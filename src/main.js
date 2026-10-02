@@ -7,6 +7,7 @@ import { Audio } from './audio.js';
 import { Game } from './game.js';
 import { heightAt, SITES } from './terrain.js';
 import { makeItem } from './items.js';
+import { IS_TOUCH, setupMobile } from './mobile.js';
 
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
@@ -46,6 +47,7 @@ console.debug('LOG game ' + (performance.now() - __t0).toFixed(0)); __t0 = perfo
 game.grade = grade;
 game.addNpc();
 game.addAmbientLife();
+if (IS_TOUCH) setupMobile(game, ui);
 
 // title-screen cinematic camera
 let mode = 'title';

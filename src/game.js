@@ -756,15 +756,19 @@ export class Game {
       }
       // target/attack
       let goal = null;
+      if (this.joy) { // virtual joystick: camera looks toward -z, so screen-up is -z
+        p.target = null; p.moveTo = null; p.pickup = null;
+        if (!p.st.action || p.st.action === 'throw') goal = { x: p.pos.x + this.joy.x * 3, y: p.pos.y, z: p.pos.z + this.joy.y * 3 };
+      }
       if (p.target && (p.target.dead || p.target.hidden)) p.target = null;
       if (p.target) { const dd = p.pos.distanceTo(p.target.pos); if (dd < (p.tgtBest ?? 1e9) - 0.5) { p.tgtBest = dd; p.tgtStall = 0; } else p.tgtStall = (p.tgtStall || 0) + dt; if (p.tgtStall > 4 && dd > 3) { p.target = null; p.tgtStall = 0; p.tgtBest = undefined; } } else { p.tgtBest = undefined; p.tgtStall = 0; }
-      if (p.target && p.whirlT <= 0) {
+      if (!goal && p.target && p.whirlT <= 0) {
         const d = Math.hypot(p.target.pos.x - p.pos.x, p.target.pos.z - p.pos.z);
         if (d <= 1.6 + p.target.radius) {
           p.facing += angDiff(p.facing, Math.atan2(p.target.pos.x - p.pos.x, p.target.pos.z - p.pos.z)) * Math.min(1, dt * 20);
           if (!p.st.action) { p.st.action = 'attack'; p.st.actionT = 0; p.actionDur = 0.62 / (1 + s.speed / 100); p.hitApplied = false; this.audio.swing(); }
         } else if (!p.st.action || p.st.action === 'throw') goal = p.target.pos;
-      } else if (p.moveTo && !(p.st.action === 'attack')) goal = p.moveTo;
+      } else if (!goal && p.moveTo && !(p.st.action === 'attack')) goal = p.moveTo;
       if (p.pickup && this.drops.includes(p.pickup) && p.pos.distanceTo(p.pickup.to) < 1.5) { this.tryPickup(p.pickup); p.pickup = null; p.moveTo = null; }
       if (goal) goal = this.steer(p, goal);
       if (goal) {
@@ -1045,7 +1049,7 @@ export class Game {
   updateCamera(dt) {
     const p = this.player.pos;
     this.autoZoom = THREE.MathUtils.lerp(this.autoZoom || 1, this.bossActive ? 1.3 : 1, Math.min(1, dt * 1.5));
-    const dist = 13.5 * this.camZoom * this.autoZoom;
+    const dist = 13.5 * this.camZoom * this.autoZoom * (innerWidth < innerHeight ? 1.45 : 1);
     const target = tmp.set(p.x, p.y + dist * 1.0, p.z + dist * 0.78);
     if (!this.camInit) { this.camPos.copy(target); this.camInit = true; }
     this.camPos.lerp(target, Math.min(1, dt * 6));

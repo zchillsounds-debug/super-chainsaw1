@@ -8,7 +8,8 @@ import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 
 const params = new URLSearchParams(location.search);
-export const QUALITY = params.get('q') || 'high';
+const touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || params.has('mobile');
+export const QUALITY = params.get('q') || (touch ? 'low' : 'high');
 
 // Golden-hour sky dome, also baked into a PMREM env map for reflections.
 export function skyDome(sunDir) {

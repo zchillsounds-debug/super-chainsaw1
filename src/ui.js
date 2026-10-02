@@ -58,7 +58,7 @@ export class UI {
       <div id="title">
         <div class="tlogo"><div class="ar">رمال بغداد</div><div class="en">Sands of Baghdad</div><div class="sub">— Year 813 of the Common Era · The Abbasid Caliphate —</div></div>
         <button id="startbtn">Enter the Sands</button>
-        <div class="controls">Left-click: move / attack · Right-click: Naft Flask · 1–4: Skills · Q: Potion · I: Inventory · Alt: show loot</div>
+        <div class="controls"><span class="pc">Left-click: move / attack · Right-click: Naft Flask · 1–4: Skills · Q: Potion · I: Inventory · Alt: show loot</span><span class="mob">Left thumb: joystick · Tap: move / attack · Right buttons: skills</span></div>
       </div>
       <div id="death" class="hidden"><div class="dt">You Have Fallen</div><button id="respawn">Rise Again</button></div>
       <div id="victory" class="hidden"><div class="vt">Victory</div><div class="vs">The Ifrit is bound beneath the Ruined Arch once more.<br/>Ishaq al-Munajjim records your deeds in the annals of the House of Wisdom.</div><div class="vstats"></div><button id="vcont">Continue Exploring</button></div>

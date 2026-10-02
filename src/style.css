@@ -125,5 +125,43 @@ button:hover{filter:brightness(1.15)}
   #minimap{transform:scale(.75);transform-origin:100% 0;top:118px}
   .tlogo .en{font-size:48px}.tlogo .ar{font-size:44px}
 }
-@media (max-width:700px){#bar{transform:translateX(-50%) scale(.6)}#quest,#minimap{display:none}}
+@media (max-width:700px){#bar{transform:translateX(-50%) scale(.6)}#quest{display:none}body.touch #minimap{display:block;top:10px}}
 #hpbars{position:absolute;inset:0;overflow:hidden;pointer-events:none}.ehp{position:absolute;left:0;top:0;width:44px;height:5px;background:#000a;border:1px solid #000;box-shadow:0 0 0 1px #5a3a1a88}.ehp i{display:block;height:100%;background:linear-gradient(#e03030,#801010)}.ehp.el{width:64px;height:6px;box-shadow:0 0 0 1px #d9a441}
+.mob{display:none}
+body.touch .pc{display:none} body.touch .mob{display:inline}
+#touch{position:absolute;inset:0;pointer-events:none}
+body:not(.touch) #touch{display:none}
+#joy{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid #d9a44188;background:radial-gradient(#0006,#0002);opacity:0;transition:opacity .15s}
+#joy.on{opacity:1}
+#knob{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:radial-gradient(#f2d27a,#8a6424);box-shadow:0 0 10px #000}
+#tskills{position:absolute;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:210px;height:210px;pointer-events:auto}
+#tskills .skill{position:absolute;width:58px;height:58px;border-radius:50%;touch-action:none}
+#tskills .skill svg{inset:9px;width:40px;height:40px}
+#tskills .skill.down{filter:brightness(1.5);transform:scale(.92)}
+#tskills .key{display:none}
+#tskills .t-attack{right:0;bottom:0;width:92px;height:92px}
+#tskills .t-attack svg{inset:16px;width:60px;height:60px}
+#tskills .t-naft{right:100px;bottom:0}
+#tskills .t-whirl{right:96px;bottom:66px}
+#tskills .t-dash{right:52px;bottom:116px}
+#tskills .t-ward{right:0;bottom:104px}
+#tskills .t-potion{right:150px;bottom:130px;width:48px;height:48px}
+.tbtn{position:absolute;pointer-events:auto;top:calc(12px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));padding:8px 14px;font-size:13px}
+body.touch #skills{display:none}
+body.touch #center{min-width:180px}
+body.touch #bar{left:0;transform:none;transform-origin:0 100%;bottom:0}
+body.touch #bar{scale:.62}
+body.touch #quest{transform:scale(.7);transform-origin:100% 0;top:6px;right:6px}
+body.touch #minimap{transform:scale(.55);transform-origin:100% 0;top:84px;right:10px}
+body.touch #inv{right:50%;transform:translate(50%,-50%) scale(.82);top:50%}
+body.touch #dialog{left:12px;right:12px;width:auto;bottom:auto;top:12px}
+body.touch .dtext{font-size:16px}
+body.touch #target{top:8px}
+body.touch #bossbar{width:70vw;top:44px}
+@media (orientation:portrait){
+  body.touch #bar{scale:.55}
+  body.touch #tskills{transform:scale(.9);transform-origin:100% 100%}
+  body.touch #bar{bottom:auto;top:calc(56px + env(safe-area-inset-top,0px));transform-origin:0 0;scale:.45}
+  .tlogo .en{font-size:38px}.tlogo .ar{font-size:36px}.tlogo .sub{font-size:16px}
+  .controls{padding:0 16px;text-align:center}
+}
