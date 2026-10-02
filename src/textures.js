@@ -122,7 +122,7 @@ export function kuficBand() {
     px += w + 8 + rnd() * 10;
   }
   x.strokeStyle = '#e6c46a'; x.lineWidth = 4; x.strokeRect(3, 3, W - 6, H - 6);
-  const t = tex(c); t.repeat.set(1, 1); return t;
+  const t = tex(c); t.repeat.set(2.2, 1); return t;
 }
 
 export function woodTex() {

@@ -16,7 +16,7 @@ export function lanternPost() {
   const body = lathe([[0, 0], [0.18, 0.05], [0.22, 0.25], [0.16, 0.45], [0.06, 0.55], [0.03, 0.7]], 8);
   const brass = new THREE.MeshStandardMaterial({ color: 0xc89b45, metalness: 0.9, roughness: 0.35, emissive: 0xffa040, emissiveIntensity: 0.0 });
   const l = mesh(body, brass); l.position.set(0.75, 2.35, 0); g.add(l);
-  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6), new THREE.MeshBasicMaterial({ color: new THREE.Color(4, 2.2, 0.8), toneMapped: false }));
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.2, 0.45), toneMapped: false }));
   glow.position.set(0.75, 2.55, 0); g.add(glow);
   g.userData.lightPos = new THREE.Vector3(0.75, 2.5, 0);
   return g;

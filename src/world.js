@@ -170,7 +170,7 @@ export function buildWorld(scene) {
     if (f > 0.55 && !inSite && r < 0.5 && cd > 12 && x > canalX(z) && Math.sin(x * 0.11) * Math.cos(z * 0.09) > 0.15) { wheatPts.push({ x, y, z }); continue; }
     if (f > 0.25 && r < 0.6 && grassPts.length < 9000 && !blocked(x, z, 0.2)) { grassPts.push({ x, y, z }); continue; }
     if (f < 0.4 && r < 0.035 && !inSite) { shrubPts.push({ x, y, z }); continue; }
-    if (r < 0.025 && !blocked(x, z, 0.5)) rockPts.push({ x, y: y - 0.1, z });
+    if (r < 0.025 && !inSite && !blocked(x, z, 0.5)) rockPts.push({ x, y: y - 0.1, z });
   }
   // dense reeds/grass hugging the canal banks
   for (let z = -WORLD / 2; z < WORLD / 2; z += 0.6) for (const s of [-1, 1]) {
@@ -181,7 +181,8 @@ export function buildWorld(scene) {
   for (let i = 0; i < 260; i++) {
     const a = rnd() * Math.PI * 2, r = 60 + rnd() * 70;
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
-    if (Math.abs(x) < WORLD / 2 - 4 && Math.abs(z) < WORLD / 2 - 4) rockPts.push({ x, y: heightAt(x, z) - 0.2, z, s: 0.5 + rnd() * 2.5 });
+    let near = false; for (const st of Object.values(SITES)) if (Math.hypot(x - st.x, z - st.z) < st.r * 1.25) near = true;
+    if (!near && roadDist(x, z) > 4 && Math.abs(x) < WORLD / 2 - 4 && Math.abs(z) < WORLD / 2 - 4) rockPts.push({ x, y: heightAt(x, z) - 0.2, z, s: 0.5 + rnd() * 2.5 });
   }
   const palmGrp = palms(palmPts, 5); scene.add(palmGrp); out.occluders.push(palmGrp);
   if (wheatPts.length) scene.add(grassField(wheatPts, 'wheat', 6));

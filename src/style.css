@@ -107,3 +107,10 @@ button:hover{filter:brightness(1.15)}
 #death .dt{font:700 60px 'Cinzel Decorative',Cinzel;color:#c02020;text-shadow:0 0 30px #000;margin-bottom:30px}
 #fade{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .8s;pointer-events:none}
 .eslot .ic,.cell .ic{display:block;width:80%;height:80%}.eslot .ic svg,.cell .ic svg{width:100%;height:100%;filter:drop-shadow(0 0 3px #000)}
+#loader{position:fixed;inset:0;z-index:50;background:radial-gradient(#2a1a0c,#050302);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1s}
+#loader.done{opacity:0;pointer-events:none}
+#loader .lt{font:700 54px 'Cinzel Decorative',Cinzel,serif;color:#f2d27a;letter-spacing:4px;text-shadow:0 0 30px #a06020}
+#loader .ls{font:italic 20px Amiri,serif;color:#c8b088;margin:10px 0 24px}
+#loader .lbar{width:320px;height:4px;background:#2a1c10;overflow:hidden;border:1px solid #6a4a20}
+#loader .lbar i{display:block;height:100%;width:40%;background:linear-gradient(90deg,#0000,#f2d27a,#0000);animation:lb 1.4s infinite linear}
+@keyframes lb{from{transform:translateX(-100%)}to{transform:translateX(260%)}}

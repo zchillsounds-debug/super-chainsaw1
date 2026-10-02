@@ -375,3 +375,41 @@ export function animateIfrit(rig, st, t) {
   } else { p.shL.rotation.z = -0.35; p.shR.rotation.z = 0.35; p.chest.rotation.x *= 0.9; }
   if (st.dead) { const d = Math.min(1, st.deadT * 0.6); rig.children[0].scale.setScalar(0.8 * (1 - d * 0.9)); rig.children[0].position.y = d * 3; }
 }
+
+// --------------------------------------------------------------------- dromedary camel
+export function camel(color = 0xb88a58) {
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const fur = new THREE.MeshStandardMaterial({ color, roughness: 0.95 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x5a3a20, roughness: 0.9 });
+  const parts = { legs: [] };
+  const torso = mesh(new THREE.SphereGeometry(0.75, 16, 12).scale(1.6, 0.85, 0.75), fur); torso.position.y = 1.9; body.add(torso);
+  const hump = mesh(new THREE.SphereGeometry(0.55, 14, 10).scale(1.1, 0.9, 0.85), fur); hump.position.set(-0.05, 2.45, 0); body.add(hump);
+  // saddle blanket
+  const blanket = mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.9, 16, 1, true, -Math.PI * 0.5, Math.PI).rotateZ(Math.PI / 2).rotateY(Math.PI / 2), new THREE.MeshStandardMaterial({ map: fabricTex('#8a1f2a', '#e0c070'), side: THREE.DoubleSide, roughness: 1 }));
+  blanket.position.set(0.15, 2.1, 0); blanket.scale.set(1, 1.05, 1.08); body.add(blanket);
+  // neck + head
+  const neck = new THREE.Group(); neck.position.set(1.05, 2.05, 0); body.add(neck); parts.neck = neck;
+  const ng = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.45, -0.1, 0), new THREE.Vector3(0.75, 0.5, 0), new THREE.Vector3(0.8, 1.15, 0)]), 12, 0.17, 8);
+  neck.add(mesh(ng, fur));
+  const head = mesh(new THREE.SphereGeometry(0.2, 10, 8).scale(1.7, 0.85, 0.8), fur); head.position.set(1.0, 1.2, 0); neck.add(head);
+  for (const s of [-1, 1]) { const ear = mesh(new THREE.ConeGeometry(0.04, 0.12, 5), fur); ear.position.set(0.85, 1.38, s * 0.1); neck.add(ear); }
+  // legs: thigh + shin pivots
+  for (const [x, z] of [[0.75, 0.32], [0.75, -0.32], [-0.75, 0.32], [-0.75, -0.32]]) {
+    const th = pivot(body, x, 1.6, z); th.add(limb(0.85, 0.14, 0.08, fur));
+    const sh = pivot(th, 0, -0.8, 0); sh.add(limb(0.82, 0.07, 0.06, fur));
+    const ft = mesh(new THREE.CylinderGeometry(0.11, 0.12, 0.08, 8), dark); ft.position.y = -0.82; sh.add(ft);
+    parts.legs.push({ th, sh, front: x > 0, side: z > 0 ? 1 : -1 });
+  }
+  const tail = mesh(new THREE.CylinderGeometry(0.03, 0.02, 0.6, 5), fur); tail.position.set(-1.2, 1.7, 0); tail.rotation.z = -0.3; body.add(tail);
+  root.userData.parts = parts;
+  return root;
+}
+export function animateCamel(rig, st, t) {
+  const p = rig.userData.parts, w = st.walkBlend || 0;
+  for (const L of p.legs) {
+    const ph = st.phase + (L.front ? 0 : Math.PI) + (L.side > 0 ? 0 : Math.PI * 0.5);
+    L.th.rotation.z = Math.sin(ph) * 0.35 * w;
+    L.sh.rotation.z = Math.max(0, -Math.sin(ph - 0.6)) * 0.6 * w;
+  }
+  p.neck.rotation.z = Math.sin(t * 0.8 + st.seed) * 0.08 - (st.graze ? 0.9 : 0) * (0.5 + 0.5 * Math.sin(t * 0.3 + st.seed));
+}

@@ -5,7 +5,8 @@ import { humanoid, ifrit } from './characters.js';
 export const TYPES = {
   bandit: {
     name: 'Desert Raider', hp: 24, dmg: 5, speed: 4.3, range: 1.9, atk: 1.1, xp: 14, radius: 0.5, action: 'attack',
-    build: () => humanoid({ robe: '#3a2f26', robe2: '#6a2a1a', turban: 0x2a2420, mask: 0x1e1a16, skin: 0x8a5a3a, weapon: 'scimitar', sash: 0x5a1a10 }),
+    build: () => { const R = [['#3a2f26', '#6a2a1a', 0x2a2420], ['#4a3020', '#8a6a2a', 0x5a1a10], ['#2a2a30', '#7a2a2a', 0x1a1a1a], ['#5a4a3a', '#2a3a2a', 0x8a7a5a]][Math.floor(Math.random() * 4)];
+      return humanoid({ robe: R[0], robe2: R[1], turban: R[2], mask: 0x1e1a16, skin: [0x8a5a3a, 0x7a4a2a, 0x9a6a44][Math.floor(Math.random() * 3)], weapon: 'scimitar', sash: 0x5a1a10, offhand: Math.random() < 0.3 ? 'shield' : null }); },
   },
   spearman: {
     name: 'Raider Lancer', hp: 34, dmg: 7, speed: 3.8, range: 2.7, atk: 1.4, xp: 18, radius: 0.5, action: 'thrust',

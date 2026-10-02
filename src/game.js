@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { humanoid, animateHumanoid, animateIfrit, scimitar } from './characters.js';
+import { humanoid, animateHumanoid, animateIfrit, scimitar, camel, animateCamel } from './characters.js';
 import { heightAt, SITES, canalX } from './terrain.js';
 import { resolve, buildGrid } from './collision.js';
 import { makeEnemy } from './entities.js';
@@ -598,6 +598,43 @@ export class Game {
     const mark = new THREE.Mesh(new THREE.OctahedronGeometry(0.12), new THREE.MeshStandardMaterial({ color: 0xffd060, emissive: 0xffa020, emissiveIntensity: 1.2, metalness: 0.8, roughness: 0.3 }));
     mark.position.y = 2.6; npc.add(mark); this.npcMark = mark;
   }
+  addAmbientLife() {
+    this.critters = [];
+    const add = (rig, x, z, kind, opts = {}) => {
+      const pos = new THREE.Vector3(x, heightAt(x, z), z);
+      rig.position.copy(pos); this.scene.add(rig);
+      this.critters.push({ rig, pos, home: pos.clone(), kind, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, seed: Math.random() * 10, graze: kind === 'camel' }, facing: Math.random() * 6, wanderT: 0, range: opts.range || 6, speed: opts.speed || 1.2 });
+    };
+    for (const [x, z, c] of [[30, 66, 0xb88a58], [33, 70, 0xa07040], [-8, 40, 0xc49a68], [70, 22, 0x9a6a3a], [74, 18, 0xb08050]]) add(camel(c), x, z, 'camel', { range: 4, speed: 0.9 });
+    const garb = [['#e8dcc0', '#2a6a5a', 0xf0ead8], ['#6a3a2a', '#d0a040', 0x2a2420], ['#2a4a6a', '#e0c070', 0xe8e0d0], ['#8a6a3a', '#3a2a1a', 0x6a3020]];
+    const V = SITES.village;
+    for (let i = 0; i < 6; i++) {
+      const [r1, r2, tb] = garb[i % garb.length];
+      add(humanoid({ robe: r1, robe2: r2, turban: tb, weapon: null, beard: i % 2 ? 0x2a1a10 : null, skin: [0xa8714a, 0x8a5a3a, 0xb88a60][i % 3] }), V.x + rand(-12, 12), V.z + rand(-6, 22), 'villager', { range: 8, speed: 1.3 });
+    }
+  }
+  updateAmbientLife(dt) {
+    if (!this.critters) return;
+    const p = this.player.pos;
+    for (const c of this.critters) {
+      const d = c.pos.distanceTo(p); c.rig.visible = d < 50; if (d > 50) continue;
+      c.wanderT -= dt;
+      if (c.wanderT <= 0) { c.wanderT = rand(4, 10); c.goal = Math.random() < 0.5 ? null : c.home.clone().add(new THREE.Vector3(rand(-c.range, c.range), 0, rand(-c.range, c.range))); }
+      let moving = false;
+      if (c.goal) {
+        const dx = c.goal.x - c.pos.x, dz = c.goal.z - c.pos.z, dd = Math.hypot(dx, dz);
+        if (dd > 0.4) { c.pos.x += dx / dd * c.speed * dt; c.pos.z += dz / dd * c.speed * dt; moving = true; c.facing += angDiff(c.facing, Math.atan2(dx, dz)) * Math.min(1, dt * 3); }
+        else c.goal = null;
+      }
+      resolve(c.pos, c.kind === 'camel' ? 1.0 : 0.4);
+      c.pos.y = heightAt(c.pos.x, c.pos.z);
+      c.st.walkBlend = THREE.MathUtils.lerp(c.st.walkBlend, moving ? (c.kind === 'camel' ? 1 : 0.5) : 0, Math.min(1, dt * 5));
+      c.st.phase += dt * (moving ? c.speed * 2.6 : 0); c.st.graze = c.kind === 'camel' && !moving;
+      c.rig.position.copy(c.pos);
+      if (c.kind === 'camel') { c.rig.rotation.y = c.facing - Math.PI / 2; animateCamel(c.rig, c.st, this.t); }
+      else { c.rig.rotation.y = c.facing; animateHumanoid(c.rig, c.st, this.t, dt); }
+    }
+  }
   talkToNpc() {
     const lines = [
       'Peace be upon you, traveller. I am <b>Ishaq al-Munajjim</b>, astronomer of the <i>Bayt al-Hikma</i>. Three nights past, a raider named <b>Abu Jahm</b> broke the old seal beneath the ruined arch of the Persian kings — and something of smokeless fire walked free.',
@@ -624,6 +661,7 @@ export class Game {
     this.updateProjectiles(dt);
     this.updateHazards(dt);
     this.updateDrops(dt);
+    this.updateAmbientLife(dt);
     this.updateCamera(dt);
     if (this.started) this.updateOccluders(); else this.occU.uHole.value.set(-9999, -9999);
     if (this.npc) {
@@ -728,6 +766,8 @@ export class Game {
     p.pos.y = heightAt(p.pos.x, p.pos.z);
     p.st.walkBlend = THREE.MathUtils.lerp(p.st.walkBlend, moving ? 1 : 0, Math.min(1, dt * 10));
     p.st.phase += dt * (moving ? speed * 1.55 : 0);
+    // footstep dust puffs
+    if (moving && p.dashT <= 0) { const step = Math.floor(p.st.phase / Math.PI); if (step !== p.lastStep) { p.lastStep = step; this.fx.dust(tmp.copy(p.pos).add(new THREE.Vector3(0, 0.1, 0)), 2, 0.45); } }
     p.rig.position.copy(p.pos); p.rig.rotation.y = p.facing;
     animateHumanoid(p.rig, p.st, this.t, dt);
     this.pLight.position.set(p.pos.x, p.pos.y + 3, p.pos.z + 1);
