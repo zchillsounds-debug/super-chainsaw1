@@ -172,9 +172,15 @@ export function createTerrain() {
         grass = mix(grass, vec3(0.55,0.50,0.26), smoothstep(0.45,0.75,n2));
         vec3 mud = vec3(0.28,0.22,0.15);
         // packed road with cart ruts and stones
-        vec3 road = mix(vec3(0.64,0.52,0.38), vec3(0.74,0.62,0.46), n3);
-        float stones = smoothstep(0.62,0.7,fb(vWPos.xz*1.4));
-        road = mix(road, vec3(0.58,0.53,0.47), stones*0.7);
+        vec3 road = mix(vec3(0.46,0.36,0.26), vec3(0.56,0.45,0.33), n3);
+        float stones = smoothstep(0.6,0.68,fb(vWPos.xz*1.6));
+        road = mix(road, vec3(0.62,0.56,0.48), stones*0.8);
+        // worn ruts: darker bands where the mask is strongest, lighter crown between
+        float rut = smoothstep(0.75,0.95,gMask.r) * (0.5+0.5*sin(gMask.r*40.0));
+        road *= 1.0 - rut*0.18;
+        // edge debris/pebbles at the transition to sand
+        float edge = smoothstep(0.15,0.35,gMask.r) * smoothstep(0.65,0.4,gMask.r);
+        road = mix(road, vec3(0.38,0.30,0.22), edge * smoothstep(0.5,0.8,fb(vWPos.xz*3.0)) * 0.7);
         // courtyard flagstones in sites
         vec2 sp = vWPos.xz*1.05;
         vec2 vc = vor2(sp);

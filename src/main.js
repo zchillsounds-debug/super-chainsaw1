@@ -14,7 +14,9 @@ const renderer = createRenderer(document.getElementById('game'));
 const scene = new THREE.Scene();
 renderer.info.autoReset = false;
 const camera = new THREE.PerspectiveCamera(36, innerWidth / innerHeight, 0.5, 1400);
+let __t0 = performance.now();
 const world = buildWorld(scene);
+console.debug('LOG world ' + (performance.now() - __t0).toFixed(0)); __t0 = performance.now();
 scene.fog = new THREE.FogExp2(0xd4a47a, 0.0048);
 scene.add(skyDome(world.sunDir));
 scene.environment = envFromSky(renderer, world.sunDir);
@@ -40,6 +42,7 @@ for (const l of world.lanterns) { l.updateMatrixWorld(); const pl = new THREE.Po
 const ui = new UI(document.getElementById('ui'));
 const audio = new Audio();
 const game = new Game({ scene, camera, renderer, world, fx, ui, audio });
+console.debug('LOG game ' + (performance.now() - __t0).toFixed(0)); __t0 = performance.now();
 game.grade = grade;
 game.addNpc();
 game.addAmbientLife();
@@ -90,6 +93,8 @@ function frame() {
   }
   // drifting dust motes / sand in the air around the camera focus
   const focus = mode === 'game' ? game.player.pos : SITES.village;
+  // graveyard ground mist
+  if (focus.x < -25 && focus.z < -10 && Math.random() < 0.6) { const G = SITES.graveyard; fx.smoke.spawn({ pos: { x: G.x + (Math.random() - 0.5) * 40, y: heightAt(G.x, G.z) + 0.3, z: G.z + (Math.random() - 0.5) * 36 }, vel: { x: 0.4, y: 0.05, z: 0.15 }, life: 7, size: 3, size1: 6, color: new THREE.Color(0.62, 0.66, 0.58), alpha: 0.16, drag: 0.1, fadeIn: 0.4 }); }
   if (Math.random() < 0.5) fx.smoke.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 50, y: (focus.y || 0) + Math.random() * 6, z: focus.z + (Math.random() - 0.5) * 40 }, vel: { x: 1.5, y: 0.1, z: 0.4 }, life: 4, size: 0.06, size1: 0.06, color: new THREE.Color(1, 0.9, 0.7), alpha: 0.6, drag: 0, fadeIn: 0.3 });
   if (mode === 'title') { titleCam(t); game.t += dt; game.updateAmbientLife(dt); } else game.update(dt);
   fx.update(dt); fx.setScale(renderer.getDrawingBufferSize(new THREE.Vector2()).y);
@@ -103,5 +108,6 @@ function frame() {
 frame();
 // debug: advance the simulation without rendering (used by automated screenshot tests)
 window.__sim = (sec, step = 1 / 30) => { for (let i = 0; i < sec / step; i++) { t += step; world.update(t, step); game.update(step); fx.update(step); for (const f of world.fires) if (Math.random() < 0.7) fx.fire(f.pos, f.intensity); } };
+try { await renderer.compileAsync(scene, camera); } catch (e) { /* older drivers: compile lazily */ }
 document.getElementById('loader')?.classList.add('done'); setTimeout(() => document.getElementById('loader')?.remove(), 1200);
 window.__mk = makeItem; window.__game = game; window.__ready = true;

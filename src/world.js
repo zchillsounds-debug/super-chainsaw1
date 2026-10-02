@@ -5,6 +5,7 @@ import { colliders, house, mosque, caravanserai, greatArch, mausoleum, roundCity
 import { palms, grassField, rocks, shrubs, wind } from './vegetation.js';
 import { lanternPost, firePit, tent, jar, crate, marketStall, cart, grave, deadTree, banner, bridge, waterwheel } from './props.js';
 import { mulberry32 } from './noise.js';
+import { sigilTex } from './textures.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // Collapse a static group's meshes into one mesh per material (huge draw-call savings).
@@ -144,10 +145,31 @@ export function buildWorld(scene) {
   // ---------------- great arch boss arena
   const A = SITES.arch;
   place(scene, greatArch(), A.x, A.z - 10, 0, true, true);
-  const braziers = [[-10, 6], [10, 6], [-10, -6], [10, -6]];
-  for (const [dx, dz] of braziers) {
-    const f = place(scene, firePit(), A.x + dx, A.z + dz, 0, false);
-    out.fires.push({ pos: f.position.clone().add(new THREE.Vector3(0, 0.3, 0)), intensity: 0.8, boss: true });
+  // cracked seal of Sulayman on the arena floor where the Ifrit was bound
+  const sig = new THREE.Mesh(new THREE.PlaneGeometry(18, 18).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: sigilTex(), color: new THREE.Color(1.6, 0.35, 0.08), transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+  sig.position.set(A.x, heightAt(A.x, A.z - 2) + 0.05, A.z - 2); scene.add(sig);
+  out.updaters.push((t) => { sig.material.opacity = 0.35 + Math.sin(t * 1.3) * 0.15; sig.rotation.y = t * 0.03; });
+  // tall braziers on stone pillars
+  const stoneM = mats().stone, bronze = new THREE.MeshStandardMaterial({ color: 0x8a5a2a, metalness: 0.9, roughness: 0.4 });
+  for (const [dx, dz] of [[-11, 7], [11, 7], [-11, -9], [11, -9], [-6, 12], [6, 12]]) {
+    const g = new THREE.Group();
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 2.2, 10).translate(0, 1.1, 0), stoneM); col.castShadow = true; g.add(col);
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.35, 0.45, 12, 1, true).translate(0, 2.4, 0), bronze); bowl.castShadow = true; g.add(bowl);
+    g.add(new THREE.Mesh(new THREE.CircleGeometry(0.62, 12).rotateX(-Math.PI / 2).translate(0, 2.5, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.4, 0.45, 0.1), toneMapped: false })));
+    place(scene, g, A.x + dx, A.z + dz, 0, false);
+    colliders.push({ type: 'circle', x: A.x + dx, z: A.z + dz, r: 0.6 });
+    out.fires.push({ pos: g.position.clone().add(new THREE.Vector3(0, 2.55, 0)), intensity: 0.75, boss: true });
+  }
+  // broken columns & fallen drums around the arena
+  for (let i = 0; i < 9; i++) {
+    const a = i / 9 * Math.PI * 2 + 0.3, r = 15 + rnd() * 4;
+    const x = A.x + Math.cos(a) * r, z = A.z - 2 + Math.sin(a) * r;
+    if (blocked(x, z, 1.5)) continue;
+    const h = 1 + rnd() * 3.5;
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.6, h, 12).translate(0, h / 2, 0), stoneM); c.castShadow = true; c.receiveShadow = true;
+    c.position.set(x, heightAt(x, z), z); c.rotation.z = (rnd() - 0.5) * 0.15; scene.add(c);
+    colliders.push({ type: 'circle', x, z, r: 0.7 });
+    if (rnd() > 0.4) { const d = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.1, 12), stoneM); d.rotation.z = Math.PI / 2; d.rotation.y = rnd() * 3; d.position.set(x + 1.6, heightAt(x + 1.6, z) + 0.5, z + 0.8); d.castShadow = true; scene.add(d); }
   }
 
   // ---------------- distant Baghdad (north, beyond the dunes)
