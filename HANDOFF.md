@@ -1,100 +1,108 @@
-# Sands of Baghdad: Handoff (after Round 1)
+# Sands of Baghdad: Handoff (after Round 2)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Sands of Baghdad**: a Diablo-style 3D ARPG in Three.js set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `sands-of-baghdad-handoff.zip` (full source, git history as `repo.bundle`, the screenshot script, and this HANDOFF.md). Please unzip it, read HANDOFF.md fully, run `npm install && npx vite`, and start **Round 2** exactly as specified in the "Round 2 spec" section. Run the critique loop (screenshot → critique → improve) every round, aiming for AAA graphics like Diablo IV. Ask me clarifying questions and confirm with me before building. I play on Android, so republish the game as a playable Artifact after each round (touch controls must keep working). Update the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Push to branch `claude/game-design-feedback-u77pmt` on zchillsounds-debug/super-chainsaw1.
+> I'm continuing a game project called **Sands of Baghdad**: a Diablo-style 3D ARPG in Three.js set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `sands-round2-handoff.zip` (full source, git history as `repo.bundle`, and this HANDOFF.md). Please unzip it, read HANDOFF.md fully, run `npm install && npx vite`, and start **Round 3** exactly as specified in the "Roadmap" section. The goal is AAA studio quality (Diablo IV as the bar). Run the critique loop (screenshot → critique → improve) every round. Ask me clarifying questions and confirm with me before building. I play on Android, so republish the game as a playable Artifact after each round (touch controls must keep working). Update the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Push to the session's assigned branch on zchillsounds-debug/super-chainsaw1.
 
 ## Restore the code
 ```
-unzip sands-of-baghdad-handoff.zip -d sands && cd sands
-git clone repo.bundle game && cd game        # branch claude/game-design-feedback-u77pmt
-cp ../shot.mjs shots/ 2>/dev/null || (mkdir -p shots && cp ../shot.mjs shots/)
+unzip sands-round2-handoff.zip -d sands && cd sands
+git clone repo.bundle game && cd game        # branch claude/continue-build-vnpiq9
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
+If the repo in the new session is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/claude/continue-build-vnpiq9` (only when the working tree is empty).
 URL flags: `?play` skips the title, `?mobile` forces the touch UI, `?q=low|high` sets quality, `?noadapt` turns off auto quality, `?x=..&z=..` sets the spawn point.
-GitHub push from the last session failed with a 403. If it fails again, reconnect GitHub at https://claude.ai/connect-github and install the Claude GitHub App on the repo.
+**GitHub push has failed with a 403 in two sessions.** Before starting, reconnect GitHub at https://claude.ai/connect-github and install the Claude GitHub App on the repo. Until that works, keep a git bundle as the backup.
 
 ## Non-negotiable design rules (from the user)
-- **No religious buildings or symbols at all.** That means no mosques, minarets, mausoleums, graves, crescents, crosses, the ۞ mark, Seal of Sulayman/star sigils, Quranic text or religious greetings ("Peace be upon you", etc.). Kufic-style lettering is fine **only** with non-religious text (act titles, place names).
-- **No supernatural enemies.** No djinn, ifrit, ghuls or imps. All foes are human: brigands, deserters, mercenaries.
-- **Authentic to 813 CE, not Western tropes.** Straight swords (sayf, not scimitar/shamshir/kilij), qalansuwa/bayda headgear, qaba coats, black Abbasid dress, short single period names (Salim, Ishaq, Ziyad, Hisham, Ghassan). No "the Cutthroat"-style epithets.
-- Audio should move away from the generic "Hijaz" cliché toward Abbasid court style: Rast/Bayati modes, oud + qanun plucks, daff frame-drum rhythms.
-- The user prefers to be asked clarifying questions and to confirm before building.
+- **No religious buildings or symbols at all.** That means no mosques, minarets, mausoleums, graves, crescents, crosses, star sigils (8-point stars included), Quranic text or religious greetings. Kufic-style lettering is fine **only** with non-religious text (act titles, place names).
+- **No supernatural enemies.** All foes are human: brigands, deserters, mercenaries.
+- **Authentic to 813 CE, not Western tropes.** Straight sayf swords, qalansuwa/bayda headgear, qaba coats, black Abbasid dress, short single period names, no epithets.
+- Music in the Abbasid court style: Rast/Bayati modes, oud, qanun and daff. No Hijaz cliché.
+- Ask clarifying questions and confirm before building.
 
 ## Story bible (decided)
-- **Hero:** Salim, a caravan guard. Abbasid black qaba over mail, felt qalansuwa wound with a dark turban, a red wool mantle on his **back**, coat tails and a straight sayf.
-- **Setting:** the Sawad (farmland) outside Baghdad, just after the 811–813 civil war between al-Amin and al-Ma'mun. Deserters and raiders exploit the chaos.
-- **Act 1:** Salim's caravan is ambushed. Ishaq (astronomer of the Bayt al-Hikma, whose instruments were in the caravan) gives the mission. Ziyad holds the old caravanserai.
-- **Act 2:** Hisham's knife-men hide in the brick-kiln yard beside a ruined Sasanian palace vault. Add a new zone/town hub with a merchant.
-- **Act 3:** Ghassan, the renegade commander, at the ruined Persian arch (Taq Kasra style), trying to choke the grain road.
-- Target length is 3 acts and about 30–45 minutes, with 6–8 cutscenes. The game auto-saves per act/checkpoint (localStorage) and the title screen gets a Continue button.
-- **Classes still to come (Round 3):** Faris (heavy melee, which is the current hero kit), Rami (archer), Naffat (naft fire-thrower), 'Ayyar (rogue with daggers and stealth).
+Hero Salim (caravan guard). Ishaq (astronomer, House of Wisdom). Act 1: Ziyad at the caravanserai. Act 2: Hisham at the kiln yard. Act 3: Ghassan at the ruined Persian arch. The target length is 3 acts and 30–45 min.
+Planned classes: Faris (heavy melee, the current kit), Rami (archer), Naffat (naft fire-thrower), 'Ayyar (rogue: daggers and stealth).
 
-## Round 1 (done, published as Version 3 of the artifact)
-- The mosque became a covered market (`suq()`) with a watchtower and well. The mausoleum became `palaceVault()` (a ruined Sasanian brick vault). The graveyard became a kiln yard (`kiln()`, `brickStack()`); `SITES.graveyard` was renamed `SITES.kiln`. Minarets were removed from the distant city, along with the star sigil, map icons, the ۞ banner mark and the Seal of Sulayman.
-- **Enemies** (`entities.js`): bandit = Brigand; spearman = Deserter Lancer; archer = Brigand Archer; deserter = Knife-man (ambushes from a crouch); naffat = Torch-bearer; commander = **Ghassan** boss (humanoid scale 1.55). The boss AI (`game.js bossAI`) has an overhead `slam`, a `command` gesture that triggers a fan of thrown naft pots, a catapult barrage of telegraphed circles, and a call for his guard.
-- **Hero:** `humanoid()` options `qaba`, `cap`, `capBand`, `cloak` (now a pivoted mantle on the back), `tails`, `helm`, `scabbard`, plus weapons `sword|dagger|torch|spear|bow`.
-- **Movement momentum:** `p.vel` gets acceleration and a slide on stop. `st.lean` and `st.fwdLean` drive hip and spine lean, and the mantle and tails trail with walk, lean and flutter.
-- **Mobile:** smaller translucent thumb cluster, `--tscale`/`--topa` CSS vars with a ⚙ settings panel (localStorage), a one-line quest pill (tap to open), the map behind a "Map" button, a compact bottom dialog, and skills hidden during dialog.
+## What exists now (Rounds 1–2)
+- **Mobile HUD:** a round minimap top-left that opens a large map on tap; small HP and MP orbs bottom-left; one ☰ menu (Inventory, Map, Controls); a quest pill top-centre.
+- **Characters** (`sculpt.js`, `human.js`, `charmats.js`, `cloth.js`, `anim.js`): SDF-sculpted skinned meshes built with narrow-band surface nets.
+  - Skeleton: 24 bones, A-pose bind, with weights taken from which shape owns each vertex.
+  - Face: eyes with lids, a jaw bone, brows and a beard.
+  - Clothing and materials: one region-based shader handling weave, mail, leather, pores and skin wrap lighting, with rim light.
+  - Cloth: verlet skirt and mantle that collide with leg and torso capsules. Simulation runs only near the player on q≠low; otherwise the cloth is kinematic.
+  - Spring bones on the beard, scabbard and sash.
+  - Animator: planted feet with two-bone leg IK, a 3-hit combo, keyframed clips, flinch, ragdoll-style death, turn-in-place, blinking, `st.lookAt`/`st.talk`/`st.expr`.
+  - Detail tiers: `detail:'hi'` for the hero, Ishaq and Ghassan; light for crowds. Geometry is cached per piece.
+- **Cinematics** (`cinema.js`, `scenes.js`):
+  - Director features: eased camera curves, letterbox, typed subtitles with rendered portraits and vocal cues, tap to advance, hold to skip, slow motion, BokehPass depth of field and a cine/dusk grade.
+  - 7 scenes: prologue, briefing, Ziyad, Hisham, Ghassan intro, phase 2, epilogue.
+  - Act cards use Reem Kufi.
+- **Audio** (`audio.js`): Karplus-Strong oud and qanun improvising in Rast/Bayati, with daff wahda/maqsum rhythms, a combat drone layer, stingers and formant vocal cues.
+- **Saving** (`save.js`): auto-saves per act to localStorage; the title screen has Continue / New Chronicle.
+- **Test tools:**
+  - `shots/shot.mjs`: a single screenshot.
+  - `shots/multi.mjs <w> <h> <query> <outdir> <steps.json>`: one page load with many shots.
+  - `shots/close.js`: helpers `__close(angle,dist,h,lookY,who)`, `__nearest()`, `__look(e)`.
+  - Debug hooks: `__director`, `__SCENES`, `__sim(sec)`.
+  - Headless SwiftShader is slow. **Don't run two captures in parallel**, and remember that CSS transitions crawl in headless.
 
-## Round 2 spec (do this next)
-### A. Cinematic system + story (original Round 2)
-1. A `cinema.js` director: timeline of shots (camera position/target curves, durations, easing), letterbox bars, input lock, subtitle bar with speaker portrait and short non-verbal vocal cue sounds, and **tap-and-hold to skip** (a ring fills on hold).
-2. Effects: film grain plus a warm grade during cinematics, slow-motion hits (time scale), depth of field for the speaker (bokeh pass; off on `q=low`), and calligraphic **act title cards** in Kufic-style lettering with non-religious text only.
-3. Scenes: the prologue (caravan on the road at dusk, ambush, Salim survives); the Ishaq briefing; Ziyad's defeat; Hisham's defeat; Ghassan's intro and phase changes; and the epilogue.
-4. Music: rewrite `audio.js`. Replace Hijaz with Rast/Bayati modes, an oud voice, a qanun-like pluck layer and daff rhythms, with combat intensity layers and cinematic stingers.
+## Known issues (fix first in Round 3)
+1. Cloth was retuned (thinner leg capsules, damping 0.94, hoop constraints) and not re-verified at full run. Check that the skirt doesn't flare into a "tutu" and the mantle doesn't fly out like a flag.
+2. Sculpt load time is about 1.5 s at low quality on desktop, likely 3–4 s on a phone. Cache the sculpted geometry in IndexedDB (key = piece key + version) and time-slice generation behind the loader.
+3. Ziyad's and Hisham's fall shots frame the body from too high, and loot beams intrude. Use a lower orbit and hide the beams during scenes.
+4. The prologue's guard-arrow shot needs a framing check. Camels are low-poly primitives next to the new humans, so sculpt camels with the same system.
+5. The score has never been listened to. Do a balance pass: levels, how dense the melody is, and the drone volume.
+6. The kiln backlog is still open: darker fired brick, soot, chimney smoke and stoke-hole glow.
+7. Foot planting was only verified on stills. Record a short frame sequence to check for sliding.
 
-### B. Mobile interface (new user feedback)
-- The **minimap must go to the top-left**, far from the ability buttons (bottom-right). Make it a small round map (about 84px) top-left that opens to a larger map on tap.
-- Declutter. Move the HP/MP orbs so they don't collide with the map. One option is two slim arc bars hugging the thumb cluster, or small orbs bottom-left above the joystick zone. Merge Bag and ⚙ into one menu button. Keep the top centre for the quest pill only.
-- Test at 390×844 portrait and 844×390 landscape. Nothing should overlap, and the playfield centre should stay clear.
+## Roadmap to AAA (one round each; confirm scope with the user first)
+**Round 3: Classes and combat feel**
+- 4 classes with distinct kits and silhouettes (Faris, Rami, Naffat, 'Ayyar), and a class pick in the prologue.
+- Hit feel: hit-stop per weapon weight, camera impulse, blood and spark decals, directional knockback, stagger meter, dodge-roll with i-frames, parry window.
+- Enemy AI: flanking, archers keeping range, shield-bearers blocking, grouping tokens so only 2–3 foes attack at once.
+- Fix the known issues above.
 
-### C. Character graphics to AAA/Diablo level (new user feedback; highest priority)
-Characters are currently capsule/lathe primitives with blank faces. The goal is realistic body, face and structure, with fluid movement that has weight and dimension.
-- **Body:** replace per-bone primitives with a single **skinned mesh** (THREE.SkinnedMesh with a proper skeleton: pelvis, spine ×3, neck, head, clavicles, upper/lower arms, hands, thighs, shins, feet). Build the mesh procedurally (sculpted with SDF or marching cubes, or lofted cross-sections) so the shoulders, chest, waist and limbs blend smoothly with real anatomy and proportions (about 7.5 heads tall, broader shoulders for warriors). Note: no external assets are used today. If you consider adding glTF models (for example CC0 Quaternius/Kenney characters with Mixamo-style rigs) embedded as base64, ask the user first, and keep everything inside the single-file artifact under the 16MB limit.
-- **Face:** modelled brow ridge, nose, cheekbones, jaw, lips, ears, eyes with whites/iris and eyelids, eyebrows and a beard/moustache with strands or alpha cards. Skin needs subsurface-like wrap lighting and a normal map with pores. Add a few blend shapes or bones for blinking and expressions during cutscenes.
-- **Clothing:** the qaba, mantle and coat tails should be cloth-simulated, at least verlet chains on the hem and mantle vertices with body-capsule collision, so they flow and swing with momentum. Add fabric normal and roughness detail, gold tiraz bands, layered mail with a proper normal map, and leather straps.
-- **Animation:** a procedural animation layer on the skeleton, covering:
-  - a **locomotion blend tree** (idle → walk → run, speed-matched stride, no foot sliding) with **two-bone IK foot placement** on terrain and pelvis bob/sway
-  - upper-body counter-rotation and arm swing
-  - **3-hit combo** attacks with anticipation, follow-through and recovery
-  - hit reactions with additive flinch
-  - deaths with ragdoll-like settling
-  - turn-in-place
-  - secondary motion with spring bones for the beard, tails, scabbard and sash
+**Round 4: World and Act II hub**
+- A merchant town hub (suq) with a vendor, blacksmith (upgrade and salvage) and stash.
+- Add the night/dusk lighting the prologue implies: time-of-day presets per act.
+- Zone streaming or chunked terrain. Interiors: caravanserai courtyard and kiln tunnels.
+- Environment art pass: trim sheets, decals, vertex-painted wear, scattered clutter, better palms and water.
 
-  Keep the existing momentum and lean values (`st.lean`, `st.fwdLean`) and feed them in.
-- **Rendering:** contact shadows/AO under feet, a stronger rim light, the character lighting rig in cutscenes (key, fill and rim), and per-character LOD for mobile (low poly count and no cloth sim on `q=low`).
-- Apply this to the hero first, then Ishaq, then the enemies and Ghassan.
-- **Validate with close-up screenshots** from several angles plus walking, running and attacking frames. Critique each loop against Diablo IV character shots.
+**Round 5: Rendering to Diablo IV level**
+- Clustered or forward+ lights so many torches can cast light.
+- Cascaded shadows with contact shadows, SSR on water, volumetric god rays and dust, a colour LUT per act, TAA instead of SMAA on high.
+- Character LOD chain with impostors far away; GPU skinning budget checks on mid-range Android (target 30 fps, 60 fps on high).
+- Hair cards and better beard shading. A cloth wrinkle normal map driven by stretch.
 
-### Known critique backlog (from Round 1)
-- Brass and steel helmets bloom too hot (lower metalness or raise roughness, or clamp bloom).
-- Kilns read as flat domes. They need darker fired-brick tint, soot, smoke from the chimney and a visible stoke-hole glow.
-- The robe skirt reads as a stiff cone. Cloth sim will fix this.
-- The boss intro is just a banner. Make it a proper cinematic in Round 2.
-- `shots/run_auto.mjs` (the full autoplay test) wasn't in the bundle. `shot.mjs` covers screenshots and the inline JS hooks.
+**Round 6: Loot, progression, endgame**
+- Skill trees per class, legendary aspects, item sets, a crafting/enchanting loop.
+- Dungeons ("ruined qanats") with modifiers, difficulty tiers, and a boss rush.
 
-## Stack
-Vite 5 + three@0.170. Everything is procedural (no external assets). The build is a single-file HTML artifact.
+**Round 7: Audio and narrative polish**
+- More scored cues per act. Positional SFX with an occlusion filter. Footstep surfaces (sand, brick, water). A crowd ambience bed in the suq.
+- More cutscenes for side quests. A full dialogue system with choices, a journal and a codex of real Abbasid history.
+
+**Round 8: Production quality**
+- Settings menu (graphics, audio, controls, accessibility: subtitles size, colour-blind modes, hold vs toggle).
+- Controller support. Localisation (Arabic UI with right-to-left layout).
+- Automated regression screenshots and a performance HUD.
+- Tutorial/onboarding. Telemetry-free playtest checklist.
+- Ship as a PWA (offline, installable on Android).
+
+**If the user approves external assets**
+CC0 rigged characters or animations (Quaternius, Kenney, Mixamo-style) or photogrammetry would be the biggest jump toward AAA. Ask first. Everything must stay inside the single-file artifact (16 MB cap).
 
 ## File map (src/)
-- main.js: renderer, lights, sky, main loop, adaptive quality, debug hooks `window.__sim(sec)`, `__game`, `__mk`, `__ready`
-- graphics.js: post-processing (GTAO, bloom, grade/vignette/grain, SMAA), QUALITY
-- terrain.js: heightfield, canal, roads, SITES (village, serai, kiln, arch), `heightAt`
-- world.js: places everything, colliders, occluders, fires
-- buildings.js: `suq`, `caravanserai`, `greatArch`, `palaceVault`, `kiln`, `roundCity`, `house`
-- props.js: stalls, carts, tents, `brickStack`, bridge, waterwheel, lanterns
-- characters.js: `humanoid()` rig + `animateHumanoid()`, `sword()`, camel. **This is the file to replace with the skinned character system.**
-- entities.js: enemy types. items.js: loot (sayf bases, uniques)
-- game.js: player, momentum, combat, skills, AI, boss, loot, NPC dialog, camera, see-through occlusion (skips MeshBasicMaterial)
-- ui.js, style.css: HUD (the mobile overrides are at the end of style.css). mobile.js: joystick, thumb skills, settings panel
-- audio.js: procedural SFX and music (to be rewritten)
-
-## Testing
-`node shots/shot.mjs <w> <h> "<query>" out.png "<js to run after load>" <waitMs>` uses headless Chromium with SwiftShader (slow, so use `__sim(sec)` to advance time). It prints page errors and `window.__log`.
-- Hero close-up: override `__game.updateCamera` to orbit the player (see the example in the Round 1 transcript: camera 4.2m away at 2.3m height, looking at hip height).
-- Phone: `node shots/shot.mjs 390 844 "play&mobile&q=low" out.png "__sim(0.5)" 3000`
-- Boss: `?x=10&z=-72` then `__sim(4)`.
+- main.js: renderer, loop, director hookup, Continue/start flow
+- graphics.js: post-processing (GTAO, Bokeh, bloom, grade with uCine/uDusk, SMAA)
+- terrain.js, world.js, buildings.js, props.js, vegetation.js, water.js: the world
+- sculpt.js: SDF and surface nets. human.js: humanoid assembly. charmats.js: character shader. cloth.js: cloth and Jiggle. anim.js: animator and CharLOD
+- characters.js: weapons and camel; re-exports humanoid
+- entities.js: enemy types. game.js: gameplay, AI, boss, quests, cineTick, checkpoints
+- cinema.js: Director. scenes.js: the 7 scenes. save.js: saving
+- audio.js: SFX, score, stingers, vocals
+- ui.js, mobile.js, style.css: HUD and touch controls (round 2 mobile overrides are at the end of style.css)
 
 ## Publishing
-`npx vite build`. Then inline `dist/assets/*.js` (as `<script type="module">`, escaping `</script`) and `*.css` into `dist/index.html`, keeping `<title>Sands of Baghdad</title>` and the Google Fonts link. Publish with the Artifact tool to the existing URL https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first in a new chat, then publish with `url`).
+`npx vite build`. Then inline `dist/assets/*.js` (as `<script type="module">`, escaping `</script`) and `*.css` into `dist/index.html`, keeping the Google Fonts link (includes Reem Kufi). Publish with the Artifact tool to https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first in a new chat, then publish with `url`). Currently Version 4.
