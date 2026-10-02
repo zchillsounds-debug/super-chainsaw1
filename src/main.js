@@ -16,6 +16,8 @@ import { Lighting } from './lighting.js';
 import { LightPool } from './lights.js';
 import { setupHub, animateHub } from './hub.js';
 import { Zones } from './zones.js';
+import { Atmos } from './atmos.js';
+import { PerfHUD } from './perf.js';
 
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
@@ -56,6 +58,8 @@ const game = new Game({ scene, camera, renderer, world, fx, ui, audio });
 console.debug('LOG game ' + (performance.now() - __t0).toFixed(0)); __t0 = performance.now();
 game.grade = grade; game.lightPool = lightPool;
 const lighting = game.lighting = new Lighting({ scene, renderer, sun, hemi, world, grade });
+const atmos = new Atmos(scene, QUALITY);
+const perf = game.perf = new PerfHUD(renderer, () => `q ${QUALITY}${perfLevel ? ' −' + perfLevel : ''} · lights ${lightPool.lights.filter((l) => l.intensity > 0).length}/${lightPool.lights.length} · foes ${game.enemies.filter((e) => e.rig.visible && !e.dead).length} · ${lighting.name}`);
 game.addNpc();
 game.addAmbientLife();
 setupHub(game); game.hubTick = (dt) => animateHub(game, dt);
@@ -97,6 +101,13 @@ if (P.get('tod')) lighting.set(P.get('tod'), 0);
 if (P.has('play')) { mode = 'game'; game.started = true; ui.show(); if (P.get('cls')) game.setClass(P.get('cls'), true); }
 if (P.has('x')) { game.player.pos.set(+P.get('x'), 0, +P.get('z')); }
 
+const _lm = new THREE.Matrix4(), _li = new THREE.Matrix4(), _lp = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0), _o = new THREE.Vector3();
+function shadowSnap(c) {
+  const sc = sun.shadow.camera, texel = (sc.right - sc.left) / sun.shadow.mapSize.x;
+  _lm.lookAt(_o, world.sunDir, Math.abs(world.sunDir.y) > 0.99 ? new THREE.Vector3(1, 0, 0) : _up); _li.copy(_lm).invert();
+  _lp.copy(c).applyMatrix4(_li); _lp.x = Math.round(_lp.x / texel) * texel; _lp.y = Math.round(_lp.y / texel) * texel; _lp.applyMatrix4(_lm);
+  sun.target.position.copy(_lp); sun.position.copy(_lp).addScaledVector(world.sunDir, 100);
+}
 const clock = new THREE.Clock(); let t = 0;
 let fireFlick = 0, cullT = 0;
 // adaptive quality: if the frame rate stays low, shed the most expensive effects
@@ -134,10 +145,13 @@ function frame() {
   lightPool.update(dt, mode === 'game' ? game.player.pos : camera.position, lighting.fireScale);
   fx.update(dt); fx.setScale(renderer.getDrawingBufferSize(new THREE.Vector2()).y);
   const c = mode === 'game' ? game.player.pos : new THREE.Vector3(SITES.village.x, 0, SITES.village.z);
-  sun.position.copy(c).addScaledVector(world.sunDir, 100); sun.target.position.copy(c);
+  // shadow map follows the hero, snapped to whole shadow texels so edges don't crawl as the camera moves
+  shadowSnap(c);
+  atmos.update(dt, c, lighting, camera, !!game.interior);
   grade.uniforms.uTime.value = t;
   renderer.info.reset();
   composer.render();
+  perf.frame(rawDt);
   requestAnimationFrame(frame);
 }
 frame();

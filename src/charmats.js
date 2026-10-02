@@ -74,7 +74,9 @@ export function charMaterial(palette = defaultPalette(), { rim = new THREE.Color
         else if (kind == 3) { float g = vn(vRest * 160.0) * 0.6 + vn(vRest * 520.0) * 0.4; H = g * 0.00035 * uDetail; cav = (0.5 - g) * 0.25; }
         else if (kind == 4) { float a = clamp(1.6 - fw * 700.0, 0.0, 1.0); float g = vn(vRest * 900.0) * 0.55 + vn(vRest * 260.0) * 0.45; H = g * 0.00012 * a * uDetail;
           float bl = vn(vRest * 30.0); diffuseColor.rgb *= 0.92 + bl * 0.14; diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.08, 0.9, 0.86), smoothstep(0.55, 0.8, vn(vRest * 18.0 + 3.0))); }
-        else if (kind == 5) { float g = vn(vec3(vRest.x * 900.0, vRest.y * 90.0, vRest.z * 900.0)); H = g * 0.0005 * uDetail; cav = (0.5 - g) * 0.5; }
+        else if (kind == 5) { // hair and beard: fine strands running down, gathered into clumps
+          float g = vn(vec3(vRest.x * 900.0, vRest.y * 90.0, vRest.z * 900.0)), cl = vn(vec3(vRest.x * 80.0, vRest.y * 10.0, vRest.z * 80.0));
+          H = (g * 0.7 + cl * 0.3) * 0.0006 * uDetail; cav = (0.5 - g) * 0.5 + (0.5 - cl) * 0.25; diffuseColor.rgb *= 0.88 + 0.24 * cl; }
         else if (kind == 6) { float g = vn(vec3(vRest.x * 30.0, vRest.y * 900.0, vRest.z * 30.0)); H = g * 0.00008; cav = (0.5 - vn(vRest * 25.0)) * 0.2; }
         else if (kind == 7) { float g = vn(vRest * 300.0) * 0.5 + vn(vRest * 60.0) * 0.5; H = g * 0.0003 * uDetail; cav = (0.5 - g) * 0.2; }
         else if (kind == 8) { float s = 160.0; float a = clamp(1.6 - fw * s * 1.5, 0.0, 1.0); float st = step(0.5, fract(vRest.y * 70.0 + floor(vRest.x * 90.0 + vRest.z * 90.0) * 0.5));
@@ -88,12 +90,21 @@ export function charMaterial(palette = defaultPalette(), { rim = new THREE.Color
         totalEmissiveRadiance += uRimC * pow(rimF, 3.5) * rk; }`)
       .replace('#include <lights_fragment_end>', /* glsl */`#include <lights_fragment_end>
         #if NUM_DIR_LIGHTS > 0
+        if (kind == 5) { // Kajiya-Kay strand highlights: a sharp white lobe and a broad tinted one, shifted along the strand
+          vec3 L = directionalLights[0].direction, Vv = normalize(vViewPosition), Hh = normalize(L + Vv);
+          vec3 up = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz), T = normalize(up - normal * dot(up, normal));
+          float sh = vn(vRest * 300.0) - 0.5;
+          float th1 = dot(normalize(T + normal * (0.08 + sh * 0.2)), Hh), th2 = dot(normalize(T - normal * 0.12), Hh);
+          float s1 = pow(sqrt(max(0.0, 1.0 - th1 * th1)), 90.0), s2 = pow(sqrt(max(0.0, 1.0 - th2 * th2)), 18.0);
+          float vis = clamp(dot(normal, L) * 0.5 + 0.5, 0.0, 1.0);
+          reflectedLight.directSpecular += directionalLights[0].color * (s1 * 0.22 + s2 * 0.1 * diffuseColor.rgb * 4.0) * vis;
+        }
         if (kind == 4) { vec3 L = directionalLights[0].direction; float ndl = dot(normal, L);
           float wrapL = max(0.0, (ndl + 0.6) / 1.6) - max(0.0, ndl);
           reflectedLight.directDiffuse += diffuseColor.rgb * vec3(1.0, 0.42, 0.3) * wrapL * directionalLights[0].color * 0.22; }
         #endif`);
   };
-  mat.customProgramCacheKey = () => 'charmat2';
+  mat.customProgramCacheKey = () => 'charmat3';
   return mat;
 }
 

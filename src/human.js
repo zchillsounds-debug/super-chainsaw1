@@ -2,7 +2,7 @@ import { cachedGeo } from './geocache.js';
 import * as THREE from 'three';
 import { sculpt, capsule, ellipsoid, torus, halfspace, V } from './sculpt.js';
 import { charMaterial, defaultPalette, R, eyeTexture, blobTexture } from './charmats.js';
-import { Cloth, Jiggle } from './cloth.js';
+import { Cloth, Jiggle, addWrinkles } from './cloth.js';
 import { fabricTex } from './textures.js';
 import { sword, dagger, torch, spear, bow, shield, addRim } from './characters.js';
 import { QUALITY } from './graphics.js';
@@ -262,12 +262,27 @@ export function humanoid(opts = {}) {
   const hp = hairPrims(B, o); if (hp.length) geos.push(piece('hair', [tier, o.neck, !!o.beard, o.beardLen, !!o.bald], () => sculpt(hp, { voxel: vox(0.0032, 0.0075), blend: 0.012 })));
   const hw = headwearPrims(B, o); if (hw.length) geos.push(piece('headwear', [tier, o.neck, !!o.helm, !!o.cap, !!o.turban], () => sculpt(hw, { voxel: vox(0.0048, 0.0085), blend: 0.02 })));
   if (o.mask) geos.push(piece('veil', [tier, o.neck], () => sculpt(veilPrims(B, o), { voxel: vox(0.0045, 0.0085), blend: 0.02 })));
+  // far LOD (crowds only): the same pieces sculpted at ~2.2x the voxel size, about a fifth of the triangles
+  const farGeos = hiTier ? null : [
+    piece('head', ['far', o.neck], () => sculpt(headPrims(B, o), { voxel: 0.016, blend: 0.014 })),
+    piece('hands', ['far', sk], () => sculpt(handPrims(B, o), { voxel: 0.017, blend: 0.012 })),
+    piece('garment', ['far', sk, o.qaba, o.mail, !!o.sash, o.tiraz], () => sculpt(garmentPrims(B, o), { voxel: 0.04, blend: 0.035, paint: garmentPaint(o) })),
+  ];
+  if (farGeos) {
+    if (hp.length) farGeos.push(piece('hair', ['far', o.neck, !!o.beard, o.beardLen, !!o.bald], () => sculpt(hp, { voxel: 0.016, blend: 0.014 })));
+    if (hw.length) farGeos.push(piece('headwear', ['far', o.neck, !!o.helm, !!o.cap, !!o.turban], () => sculpt(hw, { voxel: 0.018, blend: 0.02 })));
+    if (o.mask) farGeos.push(piece('veil', ['far', o.neck], () => sculpt(veilPrims(B, o), { voxel: 0.018, blend: 0.02 })));
+  }
   const meshes = geos.map((g, i) => {
     const m = new THREE.SkinnedMesh(g, mat); m.bind(skeleton, new THREE.Matrix4());
     // a fixed bind-pose bound is enough for culling (poses stay within it); small pieces skip the shadow pass on crowds
     m.boundingSphere = new THREE.Sphere(V(0, 0.95, 0), 1.35);
     m.castShadow = hiTier || i === 0 || i === 2; m.receiveShadow = true; body.add(m); return m;
   });
+  const farMeshes = farGeos ? farGeos.map((g, i) => {
+    const m = new THREE.SkinnedMesh(g, mat); m.bind(skeleton, new THREE.Matrix4());
+    m.boundingSphere = new THREE.Sphere(V(0, 0.95, 0), 1.35); m.castShadow = i === 2; m.receiveShadow = true; m.visible = false; body.add(m); return m;
+  }) : null;
 
   // eyes with lids (rigid, on the head bone)
   const eyeM = new THREE.MeshStandardMaterial({ map: eyeTexture(), roughness: 0.12 });
@@ -284,7 +299,7 @@ export function humanoid(opts = {}) {
   }
 
   const parts = {
-    body, bones, skeleton, mats: [mat], mat, meshes, eyes, lids, cloths: [], jiggles: [], o,
+    body, bones, skeleton, mats: [mat], mat, meshes, farMeshes, lodFar: false, eyes, lids, cloths: [], jiggles: [], o,
     hips: bones.hips, spine: bones.spine, chest: bones.chest, upperChest: bones.upperChest, neck: bones.neck, head: bones.head, jaw: bones.jaw, brow: bones.brow,
     shL: bones.armL, elL: bones.foreL, handL: bones.handL, shR: bones.armR, elR: bones.foreR, handR: bones.handR,
     thighL: bones.thighL, shinL: bones.shinL, footL: bones.footL, thighR: bones.thighR, shinR: bones.shinR, footR: bones.footR,
@@ -293,7 +308,7 @@ export function humanoid(opts = {}) {
   // cloth: qaba / robe skirt, split at the front so the legs can stride, and a mantle on the back
   root.updateMatrixWorld(true);
   const hemY = o.hemY ?? (o.qaba ? 0.36 : 0.13);
-  const skirtM = addRim(new THREE.MeshStandardMaterial({ map: fabricTex(o.robe, o.robe2, o.hem || !o.qaba ? 'hem' : true), roughness: 0.9, side: THREE.DoubleSide }));
+  const skirtM = addWrinkles(addRim(new THREE.MeshStandardMaterial({ map: fabricTex(o.robe, o.robe2, o.hem || !o.qaba ? 'hem' : true), roughness: 0.9, side: THREE.DoubleSide })));
   const rows = LOW ? 6 : 9, cols = LOW ? 12 : 18, gap = o.qaba ? 0.62 : 0.34, top = 1.02, flare = o.qaba ? 0.13 : 0.11;
   const skirt = new Cloth({
     rows, cols, anchor: bones.hips, material: skirtM, uvRepeat: 3,
@@ -305,7 +320,7 @@ export function humanoid(opts = {}) {
   });
   root.add(skirt.mesh); parts.cloths.push(skirt); parts.skirt = skirt;
   if (o.cloak) {
-    const cm = addRim(new THREE.MeshStandardMaterial({ map: fabricTex('#' + C(o.cloak).getHexString(), '#b8913e', 'hem'), roughness: 0.95, side: THREE.DoubleSide }));
+    const cm = addWrinkles(addRim(new THREE.MeshStandardMaterial({ map: fabricTex('#' + C(o.cloak).getHexString(), '#b8913e', 'hem'), roughness: 0.95, side: THREE.DoubleSide })));
     const mr = LOW ? 6 : 9, mc = LOW ? 7 : 11;
     const mantle = new Cloth({
       rows: mr, cols: mc, anchor: bones.upperChest, material: cm, uvRepeat: 2, gravity: 1,
@@ -361,3 +376,11 @@ export function humanoid(opts = {}) {
 }
 
 export function animateHumanoid(rig, st, t, dt) { rig.userData.anim?.update(st, t, dt); }
+// swap between the near and far sculpts (eyes and lids are hidden at range too)
+export function setCharLOD(rig, far) {
+  const P = rig.userData.parts; if (!P?.farMeshes || P.lodFar === far) return;
+  P.lodFar = far;
+  for (const m of P.meshes) m.visible = !far;
+  for (const m of P.farMeshes) m.visible = far;
+  for (const e of P.eyes) e.visible = !far; for (const l of P.lids) { l.up.visible = !far; l.lo.visible = !far; }
+}

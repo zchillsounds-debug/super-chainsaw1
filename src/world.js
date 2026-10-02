@@ -269,6 +269,7 @@ export function buildWorld(scene) {
 
   clutter(scene, rnd, out);
   out.updaters.push((t) => { wind.uTime.value = t; });
+  tileInstances(scene);
   out.update = (t, dt) => { for (const u of out.updaters) u(t, dt); };
   // zone streaming (lite): placed props and buildings beyond view range are hidden, so they cost neither draw calls nor shadow passes
   for (const o of CULL) { const b = new THREE.Box3().setFromObject(o); o.userData.cullR = b.getSize(new THREE.Vector3()).length() / 2; }
@@ -277,6 +278,28 @@ export function buildWorld(scene) {
 }
 
 export { colliders, blocked };
+
+// ---------------------------------------------------------------- vegetation streaming
+// Whole-map instanced batches (grass, pebbles, rocks, palms) are split into 36 m tiles, so the frustum test drops
+// everything off-screen in both the main and the shadow pass.
+function tileInstances(root, T = 36) {
+  const list = []; root.traverse((o) => { if (o.isInstancedMesh && o.count > 120) list.push(o); });
+  const m = new THREE.Matrix4(), p = new THREE.Vector3(), col = new THREE.Color();
+  for (const im of list) {
+    const tiles = new Map();
+    for (let i = 0; i < im.count; i++) { im.getMatrixAt(i, m); p.setFromMatrixPosition(m); const k = Math.floor(p.x / T) + ',' + Math.floor(p.z / T); if (!tiles.has(k)) tiles.set(k, []); tiles.get(k).push(i); }
+    if (tiles.size < 2) continue;
+    const parent = im.parent;
+    for (const idx of tiles.values()) {
+      const t = new THREE.InstancedMesh(im.geometry, im.material, idx.length);
+      idx.forEach((src, j) => { im.getMatrixAt(src, m); t.setMatrixAt(j, m); if (im.instanceColor) { im.getColorAt(src, col); t.setColorAt(j, col); } });
+      Object.assign(t, { castShadow: im.castShadow, receiveShadow: im.receiveShadow, customDepthMaterial: im.customDepthMaterial, customDistanceMaterial: im.customDistanceMaterial, renderOrder: im.renderOrder, frustumCulled: true });
+      t.position.copy(im.position); t.quaternion.copy(im.quaternion); t.scale.copy(im.scale); t.userData = im.userData;
+      t.computeBoundingSphere(); parent.add(t);
+    }
+    parent.remove(im);
+  }
+}
 
 // ---------------------------------------------------------------- environment dressing
 // Instanced clutter around the inhabited sites (sacks, baskets, shards, straw, rope) and soot/stain decals.

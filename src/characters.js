@@ -104,7 +104,7 @@ export function shield() {
 }
 
 // Humanoids are sculpted, skinned and animated in human.js / anim.js.
-export { humanoid, animateHumanoid } from './human.js';
+export { humanoid, animateHumanoid, setCharLOD } from './human.js';
 export { CharLOD } from './anim.js';
 
 // --------------------------------------------------------------------- dromedary camel

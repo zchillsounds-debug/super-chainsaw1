@@ -5,6 +5,28 @@ const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3
 // Verlet cloth patch: rows x cols particles. Row 0 is pinned to a bone. Simulated in world space
 // with distance + tether constraints and collisions against body capsules and the ground.
 // kinematic mode (low quality / far away): particles ride the bone with a cheap swing and leg push-out.
+// Cloth shader add-on: folds that follow the cloth's compression (bump from screen-space derivatives).
+export function addWrinkles(mat) {
+  const prev = mat.onBeforeCompile;
+  mat.onBeforeCompile = (sh, r) => {
+    prev && prev(sh, r);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aWr; varying float vWr; varying vec3 vWp;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWr = aWr; vWp = position;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+      varying float vWr; varying vec3 vWp;
+      float wh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float wn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(wh(i), wh(i + vec2(1, 0)), f.x), mix(wh(i + vec2(0, 1)), wh(i + vec2(1, 1)), f.x), f.y); }`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+      { float ang = atan(vWp.x, vWp.z);
+        float H = (sin(ang * 26.0 + wn(vec2(ang * 4.0, vWp.y * 6.0)) * 5.0) * 0.5 + 0.5) * (0.0012 + 0.006 * vWr) + wn(vec2(ang * 9.0, vWp.y * 30.0)) * 0.0008;
+        vec3 sp = -vViewPosition, sx = dFdx(sp), sy = dFdy(sp), r1 = cross(sy, normal), r2 = cross(normal, sx); float det = dot(sx, r1) * faceDirection;
+        vec2 dh = vec2(dFdx(H), dFdy(H)); normal = normalize(abs(det) * normal - sign(det) * (dh.x * r1 + dh.y * r2)); }`);
+  };
+  const key = mat.customProgramCacheKey?.() || '';
+  mat.customProgramCacheKey = () => 'wr' + key;
+  return mat;
+}
+
 export class Cloth {
   constructor({ rows, cols, rest, anchor, material, closed = false, uvRepeat = 1, stiff = 1, gravity = 1 }) {
     this.rows = rows; this.cols = cols; this.anchor = anchor; this.closed = closed; this.gravity = gravity;
@@ -39,6 +61,11 @@ export class Cloth {
     const cc = closed ? cols : cols - 1;
     for (let r = 0; r < rows - 1; r++) for (let c = 0; c < cc; c++) { const a = id(r, c), b = id(r, c + 1), d = id(r + 1, c), e = id(r + 1, c + 1); idx.push(a, d, b, b, d, e); }
     g.setIndex(idx);
+    // compression per particle (0 = at rest, 1 = bunched up): drives the wrinkle normal in the cloth shader
+    g.setAttribute('aWr', new THREE.BufferAttribute(new Float32Array(n), 1));
+    this.restV = new Float32Array(n); this.restH = new Float32Array(n);
+    for (let r = 1; r < rows; r++) for (let c = 0; c < cols; c++) this.restV[r * cols + c] = L(id(r, c), id(r - 1, c));
+    for (let r = 0; r < rows; r++) for (let c = 1; c < cols; c++) this.restH[r * cols + c] = L(id(r, c), id(r, c - 1));
     this.geo = g;
     this.mesh = new THREE.Mesh(g, material); this.mesh.castShadow = true; this.mesh.receiveShadow = true; this.mesh.frustumCulled = false;
     this.inited = false; this.acc = 0; this.colliders = []; this.damp = 0.94;
@@ -119,6 +146,14 @@ export class Cloth {
     for (let i = 0; i < n; i++) { _a.set(P[i * 3], P[i * 3 + 1], P[i * 3 + 2]).applyMatrix4(parentInv); pos.setXYZ(i, _a.x, _a.y, _a.z); }
     pos.needsUpdate = true;
     this.geo.computeVertexNormals();
+    // wrinkles: where an edge is shorter than at rest, the cloth has bunched
+    const wr = this.geo.attributes.aWr, ws2 = this.anchor.matrixWorld.getMaxScaleOnAxis(), dist = (a, b) => Math.hypot(P[a * 3] - P[b * 3], P[a * 3 + 1] - P[b * 3 + 1], P[a * 3 + 2] - P[b * 3 + 2]);
+    for (let i = cols; i < n; i++) {
+      const cv = 1 - dist(i, i - cols) / (this.restV[i] * ws2 || 1), ch = i % cols ? 1 - dist(i, i - 1) / (this.restH[i] * ws2 || 1) : 0;
+      const w = Math.min(1, Math.max(0, cv * 5) + Math.max(0, ch * 4));
+      wr.array[i] = wr.array[i] * 0.7 + w * 0.3;
+    }
+    wr.needsUpdate = true;
   }
 }
 

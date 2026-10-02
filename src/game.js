@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { humanoid, animateHumanoid, sword, camel, animateCamel, CharLOD } from './characters.js';
+import { humanoid, animateHumanoid, setCharLOD, sword, camel, animateCamel, CharLOD } from './characters.js';
 import { heightAt, SITES, canalX } from './terrain.js';
 import { resolve, buildGrid } from './collision.js';
 import { buildNav, findPath, navClear } from './nav.js';
@@ -373,6 +373,14 @@ export class Game {
   }
   checkpoint(act) { this.act = Math.max(this.act || 1, act); if (!this.interior) this.lighting?.forAct(this.act, 4); saveGame(this); }
   anim(rig, st, dt) { animateHumanoid(rig, st, this.t, dt); }
+  // skinning budget: rigs off-screen or far from the hero animate at a lower rate (dt accumulates)
+  animEnemy(e, dt, dist) {
+    if (!e.rig.visible) { e.animAcc = (e.animAcc || 0) + dt; return; }
+    e.animAcc = (e.animAcc || 0) + dt;
+    const every = dist > 30 ? 3 : dist > 18 ? 2 : 1;
+    if (((this.frameN || 0) + (e.animSlot ??= Math.floor(Math.random() * 3))) % every) return;
+    animateHumanoid(e.rig, e.st, this.t, e.animAcc); e.animAcc = 0;
+  }
   // while a cinematic plays: the world keeps breathing, everyone else holds still
   cineTick(dt) {
     this.t += dt;
@@ -749,7 +757,7 @@ export class Game {
     if (!this.critters) return;
     const p = this.player.pos;
     for (const c of this.critters) {
-      const d = c.pos.distanceTo(p); c.rig.visible = d < 50; if (d > 50) continue;
+      const d = c.pos.distanceTo(p); if (c.kind !== 'camel') setCharLOD(c.rig, d > 15 && !this.cinematic); c.rig.visible = this.cinematic || Math.abs(c.pos.x - p.x) < 32 && c.pos.z - p.z > -38 && c.pos.z - p.z < 22; if (d > 50) continue;
       c.wanderT -= dt;
       if (c.wanderT <= 0) { c.wanderT = rand(4, 10); c.goal = Math.random() < 0.5 ? null : c.home.clone().add(new THREE.Vector3(rand(-c.range, c.range), 0, rand(-c.range, c.range))); }
       let moving = false;
@@ -783,7 +791,7 @@ export class Game {
   update(dt) {
     if (this.hitStop > 0) { this.hitStop -= dt; dt *= 0.1; }
     if (this.slowMo > 0) { this.slowMo -= dt; dt *= 0.35; }
-    this.t += dt;
+    this.t += dt; this.frameN = (this.frameN || 0) + 1;
     const p = this.player;
     if (this.started) this.pickHover();
     if (this.started && this.lmb && !p.dead && !this.ui.dialogOpen) {
@@ -1040,10 +1048,13 @@ export class Game {
     const stealthed = p.buffs.stealth > 0;
     for (const e of this.enemies) {
       const dist = e.pos.distanceTo(p.pos);
-      e.rig.visible = dist < 45;
+      // only rigs inside the top-down view (plus a margin) are drawn and skinned
+      const vdx = Math.abs(e.pos.x - p.pos.x), vdz = e.pos.z - p.pos.z;
+      e.rig.visible = vdx < 30 * this.camZoom && vdz > -36 * this.camZoom && vdz < 20 || (e.boss && dist < 60);
+      if (e.rig.visible) setCharLOD(e.rig, dist > 15 && !this.cinematic);
       if (e.dead) {
         e.st.deadT += dt; e.deadT += dt;
-        animateHumanoid(e.rig, e.st, this.t, dt);
+        this.animEnemy(e, dt, dist);
         if (e.deadT > 5) { e.rig.position.y -= dt * 0.4; }
         if (e.deadT > 8) { this.scene.remove(e.rig); e.removed = true; }
         continue;
@@ -1061,12 +1072,12 @@ export class Game {
       // ambushers spring up
       if (e.hidden) {
         if (dist < 13) { e.hidden = false; e.riseT = 0; e.alerted = true; this.fx.dust(e.pos, 14, 1.2); this.audio.grunt(); }
-        else { e.st.crouch = 1; e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; animateHumanoid(e.rig, e.st, this.t, dt); continue; }
+        else { e.st.crouch = 1; e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; this.animEnemy(e, dt, dist); continue; }
       }
       if (e.riseT < 1) {
         e.riseT = Math.min(1, e.riseT + dt * 3.0);
         e.st.crouch = 1 - e.riseT; e.rig.position.copy(e.pos);
-        animateHumanoid(e.rig, e.st, this.t, dt);
+        this.animEnemy(e, dt, dist);
         continue;
       }
       if (e.boss) { this.bossAI(e, dt); e.pos.y = heightAt(e.pos.x, e.pos.z); e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; e.st.walkBlend = THREE.MathUtils.lerp(e.st.walkBlend, e.moving ? 1 : 0, Math.min(1, dt * 6)); e.st.phase += dt * (e.moving ? e.speed * 1.2 : 0); animateHumanoid(e.rig, e.st, this.t, dt); continue; }
@@ -1142,7 +1153,7 @@ export class Game {
       e.st.walkBlend = THREE.MathUtils.lerp(e.st.walkBlend, moving ? (e.alerted ? 1 : 0.5) : 0, Math.min(1, dt * 8));
       e.st.phase += dt * (moving ? (e.alerted ? e.speed : 1.2) * 1.6 : 0);
       e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing;
-      animateHumanoid(e.rig, e.st, this.t, dt);
+      this.animEnemy(e, dt, dist);
     }
     // cleanup removed
     if (this.enemies.some((e) => e.removed)) this.enemies = this.enemies.filter((e) => !e.removed);
