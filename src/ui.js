@@ -255,11 +255,14 @@ export class UI {
   get invOpen() { return !this.$('#inv').classList.contains('hidden'); }
   itemHTML(it, cmp) {
     const r = RARITY[it.rarity];
-    let s = `<div class="tt-name" style="color:${r.color}">${it.name}</div><div class="tt-base">${it.rarity !== 'common' && it.base !== it.name ? it.base + ' · ' : ''}${r.name} ${SLOT_NAMES[it.slot]}</div>`;
+    let s = `<div class="tt-name" style="color:${r.color}">${it.name}${it.rank ? ' +' + it.rank : ''}</div><div class="tt-base">${it.rarity !== 'common' && it.base !== it.name ? it.base + ' · ' : ''}${r.name} ${SLOT_NAMES[it.slot]}</div>`;
     if (it.min) s += `<div class="tt-main">${it.min} – ${it.max} Damage</div>`;
     if (it.armor) s += `<div class="tt-main">${it.armor} Armor</div>`;
     s += statLines(it).map((l) => `<div class="tt-aff">${l}</div>`).join('');
-    if (it.flavor) s += `<div class="tt-flavor">${it.flavor}</div>`;
+    if (it.aspect && this.aspects) s += `<div class="tt-asp"><b>${this.aspects[it.aspect].name}</b><br>${this.aspects[it.aspect].desc}</div>`;
+    if (it.set && this.sets) { const S = this.sets[it.set]; s += `<div class="tt-set"><b>${S.name}</b><br>(2) ${S.b2}<br>(4) ${S.b4}</div>`; }
+    if (it.cls && this.classNames && it.cls !== this.curCls) s += `<div class="tt-cls">${this.classNames[it.cls]} weapon</div>`;
+    if (it.flavor && !it.set) s += `<div class="tt-flavor">${it.flavor}</div>`;
     s += `<div class="tt-lvl">Item Level ${it.level}</div>`;
     if (cmp) s += `<div class="tt-cmp">Equipped: <span style="color:${RARITY[cmp.rarity].color}">${cmp.name}</span></div>`;
     return s;

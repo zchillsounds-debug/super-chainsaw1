@@ -15,7 +15,7 @@ export const PRESETS = {
     sky: { zen: c(0x060a18), mid: c(0x18203a), hor: c(0x2a3050), gnd: c(0x10121a), glow: c(0x6a80b0), cloud: c(0x3a4460), stars: 1, disk: 6 }, water: c(0x4a5a80), dusk: 0, lut: 2 },
   dawn: { sun: v(0.7, 0.24, 0.45), sunCol: c(0xffb090), sunI: 2.6, hemiSky: c(0xb0b8d0), hemiGnd: c(0x6a4a3a), hemiI: 0.5, fog: c(0xd8a898), fogD: 0.0052, exp: 1.0, env: 0.35, fire: 0.8,
     sky: { zen: c(0x3a5a98), mid: c(0xc8a0a8), hor: c(0xffb490), gnd: c(0x705048), glow: c(0xffa070), cloud: c(0xffd0c0), stars: 0, disk: 16 }, water: c(0xe8b0a0), dusk: 0.1, lut: 3 },
-  underground: { sun: v(-0.3, 0.9, 0.2), sunCol: c(0x403028), sunI: 0.0, hemiSky: c(0x6a5040), hemiGnd: c(0x201410), hemiI: 0.5, fog: c(0x0a0705), fogD: 0.03, exp: 1.25, env: 0.12, fire: 1.6,
+  underground: { sun: v(-0.3, 0.9, 0.2), sunCol: c(0x403028), sunI: 0.0, hemiSky: c(0x8a6a50), hemiGnd: c(0x302018), hemiI: 0.95, fog: c(0x0a0705), fogD: 0.022, exp: 1.45, env: 0.12, fire: 1.6,
     sky: { zen: c(0x000000), mid: c(0x000000), hor: c(0x080504), gnd: c(0x000000), glow: c(0x000000), cloud: c(0x000000), stars: 0, disk: 0 }, water: c(0x302820), dusk: 0, lut: 4 },
 };
 export const ACT_PRESET = { 1: 'golden', 2: 'dusk', 3: 'night', 4: 'dawn' };

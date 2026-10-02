@@ -299,3 +299,18 @@ body.incine #prompt,body.inshop #prompt{display:none}
 /* ---------------- Round 5: performance HUD */
 #perf{position:fixed;left:8px;top:200px;z-index:90;font:11px/1.4 ui-monospace,monospace;color:#e8e0d0;background:#000a;padding:5px 8px;border-radius:4px;pointer-events:none}
 #perf.hidden{display:none} #perf .ok{color:#7f7} #perf .warn{color:#fd5} #perf .bad{color:#f66}
+
+/* ---------------- Round 6: disciplines, enchanting, qanats */
+.tree .tcols{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tcol{display:flex;flex-direction:column;gap:6px}.tbr{font:700 14px Cinzel;color:#f0d08a;text-align:center}
+.tnode{display:flex;flex-direction:column;gap:2px;text-align:left;background:#1e140c;border:1px solid #5a4028;border-radius:6px;padding:6px 8px;color:#e8d8b8;cursor:pointer;font:inherit;position:relative}
+.tnode b{font:600 13px Cinzel}.tnode small{font:12px Amiri,serif;color:#b8a888}.tnode i{position:absolute;top:4px;right:6px;font:700 11px Cinzel;color:#ffd84a;font-style:normal}
+.tnode.has{border-color:#e0b060;background:#3a2414}.tnode.locked{opacity:.45}
+.tree .reset{margin-top:8px}
+.srow.ench .sinfo{gap:3px}.aff{text-align:left;font:13px Amiri,serif;color:#cfe0ff;background:#141018;border:1px solid #3a3450;border-radius:4px;padding:3px 6px;cursor:pointer}
+.asp{color:#ffa860}.imprint{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.imprint select{background:#1e140c;color:#eadab8;border:1px solid #5a4028;padding:4px;font:13px Amiri,serif;max-width:100%}
+.tiers{display:flex;flex-wrap:wrap;gap:6px}.tiers .on{border-color:#ffd870;background:#5a3820}.sbtn:disabled{opacity:.4;cursor:default}
+.row2{display:flex;flex-wrap:wrap;gap:8px}
+.tt-asp{color:#ffa860;margin-top:6px;font-size:13px}.tt-set{color:#5ee08a;margin-top:6px;font-size:13px}.tt-cls{color:#ff7a6a;margin-top:4px;font-size:12px}
+.r-set{border-color:#5ee08a !important} .loot.r-set{color:#5ee08a}
+@media (max-width:600px){.tree .tcols{grid-template-columns:1fr}}

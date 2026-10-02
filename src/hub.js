@@ -97,7 +97,7 @@ export function openPanel(game, kind, tab) {
   closePanel(); game.audio.init();
   const p = game.player, ui = game.ui;
   document.body.classList.add('inshop');
-  const titles = { merchant: 'Yusuf · Merchant', smith: 'Bishr · Blacksmith', stash: 'Your Stash', trainer: '\'Amr · Training Yard' };
+  const titles = { merchant: 'Yusuf · Merchant', smith: 'Bishr · Blacksmith', stash: 'Your Stash', trainer: '\'Amr · Training Yard', skills: 'Disciplines' };
   panel = el(`<div id="shop" class="panel"><div class="ptitle">${titles[kind]} <span class="close">✕</span></div><div class="sbody"></div><div class="sfoot"><span class="gold">◉ ${p.gold} Dinars</span>${kind === 'smith' ? matsLine(p) : ''}</div></div>`);
   game.ui.root.appendChild(panel);
   panel.querySelector('.close').onclick = closePanel;
@@ -153,6 +153,8 @@ export function openPanel(game, kind, tab) {
     s.querySelectorAll('.cell').forEach((c) => { const it = p.stash[+c.dataset.i]; if (!it) return; tip(c, it, p.equip[it.slot]); c.onclick = () => { ui.hideTooltip(); const k = p.bag.indexOf(null); if (k < 0) { ui.toast('Your pack is full'); return; } p.bag[k] = it; p.stash[+c.dataset.i] = null; refresh(); }; });
     body.appendChild(s);
     body.appendChild(bagGrid((i, it) => { const k = p.stash.indexOf(null); if (k < 0) { ui.toast('Your stash is full'); return; } p.stash[k] = it; p.bag[i] = null; refresh(); }, 'Your pack: tap to store'));
+  } else if (kind === 'skills') {
+    game.skillTreePanel?.(body, refresh);
   } else if (kind === 'trainer') {
     const s = el(`<div><div class="slabel">"Every road out of Baghdad wants a different hand." Change your discipline (your level and gear stay; class weapons wait in your pack).</div><div class="cp-row small">${CLASS_ORDER.map((k) => `<button class="cp-card ${k === p.cls ? 'cur' : ''}" data-k="${k}"><div class="cp-ic">${SKILL_ICONS[CLASSES[k].attack.icon]}</div><div class="cp-name">${CLASSES[k].name}</div></button>`).join('')}</div></div>`);
     s.querySelectorAll('.cp-card').forEach((b) => b.onclick = () => {

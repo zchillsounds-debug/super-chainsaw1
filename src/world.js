@@ -273,7 +273,7 @@ export function buildWorld(scene) {
   out.update = (t, dt) => { for (const u of out.updaters) u(t, dt); };
   // zone streaming (lite): placed props and buildings beyond view range are hidden, so they cost neither draw calls nor shadow passes
   for (const o of CULL) { const b = new THREE.Box3().setFromObject(o); o.userData.cullR = b.getSize(new THREE.Vector3()).length() / 2; }
-  out.cull = (focus, range = 95) => { for (const o of CULL) o.visible = Math.hypot(o.position.x - focus.x, o.position.z - focus.z) - o.userData.cullR < range; };
+  out.cull = (focus, range = 95) => { if (out.cullPaused) return; for (const o of CULL) o.visible = Math.hypot(o.position.x - focus.x, o.position.z - focus.z) - o.userData.cullR < range; };
   return out;
 }
 

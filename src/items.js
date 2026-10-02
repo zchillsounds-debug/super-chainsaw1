@@ -4,6 +4,7 @@ export const RARITY = {
   magic: { name: 'Magic', color: '#6f8cff', beam: 0x4a6cff, affixes: 2 },
   rare: { name: 'Rare', color: '#ffd84a', beam: 0xffd040, affixes: 4 },
   legendary: { name: 'Legendary', color: '#ff8a2a', beam: 0xff7a10, affixes: 5 },
+  set: { name: 'Set', color: '#5ee08a', beam: 0x30e070, affixes: 4 },
 };
 
 export const BASES = {
@@ -17,17 +18,18 @@ export const BASES = {
   amulet: [{ name: 'Lapis Amulet', icon: '📿' }, { name: 'Brass Talisman', icon: '📿' }],
 };
 
-const AFFIXES = [
+export const AFFIXES = [
   { key: 'dmgPct', fmt: (v) => `+${v}% Damage`, roll: (l) => 5 + Math.floor(Math.random() * (6 + l * 2)) },
   { key: 'life', fmt: (v) => `+${v} Maximum Life`, roll: (l) => 8 + Math.floor(Math.random() * (10 + l * 4)) },
-  { key: 'mana', fmt: (v) => `+${v} Maximum Mana`, roll: (l) => 5 + Math.floor(Math.random() * (6 + l * 2)) },
+  { key: 'mana', fmt: (v) => `+${v} Maximum Resource`, roll: (l) => 5 + Math.floor(Math.random() * (6 + l * 2)) },
   { key: 'crit', fmt: (v) => `+${v}% Critical Strike Chance`, roll: () => 2 + Math.floor(Math.random() * 6) },
   { key: 'speed', fmt: (v) => `+${v}% Attack Speed`, roll: () => 4 + Math.floor(Math.random() * 10) },
   { key: 'leech', fmt: (v) => `+${v} Life per Hit`, roll: (l) => 1 + Math.floor(Math.random() * (2 + l / 2)) },
   { key: 'move', fmt: (v) => `+${v}% Movement Speed`, roll: () => 3 + Math.floor(Math.random() * 8) },
   { key: 'fire', fmt: (v) => `+${v}% Naft (Fire) Damage`, roll: (l) => 10 + Math.floor(Math.random() * (10 + l * 3)) },
   { key: 'armor', fmt: (v) => `+${v} Armor`, roll: (l) => 3 + Math.floor(Math.random() * (5 + l * 2)) },
-  { key: 'regen', fmt: (v) => `+${v} Mana Regeneration/s`, roll: () => 1 + Math.floor(Math.random() * 3) },
+  { key: 'regen', fmt: (v) => `+${v} Resource Regeneration/s`, roll: () => 1 + Math.floor(Math.random() * 3) },
+  { key: 'cdr', fmt: (v) => `−${v}% Cooldowns`, roll: () => 3 + Math.floor(Math.random() * 6), rare: true },
 ];
 
 const PREFIX = ['Gilded', 'Simoom', 'Barmakid', 'Starlit', 'Copper', 'Ebon', 'Saffron', 'Tigris', 'Moonlit', 'Sandstorm', 'Vizier\'s', 'Falconer\'s'];
@@ -72,7 +74,7 @@ export function makeItem(level, rarity, slot) {
   if (b.min) { it.min = b.min + Math.floor(level * 0.8); it.max = b.max + level * 1.5 | 0; }
   if (b.armor) it.armor = b.armor + level;
   const n = RARITY[rarity].affixes;
-  const pool = AFFIXES.slice().sort(() => Math.random() - 0.5);
+  const pool = AFFIXES.filter((a) => !a.rare || rarity !== 'magic').sort(() => Math.random() - 0.5);
   for (let i = 0; i < n; i++) it.stats[pool[i].key] = pool[i].roll(level);
   if (rarity === 'magic') it.name = `${pick(PREFIX)} ${b.name}`;
   if (rarity === 'rare') it.name = `${pick(PREFIX)} ${b.name} ${pick(SUFFIX)}`;
@@ -80,5 +82,5 @@ export function makeItem(level, rarity, slot) {
 }
 
 export function statLines(it) {
-  return Object.entries(it.stats).map(([k, v]) => AFFIXES.find((a) => a.key === k).fmt(v));
+  return Object.entries(it.stats).map(([k, v]) => (AFFIXES.find((a) => a.key === k) || { fmt: (x) => `+${x} ${k}` }).fmt(v));
 }

@@ -14,10 +14,12 @@ import { loadSave, applySave, saveGame } from './save.js';
 import { preloadGeo, flushGeo } from './geocache.js';
 import { Lighting } from './lighting.js';
 import { LightPool } from './lights.js';
-import { setupHub, animateHub } from './hub.js';
+import { setupHub, animateHub, openPanel, closePanel, panelOpen } from './hub.js';
 import { Zones } from './zones.js';
 import { Atmos } from './atmos.js';
 import { PerfHUD } from './perf.js';
+import { setupProgression, qanatBurnTick, ASPECTS, SETS } from './progression.js';
+import { CLASSES } from './classes.js';
 
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
@@ -43,6 +45,7 @@ sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.05; sun.shadow.radius = 3;
 scene.add(sun, sun.target);
 const hemi = new THREE.HemisphereLight(0xc4c2c4, 0x7a5236, 0.5); scene.add(hemi);
 
+world.staticRoots = scene.children.filter((o) => !o.isLight); // hidden while underground
 const fx = new FX(scene);
 const { composer, grade, gtao, bokeh, resize } = createComposer(renderer, scene, camera);
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); resize(); });
@@ -62,8 +65,11 @@ const atmos = new Atmos(scene, QUALITY);
 const perf = game.perf = new PerfHUD(renderer, () => `q ${QUALITY}${perfLevel ? ' −' + perfLevel : ''} · lights ${lightPool.lights.filter((l) => l.intensity > 0).length}/${lightPool.lights.length} · foes ${game.enemies.filter((e) => e.rig.visible && !e.dead).length} · ${lighting.name}`);
 game.addNpc();
 game.addAmbientLife();
-setupHub(game); game.hubTick = (dt) => animateHub(game, dt);
+setupHub(game); game.openPanel = (k) => (panelOpen() ? closePanel() : openPanel(game, k)); game.closePanels = closePanel; game.hubTick = (dt) => animateHub(game, dt);
 game.zones = new Zones(game);
+setupProgression(game);
+game.tickExtra = (dt) => qanatBurnTick(game, dt);
+ui.aspects = ASPECTS; ui.sets = SETS; ui.classNames = Object.fromEntries(Object.entries(CLASSES).map(([k, c]) => [k, c.name]));
 if (IS_TOUCH) setupMobile(game, ui);
 const director = game.director = new Director({ game, camera, ui, audio, grade, bokeh, renderer, scene });
 

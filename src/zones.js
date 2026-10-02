@@ -53,7 +53,7 @@ export class Zones {
     const I = buildInterior(g.scene, { seed: def.seed, rooms: def.rooms, style: def.kind === 'qanat' ? 'qanat' : 'kiln' });
     g.setupOccluders([I.group]);
     g.interior = { def, I, enemies: [] };
-    for (const t of I.torches) { t.interior = true; g.lightPool?.add({ pos: t.light, color: 0xff8a3a, power: 14, dist: 10, interior: true }); }
+    for (const t of I.torches) { t.interior = true; g.lightPool?.add({ pos: t.light, color: 0xff8a3a, power: 18, dist: 11, interior: true }); }
     for (const e of g.enemies) if (!e.dead) e.rig.visible = false;
     // foes per room; the deepest room holds an elite guarding the chest
     const pool = def.kind === 'qanat' ? ['bandit', 'deserter', 'archer', 'spearman', 'naffat'] : ['deserter', 'deserter', 'naffat', 'bandit'];
@@ -70,6 +70,8 @@ export class Zones {
     g.interactables.push({ pos: I.chest.pos, r: 2.2, label: 'Open the chest', act: () => this.openChest(), interior: true, chest: true });
     g.player.pos.copy(I.entrance).add(new THREE.Vector3(0, 0, -1.5)); g.player.target = null; g.player.moveTo = null; g.player.vel?.set(0, 0, 0);
     g.camInit = false; g.lighting?.set('underground', 0);
+    for (const o of g.world.staticRoots || []) { o.userData.wasVis = o.visible; o.visible = false; }
+    g.world.cullPaused = true;
     g.ui.setMapRegion?.('interior', I);
     g.paused = false; g.ui.fade(0); g.ui.banner(def.title, def.sub, 2800); g.audio.stinger?.('ambush');
     def.onEnter?.(g);
@@ -99,6 +101,8 @@ export class Zones {
     g.interior = null;
     g.player.pos.copy(g.returnPos); g.player.pos.y = heightAt(g.player.pos.x, g.player.pos.z); g.player.target = null; g.player.moveTo = null;
     g.camInit = false; g.lighting?.forAct(g.act, 0);
+    for (const o of g.world.staticRoots || []) o.visible = o.userData.wasVis ?? true;
+    g.world.cullPaused = false; g.world.cull(g.player.pos);
     g.ui.setMapRegion?.('world');
     g.paused = false; g.ui.fade(0);
     def.onExit?.(g); saveGame(g);

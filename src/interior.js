@@ -21,9 +21,9 @@ function kit() {
   for (const t of [fired.map, fired.normalMap, lime.map, lime.normalMap]) t.repeat.set(0.3, 0.3);
   KIT = {
     kiln: { wall: triplanarMaterial({ map: fired.map, normalMap: fired.normalMap, scale: 0.5, roughness: 0.95, normalStrength: 1.3, grime: 0.7 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x3a2a20, roughness: 1 }), trim: new THREE.MeshStandardMaterial({ color: 0x1a1210, roughness: 1 }) },
-    qanat: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0xb8ad98, scale: 0.45, roughness: 0.9, normalStrength: 1.0, grime: 0.55 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x4a4234, roughness: 0.95 }), trim: new THREE.MeshStandardMaterial({ color: 0x2a261e, roughness: 1 }) },
+      floor: new THREE.MeshStandardMaterial({ color: 0x5a4434, roughness: 1 }), trim: new THREE.MeshStandardMaterial({ color: 0x1a1210, roughness: 1 }) },
+    qanat: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0xe0d4bc, scale: 0.45, roughness: 0.9, normalStrength: 1.0, grime: 0.45 }),
+      floor: new THREE.MeshStandardMaterial({ color: 0x8a7e66, roughness: 0.95 }), trim: new THREE.MeshStandardMaterial({ color: 0x2a261e, roughness: 1 }) },
     iron: new THREE.MeshStandardMaterial({ color: 0x2a2624, metalness: 0.8, roughness: 0.5 }),
     ember: new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.2, 0.3), toneMapped: false }),
     water: new THREE.MeshStandardMaterial({ color: 0x0e2a2a, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.85 }),

@@ -55,9 +55,9 @@ export const CLASSES = {
           alive(g, (e) => { const v = tmp.copy(e.pos).sub(p.pos).setY(0), d = v.length(); if (d < 2.6 + e.radius && v.normalize().dot(dir) > 0.3) { any = true; const r = g.rollDamage(0.8); g.damageEnemy(e, r.d, r.crit, p.pos, 'normal', { stagger: 999, knock: 2.6, weight: 1.6, unblockable: true }); } });
           if (any) g.impulse(dir, 0.35); g.fx.dust(tmp.copy(p.pos).addScaledVector(dir, 1.4), 8, 0.8); } };
       } },
-      s1: { id: 'whirl', name: 'Sandstorm Spin', icon: 'whirl', cd: 7, mana: 22, use(g, p) { p.whirlT = 2.0; p.whirlTick = 0; g.audio.whoosh(); } },
+      s1: { id: 'whirl', name: 'Sandstorm Spin', icon: 'whirl', cd: 7, mana: 22, use(g, p) { p.whirlT = 2.0; p.whirlTick = 0; g.audio.whoosh(); p.whirlPull = !!p.flags?.whirlPull; } },
       s2: { id: 'charge', name: 'Charge', icon: 'dash', cd: 4, mana: 10, aim: true, use(g, p) {
-        const { dir } = dirToCursor(g); p.dashDir = dir; p.dashT = 0.28; p.dashHit = new Set(); faceDir(p, dir); p.invuln = 0.3; p.dashDmg = 1.3; g.audio.whoosh(); g.fx.dust(p.pos, 12, 1.2);
+        const { dir } = dirToCursor(g); p.dashDir = dir; p.dashT = 0.28; p.dashHit = new Set(); faceDir(p, dir); p.invuln = 0.3; p.dashDmg = 1.3; p.dashStagger = !!p.flags?.chargeStagger; g.audio.whoosh(); g.fx.dust(p.pos, 12, 1.2);
       } },
       s3: { id: 'wall', name: 'Shield Wall', icon: 'wall', cd: 16, mana: 25, buff: 'ward', use(g, p) {
         p.buffs.ward = 8; p.wardTick = 0; g.audio.clang(); g.fx.ring(p.pos, C(3, 2.2, 0.8), 0.5, 5, 0.7); g.fx.dust(p.pos, 18, 1.4);
@@ -79,13 +79,14 @@ export const CLASSES = {
       s1: { id: 'volley', name: 'Rain of Arrows', icon: 'volley', cd: 6, mana: 20, aim: true, use(g, p) {
         const { dir, point } = dirToCursor(g); faceDir(p, dir); p.st.action = 'shoot'; p.st.actionT = 0; p.actionDur = 0.5;
         const d = Math.min(14, Math.hypot(point.x - p.pos.x, point.z - p.pos.z)); const c = p.pos.clone().addScaledVector(dir, d); c.y = heightAt(c.x, c.z);
-        for (let w = 0; w < 3; w++) g.telegraph(c, 3.6, 0.5 + w * 0.35, () => {
+        for (let w = 0; w < (p.flags?.volleyWave ? 4 : 3); w++) g.telegraph(c, 3.6, 0.5 + w * 0.35, () => {
           for (let i = 0; i < 10; i++) { const a = Math.random() * 6.28, r = Math.random() * 3.4; const q = tmp.set(c.x + Math.cos(a) * r, c.y, c.z + Math.sin(a) * r); g.fx.dust(q, 1, 0.4); g.fx.burst(q.setY(heightAt(q.x, q.z) + 0.2), 2, { speed: 2, life: 0.3, size: 0.1, size1: 0.02, color: C(2, 1.8, 1.4), gravity: 8 }); }
           g.audio.hit(); alive(g, (e) => { if (e.pos.distanceTo(c) < 3.6 + e.radius) { const r = g.rollDamage(0.7); g.damageEnemy(e, r.d, r.crit, c, 'normal', { weight: 0.3 }); } });
         }, false, true);
       } },
       s2: { id: 'tumble', name: 'Tumble', icon: 'tumble', cd: 3, mana: 6, aim: true, use(g, p) {
         const { dir } = dirToCursor(g); p.dashDir = dir; p.dashT = 0.24; p.dashHit = new Set(); p.dashDmg = 0; p.invuln = 0.35; p.st.crouch = 0.8; p.nextCrit = true; g.audio.whoosh(); g.fx.dust(p.pos, 10, 1);
+        if (p.flags?.tumbleArrows) for (let i = -1; i <= 1; i++) { const a = Math.atan2(-dir.x, -dir.z) + i * 0.25; g.playerShot(new THREE.Vector3(Math.sin(a), 0, Math.cos(a)), { speed: 30, mult: 0.8, kind: 'arrow', weight: 0.4 }); }
       } },
       s3: { id: 'caltrops', name: 'Caltrops', icon: 'caltrops', cd: 10, mana: 15, aim: true, use(g, p) {
         const { point } = dirToCursor(g); const c = new THREE.Vector3(point.x, heightAt(point.x, point.z), point.z);
@@ -119,7 +120,7 @@ export const CLASSES = {
       } },
       s3: { id: 'inferno', name: 'Naft Ring', icon: 'inferno', cd: 14, mana: 30, use(g, p) {
         g.audio.boom(); g.shake = 0.4; g.fx.flash(tmp.copy(p.pos).setY(p.pos.y + 1.5), 0xff7a30, 60, 0.6, 14);
-        for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; const q = new THREE.Vector3(p.pos.x + Math.cos(a) * 3.6, 0, p.pos.z + Math.sin(a) * 3.6); q.y = heightAt(q.x, q.z); g.spawnZone({ kind: 'fire', pos: q, r: 1.3, life: 5, tickDmg: 0.4, burn: 2.5 }); }
+        for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; const q = new THREE.Vector3(p.pos.x + Math.cos(a) * 3.6, 0, p.pos.z + Math.sin(a) * 3.6); q.y = heightAt(q.x, q.z); g.spawnZone({ kind: 'fire', pos: q, r: 1.3, life: p.flags?.ringLong ? 8 : 5, tickDmg: 0.4, burn: 2.5 }); }
       } },
     },
   },
@@ -139,7 +140,7 @@ export const CLASSES = {
       s1: { id: 'flurry', name: 'Flurry', icon: 'flurry', cd: 5, mana: 15, use(g, p) {
         const e = g.pickTarget(6); if (!e) { g.ui.toast('No foe in reach'); return false; }
         const behind = e.pos.clone().add(tmp.set(-Math.sin(e.facing), 0, -Math.cos(e.facing)).multiplyScalar(e.radius + 0.7)); blink(g, behind);
-        p.facing = Math.atan2(e.pos.x - p.pos.x, e.pos.z - p.pos.z); p.flurry = { e, n: 6, t: 0 };
+        p.facing = Math.atan2(e.pos.x - p.pos.x, e.pos.z - p.pos.z); p.flurry = { e, n: p.flags?.flurryPlus ? 9 : 6, t: 0 };
       } },
       s2: { id: 'step', name: 'Shadowstep', icon: 'step', cd: 4, mana: 10, use(g, p) {
         const e = g.pickTarget(12); if (!e) { g.ui.toast('No foe in reach'); return false; }
@@ -147,7 +148,7 @@ export const CLASSES = {
         p.facing = Math.atan2(e.pos.x - p.pos.x, e.pos.z - p.pos.z); p.target = e; p.nextCrit = true; p.invuln = 0.3; g.audio.whoosh();
       } },
       s3: { id: 'vanish', name: 'Vanish', icon: 'vanish', cd: 15, mana: 20, buff: 'stealth', use(g, p) {
-        p.buffs.stealth = 5; g.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1), 30, { speed: 2, life: 1.4, size: 1, size1: 2.4, color: C(0.18, 0.16, 0.2), alpha: 0.6, smoke: true, up: 0.5, drag: 1.5 });
+        if (p.flags?.vanishHeal) p.hp = Math.min(p.stats.maxHp, p.hp + p.stats.maxHp * 0.2); p.buffs.stealth = 5; g.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1), 30, { speed: 2, life: 1.4, size: 1, size1: 2.4, color: C(0.18, 0.16, 0.2), alpha: 0.6, smoke: true, up: 0.5, drag: 1.5 });
         alive(g, (e) => { if (!e.boss && e.pos.distanceTo(p.pos) < 25) { e.alerted = false; e.lost = 2.5; } }); g.audio.whoosh();
       } },
     },

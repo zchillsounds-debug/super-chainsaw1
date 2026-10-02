@@ -249,7 +249,8 @@ export class Game {
       if (k === 'q') this.useSkill('potion');
       if (k === ' ') { e.preventDefault(); this.useSkill('dodge'); }
       if (k === 'i' || k === 'c') { this.ui.toggleInventory(); this.refreshInv(); }
-      if (k === 'escape') this.ui.toggleInventory(false);
+      if (k === 'escape') { this.ui.toggleInventory(false); this.closePanels?.(); }
+      if (k === 'k') this.openPanel?.('skills');
     });
     addEventListener('keyup', (e) => { this.keys[e.key.toLowerCase()] = false; });
   }
@@ -328,6 +329,7 @@ export class Game {
     let back = false;
     if (this.kit.attack.backstab && front < -0.3 && kind === 'normal' && !e.boss) { dmg = Math.round(dmg * this.kit.attack.backstab); back = true; }
     if (e.staggerT > 0) dmg = Math.round(dmg * 1.5);
+    if (this.dmgMod) dmg = Math.round(dmg * this.dmgMod(e));
     e.hp -= dmg; e.flash = 1;
     // stagger meter: poise drains with weight; empty → reeling, open to heavy hits
     e.poise -= (o.stagger ?? (8 + dmg * 1.4) * w) * (e.boss ? 0.15 : 1);
@@ -366,6 +368,7 @@ export class Game {
     }
     if (Math.random() < (e.elite ? 1 : 0.45)) this.dropItem({ gold: Math.round(rand(3, 9) * e.level * (e.elite ? 5 : 1)), rarity: 'common' }, e.pos);
     if (Math.random() < (e.elite ? 1 : 0.1)) this.dropItem({ potion: true, rarity: 'common' }, e.pos);
+    this.onKill?.(e); e.onDeath?.(e);
     if (e.quest) this.completeQuest(e.quest, !!this.director);
     if (e === this.chief && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Ziyad', text: 'Hisham holds the kilns... he will not kneel as I did.', card: { ar: 'الأتون', en: 'Act II · The Kilns', sub: 'Hisham\'s knife-men wait among the brick stacks' } })).then(() => this.checkpoint(2));
     if (e === this.matriarch && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Hisham', text: 'Ghassan waits at the arch. You will break on it.', card: { ar: 'الطاق', en: 'Act III · The Broken Arch', sub: 'Ghassan holds the road beneath the ruined Persian arch' } })).then(() => this.checkpoint(3));
@@ -395,7 +398,7 @@ export class Game {
   xpFor(l) { return Math.round(90 * Math.pow(l, 1.6)); }
   levelUp() {
     const p = this.player; p.level++; this.recalcStats(); p.hp = p.stats.maxHp; p.mp = p.stats.maxMp;
-    this.ui.toast(`Level ${p.level}`, 'lvl'); this.audio.levelUp();
+    this.ui.toast(`Level ${p.level} · a discipline point to spend (K)`, 'lvl'); this.audio.levelUp();
     this.fx.ring(p.pos, new THREE.Color(3, 2.4, 1), 0.5, 4, 0.9);
     this.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1), 50, { speed: 3, life: 1.4, size: 0.18, size1: 0.02, color: new THREE.Color(3, 2.4, 1), up: 3, drag: 1 });
   }
@@ -415,7 +418,7 @@ export class Game {
       attacker.staggerT = 1.6; attacker.st.action = null; attacker.st.hitT = 1; attacker.poise = attacker.maxPoise;
       this.ui.damageNumber(p.pos, 'Parry!', 'parry'); this.audio.clang(); this.audio.stagger?.();
       this.fx.sparks(tmp.copy(p.pos).lerp(attacker.pos, 0.5).setY(p.pos.y + 1.3), new THREE.Color(5, 4, 2.4));
-      this.hitStop = 0.12; this.slowMo = 0.45; this.player.nextCrit = true; this.stats.parries = (this.stats.parries || 0) + 1;
+      this.hitStop = 0.12; this.slowMo = 0.45; this.player.nextCrit = true; this.stats.parries = (this.stats.parries || 0) + 1; this.onParry?.();
       return;
     }
     if (p.invuln > 0) { if (p.rollT > 0) this.ui.damageNumber(p.pos, 'Evaded', 'block'); return; }
@@ -526,7 +529,7 @@ export class Game {
     if (p.mp < S.mana) { this.ui.toast('Not enough ' + this.kit.resource.toLowerCase()); this.audio.denied?.(); return; }
     if (slot === 'potion') {
       if (p.potions <= 0) { this.ui.toast('No sherbet left'); return; }
-      p.potions--; p.buffs.heal = 1.2; this.audio.potion();
+      p.potions--; p.buffs.heal = 1.2; this.audio.potion(); this.onPotion?.();
       this.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1), 24, { speed: 1.5, life: 1, size: 0.2, size1: 0.02, color: new THREE.Color(2, 0.3, 0.4), up: 2 });
     } else if (slot === 'dodge') {
       if (p.rollT > 0 || p.dashT > 0) return;
@@ -537,9 +540,9 @@ export class Game {
       if (!dir || dir.lengthSq() < 0.01) dir = new THREE.Vector3(-Math.sin(p.facing), 0, -Math.cos(p.facing));
       dir.normalize(); p.rollDir = dir; p.rollT = 0.42; p.rollAge = 0; p.invuln = Math.max(p.invuln, 0.34); p.st.action = null; p.whirlT = 0;
       p.facing = Math.atan2(dir.x, dir.z); this.audio.whoosh(); this.fx.dust(p.pos, 8, 0.9);
-      this.stats.dodges = (this.stats.dodges || 0) + 1;
+      this.stats.dodges = (this.stats.dodges || 0) + 1; p.mp -= S.mana; p.cds[slot] = S.cd; this.onEvade?.(); return;
     } else { p.atkTarget = null; p.pendingHit = null; if (S.use(this, p) === false) return; }
-    p.mp -= S.mana; p.cds[slot] = S.cd;
+    p.mp -= S.mana; p.cds[slot] = S.cd * (slot === 'potion' ? 1 : 1 - Math.min(50, p.stats.cdr || 0) / 100);
     if (p.buffs.stealth > 0 && slot !== 's3' && slot !== 'potion' && slot !== 'dodge') p.buffs.stealth = Math.min(p.buffs.stealth, 0.3);
   }
 
@@ -609,7 +612,8 @@ export class Game {
     const gm = new THREE.MeshBasicMaterial({ map: glowDecal(), color: new THREE.Color(2.5, 0.8, 0.15), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
     const decal = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 6.5).rotateX(-Math.PI / 2), gm); decal.position.copy(pos).setY(pos.y + 0.06);
     this.scene.add(decal);
-    this.hazards.push({ kind: 'firepool', pos: pos.clone(), r: 3, t: 0, life: 3.5, tick: 0, mesh: decal });
+    const big = this.player.flags?.flaskBig; if (big) decal.scale.setScalar(1.4);
+    this.hazards.push({ kind: 'firepool', pos: pos.clone(), r: big ? 4.2 : 3, t: 0, life: big ? 5 : 3.5, tick: 0, mesh: decal });
   }
 
   // ------------------------------------------------------------------ boss
@@ -806,7 +810,7 @@ export class Game {
     this.updateDecals(dt);
     this.updateAmbientLife(dt);
     this.updateCamera(dt);
-    this.zones?.update(dt); this.hubTick?.(dt);
+    this.zones?.update(dt); this.hubTick?.(dt); this.tickExtra?.(dt);
     if (this.started) this.updateOccluders(); else this.occU.uHole.value.set(-9999, -9999);
     if (this.npc) {
       animateHumanoid(this.npc, this.npcSt, this.t, dt);
@@ -868,7 +872,7 @@ export class Game {
       this.fx.dust(p.pos, 2, 0.8);
       if (p.dashDmg) this.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1), 4, { speed: 1, life: 0.4, size: 0.4, size1: 0.05, color: new THREE.Color(2.2, 1.6, 0.8) });
       if (p.dashDmg) for (const e of this.enemies) if (!e.dead && !e.hidden && !p.dashHit.has(e) && e.pos.distanceTo(p.pos) < 1.6 + e.radius) {
-        p.dashHit.add(e); const r = this.rollDamage(p.dashDmg); this.damageEnemy(e, r.d, r.crit, p.pos, 'normal', { weight: 1.3, knock: 1.6 });
+        p.dashHit.add(e); const r = this.rollDamage(p.dashDmg); this.damageEnemy(e, r.d, r.crit, p.pos, 'normal', { weight: 1.3, knock: 1.6, stagger: p.dashStagger ? 999 : undefined });
       }
       if (p.dashT <= 0) p.st.crouch = 0;
       moving = true;
@@ -890,7 +894,10 @@ export class Game {
         this.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1.1), 2, { speed: 6, life: 0.3, size: 0.12, size1: 0.02, color: new THREE.Color(3, 2.6, 1.6), drag: 3 });
         if (p.whirlTick <= 0) {
           p.whirlTick = 0.25; this.audio.swing();
-          for (const e of this.enemies) if (!e.dead && !e.hidden && e.pos.distanceTo(p.pos) < 3.2 + e.radius) { const r = this.rollDamage(0.65); this.damageEnemy(e, r.d, r.crit, p.pos); }
+          for (const e of this.enemies) if (!e.dead && !e.hidden && e.pos.distanceTo(p.pos) < (p.whirlPull ? 5 : 3.2) + e.radius) {
+            if (p.whirlPull && !e.boss) e.pos.lerp(p.pos, 0.18);
+            const r = this.rollDamage(0.65); this.damageEnemy(e, r.d, r.crit, p.pos);
+          }
         }
         if (p.whirlT <= 0) p.st.action = null;
       }
