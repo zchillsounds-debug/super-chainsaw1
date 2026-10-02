@@ -193,3 +193,21 @@ export function sigilTex() {
   }
   return new THREE.CanvasTexture(c);
 }
+
+// Irregular splat (blood / scorch) alpha texture.
+export function splatTex(seed = 1, scorch = false) {
+  const S = 256, [c, x] = canvas(S), rnd = mulberry32(seed);
+  const C = S / 2;
+  if (scorch) {
+    const g = x.createRadialGradient(C, C, 0, C, C, C);
+    g.addColorStop(0, 'rgba(10,8,6,0.95)'); g.addColorStop(0.5, 'rgba(20,14,10,0.75)'); g.addColorStop(1, 'rgba(30,20,12,0)');
+    x.fillStyle = g; x.fillRect(0, 0, S, S);
+    for (let i = 0; i < 40; i++) { const a = rnd() * 6.28, r = C * (0.4 + rnd() * 0.55); x.fillStyle = `rgba(15,10,8,${0.3 * rnd()})`; x.beginPath(); x.arc(C + Math.cos(a) * r, C + Math.sin(a) * r, 4 + rnd() * 14, 0, 7); x.fill(); }
+  } else {
+    x.fillStyle = 'rgba(255,255,255,1)';
+    x.beginPath(); x.arc(C, C, C * 0.35, 0, 7); x.fill();
+    for (let i = 0; i < 26; i++) { const a = rnd() * 6.28, r = C * (0.2 + rnd() * 0.65); x.globalAlpha = 0.6 + rnd() * 0.4; x.beginPath(); x.arc(C + Math.cos(a) * r, C + Math.sin(a) * r, 3 + rnd() * C * 0.18, 0, 7); x.fill(); }
+    for (let i = 0; i < 10; i++) { const a = rnd() * 6.28; x.lineWidth = 2 + rnd() * 4; x.strokeStyle = '#fff'; x.beginPath(); x.moveTo(C, C); x.lineTo(C + Math.cos(a) * C * 0.9, C + Math.sin(a) * C * 0.9); x.stroke(); }
+  }
+  return new THREE.CanvasTexture(c);
+}

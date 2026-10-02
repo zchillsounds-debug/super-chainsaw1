@@ -17,7 +17,7 @@ export const TYPES = {
     build: () => humanoid({ robe: '#5a4a32', robe2: '#3a2a1a', turban: 0xc8b890, mask: 0x8a7a5a, skin: 0x9a6a44, weapon: 'bow' }),
   },
   ghoul: {
-    name: 'Ghul', hp: 30, dmg: 6, speed: 5.0, range: 1.7, atk: 0.9, xp: 16, radius: 0.5, action: 'claw',
+    name: 'Ghul', hp: 30, dmg: 6, speed: 5.0, range: 1.7, atk: 1.25, xp: 16, radius: 0.5, action: 'claw',
     build: () => humanoid({ robe: '#4a4234', robe2: '#2a261c', turban: null, skin: 0x9aa48a, weapon: null, hunch: 0.7, claws: true, longArms: 1.35, eyes: new THREE.Color(5, 4, 0.5), scale: 1.05 }),
   },
   imp: {

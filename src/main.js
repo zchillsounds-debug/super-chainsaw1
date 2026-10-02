@@ -30,7 +30,7 @@ scene.add(sun, sun.target);
 scene.add(new THREE.HemisphereLight(0xc4c2c4, 0x7a5236, 0.5));
 
 const fx = new FX(scene);
-const { composer, grade, resize } = createComposer(renderer, scene, camera);
+const { composer, grade, gtao, resize } = createComposer(renderer, scene, camera);
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); resize(); });
 
 // static fire / lantern lights (limited count)
@@ -68,8 +68,20 @@ if (P.has('x')) { game.player.pos.set(+P.get('x'), 0, +P.get('z')); }
 
 const clock = new THREE.Clock(); let t = 0;
 let fireFlick = 0;
+// adaptive quality: if the frame rate stays low, shed the most expensive effects
+let perfT = 0, perfN = 0, perfAcc = 0, perfLevel = 0;
+function adaptQuality(dt) {
+  if (P.has('noadapt') || mode !== 'game') return;
+  perfT += dt; perfAcc += dt; perfN++;
+  if (perfT < 3) return;
+  const avg = perfAcc / perfN; perfT = 0; perfAcc = 0; perfN = 0;
+  if (avg > 1 / 40 && perfLevel === 0) { if (gtao) gtao.enabled = false; perfLevel = 1; console.info('quality: AO off'); }
+  else if (avg > 1 / 40 && perfLevel === 1) { renderer.setPixelRatio(1); resize(); perfLevel = 2; console.info('quality: 1x resolution'); }
+  else if (avg > 1 / 35 && perfLevel === 2) { renderer.shadowMap.type = THREE.PCFShadowMap; sun.shadow.mapSize.set(2048, 2048); sun.shadow.map?.dispose(); sun.shadow.map = null; perfLevel = 3; console.info('quality: shadows reduced'); }
+}
 function frame() {
-  const dt = Math.min(clock.getDelta(), 0.05); t += dt;
+  const rawDt = clock.getDelta(); const dt = Math.min(rawDt, 0.05); t += dt;
+  adaptQuality(rawDt);
   world.update(t, dt);
   fireFlick += dt;
   for (const f of world.fires) {

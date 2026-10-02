@@ -4,7 +4,7 @@ import { heightAt, SITES, canalX } from './terrain.js';
 import { resolve, buildGrid } from './collision.js';
 import { makeEnemy } from './entities.js';
 import { makeItem, rollRarity, RARITY } from './items.js';
-import { sigilTex, glowDecal } from './textures.js';
+import { sigilTex, glowDecal, splatTex } from './textures.js';
 
 const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -44,12 +44,25 @@ export class Game {
     ];
     this.pois[2].icon = '☾';
     this.setupOccluders(this.world.occluders);
+    this.decals = []; this.splatTexs = [splatTex(1), splatTex(2), splatTex(3)]; this.scorchTex = splatTex(4, true);
+  }
+
+  decal(pos, size, kind) {
+    const blood = kind !== 'scorch';
+    const col = kind === 'ghoul' ? new THREE.Color(0.08, 0.1, 0.03) : kind === 'fire' ? new THREE.Color(0.25, 0.08, 0.02) : new THREE.Color(0.11, 0.008, 0.008);
+    const mat = new THREE.MeshStandardMaterial({ map: blood ? this.splatTexs[Math.floor(Math.random() * 3)] : this.scorchTex, color: blood ? col : 0xffffff, transparent: true, depthWrite: false, roughness: blood ? 0.25 : 1, polygonOffset: true, polygonOffsetFactor: -2, alphaTest: 0.02 });
+    if (blood) { mat.alphaMap = mat.map; mat.map = null; }
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size).rotateX(-Math.PI / 2), mat);
+    m.position.set(pos.x, heightAt(pos.x, pos.z) + 0.03 + Math.random() * 0.01, pos.z); m.rotation.y = Math.random() * 6.28;
+    m.renderOrder = 1; this.scene.add(m);
+    this.decals.push({ m, t: 0, life: 25 });
+    if (this.decals.length > 60) { const d = this.decals.shift(); this.scene.remove(d.m); d.m.material.dispose(); }
   }
 
   // Diablo-style see-through: a soft dithered hole around the hero cut into any building surface in front of them.
   setupOccluders(groups) {
     const U = this.occU = { uHole: { value: new THREE.Vector2(-999, -999) }, uHoleR: { value: 160 }, uPDepth: { value: 0 } };
-    const scaleOf = (o) => (o.isInstancedMesh && o.geometry.attributes.color && !o.material.map ? 2.6 : 1.0);
+    const scaleOf = (o) => (o.isInstancedMesh ? 3.2 : 1.0);
     const patched = new Map();
     const patch = (mat, hs = 1) => {
       if (patched.has(mat)) return patched.get(mat);
@@ -65,7 +78,7 @@ export class Game {
               float m[16] = float[16](0.,8.,2.,10.,12.,4.,14.,6.,3.,11.,1.,9.,15.,7.,13.,5.); return (m[k]+0.5)/16.0; }`)
           .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
             { float dz = vViewPosition.z; float d = length(gl_FragCoord.xy - uHole);
-              float f = smoothstep(uHoleR*${hs.toFixed(2)}, uHoleR*${(hs * 0.55).toFixed(2)}, d) * step(dz, uPDepth - 1.2) * ${hs > 1 ? '0.7' : '0.85'};
+              float f = smoothstep(uHoleR*${hs.toFixed(2)}, uHoleR*${(hs * 0.55).toFixed(2)}, d) * step(dz, uPDepth - 1.2) * ${hs > 1 ? '0.94' : '0.85'};
               if (f > bayer4(gl_FragCoord.xy)) discard; }`);
       };
       const key = (mat.customProgramCacheKey ? mat.customProgramCacheKey() : '') + (base ? base.toString() : '');
@@ -177,7 +190,7 @@ export class Game {
     this.spawnPack(['bandit', 'archer'], 0, 6, 3, 2);
     this.spawnPack(['ghoul'], -36, -16, 3, 2);
     // graveyard: ghouls hidden in the ground, rising when approached
-    for (let i = 0; i < 4; i++) this.spawnPack('ghoul', G.x + rand(-12, 12), G.z + rand(-10, 10), 3, 3, { hidden: true, spread: 3 });
+    for (let i = 0; i < 4; i++) this.spawnPack('ghoul', G.x + rand(-13, 13), G.z + rand(-11, 11), 2, 3, { hidden: true, spread: 3 });
     this.matriarch = this.spawnPack('ghoul', G.x - 4, G.z - 2, 1, 4, { elite: true, name: 'The Ghul of the Tombs' })[0];
     this.matriarch.quest = 'graves';
     // road south toward the arch
@@ -277,7 +290,9 @@ export class Game {
 
   damageEnemy(e, dmg, crit, src, kind = 'normal') {
     if (e.dead || e.hidden) return;
-    e.hp -= dmg; e.flash = 1; e.alerted = true;
+    const tick = kind === 'dot';
+    e.hp -= dmg; e.flash = tick ? Math.max(e.flash, 0.4) : 1; e.alerted = true;
+    if (tick) { if (e.hp <= 0) this.killEnemy(e, src); return; }
     if (!e.boss) { e.st.hitT = 1; const k = tmp.copy(e.pos).sub(src).setY(0).normalize().multiplyScalar(crit ? 0.8 : 0.35); e.pos.add(k); }
     this.ui.damageNumber(e.pos, dmg + (crit ? '!' : ''), crit ? 'crit' : kind);
     const hp = tmp2.copy(e.pos); hp.y += e.boss ? 3.5 : 1.2;
@@ -297,8 +312,8 @@ export class Game {
     e.st.fallDir = Math.random() < 0.5 ? 1 : -1;
     this.audio.death();
     const p = this.player; p.xp += e.xp;
-    this.ui.damageNumber(tmp.copy(e.pos).setY(e.pos.y + 0.6), `+${Math.round(e.xp)} XP`, 'heal');
     this.fx.dust(e.pos, 6);
+    if (!e.boss) this.decal(e.pos, 1.6 + Math.random(), e.type === 'ghoul' ? 'ghoul' : e.type === 'imp' ? 'fire' : 'blood');
     if (e.aura) e.aura.visible = false;
     while (p.xp >= this.xpFor(p.level)) { p.xp -= this.xpFor(p.level); this.levelUp(); }
     // loot
@@ -476,6 +491,7 @@ export class Game {
     this.fx.burst(tmp.copy(pos).setY(pos.y + 0.5), 20, { speed: 3, life: 2, size: 1.2, size1: 3.5, color: new THREE.Color(0.1, 0.08, 0.07), alpha: 0.5, up: 2, smoke: true, drag: 1 });
     this.fx.sparks(tmp.copy(pos).setY(pos.y + 0.5), new THREE.Color(5, 2.5, 0.6));
     for (const e of this.enemies) if (!e.dead && !e.hidden && e.pos.distanceTo(pos) < 3.6 + e.radius) { const r = this.rollDamage(1.8, true); this.damageEnemy(e, r.d, r.crit, pos, 'fire'); e.burn = 3; }
+    this.decal(pos, 6.5, 'scorch');
     // lingering fire pool
     const gm = new THREE.MeshBasicMaterial({ map: glowDecal(), color: new THREE.Color(2.5, 0.8, 0.15), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
     const decal = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 6.5).rotateX(-Math.PI / 2), gm); decal.position.copy(pos).setY(pos.y + 0.06);
@@ -542,6 +558,7 @@ export class Game {
               this.fx.flash(tmp.copy(pos).setY(pos.y + 2), 0xff6020, 40, 0.4, 12);
               this.fx.burst(tmp.copy(pos).setY(pos.y + 0.3), 40, { speed: 6, life: 0.6, size: 0.7, size1: 0.1, color: new THREE.Color(3.5, 1.2, 0.25), up: 2, drag: 2 });
               this.fx.dust(pos, 8, 1.4); this.audio.boom(); this.shake = Math.max(this.shake, 0.3);
+              this.decal(pos, 4, 'scorch');
               if (p.pos.distanceTo(pos) < 2.6) this.damagePlayer(b.dmg * 0.8, pos);
             }, true);
           }
@@ -661,6 +678,7 @@ export class Game {
     this.updateProjectiles(dt);
     this.updateHazards(dt);
     this.updateDrops(dt);
+    this.updateDecals(dt);
     this.updateAmbientLife(dt);
     this.updateCamera(dt);
     if (this.started) this.updateOccluders(); else this.occU.uHole.value.set(-9999, -9999);
@@ -833,7 +851,7 @@ export class Game {
       if (e.burn > 0) {
         e.burn -= dt; e.burnTick = (e.burnTick || 0) - dt;
         if (Math.random() < 0.5) this.fx.fire(tmp.copy(e.pos).setY(e.pos.y + 0.6), 0.5);
-        if (e.burnTick <= 0) { e.burnTick = 0.5; const r = this.rollDamage(0.15, true); this.damageEnemy(e, r.d, false, e.pos, 'fire'); if (e.dead) continue; }
+        if (e.burnTick <= 0) { e.burnTick = 0.5; const r = this.rollDamage(0.15, true); this.damageEnemy(e, r.d, false, e.pos, 'dot'); if (e.dead) continue; }
       }
       if (e.aura) { e.aura.rotation.y += dt; e.aura.material.opacity = 0.4 + Math.sin(this.t * 4) * 0.2; }
       // hidden ghouls rise
@@ -947,7 +965,7 @@ export class Game {
         h.mesh.material.opacity = Math.min(1, (1 - k) * 2) * (0.8 + Math.random() * 0.2);
         for (let j = 0; j < 3; j++) { const a = Math.random() * Math.PI * 2, r = Math.random() * h.r; this.fx.fire(tmp.set(h.pos.x + Math.cos(a) * r, h.pos.y + 0.1, h.pos.z + Math.sin(a) * r), 0.7); }
         h.tick -= dt;
-        if (h.tick <= 0) { h.tick = 0.5; for (const e of this.enemies) if (!e.dead && !e.hidden && e.pos.distanceTo(h.pos) < h.r + e.radius) { const r = this.rollDamage(0.3, true); this.damageEnemy(e, r.d, false, h.pos, 'fire'); } }
+        if (h.tick <= 0) { h.tick = 0.5; for (const e of this.enemies) if (!e.dead && !e.hidden && e.pos.distanceTo(h.pos) < h.r + e.radius) { const r = this.rollDamage(0.3, true); this.damageEnemy(e, r.d, false, h.pos, 'dot'); } }
         if (k >= 1) { this.scene.remove(h.mesh); this.hazards.splice(i, 1); }
       } else if (h.kind === 'telegraph') {
         h.ring.material.opacity = 0.85; h.fill.material.opacity = 0.06 + k * 0.22;
@@ -961,6 +979,13 @@ export class Game {
     }
   }
 
+  updateDecals(dt) {
+    for (let i = this.decals.length - 1; i >= 0; i--) {
+      const d = this.decals[i]; d.t += dt;
+      if (d.t > d.life - 4) d.m.material.opacity = Math.max(0, (d.life - d.t) / 4);
+      if (d.t >= d.life) { this.scene.remove(d.m); d.m.material.dispose(); this.decals.splice(i, 1); }
+    }
+  }
   updateDrops(dt) {
     for (const d of this.drops) {
       d.age += dt;
