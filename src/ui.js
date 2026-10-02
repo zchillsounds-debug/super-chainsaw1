@@ -75,7 +75,7 @@ export class UI {
     this.tooltip = this.$('#tooltip');
     this.$('#inv .close').onclick = () => this.toggleInventory(false);
   }
-  show() { this.hud.classList.remove('hidden'); const t = this.$('#title'); t.classList.add('gone'); setTimeout(() => { t.style.display = 'none'; }, 1300); }
+  show() { document.body.classList.add('playing'); this.hud.classList.remove('hidden'); const t = this.$('#title'); t.classList.add('gone'); setTimeout(() => { t.style.display = 'none'; }, 1300); }
   // the skill bar follows the chosen class; on touch the same elements are moved into the thumb cluster
   buildSkills(defs) {
     const host = document.getElementById('tskills') || this.$('#skills');

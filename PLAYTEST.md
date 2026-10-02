@@ -43,6 +43,20 @@ performance overlay.
 | The Lost Astrolabe, Sweet Water and 'Amr's Wager complete, each with its cutscene and reward | | |
 | Journal (J or Menu → Journal) shows quests, tasks and deeds | | |
 
+## Round 9–10 additions
+| Check | Pass? | Notes |
+|---|---|---|
+| Camels look and walk like camels (sculpted body, pacing gait, grazing) | | |
+| Capes and robes hang naturally while running (no flag-like streaming) | | |
+| Arabic: dialogue, cutscene subtitles, tasks and codex all read in Arabic | | |
+| Named captains: two per act, each with an affix shown in the name (Swift, Ironclad, Volley, Firebrand, Rallying) | | |
+| Caravanserai Storerooms (Act I), Clay Pits (Act II), Sasanian Vaults (Act III): enter, clear, beat the captain, open the chest | | |
+| The Courier's Satchel (Rafi' in the suq), Indian Steel (Bishr), Ash for the Engines ('Amr, Act III) complete | | |
+| Burning all three mangonels stops Ghassan's naft barrage | | |
+| Ghassan below a quarter of his life: shield down, fire ring, lunges you can dodge | | |
+| Victory screen → New Game+: hero kept, world resets, foes noticeably tougher | | |
+| Install from the GitHub Pages build (Add to Home screen) and play offline | | |
+
 ## Settings and accessibility
 | Check | Pass? | Notes |
 |---|---|---|

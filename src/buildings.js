@@ -218,14 +218,14 @@ export function suq() {
   const crs = crenellations(W, H, 0.4, 0.45);
   if (crs) { grp.add(mesh(crs.clone().translate(0, 0, D / 2 - 1), m.plaster)); grp.add(mesh(crs.clone().translate(0, 0, -D / 2 - 1), m.plaster)); }
   for (let i = 0; i < 20; i++) grp.add(mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.7, 6).rotateX(Math.PI / 2).translate(-W / 2 + 0.5 + i * (W - 1) / 19, H - 0.4, D / 2 - 0.6), m.wood));
-  // square mud-brick watchtower with a timber lookout
+  // squat mud-brick gate tower with a timber fighting platform: broad and low so it reads as military, not a minaret
   const T = new THREE.Group();
-  T.add(mesh(new THREE.BoxGeometry(4, 13, 4).translate(0, 6.5, 0), m.mud));
-  T.add(mesh(new THREE.BoxGeometry(4.6, 0.4, 4.6).translate(0, 13.2, 0), m.wood));
-  for (const [x, z] of [[-2, -2], [2, -2], [-2, 2], [2, 2]]) T.add(mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.4).translate(x, 14.6, z), m.wood));
-  T.add(mesh(new THREE.ConeGeometry(3.4, 1.4, 4).rotateY(Math.PI / 4).translate(0, 16.4, 0), m.wood));
-  for (const y of [4, 8, 11]) T.add(mesh(new THREE.BoxGeometry(0.5, 1.1, 0.1).translate(0, y, 2.02), m.dark, false));
-  const tc = crenellations(4, 12.4, 4.1, 0.4); if (tc) T.add(mesh(tc, m.mud));
+  T.add(mesh(new THREE.BoxGeometry(6, 8, 6).translate(0, 4, 0), m.mud));
+  T.add(mesh(new THREE.BoxGeometry(6.8, 0.35, 6.8).translate(0, 8.2, 0), m.wood));
+  for (const [x, z] of [[-3, -3], [3, -3], [-3, 3], [3, 3], [0, -3], [0, 3], [-3, 0], [3, 0]]) T.add(mesh(new THREE.CylinderGeometry(0.12, 0.12, 1.8).translate(x, 9.2, z), m.wood));
+  T.add(mesh(new THREE.BoxGeometry(6.8, 0.25, 6.8).translate(0, 10.2, 0), m.wood));
+  for (const y of [3, 6]) T.add(mesh(new THREE.BoxGeometry(0.4, 1.0, 0.1).translate(0, y, 3.02), m.dark, false));
+  const tc = crenellations(6, 7.6, 6.1, 0.4); if (tc) T.add(mesh(tc, m.mud));
   T.position.set(W / 2 + 3.5, 0, -2); grp.add(T);
   // well in the market square
   const wl = new THREE.Group();
