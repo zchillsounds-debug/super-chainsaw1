@@ -1,11 +1,10 @@
 import * as THREE from 'three';
 import { createTerrain, setBridge, heightAt, canalX, CANAL_W, roadDist, fertility, SITES, WORLD, ROADS } from './terrain.js';
 import { createCanal } from './water.js';
-import { colliders, house, mosque, caravanserai, greatArch, mausoleum, roundCity, mats } from './buildings.js';
+import { colliders, house, suq, caravanserai, greatArch, palaceVault, kiln, roundCity, mats } from './buildings.js';
 import { palms, grassField, rocks, shrubs, wind, acacias, reeds } from './vegetation.js';
-import { lanternPost, firePit, tent, jar, crate, marketStall, cart, grave, deadTree, banner, bridge, waterwheel } from './props.js';
+import { lanternPost, firePit, tent, jar, crate, marketStall, cart, brickStack, deadTree, banner, bridge, waterwheel } from './props.js';
 import { mulberry32 } from './noise.js';
-import { sigilTex } from './textures.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // Collapse a static group's meshes into one mesh per material (huge draw-call savings).
@@ -75,7 +74,7 @@ export function buildWorld(scene) {
 
   // ---------------- village
   const V = SITES.village;
-  place(scene, mosque(), V.x + 2, V.z - 6, 0, true, true);
+  place(scene, suq(), V.x + 2, V.z - 6, 0, true, true);
   const houseSpots = [[-14, 8, 0.1], [-13, 18, -0.05], [-4, 22, Math.PI], [8, 22, Math.PI + 0.1], [17, 14, -Math.PI / 2], [18, 3, -Math.PI / 2], [-16, -2, Math.PI / 2], [20, -10, -Math.PI / 2], [-6, 32, Math.PI], [12, 32, Math.PI]];
   for (const [dx, dz, r] of houseSpots) {
     const w = 4 + rnd() * 3, d = 4 + rnd() * 2.5, h = 3.2 + rnd() * 2.2;
@@ -131,24 +130,24 @@ export function buildWorld(scene) {
   for (const [dx, dz] of [[-4, 20], [4, 20], [10, -12]]) place(scene, banner('#151515'), S.x + dx, S.z + dz, rnd() * 6, false);
   for (let i = 0; i < 10; i++) { const x = S.x + (rnd() - 0.5) * 26, z = S.z + (rnd() - 0.5) * 26; if (!blocked(x, z, 0.8)) { place(scene, rnd() > 0.5 ? crate() : jar(0x7a5a3a), x, z, rnd() * 6, false); colliders.push({ type: 'circle', x, z, r: 0.5 }); } }
 
-  // ---------------- graveyard
-  const G = SITES.graveyard;
-  place(scene, mausoleum(), G.x - 4, G.z - 8, 0.3, true, true);
-  for (let i = 0; i < 46; i++) {
+  // ---------------- brick kilns & clay quarry (with the ruined Sasanian vault the deserters hide in)
+  const G = SITES.kiln;
+  place(scene, palaceVault(), G.x - 4, G.z - 8, 0.3, true, true);
+  for (const [dx, dz] of [[9, -4], [-12, 6], [6, 9]]) {
+    const k = place(scene, kiln(), G.x + dx, G.z + dz, rnd() * 6, true, true);
+    out.fires.push({ pos: k.position.clone().add(new THREE.Vector3(0, 0.8, 0)), intensity: 0.6 });
+  }
+  for (let i = 0; i < 26; i++) {
     const x = G.x + (rnd() - 0.5) * 34, z = G.z + (rnd() - 0.5) * 30;
-    if (blocked(x, z, 1.2) || roadDist(x, z) < 2) continue;
-    place(scene, grave(rnd), x, z, 0.3 + (rnd() - 0.5) * 0.15, false);
-    colliders.push({ type: 'circle', x, z, r: 0.75 });
+    if (blocked(x, z, 1.4) || roadDist(x, z) < 2) continue;
+    place(scene, brickStack(rnd), x, z, rnd() * 6, false);
+    colliders.push({ type: 'circle', x, z, r: 0.9 });
   }
   for (let i = 0; i < 6; i++) { const x = G.x + (rnd() - 0.5) * 40, z = G.z + (rnd() - 0.5) * 36; if (!blocked(x, z, 1.5)) { place(scene, deadTree(rnd), x, z, rnd() * 6, false); colliders.push({ type: 'circle', x, z, r: 0.5 }); } }
 
   // ---------------- great arch boss arena
   const A = SITES.arch;
   place(scene, greatArch(), A.x, A.z - 10, 0, true, true);
-  // cracked seal of Sulayman on the arena floor where the Ifrit was bound
-  const sig = new THREE.Mesh(new THREE.PlaneGeometry(18, 18).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: sigilTex(), color: new THREE.Color(1.6, 0.35, 0.08), transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
-  sig.position.set(A.x, heightAt(A.x, A.z - 2) + 0.05, A.z - 2); scene.add(sig);
-  out.updaters.push((t) => { sig.material.opacity = 0.35 + Math.sin(t * 1.3) * 0.15; sig.rotation.y = t * 0.03; });
   // tall braziers on stone pillars
   const stoneM = mats().stone, bronze = new THREE.MeshStandardMaterial({ color: 0x8a5a2a, metalness: 0.9, roughness: 0.4 });
   for (const [dx, dz] of [[-11, 7], [11, 7], [-11, -9], [11, -9], [-6, 12], [6, 12]]) {

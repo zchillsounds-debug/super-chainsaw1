@@ -28,7 +28,7 @@ export class UI {
       <div id="hud" class="hidden">
         <div id="target"><div class="tname"></div><div class="tbar"><div class="tfill"></div></div></div>
         <div id="bossbar" class="hidden"><div class="bname"></div><div class="bbar"><div class="bfill"></div><div class="bghost"></div></div></div>
-        <div id="quest"><div class="qtitle">The Ifrit of the Ruined Arch</div><div class="qlines"></div></div>
+        <div id="quest"><div class="qtitle">The Renegade of the Sawad</div><div class="qlines"></div></div>
         <div id="toasts"></div>
         <div id="minimap"><canvas width="180" height="180"></canvas></div>
         <div id="bar">
@@ -61,7 +61,7 @@ export class UI {
         <div class="controls"><span class="pc">Left-click: move / attack · Right-click: Naft Flask · 1–4: Skills · Q: Potion · I: Inventory · Alt: show loot</span><span class="mob">Left thumb: joystick · Tap: move / attack · Right buttons: skills</span></div>
       </div>
       <div id="death" class="hidden"><div class="dt">You Have Fallen</div><button id="respawn">Rise Again</button></div>
-      <div id="victory" class="hidden"><div class="vt">Victory</div><div class="vs">The Ifrit is bound beneath the Ruined Arch once more.<br/>Ishaq al-Munajjim records your deeds in the annals of the House of Wisdom.</div><div class="vstats"></div><button id="vcont">Continue Exploring</button></div>
+      <div id="victory" class="hidden"><div class="vt">Victory</div><div class="vs">Ghassan has fallen beneath the ruined Persian arch.<br/>Ishaq records your deeds in the annals of the House of Wisdom.</div><div class="vstats"></div><button id="vcont">Continue Exploring</button></div>
       <div id="fade"></div>`;
     this.$ = (s) => root.querySelector(s);
     this.hud = this.$('#hud');
@@ -143,9 +143,9 @@ export class UI {
   }
   buffs(list) { this.$('#buffs').innerHTML = list.map((b) => `<div class="buff">${ICONS[b.icon]}<span>${Math.ceil(b.t)}</span></div>`).join(''); }
   dialog(name, text, cb) {
-    const d = this.$('#dialog'); d.classList.remove('hidden');
+    const d = this.$('#dialog'); d.classList.remove('hidden'); document.body.classList.add('indialog');
     d.querySelector('.dname').textContent = name; d.querySelector('.dtext').innerHTML = text;
-    d.querySelector('.dbtn').onclick = () => { d.classList.add('hidden'); cb && cb(); };
+    d.querySelector('.dbtn').onclick = () => { d.classList.add('hidden'); document.body.classList.remove('indialog'); cb && cb(); };
   }
   get dialogOpen() { return !this.$('#dialog').classList.contains('hidden'); }
   death(show, cb) { const d = this.$('#death'); d.classList.toggle('hidden', !show); if (cb) this.$('#respawn').onclick = cb; }

@@ -103,14 +103,16 @@ export function cart() {
   return g;
 }
 
-// Islamic grave: low rectangular stone with headstone (shahid).
-export function grave(rnd) {
-  const m = mats(), g = new THREE.Group();
-  const stone = m.limestone;
-  g.add(mesh(new THREE.BoxGeometry(0.9, 0.35, 2).translate(0, 0.17, 0), stone));
-  const s = new THREE.Shape(); archPath(s, 0.5, 1.1 + rnd() * 0.4);
-  const hs = mesh(new THREE.ExtrudeGeometry(s, { depth: 0.1, bevelEnabled: false }), stone);
-  hs.position.set(0, 0.2, -0.95); hs.rotation.z = (rnd() - 0.5) * 0.25; hs.rotation.x = (rnd() - 0.5) * 0.2; g.add(hs);
+// Stack of sun-dried and fired bricks at the kiln yard.
+export function brickStack(rnd) {
+  const m = mats(), g = new THREE.Group(), geos = [];
+  const rows = 3 + (rnd() * 4 | 0);
+  for (let r = 0; r < rows; r++) for (let i = 0; i < 4; i++) for (let k = 0; k < 2; k++) {
+    const b = new THREE.BoxGeometry(0.34, 0.12, 0.34);
+    b.translate(-0.55 + i * 0.37 + (r % 2) * 0.05, 0.06 + r * 0.13, -0.18 + k * 0.37); geos.push(b);
+  }
+  const fired = new THREE.MeshStandardMaterial({ color: rnd() > 0.5 ? 0xa0593a : 0xc9a172, roughness: 0.95 });
+  g.add(mesh(mergeGeometries(geos), fired));
   return g;
 }
 

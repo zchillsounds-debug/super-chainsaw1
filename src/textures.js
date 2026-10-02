@@ -177,11 +177,7 @@ export function sigilTex() {
   x.beginPath(); x.arc(C, C, C - 8, 0, Math.PI * 2); x.stroke();
   x.lineWidth = 3; x.beginPath(); x.arc(C, C, C - 34, 0, Math.PI * 2); x.stroke();
   x.beginPath(); x.arc(C, C, C * 0.42, 0, Math.PI * 2); x.stroke();
-  for (let k = 0; k < 2; k++) {
-    x.beginPath();
-    for (let i = 0; i <= 4; i++) { const a = i / 4 * Math.PI * 2 + k * Math.PI / 4; x.lineTo(C + Math.cos(a) * (C - 34), C + Math.sin(a) * (C - 34)); }
-    x.stroke();
-  }
+  x.lineWidth = 2; x.beginPath(); x.arc(C, C, C * 0.7, 0, Math.PI * 2); x.stroke();
   for (let i = 0; i < 48; i++) {
     const a = i / 48 * Math.PI * 2;
     x.save(); x.translate(C + Math.cos(a) * (C - 21), C + Math.sin(a) * (C - 21)); x.rotate(a);

@@ -8,7 +8,7 @@ const HALF = WORLD / 2;
 export const canalX = (z) => -22 + Math.sin(z * 0.025) * 9 + Math.sin(z * 0.061) * 3;
 export const CANAL_W = 7;
 
-// Road polyline (village -> caravanserai -> bridge -> graveyard, and south to the arch).
+// Road polyline (village -> caravanserai -> bridge -> kiln yard, and south to the arch).
 export const ROADS = [
   [[14, 95], [12, 70], [10, 48], [14, 28], [30, 12], [52, 2]],
   [[14, 28], [4, 10], [-10, -2], [canalX(-6), -6], [-38, -14], [-52, -32]],
@@ -30,7 +30,7 @@ export function roadDist(x, z) {
 export const SITES = {
   village: { x: 18, z: 58, r: 26 },
   serai: { x: 56, z: 0, r: 24 },
-  graveyard: { x: -56, z: -36, r: 22 },
+  kiln: { x: -56, z: -36, r: 22 },
   arch: { x: 10, z: -88, r: 30 },
 };
 

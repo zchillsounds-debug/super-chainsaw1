@@ -1,36 +1,37 @@
 import * as THREE from 'three';
-import { humanoid, ifrit } from './characters.js';
+import { humanoid } from './characters.js';
 
 // Enemy archetypes.
+// Raiders and deserters loose in the Sawad after the siege of 813. All human foes.
 export const TYPES = {
   bandit: {
-    name: 'Desert Raider', hp: 24, dmg: 5, speed: 4.3, range: 1.9, atk: 1.1, xp: 14, radius: 0.5, action: 'attack',
+    name: 'Brigand', hp: 24, dmg: 5, speed: 4.3, range: 1.9, atk: 1.1, xp: 14, radius: 0.5, action: 'attack',
     build: () => { const R = [['#3a2f26', '#6a2a1a', 0x2a2420], ['#4a3020', '#8a6a2a', 0x5a1a10], ['#2a2a30', '#7a2a2a', 0x1a1a1a], ['#5a4a3a', '#2a3a2a', 0x8a7a5a]][Math.floor(Math.random() * 4)];
-      return humanoid({ robe: R[0], robe2: R[1], turban: R[2], mask: 0x1e1a16, skin: [0x8a5a3a, 0x7a4a2a, 0x9a6a44][Math.floor(Math.random() * 3)], weapon: 'scimitar', sash: 0x5a1a10, offhand: Math.random() < 0.3 ? 'shield' : null }); },
+      return humanoid({ robe: R[0], robe2: R[1], turban: R[2], mask: 0x1e1a16, skin: [0x8a5a3a, 0x7a4a2a, 0x9a6a44][Math.floor(Math.random() * 3)], weapon: 'sword', sash: 0x5a1a10, offhand: Math.random() < 0.3 ? 'shield' : null }); },
   },
   spearman: {
-    name: 'Raider Lancer', hp: 34, dmg: 7, speed: 3.8, range: 2.7, atk: 1.4, xp: 18, radius: 0.5, action: 'thrust',
-    build: () => humanoid({ robe: '#4a3a2a', robe2: '#2a3a5a', turban: 0x6a3020, skin: 0x7a4a30, weapon: 'spear', offhand: 'shield', helmet: true, mail: true }),
+    name: 'Deserter Lancer', hp: 34, dmg: 7, speed: 3.8, range: 2.7, atk: 1.4, xp: 18, radius: 0.5, action: 'thrust',
+    build: () => humanoid({ robe: '#4a3a2a', robe2: '#2a3a5a', turban: null, helm: true, skin: 0x7a4a30, weapon: 'spear', offhand: 'shield', mail: true }),
   },
   archer: {
-    name: 'Raider Bowman', hp: 20, dmg: 5, speed: 4.0, range: 15, atk: 1.8, xp: 15, radius: 0.5, action: 'shoot', ranged: 'arrow',
+    name: 'Brigand Archer', hp: 20, dmg: 5, speed: 4.0, range: 15, atk: 1.8, xp: 15, radius: 0.5, action: 'shoot', ranged: 'arrow',
     build: () => humanoid({ robe: '#5a4a32', robe2: '#3a2a1a', turban: 0xc8b890, mask: 0x8a7a5a, skin: 0x9a6a44, weapon: 'bow' }),
   },
-  ghoul: {
-    name: 'Ghul', hp: 30, dmg: 6, speed: 5.0, range: 1.7, atk: 1.25, xp: 16, radius: 0.5, action: 'claw',
-    build: () => humanoid({ robe: '#4a4234', robe2: '#2a261c', turban: null, skin: 0x9aa48a, weapon: null, hunch: 0.7, claws: true, longArms: 1.35, eyes: new THREE.Color(5, 4, 0.5), scale: 1.05 }),
+  deserter: {
+    name: 'Knife-man', hp: 30, dmg: 6, speed: 5.0, range: 1.7, atk: 1.0, xp: 16, radius: 0.5, action: 'attack',
+    build: () => humanoid({ robe: '#4a4234', robe2: '#2a261c', turban: 0x3a3228, mask: 0x2a241c, skin: [0x8a5a3a, 0x9a6a44][Math.floor(Math.random() * 2)], weapon: 'dagger', hunch: 0.25, sash: 0x3a2a1a }),
   },
-  imp: {
-    name: 'Ember Imp', hp: 34, dmg: 8, speed: 5.4, range: 1.6, atk: 0.9, xp: 10, radius: 0.45, action: 'claw',
-    build: () => humanoid({ robe: '#2a0a04', robe2: '#ff5010', turban: null, skin: 0x3a1006, weapon: null, hunch: 0.5, claws: true, eyes: new THREE.Color(6, 2, 0.2), scale: 0.8 }),
+  naffat: {
+    name: 'Torch-bearer', hp: 30, dmg: 8, speed: 5.0, range: 1.8, atk: 1.0, xp: 12, radius: 0.48, action: 'attack', fiery: true,
+    build: () => humanoid({ robe: '#3a2418', robe2: '#a04a18', turban: 0x2a1a10, mask: 0x1a120c, skin: 0x7a4a30, weapon: 'torch', sash: 0x7a2a10 }),
   },
-  ifrit: {
-    name: 'Ifrit, the Unbound', hp: 2200, dmg: 14, speed: 2.6, range: 5.5, atk: 2.4, xp: 600, radius: 1.8, boss: true,
-    build: () => { const r = ifrit(); r.children[0].scale.setScalar(0.8); return r; },
+  commander: {
+    name: 'Ghassan, the Renegade Commander', hp: 2200, dmg: 14, speed: 3.0, range: 3.2, atk: 2.4, xp: 600, radius: 1.1, boss: true,
+    build: () => humanoid({ robe: '#141414', robe2: '#8a1a14', hem: true, mail: true, helm: true, turban: null, cloak: 0x5a0e0a, tails: ['#141414', '#8a1a14'], beard: 0x1a120c, skin: 0x8a5a3a, weapon: 'sword', offhand: 'shield', sash: 0x8a1a14, scale: 1.55 }),
   },
 };
 
-const ELITE_NAMES = ['the Cutthroat', 'the Jackal', 'Sand-Viper', 'the Ravenous', 'Bloodhand', 'the Hollow'];
+const ELITE_NAMES = ['Bakr', 'Fadl', 'Hamdan', 'Nasr', 'Thabit', 'Rabi\'a', 'Mukhariq', 'Sa\'d'];
 
 export function makeEnemy(type, level, opts = {}) {
   const T = TYPES[type];
@@ -48,7 +49,7 @@ export function makeEnemy(type, level, opts = {}) {
   e.hp = e.maxHp;
   if (opts.elite) {
     rig.children[0].scale.multiplyScalar(1.3);
-    e.name = opts.name || `${T.name} ${ELITE_NAMES[Math.floor(Math.random() * ELITE_NAMES.length)]}`;
+    e.name = opts.name || `${ELITE_NAMES[Math.floor(Math.random() * ELITE_NAMES.length)]}, ${T.name}`;
     const aura = new THREE.Mesh(new THREE.RingGeometry(0.7, 1.0, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.5, 1.0, 0.2), transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
     aura.position.y = 0.08; rig.add(aura); e.aura = aura;
   }

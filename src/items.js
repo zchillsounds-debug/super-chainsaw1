@@ -8,11 +8,11 @@ export const RARITY = {
 
 const BASES = {
   weapon: [
-    { name: 'Scimitar', min: 4, max: 9, icon: '⚔' }, { name: 'Shamshir', min: 6, max: 12, icon: '⚔' },
-    { name: 'Kilij', min: 8, max: 15, icon: '⚔' }, { name: 'Damascus Saif', min: 11, max: 19, icon: '⚔' },
+    { name: 'Sayf', min: 4, max: 9, icon: '⚔' }, { name: 'Yamani Sayf', min: 6, max: 12, icon: '⚔' },
+    { name: 'Qala\'i Sayf', min: 8, max: 15, icon: '⚔' }, { name: 'Hindi Sayf', min: 11, max: 19, icon: '⚔' },
   ],
   armor: [{ name: 'Quilted Qaba', armor: 6, icon: '🥋' }, { name: 'Mail Hauberk', armor: 12, icon: '🛡' }, { name: 'Lamellar Jawshan', armor: 18, icon: '🛡' }],
-  helm: [{ name: 'Wrapped Turban', armor: 3, icon: '👳' }, { name: 'Turban Helm', armor: 6, icon: '⛑' }, { name: 'Spangenhelm', armor: 9, icon: '⛑' }],
+  helm: [{ name: 'Felt Qalansuwa', armor: 3, icon: '🎩' }, { name: 'Iron Bayda', armor: 6, icon: '⛑' }, { name: 'Mailed Bayda', armor: 9, icon: '⛑' }],
   ring: [{ name: 'Carnelian Ring', icon: '💍' }, { name: 'Silver Signet', icon: '💍' }],
   amulet: [{ name: 'Lapis Amulet', icon: '📿' }, { name: 'Brass Talisman', icon: '📿' }],
 };
@@ -31,11 +31,11 @@ const AFFIXES = [
 ];
 
 const PREFIX = ['Gilded', 'Simoom', 'Barmakid', 'Starlit', 'Copper', 'Ebon', 'Saffron', 'Tigris', 'Moonlit', 'Sandstorm', 'Vizier\'s', 'Falconer\'s'];
-const SUFFIX = ['of the Caliph', 'of the Oasis', 'of Embers', 'of the House of Wisdom', 'of the Nomad', 'of Thirst', 'of Wind', 'of the Astrolabe', 'of Basra', 'of the Crescent'];
+const SUFFIX = ['of the Caliph', 'of the Oasis', 'of Embers', 'of the House of Wisdom', 'of the Nomad', 'of Thirst', 'of Wind', 'of the Astrolabe', 'of Basra', 'of Kufa'];
 
 const UNIQUES = [
-  { slot: 'weapon', name: 'Tongue of the Simoom', base: 'Damascus Saif', min: 16, max: 28, stats: { dmgPct: 40, speed: 15, leech: 6, fire: 30 }, flavor: '"Forged in the bellows of a desert storm."' },
-  { slot: 'ring', name: 'Seal of Sulayman', base: 'Iron Seal Ring', stats: { life: 60, mana: 40, crit: 10, regen: 4 }, flavor: '"By this seal were the djinn bound."' },
+  { slot: 'weapon', name: 'Tongue of the Simoom', base: 'Hindi Sayf', min: 16, max: 28, stats: { dmgPct: 40, speed: 15, leech: 6, fire: 30 }, flavor: '"Forged in the bellows of a desert storm."' },
+  { slot: 'ring', name: 'Signet of the Barmakids', base: 'Carnelian Signet', stats: { life: 60, mana: 40, crit: 10, regen: 4 }, flavor: '"It sealed a vizier\'s letters, before his house fell."' },
   { slot: 'amulet', name: 'Astrolabe of the Banu Musa', base: 'Brass Astrolabe', stats: { dmgPct: 25, mana: 50, regen: 5, move: 10 }, flavor: '"The heavens turn; so too shall your enemies."' },
   { slot: 'armor', name: 'Jawshan of Harun', base: 'Lamellar Jawshan', armor: 34, stats: { life: 80, armor: 20, leech: 3 }, flavor: '"Worn at the gates of the Round City."' },
 ];

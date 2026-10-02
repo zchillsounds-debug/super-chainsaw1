@@ -95,8 +95,8 @@ function frame() {
   }
   // drifting dust motes / sand in the air around the camera focus
   const focus = mode === 'game' ? game.player.pos : SITES.village;
-  // graveyard ground mist
-  if (focus.x < -25 && focus.z < -10 && Math.random() < 0.6) { const G = SITES.graveyard; fx.smoke.spawn({ pos: { x: G.x + (Math.random() - 0.5) * 40, y: heightAt(G.x, G.z) + 0.3, z: G.z + (Math.random() - 0.5) * 36 }, vel: { x: 0.4, y: 0.05, z: 0.15 }, life: 7, size: 3, size1: 6, color: new THREE.Color(0.62, 0.66, 0.58), alpha: 0.16, drag: 0.1, fadeIn: 0.4 }); }
+  // kiln smoke drifting over the brick yard
+  if (focus.x < -25 && focus.z < -10 && Math.random() < 0.6) { const G = SITES.kiln; fx.smoke.spawn({ pos: { x: G.x + (Math.random() - 0.5) * 40, y: heightAt(G.x, G.z) + 0.3, z: G.z + (Math.random() - 0.5) * 36 }, vel: { x: 0.4, y: 0.05, z: 0.15 }, life: 7, size: 3, size1: 6, color: new THREE.Color(0.55, 0.5, 0.46), alpha: 0.16, drag: 0.1, fadeIn: 0.4 }); }
   if (Math.random() < 0.5) fx.smoke.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 50, y: (focus.y || 0) + Math.random() * 6, z: focus.z + (Math.random() - 0.5) * 40 }, vel: { x: 1.5, y: 0.1, z: 0.4 }, life: 4, size: 0.06, size1: 0.06, color: new THREE.Color(1, 0.9, 0.7), alpha: 0.6, drag: 0, fadeIn: 0.3 });
   if (mode === 'title') { titleCam(t); game.t += dt; game.updateAmbientLife(dt); } else game.update(dt);
   fx.update(dt); fx.setScale(renderer.getDrawingBufferSize(new THREE.Vector2()).y);

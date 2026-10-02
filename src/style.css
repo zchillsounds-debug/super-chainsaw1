@@ -165,3 +165,34 @@ body.touch #bossbar{width:70vw;top:44px}
   .tlogo .en{font-size:38px}.tlogo .ar{font-size:36px}.tlogo .sub{font-size:16px}
   .controls{padding:0 16px;text-align:center}
 }
+
+/* ---- compact mobile HUD (round 1) ---- */
+body.touch{--tscale:.8;--topa:.6}
+body.touch #tskills{transform:scale(var(--tscale));transform-origin:100% 100%;opacity:var(--topa);transition:opacity .4s}
+body.touch.tactive #tskills{opacity:max(var(--topa),.9)}
+body.touch #tskills .skill{background:radial-gradient(#0008,#0003);box-shadow:0 0 0 1.5px #d9a44199}
+body.touch #joy{transform:scale(var(--tscale))}
+body.touch #bar{scale:.42!important}
+body.touch .tbtn{padding:5px 10px;font-size:12px;opacity:.75}
+body.touch #tcfg{left:calc(64px + env(safe-area-inset-left,0px))}
+body.touch #tmap{left:auto;right:calc(10px + env(safe-area-inset-right,0px))}
+body.touch #quest{transform:none;top:calc(6px + env(safe-area-inset-top,0px));right:auto;left:50%;translate:-50% 0;width:auto;max-width:60vw;padding:4px 12px;background:#0d0806aa;border-radius:12px;text-align:center;display:block!important;pointer-events:auto}
+body.touch #quest .qtitle{font-size:11px;letter-spacing:1px}
+body.touch #quest .qlines{display:none}
+body.touch #quest.open .qlines{display:block;font-size:12px;text-align:left}
+body.touch #minimap{display:none!important}
+body.touch.mapopen #minimap{display:block!important;transform:scale(.6);transform-origin:100% 0;top:calc(40px + env(safe-area-inset-top,0px));right:8px}
+body.touch #target{top:calc(34px + env(safe-area-inset-top,0px));transform:translateX(-50%) scale(.8)}
+body.touch #bossbar{top:calc(56px + env(safe-area-inset-top,0px));width:64vw}
+body.touch #dialog{top:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));left:10px;right:10px;width:auto;padding:8px 12px;max-height:30vh;overflow:auto}
+body.touch .dname{font-size:13px;margin-bottom:2px}
+body.touch .dtext{font-size:14px;line-height:1.35}
+body.touch .dbtn{padding:4px 12px;font-size:12px;margin-top:4px}
+body.touch.indialog #tskills,body.touch.indialog #joy{display:none}
+body.touch #banner .btitle{font-size:26px}body.touch #banner .bsub{font-size:13px}
+body.touch #toasts{transform:scale(.8)}
+#tsettings{position:absolute;pointer-events:auto;top:50%;left:50%;transform:translate(-50%,-50%);width:min(300px,86vw);padding:12px 16px}
+#tsettings label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0;font:500 13px Cinzel;color:var(--parch)}
+#tsettings input{flex:1}
+#tsettings.hidden{display:none}
+@media (orientation:portrait){body.touch #bar{scale:.36!important;top:calc(40px + env(safe-area-inset-top,0px))}}

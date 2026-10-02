@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { mudBrick, girihTile, kuficBand, woodTex } from './textures.js';
+import { mudBrick, girihTile, kuficBand, woodTex, fabricTex } from './textures.js';
 import { mulberry32 } from './noise.js';
 import { triplanarMaterial } from './triplanar.js';
 
@@ -192,90 +192,49 @@ export function house(rnd, w, d, h) {
   return grp;
 }
 
-// ---------------------------------------------------------------- spiral minaret (Malwiya-style)
-export function spiralMinaret(baseR = 3, height = 16, turns = 4.5) {
+// ---------------------------------------------------------------- covered market (suq) with a watchtower
+export function suq() {
   const m = mats(), grp = new THREE.Group();
-  const top = baseR * 0.38;
-  // core tapered tower
-  grp.add(mesh(new THREE.CylinderGeometry(top, baseR, height, 28, 1).translate(0, height / 2, 0), m.mud));
-  // helical ramp
-  const seg = 260, pos = [], idx = [];
-  const rampW = 0.7, rampH = 0.35;
-  for (let i = 0; i <= seg; i++) {
-    const t = i / seg, a = t * turns * Math.PI * 2;
-    const y = t * height * 0.93;
-    const r = THREE.MathUtils.lerp(baseR, top, y / height);
-    const ca = Math.cos(a), sa = Math.sin(a);
-    const rin = r - 0.05, rout = r + rampW;
-    pos.push(ca * rin, y, sa * rin, ca * rout, y, sa * rout, ca * rout, y - rampH, sa * rout, ca * rin, y - rampH * 2.5, sa * rin);
-    if (i < seg) {
-      const b = i * 4, n = b + 4;
-      idx.push(b, n, b + 1, b + 1, n, n + 1); // top
-      idx.push(b + 1, n + 1, b + 2, b + 2, n + 1, n + 2); // outer
-      idx.push(b + 2, n + 2, b + 3, b + 3, n + 2, n + 3); // under
-    }
+  const W = 20, D = 9, H = 5.2;
+  // shop hall: plastered block with an open arcade of shop bays on the long side
+  grp.add(mesh(new THREE.BoxGeometry(W, H, D).translate(0, H / 2, -1), m.plaster));
+  const arc = arcadeWall(W, H + 0.4, 0.9, 6, 2.2, 3.8);
+  const a = mesh(arc, m.mud); a.position.set(0, 0, D / 2 + 0.6); grp.add(a);
+  // timber awning beams and striped cloth shades over the bays
+  const shade = ['#8c2f24', '#2f5d7c', '#c28a2c'];
+  for (let i = 0; i < 6; i++) {
+    const x = -W / 2 + W / 12 + i * W / 6;
+    const cl = new THREE.MeshStandardMaterial({ map: fabricTex(shade[i % 3], '#efe0b8'), roughness: 0.9, side: THREE.DoubleSide });
+    const c = mesh(new THREE.PlaneGeometry(2.9, 2.0), cl); c.rotation.x = -Math.PI / 2 + 0.5; c.position.set(x, 3.3, D / 2 + 1.8); grp.add(c);
+    grp.add(mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.9).translate(x - 1.4, 1.45, D / 2 + 2.6), m.wood));
+    grp.add(mesh(new THREE.BoxGeometry(2.2, 0.8, 1.0).translate(x, 0.4, D / 2 + 1.6), m.wood));
+    const ware = [0xc0392b, 0xe67e22, 0xd9b65a, 0x7d5a3c, 0x6b8e23, 0x9a7a5a][i];
+    for (let k = 0; k < 3; k++) grp.add(mesh(new THREE.ConeGeometry(0.22, 0.25, 10).translate(x - 0.6 + k * 0.6, 0.92, D / 2 + 1.6), new THREE.MeshStandardMaterial({ color: ware, roughness: 1 })));
   }
-  const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); rg.setIndex(idx); rg.computeVertexNormals();
-  const uv = []; for (let i = 0; i <= seg; i++) uv.push(i * 0.2, 0, i * 0.2, 0.3, i * 0.2, 0.5, i * 0.2, 0.8);
-  rg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-  grp.add(mesh(rg, m.plaster));
-  // pavilion on top
-  const pav = new THREE.CylinderGeometry(top * 1.1, top * 1.1, 2, 12, 1, true).translate(0, height + 1, 0);
-  grp.add(mesh(pav, m.plaster));
-  const pd = domeGeo(top * 1.15, top * 1.4, 16).translate(0, height + 2, 0);
-  grp.add(mesh(pd, m.dome));
-  grp.add(mesh(finial(0.8).translate(0, height + 2 + top * 1.4, 0), m.gold));
-  // square base
-  grp.add(mesh(new THREE.BoxGeometry(baseR * 2.6, 1.2, baseR * 2.6).translate(0, 0.6, 0), m.mud));
-  return grp;
-}
-
-// ---------------------------------------------------------------- mosque
-export function mosque() {
-  const m = mats(), grp = new THREE.Group();
-  const W = 18, D = 14, H = 6.5;
-  // prayer hall
-  grp.add(mesh(new THREE.BoxGeometry(W, H, D).translate(0, H / 2, 0), m.plaster));
-  // facade: arcade in front
-  const arc = arcadeWall(W, H + 0.8, 1.0, 5, 2.4, 4.8);
-  const a = mesh(arc, m.plaster); a.position.set(0, 0, D / 2 + 2.2); grp.add(a);
-  // roof of portico
-  grp.add(mesh(new THREE.BoxGeometry(W, 0.4, 2.4).translate(0, H + 0.6, D / 2 + 1.1), m.plaster));
-  // tile frieze & kufic band
-  grp.add(mesh(new THREE.BoxGeometry(W, 0.9, 0.06).translate(0, H + 0.1, D / 2 + 2.75), m.kufic, false));
-  grp.add(mesh(new THREE.BoxGeometry(W + 0.1, 0.5, D + 0.1).translate(0, H - 0.6, 0), m.tile, false));
-  // pishtaq (tall portal) with tile
-  const pw = 6, ph = 10.5;
-  grp.add(mesh(new THREE.BoxGeometry(pw, ph, 1.6).translate(0, ph / 2, D / 2 + 2.6), m.plaster));
-  const recess = blindArchRecess(3.6, 7.5, 0.9); grp.add(mesh(recess.translate(0, 0, D / 2 + 2.95), m.tile, false));
-  const inner = blindArchRecess(1.8, 3.4, 0.2); grp.add(mesh(inner.translate(0, 0, D / 2 + 3.35), m.wood, false));
-  grp.add(mesh(new THREE.BoxGeometry(pw - 0.6, 0.7, 0.08).translate(0, ph - 1.2, D / 2 + 3.42), m.kufic, false));
-  const cr = crenellations(pw, ph, 1.6, 0.4); if (cr) grp.add(mesh(cr.translate(0, 0, D / 2 + 2.6), m.plaster));
-  // drum + dome
-  grp.add(mesh(new THREE.CylinderGeometry(4.6, 4.8, 2.2, 32).translate(0, H + 1.1, -1), m.plaster));
-  grp.add(mesh(new THREE.CylinderGeometry(4.65, 4.65, 0.5, 32).translate(0, H + 2.0, -1), m.tile, false));
-  grp.add(mesh(domeGeo(4.6, 6.2).translate(0, H + 2.2, -1), m.dome));
-  grp.add(mesh(finial(1.4).translate(0, H + 8.4, -1), m.gold));
-  // small corner domes
-  for (const sx of [-1, 1]) {
-    grp.add(mesh(new THREE.CylinderGeometry(1.6, 1.6, 1, 16).translate(sx * 6.5, H + 0.5, -3), m.plaster));
-    grp.add(mesh(domeGeo(1.6, 2).translate(sx * 6.5, H + 1, -3), m.dome));
-  }
+  // flat roof with parapet and timber rafter ends
   const crs = crenellations(W, H, 0.4, 0.45);
-  if (crs) { grp.add(mesh(crs.clone().translate(0, 0, D / 2), m.plaster)); grp.add(mesh(crs.clone().translate(0, 0, -D / 2), m.plaster)); }
-  // spiral minaret
-  const mn = spiralMinaret(2.6, 17, 4.5); mn.position.set(W / 2 + 5, 0, -D / 2 + 2); grp.add(mn);
-  // courtyard fountain
-  const ft = new THREE.Group();
-  ft.add(mesh(new THREE.CylinderGeometry(2, 2.1, 0.6, 8), m.tile)); ft.children[0].position.y = 0.3;
-  const wtr = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 0.05, 16), new THREE.MeshStandardMaterial({ color: 0x2c6e6a, roughness: 0.05, metalness: 0.3 }));
-  wtr.position.y = 0.55; ft.add(wtr);
-  ft.add(mesh(new THREE.CylinderGeometry(0.2, 0.3, 1.4, 8).translate(0, 0.7, 0), m.plaster));
-  ft.position.set(0, 0, D / 2 + 8); grp.add(ft);
+  if (crs) { grp.add(mesh(crs.clone().translate(0, 0, D / 2 - 1), m.plaster)); grp.add(mesh(crs.clone().translate(0, 0, -D / 2 - 1), m.plaster)); }
+  for (let i = 0; i < 20; i++) grp.add(mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.7, 6).rotateX(Math.PI / 2).translate(-W / 2 + 0.5 + i * (W - 1) / 19, H - 0.4, D / 2 - 0.6), m.wood));
+  // square mud-brick watchtower with a timber lookout
+  const T = new THREE.Group();
+  T.add(mesh(new THREE.BoxGeometry(4, 13, 4).translate(0, 6.5, 0), m.mud));
+  T.add(mesh(new THREE.BoxGeometry(4.6, 0.4, 4.6).translate(0, 13.2, 0), m.wood));
+  for (const [x, z] of [[-2, -2], [2, -2], [-2, 2], [2, 2]]) T.add(mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.4).translate(x, 14.6, z), m.wood));
+  T.add(mesh(new THREE.ConeGeometry(3.4, 1.4, 4).rotateY(Math.PI / 4).translate(0, 16.4, 0), m.wood));
+  for (const y of [4, 8, 11]) T.add(mesh(new THREE.BoxGeometry(0.5, 1.1, 0.1).translate(0, y, 2.02), m.dark, false));
+  const tc = crenellations(4, 12.4, 4.1, 0.4); if (tc) T.add(mesh(tc, m.mud));
+  T.position.set(W / 2 + 3.5, 0, -2); grp.add(T);
+  // well in the market square
+  const wl = new THREE.Group();
+  wl.add(mesh(new THREE.CylinderGeometry(1.2, 1.3, 0.9, 14, 1, true).translate(0, 0.45, 0), m.mud));
+  wl.add(mesh(new THREE.CylinderGeometry(1.05, 1.05, 0.05, 14).translate(0, 0.6, 0), new THREE.MeshStandardMaterial({ color: 0x1a2a28, roughness: 0.1 })));
+  for (const x of [-1.1, 1.1]) wl.add(mesh(new THREE.BoxGeometry(0.15, 2.0, 0.15).translate(x, 1.0, 0), m.wood));
+  wl.add(mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.4).rotateZ(Math.PI / 2).translate(0, 1.9, 0), m.wood));
+  wl.position.set(-3, 0, D / 2 + 8); grp.add(wl);
   grp.userData.colliders = [
-    { type: 'box', x: 0, z: 0.8, hw: W / 2 + 0.2, hd: D / 2 + 2.8 },
-    { type: 'circle', x: W / 2 + 5, z: -D / 2 + 2, r: 3.6 },
-    { type: 'circle', x: 0, z: D / 2 + 8, r: 2.2 },
+    { type: 'box', x: 0, z: 0.3, hw: W / 2 + 0.2, hd: D / 2 + 2.4 },
+    { type: 'box', x: W / 2 + 3.5, z: -2, hw: 2.3, hd: 2.3 },
+    { type: 'circle', x: -3, z: D / 2 + 8, r: 1.5 },
   ];
   return grp;
 }
@@ -396,20 +355,40 @@ export function greatArch() {
   return grp;
 }
 
-// ---------------------------------------------------------------- domed mausoleum (qubba)
-export function mausoleum() {
+// ---------------------------------------------------------------- ruined Sasanian palace vault (brick barrel vault, half collapsed)
+export function palaceVault() {
   const m = mats(), grp = new THREE.Group();
-  const S = 6, H = 5;
-  for (let i = 0; i < 4; i++) {
-    const w = arcadeWall(S, H, 0.7, 1, 2.4, 3.8);
-    const o = mesh(w, m.plaster); o.rotation.y = i * Math.PI / 2;
-    o.position.set(Math.sin(i * Math.PI / 2) * S / 2, 0, Math.cos(i * Math.PI / 2) * S / 2); grp.add(o);
-  }
-  grp.add(mesh(new THREE.CylinderGeometry(S / 2 + 0.2, S / 2 * 1.41, 1.2, 8).translate(0, H + 0.6, 0), m.plaster));
-  grp.add(mesh(domeGeo(S / 2, S * 0.75, 24).translate(0, H + 1.2, 0), m.plaster));
-  grp.add(mesh(finial(0.9).translate(0, H + 1.2 + S * 0.75, 0), m.gold));
-  grp.add(mesh(new THREE.BoxGeometry(2.4, 0.8, 1).translate(0, 0.4, 0), m.tile));
-  grp.userData.colliders = [{ type: 'box', x: 0, z: 0, hw: S / 2 + 0.4, hd: S / 2 + 0.4 }];
+  const span = 6, H = 4.5, L = 9, T = 0.8;
+  const s = new THREE.Shape(), N = 16;
+  for (let i = 0; i <= N; i++) { const a = Math.PI * i / N; s.lineTo(Math.cos(a) * (span / 2 + T), H + Math.sin(a) * (span / 2 + T) * 0.9); }
+  s.lineTo(-(span / 2 + T), 0); s.lineTo(-span / 2, 0);
+  for (let i = N; i >= 0; i--) { const a = Math.PI * i / N; s.lineTo(Math.cos(a) * span / 2, H + Math.sin(a) * span / 2 * 0.9); }
+  s.lineTo(span / 2, 0); s.lineTo(span / 2 + T, 0);
+  const v = new THREE.ExtrudeGeometry(s, { depth: L * 0.6, bevelEnabled: false, curveSegments: 2 }); v.translate(0, 0, -L / 2);
+  grp.add(mesh(v, m.mud));
+  // the far half has fallen: two wall stubs and a rubble field
+  for (const sx of [-1, 1]) grp.add(mesh(new THREE.BoxGeometry(T, H * 0.7, L * 0.4).translate(sx * (span / 2 + T / 2), H * 0.35, L * 0.3), m.mud));
+  const rub = [], rnd = mulberry32(7);
+  for (let i = 0; i < 40; i++) { const z = 0.3 + rnd() * 0.6; const g = new THREE.BoxGeometry(0.6 + rnd(), 0.3 + rnd() * 0.4, 0.5 + rnd() * 0.6).rotateY(rnd() * 3).rotateX((rnd() - 0.5) * 0.6); g.translate((rnd() - 0.5) * (span + 2), 0.2, L * (z - 0.4) + 2); rub.push(g); }
+  grp.add(mesh(mergeGeometries(rub), m.mud));
+  // stucco frieze fragment over the entrance
+  grp.add(mesh(new THREE.BoxGeometry(span + 2 * T, 0.6, 0.2).translate(0, H + span / 2 * 0.9 + 0.3, -L / 2 - 0.05), m.plaster));
+  grp.userData.colliders = [
+    { type: 'box', x: -(span / 2 + T / 2), z: 0, hw: T / 2 + 0.2, hd: L / 2 },
+    { type: 'box', x: span / 2 + T / 2, z: 0, hw: T / 2 + 0.2, hd: L / 2 },
+  ];
+  return grp;
+}
+
+// ---------------------------------------------------------------- beehive brick kiln
+export function kiln() {
+  const m = mats(), grp = new THREE.Group();
+  grp.add(mesh(domeGeo(2.6, 3.4, 20), m.mud));
+  grp.add(mesh(new THREE.CylinderGeometry(0.5, 0.6, 1.4, 10).translate(0, 3.8, 0), m.mud));
+  // glowing stoke-hole
+  const hole = new THREE.Mesh(new THREE.CircleGeometry(0.55, 14), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.6, 0.9, 0.25), toneMapped: false }));
+  hole.position.set(0, 0.6, 2.45); grp.add(hole);
+  grp.userData.colliders = [{ type: 'circle', x: 0, z: 0, r: 2.8 }];
   return grp;
 }
 
@@ -431,12 +410,6 @@ export function roundCity() {
   const gd = new THREE.MeshStandardMaterial({ color: 0x2f8f4e, roughness: 0.3, metalness: 0.2 });
   grp.add(mesh(domeGeo(9, 14).translate(0, 20, 0), gd, false));
   grp.add(mesh(finial(4).translate(0, 34, 0), m.gold, false));
-  for (let i = 0; i < 6; i++) {
-    const a = i / 6 * Math.PI * 2 + 0.3;
-    const mh = 20 + (i % 2) * 8;
-    grp.add(mesh(new THREE.CylinderGeometry(0.9, 1.4, mh, 10).translate(Math.cos(a) * 30, mh / 2, Math.sin(a) * 30), m.plaster, false));
-    grp.add(mesh(domeGeo(1.2, 2.2, 10).translate(Math.cos(a) * 30, mh, Math.sin(a) * 30), m.dome, false));
-  }
   for (let i = 0; i < 60; i++) { // houses inside
     const a = Math.random() * Math.PI * 2, r = 34 + Math.random() * 22, h = 4 + Math.random() * 6;
     grp.add(mesh(new THREE.BoxGeometry(5 + Math.random() * 5, h, 5 + Math.random() * 5).translate(Math.cos(a) * r, h / 2, Math.sin(a) * r), m.plaster, false));

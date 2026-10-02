@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { humanoid, animateHumanoid, animateIfrit, scimitar, camel, animateCamel } from './characters.js';
+import { humanoid, animateHumanoid, sword, camel, animateCamel } from './characters.js';
 import { heightAt, SITES, canalX } from './terrain.js';
 import { resolve, buildGrid } from './collision.js';
 import { buildNav, findPath, navClear } from './nav.js';
@@ -32,27 +32,26 @@ export class Game {
     this.createPlayer();
     this.spawnEnemies();
     this.quests = [
-      { id: 'serai', text: 'Slay Abu Jahm at the old caravanserai', done: false },
-      { id: 'graves', text: 'Put the Ghul of the Tombs to rest', done: false },
-      { id: 'boss', text: 'Confront the Ifrit at the Ruined Arch', done: false },
+      { id: 'serai', text: 'Defeat Ziyad at the old caravanserai', done: false },
+      { id: 'graves', text: 'Drive Hisham\'s men from the kiln yard', done: false },
+      { id: 'boss', text: 'Face Ghassan at the ruined Persian arch', done: false },
     ];
     this.ui.quest(this.quests);
     this.makeMinimap();
     this.bindInput();
     this.pois = [
-      { x: SITES.village.x, z: SITES.village.z, icon: '☪', color: '#9fe0d0' },
+      { x: SITES.village.x, z: SITES.village.z, icon: '⌂', color: '#9fe0d0' },
       { x: SITES.serai.x, z: SITES.serai.z, icon: '⚔', color: '#ffd040' },
-      { x: SITES.graveyard.x, z: SITES.graveyard.z, icon: '✝', color: '#c0c0a0' },
+      { x: SITES.kiln.x, z: SITES.kiln.z, icon: '▲', color: '#d0a070' },
       { x: SITES.arch.x, z: SITES.arch.z, icon: '♨', color: '#ff7020' },
     ];
-    this.pois[2].icon = '☾';
     this.setupOccluders(this.world.occluders);
     this.decals = []; this.splatTexs = [splatTex(1), splatTex(2), splatTex(3)]; this.scorchTex = splatTex(4, true);
   }
 
   decal(pos, size, kind) {
     const blood = kind !== 'scorch';
-    const col = kind === 'ghoul' ? new THREE.Color(0.08, 0.1, 0.03) : kind === 'fire' ? new THREE.Color(0.25, 0.08, 0.02) : new THREE.Color(0.11, 0.008, 0.008);
+    const col = kind === 'fire' ? new THREE.Color(0.25, 0.08, 0.02) : new THREE.Color(0.11, 0.008, 0.008);
     const mat = new THREE.MeshStandardMaterial({ map: blood ? this.splatTexs[Math.floor(Math.random() * 3)] : this.scorchTex, color: blood ? col : 0xffffff, transparent: true, depthWrite: false, roughness: blood ? 0.25 : 1, polygonOffset: true, polygonOffsetFactor: -2, alphaTest: 0.02 });
     if (blood) { mat.alphaMap = mat.map; mat.map = null; }
     const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size).rotateX(-Math.PI / 2), mat);
@@ -89,7 +88,7 @@ export class Game {
       patched.set(mat, m);
       return m;
     };
-    for (const g of groups) g.traverse((o) => { if (o.isMesh) o.material = patch(o.material, scaleOf(o)); });
+    for (const g of groups) g.traverse((o) => { if (o.isMesh && !o.material.isMeshBasicMaterial) o.material = patch(o.material, scaleOf(o)); });
   }
   updateOccluders() {
     const p = this.player.pos;
@@ -103,14 +102,14 @@ export class Game {
 
   // ------------------------------------------------------------------ setup
   createPlayer() {
-    const rig = humanoid({ robe: '#1f2c44', robe2: '#c9a24a', hem: true, mail: true, turban: 0xece2c8, helmet: true, offhand: 'shield', beard: 0x2a1a10, cloak: 0x7a1a14, skin: 0xa8714a });
+    const rig = humanoid({ robe: '#17171a', robe2: '#b8913e', hem: true, mail: true, qaba: true, turban: null, cap: 0x2a2620, capBand: 0x141210, offhand: 'shield', beard: 0x2a1a10, cloak: 0x6e1c16, tails: ['#17171a', '#b8913e'], sash: 0x9a2a1c, scabbard: true, skin: 0xa8714a });
     this.scene.add(rig);
     const p = this.player = {
       rig, pos: new THREE.Vector3(1, 0, 88), facing: Math.PI, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, dead: false, deadT: 0, fallDir: 1 },
       hp: 100, mp: 60, level: 1, xp: 0, gold: 0, potions: 3, equip: {}, bag: new Array(40).fill(null), cds: {}, buffs: {},
       target: null, moveTo: null, actionDur: 0.6, hitApplied: false, dead: false, whirlT: 0, dashT: 0, invuln: 0,
     };
-    p.equip.weapon = { id: 0, slot: 'weapon', rarity: 'common', name: 'Rusted Scimitar', base: 'Scimitar', min: 4, max: 9, level: 1, stats: {}, icon: '⚔' };
+    p.equip.weapon = { id: 0, slot: 'weapon', rarity: 'common', name: 'Rusted Sayf', base: 'Sayf', min: 4, max: 9, level: 1, stats: {}, icon: '⚔' };
     this.recalcStats();
     p.hp = p.stats.maxHp; p.mp = p.stats.maxMp;
     // selection ring under the player
@@ -180,26 +179,26 @@ export class Game {
   }
 
   spawnEnemies() {
-    const S = SITES.serai, G = SITES.graveyard;
+    const S = SITES.serai, G = SITES.kiln;
     this.spawnPack(['bandit', 'bandit', 'archer'], 22, 36, 3, 1);
     this.spawnPack(['bandit', 'spearman'], 38, 14, 4, 1);
     this.spawnPack(['bandit', 'archer', 'spearman'], S.x, S.z + 6, 5, 2, { spread: 6 });
     this.spawnPack(['archer'], S.x - 10, S.z - 10, 2, 2);
     this.spawnPack(['bandit', 'spearman'], S.x + 8, S.z - 4, 3, 2);
-    this.chief = this.spawnPack('spearman', S.x, S.z - 6, 1, 3, { elite: true, name: 'Abu Jahm the Cutthroat' })[0];
+    this.chief = this.spawnPack('spearman', S.x, S.z - 6, 1, 3, { elite: true, name: 'Ziyad, the Raider Chief' })[0];
     this.chief.quest = 'serai';
     this.spawnPack(['bandit', 'bandit'], S.x + 2, S.z - 6, 2, 2);
     // road to the bridge and beyond
     this.spawnPack(['bandit', 'archer'], 0, 6, 3, 2);
-    this.spawnPack(['ghoul'], -36, -16, 3, 2);
-    // graveyard: ghouls hidden in the ground, rising when approached
-    for (let i = 0; i < 4; i++) this.spawnPack('ghoul', G.x + rand(-13, 13), G.z + rand(-11, 11), 2, 3, { hidden: true, spread: 3 });
-    this.matriarch = this.spawnPack('ghoul', G.x - 4, G.z - 2, 1, 4, { elite: true, name: 'The Ghul of the Tombs' })[0];
+    this.spawnPack(['deserter'], -36, -16, 3, 2);
+    // kiln yard: knife-men crouched behind the brick stacks, springing up when approached
+    for (let i = 0; i < 4; i++) this.spawnPack('deserter', G.x + rand(-13, 13), G.z + rand(-11, 11), 2, 3, { hidden: true, spread: 3 });
+    this.matriarch = this.spawnPack('spearman', G.x - 4, G.z - 2, 1, 4, { elite: true, name: 'Hisham, the Deserter' })[0];
     this.matriarch.quest = 'graves';
     // road south toward the arch
-    this.spawnPack(['ghoul', 'bandit'], 6, -30, 4, 3);
-    this.spawnPack(['ghoul', 'archer', 'spearman'], 8, -58, 5, 4, { spread: 5 });
-    this.spawnPack('ghoul', 20, -66, 1, 4, { elite: true });
+    this.spawnPack(['deserter', 'bandit'], 6, -30, 4, 3);
+    this.spawnPack(['naffat', 'archer', 'spearman'], 8, -58, 5, 4, { spread: 5 });
+    this.spawnPack('naffat', 20, -66, 1, 4, { elite: true });
     this.bossSpawned = false;
   }
 
@@ -299,9 +298,8 @@ export class Game {
     if (!e.boss) { e.st.hitT = 1; const k = tmp.copy(e.pos).sub(src).setY(0).normalize().multiplyScalar(crit ? 0.8 : 0.35); e.pos.add(k); }
     this.ui.damageNumber(e.pos, dmg + (crit ? '!' : ''), crit ? 'crit' : kind);
     const hp = tmp2.copy(e.pos); hp.y += e.boss ? 3.5 : 1.2;
-    if (e.type === 'ifrit' || e.type === 'imp') this.fx.sparks(hp, new THREE.Color(4, 1.4, 0.3));
-    else if (e.type === 'ghoul') this.fx.blood(hp, new THREE.Color(0.15, 0.2, 0.08));
-    else { this.fx.blood(hp); if (crit) this.fx.sparks(hp); }
+    if (e.T.fiery) this.fx.sparks(hp, new THREE.Color(4, 1.4, 0.3));
+    { this.fx.blood(hp); if (crit) this.fx.sparks(hp); }
     if (crit) { this.audio.crit(); this.hitStop = 0.05; this.shake = Math.max(this.shake, 0.25); } else this.audio.hit();
     if (this.player.stats.leech) this.player.hp = Math.min(this.player.stats.maxHp, this.player.hp + this.player.stats.leech);
     this.lastTarget = e; this.lastTargetT = 3;
@@ -316,7 +314,7 @@ export class Game {
     this.audio.death();
     const p = this.player; p.xp += e.xp;
     this.fx.dust(e.pos, 6);
-    if (!e.boss) this.decal(e.pos, 1.6 + Math.random(), e.type === 'ghoul' ? 'ghoul' : e.type === 'imp' ? 'fire' : 'blood');
+    if (!e.boss) this.decal(e.pos, 1.6 + Math.random(), 'blood');
     if (e.aura) e.aura.visible = false;
     while (p.xp >= this.xpFor(p.level)) { p.xp -= this.xpFor(p.level); this.levelUp(); }
     // loot
@@ -342,7 +340,7 @@ export class Game {
   completeQuest(id) {
     const q = this.quests.find((x) => x.id === id); if (!q || q.done) return;
     q.done = true; this.ui.quest(this.quests);
-    const msgs = { serai: ['The Raiders Scatter', 'Abu Jahm lies dead among the ruins'], graves: ['The Tombs Fall Silent', 'The restless dead return to the earth'], boss: ['The Ifrit is Vanquished', 'Baghdad sleeps safely tonight'] };
+    const msgs = { serai: ['The Raiders Scatter', 'Ziyad falls among the ruins of the caravanserai'], graves: ['The Kilns Fall Silent', 'Hisham\'s deserters flee into the dunes'], boss: ['The Renegade Falls', 'The grain road to Baghdad is open again'] };
     this.ui.banner(...msgs[id]);
   }
 
@@ -386,7 +384,7 @@ export class Game {
       const n = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.15, 8), pm); n.position.y = 0.34; grp.add(n);
     } else {
       let m;
-      if (item.slot === 'weapon') { m = scimitar(); m.rotation.z = Math.PI / 2; m.position.y = 0.06; m.scale.setScalar(1.1); }
+      if (item.slot === 'weapon') { m = sword(); m.rotation.z = Math.PI / 2; m.position.y = 0.06; m.scale.setScalar(1.1); }
       else {
         const col = { armor: 0x7a7d80, helm: 0x9a9da0, ring: 0xe0b050, amulet: 0x3a6ac8 }[item.slot];
         const geo = item.slot === 'ring' ? new THREE.TorusGeometry(0.12, 0.035, 8, 16) : item.slot === 'amulet' ? new THREE.OctahedronGeometry(0.15) : item.slot === 'helm' ? new THREE.SphereGeometry(0.22, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2) : new THREE.BoxGeometry(0.5, 0.15, 0.4);
@@ -506,27 +504,27 @@ export class Game {
   spawnBoss() {
     this.bossSpawned = true;
     const A = SITES.arch;
-    const b = this.spawnPack('ifrit', A.x, A.z - 2, 1, 6, { spread: 0 })[0];
+    const b = this.spawnPack('commander', A.x, A.z - 2, 1, 6, { spread: 0 })[0];
     b.st.action = null; b.phase = 1; b.summoned = false; b.meteorCd = 6; b.volleyCd = 3; b.rise = 0;
     this.boss = b; b.quest = 'boss'; b.alerted = true;
-    this.ui.banner('Ifrit, the Unbound', 'Born of smokeless fire, freed from Sulayman\'s seal', 4000);
+    this.ui.banner('Ghassan', 'Renegade commander of the siege of Baghdad', 4000);
     this.audio.roar(); this.shake = 0.8; this.bossActive = true;
     this.fx.flash(tmp.copy(b.pos).setY(4), 0xff6020, 60, 1.2, 30);
     for (let i = 0; i < 3; i++) this.fx.ring(b.pos, new THREE.Color(1.6, 0.6, 0.15), 1 + i, 6 + i * 2.5, 0.8 + i * 0.25, 0.8);
-    this.bossLight = new THREE.PointLight(0xff6a20, 25, 20, 2); this.scene.add(this.bossLight);
+    this.bossLight = new THREE.PointLight(0xff8a40, 10, 16, 2); this.scene.add(this.bossLight);
     this.audio.setMusicIntensity(1);
   }
   onBossDeath(b) {
     this.ui.bossBar(null); this.bossActive = false;
     this.player.invuln = 8;
-    for (const e of this.enemies) if (!e.dead && e.type === 'imp') { e.hp = 0; this.killEnemy(e, b.pos); }
+    for (const e of this.enemies) if (!e.dead && e.T.summoned) { e.hp = 0; this.killEnemy(e, b.pos); }
     for (const h of this.hazards) if (h.kind === 'telegraph') { this.scene.remove(h.ring, h.fill); h.onDone = null; h.t = h.life; }
     for (const q of this.projectiles) if (q.owner === 'enemy') q.life = 0;
     this.audio.setMusicIntensity(0);
     this.fx.flash(tmp.copy(b.pos).setY(4), 0xffa040, 300, 2.5, 50);
     for (let i = 0; i < 6; i++) setTimeout(() => { this.fx.ring(b.pos, new THREE.Color(4, 2, 0.5), 1, 14, 1.2); this.audio.boom(); this.shake = 0.6; }, i * 250);
     this.fx.burst(tmp.copy(b.pos).setY(4), 200, { speed: 10, life: 2, size: 0.8, size1: 0.05, color: new THREE.Color(4, 1.6, 0.4), up: 3, drag: 1.2 });
-    setTimeout(() => this.ui.banner('Victory', 'The Ifrit is bound once more. The House of Wisdom honours you.', 5000), 2500);
+    setTimeout(() => this.ui.banner('Victory', 'Ghassan is fallen. The caravans of the Sawad move freely once more.', 5000), 2500);
     const mins = Math.floor(this.t / 60), secs = Math.floor(this.t % 60);
     setTimeout(() => this.ui.victory({ level: this.player.level, gold: this.player.gold, kills: this.kills || 0, time: `${mins}m ${String(secs).padStart(2, '0')}s` }), 8000);
     if (this.bossLight) setTimeout(() => { this.scene.remove(this.bossLight); }, 2000);
@@ -534,10 +532,9 @@ export class Game {
 
   bossAI(b, dt) {
     const p = this.player, d = b.pos.distanceTo(p.pos);
-    if (b.rise < 1) { b.rise = Math.min(1, b.rise + dt * 0.5); b.rig.children[0].scale.setScalar((0.2 + b.rise * 0.8) * 0.8); return; }
+    if (b.rise < 1) { b.rise = Math.min(1, b.rise + dt * 0.5); if (!b.st.action) { b.st.action = 'command'; b.st.actionT = 0; } b.st.actionT = b.rise; if (b.rise >= 1) b.st.action = null; return; }
     this.ui.bossBar(b.name, b.hp / b.maxHp);
     if (this.bossLight) this.bossLight.position.set(b.pos.x, b.pos.y + 5, b.pos.z);
-    for (let i = 0; i < 3; i++) this.fx.fire(tmp.set(b.pos.x + rand(-1, 1), b.pos.y + 0.5, b.pos.z + rand(-1, 1)), 1.5);
     const face = Math.atan2(p.pos.x - b.pos.x, p.pos.z - b.pos.z);
     b.facing += angDiff(b.facing, face) * Math.min(1, dt * 3);
     if (b.st.action) {
@@ -546,18 +543,18 @@ export class Game {
         b.didHit = true;
         const c = b.slamPos;
         this.audio.boom(); this.shake = 0.7;
-        this.fx.ring(c, new THREE.Color(4, 1.4, 0.3), 1, 7, 0.6);
-        this.fx.burst(tmp.copy(c).setY(c.y + 0.3), 80, { speed: 9, life: 0.8, size: 0.8, size1: 0.1, color: new THREE.Color(3, 1, 0.2), up: 1, drag: 2 });
+        this.fx.ring(c, new THREE.Color(2.2, 1.8, 1.2), 0.6, 4, 0.4);
+        this.fx.sparks(tmp.copy(c).setY(c.y + 0.5), new THREE.Color(4, 3, 1.6));
         this.fx.dust(c, 20, 2);
-        if (p.pos.distanceTo(c) < 6) this.damagePlayer(b.dmg * 1.4, c);
+        if (p.pos.distanceTo(c) < 3.4) this.damagePlayer(b.dmg * 1.4, c);
       }
-      if (b.st.action === 'cast' && b.st.actionT > 0.5 && !b.didHit) {
+      if (b.st.action === 'command' && b.st.actionT > 0.5 && !b.didHit) {
         b.didHit = true;
         if (b.castKind === 'volley') {
           const n = b.phase >= 2 ? 7 : 5;
           for (let i = 0; i < n; i++) {
             const a = face + (i - (n - 1) / 2) * 0.22;
-            this.fireball(tmp.copy(b.pos).setY(b.pos.y + 4.5), new THREE.Vector3(Math.sin(a), 0, Math.cos(a)));
+            this.fireball(tmp.copy(b.pos).setY(b.pos.y + 2.4), new THREE.Vector3(Math.sin(a), 0, Math.cos(a)));
           }
           this.audio.whoosh();
         } else if (b.castKind === 'meteor') {
@@ -573,8 +570,8 @@ export class Game {
             }, true);
           }
         } else if (b.castKind === 'summon') {
-          const imps = this.spawnPack('imp', b.pos.x, b.pos.z + 3, 4, 5, { spread: 5 });
-          for (const i of imps) { i.alerted = true; this.fx.burst(tmp.copy(i.pos).setY(i.pos.y + 0.5), 30, { speed: 4, life: 0.6, size: 0.5, size1: 0.05, color: new THREE.Color(4, 1.4, 0.3), up: 2 }); }
+          const guard = this.spawnPack(['naffat', 'bandit', 'spearman'], b.pos.x, b.pos.z + 3, 4, 5, { spread: 6 });
+          for (const i of guard) { i.alerted = true; i.T = { ...i.T, summoned: true }; this.fx.dust(i.pos, 10, 1.2); }
           this.audio.roar();
         }
       }
@@ -585,21 +582,22 @@ export class Game {
     b.volleyCd -= dt; b.meteorCd -= dt;
     if (!b.summoned && b.hp < b.maxHp * 0.4) { b.summoned = true; this.bossCast(b, 'summon'); return; }
     if (b.phase >= 2 && b.meteorCd <= 0) { b.meteorCd = 9; this.bossCast(b, 'meteor'); return; }
-    if (d < 6.5 && b.atkCd <= 0) {
-      b.st.action = 'slam'; b.st.actionT = 0; b.actionDur = 1.6; b.didHit = false; b.atkCd = 2.6;
-      b.slamPos = tmp.copy(b.pos).addScaledVector(new THREE.Vector3(Math.sin(face), 0, Math.cos(face)), 3).clone();
+    if (d < 5 && b.atkCd <= 0) {
+      b.moving = false; b.st.action = 'slam'; b.st.actionT = 0; b.actionDur = 1.4; b.didHit = false; b.atkCd = 2.6;
+      b.slamPos = tmp.copy(b.pos).addScaledVector(new THREE.Vector3(Math.sin(face), 0, Math.cos(face)), 2.2).clone();
       b.slamPos.y = heightAt(b.slamPos.x, b.slamPos.z);
-      this.telegraph(b.slamPos, 6, 0.88, null);
+      this.telegraph(b.slamPos, 3.2, 0.77, null);
       return;
     }
     if (b.volleyCd <= 0 && d < 24) { b.volleyCd = b.phase >= 2 ? 3.5 : 5; this.bossCast(b, 'volley'); return; }
     // drift towards the player
-    if (d > 5) { const dir = tmp.copy(p.pos).sub(b.pos).setY(0).normalize(); b.pos.addScaledVector(dir, b.speed * dt); }
+    b.moving = d > 3.5;
+    if (b.moving) { const dir = tmp.copy(p.pos).sub(b.pos).setY(0).normalize(); b.pos.addScaledVector(dir, b.speed * dt); resolve(b.pos, b.radius); }
   }
-  bossCast(b, kind) { b.st.action = 'cast'; b.castKind = kind; b.st.actionT = 0; b.actionDur = kind === 'volley' ? 1.1 : 1.6; b.didHit = false; }
+  bossCast(b, kind) { b.moving = false; b.st.action = 'command'; b.castKind = kind; b.st.actionT = 0; b.actionDur = kind === 'volley' ? 1.1 : 1.6; b.didHit = false; }
 
   fireball(from, dir) {
-    const m = new THREE.Mesh(new THREE.SphereGeometry(0.4, 10, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2, 0.4), toneMapped: false }));
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8).scale(1, 1.3, 1), new THREE.MeshStandardMaterial({ color: 0x7a3d1e, roughness: 0.6, emissive: 0xff5010, emissiveIntensity: 0.6 }));
     m.position.copy(from); this.scene.add(m);
     const v = dir.clone().multiplyScalar(12); v.y = -2.2;
     this.projectiles.push({ mesh: m, vel: v, grav: 0, life: 3, owner: 'enemy', kind: 'fireball', dmg: this.boss.dmg * 0.6 });
@@ -664,11 +662,12 @@ export class Game {
   }
   talkToNpc() {
     const lines = [
-      'Peace be upon you, traveller. I am <b>Ishaq al-Munajjim</b>, astronomer of the <i>Bayt al-Hikma</i>. Three nights past, a raider named <b>Abu Jahm</b> broke the old seal beneath the ruined arch of the Persian kings — and something of smokeless fire walked free.',
-      'The dead in the southern tombs no longer rest, and the raiders grow bold. Drive them from the caravanserai to the east, still the <b>ghul</b> across the canal, then face the <b>Ifrit</b> at the great arch to the south. Take this sherbet — and may the stars guide your blade.',
+      'Salim! You live. When your caravan did not reach the gate, I feared the worst. I am <b>Ishaq</b>, astronomer of the <i>Bayt al-Hikma</i> — and those were my instruments on your camels.',
+      'The siege is over, but its soldiers did not all go home. A renegade named <b>Ghassan</b> gathers deserters at the ruined Persian arch to the south, and he means to choke the grain road.',
+      'Break his lieutenants first: <b>Ziyad</b> holds the old caravanserai to the east, and <b>Hisham</b> hides his knife-men in the brick kilns across the canal. Take this sherbet, and keep your sword arm loose.',
     ];
     let i = 0;
-    const next = () => { if (i < lines.length) this.ui.dialog('Ishaq al-Munajjim', lines[i++], next); };
+    const next = () => { if (i < lines.length) this.ui.dialog('Ishaq', lines[i++], next); };
     next();
     if (this.npcMark) this.npcMark.visible = false;
   }
@@ -771,14 +770,27 @@ export class Game {
       } else if (!goal && p.moveTo && !(p.st.action === 'attack')) goal = p.moveTo;
       if (p.pickup && this.drops.includes(p.pickup) && p.pos.distanceTo(p.pickup.to) < 1.5) { this.tryPickup(p.pickup); p.pickup = null; p.moveTo = null; }
       if (goal) goal = this.steer(p, goal);
+      const want = tmp2.set(0, 0, 0);
       if (goal) {
         const dx = goal.x - p.pos.x, dz = goal.z - p.pos.z, d = Math.hypot(dx, dz);
         if (d > 0.2) {
-          const step = Math.min(d, speed * dt);
-          p.pos.x += dx / d * step; p.pos.z += dz / d * step; moving = true;
-          if (p.whirlT <= 0) p.facing += angDiff(p.facing, Math.atan2(dx, dz)) * Math.min(1, dt * 14);
+          const arrive = Math.min(1, d / 1.2); // ease into the destination instead of snapping
+          want.set(dx / d, 0, dz / d).multiplyScalar(speed * (this.joy ? Math.min(1, Math.hypot(this.joy.x, this.joy.y) * 1.4) : Math.max(0.35, arrive)));
+          if (p.whirlT <= 0) p.facing += angDiff(p.facing, Math.atan2(dx, dz)) * Math.min(1, dt * 11);
         } else if (p.moveTo && Math.hypot(p.moveTo.x - p.pos.x, p.moveTo.z - p.pos.z) < 0.3) p.moveTo = null;
       }
+      if (!p.vel) p.vel = new THREE.Vector3();
+      const accel = want.lengthSq() > 0 ? 34 : 26;
+      const prevYaw = p.prevFacing ?? p.facing;
+      p.vel.x += THREE.MathUtils.clamp(want.x - p.vel.x, -accel * dt, accel * dt);
+      p.vel.z += THREE.MathUtils.clamp(want.z - p.vel.z, -accel * dt, accel * dt);
+      const vlen = Math.hypot(p.vel.x, p.vel.z);
+      if (vlen > 0.05) { p.pos.x += p.vel.x * dt; p.pos.z += p.vel.z * dt; moving = vlen > 0.6; } else p.vel.set(0, 0, 0);
+      // lean into turns (yaw rate) and forward into acceleration
+      const yawRate = dt > 0 ? angDiff(prevYaw, p.facing) / dt : 0; p.prevFacing = p.facing;
+      p.st.lean = THREE.MathUtils.lerp(p.st.lean || 0, p.whirlT > 0 ? 0 : THREE.MathUtils.clamp(yawRate * vlen / speed * 0.18, -0.5, 0.5), Math.min(1, dt * 8));
+      p.st.fwdLean = THREE.MathUtils.lerp(p.st.fwdLean || 0, THREE.MathUtils.clamp(vlen / speed, 0, 1) * 0.6 + (want.length() - vlen) / speed * 0.5, Math.min(1, dt * 6));
+      p.st.speedK = vlen / 6.4;
       // attack resolution
       if (p.st.action && p.st.action !== 'spin') {
         p.st.actionT += dt / p.actionDur;
@@ -800,8 +812,8 @@ export class Game {
     p.pos.x = THREE.MathUtils.clamp(p.pos.x, -BOUND, BOUND); p.pos.z = THREE.MathUtils.clamp(p.pos.z, -BOUND, BOUND);
     resolve(p.pos, 0.45);
     p.pos.y = heightAt(p.pos.x, p.pos.z);
-    p.st.walkBlend = THREE.MathUtils.lerp(p.st.walkBlend, moving ? 1 : 0, Math.min(1, dt * 10));
-    p.st.phase += dt * (moving ? speed * 1.55 : 0);
+    p.st.walkBlend = THREE.MathUtils.lerp(p.st.walkBlend, moving ? Math.min(1, (p.st.speedK ?? 1) * 1.1) : 0, Math.min(1, dt * 8));
+    p.st.phase += dt * (p.dashT > 0 ? speed * 1.55 : Math.hypot(p.vel?.x || 0, p.vel?.z || 0) * 1.55);
     // footstep dust puffs
     if (moving && p.dashT <= 0) { const step = Math.floor(p.st.phase / Math.PI); if (step !== p.lastStep) { p.lastStep = step; this.fx.dust(tmp.copy(p.pos).add(new THREE.Vector3(0, 0.1, 0)), 2, 0.45); } }
     p.rig.position.copy(p.pos); p.rig.rotation.y = p.facing;
@@ -883,7 +895,7 @@ export class Game {
       e.rig.visible = dist < 45;
       if (e.dead) {
         e.st.deadT += dt; e.deadT += dt;
-        if (e.boss) animateIfrit(e.rig, e.st, this.t); else animateHumanoid(e.rig, e.st, this.t, dt);
+        animateHumanoid(e.rig, e.st, this.t, dt);
         if (e.deadT > 5) { e.rig.position.y -= dt * 0.4; }
         if (e.deadT > 8) { this.scene.remove(e.rig); e.removed = true; }
         continue;
@@ -898,19 +910,18 @@ export class Game {
         if (e.burnTick <= 0) { e.burnTick = 0.5; const r = this.rollDamage(0.15, true); this.damageEnemy(e, r.d, false, e.pos, 'dot'); if (e.dead) continue; }
       }
       if (e.aura) { e.aura.rotation.y += dt; e.aura.material.opacity = 0.4 + Math.sin(this.t * 4) * 0.2; }
-      // hidden ghouls rise
+      // ambushers spring up
       if (e.hidden) {
         if (dist < 13) { e.hidden = false; e.riseT = 0; e.alerted = true; this.fx.dust(e.pos, 14, 1.2); this.audio.grunt(); }
-        else { e.rig.position.set(e.pos.x, e.pos.y - 2.2, e.pos.z); continue; }
+        else { e.st.crouch = 1; e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; animateHumanoid(e.rig, e.st, this.t, dt); continue; }
       }
       if (e.riseT < 1) {
-        e.riseT = Math.min(1, e.riseT + dt * 0.9);
-        e.rig.position.set(e.pos.x, e.pos.y - 2.2 * (1 - e.riseT), e.pos.z);
-        if (Math.random() < 0.3) this.fx.dust(e.pos, 1, 0.8);
+        e.riseT = Math.min(1, e.riseT + dt * 3.0);
+        e.st.crouch = 1 - e.riseT; e.rig.position.copy(e.pos);
         animateHumanoid(e.rig, e.st, this.t, dt);
         continue;
       }
-      if (e.boss) { this.bossAI(e, dt); e.pos.y = heightAt(e.pos.x, e.pos.z); e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; animateIfrit(e.rig, e.st, this.t); continue; }
+      if (e.boss) { this.bossAI(e, dt); e.pos.y = heightAt(e.pos.x, e.pos.z); e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; e.st.walkBlend = THREE.MathUtils.lerp(e.st.walkBlend, e.moving ? 1 : 0, Math.min(1, dt * 6)); e.st.phase += dt * (e.moving ? e.speed * 1.2 : 0); animateHumanoid(e.rig, e.st, this.t, dt); continue; }
       if (!e.alerted && dist < (e.T.ranged ? 16 : 13) && !p.dead) e.alerted = true;
       let moving = false;
       if (e.st.action) {
