@@ -39,7 +39,7 @@ export function createRenderer(container) {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.9;
+  renderer.toneMappingExposure = 0.95;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.appendChild(renderer.domElement);
   return renderer;
@@ -62,7 +62,8 @@ const GradeShader = {
       float l = dot(col, vec3(0.2126,0.7152,0.0722));
       vec3 sh = vec3(0.92,1.0,1.06), hi = vec3(1.08,1.0,0.88);
       col *= mix(sh, hi, smoothstep(0.05,0.8,l));
-      col = mix(vec3(l), col, 1.08); // saturation
+      col = mix(vec3(l), col, 1.15); // saturation
+      col = (col - 0.5*l) * 1.0 + 0.5*l; col = pow(col, vec3(1.06)); // slight contrast
       // vignette
       vec2 vc = c*vec2(uAspect,1.0);
       float v = smoothstep(1.05, 0.25, length(vc)*1.05);

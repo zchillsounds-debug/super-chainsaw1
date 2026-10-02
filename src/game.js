@@ -43,6 +43,45 @@ export class Game {
       { x: SITES.arch.x, z: SITES.arch.z, icon: '♨', color: '#ff7020' },
     ];
     this.pois[2].icon = '☾';
+    this.setupOccluders(this.world.occluders);
+  }
+
+  // Diablo-style see-through: a soft dithered hole around the hero cut into any building surface in front of them.
+  setupOccluders(groups) {
+    const U = this.occU = { uHole: { value: new THREE.Vector2(-999, -999) }, uHoleR: { value: 160 }, uPDepth: { value: 0 } };
+    const patched = new Map();
+    const patch = (mat) => {
+      if (patched.has(mat)) return patched.get(mat);
+      const m = mat.clone();
+      const base = mat.onBeforeCompile;
+      m.onBeforeCompile = (sh, r) => {
+        base && base.call(m, sh, r);
+        Object.assign(sh.uniforms, U);
+        sh.fragmentShader = sh.fragmentShader
+          .replace('#include <common>', `#include <common>
+            uniform vec2 uHole; uniform float uHoleR, uPDepth;
+            float bayer4(vec2 p){ ivec2 i = ivec2(mod(p,4.0)); int k = i.x + i.y*4;
+              float m[16] = float[16](0.,8.,2.,10.,12.,4.,14.,6.,3.,11.,1.,9.,15.,7.,13.,5.); return (m[k]+0.5)/16.0; }`)
+          .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+            { float dz = vViewPosition.z; float d = length(gl_FragCoord.xy - uHole);
+              float f = smoothstep(uHoleR, uHoleR*0.55, d) * step(dz, uPDepth - 1.2) * 0.85;
+              if (f > bayer4(gl_FragCoord.xy)) discard; }`);
+      };
+      const key = (mat.customProgramCacheKey ? mat.customProgramCacheKey() : '') + (base ? base.toString() : '');
+      m.customProgramCacheKey = () => 'occ:' + key;
+      patched.set(mat, m);
+      return m;
+    };
+    for (const g of groups) g.traverse((o) => { if (o.isMesh) o.material = patch(o.material); });
+  }
+  updateOccluders() {
+    const p = this.player.pos;
+    const sp = this.ui.project(tmp.set(p.x, p.y + 1.0, p.z), this.camera);
+    const dpr = this.renderer.getPixelRatio();
+    this.occU.uHole.value.set(sp.x * dpr, (innerHeight - sp.y) * dpr);
+    this.occU.uHoleR.value = 200 * dpr * (13.5 / (13.5 * this.camZoom));
+    tmp2.copy(tmp).applyMatrix4(this.camera.matrixWorldInverse);
+    this.occU.uPDepth.value = -tmp2.z;
   }
 
   // ------------------------------------------------------------------ setup
@@ -69,6 +108,23 @@ export class Game {
       const r = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.03, 6, 48), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 2.2, 0.8), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, toneMapped: false }));
       this.scene.add(r); this.wardRings.push(r);
     }
+    // whirlwind sand vortex
+    const vm = new THREE.ShaderMaterial({
+      uniforms: { uT: { value: 0 }, uA: { value: 0 } }, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+      fragmentShader: `uniform float uT, uA; varying vec2 vUv;
+        float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+        float n(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y); }
+        void main(){
+          vec2 p = vec2(vUv.x*8.0 + uT*6.0 + vUv.y*3.0, vUv.y*3.0 - uT*1.5);
+          float s = n(p)*0.6 + n(p*2.3)*0.4;
+          float streak = smoothstep(0.38, 0.8, s);
+          float a = streak * smoothstep(0.0,0.25,vUv.y) * smoothstep(1.0,0.6,vUv.y) * uA;
+          gl_FragColor = vec4(mix(vec3(0.55,0.42,0.28), vec3(1.0,0.88,0.66), streak), min(1.0, a*1.3));
+        }`,
+    });
+    this.vortex = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 1.2, 2.6, 32, 1, true).translate(0, 1.3, 0), vm);
+    this.vortex.renderOrder = 4; this.scene.add(this.vortex);
     // cursor marker
     this.marker = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.35, 24).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: new THREE.Color(2, 1.6, 0.6), transparent: true, opacity: 0, depthWrite: false, toneMapped: false }));
     this.scene.add(this.marker);
@@ -568,6 +624,7 @@ export class Game {
     this.updateHazards(dt);
     this.updateDrops(dt);
     this.updateCamera(dt);
+    if (this.started) this.updateOccluders(); else this.occU.uHole.value.set(-9999, -9999);
     if (this.npc) {
       animateHumanoid(this.npc, this.npcSt, this.t, dt);
       if (this.npcMark) { this.npcMark.rotation.y += dt * 2; this.npcMark.position.y = 2.6 + Math.sin(this.t * 3) * 0.1; }
@@ -673,6 +730,10 @@ export class Game {
     p.rig.position.copy(p.pos); p.rig.rotation.y = p.facing;
     animateHumanoid(p.rig, p.st, this.t, dt);
     this.pLight.position.set(p.pos.x, p.pos.y + 3, p.pos.z + 1);
+    // whirl vortex
+    const vu = this.vortex.material.uniforms; vu.uT.value = this.t;
+    vu.uA.value = THREE.MathUtils.lerp(vu.uA.value, p.whirlT > 0 ? 1 : 0, Math.min(1, dt * 10));
+    this.vortex.position.copy(p.pos); this.vortex.visible = vu.uA.value > 0.01;
     // ward visuals
     const w = p.buffs.ward > 0 ? Math.min(1, p.buffs.ward * 2) : 0;
     this.wardSigil.material.opacity = THREE.MathUtils.lerp(this.wardSigil.material.opacity, w * 0.9, dt * 6);
@@ -727,7 +788,7 @@ export class Game {
       if (dist > 70) continue;
       e.atkCd -= dt; e.st.hitT = Math.max(0, e.st.hitT - dt * 4);
       // hit flash
-      if (e.flash > 0) { e.flash = Math.max(0, e.flash - dt * 6); e.mats.forEach((m, i) => m.emissive.copy(e.baseEmissive[i]).lerp(new THREE.Color(1, 0.9, 0.8), e.flash * 0.8)); }
+      if (e.flash > 0) { e.flash = Math.max(0, e.flash - dt * 6); e.mats.forEach((m, i) => m.emissive.copy(e.baseEmissive[i]).lerp(new THREE.Color(1, 0.55, 0.3), e.flash * 0.35)); }
       if (e.burn > 0) {
         e.burn -= dt; e.burnTick = (e.burnTick || 0) - dt;
         if (Math.random() < 0.5) this.fx.fire(tmp.copy(e.pos).setY(e.pos.y + 0.6), 0.5);
@@ -873,7 +934,7 @@ export class Game {
 
   updateCamera(dt) {
     const p = this.player.pos;
-    const dist = 18 * this.camZoom;
+    const dist = 13.5 * this.camZoom;
     const target = tmp.set(p.x, p.y + dist * 1.0, p.z + dist * 0.78);
     if (!this.camInit) { this.camPos.copy(target); this.camInit = true; }
     this.camPos.lerp(target, Math.min(1, dt * 6));

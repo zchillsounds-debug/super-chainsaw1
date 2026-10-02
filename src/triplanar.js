@@ -55,5 +55,6 @@ export function triplanarMaterial({ map, normalMap, scale = 0.25, color = 0xffff
           normal = normalize((viewMatrix * vec4(fw, 0.0)).xyz);
         }`);
   };
+  mat.userData.uniforms = uniforms;
   return mat;
 }

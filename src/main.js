@@ -12,19 +12,19 @@ const renderer = createRenderer(document.getElementById('game'));
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(36, innerWidth / innerHeight, 0.5, 1400);
 const world = buildWorld(scene);
-scene.fog = new THREE.FogExp2(0xd2a882, 0.0078);
+scene.fog = new THREE.FogExp2(0xc99a72, 0.0065);
 scene.add(skyDome(world.sunDir));
 scene.environment = envFromSky(renderer, world.sunDir);
-scene.environmentIntensity = 0.55;
+scene.environmentIntensity = 0.4;
 
-const sun = new THREE.DirectionalLight(0xffcf9a, 2.7);
+const sun = new THREE.DirectionalLight(0xffc488, 3.3);
 sun.castShadow = true;
 const SM = QUALITY === 'low' ? 2048 : 4096;
 sun.shadow.mapSize.set(SM, SM);
 Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 1, far: 220 });
 sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.05; sun.shadow.radius = 3;
 scene.add(sun, sun.target);
-scene.add(new THREE.HemisphereLight(0xc8d4e8, 0x8a6648, 0.7));
+scene.add(new THREE.HemisphereLight(0xa8bce0, 0x6a4a34, 0.45));
 
 const fx = new FX(scene);
 const { composer, grade, resize } = createComposer(renderer, scene, camera);

@@ -172,20 +172,33 @@ export function createTerrain() {
         // slope -> exposed rock
         gRock = smoothstep(0.82,0.62,vNormal.y);
         col = mix(col, vec3(0.55,0.47,0.38)*(0.8+0.4*n3), 0.0);
-        col *= 0.88 + 0.24*n3; // micro variation / AO feel
+        float macro = fb(vWPos.xz*0.012+11.0);
+        col *= mix(vec3(0.82,0.74,0.66), vec3(1.08,1.02,0.95), smoothstep(0.25,0.75,macro));
+        col = mix(col, col*vec3(1.05,0.86,0.72), smoothstep(0.55,0.8,fb(vWPos.xz*0.04+5.0))*0.5*(1.0-gMask.g));
+        col *= 0.9 + 0.2*n3; // micro variation
         diffuseColor.rgb *= col;
       `)
       .replace('#include <roughnessmap_fragment>', `float roughnessFactor = roughness - gMask.b*0.45 - smoothstep(0.3,0.8,gMask.a)*0.1;`)
       .replace('#include <normal_fragment_maps>', `
         {
-          vec2 duv = vWPos.xz*0.35;
-          vec3 dn = texture2D(uDetail, duv).xyz*2.0-1.0;
-          vec3 dn2 = texture2D(uDetail, vWPos.xz*0.09 + 0.37).xyz*2.0-1.0;
-          float rip = (1.0-gMask.g)*(1.0-gMask.r)*(1.0-gMask.a);
-          vec2 d = dn.xy*mix(0.35,1.0,rip) + dn2.xy*0.6*rip;
-          vec3 wn = normalize(vec3(d.x, 1.0, d.y));
+          vec2 q = vWPos.xz;
+          // procedural wind ripples (non-repeating): warped sine with sharp crests
+          float rip = (1.0-gMask.g)*(1.0-smoothstep(0.1,0.5,gMask.r))*(1.0-smoothstep(0.2,0.6,gMask.a));
+          float amp = rip * (0.35 + 0.65*smoothstep(0.35,0.7,fb(q*0.025+3.0)));
+          vec2 dir = normalize(vec2(0.82,0.57) + vec2(fb(q*0.01)-0.5, fb(q*0.012+7.0)-0.5)*0.8);
+          float warp = fb(q*0.07)*5.0;
+          float ph = dot(q, dir)*2.6 + warp;
+          float c = cos(ph), sn = sin(ph);
+          float sharp = 0.6 + 0.4*sn; // asymmetric crest
+          vec2 g = dir * c * 2.6 * sharp * amp * 0.42;
+          vec3 dn = texture2D(uDetail, q*0.35).xyz*2.0-1.0;
+          float peb = 0.35 + 0.65*(1.0-rip);
+          g += dn.xy * 0.5 * peb;
+          // macro undulation normals (small dunes) from noise gradient
+          float e = 0.6; float h0 = fb(q*0.18);
+          g += vec2(fb((q+vec2(e,0.))*0.18)-h0, fb((q+vec2(0.,e))*0.18)-h0) / e * 0.35 * rip;
+          vec3 wn = normalize(vec3(-g.x, 1.0, -g.y));
           vec3 vn2 = normalize((viewMatrix * vec4(wn,0.0)).xyz);
-          // blend detail into geometric normal (approximate for low-slope terrain)
           normal = normalize(normal + (vn2 - (viewMatrix*vec4(0,1,0,0)).xyz));
         }
       `);

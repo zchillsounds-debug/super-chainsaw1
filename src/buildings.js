@@ -19,7 +19,7 @@ export function mats() {
     plaster: triplanarMaterial({ map: pl.map, normalMap: pl.normalMap, scale: 0.42, roughness: 0.9, normalStrength: 0.6, grime: 0.45 }),
     tile: new THREE.MeshStandardMaterial({ map: gt.map, normalMap: gt.normalMap, roughness: 0.2, metalness: 0.1 }),
     kufic: new THREE.MeshStandardMaterial({ map: kuficBand(), roughness: 0.3, emissive: 0x000000 }),
-    dome: (() => { const dm = gt.map.clone(); dm.repeat.set(10, 3); dm.needsUpdate = true; const dn = gt.normalMap.clone(); dn.repeat.set(10, 3); dn.needsUpdate = true; return new THREE.MeshStandardMaterial({ color: 0x8fd6cf, roughness: 0.3, metalness: 0.1, map: dm, normalMap: dn }); })(),
+    dome: (() => { const dm = gt.map.clone(); dm.repeat.set(24, 7); dm.needsUpdate = true; const dn = gt.normalMap.clone(); dn.repeat.set(24, 7); dn.needsUpdate = true; return new THREE.MeshStandardMaterial({ color: 0x8fd6cf, roughness: 0.3, metalness: 0.1, map: dm, normalMap: dn }); })(),
     domeGold: new THREE.MeshStandardMaterial({ color: 0xd8a640, roughness: 0.3, metalness: 0.9 }),
     wood: new THREE.MeshStandardMaterial({ map: wt, roughness: 0.8 }),
     dark: new THREE.MeshStandardMaterial({ color: 0x120c08, roughness: 1 }),

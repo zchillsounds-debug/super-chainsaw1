@@ -2,6 +2,22 @@ import * as THREE from 'three';
 import { fabricTex } from './textures.js';
 
 const lathe = (pts, seg = 14) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg);
+// Fresnel rim light so characters read clearly against the bright desert.
+export function addRim(mat, color = new THREE.Color(1.0, 0.75, 0.45), power = 3.0, strength = 0.6) {
+  if (mat.userData.rim) return mat;
+  mat.userData.rim = true;
+  const prev = mat.onBeforeCompile;
+  mat.onBeforeCompile = (sh, r) => {
+    prev && prev(sh, r);
+    sh.uniforms.uRimC = { value: color.clone().multiplyScalar(strength) };
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform vec3 uRimC;')
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        { float rim = 1.0 - max(dot(normalize(normal), normalize(vViewPosition)), 0.0);
+          totalEmissiveRadiance += uRimC * pow(rim, ${power.toFixed(1)}); }`);
+  };
+  mat.customProgramCacheKey = () => 'rim' + (prev ? prev.toString() : '');
+  return mat;
+}
 function mesh(g, m) { const o = new THREE.Mesh(g, m); o.castShadow = true; o.receiveShadow = true; return o; }
 function limb(len, r0, r1, mat) {
   const g = new THREE.CapsuleGeometry((r0 + r1) / 2, len - (r0 + r1), 4, 8).translate(0, -len / 2, 0);
@@ -127,6 +143,7 @@ export function humanoid(opts = {}) {
   if (o.weapon === 'bow') { const w = bow(); parts.handL.add(w); parts.weapon = w; }
   if (o.offhand === 'shield') { const sd = shield(); sd.position.set(-0.08, -0.05, 0.05); sd.rotation.y = -Math.PI / 2; parts.handL.add(sd); }
 
+  root.traverse((ob) => { if (ob.isMesh && ob.material.isMeshStandardMaterial) addRim(ob.material); });
   root.userData.parts = parts;
   return root;
 }

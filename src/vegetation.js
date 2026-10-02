@@ -166,7 +166,7 @@ export function grassField(points, kind = 'grass', seed = 2) {
 }
 
 // ---------------------------------------------------------------- rocks
-export function rocks(points, seed = 3, color = 0xb09a84) {
+export function rocks(points, seed = 3, color = 0xf4e6d4) {
   const rnd = mulberry32(seed);
   const g = new THREE.IcosahedronGeometry(1, 2);
   const p = g.attributes.position;

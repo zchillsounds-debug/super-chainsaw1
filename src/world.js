@@ -6,8 +6,10 @@ import { palms, grassField, rocks, shrubs, wind } from './vegetation.js';
 import { lanternPost, firePit, tent, jar, crate, marketStall, cart, grave, deadTree, banner, bridge, waterwheel } from './props.js';
 import { mulberry32 } from './noise.js';
 
-function place(scene, obj, x, z, rotY = 0, addCols = true) {
+let OCC = null;
+function place(scene, obj, x, z, rotY = 0, addCols = true, occ = false) {
   obj.position.set(x, heightAt(x, z), z); obj.rotation.y = rotY; scene.add(obj);
+  if (occ && OCC) OCC.push(obj);
   if (addCols && obj.userData.colliders) {
     const c = Math.cos(rotY), s = Math.sin(rotY);
     for (const col of obj.userData.colliders) {
@@ -33,8 +35,9 @@ function blocked(x, z, pad = 0) {
 
 export function buildWorld(scene) {
   const rnd = mulberry32(2024);
-  const out = { fires: [], updaters: [], lanterns: [] };
+  const out = { fires: [], updaters: [], lanterns: [], occluders: [] };
 
+  OCC = out.occluders;
   const sunDir = new THREE.Vector3(-0.55, 0.62, 0.35).normalize();
   out.sunDir = sunDir;
   scene.add(createTerrain());
@@ -42,13 +45,13 @@ export function buildWorld(scene) {
 
   // ---------------- village
   const V = SITES.village;
-  place(scene, mosque(), V.x + 2, V.z - 6, 0);
+  place(scene, mosque(), V.x + 2, V.z - 6, 0, true, true);
   const houseSpots = [[-14, 8, 0.1], [-13, 18, -0.05], [-4, 22, Math.PI], [8, 22, Math.PI + 0.1], [17, 14, -Math.PI / 2], [18, 3, -Math.PI / 2], [-16, -2, Math.PI / 2], [20, -10, -Math.PI / 2], [-6, 32, Math.PI], [12, 32, Math.PI]];
   for (const [dx, dz, r] of houseSpots) {
     const w = 4 + rnd() * 3, d = 4 + rnd() * 2.5, h = 3.2 + rnd() * 2.2;
     const hs = house(rnd, w, d, h);
     const x = V.x + dx, z = V.z + dz;
-    place(scene, hs, x, z, r, false);
+    place(scene, hs, x, z, r, false, true);
     colliders.push({ type: 'box', x, z, hw: w / 2 + 0.2, hd: d / 2 + 0.3, rot: r });
   }
   const stallCols = ['#8c2f24', '#2f5d7c', '#c28a2c', '#5a7d3a'];
@@ -83,7 +86,7 @@ export function buildWorld(scene) {
 
   // ---------------- caravanserai bandit camp
   const S = SITES.serai;
-  place(scene, caravanserai(rnd), S.x, S.z, 0);
+  place(scene, caravanserai(rnd), S.x, S.z, 0, true, true);
   for (const [dx, dz, r, c] of [[-8, -6, 0.3, '#2a2420'], [7, -7, -0.4, '#3a1c18'], [-9, 6, 2.6, '#2a2420']]) {
     place(scene, tent(c), S.x + dx, S.z + dz, r, false); colliders.push({ type: 'box', x: S.x + dx, z: S.z + dz, hw: 3, hd: 2.3, rot: r });
   }
@@ -97,7 +100,7 @@ export function buildWorld(scene) {
 
   // ---------------- graveyard
   const G = SITES.graveyard;
-  place(scene, mausoleum(), G.x - 4, G.z - 8, 0.3);
+  place(scene, mausoleum(), G.x - 4, G.z - 8, 0.3, true, true);
   for (let i = 0; i < 46; i++) {
     const x = G.x + (rnd() - 0.5) * 34, z = G.z + (rnd() - 0.5) * 30;
     if (blocked(x, z, 1.2) || roadDist(x, z) < 2) continue;
@@ -108,7 +111,7 @@ export function buildWorld(scene) {
 
   // ---------------- great arch boss arena
   const A = SITES.arch;
-  place(scene, greatArch(), A.x, A.z - 10, 0);
+  place(scene, greatArch(), A.x, A.z - 10, 0, true, true);
   const braziers = [[-10, 6], [10, 6], [-10, -6], [10, -6]];
   for (const [dx, dz] of braziers) {
     const f = place(scene, firePit(), A.x + dx, A.z + dz, 0, false);
@@ -148,6 +151,15 @@ export function buildWorld(scene) {
   if (wheatPts.length) scene.add(grassField(wheatPts, 'wheat', 6));
   scene.add(grassField(grassPts, 'grass', 7));
   scene.add(rocks(rockPts, 8));
+  // small pebbles & stones littering the ground
+  const pebbles = [];
+  for (let i = 0; i < 5000; i++) {
+    const x = (rnd() - 0.5) * (WORLD - 20), z = (rnd() - 0.5) * (WORLD - 20);
+    if (Math.abs(x - canalX(z)) < CANAL_W * 0.7) continue;
+    const rd = roadDist(x, z);
+    if (rnd() < (rd < 4 ? 0.9 : 0.35)) pebbles.push({ x, y: heightAt(x, z) - 0.03, z, s: 0.06 + rnd() * 0.16 });
+  }
+  const peb = rocks(pebbles, 21, 0xe8dccb); peb.castShadow = false; scene.add(peb);
   scene.add(shrubs(shrubPts, 9));
   for (const p of rockPts) if ((p.s || 0) > 1.4) colliders.push({ type: 'circle', x: p.x, z: p.z, r: p.s * 0.8 });
 
