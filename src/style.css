@@ -361,3 +361,5 @@ body:not(.touch) #quest{top:216px;max-height:calc(100vh - 420px);overflow:hidden
 #victory .vngnote{font:italic 14px Amiri,serif;color:#cdbb92;margin-top:8px;max-width:420px;text-align:center}
 /* touch controls only once the game has started (not over the title screen) */
 body:not(.playing) #touch{display:none!important}
+/* the class picker lives inside #ui (pointer-events:none): it must take taps itself, or they fall through to the canvas */
+#classpick:not(.out){pointer-events:auto}
