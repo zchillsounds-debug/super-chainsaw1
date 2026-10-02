@@ -28,8 +28,8 @@ export function addWrinkles(mat) {
 }
 
 export class Cloth {
-  constructor({ rows, cols, rest, anchor, material, closed = false, uvRepeat = 1, stiff = 1, gravity = 1 }) {
-    this.rows = rows; this.cols = cols; this.anchor = anchor; this.closed = closed; this.gravity = gravity;
+  constructor({ rows, cols, rest, anchor, material, closed = false, uvRepeat = 1, stiff = 1, gravity = 1, carry = 0.45 }) {
+    this.carry = carry; this.rows = rows; this.cols = cols; this.anchor = anchor; this.closed = closed; this.gravity = gravity;
     const n = rows * cols;
     this.p = new Float32Array(n * 3); this.q = new Float32Array(n * 3);
     this.local = new Float32Array(n * 3); // rest positions in the anchor bone's bind space
@@ -113,9 +113,15 @@ export class Cloth {
       const h = 1 / 60, g = -9.8 * this.gravity * h * h, ws = this.anchor.matrixWorld.getMaxScaleOnAxis();
       while (this.acc >= h) {
         this.acc -= h;
-        for (let c = 0; c < cols; c++) { this.pinWorld(c, _a); P[c * 3] = Q[c * 3] = _a.x; P[c * 3 + 1] = Q[c * 3 + 1] = _a.y; P[c * 3 + 2] = Q[c * 3 + 2] = _a.z; }
+        // the pinned edge's motion this step; free particles are partly carried along with it (heavy wool and
+        // felt hang off a running body rather than streaming out behind it like a flag)
+        let mx = 0, mz = 0;
+        for (let c = 0; c < cols; c++) { this.pinWorld(c, _a); mx += _a.x - P[c * 3]; mz += _a.z - P[c * 3 + 2]; P[c * 3] = Q[c * 3] = _a.x; P[c * 3 + 1] = Q[c * 3 + 1] = _a.y; P[c * 3 + 2] = Q[c * 3 + 2] = _a.z; }
+        mx /= cols; mz /= cols; if (mx * mx + mz * mz > 0.04) mx = mz = 0; // teleports
+        const carry = this.carry;
         for (let i = cols; i < n; i++) {
           const x = P[i * 3], y = P[i * 3 + 1], z = P[i * 3 + 2], damp = this.damp;
+          P[i * 3] += mx * carry; P[i * 3 + 2] += mz * carry;
           P[i * 3] += (x - Q[i * 3]) * damp + wind * h * h * (Math.sin(i * 1.7 + performance.now() * 0.004) * 6);
           P[i * 3 + 1] += (y - Q[i * 3 + 1]) * damp + g;
           P[i * 3 + 2] += (z - Q[i * 3 + 2]) * damp + wind * h * h * (Math.cos(i * 2.3 + performance.now() * 0.003) * 6);
