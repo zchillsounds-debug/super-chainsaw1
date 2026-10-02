@@ -27,7 +27,7 @@ export const TYPES = {
   },
   commander: {
     name: 'Ghassan, the Renegade Commander', hp: 2200, dmg: 14, speed: 3.0, range: 3.2, atk: 2.4, xp: 600, radius: 1.1, boss: true,
-    build: () => humanoid({ robe: '#141414', robe2: '#8a1a14', hem: true, mail: true, helm: true, turban: null, cloak: 0x5a0e0a, tails: ['#141414', '#8a1a14'], beard: 0x1a120c, skin: 0x8a5a3a, weapon: 'sword', offhand: 'shield', sash: 0x8a1a14, scale: 1.55 }),
+    build: () => humanoid({ robe: '#141414', robe2: '#8a1a14', hem: true, qaba: true, mail: true, helm: true, turban: null, cloak: 0x5a0e0a, beard: 0x1a120c, beardLen: 0.8, skin: 0x8a5a3a, weapon: 'sword', offhand: 'shield', sash: 0x8a1a14, scale: 1.55, build: 1.15, belly: 0.4, hemY: 0.3, detail: 'hi' }),
   },
 };
 

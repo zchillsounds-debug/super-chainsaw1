@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { humanoid, animateHumanoid, sword, camel, animateCamel } from './characters.js';
+import { humanoid, animateHumanoid, sword, camel, animateCamel, CharLOD } from './characters.js';
 import { heightAt, SITES, canalX } from './terrain.js';
 import { resolve, buildGrid } from './collision.js';
 import { buildNav, findPath, navClear } from './nav.js';
-import { makeEnemy } from './entities.js';
+import { makeEnemy, TYPES } from './entities.js';
 import { makeItem, rollRarity, RARITY } from './items.js';
 import { sigilTex, glowDecal, splatTex } from './textures.js';
 
@@ -102,7 +102,7 @@ export class Game {
 
   // ------------------------------------------------------------------ setup
   createPlayer() {
-    const rig = humanoid({ robe: '#17171a', robe2: '#b8913e', hem: true, mail: true, qaba: true, turban: null, cap: 0x2a2620, capBand: 0x141210, offhand: 'shield', beard: 0x2a1a10, cloak: 0x6e1c16, tails: ['#17171a', '#b8913e'], sash: 0x9a2a1c, scabbard: true, skin: 0xa8714a });
+    const rig = humanoid({ robe: '#17171a', robe2: '#b8913e', hem: true, mail: true, qaba: true, turban: null, cap: 0x2a2620, capBand: 0x141210, offhand: 'shield', beard: 0x2a1a10, cloak: 0x6e1c16, sash: 0x9a2a1c, scabbard: true, skin: 0xa8714a, build: 1.1, detail: 'hi' });
     this.scene.add(rig);
     const p = this.player = {
       rig, pos: new THREE.Vector3(1, 0, 88), facing: Math.PI, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, dead: false, deadT: 0, fallDir: 1 },
@@ -179,6 +179,7 @@ export class Game {
   }
 
   spawnEnemies() {
+    TYPES.commander.build(); // sculpt Ghassan's geometry during loading so his entrance doesn't hitch
     const S = SITES.serai, G = SITES.kiln;
     this.spawnPack(['bandit', 'bandit', 'archer'], 22, 36, 3, 1);
     this.spawnPack(['bandit', 'spearman'], 38, 14, 4, 1);
@@ -614,7 +615,7 @@ export class Game {
 
   // ------------------------------------------------------------------ NPC
   addNpc() {
-    const npc = humanoid({ robe: '#e6dcc4', robe2: '#2a6a5a', turban: 0x2a7a6a, beard: 0xd8d0c0, weapon: null, skin: 0x9a6a48, sash: 0x2a6a5a });
+    const npc = humanoid({ robe: '#e6dcc4', robe2: '#2a6a5a', turban: 0x2a7a6a, beard: 0xd8d0c0, beardLen: 1, weapon: null, skin: 0x9a6a48, sash: 0x2a6a5a, build: 0.92, belly: 0.25, tiraz: true, detail: 'hi' });
     const x = -2, z = 84; npc.position.set(x, heightAt(x, z), z); npc.rotation.y = 0.6;
     this.scene.add(npc); this.npc = npc; this.npcSt = { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0 };
     // astrolabe in hand
@@ -817,6 +818,7 @@ export class Game {
     // footstep dust puffs
     if (moving && p.dashT <= 0) { const step = Math.floor(p.st.phase / Math.PI); if (step !== p.lastStep) { p.lastStep = step; this.fx.dust(tmp.copy(p.pos).add(new THREE.Vector3(0, 0.1, 0)), 2, 0.45); } }
     p.rig.position.copy(p.pos); p.rig.rotation.y = p.facing;
+    CharLOD.center.copy(p.pos);
     animateHumanoid(p.rig, p.st, this.t, dt);
     this.pLight.position.set(p.pos.x, p.pos.y + 3, p.pos.z + 1);
     // whirl vortex
