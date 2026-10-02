@@ -49,8 +49,9 @@ export class Game {
   // Diablo-style see-through: a soft dithered hole around the hero cut into any building surface in front of them.
   setupOccluders(groups) {
     const U = this.occU = { uHole: { value: new THREE.Vector2(-999, -999) }, uHoleR: { value: 160 }, uPDepth: { value: 0 } };
+    const scaleOf = (o) => (o.isInstancedMesh && o.geometry.attributes.color && !o.material.map ? 2.6 : 1.0);
     const patched = new Map();
-    const patch = (mat) => {
+    const patch = (mat, hs = 1) => {
       if (patched.has(mat)) return patched.get(mat);
       const m = mat.clone();
       const base = mat.onBeforeCompile;
@@ -64,15 +65,15 @@ export class Game {
               float m[16] = float[16](0.,8.,2.,10.,12.,4.,14.,6.,3.,11.,1.,9.,15.,7.,13.,5.); return (m[k]+0.5)/16.0; }`)
           .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
             { float dz = vViewPosition.z; float d = length(gl_FragCoord.xy - uHole);
-              float f = smoothstep(uHoleR, uHoleR*0.55, d) * step(dz, uPDepth - 1.2) * 0.85;
+              float f = smoothstep(uHoleR*${hs.toFixed(2)}, uHoleR*${(hs * 0.55).toFixed(2)}, d) * step(dz, uPDepth - 1.2) * ${hs > 1 ? '0.7' : '0.85'};
               if (f > bayer4(gl_FragCoord.xy)) discard; }`);
       };
       const key = (mat.customProgramCacheKey ? mat.customProgramCacheKey() : '') + (base ? base.toString() : '');
-      m.customProgramCacheKey = () => 'occ:' + key;
+      m.customProgramCacheKey = () => 'occ' + hs + ':' + key;
       patched.set(mat, m);
       return m;
     };
-    for (const g of groups) g.traverse((o) => { if (o.isMesh) o.material = patch(o.material); });
+    for (const g of groups) g.traverse((o) => { if (o.isMesh) o.material = patch(o.material, scaleOf(o)); });
   }
   updateOccluders() {
     const p = this.player.pos;
@@ -86,7 +87,7 @@ export class Game {
 
   // ------------------------------------------------------------------ setup
   createPlayer() {
-    const rig = humanoid({ robe: '#26364f', robe2: '#c9a24a', mail: true, turban: 0xece2c8, helmet: true, offhand: 'shield', beard: 0x2a1a10, cloak: 0x7a1a14, skin: 0xa8714a });
+    const rig = humanoid({ robe: '#1f2c44', robe2: '#c9a24a', hem: true, mail: true, turban: 0xece2c8, helmet: true, offhand: 'shield', beard: 0x2a1a10, cloak: 0x7a1a14, skin: 0xa8714a });
     this.scene.add(rig);
     const p = this.player = {
       rig, pos: new THREE.Vector3(13, 0, 80), facing: Math.PI, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, dead: false, deadT: 0, fallDir: 1 },

@@ -24,6 +24,7 @@ export function mats() {
     wood: new THREE.MeshStandardMaterial({ map: wt, roughness: 0.8 }),
     dark: new THREE.MeshStandardMaterial({ color: 0x120c08, roughness: 1 }),
     gold: new THREE.MeshStandardMaterial({ color: 0xe0b050, roughness: 0.25, metalness: 1 }),
+    limestone: triplanarMaterial({ map: pl.map, normalMap: pl.normalMap, color: 0xf0e8dc, scale: 1.2, roughness: 0.85, grime: 0.25, normalStrength: 0.5 }),
     stone: triplanarMaterial({ map: pl.map, normalMap: pl.normalMap, color: 0xa89a88, scale: 0.8, roughness: 0.9, grime: 0.2 }),
   };
   return M;

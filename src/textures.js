@@ -141,7 +141,11 @@ export function woodTex() {
 export function fabricTex(a = '#7a1e1e', b = '#d9b56a', stripes = true) {
   const S = 256, [c, x] = canvas(S);
   x.fillStyle = a; x.fillRect(0, 0, S, S);
-  if (stripes) {
+  if (stripes === 'hem') { // embroidered hem band near one edge + subtle diamond weave
+    x.fillStyle = b; x.fillRect(0, S - 30, S, 10); x.fillRect(0, S - 14, S, 3);
+    for (let i = 0; i < S; i += 16) { x.beginPath(); x.moveTo(i, S - 20); x.lineTo(i + 8, S - 26); x.lineTo(i + 16, S - 20); x.lineTo(i + 8, S - 14); x.fill(); }
+    x.fillStyle = 'rgba(255,255,255,0.04)'; for (let j = 0; j < S - 40; j += 12) for (let i = (j / 12 % 2) * 6; i < S; i += 12) x.fillRect(i, j, 3, 3);
+  } else if (stripes) {
     x.fillStyle = b; for (let i = 0; i < S; i += 64) { x.fillRect(0, i + 4, S, 6); x.fillRect(0, i + 14, S, 2); }
   }
   for (let i = 0; i < S; i += 2) { x.fillStyle = `rgba(0,0,0,${0.05 + (i % 4 ? 0.04 : 0)})`; x.fillRect(i, 0, 1, S); x.fillRect(0, i, S, 1); }

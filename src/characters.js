@@ -29,6 +29,29 @@ function limb(len, r0, r1, mat) {
 function pivot(parent, x, y, z) { const p = new THREE.Group(); p.position.set(x, y, z); parent.add(p); return p; }
 
 const steel = new THREE.MeshStandardMaterial({ color: 0xd8dde3, metalness: 1, roughness: 0.18 });
+let _lam = null;
+function lamellar() {
+  if (_lam) return _lam;
+  const W = 256, c = document.createElement('canvas'); c.width = c.height = W; const x = c.getContext('2d');
+  const hc = document.createElement('canvas'); hc.width = hc.height = W; const hx = hc.getContext('2d');
+  x.fillStyle = '#222'; x.fillRect(0, 0, W, W); hx.fillStyle = '#000'; hx.fillRect(0, 0, W, W);
+  const pw = 16, ph = 32;
+  for (let r = 0; r < W / ph * 2 + 1; r++) for (let k = -1; k < W / pw + 1; k++) {
+    const px = k * pw + (r % 2) * pw / 2, py = r * ph * 0.5 - 8;
+    const g = x.createLinearGradient(px, 0, px + pw, 0); g.addColorStop(0, '#5a5e62'); g.addColorStop(0.5, '#c8ccd0'); g.addColorStop(1, '#4a4e52');
+    x.fillStyle = g; x.beginPath(); x.roundRect(px + 1, py + 1, pw - 2, ph - 2, [2, 2, 7, 7]); x.fill();
+    x.fillStyle = '#8a5a2a'; x.fillRect(px + pw / 2 - 1, py + 4, 2, 3); // leather lacing
+    hx.fillStyle = '#ddd'; hx.beginPath(); hx.roundRect(px + 1, py + 1, pw - 2, ph - 2, [2, 2, 7, 7]); hx.fill();
+  }
+  const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(3, 2);
+  const d = hx.getImageData(0, 0, W, W).data, nc = document.createElement('canvas'); nc.width = nc.height = W; const nx = nc.getContext('2d'), img = nx.createImageData(W, W);
+  const H = (i, j) => d[(((j + W) % W) * W + ((i + W) % W)) * 4] / 255;
+  for (let j = 0; j < W; j++) for (let i = 0; i < W; i++) { const dx = (H(i - 1, j) - H(i + 1, j)) * 3, dy = (H(i, j - 1) - H(i, j + 1)) * 3, l = Math.hypot(dx, dy, 1), k = (j * W + i) * 4; img.data[k] = (dx / l * .5 + .5) * 255; img.data[k + 1] = (dy / l * .5 + .5) * 255; img.data[k + 2] = (1 / l * .5 + .5) * 255; img.data[k + 3] = 255; }
+  nx.putImageData(img, 0, 0);
+  const normal = new THREE.CanvasTexture(nc); normal.wrapS = normal.wrapT = THREE.RepeatWrapping; normal.repeat.set(3, 2);
+  _lam = { map, normal };
+  return _lam;
+}
 const goldM = new THREE.MeshStandardMaterial({ color: 0xd9a441, metalness: 1, roughness: 0.3 });
 const leather = new THREE.MeshStandardMaterial({ color: 0x4a2e1a, roughness: 0.75 });
 
@@ -76,8 +99,9 @@ export function humanoid(opts = {}) {
   const body = new THREE.Group(); root.add(body);
   body.scale.setScalar(o.scale);
   const skinM = new THREE.MeshStandardMaterial({ color: o.skin, roughness: 0.6 });
-  const robeM = new THREE.MeshStandardMaterial({ map: fabricTex(o.robe, o.robe2), roughness: 0.85, side: THREE.DoubleSide });
-  const mailM = new THREE.MeshStandardMaterial({ color: 0x8a8d90, metalness: 0.85, roughness: 0.45 });
+  const robeM = new THREE.MeshStandardMaterial({ map: fabricTex(o.robe, o.robe2, o.hem ? 'hem' : true), roughness: 0.85, side: THREE.DoubleSide });
+  const lam = lamellar();
+  const mailM = new THREE.MeshStandardMaterial({ color: 0xffffff, map: lam.map, normalMap: lam.normal, metalness: 0.85, roughness: 0.38 });
   const sashM = new THREE.MeshStandardMaterial({ color: o.sash, roughness: 0.8 });
   const parts = { mats: [skinM, robeM, mailM, sashM] };
 
@@ -87,11 +111,13 @@ export function humanoid(opts = {}) {
   for (const s of [-1, 1]) {
     const th = pivot(hips, s * 0.12, 0, 0); th.add(limb(0.48, 0.09, 0.07, legM));
     const sh = pivot(th, 0, -0.46, 0); sh.add(limb(0.46, 0.07, 0.055, legM));
-    const ft = mesh(new THREE.BoxGeometry(0.11, 0.08, 0.24).translate(0, -0.48, 0.05), leather); sh.add(ft);
+    const ft = mesh(new THREE.BoxGeometry(0.12, 0.08, 0.25).translate(0, -0.48, 0.05), leather); sh.add(ft);
+    sh.add(mesh(new THREE.CylinderGeometry(0.075, 0.068, 0.3, 10).translate(0, -0.32, 0), leather));
+    sh.add(mesh(new THREE.TorusGeometry(0.075, 0.018, 5, 12).rotateX(Math.PI / 2).translate(0, -0.17, 0), leather));
     parts[s < 0 ? 'thighL' : 'thighR'] = th; parts[s < 0 ? 'shinL' : 'shinR'] = sh;
   }
   // robe skirt (flares from waist)
-  const skirt = mesh(lathe([[0.2, 0.05], [0.24, -0.15], [0.3, -0.5], [0.36, -0.82]], 16), robeM);
+  const skirt = mesh(lathe([[0.2, 0.05], [0.235, -0.1], [0.27, -0.35], [0.31, -0.6], [0.35, -0.8], [0.37, -0.84]], 24), robeM);
   hips.add(skirt); parts.skirt = skirt;
   // torso
   const spine = pivot(hips, 0, 0.05, 0); parts.spine = spine;
@@ -99,8 +125,19 @@ export function humanoid(opts = {}) {
   const torso = mesh(lathe([[0.2, 0], [0.22, 0.15], [0.25, 0.35], [0.24, 0.5], [0.14, 0.6], [0.06, 0.62]], 14), o.mail ? mailM : robeM);
   torso.scale.z = 0.75; spine.add(torso);
   spine.add(mesh(new THREE.CylinderGeometry(0.215, 0.215, 0.1, 14).scale(1, 1, 0.78).translate(0, 0.05, 0), sashM));
-  if (o.mail) { // tabard over mail
-    const tab = mesh(new THREE.PlaneGeometry(0.3, 0.75).translate(0, -0.1, 0.2), robeM); spine.add(tab);
+  if (o.mail) {
+    // tabard panel, belt with gold buckle, layered pauldrons, mail aventail
+    const tab = mesh(new THREE.PlaneGeometry(0.26, 0.7, 1, 4).translate(0, -0.32, 0.215), robeM); spine.add(tab);
+    const belt = mesh(new THREE.TorusGeometry(0.215, 0.035, 6, 20).rotateX(Math.PI / 2).scale(1, 1, 0.78).translate(0, 0.0, 0), leather); spine.add(belt);
+    spine.add(mesh(new THREE.BoxGeometry(0.08, 0.07, 0.03).translate(0, 0.0, 0.175), goldM));
+    for (const s2 of [-1, 1]) {
+      for (let k = 0; k < 3; k++) {
+        const pg = new THREE.SphereGeometry(0.14 - k * 0.012, 12, 6, 0, Math.PI * 2, 0, Math.PI * 0.5).scale(1.1, 0.7, 1.0);
+        const pa = mesh(pg, k === 0 ? steel : mailM); pa.position.set(s2 * (0.29 + k * 0.012), 0.56 - k * 0.07, 0); pa.rotation.z = -s2 * (0.5 + k * 0.15); spine.add(pa);
+      }
+      spine.add(mesh(new THREE.TorusGeometry(0.1, 0.012, 4, 14).rotateX(Math.PI / 2).translate(s2 * 0.3, 0.52, 0), goldM));
+    }
+    spine.add(mesh(new THREE.CylinderGeometry(0.12, 0.17, 0.16, 14, 1, true).translate(0, 0.62, 0), mailM));
   }
   if (o.cloak) {
     const cm = new THREE.MeshStandardMaterial({ color: o.cloak, roughness: 0.9, side: THREE.DoubleSide });
@@ -111,6 +148,8 @@ export function humanoid(opts = {}) {
   const neck = pivot(spine, 0, 0.62, 0.02); parts.neck = neck;
   const head = mesh(new THREE.SphereGeometry(0.13, 14, 12).scale(0.9, 1.08, 1), skinM); head.position.y = 0.14; neck.add(head);
   parts.head = head;
+  neck.add(mesh(new THREE.ConeGeometry(0.022, 0.06, 6).rotateX(Math.PI / 2 + 0.3).translate(0, 0.13, 0.125), skinM));
+  neck.add(mesh(new THREE.BoxGeometry(0.14, 0.022, 0.03).translate(0, 0.175, 0.105), skinM));
   if (o.beard) { const b = mesh(new THREE.ConeGeometry(0.09, 0.18, 8).rotateX(Math.PI).translate(0, 0.02, 0.06), new THREE.MeshStandardMaterial({ color: o.beard, roughness: 1 })); neck.add(b); }
   if (o.turban) {
     const tm = new THREE.MeshStandardMaterial({ color: o.turban, roughness: 0.9 });

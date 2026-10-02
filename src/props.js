@@ -106,7 +106,7 @@ export function cart() {
 // Islamic grave: low rectangular stone with headstone (shahid).
 export function grave(rnd) {
   const m = mats(), g = new THREE.Group();
-  const stone = new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(0.09, 0.15, 0.55 + rnd() * 0.15), roughness: 0.95, map: m.stone.map });
+  const stone = m.limestone;
   g.add(mesh(new THREE.BoxGeometry(0.9, 0.35, 2).translate(0, 0.17, 0), stone));
   const s = new THREE.Shape(); archPath(s, 0.5, 1.1 + rnd() * 0.4);
   const hs = mesh(new THREE.ExtrudeGeometry(s, { depth: 0.1, bevelEnabled: false }), stone);

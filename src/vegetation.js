@@ -46,23 +46,24 @@ function palmTrunk(h) {
   const p = g.attributes.position;
   for (let i = 0; i < p.count; i++) { const y = p.getY(i); p.setX(i, p.getX(i) + (y / h) ** 2 * 1.2); }
   g.computeVertexNormals();
-  return colorize(g, (x, y) => new THREE.Color().setHSL(0.08, 0.35, 0.22 + ((Math.floor(y * 3.5) % 2) ? 0.06 : 0)));
+  return colorize(g, (x, y) => new THREE.Color().setHSL(0.08, 0.2, 0.75 + ((Math.floor(y * 3.5) % 2) ? 0.08 : 0)));
 }
 
 function frond(len, rnd) {
   const geos = [];
-  const N = 22;
+  const N = 34;
   const droop = 0.6 + rnd() * 0.5;
   const spine = (t) => new THREE.Vector3(t * len, Math.sin(t * Math.PI * 0.55) * len * 0.35 - t * t * len * droop, 0);
   const pos = [], col = [], idx = [];
   let v = 0;
   for (let i = 1; i < N; i++) {
     const t = i / N, p = spine(t), p2 = spine(t + 1 / N);
-    const ll = len * 0.28 * Math.sin(t * Math.PI) ** 0.6 + 0.1;
+    const ll = len * 0.3 * Math.sin(t * Math.PI) ** 0.6 + 0.1;
     for (const s of [-1, 1]) {
       const dir = new THREE.Vector3(0.35, -0.55, s).normalize();
       const tip = p.clone().addScaledVector(dir, ll);
-      pos.push(p.x, p.y, p.z, p2.x, p2.y, p2.z, tip.x, tip.y, tip.z);
+      const mid = p.clone().lerp(p2, 0.45);
+      pos.push(p.x, p.y, p.z, mid.x, mid.y, mid.z, tip.x, tip.y, tip.z);
       const c1 = new THREE.Color().setHSL(0.22 - t * 0.04, 0.45, 0.2 + t * 0.06), c2 = new THREE.Color().setHSL(0.17 - t * 0.05, 0.5, 0.32 + t * 0.1);
       col.push(c1.r, c1.g, c1.b, c1.r, c1.g, c1.b, c2.r, c2.g, c2.b);
       idx.push(v, v + 1, v + 2); v += 3;
@@ -101,7 +102,8 @@ function palmCrown(h, rnd) {
 export function palms(positions, seed = 1) {
   const rnd = mulberry32(seed), grp = new THREE.Group();
   const variants = 3, H = 9;
-  const trunkMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 });
+  const bark = barkTex();
+  const trunkMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, map: bark.map, normalMap: bark.normal, normalScale: new THREE.Vector2(1.5, 1.5) });
   const leafMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, side: THREE.DoubleSide });
   addWind(leafMat, 0.6, H - 2); addWind(trunkMat, 0.05, 0);
   const buckets = Array.from({ length: variants }, () => []);
@@ -117,6 +119,7 @@ export function palms(positions, seed = 1) {
       tm.setMatrixAt(i, dummy.matrix); cm.setMatrixAt(i, dummy.matrix);
     });
     for (const m of [tm, cm]) { m.castShadow = true; m.receiveShadow = true; grp.add(m); }
+    tm.userData.occlude = true; cm.userData.occlude = true;
   }
   return grp;
 }
@@ -231,4 +234,29 @@ function rockTex() {
   const normal = new THREE.CanvasTexture(nc); normal.wrapS = normal.wrapT = THREE.RepeatWrapping;
   _rock = { map, normal };
   return _rock;
+}
+
+function barkTex() {
+  const W = 128, H = 256, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d'); const hc = document.createElement('canvas'); hc.width = W; hc.height = H; const hx = hc.getContext('2d');
+  x.fillStyle = '#7a5a3a'; x.fillRect(0, 0, W, H); hx.fillStyle = '#000'; hx.fillRect(0, 0, W, H);
+  // overlapping diamond leaf-base scales typical of date palms
+  const cw = W / 4, ch = H / 8;
+  for (let r = -1; r < 9; r++) for (let k = -1; k < 5; k++) {
+    const cx = k * cw + (r % 2) * cw / 2, cy = r * ch;
+    for (const [ctx, fill, stroke] of [[x, `hsl(28,${30 + (r * 7 + k * 13) % 15}%,${26 + (r * 5 + k * 3) % 10}%)`, '#2a1a0e'], [hx, '#bbb', '#000']]) {
+      ctx.beginPath(); ctx.moveTo(cx, cy - ch * 0.2); ctx.lineTo(cx + cw * 0.55, cy + ch * 0.5); ctx.lineTo(cx, cy + ch * 1.15); ctx.lineTo(cx - cw * 0.55, cy + ch * 0.5); ctx.closePath();
+      ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = stroke; ctx.stroke();
+    }
+  }
+  // fibres
+  for (let i = 0; i < 900; i++) { x.strokeStyle = `rgba(30,18,8,${Math.random() * 0.3})`; const px = Math.random() * W, py = Math.random() * H; x.beginPath(); x.moveTo(px, py); x.lineTo(px + (Math.random() - 0.5) * 6, py + 4 + Math.random() * 6); x.stroke(); }
+  const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(2, 3);
+  // height -> normal
+  const d = hx.getImageData(0, 0, W, H).data, nc = document.createElement('canvas'); nc.width = W; nc.height = H; const nx = nc.getContext('2d'), img = nx.createImageData(W, H);
+  const Hh = (i, j) => d[(((j + H) % H) * W + ((i + W) % W)) * 4] / 255;
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { const dx = (Hh(i - 1, j) - Hh(i + 1, j)) * 2, dy = (Hh(i, j - 1) - Hh(i, j + 1)) * 2, l = Math.hypot(dx, dy, 1), k = (j * W + i) * 4; img.data[k] = (dx / l * .5 + .5) * 255; img.data[k + 1] = (dy / l * .5 + .5) * 255; img.data[k + 2] = (1 / l * .5 + .5) * 255; img.data[k + 3] = 255; }
+  nx.putImageData(img, 0, 0);
+  const normal = new THREE.CanvasTexture(nc); normal.wrapS = normal.wrapT = THREE.RepeatWrapping; normal.repeat.set(2, 3);
+  return { map, normal };
 }

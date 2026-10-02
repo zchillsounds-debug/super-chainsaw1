@@ -147,7 +147,7 @@ export function buildWorld(scene) {
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
     if (Math.abs(x) < WORLD / 2 - 4 && Math.abs(z) < WORLD / 2 - 4) rockPts.push({ x, y: heightAt(x, z) - 0.2, z, s: 0.5 + rnd() * 2.5 });
   }
-  scene.add(palms(palmPts, 5));
+  const palmGrp = palms(palmPts, 5); scene.add(palmGrp); out.occluders.push(palmGrp);
   if (wheatPts.length) scene.add(grassField(wheatPts, 'wheat', 6));
   scene.add(grassField(grassPts, 'grass', 7));
   scene.add(rocks(rockPts, 8));
