@@ -119,7 +119,14 @@ export function buildWorld(scene) {
   }
 
   // ---------------- distant Baghdad (north, beyond the dunes)
-  const city = roundCity(); city.position.set(30, -2, 330); city.scale.setScalar(1.1); scene.add(city);
+  const city = roundCity(); city.position.set(-90, 4, -300); city.scale.setScalar(1.5); scene.add(city);
+  // far desert plain out to the horizon (beyond the playable terrain)
+  const farG = new THREE.RingGeometry(WORLD * 0.45, 1200, 64, 4).rotateX(-Math.PI / 2);
+  const fp = farG.attributes.position;
+  for (let i = 0; i < fp.count; i++) { const x = fp.getX(i), z = fp.getZ(i), r = Math.hypot(x, z); fp.setY(i, 5 + Math.sin(x * 0.02) * Math.cos(z * 0.017) * 6 * Math.min(1, (r - WORLD * 0.45) / 60) - 3); }
+  farG.computeVertexNormals();
+  const far = new THREE.Mesh(farG, new THREE.MeshStandardMaterial({ color: 0xb08458, roughness: 1 }));
+  far.receiveShadow = false; scene.add(far);
 
   // ---------------- vegetation scatter
   const palmPts = [], grassPts = [], wheatPts = [], rockPts = [], shrubPts = [];

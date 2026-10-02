@@ -17,13 +17,26 @@ export function skyDome(sunDir) {
     uniforms: { uSun: { value: sunDir } },
     vertexShader: `varying vec3 vD; void main(){ vD = normalize(position); vec4 p = projectionMatrix*modelViewMatrix*vec4(position,1.); gl_Position = p.xyww; }`,
     fragmentShader: `uniform vec3 uSun; varying vec3 vD;
+      float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+      float n(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y); }
+      float fb(vec2 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*n(p); p*=2.1; a*=.5; } return s; }
       void main(){
-        vec3 d = normalize(vD); float h = d.y;
-        vec3 zen = vec3(0.20,0.36,0.62), mid = vec3(0.72,0.66,0.62), hor = vec3(1.0,0.72,0.45), gnd = vec3(0.55,0.42,0.30);
-        vec3 c = h > 0.0 ? mix(mix(hor, mid, smoothstep(0.0,0.18,h)), zen, smoothstep(0.15,0.8,h)) : mix(hor, gnd, smoothstep(0.0,-0.2,h));
-        float s = max(dot(d, normalize(uSun)), 0.0);
-        c += vec3(1.0,0.7,0.4)*pow(s, 8.0)*0.6 + vec3(1.0,0.85,0.6)*pow(s, 700.0)*25.0;
-        // high thin clouds
+        vec3 d = normalize(vD); float hgt = d.y;
+        vec3 sunD = normalize(uSun);
+        float s = max(dot(d, sunD), 0.0);
+        vec3 zen = vec3(0.18,0.36,0.66), mid = vec3(0.78,0.66,0.56), hor = vec3(1.0,0.68,0.40), gnd = vec3(0.50,0.36,0.24);
+        vec3 c = hgt > 0.0 ? mix(mix(hor, mid, smoothstep(0.0,0.12,hgt)), zen, smoothstep(0.1,0.6,hgt)) : mix(hor, gnd, smoothstep(0.0,-0.15,hgt));
+        // warm scattering around the sun
+        c += vec3(1.0,0.55,0.25) * pow(s, 6.0) * 0.55 + vec3(1.0,0.8,0.5) * pow(s, 64.0) * 0.8;
+        // high cirrus clouds lit from the sun side
+        if (hgt > 0.0) {
+          vec2 uv = d.xz / (hgt + 0.12) * 1.4;
+          float cl = fb(uv*vec2(1.0,2.6) + vec2(3.0,0.0));
+          cl = smoothstep(0.52, 0.85, cl) * smoothstep(0.0, 0.25, hgt);
+          vec3 cc = mix(vec3(1.0,0.78,0.6), vec3(1.0,0.92,0.82), pow(s,4.0));
+          c = mix(c, cc, cl*0.65);
+        }
+        c += vec3(1.0,0.9,0.7) * smoothstep(0.9993, 0.9998, s) * 20.0; // sun disk
         gl_FragColor = vec4(c, 1.0);
       }`,
   });

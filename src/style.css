@@ -95,7 +95,7 @@ button:hover{filter:brightness(1.15)}
 .bsub{font:italic 22px Amiri,serif;color:#e8d9b5;text-shadow:0 0 10px #000}
 .btitle::before,.btitle::after{content:'۞';margin:0 22px;font-size:28px;vertical-align:middle;color:#d9a441}
 /* title */
-#title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto;background:radial-gradient(ellipse at center,#0000 30%,#000a 100%);transition:opacity 1.2s}
+#title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto;background:radial-gradient(ellipse at 50% 45%,#0000 40%,#0006 100%);transition:opacity 1.2s}
 #title.gone{opacity:0;pointer-events:none}
 .tlogo{text-align:center;margin-bottom:40px}
 .tlogo .ar{font:700 64px Amiri,serif;color:#f2d27a;text-shadow:0 0 30px #c07020,0 4px 4px #000;direction:rtl}

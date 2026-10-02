@@ -145,6 +145,41 @@ export function house(rnd, w, d, h) {
     const jm = new THREE.MeshStandardMaterial({ color: 0xa0603a, roughness: 0.8 });
     for (let i = 0; i < 3; i++) { const j = mesh(jar, jm); j.position.set((rnd() - 0.5) * w * 0.6, h, (rnd() - 0.5) * d * 0.6); grp.add(j); }
   }
+  const kind = rnd();
+  if (kind < 0.35) { // second storey set back, with a wooden mashrabiya balcony
+    const w2 = w * 0.6, d2 = d * 0.6, h2 = 2.6;
+    const up = mesh(new THREE.BoxGeometry(w2, h2, d2).translate(-w * 0.15, h + h2 / 2, -d * 0.12), wallMat); grp.add(up);
+    const pg2 = [];
+    for (const [px, pz, sx, sz] of [[0, d2 / 2, w2 + 0.2, 0.3], [0, -d2 / 2, w2 + 0.2, 0.3], [w2 / 2, 0, 0.3, d2], [-w2 / 2, 0, 0.3, d2]])
+      pg2.push(new THREE.BoxGeometry(sx, 0.5, sz).translate(px - w * 0.15, h + h2 + 0.25, pz - d * 0.12));
+    grp.add(mesh(mergeGeometries(pg2), wallMat));
+    // mashrabiya: lattice box cantilevered from the upper floor
+    const bal = new THREE.Group();
+    bal.add(mesh(new THREE.BoxGeometry(1.8, 0.12, 0.8).translate(0, 0, 0.4), m.wood));
+    bal.add(mesh(new THREE.BoxGeometry(1.8, 0.12, 0.85).translate(0, 1.5, 0.42), m.wood));
+    const lat = [];
+    for (let i = 0; i <= 8; i++) lat.push(new THREE.BoxGeometry(0.04, 1.4, 0.04).translate(-0.9 + i * 0.225, 0.75, 0.8));
+    for (let j = 0; j <= 5; j++) lat.push(new THREE.BoxGeometry(1.8, 0.04, 0.04).translate(0, 0.1 + j * 0.27, 0.8));
+    for (const sx of [-0.9, 0.9]) for (let j = 0; j <= 5; j++) lat.push(new THREE.BoxGeometry(0.04, 0.04, 0.8).translate(sx, 0.1 + j * 0.27, 0.4));
+    bal.add(mesh(mergeGeometries(lat), m.wood));
+    bal.position.set(-w * 0.15, h + 0.5, -d * 0.12 + d2 / 2); grp.add(bal);
+  } else if (kind < 0.55) { // wind-catcher tower (badgir)
+    const bx = w * 0.25, bz = -d * 0.2, bh = 3.4;
+    grp.add(mesh(new THREE.BoxGeometry(1.2, bh, 1.2).translate(bx, h + bh / 2, bz), wallMat));
+    for (const [ox, oz, ry] of [[0, 0.61, 0], [0, -0.61, 0], [0.61, 0, Math.PI / 2], [-0.61, 0, Math.PI / 2]]) {
+      const sl = mesh(new THREE.BoxGeometry(0.22, 1.1, 0.04).translate(0, 0, 0), m.dark, false);
+      for (const k of [-0.3, 0, 0.3]) { const c = sl.clone(); c.position.set(bx + ox + (ry ? 0 : k), h + bh - 0.8, bz + oz + (ry ? k : 0)); c.rotation.y = ry; grp.add(c); }
+    }
+    grp.add(mesh(new THREE.BoxGeometry(1.4, 0.18, 1.4).translate(bx, h + bh + 0.09, bz), wallMat));
+  } else if (kind < 0.7) { // small dome over the roof
+    grp.add(mesh(new THREE.CylinderGeometry(1.2, 1.25, 0.5, 16).translate(w * 0.15, h + 0.25, -d * 0.1), wallMat));
+    grp.add(mesh(domeGeo(1.2, 1.5, 20).translate(w * 0.15, h + 0.5, -d * 0.1), wallMat));
+  }
+  if (rnd() > 0.5) { // external staircase to the roof
+    const st = [];
+    for (let i = 0; i < 8; i++) st.push(new THREE.BoxGeometry(0.9, (i + 1) * h / 8, 0.45).translate(w / 2 + 0.45, (i + 1) * h / 16, -d / 2 + 0.3 + i * 0.45));
+    grp.add(mesh(mergeGeometries(st), wallMat));
+  }
   if (rnd() > 0.5) { // awning cloth over door
     const cl = new THREE.MeshStandardMaterial({ color: [0x8c2f24, 0x2f5d7c, 0xc28a2c, 0x5a7d3a][rnd() * 4 | 0], roughness: 0.9, side: THREE.DoubleSide });
     const ag = new THREE.PlaneGeometry(2.4, 1.4, 6, 3); const ap = ag.attributes.position;

@@ -13,7 +13,7 @@ const renderer = createRenderer(document.getElementById('game'));
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(36, innerWidth / innerHeight, 0.5, 1400);
 const world = buildWorld(scene);
-scene.fog = new THREE.FogExp2(0xc99a72, 0.0065);
+scene.fog = new THREE.FogExp2(0xd4a47a, 0.0048);
 scene.add(skyDome(world.sunDir));
 scene.environment = envFromSky(renderer, world.sunDir);
 scene.environmentIntensity = 0.4;
