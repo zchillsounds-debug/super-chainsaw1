@@ -10,7 +10,8 @@ import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 
 const params = new URLSearchParams(location.search);
 const touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || params.has('mobile');
-export const QUALITY = params.get('q') || (touch ? 'low' : 'high');
+const storedQ = (() => { try { return JSON.parse(localStorage.getItem('sob.settings.v1') || '{}').quality; } catch { return null; } })();
+export const QUALITY = params.get('q') || storedQ || (touch ? 'low' : 'high');
 
 // Golden-hour sky dome, also baked into a PMREM env map for reflections.
 // Sky dome with time-of-day colours (driven by lighting.js), also baked into a PMREM env map for reflections.
@@ -67,9 +68,20 @@ export function createRenderer(container) {
 }
 
 const GradeShader = {
-  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uVignette: { value: 1.0 }, uLowHp: { value: 0 }, uAspect: { value: 1 }, uCine: { value: 0 }, uDusk: { value: 0 }, uDuskAct: { value: 0 }, uLut: { value: 0 } },
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uVignette: { value: 1.0 }, uLowHp: { value: 0 }, uAspect: { value: 1 }, uCine: { value: 0 }, uDusk: { value: 0 }, uDuskAct: { value: 0 }, uLut: { value: 0 }, uCVD: { value: 0 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime, uVignette, uLowHp, uAspect, uCine, uDusk, uDuskAct, uLut; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime, uVignette, uLowHp, uAspect, uCine, uDusk, uDuskAct, uLut, uCVD; varying vec2 vUv;
+    // colour-vision assistance (daltonization): simulate the deficiency, then shift the lost contrast into channels that remain
+    vec3 daltonize(vec3 c, float t){
+      vec3 L = vec3(17.8824*c.r + 43.5161*c.g + 4.11935*c.b, 3.45565*c.r + 27.1554*c.g + 3.86714*c.b, 0.0299566*c.r + 0.184309*c.g + 1.46709*c.b);
+      vec3 s = L;
+      if (t < 1.5) s = vec3(2.02344*L.g - 2.52581*L.b, L.g, L.b);
+      else if (t < 2.5) s = vec3(L.r, 0.494207*L.r + 1.24827*L.b, L.b);
+      else s = vec3(L.r, L.g, -0.395913*L.r + 0.801109*L.g);
+      vec3 sim = vec3(0.0809444479*s.r - 0.130504409*s.g + 0.116721066*s.b, -0.0102485335*s.r + 0.0540193266*s.g - 0.113614708*s.b, -0.000365296938*s.r - 0.00412161469*s.g + 0.693511405*s.b);
+      vec3 err = c - sim;
+      return c + vec3(0.0, 0.7*err.r + err.g, 0.7*err.r + err.b);
+    }
     // per-act colour grade (a compact stand-in for a 3D LUT): lift / gamma / gain + saturation per preset
     vec3 actGrade(vec3 c, float id){
       vec3 lift = vec3(0.0), gain = vec3(1.0); float sat = 1.0, gam = 1.0;
@@ -114,6 +126,7 @@ const GradeShader = {
       col *= mix(1.0, smoothstep(1.15, 0.35, length(vc)), 0.35*uCine);
       // film grain (heavier in cinematics)
       col += (h(uv*vec2(1920.,1080.)+fract(uTime)*100.)-0.5)*(0.025 + 0.045*uCine);
+      if (uCVD > 0.5) col = max(daltonize(col, uCVD), 0.0);
       gl_FragColor = vec4(col,1.0);
     }`,
 };

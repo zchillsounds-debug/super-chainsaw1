@@ -10,7 +10,7 @@ export function setupMobile(game, ui) {
   wrap.innerHTML = `<div id="joy"><div id="knob"></div></div>
     <div id="tskills"></div>
     <button id="tmenu" class="tbtn" aria-label="Menu">☰</button>
-    <div id="tmenupop" class="panel hidden"><button data-m="bag">Inventory</button><button data-m="skills">Disciplines</button><button data-m="journal">Journal</button><button data-m="map">Map</button><button data-m="cfg">Controls</button></div>
+    <div id="tmenupop" class="panel hidden"><button data-m="bag">Inventory</button><button data-m="skills">Disciplines</button><button data-m="journal">Journal</button><button data-m="map">Map</button><button data-m="cfg">Controls</button><button data-m="settings">Settings</button></div>
     <div id="tsettings" class="panel hidden">
       <div class="ptitle">Controls <span class="close">✕</span></div>
       <label>Button size <input id="tsz" type="range" min="0.6" max="1.2" step="0.05"></label>
@@ -35,6 +35,7 @@ export function setupMobile(game, ui) {
     if (m === 'skills') game.openPanel?.('skills');
     if (m === 'journal') game.journal?.('journal');
     if (m === 'cfg') cfg.classList.toggle('hidden');
+    if (m === 'settings') game.settings?.open();
   });
   cfg.querySelector('.close').addEventListener('pointerdown', () => cfg.classList.add('hidden'));
   // collapsible quest tracker and minimap (collapsed by default)
@@ -51,7 +52,10 @@ export function setupMobile(game, ui) {
   const press = (k) => {
     game.audio.init();
     if (!game.started || game.player.dead || ui.dialogOpen || game.paused) return;
-    if (k === 'attack') { const e = game.pickTarget(9); if (e) { game.player.target = e; game.player.moveTo = null; } return; }
+    if (k === 'attack') {
+      if (game.attackMode === 'toggle') { game.autoAttack = !game.autoAttack; ui.skillEls.attack?.classList.toggle('auto', game.autoAttack); if (!game.autoAttack) game.player.target = null; return; }
+      const e = game.pickTarget(9); if (e) { game.player.target = e; game.player.moveTo = null; } return;
+    }
     const d = game.slotDefs()[k]; if (d?.aim) game.aimAuto();
     game.useSkill(k);
   };
@@ -59,7 +63,7 @@ export function setupMobile(game, ui) {
     for (const [k, el] of Object.entries(els)) {
       if (el.parentNode !== cl) cl.appendChild(el);
       el.addEventListener('pointerdown', (ev) => { ev.preventDefault(); ev.stopPropagation(); el.classList.add('down'); press(k);
-        if (k === 'attack') el._hold = setInterval(() => press('attack'), 300); });
+        if (k === 'attack' && game.attackMode !== 'toggle') el._hold = setInterval(() => press('attack'), 300); });
       const up = () => { el.classList.remove('down'); clearInterval(el._hold); };
       el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('pointerleave', up);
     }

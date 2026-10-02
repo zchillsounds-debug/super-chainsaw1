@@ -22,6 +22,9 @@ import { setupProgression, qanatBurnTick, ASPECTS, SETS } from './progression.js
 import { CLASSES } from './classes.js';
 import { lineClear } from './collision.js';
 import { setupNarrative, journalPanel } from './narrative.js';
+import { Settings } from './settings.js';
+import { Gamepads } from './gamepad.js';
+import { Tutorial } from './tutorial.js';
 
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
@@ -49,7 +52,7 @@ const hemi = new THREE.HemisphereLight(0xc4c2c4, 0x7a5236, 0.5); scene.add(hemi)
 
 world.staticRoots = scene.children.filter((o) => !o.isLight); // hidden while underground
 const fx = new FX(scene);
-const { composer, grade, gtao, bokeh, resize } = createComposer(renderer, scene, camera);
+const { composer, grade, gtao, bokeh, bloom, resize } = createComposer(renderer, scene, camera);
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); resize(); });
 
 // torch light pool: every fire and lantern is an emitter; only the nearest few get a real light
@@ -74,7 +77,14 @@ setupProgression(game);
 game.tickExtra = (dt) => qanatBurnTick(game, dt);
 setupNarrative(game);
 game.journal = (t) => { if (document.getElementById('journal')) { document.getElementById('journal').remove(); document.body.classList.remove('inshop'); } else journalPanel(game, t); };
-const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); game.discover(dt); };
+const tutorial = new Tutorial(game);
+const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); game.discover(dt); tutorial.update(dt); };
+const settings = game.settings = new Settings({ renderer, audio, game, grade, perf, gfx: { quality: QUALITY, sun, gtao, bloom, atmos, resize } });
+fx.reduce = settings.s.reduceFlash;
+const closeAll = () => { settings.close(); closePanel(); document.getElementById('journal')?.remove(); document.getElementById('shop')?.remove(); document.body.classList.remove('inshop'); ui.toggleInventory(false); };
+game.pad = new Gamepads(game, { settings: () => (settings.isOpen ? settings.close() : settings.open()), journal: () => game.journal('journal'), closeAll });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && game.started && !game.cinematic) { const any = document.body.classList.contains('inshop') || ui.invOpen; if (any) closeAll(); else settings.open(); } });
+{ const sb = document.createElement('button'); sb.id = 'setbtn'; sb.textContent = 'Settings'; sb.onclick = () => settings.open(); document.getElementById('startbtn').parentNode.appendChild(sb); }
 audio.occluded = (pos) => !lineClear(game.player.pos.x, game.player.pos.z, pos.x, pos.z);
 ui.aspects = ASPECTS; ui.sets = SETS; ui.classNames = Object.fromEntries(Object.entries(CLASSES).map(([k, c]) => [k, c.name]));
 if (IS_TOUCH) setupMobile(game, ui);
@@ -126,7 +136,7 @@ let fireFlick = 0, cullT = 0;
 // adaptive quality: if the frame rate stays low, shed the most expensive effects
 let perfT = 0, perfN = 0, perfAcc = 0, perfLevel = 0;
 function adaptQuality(dt) {
-  if (P.has('noadapt') || mode !== 'game') return;
+  if (P.has('noadapt') || mode !== 'game' || settings.s.res !== 1) return;
   perfT += dt; perfAcc += dt; perfN++;
   if (perfT < 3) return;
   const avg = perfAcc / perfN; perfT = 0; perfAcc = 0; perfN = 0;
@@ -173,5 +183,7 @@ window.__director = director; window.__SCENES = SCENES;
 window.__sim = (sec, step = 1 / 30) => { world.cull(game.player.pos); for (let i = 0; i < sec / step; i++) { t += step; world.update(t, step); if (director.update(step)) game.cineTick(step * director.timeScale); else game.update(step); fx.update(step); for (const f of world.fires) if (Math.random() < 0.7) fx.fire(f.pos, f.intensity); } };
 try { await renderer.compileAsync(scene, camera); } catch (e) { /* older drivers: compile lazily */ }
 document.getElementById('loader')?.classList.add('done'); setTimeout(() => document.getElementById('loader')?.remove(), 1200);
+// installable PWA: register the offline worker on the standalone build (not in dev, not inside an embedding frame)
+if (import.meta.env.PROD && 'serviceWorker' in navigator && window.top === window && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { /* offline install unavailable */ });
 window.__mk = makeItem; window.__game = game; window.__ready = true;
 setTimeout(flushGeo, 4000); setInterval(flushGeo, 60000);

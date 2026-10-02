@@ -249,7 +249,7 @@ export class Game {
       if (k === 'q') this.useSkill('potion');
       if (k === ' ') { e.preventDefault(); this.useSkill('dodge'); }
       if (k === 'i' || k === 'c') { this.ui.toggleInventory(); this.refreshInv(); }
-      if (k === 'escape') { this.ui.toggleInventory(false); this.closePanels?.(); }
+
       if (k === 'k') this.openPanel?.('skills');
       if (k === 'j') this.journal?.('journal');
     });
@@ -807,6 +807,9 @@ export class Game {
     this.t += dt; this.frameN = (this.frameN || 0) + 1;
     const p = this.player;
     if (this.started) this.pickHover();
+    this.pad?.update();
+    // tap-to-toggle attack mode: keep swinging at the nearest foe until toggled off
+    if (this.autoAttack && !p.dead && !p.target) { const e = this.pickTarget(9); if (e) p.target = e; }
     if (this.started && this.lmb && !p.dead && !this.ui.dialogOpen) {
       if (this.hover && !p.target) p.target = this.hover;
       if (!p.target && !p.pickup) this.setMoveTarget();
@@ -1304,10 +1307,10 @@ export class Game {
     if (!this.camInit) { this.camPos.copy(target); this.camInit = true; }
     this.camPos.lerp(target, Math.min(1, dt * 6));
     this.camera.position.copy(this.camPos);
-    if (this.camKick) { this.camera.position.addScaledVector(this.camKick, 1); this.camKick.multiplyScalar(Math.max(0, 1 - dt * 12)); }
+    if (this.camKick) { this.camera.position.addScaledVector(this.camKick, this.shakeScale ?? 1); this.camKick.multiplyScalar(Math.max(0, 1 - dt * 12)); }
     if (this.shake > 0) {
       this.shake = Math.max(0, this.shake - dt * 1.8);
-      const s = this.shake * this.shake * 0.8;
+      const s = this.shake * this.shake * 0.8 * (this.shakeScale ?? 1);
       this.camera.position.x += (Math.random() - 0.5) * s; this.camera.position.y += (Math.random() - 0.5) * s; this.camera.position.z += (Math.random() - 0.5) * s;
     }
     this.camera.lookAt(this.camPos.x + (this.camKick?.x || 0) * 0.5, this.camPos.y - dist * 1.0 + 1.0, this.camPos.z - dist * 0.78 + (this.camKick?.z || 0) * 0.5);

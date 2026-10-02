@@ -53,7 +53,7 @@ export class Atmos {
     const low = 1 - Math.min(1, Math.max(0, c.sun.y - 0.15) / 0.6); // sun low → more shafts
     this.u.uRays.value = inside ? 0 : (c.sunI / 3.3) * (0.35 + low * 0.9);
     this.u.uA.value = inside ? 0.5 : 0.7 + low * 0.5;
-    this.group.visible = true;
+    this.group.visible = this.enabled !== false;
     for (const m of this.group.children) if (m.userData.y !== undefined) m.position.set(focus.x, focus.y + m.userData.y, focus.z);
     for (const r of this.rays) {
       r.visible = this.u.uRays.value > 0.02;

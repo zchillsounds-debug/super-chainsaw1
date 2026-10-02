@@ -79,6 +79,7 @@ export class FX {
   }
   // dynamic light flash from a small pool
   flash(pos, color, intensity = 30, life = 0.3, dist = 10) {
+    if (this.reduce) { intensity *= 0.25; life *= 1.5; }
     let l = this.lights.find((x) => !x.userData.busy);
     if (!l) { if (this.lights.length >= 4) return; l = new THREE.PointLight(0xffffff, 0, dist, 2); this.lights.push(l); this.scene.add(l); }
     l.userData.busy = true; l.color.set(color); l.distance = dist; l.position.copy(pos);
