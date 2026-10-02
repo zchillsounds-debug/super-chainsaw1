@@ -196,3 +196,22 @@ body.touch #toasts{transform:scale(.8)}
 #tsettings input{flex:1}
 #tsettings.hidden{display:none}
 @media (orientation:portrait){body.touch #bar{scale:.36!important;top:calc(40px + env(safe-area-inset-top,0px))}}
+
+/* ---- round 2 mobile HUD: map top-left, small orbs bottom-left, one menu button ---- */
+body.touch #minimap{display:block!important;pointer-events:auto;top:calc(8px + env(safe-area-inset-top,0px));left:calc(8px + env(safe-area-inset-left,0px));right:auto;transform:scale(.467);transform-origin:0 0;transition:transform .2s,top .2s,left .2s;box-shadow:0 0 0 4px var(--gold2),0 0 0 6px #000,0 4px 20px #000a}
+body.touch #minimap canvas{width:100%;height:100%}
+body.touch.mapopen #minimap{transform:none;width:min(86vmin,320px);height:min(86vmin,320px);top:50%;left:50%;translate:-50% -50%;z-index:5}
+body.touch #bar{left:calc(10px + env(safe-area-inset-left,0px))!important;top:auto!important;bottom:calc(12px + env(safe-area-inset-bottom,0px))!important;transform:none!important;scale:none!important;gap:6px;pointer-events:none}
+body.touch .orb{width:54px;height:54px;margin:0}
+body.touch .orb canvas{width:100%;height:100%}
+body.touch .orb::after{inset:1px;border-width:3px}
+body.touch .orbtxt{opacity:0}
+body.touch #center{position:fixed;left:0;right:0;bottom:0;min-width:0;padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none}
+body.touch #xp{height:3px;margin:0;border:0;border-radius:0;background:#0006}
+body.touch .xptxt{display:none}
+body.touch #buffs{left:calc(10px + env(safe-area-inset-left,0px));bottom:calc(74px + env(safe-area-inset-bottom,0px));transform:scale(.75);transform-origin:0 100%}
+body.touch #tmenu{left:auto;right:calc(8px + env(safe-area-inset-right,0px));top:calc(8px + env(safe-area-inset-top,0px));width:38px;height:38px;padding:0;font-size:18px;border-radius:50%}
+#tmenupop{position:absolute;pointer-events:auto;top:calc(52px + env(safe-area-inset-top,0px));right:calc(8px + env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:6px;padding:8px}
+#tmenupop.hidden{display:none}
+#tmenupop button{font:600 13px Cinzel;padding:8px 18px;min-width:130px}
+body.touch #quest{max-width:min(56vw,320px)}

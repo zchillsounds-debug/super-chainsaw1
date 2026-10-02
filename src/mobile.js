@@ -9,9 +9,8 @@ export function setupMobile(game, ui) {
   const wrap = document.createElement('div'); wrap.id = 'touch';
   wrap.innerHTML = `<div id="joy"><div id="knob"></div></div>
     <div id="tskills"></div>
-    <button id="tbag" class="tbtn" aria-label="Inventory">Bag</button>
-    <button id="tcfg" class="tbtn" aria-label="Settings">⚙</button>
-    <button id="tmap" class="tbtn" aria-label="Map">Map</button>
+    <button id="tmenu" class="tbtn" aria-label="Menu">☰</button>
+    <div id="tmenupop" class="panel hidden"><button data-m="bag">Inventory</button><button data-m="map">Map</button><button data-m="cfg">Controls</button></div>
     <div id="tsettings" class="panel hidden">
       <div class="ptitle">Controls <span class="close">✕</span></div>
       <label>Button size <input id="tsz" type="range" min="0.6" max="1.2" step="0.05"></label>
@@ -26,12 +25,21 @@ export function setupMobile(game, ui) {
   tsz.oninput = () => { apply(tsz.value, top.value); store.set('sob.tscale', tsz.value); };
   top.oninput = () => { apply(tsz.value, top.value); store.set('sob.topa', top.value); };
   const cfg = wrap.querySelector('#tsettings');
-  wrap.querySelector('#tcfg').addEventListener('pointerdown', (e) => { e.preventDefault(); cfg.classList.toggle('hidden'); });
+  // one menu button holds inventory, the large map and the control settings
+  const pop = wrap.querySelector('#tmenupop');
+  wrap.querySelector('#tmenu').addEventListener('pointerdown', (e) => { e.preventDefault(); pop.classList.toggle('hidden'); });
+  pop.addEventListener('pointerdown', (e) => {
+    const m = e.target.dataset?.m; if (!m) return; e.preventDefault(); pop.classList.add('hidden');
+    if (m === 'bag') { ui.toggleInventory(); game.refreshInv(); }
+    if (m === 'map') document.body.classList.toggle('mapopen');
+    if (m === 'cfg') cfg.classList.toggle('hidden');
+  });
   cfg.querySelector('.close').addEventListener('pointerdown', () => cfg.classList.add('hidden'));
   // collapsible quest tracker and minimap (collapsed by default)
   const q = document.getElementById('quest');
   q.addEventListener('pointerdown', (e) => { e.preventDefault(); q.classList.toggle('open'); });
-  wrap.querySelector('#tmap').addEventListener('pointerdown', (e) => { e.preventDefault(); document.body.classList.toggle('mapopen'); });
+  // small round map top-left; tap it to open the large map, tap again to close
+  document.getElementById('minimap').addEventListener('pointerdown', (e) => { e.preventDefault(); document.body.classList.toggle('mapopen'); });
   // controls fade back to translucent shortly after the last touch
   let fadeT = null;
   const wake = () => { document.body.classList.add('tactive'); clearTimeout(fadeT); fadeT = setTimeout(() => document.body.classList.remove('tactive'), 1500); };
@@ -64,7 +72,6 @@ export function setupMobile(game, ui) {
     const up = () => { el.classList.remove('down'); clearInterval(el._hold); };
     el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('pointerleave', up);
   }
-  wrap.querySelector('#tbag').addEventListener('pointerdown', (e) => { e.preventDefault(); ui.toggleInventory(); game.refreshInv(); });
 
   // joystick (left half of the screen, appears where the thumb lands)
   const joy = wrap.querySelector('#joy'), knob = wrap.querySelector('#knob');
