@@ -106,7 +106,7 @@ export class Game {
     const rig = humanoid({ robe: '#1f2c44', robe2: '#c9a24a', hem: true, mail: true, turban: 0xece2c8, helmet: true, offhand: 'shield', beard: 0x2a1a10, cloak: 0x7a1a14, skin: 0xa8714a });
     this.scene.add(rig);
     const p = this.player = {
-      rig, pos: new THREE.Vector3(13, 0, 80), facing: Math.PI, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, dead: false, deadT: 0, fallDir: 1 },
+      rig, pos: new THREE.Vector3(1, 0, 88), facing: Math.PI, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, dead: false, deadT: 0, fallDir: 1 },
       hp: 100, mp: 60, level: 1, xp: 0, gold: 0, potions: 3, equip: {}, bag: new Array(40).fill(null), cds: {}, buffs: {},
       target: null, moveTo: null, actionDur: 0.6, hitApplied: false, dead: false, whirlT: 0, dashT: 0, invuln: 0,
     };
@@ -367,7 +367,7 @@ export class Game {
   respawn() {
     const p = this.player; this.ui.death(false);
     p.dead = false; p.st.dead = false; p.rig.children[0].rotation.x = 0; p.rig.children[0].position.y = 0;
-    p.hp = p.stats.maxHp; p.mp = p.stats.maxMp; p.pos.set(13, 0, 78); p.target = null; p.moveTo = null; p.invuln = 2;
+    p.hp = p.stats.maxHp; p.mp = p.stats.maxMp; p.pos.set(1, 0, 88); p.target = null; p.moveTo = null; p.invuln = 2;
     p.gold = Math.floor(p.gold * 0.9);
     for (const e of this.enemies) if (!e.dead) { e.alerted = false; e.hp = e.maxHp; e.pos.copy(e.home); }
     if (this.boss && !this.boss.dead) { this.boss.hp = this.boss.maxHp; this.ui.bossBar(null); this.bossActive = false; }
@@ -617,7 +617,7 @@ export class Game {
   // ------------------------------------------------------------------ NPC
   addNpc() {
     const npc = humanoid({ robe: '#e6dcc4', robe2: '#2a6a5a', turban: 0x2a7a6a, beard: 0xd8d0c0, weapon: null, skin: 0x9a6a48, sash: 0x2a6a5a });
-    const x = 9, z = 74; npc.position.set(x, heightAt(x, z), z); npc.rotation.y = 0.6;
+    const x = -2, z = 84; npc.position.set(x, heightAt(x, z), z); npc.rotation.y = 0.6;
     this.scene.add(npc); this.npc = npc; this.npcSt = { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0 };
     // astrolabe in hand
     const ast = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.02, 6, 24), new THREE.MeshStandardMaterial({ color: 0xd9a441, metalness: 1, roughness: 0.3 }));

@@ -74,7 +74,7 @@ export class UI {
     this.tooltip = this.$('#tooltip');
     this.$('#inv .close').onclick = () => this.toggleInventory(false);
   }
-  show() { this.hud.classList.remove('hidden'); this.$('#title').classList.add('gone'); }
+  show() { this.hud.classList.remove('hidden'); const t = this.$('#title'); t.classList.add('gone'); setTimeout(() => { t.style.display = 'none'; }, 1300); }
   buildSkills() {
     const defs = [['attack', 'LMB'], ['naft', 'RMB'], ['whirl', '1'], ['dash', '2'], ['ward', '3'], ['potion', 'Q']];
     this.$('#skills').innerHTML = defs.map(([k, key]) => `<div class="skill" data-k="${k}">${ICONS[k]}<div class="cd"></div><div class="key">${key}</div><div class="cnt"></div></div>`).join('');

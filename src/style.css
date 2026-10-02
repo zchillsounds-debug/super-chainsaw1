@@ -81,7 +81,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:'Cinz
 .tt-name{font:700 16px Cinzel}.tt-base{font:500 11px Cinzel;color:#a09070;margin-bottom:6px}
 .tt-main{font:700 14px Cinzel;color:#fff}.tt-aff{font:500 13px Cinzel;color:#7f9aff}.tt-flavor{font:italic 14px Amiri,serif;color:#d08040;margin-top:6px}
 .tt-lvl{font:500 10px Cinzel;color:#806a50;margin-top:6px}.tt-cmp{font:500 11px Cinzel;color:#a09070;margin-top:4px;border-top:1px solid #3a2a14;padding-top:4px}
-#dialog{left:50%;bottom:190px;transform:translateX(-50%);width:560px;padding:16px 22px}
+#dialog{left:36px;bottom:170px;width:480px;padding:16px 22px}
 .dname{font:700 17px Cinzel;color:var(--gold);margin-bottom:8px}
 .dtext{font:400 19px/1.45 Amiri,serif;color:var(--parch)}
 button{font:700 15px Cinzel;color:#1a0f06;background:linear-gradient(#f2d27a,#a87a2a);border:1px solid #3a2410;padding:8px 22px;cursor:pointer;box-shadow:0 0 0 1px #f2d27a55,0 4px 10px #000;letter-spacing:1px}
