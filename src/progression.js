@@ -231,7 +231,7 @@ function startRush(game, tier) {
       for (const e of g.interior.enemies) if (!e.elite) { g.scene.remove(e.rig); e.removed = true; e.dead = true; }
       g.enemies = g.enemies.filter((e) => !e.removed); g.interior.enemies = g.interior.enemies.filter((e) => !e.removed);
       const I = g.interior.I, c = I.center(I.rooms[1]);
-      const waves = [['spearman', 'Ziyad\'s Shade, Raider Captain'], ['deserter', 'Hisham\'s Second'], ['naffat', 'The Naft-Master'], ['archer', 'The Archer of Kufa'], ['champion', 'Mukhariq the Unbroken']];
+      const waves = [['spearman', 'Farud\'s Shade, Raider Captain'], ['deserter', 'Hisham\'s Second'], ['naffat', 'The Naft-Master'], ['archer', 'The Archer of Kufa'], ['champion', 'Mukhariq the Unbroken']];
       let i = 0, t0 = performance.now();
       const next = () => {
         if (!g.interior) return;

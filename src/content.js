@@ -31,7 +31,7 @@ const NAMED = [
 ];
 // a new area per act; each ends in a named captain guarding the chest
 const AREAS = [
-  { id: 'cellar', act: 1, style: 'cellar', at: [SITES.serai.x + 9, SITES.serai.z + 9], seed: 761, rooms: 6, level: 2, title: 'The Caravanserai Storerooms', sub: 'Vaulted stores beneath Ziyad\'s camp', pool: ['bandit', 'bandit', 'archer'], bossType: 'archer', bossName: 'Qays', label: 'Go down into the storerooms', icon: '▼', look: 'mud' },
+  { id: 'cellar', act: 1, style: 'cellar', at: [SITES.serai.x + 9, SITES.serai.z + 9], seed: 761, rooms: 6, level: 2, title: 'The Caravanserai Storerooms', sub: 'Vaulted stores beneath Farud\'s camp', pool: ['bandit', 'bandit', 'archer'], bossType: 'archer', bossName: 'Qays', label: 'Go down into the storerooms', icon: '▼', look: 'mud' },
   { id: 'pit', act: 2, style: 'pit', at: [SITES.kiln.x - 16, SITES.kiln.z + 14], seed: 806, rooms: 7, level: 3, title: 'The Clay Pits', sub: 'Where the kiln yard digs its clay', pool: ['deserter', 'deserter', 'spearman'], bossType: 'spearman', bossName: 'Thabit', label: 'Climb down into the clay pits', icon: '▼', look: 'clay' },
   { id: 'vault', act: 3, style: 'vault', at: [SITES.arch.x + 30, SITES.arch.z + 12], seed: 637, rooms: 8, level: 5, title: 'The Sasanian Vaults', sub: 'Brick halls older than Baghdad', pool: ['naffat', 'spearman', 'archer', 'deserter'], bossType: 'spearman', bossName: 'Mundhir', label: 'Enter the Sasanian vaults', icon: '▼', look: 'brick' },
 ];

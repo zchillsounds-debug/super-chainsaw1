@@ -54,7 +54,7 @@ export function setupMobile(game, ui) {
     if (!game.started || game.player.dead || ui.dialogOpen || game.paused) return;
     if (k === 'attack') {
       if (game.attackMode === 'toggle') { game.autoAttack = !game.autoAttack; ui.skillEls.attack?.classList.toggle('auto', game.autoAttack); if (!game.autoAttack) game.player.target = null; return; }
-      const e = game.pickTarget(9); if (e) { game.player.target = e; game.player.moveTo = null; } return;
+      game.atkPressT = game.t; const e = game.player.target && !game.player.target.dead ? game.player.target : game.pickTarget(game.kit.attack.kind === 'melee' ? 5 : game.kit.attack.range); if (e) { game.player.target = e; game.player.moveTo = null; } return;
     }
     const d = game.slotDefs()[k]; if (d?.aim) game.aimAuto();
     game.useSkill(k);
@@ -63,7 +63,7 @@ export function setupMobile(game, ui) {
     for (const [k, el] of Object.entries(els)) {
       if (el.parentNode !== cl) cl.appendChild(el);
       el.addEventListener('pointerdown', (ev) => { ev.preventDefault(); ev.stopPropagation(); el.classList.add('down'); press(k);
-        if (k === 'attack' && game.attackMode !== 'toggle') el._hold = setInterval(() => press('attack'), 300); });
+        if (k === 'attack' && game.attackMode !== 'toggle') el._hold = setInterval(() => press('attack'), 150); });
       const up = () => { el.classList.remove('down'); clearInterval(el._hold); };
       el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('pointerleave', up);
     }

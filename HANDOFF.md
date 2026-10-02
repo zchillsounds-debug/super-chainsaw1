@@ -38,7 +38,7 @@ URL flags:
 
 ## Story bible
 - **Characters:** the hero is Salim, a caravan guard. Ishaq is an astronomer of the House of Wisdom.
-- **Acts:** Act 1 is Ziyad at the caravanserai. Act 2 is Hisham at the kiln yard. Act 3 is Ghassan at the ruined Persian arch.
+- **Acts:** Act 1 is Farud at the caravanserai. Act 2 is Hisham at the kiln yard. Act 3 is Ghassan at the ruined Persian arch.
 - **Classes:** Faris, Rami, Naffat, 'Ayyar.
 - **Hub NPCs:** Yusuf (merchant), Bishr (blacksmith), 'Amr (trainer).
 - **Side quests:** The Lost Astrolabe, Sweet Water, 'Amr's Wager.
@@ -126,7 +126,7 @@ URL flags:
     - Ash for the Engines: 'Amr, from Act III. Burn three mangonels at the arch; doing so removes Ghassan's naft barrage and changes his phase-2 line.
   - Ghassan's final duel below 25% health: shield down, a cutscene line, a ring of fire 15 m around the arena (burns if you leave it) and telegraphed lunges.
   - New Game+ from the victory screen: keeps hero, gear, disciplines, stash and codex; the world resets, and foes get +4 levels, ×2.4 health and ×1.8 damage per cycle.
-  - Epithets removed: Ziyad, Hisham and Ghassan go by their names only, and elites are shown as "Name · Role".
+  - Epithets removed: Farud, Hisham and Ghassan go by their names only, and elites are shown as "Name · Role".
   - Three new codex entries: The Arch of Ctesiphon, Mangonels, Indian Steel.
 
 ## Test tools

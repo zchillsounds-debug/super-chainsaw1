@@ -120,7 +120,7 @@ export function briefing(g) {
   const L = [
     'Salim! You live. When your caravan did not reach the gate, I feared the worst. I am Ishaq, astronomer of the House of Wisdom, and those were my instruments on your camels.',
     'The siege is over, but its soldiers did not all go home. A renegade named Ghassan gathers deserters at the ruined Persian arch to the south. He means to choke the grain road.',
-    'Break his lieutenants first. Ziyad holds the old caravanserai to the east, and Hisham hides his knife-men in the brick kilns across the canal. Keep your sword arm loose.',
+    'Break his lieutenants first. Farud holds the old caravanserai to the east, and Hisham hides his knife-men in the brick kilns across the canal. Keep your sword arm loose.',
   ];
   const face = () => { salim.facing = yawTo(salim.pos, ishaq.pos); ishaq.facing = yawTo(ishaq.pos, salim.pos); };
   const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b = to.pos, f = yawTo(a, b); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * side, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * side); }, t0: headOf(to), fov: 30 });

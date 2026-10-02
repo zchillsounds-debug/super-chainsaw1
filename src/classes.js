@@ -42,6 +42,7 @@ function blink(g, to) { const p = g.player; g.fx.dust(p.pos, 10, 1); p.pos.set(t
 // ------------------------------------------------------------------ class definitions
 export const CLASSES = {
   faris: {
+    mobility: 0.3, // movement speed while an attack plays (1 = unhindered)
     name: 'Faris', ar: 'فارس', role: 'Mailed horseman fighting afoot: sword, shield and nerve',
     look: { robe: '#17171a', robe2: '#b8913e', hem: true, mail: true, qaba: true, turban: null, cap: 0x2a2620, capBand: 0x141210, weapon: 'sword', offhand: 'shield', beard: 0x2a1a10, cloak: 0x6e1c16, sash: 0x9a2a1c, scabbard: true, skin: 0xa8714a, build: 1.1, detail: 'hi' },
     base: { hp: 100, armor: 6, mp: 50 }, weight: 1.0, resource: 'Resolve',
@@ -65,6 +66,7 @@ export const CLASSES = {
     },
   },
   rami: {
+    mobility: 0.92, // movement speed while an attack plays (1 = unhindered)
     name: 'Rami', ar: 'رامي', role: 'Horse-archer of the Khurasani regiments: range, movement, a steady draw',
     look: { robe: '#2e3424', robe2: '#a88a4a', qaba: true, hem: true, turban: null, cap: 0x5a4a32, capBand: 0x2a2018, weapon: 'bow', beard: 0x2a1a10, beardLen: 0.5, cloak: 0x4a4a30, sash: 0x8a6a2a, skin: 0xa8714a, build: 0.98, detail: 'hi' },
     base: { hp: 84, armor: 2, mp: 60 }, weight: 0.4, resource: 'Focus',
@@ -96,6 +98,7 @@ export const CLASSES = {
     },
   },
   naffat: {
+    mobility: 0.8, // movement speed while an attack plays (1 = unhindered)
     name: 'Naffat', ar: 'نفّاط', role: 'Siege naft-thrower: clay grenades, burning oil and smoke',
     look: { robe: '#3a2a1e', robe2: '#c06a24', qaba: false, hem: true, turban: 0x6a4a2a, weapon: 'torch', beard: 0x1e140c, beardLen: 0.7, sash: 0xa04a18, mask: null, skin: 0x9a6440, build: 1.04, belly: 0.15, detail: 'hi' },
     base: { hp: 90, armor: 4, mp: 70 }, weight: 0.55, resource: 'Naft',
@@ -125,6 +128,7 @@ export const CLASSES = {
     },
   },
   ayyar: {
+    mobility: 0.7, // movement speed while an attack plays (1 = unhindered)
     name: '\'Ayyar', ar: 'عيّار', role: 'Street fighter of the Baghdad quarters: knives, speed and the shadows',
     look: { robe: '#1e1c1e', robe2: '#5a2a2a', qaba: false, hem: true, turban: 0x2a2428, mask: 0x1a1618, weapon: 'dagger', sash: 0x6a1a1a, skin: 0x9a6a44, build: 0.95, hunch: 0.05, detail: 'hi' },
     base: { hp: 80, armor: 2, mp: 55 }, weight: 0.35, resource: 'Nerve',

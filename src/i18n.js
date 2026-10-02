@@ -7,7 +7,7 @@ const AR = {
   'Enter the Sands': 'ادخل الرمال', 'Continue': 'متابعة', 'New Chronicle': 'سيرة جديدة', 'Settings': 'الإعدادات',
   'Inventory': 'المتاع', 'Disciplines': 'المهارات', 'Journal': 'اليوميات', 'Codex': 'الموسوعة', 'Map': 'الخريطة', 'Controls': 'التحكّم',
   'The Renegade of the Sawad': 'المتمرّد في السواد',
-  'Defeat Ziyad at the old caravanserai': 'اهزم زيادًا عند الخان القديم',
+  'Defeat Farud at the old caravanserai': 'اهزم فرودًا عند الخان القديم',
   'Drive Hisham\'s men from the kiln yard': 'اطرد رجال هشام من ساحة الأفران',
   'Face Ghassan at the ruined Persian arch': 'واجه غسّان عند الطاق الفارسي المهدّم',
   'Choose Salim\'s Discipline': 'اختر فنّ سالم', 'You can change it later at the training yard in the suq.': 'يمكنك تغييره لاحقًا في ساحة التدريب في السوق.',

@@ -31,7 +31,7 @@ export class Game {
     this.createPlayer();
     this.spawnEnemies();
     this.quests = [
-      { id: 'serai', text: 'Defeat Ziyad at the old caravanserai', done: false },
+      { id: 'serai', text: 'Defeat Farud at the old caravanserai', done: false },
       { id: 'graves', text: 'Drive Hisham\'s men from the kiln yard', done: false },
       { id: 'boss', text: 'Face Ghassan at the ruined Persian arch', done: false },
     ];
@@ -191,7 +191,7 @@ export class Game {
     this.spawnPack(['bandit', 'archer', 'spearman'], S.x, S.z + 6, 5, 2, { spread: 6 });
     this.spawnPack(['archer'], S.x - 10, S.z - 10, 2, 2);
     this.spawnPack(['bandit', 'spearman'], S.x + 8, S.z - 4, 3, 2);
-    this.chief = this.spawnPack('spearman', S.x, S.z - 6, 1, 3, { elite: true, name: 'Ziyad' })[0];
+    this.chief = this.spawnPack('spearman', S.x, S.z - 6, 1, 3, { elite: true, name: 'Farud' })[0];
     this.chief.quest = 'serai';
     this.spawnPack(['bandit', 'bandit'], S.x + 2, S.z - 6, 2, 2);
     // road to the bridge and beyond
@@ -379,7 +379,7 @@ export class Game {
     if (Math.random() < (e.elite ? 1 : 0.1)) this.dropItem({ potion: true, rarity: 'common' }, e.pos);
     this.onKill?.(e); e.onDeath?.(e);
     if (e.quest) this.completeQuest(e.quest, !!this.director);
-    if (e === this.chief && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Ziyad', text: 'Hisham holds the kilns... he will not kneel as I did.', card: { ar: 'الأتون', en: 'Act II · The Kilns', sub: 'Hisham\'s knife-men wait among the brick stacks' } })).then(() => this.checkpoint(2));
+    if (e === this.chief && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Farud', text: 'Hisham holds the kilns... he will not kneel as I did.', card: { ar: 'الأتون', en: 'Act II · The Kilns', sub: 'Hisham\'s knife-men wait among the brick stacks' } })).then(() => this.checkpoint(2));
     if (e === this.matriarch && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Hisham', text: 'Ghassan waits at the arch. You will break on it.', card: { ar: 'الطاق', en: 'Act III · The Broken Arch', sub: 'Ghassan holds the road beneath the ruined Persian arch' } })).then(() => this.checkpoint(3));
     if (e.boss) this.onBossDeath(e);
   }
@@ -416,7 +416,7 @@ export class Game {
     const q = this.quests.find((x) => x.id === id); if (!q || q.done) return;
     q.done = true; this.refreshTracker ? this.refreshTracker() : this.ui.quest(this.quests);
     if (silent) return;
-    const msgs = { serai: ['The Raiders Scatter', 'Ziyad falls among the ruins of the caravanserai'], graves: ['The Kilns Fall Silent', 'Hisham\'s deserters flee into the dunes'], boss: ['The Renegade Falls', 'The grain road to Baghdad is open again'] };
+    const msgs = { serai: ['The Raiders Scatter', 'Farud falls among the ruins of the caravanserai'], graves: ['The Kilns Fall Silent', 'Hisham\'s deserters flee into the dunes'], boss: ['The Renegade Falls', 'The grain road to Baghdad is open again'] };
     this.ui.banner(...msgs[id]);
   }
 
@@ -792,7 +792,7 @@ export class Game {
     const lines = [
       'Salim! You live. When your caravan did not reach the gate, I feared the worst. I am <b>Ishaq</b>, astronomer of the <i>Bayt al-Hikma</i> — and those were my instruments on your camels.',
       'The siege is over, but its soldiers did not all go home. A renegade named <b>Ghassan</b> gathers deserters at the ruined Persian arch to the south, and he means to choke the grain road.',
-      'Break his lieutenants first: <b>Ziyad</b> holds the old caravanserai to the east, and <b>Hisham</b> hides his knife-men in the brick kilns across the canal. Take this sherbet, and keep your sword arm loose.',
+      'Break his lieutenants first: <b>Farud</b> holds the old caravanserai to the east, and <b>Hisham</b> hides his knife-men in the brick kilns across the canal. Take this sherbet, and keep your sword arm loose.',
     ];
     let i = 0;
     const next = () => { if (i < lines.length) this.ui.dialog('Ishaq', lines[i++], next); };
@@ -919,21 +919,34 @@ export class Game {
       }
       // target/attack
       let goal = null;
+      // fluid combat: attacking no longer roots you. While attack is held (or auto-attack is on) the target is kept
+      // and shots/swings fire as you steer; how freely you move mid-swing depends on the class (kit.mobility).
+      const atkHeld = this.autoAttack || (this.t - (this.atkPressT ?? -9)) < 0.5;
+      const joyOn = this.joy && Math.hypot(this.joy.x, this.joy.y) > 0.15;
       if (this.joy) { // virtual joystick: camera looks toward -z, so screen-up is -z
-        p.target = null; p.moveTo = null; p.pickup = null;
-        if (!p.st.action || p.st.action === 'throw') goal = { x: p.pos.x + this.joy.x * 3, y: p.pos.y, z: p.pos.z + this.joy.y * 3 };
+        if (!atkHeld) p.target = null; p.moveTo = null; p.pickup = null;
+        if (joyOn) goal = { x: p.pos.x + this.joy.x * 3, y: p.pos.y, z: p.pos.z + this.joy.y * 3 };
+        if (atkHeld && !p.target) { const e = this.pickTarget(this.kit.attack.kind === 'melee' ? 4 : this.kit.attack.range); if (e) p.target = e; }
       }
       if (p.target && (p.target.dead || p.target.hidden)) p.target = null;
       if (p.target) { const dd = p.pos.distanceTo(p.target.pos); if (dd < (p.tgtBest ?? 1e9) - 0.5) { p.tgtBest = dd; p.tgtStall = 0; } else p.tgtStall = (p.tgtStall || 0) + dt; if (p.tgtStall > 4 && dd > 3) { p.target = null; p.tgtStall = 0; p.tgtBest = undefined; } } else { p.tgtBest = undefined; p.tgtStall = 0; }
       const A = this.kit.attack;
-      if (!goal && p.target && p.whirlT <= 0 && !p.flurry) {
+      const steering = !!goal;
+      if (p.target && p.whirlT <= 0 && !p.flurry) {
         const d = Math.hypot(p.target.pos.x - p.pos.x, p.target.pos.z - p.pos.z);
-        const inRange = A.kind === 'melee' ? d <= A.range + p.target.radius : (d <= A.range && navClear(p.pos.x, p.pos.z, p.target.pos.x, p.target.pos.z));
+        const inRange = A.kind === 'melee' ? d <= A.range + p.target.radius + (steering ? 0.4 : 0) : (d <= A.range && navClear(p.pos.x, p.pos.z, p.target.pos.x, p.target.pos.z));
         if (inRange) {
           p.facing += angDiff(p.facing, Math.atan2(p.target.pos.x - p.pos.x, p.target.pos.z - p.pos.z)) * Math.min(1, dt * 20);
           if (!p.st.action) { p.st.action = A.kind === 'melee' ? 'attack' : A.action; p.st.actionT = 0; p.actionDur = A.dur / (1 + s.speed / 100); p.hitApplied = false; p.atkTarget = p.target; if (A.kind === 'melee') this.audio.swing(); }
-        } else if (!p.st.action || p.st.action === 'throw' || p.st.action === 'shoot') goal = p.target.pos;
-      } else if (!goal && p.moveTo && !(p.st.action === 'attack')) goal = p.moveTo;
+        } else if (!steering) goal = p.target.pos;
+      } else if (!goal && p.moveTo) goal = p.moveTo;
+      // how freely the hero moves while an attack plays: ranged kits walk and shoot, heavy blades commit until the blow lands
+      const acting = p.st.action === 'attack' || p.st.action === 'shoot' || p.st.action === 'throw' || p.st.action === 'cast';
+      const mob = this.kit.mobility ?? (A.kind === 'melee' ? 0.5 : 0.85);
+      let moveK = 1;
+      if (acting) moveK = p.hitApplied ? 1 : mob;
+      // moving cancels an attack's recovery once its blow has landed
+      if (acting && p.hitApplied && steering && p.st.actionT > 0.6) p.st.action = null;
       if (p.pickup && this.drops.includes(p.pickup) && p.pos.distanceTo(p.pickup.to) < 1.5) { this.tryPickup(p.pickup); p.pickup = null; p.moveTo = null; }
       if (goal) goal = this.steer(p, goal);
       const want = tmp2.set(0, 0, 0);
@@ -942,7 +955,11 @@ export class Game {
         if (d > 0.2) {
           const arrive = Math.min(1, d / 1.2); // ease into the destination instead of snapping
           want.set(dx / d, 0, dz / d).multiplyScalar(speed * (this.joy ? Math.min(1, Math.hypot(this.joy.x, this.joy.y) * 1.4) : Math.max(0.35, arrive)));
-          if (p.whirlT <= 0) p.facing += angDiff(p.facing, Math.atan2(dx, dz)) * Math.min(1, dt * 11);
+          // backpedalling while keeping the bow on a target is a little slower than walking forward
+          const back = acting && p.target && (dx * Math.sin(p.facing) + dz * Math.cos(p.facing)) < 0 ? 0.8 : 1;
+          want.multiplyScalar(moveK * back);
+          // while shooting at a target, keep the bow on it (strafe/kite); otherwise face the way you walk
+          if (p.whirlT <= 0 && !(acting && p.target)) p.facing += angDiff(p.facing, Math.atan2(dx, dz)) * Math.min(1, dt * 11);
         } else if (p.moveTo && Math.hypot(p.moveTo.x - p.pos.x, p.moveTo.z - p.pos.z) < 0.3) p.moveTo = null;
       }
       if (!p.vel) p.vel = new THREE.Vector3();
