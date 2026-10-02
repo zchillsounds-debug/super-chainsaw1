@@ -37,6 +37,8 @@ URL flags:
 - **Ask clarifying questions and confirm before building.**
 
 ## Story bible
+Round 11 rewrote the story around the Teacher's Pages, with Shia-inspired themes only; see `STORY.md`. Ziyad is now Farud, and Jabir is Salim's brother.
+
 - **Characters:** the hero is Salim, a caravan guard. Ishaq is an astronomer of the House of Wisdom.
 - **Acts:** Act 1 is Farud at the caravanserai. Act 2 is Hisham at the kiln yard. Act 3 is Ghassan at the ruined Persian arch.
 - **Classes:** Faris, Rami, Naffat, 'Ayyar.

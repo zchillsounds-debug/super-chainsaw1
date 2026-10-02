@@ -379,8 +379,8 @@ export class Game {
     if (Math.random() < (e.elite ? 1 : 0.1)) this.dropItem({ potion: true, rarity: 'common' }, e.pos);
     this.onKill?.(e); e.onDeath?.(e);
     if (e.quest) this.completeQuest(e.quest, !!this.director);
-    if (e === this.chief && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Farud', text: 'Hisham holds the kilns... he will not kneel as I did.', card: { ar: 'الأتون', en: 'Act II · The Kilns', sub: 'Hisham\'s knife-men wait among the brick stacks' } })).then(() => this.checkpoint(2));
-    if (e === this.matriarch && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Hisham', text: 'Ghassan waits at the arch. You will break on it.', card: { ar: 'الطاق', en: 'Act III · The Broken Arch', sub: 'Ghassan holds the road beneath the ruined Persian arch' } })).then(() => this.checkpoint(3));
+    if (e === this.chief && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Farud', text: 'I read one of his pages by firelight... and never slept after. Ghassan paid me. Hisham has the rest.', card: { ar: 'الأتون', en: 'Act II · The Kilns', sub: 'Hisham is feeding the Pages to the kilns, a bundle at a time' } })).then(() => this.checkpoint(2));
+    if (e === this.matriarch && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Hisham', text: 'I sat at his feet once. Then I chose bread over a dead man\'s words. Tell Ishaq... no. Tell no one.', card: { ar: 'الطاق', en: 'Act III · The Broken Arch', sub: 'Ghassan has cut the canal. The village is thirsty' } })).then(() => this.checkpoint(3));
     if (e.boss) this.onBossDeath(e);
   }
   checkpoint(act) { this.act = Math.max(this.act || 1, act); if (!this.interior) this.lighting?.forAct(this.act, 4); saveGame(this); }
@@ -416,7 +416,7 @@ export class Game {
     const q = this.quests.find((x) => x.id === id); if (!q || q.done) return;
     q.done = true; this.refreshTracker ? this.refreshTracker() : this.ui.quest(this.quests);
     if (silent) return;
-    const msgs = { serai: ['The Raiders Scatter', 'Farud falls among the ruins of the caravanserai'], graves: ['The Kilns Fall Silent', 'Hisham\'s deserters flee into the dunes'], boss: ['The Renegade Falls', 'The grain road to Baghdad is open again'] };
+    const msgs = { serai: ['Farud Confesses', 'The buyer\'s name was Ghassan'], graves: ['The Kilns Fall Silent', 'Some pages were saved from the fire'], boss: ['The Silence Is Broken', 'The Pages are recovered; the water runs again'] };
     this.ui.banner(...msgs[id]);
   }
 
@@ -652,7 +652,7 @@ export class Game {
     const mins = Math.floor(this.t / 60), secs = Math.floor(this.t % 60);
     const win = () => this.ui.victory({ level: this.player.level, gold: this.player.gold, kills: this.kills || 0, time: `${mins}m ${String(secs).padStart(2, '0')}s` });
     if (this.director) setTimeout(() => this.director.play(SCENES.epilogue(this, b)).then(() => { this.checkpoint(4); win(); }), 1200);
-    else { setTimeout(() => this.ui.banner('Victory', 'Ghassan is fallen. The caravans of the Sawad move freely once more.', 5000), 2500); setTimeout(win, 8000); }
+    else { setTimeout(() => this.ui.banner('Victory', 'The Pages are recovered. The water runs again.', 5000), 2500); setTimeout(win, 8000); }
     if (this.bossLight) setTimeout(() => { this.scene.remove(this.bossLight); }, 2000);
   }
 
@@ -790,9 +790,9 @@ export class Game {
   }
   talkToNpc() {
     const lines = [
-      'Salim! You live. When your caravan did not reach the gate, I feared the worst. I am <b>Ishaq</b>, astronomer of the <i>Bayt al-Hikma</i> — and those were my instruments on your camels.',
-      'The siege is over, but its soldiers did not all go home. A renegade named <b>Ghassan</b> gathers deserters at the ruined Persian arch to the south, and he means to choke the grain road.',
-      'Break his lieutenants first: <b>Farud</b> holds the old caravanserai to the east, and <b>Hisham</b> hides his knife-men in the brick kilns across the canal. Take this sherbet, and keep your sword arm loose.',
+      'You are Jabir\'s brother. I am <b>Ishaq</b>. I hired your caravan, and I am sorry. He was a better man than my coin deserved.',
+      'Under my instruments was a cedar chest: the Pages of <b>the Teacher</b>, who died in a prison by the river fourteen years ago. Someone in Baghdad wants his words to burn. <b>Ghassan</b> was paid to see it done.',
+      '<b>Farud</b> holds the old caravanserai, <b>Hisham</b> the kilns, and Ghassan the broken arch. If the Pages still exist, they are between those three. Your brother asked you for one thing.',
     ];
     let i = 0;
     const next = () => { if (i < lines.length) this.ui.dialog('Ishaq', lines[i++], next); };

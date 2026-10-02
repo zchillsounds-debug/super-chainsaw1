@@ -63,7 +63,7 @@ export class UI {
         <div class="controls"><span class="pc">Left-click: move / attack · Right-click: Naft Flask · 1–4: Skills · Q: Potion · I: Inventory · Alt: show loot</span><span class="mob">Left thumb: joystick · Tap: move / attack · Right buttons: skills</span></div>
       </div>
       <div id="death" class="hidden"><div class="dt">You Have Fallen</div><button id="respawn">Rise Again</button></div>
-      <div id="victory" class="hidden"><div class="vt">Victory</div><div class="vs">Ghassan has fallen beneath the ruined Persian arch.<br/>Ishaq records your deeds in the annals of the House of Wisdom.</div><div class="vstats"></div><button id="vcont">Continue Exploring</button><button id="vng">New Game+</button><div class="vngnote">Keep your hero, gear and disciplines. The Sawad resets, and its foes grow stronger.</div></div>
+      <div id="victory" class="hidden"><div class="vt">Victory</div><div class="vs">The Teacher's Pages are safe, and the lamps for the fallen still drift on the canal.<br/>Ishaq keeps the account.</div><div class="vstats"></div><button id="vcont">Continue Exploring</button><button id="vng">New Game+</button><div class="vngnote">Keep your hero, gear and disciplines. The Sawad resets, and its foes grow stronger.</div></div>
       <div id="fade"></div>`;
     this.$ = (s) => root.querySelector(s);
     this.hud = this.$('#hud');

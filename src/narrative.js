@@ -86,12 +86,15 @@ export function setupNarrative(game) {
         choices: [
           ...(s === 1 ? [{ label: 'Your astrolabe, teacher. Recovered from the kiln tunnels.', to: null, fx: () => returnAstrolabe() }] : []),
           ...(s === -1 ? [{ label: 'You seem troubled. What did the raiders take?', to: 'lost' }] : []),
+          { label: 'Who was the Teacher?', to: 'teacher', fx: () => unlock(game, 'teacher') },
           { label: 'Tell me about the House of Wisdom.', to: 'wisdom', fx: () => unlock(game, 'wisdom') },
           { label: 'How did the siege come to this?', to: 'siege', fx: () => unlock(game, 'siege') },
           { label: 'Who were the men fighting in the streets?', to: 'ayyar', fx: () => unlock(game, 'ayyarun') },
           { label: 'Farewell.' },
         ] },
       lost: { who: 'Ishaq', text: 'My best astrolabe, with a rete cut like lace. I made it myself over three winters. The raiders will have dragged it to their tunnels under the kilns. Hisham\'s men hoard brass to melt.', choices: [{ label: 'I will find it.', fx: () => { setQuest(game, 'astrolabe', 0); unlock(game, 'astrolabe'); } }, { label: 'Another time, teacher.' }] },
+      teacher: { who: 'Ishaq', text: 'A quiet man who gave away more than he owned. He told the powerful the truth, gently, and they never forgave him for it. They kept him in a cell by the river until he died. His students say it was poison. We copied what he said so it could not be buried with him.', choices: [{ label: 'And my brother died for those pages.', to: 'jabir' }, { label: 'Back.', to: 'start' }] },
+      jabir: { who: 'Ishaq', text: 'Your brother died so that a dead man\'s words would not die a second time. That is not nothing, Salim. When this is over, we will speak his name aloud, so the people who killed him do not get to write the story.', choices: [{ label: 'Back.', to: 'start' }] },
       wisdom: { who: 'Ishaq', text: 'A library that became a workshop. We copy, we translate Ptolemy and the Indian tables, and we argue about them. The caliph pays for paper; we pay with sleep.', choices: [{ label: 'Back.', to: 'start', fx: () => unlock(game, 'paper') }] },
       siege: { who: 'Ishaq', text: 'Two brothers, one throne. Tahir\'s Khurasanis came from the east. The city was burned street by street. Now al-Amin is dead, and men who learned to loot do not unlearn it.', choices: [{ label: 'Back.', to: 'start', fx: () => unlock(game, 'khurasan') }] },
       ayyar: { who: 'Ishaq', text: 'The \'ayyarun: boys from the poor quarters with reed shields and slings, holding alleys against armoured men. Some of them are on the roads now too. Not all of them are Ghassan\'s.', choices: [{ label: 'Back.', to: 'start' }] },
@@ -120,7 +123,7 @@ export function setupNarrative(game) {
       { label: 'How does a merchant pay, out here?', to: 'coin', fx: () => unlock(game, 'dinar') },
       { label: 'Farewell.' },
     ] },
-    water: { who: 'Yusuf', text: 'The qanat under the well feeds this whole suq. Renegades camp in its galleries, and the water comes up foul. Clear them out, and I will remember it.', choices: [{ label: 'I will go down.', fx: () => setQuest(game, 'water', 0) }, { label: 'Not now.' }] },
+    water: { who: 'Yusuf', text: 'The qanat under the well feeds this whole suq. Ghassan\'s men camp in its galleries and foul the water on purpose. A man can go a long time without bread, guard. Not without water. Clear them out.', choices: [{ label: 'I will go down.', fx: () => setQuest(game, 'water', 0) }, { label: 'Not now.' }] },
     coin: { who: 'Yusuf', text: 'Gold dinars for the great deals, silver dirhams for bread. And for long roads, a suftaja: a letter my cousin in Basra will honour. Paper weighs less than gold, and bandits cannot spend it.', choices: [{ label: 'Back.', to: 'start' }] },
     });
   };
