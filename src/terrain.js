@@ -67,6 +67,18 @@ export function heightAt(x, z) {
   return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
 }
 
+// Raise the gameplay height field over a bridge deck (x-aligned span centred at bx,bz).
+export function setBridge(bx, bz, len, width, base) {
+  for (let j = 0; j <= GRID; j++) for (let i = 0; i <= GRID; i++) {
+    const x = i / GRID * WORLD - HALF, z = j / GRID * WORLD - HALF;
+    if (Math.abs(z - bz) > width / 2 || Math.abs(x - bx) > len / 2 + 1.5) continue;
+    const t = clamp((x - (bx - len / 2)) / len, 0, 1);
+    const deck = base + 0.6 + Math.sin(t * Math.PI) * 0.6;
+    const k = j * (GRID + 1) + i;
+    heights[k] = Math.max(heights[k], deck);
+  }
+}
+
 // Fertility (irrigated green land near the canal).
 export function fertility(x, z) {
   const cd = Math.abs(x - canalX(z));

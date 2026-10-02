@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createTerrain, heightAt, canalX, CANAL_W, roadDist, fertility, SITES, WORLD } from './terrain.js';
+import { createTerrain, setBridge, heightAt, canalX, CANAL_W, roadDist, fertility, SITES, WORLD } from './terrain.js';
 import { createCanal } from './water.js';
 import { colliders, house, mosque, caravanserai, greatArch, mausoleum, roundCity, mats } from './buildings.js';
 import { palms, grassField, rocks, shrubs, wind } from './vegetation.js';
@@ -102,7 +102,8 @@ export function buildWorld(scene) {
   // ---------------- canal side: bridge, waterwheel (noria)
   const bz = -6, bx = canalX(bz);
   const dxdz = canalX(bz + 0.5) - canalX(bz - 0.5);
-  place(scene, bridge(13), bx, bz, Math.atan2(dxdz, 1) * 0 + 0, false).position.y = 0.0;
+  place(scene, bridge(13), bx, bz, 0, false).position.y = 0.0;
+  setBridge(bx, bz, 13, 3.4, 0.0);
   const ww = waterwheel(); place(scene, ww, canalX(40) + 0.5, 40, Math.PI / 2, false);
   out.updaters.push((t) => { ww.userData.wheel.rotation.z = t * 0.5; });
   colliders.push({ type: 'circle', x: canalX(40), z: 40, r: 1.6 });
@@ -164,7 +165,7 @@ export function buildWorld(scene) {
   for (let i = 0; i < 26000; i++) {
     const x = (rnd() - 0.5) * (WORLD - 10), z = (rnd() - 0.5) * (WORLD - 10);
     const f = fertility(x, z), rd = roadDist(x, z), cd = Math.abs(x - canalX(z));
-    if (cd < CANAL_W * 0.6 || rd < 2.2) continue;
+    if (cd < CANAL_W * 0.6 || rd < 2.2 || (Math.abs(z - bz) < 2.6 && Math.abs(x - bx) < 8)) continue;
     let inSite = false; for (const s of Object.values(SITES)) if (Math.hypot(x - s.x, z - s.z) < s.r * 0.85) inSite = true;
     const y = heightAt(x, z);
     const r = rnd();
@@ -177,7 +178,7 @@ export function buildWorld(scene) {
   // dense reeds/grass hugging the canal banks
   for (let z = -WORLD / 2; z < WORLD / 2; z += 0.6) for (const s of [-1, 1]) {
     const x = canalX(z) + s * (CANAL_W * 0.55 + rnd() * 2.2);
-    if (rnd() < 0.8 && roadDist(x, z) > 2.5) grassPts.push({ x, y: heightAt(x, z), z });
+    if (rnd() < 0.8 && roadDist(x, z) > 2.5 && Math.abs(z - bz) > 2.6) grassPts.push({ x, y: heightAt(x, z), z });
   }
   // rocks scattered heavily in the desert edges & near the arch
   for (let i = 0; i < 260; i++) {

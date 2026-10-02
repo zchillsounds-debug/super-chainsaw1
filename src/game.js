@@ -81,7 +81,7 @@ export class Game {
               float m[16] = float[16](0.,8.,2.,10.,12.,4.,14.,6.,3.,11.,1.,9.,15.,7.,13.,5.); return (m[k]+0.5)/16.0; }`)
           .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
             { float dz = vViewPosition.z; float d = length(gl_FragCoord.xy - uHole);
-              float f = smoothstep(uHoleR*${hs.toFixed(2)}, uHoleR*${(hs * 0.55).toFixed(2)}, d) * step(dz, uPDepth - 1.2) * ${hs > 1 ? '0.94' : '0.85'};
+              float f = smoothstep(uHoleR*${hs.toFixed(2)}, uHoleR*${(hs * 0.55).toFixed(2)}, d) * step(dz, uPDepth - 1.2) * ${hs > 1 ? '1.0' : '0.85'};
               if (f > bayer4(gl_FragCoord.xy)) discard; }`);
       };
       const key = (mat.customProgramCacheKey ? mat.customProgramCacheKey() : '') + (base ? base.toString() : '');
