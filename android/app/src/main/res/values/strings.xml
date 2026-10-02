@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Sands of Baghdad</string>
+    <string name="title_activity_main">Sands of Baghdad</string>
+    <string name="package_name">com.zchill.sandsofbaghdad</string>
+    <string name="custom_url_scheme">com.zchill.sandsofbaghdad</string>
+</resources>
