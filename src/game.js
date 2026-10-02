@@ -8,6 +8,7 @@ import { makeItem, rollRarity, RARITY } from './items.js';
 import { sigilTex, glowDecal, splatTex } from './textures.js';
 
 const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
+const BOUND = 132;
 const rand = (a, b) => a + Math.random() * (b - a);
 const angDiff = (a, b) => { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 
@@ -310,7 +311,7 @@ export class Game {
   }
 
   killEnemy(e, src) {
-    e.dead = true; e.st.dead = true; e.st.deadT = 0; e.hp = 0;
+    e.dead = true; e.st.dead = true; e.st.deadT = 0; e.hp = 0; this.kills = (this.kills || 0) + 1;
     e.st.fallDir = Math.random() < 0.5 ? 1 : -1;
     this.audio.death();
     const p = this.player; p.xp += e.xp;
@@ -361,7 +362,7 @@ export class Game {
 
   playerDeath() {
     const p = this.player; p.dead = true; p.hp = 0; p.st.dead = true; p.st.deadT = 0;
-    setTimeout(() => this.ui.death(true, () => this.respawn()), 1500);
+    setTimeout(() => { if (this.player.dead) this.ui.death(true, () => this.respawn()); }, 1500);
   }
   respawn() {
     const p = this.player; this.ui.death(false);
@@ -517,10 +518,17 @@ export class Game {
   }
   onBossDeath(b) {
     this.ui.bossBar(null); this.bossActive = false;
+    this.player.invuln = 8;
+    for (const e of this.enemies) if (!e.dead && e.type === 'imp') { e.hp = 0; this.killEnemy(e, b.pos); }
+    for (const h of this.hazards) if (h.kind === 'telegraph') { this.scene.remove(h.ring, h.fill); h.onDone = null; h.t = h.life; }
+    for (const q of this.projectiles) if (q.owner === 'enemy') q.life = 0;
+    this.audio.setMusicIntensity(0);
     this.fx.flash(tmp.copy(b.pos).setY(4), 0xffa040, 300, 2.5, 50);
     for (let i = 0; i < 6; i++) setTimeout(() => { this.fx.ring(b.pos, new THREE.Color(4, 2, 0.5), 1, 14, 1.2); this.audio.boom(); this.shake = 0.6; }, i * 250);
     this.fx.burst(tmp.copy(b.pos).setY(4), 200, { speed: 10, life: 2, size: 0.8, size1: 0.05, color: new THREE.Color(4, 1.6, 0.4), up: 3, drag: 1.2 });
-    setTimeout(() => this.ui.banner('Victory', 'The Ifrit is bound once more. The House of Wisdom honours you.', 6000), 2500);
+    setTimeout(() => this.ui.banner('Victory', 'The Ifrit is bound once more. The House of Wisdom honours you.', 5000), 2500);
+    const mins = Math.floor(this.t / 60), secs = Math.floor(this.t % 60);
+    setTimeout(() => this.ui.victory({ level: this.player.level, gold: this.player.gold, kills: this.kills || 0, time: `${mins}m ${String(secs).padStart(2, '0')}s` }), 8000);
     if (this.bossLight) setTimeout(() => { this.scene.remove(this.bossLight); }, 2000);
   }
 
@@ -748,6 +756,7 @@ export class Game {
       // target/attack
       let goal = null;
       if (p.target && (p.target.dead || p.target.hidden)) p.target = null;
+      if (p.target) { const dd = p.pos.distanceTo(p.target.pos); if (dd < (p.tgtBest ?? 1e9) - 0.5) { p.tgtBest = dd; p.tgtStall = 0; } else p.tgtStall = (p.tgtStall || 0) + dt; if (p.tgtStall > 4 && dd > 3) { p.target = null; p.tgtStall = 0; p.tgtBest = undefined; } } else { p.tgtBest = undefined; p.tgtStall = 0; }
       if (p.target && p.whirlT <= 0) {
         const d = Math.hypot(p.target.pos.x - p.pos.x, p.target.pos.z - p.pos.z);
         if (d <= 1.6 + p.target.radius) {
@@ -783,6 +792,7 @@ export class Game {
     }
     // auto-pickup gold & potions on walk-over
     for (const d of this.drops) if ((d.item.gold || d.item.potion) && d.t >= 1 && p.pos.distanceTo(d.mesh.position) < 1.2) { this.tryPickup(d); break; }
+    p.pos.x = THREE.MathUtils.clamp(p.pos.x, -BOUND, BOUND); p.pos.z = THREE.MathUtils.clamp(p.pos.z, -BOUND, BOUND);
     resolve(p.pos, 0.45);
     p.pos.y = heightAt(p.pos.x, p.pos.z);
     p.st.walkBlend = THREE.MathUtils.lerp(p.st.walkBlend, moving ? 1 : 0, Math.min(1, dt * 10));
@@ -824,7 +834,7 @@ export class Game {
     ent.pathT = (ent.pathT || 0) - 1;
     const moved = !ent.pathGoal || Math.hypot(ent.pathGoal.x - goal.x, ent.pathGoal.z - goal.z) > 1.5;
     if (!ent.path || moved || ent.pathT <= 0) {
-      ent.path = findPath(pos, goal); ent.pathGoal = { x: goal.x, z: goal.z }; ent.pathT = 40;
+      ent.path = findPath(pos, goal, ent === this.player ? 80000 : 5000); ent.pathGoal = { x: goal.x, z: goal.z }; ent.pathT = ent === this.player ? 40 : 30 + Math.random() * 20;
     }
     if (!ent.path || !ent.path.length) return goal;
     while (ent.path.length > 1 && Math.hypot(ent.path[0].x - pos.x, ent.path[0].z - pos.z) < 0.6) ent.path.shift();
@@ -903,7 +913,7 @@ export class Game {
           const dir = tmp.set(wp.x - e.pos.x, 0, wp.z - e.pos.z).normalize();
           e.pos.addScaledVector(dir, e.speed * dt); moving = true;
           if (e.path) e.facing += angDiff(e.facing, Math.atan2(dir.x, dir.z)) * Math.min(1, dt * 8);
-        } else if (e.T.ranged && dist < 6) {
+        } else if (e.T.ranged && dist < 6 && dist > 2.4 && e.atkCd > e.T.atk * 0.5) {
           const dir = tmp.copy(e.pos).sub(p.pos).setY(0).normalize();
           e.pos.addScaledVector(dir, e.speed * 0.7 * dt); moving = true;
         } else if (e.atkCd <= 0) {
@@ -925,6 +935,8 @@ export class Game {
         if (d < m && d > 0.001) { e.pos.x += dx / d * (m - d) * 0.5; e.pos.z += dz / d * (m - d) * 0.5; }
       }
       { const dx = e.pos.x - p.pos.x, dz = e.pos.z - p.pos.z, d = Math.hypot(dx, dz), m = e.radius + 0.45; if (d < m && d > 0.001) { e.pos.x += dx / d * (m - d); e.pos.z += dz / d * (m - d); } }
+      if (e.alerted && !e.boss && e.pos.distanceTo(e.home) > 34) { e.alerted = false; e.wander = e.home.clone(); e.wanderT = 6; e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.5); }
+      e.pos.x = THREE.MathUtils.clamp(e.pos.x, -BOUND, BOUND); e.pos.z = THREE.MathUtils.clamp(e.pos.z, -BOUND, BOUND);
       resolve(e.pos, e.radius);
       e.pos.y = heightAt(e.pos.x, e.pos.z);
       e.st.walkBlend = THREE.MathUtils.lerp(e.st.walkBlend, moving ? (e.alerted ? 1 : 0.5) : 0, Math.min(1, dt * 8));

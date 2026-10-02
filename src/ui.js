@@ -60,6 +60,7 @@ export class UI {
         <div class="controls">Left-click: move / attack · Right-click: Naft Flask · 1–4: Skills · Q: Potion · I: Inventory · Alt: show loot</div>
       </div>
       <div id="death" class="hidden"><div class="dt">You Have Fallen</div><button id="respawn">Rise Again</button></div>
+      <div id="victory" class="hidden"><div class="vt">Victory</div><div class="vs">The Ifrit is bound beneath the Ruined Arch once more.<br/>Ishaq al-Munajjim records your deeds in the annals of the House of Wisdom.</div><div class="vstats"></div><button id="vcont">Continue Exploring</button></div>
       <div id="fade"></div>`;
     this.$ = (s) => root.querySelector(s);
     this.hud = this.$('#hud');
@@ -147,6 +148,11 @@ export class UI {
   }
   get dialogOpen() { return !this.$('#dialog').classList.contains('hidden'); }
   death(show, cb) { const d = this.$('#death'); d.classList.toggle('hidden', !show); if (cb) this.$('#respawn').onclick = cb; }
+  victory(st) {
+    const v = this.$('#victory'); v.classList.remove('hidden');
+    v.querySelector('.vstats').innerHTML = `<div><b>${st.level}</b>Level</div><div><b>${st.kills}</b>Foes Slain</div><div><b>${st.gold}</b>Dinars</div><div><b>${st.time}</b>Time</div>`;
+    this.$('#vcont').onclick = () => v.classList.add('hidden');
+  }
   fade(v) { this.$('#fade').style.opacity = v; }
 
   // ---------------- world-anchored elements

@@ -107,9 +107,11 @@ export function buildWorld(scene) {
   out.updaters.push((t) => { ww.userData.wheel.rotation.z = t * 0.5; });
   colliders.push({ type: 'circle', x: canalX(40), z: 40, r: 1.6 });
 
+  // bridge parapets keep walkers on the deck
+  for (const sz of [-1.9, 1.9]) colliders.push({ type: 'box', x: bx, z: bz + sz, hw: 6.2, hd: 0.2 });
   // canal is impassable except at the bridge (segments of circles)
   for (let z = -WORLD / 2; z < WORLD / 2; z += 2.5) {
-    if (Math.abs(z - bz) < 3.2) continue;
+    if (Math.abs(z - bz) < 4.8) continue;
     colliders.push({ type: 'circle', x: canalX(z), z, r: CANAL_W * 0.45, canal: true });
   }
 

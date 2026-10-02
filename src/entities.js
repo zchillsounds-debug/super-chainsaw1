@@ -25,7 +25,7 @@ export const TYPES = {
     build: () => humanoid({ robe: '#2a0a04', robe2: '#ff5010', turban: null, skin: 0x3a1006, weapon: null, hunch: 0.5, claws: true, eyes: new THREE.Color(6, 2, 0.2), scale: 0.8 }),
   },
   ifrit: {
-    name: 'Ifrit, the Unbound', hp: 1300, dmg: 14, speed: 2.6, range: 5.5, atk: 2.4, xp: 600, radius: 1.8, boss: true,
+    name: 'Ifrit, the Unbound', hp: 2200, dmg: 14, speed: 2.6, range: 5.5, atk: 2.4, xp: 600, radius: 1.8, boss: true,
     build: () => { const r = ifrit(); r.children[0].scale.setScalar(0.8); return r; },
   },
 };
