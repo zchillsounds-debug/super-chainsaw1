@@ -12,8 +12,9 @@ import { firePit } from './props.js';
 // Each is an interactable; the panels are plain DOM in the HUD layer and work with mouse and touch alike.
 const HUB = { merchant: [7, 81], smith: [10, 92], stash: [-6, 91], trainer: [-9, 81] };
 export const MAX_RANK = 5;
-const price = (it) => Math.round(({ common: 8, magic: 30, rare: 90, legendary: 400 })[it.rarity] * (1 + it.level * 0.25));
-const sellPrice = (it) => Math.max(1, Math.round(price(it) * 0.25));
+let DISC = 0;
+const price = (it) => Math.round(({ common: 8, magic: 30, rare: 90, set: 160, legendary: 400 })[it.rarity] * (1 + it.level * 0.25) * (1 - DISC));
+const sellPrice = (it) => it.questId ? 0 : Math.max(1, Math.round(price(it) / (1 - DISC) * 0.25));
 const SALVAGE = { common: { scrap: 1 }, magic: { scrap: 2, silk: 1 }, rare: { scrap: 3, silk: 2, gem: 1 }, legendary: { scrap: 5, silk: 3, gem: 3 } };
 const MAT_NAMES = { scrap: 'Iron Scrap', silk: 'Silk Thread', gem: 'Gem Shard' };
 export const upgradeCost = (it) => { const r = it.rank || 0; return { gold: 40 * (r + 1) * (1 + it.level * 0.2) | 0, scrap: 2 + r * 2, silk: r >= 2 ? r - 1 : 0, gem: r >= 4 ? 1 : 0 }; };
@@ -26,7 +27,7 @@ function npc(game, look, [x, z], face, name, title, talk, prop) {
   colliders.push({ type: 'circle', x, z, r: 0.6 });
   const n = { rig, st, name, title, talk, pos: rig.position, r: 3.2 };
   game.npcs.push(n);
-  game.interactables.push({ pos: rig.position, r: 3.2, label: `Talk to ${name}`, act: talk, npc: n });
+  game.interactables.push({ pos: rig.position, r: 3.2, label: `Talk to ${name}`, act: () => n.talk(), npc: n });
   return n;
 }
 function anvilProp() {
@@ -95,7 +96,7 @@ function cell(it, extra = '') { return `<div class="cell ${it ? 'r-' + it.rarity
 
 export function openPanel(game, kind, tab) {
   closePanel(); game.audio.init();
-  const p = game.player, ui = game.ui;
+  const p = game.player, ui = game.ui; DISC = p.discount || 0;
   document.body.classList.add('inshop');
   const titles = { merchant: 'Yusuf · Merchant', smith: 'Bishr · Blacksmith', stash: 'Your Stash', trainer: '\'Amr · Training Yard', skills: 'Disciplines' };
   panel = el(`<div id="shop" class="panel"><div class="ptitle">${titles[kind]} <span class="close">✕</span></div><div class="sbody"></div><div class="sfoot"><span class="gold">◉ ${p.gold} Dinars</span>${kind === 'smith' ? matsLine(p) : ''}</div></div>`);
@@ -117,7 +118,7 @@ export function openPanel(game, kind, tab) {
         p.gold -= price(it); p.bag[k] = it; game.vendorStock[+c.dataset.i] = null; game.audio.gold(); refresh(); };
     });
     body.appendChild(s);
-    body.appendChild(bagGrid((i, it) => { p.gold += sellPrice(it); p.bag[i] = null; game.audio.gold(); refresh(); }, 'Your pack: tap to sell'));
+    body.appendChild(bagGrid((i, it) => { if (it.questId) { ui.toast('That is not yours to sell'); return; } p.gold += sellPrice(it); p.bag[i] = null; game.audio.gold(); refresh(); }, 'Your pack: tap to sell'));
     const pot = el(`<button class="sbtn">Buy Pomegranate Sherbet (25)</button>`);
     pot.onclick = () => { if (p.gold < 25 || p.potions >= 5) { game.audio.denied?.(); return; } p.gold -= 25; p.potions++; game.audio.potion(); refresh(); };
     body.appendChild(pot);

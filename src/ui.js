@@ -144,7 +144,7 @@ export class UI {
     const gh = b.querySelector('.bghost'); const cur = parseFloat(gh.style.width || '100');
     gh.style.width = Math.max(frac * 100, cur - 0.4) + '%';
   }
-  quest(lines) { this.$('#quest .qlines').innerHTML = lines.map((l) => `<div class="${l.done ? 'done' : ''}">${l.done ? '✦' : '◇'} ${l.text}</div>`).join(''); }
+  quest(lines) { this.$('#quest .qlines').innerHTML = lines.map((l) => `<div class="${l.done ? 'done' : ''} ${l.side ? 'side' : ''}">${l.done ? '✦' : l.side ? '·' : '◇'} ${l.text}</div>`).join(''); }
   toast(text, cls = '') {
     const el = document.createElement('div'); el.className = 'toast ' + cls; el.innerHTML = text;
     this.$('#toasts').appendChild(el); setTimeout(() => el.classList.add('out'), 3200); setTimeout(() => el.remove(), 4000);

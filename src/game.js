@@ -251,6 +251,7 @@ export class Game {
       if (k === 'i' || k === 'c') { this.ui.toggleInventory(); this.refreshInv(); }
       if (k === 'escape') { this.ui.toggleInventory(false); this.closePanels?.(); }
       if (k === 'k') this.openPanel?.('skills');
+      if (k === 'j') this.journal?.('journal');
     });
     addEventListener('keyup', (e) => { this.keys[e.key.toLowerCase()] = false; });
   }
@@ -269,6 +270,14 @@ export class Game {
       prev = t; t += 1.0;
     }
     return o.clone().addScaledVector(d, -o.y / d.y);
+  }
+  // what the hero is walking on (footstep sounds and dust)
+  surfaceAt(pos) {
+    if (this.interior) { const I = this.interior.I; if (I.style === 'qanat') { const c = I.center(I.rooms.reduce((a, r) => (Math.hypot(I.center(r).x - pos.x, I.center(r).z - pos.z) < Math.hypot(I.center(a).x - pos.x, I.center(a).z - pos.z) ? r : a))); if (Math.abs(pos.x - (c.x + 3.6)) < 0.9) return 'water'; return 'stone'; } return 'brick'; }
+    if (Math.abs(pos.x - canalX(pos.z)) < 5.2) return 'water';
+    const V = SITES.village; if (Math.hypot(pos.x - V.x, pos.z - V.z) < 16) return 'brick';
+    const S = SITES.serai; if (Math.abs(pos.x - S.x) < 11 && Math.abs(pos.z - S.z) < 11) return 'brick';
+    return 'sand';
   }
   // touch aiming: point the virtual cursor at the nearest foe, else straight ahead
   aimAuto() {
@@ -321,7 +330,7 @@ export class Game {
     // shield-bearers turn aside frontal blows unless staggered, attacking, or the blow is a bash
     if (e.shield && !o.unblockable && !e.staggerT && !e.st.action && front > 0.45 && Math.random() < 0.65) {
       dmg = Math.max(1, Math.round(dmg * 0.2)); crit = false;
-      e.flash = 0.4; this.audio.clang(); this.fx.sparks(tmp2.copy(e.pos).setY(e.pos.y + 1.2).addScaledVector(from, 0.5), new THREE.Color(4, 3, 1.6));
+      e.flash = 0.4; this.audio.at(e.pos, () => this.audio.clang()); this.fx.sparks(tmp2.copy(e.pos).setY(e.pos.y + 1.2).addScaledVector(from, 0.5), new THREE.Color(4, 3, 1.6));
       this.ui.damageNumber(e.pos, 'Blocked', 'block'); e.hp -= dmg; e.poise -= w * 4; e.st.hitT = 0.3;
       if (e.hp <= 0) this.killEnemy(e, src); return;
     }
@@ -343,7 +352,7 @@ export class Game {
     // hit-stop and camera kick scale with weapon weight
     this.hitStop = Math.max(this.hitStop, (crit ? 0.07 : 0.035) * (0.4 + w));
     if (kind !== 'fire') this.impulse(tmp.copy(from).negate(), 0.06 * w + (crit ? 0.08 : 0));
-    if (crit) { this.audio.crit(); this.shake = Math.max(this.shake, 0.2 + w * 0.1); } else this.audio.hit(w);
+    if (crit) { this.audio.at(e.pos, () => this.audio.crit()); this.shake = Math.max(this.shake, 0.2 + w * 0.1); } else this.audio.at(e.pos, () => this.audio.hit(w));
     if (p.stats.leech) p.hp = Math.min(p.stats.maxHp, p.hp + p.stats.leech);
     this.onHit?.(e, dmg, crit);
     this.lastTarget = e; this.lastTargetT = 3;
@@ -354,7 +363,7 @@ export class Game {
   killEnemy(e, src) {
     e.dead = true; e.st.dead = true; e.st.deadT = 0; e.hp = 0; this.kills = (this.kills || 0) + 1;
     e.st.fallDir = Math.random() < 0.5 ? 1 : -1;
-    this.audio.death();
+    this.audio.at(e.pos, () => this.audio.death());
     const p = this.player; p.xp += e.xp;
     this.fx.dust(e.pos, 6);
     if (!e.boss) this.decal(e.pos, 1.6 + Math.random(), 'blood');
@@ -405,7 +414,7 @@ export class Game {
 
   completeQuest(id, silent) {
     const q = this.quests.find((x) => x.id === id); if (!q || q.done) return;
-    q.done = true; this.ui.quest(this.quests);
+    q.done = true; this.refreshTracker ? this.refreshTracker() : this.ui.quest(this.quests);
     if (silent) return;
     const msgs = { serai: ['The Raiders Scatter', 'Ziyad falls among the ruins of the caravanserai'], graves: ['The Kilns Fall Silent', 'Hisham\'s deserters flee into the dunes'], boss: ['The Renegade Falls', 'The grain road to Baghdad is open again'] };
     this.ui.banner(...msgs[id]);
@@ -735,7 +744,7 @@ export class Game {
     const x = -2, z = 84; npc.position.set(x, heightAt(x, z), z); npc.rotation.y = 0.6;
     this.scene.add(npc); this.npc = npc; this.npcSt = { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0 };
     const ishaq = { rig: npc, st: this.npcSt, name: 'Ishaq', pos: npc.position, talk: () => this.talkToNpc() };
-    this.npcs.push(ishaq); this.interactables.push({ pos: npc.position, r: 3.2, label: 'Talk to Ishaq', act: () => this.talkToNpc(), npc: ishaq });
+    this.npcs.push(ishaq); this.interactables.push({ pos: npc.position, r: 3.2, label: 'Talk to Ishaq', act: () => ishaq.talk(), npc: ishaq });
     // astrolabe in hand
     const ast = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.02, 6, 24), new THREE.MeshStandardMaterial({ color: 0xd9a441, metalness: 1, roughness: 0.3 }));
     npc.userData.parts.handL.add(ast); ast.position.y = -0.12;
@@ -811,6 +820,10 @@ export class Game {
     this.updateAmbientLife(dt);
     this.updateCamera(dt);
     this.zones?.update(dt); this.hubTick?.(dt); this.tickExtra?.(dt);
+    // listener rides the hero; the suq crowd swells near the square, drips and draughts underground
+    this.audio.setListener?.(p.pos);
+    this.ambT = (this.ambT || 0) - dt;
+    if (this.ambT <= 0) { this.ambT = 0.5; const V = SITES.village, dv = Math.hypot(p.pos.x - V.x, p.pos.z - V.z); this.audio.setAmbience?.(this.interior ? 0 : Math.max(0, Math.min(1, (40 - dv) / 25)), this.interior ? 1 : 0); }
     if (this.started) this.updateOccluders(); else this.occU.uHole.value.set(-9999, -9999);
     if (this.npc) {
       animateHumanoid(this.npc, this.npcSt, this.t, dt);
@@ -973,7 +986,7 @@ export class Game {
     p.st.walkBlend = THREE.MathUtils.lerp(p.st.walkBlend, moving ? Math.min(1, (p.st.speedK ?? 1) * 1.1) : 0, Math.min(1, dt * 8));
     p.st.phase += dt * (p.dashT > 0 ? speed * 1.55 : Math.hypot(p.vel?.x || 0, p.vel?.z || 0) * 1.55);
     // footstep dust puffs
-    if (moving && p.dashT <= 0) { const step = Math.floor(p.st.phase / Math.PI); if (step !== p.lastStep) { p.lastStep = step; this.fx.dust(tmp.copy(p.pos).add(new THREE.Vector3(0, 0.1, 0)), 2, 0.45); } }
+    if (moving && p.dashT <= 0) { const step = Math.floor(p.st.phase / Math.PI); if (step !== p.lastStep) { p.lastStep = step; const sf = this.surfaceAt(p.pos); if (sf === 'sand') this.fx.dust(tmp.copy(p.pos).add(new THREE.Vector3(0, 0.1, 0)), 2, 0.45); this.audio.step?.(sf, p.rollT > 0 ? 1.4 : 1); } }
     p.rig.position.copy(p.pos); p.rig.rotation.y = p.facing;
     CharLOD.center.copy(p.pos);
     animateHumanoid(p.rig, p.st, this.t, dt);
@@ -1078,7 +1091,7 @@ export class Game {
       if (e.aura) { e.aura.rotation.y += dt; e.aura.material.opacity = 0.4 + Math.sin(this.t * 4) * 0.2; }
       // ambushers spring up
       if (e.hidden) {
-        if (dist < 13) { e.hidden = false; e.riseT = 0; e.alerted = true; this.fx.dust(e.pos, 14, 1.2); this.audio.grunt(); }
+        if (dist < 13) { e.hidden = false; e.riseT = 0; e.alerted = true; this.fx.dust(e.pos, 14, 1.2); this.audio.at(e.pos, () => this.audio.grunt()); }
         else { e.st.crouch = 1; e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; this.animEnemy(e, dt, dist); continue; }
       }
       if (e.riseT < 1) {

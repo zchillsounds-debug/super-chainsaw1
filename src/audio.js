@@ -115,13 +115,15 @@ export class Audio {
     };
     const freq = (m, deg) => { const n = m.cents.length - 1, o = Math.floor(deg / n), i = ((deg % n) + n) % n; return m.tonic * Math.pow(2, o + m.cents[i] / 1200); };
     // low drone on the tonic and fifth (a bowed, kamancheh-like tone) under combat
-    const drone = (f) => { const o = c.createOscillator(), fl = c.createBiquadFilter(), g = c.createGain(); o.type = 'sawtooth'; o.frequency.value = f; fl.type = 'lowpass'; fl.frequency.value = 420; g.gain.value = 0.045; o.connect(fl); fl.connect(g); g.connect(this.combatBus); o.start(); };
+    const drone = (f) => { const o = c.createOscillator(), fl = c.createBiquadFilter(), g = c.createGain(); o.type = 'sawtooth'; o.frequency.value = f; fl.type = 'lowpass'; fl.frequency.value = 420; g.gain.value = 0.032; o.connect(fl); fl.connect(g); g.connect(this.combatBus); o.start(); };
     drone(73.42); drone(110);
     // rhythms (16th grid): wahda for exploring, maqsum for combat
     const WAHDA = 'D...........t.t.', MAQSUM = 'D.t...t.D...t...';
     let next = c.currentTime + 0.6, step = 0, deg = 7, phraseLeft = 0, rest = 0;
     const sched = () => {
-      const combat = this.intensity > 0.5, m = combat ? MAQ.bayati : MAQ.rast, bpm = combat ? 108 : 76, s16 = 60 / bpm / 4;
+      // each act colours the score: maqam, tempo, register and how busy the melody is (see setAct)
+      const A = this.actCfg || { ex: 'rast', bpm: 76, cbpm: 108, dens: 0.45, oct: 1, qan: 0.15 };
+      const combat = this.intensity > 0.5, m0 = MAQ[combat ? 'bayati' : A.ex], m = { tonic: m0.tonic * (combat ? 1 : A.oct), cents: m0.cents }, bpm = combat ? A.cbpm : A.bpm, s16 = 60 / bpm / 4;
       while (next < c.currentTime + 0.25) {
         const pat = combat ? MAQSUM : WAHDA, ch = pat[step % 16];
         if (ch === 'D') this.drum('dum', next, combat ? 1 : 0.7);
@@ -131,7 +133,7 @@ export class Audio {
         // melody: stepwise phrases resolving to the tonic; the qanun answers an octave up
         if (step % 2 === 0) {
           if (rest > 0) rest--;
-          else if (Math.random() < (combat ? 0.8 : 0.55)) {
+          else if (Math.random() < (combat ? 0.72 : A.dens)) {
             if (phraseLeft <= 0) { phraseLeft = 6 + Math.floor(Math.random() * 6); deg = combat ? 3 + Math.floor(Math.random() * 3) : 2 + Math.floor(Math.random() * 4); }
             phraseLeft--;
             const target = phraseLeft <= 1 ? 0 : deg + (Math.random() < 0.5 ? -1 : 1) * (Math.random() < 0.8 ? 1 : 2);
@@ -140,7 +142,7 @@ export class Audio {
             this.oud(f, next, combat ? 0.2 : 0.18);
             if (Math.random() < 0.18) this.oud(f, next + s16, 0.1); // risha double stroke
             if (phraseLeft <= 0) { this.qanun(freq(m, 7), next + s16 * 2, 0.07, 4); this.qanun(freq(m, 9), next + s16 * 3, 0.05, 2); rest = combat ? 2 : 4; }
-            else if (Math.random() < (combat ? 0.3 : 0.15)) this.qanun(f * 2, next + s16, 0.05, Math.random() < 0.4 ? 3 : 0);
+            else if (Math.random() < (combat ? 0.28 : A.qan)) this.qanun(f * 2, next + s16, 0.05, Math.random() < 0.4 ? 3 : 0);
           }
         }
         next += s16; step++;
@@ -152,7 +154,7 @@ export class Audio {
   setMusicIntensity(v) {
     if (!this.ctx) return; this.intensity = v;
     const t = this.ctx.currentTime;
-    this.music.gain.setTargetAtTime(0.2 + v * 0.08, t, 1);
+    this.music.gain.setTargetAtTime((0.17 + v * 0.07) * (this.musicVol ?? 1), t, 1);
     this.combatBus?.gain.setTargetAtTime(v > 0.5 ? 1 : 0, t, 1.5);
   }
   // short orchestral punctuation for cinematics

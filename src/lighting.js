@@ -32,11 +32,12 @@ export class Lighting {
     return s;
   }
   set(name, secs = 3) {
+    if (name === 'underground') this.onAct?.('under');
     if (!PRESETS[name] || (name === this.name && this.k >= 1)) return;
     this.name = name; this.from = this.snapshot(this.cur); this.to = PRESETS[name]; this.k = secs > 0 ? 0 : 1; this.dur = secs;
     if (secs <= 0) { this.apply(1); this.bakeEnv(); }
   }
-  forAct(act, secs) { this.set(ACT_PRESET[Math.min(4, act || 1)] || 'golden', secs); }
+  forAct(act, secs) { this.set(ACT_PRESET[Math.min(4, act || 1)] || 'golden', secs); this.onAct?.(act || 1); }
   bakeEnv() { const old = this.scene.environment; this.scene.environment = envFromSky(this.renderer, this.world.sunDir); old?.dispose?.(); }
   apply(k) {
     const f = this.from, t = this.to, o = this.cur, L = THREE.MathUtils.lerp;

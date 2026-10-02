@@ -314,3 +314,16 @@ body.incine #prompt,body.inshop #prompt{display:none}
 .tt-asp{color:#ffa860;margin-top:6px;font-size:13px}.tt-set{color:#5ee08a;margin-top:6px;font-size:13px}.tt-cls{color:#ff7a6a;margin-top:4px;font-size:12px}
 .r-set{border-color:#5ee08a !important} .loot.r-set{color:#5ee08a}
 @media (max-width:600px){.tree .tcols{grid-template-columns:1fr}}
+
+/* ---------------- Round 7: dialogue choices, journal, codex */
+.dchoices{display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.dchoice{text-align:left;font:16px Amiri,serif;color:#f0e2c4;background:#1e140ccc;border:1px solid #5a4028;border-radius:4px;padding:6px 10px;cursor:pointer}
+.dchoice:hover{border-color:#e0b060;background:#3a2414}.dchoice span{color:#e0b060;margin-right:4px}
+#journal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:40;width:min(600px,calc(100vw - 24px));max-height:calc(100vh - 40px);overflow-y:auto;pointer-events:auto;display:flex;flex-direction:column;gap:8px}
+.jbody{display:flex;flex-direction:column;gap:6px;font:15px Amiri,serif;color:#e8d8b8}
+.jq{padding:4px 6px;border-left:2px solid #6a5030}.jq.done{opacity:.6;border-color:#5ee08a}.jq b{font:600 14px Cinzel}.jq small{color:#b8a888}
+.ccat{font:700 14px Cinzel;color:#f0d08a;margin-top:6px}
+.centry{border-bottom:1px solid #3a2a1a;padding:4px 0}.centry summary{cursor:pointer;font:600 14px Cinzel;color:#efe0c0}.centry p{margin:6px 0 4px;line-height:1.45}
+.centry.locked{color:#6a5a48;font-style:italic}
+#quest .side{color:#cfe0b8;font-size:.92em}
+.toast.codex{border-color:#7ac0d0}.toast.quest{border-color:#5ee08a}

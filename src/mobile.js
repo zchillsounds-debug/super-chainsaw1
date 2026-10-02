@@ -10,7 +10,7 @@ export function setupMobile(game, ui) {
   wrap.innerHTML = `<div id="joy"><div id="knob"></div></div>
     <div id="tskills"></div>
     <button id="tmenu" class="tbtn" aria-label="Menu">☰</button>
-    <div id="tmenupop" class="panel hidden"><button data-m="bag">Inventory</button><button data-m="skills">Disciplines</button><button data-m="map">Map</button><button data-m="cfg">Controls</button></div>
+    <div id="tmenupop" class="panel hidden"><button data-m="bag">Inventory</button><button data-m="skills">Disciplines</button><button data-m="journal">Journal</button><button data-m="map">Map</button><button data-m="cfg">Controls</button></div>
     <div id="tsettings" class="panel hidden">
       <div class="ptitle">Controls <span class="close">✕</span></div>
       <label>Button size <input id="tsz" type="range" min="0.6" max="1.2" step="0.05"></label>
@@ -33,6 +33,7 @@ export function setupMobile(game, ui) {
     if (m === 'bag') { ui.toggleInventory(); game.refreshInv(); }
     if (m === 'map') document.body.classList.toggle('mapopen');
     if (m === 'skills') game.openPanel?.('skills');
+    if (m === 'journal') game.journal?.('journal');
     if (m === 'cfg') cfg.classList.toggle('hidden');
   });
   cfg.querySelector('.close').addEventListener('pointerdown', () => cfg.classList.add('hidden'));

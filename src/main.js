@@ -3,7 +3,7 @@ import { createRenderer, createComposer, skyDome, envFromSky, QUALITY } from './
 import { buildWorld } from './world.js';
 import { FX } from './fx.js';
 import { UI } from './ui.js';
-import { Audio } from './audio.js';
+import { Audio } from './audio2.js';
 import { Game } from './game.js';
 import { heightAt, SITES } from './terrain.js';
 import { makeItem } from './items.js';
@@ -20,6 +20,8 @@ import { Atmos } from './atmos.js';
 import { PerfHUD } from './perf.js';
 import { setupProgression, qanatBurnTick, ASPECTS, SETS } from './progression.js';
 import { CLASSES } from './classes.js';
+import { lineClear } from './collision.js';
+import { setupNarrative, journalPanel } from './narrative.js';
 
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
@@ -62,6 +64,7 @@ console.debug('LOG game ' + (performance.now() - __t0).toFixed(0)); __t0 = perfo
 game.grade = grade; game.lightPool = lightPool;
 const lighting = game.lighting = new Lighting({ scene, renderer, sun, hemi, world, grade });
 const atmos = new Atmos(scene, QUALITY);
+lighting.onAct = (a) => audio.setAct?.(a);
 const perf = game.perf = new PerfHUD(renderer, () => `q ${QUALITY}${perfLevel ? ' −' + perfLevel : ''} · lights ${lightPool.lights.filter((l) => l.intensity > 0).length}/${lightPool.lights.length} · foes ${game.enemies.filter((e) => e.rig.visible && !e.dead).length} · ${lighting.name}`);
 game.addNpc();
 game.addAmbientLife();
@@ -69,6 +72,10 @@ setupHub(game); game.openPanel = (k) => (panelOpen() ? closePanel() : openPanel(
 game.zones = new Zones(game);
 setupProgression(game);
 game.tickExtra = (dt) => qanatBurnTick(game, dt);
+setupNarrative(game);
+game.journal = (t) => { if (document.getElementById('journal')) { document.getElementById('journal').remove(); document.body.classList.remove('inshop'); } else journalPanel(game, t); };
+const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); game.discover(dt); };
+audio.occluded = (pos) => !lineClear(game.player.pos.x, game.player.pos.z, pos.x, pos.z);
 ui.aspects = ASPECTS; ui.sets = SETS; ui.classNames = Object.fromEntries(Object.entries(CLASSES).map(([k, c]) => [k, c.name]));
 if (IS_TOUCH) setupMobile(game, ui);
 const director = game.director = new Director({ game, camera, ui, audio, grade, bokeh, renderer, scene });
@@ -87,12 +94,12 @@ function start(cont) {
   ui.fade(1);
   setTimeout(async () => {
     mode = 'game'; game.started = true; ui.show(); ui.fade(0);
-    if (cont) { applySave(game, cont); lighting.forAct(cont.act, 0); ui.banner('The Chronicle Continues', ['', 'The road from the village', 'The kiln yard', 'The road to the arch', 'The grain road'][Math.min(4, cont.act)], 3500); return; }
+    if (cont) { applySave(game, cont); lighting.forAct(cont.act, 0); game.briefed = true; game.refreshTracker?.(); ui.banner('The Chronicle Continues', ['', 'The road from the village', 'The kiln yard', 'The road to the arch', 'The grain road'][Math.min(4, cont.act)], 3500); return; }
     const cls = P.get('cls') || await ui.classPick();
     game.setClass(cls, true);
     await director.play(SCENES.prologue(game));
     await director.play(SCENES.briefing(game));
-    game.act = 1; saveGame(game);
+    game.act = 1; game.briefed = true; game.refreshTracker?.(); saveGame(game);
   }, 800);
 }
 // Continue button when a save exists
