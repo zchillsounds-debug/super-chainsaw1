@@ -845,20 +845,31 @@ export class Game {
 
   slashTrail() {
     const p = this.player;
-    const g = new THREE.RingGeometry(1.0, 2.3, 32, 1, -Math.PI * 0.45, Math.PI * 0.9);
-    const pos = g.attributes.position;
-    // fade along the arc via vertex colors
-    const col = [];
-    for (let i = 0; i < pos.count; i++) { const a = Math.atan2(pos.getY(i), pos.getX(i)); const k = (a + Math.PI * 0.45) / (Math.PI * 0.9); col.push(k, k, k); }
-    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-    const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 2.2, 1.8), vertexColors: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+    if (!this.slashMat) {
+      this.slashMat = new THREE.ShaderMaterial({
+        uniforms: { uA: { value: 1 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, toneMapped: false,
+        vertexShader: 'varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+        fragmentShader: `uniform float uA; varying vec3 vP;
+          void main(){
+            float r = length(vP.xy); float a = atan(vP.y, vP.x);
+            float k = clamp((a + 1.41) / 2.83, 0.0, 1.0);            // 0 = tail, 1 = leading edge
+            float band = smoothstep(1.15, 2.0, r) * smoothstep(2.35, 2.05, r);
+            float edge = smoothstep(2.0, 2.18, r) * smoothstep(2.35, 2.2, r);
+            float alpha = (band * 0.45 + edge * 1.2) * pow(k, 1.6) * uA;
+            vec3 col = mix(vec3(1.0,0.75,0.4), vec3(1.6,1.5,1.3), edge);
+            gl_FragColor = vec4(col * alpha, alpha);
+          }`,
+      });
+    }
+    const g = new THREE.RingGeometry(1.1, 2.35, 40, 1, -Math.PI * 0.45, Math.PI * 0.9);
+    const m = this.slashMat.clone();
     const mesh = new THREE.Mesh(g, m);
     mesh.rotation.set(-Math.PI / 2, 0, 0);
     const grp = new THREE.Group(); grp.add(mesh); grp.position.set(p.pos.x, p.pos.y + 1.1, p.pos.z);
     grp.rotation.y = p.facing - Math.PI / 2;
     grp.rotateZ(0.18);
     this.scene.add(grp);
-    this.trails.push({ obj: grp, t: 0, life: 0.18 });
+    this.trails.push({ obj: grp, t: 0, life: 0.2 });
   }
 
   updateEnemies(dt) {
@@ -984,7 +995,7 @@ export class Game {
     }
     for (let i = this.trails.length - 1; i >= 0; i--) {
       const tr = this.trails[i]; tr.t += dt;
-      tr.obj.children[0].material.opacity = 0.85 * (1 - tr.t / tr.life);
+      tr.obj.children[0].material.uniforms.uA.value = 1 - tr.t / tr.life;
       tr.obj.scale.setScalar(1 + tr.t * 1.5);
       if (tr.t >= tr.life) { this.scene.remove(tr.obj); this.trails.splice(i, 1); }
     }
