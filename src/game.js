@@ -595,7 +595,7 @@ export class Game {
     // astrolabe in hand
     const ast = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.02, 6, 24), new THREE.MeshStandardMaterial({ color: 0xd9a441, metalness: 1, roughness: 0.3 }));
     npc.userData.parts.handL.add(ast); ast.position.y = -0.12;
-    const mark = new THREE.Mesh(new THREE.OctahedronGeometry(0.16), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 2.4, 0.8), toneMapped: false }));
+    const mark = new THREE.Mesh(new THREE.OctahedronGeometry(0.12), new THREE.MeshStandardMaterial({ color: 0xffd060, emissive: 0xffa020, emissiveIntensity: 1.2, metalness: 0.8, roughness: 0.3 }));
     mark.position.y = 2.6; npc.add(mark); this.npcMark = mark;
   }
   talkToNpc() {

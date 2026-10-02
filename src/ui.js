@@ -10,6 +10,15 @@ const ICONS = {
   potion: `<svg viewBox="0 0 64 64"><path d="M26 8h12v10c8 4 12 10 12 18 0 10-8 18-18 18S14 46 14 36c0-8 4-14 12-18z" fill="#3a0d14" stroke="#e8b060" stroke-width="2"/><path d="M17 36c4 3 26 3 30 0 0 9-6 15-15 15s-15-6-15-15z" fill="#d0203a"/></svg>`,
 };
 
+const ITEM_SVG = {
+  weapon: (c) => `<svg viewBox="0 0 64 64"><path d="M12 54 L44 14 Q50 8 55 9 Q54 16 48 21 L17 57 Z" fill="url(#bl)" stroke="${c}" stroke-width="1.5"/><path d="M8 48 L20 60" stroke="#d9a441" stroke-width="5" stroke-linecap="round"/><circle cx="9" cy="58" r="3" fill="#d9a441"/><defs><linearGradient id="bl" x1="0" x2="1"><stop offset="0" stop-color="#8a9098"/><stop offset=".5" stop-color="#f0f4f8"/><stop offset="1" stop-color="#9aa0a8"/></linearGradient></defs></svg>`,
+  armor: (c) => `<svg viewBox="0 0 64 64"><path d="M18 10 L26 6 L32 12 L38 6 L46 10 L56 20 L50 28 L46 24 L46 56 L18 56 L18 24 L14 28 L8 20 Z" fill="#6a7078" stroke="${c}" stroke-width="2"/><g stroke="#3a3e44" stroke-width="1.2">${[20, 26, 32, 38, 44, 50].map((y) => `<path d="M18 ${y} H46"/>`).join('')}</g><path d="M30 12 V56" stroke="#d9a441" stroke-width="2"/></svg>`,
+  helm: (c) => `<svg viewBox="0 0 64 64"><path d="M32 4 L36 14 Q50 18 52 36 L12 36 Q14 18 28 14 Z" fill="#a8aeb6" stroke="${c}" stroke-width="2"/><path d="M10 34 Q32 44 54 34 L54 42 Q32 52 10 42 Z" fill="#e8dcc0" stroke="#8a7a5a"/><path d="M14 44 L14 56 L50 56 L50 44" fill="none" stroke="#6a7078" stroke-width="3" stroke-dasharray="2 2"/></svg>`,
+  ring: (c) => `<svg viewBox="0 0 64 64"><circle cx="32" cy="38" r="15" fill="none" stroke="#d9a441" stroke-width="6"/><path d="M24 22 L32 10 L40 22 L32 28 Z" fill="${c}" stroke="#fff8" stroke-width="1"/></svg>`,
+  amulet: (c) => `<svg viewBox="0 0 64 64"><path d="M14 6 Q32 34 50 6" fill="none" stroke="#d9a441" stroke-width="2"/><circle cx="32" cy="40" r="14" fill="#1a2a5a" stroke="#d9a441" stroke-width="3"/><path d="M32 30 L35 37 L42 40 L35 43 L32 50 L29 43 L22 40 L29 37 Z" fill="${c}"/></svg>`,
+};
+export function itemIcon(it) { return (ITEM_SVG[it.slot] || ITEM_SVG.ring)(RARITY[it.rarity].color); }
+
 const SLOT_NAMES = { weapon: 'Weapon', armor: 'Armor', helm: 'Helm', ring: 'Ring', amulet: 'Amulet' };
 
 export class UI {
@@ -222,7 +231,7 @@ export class UI {
     const eq = this.$('#equip');
     eq.innerHTML = Object.keys(SLOT_NAMES).map((s) => {
       const it = player.equip[s];
-      return `<div class="eslot s-${s} ${it ? 'r-' + it.rarity : ''}" data-s="${s}">${it ? `<span class="ic">${it.icon || '◆'}</span>` : `<span class="lbl">${SLOT_NAMES[s]}</span>`}</div>`;
+      return `<div class="eslot s-${s} ${it ? 'r-' + it.rarity : ''}" data-s="${s}">${it ? `<span class="ic">${itemIcon(it)}</span>` : `<span class="lbl">${SLOT_NAMES[s]}</span>`}</div>`;
     }).join('');
     for (const el of eq.querySelectorAll('.eslot')) {
       const it = player.equip[el.dataset.s]; if (!it) continue;
@@ -231,7 +240,7 @@ export class UI {
       el.onclick = () => { this.hideTooltip(); onUnequip(el.dataset.s); };
     }
     const g = this.$('#grid'); const cells = [];
-    for (let i = 0; i < 40; i++) { const it = player.bag[i]; cells.push(`<div class="cell ${it ? 'r-' + it.rarity : ''}" data-i="${i}">${it ? `<span class="ic">${it.icon || '◆'}</span>` : ''}</div>`); }
+    for (let i = 0; i < 40; i++) { const it = player.bag[i]; cells.push(`<div class="cell ${it ? 'r-' + it.rarity : ''}" data-i="${i}">${it ? `<span class="ic">${itemIcon(it)}</span>` : ''}</div>`); }
     g.innerHTML = cells.join('');
     for (const el of g.querySelectorAll('.cell')) {
       const it = player.bag[+el.dataset.i]; if (!it) continue;

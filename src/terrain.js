@@ -144,7 +144,12 @@ export function createTerrain() {
         float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
           return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
         float fb(vec2 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*vn(p); p*=2.03; a*=.5; } return s; }
-        vec4 gMask; float gRock;`)
+        vec4 gMask; float gRock; float gStoneEdge; vec2 gStoneGrad;
+        vec2 hh2(vec2 p){ p = vec2(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
+        // returns (edgeDist, cellId)
+        vec2 vor2(vec2 p){ vec2 i=floor(p), f=fract(p); float d1=8., d2=8.; vec2 id=vec2(0.);
+          for(int y=-1;y<=1;y++) for(int x=-1;x<=1;x++){ vec2 g=vec2(x,y); vec2 o=hh2(i+g)*0.85+0.075; float d=length(g+o-f); if(d<d1){d2=d1;d1=d;id=i+g;} else if(d<d2) d2=d; }
+          return vec2(d2-d1, h21(id)); }`)
       .replace('#include <map_fragment>', `
         gMask = texture2D(uMask, vWPos.xz/uWorld + 0.5);
         float n1 = fb(vWPos.xz*0.08), n2 = fb(vWPos.xz*0.6), n3 = fb(vWPos.xz*2.5);
@@ -159,9 +164,17 @@ export function createTerrain() {
         float stones = smoothstep(0.62,0.7,fb(vWPos.xz*1.4));
         road = mix(road, vec3(0.58,0.53,0.47), stones*0.7);
         // courtyard flagstones in sites
-        vec2 fl = vWPos.xz*0.55; vec2 fi = floor(fl + vec2(0.0, floor(fl.x)*0.5)); vec2 ff = fract(fl + vec2(0.0, floor(fl.x)*0.5));
-        float grout = smoothstep(0.0,0.06,min(min(ff.x,1.-ff.x),min(ff.y,1.-ff.y)));
-        vec3 flag = mix(vec3(0.50,0.42,0.33), vec3(0.62,0.53,0.41), h21(fi)) * mix(0.5,1.0,grout) * (0.8+0.3*n2);
+        vec2 sp = vWPos.xz*1.05;
+        vec2 vc = vor2(sp);
+        gStoneEdge = vc.x;
+        float e2 = 0.05; gStoneGrad = vec2(vor2(sp+vec2(e2,0.)).x - vc.x, vor2(sp+vec2(0.,e2)).x - vc.x)/e2;
+        float grout = smoothstep(0.02,0.12,vc.x);
+        vec3 stoneCol = mix(vec3(0.60,0.50,0.38), vec3(0.74,0.62,0.47), vc.y);
+        stoneCol = mix(stoneCol, vec3(0.55,0.42,0.30), step(0.85, h21(vec2(vc.y*91.0,3.0)))*0.6);
+        stoneCol *= 0.85 + 0.25*n3;
+        vec3 flag = mix(vec3(0.33,0.26,0.19), stoneCol, grout);
+        // sand drifts settling over the courtyard
+        flag = mix(flag, sand*0.95, smoothstep(0.5,0.75,n1 + (1.0-grout)*0.15)*0.85);
         vec3 col = sand;
         col = mix(col, dirt, smoothstep(0.2,0.7,gMask.g)*0.8);
         col = mix(col, grass, smoothstep(0.45,0.9,gMask.g + (n2-0.5)*0.5));
@@ -197,6 +210,8 @@ export function createTerrain() {
           // macro undulation normals (small dunes) from noise gradient
           float e = 0.6; float h0 = fb(q*0.18);
           g += vec2(fb((q+vec2(e,0.))*0.18)-h0, fb((q+vec2(0.,e))*0.18)-h0) / e * 0.35 * rip;
+          float siteK = smoothstep(0.3,0.8,gMask.a);
+          g += -gStoneGrad * smoothstep(0.14,0.0,gStoneEdge) * 0.35 * siteK;
           vec3 wn = normalize(vec3(-g.x, 1.0, -g.y));
           vec3 vn2 = normalize((viewMatrix * vec4(wn,0.0)).xyz);
           normal = normalize(normal + (vn2 - (viewMatrix*vec4(0,1,0,0)).xyz));

@@ -6,6 +6,7 @@ import { UI } from './ui.js';
 import { Audio } from './audio.js';
 import { Game } from './game.js';
 import { heightAt, SITES } from './terrain.js';
+import { makeItem } from './items.js';
 
 const P = new URLSearchParams(location.search);
 const renderer = createRenderer(document.getElementById('game'));
@@ -24,7 +25,7 @@ sun.shadow.mapSize.set(SM, SM);
 Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 1, far: 220 });
 sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.05; sun.shadow.radius = 3;
 scene.add(sun, sun.target);
-scene.add(new THREE.HemisphereLight(0xa8bce0, 0x6a4a34, 0.45));
+scene.add(new THREE.HemisphereLight(0xb8c0d4, 0x6a4a34, 0.45));
 
 const fx = new FX(scene);
 const { composer, grade, resize } = createComposer(renderer, scene, camera);
@@ -86,4 +87,4 @@ function frame() {
 frame();
 // debug: advance the simulation without rendering (used by automated screenshot tests)
 window.__sim = (sec, step = 1 / 30) => { for (let i = 0; i < sec / step; i++) { t += step; world.update(t, step); game.update(step); fx.update(step); for (const f of world.fires) if (Math.random() < 0.7) fx.fire(f.pos, f.intensity); } };
-window.__game = game; window.__ready = true;
+window.__mk = makeItem; window.__game = game; window.__ready = true;
