@@ -90,7 +90,7 @@ function makeMask() {
   for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) {
     const x = i / S * WORLD - HALF, z = j / S * WORLD - HALF;
     const rd = roadDist(x, z);
-    const road = 1 - smooth(1.6, 3.6 + noise2(x * 0.3, z * 0.3) * 0.8, rd);
+    const road = 1 - smooth(2.4, 4.6 + noise2(x * 0.3, z * 0.3) * 1.0, rd);
     const cd = Math.abs(x - canalX(z));
     const wet = 1 - smooth(CANAL_W * 0.4, CANAL_W * 1.1, cd);
     let site = 0;
@@ -172,9 +172,9 @@ export function createTerrain() {
         grass = mix(grass, vec3(0.55,0.50,0.26), smoothstep(0.45,0.75,n2));
         vec3 mud = vec3(0.28,0.22,0.15);
         // packed road with cart ruts and stones
-        vec3 road = mix(vec3(0.46,0.36,0.26), vec3(0.56,0.45,0.33), n3);
-        float stones = smoothstep(0.6,0.68,fb(vWPos.xz*1.6));
-        road = mix(road, vec3(0.62,0.56,0.48), stones*0.8);
+        vec3 road = mix(vec3(0.36,0.27,0.19), vec3(0.45,0.35,0.25), n3);
+        float stones = smoothstep(0.68,0.74,fb(vWPos.xz*1.6));
+        road = mix(road, vec3(0.50,0.46,0.40), stones*0.6);
         // worn ruts: darker bands where the mask is strongest, lighter crown between
         float rut = smoothstep(0.75,0.95,gMask.r) * (0.5+0.5*sin(gMask.r*40.0));
         road *= 1.0 - rut*0.18;
@@ -199,7 +199,14 @@ export function createTerrain() {
         col = mix(col, mud, gMask.b*0.9);
         float site = smoothstep(0.3,0.8,gMask.a + (n2-0.5)*0.4);
         col = mix(col, flag, site*0.85);
-        col = mix(col, road, smoothstep(0.25,0.75,gMask.r + (n3-0.5)*0.3)*(1.0-site*0.6));
+        {
+          // contrast-adaptive road: darker than bright sand, paler & dustier than dark fertile soil
+          float lum = dot(col, vec3(0.3,0.59,0.11));
+          vec3 adapt = mix(col*vec3(1.55,1.45,1.35) + vec3(0.04), col*vec3(0.66,0.62,0.6), smoothstep(0.38,0.52,lum));
+          vec3 rc = mix(adapt, road, 0.35);
+          rc = mix(rc, vec3(0.55,0.5,0.44)*(0.85+0.3*n2), stones*0.5);
+          col = mix(col, rc, smoothstep(0.15,0.6,gMask.r + (n3-0.5)*0.3)*(1.0-site*0.6));
+        }
         // slope -> exposed rock
         gRock = smoothstep(0.82,0.62,vNormal.y);
         col = mix(col, vec3(0.55,0.47,0.38)*(0.8+0.4*n3), 0.0);

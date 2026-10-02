@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { createTerrain, setBridge, heightAt, canalX, CANAL_W, roadDist, fertility, SITES, WORLD } from './terrain.js';
+import { createTerrain, setBridge, heightAt, canalX, CANAL_W, roadDist, fertility, SITES, WORLD, ROADS } from './terrain.js';
 import { createCanal } from './water.js';
 import { colliders, house, mosque, caravanserai, greatArch, mausoleum, roundCity, mats } from './buildings.js';
-import { palms, grassField, rocks, shrubs, wind } from './vegetation.js';
+import { palms, grassField, rocks, shrubs, wind, acacias, reeds } from './vegetation.js';
 import { lanternPost, firePit, tent, jar, crate, marketStall, cart, grave, deadTree, banner, bridge, waterwheel } from './props.js';
 import { mulberry32 } from './noise.js';
 import { sigilTex } from './textures.js';
@@ -224,6 +224,45 @@ export function buildWorld(scene) {
   const peb = rocks(pebbles, 21, 0xe8dccb); peb.castShadow = false; scene.add(peb);
   scene.add(shrubs(shrubPts, 9));
   for (const p of rockPts) if ((p.s || 0) > 1.4) colliders.push({ type: 'circle', x: p.x, z: p.z, r: p.s * 0.8 });
+  // acacias dotting the semi-arid land between the fields and the dunes
+  const acPts = [];
+  for (let i = 0; i < 4000 && acPts.length < 40; i++) {
+    const x = (rnd() - 0.5) * (WORLD - 30), z = (rnd() - 0.5) * (WORLD - 30);
+    const f = fertility(x, z); if (f > 0.35 || f < 0.05 || roadDist(x, z) < 5) continue;
+    let near = false; for (const st of Object.values(SITES)) if (Math.hypot(x - st.x, z - st.z) < st.r * 1.1) near = true;
+    if (near || blocked(x, z, 2.5)) continue;
+    acPts.push({ x, y: heightAt(x, z), z }); colliders.push({ type: 'circle', x, z, r: 0.4 });
+  }
+  const acG = acacias(acPts); scene.add(acG); out.occluders.push(acG);
+  // reeds hugging the water line
+  const reedPts = [];
+  for (let z = -WORLD / 2 + 4; z < WORLD / 2 - 4; z += 0.9) for (const sd of [-1, 1]) {
+    if (rnd() > 0.55 || Math.abs(z - bz) < 4) continue;
+    const x = canalX(z) + sd * (CANAL_W * 0.42 + rnd() * 0.9);
+    reedPts.push({ x, y: Math.max(heightAt(x, z), -0.6), z });
+  }
+  scene.add(reeds(reedPts));
+  // roadside ruins: broken mud-brick wall stubs and fallen blocks
+  const M = mats();
+  for (let i = 0; i < 2000 && i < 9999; i++) {
+    const r0 = ROADS[Math.floor(rnd() * ROADS.length)], k = Math.floor(rnd() * (r0.length - 1));
+    const t = rnd(), ax = r0[k][0] + (r0[k + 1][0] - r0[k][0]) * t, az = r0[k][1] + (r0[k + 1][1] - r0[k][1]) * t;
+    const ang = Math.atan2(r0[k + 1][1] - r0[k][1], r0[k + 1][0] - r0[k][0]);
+    const side = rnd() < 0.5 ? -1 : 1, off = 6 + rnd() * 5;
+    const x = ax - Math.sin(ang) * off * side, z = az + Math.cos(ang) * off * side;
+    let near = false; for (const st of Object.values(SITES)) if (Math.hypot(x - st.x, z - st.z) < st.r * 1.2) near = true;
+    if (near || blocked(x, z, 3) || Math.abs(x - canalX(z)) < 9) continue;
+    const g = new THREE.Group();
+    const len = 3 + rnd() * 4, h = 0.8 + rnd() * 2.2;
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(len, h, 0.7).translate(0, h / 2, 0), M.mud);
+    g.add(wall);
+    const stub = new THREE.Mesh(new THREE.BoxGeometry(0.7, h * 0.6, 2 + rnd() * 2).translate(len / 2 - 0.35, h * 0.3, 1), M.mud); g.add(stub);
+    for (let b = 0; b < 5; b++) { const s = 0.3 + rnd() * 0.5; const bl = new THREE.Mesh(new THREE.BoxGeometry(s * 1.5, s * 0.6, s).rotateY(rnd() * 3).translate((rnd() - 0.5) * len, s * 0.25, 1 + rnd() * 1.5), M.mud); g.add(bl); }
+    g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    place(scene, g, x, z, -ang + (rnd() - 0.5) * 0.3, false, true);
+    colliders.push({ type: 'box', x, z, hw: len / 2, hd: 0.5, rot: -ang });
+    if (out.ruinCount = (out.ruinCount || 0) + 1, out.ruinCount >= 14) break;
+  }
 
   out.updaters.push((t) => { wind.uTime.value = t; });
   out.update = (t, dt) => { for (const u of out.updaters) u(t, dt); };

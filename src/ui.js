@@ -41,6 +41,7 @@ export class UI {
         </div>
         <div id="buffs"></div>
       </div>
+      <div id="hpbars"></div>
       <div id="labels"></div>
       <div id="dmg"></div>
       <div id="inv" class="hidden panel">
@@ -195,6 +196,22 @@ export class UI {
       used.push({ x: p.x, y });
       el.style.transform = `translate(${p.x}px, ${y}px) translate(-50%,-50%)`;
     }
+  }
+  enemyBars(enemies, camera) {
+    if (!this.barPool) { this.barPool = []; this.barRoot = this.$('#hpbars'); }
+    let n = 0;
+    for (const e of enemies) {
+      if (e.dead || e.boss || e.hidden || e.hp >= e.maxHp || !e.rig.visible) continue;
+      const p = this.project(this.v.copy(e.pos).setY(e.pos.y + (e.elite ? 2.7 : 2.25)), camera);
+      if (!p.vis) continue;
+      let b = this.barPool[n];
+      if (!b) { b = document.createElement('div'); b.className = 'ehp'; b.innerHTML = '<i></i>'; this.barRoot.appendChild(b); this.barPool.push(b); }
+      b.style.display = 'block'; b.className = 'ehp' + (e.elite ? ' el' : '');
+      b.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%,-50%)`;
+      b.firstChild.style.width = (e.hp / e.maxHp * 100) + '%';
+      n++;
+    }
+    for (let i = n; i < (this.barPool?.length || 0); i++) this.barPool[i].style.display = 'none';
   }
   drawMinimap(player, enemies, drops, pois) {
     const c = this.mini, S = 180, sc = 1.1;

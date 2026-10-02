@@ -707,6 +707,7 @@ export class Game {
     const buffs = []; if (p.buffs.ward > 0) buffs.push({ icon: 'ward', t: p.buffs.ward }); if (p.whirlT > 0) buffs.push({ icon: 'whirl', t: p.whirlT });
     this.ui.buffs(buffs);
     this.ui.updateWorld(this.camera, dt, this.keys['alt']);
+    this.ui.enemyBars(this.enemies, this.camera);
     this.minimapT = (this.minimapT || 0) - dt;
     if (this.minimapT <= 0) { this.minimapT = 0.1; this.ui.drawMinimap(p.pos, this.enemies, this.drops, this.pois); }
     this.marker.material.opacity = Math.max(0, this.marker.material.opacity - dt * 2.5);

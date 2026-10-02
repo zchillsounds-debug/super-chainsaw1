@@ -260,3 +260,61 @@ function barkTex() {
   const normal = new THREE.CanvasTexture(nc); normal.wrapS = normal.wrapT = THREE.RepeatWrapping; normal.repeat.set(2, 3);
   return { map, normal };
 }
+
+// ---------------------------------------------------------------- umbrella acacia (flat-topped crown)
+export function acacias(points, seed = 11) {
+  const rnd = mulberry32(seed), grp = new THREE.Group();
+  const bark = new THREE.MeshStandardMaterial({ color: 0x4a3626, roughness: 1 });
+  const leaf = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
+  addWind(leaf, 0.25, 3);
+  // trunk: forked branches
+  const tg = [];
+  const branch = (from, dir, len, r, depth) => {
+    const to = from.clone().addScaledVector(dir, len);
+    const c = new THREE.CylinderGeometry(r * 0.65, r, len, 6);
+    c.translate(0, len / 2, 0);
+    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    c.applyQuaternion(q); c.translate(from.x, from.y, from.z); tg.push(c);
+    if (depth > 0) for (let i = 0; i < 2; i++) {
+      const nd = dir.clone().add(new THREE.Vector3((rnd() - 0.5) * 1.6, 0.25, (rnd() - 0.5) * 1.6)).normalize();
+      branch(to, nd, len * 0.7, r * 0.6, depth - 1);
+    }
+    return to;
+  };
+  branch(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.1, 1, 0).normalize(), 2.4, 0.22, 2);
+  const trunkGeo = mergeGeometries(tg.map((g) => g.toNonIndexed()));
+  // crown: several flattened noisy blobs
+  const cg = [];
+  for (let i = 0; i < 6; i++) {
+    const g = new THREE.IcosahedronGeometry(1.4 + rnd() * 0.6, 2);
+    const p = g.attributes.position;
+    for (let k = 0; k < p.count; k++) { const v = new THREE.Vector3().fromBufferAttribute(p, k); v.multiplyScalar(1 + noise2(v.x * 2 + i, v.z * 2) * 0.25); p.setXYZ(k, v.x, v.y * 0.28, v.z); }
+    const a = i / 6 * Math.PI * 2;
+    g.translate(Math.cos(a) * 1.6 * rnd(), 4.4 + rnd() * 0.5, Math.sin(a) * 1.6 * rnd());
+    cg.push(g.toNonIndexed());
+  }
+  const crownGeo = mergeGeometries(cg); crownGeo.computeVertexNormals();
+  colorize(crownGeo, (x, y) => new THREE.Color().setHSL(0.2 + rnd() * 0.03, 0.35, 0.16 + (y - 4.2) * 0.25 + rnd() * 0.04));
+  const tm = new THREE.InstancedMesh(trunkGeo, bark, points.length), cm = new THREE.InstancedMesh(crownGeo, leaf, points.length);
+  const d = new THREE.Object3D();
+  points.forEach((pt, i) => { d.position.set(pt.x, pt.y - 0.1, pt.z); d.rotation.y = rnd() * 6; const s = 0.8 + rnd() * 0.5; d.scale.set(s, s, s); d.updateMatrix(); tm.setMatrixAt(i, d.matrix); cm.setMatrixAt(i, d.matrix); });
+  for (const m of [tm, cm]) { m.castShadow = true; m.receiveShadow = true; grp.add(m); }
+  return grp;
+}
+
+// ---------------------------------------------------------------- tall reeds / cattails along the canal
+export function reeds(points, seed = 12) {
+  const rnd = mulberry32(seed);
+  const g = clumpGeo(14, 2.0, 0.025, rnd, (r) => [new THREE.Color().setHSL(0.22, 0.4, 0.12), new THREE.Color().setHSL(0.16 + r() * 0.04, 0.4, 0.36 + r() * 0.1)]);
+  // cattail heads
+  const heads = [];
+  for (let i = 0; i < 5; i++) { const h = new THREE.CylinderGeometry(0.05, 0.05, 0.3, 5).translate((rnd() - 0.5) * 0.5, 1.9 + rnd() * 0.3, (rnd() - 0.5) * 0.5); h.deleteAttribute('uv'); heads.push(colorize(h.toNonIndexed(), () => new THREE.Color(0x4a2a14))); }
+  const geo = mergeGeometries([g, ...heads].map((x) => { const y = x.index ? x.toNonIndexed() : x; if (y.attributes.uv) y.deleteAttribute('uv'); if (!y.attributes.normal) y.computeVertexNormals(); return y; }));
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide });
+  addWind(mat, 2.0, 0);
+  const m = new THREE.InstancedMesh(geo, mat, points.length);
+  const d = new THREE.Object3D();
+  points.forEach((p, i) => { d.position.set(p.x, p.y, p.z); d.rotation.y = rnd() * 6; const s = 0.7 + rnd() * 0.6; d.scale.set(s, s, s); d.updateMatrix(); m.setMatrixAt(i, d.matrix); });
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
