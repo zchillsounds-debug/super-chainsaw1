@@ -1,0 +1,181 @@
+import * as THREE from 'three';
+import { QUALITY } from './graphics.js';
+
+// Cinematic director: plays a list of shots with eased camera moves, letterbox bars, a subtitle bar
+// with a speaker portrait, act title cards, slow motion, depth of field and a warm film grade.
+// Tap to hurry the current line; press and hold anywhere (or hold Space/Esc) to skip the scene.
+const sm = (t) => t * t * (3 - 2 * t);
+const EASE = { io: sm, lin: (t) => t, out: (t) => 1 - Math.pow(1 - t, 3), in: (t) => t * t * t, io2: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2) };
+const v3 = (a) => (a.isVector3 ? a.clone() : Array.isArray(a) ? new THREE.Vector3(...a) : typeof a === 'function' ? a() : a);
+
+export class Director {
+  constructor({ game, camera, ui, audio, grade, bokeh, renderer, scene }) {
+    Object.assign(this, { game, camera, ui, audio, grade, bokeh, renderer, scene });
+    this.def = null; this.i = 0; this.t = 0; this.timeScale = 1; this.portraits = new Map();
+    const el = this.el = document.createElement('div'); el.id = 'cine'; el.className = 'hidden';
+    el.innerHTML = `<div class="lb top"></div><div class="lb bot"></div>
+      <div class="sub"><div class="por"><canvas width="96" height="96"></canvas></div><div class="stx"><div class="sname"></div><div class="sline"></div></div></div>
+      <div class="card"><div class="ar"></div><div class="rule"><i></i><b></b><i></i></div><div class="en"></div><div class="csub"></div></div>
+      <div class="caption"></div>
+      <div class="skip"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" class="bg"/><circle cx="18" cy="18" r="15" class="fg"/></svg><span>Hold to skip</span></div>
+      <div class="cfade"></div>`;
+    document.getElementById('ui').appendChild(el);
+    this.$ = (s) => el.querySelector(s);
+    // hold-to-skip / tap-to-advance
+    this.hold = 0; this.holding = false; this.downAt = 0;
+    const down = (e) => { if (!this.def) return; e.preventDefault?.(); this.holding = true; this.downAt = performance.now(); this.audio.init(); };
+    const up = () => { if (!this.def) return; const tap = this.holding && performance.now() - this.downAt < 280; this.holding = false; this.hold = 0; if (tap) this.advance(); };
+    el.addEventListener('pointerdown', down); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+    addEventListener('keydown', (e) => { if (this.def && (e.code === 'Space' || e.code === 'Escape') && !e.repeat) down(e); });
+    addEventListener('keyup', (e) => { if (this.def && (e.code === 'Space' || e.code === 'Escape')) up(); });
+    this.p0 = new THREE.Vector3(); this.t0 = new THREE.Vector3(); this.p1 = new THREE.Vector3(); this.t1 = new THREE.Vector3(); this.look = new THREE.Vector3();
+  }
+  get active() { return !!this.def; }
+
+  play(def) {
+    return new Promise((resolve) => {
+      if (this.def) this.end(true);
+      this.def = def; this.resolve = resolve; this.i = -1; this.t = 0; this.timeScale = 1;
+      this.el.classList.remove('hidden'); document.body.classList.add('incine');
+      this.ui.hud?.classList.add('cinehide');
+      this.game.cinematic = true; this.game.joy = null; this.game.lmb = false; this.game.player.moveTo = null; this.game.player.target = null;
+      requestAnimationFrame(() => this.el.classList.add('on'));
+      def.start?.(this);
+      this.next();
+    });
+  }
+  next() {
+    const d = this.def; if (!d) return;
+    this.i++;
+    if (this.i >= d.shots.length) { this.end(false); return; }
+    const s = this.shot = d.shots[this.i]; this.t = 0; this.lineDone = false;
+    s.enter?.(this, s);
+    const cam = s.cam || {};
+    this.p0.copy(v3(cam.p0 || this.camera.position)); this.t0.copy(v3(cam.t0 || this.look));
+    this.p1.copy(v3(cam.p1 || cam.p0 || this.p0)); this.t1.copy(v3(cam.t1 || cam.t0 || this.t0));
+    this.fov0 = cam.fov0 ?? cam.fov ?? 36; this.fov1 = cam.fov1 ?? cam.fov ?? this.fov0;
+    this.timeScale = s.slow ?? 1;
+    this.setLine(s.line); this.setCard(s.card); this.setCaption(s.caption);
+    if (s.stinger) this.audio.stinger?.(s.stinger);
+    if (s.fadeIn != null) { this.fadeCur = 1; this.fade(0, s.fadeIn); }
+  }
+  advance() {
+    // a tap finishes the typed line first, then moves on
+    if (this.shot?.line && !this.lineDone) { this.typed = 1e9; return; }
+    if (this.shot?.line || this.shot?.tapNext) this.next();
+  }
+  skip() {
+    const d = this.def; if (!d) return;
+    for (let i = this.i; i < d.shots.length; i++) d.shots[i].skip?.(this);
+    this.end(true);
+  }
+  end(skipped) {
+    const d = this.def; if (!d) return;
+    this.def = null; this.shot = null; this.timeScale = 1;
+    this.el.classList.remove('on'); setTimeout(() => { if (!this.def) this.el.classList.add('hidden'); }, 700);
+    document.body.classList.remove('incine'); this.ui.hud?.classList.remove('cinehide');
+    this.setLine(null); this.setCard(null); this.setCaption(null); this.fade(0, 0);
+    if (this.bokeh) this.bokeh.enabled = false;
+    this.grade.uniforms.uCine.value = 0;
+    this.game.cinematic = false; this.game.camInit = false;
+    d.end?.(this, skipped);
+    this.resolve?.(skipped);
+  }
+  // fades are stepped in update() (CSS transitions are unreliable right after the overlay is shown)
+  fade(v, sec = 0.8) { this.fadeTo = v; this.fadeRate = sec > 0.02 ? 1 / sec : 1e9; if (!this.def) { this.fadeCur = v; this.$('.cfade').style.opacity = v; } }
+
+  setLine(line) {
+    const sub = this.$('.sub');
+    if (!line) { sub.classList.remove('show'); return; }
+    this.$('.sname').textContent = line.who || '';
+    this.lineText = line.text; this.typed = 0; this.$('.sline').innerHTML = '';
+    const por = this.$('.por'); por.style.display = line.rig ? '' : 'none';
+    if (line.rig) this.portrait(line.rig, this.$('.por canvas'));
+    sub.classList.add('show');
+    if (line.cue) this.audio.vocal?.(line.cue, line.pitch || 1);
+  }
+  setCard(c) {
+    const card = this.$('.card');
+    if (!c) { card.classList.remove('show'); return; }
+    this.$('.card .ar').textContent = c.ar || ''; this.$('.card .en').textContent = c.en || ''; this.$('.card .csub').textContent = c.sub || '';
+    card.classList.add('show'); this.cardT = 0;
+  }
+  setCaption(text) { const c = this.$('.caption'); c.textContent = text || ''; c.classList.toggle('show', !!text); }
+
+  // render a small lit head-and-shoulders portrait of the speaker into the subtitle bar
+  portrait(rig, canvas) {
+    if (this.portraits.has(rig)) { canvas.getContext('2d').drawImage(this.portraits.get(rig), 0, 0); return; }
+    try {
+      const S = 96, rt = new THREE.WebGLRenderTarget(S, S, { samples: 0 });
+      const head = rig.userData.parts.head; rig.updateMatrixWorld(true);
+      const hp = head.getWorldPosition(new THREE.Vector3()), q = head.getWorldQuaternion(new THREE.Quaternion());
+      const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(q).setY(0).normalize();
+      const s = rig.userData.parts.body.scale.x;
+      const cam = new THREE.PerspectiveCamera(24, 1, 0.05, 30);
+      cam.position.copy(hp).addScaledVector(fwd, 0.85 * s).add(new THREE.Vector3(0, 0.12 * s, 0)).add(new THREE.Vector3(-fwd.z, 0, fwd.x).multiplyScalar(0.25 * s));
+      cam.lookAt(hp.x, hp.y + 0.1 * s, hp.z);
+      const r = this.renderer, prevT = r.getRenderTarget(), prevTone = r.toneMapping;
+      r.setRenderTarget(rt); r.render(this.scene, cam); r.setRenderTarget(prevT);
+      const px = new Uint8Array(S * S * 4); r.readRenderTargetPixels(rt, 0, 0, S, S, px); rt.dispose();
+      const c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'), img = x.createImageData(S, S);
+      for (let y = 0; y < S; y++) for (let i = 0; i < S * 4; i++) {
+        let v = px[(S - 1 - y) * S * 4 + i];
+        if (i % 4 !== 3) v = Math.min(255, Math.pow(v / 255, 1 / 2.2) * 255 * 1.05); // linear -> display
+        img.data[y * S * 4 + i] = i % 4 === 3 ? 255 : v;
+      }
+      x.putImageData(img, 0, 0);
+      this.portraits.set(rig, c); canvas.getContext('2d').drawImage(c, 0, 0);
+      void prevTone;
+    } catch (e) { /* portraits are decoration only */ }
+  }
+
+  update(rawDt) {
+    if (!this.def) return false;
+    const s = this.shot; if (!s) return true;
+    // hold to skip
+    if (this.holding) { this.hold = Math.min(1, this.hold + rawDt / 0.9); if (this.hold >= 1) { this.holding = false; this.skip(); return true; } }
+    else this.hold = Math.max(0, this.hold - rawDt * 3);
+    this.$('.skip').classList.toggle('show', this.hold > 0.02 || this.t < 2.5);
+    this.$('.skip .fg').style.strokeDashoffset = String(94.25 * (1 - this.hold));
+    const dt = rawDt * this.timeScale;
+    this.t += rawDt;
+    const k = Math.min(1, this.t / s.dur), e = EASE[s.cam?.ease || 'io'](k);
+    // camera: follow targets can be functions evaluated every frame
+    const cam = s.cam || {};
+    const P1 = cam.follow ? v3(cam.p1 || cam.p0) : this.p1, T1 = cam.follow ? v3(cam.t1 || cam.t0) : this.t1;
+    const P0 = cam.follow ? v3(cam.p0) : this.p0, T0 = cam.follow ? v3(cam.t0) : this.t0;
+    this.camera.position.lerpVectors(P0, P1, e);
+    this.look.lerpVectors(T0, T1, e);
+    if (cam.shake) { const a = cam.shake * (1 - k); this.camera.position.x += (Math.random() - 0.5) * a; this.camera.position.y += (Math.random() - 0.5) * a; }
+    this.camera.lookAt(this.look);
+    const fov = this.fov0 + (this.fov1 - this.fov0) * e;
+    if (Math.abs(this.camera.fov - fov) > 1e-3) { this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
+    // grade + depth of field
+    const g = this.grade.uniforms; g.uCine.value = Math.min(1, g.uCine.value + rawDt * 1.5); g.uDusk.value = this.def.dusk ?? 0;
+    if (this.bokeh) {
+      const focus = s.dof ? v3(s.dof) : null;
+      this.bokeh.enabled = !!focus && QUALITY !== 'low';
+      if (focus) { const u = this.bokeh.uniforms; u.focus.value = this.camera.position.distanceTo(focus); u.aperture.value = (s.aperture ?? 1.2) * 0.0001; u.maxblur.value = 0.009; }
+    }
+    // title card envelope: blur/spacing in, hold, fade out
+    if (this.cardT != null && this.shot.card) {
+      this.cardT += rawDt; const c = this.$('.card'), u = this.cardT / 5.2;
+      const a = u < 0.18 ? u / 0.18 : u > 0.78 ? Math.max(0, 1 - (u - 0.78) / 0.22) : 1;
+      c.style.opacity = a; c.style.letterSpacing = (4 + 8 * Math.max(0, 1 - u / 0.18)) + 'px'; c.style.filter = `blur(${Math.max(0, 1 - u / 0.18) * 6}px)`;
+    }
+    this.fadeCur ??= 0; this.fadeTo ??= 0;
+    if (this.fadeCur !== this.fadeTo) { const st = rawDt * this.fadeRate; this.fadeCur = this.fadeCur < this.fadeTo ? Math.min(this.fadeTo, this.fadeCur + st) : Math.max(this.fadeTo, this.fadeCur - st); }
+    this.$('.cfade').style.opacity = this.fadeCur;
+    // typed subtitle
+    if (this.lineText != null && this.shot.line) {
+      this.typed += rawDt * 42;
+      const n = Math.min(this.lineText.length, Math.floor(this.typed));
+      this.$('.sline').textContent = this.lineText.slice(0, n);
+      this.lineDone = n >= this.lineText.length;
+    }
+    s.run?.(this, k, dt, s);
+    this.def?.tick?.(this, dt);
+    if (this.def && this.shot === s && this.t >= s.dur && !(s.line && s.waitTap)) this.next();
+    return true;
+  }
+}

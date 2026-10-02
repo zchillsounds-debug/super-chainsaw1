@@ -219,7 +219,7 @@ function veilPrims(B, o) {
 const _geo = new Map();
 function piece(name, key, make) {
   const k = name + '|' + key + '|' + QUALITY;
-  if (!_geo.has(k)) { const t0 = performance.now(); _geo.set(k, make()); window.__sculptMs = (window.__sculptMs || 0) + performance.now() - t0; (window.__pieces ??= []).push(k.split("|")[0] + ":" + Math.round(performance.now() - t0) + ":" + _geo.get(k).attributes.position.count); }
+  if (!_geo.has(k)) _geo.set(k, make());
   return _geo.get(k);
 }
 

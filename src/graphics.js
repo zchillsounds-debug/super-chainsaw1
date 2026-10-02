@@ -6,6 +6,7 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
+import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 
 const params = new URLSearchParams(location.search);
 const touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || params.has('mobile');
@@ -60,9 +61,9 @@ export function createRenderer(container) {
 }
 
 const GradeShader = {
-  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uVignette: { value: 1.0 }, uLowHp: { value: 0 }, uAspect: { value: 1 } },
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uVignette: { value: 1.0 }, uLowHp: { value: 0 }, uAspect: { value: 1 }, uCine: { value: 0 }, uDusk: { value: 0 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime, uVignette, uLowHp, uAspect; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime, uVignette, uLowHp, uAspect, uCine, uDusk; varying vec2 vUv;
     float h(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
     void main(){
       vec2 uv = vUv;
@@ -85,8 +86,14 @@ const GradeShader = {
       // low health pulse
       float pulse = (0.6+0.4*sin(uTime*6.0))*uLowHp;
       col = mix(col, col*vec3(1.2,0.3,0.25), smoothstep(0.3,1.2,length(vc))*pulse);
-      // film grain
-      col += (h(uv*vec2(1920.,1080.)+fract(uTime)*100.)-0.5)*0.025;
+      // dusk (prologue): cooler shadows, ember highlights, lower key
+      float l2 = dot(col, vec3(0.2126,0.7152,0.0722));
+      col = mix(col, col * mix(vec3(0.62,0.6,0.78), vec3(1.15,0.72,0.5), smoothstep(0.05,0.7,l2)) * 0.92, uDusk);
+      // cinematic grade: warmer, slightly richer contrast, heavier vignette
+      col = mix(col, pow(col * vec3(1.06,1.0,0.9), vec3(1.08)), uCine);
+      col *= mix(1.0, smoothstep(1.15, 0.35, length(vc)), 0.35*uCine);
+      // film grain (heavier in cinematics)
+      col += (h(uv*vec2(1920.,1080.)+fract(uTime)*100.)-0.5)*(0.025 + 0.045*uCine);
       gl_FragColor = vec4(col,1.0);
     }`,
 };
@@ -105,6 +112,9 @@ export function createComposer(renderer, scene, camera) {
     gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
     composer.addPass(gtao);
   }
+  // depth of field for cinematic close-ups (off unless a scene asks for it)
+  let bokeh = null;
+  if (QUALITY !== 'low') { bokeh = new BokehPass(scene, camera, { focus: 6, aperture: 0.00012, maxblur: 0.008 }); bokeh.enabled = false; composer.addPass(bokeh); }
   const bloom = new UnrealBloomPass(new THREE.Vector2(size.x, size.y), 0.55, 0.6, 0.9);
   composer.addPass(bloom);
   const grade = new ShaderPass(GradeShader);
@@ -119,7 +129,7 @@ export function createComposer(renderer, scene, camera) {
     grade.uniforms.uAspect.value = s.x / s.y;
   };
   resize();
-  return { composer, bloom, grade, gtao, resize };
+  return { composer, bloom, grade, gtao, bokeh, resize };
 }
 
 export function envFromSky(renderer, sunDir) {

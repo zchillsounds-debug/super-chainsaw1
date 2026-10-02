@@ -302,10 +302,10 @@ export class Animator {
     r.updateMatrixWorld(true);
     // cloth colliders from the posed skeleton
     const B = p.bones, c = this.caps;
-    B.thighL.getWorldPosition(c[0].a); B.shinL.getWorldPosition(c[0].b); c[0].r = 0.105 * S;
-    B.thighR.getWorldPosition(c[1].a); B.shinR.getWorldPosition(c[1].b); c[1].r = 0.105 * S;
-    c[2].a.copy(c[0].b); B.footL.getWorldPosition(c[2].b); c[2].r = 0.08 * S;
-    c[3].a.copy(c[1].b); B.footR.getWorldPosition(c[3].b); c[3].r = 0.08 * S;
+    B.thighL.getWorldPosition(c[0].a); B.shinL.getWorldPosition(c[0].b); c[0].r = 0.092 * S;
+    B.thighR.getWorldPosition(c[1].a); B.shinR.getWorldPosition(c[1].b); c[1].r = 0.092 * S;
+    c[2].a.copy(c[0].b); B.footL.getWorldPosition(c[2].b); c[2].r = 0.065 * S;
+    c[3].a.copy(c[1].b); B.footR.getWorldPosition(c[3].b); c[3].r = 0.065 * S;
     B.hips.getWorldPosition(c[4].a); B.spine.getWorldPosition(c[4].b); c[4].a.lerp(c[0].a, 0.0); c[4].r = 0.14 * S * (this.o.girth || 1);
     B.spine.getWorldPosition(c[5].a); B.upperChest.getWorldPosition(c[5].b); c[5].r = 0.12 * S * (this.o.build || 1);
     const near = !LOW && r.position.distanceTo(CharLOD.center) < CharLOD.simDist;

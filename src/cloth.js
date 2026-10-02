@@ -23,6 +23,7 @@ export class Cloth {
       if (r + 1 < rows) cons.push(id(r, c), id(r + 1, c), L(id(r, c), id(r + 1, c)));
       if (c + 1 < cols || closed) cons.push(id(r, c), id(r, c + 1), L(id(r, c), id(r, c + 1)) * 1.0);
       if (r + 2 < rows) cons.push(id(r, c), id(r + 2, c), L(id(r, c), id(r + 2, c)));
+      if (r > 0 && (c + 2 < cols || closed)) cons.push(id(r, c), id(r, c + 2), L(id(r, c), id(r, c + 2)));
     }
     this.cons = new Float32Array(cons); this.stiff = stiff;
     // tether: maximum distance of each particle to its column's pinned particle
@@ -40,7 +41,7 @@ export class Cloth {
     g.setIndex(idx);
     this.geo = g;
     this.mesh = new THREE.Mesh(g, material); this.mesh.castShadow = true; this.mesh.receiveShadow = true; this.mesh.frustumCulled = false;
-    this.inited = false; this.acc = 0; this.colliders = [];
+    this.inited = false; this.acc = 0; this.colliders = []; this.damp = 0.94;
   }
   pinWorld(i, out) { return out.set(this.local[i * 3], this.local[i * 3 + 1], this.local[i * 3 + 2]).applyMatrix4(this.anchor.matrixWorld); }
   reset() {
@@ -87,7 +88,7 @@ export class Cloth {
         this.acc -= h;
         for (let c = 0; c < cols; c++) { this.pinWorld(c, _a); P[c * 3] = Q[c * 3] = _a.x; P[c * 3 + 1] = Q[c * 3 + 1] = _a.y; P[c * 3 + 2] = Q[c * 3 + 2] = _a.z; }
         for (let i = cols; i < n; i++) {
-          const x = P[i * 3], y = P[i * 3 + 1], z = P[i * 3 + 2], damp = 0.975;
+          const x = P[i * 3], y = P[i * 3 + 1], z = P[i * 3 + 2], damp = this.damp;
           P[i * 3] += (x - Q[i * 3]) * damp + wind * h * h * (Math.sin(i * 1.7 + performance.now() * 0.004) * 6);
           P[i * 3 + 1] += (y - Q[i * 3 + 1]) * damp + g;
           P[i * 3 + 2] += (z - Q[i * 3 + 2]) * damp + wind * h * h * (Math.cos(i * 2.3 + performance.now() * 0.003) * 6);

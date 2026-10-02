@@ -215,3 +215,39 @@ body.touch #tmenu{left:auto;right:calc(8px + env(safe-area-inset-right,0px));top
 #tmenupop.hidden{display:none}
 #tmenupop button{font:600 13px Cinzel;padding:8px 18px;min-width:130px}
 body.touch #quest{max-width:min(56vw,320px)}
+/* ---- cinematics ---- */
+#cine{position:absolute;inset:0;z-index:20;pointer-events:auto;touch-action:none}
+#cine .lb{position:absolute;left:0;right:0;height:0;background:#000;transition:height .7s cubic-bezier(.2,.8,.2,1)}
+#cine .lb.top{top:0}#cine .lb.bot{bottom:0}
+#cine.on .lb{height:11vh}
+#cine .cfade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none}
+#cine .sub{position:absolute;left:50%;bottom:calc(11vh + 14px);transform:translate(-50%,10px);width:min(760px,92vw);display:flex;gap:14px;align-items:center;padding:10px 16px;background:linear-gradient(90deg,#0000,#0d0806cc 12%,#0d0806cc 88%,#0000);opacity:0;transition:opacity .35s,transform .35s}
+#cine .sub.show{opacity:1;transform:translate(-50%,0)}
+#cine .por{flex:none;width:64px;height:64px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px var(--gold2),0 0 0 3px #000,0 4px 14px #000}
+#cine .por canvas{width:100%;height:100%;display:block}
+#cine .sname{font:700 14px Cinzel;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
+#cine .sline{font:400 19px/1.35 Amiri,Georgia,serif;color:#f2e6cc;text-shadow:0 2px 4px #000;min-height:1.35em}
+#cine .card{position:absolute;left:0;right:0;top:30%;text-align:center;opacity:0;pointer-events:none}
+#cine .card:not(.show){display:none}
+@keyframes cardin{0%{opacity:0;letter-spacing:12px;filter:blur(6px)}18%{opacity:1;letter-spacing:4px;filter:blur(0)}78%{opacity:1}100%{opacity:0}}
+#cine .card .ar{font:700 64px/1.1 'Reem Kufi',Amiri,serif;color:#f2d27a;text-shadow:0 0 24px #a0602088,0 3px 4px #000;direction:rtl}
+#cine .card .rule{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px auto 10px;width:min(420px,70vw)}
+#cine .card .rule i{flex:1;height:1px;background:linear-gradient(90deg,#0000,#d9a441,#0000)}
+#cine .card .rule b{width:9px;height:9px;transform:rotate(45deg);border:1px solid #d9a441;background:#3a2410}
+#cine .card .en{font:700 26px 'Cinzel Decorative',Cinzel;color:#f2e6cc;letter-spacing:4px;text-shadow:0 2px 6px #000}
+#cine .card .csub{font:italic 17px Amiri,serif;color:#d8c49c;margin-top:6px;text-shadow:0 2px 4px #000}
+#cine .caption{position:absolute;left:0;right:0;top:46%;text-align:center;font:italic 24px Amiri,serif;color:#e8d9b5;opacity:0;transition:opacity 1.2s;text-shadow:0 2px 6px #000;padding:0 20px}
+#cine .caption.show{opacity:1}
+#cine .skip{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(11vh + 12px);display:flex;align-items:center;gap:8px;font:600 11px Cinzel;color:#d8c49c;letter-spacing:1px;opacity:0;transition:opacity .4s}
+#cine .skip.show{opacity:.85}
+#cine .skip svg{width:30px;height:30px;transform:rotate(-90deg)}
+#cine .skip circle{fill:none;stroke-width:3}
+#cine .skip .bg{stroke:#ffffff22}#cine .skip .fg{stroke:#f2d27a;stroke-dasharray:94.25;stroke-dashoffset:94.25}
+#hud.cinehide,body.incine #touch,body.incine #hpbars,body.incine #labels{opacity:0!important;pointer-events:none!important;transition:opacity .4s}
+#hud{transition:opacity .4s}
+body.touch #cine .sub{bottom:calc(11vh + 6px);padding:6px 10px;gap:10px}
+body.touch #cine .por{width:48px;height:48px}
+body.touch #cine .sline{font-size:16px}
+body.touch #cine .card .ar{font-size:46px}body.touch #cine .card .en{font-size:19px}
+@media (orientation:landscape) and (max-height:500px){#cine.on .lb{height:8vh}#cine .sub{bottom:calc(8vh + 4px)}#cine .card{top:22%}}
+#contbtn{font-size:20px;padding:12px 40px;margin-top:12px;display:block}

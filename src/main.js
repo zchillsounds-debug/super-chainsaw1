@@ -8,6 +8,9 @@ import { Game } from './game.js';
 import { heightAt, SITES } from './terrain.js';
 import { makeItem } from './items.js';
 import { IS_TOUCH, setupMobile } from './mobile.js';
+import { Director } from './cinema.js';
+import * as SCENES from './scenes.js';
+import { loadSave, applySave, saveGame } from './save.js';
 
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
@@ -33,7 +36,7 @@ scene.add(sun, sun.target);
 scene.add(new THREE.HemisphereLight(0xc4c2c4, 0x7a5236, 0.5));
 
 const fx = new FX(scene);
-const { composer, grade, gtao, resize } = createComposer(renderer, scene, camera);
+const { composer, grade, gtao, bokeh, resize } = createComposer(renderer, scene, camera);
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); resize(); });
 
 // static fire / lantern lights (limited count)
@@ -48,6 +51,7 @@ game.grade = grade;
 game.addNpc();
 game.addAmbientLife();
 if (IS_TOUCH) setupMobile(game, ui);
+const director = game.director = new Director({ game, camera, ui, audio, grade, bokeh, renderer, scene });
 
 // title-screen cinematic camera
 let mode = 'title';
@@ -57,17 +61,26 @@ const titleCam = (t) => {
   camera.position.set(cx, heightAt(cx, cz) + 14, cz);
   camera.lookAt(V.x, 9, V.z - 10);
 };
-function start() {
+function start(cont) {
   if (mode !== 'title') return;
   audio.init();
   ui.fade(1);
-  setTimeout(() => {
+  setTimeout(async () => {
     mode = 'game'; game.started = true; ui.show(); ui.fade(0);
-    ui.banner('The Outskirts of Baghdad', 'Where the Tigris feeds the palms of the Sawad', 3500);
-    setTimeout(() => game.talkToNpc(), 2600);
+    if (cont) { applySave(game, cont); ui.banner('The Chronicle Continues', ['', 'The road from the village', 'The kiln yard', 'The road to the arch', 'The grain road'][Math.min(4, cont.act)], 3500); return; }
+    await director.play(SCENES.prologue(game));
+    await director.play(SCENES.briefing(game));
+    game.act = 1; saveGame(game);
   }, 800);
 }
-document.getElementById('startbtn').onclick = start;
+// Continue button when a save exists
+const saved = loadSave();
+if (saved) {
+  const cb = document.createElement('button'); cb.id = 'contbtn'; cb.textContent = 'Continue'; cb.onclick = () => start(saved);
+  document.getElementById('startbtn').after(cb);
+  document.getElementById('startbtn').textContent = 'New Chronicle';
+}
+document.getElementById('startbtn').onclick = () => start();
 if (P.has('play')) { mode = 'game'; game.started = true; ui.show(); }
 if (P.has('x')) { game.player.pos.set(+P.get('x'), 0, +P.get('z')); }
 
@@ -98,7 +111,7 @@ function frame() {
   // kiln smoke drifting over the brick yard
   if (focus.x < -25 && focus.z < -10 && Math.random() < 0.6) { const G = SITES.kiln; fx.smoke.spawn({ pos: { x: G.x + (Math.random() - 0.5) * 40, y: heightAt(G.x, G.z) + 0.3, z: G.z + (Math.random() - 0.5) * 36 }, vel: { x: 0.4, y: 0.05, z: 0.15 }, life: 7, size: 3, size1: 6, color: new THREE.Color(0.55, 0.5, 0.46), alpha: 0.16, drag: 0.1, fadeIn: 0.4 }); }
   if (Math.random() < 0.5) fx.smoke.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 50, y: (focus.y || 0) + Math.random() * 6, z: focus.z + (Math.random() - 0.5) * 40 }, vel: { x: 1.5, y: 0.1, z: 0.4 }, life: 4, size: 0.06, size1: 0.06, color: new THREE.Color(1, 0.9, 0.7), alpha: 0.6, drag: 0, fadeIn: 0.3 });
-  if (mode === 'title') { titleCam(t); game.t += dt; game.updateAmbientLife(dt); } else game.update(dt);
+  if (mode === 'title') { titleCam(t); game.t += dt; game.updateAmbientLife(dt); } else if (director.update(dt)) game.cineTick(dt * director.timeScale); else game.update(dt * (game.timeScale ?? 1));
   fx.update(dt); fx.setScale(renderer.getDrawingBufferSize(new THREE.Vector2()).y);
   const c = mode === 'game' ? game.player.pos : new THREE.Vector3(SITES.village.x, 0, SITES.village.z);
   sun.position.copy(c).addScaledVector(world.sunDir, 100); sun.target.position.copy(c);
@@ -109,7 +122,8 @@ function frame() {
 }
 frame();
 // debug: advance the simulation without rendering (used by automated screenshot tests)
-window.__sim = (sec, step = 1 / 30) => { for (let i = 0; i < sec / step; i++) { t += step; world.update(t, step); game.update(step); fx.update(step); for (const f of world.fires) if (Math.random() < 0.7) fx.fire(f.pos, f.intensity); } };
+window.__director = director; window.__SCENES = SCENES;
+window.__sim = (sec, step = 1 / 30) => { for (let i = 0; i < sec / step; i++) { t += step; world.update(t, step); if (director.update(step)) game.cineTick(step * director.timeScale); else game.update(step); fx.update(step); for (const f of world.fires) if (Math.random() < 0.7) fx.fire(f.pos, f.intensity); } };
 try { await renderer.compileAsync(scene, camera); } catch (e) { /* older drivers: compile lazily */ }
 document.getElementById('loader')?.classList.add('done'); setTimeout(() => document.getElementById('loader')?.remove(), 1200);
 window.__mk = makeItem; window.__game = game; window.__ready = true;

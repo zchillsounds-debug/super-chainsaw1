@@ -4,6 +4,8 @@ import { heightAt, SITES, canalX } from './terrain.js';
 import { resolve, buildGrid } from './collision.js';
 import { buildNav, findPath, navClear } from './nav.js';
 import { makeEnemy, TYPES } from './entities.js';
+import * as SCENES from './scenes.js';
+import { saveGame } from './save.js';
 import { makeItem, rollRarity, RARITY } from './items.js';
 import { sigilTex, glowDecal, splatTex } from './textures.js';
 
@@ -326,8 +328,22 @@ export class Game {
     }
     if (Math.random() < (e.elite ? 1 : 0.45)) this.dropItem({ gold: Math.round(rand(3, 9) * e.level * (e.elite ? 5 : 1)), rarity: 'common' }, e.pos);
     if (Math.random() < (e.elite ? 1 : 0.1)) this.dropItem({ potion: true, rarity: 'common' }, e.pos);
-    if (e.quest) this.completeQuest(e.quest);
+    if (e.quest) this.completeQuest(e.quest, !!this.director);
+    if (e === this.chief && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Ziyad', text: 'Hisham holds the kilns... he will not kneel as I did.', card: { ar: 'الأتون', en: 'Act II · The Kilns', sub: 'Hisham\'s knife-men wait among the brick stacks' } })).then(() => this.checkpoint(2));
+    if (e === this.matriarch && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Hisham', text: 'Ghassan waits at the arch. You will break on it.', card: { ar: 'الطاق', en: 'Act III · The Broken Arch', sub: 'Ghassan holds the road beneath the ruined Persian arch' } })).then(() => this.checkpoint(3));
     if (e.boss) this.onBossDeath(e);
+  }
+  checkpoint(act) { this.act = Math.max(this.act || 1, act); saveGame(this); }
+  anim(rig, st, dt) { animateHumanoid(rig, st, this.t, dt); }
+  // while a cinematic plays: the world keeps breathing, everyone else holds still
+  cineTick(dt) {
+    this.t += dt;
+    const actors = this.director?.def?.actors || [];
+    const busy = new Set(actors.map((a) => a.rig));
+    for (const e of this.enemies) if (!busy.has(e.rig) && !e.hidden) { if (e.dead) e.st.deadT += dt; animateHumanoid(e.rig, e.st, this.t, dt); }
+    if (this.npc && !busy.has(this.npc)) animateHumanoid(this.npc, this.npcSt, this.t, dt);
+    this.updateAmbientLife(dt);
+    this.updateDrops(dt);
   }
 
   xpFor(l) { return Math.round(90 * Math.pow(l, 1.6)); }
@@ -338,9 +354,10 @@ export class Game {
     this.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1), 50, { speed: 3, life: 1.4, size: 0.18, size1: 0.02, color: new THREE.Color(3, 2.4, 1), up: 3, drag: 1 });
   }
 
-  completeQuest(id) {
+  completeQuest(id, silent) {
     const q = this.quests.find((x) => x.id === id); if (!q || q.done) return;
     q.done = true; this.ui.quest(this.quests);
+    if (silent) return;
     const msgs = { serai: ['The Raiders Scatter', 'Ziyad falls among the ruins of the caravanserai'], graves: ['The Kilns Fall Silent', 'Hisham\'s deserters flee into the dunes'], boss: ['The Renegade Falls', 'The grain road to Baghdad is open again'] };
     this.ui.banner(...msgs[id]);
   }
@@ -508,7 +525,7 @@ export class Game {
     const b = this.spawnPack('commander', A.x, A.z - 2, 1, 6, { spread: 0 })[0];
     b.st.action = null; b.phase = 1; b.summoned = false; b.meteorCd = 6; b.volleyCd = 3; b.rise = 0;
     this.boss = b; b.quest = 'boss'; b.alerted = true;
-    this.ui.banner('Ghassan', 'Renegade commander of the siege of Baghdad', 4000);
+    if (this.director) this.director.play(SCENES.bossIntro(this, b)); else this.ui.banner('Ghassan', 'Renegade commander of the siege of Baghdad', 4000);
     this.audio.roar(); this.shake = 0.8; this.bossActive = true;
     this.fx.flash(tmp.copy(b.pos).setY(4), 0xff6020, 60, 1.2, 30);
     for (let i = 0; i < 3; i++) this.fx.ring(b.pos, new THREE.Color(1.6, 0.6, 0.15), 1 + i, 6 + i * 2.5, 0.8 + i * 0.25, 0.8);
@@ -525,9 +542,10 @@ export class Game {
     this.fx.flash(tmp.copy(b.pos).setY(4), 0xffa040, 300, 2.5, 50);
     for (let i = 0; i < 6; i++) setTimeout(() => { this.fx.ring(b.pos, new THREE.Color(4, 2, 0.5), 1, 14, 1.2); this.audio.boom(); this.shake = 0.6; }, i * 250);
     this.fx.burst(tmp.copy(b.pos).setY(4), 200, { speed: 10, life: 2, size: 0.8, size1: 0.05, color: new THREE.Color(4, 1.6, 0.4), up: 3, drag: 1.2 });
-    setTimeout(() => this.ui.banner('Victory', 'Ghassan is fallen. The caravans of the Sawad move freely once more.', 5000), 2500);
     const mins = Math.floor(this.t / 60), secs = Math.floor(this.t % 60);
-    setTimeout(() => this.ui.victory({ level: this.player.level, gold: this.player.gold, kills: this.kills || 0, time: `${mins}m ${String(secs).padStart(2, '0')}s` }), 8000);
+    const win = () => this.ui.victory({ level: this.player.level, gold: this.player.gold, kills: this.kills || 0, time: `${mins}m ${String(secs).padStart(2, '0')}s` });
+    if (this.director) setTimeout(() => this.director.play(SCENES.epilogue(this, b)).then(() => { this.checkpoint(4); win(); }), 1200);
+    else { setTimeout(() => this.ui.banner('Victory', 'Ghassan is fallen. The caravans of the Sawad move freely once more.', 5000), 2500); setTimeout(win, 8000); }
     if (this.bossLight) setTimeout(() => { this.scene.remove(this.bossLight); }, 2000);
   }
 
@@ -579,7 +597,7 @@ export class Game {
       if (b.st.actionT >= 1) b.st.action = null;
       return;
     }
-    if (b.hp < b.maxHp * 0.6) b.phase = 2;
+    if (b.hp < b.maxHp * 0.6 && b.phase < 2) { b.phase = 2; if (this.director) { this.director.play(SCENES.bossPhase(this, b)); return; } }
     b.volleyCd -= dt; b.meteorCd -= dt;
     if (!b.summoned && b.hp < b.maxHp * 0.4) { b.summoned = true; this.bossCast(b, 'summon'); return; }
     if (b.phase >= 2 && b.meteorCd <= 0) { b.meteorCd = 9; this.bossCast(b, 'meteor'); return; }
@@ -695,6 +713,13 @@ export class Game {
     if (this.npc) {
       animateHumanoid(this.npc, this.npcSt, this.t, dt);
       if (this.npcMark) { this.npcMark.rotation.y += dt * 2; this.npcMark.position.y = 2.6 + Math.sin(this.t * 3) * 0.1; }
+    }
+    // music: Bayati combat layer while foes are close and alert
+    this.musicT = (this.musicT || 0) - dt;
+    if (this.musicT <= 0) {
+      this.musicT = 1;
+      const fight = this.bossActive || this.enemies.some((e) => !e.dead && e.alerted && e.pos.distanceTo(p.pos) < 16);
+      if (fight !== this.inFight) { this.inFight = fight; this.audio.setMusicIntensity(fight ? 1 : 0); }
     }
     // UI
     this.ui.setOrbs(p.hp, p.stats.maxHp, p.mp, p.stats.maxMp, this.t);
