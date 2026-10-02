@@ -24,9 +24,19 @@ function kit() {
       floor: new THREE.MeshStandardMaterial({ color: 0x5a4434, roughness: 1 }), trim: new THREE.MeshStandardMaterial({ color: 0x1a1210, roughness: 1 }) },
     qanat: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0xe0d4bc, scale: 0.45, roughness: 0.9, normalStrength: 1.0, grime: 0.45 }),
       floor: new THREE.MeshStandardMaterial({ color: 0x8a7e66, roughness: 0.95 }), trim: new THREE.MeshStandardMaterial({ color: 0x2a261e, roughness: 1 }) },
+    // storerooms under the caravanserai: limewashed mud brick, dark timber, packed earth
+    cellar: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0xf0e2c8, scale: 0.6, roughness: 0.95, normalStrength: 0.6, grime: 0.6 }),
+      floor: new THREE.MeshStandardMaterial({ color: 0x7a6248, roughness: 1 }), trim: mats().wood },
+    // the clay pits: raw red earth, cut in steps
+    pit: { wall: triplanarMaterial({ map: fired.map, normalMap: fired.normalMap, color: 0xb89070, scale: 0.18, roughness: 1, normalStrength: 2.2, grime: 0.9 }),
+      floor: new THREE.MeshStandardMaterial({ color: 0x6a5240, roughness: 1 }), trim: new THREE.MeshStandardMaterial({ color: 0x3a2a1e, roughness: 1 }) },
+    // Sasanian vaults: big yellow-grey baked brick, older and colder
+    vault: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0xc8c0aa, scale: 0.32, roughness: 0.92, normalStrength: 1.6, grime: 0.8 }),
+      floor: new THREE.MeshStandardMaterial({ color: 0x5a5244, roughness: 0.95 }), trim: new THREE.MeshStandardMaterial({ color: 0x2c2822, roughness: 1 }) },
     iron: new THREE.MeshStandardMaterial({ color: 0x2a2624, metalness: 0.8, roughness: 0.5 }),
     ember: new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.2, 0.3), toneMapped: false }),
     water: new THREE.MeshStandardMaterial({ color: 0x0e2a2a, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.85 }),
+    slip: new THREE.MeshStandardMaterial({ color: 0x7a5a3a, roughness: 0.2, metalness: 0.05 }),
     wood: mats().wood, gold: mats().gold,
   };
   return KIT;
@@ -62,7 +72,7 @@ export function destroyInterior(scene) {
   current = null;
 }
 
-// style: 'kiln' | 'qanat'. Returns { rooms, entrance, exit, torches, chests, group, spawnRooms }
+// style: 'kiln' | 'qanat' | 'cellar' | 'pit' | 'vault'. Returns { rooms, entrance, exit, torches, chests, group, spawnRooms }
 export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {}) {
   destroyInterior(scene);
   const K = kit(), M = K[style], rnd = mulberry32(seed * 7 + 3);
@@ -111,13 +121,22 @@ export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {
     for (let q = 0; q < n; q++) {
       const ox = (rnd() - 0.5) * (S - 4), oz = (rnd() - 0.5) * (S - 4);
       if (Math.abs(ox) < 2 && Math.abs(oz) < 2) continue;
-      const o = style === 'kiln' ? (rnd() < 0.55 ? brickStack(rnd) : jar(0x6a3a24, 0.9 + rnd() * 0.4)) : (rnd() < 0.6 ? jar(0x8a7a60, 0.8 + rnd() * 0.5) : crate());
+      const o = style === 'kiln' || style === 'pit' ? (rnd() < 0.55 ? brickStack(rnd) : jar(0x6a3a24, 0.9 + rnd() * 0.4))
+        : style === 'cellar' ? (rnd() < 0.5 ? crate() : jar([0xa8643c, 0x8c5a3a, 0xb98a5e][Math.floor(rnd() * 3)], 0.9 + rnd() * 0.5))
+        : (rnd() < 0.6 ? jar(0x8a7a60, 0.8 + rnd() * 0.5) : crate());
       o.position.set(c.x + ox, 0, c.z + oz); o.rotation.y = rnd() * 6; grp.add(o);
-      colliders.push({ type: 'circle', x: c.x + ox, z: c.z + oz, r: style === 'kiln' ? 0.9 : 0.5, interior: true });
+      colliders.push({ type: 'circle', x: c.x + ox, z: c.z + oz, r: style === 'kiln' || style === 'pit' ? 0.9 : 0.5, interior: true });
     }
     if (style === 'qanat') { // the water channel running through each gallery
       const w = new THREE.Mesh(new THREE.PlaneGeometry(1.4, S).rotateX(-Math.PI / 2), K.water); w.position.set(c.x + 3.6, 0.02, c.z); grp.add(w);
       box(0.25, 0.2, S, c.x + 2.8, 0.1, c.z, M.trim); box(0.25, 0.2, S, c.x + 4.4, 0.1, c.z, M.trim);
+    } else if (style === 'cellar') { // roof beams across each storeroom
+      for (let b = -1; b <= 1; b++) box(S, 0.28, 0.32, c.x, WALL_H - 0.1, c.z + b * 3.6, M.trim);
+    } else if (style === 'vault') { // heavy square piers along the long walls carry the (unseen) vault
+      for (const sx of [-1, 1]) for (const sz of [-0.5, 0.5]) { const x = c.x + sx * (S / 2 - 1.1), z = c.z + sz * S * 0.5; box(1.4, WALL_H + 0.6, 1.4, x, (WALL_H + 0.6) / 2, z, M.trim); col(x, z, 0.7, 0.7); }
+    } else if (style === 'pit') { // stepped cut faces and puddles of slip
+      for (let q = 0; q < 2; q++) { const w = 2 + rnd() * 3, x = c.x + (rnd() - 0.5) * 6; box(w, 0.5 + rnd() * 0.6, 1.2, x, 0.3, c.z - S / 2 + 1.2, M.wall); col(x, c.z - S / 2 + 1.2, w / 2, 0.6); }
+      const sl = new THREE.Mesh(new THREE.CircleGeometry(1 + rnd(), 14).rotateX(-Math.PI / 2), K.water); sl.position.set(c.x + (rnd() - 0.5) * 6, 0.02, c.z + (rnd() - 0.5) * 6); sl.material = K.slip; grp.add(sl);
     } else { // soot-black scorch on the floor
       const sc = new THREE.Mesh(new THREE.CircleGeometry(2 + rnd() * 2, 16).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35, depthWrite: false })); sc.position.set(c.x + (rnd() - 0.5) * 5, 0.015, c.z + (rnd() - 0.5) * 5); grp.add(sc);
     }

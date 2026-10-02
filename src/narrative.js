@@ -37,7 +37,7 @@ export const SIDE = {
   captains: { t: '\'Amr\'s Wager', giver: '\'Amr', steps: ['\'Amr wagers you cannot defeat three captains of the renegades (elite foes) in the field.', 'Three captains have fallen. Collect your winnings from \'Amr.', 'You won the wager.'] },
 };
 export function questState(p, id) { return (p.side ||= {})[id] ?? -1; }
-function setQuest(game, id, step) {
+export function setQuest(game, id, step) {
   const p = game.player; (p.side ||= {})[id] = step;
   const Q = SIDE[id]; if (step === 0) game.ui.toast(`${t('New task')}: <b>${t(Q.t)}</b>`, 'quest'); else if (step === Q.steps.length - 1) game.ui.banner(t(Q.t), t('Task complete'), 2600); else game.ui.toast(`<b>${t(Q.t)}</b>: ${t(Q.steps[step])}`, 'quest');
   game.audio.pickup?.(); refreshTracker(game); saveGame(game);
@@ -167,7 +167,7 @@ export function setupNarrative(game) {
   refreshTracker(game);
   game.refreshTracker = () => refreshTracker(game);
 }
-function giveItem(game, it) {
+export function giveItem(game, it) {
   const p = game.player, k = p.bag.indexOf(null);
   if (k < 0) { game.dropItem(it, p.pos); return; }
   p.bag[k] = it; game.ui.toast(`Received <b>${it.name}</b>`); game.audio.legendary?.(); game.refreshInv();

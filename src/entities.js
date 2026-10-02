@@ -26,12 +26,12 @@ export const TYPES = {
     build: () => humanoid({ robe: '#3a2418', robe2: '#a04a18', turban: 0x2a1a10, mask: 0x1a120c, skin: 0x7a4a30, weapon: 'torch', sash: 0x7a2a10 }),
   },
   commander: {
-    name: 'Ghassan, the Renegade Commander', hp: 2200, dmg: 14, speed: 3.0, range: 3.2, atk: 2.4, xp: 600, radius: 1.1, boss: true,
+    name: 'Ghassan', hp: 2200, dmg: 14, speed: 3.0, range: 3.2, atk: 2.4, xp: 600, radius: 1.1, boss: true,
     build: () => humanoid({ robe: '#141414', robe2: '#8a1a14', hem: true, qaba: true, mail: true, helm: true, turban: null, cloak: 0x5a0e0a, beard: 0x1a120c, beardLen: 0.8, skin: 0x8a5a3a, weapon: 'sword', offhand: 'shield', sash: 0x8a1a14, scale: 1.55, build: 1.15, belly: 0.4, hemY: 0.3, detail: 'hi' }),
   },
 };
 
-const ELITE_NAMES = ['Bakr', 'Fadl', 'Hamdan', 'Nasr', 'Thabit', 'Rabi\'a', 'Mukhariq', 'Sa\'d'];
+const ELITE_NAMES = ['Fadl', 'Khalid', 'Sinan', 'Hudhayl', 'Mukhariq', 'Sa\'d', 'Kulayb', 'Harith'];
 
 export function makeEnemy(type, level, opts = {}) {
   const T = TYPES[type];
@@ -51,7 +51,7 @@ export function makeEnemy(type, level, opts = {}) {
   e.shield = !!rig.userData.parts?.shield; e.staggerT = 0;
   if (opts.elite) {
     rig.children[0].scale.multiplyScalar(1.3);
-    e.name = opts.name || `${ELITE_NAMES[Math.floor(Math.random() * ELITE_NAMES.length)]}, ${T.name}`;
+    e.name = opts.name || `${ELITE_NAMES[Math.floor(Math.random() * ELITE_NAMES.length)]} · ${T.name}`;
     const aura = new THREE.Mesh(new THREE.RingGeometry(0.7, 1.0, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.5, 1.0, 0.2), transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
     aura.position.y = 0.08; rig.add(aura); e.aura = aura;
   }

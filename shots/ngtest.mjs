@@ -1,0 +1,16 @@
+import { createRequire } from 'module';
+const require = createRequire('/opt/node22/lib/node_modules/');
+const { chromium } = require('playwright');
+const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const pg = await b.newPage({ viewport: { width: 1280, height: 720 } });
+const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
+await pg.goto('http://localhost:5173/?play&q=low&noadapt');
+await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+console.log(await pg.evaluate(() => { const g = __game; g.player.level = 12; g.player.gold = 999; g.act = 4; for (const q of g.quests) q.done = true; g.player.named = { uqba: true }; return 'pre ng=' + (g.ng || 0) + ' hp0=' + g.enemies[0].maxHp; }));
+await pg.evaluate(() => __game.newGamePlus());
+await pg.waitForTimeout(3000);
+await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForTimeout(4000);
+console.log(await pg.evaluate(() => { const g = __game; return `post ng=${g.ng} act=${g.act} level=${g.player.level} gold=${g.player.gold} quests=${g.quests.map((q) => q.done).join()} named=${JSON.stringify(g.player.named)} hp0=${g.enemies[0].maxHp} started=${g.started}`; }));
+await pg.screenshot({ path: 'shots/out/ng.png' });
+console.log('errors:', errs.join(' | ') || 'none'); await b.close();

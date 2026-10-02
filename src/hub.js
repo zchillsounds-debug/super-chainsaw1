@@ -19,7 +19,7 @@ const SALVAGE = { common: { scrap: 1 }, magic: { scrap: 2, silk: 1 }, rare: { sc
 const MAT_NAMES = { scrap: 'Iron Scrap', silk: 'Silk Thread', gem: 'Gem Shard' };
 export const upgradeCost = (it) => { const r = it.rank || 0; return { gold: 40 * (r + 1) * (1 + it.level * 0.2) | 0, scrap: 2 + r * 2, silk: r >= 2 ? r - 1 : 0, gem: r >= 4 ? 1 : 0 }; };
 
-function npc(game, look, [x, z], face, name, title, talk, prop) {
+export function npc(game, look, [x, z], face, name, title, talk, prop) {
   const rig = humanoid({ detail: 'lo', ...look });
   rig.position.set(x, heightAt(x, z), z); rig.rotation.y = face;
   game.scene.add(rig);
@@ -134,9 +134,10 @@ export function openPanel(game, kind, tab) {
         const it = p.equip[r.dataset.s]; tip(r.querySelector('.cell'), it);
         const b = r.querySelector('button'); if (!b) return;
         b.onclick = () => {
-          const c = upgradeCost(it);
+          const c = { ...upgradeCost(it) }; if (p.freeTemper > 0) { c.gold = 0; c.scrap = 0; c.silk = 0; c.gem = 0; }
           if (p.gold < c.gold || p.mats.scrap < c.scrap || p.mats.silk < c.silk || p.mats.gem < c.gem) { ui.toast('You lack the materials'); game.audio.denied?.(); return; }
           p.gold -= c.gold; p.mats.scrap -= c.scrap; p.mats.silk -= c.silk; p.mats.gem -= c.gem;
+          if (p.freeTemper > 0) p.freeTemper--;
           temper(it); game.recalcStats(); game.audio.clang(); setTimeout(() => game.audio.clang(), 180); ui.toast(`${it.name} tempered to +${it.rank}`); refresh();
         };
       });

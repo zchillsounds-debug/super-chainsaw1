@@ -191,7 +191,7 @@ export class Game {
     this.spawnPack(['bandit', 'archer', 'spearman'], S.x, S.z + 6, 5, 2, { spread: 6 });
     this.spawnPack(['archer'], S.x - 10, S.z - 10, 2, 2);
     this.spawnPack(['bandit', 'spearman'], S.x + 8, S.z - 4, 3, 2);
-    this.chief = this.spawnPack('spearman', S.x, S.z - 6, 1, 3, { elite: true, name: 'Ziyad, the Raider Chief' })[0];
+    this.chief = this.spawnPack('spearman', S.x, S.z - 6, 1, 3, { elite: true, name: 'Ziyad' })[0];
     this.chief.quest = 'serai';
     this.spawnPack(['bandit', 'bandit'], S.x + 2, S.z - 6, 2, 2);
     // road to the bridge and beyond
@@ -199,7 +199,7 @@ export class Game {
     this.spawnPack(['deserter'], -36, -16, 3, 2);
     // kiln yard: knife-men crouched behind the brick stacks, springing up when approached
     for (let i = 0; i < 4; i++) this.spawnPack('deserter', G.x + rand(-13, 13), G.z + rand(-11, 11), 2, 3, { hidden: true, spread: 3 });
-    this.matriarch = this.spawnPack('spearman', G.x - 4, G.z - 2, 1, 4, { elite: true, name: 'Hisham, the Deserter' })[0];
+    this.matriarch = this.spawnPack('spearman', G.x - 4, G.z - 2, 1, 4, { elite: true, name: 'Hisham' })[0];
     this.matriarch.quest = 'graves';
     // road south toward the arch
     this.spawnPack(['deserter', 'bandit'], 6, -30, 4, 3);
@@ -704,10 +704,10 @@ export class Game {
       if (b.st.actionT >= 1) b.st.action = null;
       return;
     }
-    if (b.hp < b.maxHp * 0.6 && b.phase < 2) { b.phase = 2; if (this.director) { this.director.play(SCENES.bossPhase(this, b)); return; } }
+    if (b.hp < b.maxHp * 0.6 && b.phase < 2) { b.phase = 2; if (this.director) { this.director.play(SCENES.bossPhase(this, b, (this.player.enginesBurnt || 0) >= 3)); return; } }
     b.volleyCd -= dt; b.meteorCd -= dt;
     if (!b.summoned && b.hp < b.maxHp * 0.4) { b.summoned = true; this.bossCast(b, 'summon'); return; }
-    if (b.phase >= 2 && b.meteorCd <= 0) { b.meteorCd = 9; this.bossCast(b, 'meteor'); return; }
+    if (b.phase >= 2 && b.meteorCd <= 0 && !((this.player.enginesBurnt || 0) >= 3)) { b.meteorCd = 9; this.bossCast(b, 'meteor'); return; }
     if (d < 5 && b.atkCd <= 0) {
       b.moving = false; b.st.action = 'slam'; b.st.actionT = 0; b.actionDur = 1.4; b.didHit = false; b.atkCd = 2.6;
       b.slamPos = tmp.copy(b.pos).addScaledVector(new THREE.Vector3(Math.sin(face), 0, Math.cos(face)), 2.2).clone();

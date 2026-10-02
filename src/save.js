@@ -7,8 +7,8 @@ const CHECKPOINTS = { 1: [1, 88], 2: [SITES.serai.x - 8, SITES.serai.z + 6], 3: 
 export function saveGame(g) {
   const p = g.player;
   const data = {
-    act: g.act || 1, t: g.t, kills: g.kills || 0, quests: Object.fromEntries(g.quests.map((q) => [q.id, q.done])),
-    player: { cls: p.cls, mats: p.mats, stash: p.stash, tree: p.tree, codex: p.codex, side: p.side, discount: p.discount, worldTier: p.worldTier, unlockedTier: p.unlockedTier, level: p.level, xp: p.xp, gold: p.gold, potions: p.potions, equip: p.equip, bag: p.bag },
+    act: g.act || 1, ng: g.ng || 0, t: g.t, kills: g.kills || 0, quests: Object.fromEntries(g.quests.map((q) => [q.id, q.done])),
+    player: { cls: p.cls, mats: p.mats, stash: p.stash, tree: p.tree, codex: p.codex, side: p.side, discount: p.discount, named: p.named, enginesBurnt: p.enginesBurnt, freeTemper: p.freeTemper, worldTier: p.worldTier, unlockedTier: p.unlockedTier, level: p.level, xp: p.xp, gold: p.gold, potions: p.potions, equip: p.equip, bag: p.bag },
   };
   try { localStorage.setItem(KEY, JSON.stringify(data)); } catch { /* storage unavailable: play on without saving */ }
 }
@@ -20,7 +20,7 @@ export function applySave(g, s) {
   if (s.player.cls && s.player.cls !== p.cls) g.setClass(s.player.cls);
   Object.assign(p, { level: s.player.level, xp: s.player.xp, gold: s.player.gold, potions: s.player.potions, equip: s.player.equip || {}, bag: s.player.bag || new Array(40).fill(null) });
   if (s.player.mats) p.mats = s.player.mats; if (s.player.stash) p.stash = s.player.stash;
-  if (s.player.tree) p.tree = s.player.tree; p.codex = s.player.codex || {}; p.side = s.player.side || {}; p.discount = s.player.discount || 0; p.worldTier = s.player.worldTier || 1; p.unlockedTier = s.player.unlockedTier || 1;
+  if (s.player.tree) p.tree = s.player.tree; p.codex = s.player.codex || {}; p.side = s.player.side || {}; p.discount = s.player.discount || 0; p.worldTier = s.player.worldTier || 1; p.named = s.player.named || {}; p.enginesBurnt = s.player.enginesBurnt || 0; p.freeTemper = s.player.freeTemper || 0; g.ng = s.ng || 0; p.unlockedTier = s.player.unlockedTier || 1;
   g.recalcStats(); p.hp = p.stats.maxHp; p.mp = p.stats.maxMp;
   g.act = s.act; g.t = s.t || 0; g.kills = s.kills || 0;
   for (const q of g.quests) q.done = !!s.quests?.[q.id];

@@ -25,6 +25,7 @@ import { setupNarrative, journalPanel } from './narrative.js';
 import { Settings } from './settings.js';
 import { Gamepads } from './gamepad.js';
 import { Tutorial } from './tutorial.js';
+import { setupContent, restoreContent, applyNG, startNewGamePlus } from './content.js';
 
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
@@ -77,8 +78,10 @@ setupProgression(game);
 game.tickExtra = (dt) => qanatBurnTick(game, dt);
 setupNarrative(game);
 game.journal = (t) => { if (document.getElementById('journal')) { document.getElementById('journal').remove(); document.body.classList.remove('inshop'); } else journalPanel(game, t); };
+setupContent(game);
 const tutorial = new Tutorial(game);
-const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); game.discover(dt); tutorial.update(dt); };
+const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); game.discover(dt); tutorial.update(dt); game.contentTick?.(dt); };
+game.newGamePlus = () => startNewGamePlus(game); ui.onNewGamePlus = game.newGamePlus;
 const settings = game.settings = new Settings({ renderer, audio, game, grade, perf, gfx: { quality: QUALITY, sun, gtao, bloom, atmos, resize } });
 fx.reduce = settings.s.reduceFlash;
 const closeAll = () => { settings.close(); closePanel(); document.getElementById('journal')?.remove(); document.getElementById('shop')?.remove(); document.body.classList.remove('inshop'); ui.toggleInventory(false); };
@@ -104,7 +107,7 @@ function start(cont) {
   ui.fade(1);
   setTimeout(async () => {
     mode = 'game'; game.started = true; ui.show(); ui.fade(0);
-    if (cont) { applySave(game, cont); lighting.forAct(cont.act, 0); game.briefed = true; game.refreshTracker?.(); ui.banner('The Chronicle Continues', ['', 'The road from the village', 'The kiln yard', 'The road to the arch', 'The grain road'][Math.min(4, cont.act)], 3500); return; }
+    if (cont) { applySave(game, cont); restoreContent(game); applyNG(game); lighting.forAct(cont.act, 0); game.briefed = true; game.refreshTracker?.(); ui.banner('The Chronicle Continues', ['', 'The road from the village', 'The kiln yard', 'The road to the arch', 'The grain road'][Math.min(4, cont.act)], 3500); return; }
     const cls = P.get('cls') || await ui.classPick();
     game.setClass(cls, true);
     await director.play(SCENES.prologue(game));
@@ -114,6 +117,8 @@ function start(cont) {
 }
 // Continue button when a save exists
 const saved = loadSave();
+let autoCont = false; try { autoCont = sessionStorage.getItem('sob.autocontinue') === '1'; sessionStorage.removeItem('sob.autocontinue'); } catch { /* ignore */ }
+if (saved && autoCont) setTimeout(() => { if (mode === 'title') start(saved); else { applySave(game, saved); restoreContent(game); applyNG(game); lighting.forAct(saved.act, 0); game.briefed = true; game.refreshTracker?.(); } }, 50);
 if (saved) {
   const cb = document.createElement('button'); cb.id = 'contbtn'; cb.textContent = 'Continue'; cb.onclick = () => start(saved);
   document.getElementById('startbtn').after(cb);

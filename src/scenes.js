@@ -165,12 +165,25 @@ export function bossIntro(g, b) {
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { b.rise = 1; b.st.crouch = 0; b.st.action = null; } };
 }
-export function bossPhase(g, b) {
+export function bossPhase(g, b, enginesBurnt = false) {
   const boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st }, salim = playerActor(g);
   const shots = [
-    { dur: 3.6, slow: 0.5, stinger: 'phase', line: { who: 'Ghassan', text: 'Engines! Burn the road!', rig: b.rig, cue: 'growl' },
+    { dur: 3.6, slow: 0.5, stinger: 'phase', line: { who: 'Ghassan', text: enginesBurnt ? 'You burned my engines? Then my men will do it by hand!' : 'Engines! Burn the road!', rig: b.rig, cue: 'growl' },
       cam: { follow: true, p0: at(boss, 1.4, 5, 2), t0: at(boss, 2.3), p1: at(boss, 2.0, 3.4, 1.0), t1: at(boss, 2.4), fov: 34, shake: 0.12 }, dof: headOf(boss),
       enter: (d) => { act(boss, 'command', 1.6); d.audio.roar?.(); } },
+  ];
+  return { actors: [boss, salim], shots, tick: (d, dt) => { tickActor(g, boss, dt); tickActor(g, salim, dt); } };
+}
+
+// Ghassan, at a quarter of his life, throws down his shield: fire rings the arena and he fights with the sword alone
+export function bossDuel(g, b, enginesBurnt) {
+  const boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st }, salim = playerActor(g);
+  const text = enginesBurnt ? 'My engines are ash. Then it is steel, guard. Just you and me.' : 'Enough. No more men, no more engines. Just you and me.';
+  const shots = [
+    { dur: 4.2, slow: 0.4, stinger: 'phase', line: { who: 'Ghassan', text, rig: b.rig, cue: 'growl' },
+      cam: { follow: true, p0: at(boss, 1.6, 4.2, 1.8), t0: at(boss, 2.3), p1: at(boss, 1.9, 3.0, 0.8), t1: at(boss, 2.4), fov: 32, shake: 0.08 }, dof: headOf(boss),
+      enter: (d) => { act(boss, 'command', 1.8); d.audio.roar?.(); }, run: () => { boss.facing = yawTo(boss.pos, salim.pos); } },
+    { dur: 2.2, caption: 'Fire rings the broken arch.', cam: { follow: true, p0: at(salim, 7, -9, 0), t0: at(boss, 1.2), fov: 44 } },
   ];
   return { actors: [boss, salim], shots, tick: (d, dt) => { tickActor(g, boss, dt); tickActor(g, salim, dt); } };
 }

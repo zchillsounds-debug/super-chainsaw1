@@ -50,19 +50,19 @@ export class Zones {
     const g = this.g; if (g.interior) return;
     g.ui.fade(1); g.paused = true; await wait(600);
     g.returnPos = g.player.pos.clone();
-    const I = buildInterior(g.scene, { seed: def.seed, rooms: def.rooms, style: def.kind === 'qanat' ? 'qanat' : 'kiln' });
+    const I = buildInterior(g.scene, { seed: def.seed, rooms: def.rooms, style: def.style || (def.kind === 'qanat' ? 'qanat' : 'kiln') });
     g.setupOccluders([I.group]);
     g.interior = { def, I, enemies: [] };
-    for (const t of I.torches) { t.interior = true; g.lightPool?.add({ pos: t.light, color: 0xff8a3a, power: 18, dist: 11, interior: true }); }
+    for (const t of I.torches) { t.interior = true; g.lightPool?.add({ pos: t.light, color: ({ vault: 0xffb878, cellar: 0xffa860, pit: 0xffa060 })[def.style] || 0xff8a3a, power: 18, dist: 11, interior: true }); }
     for (const e of g.enemies) if (!e.dead) e.rig.visible = false;
     // foes per room; the deepest room holds an elite guarding the chest
-    const pool = def.kind === 'qanat' ? ['bandit', 'deserter', 'archer', 'spearman', 'naffat'] : ['deserter', 'deserter', 'naffat', 'bandit'];
+    const pool = def.pool || (def.kind === 'qanat' ? ['bandit', 'deserter', 'archer', 'spearman', 'naffat'] : ['deserter', 'deserter', 'naffat', 'bandit']);
     I.rooms.forEach((r, i) => {
       if (i === 0) return;
       const c = roomCenter(r), last = i === I.rooms.length - 1;
       const n = last ? 3 : 2 + Math.floor(Math.random() * 3);
       const pack = g.spawnPack(pool, c.x, c.z, n, def.level + (def.mods?.levelUp || 0), { spread: 3, interior: true });
-      if (last) pack.push(...g.spawnPack(def.bossType || 'spearman', c.x, c.z - 1.5, 1, def.level + 1, { elite: true, interior: true, name: def.bossName }));
+      if (last) pack.push(...g.spawnPack(def.bossType || 'spearman', c.x, c.z - 1.5, 1, def.level + 1, { elite: true, interior: true, name: def.bossName }).map((e) => Object.assign(e, { bossOf: def.bossOf })));
       for (const e of pack) { e.interior = true; def.mods?.apply?.(e); }
       g.interior.enemies.push(...pack);
     });
