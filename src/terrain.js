@@ -60,6 +60,7 @@ for (let j = 0; j <= GRID; j++) for (let i = 0; i <= GRID; i++) {
   heights[j * (GRID + 1) + i] = rawHeight(i / GRID * WORLD - HALF, j / GRID * WORLD - HALF);
 }
 export function heightAt(x, z) {
+  if (x > 148) return 0; // interiors (kiln tunnels, qanats) sit on a flat floor east of the map
   const fx = clamp((x + HALF) / WORLD * GRID, 0, GRID - 0.001), fz = clamp((z + HALF) / WORLD * GRID, 0, GRID - 0.001);
   const i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j;
   const a = heights[j * (GRID + 1) + i], b = heights[j * (GRID + 1) + i + 1];

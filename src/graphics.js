@@ -13,12 +13,19 @@ const touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in windo
 export const QUALITY = params.get('q') || (touch ? 'low' : 'high');
 
 // Golden-hour sky dome, also baked into a PMREM env map for reflections.
+// Sky dome with time-of-day colours (driven by lighting.js), also baked into a PMREM env map for reflections.
+export const SKY = {
+  uSun: { value: null }, uZen: { value: new THREE.Color(0.18, 0.36, 0.66) }, uMid: { value: new THREE.Color(0.78, 0.66, 0.56) },
+  uHor: { value: new THREE.Color(1.0, 0.68, 0.40) }, uGnd: { value: new THREE.Color(0.50, 0.36, 0.24) }, uGlow: { value: new THREE.Color(1.0, 0.55, 0.25) },
+  uCloud: { value: new THREE.Color(1.0, 0.78, 0.6) }, uStars: { value: 0 }, uDisk: { value: 20 },
+};
 export function skyDome(sunDir) {
+  SKY.uSun.value = sunDir;
   const mat = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, fog: false,
-    uniforms: { uSun: { value: sunDir } },
+    uniforms: SKY,
     vertexShader: `varying vec3 vD; void main(){ vD = normalize(position); vec4 p = projectionMatrix*modelViewMatrix*vec4(position,1.); gl_Position = p.xyww; }`,
-    fragmentShader: `uniform vec3 uSun; varying vec3 vD;
+    fragmentShader: `uniform vec3 uSun, uZen, uMid, uHor, uGnd, uGlow, uCloud; uniform float uStars, uDisk; varying vec3 vD;
       float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
       float n(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y); }
       float fb(vec2 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*n(p); p*=2.1; a*=.5; } return s; }
@@ -26,19 +33,18 @@ export function skyDome(sunDir) {
         vec3 d = normalize(vD); float hgt = d.y;
         vec3 sunD = normalize(uSun);
         float s = max(dot(d, sunD), 0.0);
-        vec3 zen = vec3(0.18,0.36,0.66), mid = vec3(0.78,0.66,0.56), hor = vec3(1.0,0.68,0.40), gnd = vec3(0.50,0.36,0.24);
-        vec3 c = hgt > 0.0 ? mix(mix(hor, mid, smoothstep(0.0,0.12,hgt)), zen, smoothstep(0.1,0.6,hgt)) : mix(hor, gnd, smoothstep(0.0,-0.15,hgt));
-        // warm scattering around the sun
-        c += vec3(1.0,0.55,0.25) * pow(s, 6.0) * 0.55 + vec3(1.0,0.8,0.5) * pow(s, 64.0) * 0.8;
-        // high cirrus clouds lit from the sun side
+        vec3 c = hgt > 0.0 ? mix(mix(uHor, uMid, smoothstep(0.0,0.12,hgt)), uZen, smoothstep(0.1,0.6,hgt)) : mix(uHor, uGnd, smoothstep(0.0,-0.15,hgt));
+        c += uGlow * pow(s, 6.0) * 0.55 + uGlow * 1.4 * vec3(1.0,0.85,0.65) * pow(s, 64.0) * 0.6;
         if (hgt > 0.0) {
           vec2 uv = d.xz / (hgt + 0.12) * 1.4;
           float cl = fb(uv*vec2(1.0,2.6) + vec2(3.0,0.0));
           cl = smoothstep(0.52, 0.85, cl) * smoothstep(0.0, 0.25, hgt);
-          vec3 cc = mix(vec3(1.0,0.78,0.6), vec3(1.0,0.92,0.82), pow(s,4.0));
-          c = mix(c, cc, cl*0.65);
+          c = mix(c, uCloud * mix(0.85, 1.05, pow(s,4.0)), cl*0.65);
+          // stars at night
+          vec2 sp = d.xz / (hgt + 0.3) * 160.0; float st = step(0.9985, h(floor(sp) + vec2(17.0, 3.0))) * smoothstep(0.05, 0.4, hgt) * (1.0 - cl);
+          c += vec3(0.9,0.92,1.0) * st * uStars * (0.6 + 0.4*h(floor(sp)+1.0));
         }
-        c += vec3(1.0,0.9,0.7) * smoothstep(0.9993, 0.9998, s) * 20.0; // sun disk
+        c += vec3(1.0,0.9,0.7) * smoothstep(0.9993, 0.9998, s) * uDisk; // sun or moon disk
         gl_FragColor = vec4(c, 1.0);
       }`,
   });
@@ -61,9 +67,22 @@ export function createRenderer(container) {
 }
 
 const GradeShader = {
-  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uVignette: { value: 1.0 }, uLowHp: { value: 0 }, uAspect: { value: 1 }, uCine: { value: 0 }, uDusk: { value: 0 } },
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uVignette: { value: 1.0 }, uLowHp: { value: 0 }, uAspect: { value: 1 }, uCine: { value: 0 }, uDusk: { value: 0 }, uDuskAct: { value: 0 }, uLut: { value: 0 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime, uVignette, uLowHp, uAspect, uCine, uDusk; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime, uVignette, uLowHp, uAspect, uCine, uDusk, uDuskAct, uLut; varying vec2 vUv;
+    // per-act colour grade (a compact stand-in for a 3D LUT): lift / gamma / gain + saturation per preset
+    vec3 actGrade(vec3 c, float id){
+      vec3 lift = vec3(0.0), gain = vec3(1.0); float sat = 1.0, gam = 1.0;
+      if (id < 0.5) { lift = vec3(0.0); gain = vec3(1.02,1.0,0.96); }                         // golden afternoon
+      else if (id < 1.5) { lift = vec3(0.01,0.0,0.018); gain = vec3(1.03,0.97,0.94); sat = 0.96; } // dusk: ember highs, violet lows
+      else if (id < 2.5) { lift = vec3(0.0,0.008,0.03); gain = vec3(0.94,0.98,1.08); sat = 0.82; gam = 0.94; } // night: cool, desaturated
+      else if (id < 3.5) { lift = vec3(0.01,0.005,0.01); gain = vec3(1.04,0.98,0.98); sat = 0.95; } // dawn
+      else { lift = vec3(0.008,0.004,0.0); gain = vec3(1.08,0.98,0.86); sat = 0.9; gam = 0.96; }   // underground torchlight
+      float l = dot(c, vec3(0.2126,0.7152,0.0722));
+      c = mix(vec3(l), c, sat);
+      c = pow(max(c * gain + lift * (1.0 - c), 0.0), vec3(gam));
+      return c;
+    }
     float h(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
     void main(){
       vec2 uv = vUv;
@@ -86,9 +105,10 @@ const GradeShader = {
       // low health pulse
       float pulse = (0.6+0.4*sin(uTime*6.0))*uLowHp;
       col = mix(col, col*vec3(1.2,0.3,0.25), smoothstep(0.3,1.2,length(vc))*pulse);
+      col = actGrade(col, uLut);
       // dusk (prologue): cooler shadows, ember highlights, lower key
       float l2 = dot(col, vec3(0.2126,0.7152,0.0722));
-      col = mix(col, col * mix(vec3(0.62,0.6,0.78), vec3(1.15,0.72,0.5), smoothstep(0.05,0.7,l2)) * 0.92, uDusk);
+      col = mix(col, col * mix(vec3(0.62,0.6,0.78), vec3(1.15,0.72,0.5), smoothstep(0.05,0.7,l2)) * 0.92, max(uDusk, uDuskAct));
       // cinematic grade: warmer, slightly richer contrast, heavier vignette
       col = mix(col, pow(col * vec3(1.06,1.0,0.9), vec3(1.08)), uCine);
       col *= mix(1.0, smoothstep(1.15, 0.35, length(vc)), 0.35*uCine);
@@ -135,7 +155,7 @@ export function createComposer(renderer, scene, camera) {
 export function envFromSky(renderer, sunDir) {
   const pm = new THREE.PMREMGenerator(renderer);
   const s = new THREE.Scene();
-  const dome = skyDome(sunDir); dome.material = dome.material.clone(); dome.material.uniforms.uSun.value = sunDir;
+  const dome = skyDome(sunDir);
   s.add(dome);
   const env = pm.fromScene(s, 0, 0.1, 1000).texture;
   pm.dispose();

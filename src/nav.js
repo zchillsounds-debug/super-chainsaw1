@@ -2,20 +2,28 @@ import { resolve } from './collision.js';
 import { WORLD } from './terrain.js';
 
 // Grid navigation: 1m cells, A* with octile heuristic + line-of-sight smoothing.
-const CELL = 1, N = Math.floor(WORLD / CELL), HALF = WORLD / 2;
+// The grid spans the overworld plus the interior region east of it (x 150..290: kiln tunnels and qanats).
+export const INTERIOR_X = 150;
+const CELL = 1, HALF = WORLD / 2, X0 = -HALF, Z0 = -HALF, NX = Math.floor((290 - X0) / CELL), NZ = Math.floor(WORLD / CELL), N = NX;
 let blocked = null;
+let floorFn = null; // interior floor test: cells east of INTERIOR_X are solid unless an interior says otherwise
+export function setInteriorFloor(fn) { floorFn = fn; }
 
-export function buildNav() {
-  blocked = new Uint8Array(N * N);
+// x0..x1 limits a rebuild to one band (used when an interior is regenerated)
+export function buildNav(x0 = X0, x1 = X0 + NX * CELL) {
+  if (!blocked) blocked = new Uint8Array(NX * NZ);
   const p = { x: 0, z: 0 };
-  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
-    p.x = i * CELL - HALF + 0.5; p.z = j * CELL - HALF + 0.5;
+  const i0 = Math.max(0, Math.floor((x0 - X0) / CELL)), i1 = Math.min(NX, Math.ceil((x1 - X0) / CELL));
+  for (let j = 0; j < NZ; j++) for (let i = i0; i < i1; i++) {
+    blocked[j * N + i] = 0;
+    p.x = i * CELL + X0 + 0.5; p.z = j * CELL + Z0 + 0.5;
+    if (p.x >= INTERIOR_X && !(floorFn && floorFn(p.x, p.z))) { blocked[j * N + i] = 1; continue; }
     const ox = p.x, oz = p.z;
     resolve(p, 0.55);
     if (Math.hypot(p.x - ox, p.z - oz) > 0.05) blocked[j * N + i] = 1;
   }
 }
-const idx = (x, z) => { const i = Math.floor((x + HALF) / CELL), j = Math.floor((z + HALF) / CELL); return (i < 0 || j < 0 || i >= N || j >= N) ? -1 : j * N + i; };
+const idx = (x, z) => { const i = Math.floor((x - X0) / CELL), j = Math.floor((z - Z0) / CELL); return (i < 0 || j < 0 || i >= NX || j >= NZ) ? -1 : j * N + i; };
 const isBlocked = (k) => k < 0 || blocked[k] === 1;
 
 export function navClear(ax, az, bx, bz) {
@@ -28,7 +36,7 @@ export function navClear(ax, az, bx, bz) {
 class Heap { constructor() { this.a = []; } push(k, f) { const a = this.a; a.push([k, f]); let i = a.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (a[p][1] <= a[i][1]) break; [a[p], a[i]] = [a[i], a[p]]; i = p; } }
   pop() { const a = this.a, top = a[0], last = a.pop(); if (a.length) { a[0] = last; let i = 0; for (;;) { const l = i * 2 + 1, r = l + 1; let m = i; if (l < a.length && a[l][1] < a[m][1]) m = l; if (r < a.length && a[r][1] < a[m][1]) m = r; if (m === i) break; [a[m], a[i]] = [a[i], a[m]]; i = m; } } return top; } get size() { return this.a.length; } }
 
-const g = new Float32Array(N * N), came = new Int32Array(N * N), stamp = new Uint32Array(N * N); let cur = 1;
+const g = new Float32Array(NX * NZ), came = new Int32Array(NX * NZ), stamp = new Uint32Array(NX * NZ); let cur = 1;
 export function findPath(from, to, maxIter = 12000) {
   if (!blocked) return null;
   let s = idx(from.x, from.z), t = idx(to.x, to.z);
@@ -49,7 +57,7 @@ export function findPath(from, to, maxIter = 12000) {
     const ki = k % N, kj = (k / N) | 0;
     for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
       if (!di && !dj) continue;
-      const ni = ki + di, nj = kj + dj; if (ni < 0 || nj < 0 || ni >= N || nj >= N) continue;
+      const ni = ki + di, nj = kj + dj; if (ni < 0 || nj < 0 || ni >= NX || nj >= NZ) continue;
       const nk = nj * N + ni; if (blocked[nk]) continue;
       if (di && dj && (blocked[kj * N + ni] || blocked[nj * N + ki])) continue; // no corner cutting
       const ng = g[k] + (di && dj ? 1.414 : 1);
@@ -57,7 +65,7 @@ export function findPath(from, to, maxIter = 12000) {
     }
   }
   if (!found) return null;
-  const raw = []; for (let k = t; k !== -1; k = came[k]) raw.push({ x: (k % N) * CELL - HALF + 0.5, z: ((k / N) | 0) * CELL - HALF + 0.5 });
+  const raw = []; for (let k = t; k !== -1; k = came[k]) raw.push({ x: (k % N) * CELL + X0 + 0.5, z: ((k / N) | 0) * CELL + Z0 + 0.5 });
   raw.reverse();
   // string-pulling
   const out = []; let a = { x: from.x, z: from.z };

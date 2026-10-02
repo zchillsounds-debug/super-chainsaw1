@@ -82,7 +82,7 @@ export function setupMobile(game, ui) {
       game.mouseScreen.x = e.clientX; game.mouseScreen.y = e.clientY;
       game.mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
       game.pickHover();
-      if (game.hoverNpc) { game.talkToNpc(); return; }
+      if (game.hoverNpc) { game.hoverNpc.talk(); return; }
       if (game.hover) { game.player.target = game.hover; game.player.moveTo = null; }
       else { game.player.target = null; game.setMoveTarget(); game.showMarker(); }
     }

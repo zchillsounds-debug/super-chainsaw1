@@ -26,6 +26,9 @@ export function mats() {
     gold: new THREE.MeshStandardMaterial({ color: 0xe0b050, roughness: 0.25, metalness: 1 }),
     limestone: triplanarMaterial({ map: pl.map, normalMap: pl.normalMap, color: 0xf0e8dc, scale: 1.2, roughness: 0.85, grime: 0.25, normalStrength: 0.5 }),
     stone: triplanarMaterial({ map: pl.map, normalMap: pl.normalMap, color: 0xa89a88, scale: 0.8, roughness: 0.9, grime: 0.2 }),
+    // fired kiln brick: darker, with heavy soot grime
+    fired: triplanarMaterial({ map: mb.map, normalMap: mb.normalMap, color: 0x8a5a48, scale: 0.42, roughness: 0.97, normalStrength: 1.4, grime: 0.95 }),
+    soot: new THREE.MeshStandardMaterial({ color: 0x141010, roughness: 1 }),
   };
   return M;
 }
@@ -383,11 +386,17 @@ export function palaceVault() {
 // ---------------------------------------------------------------- beehive brick kiln
 export function kiln() {
   const m = mats(), grp = new THREE.Group();
-  grp.add(mesh(domeGeo(2.6, 3.4, 20), m.mud));
-  grp.add(mesh(new THREE.CylinderGeometry(0.5, 0.6, 1.4, 10).translate(0, 3.8, 0), m.mud));
-  // glowing stoke-hole
-  const hole = new THREE.Mesh(new THREE.CircleGeometry(0.55, 14), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.6, 0.9, 0.25), toneMapped: false }));
+  grp.add(mesh(domeGeo(2.6, 3.4, 20), m.fired));
+  grp.add(mesh(new THREE.CylinderGeometry(0.5, 0.6, 1.4, 10).translate(0, 3.8, 0), m.fired));
+  // soot-blackened chimney lip and a scorched apron in front of the stoke-hole
+  grp.add(mesh(new THREE.CylinderGeometry(0.56, 0.52, 0.3, 10).translate(0, 4.45, 0), m.soot));
+  const apron = new THREE.Mesh(new THREE.CircleGeometry(1.6, 16).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.45, depthWrite: false }));
+  apron.position.set(0, 0.04, 3.2); grp.add(apron);
+  // stoke-hole: a brick arch around a glowing mouth
+  const arch = mesh(new THREE.TorusGeometry(0.62, 0.16, 6, 12, Math.PI).translate(0, 0.6, 0), m.soot); arch.position.z = 2.42; grp.add(arch);
+  const hole = new THREE.Mesh(new THREE.CircleGeometry(0.55, 14), new THREE.MeshBasicMaterial({ color: new THREE.Color(3.4, 1.1, 0.25), toneMapped: false }));
   hole.position.set(0, 0.6, 2.45); grp.add(hole);
+  grp.userData.chimney = new THREE.Vector3(0, 4.6, 0); grp.userData.mouth = new THREE.Vector3(0, 0.7, 3.0);
   grp.userData.colliders = [{ type: 'circle', x: 0, z: 0, r: 2.8 }];
   return grp;
 }

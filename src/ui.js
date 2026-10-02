@@ -232,14 +232,24 @@ export class UI {
     c.save(); c.beginPath(); c.arc(S / 2, S / 2, S / 2 - 4, 0, Math.PI * 2); c.clip();
     c.fillStyle = 'rgba(20,12,6,0.55)'; c.fillRect(0, 0, S, S);
     const tx = (x) => S / 2 + (x - player.x) * sc, tz = (z) => S / 2 + (z - player.z) * sc;
-    if (this.mapImg) c.drawImage(this.mapImg, tx(-140), tz(-140), 280 * sc, 280 * sc);
-    for (const p of pois) { c.fillStyle = p.color; c.font = 'bold 13px Cinzel'; c.textAlign = 'center'; c.fillText(p.icon, tx(p.x), tz(p.z) + 4); }
+    const R = this.mapRect || { x0: -140, z0: -140, w: 280, h: 280 }, img = this.mapRegionImg || this.mapImg;
+    if (img) c.drawImage(img, tx(R.x0), tz(R.z0), R.w * sc, R.h * sc);
+    if (!this.mapRegionImg) for (const p of pois) { c.fillStyle = p.color; c.font = 'bold 13px Cinzel'; c.textAlign = 'center'; c.fillText(p.icon, tx(p.x), tz(p.z) + 4); }
     for (const e of enemies) if (!e.dead) { c.fillStyle = e.boss ? '#ff6020' : e.elite ? '#ffd040' : '#e03030'; c.beginPath(); c.arc(tx(e.pos.x), tz(e.pos.z), e.boss ? 4 : 2.2, 0, 7); c.fill(); }
     for (const d of drops) if (d.item.rarity !== 'common') { c.fillStyle = RARITY[d.item.rarity].color; c.fillRect(tx(d.mesh.position.x) - 1.5, tz(d.mesh.position.z) - 1.5, 3, 3); }
     c.restore();
     c.fillStyle = '#fff'; c.beginPath(); c.arc(S / 2, S / 2, 3.2, 0, 7); c.fill();
   }
 
+  // the minimap switches to the interior plan underground
+  setMapRegion(kind, I) {
+    if (kind !== 'interior') { this.mapRegionImg = null; this.mapRect = null; return; }
+    const c = document.createElement('canvas'); c.width = 140; c.height = 280; const x = c.getContext('2d');
+    x.fillStyle = '#0a0705'; x.fillRect(0, 0, 140, 280);
+    x.fillStyle = I.style === 'qanat' ? '#6a6250' : '#5a3a28';
+    for (const [x0, z0, x1, z1] of I.floors) x.fillRect(x0 - 150 + 1, z0 + 140 + 1, x1 - x0 - 2, z1 - z0 - 2);
+    this.mapRegionImg = c; this.mapRect = { x0: 150, z0: -140, w: 140, h: 280 };
+  }
   // ---------------- inventory
   toggleInventory(v) { const el = this.$('#inv'); const show = v ?? el.classList.contains('hidden'); el.classList.toggle('hidden', !show); if (!show) this.hideTooltip(); return show; }
   get invOpen() { return !this.$('#inv').classList.contains('hidden'); }

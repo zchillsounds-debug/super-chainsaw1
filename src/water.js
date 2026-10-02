@@ -21,14 +21,14 @@ export function createCanal(sunDir) {
   const mat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false,
     uniforms: {
-      uTime: { value: 0 }, uSun: { value: sunDir.clone() },
+      uTime: { value: 0 }, uSun: { value: sunDir }, uSpec: { value: new THREE.Color(1.0, 0.85, 0.6) },
       uDeep: { value: new THREE.Color(0x0f3a3a) }, uShallow: { value: new THREE.Color(0x4f8a72) },
       uSky: { value: new THREE.Color(0xf3c999) },
       fogColor: { value: new THREE.Color() }, fogDensity: { value: 0 },
     },
     vertexShader: `varying vec2 vUv; varying vec3 vW; varying float vFogDepth;
       void main(){ vUv=uv; vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; vec4 mv=viewMatrix*w; vFogDepth=-mv.z; gl_Position=projectionMatrix*mv; }`,
-    fragmentShader: `uniform float uTime; uniform vec3 uSun,uDeep,uShallow,uSky,fogColor; uniform float fogDensity;
+    fragmentShader: `uniform float uTime; uniform vec3 uSun,uDeep,uShallow,uSky,uSpec,fogColor; uniform float fogDensity;
       varying vec2 vUv; varying vec3 vW; varying float vFogDepth;
       float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
       float n(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y); }
@@ -45,7 +45,10 @@ export function createCanal(sunDir) {
         vec3 refl = mix(uSky*0.8, uSky*1.15, smoothstep(0.0,0.6,R.y));
         vec3 col = mix(water, refl, fres*0.55);
         vec3 H = normalize(uSun + V);
-        col += vec3(1.0,0.85,0.6) * pow(max(dot(N,H),0.0), 220.0) * 3.0;
+        col += uSpec * pow(max(dot(N,H),0.0), 220.0) * 3.0;
+        // slow flow streaks drifting downstream
+        float streak = smoothstep(0.62, 0.9, n(vec2(p.x*3.0, p.y*0.35 - uTime*0.6))) * edge;
+        col += uSky * streak * 0.08;
         float foam = smoothstep(0.18,0.0,edge) * (0.5+0.5*n(p*4.0+uTime));
         col = mix(col, vec3(0.86,0.82,0.7), foam*0.5);
         float a = mix(0.55, 0.92, smoothstep(0.0,0.4,edge));

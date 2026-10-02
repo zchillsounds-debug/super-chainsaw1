@@ -271,3 +271,27 @@ body.touch #cine .card .ar{font-size:46px}body.touch #cine .card .en{font-size:1
 .cp-kit span{display:flex;align-items:center;gap:6px;font:13px Amiri,serif}
 .cp-kit svg{width:22px;height:22px;flex:none}
 @media (max-width:760px){.cp-row{grid-template-columns:repeat(2,minmax(0,1fr))}.cp-role{min-height:0;font-size:13px}.cp-kit{display:none}.cp-card{padding:8px}}
+
+/* ---------------- Round 4: context prompt, suq panels */
+#prompt{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);z-index:30;pointer-events:auto;font:600 15px Cinzel;color:#f6e6c2;background:linear-gradient(#2a1c12ee,#140c08ee);border:1px solid #c8a060;border-radius:22px;padding:8px 16px;cursor:pointer;box-shadow:0 4px 14px #0008}
+#prompt.hidden{display:none}
+#prompt .k{display:inline-block;min-width:18px;margin-right:8px;padding:0 5px;border:1px solid #e0b060;border-radius:4px;color:#ffd890;text-align:center}
+body.touch #prompt{bottom:auto;top:58%}
+body.incine #prompt,body.inshop #prompt{display:none}
+#shop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:40;width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 40px);overflow-y:auto;pointer-events:auto;display:flex;flex-direction:column;gap:8px}
+#shop .sbody{display:flex;flex-direction:column;gap:10px}
+#shop .slabel{font:14px Amiri,serif;color:#d8c8a8;margin-bottom:4px}
+#shop .sgrid{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+#shop .sgrid .cell{position:relative;aspect-ratio:1;width:auto;height:auto;cursor:pointer}
+#shop .sgrid.stock{grid-template-columns:repeat(8,1fr)}
+#shop .cell em{position:absolute;bottom:0;right:2px;font:700 10px Cinzel;color:#ffd84a;font-style:normal;text-shadow:0 0 3px #000}
+#shop .cell .rk,.cell .rk{position:absolute;top:0;right:2px;font:700 10px Cinzel;color:#9fe0ff;font-style:normal;text-shadow:0 0 3px #000}
+#shop .sfoot{display:flex;flex-wrap:wrap;gap:12px;font:14px Cinzel;color:#ffd84a;border-top:1px solid #5a4028;padding-top:6px}
+#shop .mat{color:#d8c8a8;font:13px Amiri,serif} #shop .mat b{color:#fff}
+.sbtn{font:600 13px Cinzel;color:#f6e6c2;background:#3a2414;border:1px solid #a07a40;border-radius:4px;padding:6px 10px;cursor:pointer}
+.sbtn:hover{background:#5a3820}
+.stabs{display:flex;gap:6px}.stabs button{flex:1;font:600 13px Cinzel;color:#cdb890;background:#1e140c;border:1px solid #5a4028;border-radius:4px;padding:6px;cursor:pointer}.stabs button.on{color:#fff0d0;border-color:#e0b060;background:#3a2414}
+.slist{display:flex;flex-direction:column;gap:6px}
+.srow{display:flex;align-items:center;gap:10px}.srow .cell{width:44px;height:44px;flex:none;position:relative}.srow .sinfo{flex:1;display:flex;flex-direction:column;font:14px Amiri,serif}.srow small{color:#b8a888}
+.cp-row.small{grid-template-columns:repeat(4,1fr)}.cp-row.small .cp-card{padding:6px}.cp-row.small svg{width:36px;height:36px}.cp-card.cur{border-color:#9fe0ff}
+@media (max-width:600px){#shop .sgrid{grid-template-columns:repeat(8,1fr)}#shop .sgrid.stock{grid-template-columns:repeat(4,1fr)}}

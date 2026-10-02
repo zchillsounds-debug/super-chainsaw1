@@ -34,9 +34,10 @@ export function mergeStatic(group) {
   return group;
 }
 
-let OCC = null;
+let OCC = null, CULL = null;
 function place(scene, obj, x, z, rotY = 0, addCols = true, occ = false) {
   obj.position.set(x, heightAt(x, z), z); obj.rotation.y = rotY; scene.add(obj);
+  CULL?.push(obj);
   if (obj.isGroup && !obj.userData.dynamic) mergeStatic(obj);
   if (occ && OCC) OCC.push(obj);
   if (addCols && obj.userData.colliders) {
@@ -66,11 +67,11 @@ export function buildWorld(scene) {
   const rnd = mulberry32(2024);
   const out = { fires: [], updaters: [], lanterns: [], occluders: [] };
 
-  OCC = out.occluders;
+  OCC = out.occluders; CULL = out.cullables = [];
   const sunDir = new THREE.Vector3(-0.55, 0.62, 0.35).normalize();
   out.sunDir = sunDir;
   scene.add(createTerrain());
-  const canal = createCanal(sunDir); scene.add(canal); out.updaters.push((t) => canal.update(t, scene));
+  const canal = out.canal = createCanal(sunDir); scene.add(canal); out.updaters.push((t) => canal.update(t, scene));
 
   // ---------------- village
   const V = SITES.village;
@@ -134,8 +135,11 @@ export function buildWorld(scene) {
   const G = SITES.kiln;
   place(scene, palaceVault(), G.x - 4, G.z - 8, 0.3, true, true);
   for (const [dx, dz] of [[9, -4], [-12, 6], [6, 9]]) {
-    const k = place(scene, kiln(), G.x + dx, G.z + dz, rnd() * 6, true, true);
-    out.fires.push({ pos: k.position.clone().add(new THREE.Vector3(0, 0.8, 0)), intensity: 0.6 });
+    const ry = rnd() * 6, k = kiln(), chim = k.userData.chimney.clone(), mouth = k.userData.mouth.clone();
+    place(scene, k, G.x + dx, G.z + dz, ry, true, true);
+    const rot = (v) => v.applyAxisAngle(new THREE.Vector3(0, 1, 0), ry).add(k.position);
+    (out.kilns = out.kilns || []).push({ chimney: rot(chim), mouth: rot(mouth) });
+    out.fires.push({ pos: rot(k.userData.mouth.clone().setY(0.5)), intensity: 0.5, kiln: true });
   }
   for (let i = 0; i < 26; i++) {
     const x = G.x + (rnd() - 0.5) * 34, z = G.z + (rnd() - 0.5) * 30;
@@ -263,9 +267,54 @@ export function buildWorld(scene) {
     if (out.ruinCount = (out.ruinCount || 0) + 1, out.ruinCount >= 14) break;
   }
 
+  clutter(scene, rnd, out);
   out.updaters.push((t) => { wind.uTime.value = t; });
   out.update = (t, dt) => { for (const u of out.updaters) u(t, dt); };
+  // zone streaming (lite): placed props and buildings beyond view range are hidden, so they cost neither draw calls nor shadow passes
+  for (const o of CULL) { const b = new THREE.Box3().setFromObject(o); o.userData.cullR = b.getSize(new THREE.Vector3()).length() / 2; }
+  out.cull = (focus, range = 95) => { for (const o of CULL) o.visible = Math.hypot(o.position.x - focus.x, o.position.z - focus.z) - o.userData.cullR < range; };
   return out;
 }
 
 export { colliders, blocked };
+
+// ---------------------------------------------------------------- environment dressing
+// Instanced clutter around the inhabited sites (sacks, baskets, shards, straw, rope) and soot/stain decals.
+function clutter(scene, rnd, out) {
+  const kinds = {
+    sack: { geo: new THREE.SphereGeometry(0.32, 8, 6).scale(1, 0.75, 0.8).translate(0, 0.2, 0), mat: new THREE.MeshStandardMaterial({ color: 0xb8a078, roughness: 1 }) },
+    basket: { geo: new THREE.CylinderGeometry(0.32, 0.24, 0.34, 10, 1, true).translate(0, 0.17, 0), mat: new THREE.MeshStandardMaterial({ color: 0x9a7a48, roughness: 1, side: THREE.DoubleSide }) },
+    shard: { geo: new THREE.BoxGeometry(0.22, 0.03, 0.14), mat: new THREE.MeshStandardMaterial({ color: 0xa8643c, roughness: 0.9 }) },
+    straw: { geo: new THREE.ConeGeometry(0.6, 0.45, 9).translate(0, 0.2, 0), mat: new THREE.MeshStandardMaterial({ color: 0xc8a860, roughness: 1 }) },
+    rope: { geo: new THREE.TorusGeometry(0.2, 0.05, 5, 12).rotateX(Math.PI / 2).translate(0, 0.05, 0), mat: new THREE.MeshStandardMaterial({ color: 0x8a6a40, roughness: 1 }) },
+  };
+  const spots = { sack: [], basket: [], shard: [], straw: [], rope: [] };
+  const mix = { village: ['sack', 'basket', 'basket', 'shard', 'straw', 'rope'], serai: ['sack', 'shard', 'shard', 'straw', 'rope'], kiln: ['shard', 'shard', 'shard', 'straw', 'sack'] };
+  for (const [site, list] of Object.entries(mix)) {
+    const S = SITES[site];
+    for (let i = 0; i < 220; i++) {
+      const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * S.r * 1.05, x = S.x + Math.cos(a) * r, z = S.z + Math.sin(a) * r;
+      if (blocked(x, z, 0.3) || roadDist(x, z) < 1.6 || Math.abs(x - canalX(z)) < 6) continue;
+      // cluster near walls and props: keep spots that are close to something solid
+      if (!blocked(x, z, 2.2) && rnd() < 0.75) continue;
+      const k = list[Math.floor(rnd() * list.length)];
+      spots[k].push([x, heightAt(x, z), z, rnd() * 6, 0.7 + rnd() * 0.6]);
+    }
+  }
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+  for (const [k, list] of Object.entries(spots)) {
+    if (!list.length) continue;
+    const im = new THREE.InstancedMesh(kinds[k].geo, kinds[k].mat, list.length);
+    list.forEach(([x, y, z, r, s], i) => { q.setFromAxisAngle(up, r); m4.compose(ps.set(x, y, z), q, sc.setScalar(s)); im.setMatrixAt(i, m4); });
+    im.castShadow = k !== 'shard'; im.receiveShadow = true; scene.add(im);
+  }
+  // soot and stains: dark blotches round fire pits and kilns, dark wheel ruts at the village gate
+  const blot = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 });
+  const pts = [];
+  for (const f of out.fires) pts.push([f.pos.x, f.pos.z, 2.4 + rnd()]);
+  for (let i = 0; i < 40; i++) { const S = Object.values(SITES)[i % 4]; const a = rnd() * 6.28, r = rnd() * S.r; pts.push([S.x + Math.cos(a) * r, S.z + Math.sin(a) * r, 0.6 + rnd() * 1.4]); }
+  const g = new THREE.CircleGeometry(1, 14).rotateX(-Math.PI / 2);
+  const im = new THREE.InstancedMesh(g, blot, pts.length);
+  pts.forEach(([x, z, s], i) => { m4.compose(ps.set(x, heightAt(x, z) + 0.035, z), q.identity(), sc.set(s, 1, s * (0.6 + rnd() * 0.5))); im.setMatrixAt(i, m4); });
+  im.renderOrder = 1; scene.add(im);
+}

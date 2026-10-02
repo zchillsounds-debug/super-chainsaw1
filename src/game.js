@@ -23,6 +23,7 @@ export class Game {
     buildGrid();
     buildNav();
     this.stats = {}; this.isTouch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || location.search.includes('mobile');
+    this.npcs = []; this.interactables = [];
     this.t = 0; this.enemies = []; this.projectiles = []; this.hazards = []; this.drops = []; this.trails = [];
     this.mouse = new THREE.Vector2(); this.mouseScreen = { x: 0, y: 0 };
     this.keys = {}; this.lmb = false; this.shake = 0; this.camZoom = 1; this.hitStop = 0;
@@ -86,7 +87,7 @@ export class Game {
       patched.set(mat, m);
       return m;
     };
-    for (const g of groups) g.traverse((o) => { if (o.isMesh && !o.material.isMeshBasicMaterial) o.material = patch(o.material, scaleOf(o)); });
+    for (const g of groups) g.traverse((o) => { if (o.isMesh && !o.userData.noOcc && !o.material.isMeshBasicMaterial) o.material = patch(o.material, scaleOf(o)); });
   }
   updateOccluders() {
     const p = this.player.pos;
@@ -228,7 +229,7 @@ export class Game {
       this.audio.init();
       if (e.button === 0) {
         this.lmb = true;
-        if (this.hoverNpc) { this.talkToNpc(); return; }
+        if (this.hoverNpc) { this.hoverNpc.talk(); return; }
         if (this.hover) { this.player.target = this.hover; this.player.moveTo = null; }
         else { this.player.target = null; this.setMoveTarget(); this.showMarker(); }
       } else if (e.button === 2) this.useSkill('rmb');
@@ -281,15 +282,17 @@ export class Game {
     let best = null, bd = 46;
     for (const e of this.enemies) {
       if (e.dead || e.hidden || e.rig.visible === false) continue;
+      if (e.pos.distanceTo(this.player.pos) > 40) continue;
       const sp = this.ui.project(tmp.copy(e.pos).setY(e.pos.y + (e.boss ? 4 : 1.1)), this.camera);
       const d = Math.hypot(sp.x - this.mouseScreen.x, sp.y - this.mouseScreen.y) / (e.boss ? 3 : 1);
       if (d < bd) { bd = d; best = e; }
     }
     this.hover = best;
-    this.hoverNpc = false;
-    if (!best && this.npc) {
-      const sp = this.ui.project(tmp.copy(this.npc.position).setY(this.npc.position.y + 1.2), this.camera);
-      this.hoverNpc = Math.hypot(sp.x - this.mouseScreen.x, sp.y - this.mouseScreen.y) < 40;
+    this.hoverNpc = null;
+    if (!best) for (const n of this.npcs) {
+      if (n.pos.distanceTo(this.player.pos) > 30) continue;
+      const sp = this.ui.project(tmp.copy(n.pos).setY(n.pos.y + 1.2), this.camera);
+      if (Math.hypot(sp.x - this.mouseScreen.x, sp.y - this.mouseScreen.y) < 40) { this.hoverNpc = n; break; }
     }
     this.renderer.domElement.style.cursor = best ? 'crosshair' : (this.hoverNpc ? 'help' : 'default');
   }
@@ -368,7 +371,7 @@ export class Game {
     if (e === this.matriarch && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Hisham', text: 'Ghassan waits at the arch. You will break on it.', card: { ar: 'الطاق', en: 'Act III · The Broken Arch', sub: 'Ghassan holds the road beneath the ruined Persian arch' } })).then(() => this.checkpoint(3));
     if (e.boss) this.onBossDeath(e);
   }
-  checkpoint(act) { this.act = Math.max(this.act || 1, act); saveGame(this); }
+  checkpoint(act) { this.act = Math.max(this.act || 1, act); if (!this.interior) this.lighting?.forAct(this.act, 4); saveGame(this); }
   anim(rig, st, dt) { animateHumanoid(rig, st, this.t, dt); }
   // while a cinematic plays: the world keeps breathing, everyone else holds still
   cineTick(dt) {
@@ -424,8 +427,9 @@ export class Game {
     const p = this.player; p.dead = true; p.hp = 0; p.st.dead = true; p.st.deadT = 0;
     setTimeout(() => { if (this.player.dead) this.ui.death(true, () => this.respawn()); }, 1500);
   }
-  respawn() {
+  async respawn() {
     const p = this.player; this.ui.death(false);
+    if (this.interior) await this.zones.exit();
     p.dead = false; p.st.dead = false; p.rig.children[0].rotation.x = 0; p.rig.children[0].position.y = 0;
     p.hp = p.stats.maxHp; p.mp = p.stats.maxMp; p.pos.set(1, 0, 88); p.target = null; p.moveTo = null; p.invuln = 2;
     p.gold = Math.floor(p.gold * 0.9);
@@ -718,6 +722,8 @@ export class Game {
     const npc = humanoid({ robe: '#e6dcc4', robe2: '#2a6a5a', turban: 0x2a7a6a, beard: 0xd8d0c0, beardLen: 1, weapon: null, skin: 0x9a6a48, sash: 0x2a6a5a, build: 0.92, belly: 0.25, tiraz: true, detail: 'hi' });
     const x = -2, z = 84; npc.position.set(x, heightAt(x, z), z); npc.rotation.y = 0.6;
     this.scene.add(npc); this.npc = npc; this.npcSt = { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0 };
+    const ishaq = { rig: npc, st: this.npcSt, name: 'Ishaq', pos: npc.position, talk: () => this.talkToNpc() };
+    this.npcs.push(ishaq); this.interactables.push({ pos: npc.position, r: 3.2, label: 'Talk to Ishaq', act: () => this.talkToNpc(), npc: ishaq });
     // astrolabe in hand
     const ast = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.02, 6, 24), new THREE.MeshStandardMaterial({ color: 0xd9a441, metalness: 1, roughness: 0.3 }));
     npc.userData.parts.handL.add(ast); ast.position.y = -0.12;
@@ -792,6 +798,7 @@ export class Game {
     this.updateDecals(dt);
     this.updateAmbientLife(dt);
     this.updateCamera(dt);
+    this.zones?.update(dt); this.hubTick?.(dt);
     if (this.started) this.updateOccluders(); else this.occU.uHole.value.set(-9999, -9999);
     if (this.npc) {
       animateHumanoid(this.npc, this.npcSt, this.t, dt);
@@ -945,7 +952,7 @@ export class Game {
     }
     // auto-pickup gold & potions on walk-over
     for (const d of this.drops) if ((d.item.gold || d.item.potion) && d.t >= 1 && p.pos.distanceTo(d.mesh.position) < 1.2) { this.tryPickup(d); break; }
-    p.pos.x = THREE.MathUtils.clamp(p.pos.x, -BOUND, BOUND); p.pos.z = THREE.MathUtils.clamp(p.pos.z, -BOUND, BOUND);
+    if (!this.interior) { p.pos.x = THREE.MathUtils.clamp(p.pos.x, -BOUND, BOUND); p.pos.z = THREE.MathUtils.clamp(p.pos.z, -BOUND, BOUND); }
     resolve(p.pos, 0.45);
     p.pos.y = heightAt(p.pos.x, p.pos.z);
     p.st.walkBlend = THREE.MathUtils.lerp(p.st.walkBlend, moving ? Math.min(1, (p.st.speedK ?? 1) * 1.1) : 0, Math.min(1, dt * 8));
@@ -1129,7 +1136,7 @@ export class Game {
       }
       { const dx = e.pos.x - p.pos.x, dz = e.pos.z - p.pos.z, d = Math.hypot(dx, dz), m = e.radius + 0.45; if (d < m && d > 0.001) { e.pos.x += dx / d * (m - d); e.pos.z += dz / d * (m - d); } }
       if (e.alerted && !e.boss && e.pos.distanceTo(e.home) > 34) { e.alerted = false; e.wander = e.home.clone(); e.wanderT = 6; e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.5); }
-      e.pos.x = THREE.MathUtils.clamp(e.pos.x, -BOUND, BOUND); e.pos.z = THREE.MathUtils.clamp(e.pos.z, -BOUND, BOUND);
+      if (!e.interior) { e.pos.x = THREE.MathUtils.clamp(e.pos.x, -BOUND, BOUND); e.pos.z = THREE.MathUtils.clamp(e.pos.z, -BOUND, BOUND); }
       resolve(e.pos, e.radius);
       e.pos.y = heightAt(e.pos.x, e.pos.z);
       e.st.walkBlend = THREE.MathUtils.lerp(e.st.walkBlend, moving ? (e.alerted ? 1 : 0.5) : 0, Math.min(1, dt * 8));

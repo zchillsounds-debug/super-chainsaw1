@@ -12,6 +12,10 @@ import { Director } from './cinema.js';
 import * as SCENES from './scenes.js';
 import { loadSave, applySave, saveGame } from './save.js';
 import { preloadGeo, flushGeo } from './geocache.js';
+import { Lighting } from './lighting.js';
+import { LightPool } from './lights.js';
+import { setupHub, animateHub } from './hub.js';
+import { Zones } from './zones.js';
 
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
@@ -35,23 +39,27 @@ sun.shadow.mapSize.set(SM, SM);
 Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 1, far: 220 });
 sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.05; sun.shadow.radius = 3;
 scene.add(sun, sun.target);
-scene.add(new THREE.HemisphereLight(0xc4c2c4, 0x7a5236, 0.5));
+const hemi = new THREE.HemisphereLight(0xc4c2c4, 0x7a5236, 0.5); scene.add(hemi);
 
 const fx = new FX(scene);
 const { composer, grade, gtao, bokeh, resize } = createComposer(renderer, scene, camera);
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); resize(); });
 
-// static fire / lantern lights (limited count)
-for (const f of world.fires) { const l = new THREE.PointLight(0xff8a3a, 22, 13, 2); l.position.copy(f.pos).add(new THREE.Vector3(0, 1.2, 0)); scene.add(l); f.light = l; }
-for (const l of world.lanterns) { l.updateMatrixWorld(); const pl = new THREE.PointLight(0xffa850, 7, 9, 2); pl.position.copy(l.localToWorld(l.userData.lightPos.clone())); scene.add(pl); }
+// torch light pool: every fire and lantern is an emitter; only the nearest few get a real light
+const lightPool = new LightPool(scene, QUALITY === 'low' ? 4 : 8);
+for (const f of world.fires) lightPool.add({ pos: f.pos.clone().add(new THREE.Vector3(0, f.kiln ? 0.4 : 1.2, 0)), color: f.kiln ? 0xff6a20 : 0xff8a3a, power: f.kiln ? 14 : 22, dist: f.kiln ? 8 : 13 });
+for (const l of world.lanterns) { l.updateMatrixWorld(); lightPool.add({ pos: l.localToWorld(l.userData.lightPos.clone()), color: 0xffa850, power: 7, dist: 9, flicker: 0.4, lantern: true }); }
 
 const ui = new UI(document.getElementById('ui'));
 const audio = new Audio();
 const game = new Game({ scene, camera, renderer, world, fx, ui, audio });
 console.debug('LOG game ' + (performance.now() - __t0).toFixed(0)); __t0 = performance.now();
-game.grade = grade;
+game.grade = grade; game.lightPool = lightPool;
+const lighting = game.lighting = new Lighting({ scene, renderer, sun, hemi, world, grade });
 game.addNpc();
 game.addAmbientLife();
+setupHub(game); game.hubTick = (dt) => animateHub(game, dt);
+game.zones = new Zones(game);
 if (IS_TOUCH) setupMobile(game, ui);
 const director = game.director = new Director({ game, camera, ui, audio, grade, bokeh, renderer, scene });
 
@@ -69,7 +77,7 @@ function start(cont) {
   ui.fade(1);
   setTimeout(async () => {
     mode = 'game'; game.started = true; ui.show(); ui.fade(0);
-    if (cont) { applySave(game, cont); ui.banner('The Chronicle Continues', ['', 'The road from the village', 'The kiln yard', 'The road to the arch', 'The grain road'][Math.min(4, cont.act)], 3500); return; }
+    if (cont) { applySave(game, cont); lighting.forAct(cont.act, 0); ui.banner('The Chronicle Continues', ['', 'The road from the village', 'The kiln yard', 'The road to the arch', 'The grain road'][Math.min(4, cont.act)], 3500); return; }
     const cls = P.get('cls') || await ui.classPick();
     game.setClass(cls, true);
     await director.play(SCENES.prologue(game));
@@ -85,11 +93,12 @@ if (saved) {
   document.getElementById('startbtn').textContent = 'New Chronicle';
 }
 document.getElementById('startbtn').onclick = () => start();
+if (P.get('tod')) lighting.set(P.get('tod'), 0);
 if (P.has('play')) { mode = 'game'; game.started = true; ui.show(); if (P.get('cls')) game.setClass(P.get('cls'), true); }
 if (P.has('x')) { game.player.pos.set(+P.get('x'), 0, +P.get('z')); }
 
 const clock = new THREE.Clock(); let t = 0;
-let fireFlick = 0;
+let fireFlick = 0, cullT = 0;
 // adaptive quality: if the frame rate stays low, shed the most expensive effects
 let perfT = 0, perfN = 0, perfAcc = 0, perfLevel = 0;
 function adaptQuality(dt) {
@@ -108,14 +117,21 @@ function frame() {
   fireFlick += dt;
   for (const f of world.fires) {
     if (Math.random() < 0.7) fx.fire(f.pos, f.intensity);
-    if (f.light) f.light.intensity = 18 + Math.sin(t * 13 + f.pos.x) * 3 + Math.random() * 4;
   }
   // drifting dust motes / sand in the air around the camera focus
   const focus = mode === 'game' ? game.player.pos : SITES.village;
+  // kiln chimneys: a thick column of smoke from each, and the stoke-hole embers
+  if (world.kilns && Math.hypot(focus.x - SITES.kiln.x, focus.z - SITES.kiln.z) < 70) for (const k of world.kilns) {
+    if (Math.random() < 0.5) fx.smoke.spawn({ pos: { x: k.chimney.x, y: k.chimney.y, z: k.chimney.z }, vel: { x: 0.5 + Math.random() * 0.3, y: 1.6, z: 0.2 }, life: 6, size: 0.8, size1: 4.5, color: new THREE.Color(0.16, 0.14, 0.13), alpha: 0.42, drag: 0.25, fadeIn: 0.15 });
+    if (Math.random() < 0.25) fx.glow.spawn({ pos: { x: k.mouth.x, y: k.mouth.y, z: k.mouth.z }, vel: { x: (Math.random() - 0.5), y: 1.5 + Math.random(), z: (Math.random() - 0.5) }, life: 1.2, size: 0.07, size1: 0.02, color: new THREE.Color(4, 1.6, 0.4), drag: 0.5 });
+  }
   // kiln smoke drifting over the brick yard
   if (focus.x < -25 && focus.z < -10 && Math.random() < 0.6) { const G = SITES.kiln; fx.smoke.spawn({ pos: { x: G.x + (Math.random() - 0.5) * 40, y: heightAt(G.x, G.z) + 0.3, z: G.z + (Math.random() - 0.5) * 36 }, vel: { x: 0.4, y: 0.05, z: 0.15 }, life: 7, size: 3, size1: 6, color: new THREE.Color(0.55, 0.5, 0.46), alpha: 0.16, drag: 0.1, fadeIn: 0.4 }); }
   if (Math.random() < 0.5) fx.smoke.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 50, y: (focus.y || 0) + Math.random() * 6, z: focus.z + (Math.random() - 0.5) * 40 }, vel: { x: 1.5, y: 0.1, z: 0.4 }, life: 4, size: 0.06, size1: 0.06, color: new THREE.Color(1, 0.9, 0.7), alpha: 0.6, drag: 0, fadeIn: 0.3 });
   if (mode === 'title') { titleCam(t); game.t += dt; game.updateAmbientLife(dt); } else if (director.update(dt)) game.cineTick(dt * director.timeScale); else game.update(dt * (game.timeScale ?? 1));
+  lighting.update(dt);
+  cullT -= rawDt; if (cullT <= 0) { cullT = 0.4; world.cull(mode === 'game' ? game.player.pos : camera.position, mode === 'game' ? 95 : 200); }
+  lightPool.update(dt, mode === 'game' ? game.player.pos : camera.position, lighting.fireScale);
   fx.update(dt); fx.setScale(renderer.getDrawingBufferSize(new THREE.Vector2()).y);
   const c = mode === 'game' ? game.player.pos : new THREE.Vector3(SITES.village.x, 0, SITES.village.z);
   sun.position.copy(c).addScaledVector(world.sunDir, 100); sun.target.position.copy(c);
@@ -127,7 +143,7 @@ function frame() {
 frame();
 // debug: advance the simulation without rendering (used by automated screenshot tests)
 window.__director = director; window.__SCENES = SCENES;
-window.__sim = (sec, step = 1 / 30) => { for (let i = 0; i < sec / step; i++) { t += step; world.update(t, step); if (director.update(step)) game.cineTick(step * director.timeScale); else game.update(step); fx.update(step); for (const f of world.fires) if (Math.random() < 0.7) fx.fire(f.pos, f.intensity); } };
+window.__sim = (sec, step = 1 / 30) => { world.cull(game.player.pos); for (let i = 0; i < sec / step; i++) { t += step; world.update(t, step); if (director.update(step)) game.cineTick(step * director.timeScale); else game.update(step); fx.update(step); for (const f of world.fires) if (Math.random() < 0.7) fx.fire(f.pos, f.intensity); } };
 try { await renderer.compileAsync(scene, camera); } catch (e) { /* older drivers: compile lazily */ }
 document.getElementById('loader')?.classList.add('done'); setTimeout(() => document.getElementById('loader')?.remove(), 1200);
 window.__mk = makeItem; window.__game = game; window.__ready = true;
