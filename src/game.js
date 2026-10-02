@@ -93,19 +93,19 @@ export class Game {
       hp: 100, mp: 60, level: 1, xp: 0, gold: 0, potions: 3, equip: {}, bag: new Array(40).fill(null), cds: {}, buffs: {},
       target: null, moveTo: null, actionDur: 0.6, hitApplied: false, dead: false, whirlT: 0, dashT: 0, invuln: 0,
     };
-    p.equip.weapon = { id: 0, slot: 'weapon', rarity: 'common', name: 'Rusted Scimitar', base: 'Scimitar', min: 3, max: 7, level: 1, stats: {}, icon: '⚔' };
+    p.equip.weapon = { id: 0, slot: 'weapon', rarity: 'common', name: 'Rusted Scimitar', base: 'Scimitar', min: 4, max: 9, level: 1, stats: {}, icon: '⚔' };
     this.recalcStats();
     p.hp = p.stats.maxHp; p.mp = p.stats.maxMp;
     // selection ring under the player
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.68, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffd890, transparent: true, opacity: 0.35, depthWrite: false }));
     ring.position.y = 0.06; rig.add(ring);
     // ward sigil
-    const sm = new THREE.MeshBasicMaterial({ map: sigilTex(), color: new THREE.Color(2.5, 1.8, 0.6), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+    const sm = new THREE.MeshBasicMaterial({ map: sigilTex(), color: new THREE.Color(1.1, 0.8, 0.3), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
     this.wardSigil = new THREE.Mesh(new THREE.PlaneGeometry(8, 8).rotateX(-Math.PI / 2), sm);
     this.scene.add(this.wardSigil);
     this.wardRings = [];
     for (let i = 0; i < 2; i++) {
-      const r = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.03, 6, 48), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 2.2, 0.8), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, toneMapped: false }));
+      const r = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.03, 6, 48), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 1.2, 0.4), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, toneMapped: false }));
       this.scene.add(r); this.wardRings.push(r);
     }
     // whirlwind sand vortex
@@ -491,9 +491,9 @@ export class Game {
     this.boss = b; b.quest = 'boss'; b.alerted = true;
     this.ui.banner('Ifrit, the Unbound', 'Born of smokeless fire, freed from Sulayman\'s seal', 4000);
     this.audio.roar(); this.shake = 0.8; this.bossActive = true;
-    this.fx.flash(tmp.copy(b.pos).setY(4), 0xff6020, 200, 1.5, 40);
-    for (let i = 0; i < 4; i++) this.fx.ring(b.pos, new THREE.Color(4, 1.5, 0.3), 1 + i, 10 + i * 4, 1 + i * 0.3);
-    this.bossLight = new THREE.PointLight(0xff6a20, 60, 26, 2); this.scene.add(this.bossLight);
+    this.fx.flash(tmp.copy(b.pos).setY(4), 0xff6020, 60, 1.2, 30);
+    for (let i = 0; i < 3; i++) this.fx.ring(b.pos, new THREE.Color(1.6, 0.6, 0.15), 1 + i, 6 + i * 2.5, 0.8 + i * 0.25, 0.8);
+    this.bossLight = new THREE.PointLight(0xff6a20, 25, 20, 2); this.scene.add(this.bossLight);
     this.audio.setMusicIntensity(1);
   }
   onBossDeath(b) {
@@ -507,7 +507,7 @@ export class Game {
 
   bossAI(b, dt) {
     const p = this.player, d = b.pos.distanceTo(p.pos);
-    if (b.rise < 1) { b.rise = Math.min(1, b.rise + dt * 0.5); b.rig.children[0].scale.setScalar(0.2 + b.rise * 0.8); return; }
+    if (b.rise < 1) { b.rise = Math.min(1, b.rise + dt * 0.5); b.rig.children[0].scale.setScalar((0.2 + b.rise * 0.8) * 0.8); return; }
     this.ui.bossBar(b.name, b.hp / b.maxHp);
     if (this.bossLight) this.bossLight.position.set(b.pos.x, b.pos.y + 5, b.pos.z);
     for (let i = 0; i < 3; i++) this.fx.fire(tmp.set(b.pos.x + rand(-1, 1), b.pos.y + 0.5, b.pos.z + rand(-1, 1)), 1.5);
@@ -578,7 +578,7 @@ export class Game {
   }
 
   telegraph(pos, r, delay, onDone, meteor = false) {
-    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 0.5, 0.1), transparent: true, opacity: 0.0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
+    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.1, 0.22, 0.05), transparent: true, opacity: 0.0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
     const ring = new THREE.Mesh(new THREE.RingGeometry(r * 0.92, r, 48).rotateX(-Math.PI / 2), mat);
     const fill = new THREE.Mesh(new THREE.CircleGeometry(r, 48).rotateX(-Math.PI / 2), mat.clone());
     ring.position.copy(pos).setY(pos.y + 0.1); fill.position.copy(ring.position);
@@ -736,7 +736,7 @@ export class Game {
     this.vortex.position.copy(p.pos); this.vortex.visible = vu.uA.value > 0.01;
     // ward visuals
     const w = p.buffs.ward > 0 ? Math.min(1, p.buffs.ward * 2) : 0;
-    this.wardSigil.material.opacity = THREE.MathUtils.lerp(this.wardSigil.material.opacity, w * 0.9, dt * 6);
+    this.wardSigil.material.opacity = THREE.MathUtils.lerp(this.wardSigil.material.opacity, w * 0.75, dt * 6);
     this.wardSigil.position.set(p.pos.x, p.pos.y + 0.12, p.pos.z); this.wardSigil.rotation.y += dt * 0.6;
     this.wardRings.forEach((r, i) => {
       r.material.opacity = this.wardSigil.material.opacity;
@@ -909,7 +909,7 @@ export class Game {
         if (h.tick <= 0) { h.tick = 0.5; for (const e of this.enemies) if (!e.dead && !e.hidden && e.pos.distanceTo(h.pos) < h.r + e.radius) { const r = this.rollDamage(0.3, true); this.damageEnemy(e, r.d, false, h.pos, 'fire'); } }
         if (k >= 1) { this.scene.remove(h.mesh); this.hazards.splice(i, 1); }
       } else if (h.kind === 'telegraph') {
-        h.ring.material.opacity = 0.9; h.fill.material.opacity = 0.12 + k * 0.35;
+        h.ring.material.opacity = 0.85; h.fill.material.opacity = 0.06 + k * 0.22;
         h.fill.scale.setScalar(Math.max(0.01, k));
         if (h.meteor && k > 0.6) { // falling meteor streak
           const y = (1 - (k - 0.6) / 0.4) * 18;
@@ -934,7 +934,8 @@ export class Game {
 
   updateCamera(dt) {
     const p = this.player.pos;
-    const dist = 13.5 * this.camZoom;
+    this.autoZoom = THREE.MathUtils.lerp(this.autoZoom || 1, this.bossActive ? 1.3 : 1, Math.min(1, dt * 1.5));
+    const dist = 13.5 * this.camZoom * this.autoZoom;
     const target = tmp.set(p.x, p.y + dist * 1.0, p.z + dist * 0.78);
     if (!this.camInit) { this.camPos.copy(target); this.camInit = true; }
     this.camPos.lerp(target, Math.min(1, dt * 6));

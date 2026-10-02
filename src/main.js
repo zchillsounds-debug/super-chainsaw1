@@ -84,4 +84,6 @@ function frame() {
   requestAnimationFrame(frame);
 }
 frame();
+// debug: advance the simulation without rendering (used by automated screenshot tests)
+window.__sim = (sec, step = 1 / 30) => { for (let i = 0; i < sec / step; i++) { t += step; world.update(t, step); game.update(step); fx.update(step); for (const f of world.fires) if (Math.random() < 0.7) fx.fire(f.pos, f.intensity); } };
 window.__game = game; window.__ready = true;

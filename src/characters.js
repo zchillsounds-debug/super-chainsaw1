@@ -216,25 +216,48 @@ export function animateHumanoid(rig, st, t, dt) {
 export function ifrit() {
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
   const parts = {};
-  const fireMat = new THREE.MeshStandardMaterial({ color: 0x3a1408, emissive: 0xff5a14, emissiveIntensity: 1.6, roughness: 0.6 });
-  const skin = new THREE.MeshStandardMaterial({ color: 0x2a0d06, emissive: 0x7a1a04, emissiveIntensity: 0.6, roughness: 0.5, metalness: 0.2 });
-  fireMat.onBeforeCompile = (sh) => {
-    sh.uniforms.uTime = { value: 0 }; parts.fireUniform = sh.uniforms.uTime;
+  const timeU = { value: 0 }; parts.fireUniform = timeU;
+  // Basalt skin with glowing, pulsing lava cracks (voronoi edges in object space)
+  const skin = new THREE.MeshStandardMaterial({ color: 0x1c1310, emissive: 0xff5a10, emissiveIntensity: 2.2, roughness: 0.55, metalness: 0.1 });
+  skin.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = timeU;
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vOP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvOP = position;');
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uTime; varying vec3 vOP;')
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+      uniform float uTime; varying vec3 vOP;
+      vec3 hh(vec3 p){ p = vec3(dot(p,vec3(127.1,311.7,74.7)), dot(p,vec3(269.5,183.3,246.1)), dot(p,vec3(113.5,271.9,124.6))); return fract(sin(p)*43758.5453); }
+      float vor(vec3 p){ vec3 i=floor(p), f=fract(p); float d1=8., d2=8.;
+        for(int z=-1;z<=1;z++) for(int y=-1;y<=1;y++) for(int x=-1;x<=1;x++){ vec3 g=vec3(x,y,z); vec3 o=hh(i+g); float d=length(g+o-f); if(d<d1){d2=d1;d1=d;} else if(d<d2) d2=d; }
+        return d2-d1; }`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-        float fl = sin(vOP.y*9.0 - uTime*6.0 + sin(vOP.x*7.0+uTime)*2.0)*0.5+0.5;
-        float cr = sin(vOP.x*23.0+vOP.y*17.0)*sin(vOP.z*19.0-vOP.y*11.0);
-        totalEmissiveRadiance *= (0.35 + fl*0.9) * (0.6 + smoothstep(0.3,0.9,cr)*1.6);`);
+        float e = vor(vOP*3.2);
+        float crack = smoothstep(0.12, 0.02, e);
+        float pulse = 0.6 + 0.4*sin(uTime*3.0 - vOP.y*4.0);
+        totalEmissiveRadiance *= crack * pulse + smoothstep(0.35,0.0,e)*0.08;`);
   };
+  // Flame/smoke tail: vertical licking streaks, fading to smoke at the bottom
+  const fireMat = new THREE.ShaderMaterial({
+    uniforms: { uTime: timeU }, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false,
+    vertexShader: 'varying vec2 vUv; varying vec3 vOP; void main(){ vUv=uv; vOP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+    fragmentShader: `uniform float uTime; varying vec2 vUv; varying vec3 vOP;
+      float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+      float n(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y); }
+      void main(){
+        vec2 p = vec2(vUv.x*10.0, vUv.y*3.0 - uTime*1.8);
+        float f = n(p)*0.55 + n(p*2.1 + 3.0)*0.3 + n(p*4.3)*0.15;
+        float y = vUv.y;
+        float flame = smoothstep(0.35, 0.75, f + y*0.35);
+        vec3 col = mix(vec3(0.08,0.05,0.04), vec3(3.2,1.1,0.25), flame);
+        col = mix(col, vec3(4.0,2.6,1.0), smoothstep(0.75,0.95,f + y*0.3));
+        float a = smoothstep(0.0, 0.35, y) * (0.55 + flame*0.45);
+        gl_FragColor = vec4(col, a);
+      }`,
+  });
   // smoke-vortex lower body
   const tail = mesh(lathe([[0.05, 0], [0.35, 0.5], [0.7, 1.4], [0.95, 2.4], [1.0, 2.9]], 20), fireMat);
-  tail.position.y = 0.2; body.add(tail); parts.tail = tail;
+  tail.position.y = 0.2; tail.castShadow = false; body.add(tail); parts.tail = tail;
   const chest = new THREE.Group(); chest.position.y = 3.0; body.add(chest); parts.chest = chest;
   const torso = mesh(lathe([[0.9, 0], [1.15, 0.6], [1.3, 1.2], [1.0, 1.7], [0.4, 1.9]], 18), skin);
   torso.scale.z = 0.7; chest.add(torso);
-  const cracks = mesh(lathe([[0.92, 0.05], [1.17, 0.6], [1.32, 1.2], [1.02, 1.7]], 18), fireMat);
-  cracks.scale.set(0.99, 1, 0.69); chest.add(cracks);
   const head = new THREE.Group(); head.position.y = 2.1; chest.add(head); parts.head = head;
   head.add(mesh(new THREE.SphereGeometry(0.45, 16, 12).scale(0.9, 1.1, 0.95), skin));
   const hornM = new THREE.MeshStandardMaterial({ color: 0x1a1210, roughness: 0.4, metalness: 0.3 });
@@ -246,7 +269,7 @@ export function ifrit() {
     e.position.set(s * 0.17, 0.05, 0.38); head.add(e);
   }
   // fiery crown / mane
-  const mane = mesh(new THREE.ConeGeometry(0.5, 1.4, 12, 1, true).translate(0, 0.7, -0.2), fireMat); head.add(mane);
+  const mane = mesh(new THREE.ConeGeometry(0.5, 1.6, 16, 1, true).translate(0, 0.8, -0.25), fireMat); mane.castShadow = false; head.add(mane);
   // gold bracers & arms
   for (const s of [-1, 1]) {
     const sh = pivot(chest, s * 1.35, 1.4, 0);
@@ -256,7 +279,7 @@ export function ifrit() {
     el.add(limb(1.25, 0.25, 0.2, skin));
     el.add(mesh(new THREE.CylinderGeometry(0.29, 0.29, 0.45, 14).translate(0, -0.7, 0), goldM));
     const hand = pivot(el, 0, -1.3, 0);
-    hand.add(mesh(new THREE.SphereGeometry(0.3, 10, 8), fireMat));
+    hand.add(mesh(new THREE.SphereGeometry(0.3, 12, 10), skin));
     sh.rotation.z = s * 0.35;
     parts[s < 0 ? 'shL' : 'shR'] = sh; parts[s < 0 ? 'elL' : 'elR'] = el; parts[s < 0 ? 'handL' : 'handR'] = hand;
   }
@@ -286,5 +309,5 @@ export function animateIfrit(rig, st, t) {
     const e = Math.sin(k * Math.PI);
     p.shL.rotation.z = -0.35 - e * 1.2; p.shR.rotation.z = 0.35 + e * 1.2; p.shL.rotation.x = p.shR.rotation.x = -0.8 * e;
   } else { p.shL.rotation.z = -0.35; p.shR.rotation.z = 0.35; p.chest.rotation.x *= 0.9; }
-  if (st.dead) { const d = Math.min(1, st.deadT * 0.6); rig.children[0].scale.setScalar(1 - d * 0.9); rig.children[0].position.y = d * 3; }
+  if (st.dead) { const d = Math.min(1, st.deadT * 0.6); rig.children[0].scale.setScalar(0.8 * (1 - d * 0.9)); rig.children[0].position.y = d * 3; }
 }
