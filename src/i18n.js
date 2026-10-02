@@ -1,7 +1,8 @@
 // Arabic interface with right-to-left layout. The UI is built in English across many modules, so rather than
 // threading keys through all of them, a MutationObserver translates interface text as it appears:
 // exact strings from the table, plus a few patterns for strings with numbers or names in them.
-// Story dialogue and codex entries stay in English (marked in the settings note).
+// Story text (dialogue, cutscenes, tasks, codex) comes from story_ar.js through t().
+import { STORY_AR } from './story_ar.js';
 const AR = {
   'Enter the Sands': 'ادخل الرمال', 'Continue': 'متابعة', 'New Chronicle': 'سيرة جديدة', 'Settings': 'الإعدادات',
   'Inventory': 'المتاع', 'Disciplines': 'المهارات', 'Journal': 'اليوميات', 'Codex': 'الموسوعة', 'Map': 'الخريطة', 'Controls': 'التحكّم',
@@ -32,16 +33,24 @@ const AR = {
 };
 const PATTERNS = [
   [/^Level (\d+)$/, (m) => `المستوى ${m[1]}`],
+  [/^Codex \((\d+)\/(\d+)\)$/, (m) => `الموسوعة (${m[1]}/${m[2]})`],
   [/^Talk to (.+)$/, (m) => `تحدّث إلى ${({ Ishaq: 'إسحاق', Yusuf: 'يوسف', Bishr: 'بشر', '\'Amr': 'عمرو' })[m[1]] || m[1]}`],
   [/^◉ (\d+) Dinars$/, (m) => `◉ ${m[1]} دينار`],
   [/^(\d+) Dinars$/, (m) => `${m[1]} دينار`],
   [/^([◇✦·]) (.+)$/, (m) => AR[m[2]] ? `${m[1]} ${AR[m[2]]}` : null],
 ];
 export let LANG = 'en';
+const strip = (s) => String(s).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+// Story text: returns the Arabic for an English line (markup ignored), or the line itself.
+export function t(s) {
+  if (LANG !== 'ar' || s == null) return s;
+  const k = strip(s); return STORY_AR[k] ?? AR[k] ?? s;
+}
 const SKIP = new Set(['dmg', 'hpbars', 'perf']);
 function tr(s) {
   const k = s.trim(); if (!k) return null;
   if (AR[k]) return s.replace(k, AR[k]);
+  if (STORY_AR[k]) return s.replace(k, STORY_AR[k]);
   for (const [re, f] of PATTERNS) { const m = k.match(re); if (m) { const r = f(m); if (r) return s.replace(k, r); } }
   return null;
 }

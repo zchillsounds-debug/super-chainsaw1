@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { QUALITY } from './graphics.js';
+import { t } from './i18n.js';
 
 // Cinematic director: plays a list of shots with eased camera moves, letterbox bars, a subtitle bar
 // with a speaker portrait, act title cards, slow motion, depth of field and a warm film grade.
@@ -88,8 +89,8 @@ export class Director {
   setLine(line) {
     const sub = this.$('.sub');
     if (!line) { sub.classList.remove('show'); return; }
-    this.$('.sname').textContent = line.who || '';
-    this.lineText = line.text; this.typed = 0; this.$('.sline').innerHTML = '';
+    this.$('.sname').textContent = t(line.who || '');
+    this.lineText = t(line.text); this.typed = 0; this.$('.sline').innerHTML = '';
     const por = this.$('.por'); por.style.display = line.rig ? '' : 'none';
     if (line.rig) this.portrait(line.rig, this.$('.por canvas'));
     sub.classList.add('show');
@@ -98,10 +99,10 @@ export class Director {
   setCard(c) {
     const card = this.$('.card');
     if (!c) { card.classList.remove('show'); return; }
-    this.$('.card .ar').textContent = c.ar || ''; this.$('.card .en').textContent = c.en || ''; this.$('.card .csub').textContent = c.sub || '';
+    this.$('.card .ar').textContent = c.ar || ''; this.$('.card .en').textContent = t(c.en || ''); this.$('.card .csub').textContent = t(c.sub || '');
     card.classList.add('show'); this.cardT = 0;
   }
-  setCaption(text) { const c = this.$('.caption'); c.textContent = text || ''; c.classList.toggle('show', !!text); }
+  setCaption(text) { const c = this.$('.caption'); c.textContent = t(text || ''); c.classList.toggle('show', !!text); }
 
   // render a small lit head-and-shoulders portrait of the speaker into the subtitle bar
   portrait(rig, canvas) {

@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import * as THREE from 'three';
 import { RARITY, statLines } from './items.js';
 import { SKILL_ICONS, SLOT_KEYS, CLASSES, CLASS_ORDER } from './classes.js';
@@ -157,7 +158,7 @@ export class UI {
   buffs(list) { const h = list.map((b) => b.icon + Math.ceil(b.t)).join(); if (h === this._bh) return; this._bh = h; this.$('#buffs').innerHTML = list.map((b) => `<div class="buff">${SKILL_ICONS[b.icon] || ICONS[b.icon] || ''}<span>${Math.ceil(b.t)}</span></div>`).join(''); }
   dialog(name, text, cb) {
     const d = this.$('#dialog'); d.classList.remove('hidden'); document.body.classList.add('indialog');
-    d.querySelector('.dname').textContent = name; d.querySelector('.dtext').innerHTML = text;
+    d.querySelector('.dname').textContent = t(name); d.querySelector('.dtext').innerHTML = t(text);
     d.querySelector('.dbtn').onclick = () => { d.classList.add('hidden'); document.body.classList.remove('indialog'); cb && cb(); };
   }
   get dialogOpen() { return !this.$('#dialog').classList.contains('hidden'); }

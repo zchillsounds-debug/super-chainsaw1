@@ -1,6 +1,7 @@
 import * as SCENES from './scenes.js';
 import { makeItem } from './items.js';
 import { saveGame } from './save.js';
+import { t } from './i18n.js';
 
 // Dialogue with choices, side quests, the journal and a codex of (secular) Abbasid history.
 
@@ -9,24 +10,24 @@ import { saveGame } from './save.js';
 export const CODEX = {
   siege: { t: 'The Siege of Baghdad, 812–813', cat: 'History', x: 'After Harun al-Rashid died in 809, his sons al-Amin (in Baghdad) and al-Ma\'mun (in Khurasan) fought for the caliphate. Al-Ma\'mun\'s general Tahir ibn al-Husayn besieged Baghdad from August 812. The fighting wrecked whole quarters of the city. It ended in September 813 with al-Amin\'s death. Soldiers of both sides were left loose in the countryside.' },
   round: { t: 'The Round City', cat: 'Places', x: 'Madinat al-Salam, the "City of Peace", was founded by the caliph al-Mansur in 762 on the west bank of the Tigris. Its plan was a perfect circle about two kilometres across, with double walls, a moat and four gates: the Kufa, Basra, Khurasan and Syria gates. Markets were later moved out to the suburb of al-Karkh. Much of the siege\'s damage fell on these outer quarters.' },
-  wisdom: { t: 'The House of Wisdom', cat: 'Learning', x: 'Bayt al-Hikma began as a palace library under Harun al-Rashid. It grew under al-Ma\'mun into a centre for translating Greek, Persian and Indian works on astronomy, mathematics, medicine and philosophy into Arabic. Scholars such as al-Khwarizmi worked in this circle, and astronomers made observations to check the tables of Ptolemy.' },
-  astrolabe: { t: 'The Astrolabe', cat: 'Learning', x: 'A brass instrument that models the sky on a flat plate. By sighting a star or the sun and turning the rete, an astronomer can find the time, latitude and the heights of stars. Abbasid makers refined the Greek design. Treatises on its use were among the earliest scientific works written in Arabic.' },
-  sawad: { t: 'The Sawad', cat: 'Places', x: '"The Black Land": the dark, irrigated plain of southern Iraq between the Tigris and Euphrates, so called for its green fields against the desert. Its canals, date palms and grain fed Baghdad. Its taxes were the treasury\'s backbone, so keeping its roads open mattered to whoever held the city.' },
+  wisdom: { t: 'The House of Wisdom', cat: 'Learning', x: 'Bayt al-Hikma began as a palace library under Harun al-Rashid. After al-Ma\'mun entered Baghdad in 819 it grew into a centre for translating Greek, Persian and Indian works on astronomy, mathematics, medicine and philosophy into Arabic. Scholars such as al-Khwarizmi worked in this circle, and in the 820s and 830s his astronomers made observations to check the tables of Ptolemy.' },
+  astrolabe: { t: 'The Astrolabe', cat: 'Learning', x: 'A brass instrument that models the sky on a flat plate. By sighting a star or the sun and turning the rete, an astronomer can find the time, latitude and the heights of stars. Abbasid makers refined the Greek design. Treatises on its use, such as the one attributed to Masha\'allah, were among the early scientific works written in Arabic.' },
+  sawad: { t: 'The Sawad', cat: 'Places', x: '"The Black Land": the dark, irrigated plain of central and lower Iraq between the Tigris and Euphrates, so called for its green fields against the desert. Its canals, date palms and grain fed Baghdad. Its taxes were the treasury\'s backbone, so keeping its roads open mattered to whoever held the city.' },
   qanat: { t: 'Qanats', cat: 'Places', x: 'Underground channels that carry groundwater by gravity over many kilometres. They are marked on the surface by a line of access shafts. The technique came from Iran and spread across the Islamic world. Building and cleaning them took specialists who worked deep below ground by lamplight.' },
-  naft: { t: 'Naft and the Naffatun', cat: 'War', x: 'Crude oil from seeps in Iraq and Persia was distilled into "white naft", a fierce incendiary. Specialist troops called naffatun threw it in clay pots or sprayed it with siphons. They wore protective clothing of felt and leather. Fire weapons were used heavily in the siege of Baghdad.' },
+  naft: { t: 'Naft and the Naffatun', cat: 'War', x: 'Crude oil from seeps in Iraq and Persia was distilled into "white naft", a fierce incendiary. Specialist troops called naffatun threw it in clay pots or projected it from tubes. They wore protective clothing of felt and leather. Chroniclers record fire and mangonels wrecking whole streets in the siege of Baghdad.' },
   ayyarun: { t: 'The \'Ayyarun', cat: 'War', x: 'Bands of young men from Baghdad\'s poorer quarters. During the siege of 812–813 they fought for al-Amin, often nearly naked, with little armour, makeshift shields and stones. They were brave street fighters who knew every alley. Chroniclers describe them with a mix of scorn and admiration.' },
   khurasan: { t: 'The Khurasani Regiments', cat: 'War', x: 'Troops from Khurasan in the far east of the empire, the heartland of the Abbasid revolution of 750. Under Tahir they formed the core of al-Ma\'mun\'s army. They were known for mounted archery and disciplined infantry.' },
   kilns: { t: 'Baked Brick', cat: 'Craft', x: 'Mesopotamia has little stone and timber, so it has built in brick for thousands of years. Sun-dried mud brick served for ordinary walls. Kiln-fired brick, harder and costlier, faced palaces, bridges and the gates of the Round City. Kiln yards outside the city burned day and night.' },
-  khan: { t: 'Caravanserais', cat: 'Places', x: 'Walled inns along the trade roads, built around a courtyard with stables below and rooms above. A single gate could be shut at night. Merchants, pilgrims, couriers and their animals rested there a day\'s journey apart.' },
+  khan: { t: 'Caravanserais', cat: 'Places', x: 'Walled inns along the trade roads, built around a courtyard ringed with rooms, storerooms and stables. A single gate could be shut at night. Merchants, couriers and their animals rested in them, roughly a day\'s march apart.' },
   barid: { t: 'The Barid', cat: 'History', x: 'The caliphal post and intelligence service. Relays of horses and couriers carried official letters along the main roads. Its local masters also sent the capital reports on governors, prices and unrest.' },
   dinar: { t: 'Dinars and Dirhams', cat: 'Trade', x: 'The gold dinar (about 4.25 g) and the silver dirham were the coins of the caliphate. After the reform of the 690s they carried only inscriptions, with no images. Bills of exchange (suftaja) and cheques (sakk) let merchants move money without carrying coin across the empire.' },
-  paper: { t: 'Paper in Baghdad', cat: 'Craft', x: 'Papermaking reached the Islamic world from Central Asia. A paper mill is recorded in Baghdad in the 790s, under Harun al-Rashid. Cheaper than parchment or papyrus, paper fed the bureaucracy, the book markets of the city and, soon, the translators of the House of Wisdom.' },
+  paper: { t: 'Paper in Baghdad', cat: 'Craft', x: 'Papermaking reached the Islamic world from Central Asia. Later writers credit the Barmakid al-Fadl ibn Yahya with founding a paper mill in Baghdad in the 790s. Cheaper than parchment or papyrus, paper fed the bureaucracy, the book markets of the city and, soon, the translators of the House of Wisdom.' },
   barmakids: { t: 'The Barmakids', cat: 'History', x: 'A family of Persian administrators from Balkh. As viziers under Harun al-Rashid they ran the empire\'s government and patronised scholars and poets. In 803 Harun abruptly had them arrested and their leader Ja\'far executed. The reasons are still debated.' },
 };
 export function unlock(game, id) {
   const p = game.player; p.codex ||= {};
   if (!CODEX[id] || p.codex[id]) return;
-  p.codex[id] = true; game.ui.toast(`Codex: <b>${CODEX[id].t}</b>`, 'codex'); game.audio.pickup?.();
+  p.codex[id] = true; game.ui.toast(`${t('Codex')}: <b>${t(CODEX[id].t)}</b>`, 'codex'); game.audio.pickup?.();
 }
 
 // ------------------------------------------------------------------ quests
@@ -38,11 +39,11 @@ export const SIDE = {
 export function questState(p, id) { return (p.side ||= {})[id] ?? -1; }
 function setQuest(game, id, step) {
   const p = game.player; (p.side ||= {})[id] = step;
-  const Q = SIDE[id]; if (step === 0) game.ui.toast(`New task: <b>${Q.t}</b>`, 'quest'); else if (step === Q.steps.length - 1) game.ui.banner(Q.t, 'Task complete', 2600); else game.ui.toast(`<b>${Q.t}</b>: ${Q.steps[step]}`, 'quest');
+  const Q = SIDE[id]; if (step === 0) game.ui.toast(`${t('New task')}: <b>${t(Q.t)}</b>`, 'quest'); else if (step === Q.steps.length - 1) game.ui.banner(t(Q.t), t('Task complete'), 2600); else game.ui.toast(`<b>${t(Q.t)}</b>: ${t(Q.steps[step])}`, 'quest');
   game.audio.pickup?.(); refreshTracker(game); saveGame(game);
 }
 function refreshTracker(game) {
-  const p = game.player, side = Object.entries(p.side || {}).filter(([id, s]) => s < SIDE[id].steps.length - 1).map(([id, s]) => ({ text: `${SIDE[id].t}: ${SIDE[id].steps[s].split('. ')[0]}`, done: false, side: true }));
+  const p = game.player, side = Object.entries(p.side || {}).filter(([id, s]) => s < SIDE[id].steps.length - 1).map(([id, s]) => ({ text: `${t(SIDE[id].t)}: ${t(SIDE[id].steps[s]).split(/\. |\. /)[0]}`, done: false, side: true }));
   game.ui.quest([...game.quests, ...side]);
 }
 
@@ -55,12 +56,12 @@ export function converse(game, nodes, start = 'start') {
       const n = typeof nodes[id] === 'function' ? nodes[id]() : nodes[id];
       if (!n) { d.classList.add('hidden'); document.body.classList.remove('indialog'); d.querySelector('.dchoices')?.remove(); res(); return; }
       d.classList.remove('hidden'); document.body.classList.add('indialog');
-      d.querySelector('.dname').textContent = n.who; d.querySelector('.dtext').innerHTML = n.text;
+      d.querySelector('.dname').textContent = t(n.who); d.querySelector('.dtext').innerHTML = t(n.text);
       d.querySelector('.dbtn').style.display = 'none';
       d.querySelector('.dchoices')?.remove();
       const box = document.createElement('div'); box.className = 'dchoices';
       const ch = n.choices || [{ label: 'Farewell' }];
-      ch.forEach((c, i) => { const b = document.createElement('button'); b.className = 'dchoice'; b.innerHTML = `<span>${i + 1}.</span> ${c.label}`; b.onclick = () => { c.fx?.(); show(c.to); }; box.appendChild(b); });
+      ch.forEach((c, i) => { const b = document.createElement('button'); b.className = 'dchoice'; b.innerHTML = `<span>${i + 1}.</span> ${t(c.label)}`; b.onclick = () => { c.fx?.(); show(c.to); }; box.appendChild(b); });
       d.appendChild(box);
       const key = (e) => { const k = +e.key; if (k >= 1 && k <= ch.length) { removeEventListener('keydown', key); box.children[k - 1].click(); } };
       addEventListener('keydown', key);
@@ -178,10 +179,10 @@ export function journalPanel(game, tab = 'journal') {
   document.body.classList.add('inshop');
   const w = document.createElement('div'); w.id = 'journal'; w.className = 'panel';
   const main = game.quests.map((q) => `<div class="jq ${q.done ? 'done' : ''}"><b>${q.done ? '✓' : '◇'} ${q.text}</b></div>`).join('');
-  const side = Object.entries(SIDE).map(([id, Q]) => { const s = questState(p, id); if (s < 0) return ''; const done = s >= Q.steps.length - 1; return `<div class="jq ${done ? 'done' : ''}"><b>${done ? '✓' : '◇'} ${Q.t}</b> <small>(${Q.giver})</small><div>${Q.steps[s]}</div></div>`; }).join('') || '<div class="jq"><i>No tasks yet. The people of the suq may have work.</i></div>';
+  const side = Object.entries(SIDE).map(([id, Q]) => { const s = questState(p, id); if (s < 0) return ''; const done = s >= Q.steps.length - 1; return `<div class="jq ${done ? 'done' : ''}"><b>${done ? '✓' : '◇'} ${t(Q.t)}</b> <small>(${t(Q.giver)})</small><div>${t(Q.steps[s])}</div></div>`; }).join('') || '<div class="jq"><i>No tasks yet. The people of the suq may have work.</i></div>';
   const cats = {}; for (const [id, c] of Object.entries(CODEX)) (cats[c.cat] ||= []).push([id, c]);
   const known = Object.keys(p.codex || {}).length;
-  const codex = Object.entries(cats).map(([cat, list]) => `<div class="ccat">${cat}</div>` + list.map(([id, c]) => p.codex?.[id] ? `<details class="centry"><summary>${c.t}</summary><p>${c.x}</p></details>` : `<div class="centry locked">— undiscovered —</div>`).join('')).join('');
+  const codex = Object.entries(cats).map(([cat, list]) => `<div class="ccat">${t(cat)}</div>` + list.map(([id, c]) => p.codex?.[id] ? `<details class="centry"><summary>${t(c.t)}</summary><p>${t(c.x)}</p></details>` : `<div class="centry locked">— undiscovered —</div>`).join('')).join('');
   const st = game.stats || {};
   w.innerHTML = `<div class="ptitle">${tab === 'journal' ? 'Journal' : 'Codex'} <span class="close">✕</span></div>
     <div class="stabs"><button data-t="journal" class="${tab === 'journal' ? 'on' : ''}">Journal</button><button data-t="codex" class="${tab === 'codex' ? 'on' : ''}">Codex (${known}/${Object.keys(CODEX).length})</button></div>
