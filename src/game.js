@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { humanoid, animateHumanoid, animateIfrit, scimitar, camel, animateCamel } from './characters.js';
 import { heightAt, SITES, canalX } from './terrain.js';
 import { resolve, buildGrid } from './collision.js';
+import { buildNav, findPath, navClear } from './nav.js';
 import { makeEnemy } from './entities.js';
 import { makeItem, rollRarity, RARITY } from './items.js';
 import { sigilTex, glowDecal, splatTex } from './textures.js';
@@ -22,6 +23,7 @@ export class Game {
   constructor({ scene, camera, renderer, world, fx, ui, audio }) {
     Object.assign(this, { scene, camera, renderer, world, fx, ui, audio });
     buildGrid();
+    buildNav();
     this.t = 0; this.enemies = []; this.projectiles = []; this.hazards = []; this.drops = []; this.trails = [];
     this.mouse = new THREE.Vector2(); this.mouseScreen = { x: 0, y: 0 };
     this.keys = {}; this.lmb = false; this.shake = 0; this.camZoom = 1; this.hitStop = 0;
@@ -754,13 +756,14 @@ export class Game {
         } else if (!p.st.action || p.st.action === 'throw') goal = p.target.pos;
       } else if (p.moveTo && !(p.st.action === 'attack')) goal = p.moveTo;
       if (p.pickup && this.drops.includes(p.pickup) && p.pos.distanceTo(p.pickup.to) < 1.5) { this.tryPickup(p.pickup); p.pickup = null; p.moveTo = null; }
+      if (goal) goal = this.steer(p, goal);
       if (goal) {
         const dx = goal.x - p.pos.x, dz = goal.z - p.pos.z, d = Math.hypot(dx, dz);
         if (d > 0.2) {
           const step = Math.min(d, speed * dt);
           p.pos.x += dx / d * step; p.pos.z += dz / d * step; moving = true;
           if (p.whirlT <= 0) p.facing += angDiff(p.facing, Math.atan2(dx, dz)) * Math.min(1, dt * 14);
-        } else if (goal === p.moveTo) p.moveTo = null;
+        } else if (p.moveTo && Math.hypot(p.moveTo.x - p.pos.x, p.moveTo.z - p.pos.z) < 0.3) p.moveTo = null;
       }
       // attack resolution
       if (p.st.action && p.st.action !== 'spin') {
@@ -812,6 +815,21 @@ export class Game {
     }
     // boss trigger
     if (!this.bossSpawned && Math.hypot(p.pos.x - SITES.arch.x, p.pos.z - SITES.arch.z) < 24) this.spawnBoss();
+  }
+
+  // Follow an A* path when the straight line to the goal is blocked.
+  steer(ent, goal) {
+    const pos = ent.pos;
+    if (navClear(pos.x, pos.z, goal.x, goal.z)) { ent.path = null; return goal; }
+    ent.pathT = (ent.pathT || 0) - 1;
+    const moved = !ent.pathGoal || Math.hypot(ent.pathGoal.x - goal.x, ent.pathGoal.z - goal.z) > 1.5;
+    if (!ent.path || moved || ent.pathT <= 0) {
+      ent.path = findPath(pos, goal); ent.pathGoal = { x: goal.x, z: goal.z }; ent.pathT = 40;
+    }
+    if (!ent.path || !ent.path.length) return goal;
+    while (ent.path.length > 1 && Math.hypot(ent.path[0].x - pos.x, ent.path[0].z - pos.z) < 0.6) ent.path.shift();
+    const w = ent.path[0];
+    return { x: w.x, z: w.z, y: goal.y };
   }
 
   slashTrail() {
@@ -881,8 +899,10 @@ export class Game {
         const face = Math.atan2(p.pos.x - e.pos.x, p.pos.z - e.pos.z);
         e.facing += angDiff(e.facing, face) * Math.min(1, dt * 8);
         if (dist > e.range) {
-          const dir = tmp.copy(p.pos).sub(e.pos).setY(0).normalize();
+          const wp = this.steer(e, p.pos);
+          const dir = tmp.set(wp.x - e.pos.x, 0, wp.z - e.pos.z).normalize();
           e.pos.addScaledVector(dir, e.speed * dt); moving = true;
+          if (e.path) e.facing += angDiff(e.facing, Math.atan2(dir.x, dir.z)) * Math.min(1, dt * 8);
         } else if (e.T.ranged && dist < 6) {
           const dir = tmp.copy(e.pos).sub(p.pos).setY(0).normalize();
           e.pos.addScaledVector(dir, e.speed * 0.7 * dt); moving = true;
