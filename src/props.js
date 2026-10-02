@@ -136,7 +136,7 @@ export function banner(color = '#1d1d1d') {
   const cloth = new THREE.MeshStandardMaterial({ map: fabricTex(color, '#a02020', false), side: THREE.DoubleSide, roughness: 1 });
   const cg = new THREE.PlaneGeometry(1.4, 2.2, 6, 8);
   const cl = mesh(cg, cloth); cl.position.set(0.72, 3.7, 0); g.add(cl);
-  g.userData.cloth = cl;
+  g.userData.cloth = cl; g.userData.dynamic = true;
   return g;
 }
 
@@ -171,7 +171,7 @@ export function waterwheel() {
     const a = i / 12 * Math.PI * 2; pot.position.set(Math.cos(a) * 2.7, Math.sin(a) * 2.7, 0); wheel.add(pot);
   }
   wheel.add(mesh(new THREE.CylinderGeometry(0.2, 0.2, 1, 8).rotateX(Math.PI / 2), m.wood));
-  wheel.position.y = 1.4; g.add(wheel);
+  wheel.position.y = 1.4; g.add(wheel); g.userData.dynamic = true;
   for (const z of [-0.6, 0.6]) g.add(mesh(new THREE.BoxGeometry(0.3, 3.6, 0.3).translate(0, 0.6, z), m.mud));
   g.userData.wheel = wheel;
   return g;

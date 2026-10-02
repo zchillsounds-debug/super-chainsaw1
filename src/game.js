@@ -778,7 +778,7 @@ export class Game {
     const p = this.player;
     for (const e of this.enemies) {
       const dist = e.pos.distanceTo(p.pos);
-      e.rig.visible = dist < 70;
+      e.rig.visible = dist < 45;
       if (e.dead) {
         e.st.deadT += dt; e.deadT += dt;
         if (e.boss) animateIfrit(e.rig, e.st, this.t); else animateHumanoid(e.rig, e.st, this.t, dt);

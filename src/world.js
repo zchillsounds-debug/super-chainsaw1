@@ -5,10 +5,39 @@ import { colliders, house, mosque, caravanserai, greatArch, mausoleum, roundCity
 import { palms, grassField, rocks, shrubs, wind } from './vegetation.js';
 import { lanternPost, firePit, tent, jar, crate, marketStall, cart, grave, deadTree, banner, bridge, waterwheel } from './props.js';
 import { mulberry32 } from './noise.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+
+// Collapse a static group's meshes into one mesh per material (huge draw-call savings).
+export function mergeStatic(group) {
+  group.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(group.matrixWorld).invert();
+  const byMat = new Map(); const keep = [];
+  group.traverse((o) => {
+    if (!o.isMesh || o.isInstancedMesh) return;
+    if (o.userData.noMerge) { keep.push(o); return; }
+    const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone());
+    for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+    if (!g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+    if (!g.attributes.normal) g.computeVertexNormals();
+    g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld));
+    const key = o.material.uuid + (o.castShadow ? 's' : 'n');
+    if (!byMat.has(key)) byMat.set(key, { mat: o.material, cast: o.castShadow, geos: [] });
+    byMat.get(key).geos.push(g);
+  });
+  const userData = group.userData;
+  for (const c of [...group.children]) group.remove(c);
+  for (const { mat, cast, geos } of byMat.values()) {
+    const m = new THREE.Mesh(mergeGeometries(geos), mat); m.castShadow = cast; m.receiveShadow = true; group.add(m);
+  }
+  for (const k of keep) group.add(k);
+  group.userData = userData;
+  return group;
+}
 
 let OCC = null;
 function place(scene, obj, x, z, rotY = 0, addCols = true, occ = false) {
   obj.position.set(x, heightAt(x, z), z); obj.rotation.y = rotY; scene.add(obj);
+  if (obj.isGroup && !obj.userData.dynamic) mergeStatic(obj);
   if (occ && OCC) OCC.push(obj);
   if (addCols && obj.userData.colliders) {
     const c = Math.cos(rotY), s = Math.sin(rotY);

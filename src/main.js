@@ -11,6 +11,7 @@ import { makeItem } from './items.js';
 const P = new URLSearchParams(location.search);
 const renderer = createRenderer(document.getElementById('game'));
 const scene = new THREE.Scene();
+renderer.info.autoReset = false;
 const camera = new THREE.PerspectiveCamera(36, innerWidth / innerHeight, 0.5, 1400);
 const world = buildWorld(scene);
 scene.fog = new THREE.FogExp2(0xd4a47a, 0.0048);
@@ -81,6 +82,7 @@ function frame() {
   const c = mode === 'game' ? game.player.pos : new THREE.Vector3(SITES.village.x, 0, SITES.village.z);
   sun.position.copy(c).addScaledVector(world.sunDir, 100); sun.target.position.copy(c);
   grade.uniforms.uTime.value = t;
+  renderer.info.reset();
   composer.render();
   requestAnimationFrame(frame);
 }

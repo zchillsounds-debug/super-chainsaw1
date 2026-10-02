@@ -1,5 +1,29 @@
 import * as THREE from 'three';
 import { fabricTex } from './textures.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+
+// Merge each bone's direct mesh children by material: far fewer draw calls per character.
+function mergePerBone(root) {
+  const groups = []; root.traverse((o) => { if (o.isGroup || o.isObject3D && !o.isMesh) groups.push(o); });
+  for (const g of groups) {
+    const meshes = g.children.filter((c) => c.isMesh && c.children.length === 0 && !c.userData.keep);
+    const byMat = new Map();
+    for (const m of meshes) { if (!byMat.has(m.material)) byMat.set(m.material, []); byMat.get(m.material).push(m); }
+    for (const [mat, list] of byMat) {
+      if (list.length < 2) continue;
+      const geos = list.map((m) => {
+        m.updateMatrix();
+        const geo = (m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone()).applyMatrix4(m.matrix);
+        for (const k of Object.keys(geo.attributes)) if (!['position', 'normal', 'uv'].includes(k)) geo.deleteAttribute(k);
+        if (!geo.attributes.uv) geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(geo.attributes.position.count * 2), 2));
+        return geo;
+      });
+      const merged = new THREE.Mesh(mergeGeometries(geos), mat); merged.castShadow = true; merged.receiveShadow = true;
+      for (const m of list) g.remove(m);
+      g.add(merged);
+    }
+  }
+}
 
 const lathe = (pts, seg = 14) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg);
 // Fresnel rim light so characters read clearly against the bright desert.
@@ -118,7 +142,7 @@ export function humanoid(opts = {}) {
   }
   // robe skirt (flares from waist)
   const skirt = mesh(lathe([[0.2, 0.05], [0.235, -0.1], [0.27, -0.35], [0.31, -0.6], [0.35, -0.8], [0.37, -0.84]], 24), robeM);
-  hips.add(skirt); parts.skirt = skirt;
+  hips.add(skirt); parts.skirt = skirt; skirt.userData.keep = true;
   // torso
   const spine = pivot(hips, 0, 0.05, 0); parts.spine = spine;
   spine.rotation.x = o.hunch; spine.userData.baseHunch = o.hunch;
@@ -142,7 +166,7 @@ export function humanoid(opts = {}) {
   if (o.cloak) {
     const cm = new THREE.MeshStandardMaterial({ color: o.cloak, roughness: 0.9, side: THREE.DoubleSide });
     const cg = new THREE.CylinderGeometry(0.26, 0.45, 1.2, 12, 4, true, Math.PI * 0.6, Math.PI * 0.8).translate(0, -0.05, -0.02);
-    const cl = mesh(cg, cm); cl.rotation.y = Math.PI; spine.add(cl); parts.cloak = cl;
+    const cl = mesh(cg, cm); cl.rotation.y = Math.PI; spine.add(cl); parts.cloak = cl; cl.userData.keep = true;
   }
   // head
   const neck = pivot(spine, 0, 0.62, 0.02); parts.neck = neck;
@@ -183,6 +207,7 @@ export function humanoid(opts = {}) {
   if (o.offhand === 'shield') { const sd = shield(); sd.position.set(-0.08, -0.05, 0.05); sd.rotation.y = -Math.PI / 2; parts.handL.add(sd); }
 
   root.traverse((ob) => { if (ob.isMesh && ob.material.isMeshStandardMaterial) addRim(ob.material); });
+  mergePerBone(root);
   root.userData.parts = parts;
   return root;
 }
