@@ -132,7 +132,7 @@ function shadowSnap(c) {
   sun.target.position.copy(_lp); sun.position.copy(_lp).addScaledVector(world.sunDir, 100);
 }
 const clock = new THREE.Clock(); let t = 0;
-let fireFlick = 0, cullT = 0;
+let fireFlick = 0, cullT = 0, shFrame = 0; const _shLast = new THREE.Vector3();
 // adaptive quality: if the frame rate stays low, shed the most expensive effects
 let perfT = 0, perfN = 0, perfAcc = 0, perfLevel = 0;
 function adaptQuality(dt) {
@@ -170,6 +170,12 @@ function frame() {
   const c = mode === 'game' ? game.player.pos : new THREE.Vector3(SITES.village.x, 0, SITES.village.z);
   // shadow map follows the hero, snapped to whole shadow texels so edges don't crawl as the camera moves
   shadowSnap(c);
+  // phones: the sun's shadow map is redrawn at half rate (the sun is static; only actors move), unless the frame moved it
+  shFrame++;
+  const halfRate = QUALITY === 'low' || perfLevel >= 2;
+  renderer.shadowMap.autoUpdate = false;
+  renderer.shadowMap.needsUpdate = !halfRate || !sun.shadow.map || (shFrame & 1) === 0 || !sun.target.position.equals(_shLast);
+  _shLast.copy(sun.target.position);
   atmos.update(dt, c, lighting, camera, !!game.interior);
   grade.uniforms.uTime.value = t;
   renderer.info.reset();
@@ -185,5 +191,5 @@ try { await renderer.compileAsync(scene, camera); } catch (e) { /* older drivers
 document.getElementById('loader')?.classList.add('done'); setTimeout(() => document.getElementById('loader')?.remove(), 1200);
 // installable PWA: register the offline worker on the standalone build (not in dev, not inside an embedding frame)
 if (import.meta.env.PROD && 'serviceWorker' in navigator && window.top === window && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { /* offline install unavailable */ });
-window.__mk = makeItem; window.__game = game; window.__ready = true;
+window.__mk = makeItem; window.__game = game; window.__renderer = renderer; window.__ready = true;
 setTimeout(flushGeo, 4000); setInterval(flushGeo, 60000);

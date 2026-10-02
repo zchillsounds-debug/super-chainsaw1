@@ -8,25 +8,47 @@ import { mulberry32 } from './noise.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // Collapse a static group's meshes into one mesh per material (huge draw-call savings).
+// Plain standard materials that differ only in colour share one batch: the colour is baked into vertex colours.
+const MAT_POOL = new Map();
+function matSig(m) {
+  if (!m.isMeshStandardMaterial || m.onBeforeCompile?.toString().length > 20 || m.userData.keep || m.vertexColors || m.transparent) return null;
+  return [m.type, m.map?.uuid, m.normalMap?.uuid, m.roughnessMap?.uuid, m.roughness.toFixed(2), m.metalness.toFixed(2), m.emissive.getHexString(), m.emissiveIntensity, m.side, m.flatShading, m.alphaTest].join('|');
+}
+function pooled(m, sig) {
+  if (!MAT_POOL.has(sig)) { const c = m.clone(); c.color.set(0xffffff); c.vertexColors = true; MAT_POOL.set(sig, c); }
+  return MAT_POOL.get(sig);
+}
 export function mergeStatic(group) {
   group.updateMatrixWorld(true);
   const inv = new THREE.Matrix4().copy(group.matrixWorld).invert();
   const byMat = new Map(); const keep = [];
   group.traverse((o) => {
     if (!o.isMesh || o.isInstancedMesh) return;
-    if (o.userData.noMerge) { keep.push(o); return; }
+    if (o.userData.noMerge || Array.isArray(o.material)) { keep.push(o); return; }
     const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone());
-    for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+    const hadCol = g.attributes.color;
+    for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(k)) g.deleteAttribute(k);
     if (!g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
     if (!g.attributes.normal) g.computeVertexNormals();
     g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld));
-    const key = o.material.uuid + (o.castShadow ? 's' : 'n');
-    if (!byMat.has(key)) byMat.set(key, { mat: o.material, cast: o.castShadow, geos: [] });
+    const sig = matSig(o.material);
+    let mat = o.material, key;
+    if (sig) {
+      mat = pooled(o.material, sig); key = sig;
+      const n = g.attributes.position.count, col = new Float32Array(n * 3), c = o.material.color;
+      for (let i = 0; i < n; i++) { col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
+      g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    } else { key = o.material.uuid; if (hadCol && !o.material.vertexColors) g.deleteAttribute('color'); }
+    key += o.castShadow ? 's' : 'n';
+    if (!byMat.has(key)) byMat.set(key, { mat, cast: o.castShadow, geos: [] });
     byMat.get(key).geos.push(g);
   });
   const userData = group.userData;
   for (const c of [...group.children]) group.remove(c);
   for (const { mat, cast, geos } of byMat.values()) {
+    // all geos in a batch must carry the same attribute set
+    const has = (k) => geos.every((g) => g.attributes[k]);
+    for (const g of geos) if (g.attributes.color && !has('color')) g.deleteAttribute('color');
     const m = new THREE.Mesh(mergeGeometries(geos), mat); m.castShadow = cast; m.receiveShadow = true; group.add(m);
   }
   for (const k of keep) group.add(k);
@@ -273,11 +295,43 @@ export function buildWorld(scene) {
   out.update = (t, dt) => { for (const u of out.updaters) u(t, dt); };
   // zone streaming (lite): placed props and buildings beyond view range are hidden, so they cost neither draw calls nor shadow passes
   for (const o of CULL) { const b = new THREE.Box3().setFromObject(o); o.userData.cullR = b.getSize(new THREE.Vector3()).length() / 2; }
-  out.cull = (focus, range = 95) => { if (out.cullPaused) return; for (const o of CULL) o.visible = Math.hypot(o.position.x - focus.x, o.position.z - focus.z) - o.userData.cullR < range; };
+  CULL = chunkMerge(scene, CULL, out.occluders); out.cullables = CULL;
+  out.cull = (focus, range = 95) => { if (out.cullPaused) return; for (const o of CULL) o.visible = Math.hypot((o.userData.cx ?? o.position.x) - focus.x, (o.userData.cz ?? o.position.z) - focus.z) - o.userData.cullR < range; };
   return out;
 }
 
 export { colliders, blocked };
+
+// ---------------------------------------------------------------- static chunk batching
+// Small placed props (jars, crates, tents, banners, walls) are re-parented into 40 m chunks and merged per material,
+// so a chunk costs one draw call per material instead of one per prop. Props with live references (lanterns, wheels,
+// occluders that fade) keep their own node.
+function chunkMerge(scene, cull, occ, C = 40) {
+  const plain = (o) => {
+    if (o.parent !== scene || occ.includes(o) || o.userData.dynamic) return false;
+    if (Object.keys(o.userData).some((k) => k !== 'colliders' && k !== 'cullR')) return false;
+    let ok = true; o.traverse((c) => { if (c !== o && !(c.isMesh && !c.isInstancedMesh && !c.userData.noMerge && !c.material.transparent)) ok = false; });
+    return ok;
+  };
+  const chunks = new Map(), rest = [];
+  for (const o of cull) {
+    if (!plain(o)) { rest.push(o); continue; }
+    const k = Math.floor(o.position.x / C) + ',' + Math.floor(o.position.z / C);
+    if (!chunks.has(k)) chunks.set(k, []); chunks.get(k).push(o);
+  }
+  for (const [k, list] of chunks) {
+    if (list.length < 2) { rest.push(...list); continue; }
+    const [cx, cz] = k.split(',').map((v) => (+v + 0.5) * C);
+    const g = new THREE.Group(); g.position.set(cx, 0, cz); scene.add(g); g.updateMatrixWorld(true);
+    for (const o of list) g.attach(o);
+    mergeStatic(g);
+    for (const m of g.children) m.geometry.computeBoundingSphere();
+    const b = new THREE.Box3().setFromObject(g); g.userData.cullR = b.getSize(new THREE.Vector3()).length() / 2;
+    const c = b.getCenter(new THREE.Vector3()); g.userData.cx = c.x; g.userData.cz = c.z;
+    rest.push(g);
+  }
+  return rest;
+}
 
 // ---------------------------------------------------------------- vegetation streaming
 // Whole-map instanced batches (grass, pebbles, rocks, palms) are split into 36 m tiles, so the frustum test drops
