@@ -1,0 +1,247 @@
+import * as THREE from 'three';
+import { RARITY, statLines } from './items.js';
+
+const ICONS = {
+  attack: `<svg viewBox="0 0 64 64"><path d="M14 52 L46 12 Q52 8 54 10 Q52 18 48 20 L18 56 Z" fill="#dfe6ee" stroke="#6a5530" stroke-width="2"/><path d="M10 46 L22 58" stroke="#d9a441" stroke-width="5" stroke-linecap="round"/></svg>`,
+  whirl: `<svg viewBox="0 0 64 64"><g fill="none" stroke="#f0c070" stroke-width="4" stroke-linecap="round"><path d="M32 32 m-4 0 a4 4 0 1 1 8 0 a8 8 0 1 1 -16 0 a12 12 0 1 1 24 0 a16 16 0 1 1 -32 0 a20 20 0 1 1 40 0"/></g></svg>`,
+  naft: `<svg viewBox="0 0 64 64"><path d="M26 10h12v8c8 4 12 10 12 18 0 10-8 18-18 18S14 46 14 36c0-8 4-14 12-18z" fill="#7a3d1e" stroke="#e8b060" stroke-width="2"/><path d="M32 22c6 8 10 12 6 20-3 6-12 6-14 0-2-6 4-8 8-20z" fill="#ff7a20"/><path d="M32 32c2 4 4 6 2 9-2 2-5 1-5-1 0-3 2-4 3-8z" fill="#ffe08a"/></svg>`,
+  dash: `<svg viewBox="0 0 64 64"><g stroke="#e8d0a0" stroke-width="4" stroke-linecap="round"><path d="M8 20h22M4 32h30M8 44h22"/></g><path d="M36 14 L58 32 L36 50 Z" fill="#f0c070"/></svg>`,
+  ward: `<svg viewBox="0 0 64 64"><g fill="none" stroke="#ffd870" stroke-width="2.5"><circle cx="32" cy="32" r="24"/><circle cx="32" cy="32" r="10"/><path d="M32 8v48M8 32h48"/><rect x="15" y="15" width="34" height="34"/><rect x="15" y="15" width="34" height="34" transform="rotate(45 32 32)"/></g></svg>`,
+  potion: `<svg viewBox="0 0 64 64"><path d="M26 8h12v10c8 4 12 10 12 18 0 10-8 18-18 18S14 46 14 36c0-8 4-14 12-18z" fill="#3a0d14" stroke="#e8b060" stroke-width="2"/><path d="M17 36c4 3 26 3 30 0 0 9-6 15-15 15s-15-6-15-15z" fill="#d0203a"/></svg>`,
+};
+
+const SLOT_NAMES = { weapon: 'Weapon', armor: 'Armor', helm: 'Helm', ring: 'Ring', amulet: 'Amulet' };
+
+export class UI {
+  constructor(root) {
+    this.root = root;
+    root.innerHTML = `
+      <div id="hud" class="hidden">
+        <div id="target"><div class="tname"></div><div class="tbar"><div class="tfill"></div></div></div>
+        <div id="bossbar" class="hidden"><div class="bname"></div><div class="bbar"><div class="bfill"></div><div class="bghost"></div></div></div>
+        <div id="quest"><div class="qtitle">The Ifrit of the Ruined Arch</div><div class="qlines"></div></div>
+        <div id="toasts"></div>
+        <div id="minimap"><canvas width="180" height="180"></canvas></div>
+        <div id="bar">
+          <div class="orb" id="hporb"><canvas width="150" height="150"></canvas><div class="orbtxt"></div></div>
+          <div id="center">
+            <div id="xp"><div class="xpfill"></div><div class="xptxt"></div></div>
+            <div id="skills"></div>
+          </div>
+          <div class="orb" id="mporb"><canvas width="150" height="150"></canvas><div class="orbtxt"></div></div>
+        </div>
+        <div id="buffs"></div>
+      </div>
+      <div id="labels"></div>
+      <div id="dmg"></div>
+      <div id="inv" class="hidden panel">
+        <div class="ptitle">Inventory <span class="close">✕</span></div>
+        <div id="equip"></div>
+        <div id="stats"></div>
+        <div id="grid"></div>
+        <div id="gold"></div>
+        <div class="hint">Click to equip · Right-click to discard</div>
+      </div>
+      <div id="tooltip" class="hidden"></div>
+      <div id="dialog" class="hidden panel"><div class="dname"></div><div class="dtext"></div><button class="dbtn">Continue</button></div>
+      <div id="banner" class="hidden"><div class="btitle"></div><div class="bsub"></div></div>
+      <div id="title">
+        <div class="tlogo"><div class="ar">رمال بغداد</div><div class="en">Sands of Baghdad</div><div class="sub">— Year 813 of the Common Era · The Abbasid Caliphate —</div></div>
+        <button id="startbtn">Enter the Sands</button>
+        <div class="controls">Left-click: move / attack · Right-click: Naft Flask · 1–4: Skills · Q: Potion · I: Inventory · Alt: show loot</div>
+      </div>
+      <div id="death" class="hidden"><div class="dt">You Have Fallen</div><button id="respawn">Rise Again</button></div>
+      <div id="fade"></div>`;
+    this.$ = (s) => root.querySelector(s);
+    this.hud = this.$('#hud');
+    this.labels = this.$('#labels'); this.dmg = this.$('#dmg');
+    this.dmgPool = []; this.labelMap = new Map();
+    this.hpCanvas = this.$('#hporb canvas').getContext('2d'); this.mpCanvas = this.$('#mporb canvas').getContext('2d');
+    this.mini = this.$('#minimap canvas').getContext('2d');
+    this.v = new THREE.Vector3();
+    this.buildSkills();
+    this.tooltip = this.$('#tooltip');
+    this.$('#inv .close').onclick = () => this.toggleInventory(false);
+  }
+  show() { this.hud.classList.remove('hidden'); this.$('#title').classList.add('gone'); }
+  buildSkills() {
+    const defs = [['attack', 'LMB'], ['naft', 'RMB'], ['whirl', '1'], ['dash', '2'], ['ward', '3'], ['potion', 'Q']];
+    this.$('#skills').innerHTML = defs.map(([k, key]) => `<div class="skill" data-k="${k}">${ICONS[k]}<div class="cd"></div><div class="key">${key}</div><div class="cnt"></div></div>`).join('');
+    this.skillEls = {}; for (const el of this.root.querySelectorAll('.skill')) this.skillEls[el.dataset.k] = el;
+  }
+  setSkill(k, cdFrac, usable = true, count = null) {
+    const el = this.skillEls[k]; if (!el) return;
+    el.querySelector('.cd').style.height = (cdFrac * 100) + '%';
+    el.classList.toggle('nomana', !usable);
+    if (count !== null) el.querySelector('.cnt').textContent = count;
+  }
+  drawOrb(ctx, frac, c1, c2, t) {
+    const S = 150, R = 66; ctx.clearRect(0, 0, S, S);
+    ctx.save(); ctx.beginPath(); ctx.arc(S / 2, S / 2, R, 0, Math.PI * 2); ctx.clip();
+    ctx.fillStyle = '#080506'; ctx.fillRect(0, 0, S, S);
+    const lvl = S / 2 + R - frac * R * 2;
+    const g = ctx.createLinearGradient(0, lvl, 0, S); g.addColorStop(0, c1); g.addColorStop(1, c2);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, S);
+    for (let x = 0; x <= S; x += 4) ctx.lineTo(x, lvl + Math.sin(x * 0.06 + t * 2.4) * 3 + Math.sin(x * 0.11 - t * 1.7) * 2);
+    ctx.lineTo(S, S); ctx.fill();
+    // swirling inner glow
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 3; i++) {
+      const a = t * (0.4 + i * 0.2) + i * 2, rx = S / 2 + Math.cos(a) * 25, ry = Math.max(lvl + 20, S / 2 + Math.sin(a * 1.3) * 25);
+      const rg = ctx.createRadialGradient(rx, ry, 0, rx, ry, 40); rg.addColorStop(0, c1 + '55'); rg.addColorStop(1, '#0000');
+      ctx.fillStyle = rg; ctx.fillRect(0, 0, S, S);
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    // glass highlight
+    const hg = ctx.createRadialGradient(S * 0.38, S * 0.3, 2, S * 0.38, S * 0.3, R * 0.9);
+    hg.addColorStop(0, 'rgba(255,255,255,0.45)'); hg.addColorStop(0.3, 'rgba(255,255,255,0.08)'); hg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = hg; ctx.fillRect(0, 0, S, S);
+    const sh = ctx.createRadialGradient(S / 2, S / 2, R * 0.6, S / 2, S / 2, R); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,0.65)');
+    ctx.fillStyle = sh; ctx.fillRect(0, 0, S, S);
+    ctx.restore();
+  }
+  setOrbs(hp, maxHp, mp, maxMp, t) {
+    this.drawOrb(this.hpCanvas, hp / maxHp, '#e0283a', '#4a0408', t);
+    this.drawOrb(this.mpCanvas, mp / maxMp, '#3a6cff', '#06104a', t + 3);
+    this.$('#hporb .orbtxt').textContent = `${Math.ceil(hp)} / ${maxHp}`;
+    this.$('#mporb .orbtxt').textContent = `${Math.floor(mp)} / ${maxMp}`;
+  }
+  setXP(frac, level) { this.$('#xp .xpfill').style.width = (frac * 100) + '%'; this.$('#xp .xptxt').textContent = `Level ${level}`; }
+  showTarget(name, frac, cls = '') {
+    const t = this.$('#target'); t.className = 'show ' + cls;
+    t.querySelector('.tname').textContent = name; t.querySelector('.tfill').style.width = Math.max(0, frac * 100) + '%';
+  }
+  hideTarget() { this.$('#target').className = ''; }
+  bossBar(name, frac) {
+    const b = this.$('#bossbar');
+    if (name == null) { b.classList.add('hidden'); return; }
+    b.classList.remove('hidden'); b.querySelector('.bname').textContent = name;
+    b.querySelector('.bfill').style.width = (frac * 100) + '%';
+    const gh = b.querySelector('.bghost'); const cur = parseFloat(gh.style.width || '100');
+    gh.style.width = Math.max(frac * 100, cur - 0.4) + '%';
+  }
+  quest(lines) { this.$('#quest .qlines').innerHTML = lines.map((l) => `<div class="${l.done ? 'done' : ''}">${l.done ? '✦' : '◇'} ${l.text}</div>`).join(''); }
+  toast(text, cls = '') {
+    const el = document.createElement('div'); el.className = 'toast ' + cls; el.innerHTML = text;
+    this.$('#toasts').appendChild(el); setTimeout(() => el.classList.add('out'), 3200); setTimeout(() => el.remove(), 4000);
+  }
+  banner(title, sub, ms = 3500) {
+    const b = this.$('#banner'); b.querySelector('.btitle').textContent = title; b.querySelector('.bsub').textContent = sub || '';
+    b.classList.remove('hidden'); b.classList.remove('out'); void b.offsetWidth; b.classList.add('in');
+    clearTimeout(this._bt); this._bt = setTimeout(() => { b.classList.add('out'); setTimeout(() => b.classList.add('hidden'), 900); }, ms);
+  }
+  buffs(list) { this.$('#buffs').innerHTML = list.map((b) => `<div class="buff">${ICONS[b.icon]}<span>${Math.ceil(b.t)}</span></div>`).join(''); }
+  dialog(name, text, cb) {
+    const d = this.$('#dialog'); d.classList.remove('hidden');
+    d.querySelector('.dname').textContent = name; d.querySelector('.dtext').innerHTML = text;
+    d.querySelector('.dbtn').onclick = () => { d.classList.add('hidden'); cb && cb(); };
+  }
+  get dialogOpen() { return !this.$('#dialog').classList.contains('hidden'); }
+  death(show, cb) { const d = this.$('#death'); d.classList.toggle('hidden', !show); if (cb) this.$('#respawn').onclick = cb; }
+  fade(v) { this.$('#fade').style.opacity = v; }
+
+  // ---------------- world-anchored elements
+  project(pos, camera) {
+    this.v.copy(pos).project(camera);
+    return { x: (this.v.x * 0.5 + 0.5) * innerWidth, y: (-this.v.y * 0.5 + 0.5) * innerHeight, vis: this.v.z < 1 };
+  }
+  damageNumber(pos, text, kind = 'normal') {
+    const el = this.dmgPool.find((d) => !d.active) || (() => { const e = { el: document.createElement('div') }; this.dmg.appendChild(e.el); this.dmgPool.push(e); return e; })();
+    el.active = true; el.t = 0; el.pos = pos.clone(); el.pos.y += 2.2; el.dx = (Math.random() - 0.5) * 40;
+    el.el.className = 'dn ' + kind; el.el.textContent = text; el.el.style.display = 'block';
+  }
+  addLootLabel(drop, onClick) {
+    const el = document.createElement('div'); el.className = 'loot r-' + drop.item.rarity;
+    el.textContent = drop.item.gold ? `${drop.item.gold} Dinars` : drop.item.potion ? 'Pomegranate Sherbet' : drop.item.name;
+    el.onmousedown = (e) => { e.stopPropagation(); onClick(drop); };
+    el.onmouseenter = () => !drop.item.gold && !drop.item.potion && this.showTooltip(drop.item, el.getBoundingClientRect());
+    el.onmouseleave = () => this.hideTooltip();
+    this.labels.appendChild(el); this.labelMap.set(drop, el);
+  }
+  removeLootLabel(drop) { const el = this.labelMap.get(drop); if (el) el.remove(); this.labelMap.delete(drop); this.hideTooltip(); }
+  updateWorld(camera, dt, showAll) {
+    for (const d of this.dmgPool) {
+      if (!d.active) continue; d.t += dt;
+      const p = this.project(d.pos, camera);
+      const k = d.t / 1.0;
+      d.el.style.transform = `translate(${p.x + d.dx * k}px, ${p.y - k * 70}px) translate(-50%,-50%) scale(${d.t < 0.1 ? 1.6 - d.t * 6 : 1})`;
+      d.el.style.opacity = 1 - Math.max(0, k - 0.6) / 0.4;
+      if (d.t > 1) { d.active = false; d.el.style.display = 'none'; }
+    }
+    const used = [];
+    for (const [drop, el] of this.labelMap) {
+      const show = showAll || drop.item.rarity !== 'common' || drop.item.gold || drop.age < 4;
+      const p = this.project(drop.mesh.position, camera);
+      if (!p.vis || !show) { el.style.display = 'none'; continue; }
+      el.style.display = 'block';
+      let y = p.y - 26;
+      // naive label stacking to avoid overlap
+      for (const u of used) if (Math.abs(u.x - p.x) < 90 && Math.abs(u.y - y) < 20) y = u.y - 22;
+      used.push({ x: p.x, y });
+      el.style.transform = `translate(${p.x}px, ${y}px) translate(-50%,-50%)`;
+    }
+  }
+  drawMinimap(player, enemies, drops, pois) {
+    const c = this.mini, S = 180, sc = 1.1;
+    c.clearRect(0, 0, S, S);
+    c.save(); c.beginPath(); c.arc(S / 2, S / 2, S / 2 - 4, 0, Math.PI * 2); c.clip();
+    c.fillStyle = 'rgba(20,12,6,0.55)'; c.fillRect(0, 0, S, S);
+    const tx = (x) => S / 2 + (x - player.x) * sc, tz = (z) => S / 2 + (z - player.z) * sc;
+    if (this.mapImg) c.drawImage(this.mapImg, tx(-140), tz(-140), 280 * sc, 280 * sc);
+    for (const p of pois) { c.fillStyle = p.color; c.font = 'bold 13px Cinzel'; c.textAlign = 'center'; c.fillText(p.icon, tx(p.x), tz(p.z) + 4); }
+    for (const e of enemies) if (!e.dead) { c.fillStyle = e.boss ? '#ff6020' : e.elite ? '#ffd040' : '#e03030'; c.beginPath(); c.arc(tx(e.pos.x), tz(e.pos.z), e.boss ? 4 : 2.2, 0, 7); c.fill(); }
+    for (const d of drops) if (d.item.rarity !== 'common') { c.fillStyle = RARITY[d.item.rarity].color; c.fillRect(tx(d.mesh.position.x) - 1.5, tz(d.mesh.position.z) - 1.5, 3, 3); }
+    c.restore();
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(S / 2, S / 2, 3.2, 0, 7); c.fill();
+  }
+
+  // ---------------- inventory
+  toggleInventory(v) { const el = this.$('#inv'); const show = v ?? el.classList.contains('hidden'); el.classList.toggle('hidden', !show); if (!show) this.hideTooltip(); return show; }
+  get invOpen() { return !this.$('#inv').classList.contains('hidden'); }
+  itemHTML(it, cmp) {
+    const r = RARITY[it.rarity];
+    let s = `<div class="tt-name" style="color:${r.color}">${it.name}</div><div class="tt-base">${it.rarity !== 'common' && it.base !== it.name ? it.base + ' · ' : ''}${r.name} ${SLOT_NAMES[it.slot]}</div>`;
+    if (it.min) s += `<div class="tt-main">${it.min} – ${it.max} Damage</div>`;
+    if (it.armor) s += `<div class="tt-main">${it.armor} Armor</div>`;
+    s += statLines(it).map((l) => `<div class="tt-aff">${l}</div>`).join('');
+    if (it.flavor) s += `<div class="tt-flavor">${it.flavor}</div>`;
+    s += `<div class="tt-lvl">Item Level ${it.level}</div>`;
+    if (cmp) s += `<div class="tt-cmp">Equipped: <span style="color:${RARITY[cmp.rarity].color}">${cmp.name}</span></div>`;
+    return s;
+  }
+  showTooltip(it, rect, cmp) {
+    const t = this.tooltip; t.innerHTML = this.itemHTML(it, cmp); t.classList.remove('hidden');
+    t.style.borderColor = RARITY[it.rarity].color;
+    const w = t.offsetWidth, h = t.offsetHeight;
+    let x = rect.left + rect.width / 2 - w / 2, y = rect.top - h - 10;
+    if (y < 8) y = rect.bottom + 10; x = Math.max(8, Math.min(innerWidth - w - 8, x));
+    t.style.left = x + 'px'; t.style.top = y + 'px';
+  }
+  hideTooltip() { this.tooltip.classList.add('hidden'); }
+  refreshInventory(player, onEquip, onDiscard, onUnequip) {
+    const eq = this.$('#equip');
+    eq.innerHTML = Object.keys(SLOT_NAMES).map((s) => {
+      const it = player.equip[s];
+      return `<div class="eslot s-${s} ${it ? 'r-' + it.rarity : ''}" data-s="${s}">${it ? `<span class="ic">${it.icon || '◆'}</span>` : `<span class="lbl">${SLOT_NAMES[s]}</span>`}</div>`;
+    }).join('');
+    for (const el of eq.querySelectorAll('.eslot')) {
+      const it = player.equip[el.dataset.s]; if (!it) continue;
+      el.onmouseenter = () => this.showTooltip(it, el.getBoundingClientRect());
+      el.onmouseleave = () => this.hideTooltip();
+      el.onclick = () => { this.hideTooltip(); onUnequip(el.dataset.s); };
+    }
+    const g = this.$('#grid'); const cells = [];
+    for (let i = 0; i < 40; i++) { const it = player.bag[i]; cells.push(`<div class="cell ${it ? 'r-' + it.rarity : ''}" data-i="${i}">${it ? `<span class="ic">${it.icon || '◆'}</span>` : ''}</div>`); }
+    g.innerHTML = cells.join('');
+    for (const el of g.querySelectorAll('.cell')) {
+      const it = player.bag[+el.dataset.i]; if (!it) continue;
+      el.onmouseenter = () => this.showTooltip(it, el.getBoundingClientRect(), player.equip[it.slot]);
+      el.onmouseleave = () => this.hideTooltip();
+      el.onclick = () => { this.hideTooltip(); onEquip(+el.dataset.i); };
+      el.oncontextmenu = (e) => { e.preventDefault(); this.hideTooltip(); onDiscard(+el.dataset.i); };
+    }
+    const st = player.stats;
+    this.$('#stats').innerHTML = `<div><b>Level</b> ${player.level}</div><div><b>Damage</b> ${st.min}–${st.max}</div><div><b>Armor</b> ${st.armor}</div><div><b>Life</b> ${st.maxHp}</div><div><b>Mana</b> ${st.maxMp}</div><div><b>Crit</b> ${st.crit}%</div><div><b>Atk Speed</b> +${st.speed}%</div><div><b>Life/Hit</b> ${st.leech}</div>`;
+    this.$('#gold').textContent = `◉ ${player.gold} Dinars`;
+  }
+}

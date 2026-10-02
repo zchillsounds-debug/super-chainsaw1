@@ -1,0 +1,108 @@
+html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:'Cinzel',Georgia,serif;color:#e8d9b5;user-select:none}
+#game{position:fixed;inset:0}
+#game canvas{display:block}
+#ui{position:fixed;inset:0;pointer-events:none}
+.hidden{display:none!important}
+:root{--gold:#d9a441;--gold2:#8a6424;--ink:#0d0806;--parch:#e8d9b5}
+#hud{position:absolute;inset:0}
+/* bottom bar */
+#bar{position:absolute;left:50%;bottom:0;transform:translateX(-50%);display:flex;align-items:flex-end;gap:0;pointer-events:auto}
+.orb{position:relative;width:150px;height:150px;margin-bottom:6px;filter:drop-shadow(0 6px 10px #000)}
+.orb::after{content:'';position:absolute;inset:4px;border-radius:50%;border:6px solid transparent;background:conic-gradient(from 0deg,#f2d27a,#7a5520,#f2d27a,#5a3a12,#f2d27a,#7a5520,#f2d27a) border-box;-webkit-mask:linear-gradient(#000 0 0) padding-box exclude,linear-gradient(#000 0 0);mask:linear-gradient(#000 0 0) padding-box exclude,linear-gradient(#000 0 0);pointer-events:none}
+.orb canvas{position:absolute;inset:0}
+.orbtxt{position:absolute;left:0;right:0;top:50%;text-align:center;font:700 13px Cinzel;color:#fff;text-shadow:0 0 4px #000,0 0 2px #000;opacity:0;transition:opacity .2s}
+.orb:hover .orbtxt{opacity:1}
+#center{position:relative;padding:10px 18px 12px;background:linear-gradient(#2a1c10ee,#120a05f5);border:2px solid var(--gold2);border-bottom:none;border-radius:14px 14px 0 0;box-shadow:inset 0 0 0 1px #000,inset 0 2px 0 #f2d27a55,0 -4px 20px #0008;margin:0 -10px;
+  background-image:linear-gradient(#2a1c10ee,#120a05f5),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cg fill='none' stroke='%23d9a441' stroke-opacity='.10'%3E%3Cpath d='M20 0l6 14 14 6-14 6-6 14-6-14L0 20l14-6z'/%3E%3C/g%3E%3C/svg%3E");background-blend-mode:normal}
+#skills{display:flex;gap:8px}
+.skill{position:relative;width:56px;height:56px;border:2px solid var(--gold2);border-radius:6px;background:radial-gradient(#2c2014,#0b0704);box-shadow:inset 0 0 8px #000,0 0 0 1px #000;overflow:hidden}
+.skill svg{position:absolute;inset:6px;width:40px;height:40px;filter:drop-shadow(0 0 3px #000)}
+.skill .cd{position:absolute;left:0;right:0;bottom:0;height:0;background:#000b}
+.skill .key{position:absolute;right:3px;bottom:1px;font:700 11px Cinzel;color:#f2d27a;text-shadow:0 0 3px #000}
+.skill .cnt{position:absolute;left:4px;top:2px;font:700 12px Cinzel;color:#fff;text-shadow:0 0 3px #000}
+.skill.nomana svg{filter:grayscale(1) brightness(.5) sepia(1) hue-rotate(190deg)}
+.skill.flash{box-shadow:0 0 12px #ffd870}
+#xp{position:relative;height:9px;margin:0 2px 9px;background:#0a0603;border:1px solid var(--gold2);border-radius:5px;overflow:hidden}
+.xpfill{height:100%;width:0;background:linear-gradient(90deg,#8a6424,#f2d27a);box-shadow:0 0 6px #f2d27a}
+.xptxt{position:absolute;inset:0;font:700 8px Cinzel;text-align:center;line-height:9px;color:#fff;text-shadow:0 0 2px #000}
+/* target / boss */
+#target{position:absolute;top:18px;left:50%;transform:translateX(-50%);text-align:center;opacity:0;transition:opacity .15s}
+#target.show{opacity:1}
+.tname{font:700 16px Cinzel;color:#f0e0c0;text-shadow:0 0 6px #000,0 2px 2px #000;letter-spacing:1px}
+#target.elite .tname{color:#ffd84a} #target.boss .tname{color:#ff8a2a}
+.tbar{width:300px;height:12px;margin:4px auto 0;background:#120404;border:1px solid #6a4a20;box-shadow:0 0 0 1px #000}
+.tfill{height:100%;background:linear-gradient(#d02a2a,#6a0808)}
+#bossbar{position:absolute;top:60px;left:50%;transform:translateX(-50%);width:560px;text-align:center}
+.bname{font:700 22px 'Cinzel Decorative',Cinzel;color:#ff9a3a;text-shadow:0 0 12px #f40,0 2px 2px #000;letter-spacing:2px}
+.bbar{position:relative;height:16px;margin-top:6px;background:#150404;border:2px solid var(--gold2);box-shadow:0 0 0 1px #000,0 0 18px #f405}
+.bfill,.bghost{position:absolute;left:0;top:0;bottom:0}
+.bfill{background:linear-gradient(#ff7a20,#9a1a04);z-index:2;box-shadow:0 0 10px #f60}
+.bghost{background:#f2d27a;z-index:1;width:100%}
+/* quest / toasts */
+#quest{position:absolute;top:20px;right:22px;width:280px;padding:12px 16px;background:linear-gradient(90deg,#0000,#0d0806cc 20%);text-align:right}
+.qtitle{font:700 15px Cinzel;color:var(--gold);letter-spacing:1px;margin-bottom:6px;text-shadow:0 0 6px #000}
+.qlines div{font:500 13px Cinzel;color:#e8d9b5;margin:3px 0;text-shadow:0 0 4px #000}
+.qlines div.done{color:#8a8070;text-decoration:line-through}
+#minimap{position:absolute;top:150px;right:22px;width:180px;height:180px;border-radius:50%;box-shadow:0 0 0 3px var(--gold2),0 0 0 4px #000,0 4px 20px #000a}
+#toasts{position:absolute;top:36%;left:50%;transform:translateX(-50%);text-align:center}
+.toast{font:700 18px Cinzel;color:#f2d27a;text-shadow:0 0 8px #000,0 2px 2px #000;margin:4px;transition:opacity .8s,transform .8s}
+.toast.out{opacity:0;transform:translateY(-20px)}
+.toast.leg{color:#ff8a2a;font-size:22px} .toast.lvl{color:#fff;font-size:26px;text-shadow:0 0 16px #f2d27a}
+#buffs{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);display:flex;gap:6px}
+.buff{position:relative;width:34px;height:34px;border:1px solid var(--gold);border-radius:4px;background:#0b0704cc}
+.buff svg{width:30px;height:30px;margin:2px}
+.buff span{position:absolute;right:2px;bottom:0;font:700 11px Cinzel;color:#fff;text-shadow:0 0 3px #000}
+/* damage numbers & loot labels */
+#dmg,#labels{position:absolute;inset:0;overflow:hidden}
+.dn{position:absolute;left:0;top:0;font:700 20px Cinzel;color:#fff;text-shadow:0 0 3px #000,0 2px 2px #000;white-space:nowrap;will-change:transform}
+.dn.crit{color:#ffd84a;font-size:28px} .dn.fire{color:#ff8a3a} .dn.player{color:#ff4040;font-size:18px} .dn.heal{color:#60ff80}
+#labels{pointer-events:none}
+.loot{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;padding:2px 8px;font:700 12px Cinzel;background:#000c;border:1px solid #fff3;white-space:nowrap}
+.loot:hover{background:#2a1c10;border-color:#f2d27a}
+.r-common{color:#d8d0c0}.r-magic{color:#7f9aff}.r-rare{color:#ffd84a}.r-legendary{color:#ff8a2a;border-color:#ff8a2a88}
+.loot.r-legendary{box-shadow:0 0 8px #ff7a10}
+/* panels */
+.panel{position:absolute;pointer-events:auto;background:linear-gradient(#24170cf5,#0f0905f8);border:2px solid var(--gold2);box-shadow:0 0 0 1px #000,inset 0 0 40px #000,0 10px 40px #000c;color:var(--parch)}
+.ptitle{font:700 18px Cinzel;color:var(--gold);text-align:center;padding:10px;border-bottom:1px solid var(--gold2);letter-spacing:2px}
+.ptitle .close{position:absolute;right:12px;cursor:pointer;color:#a08060}
+#inv{right:30px;top:50%;transform:translateY(-50%);width:400px;padding-bottom:10px}
+#equip{position:relative;height:200px;margin:10px;background:radial-gradient(#3a2814,#120a05 70%);border:1px solid #4a3418}
+.eslot{position:absolute;width:56px;height:56px;border:1px solid #6a4a20;background:#0b0704;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.eslot .lbl{font:500 9px Cinzel;color:#6a5a40} .eslot .ic,.cell .ic{font-size:28px;filter:drop-shadow(0 0 3px #000)}
+.s-helm{left:172px;top:10px}.s-armor{left:172px;top:76px;height:80px}.s-weapon{left:90px;top:76px;height:80px}.s-ring{left:254px;top:120px}.s-amulet{left:254px;top:40px}
+.eslot.r-magic,.cell.r-magic{background:#0d1230;border-color:#4a6cff}.eslot.r-rare,.cell.r-rare{background:#2a2208;border-color:#ffd040}.eslot.r-legendary,.cell.r-legendary{background:#2e1404;border-color:#ff7a10;box-shadow:inset 0 0 10px #ff7a1088}
+#stats{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;margin:0 14px 8px;font:500 12px Cinzel}
+#stats b{color:var(--gold);font-weight:700}
+#grid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;margin:0 12px}
+.cell{aspect-ratio:1;border:1px solid #3a2a14;background:#080503;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#gold{margin:8px 14px 0;font:700 13px Cinzel;color:#f2d27a}
+.hint{margin:4px 14px;font:500 10px Cinzel;color:#806a50}
+#tooltip{position:fixed;z-index:20;min-width:220px;max-width:300px;padding:10px 14px;background:#0b0704f2;border:1px solid;box-shadow:0 0 0 1px #000,0 6px 20px #000;text-align:center;pointer-events:none}
+.tt-name{font:700 16px Cinzel}.tt-base{font:500 11px Cinzel;color:#a09070;margin-bottom:6px}
+.tt-main{font:700 14px Cinzel;color:#fff}.tt-aff{font:500 13px Cinzel;color:#7f9aff}.tt-flavor{font:italic 14px Amiri,serif;color:#d08040;margin-top:6px}
+.tt-lvl{font:500 10px Cinzel;color:#806a50;margin-top:6px}.tt-cmp{font:500 11px Cinzel;color:#a09070;margin-top:4px;border-top:1px solid #3a2a14;padding-top:4px}
+#dialog{left:50%;bottom:190px;transform:translateX(-50%);width:560px;padding:16px 22px}
+.dname{font:700 17px Cinzel;color:var(--gold);margin-bottom:8px}
+.dtext{font:400 19px/1.45 Amiri,serif;color:var(--parch)}
+button{font:700 15px Cinzel;color:#1a0f06;background:linear-gradient(#f2d27a,#a87a2a);border:1px solid #3a2410;padding:8px 22px;cursor:pointer;box-shadow:0 0 0 1px #f2d27a55,0 4px 10px #000;letter-spacing:1px}
+button:hover{filter:brightness(1.15)}
+.dbtn{float:right;margin-top:10px}
+/* banner */
+#banner{position:absolute;top:24%;left:0;right:0;text-align:center;opacity:0}
+#banner.in{animation:bin .9s forwards} #banner.out{animation:bout .9s forwards}
+@keyframes bin{from{opacity:0;letter-spacing:14px}to{opacity:1;letter-spacing:4px}} @keyframes bout{from{opacity:1}to{opacity:0}}
+.btitle{font:700 44px 'Cinzel Decorative',Cinzel;color:#f2d27a;letter-spacing:4px;text-shadow:0 0 20px #000,0 0 40px #a0602099,0 3px 3px #000}
+.bsub{font:italic 22px Amiri,serif;color:#e8d9b5;text-shadow:0 0 10px #000}
+.btitle::before,.btitle::after{content:'۞';margin:0 22px;font-size:28px;vertical-align:middle;color:#d9a441}
+/* title */
+#title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto;background:radial-gradient(ellipse at center,#0000 30%,#000a 100%);transition:opacity 1.2s}
+#title.gone{opacity:0;pointer-events:none}
+.tlogo{text-align:center;margin-bottom:40px}
+.tlogo .ar{font:700 64px Amiri,serif;color:#f2d27a;text-shadow:0 0 30px #c07020,0 4px 4px #000;direction:rtl}
+.tlogo .en{font:700 72px 'Cinzel Decorative',Cinzel;color:#f6e2b0;letter-spacing:6px;text-shadow:0 0 24px #000,0 0 50px #c0702066,0 4px 4px #000;margin-top:-10px}
+.tlogo .sub{font:italic 22px Amiri,serif;color:#e8d0a0;text-shadow:0 0 8px #000;margin-top:6px}
+#startbtn{font-size:20px;padding:12px 40px}
+.controls{margin-top:28px;font:500 13px Cinzel;color:#e8d9b5cc;text-shadow:0 0 6px #000}
+#death{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(#3a000088,#000d);pointer-events:auto}
+#death .dt{font:700 60px 'Cinzel Decorative',Cinzel;color:#c02020;text-shadow:0 0 30px #000;margin-bottom:30px}
+#fade{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .8s;pointer-events:none}
