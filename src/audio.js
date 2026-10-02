@@ -42,6 +42,8 @@ export class Audio {
   pickup() { this.tone(880, 0.12, 'sine', 0.15); setTimeout(() => this.tone(1320, 0.2, 'sine', 0.12), 70); }
   gold() { for (let i = 0; i < 3; i++) setTimeout(() => this.tone(2000 + Math.random() * 800, 0.08, 'triangle', 0.06), i * 40); }
   legendary() { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.tone(f, 0.6, 'triangle', 0.12), i * 90)); }
+  stagger() { this.tone(220, 0.35, 'triangle', 0.18, 0.6); this.noise(0.3, 900, 300, 1.5, 0.35); }
+  denied() { this.tone(160, 0.12, 'square', 0.05, 0.9); }
   grunt() { this.noise(0.25, 400, 200, 3, 0.4); }
   death() { this.noise(0.6, 500, 120, 2, 0.4); }
   roar() { this.noise(1.6, 200, 70, 2, 0.9, 'lowpass'); this.tone(55, 1.6, 'sawtooth', 0.15, 0.7); }

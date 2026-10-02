@@ -143,7 +143,7 @@ export function lieutenantFalls(g, e, { who, text, card }) {
   const ang = yawTo(salim.pos, foe.pos);
   const orbit = (r, h, a0) => () => { const a = a0 + (performance.now() / 1000) * 0.12; return V(foe.pos.x + Math.sin(a) * r, foe.pos.y + h, foe.pos.z + Math.cos(a) * r); };
   const shots = [
-    { dur: 3.4, slow: 0.3, line: { who, text, rig: e.rig, cue: 'hurt' }, cam: { follow: true, p0: orbit(4.2, 1.8, ang + 2.2), t0: at(foe, 0.9) }, dof: at(foe, 0.9), aperture: 1.0 },
+    { dur: 3.4, slow: 0.3, line: { who, text, rig: e.rig, cue: 'hurt' }, cam: { follow: true, p0: orbit(3.3, 0.85, ang + 2.2), t0: at(foe, 0.35) }, dof: at(foe, 0.4), aperture: 1.0 },
     { dur: 5.6, card, stinger: 'title', cam: { p0: () => at(foe, 3.5, 0, 0)().add(V(0, 0, 0)), t0: at(foe, 0.5), p1: () => at(foe, 14, 0, 0)().add(V(8, 0, 8)), t1: at(foe, 0), ease: 'io2' } },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); } };

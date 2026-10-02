@@ -47,6 +47,8 @@ export function makeEnemy(type, level, opts = {}) {
     flash: 0, hidden: !!opts.hidden, riseT: opts.hidden ? 0 : 1, didHit: false, slow: 0, burn: 0,
   };
   e.hp = e.maxHp;
+  e.maxPoise = e.poise = Math.round((18 + e.maxHp * 0.55) * (opts.elite ? 1.8 : 1));
+  e.shield = !!rig.userData.parts?.shield; e.staggerT = 0;
   if (opts.elite) {
     rig.children[0].scale.multiplyScalar(1.3);
     e.name = opts.name || `${ELITE_NAMES[Math.floor(Math.random() * ELITE_NAMES.length)]}, ${T.name}`;

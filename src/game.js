@@ -6,27 +6,23 @@ import { buildNav, findPath, navClear } from './nav.js';
 import { makeEnemy, TYPES } from './entities.js';
 import * as SCENES from './scenes.js';
 import { saveGame } from './save.js';
-import { makeItem, rollRarity, RARITY } from './items.js';
-import { sigilTex, glowDecal, splatTex } from './textures.js';
+import { makeItem, rollRarity, RARITY, setWeaponPool } from './items.js';
+import { glowDecal, splatTex } from './textures.js';
+import { CLASSES, COMMON } from './classes.js';
 
 const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
 const BOUND = 132;
 const rand = (a, b) => a + Math.random() * (b - a);
 const angDiff = (a, b) => { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 
-const SKILLS = {
-  naft: { cd: 0.9, mana: 12 },
-  whirl: { cd: 7, mana: 22 },
-  dash: { cd: 4, mana: 10 },
-  ward: { cd: 16, mana: 25 },
-  potion: { cd: 1.2, mana: 0 },
-};
+const MAX_TOKENS = 3; // melee foes allowed to press the attack at once; the rest circle and flank
 
 export class Game {
   constructor({ scene, camera, renderer, world, fx, ui, audio }) {
     Object.assign(this, { scene, camera, renderer, world, fx, ui, audio });
     buildGrid();
     buildNav();
+    this.stats = {}; this.isTouch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || location.search.includes('mobile');
     this.t = 0; this.enemies = []; this.projectiles = []; this.hazards = []; this.drops = []; this.trails = [];
     this.mouse = new THREE.Vector2(); this.mouseScreen = { x: 0, y: 0 };
     this.keys = {}; this.lmb = false; this.shake = 0; this.camZoom = 1; this.hitStop = 0;
@@ -103,24 +99,14 @@ export class Game {
   }
 
   // ------------------------------------------------------------------ setup
-  createPlayer() {
-    const rig = humanoid({ robe: '#17171a', robe2: '#b8913e', hem: true, mail: true, qaba: true, turban: null, cap: 0x2a2620, capBand: 0x141210, offhand: 'shield', beard: 0x2a1a10, cloak: 0x6e1c16, sash: 0x9a2a1c, scabbard: true, skin: 0xa8714a, build: 1.1, detail: 'hi' });
-    this.scene.add(rig);
+  createPlayer(cls = 'faris') {
     const p = this.player = {
-      rig, pos: new THREE.Vector3(1, 0, 88), facing: Math.PI, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, dead: false, deadT: 0, fallDir: 1 },
+      rig: null, pos: new THREE.Vector3(1, 0, 88), facing: Math.PI, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, dead: false, deadT: 0, fallDir: 1 },
       hp: 100, mp: 60, level: 1, xp: 0, gold: 0, potions: 3, equip: {}, bag: new Array(40).fill(null), cds: {}, buffs: {},
       target: null, moveTo: null, actionDur: 0.6, hitApplied: false, dead: false, whirlT: 0, dashT: 0, invuln: 0,
     };
-    p.equip.weapon = { id: 0, slot: 'weapon', rarity: 'common', name: 'Rusted Sayf', base: 'Sayf', min: 4, max: 9, level: 1, stats: {}, icon: '⚔' };
-    this.recalcStats();
+    this.setClass(cls, true);
     p.hp = p.stats.maxHp; p.mp = p.stats.maxMp;
-    // selection ring under the player
-    const ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.68, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffd890, transparent: true, opacity: 0.35, depthWrite: false }));
-    ring.position.y = 0.06; rig.add(ring);
-    // ward sigil
-    const sm = new THREE.MeshBasicMaterial({ map: sigilTex(), color: new THREE.Color(1.1, 0.8, 0.3), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
-    this.wardSigil = new THREE.Mesh(new THREE.PlaneGeometry(8, 8).rotateX(-Math.PI / 2), sm);
-    this.scene.add(this.wardSigil);
     this.wardRings = [];
     for (let i = 0; i < 2; i++) {
       const r = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.03, 6, 48), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 1.2, 0.4), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, toneMapped: false }));
@@ -150,8 +136,24 @@ export class Game {
     this.pLight = new THREE.PointLight(0xffc890, 6, 9, 2); this.scene.add(this.pLight);
   }
 
+  // Swap Salim's discipline: rebuilds the rig, the kit and the starting weapon.
+  setClass(cls, fresh = false) {
+    const p = this.player, K = this.kit = CLASSES[cls] || CLASSES.faris; p.cls = cls in CLASSES ? cls : 'faris';
+    if (p.rig) this.scene.remove(p.rig);
+    const rig = p.rig = humanoid(K.look); this.scene.add(rig);
+    rig.position.copy(p.pos); rig.rotation.y = p.facing;
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.68, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffd890, transparent: true, opacity: 0.35, depthWrite: false }));
+    ring.position.y = 0.06; rig.add(ring);
+    if (fresh || !p.equip.weapon || p.equip.weapon.cls !== p.cls) p.equip.weapon = { id: 0, slot: 'weapon', rarity: 'common', name: K.weapon.name, base: K.weapon.base, min: K.weapon.min, max: K.weapon.max, level: 1, stats: {}, cls: p.cls };
+    setWeaponPool(p.cls, K.weapons);
+    p.cds = {}; this.recalcStats(); p.hp = p.stats.maxHp; p.mp = p.stats.maxMp;
+    this.ui.buildSkills?.(this.slotDefs());
+    this.onClassChange?.();
+  }
+  slotDefs() { const K = this.kit; return { attack: K.attack, ...K.skills, potion: COMMON.potion, dodge: COMMON.dodge }; }
+
   recalcStats() {
-    const p = this.player, s = { min: 1, max: 3, armor: 2, maxHp: 80 + p.level * 20, maxMp: 50 + p.level * 6, crit: 5, speed: 0, leech: 0, move: 0, fire: 0, dmgPct: 0, regen: 2 };
+    const p = this.player, B = this.kit.base, s = { min: 1, max: 3, armor: B.armor, maxHp: B.hp - 20 + p.level * 20, maxMp: B.mp + p.level * 6, crit: 5, speed: 0, leech: 0, move: 0, fire: 0, dmgPct: 0, regen: 2 };
     for (const it of Object.values(p.equip)) {
       if (!it) continue;
       if (it.min) { s.min = it.min; s.max = it.max; }
@@ -229,7 +231,7 @@ export class Game {
         if (this.hoverNpc) { this.talkToNpc(); return; }
         if (this.hover) { this.player.target = this.hover; this.player.moveTo = null; }
         else { this.player.target = null; this.setMoveTarget(); this.showMarker(); }
-      } else if (e.button === 2) this.useSkill('naft');
+      } else if (e.button === 2) this.useSkill('rmb');
     });
     addEventListener('mouseup', (e) => { if (e.button === 0) this.lmb = false; });
     addEventListener('wheel', (e) => { this.camZoom = THREE.MathUtils.clamp(this.camZoom + Math.sign(e.deltaY) * 0.08, 0.7, 1.35); });
@@ -238,11 +240,13 @@ export class Game {
       if (!this.started) return;
       if (e.key === 'Alt') e.preventDefault();
       const k = e.key.toLowerCase();
-      if (k === '1') this.useSkill('whirl');
-      if (k === '2') this.useSkill('dash');
-      if (k === '3') this.useSkill('ward');
-      if (k === '4') this.useSkill('naft');
+      if (this.paused) return;
+      if (k === '1') this.useSkill('s1');
+      if (k === '2') this.useSkill('s2');
+      if (k === '3') this.useSkill('s3');
+      if (k === '4') this.useSkill('rmb');
       if (k === 'q') this.useSkill('potion');
+      if (k === ' ') { e.preventDefault(); this.useSkill('dodge'); }
       if (k === 'i' || k === 'c') { this.ui.toggleInventory(); this.refreshInv(); }
       if (k === 'escape') this.ui.toggleInventory(false);
     });
@@ -263,6 +267,12 @@ export class Game {
       prev = t; t += 1.0;
     }
     return o.clone().addScaledVector(d, -o.y / d.y);
+  }
+  // touch aiming: point the virtual cursor at the nearest foe, else straight ahead
+  aimAuto() {
+    const p = this.player, e = this.pickTarget(14);
+    const at = e ? e.pos.clone() : p.pos.clone().add(new THREE.Vector3(Math.sin(p.facing) * 6, 0, Math.cos(p.facing) * 6));
+    const v = at.project(this.camera); this.mouse.set(v.x, v.y);
   }
   setMoveTarget() { this.player.moveTo = this.groundPoint(); }
   showMarker() { const g = this.player.moveTo; if (!g) return; this.marker.position.set(g.x, g.y + 0.08, g.z); this.marker.material.opacity = 1; this.marker.scale.setScalar(1.6); }
@@ -288,26 +298,51 @@ export class Game {
   rollDamage(mult = 1, fire = false) {
     const s = this.player.stats;
     let d = rand(s.min, s.max) * mult * (fire ? 1 + s.fire / 100 : 1);
-    const crit = Math.random() * 100 < s.crit;
+    let crit = Math.random() * 100 < s.crit;
+    if (this.player.nextCrit) { crit = true; this.player.nextCrit = false; }
+    if (this.player.buffs.stealth > 0) { d *= 1.5; crit = true; this.player.buffs.stealth = 0; }
     if (crit) d *= 2;
     return { d: Math.max(1, Math.round(d)), crit };
   }
 
-  damageEnemy(e, dmg, crit, src, kind = 'normal') {
+  // o: { weight (hit-stop / kick / knockback scale), stagger (poise damage), knock (metres), unblockable }
+  damageEnemy(e, dmg, crit, src, kind = 'normal', o = {}) {
     if (e.dead || e.hidden) return;
     const tick = kind === 'dot';
-    e.hp -= dmg; e.flash = tick ? Math.max(e.flash, 0.4) : 1; e.alerted = true;
-    if (tick) { if (e.hp <= 0) this.killEnemy(e, src); return; }
-    if (!e.boss) { e.st.hitT = 1; const k = tmp.copy(e.pos).sub(src).setY(0).normalize().multiplyScalar(crit ? 0.8 : 0.35); e.pos.add(k); }
-    this.ui.damageNumber(e.pos, dmg + (crit ? '!' : ''), crit ? 'crit' : kind);
+    const p = this.player, w = o.weight ?? this.kit.weight;
+    e.alerted = true; e.lost = 0;
+    if (tick) { e.hp -= dmg; e.flash = Math.max(e.flash, 0.4); if (e.hp <= 0) this.killEnemy(e, src); return; }
+    const from = tmp.copy(src).sub(e.pos).setY(0); const fl = from.length() || 1; from.divideScalar(fl);
+    const front = from.dot(tmp2.set(Math.sin(e.facing), 0, Math.cos(e.facing)));
+    // shield-bearers turn aside frontal blows unless staggered, attacking, or the blow is a bash
+    if (e.shield && !o.unblockable && !e.staggerT && !e.st.action && front > 0.45 && Math.random() < 0.65) {
+      dmg = Math.max(1, Math.round(dmg * 0.2)); crit = false;
+      e.flash = 0.4; this.audio.clang(); this.fx.sparks(tmp2.copy(e.pos).setY(e.pos.y + 1.2).addScaledVector(from, 0.5), new THREE.Color(4, 3, 1.6));
+      this.ui.damageNumber(e.pos, 'Blocked', 'block'); e.hp -= dmg; e.poise -= w * 4; e.st.hitT = 0.3;
+      if (e.hp <= 0) this.killEnemy(e, src); return;
+    }
+    // backstab: knives in the back hit harder
+    let back = false;
+    if (this.kit.attack.backstab && front < -0.3 && kind === 'normal' && !e.boss) { dmg = Math.round(dmg * this.kit.attack.backstab); back = true; }
+    if (e.staggerT > 0) dmg = Math.round(dmg * 1.5);
+    e.hp -= dmg; e.flash = 1;
+    // stagger meter: poise drains with weight; empty → reeling, open to heavy hits
+    e.poise -= (o.stagger ?? (8 + dmg * 1.4) * w) * (e.boss ? 0.15 : 1);
+    if (e.poise <= 0 && !e.boss) { e.staggerT = e.elite ? 1.0 : 1.4; e.poise = e.maxPoise; e.st.action = null; this.ui.damageNumber(e.pos, 'Staggered', 'stagger'); this.audio.stagger?.(); }
+    if (!e.boss) { e.st.hitT = 1; const k = (o.knock ?? 0.25 + w * 0.35) * (crit ? 1.6 : 1) * (e.elite ? 0.5 : 1); e.knock = (e.knock || new THREE.Vector3()).addScaledVector(from, -k * 9); }
+    this.ui.damageNumber(e.pos, dmg + (crit ? '!' : back ? '◂' : ''), crit ? 'crit' : back ? 'back' : kind);
     const hp = tmp2.copy(e.pos); hp.y += e.boss ? 3.5 : 1.2;
     if (e.T.fiery) this.fx.sparks(hp, new THREE.Color(4, 1.4, 0.3));
-    { this.fx.blood(hp); if (crit) this.fx.sparks(hp); }
-    if (crit) { this.audio.crit(); this.hitStop = 0.05; this.shake = Math.max(this.shake, 0.25); } else this.audio.hit();
-    if (this.player.stats.leech) this.player.hp = Math.min(this.player.stats.maxHp, this.player.hp + this.player.stats.leech);
+    this.fx.blood(hp); if (crit || w > 0.8) this.fx.sparks(hp);
+    if (Math.random() < 0.25 + w * 0.2) this.decal(e.pos, 0.5 + Math.random() * 0.6, 'blood');
+    // hit-stop and camera kick scale with weapon weight
+    this.hitStop = Math.max(this.hitStop, (crit ? 0.07 : 0.035) * (0.4 + w));
+    if (kind !== 'fire') this.impulse(tmp.copy(from).negate(), 0.06 * w + (crit ? 0.08 : 0));
+    if (crit) { this.audio.crit(); this.shake = Math.max(this.shake, 0.2 + w * 0.1); } else this.audio.hit(w);
+    if (p.stats.leech) p.hp = Math.min(p.stats.maxHp, p.hp + p.stats.leech);
+    this.onHit?.(e, dmg, crit);
     this.lastTarget = e; this.lastTargetT = 3;
-    // alert nearby allies
-    for (const o of this.enemies) if (!o.dead && o.pos.distanceTo(e.pos) < 12) o.alerted = true;
+    for (const o2 of this.enemies) if (!o2.dead && o2.pos.distanceTo(e.pos) < 12) o2.alerted = true;
     if (e.hp <= 0) this.killEnemy(e, src);
   }
 
@@ -362,17 +397,26 @@ export class Game {
     this.ui.banner(...msgs[id]);
   }
 
-  damagePlayer(dmg, src) {
-    const p = this.player; if (p.dead || p.invuln > 0) return;
+  damagePlayer(dmg, src, attacker = null) {
+    const p = this.player; if (p.dead) return;
+    // parry: an evade started just before a melee blow lands turns it aside and leaves the attacker reeling
+    if (attacker && p.rollT > 0 && p.rollAge < 0.2 && !attacker.boss) {
+      attacker.staggerT = 1.6; attacker.st.action = null; attacker.st.hitT = 1; attacker.poise = attacker.maxPoise;
+      this.ui.damageNumber(p.pos, 'Parry!', 'parry'); this.audio.clang(); this.audio.stagger?.();
+      this.fx.sparks(tmp.copy(p.pos).lerp(attacker.pos, 0.5).setY(p.pos.y + 1.3), new THREE.Color(5, 4, 2.4));
+      this.hitStop = 0.12; this.slowMo = 0.45; this.player.nextCrit = true; this.stats.parries = (this.stats.parries || 0) + 1;
+      return;
+    }
+    if (p.invuln > 0) { if (p.rollT > 0) this.ui.damageNumber(p.pos, 'Evaded', 'block'); return; }
     const s = p.stats;
     let red = s.armor / (s.armor + 40 + p.level * 6);
-    if (p.buffs.ward > 0) red = 1 - (1 - red) * 0.5;
+    if (p.buffs.ward > 0) { red = 1 - (1 - red) * 0.5; if (attacker && !attacker.boss) { const r = this.rollDamage(0.3); this.damageEnemy(attacker, r.d, false, p.pos, 'normal', { weight: 0.5 }); } }
     const d = Math.max(1, Math.round(dmg * (1 - red)));
-    p.hp -= d; p.st.hitT = 0.6;
+    p.hp -= d; p.st.hitT = 0.6; this.impulse(tmp.copy(p.pos).sub(src).setY(0).normalize(), Math.min(0.4, d / 40));
     this.ui.damageNumber(p.pos, d, 'player');
     this.fx.blood(tmp.copy(p.pos).setY(p.pos.y + 1.2));
     this.shake = Math.max(this.shake, Math.min(0.5, d / 40));
-    this.audio.grunt();
+    this.audio.grunt(); this.onPlayerHurt?.(d);
     if (p.hp <= 0) this.playerDeath();
   }
 
@@ -434,6 +478,8 @@ export class Game {
     if (item.rarity === 'legendary') { this.audio.legendary(); this.ui.toast(`★ ${item.name} ★`, 'leg'); }
   }
 
+  // loot beams and glow decals step aside during cinematics
+  setLootBeams(on) { for (const d of this.drops) d.mesh.children.forEach((c) => { if (c.material?.blending === THREE.AdditiveBlending) c.visible = on; }); this.ui.labels.style.display = on ? '' : 'none'; }
   tryPickup(d) {
     const p = this.player;
     if (d.item.gold) { p.gold += d.item.gold; this.audio.gold(); }
@@ -443,7 +489,7 @@ export class Game {
       if (slot < 0) { this.ui.toast('Your pack is full'); return false; }
       p.bag[slot] = d.item; this.audio.pickup();
       // auto-equip into empty slots
-      if (!p.equip[d.item.slot]) { p.equip[d.item.slot] = d.item; p.bag[slot] = null; this.recalcStats(); this.ui.toast(`Equipped ${d.item.name}`); }
+      if (!p.equip[d.item.slot] && !(d.item.cls && d.item.cls !== p.cls)) { p.equip[d.item.slot] = d.item; p.bag[slot] = null; this.recalcStats(); this.ui.toast(`Equipped ${d.item.name}`); }
     }
     this.scene.remove(d.mesh); this.ui.removeLootLabel(d);
     this.drops.splice(this.drops.indexOf(d), 1);
@@ -455,43 +501,79 @@ export class Game {
     if (!this.ui.invOpen) return;
     const p = this.player;
     this.ui.refreshInventory(p,
-      (i) => { const it = p.bag[i]; const old = p.equip[it.slot]; p.equip[it.slot] = it; p.bag[i] = old || null; this.recalcStats(); this.audio.clang(); this.refreshInv(); },
+      (i) => { const it = p.bag[i]; if (it.slot === 'weapon' && it.cls && it.cls !== p.cls) { this.ui.toast(`Only a ${CLASSES[it.cls].name} can wield that`); return; } const old = p.equip[it.slot]; p.equip[it.slot] = it; p.bag[i] = old || null; this.recalcStats(); this.audio.clang(); this.refreshInv(); },
       (i) => { p.bag[i] = null; this.refreshInv(); },
       (s) => { const k = p.bag.indexOf(null); if (k < 0 || s === 'weapon') return; p.bag[k] = p.equip[s]; p.equip[s] = null; this.recalcStats(); this.refreshInv(); });
   }
 
   // ------------------------------------------------------------------ skills
-  useSkill(name) {
-    const p = this.player; if (p.dead || !this.started) return;
-    const S = SKILLS[name];
-    if ((p.cds[name] || 0) > 0) return;
-    if (p.mp < S.mana) { this.ui.toast('Not enough mana'); return; }
-    if (name === 'potion') {
+  useSkill(slot) {
+    const p = this.player; if (p.dead || !this.started || this.paused) return;
+    const S = this.slotDefs()[slot]; if (!S || slot === 'attack') return;
+    if ((p.cds[slot] || 0) > 0) return;
+    if (p.mp < S.mana) { this.ui.toast('Not enough ' + this.kit.resource.toLowerCase()); this.audio.denied?.(); return; }
+    if (slot === 'potion') {
       if (p.potions <= 0) { this.ui.toast('No sherbet left'); return; }
       p.potions--; p.buffs.heal = 1.2; this.audio.potion();
       this.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1), 24, { speed: 1.5, life: 1, size: 0.2, size1: 0.02, color: new THREE.Color(2, 0.3, 0.4), up: 2 });
-    } else if (name === 'naft') {
-      const g = this.groundPoint();
-      const from = p.pos.clone(); from.y += 1.6;
-      const dist = Math.min(14, Math.hypot(g.x - p.pos.x, g.z - p.pos.z));
-      const dir = tmp.set(g.x - p.pos.x, 0, g.z - p.pos.z).normalize();
-      const target = p.pos.clone().addScaledVector(dir, dist); target.y = heightAt(target.x, target.z);
-      p.facing = Math.atan2(dir.x, dir.z);
-      p.st.action = 'throw'; p.st.actionT = 0; p.actionDur = 0.45;
-      this.throwFlask(from, target);
-      this.audio.whoosh();
-    } else if (name === 'whirl') {
-      p.whirlT = 2.0; p.whirlTick = 0; this.audio.whoosh();
-    } else if (name === 'dash') {
-      const g = this.groundPoint();
-      const dir = new THREE.Vector3(g.x - p.pos.x, 0, g.z - p.pos.z); if (dir.lengthSq() < 0.01) dir.set(Math.sin(p.facing), 0, Math.cos(p.facing));
-      dir.normalize(); p.dashDir = dir; p.dashT = 0.28; p.dashHit = new Set(); p.facing = Math.atan2(dir.x, dir.z); p.invuln = 0.3;
-      this.audio.whoosh(); this.fx.dust(p.pos, 12, 1.2);
-    } else if (name === 'ward') {
-      p.buffs.ward = 8; p.wardTick = 0; this.audio.levelUp();
-      this.fx.ring(p.pos, new THREE.Color(3, 2.2, 0.8), 0.5, 5, 0.7);
+    } else if (slot === 'dodge') {
+      if (p.rollT > 0 || p.dashT > 0) return;
+      let dir;
+      if (this.joy && Math.hypot(this.joy.x, this.joy.y) > 0.2) dir = new THREE.Vector3(this.joy.x, 0, this.joy.y);
+      else if (p.vel && Math.hypot(p.vel.x, p.vel.z) > 1) dir = new THREE.Vector3(p.vel.x, 0, p.vel.z);
+      else if (!this.isTouch) { const g = this.groundPoint(); dir = new THREE.Vector3(g.x - p.pos.x, 0, g.z - p.pos.z); }
+      if (!dir || dir.lengthSq() < 0.01) dir = new THREE.Vector3(-Math.sin(p.facing), 0, -Math.cos(p.facing));
+      dir.normalize(); p.rollDir = dir; p.rollT = 0.42; p.rollAge = 0; p.invuln = Math.max(p.invuln, 0.34); p.st.action = null; p.whirlT = 0;
+      p.facing = Math.atan2(dir.x, dir.z); this.audio.whoosh(); this.fx.dust(p.pos, 8, 0.9);
+      this.stats.dodges = (this.stats.dodges || 0) + 1;
+    } else { p.atkTarget = null; p.pendingHit = null; if (S.use(this, p) === false) return; }
+    p.mp -= S.mana; p.cds[slot] = S.cd;
+    if (p.buffs.stealth > 0 && slot !== 's3' && slot !== 'potion' && slot !== 'dodge') p.buffs.stealth = Math.min(p.buffs.stealth, 0.3);
+  }
+
+  // a glint on the attacker's blade as a melee blow winds up: the cue for a parry
+  telegraphTell(e) {
+    const h = tmp.copy(e.pos).setY(e.pos.y + 1.7 * (e.elite ? 1.3 : 1));
+    this.fx.glow.spawn({ pos: { x: h.x, y: h.y, z: h.z }, life: 0.35, size: 0.9, size1: 0.1, color: new THREE.Color(3.2, 2.6, 1.6) });
+  }
+  // nearest live foe to the cursor, else to the hero
+  pickTarget(r) {
+    const p = this.player;
+    if (this.hover && !this.hover.dead && this.hover.pos.distanceTo(p.pos) < r) return this.hover;
+    if (p.target && !p.target.dead && p.target.pos.distanceTo(p.pos) < r) return p.target;
+    let best = null, bd = r;
+    for (const e of this.enemies) { if (e.dead || e.hidden) continue; const d = e.pos.distanceTo(p.pos); if (d < bd) { bd = d; best = e; } }
+    return best;
+  }
+  // camera impulse in world space (decays in updateCamera)
+  impulse(dir, k) { this.camKick = this.camKick || new THREE.Vector3(); this.camKick.addScaledVector(dir, k); }
+
+  playerShot(dir, o) {
+    const p = this.player;
+    const from = p.pos.clone(); from.y += 1.35; from.addScaledVector(dir, 0.6);
+    let m;
+    if (o.kind === 'fire') m = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.2, 0.3), toneMapped: false }));
+    else if (o.kind === 'knife') m = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.3, 4).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xdfe6ee, metalness: 1, roughness: 0.25 }));
+    else m = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.85, 4).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x4a3420, emissive: o.glow ? 0x806040 : 0 }));
+    m.position.copy(from); m.lookAt(from.clone().add(dir)); this.scene.add(m);
+    this.projectiles.push({ mesh: m, vel: dir.clone().multiplyScalar(o.speed || 28), grav: 0, life: o.life ?? 0.75, owner: 'player', kind: 'pshot', o, hit: new Set(), pierce: o.pierce || 0 });
+  }
+
+  // lingering ground effects: fire pools, caltrops, smoke clouds
+  spawnZone(z) {
+    z.t = 0; z.tick = 0; z.kind2 = z.kind; z.pos = z.pos.clone();
+    if (z.kind === 'fire') {
+      const gm = new THREE.MeshBasicMaterial({ map: glowDecal(), color: new THREE.Color(2.5, 0.8, 0.15), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+      z.mesh = new THREE.Mesh(new THREE.PlaneGeometry(z.r * 2.2, z.r * 2.2).rotateX(-Math.PI / 2), gm); z.mesh.position.copy(z.pos).setY(z.pos.y + 0.06);
+      this.decal(z.pos, z.r * 2, 'scorch');
+    } else if (z.kind === 'caltrops') {
+      const g = new THREE.Group(), mm = new THREE.MeshStandardMaterial({ color: 0x8a8e94, metalness: 0.9, roughness: 0.45 });
+      const geo = new THREE.TetrahedronGeometry(0.09);
+      for (let i = 0; i < 36; i++) { const a = Math.random() * 6.28, r = Math.sqrt(Math.random()) * z.r; const c = new THREE.Mesh(geo, mm); c.position.set(z.pos.x + Math.cos(a) * r, 0, z.pos.z + Math.sin(a) * r); c.position.y = heightAt(c.position.x, c.position.z) + 0.05; c.rotation.set(Math.random() * 6, Math.random() * 6, 0); g.add(c); }
+      z.mesh = g;
     }
-    p.mp -= S.mana; p.cds[name] = S.cd;
+    if (z.mesh) this.scene.add(z.mesh);
+    this.hazards.push({ ...z, kind: 'zone' });
   }
 
   throwFlask(from, to) {
@@ -622,13 +704,13 @@ export class Game {
     this.projectiles.push({ mesh: m, vel: v, grav: 0, life: 3, owner: 'enemy', kind: 'fireball', dmg: this.boss.dmg * 0.6 });
   }
 
-  telegraph(pos, r, delay, onDone, meteor = false) {
-    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.1, 0.22, 0.05), transparent: true, opacity: 0.0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
+  telegraph(pos, r, delay, onDone, meteor = false, friendly = false) {
+    const mat = new THREE.MeshBasicMaterial({ color: friendly ? new THREE.Color(0.9, 0.8, 0.4) : new THREE.Color(1.1, 0.22, 0.05), transparent: true, opacity: 0.0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
     const ring = new THREE.Mesh(new THREE.RingGeometry(r * 0.92, r, 48).rotateX(-Math.PI / 2), mat);
     const fill = new THREE.Mesh(new THREE.CircleGeometry(r, 48).rotateX(-Math.PI / 2), mat.clone());
     ring.position.copy(pos).setY(pos.y + 0.1); fill.position.copy(ring.position);
     this.scene.add(ring, fill);
-    this.hazards.push({ kind: 'telegraph', ring, fill, t: 0, life: delay, onDone, meteor, pos: pos.clone() });
+    this.hazards.push({ kind: 'telegraph', ring, fill, t: 0, life: delay, onDone, meteor, friendly, pos: pos.clone() });
   }
 
   // ------------------------------------------------------------------ NPC
@@ -694,6 +776,7 @@ export class Game {
   // ------------------------------------------------------------------ update loop
   update(dt) {
     if (this.hitStop > 0) { this.hitStop -= dt; dt *= 0.1; }
+    if (this.slowMo > 0) { this.slowMo -= dt; dt *= 0.35; }
     this.t += dt;
     const p = this.player;
     if (this.started) this.pickHover();
@@ -724,12 +807,13 @@ export class Game {
     // UI
     this.ui.setOrbs(p.hp, p.stats.maxHp, p.mp, p.stats.maxMp, this.t);
     this.ui.setXP(p.xp / this.xpFor(p.level), p.level);
+    const defs = this.slotDefs();
     this.ui.setSkill('attack', 0, true);
-    for (const k of Object.keys(SKILLS)) this.ui.setSkill(k, Math.max(0, (p.cds[k] || 0) / SKILLS[k].cd), p.mp >= SKILLS[k].mana, k === 'potion' ? p.potions : null);
+    for (const k in defs) if (k !== 'attack') this.ui.setSkill(k, Math.max(0, (p.cds[k] || 0) / defs[k].cd), p.mp >= defs[k].mana, k === 'potion' ? p.potions : null);
     const tgt = this.hover || (this.lastTargetT > 0 && !this.lastTarget?.dead ? this.lastTarget : null);
     this.lastTargetT -= dt;
     if (tgt && !tgt.boss) this.ui.showTarget(tgt.name + (tgt.level ? `  ·  Lv ${tgt.level}` : ''), tgt.hp / tgt.maxHp, tgt.elite ? 'elite' : ''); else this.ui.hideTarget();
-    const buffs = []; if (p.buffs.ward > 0) buffs.push({ icon: 'ward', t: p.buffs.ward }); if (p.whirlT > 0) buffs.push({ icon: 'whirl', t: p.whirlT });
+    const buffs = []; if (p.buffs.ward > 0) buffs.push({ icon: 'wall', t: p.buffs.ward }); if (p.whirlT > 0) buffs.push({ icon: 'whirl', t: p.whirlT }); if (p.buffs.stealth > 0) buffs.push({ icon: 'vanish', t: p.buffs.stealth });
     this.ui.buffs(buffs);
     this.ui.updateWorld(this.camera, dt, this.keys['alt']);
     this.ui.enemyBars(this.enemies, this.camera);
@@ -753,17 +837,33 @@ export class Game {
     let moving = false;
     const speed = 6.4 * (1 + s.move / 100) * (p.whirlT > 0 ? 0.75 : 1);
     if (p.dead) { p.st.deadT += dt; }
+    else if (p.rollT > 0) {
+      // evade: a low, quick roll with invulnerability frames; starting it as a blow lands is a parry
+      p.rollT -= dt; p.rollAge += dt;
+      const k = Math.max(0, p.rollT / 0.42);
+      p.pos.addScaledVector(p.rollDir, (5 + 13 * k) * dt);
+      p.st.crouch = Math.sin(Math.min(1, p.rollAge / 0.42) * Math.PI) * 0.9; p.st.fwdLean = 1;
+      if (Math.random() < 0.5) this.fx.dust(p.pos, 1, 0.6);
+      if (p.rollT <= 0) p.st.crouch = 0;
+      moving = true;
+    }
     else if (p.dashT > 0) {
       p.dashT -= dt;
-      p.pos.addScaledVector(p.dashDir, 34 * dt);
+      p.pos.addScaledVector(p.dashDir, (p.dashDmg ? 34 : 24) * dt);
       this.fx.dust(p.pos, 2, 0.8);
-      this.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1), 4, { speed: 1, life: 0.4, size: 0.4, size1: 0.05, color: new THREE.Color(2.2, 1.6, 0.8) });
-      for (const e of this.enemies) if (!e.dead && !e.hidden && !p.dashHit.has(e) && e.pos.distanceTo(p.pos) < 1.6 + e.radius) {
-        p.dashHit.add(e); const r = this.rollDamage(1.3); this.damageEnemy(e, r.d, r.crit, p.pos);
-        if (!e.boss) e.pos.addScaledVector(p.dashDir, 1.5);
+      if (p.dashDmg) this.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1), 4, { speed: 1, life: 0.4, size: 0.4, size1: 0.05, color: new THREE.Color(2.2, 1.6, 0.8) });
+      if (p.dashDmg) for (const e of this.enemies) if (!e.dead && !e.hidden && !p.dashHit.has(e) && e.pos.distanceTo(p.pos) < 1.6 + e.radius) {
+        p.dashHit.add(e); const r = this.rollDamage(p.dashDmg); this.damageEnemy(e, r.d, r.crit, p.pos, 'normal', { weight: 1.3, knock: 1.6 });
       }
+      if (p.dashT <= 0) p.st.crouch = 0;
       moving = true;
     } else {
+      // flurry: a burst of knife cuts on one foe
+      if (p.flurry) {
+        const f = p.flurry; f.t -= dt;
+        if (f.e.dead || f.n <= 0) p.flurry = null;
+        else if (f.t <= 0) { f.t = 0.09; f.n--; p.st.action = 'attack'; p.st.actionT = 0.45; p.actionDur = 0.2; p.hitApplied = true; this.slashTrail(); this.audio.swing(); const r = this.rollDamage(0.6); this.damageEnemy(f.e, r.d, r.crit, p.pos, 'normal', { weight: 0.25 }); }
+      }
       // whirlwind
       if (p.whirlT > 0) {
         p.whirlT -= dt; p.whirlTick -= dt; p.st.action = 'spin';
@@ -787,12 +887,14 @@ export class Game {
       }
       if (p.target && (p.target.dead || p.target.hidden)) p.target = null;
       if (p.target) { const dd = p.pos.distanceTo(p.target.pos); if (dd < (p.tgtBest ?? 1e9) - 0.5) { p.tgtBest = dd; p.tgtStall = 0; } else p.tgtStall = (p.tgtStall || 0) + dt; if (p.tgtStall > 4 && dd > 3) { p.target = null; p.tgtStall = 0; p.tgtBest = undefined; } } else { p.tgtBest = undefined; p.tgtStall = 0; }
-      if (!goal && p.target && p.whirlT <= 0) {
+      const A = this.kit.attack;
+      if (!goal && p.target && p.whirlT <= 0 && !p.flurry) {
         const d = Math.hypot(p.target.pos.x - p.pos.x, p.target.pos.z - p.pos.z);
-        if (d <= 1.6 + p.target.radius) {
+        const inRange = A.kind === 'melee' ? d <= A.range + p.target.radius : (d <= A.range && navClear(p.pos.x, p.pos.z, p.target.pos.x, p.target.pos.z));
+        if (inRange) {
           p.facing += angDiff(p.facing, Math.atan2(p.target.pos.x - p.pos.x, p.target.pos.z - p.pos.z)) * Math.min(1, dt * 20);
-          if (!p.st.action) { p.st.action = 'attack'; p.st.actionT = 0; p.actionDur = 0.62 / (1 + s.speed / 100); p.hitApplied = false; this.audio.swing(); }
-        } else if (!p.st.action || p.st.action === 'throw') goal = p.target.pos;
+          if (!p.st.action) { p.st.action = A.kind === 'melee' ? 'attack' : A.action; p.st.actionT = 0; p.actionDur = A.dur / (1 + s.speed / 100); p.hitApplied = false; p.atkTarget = p.target; if (A.kind === 'melee') this.audio.swing(); }
+        } else if (!p.st.action || p.st.action === 'throw' || p.st.action === 'shoot') goal = p.target.pos;
       } else if (!goal && p.moveTo && !(p.st.action === 'attack')) goal = p.moveTo;
       if (p.pickup && this.drops.includes(p.pickup) && p.pos.distanceTo(p.pickup.to) < 1.5) { this.tryPickup(p.pickup); p.pickup = null; p.moveTo = null; }
       if (goal) goal = this.steer(p, goal);
@@ -820,15 +922,23 @@ export class Game {
       // attack resolution
       if (p.st.action && p.st.action !== 'spin') {
         p.st.actionT += dt / p.actionDur;
-        if (p.st.action === 'attack' && !p.hitApplied && p.st.actionT > 0.55) {
+        if (p.pendingHit && p.st.actionT > p.pendingHit.at) { const f = p.pendingHit.fn; p.pendingHit = null; f(); }
+        if (!p.hitApplied && p.st.actionT > 0.55 && (p.st.action === 'attack' || ((p.st.action === 'shoot' || p.st.action === 'throw') && p.atkTarget))) {
           p.hitApplied = true;
-          this.slashTrail();
-          const fwd = new THREE.Vector3(Math.sin(p.facing), 0, Math.cos(p.facing));
-          for (const e of this.enemies) {
-            if (e.dead || e.hidden) continue;
-            const v = tmp.copy(e.pos).sub(p.pos).setY(0), d = v.length();
-            if (d < 2.4 + e.radius && v.normalize().dot(fwd) > 0.2) { const r = this.rollDamage(1); this.damageEnemy(e, r.d, r.crit, p.pos); }
+          if (A.kind === 'melee') {
+            this.slashTrail();
+            const fwd = new THREE.Vector3(Math.sin(p.facing), 0, Math.cos(p.facing));
+            for (const e of this.enemies) {
+              if (e.dead || e.hidden) continue;
+              const v = tmp.copy(e.pos).sub(p.pos).setY(0), d = v.length();
+              if (d < A.reach + e.radius && v.normalize().dot(fwd) > A.arc) { const r = this.rollDamage(1); this.damageEnemy(e, r.d, r.crit, p.pos); }
+            }
+          } else if (p.atkTarget && !p.atkTarget.dead) {
+            const t = p.atkTarget, dir = new THREE.Vector3(t.pos.x - p.pos.x, 0, t.pos.z - p.pos.z).normalize();
+            this.playerShot(dir, { ...A.proj, weight: this.kit.weight });
+            this.audio.whoosh();
           }
+          p.atkTarget = null;
         }
         if (p.st.actionT >= 1) { p.st.action = null; }
       }
@@ -852,10 +962,9 @@ export class Game {
     this.vortex.position.copy(p.pos); this.vortex.visible = vu.uA.value > 0.01;
     // ward visuals
     const w = p.buffs.ward > 0 ? Math.min(1, p.buffs.ward * 2) : 0;
-    this.wardSigil.material.opacity = THREE.MathUtils.lerp(this.wardSigil.material.opacity, w * 0.75, dt * 6);
-    this.wardSigil.position.set(p.pos.x, p.pos.y + 0.12, p.pos.z); this.wardSigil.rotation.y += dt * 0.6;
+    this.wardA = THREE.MathUtils.lerp(this.wardA || 0, w * 0.5, dt * 6);
     this.wardRings.forEach((r, i) => {
-      r.material.opacity = this.wardSigil.material.opacity;
+      r.material.opacity = this.wardA;
       r.position.set(p.pos.x, p.pos.y + 1.1, p.pos.z);
       r.rotation.set(this.t * (1.5 + i) + i, this.t * (1.1 - i * 0.3), 0);
     });
@@ -917,6 +1026,11 @@ export class Game {
 
   updateEnemies(dt) {
     const p = this.player;
+    // attack tokens: only the nearest few melee foes press in; the others circle at a distance and look for the flank
+    const melee = this.enemies.filter((e) => !e.dead && !e.hidden && e.alerted && !e.boss && !e.T.ranged && e.riseT >= 1);
+    melee.sort((a, b) => a.pos.distanceToSquared(p.pos) - b.pos.distanceToSquared(p.pos));
+    melee.forEach((e, i) => { e.token = i < MAX_TOKENS; e.ringSlot = i; });
+    const stealthed = p.buffs.stealth > 0;
     for (const e of this.enemies) {
       const dist = e.pos.distanceTo(p.pos);
       e.rig.visible = dist < 45;
@@ -949,29 +1063,54 @@ export class Game {
         continue;
       }
       if (e.boss) { this.bossAI(e, dt); e.pos.y = heightAt(e.pos.x, e.pos.z); e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; e.st.walkBlend = THREE.MathUtils.lerp(e.st.walkBlend, e.moving ? 1 : 0, Math.min(1, dt * 6)); e.st.phase += dt * (e.moving ? e.speed * 1.2 : 0); animateHumanoid(e.rig, e.st, this.t, dt); continue; }
-      if (!e.alerted && dist < (e.T.ranged ? 16 : 13) && !p.dead) e.alerted = true;
+      e.lost = Math.max(0, (e.lost || 0) - dt);
+      if (!e.alerted && !e.lost && dist < (stealthed ? 2.5 : e.T.ranged ? 16 : 13) && !p.dead) e.alerted = true;
+      if (stealthed && e.alerted && dist > 4 && !e.boss) { e.alerted = false; e.lost = 1; }
       let moving = false;
-      if (e.st.action) {
+      const slow = e.slowT > 0 ? 1 - e.slowK : 1; e.slowT = Math.max(0, (e.slowT || 0) - dt);
+      if (e.knock && e.knock.lengthSq() > 0.0001) { e.pos.addScaledVector(e.knock, dt); e.knock.multiplyScalar(Math.max(0, 1 - dt * 10)); }
+      if (e.staggerT > 0) {
+        // reeling: no attacks, stumble, open to heavy hits
+        e.staggerT -= dt; e.st.hitT = Math.max(e.st.hitT, 0.8); e.st.action = null;
+        if (Math.random() < 0.08) this.fx.burst(tmp.copy(e.pos).setY(e.pos.y + 2.1), 1, { speed: 1, life: 0.6, size: 0.12, size1: 0.02, color: new THREE.Color(2.5, 2.2, 1.2), up: 0.5 });
+        if (e.staggerT <= 0) e.staggerT = 0;
+      } else if (e.st.action) {
         e.st.actionT += dt / e.T.atk * 1.6;
         if (!e.didHit && e.st.actionT > 0.6) {
           e.didHit = true;
           if (e.T.ranged) this.shootArrow(e);
-          else if (dist < e.range + 0.9 && !p.dead) this.damagePlayer(e.dmg, e.pos);
+          else if (dist < e.range + 0.9 && !p.dead) this.damagePlayer(e.dmg, e.pos, e);
         }
         if (e.st.actionT >= 1) e.st.action = null;
       } else if (e.alerted && !p.dead) {
         const face = Math.atan2(p.pos.x - e.pos.x, p.pos.z - e.pos.z);
         e.facing += angDiff(e.facing, face) * Math.min(1, dt * 8);
-        if (dist > e.range) {
-          const wp = this.steer(e, p.pos);
+        // where this foe wants to stand
+        let want = null;
+        if (e.T.ranged) {
+          // archers hold 8–13 m, backing off from a closing hero and side-stepping to keep a clear line
+          if (dist > 13 || !navClear(e.pos.x, e.pos.z, p.pos.x, p.pos.z)) want = p.pos;
+          else if (dist < 7.5) { const away = tmp.copy(e.pos).sub(p.pos).setY(0).normalize(); want = { x: e.pos.x + away.x * 4 + away.z * (e.ringSlot % 2 ? 2 : -2), z: e.pos.z + away.z * 4 - away.x * (e.ringSlot % 2 ? 2 : -2) }; }
+        } else if (!e.token) {
+          // no token: orbit at 4.5 m, spread around the hero, drifting toward the hero's back
+          const back = p.facing + Math.PI, n = Math.max(1, melee.length - MAX_TOKENS);
+          const slot = (e.ringSlot - MAX_TOKENS) / n - 0.5;
+          const a = back + slot * 2.6 + Math.sin(this.t * 0.4 + e.ringSlot) * 0.25;
+          want = { x: p.pos.x + Math.sin(a) * 4.5, z: p.pos.z + Math.cos(a) * 4.5 };
+        } else if (dist > e.range) {
+          // token holder: approach, angled toward the flank when others already engage the front
+          const flank = (e.ringSlot % 2 ? 1 : -1) * Math.min(1, e.ringSlot) * 1.4;
+          want = { x: p.pos.x + Math.cos(p.facing) * flank, z: p.pos.z - Math.sin(p.facing) * flank };
+        }
+        if (want && Math.hypot(want.x - e.pos.x, want.z - e.pos.z) > 0.5) {
+          const wp = this.steer(e, want);
           const dir = tmp.set(wp.x - e.pos.x, 0, wp.z - e.pos.z).normalize();
-          e.pos.addScaledVector(dir, e.speed * dt); moving = true;
-          if (e.path) e.facing += angDiff(e.facing, Math.atan2(dir.x, dir.z)) * Math.min(1, dt * 8);
-        } else if (e.T.ranged && dist < 6 && dist > 2.4 && e.atkCd > e.T.atk * 0.5) {
-          const dir = tmp.copy(e.pos).sub(p.pos).setY(0).normalize();
-          e.pos.addScaledVector(dir, e.speed * 0.7 * dt); moving = true;
-        } else if (e.atkCd <= 0) {
+          const sp = (e.token || e.T.ranged ? e.speed : e.speed * 0.6) * slow;
+          e.pos.addScaledVector(dir, sp * dt); moving = true;
+          if (e.path || dist > 6) e.facing += angDiff(e.facing, Math.atan2(dir.x, dir.z)) * Math.min(1, dt * 8);
+        } else if (e.atkCd <= 0 && (e.T.ranged || (e.token && dist <= e.range + 0.4))) {
           e.st.action = e.T.action; e.st.actionT = 0; e.didHit = false; e.atkCd = e.T.atk * rand(0.9, 1.3);
+          if (!e.T.ranged) this.telegraphTell?.(e);
         }
       } else if (!e.alerted) {
         // idle wander near home
@@ -1029,6 +1168,21 @@ export class Game {
         this.fx.fire(mp, 0.6);
         if (p.pos.distanceTo(tmp.copy(mp).setY(p.pos.y)) < 0.9 && Math.abs(mp.y - p.pos.y - 1) < 1.6) { this.damagePlayer(q.dmg, mp); dead = true; this.fx.burst(mp, 30, { speed: 5, life: 0.5, size: 0.5, size1: 0.05, color: new THREE.Color(4, 1.4, 0.3) }); }
         if (mp.y < heightAt(mp.x, mp.z) + 0.2) { dead = true; this.fx.burst(mp, 20, { speed: 4, life: 0.5, size: 0.5, size1: 0.05, color: new THREE.Color(4, 1.4, 0.3), up: 2 }); }
+      } else if (q.kind === 'pshot') {
+        const o = q.o;
+        if (o.kind === 'fire') { this.fx.fire(mp, 0.3); }
+        else if (o.glow && Math.random() < 0.7) this.fx.glow.spawn({ pos: { x: mp.x, y: mp.y, z: mp.z }, life: 0.25, size: 0.25, size1: 0.02, color: o.glow });
+        for (const e of this.enemies) {
+          if (e.dead || e.hidden || q.hit.has(e)) continue;
+          if (Math.hypot(e.pos.x - mp.x, e.pos.z - mp.z) < e.radius + 0.35 && mp.y - e.pos.y < (e.boss ? 5 : 2.2)) {
+            q.hit.add(e); const r = this.rollDamage(o.mult || 1, !!o.fire);
+            this.damageEnemy(e, r.d, r.crit, tmp2.copy(mp).sub(q.vel).setY(e.pos.y), o.fire ? 'fire' : 'normal', { weight: o.weight });
+            if (o.burn) e.burn = Math.max(e.burn || 0, o.burn);
+            if (o.fire) this.fx.burst(mp, 10, { speed: 3, life: 0.4, size: 0.4, size1: 0.05, color: new THREE.Color(3.5, 1.3, 0.3) });
+            if (q.pierce-- <= 0) { dead = true; break; }
+          }
+        }
+        const c = mp.clone(); if (resolve(c, 0.05, true) || mp.y < heightAt(mp.x, mp.z)) dead = true;
       } else if (q.kind === 'arrow') {
         if (p.pos.distanceTo(tmp.copy(mp).setY(p.pos.y)) < 0.6) { this.damagePlayer(q.dmg, mp); dead = true; }
         const c = mp.clone(); if (resolve(c, 0.05, true)) dead = true;
@@ -1053,8 +1207,28 @@ export class Game {
         h.tick -= dt;
         if (h.tick <= 0) { h.tick = 0.5; for (const e of this.enemies) if (!e.dead && !e.hidden && e.pos.distanceTo(h.pos) < h.r + e.radius) { const r = this.rollDamage(0.3, true); this.damageEnemy(e, r.d, false, h.pos, 'dot'); } }
         if (k >= 1) { this.scene.remove(h.mesh); this.hazards.splice(i, 1); }
+      } else if (h.kind === 'zone') {
+        const k2 = h.t / h.life;
+        if (h.kind2 === 'fire') {
+          h.mesh.material.opacity = Math.min(1, (1 - k2) * 2) * (0.8 + Math.random() * 0.2);
+          if (Math.random() < 0.8) { const a = Math.random() * 6.28, r = Math.random() * h.r; this.fx.fire(tmp.set(h.pos.x + Math.cos(a) * r, h.pos.y + 0.1, h.pos.z + Math.sin(a) * r), 0.6); }
+        } else if (h.kind2 === 'smoke') {
+          if (Math.random() < 0.6) { const a = Math.random() * 6.28, r = Math.random() * h.r; this.fx.smoke.spawn({ pos: { x: h.pos.x + Math.cos(a) * r, y: h.pos.y + Math.random(), z: h.pos.z + Math.sin(a) * r }, vel: { x: 0.2, y: 0.4, z: 0.1 }, life: 2.5, size: 1.4, size1: 3.2, color: new THREE.Color(0.42, 0.4, 0.38), alpha: 0.5, drag: 0.5, fadeIn: 0.3 }); }
+        }
+        h.tick -= dt;
+        if (h.tick <= 0) {
+          h.tick = 0.5;
+          for (const e of this.enemies) if (!e.dead && !e.hidden && e.pos.distanceTo(h.pos) < h.r + e.radius) {
+            if (h.tickDmg) { const r = this.rollDamage(h.tickDmg, h.kind2 === 'fire'); this.damageEnemy(e, r.d, false, h.pos, 'dot'); }
+            if (h.burn) e.burn = Math.max(e.burn || 0, h.burn);
+            if (h.slow) { e.slowT = 0.6; e.slowK = h.slow; }
+            if (h.kind2 === 'smoke' && !e.boss) { e.alerted = false; e.lost = 1.5; e.st.action = null; }
+          }
+        }
+        if (k2 >= 1) { if (h.mesh) this.scene.remove(h.mesh); this.hazards.splice(i, 1); }
       } else if (h.kind === 'telegraph') {
-        h.ring.material.opacity = 0.85; h.fill.material.opacity = 0.06 + k * 0.22;
+        const fa = h.friendly ? 0.18 : 1;
+        h.ring.material.opacity = 0.85 * fa; h.fill.material.opacity = (0.06 + k * 0.22) * fa;
         h.fill.scale.setScalar(Math.max(0.01, k));
         if (h.meteor && k > 0.6) { // falling meteor streak
           const y = (1 - (k - 0.6) / 0.4) * 18;
@@ -1092,11 +1266,12 @@ export class Game {
     if (!this.camInit) { this.camPos.copy(target); this.camInit = true; }
     this.camPos.lerp(target, Math.min(1, dt * 6));
     this.camera.position.copy(this.camPos);
+    if (this.camKick) { this.camera.position.addScaledVector(this.camKick, 1); this.camKick.multiplyScalar(Math.max(0, 1 - dt * 12)); }
     if (this.shake > 0) {
       this.shake = Math.max(0, this.shake - dt * 1.8);
       const s = this.shake * this.shake * 0.8;
       this.camera.position.x += (Math.random() - 0.5) * s; this.camera.position.y += (Math.random() - 0.5) * s; this.camera.position.z += (Math.random() - 0.5) * s;
     }
-    this.camera.lookAt(this.camPos.x, this.camPos.y - dist * 1.0 + 1.0, this.camPos.z - dist * 0.78);
+    this.camera.lookAt(this.camPos.x + (this.camKick?.x || 0) * 0.5, this.camPos.y - dist * 1.0 + 1.0, this.camPos.z - dist * 0.78 + (this.camKick?.z || 0) * 0.5);
   }
 }

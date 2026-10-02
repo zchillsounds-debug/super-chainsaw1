@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { RARITY, statLines } from './items.js';
+import { SKILL_ICONS, SLOT_KEYS, CLASSES, CLASS_ORDER } from './classes.js';
 
 const ICONS = {
   attack: `<svg viewBox="0 0 64 64"><path d="M14 52 L46 12 Q52 8 54 10 Q52 18 48 20 L18 56 Z" fill="#dfe6ee" stroke="#6a5530" stroke-width="2"/><path d="M10 46 L22 58" stroke="#d9a441" stroke-width="5" stroke-linecap="round"/></svg>`,
@@ -70,15 +71,27 @@ export class UI {
     this.hpCanvas = this.$('#hporb canvas').getContext('2d'); this.mpCanvas = this.$('#mporb canvas').getContext('2d');
     this.mini = this.$('#minimap canvas').getContext('2d');
     this.v = new THREE.Vector3();
-    this.buildSkills();
     this.tooltip = this.$('#tooltip');
     this.$('#inv .close').onclick = () => this.toggleInventory(false);
   }
   show() { this.hud.classList.remove('hidden'); const t = this.$('#title'); t.classList.add('gone'); setTimeout(() => { t.style.display = 'none'; }, 1300); }
-  buildSkills() {
-    const defs = [['attack', 'LMB'], ['naft', 'RMB'], ['whirl', '1'], ['dash', '2'], ['ward', '3'], ['potion', 'Q']];
-    this.$('#skills').innerHTML = defs.map(([k, key]) => `<div class="skill" data-k="${k}">${ICONS[k]}<div class="cd"></div><div class="key">${key}</div><div class="cnt"></div></div>`).join('');
-    this.skillEls = {}; for (const el of this.root.querySelectorAll('.skill')) this.skillEls[el.dataset.k] = el;
+  // the skill bar follows the chosen class; on touch the same elements are moved into the thumb cluster
+  buildSkills(defs) {
+    const host = document.getElementById('tskills') || this.$('#skills');
+    host.querySelectorAll('.skill').forEach((el) => el.remove());
+    const html = Object.entries(defs).map(([k, d]) => `<div class="skill t-${k}" data-k="${k}" title="${d.name}">${SKILL_ICONS[d.icon] || ''}<div class="cd"></div><div class="key">${SLOT_KEYS[k]}</div><div class="cnt"></div></div>`).join('');
+    host.insertAdjacentHTML('beforeend', html);
+    this.skillEls = {}; for (const el of host.querySelectorAll('.skill')) this.skillEls[el.dataset.k] = el;
+    this.onSkillsBuilt?.(this.skillEls);
+  }
+  // class choice before the prologue (returns a promise of the class id)
+  classPick() {
+    return new Promise((res) => {
+      const el = document.createElement('div'); el.id = 'classpick';
+      el.innerHTML = `<div class="cp-title">Choose Salim's Discipline</div><div class="cp-sub">You can change it later at the training yard in the suq.</div><div class="cp-row">${CLASS_ORDER.map((k) => { const c = CLASSES[k]; return `<button class="cp-card" data-k="${k}"><div class="cp-ic">${SKILL_ICONS[c.attack.icon]}</div><div class="cp-ar">${c.ar}</div><div class="cp-name">${c.name}</div><div class="cp-role">${c.role}</div><div class="cp-kit">${Object.values(c.skills).map((s) => `<span>${SKILL_ICONS[s.icon]}<i>${s.name}</i></span>`).join('')}</div></button>`; }).join('')}</div>`;
+      this.root.appendChild(el);
+      el.addEventListener('click', (e) => { const b = e.target.closest('.cp-card'); if (!b) return; el.classList.add('out'); setTimeout(() => el.remove(), 500); res(b.dataset.k); });
+    });
   }
   setSkill(k, cdFrac, usable = true, count = null) {
     const el = this.skillEls[k]; if (!el) return;
@@ -141,7 +154,7 @@ export class UI {
     b.classList.remove('hidden'); b.classList.remove('out'); void b.offsetWidth; b.classList.add('in');
     clearTimeout(this._bt); this._bt = setTimeout(() => { b.classList.add('out'); setTimeout(() => b.classList.add('hidden'), 900); }, ms);
   }
-  buffs(list) { this.$('#buffs').innerHTML = list.map((b) => `<div class="buff">${ICONS[b.icon]}<span>${Math.ceil(b.t)}</span></div>`).join(''); }
+  buffs(list) { const h = list.map((b) => b.icon + Math.ceil(b.t)).join(); if (h === this._bh) return; this._bh = h; this.$('#buffs').innerHTML = list.map((b) => `<div class="buff">${SKILL_ICONS[b.icon] || ICONS[b.icon] || ''}<span>${Math.ceil(b.t)}</span></div>`).join(''); }
   dialog(name, text, cb) {
     const d = this.$('#dialog'); d.classList.remove('hidden'); document.body.classList.add('indialog');
     d.querySelector('.dname').textContent = name; d.querySelector('.dtext').innerHTML = text;

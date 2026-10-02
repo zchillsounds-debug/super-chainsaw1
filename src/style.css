@@ -141,10 +141,10 @@ body:not(.touch) #touch{display:none}
 #tskills .key{display:none}
 #tskills .t-attack{right:0;bottom:0;width:92px;height:92px}
 #tskills .t-attack svg{inset:16px;width:60px;height:60px}
-#tskills .t-naft{right:100px;bottom:0}
-#tskills .t-whirl{right:96px;bottom:66px}
-#tskills .t-dash{right:52px;bottom:116px}
-#tskills .t-ward{right:0;bottom:104px}
+#tskills .t-rmb{right:100px;bottom:0}
+#tskills .t-s1{right:96px;bottom:66px}
+#tskills .t-s2{right:52px;bottom:116px}
+#tskills .t-s3{right:0;bottom:104px}
 #tskills .t-potion{right:150px;bottom:130px;width:48px;height:48px}
 .tbtn{position:absolute;pointer-events:auto;top:calc(12px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));padding:8px 14px;font-size:13px}
 body.touch #skills{display:none}
@@ -251,3 +251,23 @@ body.touch #cine .sline{font-size:16px}
 body.touch #cine .card .ar{font-size:46px}body.touch #cine .card .en{font-size:19px}
 @media (orientation:landscape) and (max-height:500px){#cine.on .lb{height:8vh}#cine .sub{bottom:calc(8vh + 4px)}#cine .card{top:22%}}
 #contbtn{font-size:20px;padding:12px 40px;margin-top:12px;display:block}
+
+/* ---------------- Round 3: classes, evade, combat feedback */
+#tskills .t-dodge{right:150px;bottom:62px;width:50px;height:50px}
+.dn.back{color:#d8a0ff;font-size:23px} .dn.block{color:#cfd6e0;font-size:15px;letter-spacing:.06em} .dn.stagger{color:#ffcf70;font-size:17px;letter-spacing:.08em}
+.dn.parry{color:#fff2c0;font-size:26px;text-shadow:0 0 10px #ffb040,0 2px 2px #000}
+#classpick{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;background:radial-gradient(ellipse at center,#1a120ccc,#050302f2);color:#ead9b8;transition:opacity .5s;overflow-y:auto}
+#classpick.out{opacity:0;pointer-events:none}
+.cp-title{font:700 clamp(20px,4vw,34px) Cinzel;color:#f0d08a;text-align:center}
+.cp-sub{font:15px Amiri,serif;opacity:.75;text-align:center}
+.cp-row{display:grid;grid-template-columns:repeat(4,minmax(0,220px));gap:12px;margin-top:8px}
+.cp-card{background:linear-gradient(#2a1c12,#140c08);border:1px solid #6a5030;border-radius:8px;padding:12px;color:inherit;text-align:center;cursor:pointer;font:inherit;transition:transform .15s,border-color .15s}
+.cp-card:hover,.cp-card:focus{transform:translateY(-3px);border-color:#e0b060;outline:none}
+.cp-ic svg{width:56px;height:56px}
+.cp-ar{font:500 22px 'Reem Kufi',sans-serif;color:#e0b060}
+.cp-name{font:700 18px Cinzel;color:#fff0d0}
+.cp-role{font:14px Amiri,serif;opacity:.8;min-height:40px}
+.cp-kit{display:flex;flex-direction:column;gap:3px;margin-top:8px;text-align:left}
+.cp-kit span{display:flex;align-items:center;gap:6px;font:13px Amiri,serif}
+.cp-kit svg{width:22px;height:22px;flex:none}
+@media (max-width:760px){.cp-row{grid-template-columns:repeat(2,minmax(0,1fr))}.cp-role{min-height:0;font-size:13px}.cp-kit{display:none}.cp-card{padding:8px}}

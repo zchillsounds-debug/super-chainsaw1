@@ -6,7 +6,7 @@ export const RARITY = {
   legendary: { name: 'Legendary', color: '#ff8a2a', beam: 0xff7a10, affixes: 5 },
 };
 
-const BASES = {
+export const BASES = {
   weapon: [
     { name: 'Sayf', min: 4, max: 9, icon: '⚔' }, { name: 'Yamani Sayf', min: 6, max: 12, icon: '⚔' },
     { name: 'Qala\'i Sayf', min: 8, max: 15, icon: '⚔' }, { name: 'Hindi Sayf', min: 11, max: 19, icon: '⚔' },
@@ -41,6 +41,9 @@ const UNIQUES = [
 ];
 
 let uid = 1;
+// loot follows the hero's discipline: bows for the Rami, siphons for the Naffat, knives for the 'Ayyar
+let weaponPool = null, weaponCls = 'faris';
+export function setWeaponPool(cls, list) { weaponCls = cls; weaponPool = list.map((w) => ({ ...w, icon: '⚔' })); }
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
 export function rollRarity(level, bonus = 0) {
@@ -57,14 +60,15 @@ export function makeItem(level, rarity, slot) {
     const pool = UNIQUES.filter((u) => u.slot === slot);
     const u = pool.length ? pick(pool) : pick(UNIQUES);
     const it = { id: uid++, slot: u.slot, rarity, name: u.name, base: u.base, level, stats: { ...u.stats }, flavor: u.flavor, icon: (BASES[u.slot][0] || {}).icon };
-    if (u.min) { it.min = u.min + level; it.max = u.max + level * 2; }
+    if (u.min) { it.min = u.min + level; it.max = u.max + level * 2; it.cls = weaponCls; if (weaponCls !== 'faris') { it.base = weaponPool[3].name; } }
     if (u.armor) it.armor = u.armor + level * 2;
     return it;
   }
-  const bases = BASES[slot];
+  const bases = slot === 'weapon' && weaponPool ? weaponPool : BASES[slot];
   const tier = Math.min(bases.length - 1, Math.floor(Math.random() * (1 + level / 3)));
   const b = bases[tier];
   const it = { id: uid++, slot, rarity, base: b.name, name: b.name, level, stats: {}, icon: b.icon };
+  if (slot === 'weapon') it.cls = weaponCls;
   if (b.min) { it.min = b.min + Math.floor(level * 0.8); it.max = b.max + level * 1.5 | 0; }
   if (b.armor) it.armor = b.armor + level;
   const n = RARITY[rarity].affixes;

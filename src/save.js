@@ -8,7 +8,7 @@ export function saveGame(g) {
   const p = g.player;
   const data = {
     act: g.act || 1, t: g.t, kills: g.kills || 0, quests: Object.fromEntries(g.quests.map((q) => [q.id, q.done])),
-    player: { level: p.level, xp: p.xp, gold: p.gold, potions: p.potions, equip: p.equip, bag: p.bag },
+    player: { cls: p.cls, level: p.level, xp: p.xp, gold: p.gold, potions: p.potions, equip: p.equip, bag: p.bag },
   };
   try { localStorage.setItem(KEY, JSON.stringify(data)); } catch { /* storage unavailable: play on without saving */ }
 }
@@ -17,6 +17,7 @@ export function loadSave() {
 }
 export function applySave(g, s) {
   const p = g.player;
+  if (s.player.cls && s.player.cls !== p.cls) g.setClass(s.player.cls);
   Object.assign(p, { level: s.player.level, xp: s.player.xp, gold: s.player.gold, potions: s.player.potions, equip: s.player.equip || {}, bag: s.player.bag || new Array(40).fill(null) });
   g.recalcStats(); p.hp = p.stats.maxHp; p.mp = p.stats.maxMp;
   g.act = s.act; g.t = s.t || 0; g.kills = s.kills || 0;

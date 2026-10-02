@@ -38,6 +38,7 @@ export class Director {
       this.def = def; this.resolve = resolve; this.i = -1; this.t = 0; this.timeScale = 1;
       this.el.classList.remove('hidden'); document.body.classList.add('incine');
       this.ui.hud?.classList.add('cinehide');
+      this.game.setLootBeams?.(false);
       this.game.cinematic = true; this.game.joy = null; this.game.lmb = false; this.game.player.moveTo = null; this.game.player.target = null;
       requestAnimationFrame(() => this.el.classList.add('on'));
       def.start?.(this);
@@ -77,7 +78,7 @@ export class Director {
     this.setLine(null); this.setCard(null); this.setCaption(null); this.fade(0, 0);
     if (this.bokeh) this.bokeh.enabled = false;
     this.grade.uniforms.uCine.value = 0;
-    this.game.cinematic = false; this.game.camInit = false;
+    this.game.cinematic = false; this.game.camInit = false; this.game.setLootBeams?.(true);
     d.end?.(this, skipped);
     this.resolve?.(skipped);
   }

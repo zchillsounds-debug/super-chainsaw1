@@ -44,34 +44,25 @@ export function setupMobile(game, ui) {
   let fadeT = null;
   const wake = () => { document.body.classList.add('tactive'); clearTimeout(fadeT); fadeT = setTimeout(() => document.body.classList.remove('tactive'), 1500); };
   addEventListener('pointerdown', wake, true);
-  // move the existing skill slots (they already show cooldowns) into a thumb cluster
+  // the skill slots (they already show cooldowns) live in a thumb cluster; rebuilt when the class changes
   const cl = wrap.querySelector('#tskills');
-  const order = ['attack', 'naft', 'whirl', 'dash', 'ward', 'potion'];
-  for (const k of order) { const el = ui.skillEls[k]; if (el) { el.classList.add('t-' + k); cl.appendChild(el); } }
-  const nearest = (r = 9) => {
-    let best = null, bd = r;
-    for (const e of game.enemies) { if (e.dead || e.hidden) continue; const d = e.pos.distanceTo(game.player.pos); if (d < bd) { bd = d; best = e; } }
-    return best;
-  };
-  const aim = () => {
-    const p = game.player, e = nearest(14);
-    const at = e ? e.pos.clone() : p.pos.clone().add(new THREE.Vector3(Math.sin(p.facing) * 6, 0, Math.cos(p.facing) * 6));
-    const v = at.project(game.camera); game.mouse.set(v.x, v.y);
-  };
   const press = (k) => {
     game.audio.init();
-    if (!game.started || game.player.dead || ui.dialogOpen) return;
-    if (k === 'attack') { const e = nearest(); if (e) { game.player.target = e; game.player.moveTo = null; } return; }
-    if (k === 'naft' || k === 'dash') aim();
+    if (!game.started || game.player.dead || ui.dialogOpen || game.paused) return;
+    if (k === 'attack') { const e = game.pickTarget(9); if (e) { game.player.target = e; game.player.moveTo = null; } return; }
+    const d = game.slotDefs()[k]; if (d?.aim) game.aimAuto();
     game.useSkill(k);
   };
-  for (const k of order) {
-    const el = ui.skillEls[k]; if (!el) continue;
-    el.addEventListener('pointerdown', (ev) => { ev.preventDefault(); ev.stopPropagation(); el.classList.add('down'); press(k);
-      if (k === 'attack') el._hold = setInterval(() => press('attack'), 300); });
-    const up = () => { el.classList.remove('down'); clearInterval(el._hold); };
-    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('pointerleave', up);
-  }
+  const wire = (els) => {
+    for (const [k, el] of Object.entries(els)) {
+      if (el.parentNode !== cl) cl.appendChild(el);
+      el.addEventListener('pointerdown', (ev) => { ev.preventDefault(); ev.stopPropagation(); el.classList.add('down'); press(k);
+        if (k === 'attack') el._hold = setInterval(() => press('attack'), 300); });
+      const up = () => { el.classList.remove('down'); clearInterval(el._hold); };
+      el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('pointerleave', up);
+    }
+  };
+  ui.onSkillsBuilt = wire; ui.buildSkills(game.slotDefs());
 
   // joystick (left half of the screen, appears where the thumb lands)
   const joy = wrap.querySelector('#joy'), knob = wrap.querySelector('#knob');

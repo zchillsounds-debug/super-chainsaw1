@@ -11,9 +11,11 @@ import { IS_TOUCH, setupMobile } from './mobile.js';
 import { Director } from './cinema.js';
 import * as SCENES from './scenes.js';
 import { loadSave, applySave, saveGame } from './save.js';
+import { preloadGeo, flushGeo } from './geocache.js';
 
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
+const __cached = await preloadGeo(); console.debug('LOG geo cache ' + __cached);
 const renderer = createRenderer(document.getElementById('game'));
 const scene = new THREE.Scene();
 renderer.info.autoReset = false;
@@ -68,6 +70,8 @@ function start(cont) {
   setTimeout(async () => {
     mode = 'game'; game.started = true; ui.show(); ui.fade(0);
     if (cont) { applySave(game, cont); ui.banner('The Chronicle Continues', ['', 'The road from the village', 'The kiln yard', 'The road to the arch', 'The grain road'][Math.min(4, cont.act)], 3500); return; }
+    const cls = P.get('cls') || await ui.classPick();
+    game.setClass(cls, true);
     await director.play(SCENES.prologue(game));
     await director.play(SCENES.briefing(game));
     game.act = 1; saveGame(game);
@@ -81,7 +85,7 @@ if (saved) {
   document.getElementById('startbtn').textContent = 'New Chronicle';
 }
 document.getElementById('startbtn').onclick = () => start();
-if (P.has('play')) { mode = 'game'; game.started = true; ui.show(); }
+if (P.has('play')) { mode = 'game'; game.started = true; ui.show(); if (P.get('cls')) game.setClass(P.get('cls'), true); }
 if (P.has('x')) { game.player.pos.set(+P.get('x'), 0, +P.get('z')); }
 
 const clock = new THREE.Clock(); let t = 0;
@@ -127,3 +131,4 @@ window.__sim = (sec, step = 1 / 30) => { for (let i = 0; i < sec / step; i++) { 
 try { await renderer.compileAsync(scene, camera); } catch (e) { /* older drivers: compile lazily */ }
 document.getElementById('loader')?.classList.add('done'); setTimeout(() => document.getElementById('loader')?.remove(), 1200);
 window.__mk = makeItem; window.__game = game; window.__ready = true;
+setTimeout(flushGeo, 4000); setInterval(flushGeo, 60000);

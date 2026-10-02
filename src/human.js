@@ -1,3 +1,4 @@
+import { cachedGeo } from './geocache.js';
 import * as THREE from 'three';
 import { sculpt, capsule, ellipsoid, torus, halfspace, V } from './sculpt.js';
 import { charMaterial, defaultPalette, R, eyeTexture, blobTexture } from './charmats.js';
@@ -219,7 +220,7 @@ function veilPrims(B, o) {
 const _geo = new Map();
 function piece(name, key, make) {
   const k = name + '|' + key + '|' + QUALITY;
-  if (!_geo.has(k)) _geo.set(k, make());
+  if (!_geo.has(k)) _geo.set(k, cachedGeo(k, make));
   return _geo.get(k);
 }
 
