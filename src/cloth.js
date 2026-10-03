@@ -28,8 +28,8 @@ export function addWrinkles(mat) {
 }
 
 export class Cloth {
-  constructor({ rows, cols, rest, anchor, material, closed = false, uvRepeat = 1, stiff = 1, gravity = 1, carry = 0.45 }) {
-    this.carry = carry; this.rows = rows; this.cols = cols; this.anchor = anchor; this.closed = closed; this.gravity = gravity;
+  constructor({ rows, cols, rest, anchor, material, closed = false, uvRepeat = 1, stiff = 1, gravity = 1, carry = 0.45, maxSwing = 0 }) {
+    this.carry = carry; this.maxSwing = maxSwing; this.rows = rows; this.cols = cols; this.anchor = anchor; this.closed = closed; this.gravity = gravity;
     const n = rows * cols;
     this.p = new Float32Array(n * 3); this.q = new Float32Array(n * 3);
     this.local = new Float32Array(n * 3); // rest positions in the anchor bone's bind space
@@ -143,6 +143,15 @@ export class Cloth {
             const dx = P[i * 3] - P[c0 * 3], dy = P[i * 3 + 1] - P[c0 * 3 + 1], dz = P[i * 3 + 2] - P[c0 * 3 + 2], d = Math.sqrt(dx * dx + dy * dy + dz * dz);
             if (d > mx) { const k = mx / d; P[i * 3] = P[c0 * 3] + dx * k; P[i * 3 + 1] = P[c0 * 3 + 1] + dy * k; P[i * 3 + 2] = P[c0 * 3 + 2] + dz * k; }
             this.collide(i, groundY);
+            // Round 20: a long robe can't swing up like a flag (a striding leg pushed the front of the Naffat's robe
+            // up and out in front of him): keep each particle within maxSwing of hanging straight down from its pin
+            if (this.maxSwing) {
+              const hx = P[i * 3] - P[c0 * 3], hz = P[i * 3 + 2] - P[c0 * 3 + 2], drop = P[c0 * 3 + 1] - P[i * 3 + 1], hh = Math.sqrt(hx * hx + hz * hz);
+              if (hh > 1e-5 && Math.atan2(hh, drop) > this.maxSwing) {
+                const L = Math.sqrt(hh * hh + drop * drop), nh = L * Math.sin(this.maxSwing) / hh;
+                P[i * 3] = P[c0 * 3] + hx * nh; P[i * 3 + 2] = P[c0 * 3 + 2] + hz * nh; P[i * 3 + 1] = P[c0 * 3 + 1] - L * Math.cos(this.maxSwing);
+              }
+            }
           }
         }
       }

@@ -309,9 +309,11 @@ export function humanoid(opts = {}) {
   root.updateMatrixWorld(true);
   const hemY = o.hemY ?? (o.qaba ? 0.36 : 0.13);
   const skirtM = addWrinkles(addRim(new THREE.MeshStandardMaterial({ map: fabricTex(o.robe, o.robe2, o.hem || !o.qaba ? 'hem' : true), roughness: 0.9, side: THREE.DoubleSide })));
-  const rows = LOW ? 6 : 9, cols = LOW ? 12 : 18, gap = o.qaba ? 0.62 : 0.34, top = 1.02, flare = o.qaba ? 0.13 : 0.11;
+  const rows = LOW ? 6 : 9, cols = LOW ? 12 : 18, gap = o.qaba ? 0.62 : 0.52, top = 1.02, flare = o.qaba ? 0.13 : 0.11;
   const skirt = new Cloth({
     rows, cols, anchor: bones.hips, material: skirtM, uvRepeat: 3,
+    // long robes ride with the legs rather than streaming out (they read as a flag in front of or behind the body)
+    carry: hemY < 0.3 ? 0.8 : 0.55, maxSwing: hemY < 0.3 ? 0.62 : 0.85,
     rest: (r, c) => {
       const t = r / (rows - 1), a = gap / 2 + (c / (cols - 1)) * (Math.PI * 2 - gap);
       const y = top + (hemY - top) * t, rx = (0.168 * o.girth + 0.012) + flare * Math.pow(t, 0.8), rz = (0.132 * o.girth + 0.012 + o.belly * 0.02) + flare * 0.85 * Math.pow(t, 0.8);

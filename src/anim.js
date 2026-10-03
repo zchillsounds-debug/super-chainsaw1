@@ -148,7 +148,12 @@ export class Animator {
     const armK = 1.25 / S;
     const swR = THREE.MathUtils.clamp(fL * armK, -0.9, 0.9) * walkK, swL = THREE.MathUtils.clamp(fR * armK, -0.9, 0.9) * walkK;
     const elB = -(0.18 + runK * 1.05);
-    if (this.armed) {
+    if (o.weapon === 'torch') {
+      // Round 20: a torch is carried up, flame above the fist and out from the body, never levelled like a spear
+      b.shR[0] = -0.12 - swR * 0.35 + breathe * 0.02; b.shR[1] = 0.1; b.shR[2] = -0.42 + runK * 0.05;
+      b.elR[0] = -0.75 - runK * 0.2; b.elR[1] = 0; b.elR[2] = 0;
+      b.hR[0] = -0.55 + runK * 0.1; b.hR[1] = 0; b.hR[2] = 0.3;
+    } else if (this.armed) {
       const g = 1 - walkK * 0.5;
       // sword low and forward, edge angled out
       b.shR[0] = -0.2 * g - swR * 0.6; b.shR[1] = 0.25; b.shR[2] = -0.12 + runK * 0.05;
