@@ -15,7 +15,7 @@ import { mulberry32 } from './noise.js';
 import { t } from './i18n.js';
 import { DUNGEONS } from './dungeons.js';
 
-// Round 16 side content: twelve short quest chains (four per region), a daily bounty board in each hub,
+// Round 16 side content: short quest chains (four per region, eight in the marshes and al-Karkh since Round 20), a daily bounty board in each hub,
 // timed world events the trail points to, and tracking any task on the trail by tapping it in the tracker.
 
 const BASE = { sawad: 2, marsh: 7, karkh: 10, docks: 13 }[REGION];
@@ -111,6 +111,36 @@ const Q = {
         { kind: 'return', text: 'Bring the ledger to Bashshar.', lines: [['Bashshar', 'Into the fire with it. ... There. My grandchildren will never know what was owed.']] },
         { text: 'The village owes Rawh nothing.' }],
       reward: { gold: 180, item: 'legendary', renown: 18 } },
+    // Round 20: four more for the marshes
+    { id: 'sluice', t: 'The Dry Channel', giver: { name: 'Mazin', title: 'Water-keeper', look: 'herder', at: [16, 92], face: 2.6 },
+      offer: 'Rawh\'s men have closed the old sluice on the west channel. The water we drink comes down that channel. Three days now, and the children drink from the marsh.',
+      steps: [
+        { kind: 'kill', text: 'Drive Rawh\'s men from the sluice on the west channel.', at: [-26, 24], pack: ['bandit', 'netter', 'slinger'], n: 4 },
+        { kind: 'return', text: 'Tell Mazin the channel runs again.', lines: [['Mazin', 'I hear it already. Sweet water, coming home. Take this, and drink first, guard.']] },
+        { text: 'The west channel runs again.' }],
+      reward: { gold: 170, item: 'rare', renown: 14, codex: 'sluices' } },
+    { id: 'decoys', t: 'The Fowler\'s Nets', giver: { name: 'Asad', title: 'Fowler', look: 'fisher', at: [22, 78], face: -1.6 },
+      offer: 'Every winter the ducks come down to the marsh, and every winter I feed my family with my nets. Rawh\'s men took them all to their camp in the south-west, to snare men instead of birds.',
+      steps: [
+        { kind: 'take', text: 'Take back Asad\'s nets from the camp in the south-west.', at: [-46, -10], label: 'Take the fowler\'s nets', item: 'Fowling Nets', guard: { pack: ['netter', 'netter', 'bandit'], n: 4 } },
+        { kind: 'return', text: 'Bring the nets to Asad.', lines: [['Asad', 'Torn here and here, but I can mend them. The ducks will not know what happened. Here, for your trouble.']] },
+        { text: 'Asad is fowling again.' }],
+      reward: { gold: 180, item: 'rare', renown: 14 } },
+    { id: 'roof', t: 'Reed for the Roof', giver: { name: '\'Umayr', title: 'Reed builder', look: 'cutter', at: [-2, 84], face: 1.6 },
+      offer: 'The great mudhif lost half its roof in the spring flood. I have cut reed enough to mend it, out on the east beds, but Rawh\'s ambushers lie in the reeds there and my buffalo will not go alone.',
+      steps: [
+        { kind: 'kill', text: 'Clear the ambushers from the east reed beds.', at: [42, 30], pack: ['reedman', 'reedman', 'slinger'], n: 4, hidden: true },
+        { kind: 'escort', text: 'Lead the laden buffalo back to the village.', at: [40, 28], who: 'buffalo', to: [6, 84], ambush: [[24, 52, ['reedman', 'netter']]] },
+        { kind: 'return', text: 'Speak with \'Umayr.', lines: [['\'Umayr', 'Enough for the whole roof, and some left over for my sister\'s. The guest hall will stand another twenty years.']] },
+        { text: 'The mudhif has its roof again.' }],
+      reward: { gold: 200, item: 'legendary', renown: 18 } },
+    { id: 'bitter', t: 'Bitter Water', giver: { name: 'Aws', title: 'Healer', look: 'scribe', at: [6, 70], face: 0.2 },
+      offer: 'Half the village has the flux. Someone has been fouling the sweet-water tank by the reed camp road with dead fish. I know who pays them.',
+      steps: [
+        { kind: 'kill', text: 'Catch the men fouling the water tank on the reed camp road.', at: [-18, 54], pack: ['bandit', 'bandit', 'slinger'], n: 3, elite: 'Shamir' },
+        { kind: 'return', text: 'Tell Aws the tank is safe.', lines: [['Aws', 'Then I can clean it, and in a week no one will be sick. To deny a village water. There is no lower thing a man can do.']] },
+        { text: 'The sweet water is clean again.' }],
+      reward: { gold: 190, item: 'rare', renown: 16 } },
   ],
   karkh: [
     { id: 'vats', t: 'The Dyers\' Vats', giver: { name: '\'Abbad', title: 'Dyer', look: 'dyer', at: [-50, 74], face: -0.6 },
@@ -142,6 +172,35 @@ const Q = {
         { kind: 'return', text: 'Tell Nu\'aym the bridge is free.', lines: [['Nu\'aym', 'Free! I will tell every carter in the quarter whose name to bless. Here, for the road.']] },
         { text: 'Anyone may cross the north bridge.' }],
       reward: { gold: 140, item: 'rare', renown: 12 } },
+    // Round 20: four more for al-Karkh
+    { id: 'bread', t: 'The Baker\'s Flour', giver: { name: 'Fadl', title: 'Baker', look: 'potter', at: [-66, 100], face: 2.8 },
+      offer: 'The quarter eats from my oven, and the buyer\'s men took my flour for their own. Twenty sacks, stacked in their store by the paper-sellers\' lane.',
+      steps: [
+        { kind: 'take', text: 'Take back Fadl\'s flour from the store near the paper-sellers\' lane.', at: [-44, -36], label: 'Take the flour sacks', item: 'Sacks of Flour', guard: { pack: ['guard', 'guard', 'archer'], n: 4 } },
+        { kind: 'return', text: 'Bring the flour to Fadl.', lines: [['Fadl', 'Bread tomorrow, for everyone. The first loaf is yours, and this as well.']] },
+        { text: 'Fadl\'s oven is lit.' }],
+      reward: { gold: 180, item: 'rare', renown: 14, codex: 'bread' } },
+    { id: 'letters', t: 'The Letter-Writer', giver: { name: 'Hayyan', title: 'Letter-writer', look: 'seller', at: [-74, 88], face: 1.4 },
+      offer: 'I write letters for those who cannot. Families to their sons in Basra, in Kufa, in Khurasan. The courier who carried them was robbed on the east lanes.',
+      steps: [
+        { kind: 'kill', text: 'Find the robbers on the east lanes.', at: [48, 34], pack: ['deserter', 'guard', 'archer'], n: 4 },
+        { kind: 'return', text: 'Bring the letters back to Hayyan.', lines: [['Hayyan', 'Not one opened. These mothers will hear from their sons, and their sons from them. Thank you.']] },
+        { text: 'The letters go out again.' }],
+      reward: { gold: 170, item: 'rare', renown: 14 } },
+    { id: 'carriers', t: 'The Water-Carriers', giver: { name: 'Rufay\'', title: 'Water-carrier', look: 'carter', at: [-52, 92], face: -2.0 },
+      offer: 'We carry water from the Sarat to every house that has no well. Now the buyer\'s men stand on the canal steps and take a coin for every skin we fill.',
+      steps: [
+        { kind: 'kill', text: 'Clear the buyer\'s men from the canal steps south of the bridge.', at: [12, -40], pack: ['guard', 'guard', 'spearman'], n: 4, elite: 'Hawshab' },
+        { kind: 'return', text: 'Tell Rufay\' the steps are free.', lines: [['Rufay\'', 'Free water for al-Karkh. My father carried water in the siege, and no one taxed it even then.']] },
+        { text: 'The water-carriers fill their skins for nothing.' }],
+      reward: { gold: 200, item: 'legendary', renown: 18 } },
+    { id: 'binder', t: 'The Bookbinder\'s Tools', giver: { name: 'Thumama', title: 'Bookbinder', look: 'scribe', at: [-60, 74], face: 0.4 },
+      offer: 'My awls, my bone folders and my presses are in my old shop, under the ash on the south lane. Thieves camp in the ruins there now. Without my tools no book in this quarter gets a cover.',
+      steps: [
+        { kind: 'take', text: 'Recover Thumama\'s tools from the ruins on the south lane.', at: [-20, -66], label: 'Take the bookbinder\'s tools', item: 'Bookbinding Tools', guard: { pack: ['deserter', 'deserter', 'naffat'], n: 4 } },
+        { kind: 'return', text: 'Bring the tools to Thumama.', lines: [['Thumama', 'My press! Hakam\'s copies will need covers, and now they shall have the best in Baghdad.']] },
+        { text: 'Thumama is binding again.' }],
+      reward: { gold: 190, item: 'rare', renown: 16 } },
   ],
   // Round 20: Act VI, the river quays
   docks: [
