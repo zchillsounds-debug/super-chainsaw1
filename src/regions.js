@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { emberBed } from './ember.js';
 import { heightAt, canalX, CANAL_W, roadDist, SITES, WORLD, ROADS, WATER_Y, DEEP_Y, setBridge } from './terrain.js';
 import { colliders, house, roundCity, mats } from './buildings.js';
 import { palms, grassField, rocks, shrubs, reeds, tallReeds } from './vegetation.js';
@@ -18,7 +19,7 @@ function brazier(scene, out, x, z, boss = true) {
   const g = new THREE.Group();
   const c = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 2.2, 10).translate(0, 1.1, 0), stoneM); c.castShadow = true; g.add(c);
   const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.35, 0.45, 12, 1, true).translate(0, 2.4, 0), bronze); bowl.castShadow = true; g.add(bowl);
-  g.add(new THREE.Mesh(new THREE.CircleGeometry(0.62, 12).rotateX(-Math.PI / 2).translate(0, 2.5, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.4, 0.45, 0.1), toneMapped: false })));
+  g.add(new THREE.Mesh(new THREE.CircleGeometry(0.62, 12).rotateX(-Math.PI / 2).translate(0, 2.5, 0), emberBed()));
   place(scene, g, x, z, 0, false);
   colliders.push({ type: 'circle', x, z, r: 0.6 });
   out.fires.push({ pos: g.position.clone().add(new THREE.Vector3(0, 2.55, 0)), intensity: 0.75, boss });
