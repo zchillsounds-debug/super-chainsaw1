@@ -238,4 +238,9 @@ export const STORY_AR = {
   'The last Pages were in Ghassan\'s tent. They were safe.': 'كانت آخر الأوراق في خيمة غسّان. صارت في أمان.',
   'That evening the village floated a lamp on the canal for each guard who died.': 'في ذلك المساء أطلقت القرية سراجًا على القناة لكلّ حارس مات.',
   'Thanks to you, his words will be read. And we will remember Jabir.': 'بفضلك ستُقرأ كلماته. وسنذكر جابرًا.',
+  'Two more days to Baghdad, Salim. Then home.': 'يومان آخران إلى بغداد يا سالم. ثمّ إلى البيت.',
+  'Riders were waiting on the dunes.': 'كان فرسان ينتظرون على الكثبان.',
+  'Bandits attacked the caravan at dusk.': 'هاجم قطّاع الطرق القافلة عند الغروب.',
+  'I will bring it back, brother. I promise.': 'سأستعيده يا أخي. أعدك.',
+  'Jabir did not live to see Baghdad. The bandits had taken the chest.': 'لم يعش جابر ليرى بغداد. وكان قطّاع الطرق قد أخذوا الصندوق.',
 };

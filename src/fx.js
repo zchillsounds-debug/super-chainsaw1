@@ -58,7 +58,10 @@ export class FX {
     this.scene = scene;
     this.glow = new Layer(5000, true); this.smoke = new Layer(3000, false);
     scene.add(this.glow.points, this.smoke.points);
+    // flash lights are allocated up front: adding a light later changes the light count, which recompiles
+    // every lit shader in the scene (a long freeze, worst in the boss fight)
     this.rings = []; this.lights = [];
+    for (let i = 0; i < 3; i++) { const l = new THREE.PointLight(0xffffff, 0, 10, 2); l.userData.busy = false; this.lights.push(l); this.scene.add(l); }
     this.flashes = [];
   }
   setScale(h) { this.glow.points.material.uniforms.uScale.value = h * 0.9; this.smoke.points.material.uniforms.uScale.value = h * 0.9; }
@@ -81,7 +84,7 @@ export class FX {
   flash(pos, color, intensity = 30, life = 0.3, dist = 10) {
     if (this.reduce) { intensity *= 0.25; life *= 1.5; }
     let l = this.lights.find((x) => !x.userData.busy);
-    if (!l) { if (this.lights.length >= 4) return; l = new THREE.PointLight(0xffffff, 0, dist, 2); this.lights.push(l); this.scene.add(l); }
+    if (!l) return;
     l.userData.busy = true; l.color.set(color); l.distance = dist; l.position.copy(pos);
     this.flashes.push({ light: l, t: 0, life, i: intensity });
   }

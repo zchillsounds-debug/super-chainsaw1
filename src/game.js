@@ -58,7 +58,7 @@ export class Game {
     m.position.set(pos.x, heightAt(pos.x, pos.z) + 0.03 + Math.random() * 0.01, pos.z); m.rotation.y = Math.random() * 6.28;
     m.renderOrder = 1; this.scene.add(m);
     this.decals.push({ m, t: 0, life: 25 });
-    if (this.decals.length > 60) { const d = this.decals.shift(); this.scene.remove(d.m); d.m.material.dispose(); }
+    if (this.decals.length > 40) { const d = this.decals.shift(); this.scene.remove(d.m); d.m.material.dispose(); d.m.geometry.dispose(); }
   }
 
   // Diablo-style see-through: a soft dithered hole around the hero cut into any building surface in front of them.
@@ -136,6 +136,7 @@ export class Game {
     this.scene.add(this.marker);
     // player light (keeps the hero readable)
     this.pLight = new THREE.PointLight(0xffc890, 6, 9, 2); this.scene.add(this.pLight);
+    this.bossLight = new THREE.PointLight(0xff8a40, 0, 16, 2); this.scene.add(this.bossLight);
   }
 
   // Swap Salim's discipline: rebuilds the rig, the kit and the starting weapon.
@@ -645,7 +646,8 @@ export class Game {
     this.audio.roar(); this.shake = 0.8; this.bossActive = true;
     this.fx.flash(tmp.copy(b.pos).setY(4), 0xff6020, 60, 1.2, 30);
     for (let i = 0; i < 3; i++) this.fx.ring(b.pos, new THREE.Color(1.6, 0.6, 0.15), 1 + i, 6 + i * 2.5, 0.8 + i * 0.25, 0.8);
-    this.bossLight = new THREE.PointLight(0xff8a40, 10, 16, 2); this.scene.add(this.bossLight);
+    // the boss light exists from the start (dark), so lighting it never recompiles the scene's shaders
+    this.bossLight.intensity = 10;
     this.audio.setMusicIntensity(1);
   }
   onBossDeath(b) {
@@ -662,7 +664,7 @@ export class Game {
     const win = () => this.ui.victory({ level: this.player.level, gold: this.player.gold, kills: this.kills || 0, time: `${mins}m ${String(secs).padStart(2, '0')}s` });
     if (this.director) setTimeout(() => this.director.play(SCENES.epilogue(this, b)).then(() => { this.checkpoint(4); win(); }), 1200);
     else { setTimeout(() => this.ui.banner('Victory', 'The Pages are recovered. The water runs again.', 5000), 2500); setTimeout(win, 8000); }
-    if (this.bossLight) setTimeout(() => { this.scene.remove(this.bossLight); }, 2000);
+    if (this.bossLight) setTimeout(() => { this.bossLight.intensity = 0; }, 2000);
   }
 
   bossAI(b, dt) {
@@ -1007,8 +1009,13 @@ export class Game {
         if (p.st.actionT >= 1) { p.st.action = null; }
       }
     }
-    // auto-pickup gold & potions on walk-over
-    for (const d of this.drops) if ((d.item.gold || d.item.potion) && d.t >= 1 && p.pos.distanceTo(d.mesh.position) < 1.2) { this.tryPickup(d); break; }
+    // walk-over pickup: gold, sherbet and anything better than common (white items wait for a tap)
+    for (const d of this.drops) {
+      if (d.t < 0.6 || d.noAuto || !(d.item.gold || d.item.potion || d.item.rarity !== 'common')) continue;
+      if (p.pos.distanceTo(d.mesh.position) > 1.6) continue;
+      if (!d.item.gold && !d.item.potion && p.bag.indexOf(null) < 0) { if (!d.fullWarned) { d.fullWarned = true; this.ui.toast('Pack full: salvage or sell to make room'); this.audio.denied?.(); } continue; }
+      if (this.tryPickup(d)) break;
+    }
     if (!this.interior) { p.pos.x = THREE.MathUtils.clamp(p.pos.x, -BOUND, BOUND); p.pos.z = THREE.MathUtils.clamp(p.pos.z, -BOUND, BOUND); }
     resolve(p.pos, 0.45);
     p.pos.y = heightAt(p.pos.x, p.pos.z);

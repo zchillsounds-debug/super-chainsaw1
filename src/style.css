@@ -502,3 +502,16 @@ body.touch .dtext{font-size:17px;line-height:1.4;overflow-y:auto}
 body.touch #dialog .dbtn{align-self:flex-end;float:none;min-width:140px}
 #title{background:radial-gradient(ellipse at 50% 42%,#0000 35%,#0007 100%),linear-gradient(#0000 55%,#000a)}
 .controls{padding:6px 14px;border-radius:16px;background:#0d0806b3;font-size:13px;color:#ecdcb8}
+/* class picker: always one screen, never scrolls */
+#classpick{overflow:hidden;height:100dvh;box-sizing:border-box;padding:calc(10px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px))}
+.cp-row{width:min(960px,100%);grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-height:560px){
+  .cp-title{font-size:22px}.cp-sub{font-size:13px}
+  #classpick{gap:6px}.cp-row{gap:10px;margin-top:4px}
+  .cp-card{padding:8px 8px 10px}.cp-ic svg{width:40px;height:40px}.cp-ar{font-size:18px;line-height:1.1}.cp-name{font-size:16px}
+  .cp-role{font-size:12.5px;min-height:0;line-height:1.3}
+  .cp-kit{flex-direction:row;justify-content:center;gap:8px;margin-top:6px}.cp-kit span{gap:0}.cp-kit i{display:none}.cp-kit svg{width:26px;height:26px}
+}
+@media (max-width:760px) and (orientation:portrait){.cp-row{grid-template-columns:repeat(2,minmax(0,1fr))}.cp-kit{display:none}}
+@media (max-width:760px) and (orientation:landscape){.cp-kit{display:flex}.cp-role{display:none}}
+#classpick{background:radial-gradient(ellipse at center,#1a120cf0,#050302fa)}

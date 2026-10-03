@@ -63,68 +63,49 @@ export function prologue(g) {
     for (const a of caravan) { if (a.st.dead || a.halt) { a.moving = false; continue; } a.moving = true; walk(a, V(road(a.pos.z - 2) + (a.camel ? 1.3 : a === salim ? -0.2 : a === guard1 ? -1.2 : -0.6), 0, a.pos.z - 2), speed, dt); }
   };
   let arrow = null, jabirLight = null;
-  const cleanup = () => {
+  let cleanup = () => {
     for (const r of extra) sc.remove(r);
     if (jabirLight) sc.remove(jabirLight);
     if (arrow) sc.remove(arrow);
     const p = g.player; p.pos.set(1, 0, 88); p.pos.y = heightAt(1, 88); p.facing = yawTo(p.pos, g.npc.position); p.st.crouch = 0; p.st.action = null; p.st.hitT = 0; p.vel?.set(0, 0, 0);
   };
+  // calm and readable: no arrows or blows on screen; the attack happens in a fade to black
+  const lamp = g.bossLight; // pre-made light (adding one mid-scene would recompile every shader and stutter)
+  const hideBandits = () => { for (const b of [archer, b1, b2]) b.rig.visible = false; };
   const shots = [
     { dur: 6.5, card: { ar: 'القافلة', en: 'Act I · The Caravan', sub: 'The Sawad, outside Baghdad, in the year 813' }, stinger: 'title', fadeIn: 1.2,
       cam: { p0: () => ground(36, 140, 14), t0: () => ground(14, 124, 1.2), p1: () => ground(26, 132, 6), t1: () => ground(13.5, 121, 1.4) }, run: (d, k, dt) => march(dt) },
-    { dur: 5.2, line: { who: 'Salim', text: 'Too quiet, brother. I do not like it.', rig: g.player.rig, cue: 'hm' },
-      cam: { follow: true, p0: at(salim, 1.75, 2.6, 1.6), t0: at(salim, 1.6, -1.5, -0.6), p1: at(salim, 1.7, 2.2, 1.2), t1: at(salim, 1.6, -1.5, -0.6) }, dof: headOf(salim), aperture: 1.6,
-      run: (d, k, dt) => { march(dt); salim.st.headYaw = -Math.sin(k * Math.PI) * 0.7; } },
-    { dur: 3.0, cam: { p0: () => ground(17, 109, 1.8), t0: () => ground(27, 116, 1.4), p1: () => ground(18, 111.5, 2.0), t1: () => ground(27, 116, 1.5), fov: 30 }, stinger: 'ambush',
-      enter: (d) => { d.audio.vocal('shout', 0.9); },
-      run: (d, k, dt) => { march(dt, 0.6); for (const b of [archer, b1, b2]) b.st.crouch = Math.max(0, 1 - k * 2.2); if (k > 0.45 && !archer.st.action) act(archer, 'shoot', 1.6); salim.st.headYaw = 0; } },
-    { dur: 2.6, slow: 0.3, cam: { follow: true, p0: at(guard1, 1.4, 1.2, -2.4), t0: at(guard1, 1.3, 0, 0), p1: at(guard1, 1.2, 0.6, -1.9), t1: at(guard1, 1.0, 0, 0), fov: 32 },
-      enter: () => { for (const a of caravan) a.halt = true; arrow = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.7, 4).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x5a3a20 })); sc.add(arrow); arrow.userData.t = 0; },
-      run: (d, k, dt) => {
-        const a0 = at(archer, 1.5)(), a1 = at(guard1, 1.35)(); arrow.userData.t = Math.min(1, arrow.userData.t + dt * 1.6);
-        const u = arrow.userData.t; arrow.position.lerpVectors(a0, a1, u).y += Math.sin(u * Math.PI) * 0.6; arrow.lookAt(a1);
-        if (u >= 1 && !guard1.st.dead) { guard1.st.dead = true; guard1.st.fallDir = 1; d.audio.vocal('hurt', 0.8); d.audio.hit?.(); }
-      } },
-    { dur: 4.8, slow: 0.6, line: { who: 'Jabir', text: 'Salim... the chest. Do not let them burn it.', rig: guard1.rig, cue: 'hurt' },
-      cam: { follow: true, p0: at(salim, 2.5, -1.9, -2.3), t0: at(salim, 0.35, 1.3), p1: at(salim, 2.2, -1.6, -2.0), t1: at(salim, 0.4, 1.25), fov: 40 }, dof: headOf(salim), aperture: 1.4,
-      enter: (d) => {
-        // he is already down when the line plays, whatever was skipped before
-        if (arrow) arrow.visible = false;
+    { dur: 4.6, line: { who: 'Jabir', text: 'Two more days to Baghdad, Salim. Then home.', rig: guard1.rig, cue: 'hm' },
+      cam: { follow: true, p0: at(guard1, 1.8, 2.8, 2.2), t0: at(guard1, 1.55, -1, 0), p1: at(guard1, 1.75, 2.4, 1.8), t1: at(guard1, 1.55, -1, 0), fov: 34 }, dof: headOf(guard1), aperture: 1.4,
+      run: (d, k, dt) => march(dt) },
+    { dur: 4.4, line: { who: 'Salim', text: 'Too quiet, brother. I do not like it.', rig: g.player.rig, cue: 'hm' },
+      cam: { follow: true, p0: at(salim, 1.75, 2.6, 1.6), t0: at(salim, 1.6, -1.5, -0.6), p1: at(salim, 1.7, 2.3, 1.3), t1: at(salim, 1.6, -1.5, -0.6) }, dof: headOf(salim), aperture: 1.6,
+      run: (d, k, dt) => { march(dt); salim.st.headYaw = -Math.sin(k * Math.PI) * 0.6; } },
+    // riders on the ridge, seen from far away; they only stand and watch
+    { dur: 3.6, caption: 'Riders were waiting on the dunes.', noWait: true, cam: { p0: () => ground(17, 109, 1.8), t0: () => ground(27, 116, 1.6), p1: () => ground(17.6, 110.2, 1.9), t1: () => ground(27, 116, 1.6), fov: 32 }, stinger: 'ambush',
+      run: (d, k, dt) => { march(dt, 0.8); for (const b of [archer, b1, b2]) b.st.crouch = Math.max(0, 1 - k * 1.6); salim.st.headYaw = 0; if (k > 0.7) d.fade(1, 1.0); } },
+    { dur: 3.4, caption: 'Bandits attacked the caravan at dusk.',
+      enter: (d) => { d.fade(1, 0.01); d.audio.vocal('shout', 0.9); for (const a of caravan) a.halt = true; hideBandits(); } },
+    { dur: 4.8, fadeIn: 1.4, line: { who: 'Jabir', text: 'Salim... the chest. Do not let them burn it.', rig: guard1.rig, cue: 'breath' },
+      cam: { follow: true, p0: at(salim, 2.5, -1.9, -2.3), t0: at(salim, 0.35, 1.3), p1: at(salim, 2.35, -1.75, -2.15), t1: at(salim, 0.38, 1.28), fov: 40 }, dof: headOf(salim), aperture: 1.4,
+      enter: () => {
+        hideBandits();
         guard1.st.dead = true; guard1.st.fallDir = 1; guard1.st.deadT = Math.max(guard1.st.deadT || 0, 4);
-        // he falls backwards; turn him so he lies along the dune's contour rather than with his head in the slope
+        // he lies along the dune's contour rather than with his head in the slope
         { let best = 0, bd = 1e9; const h0 = heightAt(guard1.pos.x, guard1.pos.z); for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, dh = Math.abs(heightAt(guard1.pos.x + Math.sin(a) * 1.6, guard1.pos.z + Math.cos(a) * 1.6) - h0) + Math.abs(heightAt(guard1.pos.x + Math.sin(a) * 0.8, guard1.pos.z + Math.cos(a) * 0.8) - h0); if (dh < bd) { bd = dh; best = a; } } guard1.facing = best + Math.PI; guard1.pos.y = h0; }
-        for (const c of caravan) c.halt = true;
         salim.pos.copy(guard1.pos).add(V(0.9, 0, -0.2));
-        // the other guard stands over them, spear out toward the dunes
         guard2.pos.copy(salim.pos).add(V(1.4, 0, -1.6)); guard2.pos.y = heightAt(guard2.pos.x, guard2.pos.z); guard2.facing = Math.PI / 2;
         for (const c of [camelA, camelB]) { c.pos.x += 3; c.pos.y = heightAt(c.pos.x, c.pos.z); } salim.pos.y = heightAt(salim.pos.x, salim.pos.z); salim.facing = yawTo(salim.pos, guard1.pos); salim.st.crouch = 0.85;
-        // a low, warm light from the spilled lantern so the faces read at dusk
-        jabirLight = new THREE.PointLight(0xff9a50, 16, 8, 2); jabirLight.position.copy(guard1.pos).add(V(0.4, 1.1, 0.9)); sc.add(jabirLight);
+        // a low, warm lantern light so the faces read at dusk
+        if (lamp) { lamp.color.set(0xff9a50); lamp.distance = 8; lamp.position.copy(guard1.pos).add(V(0.4, 1.1, 0.9)); lamp.intensity = 7; }
       },
-      run: (d, k) => { salim.st.crouch = 0.85; jabirLight.intensity = 16 * (0.9 + Math.random() * 0.15); } },
-    { dur: 3.2, cam: { follow: true, p0: at(salim, 1.3, -3.4, 1.2), t0: at(salim, 1.2, 3, 0), p1: at(salim, 1.1, -2.6, 1.0), t1: at(salim, 1.2, 3, 0), fov: 34 },
-      enter: (d) => { salim.st.crouch = 0; if (jabirLight) jabirLight.intensity = 3; salim.facing = yawTo(salim.pos, b1.pos); d.audio.vocal('hm', 1.1); },
-      run: (d, k, dt) => {
-        salim.facing = yawTo(salim.pos, b1.pos);
-        const meet = salim.pos.clone().add(V(Math.sin(salim.facing) * 1.6, 0, Math.cos(salim.facing) * 1.6));
-        walk(b1, meet, 5.2, dt); walk(b2, meet.clone().add(V(0.6, 0, 3.2)), 4.6, dt);
-      } },
-    { dur: 3.0, slow: 0.35, cam: { follow: true, p0: at(salim, 1.6, 2.4, 2.6), t0: at(salim, 1.2, 0.8, 0), p1: at(salim, 1.4, 0.4, 3.4), t1: at(salim, 1.2, 0.8, 0), fov: 34 }, dof: at(salim, 1.5),
-      enter: (d) => { act(salim, 'attack', 0.55); d.audio.swing?.(); d.audio.vocal('effort', 1); },
-      run: (d, k, dt) => {
-        salim.facing = yawTo(salim.pos, b1.pos); b1.facing = yawTo(b1.pos, salim.pos);
-        if (!salim.st.action && !b1.st.dead && k < 0.5) { act(salim, 'attack', 0.55); d.audio.swing?.(); }
-        if (k > 0.42 && !b1.st.dead) { b1.st.dead = true; b1.st.fallDir = 1; d.audio.hit?.(); d.audio.vocal('hurt', 1.15); }
-      } },
-    { dur: 2.4, cam: { follow: true, p0: at(salim, 1.0, 1.6, -1.8), t0: at(salim, 1.3, 0, 0), p1: at(salim, 0.8, 1.3, -1.4), t1: at(salim, 0.9, 0, 0), shake: 0.15 },
-      enter: (d) => { b2.pos.copy(salim.pos).add(V(-Math.sin(salim.facing) * 1.4, 0, -Math.cos(salim.facing) * 1.4)); b2.facing = yawTo(b2.pos, salim.pos); act(b2, 'attack', 0.6); },
-      run: (d, k, dt) => {
-        if (k > 0.35 && salim.st.hitT === 0 && !salim.hurt) { salim.hurt = true; salim.st.hitT = 1; d.audio.hit?.(); d.audio.vocal('hurt', 1); }
-        if (salim.hurt) salim.st.crouch = Math.min(0.85, (k - 0.35) * 2);
-        if (k > 0.75) d.fade(1, 0.5);
-      } },
-    { dur: 4.5, caption: 'Bandits ambushed the caravan. Jabir was killed, and they took the chest.', cam: { p0: V(0, 60, 0), t0: V(0, 0, 1) }, enter: (d) => d.fade(1, 0.01) },
+      run: () => { salim.st.crouch = 0.85; } },
+    { dur: 3.6, line: { who: 'Salim', text: 'I will bring it back, brother. I promise.', rig: g.player.rig, cue: 'breath' },
+      cam: { follow: true, p0: at(salim, 1.5, 1.9, 1.0), t0: headOf(salim), p1: at(salim, 1.45, 1.7, 0.9), t1: headOf(salim), fov: 32 }, dof: headOf(salim), aperture: 1.3,
+      run: () => { salim.st.crouch = 0.85; } },
+    { dur: 4.2, caption: 'Jabir did not live to see Baghdad. The bandits had taken the chest.', enter: (d) => d.fade(1, 1.2) },
   ];
+  const _end = cleanup; cleanup = () => { _end(); if (lamp) { lamp.intensity = 0; lamp.color.set(0xff8a40); lamp.distance = 16; } for (const b of [archer, b1, b2]) b.rig.visible = true; };
   return {
     dusk: 0.7, actors, shots,
     tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
@@ -161,7 +142,8 @@ export function lieutenantFalls(g, e, { who, text, card }) {
   const ang = yawTo(salim.pos, foe.pos);
   const orbit = (r, h, a0) => () => { const a = a0 + (performance.now() / 1000) * 0.12; return V(foe.pos.x + Math.sin(a) * r, foe.pos.y + h, foe.pos.z + Math.cos(a) * r); };
   const shots = [
-    { dur: 3.4, slow: 0.3, line: { who, text, rig: e.rig, cue: 'hurt' }, cam: { follow: true, p0: orbit(3.3, 0.85, ang + 2.2), t0: at(foe, 0.35) }, dof: at(foe, 0.4), aperture: 1.0 },
+    // calm framing: from behind Salim's shoulder at normal speed, no slow-motion lingering on the fallen man
+    { dur: 3.4, line: { who, text, rig: e.rig, cue: 'breath' }, cam: { follow: true, p0: at(salim, 2.2, -2.8, 1.4), t0: at(foe, 0.6), p1: at(salim, 2.1, -2.5, 1.2), t1: at(foe, 0.6), fov: 38 }, dof: at(foe, 0.6), aperture: 1.0 },
     { dur: 5.6, card, stinger: 'title', cam: { p0: () => at(foe, 3.5, 0, 0)().add(V(0, 0, 0)), t0: at(foe, 0.5), p1: () => at(foe, 14, 0, 0)().add(V(8, 0, 8)), t1: at(foe, 0), ease: 'io2' } },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); } };
@@ -223,7 +205,7 @@ export function epilogue(g, b) {
     }
   };
   const shots = [
-    { dur: 4.2, slow: 0.3, cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.4), p1: () => V(boss.pos.x + Math.sin(ang + 1.6) * 6, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.6) * 6), t1: at(boss, 0.6), fov: 34 } },
+    { dur: 4.2, cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.4), p1: () => V(boss.pos.x + Math.sin(ang + 1.6) * 6, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.6) * 6), t1: at(boss, 0.6), fov: 34 } },
     { dur: 4.4, line: { who: 'Salim', text: 'Not for paper. For my brother.', rig: g.player.rig, cue: 'hm' },
       cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim), run: () => { salim.facing = yawTo(salim.pos, boss.pos); } },
     { dur: 3.6, caption: 'The last Pages were in Ghassan\'s tent. They were safe.', enter: (d) => d.fade(1, 0.8) },
