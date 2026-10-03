@@ -244,11 +244,15 @@ function frame() {
       if (S > 0.05 && mode === 'game') for (let i = 0; i < 3; i++) if (Math.random() < S) fx.smoke.spawn({ pos: { x: game.player.pos.x + (Math.random() - 0.5) * 40, y: (game.player.pos.y || 0) + Math.random() * 4, z: game.player.pos.z + (Math.random() - 0.5) * 34 }, vel: { x: 7 * 0.82, y: 0.2, z: 7 * 0.57 }, life: 3, size: 1.5, size1: 3.5, color: STORM_COL, alpha: 0.22 * S, drag: 0, fadeIn: 0.3 });
     }
   }
-  cullT -= rawDt; if (cullT <= 0) { cullT = 0.4; world.cull(mode === 'game' ? game.player.pos : camera.position, mode === 'game' ? 95 : 200); }
+  cullT -= rawDt; if (cullT <= 0) { cullT = 0.4; world.cull(mode === 'game' ? game.player.pos : camera.position, mode === 'game' ? 95 * Math.max(1, game.camZoom * 0.8) : 200); }
   lightPool.update(dt, mode === 'game' ? game.player.pos : camera.position, lighting.fireScale);
   fx.update(dt); fx.setScale(renderer.getDrawingBufferSize(new THREE.Vector2()).y);
   const c = mode === 'game' ? game.player.pos : new THREE.Vector3(SITES.village.x, 0, SITES.village.z);
   // shadow map follows the hero, snapped to whole shadow texels so edges don't crawl as the camera moves
+  { // Round 20: a wider shadow box when zoomed far out (the overhead view sees further)
+    const ext = Math.round(40 * Math.max(1, (mode === 'game' ? game.camZoom : 1) / 1.5) * (innerWidth < innerHeight ? 1.2 : 1)), sc = sun.shadow.camera;
+    if (sc.right !== ext) { Object.assign(sc, { left: -ext, right: ext, top: ext, bottom: -ext }); sc.updateProjectionMatrix(); renderer.shadowMap.needsUpdate = true; }
+  }
   shadowSnap(c);
   // phones: the sun's shadow map is redrawn at half rate (the sun is static; only actors move), unless the frame moved it
   shFrame++;

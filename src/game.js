@@ -32,7 +32,7 @@ export class Game {
     this.npcs = []; this.interactables = [];
     this.t = 0; this.enemies = []; this.projectiles = []; this.hazards = []; this.drops = []; this.trails = [];
     this.mouse = new THREE.Vector2(); this.mouseScreen = { x: 0, y: 0 };
-    this.keys = {}; this.lmb = false; this.shake = 0; this.camZoom = 1; this.hitStop = 0;
+    this.keys = {}; this.lmb = false; this.shake = 0; this.camZoom = 1.25; this.hitStop = 0;
     this.camPos = new THREE.Vector3(); this.started = false;
     this.createPlayer();
     this.spawnEnemies();
@@ -1513,9 +1513,10 @@ export class Game {
     const ease = this.bossActive ? 1.3 : 1 + 0.14 * Math.min(1, Math.max(0, (this.fightN || 0) - 2) / 4);
     this.autoZoom = THREE.MathUtils.lerp(this.autoZoom || 1, ease, Math.min(1, dt * 1.2));
     // zoom: close in, the camera drops toward an over-the-shoulder angle; out, it rises to a high wide view
-    const z = this.camZoom, k = THREE.MathUtils.smoothstep(z, 0.5, 1.0);
+    // Round 20: past 1.0 the view keeps tilting toward a steep Diablo-style overhead (about 60° at the default 1.25)
+    const z = this.camZoom, k = THREE.MathUtils.smoothstep(z, 0.5, 1.0), k2 = THREE.MathUtils.smoothstep(z, 1.0, 1.45);
     const dist = 13.5 * z * this.autoZoom * (innerWidth < innerHeight ? 1.45 : 1);
-    const yK = THREE.MathUtils.lerp(0.58, 1.0, k), zK = THREE.MathUtils.lerp(1.08, 0.78, k), lookY = THREE.MathUtils.lerp(1.55, 1.0, k);
+    const yK = THREE.MathUtils.lerp(0.58, 1.0, k) + 0.22 * k2, zK = THREE.MathUtils.lerp(1.08, 0.78, k) - 0.2 * k2, lookY = THREE.MathUtils.lerp(1.55, 1.0, k);
     const target = tmp.set(p.x, p.y + dist * yK, p.z + dist * zK);
     if (!this.camInit) { this.camPos.copy(target); this.camInit = true; }
     this.camPos.lerp(target, Math.min(1, dt * 6));

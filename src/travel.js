@@ -8,13 +8,13 @@ import { t } from './i18n.js';
 // Round 19: camera zoom (pinch / mouse wheel), a full-screen map you can pan and pinch, walk-to targets that
 // follow a navigable path (from the map, or from a long tap-to-move on the ground), and fast travel between
 // places already reached.
-export const ZOOM_MIN = 0.5, ZOOM_MAX = 1.7;
+export const ZOOM_MIN = 0.5, ZOOM_MAX = 2.4;
 const SITE_NAMES = {
   sawad: { village: 'The Village', serai: 'Old Caravanserai', kiln: 'Kiln Yard', arch: 'Persian Arch' },
   marsh: { village: 'Reed Village', serai: 'Reed Camp', kiln: 'Fish Racks', arch: 'Old Weir' },
   karkh: { village: 'The Khan', serai: 'Burned Suq', kiln: 'Paper-Sellers\' Lane', arch: 'The Square' },
 }[REGION];
-const KEY = 'sob.zoom';
+const KEY = 'sob.zoom2'; // Round 20: new key so the new overhead default replaces older saved zooms
 
 export function setupTravel(g) {
   // ---------------------------------------------------------------- zoom
