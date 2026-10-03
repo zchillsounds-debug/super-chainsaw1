@@ -274,6 +274,7 @@ export class UI {
     if (it.armor) s += `<div class="tt-main">${it.armor} Armor</div>`;
     s += statLines(it).map((l) => `<div class="tt-aff">${l}</div>`).join('');
     if (it.aspect && this.aspects) s += `<div class="tt-asp"><b>${this.aspects[it.aspect].name}</b><br>${this.aspects[it.aspect].desc}</div>`;
+    if (it.socket && this.gemLine) s += this.gemLine(it);
     if (it.set && this.sets) { const S = this.sets[it.set]; s += `<div class="tt-set"><b>${S.name}</b><br>(2) ${S.b2}<br>(4) ${S.b4}</div>`; }
     if (it.cls && this.classNames && it.cls !== this.curCls) s += `<div class="tt-cls">${this.classNames[it.cls]} weapon</div>`;
     if (it.flavor && !it.set) s += `<div class="tt-flavor">${it.flavor}</div>`;

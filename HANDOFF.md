@@ -1,12 +1,12 @@
-# Madinat al-Salam: Handoff (after Round 17)
+# Madinat al-Salam: Handoff (after Round 18)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam** (formerly "Sands of Baghdad"). It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `madinat-round17-handoff.zip` (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
+> I'm continuing a game project called **Madinat al-Salam** (formerly "Sands of Baghdad"). It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `madinat-round18-handoff.zip` (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
 >
 > Please:
 > 1. Unzip it and read HANDOFF.md fully.
 > 2. Run `npm install && npx vite`.
-> 3. Start **Round 18** as specified in the "Next" section. Show me the plan for it and ask your open questions before building.
+> 3. Start **Round 19** as specified in the "Next" section. Show me the plan for it and ask your open questions before building.
 >
 > The goal is AAA mobile game quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop (screenshot → critique → improve) every round, and ask me clarifying questions and confirm with me before building. I play on Android. After each round:
 > - Republish the game as a playable Artifact, updating the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Touch controls must keep working.
@@ -15,7 +15,7 @@
 
 ## Restore the code
 ```
-unzip madinat-round17-handoff.zip -d madinat && cd madinat
+unzip madinat-round18-handoff.zip -d madinat && cd madinat
 git clone repo.bundle game && cd game        # Rounds 15-16 are on branch claude/new-session-tvzhqq
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
@@ -261,8 +261,23 @@ User decisions: Renown buys passives only (no cosmetics); Contracts are unlimite
 - Arabic for everything (end of `story_ar.js`).
 - **Test:** `node shots/r17test.mjs <region> [shots]` enters each new dungeon, triggers its hazard, buys every Renown rank and runs a contract. All three regions are clean.
 
-## Next: Round 18, loot and build depth (confirm with the user before building)
-See the roadmap: 20 aspects, 5 sets, gems, a fifth skill slot, level cap 30, stash tabs.
+## Round 18 (done): loot and build depth
+User decisions: alternate skills unlock by level; Bishr cuts sockets for a fee; stash tabs cost 500/1500/4000; the third new set is the Karkh paper-seller (warraq), not a House of Wisdom courier.
+- **`build.js`** (new) holds most of Round 18. `g.slotDefs()` now comes from the loadout (`p.loadout[cls]`, slot → skill id).
+- **Fifth skill slot `s4`** at level 15 (key 4; on touch it sits above the cluster as `.t-s4`). **Alternate skills** (`ALT_SKILLS` in `classes.js`) open at 15 and 20:
+  - Faris: Rallying Cry, Sweeping Cut.
+  - Rami: Pinning Shot, Scatter Volley.
+  - Naffat: Naft Mortar, Burning Brand.
+  - 'Ayyar: Death Mark, Blinding Powder.
+  - Any skill can go in any slot from Disciplines (tap a slot, then a skill; picking a skill already slotted swaps the two).
+- **Aspects: 8 → 20.** Twelve discipline aspects (`cls` field) only drop for that discipline: bulwark, unbroken, onset / split, hawk, quiver / spill, cinder, bellows / shade, alley, edge. Hooks wrap useSkill, onKill, onHit, dmgMod, playerShot and spawnZone.
+- **Sets: 2 → 5.** New: Panoply of the Abna', Outfit of the Basra Nakhuda, Tools of the Warraq.
+- **Gems** (`p.gems`, keys like `ruby2`): ruby, lapis and carnelian, in three grades. Effects differ in a weapon and in other gear (see `GEMS`). One per dungeon chest, more from contracts, sometimes from captains. Bishr's new Gems tab cuts a socket, sets or removes a gem, and combines 3 into 1.
+- **Level cap 30** (`MAX_LEVEL` in `game.js`). **Stash tabs:** 3 extra pages (`p.stashTabs`, `p.stashPages`).
+- **Save fix:** Round 17's Renown board and slain captains were never saved. `save.js` now saves an `EXTRA` key list.
+- **Test:** `node shots/r18test.mjs <cls> [shots]` is clean for all four classes; `r17test` is still clean.
+
+## Next: Round 19 (propose to the user and confirm before building)
 
 ## Roadmap (R15 done)
 The goal is about 8–12 hours for a first playthrough, up from about 1.5 today, plus a repeatable endgame. It is split into rounds so each one ships playable.

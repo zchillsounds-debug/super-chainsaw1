@@ -51,6 +51,19 @@ export const ASPECTS = {
   mirage: { name: 'Aspect of the Mirage', desc: 'A parry makes you untouchable for 2 seconds and resets Evade.' },
   qanat: { name: 'Aspect of Qanat Water', desc: 'Sherbet heals 50% more and cools all burning.' },
   siege: { name: 'Aspect of the Siege', desc: 'Your skills deal 35% more damage to staggered foes.' },
+  // Round 18: three per discipline; they only drop for that discipline
+  bulwark: { cls: 'faris', name: 'Aspect of the Bulwark', desc: 'Shield Bash staggers every foe within 4 metres of you.' },
+  unbroken: { cls: 'faris', name: 'Aspect of the Unbroken', desc: 'Shield Wall restores 25% of your life.' },
+  onset: { cls: 'faris', name: 'Aspect of the Onset', desc: 'Each kill takes 2 seconds off Charge.' },
+  split: { cls: 'rami', name: 'Aspect of the Split Shaft', desc: 'Every third arrow splits into three.' },
+  hawk: { cls: 'rami', name: 'Aspect of the Hawk', desc: 'Piercing Shot always strikes critically.' },
+  quiver: { cls: 'rami', name: 'Aspect of the Full Quiver', desc: 'Tumble restores 15 focus.' },
+  spill: { cls: 'naffat', name: 'Aspect of the Wide Spill', desc: 'Your fire pools are 40% wider.' },
+  cinder: { cls: 'naffat', name: 'Aspect of Cinders', desc: 'Burning foes take 20% more damage from you.' },
+  bellows: { cls: 'naffat', name: 'Aspect of the Bellows', desc: 'Naft Ring recovers 40% faster.' },
+  shade: { cls: 'ayyar', name: 'Aspect of the Shade', desc: 'Your first blow from stealth deals 50% more damage and resets Evade.' },
+  alley: { cls: 'ayyar', name: 'Aspect of the Alley', desc: 'Each kill resets Shadowstep.' },
+  edge: { cls: 'ayyar', name: 'Aspect of the Knife\'s Edge', desc: 'You deal 30% more damage to foes below 35% life.' },
 };
 const ASPECT_KEYS = Object.keys(ASPECTS);
 
@@ -60,7 +73,15 @@ export const SETS = {
     bonus: { 2: { move: 10, regen: 2 }, 4: { cdr: 15, dmgPct: 15 } }, b2: '+10% movement, +2 regeneration', b4: '−15% cooldowns, +15% damage' },
   khurasan: { name: 'Harness of Khurasan', pieces: { armor: 'Khurasani Jawshan', helm: 'Khurasani Bayda', ring: 'Khurasani Ring', amulet: 'Khurasani Pendant' },
     bonus: { 2: { armor: 20, life: 50 }, 4: { crit: 10, dmgPct: 25 } }, b2: '+20 armor, +50 life', b4: '+10% critical strike, +25% damage' },
+  // Round 18
+  abna: { name: 'Panoply of the Abna\'', pieces: { armor: 'Abna\' Lamellar', helm: 'Abna\' Bayda', ring: 'Abna\' Signet', amulet: 'Abna\' Badge' },
+    bonus: { 2: { life: 80, leech: 2 }, 4: { armor: 30, cdr: 10 } }, b2: '+80 life, +2 life per hit', b4: '+30 armor, −10% cooldowns' },
+  nakhuda: { name: 'Outfit of the Basra Nakhuda', pieces: { armor: 'Nakhuda\'s Coat', helm: 'Nakhuda\'s Turban', ring: 'Nakhuda\'s Seal', amulet: 'Nakhuda\'s Compass-stone' },
+    bonus: { 2: { move: 8, crit: 5 }, 4: { speed: 15, dmgPct: 20 } }, b2: '+8% movement, +5% critical strike', b4: '+15% attack speed, +20% damage' },
+  warraq: { name: 'Tools of the Warraq', pieces: { armor: 'Warraq\'s Apron', helm: 'Warraq\'s Cap', ring: 'Warraq\'s Pen-ring', amulet: 'Warraq\'s Inkwell' },
+    bonus: { 2: { mana: 25, regen: 3 }, 4: { cdr: 20, fire: 20 } }, b2: '+25 resource, +3 regeneration', b4: '−20% cooldowns, +20% fire damage' },
 };
+const SET_KEYS = Object.keys(SETS);
 export function setStats(p) {
   const n = {}; for (const it of Object.values(p.equip)) if (it?.set) n[it.set] = (n[it.set] || 0) + 1;
   const s = {}; for (const [k, c] of Object.entries(n)) for (const th of [2, 4]) if (c >= th) for (const [a, v] of Object.entries(SETS[k].bonus[th])) s[a] = (s[a] || 0) + v;
@@ -80,8 +101,8 @@ export function setupProgression(game) {
   // legendary drops gain an aspect; a small share of rares become set pieces
   const baseDrop = game.dropItem.bind(game);
   game.dropItem = (item, at) => {
-    if (item.rarity === 'legendary' && !item.aspect) item.aspect = ASPECT_KEYS[Math.floor(Math.random() * ASPECT_KEYS.length)];
-    if (item.rarity === 'rare' && !item.set && ['armor', 'helm', 'ring', 'amulet'].includes(item.slot) && Math.random() < 0.18) Object.assign(item, makeSetItem(item.level, Math.random() < 0.5 ? 'barid' : 'khurasan', item.slot));
+    if (item.rarity === 'legendary' && !item.aspect) { const ks = ASPECT_KEYS.filter((k) => !ASPECTS[k].cls || ASPECTS[k].cls === p.cls); item.aspect = ks[Math.floor(Math.random() * ks.length)]; }
+    if (item.rarity === 'rare' && !item.set && ['armor', 'helm', 'ring', 'amulet'].includes(item.slot) && Math.random() < 0.18) Object.assign(item, makeSetItem(item.level, SET_KEYS[Math.floor(Math.random() * SET_KEYS.length)], item.slot));
     if (item.gold && aspectsOf(p).has('purse')) item.gold = Math.round(item.gold * 1.6);
     if (item.gold) item.gold = Math.round(item.gold * (1 + (p.worldTier - 1) * 0.35));
     return baseDrop(item, at);

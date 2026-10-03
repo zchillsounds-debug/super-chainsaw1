@@ -432,4 +432,16 @@ Object.assign(STORY_AR, {
   'Road-worn': 'ابن الطريق', '+3% movement speed': '+3% سرعة الحركة', 'Quick Study': 'سريع التعلّم', '+8% experience': '+8% خبرة',
   'Layered Mail': 'الدرع المضاعف', '+6% armour': '+6% درع', 'Second Wind': 'النفس الثاني', '+1 life regained per second': '+1 حياة تُستعاد كلّ ثانية',
   'Rosewater': 'ماء الورد', 'Sherbet heals 15% more': 'الشربة تشفي أكثر بـ15%', 'Captain-Hunter': 'صائد القادة', '+8% damage to captains and elites': '+8% ضرر على القادة والنخبة',
+  // Round 18: skills, aspects, sets, gems, stash
+  'A Fifth Skill': 'مهارة خامسة', 'A new skill slot opens. Choose your skills in Disciplines.': 'انفتحت خانة مهارة جديدة. اختر مهاراتك في الفنون.', 'New skill': 'مهارة جديدة',
+  'Skills': 'المهارات', 'Tap a slot, then a skill to put in it': 'المس خانة، ثم مهارة لتضعها فيها', 'Now pick a skill for this slot': 'اختر الآن مهارة لهذه الخانة', 'A fifth slot opens at level': 'تنفتح خانة خامسة في المستوى', 'Level': 'المستوى', 'level': 'المستوى',
+  'Rallying Cry': 'صيحة الحشد', '+25% damage and +20 armour for 6 seconds': '+25% ضرر و+20 درع لستّ ثوانٍ', 'Sweeping Cut': 'الضربة الكاسحة', 'A wide cut through every foe in front of you': 'ضربة عريضة تشقّ كلّ عدوّ أمامك',
+  'Pinning Shot': 'رمية التثبيت', 'A heavy arrow that pins a foe in place for 2.5 seconds': 'سهم ثقيل يثبّت العدوّ مكانه ثانيتين ونصفًا', 'Scatter Volley': 'الرشقة المتفرّقة', 'Seven arrows loosed in a wide fan': 'سبعة أسهم تنطلق في مروحة عريضة',
+  'Naft Mortar': 'قاذف النفط', 'Three pots fall in turn on the target ground': 'ثلاث جرار تسقط تباعًا على الموضع', 'Burning Brand': 'الجمرة المتّقدة', 'For 8 seconds every hit sets the foe alight': 'لثماني ثوانٍ تُشعل كلّ ضربة العدوّ',
+  'Death Mark': 'علامة الهلاك', 'Marked foe takes 35% more damage for 8 seconds': 'العدوّ المعلَّم ينال ضررًا أكثر بـ35% لثماني ثوانٍ', 'Blinding Powder': 'ذرور العمى', 'A cloud of powder that dazes every foe in front of you': 'سحابة ذرور تُدهش كلّ عدوّ أمامك',
+  'Chipped Ruby': 'ياقوت مثلوم', 'Flawless Ruby': 'ياقوت صافٍ', 'Royal Ruby': 'ياقوت ملكي', 'Chipped Lapis': 'لازورد مثلوم', 'Flawless Lapis': 'لازورد صافٍ', 'Royal Lapis': 'لازورد ملكي',
+  'Chipped Carnelian': 'عقيق مثلوم', 'Flawless Carnelian': 'عقيق صافٍ', 'Royal Carnelian': 'عقيق ملكي',
+  'Empty socket': 'تجويف فارغ', 'No socket': 'بلا تجويف', 'Cut a socket': 'احفر تجويفًا', 'Remove gem': 'انزع الحجر', 'Combine 3': 'ادمج 3', 'worn': 'ملبوس', 'A socket is cut': 'حُفر التجويف', 'Not enough dinars': 'لا دنانير كافية',
+  'No gems yet. They come from dungeon chests, contracts and captains.': 'لا أحجار بعد. تأتي من صناديق السراديب والعقود والقادة.', 'No rare, set or legendary items to work on.': 'لا قطع نادرة أو طقمية أو أسطورية للعمل عليها.',
+  'Bishr can cut a socket into a rare, set or legendary item, and set a gem in it. In a weapon: ruby adds damage, lapis fire damage, carnelian critical strike. In armour or jewellery: ruby adds life, lapis armour and guards against burning, carnelian finds more dinars.': 'يحفر بشر تجويفًا في القطعة النادرة أو الطقمية أو الأسطورية ويرصّع فيه حجرًا. في السلاح: الياقوت يزيد الضرر، واللازورد ضرر النار، والعقيق الضربة القاضية. في الدرع والحليّ: الياقوت يزيد الحياة، واللازورد الدرع ويقي الحريق، والعقيق يجد دنانير أكثر.',
 });

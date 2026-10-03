@@ -7,6 +7,7 @@ import { makeItem, rollRarity, RARITY, statLines } from './items.js';
 import { itemIcon } from './ui.js';
 import { CLASSES, CLASS_ORDER, SKILL_ICONS } from './classes.js';
 import { firePit } from './props.js';
+import { TAB_COST, stashPage } from './build.js';
 
 // The suq at the village gate: merchant, blacksmith, stash and training yard.
 // Each is an interactable; the panels are plain DOM in the HUD layer and work with mouse and touch alike.
@@ -128,11 +129,11 @@ export function openPanel(game, kind, tab) {
     body.appendChild(s);
     body.appendChild(bagGrid((i, it) => { if (it.questId) { ui.toast('That is not yours to sell'); return; } p.gold += sellPrice(it); p.bag[i] = null; game.audio.gold(); refresh(); }, 'Your pack: tap to sell', (it) => `Sell · ${sellPrice(it)}`));
     const pot = el(`<button class="sbtn">Buy Pomegranate Sherbet (25)</button>`);
-    pot.onclick = () => { if (p.gold < 25 || p.potions >= 5) { game.audio.denied?.(); return; } p.gold -= 25; p.potions++; game.audio.potion(); refresh(); };
+    pot.onclick = () => { if (p.gold < 25 || p.potions >= 5 + (p.potCap || 0)) { game.audio.denied?.(); return; } p.gold -= 25; p.potions++; game.audio.potion(); refresh(); };
     body.appendChild(pot);
   } else if (kind === 'smith') {
     tab = tab || 'upgrade';
-    const tabs = el(`<div class="stabs"><button data-t="upgrade">Upgrade</button><button data-t="salvage">Salvage</button><button data-t="enchant">Enchant</button></div>`);
+    const tabs = el(`<div class="stabs"><button data-t="upgrade">Upgrade</button><button data-t="salvage">Salvage</button><button data-t="enchant">Enchant</button><button data-t="gems">Gems</button></div>`);
     tabs.querySelectorAll('button').forEach((b) => { b.classList.toggle('on', b.dataset.t === tab); b.onclick = () => openPanel(game, 'smith', b.dataset.t); });
     body.appendChild(tabs);
     if (tab === 'upgrade') {
@@ -155,15 +156,28 @@ export function openPanel(game, kind, tab) {
       const all = el(`<button class="sbtn">Salvage all common and magic items</button>`);
       all.onclick = () => { let n = 0; p.bag.forEach((it, i) => { if (it && (it.rarity === 'common' || it.rarity === 'magic')) { const g = SALVAGE[it.rarity] || SALVAGE.common; for (const k in g) p.mats[k] = (p.mats[k] || 0) + g[k]; p.bag[i] = null; n++; } }); if (n) game.audio.clang(); refresh(); };
       body.appendChild(all);
+    } else if (tab === 'gems') {
+      game.gemPanel?.(body, refresh);
     } else {
       game.enchantPanel ? game.enchantPanel(body, refresh) : body.appendChild(el('<div class="slabel">Enchanting arrives with the House of Wisdom\'s formulae.</div>'));
     }
   } else if (kind === 'stash') {
-    const s = el(`<div><div class="slabel">Stash: tap to take</div><div class="sgrid">${p.stash.map((it, i) => cell(it, `data-i="${i}"`)).join('')}</div></div>`);
-    s.querySelectorAll('.cell').forEach((c) => { const it = p.stash[+c.dataset.i]; if (!it) return; bind(c, it, p.equip[it.slot], 'Take', () => { const k = p.bag.indexOf(null); if (k < 0) { ui.toast('Your pack is full'); return; } p.bag[k] = it; p.stash[+c.dataset.i] = null; refresh(); }); });
+    // four tabs: the first is free, the others are bought with dinars
+    tab = +tab || 0; const open = (p.stashTabs || 0) + 1;
+    const tabs = el(`<div class="stabs">${TAB_COST.map((c, i) => `<button data-t="${i}" class="${i === tab ? 'on' : ''}">${i < open ? `Tab ${i + 1}` : `🔒 ${c}`}</button>`).join('')}</div>`);
+    tabs.querySelectorAll('button').forEach((b) => b.onclick = () => {
+      const i = +b.dataset.t;
+      if (i >= open) { if (i > open) { ui.toast('Open the tabs in order'); return; } if (p.gold < TAB_COST[i]) { ui.toast('Not enough dinars'); game.audio.denied?.(); return; } p.gold -= TAB_COST[i]; p.stashTabs = i; game.audio.gold(); ui.toast(`Stash tab ${i + 1} opened`); }
+      openPanel(game, 'stash', i);
+    });
+    const S = stashPage(p, tab);
+    const s = el(`<div><div class="slabel">Stash: tap to take</div><div class="sgrid">${S.map((it, i) => cell(it, `data-i="${i}"`)).join('')}</div></div>`);
+    s.prepend(tabs);
+    s.querySelectorAll('.cell').forEach((c) => { const it = S[+c.dataset.i]; if (!it) return; bind(c, it, p.equip[it.slot], 'Take', () => { const k = p.bag.indexOf(null); if (k < 0) { ui.toast('Your pack is full'); return; } p.bag[k] = it; S[+c.dataset.i] = null; refresh(); }); });
     body.appendChild(s);
-    body.appendChild(bagGrid((i, it) => { const k = p.stash.indexOf(null); if (k < 0) { ui.toast('Your stash is full'); return; } p.stash[k] = it; p.bag[i] = null; refresh(); }, 'Your pack: tap to store', 'Store'));
+    body.appendChild(bagGrid((i, it) => { const k = S.indexOf(null); if (k < 0) { ui.toast('This stash tab is full'); return; } S[k] = it; p.bag[i] = null; refresh(); }, 'Your pack: tap to store', 'Store'));
   } else if (kind === 'skills') {
+    game.loadoutPanel?.(body, refresh);
     game.skillTreePanel?.(body, refresh);
   } else if (kind === 'trainer') {
     const s = el(`<div><div class="slabel">"Every road out of Baghdad wants a different hand." Change your discipline (your level and gear stay; class weapons wait in your pack).</div><div class="cp-row small">${CLASS_ORDER.map((k) => `<button class="cp-card ${k === p.cls ? 'cur' : ''}" data-k="${k}"><div class="cp-ic">${SKILL_ICONS[CLASSES[k].attack.icon]}</div><div class="cp-name">${CLASSES[k].name}</div></button>`).join('')}</div></div>`);

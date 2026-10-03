@@ -30,6 +30,7 @@ import { Tutorial } from './tutorial.js';
 import { setupContent, restoreContent, applyNG, startNewGamePlus } from './content.js';
 import { setupSideQuests } from './sidequests.js';
 import { setupDungeons } from './dungeons.js';
+import { setupBuild } from './build.js';
 import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, FIRST_ACT, STORY, REGION_NAME } from './region.js';
 
 const P = new URLSearchParams(location.search);
@@ -86,6 +87,7 @@ game.journal = (t) => { if (document.getElementById('journal')) { document.getEl
 setupContent(game);
 setupSideQuests(game);
 setupDungeons(game);
+setupBuild(game);
 const tutorial = new Tutorial(game);
 const guide = game.guide = new Guide(game);
 const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); guide.update(dt); game.discover(dt); tutorial.update(dt); game.contentTick?.(dt); game.sideTick?.(dt); };

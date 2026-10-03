@@ -20,6 +20,7 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const angDiff = (a, b) => { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 
 const MAX_TOKENS = 3; // melee foes allowed to press the attack at once; the rest circle and flank
+export const MAX_LEVEL = 30;
 
 export class Game {
   constructor({ scene, camera, renderer, world, fx, ui, audio }) {
@@ -311,6 +312,7 @@ export class Game {
       if (k === '1') this.useSkill('s1');
       if (k === '2') this.useSkill('s2');
       if (k === '3') this.useSkill('s3');
+      if (k === '4') this.useSkill('s4');
       if (k === '4') this.useSkill('rmb');
       if (k === 'q') this.useSkill('potion');
       if (k === ' ') { e.preventDefault(); this.useSkill('dodge'); }
@@ -436,7 +438,8 @@ export class Game {
     this.fx.dust(e.pos, 6);
     if (!e.boss) this.decal(e.pos, 1.6 + Math.random(), 'blood');
     if (e.aura) e.aura.visible = false;
-    while (p.xp >= this.xpFor(p.level)) { p.xp -= this.xpFor(p.level); this.levelUp(); }
+    if (p.level >= MAX_LEVEL) p.xp = 0;
+    while (p.level < MAX_LEVEL && p.xp >= this.xpFor(p.level)) { p.xp -= this.xpFor(p.level); this.levelUp(); }
     // loot
     const n = e.boss ? 6 : e.elite ? 3 : (Math.random() < 0.35 ? 1 : 0);
     for (let i = 0; i < n; i++) {
@@ -629,7 +632,7 @@ export class Game {
       this.stats.dodges = (this.stats.dodges || 0) + 1; p.mp -= S.mana; p.cds[slot] = S.cd; this.onEvade?.(); return;
     } else { p.atkTarget = null; p.pendingHit = null; if (S.use(this, p) === false) return; }
     p.mp -= S.mana; p.cds[slot] = S.cd * (slot === 'potion' ? 1 : 1 - Math.min(50, p.stats.cdr || 0) / 100);
-    if (p.buffs.stealth > 0 && slot !== 's3' && slot !== 'potion' && slot !== 'dodge') p.buffs.stealth = Math.min(p.buffs.stealth, 0.3);
+    if (p.buffs.stealth > 0 && S.id !== 'vanish' && slot !== 'potion' && slot !== 'dodge') p.buffs.stealth = Math.min(p.buffs.stealth, 0.3);
   }
 
   // a glint on the attacker's blade as a melee blow winds up: the cue for a parry
@@ -949,7 +952,7 @@ export class Game {
     const tgt = this.hover || (this.lastTargetT > 0 && !this.lastTarget?.dead ? this.lastTarget : null);
     this.lastTargetT -= dt;
     if (tgt && !tgt.boss) this.ui.showTarget(tgt.name + (tgt.level ? `  ·  Lv ${tgt.level}` : ''), tgt.hp / tgt.maxHp, tgt.elite ? 'elite' : ''); else this.ui.hideTarget();
-    const buffs = []; if (p.buffs.ward > 0) buffs.push({ icon: 'wall', t: p.buffs.ward }); if (p.whirlT > 0) buffs.push({ icon: 'whirl', t: p.whirlT }); if (p.buffs.stealth > 0) buffs.push({ icon: 'vanish', t: p.buffs.stealth });
+    const buffs = []; if (p.buffs.ward > 0) buffs.push({ icon: 'wall', t: p.buffs.ward }); if (p.whirlT > 0) buffs.push({ icon: 'whirl', t: p.whirlT }); if (p.buffs.stealth > 0) buffs.push({ icon: 'vanish', t: p.buffs.stealth }); for (const k of ['rally', 'brand']) if (p.buffs[k] > 0) buffs.push({ icon: k, t: p.buffs[k] });
     this.ui.buffs(buffs);
     this.ui.updateWorld(this.camera, dt, this.keys['alt']);
     this.ui.enemyBars(this.enemies, this.camera);
