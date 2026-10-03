@@ -1,7 +1,7 @@
-# Madinat al-Salam: Handoff (after Round 14)
+# Madinat al-Salam: Handoff (after Round 16)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam** (formerly "Sands of Baghdad"). It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `madinat-round14-handoff.zip` (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
+> I'm continuing a game project called **Madinat al-Salam** (formerly "Sands of Baghdad"). It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `madinat-round16-handoff.zip` (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
 >
 > Please:
 > 1. Unzip it and read HANDOFF.md fully.
@@ -15,11 +15,11 @@
 
 ## Restore the code
 ```
-unzip madinat-round14-handoff.zip -d madinat && cd madinat
-git clone repo.bundle game && cd game        # Round 15 is on branch claude/new-session-tvzhqq
+unzip madinat-round16-handoff.zip -d madinat && cd madinat
+git clone repo.bundle game && cd game        # Rounds 15-16 are on branch claude/new-session-tvzhqq
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
-If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/claude/new-session-e8qzyb`.
+If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/claude/new-session-tvzhqq`.
 
 URL flags:
 - `?play` skips the title screen.
@@ -247,8 +247,26 @@ Round 11 rewrote the story around the Teacher's Pages, with Shia-inspired themes
 - **Arabic** for all of it (end of `story_ar.js`, plus bounty patterns in `i18n.js`).
 - **Tests:** `shots/r16test.mjs <region>` plays every quest, bounty and an event to completion; all three regions are clean.
 
-## Next: Round 17+ (proposed; confirm with the user before building)
-User decisions for Round 15: Nahrawan confirmed, separate maps, both acts in one round. Still open: the order of R16–R18, and whether bounties reset daily or per act.
+## Next: Round 17, dungeons and endgame (proposed; confirm with the user before building)
+User decisions so far: Nahrawan and al-Karkh acts (done in R15); separate maps; bounties reset daily (done in R16); the buffalo was built.
+
+**Plan for R17:**
+- **Six new interior styles** in `interior.js`, each with its own room kit and one hazard. Spread them across the regions as new entrances and bounty "clear" targets.
+  - Cistern: the floor floods in waves.
+  - Granary vaults: grain stacks collapse when hit.
+  - Salt mine: glare and narrow passages.
+  - Kiln tunnels II: smoke vents that block sight.
+  - Palace cellars: traps on the floor.
+  - Reed-hut warren: fire spreads through it.
+- **Captain's Contracts:** a board or NPC where you pick a captain, a region and 1–3 modifiers (reuse the qanat modifier system in `progression.js`). Rewards scale with the modifiers. Contracts sit alongside the qanat tiers and the Gauntlet of Captains.
+- **Renown board:** spend `p.renown` (earned from bounties, events and side quests since R16) on a small account-wide passive board of about 12 nodes: more gold found, extra potion charges, more evade distance, rarity chance and so on. Open it from the menu sheet.
+- Every round still runs the critique loop, publishes the Artifact, pushes, and sends the APK.
+
+**Open questions to ask before building R17:**
+1. Should Renown also unlock cosmetics (dyes for the qaba, banners), or stay passives only?
+2. Should Contracts have a daily limit, or be unlimited?
+3. Keep all six interior styles, or do fewer with more polish?
+4. Should the level cap rise to 30 here, or wait for R18 as planned?
 
 ## Roadmap (R15 done)
 The goal is about 8–12 hours for a first playthrough, up from about 1.5 today, plus a repeatable endgame. It is split into rounds so each one ships playable.
@@ -275,7 +293,7 @@ The goal is about 8–12 hours for a first playthrough, up from about 1.5 today,
 
 **Constraints for every round:** human foes only; no religious buildings or symbols; 813 CE authentic names, dress and weapons; Rast/Bayati music; no violence on screen in cutscenes; mobile first; and no lights or new shader variants created at runtime (create them at load).
 
-**Questions for the user before R15:** the order of rounds; Act V is now set (al-Karkh, chosen by the user); confirm Act IV (Nahrawan); whether Rawh and the unnamed buyer are right; whether bounties should reset daily (real time) or per act.
+
 
 ## Known gaps
 1. Verify on a device: immersive mode, Smooth sharpness frame rate, the trail's readability in sunlight, and Back.
@@ -283,10 +301,10 @@ The goal is about 8–12 hours for a first playthrough, up from about 1.5 today,
 3. Farud's and Hisham's death shots and the boss intro still use the old camera work.
 
 ## File map (src/)
-- **Core:** main.js (boot, loop, wiring), game.js (gameplay, AI, combat), classes.js, entities.js, items.js, save.js, content.js (R10 captains, areas, tasks, engines, duel, NG+)
-- **World:** world.js, terrain.js, buildings.js, props.js, vegetation.js, water.js, interior.js, zones.js, hub.js
+- **Core:** main.js (boot, loop, wiring), game.js (gameplay, AI, combat), classes.js, entities.js, items.js, save.js, content.js (R10 captains, areas, tasks, engines, duel, NG+), region.js + story15.js (R15 regions, quest chains, boss kits), sidequests.js (R16 side quests, bounties, world events, tracking)
+- **World:** world.js, regions.js + regionprops.js (R15 marsh and Karkh), terrain.js, buildings.js, props.js, vegetation.js, water.js, interior.js, zones.js, hub.js
 - **Rendering:** graphics.js, lighting.js, lights.js, atmos.js, fx.js, perf.js
-- **Characters:** sculpt.js, human.js, creatures.js (camels), charmats.js, cloth.js, anim.js, characters.js, geocache.js
+- **Characters:** sculpt.js, human.js, creatures.js (camels, water buffalo), charmats.js, cloth.js, anim.js, characters.js, geocache.js
 - **Story:** cinema.js, scenes.js, narrative.js
 - **Progression:** progression.js
 - **Audio:** audio.js, audio2.js
