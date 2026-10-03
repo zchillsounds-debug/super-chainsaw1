@@ -1,4 +1,4 @@
-import { IS_MARSH, IS_KARKH } from './region.js';
+import { IS_MARSH, IS_KARKH, IS_DOCKS } from './region.js';
 import { SITES } from './terrain.js';
 import * as SCENES from './scenes.js';
 import { makeItem } from './items.js';
@@ -163,8 +163,9 @@ export function setupNarrative(game) {
   game.discover = (dt) => {
     if ((game.discoverT -= dt) > 0) return; game.discoverT = 1;
     const P = p.pos; const near = (s, r) => Math.hypot(P.x - s.x, P.z - s.z) < r;
-    if (game.interior) { const k = game.interior.def.kind; unlock(game, k === 'qanat' ? 'qanat' : k === 'granary' ? 'nahrawan' : k === 'cellars' ? 'warraqin' : 'kilns'); return; }
+    if (game.interior) { const k = game.interior.def.kind; unlock(game, k === 'qanat' ? 'qanat' : k === 'granary' ? 'nahrawan' : k === 'cellars' ? 'warraqin' : k === 'customs' ? 'rivercraft' : 'kilns'); return; }
     if (IS_MARSH) { if (game.t > 20) unlock(game, 'nahrawan'); if (near(SITES.village, 30)) unlock(game, 'mudhif'); if (p.wading) unlock(game, 'mashuf'); return; }
+    if (IS_DOCKS) { if (game.t > 20) unlock(game, 'tigris'); if (near(SITES.kiln, 26)) unlock(game, 'rivercraft'); if (near(SITES.arch, 34)) unlock(game, 'jisr'); if (near(SITES.village, 26)) unlock(game, 'copyists'); return; }
     if (IS_KARKH) { if (game.t > 20) unlock(game, 'karkh'); if (near(SITES.kiln, 26)) unlock(game, 'warraqin'); if (near(SITES.serai, 26)) unlock(game, 'siege'); if (near(SITES.village, 26)) unlock(game, 'wisdom'); if (near(SITES.arch, 34)) unlock(game, 'round'); return; }
     if (near({ x: 56, z: 0 }, 26)) unlock(game, 'khan');
     if (near({ x: -56, z: -36 }, 26)) unlock(game, 'kilns');

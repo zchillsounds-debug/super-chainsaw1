@@ -2,14 +2,14 @@ import * as THREE from 'three';
 import { canalX, CANAL_W, WORLD, WATER_Y, heightAt } from './terrain.js';
 import { REFL, REFL_GLSL } from './reflect.js';
 
-export function createCanal(sunDir) {
+export function createCanal(sunDir, { halfW = CANAL_W * 0.62, river = false } = {}) {
   const segs = 260, half = WORLD / 2;
   const pos = [], uv = [], idx = [];
   for (let i = 0; i <= segs; i++) {
     const z = -half + i / segs * WORLD, x = canalX(z);
     const dx = canalX(z + 0.5) - canalX(z - 0.5);
     const nx = 1, nz = -dx; const l = Math.hypot(nx, nz);
-    const w = CANAL_W * 0.62;
+    const w = halfW;
     pos.push(x - nx / l * w, -0.55, z - nz / l * w, x + nx / l * w, -0.55, z + nz / l * w);
     uv.push(0, z * 0.1, 1, z * 0.1);
     if (i < segs) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
@@ -23,13 +23,13 @@ export function createCanal(sunDir) {
     transparent: true, depthWrite: false,
     uniforms: {
       uTime: { value: 0 }, uSun: { value: sunDir }, uSpec: { value: new THREE.Color(1.0, 0.85, 0.6) },
-      uDeep: { value: new THREE.Color(0x0a2526) }, uShallow: { value: new THREE.Color(0x2c5248) },
+      uDeep: { value: new THREE.Color(river ? 0x0c2a26 : 0x0a2526) }, uShallow: { value: new THREE.Color(river ? 0x23463a : 0x2c5248) }, uRiver: { value: river ? 1 : 0 },
       uSky: { value: new THREE.Color(0xf3c999) },
       fogColor: { value: new THREE.Color() }, fogDensity: { value: 0 }, ...REFL,
     },
     vertexShader: `varying vec2 vUv; varying vec3 vW; varying float vFogDepth;
       void main(){ vUv=uv; vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; vec4 mv=viewMatrix*w; vFogDepth=-mv.z; gl_Position=projectionMatrix*mv; }`,
-    fragmentShader: `uniform float uTime; uniform vec3 uSun,uDeep,uShallow,uSky,uSpec,fogColor; uniform float fogDensity; ${REFL_GLSL}
+    fragmentShader: `uniform float uTime, uRiver; uniform vec3 uSun,uDeep,uShallow,uSky,uSpec,fogColor; uniform float fogDensity; ${REFL_GLSL}
       varying vec2 vUv; varying vec3 vW; varying float vFogDepth;
       float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
       float n(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y); }
@@ -42,7 +42,9 @@ export function createCanal(sunDir) {
         vec3 V = normalize(cameraPosition - vW);
         float fres = clamp((0.04 + 0.96*pow(1.0 - max(dot(N,V),0.0), 5.0)) * 2.2, 0.0, 1.0);
         float edge = 1.0 - abs(vUv.x*2.0-1.0);
-        vec3 water = mix(uShallow, uDeep, smoothstep(0.0,0.7,edge));
+        vec3 water = mix(uShallow, uDeep, smoothstep(0.0, mix(0.7, 0.12, uRiver), edge));
+        // Round 20: the Tigris: silt-green, broad slow eddies drifting south
+        if (uRiver > 0.5) water *= 0.85 + 0.3 * n(vec2(p.x * 0.05, p.y * 0.02 + uTime * 0.04));
         vec3 R = reflect(-V,N);
         vec3 refl = reflAt(vW, N, mix(uSky*0.8, uSky*1.15, smoothstep(0.0,0.6,R.y)));
         vec3 col = mix(water, refl, fres);
@@ -53,7 +55,7 @@ export function createCanal(sunDir) {
         col += uSky * streak * 0.08;
         float foam = smoothstep(0.18,0.0,edge) * (0.5+0.5*n(p*4.0+uTime));
         col = mix(col, vec3(0.86,0.82,0.7), foam*0.5);
-        float a = mix(0.55, 0.92, smoothstep(0.0,0.4,edge));
+        float a = mix(mix(0.55, 0.92, smoothstep(0.0,0.4,edge)), 0.97, uRiver);
         float f = 1.0 - exp(-fogDensity*fogDensity*vFogDepth*vFogDepth);
         col = mix(col, fogColor, f);
         gl_FragColor = vec4(col, a);

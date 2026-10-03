@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GROUND } from './groundtex.js';
 import { fbm, noise2, smooth, clamp, mulberry32 } from './noise.js';
-import { REGION, IS_MARSH, IS_KARKH } from './region.js';
+import { REGION, IS_MARSH, IS_KARKH, IS_DOCKS, IS_CITY } from './region.js';
 
 export const WORLD = 280; // terrain size (units ~ meters)
 const HALF = WORLD / 2;
@@ -12,9 +12,11 @@ const CANAL = {
   sawad: (z) => -22 + Math.sin(z * 0.025) * 9 + Math.sin(z * 0.061) * 3,
   marsh: () => -9999,
   karkh: (z) => 21 + Math.sin(z * 0.03) * 5 + Math.sin(z * 0.071) * 1.5,
+  // Round 20: the Tigris itself, broad and slow, along the east of the river quays
+  docks: (z) => 66 + Math.sin(z * 0.018) * 5 + Math.sin(z * 0.047) * 1.5,
 }[REGION];
 export const canalX = CANAL;
-export const CANAL_W = 7;
+export const CANAL_W = IS_DOCKS ? 46 : 7;
 // the marshes' open water: the surface sits at WATER_Y; ground lower than DEEP_Y is too deep to wade
 export const WATER_Y = IS_MARSH ? -0.45 : -0.55, DEEP_Y = -1.05;
 
@@ -40,6 +42,13 @@ export const ROADS = {
     [[-20, 56], [8, 62], [44, 62], [62, 40], [60, 0], [44, -40]],
     [[-58, -24], [-46, -56], [-14, -74]],
   ],
+  // the company's khan -> the warehouses -> the boatyard -> the bridge landing; the quay road along the river; a loop inland
+  docks: [
+    [[-48, 120], [-48, 96], [-30, 80], [-8, 60], [14, 40], [16, 10], [14, -30], [18, -60], [24, -88]],
+    [[34, 116], [34, 70], [32, 30], [30, -10], [30, -50], [34, -100], [34, -124]],
+    [[-8, 60], [-42, 30], [-62, -10], [-44, -60], [-4, -84], [24, -88]],
+    [[14, 40], [32, 30]], [[14, -30], [30, -30]],
+  ],
 }[REGION];
 // shallow fords where a causeway dips under the water (marsh)
 const FORDS = IS_MARSH ? [[37, 37, 7], [-42, -14, 6], [41, -48, 6]] : [];
@@ -61,7 +70,10 @@ export const SITES = {
   sawad: { village: { x: 18, z: 58, r: 26 }, serai: { x: 56, z: 0, r: 24 }, kiln: { x: -56, z: -36, r: 22 }, arch: { x: 10, z: -88, r: 30 } },
   marsh: { village: { x: 12, z: 80, r: 24 }, serai: { x: -52, z: 28, r: 20 }, kiln: { x: 58, z: -6, r: 20 }, arch: { x: -6, z: -84, r: 26 } },
   karkh: { village: { x: -62, z: 86, r: 20 }, serai: { x: -8, z: 36, r: 24 }, kiln: { x: -58, z: -24, r: 20 }, arch: { x: 44, z: -62, r: 26 } },
+  docks: { village: { x: -48, z: 98, r: 20 }, serai: { x: 12, z: 40, r: 24 }, kiln: { x: 16, z: -30, r: 22 }, arch: { x: 20, z: -88, r: 26 } },
 }[REGION];
+// Round 20: wooden decks (jetties) the hero can walk out on over the river: [x0, x1, z, width, y]
+export const DECKS = IS_DOCKS ? [[38, 52, 60, 3.2, 0.25], [38, 52, 20, 3.2, 0.25], [38, 50, -30, 3.6, 0.25], [38, 54, -88, 3.6, 0.3]] : [];
 
 function sawadHeight(x, z) {
   // gentle undulation + dunes towards the edges
@@ -111,7 +123,23 @@ function karkhHeight(x, z) {
   for (const s of Object.values(SITES)) h = THREE.MathUtils.lerp(0.1, h, smooth(s.r * 0.8, s.r * 1.2, Math.hypot(x - s.x, z - s.z)));
   return h;
 }
-export const rawHeight = IS_MARSH ? marshHeight : IS_KARKH ? karkhHeight : sawadHeight;
+function docksHeight(x, z) {
+  // the quays: flat paved ground stepping down by a stone quay wall into the deep Tigris; the far bank rises in gardens
+  let h = fbm(x * 0.02, z * 0.02, 3) * 0.9;
+  const edge = smooth(100, HALF - 4, Math.max(Math.abs(x - 20), Math.abs(z)));
+  h += edge * (1.5 + fbm(x * 0.05, z * 0.05, 2) * 3) * (x < canalX(z) ? 1 : 0.3);
+  const rd = roadDist(x, z);
+  h = THREE.MathUtils.lerp(h * 0.2, h, smooth(2.5, 7, rd));
+  for (const s of Object.values(SITES)) h = THREE.MathUtils.lerp(0.12, h, smooth(s.r * 0.8, s.r * 1.2, Math.hypot(x - s.x, z - s.z)));
+  const dx = x - canalX(z), half = CANAL_W / 2;
+  // the west bank is a cut stone quay (a sharp drop); the east bank a soft muddy slope
+  const west = dx < 0 ? smooth(-half - 0.6, -half + 0.4, dx) : 0, east = dx > 0 ? 1 - smooth(half - 6, half + 4, dx) : 0;
+  const river = Math.max(west, east, dx >= -half && dx <= half ? 1 : 0);
+  h = THREE.MathUtils.lerp(h, -3.2 + fbm(x * 0.05, z * 0.05, 2) * 0.6, river);
+  if (dx > half) h += smooth(half + 4, half + 30, dx) * 1.2;
+  return h;
+}
+export const rawHeight = IS_MARSH ? marshHeight : IS_DOCKS ? docksHeight : IS_KARKH ? karkhHeight : sawadHeight;
 
 // Height lookup grid (fast, bilinear) used by gameplay.
 const GRID = 256;
@@ -128,6 +156,11 @@ export function heightAt(x, z) {
   return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
 }
 
+// Round 20: flat jetty decks over the river (x-aligned), applied to the gameplay height grid
+for (const [x0, x1, dz, w, y] of DECKS) for (let j = 0; j <= GRID; j++) for (let i = 0; i <= GRID; i++) {
+  const x = i / GRID * WORLD - HALF, z = j / GRID * WORLD - HALF;
+  if (Math.abs(z - dz) <= w / 2 + 0.3 && x >= x0 - 2 && x <= x1) { const k = j * (GRID + 1) + i; heights[k] = Math.max(heights[k], y); }
+}
 // Raise the gameplay height field over a bridge deck (x-aligned span centred at bx,bz).
 export function setBridge(bx, bz, len, width, base) {
   for (let j = 0; j <= GRID; j++) for (let i = 0; i <= GRID; i++) {
@@ -145,6 +178,7 @@ export function fertility(x, z) {
   if (IS_MARSH) return clamp(0.35 + (heightAt(x, z) - WATER_Y) * 1.2, 0, 1);
   const cd = Math.abs(x - canalX(z));
   if (IS_KARKH) return clamp(1 - smooth(4, 12, cd), 0, 1) * 0.7;
+  if (IS_DOCKS) return x > canalX(z) ? 0.8 : clamp(1 - smooth(4, 40, Math.abs(x + 90)), 0, 1) * 0.5; // gardens on the far bank, a few to the west
   return clamp(1 - smooth(6, 34 + fbm(x * 0.03, z * 0.03) * 20, cd), 0, 1);
 }
 
@@ -155,10 +189,11 @@ function makeMask() {
     const rd = roadDist(x, z);
     const road = 1 - smooth(2.4, 4.6 + noise2(x * 0.3, z * 0.3) * 1.0, rd);
     const cd = Math.abs(x - canalX(z));
-    const wet = IS_MARSH ? 1 - smooth(WATER_Y - 0.1, WATER_Y + 0.45, heightAt(x, z)) : 1 - smooth(CANAL_W * 0.4, CANAL_W * 1.1, cd);
+    const wet = IS_MARSH ? 1 - smooth(WATER_Y - 0.1, WATER_Y + 0.45, heightAt(x, z)) : IS_DOCKS ? 1 - smooth(CANAL_W * 0.5 - 1, CANAL_W * 0.5 + 0.5, cd) : 1 - smooth(CANAL_W * 0.4, CANAL_W * 1.1, cd);
     let site = 0;
-    if (IS_KARKH) site = Math.max(site, (1 - smooth(2.2, 4.2, rd)) * 0.75);
-    for (const s of IS_MARSH ? [] : IS_KARKH ? [SITES.village, SITES.serai, SITES.arch] : [SITES.village, SITES.serai]) site = Math.max(site, 1 - smooth(s.r * 0.5, s.r * 0.9, Math.hypot(x - s.x, z - s.z)));
+    if (IS_CITY) site = Math.max(site, (1 - smooth(2.2, 4.2, rd)) * 0.75);
+    if (IS_DOCKS) site = Math.max(site, (1 - smooth(4, 12, Math.abs(x - canalX(z) + CANAL_W / 2 + 4))) * (x < canalX(z) ? 1 : 0)); // the paved quay
+    for (const s of IS_MARSH ? [] : IS_CITY ? [SITES.village, SITES.serai, SITES.arch, ...(IS_DOCKS ? [SITES.kiln] : [])] : [SITES.village, SITES.serai]) site = Math.max(site, 1 - smooth(s.r * 0.5, s.r * 0.9, Math.hypot(x - s.x, z - s.z)));
     const k = (j * S + i) * 4;
     data[k] = road * 255; data[k + 1] = fertility(x, z) * (1 - road) * 255; data[k + 2] = wet * 255; data[k + 3] = site * 255;
   }
@@ -184,7 +219,7 @@ export function createTerrain() {
       .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWPos = (modelMatrix * vec4(transformed,1.0)).xyz;');
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
-        #define RG ${IS_MARSH ? 1 : IS_KARKH ? 2 : 0}
+        #define RG ${IS_MARSH ? 1 : IS_KARKH ? 2 : IS_DOCKS ? 3 : 0}
         varying vec3 vWPos; uniform sampler2D uMask; uniform float uWorld;
         float h21(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return fract(p.x*p.y); }
         float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
@@ -198,7 +233,7 @@ export function createTerrain() {
         // height blend: near the transition the higher surface wins
         #if RG == 1
           const vec3 pebA = vec3(0.40,0.38,0.33), pebB = vec3(0.28,0.25,0.20), pebC = vec3(0.46,0.42,0.36);
-        #elif RG == 2
+        #elif RG >= 2
           const vec3 pebA = vec3(0.44,0.42,0.40), pebB = vec3(0.24,0.22,0.21), pebC = vec3(0.56,0.42,0.32);
         #else
           const vec3 pebA = vec3(0.56,0.52,0.47), pebB = vec3(0.42,0.33,0.26), pebC = vec3(0.66,0.56,0.44);
@@ -226,8 +261,8 @@ export function createTerrain() {
           grass = mix(vec3(0.20,0.29,0.11), vec3(0.33,0.39,0.15), n1); grass = mix(grass, vec3(0.44,0.40,0.21), smoothstep(0.5,0.8,n2)*0.6);
           grass = mix(grass, vec3(0.47,0.40,0.22), smoothstep(0.55,0.8,fb(vWPos.xz*0.06+2.0))*0.55); // dry, yellowed tussocks
           mud = vec3(0.15,0.13,0.10);
-        #elif RG == 2
-          // al-Karkh: trodden earth and ash, black soot where the fires burned
+        #elif RG >= 2
+          // al-Karkh: trodden earth and ash, black soot where the fires burned (the quays: the same earth, river silt)
           sand = mix(vec3(0.38,0.35,0.31), vec3(0.47,0.43,0.37), n1);
           sand = mix(sand, vec3(0.30,0.28,0.26), smoothstep(0.5,0.8,n2)*0.5);
           dirt = mix(vec3(0.36,0.31,0.26), vec3(0.44,0.38,0.31), n2);
@@ -251,7 +286,7 @@ export function createTerrain() {
         vec3 road = mix(vec3(0.40,0.31,0.22), vec3(0.47,0.37,0.27), n3);
         #if RG == 1
           road = mix(vec3(0.34,0.29,0.22), vec3(0.40,0.34,0.26), n3);
-        #elif RG == 2
+        #elif RG >= 2
           road = mix(vec3(0.40,0.35,0.30), vec3(0.47,0.41,0.34), n3);
         #endif
         vec3 cRoad = road * dR.r; cRoad = mix(cRoad, peb(dR.b) * 1.05, dR.g * 0.8);
@@ -259,7 +294,7 @@ export function createTerrain() {
         cRoad *= 1.0 - rut*0.14;
         vec3 stoneCol = mix(vec3(0.62,0.52,0.40), vec3(0.76,0.64,0.49), dF.b);
         stoneCol = mix(stoneCol, vec3(0.55,0.42,0.30), step(0.85, fract(dF.b*7.3))*0.6);
-        #if RG == 2
+        #if RG >= 2
           stoneCol = mix(vec3(0.50,0.47,0.42), vec3(0.64,0.58,0.50), dF.b);
         #endif
         vec3 cFlag = mix(stoneCol * dF.r, sand * 0.62, dF.g);
@@ -345,5 +380,6 @@ export function mapColor(x, z) {
   if (IS_MARSH) { const h = heightAt(x, z); return h < DEEP_Y ? '#1e4a4c' : h < WATER_Y ? '#3a6a5e' : roadDist(x, z) < 3 ? '#7a6644' : '#4a5a2a'; }
   const cd = Math.abs(x - canalX(z));
   if (IS_KARKH) return cd < 3 ? '#2a6a6a' : roadDist(x, z) < 3.5 ? '#8a7254' : '#4a3e34';
+  if (IS_DOCKS) return cd < CANAL_W / 2 ? '#24585c' : DECKS.some(([x0, x1, dz, w]) => x >= x0 && x <= x1 && Math.abs(z - dz) < w / 2) ? '#7a5a36' : roadDist(x, z) < 3.5 ? '#8a7254' : x > canalX(z) ? '#4a5a2a' : '#5a4e40';
   return cd < 3 ? '#2a6a6a' : (cd < 25 ? '#4a4a26' : '#6a5032');
 }

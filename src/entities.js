@@ -62,6 +62,11 @@ export const TYPES = {
 
 const ELITE_NAMES = ['Fadl', 'Khalid', 'Sinan', 'Hudhayl', 'Mukhariq', 'Sa\'d', 'Kulayb', 'Harith'];
 
+// Round 20: Ghanim, the buyer's steward, at the bridge of boats (Act VI)
+TYPES.ghanim = {
+  name: 'Ghanim', hp: 4600, dmg: 20, speed: 3.3, range: 3.2, atk: 2.2, xp: 1900, radius: 1.1, boss: true,
+  build: (x) => humanoid({ robe: '#1e1620', robe2: '#c8a050', hem: true, qaba: true, mail: true, helm: true, turban: null, cloak: 0x2a1a30, beard: 0x8a8070, beardLen: 0.9, skin: 0x9a6a44, weapon: 'sword', offhand: 'shield', sash: 0x5a2a6a, scale: 1.5, build: 1.15, belly: 0.3, hemY: 0.3, detail: 'hi', armour: 'heavy', leather: 0x2a1a2e, crest: 'plume', ...x }),
+};
 Object.assign(TYPES, TYPES20); // Round 20: crossbowmen, siege engineers and their mangonels, camel raiders
 
 // Round 20: captains get a silhouette of their own: heavy armour, the full-detail sculpt and one crest chosen

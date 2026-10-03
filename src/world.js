@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { createTerrain, setBridge, heightAt, canalX, CANAL_W, roadDist, fertility, SITES, WORLD, ROADS } from './terrain.js';
 import { createCanal, createLagoon } from './water.js';
-import { IS_MARSH, IS_KARKH } from './region.js';
-import { buildMarsh, buildKarkh } from './regions.js';
+import { IS_MARSH, IS_KARKH, IS_DOCKS } from './region.js';
+import { buildMarsh, buildKarkh, buildDocks } from './regions.js';
 import { colliders, house, suq, caravanserai, greatArch, palaceVault, kiln, roundCity, mats } from './buildings.js';
 import { palms, grassField, rocks, shrubs, wind, acacias, reeds } from './vegetation.js';
 import { emberBed } from './ember.js';
@@ -97,8 +97,8 @@ export function buildWorld(scene) {
   out.sunDir = sunDir;
   scene.add(createTerrain());
   if (IS_MARSH) { const lag = out.canal = createLagoon(sunDir); scene.add(lag); out.updaters.push((t) => lag.update(t, scene)); }
-  else { const canal = out.canal = createCanal(sunDir); scene.add(canal); out.updaters.push((t) => canal.update(t, scene)); }
-  if (IS_MARSH) buildMarsh(scene, rnd, out); else if (IS_KARKH) buildKarkh(scene, rnd, out); else buildSawad(scene, rnd, out, sunDir);
+  else { const canal = out.canal = createCanal(sunDir, IS_DOCKS ? { halfW: CANAL_W / 2 + 2, river: true } : {}); scene.add(canal); out.updaters.push((t) => canal.update(t, scene)); }
+  if (IS_MARSH) buildMarsh(scene, rnd, out); else if (IS_DOCKS) buildDocks(scene, rnd, out); else if (IS_KARKH) buildKarkh(scene, rnd, out); else buildSawad(scene, rnd, out, sunDir);
 
   clutter(scene, rnd, out);
   out.updaters.push((t) => { wind.uTime.value = t; });

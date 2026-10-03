@@ -15,6 +15,11 @@ export const LIEUT = {
     chief: { who: '\'Asim', text: '\'Utba moved the Pages to the paper-sellers\' lane. Layth guards them.', act: 5, card: { ar: 'سوق الورّاقين', en: 'The Paper-Sellers\' Lane', sub: 'Layth guards the Pages among the paper shops.' } },
     second: { who: 'Layth', text: 'Too late. \'Utba took them to the square. He burns them at sunset.', act: 5, card: { ar: 'الساحة', en: 'The Square', sub: 'Stop \'Utba before he lights the pyre.' } },
   },
+  // Round 20: Act VI, the river quays. The buyer's steward Ghanim means to sink the first copies before they sail.
+  docks: {
+    chief: { who: 'Bilal', text: 'Ghanim pays us to hold the river. Mus\'ab keeps the copyists\' boat at the yard.', act: 6, card: { ar: 'دار الصناعة', en: 'The Boatyard', sub: 'Free the copyists\' boat from Mus\'ab.' } },
+    second: { who: 'Mus\'ab', text: 'The boat is yours. But Ghanim cut the bridge, and he waits at its foot.', act: 6, card: { ar: 'الجسر', en: 'The Bridge of Boats', sub: 'Ghanim will not let the copies sail. Face him at the bridge.' } },
+  },
 }[REGION];
 
 // the act's last fight: who, where, his kit, and the lines for the intro and his second phase
@@ -38,6 +43,14 @@ export const BOSS = {
     duelCaption: 'The stalls are burning. Stay inside the ring.',
     banner: ['\'Utba', 'Captain of the buyer\'s men'],
   },
+  docks: {
+    type: 'ghanim', level: 14, phaseAt: 0.6, duelAt: 0.3, volley: 'bolts', barrage: 'stones', summon: ['crossbow', 'guard', 'engineer'],
+    intro: { text: 'Copies, guard? Then I will sink every boat on the river.', card: { ar: 'غانم', en: 'Ghanim', sub: 'The buyer\'s steward' } },
+    phase: 'Crossbows! Hold the bridge!',
+    duel: 'No one sails tonight. Not you, not your paper.',
+    duelCaption: 'Ghanim fires the bridge. Stay inside the ring.',
+    banner: ['Ghanim', 'The buyer\'s steward'],
+  },
 }[REGION];
 
 // Ishaq's words when Salim speaks with him in each region's hub corner
@@ -56,5 +69,10 @@ export const ISHAQ_TALK = {
     'This was the greatest market in the world before the siege. Now look at it.',
     'The buyer\'s men answer to <b>\'Utba</b>. <b>\'Asim</b> holds the burned suq and <b>Layth</b> the paper-sellers\' lane.',
     'The scholars of the House of Wisdom have promised to copy the Pages. Bring them here, and they are safe for ever.',
+  ],
+  docks: [
+    'Hakam\'s copyists worked through the night. The first copies are to go downriver, to Wasit and Basra, at dawn.',
+    'The buyer\'s steward, <b>Ghanim</b>, holds the quays. <b>Bilal</b> keeps the warehouses and <b>Mus\'ab</b> has taken the copyists\' boat at the yard.',
+    'Ten cities, Salim. Once the copies are on the water, no one can gather them all again.',
   ],
 }[REGION];

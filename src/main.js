@@ -41,14 +41,14 @@ import { setupMount } from './mount.js';
 import { setupCompanion } from './companion.js';
 import { CombatFX } from './combatfx.js';
 import { Ambient } from './ambient.js';
-import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, FIRST_ACT, STORY, REGION_NAME } from './region.js';
+import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, IS_CITY, FIRST_ACT, STORY, REGION_NAME } from './region.js';
 
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
 const __cached = await preloadGeo(); console.debug('LOG geo cache ' + __cached);
 const renderer = createRenderer(document.getElementById('game'));
 bakeGround(renderer, QUALITY);
-WEATHER.uDustCol.value.set(IS_MARSH ? 0x6a604a : IS_KARKH ? 0x6e655a : 0xa8835a);
+WEATHER.uDustCol.value.set(IS_MARSH ? 0x6a604a : IS_CITY ? 0x6e655a : 0xa8835a);
 const scene = new THREE.Scene();
 renderer.info.autoReset = false;
 const camera = new THREE.PerspectiveCamera(36, innerWidth / innerHeight, 0.5, 1400);
@@ -227,7 +227,11 @@ function frame() {
   }
   // kiln smoke drifting over the brick yard
   if (IS_SAWAD && focus.x < -25 && focus.z < -10 && Math.random() < 0.6) { const G = SITES.kiln; fx.smoke.spawn({ pos: { x: G.x + (Math.random() - 0.5) * 40, y: heightAt(G.x, G.z) + 0.3, z: G.z + (Math.random() - 0.5) * 36 }, vel: { x: 0.4, y: 0.05, z: 0.15 }, life: 7, size: 3, size1: 6, color: new THREE.Color(0.55, 0.5, 0.46), alpha: 0.16, drag: 0.1, fadeIn: 0.4 }); }
-  if (IS_KARKH) {
+  if (IS_DOCKS) {
+    // the river quays: pitch smoke from the boatyard cauldrons, mist lifting off the Tigris at dawn
+    if (world.smokers) for (const sm of world.smokers) if (Math.abs(sm.x - focus.x) < 60 && Math.abs(sm.z - focus.z) < 60 && Math.random() < 0.3) fx.smoke.spawn({ pos: { x: sm.x + (Math.random() - 0.5) * 0.5, y: sm.y, z: sm.z + (Math.random() - 0.5) * 0.5 }, vel: { x: 0.5, y: 1.2, z: 0.2 }, life: 6, size: 0.6, size1: 3.5, color: new THREE.Color(0.12, 0.11, 0.1), alpha: 0.4, drag: 0.2, fadeIn: 0.2 });
+    if (Math.random() < 0.5) { const z = focus.z + (Math.random() - 0.5) * 60, x = canalX(z) + (Math.random() - 0.5) * 40; fx.smoke.spawn({ pos: { x, y: -0.3 + Math.random() * 0.6, z }, vel: { x: 0.25, y: 0.08, z: -0.3 }, life: 9, size: 3, size1: 7, color: new THREE.Color(0.85, 0.82, 0.78), alpha: 0.1, drag: 0, fadeIn: 0.5 }); }
+  } else if (IS_KARKH) {
     // al-Karkh: smoke still rising from the ruins, ash drifting down, the odd ember
     if (world.smokers) for (const sm of world.smokers) if (Math.abs(sm.x - focus.x) < 60 && Math.abs(sm.z - focus.z) < 60 && Math.random() < 0.35) fx.smoke.spawn({ pos: { x: sm.x + (Math.random() - 0.5), y: sm.y, z: sm.z + (Math.random() - 0.5) }, vel: { x: 0.6, y: 1.4, z: 0.25 }, life: 7, size: 0.9, size1: 5, color: new THREE.Color(0.2, 0.18, 0.17), alpha: 0.35, drag: 0.2, fadeIn: 0.2 });
     if (Math.random() < 0.6) fx.smoke.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 50, y: (focus.y || 0) + 3 + Math.random() * 6, z: focus.z + (Math.random() - 0.5) * 40 }, vel: { x: 0.5, y: -0.35, z: 0.2 }, life: 6, size: 0.07, size1: 0.05, color: new THREE.Color(0.55, 0.52, 0.5), alpha: 0.7, drag: 0, fadeIn: 0.4 });

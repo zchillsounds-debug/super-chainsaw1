@@ -2,8 +2,8 @@
 // (Acts I-III), the Nahrawan marshes (Act IV) and al-Karkh (Act V). Travelling between them saves the game and
 // reloads the page into the next region, so a phone only ever holds one map in memory.
 const P = new URLSearchParams(location.search);
-const ORDER = ['sawad', 'marsh', 'karkh'];
-export const FIRST_ACT = { sawad: 1, marsh: 4, karkh: 5 };
+const ORDER = ['sawad', 'marsh', 'karkh', 'docks'];
+export const FIRST_ACT = { sawad: 1, marsh: 4, karkh: 5, docks: 6 };
 
 function pick() {
   const q = P.get('region'); if (ORDER.includes(q)) return q;
@@ -11,15 +11,18 @@ function pick() {
   let act = 1; try { act = JSON.parse(localStorage.getItem('sob.save.v1'))?.act || 1; } catch { /* no save */ }
   return regionForAct(act);
 }
-export function regionForAct(act) { return act >= 5 ? 'karkh' : act === 4 ? 'marsh' : 'sawad'; }
+// Round 20: Act VI, the river quays of al-Karkh on the Tigris (act 7 = the chronicle finished, still on the quays)
+export function regionForAct(act) { return act >= 6 ? 'docks' : act === 5 ? 'karkh' : act === 4 ? 'marsh' : 'sawad'; }
 export const REGION = pick();
-export const IS_SAWAD = REGION === 'sawad', IS_MARSH = REGION === 'marsh', IS_KARKH = REGION === 'karkh';
+export const IS_SAWAD = REGION === 'sawad', IS_MARSH = REGION === 'marsh', IS_KARKH = REGION === 'karkh', IS_DOCKS = REGION === 'docks';
+export const IS_CITY = IS_KARKH || IS_DOCKS; // the two Baghdad maps share their ground, weather and street life
 
 // Hub corner: the merchant, smith, stash and trainer travel with Salim and Ishaq and set up in each region.
 export const HUB = {
   sawad: { merchant: [7, 81], smith: [10, 92], stash: [-6, 91], trainer: [-9, 81], ishaq: [-2, 84], spawn: [1, 88] },
   marsh: { merchant: [20, 74], smith: [24, 86], stash: [2, 87], trainer: [-1, 75], ishaq: [8, 80], spawn: [10, 90] },
   karkh: { merchant: [-52, 80], smith: [-54, 92], stash: [-70, 92], trainer: [-73, 80], ishaq: [-64, 86], spawn: [-62, 96] },
+  docks: { merchant: [-38, 92], smith: [-41, 104], stash: [-58, 104], trainer: [-60, 92], ishaq: [-50, 98], spawn: [-48, 108] },
 }[REGION];
 
 // Main-quest chain per region: two named captains on the road (chief, second) and the act's final fight.
@@ -51,6 +54,15 @@ export const STORY = {
     chief: 'burnedsuq', second: 'warraqin', boss: 'utba',
     banner: ['', '', '', '', '', 'Al-Karkh', 'Al-Karkh'],
   },
+  docks: {
+    quests: [
+      { id: 'warehouses', text: 'Find Bilal among the river warehouses' },
+      { id: 'boatyard', text: 'Free the copyists\' boat from Mus\'ab at the boatyard' },
+      { id: 'ghanim', text: 'Face Ghanim at the bridge of boats' },
+    ],
+    chief: 'warehouses', second: 'boatyard', boss: 'ghanim',
+    banner: ['', '', '', '', '', '', 'The river quays', 'The river quays'],
+  },
 }[REGION];
 
-export const REGION_NAME = { sawad: 'The Sawad', marsh: 'The Nahrawan Marshes', karkh: 'Al-Karkh' }[REGION];
+export const REGION_NAME = { sawad: 'The Sawad', marsh: 'The Nahrawan Marshes', karkh: 'Al-Karkh', docks: 'The River Quays' }[REGION];

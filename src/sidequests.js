@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { heightAt, SITES, ROADS, waterDepth } from './terrain.js';
-import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, HUB } from './region.js';
+import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, HUB } from './region.js';
 import { colliders } from './buildings.js';
 import { blocked } from './world.js';
 import { resolve, buildGrid } from './collision.js';
@@ -18,7 +18,7 @@ import { DUNGEONS } from './dungeons.js';
 // Round 16 side content: twelve short quest chains (four per region), a daily bounty board in each hub,
 // timed world events the trail points to, and tracking any task on the trail by tapping it in the tracker.
 
-const BASE = { sawad: 2, marsh: 7, karkh: 10 }[REGION];
+const BASE = { sawad: 2, marsh: 7, karkh: 10, docks: 13 }[REGION];
 const lvl = (g, add = 0) => Math.max(BASE, g.player.level) + add;
 const V3 = (x, z, y = 0) => new THREE.Vector3(x, heightAt(x, z) + y, z);
 // nearest walkable spot to a point: off every collider, out of deep water
@@ -143,6 +143,38 @@ const Q = {
         { text: 'Anyone may cross the north bridge.' }],
       reward: { gold: 140, item: 'rare', renown: 12 } },
   ],
+  // Round 20: Act VI, the river quays
+  docks: [
+    { id: 'skiff', t: 'The Ferryman\'s Skiff', giver: { name: 'Yazid', title: 'Ferryman', look: 'carter', at: [-40, 104], face: -0.8 },
+      offer: 'Ghanim\'s men took my skiff at the north jetty. They use it to row out and search the barges. Forty years I have ferried this river, and now I stand on the bank like a stranger.',
+      steps: [
+        { kind: 'kill', text: 'Drive Ghanim\'s men off the north jetty.', at: [36, 60], pack: ['guard', 'crossbow', 'deserter'], n: 4 },
+        { kind: 'return', text: 'Tell Yazid his skiff is free.', lines: [['Yazid', 'My skiff! Then I will row the copyists across myself, if they ask. Take this, with an old man\'s thanks.']] },
+        { text: 'Yazid ferries the river again.' }],
+      reward: { gold: 200, item: 'rare', renown: 14 } },
+    { id: 'pitch', t: 'Pitch for the Hulls', giver: { name: 'Ma\'qil', title: 'Shipwright', look: 'dyer', at: [-56, 90], face: 0.6 },
+      offer: 'Without pitch my hulls leak like sieves. Ghanim\'s engineers carried off every jar of it from the yard, to their camp inland. They want the boats to sink.',
+      steps: [
+        { kind: 'take', text: 'Take back the pitch jars from the engineers\' camp inland.', at: [-58, -30], label: 'Take the pitch jars', item: 'Jars of Pitch', guard: { pack: ['engineer', 'guard', 'crossbow'], n: 4 } },
+        { kind: 'return', text: 'Bring the pitch to Ma\'qil.', lines: [['Ma\'qil', 'Good black pitch from Hit. The copyists\' boat will ride dry all the way to Basra.']] },
+        { text: 'Ma\'qil\'s hulls are tight again.' }],
+      reward: { gold: 210, item: 'rare', renown: 14, codex: 'rivercraft' } },
+    { id: 'wages', t: 'The Porters\' Wages', giver: { name: 'Jundub', title: 'Porter', look: 'father', at: [-44, 88], face: -0.2 },
+      offer: 'We carried bales for Bilal\'s masters all season, and when we asked for our wages his toll-men beat us off the quay road. Every porter on the river is owed.',
+      steps: [
+        { kind: 'kill', text: 'Break the toll-men on the quay road by the warehouses.', at: [32, 22], pack: ['guard', 'guard', 'spearman'], n: 4, elite: 'Qurra' },
+        { kind: 'return', text: 'Tell Jundub the road is open.', lines: [['Jundub', 'The road is ours again. The porters made a purse for whoever did this. It is yours.']] },
+        { text: 'The porters are paid.' }],
+      reward: { gold: 240, item: 'rare', renown: 16 } },
+    { id: 'daughter', t: 'The Copyist\'s Daughter', giver: { name: 'Wasil', title: 'Copyist', look: 'seller', at: [-58, 100], face: 1.4 },
+      offer: 'My daughter carries my finished quires to Hakam each night. Last night she did not come home. Someone saw her hiding in the old lanes to the south-west.',
+      steps: [
+        { kind: 'kill', text: 'Find Wasil\'s daughter in the south-west lanes and drive off the men around her.', at: [-62, -18], pack: ['guard', 'deserter', 'crossbow'], n: 4 },
+        { kind: 'escort', text: 'Lead her back to the khan.', at: [-60, -16], who: 'children', to: [-56, 96], ambush: [[-30, 50, ['deserter', 'deserter', 'crossbow']]] },
+        { kind: 'return', text: 'Speak with Wasil.', lines: [['Wasil', 'And the quires are safe in her bag, every one. You have saved two things I love tonight.']] },
+        { text: 'Wasil\'s daughter is home.' }],
+      reward: { gold: 190, item: 'legendary', renown: 18, codex: 'copyists' } },
+  ],
 }[REGION];
 
 // ------------------------------------------------------------------ bounty board (daily)
@@ -152,8 +184,8 @@ function rollBounties(g) {
   const seed = [...(today() + REGION)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7), rnd = mulberry32(seed);
   const roadPt = () => { const r = ROADS[Math.floor(rnd() * ROADS.length)], k = Math.floor(rnd() * (r.length - 1)), u = 0.2 + rnd() * 0.6; return [r[k][0] + (r[k + 1][0] - r[k][0]) * u, r[k][1] + (r[k + 1][1] - r[k][1]) * u]; };
   const farPt = () => { for (let i = 0; i < 30; i++) { const p = roadPt(); if (Math.hypot(p[0] - SITES.village.x, p[1] - SITES.village.z) > 45) return p; } return roadPt(); };
-  const pool = { sawad: ['bandit', 'archer', 'spearman', 'deserter'], marsh: ['bandit', 'slinger', 'netter', 'reedman'], karkh: ['guard', 'archer', 'naffat', 'deserter'] }[REGION];
-  const areas = [{ kind: 'qanat', name: 'the ruined qanats' }, ...({ sawad: [{ kind: 'kiln', name: 'the kiln tunnels' }, { kind: 'cellar', name: 'the caravanserai storerooms' }], marsh: [{ kind: 'granary', name: 'the drowned granary' }], karkh: [{ kind: 'cellars', name: 'the merchants\' cellars' }] }[REGION]), ...DUNGEONS.map((d) => ({ kind: d.id, name: d.title.replace(/^The /, 'the ') }))];
+  const pool = { sawad: ['bandit', 'archer', 'spearman', 'deserter'], marsh: ['bandit', 'slinger', 'netter', 'reedman'], karkh: ['guard', 'archer', 'naffat', 'deserter'], docks: ['guard', 'crossbow', 'deserter', 'spearman'] }[REGION];
+  const areas = [{ kind: 'qanat', name: 'the ruined qanats' }, ...({ sawad: [{ kind: 'kiln', name: 'the kiln tunnels' }, { kind: 'cellar', name: 'the caravanserai storerooms' }], marsh: [{ kind: 'granary', name: 'the drowned granary' }], karkh: [{ kind: 'cellars', name: 'the merchants\' cellars' }], docks: [{ kind: 'customs', name: 'the customs vaults' }] }[REGION]), ...DUNGEONS.map((d) => ({ kind: d.id, name: d.title.replace(/^The /, 'the ') }))];
   const sites = Object.entries({ serai: SITES.serai, kiln: SITES.kiln }).map(([, s]) => s);
   const kinds = ['hunt', 'recover', 'escort', 'clear', 'hunt', 'recover'];
   const out = []; const used = new Set();
@@ -161,7 +193,7 @@ function rollBounties(g) {
     const k = kinds[Math.floor(rnd() * kinds.length)]; if (used.has(k) && rnd() < 0.7) continue; used.add(k);
     if (k === 'hunt') { const at = farPt(), name = BOUNTY_NAMES[Math.floor(rnd() * BOUNTY_NAMES.length)], type = pool[Math.floor(rnd() * pool.length)]; out.push({ kind: k, at, name, type, text: `Hunt ${name}, a renegade captain on the roads.` }); }
     else if (k === 'recover') { const at = farPt(); out.push({ kind: k, at, text: 'Recover stolen goods from a band on the roads.' }); }
-    else if (k === 'escort') { const s = sites[Math.floor(rnd() * sites.length)]; const [x, z] = freeSpot(s.x + 6, s.z + 8); out.push({ kind: k, to: [x, z], text: `Escort a laden ${IS_MARSH ? 'buffalo' : 'camel'} from the hub to the ${s === SITES.serai ? (IS_MARSH ? 'reed camp' : IS_KARKH ? 'burned suq' : 'caravanserai') : (IS_MARSH ? 'fish racks' : IS_KARKH ? 'paper-sellers\' lane' : 'kiln yard')}.` }); }
+    else if (k === 'escort') { const s = sites[Math.floor(rnd() * sites.length)]; const [x, z] = freeSpot(s.x + 6, s.z + 8); out.push({ kind: k, to: [x, z], text: `Escort a laden ${IS_MARSH ? 'buffalo' : 'camel'} from the hub to the ${s === SITES.serai ? (IS_MARSH ? 'reed camp' : IS_KARKH ? 'burned suq' : IS_DOCKS ? 'warehouses' : 'caravanserai') : (IS_MARSH ? 'fish racks' : IS_KARKH ? 'paper-sellers\' lane' : IS_DOCKS ? 'boatyard' : 'kiln yard')}.` }); }
     else { const a = areas[Math.floor(rnd() * areas.length)]; out.push({ kind: k, area: a.kind, text: `Clear ${a.name} and open the chest at the bottom.` }); }
   }
   return out.map((b, i) => ({ ...b, i, pool, renown: 15 + Math.floor(rnd() * 3) * 5, gold: 60 + Math.floor(rnd() * 4) * 20 }));
@@ -180,6 +212,10 @@ const EVENTS = {
   karkh: [
     { id: 'granary', t: 'A granary on fire', text: 'Looters set a granary alight on the east lane. Stop them before they carry off the grain.', at: [60, 24], pack: ['naffat', 'guard', 'deserter', 'naffat'], prop: 'fire' },
     { id: 'convoy', t: 'A grain convoy ambushed', text: 'The buyer\'s men are robbing a grain convoy near the north bridge.', at: [-2, 60], pack: ['guard', 'archer', 'deserter'], prop: 'caravan' },
+  ],
+  docks: [
+    { id: 'storefire', t: 'A warehouse on fire', text: 'Ghanim\'s men have fired a warehouse by the quay road. Drive them off before it spreads.', at: [-6, 18], pack: ['naffat', 'guard', 'crossbow', 'naffat'], prop: 'fire' },
+    { id: 'porters', t: 'Porters ambushed', text: 'A file of porters is being robbed on the quay road, south of the warehouses.', at: [30, -8], pack: ['guard', 'deserter', 'crossbow'], prop: 'caravan' },
   ],
 }[REGION];
 

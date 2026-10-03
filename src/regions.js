@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { emberBed } from './ember.js';
-import { heightAt, canalX, CANAL_W, roadDist, SITES, WORLD, ROADS, WATER_Y, DEEP_Y, setBridge } from './terrain.js';
+import { heightAt, canalX, CANAL_W, roadDist, SITES, WORLD, ROADS, WATER_Y, DEEP_Y, setBridge, DECKS } from './terrain.js';
+import { quayWall, jetty, barge, boatFrame, crane, baleStack, cauldron, boatBridge } from './docksprops.js';
 import { colliders, house, roundCity, mats } from './buildings.js';
 import { palms, grassField, rocks, shrubs, reeds, tallReeds } from './vegetation.js';
 import { lanternPost, firePit, tent, jar, crate, marketStall, banner, bridge, deadTree, cart } from './props.js';
@@ -271,4 +272,120 @@ export function buildKarkh(scene, rnd, out) {
   const peb = rocks(pebbles, 21, 0x9a8a7a); peb.castShadow = false; scene.add(peb);
   scene.add(shrubs(shrubPts, 9));
   for (let i = 0, n = 0; i < 300 && n < 14; i++) { const x = (rnd() - 0.5) * 230, z = (rnd() - 0.5) * 230; if (!inSite(x, z, 1.1) && !blocked(x, z, 1.5) && roadDist(x, z) > 4) { place(scene, deadTree(rnd), x, z, rnd() * 6, false); colliders.push({ type: 'circle', x, z, r: 0.5 }); n++; } }
+}
+
+// ================================================================== Act VI: the river quays (Round 20)
+export function buildDocks(scene, rnd, out) {
+  out.smokers = []; out.boats = [];
+  const bank = (z) => canalX(z) - CANAL_W / 2; // the line of the west quay
+  const onDeck = (z) => DECKS.some(([, , dz, w]) => Math.abs(z - dz) < w / 2 + 0.2);
+  // ---------------- the stone quay: wall, coping, bollards and water stairs; the river is closed off along it
+  for (let z = -136; z < 136; z += 10) {
+    const zc = z + 5, x = bank(zc) - 0.8, slope = Math.atan2(bank(zc + 5) - bank(zc - 5), 10);
+    const q = quayWall(10.1, Math.abs(zc % 50) < 6); q.position.set(x, 0, zc); q.rotation.y = Math.PI / 2 - slope; scene.add(q);
+  }
+  for (let z = -138; z < 138; z += 2) if (!onDeck(z)) colliders.push({ type: 'box', x: bank(z) + 0.2, z, hw: 0.5, hd: 1.15, canal: true });
+  colliders.push({ type: 'box', x: canalX(0) + 30, z: 0, hw: 6, hd: 140 }); // the far bank stays out of reach
+  // ---------------- jetties (walkable decks) with rails, and barges moored along the quay
+  for (const [x0, x1, dz, w, y] of DECKS) {
+    const j = jetty(x1 - x0 + 2, w); j.position.set(x0 - 2, y - 0.2, dz); scene.add(j);
+    for (const sd of [-1, 1]) colliders.push({ type: 'box', x: (x0 + x1) / 2, z: dz + sd * (w / 2 + 0.05), hw: (x1 - x0) / 2 + 1, hd: 0.15 });
+    colliders.push({ type: 'box', x: x1 + 0.2, z: dz, hw: 0.2, hd: w / 2 });
+  }
+  const moor = (x, z, ry, len) => { const b = barge(rnd, len); b.position.set(x, -0.95, z); b.rotation.y = ry; scene.add(b); out.boats.push({ m: b, y: -0.95, ph: rnd() * 6 }); };
+  for (const [z, len] of [[70, 11], [48, 10], [32, 12], [8, 9], [-46, 10], [-62, 11], [100, 9], [-118, 10]]) moor(bank(z) + 3.2, z, (rnd() - 0.5) * 0.06, len);
+  for (const [z, len] of [[64, 8], [26, 9]]) moor(bank(z) + 9.5 + rnd() * 4, z, 0.2 * (rnd() - 0.5), len);
+  out.updaters.push((t) => { for (const b of out.boats) { b.m.position.y = b.y + Math.sin(t * 1.1 + b.ph) * 0.04; b.m.rotation.z = Math.sin(t * 0.8 + b.ph) * 0.025; } });
+
+  // ---------------- the company's khan on the quay road (hub corner)
+  const V = SITES.village;
+  place(scene, col(compoundWall(34)), V.x - 2, V.z - 17, 0, true, true);
+  place(scene, col(compoundWall(30)), V.x - 19, V.z + 0, Math.PI / 2, true, true);
+  place(scene, col(compoundWall(22, 3.6, 4)), V.x + 16, V.z + 4, Math.PI / 2, true, true);
+  for (const [dx, dz, c, r] of [[10, -8, '#2f5d7c', 0.05], [-12, -9, '#8c2f24', -0.05], [-13, 5, '#c28a2c', 0]]) place(scene, awning(c, 5, 3.4), V.x + dx, V.z + dz, r, false);
+  for (const [dx, dz, r] of [[-17.8, -4, Math.PI / 2]]) place(scene, col(bookShelf(rnd)), V.x + dx, V.z + dz, r);
+  place(scene, col(scholarTable()), V.x - 12, V.z - 1.5, Math.PI / 2 + 0.1);
+  place(scene, col(wellHead()), V.x - 1, V.z + 6.5, 0.3);
+  fire(scene, out, V.x + 3, V.z - 4, 0.7);
+  for (const [dx, dz] of [[-6, 2], [7, 9], [-2, -12], [13, -2]]) lantern(scene, out, V.x + dx, V.z + dz, rnd);
+  scatterJars(scene, rnd, V, 14, 30);
+  place(scene, cart(), V.x + 12, V.z + 10, 0.7, false); colliders.push({ type: 'circle', x: V.x + 12, z: V.z + 10, r: 1.3 });
+
+  // ---------------- the river warehouses (Bilal): long stores, bales, cranes at the quay
+  const S = SITES.serai;
+  for (const [dx, dz, w, d, r] of [[-12, -10, 13, 6.5, 0], [-12, 6, 13, 6.5, 0], [-13, 20, 10, 6, 0.05], [10, -16, 6.5, 12, 0], [-30, -2, 7, 12, Math.PI / 2]]) {
+    const x = S.x + dx, z = S.z + dz; if (blocked(x, z, 2)) continue;
+    const hs = house(rnd, w, d, 4.2 + rnd() * 1.2); hs.userData.occChunk = true; place(scene, hs, x, z, r, false, true);
+    colliders.push({ type: 'box', x, z, hw: w / 2 + 0.2, hd: d / 2 + 0.25, rot: r });
+  }
+  for (const [dx, dz] of [[2, -4], [4, 8], [-2, 16], [8, 2], [16, 12], [12, -8]]) { const x = S.x + dx, z = S.z + dz; if (!blocked(x, z, 1.6) && roadDist(x, z) > 2.6) place(scene, col(baleStack(rnd)), x, z, rnd() * 0.4); }
+  for (const z of [S.z - 8, S.z + 12]) { const c = crane(); place(scene, c, bank(z) - 1.6, z, Math.PI / 2 - 0.1, false); colliders.push({ type: 'circle', x: bank(z) - 1.6, z, r: 1.2 }); }
+  scatterJars(scene, rnd, S, 12, 30, ['jar', 'crate', 'jar']);
+  for (const [dx, dz] of [[-6, -2], [6, 14]]) lantern(scene, out, S.x + dx, S.z + dz, rnd);
+
+  // ---------------- the boatyard (Mus'ab): hulls on the slip running down to the river, pitch boiling, timber
+  const G = SITES.kiln;
+  for (const [dz, len] of [[-9, 11], [0, 13], [9, 10]]) { const f = boatFrame(len); place(scene, f, G.x + 10, G.z + dz, Math.PI / 2, false); colliders.push({ type: 'box', x: G.x + 10, z: G.z + dz, hw: len / 2, hd: 1.5 }); }
+  for (const [dx, dz] of [[-6, -10], [-4, 10]]) { place(scene, col(cauldron()), G.x + dx, G.z + dz); out.fires.push({ pos: new THREE.Vector3(G.x + dx, heightAt(G.x + dx, G.z + dz) + 0.4, G.z + dz), intensity: 0.6 }); out.smokers.push(new THREE.Vector3(G.x + dx, heightAt(G.x + dx, G.z + dz) + 1.1, G.z + dz)); }
+  for (const [dx, dz] of [[-12, -2], [-10, 14], [-14, -14]]) place(scene, col(beamPile(rnd)), G.x + dx, G.z + dz, rnd() * 6);
+  { const hs = house(rnd, 8, 6, 3.6); place(scene, hs, G.x - 16, G.z + 4, Math.PI / 2, false, true); colliders.push({ type: 'box', x: G.x - 16, z: G.z + 4, hw: 4.2, hd: 3.3, rot: Math.PI / 2 }); }
+  // the copyists' boat, held at the yard's jetty
+  moor(bank(G.z) + 4, G.z + 4.5, 0, 9);
+
+  // ---------------- the bridge landing (Ghanim): a paved square at the foot of the bridge of boats, cut mid-river
+  const A = SITES.arch;
+  { const br = boatBridge(CANAL_W + 2, 0.36, 0.56); br.position.set(bank(-88) - 1, -0.05, -88); scene.add(br); }
+  for (const [dx, dz] of [[-9, 8], [9, 8], [-9, -8], [9, -8]]) brazier(scene, out, A.x + dx, A.z + dz);
+  for (const [dx, dz] of [[-14, -14], [12, 16], [-16, 12]]) place(scene, col(baleStack(rnd)), A.x + dx, A.z + dz, rnd());
+  for (const [dx, dz] of [[-4, -18], [8, -18]]) place(scene, banner('#151515'), A.x + dx, A.z + dz, rnd() * 6, false);
+  { const c = crane(); place(scene, c, bank(-100) - 1.6, -100, Math.PI / 2, false); colliders.push({ type: 'circle', x: bank(-100) - 1.6, z: -100, r: 1.2 }); }
+
+  // ---------------- streets of the river quarter (the siege fires reached only some of it)
+  const tryHouse = (x, z, ry, burnt) => {
+    const w = 4 + rnd() * 3.2, d = 4 + rnd() * 2.4, h = 3.2 + rnd() * 2.4;
+    const r = Math.hypot(w, d) / 2 + 0.6;
+    if (!inBounds(x, z, 127) || inSite(x, z, 1.05) || blocked(x, z, r - 0.6) || roadDist(x, z) < r * 0.75 + 1.2 || x > bank(z) - r - 5) return false;
+    const hs = burnt ? burnedHouse(rnd, w, d, h) : house(rnd, w, d, h); hs.userData.occChunk = true;
+    place(scene, hs, x, z, ry, false, false);
+    colliders.push({ type: 'box', x, z, hw: w / 2 + 0.2, hd: d / 2 + 0.25, rot: ry });
+    return true;
+  };
+  for (const r0 of ROADS) for (let k = 0; k < r0.length - 1; k++) {
+    const [ax, az] = r0[k], [bx, bz] = r0[k + 1], L = Math.hypot(bx - ax, bz - az), ang = Math.atan2(bz - az, bx - ax);
+    for (let s2 = 3; s2 < L; s2 += 5.6) for (const side of [-1, 1]) {
+      const off = 6.4 + rnd() * 1.6, x = ax + Math.cos(ang) * s2 - Math.sin(ang) * off * side, z = az + Math.sin(ang) * s2 + Math.cos(ang) * off * side;
+      tryHouse(x, z, -ang + (rnd() - 0.5) * 0.08, rnd() < 0.25);
+    }
+  }
+  for (let i = 0, n = 0; i < 2400 && n < 90; i++) { const x = (rnd() - 0.5) * 250, z = (rnd() - 0.5) * 250; if (roadDist(x, z) > 11 && tryHouse(x, z, Math.round(rnd() * 4) * Math.PI / 2 + (rnd() - 0.5) * 0.1, rnd() < 0.2)) n++; }
+
+  // ---------------- skyline: the Round City to the north-west; the far bank in gardens and low houses
+  const wall = cityWall(220); wall.position.set(-170, heightAt(-120, -120) - 1, -170); wall.rotation.y = Math.atan2(170, 160); scene.add(wall);
+  const city = mergeStatic(roundCity()); city.position.set(-300, 2, -280); city.scale.setScalar(1.7); scene.add(city);
+  farRing(scene, 0x5a5a40, -2, 4);
+  {
+    const geo = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), im = new THREE.InstancedMesh(geo, mats().plaster, 260), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
+    for (let i = 0; i < 260; i++) { const z = (rnd() - 0.5) * 520, x = 150 + rnd() * 160; q.setFromAxisAngle(up, rnd() * 3); m4.compose(new THREE.Vector3(x, 0, z), q, new THREE.Vector3(5 + rnd() * 8, 3 + rnd() * 5, 5 + rnd() * 8)); im.setMatrixAt(i, m4); }
+    im.castShadow = false; im.frustumCulled = false; scene.add(im);
+  }
+
+  // ---------------- vegetation: palms on both banks, the far bank's gardens, weeds along the lanes, river pebbles
+  const palmPts = [], grass = [], shrubPts = [], pebbles = [], rubble = [];
+  for (let i = 0; i < 26000; i++) {
+    const x = (rnd() - 0.5) * (WORLD - 10), z = (rnd() - 0.5) * (WORLD - 10), rd = roadDist(x, z), y = heightAt(x, z), b = bank(z);
+    if (x > b - 1 && x < canalX(z) + CANAL_W / 2 + 2) continue; // the river
+    if (x > canalX(z)) { if (palmPts.length < 120 && rnd() < 0.05) { palmPts.push({ x, y, z }); continue; } if (grass.length < 6000 && rnd() < 0.4) grass.push({ x, y, z }); continue; }
+    if (x > b - 14 && rd > 3 && palmPts.length < 60 && rnd() < 0.02 && !blocked(x, z, 1.2) && !inSite(x, z)) { palmPts.push({ x, y, z }); colliders.push({ type: 'circle', x, z, r: 0.45 }); continue; }
+    if (rnd() < 0.05 && rd > 2.5 && grass.length < 6000 && !inSite(x, z, 0.8) && !blocked(x, z, 0.2)) { grass.push({ x, y, z }); continue; }
+    if (rd > 3 && !inSite(x, z) && shrubPts.length < 300 && rnd() < 0.015) { shrubPts.push({ x, y, z }); continue; }
+    if (rnd() < 0.012 && !inSite(x, z, 0.6)) rubble.push({ x, y: y - 0.12, z, s: 0.3 + rnd() * 0.7 });
+  }
+  for (let i = 0; i < 5000; i++) { const x = (rnd() - 0.5) * (WORLD - 20), z = (rnd() - 0.5) * (WORLD - 20); if (x > bank(z) - 1) continue; if (rnd() < (roadDist(x, z) < 4 ? 0.5 : 0.8)) pebbles.push({ x, y: heightAt(x, z) - 0.03, z, s: 0.06 + rnd() * 0.18 }); }
+  const pg = palms(palmPts, 5); scene.add(pg); out.occluders.push(pg);
+  scene.add(grassField(grass, 'grass', 7));
+  scene.add(rocks(rubble, 8, 0xc8b8a4));
+  const peb = rocks(pebbles, 21, 0x9a8a7a); peb.castShadow = false; scene.add(peb);
+  scene.add(shrubs(shrubPts, 9));
+  // reeds in the shallows of the far bank
+  { const rp = []; for (let i = 0; i < 1400; i++) { const z = (rnd() - 0.5) * 270, x = canalX(z) + CANAL_W / 2 - 3 + rnd() * 6; rp.push({ x, y: heightAt(x, z), z }); } scene.add(reeds(rp, 4)); }
 }

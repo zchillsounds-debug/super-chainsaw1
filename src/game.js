@@ -12,9 +12,9 @@ import { saveGame } from './save.js';
 import { makeItem, rollRarity, RARITY, setWeaponPool } from './items.js';
 import { glowDecal, splatTex } from './textures.js';
 import { CLASSES, COMMON } from './classes.js';
-import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, STORY, HUB } from './region.js';
+import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, IS_CITY, STORY, HUB } from './region.js';
 import { LIEUT, BOSS, ISHAQ_TALK } from './story15.js';
-import { WATER_Y, roadDist } from './terrain.js';
+import { WATER_Y, roadDist, DECKS, CANAL_W } from './terrain.js';
 
 const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
 const BOUND = 132;
@@ -241,6 +241,7 @@ export class Game {
     TYPES[BOSS.type].build(); // sculpt the boss's geometry during loading so his entrance doesn't hitch
     this.bossSpawned = false;
     if (IS_MARSH) return this.spawnMarsh();
+    if (IS_DOCKS) return this.spawnDocks();
     if (IS_KARKH) return this.spawnKarkh();
     const S = SITES.serai, G = SITES.kiln;
     this.spawnPack(['bandit', 'bandit', 'archer'], 22, 36, 3, 1);
@@ -322,6 +323,32 @@ export class Game {
     this.spawnPack(['engineer', 'guard'], 30, 30, 2, 10); this.spawnPack(['engineer', 'guard', 'crossbow'], A.x + 14, A.z + 20, 3, 11, { spread: 5 });
   }
 
+  // Act VI (Round 20): Ghanim's hired men hold the river quays: crossbowmen on the warehouse roofs' edges, guards on
+  // the quay road, engineers raising mangonels by the boatyard, camel raiders on the open ground inland
+  spawnDocks() {
+    const S = SITES.serai, G = SITES.kiln, A = SITES.arch;
+    this.spawnPack(['guard', 'crossbow'], -20, 72, 3, 12);
+    this.spawnPack(['deserter'], -34, 58, 2, 12, { hidden: true, spread: 3 });
+    // the warehouses
+    this.spawnPack(['guard', 'crossbow', 'deserter'], S.x, S.z + 8, 5, 13, { spread: 6 });
+    this.spawnPack(['crossbow', 'crossbow'], S.x + 14, S.z - 4, 2, 13);
+    for (let i = 0; i < 2; i++) this.spawnPack('deserter', S.x + rand(-10, 10), S.z + rand(-12, 12), 2, 13, { hidden: true, spread: 3 });
+    this.chief = this.spawnPack('guard', S.x, S.z - 4, 1, 14, { elite: true, name: 'Bilal' })[0];
+    this.chief.quest = STORY.chief;
+    // the quay road and the boatyard
+    this.spawnPack(['guard', 'crossbow'], 30, 10, 3, 13);
+    this.spawnPack(['engineer', 'guard', 'crossbow'], G.x - 6, G.z + 8, 4, 14, { spread: 5 });
+    this.spawnPack(['naffat', 'guard'], G.x + 4, G.z - 10, 3, 14);
+    this.matriarch = this.spawnPack('spearman', G.x - 2, G.z - 2, 1, 15, { elite: true, name: 'Mus\'ab' })[0];
+    this.matriarch.quest = STORY.second;
+    // inland: raiders on the open ground, and the road south to the bridge
+    this.spawnPack('rider', -50, 10, 2, 13, { spread: 8 }); this.spawnPack('rider', -30, -50, 1, 14);
+    this.spawnPack(['guard', 'spearman', 'archer'], -60, -14, 4, 14);
+    this.spawnPack(['crossbow', 'guard', 'engineer'], 2, -64, 4, 15, { spread: 5 });
+    this.spawnPack(['guard', 'crossbow', 'naffat'], 28, -66, 4, 15, { spread: 5 });
+    this.spawnPack('crossbow', A.x - 16, A.z + 14, 1, 15, { elite: true });
+  }
+
   makeMinimap() {
     const c = document.createElement('canvas'); c.width = c.height = 280; const x = c.getContext('2d');
     for (let j = 0; j < 280; j += 2) for (let i = 0; i < 280; i += 2) {
@@ -387,8 +414,9 @@ export class Game {
   surfaceAt(pos) {
     if (this.interior) { const I = this.interior.I; if (I.style === 'qanat') { const c = I.center(I.rooms.reduce((a, r) => (Math.hypot(I.center(r).x - pos.x, I.center(r).z - pos.z) < Math.hypot(I.center(a).x - pos.x, I.center(a).z - pos.z) ? r : a))); if (Math.abs(pos.x - (c.x + 3.6)) < 0.9) return 'water'; return 'stone'; } return 'brick'; }
     if (IS_MARSH) return waterDepth(pos.x, pos.z) > 0.04 ? 'water' : roadDist(pos.x, pos.z) < 3 ? 'sand' : 'grass';
-    if (Math.abs(pos.x - canalX(pos.z)) < 5.2) return 'water';
-    if (IS_KARKH) return roadDist(pos.x, pos.z) < 3.5 || Object.values(SITES).some((s) => Math.hypot(pos.x - s.x, pos.z - s.z) < s.r * 0.7) ? 'brick' : 'sand';
+    if (IS_DOCKS && DECKS.some(([x0, x1, dz, w]) => pos.x > x0 - 2 && pos.x < x1 && Math.abs(pos.z - dz) < w / 2 + 0.2)) return 'wood';
+    if (Math.abs(pos.x - canalX(pos.z)) < (IS_DOCKS ? CANAL_W / 2 : 5.2)) return 'water';
+    if (IS_CITY) return roadDist(pos.x, pos.z) < 3.5 || Object.values(SITES).some((s) => Math.hypot(pos.x - s.x, pos.z - s.z) < s.r * 0.7) ? 'brick' : 'sand';
     const V = SITES.village; if (Math.hypot(pos.x - V.x, pos.z - V.z) < 16) return 'brick';
     const S = SITES.serai; if (Math.abs(pos.x - S.x) < 11 && Math.abs(pos.z - S.z) < 11) return 'brick';
     return 'sand';
@@ -784,7 +812,8 @@ export class Game {
     const mins = Math.floor(this.t / 60), secs = Math.floor(this.t % 60);
     const win = () => this.ui.victory({ level: this.player.level, gold: this.player.gold, kills: this.kills || 0, time: `${mins}m ${String(secs).padStart(2, '0')}s` });
     // each region's last fight closes its act: the Sawad and the marshes travel on, al-Karkh ends the chronicle
-    const ending = IS_SAWAD ? [SCENES.epilogue, 4, () => this.travel?.()] : IS_MARSH ? [SCENES.rawhFalls, 5, () => this.travel?.()] : [SCENES.finale, 6, win];
+    // Round 20: al-Karkh now travels on to the river quays (Act VI), whose last fight ends the chronicle
+    const ending = IS_SAWAD ? [SCENES.epilogue, 4, () => this.travel?.()] : IS_MARSH ? [SCENES.rawhFalls, 5, () => this.travel?.()] : IS_DOCKS ? [SCENES.docksFinale, 7, win] : [SCENES.finale, 6, () => this.travel?.()];
     if (this.director) setTimeout(() => this.director.play(ending[0](this, b)).then(() => { this.checkpoint(ending[1]); ending[2](); }), 1200);
     else { setTimeout(() => this.ui.banner('Victory', 'The Pages are recovered.', 5000), 2500); setTimeout(() => { this.checkpoint(ending[1]); ending[2](); }, 8000); }
     if (this.bossLight) setTimeout(() => { this.bossLight.intensity = 0; }, 2000);
@@ -821,6 +850,19 @@ export class Game {
         } else if (b.castKind === 'volley' && K.volley === 'arrows') {
           const n = b.phase >= 2 ? 9 : 6;
           for (let i = 0; i < n; i++) { const a = face + (i - (n - 1) / 2) * 0.16; this.shootArrow(b, new THREE.Vector3(Math.sin(a), 0, Math.cos(a)), b.dmg * 0.45); }
+        } else if (b.castKind === 'volley' && K.volley === 'bolts') {
+          // Round 20 (Ghanim): his crossbowmen loose a spread of heavy bolts; each lane is marked on the ground first
+          const n = b.phase >= 2 ? 5 : 3, from = b.pos.clone().setY(b.pos.y + 2.2);
+          for (let i = 0; i < n; i++) {
+            const a = face + (i - (n - 1) / 2) * 0.2, dir = new THREE.Vector3(Math.sin(a), 0, Math.cos(a));
+            const m = new THREE.Mesh(this.arrowGeo, this.arrowMat); m.scale.set(1.6, 1.6, 0.8); m.position.copy(from); m.lookAt(from.clone().add(dir)); this.scene.add(m);
+            this.projectiles.push({ mesh: m, vel: dir.multiplyScalar(30), grav: 0, life: 1.1, owner: 'enemy', kind: 'arrow', dmg: b.dmg * 0.6, bolt: true });
+          }
+          this.audio.clang?.();
+        } else if (b.castKind === 'meteor' && K.barrage === 'stones') {
+          // (Ghanim) mangonels on the far bank: big stones onto wide marked rings around the hero
+          for (let i = 0; i < 4; i++) { const q = new THREE.Vector3(p.pos.x + (i ? rand(-7, 7) : 0), 0, p.pos.z + (i ? rand(-7, 7) : 0)); q.y = heightAt(q.x, q.z); this.lobStone(new THREE.Vector3(p.pos.x + 40, 14, p.pos.z + rand(-10, 10)), q, b.dmg * 0.8, 1.7 + i * 0.25, 2.3); }
+          this.audio.boom?.();
         } else if (b.castKind === 'volley') {
           const n = b.phase >= 2 ? 7 : 5;
           for (let i = 0; i < n; i++) {
@@ -912,7 +954,7 @@ export class Game {
       this.critters.push({ rig, pos, home: pos.clone(), kind, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, seed: Math.random() * 10, graze: kind === 'camel' || kind === 'buffalo' }, facing: Math.random() * 6, wanderT: 0, range: opts.range || 6, speed: opts.speed || 1.2 });
     };
     const V0 = SITES.village;
-    const camels = IS_SAWAD ? [[30, 66, 0xb88a58], [33, 70, 0xa07040], [-8, 40, 0xc49a68], [70, 22, 0x9a6a3a], [74, 18, 0xb08050]] : IS_KARKH ? [[V0.x + 9, V0.z - 9, 0xb88a58], [V0.x + 12, V0.z - 6, 0xa07040]] : [];
+    const camels = IS_SAWAD ? [[30, 66, 0xb88a58], [33, 70, 0xa07040], [-8, 40, 0xc49a68], [70, 22, 0x9a6a3a], [74, 18, 0xb08050]] : IS_CITY ? [[V0.x + 9, V0.z - 9, 0xb88a58], [V0.x + 12, V0.z - 6, 0xa07040]] : [];
     for (const [x, z, c] of camels) add(camel(c), x, z, 'camel', { range: 4, speed: 0.9 });
     // the marsh village keeps water buffalo, grazing on the island's edge
     if (IS_MARSH) for (const [dx, dz, c] of [[-14, 14, 0x2c2a2a], [-10, 18, 0x343030], [22, 6, 0x262424]]) add(buffalo(c), V0.x + dx, V0.z + dz, 'buffalo', { range: 3, speed: 0.7 });

@@ -13,6 +13,7 @@ const SITE_NAMES = {
   sawad: { village: 'The Village', serai: 'Old Caravanserai', kiln: 'Kiln Yard', arch: 'Persian Arch' },
   marsh: { village: 'Reed Village', serai: 'Reed Camp', kiln: 'Fish Racks', arch: 'Old Weir' },
   karkh: { village: 'The Khan', serai: 'Burned Suq', kiln: 'Paper-Sellers\' Lane', arch: 'The Square' },
+  docks: { village: 'The Quay Khan', serai: 'The Warehouses', kiln: 'The Boatyard', arch: 'The Bridge of Boats' },
 }[REGION];
 const KEY = 'sob.zoom2'; // Round 20: new key so the new overhead default replaces older saved zooms
 

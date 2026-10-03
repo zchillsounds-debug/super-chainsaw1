@@ -10,7 +10,7 @@ import { saveGame } from './save.js';
 import { haptic } from './sheets.js';
 import { t } from './i18n.js';
 
-// Round 20: a hired guard who fights beside Salim. Bakr, a captain of guards for hire, stands in every hub with
+// Round 20: a hired guard who fights beside Salim. Kathir, a captain of guards for hire, stands in every hub with
 // two of his men: Ma'n with a spear and shield, or Dirar with a bow. One fee, and the guard stays until dismissed
 // (he travels between regions and goes underground too). He can't be killed. Orders, from his button or G:
 //   Follow: keeps at Salim's shoulder and fights whatever comes near him.
@@ -36,9 +36,9 @@ export function setupCompanion(g) {
   {
     const [x, z] = freeSpot(HUB.ishaq[0] + 8, HUB.ishaq[1] + 3, 1.2);
     const n = npc(g, { robe: '#2a2a2e', robe2: '#b8913e', qaba: true, cap: 0x1e1a16, capBand: 0x6a1a14, beard: 0x8a8070, beardLen: 0.8, skin: 0x9a6a44, weapon: 'sword', sash: 0x6a1a14, armour: 'lamellar', leather: 0x2a1a14 },
-      [x, z], Math.atan2(HUB.spawn[0] - x, HUB.spawn[1] - z), 'Bakr', 'Guards for hire', () => panel());
+      [x, z], Math.atan2(HUB.spawn[0] - x, HUB.spawn[1] - z), 'Kathir', 'Guards for hire', () => panel());
     g.pois?.push({ x, z, icon: '⛨', color: '#c0a070' });
-    g.bakr = n;
+    g.kathir = n;
   }
 
   function spawn(kind) {

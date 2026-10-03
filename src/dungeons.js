@@ -19,6 +19,9 @@ const ALL = [
   { id: 'grainvault', region: 'marsh', style: 'grainvault', near: ['serai', 14, 14], seed: 1703, rooms: 8, level: 8, title: 'The Granary Vaults', sub: 'Strike a grain stack to bring it down on your foes.', pool: ['bandit', 'slinger', 'netter', 'spearman'], bossType: 'spearman', bossName: 'Hurayth', label: 'Go down into the granary vaults', look: 'mud' },
   { id: 'warren', region: 'marsh', style: 'warren', near: ['arch', 18, 16], seed: 1704, rooms: 8, level: 9, title: 'The Reed Warren', sub: 'Fire runs from hut to hut. Watch for smoke.', pool: ['reedman', 'netter', 'slinger', 'naffat'], bossType: 'naffat', bossName: 'Sinan', label: 'Enter the reed warren', look: 'reed' },
   { id: 'salt', region: 'karkh', style: 'salt', near: ['arch', -20, 18], seed: 1705, rooms: 9, level: 11, title: 'The Salt Workings', sub: 'Light through the roof cracks dazzles. Step out of it.', pool: ['guard', 'archer', 'deserter'], bossType: 'guard', bossName: 'Unays', label: 'Go down into the salt workings', look: 'salt' },
+  // Round 20: Act VI, the river quays
+  { id: 'undercroft', region: 'docks', style: 'cistern', near: ['village', 22, -18], seed: 1707, rooms: 8, level: 13, title: 'The Flooded Undercroft', sub: 'The river seeps in and out of these vaults. Keep to the stone landings.', pool: ['guard', 'crossbow', 'deserter'], bossType: 'guard', bossName: 'Hubaysh', label: 'Go down into the flooded undercroft', look: 'stone' },
+  { id: 'wharfvault', region: 'docks', style: 'grainvault', near: ['kiln', -20, 16], seed: 1708, rooms: 8, level: 15, title: 'The Wharf Vaults', sub: 'Strike a stack of bales to bring it down on your foes.', pool: ['guard', 'engineer', 'crossbow', 'spearman'], bossType: 'engineer', bossName: 'Mudrik', label: 'Go down into the wharf vaults', look: 'mud' },
   { id: 'palace', region: 'karkh', style: 'palace', near: ['kiln', 18, -12], seed: 1706, rooms: 8, level: 12, title: 'The Palace Cellars', sub: 'Cracked tiles hide triggers. Foes set them off too.', pool: ['guard', 'archer', 'naffat', 'spearman'], bossType: 'guard', bossName: 'Habib', label: 'Go down into the palace cellars', look: 'brick' },
 ];
 export const DUNGEONS = ALL.filter((d) => d.region === REGION);
@@ -27,8 +30,9 @@ const GROUNDS = {
   sawad: [['cistern', 'The Old Cistern'], ['kiln2', 'The Lower Kilns'], ['vault', 'The Sasanian Vaults'], ['pit', 'The Clay Pits']],
   marsh: [['grainvault', 'The Granary Vaults'], ['warren', 'The Reed Warren'], ['flood', 'The Drowned Granary']],
   karkh: [['salt', 'The Salt Workings'], ['palace', 'The Palace Cellars'], ['scorched', 'The Merchants\' Cellars']],
+  docks: [['cistern', 'The Flooded Undercroft'], ['grainvault', 'The Wharf Vaults'], ['cellar', 'The Customs Vaults']],
 }[REGION];
-const BASE = { sawad: 3, marsh: 8, karkh: 11 }[REGION];
+const BASE = { sawad: 3, marsh: 8, karkh: 11, docks: 14 }[REGION];
 
 // ------------------------------------------------------------------ the Renown board: account passives bought with Renown
 export const RENOWN = [
@@ -266,7 +270,7 @@ export function startContract(g, cap, ground, mods, R) {
   const p = g.player, info = p.slain[cap] || { type: 'spearman' }, list = mods.map((m) => MODS[m]);
   const all = {}; for (const m of list) Object.assign(all, m);
   const C = { won: false };
-  const pool = { sawad: ['bandit', 'archer', 'spearman', 'deserter', 'naffat'], marsh: ['bandit', 'slinger', 'netter', 'reedman', 'spearman'], karkh: ['guard', 'archer', 'naffat', 'deserter', 'spearman'] }[REGION];
+  const pool = { sawad: ['bandit', 'archer', 'spearman', 'deserter', 'naffat'], marsh: ['bandit', 'slinger', 'netter', 'reedman', 'spearman'], karkh: ['guard', 'archer', 'naffat', 'deserter', 'spearman'], docks: ['guard', 'crossbow', 'spearman', 'deserter', 'engineer'] }[REGION];
   const title = (GROUNDS.find((x) => x[0] === ground) || [0, 'The Depths'])[1];
   g.zones.enter({
     kind: 'contract', style: ground, seed: (Math.random() * 1e6) | 0, rooms: 6 + mods.length, level: R.lvl + (all.levelUp || 0), contract: C,

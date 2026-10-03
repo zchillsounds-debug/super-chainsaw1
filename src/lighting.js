@@ -24,7 +24,7 @@ export const PRESETS = {
   underground: { sun: v(-0.3, 0.9, 0.2), sunCol: c(0x403028), sunI: 0.0, hemiSky: c(0x8a6a50), hemiGnd: c(0x302018), hemiI: 0.95, fog: c(0x0a0705), fogD: 0.022, exp: 1.45, env: 0.12, hero: 9, vol: 0.0, fire: 1.6,
     sky: { zen: c(0x000000), mid: c(0x000000), hor: c(0x080504), gnd: c(0x000000), glow: c(0x000000), cloud: c(0x000000), stars: 0, disk: 0 }, water: c(0x302820), dusk: 0, lut: 4 },
 };
-export const ACT_PRESET = { 1: 'golden', 2: 'dusk', 3: 'night', 4: 'mist', 5: 'haze', 6: 'dusk' };
+export const ACT_PRESET = { 1: 'golden', 2: 'dusk', 3: 'night', 4: 'mist', 5: 'haze', 6: 'golden', 7: 'dusk' };
 
 export class Lighting {
   constructor({ scene, renderer, sun, hemi, world, grade }) {
@@ -43,7 +43,7 @@ export class Lighting {
     this.name = name; this.from = this.snapshot(this.cur); this.to = PRESETS[name]; this.k = secs > 0 ? 0 : 1; this.dur = secs;
     if (secs <= 0) { this.apply(1); this.bakeEnv(); }
   }
-  forAct(act, secs) { this.set(ACT_PRESET[Math.min(6, act || 1)] || 'golden', secs); this.onAct?.(act || 1); }
+  forAct(act, secs) { this.set(ACT_PRESET[Math.min(7, act || 1)] || 'golden', secs); this.onAct?.(act || 1); }
   bakeEnv() { const old = this.scene.environment; this.scene.environment = envFromSky(this.renderer, this.world.sunDir); old?.dispose?.(); }
   apply(k) {
     const f = this.from, t = this.to, o = this.cur, L = THREE.MathUtils.lerp;

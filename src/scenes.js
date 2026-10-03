@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { humanoid, camel, animateCamel } from './characters.js';
-import { heightAt, canalX, SITES, WATER_Y } from './terrain.js';
+import { heightAt, canalX, SITES, WATER_Y, CANAL_W } from './terrain.js';
+import { barge } from './docksprops.js';
 import { REGION, HUB } from './region.js';
 import { mashuf } from './regionprops.js';
 
@@ -311,6 +312,19 @@ export function arrival(g) {
       say('Salim', 'Then someone here will talk.'),
       say('Ishaq', 'Start with Marwan. His men hold the reed camp to the west.'),
     ];
+  } else if (REGION === 'docks') {
+    // Round 20, the river quays: a crane shot along the Tigris at dawn, barges at the quay, then the khan
+    const S = SITES.serai, bx = canalX(S.z) - CANAL_W / 2;
+    shots = [
+      { dur: 6.5, card: { ar: 'الشطّ', en: 'Act VI · The River Quays', sub: 'The quays of al-Karkh on the Tigris, at dawn' }, stinger: 'title', fadeIn: 1.4,
+        cam: { p0: () => V(bx + 30, 18, S.z + 70), t0: () => V(bx, 0, S.z + 10), p1: () => V(bx + 8, 8, S.z + 30), t1: () => V(bx - 6, 2, S.z - 40), ease: 'io2' }, enter: () => land() },
+      { dur: 5.0, caption: 'Everything Baghdad eats or sells comes up this river, or goes down it.', noWait: true,
+        cam: { p0: () => V(bx - 4, 3.2, S.z + 16), t0: () => V(bx + 10, 0.5, S.z - 4), p1: () => V(bx - 2, 2.6, S.z + 10), t1: () => V(bx + 12, 0.5, S.z - 12), fov: 40 }, run: (d, k) => { if (k > 0.8) d.fade(1, 0.8); } },
+      { dur: 3.0, fadeIn: 1.0, cam: { p0: () => V(ishaq.pos.x + 6, ishaq.pos.y + 3, ishaq.pos.z + 7), t0: at(ishaq, 1.3), p1: () => V(ishaq.pos.x + 4, ishaq.pos.y + 2.4, ishaq.pos.z + 5), t1: at(ishaq, 1.3) }, enter: () => face() },
+      say('Ishaq', 'Hakam\'s copyists worked all night. The first copies sail at dawn, for Wasit and Basra.'),
+      say('Salim', 'And the buyer?'),
+      say('Ishaq', 'His steward, Ghanim, holds the quays. Start with Bilal, at the warehouses.'),
+    ];
   } else {
     // al-Karkh: a crane shot down a burned lane toward the Round City's wall, then the khan
     const S = SITES.serai;
@@ -383,23 +397,64 @@ export function finale(g, b) {
     L('Ishaq', g.npc, 'Every page, brought home by a caravan guard and his brother.', ots(scholar, ishaq, 0.35), headOf(ishaq), () => { ishaq.st.talk = true; act(ishaq, 'cast', 2.4); }),
     L('Hakam', scholar.rig, 'We will copy them, ten times over, for ten cities.', ots(ishaq, scholar, -0.35), headOf(scholar), () => { ishaq.st.talk = false; scholar.st.talk = true; }),
     L('Ishaq', g.npc, 'Then no one can burn them again.', ots(scholar, ishaq, 0.35), headOf(ishaq), () => { scholar.st.talk = false; ishaq.st.talk = true; }),
-    { dur: 3.6, caption: 'That evening Salim went down to the canal.', enter: (d) => { ishaq.st.talk = false; d.fade(1, 0.8); } },
-    { dur: 7, fadeIn: 1.6, caption: 'He set a lamp on the water for his brother, and one for each guard of the caravan.',
-      enter: () => { floatLamps(LZ); g.lighting?.set?.('dusk', 0); scholar.rig.visible = false; },
-      cam: { p0: () => V(canalX(LZ - 14) + 7, 3.2, LZ - 18), t0: () => V(canalX(LZ), -0.4, LZ), p1: () => V(canalX(LZ - 12) + 5, 2.2, LZ - 14), t1: () => V(canalX(LZ + 4), -0.4, LZ + 4), fov: 40 },
-      run: (d, k, dt) => { for (const l of lamps) { l.position.z += l.userData.v * dt; l.position.x = canalX(l.position.z) + Math.sin(l.position.z * 2) * 0.4; } } },
+    // Round 20: the chronicle goes on to the river quays (Act VI); the lamps are lit there, at its end
+    { dur: 4.4, caption: 'Hakam\'s copyists began that night. By dawn the first copies were bound for the river.', enter: (d) => { ishaq.st.talk = false; d.fade(1, 0.8); } },
+    { dur: 6, card: { ar: 'الشطّ', en: 'Act VI · The River Quays', sub: 'The buyer\'s steward means to sink the copies before they sail.' }, stinger: 'title', fadeIn: 1.2, enter: () => { scholar.rig.visible = false; },
+      cam: { p0: () => V(V0.x + 10, 30, V0.z + 30), t0: () => V(V0.x + 60, 0, V0.z - 40), p1: () => V(V0.x + 30, 40, V0.z + 50), t1: () => V(V0.x + 120, 0, V0.z - 80), ease: 'io2' } },
+  ];
+  return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
+    end: () => { for (const l of lamps) sc.remove(l); for (const r of extra) sc.remove(r); const [ix, iz] = HUB.ishaq; ishaq.pos.set(ix, heightAt(ix, iz), iz); } };
+}
+
+// Round 20: the docks finale. Ghanim falls at the bridge; the copyists' barge sails downriver with the first copies;
+// that evening Salim sets lamps on the Tigris for his brother. The chronicle ends here.
+export function docksFinale(g, b) {
+  const salim = playerActor(g), boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st }, ishaq = npcActor(g);
+  const sc = g.scene, extra = [], actors = [salim, boss, ishaq], ang = yawTo(salim.pos, boss.pos);
+  const bank = (z) => canalX(z) - CANAL_W / 2, QZ = -6, LZ = 34;
+  const scholar = actor(humanoid({ robe: '#e8e0cc', robe2: '#2a3a5a', turban: 0xf0ead8, beard: 0xb8b0a0, beardLen: 1, skin: 0x9a6a48, weapon: null, sash: 0x2a3a5a, build: 0.9, belly: 0.3, tiraz: true }), V(bank(QZ) - 2.2, 0, QZ + 1.4), Math.PI / 2);
+  scholar.pos.y = heightAt(scholar.pos.x, scholar.pos.z); sc.add(scholar.rig); extra.push(scholar.rig); scholar.rig.visible = false; actors.push(scholar);
+  const boat = barge(Math.random, 11); boat.visible = false; sc.add(boat); extra.push(boat);
+  const sail = (k) => { const z = QZ + 2 - k * 40; boat.position.set(bank(z) + 9, -0.95 + Math.sin(k * 30) * 0.03, z); boat.rotation.y = Math.PI; };
+  const lamps = [];
+  const floatLamps = () => {
+    const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.6, 0.5), toneMapped: false }), cupM = new THREE.MeshStandardMaterial({ color: 0x8a5a34, roughness: 0.9 });
+    for (let i = 0; i < 26; i++) {
+      const z = LZ + 6 - i * 1.4 + Math.random(), x = bank(z) + 1.5 + Math.random() * 7;
+      const l = new THREE.Group(); l.scale.setScalar(1.8); const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.06, 0.07, 8), cupM);
+      const flame = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 5), m); flame.position.y = 0.08; flame.scale.y = 1.8; l.add(cup, flame);
+      l.position.set(x, -0.5, z); l.userData.v = 0.18 + Math.random() * 0.15; sc.add(l); lamps.push(l);
+    }
+  };
+  const drift = (dt) => { for (const l of lamps) l.position.z -= l.userData.v * dt; }; // the river runs south, toward Basra
+  const L = (who, rig, text, cam, dof, enter) => ({ dur: lineDur(text), line: { who, text, rig, cue: who === 'Salim' ? 'hm' : 'breath' }, cam, dof, enter });
+  const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b2 = to.pos, f = yawTo(a, b2), sd = side * 1.9; return V(a.x - Math.sin(f) * 1.2 + Math.cos(f) * sd, a.y + 1.95, a.z - Math.cos(f) * 1.2 - Math.sin(f) * sd); }, t0: headOf(to), fov: 32 });
+  const shots = [
+    { dur: 3.8, cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.0), p1: () => V(boss.pos.x + Math.sin(ang + 1.7) * 6, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.7) * 6), t1: at(boss, 0.5), fov: 34 } },
+    { dur: 4.2, caption: 'Ghanim\'s men threw down their crossbows. The copyists\' barge came down from the yard.', enter: (d) => d.fade(1, 0.8) },
+    // on the quay: Hakam and Ishaq see the first copies off
+    { dur: 3.6, fadeIn: 1.0, enter: () => {
+      scholar.rig.visible = true; boat.visible = true; sail(0);
+      const p = g.player; p.pos.set(bank(QZ) - 2.4, 0, QZ - 1.2); p.pos.y = heightAt(p.pos.x, p.pos.z);
+      ishaq.pos.set(bank(QZ) - 3.6, heightAt(bank(QZ) - 3.6, QZ), QZ); salim.facing = Math.PI / 2; ishaq.facing = Math.PI / 2 + 0.3; scholar.facing = Math.PI / 2;
+    }, cam: { p0: () => V(bank(QZ) - 8, 3.2, QZ + 6), t0: () => V(bank(QZ) + 8, 0.5, QZ - 3), p1: () => V(bank(QZ) - 7, 2.6, QZ + 4), t1: () => V(bank(QZ) + 9, 0.6, QZ - 6), fov: 40 }, run: (d, k) => sail(k * 0.12) },
+    L('Hakam', scholar.rig, 'Two copies to Wasit, two to Basra. The rest go north when the river allows.', ots(ishaq, scholar, -0.35), headOf(scholar), () => { scholar.st.talk = true; scholar.facing = yawTo(scholar.pos, ishaq.pos); ishaq.facing = yawTo(ishaq.pos, scholar.pos); }),
+    L('Ishaq', g.npc, 'Let him try to gather them now.', ots(scholar, ishaq, 0.35), headOf(ishaq), () => { scholar.st.talk = false; ishaq.st.talk = true; }),
+    { dur: 5.5, caption: 'The barge took the current, and was gone around the bend by noon.', noWait: true,
+      cam: { p0: () => V(bank(QZ) - 1, 2.2, QZ + 2), t0: () => boat.position.clone().add(V(0, 1.2, 0)), p1: () => V(bank(QZ) - 1.5, 2.6, QZ + 3), t1: () => boat.position.clone().add(V(0, 1.2, 0)), fov: 36 },
+      enter: () => { ishaq.st.talk = false; }, run: (d, k) => { sail(0.12 + k * 0.88); if (k > 0.82) d.fade(1, 0.8); } },
+    { dur: 7, fadeIn: 1.6, caption: 'That evening he set a lamp on the river for his brother, and one for each guard of the caravan.',
+      enter: () => { boat.visible = false; scholar.rig.visible = false; floatLamps(); g.lighting?.set?.('dusk', 0); },
+      cam: { p0: () => V(bank(LZ) - 4, 3.2, LZ + 14), t0: () => V(bank(LZ) + 5, -0.4, LZ), p1: () => V(bank(LZ) - 3, 2.4, LZ + 10), t1: () => V(bank(LZ) + 6, -0.4, LZ - 6), fov: 40 },
+      run: (d, k, dt) => drift(dt || 1 / 60) },
     { dur: 4.4, line: { who: 'Salim', text: 'Jabir. It is done.', rig: g.player.rig, cue: 'breath' },
-      enter: () => { const p = g.player; p.pos.set(canalX(LZ) - 4.5, 0, LZ); p.pos.y = heightAt(p.pos.x, LZ); salim.facing = Math.PI / 2; ishaq.pos.set(p.pos.x - 1.4, heightAt(p.pos.x - 1.4, LZ - 1.2), LZ - 1.2); ishaq.facing = Math.PI / 2; },
-      cam: { follow: true, p0: at(salim, 1.6, 2.2, -1.2), t0: headOf(salim), fov: 28 }, dof: headOf(salim), aperture: 1.2,
-      run: (d, k, dt) => { for (const l of lamps) l.position.z += l.userData.v * dt; } },
+      enter: () => { const p = g.player; p.pos.set(bank(LZ) - 1.4, 0, LZ); p.pos.y = heightAt(p.pos.x, LZ); salim.facing = Math.PI / 2; ishaq.pos.set(p.pos.x - 1.4, heightAt(p.pos.x - 1.4, LZ - 1.2), LZ - 1.2); ishaq.facing = Math.PI / 2; },
+      cam: { follow: true, p0: at(salim, 1.6, 2.2, -1.2), t0: headOf(salim), fov: 28 }, dof: headOf(salim), aperture: 1.2, run: (d, k, dt) => drift(dt || 1 / 60) },
     { dur: 4.0, line: { who: 'Ishaq', text: 'We keep the account.', rig: g.npc, cue: 'breath' },
-      // a quiet two-shot from over the water, the lamps drifting past below them
-      cam: { p0: () => V(canalX(LZ) - 0.6, 1.2, LZ + 1.2), t0: () => V(salim.pos.x - 0.7, salim.pos.y + 1.45, LZ - 0.6), p1: () => V(canalX(LZ) - 0.9, 1.25, LZ + 0.6), t1: () => V(salim.pos.x - 0.7, salim.pos.y + 1.45, LZ - 0.6), fov: 34 },
-      enter: () => { ishaq.facing = yawTo(ishaq.pos, salim.pos); ishaq.st.talk = true; },
-      run: (d, k, dt) => { for (const l of lamps) l.position.z += l.userData.v * dt; } },
+      cam: { p0: () => V(bank(LZ) + 1.2, 0.9, LZ + 1.2), t0: () => V(salim.pos.x - 0.7, salim.pos.y + 1.45, LZ - 0.6), p1: () => V(bank(LZ) + 1.0, 0.95, LZ + 0.6), t1: () => V(salim.pos.x - 0.7, salim.pos.y + 1.45, LZ - 0.6), fov: 34 },
+      enter: () => { ishaq.facing = yawTo(ishaq.pos, salim.pos); ishaq.st.talk = true; }, run: (d, k, dt) => drift(dt || 1 / 60) },
     { dur: 6.5, card: { ar: 'مدينة السلام', en: 'Madinat al-Salam', sub: 'Here ends the chronicle of Salim' }, enter: () => { ishaq.st.talk = false; },
-      cam: { p0: () => V(canalX(LZ) - 6, 4, LZ + 8), t0: () => V(canalX(LZ), 0, LZ - 10), p1: () => V(canalX(LZ) - 20, 30, LZ + 40), t1: () => V(canalX(LZ) + 40, 10, LZ - 120), ease: 'io2' },
-      run: (d, k, dt) => { for (const l of lamps) l.position.z += l.userData.v * dt; } },
+      cam: { p0: () => V(bank(LZ) - 6, 4, LZ + 8), t0: () => V(bank(LZ) + 6, 0, LZ - 10), p1: () => V(bank(LZ) - 20, 30, LZ + 40), t1: () => V(bank(LZ) + 20, 10, LZ - 140), ease: 'io2' }, run: (d, k, dt) => drift(dt || 1 / 60) },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
     end: () => { for (const l of lamps) sc.remove(l); for (const r of extra) sc.remove(r); const [ix, iz] = HUB.ishaq; ishaq.pos.set(ix, heightAt(ix, iz), iz); } };

@@ -8,7 +8,8 @@ const ACTS = {
   3: { ex: 'bayati', bpm: 58, cbpm: 118, dens: 0.3, oct: 0.5, qan: 0.06 },     // night under the arch: low register, sparse
   4: { ex: 'rast', bpm: 70, cbpm: 110, dens: 0.4, oct: 1, qan: 0.22 },         // the marshes: Rast, unhurried, the qanun like light on water
   5: { ex: 'bayati', bpm: 62, cbpm: 120, dens: 0.34, oct: 0.5, qan: 0.08 },    // burned al-Karkh: low Bayati, tense
-  6: { ex: 'rast', bpm: 84, cbpm: 108, dens: 0.55, oct: 1, qan: 0.3 },         // the chronicle closes: Rast, bright qanun
+  6: { ex: 'rast', bpm: 72, cbpm: 114, dens: 0.42, oct: 1, qan: 0.26 },         // Round 20, the river quays: Rast on the water at dawn
+  7: { ex: 'rast', bpm: 84, cbpm: 108, dens: 0.55, oct: 1, qan: 0.3 },         // the chronicle closes: Rast, bright qanun
   under: { ex: 'rast', bpm: 54, cbpm: 104, dens: 0.22, oct: 0.5, qan: 0.05 },  // tunnels and qanats
 };
 P.setAct = function (act) { this.actCfg = ACTS[act] || ACTS[1]; };
@@ -44,6 +45,7 @@ P.step = function (surface, k = 1) {
   else if (surface === 'brick') { this.noise(0.05, 2200, 1200, 2, 0.08 * v); this.tone(140 + Math.random() * 30, 0.05, 'triangle', 0.04 * v, 0.7); }
   else if (surface === 'water') { this.noise(0.22, 2600, 900, 1.2, 0.09 * v, 'highpass'); this.tone(500 + Math.random() * 400, 0.08, 'sine', 0.025 * v, 1.6); }
   else if (surface === 'stone') { this.noise(0.06, 1700, 900, 1.6, 0.08 * v); }
+  else if (surface === 'wood') { this.noise(0.05, 900, 500, 1.4, 0.07 * v); this.tone(95 + Math.random() * 20, 0.08, 'triangle', 0.06 * v, 0.6); } // Round 20: jetty planks
 };
 
 // ------------------------------------------------------------------ ambience beds

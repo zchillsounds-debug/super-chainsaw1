@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { heightAt, canalX } from './terrain.js';
-import { IS_SAWAD, IS_MARSH, IS_KARKH } from './region.js';
+import { IS_SAWAD, IS_MARSH, IS_KARKH, IS_CITY, IS_DOCKS } from './region.js';
 import { wind } from './vegetation.js';
 import { navClear } from './nav.js';
 
@@ -97,7 +97,7 @@ export class Ambient {
     const P = this.g.player.pos, idle = this.flock.filter((b) => b.state === 'off'); if (idle.length < 5) return;
     for (let tries = 0; tries < 8; tries++) {
       const a = Math.random() * 6.28, r = 14 + Math.random() * 14, cx = P.x + Math.cos(a) * r, cz = P.z + Math.sin(a) * r;
-      if (Math.abs(cx) > 132 || Math.abs(cz) > 132 || (!IS_MARSH && Math.abs(cx - canalX(cz)) < 5) || !navClear(cx, cz, cx + 0.2, cz + 0.2)) continue;
+      if (Math.abs(cx) > 132 || Math.abs(cz) > 132 || (!IS_MARSH && Math.abs(cx - canalX(cz)) < (IS_DOCKS ? 25 : 5)) || !navClear(cx, cz, cx + 0.2, cz + 0.2)) continue;
       const n = 4 + Math.floor(Math.random() * Math.min(5, idle.length - 3));
       for (let i = 0; i < n; i++) { const b = idle[i]; const x = cx + (Math.random() - 0.5) * 3, z = cz + (Math.random() - 0.5) * 3; b.state = 'ground'; b.p.set(x, heightAt(x, z) + 0.08, z); b.yaw = Math.random() * 6.28; b.t = 0; b.hop = Math.random() * 2; }
       return;
@@ -129,7 +129,7 @@ export class Ambient {
     wind.uWindK.value = 1 + S * 2.2;
     // streaks: a light drift always in the desert, a river of sand in the storm
     const U = this.streakU; U.uTime.value = this.t; U.uFocus.value.copy(focus);
-    U.uK.value = g.interior ? 0 : (IS_KARKH ? 0.25 : 0.55) + S * 2.2;
+    U.uK.value = g.interior ? 0 : (IS_CITY ? 0.25 : 0.55) + S * 2.2;
     if (lighting) U.uCol.value.copy(lighting.cur.fog).lerp(lighting.cur.sunCol, 0.35);
     // ---- birds
     if ((this.flockT -= dt) <= 0) { this.flockT = 6; if (!g.interior && !g.cinematic) this.seedFlock(); }
