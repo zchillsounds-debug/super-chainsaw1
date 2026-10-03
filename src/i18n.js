@@ -19,7 +19,7 @@ const AR = {
   'Upgrade': 'تحسين', 'Salvage': 'تفكيك', 'Enchant': 'نقش', 'Temper': 'اسقِ الحديد', 'Descend': 'انزل',
   'For sale: tap to buy': 'للبيع: انقر للشراء', 'Your pack: tap to sell': 'متاعك: انقر للبيع', 'Stash: tap to take': 'الخزانة: انقر للأخذ', 'Your pack: tap to store': 'متاعك: انقر للتخزين',
   'Normal': 'عادي', 'Veteran': 'محنّك', 'Elite': 'نخبة', 'Torment I': 'عذاب ١', 'Torment II': 'عذاب ٢', 'Torment III': 'عذاب ٣',
-  'The Ruined Qanats': 'القنوات المهدّمة', 'Farewell.': 'وداعًا.', 'Back.': 'رجوع.', 'Hold to skip': 'اضغط مطوّلًا للتخطّي',
+  'The Ruined Qanats': 'القنوات المهدّمة', 'Farewell.': 'وداعًا.', 'Back.': 'رجوع.', 'Hold to skip': 'اضغط مطوّلًا للتخطّي', 'Tap to continue': 'انقر للمتابعة', 'Find the chest': 'اعثر على الصندوق',
   'Not enough dinars': 'لا تكفي الدنانير', 'Your pack is full': 'متاعك ممتلئ', 'No sherbet left': 'نفد الشراب',
   'Weapon': 'السلاح', 'Armor': 'الدرع', 'Helm': 'الخوذة', 'Ring': 'الخاتم', 'Amulet': 'القلادة',
   'Graphics': 'الرسوميات', 'Audio': 'الصوت', 'Accessibility': 'سهولة الوصول', 'Language': 'اللغة',

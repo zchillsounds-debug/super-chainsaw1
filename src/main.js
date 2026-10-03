@@ -15,6 +15,7 @@ import { preloadGeo, flushGeo } from './geocache.js';
 import { Lighting } from './lighting.js';
 import { LightPool } from './lights.js';
 import { setupSheets } from './sheets.js';
+import { Guide } from './guide.js';
 import { setupHub, animateHub, openPanel, closePanel, panelOpen } from './hub.js';
 import { Zones } from './zones.js';
 import { Atmos } from './atmos.js';
@@ -81,7 +82,8 @@ setupNarrative(game);
 game.journal = (t) => { if (document.getElementById('journal')) { document.getElementById('journal').remove(); document.body.classList.remove('inshop'); } else journalPanel(game, t); };
 setupContent(game);
 const tutorial = new Tutorial(game);
-const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); game.discover(dt); tutorial.update(dt); game.contentTick?.(dt); };
+const guide = game.guide = new Guide(game);
+const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); guide.update(dt); game.discover(dt); tutorial.update(dt); game.contentTick?.(dt); };
 game.newGamePlus = () => startNewGamePlus(game); ui.onNewGamePlus = game.newGamePlus;
 const settings = game.settings = new Settings({ renderer, audio, game, grade, perf, gfx: { quality: QUALITY, sun, gtao, bloom, atmos, resize } });
 fx.reduce = settings.s.reduceFlash;
@@ -151,7 +153,7 @@ function adaptQuality(dt) {
   if (perfT < 3) return;
   const avg = perfAcc / perfN; perfT = 0; perfAcc = 0; perfN = 0;
   if (avg > 1 / 40 && perfLevel === 0) { if (gtao) gtao.enabled = false; perfLevel = 1; console.info('quality: AO off'); }
-  else if (avg > 1 / 40 && perfLevel === 1) { renderer.setPixelRatio(1); resize(); perfLevel = 2; console.info('quality: 1x resolution'); }
+  else if (avg > 1 / 40 && perfLevel === 1) { renderer.setPixelRatio(Math.max(settings.s.sharp === 'smooth' ? 1.5 : 1, renderer.getPixelRatio() * 0.75)); resize(); perfLevel = 2; console.info('quality: 1x resolution'); }
   else if (avg > 1 / 35 && perfLevel === 2) { renderer.shadowMap.type = THREE.PCFShadowMap; sun.shadow.mapSize.set(2048, 2048); sun.shadow.map?.dispose(); sun.shadow.map = null; perfLevel = 3; console.info('quality: shadows reduced'); }
 }
 function frame() {

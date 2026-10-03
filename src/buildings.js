@@ -174,9 +174,11 @@ export function house(rnd, w, d, h) {
       for (const k of [-0.3, 0, 0.3]) { const c = sl.clone(); c.position.set(bx + ox + (ry ? 0 : k), h + bh - 0.8, bz + oz + (ry ? k : 0)); c.rotation.y = ry; grp.add(c); }
     }
     grp.add(mesh(new THREE.BoxGeometry(1.4, 0.18, 1.4).translate(bx, h + bh + 0.09, bz), wallMat));
-  } else if (kind < 0.7) { // small dome over the roof
-    grp.add(mesh(new THREE.CylinderGeometry(1.2, 1.25, 0.5, 16).translate(w * 0.15, h + 0.25, -d * 0.1), wallMat));
-    grp.add(mesh(domeGeo(1.2, 1.5, 20).translate(w * 0.15, h + 0.5, -d * 0.1), wallMat));
+  } else if (kind < 0.7) { // a wind-catcher (badgir) on the roof: a squat vented tower, not a dome
+    const bx = w * 0.15, bz = -d * 0.1;
+    grp.add(mesh(new THREE.BoxGeometry(1.5, 2.2, 1.5).translate(bx, h + 1.1, bz), wallMat));
+    for (const [ox, oz, ry] of [[0, 0.76, 0], [0, -0.76, 0]]) for (const k of [-0.42, 0, 0.42]) { const v = mesh(new THREE.BoxGeometry(0.24, 1.0, 0.04), m.dark, false); v.position.set(bx + ox + k, h + 1.55, bz + oz); v.rotation.y = ry; grp.add(v); }
+    grp.add(mesh(new THREE.BoxGeometry(1.75, 0.16, 1.75).translate(bx, h + 2.28, bz), wallMat));
   }
   if (rnd() > 0.5) { // external staircase to the roof
     const st = [];
@@ -413,12 +415,11 @@ export function roundCity() {
     const a = i / 48 * Math.PI * 2;
     grp.add(mesh(new THREE.CylinderGeometry(2.2, 2.6, 13, 10).translate(Math.cos(a) * R, 6.5, Math.sin(a) * R), m.mud, false));
   }
-  // green dome palace in the center
+  // the caliph's palace in the centre: a broad, stepped audience hall with a low green roof (no pointed dome or finial)
   grp.add(mesh(new THREE.BoxGeometry(30, 14, 30).translate(0, 7, 0), m.plaster, false));
-  grp.add(mesh(new THREE.CylinderGeometry(9, 9, 6, 24).translate(0, 17, 0), m.plaster, false));
+  grp.add(mesh(new THREE.BoxGeometry(20, 6, 20).translate(0, 17, 0), m.plaster, false));
   const gd = new THREE.MeshStandardMaterial({ color: 0x2f8f4e, roughness: 0.3, metalness: 0.2 });
-  grp.add(mesh(domeGeo(9, 14).translate(0, 20, 0), gd, false));
-  grp.add(mesh(finial(4).translate(0, 34, 0), m.gold, false));
+  grp.add(mesh(new THREE.SphereGeometry(10, 24, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.32, 1).translate(0, 20, 0), gd, false));
   for (let i = 0; i < 60; i++) { // houses inside
     const a = Math.random() * Math.PI * 2, r = 34 + Math.random() * 22, h = 4 + Math.random() * 6;
     grp.add(mesh(new THREE.BoxGeometry(5 + Math.random() * 5, h, 5 + Math.random() * 5).translate(Math.cos(a) * r, h / 2, Math.sin(a) * r), m.plaster, false));

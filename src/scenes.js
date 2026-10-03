@@ -72,7 +72,7 @@ export function prologue(g) {
   const shots = [
     { dur: 6.5, card: { ar: 'القافلة', en: 'Act I · The Caravan', sub: 'The Sawad, outside Baghdad, in the year 813' }, stinger: 'title', fadeIn: 1.2,
       cam: { p0: () => ground(36, 140, 14), t0: () => ground(14, 124, 1.2), p1: () => ground(26, 132, 6), t1: () => ground(13.5, 121, 1.4) }, run: (d, k, dt) => march(dt) },
-    { dur: 5.2, line: { who: 'Salim', text: 'Too quiet, brother. Even the frogs in the canal have stopped.', rig: g.player.rig, cue: 'hm' },
+    { dur: 5.2, line: { who: 'Salim', text: 'Too quiet, brother. I do not like it.', rig: g.player.rig, cue: 'hm' },
       cam: { follow: true, p0: at(salim, 1.75, 2.6, 1.6), t0: at(salim, 1.6, -1.5, -0.6), p1: at(salim, 1.7, 2.2, 1.2), t1: at(salim, 1.6, -1.5, -0.6) }, dof: headOf(salim), aperture: 1.6,
       run: (d, k, dt) => { march(dt); salim.st.headYaw = -Math.sin(k * Math.PI) * 0.7; } },
     { dur: 3.0, cam: { p0: () => ground(17, 109, 1.8), t0: () => ground(27, 116, 1.4), p1: () => ground(18, 111.5, 2.0), t1: () => ground(27, 116, 1.5), fov: 30 }, stinger: 'ambush',
@@ -123,7 +123,7 @@ export function prologue(g) {
         if (salim.hurt) salim.st.crouch = Math.min(0.85, (k - 0.35) * 2);
         if (k > 0.75) d.fade(1, 0.5);
       } },
-    { dur: 4.5, caption: 'Jabir fell on the grain road. The chest was taken. Salim lived.', cam: { p0: V(0, 60, 0), t0: V(0, 0, 1) }, enter: (d) => d.fade(1, 0.01) },
+    { dur: 4.5, caption: 'Bandits ambushed the caravan. Jabir was killed, and they took the chest.', cam: { p0: V(0, 60, 0), t0: V(0, 0, 1) }, enter: (d) => d.fade(1, 0.01) },
   ];
   return {
     dusk: 0.7, actors, shots,
@@ -136,9 +136,9 @@ export function prologue(g) {
 export function briefing(g) {
   const salim = playerActor(g), ishaq = npcActor(g), actors = [salim, ishaq];
   const L = [
-    'You are Jabir\'s brother. I am Ishaq. I hired your caravan, and I am sorry. He was a better man than my coin deserved.',
-    'Under my instruments was a cedar chest: the Pages of the Teacher, who died in a prison by the river fourteen years ago. Someone in Baghdad wants his words to burn. Ghassan was paid to see it done.',
-    'Farud holds the old caravanserai, Hisham the kilns, and Ghassan the broken arch. If the Pages still exist, they are between those three. Your brother asked you for one thing.',
+    'I am Ishaq. I hired your caravan. I am sorry about Jabir.',
+    'The Pages: the writings of my old teacher. A powerful man in Baghdad wants them burned. He paid a bandit chief, Ghassan, to steal them.',
+    'Ghassan split the Pages between his men. Get them back. Start with Farud, at the old caravanserai.',
   ];
   const face = () => { salim.facing = yawTo(salim.pos, ishaq.pos); ishaq.facing = yawTo(ishaq.pos, salim.pos); };
   const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b = to.pos, f = yawTo(a, b); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * side, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * side); }, t0: headOf(to), fov: 30 });
@@ -147,7 +147,7 @@ export function briefing(g) {
     { dur: 3.2, fadeIn: 1.0, cam: { p0: () => V(-0.5 + 5.5, heightAt(4, 90) + 2.6, 92), t0: () => V(-0.5, 1.4 + heightAt(0, 86), 86), p1: () => V(3.5, heightAt(3, 90) + 2.2, 90.5), t1: () => V(-0.5, 1.4 + heightAt(0, 86), 86) },
       enter: () => { face(); g.npcMark && (g.npcMark.visible = false); } },
     { dur: lineDur(L[0]), line: { who: 'Ishaq', text: L[0], rig: g.npc, cue: 'breath' }, cam: ots(salim, ishaq, 0.35), dof: headOf(ishaq), enter: () => talk(true), run: () => face() },
-    { dur: 3.6, line: { who: 'Salim', text: 'Then I will finish what he asked.', rig: g.player.rig, cue: 'hm' }, cam: ots(ishaq, salim, -0.35), dof: headOf(salim), enter: () => { talk(false); salim.st.talk = true; } },
+    { dur: 3.6, line: { who: 'Salim', text: 'He died for that chest. What was in it?', rig: g.player.rig, cue: 'hm' }, cam: ots(ishaq, salim, -0.35), dof: headOf(salim), enter: () => { talk(false); salim.st.talk = true; } },
     { dur: lineDur(L[1]), line: { who: 'Ishaq', text: L[1], rig: g.npc }, cam: ots(salim, ishaq, 0.4), dof: headOf(ishaq), enter: () => { salim.st.talk = false; talk(true); act(ishaq, 'cast', 2.4); } },
     { dur: lineDur(L[2]), line: { who: 'Ishaq', text: L[2], rig: g.npc }, cam: { follow: true, p0: at(ishaq, 1.6, 2.4, 1.6), t0: headOf(ishaq), p1: at(ishaq, 1.6, 2.0, 1.0), t1: headOf(ishaq), fov: 32 }, dof: headOf(ishaq) },
   ];
@@ -175,10 +175,10 @@ export function bossIntro(g, b) {
   const shots = [
     { dur: 3.4, cam: { follow: true, p0: at(salim, 1.9, -3.2, 0.9), t0: at(boss, 2.4), p1: at(salim, 1.8, -2.2, 0.7), t1: at(boss, 2.4), fov: 32 }, stinger: 'boss',
       enter: () => { face(); b.st.crouch = 0.8; }, run: (d, k) => { face(); b.st.crouch = 0.8 * (1 - k); } },
-    { dur: 5.2, line: { who: 'Ghassan', text: 'Words make men stubborn, guard. Stubborn men do not pay. Turn back while you can.', rig: b.rig, cue: 'growl' },
+    { dur: 5.2, line: { who: 'Ghassan', text: 'Turn back, guard. Those Pages are not worth your life.', rig: b.rig, cue: 'growl' },
       cam: { follow: true, p0: at(boss, 0.5, 4.6, 1.4), t0: at(boss, 2.25), p1: at(boss, 0.7, 3.6, 0.9), t1: at(boss, 2.3), fov: 34 }, dof: headOf(boss),
       enter: (d) => { act(boss, 'command', 2.6); d.audio.roar?.(); }, run: () => face() },
-    { dur: 4.6, card: { ar: 'غسّان', en: 'Ghassan', sub: 'He sells silence by the bale' },
+    { dur: 4.6, card: { ar: 'غسّان', en: 'Ghassan', sub: 'The man who paid for the ambush' },
       cam: { follow: true, p0: at(boss, 2.4, 6, -4), t0: at(boss, 1.8), p1: at(boss, 2.0, 5.4, 3.2), t1: at(boss, 1.8), fov: 36 } },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { b.rise = 1; b.st.crouch = 0; b.st.action = null; } };
@@ -186,7 +186,7 @@ export function bossIntro(g, b) {
 export function bossPhase(g, b, enginesBurnt = false) {
   const boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st }, salim = playerActor(g);
   const shots = [
-    { dur: 3.6, slow: 0.5, stinger: 'phase', line: { who: 'Ghassan', text: enginesBurnt ? 'You burned my engines? Then my men will do it by hand!' : 'Engines! Burn the road, and the canal with it!', rig: b.rig, cue: 'growl' },
+    { dur: 3.6, slow: 0.5, stinger: 'phase', line: { who: 'Ghassan', text: enginesBurnt ? 'You burned my engines? Then my men will burn you by hand!' : 'Fire the engines! Burn the road!', rig: b.rig, cue: 'growl' },
       cam: { follow: true, p0: at(boss, 1.4, 5, 2), t0: at(boss, 2.3), p1: at(boss, 2.0, 3.4, 1.0), t1: at(boss, 2.4), fov: 34, shake: 0.12 }, dof: headOf(boss),
       enter: (d) => { act(boss, 'command', 1.6); d.audio.roar?.(); } },
   ];
@@ -196,12 +196,12 @@ export function bossPhase(g, b, enginesBurnt = false) {
 // Ghassan, at a quarter of his life, throws down his shield: fire rings the arena and he fights with the sword alone
 export function bossDuel(g, b, enginesBurnt) {
   const boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st }, salim = playerActor(g);
-  const text = enginesBurnt ? 'My engines are ash. Then it is steel. Die for paper, then.' : 'You would die for paper? Then die.';
+  const text = enginesBurnt ? 'No engines left. Then it is just you and me.' : 'You would die for paper? Then die.';
   const shots = [
     { dur: 4.2, slow: 0.4, stinger: 'phase', line: { who: 'Ghassan', text, rig: b.rig, cue: 'growl' },
       cam: { follow: true, p0: at(boss, 1.6, 4.2, 1.8), t0: at(boss, 2.3), p1: at(boss, 1.9, 3.0, 0.8), t1: at(boss, 2.4), fov: 32, shake: 0.08 }, dof: headOf(boss),
       enter: (d) => { act(boss, 'command', 1.8); d.audio.roar?.(); }, run: () => { boss.facing = yawTo(boss.pos, salim.pos); } },
-    { dur: 2.2, caption: 'Fire rings the broken arch.', cam: { follow: true, p0: at(salim, 7, -9, 0), t0: at(boss, 1.2), fov: 44 } },
+    { dur: 2.2, caption: 'Ghassan rings the arena with fire. Stay inside it.', cam: { follow: true, p0: at(salim, 7, -9, 0), t0: at(boss, 1.2), fov: 44 } },
   ];
   return { actors: [boss, salim], shots, tick: (d, dt) => { tickActor(g, boss, dt); tickActor(g, salim, dt); } };
 }
@@ -211,7 +211,7 @@ export function epilogue(g, b) {
   const salim = playerActor(g), boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st }, ishaq = npcActor(g);
   const actors = [salim, boss, ishaq];
   const ang = yawTo(salim.pos, boss.pos);
-  const text = 'The Teacher wrote: injustice lasts an hour, and justice until the end of days. We keep the account until the scales are set right.';
+  const text = 'Thanks to you, his words will be read. And we will remember Jabir.';
   const lamps = [];
   const floatLamps = () => {
     const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.6, 0.5), toneMapped: false });
@@ -224,10 +224,10 @@ export function epilogue(g, b) {
   };
   const shots = [
     { dur: 4.2, slow: 0.3, cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.4), p1: () => V(boss.pos.x + Math.sin(ang + 1.6) * 6, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.6) * 6), t1: at(boss, 0.6), fov: 34 } },
-    { dur: 4.4, line: { who: 'Salim', text: 'Not for paper. For the ones you silenced, and for my brother.', rig: g.player.rig, cue: 'hm' },
+    { dur: 4.4, line: { who: 'Salim', text: 'Not for paper. For my brother.', rig: g.player.rig, cue: 'hm' },
       cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim), run: () => { salim.facing = yawTo(salim.pos, boss.pos); } },
-    { dur: 3.6, caption: 'In Ghassan\'s tent, wrapped in a saddle cloth, the Pages were waiting.', enter: (d) => d.fade(1, 0.8) },
-    { dur: 7, fadeIn: 1.6, caption: 'At dusk the village set lamps on the water, one for each guard of the caravan.',
+    { dur: 3.6, caption: 'The last Pages were in Ghassan\'s tent. They were safe.', enter: (d) => d.fade(1, 0.8) },
+    { dur: 7, fadeIn: 1.6, caption: 'That evening the village floated a lamp on the canal for each guard who died.',
       enter: () => { floatLamps(); g.lighting?.set?.('dusk', 0); },
       cam: { p0: () => V(canalX(70) + 7, 3.2, 66), t0: () => V(canalX(84), 0.2, 84), p1: () => V(canalX(72) + 5, 2.2, 70), t1: () => V(canalX(88), 0.2, 88), fov: 40 },
       run: (d, k, dt) => { for (const l of lamps) { l.position.z += l.userData.v * dt; l.position.x = canalX(l.position.z) + Math.sin(l.position.z * 2) * 0.4; } } },

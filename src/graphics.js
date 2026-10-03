@@ -11,6 +11,8 @@ import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 const params = new URLSearchParams(location.search);
 const touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || params.has('mobile');
 const storedQ = (() => { try { return JSON.parse(localStorage.getItem('sob.settings.v1') || '{}').quality; } catch { return null; } })();
+// sharpness: render scale over CSS pixels (smooth = native up to 2x, the default)
+export const SHARP_RATIO = { smooth: 2, balanced: 1.5, fast: 1 };
 export const QUALITY = params.get('q') || storedQ || (touch ? 'low' : 'high');
 
 // Golden-hour sky dome, also baked into a PMREM env map for reflections.
@@ -101,9 +103,9 @@ const GradeShader = {
       // subtle chromatic aberration toward edges
       vec2 c = uv-0.5; float r2 = dot(c,c);
       vec3 col;
-      col.r = texture2D(tDiffuse, uv - c*r2*0.006).r;
+      col.r = texture2D(tDiffuse, uv - c*r2*0.002).r;
       col.g = texture2D(tDiffuse, uv).g;
-      col.b = texture2D(tDiffuse, uv + c*r2*0.006).b;
+      col.b = texture2D(tDiffuse, uv + c*r2*0.002).b;
       // warm split-tone: teal shadows, amber highlights
       float l = dot(col, vec3(0.2126,0.7152,0.0722));
       vec3 sh = vec3(0.92,1.0,1.06), hi = vec3(1.08,1.0,0.88);
@@ -124,8 +126,8 @@ const GradeShader = {
       // cinematic grade: warmer, slightly richer contrast, heavier vignette
       col = mix(col, pow(col * vec3(1.06,1.0,0.9), vec3(1.08)), uCine);
       col *= mix(1.0, smoothstep(1.15, 0.35, length(vc)), 0.35*uCine);
-      // film grain (heavier in cinematics)
-      col += (h(uv*vec2(1920.,1080.)+fract(uTime)*100.)-0.5)*(0.025 + 0.045*uCine);
+      // no film grain: on phone screens it read as noise; a sub-LSB dither only, to keep gradients free of banding
+      col += (h(uv*vec2(1920.,1080.)) - 0.5) / 255.0;
       if (uCVD > 0.5) col = max(daltonize(col, uCVD), 0.0);
       gl_FragColor = vec4(col,1.0);
     }`,

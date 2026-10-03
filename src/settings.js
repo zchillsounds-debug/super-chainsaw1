@@ -1,9 +1,10 @@
 import { setLanguage } from './i18n.js';
+import { SHARP_RATIO } from './graphics.js';
 
 // Settings: graphics, audio, controls, accessibility, language. Stored per device in localStorage.
 const KEY = 'sob.settings.v1';
 export const DEFAULTS = {
-  quality: null, res: 1, shadows: true, ao: true, bloom: true, atmos: true, fps: false,
+  quality: null, res: 1, sharp: 'smooth', shadows: true, ao: true, bloom: true, atmos: true, fps: false,
   master: 1, music: 1, sfx: 1, amb: 1,
   attackMode: 'hold', shake: 1, tscale: 0.85, topa: 0.65,
   subs: 1, cvd: 0, reduceFlash: false, tutorial: true,
@@ -22,7 +23,7 @@ export class Settings {
     const { s } = this, { renderer, gfx, audio, game, grade, perf } = this.ctx;
     // graphics
     if (gfx) {
-      const base = Math.min(devicePixelRatio, gfx.quality === 'low' ? 1 : 1.5);
+      const base = Math.min(devicePixelRatio, SHARP_RATIO[s.sharp] || 2);
       renderer.setPixelRatio(base * s.res); gfx.resize();
       gfx.sun.castShadow = s.shadows; renderer.shadowMap.enabled = s.shadows;
       if (gfx.gtao) gfx.gtao.enabled = s.ao; if (gfx.bloom) gfx.bloom.enabled = s.bloom;
@@ -47,7 +48,7 @@ export class Settings {
     const q = new URLSearchParams(location.search).get('q') || this.ctx.gfx?.quality;
     w.innerHTML = `<div class="ptitle">Settings <span class="close" role="button" aria-label="Close">✕</span></div><div class="sgrid2">
       <section><h4>Graphics</h4>${sel('quality', 'Quality', [['low', 'Low'], ['high', 'High']]).replace(`value="${q}"`, `value="${q}" selected`)}<small class="note">Reload to apply</small>
-        ${range('res', 'Resolution', 0.5, 1.5, 0.05)}${tog('shadows', 'Shadows')}${tog('ao', 'Ambient occlusion')}${tog('bloom', 'Bloom')}${tog('atmos', 'Atmosphere')}${tog('fps', 'Show FPS')}</section>
+        ${sel('sharp', 'Sharpness', [['smooth', 'Smooth (sharpest)'], ['balanced', 'Balanced'], ['fast', 'Fast (best frame rate)']])}${range('res', 'Resolution', 0.5, 1.5, 0.05)}${tog('shadows', 'Shadows')}${tog('ao', 'Ambient occlusion')}${tog('bloom', 'Bloom')}${tog('atmos', 'Atmosphere')}${tog('fps', 'Show FPS')}</section>
       <section><h4>Audio</h4>${range('master', 'Master', 0, 1, 0.05)}${range('music', 'Music', 0, 1, 0.05)}${range('sfx', 'Effects', 0, 1, 0.05)}${range('amb', 'Ambience', 0, 1, 0.05)}</section>
       <section><h4>Controls</h4>${sel('attackMode', 'Attack button', [['hold', 'Hold to repeat'], ['toggle', 'Tap to toggle']])}${range('shake', 'Camera shake', 0, 1, 0.1)}${document.body.classList.contains('touch') ? range('tscale', 'Button size', 0.7, 1.2, 0.05) + range('topa', 'Button opacity', 0.3, 1, 0.05) : ''}
         <div class="note">Gamepad: left stick move · A attack · B evade · X right skill · Y / LB / RB skills 1–3 · RT sherbet · Start settings · Back journal</div></section>

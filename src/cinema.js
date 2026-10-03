@@ -18,6 +18,7 @@ export class Director {
       <div class="sub"><div class="por"><canvas width="96" height="96"></canvas></div><div class="stx"><div class="sname"></div><div class="sline"></div></div></div>
       <div class="card"><div class="ar"></div><div class="rule"><i></i><b></b><i></i></div><div class="en"></div><div class="csub"></div></div>
       <div class="caption"></div>
+      <div class="tapnext"><span>Tap to continue</span><i>▸</i></div>
       <div class="skip"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" class="bg"/><circle cx="18" cy="18" r="15" class="fg"/></svg><span>Hold to skip</span></div>
       <div class="cfade"></div>`;
     document.getElementById('ui').appendChild(el);
@@ -64,7 +65,7 @@ export class Director {
   advance() {
     // a tap finishes the typed line first, then moves on
     if (this.shot?.line && !this.lineDone) { this.typed = 1e9; return; }
-    if (this.shot?.line || this.shot?.tapNext) this.next();
+    if (this.shot?.line || this.shot?.caption || this.shot?.tapNext) this.next();
   }
   skip() {
     const d = this.def; if (!d) return;
@@ -177,7 +178,11 @@ export class Director {
     }
     s.run?.(this, k, dt, s);
     this.def?.tick?.(this, dt);
-    if (this.def && this.shot === s && this.t >= s.dur && !(s.line && s.waitTap)) this.next();
+    // spoken lines and captions hold until tapped, so nothing is missed (they move on by themselves after 20 s)
+    const waits = !!(s.line || s.caption) && !s.noWait;
+    const ready = this.t >= s.dur && (!s.line || this.lineDone);
+    this.$('.tapnext').classList.toggle('show', waits && ready);
+    if (this.def && this.shot === s && ready && (!waits || this.t >= s.dur + 20)) this.next();
     return true;
   }
 }

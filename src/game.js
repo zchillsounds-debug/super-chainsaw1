@@ -380,8 +380,8 @@ export class Game {
     if (Math.random() < (e.elite ? 1 : 0.1)) this.dropItem({ potion: true, rarity: 'common' }, e.pos);
     this.onKill?.(e); e.onDeath?.(e);
     if (e.quest) this.completeQuest(e.quest, !!this.director);
-    if (e === this.chief && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Farud', text: 'I read one of his pages by firelight... and never slept after. Ghassan paid me. Hisham has the rest.', card: { ar: 'الأتون', en: 'Act II · The Kilns', sub: 'Hisham is feeding the Pages to the kilns, a bundle at a time' } })).then(() => this.checkpoint(2));
-    if (e === this.matriarch && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Hisham', text: 'I sat at his feet once. Then I chose bread over a dead man\'s words. Tell Ishaq... no. Tell no one.', card: { ar: 'الطاق', en: 'Act III · The Broken Arch', sub: 'Ghassan has cut the canal. The village is thirsty' } })).then(() => this.checkpoint(3));
+    if (e === this.chief && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Farud', text: 'Ghassan paid me to take the chest. Hisham has the Pages now, at the kilns.', card: { ar: 'الأتون', en: 'Act II · The Kilns', sub: 'Hisham is burning the Pages in the kilns. Stop him.' } })).then(() => this.checkpoint(2));
+    if (e === this.matriarch && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Hisham', text: 'I sold the Pages to Ghassan for a bag of silver. He has the rest, at the old arch.', card: { ar: 'الطاق', en: 'Act III · The Broken Arch', sub: 'Ghassan has cut off the village\'s water. Find him at the arch.' } })).then(() => this.checkpoint(3));
     if (e.boss) this.onBossDeath(e);
   }
   checkpoint(act) { this.act = Math.max(this.act || 1, act); if (!this.interior) this.lighting?.forAct(this.act, 4); saveGame(this); }
@@ -396,6 +396,8 @@ export class Game {
   }
   // while a cinematic plays: the world keeps breathing, everyone else holds still
   cineTick(dt) {
+    // no see-through hole in cutscenes: the camera is free, and the dither read as grain on walls
+    if (this.occU) this.occU.uHole.value.set(-9999, -9999);
     this.t += dt;
     const actors = this.director?.def?.actors || [];
     const busy = new Set(actors.map((a) => a.rig));

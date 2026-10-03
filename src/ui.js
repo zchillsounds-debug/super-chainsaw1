@@ -33,7 +33,7 @@ export class UI {
       <div id="hud" class="hidden">
         <div id="target"><div class="tname"></div><div class="tbar"><div class="tfill"></div></div></div>
         <div id="bossbar" class="hidden"><div class="bname"></div><div class="bbar"><div class="bfill"></div><div class="bghost"></div></div></div>
-        <div id="quest"><div class="qtitle">The Renegade of the Sawad</div><div class="qlines"></div></div>
+        <div id="quest"><div class="qtitle">The Renegade of the Sawad</div><div class="qnow hidden"><i>◆</i><span class="qtx"></span><b class="qd"></b></div><div class="qlines"></div></div>
         <div id="toasts"></div>
         <div id="minimap"><canvas width="180" height="180"></canvas></div>
         <div id="bar">
@@ -150,6 +150,13 @@ export class UI {
     gh.style.width = Math.max(frac * 100, cur - 0.4) + '%';
   }
   quest(lines) { this.$('#quest .qlines').innerHTML = lines.map((l) => `<div class="${l.done ? 'done' : ''} ${l.side ? 'side' : ''}">${l.done ? '✦' : l.side ? '·' : '◇'} ${l.text}</div>`).join(''); }
+  // the active objective and how far it is (kept in step with the ground trail)
+  objective(text, dist) {
+    const el = this.$('#quest .qnow'); el.classList.toggle('hidden', !text); if (!text) return;
+    const tx = t(text), dd = dist == null ? '' : dist < 1000 ? `${Math.round(dist)} m` : '';
+    if (this._oT !== tx) { this._oT = tx; el.querySelector('.qtx').textContent = tx; el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
+    if (this._oD !== dd) { this._oD = dd; el.querySelector('.qd').textContent = dd; }
+  }
   toast(text, cls = '') {
     const el = document.createElement('div'); el.className = 'toast ' + cls; el.innerHTML = text;
     this.$('#toasts').appendChild(el); setTimeout(() => el.classList.add('out'), 3200); setTimeout(() => el.remove(), 4000);
@@ -166,12 +173,12 @@ export class UI {
     d.querySelector('.dbtn').onclick = () => { d.classList.add('hidden'); document.body.classList.remove('indialog'); cb && cb(); };
   }
   get dialogOpen() { return !this.$('#dialog').classList.contains('hidden'); }
-  death(show, cb) { const d = this.$('#death'); d.classList.toggle('hidden', !show); if (cb) this.$('#respawn').onclick = cb; }
+  death(show, cb) { const d = this.$('#death'); d.classList.toggle('hidden', !show); document.body.classList.toggle('overlay', show); if (cb) this.$('#respawn').onclick = cb; }
   victory(st) {
-    const v = this.$('#victory'); v.classList.remove('hidden');
+    const v = this.$('#victory'); v.classList.remove('hidden'); document.body.classList.add('overlay');
     v.querySelector('.vstats').innerHTML = `<div><b>${st.level}</b>Level</div><div><b>${st.kills}</b>Foes Slain</div><div><b>${st.gold}</b>Dinars</div><div><b>${st.time}</b>Time</div>`;
-    this.$('#vcont').onclick = () => v.classList.add('hidden');
-    this.$('#vng').onclick = () => { v.classList.add('hidden'); this.onNewGamePlus?.(); };
+    this.$('#vcont').onclick = () => { v.classList.add('hidden'); document.body.classList.remove('overlay'); };
+    this.$('#vng').onclick = () => { v.classList.add('hidden'); document.body.classList.remove('overlay'); this.onNewGamePlus?.(); };
   }
   fade(v) { this.$('#fade').style.opacity = v; }
 

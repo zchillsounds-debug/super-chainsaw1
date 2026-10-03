@@ -179,11 +179,26 @@ Round 11 rewrote the story around the Teacher's Pages, with Shia-inspired themes
 - **Rule fixes:** the Ward icon's two overlapping squares (an 8-point star) became a dashed ring; the amulet gem lost its 4-point star. Gauntlet captains are now single names (Malik, Sa'd, 'Ubayd, Hani, Mukhariq · Role) instead of "Farud's Shade" or "the Unbroken", and qanat captains are "Name · Captain". `ui.curCls` is now set, so "X weapon" only warns for other classes.
 - **Testing:** `shots/multi.mjs` at 915×412, 360×640, 412×915, 1024×600 (touch) and 1440×900 (desktop) showed no horizontal overflow and no sheet off-screen. Inject a `*{animation-duration:0s;transition:none}` style first, because headless capture otherwise catches the sheets mid-fade.
 
-## Known gaps (start Round 13 here)
-1. Verify Round 12 on a device: swipe-to-close, Back in the APK (Capacitor's default back handler should call history.back()), haptics, and the strafe gait.
-2. Farud's and Hisham's death shots and the boss intro still use the old camera work.
-3. CC0 models are approved, but kenney.nl and quaternius.com are blocked.
-4. The game does not pause while a sheet is open (as in Diablo Immortal); consider pausing in the hub.
+## Round 13 (done): full screen, smooth image, plain story, guidance
+- **Immersive APK:** `MainActivity.java` hides the status and navigation bars (an edge swipe shows them briefly), draws into the camera cutout, and keeps the screen on. The viewport has `viewport-fit=cover`.
+- **Smoother image:**
+  - Film grain removed; only a sub-1/255 dither remains to stop banding.
+  - Chromatic aberration reduced to a third.
+  - New **Sharpness** setting (Settings → Graphics): Smooth (native resolution up to 2×, the default), Balanced (1.5×) or Fast (1×). Adaptive quality never drops Smooth below 1.5×.
+  - The see-through dither hole is off in cutscenes; on walls it read as grain.
+- **Plain story:** every cutscene line was rewritten short and plain (`scenes.js`, `game.js`, Arabic in `story_ar.js`). The briefing now says who, what and where: Ishaq, the Pages, Ghassan, and "start with Farud". Lines and captions hold until tapped, with a "Tap to continue ▸" cue, and move on by themselves after 20 s. Act cards say what to do ("Hisham is burning the Pages in the kilns. Stop him.").
+- **Guidance (`guide.js`):** glowing chevrons flow along an A* path (`findPath`) from the hero to the current objective, re-pathed every 0.6 s and showing about 46 m ahead. They fade near the goal, in fights and in cutscenes. Underground they lead to the chest, then to the way out. The tracker shows the active objective and its distance (`ui.objective`), and on touch it replaces the story title.
+- **Mobile polish:**
+  - Death and victory hide the HUD and touch controls (`body.overlay`), and victory fits 412 px tall screens.
+  - Toasts sit above the orbs on touch, clear of the area banners.
+  - The dialogue box has larger text.
+  - The title-screen control hint sits on a pill.
+- **Rule fixes:** the skyline palace lost its pointed dome and finial; it is now a stepped hall with a low green roof. The small rooftop domes on village houses (they read like tombs) are now wind-catchers.
+
+## Known gaps (start Round 14 here)
+1. Verify on a device: immersive mode, Smooth sharpness frame rate, the trail's readability in sunlight, and Back.
+2. Side-quest objectives are not on the trail yet (main quest and interiors only); tapping a tracker entry to pick the target was offered but not chosen.
+3. Farud's and Hisham's death shots and the boss intro still use the old camera work.
 
 ## File map (src/)
 - **Core:** main.js (boot, loop, wiring), game.js (gameplay, AI, combat), classes.js, entities.js, items.js, save.js, content.js (R10 captains, areas, tasks, engines, duel, NG+)
@@ -193,4 +208,4 @@ Round 11 rewrote the story around the Teacher's Pages, with Shia-inspired themes
 - **Story:** cinema.js, scenes.js, narrative.js
 - **Progression:** progression.js
 - **Audio:** audio.js, audio2.js
-- **UI:** ui.js, sheets.js (sheet manager, haptics), mobile.js, style.css (later rounds append their own sections), settings.js, i18n.js + story_ar.js, gamepad.js, tutorial.js
+- **UI:** guide.js (objective trail), ui.js, sheets.js (sheet manager, haptics), mobile.js, style.css (later rounds append their own sections), settings.js, i18n.js + story_ar.js, gamepad.js, tutorial.js

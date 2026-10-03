@@ -458,3 +458,47 @@ body.touch #cine .skip{font-size:12px}
 body.touch .tt-base,body.touch .tt-lvl{font-size:12px}
 body.insheet #touch #tskills,body.insheet #joy,body.insheet #hint{visibility:hidden}
 @media (orientation:portrait){body.touch #bar{left:calc(10px + env(safe-area-inset-left,0px))!important;translate:none;gap:8px}body.touch #buffs{left:calc(10px + env(safe-area-inset-left,0px));transform:none}}
+
+/* ---------------- Round 13: cutscene tap-to-continue */
+#cine .tapnext{position:absolute;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(11vh + 18px);display:flex;align-items:center;gap:8px;font:600 13px Cinzel,serif;color:#f2d27a;letter-spacing:1px;opacity:0;transition:opacity .3s;text-shadow:0 2px 4px #000;pointer-events:none;z-index:2}
+#cine .tapnext.show{opacity:1}
+#cine .tapnext i{font-style:normal;font-size:18px;animation:tapnudge 1s ease-in-out infinite}
+@keyframes tapnudge{50%{transform:translateX(5px)}}
+#cine .sub .stx{flex:1;min-width:0}
+#cine .sub{padding-right:150px;box-sizing:border-box}
+body.touch #cine .tapnext{bottom:calc(8vh + 14px)}
+#cine .caption{font-size:26px;max-width:760px;margin:0 auto;left:0;right:0;line-height:1.4}
+body.touch #cine .caption{font-size:20px}
+
+/* objective line in the tracker */
+#quest .qnow{display:flex;align-items:center;gap:8px;font:600 14px Cinzel,serif;color:#fff2d0;text-shadow:0 0 6px #000,0 1px 2px #000;margin:2px 0 6px}
+#quest .qnow i{font-style:normal;color:#ffd870;font-size:11px;text-shadow:0 0 8px #ffb040}
+#quest .qnow b{margin-left:auto;font:700 13px Cinzel,serif;color:#ffd870;white-space:nowrap}
+#quest .qnow.pulse{animation:qpulse 1.2s ease-out}
+@keyframes qpulse{0%{color:#fff;text-shadow:0 0 14px #ffd870}100%{}}
+body:not(.touch) #quest .qnow{justify-content:flex-end}
+body.touch #quest .qtitle{display:none}
+body.touch #quest .qnow{margin:0;font-size:13px}
+body.touch #quest .qnow.hidden+.qlines{display:none}
+body.touch #quest:has(.qnow.hidden) .qtitle{display:block}
+body.touch #quest .qnow::after{content:'▾';color:#f2d27a;margin-left:2px}
+body.touch #quest.open .qnow::after{content:'▴'}
+
+/* ---------------- Round 13: overlays, toasts, dialogue on phones */
+body.overlay #touch,body.overlay #hud,body.overlay #hpbars,body.overlay #labels{opacity:0!important;pointer-events:none!important}
+#death,#victory{z-index:30;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(12px + env(safe-area-inset-bottom,0px));box-sizing:border-box;overflow-y:auto}
+#death button,#victory button{min-height:48px;min-width:200px}
+@media (max-height:520px){
+  #victory .vt{font-size:44px;letter-spacing:4px}#victory .vs{font-size:16px;margin:6px 0 12px}
+  .vstats{gap:22px;margin-bottom:14px}.vstats b{font-size:26px}.vstats div{font-size:12px}
+  #victory #vng{margin-top:8px}#victory .vngnote{font-size:13px}
+  #death .dt{font-size:44px;margin-bottom:20px}
+}
+body.touch #toasts{top:auto;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%)}
+body.touch .toast{font-size:15px}body.touch .toast.lvl{font-size:22px}body.touch .toast.leg{font-size:18px}
+body.touch #dialog{padding:12px 16px 10px;border-radius:12px;max-height:44vh;display:flex;flex-direction:column}
+body.touch .dname{font-size:15px;letter-spacing:1px;margin-bottom:4px}
+body.touch .dtext{font-size:17px;line-height:1.4;overflow-y:auto}
+body.touch #dialog .dbtn{align-self:flex-end;float:none;min-width:140px}
+#title{background:radial-gradient(ellipse at 50% 42%,#0000 35%,#0007 100%),linear-gradient(#0000 55%,#000a)}
+.controls{padding:6px 14px;border-radius:16px;background:#0d0806b3;font-size:13px;color:#ecdcb8}
