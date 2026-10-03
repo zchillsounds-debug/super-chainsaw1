@@ -14,9 +14,9 @@ const HUB = { merchant: [7, 81], smith: [10, 92], stash: [-6, 91], trainer: [-9,
 export const MAX_RANK = 5;
 let DISC = 0;
 const price = (it) => Math.round(({ common: 8, magic: 30, rare: 90, set: 160, legendary: 400 })[it.rarity] * (1 + it.level * 0.25) * (1 - DISC));
-const sellPrice = (it) => it.questId ? 0 : Math.max(1, Math.round(price(it) / (1 - DISC) * 0.25));
-const SALVAGE = { common: { scrap: 1 }, magic: { scrap: 2, silk: 1 }, rare: { scrap: 3, silk: 2, gem: 1 }, legendary: { scrap: 5, silk: 3, gem: 3 } };
-const MAT_NAMES = { scrap: 'Iron Scrap', silk: 'Silk Thread', gem: 'Gem Shard' };
+export const sellPrice = (it) => it.questId ? 0 : Math.max(1, Math.round(price(it) / (1 - DISC) * 0.25));
+export const SALVAGE = { common: { scrap: 1 }, magic: { scrap: 2, silk: 1 }, rare: { scrap: 3, silk: 2, gem: 1 }, set: { scrap: 4, silk: 3, gem: 2 }, legendary: { scrap: 5, silk: 3, gem: 3 } };
+export const MAT_NAMES = { scrap: 'Iron Scrap', silk: 'Silk Thread', gem: 'Gem Shard' };
 export const upgradeCost = (it) => { const r = it.rank || 0; return { gold: 40 * (r + 1) * (1 + it.level * 0.2) | 0, scrap: 2 + r * 2, silk: r >= 2 ? r - 1 : 0, gem: r >= 4 ? 1 : 0 }; };
 
 export function npc(game, look, [x, z], face, name, title, talk, prop) {
@@ -89,7 +89,7 @@ export function restock(game) { game.vendorStock = rollStock(game); }
 // ------------------------------------------------------------------ panels
 let panel = null;
 function closePanel() { if (panel) { panel.remove(); panel = null; document.body.classList.remove('inshop'); } }
-export function panelOpen() { return !!panel; }
+export function panelOpen() { return !!panel && panel.isConnected; }
 function el(html) { const d = document.createElement('div'); d.innerHTML = html; return d.firstElementChild; }
 function matsLine(p) { return Object.entries(MAT_NAMES).map(([k, n]) => `<span class="mat m-${k}">${n}: <b>${p.mats[k] || 0}</b></span>`).join(''); }
 function cell(it, extra = '') { return `<div class="cell ${it ? 'r-' + it.rarity : ''}" ${extra}>${it ? `<span class="ic">${itemIcon(it)}</span>${it.rank ? `<i class="rk">+${it.rank}</i>` : ''}` : ''}</div>`; }
@@ -99,26 +99,33 @@ export function openPanel(game, kind, tab) {
   const p = game.player, ui = game.ui; DISC = p.discount || 0;
   document.body.classList.add('inshop');
   const titles = { merchant: 'Yusuf · Merchant', smith: 'Bishr · Blacksmith', stash: 'Your Stash', trainer: '\'Amr · Training Yard', skills: 'Disciplines' };
-  panel = el(`<div id="shop" class="panel"><div class="ptitle">${titles[kind]} <span class="close">✕</span></div><div class="sbody"></div><div class="sfoot"><span class="gold">◉ ${p.gold} Dinars</span>${kind === 'smith' ? matsLine(p) : ''}</div></div>`);
+  panel = el(`<div id="shop" class="panel"><div class="ptitle">${titles[kind]} <span class="close" role="button" aria-label="Close">✕</span></div><div class="sbody"></div><div class="sfoot"><span class="gold">◉ ${p.gold} Dinars</span>${kind === 'smith' ? matsLine(p) : ''}</div></div>`);
   game.ui.root.appendChild(panel);
   panel.querySelector('.close').onclick = closePanel;
   const body = panel.querySelector('.sbody');
   const refresh = () => openPanel(game, kind, tab);
-  const tip = (node, it, cmp) => { node.onmouseenter = () => ui.showTooltip(it, node.getBoundingClientRect(), cmp); node.onmouseleave = () => ui.hideTooltip(); };
-  const bagGrid = (onClick, label) => {
+  const touch = document.body.classList.contains('touch');
+  const tip = (node, it, cmp) => { if (touch) { node.onclick = () => ui.itemCard(it, { cmp }); return; } node.onmouseenter = () => ui.showTooltip(it, node.getBoundingClientRect(), cmp); node.onmouseleave = () => ui.hideTooltip(); };
+  // on touch a tap opens the item card with the action on it; with a mouse the hover tooltip shows and a click acts at once
+  const bind = (node, it, cmp, verb, fn) => {
+    if (touch) { node.onclick = () => ui.itemCard(it, { cmp, actions: [{ label: verb, fn, main: true }] }); return; }
+    tip(node, it, cmp); node.onclick = () => { ui.hideTooltip(); fn(); };
+  };
+  const bagGrid = (onClick, label, verb) => {
     const g = el(`<div><div class="slabel">${label}</div><div class="sgrid">${p.bag.map((it, i) => cell(it, `data-i="${i}"`)).join('')}</div></div>`);
-    g.querySelectorAll('.cell').forEach((c) => { const it = p.bag[+c.dataset.i]; if (!it) return; tip(c, it, p.equip[it.slot]); c.onclick = () => { ui.hideTooltip(); onClick(+c.dataset.i, it); }; });
+    g.querySelectorAll('.cell').forEach((c) => { const it = p.bag[+c.dataset.i]; if (!it) return; bind(c, it, p.equip[it.slot], typeof verb === 'function' ? verb(it) : verb, () => onClick(+c.dataset.i, it)); });
     return g;
   };
+  if (kind === 'merchant' || kind === 'stash') body.classList.add('two');
   if (kind === 'merchant') {
     const s = el(`<div><div class="slabel">For sale: tap to buy</div><div class="sgrid stock">${game.vendorStock.map((it, i) => it ? cell(it, `data-i="${i}"`).replace('</div>', `<em>${price(it)}</em></div>`) : cell(null)).join('')}</div></div>`);
     s.querySelectorAll('.cell[data-i]').forEach((c) => {
-      const it = game.vendorStock[+c.dataset.i]; tip(c, it, p.equip[it.slot]);
-      c.onclick = () => { ui.hideTooltip(); const k = p.bag.indexOf(null); if (p.gold < price(it)) { ui.toast('Not enough dinars'); game.audio.denied?.(); return; } if (k < 0) { ui.toast('Your pack is full'); return; }
-        p.gold -= price(it); p.bag[k] = it; game.vendorStock[+c.dataset.i] = null; game.audio.gold(); refresh(); };
+      const it = game.vendorStock[+c.dataset.i];
+      bind(c, it, p.equip[it.slot], `Buy · ${price(it)}`, () => { const k = p.bag.indexOf(null); if (p.gold < price(it)) { ui.toast('Not enough dinars'); game.audio.denied?.(); return; } if (k < 0) { ui.toast('Your pack is full'); return; }
+        p.gold -= price(it); p.bag[k] = it; game.vendorStock[+c.dataset.i] = null; game.audio.gold(); refresh(); });
     });
     body.appendChild(s);
-    body.appendChild(bagGrid((i, it) => { if (it.questId) { ui.toast('That is not yours to sell'); return; } p.gold += sellPrice(it); p.bag[i] = null; game.audio.gold(); refresh(); }, 'Your pack: tap to sell'));
+    body.appendChild(bagGrid((i, it) => { if (it.questId) { ui.toast('That is not yours to sell'); return; } p.gold += sellPrice(it); p.bag[i] = null; game.audio.gold(); refresh(); }, 'Your pack: tap to sell', (it) => `Sell · ${sellPrice(it)}`));
     const pot = el(`<button class="sbtn">Buy Pomegranate Sherbet (25)</button>`);
     pot.onclick = () => { if (p.gold < 25 || p.potions >= 5) { game.audio.denied?.(); return; } p.gold -= 25; p.potions++; game.audio.potion(); refresh(); };
     body.appendChild(pot);
@@ -143,18 +150,18 @@ export function openPanel(game, kind, tab) {
       });
       body.appendChild(list);
     } else if (tab === 'salvage') {
-      body.appendChild(bagGrid((i, it) => { const g = SALVAGE[it.rarity]; for (const k in g) p.mats[k] = (p.mats[k] || 0) + g[k]; p.bag[i] = null; game.audio.clang(); ui.toast('Salvaged: ' + Object.entries(g).map(([k, v]) => `${v} ${MAT_NAMES[k]}`).join(', ')); refresh(); }, 'Tap an item in your pack to break it down'));
+      body.appendChild(bagGrid((i, it) => { const g = SALVAGE[it.rarity] || SALVAGE.common; for (const k in g) p.mats[k] = (p.mats[k] || 0) + g[k]; p.bag[i] = null; game.audio.clang(); ui.toast('Salvaged: ' + Object.entries(g).map(([k, v]) => `${v} ${MAT_NAMES[k]}`).join(', ')); refresh(); }, 'Tap an item in your pack to break it down', 'Salvage'));
       const all = el(`<button class="sbtn">Salvage all common and magic items</button>`);
-      all.onclick = () => { let n = 0; p.bag.forEach((it, i) => { if (it && (it.rarity === 'common' || it.rarity === 'magic')) { const g = SALVAGE[it.rarity]; for (const k in g) p.mats[k] += g[k]; p.bag[i] = null; n++; } }); if (n) game.audio.clang(); refresh(); };
+      all.onclick = () => { let n = 0; p.bag.forEach((it, i) => { if (it && (it.rarity === 'common' || it.rarity === 'magic')) { const g = SALVAGE[it.rarity] || SALVAGE.common; for (const k in g) p.mats[k] = (p.mats[k] || 0) + g[k]; p.bag[i] = null; n++; } }); if (n) game.audio.clang(); refresh(); };
       body.appendChild(all);
     } else {
       game.enchantPanel ? game.enchantPanel(body, refresh) : body.appendChild(el('<div class="slabel">Enchanting arrives with the House of Wisdom\'s formulae.</div>'));
     }
   } else if (kind === 'stash') {
     const s = el(`<div><div class="slabel">Stash: tap to take</div><div class="sgrid">${p.stash.map((it, i) => cell(it, `data-i="${i}"`)).join('')}</div></div>`);
-    s.querySelectorAll('.cell').forEach((c) => { const it = p.stash[+c.dataset.i]; if (!it) return; tip(c, it, p.equip[it.slot]); c.onclick = () => { ui.hideTooltip(); const k = p.bag.indexOf(null); if (k < 0) { ui.toast('Your pack is full'); return; } p.bag[k] = it; p.stash[+c.dataset.i] = null; refresh(); }; });
+    s.querySelectorAll('.cell').forEach((c) => { const it = p.stash[+c.dataset.i]; if (!it) return; bind(c, it, p.equip[it.slot], 'Take', () => { const k = p.bag.indexOf(null); if (k < 0) { ui.toast('Your pack is full'); return; } p.bag[k] = it; p.stash[+c.dataset.i] = null; refresh(); }); });
     body.appendChild(s);
-    body.appendChild(bagGrid((i, it) => { const k = p.stash.indexOf(null); if (k < 0) { ui.toast('Your stash is full'); return; } p.stash[k] = it; p.bag[i] = null; refresh(); }, 'Your pack: tap to store'));
+    body.appendChild(bagGrid((i, it) => { const k = p.stash.indexOf(null); if (k < 0) { ui.toast('Your stash is full'); return; } p.stash[k] = it; p.bag[i] = null; refresh(); }, 'Your pack: tap to store', 'Store'));
   } else if (kind === 'skills') {
     game.skillTreePanel?.(body, refresh);
   } else if (kind === 'trainer') {

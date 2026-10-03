@@ -86,11 +86,13 @@ export function prologue(g) {
         if (u >= 1 && !guard1.st.dead) { guard1.st.dead = true; guard1.st.fallDir = 1; d.audio.vocal('hurt', 0.8); d.audio.hit?.(); }
       } },
     { dur: 4.8, slow: 0.6, line: { who: 'Jabir', text: 'Salim... the chest. Do not let them burn it.', rig: guard1.rig, cue: 'hurt' },
-      cam: { follow: true, p0: at(salim, 2.3, 3.6, -1.8), t0: at(salim, 0.9), p1: at(salim, 2.0, 3.1, -1.5), t1: at(salim, 0.95), fov: 34 }, dof: headOf(salim), aperture: 1.4,
+      cam: { follow: true, p0: at(salim, 2.5, -1.9, -2.3), t0: at(salim, 0.35, 1.3), p1: at(salim, 2.2, -1.6, -2.0), t1: at(salim, 0.4, 1.25), fov: 40 }, dof: headOf(salim), aperture: 1.4,
       enter: (d) => {
         // he is already down when the line plays, whatever was skipped before
         if (arrow) arrow.visible = false;
         guard1.st.dead = true; guard1.st.fallDir = 1; guard1.st.deadT = Math.max(guard1.st.deadT || 0, 4);
+        // he falls backwards; turn him so he lies along the dune's contour rather than with his head in the slope
+        { let best = 0, bd = 1e9; const h0 = heightAt(guard1.pos.x, guard1.pos.z); for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, dh = Math.abs(heightAt(guard1.pos.x + Math.sin(a) * 1.6, guard1.pos.z + Math.cos(a) * 1.6) - h0) + Math.abs(heightAt(guard1.pos.x + Math.sin(a) * 0.8, guard1.pos.z + Math.cos(a) * 0.8) - h0); if (dh < bd) { bd = dh; best = a; } } guard1.facing = best + Math.PI; guard1.pos.y = h0; }
         for (const c of caravan) c.halt = true;
         salim.pos.copy(guard1.pos).add(V(0.9, 0, -0.2));
         // the other guard stands over them, spear out toward the dunes

@@ -1,3 +1,4 @@
+import { sellPrice, SALVAGE, MAT_NAMES } from './hub.js';
 import * as THREE from 'three';
 import { humanoid, animateHumanoid, setCharLOD, sword, camel, animateCamel, CharLOD } from './characters.js';
 import { heightAt, SITES, canalX } from './terrain.js';
@@ -139,7 +140,7 @@ export class Game {
 
   // Swap Salim's discipline: rebuilds the rig, the kit and the starting weapon.
   setClass(cls, fresh = false) {
-    const p = this.player, K = this.kit = CLASSES[cls] || CLASSES.faris; p.cls = cls in CLASSES ? cls : 'faris';
+    const p = this.player, K = this.kit = CLASSES[cls] || CLASSES.faris; p.cls = cls in CLASSES ? cls : 'faris'; this.ui.curCls = p.cls;
     if (p.rig) this.scene.remove(p.rig);
     const rig = p.rig = humanoid(K.look); this.scene.add(rig);
     rig.position.copy(p.pos); rig.rotation.y = p.facing;
@@ -524,10 +525,16 @@ export class Game {
   refreshInv() {
     if (!this.ui.invOpen) return;
     const p = this.player;
-    this.ui.refreshInventory(p,
-      (i) => { const it = p.bag[i]; if (it.slot === 'weapon' && it.cls && it.cls !== p.cls) { this.ui.toast(`Only a ${CLASSES[it.cls].name} can wield that`); return; } const old = p.equip[it.slot]; p.equip[it.slot] = it; p.bag[i] = old || null; this.recalcStats(); this.audio.clang(); this.refreshInv(); },
-      (i) => { p.bag[i] = null; this.refreshInv(); },
-      (s) => { const k = p.bag.indexOf(null); if (k < 0 || s === 'weapon') return; p.bag[k] = p.equip[s]; p.equip[s] = null; this.recalcStats(); this.refreshInv(); });
+    const equip = (i) => { const it = p.bag[i]; if (it.slot === 'weapon' && it.cls && it.cls !== p.cls) { this.ui.toast(`Only a ${CLASSES[it.cls].name} can wield that`); return; } const old = p.equip[it.slot]; p.equip[it.slot] = it; p.bag[i] = old || null; this.recalcStats(); this.audio.clang(); this.refreshInv(); };
+    this.ui.refreshInventory(p, {
+      equip,
+      unequip: (s) => { const k = p.bag.indexOf(null); if (k < 0) { this.ui.toast('Your pack is full'); return; } p.bag[k] = p.equip[s]; p.equip[s] = null; this.recalcStats(); this.refreshInv(); },
+      price: (it) => sellPrice(it),
+      sell: (i) => { p.gold += sellPrice(p.bag[i]); p.bag[i] = null; this.audio.gold(); this.refreshInv(); },
+      salvage: (i) => { const g = SALVAGE[p.bag[i].rarity] || SALVAGE.common; p.mats ||= {}; for (const k in g) p.mats[k] = (p.mats[k] || 0) + g[k]; p.bag[i] = null; this.audio.clang(); this.ui.toast('Salvaged: ' + Object.entries(g).map(([k, v]) => `${v} ${MAT_NAMES[k]}`).join(', ')); this.refreshInv(); },
+      // an upgrade arrow on pack items that beat what is worn in that slot
+      better: (it) => { const c = p.equip[it.slot]; if (it.cls && it.cls !== p.cls) return false; if (!c) return true; return it.min ? (it.min + it.max) > (c.min + c.max) : (it.armor || 0) > (c.armor || 0); },
+    });
   }
 
   // ------------------------------------------------------------------ skills

@@ -8,7 +8,7 @@ const ICONS = {
   whirl: `<svg viewBox="0 0 64 64"><g fill="none" stroke="#f0c070" stroke-width="4" stroke-linecap="round"><path d="M32 32 m-4 0 a4 4 0 1 1 8 0 a8 8 0 1 1 -16 0 a12 12 0 1 1 24 0 a16 16 0 1 1 -32 0 a20 20 0 1 1 40 0"/></g></svg>`,
   naft: `<svg viewBox="0 0 64 64"><path d="M26 10h12v8c8 4 12 10 12 18 0 10-8 18-18 18S14 46 14 36c0-8 4-14 12-18z" fill="#7a3d1e" stroke="#e8b060" stroke-width="2"/><path d="M32 22c6 8 10 12 6 20-3 6-12 6-14 0-2-6 4-8 8-20z" fill="#ff7a20"/><path d="M32 32c2 4 4 6 2 9-2 2-5 1-5-1 0-3 2-4 3-8z" fill="#ffe08a"/></svg>`,
   dash: `<svg viewBox="0 0 64 64"><g stroke="#e8d0a0" stroke-width="4" stroke-linecap="round"><path d="M8 20h22M4 32h30M8 44h22"/></g><path d="M36 14 L58 32 L36 50 Z" fill="#f0c070"/></svg>`,
-  ward: `<svg viewBox="0 0 64 64"><g fill="none" stroke="#ffd870" stroke-width="2.5"><circle cx="32" cy="32" r="24"/><circle cx="32" cy="32" r="10"/><path d="M32 8v48M8 32h48"/><rect x="15" y="15" width="34" height="34"/><rect x="15" y="15" width="34" height="34" transform="rotate(45 32 32)"/></g></svg>`,
+  ward: `<svg viewBox="0 0 64 64"><g fill="none" stroke="#ffd870" stroke-width="2.5"><circle cx="32" cy="32" r="24"/><circle cx="32" cy="32" r="10"/><path d="M32 8v48M8 32h48"/><circle cx="32" cy="32" r="17" stroke-dasharray="4 3"/></g></svg>`,
   potion: `<svg viewBox="0 0 64 64"><path d="M26 8h12v10c8 4 12 10 12 18 0 10-8 18-18 18S14 46 14 36c0-8 4-14 12-18z" fill="#3a0d14" stroke="#e8b060" stroke-width="2"/><path d="M17 36c4 3 26 3 30 0 0 9-6 15-15 15s-15-6-15-15z" fill="#d0203a"/></svg>`,
 };
 
@@ -17,11 +17,14 @@ const ITEM_SVG = {
   armor: (c) => `<svg viewBox="0 0 64 64"><path d="M18 10 L26 6 L32 12 L38 6 L46 10 L56 20 L50 28 L46 24 L46 56 L18 56 L18 24 L14 28 L8 20 Z" fill="#6a7078" stroke="${c}" stroke-width="2"/><g stroke="#3a3e44" stroke-width="1.2">${[20, 26, 32, 38, 44, 50].map((y) => `<path d="M18 ${y} H46"/>`).join('')}</g><path d="M30 12 V56" stroke="#d9a441" stroke-width="2"/></svg>`,
   helm: (c) => `<svg viewBox="0 0 64 64"><path d="M32 4 L36 14 Q50 18 52 36 L12 36 Q14 18 28 14 Z" fill="#a8aeb6" stroke="${c}" stroke-width="2"/><path d="M10 34 Q32 44 54 34 L54 42 Q32 52 10 42 Z" fill="#e8dcc0" stroke="#8a7a5a"/><path d="M14 44 L14 56 L50 56 L50 44" fill="none" stroke="#6a7078" stroke-width="3" stroke-dasharray="2 2"/></svg>`,
   ring: (c) => `<svg viewBox="0 0 64 64"><circle cx="32" cy="38" r="15" fill="none" stroke="#d9a441" stroke-width="6"/><path d="M24 22 L32 10 L40 22 L32 28 Z" fill="${c}" stroke="#fff8" stroke-width="1"/></svg>`,
-  amulet: (c) => `<svg viewBox="0 0 64 64"><path d="M14 6 Q32 34 50 6" fill="none" stroke="#d9a441" stroke-width="2"/><circle cx="32" cy="40" r="14" fill="#1a2a5a" stroke="#d9a441" stroke-width="3"/><path d="M32 30 L35 37 L42 40 L35 43 L32 50 L29 43 L22 40 L29 37 Z" fill="${c}"/></svg>`,
+  amulet: (c) => `<svg viewBox="0 0 64 64"><path d="M14 6 Q32 34 50 6" fill="none" stroke="#d9a441" stroke-width="2"/><circle cx="32" cy="40" r="14" fill="#1a2a5a" stroke="#d9a441" stroke-width="3"/><ellipse cx="32" cy="40" rx="7" ry="9" fill="${c}"/><ellipse cx="30" cy="36" rx="2" ry="3" fill="#fff8"/></svg>`,
 };
 export function itemIcon(it) { return (ITEM_SVG[it.slot] || ITEM_SVG.ring)(RARITY[it.rarity].color); }
 
 const SLOT_NAMES = { weapon: 'Weapon', armor: 'Armor', helm: 'Helm', ring: 'Ring', amulet: 'Amulet' };
+// a plain standing figure behind the equipment slots
+const DOLL = `<svg class="doll" viewBox="0 0 120 200" aria-hidden="true"><g fill="#d9a44114" stroke="#d9a44140" stroke-width="1.5"><circle cx="60" cy="26" r="15"/><path d="M38 50 Q60 42 82 50 L92 108 L80 110 L76 72 L74 120 L80 192 L64 192 L60 132 L56 192 L40 192 L46 120 L44 72 L40 110 L28 108 Z"/></g></svg>`;
+const avgDmg = (it) => it && it.min ? (it.min + it.max) / 2 : 0;
 
 export class UI {
   constructor(root) {
@@ -47,12 +50,11 @@ export class UI {
       <div id="labels"></div>
       <div id="dmg"></div>
       <div id="inv" class="hidden panel">
-        <div class="ptitle">Inventory <span class="close">✕</span></div>
-        <div id="equip"></div>
-        <div id="stats"></div>
-        <div id="grid"></div>
-        <div id="gold"></div>
-        <div class="hint">Click to equip · Right-click to discard</div>
+        <div class="ptitle">Inventory <span class="close" role="button" aria-label="Close">✕</span></div>
+        <div class="invbody">
+          <div class="invleft"><div id="equip"></div><div id="stats"></div></div>
+          <div class="invright"><div class="baghead"><span class="bagn"></span><span id="gold"></span></div><div id="grid"></div></div>
+        </div>
       </div>
       <div id="tooltip" class="hidden"></div>
       <div id="dialog" class="hidden panel"><div class="dname"></div><div class="dtext"></div><button class="dbtn">Continue</button></div>
@@ -128,8 +130,10 @@ export class UI {
   setOrbs(hp, maxHp, mp, maxMp, t) {
     this.drawOrb(this.hpCanvas, hp / maxHp, '#e0283a', '#4a0408', t);
     this.drawOrb(this.mpCanvas, mp / maxMp, '#3a6cff', '#06104a', t + 3);
-    this.$('#hporb .orbtxt').textContent = `${Math.ceil(hp)} / ${maxHp}`;
-    this.$('#mporb .orbtxt').textContent = `${Math.floor(mp)} / ${maxMp}`;
+    // small touch orbs carry just the current value
+    const tch = document.body.classList.contains('touch');
+    this.$('#hporb .orbtxt').textContent = tch ? Math.ceil(hp) : `${Math.ceil(hp)} / ${maxHp}`;
+    this.$('#mporb .orbtxt').textContent = tch ? Math.floor(mp) : `${Math.floor(mp)} / ${maxMp}`;
   }
   setXP(frac, level) { this.$('#xp .xpfill').style.width = (frac * 100) + '%'; this.$('#xp .xptxt').textContent = `Level ${level}`; }
   showTarget(name, frac, cls = '') {
@@ -253,7 +257,7 @@ export class UI {
     this.mapRegionImg = c; this.mapRect = { x0: 150, z0: -140, w: 140, h: 280 };
   }
   // ---------------- inventory
-  toggleInventory(v) { const el = this.$('#inv'); const show = v ?? el.classList.contains('hidden'); el.classList.toggle('hidden', !show); if (!show) this.hideTooltip(); return show; }
+  toggleInventory(v) { const el = this.$('#inv'); const show = v ?? el.classList.contains('hidden'); el.classList.toggle('hidden', !show); if (!show) { this.hideTooltip(); this.closeCard(); } return show; }
   get invOpen() { return !this.$('#inv').classList.contains('hidden'); }
   itemHTML(it, cmp) {
     const r = RARITY[it.rarity];
@@ -278,30 +282,57 @@ export class UI {
     t.style.left = x + 'px'; t.style.top = y + 'px';
   }
   hideTooltip() { this.tooltip.classList.add('hidden'); }
-  refreshInventory(player, onEquip, onDiscard, onUnequip) {
+  // inventory sheet: paper-doll and stats on the left, the pack on the right; a tap opens the item card
+  refreshInventory(player, h) {
     const eq = this.$('#equip');
-    eq.innerHTML = Object.keys(SLOT_NAMES).map((s) => {
+    eq.innerHTML = DOLL + Object.keys(SLOT_NAMES).map((s) => {
       const it = player.equip[s];
-      return `<div class="eslot s-${s} ${it ? 'r-' + it.rarity : ''}" data-s="${s}">${it ? `<span class="ic">${itemIcon(it)}</span>` : `<span class="lbl">${SLOT_NAMES[s]}</span>`}</div>`;
+      return `<button class="eslot s-${s} ${it ? 'r-' + it.rarity : ''}" data-s="${s}" aria-label="${SLOT_NAMES[s]}">${it ? `<span class="ic">${itemIcon(it)}</span>${it.rank ? `<i class="rk">+${it.rank}</i>` : ''}` : `<span class="lbl">${SLOT_NAMES[s]}</span>`}</button>`;
     }).join('');
+    const hover = (el, it, cmp) => { if (document.body.classList.contains('touch')) return; el.onmouseenter = () => this.showTooltip(it, el.getBoundingClientRect(), cmp); el.onmouseleave = () => this.hideTooltip(); };
     for (const el of eq.querySelectorAll('.eslot')) {
-      const it = player.equip[el.dataset.s]; if (!it) continue;
-      el.onmouseenter = () => this.showTooltip(it, el.getBoundingClientRect());
-      el.onmouseleave = () => this.hideTooltip();
-      el.onclick = () => { this.hideTooltip(); onUnequip(el.dataset.s); };
+      const s = el.dataset.s, it = player.equip[s]; if (!it) continue;
+      hover(el, it);
+      el.onclick = () => { this.hideTooltip(); this.itemCard(it, { actions: s === 'weapon' ? [] : [{ label: 'Unequip', fn: () => h.unequip(s) }] }); };
     }
     const g = this.$('#grid'); const cells = [];
-    for (let i = 0; i < 40; i++) { const it = player.bag[i]; cells.push(`<div class="cell ${it ? 'r-' + it.rarity : ''}" data-i="${i}">${it ? `<span class="ic">${itemIcon(it)}</span>` : ''}</div>`); }
+    for (let i = 0; i < 40; i++) { const it = player.bag[i]; cells.push(`<button class="cell ${it ? 'r-' + it.rarity : ''} ${it && h.better?.(it) ? 'up' : ''}" data-i="${i}">${it ? `<span class="ic">${itemIcon(it)}</span>${it.rank ? `<i class="rk">+${it.rank}</i>` : ''}` : ''}</button>`); }
     g.innerHTML = cells.join('');
     for (const el of g.querySelectorAll('.cell')) {
-      const it = player.bag[+el.dataset.i]; if (!it) continue;
-      el.onmouseenter = () => this.showTooltip(it, el.getBoundingClientRect(), player.equip[it.slot]);
-      el.onmouseleave = () => this.hideTooltip();
-      el.onclick = () => { this.hideTooltip(); onEquip(+el.dataset.i); };
-      el.oncontextmenu = (e) => { e.preventDefault(); this.hideTooltip(); onDiscard(+el.dataset.i); };
+      const i = +el.dataset.i, it = player.bag[i]; if (!it) continue;
+      hover(el, it, player.equip[it.slot]);
+      el.onclick = () => {
+        this.hideTooltip();
+        const quest = !!it.questId, acts = [{ label: 'Equip', fn: () => h.equip(i), main: true }];
+        if (!quest) acts.push({ label: `Sell · ${h.price(it)}`, fn: () => h.sell(i) }, { label: 'Salvage', fn: () => h.salvage(i) });
+        this.itemCard(it, { cmp: player.equip[it.slot], actions: acts });
+      };
+      el.oncontextmenu = (e) => { e.preventDefault(); this.hideTooltip(); h.equip(i); };
     }
+    this.$('.bagn').textContent = `Pack ${player.bag.filter(Boolean).length} / 40`;
     const st = player.stats;
     this.$('#stats').innerHTML = `<div><b>Level</b> ${player.level}</div><div><b>Damage</b> ${st.min}–${st.max}</div><div><b>Armor</b> ${st.armor}</div><div><b>Life</b> ${st.maxHp}</div><div><b>Mana</b> ${st.maxMp}</div><div><b>Crit</b> ${st.crit}%</div><div><b>Atk Speed</b> +${st.speed}%</div><div><b>Life/Hit</b> ${st.leech}</div>`;
     this.$('#gold').textContent = `◉ ${player.gold} Dinars`;
   }
+  // item card: full details, a side-by-side comparison with what is worn, and the actions for the item
+  itemCard(it, { cmp = null, actions = [] } = {}) {
+    this.closeCard();
+    const w = document.createElement('div'); w.id = 'icard';
+    const delta = (a, b, label) => { const d = Math.round(a - b); return d ? `<div class="dl ${d > 0 ? 'pos' : 'neg'}">${d > 0 ? '▲ +' : '▼ '}${d} ${label}</div>` : ''; };
+    const diff = cmp ? delta(avgDmg(it), avgDmg(cmp), 'Damage') + delta(it.armor || 0, cmp.armor || 0, 'Armor') : '';
+    const col = (x, tag) => `<div class="iccol" style="border-color:${RARITY[x.rarity].color}"><div class="ictag">${tag}</div><div class="icic">${itemIcon(x)}</div>${this.itemHTML(x)}</div>`;
+    w.innerHTML = `<div class="icwrap"><div class="iccols">${col(it, cmp ? 'Selected' : SLOT_NAMES[it.slot])}${cmp ? `<div class="iccmp hidden">${col(cmp, 'Equipped')}</div>` : ''}</div>
+      ${diff ? `<div class="icdiff">${diff}</div>` : ''}
+      <div class="icacts">${actions.map((a, k) => `<button class="${a.main ? 'main' : 'sbtn'}" data-a="${k}">${a.label}</button>`).join('')}${cmp ? '<button class="sbtn" data-a="cmp">Compare</button>' : ''}<button class="sbtn" data-a="x">Close</button></div></div>`;
+    this.root.appendChild(w);
+    w.addEventListener('pointerdown', (e) => { if (e.target === w) { e.preventDefault(); e.stopPropagation(); this.closeCard(); } });
+    w.querySelectorAll('[data-a]').forEach((b) => b.onclick = () => {
+      const a = b.dataset.a;
+      if (a === 'x') return this.closeCard();
+      if (a === 'cmp') { const c = w.querySelector('.iccmp'); c.classList.toggle('hidden'); b.classList.toggle('on', !c.classList.contains('hidden')); return; }
+      this.closeCard(); actions[+a].fn();
+    });
+  }
+  closeCard() { this.root.querySelector('#icard')?.remove(); }
+
 }

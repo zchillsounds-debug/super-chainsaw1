@@ -363,3 +363,98 @@ body:not(.touch) #quest{top:216px;max-height:calc(100vh - 420px);overflow:hidden
 body:not(.playing) #touch{display:none!important}
 /* the class picker lives inside #ui (pointer-events:none): it must take taps itself, or they fall through to the canvas */
 #classpick:not(.out){pointer-events:auto}
+
+/* ---------------- Round 12: mobile-first sheets, inventory, item card, menu sheet, thumb HUD */
+#sheetbg{position:absolute;inset:0;z-index:35;background:radial-gradient(ellipse at center,#0007,#000c);opacity:0;pointer-events:none;transition:opacity .2s}
+#sheetbg.on{opacity:1;pointer-events:auto}
+.panel.sheet:not(#tmenupop){position:fixed;z-index:40;left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:min(980px,calc(100vw - 32px));max-height:calc(100dvh - 32px);display:flex;flex-direction:column;overflow:hidden;padding:0;gap:0;border-radius:12px;animation:sheetin .22s cubic-bezier(.2,.8,.2,1);transition:translate .2s}
+@keyframes sheetin{from{opacity:0;translate:0 28px}to{opacity:1;translate:0 0}}
+.sheet .ptitle{position:relative;flex:none;min-height:52px;display:flex;align-items:center;justify-content:center;padding:6px 64px;box-sizing:border-box;touch-action:none;background:linear-gradient(#3a2614,#1c120a);border-radius:12px 12px 0 0}
+.sheet .ptitle .close{position:absolute;right:6px;top:50%;translate:0 -50%;width:44px;height:44px;display:grid;place-items:center;font:700 22px Cinzel,serif;color:#f2d27a;border-radius:50%;background:#0007;border:1px solid var(--gold2);cursor:pointer;transition:transform .1s,background .1s}
+.sheet .ptitle .close:active{transform:scale(.88);background:#5a3820}
+body.touch .sheet .ptitle::before{content:'';position:absolute;top:5px;left:50%;width:44px;height:4px;margin-left:-22px;border-radius:2px;background:#d9a44166}
+.sheet .sbody,.sheet .jbody,.sheet .sgrid2,.sheet .invbody{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:12px 14px;box-sizing:border-box}
+.sheet .sfoot{flex:none;padding:8px 14px 10px}
+.sheet .stabs{flex:none;padding:10px 14px 0}
+body.touch .panel.sheet:not(#tmenupop){left:calc(10px + env(safe-area-inset-left,0px));right:calc(10px + env(safe-area-inset-right,0px));top:calc(8px + env(safe-area-inset-top,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));transform:none;width:auto;max-height:none}
+/* tappable things: big targets, pressed states */
+button.cell,button.eslot{padding:0;margin:0;font:inherit;color:inherit;letter-spacing:0;box-shadow:none;background:#080503;border-radius:6px;position:relative;transition:transform .08s,filter .08s}
+button.cell:active,button.eslot:active,.sheet button:active,.tile:active,#icard button:active{transform:scale(.94);filter:brightness(1.25)}
+.cell.up::after{content:'▲';position:absolute;left:3px;top:1px;font:700 12px Cinzel,serif;color:#5ee08a;text-shadow:0 0 3px #000}
+.cell .rk,.eslot .rk{position:absolute;top:1px;right:3px;font:700 12px Cinzel,serif;color:#9fe0ff;font-style:normal;text-shadow:0 0 3px #000}
+/* inventory: paper-doll and stats left, the pack right */
+#inv.sheet .invbody{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:start}
+.invleft{display:flex;flex-direction:column;gap:10px;position:sticky;top:0}
+#inv #equip{--es:clamp(52px,14dvh,76px);position:relative;height:auto;margin:0;display:grid;grid-template-columns:repeat(3,var(--es));grid-auto-rows:var(--es);grid-template-areas:"weapon helm amulet" "weapon armor ring" "weapon armor .";gap:8px;padding:10px;border-radius:10px;justify-content:center}
+#equip .doll{position:absolute;left:50%;top:6px;height:calc(100% - 12px);translate:-50% 0;pointer-events:none}
+#inv #equip .eslot{position:relative;left:auto;top:auto;width:auto;height:auto;border-radius:8px}
+#inv .s-helm{grid-area:helm}#inv .s-amulet{grid-area:amulet}#inv .s-ring{grid-area:ring}#inv .s-armor{grid-area:armor}#inv .s-weapon{grid-area:weapon}
+.eslot .lbl{font:600 12px Cinzel,serif;color:#8a7a5a}
+#inv #stats{margin:0;gap:4px 14px;font:500 13px Cinzel,serif;padding:8px 10px;background:#0006;border:1px solid #3a2a14;border-radius:8px}
+.baghead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font:600 13px Cinzel,serif;color:#cdb890}
+#inv #gold{margin:0}
+#inv #grid{grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:6px;margin:0}
+#inv .cell{aspect-ratio:1;min-height:44px}
+@media (orientation:portrait){#inv.sheet .invbody{grid-template-columns:minmax(0,1fr)}.invleft{position:static}}
+/* suq panels: two columns in landscape, auto-fitting grids, 44 px cells */
+#shop .sgrid,#shop .sgrid.stock{grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:5px}
+#shop .cell{min-height:44px}
+#shop .cell em{font-size:12px}
+@media (orientation:landscape){#shop .sbody.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:14px}#shop .sbody.two>div:nth-child(2){grid-column:2;grid-row:1/span 2}#shop .sbody.two>.sbtn{grid-column:1;grid-row:2;align-self:start;justify-self:start}}
+.sbtn,.stabs button{min-height:44px}
+.tnode{min-height:44px}
+.centry summary{min-height:40px;display:flex;align-items:center}
+#settings.sheet label{min-height:44px}
+#settings.sheet select{min-height:40px}
+/* item card */
+#icard{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:#000a;pointer-events:auto;animation:sheetin .16s ease-out}
+.icwrap{width:min(640px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow-y:auto;box-sizing:border-box;padding:12px;background:linear-gradient(#24170cfa,#0f0905fc);border:2px solid var(--gold2);border-radius:12px;box-shadow:0 0 0 1px #000,0 10px 40px #000c}
+.iccols{display:flex;gap:10px}
+.iccmp{flex:1;min-width:0;display:flex}
+.iccol{flex:1;min-width:0;padding:8px 10px;text-align:center;border:1px solid;border-radius:8px;background:#0b0704}
+.ictag{font:600 12px Cinzel,serif;color:#a08a60;text-transform:uppercase;letter-spacing:1px}
+.icic svg{width:56px;height:56px;filter:drop-shadow(0 0 4px #000)}
+.icdiff{display:flex;justify-content:center;gap:16px;margin-top:8px;font:700 14px Cinzel,serif}
+.dl.pos{color:#5ee08a}.dl.neg{color:#ff6a5a}
+.icacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.icacts button{flex:1 1 110px;min-height:46px;border-radius:6px;font:600 14px Cinzel,serif}
+.icacts .main{font-weight:700}
+.icacts .sbtn.on{border-color:#ffd870;background:#5a3820}
+#icard .tt-base,#icard .tt-lvl,#icard .tt-cmp{font-size:12px}
+#tooltip{z-index:70}
+@media (max-height:460px){.icic svg{width:40px;height:40px}.iccol{padding:6px 8px}#icard .tt-name{font-size:15px}}
+/* menu: a bottom sheet of icon tiles */
+#tmenupop{position:fixed;top:auto;right:0;left:0;bottom:0;margin:0 auto;z-index:41;width:min(640px,100vw);box-sizing:border-box;display:block;gap:0;padding:0 calc(14px + env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) calc(14px + env(safe-area-inset-left,0px));border-radius:18px 18px 0 0;border-bottom:0;animation:menuup .22s cubic-bezier(.2,.8,.2,1);transition:translate .2s}
+@keyframes menuup{from{translate:0 100%}to{translate:0 0}}
+#tmenupop .grab{position:relative;height:24px;touch-action:none}
+#tmenupop .grab::after{content:'';position:absolute;left:50%;top:9px;width:44px;height:4px;margin-left:-22px;border-radius:2px;background:#d9a44188}
+.tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+#tmenupop .tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:0;min-height:84px;padding:10px 4px;background:linear-gradient(#2e1f12,#160e07);border:1px solid #6a4a20;border-radius:12px;color:#f0e0c0;font:600 12px Cinzel,serif;letter-spacing:.5px;box-shadow:inset 0 1px 0 #f2d27a22;transition:transform .08s,filter .08s}
+.tile svg{width:36px;height:36px}
+@media (max-width:480px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* thumb HUD */
+body.touch #tmenu{width:48px;height:48px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:12px;opacity:.92;background:#140c07cc;border:1px solid var(--gold2);box-shadow:0 2px 8px #0008}
+#tmenu i{display:block;width:20px;height:2.5px;border-radius:2px;background:#f2d27a}
+body.touch #tmenu:active{transform:scale(.92)}
+body.touch #bar{left:50%!important;translate:-50% 0;gap:clamp(110px,30vw,320px)}
+body.touch .orb{width:62px;height:62px}
+body.touch .orbtxt{opacity:1;font-size:12px;translate:0 -50%}
+body.touch #buffs{left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+body.touch .buff span{font-size:12px}
+body.touch #tskills .t-potion,body.touch #tskills .t-dodge{width:58px;height:58px}
+body.touch #tskills .t-potion svg,body.touch #tskills .t-dodge svg{inset:9px;width:40px;height:40px}
+body.touch #tskills .cnt{font-size:13px}
+body.touch #quest{min-height:36px;box-sizing:border-box;padding:8px 16px}
+body.touch #quest .qtitle{font-size:12px}
+body.touch #quest .qtitle::after{content:' ▾';color:#f2d27a}
+body.touch #quest.open .qtitle::after{content:' ▴'}
+body.touch #minimap{width:180px;height:180px}
+body.touch.mapopen #minimap{z-index:45}
+body.touch #prompt{padding:12px 20px;min-height:44px;box-sizing:border-box}
+body.touch .dchoice{min-height:44px;font-size:15px}
+body.touch .dbtn{min-height:44px;padding:8px 18px;font-size:13px}
+body.touch #hint{font-size:14px}body.touch #hint .hx{min-width:44px;min-height:44px}
+body.touch #cine .skip{font-size:12px}
+body.touch .tt-base,body.touch .tt-lvl{font-size:12px}
+body.insheet #touch #tskills,body.insheet #joy,body.insheet #hint{visibility:hidden}
+@media (orientation:portrait){body.touch #bar{left:calc(10px + env(safe-area-inset-left,0px))!important;translate:none;gap:8px}body.touch #buffs{left:calc(10px + env(safe-area-inset-left,0px));transform:none}}

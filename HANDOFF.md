@@ -164,39 +164,26 @@ Round 11 rewrote the story around the Teacher's Pages, with Shia-inspired themes
 - **Story rewrite:** themes only (see `STORY.md`). The Teacher's Pages, Jabir's death in the prologue, the new briefing, Farud's confession, Hisham's betrayal, Ghassan fouling the water, the duel line, and the lamps-on-the-canal epilogue. All of it has Arabic in `story_ar.js`.
 - **Class picker bug fixed:** taps fell through to the canvas because `#ui` has pointer-events:none.
 
-## Known gaps (start Round 12 here)
-**The user's playtest on Android (top priority):**
-1. Menus and panels don't close when you tap outside them; you have to tap the menu button again, which is unintuitive.
-2. Panels don't fit on a phone screen. The inventory and equipment can't be seen at all.
-3. The mobile interface is "nowhere near" AAA mobile quality.
+## Round 12 (done): mobile UI overhaul
+- **Sheets (`sheets.js`):** inventory, suq panels, qanat panel, skills, journal/codex, settings and the menu are all sheets over a dimmed backdrop. Each closes from its 44 px ✕, a backdrop tap, Android Back, or a swipe down on its header. Opening one closes any other. Open sheets are found in the DOM (MutationObserver), so modules keep building their panels as before. One history entry (`{sheet:1}`) stands for "a sheet is open" and is reused rather than popped, because popping it from code raced the next open.
+- **Layout:** on touch, sheets fill the screen inside the safe area with a 10 px margin. On desktop they are centred, at most 980 px wide. Bodies scroll inside the sheet (`.sbody`, `.jbody`, `.sgrid2`, `.invbody`).
+- **Inventory:** paper-doll grid (weapon tall on the left) and a stats block on the left; the pack grid (auto-fill, cells at least 54 px) on the right; in portrait they stack. ▲ marks upgrades. Tapping any item opens the **item card** (`ui.itemCard`): full details, Compare (side by side with what's worn, plus a damage/armour delta), and Equip / Sell / Salvage, or Unequip for worn items. Sell and Salvage work anywhere.
+- **Suq on touch:** a tap opens the item card with the panel's action (Buy · price, Sell · price, Salvage, Take, Store). Desktop keeps hover tooltips and click-to-act. Merchant and stash use two columns in landscape.
+- **Menu:** ☰ (48 px) opens a bottom sheet of six icon tiles: Inventory, Disciplines, Journal, Codex, Map, Settings. The old Controls popup is gone; button size and opacity are now in Settings → Controls (touch only).
+- **HUD:** 62 px orbs at bottom centre showing the current value; potion and evade buttons enlarged to 58 px; the quest tracker shows ▾/▴; the minimap expands on tap and closes on tap or backdrop; touch controls hide while a sheet is open.
+- **Feel:** haptics (`navigator.vibrate`) on sheet open, buttons and skills; pressed states on all tappable things; no touch text below 12 px.
+- **Extras:**
+  - Death falls always finish. A cutscene that sets `st.deadT` snaps to lying, and lying bodies are raised to rest on the ground. In the prologue Jabir is turned to lie along the dune's contour, and his line is now framed over Salim's shoulder.
+  - Strafing gait (`anim.js`): shorter, quicker side-steps, a wider stance, and hips and feet turned into the step while the chest stays on the target.
+  - Arabic for "Name · Role/Affix · Lv n" labels (i18n pattern) and for the new sheet buttons.
+- **Rule fixes:** the Ward icon's two overlapping squares (an 8-point star) became a dashed ring; the amulet gem lost its 4-point star. Gauntlet captains are now single names (Malik, Sa'd, 'Ubayd, Hani, Mukhariq · Role) instead of "Farud's Shade" or "the Unbroken", and qanat captains are "Name · Captain". `ui.curCls` is now set, so "X weapon" only warns for other classes.
+- **Testing:** `shots/multi.mjs` at 915×412, 360×640, 412×915, 1024×600 (touch) and 1440×900 (desktop) showed no horizontal overflow and no sheet off-screen. Inject a `*{animation-duration:0s;transition:none}` style first, because headless capture otherwise catches the sheets mid-fade.
 
-**Other gaps:**
-4. Jabir slumps rather than lying fully down in the prologue, because the death fall doesn't finish in cutscenes. Farud's and Hisham's death shots and the boss intro still use the old camera work.
-5. Combat feel hasn't been verified on a device. Walking sideways while keeping aim can look like gliding.
-6. Named-captain labels aren't translated into Arabic. CC0 models are approved but kenney.nl and quaternius.com are blocked.
-
-## Next: Round 12, mobile UI overhaul (confirm with the user before building)
-Build a mobile-first UI at AAA mobile ARPG quality (Diablo Immortal is the reference).
-
-**Panels and navigation:**
-- Every panel (inventory, equipment, merchant, smith, stash, trainer, skill tree, journal and codex, settings) becomes a full-screen sheet with a big ✕. Tapping the dimmed backdrop, pressing the Android back button (history API) or swiping down also closes it.
-- Only one panel is open at a time.
-
-**Inventory:**
-- Equipment paper-doll on the left, a scrollable bag grid on the right, all inside the safe area.
-- Tap an item to open a detail card with Equip / Sell / Salvage / Compare.
-
-**Layout and touch targets:**
-- Use the safe area (`env(safe-area-inset-*)`, dvh units) and test at 360×640, 412×915 and 915×412 landscape, plus small tablets.
-- Touch targets at least 44 px, no hover-only info, no text below 12 px. Pressed states, haptics (`navigator.vibrate`) and transitions.
-- A radial menu button that opens a bottom sheet of icons instead of a text list.
-
-**HUD:**
-- Declutter: orbs and skills sized to the thumb arcs, the quest tracker collapsible, and the minimap tap-to-expand.
-
-**Testing:**
-- Run the critique loop with `shots/multi.mjs` and `hasTouch/isMobile` viewports at each size.
-- Check that nothing overflows: compare `scrollWidth` with `clientWidth` on every panel.
+## Known gaps (start Round 13 here)
+1. Verify Round 12 on a device: swipe-to-close, Back in the APK (Capacitor's default back handler should call history.back()), haptics, and the strafe gait.
+2. Farud's and Hisham's death shots and the boss intro still use the old camera work.
+3. CC0 models are approved, but kenney.nl and quaternius.com are blocked.
+4. The game does not pause while a sheet is open (as in Diablo Immortal); consider pausing in the hub.
 
 ## File map (src/)
 - **Core:** main.js (boot, loop, wiring), game.js (gameplay, AI, combat), classes.js, entities.js, items.js, save.js, content.js (R10 captains, areas, tasks, engines, duel, NG+)
@@ -206,4 +193,4 @@ Build a mobile-first UI at AAA mobile ARPG quality (Diablo Immortal is the refer
 - **Story:** cinema.js, scenes.js, narrative.js
 - **Progression:** progression.js
 - **Audio:** audio.js, audio2.js
-- **UI:** ui.js, mobile.js, style.css (later rounds append their own sections), settings.js, i18n.js + story_ar.js, gamepad.js, tutorial.js
+- **UI:** ui.js, sheets.js (sheet manager, haptics), mobile.js, style.css (later rounds append their own sections), settings.js, i18n.js + story_ar.js, gamepad.js, tutorial.js

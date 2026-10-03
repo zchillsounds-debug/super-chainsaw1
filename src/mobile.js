@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { haptic } from './sheets.js';
 
 export const IS_TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || new URLSearchParams(location.search).has('mobile');
 
@@ -7,42 +7,39 @@ export function setupMobile(game, ui) {
   document.body.classList.add('touch');
   const root = document.getElementById('ui');
   const wrap = document.createElement('div'); wrap.id = 'touch';
+  const ic = (d) => `<svg viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="#f2d27a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${d}</g></svg>`;
+  const TILES = [
+    ['bag', 'Inventory', ic('<path d="M12 18h24l-2 22H14z"/><path d="M18 18v-4a6 6 0 0 1 12 0v4"/><path d="M18 26h12"/>')],
+    ['skills', 'Disciplines', ic('<circle cx="24" cy="10" r="4"/><circle cx="12" cy="36" r="4"/><circle cx="36" cy="36" r="4"/><circle cx="24" cy="36" r="4"/><path d="M24 14v18M24 22l-12 10M24 22l12 10"/>')],
+    ['journal', 'Journal', ic('<path d="M10 8h22a6 6 0 0 1 6 6v26H16a6 6 0 0 1-6-6z"/><path d="M16 16h14M16 23h14M16 30h9"/>')],
+    ['codex', 'Codex', ic('<path d="M24 12c-5-4-12-4-16-2v28c4-2 11-2 16 2 5-4 12-4 16-2V10c-4-2-11-2-16 2z"/><path d="M24 12v28"/>')],
+    ['map', 'Map', ic('<path d="M6 12l12-4 12 4 12-4v28l-12 4-12-4-12 4z"/><path d="M18 8v28M30 12v28"/>')],
+    ['settings', 'Settings', ic('<circle cx="24" cy="24" r="6"/><path d="M24 6v6M24 36v6M6 24h6M36 24h6M11 11l4 4M33 33l4 4M37 11l-4 4M15 33l-4 4"/>')],
+  ];
   wrap.innerHTML = `<div id="joy"><div id="knob"></div></div>
     <div id="tskills"></div>
-    <button id="tmenu" class="tbtn" aria-label="Menu">☰</button>
-    <div id="tmenupop" class="panel hidden"><button data-m="bag">Inventory</button><button data-m="skills">Disciplines</button><button data-m="journal">Journal</button><button data-m="map">Map</button><button data-m="cfg">Controls</button><button data-m="settings">Settings</button></div>
-    <div id="tsettings" class="panel hidden">
-      <div class="ptitle">Controls <span class="close">✕</span></div>
-      <label>Button size <input id="tsz" type="range" min="0.6" max="1.2" step="0.05"></label>
-      <label>Button opacity <input id="top" type="range" min="0.25" max="1" step="0.05"></label>
-    </div>`;
+    <button id="tmenu" class="tbtn" aria-label="Menu"><i></i><i></i><i></i></button>
+    <div id="tmenupop" class="panel hidden"><div class="grab"></div><div class="tiles">${TILES.map(([k, l, svg]) => `<button class="tile" data-m="${k}">${svg}<span>${l}</span></button>`).join('')}</div></div>`;
   root.appendChild(wrap);
-  // control size / opacity, remembered per device
-  const store = { get: (k, d) => { try { return parseFloat(localStorage.getItem(k)) || d; } catch { return d; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } } };
-  const apply = (sz, op) => { document.body.style.setProperty('--tscale', sz); document.body.style.setProperty('--topa', op); };
-  const tsz = wrap.querySelector('#tsz'), top = wrap.querySelector('#top');
-  tsz.value = store.get('sob.tscale', 0.8); top.value = store.get('sob.topa', 0.6); apply(tsz.value, top.value);
-  tsz.oninput = () => { apply(tsz.value, top.value); store.set('sob.tscale', tsz.value); };
-  top.oninput = () => { apply(tsz.value, top.value); store.set('sob.topa', top.value); };
-  const cfg = wrap.querySelector('#tsettings');
-  // one menu button holds inventory, the large map and the control settings
+  // the menu is a bottom sheet of large tiles; picking one opens that sheet in its place
   const pop = wrap.querySelector('#tmenupop');
-  wrap.querySelector('#tmenu').addEventListener('pointerdown', (e) => { e.preventDefault(); pop.classList.toggle('hidden'); });
-  pop.addEventListener('pointerdown', (e) => {
-    const m = e.target.dataset?.m; if (!m) return; e.preventDefault(); pop.classList.add('hidden');
-    if (m === 'bag') { ui.toggleInventory(); game.refreshInv(); }
-    if (m === 'map') document.body.classList.toggle('mapopen');
+  game.sheets?.watch(pop);
+  wrap.querySelector('#tmenu').addEventListener('pointerdown', (e) => { e.preventDefault(); haptic(10); const show = pop.classList.contains('hidden'); game.sheets?.closeAll(); pop.classList.toggle('hidden', !show); });
+  pop.addEventListener('click', (e) => {
+    const m = e.target.closest('.tile')?.dataset.m; if (!m) return;
+    pop.classList.add('hidden');
+    if (m === 'bag') { ui.toggleInventory(true); game.refreshInv(); }
+    if (m === 'map') document.body.classList.add('mapopen');
     if (m === 'skills') game.openPanel?.('skills');
     if (m === 'journal') game.journal?.('journal');
-    if (m === 'cfg') cfg.classList.toggle('hidden');
+    if (m === 'codex') game.journal?.('codex');
     if (m === 'settings') game.settings?.open();
   });
-  cfg.querySelector('.close').addEventListener('pointerdown', () => cfg.classList.add('hidden'));
   // collapsible quest tracker and minimap (collapsed by default)
   const q = document.getElementById('quest');
-  q.addEventListener('pointerdown', (e) => { e.preventDefault(); q.classList.toggle('open'); });
+  q.addEventListener('pointerdown', (e) => { e.preventDefault(); haptic(6); q.classList.toggle('open'); });
   // small round map top-left; tap it to open the large map, tap again to close
-  document.getElementById('minimap').addEventListener('pointerdown', (e) => { e.preventDefault(); document.body.classList.toggle('mapopen'); });
+  document.getElementById('minimap').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); haptic(8); if (document.body.classList.contains('mapopen')) game.sheets?.closeAll(); else document.body.classList.add('mapopen'); });
   // controls fade back to translucent shortly after the last touch
   let fadeT = null;
   const wake = () => { document.body.classList.add('tactive'); clearTimeout(fadeT); fadeT = setTimeout(() => document.body.classList.remove('tactive'), 1500); };
@@ -62,7 +59,7 @@ export function setupMobile(game, ui) {
   const wire = (els) => {
     for (const [k, el] of Object.entries(els)) {
       if (el.parentNode !== cl) cl.appendChild(el);
-      el.addEventListener('pointerdown', (ev) => { ev.preventDefault(); ev.stopPropagation(); el.classList.add('down'); press(k);
+      el.addEventListener('pointerdown', (ev) => { ev.preventDefault(); ev.stopPropagation(); el.classList.add('down'); haptic(k === 'attack' ? 6 : 12); press(k);
         if (k === 'attack' && game.attackMode !== 'toggle') el._hold = setInterval(() => press('attack'), 150); });
       const up = () => { el.classList.remove('down'); clearInterval(el._hold); };
       el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('pointerleave', up);

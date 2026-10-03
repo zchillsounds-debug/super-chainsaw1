@@ -192,7 +192,7 @@ export function qanatPanel(game) {
   const p = game.player; document.body.classList.add('inshop');
   const offer = game.qanatOffer ||= { seed: (Math.random() * 1e6) | 0, mods: rollMods(2) };
   const tier = Math.min(p.worldTier, p.unlockedTier);
-  const w = el(`<div id="shop" class="panel"><div class="ptitle">The Ruined Qanats <span class="close">✕</span></div><div class="sbody">
+  const w = el(`<div id="shop" class="panel"><div class="ptitle">The Ruined Qanats <span class="close" role="button" aria-label="Close">✕</span></div><div class="sbody">
     <div class="slabel">Old water galleries run for miles under the Sawad, and the renegades use them. Each descent is a new maze. Clear the deepest gallery to open the next difficulty tier.</div>
     <div class="tiers">${[1, 2, 3, 4, 5, 6].map((t) => `<button class="sbtn tier ${t === tier ? 'on' : ''}" data-t="${t}" ${t > p.unlockedTier ? 'disabled' : ''}>${tierName(t)}</button>`).join('')}</div>
     <div class="slabel">This descent: ${offer.mods.map((m) => `<b>${MODS[m].name}</b> (${MODS[m].desc})`).join(' · ')}</div>
@@ -213,7 +213,7 @@ function startQanat(game, tier, offer) {
   const modList = offer.mods.map((m) => MODS[m]);
   const def = {
     kind: 'qanat', seed: offer.seed, rooms: 7 + Math.min(4, tier), level: qLevel(game, tier) + (mods.levelUp || 0), title: `The Ruined Qanats · ${tierName(tier)}`, sub: offer.mods.map((m) => MODS[m].name).join(' · '),
-    bossType: 'champion', bossName: ['Mukhariq', 'Thabit', 'Hamdan', 'Nasr'][tier % 4] + ', Captain of the Galleries', lootBonus: (mods.loot || 0) + Math.floor((tier - 1) / 2),
+    bossType: 'champion', bossName: ['Mukhariq', 'Thabit', 'Hamdan', 'Nasr'][tier % 4] + ' · Captain', lootBonus: (mods.loot || 0) + Math.floor((tier - 1) / 2),
     mods: { apply: (e) => { for (const m of modList) m.apply?.(e); const k = 1 + (tier - 1) * 0.45; e.maxHp = e.hp = Math.round(e.maxHp * k); e.dmg *= 1 + (tier - 1) * 0.3; }, fragile: !!mods.fragile },
     onEnter: (g) => { g.recalcStats(); if (mods.burning) g.qanatBurn = true; },
     onExit: (g) => { g.qanatBurn = false; g.recalcStats(); },
@@ -231,7 +231,7 @@ function startRush(game, tier) {
       for (const e of g.interior.enemies) if (!e.elite) { g.scene.remove(e.rig); e.removed = true; e.dead = true; }
       g.enemies = g.enemies.filter((e) => !e.removed); g.interior.enemies = g.interior.enemies.filter((e) => !e.removed);
       const I = g.interior.I, c = I.center(I.rooms[1]);
-      const waves = [['spearman', 'Farud\'s Shade, Raider Captain'], ['deserter', 'Hisham\'s Second'], ['naffat', 'The Naft-Master'], ['archer', 'The Archer of Kufa'], ['champion', 'Mukhariq the Unbroken']];
+      const waves = [['spearman', 'Malik · Raider'], ['deserter', 'Sa\'d · Deserter'], ['naffat', '\'Ubayd · Naffat'], ['archer', 'Hani · Archer'], ['champion', 'Mukhariq · Champion']];
       let i = 0, t0 = performance.now();
       const next = () => {
         if (!g.interior) return;

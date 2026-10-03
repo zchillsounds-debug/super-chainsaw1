@@ -30,6 +30,12 @@ const AR = {
   'Reduce flashing': 'تقليل الوميض', 'Tutorial hints': 'تلميحات تعليمية', 'Low': 'منخفضة', 'High': 'عالية', 'Small': 'صغير', 'Medium': 'متوسّط', 'Large': 'كبير', 'Huge': 'ضخم',
   'Reload to apply': 'أعد التحميل للتطبيق', 'Gamepad': 'يد التحكّم', 'Tasks': 'المهام', 'Deeds': 'المآثر',
   'Show me your wares.': 'أرني بضاعتك.', 'Training.': 'التدريب.',
+  // captains: "Name · Role" labels (names come from story_ar.js)
+  'Swift': 'السريع', 'Ironclad': 'المدرّع', 'Volley': 'الرشّاق', 'Firebrand': 'مُضرم النار', 'Rallying': 'المحرِّض',
+  'Raider': 'مُغير', 'Deserter': 'فارّ', 'Archer': 'رامٍ', 'Champion': 'بطل', 'Captain': 'قائد',
+  'Malik': 'مالك', 'Sa\'d': 'سعد', '\'Ubayd': 'عبيد', 'Hani': 'هانئ', 'Mukhariq': 'مخارق',
+  // round 12 sheets
+  'Equip': 'جهّز', 'Unequip': 'انزع', 'Compare': 'قارن', 'Close': 'إغلاق', 'Selected': 'المختار', 'Equipped': 'المُجهَّز', 'Take': 'خذ', 'Store': 'خزّن',
 };
 const PATTERNS = [
   [/^Level (\d+)$/, (m) => `المستوى ${m[1]}`],
@@ -38,6 +44,13 @@ const PATTERNS = [
   [/^◉ (\d+) Dinars$/, (m) => `◉ ${m[1]} دينار`],
   [/^(\d+) Dinars$/, (m) => `${m[1]} دينار`],
   [/^([◇✦·]) (.+)$/, (m) => AR[m[2]] ? `${m[1]} ${AR[m[2]]}` : null],
+  [/^Pack (\d+) \/ (\d+)$/, (m) => `المتاع ${m[1]} / ${m[2]}`],
+  [/^(Sell|Buy) · (\d+)$/, (m) => `${m[1] === 'Sell' ? 'بِع' : 'اشترِ'} · ${m[2]}`],
+  // "Name · Role", "Name · Affix  ·  Lv 3": every part must be known, or the label stays as it is
+  [/^.+ · .+$/, (m) => {
+    const parts = m[0].split(/\s+·\s+/).map((x) => { const lv = x.match(/^Lv (\d+)$/); return lv ? `المستوى ${lv[1]}` : AR[x] ?? STORY_AR[x] ?? null; });
+    return parts.every((x) => x) ? parts.join(' · ') : null;
+  }],
 ];
 export let LANG = 'en';
 const strip = (s) => String(s).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();

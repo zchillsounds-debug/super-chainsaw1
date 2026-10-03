@@ -92,10 +92,15 @@ export class Animator {
     // ---------------- gait
     const moving = v > 0.3;
     const runK = clamp01((v - 2.2) / 3), walkK = clamp01(v / 1.2);
-    const stepLen = Math.min(1.35, 0.34 + 0.19 * v), rate = moving ? v / (2 * stepLen) : 0;
+    const fy = r.rotation.y, fwdX = Math.sin(fy), fwdZ = Math.cos(fy), rgtX = Math.cos(fy), rgtZ = -Math.sin(fy);
+    // strafing (moving across the way the body faces, e.g. kiting a target): shorter, quicker side-steps
+    // with a wider stance, hips and feet turned into the step while the chest stays on the target
+    const lat = moving ? (this.vel.x * rgtX + this.vel.z * rgtZ) / Math.max(speed, 1e-4) : 0, latK = Math.abs(lat) * (1 - runK * 0.5);
+    this.lat = (this.lat || 0) + (lat * (1 - runK * 0.5) - (this.lat || 0)) * Math.min(1, dt * 8);
+    const stepLen = Math.min(1.35, 0.34 + 0.19 * v) * (1 - 0.4 * latK), rate = moving ? v / (2 * stepLen) : 0;
     const duty = 0.62 - 0.26 * runK;
     this.gp += rate * dt;
-    const fy = r.rotation.y, fwdX = Math.sin(fy), fwdZ = Math.cos(fy), rgtX = Math.cos(fy), rgtZ = -Math.sin(fy);
+    const footYaw = fy - this.lat * 0.55;
     for (const f of this.feet) {
       const other = this.feet[1 - f.i];
       const u = ((this.gp + f.i * 0.5) % 1 + 1) % 1;
@@ -115,14 +120,14 @@ export class Animator {
         // landing target: where the hip will be at mid-stance
         if (moving) {
           const ahead = (1 - f.s) * f.dur + duty / Math.max(rate, 0.01) * 0.5;
-          _a.set(r.position.x + this.vel.x * ahead + rgtX * f.side * 0.1 * S, 0, r.position.z + this.vel.z * ahead + rgtZ * f.side * 0.1 * S);
+          const w = (0.1 + 0.07 * latK) * S; _a.set(r.position.x + this.vel.x * ahead + rgtX * f.side * w, 0, r.position.z + this.vel.z * ahead + rgtZ * f.side * w);
         } else this.restSpot(f, _a);
         const e = sm(f.s);
         f.pos.x = f.from.x + (_a.x - f.from.x) * e; f.pos.z = f.from.z + (_a.z - f.from.z) * e;
         f.pos.y = heightAt(f.pos.x, f.pos.z);
-        f.yaw = f.yaw + Math.atan2(Math.sin(fy - f.yaw), Math.cos(fy - f.yaw)) * Math.min(1, dt / Math.max(0.05, f.dur * (1 - f.s) + 0.02) );
+        f.yaw = f.yaw + Math.atan2(Math.sin(footYaw - f.yaw), Math.cos(footYaw - f.yaw)) * Math.min(1, dt / Math.max(0.05, f.dur * (1 - f.s) + 0.02) );
         f.pitch = f.s < 0.35 ? 0.5 * (1 - f.s / 0.35) * walkK : -0.32 * sm(clamp01((f.s - 0.35) / 0.5)) * (1 - sm(clamp01((f.s - 0.85) / 0.15))) * walkK;
-        if (f.s >= 1) { f.swing = false; f.pitch = 0; f.yaw = fy; this.onStep?.(f.pos, v); }
+        if (f.s >= 1) { f.swing = false; f.pitch = 0; f.yaw = footYaw; this.onStep?.(f.pos, v); }
       }
     }
 
@@ -132,10 +137,10 @@ export class Animator {
     const fL = (this.feet[0].pos.x - r.position.x) * fwdX + (this.feet[0].pos.z - r.position.z) * fwdZ;
     const fR = (this.feet[1].pos.x - r.position.x) * fwdX + (this.feet[1].pos.z - r.position.z) * fwdZ;
     const lean = st.lean || 0, fl = st.fwdLean || 0, breathe = Math.sin(t * 2.1) * (1 - walkK * 0.7);
-    const hipYaw = (fL - fR) / S * 0.28 * walkK;
-    b.hips[0] = 0.04 * runK; b.hips[1] = hipYaw; b.hips[2] = -lean * 0.3 + (moving ? Math.cos(ph) * 0.035 * walkK : 0);
-    b.spine[0] = (o.hunch || 0) * 0.6 + fl * 0.12 + runK * 0.1; b.spine[1] = -hipYaw * 0.5; b.spine[2] = -lean * 0.08;
-    b.chest[0] = (o.hunch || 0) * 0.4 + fl * 0.1 + breathe * 0.012 + runK * 0.06; b.chest[1] = -hipYaw * 0.6; b.chest[2] = -lean * 0.06;
+    const hipYaw = (fL - fR) / S * 0.28 * walkK, twist = -this.lat * 0.4 * walkK;
+    b.hips[0] = 0.04 * runK; b.hips[1] = hipYaw + twist; b.hips[2] = -lean * 0.3 + (moving ? Math.cos(ph) * (0.035 + 0.03 * latK) * walkK : 0) + this.lat * 0.05 * walkK;
+    b.spine[0] = (o.hunch || 0) * 0.6 + fl * 0.12 + runK * 0.1; b.spine[1] = -hipYaw * 0.5 - twist * 0.6; b.spine[2] = -lean * 0.08;
+    b.chest[0] = (o.hunch || 0) * 0.4 + fl * 0.1 + breathe * 0.012 + runK * 0.06; b.chest[1] = -hipYaw * 0.6 - twist * 0.4; b.chest[2] = -lean * 0.06;
     b.uc[0] = breathe * 0.01; b.uc[1] = -hipYaw * 0.2; b.uc[2] = 0;
     b.neck[0] = -(b.spine[0] + b.chest[0]) * 0.45 - runK * 0.05; b.neck[1] = hipYaw * 0.5; b.neck[2] = lean * 0.1;
     b.head[0] = -(b.spine[0] + b.chest[0]) * 0.25 + (st.nod || 0); b.head[1] = (st.headYaw || 0); b.head[2] = 0;
@@ -258,13 +263,17 @@ export class Animator {
     const p = this.p, B = p.bones, S = this.S;
     if (!this.dd) this.dd = { th: 0, w: 0, t: 0, side: st.fallDir || 1, settle: 0 };
     const d = this.dd; d.t += dt;
+    // a cutscene can declare someone long dead (st.deadT): skip straight to lying still
+    if ((st.deadT || 0) > d.t + 0.5) { d.t = st.deadT; d.th = Math.PI / 2; d.w = 0; }
     const buckle = sm(clamp01(d.t / 0.32));
     if (d.t > 0.12) {
       d.w += 13 * Math.sin(d.th + 0.15) * dt; d.th += d.w * dt;
       if (d.th >= Math.PI / 2) { d.th = Math.PI / 2; d.w = Math.abs(d.w) > 0.6 ? -d.w * 0.25 : 0; }
+      // never left hanging part-way: after a second and a half the body is brought the rest of the way down
+      if (d.t > 1.5 && d.th < Math.PI / 2) d.th = Math.min(Math.PI / 2, d.th + dt * 2.5);
     }
     const lie = d.th / (Math.PI / 2), sd = d.side;
-    p.body.rotation.x = -d.th * sd; p.body.position.y = Math.sin(d.th) * 0.1 * S;
+    p.body.rotation.x = -d.th * sd; p.body.position.y = Math.sin(d.th) * 0.17 * S; // the back rests on the ground, not in it
     const set = (bn, x, y, z) => { const bone = B[bn], br = bone.userData.bindRot; bone.rotation.set(br.x + x, br.y + y, br.z + z); };
     const limp = Math.sin(clamp01(d.t * 1.6) * Math.PI) * (1 - lie * 0.5);
     set('hips', 0, 0, 0);

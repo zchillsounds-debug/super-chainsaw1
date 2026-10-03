@@ -187,7 +187,7 @@ export function journalPanel(game, tab = 'journal') {
   const known = Object.keys(p.codex || {}).length;
   const codex = Object.entries(cats).map(([cat, list]) => `<div class="ccat">${t(cat)}</div>` + list.map(([id, c]) => p.codex?.[id] ? `<details class="centry"><summary>${t(c.t)}</summary><p>${t(c.x)}</p></details>` : `<div class="centry locked">— undiscovered —</div>`).join('')).join('');
   const st = game.stats || {};
-  w.innerHTML = `<div class="ptitle">${tab === 'journal' ? 'Journal' : 'Codex'} <span class="close">✕</span></div>
+  w.innerHTML = `<div class="ptitle">${tab === 'journal' ? 'Journal' : 'Codex'} <span class="close" role="button" aria-label="Close">✕</span></div>
     <div class="stabs"><button data-t="journal" class="${tab === 'journal' ? 'on' : ''}">Journal</button><button data-t="codex" class="${tab === 'codex' ? 'on' : ''}">Codex (${known}/${Object.keys(CODEX).length})</button></div>
     <div class="jbody">${tab === 'journal' ? `<div class="slabel">The Renegade of the Sawad</div>${main}<div class="slabel">Tasks</div>${side}<div class="slabel">Deeds</div><div class="jq"><small>Foes slain ${game.kills || 0} · parries ${st.parries || 0} · qanats cleared ${st.qanats || 0} · gauntlets run ${st.rushes || 0}</small></div>` : codex}</div>`;
   game.ui.root.appendChild(w);

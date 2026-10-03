@@ -14,6 +14,7 @@ import { loadSave, applySave, saveGame } from './save.js';
 import { preloadGeo, flushGeo } from './geocache.js';
 import { Lighting } from './lighting.js';
 import { LightPool } from './lights.js';
+import { setupSheets } from './sheets.js';
 import { setupHub, animateHub, openPanel, closePanel, panelOpen } from './hub.js';
 import { Zones } from './zones.js';
 import { Atmos } from './atmos.js';
@@ -84,9 +85,13 @@ const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); game
 game.newGamePlus = () => startNewGamePlus(game); ui.onNewGamePlus = game.newGamePlus;
 const settings = game.settings = new Settings({ renderer, audio, game, grade, perf, gfx: { quality: QUALITY, sun, gtao, bloom, atmos, resize } });
 fx.reduce = settings.s.reduceFlash;
-const closeAll = () => { settings.close(); closePanel(); document.getElementById('journal')?.remove(); document.getElementById('shop')?.remove(); document.body.classList.remove('inshop'); ui.toggleInventory(false); };
+const sheets = game.sheets = setupSheets(ui, {
+  inv: () => ui.toggleInventory(false), settings: () => settings.close(), journal: () => document.getElementById('journal')?.remove(),
+  shop: () => { closePanel(); document.getElementById('shop')?.remove(); }, tmenupop: () => document.getElementById('tmenupop')?.classList.add('hidden'),
+});
+const closeAll = sheets.closeAll;
 game.pad = new Gamepads(game, { settings: () => (settings.isOpen ? settings.close() : settings.open()), journal: () => game.journal('journal'), closeAll });
-addEventListener('keydown', (e) => { if (e.key === 'Escape' && game.started && !game.cinematic) { const any = document.body.classList.contains('inshop') || ui.invOpen; if (any) closeAll(); else settings.open(); } });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && game.started && !game.cinematic) { const any = sheets.open || ui.invOpen; if (any) closeAll(); else settings.open(); } });
 { const sb = document.createElement('button'); sb.id = 'setbtn'; sb.textContent = 'Settings'; sb.onclick = () => settings.open(); document.getElementById('startbtn').parentNode.appendChild(sb); }
 audio.occluded = (pos) => !lineClear(game.player.pos.x, game.player.pos.z, pos.x, pos.z);
 ui.aspects = ASPECTS; ui.sets = SETS; ui.classNames = Object.fromEntries(Object.entries(CLASSES).map(([k, c]) => [k, c.name]));
