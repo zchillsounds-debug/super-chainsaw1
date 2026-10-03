@@ -17,7 +17,7 @@ export function defaultPalette() {
   set(R.LEATHER, 0x3e2616, 0.68, 0, K.leather);
   set(R.MAIL, 0x70757b, 0.5, 0.8, K.mail);
   set(R.SKIN, 0xa8714a, 0.52, 0, K.skin);
-  set(R.LIPS, 0x8a4a3a, 0.42, 0, K.skin);
+  set(R.LIPS, 0x8a4a3a, 0.58, 0, K.skin);
   set(R.HAIR, 0x1c120c, 0.62, 0, K.hair);
   set(R.STEEL, 0x8c939b, 0.4, 0.8, K.steel);
   set(R.DARK, 0x2c241e, 0.95, 0, K.weave);
@@ -32,7 +32,7 @@ export function defaultPalette() {
 
 const GLSL_COMMON = /* glsl */`
 varying vec3 vRest; varying vec3 vRestN; varying float vMat;
-uniform vec3 uCol[${N}]; uniform vec3 uPBR[${N}]; uniform vec3 uRimC, uRimG; uniform float uDetail;
+uniform vec3 uCol[${N}]; uniform vec3 uPBR[${N}]; uniform vec3 uRimC, uRimG; uniform float uDetail; uniform vec3 uJ[4]; uniform vec4 uBend;
 float h31(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 float vn(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(mix(h31(i), h31(i + vec3(1,0,0)), f.x), mix(h31(i + vec3(0,1,0)), h31(i + vec3(1,1,0)), f.x), f.y),
@@ -56,7 +56,10 @@ export function charMaterial(palette = defaultPalette(), { rim = new THREE.Color
   const mat = new THREE.MeshStandardMaterial({ roughness: 0.8, metalness: 0, side });
   const cols = [], pbr = [];
   for (let i = 0; i < N; i++) { const q = palette[i] || palette[0]; cols.push(q.c.clone()); pbr.push(new THREE.Vector3(q.r, q.m, q.k)); }
-  const uni = { uCol: { value: cols }, uPBR: { value: pbr }, uRimC: { value: rim.clone().multiplyScalar(rimK) }, uRimG: RIM_G, uDetail: { value: 1 } };
+  // Round 20: uJ = rest positions of the elbows and knees, uBend = how far each is bent (set by the animator);
+  // cloth bunches into folds around a bent joint
+  const uni = { uCol: { value: cols }, uPBR: { value: pbr }, uRimC: { value: rim.clone().multiplyScalar(rimK) }, uRimG: RIM_G, uDetail: { value: 1 },
+    uJ: { value: [0, 1, 2, 3].map(() => new THREE.Vector3(0, -9, 0)) }, uBend: { value: new THREE.Vector4() } };
   mat.userData.uni = uni;
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, uni);
@@ -84,6 +87,12 @@ export function charMaterial(palette = defaultPalette(), { rim = new THREE.Color
         else if (kind == 7) { float g = vn(vRest * 300.0) * 0.5 + vn(vRest * 60.0) * 0.5; H = g * 0.0003 * uDetail; cav = (0.5 - g) * 0.2; }
         else if (kind == 8) { float s = 160.0; float a = clamp(1.6 - fw * s * 1.5, 0.0, 1.0); float st = step(0.5, fract(vRest.y * 70.0 + floor(vRest.x * 90.0 + vRest.z * 90.0) * 0.5));
           float t = tri3(vRest, vRestN, s, 1); H = (t * 0.0002 + st * 0.0002) * a; cav = (1.0 - st) * 0.35 * a; }
+        if (kind == 1 || kind == 3) { // pose folds: rings of creases round a bent elbow or knee
+          float bend[4]; bend[0] = uBend.x; bend[1] = uBend.y; bend[2] = uBend.z; bend[3] = uBend.w;
+          for (int j = 0; j < 4; j++) { vec3 dv = vRest - uJ[j]; float d = length(dv), fo = smoothstep(0.12, 0.015, d) * bend[j];
+            if (fo > 0.001) { float ang = atan(dv.x, dv.z); float f = sin(dv.y * 170.0 + sin(ang * 3.0 + dv.y * 40.0) * 1.6) * 0.5 + 0.5;
+              H += f * 0.003 * fo; cav += (1.0 - f) * 0.42 * fo; } }
+        }
         diffuseColor.rgb *= 1.0 - cav;`)
       .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = pb.x;')
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = pb.y;')
@@ -112,7 +121,7 @@ export function charMaterial(palette = defaultPalette(), { rim = new THREE.Color
           reflectedLight.directDiffuse += diffuseColor.rgb * vec3(1.0, 0.42, 0.3) * wrapL * directionalLights[0].color * 0.22; }
         #endif`);
   };
-  mat.customProgramCacheKey = () => 'charmat5';
+  mat.customProgramCacheKey = () => 'charmat6';
   return mat;
 }
 
@@ -121,15 +130,17 @@ let _eye = null;
 export function eyeTexture() {
   if (_eye) return _eye;
   const S = 128, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d');
-  x.fillStyle = '#e8ddd0'; x.fillRect(0, 0, S, S);
+  x.fillStyle = '#d6c8b4'; x.fillRect(0, 0, S, S);
   x.strokeStyle = 'rgba(170,60,50,0.25)'; x.lineWidth = 0.6;
   for (let i = 0; i < 18; i++) { x.beginPath(); const a = Math.random() * 6.28; x.moveTo(S / 2 + Math.cos(a) * 60, S / 2 + Math.sin(a) * 60); x.quadraticCurveTo(S / 2 + Math.cos(a + 0.3) * 40, S / 2 + Math.sin(a + 0.3) * 40, S / 2 + Math.cos(a) * 26, S / 2 + Math.sin(a) * 26); x.stroke(); }
-  const cx = S / 2, cy = S / 2, ir = 22;
+  const cx = S / 2, cy = S / 2, ir = 30; // Round 20: a larger iris (a white ring all round read as a stare)
   const g = x.createRadialGradient(cx, cy, 2, cx, cy, ir); g.addColorStop(0, '#3a2210'); g.addColorStop(0.45, '#5a3818'); g.addColorStop(0.85, '#3a2410'); g.addColorStop(1, '#140a04');
   x.fillStyle = g; x.beginPath(); x.arc(cx, cy, ir, 0, 7); x.fill();
   for (let i = 0; i < 90; i++) { const a = i / 90 * 6.28; x.strokeStyle = `rgba(${120 + Math.random() * 60},${80 + Math.random() * 30},30,0.35)`; x.beginPath(); x.moveTo(cx + Math.cos(a) * 8, cy + Math.sin(a) * 8); x.lineTo(cx + Math.cos(a) * (ir - 2), cy + Math.sin(a) * (ir - 2)); x.stroke(); }
-  x.fillStyle = '#050302'; x.beginPath(); x.arc(cx, cy, 7.5, 0, 7); x.fill();
-  x.fillStyle = 'rgba(255,255,255,0.9)'; x.beginPath(); x.arc(cx - 6, cy - 7, 2.6, 0, 7); x.fill();
+  x.fillStyle = '#050302'; x.beginPath(); x.arc(cx, cy, 9, 0, 7); x.fill();
+  // the upper lid's shadow across the top of the eye
+  const sh = x.createLinearGradient(0, cy - 34, 0, cy - 8); sh.addColorStop(0, 'rgba(40,22,14,0.75)'); sh.addColorStop(1, 'rgba(40,22,14,0)'); x.fillStyle = sh; x.fillRect(0, 0, S, cy - 8);
+  x.fillStyle = 'rgba(255,255,255,0.85)'; x.beginPath(); x.arc(cx - 7, cy - 6, 3, 0, 7); x.fill();
   _eye = new THREE.CanvasTexture(c); _eye.colorSpace = THREE.SRGBColorSpace;
   return _eye;
 }

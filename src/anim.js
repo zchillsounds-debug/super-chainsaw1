@@ -336,7 +336,7 @@ export class Animator {
     if (this.blinkT <= 0) { this.blink = 1; this.blinkT = 2 + Math.random() * 4; }
     this.blink = Math.max(0, this.blink - dt * 7);
     const closed = st.dead ? 1 : Math.max(Math.sin(this.blink * Math.PI), st.eyesClosed || 0, clamp01(st.hitT || 0) * 0.6);
-    for (const l of p.lids) { l.up.rotation.x = -0.55 + closed * 1.05; l.lo.rotation.x = 0.35 - closed * 0.15; }
+    for (const l of p.lids) { l.up.rotation.x = -0.36 + closed * 0.86; l.lo.rotation.x = 0.3 - closed * 0.1; } // Round 20: relaxed lids cover the top of the iris
     const jaw = Math.max(this.jawT || 0, st.talk ? Math.max(0, Math.sin(t * 13) * Math.sin(t * 5.3)) * 0.6 : 0, st.expr?.jaw || 0);
     p.jaw.rotation.x = jaw * 0.28;
     const brow = st.expr?.brow ?? ((st.action || st.hitT > 0.2) ? -1 : 0);
@@ -348,6 +348,9 @@ export class Animator {
       h.rotation.y += THREE.MathUtils.clamp(yy, -0.9, 0.9) * 0.6; p.neck.rotation.y += THREE.MathUtils.clamp(yy, -0.9, 0.9) * 0.3;
     }
     r.updateMatrixWorld(true);
+    // pose folds in the cloth shader: elbow bend from the forearm, knee bend from the shin's rotation
+    const ub = p.mat?.userData.uni?.uBend;
+    if (ub) { const kb = (bn) => Math.min(1, 2 * Math.acos(Math.min(1, Math.abs(bn.quaternion.w))) / 1.6); ub.value.set(Math.min(1, Math.max(0, -p.bones.foreL.rotation.x) / 1.6), Math.min(1, Math.max(0, -p.bones.foreR.rotation.x) / 1.6), kb(p.bones.shinL), kb(p.bones.shinR)); }
     // cloth colliders from the posed skeleton
     const B = p.bones, c = this.caps;
     B.thighL.getWorldPosition(c[0].a); B.shinL.getWorldPosition(c[0].b); c[0].r = 0.092 * S;

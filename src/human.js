@@ -89,8 +89,8 @@ function headPrims(B, o) {
     L.push(ell(H, [s * 0.008, 0.055, 0.107], [0.0038, 0.003, 0.0045], null, { sub: true, k: 0.003 }));
   }
   // lips (upper on the head, lower on the jaw) and the mouth line
-  L.push(ell(H, [0, 0.044, 0.098], [0.022, 0.0068, 0.0085], null, { k: 0.007, mat: R.LIPS }));
-  L.push(ell('jaw', [0, -0.041, 0.086], [0.02, 0.0075, 0.009], null, { k: 0.007, mat: R.LIPS }));
+  L.push(ell(H, [0, 0.0415, 0.098], [0.021, 0.0062, 0.0082], null, { k: 0.007, mat: R.LIPS }));
+  L.push(ell('jaw', [0, -0.036, 0.093], [0.019, 0.0066, 0.0095], null, { k: 0.007, mat: R.LIPS }));
   L.push(cap(H, [-0.021, 0.0375, 0.103], [0.021, 0.0375, 0.103], 0.0016, 0.0016, { sub: true, k: 0.003 }));
   return L;
 }
@@ -116,9 +116,10 @@ function garmentPrims(B, o) {
   const T = { torso: true, mat: body };
   L.push(ell('hips', [0, -0.01, -0.005], [0.16 * o.girth, 0.125, 0.118 * o.girth], null, { k: 0.05, ...T, mat: R.CLOTH }));
   for (const [, s] of SIDES) L.push(ell('hips', [s * 0.072, -0.075, -0.045], [0.085, 0.09, 0.075], null, { k: 0.05, ...T, mat: R.CLOTH }));
-  L.push(ell('spine', [0, 0.08, 0.008 + o.belly * 0.03], [0.146 * o.girth, 0.125, 0.11 + o.belly * 0.03], null, { k: 0.06, ...T }));
-  L.push(ell('chest', [0, 0.09, 0.012], [0.17 * b, 0.15, 0.122], null, { k: 0.06, ...T }));
-  for (const [, s] of SIDES) L.push(ell('chest', [s * 0.066 * b, 0.11, 0.058], [0.078 * b, 0.062, 0.05], null, { k: 0.04, ...T }));
+  // Round 20: a straighter, broader male torso (the old waist and rounded pectorals read as feminine)
+  L.push(ell('spine', [0, 0.08, 0.008 + o.belly * 0.03], [0.157 * o.girth, 0.13, 0.115 + o.belly * 0.03], null, { k: 0.06, ...T }));
+  L.push(ell('chest', [0, 0.09, 0.008], [0.176 * b, 0.155, 0.12], null, { k: 0.06, ...T }));
+  L.push(ell('chest', [0, 0.13, 0.04], [0.155 * b, 0.055, 0.075], null, { k: 0.06, ...T }));
   L.push(cap('upperChest', [-0.148 * b, 0.065, -0.012], [0.148 * b, 0.065, -0.012], 0.072, 0.072, { k: 0.05, ...T }));
   L.push(ell('upperChest', [0, 0.02, -0.045], [0.158 * b, 0.13, 0.085], null, { k: 0.05, ...T }));
   for (const [, s] of SIDES) L.push(cap('upperChest', [s * 0.1 * b, 0.085, -0.02], [0, 0.138, -0.015], 0.046, 0.04, { k: 0.04, ...T }));
@@ -162,7 +163,8 @@ function garmentPaint(o) {
 function hairPrims(B, o) {
   const { cap, ell } = helpers(B, HS), L = [], hm = { mat: R.HAIR };
   if (!o.bald) L.push(ell('head', [0, 0.11, -0.018], [0.0795, 0.068, 0.099], null, { k: 0.02, mat: R.HAIR }), ell('head', [0, 0.05, -0.09], [0.06, 0.05, 0.03], null, { k: 0.03, mat: R.HAIR }));
-  for (const [, s] of SIDES) L.push(cap('brow', [s * 0.052, 0.004, 0.012], [s * 0.012, 0.008, 0.031], 0.005, 0.0058, { k: 0.004, mat: R.BROW }));
+  // brows: a thin arch, heavier at the inner end, tapering down at the temple
+  for (const [, s] of SIDES) L.push(cap('brow', [s * 0.012, 0.006, 0.031], [s * 0.034, 0.011, 0.027], 0.0052, 0.0045, { k: 0.004, mat: R.BROW }), cap('brow', [s * 0.034, 0.011, 0.027], [s * 0.056, 0.0, 0.011], 0.0045, 0.0028, { k: 0.004, mat: R.BROW }));
   if (o.beard) {
     const len = o.beardLen;
     for (const [, s] of SIDES) {
@@ -175,7 +177,7 @@ function hairPrims(B, o) {
     for (const [, s] of SIDES) L.push(cap('head', [s * 0.033, 0.03, 0.088], [s * 0.012, 0.05, 0.104], 0.0055, 0.0068, { k: 0.008, ...hm }));
     L.push(cap('head', [-0.012, 0.05, 0.104], [0.012, 0.05, 0.104], 0.0068, 0.0068, { k: 0.008, ...hm }));
     for (const [, s] of SIDES) L.push(cap('head', [s * 0.072, 0.11, 0.0], [s * 0.06, 0.055, 0.035], 0.008, 0.012, { k: 0.012, ...hm })); // sideburns
-    L.push(ell('jaw', [0, -0.04, 0.095], [0.02, 0.013, 0.03], null, { sub: true, k: 0.008 })); // keep the lower lip clear
+    L.push(ell('jaw', [0, -0.034, 0.104], [0.016, 0.005, 0.012], null, { sub: true, k: 0.004 })); // just the lower lip's edge shows; the beard closes under it
     L.push(ell('head', [0, 0.062, 0.108], [0.022, 0.009, 0.02], null, { sub: true, k: 0.006 })); // clear under the nose
   }
   return L;
@@ -292,7 +294,7 @@ export function humanoid(opts = {}) {
   // palette for this character
   const pal = defaultPalette(), C = (c) => new THREE.Color(c);
   pal[R.CLOTH].c = C(o.robe); pal[R.CLOTH2].c = C(o.robe2); pal[R.SASH].c = C(o.sash);
-  pal[R.SKIN].c = C(o.skin); pal[R.LIPS].c = C(o.skin).multiply(C(0xc89a8c)).multiplyScalar(0.9);
+  pal[R.SKIN].c = C(o.skin); pal[R.LIPS].c = C(o.skin).multiply(C(0xd0a090)).multiplyScalar(0.86);
   pal[R.SKIN].c.offsetHSL(0, -0.12, -0.02);
   if (o.beard) { pal[R.HAIR].c = C(o.beard); pal[R.BROW].c = C(o.beard).lerp(C(0x1a120c), 0.3); }
   if (o.turban) pal[R.WRAP].c = C(o.turban);
@@ -302,6 +304,7 @@ export function humanoid(opts = {}) {
   if (o.hat) pal[R.WRAP].c = C(o.hat);
   pal[R.DARK].c = C(o.trousers ?? 0x2c241e);
   const mat = charMaterial(pal);
+  ['foreL', 'foreR', 'shinL', 'shinR'].forEach((n, i) => mat.userData.uni.uJ.value[i].setFromMatrixPosition(B.mats[n]));
 
   // sculpted, skinned pieces (geometry is shared between characters with the same build)
   const sk = JSON.stringify([o.build, o.girth, o.belly, o.neck]);
@@ -314,7 +317,7 @@ export function humanoid(opts = {}) {
     piece('hands', [tier, sk], () => sculpt(handPrims(B, o), { voxel: vox(0.0034, 0.0075), blend: 0.01 })),
     piece('garment', [tier, sk, o.qaba, o.mail, !!o.sash, o.tiraz], () => sculpt(garmentPrims(B, o), { voxel: vox(0.0105, 0.0185), blend: 0.03, paint: garmentPaint(o) })),
   ];
-  const hp = hairPrims(B, o); if (hp.length) geos.push(piece('hair', [tier, o.neck, !!o.beard, o.beardLen, !!o.bald], () => sculpt(hp, { voxel: vox(0.0032, 0.0075), blend: 0.012 })));
+  const hp = hairPrims(B, o); if (hp.length) geos.push(piece('hair', [tier, o.neck, !!o.beard, o.beardLen, !!o.bald, 3], () => sculpt(hp, { voxel: vox(0.0032, 0.0075), blend: 0.012 })));
   const hw = headwearPrims(B, o); if (hw.length) geos.push(piece('headwear', [tier, o.neck, !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume'], () => sculpt(hw, { voxel: vox(0.0048, 0.0085), blend: 0.02 })));
   const ap = o.armour ? armourPrims(B, o) : []; if (ap.length) geos.push(piece('armour', [tier, sk, o.armour, 2], () => sculpt(ap, { voxel: vox(0.008, 0.014), blend: 0.02, paint: armourPaint(o) })));
   if (o.mask) geos.push(piece('veil', [tier, o.neck], () => sculpt(veilPrims(B, o), { voxel: vox(0.0045, 0.0085), blend: 0.02 })));
