@@ -442,10 +442,11 @@ export class Game {
     if (this.kit.attack.backstab && front < -0.3 && kind === 'normal' && !e.boss) { dmg = Math.round(dmg * this.kit.attack.backstab); back = true; }
     if (e.staggerT > 0) dmg = Math.round(dmg * 1.5);
     if (this.dmgMod) dmg = Math.round(dmg * this.dmgMod(e));
-    e.hp -= dmg; e.flash = 1;
+    e.hp -= dmg; e.flash = 1; this.lastCrit = crit;
     // stagger meter: poise drains with weight; empty → reeling, open to heavy hits
     e.poise -= (o.stagger ?? (8 + dmg * 1.4) * w) * (e.boss ? 0.15 : 1);
     if (e.poise <= 0 && !e.boss) { e.staggerT = e.elite ? 1.0 : 1.4; e.poise = e.maxPoise; e.st.action = null; this.ui.damageNumber(e.pos, 'Staggered', 'stagger'); this.audio.stagger?.(); }
+    (e.st.hitFrom ??= { x: 0, z: 0 }).x = from.x; e.st.hitFrom.z = from.z;
     if (!e.boss) { e.st.hitT = 1; const k = (o.knock ?? 0.25 + w * 0.35) * (crit ? 1.6 : 1) * (e.elite ? 0.5 : 1); e.knock = (e.knock || new THREE.Vector3()).addScaledVector(from, -k * 9); }
     this.ui.damageNumber(e.pos, dmg + (crit ? '!' : back ? '◂' : ''), crit ? 'crit' : back ? 'back' : kind);
     const hp = tmp2.copy(e.pos); hp.y += e.boss ? 3.5 : 1.2;
@@ -465,7 +466,11 @@ export class Game {
 
   killEnemy(e, src) {
     e.dead = true; e.st.dead = true; e.st.deadT = 0; e.hp = 0; this.kills = (this.kills || 0) + 1;
-    e.st.fallDir = Math.random() < 0.5 ? 1 : -1;
+    // Round 20: fall away from the blow; heavy weapons and crits knock the body back, others crumple to the knees or twist
+    const hf = e.st.hitFrom, front = hf ? hf.x * Math.sin(e.facing) + hf.z * Math.cos(e.facing) : 1;
+    e.st.fallDir = front > -0.2 ? 1 : -1;
+    e.st.deathKind = (this.kit?.weight || 0) > 0.8 || this.lastCrit ? 0 : [0, 1, 2][Math.floor(Math.random() * 3)];
+    e.st.twist = hf ? Math.sign(hf.x * Math.cos(e.facing) - hf.z * Math.sin(e.facing)) || 1 : 1;
     this.audio.at(e.pos, () => this.audio.death());
     const p = this.player; p.xp += Math.round(e.xp * (p.xpK || 1));
     this.fx.dust(e.pos, 6);
@@ -542,7 +547,7 @@ export class Game {
     let red = s.armor / (s.armor + 40 + p.level * 6);
     if (p.buffs.ward > 0) { red = 1 - (1 - red) * 0.5; if (attacker && !attacker.boss) { const r = this.rollDamage(0.3); this.damageEnemy(attacker, r.d, false, p.pos, 'normal', { weight: 0.5 }); } }
     const d = Math.max(1, Math.round(dmg * (1 - red)));
-    p.hp -= d; p.st.hitT = 0.6; this.impulse(tmp.copy(p.pos).sub(src).setY(0).normalize(), Math.min(0.4, d / 40));
+    p.hp -= d; p.st.hitT = 0.6; if (src) { const hx = src.x - p.pos.x, hz = src.z - p.pos.z, hl = Math.hypot(hx, hz) || 1; p.st.hitFrom = { x: hx / hl, z: hz / hl }; } this.impulse(tmp.copy(p.pos).sub(src).setY(0).normalize(), Math.min(0.4, d / 40));
     this.ui.damageNumber(p.pos, d, 'player');
     this.fx.blood(tmp.copy(p.pos).setY(p.pos.y + 1.2));
     this.shake = Math.max(this.shake, Math.min(0.5, d / 40));

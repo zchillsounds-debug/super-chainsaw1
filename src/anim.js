@@ -38,8 +38,31 @@ const CLIPS = {
   command: [[0, null], [0.4, { shL: [-2.6, 0, -0.3], elL: [-0.2, 0, 0], chest: [-0.15, 0.2, 0], neck: [-0.2, 0, 0], jaw: 0.9 }, 'out'], [0.7, { shL: [-2.5, 0, -0.35], elL: [-0.15, 0, 0], chest: [-0.12, 0.2, 0], neck: [-0.15, 0, 0], jaw: 0.6 }, 'lin'], [1, null, 'io']],
   cast: [[0, null], [0.45, { shL: [-2.2, 0, 0], elL: [-0.3, 0, 0], shR: [-0.8, 0, 0], chest: [-0.1, 0, 0] }, 'out'], [1, null, 'io']],
   shoot: [[0, { shL: [-1.5, 0.3, 0.1], elL: [-0.05, 0, 0], shR: [-1.5, 0, 0], elR: [-0.4, 0, 0], chest: [0, -0.5, 0], neck: [0, 0.4, 0] }], [0.7, { shL: [-1.5, 0.3, 0.1], elL: [-0.05, 0, 0], shR: [-1.4, 0.2, 0.2], elR: [-1.9, 0, 0], chest: [0, -0.5, 0], neck: [0, 0.4, 0] }, 'io'], [1, null, 'out']],
+  // Round 20: more attack variations (each weapon cycles three moves; the third is the heavy finisher)
+  stabA: [[0, null], [0.3, { shR: [-0.6, 0.2, 0.2], elR: [-1.8, 0, 0], hR: [0.2, 0, 0], chest: [0, 0.35, 0], spine: [0, 0.15, 0], drop: 0.04 }, 'io'],
+    [0.45, { shR: [-1.5, -0.1, 0], elR: [-0.1, 0, 0], chest: [0.15, -0.3, 0], spine: [0.08, -0.12, 0], hips: [0, -0.15, 0], lunge: 0.28, drop: 0.06, jaw: 0.4 }, 'snap'],
+    [0.62, { shR: [-1.4, -0.1, 0], elR: [-0.25, 0, 0], chest: [0.15, -0.32, 0], lunge: 0.3, drop: 0.06 }, 'out'], [1, null, 'io']],
+  stabB: [[0, null], [0.28, { shR: [-1.2, 1.1, -0.4], elR: [-1.7, 0, 0], hR: [0.3, 0, 0.3], chest: [0.1, -0.6, 0], spine: [0.05, -0.2, 0], hips: [0, -0.2, 0], drop: 0.05 }, 'io'],
+    [0.46, { shR: [-1.2, -0.8, 0.7], elR: [-0.3, 0, 0], hR: [-0.2, 0, -0.3], chest: [0.05, 0.6, 0], spine: [0.05, 0.2, 0], hips: [0, 0.3, 0], lunge: 0.16, drop: 0.07, jaw: 0.5 }, 'snap'],
+    [0.66, { shR: [-1.0, -1.0, 0.8], elR: [-0.4, 0, 0], chest: [0.05, 0.7, 0], spine: [0.05, 0.22, 0], hips: [0, 0.32, 0], lunge: 0.18, drop: 0.06 }, 'out'], [1, null, 'io']],
+  stabC: [[0, null], [0.34, { shR: [-0.2, 0, 0.1], elR: [-1.4, 0, 0], shL: [-0.3, 0, -0.2], elL: [-1.2, 0, 0], chest: [0.35, 0, 0], spine: [0.2, 0, 0], drop: 0.14 }, 'io'],
+    [0.5, { shR: [-2.4, 0, -0.1], elR: [-0.2, 0, 0], shL: [-1.3, 0, -0.2], elL: [-0.3, 0, 0], chest: [-0.2, 0, 0], spine: [-0.1, 0, 0], drop: -0.03, lunge: 0.3, jaw: 0.8 }, 'snap'],
+    [0.7, { shR: [-2.2, 0, -0.1], elR: [-0.3, 0, 0], shL: [-1.1, 0, -0.2], chest: [-0.15, 0, 0], drop: 0, lunge: 0.32 }, 'out'], [1, null, 'io']],
+  thrustHigh: [[0, null], [0.4, { shR: [-2.6, 0, 0.3], elR: [-1.4, 0, 0], chest: [-0.15, 0.3, 0], spine: [-0.05, 0.15, 0], drop: 0.02 }, 'io'],
+    [0.58, { shR: [-1.7, 0, 0], elR: [-0.05, 0, 0], chest: [0.25, -0.3, 0], spine: [0.12, -0.1, 0], lunge: 0.36, drop: 0.08, jaw: 0.5 }, 'snap'], [1, null, 'io']],
+  sweep: [[0, null], [0.38, { shR: [-1.0, 1.2, -0.3], shL: [-1.0, 0, -0.2], elR: [-0.6, 0, 0], chest: [0, -0.7, 0], spine: [0, -0.25, 0], hips: [0, -0.2, 0], drop: 0.06 }, 'io'],
+    [0.56, { shR: [-1.0, -1.2, 0.6], shL: [-0.8, 0, -0.1], elR: [-0.2, 0, 0], chest: [0.05, 0.7, 0], spine: [0.05, 0.25, 0], hips: [0, 0.35, 0], drop: 0.1, lunge: 0.12, jaw: 0.6 }, 'snap'], [1, null, 'io']],
+  shootQuick: [[0, { shL: [-1.3, 0.35, 0.1], elL: [-0.1, 0, 0], shR: [-1.3, 0, 0], elR: [-0.6, 0, 0], chest: [0.05, -0.6, 0], neck: [0, 0.5, 0] }], [0.5, { shL: [-1.3, 0.35, 0.1], elL: [-0.1, 0, 0], shR: [-1.25, 0.2, 0.2], elR: [-1.8, 0, 0], chest: [0.05, -0.65, 0], neck: [0, 0.5, 0] }, 'snap'], [1, null, 'out']],
+  shootKneel: [[0, { shL: [-1.5, 0.3, 0.1], elL: [-0.05, 0, 0], shR: [-1.5, 0, 0], elR: [-0.4, 0, 0], chest: [0.1, -0.5, 0], spine: [0.12, 0, 0], neck: [-0.1, 0.4, 0], drop: 0.2 }],
+    [0.7, { shL: [-1.55, 0.3, 0.1], elL: [-0.05, 0, 0], shR: [-1.45, 0.2, 0.2], elR: [-1.9, 0, 0], chest: [0.1, -0.5, 0], spine: [0.12, 0, 0], neck: [-0.1, 0.4, 0], drop: 0.22 }, 'io'], [1, null, 'out']],
+  throwSide: [[0, null], [0.42, { shL: [-1.2, -1.0, 0.3], elL: [-1.0, 0, 0], chest: [0, -0.6, 0], spine: [0, -0.25, 0], drop: 0.05 }, 'io'],
+    [0.6, { shL: [-1.3, 0.9, -0.2], elL: [-0.2, 0, 0], chest: [0.05, 0.6, 0], spine: [0.03, 0.25, 0], lunge: 0.12, drop: 0.06 }, 'snap'], [1, null, 'io']],
+  throwLow: [[0, null], [0.42, { shL: [0.6, 0, -0.2], elL: [-0.3, 0, 0], chest: [0.2, -0.2, 0], spine: [0.15, 0, 0], drop: 0.12 }, 'io'],
+    [0.6, { shL: [-1.9, 0, -0.1], elL: [-0.2, 0, 0], chest: [-0.1, 0.2, 0], spine: [-0.05, 0.1, 0], lunge: 0.15, drop: 0.02 }, 'snap'], [1, null, 'io']],
 };
 const COMBO = ['slashA', 'slashB', 'chop'];
+// which moves an action cycles through, by weapon; a chain resets after a pause
+const VARIANTS = { attack: { sword: COMBO, dagger: ['stabA', 'stabB', 'stabC'], spear: ['thrust', 'thrustHigh', 'sweep'] }, thrust: ['thrust', 'thrustHigh', 'sweep'], shoot: ['shoot', 'shootQuick', 'shootKneel'], throw: ['throw', 'throwSide', 'throwLow'] };
 const CH = ['hips', 'spine', 'chest', 'uc', 'neck', 'head', 'shR', 'elR', 'hR', 'shL', 'elL', 'hL'];
 function samplePose(clip, k, base, out) {
   let i = 0; while (i < clip.length - 2 && k >= clip[i + 1][0]) i++;
@@ -87,7 +110,7 @@ export class Animator {
     const speed = this.vel.length(), v = speed / S;
 
     if (st.dead) { this.death(st, t, dt); this.finish(st, t, dt, false); return; }
-    if (this.dd) { this.dd = null; p.body.rotation.x = 0; p.body.position.y = 0; this.resetFeet(); }
+    if (this.dd) { this.dd = null; p.body.rotation.set(0, 0, 0); p.body.position.y = 0; this.resetFeet(); }
 
     // ---------------- gait
     const moving = v > 0.3;
@@ -176,12 +199,13 @@ export class Animator {
     let pose = b;
     if (act) {
       let clipName = act === 'attack' ? null : act;
-      if (act === 'attack') {
-        if (this.clip === null || this.lastAct !== 'attack' || st.actionT < this.lastK - 0.3) {
+      const V = VARIANTS[act], list = V && (Array.isArray(V) ? V : V[o.weapon] || COMBO);
+      if (list) {
+        if (this.clip === null || this.lastAct !== act || st.actionT < this.lastK - 0.3) {
           this.combo = this.t - this.lastAtkEnd < 0.7 ? (this.combo + 1) % 3 : 0;
           st.combo = this.combo;
         }
-        clipName = COMBO[this.combo];
+        clipName = list[this.combo];
       }
       this.clip = clipName; this.lastK = st.actionT;
       const clip = CLIPS[clipName];
@@ -193,23 +217,30 @@ export class Animator {
       }
       this.actW = 1;
     } else {
-      if (this.lastAct === 'attack') this.lastAtkEnd = this.t;
+      if (VARIANTS[this.lastAct]) this.lastAtkEnd = this.t;
       this.clip = null;
     }
     this.lastAct = act;
 
     // ---------------- additive layers: flinch, crouch
-    const hit = clamp01(st.hitT || 0), hs = this.hitSide ??= Math.random() < 0.5 ? -1 : 1;
-    if (hit <= 0) this.hitSide = null;
+    // Round 20: flinch away from where the blow came from (st.hitFrom: world direction toward the attacker)
+    const hit = clamp01(st.hitT || 0);
+    if (hit <= 0) { this.hitSide = null; this.hitFront = null; }
+    if (this.hitSide == null && hit > 0) {
+      const hf = st.hitFrom;
+      if (hf) { this.hitFront = hf.x * fwdX + hf.z * fwdZ; this.hitSide = THREE.MathUtils.clamp(-(hf.x * rgtX + hf.z * rgtZ), -1, 1); }
+      else { this.hitFront = 1; this.hitSide = Math.random() < 0.5 ? -1 : 1; }
+    }
+    const hs = this.hitSide ?? 0, hfr = this.hitFront ?? 1, hfK = hfr > -0.3 ? 1 : -0.8; // a blow from behind pitches the chest forward
     const hc = hit * hit;
     const crouch = st.crouch || 0;
     const C = this.chan;
     for (const c of CH) {
       const bone = C[c], br = bone.userData.bindRot, q = pose[c];
       let x = q[0], y = q[1], z = q[2];
-      if (c === 'chest') { x -= hc * 0.35; z += hs * hc * 0.12; x += crouch * 0.25; }
-      if (c === 'spine') { x -= hc * 0.12; x += crouch * 0.45; }
-      if (c === 'neck') { x -= hc * 0.3; y += hs * hc * 0.3; x -= crouch * 0.3; }
+      if (c === 'chest') { x -= hc * 0.35 * hfK; z += hs * hc * 0.22; y += hs * hc * 0.18; x += crouch * 0.25; }
+      if (c === 'spine') { x -= hc * 0.12 * hfK; z += hs * hc * 0.08; x += crouch * 0.45; }
+      if (c === 'neck') { x -= hc * 0.3 * hfK; y += hs * hc * 0.3; x -= crouch * 0.3; }
       if (c === 'shR') { z += hc * 0.3; x -= crouch * 0.3; }
       if (c === 'shL') { z -= hc * 0.3; x -= crouch * 0.3; }
       if (c === 'elR' || c === 'elL') x -= hc * 0.3;
@@ -266,12 +297,15 @@ export class Animator {
 
   death(st, t, dt) {
     const p = this.p, B = p.bones, S = this.S;
-    if (!this.dd) this.dd = { th: 0, w: 0, t: 0, side: st.fallDir || 1, settle: 0 };
+    // kinds (Round 20): 0 knocked back off the feet, 1 crumple to the knees then forward on the face, 2 twist and fall
+    if (!this.dd) { const kind = st.deathKind || 0; this.dd = { th: 0, w: 0, t: 0, side: kind === 1 ? -1 : st.fallDir || 1, settle: 0, kind, tw: st.twist || 1 }; }
     const d = this.dd; d.t += dt;
     // a cutscene can declare someone long dead (st.deadT): skip straight to lying still
     if ((st.deadT || 0) > d.t + 0.5) { d.t = st.deadT; d.th = Math.PI / 2; d.w = 0; }
-    const buckle = sm(clamp01(d.t / 0.32));
-    if (d.t > 0.12) {
+    const kneel = d.kind === 1, delay = kneel ? 0.55 : 0.12;
+    const buckle = sm(clamp01(d.t / (kneel ? 0.4 : 0.32))) * (kneel ? 1.5 : 1);
+    if (d.kind === 2) p.body.rotation.y = d.tw * 0.9 * sm(clamp01(d.t / 0.7));
+    if (d.t > delay) {
       d.w += 13 * Math.sin(d.th + 0.15) * dt; d.th += d.w * dt;
       if (d.th >= Math.PI / 2) { d.th = Math.PI / 2; d.w = Math.abs(d.w) > 0.6 ? -d.w * 0.25 : 0; }
       // never left hanging part-way: after a second and a half the body is brought the rest of the way down
