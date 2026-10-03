@@ -192,7 +192,7 @@ function shadowSnap(c) {
   sun.target.position.copy(_lp); sun.position.copy(_lp).addScaledVector(world.sunDir, 100);
 }
 const clock = new THREE.Clock(); let t = 0;
-const _frus = new THREE.Frustum(), _pm = new THREE.Matrix4(), _pp = new THREE.Vector3();
+const _ck = new THREE.Vector3(), _frus = new THREE.Frustum(), _pm = new THREE.Matrix4(), _pp = new THREE.Vector3();
 let fireFlick = 0, cullT = 0, shFrame = 0, reflTagT = 0, stormWas = false; const STORM_COL = new THREE.Color(0.78, 0.6, 0.42); const _shLast = new THREE.Vector3();
 // adaptive quality: if the frame rate stays low, shed the most expensive effects
 let perfT = 0, perfN = 0, perfAcc = 0, perfLevel = 0;
@@ -259,7 +259,11 @@ function frame() {
   if (vol?.enabled !== false && vol) for (const r of atmos.rays) r.visible = false; // real god rays replace the old slabs
   {
     const L = lighting.cur, hk = (L.hero || 0) * (game.interior ? 1.2 : 1);
-    heroLight.intensity = mode === 'game' ? hk : 0; heroLight.position.set(c.x, (c.y || 0) + 3.4, c.z + 1.2);
+    if (game.cinematic && mode === 'game') {
+      // cutscenes: the same light becomes a soft key beside the camera, so faces never go to silhouette
+      _ck.set(1.6, 0.9, -0.6).applyQuaternion(camera.quaternion).add(camera.position);
+      heroLight.position.copy(_ck); heroLight.intensity = 7 + hk * 0.5;
+    } else { heroLight.intensity = mode === 'game' ? hk : 0; heroLight.position.set(c.x, (c.y || 0) + 3.4, c.z + 1.2); }
     RIM_G.value.copy(L.sunCol).lerp(L.hemiSky, 0.35).multiplyScalar(0.9 + (L.hero || 0) / 12);
   }
   if (vol) {

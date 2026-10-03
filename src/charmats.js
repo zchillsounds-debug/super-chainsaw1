@@ -102,12 +102,17 @@ export function charMaterial(palette = defaultPalette(), { rim = new THREE.Color
           float vis = clamp(dot(normal, L) * 0.5 + 0.5, 0.0, 1.0);
           reflectedLight.directSpecular += directionalLights[0].color * (s1 * 0.22 + s2 * 0.1 * diffuseColor.rgb * 4.0) * vis;
         }
+        if (kind == 1 || kind == 8) { // cloth sheen: woven fabric catches light at grazing angles
+          vec3 L = directionalLights[0].direction, Vv = normalize(vViewPosition);
+          float nv = max(dot(normal, Vv), 0.0), nl = clamp(dot(normal, L) * 0.5 + 0.5, 0.0, 1.0);
+          reflectedLight.directSpecular += directionalLights[0].color * diffuseColor.rgb * pow(1.0 - nv, 3.0) * nl * 0.55;
+        }
         if (kind == 4) { vec3 L = directionalLights[0].direction; float ndl = dot(normal, L);
           float wrapL = max(0.0, (ndl + 0.6) / 1.6) - max(0.0, ndl);
           reflectedLight.directDiffuse += diffuseColor.rgb * vec3(1.0, 0.42, 0.3) * wrapL * directionalLights[0].color * 0.22; }
         #endif`);
   };
-  mat.customProgramCacheKey = () => 'charmat4';
+  mat.customProgramCacheKey = () => 'charmat5';
   return mat;
 }
 
