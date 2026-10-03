@@ -28,6 +28,7 @@ import { Settings } from './settings.js';
 import { Gamepads } from './gamepad.js';
 import { Tutorial } from './tutorial.js';
 import { setupContent, restoreContent, applyNG, startNewGamePlus } from './content.js';
+import { setupSideQuests } from './sidequests.js';
 import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, FIRST_ACT, STORY, REGION_NAME } from './region.js';
 
 const P = new URLSearchParams(location.search);
@@ -82,9 +83,10 @@ game.tickExtra = (dt) => qanatBurnTick(game, dt);
 setupNarrative(game);
 game.journal = (t) => { if (document.getElementById('journal')) { document.getElementById('journal').remove(); document.body.classList.remove('inshop'); } else journalPanel(game, t); };
 setupContent(game);
+setupSideQuests(game);
 const tutorial = new Tutorial(game);
 const guide = game.guide = new Guide(game);
-const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); guide.update(dt); game.discover(dt); tutorial.update(dt); game.contentTick?.(dt); };
+const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); guide.update(dt); game.discover(dt); tutorial.update(dt); game.contentTick?.(dt); game.sideTick?.(dt); };
 game.newGamePlus = () => startNewGamePlus(game); ui.onNewGamePlus = game.newGamePlus;
 const settings = game.settings = new Settings({ renderer, audio, game, grade, perf, gfx: { quality: QUALITY, sun, gtao, bloom, atmos, resize } });
 fx.reduce = settings.s.reduceFlash;
@@ -116,7 +118,7 @@ function start(cont) {
   setTimeout(async () => {
     mode = 'game'; game.started = true; ui.show(); ui.fade(0);
     if (cont) {
-      applySave(game, cont); restoreContent(game); applyNG(game); lighting.forAct(cont.act, 0); game.briefed = true; game.refreshTracker?.();
+      applySave(game, cont); restoreContent(game); applyNG(game); game.restoreSide?.(); lighting.forAct(cont.act, 0); game.briefed = true; game.refreshTracker?.();
       // first time in a new region: the arrival scene; otherwise a banner
       if (!IS_SAWAD && !game.arrived?.[REGION]) { game.act = Math.max(game.act, FIRST_ACT[REGION]); await director.play(SCENES.arrival(game)); (game.arrived ||= {})[REGION] = true; game.refreshTracker?.(); saveGame(game); }
       else ui.banner('The Chronicle Continues', STORY.banner[cont.act] || REGION_NAME, 3500);
@@ -144,7 +146,7 @@ let newGame = false; try { newGame = !!sessionStorage.getItem('sob.newgame'); se
 const saved = loadSave();
 if (newGame) setTimeout(() => start(), 50);
 let autoCont = false; try { autoCont = sessionStorage.getItem('sob.autocontinue') === '1'; sessionStorage.removeItem('sob.autocontinue'); } catch { /* ignore */ }
-if (saved && autoCont) setTimeout(() => { if (mode === 'title') start(saved); else { applySave(game, saved); restoreContent(game); applyNG(game); lighting.forAct(saved.act, 0); game.briefed = true; game.refreshTracker?.(); } }, 50);
+if (saved && autoCont) setTimeout(() => { if (mode === 'title') start(saved); else { applySave(game, saved); restoreContent(game); applyNG(game); game.restoreSide?.(); lighting.forAct(saved.act, 0); game.briefed = true; game.refreshTracker?.(); } }, 50);
 if (saved) {
   const cb = document.createElement('button'); cb.id = 'contbtn'; cb.textContent = 'Continue'; cb.onclick = () => start(saved);
   document.getElementById('startbtn').after(cb);

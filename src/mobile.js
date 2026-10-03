@@ -37,7 +37,7 @@ export function setupMobile(game, ui) {
   });
   // collapsible quest tracker and minimap (collapsed by default)
   const q = document.getElementById('quest');
-  q.addEventListener('pointerdown', (e) => { e.preventDefault(); haptic(6); q.classList.toggle('open'); });
+  q.addEventListener('pointerdown', (e) => { e.preventDefault(); haptic(6); const k = e.target.closest('[data-k]'); if (k && q.classList.contains('open')) { game.track?.(k.dataset.k); return; } q.classList.toggle('open'); });
   // small round map top-left; tap it to open the large map, tap again to close
   document.getElementById('minimap').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); haptic(8); if (document.body.classList.contains('mapopen')) game.sheets?.closeAll(); else document.body.classList.add('mapopen'); });
   // controls fade back to translucent shortly after the last touch

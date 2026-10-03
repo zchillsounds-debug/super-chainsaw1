@@ -1,6 +1,6 @@
 import { sellPrice, SALVAGE, MAT_NAMES } from './hub.js';
 import * as THREE from 'three';
-import { humanoid, animateHumanoid, setCharLOD, sword, camel, animateCamel, CharLOD } from './characters.js';
+import { humanoid, animateHumanoid, setCharLOD, sword, camel, animateCamel, buffalo, animateBuffalo, CharLOD } from './characters.js';
 import { heightAt, SITES, canalX, mapColor, waterDepth } from './terrain.js';
 import { resolve, buildGrid } from './collision.js';
 import { buildNav, findPath, navClear } from './nav.js';
@@ -855,11 +855,13 @@ export class Game {
     const add = (rig, x, z, kind, opts = {}) => {
       const pos = new THREE.Vector3(x, heightAt(x, z), z);
       rig.position.copy(pos); this.scene.add(rig);
-      this.critters.push({ rig, pos, home: pos.clone(), kind, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, seed: Math.random() * 10, graze: kind === 'camel' }, facing: Math.random() * 6, wanderT: 0, range: opts.range || 6, speed: opts.speed || 1.2 });
+      this.critters.push({ rig, pos, home: pos.clone(), kind, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, seed: Math.random() * 10, graze: kind === 'camel' || kind === 'buffalo' }, facing: Math.random() * 6, wanderT: 0, range: opts.range || 6, speed: opts.speed || 1.2 });
     };
     const V0 = SITES.village;
     const camels = IS_SAWAD ? [[30, 66, 0xb88a58], [33, 70, 0xa07040], [-8, 40, 0xc49a68], [70, 22, 0x9a6a3a], [74, 18, 0xb08050]] : IS_KARKH ? [[V0.x + 9, V0.z - 9, 0xb88a58], [V0.x + 12, V0.z - 6, 0xa07040]] : [];
     for (const [x, z, c] of camels) add(camel(c), x, z, 'camel', { range: 4, speed: 0.9 });
+    // the marsh village keeps water buffalo, grazing on the island's edge
+    if (IS_MARSH) for (const [dx, dz, c] of [[-14, 14, 0x2c2a2a], [-10, 18, 0x343030], [22, 6, 0x262424]]) add(buffalo(c), V0.x + dx, V0.z + dz, 'buffalo', { range: 3, speed: 0.7 });
     const garb = [['#e8dcc0', '#2a6a5a', 0xf0ead8], ['#6a3a2a', '#d0a040', 0x2a2420], ['#2a4a6a', '#e0c070', 0xe8e0d0], ['#8a6a3a', '#3a2a1a', 0x6a3020]];
     const V = SITES.village;
     for (let i = 0; i < 6; i++) {
@@ -871,7 +873,7 @@ export class Game {
     if (!this.critters) return;
     const p = this.player.pos;
     for (const c of this.critters) {
-      const d = c.pos.distanceTo(p); if (c.kind !== 'camel') setCharLOD(c.rig, d > 15 && !this.cinematic); c.rig.visible = this.cinematic || Math.abs(c.pos.x - p.x) < 32 && c.pos.z - p.z > -38 && c.pos.z - p.z < 22; if (d > 50) continue;
+      const d = c.pos.distanceTo(p); if (c.kind === 'villager') setCharLOD(c.rig, d > 15 && !this.cinematic); c.rig.visible = this.cinematic || Math.abs(c.pos.x - p.x) < 32 && c.pos.z - p.z > -38 && c.pos.z - p.z < 22; if (d > 50) continue;
       c.wanderT -= dt;
       if (c.wanderT <= 0) { c.wanderT = rand(4, 10); c.goal = Math.random() < 0.5 ? null : c.home.clone().add(new THREE.Vector3(rand(-c.range, c.range), 0, rand(-c.range, c.range))); }
       let moving = false;
@@ -880,12 +882,14 @@ export class Game {
         if (dd > 0.4) { c.pos.x += dx / dd * c.speed * dt; c.pos.z += dz / dd * c.speed * dt; moving = true; c.facing += angDiff(c.facing, Math.atan2(dx, dz)) * Math.min(1, dt * 3); }
         else c.goal = null;
       }
-      resolve(c.pos, c.kind === 'camel' ? 1.0 : 0.4);
+      resolve(c.pos, c.kind === 'villager' ? 0.4 : 1.0);
       c.pos.y = heightAt(c.pos.x, c.pos.z);
-      c.st.walkBlend = THREE.MathUtils.lerp(c.st.walkBlend, moving ? (c.kind === 'camel' ? 1 : 0.5) : 0, Math.min(1, dt * 5));
-      c.st.phase += dt * (moving ? c.speed * 2.6 : 0); c.st.graze = c.kind === 'camel' && !moving;
+      const beast = c.kind !== 'villager';
+      c.st.walkBlend = THREE.MathUtils.lerp(c.st.walkBlend, moving ? (beast ? 1 : 0.5) : 0, Math.min(1, dt * 5));
+      c.st.phase += dt * (moving ? c.speed * 2.6 : 0); c.st.graze = beast && !moving;
       c.rig.position.copy(c.pos);
       if (c.kind === 'camel') { c.rig.rotation.y = c.facing - Math.PI / 2; animateCamel(c.rig, c.st, this.t); }
+      else if (c.kind === 'buffalo') { c.rig.rotation.y = c.facing - Math.PI / 2; animateBuffalo(c.rig, c.st, this.t); }
       else { c.rig.rotation.y = c.facing; animateHumanoid(c.rig, c.st, this.t, dt); }
     }
   }

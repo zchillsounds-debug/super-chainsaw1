@@ -6,7 +6,7 @@
 > Please:
 > 1. Unzip it and read HANDOFF.md fully.
 > 2. Run `npm install && npx vite`.
-> 3. Start **Round 16** as specified in the "Next" section. Show me the plan for it and ask your open questions before building.
+> 3. Start **Round 17** as specified in the "Next" section. Show me the plan for it and ask your open questions before building.
 >
 > The goal is AAA mobile game quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop (screenshot → critique → improve) every round, and ask me clarifying questions and confirm with me before building. I play on Android. After each round:
 > - Republish the game as a playable Artifact, updating the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Touch controls must keep working.
@@ -229,7 +229,25 @@ Round 11 rewrote the story around the Teacher's Pages, with Shia-inspired themes
 - **Fixes:** the boss could freeze if a cutscene gave him an action with no duration; the guide trail and Ishaq's marker now hide in cutscenes; props hidden by distance culling are now compiled at load (no hitch when you walk up to a site); the far Round City is merged into one mesh.
 - **Tests:** `shots/r15test.mjs <region>` (systems smoke test) and `shots/traveltest.mjs` (Sawad → marsh → Karkh through reloads), both clean. Draws: Sawad hub 625; Karkh hub 710; marsh camp about 810; Karkh suq 848 (Sawad serai 809).
 
-## Next: Round 16+ (proposed; confirm with the user before building)
+## Round 16 (done): side content
+- **`sidequests.js`** (new) holds all Round 16 content.
+- **12 side quests,** four per region, each with a new giver standing in the hub:
+  - Sawad: The Potter's Tools (Zayd), The Scribe's Ledger (Nadr), The Camel Trader's String (Hudba, a camel escort), Jabir's Spear (from Ishaq: a quiet scene on the dune, no combat, rewarding the legendary amulet "Jabir's Spearhead").
+  - Marshes: The Boatman's Son (Hilal; escort the boy Saqr), Cut Nets (Jamil), The Strayed Buffalo (Rabah; escort the buffalo), The Debt Ledger (Bashshar).
+  - Al-Karkh: The Dyers' Vats ('Abbad), The Copyist's Pens (Sa'id), Lost in the Ruins (Ma'mar; escort two children, with an ambush on the way), The Bridge Toll (Nu'aym).
+- **How quests are built:** steps are data, of these kinds: `kill` (a band at a spot), `take` (an object, often guarded), `escort` (followers trail the hero; forgiving, as they can't die and wait if left behind), `visit` (a place and a scene) and `return` (talk to the giver). Progress uses `p.side[id]` as before, and each step's spawns and objects are rebuilt on load (`game.restoreSide`). Rewards are gold, an item, Renown and sometimes a codex entry. Givers have a blue marker while they have something to offer or are waiting for you.
+- **Water buffalo** (`creatures.js`): sculpted and skinned like the camel, with a diagonal gait, a low head and swept horns. Three graze in the marsh village.
+  - Pitfall: the per-vertex material id is interpolated across the mesh, so two regions only meet cleanly if their ids are adjacent numbers (the buffalo uses 10, 11 and 12). Otherwise a stripe of the in-between colours shows along the seam.
+- **Daily bounty board** in each hub ("Read the bounty board"; the panel is a `#shop` sheet).
+  - Three bounties per day, seeded by the date plus the region. Types: hunt a named captain, recover stolen goods, escort a laden camel (a buffalo in the marshes), clear an interior and open its chest.
+  - Rewards: gold, scrap, silk, gems and Renown (`p.renown`, which Round 17 spends).
+  - State lives in `p.bounty[region] = { day, taken, done }`.
+- **World events:** every 4–7 minutes (the first after about 2.5–4.5), when no boss fight or cutscene is running. There are two per region: a caravan under attack, a fouled well, an ambush on the water, burning reed stacks, a burning granary, a convoy ambush. They give you 150 seconds, show a countdown in the tracker and are auto-tracked on the trail. Winning drops a rare or legendary item, gold and Renown.
+- **Tracker selection:** side tasks, bounties and events in the tracker can be tapped (touch: open the tracker, then tap a line; desktop: click) to put that task on the glowing trail. Tap it again to go back to the story. `game.trackTarget()` feeds the guide. This closes Known gap 2.
+- **Arabic** for all of it (end of `story_ar.js`, plus bounty patterns in `i18n.js`).
+- **Tests:** `shots/r16test.mjs <region>` plays every quest, bounty and an event to completion; all three regions are clean.
+
+## Next: Round 17+ (proposed; confirm with the user before building)
 User decisions for Round 15: Nahrawan confirmed, separate maps, both acts in one round. Still open: the order of R16–R18, and whether bounties reset daily or per act.
 
 ## Roadmap (R15 done)
@@ -261,7 +279,7 @@ The goal is about 8–12 hours for a first playthrough, up from about 1.5 today,
 
 ## Known gaps
 1. Verify on a device: immersive mode, Smooth sharpness frame rate, the trail's readability in sunlight, and Back.
-2. Side-quest objectives are not on the trail yet (main quest and interiors only); tapping a tracker entry to pick the target was offered but not chosen.
+2. (Fixed in Round 16: tap a tracker entry to put it on the trail.)
 3. Farud's and Hisham's death shots and the boss intro still use the old camera work.
 
 ## File map (src/)

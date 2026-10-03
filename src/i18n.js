@@ -40,6 +40,13 @@ const AR = {
 };
 const PATTERNS = [
   [/^Level (\d+)$/, (m) => `المستوى ${m[1]}`],
+  // Round 16 bounties
+  [/^Hunt (.+), a renegade captain on the roads\.$/, (m) => `طارد ${STORY_AR[m[1]] || m[1]}، قائدًا متمرّدًا على الطرق.`],
+  [/^Escort a laden (camel|buffalo) from the hub to the (.+)\.$/, (m) => `رافق ${m[1] === 'camel' ? 'جملًا محمّلًا' : 'جاموسًا محمّلًا'} من المخيّم إلى ${STORY_AR[m[2]] || m[2]}.`],
+  [/^Clear (.+) and open the chest at the bottom\.$/, (m) => `طهّر ${STORY_AR[m[1]] || m[1]} وافتح الصندوق في أعماقها.`],
+  [/^Bounty: (.+)$/, (m) => `مكافأة: ${STORY_AR[m[1]] || m[1]}`],
+  [/^\+(\d+) Renown$/, (m) => `+${m[1]} سمعة`],
+  [/^⚑ (.+) \((\d+)s\)$/, (m) => `⚑ ${STORY_AR[m[1]] || m[1]} (${m[2]} ث)`],
   [/^Codex \((\d+)\/(\d+)\)$/, (m) => `الموسوعة (${m[1]}/${m[2]})`],
   [/^Talk to (.+)$/, (m) => `تحدّث إلى ${({ Ishaq: 'إسحاق', Yusuf: 'يوسف', Bishr: 'بشر', '\'Amr': 'عمرو' })[m[1]] || STORY_AR[m[1]] || m[1]}`],
   [/^◉ (\d+) Dinars$/, (m) => `◉ ${m[1]} دينار`],

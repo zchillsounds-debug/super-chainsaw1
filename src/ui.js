@@ -149,7 +149,8 @@ export class UI {
     const gh = b.querySelector('.bghost'); const cur = parseFloat(gh.style.width || '100');
     gh.style.width = Math.max(frac * 100, cur - 0.4) + '%';
   }
-  quest(lines) { this.$('#quest .qlines').innerHTML = lines.map((l) => `<div class="${l.done ? 'done' : ''} ${l.side ? 'side' : ''}">${l.done ? '✦' : l.side ? '·' : '◇'} ${l.text}</div>`).join(''); }
+  // side tasks, bounties and events can be tapped to put them on the trail (data-k); the tracked one is marked
+  quest(lines) { this.$('#quest .qlines').innerHTML = lines.map((l) => `<div class="${l.done ? 'done' : ''} ${l.side ? 'side' : ''} ${l.on ? 'on' : ''}"${l.key ? ` data-k="${l.key}"` : ''}>${l.done ? '✦' : l.on ? '➤' : l.side ? '·' : '◇'} ${l.text}</div>`).join(''); }
   // the active objective and how far it is (kept in step with the ground trail)
   objective(text, dist) {
     const el = this.$('#quest .qnow'); el.classList.toggle('hidden', !text); if (!text) return;

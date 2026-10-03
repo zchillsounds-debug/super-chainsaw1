@@ -515,3 +515,9 @@ body.touch #dialog .dbtn{align-self:flex-end;float:none;min-width:140px}
 @media (max-width:760px) and (orientation:portrait){.cp-row{grid-template-columns:repeat(2,minmax(0,1fr))}.cp-kit{display:none}}
 @media (max-width:760px) and (orientation:landscape){.cp-kit{display:flex}.cp-role{display:none}}
 #classpick{background:radial-gradient(ellipse at center,#1a120cf0,#050302fa)}
+/* Round 16: tracked task on the trail, bounty board */
+#quest .qlines div[data-k]{pointer-events:auto;cursor:pointer}
+#quest .qlines div.on{color:#9fe0ff;text-shadow:0 0 6px #000,0 0 8px #40a0ff88}
+.srow.bounty{padding:6px 8px;border:1px solid #4a3418;border-radius:8px;background:#0b0704aa}
+.srow.bounty .bico{flex:none;width:36px;height:36px;display:grid;place-items:center;font:700 20px Cinzel,serif;color:#f2d27a;border:1px solid #6a4a20;border-radius:50%;background:#1e140c}
+.srow.bounty .bdone{color:#5ee08a;font:700 13px Cinzel,serif}.srow.bounty .btaken{color:#9fe0ff;font:700 13px Cinzel,serif}

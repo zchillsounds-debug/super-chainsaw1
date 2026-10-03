@@ -45,8 +45,9 @@ export function setQuest(game, id, step) {
   game.audio.pickup?.(); refreshTracker(game); saveGame(game);
 }
 function refreshTracker(game) {
-  const p = game.player, side = Object.entries(p.side || {}).filter(([id, s]) => s < SIDE[id].steps.length - 1).map(([id, s]) => ({ text: `${t(SIDE[id].t)}: ${t(SIDE[id].steps[s]).split(/\. |\. /)[0]}`, done: false, side: true }));
-  game.ui.quest([...game.quests, ...side]);
+  const p = game.player, on = game.trackedKey?.();
+  const side = Object.entries(p.side || {}).filter(([id, s]) => SIDE[id] && s < SIDE[id].steps.length - 1).map(([id, s]) => ({ key: 'q:' + id, on: on === 'q:' + id, text: `${t(SIDE[id].t)}: ${t(SIDE[id].steps[s]).split(/\. |\. /)[0]}`, done: false, side: true }));
+  game.ui.quest([...game.quests, ...side, ...(game.sideLines?.() || [])]);
 }
 
 // ------------------------------------------------------------------ dialogue with choices

@@ -108,4 +108,4 @@ export { humanoid, animateHumanoid, setCharLOD } from './human.js';
 export { CharLOD } from './anim.js';
 
 // --------------------------------------------------------------------- dromedary camel (sculpted, see creatures.js)
-export { camel, animateCamel } from './creatures.js';
+export { camel, animateCamel, buffalo, animateBuffalo } from './creatures.js';

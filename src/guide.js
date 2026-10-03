@@ -22,6 +22,7 @@ function chevronTexture() {
 export function objectiveTarget(g) {
   if (g.interior) { const I = g.interior.I; return I.chest && !I.chest.opened ? I.chest.pos : I.entrance; }
   if (!g.briefed) return null;
+  const tr = g.trackTarget?.(); if (tr?.pos) return tr.pos;
   const q = g.quests.find((x) => !x.done); if (!q) return null;
   const alive = (e) => e && !e.dead ? e.pos : null;
   if (q.id === STORY.chief) return alive(g.chief) || SITES.serai;
@@ -48,7 +49,8 @@ export class Guide {
     if ((this.labelT = (this.labelT || 0) - dt) <= 0) {
       this.labelT = 0.4;
       const q = g.interior ? null : g.briefed && g.quests.find((x) => !x.done);
-      const text = g.interior ? (g.interior.I.chest && !g.interior.I.chest.opened ? 'Find the chest' : 'Climb back to the surface') : q?.text;
+      const tr = g.interior ? null : g.trackTarget?.();
+      const text = g.interior ? (g.interior.I.chest && !g.interior.I.chest.opened ? 'Find the chest' : 'Climb back to the surface') : tr?.text || q?.text;
       g.ui.objective(g.cinematic ? null : text, goal ? Math.hypot(goal.x - P.x, goal.z - P.z) : null);
     }
     const fighting = g.player.target && !g.player.target.dead;
