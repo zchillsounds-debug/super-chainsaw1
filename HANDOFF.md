@@ -1,22 +1,25 @@
-# Sands of Baghdad: Handoff (after Round 11)
+# Madinat al-Salam: Handoff (after Round 14)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Sands of Baghdad**: a Diablo-style 3D ARPG in Three.js set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `sands-round10-handoff.zip` (full source, git history as `repo.bundle`, and this HANDOFF.md).
+> I'm continuing a game project called **Madinat al-Salam** (formerly "Sands of Baghdad"). It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `madinat-round14-handoff.zip` (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
 >
 > Please:
 > 1. Unzip it and read HANDOFF.md fully.
 > 2. Run `npm install && npx vite`.
-> 3. Start **Round 11** as specified in the "Next" section.
+> 3. Start **Round 15** as specified in the "Next" section. Show me the plan for it and ask your open questions before building.
 >
-> The goal is AAA studio quality, with Diablo IV as the bar. Run the critique loop (screenshot → critique → improve) every round, and ask me clarifying questions and confirm with me before building. I play on Android, so republish the game as a playable Artifact after each round; touch controls must keep working. Update the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Push to the session's assigned branch on zchillsounds-debug/super-chainsaw1.
+> The goal is AAA mobile game quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop (screenshot → critique → improve) every round, and ask me clarifying questions and confirm with me before building. I play on Android. After each round:
+> - Republish the game as a playable Artifact, updating the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Touch controls must keep working.
+> - Push to the session's assigned branch on zchillsounds-debug/super-chainsaw1.
+> - Send me the APK that CI builds (see "Getting the APK to the user").
 
 ## Restore the code
 ```
-unzip sands-round11-handoff.zip -d sands && cd sands
-git clone repo.bundle game && cd game        # branch claude/build-all-rounds-8si5e6
+unzip madinat-round14-handoff.zip -d madinat && cd madinat
+git clone repo.bundle game && cd game        # Round 12-14 work is on branch claude/new-session-e8qzyb
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
-If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/claude/build-all-rounds-8si5e6`.
+If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/claude/new-session-e8qzyb`.
 
 URL flags:
 - `?play` skips the title screen.
@@ -41,6 +44,9 @@ URL flags:
 - **Authentic to 813 CE, not Western tropes.** Use straight sayf swords, qalansuwa or bayda headgear, qaba coats and black Abbasid dress. Use short single period names with no epithets.
 - **Music in the Abbasid court style:** Rast/Bayati modes, played on oud, qanun and daff. No Hijaz cliché.
 - **Ask clarifying questions and confirm before building.**
+
+## Title
+The game is called **Madinat al-Salam** (مدينة السلام, "the City of Peace"), Baghdad's official Abbasid name. The user renamed it from "Sands of Baghdad", which leaned on a Western desert cliché. The app id stays `com.zchill.sandsofbaghdad`, so installed saves carry over.
 
 ## Story bible
 Round 11 rewrote the story around the Teacher's Pages, with Shia-inspired themes only; see `STORY.md`. Ziyad is now Farud, and Jabir is Salim's brother.
@@ -206,7 +212,7 @@ The goal is about 8–12 hours for a first playthrough, up from about 1.5 today,
 
 **R15: two new acts (main story about 2× longer)**
 - **Act IV, The Nahrawan Marshes.** Reed beds, flooded canals and fishing villages. The last Pages were carried off by Ghassan's paymaster, Rawh. New foes: slingers, net-throwers, reed ambushers.
-- **Act V, The Kufa Gate Suburb.** Burned market streets outside the Round City walls. Rawh's buyer's men hold the gate yards; the buyer stays unnamed. The finale is a two-phase street fight, then the Pages are delivered to the House of Wisdom scholars. The building itself is never shown as anything religious.
+- **Act V, Al-Karkh.** Baghdad's great market suburb, southwest of the Round City walls. It was historically burned in the 812–813 siege. Rawh's buyer's men hold the ruined suq lanes; the buyer stays unnamed. The finale is a two-phase street fight, then the Pages are delivered to the House of Wisdom scholars. The building itself is never shown as anything religious.
 - Each act gets a hub corner, two named captains, one new interior, a lieutenant fight and calm, non-violent cutscenes. All lines are short and tap-to-continue, with Arabic.
 
 **R16: side content (about +3 h)**
@@ -226,7 +232,7 @@ The goal is about 8–12 hours for a first playthrough, up from about 1.5 today,
 
 **Constraints for every round:** human foes only; no religious buildings or symbols; 813 CE authentic names, dress and weapons; Rast/Bayati music; no violence on screen in cutscenes; mobile first; and no lights or new shader variants created at runtime (create them at load).
 
-**Questions for the user before R15:** the order of rounds; the names and setting of Acts IV and V; whether Rawh and the unnamed buyer are right; whether bounties should reset daily (real time) or per act.
+**Questions for the user before R15:** the order of rounds; Act V is now set (al-Karkh, chosen by the user); confirm Act IV (Nahrawan); whether Rawh and the unnamed buyer are right; whether bounties should reset daily (real time) or per act.
 
 ## Known gaps
 1. Verify on a device: immersive mode, Smooth sharpness frame rate, the trail's readability in sunlight, and Back.

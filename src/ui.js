@@ -60,7 +60,7 @@ export class UI {
       <div id="dialog" class="hidden panel"><div class="dname"></div><div class="dtext"></div><button class="dbtn">Continue</button></div>
       <div id="banner" class="hidden"><div class="btitle"></div><div class="bsub"></div></div>
       <div id="title">
-        <div class="tlogo"><div class="ar">رمال بغداد</div><div class="en">Sands of Baghdad</div><div class="sub">— Year 813 of the Common Era · The Abbasid Caliphate —</div></div>
+        <div class="tlogo"><div class="ar">مدينة السلام</div><div class="en">Madinat al-Salam</div><div class="sub">— Year 813 of the Common Era · The Abbasid Caliphate —</div></div>
         <button id="startbtn">Enter the Sands</button>
         <div class="controls"><span class="pc">Left-click: move / attack · Right-click: Naft Flask · 1–4: Skills · Q: Potion · I: Inventory · Alt: show loot</span><span class="mob">Left thumb: joystick · Tap: move / attack · Right buttons: skills</span></div>
       </div>

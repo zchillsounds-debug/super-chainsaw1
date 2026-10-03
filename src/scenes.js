@@ -222,7 +222,7 @@ export function epilogue(g, b) {
         const p = g.player; p.pos.set(1, 0, 88); p.pos.y = heightAt(1, 88); salim.facing = yawTo(salim.pos, ishaq.pos); ishaq.facing = yawTo(ishaq.pos, salim.pos); ishaq.st.talk = true;
       },
       cam: { follow: true, p0: at(salim, 1.75, -0.9, 0.4), t0: headOf(ishaq), fov: 30 }, dof: headOf(ishaq) },
-    { dur: 6, card: { ar: 'رمال بغداد', en: 'Sands of Baghdad', sub: 'Here ends the first chronicle of Salim' }, enter: () => { ishaq.st.talk = false; },
+    { dur: 6, card: { ar: 'مدينة السلام', en: 'Madinat al-Salam', sub: 'Here ends the first chronicle of Salim' }, enter: () => { ishaq.st.talk = false; },
       cam: { p0: V(8, 6, 98), t0: V(4, 3, 80), p1: V(22, 26, 118), t1: V(14, 2, 70), ease: 'io2' } },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { for (const l of lamps) g.scene.remove(l); } };

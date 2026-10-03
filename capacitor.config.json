@@ -1,6 +1,6 @@
 {
   "appId": "com.zchill.sandsofbaghdad",
-  "appName": "Sands of Baghdad",
+  "appName": "Madinat al-Salam",
   "webDir": "dist",
   "android": { "allowMixedContent": false, "backgroundColor": "#0b0704" }
 }

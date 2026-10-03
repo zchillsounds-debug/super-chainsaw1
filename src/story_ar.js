@@ -7,7 +7,7 @@ export const STORY_AR = {
   'Act II · The Kilns': 'الفصل الثاني · الأتون', 'Hisham\'s knife-men wait among the brick stacks': 'رجال هشام بسكاكينهم يتربّصون بين أكوام الآجرّ',
   'Act III · The Broken Arch': 'الفصل الثالث · الطاق المكسور', 'Ghassan holds the road beneath the ruined Persian arch': 'غسّان يمسك الطريق تحت الطاق الفارسي المهدّم',
   'Renegade commander of the siege': 'قائد المتمرّدين من أيام الحصار', 'Renegade commander of the siege of Baghdad': 'قائد المتمرّدين من أيام حصار بغداد',
-  'Sands of Baghdad': 'رمال بغداد', 'Here ends the first chronicle of Salim': 'هنا تنتهي السيرة الأولى لسالم',
+  'Madinat al-Salam': 'مدينة السلام', 'The City of Peace': 'مدينة السلام', 'Here ends the first chronicle of Salim': 'هنا تنتهي السيرة الأولى لسالم',
   'By nightfall the grain road was open again.': 'ومع حلول الليل عاد طريق الحَبّ مفتوحًا.',
 
   // ---------------------------------------------------------------- prologue and briefing

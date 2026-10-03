@@ -1,4 +1,4 @@
-# Sands of Baghdad: story bible (Round 11)
+# Madinat al-Salam: story bible (Round 11)
 
 The inspiration is Shia storytelling, carried by **themes only**. There are no names of holy figures, no rituals, no religious buildings, symbols or text.
 

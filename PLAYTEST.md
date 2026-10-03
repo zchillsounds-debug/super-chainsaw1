@@ -1,4 +1,4 @@
-# Sands of Baghdad: playtest checklist
+# Madinat al-Salam: playtest checklist
 
 The game collects no telemetry. Playtesters fill in this sheet by hand. Press F3 (or Settings → Show FPS) to see the
 performance overlay.
