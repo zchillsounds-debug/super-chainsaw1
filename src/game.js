@@ -6,6 +6,7 @@ import { heightAt, SITES, canalX, mapColor, waterDepth } from './terrain.js';
 import { resolve, buildGrid } from './collision.js';
 import { buildNav, findPath, navClear } from './nav.js';
 import { makeEnemy, TYPES } from './entities.js';
+import { fleeTick } from './foes20.js';
 import * as SCENES from './scenes.js';
 import { saveGame } from './save.js';
 import { makeItem, rollRarity, RARITY, setWeaponPool } from './items.js';
@@ -58,6 +59,9 @@ export class Game {
     this.netGeo = new THREE.CircleGeometry(0.9, 12);
     this.stoneGeo = new THREE.DodecahedronGeometry(0.09, 0); this.stoneMat = new THREE.MeshStandardMaterial({ color: 0x8a8070, roughness: 0.9 });
     this.arrowGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.8, 4).rotateX(Math.PI / 2); this.arrowMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a });
+    // Round 20: crossbow aim lines, made at load and hidden
+    { const lg = new THREE.PlaneGeometry(0.07, 1).rotateX(-Math.PI / 2).translate(0, 0, 0.5);
+      this.aimLines = [0, 1, 2, 3].map(() => { const m = new THREE.Mesh(lg, new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 0.35, 0.15), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })); m.visible = false; m.renderOrder = 3; this.scene.add(m); return m; }); }
     // shader warm-up: one of each projectile sits far under the ground, so the load-time compile covers them
     const warm = new THREE.Group(); warm.position.set(0, -60, 0);
     warm.add(new THREE.Mesh(this.stoneGeo, this.stoneMat), new THREE.Mesh(this.arrowGeo, this.arrowMat), new THREE.Mesh(this.netGeo, this.netMat), new THREE.Mesh(this.netMesh.geometry, this.netMat));
@@ -258,6 +262,10 @@ export class Game {
     this.spawnPack(['deserter', 'bandit'], 6, -30, 4, 3);
     this.spawnPack(['naffat', 'archer', 'spearman'], 8, -58, 5, 4, { spread: 5 });
     this.spawnPack('naffat', 20, -66, 1, 4, { elite: true });
+    // Round 20: camel raiders on the open sand, crossbowmen on the serai's flank, Ghassan's engineers on the arch road
+    this.spawnPack('rider', -40, 28, 1, 2); this.spawnPack('rider', 34, -36, 2, 3, { spread: 8 });
+    this.spawnPack(['crossbow', 'bandit'], S.x + 12, S.z + 12, 2, 2);
+    this.spawnPack(['engineer', 'spearman'], 2, -46, 2, 4); this.spawnPack(['engineer', 'crossbow', 'naffat'], 26, -60, 3, 4, { spread: 5 });
   }
   // Act IV: Rawh's hired marsh men hold the causeways; ambushers crouch in the reed beds beside them
   spawnMarsh() {
@@ -286,6 +294,7 @@ export class Game {
     this.spawnPack(['bandit', 'slinger'], 50, -34, 4, 9);
     this.spawnPack(['spearman', 'netter'], 28, -62, 4, 9);
     this.spawnPack('slinger', A.x + 14, A.z + 16, 1, 9, { elite: true });
+    this.spawnPack(['crossbow', 'netter'], -36, 40, 2, 7); this.spawnPack(['crossbow', 'spearman', 'crossbow'], 20, -50, 3, 9);
   }
   // Act V: the buyer's guards hold the lanes of burned al-Karkh; knife-men hide in the ruins
   spawnKarkh() {
@@ -309,6 +318,8 @@ export class Game {
     this.spawnPack(['guard', 'deserter'], 20, -20, 4, 11);
     this.spawnPack(['guard', 'spearman', 'archer'], 44, -40, 5, 11, { spread: 5 });
     this.spawnPack('naffat', A.x - 16, A.z + 14, 1, 11, { elite: true });
+    this.spawnPack(['crossbow', 'guard'], -20, 40, 2, 10); this.spawnPack(['crossbow', 'crossbow', 'guard'], 40, -20, 3, 11);
+    this.spawnPack(['engineer', 'guard'], 30, 30, 2, 10); this.spawnPack(['engineer', 'guard', 'crossbow'], A.x + 14, A.z + 20, 3, 11, { spread: 5 });
   }
 
   makeMinimap() {
@@ -1007,6 +1018,7 @@ export class Game {
     for (const k in p.cds) p.cds[k] = Math.max(0, p.cds[k] - dt);
     for (const k in p.buffs) p.buffs[k] = Math.max(0, p.buffs[k] - dt);
     p.invuln = Math.max(0, p.invuln - dt);
+    if (p.knock && p.knock.lengthSq() > 1e-4) { p.pos.addScaledVector(p.knock, dt); p.knock.multiplyScalar(Math.max(0, 1 - dt * 8)); resolve(p.pos, 0.45); } // a crossbow bolt's shove
     if (!p.dead) {
       p.mp = Math.min(s.maxMp, p.mp + s.regen * dt);
       p.hp = Math.min(s.maxHp, p.hp + 0.6 * dt + (p.buffs.heal > 0 ? s.maxHp * 0.5 * (p.healK || 1) / 1.2 * dt : 0));
@@ -1240,7 +1252,7 @@ export class Game {
   updateEnemies(dt) {
     const p = this.player;
     // attack tokens: only the nearest few melee foes press in; the others circle at a distance and look for the flank
-    const melee = this.enemies.filter((e) => !e.dead && !e.hidden && e.alerted && !e.boss && !e.T.ranged && e.riseT >= 1);
+    const melee = this.enemies.filter((e) => !e.dead && !e.hidden && e.alerted && !e.boss && !e.T.ranged && !e.T.static && e.type !== 'rider' && e.riseT >= 1);
     melee.sort((a, b) => a.pos.distanceToSquared(p.pos) - b.pos.distanceToSquared(p.pos));
     melee.forEach((e, i) => { e.token = i < MAX_TOKENS; e.ringSlot = i; });
     const stealthed = p.buffs.stealth > 0;
@@ -1252,6 +1264,7 @@ export class Game {
       if (e.rig.visible) setCharLOD(e.rig, dist > 15 && !this.cinematic);
       if (e.dead) {
         e.st.deadT += dt; e.deadT += dt;
+        if (e.fleeing) fleeTick(this, e, dt);
         this.animEnemy(e, dt, dist);
         if (e.deadT > 5) { e.rig.position.y -= dt * 0.4; }
         if (e.deadT > 8) { this.scene.remove(e.rig); e.removed = true; }
@@ -1279,6 +1292,7 @@ export class Game {
         continue;
       }
       if (e.boss) { this.bossAI(e, dt); e.pos.y = heightAt(e.pos.x, e.pos.z); e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; e.st.walkBlend = THREE.MathUtils.lerp(e.st.walkBlend, e.moving ? 1 : 0, Math.min(1, dt * 6)); e.st.phase += dt * (e.moving ? e.speed * 1.2 : 0); animateHumanoid(e.rig, e.st, this.t, dt); continue; }
+      if (e.T.ai && e.T.ai(this, e, dt, dist) === 'skip') { e.st.hitT = Math.max(0, e.st.hitT - dt * 2); continue; }
       e.lost = Math.max(0, (e.lost || 0) - dt);
       if (!e.alerted && !e.lost && dist < (stealthed ? 2.5 : (e.T.ranged ? 16 : 13) * (this.sightK ?? 1)) && !p.dead) e.alerted = true;
       if (stealthed && e.alerted && dist > 4 && !e.boss) { e.alerted = false; e.lost = 1; }
@@ -1296,9 +1310,11 @@ export class Game {
           e.didHit = true;
           if (e.T.ranged === 'stone') { const q = p.pos.clone().addScaledVector(p.vel || tmp.set(0, 0, 0), 0.5); q.y = heightAt(q.x, q.z); this.lobStone(tmp.copy(e.pos).setY(e.pos.y + 2.2), q, e.dmg, 0.95); }
           else if (e.T.ranged === 'net') this.throwNet(e, tmp.copy(p.pos).sub(e.pos).setY(0).normalize().clone());
+          else if (e.T.ranged === 'bolt') { this.shootBolt(e); this.aimLine(e, null); }
           else if (e.T.ranged) this.shootArrow(e);
           else if (dist < e.range + 0.9 && !p.dead) this.damagePlayer(e.dmg, e.pos, e);
         }
+        if (e.T.ranged === 'bolt' && !e.didHit) this.aimLine(e, e.st.actionT);
         if (e.st.actionT >= 1) e.st.action = null;
       } else if (e.alerted && !p.dead) {
         const face = Math.atan2(p.pos.x - e.pos.x, p.pos.z - e.pos.z);
@@ -1371,12 +1387,32 @@ export class Game {
     this.audio.whoosh();
   }
   // a sling stone lobbed high onto a marked spot (the ring shows where it lands)
-  lobStone(from, to, dmg, T = 0.95) {
+  // Round 20: a crossbow bolt: fast, heavy, and it knocks the hero back
+  shootBolt(e) {
+    const p = this.player, from = e.pos.clone(); from.y += 1.45;
+    const to = (e.aimAt || p.pos).clone(); to.y = p.pos.y + 1.0;
+    const dir = to.sub(from).normalize();
+    const m = new THREE.Mesh(this.arrowGeo, this.arrowMat); m.scale.set(1.6, 1.6, 0.8);
+    m.position.copy(from); m.lookAt(from.clone().add(dir)); this.scene.add(m);
+    this.projectiles.push({ mesh: m, vel: dir.multiplyScalar(38), grav: 0, life: 0.8, owner: 'enemy', kind: 'arrow', dmg: e.dmg, bolt: true });
+    this.audio.at(e.pos, () => this.audio.clang?.());
+  }
+  // the crossbowman's aim: a red line along the ground from him toward where he will shoot (pooled meshes)
+  aimLine(e, k) {
+    if (k == null) { if (e.aimMesh) { e.aimMesh.visible = false; e.aimMesh.userData.owner = null; e.aimMesh = null; } e.aimAt = null; return; }
+    if (!e.aimMesh) { e.aimMesh = this.aimLines.find((m) => !m.userData.owner || m.userData.owner.dead || !m.userData.owner.st.action); if (!e.aimMesh) return; e.aimMesh.userData.owner = e; }
+    const p = this.player.pos; if (k < 0.45 || !e.aimAt) e.aimAt = p.clone(); // he tracks, then holds his aim for the last moment
+    const m = e.aimMesh, d = Math.max(1, Math.hypot(e.aimAt.x - e.pos.x, e.aimAt.z - e.pos.z) + 3);
+    m.visible = true; m.position.set(e.pos.x, Math.max(e.pos.y, e.aimAt.y) + 0.12, e.pos.z); m.rotation.set(0, Math.atan2(e.aimAt.x - e.pos.x, e.aimAt.z - e.pos.z), 0); m.scale.set(k > 0.45 ? 1.6 : 1, 1, d);
+    m.material.opacity = 0.25 + 0.55 * Math.min(1, k / 0.6) * (k > 0.45 ? 0.75 + 0.25 * Math.sin(this.t * 40) : 1);
+    e.facing = Math.atan2(e.aimAt.x - e.pos.x, e.aimAt.z - e.pos.z);
+  }
+  lobStone(from, to, dmg, T = 0.95, R = 1.25) {
     const m = new THREE.Mesh(this.stoneGeo, this.stoneMat); m.position.copy(from); this.scene.add(m);
     const vel = new THREE.Vector3((to.x - from.x) / T, 0, (to.z - from.z) / T); vel.y = (to.y - from.y + 0.5 * 18 * T * T) / T;
     this.projectiles.push({ mesh: m, vel, grav: 18, life: T, owner: 'enemy', kind: 'stone' });
     const at = to.clone();
-    this.telegraph(at, 1.25, T, () => { this.fx.dust(at, 6, 0.8); this.audio.at(at, () => this.audio.hit?.(0.4)); if (!this.player.dead && this.player.pos.distanceTo(at) < 1.35) this.damagePlayer(dmg, at); });
+    this.telegraph(at, R, T, () => { this.fx.dust(at, R > 2 ? 18 : 6, R > 2 ? 1.6 : 0.8); if (R > 2) this.shake = Math.max(this.shake, 0.25); this.audio.at(at, () => this.audio.hit?.(0.4)); if (!this.player.dead && this.player.pos.distanceTo(at) < R + 0.1) this.damagePlayer(dmg, at); });
     this.audio.at(from, () => this.audio.whoosh());
   }
   // a weighted casting net, flung flat and spinning; it pins the hero unless he evades through it
@@ -1438,7 +1474,7 @@ export class Game {
         }
         const c = mp.clone(); if (resolve(c, 0.05, true)) dead = true;
       } else if (q.kind === 'arrow') {
-        if (p.pos.distanceTo(tmp.copy(mp).setY(p.pos.y)) < 0.6) { this.damagePlayer(q.dmg, mp); dead = true; }
+        if (p.pos.distanceTo(tmp.copy(mp).setY(p.pos.y)) < 0.6) { const hp0 = p.hp; this.damagePlayer(q.dmg, mp); dead = true; if (q.bolt && p.hp < hp0) { p.knock = (p.knock || new THREE.Vector3()).addScaledVector(tmp2.copy(q.vel).setY(0).normalize(), 6); this.shake = Math.max(this.shake, 0.3); } }
         const c = mp.clone(); if (resolve(c, 0.05, true)) dead = true;
       }
       if (dead) { this.scene.remove(q.mesh); this.projectiles.splice(i, 1); }

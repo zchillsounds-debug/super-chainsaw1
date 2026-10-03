@@ -32,7 +32,7 @@ const AR = {
   'Show me your wares.': 'أرني بضاعتك.', 'Training.': 'التدريب.',
   // captains: "Name · Role" labels (names come from story_ar.js)
   'Swift': 'السريع', 'Ironclad': 'المدرّع', 'Volley': 'الرشّاق', 'Firebrand': 'مُضرم النار', 'Rallying': 'المحرِّض',
-  'Snaring': 'صاحب الشِّباك', 'Reed-born': 'ابن القصب', 'Slinger': 'مِقلاعيّ', 'Net-thrower': 'رامي الشِّباك', 'Reed Ambusher': 'كمين القصب', 'Hired Guard': 'حارس مأجور',
+  'Snaring': 'صاحب الشِّباك', 'Reed-born': 'ابن القصب', 'Slinger': 'مِقلاعيّ', 'Net-thrower': 'رامي الشِّباك', 'Reed Ambusher': 'كمين القصب', 'Hired Guard': 'حارس مأجور', 'Crossbowman': 'رامي القوس الرِّجليّ', 'Siege Engineer': 'مهندس الحصار', 'Mangonel': 'منجنيق', 'Camel Raider': 'غازٍ على جمل', 'Unhorsed Raider': 'غازٍ مُترجِّل',
   'Raider': 'مُغير', 'Deserter': 'فارّ', 'Archer': 'رامٍ', 'Champion': 'بطل', 'Captain': 'قائد',
   'Malik': 'مالك', 'Sa\'d': 'سعد', '\'Ubayd': 'عبيد', 'Hani': 'هانئ', 'Mukhariq': 'مخارق',
   // round 12 sheets

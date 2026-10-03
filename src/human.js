@@ -4,7 +4,7 @@ import { sculpt, capsule, ellipsoid, torus, halfspace, V } from './sculpt.js';
 import { charMaterial, defaultPalette, R, eyeTexture, blobTexture } from './charmats.js';
 import { Cloth, Jiggle, addWrinkles } from './cloth.js';
 import { fabricTex } from './textures.js';
-import { sword, dagger, torch, spear, bow, shield, addRim } from './characters.js';
+import { sword, dagger, torch, spear, bow, shield, crossbow, mallet, addRim } from './characters.js';
 import { QUALITY } from './graphics.js';
 import { Animator } from './anim.js';
 
@@ -405,6 +405,8 @@ export function humanoid(opts = {}) {
   if (o.weapon === 'dagger') { parts.trails = []; for (const [S, s] of SIDES) { const w = dagger(); w.rotation.x = Math.PI / 2; grip(bones['hand' + S], w, s); parts.trails.push({ obj: w, a: 0.12, b: 0.46 }); } }
   if (o.weapon === 'torch') { const w = torch(); w.rotation.x = Math.PI / 2.4; parts.weapon = grip(bones.handR, w, 1); }
   if (o.weapon === 'spear') { const w = spear(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
+  if (o.weapon === 'crossbow') { const w = crossbow(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
+  if (o.weapon === 'mallet') { const w = mallet(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
   if (o.weapon === 'sling') { // a cord sling hanging from the right hand, the pouch loaded with a stone
     const w = new THREE.Group(), cord = new THREE.MeshStandardMaterial({ color: 0x8a6a40, roughness: 1 });
     for (const s of [-1, 1]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.5, 3).translate(0, -0.25, 0), cord); c.position.x = s * 0.02; c.rotation.z = s * 0.05; w.add(c); }
@@ -415,7 +417,7 @@ export function humanoid(opts = {}) {
     const n = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.06, 6, 12), new THREE.MeshStandardMaterial({ color: 0x8a7a5a, roughness: 1 })); n.rotation.x = Math.PI / 2; n.position.set(0, -0.05, 0); bones.foreL.add(n);
   }
   // blade segments for swing trails (combatfx.js): local base and tip along the weapon's +y
-  if (!parts.trails && parts.weapon && o.weapon !== 'bow' && o.weapon !== 'sling' && o.weapon !== 'net') parts.trails = [{ obj: parts.weapon, ...({ sword: { a: 0.22, b: 1.12 }, spear: { a: 1.55, b: 2.12 }, torch: { a: 0.45, b: 0.86, fire: true } }[o.weapon] || { a: 0.2, b: 0.9 }) }];
+  if (!parts.trails && parts.weapon && o.weapon !== 'bow' && o.weapon !== 'sling' && o.weapon !== 'net' && o.weapon !== 'crossbow') parts.trails = [{ obj: parts.weapon, ...({ sword: { a: 0.22, b: 1.12 }, spear: { a: 1.55, b: 2.12 }, torch: { a: 0.45, b: 0.86, fire: true }, mallet: { a: 0.4, b: 0.66 } }[o.weapon] || { a: 0.2, b: 0.9 }) }];
   if (o.weapon === 'bow') { const w = bow(); w.position.set(0.018, -0.1, 0); bones.handL.add(w); parts.weapon = w; }
   if (o.offhand === 'shield') { const sd = shield(); sd.scale.setScalar(0.92); sd.position.set(-0.075, -0.14, 0.02); sd.rotation.set(0, -Math.PI / 2 + 0.5, 0); bones.foreL.add(sd); parts.shield = sd; }
   if (o.crest === 'banner') {

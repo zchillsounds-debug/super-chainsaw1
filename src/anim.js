@@ -60,9 +60,12 @@ const CLIPS = {
   throwLow: [[0, null], [0.42, { shL: [0.6, 0, -0.2], elL: [-0.3, 0, 0], chest: [0.2, -0.2, 0], spine: [0.15, 0, 0], drop: 0.12 }, 'io'],
     [0.6, { shL: [-1.9, 0, -0.1], elL: [-0.2, 0, 0], chest: [-0.1, 0.2, 0], spine: [-0.05, 0.1, 0], lunge: 0.15, drop: 0.02 }, 'snap'], [1, null, 'io']],
 };
+CLIPS.aimXbow = [[0, null], [0.25, { shR: [-1.35, 0.35, 0.1], elR: [-1.25, 0, 0], hR: [0.1, 0, 0], shL: [-1.45, -0.35, 0], elL: [-0.7, 0, 0], chest: [0, -0.15, 0], neck: [0.05, 0.12, 0], drop: 0.04 }, 'io'],
+  [0.62, { shR: [-1.35, 0.35, 0.1], elR: [-1.25, 0, 0], hR: [0.1, 0, 0], shL: [-1.45, -0.35, 0], elL: [-0.7, 0, 0], chest: [0, -0.15, 0], neck: [0.05, 0.12, 0], drop: 0.04 }, 'lin'],
+  [0.7, { shR: [-1.5, 0.35, 0.1], elR: [-1.0, 0, 0], shL: [-1.6, -0.35, 0], elL: [-0.6, 0, 0], chest: [-0.08, -0.15, 0], neck: [0.05, 0.12, 0] }, 'snap'], [1, null, 'io']];
 const COMBO = ['slashA', 'slashB', 'chop'];
 // which moves an action cycles through, by weapon; a chain resets after a pause
-const VARIANTS = { attack: { sword: COMBO, dagger: ['stabA', 'stabB', 'stabC'], spear: ['thrust', 'thrustHigh', 'sweep'] }, thrust: ['thrust', 'thrustHigh', 'sweep'], shoot: ['shoot', 'shootQuick', 'shootKneel'], throw: ['throw', 'throwSide', 'throwLow'] };
+const VARIANTS = { attack: { sword: COMBO, mallet: ['chop', 'slashA', 'chop'], dagger: ['stabA', 'stabB', 'stabC'], spear: ['thrust', 'thrustHigh', 'sweep'] }, thrust: ['thrust', 'thrustHigh', 'sweep'], shoot: ['shoot', 'shootQuick', 'shootKneel'], throw: ['throw', 'throwSide', 'throwLow'] };
 const CH = ['hips', 'spine', 'chest', 'uc', 'neck', 'head', 'shR', 'elR', 'hR', 'shL', 'elL', 'hL'];
 function samplePose(clip, k, base, out) {
   let i = 0; while (i < clip.length - 2 && k >= clip[i + 1][0]) i++;
@@ -82,7 +85,7 @@ export class Animator {
     this.base = newPose(); this.act = newPose();
     this.feet = [0, 1].map((i) => ({ i, side: i ? 1 : -1, pos: new THREE.Vector3(), yaw: 0, swing: false, s: 0, dur: 0.3, from: new THREE.Vector3(), lift: 0.07, pitch: 0, bootstrap: true }));
     this.prev = new THREE.Vector3(); this.vel = new THREE.Vector3(); this.speed = 0; this.gp = Math.random(); this.inited = false;
-    this.armed = o.weapon === 'sword' || o.weapon === 'spear' || o.weapon === 'torch' || o.weapon === 'dagger';
+    this.armed = o.weapon === 'sword' || o.weapon === 'spear' || o.weapon === 'torch' || o.weapon === 'dagger' || o.weapon === 'mallet' || o.weapon === 'crossbow';
     this.shield = o.offhand === 'shield';
     this.blinkT = 1 + Math.random() * 3; this.blink = 0; this.combo = 0; this.lastAtkEnd = -9; this.clip = null; this.lastK = 0; this.actW = 0;
     this.dd = null; this.t = 0;
@@ -254,9 +257,16 @@ export class Animator {
     B.hips.position.set(0, 1.0 - drop, pose.lunge / S * 0.6 + fl * 0.03);
     this.jawT = pose.jaw;
 
-    // ---------------- leg IK
+    // ---------------- leg IK (a rider's legs straddle the saddle instead: Round 20)
     r.updateMatrixWorld(true);
-    for (const f of this.feet) this.solveLeg(f, fy);
+    if (st.mounted) {
+      B.hips.position.set(0, 1.0, 0);
+      for (const [S2, s] of [['L', -1], ['R', 1]]) {
+        const set = (bn, x, y, z) => { const bone = B[bn], br = bone.userData.bindRot; bone.rotation.set(br.x + x, br.y + y, br.z + z); };
+        set('thigh' + S2, -1.25, 0, s * 0.55); set('shin' + S2, 1.35, 0, -s * 0.2); set('foot' + S2, 0.35, 0, 0);
+      }
+      r.updateMatrixWorld(true);
+    } else for (const f of this.feet) this.solveLeg(f, fy);
     this.finish(st, t, dt, true);
   }
 

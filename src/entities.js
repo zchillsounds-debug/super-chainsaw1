@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { humanoid } from './characters.js';
+import { TYPES20 } from './foes20.js';
 
 // Enemy archetypes.
 // Raiders and deserters loose in the Sawad after the siege of 813. All human foes.
@@ -60,6 +61,8 @@ export const TYPES = {
 };
 
 const ELITE_NAMES = ['Fadl', 'Khalid', 'Sinan', 'Hudhayl', 'Mukhariq', 'Sa\'d', 'Kulayb', 'Harith'];
+
+Object.assign(TYPES, TYPES20); // Round 20: crossbowmen, siege engineers and their mangonels, camel raiders
 
 // Round 20: captains get a silhouette of their own: heavy armour, the full-detail sculpt and one crest chosen
 // from the name (a plume, a mantle, a tall felt cap, a pennant on the back, or great shoulders and greaves)

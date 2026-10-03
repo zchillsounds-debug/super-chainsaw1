@@ -88,6 +88,22 @@ export function spear() {
   g.add(mesh(new THREE.ConeGeometry(0.06, 0.35, 4).translate(0, 1.95, 0), steel));
   return g;
 }
+// Round 20: a foot crossbow (qaws al-rijl): a wooden stock with a short composite prod and its cord
+export function crossbow() {
+  const g = new THREE.Group();
+  g.add(mesh(new THREE.BoxGeometry(0.05, 0.78, 0.06).translate(0, 0.3, 0), leather));
+  const prod = mesh(new THREE.TorusGeometry(0.32, 0.02, 5, 16, Math.PI * 0.7), leather); prod.rotation.z = Math.PI / 2 - Math.PI * 0.35; prod.position.y = 0.36; g.add(prod);
+  g.add(mesh(new THREE.BoxGeometry(0.58, 0.006, 0.006).translate(0, 0.505, 0.0), new THREE.MeshStandardMaterial({ color: 0xd8c8a0, roughness: 0.9 })));
+  g.add(mesh(new THREE.BoxGeometry(0.03, 0.06, 0.08).translate(0, 0.5, 0.03), steel)); // the nut that holds the cord
+  return g;
+}
+// a siege carpenter's wooden mallet
+export function mallet() {
+  const g = new THREE.Group();
+  g.add(mesh(new THREE.CylinderGeometry(0.02, 0.024, 0.62, 6).translate(0, 0.22, 0), leather));
+  g.add(mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.22, 8).rotateZ(Math.PI / 2).translate(0, 0.55, 0), new THREE.MeshStandardMaterial({ color: 0x6a4a2a, roughness: 0.85 })));
+  return g;
+}
 export function bow() {
   const g = new THREE.Group();
   const c = new THREE.TorusGeometry(0.6, 0.02, 5, 20, Math.PI * 0.9);
