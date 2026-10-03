@@ -256,6 +256,7 @@ function frame() {
   renderer.shadowMap.needsUpdate = !halfRate || !sun.shadow.map || (shFrame & 1) === 0 || !sun.target.position.equals(_shLast);
   _shLast.copy(sun.target.position);
   atmos.update(dt, c, lighting, camera, !!game.interior);
+  if (vol?.enabled !== false && vol) for (const r of atmos.rays) r.visible = false; // real god rays replace the old slabs
   {
     const L = lighting.cur, hk = (L.hero || 0) * (game.interior ? 1.2 : 1);
     heroLight.intensity = mode === 'game' ? hk : 0; heroLight.position.set(c.x, (c.y || 0) + 3.4, c.z + 1.2);

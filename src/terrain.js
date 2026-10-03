@@ -190,7 +190,7 @@ export function createTerrain() {
         float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
           return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
         float fb(vec2 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*vn(p); p*=2.03; a*=.5; } return s; }
-        vec4 gMask; float gRock; vec4 gDet; float gSand;
+        vec4 gMask; float gRock; vec4 gDet; float gSand; float gWet = 0.0;
         uniform sampler2D tSandD, tSandN, tEarthD, tEarthN, tFlagD, tFlagN, tRoadD, tRoadN;
         // anti-tiling: a second lookup turned 90 degrees and shifted, blended in by low-frequency noise
         vec4 gTex(sampler2D t, vec2 uv, float k){ vec4 a = texture2D(t, uv); if (k <= 0.001) return a; vec4 b = texture2D(t, vec2(-uv.y, uv.x) + vec2(0.37, 0.61)); return mix(a, b, k); }
@@ -221,9 +221,10 @@ export function createTerrain() {
         vec3 mud = vec3(0.28,0.22,0.15);
         #if RG == 1
           // marsh: grey-brown silt, lush grass, black wet mud at the water line
-          sand = mix(vec3(0.36,0.33,0.26), vec3(0.45,0.41,0.31), n1); sand = mix(sand, vec3(0.30,0.27,0.21), smoothstep(0.5,0.8,n2)*0.5);
+          sand = mix(vec3(0.31,0.26,0.19), vec3(0.39,0.33,0.24), n1); sand = mix(sand, vec3(0.24,0.20,0.15), smoothstep(0.5,0.8,n2)*0.5);
           dirt = mix(vec3(0.30,0.26,0.19), vec3(0.38,0.33,0.24), n2);
-          grass = mix(vec3(0.22,0.32,0.12), vec3(0.36,0.42,0.16), n1); grass = mix(grass, vec3(0.44,0.44,0.22), smoothstep(0.5,0.8,n2)*0.6);
+          grass = mix(vec3(0.20,0.29,0.11), vec3(0.33,0.39,0.15), n1); grass = mix(grass, vec3(0.44,0.40,0.21), smoothstep(0.5,0.8,n2)*0.6);
+          grass = mix(grass, vec3(0.47,0.40,0.22), smoothstep(0.55,0.8,fb(vWPos.xz*0.06+2.0))*0.55); // dry, yellowed tussocks
           mud = vec3(0.15,0.13,0.10);
         #elif RG == 2
           // al-Karkh: trodden earth and ash, black soot where the fires burned
@@ -293,9 +294,14 @@ export function createTerrain() {
         col *= 0.94 + 0.12*n3;
         // baked cavity: dark crevices between stones, under pebbles and in cracks
         col *= mix(1.0, nB.b, 0.85);
+        #if RG == 1
+          // standing water in the low, trodden ground of the marsh
+          gWet = smoothstep(0.6, 0.72, fb(wq*0.11 + 7.0) + (0.5 - dS.a)*0.3) * (1.0 - kGrass) * (1.0 - kSite);
+          col *= 1.0 - gWet * 0.5;
+        #endif
         diffuseColor.rgb *= col;
       `)
-      .replace('#include <roughnessmap_fragment>', `float roughnessFactor = roughness - gMask.b*0.45 - smoothstep(0.3,0.8,gMask.a)*0.1;`)
+      .replace('#include <roughnessmap_fragment>', `float roughnessFactor = mix(roughness - gMask.b*0.45 - smoothstep(0.3,0.8,gMask.a)*0.1, 0.08, gWet);`)
       .replace('#include <normal_fragment_maps>', `
         {
           vec2 q = vWPos.xz;
@@ -313,7 +319,7 @@ export function createTerrain() {
           vec2 g = dir * c * 2.6 * sharp * amp * 0.42;
           // baked material normal (tangent space: x along world x, y along world z)
           vec2 tn = gDet.xy*2.0-1.0;
-          g -= tn * 1.6;
+          g -= tn * 1.6 * (1.0 - gWet);
           // macro undulation normals (small dunes) from noise gradient
           float e = 0.6; float h0 = fb(q*0.18);
           g += vec2(fb((q+vec2(e,0.))*0.18)-h0, fb((q+vec2(0.,e))*0.18)-h0) / e * 0.35 * rip;
