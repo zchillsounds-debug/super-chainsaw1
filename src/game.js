@@ -90,8 +90,7 @@ export class Game {
         sh.fragmentShader = sh.fragmentShader
           .replace('#include <common>', `#include <common>
             uniform vec2 uHole; uniform float uHoleR, uPDepth;
-            float bayer4(vec2 p){ ivec2 i = ivec2(mod(p,4.0)); int k = i.x + i.y*4;
-              float m[16] = float[16](0.,8.,2.,10.,12.,4.,14.,6.,3.,11.,1.,9.,15.,7.,13.,5.); return (m[k]+0.5)/16.0; }`)
+            float bayer4(vec2 p){ return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }`)
           .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
             { float dz = vViewPosition.z; float d = length(gl_FragCoord.xy - uHole);
               float f = smoothstep(uHoleR*${hs.toFixed(2)}, uHoleR*${(hs * 0.55).toFixed(2)}, d) * step(dz, uPDepth - 1.2) * ${hs > 1 ? '1.0' : '0.85'};
@@ -102,7 +101,23 @@ export class Game {
       patched.set(mat, m);
       return m;
     };
-    for (const g of groups) g.traverse((o) => { if (o.isMesh && !o.userData.noOcc && !o.material.isMeshBasicMaterial) o.material = patch(o.material, scaleOf(o)); });
+    // the AO G-buffer pass draws with one override material: occluders switch its hole on while they draw
+    const G = this.occGBuf = { on: { value: 0 }, mat: null };
+    const before = (r, s, c, geo, mat) => { if (mat === G.mat) { G.on.value = 1; mat.uniformsNeedUpdate = true; } };
+    const after = (r, s, c, geo, mat) => { if (mat === G.mat) { G.on.value = 0; mat.uniformsNeedUpdate = true; } };
+    for (const g of groups) g.traverse((o) => { if (o.isMesh && !o.userData.noOcc && !o.material.isMeshBasicMaterial) { o.material = patch(o.material, scaleOf(o)); o.onBeforeRender = before; o.onAfterRender = after; } });
+  }
+  // cut the same see-through hole into the AO pass, so a wall faded away no longer shades the floor behind it
+  holeInGBuffer(mat) {
+    const U = this.occU, G = this.occGBuf; G.mat = mat;
+    mat.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, U); sh.uniforms.uOccOn = G.on;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vOccZ;').replace('#include <project_vertex>', '#include <project_vertex>\nvOccZ = -mvPosition.z;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <packing>', '#include <packing>\nuniform vec2 uHole; uniform float uHoleR, uPDepth, uOccOn; varying float vOccZ;')
+        .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+          if (uOccOn > 0.5) { float d = length(gl_FragCoord.xy - uHole); if (d < uHoleR*0.8 && vOccZ < uPDepth - 1.2) discard; }`);
+    };
+    mat.customProgramCacheKey = () => 'gbufhole'; mat.needsUpdate = true;
   }
   updateOccluders() {
     const p = this.player.pos;
@@ -302,7 +317,6 @@ export class Game {
       } else if (e.button === 2) this.useSkill('rmb');
     });
     addEventListener('mouseup', (e) => { if (e.button === 0) this.lmb = false; });
-    addEventListener('wheel', (e) => { this.camZoom = THREE.MathUtils.clamp(this.camZoom + Math.sign(e.deltaY) * 0.08, 0.7, 1.35); });
     addEventListener('keydown', (e) => {
       this.keys[e.key.toLowerCase()] = true;
       if (!this.started) return;
@@ -1209,7 +1223,7 @@ export class Game {
       const dist = e.pos.distanceTo(p.pos);
       // only rigs inside the top-down view (plus a margin) are drawn and skinned
       const vdx = Math.abs(e.pos.x - p.pos.x), vdz = e.pos.z - p.pos.z;
-      e.rig.visible = vdx < 30 * this.camZoom && vdz > -36 * this.camZoom && vdz < 20 || (e.boss && dist < 60);
+      const vz = Math.max(1, this.camZoom) * (this.camZoom < 0.85 ? 1.5 : 1); e.rig.visible = vdx < 30 * vz && vdz > -36 * vz && vdz < 20 * Math.max(1, this.camZoom) || (e.boss && dist < 60);
       if (e.rig.visible) setCharLOD(e.rig, dist > 15 && !this.cinematic);
       if (e.dead) {
         e.st.deadT += dt; e.deadT += dt;
@@ -1473,9 +1487,15 @@ export class Game {
 
   updateCamera(dt) {
     const p = this.player.pos;
-    this.autoZoom = THREE.MathUtils.lerp(this.autoZoom || 1, this.bossActive ? 1.3 : 1, Math.min(1, dt * 1.5));
-    const dist = 13.5 * this.camZoom * this.autoZoom * (innerWidth < innerHeight ? 1.45 : 1);
-    const target = tmp.set(p.x, p.y + dist * 1.0, p.z + dist * 0.78);
+    // ease back a little when a fight grows (more foes alerted close by), more for a captain
+    if ((this.fightCountT = (this.fightCountT || 0) - dt) <= 0) { this.fightCountT = 0.5; let n = 0; for (const e of this.enemies) if (!e.dead && e.alerted && Math.abs(e.pos.x - p.x) < 14 && Math.abs(e.pos.z - p.z) < 14) n++; this.fightN = n; }
+    const ease = this.bossActive ? 1.3 : 1 + 0.14 * Math.min(1, Math.max(0, (this.fightN || 0) - 2) / 4);
+    this.autoZoom = THREE.MathUtils.lerp(this.autoZoom || 1, ease, Math.min(1, dt * 1.2));
+    // zoom: close in, the camera drops toward an over-the-shoulder angle; out, it rises to a high wide view
+    const z = this.camZoom, k = THREE.MathUtils.smoothstep(z, 0.5, 1.0);
+    const dist = 13.5 * z * this.autoZoom * (innerWidth < innerHeight ? 1.45 : 1);
+    const yK = THREE.MathUtils.lerp(0.58, 1.0, k), zK = THREE.MathUtils.lerp(1.08, 0.78, k), lookY = THREE.MathUtils.lerp(1.55, 1.0, k);
+    const target = tmp.set(p.x, p.y + dist * yK, p.z + dist * zK);
     if (!this.camInit) { this.camPos.copy(target); this.camInit = true; }
     this.camPos.lerp(target, Math.min(1, dt * 6));
     this.camera.position.copy(this.camPos);
@@ -1485,6 +1505,6 @@ export class Game {
       const s = this.shake * this.shake * 0.8 * (this.shakeScale ?? 1);
       this.camera.position.x += (Math.random() - 0.5) * s; this.camera.position.y += (Math.random() - 0.5) * s; this.camera.position.z += (Math.random() - 0.5) * s;
     }
-    this.camera.lookAt(this.camPos.x + (this.camKick?.x || 0) * 0.5, this.camPos.y - dist * 1.0 + 1.0, this.camPos.z - dist * 0.78 + (this.camKick?.z || 0) * 0.5);
+    this.camera.lookAt(this.camPos.x + (this.camKick?.x || 0) * 0.5, this.camPos.y - dist * yK + lookY, this.camPos.z - dist * zK + (this.camKick?.z || 0) * 0.5);
   }
 }

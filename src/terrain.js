@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GROUND } from './groundtex.js';
 import { fbm, noise2, smooth, clamp, mulberry32 } from './noise.js';
 import { REGION, IS_MARSH, IS_KARKH } from './region.js';
 
@@ -166,37 +167,6 @@ function makeMask() {
   return t;
 }
 
-// Tileable detail normal (sand ripples + pebbles) generated on a canvas.
-function detailNormal() {
-  const S = 256, c = document.createElement('canvas'); c.width = c.height = S;
-  const x = c.getContext('2d'), img = x.createImageData(S, S);
-  const H = new Float32Array(S * S), rnd = mulberry32(9);
-  for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) {
-    const u = i / S * Math.PI * 2, v = j / S * Math.PI * 2;
-    // periodic ripples
-    let h = Math.sin(u * 6 + Math.sin(v * 2) * 1.5 + Math.sin(u * 2 + v) * 0.8) * 0.35;
-    h += Math.sin(u * 13 + v * 3) * 0.08;
-    H[j * S + i] = h;
-  }
-  for (let p = 0; p < 500; p++) { // pebbles
-    const cx = rnd() * S, cy = rnd() * S, r = 1.5 + rnd() * 3.5;
-    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
-      const d = Math.hypot(dx, dy) / r; if (d > 1) continue;
-      const ii = ((cx + dx + S) % S) | 0, jj = ((cy + dy + S) % S) | 0;
-      H[jj * S + ii] = Math.max(H[jj * S + ii], 0.6 * Math.sqrt(1 - d * d));
-    }
-  }
-  for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) {
-    const dx = (H[j * S + (i + S - 1) % S] - H[j * S + (i + 1) % S]) * 2.2;
-    const dy = (H[((j + S - 1) % S) * S + i] - H[((j + 1) % S) * S + i]) * 2.2;
-    const l = Math.hypot(dx, dy, 1), k = (j * S + i) * 4;
-    img.data[k] = (dx / l * .5 + .5) * 255; img.data[k + 1] = (dy / l * .5 + .5) * 255; img.data[k + 2] = (1 / l * .5 + .5) * 255; img.data[k + 3] = 255;
-  }
-  x.putImageData(img, 0, 0);
-  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8;
-  return t;
-}
-
 export function createTerrain() {
   const seg = 320;
   const geo = new THREE.PlaneGeometry(WORLD, WORLD, seg, seg);
@@ -206,7 +176,7 @@ export function createTerrain() {
   geo.computeVertexNormals();
 
   const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, metalness: 0 });
-  const uniforms = { uMask: { value: makeMask() }, uDetail: { value: detailNormal() }, uWorld: { value: WORLD } };
+  const uniforms = { uMask: { value: makeMask() }, uWorld: { value: WORLD }, tSandD: GROUND.sandD, tSandN: GROUND.sandN, tEarthD: GROUND.earthD, tEarthN: GROUND.earthN, tFlagD: GROUND.flagD, tFlagN: GROUND.flagN, tRoadD: GROUND.roadD, tRoadN: GROUND.roadN };
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, uniforms);
     sh.vertexShader = sh.vertexShader
@@ -215,12 +185,26 @@ export function createTerrain() {
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
         #define RG ${IS_MARSH ? 1 : IS_KARKH ? 2 : 0}
-        varying vec3 vWPos; uniform sampler2D uMask; uniform sampler2D uDetail; uniform float uWorld;
+        varying vec3 vWPos; uniform sampler2D uMask; uniform float uWorld;
         float h21(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return fract(p.x*p.y); }
         float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
           return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
         float fb(vec2 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*vn(p); p*=2.03; a*=.5; } return s; }
-        vec4 gMask; float gRock; float gStoneEdge; vec2 gStoneGrad;
+        vec4 gMask; float gRock; vec4 gDet; float gSand;
+        uniform sampler2D tSandD, tSandN, tEarthD, tEarthN, tFlagD, tFlagN, tRoadD, tRoadN;
+        // anti-tiling: a second lookup turned 90 degrees and shifted, blended in by low-frequency noise
+        vec4 gTex(sampler2D t, vec2 uv, float k){ vec4 a = texture2D(t, uv); if (k <= 0.001) return a; vec4 b = texture2D(t, vec2(-uv.y, uv.x) + vec2(0.37, 0.61)); return mix(a, b, k); }
+        vec4 gTexN(sampler2D t, vec2 uv, float k){ vec4 a = texture2D(t, uv); if (k <= 0.001) return a; vec4 b = texture2D(t, vec2(-uv.y, uv.x) + vec2(0.37, 0.61)); b.xy = vec2(b.y, 1.0 - b.x); return mix(a, b, k); }
+        // height blend: near the transition the higher surface wins
+        #if RG == 1
+          const vec3 pebA = vec3(0.40,0.38,0.33), pebB = vec3(0.28,0.25,0.20), pebC = vec3(0.46,0.42,0.36);
+        #elif RG == 2
+          const vec3 pebA = vec3(0.44,0.42,0.40), pebB = vec3(0.24,0.22,0.21), pebC = vec3(0.56,0.42,0.32);
+        #else
+          const vec3 pebA = vec3(0.56,0.52,0.47), pebB = vec3(0.42,0.33,0.26), pebC = vec3(0.66,0.56,0.44);
+        #endif
+        vec3 peb(float t){ return t < 0.5 ? mix(pebA, pebB, t*2.0) : mix(pebB, pebC, t*2.0-1.0); }
+        float hb(float k, float hA, float hB){ float t = clamp(k + (hB - hA) * 0.9 * (4.0*k*(1.0-k)), 0.0, 1.0); return smoothstep(0.3, 0.7, t) * step(0.001, k); }
         vec2 hh2(vec2 p){ p = vec2(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
         // returns (edgeDist, cellId)
         vec2 vor2(vec2 p){ vec2 i=floor(p), f=fract(p); float d1=8., d2=8.; vec2 id=vec2(0.);
@@ -248,57 +232,64 @@ export function createTerrain() {
           dirt = mix(vec3(0.36,0.31,0.26), vec3(0.44,0.38,0.31), n2);
           grass = mix(vec3(0.30,0.34,0.16), vec3(0.40,0.40,0.22), n1);
         #endif
-        // packed road with cart ruts and stones
-        vec3 road = mix(vec3(0.36,0.27,0.19), vec3(0.45,0.35,0.25), n3);
-        float stones = smoothstep(0.68,0.74,fb(vWPos.xz*1.6));
-        road = mix(road, vec3(0.50,0.46,0.40), stones*0.6);
-        // worn ruts: darker bands where the mask is strongest, lighter crown between
-        float rut = smoothstep(0.75,0.95,gMask.r) * (0.5+0.5*sin(gMask.r*40.0));
-        road *= 1.0 - rut*0.18;
-        // edge debris/pebbles at the transition to sand
-        float edge = smoothstep(0.15,0.35,gMask.r) * smoothstep(0.65,0.4,gMask.r);
-        road = mix(road, vec3(0.38,0.30,0.22), edge * smoothstep(0.5,0.8,fb(vWPos.xz*3.0)) * 0.7);
-        // courtyard flagstones in sites
-        vec2 sp = vWPos.xz*1.05;
-        vec2 vc = vor2(sp);
-        gStoneEdge = vc.x;
-        float e2 = 0.05; gStoneGrad = vec2(vor2(sp+vec2(e2,0.)).x - vc.x, vor2(sp+vec2(0.,e2)).x - vc.x)/e2;
-        float grout = smoothstep(0.02,0.12,vc.x);
-        vec3 stoneCol = mix(vec3(0.60,0.50,0.38), vec3(0.74,0.62,0.47), vc.y);
-        stoneCol = mix(stoneCol, vec3(0.55,0.42,0.30), step(0.85, h21(vec2(vc.y*91.0,3.0)))*0.6);
-        #if RG == 2
-          stoneCol = mix(vec3(0.50,0.47,0.42), vec3(0.62,0.57,0.50), vc.y);
+        // ---- Round 19: baked ground materials (groundtex.js), coloured per region, blended by height
+        vec2 wq = vWPos.xz;
+        float tileMix = smoothstep(0.35, 0.65, fb(wq*0.045 + 21.0));
+        vec4 dS = gTex(tSandD, wq/3.6, tileMix), dE = gTex(tEarthD, wq/4.6, tileMix), dF = gTex(tFlagD, wq/3.8, 0.0), dR = gTex(tRoadD, wq/3.2, tileMix);
+        vec4 nS = gTexN(tSandN, wq/3.6, tileMix), nE = gTexN(tEarthN, wq/4.6, tileMix), nF = gTexN(tFlagN, wq/3.8, 0.0), nR = gTexN(tRoadN, wq/3.2, tileMix);
+        // each layer: palette colour x baked brightness, features (pebbles, cracks, joints) on top
+        vec3 cSand = sand * dS.r; cSand = mix(cSand, peb(dS.b), dS.g*0.85);
+        // dry earth: soft trodden dirt, with patches where it has baked and cracked into plates
+        float crackK = smoothstep(0.52, 0.68, fb(wq*0.05 + 4.0));
+        vec3 cDirt = dirt * mix(mix(0.92, 1.04, dS.r), dE.r * 1.08, crackK); cDirt = mix(cDirt, peb(dS.b), dS.g*0.6*(1.0-crackK));
+        vec3 cGrass = grass * mix(1.0, mix(dS.r, dE.r, crackK), 0.5);
+        vec3 cMud = mud * mix(0.85, 1.1, dE.r);
+        vec3 road = mix(vec3(0.40,0.31,0.22), vec3(0.47,0.37,0.27), n3);
+        #if RG == 1
+          road = mix(vec3(0.34,0.29,0.22), vec3(0.40,0.34,0.26), n3);
+        #elif RG == 2
+          road = mix(vec3(0.40,0.35,0.30), vec3(0.47,0.41,0.34), n3);
         #endif
-        stoneCol *= 0.85 + 0.25*n3;
-        vec3 flag = mix(vec3(0.33,0.26,0.19), stoneCol, grout);
-        // sand drifts settling over the courtyard
-        flag = mix(flag, sand*0.95, smoothstep(0.5,0.75,n1 + (1.0-grout)*0.15)*0.85);
-        vec3 col = sand;
-        col = mix(col, dirt, smoothstep(0.2,0.7,gMask.g)*0.8);
-        col = mix(col, grass, smoothstep(0.45,0.9,gMask.g + (n2-0.5)*0.5));
-        col = mix(col, mud, gMask.b*0.9);
+        vec3 cRoad = road * dR.r; cRoad = mix(cRoad, peb(dR.b) * 1.05, dR.g * 0.8);
+        float rut = smoothstep(0.75,0.95,gMask.r) * (0.5+0.5*sin(gMask.r*40.0));
+        cRoad *= 1.0 - rut*0.14;
+        vec3 stoneCol = mix(vec3(0.62,0.52,0.40), vec3(0.76,0.64,0.49), dF.b);
+        stoneCol = mix(stoneCol, vec3(0.55,0.42,0.30), step(0.85, fract(dF.b*7.3))*0.6);
+        #if RG == 2
+          stoneCol = mix(vec3(0.50,0.47,0.42), vec3(0.64,0.58,0.50), dF.b);
+        #endif
+        vec3 cFlag = mix(stoneCol * dF.r, sand * 0.62, dF.g);
+        // height-aware blending: pebbles and stone tops poke through, sand settles into the low parts
+        float kDirt = hb(smoothstep(0.2,0.7,gMask.g)*0.8, dS.a, dE.a);
+        float kGrass = hb(smoothstep(0.45,0.9,gMask.g + (n2-0.5)*0.5), dE.a, dE.a*0.6 + 0.2);
+        float kMud = gMask.b*0.9;
         float site = smoothstep(0.3,0.8,gMask.a + (n2-0.5)*0.4);
-        col = mix(col, flag, site*0.85);
+        // blown sand settles over the paving in drifts, deepest along the joints
+        float drift = smoothstep(0.45, 0.8, n1 + (n2-0.5)*0.5);
+        float kSite = hb(site*(0.97 - drift*0.75), 0.3 + dS.a*0.4 + drift*0.5, dF.a);
+        float kRoad = hb(smoothstep(0.15,0.6,gMask.r + (n3-0.5)*0.3)*(1.0-site*0.6), dS.a, dR.a + 0.05);
+        vec3 col = cSand;
+        col = mix(col, cDirt, kDirt);
+        col = mix(col, cGrass, kGrass);
+        col = mix(col, cMud, kMud);
+        col = mix(col, cRoad, kRoad);
+        col = mix(col, cFlag, kSite);
+        // the blended surface normal and cavity, carried to the normal stage
+        vec4 nB = nS;
+        vec4 nDirt = mix(nS, nE, crackK); nB = mix(nB, nDirt, kDirt); nB = mix(nB, nDirt, kGrass*0.6); nB = mix(nB, vec4(0.5,0.5,1.0,1.0), kMud*0.7); nB = mix(nB, nR, kRoad); nB = mix(nB, nF, kSite);
+        gDet = nB; gSand = (1.0-kDirt)*(1.0-kGrass)*(1.0-kRoad)*(1.0-kSite)*(1.0-kMud);
         #if RG == 2
           // soot and ash where the fires burned (kept off the swept lanes and squares)
-          col = mix(col, vec3(0.13,0.12,0.11), smoothstep(0.56,0.78,fb(vWPos.xz*0.11+3.0))*0.8*(1.0-site));
+          col = mix(col, vec3(0.13,0.12,0.11) * mix(0.8, 1.2, dE.r), smoothstep(0.56,0.78,fb(vWPos.xz*0.11+3.0))*0.8*(1.0-site));
           col = mix(col, vec3(0.55,0.53,0.5), smoothstep(0.62,0.8,fb(vWPos.xz*0.35+9.0))*0.25*(1.0-site));
         #endif
-        {
-          // contrast-adaptive road: darker than bright sand, paler & dustier than dark fertile soil
-          float lum = dot(col, vec3(0.3,0.59,0.11));
-          vec3 adapt = mix(col*vec3(1.55,1.45,1.35) + vec3(0.04), col*vec3(0.66,0.62,0.6), smoothstep(0.38,0.52,lum));
-          vec3 rc = mix(adapt, road, 0.35);
-          rc = mix(rc, vec3(0.55,0.5,0.44)*(0.85+0.3*n2), stones*0.5);
-          col = mix(col, rc, smoothstep(0.15,0.6,gMask.r + (n3-0.5)*0.3)*(1.0-site*0.6));
-        }
-        // slope -> exposed rock
         gRock = smoothstep(0.82,0.62,vNormal.y);
-        col = mix(col, vec3(0.55,0.47,0.38)*(0.8+0.4*n3), 0.0);
         float macro = fb(vWPos.xz*0.012+11.0);
         col *= mix(vec3(0.82,0.74,0.66), vec3(1.08,1.02,0.95), smoothstep(0.25,0.75,macro));
         col = mix(col, col*vec3(1.05,0.86,0.72), smoothstep(0.55,0.8,fb(vWPos.xz*0.04+5.0))*0.5*(1.0-gMask.g));
-        col *= 0.9 + 0.2*n3; // micro variation
+        col *= 0.94 + 0.12*n3;
+        // baked cavity: dark crevices between stones, under pebbles and in cracks
+        col *= mix(1.0, nB.b, 0.85);
         diffuseColor.rgb *= col;
       `)
       .replace('#include <roughnessmap_fragment>', `float roughnessFactor = roughness - gMask.b*0.45 - smoothstep(0.3,0.8,gMask.a)*0.1;`)
@@ -306,7 +297,7 @@ export function createTerrain() {
         {
           vec2 q = vWPos.xz;
           // procedural wind ripples (non-repeating): warped sine with sharp crests
-          float rip = (1.0-gMask.g)*(1.0-smoothstep(0.1,0.5,gMask.r))*(1.0-smoothstep(0.2,0.6,gMask.a));
+          float rip = gSand*(1.0-gMask.g)*(1.0-smoothstep(0.1,0.5,gMask.r))*(1.0-smoothstep(0.2,0.6,gMask.a));
           #if RG != 0
             rip *= 0.0; // wind ripples belong to the desert
           #endif
@@ -317,14 +308,12 @@ export function createTerrain() {
           float c = cos(ph), sn = sin(ph);
           float sharp = 0.6 + 0.4*sn; // asymmetric crest
           vec2 g = dir * c * 2.6 * sharp * amp * 0.42;
-          vec3 dn = texture2D(uDetail, q*0.35).xyz*2.0-1.0;
-          float peb = 0.35 + 0.65*(1.0-rip);
-          g += dn.xy * 0.5 * peb;
+          // baked material normal (tangent space: x along world x, y along world z)
+          vec2 tn = gDet.xy*2.0-1.0;
+          g -= tn * 1.6;
           // macro undulation normals (small dunes) from noise gradient
           float e = 0.6; float h0 = fb(q*0.18);
           g += vec2(fb((q+vec2(e,0.))*0.18)-h0, fb((q+vec2(0.,e))*0.18)-h0) / e * 0.35 * rip;
-          float siteK = smoothstep(0.3,0.8,gMask.a);
-          g += -gStoneGrad * smoothstep(0.14,0.0,gStoneEdge) * 0.35 * siteK;
           vec3 wn = normalize(vec3(-g.x, 1.0, -g.y));
           vec3 vn2 = normalize((viewMatrix * vec4(wn,0.0)).xyz);
           normal = normalize(normal + (vn2 - (viewMatrix*vec4(0,1,0,0)).xyz));

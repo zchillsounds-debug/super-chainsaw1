@@ -551,3 +551,14 @@ body.touch #dialog .dbtn{align-self:flex-end;float:none;min-width:140px}
 .gemrow{display:flex;flex-wrap:wrap;gap:8px}.gemchip{display:flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid #4a3418;border-radius:18px;background:#0b0704;font:14px Amiri,serif;color:#e8d8b8}
 .gemic{width:20px;height:20px;flex:none}.gemacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.gemacts .sbtn{display:flex;align-items:center;gap:4px}
 .tt-gem{font:500 13px Cinzel,serif;margin-top:6px}.tt-gem.empty{color:#a09070}
+/* ---- Round 19: full-screen map */
+#shop.bigmap{width:min(980px,calc(100vw - 20px));height:calc(100dvh - 24px);max-height:none;overflow:hidden;padding-bottom:8px}
+#shop.bigmap .mapwrap{position:relative;flex:1;min-height:0;border-radius:6px;overflow:hidden;border:1px solid #5a4028}
+#shop.bigmap canvas{display:block;touch-action:none;cursor:grab}
+#shop.bigmap .maphint{position:absolute;left:50%;bottom:8px;translate:-50% 0;font:13px Amiri,serif;color:#e8d8b8;background:rgba(10,6,3,.7);padding:4px 12px;border-radius:12px;pointer-events:none;white-space:nowrap}
+#shop.bigmap .mapcard{position:absolute;right:10px;top:10px;background:rgba(18,11,6,.94);border:1px solid #a07a40;border-radius:8px;padding:10px 12px;color:#f0e0c0;font:15px Amiri,serif;min-width:190px;box-shadow:0 6px 20px #000a}
+#shop.bigmap .mapcard b{font:600 15px Cinzel,serif;color:#ffd870}
+#shop.bigmap .mapcard .mcb{display:flex;gap:8px;margin-top:8px}
+#shop.bigmap .mapcard button{flex:1;min-height:44px;font:600 13px Cinzel,serif;color:#1a1008;background:linear-gradient(#f0c870,#b88a3a);border:0;border-radius:6px}
+#shop.bigmap .mapcard button:disabled{opacity:.4}
+#shop.bigmap .mapcard i{display:block;margin-top:6px;font-size:13px;color:#e0a080}

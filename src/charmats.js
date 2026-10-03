@@ -32,7 +32,7 @@ export function defaultPalette() {
 
 const GLSL_COMMON = /* glsl */`
 varying vec3 vRest; varying vec3 vRestN; varying float vMat;
-uniform vec3 uCol[${N}]; uniform vec3 uPBR[${N}]; uniform vec3 uRimC; uniform float uDetail;
+uniform vec3 uCol[${N}]; uniform vec3 uPBR[${N}]; uniform vec3 uRimC, uRimG; uniform float uDetail;
 float h31(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 float vn(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(mix(h31(i), h31(i + vec3(1,0,0)), f.x), mix(h31(i + vec3(0,1,0)), h31(i + vec3(1,1,0)), f.x), f.y),
@@ -49,11 +49,14 @@ vec3 perturbN(vec3 sp, vec3 sn, float H, float fd){
   vec2 dh = vec2(dFdx(H), dFdy(H)); vec3 g = sign(det) * (dh.x * r1 + dh.y * r2); return normalize(abs(det) * sn - g); }
 `;
 
+// Round 19: one rim colour for every character, set from the time of day (lighting.js), so figures read against
+// the ground in every light
+export const RIM_G = { value: new THREE.Color(1, 1, 1) };
 export function charMaterial(palette = defaultPalette(), { rim = new THREE.Color(1.0, 0.78, 0.5), rimK = 0.75, side = THREE.FrontSide } = {}) {
   const mat = new THREE.MeshStandardMaterial({ roughness: 0.8, metalness: 0, side });
   const cols = [], pbr = [];
   for (let i = 0; i < N; i++) { const q = palette[i] || palette[0]; cols.push(q.c.clone()); pbr.push(new THREE.Vector3(q.r, q.m, q.k)); }
-  const uni = { uCol: { value: cols }, uPBR: { value: pbr }, uRimC: { value: rim.clone().multiplyScalar(rimK) }, uDetail: { value: 1 } };
+  const uni = { uCol: { value: cols }, uPBR: { value: pbr }, uRimC: { value: rim.clone().multiplyScalar(rimK) }, uRimG: RIM_G, uDetail: { value: 1 } };
   mat.userData.uni = uni;
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, uni);
@@ -87,7 +90,7 @@ export function charMaterial(palette = defaultPalette(), { rim = new THREE.Color
       .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nif (H != 0.0) normal = perturbN(-vViewPosition, normal, H, faceDirection);')
       .replace('#include <emissivemap_fragment>', /* glsl */`#include <emissivemap_fragment>
         { float rimF = 1.0 - max(dot(normal, normalize(vViewPosition)), 0.0); float rk = kind == 4 ? 0.35 : kind == 5 ? 0.12 : kind == 7 ? 0.1 : (kind == 2 || kind == 6 || kind == 8) ? 0.45 : 0.85;
-        totalEmissiveRadiance += uRimC * pow(rimF, 3.5) * rk; }`)
+        totalEmissiveRadiance += uRimC * uRimG * pow(rimF, 2.6) * rk; }`)
       .replace('#include <lights_fragment_end>', /* glsl */`#include <lights_fragment_end>
         #if NUM_DIR_LIGHTS > 0
         if (kind == 5) { // Kajiya-Kay strand highlights: a sharp white lobe and a broad tinted one, shifted along the strand
@@ -104,7 +107,7 @@ export function charMaterial(palette = defaultPalette(), { rim = new THREE.Color
           reflectedLight.directDiffuse += diffuseColor.rgb * vec3(1.0, 0.42, 0.3) * wrapL * directionalLights[0].color * 0.22; }
         #endif`);
   };
-  mat.customProgramCacheKey = () => 'charmat3';
+  mat.customProgramCacheKey = () => 'charmat4';
   return mat;
 }
 

@@ -20,6 +20,7 @@ function chevronTexture() {
 
 // where the trail leads: the chest (then the way out) underground, otherwise the first unfinished act goal
 export function objectiveTarget(g) {
+  if (g.walk && !g.interior) return g.walk.goal;
   if (g.interior) { const I = g.interior.I; return I.chest && !I.chest.opened ? I.chest.pos : I.entrance; }
   if (!g.briefed) return null;
   const tr = g.trackTarget?.(); if (tr?.pos) return tr.pos;
@@ -50,7 +51,7 @@ export class Guide {
       this.labelT = 0.4;
       const q = g.interior ? null : g.briefed && g.quests.find((x) => !x.done);
       const tr = g.interior ? null : g.trackTarget?.();
-      const text = g.interior ? (g.interior.I.chest && !g.interior.I.chest.opened ? 'Find the chest' : 'Climb back to the surface') : tr?.text || q?.text;
+      const text = g.walk && !g.interior ? (g.walk.label ? 'Walking: ' + g.walk.label : null) || q?.text : g.interior ? (g.interior.I.chest && !g.interior.I.chest.opened ? 'Find the chest' : 'Climb back to the surface') : tr?.text || q?.text;
       g.ui.objective(g.cinematic ? null : text, goal ? Math.hypot(goal.x - P.x, goal.z - P.z) : null);
     }
     const fighting = g.player.target && !g.player.target.dead;

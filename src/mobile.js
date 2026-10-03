@@ -30,7 +30,7 @@ export function setupMobile(game, ui) {
     const m = e.target.closest('.tile')?.dataset.m; if (!m) return;
     pop.classList.add('hidden');
     if (m === 'bag') { ui.toggleInventory(true); game.refreshInv(); }
-    if (m === 'map') document.body.classList.add('mapopen');
+    if (m === 'map') game.openMap();
     if (m === 'skills') game.openPanel?.('skills');
     if (m === 'journal') game.journal?.('journal');
     if (m === 'codex') game.journal?.('codex');
@@ -41,7 +41,7 @@ export function setupMobile(game, ui) {
   const q = document.getElementById('quest');
   q.addEventListener('pointerdown', (e) => { e.preventDefault(); haptic(6); const k = e.target.closest('[data-k]'); if (k && q.classList.contains('open')) { game.track?.(k.dataset.k); return; } q.classList.toggle('open'); });
   // small round map top-left; tap it to open the large map, tap again to close
-  document.getElementById('minimap').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); haptic(8); if (document.body.classList.contains('mapopen')) game.sheets?.closeAll(); else document.body.classList.add('mapopen'); });
+  document.getElementById('minimap').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); haptic(8); game.openMap(); });
   // controls fade back to translucent shortly after the last touch
   let fadeT = null;
   const wake = () => { document.body.classList.add('tactive'); clearTimeout(fadeT); fadeT = setTimeout(() => document.body.classList.remove('tactive'), 1500); };
@@ -79,11 +79,12 @@ export function setupMobile(game, ui) {
     game.audio.init();
     if (!game.started || ui.dialogOpen) return;
     if (e.clientX < innerWidth * 0.4 && jid === null) {
-      jid = e.pointerId; jx = e.clientX; jy = e.clientY;
+      jid = game.joyId = e.pointerId; jx = e.clientX; jy = e.clientY;
       joy.style.left = jx + 'px'; joy.style.top = jy + 'px'; joy.classList.add('on');
       canvas.setPointerCapture(e.pointerId);
     } else {
-      // tap to move / attack
+      // tap to move / attack (not the second finger of a pinch)
+      if (game.pinching) return;
       game.mouseScreen.x = e.clientX; game.mouseScreen.y = e.clientY;
       game.mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
       game.pickHover();
@@ -99,6 +100,6 @@ export function setupMobile(game, ui) {
     knob.style.transform = `translate(${dx}px, ${dy}px)`;
     game.joy = l > 8 ? { x: dx / R, y: dy / R } : null;
   });
-  const end = (e) => { if (e.pointerId !== jid) return; jid = null; game.joy = null; joy.classList.remove('on'); knob.style.transform = ''; };
+  const end = (e) => { if (e.pointerId !== jid) return; jid = game.joyId = null; game.joy = null; joy.classList.remove('on'); knob.style.transform = ''; };
   canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
 }

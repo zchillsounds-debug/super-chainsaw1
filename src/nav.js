@@ -79,3 +79,5 @@ export function findPath(from, to, maxIter = 12000) {
   if (isBlocked(idx(to.x, to.z))) out[out.length - 1] = raw[raw.length - 1];
   return out;
 }
+// the nav grid as a map layer: true where a wall, building or deep water blocks the way
+export function blockedAt(x, z) { if (!blocked) return false; return isBlocked(idx(x, z)); }

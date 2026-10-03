@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createRenderer, createComposer, skyDome, envFromSky, QUALITY } from './graphics.js';
 import { buildWorld } from './world.js';
+import { bakeGround } from './groundtex.js';
 import { FX } from './fx.js';
 import { UI } from './ui.js';
 import { Audio } from './audio2.js';
@@ -13,6 +14,7 @@ import * as SCENES from './scenes.js';
 import { loadSave, applySave, saveGame } from './save.js';
 import { preloadGeo, flushGeo } from './geocache.js';
 import { Lighting } from './lighting.js';
+import { RIM_G } from './charmats.js';
 import { LightPool } from './lights.js';
 import { setupSheets } from './sheets.js';
 import { Guide } from './guide.js';
@@ -31,12 +33,14 @@ import { setupContent, restoreContent, applyNG, startNewGamePlus } from './conte
 import { setupSideQuests } from './sidequests.js';
 import { setupDungeons } from './dungeons.js';
 import { setupBuild } from './build.js';
+import { setupTravel } from './travel.js';
 import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, FIRST_ACT, STORY, REGION_NAME } from './region.js';
 
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
 const __cached = await preloadGeo(); console.debug('LOG geo cache ' + __cached);
 const renderer = createRenderer(document.getElementById('game'));
+bakeGround(renderer, QUALITY);
 const scene = new THREE.Scene();
 renderer.info.autoReset = false;
 const camera = new THREE.PerspectiveCamera(36, innerWidth / innerHeight, 0.5, 1400);
@@ -56,10 +60,12 @@ Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, n
 sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.05; sun.shadow.radius = 3;
 scene.add(sun, sun.target);
 const hemi = new THREE.HemisphereLight(0xc4c2c4, 0x7a5236, 0.5); scene.add(hemi);
+// the hero's own soft light: in the dark it keeps Salim and the ground around him readable (made at load: no recompiles)
+const heroLight = new THREE.PointLight(0xffd8b0, 0, 10, 1.6); scene.add(heroLight);
 
 world.staticRoots = scene.children.filter((o) => !o.isLight); // hidden while underground
 const fx = new FX(scene);
-const { composer, grade, gtao, bokeh, bloom, resize } = createComposer(renderer, scene, camera);
+const { composer, grade, gtao, bokeh, bloom, vol, resize } = createComposer(renderer, scene, camera, sun);
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); resize(); });
 
 // torch light pool: every fire and lantern is an emitter; only the nearest few get a real light
@@ -88,9 +94,10 @@ setupContent(game);
 setupSideQuests(game);
 setupDungeons(game);
 setupBuild(game);
+setupTravel(game);
 const tutorial = new Tutorial(game);
 const guide = game.guide = new Guide(game);
-const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); guide.update(dt); game.discover(dt); tutorial.update(dt); game.contentTick?.(dt); game.sideTick?.(dt); };
+const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); guide.update(dt); game.discover(dt); tutorial.update(dt); game.contentTick?.(dt); game.sideTick?.(dt); game.travelTick?.(dt); };
 game.newGamePlus = () => startNewGamePlus(game); ui.onNewGamePlus = game.newGamePlus;
 const settings = game.settings = new Settings({ renderer, audio, game, grade, perf, gfx: { quality: QUALITY, sun, gtao, bloom, atmos, resize } });
 fx.reduce = settings.s.reduceFlash;
@@ -105,6 +112,7 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape' && game.started && !
 audio.occluded = (pos) => !lineClear(game.player.pos.x, game.player.pos.z, pos.x, pos.z);
 ui.aspects = ASPECTS; ui.sets = SETS; ui.classNames = Object.fromEntries(Object.entries(CLASSES).map(([k, c]) => [k, c.name]));
 if (IS_TOUCH) setupMobile(game, ui);
+if (gtao) game.holeInGBuffer(gtao.normalMaterial);
 const director = game.director = new Director({ game, camera, ui, audio, grade, bokeh, renderer, scene });
 
 // title-screen cinematic camera
@@ -222,6 +230,16 @@ function frame() {
   renderer.shadowMap.needsUpdate = !halfRate || !sun.shadow.map || (shFrame & 1) === 0 || !sun.target.position.equals(_shLast);
   _shLast.copy(sun.target.position);
   atmos.update(dt, c, lighting, camera, !!game.interior);
+  {
+    const L = lighting.cur, hk = (L.hero || 0) * (game.interior ? 1.2 : 1);
+    heroLight.intensity = mode === 'game' ? hk : 0; heroLight.position.set(c.x, (c.y || 0) + 3.4, c.z + 1.2);
+    RIM_G.value.copy(L.sunCol).lerp(L.hemiSky, 0.35).multiplyScalar(0.9 + (L.hero || 0) / 12);
+  }
+  if (vol) {
+    const L = lighting.cur, U = vol.u; vol.enabled = (!gtao || gtao.enabled) && !game.interior && (L.vol ?? 0.02) > 0.001 && settings.s.volumetric !== false;
+    U.uSun.value.copy(world.sunDir); U.uSunCol.value.copy(L.sunCol); U.uSunI.value = L.sunI * 0.55; U.uAmb.value.copy(L.fog).multiplyScalar(0.06 * L.hemiI);
+    U.uDens.value = L.vol ?? 0.02; U.uGround.value = c.y || 0; U.uTime.value = t; vol.amount = 1;
+  }
   grade.uniforms.uTime.value = t;
   renderer.info.reset();
   composer.render();
@@ -239,5 +257,5 @@ world.cull(mode === 'game' ? game.player.pos : camera.position, mode === 'game' 
 document.getElementById('loader')?.classList.add('done'); setTimeout(() => document.getElementById('loader')?.remove(), 1200);
 // installable PWA: register the offline worker on the standalone build (not in dev, not inside an embedding frame)
 if (import.meta.env.PROD && 'serviceWorker' in navigator && window.top === window && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { /* offline install unavailable */ });
-window.__mk = makeItem; window.__game = game; window.__renderer = renderer; window.__ready = true;
+window.__mk = makeItem; window.__game = game; window.__vol = vol; window.__lighting = lighting; window.__renderer = renderer; window.__ready = true;
 setTimeout(flushGeo, 4000); setInterval(flushGeo, 60000);

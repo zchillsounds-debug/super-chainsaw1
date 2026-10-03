@@ -7,6 +7,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
+import { VolumePass } from './volume.js';
 
 const params = new URLSearchParams(location.search);
 const touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || params.has('mobile');
@@ -135,7 +136,7 @@ const GradeShader = {
     }`,
 };
 
-export function createComposer(renderer, scene, camera) {
+export function createComposer(renderer, scene, camera, sun) {
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
   const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 0 });
   const composer = new EffectComposer(renderer, rt);
@@ -147,8 +148,21 @@ export function createComposer(renderer, scene, camera) {
     gtao.blendIntensity = 0.85;
     gtao.updateGtaoMaterial({ radius: 1.2, distanceExponent: 1.5, thickness: 2.0, scale: 1.0, samples: 12 });
     gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
+    // the G-buffer pass draws only solid surfaces: haze slabs, light shafts, particles, decals and the sky stay out
+    // of the depth (they used to write it, which muddied the AO and broke the volumetric light)
+    gtao.overrideVisibility = function () {
+      const cache = this._visibilityCache;
+      this.scene.traverse((o) => {
+        cache.set(o, o.visible);
+        const m = o.material;
+        if (o.isPoints || o.isLine || o.isSprite || o.userData.noAO || (m && !Array.isArray(m) && (m.transparent || m.depthWrite === false || m.blending === THREE.AdditiveBlending))) o.visible = false;
+      });
+    };
     composer.addPass(gtao);
   }
+  // volumetric light (needs the GTAO depth; off on Low)
+  let vol = null;
+  if (gtao && sun) { vol = new VolumePass(camera, sun, gtao, size.x, size.y); composer.addPass(vol); }
   // depth of field for cinematic close-ups (off unless a scene asks for it)
   let bokeh = null;
   if (QUALITY !== 'low') { bokeh = new BokehPass(scene, camera, { focus: 6, aperture: 0.00012, maxblur: 0.008 }); bokeh.enabled = false; composer.addPass(bokeh); }
@@ -166,7 +180,7 @@ export function createComposer(renderer, scene, camera) {
     grade.uniforms.uAspect.value = s.x / s.y;
   };
   resize();
-  return { composer, bloom, grade, gtao, bokeh, resize };
+  return { composer, bloom, grade, gtao, bokeh, vol, resize };
 }
 
 export function envFromSky(renderer, sunDir) {
