@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { particleSprite } from './textures.js';
 
 // Pooled CPU particle system with two blend layers (additive glow + alpha smoke).
+export const FX_TIME = { value: 0 };
 class Layer {
   constructor(max, additive) {
     this.max = max; this.n = 0;
@@ -12,11 +13,37 @@ class Layer {
     g.setAttribute('color', new THREE.BufferAttribute(this.col, 4).setUsage(THREE.DynamicDrawUsage));
     g.setAttribute('size', new THREE.BufferAttribute(this.size, 1).setUsage(THREE.DynamicDrawUsage));
     this.geo = g;
+    // Round 19: particles are shaded, not stamped. Glow (fire, sparks, embers) gets a hot core and a flickering,
+    // noise-torn edge; smoke gets wispy, billowing breakup that turns slowly. Each particle carries its own seed.
     const mat = new THREE.ShaderMaterial({
-      uniforms: { uTex: { value: particleSprite() }, uScale: { value: 600 } },
-      vertexShader: `attribute float size; attribute vec4 color; varying vec4 vC; uniform float uScale;
-        void main(){ vC=color; vec4 mv=modelViewMatrix*vec4(position,1.); gl_PointSize = size*uScale/(-mv.z); gl_Position=projectionMatrix*mv; }`,
-      fragmentShader: `uniform sampler2D uTex; varying vec4 vC; void main(){ vec4 t=texture2D(uTex, gl_PointCoord); gl_FragColor = vec4(vC.rgb, vC.a*t.a); if(gl_FragColor.a<0.003) discard; }`,
+      uniforms: { uTex: { value: particleSprite() }, uScale: { value: 600 }, uTime: FX_TIME },
+      vertexShader: `attribute float size; attribute vec4 color; varying vec4 vC; varying float vSeed, vPx; uniform float uScale;
+        void main(){ vC=color; vec4 mv=modelViewMatrix*vec4(position,1.); gl_PointSize = size*uScale/(-mv.z); vPx = gl_PointSize;
+          vSeed = fract(sin(dot(floor(position.xz*3.0) + color.rg*7.0, vec2(12.9898,78.233)))*43758.5453); gl_Position=projectionMatrix*mv; }`,
+      fragmentShader: `uniform sampler2D uTex; uniform float uTime; varying vec4 vC; varying float vSeed, vPx;
+        float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+        float n(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y); }
+        void main(){
+          vec2 pc = gl_PointCoord - 0.5; float r = length(pc) * 2.0;
+          float base = texture2D(uTex, gl_PointCoord).a;
+          if (vPx < 6.0) { gl_FragColor = vec4(vC.rgb, vC.a * base); if (gl_FragColor.a < 0.003) discard; return; } // tiny motes: plain
+          #if ${additive ? 1 : 0}
+            // flame: a hot core, an edge torn by rising noise
+            float tn = n(pc * 3.5 + vec2(vSeed * 17.0, -uTime * 2.6)) * 0.65 + n(pc * 8.0 + vec2(-vSeed * 9.0, -uTime * 4.0)) * 0.35;
+            float body = smoothstep(1.0, 0.25, r + (tn - 0.5) * 0.7);
+            float core = pow(max(0.0, 1.0 - r), 3.0);
+            vec3 col = vC.rgb * (0.55 + core * 0.8);
+            gl_FragColor = vec4(col, vC.a * body * (0.6 + 0.4 * tn));
+          #else
+            // smoke: soft billows that roll as they rise
+            float a = vSeed * 6.28 + uTime * 0.25 * (vSeed - 0.5); mat2 R = mat2(cos(a), -sin(a), sin(a), cos(a));
+            vec2 q = R * pc;
+            float b = n(q * 3.0 + vSeed * 31.0) * 0.6 + n(q * 7.0 - vSeed * 13.0 + uTime * 0.2) * 0.4;
+            float shape = smoothstep(1.0, 0.35, r + (b - 0.5) * 0.9);
+            gl_FragColor = vec4(vC.rgb * (0.85 + 0.3 * b), vC.a * shape * (0.55 + 0.6 * b));
+          #endif
+          if (gl_FragColor.a < 0.003) discard;
+        }`,
       transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending, toneMapped: false,
     });
     this.points = new THREE.Points(g, mat); this.points.frustumCulled = false;
@@ -63,16 +90,19 @@ export class FX {
     this.rings = []; this.lights = [];
     for (let i = 0; i < 3; i++) { const l = new THREE.PointLight(0xffffff, 0, 10, 2); l.userData.busy = false; this.lights.push(l); this.scene.add(l); }
     this.flashes = [];
+    // compile the ring shader at load: one ring parked far below the ground
+    this.ring(new THREE.Vector3(0, -80, 0), 0x000000, 0.1, 0.1, 1e9, 0);
   }
   setScale(h) { this.glow.points.material.uniforms.uScale.value = h * 0.9; this.smoke.points.material.uniforms.uScale.value = h * 0.9; }
   update(dt) {
+    FX_TIME.value += dt;
     this.glow.update(dt); this.smoke.update(dt);
     for (let i = this.rings.length - 1; i >= 0; i--) {
       const r = this.rings[i]; r.t += dt;
       const k = r.t / r.life;
       r.mesh.scale.setScalar(r.r0 + (r.r1 - r.r0) * (1 - Math.pow(1 - k, 3)));
       r.mesh.material.opacity = (1 - k) * r.a;
-      if (k >= 1) { this.scene.remove(r.mesh); r.mesh.geometry.dispose(); r.mesh.material.dispose(); this.rings.splice(i, 1); }
+      if (k >= 1) { this.scene.remove(r.mesh); r.mesh.material.dispose(); this.rings.splice(i, 1); }
     }
     for (let i = this.flashes.length - 1; i >= 0; i--) {
       const f = this.flashes[i]; f.t += dt;
@@ -89,9 +119,25 @@ export class FX {
     this.flashes.push({ light: l, t: 0, life, i: intensity });
   }
   ring(pos, color, r0, r1, life = 0.5, alpha = 1) {
-    const g = new THREE.RingGeometry(0.85, 1, 48).rotateX(-Math.PI / 2);
-    const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: alpha, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
-    const mesh = new THREE.Mesh(g, m); mesh.position.copy(pos); mesh.position.y += 0.1;
+    // a shockwave: bright leading edge, a soft glow trailing inside it, torn slightly by noise
+    if (!this.ringGeo) {
+      this.ringGeo = new THREE.CircleGeometry(1, 56).rotateX(-Math.PI / 2);
+      this.ringMat = new THREE.ShaderMaterial({
+        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, side: THREE.DoubleSide,
+        uniforms: { color: { value: new THREE.Color() }, opacity: { value: 1 } },
+        vertexShader: 'varying vec2 vP; void main(){ vP = position.xz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: `uniform vec3 color; uniform float opacity; varying vec2 vP;
+          float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+          void main(){ float r = length(vP); float a = atan(vP.y, vP.x);
+            float tear = 0.85 + 0.15 * h(vec2(floor(a * 9.0), 3.0));
+            float edge = smoothstep(0.8, 0.97, r) * smoothstep(1.0, 0.965, r);
+            float trail = pow(r, 4.0) * 0.35 * smoothstep(1.0, 0.95, r);
+            gl_FragColor = vec4(color * (edge * 0.75 + trail * 0.6) * tear * opacity, 1.0); }`,
+      });
+    }
+    const m = this.ringMat.clone(); m.uniforms.color.value = new THREE.Color(color); m.uniforms.opacity.value = alpha;
+    Object.defineProperty(m, 'opacity', { get: () => m.uniforms.opacity.value, set: (v) => { m.uniforms.opacity.value = v; }, configurable: true });
+    const mesh = new THREE.Mesh(this.ringGeo, m); mesh.position.copy(pos); mesh.position.y += 0.1; mesh.userData.noAO = true;
     this.scene.add(mesh); this.rings.push({ mesh, t: 0, life, r0, r1, a: alpha });
   }
   burst(pos, n, o) {

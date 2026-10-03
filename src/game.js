@@ -104,7 +104,7 @@ export class Game {
               float f = smoothstep(uHoleR*${hs.toFixed(2)}, uHoleR*${(hs * 0.55).toFixed(2)}, d) * step(dz, uPDepth - 1.2) * ${hs > 1 ? '1.0' : '0.85'};
               // cutaway: anything between the camera and the hero is cut down to head height over a wider area
               float cutR = uHoleR * ${(hs * 2.2).toFixed(2)};
-              float cut = uCut * step(dz, uPDepth - 0.8) * smoothstep(cutR, cutR * 0.7, d) * smoothstep(uPY + 2.0, uPY + 2.6, vOccY);
+              float cut = uCut * step(dz, uPDepth - 0.8) * smoothstep(cutR, cutR * 0.88, d) * smoothstep(uPY + 2.0, uPY + 2.6, vOccY);
               f = max(f, cut);
               if (f > bayer4(gl_FragCoord.xy)) discard; }`);
       };

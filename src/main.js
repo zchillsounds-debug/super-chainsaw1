@@ -67,7 +67,7 @@ sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.05; sun.shadow.radius = 3;
 scene.add(sun, sun.target);
 const hemi = new THREE.HemisphereLight(0xc4c2c4, 0x7a5236, 0.5); scene.add(hemi);
 // the hero's own soft light: in the dark it keeps Salim and the ground around him readable (made at load: no recompiles)
-const heroLight = new THREE.PointLight(0xffd8b0, 0, 10, 1.6); scene.add(heroLight);
+const heroLight = new THREE.PointLight(0xffd8b0, 0, 14, 1.3); scene.add(heroLight);
 
 world.staticRoots = scene.children.filter((o) => !o.isLight); // hidden while underground
 const fx = new FX(scene);

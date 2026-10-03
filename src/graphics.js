@@ -89,8 +89,8 @@ const GradeShader = {
     vec3 actGrade(vec3 c, float id){
       vec3 lift = vec3(0.0), gain = vec3(1.0); float sat = 1.0, gam = 1.0;
       if (id < 0.5) { lift = vec3(0.0); gain = vec3(1.02,1.0,0.96); }                         // golden afternoon
-      else if (id < 1.5) { lift = vec3(0.01,0.0,0.018); gain = vec3(1.03,0.97,0.94); sat = 0.96; } // dusk: ember highs, violet lows
-      else if (id < 2.5) { lift = vec3(0.0,0.008,0.03); gain = vec3(0.94,0.98,1.08); sat = 0.82; gam = 0.94; } // night: cool, desaturated
+      else if (id < 1.5) { lift = vec3(0.0,0.008,0.016); gain = vec3(1.04,0.98,0.93); sat = 0.92; } // dusk: ember highs, teal lows
+      else if (id < 2.5) { lift = vec3(0.0,0.006,0.014); gain = vec3(0.98,0.99,1.03); sat = 0.7; gam = 0.97; } // night: cool, desaturated
       else if (id < 3.5) { lift = vec3(0.01,0.005,0.01); gain = vec3(1.04,0.98,0.98); sat = 0.95; } // dawn
       else if (id < 4.5) { lift = vec3(0.008,0.004,0.0); gain = vec3(1.08,0.98,0.86); sat = 0.9; gam = 0.96; }   // underground torchlight
       else if (id < 5.5) { lift = vec3(0.012,0.018,0.016); gain = vec3(0.98,1.01,0.99); sat = 0.9; gam = 1.02; } // marsh morning: soft, misty greens
@@ -125,7 +125,7 @@ const GradeShader = {
       col = actGrade(col, uLut);
       // dusk (prologue): cooler shadows, ember highlights, lower key
       float l2 = dot(col, vec3(0.2126,0.7152,0.0722));
-      col = mix(col, col * mix(vec3(0.62,0.6,0.78), vec3(1.15,0.72,0.5), smoothstep(0.05,0.7,l2)) * 0.92, max(uDusk, uDuskAct));
+      col = mix(col, col * mix(vec3(0.6,0.7,0.78), vec3(1.12,0.8,0.58), smoothstep(0.05,0.7,l2)) * 0.95, max(uDusk, uDuskAct));
       // cinematic grade: warmer, slightly richer contrast, heavier vignette
       col = mix(col, pow(col * vec3(1.06,1.0,0.9), vec3(1.08)), uCine);
       col *= mix(1.0, smoothstep(1.15, 0.35, length(vc)), 0.35*uCine);
