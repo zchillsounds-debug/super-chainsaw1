@@ -16,6 +16,8 @@ export const BASES = {
   helm: [{ name: 'Felt Qalansuwa', armor: 3, icon: '🎩' }, { name: 'Iron Bayda', armor: 6, icon: '⛑' }, { name: 'Mailed Bayda', armor: 9, icon: '⛑' }],
   ring: [{ name: 'Carnelian Ring', icon: '💍' }, { name: 'Silver Signet', icon: '💍' }],
   amulet: [{ name: 'Lapis Amulet', icon: '📿' }, { name: 'Brass Talisman', icon: '📿' }],
+  // Round 20: belts (mintaqa), with the sherbet flask hung from them
+  belt: [{ name: 'Cloth Sash', armor: 1, icon: '🎗' }, { name: 'Leather Mintaqa', armor: 2, icon: '🎗' }, { name: 'Studded Mintaqa', armor: 4, icon: '🎗' }],
 };
 
 export const AFFIXES = [
@@ -30,6 +32,10 @@ export const AFFIXES = [
   { key: 'armor', fmt: (v) => `+${v} Armor`, roll: (l) => 3 + Math.floor(Math.random() * (5 + l * 2)) },
   { key: 'regen', fmt: (v) => `+${v} Resource Regeneration/s`, roll: () => 1 + Math.floor(Math.random() * 3) },
   { key: 'cdr', fmt: (v) => `−${v}% Cooldowns`, roll: () => 3 + Math.floor(Math.random() * 6), rare: true },
+  // Round 20: belt-only properties, all about the sherbet flask
+  { key: 'potHeal', fmt: (v) => `+${v}% Sherbet Healing`, roll: () => 15 + Math.floor(Math.random() * 26), slot: 'belt' },
+  { key: 'potCapB', fmt: (v) => `+${v} Sherbet Carried`, roll: () => 1, slot: 'belt' },
+  { key: 'drinkRes', fmt: (v) => `Sherbet restores ${v} Resource`, roll: (l) => 10 + Math.floor(Math.random() * (10 + l * 2)), slot: 'belt' },
 ];
 
 const PREFIX = ['Gilded', 'Simoom', 'Barmakid', 'Starlit', 'Copper', 'Ebon', 'Saffron', 'Tigris', 'Moonlit', 'Sandstorm', 'Vizier\'s', 'Falconer\'s'];
@@ -39,6 +45,7 @@ const UNIQUES = [
   { slot: 'weapon', name: 'Tongue of the Simoom', base: 'Hindi Sayf', min: 16, max: 28, stats: { dmgPct: 40, speed: 15, leech: 6, fire: 30 }, flavor: '"Forged in the bellows of a desert storm."' },
   { slot: 'ring', name: 'Signet of the Barmakids', base: 'Carnelian Signet', stats: { life: 60, mana: 40, crit: 10, regen: 4 }, flavor: '"It sealed a vizier\'s letters, before his house fell."' },
   { slot: 'amulet', name: 'Astrolabe of the Banu Musa', base: 'Brass Astrolabe', stats: { dmgPct: 25, mana: 50, regen: 5, move: 10 }, flavor: '"The heavens turn; so too shall your enemies."' },
+  { slot: 'belt', name: 'Girdle of the Water-Carrier', base: 'Studded Mintaqa', armor: 6, stats: { potHeal: 45, potCapB: 1, life: 50, regen: 2 }, flavor: '"He carried water through the siege, and asked no coin for it."' },
   { slot: 'armor', name: 'Jawshan of Harun', base: 'Lamellar Jawshan', armor: 34, stats: { life: 80, armor: 20, leech: 3 }, flavor: '"Worn at the gates of the Round City."' },
 ];
 
@@ -57,7 +64,7 @@ export function rollRarity(level, bonus = 0) {
 }
 
 export function makeItem(level, rarity, slot) {
-  slot = slot || pick(['weapon', 'weapon', 'armor', 'helm', 'ring', 'amulet']);
+  slot = slot || pick(['weapon', 'weapon', 'armor', 'helm', 'ring', 'amulet', 'belt']);
   if (rarity === 'legendary') {
     const pool = UNIQUES.filter((u) => u.slot === slot);
     const u = pool.length ? pick(pool) : pick(UNIQUES);
@@ -74,7 +81,9 @@ export function makeItem(level, rarity, slot) {
   if (b.min) { it.min = b.min + Math.floor(level * 0.8); it.max = b.max + level * 1.5 | 0; }
   if (b.armor) it.armor = b.armor + level;
   const n = RARITY[rarity].affixes;
-  const pool = AFFIXES.filter((a) => !a.rare || rarity !== 'magic').sort(() => Math.random() - 0.5);
+  const pool = AFFIXES.filter((a) => (!a.rare || rarity !== 'magic') && (!a.slot || a.slot === slot)).sort(() => Math.random() - 0.5);
+  // a belt always carries one of its own properties first
+  if (slot === 'belt' && n) { const own = pool.findIndex((a) => a.slot === 'belt'); if (own > 0) pool.unshift(pool.splice(own, 1)[0]); }
   for (let i = 0; i < n; i++) it.stats[pool[i].key] = pool[i].roll(level);
   if (rarity === 'magic') it.name = `${pick(PREFIX)} ${b.name}`;
   if (rarity === 'rare') it.name = `${pick(PREFIX)} ${b.name} ${pick(SUFFIX)}`;
@@ -84,3 +93,17 @@ export function makeItem(level, rarity, slot) {
 export function statLines(it) {
   return Object.entries(it.stats).map(([k, v]) => (AFFIXES.find((a) => a.key === k) || { fmt: (x) => `+${x} ${k}` }).fmt(v));
 }
+
+// Round 20: Bishr forges an item to order: a rare of the chosen slot whose chosen property is rolled in its top third
+export function craftItem(level, slot, key) {
+  const it = makeItem(level, 'rare', slot);
+  const a = AFFIXES.find((x) => x.key === key);
+  if (a) {
+    if (!(key in it.stats)) { const drop = Object.keys(it.stats).find((k) => k !== key); if (drop) delete it.stats[drop]; }
+    let best = 0; for (let i = 0; i < 6; i++) best = Math.max(best, a.roll(level));
+    it.stats[key] = best;
+  }
+  it.crafted = true;
+  return it;
+}
+export const craftableAffixes = (slot) => AFFIXES.filter((a) => !a.slot || a.slot === slot);

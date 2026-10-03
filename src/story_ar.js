@@ -451,6 +451,11 @@ Object.assign(STORY_AR, {
 
 // ---------------------------------------------------------------- Round 20: Act VI, the river quays
 Object.assign(STORY_AR, {
+  'Forge': 'اصنع', 'Property': 'الخاصيّة', 'Forge it': 'اطرقه', 'Forged': 'طُرق',
+  'Bishr forges a rare to order: pick what, and the one property you cannot do without. He rolls it in the top third; the rest is up to the fire.': 'يطرق بشر قطعة نادرة حسب الطلب: اختر ما تريد، والخاصيّة الواحدة التي لا غنى لك عنها. يجعلها في أعلى ثلثها، والباقي على النار.',
+  'Damage': 'الضرر', 'Maximum Life': 'أقصى الحياة', 'Maximum Resource': 'أقصى المورد', 'Critical Strike Chance': 'فرصة الضربة القاضية', 'Attack Speed': 'سرعة الهجوم', 'Life per Hit': 'حياة لكلّ ضربة',
+  'Movement Speed': 'سرعة الحركة', 'Naft (Fire) Damage': 'ضرر النفط (النار)', 'Resource Regeneration/s': 'تجدّد المورد/ث', 'Cooldowns': 'أزمنة التبريد', 'Sherbet Healing': 'شفاء الشراب', 'Sherbet Carried': 'الشراب المحمول', 'Sherbet restores Resource': 'الشراب يعيد المورد',
+  'Girdle of the Water-Carrier': 'منطقة السقّاء', 'Cloth Sash': 'زنّار قماش', 'Leather Mintaqa': 'منطقة جلد', 'Studded Mintaqa': 'منطقة مرصّعة',
   'Siege Trials': 'محن الحصار', 'Siege Trial': 'محنة الحصار', 'Read the siege trials': 'اقرأ لوح محن الحصار', 'Tier': 'الدرجة', 'Time': 'الوقت', 'a gem': 'حجر كريم', 'Your best': 'أفضل وقت لك',
   'Begin the trial': 'ابدأ المحنة', 'Your last trials': 'محنك الأخيرة', 'No trials run yet.': 'لم تخض أيّ محنة بعد.', 'Trial abandoned': 'تُركت المحنة', 'Trial cleared': 'اجتزت المحنة', 'Too slow': 'بطيء جدًّا', 'New best!': 'أفضل وقت جديد!', 'opened': 'فُتحت',
   'Clear the rooms and break the captain before time runs out.': 'طهّر الغرف واكسر القائد قبل أن ينفد الوقت.',

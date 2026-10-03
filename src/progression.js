@@ -168,7 +168,7 @@ function enchantUI(game, body, refresh) {
     row.querySelectorAll('.aff').forEach((b) => b.onclick = () => {
       if (p.mats.gem < 1 || p.gold < 40) { ui.toast('You need a gem shard and 40 dinars'); game.audio.denied?.(); return; }
       p.mats.gem--; p.gold -= 40;
-      const used = new Set(Object.keys(it.stats)); const pool = AFFIXES.filter((a) => !used.has(a.key) || a.key === b.dataset.k);
+      const used = new Set(Object.keys(it.stats)); const pool = AFFIXES.filter((a) => (!used.has(a.key) || a.key === b.dataset.k) && (!a.slot || a.slot === it.slot));
       const a = pool[Math.floor(Math.random() * pool.length)]; delete it.stats[b.dataset.k]; it.stats[a.key] = a.roll(it.level);
       game.recalcStats(); game.audio.legendary(); refresh();
     });

@@ -69,7 +69,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:'Cinz
 #equip{position:relative;height:200px;margin:10px;background:radial-gradient(#3a2814,#120a05 70%);border:1px solid #4a3418}
 .eslot{position:absolute;width:56px;height:56px;border:1px solid #6a4a20;background:#0b0704;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .eslot .lbl{font:500 9px Cinzel;color:#6a5a40} .eslot .ic,.cell .ic{font-size:28px;filter:drop-shadow(0 0 3px #000)}
-.s-helm{left:172px;top:10px}.s-armor{left:172px;top:76px;height:80px}.s-weapon{left:90px;top:76px;height:80px}.s-ring{left:254px;top:120px}.s-amulet{left:254px;top:40px}
+.s-helm{left:172px;top:10px}.s-armor{left:172px;top:76px;height:80px}.s-weapon{left:90px;top:76px;height:80px}.s-ring{left:254px;top:120px}.s-amulet{left:254px;top:40px}.s-belt{left:254px;top:200px}
 .eslot.r-magic,.cell.r-magic{background:#0d1230;border-color:#4a6cff}.eslot.r-rare,.cell.r-rare{background:#2a2208;border-color:#ffd040}.eslot.r-legendary,.cell.r-legendary{background:#2e1404;border-color:#ff7a10;box-shadow:inset 0 0 10px #ff7a1088}
 #stats{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;margin:0 14px 8px;font:500 12px Cinzel}
 #stats b{color:var(--gold);font-weight:700}
@@ -385,10 +385,10 @@ button.cell:active,button.eslot:active,.sheet button:active,.tile:active,#icard 
 /* inventory: paper-doll and stats left, the pack right */
 #inv.sheet .invbody{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:start}
 .invleft{display:flex;flex-direction:column;gap:10px;position:sticky;top:0}
-#inv #equip{--es:clamp(52px,14dvh,76px);position:relative;height:auto;margin:0;display:grid;grid-template-columns:repeat(3,var(--es));grid-auto-rows:var(--es);grid-template-areas:"weapon helm amulet" "weapon armor ring" "weapon armor .";gap:8px;padding:10px;border-radius:10px;justify-content:center}
+#inv #equip{--es:clamp(52px,14dvh,76px);position:relative;height:auto;margin:0;display:grid;grid-template-columns:repeat(3,var(--es));grid-auto-rows:var(--es);grid-template-areas:"weapon helm amulet" "weapon armor ring" "weapon armor belt";gap:8px;padding:10px;border-radius:10px;justify-content:center}
 #equip .doll{position:absolute;left:50%;top:6px;height:calc(100% - 12px);translate:-50% 0;pointer-events:none}
 #inv #equip .eslot{position:relative;left:auto;top:auto;width:auto;height:auto;border-radius:8px}
-#inv .s-helm{grid-area:helm}#inv .s-amulet{grid-area:amulet}#inv .s-ring{grid-area:ring}#inv .s-armor{grid-area:armor}#inv .s-weapon{grid-area:weapon}
+#inv .s-helm{grid-area:helm}#inv .s-amulet{grid-area:amulet}#inv .s-ring{grid-area:ring}#inv .s-armor{grid-area:armor}#inv .s-weapon{grid-area:weapon}#inv .s-belt{grid-area:belt}
 .eslot .lbl{font:600 12px Cinzel,serif;color:#8a7a5a}
 #inv #stats{margin:0;gap:4px 14px;font:500 13px Cinzel,serif;padding:8px 10px;background:#0006;border:1px solid #3a2a14;border-radius:8px}
 .baghead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font:600 13px Cinzel,serif;color:#cdb890}

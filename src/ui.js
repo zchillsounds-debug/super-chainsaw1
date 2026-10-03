@@ -17,11 +17,12 @@ const ITEM_SVG = {
   armor: (c) => `<svg viewBox="0 0 64 64"><path d="M18 10 L26 6 L32 12 L38 6 L46 10 L56 20 L50 28 L46 24 L46 56 L18 56 L18 24 L14 28 L8 20 Z" fill="#6a7078" stroke="${c}" stroke-width="2"/><g stroke="#3a3e44" stroke-width="1.2">${[20, 26, 32, 38, 44, 50].map((y) => `<path d="M18 ${y} H46"/>`).join('')}</g><path d="M30 12 V56" stroke="#d9a441" stroke-width="2"/></svg>`,
   helm: (c) => `<svg viewBox="0 0 64 64"><path d="M32 4 L36 14 Q50 18 52 36 L12 36 Q14 18 28 14 Z" fill="#a8aeb6" stroke="${c}" stroke-width="2"/><path d="M10 34 Q32 44 54 34 L54 42 Q32 52 10 42 Z" fill="#e8dcc0" stroke="#8a7a5a"/><path d="M14 44 L14 56 L50 56 L50 44" fill="none" stroke="#6a7078" stroke-width="3" stroke-dasharray="2 2"/></svg>`,
   ring: (c) => `<svg viewBox="0 0 64 64"><circle cx="32" cy="38" r="15" fill="none" stroke="#d9a441" stroke-width="6"/><path d="M24 22 L32 10 L40 22 L32 28 Z" fill="${c}" stroke="#fff8" stroke-width="1"/></svg>`,
+  belt: (c) => `<svg viewBox="0 0 64 64"><path d="M6 26 Q32 34 58 26 L58 38 Q32 46 6 38 Z" fill="#6a4428" stroke="${c}" stroke-width="2"/><rect x="26" y="27" width="12" height="12" rx="2" fill="none" stroke="#d9a441" stroke-width="3"/><path d="M46 40 L46 50 Q46 58 52 58 Q58 58 58 50 L58 42" fill="#a82a3a" stroke="#3a1a10" stroke-width="2"/></svg>`,
   amulet: (c) => `<svg viewBox="0 0 64 64"><path d="M14 6 Q32 34 50 6" fill="none" stroke="#d9a441" stroke-width="2"/><circle cx="32" cy="40" r="14" fill="#1a2a5a" stroke="#d9a441" stroke-width="3"/><ellipse cx="32" cy="40" rx="7" ry="9" fill="${c}"/><ellipse cx="30" cy="36" rx="2" ry="3" fill="#fff8"/></svg>`,
 };
 export function itemIcon(it) { return (ITEM_SVG[it.slot] || ITEM_SVG.ring)(RARITY[it.rarity].color); }
 
-const SLOT_NAMES = { weapon: 'Weapon', armor: 'Armor', helm: 'Helm', ring: 'Ring', amulet: 'Amulet' };
+const SLOT_NAMES = { weapon: 'Weapon', armor: 'Armor', helm: 'Helm', ring: 'Ring', amulet: 'Amulet', belt: 'Belt' };
 // a plain standing figure behind the equipment slots
 const DOLL = `<svg class="doll" viewBox="0 0 120 200" aria-hidden="true"><g fill="#d9a44114" stroke="#d9a44140" stroke-width="1.5"><circle cx="60" cy="26" r="15"/><path d="M38 50 Q60 42 82 50 L92 108 L80 110 L76 72 L74 120 L80 192 L64 192 L60 132 L56 192 L40 192 L46 120 L44 72 L40 110 L28 108 Z"/></g></svg>`;
 const avgDmg = (it) => it && it.min ? (it.min + it.max) / 2 : 0;

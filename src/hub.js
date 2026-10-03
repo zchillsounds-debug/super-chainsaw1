@@ -129,11 +129,11 @@ export function openPanel(game, kind, tab) {
     body.appendChild(s);
     body.appendChild(bagGrid((i, it) => { if (it.questId) { ui.toast('That is not yours to sell'); return; } p.gold += sellPrice(it); p.bag[i] = null; game.audio.gold(); refresh(); }, 'Your pack: tap to sell', (it) => `Sell · ${sellPrice(it)}`));
     const pot = el(`<button class="sbtn">Buy Pomegranate Sherbet (25)</button>`);
-    pot.onclick = () => { if (p.gold < 25 || p.potions >= 5 + (p.potCap || 0)) { game.audio.denied?.(); return; } p.gold -= 25; p.potions++; game.audio.potion(); refresh(); };
+    pot.onclick = () => { if (p.gold < 25 || p.potions >= 5 + (p.potCap || 0) + (p.stats.potCapB || 0)) { game.audio.denied?.(); return; } p.gold -= 25; p.potions++; game.audio.potion(); refresh(); };
     body.appendChild(pot);
   } else if (kind === 'smith') {
     tab = tab || 'upgrade';
-    const tabs = el(`<div class="stabs"><button data-t="upgrade">Upgrade</button><button data-t="salvage">Salvage</button><button data-t="enchant">Enchant</button><button data-t="gems">Gems</button></div>`);
+    const tabs = el(`<div class="stabs"><button data-t="upgrade">Upgrade</button><button data-t="salvage">Salvage</button><button data-t="enchant">Enchant</button><button data-t="gems">Gems</button><button data-t="craft">Craft</button></div>`);
     tabs.querySelectorAll('button').forEach((b) => { b.classList.toggle('on', b.dataset.t === tab); b.onclick = () => openPanel(game, 'smith', b.dataset.t); });
     body.appendChild(tabs);
     if (tab === 'upgrade') {
@@ -158,6 +158,8 @@ export function openPanel(game, kind, tab) {
       body.appendChild(all);
     } else if (tab === 'gems') {
       game.gemPanel?.(body, refresh);
+    } else if (tab === 'craft') {
+      game.craftPanel?.(body, refresh);
     } else {
       game.enchantPanel ? game.enchantPanel(body, refresh) : body.appendChild(el('<div class="slabel">Enchanting arrives with the House of Wisdom\'s formulae.</div>'));
     }

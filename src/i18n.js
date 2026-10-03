@@ -21,7 +21,7 @@ const AR = {
   'Normal': 'عادي', 'Veteran': 'محنّك', 'Elite': 'نخبة', 'Torment I': 'عذاب ١', 'Torment II': 'عذاب ٢', 'Torment III': 'عذاب ٣',
   'The Ruined Qanats': 'القنوات المهدّمة', 'Farewell.': 'وداعًا.', 'Back.': 'رجوع.', 'Hold to skip': 'اضغط مطوّلًا للتخطّي', 'Tap to continue': 'انقر للمتابعة', 'Find the chest': 'اعثر على الصندوق',
   'Not enough dinars': 'لا تكفي الدنانير', 'Your pack is full': 'متاعك ممتلئ', 'Pack full: salvage or sell to make room': 'المتاع ممتلئ: فكّك أو بِع لتفسح مكانًا', 'No sherbet left': 'نفد الشراب',
-  'Weapon': 'السلاح', 'Armor': 'الدرع', 'Helm': 'الخوذة', 'Ring': 'الخاتم', 'Amulet': 'القلادة',
+  'Weapon': 'السلاح', 'Armor': 'الدرع', 'Helm': 'الخوذة', 'Ring': 'الخاتم', 'Amulet': 'القلادة', 'Belt': 'المنطقة', 'Craft': 'اصنع',
   'Graphics': 'الرسوميات', 'Audio': 'الصوت', 'Accessibility': 'سهولة الوصول', 'Language': 'اللغة',
   'Quality': 'الجودة', 'Resolution': 'الدقّة', 'Shadows': 'الظلال', 'Ambient occlusion': 'الإظلال المحيط', 'Bloom': 'التوهّج', 'Atmosphere': 'الأجواء', 'Show FPS': 'عرض الإطارات',
   'Master': 'العام', 'Music': 'الموسيقى', 'Effects': 'المؤثّرات', 'Ambience': 'الأجواء الصوتية',

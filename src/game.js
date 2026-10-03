@@ -660,7 +660,7 @@ export class Game {
   tryPickup(d) {
     const p = this.player;
     if (d.item.gold) { p.gold += d.item.gold; this.audio.gold(); }
-    else if (d.item.potion) { if (p.potions >= 5 + (p.potCap || 0)) return false; p.potions++; this.audio.pickup(); }
+    else if (d.item.potion) { if (p.potions >= 5 + (p.potCap || 0) + (p.stats.potCapB || 0)) return false; p.potions++; this.audio.pickup(); }
     else {
       const slot = p.bag.indexOf(null);
       if (slot < 0) { this.ui.toast('Your pack is full'); return false; }
@@ -697,7 +697,7 @@ export class Game {
     if (p.mp < S.mana) { this.ui.toast('Not enough ' + this.kit.resource.toLowerCase()); this.audio.denied?.(); return; }
     if (slot === 'potion') {
       if (p.potions <= 0) { this.ui.toast('No sherbet left'); return; }
-      p.potions--; p.buffs.heal = 1.2; this.audio.potion(); this.onPotion?.();
+      p.potions--; p.buffs.heal = 1.2; if (p.stats.drinkRes) p.mp = Math.min(p.stats.maxMp, p.mp + p.stats.drinkRes); this.audio.potion(); this.onPotion?.();
       this.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1), 24, { speed: 1.5, life: 1, size: 0.2, size1: 0.02, color: new THREE.Color(2, 0.3, 0.4), up: 2 });
     } else if (slot === 'dodge') {
       if (p.rollT > 0 || p.dashT > 0) return;
@@ -1064,7 +1064,7 @@ export class Game {
     if (p.knock && p.knock.lengthSq() > 1e-4) { p.pos.addScaledVector(p.knock, dt); p.knock.multiplyScalar(Math.max(0, 1 - dt * 8)); resolve(p.pos, 0.45); } // a crossbow bolt's shove
     if (!p.dead) {
       p.mp = Math.min(s.maxMp, p.mp + s.regen * dt);
-      p.hp = Math.min(s.maxHp, p.hp + 0.6 * dt + (p.buffs.heal > 0 ? s.maxHp * 0.5 * (p.healK || 1) / 1.2 * dt : 0));
+      p.hp = Math.min(s.maxHp, p.hp + 0.6 * dt + (p.buffs.heal > 0 ? s.maxHp * 0.5 * (p.healK || 1) * (1 + (s.potHeal || 0) / 100) / 1.2 * dt : 0));
     }
     p.st.hitT = Math.max(0, p.st.hitT - dt * 3);
     let moving = false;

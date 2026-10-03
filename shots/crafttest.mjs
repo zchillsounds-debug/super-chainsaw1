@@ -1,0 +1,24 @@
+// node shots/crafttest.mjs [shotdir]: forge a belt with Sherbet Healing at Bishr, equip it, check the stats and the sherbet
+import { createRequire } from 'module';
+import fs from 'fs';
+const require = createRequire('/opt/node22/lib/node_modules/');
+const { chromium } = require('playwright');
+const out = process.argv[2]; if (out) fs.mkdirSync(out, { recursive: true });
+const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: true, isMobile: true });
+const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
+await pg.goto('http://localhost:5173/?play&mobile&noadapt');
+await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.evaluate("{const s=document.createElement('style');s.textContent='*{animation-duration:0s!important;transition:none!important}';document.head.appendChild(s)}");
+await pg.evaluate(() => { const p = __game.player; p.level = 12; p.gold = 99999; p.mats = { scrap: 99, silk: 99, gem: 9 }; __game.openPanel('smith'); });
+await pg.evaluate(() => { document.querySelector('#shop .stabs [data-t=craft]').click(); });
+await pg.evaluate(() => { document.querySelector('#shop [data-slot=belt]').click(); });
+await pg.evaluate(() => { document.querySelector('#shop [data-key=potHeal]').click(); });
+await pg.waitForTimeout(600); if (out) await pg.screenshot({ path: `${out}/craft.png` });
+const r = await pg.evaluate(() => { document.querySelector('#shop .go').click(); const g = __game, p = g.player; const i = p.bag.findIndex((x) => x && x.slot === 'belt'); const it = p.bag[i]; p.equip.belt = it; p.bag[i] = null; g.recalcStats(); return { name: it.name, stats: it.stats, potHeal: p.stats.potHeal, gold: p.gold, mats: p.mats }; });
+console.log(JSON.stringify(r));
+await pg.evaluate(() => { document.getElementById('shop')?.remove(); document.querySelector('.card,#itemcard')?.remove(); __game.ui.toggleInventory(true); __game.refreshInv(); });
+await pg.waitForTimeout(800); if (out) await pg.screenshot({ path: `${out}/inv.png` });
+const h = await pg.evaluate(() => { const g = __game, p = g.player; g.ui.toggleInventory(false); p.hp = 10; p.cds = {}; g.useSkill('potion'); __sim(1.3); return Math.round(p.hp); });
+console.log('hp after sherbet', h);
+console.log('errors:', errs.slice(0, 4).join(' | ') || 'none'); await b.close();
