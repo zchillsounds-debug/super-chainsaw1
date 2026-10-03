@@ -78,7 +78,7 @@ export class Game {
 
   // Diablo-style see-through: a soft dithered hole around the hero cut into any building surface in front of them.
   setupOccluders(groups) {
-    const U = this.occU = { uHole: { value: new THREE.Vector2(-999, -999) }, uHoleR: { value: 160 }, uPDepth: { value: 0 } };
+    const U = this.occU = { uHole: { value: new THREE.Vector2(-999, -999) }, uHoleR: { value: 160 }, uPDepth: { value: 0 }, uPY: { value: 0 }, uCut: { value: 1 } };
     const scaleOf = (o) => (o.isInstancedMesh ? 3.2 : 1.0);
     const patched = new Map();
     const patch = (mat, hs = 1) => {
@@ -88,13 +88,24 @@ export class Game {
       m.onBeforeCompile = (sh, r) => {
         base && base.call(m, sh, r);
         Object.assign(sh.uniforms, U);
+        sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vOccY;')
+          .replace('#include <project_vertex>', `#include <project_vertex>
+            { vec4 ow = vec4(transformed, 1.0);
+              #ifdef USE_INSTANCING
+                ow = instanceMatrix * ow;
+              #endif
+              vOccY = (modelMatrix * ow).y; }`);
         sh.fragmentShader = sh.fragmentShader
           .replace('#include <common>', `#include <common>
-            uniform vec2 uHole; uniform float uHoleR, uPDepth;
+            uniform vec2 uHole; uniform float uHoleR, uPDepth, uPY, uCut; varying float vOccY;
             float bayer4(vec2 p){ return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }`)
           .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
             { float dz = vViewPosition.z; float d = length(gl_FragCoord.xy - uHole);
               float f = smoothstep(uHoleR*${hs.toFixed(2)}, uHoleR*${(hs * 0.55).toFixed(2)}, d) * step(dz, uPDepth - 1.2) * ${hs > 1 ? '1.0' : '0.85'};
+              // cutaway: anything between the camera and the hero is cut down to head height over a wider area
+              float cutR = uHoleR * ${(hs * 2.2).toFixed(2)};
+              float cut = uCut * step(dz, uPDepth - 0.8) * smoothstep(cutR, cutR * 0.7, d) * smoothstep(uPY + 2.0, uPY + 2.6, vOccY);
+              f = max(f, cut);
               if (f > bayer4(gl_FragCoord.xy)) discard; }`);
       };
       const key = (mat.customProgramCacheKey ? mat.customProgramCacheKey() : '') + (base ? base.toString() : '');
@@ -113,10 +124,16 @@ export class Game {
     const U = this.occU, G = this.occGBuf; G.mat = mat;
     mat.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, U); sh.uniforms.uOccOn = G.on;
-      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vOccZ;').replace('#include <project_vertex>', '#include <project_vertex>\nvOccZ = -mvPosition.z;');
-      sh.fragmentShader = sh.fragmentShader.replace('#include <packing>', '#include <packing>\nuniform vec2 uHole; uniform float uHoleR, uPDepth, uOccOn; varying float vOccZ;')
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vOccZ, vOccY;').replace('#include <project_vertex>', `#include <project_vertex>
+        vOccZ = -mvPosition.z;
+        { vec4 ow = vec4(transformed, 1.0);
+          #ifdef USE_INSTANCING
+            ow = instanceMatrix * ow;
+          #endif
+          vOccY = (modelMatrix * ow).y; }`);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <packing>', '#include <packing>\nuniform vec2 uHole; uniform float uHoleR, uPDepth, uOccOn, uPY, uCut; varying float vOccZ, vOccY;')
         .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
-          if (uOccOn > 0.5) { float d = length(gl_FragCoord.xy - uHole); if (d < uHoleR*0.8 && vOccZ < uPDepth - 1.2) discard; }`);
+          if (uOccOn > 0.5) { float d = length(gl_FragCoord.xy - uHole); if ((d < uHoleR*0.8 && vOccZ < uPDepth - 1.2) || (uCut > 0.5 && d < uHoleR*1.9 && vOccZ < uPDepth - 0.8 && vOccY > uPY + 2.3)) discard; }`);
     };
     mat.customProgramCacheKey = () => 'gbufhole'; mat.needsUpdate = true;
   }
@@ -125,7 +142,8 @@ export class Game {
     const sp = this.ui.project(tmp.set(p.x, p.y + 1.0, p.z), this.camera);
     const dpr = this.renderer.getPixelRatio();
     this.occU.uHole.value.set(sp.x * dpr, (innerHeight - sp.y) * dpr);
-    this.occU.uHoleR.value = 200 * dpr * (13.5 / (13.5 * this.camZoom));
+    this.occU.uHoleR.value = Math.min(innerWidth, innerHeight) * 0.42 * dpr / Math.max(0.6, this.camZoom) * (innerWidth < innerHeight ? 1.25 : 1);
+    this.occU.uPY.value = p.y; this.occU.uCut.value = this.cinematic ? 0 : 1;
     tmp2.copy(tmp).applyMatrix4(this.camera.matrixWorldInverse);
     this.occU.uPDepth.value = -tmp2.z;
   }

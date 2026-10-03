@@ -15,6 +15,7 @@ import { loadSave, applySave, saveGame } from './save.js';
 import { preloadGeo, flushGeo } from './geocache.js';
 import { Lighting } from './lighting.js';
 import { RIM_G } from './charmats.js';
+import { WEATHER } from './triplanar.js';
 import { PlanarReflection, reflects, REFL, REFLECT_LAYER } from './reflect.js';
 import { canalX, WATER_Y } from './terrain.js';
 import { LightPool } from './lights.js';
@@ -45,6 +46,7 @@ await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let
 const __cached = await preloadGeo(); console.debug('LOG geo cache ' + __cached);
 const renderer = createRenderer(document.getElementById('game'));
 bakeGround(renderer, QUALITY);
+WEATHER.uDustCol.value.set(IS_MARSH ? 0x6a604a : IS_KARKH ? 0x6e655a : 0xa8835a);
 const scene = new THREE.Scene();
 renderer.info.autoReset = false;
 const camera = new THREE.PerspectiveCamera(36, innerWidth / innerHeight, 0.5, 1400);
@@ -190,6 +192,7 @@ function shadowSnap(c) {
   sun.target.position.copy(_lp); sun.position.copy(_lp).addScaledVector(world.sunDir, 100);
 }
 const clock = new THREE.Clock(); let t = 0;
+const _frus = new THREE.Frustum(), _pm = new THREE.Matrix4(), _pp = new THREE.Vector3();
 let fireFlick = 0, cullT = 0, shFrame = 0, reflTagT = 0, stormWas = false; const STORM_COL = new THREE.Color(0.78, 0.6, 0.42); const _shLast = new THREE.Vector3();
 // adaptive quality: if the frame rate stays low, shed the most expensive effects
 let perfT = 0, perfN = 0, perfAcc = 0, perfLevel = 0;
@@ -267,10 +270,14 @@ function frame() {
   renderer.info.reset();
   if (reflection) {
     // only when water could be on screen: the marsh always, elsewhere near the canal
-    const near = IS_MARSH || (!game.interior && Math.abs(c.x - canalX(c.z)) < 30 * Math.max(1, game.camZoom || 1));
+    let near = IS_MARSH;
+    if (!near && !game.interior) { // is any stretch of the canal inside the view?
+      _frus.setFromProjectionMatrix(_pm.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+      for (let z = c.z - 60; z <= c.z + 30 && !near; z += 3) if (_frus.containsPoint(_pp.set(canalX(z), -0.55, z))) near = true;
+    }
     reflection.active = near && !game.interior && settings.s.reflections !== false;
     if ((reflTagT -= dt) <= 0) { reflTagT = 1.5; scene.traverse((o) => { if (o.isSkinnedMesh && !o.layers.isEnabled(REFLECT_LAYER)) o.layers.enable(REFLECT_LAYER); }); }
-    reflection.update(perfLevel >= 2 ? 2 : 1);
+    reflection.update(perfLevel >= 2 ? 3 : 2);
   }
   REFL.uRipT.value = t;
   composer.render();
@@ -283,7 +290,10 @@ window.__director = director; window.__SCENES = SCENES;
 window.__sim = (sec, step = 1 / 30) => { world.cull(game.player.pos); for (let i = 0; i < sec / step; i++) { t += step; world.update(t, step); if (director.update(step)) game.cineTick(step * director.timeScale); else game.update(step); fx.update(step); for (const f of world.fires) if (Math.random() < 0.7) fx.fire(f.pos, f.intensity); } };
 // compile every material up front, including props the distance cull has hidden, so walking up to a new site never hitches
 for (const o of world.cullables || []) o.visible = true;
+// pooled effects start hidden, and compile skips hidden objects: show everything for the compile, then restore
+const hiddenForCompile = []; scene.traverse((o) => { if (!o.visible && (o.isMesh || o.isPoints || o.isGroup)) { hiddenForCompile.push(o); o.visible = true; } });
 try { await renderer.compileAsync(scene, camera); } catch (e) { /* older drivers: compile lazily */ }
+for (const o of hiddenForCompile) o.visible = false;
 world.cull(mode === 'game' ? game.player.pos : camera.position, mode === 'game' ? 95 : 200);
 document.getElementById('loader')?.classList.add('done'); setTimeout(() => document.getElementById('loader')?.remove(), 1200);
 // installable PWA: register the offline worker on the standalone build (not in dev, not inside an embedding frame)

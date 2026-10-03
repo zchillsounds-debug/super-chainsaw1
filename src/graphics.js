@@ -146,7 +146,7 @@ export function createComposer(renderer, scene, camera, sun) {
     gtao = new GTAOPass(scene, camera, size.x, size.y);
     gtao.output = GTAOPass.OUTPUT.Default;
     gtao.blendIntensity = 0.85;
-    gtao.updateGtaoMaterial({ radius: 1.2, distanceExponent: 1.5, thickness: 2.0, scale: 1.0, samples: 12 });
+    gtao.updateGtaoMaterial({ radius: 1.0, distanceExponent: 1.5, thickness: 0.7, scale: 1.0, samples: 12 });
     gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
     // the G-buffer pass draws only solid surfaces: haze slabs, light shafts, particles, decals and the sky stay out
     // of the depth (they used to write it, which muddied the AO and broke the volumetric light)
