@@ -3,3 +3,4 @@ dist
 shots
 *.bundle
 *.zip
+out.html
