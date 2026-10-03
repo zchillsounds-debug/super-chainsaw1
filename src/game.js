@@ -357,7 +357,7 @@ export class Game {
       if (k === '2') this.useSkill('s2');
       if (k === '3') this.useSkill('s3');
       if (k === '4') this.useSkill('s4');
-      if (k === '4') this.useSkill('rmb');
+      if (k === 'e') this.useSkill('rmb'); // was a second binding on 4, which also fired the fifth slot
       if (k === 'q') this.useSkill('potion');
       if (k === ' ') { e.preventDefault(); this.useSkill('dodge'); }
       if (k === 'i' || k === 'c') { this.ui.toggleInventory(); this.refreshInv(); }
@@ -515,6 +515,7 @@ export class Game {
   }
   // while a cinematic plays: the world keeps breathing, everyone else holds still
   cineTick(dt) {
+    if (this.mount?.on) this.mount.dismount(true); // cutscenes start on foot
     // no see-through hole in cutscenes: the camera is free, and the dither read as grain on walls
     if (this.occU) this.occU.uHole.value.set(-9999, -9999);
     if (this.guide) { this.guide.mesh.count = 0; this.guide.vis = 0; }
@@ -1027,7 +1028,7 @@ export class Game {
     let moving = false;
     // wading through marsh water slows the hero to a heavy stride
     const wet = waterDepth(p.pos.x, p.pos.z); p.wading = wet > 0.08;
-    const speed = 6.4 * (1 + s.move / 100) * (p.whirlT > 0 ? 0.75 : 1) * (p.wading ? 0.62 : 1) * (this.hazSlow ?? 1);
+    const speed = 6.4 * (1 + s.move / 100) * (p.whirlT > 0 ? 0.75 : 1) * (p.wading ? 0.62 : 1) * (this.hazSlow ?? 1) * (p.mountK || 1);
     if (p.dead) { p.st.deadT += dt; }
     else if (p.rollT > 0) {
       // evade: a low, quick roll with invulnerability frames; starting it as a blow lands is a parry
@@ -1180,6 +1181,7 @@ export class Game {
     p.rig.position.copy(p.pos); p.rig.rotation.y = p.facing;
     CharLOD.center.copy(p.pos);
     animateHumanoid(p.rig, p.st, this.t, dt);
+    this.mount?.tick(dt);
     this.pLight.position.set(p.pos.x, p.pos.y + 3, p.pos.z + 1);
     // whirl vortex
     const vu = this.vortex.material.uniforms; vu.uT.value = this.t;

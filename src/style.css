@@ -562,3 +562,11 @@ body.touch #dialog .dbtn{align-self:flex-end;float:none;min-width:140px}
 #shop.bigmap .mapcard button{flex:1;min-height:44px;font:600 13px Cinzel,serif;color:#1a1008;background:linear-gradient(#f0c870,#b88a3a);border:0;border-radius:6px}
 #shop.bigmap .mapcard button:disabled{opacity:.4}
 #shop.bigmap .mapcard i{display:block;margin-top:6px;font-size:13px;color:#e0a080}
+
+/* ---- Round 20: camel mount button (bottom right above the bar on desktop; in the thumb cluster on touch) */
+#mountbtn{position:absolute;pointer-events:auto;right:24px;bottom:150px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#3a2c1c,#140e08);border:2px solid #8a6a3a;color:#e8d4a8;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px #0008;transition:transform .12s,border-color .2s}
+#mountbtn svg{width:30px;height:30px}
+#mountbtn.on{border-color:#f0c060;color:#ffe2a0;box-shadow:0 0 12px #f0b04080}
+#mountbtn:active{transform:scale(.92)}
+#mountbtn.hide,body.overlay #mountbtn,body.insheet #mountbtn,body.indialog #mountbtn,body:not(.playing) #mountbtn{display:none}
+body.touch #mountbtn{right:calc(214px + env(safe-area-inset-right,0px));bottom:calc(150px + env(safe-area-inset-bottom,0px));width:50px;height:50px;opacity:.85}

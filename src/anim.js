@@ -110,7 +110,7 @@ export class Animator {
     if (!this.inited || this.prev.distanceToSquared(r.position) > 9) { this.prev.copy(r.position); this.inited = true; this.resetFeet(); }
     if (dt > 0) { _a.subVectors(r.position, this.prev).setY(0).divideScalar(dt); this.vel.lerp(_a, Math.min(1, dt * 12)); }
     this.prev.copy(r.position);
-    const speed = this.vel.length(), v = speed / S;
+    const speed = st.mounted ? 0 : this.vel.length(), v = speed / S;
 
     if (st.dead) { this.death(st, t, dt); this.finish(st, t, dt, false); return; }
     if (this.dd) { this.dd = null; p.body.rotation.set(0, 0, 0); p.body.position.y = 0; this.resetFeet(); }
