@@ -139,16 +139,30 @@ export function briefing(g) {
 
 // ------------------------------------------------------------------ a lieutenant falls, and the next act begins
 export function lieutenantFalls(g, e, { who, text, card }) {
+  // Round 20: Salim walks up and kneels by the fallen man; his last words in a close shot from above,
+  // Salim's reaction from low, then the crane up for the act card (no slow motion, nothing shown of the blow)
   const salim = playerActor(g), foe = { rig: e.rig, pos: e.pos, get facing() { return e.facing; }, set facing(v) { e.facing = v; }, st: e.st };
   const actors = [salim, foe];
-  const ang = yawTo(salim.pos, foe.pos);
-  const orbit = (r, h, a0) => () => { const a = a0 + (performance.now() / 1000) * 0.12; return V(foe.pos.x + Math.sin(a) * r, foe.pos.y + h, foe.pos.z + Math.cos(a) * r); };
+  const dir = V(salim.pos.x - foe.pos.x, 0, salim.pos.z - foe.pos.z); if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1); dir.normalize();
+  const spot = V(foe.pos.x + dir.x * 1.15, salim.pos.y, foe.pos.z + dir.z * 1.15);
+  const side = V(dir.z, 0, -dir.x);
+  // low, from beyond the fallen man: he lies across the foreground, Salim kneels over him
+  const mid = () => V(spot.x * 0.6 + foe.pos.x * 0.4, salim.pos.y + 0.72, spot.z * 0.6 + foe.pos.z * 0.4);
+  const faceDown = () => V(foe.pos.x - dir.x * 2.3 + side.x * 1.2, foe.pos.y + 0.62, foe.pos.z - dir.z * 2.3 + side.z * 1.2);
+  let kneel = 0;
   const shots = [
-    // calm framing: from behind Salim's shoulder at normal speed, no slow-motion lingering on the fallen man
-    { dur: 3.4, line: { who, text, rig: e.rig, cue: 'breath' }, cam: { follow: true, p0: at(salim, 2.2, -2.8, 1.4), t0: at(foe, 0.6), p1: at(salim, 2.1, -2.5, 1.2), t1: at(foe, 0.6), fov: 38 }, dof: at(foe, 0.6), aperture: 1.0 },
-    { dur: 5.6, card, stinger: 'title', cam: { p0: () => at(foe, 3.5, 0, 0)().add(V(0, 0, 0)), t0: at(foe, 0.5), p1: () => at(foe, 14, 0, 0)().add(V(8, 0, 8)), t1: at(foe, 0), ease: 'io2' } },
+    { dur: 2.6, cam: { follow: true, p0: () => V(spot.x + side.x * 3.2 + dir.x * 1.5, spot.y + 1.1, spot.z + side.z * 3.2 + dir.z * 1.5), t0: at(salim, 1.0), p1: () => V(spot.x + side.x * 2.6 + dir.x * 0.6, spot.y + 0.9, spot.z + side.z * 2.6 + dir.z * 0.6), t1: at(foe, 0.4), fov: 36 },
+      run: (d, k, dt) => { walk(salim, spot, 1.6, dt || 1 / 60); } },
+    { dur: lineDur(text), line: { who, text, rig: e.rig, cue: 'breath' }, cam: { follow: true, p0: faceDown, t0: mid, p1: () => faceDown().add(V(0, -0.1, 0)).lerp(mid(), 0.15), t1: mid, fov: 36 }, dof: headOf(foe), aperture: 1.6,
+      enter: () => { salim.pos.copy(spot); salim.facing = yawTo(salim.pos, foe.pos); }, run: (d, k, dt) => { kneel = Math.min(1, kneel + (dt || 1 / 60) * 2.5); salim.st.crouch = 0.65 * kneel; } },
+    { dur: 2.2, cam: { follow: true, p0: () => { const h = headOf(salim)(); return V(h.x - dir.x * 1.1 + side.x * 0.35, h.y - 0.25, h.z - dir.z * 1.1 + side.z * 0.35); }, t0: headOf(salim), fov: 30 }, dof: headOf(salim), aperture: 1.4 },
+    { dur: 5.6, card, stinger: 'title', cam: { p0: at(salim, 1.6, -2.4, 0.8), t0: at(foe, 0.4), p1: () => at(salim, 9, -10, 3)(), t1: at(foe, 0), ease: 'io2' },
+      run: (d, k) => { salim.st.crouch = 0.65 * Math.max(0, 1 - k * 3); } },
   ];
-  return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); } };
+  // his surviving men step out of the frame for the scene (they are back when it ends)
+  const hidden = g.enemies.filter((o) => o !== e && !o.dead && o.rig.visible && o.pos.distanceTo(e.pos) < 14);
+  for (const o of hidden) o.rig.visible = false;
+  return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { salim.st.crouch = 0; for (const o of hidden) o.rig.visible = true; } };
 }
 
 // ------------------------------------------------------------------ Ghassan at the arch
@@ -163,8 +177,11 @@ export function bossIntro(g, b, intro = null) {
     { dur: 5.2, line: { who, text: I.text, rig: b.rig, cue: 'growl' },
       cam: { follow: true, p0: at(boss, 0.5, 4.6, 1.4), t0: at(boss, 2.25), p1: at(boss, 0.7, 3.6, 0.9), t1: at(boss, 2.3), fov: 34 }, dof: headOf(boss),
       enter: (d) => { act(boss, 'command', 2.6); d.audio.roar?.(); }, run: () => face() },
+    // Round 20: Salim's answer is a look, from low and close, before the boss is framed from below for his card
+    { dur: 2.0, cam: { follow: true, p0: () => { const h = headOf(salim)(), f = yawTo(salim.pos, boss.pos); return V(h.x + Math.sin(f) * 1.2 + Math.cos(f) * 0.4, h.y - 0.3, h.z + Math.cos(f) * 1.2 - Math.sin(f) * 0.4); }, t0: headOf(salim), fov: 30 }, dof: headOf(salim), aperture: 1.4,
+      enter: () => { salim.facing = yawTo(salim.pos, boss.pos); } },
     { dur: 4.6, card: I.card,
-      cam: { follow: true, p0: at(boss, 2.4, 6, -4), t0: at(boss, 1.8), p1: at(boss, 2.0, 5.4, 3.2), t1: at(boss, 1.8), fov: 36 } },
+      cam: { follow: true, p0: at(boss, 0.5, 6.5, -3.5), t0: at(boss, 2.6), p1: at(boss, 0.7, 5.2, 2.8), t1: at(boss, 2.4), fov: 38 } },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { b.rise = 1; b.st.crouch = 0; b.st.action = null; } };
 }

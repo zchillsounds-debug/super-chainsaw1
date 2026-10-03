@@ -468,8 +468,9 @@ export class Game {
     e.dead = true; e.st.dead = true; e.st.deadT = 0; e.hp = 0; this.kills = (this.kills || 0) + 1;
     // Round 20: fall away from the blow; heavy weapons and crits knock the body back, others crumple to the knees or twist
     const hf = e.st.hitFrom, front = hf ? hf.x * Math.sin(e.facing) + hf.z * Math.cos(e.facing) : 1;
-    e.st.fallDir = front > -0.2 ? 1 : -1;
-    e.st.deathKind = (this.kit?.weight || 0) > 0.8 || this.lastCrit ? 0 : [0, 1, 2][Math.floor(Math.random() * 3)];
+    e.st.fallDir = front > -0.2 || e.elite ? 1 : -1;
+    // captains always go down on their backs: their last words are filmed close on the face
+    e.st.deathKind = e.elite || (this.kit?.weight || 0) > 0.8 || this.lastCrit ? 0 : [0, 1, 2][Math.floor(Math.random() * 3)];
     e.st.twist = hf ? Math.sign(hf.x * Math.cos(e.facing) - hf.z * Math.sin(e.facing)) || 1 : 1;
     this.audio.at(e.pos, () => this.audio.death());
     const p = this.player; p.xp += Math.round(e.xp * (p.xpK || 1));
