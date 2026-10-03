@@ -35,6 +35,7 @@ export class Zones {
   update(dt) {
     const g = this.g, p = g.player.pos;
     if (g.interior) for (const t of g.interior.I.torches) if (Math.random() < 0.5 && t.pos.distanceToSquared(p) < 900) g.fx.fire(t.pos, 0.35);
+    if (g.interior) for (const f of g.interior.I.fades || []) { const d = Math.hypot(f.mesh.position.x - p.x, f.mesh.position.z - p.z); f.mesh.material.opacity = f.base * Math.max(0, Math.min(1, 1 - (d - 5) / 4)); f.mesh.visible = d < 9; }
     let best = null, bd = 1e9;
     if (g.started && !g.cinematic && !g.player.dead && !g.ui.dialogOpen) for (const it of g.interactables) {
       if (it.hidden) continue; const d = Math.hypot(it.pos.x - p.x, it.pos.z - p.z); if (d < it.r && d < bd) { bd = d; best = it; }

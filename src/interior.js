@@ -105,6 +105,11 @@ function kit() {
     water: new THREE.MeshStandardMaterial({ color: 0x0e2a2a, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.85 }),
     slip: new THREE.MeshStandardMaterial({ color: 0x7a5a3a, roughness: 0.2, metalness: 0.05 }),
     wood: mats().wood, gold: mats().gold,
+    // Round 20: dressing for the rooms, and the light that torches and roof grates throw
+    sack: new THREE.MeshStandardMaterial({ color: 0xb09a70, roughness: 1 }), basket: new THREE.MeshStandardMaterial({ color: 0x8a6a38, roughness: 1 }),
+    ash: new THREE.MeshStandardMaterial({ color: 0x2a2622, roughness: 1 }), stone: new THREE.MeshStandardMaterial({ color: 0x8a8274, roughness: 0.95 }),
+    rope: new THREE.MeshStandardMaterial({ color: 0x8a7050, roughness: 1 }), carpet: new THREE.MeshStandardMaterial({ color: 0x6a1e18, roughness: 1 }),
+    glow: {}, // additive cone and pool materials by colour (made on first use, one per style)
   };
   return KIT;
 }
@@ -139,6 +144,50 @@ export function destroyInterior(scene) {
   current = null;
 }
 
+// ---------------------------------------------------------------- Round 20: light volumes and room dressing
+let GRAD = null;
+function gradTex() { // [0] a cone's fade (bright at the flame, gone at the floor), [1] a soft round pool
+  if (GRAD) return GRAD;
+  const mk = (draw) => { const c = document.createElement('canvas'); c.width = c.height = 64; draw(c.getContext('2d')); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
+  GRAD = [mk((x) => { const g = x.createLinearGradient(0, 0, 0, 64); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.08, 'rgba(255,255,255,1)'); g.addColorStop(0.45, 'rgba(255,255,255,0.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); }),
+    mk((x) => { const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.4, 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); }),
+    // a daylight shaft: nothing near the roof (so it never fogs the overhead view), strongest just above the floor
+    mk((x) => { const g = x.createLinearGradient(0, 0, 0, 64); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.45, 'rgba(255,255,255,0.25)'); g.addColorStop(0.85, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0.5)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); })];
+  return GRAD;
+}
+function glowMats(K, hex) {
+  if (K.glow[hex]) return K.glow[hex];
+  const [cone, pool, skyT] = gradTex(), col = new THREE.Color(hex);
+  const m = (map, op) => new THREE.MeshBasicMaterial({ color: col, map, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
+  return (K.glow[hex] = { cone: m(cone, 0.13), pool: m(pool, 0.3), sky: m(skyT, 0.09), skyPool: m(pool, 0.3) });
+}
+const TORCH_HEX = { cistern: 0xb8c8c0, salt: 0xfff0d8, kiln2: 0xe88a50, palace: 0xffc890, scorched: 0xff8a3a };
+const SKY_STYLES = new Set(['cistern', 'qanat', 'grainvault', 'palace', 'vault', 'cellar', 'flood']);
+// a half cone, open toward the wall (it must not show through the wall's far side), and a pool clear of the wall
+const _cone = new THREE.CylinderGeometry(0.1, 1.35, 2.4, 10, 1, true, -Math.PI / 2, Math.PI).translate(0, -1.2, 0), _pool = new THREE.CircleGeometry(1.9, 18).rotateX(-Math.PI / 2);
+const _sky = new THREE.CylinderGeometry(1.2, 1.6, 3.8, 14, 1, true).translate(0, 1.9, 0), _skyPool = new THREE.CircleGeometry(2.0, 18).rotateX(-Math.PI / 2);
+// props laid along the walls (the middle of a room stays clear to fight in); returns [mesh, collider radius]
+function dressProp(style, rnd, K) {
+  const g = new THREE.Group(), add = (geo, m, x, y, z, ry = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.y = ry; o.castShadow = true; o.receiveShadow = true; g.add(o); return o; };
+  const rubble = () => { for (let i = 0; i < 5; i++) add(new THREE.DodecahedronGeometry(0.15 + rnd() * 0.22, 0), K.stone, (rnd() - 0.5) * 1.2, 0.1, (rnd() - 0.5) * 0.9, rnd() * 6); return 0.7; };
+  const sacks = () => { for (let i = 0; i < 3; i++) add(new THREE.SphereGeometry(0.34, 8, 6).scale(1, 0.75, 0.8), K.sack, (i - 1) * 0.55 + (rnd() - 0.5) * 0.1, 0.24, (rnd() - 0.5) * 0.3, rnd() * 3); if (rnd() < 0.6) add(new THREE.SphereGeometry(0.32, 8, 6).scale(1, 0.75, 0.8), K.sack, 0, 0.6, 0); return 0.9; };
+  const basket = () => { add(new THREE.CylinderGeometry(0.34, 0.26, 0.5, 10, 1, true), K.basket, 0, 0.25, 0); add(new THREE.CircleGeometry(0.3, 10).rotateX(-Math.PI / 2), K.grain, 0, 0.38, 0); return 0.45; };
+  const bucket = () => { add(new THREE.CylinderGeometry(0.2, 0.16, 0.36, 9), K.wood, 0, 0.18, 0); add(new THREE.TorusGeometry(0.32, 0.05, 5, 12).rotateX(Math.PI / 2), K.rope, 0.6, 0.06, 0.1); add(new THREE.TorusGeometry(0.24, 0.05, 5, 12).rotateX(Math.PI / 2), K.rope, 0.6, 0.14, 0.1); return 0.5; };
+  const ash = () => { add(new THREE.ConeGeometry(0.9, 0.45, 10), K.ash, 0, 0.22, 0); add(new THREE.BoxGeometry(0.22, 0.12, 0.44), K.wood, 0.5, 0.06, 0.3, 0.6); return 0.8; };
+  const post = () => { add(new THREE.BoxGeometry(0.3, WALL_H, 0.3), K.wood, 0, WALL_H / 2, 0); add(new THREE.BoxGeometry(1.4, 0.24, 0.32), K.wood, 0, WALL_H - 0.3, 0); return 0.35; };
+  const blocks = () => { for (let i = 0; i < 3; i++) add(new THREE.BoxGeometry(0.55, 0.4, 0.45), style === 'salt' ? K.saltw : K.stone, (i - 1) * 0.6, 0.2 + (i === 1 && rnd() < 0.5 ? 0.4 : 0), (rnd() - 0.5) * 0.2, (rnd() - 0.5) * 0.4); return 0.9; };
+  const reeds = () => { for (let i = 0; i < 4; i++) { const o = add(new THREE.CylinderGeometry(0.16, 0.16, 1.7, 7), K.reed, (i - 1.5) * 0.3, 0.85, 0); o.rotation.z = (rnd() - 0.5) * 0.3; } add(new THREE.TorusGeometry(0.62, 0.03, 4, 14).rotateX(Math.PI / 2), K.rope, 0, 1.0, 0); return 0.7; };
+  const drum = () => { const o = add(new THREE.CylinderGeometry(0.42, 0.42, 0.8, 12), K.stone, 0, 0.42, 0); o.rotation.z = Math.PI / 2; add(new THREE.CylinderGeometry(0.42, 0.42, 0.6, 12), K.stone, 0.9, 0.3, 0.2); return 0.9; };
+  const bench = () => { add(new THREE.BoxGeometry(1.6, 0.4, 0.5), K.wood, 0, 0.2, 0); add(new THREE.PlaneGeometry(1.8, 1.1).rotateX(-Math.PI / 2), K.carpet, 0, 0.015, 0.9); return 0.6; };
+  const pick = {
+    cistern: [bucket, drum, rubble, blocks], qanat: [bucket, rubble, blocks, post], kiln: [ash, rubble, post], kiln2: [ash, rubble, blocks], pit: [rubble, basket, ash],
+    cellar: [sacks, post, basket, rubble], scorched: [ash, rubble, post], flood: [sacks, basket, rubble], grainvault: [sacks, basket, sacks, post],
+    salt: [blocks, post, rubble], palace: [bench, drum, rubble], warren: [reeds, basket, reeds, sacks], vault: [drum, rubble, blocks],
+  }[style] || [rubble];
+  const r = pick[Math.floor(rnd() * pick.length)]();
+  return [g, r];
+}
+
 // style: 'kiln' | 'qanat' | 'cellar' | 'pit' | 'vault' | 'flood' | 'scorched' | (R17) 'cistern' | 'grainvault' | 'salt' | 'kiln2' | 'palace' | 'warren'. Returns { rooms, entrance, exit, torches, chests, group, spawnRooms }
 export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {}) {
   destroyInterior(scene);
@@ -148,7 +197,7 @@ export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {
   const L = layout(seed, rooms), grp = new THREE.Group();
   const col = (x, z, hw, hd) => colliders.push({ type: 'box', x, z, hw, hd, rot: 0, interior: true });
   const box = (w, h, d, x, y, z, m) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.castShadow = true; b.receiveShadow = true; grp.add(b); return b; };
-  const torches = [], floors = [], dynW = [];
+  const torches = [], floors = [], dynW = [], fades = []; // fades: shafts shown only near the hero (from a neighbouring room they read as solid tubes)
   const dyn = new THREE.Group();
   for (const r of L.rooms) {
     const c = roomCenter(r);
@@ -185,6 +234,28 @@ export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {
       const em = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 5), K.ember); em.position.set(sx, 2.5, sz); grp.add(em);
       const off = new THREE.Vector3(Math.sin(ry) * 0.9, 0, tx === 0 ? 0.9 : 0); if (tx !== 0) off.set(-Math.sign(tx) * 0.9, 0, 0);
       torches.push({ pos: new THREE.Vector3(sx, 2.55, sz), light: new THREE.Vector3(sx, 2.3, sz).add(off), intensity: 0.45, torch: true });
+    }
+    // Round 20: each torch throws a soft cone of light down the wall and a warm pool on the floor
+    { const G = glowMats(K, TORCH_HEX[style] || 0xffa050);
+      for (const t of torches.slice(-tw.length)) {
+        const ox = t.light.x - t.pos.x, oz = t.light.z - t.pos.z, ol = Math.hypot(ox, oz) || 1;
+        const cn = new THREE.Mesh(_cone, G.cone); cn.position.set(t.pos.x + ox / ol * 0.12, t.pos.y - 0.05, t.pos.z + oz / ol * 0.12); cn.rotation.y = Math.atan2(ox, oz); grp.add(cn);
+        const pl = new THREE.Mesh(_pool, G.pool); pl.position.set(t.pos.x + ox / ol * 2.0, 0.03, t.pos.z + oz / ol * 2.0); grp.add(pl);
+      }
+      // and in the old cisterns, galleries and stores, daylight falls through a grate in some roofs
+      if (SKY_STYLES.has(style) && rnd() < 0.4) {
+        const Gs = glowMats(K, 0xd8e0e8), sx = c.x + (rnd() - 0.5) * 4, sz = c.z + (rnd() - 0.5) * 4;
+        const sh = new THREE.Mesh(_sky, Gs.sky.clone()); sh.position.set(sx, 0, sz); sh.rotation.z = 0.08; sh.userData.noMerge = true; grp.add(sh); fades.push({ mesh: sh, base: sh.material.opacity });
+        const sp = new THREE.Mesh(_skyPool, Gs.skyPool); sp.position.set(sx + 0.3, 0.035, sz); grp.add(sp);
+      }
+    }
+    // Round 20: props along the walls, clear of the doorways
+    for (let q = 0, n2 = 3 + Math.floor(rnd() * 3); q < n2; q++) {
+      const side = Math.floor(rnd() * 4), along = (rnd() - 0.5) * (S - 3.2), inset = S / 2 - T - 0.9;
+      if (Math.abs(along) < DOOR / 2 + 0.9) continue;
+      const [x, z] = [[along, -inset], [along, inset], [-inset, along], [inset, along]][side];
+      const [o, r] = dressProp(style, rnd, K); o.position.set(c.x + x, 0, c.z + z); o.rotation.y = side < 2 ? 0 : Math.PI / 2; grp.add(o);
+      colliders.push({ type: 'circle', x: c.x + x, z: c.z + z, r, interior: true });
     }
     // clutter
     const n = 2 + Math.floor(rnd() * 4);
@@ -277,8 +348,8 @@ export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {
   }
   // entrance: a shaft of daylight and the way back up
   const e0 = roomCenter(L.rooms[0]);
-  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.2, 14, 16, 1, true).translate(0, 7, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.2, 1.0, 0.7), transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-  shaft.position.set(e0.x, 0, e0.z + 2.5); dyn.add(shaft);
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 2.1, 4.2, 16, 1, true).translate(0, 2.1, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.2, 1.0, 0.7), map: gradTex()[2], transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+  shaft.position.set(e0.x, 0, e0.z + 2.5); dyn.add(shaft); fades.push({ mesh: shaft, base: shaft.material.opacity });
   const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 8, 5), K.wood); rope.position.set(e0.x + 0.6, 4, e0.z + 2.5); dyn.add(rope);
   // treasure chest in the deepest room
   const last = L.rooms[L.rooms.length - 1], lc = roomCenter(last);
@@ -296,7 +367,7 @@ export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {
   const inFloor = (x, z) => floors.some(([x0, z0, x1, z1]) => x > x0 && x < x1 && z > z0 && z < z1);
   setInteriorFloor(inFloor);
   buildGrid(); buildNav(INTERIOR_X, 290);
-  current = { group: grp, rooms: L.rooms, torches, style, entrance: new THREE.Vector3(e0.x, 0, e0.z + 2.5), chest: { mesh: chest, lid, pos: new THREE.Vector3(lc.x, 0, lc.z - 3.5), opened: false }, center: roomCenter, floors, hazards: haz, water: dynW };
+  current = { group: grp, rooms: L.rooms, torches, style, entrance: new THREE.Vector3(e0.x, 0, e0.z + 2.5), chest: { mesh: chest, lid, pos: new THREE.Vector3(lc.x, 0, lc.z - 3.5), opened: false }, center: roomCenter, floors, hazards: haz, water: dynW, fades };
   return current;
 }
 export const interiorNow = () => current;
