@@ -340,7 +340,7 @@ export function humanoid(opts = {}) {
   const goldM = new THREE.MeshStandardMaterial({ color: 0xc9973c, metalness: 0.8, roughness: 0.4 });
   const grip = (h, w, s) => { w.position.set(-s * 0.018, -0.1, 0.004); h.add(w); return w; };
   if (o.weapon === 'sword') { const w = sword(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
-  if (o.weapon === 'dagger') { for (const [S, s] of SIDES) { const w = dagger(); w.rotation.x = Math.PI / 2; grip(bones['hand' + S], w, s); } }
+  if (o.weapon === 'dagger') { parts.trails = []; for (const [S, s] of SIDES) { const w = dagger(); w.rotation.x = Math.PI / 2; grip(bones['hand' + S], w, s); parts.trails.push({ obj: w, a: 0.12, b: 0.46 }); } }
   if (o.weapon === 'torch') { const w = torch(); w.rotation.x = Math.PI / 2.4; parts.weapon = grip(bones.handR, w, 1); }
   if (o.weapon === 'spear') { const w = spear(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
   if (o.weapon === 'sling') { // a cord sling hanging from the right hand, the pouch loaded with a stone
@@ -352,6 +352,8 @@ export function humanoid(opts = {}) {
   if (o.weapon === 'net') { // a rolled casting net over the left arm
     const n = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.06, 6, 12), new THREE.MeshStandardMaterial({ color: 0x8a7a5a, roughness: 1 })); n.rotation.x = Math.PI / 2; n.position.set(0, -0.05, 0); bones.foreL.add(n);
   }
+  // blade segments for swing trails (combatfx.js): local base and tip along the weapon's +y
+  if (!parts.trails && parts.weapon && o.weapon !== 'bow' && o.weapon !== 'sling' && o.weapon !== 'net') parts.trails = [{ obj: parts.weapon, ...({ sword: { a: 0.22, b: 1.12 }, spear: { a: 1.55, b: 2.12 }, torch: { a: 0.45, b: 0.86, fire: true } }[o.weapon] || { a: 0.2, b: 0.9 }) }];
   if (o.weapon === 'bow') { const w = bow(); w.position.set(0.018, -0.1, 0); bones.handL.add(w); parts.weapon = w; }
   if (o.offhand === 'shield') { const sd = shield(); sd.scale.setScalar(0.92); sd.position.set(-0.075, -0.14, 0.02); sd.rotation.set(0, -Math.PI / 2 + 0.5, 0); bones.foreL.add(sd); parts.shield = sd; }
   if (o.scabbard) {

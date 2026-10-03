@@ -1,5 +1,6 @@
 import { sellPrice, SALVAGE, MAT_NAMES } from './hub.js';
 import * as THREE from 'three';
+import { REFL } from './reflect.js';
 import { humanoid, animateHumanoid, setCharLOD, sword, camel, animateCamel, buffalo, animateBuffalo, CharLOD } from './characters.js';
 import { heightAt, SITES, canalX, mapColor, waterDepth } from './terrain.js';
 import { resolve, buildGrid } from './collision.js';
@@ -1139,7 +1140,7 @@ export class Game {
     p.st.walkBlend = THREE.MathUtils.lerp(p.st.walkBlend, moving ? Math.min(1, (p.st.speedK ?? 1) * 1.1) : 0, Math.min(1, dt * 8));
     p.st.phase += dt * (p.dashT > 0 ? speed * 1.55 : Math.hypot(p.vel?.x || 0, p.vel?.z || 0) * 1.55);
     // footstep dust puffs
-    if (moving && p.dashT <= 0) { const step = Math.floor(p.st.phase / Math.PI); if (step !== p.lastStep) { p.lastStep = step; const sf = this.surfaceAt(p.pos); if (sf === 'sand') this.fx.dust(tmp.copy(p.pos).add(new THREE.Vector3(0, 0.1, 0)), 2, 0.45); else if (p.wading) this.splash(p.pos); this.audio.step?.(sf, p.rollT > 0 ? 1.4 : 1); } }
+    if (moving && p.dashT <= 0) { const step = Math.floor(p.st.phase / Math.PI); if (step !== p.lastStep) { p.lastStep = step; const sf = this.surfaceAt(p.pos); this.onStep?.(p, sf, step); if (sf === 'sand') this.fx.dust(tmp.copy(p.pos).add(new THREE.Vector3(0, 0.1, 0)), 2, 0.45); else if (p.wading) this.splash(p.pos); this.audio.step?.(sf, p.rollT > 0 ? 1.4 : 1); } }
     p.rig.position.copy(p.pos); p.rig.rotation.y = p.facing;
     CharLOD.center.copy(p.pos);
     animateHumanoid(p.rig, p.st, this.t, dt);
@@ -1255,7 +1256,7 @@ export class Game {
       }
       if (e.boss) { this.bossAI(e, dt); e.pos.y = heightAt(e.pos.x, e.pos.z); e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; e.st.walkBlend = THREE.MathUtils.lerp(e.st.walkBlend, e.moving ? 1 : 0, Math.min(1, dt * 6)); e.st.phase += dt * (e.moving ? e.speed * 1.2 : 0); animateHumanoid(e.rig, e.st, this.t, dt); continue; }
       e.lost = Math.max(0, (e.lost || 0) - dt);
-      if (!e.alerted && !e.lost && dist < (stealthed ? 2.5 : e.T.ranged ? 16 : 13) && !p.dead) e.alerted = true;
+      if (!e.alerted && !e.lost && dist < (stealthed ? 2.5 : (e.T.ranged ? 16 : 13) * (this.sightK ?? 1)) && !p.dead) e.alerted = true;
       if (stealthed && e.alerted && dist > 4 && !e.boss) { e.alerted = false; e.lost = 1; }
       let moving = false;
       const slow = e.slowT > 0 ? 1 - e.slowK : 1; e.slowT = Math.max(0, (e.slowT || 0) - dt);
@@ -1361,7 +1362,9 @@ export class Game {
     this.projectiles.push({ mesh: m, vel: dir.clone().multiplyScalar(13), grav: 0, life: 0.85, owner: 'enemy', kind: 'net', dmg: e.dmg * 0.4 });
     this.audio.at(e.pos, () => this.audio.whoosh());
   }
-  splash(pos) {
+  splash(pos, k = 1) {
+    // a ripple ring spreading on the water surface (reflect.js), cycling through eight slots
+    const R = REFL.uRip.value; this.ripI = ((this.ripI || 0) + 1) % R.length; R[this.ripI].set(pos.x, pos.z, 0.9 * k, REFL.uRipT.value);
     this.fx.ring(tmp.copy(pos).setY(WATER_Y + 0.02), new THREE.Color(0.7, 0.8, 0.8), 0.15, 0.9, 0.6, 0.35);
     this.fx.burst(tmp.copy(pos).setY(WATER_Y + 0.05), 5, { speed: 1.4, life: 0.45, size: 0.09, size1: 0.02, color: new THREE.Color(0.85, 0.9, 0.95), up: 2.2, drag: 1 });
   }

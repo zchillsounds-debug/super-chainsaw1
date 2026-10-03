@@ -241,6 +241,9 @@ export function createTerrain() {
         vec3 cSand = sand * dS.r; cSand = mix(cSand, peb(dS.b), dS.g*0.85);
         // dry earth: soft trodden dirt, with patches where it has baked and cracked into plates
         float crackK = smoothstep(0.52, 0.68, fb(wq*0.05 + 4.0));
+        #if RG == 1
+          crackK *= 0.0; // the marsh never bakes dry
+        #endif
         vec3 cDirt = dirt * mix(mix(0.92, 1.04, dS.r), dE.r * 1.08, crackK); cDirt = mix(cDirt, peb(dS.b), dS.g*0.6*(1.0-crackK));
         vec3 cGrass = grass * mix(1.0, mix(dS.r, dE.r, crackK), 0.5);
         vec3 cMud = mud * mix(0.85, 1.1, dE.r);

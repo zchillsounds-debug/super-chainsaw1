@@ -15,6 +15,8 @@ import { loadSave, applySave, saveGame } from './save.js';
 import { preloadGeo, flushGeo } from './geocache.js';
 import { Lighting } from './lighting.js';
 import { RIM_G } from './charmats.js';
+import { PlanarReflection, reflects, REFL, REFLECT_LAYER } from './reflect.js';
+import { canalX, WATER_Y } from './terrain.js';
 import { LightPool } from './lights.js';
 import { setupSheets } from './sheets.js';
 import { Guide } from './guide.js';
@@ -34,6 +36,8 @@ import { setupSideQuests } from './sidequests.js';
 import { setupDungeons } from './dungeons.js';
 import { setupBuild } from './build.js';
 import { setupTravel } from './travel.js';
+import { CombatFX } from './combatfx.js';
+import { Ambient } from './ambient.js';
 import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, FIRST_ACT, STORY, REGION_NAME } from './region.js';
 
 const P = new URLSearchParams(location.search);
@@ -66,7 +70,14 @@ const heroLight = new THREE.PointLight(0xffd8b0, 0, 10, 1.6); scene.add(heroLigh
 world.staticRoots = scene.children.filter((o) => !o.isLight); // hidden while underground
 const fx = new FX(scene);
 const { composer, grade, gtao, bokeh, bloom, vol, resize } = createComposer(renderer, scene, camera, sun);
-addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); resize(); });
+// water reflections (High only): terrain, sky, buildings, palms, lights and characters are drawn mirrored
+const reflection = QUALITY !== 'low' ? new PlanarReflection(renderer, scene, camera, { scale: 0.4, y: IS_MARSH ? WATER_Y + 0.0 : -0.55 }) : null;
+if (reflection) {
+  for (const o of scene.children) if (o.name === 'terrain' || o.isLight || o.renderOrder === -10) reflects(o);
+  for (const g of world.occluders) reflects(g);
+  sun.layers.enable(REFLECT_LAYER); sun.target.layers.enable(REFLECT_LAYER); hemi.layers.enable(REFLECT_LAYER); heroLight.layers.enable(REFLECT_LAYER);
+}
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); resize(); reflection?.resize(); });
 
 // torch light pool: every fire and lantern is an emitter; only the nearest few get a real light
 const lightPool = new LightPool(scene, QUALITY === 'low' ? 4 : 8);
@@ -95,6 +106,8 @@ setupSideQuests(game);
 setupDungeons(game);
 setupBuild(game);
 setupTravel(game);
+const combatFx = game.combatFx = new CombatFX(game);
+const ambient = game.ambient = new Ambient(game, QUALITY);
 const tutorial = new Tutorial(game);
 const guide = game.guide = new Guide(game);
 const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); guide.update(dt); game.discover(dt); tutorial.update(dt); game.contentTick?.(dt); game.sideTick?.(dt); game.travelTick?.(dt); };
@@ -177,7 +190,7 @@ function shadowSnap(c) {
   sun.target.position.copy(_lp); sun.position.copy(_lp).addScaledVector(world.sunDir, 100);
 }
 const clock = new THREE.Clock(); let t = 0;
-let fireFlick = 0, cullT = 0, shFrame = 0; const _shLast = new THREE.Vector3();
+let fireFlick = 0, cullT = 0, shFrame = 0, reflTagT = 0, stormWas = false; const STORM_COL = new THREE.Color(0.78, 0.6, 0.42); const _shLast = new THREE.Vector3();
 // adaptive quality: if the frame rate stays low, shed the most expensive effects
 let perfT = 0, perfN = 0, perfAcc = 0, perfLevel = 0;
 function adaptQuality(dt) {
@@ -217,6 +230,16 @@ function frame() {
   } else if (Math.random() < 0.5) fx.smoke.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 50, y: (focus.y || 0) + Math.random() * 6, z: focus.z + (Math.random() - 0.5) * 40 }, vel: { x: 1.5, y: 0.1, z: 0.4 }, life: 4, size: 0.06, size1: 0.06, color: new THREE.Color(1, 0.9, 0.7), alpha: 0.6, drag: 0, fadeIn: 0.3 });
   if (mode === 'title') { titleCam(t); game.t += dt; game.updateAmbientLife(dt); } else if (director.update(dt)) game.cineTick(dt * director.timeScale); else game.update(dt * (game.timeScale ?? 1));
   lighting.update(dt);
+  if (mode === 'game') combatFx.update(dt * (game.timeScale ?? 1));
+  ambient.update(dt, mode === 'game' ? game.player.pos : SITES.village, lighting);
+  { // a sandstorm thickens the air: denser, sandier fog, a dimmer sun, dust driven along the ground
+    const S = ambient.storm, L = lighting.cur;
+    if (S > 0.001 || stormWas) {
+      scene.fog.density = L.fogD * (1 + 3.5 * S); scene.fog.color.copy(L.fog).lerp(STORM_COL, 0.55 * S);
+      sun.intensity = L.sunI * (1 - 0.45 * S); stormWas = S > 0.001;
+      if (S > 0.05 && mode === 'game') for (let i = 0; i < 3; i++) if (Math.random() < S) fx.smoke.spawn({ pos: { x: game.player.pos.x + (Math.random() - 0.5) * 40, y: (game.player.pos.y || 0) + Math.random() * 4, z: game.player.pos.z + (Math.random() - 0.5) * 34 }, vel: { x: 7 * 0.82, y: 0.2, z: 7 * 0.57 }, life: 3, size: 1.5, size1: 3.5, color: STORM_COL, alpha: 0.22 * S, drag: 0, fadeIn: 0.3 });
+    }
+  }
   cullT -= rawDt; if (cullT <= 0) { cullT = 0.4; world.cull(mode === 'game' ? game.player.pos : camera.position, mode === 'game' ? 95 : 200); }
   lightPool.update(dt, mode === 'game' ? game.player.pos : camera.position, lighting.fireScale);
   fx.update(dt); fx.setScale(renderer.getDrawingBufferSize(new THREE.Vector2()).y);
@@ -238,10 +261,18 @@ function frame() {
   if (vol) {
     const L = lighting.cur, U = vol.u; vol.enabled = (!gtao || gtao.enabled) && !game.interior && (L.vol ?? 0.02) > 0.001 && settings.s.volumetric !== false;
     U.uSun.value.copy(world.sunDir); U.uSunCol.value.copy(L.sunCol); U.uSunI.value = L.sunI * 0.55; U.uAmb.value.copy(L.fog).multiplyScalar(0.06 * L.hemiI);
-    U.uDens.value = L.vol ?? 0.02; U.uGround.value = c.y || 0; U.uTime.value = t; vol.amount = 1;
+    U.uDens.value = (L.vol ?? 0.02) * (1 + 2.5 * ambient.storm); U.uGround.value = c.y || 0; U.uTime.value = t; vol.amount = 1;
   }
   grade.uniforms.uTime.value = t;
   renderer.info.reset();
+  if (reflection) {
+    // only when water could be on screen: the marsh always, elsewhere near the canal
+    const near = IS_MARSH || (!game.interior && Math.abs(c.x - canalX(c.z)) < 30 * Math.max(1, game.camZoom || 1));
+    reflection.active = near && !game.interior && settings.s.reflections !== false;
+    if ((reflTagT -= dt) <= 0) { reflTagT = 1.5; scene.traverse((o) => { if (o.isSkinnedMesh && !o.layers.isEnabled(REFLECT_LAYER)) o.layers.enable(REFLECT_LAYER); }); }
+    reflection.update(perfLevel >= 2 ? 2 : 1);
+  }
+  REFL.uRipT.value = t;
   composer.render();
   perf.frame(rawDt);
   requestAnimationFrame(frame);
@@ -257,5 +288,5 @@ world.cull(mode === 'game' ? game.player.pos : camera.position, mode === 'game' 
 document.getElementById('loader')?.classList.add('done'); setTimeout(() => document.getElementById('loader')?.remove(), 1200);
 // installable PWA: register the offline worker on the standalone build (not in dev, not inside an embedding frame)
 if (import.meta.env.PROD && 'serviceWorker' in navigator && window.top === window && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { /* offline install unavailable */ });
-window.__mk = makeItem; window.__game = game; window.__vol = vol; window.__lighting = lighting; window.__renderer = renderer; window.__ready = true;
+window.__mk = makeItem; window.__game = game; window.__vol = vol; window.__refl = reflection; window.__lighting = lighting; window.__renderer = renderer; window.__ready = true;
 setTimeout(flushGeo, 4000); setInterval(flushGeo, 60000);

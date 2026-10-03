@@ -4,27 +4,40 @@ import { mulberry32, noise2 } from './noise.js';
 import { triplanarMaterial } from './triplanar.js';
 import { mudBrick } from './textures.js';
 
-// Shared wind uniform for all swaying foliage.
-export const wind = { uTime: { value: 0 } };
+// Shared wind for all swaying foliage (Round 19): a steady lean along the wind, gusts that roll across the
+// land as visible waves, and a quick flutter on top. uWindK rises in a sandstorm.
+export const wind = { uTime: { value: 0 }, uWindK: { value: 1 }, uWindDir: { value: new THREE.Vector2(0.82, 0.57) } };
 
 function addWind(mat, strength = 1, pivotY = 0) {
   mat.onBeforeCompile = (sh) => {
-    sh.uniforms.uTime = wind.uTime;
+    sh.uniforms.uTime = wind.uTime; sh.uniforms.uWindK = wind.uWindK; sh.uniforms.uWindDir = wind.uWindDir;
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nuniform float uTime;')
+      .replace('#include <common>', '#include <common>\nuniform float uTime, uWindK; uniform vec2 uWindDir;')
       .replace('#include <begin_vertex>', `#include <begin_vertex>
         {
           vec4 ip = vec4(0.0,0.0,0.0,1.0);
+          vec3 wd = vec3(uWindDir.x, 0.0, uWindDir.y);
           #ifdef USE_INSTANCING
             ip = instanceMatrix * vec4(0.0,0.0,0.0,1.0);
+            wd = transpose(mat3(instanceMatrix)) * wd; // the wind in the instance's own frame
           #endif
+          wd = normalize(vec3(wd.x, 0.0, wd.z) + 1e-5);
+          vec3 wpI = (modelMatrix * ip).xyz;
           float hgt = max(position.y - ${pivotY.toFixed(2)}, 0.0);
-          float ph = ip.x*0.37 + ip.z*0.21;
-          float sway = sin(uTime*1.6 + ph) * 0.6 + sin(uTime*3.7 + ph*2.0)*0.25;
-          transformed.x += sway * hgt * hgt * ${(0.012 * strength).toFixed(4)};
-          transformed.z += cos(uTime*1.3 + ph) * hgt * hgt * ${(0.008 * strength).toFixed(4)};
+          float ph = wpI.x*0.37 + wpI.z*0.21;
+          // gust fronts travelling downwind
+          float g = 0.5 + 0.5*sin(dot(wpI.xz, uWindDir)*0.09 - uTime*1.5 + sin(dot(wpI.xz, vec2(-uWindDir.y, uWindDir.x))*0.05)*1.5);
+          g = g*g*g;
+          float lean = (0.25 + g*1.25) * uWindK;
+          float sway = sin(uTime*1.6 + ph) * (0.35 + 0.3*g) + sin(uTime*3.7 + ph*2.0)*0.18;
+          float flutter = sin(uTime*8.3 + ph*5.0 + position.y*3.0) * 0.06 * (0.4 + g);
+          float k = hgt * hgt * ${(0.012 * strength).toFixed(4)};
+          vec3 side = vec3(-wd.z, 0.0, wd.x);
+          transformed += wd * (lean + sway) * k + side * (cos(uTime*1.3 + ph) * 0.45 + flutter * 3.0) * k * 0.6;
+          transformed.y -= (lean * k) * (lean * k) * 0.25 / max(hgt, 0.3); // bent stems droop a little
         }`);
   };
+  mat.customProgramCacheKey = () => 'wind2:' + strength + ':' + pivotY;
 }
 
 function colorize(geo, fn) {
