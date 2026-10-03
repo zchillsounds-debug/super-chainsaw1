@@ -1,4 +1,4 @@
-# Sands of Baghdad: Handoff (after Round 10)
+# Sands of Baghdad: Handoff (after Round 11)
 
 ## Paste this into the new chat
 > I'm continuing a game project called **Sands of Baghdad**: a Diablo-style 3D ARPG in Three.js set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `sands-round10-handoff.zip` (full source, git history as `repo.bundle`, and this HANDOFF.md).
@@ -12,7 +12,7 @@
 
 ## Restore the code
 ```
-unzip sands-round10-handoff.zip -d sands && cd sands
+unzip sands-round11-handoff.zip -d sands && cd sands
 git clone repo.bundle game && cd game        # branch claude/build-all-rounds-8si5e6
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
@@ -27,7 +27,13 @@ URL flags:
 - `?tod=golden|dusk|night|dawn|underground` sets the time of day.
 - `?perf` shows the performance overlay.
 
-**GitHub push has failed with a 403 in four sessions (Round 9–10 included).** Reconnect GitHub at https://claude.ai/connect-github and install the Claude GitHub App on the repo before you start. Until that works, keep a git bundle as the backup.
+**GitHub now works.** The account was reconnected and the Claude GitHub App was installed in Round 11, and pushes succeed.
+
+**Getting the APK to the user:**
+- `.github/workflows/apk.yml` builds a debug APK on every push to `claude/**` (Capacitor 6 wrapper, `android/`, landscape).
+- The Actions download host (blob.core.windows.net) is blocked in the cloud session, so the workflow also force-pushes the APK to the orphan branch **`apk-builds`**.
+- To fetch it: `git fetch origin apk-builds && git show origin/apk-builds:sands-of-baghdad.apk > <scratchpad>/sands-of-baghdad.apk`. Wait until the commit message shows your short SHA, then send the file with SendUserFile.
+- dl.google.com is blocked too, so you can't build the APK locally; always build it through CI.
 
 ## Non-negotiable design rules (from the user)
 - **No religious buildings or symbols at all.** That means no mosques, minarets, mausoleums or graves, and no crescents, crosses or star sigils (8-point stars included). No Quranic text and no religious greetings. Kufic-style lettering is fine only with non-religious text.
@@ -148,18 +154,49 @@ Round 11 rewrote the story around the Teacher's Pages, with Shia-inspired themes
 3. Publish with the Artifact tool to https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c. In a new chat, read the artifact first, then publish with `url`.
 4. It is currently at about 1.06 MB, after the Round 10 publish.
 
-## Known gaps (start Round 11 here)
-1. Still nothing from R3–R10 has been played on a real Android device. Ask the user for playtest results (`PLAYTEST.md`) first.
-2. CC0 rigged characters (Quaternius, Kenney) are approved, but kenney.nl and quaternius.com are blocked by this environment's network policy. Allow them under Edit → Network access in the cloud environment menu.
-3. The score and the new content are unheard and unplayed at real speed. Balance Round 10 (affix numbers, duel lunge damage, New Game+ scaling) by feel.
-4. Named-captain labels ("Qays · Volley") and some numeric toasts aren't translated into Arabic.
-5. The camel walk is a simple pace and needs a check in motion. Feet don't do IK on slopes.
-6. Rendering compromises on high quality: no SSR on water, SMAA instead of TAA, and a single stabilised shadow map rather than cascades.
-7. The GitHub Pages workflow is untested until a push succeeds and Pages is enabled.
+## Round 11 (done)
+- **Fluid combat (`game.js` updatePlayer, `classes.js` mobility, `mobile.js` attack hold):**
+  - Holding attack (or auto-attack) keeps a target while you steer with the joystick.
+  - Movement speed while an attack plays depends on the class: Faris 0.3 until the blow lands, Rami 0.92, Naffat 0.8, 'Ayyar 0.7.
+  - Moving cancels an attack's recovery once the hit has landed.
+  - Ranged classes keep facing their target while kiting; backpedalling is 0.8× speed.
+- **Rename:** Ziyad is now Farud everywhere (Arabic فرود).
+- **Story rewrite:** themes only (see `STORY.md`). The Teacher's Pages, Jabir's death in the prologue, the new briefing, Farud's confession, Hisham's betrayal, Ghassan fouling the water, the duel line, and the lamps-on-the-canal epilogue. All of it has Arabic in `story_ar.js`.
+- **Class picker bug fixed:** taps fell through to the canvas because `#ui` has pointer-events:none.
 
-## Next (proposed, confirm with the user)
-- **Round 11: playtest fixes and feel.** Device feedback, balance, then a polish pass on the new areas: unique props per style, set dressing and lighting.
-- **Round 12: long tail.** More qanat modifiers, seasonal or weekly seeds, more legendary aspects, and a Gauntlet leaderboard (local).
+## Known gaps (start Round 12 here)
+**The user's playtest on Android (top priority):**
+1. Menus and panels don't close when you tap outside them; you have to tap the menu button again, which is unintuitive.
+2. Panels don't fit on a phone screen. The inventory and equipment can't be seen at all.
+3. The mobile interface is "nowhere near" AAA mobile quality.
+
+**Other gaps:**
+4. Jabir slumps rather than lying fully down in the prologue, because the death fall doesn't finish in cutscenes. Farud's and Hisham's death shots and the boss intro still use the old camera work.
+5. Combat feel hasn't been verified on a device. Walking sideways while keeping aim can look like gliding.
+6. Named-captain labels aren't translated into Arabic. CC0 models are approved but kenney.nl and quaternius.com are blocked.
+
+## Next: Round 12, mobile UI overhaul (confirm with the user before building)
+Build a mobile-first UI at AAA mobile ARPG quality (Diablo Immortal is the reference).
+
+**Panels and navigation:**
+- Every panel (inventory, equipment, merchant, smith, stash, trainer, skill tree, journal and codex, settings) becomes a full-screen sheet with a big ✕. Tapping the dimmed backdrop, pressing the Android back button (history API) or swiping down also closes it.
+- Only one panel is open at a time.
+
+**Inventory:**
+- Equipment paper-doll on the left, a scrollable bag grid on the right, all inside the safe area.
+- Tap an item to open a detail card with Equip / Sell / Salvage / Compare.
+
+**Layout and touch targets:**
+- Use the safe area (`env(safe-area-inset-*)`, dvh units) and test at 360×640, 412×915 and 915×412 landscape, plus small tablets.
+- Touch targets at least 44 px, no hover-only info, no text below 12 px. Pressed states, haptics (`navigator.vibrate`) and transitions.
+- A radial menu button that opens a bottom sheet of icons instead of a text list.
+
+**HUD:**
+- Declutter: orbs and skills sized to the thumb arcs, the quest tracker collapsible, and the minimap tap-to-expand.
+
+**Testing:**
+- Run the critique loop with `shots/multi.mjs` and `hasTouch/isMobile` viewports at each size.
+- Check that nothing overflows: compare `scrollWidth` with `clientWidth` on every panel.
 
 ## File map (src/)
 - **Core:** main.js (boot, loop, wiring), game.js (gameplay, AI, combat), classes.js, entities.js, items.js, save.js, content.js (R10 captains, areas, tasks, engines, duel, NG+)
