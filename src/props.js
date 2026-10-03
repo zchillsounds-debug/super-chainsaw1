@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { mats, archPath } from './buildings.js';
 import { fabricTex } from './textures.js';
+import { emberBed } from './ember.js';
 
 function mesh(g, m, cast = true) { const o = new THREE.Mesh(g, m); o.castShadow = cast; o.receiveShadow = true; return o; }
 const lathe = (pts, seg = 12) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg);
@@ -31,7 +32,7 @@ export function firePit() {
   for (let i = 0; i < 4; i++) {
     const lg = mesh(new THREE.CylinderGeometry(0.08, 0.1, 1.2, 5), m.wood); lg.rotation.z = Math.PI / 2 - 0.3; lg.rotation.y = i * Math.PI / 2; lg.position.y = 0.2; g.add(lg);
   }
-  g.add(new THREE.Mesh(new THREE.CircleGeometry(0.6, 12).rotateX(-Math.PI / 2).translate(0, 0.03, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 0.9, 0.2), toneMapped: false })));
+  g.add(new THREE.Mesh(new THREE.CircleGeometry(0.6, 16).rotateX(-Math.PI / 2).translate(0, 0.03, 0), emberBed()));
   g.userData.firePos = new THREE.Vector3(0, 0.4, 0);
   return g;
 }

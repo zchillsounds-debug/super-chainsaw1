@@ -96,7 +96,8 @@ const GradeShader = {
       else if (id < 5.5) { lift = vec3(0.012,0.018,0.016); gain = vec3(0.98,1.01,0.99); sat = 0.9; gam = 1.02; } // marsh morning: soft, misty greens
       else { lift = vec3(0.016,0.008,0.0); gain = vec3(1.06,0.97,0.88); sat = 0.88; gam = 0.98; }   // al-Karkh: amber smoke
       float l = dot(c, vec3(0.2126,0.7152,0.0722));
-      c = mix(vec3(l), c, sat);
+      // desaturate the darks and mids only: fire, lamps and glints keep their colour
+      c = mix(vec3(l), c, mix(sat, max(sat, 1.08), smoothstep(0.35, 1.1, l)));
       c = pow(max(c * gain + lift * (1.0 - c), 0.0), vec3(gam));
       return c;
     }

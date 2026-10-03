@@ -83,7 +83,7 @@ addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; cam
 
 // torch light pool: every fire and lantern is an emitter; only the nearest few get a real light
 const lightPool = new LightPool(scene, QUALITY === 'low' ? 4 : 8);
-for (const f of world.fires) lightPool.add({ pos: f.pos.clone().add(new THREE.Vector3(0, f.kiln ? 0.4 : 1.2, 0)), color: f.kiln ? 0xff6a20 : 0xff8a3a, power: f.kiln ? 14 : 22, dist: f.kiln ? 8 : 13 });
+for (const f of world.fires) lightPool.add({ pos: f.pos.clone().add(new THREE.Vector3(0, f.kiln ? 0.4 : f.boss ? 2.4 : 1.2, 0)), color: f.kiln ? 0xff6a20 : 0xff9838, power: f.kiln ? 14 : f.boss ? 26 : 22, dist: f.kiln ? 8 : 13 });
 for (const l of world.lanterns) { l.updateMatrixWorld(); lightPool.add({ pos: l.localToWorld(l.userData.lightPos.clone()), color: 0xffa850, power: 7, dist: 9, flicker: 0.4, lantern: true }); }
 
 const ui = new UI(document.getElementById('ui'));
