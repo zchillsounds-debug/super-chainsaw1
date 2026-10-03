@@ -451,6 +451,10 @@ Object.assign(STORY_AR, {
 
 // ---------------------------------------------------------------- Round 20: Act VI, the river quays
 Object.assign(STORY_AR, {
+  'Benchmark': 'اختبار الأداء', 'frames per second': 'إطار في الثانية', 'Slowest 1%': 'أبطأ ١٪', 'Frame time': 'زمن الإطار', 'Draw calls': 'نداءات الرسم', 'Apply suggestion': 'طبّق الاقتراح', 'Applied': 'طُبّق',
+  'Start the benchmark from the overworld, outside a fight.': 'ابدأ اختبار الأداء من الخارج، بعيدًا عن القتال.', 'Run benchmark (30 s)': 'شغّل اختبار الأداء (٣٠ ث)', 'A short fly-through and fight that measures this device and suggests settings.': 'جولة قصيرة وقتال يقيسان هذا الجهاز ويقترحان الإعدادات.',
+  'Runs smoothly. Keep High quality and Smooth sharpness.': 'يعمل بسلاسة. أبقِ الجودة العالية والحدّة الناعمة.', 'Good. High quality with Balanced sharpness gives headroom in big fights.': 'جيّد. الجودة العالية مع الحدّة المتوازنة تمنح هامشًا في المعارك الكبيرة.',
+  'Playable. Fast sharpness will steady the frame rate.': 'قابل للعب. الحدّة السريعة ستثبّت معدّل الإطارات.', 'Heavy for this device. Low quality and Fast sharpness are recommended.': 'ثقيل على هذا الجهاز. يُنصح بالجودة المنخفضة والحدّة السريعة.',
   'Forge': 'اصنع', 'Property': 'الخاصيّة', 'Forge it': 'اطرقه', 'Forged': 'طُرق',
   'Bishr forges a rare to order: pick what, and the one property you cannot do without. He rolls it in the top third; the rest is up to the fire.': 'يطرق بشر قطعة نادرة حسب الطلب: اختر ما تريد، والخاصيّة الواحدة التي لا غنى لك عنها. يجعلها في أعلى ثلثها، والباقي على النار.',
   'Damage': 'الضرر', 'Maximum Life': 'أقصى الحياة', 'Maximum Resource': 'أقصى المورد', 'Critical Strike Chance': 'فرصة الضربة القاضية', 'Attack Speed': 'سرعة الهجوم', 'Life per Hit': 'حياة لكلّ ضربة',

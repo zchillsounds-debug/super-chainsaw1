@@ -48,7 +48,7 @@ export class Settings {
     const q = new URLSearchParams(location.search).get('q') || this.ctx.gfx?.quality;
     w.innerHTML = `<div class="ptitle">Settings <span class="close" role="button" aria-label="Close">✕</span></div><div class="sgrid2">
       <section><h4>Graphics</h4>${sel('quality', 'Quality', [['low', 'Low'], ['high', 'High']]).replace(`value="${q}"`, `value="${q}" selected`)}<small class="note">Reload to apply</small>
-        ${sel('sharp', 'Sharpness', [['smooth', 'Smooth (sharpest)'], ['balanced', 'Balanced'], ['fast', 'Fast (best frame rate)']])}${range('res', 'Resolution', 0.5, 1.5, 0.05)}${tog('shadows', 'Shadows')}${tog('ao', 'Ambient occlusion')}${tog('bloom', 'Bloom')}${tog('atmos', 'Atmosphere')}${tog('fps', 'Show FPS')}</section>
+        ${sel('sharp', 'Sharpness', [['smooth', 'Smooth (sharpest)'], ['balanced', 'Balanced'], ['fast', 'Fast (best frame rate)']])}${range('res', 'Resolution', 0.5, 1.5, 0.05)}${tog('shadows', 'Shadows')}${tog('ao', 'Ambient occlusion')}${tog('bloom', 'Bloom')}${tog('atmos', 'Atmosphere')}${tog('fps', 'Show FPS')}<button class="sbtn benchbtn">Run benchmark (30 s)</button><small class="note">A short fly-through and fight that measures this device and suggests settings.</small></section>
       <section><h4>Audio</h4>${range('master', 'Master', 0, 1, 0.05)}${range('music', 'Music', 0, 1, 0.05)}${range('sfx', 'Effects', 0, 1, 0.05)}${range('amb', 'Ambience', 0, 1, 0.05)}</section>
       <section><h4>Controls</h4>${sel('attackMode', 'Attack button', [['hold', 'Hold to repeat'], ['toggle', 'Tap to toggle']])}${range('shake', 'Camera shake', 0, 1, 0.1)}${document.body.classList.contains('touch') ? range('tscale', 'Button size', 0.7, 1.2, 0.05) + range('topa', 'Button opacity', 0.3, 1, 0.05) : ''}
         <div class="note">Gamepad: left stick move · A attack · B evade · X right skill · Y / LB / RB skills 1–3 · RT sherbet · Start settings · Back journal</div></section>
@@ -57,6 +57,7 @@ export class Settings {
     </div>`;
     document.getElementById('ui').appendChild(w); document.body.classList.add('inshop');
     w.querySelector('.close').onclick = () => this.close();
+    w.querySelector('.benchbtn').onclick = () => this.ctx.game.runBench?.();
     w.querySelectorAll('[data-k]').forEach((i) => {
       const k = i.dataset.k;
       const read = () => i.type === 'checkbox' ? i.checked : i.type === 'range' ? +i.value : (isNaN(+i.value) ? i.value : +i.value);

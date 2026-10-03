@@ -41,6 +41,7 @@ import { setupMount } from './mount.js';
 import { setupCompanion } from './companion.js';
 import { setupTrials } from './trials.js';
 import { setupCraft } from './craft.js';
+import { setupBench } from './bench.js';
 import { CombatFX } from './combatfx.js';
 import { Ambient } from './ambient.js';
 import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, IS_CITY, FIRST_ACT, STORY, REGION_NAME } from './region.js';
@@ -123,6 +124,7 @@ const guide = game.guide = new Guide(game);
 const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); guide.update(dt); game.discover(dt); tutorial.update(dt); game.contentTick?.(dt); game.sideTick?.(dt); game.travelTick?.(dt); };
 game.newGamePlus = () => startNewGamePlus(game); ui.onNewGamePlus = game.newGamePlus;
 const settings = game.settings = new Settings({ renderer, audio, game, grade, perf, gfx: { quality: QUALITY, sun, gtao, bloom, atmos, resize } });
+setupBench(game, renderer, settings);
 fx.reduce = settings.s.reduceFlash;
 const sheets = game.sheets = setupSheets(ui, {
   inv: () => ui.toggleInventory(false), settings: () => settings.close(), journal: () => document.getElementById('journal')?.remove(),
@@ -205,7 +207,7 @@ let fireFlick = 0, cullT = 0, shFrame = 0, reflTagT = 0, stormWas = false; const
 // adaptive quality: if the frame rate stays low, shed the most expensive effects
 let perfT = 0, perfN = 0, perfAcc = 0, perfLevel = 0;
 function adaptQuality(dt) {
-  if (P.has('noadapt') || mode !== 'game' || settings.s.res !== 1) return;
+  if (P.has('noadapt') || mode !== 'game' || settings.s.res !== 1 || document.body.classList.contains('benching')) return;
   perfT += dt; perfAcc += dt; perfN++;
   if (perfT < 3) return;
   const avg = perfAcc / perfN; perfT = 0; perfAcc = 0; perfN = 0;
@@ -216,6 +218,7 @@ function adaptQuality(dt) {
 }
 function frame() {
   const rawDt = clock.getDelta(); const dt = Math.min(rawDt, 0.05); t += dt;
+  game.benchTick?.(rawDt);
   adaptQuality(rawDt);
   world.update(t, dt);
   fireFlick += dt;
