@@ -568,10 +568,10 @@ body.touch #dialog .dbtn{align-self:flex-end;float:none;min-width:140px}
 #mountbtn svg{width:30px;height:30px}
 #mountbtn.on{border-color:#f0c060;color:#ffe2a0;box-shadow:0 0 12px #f0b04080}
 #mountbtn:active{transform:scale(.92)}
-#mountbtn.hide,body.overlay #mountbtn,body.insheet #mountbtn,body.indialog #mountbtn,body:not(.playing) #mountbtn{display:none}
+#mountbtn.hide,body.overlay #mountbtn,body.insheet #mountbtn,body.indialog #mountbtn,body.incine #mountbtn,body:not(.playing) #mountbtn{display:none}
 body.touch #mountbtn{right:calc(214px + env(safe-area-inset-right,0px));bottom:calc(150px + env(safe-area-inset-bottom,0px));width:50px;height:50px;opacity:.85}
 #compbtn{position:absolute;pointer-events:auto;right:80px;bottom:150px;height:40px;padding:0 12px 0 8px;border-radius:20px;background:linear-gradient(#2a2016,#140e08);border:2px solid #6a5a3a;color:#e8d4a8;display:flex;align-items:center;gap:6px;cursor:pointer;font:600 13px/1 serif;box-shadow:0 2px 8px #0008}
 #compbtn .ci{font-size:18px}
 #compbtn:active{transform:scale(.94)}
-#compbtn.hide,body.overlay #compbtn,body.insheet #compbtn,body.indialog #compbtn,body:not(.playing) #compbtn{display:none}
+#compbtn.hide,body.overlay #compbtn,body.insheet #compbtn,body.indialog #compbtn,body.incine #compbtn,body:not(.playing) #compbtn{display:none}
 body.touch #compbtn{right:auto;left:calc(14px + env(safe-area-inset-left,0px));bottom:auto;top:calc(150px + env(safe-area-inset-top,0px));height:42px;opacity:.9}

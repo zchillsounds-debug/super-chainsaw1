@@ -1,4 +1,4 @@
-// node shots/traveltest.mjs   Sawad -> marshes -> al-Karkh through saves and reloads
+// node shots/traveltest.mjs   Sawad -> marshes -> al-Karkh -> river quays (Round 20) through saves and reloads
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
 const { chromium } = require('playwright');
@@ -21,5 +21,9 @@ await pg.evaluate(() => { const g = __game; g.checkpoint(5); g.travel(); });
 console.log(await step('karkh'));
 await pg.evaluate(() => { __director.skip(); __sim(1); });
 console.log(await pg.evaluate(() => `save act=${JSON.parse(localStorage.getItem('sob.save.v1')).act} arrived=${JSON.stringify(__game.arrived)}`));
+await pg.evaluate(() => { const g = __game; g.checkpoint(6); g.travel(); });
+console.log(await step('docks'));
+await pg.evaluate(() => { __director.skip(); __sim(1); });
+console.log(await pg.evaluate(() => `docks: save act=${JSON.parse(localStorage.getItem('sob.save.v1')).act} arrived=${JSON.stringify(__game.arrived)} pos=${__game.player.pos.x.toFixed(0)},${__game.player.pos.z.toFixed(0)}`));
 console.log('errors:', errs.join(' | ') || 'none');
 await b.close();

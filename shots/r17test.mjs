@@ -9,7 +9,7 @@ const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console
 await pg.goto(`http://localhost:5173/?play&noadapt&q=low&mobile&region=${region}`);
 await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
 const W = (ms) => pg.waitForTimeout(ms);
-const ids = await pg.evaluate(() => __game.interactables.filter((i) => ['cistern', 'kiln2', 'grainvault', 'warren', 'salt', 'palace'].includes(i.area)).map((i) => i.area));
+const ids = await pg.evaluate(() => __game.interactables.filter((i) => ['cistern', 'kiln2', 'grainvault', 'warren', 'salt', 'palace', 'undercroft', 'wharfvault'].includes(i.area)).map((i) => i.area));
 console.log('entrances', ids.join(','));
 for (const id of ids) {
   await pg.evaluate((id) => { const g = __game; g.briefed = true; g.player.stats.maxHp = 1e6; g.player.hp = 1e6; g.interactables.find((i) => i.area === id).act(); }, id);
@@ -21,7 +21,7 @@ for (const id of ids) {
     p.stats.maxHp = 1e6; p.hp = 1e6;
     for (const e of g.interior.enemies) { e.alerted = false; e.dmg = 0; }
     const h = I.hazards.find((x) => x.kind !== 'landing');
-    if (id === 'cistern') { for (let i = 0; i < 40; i++) __sim(0.25); note = 'water y ' + I.water[0].position.y.toFixed(2); }
+    if (id === 'cistern' || I.style === 'cistern') { for (let i = 0; i < 40; i++) __sim(0.25); note = 'water y ' + I.water[0].position.y.toFixed(2); }
     else if (h) {
       p.pos.set(h.x + (h.kind === 'hut' ? 2 : 0.1), 0, h.z + (h.kind === 'hut' ? 0 : 0.2));
       if (h.kind === 'stack') { p.pos.set(h.x + 1.8, 0, h.z); p.st.action = 'attack'; __sim(0.05); p.st.action = null; }
