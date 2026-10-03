@@ -6,7 +6,9 @@ const ACTS = {
   1: { ex: 'rast', bpm: 76, cbpm: 108, dens: 0.45, oct: 1, qan: 0.15 },        // afternoon on the caravan road
   2: { ex: 'bayati', bpm: 66, cbpm: 112, dens: 0.38, oct: 1, qan: 0.1 },       // dusk at the kilns: Bayati, slower
   3: { ex: 'bayati', bpm: 58, cbpm: 118, dens: 0.3, oct: 0.5, qan: 0.06 },     // night under the arch: low register, sparse
-  4: { ex: 'rast', bpm: 84, cbpm: 108, dens: 0.55, oct: 1, qan: 0.3 },         // dawn: Rast, bright qanun
+  4: { ex: 'rast', bpm: 70, cbpm: 110, dens: 0.4, oct: 1, qan: 0.22 },         // the marshes: Rast, unhurried, the qanun like light on water
+  5: { ex: 'bayati', bpm: 62, cbpm: 120, dens: 0.34, oct: 0.5, qan: 0.08 },    // burned al-Karkh: low Bayati, tense
+  6: { ex: 'rast', bpm: 84, cbpm: 108, dens: 0.55, oct: 1, qan: 0.3 },         // the chronicle closes: Rast, bright qanun
   under: { ex: 'rast', bpm: 54, cbpm: 104, dens: 0.22, oct: 0.5, qan: 0.05 },  // tunnels and qanats
 };
 P.setAct = function (act) { this.actCfg = ACTS[act] || ACTS[1]; };

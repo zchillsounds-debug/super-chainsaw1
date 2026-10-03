@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { createTerrain, setBridge, heightAt, canalX, CANAL_W, roadDist, fertility, SITES, WORLD, ROADS } from './terrain.js';
-import { createCanal } from './water.js';
+import { createCanal, createLagoon } from './water.js';
+import { IS_MARSH, IS_KARKH } from './region.js';
+import { buildMarsh, buildKarkh } from './regions.js';
 import { colliders, house, suq, caravanserai, greatArch, palaceVault, kiln, roundCity, mats } from './buildings.js';
 import { palms, grassField, rocks, shrubs, wind, acacias, reeds } from './vegetation.js';
 import { lanternPost, firePit, tent, jar, crate, marketStall, cart, brickStack, deadTree, banner, bridge, waterwheel } from './props.js';
@@ -93,8 +95,23 @@ export function buildWorld(scene) {
   const sunDir = new THREE.Vector3(-0.55, 0.62, 0.35).normalize();
   out.sunDir = sunDir;
   scene.add(createTerrain());
-  const canal = out.canal = createCanal(sunDir); scene.add(canal); out.updaters.push((t) => canal.update(t, scene));
+  if (IS_MARSH) { const lag = out.canal = createLagoon(sunDir); scene.add(lag); out.updaters.push((t) => lag.update(t, scene)); }
+  else { const canal = out.canal = createCanal(sunDir); scene.add(canal); out.updaters.push((t) => canal.update(t, scene)); }
+  if (IS_MARSH) buildMarsh(scene, rnd, out); else if (IS_KARKH) buildKarkh(scene, rnd, out); else buildSawad(scene, rnd, out, sunDir);
 
+  clutter(scene, rnd, out);
+  out.updaters.push((t) => { wind.uTime.value = t; });
+  tileInstances(scene);
+  out.update = (t, dt) => { for (const u of out.updaters) u(t, dt); };
+  // zone streaming (lite): placed props and buildings beyond view range are hidden, so they cost neither draw calls nor shadow passes
+  for (const o of CULL) { const b = new THREE.Box3().setFromObject(o); o.userData.cullR = b.getSize(new THREE.Vector3()).length() / 2; }
+  CULL = chunkMerge(scene, CULL, out.occluders); out.cullables = CULL;
+  out.cull = (focus, range = 95) => { if (out.cullPaused) return; for (const o of CULL) o.visible = Math.hypot((o.userData.cx ?? o.position.x) - focus.x, (o.userData.cz ?? o.position.z) - focus.z) - o.userData.cullR < range; };
+  return out;
+}
+
+// ---------------------------------------------------------------- Acts I-III: the Sawad
+function buildSawad(scene, rnd, out, sunDir) {
   // ---------------- village
   const V = SITES.village;
   place(scene, suq(), V.x + 2, V.z - 6, 0, true, true);
@@ -198,7 +215,7 @@ export function buildWorld(scene) {
   }
 
   // ---------------- distant Baghdad (north, beyond the dunes)
-  const city = roundCity(); city.position.set(-90, 4, -300); city.scale.setScalar(1.5); scene.add(city);
+  const city = mergeStatic(roundCity()); city.position.set(-90, 4, -300); city.scale.setScalar(1.5); scene.add(city);
   // far desert plain out to the horizon (beyond the playable terrain)
   const farG = new THREE.RingGeometry(WORLD * 0.45, 1200, 64, 4).rotateX(-Math.PI / 2);
   const fp = farG.attributes.position;
@@ -289,18 +306,9 @@ export function buildWorld(scene) {
     if (out.ruinCount = (out.ruinCount || 0) + 1, out.ruinCount >= 14) break;
   }
 
-  clutter(scene, rnd, out);
-  out.updaters.push((t) => { wind.uTime.value = t; });
-  tileInstances(scene);
-  out.update = (t, dt) => { for (const u of out.updaters) u(t, dt); };
-  // zone streaming (lite): placed props and buildings beyond view range are hidden, so they cost neither draw calls nor shadow passes
-  for (const o of CULL) { const b = new THREE.Box3().setFromObject(o); o.userData.cullR = b.getSize(new THREE.Vector3()).length() / 2; }
-  CULL = chunkMerge(scene, CULL, out.occluders); out.cullables = CULL;
-  out.cull = (focus, range = 95) => { if (out.cullPaused) return; for (const o of CULL) o.visible = Math.hypot((o.userData.cx ?? o.position.x) - focus.x, (o.userData.cz ?? o.position.z) - focus.z) - o.userData.cullR < range; };
-  return out;
 }
 
-export { colliders, blocked };
+export { colliders, blocked, place };
 
 // ---------------------------------------------------------------- static chunk batching
 // Small placed props (jars, crates, tents, banners, walls) are re-parented into 40 m chunks and merged per material,
@@ -309,7 +317,7 @@ export { colliders, blocked };
 function chunkMerge(scene, cull, occ, C = 40) {
   const plain = (o) => {
     if (o.parent !== scene || occ.includes(o) || o.userData.dynamic) return false;
-    if (Object.keys(o.userData).some((k) => k !== 'colliders' && k !== 'cullR')) return false;
+    if (Object.keys(o.userData).some((k) => k !== 'colliders' && k !== 'cullR' && k !== 'occChunk')) return false;
     let ok = true; o.traverse((c) => { if (c !== o && !(c.isMesh && !c.isInstancedMesh && !c.userData.noMerge && !c.material.transparent)) ok = false; });
     return ok;
   };
@@ -324,7 +332,9 @@ function chunkMerge(scene, cull, occ, C = 40) {
     const [cx, cz] = k.split(',').map((v) => (+v + 0.5) * C);
     const g = new THREE.Group(); g.position.set(cx, 0, cz); scene.add(g); g.updateMatrixWorld(true);
     for (const o of list) g.attach(o);
+    const occChunk = list.some((o) => o.userData.occChunk);
     mergeStatic(g);
+    if (occChunk) occ.push(g); // merged street blocks still get the see-through hole
     for (const m of g.children) m.geometry.computeBoundingSphere();
     const b = new THREE.Box3().setFromObject(g); g.userData.cullR = b.getSize(new THREE.Vector3()).length() / 2;
     const c = b.getCenter(new THREE.Vector3()); g.userData.cx = c.x; g.userData.cz = c.z;

@@ -32,3 +32,8 @@ A powerful man in Baghdad, never named, wants the Pages burned. He paid Ghassan 
 - Grief is shown with restraint: a held look, a lamp, a name spoken aloud.
 - No villain speech lasts longer than one sentence.
 - Every act ends on a human cost, not a victory fanfare.
+
+## Round 15: Acts IV and V
+4. **The Marshes.** The chest from Ghassan's tent is light. Rawh, his paymaster, fled east into the Nahrawan marshes with the rest. Marwan (the reed camp) gives up Sahl (the fish racks), and Sahl gives up Rawh (the old weir). Rawh: "Too late. I sent the last bundle up the canal at dawn." His own boats carry Salim to Baghdad.
+5. **Al-Karkh.** The burned market suburb. The buyer's men answer to 'Utba. 'Asim (the burned suq) gives up Layth (the paper-sellers' lane), who says 'Utba will burn the Pages in the square at sunset. After the fight the Pages are taken unburned off the pyre. In the khan, Ishaq gives them to Hakam, a scholar of the House of Wisdom: "We will copy them, ten times over, for ten cities." At dusk Salim sets lamps on the canal: "Jabir. It is done." Ishaq: "We keep the account."
+The buyer himself stays unnamed.

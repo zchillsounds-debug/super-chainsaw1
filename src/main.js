@@ -28,6 +28,7 @@ import { Settings } from './settings.js';
 import { Gamepads } from './gamepad.js';
 import { Tutorial } from './tutorial.js';
 import { setupContent, restoreContent, applyNG, startNewGamePlus } from './content.js';
+import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, FIRST_ACT, STORY, REGION_NAME } from './region.js';
 
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
@@ -114,7 +115,17 @@ function start(cont) {
   ui.fade(1);
   setTimeout(async () => {
     mode = 'game'; game.started = true; ui.show(); ui.fade(0);
-    if (cont) { applySave(game, cont); restoreContent(game); applyNG(game); lighting.forAct(cont.act, 0); game.briefed = true; game.refreshTracker?.(); ui.banner('The Chronicle Continues', ['', 'The road from the village', 'The kiln yard', 'The road to the arch', 'The grain road'][Math.min(4, cont.act)], 3500); return; }
+    if (cont) {
+      applySave(game, cont); restoreContent(game); applyNG(game); lighting.forAct(cont.act, 0); game.briefed = true; game.refreshTracker?.();
+      // first time in a new region: the arrival scene; otherwise a banner
+      if (!IS_SAWAD && !game.arrived?.[REGION]) { game.act = Math.max(game.act, FIRST_ACT[REGION]); await director.play(SCENES.arrival(game)); (game.arrived ||= {})[REGION] = true; game.refreshTracker?.(); saveGame(game); }
+      else ui.banner('The Chronicle Continues', STORY.banner[cont.act] || REGION_NAME, 3500);
+      return;
+    }
+    if (!IS_SAWAD) { // a new chronicle always begins in the Sawad: reload into it
+      try { sessionStorage.setItem('sob.newgame', '1'); } catch { /* ignore */ }
+      location.reload(); return;
+    }
     const cls = P.get('cls') || await ui.classPick();
     game.setClass(cls, true);
     await director.play(SCENES.prologue(game));
@@ -122,8 +133,16 @@ function start(cont) {
     game.act = 1; game.briefed = true; game.refreshTracker?.(); saveGame(game);
   }, 800);
 }
+// Travel to the next region: save, then reload the page into it (see region.js)
+game.travel = () => {
+  saveGame(game);
+  try { sessionStorage.setItem('sob.autocontinue', '1'); } catch { /* ignore */ }
+  ui.fade(1); setTimeout(() => location.reload(), 900);
+};
 // Continue button when a save exists
+let newGame = false; try { newGame = !!sessionStorage.getItem('sob.newgame'); sessionStorage.removeItem('sob.newgame'); } catch { /* ignore */ }
 const saved = loadSave();
+if (newGame) setTimeout(() => start(), 50);
 let autoCont = false; try { autoCont = sessionStorage.getItem('sob.autocontinue') === '1'; sessionStorage.removeItem('sob.autocontinue'); } catch { /* ignore */ }
 if (saved && autoCont) setTimeout(() => { if (mode === 'title') start(saved); else { applySave(game, saved); restoreContent(game); applyNG(game); lighting.forAct(saved.act, 0); game.briefed = true; game.refreshTracker?.(); } }, 50);
 if (saved) {
@@ -133,7 +152,7 @@ if (saved) {
 }
 document.getElementById('startbtn').onclick = () => start();
 if (P.get('tod')) lighting.set(P.get('tod'), 0);
-if (P.has('play')) { mode = 'game'; game.started = true; ui.show(); if (P.get('cls')) game.setClass(P.get('cls'), true); }
+if (P.has('play')) { mode = 'game'; game.started = true; ui.show(); if (P.get('cls')) game.setClass(P.get('cls'), true); if (!IS_SAWAD) { game.act = FIRST_ACT[REGION]; game.briefed = true; if (!P.get('tod')) lighting.forAct(game.act, 0); game.refreshTracker?.(); } }
 if (P.has('x')) { game.player.pos.set(+P.get('x'), 0, +P.get('z')); }
 
 const _lm = new THREE.Matrix4(), _li = new THREE.Matrix4(), _lp = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0), _o = new THREE.Vector3();
@@ -172,8 +191,16 @@ function frame() {
     if (Math.random() < 0.25) fx.glow.spawn({ pos: { x: k.mouth.x, y: k.mouth.y, z: k.mouth.z }, vel: { x: (Math.random() - 0.5), y: 1.5 + Math.random(), z: (Math.random() - 0.5) }, life: 1.2, size: 0.07, size1: 0.02, color: new THREE.Color(4, 1.6, 0.4), drag: 0.5 });
   }
   // kiln smoke drifting over the brick yard
-  if (focus.x < -25 && focus.z < -10 && Math.random() < 0.6) { const G = SITES.kiln; fx.smoke.spawn({ pos: { x: G.x + (Math.random() - 0.5) * 40, y: heightAt(G.x, G.z) + 0.3, z: G.z + (Math.random() - 0.5) * 36 }, vel: { x: 0.4, y: 0.05, z: 0.15 }, life: 7, size: 3, size1: 6, color: new THREE.Color(0.55, 0.5, 0.46), alpha: 0.16, drag: 0.1, fadeIn: 0.4 }); }
-  if (Math.random() < 0.5) fx.smoke.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 50, y: (focus.y || 0) + Math.random() * 6, z: focus.z + (Math.random() - 0.5) * 40 }, vel: { x: 1.5, y: 0.1, z: 0.4 }, life: 4, size: 0.06, size1: 0.06, color: new THREE.Color(1, 0.9, 0.7), alpha: 0.6, drag: 0, fadeIn: 0.3 });
+  if (IS_SAWAD && focus.x < -25 && focus.z < -10 && Math.random() < 0.6) { const G = SITES.kiln; fx.smoke.spawn({ pos: { x: G.x + (Math.random() - 0.5) * 40, y: heightAt(G.x, G.z) + 0.3, z: G.z + (Math.random() - 0.5) * 36 }, vel: { x: 0.4, y: 0.05, z: 0.15 }, life: 7, size: 3, size1: 6, color: new THREE.Color(0.55, 0.5, 0.46), alpha: 0.16, drag: 0.1, fadeIn: 0.4 }); }
+  if (IS_KARKH) {
+    // al-Karkh: smoke still rising from the ruins, ash drifting down, the odd ember
+    if (world.smokers) for (const sm of world.smokers) if (Math.abs(sm.x - focus.x) < 60 && Math.abs(sm.z - focus.z) < 60 && Math.random() < 0.35) fx.smoke.spawn({ pos: { x: sm.x + (Math.random() - 0.5), y: sm.y, z: sm.z + (Math.random() - 0.5) }, vel: { x: 0.6, y: 1.4, z: 0.25 }, life: 7, size: 0.9, size1: 5, color: new THREE.Color(0.2, 0.18, 0.17), alpha: 0.35, drag: 0.2, fadeIn: 0.2 });
+    if (Math.random() < 0.6) fx.smoke.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 50, y: (focus.y || 0) + 3 + Math.random() * 6, z: focus.z + (Math.random() - 0.5) * 40 }, vel: { x: 0.5, y: -0.35, z: 0.2 }, life: 6, size: 0.07, size1: 0.05, color: new THREE.Color(0.55, 0.52, 0.5), alpha: 0.7, drag: 0, fadeIn: 0.4 });
+    if (Math.random() < 0.08) fx.glow.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 30, y: (focus.y || 0) + Math.random() * 3, z: focus.z + (Math.random() - 0.5) * 24 }, vel: { x: 0.4, y: 0.7, z: 0.1 }, life: 2.5, size: 0.05, size1: 0.01, color: new THREE.Color(4, 1.4, 0.3), drag: 0.2 });
+  } else if (IS_MARSH) {
+    // the marshes: midges and reed fluff hanging in the still air
+    if (Math.random() < 0.45) fx.smoke.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 44, y: (focus.y || 0) + 0.5 + Math.random() * 3, z: focus.z + (Math.random() - 0.5) * 36 }, vel: { x: 0.3 * (Math.random() - 0.5), y: 0.05, z: 0.3 * (Math.random() - 0.5) }, life: 5, size: 0.05, size1: 0.05, color: new THREE.Color(1, 0.98, 0.9), alpha: 0.55, drag: 0, fadeIn: 0.5 });
+  } else if (Math.random() < 0.5) fx.smoke.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 50, y: (focus.y || 0) + Math.random() * 6, z: focus.z + (Math.random() - 0.5) * 40 }, vel: { x: 1.5, y: 0.1, z: 0.4 }, life: 4, size: 0.06, size1: 0.06, color: new THREE.Color(1, 0.9, 0.7), alpha: 0.6, drag: 0, fadeIn: 0.3 });
   if (mode === 'title') { titleCam(t); game.t += dt; game.updateAmbientLife(dt); } else if (director.update(dt)) game.cineTick(dt * director.timeScale); else game.update(dt * (game.timeScale ?? 1));
   lighting.update(dt);
   cullT -= rawDt; if (cullT <= 0) { cullT = 0.4; world.cull(mode === 'game' ? game.player.pos : camera.position, mode === 'game' ? 95 : 200); }
@@ -199,7 +226,10 @@ frame();
 // debug: advance the simulation without rendering (used by automated screenshot tests)
 window.__director = director; window.__SCENES = SCENES;
 window.__sim = (sec, step = 1 / 30) => { world.cull(game.player.pos); for (let i = 0; i < sec / step; i++) { t += step; world.update(t, step); if (director.update(step)) game.cineTick(step * director.timeScale); else game.update(step); fx.update(step); for (const f of world.fires) if (Math.random() < 0.7) fx.fire(f.pos, f.intensity); } };
+// compile every material up front, including props the distance cull has hidden, so walking up to a new site never hitches
+for (const o of world.cullables || []) o.visible = true;
 try { await renderer.compileAsync(scene, camera); } catch (e) { /* older drivers: compile lazily */ }
+world.cull(mode === 'game' ? game.player.pos : camera.position, mode === 'game' ? 95 : 200);
 document.getElementById('loader')?.classList.add('done'); setTimeout(() => document.getElementById('loader')?.remove(), 1200);
 // installable PWA: register the offline worker on the standalone build (not in dev, not inside an embedding frame)
 if (import.meta.env.PROD && 'serviceWorker' in navigator && window.top === window && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { /* offline install unavailable */ });

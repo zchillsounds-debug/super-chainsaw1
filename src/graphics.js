@@ -91,7 +91,9 @@ const GradeShader = {
       else if (id < 1.5) { lift = vec3(0.01,0.0,0.018); gain = vec3(1.03,0.97,0.94); sat = 0.96; } // dusk: ember highs, violet lows
       else if (id < 2.5) { lift = vec3(0.0,0.008,0.03); gain = vec3(0.94,0.98,1.08); sat = 0.82; gam = 0.94; } // night: cool, desaturated
       else if (id < 3.5) { lift = vec3(0.01,0.005,0.01); gain = vec3(1.04,0.98,0.98); sat = 0.95; } // dawn
-      else { lift = vec3(0.008,0.004,0.0); gain = vec3(1.08,0.98,0.86); sat = 0.9; gam = 0.96; }   // underground torchlight
+      else if (id < 4.5) { lift = vec3(0.008,0.004,0.0); gain = vec3(1.08,0.98,0.86); sat = 0.9; gam = 0.96; }   // underground torchlight
+      else if (id < 5.5) { lift = vec3(0.012,0.018,0.016); gain = vec3(0.98,1.01,0.99); sat = 0.9; gam = 1.02; } // marsh morning: soft, misty greens
+      else { lift = vec3(0.016,0.008,0.0); gain = vec3(1.06,0.97,0.88); sat = 0.88; gam = 0.98; }   // al-Karkh: amber smoke
       float l = dot(c, vec3(0.2126,0.7152,0.0722));
       c = mix(vec3(l), c, sat);
       c = pow(max(c * gain + lift * (1.0 - c), 0.0), vec3(gam));

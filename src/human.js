@@ -343,6 +343,15 @@ export function humanoid(opts = {}) {
   if (o.weapon === 'dagger') { for (const [S, s] of SIDES) { const w = dagger(); w.rotation.x = Math.PI / 2; grip(bones['hand' + S], w, s); } }
   if (o.weapon === 'torch') { const w = torch(); w.rotation.x = Math.PI / 2.4; parts.weapon = grip(bones.handR, w, 1); }
   if (o.weapon === 'spear') { const w = spear(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
+  if (o.weapon === 'sling') { // a cord sling hanging from the right hand, the pouch loaded with a stone
+    const w = new THREE.Group(), cord = new THREE.MeshStandardMaterial({ color: 0x8a6a40, roughness: 1 });
+    for (const s of [-1, 1]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.5, 3).translate(0, -0.25, 0), cord); c.position.x = s * 0.02; c.rotation.z = s * 0.05; w.add(c); }
+    const pouch = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 4).scale(1.3, 0.8, 1), leatherM); pouch.position.y = -0.5; w.add(pouch);
+    parts.weapon = grip(bones.handR, w, 1);
+  }
+  if (o.weapon === 'net') { // a rolled casting net over the left arm
+    const n = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.06, 6, 12), new THREE.MeshStandardMaterial({ color: 0x8a7a5a, roughness: 1 })); n.rotation.x = Math.PI / 2; n.position.set(0, -0.05, 0); bones.foreL.add(n);
+  }
   if (o.weapon === 'bow') { const w = bow(); w.position.set(0.018, -0.1, 0); bones.handL.add(w); parts.weapon = w; }
   if (o.offhand === 'shield') { const sd = shield(); sd.scale.setScalar(0.92); sd.position.set(-0.075, -0.14, 0.02); sd.rotation.set(0, -Math.PI / 2 + 0.5, 0); bones.foreL.add(sd); parts.shield = sd; }
   if (o.scabbard) {

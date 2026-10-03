@@ -318,3 +318,23 @@ export function reeds(points, seed = 12) {
   m.castShadow = true; m.receiveShadow = true;
   return m;
 }
+
+// Giant marsh reed (qasab) in dense beds, taller than a man, with pale feathery plumes (Act IV).
+export function tallReeds(points, seed = 15) {
+  const rnd = mulberry32(seed);
+  const g = clumpGeo(16, 3.6, 0.03, rnd, (r) => [new THREE.Color().setHSL(0.2, 0.35, 0.13), new THREE.Color().setHSL(0.12 + r() * 0.03, 0.35, 0.5 + r() * 0.12)]);
+  const plumes = [];
+  // soft drooping seed heads (panicles), each a slender spindle nodding off the stem tip
+  for (let i = 0; i < 9; i++) {
+    const h = new THREE.SphereGeometry(0.05, 5, 4).scale(1.3, 6, 1.0).translate(0, 0.2, 0).rotateZ(0.12 + rnd() * 0.3).rotateY(rnd() * 6.28).translate((rnd() - 0.5) * 0.6, 3.3 + rnd() * 0.6, (rnd() - 0.5) * 0.6);
+    h.deleteAttribute('uv'); plumes.push(colorize(h.toNonIndexed(), (x, y) => new THREE.Color(0xc8b48c).multiplyScalar(0.85 + (y - 3) * 0.12)));
+  }
+  const geo = mergeGeometries([g, ...plumes].map((x) => { const y = x.index ? x.toNonIndexed() : x; if (y.attributes.uv) y.deleteAttribute('uv'); if (!y.attributes.normal) y.computeVertexNormals(); return y; }));
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide });
+  addWind(mat, 1.6, 0);
+  const m = new THREE.InstancedMesh(geo, mat, points.length);
+  const d = new THREE.Object3D();
+  points.forEach((p, i) => { d.position.set(p.x, p.y, p.z); d.rotation.y = rnd() * 6; const s = 0.75 + rnd() * 0.5; d.scale.set(s, s * (0.85 + rnd() * 0.35), s); d.updateMatrix(); m.setMatrixAt(i, d.matrix); });
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}

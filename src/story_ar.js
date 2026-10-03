@@ -244,3 +244,88 @@ export const STORY_AR = {
   'I will bring it back, brother. I promise.': 'سأستعيده يا أخي. أعدك.',
   'Jabir did not live to see Baghdad. The bandits had taken the chest.': 'لم يعش جابر ليرى بغداد. وكان قطّاع الطرق قد أخذوا الصندوق.',
 };
+
+// ---------------------------------------------------------------- Round 15: the marshes and al-Karkh
+Object.assign(STORY_AR, {
+  // names and places
+  'Marwan': 'مروان', 'Sahl': 'سهل', 'Rawh': 'روح', '\'Asim': 'عاصم', 'Layth': 'ليث', '\'Utba': 'عتبة', 'Zuhayr': 'زهير', 'Muhriz': 'محرز',
+  'Hammad': 'حمّاد', 'Shabib': 'شبيب', 'Ghalib': 'غالب', 'Qutayba': 'قتيبة', 'Hakam': 'الحكم',
+  'The Nahrawan marshes': 'أهوار النهروان', 'The Nahrawan Marshes': 'أهوار النهروان', 'Al-Karkh': 'الكرخ', 'The Sawad': 'السواد',
+  // tasks
+  'Find Marwan in the reed camp to the west': 'اعثر على مروان في مخيّم القصب غربًا',
+  'Take Rawh\'s boats from Sahl at the fish racks': 'خذ قوارب روح من سهل عند مناشر السمك',
+  'Face Rawh at the old weir': 'واجه روحًا عند السِّكر القديم',
+  'Find \'Asim in the burned suq': 'اعثر على عاصم في السوق المحروقة',
+  'Drive Layth from the paper-sellers\' lane': 'اطرد ليثًا من سوق الورّاقين',
+  'Stop \'Utba in the square before sunset': 'أوقف عتبة في الساحة قبل الغروب',
+  // captains fall
+  'Rawh paid us to hide his boats. Sahl keeps them at the fish racks, east.': 'دفع لنا روح لنخبّئ قواربه. سهل يحرسها عند مناشر السمك شرقًا.',
+  'The Fish Racks': 'مناشر السمك', 'Take Rawh\'s boats from Sahl, so he cannot run.': 'خذ قوارب روح من سهل، فلا يستطيع الفرار.',
+  'Rawh is at the old weir with the Pages. He sails for Baghdad tonight.': 'روح عند السِّكر القديم ومعه الأوراق. يبحر إلى بغداد الليلة.',
+  'The Old Weir': 'السِّكر القديم', 'Rawh is waiting for a boat that will not come.': 'روح ينتظر قاربًا لن يأتي.',
+  '\'Utba moved the Pages to the paper-sellers\' lane. Layth guards them.': 'نقل عتبة الأوراق إلى سوق الورّاقين. ليث يحرسها.',
+  'The Paper-Sellers\' Lane': 'سوق الورّاقين', 'Layth guards the Pages among the paper shops.': 'ليث يحرس الأوراق بين دكاكين الورق.',
+  'Too late. \'Utba took them to the square. He burns them at sunset.': 'فات الأوان. أخذها عتبة إلى الساحة. سيحرقها عند الغروب.',
+  'The Square': 'الساحة', 'Stop \'Utba before he lights the pyre.': 'أوقف عتبة قبل أن يشعل المحرقة.',
+  // bosses
+  'Paper, guard? My buyer pays in gold. Name your price.': 'ورق يا حارس؟ شاريّ يدفع ذهبًا. سمِّ ثمنك.',
+  'Ghassan\'s paymaster': 'صرّاف غسّان', 'Nets! Drag him into the water!': 'الشِّباك! اسحبوه إلى الماء!',
+  'Paper burns, guard. So do the men who carry it.': 'الورق يحترق يا حارس. وكذلك من يحمله.',
+  'Captain of the buyer\'s men': 'قائد رجال الشاري', 'Archers! Bring him down!': 'أيها الرماة! أسقطوه!',
+  'Light the stalls. Let the whole square burn.': 'أشعلوا الدكاكين. لتحترق الساحة كلّها.',
+  'The stalls are burning. Stay inside the ring.': 'الدكاكين تحترق. ابقَ داخل الحلقة.',
+  // Ishaq in the marshes and in al-Karkh
+  'The fishermen here owe Rawh nothing, and they do not like him. They say he paid for boats and silence.': 'صيّادو هذه الأهوار لا يدينون لروح بشيء، ولا يحبّونه. يقولون إنه دفع ثمن القوارب والسكوت.',
+  'Marwan hides his boats in the reed camp to the west. Sahl keeps the rest at the fish racks to the east. Without boats, Rawh cannot leave.': 'مروان يخبّئ قواربه في مخيّم القصب غربًا. وسهل يحرس البقية عند مناشر السمك شرقًا. بلا قوارب لا يستطيع روح الرحيل.',
+  'Mind the deep water. Wade where it is shallow, and watch the reeds. The marsh men fight from them.': 'احذر الماء العميق. خُض حيث يكون ضحلًا، وراقب القصب. رجال الأهوار يقاتلون من بينه.',
+  'This was the greatest market in the world before the siege. Now look at it.': 'كانت هذه أعظم سوق في الدنيا قبل الحصار. انظر إليها الآن.',
+  'The buyer\'s men answer to \'Utba. \'Asim holds the burned suq and Layth the paper-sellers\' lane.': 'رجال الشاري يأتمرون بعتبة. عاصم يمسك السوق المحروقة، وليث سوق الورّاقين.',
+  'The scholars of the House of Wisdom have promised to copy the Pages. Bring them here, and they are safe for ever.': 'وعد علماء بيت الحكمة بنسخ الأوراق. أحضرها إلى هنا، فتبقى في أمان أبدًا.',
+  // the end of Act III now leads on
+  'Most of the Pages were in Ghassan\'s tent.': 'كانت معظم الأوراق في خيمة غسّان.',
+  'But the chest is light. Some of the Pages are missing.': 'لكنّ الصندوق خفيف. بعض الأوراق مفقود.',
+  'Who has them?': 'من أخذها؟',
+  'Rawh, Ghassan\'s paymaster. He fled east, into the Nahrawan marshes.': 'روح، صرّاف غسّان. فرّ شرقًا إلى أهوار النهروان.',
+  'Act IV · The Marshes': 'الفصل الرابع · الأهوار', 'Rawh has the last Pages. Follow him into the reeds.': 'آخر الأوراق مع روح. اتبعه إلى القصب.',
+  // arrivals
+  'The Nahrawan, east of Baghdad, two days later': 'النهروان، شرق بغداد، بعد يومين',
+  'Where the old canal broke its banks, the land became water and reed.': 'حيث فاض النهر القديم على ضفّتيه، صارت الأرض ماءً وقصبًا.',
+  'The fishermen say Rawh paid for boats, and for silence.': 'يقول الصيّادون إن روحًا دفع ثمن القوارب، وثمن السكوت.',
+  'Then someone here will talk.': 'إذن سيتكلّم أحدٌ هنا.',
+  'Start with Marwan. His men hold the reed camp to the west.': 'ابدأ بمروان. رجاله يمسكون مخيّم القصب غربًا.',
+  'Act V · Al-Karkh': 'الفصل الخامس · الكرخ', 'The market quarter outside the Round City, burned in the siege': 'حيّ الأسواق خارج المدينة المدوّرة، احترق في الحصار',
+  'A year after the siege, al-Karkh is still black with ash.': 'بعد عام من الحصار، ما زالت الكرخ سوداء من الرماد.',
+  'The scholars of the House of Wisdom will keep the Pages safe, if we can get them there.': 'سيحفظ علماء بيت الحكمة الأوراق، إن استطعنا إيصالها إليهم.',
+  'Who holds them now?': 'من يمسكها الآن؟',
+  'The buyer\'s men. Their captain is \'Utba. Start with \'Asim, in the burned suq.': 'رجال الشاري. قائدهم عتبة. ابدأ بعاصم، في السوق المحروقة.',
+  // Rawh falls
+  'Too late. I sent the last bundle up the canal at dawn.': 'فات الأوان. أرسلت آخر حزمة في النهر عند الفجر.',
+  'To whom?': 'إلى من؟',
+  'The buyer\'s men, in al-Karkh. They will burn it where the city can watch.': 'إلى رجال الشاري، في الكرخ. سيحرقونها حيث تراها المدينة.',
+  'That night Rawh\'s own boats carried Salim and Ishaq up the canal to Baghdad.': 'في تلك الليلة حملت قوارب روح نفسه سالمًا وإسحاق في النهر إلى بغداد.',
+  'The buyer\'s men will burn the Pages. Get there first.': 'رجال الشاري سيحرقون الأوراق. اسبقهم إليها.',
+  // the finale
+  'The Pages were still on the pyre. Not one had burned.': 'كانت الأوراق ما تزال على المحرقة. لم تحترق ورقة واحدة.',
+  'Every page, brought home by a caravan guard and his brother.': 'كلّ ورقة، أعادها حارس قافلة وأخوه.',
+  'We will copy them, ten times over, for ten cities.': 'سننسخها عشر مرّات، لعشر مدن.',
+  'Then no one can burn them again.': 'إذن لن يستطيع أحد أن يحرقها بعد اليوم.',
+  'That evening Salim went down to the canal.': 'في ذلك المساء نزل سالم إلى النهر.',
+  'He set a lamp on the water for his brother, and one for each guard of the caravan.': 'وضع سراجًا على الماء لأخيه، وسراجًا لكلّ حارس من حرّاس القافلة.',
+  'Jabir. It is done.': 'جابر. تمّ الأمر.',
+  'We keep the account.': 'نحن نحفظ الحساب.',
+  'Here ends the chronicle of Salim': 'هنا تنتهي سيرة سالم',
+  // interiors and toasts
+  'The Drowned Granary': 'الأهراء الغارقة', 'Grain stores the floods took': 'مخازن غلال أخذها الفيضان', 'Wade down into the drowned granary': 'انزل خائضًا إلى الأهراء الغارقة',
+  'The Merchants\' Cellars': 'أقبية التجّار', 'Vaults under the burned suq': 'أقبية تحت السوق المحروقة', 'Go down into the merchants\' cellars': 'انزل إلى أقبية التجّار',
+  'Caught in a net! Evade to tear free': 'علقت في شبكة! راوغ لتتحرّر', 'the reeds are full of his men!': 'القصب مليء برجاله!',
+  // codex
+  'The Nahrawan': 'النهروان',
+  'A great canal east of the Tigris, older than Islam, that watered the lands from Samarra down past Baghdad. Its weirs and sluices were Sasanian work. Where its banks failed, the water spread into marsh and reed bed.': 'نهر عظيم شرقيّ دجلة، أقدم من الإسلام، كان يسقي الأرض من سامرّاء إلى ما بعد بغداد. سدوده ومَسَنّياته من عمل الساسانيين. وحيث انهارت ضفّتاه انتشر الماء أهوارًا ومنابت قصب.',
+  'Marsh Boats': 'قوارب الأهوار',
+  'In the reed country people travelled by water. Their long, narrow canoes were built of wood and sealed with bitumen, so they ride black and low. A man poles one standing, and it slips through channels too narrow for any other craft.': 'في بلاد القصب يتنقّل الناس على الماء. زوارقهم طويلة ضيّقة، من خشب مطليّ بالقار، فتبدو سوداء منخفضة. يدفعها الرجل بالمردي واقفًا، فتنساب في قنوات أضيق من أن يدخلها غيرها.',
+  'Reed Halls': 'مضايف القصب',
+  'The marsh people built great halls entirely of reed: bundles bent into arches, covered with woven mats. A large one could be raised in days and last for decades. Such halls appear on seals from Sumer, thousands of years before Salim.': 'بنى أهل الأهوار قاعات كبيرة من القصب وحده: حزم تُحنى أقواسًا وتُغطّى بالحُصر المنسوجة. يُرفع الكبير منها في أيام ويبقى عقودًا. وتظهر مثل هذه القاعات على أختام سومر، قبل سالم بآلاف السنين.',
+  'The market suburb south-west of the Round City. Al-Mansur moved the markets out of his city in the 770s, and al-Karkh grew into the busiest market in the caliphate. In the siege of 812–813 the fighting and the fires ruined much of it.': 'حيّ الأسواق جنوب غرب المدينة المدوّرة. نقل المنصور الأسواق خارج مدينته في سبعينيات القرن الثامن، فصارت الكرخ أنشط سوق في الخلافة. وفي حصار ٨١٢–٨١٣ خرّب القتال والحرائق كثيرًا منها.',
+  'The Paper-Sellers': 'الورّاقون',
+  'The warraqin sold paper and copied books to order. By the end of the century the geographer al-Ya\'qubi counted over a hundred of their shops in one market of Baghdad. A book could be had in days, and a scholar could earn his bread by copying.': 'كان الورّاقون يبيعون الورق وينسخون الكتب حسب الطلب. وفي آخر القرن عدّ الجغرافي اليعقوبي أكثر من مئة دكّان لهم في سوق واحدة ببغداد. كان الكتاب يُنال في أيام، وكان العالِم يكسب خبزه بالنسخ.',
+});

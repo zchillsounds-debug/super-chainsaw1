@@ -32,6 +32,7 @@ const AR = {
   'Show me your wares.': 'أرني بضاعتك.', 'Training.': 'التدريب.',
   // captains: "Name · Role" labels (names come from story_ar.js)
   'Swift': 'السريع', 'Ironclad': 'المدرّع', 'Volley': 'الرشّاق', 'Firebrand': 'مُضرم النار', 'Rallying': 'المحرِّض',
+  'Snaring': 'صاحب الشِّباك', 'Reed-born': 'ابن القصب', 'Slinger': 'مِقلاعيّ', 'Net-thrower': 'رامي الشِّباك', 'Reed Ambusher': 'كمين القصب', 'Hired Guard': 'حارس مأجور',
   'Raider': 'مُغير', 'Deserter': 'فارّ', 'Archer': 'رامٍ', 'Champion': 'بطل', 'Captain': 'قائد',
   'Malik': 'مالك', 'Sa\'d': 'سعد', '\'Ubayd': 'عبيد', 'Hani': 'هانئ', 'Mukhariq': 'مخارق',
   // round 12 sheets
@@ -40,7 +41,7 @@ const AR = {
 const PATTERNS = [
   [/^Level (\d+)$/, (m) => `المستوى ${m[1]}`],
   [/^Codex \((\d+)\/(\d+)\)$/, (m) => `الموسوعة (${m[1]}/${m[2]})`],
-  [/^Talk to (.+)$/, (m) => `تحدّث إلى ${({ Ishaq: 'إسحاق', Yusuf: 'يوسف', Bishr: 'بشر', '\'Amr': 'عمرو' })[m[1]] || m[1]}`],
+  [/^Talk to (.+)$/, (m) => `تحدّث إلى ${({ Ishaq: 'إسحاق', Yusuf: 'يوسف', Bishr: 'بشر', '\'Amr': 'عمرو' })[m[1]] || STORY_AR[m[1]] || m[1]}`],
   [/^◉ (\d+) Dinars$/, (m) => `◉ ${m[1]} دينار`],
   [/^(\d+) Dinars$/, (m) => `${m[1]} دينار`],
   [/^([◇✦·]) (.+)$/, (m) => AR[m[2]] ? `${m[1]} ${AR[m[2]]}` : null],

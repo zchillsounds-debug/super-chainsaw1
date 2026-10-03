@@ -8,6 +8,7 @@ import { makeItem } from './items.js';
 import * as SCENES from './scenes.js';
 import { saveGame } from './save.js';
 import { t } from './i18n.js';
+import { REGION, IS_SAWAD } from './region.js';
 
 // Round 10 content: named elites with affixes, a new area per act (each held by a named captain), three more
 // side tasks, the siege engines at the arch, Ghassan's final duel, and New Game+.
@@ -19,6 +20,8 @@ const AFFIX = {
   volley: { label: 'Volley', apply: () => {} },
   firebrand: { label: 'Firebrand', apply: () => {} },
   rally: { label: 'Rallying', apply: () => {} },
+  snare: { label: 'Snaring', apply: () => {} },
+  ambush: { label: 'Reed-born', apply: () => {} },
 };
 // named captains in the open field, two per act
 const NAMED = [
@@ -28,13 +31,19 @@ const NAMED = [
   { id: 'hamdan', act: 2, name: 'Hamdan', type: 'spearman', at: [SITES.kiln.x + 20, SITES.kiln.z + 18], level: 3, affix: 'ironclad', guard: ['spearman', 'deserter'] },
   { id: 'rabia', act: 3, name: 'Rabi\'a', type: 'naffat', at: [SITES.arch.x - 22, SITES.arch.z + 26], level: 5, affix: 'firebrand', guard: ['naffat', 'archer'] },
   { id: 'jarir', act: 3, name: 'Jarir', type: 'spearman', at: [SITES.arch.x + 24, SITES.arch.z + 22], level: 5, affix: 'rally', guard: ['spearman', 'bandit', 'archer'] },
-];
+  { id: 'zuhayr', region: 'marsh', name: 'Zuhayr', type: 'netter', at: [-36, -28], level: 8, affix: 'snare', guard: ['netter', 'slinger'] },
+  { id: 'muhriz', region: 'marsh', name: 'Muhriz', type: 'spearman', at: [52, -34], level: 8, affix: 'ambush', guard: ['reedman', 'slinger'] },
+  { id: 'hammad', region: 'karkh', name: 'Hammad', type: 'guard', at: [60, 20], level: 10, affix: 'rally', guard: ['guard', 'archer', 'spearman'] },
+  { id: 'shabib', region: 'karkh', name: 'Shabib', type: 'archer', at: [-46, -56], level: 10, affix: 'volley', guard: ['guard', 'naffat'] },
+].filter((n) => (n.region || 'sawad') === REGION);
 // a new area per act; each ends in a named captain guarding the chest
 const AREAS = [
   { id: 'cellar', act: 1, style: 'cellar', at: [SITES.serai.x + 9, SITES.serai.z + 9], seed: 761, rooms: 6, level: 2, title: 'The Caravanserai Storerooms', sub: 'Vaulted stores beneath Farud\'s camp', pool: ['bandit', 'bandit', 'archer'], bossType: 'archer', bossName: 'Qays', label: 'Go down into the storerooms', icon: '▼', look: 'mud' },
   { id: 'pit', act: 2, style: 'pit', at: [SITES.kiln.x - 16, SITES.kiln.z + 14], seed: 806, rooms: 7, level: 3, title: 'The Clay Pits', sub: 'Where the kiln yard digs its clay', pool: ['deserter', 'deserter', 'spearman'], bossType: 'spearman', bossName: 'Thabit', label: 'Climb down into the clay pits', icon: '▼', look: 'clay' },
   { id: 'vault', act: 3, style: 'vault', at: [SITES.arch.x + 30, SITES.arch.z + 12], seed: 637, rooms: 8, level: 5, title: 'The Sasanian Vaults', sub: 'Brick halls older than Baghdad', pool: ['naffat', 'spearman', 'archer', 'deserter'], bossType: 'spearman', bossName: 'Mundhir', label: 'Enter the Sasanian vaults', icon: '▼', look: 'brick' },
-];
+  { id: 'granary', region: 'marsh', style: 'flood', at: [SITES.kiln.x - 6, SITES.kiln.z + 15], seed: 904, rooms: 8, level: 8, title: 'The Drowned Granary', sub: 'Grain stores the floods took', pool: ['reedman', 'netter', 'slinger', 'bandit'], bossType: 'spearman', bossName: 'Ghalib', label: 'Wade down into the drowned granary', icon: '▼', look: 'clay' },
+  { id: 'cellars', region: 'karkh', style: 'scorched', at: [SITES.serai.x + 14, SITES.serai.z - 13], seed: 812, rooms: 8, level: 11, title: 'The Merchants\' Cellars', sub: 'Vaults under the burned suq', pool: ['guard', 'deserter', 'archer', 'naffat'], bossType: 'guard', bossName: 'Qutayba', label: 'Go down into the merchants\' cellars', icon: '▼', look: 'brick' },
+].filter((a) => (a.region || 'sawad') === REGION);
 
 export function setupContent(game) {
   const p = game.player; game.fires2 = []; game.named = {};
@@ -47,6 +56,11 @@ export function setupContent(game) {
     teacher: { t: 'The Teacher', cat: 'People', x: 'Salim never learns his name; his students only ever say "the Teacher". He taught wherever people would listen, lived simply, and spoke plainly to men who preferred flattery. He was held for years in a prison beside the Tigris and died there in 799. His sayings were copied and passed hand to hand, because written words outlive the people who try to silence them.' },
     ctesiphon: { t: 'The Arch of Ctesiphon', cat: 'Places', x: 'The Sasanian kings\' palace at Ctesiphon, downriver from where Baghdad would rise, was crowned by a vast brick vault, the Taq Kasra, built in the 6th century. Its single span of about 25 metres made it one of the largest brick vaults ever raised. Later writers tell that al-Mansur thought of pulling it down for bricks for his new city, and gave up when the cost of demolition outran the value of the bricks.' },
     mangonel: { t: 'Mangonels', cat: 'War', x: 'The manjaniq was a beam sling engine worked by teams pulling ropes. It threw stones and pots of naft over walls. Both sides set them up in Baghdad in 812–813, and the chroniclers blame them for much of the damage to houses and markets.' },
+    nahrawan: { t: 'The Nahrawan', cat: 'Places', x: 'A great canal east of the Tigris, older than Islam, that watered the lands from Samarra down past Baghdad. Its weirs and sluices were Sasanian work. Where its banks failed, the water spread into marsh and reed bed.' },
+    mashuf: { t: 'Marsh Boats', cat: 'Craft', x: 'In the reed country people travelled by water. Their long, narrow canoes were built of wood and sealed with bitumen, so they ride black and low. A man poles one standing, and it slips through channels too narrow for any other craft.' },
+    mudhif: { t: 'Reed Halls', cat: 'Craft', x: 'The marsh people built great halls entirely of reed: bundles bent into arches, covered with woven mats. A large one could be raised in days and last for decades. Such halls appear on seals from Sumer, thousands of years before Salim.' },
+    karkh: { t: 'Al-Karkh', cat: 'Places', x: 'The market suburb south-west of the Round City. Al-Mansur moved the markets out of his city in the 770s, and al-Karkh grew into the busiest market in the caliphate. In the siege of 812–813 the fighting and the fires ruined much of it.' },
+    warraqin: { t: 'The Paper-Sellers', cat: 'Learning', x: 'The warraqin sold paper and copied books to order. By the end of the century the geographer al-Ya\'qubi counted over a hundred of their shops in one market of Baghdad. A book could be had in days, and a scholar could earn his bread by copying.' },
     steel: { t: 'Indian Steel', cat: 'Craft', x: 'Crucible steel came west from India and Sri Lanka as small ingots. Smiths prized it for blades that took a hard, keen edge, and its watered pattern became famous. Merchants carried it through the Gulf ports to Basra and up to Baghdad.' },
   });
   // ---------------------------------------------------------------- named captains in the field
@@ -58,9 +72,19 @@ export function setupContent(game) {
     if (e.bossOf === 'cellar' && questState(p, 'satchel') <= 0) { giveItem(game, questItem('satchel', 'The Courier\'s Satchel', 'Sealed letters of the barid.')); if (questState(p, 'satchel') === 0) setQuest(game, 'satchel', 1); }
     if (e.bossOf === 'pit' && questState(p, 'ingots') <= 0) { giveItem(game, questItem('ingots', 'Indian Steel Ingots', 'Heavy, dark and finely grained.')); if (questState(p, 'ingots') === 0) setQuest(game, 'ingots', 1); }
     if (e.bossOf === 'vault') unlock(game, 'ctesiphon');
+    if (e.bossOf === 'granary') unlock(game, 'nahrawan');
+    if (e.bossOf === 'cellars') unlock(game, 'warraqin');
   };
   // ---------------------------------------------------------------- new areas
   for (const A of AREAS) addEntrance(game, A);
+  game.engines = [];
+  let t0 = 0;
+  const duelTick = (dt) => { if (game.boss && !game.boss.dead) tickDuel(game, game.boss, dt); };
+  if (!IS_SAWAD) {
+    // the marshes and al-Karkh: the Sawad's side tasks (Rafi', the ingots, the engines) stay behind in the Sawad
+    game.contentTick = (dt) => { t0 += dt; tickAffixes(game, dt); tickFires(game, dt); duelTick(dt); };
+    return;
+  }
   // ---------------------------------------------------------------- Rafi', a wounded courier of the barid
   const rafi = npc(game, { robe: '#3a4a5a', robe2: '#c8b070', turban: 0x2a3440, beard: 0x2a1c12, beardLen: 0.4, skin: 0x8a5a3a, weapon: null, sash: 0x2a3440, build: 0.95 }, [14, 86], -2.2, 'Rafi\'', 'Courier', () => {
     const s = questState(p, 'satchel'), has = bagHas(p, 'satchel');
@@ -106,16 +130,14 @@ export function setupContent(game) {
     if (s === -1 && (game.act || 1) >= 3) return converse(game, { start: { who: '\'Amr', text: 'One more thing, before you go south. Ghassan has mangonels on the road to the arch. If he gets them loosing naft at you, you will burn. Burn them first.', choices: [{ label: 'Consider it done.', fx: () => { setQuest(game, 'engines', 0); unlock(game, 'mangonel'); } }, { label: 'Later.', fx: () => setTimeout(aTalk, 0) }] } });
     aTalk();
   };
-  game.engines = [];
   for (const [dx, dz, r] of [[-14, 30, 0.3], [6, 34, -0.2], [20, 28, 0.5]]) addEngine(game, SITES.arch.x + dx, SITES.arch.z + dz, r);
   // ---------------------------------------------------------------- per-frame
-  let t0 = 0;
   game.contentTick = (dt) => {
     t0 += dt;
     satchelMark.visible = questState(p, 'satchel') === -1 || bagHas(p, 'satchel');
     tickAffixes(game, dt);
     tickFires(game, dt);
-    if (game.boss && !game.boss.dead) tickDuel(game, game.boss, dt);
+    duelTick(dt);
   };
 }
 
@@ -135,6 +157,8 @@ function tickAffixes(game, dt) {
     e.affixT -= dt; if (e.affixT > 0) continue;
     const d = e.pos.distanceTo(p.pos);
     if (e.affix === 'volley' && d < 16) { e.affixT = 4.5; for (let i = 0; i < 3; i++) setTimeout(() => !e.dead && game.shootArrow(e), i * 160); }
+    else if (e.affix === 'snare' && d < 10) { e.affixT = 5; for (let i = -1; i <= 1; i++) { const a = Math.atan2(p.pos.x - e.pos.x, p.pos.z - e.pos.z) + i * 0.3; game.throwNet(e, new THREE.Vector3(Math.sin(a), 0, Math.cos(a))); } }
+    else if (e.affix === 'ambush' && d < 14 && !e.called) { e.called = true; e.affixT = 99; const g2 = game.spawnPack('reedman', p.pos.x, p.pos.z, 3, e.level - 1, { spread: 6 }); for (const r of g2) { r.alerted = true; r.riseT = 0; game.fx.dust(r.pos, 12, 1.2); } game.ui.toast(`${t(e.baseName)}: ${t('the reeds are full of his men!')}`); }
     else if (e.affix === 'firebrand') { e.affixT = 5; if (d < 14) for (let i = 0; i < 3; i++) { const a = Math.random() * 6.28, q = p.pos.clone().add(tmp.set(Math.cos(a) * 2.5 * i, 0, Math.sin(a) * 2.5 * i)); q.y = heightAt(q.x, q.z); enemyFire(game, q, 2.2, 4.5, e.dmg * 0.35, 0.9 + i * 0.35); } }
     else if (e.affix === 'rally') { e.affixT = 1; for (const g of e.guards || []) if (!g.dead) { g.speed = g.T.speed * 1.3; g.alerted = true; } }
     else e.affixT = 3;
@@ -221,11 +245,12 @@ function burnEngine(game, E, quiet = false) {
 // ------------------------------------------------------------------ Ghassan's final duel (below a quarter of his life)
 function tickDuel(game, b, dt) {
   const p = game.player;
-  if (!b.duel && b.hp < b.maxHp * 0.25 && !b.st.action) {
+  const K = b.kit; if (!K?.duelAt) return;
+  if (!b.duel && b.hp < b.maxHp * K.duelAt && !b.st.action) {
     b.duel = true; b.speed *= 1.6; b.lungeCd = 2.5; b.ringT = 0;
     // the shield goes down, the fire ring goes up
     const sh = b.rig.userData.parts?.shield; if (sh) sh.visible = false;
-    game.director?.play(SCENES.bossDuel(game, b, (p.enginesBurnt || 0) >= 3));
+    game.director?.play(SCENES.bossDuel(game, b, IS_SAWAD && (p.enginesBurnt || 0) >= 3, K));
     b.arena = b.pos.clone();
     // a glowing ring of burning naft marks the duel ground (segments follow the terrain)
     const ring = new THREE.Group(), gm = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 0.9, 0.2), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });

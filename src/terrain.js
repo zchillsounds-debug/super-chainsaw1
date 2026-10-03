@@ -1,19 +1,47 @@
 import * as THREE from 'three';
 import { fbm, noise2, smooth, clamp, mulberry32 } from './noise.js';
+import { REGION, IS_MARSH, IS_KARKH } from './region.js';
 
 export const WORLD = 280; // terrain size (units ~ meters)
 const HALF = WORLD / 2;
 
-// Canal centerline: x as a function of z.
-export const canalX = (z) => -22 + Math.sin(z * 0.025) * 9 + Math.sin(z * 0.061) * 3;
+// Region layouts (Round 15): each act region is its own map; see region.js.
+// Canal centerline: x as a function of z. (The marshes have open water instead of a canal.)
+const CANAL = {
+  sawad: (z) => -22 + Math.sin(z * 0.025) * 9 + Math.sin(z * 0.061) * 3,
+  marsh: () => -9999,
+  karkh: (z) => 21 + Math.sin(z * 0.03) * 5 + Math.sin(z * 0.071) * 1.5,
+}[REGION];
+export const canalX = CANAL;
 export const CANAL_W = 7;
+// the marshes' open water: the surface sits at WATER_Y; ground lower than DEEP_Y is too deep to wade
+export const WATER_Y = IS_MARSH ? -0.45 : -0.55, DEEP_Y = -1.05;
 
-// Road polyline (village -> caravanserai -> bridge -> kiln yard, and south to the arch).
-export const ROADS = [
-  [[14, 95], [12, 70], [10, 48], [14, 28], [30, 12], [52, 2]],
-  [[14, 28], [4, 10], [-10, -2], [canalX(-6), -6], [-38, -14], [-52, -32]],
-  [[4, 10], [6, -20], [8, -50], [10, -78]],
-];
+// Road polylines (in the marshes: raised causeways; in al-Karkh: the market lanes).
+export const ROADS = {
+  // village -> caravanserai -> bridge -> kiln yard, and south to the arch
+  sawad: [
+    [[14, 95], [12, 70], [10, 48], [14, 28], [30, 12], [52, 2]],
+    [[14, 28], [4, 10], [-10, -2], [canalX(-6), -6], [-38, -14], [-52, -32]],
+    [[4, 10], [6, -20], [8, -50], [10, -78]],
+  ],
+  // fishing village -> reed camp (west) and fish racks (east), both on to the old weir in the south
+  marsh: [
+    [[10, 104], [10, 78], [-6, 62], [-30, 46], [-52, 28]],
+    [[10, 78], [28, 52], [44, 26], [58, -6]],
+    [[-52, 28], [-48, 2], [-36, -28], [-20, -56], [-6, -84]],
+    [[58, -6], [52, -34], [30, -62], [-6, -84]],
+  ],
+  // khan courtyard -> burned suq -> bridge -> the square; branch west to the paper-sellers' lane
+  karkh: [
+    [[-62, 104], [-62, 84], [-40, 70], [-20, 56], [-8, 36], [-8, 10], [4, -20], [36, -20], [44, -40], [44, -62]],
+    [[-8, 10], [-32, -6], [-58, -24]],
+    [[-20, 56], [8, 62], [44, 62], [62, 40], [60, 0], [44, -40]],
+    [[-58, -24], [-46, -56], [-14, -74]],
+  ],
+}[REGION];
+// shallow fords where a causeway dips under the water (marsh)
+const FORDS = IS_MARSH ? [[37, 37, 7], [-42, -14, 6], [41, -48, 6]] : [];
 
 function distSeg(px, pz, ax, az, bx, bz) {
   const dx = bx - ax, dz = bz - az;
@@ -26,15 +54,15 @@ export function roadDist(x, z) {
   return d;
 }
 
-// Flattened plateaus for key locations.
+// Flattened plateaus for key locations. The keys are the same in every region:
+// village = the hub corner, serai = the first captain's ground, kiln = the second's, arch = the act's last fight.
 export const SITES = {
-  village: { x: 18, z: 58, r: 26 },
-  serai: { x: 56, z: 0, r: 24 },
-  kiln: { x: -56, z: -36, r: 22 },
-  arch: { x: 10, z: -88, r: 30 },
-};
+  sawad: { village: { x: 18, z: 58, r: 26 }, serai: { x: 56, z: 0, r: 24 }, kiln: { x: -56, z: -36, r: 22 }, arch: { x: 10, z: -88, r: 30 } },
+  marsh: { village: { x: 12, z: 80, r: 24 }, serai: { x: -52, z: 28, r: 20 }, kiln: { x: 58, z: -6, r: 20 }, arch: { x: -6, z: -84, r: 26 } },
+  karkh: { village: { x: -62, z: 86, r: 20 }, serai: { x: -8, z: 36, r: 24 }, kiln: { x: -58, z: -24, r: 20 }, arch: { x: 44, z: -62, r: 26 } },
+}[REGION];
 
-export function rawHeight(x, z) {
+function sawadHeight(x, z) {
   // gentle undulation + dunes towards the edges
   const edge = smooth(70, HALF - 6, Math.max(Math.abs(x), Math.abs(z)));
   let h = fbm(x * 0.012, z * 0.012, 4) * 3.2 + edge * (6 + fbm(x * 0.03 + 9, z * 0.03, 3) * 8);
@@ -52,6 +80,37 @@ export function rawHeight(x, z) {
   }
   return h;
 }
+// land fraction of the marsh (1 = dry ground, 0 = open water)
+export function marshLand(x, z) {
+  const n = fbm(x * 0.017 + 4, z * 0.017, 4) + fbm(x * 0.05 + 3, z * 0.05, 2) * 0.12;
+  let land = smooth(0.6, 0.7, n) * (1 - smooth(96, 118, Math.max(Math.abs(x), Math.abs(z))));
+  land = Math.max(land, 1 - smooth(2.4, 6.5, roadDist(x, z)));
+  for (const s of Object.values(SITES)) land = Math.max(land, 1 - smooth(s.r * 0.85, s.r * 1.25, Math.hypot(x - s.x, z - s.z)));
+  return land;
+}
+function marshHeight(x, z) {
+  // reed-fringed open water with wadeable shallows; causeways and islands stand just above it
+  const edge = smooth(100, 124, Math.max(Math.abs(x), Math.abs(z)));
+  const shallow = smooth(0.42, 0.56, fbm(x * 0.03 + 7, z * 0.03 - 2, 3)) * (1 - edge);
+  const bed = THREE.MathUtils.lerp(-1.55 + fbm(x * 0.06, z * 0.06, 2) * 0.35, -0.82 + fbm(x * 0.1, z * 0.1, 2) * 0.2, shallow);
+  const top = 0.12 + fbm(x * 0.04 + 1, z * 0.04, 3) * 0.55;
+  let h = THREE.MathUtils.lerp(bed, top, marshLand(x, z));
+  for (const [fx, fz, r] of FORDS) h = THREE.MathUtils.lerp(-0.74, h, smooth(r * 0.5, r, Math.hypot(x - fx, z - fz)));
+  return h;
+}
+function karkhHeight(x, z) {
+  // flat ground of the market suburb, heaped with rubble away from the lanes; the Sarat canal in its trench
+  let h = fbm(x * 0.02, z * 0.02, 3) * 1.2 + Math.max(0, fbm(x * 0.09 + 5, z * 0.09, 2) - 0.55) * 2.4;
+  const edge = smooth(96, HALF - 4, Math.max(Math.abs(x), Math.abs(z)));
+  h += edge * (2 + fbm(x * 0.05, z * 0.05, 2) * 4);
+  const cd = Math.abs(x - canalX(z));
+  h = h * smooth(CANAL_W * 0.5, CANAL_W * 1.6, cd) + (-1.6) * (1 - smooth(CANAL_W * 0.35, CANAL_W * 0.8, cd));
+  const rd = roadDist(x, z);
+  h = THREE.MathUtils.lerp(h * 0.2, h, smooth(2.5, 7, rd));
+  for (const s of Object.values(SITES)) h = THREE.MathUtils.lerp(0.1, h, smooth(s.r * 0.8, s.r * 1.2, Math.hypot(x - s.x, z - s.z)));
+  return h;
+}
+export const rawHeight = IS_MARSH ? marshHeight : IS_KARKH ? karkhHeight : sawadHeight;
 
 // Height lookup grid (fast, bilinear) used by gameplay.
 const GRID = 256;
@@ -82,7 +141,9 @@ export function setBridge(bx, bz, len, width, base) {
 
 // Fertility (irrigated green land near the canal).
 export function fertility(x, z) {
+  if (IS_MARSH) return clamp(0.35 + (heightAt(x, z) - WATER_Y) * 1.2, 0, 1);
   const cd = Math.abs(x - canalX(z));
+  if (IS_KARKH) return clamp(1 - smooth(4, 12, cd), 0, 1) * 0.7;
   return clamp(1 - smooth(6, 34 + fbm(x * 0.03, z * 0.03) * 20, cd), 0, 1);
 }
 
@@ -93,9 +154,10 @@ function makeMask() {
     const rd = roadDist(x, z);
     const road = 1 - smooth(2.4, 4.6 + noise2(x * 0.3, z * 0.3) * 1.0, rd);
     const cd = Math.abs(x - canalX(z));
-    const wet = 1 - smooth(CANAL_W * 0.4, CANAL_W * 1.1, cd);
+    const wet = IS_MARSH ? 1 - smooth(WATER_Y - 0.1, WATER_Y + 0.45, heightAt(x, z)) : 1 - smooth(CANAL_W * 0.4, CANAL_W * 1.1, cd);
     let site = 0;
-    for (const s of [SITES.village, SITES.serai]) site = Math.max(site, 1 - smooth(s.r * 0.5, s.r * 0.9, Math.hypot(x - s.x, z - s.z)));
+    if (IS_KARKH) site = Math.max(site, (1 - smooth(2.2, 4.2, rd)) * 0.75);
+    for (const s of IS_MARSH ? [] : IS_KARKH ? [SITES.village, SITES.serai, SITES.arch] : [SITES.village, SITES.serai]) site = Math.max(site, 1 - smooth(s.r * 0.5, s.r * 0.9, Math.hypot(x - s.x, z - s.z)));
     const k = (j * S + i) * 4;
     data[k] = road * 255; data[k + 1] = fertility(x, z) * (1 - road) * 255; data[k + 2] = wet * 255; data[k + 3] = site * 255;
   }
@@ -152,6 +214,7 @@ export function createTerrain() {
       .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWPos = (modelMatrix * vec4(transformed,1.0)).xyz;');
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
+        #define RG ${IS_MARSH ? 1 : IS_KARKH ? 2 : 0}
         varying vec3 vWPos; uniform sampler2D uMask; uniform sampler2D uDetail; uniform float uWorld;
         float h21(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return fract(p.x*p.y); }
         float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
@@ -172,6 +235,19 @@ export function createTerrain() {
         vec3 grass = mix(vec3(0.30,0.36,0.14), vec3(0.46,0.47,0.20), n1);
         grass = mix(grass, vec3(0.55,0.50,0.26), smoothstep(0.45,0.75,n2));
         vec3 mud = vec3(0.28,0.22,0.15);
+        #if RG == 1
+          // marsh: grey-brown silt, lush grass, black wet mud at the water line
+          sand = mix(vec3(0.36,0.33,0.26), vec3(0.45,0.41,0.31), n1); sand = mix(sand, vec3(0.30,0.27,0.21), smoothstep(0.5,0.8,n2)*0.5);
+          dirt = mix(vec3(0.30,0.26,0.19), vec3(0.38,0.33,0.24), n2);
+          grass = mix(vec3(0.22,0.32,0.12), vec3(0.36,0.42,0.16), n1); grass = mix(grass, vec3(0.44,0.44,0.22), smoothstep(0.5,0.8,n2)*0.6);
+          mud = vec3(0.15,0.13,0.10);
+        #elif RG == 2
+          // al-Karkh: trodden earth and ash, black soot where the fires burned
+          sand = mix(vec3(0.38,0.35,0.31), vec3(0.47,0.43,0.37), n1);
+          sand = mix(sand, vec3(0.30,0.28,0.26), smoothstep(0.5,0.8,n2)*0.5);
+          dirt = mix(vec3(0.36,0.31,0.26), vec3(0.44,0.38,0.31), n2);
+          grass = mix(vec3(0.30,0.34,0.16), vec3(0.40,0.40,0.22), n1);
+        #endif
         // packed road with cart ruts and stones
         vec3 road = mix(vec3(0.36,0.27,0.19), vec3(0.45,0.35,0.25), n3);
         float stones = smoothstep(0.68,0.74,fb(vWPos.xz*1.6));
@@ -190,6 +266,9 @@ export function createTerrain() {
         float grout = smoothstep(0.02,0.12,vc.x);
         vec3 stoneCol = mix(vec3(0.60,0.50,0.38), vec3(0.74,0.62,0.47), vc.y);
         stoneCol = mix(stoneCol, vec3(0.55,0.42,0.30), step(0.85, h21(vec2(vc.y*91.0,3.0)))*0.6);
+        #if RG == 2
+          stoneCol = mix(vec3(0.50,0.47,0.42), vec3(0.62,0.57,0.50), vc.y);
+        #endif
         stoneCol *= 0.85 + 0.25*n3;
         vec3 flag = mix(vec3(0.33,0.26,0.19), stoneCol, grout);
         // sand drifts settling over the courtyard
@@ -200,6 +279,11 @@ export function createTerrain() {
         col = mix(col, mud, gMask.b*0.9);
         float site = smoothstep(0.3,0.8,gMask.a + (n2-0.5)*0.4);
         col = mix(col, flag, site*0.85);
+        #if RG == 2
+          // soot and ash where the fires burned (kept off the swept lanes and squares)
+          col = mix(col, vec3(0.13,0.12,0.11), smoothstep(0.56,0.78,fb(vWPos.xz*0.11+3.0))*0.8*(1.0-site));
+          col = mix(col, vec3(0.55,0.53,0.5), smoothstep(0.62,0.8,fb(vWPos.xz*0.35+9.0))*0.25*(1.0-site));
+        #endif
         {
           // contrast-adaptive road: darker than bright sand, paler & dustier than dark fertile soil
           float lum = dot(col, vec3(0.3,0.59,0.11));
@@ -223,6 +307,9 @@ export function createTerrain() {
           vec2 q = vWPos.xz;
           // procedural wind ripples (non-repeating): warped sine with sharp crests
           float rip = (1.0-gMask.g)*(1.0-smoothstep(0.1,0.5,gMask.r))*(1.0-smoothstep(0.2,0.6,gMask.a));
+          #if RG != 0
+            rip *= 0.0; // wind ripples belong to the desert
+          #endif
           float amp = rip * (0.35 + 0.65*smoothstep(0.35,0.7,fb(q*0.025+3.0)));
           vec2 dir = normalize(vec2(0.82,0.57) + vec2(fb(q*0.01)-0.5, fb(q*0.012+7.0)-0.5)*0.8);
           float warp = fb(q*0.07)*5.0;
@@ -248,4 +335,17 @@ export function createTerrain() {
   mesh.receiveShadow = true;
   mesh.name = 'terrain';
   return mesh;
+}
+
+// Marsh water: how deep the hero stands (0 on dry ground). Used for wading speed, splashes and footsteps.
+export function waterDepth(x, z) {
+  if (!IS_MARSH || x > 148) return 0;
+  return Math.max(0, WATER_Y - heightAt(x, z));
+}
+// Minimap colour for a world point in this region.
+export function mapColor(x, z) {
+  if (IS_MARSH) { const h = heightAt(x, z); return h < DEEP_Y ? '#1e4a4c' : h < WATER_Y ? '#3a6a5e' : roadDist(x, z) < 3 ? '#7a6644' : '#4a5a2a'; }
+  const cd = Math.abs(x - canalX(z));
+  if (IS_KARKH) return cd < 3 ? '#2a6a6a' : roadDist(x, z) < 3.5 ? '#8a7254' : '#4a3e34';
+  return cd < 3 ? '#2a6a6a' : (cd < 25 ? '#4a4a26' : '#6a5032');
 }

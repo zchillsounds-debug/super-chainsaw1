@@ -10,7 +10,8 @@ import { firePit } from './props.js';
 
 // The suq at the village gate: merchant, blacksmith, stash and training yard.
 // Each is an interactable; the panels are plain DOM in the HUD layer and work with mouse and touch alike.
-const HUB = { merchant: [7, 81], smith: [10, 92], stash: [-6, 91], trainer: [-9, 81] };
+// (each region sets its hub corner up in its own place: see region.js)
+import { HUB } from './region.js';
 export const MAX_RANK = 5;
 let DISC = 0;
 const price = (it) => Math.round(({ common: 8, magic: 30, rare: 90, set: 160, legendary: 400 })[it.rarity] * (1 + it.level * 0.25) * (1 - DISC));

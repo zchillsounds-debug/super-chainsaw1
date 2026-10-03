@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { heightAt } from './terrain.js';
 import { findPath } from './nav.js';
 import { SITES } from './terrain.js';
+import { STORY } from './region.js';
 
 // Objective guidance: a trail of glowing chevrons on the ground, flowing from the hero along a navigable
 // path toward the current objective (refreshed as the hero moves). It shows the next ~45 m and fades out
@@ -23,9 +24,9 @@ export function objectiveTarget(g) {
   if (!g.briefed) return null;
   const q = g.quests.find((x) => !x.done); if (!q) return null;
   const alive = (e) => e && !e.dead ? e.pos : null;
-  if (q.id === 'serai') return alive(g.chief) || SITES.serai;
-  if (q.id === 'graves') return alive(g.matriarch) || SITES.kiln;
-  if (q.id === 'boss') return alive(g.boss) || SITES.arch;
+  if (q.id === STORY.chief) return alive(g.chief) || SITES.serai;
+  if (q.id === STORY.second) return alive(g.matriarch) || SITES.kiln;
+  if (q.id === STORY.boss) return alive(g.boss) || SITES.arch;
   return null;
 }
 

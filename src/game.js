@@ -1,7 +1,7 @@
 import { sellPrice, SALVAGE, MAT_NAMES } from './hub.js';
 import * as THREE from 'three';
 import { humanoid, animateHumanoid, setCharLOD, sword, camel, animateCamel, CharLOD } from './characters.js';
-import { heightAt, SITES, canalX } from './terrain.js';
+import { heightAt, SITES, canalX, mapColor, waterDepth } from './terrain.js';
 import { resolve, buildGrid } from './collision.js';
 import { buildNav, findPath, navClear } from './nav.js';
 import { makeEnemy, TYPES } from './entities.js';
@@ -10,6 +10,9 @@ import { saveGame } from './save.js';
 import { makeItem, rollRarity, RARITY, setWeaponPool } from './items.js';
 import { glowDecal, splatTex } from './textures.js';
 import { CLASSES, COMMON } from './classes.js';
+import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, STORY, HUB } from './region.js';
+import { LIEUT, BOSS, ISHAQ_TALK } from './story15.js';
+import { WATER_Y, roadDist } from './terrain.js';
 
 const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
 const BOUND = 132;
@@ -31,11 +34,7 @@ export class Game {
     this.camPos = new THREE.Vector3(); this.started = false;
     this.createPlayer();
     this.spawnEnemies();
-    this.quests = [
-      { id: 'serai', text: 'Defeat Farud at the old caravanserai', done: false },
-      { id: 'graves', text: 'Drive Hisham\'s men from the kiln yard', done: false },
-      { id: 'boss', text: 'Face Ghassan at the ruined Persian arch', done: false },
-    ];
+    this.quests = STORY.quests.map((q) => ({ ...q, done: false }));
     this.ui.quest(this.quests);
     this.makeMinimap();
     this.bindInput();
@@ -47,6 +46,20 @@ export class Game {
     ];
     this.setupOccluders(this.world.occluders);
     this.decals = []; this.splatTexs = [splatTex(1), splatTex(2), splatTex(3)]; this.scorchTex = splatTex(4, true);
+    this.fires2 = [];
+    // a casting net that can pin the hero (made at load, shown when a net-thrower lands one)
+    const nc = document.createElement('canvas'); nc.width = nc.height = 64; const nx = nc.getContext('2d'); nx.strokeStyle = '#fff'; nx.lineWidth = 3;
+    for (let i = 0; i <= 64; i += 9) { nx.beginPath(); nx.moveTo(i, 0); nx.lineTo(i, 64); nx.stroke(); nx.beginPath(); nx.moveTo(0, i); nx.lineTo(64, i); nx.stroke(); }
+    const nt = new THREE.CanvasTexture(nc); nt.wrapS = nt.wrapT = THREE.RepeatWrapping; nt.repeat.set(5, 3);
+    this.netMat = new THREE.MeshStandardMaterial({ map: nt, alphaTest: 0.4, side: THREE.DoubleSide, color: 0x9a8a68, roughness: 1 });
+    this.netMesh = new THREE.Mesh(new THREE.SphereGeometry(0.85, 12, 6, 0, Math.PI * 2, 0, Math.PI * 0.62).scale(1, 2.1, 1), this.netMat); this.netMesh.visible = false; this.scene.add(this.netMesh);
+    this.netGeo = new THREE.CircleGeometry(0.9, 12);
+    this.stoneGeo = new THREE.DodecahedronGeometry(0.09, 0); this.stoneMat = new THREE.MeshStandardMaterial({ color: 0x8a8070, roughness: 0.9 });
+    this.arrowGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.8, 4).rotateX(Math.PI / 2); this.arrowMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1a });
+    // shader warm-up: one of each projectile sits far under the ground, so the load-time compile covers them
+    const warm = new THREE.Group(); warm.position.set(0, -60, 0);
+    warm.add(new THREE.Mesh(this.stoneGeo, this.stoneMat), new THREE.Mesh(this.arrowGeo, this.arrowMat), new THREE.Mesh(this.netGeo, this.netMat), new THREE.Mesh(this.netMesh.geometry, this.netMat));
+    this.scene.add(warm);
   }
 
   decal(pos, size, kind) {
@@ -103,7 +116,7 @@ export class Game {
   // ------------------------------------------------------------------ setup
   createPlayer(cls = 'faris') {
     const p = this.player = {
-      rig: null, pos: new THREE.Vector3(1, 0, 88), facing: Math.PI, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, dead: false, deadT: 0, fallDir: 1 },
+      rig: null, pos: new THREE.Vector3(HUB.spawn[0], 0, HUB.spawn[1]), facing: Math.PI, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, dead: false, deadT: 0, fallDir: 1 },
       hp: 100, mp: 60, level: 1, xp: 0, gold: 0, potions: 3, equip: {}, bag: new Array(40).fill(null), cds: {}, buffs: {},
       target: null, moveTo: null, actionDur: 0.6, hitApplied: false, dead: false, whirlT: 0, dashT: 0, invuln: 0,
     };
@@ -186,7 +199,10 @@ export class Game {
   }
 
   spawnEnemies() {
-    TYPES.commander.build(); // sculpt Ghassan's geometry during loading so his entrance doesn't hitch
+    TYPES[BOSS.type].build(); // sculpt the boss's geometry during loading so his entrance doesn't hitch
+    this.bossSpawned = false;
+    if (IS_MARSH) return this.spawnMarsh();
+    if (IS_KARKH) return this.spawnKarkh();
     const S = SITES.serai, G = SITES.kiln;
     this.spawnPack(['bandit', 'bandit', 'archer'], 22, 36, 3, 1);
     this.spawnPack(['bandit', 'spearman'], 38, 14, 4, 1);
@@ -207,15 +223,63 @@ export class Game {
     this.spawnPack(['deserter', 'bandit'], 6, -30, 4, 3);
     this.spawnPack(['naffat', 'archer', 'spearman'], 8, -58, 5, 4, { spread: 5 });
     this.spawnPack('naffat', 20, -66, 1, 4, { elite: true });
-    this.bossSpawned = false;
+  }
+  // Act IV: Rawh's hired marsh men hold the causeways; ambushers crouch in the reed beds beside them
+  spawnMarsh() {
+    const S = SITES.serai, G = SITES.kiln, A = SITES.arch;
+    this.spawnPack(['bandit', 'slinger'], -6, 62, 3, 6);
+    this.spawnPack('reedman', -18, 58, 2, 6, { hidden: true, spread: 3 });
+    this.spawnPack(['slinger', 'netter', 'bandit'], -30, 46, 4, 6);
+    // the reed camp
+    this.spawnPack(['bandit', 'slinger', 'netter'], S.x, S.z + 6, 5, 7, { spread: 6 });
+    this.spawnPack(['slinger'], S.x - 9, S.z - 2, 2, 7);
+    this.spawnPack('reedman', S.x + 12, S.z + 10, 2, 7, { hidden: true, spread: 4 });
+    this.chief = this.spawnPack('netter', S.x + 1, S.z - 4, 1, 8, { elite: true, name: 'Marwan' })[0];
+    this.chief.quest = STORY.chief;
+    this.spawnPack(['bandit', 'spearman'], S.x + 3, S.z - 5, 2, 7);
+    // the east causeway and the fish racks
+    this.spawnPack(['slinger', 'bandit'], 28, 52, 3, 7);
+    this.spawnPack('reedman', 40, 34, 3, 7, { hidden: true, spread: 4 });
+    this.spawnPack(['spearman', 'netter', 'slinger'], G.x - 4, G.z + 4, 5, 8, { spread: 6 });
+    this.spawnPack('slinger', G.x + 8, G.z - 8, 2, 8);
+    this.matriarch = this.spawnPack('spearman', G.x + 2, G.z - 3, 1, 9, { elite: true, name: 'Sahl' })[0];
+    this.matriarch.quest = STORY.second;
+    // the two roads south to the weir
+    this.spawnPack(['netter', 'slinger', 'bandit'], -48, 0, 4, 8);
+    this.spawnPack('reedman', -38, -22, 3, 8, { hidden: true, spread: 4 });
+    this.spawnPack(['spearman', 'slinger', 'netter'], -24, -52, 5, 9, { spread: 5 });
+    this.spawnPack(['bandit', 'slinger'], 50, -34, 4, 9);
+    this.spawnPack(['spearman', 'netter'], 28, -62, 4, 9);
+    this.spawnPack('slinger', A.x + 14, A.z + 16, 1, 9, { elite: true });
+  }
+  // Act V: the buyer's guards hold the lanes of burned al-Karkh; knife-men hide in the ruins
+  spawnKarkh() {
+    const S = SITES.serai, G = SITES.kiln, A = SITES.arch;
+    this.spawnPack(['guard', 'archer'], -40, 70, 3, 9);
+    this.spawnPack(['deserter'], -26, 60, 2, 9, { hidden: true, spread: 3 });
+    // the burned suq
+    this.spawnPack(['guard', 'deserter', 'archer'], S.x, S.z + 8, 4, 10, { spread: 6 });
+    for (let i = 0; i < 2; i++) this.spawnPack('deserter', S.x + rand(-9, 9), S.z + rand(-12, 12), 2, 10, { hidden: true, spread: 3 });
+    this.chief = this.spawnPack('guard', S.x, S.z - 4, 1, 11, { elite: true, name: '\'Asim' })[0];
+    this.chief.quest = STORY.chief;
+    this.spawnPack(['guard', 'archer'], S.x - 3, S.z - 6, 2, 10);
+    // the paper-sellers' lane
+    this.spawnPack(['naffat', 'guard', 'archer'], -32, -6, 4, 10);
+    this.spawnPack(['naffat', 'guard', 'archer', 'naffat'], G.x + 4, G.z + 3, 5, 11, { spread: 6 });
+    this.matriarch = this.spawnPack('naffat', G.x - 2, G.z - 2, 1, 12, { elite: true, name: 'Layth' })[0];
+    this.matriarch.quest = STORY.second;
+    // the east lanes and the way to the square
+    this.spawnPack(['guard', 'spearman'], 8, 62, 3, 10);
+    this.spawnPack(['guard', 'archer', 'naffat'], 60, 10, 4, 11);
+    this.spawnPack(['guard', 'deserter'], 20, -20, 4, 11);
+    this.spawnPack(['guard', 'spearman', 'archer'], 44, -40, 5, 11, { spread: 5 });
+    this.spawnPack('naffat', A.x - 16, A.z + 14, 1, 11, { elite: true });
   }
 
   makeMinimap() {
     const c = document.createElement('canvas'); c.width = c.height = 280; const x = c.getContext('2d');
     for (let j = 0; j < 280; j += 2) for (let i = 0; i < 280; i += 2) {
-      const wx = i - 140, wz = j - 140;
-      const cd = Math.abs(wx - canalX(wz));
-      x.fillStyle = cd < 3 ? '#2a6a6a' : (cd < 25 ? '#4a4a26' : '#6a5032');
+      x.fillStyle = mapColor(i - 140, j - 140);
       x.fillRect(i, j, 2, 2);
     }
     this.ui.mapImg = c;
@@ -276,7 +340,9 @@ export class Game {
   // what the hero is walking on (footstep sounds and dust)
   surfaceAt(pos) {
     if (this.interior) { const I = this.interior.I; if (I.style === 'qanat') { const c = I.center(I.rooms.reduce((a, r) => (Math.hypot(I.center(r).x - pos.x, I.center(r).z - pos.z) < Math.hypot(I.center(a).x - pos.x, I.center(a).z - pos.z) ? r : a))); if (Math.abs(pos.x - (c.x + 3.6)) < 0.9) return 'water'; return 'stone'; } return 'brick'; }
+    if (IS_MARSH) return waterDepth(pos.x, pos.z) > 0.04 ? 'water' : roadDist(pos.x, pos.z) < 3 ? 'sand' : 'grass';
     if (Math.abs(pos.x - canalX(pos.z)) < 5.2) return 'water';
+    if (IS_KARKH) return roadDist(pos.x, pos.z) < 3.5 || Object.values(SITES).some((s) => Math.hypot(pos.x - s.x, pos.z - s.z) < s.r * 0.7) ? 'brick' : 'sand';
     const V = SITES.village; if (Math.hypot(pos.x - V.x, pos.z - V.z) < 16) return 'brick';
     const S = SITES.serai; if (Math.abs(pos.x - S.x) < 11 && Math.abs(pos.z - S.z) < 11) return 'brick';
     return 'sand';
@@ -381,8 +447,7 @@ export class Game {
     if (Math.random() < (e.elite ? 1 : 0.1)) this.dropItem({ potion: true, rarity: 'common' }, e.pos);
     this.onKill?.(e); e.onDeath?.(e);
     if (e.quest) this.completeQuest(e.quest, !!this.director);
-    if (e === this.chief && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Farud', text: 'Ghassan paid me to take the chest. Hisham has the Pages now, at the kilns.', card: { ar: 'الأتون', en: 'Act II · The Kilns', sub: 'Hisham is burning the Pages in the kilns. Stop him.' } })).then(() => this.checkpoint(2));
-    if (e === this.matriarch && this.director) this.director.play(SCENES.lieutenantFalls(this, e, { who: 'Hisham', text: 'I sold the Pages to Ghassan for a bag of silver. He has the rest, at the old arch.', card: { ar: 'الطاق', en: 'Act III · The Broken Arch', sub: 'Ghassan has cut off the village\'s water. Find him at the arch.' } })).then(() => this.checkpoint(3));
+    for (const [foe, L] of [[this.chief, LIEUT.chief], [this.matriarch, LIEUT.second]]) if (e === foe && this.director) this.director.play(SCENES.lieutenantFalls(this, e, L)).then(() => this.checkpoint(L.act));
     if (e.boss) this.onBossDeath(e);
   }
   checkpoint(act) { this.act = Math.max(this.act || 1, act); if (!this.interior) this.lighting?.forAct(this.act, 4); saveGame(this); }
@@ -399,6 +464,8 @@ export class Game {
   cineTick(dt) {
     // no see-through hole in cutscenes: the camera is free, and the dither read as grain on walls
     if (this.occU) this.occU.uHole.value.set(-9999, -9999);
+    if (this.guide) { this.guide.mesh.count = 0; this.guide.vis = 0; }
+    if (this.npcMark) this.npcMark.visible = false;
     this.t += dt;
     const actors = this.director?.def?.actors || [];
     const busy = new Set(actors.map((a) => a.rig));
@@ -639,10 +706,10 @@ export class Game {
   spawnBoss() {
     this.bossSpawned = true;
     const A = SITES.arch;
-    const b = this.spawnPack('commander', A.x, A.z - 2, 1, 6, { spread: 0 })[0];
-    b.st.action = null; b.phase = 1; b.summoned = false; b.meteorCd = 6; b.volleyCd = 3; b.rise = 0;
-    this.boss = b; b.quest = 'boss'; b.alerted = true;
-    if (this.director) this.director.play(SCENES.bossIntro(this, b)); else this.ui.banner('Ghassan', 'Renegade commander of the siege of Baghdad', 4000);
+    const b = this.spawnPack(BOSS.type, A.x, A.z - 2, 1, BOSS.level, { spread: 0 })[0];
+    b.st.action = null; b.phase = 1; b.summoned = false; b.meteorCd = 6; b.volleyCd = 3; b.rise = 0; b.kit = BOSS;
+    this.boss = b; b.quest = STORY.boss; b.alerted = true;
+    if (this.director) this.director.play(SCENES.bossIntro(this, b, BOSS.intro)); else this.ui.banner(BOSS.banner[0], BOSS.banner[1], 4000);
     this.audio.roar(); this.shake = 0.8; this.bossActive = true;
     this.fx.flash(tmp.copy(b.pos).setY(4), 0xff6020, 60, 1.2, 30);
     for (let i = 0; i < 3; i++) this.fx.ring(b.pos, new THREE.Color(1.6, 0.6, 0.15), 1 + i, 6 + i * 2.5, 0.8 + i * 0.25, 0.8);
@@ -662,8 +729,10 @@ export class Game {
     this.fx.burst(tmp.copy(b.pos).setY(4), 200, { speed: 10, life: 2, size: 0.8, size1: 0.05, color: new THREE.Color(4, 1.6, 0.4), up: 3, drag: 1.2 });
     const mins = Math.floor(this.t / 60), secs = Math.floor(this.t % 60);
     const win = () => this.ui.victory({ level: this.player.level, gold: this.player.gold, kills: this.kills || 0, time: `${mins}m ${String(secs).padStart(2, '0')}s` });
-    if (this.director) setTimeout(() => this.director.play(SCENES.epilogue(this, b)).then(() => { this.checkpoint(4); win(); }), 1200);
-    else { setTimeout(() => this.ui.banner('Victory', 'The Pages are recovered. The water runs again.', 5000), 2500); setTimeout(win, 8000); }
+    // each region's last fight closes its act: the Sawad and the marshes travel on, al-Karkh ends the chronicle
+    const ending = IS_SAWAD ? [SCENES.epilogue, 4, () => this.travel?.()] : IS_MARSH ? [SCENES.rawhFalls, 5, () => this.travel?.()] : [SCENES.finale, 6, win];
+    if (this.director) setTimeout(() => this.director.play(ending[0](this, b)).then(() => { this.checkpoint(ending[1]); ending[2](); }), 1200);
+    else { setTimeout(() => this.ui.banner('Victory', 'The Pages are recovered.', 5000), 2500); setTimeout(() => { this.checkpoint(ending[1]); ending[2](); }, 8000); }
     if (this.bossLight) setTimeout(() => { this.bossLight.intensity = 0; }, 2000);
   }
 
@@ -675,6 +744,8 @@ export class Game {
     const face = Math.atan2(p.pos.x - b.pos.x, p.pos.z - b.pos.z);
     b.facing += angDiff(b.facing, face) * Math.min(1, dt * 3);
     if (b.st.action) {
+      // a cutscene can hand him an action (his roar) without a duration: never let that freeze him
+      if (!(b.actionDur > 0) || !Number.isFinite(b.st.actionT)) { b.actionDur = 1.2; b.st.actionT = Number.isFinite(b.st.actionT) ? b.st.actionT : 0; }
       b.st.actionT += dt / b.actionDur;
       if (b.st.action === 'slam' && b.st.actionT > 0.55 && !b.didHit) {
         b.didHit = true;
@@ -687,13 +758,30 @@ export class Game {
       }
       if (b.st.action === 'command' && b.st.actionT > 0.5 && !b.didHit) {
         b.didHit = true;
-        if (b.castKind === 'volley') {
+        const K = b.kit || BOSS;
+        if (b.castKind === 'volley' && K.volley === 'stones') {
+          // his slingers loose together: stones drop on and around the hero, each landing spot marked
+          const n = b.phase >= 2 ? 7 : 5;
+          for (let i = 0; i < n; i++) { const q = new THREE.Vector3(p.pos.x + (i ? rand(-5, 5) : 0), 0, p.pos.z + (i ? rand(-5, 5) : 0)); q.y = heightAt(q.x, q.z); this.lobStone(tmp.copy(b.pos).setY(b.pos.y + 2.6), q, b.dmg * 0.55, 1.0 + i * 0.1); }
+          this.audio.whoosh();
+        } else if (b.castKind === 'volley' && K.volley === 'arrows') {
+          const n = b.phase >= 2 ? 9 : 6;
+          for (let i = 0; i < n; i++) { const a = face + (i - (n - 1) / 2) * 0.16; this.shootArrow(b, new THREE.Vector3(Math.sin(a), 0, Math.cos(a)), b.dmg * 0.45); }
+        } else if (b.castKind === 'volley') {
           const n = b.phase >= 2 ? 7 : 5;
           for (let i = 0; i < n; i++) {
             const a = face + (i - (n - 1) / 2) * 0.22;
             this.fireball(tmp.copy(b.pos).setY(b.pos.y + 2.4), new THREE.Vector3(Math.sin(a), 0, Math.cos(a)));
           }
           this.audio.whoosh();
+        } else if (b.castKind === 'meteor' && K.barrage === 'nets') {
+          for (let i = 0; i < 3; i++) { const a = face + (i - 1) * 0.35; this.throwNet(b, new THREE.Vector3(Math.sin(a), 0, Math.cos(a))); }
+        } else if (b.castKind === 'meteor' && K.barrage === 'firepots') {
+          // naft pots thrown by his torch-bearers: marked circles that burn for a few seconds
+          for (let i = 0; i < 6; i++) {
+            const pos = new THREE.Vector3(p.pos.x + (i ? rand(-6, 6) : 0), 0, p.pos.z + (i ? rand(-6, 6) : 0)); pos.y = heightAt(pos.x, pos.z);
+            this.telegraph(pos, 2.2, 1.1 + i * 0.15, () => { this.fx.flash(tmp.copy(pos).setY(pos.y + 1.5), 0xff6020, 20, 0.3, 10); this.audio.boom(); this.decal(pos, 4.4, 'scorch'); this.fires2.push({ pos: pos.clone(), r: 2.2, life: 4.5, t: 0, tick: 0, dmg: b.dmg * 0.3 }); });
+          }
         } else if (b.castKind === 'meteor') {
           for (let i = 0; i < 9; i++) {
             const pos = new THREE.Vector3(p.pos.x + rand(-7, 7), 0, p.pos.z + rand(-7, 7)); if (i === 0) pos.set(p.pos.x, 0, p.pos.z);
@@ -707,7 +795,7 @@ export class Game {
             }, true);
           }
         } else if (b.castKind === 'summon') {
-          const guard = this.spawnPack(['naffat', 'bandit', 'spearman'], b.pos.x, b.pos.z + 3, 4, 5, { spread: 6 });
+          const guard = this.spawnPack((b.kit || BOSS).summon, b.pos.x, b.pos.z + 3, 4, b.level - 1, { spread: 6 });
           for (const i of guard) { i.alerted = true; i.T = { ...i.T, summoned: true }; this.fx.dust(i.pos, 10, 1.2); }
           this.audio.roar();
         }
@@ -715,10 +803,10 @@ export class Game {
       if (b.st.actionT >= 1) b.st.action = null;
       return;
     }
-    if (b.hp < b.maxHp * 0.6 && b.phase < 2) { b.phase = 2; if (this.director) { this.director.play(SCENES.bossPhase(this, b, (this.player.enginesBurnt || 0) >= 3)); return; } }
+    if (b.hp < b.maxHp * (b.kit?.phaseAt ?? 0.6) && b.phase < 2) { b.phase = 2; if (this.director) { this.director.play(SCENES.bossPhase(this, b, (this.player.enginesBurnt || 0) >= 3, b.kit?.phase)); return; } }
     b.volleyCd -= dt; b.meteorCd -= dt;
     if (!b.summoned && b.hp < b.maxHp * 0.4) { b.summoned = true; this.bossCast(b, 'summon'); return; }
-    if (b.phase >= 2 && b.meteorCd <= 0 && !((this.player.enginesBurnt || 0) >= 3)) { b.meteorCd = 9; this.bossCast(b, 'meteor'); return; }
+    if (b.phase >= 2 && b.meteorCd <= 0 && !(IS_SAWAD && (this.player.enginesBurnt || 0) >= 3)) { b.meteorCd = b.kit?.barrage === 'nets' ? 7 : 9; this.bossCast(b, 'meteor'); return; }
     if (d < 5 && b.atkCd <= 0) {
       b.moving = false; b.st.action = 'slam'; b.st.actionT = 0; b.actionDur = 1.4; b.didHit = false; b.atkCd = 2.6;
       b.slamPos = tmp.copy(b.pos).addScaledVector(new THREE.Vector3(Math.sin(face), 0, Math.cos(face)), 2.2).clone();
@@ -752,7 +840,7 @@ export class Game {
   // ------------------------------------------------------------------ NPC
   addNpc() {
     const npc = humanoid({ robe: '#e6dcc4', robe2: '#2a6a5a', turban: 0x2a7a6a, beard: 0xd8d0c0, beardLen: 1, weapon: null, skin: 0x9a6a48, sash: 0x2a6a5a, build: 0.92, belly: 0.25, tiraz: true, detail: 'hi' });
-    const x = -2, z = 84; npc.position.set(x, heightAt(x, z), z); npc.rotation.y = 0.6;
+    const [x, z] = HUB.ishaq; npc.position.set(x, heightAt(x, z), z); npc.rotation.y = 0.6;
     this.scene.add(npc); this.npc = npc; this.npcSt = { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0 };
     const ishaq = { rig: npc, st: this.npcSt, name: 'Ishaq', pos: npc.position, talk: () => this.talkToNpc() };
     this.npcs.push(ishaq); this.interactables.push({ pos: npc.position, r: 3.2, label: 'Talk to Ishaq', act: () => ishaq.talk(), npc: ishaq });
@@ -769,12 +857,14 @@ export class Game {
       rig.position.copy(pos); this.scene.add(rig);
       this.critters.push({ rig, pos, home: pos.clone(), kind, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, seed: Math.random() * 10, graze: kind === 'camel' }, facing: Math.random() * 6, wanderT: 0, range: opts.range || 6, speed: opts.speed || 1.2 });
     };
-    for (const [x, z, c] of [[30, 66, 0xb88a58], [33, 70, 0xa07040], [-8, 40, 0xc49a68], [70, 22, 0x9a6a3a], [74, 18, 0xb08050]]) add(camel(c), x, z, 'camel', { range: 4, speed: 0.9 });
+    const V0 = SITES.village;
+    const camels = IS_SAWAD ? [[30, 66, 0xb88a58], [33, 70, 0xa07040], [-8, 40, 0xc49a68], [70, 22, 0x9a6a3a], [74, 18, 0xb08050]] : IS_KARKH ? [[V0.x + 9, V0.z - 9, 0xb88a58], [V0.x + 12, V0.z - 6, 0xa07040]] : [];
+    for (const [x, z, c] of camels) add(camel(c), x, z, 'camel', { range: 4, speed: 0.9 });
     const garb = [['#e8dcc0', '#2a6a5a', 0xf0ead8], ['#6a3a2a', '#d0a040', 0x2a2420], ['#2a4a6a', '#e0c070', 0xe8e0d0], ['#8a6a3a', '#3a2a1a', 0x6a3020]];
     const V = SITES.village;
     for (let i = 0; i < 6; i++) {
       const [r1, r2, tb] = garb[i % garb.length];
-      add(humanoid({ robe: r1, robe2: r2, turban: tb, weapon: null, beard: i % 2 ? 0x2a1a10 : null, skin: [0xa8714a, 0x8a5a3a, 0xb88a60][i % 3] }), V.x + rand(-12, 12), V.z + rand(-6, 22), 'villager', { range: 8, speed: 1.3 });
+      add(humanoid({ robe: r1, robe2: r2, turban: tb, weapon: null, beard: i % 2 ? 0x2a1a10 : null, skin: [0xa8714a, 0x8a5a3a, 0xb88a60][i % 3] }), V.x + rand(-12, 12), V.z + (IS_SAWAD ? rand(-6, 22) : rand(-8, 10)), 'villager', { range: IS_SAWAD ? 8 : 6, speed: 1.3 });
     }
   }
   updateAmbientLife(dt) {
@@ -800,11 +890,7 @@ export class Game {
     }
   }
   talkToNpc() {
-    const lines = [
-      'You are Jabir\'s brother. I am <b>Ishaq</b>. I hired your caravan, and I am sorry. He was a better man than my coin deserved.',
-      'Under my instruments was a cedar chest: the Pages of <b>the Teacher</b>, who died in a prison by the river fourteen years ago. Someone in Baghdad wants his words to burn. <b>Ghassan</b> was paid to see it done.',
-      '<b>Farud</b> holds the old caravanserai, <b>Hisham</b> the kilns, and Ghassan the broken arch. If the Pages still exist, they are between those three. Your brother asked you for one thing.',
-    ];
+    const lines = ISHAQ_TALK;
     let i = 0;
     const next = () => { if (i < lines.length) this.ui.dialog('Ishaq', lines[i++], next); };
     next();
@@ -881,7 +967,9 @@ export class Game {
     }
     p.st.hitT = Math.max(0, p.st.hitT - dt * 3);
     let moving = false;
-    const speed = 6.4 * (1 + s.move / 100) * (p.whirlT > 0 ? 0.75 : 1);
+    // wading through marsh water slows the hero to a heavy stride
+    const wet = waterDepth(p.pos.x, p.pos.z); p.wading = wet > 0.08;
+    const speed = 6.4 * (1 + s.move / 100) * (p.whirlT > 0 ? 0.75 : 1) * (p.wading ? 0.62 : 1);
     if (p.dead) { p.st.deadT += dt; }
     else if (p.rollT > 0) {
       // evade: a low, quick roll with invulnerability frames; starting it as a blow lands is a parry
@@ -1016,13 +1104,21 @@ export class Game {
       if (!d.item.gold && !d.item.potion && p.bag.indexOf(null) < 0) { if (!d.fullWarned) { d.fullWarned = true; this.ui.toast('Pack full: salvage or sell to make room'); this.audio.denied?.(); } continue; }
       if (this.tryPickup(d)) break;
     }
+    // a net pins the hero in place (he can still strike); an evade tears free at once
+    if (p.netT > 0) {
+      p.netT -= dt;
+      if (p.rollT > 0 || p.dead) { p.netT = 0; this.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1), 12, { speed: 3, life: 0.5, size: 0.15, size1: 0.05, color: new THREE.Color(0.6, 0.5, 0.35) }); }
+      else if (p.netPos) { p.pos.x = p.netPos.x; p.pos.z = p.netPos.z; }
+    }
+    this.netMesh.visible = p.netT > 0;
+    if (this.netMesh.visible) { this.netMesh.position.set(p.pos.x, p.pos.y, p.pos.z); this.netMesh.rotation.y += dt * 0.5; this.netMesh.scale.setScalar(Math.min(1, 0.6 + p.netT)); }
     if (!this.interior) { p.pos.x = THREE.MathUtils.clamp(p.pos.x, -BOUND, BOUND); p.pos.z = THREE.MathUtils.clamp(p.pos.z, -BOUND, BOUND); }
     resolve(p.pos, 0.45);
     p.pos.y = heightAt(p.pos.x, p.pos.z);
     p.st.walkBlend = THREE.MathUtils.lerp(p.st.walkBlend, moving ? Math.min(1, (p.st.speedK ?? 1) * 1.1) : 0, Math.min(1, dt * 8));
     p.st.phase += dt * (p.dashT > 0 ? speed * 1.55 : Math.hypot(p.vel?.x || 0, p.vel?.z || 0) * 1.55);
     // footstep dust puffs
-    if (moving && p.dashT <= 0) { const step = Math.floor(p.st.phase / Math.PI); if (step !== p.lastStep) { p.lastStep = step; const sf = this.surfaceAt(p.pos); if (sf === 'sand') this.fx.dust(tmp.copy(p.pos).add(new THREE.Vector3(0, 0.1, 0)), 2, 0.45); this.audio.step?.(sf, p.rollT > 0 ? 1.4 : 1); } }
+    if (moving && p.dashT <= 0) { const step = Math.floor(p.st.phase / Math.PI); if (step !== p.lastStep) { p.lastStep = step; const sf = this.surfaceAt(p.pos); if (sf === 'sand') this.fx.dust(tmp.copy(p.pos).add(new THREE.Vector3(0, 0.1, 0)), 2, 0.45); else if (p.wading) this.splash(p.pos); this.audio.step?.(sf, p.rollT > 0 ? 1.4 : 1); } }
     p.rig.position.copy(p.pos); p.rig.rotation.y = p.facing;
     CharLOD.center.copy(p.pos);
     animateHumanoid(p.rig, p.st, this.t, dt);
@@ -1048,7 +1144,7 @@ export class Game {
       }
     }
     // boss trigger
-    if (!this.bossSpawned && Math.hypot(p.pos.x - SITES.arch.x, p.pos.z - SITES.arch.z) < 24) this.spawnBoss();
+    if (!this.bossSpawned && !this.quests.find((q) => q.id === STORY.boss)?.done && Math.hypot(p.pos.x - SITES.arch.x, p.pos.z - SITES.arch.z) < 24) this.spawnBoss();
   }
 
   // Follow an A* path when the straight line to the goal is blocked.
@@ -1152,7 +1248,9 @@ export class Game {
         e.st.actionT += dt / e.T.atk * 1.6;
         if (!e.didHit && e.st.actionT > 0.6) {
           e.didHit = true;
-          if (e.T.ranged) this.shootArrow(e);
+          if (e.T.ranged === 'stone') { const q = p.pos.clone().addScaledVector(p.vel || tmp.set(0, 0, 0), 0.5); q.y = heightAt(q.x, q.z); this.lobStone(tmp.copy(e.pos).setY(e.pos.y + 2.2), q, e.dmg, 0.95); }
+          else if (e.T.ranged === 'net') this.throwNet(e, tmp.copy(p.pos).sub(e.pos).setY(0).normalize().clone());
+          else if (e.T.ranged) this.shootArrow(e);
           else if (dist < e.range + 0.9 && !p.dead) this.damagePlayer(e.dmg, e.pos, e);
         }
         if (e.st.actionT >= 1) e.st.action = null;
@@ -1163,8 +1261,9 @@ export class Game {
         let want = null;
         if (e.T.ranged) {
           // archers hold 8–13 m, backing off from a closing hero and side-stepping to keep a clear line
-          if (dist > 13 || !navClear(e.pos.x, e.pos.z, p.pos.x, p.pos.z)) want = p.pos;
-          else if (dist < 7.5) { const away = tmp.copy(e.pos).sub(p.pos).setY(0).normalize(); want = { x: e.pos.x + away.x * 4 + away.z * (e.ringSlot % 2 ? 2 : -2), z: e.pos.z + away.z * 4 - away.x * (e.ringSlot % 2 ? 2 : -2) }; }
+          const [h0, h1] = e.T.hold || [7.5, 13];
+          if (dist > h1 || !navClear(e.pos.x, e.pos.z, p.pos.x, p.pos.z)) want = p.pos;
+          else if (dist < h0) { const away = tmp.copy(e.pos).sub(p.pos).setY(0).normalize(); want = { x: e.pos.x + away.x * 4 + away.z * (e.ringSlot % 2 ? 2 : -2), z: e.pos.z + away.z * 4 - away.x * (e.ringSlot % 2 ? 2 : -2) }; }
         } else if (!e.token) {
           // no token: orbit at 4.5 m, spread around the hero, drifting toward the hero's back
           const back = p.facing + Math.PI, n = Math.max(1, melee.length - MAX_TOKENS);
@@ -1179,7 +1278,7 @@ export class Game {
         if (want && Math.hypot(want.x - e.pos.x, want.z - e.pos.z) > 0.5) {
           const wp = this.steer(e, want);
           const dir = tmp.set(wp.x - e.pos.x, 0, wp.z - e.pos.z).normalize();
-          const sp = (e.token || e.T.ranged ? e.speed : e.speed * 0.6) * slow;
+          const sp = (e.token || e.T.ranged ? e.speed : e.speed * 0.6) * slow * (IS_MARSH && waterDepth(e.pos.x, e.pos.z) > 0.08 ? 0.65 : 1);
           e.pos.addScaledVector(dir, sp * dt); moving = true;
           if (e.path || dist > 6) e.facing += angDiff(e.facing, Math.atan2(dir.x, dir.z)) * Math.min(1, dt * 8);
         } else if (e.atkCd <= 0 && (e.T.ranged || (e.token && dist <= e.range + 0.4))) {
@@ -1215,15 +1314,35 @@ export class Game {
     if (this.enemies.some((e) => e.removed)) this.enemies = this.enemies.filter((e) => !e.removed);
   }
 
-  shootArrow(e) {
+  shootArrow(e, aim = null, dmg = e.dmg) {
     const p = this.player;
-    const from = e.pos.clone(); from.y += 1.4;
+    const from = e.pos.clone(); from.y += e.boss ? 2.6 : 1.4;
     const to = p.pos.clone(); to.y += 1.0;
-    const dir = to.sub(from).normalize();
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.8, 4).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x3a2a1a }));
+    const dir = aim ? aim.clone().setY((to.y - from.y) / Math.max(1, from.distanceTo(to))).normalize() : to.sub(from).normalize();
+    const m = new THREE.Mesh(this.arrowGeo, this.arrowMat);
     m.position.copy(from); m.lookAt(from.clone().add(dir)); this.scene.add(m);
-    this.projectiles.push({ mesh: m, vel: dir.multiplyScalar(22), grav: 0, life: 1.5, owner: 'enemy', kind: 'arrow', dmg: e.dmg });
+    this.projectiles.push({ mesh: m, vel: dir.multiplyScalar(22), grav: 0, life: 1.5, owner: 'enemy', kind: 'arrow', dmg });
     this.audio.whoosh();
+  }
+  // a sling stone lobbed high onto a marked spot (the ring shows where it lands)
+  lobStone(from, to, dmg, T = 0.95) {
+    const m = new THREE.Mesh(this.stoneGeo, this.stoneMat); m.position.copy(from); this.scene.add(m);
+    const vel = new THREE.Vector3((to.x - from.x) / T, 0, (to.z - from.z) / T); vel.y = (to.y - from.y + 0.5 * 18 * T * T) / T;
+    this.projectiles.push({ mesh: m, vel, grav: 18, life: T, owner: 'enemy', kind: 'stone' });
+    const at = to.clone();
+    this.telegraph(at, 1.25, T, () => { this.fx.dust(at, 6, 0.8); this.audio.at(at, () => this.audio.hit?.(0.4)); if (!this.player.dead && this.player.pos.distanceTo(at) < 1.35) this.damagePlayer(dmg, at); });
+    this.audio.at(from, () => this.audio.whoosh());
+  }
+  // a weighted casting net, flung flat and spinning; it pins the hero unless he evades through it
+  throwNet(e, dir) {
+    const m = new THREE.Mesh(this.netGeo, this.netMat); m.rotation.x = -Math.PI / 2;
+    m.position.copy(e.pos).setY(e.pos.y + 1.5); this.scene.add(m);
+    this.projectiles.push({ mesh: m, vel: dir.clone().multiplyScalar(13), grav: 0, life: 0.85, owner: 'enemy', kind: 'net', dmg: e.dmg * 0.4 });
+    this.audio.at(e.pos, () => this.audio.whoosh());
+  }
+  splash(pos) {
+    this.fx.ring(tmp.copy(pos).setY(WATER_Y + 0.02), new THREE.Color(0.7, 0.8, 0.8), 0.15, 0.9, 0.6, 0.35);
+    this.fx.burst(tmp.copy(pos).setY(WATER_Y + 0.05), 5, { speed: 1.4, life: 0.45, size: 0.09, size1: 0.02, color: new THREE.Color(0.85, 0.9, 0.95), up: 2.2, drag: 1 });
   }
 
   updateProjectiles(dt) {
@@ -1257,6 +1376,19 @@ export class Game {
           }
         }
         const c = mp.clone(); if (resolve(c, 0.05, true) || mp.y < heightAt(mp.x, mp.z)) dead = true;
+      } else if (q.kind === 'stone') {
+        q.mesh.rotation.x += dt * 9;
+      } else if (q.kind === 'net') {
+        q.mesh.rotation.z += dt * 9; q.mesh.scale.setScalar(0.6 + (0.85 - q.life) * 0.8);
+        if (!p.dead && p.pos.distanceTo(tmp.copy(mp).setY(p.pos.y)) < 1.1) {
+          dead = true;
+          if (p.invuln > 0 || p.rollT > 0) { this.ui.damageNumber(p.pos, 'Evaded', 'block'); }
+          else {
+            p.netT = 1.5; p.netPos = p.pos.clone(); this.damagePlayer(q.dmg, mp); this.audio.denied?.();
+            if (!this.netWarned) { this.netWarned = true; this.ui.toast('Caught in a net! Evade to tear free'); }
+          }
+        }
+        const c = mp.clone(); if (resolve(c, 0.05, true)) dead = true;
       } else if (q.kind === 'arrow') {
         if (p.pos.distanceTo(tmp.copy(mp).setY(p.pos.y)) < 0.6) { this.damagePlayer(q.dmg, mp); dead = true; }
         const c = mp.clone(); if (resolve(c, 0.05, true)) dead = true;

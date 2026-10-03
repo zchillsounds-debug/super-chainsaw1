@@ -33,6 +33,14 @@ function kit() {
     // Sasanian vaults: big yellow-grey baked brick, older and colder
     vault: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0xc8c0aa, scale: 0.32, roughness: 0.92, normalStrength: 1.6, grime: 0.8 }),
       floor: new THREE.MeshStandardMaterial({ color: 0x5a5244, roughness: 0.95 }), trim: new THREE.MeshStandardMaterial({ color: 0x2c2822, roughness: 1 }) },
+    // the drowned granary: mud-brick bins, the floor under a hand's depth of still water
+    flood: { wall: triplanarMaterial({ map: fired.map, normalMap: fired.normalMap, color: 0xa89878, scale: 0.4, roughness: 0.95, normalStrength: 1.2, grime: 0.95 }),
+      floor: new THREE.MeshStandardMaterial({ color: 0x3a3a2c, roughness: 0.6 }), trim: new THREE.MeshStandardMaterial({ color: 0x2a2418, roughness: 1 }) },
+    // the merchants' cellars under burned al-Karkh: plaster blackened by the fire above
+    scorched: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0x8a7a68, scale: 0.55, roughness: 1, normalStrength: 0.8, grime: 1.0 }),
+      floor: new THREE.MeshStandardMaterial({ color: 0x4a3e34, roughness: 1 }), trim: new THREE.MeshStandardMaterial({ color: 0x120e0c, roughness: 0.95 }) },
+    pool: new THREE.MeshStandardMaterial({ color: 0x1a2a24, roughness: 0.08, metalness: 0.3, transparent: true, opacity: 0.78, depthWrite: false }),
+    grain: new THREE.MeshStandardMaterial({ color: 0xb89a58, roughness: 1 }),
     iron: new THREE.MeshStandardMaterial({ color: 0x2a2624, metalness: 0.8, roughness: 0.5 }),
     ember: new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.2, 0.3), toneMapped: false }),
     water: new THREE.MeshStandardMaterial({ color: 0x0e2a2a, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.85 }),
@@ -72,14 +80,14 @@ export function destroyInterior(scene) {
   current = null;
 }
 
-// style: 'kiln' | 'qanat' | 'cellar' | 'pit' | 'vault'. Returns { rooms, entrance, exit, torches, chests, group, spawnRooms }
+// style: 'kiln' | 'qanat' | 'cellar' | 'pit' | 'vault' | 'flood' | 'scorched'. Returns { rooms, entrance, exit, torches, chests, group, spawnRooms }
 export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {}) {
   destroyInterior(scene);
   const K = kit(), M = K[style], rnd = mulberry32(seed * 7 + 3);
   const L = layout(seed, rooms), grp = new THREE.Group(), dyn = new THREE.Group();
   const col = (x, z, hw, hd) => colliders.push({ type: 'box', x, z, hw, hd, rot: 0, interior: true });
   const box = (w, h, d, x, y, z, m) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.castShadow = true; b.receiveShadow = true; grp.add(b); return b; };
-  const torches = [], floors = [];
+  const torches = [], floors = [], dynW = [];
   for (const r of L.rooms) {
     const c = roomCenter(r);
     floors.push([c.x - S / 2, c.z - S / 2, c.x + S / 2, c.z + S / 2]);
@@ -123,6 +131,8 @@ export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {
       if (Math.abs(ox) < 2 && Math.abs(oz) < 2) continue;
       const o = style === 'kiln' || style === 'pit' ? (rnd() < 0.55 ? brickStack(rnd) : jar(0x6a3a24, 0.9 + rnd() * 0.4))
         : style === 'cellar' ? (rnd() < 0.5 ? crate() : jar([0xa8643c, 0x8c5a3a, 0xb98a5e][Math.floor(rnd() * 3)], 0.9 + rnd() * 0.5))
+        : style === 'flood' ? jar(0x5a4a34, 1 + rnd() * 0.4)
+        : style === 'scorched' ? (rnd() < 0.6 ? crate() : jar(0x2a221c, 0.9 + rnd() * 0.4))
         : (rnd() < 0.6 ? jar(0x8a7a60, 0.8 + rnd() * 0.5) : crate());
       o.position.set(c.x + ox, 0, c.z + oz); o.rotation.y = rnd() * 6; grp.add(o);
       colliders.push({ type: 'circle', x: c.x + ox, z: c.z + oz, r: style === 'kiln' || style === 'pit' ? 0.9 : 0.5, interior: true });
@@ -130,6 +140,12 @@ export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {
     if (style === 'qanat') { // the water channel running through each gallery
       const w = new THREE.Mesh(new THREE.PlaneGeometry(1.4, S).rotateX(-Math.PI / 2), K.water); w.position.set(c.x + 3.6, 0.02, c.z); grp.add(w);
       box(0.25, 0.2, S, c.x + 2.8, 0.1, c.z, M.trim); box(0.25, 0.2, S, c.x + 4.4, 0.1, c.z, M.trim);
+    } else if (style === 'flood') { // standing water over the whole floor, rotting grain heaped in the bins along the walls
+      const w = new THREE.Mesh(new THREE.PlaneGeometry(S, S).rotateX(-Math.PI / 2), K.pool); w.position.set(c.x, 0.06, c.z); w.userData.noOcc = true; dynW.push(w);
+      for (const sx of [-1, 1]) { const x = c.x + sx * (S / 2 - 1.6); box(2.2, 1.0, S * 0.5, x, 0.5, c.z - S * 0.15, M.trim); col(x, c.z - S * 0.15, 1.1, S * 0.25); const h = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 5, 0, Math.PI * 2, 0, Math.PI / 2).scale(0.9, 0.5, S * 0.22), K.grain); h.position.set(x, 1.0, c.z - S * 0.15); grp.add(h); }
+    } else if (style === 'scorched') { // charred beams fallen through from the burned suq above, soot pooled on the floor
+      for (let b = 0; b < 2; b++) { const beam = box(S * 0.7, 0.3, 0.32, c.x + (rnd() - 0.5) * 3, 0.25 + b * 0.5, c.z + (rnd() - 0.5) * 6, M.trim); beam.rotation.y = (rnd() - 0.5) * 1.2; beam.rotation.z = (rnd() - 0.5) * 0.3; }
+      const sc = new THREE.Mesh(new THREE.CircleGeometry(2.5 + rnd() * 2, 16).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.45, depthWrite: false })); sc.position.set(c.x + (rnd() - 0.5) * 4, 0.015, c.z + (rnd() - 0.5) * 4); grp.add(sc);
     } else if (style === 'cellar') { // roof beams across each storeroom
       for (let b = -1; b <= 1; b++) box(S, 0.28, 0.32, c.x, WALL_H - 0.1, c.z + b * 3.6, M.trim);
     } else if (style === 'vault') { // heavy square piers along the long walls carry the (unseen) vault
@@ -156,7 +172,7 @@ export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {
   colliders.push({ type: 'circle', x: lc.x, z: lc.z - 3.5, r: 0.8, interior: true });
   grp.updateMatrixWorld(true); mergeStatic(grp);
   grp.traverse((o) => { if (o.isMesh && (o.material === M.floor || o.material === K.water || o.material.transparent)) o.userData.noOcc = true; });
-  grp.add(dyn);
+  grp.add(dyn); for (const w of dynW) grp.add(w);
   scene.add(grp);
   // collision + nav for the new layout
   const inFloor = (x, z) => floors.some(([x0, z0, x1, z1]) => x > x0 && x < x1 && z > z0 && z < z1);

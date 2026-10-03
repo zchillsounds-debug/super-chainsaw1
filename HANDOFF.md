@@ -6,7 +6,7 @@
 > Please:
 > 1. Unzip it and read HANDOFF.md fully.
 > 2. Run `npm install && npx vite`.
-> 3. Start **Round 15** as specified in the "Next" section. Show me the plan for it and ask your open questions before building.
+> 3. Start **Round 16** as specified in the "Next" section. Show me the plan for it and ask your open questions before building.
 >
 > The goal is AAA mobile game quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop (screenshot → critique → improve) every round, and ask me clarifying questions and confirm with me before building. I play on Android. After each round:
 > - Republish the game as a playable Artifact, updating the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Touch controls must keep working.
@@ -16,7 +16,7 @@
 ## Restore the code
 ```
 unzip madinat-round14-handoff.zip -d madinat && cd madinat
-git clone repo.bundle game && cd game        # Round 12-14 work is on branch claude/new-session-e8qzyb
+git clone repo.bundle game && cd game        # Round 15 is on branch claude/new-session-tvzhqq
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
 If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/claude/new-session-e8qzyb`.
@@ -207,7 +207,32 @@ Round 11 rewrote the story around the Teacher's Pages, with Shia-inspired themes
 - **Class picker:** fits one screen and never scrolls (it has an explicit 100dvh height). On short screens it uses compact cards with icon-only kits.
 - **Intro without violence:** a title card, then Jabir ("Two more days to Baghdad"), then Salim ("Too quiet"), then riders standing on the dunes seen from afar, then a fade to black ("Bandits attacked the caravan at dusk"), then Salim kneeling by Jabir (his last words), then Salim's promise, then a closing caption. No arrows, blows or deaths are on screen. The intro uses the pre-made boss light as its lantern. Lieutenant deaths are no longer slow-motion orbits (a calm over-the-shoulder shot at normal speed), and the epilogue's first shot is no longer in slow motion.
 
-## Next: Round 15+, content expansion (proposed; confirm with the user before building)
+## Round 15 (done): Acts IV and V, two new maps
+- **Separate maps (`region.js`):** the Sawad (Acts I–III), the Nahrawan marshes (Act IV) and al-Karkh (Act V). The region is chosen at load from the save's act (4 = marsh, 5 and 6 = Karkh). `?region=marsh|karkh` forces one (with `?play`, it also sets the act). `game.travel()` saves, sets `sob.autocontinue` and reloads; the first visit to a region plays `SCENES.arrival` (tracked in `save.arrived`). "New Chronicle" from a later region sets `sob.newgame` and reloads into the Sawad.
+- **Per-region data:** `region.js` (hub corner positions, quest chain, banners) and `story15.js` (captain lines and cards, the boss kit and lines, Ishaq's talk). The `SITES` keys are the same everywhere: `village` = hub, `serai` = first captain, `kiln` = second, `arch` = last fight.
+- **Terrain (`terrain.js`):** region height functions, roads (marsh causeways, Karkh lanes), shader palettes (`#define RG`), `waterDepth()` and `mapColor()`. Marsh: open water at `WATER_Y` -0.45. Ground below `DEEP_Y` -1.05 is blocked by edge colliders; shallows are wadeable at 0.62× speed, with splashes and the water footstep sound.
+- **Dressing:** `regions.js` (`buildMarsh` / `buildKarkh`), `regionprops.js`, plus `tallReeds` in `vegetation.js` and `createLagoon` in `water.js`.
+  - Marsh: mudhif reed halls, bitumen mashuf boats bobbing, fish racks, nets, reed stacks, the Sasanian weir, lily pads, a reed wall on the horizon.
+  - Karkh: gutted houses (merged into 40 m chunks that keep the see-through hole), burned stalls, beam piles, the paper-sellers' shops, the khan with the scholars' shelves and table, the pyre, the Round City wall and gate on the skyline, smoke columns, falling ash and embers.
+- **Foes (`entities.js`):** Slinger (stones lobbed onto a marked ring), Net-thrower (a spinning net that pins the hero for 1.5 s; an evade tears free), Reed Ambusher (hidden in the reeds), Hired Guard.
+- **Bosses:**
+  - Rawh (L9) at the weir: stone volleys, a three-net fan in phase 2 (below 50%), reed-men reinforcements.
+  - 'Utba (L12) in the square: arrow fans, then naft pots below 65% (phase 2). Below 35% his shield goes down and the stalls burn in a ring with lunges (the duel, now generic: `kit.duelAt`).
+  - `bossAI` reads `b.kit` (`volley` / `barrage` / `summon` / `phaseAt`).
+- **Content (`content.js`):** field captains Zuhayr (Snaring) and Muhriz (Reed-born) in the marsh, Hammad (Rallying) and Shabib (Volley) in Karkh. Interiors: the Drowned Granary (`flood` style, captain Ghalib) and the Merchants' Cellars (`scorched`, Qutayba). The Sawad's side tasks (Rafi', ingots, engines) stay in the Sawad. Five codex entries (Nahrawan, Marsh Boats, Reed Halls, Al-Karkh, the Paper-Sellers), unlocked by place.
+- **Story:**
+  - The Ghassan epilogue now ends "the chest is light", naming Rawh, with the Act IV card.
+  - Marwan → Sahl → Rawh ("sent the last bundle up the canal") → Act V.
+  - 'Asim → Layth → 'Utba → finale: the Pages taken off the pyre, given to Hakam of the House of Wisdom in the khan, then lamps on the Sarat canal ("We keep the account"), then the closing card and the victory screen with NG+.
+  - All of it has Arabic (end of `story_ar.js`).
+- **Look:** lighting presets `mist` (Act IV) and `haze` (Act V) with their own grades (LUT ids 5 and 6); scores for acts 4–6 in `audio2.js`.
+- **Fixes:** the boss could freeze if a cutscene gave him an action with no duration; the guide trail and Ishaq's marker now hide in cutscenes; props hidden by distance culling are now compiled at load (no hitch when you walk up to a site); the far Round City is merged into one mesh.
+- **Tests:** `shots/r15test.mjs <region>` (systems smoke test) and `shots/traveltest.mjs` (Sawad → marsh → Karkh through reloads), both clean. Draws: Sawad hub 625; Karkh hub 710; marsh camp about 810; Karkh suq 848 (Sawad serai 809).
+
+## Next: Round 16+ (proposed; confirm with the user before building)
+User decisions for Round 15: Nahrawan confirmed, separate maps, both acts in one round. Still open: the order of R16–R18, and whether bounties reset daily or per act.
+
+## Roadmap (R15 done)
 The goal is about 8–12 hours for a first playthrough, up from about 1.5 today, plus a repeatable endgame. It is split into rounds so each one ships playable.
 
 **R15: two new acts (main story about 2× longer)**

@@ -15,10 +15,16 @@ export const PRESETS = {
     sky: { zen: c(0x060a18), mid: c(0x18203a), hor: c(0x2a3050), gnd: c(0x10121a), glow: c(0x6a80b0), cloud: c(0x3a4460), stars: 1, disk: 6 }, water: c(0x4a5a80), dusk: 0, lut: 2 },
   dawn: { sun: v(0.7, 0.24, 0.45), sunCol: c(0xffb090), sunI: 2.6, hemiSky: c(0xb0b8d0), hemiGnd: c(0x6a4a3a), hemiI: 0.5, fog: c(0xd8a898), fogD: 0.0052, exp: 1.0, env: 0.35, fire: 0.8,
     sky: { zen: c(0x3a5a98), mid: c(0xc8a0a8), hor: c(0xffb490), gnd: c(0x705048), glow: c(0xffa070), cloud: c(0xffd0c0), stars: 0, disk: 16 }, water: c(0xe8b0a0), dusk: 0.1, lut: 3 },
+  // Act IV: a hazy marsh morning, the sun low and white through the mist off the water
+  mist: { sun: v(0.6, 0.42, 0.5), sunCol: c(0xfff0d0), sunI: 2.4, hemiSky: c(0xb8c8c8), hemiGnd: c(0x4a5038), hemiI: 0.62, fog: c(0xb4bcb0), fogD: 0.0072, exp: 1.02, env: 0.42, fire: 0.8,
+    sky: { zen: c(0x5a7a98), mid: c(0xb8c4c0), hor: c(0xe8e0c8), gnd: c(0x5a6050), glow: c(0xfff0c8), cloud: c(0xf0ece0), stars: 0, disk: 14 }, water: c(0xd8dcd0), dusk: 0, lut: 5 },
+  // Act V: al-Karkh in the late afternoon, the light thick and amber with smoke
+  haze: { sun: v(-0.7, 0.36, 0.42), sunCol: c(0xffc090), sunI: 2.7, hemiSky: c(0xa8a098), hemiGnd: c(0x4a3e34), hemiI: 0.55, fog: c(0x8a7c70), fogD: 0.0066, exp: 1.0, env: 0.32, fire: 1.25,
+    sky: { zen: c(0x3e4458), mid: c(0x9a8478), hor: c(0xd8a078), gnd: c(0x4a3a30), glow: c(0xff9a50), cloud: c(0xb09080), stars: 0, disk: 12 }, water: c(0xc89a78), dusk: 0.08, lut: 6 },
   underground: { sun: v(-0.3, 0.9, 0.2), sunCol: c(0x403028), sunI: 0.0, hemiSky: c(0x8a6a50), hemiGnd: c(0x302018), hemiI: 0.95, fog: c(0x0a0705), fogD: 0.022, exp: 1.45, env: 0.12, fire: 1.6,
     sky: { zen: c(0x000000), mid: c(0x000000), hor: c(0x080504), gnd: c(0x000000), glow: c(0x000000), cloud: c(0x000000), stars: 0, disk: 0 }, water: c(0x302820), dusk: 0, lut: 4 },
 };
-export const ACT_PRESET = { 1: 'golden', 2: 'dusk', 3: 'night', 4: 'dawn' };
+export const ACT_PRESET = { 1: 'golden', 2: 'dusk', 3: 'night', 4: 'mist', 5: 'haze', 6: 'dusk' };
 
 export class Lighting {
   constructor({ scene, renderer, sun, hemi, world, grade }) {
@@ -37,7 +43,7 @@ export class Lighting {
     this.name = name; this.from = this.snapshot(this.cur); this.to = PRESETS[name]; this.k = secs > 0 ? 0 : 1; this.dur = secs;
     if (secs <= 0) { this.apply(1); this.bakeEnv(); }
   }
-  forAct(act, secs) { this.set(ACT_PRESET[Math.min(4, act || 1)] || 'golden', secs); this.onAct?.(act || 1); }
+  forAct(act, secs) { this.set(ACT_PRESET[Math.min(6, act || 1)] || 'golden', secs); this.onAct?.(act || 1); }
   bakeEnv() { const old = this.scene.environment; this.scene.environment = envFromSky(this.renderer, this.world.sunDir); old?.dispose?.(); }
   apply(k) {
     const f = this.from, t = this.to, o = this.cur, L = THREE.MathUtils.lerp;

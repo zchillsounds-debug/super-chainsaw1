@@ -25,9 +25,37 @@ export const TYPES = {
     name: 'Torch-bearer', hp: 30, dmg: 8, speed: 5.0, range: 1.8, atk: 1.0, xp: 12, radius: 0.48, action: 'attack', fiery: true,
     build: () => humanoid({ robe: '#3a2418', robe2: '#a04a18', turban: 0x2a1a10, mask: 0x1a120c, skin: 0x7a4a30, weapon: 'torch', sash: 0x7a2a10 }),
   },
+  // ---- Act IV: the marsh men Rawh hired (Round 15)
+  slinger: {
+    name: 'Slinger', hp: 22, dmg: 7, speed: 4.2, range: 15, atk: 2.2, xp: 16, radius: 0.48, action: 'chop', ranged: 'stone', hold: [8, 14],
+    build: () => humanoid({ robe: '#6a5a40', robe2: '#3a4a3a', turban: 0xd8ccb0, skin: [0x8a5a3a, 0x7a4a2a][Math.floor(Math.random() * 2)], weapon: 'sling', sash: 0x3a4a3a, build: 0.9 }),
+  },
+  netter: {
+    name: 'Net-thrower', hp: 30, dmg: 4, speed: 4.4, range: 9, atk: 3.6, xp: 18, radius: 0.5, action: 'throw', ranged: 'net', hold: [4.5, 9],
+    build: () => humanoid({ robe: '#4a4a3a', robe2: '#6a5a3a', turban: 0x8a7a5a, beard: 0x2a1a10, skin: 0x7a4a2a, weapon: 'net', sash: 0x5a4a2a, build: 1.05 }),
+  },
+  reedman: {
+    name: 'Reed Ambusher', hp: 28, dmg: 7, speed: 5.2, range: 2.4, atk: 1.1, xp: 17, radius: 0.48, action: 'thrust',
+    build: () => humanoid({ robe: '#4a5236', robe2: '#2a3020', turban: 0x5a5a3a, mask: 0x3a3a26, skin: 0x7a4a2a, weapon: 'spear', hunch: 0.2, sash: 0x2a3020 }),
+  },
+  // ---- Act V: the buyer's hired guards in al-Karkh
+  guard: {
+    name: 'Hired Guard', hp: 46, dmg: 8, speed: 3.7, range: 2.0, atk: 1.3, xp: 22, radius: 0.52, action: 'attack',
+    build: () => humanoid({ robe: '#2a2a2a', robe2: '#5a4a2a', qaba: true, turban: null, helm: true, mail: true, skin: [0x8a5a3a, 0x9a6a44][Math.floor(Math.random() * 2)], weapon: 'sword', offhand: 'shield', sash: 0x5a4a2a, build: 1.1 }),
+  },
   commander: {
     name: 'Ghassan', hp: 2200, dmg: 14, speed: 3.0, range: 3.2, atk: 2.4, xp: 600, radius: 1.1, boss: true,
     build: () => humanoid({ robe: '#141414', robe2: '#8a1a14', hem: true, qaba: true, mail: true, helm: true, turban: null, cloak: 0x5a0e0a, beard: 0x1a120c, beardLen: 0.8, skin: 0x8a5a3a, weapon: 'sword', offhand: 'shield', sash: 0x8a1a14, scale: 1.55, build: 1.15, belly: 0.4, hemY: 0.3, detail: 'hi' }),
+  },
+  // Rawh, Ghassan's paymaster: a merchant's coat over mail, quick with a blade and quicker with his purse
+  rawh: {
+    name: 'Rawh', hp: 2900, dmg: 15, speed: 3.6, range: 3.0, atk: 2.2, xp: 900, radius: 1.0, boss: true,
+    build: () => humanoid({ robe: '#3a5a6a', robe2: '#c8a050', hem: true, qaba: true, mail: true, turban: 0xe8dcc0, beard: 0x2a1c12, beardLen: 0.6, skin: 0x9a6a44, weapon: 'sword', sash: 0xc8a050, scale: 1.4, build: 1.0, belly: 0.5, hemY: 0.3, detail: 'hi' }),
+  },
+  // 'Utba, captain of the buyer's men: black-dressed, iron-capped, shield and sayf
+  utba: {
+    name: '\'Utba', hp: 3800, dmg: 18, speed: 3.2, range: 3.2, atk: 2.3, xp: 1400, radius: 1.1, boss: true,
+    build: () => humanoid({ robe: '#141414', robe2: '#3a3a3a', hem: true, qaba: true, mail: true, helm: true, turban: null, cloak: 0x1a1a1a, beard: 0x141010, beardLen: 0.7, skin: 0x8a5a3a, weapon: 'sword', offhand: 'shield', sash: 0x5a4a2a, scale: 1.5, build: 1.2, belly: 0.2, hemY: 0.3, detail: 'hi' }),
   },
 };
 
