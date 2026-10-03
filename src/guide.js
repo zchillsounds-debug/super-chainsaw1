@@ -36,7 +36,7 @@ export class Guide {
   constructor(g) {
     this.g = g; this.path = null; this.repath = 0; this.flow = 0; this.vis = 0;
     const geo = new THREE.PlaneGeometry(1.25, 1.25).rotateX(-Math.PI / 2);
-    const mat = new THREE.MeshBasicMaterial({ map: chevronTexture(), color: new THREE.Color(3.2, 2.3, 0.9), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
+    const mat = new THREE.MeshBasicMaterial({ map: chevronTexture(), color: new THREE.Color(1.7, 1.2, 0.48), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
     this.mesh = new THREE.InstancedMesh(geo, mat, MAX); this.mesh.frustumCulled = false; this.mesh.renderOrder = 2;
     this.mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX * 3), 3);
     this.mesh.count = 0; g.scene.add(this.mesh);

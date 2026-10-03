@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { colliders, mats } from './buildings.js';
 import { mudBrick } from './textures.js';
 import { triplanarMaterial } from './triplanar.js';
+import { GROUND } from './groundtex.js';
 import { mulberry32 } from './noise.js';
 import { buildGrid } from './collision.js';
 import { buildNav, setInteriorFloor, INTERIOR_X } from './nav.js';
@@ -15,6 +16,38 @@ export const ORIGIN = { x: 220, z: 0 };
 const S = 12, WALL_H = 3.4, T = 0.8;
 let DOOR = 3.4;
 
+// Round 19: dungeon floors use the baked ground materials (groundtex.js) in world space: worn flagstones or
+// trodden earth with cavity shading and relief, and standing puddles in the wet dungeons
+function floorMat(color, kind, roughness = 1, wet = 0) {
+  const m = new THREE.MeshStandardMaterial({ color, roughness });
+  const K = { flag: ['tFlagD', 'tFlagN', '3.4'], earth: ['tEarthD', 'tEarthN', '4.2'], sand: ['tSandD', 'tSandN', '3.4'], road: ['tRoadD', 'tRoadN', '3.0'] }[kind];
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.tD = GROUND[K[0].replace('t', '').replace(/^./, (c) => c.toLowerCase())];
+    sh.uniforms.tN = GROUND[K[1].replace('t', '').replace(/^./, (c) => c.toLowerCase())];
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vFW;').replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvFW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+        varying vec3 vFW; uniform sampler2D tD, tN; vec4 fD, fN; float fWet;
+        float fh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float fn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f); return mix(mix(fh(i), fh(i+vec2(1,0)), f.x), mix(fh(i+vec2(0,1)), fh(i+vec2(1,1)), f.x), f.y); }`)
+      .replace('#include <map_fragment>', `#include <map_fragment>
+        { vec2 uv = vFW.xz / ${K[2]}; fD = texture2D(tD, uv); fN = texture2D(tN, uv);
+          float var = fn(vFW.xz * 0.35) * 0.6 + fn(vFW.xz * 1.3) * 0.4;
+          vec3 c = diffuseColor.rgb * fD.r * (0.8 + 0.35 * var);
+          ${kind === 'flag' ? 'c = mix(c, diffuseColor.rgb * 0.45, fD.g);' : kind === 'earth' ? 'c = mix(c, diffuseColor.rgb * 0.5, fD.g * 0.7);' : 'c = mix(c, diffuseColor.rgb * 0.7, fD.g * 0.5);'}
+          c *= mix(1.0, fN.b, 0.9);
+          // puddles collect in the low parts
+          fWet = ${wet.toFixed(2)} * smoothstep(0.55, 0.7, fn(vFW.xz * 0.22 + 3.0) + (0.5 - fD.a) * 0.6);
+          c *= 1.0 - fWet * 0.45;
+          diffuseColor.rgb = c; }`)
+      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.06, fWet);')
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        { vec2 tn = (fN.xy * 2.0 - 1.0) * 1.4 * (1.0 - fWet); vec3 wn = normalize(vec3(tn.x, 1.0, tn.y));
+          normal = normalize(normal + ((viewMatrix * vec4(wn, 0.0)).xyz - (viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz)); }`);
+  };
+  m.customProgramCacheKey = () => 'dfloor:' + kind + wet;
+  return m;
+}
+
 let KIT = null;
 function kit() {
   if (KIT) return KIT;
@@ -22,43 +55,43 @@ function kit() {
   for (const t of [fired.map, fired.normalMap, lime.map, lime.normalMap]) t.repeat.set(0.3, 0.3);
   KIT = {
     kiln: { wall: triplanarMaterial({ map: fired.map, normalMap: fired.normalMap, scale: 0.5, roughness: 0.95, normalStrength: 1.3, grime: 0.7 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x5a4434, roughness: 1 }), trim: new THREE.MeshStandardMaterial({ color: 0x1a1210, roughness: 1 }) },
+      floor: floorMat(0x5a4434, 'earth', 1, 0), trim: new THREE.MeshStandardMaterial({ color: 0x1a1210, roughness: 1 }) },
     qanat: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0xe0d4bc, scale: 0.45, roughness: 0.9, normalStrength: 1.0, grime: 0.45 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x8a7e66, roughness: 0.95 }), trim: new THREE.MeshStandardMaterial({ color: 0x2a261e, roughness: 1 }) },
+      floor: floorMat(0x8a7e66, 'flag', 0.95, 0.3), trim: new THREE.MeshStandardMaterial({ color: 0x2a261e, roughness: 1 }) },
     // storerooms under the caravanserai: limewashed mud brick, dark timber, packed earth
     cellar: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0xf0e2c8, scale: 0.6, roughness: 0.95, normalStrength: 0.6, grime: 0.6 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x7a6248, roughness: 1 }), trim: mats().wood },
+      floor: floorMat(0x7a6248, 'flag', 1, 0), trim: mats().wood },
     // the clay pits: raw red earth, cut in steps
     pit: { wall: triplanarMaterial({ map: fired.map, normalMap: fired.normalMap, color: 0xb89070, scale: 0.18, roughness: 1, normalStrength: 2.2, grime: 0.9 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x6a5240, roughness: 1 }), trim: new THREE.MeshStandardMaterial({ color: 0x3a2a1e, roughness: 1 }) },
+      floor: floorMat(0x6a5240, 'earth', 1, 0), trim: new THREE.MeshStandardMaterial({ color: 0x3a2a1e, roughness: 1 }) },
     // Sasanian vaults: big yellow-grey baked brick, older and colder
     vault: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0xc8c0aa, scale: 0.32, roughness: 0.92, normalStrength: 1.6, grime: 0.8 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x5a5244, roughness: 0.95 }), trim: new THREE.MeshStandardMaterial({ color: 0x2c2822, roughness: 1 }) },
+      floor: floorMat(0x5a5244, 'flag', 0.95, 0), trim: new THREE.MeshStandardMaterial({ color: 0x2c2822, roughness: 1 }) },
     // the drowned granary: mud-brick bins, the floor under a hand's depth of still water
     flood: { wall: triplanarMaterial({ map: fired.map, normalMap: fired.normalMap, color: 0xa89878, scale: 0.4, roughness: 0.95, normalStrength: 1.2, grime: 0.95 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x3a3a2c, roughness: 0.6 }), trim: new THREE.MeshStandardMaterial({ color: 0x2a2418, roughness: 1 }) },
+      floor: floorMat(0x3a3a2c, 'earth', 0.6, 0.9), trim: new THREE.MeshStandardMaterial({ color: 0x2a2418, roughness: 1 }) },
     // the merchants' cellars under burned al-Karkh: plaster blackened by the fire above
     scorched: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0x8a7a68, scale: 0.55, roughness: 1, normalStrength: 0.8, grime: 1.0 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x4a3e34, roughness: 1 }), trim: new THREE.MeshStandardMaterial({ color: 0x120e0c, roughness: 0.95 }) },
+      floor: floorMat(0x4a3e34, 'earth', 1, 0), trim: new THREE.MeshStandardMaterial({ color: 0x120e0c, roughness: 0.95 }) },
     // Round 17 styles
     // a Sasanian cistern: pale lime plaster over brick, the floor wet, stone landings to stand on
     cistern: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0xb8b4a0, scale: 0.4, roughness: 0.7, normalStrength: 1.0, grime: 0.85 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x46483e, roughness: 0.45 }), trim: new THREE.MeshStandardMaterial({ color: 0x6a685a, roughness: 0.9 }) },
+      floor: floorMat(0x46483e, 'flag', 0.45, 0.8), trim: new THREE.MeshStandardMaterial({ color: 0x6a685a, roughness: 0.9 }) },
     // granary vaults: tall mud-brick bins under timber, grain dust on everything
     grainvault: { wall: triplanarMaterial({ map: fired.map, normalMap: fired.normalMap, color: 0xd0b088, scale: 0.45, roughness: 1, normalStrength: 1.0, grime: 0.5 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x9a8058, roughness: 1 }), trim: mats().wood },
+      floor: floorMat(0x9a8058, 'earth', 1, 0), trim: mats().wood },
     // the salt workings: white crust over grey rock, narrow cuts
     salt: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0xf4f0e6, scale: 0.22, roughness: 0.6, normalStrength: 2.4, grime: 0.25 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0xc8c2b4, roughness: 0.75 }), trim: new THREE.MeshStandardMaterial({ color: 0x8a8478, roughness: 0.8 }) },
+      floor: floorMat(0xc8c2b4, 'earth', 0.75, 0), trim: new THREE.MeshStandardMaterial({ color: 0x8a8478, roughness: 0.8 }) },
     // the old kiln galleries: soot-black fired brick, glowing vents
     kiln2: { wall: triplanarMaterial({ map: fired.map, normalMap: fired.normalMap, color: 0x7a5a4a, scale: 0.5, roughness: 0.95, normalStrength: 1.4, grime: 1.0 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x3a2c24, roughness: 1 }), trim: new THREE.MeshStandardMaterial({ color: 0x0e0a08, roughness: 1 }) },
+      floor: floorMat(0x3a2c24, 'earth', 1, 0), trim: new THREE.MeshStandardMaterial({ color: 0x0e0a08, roughness: 1 }) },
     // palace cellars: cut-stone dados, tiled floors, painted plaster above
     palace: { wall: triplanarMaterial({ map: lime.map, normalMap: lime.normalMap, color: 0xe8d8b8, scale: 0.7, roughness: 0.8, normalStrength: 0.5, grime: 0.55 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x8a6e52, roughness: 0.7 }), trim: new THREE.MeshStandardMaterial({ color: 0x2a4a48, roughness: 0.8 }) },
+      floor: floorMat(0x8a6e52, 'flag', 0.7, 0), trim: new THREE.MeshStandardMaterial({ color: 0x2a4a48, roughness: 0.8 }) },
     // the reed-hut warren: woven reed walls, mud floor, matting
     warren: { wall: triplanarMaterial({ map: fired.map, normalMap: fired.normalMap, color: 0xc8a868, scale: 0.12, roughness: 1, normalStrength: 2.6, grime: 0.4 }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x5a4a32, roughness: 1 }), trim: new THREE.MeshStandardMaterial({ color: 0x7a6238, roughness: 1 }) },
+      floor: floorMat(0x5a4a32, 'earth', 1, 0.15), trim: new THREE.MeshStandardMaterial({ color: 0x7a6238, roughness: 1 }) },
     reed: new THREE.MeshStandardMaterial({ color: 0xb89a5a, roughness: 1 }),
     cisternW: new THREE.MeshStandardMaterial({ color: 0x3a6a66, emissive: 0x0c2422, roughness: 0.05, metalness: 0.4, transparent: true, opacity: 0.72, depthWrite: false }),
     tile: new THREE.MeshStandardMaterial({ color: 0x3a6a72, roughness: 0.5 }),
