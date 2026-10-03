@@ -13,6 +13,7 @@ import * as SCENES from './scenes.js';
 import { saveGame } from './save.js';
 import { mulberry32 } from './noise.js';
 import { t } from './i18n.js';
+import { DUNGEONS } from './dungeons.js';
 
 // Round 16 side content: twelve short quest chains (four per region), a daily bounty board in each hub,
 // timed world events the trail points to, and tracking any task on the trail by tapping it in the tracker.
@@ -21,7 +22,7 @@ const BASE = { sawad: 2, marsh: 7, karkh: 10 }[REGION];
 const lvl = (g, add = 0) => Math.max(BASE, g.player.level) + add;
 const V3 = (x, z, y = 0) => new THREE.Vector3(x, heightAt(x, z) + y, z);
 // nearest walkable spot to a point: off every collider, out of deep water
-function freeSpot(x, z, pad = 1.2) {
+export function freeSpot(x, z, pad = 1.2) {
   for (let r = 0; r < 14; r += 0.8) for (let k = 0; k < 10; k++) {
     const a = k / 10 * Math.PI * 2 + r, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r;
     if (!blocked(px, pz, pad) && waterDepth(px, pz) < 0.12 && Math.abs(px) < 126 && Math.abs(pz) < 126) return [px, pz];
@@ -152,7 +153,7 @@ function rollBounties(g) {
   const roadPt = () => { const r = ROADS[Math.floor(rnd() * ROADS.length)], k = Math.floor(rnd() * (r.length - 1)), u = 0.2 + rnd() * 0.6; return [r[k][0] + (r[k + 1][0] - r[k][0]) * u, r[k][1] + (r[k + 1][1] - r[k][1]) * u]; };
   const farPt = () => { for (let i = 0; i < 30; i++) { const p = roadPt(); if (Math.hypot(p[0] - SITES.village.x, p[1] - SITES.village.z) > 45) return p; } return roadPt(); };
   const pool = { sawad: ['bandit', 'archer', 'spearman', 'deserter'], marsh: ['bandit', 'slinger', 'netter', 'reedman'], karkh: ['guard', 'archer', 'naffat', 'deserter'] }[REGION];
-  const areas = [{ kind: 'qanat', name: 'the ruined qanats' }, ...({ sawad: [{ kind: 'kiln', name: 'the kiln tunnels' }, { kind: 'cellar', name: 'the caravanserai storerooms' }], marsh: [{ kind: 'granary', name: 'the drowned granary' }], karkh: [{ kind: 'cellars', name: 'the merchants\' cellars' }] }[REGION])];
+  const areas = [{ kind: 'qanat', name: 'the ruined qanats' }, ...({ sawad: [{ kind: 'kiln', name: 'the kiln tunnels' }, { kind: 'cellar', name: 'the caravanserai storerooms' }], marsh: [{ kind: 'granary', name: 'the drowned granary' }], karkh: [{ kind: 'cellars', name: 'the merchants\' cellars' }] }[REGION]), ...DUNGEONS.map((d) => ({ kind: d.id, name: d.title.replace(/^The /, 'the ') }))];
   const sites = Object.entries({ serai: SITES.serai, kiln: SITES.kiln }).map(([, s]) => s);
   const kinds = ['hunt', 'recover', 'escort', 'clear', 'hunt', 'recover'];
   const out = []; const used = new Set();
@@ -382,7 +383,7 @@ export function setupSideQuests(game) {
     if (k === 'ev') return ev.cur ? { pos: bandPos(ev.cur.pack) || ev.cur.pos, text: ev.cur.E.text } : null;
     if (k.startsWith('b:')) {
       const b = bounties[+k.slice(2)], L = blive.get(b.i); if (!b) return null;
-      if (b.kind === 'clear') return { pos: b.area === 'qanat' ? new THREE.Vector3(SITES.village.x - 1, 0, SITES.village.z + 6.5) : (g.interactables.find((i) => /Go down|Descend|Climb down|Wade down|Enter/.test(i.label) && i.label.toLowerCase().includes(b.area === 'cellar' ? 'storerooms' : b.area === 'kiln' ? 'kiln' : b.area === 'granary' ? 'granary' : 'cellars'))?.pos || SITES.kiln), text: b.text };
+      if (b.kind === 'clear') return { pos: b.area === 'qanat' ? new THREE.Vector3(SITES.village.x - 1, 0, SITES.village.z + 6.5) : (g.interactables.find((i) => i.area === b.area)?.pos || SITES.kiln), text: b.text };
       if (!L) return null;
       if (b.kind === 'escort') { const f = L.follow[0]; return { pos: f.pos.distanceTo(p.pos) > 12 ? f.pos : L.dest, text: b.text }; }
       return { pos: (L.target && !L.pack.some((e) => !e.dead) ? L.target : bandPos(L.pack)) || L.target, text: b.text };
@@ -438,7 +439,7 @@ export function setupSideQuests(game) {
 const angDiff = (a, b) => { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 
 // A notice board: two posts, a plank face pinned with paper bounties
-function boardProp() {
+export function boardProp() {
   const g = new THREE.Group(), wood = new THREE.MeshStandardMaterial({ color: 0x6a4a2a, roughness: 0.85 }), paper = new THREE.MeshStandardMaterial({ color: 0xe8dcc0, roughness: 0.9 });
   for (const s of [-1, 1]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.4, 0.14), wood); post.position.set(s * 0.95, 1.2, 0); post.castShadow = true; g.add(post); }
   const face = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.2, 0.08), wood); face.position.set(0, 1.55, 0); face.castShadow = true; g.add(face);

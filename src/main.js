@@ -29,6 +29,7 @@ import { Gamepads } from './gamepad.js';
 import { Tutorial } from './tutorial.js';
 import { setupContent, restoreContent, applyNG, startNewGamePlus } from './content.js';
 import { setupSideQuests } from './sidequests.js';
+import { setupDungeons } from './dungeons.js';
 import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, FIRST_ACT, STORY, REGION_NAME } from './region.js';
 
 const P = new URLSearchParams(location.search);
@@ -84,6 +85,7 @@ setupNarrative(game);
 game.journal = (t) => { if (document.getElementById('journal')) { document.getElementById('journal').remove(); document.body.classList.remove('inshop'); } else journalPanel(game, t); };
 setupContent(game);
 setupSideQuests(game);
+setupDungeons(game);
 const tutorial = new Tutorial(game);
 const guide = game.guide = new Guide(game);
 const prevExtra = game.tickExtra; game.tickExtra = (dt) => { prevExtra(dt); guide.update(dt); game.discover(dt); tutorial.update(dt); game.contentTick?.(dt); game.sideTick?.(dt); };

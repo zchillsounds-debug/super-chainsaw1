@@ -185,18 +185,19 @@ function tickFires(game, dt) {
 }
 
 // ------------------------------------------------------------------ area entrances (stairs down)
-function addEntrance(game, A) {
+export function addEntrance(game, A) {
   const p = new THREE.Vector3(A.at[0], 0, A.at[1]); resolve(p, 2.4); p.y = heightAt(p.x, p.z);
-  const col = { mud: 0x8a6a4a, clay: 0x7a4a30, brick: 0x6a5a4a }[A.look];
+  const col = { mud: 0x8a6a4a, clay: 0x7a4a30, brick: 0x6a5a4a, stone: 0x9a968a, salt: 0xc8c4b8, reed: 0x9a804a }[A.look];
   const grp = new THREE.Group(), m = new THREE.MeshStandardMaterial({ color: col, roughness: 1 });
   const dark = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 3).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x050302 })); dark.position.y = 0.03; grp.add(dark);
   for (const sx of [-1.3, 1.3]) { const w = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.8, 3.2), m); w.position.set(sx, 0.4, 0); w.castShadow = true; grp.add(w); }
   const back = new THREE.Mesh(new THREE.BoxGeometry(3, 1.5, 0.4), m); back.position.set(0, 0.75, -1.6); back.castShadow = true; grp.add(back);
-  if (A.look === 'brick') { const arch = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.22, 6, 12, Math.PI), m); arch.position.set(0, 1.4, -1.6); grp.add(arch); }
+  if (A.look === 'brick' || A.look === 'stone') { const arch = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.22, 6, 12, Math.PI), m); arch.position.set(0, 1.4, -1.6); grp.add(arch); }
   grp.position.copy(p); game.scene.add(grp);
   colliders.push({ type: 'box', x: p.x, z: p.z - 1.6, hw: 1.5, hd: 0.3, rot: 0 }); buildGrid();
   game.lightPool?.add({ pos: p.clone().add(new THREE.Vector3(0, 1, 0.5)), color: 0xff7a30, power: 6, dist: 6, flicker: 1.2 });
-  game.interactables.push({ pos: p, r: 3, label: A.label, act: () => game.zones.enter({ kind: A.id, style: A.style, seed: A.seed, rooms: A.rooms, level: A.level, title: A.title, sub: A.sub, pool: A.pool, bossType: A.bossType, bossName: A.bossName, bossOf: A.id }) });
+  game.interactables.push({ pos: p, r: 3, label: A.label, area: A.id, act: () => game.zones.enter({ kind: A.id, style: A.style, seed: A.seed, rooms: A.rooms, level: A.level, title: A.title, sub: A.sub, pool: A.pool, bossType: A.bossType, bossName: A.bossName, bossOf: A.id, ...(A.extra || {}) }) });
+  return p;
   game.pois?.push({ x: p.x, z: p.z, icon: A.icon, color: '#c09060' });
 }
 

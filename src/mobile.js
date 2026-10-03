@@ -13,6 +13,7 @@ export function setupMobile(game, ui) {
     ['skills', 'Disciplines', ic('<circle cx="24" cy="10" r="4"/><circle cx="12" cy="36" r="4"/><circle cx="36" cy="36" r="4"/><circle cx="24" cy="36" r="4"/><path d="M24 14v18M24 22l-12 10M24 22l12 10"/>')],
     ['journal', 'Journal', ic('<path d="M10 8h22a6 6 0 0 1 6 6v26H16a6 6 0 0 1-6-6z"/><path d="M16 16h14M16 23h14M16 30h9"/>')],
     ['codex', 'Codex', ic('<path d="M24 12c-5-4-12-4-16-2v28c4-2 11-2 16 2 5-4 12-4 16-2V10c-4-2-11-2-16 2z"/><path d="M24 12v28"/>')],
+    ['renown', 'Renown', ic('<circle cx="24" cy="20" r="11"/><path d="M18 30l-4 12 10-5 10 5-4-12"/><path d="M19 20l4 4 7-8"/>')],
     ['map', 'Map', ic('<path d="M6 12l12-4 12 4 12-4v28l-12 4-12-4-12 4z"/><path d="M18 8v28M30 12v28"/>')],
     ['settings', 'Settings', ic('<circle cx="24" cy="24" r="6"/><path d="M24 6v6M24 36v6M6 24h6M36 24h6M11 11l4 4M33 33l4 4M37 11l-4 4M15 33l-4 4"/>')],
   ];
@@ -34,6 +35,7 @@ export function setupMobile(game, ui) {
     if (m === 'journal') game.journal?.('journal');
     if (m === 'codex') game.journal?.('codex');
     if (m === 'settings') game.settings?.open();
+    if (m === 'renown') game.renownPanel?.();
   });
   // collapsible quest tracker and minimap (collapsed by default)
   const q = document.getElementById('quest');

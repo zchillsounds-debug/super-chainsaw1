@@ -432,7 +432,7 @@ export class Game {
     e.dead = true; e.st.dead = true; e.st.deadT = 0; e.hp = 0; this.kills = (this.kills || 0) + 1;
     e.st.fallDir = Math.random() < 0.5 ? 1 : -1;
     this.audio.at(e.pos, () => this.audio.death());
-    const p = this.player; p.xp += e.xp;
+    const p = this.player; p.xp += Math.round(e.xp * (p.xpK || 1));
     this.fx.dust(e.pos, 6);
     if (!e.boss) this.decal(e.pos, 1.6 + Math.random(), 'blood');
     if (e.aura) e.aura.visible = false;
@@ -578,7 +578,7 @@ export class Game {
   tryPickup(d) {
     const p = this.player;
     if (d.item.gold) { p.gold += d.item.gold; this.audio.gold(); }
-    else if (d.item.potion) { if (p.potions >= 5) return false; p.potions++; this.audio.pickup(); }
+    else if (d.item.potion) { if (p.potions >= 5 + (p.potCap || 0)) return false; p.potions++; this.audio.pickup(); }
     else {
       const slot = p.bag.indexOf(null);
       if (slot < 0) { this.ui.toast('Your pack is full'); return false; }
@@ -967,19 +967,19 @@ export class Game {
     p.invuln = Math.max(0, p.invuln - dt);
     if (!p.dead) {
       p.mp = Math.min(s.maxMp, p.mp + s.regen * dt);
-      p.hp = Math.min(s.maxHp, p.hp + 0.6 * dt + (p.buffs.heal > 0 ? s.maxHp * 0.5 / 1.2 * dt : 0));
+      p.hp = Math.min(s.maxHp, p.hp + 0.6 * dt + (p.buffs.heal > 0 ? s.maxHp * 0.5 * (p.healK || 1) / 1.2 * dt : 0));
     }
     p.st.hitT = Math.max(0, p.st.hitT - dt * 3);
     let moving = false;
     // wading through marsh water slows the hero to a heavy stride
     const wet = waterDepth(p.pos.x, p.pos.z); p.wading = wet > 0.08;
-    const speed = 6.4 * (1 + s.move / 100) * (p.whirlT > 0 ? 0.75 : 1) * (p.wading ? 0.62 : 1);
+    const speed = 6.4 * (1 + s.move / 100) * (p.whirlT > 0 ? 0.75 : 1) * (p.wading ? 0.62 : 1) * (this.hazSlow ?? 1);
     if (p.dead) { p.st.deadT += dt; }
     else if (p.rollT > 0) {
       // evade: a low, quick roll with invulnerability frames; starting it as a blow lands is a parry
       p.rollT -= dt; p.rollAge += dt;
       const k = Math.max(0, p.rollT / 0.42);
-      p.pos.addScaledVector(p.rollDir, (5 + 13 * k) * dt);
+      p.pos.addScaledVector(p.rollDir, (5 + 13 * k) * (p.evadeK || 1) * dt);
       p.st.crouch = Math.sin(Math.min(1, p.rollAge / 0.42) * Math.PI) * 0.9; p.st.fwdLean = 1;
       if (Math.random() < 0.5) this.fx.dust(p.pos, 1, 0.6);
       if (p.rollT <= 0) p.st.crouch = 0;

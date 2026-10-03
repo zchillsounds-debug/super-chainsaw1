@@ -1,12 +1,12 @@
-# Madinat al-Salam: Handoff (after Round 16)
+# Madinat al-Salam: Handoff (after Round 17)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam** (formerly "Sands of Baghdad"). It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `madinat-round16-handoff.zip` (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
+> I'm continuing a game project called **Madinat al-Salam** (formerly "Sands of Baghdad"). It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `madinat-round17-handoff.zip` (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
 >
 > Please:
 > 1. Unzip it and read HANDOFF.md fully.
 > 2. Run `npm install && npx vite`.
-> 3. Start **Round 17** as specified in the "Next" section. Show me the plan for it and ask your open questions before building.
+> 3. Start **Round 18** as specified in the "Next" section. Show me the plan for it and ask your open questions before building.
 >
 > The goal is AAA mobile game quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop (screenshot → critique → improve) every round, and ask me clarifying questions and confirm with me before building. I play on Android. After each round:
 > - Republish the game as a playable Artifact, updating the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Touch controls must keep working.
@@ -15,7 +15,7 @@
 
 ## Restore the code
 ```
-unzip madinat-round16-handoff.zip -d madinat && cd madinat
+unzip madinat-round17-handoff.zip -d madinat && cd madinat
 git clone repo.bundle game && cd game        # Rounds 15-16 are on branch claude/new-session-tvzhqq
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
@@ -29,6 +29,7 @@ URL flags:
 - `?cls=faris|rami|naffat|ayyar` picks the class.
 - `?tod=golden|dusk|night|dawn|underground` sets the time of day.
 - `?perf` shows the performance overlay.
+- Session branch for Round 17: `claude/new-session-qqie4b`.
 
 **GitHub now works.** The account was reconnected and the Claude GitHub App was installed in Round 11, and pushes succeed.
 
@@ -247,26 +248,21 @@ Round 11 rewrote the story around the Teacher's Pages, with Shia-inspired themes
 - **Arabic** for all of it (end of `story_ar.js`, plus bounty patterns in `i18n.js`).
 - **Tests:** `shots/r16test.mjs <region>` plays every quest, bounty and an event to completion; all three regions are clean.
 
-## Next: Round 17, dungeons and endgame (proposed; confirm with the user before building)
-User decisions so far: Nahrawan and al-Karkh acts (done in R15); separate maps; bounties reset daily (done in R16); the buffalo was built.
+## Round 17 (done): dungeons and endgame
+User decisions: Renown buys passives only (no cosmetics); Contracts are unlimited; all six dungeon styles; the level cap stays at 25 until R18.
+- **`dungeons.js`** (new) holds all Round 17 content. `interior.js` has six new styles, and each room records hazard anchors in `I.hazards`.
+- **Six new dungeons,** two per region, each with an entrance on the map, a named captain at the chest, and level scaling with the hero (`def.scale`):
+  - Sawad: the Old Cistern (Wahb; the water rises every 14 s, with ripples and a toast 2 s ahead; stone landings stay dry, everyone else is slowed) and the Lower Kilns (Bujayr; floor vents glow, then blast; the smoke left behind hides the hero).
+  - Marshes: the Granary Vaults (Hurayth; strike a grain stack and 0.6 s later it falls in a 3.2 m ring that hurts and staggers foes, and you too if you stay) and the Reed Warren (Sinan; huts smoke for 2 s, burn for 8 s, and spread fire to huts within 7 m).
+  - Al-Karkh: the Salt Workings (Unays; narrow 2.2 m doors and salt pillars; roof-crack shafts flare on a 9 s cycle and dazzle the hero, a white screen at reduced strength under "reduce flashing", plus a slow) and the Palace Cellars (Habib; light cracked-tile pressure plates fire bolts 0.55 s after being stepped on, by the hero or by foes).
+  - All of them are bounty "clear" targets. Interactables now carry `area`, and the tracker finds entrances by it.
+- **Captain's Contracts:** a board next to Ishaq in every hub. Pick a captain you have slain (`p.slain`, recorded for named and area captains), a ground from this region's styles, and up to three MODS from the qanat pool. The run is level +1 per modifier, with extra chest loot, 60×level×(1+0.5n) dinars and 10+10n Renown. Unlimited.
+- **Renown board:** 12 nodes with 2–3 ranks each, costing 20/40/60 (`p.rb`), opened from the ☰ menu tile "Renown" or the N key. Hooks: `p.potCap`, `p.evadeK`, `p.xpK`, `p.healK`, `game.hazSlow`, plus wraps of recalcStats, dropItem and dmgMod.
+- Arabic for everything (end of `story_ar.js`).
+- **Test:** `node shots/r17test.mjs <region> [shots]` enters each new dungeon, triggers its hazard, buys every Renown rank and runs a contract. All three regions are clean.
 
-**Plan for R17:**
-- **Six new interior styles** in `interior.js`, each with its own room kit and one hazard. Spread them across the regions as new entrances and bounty "clear" targets.
-  - Cistern: the floor floods in waves.
-  - Granary vaults: grain stacks collapse when hit.
-  - Salt mine: glare and narrow passages.
-  - Kiln tunnels II: smoke vents that block sight.
-  - Palace cellars: traps on the floor.
-  - Reed-hut warren: fire spreads through it.
-- **Captain's Contracts:** a board or NPC where you pick a captain, a region and 1–3 modifiers (reuse the qanat modifier system in `progression.js`). Rewards scale with the modifiers. Contracts sit alongside the qanat tiers and the Gauntlet of Captains.
-- **Renown board:** spend `p.renown` (earned from bounties, events and side quests since R16) on a small account-wide passive board of about 12 nodes: more gold found, extra potion charges, more evade distance, rarity chance and so on. Open it from the menu sheet.
-- Every round still runs the critique loop, publishes the Artifact, pushes, and sends the APK.
-
-**Open questions to ask before building R17:**
-1. Should Renown also unlock cosmetics (dyes for the qaba, banners), or stay passives only?
-2. Should Contracts have a daily limit, or be unlimited?
-3. Keep all six interior styles, or do fewer with more polish?
-4. Should the level cap rise to 30 here, or wait for R18 as planned?
+## Next: Round 18, loot and build depth (confirm with the user before building)
+See the roadmap: 20 aspects, 5 sets, gems, a fifth skill slot, level cap 30, stash tabs.
 
 ## Roadmap (R15 done)
 The goal is about 8–12 hours for a first playthrough, up from about 1.5 today, plus a repeatable endgame. It is split into rounds so each one ships playable.

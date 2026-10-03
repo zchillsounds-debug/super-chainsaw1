@@ -29,7 +29,7 @@ export class Zones {
     grp.position.copy(p); this.g.scene.add(grp);
     colliders.push({ type: 'box', x: p.x, z: p.z - 1.6, hw: 1.5, hd: 0.3, rot: 0 }); buildGrid();
     this.g.lightPool?.add({ pos: p.clone().add(new THREE.Vector3(0, 1, 0.5)), color: 0xff6a20, power: 6, dist: 6, flicker: 1.4 });
-    this.g.interactables.push({ pos: p, r: 3, label: 'Descend into the kiln tunnels', act: () => this.enter({ kind: 'kiln', seed: 813, rooms: 7, level: 3, title: 'The Kiln Tunnels', sub: 'Brick galleries beneath the yard' }) });
+    this.g.interactables.push({ pos: p, r: 3, area: 'kiln', label: 'Descend into the kiln tunnels', act: () => this.enter({ kind: 'kiln', seed: 813, rooms: 7, level: 3, title: 'The Kiln Tunnels', sub: 'Brick galleries beneath the yard' }) });
     this.g.pois?.push({ x: p.x, z: p.z, icon: '▼', color: '#c08050' });
   }
   update(dt) {
@@ -54,7 +54,7 @@ export class Zones {
     const I = buildInterior(g.scene, { seed: def.seed, rooms: def.rooms, style: def.style || (def.kind === 'qanat' ? 'qanat' : 'kiln') });
     g.setupOccluders([I.group]);
     g.interior = { def, I, enemies: [] };
-    for (const t of I.torches) { t.interior = true; g.lightPool?.add({ pos: t.light, color: ({ vault: 0xffb878, cellar: 0xffa860, pit: 0xffa060, flood: 0xffb070, scorched: 0xff9040 })[def.style] || 0xff8a3a, power: 18, dist: 11, interior: true }); }
+    for (const t of I.torches) { t.interior = true; g.lightPool?.add({ pos: t.light, color: ({ vault: 0xffb878, cellar: 0xffa860, pit: 0xffa060, flood: 0xffb070, scorched: 0xff9040, cistern: 0xc8d0c0, grainvault: 0xffb870, salt: 0xfff0d8, kiln2: 0xff7030, palace: 0xffc890, warren: 0xffa850 })[def.style] || 0xff8a3a, power: 18, dist: 11, interior: true }); }
     for (const e of g.enemies) if (!e.dead) e.rig.visible = false;
     // foes per room; the deepest room holds an elite guarding the chest
     const pool = def.pool || (def.kind === 'qanat' ? ['bandit', 'deserter', 'archer', 'spearman', 'naffat'] : ['deserter', 'deserter', 'naffat', 'bandit']);
