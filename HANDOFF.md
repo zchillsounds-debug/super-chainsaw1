@@ -1,14 +1,14 @@
 # Madinat al-Salam: Handoff (after Round 19)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam** (formerly "Sands of Baghdad"). It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `madinat-round19-handoff.zip` (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
+> I'm continuing a game project called **Madinat al-Salam**. It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `madinat-round19-handoff.zip` (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
 >
 > Please:
 > 1. Unzip it and read HANDOFF.md fully.
 > 2. Run `npm install && npx vite`.
-> 3. Read the Round 19 notes, then ask me what Round 20 should be (a suggestion is in "Next"), and confirm before building.
+> 3. Plan **Round 20: improve the game and expand content**. Start from the menu in the "Next" section, ask me clarifying questions, and confirm the plan with me before building.
 >
-> The goal is AAA mobile game quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop (screenshot → critique → improve) every round, and ask me clarifying questions and confirm with me before building. I play on Android. After each round:
+> The goal is AAA mobile game quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop (screenshot → critique → improve) every round. I play on Android. After each round:
 > - Republish the game as a playable Artifact, updating the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Touch controls must keep working.
 > - Push to the session's assigned branch on zchillsounds-debug/super-chainsaw1.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
@@ -34,7 +34,7 @@ URL flags:
 **GitHub now works.** The account was reconnected and the Claude GitHub App was installed in Round 11, and pushes succeed.
 
 **Getting the APK to the user:**
-- `.github/workflows/apk.yml` builds a debug APK on every push to `claude/**` (Capacitor 6 wrapper, `android/`, landscape).
+- `.github/workflows/apk.yml` builds a debug APK on every push to `main` or `claude/**` (Capacitor 6 wrapper, `android/`, landscape). If the session branch has another name (Round 19's was `ccr-...`), trigger it by hand: GitHub MCP `actions_run_trigger` with method `run_workflow`, workflow `apk.yml`, ref = the branch.
 - The Actions download host (blob.core.windows.net) is blocked in the cloud session, so the workflow also force-pushes the APK to the orphan branch **`apk-builds`**.
 - To fetch it: `git fetch origin apk-builds && git show origin/apk-builds:sands-of-baghdad.apk > <scratchpad>/sands-of-baghdad.apk`. Wait until the commit message shows your short SHA, then send the file with SendUserFile.
 - dl.google.com is blocked too, so you can't build the APK locally; always build it through CI.
@@ -292,10 +292,21 @@ User decisions this round: full Round 19 plus a long graphics critique loop; loo
 - **Tests:** `shots/crit.mjs <out> [names]` (the critique set: hub, fight, kiln dusk, night arch, hero close-up, marsh, Karkh, portrait), `shots/skills.mjs <out> <cls>` (skill effects), `shots/dung.mjs <out> <region> <ids>` (dungeon rooms), `shots/bakedump.mjs` (ground bakes as PNG), `shots/console.mjs <query>` (console errors and warnings). r17test and r18test still pass.
 - **Headless note:** the main loop only advances when a screenshot forces a frame; use `__sim` for time-based effects.
 
-## Next: Round 20 (suggested, not yet approved)
-- Character fidelity: higher-detail sculpts for the hero and captains, wrinkle maps that move with the pose, better faces in cutscenes.
-- Volumetric fire light from braziers (point-light shadows are too costly; try light shafts from torches in dungeons).
-- Device pass on Android: frame time on a mid-range phone with High, then tune adaptive steps.
+## Next: Round 20 menu (not yet approved: ask the user which to build)
+**Improve**
+- Character fidelity: more detailed sculpts for Salim and the captains, wrinkles that follow the pose, better faces in cutscenes (Known gap 3: Farud's and Hisham's death shots and the boss intro still use the old camera work).
+- Enemy variety in looks: armour sets per faction, distinct captain silhouettes.
+- Dungeon lighting: light shafts from torches, more props per room style.
+- Device pass: frame time on a mid-range Android phone with High, then tune adaptive quality.
+- Animation: more attack variations per class, hit reactions by direction, better deaths.
+
+**Expand content**
+- Act VI or an epilogue region (e.g. the Round City's outer suburbs or the Tigris docks at al-Karkh), with two captains, a boss and an interior.
+- More enemy types (still human): siege engineers, mounted raiders on camels, crossbowmen.
+- A seasonal "Siege Rift" style endgame: timed runs through mixed dungeon rooms with a leaderboard of your own times.
+- Companions: Ishaq or a hired guard who fights beside you, with simple orders.
+- Mounts: a camel for travel on the overworld maps.
+- More side quests and codex entries for al-Karkh and the marshes; crafting at Bishr (new item types).
 
 ## Roadmap (R15 done)
 The goal is about 8–12 hours for a first playthrough, up from about 1.5 today, plus a repeatable endgame. It is split into rounds so each one ships playable.
