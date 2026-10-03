@@ -6,7 +6,7 @@
 > Please:
 > 1. Unzip it and read HANDOFF.md fully.
 > 2. Run `npm install && npx vite`.
-> 3. Start **Round 19** as specified in the "Next" section. Show me the plan for it and ask your open questions before building.
+> 3. Build **Round 19** in full as specified in the "Next" section. I have already approved that plan, so build it without asking again; ask only if something is truly blocking.
 >
 > The goal is AAA mobile game quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop (screenshot → critique → improve) every round, and ask me clarifying questions and confirm with me before building. I play on Android. After each round:
 > - Republish the game as a playable Artifact, updating the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Touch controls must keep working.
@@ -16,10 +16,10 @@
 ## Restore the code
 ```
 unzip madinat-round18-handoff.zip -d madinat && cd madinat
-git clone repo.bundle game && cd game        # Rounds 15-16 are on branch claude/new-session-tvzhqq
+git clone repo.bundle game && cd game        # Rounds 17-18 are on branch claude/new-session-qqie4b
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
-If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/claude/new-session-tvzhqq`.
+If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/claude/new-session-qqie4b`.
 
 URL flags:
 - `?play` skips the title screen.
@@ -277,7 +277,19 @@ User decisions: alternate skills unlock by level; Bishr cuts sockets for a fee; 
 - **Save fix:** Round 17's Renown board and slain captains were never saved. `save.js` now saves an `EXTRA` key list.
 - **Test:** `node shots/r18test.mjs <cls> [shots]` is clean for all four classes; `r17test` is still clean.
 
-## Next: Round 19 (propose to the user and confirm before building)
+## Next: Round 19, a huge round: camera, map travel, AAA graphics (APPROVED by the user; build it in full)
+User decisions: zoom goes from close to wide; tap the map to walk, plus fast travel; all four graphics groups; **looks first** (frame rate may dip to about 30 fps on mid-range phones, but Low must still drop the heaviest effects).
+- **Camera zoom:** pinch on touch, mouse wheel on desktop, from a close over-the-shoulder view to a high wide view (about twice the ground shown). The camera eases back a little in big fights. Save zoom in localStorage. Keep cutscene cameras untouched. Check the trail, labels and occlusion fade at both extremes.
+- **Map travel:** a full-screen pan and pinch map (from the minimap or the ☰ Map tile).
+  - Tapping a spot sets a walk-to target. Salim pathfinds there along roads with the guide trail; combat or joystick input interrupts it.
+  - **Fast travel** to discovered places (hub, dungeon entrances, qanat shaft, contract board, captain sites): fade and teleport. Not allowed in a fight, inside a dungeon, or while a boss is engaged.
+  - Tapping far ahead on the ground also pathfinds (`findPath`).
+- **Light and colour:** god rays through dust and palm canopies (screen-space radial blur from the sun in `atmos.js`), a cinematic grade per time of day, richer bloom, height fog and haze.
+- **Water and sand:** reflections on canals, marsh water and the cistern (a planar or cheap SSR approach, falling back on Low), ripples where things walk. Wind-blown sand streaks and drifting dust. Footprint decals that stay in sand (pooled, capped).
+- **Combat effects:** a light trail on every blade swing (ribbon mesh made at load), bigger hit sparks and a flash on crits, dust bursts on knockback and stagger, ground cracks on heavy blows.
+- **Life and wind:** palms, reeds and grass sway in the vertex shader (wind uniform), birds that flush near the hero (instanced), and an occasional light sandstorm (a visibility drop plus a foe detection-range drop, never during cutscenes).
+- **Rules:** no lights or new shader variants at runtime (compile at load); keep the draw-call budget near the R15 numbers; the APK is the target.
+- Then run the critique loop with screenshots at 915×412 and 412×915, check frame time with `?perf` and `shots/perf.mjs`, republish the Artifact, push, and send the APK.
 
 ## Roadmap (R15 done)
 The goal is about 8–12 hours for a first playthrough, up from about 1.5 today, plus a repeatable endgame. It is split into rounds so each one ships playable.
