@@ -1,12 +1,12 @@
-# Madinat al-Salam: Handoff (after Round 18)
+# Madinat al-Salam: Handoff (after Round 19)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam** (formerly "Sands of Baghdad"). It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `madinat-round18-handoff.zip` (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
+> I'm continuing a game project called **Madinat al-Salam** (formerly "Sands of Baghdad"). It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `madinat-round19-handoff.zip` (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
 >
 > Please:
 > 1. Unzip it and read HANDOFF.md fully.
 > 2. Run `npm install && npx vite`.
-> 3. Build **Round 19** in full as specified in the "Next" section. I have already approved that plan, so build it without asking again; ask only if something is truly blocking.
+> 3. Read the Round 19 notes, then ask me what Round 20 should be (a suggestion is in "Next"), and confirm before building.
 >
 > The goal is AAA mobile game quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop (screenshot → critique → improve) every round, and ask me clarifying questions and confirm with me before building. I play on Android. After each round:
 > - Republish the game as a playable Artifact, updating the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Touch controls must keep working.
@@ -15,11 +15,11 @@
 
 ## Restore the code
 ```
-unzip madinat-round18-handoff.zip -d madinat && cd madinat
-git clone repo.bundle game && cd game        # Rounds 17-18 are on branch claude/new-session-qqie4b
+unzip madinat-round19-handoff.zip -d madinat && cd madinat
+git clone repo.bundle game && cd game        # Round 19 is on branch ccr-56d2fa55-vx1w3y
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
-If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/claude/new-session-qqie4b`.
+If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-56d2fa55-vx1w3y`.
 
 URL flags:
 - `?play` skips the title screen.
@@ -277,19 +277,25 @@ User decisions: alternate skills unlock by level; Bishr cuts sockets for a fee; 
 - **Save fix:** Round 17's Renown board and slain captains were never saved. `save.js` now saves an `EXTRA` key list.
 - **Test:** `node shots/r18test.mjs <cls> [shots]` is clean for all four classes; `r17test` is still clean.
 
-## Next: Round 19, a huge round: camera, map travel, AAA graphics (APPROVED by the user; build it in full)
-User decisions: zoom goes from close to wide; tap the map to walk, plus fast travel; all four graphics groups; **looks first** (frame rate may dip to about 30 fps on mid-range phones, but Low must still drop the heaviest effects).
-- **Camera zoom:** pinch on touch, mouse wheel on desktop, from a close over-the-shoulder view to a high wide view (about twice the ground shown). The camera eases back a little in big fights. Save zoom in localStorage. Keep cutscene cameras untouched. Check the trail, labels and occlusion fade at both extremes.
-- **Map travel:** a full-screen pan and pinch map (from the minimap or the ☰ Map tile).
-  - Tapping a spot sets a walk-to target. Salim pathfinds there along roads with the guide trail; combat or joystick input interrupts it.
-  - **Fast travel** to discovered places (hub, dungeon entrances, qanat shaft, contract board, captain sites): fade and teleport. Not allowed in a fight, inside a dungeon, or while a boss is engaged.
-  - Tapping far ahead on the ground also pathfinds (`findPath`).
-- **Light and colour:** god rays through dust and palm canopies (screen-space radial blur from the sun in `atmos.js`), a cinematic grade per time of day, richer bloom, height fog and haze.
-- **Water and sand:** reflections on canals, marsh water and the cistern (a planar or cheap SSR approach, falling back on Low), ripples where things walk. Wind-blown sand streaks and drifting dust. Footprint decals that stay in sand (pooled, capped).
-- **Combat effects:** a light trail on every blade swing (ribbon mesh made at load), bigger hit sparks and a flash on crits, dust bursts on knockback and stagger, ground cracks on heavy blows.
-- **Life and wind:** palms, reeds and grass sway in the vertex shader (wind uniform), birds that flush near the hero (instanced), and an occasional light sandstorm (a visibility drop plus a foe detection-range drop, never during cutscenes).
-- **Rules:** no lights or new shader variants at runtime (compile at load); keep the draw-call budget near the R15 numbers; the APK is the target.
-- Then run the critique loop with screenshots at 915×412 and 412×915, check frame time with `?perf` and `shots/perf.mjs`, republish the Artifact, push, and send the APK.
+## Round 19 (done): camera, map travel, AAA graphics
+User decisions this round: full Round 19 plus a long graphics critique loop; looks above all (High is now the default on phones, adaptive quality only sheds below ~24 fps); ship once at the end.
+- **Camera (`travel.js`, `game.js` updateCamera):** pinch / mouse wheel zoom 0.5–1.7, saved in `sob.zoom`. Close in, the camera drops toward over-the-shoulder; out, it rises high. It eases back when 3+ foes are alerted nearby, more for a captain. Enemy view culling widens with zoom.
+- **Map travel (`travel.js`):** M key, the ☰ Map tile or a tap on the minimap opens a full-screen painted map (terrain colour + hill shading + walls inked from the nav grid). Pan with one finger, pinch to zoom. Tap the ground to walk there along an A* path (`g.walkTo`, `g.walk`; the guide trail follows it; the joystick, attacking or a target cancels it). Waypoints (hub, captain sites, dungeon entrances, qanat shaft, contract board) are discovered within 16 m (`p.visited[region]`, saved). Tap a found waypoint for Walk there / Fast travel. Fast travel is blocked underground, in a fight (alerted foe within 22 m) or with a captain engaged. A long tap-to-move on the ground also pathfinds around walls.
+- **Ground (`groundtex.js`, `terrain.js`):** four seamless materials are baked on the GPU at load (sand with pebbles, cracked earth, flagstones, packed road): brightness/feature/height plus normal and cavity. The terrain shader colours them per region, blends them by height (pebbles and stone tops poke through, sand settles in joints and drifts over paving), and fights tiling with a rotated second lookup. Marsh ground has dark wet mud and glossy puddles. Dungeon floors (`interior.js` floorMat) use the same bakes, with puddles in the cistern, qanat and flooded granary.
+- **Light (`volume.js`, `lighting.js`):** a half-res ray-marched volumetric pass reads the sun shadow map, so dust glows in sunlight and stays dark in shadow (real god rays through palms and arches). Density per preset (`vol`), thicker in sandstorms. Depth comes from the GTAO G-buffer, which now skips transparent/additive meshes (they were muddying AO). The old sun-shaft slabs are hidden where the volume runs. Hero fill light per preset (`hero`), which in cutscenes becomes a soft key beside the camera. Character rim tinted by time of day (`RIM_G`), cloth sheen on fabric. Night is desaturated moonlight; dusk is teal shadows and amber light; the grade keeps highlights saturated.
+- **Water (`reflect.js`, `water.js`):** planar reflections at 0.4× resolution, every other frame, only when water is in the view frustum (marsh always). Reflected: terrain, sky, buildings, palms, characters. Physically based fresnel, darker water, sharp sun glints. Wading spawns ripple rings (8 slots, `REFL.uRip`).
+- **Buildings (`triplanar.js`, `game.js`):** sand settles on every upward face, salt bloom at the wall foot, rain streaks. Diablo-style cutaway: walls between camera and hero are cut above head height over a wide radius (also in the AO pass), plus the old dither hole.
+- **Combat (`combatfx.js`, `fx.js`):** blade light trails (pooled ribbons, arc-interpolated; colour per discipline; torch trails burn), crescent impact slashes, crit flash plus shockwave, dust on knockback and stagger, ground cracks under heavy blows. Fire and smoke particles are now shaded (hot core, torn edges; rolling smoke billows). Rings are shockwaves with a leading edge. Brazier and campfire coals are a pulsing ember shader (`ember.js`).
+- **Life (`ambient.js`, `vegetation.js`):** gusting wind (lean, travelling gust fronts, flutter; `wind.uWindK`); footprints in sand (72 pooled, 25 s fade); wind-blown sand streaks (GPU-animated); birds feeding on the ground that flush when you come near, in a fight or a storm; sandstorms every ~6–10 min in the Sawad and al-Karkh (never in cutscenes, boss fights or underground): thick sandy fog, dimmer sun, driven dust, foes see 45% less far (`g.sightK`).
+- **Rules kept:** no lights added at runtime (hero light made at load); pooled effects start hidden, so main.js now shows every hidden object during the load-time compile and hides them again.
+- **Draws:** Sawad hub 648 (High), marsh camp 717, Low 341.
+- **Tests:** `shots/crit.mjs <out> [names]` (the critique set: hub, fight, kiln dusk, night arch, hero close-up, marsh, Karkh, portrait), `shots/skills.mjs <out> <cls>` (skill effects), `shots/dung.mjs <out> <region> <ids>` (dungeon rooms), `shots/bakedump.mjs` (ground bakes as PNG), `shots/console.mjs <query>` (console errors and warnings). r17test and r18test still pass.
+- **Headless note:** the main loop only advances when a screenshot forces a frame; use `__sim` for time-based effects.
+
+## Next: Round 20 (suggested, not yet approved)
+- Character fidelity: higher-detail sculpts for the hero and captains, wrinkle maps that move with the pose, better faces in cutscenes.
+- Volumetric fire light from braziers (point-light shadows are too costly; try light shafts from torches in dungeons).
+- Device pass on Android: frame time on a mid-range phone with High, then tune adaptive steps.
 
 ## Roadmap (R15 done)
 The goal is about 8–12 hours for a first playthrough, up from about 1.5 today, plus a repeatable endgame. It is split into rounds so each one ships playable.
