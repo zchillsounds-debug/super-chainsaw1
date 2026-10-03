@@ -10,11 +10,11 @@ import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 import { VolumePass } from './volume.js';
 
 const params = new URLSearchParams(location.search);
-const touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || params.has('mobile');
 const storedQ = (() => { try { return JSON.parse(localStorage.getItem('sob.settings.v1') || '{}').quality; } catch { return null; } })();
 // sharpness: render scale over CSS pixels (smooth = native up to 2x, the default)
 export const SHARP_RATIO = { smooth: 2, balanced: 1.5, fast: 1 };
-export const QUALITY = params.get('q') || storedQ || (touch ? 'low' : 'high');
+// Round 19: looks first, High is the default everywhere (the user's call); Low stays one tap away in Settings
+export const QUALITY = params.get('q') || storedQ || 'high';
 
 // Golden-hour sky dome, also baked into a PMREM env map for reflections.
 // Sky dome with time-of-day colours (driven by lighting.js), also baked into a PMREM env map for reflections.

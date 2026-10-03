@@ -201,9 +201,10 @@ function adaptQuality(dt) {
   perfT += dt; perfAcc += dt; perfN++;
   if (perfT < 3) return;
   const avg = perfAcc / perfN; perfT = 0; perfAcc = 0; perfN = 0;
-  if (avg > 1 / 40 && perfLevel === 0) { if (gtao) gtao.enabled = false; perfLevel = 1; console.info('quality: AO off'); }
-  else if (avg > 1 / 40 && perfLevel === 1) { renderer.setPixelRatio(Math.max(settings.s.sharp === 'smooth' ? 1.5 : 1, renderer.getPixelRatio() * 0.75)); resize(); perfLevel = 2; console.info('quality: 1x resolution'); }
-  else if (avg > 1 / 35 && perfLevel === 2) { renderer.shadowMap.type = THREE.PCFShadowMap; sun.shadow.mapSize.set(2048, 2048); sun.shadow.map?.dispose(); sun.shadow.map = null; perfLevel = 3; console.info('quality: shadows reduced'); }
+  // looks first: only a frame rate under ~24 sheds anything, resolution before AO and volumetric light
+  if (avg > 1 / 24 && perfLevel === 0) { renderer.setPixelRatio(Math.max(1, renderer.getPixelRatio() * 0.8)); resize(); reflection?.resize(); perfLevel = 1; console.info('quality: lower resolution'); }
+  else if (avg > 1 / 24 && perfLevel === 1) { if (gtao) gtao.enabled = false; perfLevel = 2; console.info('quality: AO and volumetric light off'); }
+  else if (avg > 1 / 22 && perfLevel === 2) { renderer.shadowMap.type = THREE.PCFShadowMap; sun.shadow.mapSize.set(2048, 2048); sun.shadow.map?.dispose(); sun.shadow.map = null; perfLevel = 3; console.info('quality: shadows reduced'); }
 }
 function frame() {
   const rawDt = clock.getDelta(); const dt = Math.min(rawDt, 0.05); t += dt;
