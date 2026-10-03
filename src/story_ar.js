@@ -451,6 +451,11 @@ Object.assign(STORY_AR, {
 
 // ---------------------------------------------------------------- Round 20: Act VI, the river quays
 Object.assign(STORY_AR, {
+  'Siege Trials': 'محن الحصار', 'Siege Trial': 'محنة الحصار', 'Read the siege trials': 'اقرأ لوح محن الحصار', 'Tier': 'الدرجة', 'Time': 'الوقت', 'a gem': 'حجر كريم', 'Your best': 'أفضل وقت لك',
+  'Begin the trial': 'ابدأ المحنة', 'Your last trials': 'محنك الأخيرة', 'No trials run yet.': 'لم تخض أيّ محنة بعد.', 'Trial abandoned': 'تُركت المحنة', 'Trial cleared': 'اجتزت المحنة', 'Too slow': 'بطيء جدًّا', 'New best!': 'أفضل وقت جديد!', 'opened': 'فُتحت',
+  'Clear the rooms and break the captain before time runs out.': 'طهّر الغرف واكسر القائد قبل أن ينفد الوقت.',
+  'Five rooms from every dungeon in the chronicle, and a captain at the end. Break him inside four minutes to clear the tier and open the next.': 'خمس غرف من كلّ سراديب الحكاية، وقائد في آخرها. اكسره في أقلّ من أربع دقائق لتجتاز الدرجة وتفتح التي تليها.',
+  'Hudhayl': 'هذيل', 'Sharik': 'شريك', 'Muzahim': 'مزاحم', 'Zufar': 'زفر', 'Labid': 'لبيد', 'Mutarrif': 'مطرّف',
   'The River Quays': 'الشطّ', 'The river quays': 'الشطّ', 'The Quay Khan': 'خان الشطّ', 'The Warehouses': 'المخازن',
   'Find Bilal among the river warehouses': 'اعثر على بلال بين مخازن النهر',
   'Free the copyists\' boat from Mus\'ab at the boatyard': 'حرّر قارب النُّسّاخ من مصعب في دار الصناعة',

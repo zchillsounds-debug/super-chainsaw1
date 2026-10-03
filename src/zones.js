@@ -52,7 +52,7 @@ export class Zones {
     const g = this.g; if (g.interior) return;
     g.ui.fade(1); g.paused = true; await wait(600);
     g.returnPos = g.player.pos.clone();
-    const I = buildInterior(g.scene, { seed: def.seed, rooms: def.rooms, style: def.style || (def.kind === 'qanat' ? 'qanat' : 'kiln') });
+    const I = buildInterior(g.scene, { seed: def.seed, rooms: def.rooms, style: def.style || (def.kind === 'qanat' ? 'qanat' : 'kiln'), styles: def.styles });
     g.setupOccluders([I.group]);
     g.interior = { def, I, enemies: [] };
     for (const t of I.torches) { t.interior = true; g.lightPool?.add({ pos: t.light, color: ({ vault: 0xffb878, cellar: 0xffa860, pit: 0xffa060, flood: 0xffb070, scorched: 0xff9040, cistern: 0xc8d0c0, grainvault: 0xffb870, salt: 0xfff0d8, kiln2: 0xff7030, palace: 0xffc890, warren: 0xffa850 })[def.style] || 0xff8a3a, power: 18, dist: 11, interior: true }); }
@@ -62,7 +62,7 @@ export class Zones {
     I.rooms.forEach((r, i) => {
       if (i === 0) return;
       const c = roomCenter(r), last = i === I.rooms.length - 1;
-      const n = last ? 3 : 2 + Math.floor(Math.random() * 3);
+      const n = (last ? 3 : 2 + Math.floor(Math.random() * 3)) + (def.extraFoes || 0);
       const pack = g.spawnPack(pool, c.x, c.z, n, def.level + (def.mods?.levelUp || 0), { spread: 3, interior: true });
       if (last) pack.push(...g.spawnPack(def.bossType || 'spearman', c.x, c.z - 1.5, 1, def.level + 1, { elite: true, interior: true, name: def.bossName }).map((e) => Object.assign(e, { bossOf: def.bossOf })));
       for (const e of pack) { e.interior = true; def.mods?.apply?.(e); }

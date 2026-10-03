@@ -575,3 +575,10 @@ body.touch #mountbtn{right:calc(214px + env(safe-area-inset-right,0px));bottom:c
 #compbtn:active{transform:scale(.94)}
 #compbtn.hide,body.overlay #compbtn,body.insheet #compbtn,body.indialog #compbtn,body.incine #compbtn,body:not(.playing) #compbtn{display:none}
 body.touch #compbtn{right:auto;left:calc(14px + env(safe-area-inset-left,0px));bottom:auto;top:calc(150px + env(safe-area-inset-top,0px));height:42px;opacity:.9}
+/* Round 20: the Siege Trials timer */
+#trialtimer{position:absolute;left:50%;transform:translateX(-50%);top:calc(48px + env(safe-area-inset-top,0px));padding:6px 16px;border-radius:18px;background:#120c08cc;border:1px solid #8a6a3a;color:#f0dca8;font:700 20px/1 serif;letter-spacing:1px;pointer-events:none;text-shadow:0 1px 3px #000}
+#trialtimer.low{color:#ff8a6a;border-color:#c04a2a;animation:tpulse 1s infinite}
+@keyframes tpulse{50%{opacity:.6}}
+#trialtimer.hide,body.incine #trialtimer,body.overlay #trialtimer{display:none}
+#shop.trials .chip small{display:block;font-size:11px;opacity:.75}
+#shop .chip:disabled{opacity:.38;cursor:default}

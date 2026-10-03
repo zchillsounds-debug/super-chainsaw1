@@ -189,7 +189,8 @@ function dressProp(style, rnd, K) {
 }
 
 // style: 'kiln' | 'qanat' | 'cellar' | 'pit' | 'vault' | 'flood' | 'scorched' | (R17) 'cistern' | 'grainvault' | 'salt' | 'kiln2' | 'palace' | 'warren'. Returns { rooms, entrance, exit, torches, chests, group, spawnRooms }
-export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {}) {
+// styles (Round 20): an optional list of room styles, used in turn (the Siege Trials mix rooms from every region)
+export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln', styles = null } = {}) {
   destroyInterior(scene);
   const K = kit(), M = K[style], rnd = mulberry32(seed * 7 + 3);
   DOOR = style === 'salt' ? 2.2 : 3.4;
@@ -199,7 +200,9 @@ export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln' } = {
   const box = (w, h, d, x, y, z, m) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.castShadow = true; b.receiveShadow = true; grp.add(b); return b; };
   const torches = [], floors = [], dynW = [], fades = []; // fades: shafts shown only near the hero (from a neighbouring room they read as solid tubes)
   const dyn = new THREE.Group();
+  const roomStyles = L.rooms.map((r, i) => (styles ? styles[i % styles.length] : style));
   for (const r of L.rooms) {
+    const style = roomStyles[L.rooms.indexOf(r)], M = K[style];
     const c = roomCenter(r);
     floors.push([c.x - S / 2, c.z - S / 2, c.x + S / 2, c.z + S / 2]);
     const f = new THREE.Mesh(new THREE.PlaneGeometry(S, S).rotateX(-Math.PI / 2), M.floor); f.position.set(c.x, 0, c.z); f.receiveShadow = true; grp.add(f);
