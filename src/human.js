@@ -191,6 +191,8 @@ function headwearPrims(B, o) {
     L.push(ell(H, [0, 0.06, 0.09], [0.066, 0.052, 0.075], null, { sub: true, k: 0.015 }));
     L.push(tor(H, [0, 0.118, -0.012], 0.09, 0.009, [0.12, 0, 0], { k: 0.006, mat: R.GOLD }));
     L.push(cap(H, [0, 0.13, 0.095], [0, 0.07, 0.112], 0.008, 0.0065, { k: 0.008, mat: R.STEEL }));
+    // a captain's horsehair plume rising from the helmet spike and falling back
+    if (o.crest === 'plume') { L.push(cap(H, [0, 0.25, -0.016], [0, 0.34, -0.07], 0.014, 0.042, { k: 0.02, mat: R.SASH })); L.push(cap(H, [0, 0.34, -0.07], [0, 0.18, -0.22], 0.042, 0.014, { k: 0.03, mat: R.SASH })); }
   } else if (o.cap) {
     // tall felt qalansuwa wound with a dark turban cloth
     L.push(ell(H, [0, 0.17, -0.014], [0.084, 0.115, 0.094], null, { k: 0.02, mat: R.FELT }));
@@ -198,6 +200,12 @@ function headwearPrims(B, o) {
     L.push(tor(H, [0, 0.162, -0.016], 0.08, 0.02, [0.1, 0, 0.06], { k: 0.012, mat: R.WRAP }, 0.9));
     L.push(tor(H, [0, 0.185, -0.018], 0.072, 0.017, [-0.05, 0, -0.08], { k: 0.012, mat: R.WRAP }, 0.9));
     L.push(ell(H, [0, 0.05, -0.01], [0.2, 0.066, 0.2], null, { sub: true, k: 0.01 }));
+  } else if (o.hat) {
+    // Round 20: a wide woven-reed sun hat (marsh men)
+    L.push(ell(H, [0, 0.16, -0.012], [0.09, 0.07, 0.1], null, { k: 0.02, mat: R.WRAP }));
+    L.push(ell(H, [0, 0.19, -0.012], [0.22, 0.03, 0.22], null, { k: 0.03, mat: R.WRAP }));
+    L.push(cap(H, [0, 0.19, -0.012], [0, 0.27, -0.012], 0.09, 0.012, { k: 0.04, mat: R.WRAP }));
+    L.push(ell(H, [0, 0.05, -0.01], [0.2, 0.07, 0.2], null, { sub: true, k: 0.01 }));
   } else if (o.turban) {
     L.push(ell(H, [0, 0.155, -0.012], [0.09, 0.07, 0.1], null, { k: 0.02, mat: R.WRAP }));
     L.push(tor(H, [0, 0.13, -0.01], 0.087, 0.026, [-0.14, 0, 0], { k: 0.015, mat: R.WRAP }, 0.85));
@@ -206,6 +214,51 @@ function headwearPrims(B, o) {
     L.push(ell(H, [0, 0.05, -0.01], [0.2, 0.07, 0.2], null, { sub: true, k: 0.01 }));
   }
   return L;
+}
+
+// Round 20: faction armour, sculpted like the rest of the body (one extra piece, one draw) and keyed by kind.
+// Material ids that touch inside one sculpt must be neighbours (the id is interpolated across a triangle):
+// GOLD 2 / LEATHER 3 / MAIL 4 for torso shells, STEEL 8 / DARK 9 for plates.
+//   leather: brigands' studded jerkin, one shoulder guard, leather bracers
+//   lamellar: the old army's black-lacquered lamellar coat laced in bronze, layered shoulders, skirt plates, steel bracers
+//   scale: hired mercenaries' scale shirt with bronze edging, steel shoulder plates and greaves
+//   reed: marsh men's woven-reed vest bound with cord
+//   heavy: captains: lamellar with broad three-tier shoulders, a gorget, plated skirt and greaves
+function armourPrims(B, o) {
+  const { cap, ell, tor } = helpers(B), L = [], b = o.build, g = o.girth, a = o.armour;
+  if (a === 'leather') {
+    L.push(ell('chest', [0, 0.06, 0.016], [0.183 * b, 0.16, 0.137], null, { k: 0.03, mat: R.LEATHER }));
+    L.push(ell('spine', [0, 0.07, 0.01 + o.belly * 0.03], [0.162 * g, 0.12, 0.128 + o.belly * 0.03], null, { k: 0.03, mat: R.LEATHER }));
+    for (const [, s] of SIDES) for (let i = 0; i < 3; i++) L.push(ell('chest', [s * 0.06 * b, 0.0 + i * 0.065, 0.145], [0.011, 0.011, 0.008], null, { k: 0.004, mat: R.GOLD }));
+    L.push(ell('armL', [0, -0.03, 0], [0.088 * b, 0.07, 0.088], null, { k: 0.012, mat: R.LEATHER }));
+    for (const [S] of SIDES) L.push(cap('fore' + S, [0, -0.07, 0], [0, -0.2, 0], 0.052, 0.043, { k: 0.01, mat: R.LEATHER }));
+  } else if (a === 'reed') {
+    L.push(ell('chest', [0, 0.05, 0.014], [0.18 * b, 0.165, 0.133], null, { k: 0.03, mat: R.LEATHER }));
+    L.push(ell('spine', [0, 0.06, 0.01 + o.belly * 0.03], [0.158 * g, 0.115, 0.126 + o.belly * 0.03], null, { k: 0.03, mat: R.LEATHER }));
+    L.push(tor('chest', [0, 0.05, 0.01], 0.17 * b, 0.009, [0, 0, 0.5], { k: 0.004, mat: R.GOLD }, 0.8));
+    L.push(tor('chest', [0, 0.05, 0.01], 0.17 * b, 0.009, [0, 0, -0.5], { k: 0.004, mat: R.GOLD }, 0.8));
+  } else if (a === 'lamellar' || a === 'heavy' || a === 'scale') {
+    const main = a === 'scale' ? R.MAIL : R.LEATHER, heavy = a === 'heavy', lam = { lam: true };
+    // one smooth coat from waist to chest; the plate rows and their bronze lacing are painted on (armourPaint)
+    L.push(ell('spine', [0, 0.05, 0.012 + o.belly * 0.03], [0.162 * g, 0.13, 0.131 * g + o.belly * 0.03], null, { k: 0.04, mat: main, ...lam }));
+    L.push(ell('chest', [0, 0.08, 0.016], [0.186 * b, 0.165, 0.138], null, { k: 0.04, mat: main, ...lam }));
+    L.push(ell('upperChest', [0, 0.02, -0.04], [0.17 * b, 0.12, 0.098], null, { k: 0.03, mat: main, ...lam }));
+    if (heavy) L.push(tor('upperChest', [0, 0.11, -0.006], 0.084, 0.03, null, { k: 0.012, mat: R.LEATHER }));
+    // skirt plates over the hips, front and back
+    for (const [, s] of SIDES) for (const z of [1, -1]) L.push(ell('hips', [s * 0.068, -0.085, z * 0.105 * g], [0.085, heavy ? 0.13 : 0.1, 0.03], [z * 0.15, 0, 0], { k: 0.01, mat: main }));
+    for (const [S] of SIDES) {
+      const tiers = heavy ? 3 : 2, w = heavy ? 1.4 : 1;
+      for (let t = 0; t < tiers; t++) L.push(ell('arm' + S, [0, -0.015 - t * 0.055, 0], [(0.088 - t * 0.004) * b * w, 0.05, (0.09 - t * 0.004) * w], null, { k: 0.006, mat: t % 2 ? R.DARK : R.STEEL }));
+      L.push(cap('fore' + S, [0, -0.06, 0], [0, -0.205, 0], 0.053, 0.045, { k: 0.01, mat: R.STEEL }));
+      if (a !== 'lamellar') L.push(cap('shin' + S, [0, -0.03, 0.012], [0, -0.3, 0.016], 0.066, 0.058, { k: 0.01, mat: R.STEEL }));
+    }
+  }
+  return L;
+}
+
+// lacing rows every 5.5 cm on the lamellar coat (bronze cord over the lacquered plates; on scale, a bronze edge)
+function armourPaint(o) {
+  return (x, y, z, dom) => { if (!dom?.lam) return null; const f = ((y - 1.02) / 0.055) % 1; return f > 0.84 ? R.GOLD : null; };
 }
 
 function veilPrims(B, o) {
@@ -245,6 +298,8 @@ export function humanoid(opts = {}) {
   if (o.turban) pal[R.WRAP].c = C(o.turban);
   if (o.cap) { pal[R.FELT].c = C(o.cap); pal[R.WRAP].c = C(o.capBand || 0x1a1814); }
   if (o.mask) pal[R.MASK].c = C(o.mask);
+  if (o.leather) pal[R.LEATHER].c = C(o.leather);
+  if (o.hat) pal[R.WRAP].c = C(o.hat);
   pal[R.DARK].c = C(o.trousers ?? 0x2c241e);
   const mat = charMaterial(pal);
 
@@ -260,7 +315,8 @@ export function humanoid(opts = {}) {
     piece('garment', [tier, sk, o.qaba, o.mail, !!o.sash, o.tiraz], () => sculpt(garmentPrims(B, o), { voxel: vox(0.0105, 0.0185), blend: 0.03, paint: garmentPaint(o) })),
   ];
   const hp = hairPrims(B, o); if (hp.length) geos.push(piece('hair', [tier, o.neck, !!o.beard, o.beardLen, !!o.bald], () => sculpt(hp, { voxel: vox(0.0032, 0.0075), blend: 0.012 })));
-  const hw = headwearPrims(B, o); if (hw.length) geos.push(piece('headwear', [tier, o.neck, !!o.helm, !!o.cap, !!o.turban], () => sculpt(hw, { voxel: vox(0.0048, 0.0085), blend: 0.02 })));
+  const hw = headwearPrims(B, o); if (hw.length) geos.push(piece('headwear', [tier, o.neck, !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume'], () => sculpt(hw, { voxel: vox(0.0048, 0.0085), blend: 0.02 })));
+  const ap = o.armour ? armourPrims(B, o) : []; if (ap.length) geos.push(piece('armour', [tier, sk, o.armour, 2], () => sculpt(ap, { voxel: vox(0.008, 0.014), blend: 0.02, paint: armourPaint(o) })));
   if (o.mask) geos.push(piece('veil', [tier, o.neck], () => sculpt(veilPrims(B, o), { voxel: vox(0.0045, 0.0085), blend: 0.02 })));
   // far LOD (crowds only): the same pieces sculpted at ~2.2x the voxel size, about a fifth of the triangles
   const farGeos = hiTier ? null : [
@@ -270,7 +326,8 @@ export function humanoid(opts = {}) {
   ];
   if (farGeos) {
     if (hp.length) farGeos.push(piece('hair', ['far', o.neck, !!o.beard, o.beardLen, !!o.bald], () => sculpt(hp, { voxel: 0.016, blend: 0.014 })));
-    if (hw.length) farGeos.push(piece('headwear', ['far', o.neck, !!o.helm, !!o.cap, !!o.turban], () => sculpt(hw, { voxel: 0.018, blend: 0.02 })));
+    if (hw.length) farGeos.push(piece('headwear', ['far', o.neck, !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume'], () => sculpt(hw, { voxel: 0.018, blend: 0.02 })));
+    if (ap.length) farGeos.push(piece('armour', ['far', sk, o.armour, 2], () => sculpt(ap, { voxel: 0.03, blend: 0.03, paint: armourPaint(o) })));
     if (o.mask) farGeos.push(piece('veil', ['far', o.neck], () => sculpt(veilPrims(B, o), { voxel: 0.018, blend: 0.02 })));
   }
   const meshes = geos.map((g, i) => {
@@ -358,6 +415,15 @@ export function humanoid(opts = {}) {
   if (!parts.trails && parts.weapon && o.weapon !== 'bow' && o.weapon !== 'sling' && o.weapon !== 'net') parts.trails = [{ obj: parts.weapon, ...({ sword: { a: 0.22, b: 1.12 }, spear: { a: 1.55, b: 2.12 }, torch: { a: 0.45, b: 0.86, fire: true } }[o.weapon] || { a: 0.2, b: 0.9 }) }];
   if (o.weapon === 'bow') { const w = bow(); w.position.set(0.018, -0.1, 0); bones.handL.add(w); parts.weapon = w; }
   if (o.offhand === 'shield') { const sd = shield(); sd.scale.setScalar(0.92); sd.position.set(-0.075, -0.14, 0.02); sd.rotation.set(0, -Math.PI / 2 + 0.5, 0); bones.foreL.add(sd); parts.shield = sd; }
+  if (o.crest === 'banner') {
+    // Round 20: a captain's plain pennant on a short pole across the back (no device on it)
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 1.5, 6).translate(0, 0.55, 0), leatherM); pole.position.set(0.09, 0.05, -0.12); pole.rotation.z = -0.12; pole.castShadow = true; bones.upperChest.add(pole);
+    const pm = addRim(new THREE.MeshStandardMaterial({ color: C(o.sash), roughness: 0.9, side: THREE.DoubleSide }));
+    const g = new THREE.PlaneGeometry(0.6, 0.7, 4, 1).translate(0.3, 0, 0), gp = g.attributes.position;
+    for (let i = 0; i < gp.count; i++) { const x = gp.getX(i); gp.setY(i, gp.getY(i) * (1 - x * 1.2)); gp.setZ(i, Math.sin(x * 9) * 0.03); }
+    g.computeVertexNormals();
+    const flag = new THREE.Mesh(g, pm); flag.position.set(0, 0.95, 0); flag.rotation.y = Math.PI * 0.75; flag.castShadow = true; pole.add(flag); parts.banner = flag;
+  }
   if (o.scabbard) {
     const piv = new THREE.Group(); piv.position.set(-0.165, 0.03, 0.02); piv.rotation.set(0.55, 0, -0.18); bones.hips.add(piv);
     const sc = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.02, 0.9, 8).translate(0, -0.45, 0).scale(1, 1, 0.55), leatherM); sc.castShadow = true; piv.add(sc);
