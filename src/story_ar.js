@@ -317,7 +317,10 @@ Object.assign(STORY_AR, {
   // interiors and toasts
   'The Drowned Granary': 'الأهراء الغارقة', 'Grain stores the floods took': 'مخازن غلال أخذها الفيضان', 'Wade down into the drowned granary': 'انزل خائضًا إلى الأهراء الغارقة',
   'The Merchants\' Cellars': 'أقبية التجّار', 'Vaults under the burned suq': 'أقبية تحت السوق المحروقة', 'Go down into the merchants\' cellars': 'انزل إلى أقبية التجّار',
-  'Caught in a net! Evade to tear free': 'علقت في شبكة! راوغ لتتحرّر', 'An engineer is raising a mangonel: break it': 'مهندس ينصب منجنيقاً: حطّمه', 'No camels underground': 'لا جِمال تحت الأرض', 'Not with foes so near': 'ليس والأعداء بهذا القرب', 'Mounted. You climb down by yourself when foes come.': 'ركبتَ. ستنزل وحدك حين يقترب الأعداء.', 'the reeds are full of his men!': 'القصب مليء برجاله!',
+  'Caught in a net! Evade to tear free': 'علقت في شبكة! راوغ لتتحرّر', 'An engineer is raising a mangonel: break it': 'مهندس ينصب منجنيقاً: حطّمه', 'No camels underground': 'لا جِمال تحت الأرض', 'Bakr': 'بكر', 'Guards for hire': 'حُرّاس للأجرة', 'Guards for Hire': 'حُرّاس للأجرة', 'Ma\'n': 'معن', 'Dirar': 'ضرار', 'Spearman': 'رمّاح', 'Archer': 'رامٍ',
+  'Spear and shield. Holds foes off you up close.': 'رمح وترس. يصدّ عنك الأعداء عن قرب.', 'A bowman. Shoots from range and keeps his distance.': 'رامٍ بالقوس. يرمي من بعيد ويحفظ مسافته.',
+  'With you': 'معك', 'Hire': 'استأجر', 'Orders': 'الأوامر', 'Follow': 'اتبعني', 'Hold': 'اثبت', 'Attack': 'هاجم', 'Dismiss': 'اصرفه', 'joins you': 'ينضمّ إليك',
+  'One fee, and he stays with you until you send him home. He cannot be killed. Give orders with his button or G.': 'أجرة واحدة، ويبقى معك حتى تصرفه. لا يُقتل. أعطه الأوامر بزرّه أو بالحرف G.', 'Not with foes so near': 'ليس والأعداء بهذا القرب', 'Mounted. You climb down by yourself when foes come.': 'ركبتَ. ستنزل وحدك حين يقترب الأعداء.', 'the reeds are full of his men!': 'القصب مليء برجاله!',
   // codex
   'The Nahrawan': 'النهروان',
   'A great canal east of the Tigris, older than Islam, that watered the lands from Samarra down past Baghdad. Its weirs and sluices were Sasanian work. Where its banks failed, the water spread into marsh and reed bed.': 'نهر عظيم شرقيّ دجلة، أقدم من الإسلام، كان يسقي الأرض من سامرّاء إلى ما بعد بغداد. سدوده ومَسَنّياته من عمل الساسانيين. وحيث انهارت ضفّتاه انتشر الماء أهوارًا ومنابت قصب.',
