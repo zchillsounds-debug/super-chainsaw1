@@ -7,6 +7,19 @@ import { QUALITY } from './graphics.js';
 // -> upper-body action clips (keyframed with anticipation / strike / follow-through / recovery)
 // -> additive flinch -> face (blink, jaw, brow) -> cloth and spring bones.
 export const CharLOD = { center: new THREE.Vector3(), simDist: 24 };
+// Round 21: facial expressions. brow: both brows up (+) or down (-); inner: the inner ends lift (+, grief, worry)
+// or knot down (-, anger); lid: eyes wide (+) or narrowed (-); smile: mouth corners up (+) or down (-); jaw: open.
+// A cutscene sets one by name on the speaker (rig.userData.expr, see cinema.js); fights set their own.
+export const EXPR = {
+  neutral: {}, listen: { brow: 0.2, inner: 0.15 },
+  grief: { brow: -0.15, inner: 1, lid: -0.35, smile: -0.8, jaw: 0.04 }, sad: { inner: 0.6, lid: -0.2, smile: -0.45 },
+  anger: { brow: -1, inner: -0.9, lid: -0.3, smile: -0.45, jaw: 0.06 }, stern: { brow: -0.5, inner: -0.5, lid: -0.15, smile: -0.2 },
+  resolve: { brow: -0.35, inner: -0.25, lid: -0.1, smile: -0.1 }, surprise: { brow: 1, inner: 0.3, lid: 0.7, jaw: 0.35 },
+  fear: { brow: 0.6, inner: 0.9, lid: 0.45, smile: -0.4, jaw: 0.18 }, warm: { brow: 0.2, inner: 0.25, lid: -0.15, smile: 0.75 },
+  pain: { brow: -0.6, inner: 0.7, lid: -0.65, smile: -0.6, jaw: 0.22 }, effort: { brow: -0.8, inner: -0.6, lid: -0.25, smile: -0.35 },
+  wary: { brow: -0.2, inner: -0.1, lid: -0.3 }, whistle: { brow: 0.3, lid: -0.1, jaw: 0.05, smile: -0.3 },
+};
+const EX_KEYS = ['brow', 'inner', 'lid', 'smile', 'jaw'];
 const LOW = QUALITY === 'low';
 
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _d = new THREE.Vector3(), _e = new THREE.Vector3();
@@ -63,6 +76,11 @@ const CLIPS = {
 CLIPS.aimXbow = [[0, null], [0.25, { shR: [-1.35, 0.35, 0.1], elR: [-1.25, 0, 0], hR: [0.1, 0, 0], shL: [-1.45, -0.35, 0], elL: [-0.7, 0, 0], chest: [0, -0.15, 0], neck: [0.05, 0.12, 0], drop: 0.04 }, 'io'],
   [0.62, { shR: [-1.35, 0.35, 0.1], elR: [-1.25, 0, 0], hR: [0.1, 0, 0], shL: [-1.45, -0.35, 0], elL: [-0.7, 0, 0], chest: [0, -0.15, 0], neck: [0.05, 0.12, 0], drop: 0.04 }, 'lin'],
   [0.7, { shR: [-1.5, 0.35, 0.1], elR: [-1.0, 0, 0], shL: [-1.6, -0.35, 0], elL: [-0.6, 0, 0], chest: [-0.08, -0.15, 0], neck: [0.05, 0.12, 0] }, 'snap'], [1, null, 'io']];
+// Round 21: two fingers to the lips to whistle up the mount; an arm flung out to point (the falcon, a direction)
+{ const w = { shR: [-1.25, -0.45, 0.25], elR: [-2.35, 0, 0], hR: [0.3, 0, 0], neck: [-0.12, 0, 0], head: [-0.12, 0, 0], chest: [-0.05, 0, 0], jaw: 0.08 };
+  CLIPS.whistle = [[0, null], [0.28, w, 'io'], [0.78, w, 'lin'], [1, null, 'io']];
+  const pt = { shR: [-1.55, 0.1, 0.05], elR: [-0.08, 0, 0], hR: [-0.1, 0, 0], chest: [0, 0.18, 0], neck: [0, 0.15, 0] };
+  CLIPS.point = [[0, null], [0.25, pt, 'snap'], [0.8, pt, 'lin'], [1, null, 'io']]; }
 const COMBO = ['slashA', 'slashB', 'chop'];
 // which moves an action cycles through, by weapon; a chain resets after a pause
 const VARIANTS = { attack: { sword: COMBO, mallet: ['chop', 'slashA', 'chop'], dagger: ['stabA', 'stabB', 'stabC'], spear: ['thrust', 'thrustHigh', 'sweep'] }, thrust: ['thrust', 'thrustHigh', 'sweep'], shoot: ['shoot', 'shootQuick', 'shootKneel'], throw: ['throw', 'throwSide', 'throwLow'] };
@@ -345,12 +363,20 @@ export class Animator {
     this.blinkT -= dt;
     if (this.blinkT <= 0) { this.blink = 1; this.blinkT = 2 + Math.random() * 4; }
     this.blink = Math.max(0, this.blink - dt * 7);
+    // expression: a named one from the scene (or the state), else the fight's own (effort, pain), eased toward
+    const ename = st.exprName || r.userData.expr || (st.hitT > 0.25 ? 'pain' : st.action === 'whistle' ? 'whistle' : st.action ? 'effort' : null);
+    const tgt = typeof st.expr === 'object' && st.expr ? st.expr : EXPR[ename] || EXPR.neutral, ex = this.ex ||= { brow: 0, inner: 0, lid: 0, smile: 0, jaw: 0 };
+    const ek = Math.min(1, dt * (ename === 'pain' || ename === 'effort' ? 14 : 5));
+    for (const k of EX_KEYS) ex[k] += ((tgt[k] || 0) - ex[k]) * ek;
     const closed = st.dead ? 1 : Math.max(Math.sin(this.blink * Math.PI), st.eyesClosed || 0, clamp01(st.hitT || 0) * 0.6);
-    for (const l of p.lids) { l.up.rotation.x = -0.36 + closed * 0.86; l.lo.rotation.x = 0.3 - closed * 0.1; } // Round 20: relaxed lids cover the top of the iris
-    const jaw = Math.max(this.jawT || 0, st.talk ? Math.max(0, Math.sin(t * 13) * Math.sin(t * 5.3)) * 0.6 : 0, st.expr?.jaw || 0);
+    const lw = closed > 0.5 ? 0 : ex.lid; // a blink always closes fully
+    for (const l of p.lids) { l.up.rotation.x = -0.36 + closed * 0.86 - lw * 0.24; l.lo.rotation.x = 0.3 - closed * 0.1 + Math.min(0, lw) * 0.22; } // Round 20: relaxed lids cover the top of the iris
+    const jaw = Math.max(this.jawT || 0, st.talk ? Math.max(0, Math.sin(t * 13) * Math.sin(t * 5.3)) * 0.6 : 0, ex.jaw);
     p.jaw.rotation.x = jaw * 0.28;
-    const brow = st.expr?.brow ?? ((st.action || st.hitT > 0.2) ? -1 : 0);
-    p.brow.position.copy(p.brow.userData.bindPos).y += brow * 0.004; p.brow.rotation.x = -brow * 0.08;
+    if (p.browL) {
+      for (const [bn, sd] of [[p.browL, -1], [p.browR, 1]]) { bn.position.copy(bn.userData.bindPos); bn.position.y += ex.brow * 0.0045 + ex.inner * 0.0012; bn.rotation.set(-ex.brow * 0.06, 0, -sd * ex.inner * 0.24); }
+      for (const [bn, sd] of [[p.mouthL, -1], [p.mouthR, 1]]) { bn.position.copy(bn.userData.bindPos); bn.position.x += sd * Math.max(0, ex.smile) * 0.0016; bn.position.y += ex.smile * 0.0036 - jaw * 0.002; bn.position.z -= Math.abs(ex.smile) * 0.0012; }
+    }
     if (st.lookAt && alive) {
       const h = p.head; h.updateMatrixWorld(); const hp = h.getWorldPosition(_a);
       const dir = _b.subVectors(st.lookAt, hp); const yaw = Math.atan2(dir.x, dir.z) - r.rotation.y;

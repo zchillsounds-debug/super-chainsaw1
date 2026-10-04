@@ -78,10 +78,10 @@ export function prologue(g) {
   const shots = [
     { dur: 6.5, card: { ar: 'القافلة', en: 'Act I · The Caravan', sub: 'The Sawad, outside Baghdad, in the year 813' }, stinger: 'title', fadeIn: 1.2,
       cam: { p0: () => ground(36, 140, 14), t0: () => ground(14, 124, 1.2), p1: () => ground(26, 132, 6), t1: () => ground(13.5, 121, 1.4) }, run: (d, k, dt) => march(dt) },
-    { dur: 4.6, line: { who: 'Jabir', text: 'Two more days to Baghdad, Salim. Then home.', rig: guard1.rig, cue: 'hm' },
+    { dur: 4.6, line: { who: 'Jabir', text: 'Two more days to Baghdad, Salim. Then home.', rig: guard1.rig, cue: 'hm', expr: 'warm' },
       cam: { follow: true, p0: at(guard1, 1.8, 2.8, 2.2), t0: at(guard1, 1.55, -1, 0), p1: at(guard1, 1.75, 2.4, 1.8), t1: at(guard1, 1.55, -1, 0), fov: 34 }, dof: headOf(guard1), aperture: 1.4,
       run: (d, k, dt) => march(dt) },
-    { dur: 4.4, line: { who: 'Salim', text: 'Too quiet, brother. I do not like it.', rig: g.player.rig, cue: 'hm' },
+    { dur: 4.4, line: { who: 'Salim', text: 'Too quiet, brother. I do not like it.', rig: g.player.rig, cue: 'hm', expr: 'wary' },
       cam: { follow: true, p0: at(salim, 1.75, 2.6, 1.6), t0: at(salim, 1.6, -1.5, -0.6), p1: at(salim, 1.7, 2.3, 1.3), t1: at(salim, 1.6, -1.5, -0.6) }, dof: headOf(salim), aperture: 1.6,
       run: (d, k, dt) => { march(dt); salim.st.headYaw = -Math.sin(k * Math.PI) * 0.6; } },
     // riders on the ridge, seen from far away; they only stand and watch
@@ -89,7 +89,7 @@ export function prologue(g) {
       run: (d, k, dt) => { march(dt, 0.8); for (const b of [archer, b1, b2]) b.st.crouch = Math.max(0, 1 - k * 1.6); salim.st.headYaw = 0; if (k > 0.7) d.fade(1, 1.0); } },
     { dur: 3.4, caption: 'Bandits attacked the caravan at dusk.',
       enter: (d) => { d.fade(1, 0.01); d.audio.vocal('shout', 0.9); for (const a of caravan) a.halt = true; hideBandits(); } },
-    { dur: 4.8, fadeIn: 1.4, line: { who: 'Jabir', text: 'Salim... the chest. Do not let them burn it.', rig: guard1.rig, cue: 'breath' },
+    { dur: 4.8, fadeIn: 1.4, line: { who: 'Jabir', text: 'Salim... the chest. Do not let them burn it.', rig: guard1.rig, cue: 'breath', expr: 'pain', react: 'grief' },
       cam: { follow: true, p0: at(salim, 2.5, -1.9, -2.3), t0: at(salim, 0.35, 1.3), p1: at(salim, 2.35, -1.75, -2.15), t1: at(salim, 0.38, 1.28), fov: 40 }, dof: headOf(salim), aperture: 1.4,
       enter: () => {
         hideBandits();
@@ -103,7 +103,7 @@ export function prologue(g) {
         if (lamp) { lamp.color.set(0xff9a50); lamp.distance = 8; lamp.position.copy(guard1.pos).add(V(0.4, 1.1, 0.9)); lamp.intensity = 7; }
       },
       run: () => { salim.st.crouch = 0.85; } },
-    { dur: 3.6, line: { who: 'Salim', text: 'I will bring it back, brother. I promise.', rig: g.player.rig, cue: 'breath' },
+    { dur: 3.6, line: { who: 'Salim', text: 'I will bring it back, brother. I promise.', rig: g.player.rig, cue: 'breath', expr: 'grief' },
       cam: { follow: true, p0: at(salim, 1.5, 1.9, 1.0), t0: headOf(salim), p1: at(salim, 1.45, 1.7, 0.9), t1: headOf(salim), fov: 32 }, dof: headOf(salim), aperture: 1.3,
       run: () => { salim.st.crouch = 0.85; } },
     { dur: 4.2, caption: 'Jabir did not live to see Baghdad. The bandits had taken the chest.', enter: (d) => d.fade(1, 1.2) },
@@ -131,7 +131,7 @@ export function briefing(g) {
     { dur: 3.2, fadeIn: 1.0, cam: { p0: () => V(-0.5 + 5.5, heightAt(4, 90) + 2.6, 92), t0: () => V(-0.5, 1.4 + heightAt(0, 86), 86), p1: () => V(3.5, heightAt(3, 90) + 2.2, 90.5), t1: () => V(-0.5, 1.4 + heightAt(0, 86), 86) },
       enter: () => { face(); g.npcMark && (g.npcMark.visible = false); } },
     { dur: lineDur(L[0]), line: { who: 'Ishaq', text: L[0], rig: g.npc, cue: 'breath' }, cam: ots(salim, ishaq, 0.35), dof: headOf(ishaq), enter: () => talk(true), run: () => face() },
-    { dur: 3.6, line: { who: 'Salim', text: 'He died for that chest. What was in it?', rig: g.player.rig, cue: 'hm' }, cam: ots(ishaq, salim, -0.35), dof: headOf(salim), enter: () => { talk(false); salim.st.talk = true; } },
+    { dur: 3.6, line: { who: 'Salim', text: 'He died for that chest. What was in it?', rig: g.player.rig, cue: 'hm', expr: 'grief', react: 'sad' }, cam: ots(ishaq, salim, -0.35), dof: headOf(salim), enter: () => { talk(false); salim.st.talk = true; } },
     { dur: lineDur(L[1]), line: { who: 'Ishaq', text: L[1], rig: g.npc }, cam: ots(salim, ishaq, 0.4), dof: headOf(ishaq), enter: () => { salim.st.talk = false; talk(true); act(ishaq, 'cast', 2.4); } },
     { dur: lineDur(L[2]), line: { who: 'Ishaq', text: L[2], rig: g.npc }, cam: { follow: true, p0: at(ishaq, 1.6, 2.4, 1.6), t0: headOf(ishaq), p1: at(ishaq, 1.6, 2.0, 1.0), t1: headOf(ishaq), fov: 32 }, dof: headOf(ishaq) },
   ];
@@ -175,7 +175,7 @@ export function bossIntro(g, b, intro = null) {
   const shots = [
     { dur: 3.4, cam: { follow: true, p0: at(salim, 1.9, -3.2, 0.9), t0: at(boss, 2.4), p1: at(salim, 1.8, -2.2, 0.7), t1: at(boss, 2.4), fov: 32 }, stinger: 'boss',
       enter: () => { face(); b.st.crouch = 0.8; }, run: (d, k) => { face(); b.st.crouch = 0.8 * (1 - k); } },
-    { dur: 5.2, line: { who, text: I.text, rig: b.rig, cue: 'growl' },
+    { dur: 5.2, line: { who, text: I.text, rig: b.rig, cue: 'growl', expr: 'anger', react: 'resolve' },
       cam: { follow: true, p0: at(boss, 0.5, 4.6, 1.4), t0: at(boss, 2.25), p1: at(boss, 0.7, 3.6, 0.9), t1: at(boss, 2.3), fov: 34 }, dof: headOf(boss),
       enter: (d) => { act(boss, 'command', 2.6); d.audio.roar?.(); }, run: () => face() },
     // Round 20: Salim's answer is a look, from low and close, before the boss is framed from below for his card
@@ -227,14 +227,14 @@ export function epilogue(g, b) {
   };
   const shots = [
     { dur: 4.2, cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.4), p1: () => V(boss.pos.x + Math.sin(ang + 1.6) * 6, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.6) * 6), t1: at(boss, 0.6), fov: 34 } },
-    { dur: 4.4, line: { who: 'Salim', text: 'Not for paper. For my brother.', rig: g.player.rig, cue: 'hm' },
+    { dur: 4.4, line: { who: 'Salim', text: 'Not for paper. For my brother.', rig: g.player.rig, cue: 'hm', expr: 'resolve' },
       cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim), run: () => { salim.facing = yawTo(salim.pos, boss.pos); } },
     { dur: 3.6, caption: 'Most of the Pages were in Ghassan\'s tent.', enter: (d) => d.fade(1, 0.8) },
     { dur: 7, fadeIn: 1.6, caption: 'That evening the village floated a lamp on the canal for each guard who died.',
       enter: () => { floatLamps(); g.lighting?.set?.('dusk', 0); },
       cam: { p0: () => V(canalX(70) + 7, 3.2, 66), t0: () => V(canalX(84), 0.2, 84), p1: () => V(canalX(72) + 5, 2.2, 70), t1: () => V(canalX(88), 0.2, 88), fov: 40 },
       run: (d, k, dt) => { for (const l of lamps) { l.position.z += l.userData.v * dt; l.position.x = canalX(l.position.z) + Math.sin(l.position.z * 2) * 0.4; } } },
-    { dur: 4.2, line: { who: 'Salim', text: 'Jabir.', rig: g.player.rig, cue: 'breath' },
+    { dur: 4.2, line: { who: 'Salim', text: 'Jabir.', rig: g.player.rig, cue: 'breath', expr: 'sad' },
       enter: () => { const p = g.player; p.pos.set(canalX(84) - 3, 0, 84); p.pos.y = heightAt(p.pos.x, 84); salim.facing = Math.PI / 2; },
       cam: { follow: true, p0: at(salim, 1.6, 2.2, -1.2), t0: headOf(salim), fov: 28 }, dof: headOf(salim), aperture: 1.2,
       run: (d, k, dt) => { for (const l of lamps) l.position.z += l.userData.v * dt; } },
@@ -447,7 +447,7 @@ export function docksFinale(g, b) {
       enter: () => { boat.visible = false; scholar.rig.visible = false; floatLamps(); g.lighting?.set?.('dusk', 0); },
       cam: { p0: () => V(bank(LZ) - 4, 3.2, LZ + 14), t0: () => V(bank(LZ) + 5, -0.4, LZ), p1: () => V(bank(LZ) - 3, 2.4, LZ + 10), t1: () => V(bank(LZ) + 6, -0.4, LZ - 6), fov: 40 },
       run: (d, k, dt) => drift(dt || 1 / 60) },
-    { dur: 4.4, line: { who: 'Salim', text: 'Jabir. It is done.', rig: g.player.rig, cue: 'breath' },
+    { dur: 4.4, line: { who: 'Salim', text: 'Jabir. It is done.', rig: g.player.rig, cue: 'breath', expr: 'sad', react: 'warm' },
       enter: () => { const p = g.player; p.pos.set(bank(LZ) - 1.4, 0, LZ); p.pos.y = heightAt(p.pos.x, LZ); salim.facing = Math.PI / 2; ishaq.pos.set(p.pos.x - 1.4, heightAt(p.pos.x - 1.4, LZ - 1.2), LZ - 1.2); ishaq.facing = Math.PI / 2; },
       cam: { follow: true, p0: at(salim, 1.6, 2.2, -1.2), t0: headOf(salim), fov: 28 }, dof: headOf(salim), aperture: 1.2, run: (d, k, dt) => drift(dt || 1 / 60) },
     { dur: 4.0, line: { who: 'Ishaq', text: 'We keep the account.', rig: g.npc, cue: 'breath' },

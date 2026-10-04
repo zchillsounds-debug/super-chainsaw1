@@ -48,6 +48,11 @@ export class Audio {
   death() { this.noise(0.6, 500, 120, 2, 0.4); }
   roar() { this.noise(1.6, 200, 70, 2, 0.9, 'lowpass'); this.tone(55, 1.6, 'sawtooth', 0.15, 0.7); }
   levelUp() { [392, 494, 587, 784].forEach((f, i) => setTimeout(() => this.tone(f, 0.8, 'triangle', 0.14), i * 120)); }
+  // Round 21: a two-note whistle to call the mount, a hound's bark, a falcon's cry, a fish on the line
+  whistle() { this.tone(1900, 0.18, 'sine', 0.09, 1.25); setTimeout(() => this.tone(2350, 0.32, 'sine', 0.1, 0.82), 190); }
+  bark() { this.noise(0.09, 900, 500, 2.5, 0.35); this.tone(330, 0.1, 'sawtooth', 0.05, 0.7); }
+  cry() { this.tone(2800, 0.35, 'sine', 0.06, 0.7); setTimeout(() => this.tone(3100, 0.25, 'sine', 0.05, 0.75), 160); }
+  splashSmall() { this.noise(0.35, 2200, 500, 0.7, 0.3); }
   potion() { for (let i = 0; i < 4; i++) setTimeout(() => this.tone(300 + i * 60, 0.15, 'sine', 0.1, 1.3), i * 60); }
   startWind() {
     const s = this.ctx.createBufferSource(); s.buffer = this.noiseBuf; s.loop = true;

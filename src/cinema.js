@@ -9,6 +9,19 @@ const sm = (t) => t * t * (3 - 2 * t);
 const EASE = { io: sm, lin: (t) => t, out: (t) => 1 - Math.pow(1 - t, 3), in: (t) => t * t * t, io2: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2) };
 const v3 = (a) => (a.isVector3 ? a.clone() : Array.isArray(a) ? new THREE.Vector3(...a) : typeof a === 'function' ? a() : a);
 
+// Round 21: faces act the lines. A line may name its expression (line.expr); otherwise it is read from the words.
+// The speaker wears it; everyone else in the scene reacts (grief softens to sadness, anger to a stern look).
+const MOODS = [
+  ['grief', /\b(died|dead|dies|death|grave|bur(y|ied)|mourn|last words|lost|gone|weep|tears|sorry)\b/i],
+  ['fear', /\b(afraid|fear|mercy|spare me|please)\b/i],
+  ['anger', /\b(burn(s|ed|ing)?|fire|thie(f|ves)|traitor|betray(ed)?|fouled|poison(ed)?|kill(ed)?|murder|enough|how dare|you will pay)\b|!/i],
+  ['warm', /\b(thank(s| you)?|well done|friend|peace|welcome|sweet|glad|home|bread|keep the account|it is done)\b/i],
+  ['surprise', /\b(what|who|how)\b[^.]*\?$/i],
+  ['resolve', /\b(I will|we will|I'll|we'll|promise|swear|must|find him|stop (him|them)|follow|I am coming)\b/i],
+];
+const REACT = { grief: 'sad', anger: 'stern', fear: 'wary', warm: 'warm', surprise: 'surprise', resolve: 'resolve' };
+export function moodOf(text = '') { for (const [m, re] of MOODS) if (re.test(text)) return m; return 'neutral'; }
+
 export class Director {
   constructor({ game, camera, ui, audio, grade, bokeh, renderer, scene }) {
     Object.assign(this, { game, camera, ui, audio, grade, bokeh, renderer, scene });
@@ -74,6 +87,7 @@ export class Director {
   }
   end(skipped) {
     const d = this.def; if (!d) return;
+    for (const r of this.faces()) r.userData.expr = null;
     this.def = null; this.shot = null; this.timeScale = 1;
     this.el.classList.remove('on'); setTimeout(() => { if (!this.def) this.el.classList.add('hidden'); }, 700);
     document.body.classList.remove('incine'); this.ui.hud?.classList.remove('cinehide');
@@ -96,7 +110,11 @@ export class Director {
     if (line.rig) this.portrait(line.rig, this.$('.por canvas'));
     sub.classList.add('show');
     if (line.cue) this.audio.vocal?.(line.cue, line.pitch || 1);
+    // faces: the speaker shows the line's feeling, the others react to it
+    const mood = line.expr || moodOf(line.text);
+    for (const r of this.faces()) r.userData.expr = r === line.rig ? mood : line.react || REACT[mood] || 'listen';
   }
+  faces() { const out = new Set(); for (const a of this.def?.actors || []) if (a?.rig?.userData?.parts) out.add(a.rig); if (this.shot?.line?.rig) out.add(this.shot.line.rig); if (this.game.player?.rig) out.add(this.game.player.rig); if (this.game.npc) out.add(this.game.npc); return out; }
   setCard(c) {
     const card = this.$('.card');
     if (!c) { card.classList.remove('show'); return; }

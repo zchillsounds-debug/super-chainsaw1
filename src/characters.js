@@ -151,4 +151,4 @@ export { humanoid, animateHumanoid, setCharLOD } from './human.js';
 export { CharLOD } from './anim.js';
 
 // --------------------------------------------------------------------- dromedary camel (sculpted, see creatures.js)
-export { camel, animateCamel, buffalo, animateBuffalo } from './creatures.js';
+export { camel, animateCamel, buffalo, animateBuffalo, horse, animateHorse, saluki, animateSaluki, SALUKI_COATS } from './creatures.js';

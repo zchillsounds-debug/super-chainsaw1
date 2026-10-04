@@ -23,6 +23,9 @@ function boneDefs(b) {
     d.push(['clav' + S, 'upperChest', s * 0.025, 0.095, 0], ['arm' + S, 'clav' + S, s * 0.155 * b, -0.015, -0.01, s * 0.35], ['fore' + S, 'arm' + S, 0, -0.29, 0], ['hand' + S, 'fore' + S, 0, -0.255, 0]);
     d.push(['thigh' + S, 'hips', s * 0.095, -0.05, 0], ['shin' + S, 'thigh' + S, 0, -0.44, 0], ['foot' + S, 'shin' + S, 0, -0.43, 0], ['toe' + S, 'foot' + S, 0, -0.06, 0.12]);
   }
+  // Round 21: face bones for expressions: each brow can lift, lower and tilt at its inner end, and each mouth
+  // corner can draw up (a smile) or down (grief). Appended last so every older bone keeps its index.
+  for (const [S, s] of [['L', -1], ['R', 1]]) d.push(['brow' + S, 'head', s * 0.032 * HS, 0.118 * HS, 0.072 * HS], ['mouth' + S, 'head', s * 0.021 * HS, 0.04 * HS, 0.098 * HS]);
   return d;
 }
 const _bind = new Map();
@@ -63,6 +66,7 @@ function helpers(B, sc = 1) {
   };
 }
 const SIDES = [['L', -1], ['R', 1]];
+const HAIRS = ['crop', 'crop', 'long', 'locks', 'tied'];
 
 function headPrims(B, o) {
   const { cap, ell } = helpers(B, HS), H = 'head', L = [];
@@ -77,7 +81,7 @@ function headPrims(B, o) {
   L.push(ell('jaw', [0, -0.072, 0.07], [0.024, 0.021, 0.018], null, { k: 0.02, ...sk }));
   for (const [, s] of SIDES) {
     L.push(ell(H, [s * 0.046, 0.084, 0.062], [0.024, 0.015, 0.022], null, { k: 0.02, ...sk })); // cheekbone
-    L.push(cap('brow', [s * 0.052, -0.004, 0.0], [s * 0.012, 0.0, 0.018], 0.0115, 0.011, { k: 0.016, ...sk })); // brow ridge
+    L.push(cap('brow', [s * 0.052, -0.004, 0.0], [s * 0.012, 0.0, 0.018], 0.0115, 0.011, { k: 0.016, ...sk, bone: B.idx[s < 0 ? 'browL' : 'browR'] })); // brow ridge
     L.push(ell(H, [s * 0.077, 0.09, -0.006], [0.011, 0.03, 0.019], [0, -s * 0.35, 0], { k: 0.008, ...sk })); // ear
     L.push(ell(H, [s * 0.084, 0.088, -0.001], [0.005, 0.016, 0.009], null, { sub: true, k: 0.005 }));
     L.push(ell(H, [s * 0.033, 0.096, 0.09], [0.019, 0.0125, 0.017], null, { sub: true, k: 0.012 })); // eye socket
@@ -93,6 +97,12 @@ function headPrims(B, o) {
   L.push(ell(H, [0, 0.0415, 0.098], [0.021, 0.0062, 0.0082], null, { k: 0.007, mat: R.LIPS }));
   L.push(ell('jaw', [0, -0.036, 0.093], [0.019, 0.0066, 0.0095], null, { k: 0.007, mat: R.LIPS }));
   L.push(cap(H, [-0.021, 0.0375, 0.103], [0.021, 0.0375, 0.103], 0.0016, 0.0016, { sub: true, k: 0.003 }));
+  // mouth corners and the cheek above each: they carry the corner's weight so a smile or a frown moves the skin
+  for (const [S, s] of SIDES) {
+    const mb = { bone: B.idx['mouth' + S] };
+    L.push(ell(H, [s * 0.021, 0.04, 0.095], [0.0065, 0.0055, 0.0065], null, { k: 0.006, mat: R.LIPS, ...mb }));
+    L.push(ell(H, [s * 0.031, 0.05, 0.088], [0.009, 0.009, 0.008], null, { k: 0.01, ...sk, ...mb, w: 0.7 }));
+  }
   return L;
 }
 function handPrims(B, o) {
@@ -162,17 +172,24 @@ function garmentPaint(o) {
   };
 }
 function hairPrims(B, o) {
-  const { cap, ell } = helpers(B, HS), L = [], hm = { mat: R.HAIR };
+  const { cap, ell } = helpers(B, HS), L = [], hm = { mat: R.HAIR }, trim = o.beardStyle === 'trim';
   if (!o.bald) L.push(ell('head', [0, 0.11, -0.018], [0.0795, 0.068, 0.099], null, { k: 0.02, mat: R.HAIR }), ell('head', [0, 0.05, -0.09], [0.06, 0.05, 0.03], null, { k: 0.03, mat: R.HAIR }));
+  // Round 21: hair styles of the time. long: the jumma, hair worn to the nape; locks: two plaited side locks
+  // (dhu'aba) hanging before the ears; tied: gathered in a knot at the nape. (crop is the plain short cut above.)
+  if (!o.bald && o.hair === 'long') { L.push(ell('head', [0, 0.05, -0.088], [0.072, 0.08, 0.042], null, { k: 0.025, ...hm }), cap('neck', [0, 0.07, -0.06], [0, -0.05, -0.075], 0.052, 0.046, { k: 0.03, ...hm })); for (const [, s] of SIDES) L.push(cap('head', [s * 0.07, 0.07, -0.03], [s * 0.066, -0.02, -0.05], 0.016, 0.014, { k: 0.02, ...hm })); }
+  if (!o.bald && o.hair === 'locks') for (const [, s] of SIDES) L.push(cap('head', [s * 0.071, 0.085, 0.012], [s * 0.077, -0.02, 0.022], 0.012, 0.0095, { k: 0.008, ...hm }), cap('head', [s * 0.077, -0.02, 0.022], [s * 0.072, -0.1, 0.034], 0.0095, 0.007, { k: 0.006, ...hm }));
+  if (!o.bald && o.hair === 'tied') L.push(ell('head', [0, 0.06, -0.104], [0.036, 0.033, 0.03], null, { k: 0.015, ...hm }), cap('head', [0, 0.08, -0.094], [0, 0.045, -0.112], 0.021, 0.018, { k: 0.015, ...hm }));
   // brows: a thin arch, heavier at the inner end, tapering down at the temple
-  for (const [, s] of SIDES) L.push(cap('brow', [s * 0.012, 0.006, 0.031], [s * 0.034, 0.011, 0.027], 0.0052, 0.0045, { k: 0.004, mat: R.BROW }), cap('brow', [s * 0.034, 0.011, 0.027], [s * 0.056, 0.0, 0.011], 0.0045, 0.0028, { k: 0.004, mat: R.BROW }));
+  for (const [S, s] of SIDES) { const bb = { bone: B.idx['brow' + S] }; L.push(cap('brow', [s * 0.012, 0.006, 0.031], [s * 0.034, 0.011, 0.027], 0.0052, 0.0045, { k: 0.004, mat: R.BROW, ...bb }), cap('brow', [s * 0.034, 0.011, 0.027], [s * 0.056, 0.0, 0.011], 0.0045, 0.0028, { k: 0.004, mat: R.BROW, ...bb })); }
   if (o.beard) {
     const len = o.beardLen;
     for (const [, s] of SIDES) {
       L.push(cap('jaw', [s * 0.057, -0.01, -0.012], [s * 0.026, -0.072, 0.06], 0.017, 0.022, { k: 0.02, ...hm }));
       L.push(ell('jaw', [s * 0.043, -0.038, 0.045], [0.02, 0.03, 0.026], null, { k: 0.02, ...hm }));
     }
-    L.push(ell('beard', [0, -0.012 - len * 0.03, 0.016], [0.036, 0.034 + len * 0.04, 0.028], null, { k: 0.025, ...hm }));
+    // a trimmed beard follows the jaw closely; the full one hangs below the chin
+    if (!trim) L.push(ell('beard', [0, -0.012 - len * 0.03, 0.016], [0.036, 0.034 + len * 0.04, 0.028], null, { k: 0.025, ...hm }));
+    else L.push(ell('beard', [0, -0.006, 0.02], [0.03, 0.022, 0.022], null, { k: 0.02, ...hm }));
     L.push(ell('jaw', [0, -0.065, 0.068], [0.03, 0.024, 0.024], null, { k: 0.02, ...hm }));
     // moustache, joined under the nose and running into the beard
     for (const [, s] of SIDES) L.push(cap('head', [s * 0.033, 0.03, 0.088], [s * 0.012, 0.05, 0.104], 0.0055, 0.0068, { k: 0.008, ...hm }));
@@ -284,8 +301,32 @@ function piece(name, key, make) {
 const _merged = new Map();
 function mergedPieces(geos) {
   const k = geos.map((g) => g.userData.key).join('+');
-  if (!_merged.has(k)) { const m = geos.length > 1 ? mergeGeometries(geos) : geos[0]; m.computeBoundingSphere(); _merged.set(k, m); }
+  if (!_merged.has(k)) { const m = compact(geos.length > 1 ? mergeGeometries(geos) : geos[0]); _merged.set(k, m); }
   return _merged.get(k);
+}
+// the merged copy is packed tight for the GPU (28 bytes a vertex, was 60: byte normals, bone indices and weights)
+// and its CPU arrays are dropped once uploaded; the shared pieces stay on the CPU to build new combinations
+const dropArray = function () { this.array = null; };
+function compact(src) {
+  const n = src.attributes.position.count, g = new THREE.BufferGeometry();
+  const N = src.attributes.normal.array, SI = src.attributes.skinIndex.array, SW = src.attributes.skinWeight.array, M = src.attributes.aMat.array;
+  const n8 = new Int8Array(n * 4), i8 = new Uint8Array(n * 4), w8 = new Uint8Array(n * 4), m8 = new Uint8Array(n * 4);
+  for (let v = 0; v < n; v++) {
+    for (let c = 0; c < 3; c++) n8[v * 4 + c] = Math.round(Math.max(-1, Math.min(1, N[v * 3 + c])) * 127);
+    let sum = 0, big = 0;
+    for (let c = 0; c < 4; c++) { i8[v * 4 + c] = SI[v * 4 + c]; const w = Math.round(SW[v * 4 + c] * 255); w8[v * 4 + c] = w; sum += w; if (w > w8[v * 4 + big]) big = c; }
+    w8[v * 4 + big] += 255 - sum; // the weights still add up to exactly one
+    m8[v * 4] = M[v];
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(src.attributes.position.array), 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(n8, 4, true));
+  g.setAttribute('skinIndex', new THREE.BufferAttribute(i8, 4));
+  g.setAttribute('skinWeight', new THREE.BufferAttribute(w8, 4, true));
+  g.setAttribute('aMat', new THREE.BufferAttribute(m8, 4));
+  const ix = src.index.array; g.setIndex(new THREE.BufferAttribute(n > 65535 ? new Uint32Array(ix) : new Uint16Array(ix), 1));
+  g.boundingSphere = new THREE.Sphere(V(0, 0.95, 0), 1.35);
+  for (const a of Object.values(g.attributes)) a.onUpload(dropArray); g.index.onUpload(dropArray);
+  return g;
 }
 // both eyes (or both upper / lower lids) as one mesh: the lids of both eyes turn about the same x axis, so one pivot serves
 const _eyeGeo = new Map();
@@ -323,6 +364,9 @@ export function humanoid(opts = {}) {
   const o = Object.assign({ skin: 0xa8714a, robe: '#e8dcc0', robe2: '#a03020', sash: 0x8a1c1c, turban: 0xf0ead8, weapon: 'sword', offhand: null, hunch: 0, scale: 1,
     mail: false, cloak: null, cap: null, helm: null, mask: null, beard: null, qaba: false, build: 1, girth: 1, belly: 0, neck: 1, beardLen: 0.5, hemY: null }, opts);
   if (o.helm) o.turban = null;
+  // crowds and foes get a hair style and beard cut at random (heroes keep what their look names)
+  if (o.hair == null) o.hair = o.detail === 'hi' ? 'crop' : HAIRS[Math.floor(Math.random() * HAIRS.length)];
+  if (o.beardStyle == null) o.beardStyle = o.detail !== 'hi' && o.hair === 'crop' && Math.random() < 0.5 ? 'trim' : 'full';
   const B = bindData(o.build);
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body); body.scale.setScalar(o.scale);
   const { bones, skeleton } = makeSkeleton(B);
@@ -331,7 +375,7 @@ export function humanoid(opts = {}) {
   // palette for this character
   const pal = defaultPalette(), C = (c) => new THREE.Color(c);
   pal[R.CLOTH].c = C(o.robe); pal[R.CLOTH2].c = C(o.robe2); pal[R.SASH].c = C(o.sash);
-  pal[R.SKIN].c = C(o.skin); pal[R.LIPS].c = C(o.skin).multiply(C(0xd0a090)).multiplyScalar(0.86);
+  pal[R.SKIN].c = C(o.skin); pal[R.LIPS].c = C(o.skin).multiply(C(0xc49a8c)).multiplyScalar(0.8); // Round 21: less red, so closed lips under a moustache don't read as an open mouth
   pal[R.SKIN].c.offsetHSL(0, -0.12, -0.02);
   if (o.beard) { pal[R.HAIR].c = C(o.beard); pal[R.BROW].c = C(o.beard).lerp(C(0x1a120c), 0.3); }
   if (o.turban) pal[R.WRAP].c = C(o.turban);
@@ -354,7 +398,7 @@ export function humanoid(opts = {}) {
     piece('hands', [tier, sk], () => sculpt(handPrims(B, o), { voxel: vox(0.0034, 0.0075), blend: 0.01 })),
     piece('garment', [tier, sk, o.qaba, o.mail, !!o.sash, o.tiraz], () => sculpt(garmentPrims(B, o), { voxel: vox(0.0105, 0.0185), blend: 0.03, paint: garmentPaint(o) })),
   ];
-  const hp = hairPrims(B, o); if (hp.length) geos.push(piece('hair', [tier, o.neck, !!o.beard, o.beardLen, !!o.bald, 3], () => sculpt(hp, { voxel: vox(0.0032, 0.0075), blend: 0.012 })));
+  const hp = hairPrims(B, o); if (hp.length) geos.push(piece('hair', [tier, o.neck, !!o.beard, o.beardLen, !!o.bald, 3, o.hair, o.beardStyle], () => sculpt(hp, { voxel: vox(0.0032, 0.0075), blend: 0.012 })));
   const hw = headwearPrims(B, o); if (hw.length) geos.push(piece('headwear', [tier, o.neck, !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume'], () => sculpt(hw, { voxel: vox(0.0048, 0.0085), blend: 0.02 })));
   const ap = o.armour ? armourPrims(B, o) : []; if (ap.length) geos.push(piece('armour', [tier, sk, o.armour, 2], () => sculpt(ap, { voxel: vox(0.008, 0.014), blend: 0.02, paint: armourPaint(o) })));
   if (o.mask) geos.push(piece('veil', [tier, o.neck], () => sculpt(veilPrims(B, o), { voxel: vox(0.0045, 0.0085), blend: 0.02 })));
@@ -365,7 +409,7 @@ export function humanoid(opts = {}) {
     piece('garment', ['far', sk, o.qaba, o.mail, !!o.sash, o.tiraz], () => sculpt(garmentPrims(B, o), { voxel: 0.04, blend: 0.035, paint: garmentPaint(o) })),
   ];
   if (farGeos) {
-    if (hp.length) farGeos.push(piece('hair', ['far', o.neck, !!o.beard, o.beardLen, !!o.bald], () => sculpt(hp, { voxel: 0.016, blend: 0.014 })));
+    if (hp.length) farGeos.push(piece('hair', ['far', o.neck, !!o.beard, o.beardLen, !!o.bald, o.hair, o.beardStyle], () => sculpt(hp, { voxel: 0.016, blend: 0.014 })));
     if (hw.length) farGeos.push(piece('headwear', ['far', o.neck, !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume'], () => sculpt(hw, { voxel: 0.018, blend: 0.02 })));
     if (ap.length) farGeos.push(piece('armour', ['far', sk, o.armour, 2], () => sculpt(ap, { voxel: 0.03, blend: 0.03, paint: armourPaint(o) })));
     if (o.mask) farGeos.push(piece('veil', ['far', o.neck], () => sculpt(veilPrims(B, o), { voxel: 0.018, blend: 0.02 })));
@@ -396,6 +440,7 @@ export function humanoid(opts = {}) {
   const parts = {
     body, bones, skeleton, mats: [mat], mat, meshes, farMeshes, lodFar: false, eyes, lids, cloths: [], jiggles: [], o,
     hips: bones.hips, spine: bones.spine, chest: bones.chest, upperChest: bones.upperChest, neck: bones.neck, head: bones.head, jaw: bones.jaw, brow: bones.brow,
+    browL: bones.browL, browR: bones.browR, mouthL: bones.mouthL, mouthR: bones.mouthR,
     shL: bones.armL, elL: bones.foreL, handL: bones.handL, shR: bones.armR, elR: bones.foreR, handR: bones.handR,
     thighL: bones.thighL, shinL: bones.shinL, footL: bones.footL, thighR: bones.thighR, shinR: bones.shinR, footR: bones.footR,
   };
