@@ -1,12 +1,13 @@
-# Madinat al-Salam: Handoff (Round 21 shipped; Round 22 to plan)
+# Madinat al-Salam: Handoff (Round 22 in progress)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/artifact-session-2nd2ew` of zchillsounds-debug/super-chainsaw1 (all of Round 21, shipped).
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-12b62167-3gbme9` of zchillsounds-debug/super-chainsaw1 (Round 21 shipped, Round 22 partly built).
 >
-> **Round 22 is next: improved gameplay, improved graphics and expanded features.** Above all I want the dungeons I asked for before (the Round 21 holds: hand-built maps with chasms, bridges, campfires, the close action camera and hold captains) in the main game, scattered across the maps from the start, not only as endgame.
-> 1. Fetch the branch (`git fetch origin claude/artifact-session-2nd2ew && git checkout -B <your session branch> FETCH_HEAD`), run `npm install`, and read HANDOFF.md fully, especially "Round 22: the brief".
-> 2. Ask me the open questions there, then propose a concrete plan. **Confirm with me before building anything.**
-> 3. Build it, run the test sweep (`shots/withvite.sh sh shots/sweep.sh`, in two halves) plus new tests, and fix anything that fails.
+> **Round 22 is approved and in progress** (holds in every act region, gameplay, graphics, features). See "Round 22: approved plan and status" in HANDOFF.md for what's done and what's left.
+> 1. Fetch the branch (`git fetch origin ccr-12b62167-3gbme9 && git checkout -B <your session branch> FETCH_HEAD`), run `npm install`, and read HANDOFF.md fully, especially the Round 22 section.
+> 2. Carry on with "Remaining" there. The plan is already approved, so no need to re-ask, but ask me about anything unclear.
+> 3. Run the test sweep (`sh shots/testvite.sh`, then `sh shots/sweep.sh` in two halves) plus the Round 22 tests, and fix anything that fails.
+> 4. When the context reaches about 300k tokens, write a new handoff for the next chat.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. I play on Android. When Round 22 is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
@@ -416,30 +417,36 @@ The user approved the full plan: everything on the Round 20 menu, a **post-game 
 - The holds' interior lives at x 160–280. `g.interior.hold` is true there; the sky stays visible (`userData.sky`).
 - `game.killEnemy` is wrapped by `rivals.js`: a non-final Zubayr never dies.
 
-## Round 22: the brief (not yet planned or approved)
-The user asked for three things: **improved gameplay, improved graphics and expanded features**. The headline is **"those dungeons I talked about before"**, which should **not have to be endgame** and should be **scattered across the map from the start**.
+## Round 22: approved plan and status (in progress)
 
-**Reading of "those dungeons":** the Round 21 **holds**. These are the user-approved "Black Myth: Wukong"-style dungeons: hand-built tile maps, chasms, plank bridges, gates, campfire rest points, the close action camera with lock-on, and hold captains with the `MOVES` set. Today they exist only in the post-game Hamrin region. **Confirm this reading with the user first.** The alternative is the six Round 17 dungeons, which are already in the main game but are random-walk rooms.
+**Standing rule from the user:** when the chat's context reaches about 300k tokens, write a handoff (this file plus the paste prompt at the top) so a new chat can continue and save tokens.
 
-**What the work involves (starting points in the code):**
-- `holds.js` holds the `MAPS` tile maps (quarry, fort, gorge, rivalhold), `buildHold`, the `BOSS` captains and `MOVES`, and campfires (saved in `p.holds`). The hold interior is built at x 160–280 with `g.interior.hold`.
-- The entrances are hold mouths in `hamrin.js`. Each region would need its own mouths, placed through `region.js` / `regions.js`, with map waypoints (`travel.js`, `p.visited`) and tracker entries.
-- Level scaling can follow the Round 17 dungeons (`dungeons.js`, `def.scale`), so a hold fits the act you are in.
-- Each region needs its own look and story: Sawad (caravan ruins, kiln pits), marsh (reed islands, a sunken weir), Karkh (burned lanes and cellars), docks (warehouses, a hulk on the river). That means new `MAPS`, new captains, and lighting presets per hold.
-- The action camera (`game.actionCamera`) is only used in holds today. Decide whether it stays hold-only.
+**User decisions:** the holds, 2 per region; a mix of story and optional (one per act on the story path); Hamrin holds stay as the top tier of one system; the close camera is a setting usable anywhere; every gameplay, graphics and feature option (combat feel, enemies and AI, controls and targeting, pacing and difficulty; characters and faces, world and lighting, combat effects, hold interiors; hold puzzles and secrets, new enemy types, new skills, carried-over polish); ship once at the end.
 
-**Open questions to ask the user before planning:**
-1. Are "those dungeons" the holds? How many per region (e.g. 2–3 in each of the Sawad, marsh, Karkh and docks)?
-2. Are they optional side content, or tied to the story (e.g. one per act on the main path)?
-3. Should the Hamrin endgame holds stay as they are (harder, post-game), or become the top tier of the same system?
-4. "Improved gameplay": what feels off on the phone? Candidates: combat feel and hit reactions, enemy variety and AI, dodge and parry timing, skill feel, controls and auto-target, pacing and difficulty.
-5. "Improved graphics": what bothers them most? Candidates: the Hamrin overworld critique (still never re-shot), character and face detail, foliage and water, effects (fire, naft, hits), the blobby falcon, lighting in towns.
-6. "Expanded features": anything specific? Candidates: more holds content (puzzles, traps, secret rooms), new enemy types, new skills or a fifth class, a crafting/housing loop, more side quests.
-7. Ship once at the end, as before?
+### Done (committed, tested unless noted)
+1. **Holds in the act regions** (`holds.js`, data in `holdmaps.js`: `MAPS22`, `HOLDS22`, `BOSS22`).
+   - Eight maps: Sawad caravan (The Sand-Choked Khan) + kilnpits (story, Hisham); marsh reedisle (story, Sahl) + weir; Karkh lanes (story, Layth) + undercroft; docks hulk (story, Mus'ab) + warehouse. 16 new captains.
+   - Kits per hold (`kit`: rock, brick, reed, timber) and drops (`drop`: deep, pit, water). New tiles: `h` loose stones (a glint shows them within 8 m), `L` lever, `D` portcullis, `b` sunken bridge (both raised by the lever), `K` pressure plate (hurts Salim and foes), `o` shallows (slow). Legend in `holdmaps.js`.
+   - Doors on the map (`g.holdDoors`, `holdDoor()`), found as waypoints (interactable `area`). Level = max(hold level, Salim's level). Hamrin holds keep their formula and drop one extra legendary.
+   - Story holds: the act's second lieutenant is parked out of the field (`e.parked`, skipped in `updateEnemies`) and stands at the hold's end (`storyIn`); his death is the act's own (killEnemy plays his scene and checkpoint). Hisham and Layth keep their special fights; Sahl and Mus'ab get hold moves (`STORY_MOVES`). The quest texts for the second lieutenants now point to the holds.
+   - Optional holds are daily bounty "clear" targets (`g.onHoldCleared`).
+   - Codex entries (khans, claypits, reedisles, weirs, lanes, vaults, hulks, bales). Arabic in `story22_ar.js` (`AR22`).
+   - Tests: `node shots/holdcheck.mjs` (maps can be finished, pure data) and `node shots/r22holds.mjs <id> [out]` (passed: kilnpits, caravan, weir, lanes, undercroft, hulk; reedisle, warehouse and hulk being rerun after fixes).
+2. **Gameplay** (`feel22.js`, `foes22.js`).
+   - Foes: hookman (drags Salim along a marked line), pavise shield-bearer (blocks frontal blows; a heavy blow, a skill or a side hit breaks his guard; walks a bowman behind him), sling-lad (runs when you close in). Mixed into packs by `mixPack` in `game.spawnPack`.
+   - Pack leaders (packs of 4 or more): red pennant, +20% damage to his men; when he dies they falter. `shapePack` (also applies difficulty to life).
+   - Smarter `pickTarget` (facing or joystick direction, wounded, last target, leaders; sticky). Hit-stop ×1.35 plus a beat on kills; parry window 0.26 s (`game.js`), the parry cue rings and buzzes, and a parry restores a little life and mana.
+   - Settings → Controls: Camera (Overhead / Close) and Difficulty (Story / Normal / Hard; `DIFFICULTY` in `foes22.js`). The close camera keeps above terrain outside.
+   - Test: `node shots/r22feel.mjs [region]` (not yet run).
+3. **Features:** level-25 skills (`classes.js` `ALT_SKILLS`): Shield Rush (Faris), Piercing Shot (Rami), Wall of Fire (Naffat), Shadow Step ('Ayyar). Craft tab: set pieces first once a recipe is known. Forge prop moved away from Bishr. Arabic for old set-piece names and "Walking".
+4. **Graphics so far:** falcon rebuilt (`hublife.js` `falconRig`, folded wings, 1.3× size; needs a look in shots); `fx.naftBurst`, hotter sparks and fire core.
 
-**Carried-over polish (from Round 21):** the falcon looks small and blobby on the shoulder; the forge prop sits right behind Bishr; the set craft section is below the fold in the Craft tab; old set-piece names are still English only; the "Walking: " prefix is untranslated.
+### Remaining
+- Run `r22feel`, then a critique pass with shots: faces and characters, town lighting at dusk and night (Karkh, docks), the Hamrin overworld (still washed out?), hold interiors per kit, effects, falcon, forge.
+- Full sweep (`shots/sweep.sh` in two halves) plus `r22holds` for all 8 and `r22feel`; add them to `sweep.sh`.
+- Publish the Artifact, push, APK via CI (trigger `apk.yml` by hand: the session branch is `ccr-...`), new handoff.
 
-**Constraints still apply:** see "Non-negotiable design rules" and the constraints line under the Roadmap. In particular: no religious buildings or symbols, human foes only, 813 CE authenticity, ask and confirm before building, no lights or new shader variants created at runtime. Long robes are now closed cloth tubes (Round 21 item 5); keep `outside`/`slack` when adding robed characters.
+**Test server note:** use `sh shots/testvite.sh` to (re)start a dev server on :5173 that never reloads mid-run (`shots/vite.test.config.js`); restart it after editing `src/`. The normal `npx vite` reloads the page on every save and kills running tests.
 
 ## Roadmap (R15 done)
 The goal is about 8–12 hours for a first playthrough, up from about 1.5 today, plus a repeatable endgame. It is split into rounds so each one ships playable.

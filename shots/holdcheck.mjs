@@ -16,6 +16,7 @@ for (const [id, rows] of Object.entries(MAPS22)) {
   const has = (set, ch) => find(ch).every((p) => set.has(p.join()));
   const base = reach([]), lever = n('L') ? reach(['D', 'b']) : base, all = reach(['D', 'b', 'x', 'h']);
   if (n('L') && !has(base, 'L')) errs.push('lever not reachable');
+  if (n('L') && !n('D') && !n('b')) errs.push('lever opens nothing');
   for (const ch of ['M', 'B', 'T', 'C', 'm', 'a']) if (!has(lever, ch)) errs.push(`${ch} not reachable`);
   if (find('S').some((p) => base.has(p.join()))) errs.push('hidden chest open without a secret');
   if (!has(all, 'S')) errs.push('hidden chest unreachable');

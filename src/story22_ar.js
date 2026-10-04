@@ -32,7 +32,7 @@ export const AR22 = {
   'Panoply of the Abna\'': 'عدّة الأبناء', 'Abna\' Lamellar': 'درع الأبناء', 'Abna\' Bayda': 'بيضة الأبناء', 'Abna\' Signet': 'خاتم الأبناء', 'Abna\' Badge': 'شارة الأبناء',
   'Outfit of the Basra Nakhuda': 'ثياب ناخذة البصرة', 'Nakhuda\'s Coat': 'معطف الناخذة', 'Nakhuda\'s Turban': 'عمامة الناخذة', 'Nakhuda\'s Seal': 'خاتم الناخذة', 'Nakhuda\'s Compass-stone': 'حجر بوصلة الناخذة',
   'Tools of the Warraq': 'أدوات الورّاق', 'Warraq\'s Apron': 'مئزر الورّاق', 'Warraq\'s Cap': 'قلنسوة الورّاق', 'Warraq\'s Pen-ring': 'خاتم قلم الورّاق', 'Warraq\'s Inkwell': 'محبرة الورّاق',
-  'Walking': 'في الطريق',
+  'Walking': 'في الطريق', 'Rawh\'s boatmaster': 'رئيس قوارب روح', 'Holder of the copyists\' boat': 'حابس قارب النسّاخ',
   'Find Hisham at the bottom of the kiln pits': 'اعثر على هشام في قاع حُفَر الأتون', 'Take Rawh\'s boats from Sahl on the reed islands': 'خذ قوارب روح من سهل في جزر القصب',
   'Drive Layth from the burned lanes behind the paper-sellers': 'اطرد ليثًا من الأزقّة المحترقة خلف الورّاقين', 'Free the copyists\' boat from Mus\'ab on the beached hulk': 'حرّر قارب النسّاخ من مصعب على السفينة الجانحة',
   // gameplay (Round 22)

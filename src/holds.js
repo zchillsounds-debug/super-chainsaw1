@@ -640,6 +640,12 @@ function pickMove(g, e, dist) {
   return true;
 }
 
+// lieutenants who wait in story holds without a fight of their own get these moves there
+const STORY_MOVES = {
+  Sahl: { sub: 'Rawh\'s boatmaster', moves: ['swing', 'net', 'sweep', 'charge'], p2: { at: 0.5, line: 'Burn the reeds behind him!', add: ['fireline', 'summon'], summon: ['reedman', 'netter', 'slinger'] } },
+  'Mus\'ab': { sub: 'Holder of the copyists\' boat', moves: ['swing', 'charge', 'sweep', 'arrows'], p2: { at: 0.5, line: 'Crossbows, from the rail!', add: ['summon', 'stomp'], summon: ['crossbow', 'crossbow', 'guard'] } },
+};
+
 // ------------------------------------------------------------------ setup
 export function setupHolds(g) {
   const p = g.player;
@@ -787,6 +793,9 @@ export function setupHolds(g) {
     if (!L.holdHp) { L.holdHp = true; L.maxHp = Math.round(L.maxHp * 2.4); L.dmg *= 1.15; L.maxPoise = (L.maxPoise || 40) * 3; L.poise = L.maxPoise; L.xp *= 3; }
     L.parked = false; L.ghost = false; L.interior = true; L.storyBoss = true; L.holdKey = 'boss'; L.hp = L.maxHp; L.alerted = false;
     L.pos.copy(I.bossAt); L.pos.y = 0; L.home = I.bossAt.clone(); L.facing = Math.PI; L.rig.visible = true;
+    // a lieutenant with no fight of his own (Sahl, Mus'ab) fights here with a hold master's moves
+    const SM = STORY_MOVES[L.baseName || L.name];
+    if (SM && (!L.T.ai || L.T.ai === holdBossAI)) { L.holdBoss = { name: L.baseName || L.name, ...SM }; L.T = { ...L.T, ai: holdBossAI }; L.moves = [...SM.moves]; L.cds = {}; L.engaged = false; L.p2 = false; L.final = true; }
     if (!g.enemies.includes(L)) g.enemies.push(L);
     g.interior.enemies.push(L);
   }
@@ -855,7 +864,10 @@ export function setupHolds(g) {
   g.onKill = (e) => {
     prevKill?.(e);
     if (e.storyBoss && g.interior?.hold) { // the lieutenant falls in his hold: it is broken (his own scene plays from killEnemy)
-      const s2 = state(g.interior.I.hold); s2.done = true; e.storyBoss = false; p.renown = (p.renown || 0) + 30; saveGame(g); return;
+      const s2 = state(g.interior.I.hold); s2.done = true; e.storyBoss = false; p.renown = (p.renown || 0) + 30;
+      e.barOn = false; g.ui.bossBar(null); g.holdArena = null; ringM.visible = false; g.audio.setMusicIntensity?.(0);
+      for (const m of g.interior.enemies) if (m.summoned && !m.dead) { m.hp = 0; g.killEnemy(m, e.pos); }
+      saveGame(g); return;
     }
     if (!e.holdBoss || !g.interior?.hold) return;
     const id = g.interior.I.hold, s = state(id), H = HOLDS[id];
