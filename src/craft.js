@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { craftItem, craftableAffixes, RARITY } from './items.js';
-import { MAT_NAMES } from './hub.js';
+import { MAT_NAMES, HUBK } from './hub.js';
 import { saveGame } from './save.js';
 import { t } from './i18n.js';
 import { SETS, makeSetItem } from './progression.js';
@@ -36,8 +36,8 @@ export function setupCraft(g) {
   const prevKill = g.onKill;
   g.onKill = (e) => { prevKill?.(e); const k = e.boss || e.holdBoss ? 0.35 : e.elite ? 0.08 : 0; if (k && Math.random() < k) dropRecipe(e.pos.clone(), e.level); };
   if (g.zones) { const oc = g.zones.openChest.bind(g.zones); g.zones.openChest = () => { const I = g.interior?.I, was = I?.chest?.opened; oc(); if (I && !was && I.chest.opened && Math.random() < 0.15) dropRecipe(I.chest.pos.clone().add(new THREE.Vector3(0, 0.6, 1)), g.interior.def.level); }; }
-  const setCost = () => { const l = p0.level; return { gold: Math.round(120 * l + 300), scrap: 12 + Math.floor(l / 3), silk: 6 + Math.floor(l / 5), gem: 3 }; };
-  const cost = () => { const l = g.player.level; return { gold: Math.round(70 * l + 120), scrap: 8 + Math.floor(l / 3), silk: 3 + Math.floor(l / 6), gem: 1 }; };
+  const setCost = () => { const l = p0.level; return { gold: Math.round((120 * l + 300) * HUBK.forge), scrap: 12 + Math.floor(l / 3), silk: 6 + Math.floor(l / 5), gem: 3 }; };
+  const cost = () => { const l = g.player.level; return { gold: Math.round((70 * l + 120) * HUBK.forge), scrap: 8 + Math.floor(l / 3), silk: 3 + Math.floor(l / 6), gem: 1 }; };
   g.craftPanel = (body, refresh) => {
     const p = g.player, c = cost(), list = craftableAffixes(sel.slot);
     if (!list.some((a) => a.key === sel.key)) sel.key = list[0].key;

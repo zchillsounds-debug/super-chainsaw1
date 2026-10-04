@@ -19,7 +19,9 @@ const price = (it) => Math.round(({ common: 8, magic: 30, rare: 90, set: 160, le
 export const sellPrice = (it) => it.questId ? 0 : Math.max(1, Math.round(price(it) / (1 - DISC) * 0.25));
 export const SALVAGE = { common: { scrap: 1 }, magic: { scrap: 2, silk: 1 }, rare: { scrap: 3, silk: 2, gem: 1 }, set: { scrap: 4, silk: 3, gem: 2 }, legendary: { scrap: 5, silk: 3, gem: 3 } };
 export const MAT_NAMES = { scrap: 'Iron Scrap', silk: 'Silk Thread', gem: 'Gem Shard' };
-export const upgradeCost = (it) => { const r = it.rank || 0; return { gold: 40 * (r + 1) * (1 + it.level * 0.2) | 0, scrap: 2 + r * 2, silk: r >= 2 ? r - 1 : 0, gem: r >= 4 ? 1 : 0 }; };
+// Round 21: camp upgrades scale the forge's prices (hublife.js)
+export const HUBK = { forge: 1 };
+export const upgradeCost = (it) => { const r = it.rank || 0; return { gold: 40 * (r + 1) * (1 + it.level * 0.2) * HUBK.forge | 0, scrap: 2 + r * 2, silk: r >= 2 ? r - 1 : 0, gem: r >= 4 ? 1 : 0 }; };
 
 export function npc(game, look, [x, z], face, name, title, talk, prop) {
   const rig = humanoid({ detail: 'lo', ...look });
@@ -98,7 +100,7 @@ function cell(it, extra = '') { return `<div class="cell ${it ? 'r-' + it.rarity
 
 export function openPanel(game, kind, tab) {
   closePanel(); game.audio.init();
-  const p = game.player, ui = game.ui; DISC = p.discount || 0;
+  const p = game.player, ui = game.ui; DISC = (p.discount || 0) + (p.hubUp?.stalls ? 0.1 : 0);
   document.body.classList.add('inshop');
   const titles = { merchant: 'Yusuf · Merchant', smith: 'Bishr · Blacksmith', stash: 'Your Stash', trainer: '\'Amr · Training Yard', skills: 'Disciplines' };
   panel = el(`<div id="shop" class="panel"><div class="ptitle">${titles[kind]} <span class="close" role="button" aria-label="Close">✕</span></div><div class="sbody"></div><div class="sfoot"><span class="gold">◉ ${p.gold} Dinars</span>${kind === 'smith' ? matsLine(p) : ''}</div></div>`);
@@ -131,6 +133,7 @@ export function openPanel(game, kind, tab) {
     const pot = el(`<button class="sbtn">Buy Pomegranate Sherbet (25)</button>`);
     pot.onclick = () => { if (p.gold < 25 || p.potions >= 5 + (p.potCap || 0) + (p.stats.potCapB || 0)) { game.audio.denied?.(); return; } p.gold -= 25; p.potions++; game.audio.potion(); refresh(); };
     body.appendChild(pot);
+    game.merchantExtra?.(body, refresh);
   } else if (kind === 'smith') {
     tab = tab || 'upgrade';
     const tabs = el(`<div class="stabs"><button data-t="upgrade">Upgrade</button><button data-t="salvage">Salvage</button><button data-t="enchant">Enchant</button><button data-t="gems">Gems</button><button data-t="craft">Craft</button></div>`);

@@ -601,3 +601,24 @@ body.benching #tskills,body.benching #joy,body.benching #mountbtn,body.benching 
 #lockbtn:active{transform:scale(.92)}
 #lockbtn.hide,body.overlay #lockbtn,body.insheet #lockbtn,body.indialog #lockbtn,body.incine #lockbtn,body:not(.playing) #lockbtn{display:none}
 body.touch #lockbtn{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(238px + env(safe-area-inset-bottom,0px))}
+
+/* Round 21: hub life: the kennel and mews, the camp's needs, fishing */
+#shop.mews .chip{flex-direction:row;align-items:center;gap:8px}
+#shop.mews .sw{display:inline-block;width:18px;height:18px;border-radius:50%;border:1px solid #f0dca8aa}
+#shop.camp .done{color:#7ad08a;font:700 14px serif;padding:0 8px}
+.fishsell{margin-top:8px}
+#fishing{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(300px,80vw);padding:10px 12px 12px;border-radius:16px;background:#120c08dd;border:1px solid #8a6a3a;color:#f0dca8;text-align:center;pointer-events:auto;z-index:6}
+#fishing.hide,body.incine #fishing,body.overlay #fishing{display:none}
+#fishing .fmsg{font:700 16px serif;min-height:22px;margin-bottom:6px;text-shadow:0 1px 3px #000}
+#fishing .fbar{position:relative;height:22px;border-radius:11px;background:#2a1c10;border:1px solid #6a4a20;overflow:hidden;margin:4px 0 8px}
+#fishing .fbar.hide{display:none}
+#fishing .fzone{position:absolute;top:0;bottom:0;background:linear-gradient(#5ac06a,#2a8a3a);opacity:.85}
+#fishing .fneedle{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:#fff4d0;box-shadow:0 0 6px #fff}
+#fishing .fdots{font-size:18px;letter-spacing:4px;min-height:20px;color:#f2d27a}#fishing .fdots i{color:#ff8a6a;font-style:normal}
+#fishing .frow{display:flex;gap:10px;justify-content:center}
+#fishing .fbtn{min-width:150px;min-height:56px;border-radius:28px;border:2px solid #8a6a3a;background:linear-gradient(#4a3418,#2a1c0c);color:#fff4d0;font:700 20px serif;letter-spacing:1px;cursor:pointer}
+#fishing .fbtn:active{transform:scale(.95)}
+#fishing.bite .fbtn{border-color:#ffd870;box-shadow:0 0 18px #ffb84a;animation:tpulse .35s infinite}
+#fishing .fquit{width:56px;min-height:56px;border-radius:28px;border:1px solid #6a4a20;background:#160e07;color:#f0dca8;font:700 20px serif;cursor:pointer}
+body.fishing #tskills,body.fishing #joy,body.fishing #mountbtn,body.fishing #compbtn,body.fishing #prompt,body.touch.fishing #mporb{visibility:hidden}
+body:not(.touch) #fishing{right:auto;left:50%;transform:translateX(-50%);bottom:120px}
