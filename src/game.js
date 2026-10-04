@@ -257,16 +257,14 @@ export class Game {
     this.spawnPack(['bandit', 'archer', 'spearman'], S.x, S.z + 6, 5, 2, { spread: 6 });
     this.spawnPack(['archer'], S.x - 10, S.z - 10, 2, 2);
     this.spawnPack(['bandit', 'spearman'], S.x + 8, S.z - 4, 3, 2);
-    this.chief = this.spawnPack('spearman', S.x, S.z - 6, 1, 3, { elite: true, name: 'Farud' })[0];
-    this.chief.quest = 'serai';
+    this.chief = null; // Round 22: he holds a dungeon now (storyholds.js)
     this.spawnPack(['bandit', 'bandit'], S.x + 2, S.z - 6, 2, 2);
     // road to the bridge and beyond
     this.spawnPack(['bandit', 'archer'], 0, 6, 3, 2);
     this.spawnPack(['deserter'], -36, -16, 3, 2);
     // kiln yard: knife-men crouched behind the brick stacks, springing up when approached
     for (let i = 0; i < 4; i++) this.spawnPack('deserter', G.x + rand(-13, 13), G.z + rand(-11, 11), 2, 3, { hidden: true, spread: 3 });
-    this.matriarch = this.spawnPack('spearman', G.x - 4, G.z - 2, 1, 4, { elite: true, name: 'Hisham' })[0];
-    this.matriarch.quest = 'graves';
+    this.matriarch = null; // Round 22: he holds a dungeon now (storyholds.js)
     // road south toward the arch
     this.spawnPack(['deserter', 'bandit'], 6, -30, 4, 3);
     this.spawnPack(['naffat', 'archer', 'spearman'], 8, -58, 5, 4, { spread: 5 });
@@ -286,16 +284,14 @@ export class Game {
     this.spawnPack(['bandit', 'slinger', 'netter'], S.x, S.z + 6, 5, 7, { spread: 6 });
     this.spawnPack(['slinger'], S.x - 9, S.z - 2, 2, 7);
     this.spawnPack('reedman', S.x + 12, S.z + 10, 2, 7, { hidden: true, spread: 4 });
-    this.chief = this.spawnPack('netter', S.x + 1, S.z - 4, 1, 8, { elite: true, name: 'Marwan' })[0];
-    this.chief.quest = STORY.chief;
+    this.chief = null; // Round 22: he holds a dungeon now (storyholds.js)
     this.spawnPack(['bandit', 'spearman'], S.x + 3, S.z - 5, 2, 7);
     // the east causeway and the fish racks
     this.spawnPack(['slinger', 'bandit'], 28, 52, 3, 7);
     this.spawnPack('reedman', 40, 34, 3, 7, { hidden: true, spread: 4 });
     this.spawnPack(['spearman', 'netter', 'slinger'], G.x - 4, G.z + 4, 5, 8, { spread: 6 });
     this.spawnPack('slinger', G.x + 8, G.z - 8, 2, 8);
-    this.matriarch = this.spawnPack('spearman', G.x + 2, G.z - 3, 1, 9, { elite: true, name: 'Sahl' })[0];
-    this.matriarch.quest = STORY.second;
+    this.matriarch = null; // Round 22: he holds a dungeon now (storyholds.js)
     // the two roads south to the weir
     this.spawnPack(['netter', 'slinger', 'bandit'], -48, 0, 4, 8);
     this.spawnPack('reedman', -38, -22, 3, 8, { hidden: true, spread: 4 });
@@ -313,14 +309,12 @@ export class Game {
     // the burned suq
     this.spawnPack(['guard', 'deserter', 'archer'], S.x, S.z + 8, 4, 10, { spread: 6 });
     for (let i = 0; i < 2; i++) this.spawnPack('deserter', S.x + rand(-9, 9), S.z + rand(-12, 12), 2, 10, { hidden: true, spread: 3 });
-    this.chief = this.spawnPack('guard', S.x, S.z - 4, 1, 11, { elite: true, name: '\'Asim' })[0];
-    this.chief.quest = STORY.chief;
+    this.chief = null; // Round 22: he holds a dungeon now (storyholds.js)
     this.spawnPack(['guard', 'archer'], S.x - 3, S.z - 6, 2, 10);
     // the paper-sellers' lane
     this.spawnPack(['naffat', 'guard', 'archer'], -32, -6, 4, 10);
     this.spawnPack(['naffat', 'guard', 'archer', 'naffat'], G.x + 4, G.z + 3, 5, 11, { spread: 6 });
-    this.matriarch = this.spawnPack('naffat', G.x - 2, G.z - 2, 1, 12, { elite: true, name: 'Layth' })[0];
-    this.matriarch.quest = STORY.second;
+    this.matriarch = null; // Round 22: he holds a dungeon now (storyholds.js)
     // the east lanes and the way to the square
     this.spawnPack(['guard', 'spearman'], 8, 62, 3, 10);
     this.spawnPack(['guard', 'archer', 'naffat'], 60, 10, 4, 11);
@@ -341,14 +335,12 @@ export class Game {
     this.spawnPack(['guard', 'crossbow', 'deserter'], S.x, S.z + 8, 5, 13, { spread: 6 });
     this.spawnPack(['crossbow', 'crossbow'], S.x + 14, S.z - 4, 2, 13);
     for (let i = 0; i < 2; i++) this.spawnPack('deserter', S.x + rand(-10, 10), S.z + rand(-12, 12), 2, 13, { hidden: true, spread: 3 });
-    this.chief = this.spawnPack('guard', S.x, S.z - 4, 1, 14, { elite: true, name: 'Bilal' })[0];
-    this.chief.quest = STORY.chief;
+    this.chief = null; // Round 22: he holds a dungeon now (storyholds.js)
     // the quay road and the boatyard
     this.spawnPack(['guard', 'crossbow'], 30, 10, 3, 13);
     this.spawnPack(['engineer', 'guard', 'crossbow'], G.x - 6, G.z + 8, 4, 14, { spread: 5 });
     this.spawnPack(['naffat', 'guard'], G.x + 4, G.z - 10, 3, 14);
-    this.matriarch = this.spawnPack('spearman', G.x - 2, G.z - 2, 1, 15, { elite: true, name: 'Mus\'ab' })[0];
-    this.matriarch.quest = STORY.second;
+    this.matriarch = null; // Round 22: he holds a dungeon now (storyholds.js)
     // inland: raiders on the open ground, and the road south to the bridge
     this.spawnPack('rider', -50, 10, 2, 13, { spread: 8 }); this.spawnPack('rider', -30, -50, 1, 14);
     this.spawnPack(['guard', 'spearman', 'archer'], -60, -14, 4, 14);
@@ -437,7 +429,7 @@ export class Game {
   }
   // what the hero is walking on (footstep sounds and dust)
   surfaceAt(pos) {
-    if (this.interior?.I.hold) { const I = this.interior.I, [c, r] = I.tileOf(pos.x, pos.z); return I.at(c, r) === '=' ? 'wood' : 'stone'; }
+    if (this.interior?.I.hold) { const I = this.interior.I, [c, r] = I.tileOf(pos.x, pos.z), ch = I.at(c, r), th = I.theme; return ch === '=' || th === 'timber' ? 'wood' : ch === '%' ? 'water' : th === 'reed' ? 'grass' : th === 'masonry' ? 'brick' : 'stone'; }
     if (this.interior) { const I = this.interior.I; if (I.style === 'qanat') { const c = I.center(I.rooms.reduce((a, r) => (Math.hypot(I.center(r).x - pos.x, I.center(r).z - pos.z) < Math.hypot(I.center(a).x - pos.x, I.center(a).z - pos.z) ? r : a))); if (Math.abs(pos.x - (c.x + 3.6)) < 0.9) return 'water'; return 'stone'; } return 'brick'; }
     if (IS_MARSH) return waterDepth(pos.x, pos.z) > 0.04 ? 'water' : roadDist(pos.x, pos.z) < 3 ? 'sand' : 'grass';
     if (IS_DOCKS && DECKS.some(([x0, x1, dz, w]) => pos.x > x0 - 2 && pos.x < x1 && Math.abs(pos.z - dz) < w / 2 + 0.2)) return 'wood';

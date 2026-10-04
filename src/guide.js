@@ -27,8 +27,9 @@ export function objectiveTarget(g) {
   const tr = g.trackTarget?.(); if (tr?.pos) return tr.pos;
   const q = g.quests.find((x) => !x.done); if (!q) return null;
   const alive = (e) => e && !e.dead ? e.pos : null;
-  if (q.id === STORY.chief) return alive(g.chief) || SITES.serai;
-  if (q.id === STORY.second) return alive(g.matriarch) || SITES.kiln;
+  // Round 22: the lieutenants hold dungeons now; the trail leads to the door
+  if (q.id === STORY.chief) return g.storyDoor?.chief || alive(g.chief) || SITES.serai;
+  if (q.id === STORY.second) return g.storyDoor?.second || alive(g.matriarch) || SITES.kiln;
   if (q.id === STORY.boss) return alive(g.boss) || SITES.arch;
   return null;
 }

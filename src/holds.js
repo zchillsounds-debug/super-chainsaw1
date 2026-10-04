@@ -7,8 +7,10 @@ import { buildNav, setInteriorFloor, INTERIOR_X, navClear } from './nav.js';
 import { triplanarMaterial } from './triplanar.js';
 import { rockTex } from './vegetation.js';
 import { floorMat } from './interior.js';
-import { mudBrick } from './textures.js';
-import { firePit } from './props.js';
+import { mudBrick, woodTex } from './textures.js';
+import { firePit, brickStack, crate } from './props.js';
+import { rmats, reedStack } from './regionprops.js';
+import { baleStack } from './docksprops.js';
 import { mergeStatic } from './world.js';
 import { makeItem } from './items.js';
 import { saveGame } from './save.js';
@@ -16,6 +18,7 @@ import { CODEX, unlock } from './narrative.js';
 import * as SCENES from './scenes.js';
 import { haptic } from './sheets.js';
 import { t } from './i18n.js';
+import { STORY } from './region.js';
 
 // Round 21: the holds of the Hamrin hills, four dungeons laid out by hand rather than rolled at random. Each is a
 // tile map (3 m tiles) of rock and ravine: rope-railed plank bridges over chasms, ledges, low walls to fight round,
@@ -26,12 +29,15 @@ import { t } from './i18n.js';
 // Inside, the camera comes down behind Salim's shoulder (the close action camera) with a lock-on.
 //   legend: # rock  . floor  ~ chasm  = bridge  w low wall  p pillar  x cracked wall  g barred gate
 //           E entrance  C campfire  m foes  a archers  M mid-boss  B master  T the master's chest  S hidden chest
+// Round 22 adds the story holds (storyholds.js), two in every region, each in a theme of its own (rock, masonry,
+// reed or timber) and these tiles:   % shallow water (wade, slowed)   v a fire vent (it glows, then blasts)
+//           k a hoist or a charred beam overhead (loads drop round Salim when he passes)   h a stack in the way
 const TILE = 3, OX = 220;
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
 const angDiff = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
 const rand = (a, b) => a + Math.random() * (b - a);
-const WALK = new Set(['.', 'E', 'C', 'm', 'a', 'M', 'B', 'T', 'S', '=']);
+const WALK = new Set(['.', 'E', 'C', 'm', 'a', 'M', 'B', 'T', 'S', '=', '%', 'v', 'k']);
 
 const MAPS = {
   quarry: [
@@ -217,23 +223,35 @@ export const HOLDS = {
   gorge: { title: 'The Gorge Bridge', sub: 'Plank ways across the ravine of the Diyala', rock: 0x9a8270, floor: [0x7a6a58, 'earth'], wall: 0x8a7462, pool: ['spearman', 'deserter', 'guard', 'netter'], ranged: ['archer', 'slinger'], mid: 'dhuayb', boss: 'hanzala', codex: 'diyala', quest: 'gorge', step: 2 },
   rivalhold: { title: 'Zubayr\'s Hold', sub: 'The bowman\'s ravine', rock: 0x9a6a50, floor: [0x6a4e3a, 'earth'], wall: 0x8a5a44, pool: ['deserter', 'guard', 'deserter', 'naffat'], ranged: ['archer', 'archer', 'crossbow'], mid: 'nahshal', boss: 'zubayr', codex: 'hamrin', quest: 'rivalhold', step: 3 },
 };
-for (const [k, B] of Object.entries(BOSS)) if (B.type !== 'zubayr') {
-  // each captain is his own type, built from his men's look with his crest and colour
-  const base = TYPES[B.type];
-  TYPES['hb_' + k] = { ...base, name: B.name, build: (x) => base.build({ ...captainLook(B.name), ...B.look, detail: 'hi', ...x }) };
+function registerTypes(bosses) {
+  for (const [k, B] of Object.entries(bosses)) if (B.type !== 'zubayr') {
+    // each captain is his own type, built from his men's look with his crest and colour
+    const base = TYPES[B.type];
+    TYPES['hb_' + k] = { ...base, name: B.name, build: (x) => base.build({ ...captainLook(B.name), ...B.look, detail: 'hi', ...x }) };
+  }
+}
+registerTypes(BOSS);
+// Round 22: the story holds (storyholds.js) add their maps, captains and holds here
+export function registerHolds(maps, bosses, holds) {
+  Object.assign(MAPS, maps); Object.assign(BOSS, bosses); Object.assign(HOLDS, holds); registerTypes(bosses);
 }
 
 // ------------------------------------------------------------------ the builder
 let KIT = null;
 function kit() {
   if (KIT) return KIT;
-  const rt = rockTex(), brick = mudBrick([150, 132, 110]);
+  const rt = rockTex(), brick = mudBrick([150, 132, 110]), wt = woodTex();
   KIT = {
     rt, brick, plank: new THREE.MeshStandardMaterial({ color: 0x6a4a2c, roughness: 0.9 }), plank2: new THREE.MeshStandardMaterial({ color: 0x4e3620, roughness: 0.95 }),
     rope: new THREE.MeshStandardMaterial({ color: 0x9a8058, roughness: 1 }), void: new THREE.MeshBasicMaterial({ color: 0x050403 }),
     river: new THREE.MeshStandardMaterial({ color: 0x2a4a48, roughness: 0.15, metalness: 0.3, emissive: 0x081412 }), deep: new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 }),
     iron: new THREE.MeshStandardMaterial({ color: 0x2a2624, metalness: 0.8, roughness: 0.5 }), ember: new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.2, 0.3), toneMapped: false }),
     gold: new THREE.MeshStandardMaterial({ color: 0xc9973c, metalness: 0.85, roughness: 0.4 }), wood: new THREE.MeshStandardMaterial({ color: 0x5a3a20, roughness: 0.85 }),
+    // Round 22: the story holds' themes
+    timber: triplanarMaterial({ map: wt, normalMap: rt.normal, color: 0xb89a7a, scale: 0.42, roughness: 0.9, normalStrength: 0.35, grime: 0.7 }),
+    deck: triplanarMaterial({ map: wt, normalMap: rt.normal, color: 0xc8a888, scale: 0.36, roughness: 0.85, normalStrength: 0.3, grime: 0.45 }),
+    shallow: new THREE.MeshStandardMaterial({ color: 0x2c3a30, roughness: 0.06, metalness: 0.25, transparent: true, opacity: 0.74, depthWrite: false }),
+    char: new THREE.MeshStandardMaterial({ color: 0x16120f, roughness: 0.92 }),
     styles: {},
   };
   return KIT;
@@ -241,11 +259,14 @@ function kit() {
 function styleMats(id) {
   const K = kit(), H = HOLDS[id];
   if (K.styles[id]) return K.styles[id];
+  const masonry = H.theme === 'masonry';
   return (K.styles[id] = {
     rock: triplanarMaterial({ map: K.rt.map, normalMap: K.rt.normal, color: H.rock, scale: 0.55, roughness: 0.95, normalStrength: 1.6, grime: 0.55 }),
-    wall: triplanarMaterial({ map: K.brick.map, normalMap: K.brick.normalMap, color: H.wall, scale: 0.5, roughness: 0.95, normalStrength: 1.2, grime: 0.6 }),
-    crack: triplanarMaterial({ map: K.rt.map, normalMap: K.rt.normal, color: new THREE.Color(H.rock).multiplyScalar(1.15), scale: 0.6, roughness: 1, normalStrength: 2.6, grime: 1.0 }),
-    floor: floorMat(H.floor[0], H.floor[1], 1, id === 'gorge' ? 0.25 : 0),
+    wall: triplanarMaterial({ map: K.brick.map, normalMap: K.brick.normalMap, color: H.wall, scale: 0.5, roughness: 0.95, normalStrength: 1.2, grime: H.char ? 1.0 : 0.6 }),
+    crack: masonry ? triplanarMaterial({ map: K.brick.map, normalMap: K.brick.normalMap, color: new THREE.Color(H.wall).multiplyScalar(1.12), scale: 0.5, roughness: 1, normalStrength: 2.4, grime: 1.0 })
+      : triplanarMaterial({ map: K.rt.map, normalMap: K.rt.normal, color: new THREE.Color(H.rock).multiplyScalar(1.15), scale: 0.6, roughness: 1, normalStrength: 2.6, grime: 1.0 }),
+    floor: H.floor === 'deck' ? K.deck : floorMat(H.floor[0], H.floor[1], 1, H.wet ?? (id === 'gorge' ? 0.25 : 0)),
+    water: H.water ? new THREE.MeshStandardMaterial({ color: H.water, roughness: 0.1, metalness: 0.3, emissive: new THREE.Color(H.water).multiplyScalar(0.15) }) : K.river,
   });
 }
 // one lumpy rock (a noisy dodecahedron), shared by every cliff and column
@@ -257,55 +278,115 @@ function rockLump() {
   g.computeVertexNormals(); return (_lump = g);
 }
 const hash = (c, r) => { let h = (c * 73856093) ^ (r * 19349663); h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+const seeded = (c, r) => { let k = 0; return () => hash(c * 31 + (k++), r * 17 + k * 7); };
 
 export function buildHold(scene, id) {
-  const rows = MAPS[id], H = rows.length, W = rows[0].length, M = styleMats(id), K = kit();
+  const rows = MAPS[id], H = rows.length, W = rows[0].length, M = styleMats(id), K = kit(), D = HOLDS[id];
+  const theme = D.theme || 'rock', wy = D.waterY ?? -12; // the drop: how far down the chasm floor or the water lies
   const at = (c, r) => rows[r]?.[c] ?? '#';
   const X = (c) => OX + (c - W / 2) * TILE + TILE / 2, Z = (r) => (r - H / 2) * TILE + TILE / 2;
   const grp = new THREE.Group(), dyn = new THREE.Group();
   const add = (geo, m, x, y, z, ry = 0, into = grp) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.y = ry; o.castShadow = true; o.receiveShadow = true; into.add(o); return o; };
   const col = (x, z, hw, hd, extra = {}) => { const c = { type: 'box', x, z, hw, hd, rot: 0, interior: true, ...extra }; colliders.push(c); return c; };
-  const I = { hold: id, mist: [], group: grp, rooms: [], torches: [], style: 'hold', floors: [], hazards: [], water: [], fades: [], spawns: [], fires: [], gates: [], cracks: [], chests: [], tiles: rows, W, H, X, Z, at };
+  const I = { hold: id, theme, mist: [], group: grp, rooms: [], torches: [], style: 'hold', floors: [], hazards: [], water: [], fades: [], spawns: [], fires: [], gates: [], cracks: [], chests: [], vents: [], hoists: [], tiles: rows, W, H, X, Z, at };
   const walkable = (c, r) => WALK.has(at(c, r)) || (at(c, r) === 'x' && I.cracks.find((k) => k.c === c && k.r === r)?.open) || (at(c, r) === 'g' && I.gates.find((k) => k.c === c && k.r === r)?.open);
   I.walkable = walkable;
   const floorG = new THREE.PlaneGeometry(TILE, TILE).rotateX(-Math.PI / 2);
+  const R = theme === 'reed' ? rmats() : null;
+  const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  // reeds: a clump of tall thin stems, leaning a little, pale tips
+  const reedClump = (x, z, n, c, r, h0 = 2.4, h1 = 4.2) => {
+    for (let k = 0; k < n; k++) {
+      const h = h0 + hash(c * 5 + k, r) * (h1 - h0), s = add(new THREE.CylinderGeometry(0.035, 0.1, h, 5), k % 3 ? R.reedRib : R.reedPale, x + (hash(c + k * 3, r * 2) - 0.5) * 2.6, h / 2 - 0.2, z + (hash(c * 2, r + k * 5) - 0.5) * 2.6);
+      s.rotation.set((hash(c + k, r) - 0.5) * 0.3, 0, (hash(r + k, c) - 0.5) * 0.3); s.castShadow = k % 2 === 0;
+    }
+  };
   for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
-    const ch = at(c, r), x = X(c), z = Z(r), near = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dc, dr]) => WALK.has(at(c + dc, r + dr)) || '~xgwp'.includes(at(c + dc, r + dr)));
-    if (WALK.has(ch) && ch !== '=') { add(floorG, M.floor, x, 0, z).castShadow = false; I.floors.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]); }
-    if ('wpCgx'.includes(ch)) { add(floorG, M.floor, x, 0, z).castShadow = false; I.floors.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]); }
-    if (ch === '#' && !near) {
-      // the rock beyond the paths: big weathered lumps at mixed heights, a ridge line against the sky
-      if (hash(c, r) < 0.7) continue;
-      const lr = 2.6 + hash(c + 9, r) * 2.4, lump = add(rockLump(), M.rock, x, 4 + hash(r, c + 4) * 6, z); lump.scale.set(lr, lr * (0.9 + hash(c, r + 6) * 0.9), lr); lump.rotation.set(hash(c, r) * 3, hash(r, c) * 6, 0); lump.castShadow = false;
-    } else if (ch === '#') {
-      // rock at the paths' edge: jagged columns
-      const h = 6.5 + hash(c, r) * 5.5 + (near ? 0 : 2.5), w = TILE + 0.06;
-      // a rough base, jittered, then lumps of rock stacked and leaning on it: it reads as cliff, not as blocks
-      const jx = (hash(c + 11, r) - 0.5) * 0.5, jz = (hash(c, r + 11) - 0.5) * 0.5;
-      add(new THREE.BoxGeometry(w, h * 0.72, w), M.rock, x + jx, h * 0.36 - 0.2, z + jz, (hash(r, c) - 0.5) * 0.35);
-      if (near) {
-        col(x, z, TILE / 2, TILE / 2);
-        for (let k = 0; k < 2; k++) { const lr = 1.5 + hash(c + k, r * 3) * 0.7, lump = add(rockLump(), M.rock, x + (hash(c * 7 + k, r) - 0.5) * 1.2, h * (0.45 + k * 0.32), z + (hash(c, r * 7 + k) - 0.5) * 1.2); lump.scale.set(lr, lr * (1.2 + hash(r + k, c) * 0.8), lr); lump.rotation.set(hash(c, r + k) * 3, hash(r, c + k) * 6, hash(c + k, r) * 0.6); }
-        if (hash(c + 3, r + 5) < 0.35) { const ledge = add(new THREE.BoxGeometry(w * 1.05, 0.5, w * 1.05), M.rock, x, h * (0.3 + hash(c, r + 2) * 0.3), z, hash(c + 1, r) * 0.6); ledge.castShadow = true; }
+    const ch = at(c, r), x = X(c), z = Z(r), near = N4.some(([dc, dr]) => WALK.has(at(c + dc, r + dr)) || '~xgwph'.includes(at(c + dc, r + dr)));
+    if (WALK.has(ch) && ch !== '=' && ch !== '%') { add(floorG, M.floor, x, 0, z).castShadow = false; I.floors.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]); }
+    if ('wpCgxh'.includes(ch)) { add(floorG, M.floor, x, 0, z).castShadow = false; I.floors.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]); }
+    if (ch === '#') {
+      if (theme === 'rock') {
+        if (!near) {
+          // the rock beyond the paths: big weathered lumps at mixed heights, a ridge line against the sky
+          if (hash(c, r) < 0.7) continue;
+          const lr = 2.6 + hash(c + 9, r) * 2.4, lump = add(rockLump(), M.rock, x, 4 + hash(r, c + 4) * 6, z); lump.scale.set(lr, lr * (0.9 + hash(c, r + 6) * 0.9), lr); lump.rotation.set(hash(c, r) * 3, hash(r, c) * 6, 0); lump.castShadow = false;
+        } else {
+          // rock at the paths' edge: jagged columns; a rough base, jittered, then lumps of rock stacked and leaning on it
+          const h = 6.5 + hash(c, r) * 5.5, w = TILE + 0.06;
+          const jx = (hash(c + 11, r) - 0.5) * 0.5, jz = (hash(c, r + 11) - 0.5) * 0.5;
+          add(new THREE.BoxGeometry(w, h * 0.72, w), M.rock, x + jx, h * 0.36 - 0.2, z + jz, (hash(r, c) - 0.5) * 0.35);
+          col(x, z, TILE / 2, TILE / 2);
+          for (let k = 0; k < 2; k++) { const lr = 1.5 + hash(c + k, r * 3) * 0.7, lump = add(rockLump(), M.rock, x + (hash(c * 7 + k, r) - 0.5) * 1.2, h * (0.45 + k * 0.32), z + (hash(c, r * 7 + k) - 0.5) * 1.2); lump.scale.set(lr, lr * (1.2 + hash(r + k, c) * 0.8), lr); lump.rotation.set(hash(c, r + k) * 3, hash(r, c + k) * 6, hash(c + k, r) * 0.6); }
+          if (hash(c + 3, r + 5) < 0.35) { const ledge = add(new THREE.BoxGeometry(w * 1.05, 0.5, w * 1.05), M.rock, x, h * (0.3 + hash(c, r + 2) * 0.3), z, hash(c + 1, r) * 0.6); ledge.castShadow = true; }
+          if (hash(c + 7, r) < 0.3) { const b = add(new THREE.DodecahedronGeometry(0.6 + hash(r, c + 3) * 0.7, 0), M.rock, x + (hash(c, r + 9) - 0.5) * 2, 0.3, z + (hash(c + 2, r) - 0.5) * 2); b.rotation.set(hash(c, r) * 3, hash(r, c) * 3, 0); }
+        }
+      } else if (theme === 'masonry') {
+        if (!near) {
+          // the ruin beyond: mounds of fallen brick and the odd wall still standing against the sky
+          const hv = hash(c, r);
+          if (hv > 0.8) { const m = add(rockLump(), M.wall, x, -0.4, z, hv * 9); m.scale.set(2.2 + hv, 0.9 + hash(r, c) * 0.8, 2.2 + hash(c, r + 1)); m.castShadow = false; }
+          else if (hv > 0.7) add(new THREE.BoxGeometry(TILE * (0.7 + hash(r, c) * 0.5), 2 + hash(c + 1, r) * 4.5, 0.9), M.wall, x, 1.5, z, hash(c, r + 3) * 3).castShadow = false;
+        } else {
+          // a wall of brick: courses broken at the crown, a block set back on top, fallen brick at the foot
+          const [h0, h1] = D.wallH || [4.2, 7], h = h0 + hash(c, r) * (h1 - h0), w = TILE + 0.04;
+          add(new THREE.BoxGeometry(w, h, w), M.wall, x, h / 2 - 0.1, z);
+          col(x, z, TILE / 2, TILE / 2);
+          if (hash(c + 5, r) < 0.55) add(new THREE.BoxGeometry(w * (0.4 + hash(c, r + 5) * 0.4), 0.5 + hash(r, c + 5) * 1.3, w * (0.5 + hash(c + 2, r) * 0.4)), M.wall, x + (hash(c, r + 8) - 0.5) * 0.9, h + 0.2, z + (hash(c + 8, r) - 0.5) * 0.9, (hash(r, c) - 0.5) * 0.2);
+          if (hash(c, r + 3) < 0.3) add(new THREE.BoxGeometry(w * 1.04, 0.24, w * 1.04), M.wall, x, h * (0.35 + hash(c + 4, r) * 0.25), z); // a string course
+          const n = N4.find(([dc, dr]) => WALK.has(at(c + dc, r + dr)));
+          if (n && hash(c, r + 7) < 0.45) for (let k = 0; k < 2; k++) { const m = add(rockLump(), M.wall, x + n[0] * (TILE / 2 + 0.2) + (hash(c + k, r) - 0.5) * 1.6 * Math.abs(n[1]), 0.05, z + n[1] * (TILE / 2 + 0.2) + (hash(c, r + k) - 0.5) * 1.6 * Math.abs(n[0])); const s = 0.35 + hash(c * 3 + k, r) * 0.35; m.scale.set(s * 1.4, s * 0.7, s); m.rotation.y = hash(r, c + k) * 6; }
+          if (D.char && n && hash(c + 9, r + 9) < 0.28) { const b = add(new THREE.BoxGeometry(n[0] ? 1.8 : 0.22, 0.22, n[1] ? 1.8 : 0.22), K.char, x + n[0] * TILE / 2, h * (0.55 + hash(c, r) * 0.3), z + n[1] * TILE / 2); b.rotation.set(n[1] * 0.35, 0, -n[0] * 0.35); }
+        }
+      } else if (theme === 'reed') {
+        // the marsh: mud banks thick with reed; beyond them reed beds stand in open water
+        if (near) { const b = add(new THREE.BoxGeometry(TILE + 0.1, 1.2, TILE + 0.1), M.rock, x, -0.25, z, (hash(c, r) - 0.5) * 0.2); b.castShadow = false; col(x, z, TILE / 2, TILE / 2); reedClump(x, z, 8, c, r, 2.6, 4.6); }
+        else if (hash(c, r) < 0.45) reedClump(x, z, 5, c, r, 2.2, 4);
+      } else if (theme === 'timber') {
+        if (near) {
+          // planked walls (the yard's sheds) or a hull's low bulwark over the water (the hulks)
+          const [h0, h1] = D.wallH || [3.6, 5.4], h = D.low ? 1.15 : h0 + hash(c, r) * (h1 - h0), w = TILE + 0.04;
+          add(new THREE.BoxGeometry(w, h, w), K.timber, x, h / 2 - 0.05, z);
+          add(new THREE.BoxGeometry(w + 0.12, 0.16, w + 0.12), K.plank2, x, h, z).castShadow = false;
+          if (hash(c, r + 2) < 0.5) add(new THREE.CylinderGeometry(0.14, 0.16, h + 0.4, 6), K.plank2, x + (hash(c + 1, r) < 0.5 ? -1 : 1) * TILE / 2, (h + 0.4) / 2, z + (hash(c, r + 1) < 0.5 ? -1 : 1) * TILE / 2);
+          col(x, z, TILE / 2, TILE / 2);
+        } else if (!D.sea && hash(c, r) > 0.82) {
+          // stacks of seasoned timber in the yard beyond
+          for (let k = 0; k < 4; k++) add(new THREE.BoxGeometry(2.6, 0.3, 0.3), K.plank, x, 0.15 + Math.floor(k / 2) * 0.3, z + (k % 2 - 0.5) * 0.4 + (Math.floor(k / 2) - 0.5) * 0.2, hash(c, r) * 3).castShadow = false;
+        }
       }
-      if (near && hash(c + 7, r) < 0.3) { const b = add(new THREE.DodecahedronGeometry(0.6 + hash(r, c + 3) * 0.7, 0), M.rock, x + (hash(c, r + 9) - 0.5) * 2, 0.3, z + (hash(c + 2, r) - 0.5) * 2); b.rotation.set(hash(c, r) * 3, hash(r, c) * 3, 0); }
     } else if (ch === '~') {
-      // the drop: dark below, rock faces going down at its edges
+      // the drop: water or a dark floor below, faces going down at its edges
       col(x, z, TILE / 2, TILE / 2, { chasm: true });
-      // far below: the river (the gorge) or rubble on a dark floor (the quarry, the fort's drop, the ravine)
-      add(new THREE.PlaneGeometry(TILE, TILE).rotateX(-Math.PI / 2), id === 'gorge' ? K.river : K.deep, x, -12, z).castShadow = false;
-      if (hash(c * 3, r) < 0.35) { const b = add(rockLump(), M.rock, x + (hash(c, r * 5) - 0.5) * 2, -12, z + (hash(c * 5, r) - 0.5) * 2); const bs = 0.5 + hash(r, c * 2) * 0.9; b.scale.set(bs, bs * 0.7, bs); b.castShadow = false; }
-      if (hash(c, r * 3) < 0.12) I.mist.push(V(x, -9, z));
-      for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const below = wy, faceH = -below + 0.25;
+      if (!D.sea) add(new THREE.PlaneGeometry(TILE, TILE).rotateX(-Math.PI / 2), D.chasm === 'deep' ? K.deep : D.chasm === 'river' || id === 'gorge' ? M.water : K.deep, x, below, z).castShadow = false;
+      if (theme === 'rock' && hash(c * 3, r) < 0.35) { const b = add(rockLump(), M.rock, x + (hash(c, r * 5) - 0.5) * 2, below, z + (hash(c * 5, r) - 0.5) * 2); const bs = 0.5 + hash(r, c * 2) * 0.9; b.scale.set(bs, bs * 0.7, bs); b.castShadow = false; }
+      if (hash(c, r * 3) < (D.sea ? 0.04 : 0.12)) I.mist.push(V(x, below + (D.sea ? 0.6 : 3), z));
+      if (theme === 'reed' && !near && hash(c + 2, r) < 0.12) reedClump(x, z, 4, c, r, 2, 3.4);
+      for (const [dc, dr] of N4) {
         const n = at(c + dc, r + dr); if (n === '~' || n === '#') continue;
-        const face = add(new THREE.BoxGeometry(dc ? 0.7 : TILE, 12.2, dr ? 0.7 : TILE), M.rock, x + dc * (TILE / 2 - 0.35), -6.05, z + dr * (TILE / 2 - 0.35)); face.castShadow = false;
+        const fx = x + dc * (TILE / 2 - 0.35), fz = z + dr * (TILE / 2 - 0.35);
+        if (theme === 'timber') {
+          // pilings along the edge, a wale beam on them
+          for (let k = -1; k <= 1; k++) add(new THREE.CylinderGeometry(0.16, 0.18, faceH + 0.6, 6), K.plank2, fx + (dr ? k : 0) * 1.1, -faceH / 2 - 0.1, fz + (dc ? k : 0) * 1.1).castShadow = false;
+          add(new THREE.BoxGeometry(dc ? 0.3 : TILE, 0.32, dr ? 0.3 : TILE), K.plank, fx, -0.18, fz).castShadow = false;
+        } else {
+          const face = add(new THREE.BoxGeometry(dc ? 0.7 : TILE, faceH, dr ? 0.7 : TILE), theme === 'masonry' ? M.wall : M.rock, fx, -faceH / 2 + 0.05, fz); face.castShadow = false;
+        }
       }
+    } else if (ch === '%') {
+      // shallow water over a sunken floor: Salim wades, slowed
+      add(floorG, M.floor, x, -0.32, z).castShadow = false;
+      const w = add(floorG, K.shallow, x, 0.1, z); w.castShadow = false; w.receiveShadow = false;
+      I.floors.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]); I.water.push({ c, r });
+      if (theme === 'reed' && hash(c, r) < 0.25) reedClump(x + (hash(c, r + 1) - 0.5) * 1.5, z, 2, c, r, 1.4, 2.4);
     } else if (ch === '=') {
       // a plank way: boards across, a rope rail on each chasm side, posts at the corners
       const alongZ = at(c - 1, r) === '~' || at(c + 1, r) === '~';
       for (let k = 0; k < 6; k++) { const o = k / 6 * TILE - TILE / 2 + TILE / 12; add(new THREE.BoxGeometry(alongZ ? TILE * 0.96 : 0.44, 0.1, alongZ ? 0.44 : TILE * 0.96), k % 2 ? K.plank : K.plank2, x + (alongZ ? 0 : o), -0.02 - hash(c * 3 + k, r) * 0.04, z + (alongZ ? o : 0)); }
       I.floors.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]);
       add(new THREE.BoxGeometry(alongZ ? 0.18 : TILE, 0.22, alongZ ? TILE : 0.18), K.plank2, x + (alongZ ? -TILE / 2 + 0.1 : 0), -0.16, z + (alongZ ? 0 : -TILE / 2 + 0.1)).castShadow = false;
+      if (D.sea || theme === 'reed') for (const s of [-1, 1]) add(new THREE.CylinderGeometry(0.1, 0.12, -wy + 0.6, 6), K.plank2, x + (alongZ ? 0 : s * (TILE / 2 - 0.2)), wy / 2 - 0.2, z + (alongZ ? s * (TILE / 2 - 0.2) : 0)).castShadow = false;
       for (const s of [-1, 1]) {
         const side = alongZ ? at(c + s, r) : at(c, r + s); if (side !== '~') continue;
         const ox = alongZ ? s * (TILE / 2 - 0.12) : 0, oz = alongZ ? 0 : s * (TILE / 2 - 0.12);
@@ -314,14 +395,36 @@ export function buildHold(scene, id) {
         col(x + ox, z + oz, alongZ ? 0.12 : TILE / 2, alongZ ? TILE / 2 : 0.12);
       }
     } else if (ch === 'w') {
-      add(new THREE.BoxGeometry(TILE, 1.15, TILE * 0.55), M.wall, x, 0.57, z); col(x, z, TILE / 2, TILE * 0.28);
+      if (theme === 'reed') { for (let k = 0; k < 3; k++) add(new THREE.CylinderGeometry(0.34, 0.34, TILE * 0.95, 8).rotateZ(Math.PI / 2), R.reedPale, x, 0.32 + (k === 2 ? 0.56 : 0), z + (k === 2 ? 0 : (k - 0.5) * 0.66)); }
+      else if (theme === 'timber') { for (let k = 0; k < 2; k++) { add(new THREE.BoxGeometry(1.25, 1.0, 1.25), K.timber, x + (k - 0.5) * 1.4, 0.5, z + (hash(c + k, r) - 0.5) * 0.3, (hash(c, r + k) - 0.5) * 0.3); } }
+      else add(new THREE.BoxGeometry(TILE, 1.15, TILE * 0.55), M.wall, x, 0.57, z);
+      col(x, z, TILE / 2, TILE * 0.28);
     } else if (ch === 'p') {
-      // a column of rock the quarrymen left standing: rough lumps stacked on a broad foot
-      add(new THREE.CylinderGeometry(0.9, 1.15, 2.2, 7), M.rock, x, 1.1, z, hash(c, r) * 3);
-      for (let k = 0; k < 3; k++) { const lump = add(rockLump(), M.rock, x + (hash(c + k, r) - 0.5) * 0.3, 2.4 + k * 1.5, z + (hash(c, r + k) - 0.5) * 0.3); const sc = 0.95 - k * 0.12; lump.scale.set(sc, sc * 1.25, sc); lump.rotation.set(hash(c * 3 + k, r) * 3, hash(r, c * 3 + k) * 6, 0); }
+      if (theme === 'masonry') {
+        // a brick pier with a coping
+        const h = 3.6 + hash(c, r) * 2.2; add(new THREE.BoxGeometry(1.5, h, 1.5), M.wall, x, h / 2, z, hash(c, r) * 0.3); add(new THREE.BoxGeometry(1.8, 0.3, 1.8), M.wall, x, h + 0.1, z, hash(c, r) * 0.3);
+      } else if (theme === 'reed') {
+        // a great bundle of reed bound with rope, like the ribs of a guest hall
+        add(new THREE.CylinderGeometry(0.5, 0.7, 4.6, 9), R.reedRib, x, 2.3, z); for (let k = 0; k < 4; k++) add(new THREE.TorusGeometry(0.6 - k * 0.04, 0.05, 4, 12).rotateX(Math.PI / 2), K.rope, x, 0.6 + k * 1.1, z).castShadow = false;
+      } else if (theme === 'timber') {
+        // a post with a cross-tree and a coil of rope
+        add(new THREE.CylinderGeometry(0.24, 0.3, 6.5, 8), K.plank2, x, 3.25, z); add(new THREE.BoxGeometry(2.2, 0.2, 0.2), K.plank2, x, 5.6, z, hash(c, r) * 3); add(new THREE.TorusGeometry(0.42, 0.1, 5, 12).rotateX(Math.PI / 2), K.rope, x, 0.12, z + 0.2).castShadow = false;
+      } else {
+        // a column of rock the quarrymen left standing: rough lumps stacked on a broad foot
+        add(new THREE.CylinderGeometry(0.9, 1.15, 2.2, 7), M.rock, x, 1.1, z, hash(c, r) * 3);
+        for (let k = 0; k < 3; k++) { const lump = add(rockLump(), M.rock, x + (hash(c + k, r) - 0.5) * 0.3, 2.4 + k * 1.5, z + (hash(c, r + k) - 0.5) * 0.3); const sc = 0.95 - k * 0.12; lump.scale.set(sc, sc * 1.25, sc); lump.rotation.set(hash(c * 3 + k, r) * 3, hash(r, c * 3 + k) * 6, 0); }
+      }
       col(x, z, 0.95, 0.95);
+    } else if (ch === 'h') {
+      // a stack in the way: fired brick, bundled reed, bales of cargo, or a fallen boulder
+      const rnd = seeded(c, r), ry = hash(c, r) * 3;
+      const o = theme === 'masonry' ? brickStack(rnd) : theme === 'reed' ? reedStack(rnd) : theme === 'timber' ? (hash(r, c) < 0.5 ? baleStack(rnd) : crate()) : null;
+      if (o) { o.position.set(x, 0, z); o.rotation.y = ry; if (theme === 'masonry') o.scale.setScalar(2.1); if (theme === 'timber' && !o.userData.colliders) o.scale.setScalar(2.2); o.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); grp.add(o); }
+      else { const b = add(rockLump(), M.rock, x, 0.6, z, ry); b.scale.set(1.3, 1.1, 1.2); }
+      if (theme === 'masonry') { const o2 = brickStack(seeded(c + 3, r)); o2.position.set(x + 0.7, 0, z - 0.6); o2.rotation.y = ry + 0.5; o2.scale.setScalar(1.6); grp.add(o2); }
+      colliders.push({ type: 'circle', x, z, r: 1.3, interior: true });
     } else if (ch === 'x') {
-      const m = add(new THREE.BoxGeometry(TILE + 0.06, 7, TILE + 0.06), M.crack, x, 3.3, z, 0, dyn); m.userData.noMerge = true;
+      const m = add(new THREE.BoxGeometry(TILE + 0.06, 7, TILE + 0.06), theme === 'timber' ? K.timber : M.crack, x, 3.3, z, 0, dyn); m.userData.noMerge = true;
       for (let k = 0; k < 4; k++) { const cr = add(new THREE.BoxGeometry(0.08, 2.2, 0.08), K.void, x + (k - 1.5) * 0.5, 1.3 + k * 0.3, z + TILE / 2 + 0.05, 0, m); cr.position.set((k - 1.5) * 0.5, -2 + k * 0.3, TILE / 2 + 0.05); cr.rotation.z = (k % 2 ? 0.5 : -0.4); }
       I.cracks.push({ c, r, x, z, mesh: m, col: col(x, z, TILE / 2, TILE / 2), open: false });
     } else if (ch === 'g') {
@@ -331,6 +434,22 @@ export function buildHold(scene, id) {
       for (let k = 0; k < 7; k++) add(new THREE.BoxGeometry(alongX ? 0.36 : 0.22, 3.2, alongX ? 0.22 : 0.36), K.plank, alongX ? -TILE / 2 + 0.25 + k * 0.42 : 0, 1.6, alongX ? 0 : -TILE / 2 + 0.25 + k * 0.42, 0, leaf);
       add(new THREE.BoxGeometry(alongX ? TILE : 0.3, 0.26, alongX ? 0.3 : TILE), K.iron, 0, 2.0, 0, 0, leaf); add(new THREE.BoxGeometry(alongX ? TILE : 0.3, 0.26, alongX ? 0.3 : TILE), K.iron, 0, 0.8, 0, 0, leaf);
       I.gates.push({ c, r, x, z, mesh: gate, leaf, col: col(x, z, TILE / 2, TILE / 2), open: false, alongX });
+    } else if (ch === 'v') {
+      // a fire vent: an iron grate over a glowing pit; it brightens, then blasts
+      add(new THREE.BoxGeometry(1.7, 0.06, 1.7), K.void, x, 0.01, z).castShadow = false;
+      for (let k = 0; k < 5; k++) add(new THREE.BoxGeometry(1.8, 0.08, 0.1), K.iron, x, 0.05, z - 0.8 + k * 0.4).castShadow = false;
+      const glow = add(new THREE.PlaneGeometry(1.5, 1.5).rotateX(-Math.PI / 2), K.ember, x, 0.03, z, 0, dyn); glow.castShadow = false; glow.receiveShadow = false; glow.scale.setScalar(0.6);
+      I.vents.push({ pos: V(x, 0, z), glow, off: hash(c, r) * 6 });
+    } else if (ch === 'k') {
+      // overhead: a hoist with its load (the yard), or a charred beam ready to come down (the burned quarter)
+      if (theme === 'timber') {
+        const s = hash(c, r) < 0.5 ? -1 : 1;
+        add(new THREE.CylinderGeometry(0.16, 0.2, 6.2, 6), K.plank2, x + s * 1.3, 3.1, z); add(new THREE.BoxGeometry(2.8, 0.2, 0.2), K.plank2, x, 6.0, z);
+        add(new THREE.CylinderGeometry(0.02, 0.02, 2.4, 4), K.rope, x - s * 0.4, 4.8, z).castShadow = false; add(new THREE.BoxGeometry(0.9, 0.7, 1.0), K.timber, x - s * 0.4, 3.3, z);
+      } else {
+        for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.26, 0.26, TILE * 1.05), K.char, x + s * 0.7, 5.2 + s * 0.3, z, 0.1 * s).rotation.x = 0.12 * s;
+      }
+      I.hoists.push({ pos: V(x, 0, z), cd: 2 + hash(c, r) * 3 });
     }
     // furniture of the special tiles
     if (ch === 'C') {
@@ -354,13 +473,17 @@ export function buildHold(scene, id) {
       I.chests.push({ kind: ch, pos: V(x, 0, z), mesh: chest, lid, opened: false });
     }
   }
+  // what lies beyond the map: open water (the marsh, the river) or level ground (the ruins, the yard)
+  if (D.sea) add(new THREE.PlaneGeometry(600, 600).rotateX(-Math.PI / 2), M.water, OX, wy, 0).castShadow = false;
+  else if (theme !== 'rock') add(new THREE.PlaneGeometry(600, 600).rotateX(-Math.PI / 2), M.floor, OX, -0.08, 0).castShadow = false;
   // braziers along the paths (light from the pool where the walls close in)
   for (let r = 1; r < H - 1; r++) for (let c = 1; c < W - 1; c++) {
-    if (at(c, r) !== '#' || hash(c * 5, r * 3) > 0.12) continue;
-    const n = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dc, dr]) => WALK.has(at(c + dc, r + dr)) && at(c + dc, r + dr) !== '=');
+    if (at(c, r) !== '#' || hash(c * 5, r * 3) > (D.braziers ?? 0.12)) continue;
+    const n = N4.find(([dc, dr]) => WALK.has(at(c + dc, r + dr)) && at(c + dc, r + dr) !== '=');
     if (!n) continue;
     const x = X(c) + n[0] * (TILE / 2 + 0.3), z = Z(r) + n[1] * (TILE / 2 + 0.3);
-    add(new THREE.CylinderGeometry(0.06, 0.04, 0.7, 6), K.iron, x, 2.3, z).rotation.set(n[1] * 0.5, 0, -n[0] * 0.5);
+    if (theme === 'reed') { add(new THREE.CylinderGeometry(0.05, 0.06, 2.6, 5), K.plank2, x, 1.3, z); } // a torch on a pole among the reeds
+    else add(new THREE.CylinderGeometry(0.06, 0.04, 0.7, 6), K.iron, x, 2.3, z).rotation.set(n[1] * 0.5, 0, -n[0] * 0.5);
     add(new THREE.SphereGeometry(0.1, 6, 5), K.ember, x + n[0] * 0.15, 2.65, z + n[1] * 0.15).castShadow = false;
     I.torches.push({ pos: V(x + n[0] * 0.15, 2.7, z + n[1] * 0.15), light: V(x + n[0] * 0.9, 2.4, z + n[1] * 0.9), intensity: 0.5, torch: true });
   }
@@ -374,15 +497,16 @@ export function buildHold(scene, id) {
   buildGrid(); buildNav(INTERIOR_X, 290);
   // which side of each gate is the far one (reached later along the way from the entrance)
   const dist = new Map(), q = [], [ec, er] = tileOf(I.entrance.x, I.entrance.z); dist.set(ec + ',' + er, 0); q.push([ec, er]);
-  while (q.length) { const [c, r] = q.shift(), d = dist.get(c + ',' + r); for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (c + dc) + ',' + (r + dr); if (dist.has(k) || !(WALK.has(at(c + dc, r + dr)) || at(c + dc, r + dr) === 'x')) continue; dist.set(k, d + 1); q.push([c + dc, r + dr]); } }
+  while (q.length) { const [c, r] = q.shift(), d = dist.get(c + ',' + r); for (const [dc, dr] of N4) { const k = (c + dc) + ',' + (r + dr); if (dist.has(k) || !(WALK.has(at(c + dc, r + dr)) || at(c + dc, r + dr) === 'x')) continue; dist.set(k, d + 1); q.push([c + dc, r + dr]); } }
   for (const G of I.gates) {
-    const sides = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dc, dr]) => [G.c + dc, G.r + dr]).filter(([c, r]) => WALK.has(at(c, r)));
+    const sides = N4.map(([dc, dr]) => [G.c + dc, G.r + dr]).filter(([c, r]) => WALK.has(at(c, r)));
     sides.sort((a, b) => (dist.get(b.join()) ?? 0) - (dist.get(a.join()) ?? 0));
     G.far = V(X(sides[0][0]), 0, Z(sides[0][1])); G.near = V(X(sides[sides.length - 1][0]), 0, Z(sides[sides.length - 1][1]));
   }
   I.center = () => I.entrance; I.chest = null;
   return I;
 }
+
 function destroyHold(scene, I) {
   scene.remove(I.group);
   I.group.traverse((o) => { if (o.isMesh && o.geometry) o.geometry.dispose(); });
@@ -482,6 +606,8 @@ function holdBossAI(g, e, dt, dist) {
     if (e.idleT <= 0 && pickMove(g, e, dist)) return 'skip';
     return g.rivalAI(g, e, dt, dist);
   } else {
+    // Round 22: a lieutenant with a fight of his own (rivals.js) keeps it between the moves
+    if (K.own && g.__rivals?.[K.own] && g.__rivals[K.own](g, e, dt, dist) === 'skip') return 'skip';
     e.idleT = (e.idleT ?? 0.6) - dt;
     if (e.idleT <= 0 && !p.dead && pickMove(g, e, dist)) return 'skip';
     // close in, or circle a little while the moves come round
@@ -542,16 +668,19 @@ export function setupHolds(g) {
   // the label on each hold's door (hamrin.js): what is left to do there
   g.holds = {
     label: (id) => { const s = state(id), H = HOLDS[id]; return s.done ? `${t('Enter')} ${t(H.title)} (${t('cleared')})` : `${t('Enter')} ${t(H.title)}`; },
+    locked: (id) => { const H = HOLDS[id]; if (!H.needs) return null; const q = g.quests.find((x) => x.id === H.needs); return q && !q.done ? H.lockMsg || 'Not yet' : null; },
     enter: (id) => enter(id),
     state,
   };
   async function enter(id) {
     if (g.interior) return;
     const H = HOLDS[id], s = state(id);
+    const lockMsg = g.holds.locked(id); if (lockMsg) { g.ui.toast(t(lockMsg)); g.audio.denied?.(); return; }
     g.ui.fade(1); g.paused = true; await new Promise((r) => setTimeout(r, 600));
     g.returnPos = p.pos.clone();
     const I = buildHold(g.scene, id);
-    const level = Math.max(22, Math.min(30, p.level + 1)) + H.step;
+    // the Hamrin holds are endgame (22-30); the story holds meet Salim at his own level, whenever he comes
+    const level = H.region ? Math.max(1, p.level) : Math.max(22, Math.min(30, p.level + 1)) + H.step;
     g.interior = { def: { kind: 'hold', id, title: H.title, level }, I, enemies: [], hold: true };
     for (const tch of I.torches) g.lightPool?.add({ pos: tch.light, color: tch.fire ? 0xff9a40 : 0xffa860, power: tch.fire ? 22 : 14, dist: tch.fire ? 12 : 9, interior: true });
     for (const e of g.enemies) if (!e.dead) e.rig.visible = false;
@@ -578,13 +707,15 @@ export function setupHolds(g) {
       return [I.entrance, 'Climb back out of the hold'];
     };
     p.pos.copy(s.lastFire != null && I.fires[s.lastFire] ? I.fires[s.lastFire].pos.clone().add(V(0, 0, 2)) : I.start); p.target = null; p.moveTo = null; p.vel?.set(0, 0, 0);
-    g.camInit = false; g.camAction = true; g.lighting?.set('gorge', 0);
+    g.camInit = false; g.camAction = true; g.lighting?.set(H.light || 'gorge', 0);
     for (const o of g.world.staticRoots || []) { o.userData.wasVis = o.visible; o.visible = !!o.userData.sky; }
     g.world.cullPaused = true;
     g.ui.setMapRegion?.('interior', I);
     await g.warmCompile?.();
     g.paused = false; g.ui.fade(0); g.ui.banner(t(H.title), t(H.sub), 2800); g.audio.stinger?.('ambush');
     unlock(g, H.codex);
+    // the first hold: how the close camera and the lock-on work
+    if (!p.tutHold) { p.tutHold = true; setTimeout(() => g.ui.toast(t(g.ui.touch || document.body.classList.contains('touch') ? 'Close quarters: the camera follows behind you. Tap ◎ to lock on to a foe.' : 'Close quarters: the camera follows behind you. Tab or F locks on to a foe.')), 3200); }
   }
   function populate(I, level, s, menOnly = false) {
     const H = HOLDS[I.hold];
@@ -595,6 +726,8 @@ export function setupHolds(g) {
       const pack = g.spawnPack(pool, sp.x, sp.z, n, level - 1, { spread: 2.2, interior: true });
       for (const e of pack) { e.interior = true; e.pos.y = 0; e.rig.visible = true; } g.interior.enemies.push(...pack);
     }
+    // a story hold whose lieutenant already fell (an older save, before the holds) counts as broken
+    if (H.region && g.quests.find((q) => q.id === H.quest)?.done) { s.done = true; s.mid = true; }
     for (const [key, atK] of [['mid', 'midAt'], ['boss', 'bossAt']]) {
       if (menOnly || (key === 'mid' ? s.mid : s.done)) continue;
       const bid = H[key], K = BOSS[bid], type = K.type === 'zubayr' ? 'zubayr' : 'hb_' + bid;
@@ -604,6 +737,8 @@ export function setupHolds(g) {
       if (K.block) { e.shield = true; e.blockK = K.block; }
       if (K.rival) { e.volleyN = 5; e.T = { ...e.T, hold: [7, 13] }; }
       e.T = { ...e.T, ai: holdBossAI }; e.moves = [...K.moves]; e.cds = {}; e.facing = Math.PI; e.alerted = true; e.engaged = false;
+      // the story's lieutenant: his fall completes the quest and plays his last words (game.killEnemy)
+      if (key === 'boss' && H.lieut) { e.quest = STORY[H.lieut]; if (H.lieut === 'chief') g.chief = e; else g.matriarch = e; }
       g.interior.enemies.push(e);
     }
   }
@@ -649,7 +784,7 @@ export function setupHolds(g) {
     w.querySelector('[data-out]').onclick = () => { w.remove(); exit(); };
     // and his men come back to their posts (the captains already beaten stay beaten)
     populate(I, g.interior.def.level, s, true);
-    for (const e of g.interior.enemies) if (e.holdBoss && !e.dead) { e.hp = e.maxHp; e.engaged = false; e.p2 = false; e.moves = [...e.holdBoss.moves]; e.pos.copy(e.holdKey === 'mid' ? I.midAt : I.bossAt); e.ghost = false; e.rig.visible = true; }
+    for (const e of g.interior.enemies) if (e.holdBoss && !e.dead) { e.hp = e.maxHp; e.engaged = false; e.p2 = false; e.moves = [...e.holdBoss.moves]; e.pos.copy(e.holdKey === 'mid' ? I.midAt : I.bossAt); e.ghost = false; e.rig.visible = true; e.hook = null; e.smoke = null; if (g.rivalChain) g.rivalChain.visible = false; }
   }
   async function exit() {
     if (!g.interior?.hold) return;
@@ -661,6 +796,7 @@ export function setupHolds(g) {
     g.interactables = g.interactables.filter((x) => !x.interior);
     g.lightPool?.remove((e) => e.interior);
     destroyHold(g.scene, I); buildGrid(); setInteriorFloor(null); buildNav(INTERIOR_X, 290);
+    if (g.chief?.removed && !g.chief.dead) g.chief = null; if (g.matriarch?.removed && !g.matriarch.dead) g.matriarch = null;
     g.interior = null; g.camAction = false; g.lockOn = null; g.holdArena = null; ringM.visible = false;
     g.ui.bossBar(null); g.audio.setMusicIntensity?.(0);
     p.pos.copy(g.returnPos); p.pos.y = 0; p.target = null; p.moveTo = null;
@@ -685,11 +821,12 @@ export function setupHolds(g) {
     if (e.holdKey === 'mid') { s.mid = true; g.ui.banner(t(e.name) + ' ' + t('falls'), t('The way on is open. A fire waits ahead.'), 3200); }
     else {
       s.done = true; g.completeQuest?.(H.quest, true);
-      if (e.holdBoss.rival) {
+      if (H.lieut) { /* his last words play from game.killEnemy */ }
+      else if (e.holdBoss.rival) {
         p.rival = { ...(p.rival || {}), final: 'fallen' };
         g.director?.play(SCENES.lieutenantFalls(g, e, { who: 'Zubayr', text: 'It was only ever the pay.', card: { ar: 'زبير', en: 'Zubayr', sub: t('Jabir\'s account is kept') } }));
       } else g.ui.banner(t(H.title), t('The hold is broken. Its master\'s chest is yours.'), 3800);
-      if (Object.keys(HOLDS).every((k) => state(k).done)) setTimeout(() => g.ui.banner(t('The Hamrin Hills'), t('Every hold is broken'), 4200), 4500);
+      if (!H.region && Object.keys(HOLDS).filter((k) => !HOLDS[k].region).every((k) => state(k).done)) setTimeout(() => g.ui.banner(t('The Hamrin Hills'), t('Every hold is broken'), 4200), 4500);
     }
     saveGame(g);
   };
@@ -703,7 +840,7 @@ export function setupHolds(g) {
     const F = s.lastFire != null ? I.fires[s.lastFire] : null;
     p.pos.copy(F ? F.pos.clone().add(V(0, 0, 2)) : I.start);
     g.holdArena = null; ringM.visible = false; g.ui.bossBar(null);
-    for (const e of g.interior.enemies) if (e.holdBoss && !e.dead) { e.hp = e.maxHp; e.engaged = false; e.p2 = false; e.mv = null; e.curMove = null; e.st.action = null; e.moves = [...e.holdBoss.moves]; e.cds = {}; e.pos.copy(e.holdKey === 'mid' ? I.midAt : I.bossAt); e.ghost = false; e.rig.visible = true; }
+    for (const e of g.interior.enemies) if (e.holdBoss && !e.dead) { e.hp = e.maxHp; e.engaged = false; e.p2 = false; e.mv = null; e.curMove = null; e.st.action = null; e.moves = [...e.holdBoss.moves]; e.cds = {}; e.pos.copy(e.holdKey === 'mid' ? I.midAt : I.bossAt); e.ghost = false; e.rig.visible = true; e.hook = null; e.smoke = null; if (g.rivalChain) g.rivalChain.visible = false; }
     for (const e of g.interior.enemies) if (e.summoned && !e.dead) { g.scene.remove(e.rig); e.removed = true; e.dead = true; }
     for (const e of g.interior.enemies) if (!e.dead && !e.holdBoss) { e.alerted = false; e.hp = e.maxHp; e.pos.copy(e.home); }
     g.camInit = false;
@@ -714,6 +851,23 @@ export function setupHolds(g) {
     prevTick?.(dt);
     const IH = g.interior?.I; if (IH?.hold) for (const m of IH.mist) if (Math.random() < 0.06 && Math.abs(m.x - p.pos.x) < 30 && Math.abs(m.z - p.pos.z) < 30) g.fx.smoke.spawn({ pos: { x: m.x + rand(-1.5, 1.5), y: m.y, z: m.z + rand(-1.5, 1.5) }, vel: { x: 0.2, y: 0.9, z: 0.1 }, life: 7, size: 2.5, size1: 6, color: new THREE.Color(0.75, 0.74, 0.72), alpha: 0.14, drag: 0.1, fadeIn: 0.5 });
     for (const h of holes) if (h.m.visible) { h.t += dt; if (h.t > h.life) h.m.visible = false; else if (!p.dead && Math.hypot(p.pos.x - h.m.position.x, p.pos.z - h.m.position.z) < 1.2) { p.st.hitT = Math.max(p.st.hitT, 0.2); g.hazSlowK = 0.45; if ((h.tick = (h.tick || 0) - dt) <= 0) { h.tick = 0.5; g.damagePlayer(4 + p.level, h.m.position); } } }
+    // Round 22: the story holds' hazards: fire vents on a cycle, loads dropped round Salim, shallow water that slows
+    if (IH?.hold && !g.cinematic && !p.dead && !g.paused) {
+      for (const v of IH.vents) {
+        v.t = (v.t ?? v.off) + dt; const k = v.t % 5.5, d = Math.hypot(p.pos.x - v.pos.x, p.pos.z - v.pos.z);
+        v.glow.scale.setScalar(k > 3.8 ? 0.6 + Math.min(1, (k - 3.8) / 0.8) * 0.75 : 0.55 + 0.08 * Math.sin(g.t * 3 + v.off));
+        if ((v.prev ?? 0) < 3.8 && k >= 3.8 && d < 26) g.telegraph(v.pos.clone(), 1.6, 0.8, () => { g.fires2.push({ pos: v.pos.clone(), r: 1.5, life: 1.4, t: 0, tick: 0, dmg: 5 + p.level * 1.8 }); g.fx.burst(tmp.copy(v.pos).setY(0.4), 26, { speed: 3.5, life: 0.8, size: 0.35, size1: 0.05, color: new THREE.Color(3, 1.3, 0.35), up: 6, drag: 1.2 }); g.audio.at(v.pos, () => g.audio.boom?.()); });
+        v.prev = k;
+      }
+      for (const h of IH.hoists) {
+        if (Math.hypot(p.pos.x - h.pos.x, p.pos.z - h.pos.z) > 7) continue;
+        if ((h.cd -= dt) > 0) continue;
+        h.cd = rand(5, 7.5); const q = V(p.pos.x + (p.vel?.x || 0) * 0.35, 0, p.pos.z + (p.vel?.z || 0) * 0.35);
+        if (g.holdWalk(q)) g.lobStone(V(q.x + 0.4, 8.5, q.z + 0.2), q, 7 + p.level * 2.2, 1.15, 1.7);
+      }
+      const [tc, tr] = IH.tileOf(p.pos.x, p.pos.z);
+      if (IH.at(tc, tr) === '%') g.hazSlowK = Math.min(g.hazSlowK ?? 1, 0.72);
+    }
     const A = g.holdArena;
     if (A) {
       A.t += dt; A.r = Math.max(A.to, 13 - A.t * 0.35);

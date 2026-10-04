@@ -36,8 +36,8 @@ export const HUB = {
 export const STORY = {
   sawad: {
     quests: [
-      { id: 'serai', text: 'Defeat Farud at the old caravanserai' },
-      { id: 'graves', text: 'Drive Hisham\'s men from the kiln yard' },
+      { id: 'serai', text: 'Follow Farud into the broken dam behind the caravanserai' },
+      { id: 'graves', text: 'Find Hisham in the galleries under the kiln yard' },
       { id: 'boss', text: 'Face Ghassan at the ruined Persian arch' },
     ],
     chief: 'serai', second: 'graves', boss: 'boss',
@@ -45,8 +45,8 @@ export const STORY = {
   },
   marsh: {
     quests: [
-      { id: 'reedcamp', text: 'Find Marwan in the reed camp to the west' },
-      { id: 'landing', text: 'Take Rawh\'s boats from Sahl at the fish racks' },
+      { id: 'reedcamp', text: 'Find Marwan in the reed stockade to the west' },
+      { id: 'landing', text: 'Take Rawh\'s boats from Sahl in the sunken village' },
       { id: 'rawh', text: 'Face Rawh at the old weir' },
     ],
     chief: 'reedcamp', second: 'landing', boss: 'rawh',
@@ -54,8 +54,8 @@ export const STORY = {
   },
   karkh: {
     quests: [
-      { id: 'burnedsuq', text: 'Find \'Asim in the burned suq' },
-      { id: 'warraqin', text: 'Drive Layth from the paper-sellers\' lane' },
+      { id: 'burnedsuq', text: 'Find \'Asim in the burned quarter behind the suq' },
+      { id: 'warraqin', text: 'Drive Layth from the vaults under the paper-sellers\' lane' },
       { id: 'utba', text: 'Stop \'Utba in the square before sunset' },
     ],
     chief: 'burnedsuq', second: 'warraqin', boss: 'utba',
@@ -63,8 +63,8 @@ export const STORY = {
   },
   docks: {
     quests: [
-      { id: 'warehouses', text: 'Find Bilal among the river warehouses' },
-      { id: 'boatyard', text: 'Free the copyists\' boat from Mus\'ab at the boatyard' },
+      { id: 'warehouses', text: 'Find Bilal in the shipyard by the warehouses' },
+      { id: 'boatyard', text: 'Free the copyists\' boat from Mus\'ab among the hulks' },
       { id: 'ghanim', text: 'Face Ghanim at the bridge of boats' },
     ],
     chief: 'warehouses', second: 'boatyard', boss: 'ghanim',

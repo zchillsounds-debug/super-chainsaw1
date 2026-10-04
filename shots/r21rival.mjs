@@ -27,7 +27,8 @@ const res = await pg.evaluate(async (region) => {
     log.push('gone ' + !!z.removed + ' rival ' + JSON.stringify(p.rival));
   }
   const L = g.matriarch;
-  if (region === 'sawad' || region === 'karkh') {
+  if (!L && (region === 'sawad' || region === 'karkh')) log.push('the lieutenant now holds a dungeon (shots/r22holds.mjs tests his fight)');
+  if (L && (region === 'sawad' || region === 'karkh')) {
     for (const e of g.enemies) if (e !== L && !e.dead && e.pos.distanceTo(L.pos) < 20) { e.dead = true; e.removed = true; g.scene.remove(e.rig); }
     p.pos.set(L.pos.x + 7, 0, L.pos.z + 3); L.alerted = true; L.pos.y = 0; __sim(0.1);
     const seen = new Set(); let pulled = 0, ghost = 0, hp0 = p.hp;
@@ -37,5 +38,5 @@ const res = await pg.evaluate(async (region) => {
   return log.join('\n');
 }, region);
 console.log(res);
-if (out) { await pg.evaluate(() => { const L = __game.matriarch; __look(L, 40, 7, 3, 1.2); __sim(0.05); }); await pg.waitForTimeout(500); await pg.screenshot({ path: `${out}/lieut-${region}.png` }); }
+if (out) { await pg.evaluate(() => { const L = __game.matriarch || __game.enemies[0]; __look(L, 40, 7, 3, 1.2); __sim(0.05); }); await pg.waitForTimeout(500); await pg.screenshot({ path: `${out}/lieut-${region}.png` }); }
 console.log('errors:', errs.slice(0, 5).join(' | ') || 'none'); await b.close();

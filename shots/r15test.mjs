@@ -12,7 +12,7 @@ const out = await pg.evaluate(async () => {
   const g = window.__game, r = {}, sim = (s) => window.__sim(s);
   r.act = g.act; r.quests = g.quests.map((q) => q.id).join(',');
   r.enemies = g.enemies.length; r.types = [...new Set(g.enemies.map((e) => e.type))].join(',');
-  r.chief = g.chief?.name; r.second = g.matriarch?.name;
+  r.holdDoors = Object.keys(g.storyDoor || {}).join(',');
   r.programs0 = window.__renderer.info.programs.length;
   // a net and a sling stone at the hero
   const e = g.enemies.find((x) => !x.boss) ; const P = g.player.pos;

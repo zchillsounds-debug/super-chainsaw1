@@ -4,20 +4,20 @@ import { REGION } from './region.js';
 
 export const LIEUT = {
   sawad: {
-    chief: { who: 'Farud', text: 'Ghassan paid me to take the chest. Hisham has the Pages now, at the kilns.', act: 2, card: { ar: 'الأتون', en: 'Act II · The Kilns', sub: 'Hisham is burning the Pages in the kilns. Stop him.' } },
+    chief: { who: 'Farud', text: 'Ghassan paid me to take the chest. Hisham has the Pages now, at the kilns.', act: 2, card: { ar: 'الأتون', en: 'Act II · The Kilns', sub: 'Hisham is burning the Pages in the kiln galleries. Stop him.' } },
     second: { who: 'Hisham', text: 'I sold the Pages to Ghassan for a bag of silver. He has the rest, at the old arch.', act: 3, card: { ar: 'الطاق', en: 'Act III · The Broken Arch', sub: 'Ghassan has cut off the village\'s water. Find him at the arch.' } },
   },
   marsh: {
-    chief: { who: 'Marwan', text: 'Rawh paid us to hide his boats. Sahl keeps them at the fish racks, east.', act: 4, card: { ar: 'المرسى', en: 'The Fish Racks', sub: 'Take Rawh\'s boats from Sahl, so he cannot run.' } },
+    chief: { who: 'Marwan', text: 'Rawh paid us to hide his boats. Sahl keeps them in the drowned village, east.', act: 4, card: { ar: 'القرية الغارقة', en: 'The Sunken Village', sub: 'Take Rawh\'s boats from Sahl, so he cannot run.' } },
     second: { who: 'Sahl', text: 'Rawh is at the old weir with the Pages. He sails for Baghdad tonight.', act: 4, card: { ar: 'السِّكر القديم', en: 'The Old Weir', sub: 'Rawh is waiting for a boat that will not come.' } },
   },
   karkh: {
-    chief: { who: '\'Asim', text: '\'Utba moved the Pages to the paper-sellers\' lane. Layth guards them.', act: 5, card: { ar: 'سوق الورّاقين', en: 'The Paper-Sellers\' Lane', sub: 'Layth guards the Pages among the paper shops.' } },
+    chief: { who: '\'Asim', text: '\'Utba moved the Pages to the vaults under the paper-sellers\' lane. Layth guards them.', act: 5, card: { ar: 'مخازن الورّاقين', en: 'The Warehouse Vaults', sub: 'Layth guards the Pages in the store-rooms under the paper shops.' } },
     second: { who: 'Layth', text: 'Too late. \'Utba took them to the square. He burns them at sunset.', act: 5, card: { ar: 'الساحة', en: 'The Square', sub: 'Stop \'Utba before he lights the pyre.' } },
   },
   // Round 20: Act VI, the river quays. The buyer's steward Ghanim means to sink the first copies before they sail.
   docks: {
-    chief: { who: 'Bilal', text: 'Ghanim pays us to hold the river. Mus\'ab keeps the copyists\' boat at the yard.', act: 6, card: { ar: 'دار الصناعة', en: 'The Boatyard', sub: 'Free the copyists\' boat from Mus\'ab.' } },
+    chief: { who: 'Bilal', text: 'Ghanim pays us to hold the river. Mus\'ab keeps the copyists\' boat among the burned hulks.', act: 6, card: { ar: 'السفن المحروقة', en: 'The Hulks', sub: 'Free the copyists\' boat from Mus\'ab.' } },
     second: { who: 'Mus\'ab', text: 'The boat is yours. But Ghanim cut the bridge, and he waits at its foot.', act: 6, card: { ar: 'الجسر', en: 'The Bridge of Boats', sub: 'Ghanim will not let the copies sail. Face him at the bridge.' } },
   },
   hamrin: {}, // Round 21: the endgame's captains are in the holds (holds.js)
