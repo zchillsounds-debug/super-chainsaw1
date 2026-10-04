@@ -31,7 +31,7 @@ export const AR22 = {
   'The way is barred. Find Marwan first.': 'الطريق موصد. اعثر على مروان أوّلًا.',
   'The vaults are barred. Find \'Asim first.': 'المخازن موصدة. اعثر على عاصم أوّلًا.',
   'No boat will take you out yet. Find Bilal first.': 'لن يحملك قارب إلى هناك بعد. اعثر على بلال أوّلًا.',
-  'Not yet': 'ليس بعد',
+  'Not yet': 'ليس بعد', 'barred': 'موصد',
   'Close quarters: the camera follows behind you. Tap ◎ to lock on to a foe.': 'قتال قريب: الكاميرا تتبعك من الخلف. المس ◎ لتثبّت على عدوّ.',
   'Close quarters: the camera follows behind you. Tab or F locks on to a foe.': 'قتال قريب: الكاميرا تتبعك من الخلف. Tab أو F للتثبيت على عدوّ.',
   // the story, as it now runs

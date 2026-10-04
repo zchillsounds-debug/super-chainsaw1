@@ -326,7 +326,10 @@ export function startNewGamePlus(game) {
   const p = game.player, ng = (game.ng || 0) + 1;
   game.act = 1; game.ng = ng;
   for (const q of game.quests) q.done = false;
+  game.savedQuests = {}; // every region's story starts over, not just this one's
   p.side = {}; p.named = {}; p.enginesBurnt = 0;
+  // Round 22: the story holds fill again (the Hamrin holds keep their state)
+  if (p.holds) for (const k of ['dam', 'kilns', 'stockade', 'sunken', 'quarter', 'vaults', 'shipyard', 'hulks']) delete p.holds[k];
   saveGame(game);
   try { sessionStorage.setItem('sob.autocontinue', '1'); } catch { /* ignore */ }
   location.reload();

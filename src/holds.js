@@ -667,7 +667,7 @@ export function setupHolds(g) {
 
   // the label on each hold's door (hamrin.js): what is left to do there
   g.holds = {
-    label: (id) => { const s = state(id), H = HOLDS[id]; return s.done ? `${t('Enter')} ${t(H.title)} (${t('cleared')})` : `${t('Enter')} ${t(H.title)}`; },
+    label: (id) => { const s = state(id), H = HOLDS[id]; return s.done ? `${t('Enter')} ${t(H.title)} (${t('cleared')})` : g.holds.locked(id) ? `${t(H.title)} (${t('barred')})` : `${t('Enter')} ${t(H.title)}`; },
     locked: (id) => { const H = HOLDS[id]; if (!H.needs) return null; const q = g.quests.find((x) => x.id === H.needs); return q && !q.done ? H.lockMsg || 'Not yet' : null; },
     enter: (id) => enter(id),
     state,
