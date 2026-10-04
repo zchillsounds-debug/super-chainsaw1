@@ -1,16 +1,16 @@
-# Madinat al-Salam: Handoff (after Round 20)
+# Madinat al-Salam: Handoff (Round 21 in progress)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**. It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on the session branch `ccr-c97baf64-6kbn83` of zchillsounds-debug/super-chainsaw1 (or in `madinat-round20-handoff.zip` if I attach it) (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-veqq6w` of zchillsounds-debug/super-chainsaw1.
 >
-> Please:
-> 1. Unzip it and read HANDOFF.md fully.
-> 2. Run `npm install && npx vite`.
-> 3. Plan **Round 21**. Start from the menu in the "Next" section, ask me clarifying questions, and confirm the plan with me before building.
+> **Round 21 is half built and already approved: do not re-plan it.** Please:
+> 1. Fetch the branch and read HANDOFF.md fully, especially "Round 21 (in progress)".
+> 2. Run `npm install`. Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Don't leave a background vite running; it is killed after two hours.
+> 3. Finish the remaining Round 21 items in the order listed, then ship.
 >
-> The goal is AAA mobile game quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop (screenshot → critique → improve) every round. I play on Android. After each round:
-> - Republish the game as a playable Artifact, updating the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Touch controls must keep working.
-> - Push to the session's assigned branch on zchillsounds-debug/super-chainsaw1.
+> The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When Round 21 is done:
+> - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
+> - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
 
 ## Restore the code
@@ -19,7 +19,7 @@ unzip madinat-round19-handoff.zip -d madinat && cd madinat
 git clone repo.bundle game && cd game        # Round 20 is on branch ccr-c97baf64-6kbn83 (Round 19: ccr-56d2fa55-vx1w3y)
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
-If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-c97baf64-6kbn83`. If the repo has the branch, just `git fetch origin ccr-c97baf64-6kbn83 && git checkout -B <session-branch> FETCH_HEAD`.
+If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-c97baf64-6kbn83`. If the repo has the branch, just `git fetch origin claude/new-session-veqq6w && git checkout -B <session-branch> FETCH_HEAD` (Round 21 work; Round 20 alone is `ccr-c97baf64-6kbn83`).
 
 URL flags:
 - `?play` skips the title screen.
@@ -30,7 +30,8 @@ URL flags:
 - `?tod=golden|dusk|night|dawn|underground` sets the time of day.
 - `?perf` shows the performance overlay.
 - `?region=sawad|marsh|karkh|docks` forces a map.
-- Headless tests: the vite dev server must be running; `withvite.sh`-style (start vite, run the test, stop it) works best, because a background server is killed after two hours.
+- Headless tests: use `shots/withvite.sh <cmd>` (starts vite, runs the test, stops it). A background server is killed after two hours.
+- `?region=hamrin` forces the endgame map.
 
 **GitHub now works.** The account was reconnected and the Claude GitHub App was installed in Round 11, and pushes succeed.
 
@@ -317,20 +318,70 @@ User decisions: everything on the menu, shipped once at the end; Act VI at the T
 - **Draws:** Sawad hub 781 High / 409 Low (was 648/341: wider default view, more characters); docks hub 860.
 - **Known issue (also in Round 19):** in the marshes four standard-material programs (some with the wall-cutaway `occ` variant) compile during the Rawh fight; investigate with a programs diff like the one used this round.
 
-## Next: Round 21 menu (not yet approved: ask the user which to build)
-**Improve**
-- Device pass with the user's benchmark numbers: tune adaptive quality, draw calls (characters cost ~40 draws over the main, AO and shadow passes: merge eyes and lids, drop AO normals for small pieces).
-- Fix the marsh boss-fight shader compile (see Round 20, known issue).
-- Companion depth: foes can target him, he can be knocked down; more hires (a Naffat, an 'Ayyar).
-- Mounted travel polish: a camel for the hired guard, a mount whistle animation, horses for Karkh.
-- Faces: real facial expressions in cutscenes (brow, mouth shapes), hair variety.
+## Round 21 (in progress): approved plan and status
+The user approved the full plan: everything on the Round 20 menu, a **post-game region** (the Hamrin ravines: an endgame hub plus four endgame dungeons), and the **Black Myth: Wukong close action camera** inside those dungeons, with **campfires** as rest points (no shrines). It ships **once at the end**: the Artifact, the push and the APK.
 
-**Expand content**
-- Act VII or an epilogue chapter (the copies reach Basra? Wasit?), or a post-game region.
-- More bosses with unique mechanics; a rival captain who recurs across acts.
-- Trials season rules (weekly modifiers), and trial-only legendaries.
-- Crafting depth: recipes found in the world, set pieces craftable at Bishr.
-- Pets/beasts, fishing on the Tigris, a hub upgrade system.
+### Done (committed, tested)
+- **Performance (`human.js`, `characters.js`, `main.js`).**
+  - Each character's sculpted pieces are merged into one skinned mesh. The merged copy is packed to 28 bytes a vertex, and its CPU arrays are dropped after upload.
+  - Both eyeballs are one mesh, as are both upper lids and both lower lids. They are kept out of the AO pass.
+  - The three contact-shadow blobs are one dynamic mesh (`blobSync`).
+  - Weapons are merged by material and share their geometry.
+  - Small gear stays out of the AO pass, and crowds' gear casts no shadow.
+  - Sawad hub went from 781 to 572 draws on High, and from 409 to 317 on Low. Geometry cache is now `r21.0`.
+  - Adaptive quality steps down in four stages, with hysteresis and recovery (`QSTEPS`).
+  - Shader warm-up: compile against `composer.readBuffer` and the reflection target, then draw one real frame of the whole map while the loader is up (culling paused, everything shown, a wide shadow box). Lights are on the reflection layer, because the reflection shares light state with the shadow pass.
+  - The Rawh fight went from 7 programs compiled mid-fight to 1 small depth shader. Tools: `shots/progdiff.mjs`, `shots/progwho.mjs`, `shots/rigdraws.mjs`.
+- **Companion (`companion.js`).**
+  - Spare melee foes (`e.onGuard`) attack the guard.
+  - He has health at 80% of Salim's. He gets knocked down instead of dying: stand beside him to help him up, or he gets up by himself 14 s after foes leave.
+  - A health bar sits on his order button.
+  - New hires: Tamim (naft-thrower) and Talha (an 'ayyar who slips round to a foe's back).
+  - He rides his own camel, or a horse in the city. Test: `r21comp.mjs`.
+- **Faces and mounts.**
+  - New face bones: `browL/R` and `mouthL/R`, appended last. There are 12 expressions in `EXPR` (`anim.js`).
+  - The cutscene director sets the speaker's expression from `line.expr`, or reads it from the words (`moodOf` in `cinema.js`). Listeners react (`line.react`).
+  - Hair styles: crop, long, locks, tied. A trimmed beard. Crowds get them at random.
+  - A horse (`creatures.js`) in al-Karkh and the docks, at 1.9× speed.
+  - The `whistle` clip calls the mount, which trots in. Also new clips: `point` and `shove`.
+  - A saluki sculpt (`saluki()` with `SALUKI_COATS`) for Hub life.
+  - Tests: `faces.mjs` (keep the camera at least 1.2 m away: the near plane is 0.5), `r21mount.mjs`.
+- **Rival and lieutenants (`rivals.js`).**
+  - Zubayr, the bowman who shot Jabir, ambushes in Acts II, IV and VI (`RIVAL`) and escapes at 30% health. The last time he names the Hamrin hills. Saved as `p.rival`.
+  - Hisham: a shove, then a hooked chain that pulls Salim in.
+  - Layth: smoke, he vanishes (`e.ghost`), then lunges from behind with a glint.
+  - Lieutenants show the boss bar. Test: `r21rival.mjs <region>`.
+- **Hamrin (`hamrin.js`, `region.js`, `terrain.js`).**
+  - Region `hamrin`. `regionForAct(7)` goes there when `localStorage['sob.endgame'] === 'hamrin'`.
+  - In the docks hub after act 7: "Ride north to the Hamrin hills". In the Hamrin camp: "Ride back to the river quays".
+  - Terraced badland cliffs (`hamrinHeight`, `HAMRIN_WALK`), with colliders ringing the walkable gorge floors. Palette `RG 4`.
+  - The camp hub, four hold mouths, overworld packs (`spawnHamrin`, rescaled to Salim's level), field captains Asbagh and Kahmas, two events, codex entries.
+  - Lighting presets `highland` and `gorge`; music act 8.
+  - **The overworld look still needs a critique pass:** earlier shots looked washed out. The terraces and darker rock were changed but have not been re-shot.
+- **Holds (`holds.js`).**
+  - Four tile maps in `MAPS`: quarry, fort, gorge, rivalhold. 3 m tiles; the legend is in the file header.
+  - `buildHold` makes rock, chasms (river or rubble floor, mist), plank bridges with ropes, low walls, rock columns, cracked walls, gates (open from the far side, worked out by BFS), campfires, chests and braziers.
+  - Eight captains in `BOSS`, each with a `TYPES['hb_<id>']` look. They share the `MOVES` set: swing, slam, crack, rockfall, charge (stunned by walls), sweep, stomp (holes), arrows, fireline, firepots, net, summon, shrink (arena ring), vanish. Phase two is `p2`.
+  - Zubayr's last stand: `rivalAI` plus moves. Final scene: `lieutenantFalls`.
+  - Campfire rest: heal, refill, respawn his men, travel between lit fires, leave. Dying wakes Salim at the last fire. The guide trail follows `I.objective()`. Saved as `p.holds`.
+  - The close camera is `game.actionCamera` (`g.camAction`): yaw follows, lock-on via `#lockbtn` or Tab/F with a reticle, the camera pulls in at walls, fov 52, and `joyWorld()` makes the joystick camera-relative. Test: `r21holds.mjs <id> [out]`. Quarry and gorge pass end to end.
+
+### Remaining, in order
+1. Run `r21holds.mjs` for fort and rivalhold, and fix what fails. Re-shoot the gorge after the chasm and ridge change. Critique-pass the Hamrin overworld (hub and overview shots) and the hold visuals.
+2. **Rift seasons and crafting** (`trials.js`, `craft.js`): weekly modifiers seeded by ISO week, 4 trial-only legendaries, recipe scrolls dropped in the world, craftable set pieces at Bishr.
+3. **Hub life:**
+   - Saluki: follows, picks up gold, coat choice. The model is done.
+   - Hunting falcon: perches on the arm in the hub and marks hidden foes and archers.
+   - Fishing: a timing minigame on the Tigris and marsh water, giving food buffs or fish to sell.
+   - Hub upgrades: well, stalls and forge, each with a perk and a visual change.
+4. Arabic for everything new in `src/story21_ar.js` (the `AR21` table). Hamrin, holds and boss text is not translated yet.
+5. Re-run all tests: r15–r18, ngtest, traveltest (add hamrin), finaletest, trialtest, crafttest, benchtest, r21comp, r21rival, r21mount, r21holds ×4, and `perf.mjs` (High about 570).
+6. Ship: `npx vite build`, `node shots/inline.mjs out.html`, publish to the artifact URL, push, trigger `apk.yml` if needed, send the APK. Update this handoff.
+
+### Notes
+- Naming rule: avoid names of religious figures (no Hamza, 'Ali, etc.).
+- The holds' interior lives at x 160–280. `g.interior.hold` is true there; the sky stays visible (`userData.sky`).
+- `game.killEnemy` is wrapped by `rivals.js`: a non-final Zubayr never dies.
 
 ## Roadmap (R15 done)
 The goal is about 8–12 hours for a first playthrough, up from about 1.5 today, plus a repeatable endgame. It is split into rounds so each one ships playable.
@@ -365,6 +416,7 @@ The goal is about 8–12 hours for a first playthrough, up from about 1.5 today,
 3. (Fixed in Round 20: new camera work for the lieutenants' last words and the boss intro.)
 
 ## File map (src/)
+- **Round 21:** rivals.js, hamrin.js, holds.js, story21_ar.js
 - **Round 20:** foes20.js, companion.js, mount.js, trials.js, craft.js, bench.js, docksprops.js
 - **Core:** main.js (boot, loop, wiring), game.js (gameplay, AI, combat), classes.js, entities.js, items.js, save.js, content.js (R10 captains, areas, tasks, engines, duel, NG+), region.js + story15.js (R15 regions, quest chains, boss kits), sidequests.js (R16 side quests, bounties, world events, tracking)
 - **World:** world.js, regions.js + regionprops.js (R15 marsh and Karkh), terrain.js, buildings.js, props.js, vegetation.js, water.js, interior.js, zones.js, hub.js
