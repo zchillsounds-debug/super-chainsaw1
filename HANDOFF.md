@@ -1,18 +1,18 @@
-# Madinat al-Salam: Handoff (Round 21: tests and publish left)
+# Madinat al-Salam: Handoff (Round 21 shipped; Round 22 to plan)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-56d2fa55-vx1w3y` of zchillsounds-debug/super-chainsaw1 (it holds all of Round 21).
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/artifact-session-2nd2ew` of zchillsounds-debug/super-chainsaw1 (all of Round 21, shipped).
 >
-> **Round 21 is built and approved; only part of the test sweep and the Artifact publish are left. Don't re-plan it.** Please:
-> 1. Fetch the branch (`git fetch origin ccr-56d2fa55-vx1w3y && git checkout -B <your session branch> FETCH_HEAD`) and read HANDOFF.md fully, especially "Round 21" → "Remaining".
-> 2. Run `npm install`. Run tests with `shots/withvite.sh node shots/<test>.mjs ...` (it starts vite, runs the test, stops vite). The rest of the sweep: `shots/withvite.sh sh shots/sweep.sh` after deleting the lines that already passed.
-> 3. Fix anything that fails, then ship.
+> **Round 22 is next: improved gameplay, improved graphics and expanded features.** Above all I want the dungeons I asked for before (the Round 21 holds: hand-built maps with chasms, bridges, campfires, the close action camera and hold captains) in the main game, scattered across the maps from the start, not only as endgame.
+> 1. Fetch the branch (`git fetch origin claude/artifact-session-2nd2ew && git checkout -B <your session branch> FETCH_HEAD`), run `npm install`, and read HANDOFF.md fully, especially "Round 22: the brief".
+> 2. Ask me the open questions there, then propose a concrete plan. **Confirm with me before building anything.**
+> 3. Build it, run the test sweep (`shots/withvite.sh sh shots/sweep.sh`, in two halves) plus new tests, and fix anything that fails.
 >
-> The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. I play on Android. When Round 21 is done:
+> The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. I play on Android. When Round 22 is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user"; trigger `apk.yml` by hand if the branch isn't `claude/**`).
-> - Then ask me what Round 22 should be, and confirm before building.
+> - Write a new handoff for the next chat.
 
 ## Restore the code
 ```
@@ -415,6 +415,31 @@ The user approved the full plan: everything on the Round 20 menu, a **post-game 
 - Naming rule: avoid names of religious figures (no Hamza, 'Ali, etc.).
 - The holds' interior lives at x 160–280. `g.interior.hold` is true there; the sky stays visible (`userData.sky`).
 - `game.killEnemy` is wrapped by `rivals.js`: a non-final Zubayr never dies.
+
+## Round 22: the brief (not yet planned or approved)
+The user asked for three things: **improved gameplay, improved graphics and expanded features**. The headline is **"those dungeons I talked about before"**, which should **not have to be endgame** and should be **scattered across the map from the start**.
+
+**Reading of "those dungeons":** the Round 21 **holds**. These are the user-approved "Black Myth: Wukong"-style dungeons: hand-built tile maps, chasms, plank bridges, gates, campfire rest points, the close action camera with lock-on, and hold captains with the `MOVES` set. Today they exist only in the post-game Hamrin region. **Confirm this reading with the user first.** The alternative is the six Round 17 dungeons, which are already in the main game but are random-walk rooms.
+
+**What the work involves (starting points in the code):**
+- `holds.js` holds the `MAPS` tile maps (quarry, fort, gorge, rivalhold), `buildHold`, the `BOSS` captains and `MOVES`, and campfires (saved in `p.holds`). The hold interior is built at x 160–280 with `g.interior.hold`.
+- The entrances are hold mouths in `hamrin.js`. Each region would need its own mouths, placed through `region.js` / `regions.js`, with map waypoints (`travel.js`, `p.visited`) and tracker entries.
+- Level scaling can follow the Round 17 dungeons (`dungeons.js`, `def.scale`), so a hold fits the act you are in.
+- Each region needs its own look and story: Sawad (caravan ruins, kiln pits), marsh (reed islands, a sunken weir), Karkh (burned lanes and cellars), docks (warehouses, a hulk on the river). That means new `MAPS`, new captains, and lighting presets per hold.
+- The action camera (`game.actionCamera`) is only used in holds today. Decide whether it stays hold-only.
+
+**Open questions to ask the user before planning:**
+1. Are "those dungeons" the holds? How many per region (e.g. 2–3 in each of the Sawad, marsh, Karkh and docks)?
+2. Are they optional side content, or tied to the story (e.g. one per act on the main path)?
+3. Should the Hamrin endgame holds stay as they are (harder, post-game), or become the top tier of the same system?
+4. "Improved gameplay": what feels off on the phone? Candidates: combat feel and hit reactions, enemy variety and AI, dodge and parry timing, skill feel, controls and auto-target, pacing and difficulty.
+5. "Improved graphics": what bothers them most? Candidates: the Hamrin overworld critique (still never re-shot), character and face detail, foliage and water, effects (fire, naft, hits), the blobby falcon, lighting in towns.
+6. "Expanded features": anything specific? Candidates: more holds content (puzzles, traps, secret rooms), new enemy types, new skills or a fifth class, a crafting/housing loop, more side quests.
+7. Ship once at the end, as before?
+
+**Carried-over polish (from Round 21):** the falcon looks small and blobby on the shoulder; the forge prop sits right behind Bishr; the set craft section is below the fold in the Craft tab; old set-piece names are still English only; the "Walking: " prefix is untranslated.
+
+**Constraints still apply:** see "Non-negotiable design rules" and the constraints line under the Roadmap. In particular: no religious buildings or symbols, human foes only, 813 CE authenticity, ask and confirm before building, no lights or new shader variants created at runtime. Long robes are now closed cloth tubes (Round 21 item 5); keep `outside`/`slack` when adding robed characters.
 
 ## Roadmap (R15 done)
 The goal is about 8–12 hours for a first playthrough, up from about 1.5 today, plus a repeatable endgame. It is split into rounds so each one ships playable.
