@@ -1,17 +1,18 @@
-# Madinat al-Salam: Handoff (Round 21 nearly done)
+# Madinat al-Salam: Handoff (Round 21: tests and publish left)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-a81550d1-0nkldn` of zchillsounds-debug/super-chainsaw1 (Round 21 items 1–4 done there).
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-56d2fa55-vx1w3y` of zchillsounds-debug/super-chainsaw1 (it holds all of Round 21).
 >
-> **Round 21 is built except the final test sweep and the Artifact publish; it is already approved, so don't re-plan it.** Please:
-> 1. Fetch the branch and read HANDOFF.md fully, especially "Round 21" → "Remaining".
-> 2. Run `npm install`. Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Don't leave a background vite running; it is killed after two hours.
-> 3. Finish the remaining Round 21 items (test sweep, publish), then ship.
+> **Round 21 is built and approved; only part of the test sweep and the Artifact publish are left. Don't re-plan it.** Please:
+> 1. Fetch the branch (`git fetch origin ccr-56d2fa55-vx1w3y && git checkout -B <your session branch> FETCH_HEAD`) and read HANDOFF.md fully, especially "Round 21" → "Remaining".
+> 2. Run `npm install`. Run tests with `shots/withvite.sh node shots/<test>.mjs ...` (it starts vite, runs the test, stops vite). The rest of the sweep: `shots/withvite.sh sh shots/sweep.sh` after deleting the lines that already passed.
+> 3. Fix anything that fails, then ship.
 >
-> The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When Round 21 is done:
+> The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. I play on Android. When Round 21 is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
-> - Send me the APK that CI builds (see "Getting the APK to the user").
+> - Send me the APK that CI builds (see "Getting the APK to the user"; trigger `apk.yml` by hand if the branch isn't `claude/**`).
+> - Then ask me what Round 22 should be, and confirm before building.
 
 ## Restore the code
 ```
@@ -394,9 +395,13 @@ The user approved the full plan: everything on the Round 20 menu, a **post-game 
 4. **Arabic** for all of the above plus the Hamrin, hold and boss text (`AR21`). Remaining English: the set-piece names (Courier's Qaba, Khurasani Jawshan, etc., from R6/R18) and the R19 "Walking: " prefix. Both are older gaps.
 
 ### Remaining
-1. Re-run all tests: r15–r18, ngtest, traveltest (add hamrin), finaletest, trialtest, crafttest, benchtest, r21comp, r21rival, r21mount, r21holds ×4, r21rift, r21hub ×2, and `perf.mjs` (High about 570; check the hub props did not add many draws).
-2. Publish the Artifact: `npx vite build`, `node shots/inline.mjs out.html`, then publish to https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first). This was **not done this session**: the user ran low on tokens. The APK was built.
-3. Optional polish:
+1. **Test sweep, part done.** `shots/sweep.sh` runs everything in order (one vite via `withvite.sh`; about 2 h in all).
+   - **Passed, no errors:** r15test ×4 (sawad, marsh, karkh, docks), r16test ×4, r17test sawad and marsh.
+   - **Still to run:** r17test karkh and docks, r18test ×4 classes, ngtest, traveltest (now includes the Hamrin leg: docks → Hamrin → docks), finaletest sawad/karkh/docks, trialtest, crafttest, benchtest, r21comp, r21rival ×3, r21mount, r21holds ×4, r21rift, r21hub marsh/docks, and `perf.mjs` (High hub about 570 draws; Low, Hamrin, docks).
+   - Run it in two halves so neither passes the two-hour limit on background jobs.
+2. **Publish the Artifact:** `npx vite build`, `node shots/inline.mjs out.html`, read https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c, then publish `out.html` with that `url`. Not done yet.
+3. **APK:** trigger `apk.yml` on the branch, wait for `apk-builds` to show the new short SHA, send it.
+4. Optional polish:
    - The falcon is small and blobby on the shoulder.
    - The forge prop sits right behind Bishr.
    - The set craft section is below the fold in the Craft tab.
