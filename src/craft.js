@@ -18,7 +18,7 @@ export const recipeName = (r) => { const [k, sl] = r.split(':'); return SETS[k]?
 
 export function setupCraft(g) {
   const p0 = g.player;
-  const sel = { slot: 'weapon', key: null, recipe: null };
+  const sel = { slot: 'weapon', key: null, recipe: null, mode: 'rare' };
   const known = () => (p0.recipes ||= []);
   // a scroll drops where something worth it fell
   const dropRecipe = (at, level) => {
@@ -30,7 +30,7 @@ export function setupCraft(g) {
   g.dropRecipe = dropRecipe;
   g.onRecipe = (it) => {
     if (known().includes(it.recipe)) return;
-    known().push(it.recipe); saveGame(g);
+    known().push(it.recipe); sel.mode = 'set'; sel.recipe = it.recipe; saveGame(g);
     g.ui.toast(`${t('Bishr can now forge')}: ${t(recipeName(it.recipe))}`, 'leg');
   };
   const prevKill = g.onKill;
@@ -43,6 +43,12 @@ export function setupCraft(g) {
     if (!list.some((a) => a.key === sel.key)) sel.key = list[0].key;
     const has = (k, n) => (p.mats?.[k] || 0) >= n, afford = p.gold >= c.gold && has('scrap', c.scrap) && has('silk', c.silk) && has('gem', c.gem);
     const label = (a) => a.fmt('X').replace(/[+−]?X%?\s*/, '').replace(/^Sherbet restores X /, 'Sherbet restores ');
+    // two halves, one at a time, so neither sits below the fold on a phone
+    const R = known();
+    const sw = el(`<div class="chips cmode"><button class="chip ${sel.mode === 'rare' ? 'on' : ''}" data-mode="rare">${t('Rare to order')}</button><button class="chip ${sel.mode === 'set' ? 'on' : ''}" data-mode="set">${t('Set pieces')} · ${R.length}/${ALL_RECIPES.length}</button></div>`);
+    sw.querySelectorAll('[data-mode]').forEach((b) => b.onclick = () => { sel.mode = b.dataset.mode; refresh(); });
+    body.appendChild(sw);
+    if (sel.mode === 'rare') {
     const w = el(`<div>
       <div class="slabel">${t('Bishr forges a rare to order: pick what, and the one property you cannot do without. He rolls it in the top third; the rest is up to the fire.')}</div>
       <div class="cgroup"><div class="ch">${t('Forge')}</div><div class="chips">${SLOTS.map(([k, n]) => `<button class="chip ${k === sel.slot ? 'on' : ''}" data-slot="${k}">${t(n)}</button>`).join('')}</div></div>
@@ -60,8 +66,10 @@ export function setupCraft(g) {
       saveGame(g); refresh(); g.ui.itemCard?.(it, { cmp: p.equip[it.slot] });
     };
     body.appendChild(w);
+    return;
+    }
     // the set pieces Bishr has learned from recipe scrolls
-    const R = known(), sc = setCost(), sa = p.gold >= sc.gold && has('scrap', sc.scrap) && has('silk', sc.silk) && has('gem', sc.gem);
+    const sc = setCost(), sa = p.gold >= sc.gold && has('scrap', sc.scrap) && has('silk', sc.silk) && has('gem', sc.gem);
     if (!R.includes(sel.recipe)) sel.recipe = R[0] || null;
     const groups = Object.entries(SETS).map(([k, S]) => [k, S, R.filter((r) => r.startsWith(k + ':'))]).filter(([, , rs]) => rs.length);
     const w2 = el(`<div class="setcraft">

@@ -97,4 +97,11 @@ export const AR21 = {
   'Too soon: it took fright': 'مبكرًا جدًّا: فزعت', 'Too slow: it took the bait and went': 'بطيئًا جدًّا: أخذت الطُّعم ومضت', 'The line went slack: it got away': 'ارتخى الخيط: أفلتت',
   'Himri': 'حِمري', 'Bunni': 'بُنّي', 'Shilig': 'شِلِك', 'Shabbut': 'شَبّوط',
   '+3 regeneration': '+3 تجدّد', '+10% maximum life': '+10% أقصى الحياة', '+8% movement': '+8% سرعة الحركة', '+12% damage': '+12% ضرر',
+  // the five item sets and their pieces (Rounds 6 and 18), the Craft switch, the map walk
+  'Garb of the Barid': 'زيّ البريد', 'Courier\'s Qaba': 'قباء البريدي', 'Courier\'s Qalansuwa': 'قلنسوة البريدي', 'Courier\'s Seal': 'خاتم البريدي', 'Courier\'s Token': 'شارة البريدي',
+  'Harness of Khurasan': 'عُدّة خراسان', 'Khurasani Jawshan': 'جوشن خراساني', 'Khurasani Bayda': 'بيضة خراسانية', 'Khurasani Ring': 'خاتم خراساني', 'Khurasani Pendant': 'قلادة خراسانية',
+  'Panoply of the Abna\'': 'عُدّة الأبناء', 'Abna\' Lamellar': 'صفائح الأبناء', 'Abna\' Bayda': 'بيضة الأبناء', 'Abna\' Signet': 'ختم الأبناء', 'Abna\' Badge': 'شارة الأبناء',
+  'Outfit of the Basra Nakhuda': 'كسوة ناخذاة البصرة', 'Nakhuda\'s Coat': 'قباء الناخذاة', 'Nakhuda\'s Turban': 'عمامة الناخذاة', 'Nakhuda\'s Seal': 'خاتم الناخذاة', 'Nakhuda\'s Compass-stone': 'حجر الهداية للناخذاة',
+  'Tools of the Warraq': 'أدوات الورّاق', 'Warraq\'s Apron': 'مئزر الورّاق', 'Warraq\'s Cap': 'طاقية الورّاق', 'Warraq\'s Pen-ring': 'خاتم قلم الورّاق', 'Warraq\'s Inkwell': 'محبرة الورّاق',
+  'Rare to order': 'نادرة حسب الطلب', 'Walking': 'في الطريق', 'Walking to the marker': 'إلى العلامة',
 };

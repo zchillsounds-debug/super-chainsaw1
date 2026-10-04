@@ -4,7 +4,7 @@ import { HUB, IS_MARSH, IS_DOCKS } from './region.js';
 import { heightAt, waterDepth, DECKS, WATER_Y } from './terrain.js';
 import { colliders, mats } from './buildings.js';
 import { buildGrid, resolve } from './collision.js';
-import { blocked } from './world.js';
+import { blocked, mergeStatic } from './world.js';
 import { freeSpot } from './sidequests.js';
 import { HUBK, MAT_NAMES } from './hub.js';
 import { saveGame } from './save.js';
@@ -109,7 +109,6 @@ function forgeAfter(k) {
   const bel = new THREE.Group(); bel.position.set(-1.1, 0.5, 0); g.add(bel); box(bel, 0.6, 0.05, 0.4, k.wood, 0, 0.12, 0); box(bel, 0.6, 0.05, 0.4, k.wood, 0, -0.12, 0); box(bel, 0.5, 0.2, 0.36, k.leather, 0, 0, 0); const nz = cyl(bel, 0.03, 0.05, 0.4, k.iron, 0.45, 0, 0, 6); nz.rotation.z = Math.PI / 2;
   const tr = box(g, 0.9, 0.35, 0.45, k.wood, 1.25, 0.18, 0.2); const w = box(g, 0.8, 0.03, 0.36, k.water, 1.25, 0.34, 0.2); w.castShadow = false; tr.castShadow = true;
   for (let i = 0; i < 3; i++) { const tl = box(g, 0.04, 0.6, 0.04, k.iron, 0.7 + i * 0.12, 1.1, 0.52); tl.rotation.z = 0.1; }
-  g.userData.ember = coals;
   return g;
 }
 
@@ -144,7 +143,7 @@ export function setupHubLife(g) {
 
   // ================================================================== the kennel and mews
   const [kx, kz] = freeSpot(H.trainer[0] - 5, H.trainer[1] + 3, 2.2);
-  { const o = kennel(k); o.position.set(kx, heightAt(kx, kz), kz); o.rotation.y = Math.atan2(H.spawn[0] - kx, H.spawn[1] - kz); g.scene.add(o); colliders.push({ type: 'circle', x: kx, z: kz, r: 1.5 }); }
+  { const o = kennel(k); o.position.set(kx, heightAt(kx, kz), kz); o.rotation.y = Math.atan2(H.spawn[0] - kx, H.spawn[1] - kz); g.scene.add(mergeStatic(o)); colliders.push({ type: 'circle', x: kx, z: kz, r: 1.5 }); }
   g.interactables.push({ pos: V(kx, heightAt(kx, kz), kz), r: 3, label: 'The kennel and mews', act: () => mewsPanel() });
   g.pois?.push({ x: kx, z: kz, icon: '🐾', color: '#d8b888' });
 
@@ -190,12 +189,15 @@ export function setupHubLife(g) {
 
   // ================================================================== camp upgrades
   const [lx, lz] = freeSpot(H.ishaq[0] + 3.5, H.ishaq[1] + 2.5, 1.3);
-  { const o = ledger(k); o.position.set(lx, heightAt(lx, lz), lz); o.rotation.y = Math.atan2(H.spawn[0] - lx, H.spawn[1] - lz); g.scene.add(o); colliders.push({ type: 'circle', x: lx, z: lz, r: 0.7 }); }
+  { const o = ledger(k); o.position.set(lx, heightAt(lx, lz), lz); o.rotation.y = Math.atan2(H.spawn[0] - lx, H.spawn[1] - lz); g.scene.add(mergeStatic(o)); colliders.push({ type: 'circle', x: lx, z: lz, r: 0.7 }); }
   g.interactables.push({ pos: V(lx, heightAt(lx, lz), lz), r: 2.4, label: 'The camp\'s needs', act: () => campPanel() });
   const spots = {};
-  for (const [key, at, mk0, mk1] of [['well', [H.ishaq[0] - 4, H.ishaq[1] - 4], wellBefore, wellAfter], ['stalls', [H.merchant[0] + 3.2, H.merchant[1] - 1.5], stallsBefore, stallsAfter], ['forge', [H.smith[0] + 3.4, H.smith[1] + 1.4], forgeBefore, forgeAfter]]) {
+  // the forge stands at Bishr's side, never in line with him from the camp's centre (it hid him from the spawn)
+  const besideSmith = () => { const dx = H.smith[0] - H.spawn[0], dz = H.smith[1] - H.spawn[1], l = Math.hypot(dx, dz) || 1; return [H.smith[0] - dz / l * 3.4 + dx / l * 0.5, H.smith[1] + dx / l * 3.4 + dz / l * 0.5]; };
+  for (const [key, at, mk0, mk1] of [['well', [H.ishaq[0] - 4, H.ishaq[1] - 4], wellBefore, wellAfter], ['stalls', [H.merchant[0] + 3.2, H.merchant[1] - 1.5], stallsBefore, stallsAfter], ['forge', besideSmith(), forgeBefore, forgeAfter]]) {
     const [x, z] = freeSpot(at[0], at[1], 1.6), y = heightAt(x, z), ry = Math.atan2(H.spawn[0] - x, H.spawn[1] - z);
-    const a = mk0(k), b = mk1(k); for (const o of [a, b]) { o.position.set(x, y, z); o.rotation.y = ry; g.scene.add(o); }
+    // merged by material like every placed prop: loose boxes cost a draw each in the main, shadow and AO passes
+    const a = mk0(k), b = mk1(k); for (const o of [a, b]) { o.position.set(x, y, z); o.rotation.y = ry; g.scene.add(mergeStatic(o)); }
     colliders.push({ type: 'circle', x, z, r: key === 'stalls' ? 0.4 : 1.0 });
     spots[key] = { a, b, x, z };
   }

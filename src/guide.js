@@ -3,6 +3,7 @@ import { heightAt } from './terrain.js';
 import { findPath } from './nav.js';
 import { SITES } from './terrain.js';
 import { STORY } from './region.js';
+import { t } from './i18n.js';
 
 // Objective guidance: a trail of glowing chevrons on the ground, flowing from the hero along a navigable
 // path toward the current objective (refreshed as the hero moves). It shows the next ~45 m and fades out
@@ -51,7 +52,7 @@ export class Guide {
       this.labelT = 0.4;
       const q = g.interior ? null : g.briefed && g.quests.find((x) => !x.done);
       const tr = g.interior ? null : g.trackTarget?.();
-      const text = g.walk && !g.interior ? (g.walk.label ? 'Walking: ' + g.walk.label : null) || q?.text : g.interior ? (g.interior.I.objective ? g.interior.I.objective()[1] : g.interior.I.chest && !g.interior.I.chest.opened ? 'Find the chest' : 'Climb back to the surface') : tr?.text || q?.text;
+      const text = g.walk && !g.interior ? (g.walk.label ? t('Walking') + ': ' + t(g.walk.label) : null) || q?.text : g.interior ? (g.interior.I.objective ? g.interior.I.objective()[1] : g.interior.I.chest && !g.interior.I.chest.opened ? 'Find the chest' : 'Climb back to the surface') : tr?.text || q?.text;
       g.ui.objective(g.cinematic ? null : text, goal ? Math.hypot(goal.x - P.x, goal.z - P.z) : null);
     }
     const fighting = g.player.target && !g.player.target.dead;
