@@ -7,6 +7,7 @@ import { fabricTex } from './textures.js';
 import { sword, dagger, torch, spear, bow, shield, crossbow, mallet, addRim } from './characters.js';
 import { QUALITY } from './graphics.js';
 import { Animator } from './anim.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const LOW = QUALITY === 'low';
 
@@ -275,8 +276,44 @@ function veilPrims(B, o) {
 const _geo = new Map();
 function piece(name, key, make) {
   const k = name + '|' + key + '|' + QUALITY;
-  if (!_geo.has(k)) _geo.set(k, cachedGeo(k, make));
+  if (!_geo.has(k)) { const g = cachedGeo(k, make); g.userData.key = k; _geo.set(k, g); }
   return _geo.get(k);
+}
+// Round 21: all of a character's sculpted pieces share one material and one skeleton, so they are drawn as one
+// skinned mesh (was 4-7 draws in each of the main, AO and shadow passes). Merged once per combination of pieces.
+const _merged = new Map();
+function mergedPieces(geos) {
+  const k = geos.map((g) => g.userData.key).join('+');
+  if (!_merged.has(k)) { const m = geos.length > 1 ? mergeGeometries(geos) : geos[0]; m.computeBoundingSphere(); _merged.set(k, m); }
+  return _merged.get(k);
+}
+// both eyes (or both upper / lower lids) as one mesh: the lids of both eyes turn about the same x axis, so one pivot serves
+const _eyeGeo = new Map();
+function pairGeo(kind, hi) {
+  const k = kind + hi; if (_eyeGeo.has(k)) return _eyeGeo.get(k);
+  const one = (s) => {
+    const g = kind === 'ball' ? new THREE.SphereGeometry(0.0118, hi ? 16 : 8, hi ? 12 : 6).rotateY(-Math.PI / 2)
+      : kind === 'up' ? new THREE.SphereGeometry(0.0138, 14, 6, 0, Math.PI * 2, 0, Math.PI * 0.5) : new THREE.SphereGeometry(0.0134, 14, 6, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5);
+    return g.translate(s * 0.032, 0, 0);
+  };
+  const g = mergeGeometries([one(-1), one(1)]); _eyeGeo.set(k, g); return g;
+}
+// the three contact-shadow blobs (body, two feet) are one mesh: each frame the animator places three quads
+function blobMesh(root, mat) {
+  const g = new THREE.BufferGeometry(), P = new Float32Array(36), UV = new Float32Array(24), idx = [];
+  for (let i = 0; i < 3; i++) { UV.set([0, 0, 1, 0, 1, 1, 0, 1], i * 8); idx.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3); }
+  g.setAttribute('position', new THREE.BufferAttribute(P, 3).setUsage(THREE.DynamicDrawUsage)); g.setAttribute('uv', new THREE.BufferAttribute(UV, 2)); g.setIndex(idx);
+  g.boundingSphere = new THREE.Sphere(V(0, 0, 0), 2.2);
+  const m = new THREE.Mesh(g, mat); m.renderOrder = 1; root.add(m);
+  const virt = [0, 1, 2].map(() => new THREE.Object3D());
+  const sync = () => {
+    for (let i = 0; i < 3; i++) {
+      const b = virt[i], c = Math.cos(b.rotation.y), s = Math.sin(b.rotation.y), hx = 0.5 * b.scale.x * (b.visible ? 1 : 0), hz = 0.5 * b.scale.z * (b.visible ? 1 : 0);
+      [[-1, 1], [1, 1], [1, -1], [-1, -1]].forEach(([u, v], j) => { const x = u * hx, z = v * hz; P.set([b.position.x + x * c + z * s, b.position.y, b.position.z - x * s + z * c], (i * 4 + j) * 3); });
+    }
+    g.attributes.position.needsUpdate = true;
+  };
+  return { virt, sync, mesh: m };
 }
 
 // ---------------------------------------------------------------- humanoid
@@ -333,30 +370,28 @@ export function humanoid(opts = {}) {
     if (ap.length) farGeos.push(piece('armour', ['far', sk, o.armour, 2], () => sculpt(ap, { voxel: 0.03, blend: 0.03, paint: armourPaint(o) })));
     if (o.mask) farGeos.push(piece('veil', ['far', o.neck], () => sculpt(veilPrims(B, o), { voxel: 0.018, blend: 0.02 })));
   }
-  const meshes = geos.map((g, i) => {
-    const m = new THREE.SkinnedMesh(g, mat); m.bind(skeleton, new THREE.Matrix4());
-    // a fixed bind-pose bound is enough for culling (poses stay within it); small pieces skip the shadow pass on crowds
-    m.boundingSphere = new THREE.Sphere(V(0, 0.95, 0), 1.35);
-    m.castShadow = hiTier || i === 0 || i === 2; m.receiveShadow = true; body.add(m); return m;
-  });
-  const farMeshes = farGeos ? farGeos.map((g, i) => {
-    const m = new THREE.SkinnedMesh(g, mat); m.bind(skeleton, new THREE.Matrix4());
-    m.boundingSphere = new THREE.Sphere(V(0, 0.95, 0), 1.35); m.castShadow = i === 2; m.receiveShadow = true; m.visible = false; body.add(m); return m;
-  }) : null;
+  const near = new THREE.SkinnedMesh(mergedPieces(geos), mat); near.bind(skeleton, new THREE.Matrix4());
+  // a fixed bind-pose bound is enough for culling (poses stay within it)
+  near.boundingSphere = new THREE.Sphere(V(0, 0.95, 0), 1.35); near.castShadow = true; near.receiveShadow = true; body.add(near);
+  const meshes = [near];
+  let farMeshes = null;
+  if (farGeos) {
+    const far = new THREE.SkinnedMesh(mergedPieces(farGeos), mat); far.bind(skeleton, new THREE.Matrix4());
+    far.boundingSphere = new THREE.Sphere(V(0, 0.95, 0), 1.35); far.castShadow = true; far.receiveShadow = true; far.visible = false; body.add(far);
+    farMeshes = [far];
+  }
 
-  // eyes with lids (rigid, on the head bone)
+  // eyes with lids (rigid, on the head bone): both eyeballs one mesh, both upper lids one, both lower lids one.
+  // They are tiny and sit inside the head's own depth, so they stay out of the AO pass.
   const eyeM = new THREE.MeshStandardMaterial({ map: eyeTexture(), roughness: 0.12 });
   const lidM = addRim(new THREE.MeshStandardMaterial({ color: C(o.skin).multiplyScalar(0.92), roughness: 0.55 }));
-  const eyes = [], lids = [], eyeRoot = new THREE.Group(); eyeRoot.scale.setScalar(HS); bones.head.add(eyeRoot);
-  for (const [, s] of SIDES) {
-    const piv = new THREE.Group(); piv.position.set(s * 0.032, 0.095, 0.0715); eyeRoot.add(piv);
-    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.0118, hiTier ? 16 : 8, hiTier ? 12 : 6), eyeM); ball.rotation.y = -Math.PI / 2; piv.add(ball);
-    const up = new THREE.Mesh(new THREE.SphereGeometry(0.0138, 14, 6, 0, Math.PI * 2, 0, Math.PI * 0.5), lidM);
-    const lo = new THREE.Mesh(new THREE.SphereGeometry(0.0134, 14, 6, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5), lidM);
-    const lidPiv = new THREE.Group(); piv.parent.add(lidPiv); lidPiv.position.copy(piv.position); lidPiv.add(up); lidPiv.add(lo);
-    up.rotation.x = -0.3; lo.rotation.x = 0.25;
-    eyes.push(piv); lids.push({ up, lo });
-  }
+  const eyeRoot = new THREE.Group(); eyeRoot.scale.setScalar(HS); bones.head.add(eyeRoot);
+  const piv = new THREE.Group(); piv.position.set(0, 0.095, 0.0715); eyeRoot.add(piv);
+  const balls = new THREE.Mesh(pairGeo('ball', hiTier), eyeM); balls.userData.noAO = true; piv.add(balls);
+  const lidPiv = new THREE.Group(); lidPiv.position.copy(piv.position); eyeRoot.add(lidPiv);
+  const up = new THREE.Mesh(pairGeo('up', 1), lidM), lo = new THREE.Mesh(pairGeo('lo', 1), lidM); up.userData.noAO = lo.userData.noAO = true;
+  lidPiv.add(up, lo); up.rotation.x = -0.3; lo.rotation.x = 0.25;
+  const eyes = [piv], lids = [{ up, lo }];
 
   const parts = {
     body, bones, skeleton, mats: [mat], mat, meshes, farMeshes, lodFar: false, eyes, lids, cloths: [], jiggles: [], o,
@@ -447,13 +482,16 @@ export function humanoid(opts = {}) {
   }
   if (o.beard) parts.jiggles.push(new Jiggle(bones.beard, V(0, -1, 0.3), 0.06 + o.beardLen * 0.04, { stiff: 140, damp: 12, grav: 2, limit: 0.35 }));
 
-  // contact shadows: a soft blob under the body and one under each foot
+  // contact shadows: a soft blob under the body and one under each foot (one mesh, see blobMesh)
   const blobM = new THREE.MeshBasicMaterial({ map: blobTexture(), transparent: true, depthWrite: false, opacity: 0.75, polygonOffset: true, polygonOffsetFactor: -2 });
-  const blobG = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
-  const blob = new THREE.Mesh(blobG, blobM); blob.scale.set(0.95 * o.scale, 1, 0.75 * o.scale); blob.position.y = 0.035; blob.renderOrder = 1; root.add(blob);
-  parts.blobs = [blob];
-  for (let i = 0; i < 2; i++) { const f = new THREE.Mesh(blobG, blobM); f.scale.set(0.28 * o.scale, 1, 0.4 * o.scale); f.renderOrder = 1; root.add(f); parts.blobs.push(f); }
+  const BL = blobMesh(root, blobM);
+  BL.virt[0].scale.set(0.95 * o.scale, 1, 0.75 * o.scale); BL.virt[0].position.y = 0.035;
+  for (let i = 1; i < 3; i++) BL.virt[i].scale.set(0.28 * o.scale, 1, 0.4 * o.scale);
+  parts.blobs = BL.virt; parts.blobSync = BL.sync; parts.blobMesh = BL.mesh; BL.sync();
 
+  // Round 21: rigid gear (weapons, shields, sash ends, scabbards) is small: it stays out of the AO pass, and only
+  // hero-class characters cast its shadow (crowds' blades and sash strips were a third of the shadow draws)
+  bones.hips.traverse((m) => { if (!m.isMesh || m.isSkinnedMesh || m.userData.noAO) return; m.userData.noAO = true; if (!hiTier || m.geometry.type === 'PlaneGeometry') m.castShadow = false; });
   root.userData.parts = parts;
   root.userData.anim = new Animator(root, parts, o);
   return root;

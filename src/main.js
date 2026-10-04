@@ -204,17 +204,30 @@ function shadowSnap(c) {
 const clock = new THREE.Clock(); let t = 0;
 const _ck = new THREE.Vector3(), _frus = new THREE.Frustum(), _pm = new THREE.Matrix4(), _pp = new THREE.Vector3();
 let fireFlick = 0, cullT = 0, shFrame = 0, reflTagT = 0, stormWas = false; const STORM_COL = new THREE.Color(0.78, 0.6, 0.42); const _shLast = new THREE.Vector3();
-// adaptive quality: if the frame rate stays low, shed the most expensive effects
-let perfT = 0, perfN = 0, perfAcc = 0, perfLevel = 0;
+// adaptive quality (Round 21): sheds the most expensive effects one small step at a time when the frame rate stays
+// low, and gives them back when there is headroom again. Each 3 s window is one vote; two slow windows in a row step
+// down, four fast ones step back up, and a step is never retried for 20 s after being taken back (no see-sawing).
+//   level 1-2: render resolution x0.87 each (Smooth never drops under 1.5x on high-density screens)
+//   level 3: AO and volumetric light off      level 4: smaller, softer shadow map
+let perfT = 0, perfN = 0, perfAcc = 0, perfLevel = 0, slowN = 0, fastN = 0, basePR = 0, holdUntil = 0;
+const QSTEPS = [
+  { down: () => setPR(0.87), up: () => setPR(1), name: 'resolution 87%' },
+  { down: () => setPR(0.76), up: () => setPR(0.87), name: 'resolution 76%' },
+  { down: () => { if (gtao) gtao.enabled = false; }, up: () => { if (gtao) gtao.enabled = settings.s.ao !== false; }, name: 'AO and volumetric light off' },
+  { down: () => { renderer.shadowMap.type = THREE.PCFShadowMap; setShadow(2048); }, up: () => { renderer.shadowMap.type = THREE.PCFSoftShadowMap; setShadow(SM); }, name: 'shadows reduced' },
+];
+function setPR(k) { const floor = settings.s.sharp === 'smooth' && devicePixelRatio >= 2 ? 1.5 : 1; renderer.setPixelRatio(Math.max(Math.min(floor, basePR), basePR * k)); resize(); reflection?.resize(); }
+function setShadow(n) { sun.shadow.mapSize.set(n, n); sun.shadow.map?.dispose(); sun.shadow.map = null; }
 function adaptQuality(dt) {
-  if (P.has('noadapt') || mode !== 'game' || settings.s.res !== 1 || document.body.classList.contains('benching')) return;
+  if (P.has('noadapt') || mode !== 'game' || settings.s.res !== 1 || document.body.classList.contains('benching') || game.cinematic) { perfT = perfAcc = perfN = 0; return; }
+  if (!basePR || perfLevel === 0) basePR = renderer.getPixelRatio();
   perfT += dt; perfAcc += dt; perfN++;
   if (perfT < 3) return;
   const avg = perfAcc / perfN; perfT = 0; perfAcc = 0; perfN = 0;
-  // looks first: only a frame rate under ~24 sheds anything, resolution before AO and volumetric light
-  if (avg > 1 / 24 && perfLevel === 0) { renderer.setPixelRatio(Math.max(1, renderer.getPixelRatio() * 0.8)); resize(); reflection?.resize(); perfLevel = 1; console.info('quality: lower resolution'); }
-  else if (avg > 1 / 24 && perfLevel === 1) { if (gtao) gtao.enabled = false; perfLevel = 2; console.info('quality: AO and volumetric light off'); }
-  else if (avg > 1 / 22 && perfLevel === 2) { renderer.shadowMap.type = THREE.PCFShadowMap; sun.shadow.mapSize.set(2048, 2048); sun.shadow.map?.dispose(); sun.shadow.map = null; perfLevel = 3; console.info('quality: shadows reduced'); }
+  if (avg > 1 / 24) { slowN++; fastN = 0; } else if (avg < 1 / 40) { fastN++; slowN = 0; } else { slowN = 0; fastN = 0; }
+  if (slowN >= 2 && perfLevel < QSTEPS.length) { QSTEPS[perfLevel].down(); console.info('quality: ' + QSTEPS[perfLevel].name); perfLevel++; slowN = 0; }
+  else if (fastN >= 4 && perfLevel > 0 && clock.elapsedTime > holdUntil) { perfLevel--; QSTEPS[perfLevel].up(); console.info('quality: restored ' + QSTEPS[perfLevel].name); fastN = 0; holdUntil = clock.elapsedTime + 20; }
+  game.perfLevel = perfLevel;
 }
 function frame() {
   const rawDt = clock.getDelta(); const dt = Math.min(rawDt, 0.05); t += dt;
@@ -317,7 +330,34 @@ window.__sim = (sec, step = 1 / 30) => { world.cull(game.player.pos); for (let i
 for (const o of world.cullables || []) o.visible = true;
 // pooled effects start hidden, and compile skips hidden objects: show everything for the compile, then restore
 const hiddenForCompile = []; scene.traverse((o) => { if (!o.visible && (o.isMesh || o.isPoints || o.isGroup)) { hiddenForCompile.push(o); o.visible = true; } });
-try { await renderer.compileAsync(scene, camera); } catch (e) { /* older drivers: compile lazily */ }
+// Round 21: compile for the targets the frame really draws into. The composer renders the scene into a linear
+// half-float target (not the screen), the water reflection into its own target and sees fewer lights, and the
+// shadow and AO passes have their own programs: compiling against the screen alone left all of those to compile
+// the first time something came into view mid-fight (the Rawh hitch). So: compile against each target, then draw
+// one real frame of the whole map (no culling, wide shadow box, reflection on) while the loader is still up.
+// the reflection shares the renderer's light state with the shadow pass: if it saw fewer lights, every shadow and
+// mirrored material needed a second variant, built by turns mid-game. It sees all of them now (one variant).
+if (reflection) scene.traverse((o) => { if (o.isLight) o.layers.enable(REFLECT_LAYER); });
+{
+  world.cullPaused = true; // the loop keeps running while the compile awaits: don't let it hide far props again
+  const prevRT = renderer.getRenderTarget();
+  try { renderer.setRenderTarget(composer.readBuffer); await renderer.compileAsync(scene, camera); } catch (e) { /* compile lazily */ }
+  if (reflection) try { renderer.setRenderTarget(reflection.rt); await renderer.compileAsync(scene, reflection.cam); } catch (e) { /* compile lazily */ }
+  renderer.setRenderTarget(prevRT);
+  // the loop also re-hides rigs out of view while the compile awaits: show everything again, synchronously
+  const hid2 = []; scene.traverse((o) => { if (!o.visible && (o.isMesh || o.isPoints || o.isGroup)) { hid2.push(o); o.visible = true; } });
+  const fc = []; scene.traverse((o) => { if (o.frustumCulled) { fc.push(o); o.frustumCulled = false; } });
+  const sc = sun.shadow.camera, keep = { left: sc.left, right: sc.right, top: sc.top, bottom: sc.bottom, far: sc.far };
+  Object.assign(sc, { left: -170, right: 170, top: 170, bottom: -170, far: 420 }); sc.updateProjectionMatrix();
+  shadowSnap(new THREE.Vector3(0, 0, 0)); sun.position.copy(sun.target.position).addScaledVector(world.sunDir, 200); sun.updateMatrixWorld(); sun.target.updateMatrixWorld();
+  try {
+    if (reflection) { const was = reflection.active; reflection.active = true; reflection.update(1); reflection.active = was; }
+    renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; composer.render();
+  } catch (e) { console.warn('warm-up frame', e); }
+  for (const o of fc) o.frustumCulled = true; for (const o of hid2) o.visible = false;
+  Object.assign(sc, keep); sc.updateProjectionMatrix(); renderer.shadowMap.needsUpdate = true;
+  world.cullPaused = false;
+}
 for (const o of hiddenForCompile) o.visible = false;
 world.cull(mode === 'game' ? game.player.pos : camera.position, mode === 'game' ? 95 : 200);
 document.getElementById('loader')?.classList.add('done'); setTimeout(() => document.getElementById('loader')?.remove(), 1200);

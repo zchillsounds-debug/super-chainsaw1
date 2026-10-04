@@ -385,6 +385,7 @@ export class Animator {
       }
       if (!alive) { B.hips.getWorldPosition(_a); r.worldToLocal(_a); bl[0].position.set(_a.x * 0.5, 0.035, _a.z * 0.5); bl[0].scale.set(1.2 * S, 1, 1.4 * S); }
       else bl[0].scale.set(0.95 * S, 1, 0.75 * S);
+      p.blobSync?.();
     }
   }
 }

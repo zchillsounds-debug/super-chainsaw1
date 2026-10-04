@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { fabricTex } from './textures.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const lathe = (pts, seg = 14) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg);
 // Fresnel rim light so characters read clearly against the bright desert.
@@ -56,40 +57,40 @@ const goldM = new THREE.MeshStandardMaterial({ color: 0xb8893a, metalness: 0.85,
 const leather = new THREE.MeshStandardMaterial({ color: 0x4a2e1a, roughness: 0.75 });
 
 // Straight double-edged sword (sayf), the blade of the early Abbasid period.
-export function sword() {
+function swordRaw() {
   const s = new THREE.Shape();
   s.moveTo(-0.032, 0); s.lineTo(-0.028, 0.88); s.lineTo(0, 1.0); s.lineTo(0.028, 0.88); s.lineTo(0.032, 0); s.closePath();
   const blade = new THREE.ExtrudeGeometry(s, { depth: 0.006, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.008, bevelSegments: 1 });
   const g = new THREE.Group();
   const b = mesh(blade, steel); b.position.set(0, 0.12, -0.003); g.add(b);
-  g.add(mesh(new THREE.BoxGeometry(0.004, 0.7, 0.014).translate(0, 0.5, 0.008), new THREE.MeshStandardMaterial({ color: 0x9aa0a6, metalness: 1, roughness: 0.35 }))); // fuller
+  g.add(mesh(new THREE.BoxGeometry(0.004, 0.7, 0.014).translate(0, 0.5, 0.008), steel)); // fuller
   g.add(mesh(new THREE.BoxGeometry(0.2, 0.03, 0.05).translate(0, 0.11, 0), goldM));
   g.add(mesh(new THREE.CylinderGeometry(0.022, 0.026, 0.2, 8).translate(0, 0.0, 0), leather));
   g.add(mesh(new THREE.SphereGeometry(0.035, 8, 6).scale(1, 0.7, 1).translate(0, -0.11, 0), goldM));
   return g;
 }
-export function dagger() {
+function daggerRaw() {
   const g = new THREE.Group();
   g.add(mesh(new THREE.ConeGeometry(0.03, 0.34, 4).scale(1, 1, 0.25).translate(0, 0.27, 0), steel));
   g.add(mesh(new THREE.BoxGeometry(0.1, 0.02, 0.03).translate(0, 0.1, 0), leather));
   g.add(mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.12, 6).translate(0, 0.03, 0), leather));
   return g;
 }
-export function torch() {
+function torchRaw() {
   const g = new THREE.Group();
   g.add(mesh(new THREE.CylinderGeometry(0.03, 0.025, 0.7, 6).translate(0, 0.25, 0), leather));
   const f = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.26, 7).translate(0, 0.7, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.3, 0.3), toneMapped: false }));
   g.add(f);
   return g;
 }
-export function spear() {
+function spearRaw() {
   const g = new THREE.Group();
   g.add(mesh(new THREE.CylinderGeometry(0.025, 0.025, 2.4, 6).translate(0, 0.6, 0), leather));
   g.add(mesh(new THREE.ConeGeometry(0.06, 0.35, 4).translate(0, 1.95, 0), steel));
   return g;
 }
 // Round 20: a foot crossbow (qaws al-rijl): a wooden stock with a short composite prod and its cord
-export function crossbow() {
+function crossbowRaw() {
   const g = new THREE.Group();
   g.add(mesh(new THREE.BoxGeometry(0.05, 0.78, 0.06).translate(0, 0.3, 0), leather));
   const prod = mesh(new THREE.TorusGeometry(0.32, 0.02, 5, 16, Math.PI * 0.7), leather); prod.rotation.z = Math.PI / 2 - Math.PI * 0.35; prod.position.y = 0.36; g.add(prod);
@@ -98,19 +99,19 @@ export function crossbow() {
   return g;
 }
 // a siege carpenter's wooden mallet
-export function mallet() {
+function malletRaw() {
   const g = new THREE.Group();
   g.add(mesh(new THREE.CylinderGeometry(0.02, 0.024, 0.62, 6).translate(0, 0.22, 0), leather));
   g.add(mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.22, 8).rotateZ(Math.PI / 2).translate(0, 0.55, 0), new THREE.MeshStandardMaterial({ color: 0x6a4a2a, roughness: 0.85 })));
   return g;
 }
-export function bow() {
+function bowRaw() {
   const g = new THREE.Group();
   const c = new THREE.TorusGeometry(0.6, 0.02, 5, 20, Math.PI * 0.9);
   const b = mesh(c, leather); b.rotation.z = Math.PI / 2 - Math.PI * 0.45; g.add(b);
   return g;
 }
-export function shield() {
+function shieldRaw() {
   const g = new THREE.Group();
   const d = mesh(new THREE.CylinderGeometry(0.31, 0.31, 0.05, 20).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x7a4a24, roughness: 0.6, map: fabricTex('#6b3f1e', '#b08040', false) }));
   g.add(d);
@@ -118,6 +119,32 @@ export function shield() {
   g.add(mesh(new THREE.SphereGeometry(0.09, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2).rotateX(Math.PI / 2).translate(0, 0, 0.03), steel));
   return g;
 }
+
+// Round 21: every weapon is built once, its pieces merged by material (a sword was five draws, now three), and each
+// copy shares those geometries. Unlit pieces (the torch flame) stay separate.
+const _wcache = new Map();
+function mergedGear(name, build) {
+  let parts = _wcache.get(name);
+  if (!parts) {
+    const src = build(); src.updateMatrixWorld(true);
+    const byMat = new Map(); parts = [];
+    src.traverse((o) => {
+      if (!o.isMesh) return;
+      if (o.material.isMeshBasicMaterial) { parts.push({ geo: o.geometry.clone().applyMatrix4(o.matrixWorld), mat: o.material, shadow: false }); return; }
+      const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone(); g.applyMatrix4(o.matrixWorld);
+      for (const a of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(a)) g.deleteAttribute(a);
+      if (!byMat.has(o.material)) byMat.set(o.material, []); byMat.get(o.material).push(g);
+    });
+    for (const [mat, gs] of byMat) parts.push({ geo: gs.length > 1 ? mergeGeometries(gs) : gs[0], mat, shadow: true });
+    _wcache.set(name, parts);
+  }
+  const g = new THREE.Group();
+  for (const q of parts) { const m = new THREE.Mesh(q.geo, q.mat); m.castShadow = q.shadow; m.receiveShadow = q.shadow; g.add(m); }
+  return g;
+}
+export const sword = () => mergedGear('sword', swordRaw), dagger = () => mergedGear('dagger', daggerRaw), torch = () => mergedGear('torch', torchRaw);
+export const spear = () => mergedGear('spear', spearRaw), crossbow = () => mergedGear('crossbow', crossbowRaw), mallet = () => mergedGear('mallet', malletRaw);
+export const bow = () => mergedGear('bow', bowRaw), shield = () => mergedGear('shield', shieldRaw);
 
 // Humanoids are sculpted, skinned and animated in human.js / anim.js.
 export { humanoid, animateHumanoid, setCharLOD } from './human.js';

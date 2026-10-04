@@ -65,7 +65,11 @@ export class Game {
     // shader warm-up: one of each projectile sits far under the ground, so the load-time compile covers them
     const warm = new THREE.Group(); warm.position.set(0, -60, 0);
     warm.add(new THREE.Mesh(this.stoneGeo, this.stoneMat), new THREE.Mesh(this.arrowGeo, this.arrowMat), new THREE.Mesh(this.netGeo, this.netMat), new THREE.Mesh(this.netMesh.geometry, this.netMat));
-    this.scene.add(warm);
+    // Round 21: plain two-sided and textured-cutout shadow casters, so both depth variants exist from the start
+    // (the first two-sided prop to come into the shadow box used to compile one mid-fight)
+    { const ds = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshStandardMaterial({ side: THREE.DoubleSide })); ds.castShadow = true; warm.add(ds); }
+    // hidden: the load-time warm-up shows every hidden object for one frame, so these never cost a draw in play
+    warm.visible = false; this.scene.add(warm);
   }
 
   decal(pos, size, kind) {
