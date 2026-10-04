@@ -1,12 +1,12 @@
-# Madinat al-Salam: Handoff (after Round 19)
+# Madinat al-Salam: Handoff (after Round 20)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**. It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. I've attached `madinat-round19-handoff.zip` (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
+> I'm continuing a game project called **Madinat al-Salam**. It is a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on the session branch `ccr-c97baf64-6kbn83` of zchillsounds-debug/super-chainsaw1 (or in `madinat-round20-handoff.zip` if I attach it) (full source, git history as `repo.bundle`, test scripts, and this HANDOFF.md).
 >
 > Please:
 > 1. Unzip it and read HANDOFF.md fully.
 > 2. Run `npm install && npx vite`.
-> 3. Plan **Round 20: improve the game and expand content**. Start from the menu in the "Next" section, ask me clarifying questions, and confirm the plan with me before building.
+> 3. Plan **Round 21**. Start from the menu in the "Next" section, ask me clarifying questions, and confirm the plan with me before building.
 >
 > The goal is AAA mobile game quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop (screenshot → critique → improve) every round. I play on Android. After each round:
 > - Republish the game as a playable Artifact, updating the existing link https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c rather than making a new one. Touch controls must keep working.
@@ -16,10 +16,10 @@
 ## Restore the code
 ```
 unzip madinat-round19-handoff.zip -d madinat && cd madinat
-git clone repo.bundle game && cd game        # Round 19 is on branch ccr-56d2fa55-vx1w3y
+git clone repo.bundle game && cd game        # Round 20 is on branch ccr-c97baf64-6kbn83 (Round 19: ccr-56d2fa55-vx1w3y)
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
-If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-56d2fa55-vx1w3y`.
+If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-c97baf64-6kbn83`. If the repo has the branch, just `git fetch origin ccr-c97baf64-6kbn83 && git checkout -B <session-branch> FETCH_HEAD`.
 
 URL flags:
 - `?play` skips the title screen.
@@ -29,7 +29,8 @@ URL flags:
 - `?cls=faris|rami|naffat|ayyar` picks the class.
 - `?tod=golden|dusk|night|dawn|underground` sets the time of day.
 - `?perf` shows the performance overlay.
-- Session branch for Round 17: `claude/new-session-qqie4b`.
+- `?region=sawad|marsh|karkh|docks` forces a map.
+- Headless tests: the vite dev server must be running; `withvite.sh`-style (start vite, run the test, stop it) works best, because a background server is killed after two hours.
 
 **GitHub now works.** The account was reconnected and the Claude GitHub App was installed in Round 11, and pushes succeed.
 
@@ -292,21 +293,44 @@ User decisions this round: full Round 19 plus a long graphics critique loop; loo
 - **Tests:** `shots/crit.mjs <out> [names]` (the critique set: hub, fight, kiln dusk, night arch, hero close-up, marsh, Karkh, portrait), `shots/skills.mjs <out> <cls>` (skill effects), `shots/dung.mjs <out> <region> <ids>` (dungeon rooms), `shots/bakedump.mjs` (ground bakes as PNG), `shots/console.mjs <query>` (console errors and warnings). r17test and r18test still pass.
 - **Headless note:** the main loop only advances when a screenshot forces a frame; use `__sim` for time-based effects.
 
-## Next: Round 20 menu (not yet approved: ask the user which to build)
+## Round 20 (done): improve and expand
+User decisions: everything on the menu, shipped once at the end; Act VI at the Tigris docks; the companion is a hired guard; the camel is for travel only; overhead camera by default with more zoom-out; fix the Naffat's robe.
+- **Camera (`game.js` updateCamera, `travel.js`):** default zoom 1.25 = a steep ~60° overhead view; zoom out to 2.4 (`ZOOM_MAX`); the saved zoom key changed to `sob.zoom2` so the new default shows. Shadow box and prop culling widen with zoom (`main.js`).
+- **Naffat fix (`cloth.js`, `human.js`, `anim.js`):** cloth `maxSwing` keeps long robes from swinging up like a flag (a striding leg pushed the hem up in front of him); long robes are carried with the legs (`carry` 0.8) and split wider at the front; the torch is carried upright.
+- **Animation (`anim.js`):** three-move chains per weapon (`VARIANTS`: sword, dagger stabs, spear thrust/high/sweep, bow quick/kneel, naft side/underhand throws); flinches away from the blow (`st.hitFrom`); three deaths (`st.deathKind`: knocked back, crumple to the knees and fall forward, twist). Captains always fall on their backs.
+- **Faces and bodies (`human.js`, `charmats.js`):** relaxed lids, larger iris with a lid shadow, closed lips under the beard, arched brows, a broader male torso; cloth folds deepen as elbows and knees bend (`uJ`/`uBend` uniforms). Geometry cache `VERSION` is now `r20.0`.
+- **Faction armour (`human.js` armourPrims):** `armour: leather | lamellar | scale | reed | heavy`, one extra sculpted piece; lamellar lacing is painted (`armourPaint`). Material ids that touch in one sculpt must be neighbours (see the comment). Marsh men wear reed hats (`hat`).
+- **Captains (`entities.js` captainLook):** heavy lacquered lamellar in their own colour plus a crest (plume, mantle, felt cap, pennant, great shoulders), fixed for the six lieutenants (`NAMED`).
+- **Cutscenes (`scenes.js`, Known gap 3 closed):** lieutenants: Salim walks up and kneels, a low shot over the fallen man, Salim's reaction, then the crane-up card; nearby guards are hidden for the scene. Boss intro: Salim's look, then a low-angle card shot.
+- **New foes (`foes20.js`):** crossbowman (kneeling aim with a red line on the ground, `aimLines` pool, heavy bolt that shoves), siege engineer (runs to open ground and raises a mangonel, `TYPES20.mangonel`, which shells a wide ring until broken), camel raider (charge passes; thrown at half health, fights on as 'Unhorsed Raider'). Types with `T.ai` return `'skip'` when they handle themselves.
+- **Hired guard (`companion.js`):** Kathir in every hub hires out Ma'n (spear) or Dirar (bow); one fee; can't be killed; travels with you; orders Follow / Hold / Attack (button or G). Saved as `p.companion`.
+- **Camel mount (`mount.js`):** button or V; 1.65× pace; dismounts when foes come near, on attack/skill/evade, underground and in cutscenes. Rider pose: `st.mounted` in `anim.js`.
+- **Dungeons (`interior.js`):** half-cone torch light and warm floor pools, daylight shafts through roof grates (shown only near the hero), wall props for every style (`dressProp`). `buildInterior` takes `styles` (a style per room).
+- **Act VI, the river quays (`region.js` 'docks', `terrain.js` docksHeight/`DECKS`, `regions.js` buildDocks, `docksprops.js`):** the Tigris as a wide opaque river along a stone quay; walkable jetties; barges; warehouses with cranes; boatyard; the bridge of boats cut mid-river. Captains Bilal and Mus'ab, boss Ghanim (`TYPES.ghanim`: bolt volleys, mangonel stones from the far bank, fire-ring duel). Field captains Kulayb and Dhuhl, the Customs Vaults area, dungeons Flooded Undercroft and Wharf Vaults, four side quests, two world events, four codex entries. Acts: 6 = docks, 7 = chronicle finished. Al-Karkh's finale now ends with the Act VI card and travels on; the lamps scene moved to `SCENES.docksFinale`, which ends in victory and NG+. Lighting `golden` for act 6.
+- **Siege Trials (`trials.js`, the "Siege Rift"):** board beside Ishaq; 5 mixed-style rooms + captain; 4 minutes; 10 tiers; foes = your level + 2×tier − 1; best time per tier and last runs in `p.rift`.
+- **Side content:** four more quests each in the marshes and al-Karkh (`sidequests.js`), codex Sluices and Channels, Bread in Baghdad.
+- **Loot (`items.js`, `craft.js`):** belt slot (sherbet healing, flasks carried, resource on drinking; legendary Girdle of the Water-Carrier). Bishr's Craft tab forges a rare of a chosen slot with a chosen property rolled high.
+- **Benchmark (`bench.js`):** Settings → Graphics → Run benchmark (30 s): fps, slowest 1%, frame time, draw calls, a suggestion it can apply. Ask the user to run it on their phone and send the result line.
+- **Keys:** E is the right-hand skill (4 used to fire two slots), V camel, G guard orders.
+- **Arabic** for all new text (end of `story_ar.js`).
+- **Tests (all clean):** `r15test` (all four regions), `r16test` (all four), `r17test docks`, `r18test` (four classes), `ngtest`, `traveltest` (Sawad → marsh → Karkh → docks), `finaletest <region>`, `trialtest`, `crafttest`, `benchtest`, `errs.mjs <query>` (page errors without waiting for ready).
+- **Draws:** Sawad hub 781 High / 409 Low (was 648/341: wider default view, more characters); docks hub 860.
+- **Known issue (also in Round 19):** in the marshes four standard-material programs (some with the wall-cutaway `occ` variant) compile during the Rawh fight; investigate with a programs diff like the one used this round.
+
+## Next: Round 21 menu (not yet approved: ask the user which to build)
 **Improve**
-- Character fidelity: more detailed sculpts for Salim and the captains, wrinkles that follow the pose, better faces in cutscenes (Known gap 3: Farud's and Hisham's death shots and the boss intro still use the old camera work).
-- Enemy variety in looks: armour sets per faction, distinct captain silhouettes.
-- Dungeon lighting: light shafts from torches, more props per room style.
-- Device pass: frame time on a mid-range Android phone with High, then tune adaptive quality.
-- Animation: more attack variations per class, hit reactions by direction, better deaths.
+- Device pass with the user's benchmark numbers: tune adaptive quality, draw calls (characters cost ~40 draws over the main, AO and shadow passes: merge eyes and lids, drop AO normals for small pieces).
+- Fix the marsh boss-fight shader compile (see Round 20, known issue).
+- Companion depth: foes can target him, he can be knocked down; more hires (a Naffat, an 'Ayyar).
+- Mounted travel polish: a camel for the hired guard, a mount whistle animation, horses for Karkh.
+- Faces: real facial expressions in cutscenes (brow, mouth shapes), hair variety.
 
 **Expand content**
-- Act VI or an epilogue region (e.g. the Round City's outer suburbs or the Tigris docks at al-Karkh), with two captains, a boss and an interior.
-- More enemy types (still human): siege engineers, mounted raiders on camels, crossbowmen.
-- A seasonal "Siege Rift" style endgame: timed runs through mixed dungeon rooms with a leaderboard of your own times.
-- Companions: Ishaq or a hired guard who fights beside you, with simple orders.
-- Mounts: a camel for travel on the overworld maps.
-- More side quests and codex entries for al-Karkh and the marshes; crafting at Bishr (new item types).
+- Act VII or an epilogue chapter (the copies reach Basra? Wasit?), or a post-game region.
+- More bosses with unique mechanics; a rival captain who recurs across acts.
+- Trials season rules (weekly modifiers), and trial-only legendaries.
+- Crafting depth: recipes found in the world, set pieces craftable at Bishr.
+- Pets/beasts, fishing on the Tigris, a hub upgrade system.
 
 ## Roadmap (R15 done)
 The goal is about 8–12 hours for a first playthrough, up from about 1.5 today, plus a repeatable endgame. It is split into rounds so each one ships playable.
@@ -338,9 +362,10 @@ The goal is about 8–12 hours for a first playthrough, up from about 1.5 today,
 ## Known gaps
 1. Verify on a device: immersive mode, Smooth sharpness frame rate, the trail's readability in sunlight, and Back.
 2. (Fixed in Round 16: tap a tracker entry to put it on the trail.)
-3. Farud's and Hisham's death shots and the boss intro still use the old camera work.
+3. (Fixed in Round 20: new camera work for the lieutenants' last words and the boss intro.)
 
 ## File map (src/)
+- **Round 20:** foes20.js, companion.js, mount.js, trials.js, craft.js, bench.js, docksprops.js
 - **Core:** main.js (boot, loop, wiring), game.js (gameplay, AI, combat), classes.js, entities.js, items.js, save.js, content.js (R10 captains, areas, tasks, engines, duel, NG+), region.js + story15.js (R15 regions, quest chains, boss kits), sidequests.js (R16 side quests, bounties, world events, tracking)
 - **World:** world.js, regions.js + regionprops.js (R15 marsh and Karkh), terrain.js, buildings.js, props.js, vegetation.js, water.js, interior.js, zones.js, hub.js
 - **Rendering:** graphics.js, lighting.js, lights.js, atmos.js, fx.js, perf.js

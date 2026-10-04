@@ -37,3 +37,8 @@ A powerful man in Baghdad, never named, wants the Pages burned. He paid Ghassan 
 4. **The Marshes.** The chest from Ghassan's tent is light. Rawh, his paymaster, fled east into the Nahrawan marshes with the rest. Marwan (the reed camp) gives up Sahl (the fish racks), and Sahl gives up Rawh (the old weir). Rawh: "Too late. I sent the last bundle up the canal at dawn." His own boats carry Salim to Baghdad.
 5. **Al-Karkh.** The burned market suburb. The buyer's men answer to 'Utba. 'Asim (the burned suq) gives up Layth (the paper-sellers' lane), who says 'Utba will burn the Pages in the square at sunset. After the fight the Pages are taken unburned off the pyre. In the khan, Ishaq gives them to Hakam, a scholar of the House of Wisdom: "We will copy them, ten times over, for ten cities." At dusk Salim sets lamps on the canal: "Jabir. It is done." Ishaq: "We keep the account."
 The buyer himself stays unnamed.
+
+## Round 20: Act VI
+5. **Al-Karkh** now ends after Hakam's promise: "Hakam's copyists began that night. By dawn the first copies were bound for the river."
+6. **The River Quays.** The buyer's steward **Ghanim** means to sink the copies before they sail. Bilal (the warehouses) gives up Mus'ab (the boatyard, holding the copyists' barge), and Mus'ab says Ghanim cut the bridge of boats and waits at its foot. After the fight the barge sails downriver: "Two copies to Wasit, two to Basra." Ishaq: "Let him try to gather them now." At dusk Salim sets lamps on the Tigris: "Jabir. It is done." Ishaq: "We keep the account."
+The buyer still stays unnamed.
