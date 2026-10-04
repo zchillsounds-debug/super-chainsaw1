@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { IS_HAMRIN } from './region.js';
 import { SKY, envFromSky } from './graphics.js';
 
 // Time-of-day presets, one per act, blended over a few seconds.
@@ -21,6 +22,12 @@ export const PRESETS = {
   // Act V: al-Karkh in the late afternoon, the light thick and amber with smoke
   haze: { sun: v(-0.7, 0.36, 0.42), sunCol: c(0xffc090), sunI: 2.7, hemiSky: c(0xa8a098), hemiGnd: c(0x4a3e34), hemiI: 0.55, fog: c(0x8a7c70), fogD: 0.0066, exp: 1.0, env: 0.32, hero: 4, vol: 0.04, fire: 1.25,
     sky: { zen: c(0x3e4458), mid: c(0x9a8478), hor: c(0xd8a078), gnd: c(0x4a3a30), glow: c(0xff9a50), cloud: c(0xb09080), stars: 0, disk: 12 }, water: c(0xc89a78), dusk: 0.08, lut: 6 },
+  // Round 21: the Hamrin hills in the late afternoon: clear high air, a cooler sky, long shadows off the ridges
+  highland: { sun: v(-0.62, 0.48, 0.42), sunCol: c(0xffd2a0), sunI: 3.1, hemiSky: c(0xb4c0d4), hemiGnd: c(0x6a5440), hemiI: 0.55, fog: c(0xb8b4b0), fogD: 0.0042, exp: 0.98, env: 0.4, hero: 1.5, vol: 0.028, fire: 1,
+    sky: { zen: c(0x2a5aa0), mid: c(0xa8b0c0), hor: c(0xf0c8a0), gnd: c(0x6a5440), glow: c(0xffb070), cloud: c(0xf8e0c8), stars: 0, disk: 18 }, water: c(0xc8d0d8), dusk: 0.02, lut: 0 },
+  // inside the holds: the gorges at evening, deep in shadow under a bright strip of sky
+  gorge: { sun: v(-0.4, 0.72, 0.55), sunCol: c(0xffc490), sunI: 2.8, hemiSky: c(0xa4acc4), hemiGnd: c(0x6a5440), hemiI: 1.0, fog: c(0x9a8a80), fogD: 0.0085, exp: 1.12, env: 0.36, hero: 5, vol: 0.035, fire: 1.3,
+    sky: { zen: c(0x1e3460), mid: c(0x7a6a78), hor: c(0xe8906a), gnd: c(0x3a2a22), glow: c(0xff8a50), cloud: c(0xd89070), stars: 0.08, disk: 12 }, water: c(0x8a8478), dusk: 0.1, lut: 1 },
   underground: { sun: v(-0.3, 0.9, 0.2), sunCol: c(0x403028), sunI: 0.0, hemiSky: c(0x8a6a50), hemiGnd: c(0x302018), hemiI: 0.95, fog: c(0x0a0705), fogD: 0.022, exp: 1.45, env: 0.12, hero: 9, vol: 0.0, fire: 1.6,
     sky: { zen: c(0x000000), mid: c(0x000000), hor: c(0x080504), gnd: c(0x000000), glow: c(0x000000), cloud: c(0x000000), stars: 0, disk: 0 }, water: c(0x302820), dusk: 0, lut: 4 },
 };
@@ -43,7 +50,7 @@ export class Lighting {
     this.name = name; this.from = this.snapshot(this.cur); this.to = PRESETS[name]; this.k = secs > 0 ? 0 : 1; this.dur = secs;
     if (secs <= 0) { this.apply(1); this.bakeEnv(); }
   }
-  forAct(act, secs) { this.set(ACT_PRESET[Math.min(7, act || 1)] || 'golden', secs); this.onAct?.(act || 1); }
+  forAct(act, secs) { if (IS_HAMRIN) { this.set('highland', secs); this.onAct?.(8); return; } this.set(ACT_PRESET[Math.min(7, act || 1)] || 'golden', secs); this.onAct?.(act || 1); }
   bakeEnv() { const old = this.scene.environment; this.scene.environment = envFromSky(this.renderer, this.world.sunDir); old?.dispose?.(); }
   apply(k) {
     const f = this.from, t = this.to, o = this.cur, L = THREE.MathUtils.lerp;

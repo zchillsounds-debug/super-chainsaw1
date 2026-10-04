@@ -293,5 +293,5 @@ export function setupRivals(g) {
     if (g.director) g.director.play(meetScene(g, z, R.intro, REGION === 'sawad' ? { ar: 'زبير', en: 'Zubayr', sub: 'The bowman on the dune' } : null)).then(() => { z.alerted = true; for (const m of men) m.alerted = true; });
     else { z.alerted = true; for (const m of men) m.alerted = true; }
   };
-  g.__rivals = { RIVAL, spot: () => spot, met: () => met, hookAI, smokeAI, zubayrAI, special };
+  g.__rivals = { RIVAL, spot: () => spot, met: () => met, hookAI, smokeAI, zubayrAI, special, meetScene };
 }

@@ -31,8 +31,9 @@ const GROUNDS = {
   marsh: [['grainvault', 'The Granary Vaults'], ['warren', 'The Reed Warren'], ['flood', 'The Drowned Granary']],
   karkh: [['salt', 'The Salt Workings'], ['palace', 'The Palace Cellars'], ['scorched', 'The Merchants\' Cellars']],
   docks: [['cistern', 'The Flooded Undercroft'], ['grainvault', 'The Wharf Vaults'], ['cellar', 'The Customs Vaults']],
+  hamrin: [['salt', 'The Salt Workings'], ['vault', 'The Sasanian Vaults'], ['kiln2', 'The Lower Kilns'], ['cistern', 'The Old Cistern']],
 }[REGION];
-const BASE = { sawad: 3, marsh: 8, karkh: 11, docks: 14 }[REGION];
+const BASE = { sawad: 3, marsh: 8, karkh: 11, docks: 14, hamrin: 20 }[REGION];
 
 // ------------------------------------------------------------------ the Renown board: account passives bought with Renown
 export const RENOWN = [
@@ -270,7 +271,7 @@ export function startContract(g, cap, ground, mods, R) {
   const p = g.player, info = p.slain[cap] || { type: 'spearman' }, list = mods.map((m) => MODS[m]);
   const all = {}; for (const m of list) Object.assign(all, m);
   const C = { won: false };
-  const pool = { sawad: ['bandit', 'archer', 'spearman', 'deserter', 'naffat'], marsh: ['bandit', 'slinger', 'netter', 'reedman', 'spearman'], karkh: ['guard', 'archer', 'naffat', 'deserter', 'spearman'], docks: ['guard', 'crossbow', 'spearman', 'deserter', 'engineer'] }[REGION];
+  const pool = { sawad: ['bandit', 'archer', 'spearman', 'deserter', 'naffat'], marsh: ['bandit', 'slinger', 'netter', 'reedman', 'spearman'], karkh: ['guard', 'archer', 'naffat', 'deserter', 'spearman'], docks: ['guard', 'crossbow', 'spearman', 'deserter', 'engineer'], hamrin: ['guard', 'crossbow', 'spearman', 'deserter', 'archer', 'naffat'] }[REGION];
   const title = (GROUNDS.find((x) => x[0] === ground) || [0, 'The Depths'])[1];
   g.zones.enter({
     kind: 'contract', style: ground, seed: (Math.random() * 1e6) | 0, rooms: 6 + mods.length, level: R.lvl + (all.levelUp || 0), contract: C,

@@ -10,6 +10,7 @@ const ACTS = {
   5: { ex: 'bayati', bpm: 62, cbpm: 120, dens: 0.34, oct: 0.5, qan: 0.08 },    // burned al-Karkh: low Bayati, tense
   6: { ex: 'rast', bpm: 72, cbpm: 114, dens: 0.42, oct: 1, qan: 0.26 },         // Round 20, the river quays: Rast on the water at dawn
   7: { ex: 'rast', bpm: 84, cbpm: 108, dens: 0.55, oct: 1, qan: 0.3 },         // the chronicle closes: Rast, bright qanun
+  8: { ex: 'bayati', bpm: 68, cbpm: 116, dens: 0.36, oct: 0.5, qan: 0.14 },       // Round 21, the Hamrin hills: Bayati, spare and low, the oud alone in the gorges
   under: { ex: 'rast', bpm: 54, cbpm: 104, dens: 0.22, oct: 0.5, qan: 0.05 },  // tunnels and qanats
 };
 P.setAct = function (act) { this.actCfg = ACTS[act] || ACTS[1]; };

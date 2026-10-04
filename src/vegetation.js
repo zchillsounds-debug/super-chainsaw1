@@ -223,7 +223,7 @@ export function shrubs(points, seed = 4) {
 }
 
 let _rock = null;
-function rockTex() {
+export function rockTex() {
   if (_rock) return _rock;
   const S = 256, c = document.createElement('canvas'); c.width = c.height = S;
   const x = c.getContext('2d'), img = x.createImageData(S, S), H = new Float32Array(S * S);

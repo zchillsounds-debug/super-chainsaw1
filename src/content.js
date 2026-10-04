@@ -38,6 +38,9 @@ const NAMED = [
   // Round 20: Act VI, the river quays
   { id: 'kulayb', region: 'docks', name: 'Kulayb', type: 'crossbow', at: [-70, 40], level: 13, affix: 'volley', guard: ['crossbow', 'guard'] },
   { id: 'dhuhl', region: 'docks', name: 'Dhuhl', type: 'engineer', at: [-20, -40], level: 14, affix: 'ironclad', guard: ['engineer', 'guard', 'spearman'] },
+  // Round 21: the Hamrin hills
+  { id: 'asbagh', region: 'hamrin', name: 'Asbagh', type: 'deserter', at: [30, 54], level: 22, affix: 'swift', guard: ['deserter', 'archer', 'guard'] },
+  { id: 'kahmas', region: 'hamrin', name: 'Kahmas', type: 'crossbow', at: [-30, -38], level: 22, affix: 'volley', guard: ['crossbow', 'guard', 'spearman'] },
 ].filter((n) => (n.region || 'sawad') === REGION);
 // a new area per act; each ends in a named captain guarding the chest
 const AREAS = [

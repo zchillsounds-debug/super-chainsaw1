@@ -595,3 +595,9 @@ body.benching #tskills,body.benching #joy,body.benching #mountbtn,body.benching 
 #compbtn.down{border-color:#7ab070;animation:compdown 1.2s ease-in-out infinite}
 #compbtn.down .chp i{background:linear-gradient(90deg,#4a9a4a,#8ad07a)}
 @keyframes compdown{50%{box-shadow:0 0 12px #6ac06a}}
+/* Round 21: lock-on in the close camera */
+#lockbtn{position:absolute;pointer-events:auto;right:24px;bottom:252px;width:52px;height:52px;border-radius:50%;background:radial-gradient(#2a2016,#140e08);border:2px solid #6a5a3a;color:#e8d4a8;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 2px 8px #0008;cursor:pointer}
+#lockbtn.on{border-color:#e07a3a;color:#ffb070;box-shadow:0 0 14px #e07a3a99}
+#lockbtn:active{transform:scale(.92)}
+#lockbtn.hide,body.overlay #lockbtn,body.insheet #lockbtn,body.indialog #lockbtn,body.incine #lockbtn,body:not(.playing) #lockbtn{display:none}
+body.touch #lockbtn{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(238px + env(safe-area-inset-bottom,0px))}

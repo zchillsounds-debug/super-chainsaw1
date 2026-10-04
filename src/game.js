@@ -3,7 +3,9 @@ import * as THREE from 'three';
 import { REFL } from './reflect.js';
 import { humanoid, animateHumanoid, setCharLOD, sword, camel, animateCamel, buffalo, animateBuffalo, CharLOD } from './characters.js';
 import { heightAt, SITES, canalX, mapColor, waterDepth } from './terrain.js';
-import { resolve, buildGrid } from './collision.js';
+import { resolve, buildGrid, lineClear } from './collision.js';
+// the close camera only needs to know about rock (anything it would sit inside)
+const lineClearCam = (ax, az, bx, bz) => lineClear(ax, az, bx, bz);
 import { buildNav, findPath, navClear } from './nav.js';
 import { makeEnemy, TYPES } from './entities.js';
 import { fleeTick } from './foes20.js';
@@ -12,7 +14,7 @@ import { saveGame } from './save.js';
 import { makeItem, rollRarity, RARITY, setWeaponPool } from './items.js';
 import { glowDecal, splatTex } from './textures.js';
 import { CLASSES, COMMON } from './classes.js';
-import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, IS_CITY, STORY, HUB } from './region.js';
+import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, IS_CITY, IS_HAMRIN, STORY, HUB } from './region.js';
 import { LIEUT, BOSS, ISHAQ_TALK } from './story15.js';
 import { WATER_Y, roadDist, DECKS, CANAL_W } from './terrain.js';
 
@@ -146,6 +148,7 @@ export class Game {
     mat.customProgramCacheKey = () => 'gbufhole'; mat.needsUpdate = true;
   }
   updateOccluders() {
+    if (this.camAction) { this.occU.uHole.value.set(-9999, -9999); this.occU.uCut.value = 0; return; }
     const p = this.player.pos;
     const sp = this.ui.project(tmp.set(p.x, p.y + 1.0, p.z), this.camera);
     const dpr = this.renderer.getPixelRatio();
@@ -246,6 +249,7 @@ export class Game {
     this.bossSpawned = false;
     if (IS_MARSH) return this.spawnMarsh();
     if (IS_DOCKS) return this.spawnDocks();
+    if (IS_HAMRIN) return this.spawnHamrin?.();
     if (IS_KARKH) return this.spawnKarkh();
     const S = SITES.serai, G = SITES.kiln;
     this.spawnPack(['bandit', 'bandit', 'archer'], 22, 36, 3, 1);
@@ -353,6 +357,23 @@ export class Game {
     this.spawnPack('crossbow', A.x - 16, A.z + 14, 1, 15, { elite: true });
   }
 
+  // Round 21: the Hamrin hills: deserters from both armies in the gorges (levels are raised to Salim's when he arrives)
+  spawnHamrin() {
+    const S = SITES.serai, G = SITES.kiln, A = SITES.arch, H = SITES.hold;
+    this.spawnPack(['guard', 'archer', 'spearman'], -26, 58, 4, 22, { spread: 5 });
+    this.spawnPack(['deserter'], -40, 46, 2, 22, { hidden: true, spread: 3 });
+    this.spawnPack(['crossbow', 'guard', 'deserter'], S.x + 14, S.z + 6, 4, 23, { spread: 5 });
+    this.spawnPack(['guard', 'spearman', 'crossbow'], 28, 56, 4, 22, { spread: 5 });
+    this.spawnPack(['engineer', 'guard'], G.x - 14, G.z + 6, 2, 23);
+    this.spawnPack(['guard', 'archer', 'naffat'], -6, 20, 4, 23, { spread: 5 });
+    this.spawnPack('rider', 4, -2, 2, 23, { spread: 8 });
+    this.spawnPack(['crossbow', 'guard', 'spearman'], 14, -34, 4, 24, { spread: 5 });
+    this.spawnPack(['deserter'], 22, -46, 3, 24, { hidden: true, spread: 3 });
+    this.spawnPack(['guard', 'archer', 'naffat', 'spearman'], A.x - 8, A.z + 12, 5, 24, { spread: 5 });
+    this.spawnPack(['archer', 'archer', 'guard'], -28, -34, 4, 24, { spread: 5 });
+    this.spawnPack(['crossbow', 'deserter', 'guard'], H.x + 14, H.z + 10, 4, 25, { spread: 5 });
+    this.spawnPack(['guard', 'spearman'], 50, -14, 3, 24);
+  }
   makeMinimap() {
     const c = document.createElement('canvas'); c.width = c.height = 280; const x = c.getContext('2d');
     for (let j = 0; j < 280; j += 2) for (let i = 0; i < 280; i += 2) {
@@ -416,6 +437,7 @@ export class Game {
   }
   // what the hero is walking on (footstep sounds and dust)
   surfaceAt(pos) {
+    if (this.interior?.I.hold) { const I = this.interior.I, [c, r] = I.tileOf(pos.x, pos.z); return I.at(c, r) === '=' ? 'wood' : 'stone'; }
     if (this.interior) { const I = this.interior.I; if (I.style === 'qanat') { const c = I.center(I.rooms.reduce((a, r) => (Math.hypot(I.center(r).x - pos.x, I.center(r).z - pos.z) < Math.hypot(I.center(a).x - pos.x, I.center(a).z - pos.z) ? r : a))); if (Math.abs(pos.x - (c.x + 3.6)) < 0.9) return 'water'; return 'stone'; } return 'brick'; }
     if (IS_MARSH) return waterDepth(pos.x, pos.z) > 0.04 ? 'water' : roadDist(pos.x, pos.z) < 3 ? 'sand' : 'grass';
     if (IS_DOCKS && DECKS.some(([x0, x1, dz, w]) => pos.x > x0 - 2 && pos.x < x1 && Math.abs(pos.z - dz) < w / 2 + 0.2)) return 'wood';
@@ -432,6 +454,13 @@ export class Game {
     const v = at.project(this.camera); this.mouse.set(v.x, v.y);
   }
   setMoveTarget() { this.player.moveTo = this.groundPoint(); }
+  // Round 21: the joystick in world terms: screen-up is -z in the overhead view, the camera's forward in the close one
+  joyWorld() {
+    const jx = this.joy?.x || 0, jy = this.joy?.y || 0;
+    if (!this.camAction) return { x: jx, z: jy };
+    const y = this.camYaw ?? this.player.facing, c = Math.cos(y), s = Math.sin(y);
+    return { x: -c * jx - s * jy, z: s * jx - c * jy };
+  }
   showMarker() { const g = this.player.moveTo; if (!g) return; this.marker.position.set(g.x, g.y + 0.08, g.z); this.marker.material.opacity = 1; this.marker.scale.setScalar(1.6); }
 
   pickHover() {
@@ -474,7 +503,7 @@ export class Game {
     const from = tmp.copy(src).sub(e.pos).setY(0); const fl = from.length() || 1; from.divideScalar(fl);
     const front = from.dot(tmp2.set(Math.sin(e.facing), 0, Math.cos(e.facing)));
     // shield-bearers turn aside frontal blows unless staggered, attacking, or the blow is a bash
-    if (e.shield && !o.unblockable && !e.staggerT && !e.st.action && front > 0.45 && Math.random() < 0.65) {
+    if (e.shield && !o.unblockable && !e.staggerT && !e.st.action && front > 0.45 && Math.random() < (e.blockK ?? 0.65)) {
       dmg = Math.max(1, Math.round(dmg * 0.2)); crit = false;
       e.flash = 0.4; this.audio.at(e.pos, () => this.audio.clang()); this.fx.sparks(tmp2.copy(e.pos).setY(e.pos.y + 1.2).addScaledVector(from, 0.5), new THREE.Color(4, 3, 1.6));
       this.ui.damageNumber(e.pos, 'Blocked', 'block'); e.hp -= dmg; e.poise -= w * 4; e.st.hitT = 0.3;
@@ -706,7 +735,7 @@ export class Game {
     } else if (slot === 'dodge') {
       if (p.rollT > 0 || p.dashT > 0) return;
       let dir;
-      if (this.joy && Math.hypot(this.joy.x, this.joy.y) > 0.2) dir = new THREE.Vector3(this.joy.x, 0, this.joy.y);
+      if (this.joy && Math.hypot(this.joy.x, this.joy.y) > 0.2) { const j = this.joyWorld(); dir = new THREE.Vector3(j.x, 0, j.z); }
       else if (p.vel && Math.hypot(p.vel.x, p.vel.z) > 1) dir = new THREE.Vector3(p.vel.x, 0, p.vel.z);
       else if (!this.isTouch) { const g = this.groundPoint(); dir = new THREE.Vector3(g.x - p.pos.x, 0, g.z - p.pos.z); }
       if (!dir || dir.lengthSq() < 0.01) dir = new THREE.Vector3(-Math.sin(p.facing), 0, -Math.cos(p.facing));
@@ -1074,7 +1103,8 @@ export class Game {
     let moving = false;
     // wading through marsh water slows the hero to a heavy stride
     const wet = waterDepth(p.pos.x, p.pos.z); p.wading = wet > 0.08;
-    const speed = 6.4 * (1 + s.move / 100) * (p.whirlT > 0 ? 0.75 : 1) * (p.wading ? 0.62 : 1) * (this.hazSlow ?? 1) * (p.mountK || 1);
+    const speed = 6.4 * (1 + s.move / 100) * (p.whirlT > 0 ? 0.75 : 1) * (p.wading ? 0.62 : 1) * (this.hazSlow ?? 1) * (this.hazSlowK ?? 1) * (p.mountK || 1);
+    this.hazSlowK = 1;
     if (p.dead) { p.st.deadT += dt; }
     else if (p.rollT > 0) {
       // evade: a low, quick roll with invulnerability frames; starting it as a blow lands is a parry
@@ -1127,9 +1157,9 @@ export class Game {
       // and shots/swings fire as you steer; how freely you move mid-swing depends on the class (kit.mobility).
       const atkHeld = this.autoAttack || (this.t - (this.atkPressT ?? -9)) < 0.5;
       const joyOn = this.joy && Math.hypot(this.joy.x, this.joy.y) > 0.15;
-      if (this.joy) { // virtual joystick: camera looks toward -z, so screen-up is -z
-        if (!atkHeld) p.target = null; p.moveTo = null; p.pickup = null;
-        if (joyOn) goal = { x: p.pos.x + this.joy.x * 3, y: p.pos.y, z: p.pos.z + this.joy.y * 3 };
+      if (this.joy) { // virtual joystick: camera looks toward -z, so screen-up is -z (the close camera turns it)
+        if (!atkHeld && !this.lockOn) p.target = null; p.moveTo = null; p.pickup = null;
+        if (joyOn) { const j = this.joyWorld(); goal = { x: p.pos.x + j.x * 3, y: p.pos.y, z: p.pos.z + j.z * 3 }; }
         if (atkHeld && !p.target) { const e = this.pickTarget(this.kit.attack.kind === 'melee' ? 4 : this.kit.attack.range); if (e) p.target = e; }
       }
       if (p.target && (p.target.dead || p.target.hidden || p.target.ghost)) p.target = null;
@@ -1250,7 +1280,7 @@ export class Game {
       }
     }
     // boss trigger
-    if (!this.bossSpawned && !this.quests.find((q) => q.id === STORY.boss)?.done && Math.hypot(p.pos.x - SITES.arch.x, p.pos.z - SITES.arch.z) < 24) this.spawnBoss();
+    if (STORY.boss && !this.bossSpawned && !this.quests.find((q) => q.id === STORY.boss)?.done && Math.hypot(p.pos.x - SITES.arch.x, p.pos.z - SITES.arch.z) < 24) this.spawnBoss();
   }
 
   // Follow an A* path when the straight line to the goal is blocked.
@@ -1308,7 +1338,7 @@ export class Game {
       const dist = e.pos.distanceTo(p.pos);
       // only rigs inside the top-down view (plus a margin) are drawn and skinned
       const vdx = Math.abs(e.pos.x - p.pos.x), vdz = e.pos.z - p.pos.z;
-      const vz = Math.max(1, this.camZoom) * (this.camZoom < 0.85 ? 1.5 : 1); e.rig.visible = !e.ghost && !e.removed && (vdx < 30 * vz && vdz > -36 * vz && vdz < 20 * Math.max(1, this.camZoom) || (e.boss && dist < 60));
+      const vz = Math.max(1, this.camZoom) * (this.camZoom < 0.85 ? 1.5 : 1); e.rig.visible = !e.ghost && !e.removed && (this.camAction ? dist < 60 : (vdx < 30 * vz && vdz > -36 * vz && vdz < 20 * Math.max(1, this.camZoom) || (e.boss && dist < 60)));
       if (e.rig.visible) setCharLOD(e.rig, dist > 15 && !this.cinematic);
       if (e.dead) {
         e.st.deadT += dt; e.deadT += dt;
@@ -1605,7 +1635,35 @@ export class Game {
     }
   }
 
+  // Round 21: the close action camera (inside the holds): low behind Salim's shoulder, turning after him as he
+  // goes; with a lock-on it looks from him to the foe. It pulls in where rock stands between it and him.
+  actionCamera(dt) {
+    const pl = this.player, p = pl.pos, L = this.lockOn && !this.lockOn.dead && !this.lockOn.ghost && this.lockOn.pos.distanceTo(p) < 30 ? this.lockOn : null;
+    if (this.lockOn && !L) this.lockOn = null;
+    if (this.camYaw == null || !this.camInit) this.camYaw = pl.facing;
+    const moving = Math.hypot(pl.vel?.x || 0, pl.vel?.z || 0) > 1;
+    let want = this.camYaw;
+    if (L) want = Math.atan2(L.pos.x - p.x, L.pos.z - p.z);
+    else if (moving && Math.abs(angDiff(this.camYaw, pl.facing)) < 2.3) want = pl.facing; // follow, but not when he runs back toward the camera
+    this.camYaw += angDiff(this.camYaw, want) * Math.min(1, dt * (L ? 5 : 1.7));
+    const z = THREE.MathUtils.clamp(this.camZoom / 1.25, 0.7, 1.6), dist = 4.4 * z, h = 1.6 + 0.9 * z;
+    const fx = Math.sin(this.camYaw), fz = Math.cos(this.camYaw);
+    let k = 1; // pull in toward Salim while rock is in the way
+    for (; k > 0.3; k -= 0.1) if (lineClearCam(p.x, p.z, p.x - fx * dist * k, p.z - fz * dist * k)) break;
+    const target = tmp.set(p.x - fx * dist * k, p.y + h * (0.75 + 0.25 * k), p.z - fz * dist * k);
+    if (!this.camInit) { this.camPos.copy(target); this.camInit = true; }
+    this.camPos.lerp(target, Math.min(1, dt * 7));
+    this.camera.position.copy(this.camPos);
+    if (this.camKick) { this.camera.position.addScaledVector(this.camKick, 0.6); this.camKick.multiplyScalar(Math.max(0, 1 - dt * 12)); }
+    if (this.shake > 0) { this.shake = Math.max(0, this.shake - dt * 1.8); const s = this.shake * this.shake * 0.5; this.camera.position.x += (Math.random() - 0.5) * s; this.camera.position.y += (Math.random() - 0.5) * s; this.camera.position.z += (Math.random() - 0.5) * s; }
+    const look = tmp2.set(p.x + fx * 2.2, p.y + 1.35, p.z + fz * 2.2);
+    if (L) look.lerp(tmp.set(L.pos.x, L.pos.y + 1.3, L.pos.z), 0.45);
+    this.camera.lookAt(look);
+    if (Math.abs(this.camera.fov - 52) > 0.01) { this.camera.fov = 52; this.camera.updateProjectionMatrix(); }
+  }
   updateCamera(dt) {
+    if (this.camAction) return this.actionCamera(dt);
+    if (this.camera.fov !== 36 && !this.cinematic) { this.camera.fov = 36; this.camera.updateProjectionMatrix(); }
     const p = this.player.pos;
     // ease back a little when a fight grows (more foes alerted close by), more for a captain
     if ((this.fightCountT = (this.fightCountT || 0) - dt) <= 0) { this.fightCountT = 0.5; let n = 0; for (const e of this.enemies) if (!e.dead && e.alerted && Math.abs(e.pos.x - p.x) < 14 && Math.abs(e.pos.z - p.z) < 14) n++; this.fightN = n; }

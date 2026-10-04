@@ -18,7 +18,7 @@ import { DUNGEONS } from './dungeons.js';
 // Round 16 side content: short quest chains (four per region, eight in the marshes and al-Karkh since Round 20), a daily bounty board in each hub,
 // timed world events the trail points to, and tracking any task on the trail by tapping it in the tracker.
 
-const BASE = { sawad: 2, marsh: 7, karkh: 10, docks: 13 }[REGION];
+const BASE = { sawad: 2, marsh: 7, karkh: 10, docks: 13, hamrin: 20 }[REGION];
 const lvl = (g, add = 0) => Math.max(BASE, g.player.level) + add;
 const V3 = (x, z, y = 0) => new THREE.Vector3(x, heightAt(x, z) + y, z);
 // nearest walkable spot to a point: off every collider, out of deep water
@@ -234,6 +234,7 @@ const Q = {
         { text: 'Wasil\'s daughter is home.' }],
       reward: { gold: 190, item: 'legendary', renown: 18, codex: 'copyists' } },
   ],
+  hamrin: [], // Round 21: the endgame's work is in the holds, the bounties and the events
 }[REGION];
 
 // ------------------------------------------------------------------ bounty board (daily)
@@ -243,8 +244,8 @@ function rollBounties(g) {
   const seed = [...(today() + REGION)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7), rnd = mulberry32(seed);
   const roadPt = () => { const r = ROADS[Math.floor(rnd() * ROADS.length)], k = Math.floor(rnd() * (r.length - 1)), u = 0.2 + rnd() * 0.6; return [r[k][0] + (r[k + 1][0] - r[k][0]) * u, r[k][1] + (r[k + 1][1] - r[k][1]) * u]; };
   const farPt = () => { for (let i = 0; i < 30; i++) { const p = roadPt(); if (Math.hypot(p[0] - SITES.village.x, p[1] - SITES.village.z) > 45) return p; } return roadPt(); };
-  const pool = { sawad: ['bandit', 'archer', 'spearman', 'deserter'], marsh: ['bandit', 'slinger', 'netter', 'reedman'], karkh: ['guard', 'archer', 'naffat', 'deserter'], docks: ['guard', 'crossbow', 'deserter', 'spearman'] }[REGION];
-  const areas = [{ kind: 'qanat', name: 'the ruined qanats' }, ...({ sawad: [{ kind: 'kiln', name: 'the kiln tunnels' }, { kind: 'cellar', name: 'the caravanserai storerooms' }], marsh: [{ kind: 'granary', name: 'the drowned granary' }], karkh: [{ kind: 'cellars', name: 'the merchants\' cellars' }], docks: [{ kind: 'customs', name: 'the customs vaults' }] }[REGION]), ...DUNGEONS.map((d) => ({ kind: d.id, name: d.title.replace(/^The /, 'the ') }))];
+  const pool = { sawad: ['bandit', 'archer', 'spearman', 'deserter'], marsh: ['bandit', 'slinger', 'netter', 'reedman'], karkh: ['guard', 'archer', 'naffat', 'deserter'], docks: ['guard', 'crossbow', 'deserter', 'spearman'], hamrin: ['guard', 'crossbow', 'spearman', 'deserter', 'archer'] }[REGION];
+  const areas = [{ kind: 'qanat', name: 'the ruined qanats' }, ...({ sawad: [{ kind: 'kiln', name: 'the kiln tunnels' }, { kind: 'cellar', name: 'the caravanserai storerooms' }], marsh: [{ kind: 'granary', name: 'the drowned granary' }], karkh: [{ kind: 'cellars', name: 'the merchants\' cellars' }], docks: [{ kind: 'customs', name: 'the customs vaults' }], hamrin: [] }[REGION]), ...DUNGEONS.map((d) => ({ kind: d.id, name: d.title.replace(/^The /, 'the ') }))];
   const sites = Object.entries({ serai: SITES.serai, kiln: SITES.kiln }).map(([, s]) => s);
   const kinds = ['hunt', 'recover', 'escort', 'clear', 'hunt', 'recover'];
   const out = []; const used = new Set();
@@ -275,6 +276,11 @@ const EVENTS = {
   docks: [
     { id: 'storefire', t: 'A warehouse on fire', text: 'Ghanim\'s men have fired a warehouse by the quay road. Drive them off before it spreads.', at: [-6, 18], pack: ['naffat', 'guard', 'crossbow', 'naffat'], prop: 'fire' },
     { id: 'porters', t: 'Porters ambushed', text: 'A file of porters is being robbed on the quay road, south of the warehouses.', at: [30, -8], pack: ['guard', 'deserter', 'crossbow'], prop: 'caravan' },
+  ],
+  // Round 21: the Hamrin hills
+  hamrin: [
+    { id: 'salters', t: 'Salt traders waylaid', text: 'Deserters have stopped a salt caravan in the western gorge. Drive them off.', at: [-34, 50], pack: ['guard', 'crossbow', 'deserter', 'spearman'], prop: 'caravan' },
+    { id: 'shepherds', t: 'The shepherds\' fold is burning', text: 'Raiders fired a fold in the southern valley to drive off the flock.', at: [-6, -14], pack: ['naffat', 'guard', 'deserter', 'naffat'], prop: 'fire' },
   ],
 }[REGION];
 

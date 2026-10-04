@@ -20,6 +20,7 @@ export const LIEUT = {
     chief: { who: 'Bilal', text: 'Ghanim pays us to hold the river. Mus\'ab keeps the copyists\' boat at the yard.', act: 6, card: { ar: 'دار الصناعة', en: 'The Boatyard', sub: 'Free the copyists\' boat from Mus\'ab.' } },
     second: { who: 'Mus\'ab', text: 'The boat is yours. But Ghanim cut the bridge, and he waits at its foot.', act: 6, card: { ar: 'الجسر', en: 'The Bridge of Boats', sub: 'Ghanim will not let the copies sail. Face him at the bridge.' } },
   },
+  hamrin: {}, // Round 21: the endgame's captains are in the holds (holds.js)
 }[REGION];
 
 // the act's last fight: who, where, his kit, and the lines for the intro and his second phase
@@ -51,6 +52,8 @@ export const BOSS = {
     duelCaption: 'Ghanim fires the bridge. Stay inside the ring.',
     banner: ['Ghanim', 'The buyer\'s steward'],
   },
+  // Round 21: no field boss in the hills; Zubayr's sculpt is warmed at load for his hold
+  hamrin: { type: 'zubayr', level: 30, banner: ['Zubayr', 'The bowman on the dune'] },
 }[REGION];
 
 // Ishaq's words when Salim speaks with him in each region's hub corner
@@ -74,5 +77,10 @@ export const ISHAQ_TALK = {
     'Hakam\'s copyists worked through the night. The first copies are to go downriver, to Wasit and Basra, at dawn.',
     'The buyer\'s steward, <b>Ghanim</b>, holds the quays. <b>Bilal</b> keeps the warehouses and <b>Mus\'ab</b> has taken the copyists\' boat at the yard.',
     'Ten cities, Salim. Once the copies are on the water, no one can gather them all again.',
+  ],
+  hamrin: [
+    'These hills were full of deserters after the siege: men from both armies, with nowhere to go and nothing to lose.',
+    'They hold four places. The old <b>quarry</b> to the west, the <b>fort</b> on the eastern cliff, the <b>bridge</b> over the gorge to the south, and a hold in the far ravine where <b>Zubayr</b> went to ground.',
+    'Rest by the fires inside, Salim. The men there will not fight fair, and the ground is worse.',
   ],
 }[REGION];

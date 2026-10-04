@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GROUND } from './groundtex.js';
 import { fbm, noise2, smooth, clamp, mulberry32 } from './noise.js';
-import { REGION, IS_MARSH, IS_KARKH, IS_DOCKS, IS_CITY } from './region.js';
+import { REGION, IS_MARSH, IS_KARKH, IS_DOCKS, IS_CITY, IS_HAMRIN } from './region.js';
 
 export const WORLD = 280; // terrain size (units ~ meters)
 const HALF = WORLD / 2;
@@ -14,6 +14,8 @@ const CANAL = {
   karkh: (z) => 21 + Math.sin(z * 0.03) * 5 + Math.sin(z * 0.071) * 1.5,
   // Round 20: the Tigris itself, broad and slow, along the east of the river quays
   docks: (z) => 66 + Math.sin(z * 0.018) * 5 + Math.sin(z * 0.047) * 1.5,
+  // Round 21: the Diyala running down the eastern gorge of the Hamrin hills
+  hamrin: (z) => 98 + Math.sin(z * 0.022) * 6 + Math.sin(z * 0.06) * 2,
 }[REGION];
 export const canalX = CANAL;
 export const CANAL_W = IS_DOCKS ? 46 : 7;
@@ -49,6 +51,14 @@ export const ROADS = {
     [[-8, 60], [-42, 30], [-62, -10], [-44, -60], [-4, -84], [24, -88]],
     [[14, 40], [32, 30]], [[14, -30], [30, -30]],
   ],
+  // Round 21: the deserters' camp -> the quarry (west), the cliff fort (east), the gorge bridge (south) and Zubayr's hold
+  hamrin: [
+    [[-8, 124], [-8, 84], [-24, 62], [-44, 44], [-64, 30]],
+    [[-8, 84], [14, 66], [40, 50], [62, 36]],
+    [[-24, 62], [-12, 32], [2, 2], [16, -30], [36, -64]],
+    [[2, 2], [-20, -24], [-40, -50], [-54, -74]],
+    [[16, -30], [48, -16], [84, -10]],
+  ],
 }[REGION];
 // shallow fords where a causeway dips under the water (marsh)
 const FORDS = IS_MARSH ? [[37, 37, 7], [-42, -14, 6], [41, -48, 6]] : [];
@@ -71,6 +81,8 @@ export const SITES = {
   marsh: { village: { x: 12, z: 80, r: 24 }, serai: { x: -52, z: 28, r: 20 }, kiln: { x: 58, z: -6, r: 20 }, arch: { x: -6, z: -84, r: 26 } },
   karkh: { village: { x: -62, z: 86, r: 20 }, serai: { x: -8, z: 36, r: 24 }, kiln: { x: -58, z: -24, r: 20 }, arch: { x: 44, z: -62, r: 26 } },
   docks: { village: { x: -48, z: 98, r: 20 }, serai: { x: 12, z: 40, r: 24 }, kiln: { x: 16, z: -30, r: 22 }, arch: { x: 20, z: -88, r: 26 } },
+  // Round 21: the hub camp and the four holds' mouths (serai = the quarry, kiln = the fort, arch = the bridge, hold = Zubayr)
+  hamrin: { village: { x: -8, z: 84, r: 24 }, serai: { x: -64, z: 30, r: 15 }, kiln: { x: 62, z: 36, r: 15 }, arch: { x: 36, z: -64, r: 17 }, hold: { x: -54, z: -74, r: 15 } },
 }[REGION];
 // Round 20: wooden decks (jetties) the hero can walk out on over the river: [x0, x1, z, width, y]
 export const DECKS = IS_DOCKS ? [[38, 52, 60, 3.2, 0.25], [38, 52, 20, 3.2, 0.25], [38, 50, -30, 3.6, 0.25], [38, 54, -88, 3.6, 0.3]] : [];
@@ -139,7 +151,30 @@ function docksHeight(x, z) {
   if (dx > half) h += smooth(half + 4, half + 30, dx) * 1.2;
   return h;
 }
-export const rawHeight = IS_MARSH ? marshHeight : IS_DOCKS ? docksHeight : IS_KARKH ? karkhHeight : sawadHeight;
+// Round 21: the Hamrin hills: ridged limestone uplands cut by gorges. The gorge floors (along the roads, round the
+// sites and down the Diyala) are the walkable ground; the rock between them rises in cliffs (walled off, see
+// hamrin.js). HAMRIN_WALK is the height above which the ground is rock face.
+export const HAMRIN_WALK = 2.4;
+export function hamrinOpen(x, z) {
+  const rd = roadDist(x, z), w = 6 + fbm(x * 0.04 + 5, z * 0.04, 2) * 6;
+  let site = 1e9; for (const s of Object.values(SITES)) site = Math.min(site, Math.hypot(x - s.x, z - s.z) - s.r);
+  return Math.max(1 - smooth(w, w + 2.6, rd), 1 - smooth(0, 3, site));
+}
+function hamrinHeight(x, z) {
+  const floor = fbm(x * 0.03, z * 0.03, 3) * 1.1 - 0.1;
+  const rdg = 1 - Math.abs(noise2(x * 0.021 + 3, z * 0.021) * 2 - 1);
+  let ridge = 6.5 + fbm(x * 0.017 + 3, z * 0.017, 4) * 9 + rdg * rdg * 7 + Math.max(0, fbm(x * 0.09, z * 0.09, 2) - 0.5) * 3;
+  // banded badlands: the soft beds weather back into terraces between harder ledges
+  const st = 1.9, q = ridge / st, f = q - Math.floor(q); ridge = (Math.floor(q) + smooth(0.55, 0.95, f)) * st;
+  const open = hamrinOpen(x, z);
+  let h = THREE.MathUtils.lerp(ridge, floor, open);
+  // the Diyala in its own cut gorge to the east, below the cliffs
+  const cd = Math.abs(x - canalX(z));
+  h = THREE.MathUtils.lerp(h, -1.6, 1 - smooth(CANAL_W * 0.35, CANAL_W * 0.8, cd));
+  h += smooth(100, HALF - 4, Math.max(Math.abs(x), Math.abs(z))) * 8;
+  return h;
+}
+export const rawHeight = IS_HAMRIN ? hamrinHeight : IS_MARSH ? marshHeight : IS_DOCKS ? docksHeight : IS_KARKH ? karkhHeight : sawadHeight;
 
 // Height lookup grid (fast, bilinear) used by gameplay.
 const GRID = 256;
@@ -179,6 +214,7 @@ export function fertility(x, z) {
   const cd = Math.abs(x - canalX(z));
   if (IS_KARKH) return clamp(1 - smooth(4, 12, cd), 0, 1) * 0.7;
   if (IS_DOCKS) return x > canalX(z) ? 0.8 : clamp(1 - smooth(4, 40, Math.abs(x + 90)), 0, 1) * 0.5; // gardens on the far bank, a few to the west
+  if (IS_HAMRIN) return clamp(1 - smooth(4, 14, Math.abs(x - canalX(z))), 0, 1) * 0.8 + clamp(smooth(0.45, 0.75, fbm(x * 0.03 + 2, z * 0.03, 3)) * (heightAt(x, z) < 2 ? 0.45 : 0), 0, 1); // tamarisk by the river, steppe grass in the gorges
   return clamp(1 - smooth(6, 34 + fbm(x * 0.03, z * 0.03) * 20, cd), 0, 1);
 }
 
@@ -193,7 +229,7 @@ function makeMask() {
     let site = 0;
     if (IS_CITY) site = Math.max(site, (1 - smooth(2.2, 4.2, rd)) * 0.75);
     if (IS_DOCKS) site = Math.max(site, (1 - smooth(4, 12, Math.abs(x - canalX(z) + CANAL_W / 2 + 4))) * (x < canalX(z) ? 1 : 0)); // the paved quay
-    for (const s of IS_MARSH ? [] : IS_CITY ? [SITES.village, SITES.serai, SITES.arch, ...(IS_DOCKS ? [SITES.kiln] : [])] : [SITES.village, SITES.serai]) site = Math.max(site, 1 - smooth(s.r * 0.5, s.r * 0.9, Math.hypot(x - s.x, z - s.z)));
+    for (const s of IS_MARSH || IS_HAMRIN ? [] : IS_CITY ? [SITES.village, SITES.serai, SITES.arch, ...(IS_DOCKS ? [SITES.kiln] : [])] : [SITES.village, SITES.serai]) site = Math.max(site, 1 - smooth(s.r * 0.5, s.r * 0.9, Math.hypot(x - s.x, z - s.z)));
     const k = (j * S + i) * 4;
     data[k] = road * 255; data[k + 1] = fertility(x, z) * (1 - road) * 255; data[k + 2] = wet * 255; data[k + 3] = site * 255;
   }
@@ -215,12 +251,12 @@ export function createTerrain() {
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, uniforms);
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;')
-      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWPos = (modelMatrix * vec4(transformed,1.0)).xyz;');
+      .replace('#include <common>', '#include <common>\nvarying vec3 vWPos; varying vec3 vWN;')
+      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWPos = (modelMatrix * vec4(transformed,1.0)).xyz; vWN = normalize(mat3(modelMatrix) * objectNormal);');
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
-        #define RG ${IS_MARSH ? 1 : IS_KARKH ? 2 : IS_DOCKS ? 3 : 0}
-        varying vec3 vWPos; uniform sampler2D uMask; uniform float uWorld;
+        #define RG ${IS_MARSH ? 1 : IS_KARKH ? 2 : IS_DOCKS ? 3 : IS_HAMRIN ? 4 : 0}
+        varying vec3 vWPos; varying vec3 vWN; uniform sampler2D uMask; uniform float uWorld;
         float h21(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return fract(p.x*p.y); }
         float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
           return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
@@ -233,6 +269,8 @@ export function createTerrain() {
         // height blend: near the transition the higher surface wins
         #if RG == 1
           const vec3 pebA = vec3(0.40,0.38,0.33), pebB = vec3(0.28,0.25,0.20), pebC = vec3(0.46,0.42,0.36);
+        #elif RG == 4
+          const vec3 pebA = vec3(0.62,0.58,0.52), pebB = vec3(0.44,0.40,0.36), pebC = vec3(0.70,0.62,0.52);
         #elif RG >= 2
           const vec3 pebA = vec3(0.44,0.42,0.40), pebB = vec3(0.24,0.22,0.21), pebC = vec3(0.56,0.42,0.32);
         #else
@@ -261,6 +299,11 @@ export function createTerrain() {
           grass = mix(vec3(0.20,0.29,0.11), vec3(0.33,0.39,0.15), n1); grass = mix(grass, vec3(0.44,0.40,0.21), smoothstep(0.5,0.8,n2)*0.6);
           grass = mix(grass, vec3(0.47,0.40,0.22), smoothstep(0.55,0.8,fb(vWPos.xz*0.06+2.0))*0.55); // dry, yellowed tussocks
           mud = vec3(0.15,0.13,0.10);
+        #elif RG == 4
+          // the Hamrin hills: pale limestone grit, red-brown earth, dry steppe grass yellowed by the summer
+          sand = mix(vec3(0.50,0.43,0.35), vec3(0.58,0.50,0.40), n1); sand = mix(sand, vec3(0.46,0.36,0.28), smoothstep(0.5,0.8,n2)*0.5);
+          dirt = mix(vec3(0.50,0.34,0.24), vec3(0.60,0.42,0.30), n2);
+          grass = mix(vec3(0.50,0.46,0.26), vec3(0.60,0.54,0.30), n1); grass = mix(grass, vec3(0.34,0.38,0.18), smoothstep(0.6,0.85,n2)*0.6);
         #elif RG >= 2
           // al-Karkh: trodden earth and ash, black soot where the fires burned (the quays: the same earth, river silt)
           sand = mix(vec3(0.38,0.35,0.31), vec3(0.47,0.43,0.37), n1);
@@ -323,6 +366,18 @@ export function createTerrain() {
           col = mix(col, vec3(0.55,0.53,0.5), smoothstep(0.62,0.8,fb(vWPos.xz*0.35+9.0))*0.25*(1.0-site));
         #endif
         gRock = smoothstep(0.82,0.62,vNormal.y);
+        #if RG == 4
+          // cliff faces: bedded limestone, banded by height, darker in the joints, streaked where water runs down
+          { float sl = smoothstep(0.88, 0.62, vWN.y);
+            float band = fract(vWPos.y * 0.9 + fb(vWPos.xz * 0.05) * 1.5);
+            vec3 rock = mix(vec3(0.46,0.38,0.30), vec3(0.60,0.50,0.40), fb(vWPos.xz * 0.2 + vWPos.y * 0.3));
+            // alternating beds: red-brown mudstone and pale sandstone
+            rock = mix(rock, vec3(0.56,0.36,0.26), step(0.5, fract(vWPos.y * 0.26 + fb(vWPos.xz * 0.03) * 0.6)) * 0.55);
+            rock = mix(rock, vec3(0.40,0.32,0.26), smoothstep(0.6, 0.9, fb(vWPos.xz * 0.07 + 13.0)) * 0.5);
+            rock *= mix(0.62, 1.0, smoothstep(0.0, 0.12, band) * smoothstep(1.0, 0.88, band));
+            rock *= 1.0 - smoothstep(0.55, 0.9, fb(vec2(vWPos.x * 0.6 + vWPos.z * 0.6, vWPos.y * 0.15))) * 0.25;
+            col = mix(col, rock * mix(0.9, 1.05, dE.r), sl); gDet = mix(gDet, nE, sl * 0.6); }
+        #endif
         float macro = fb(vWPos.xz*0.012+11.0);
         col *= mix(vec3(0.82,0.74,0.66), vec3(1.08,1.02,0.95), smoothstep(0.25,0.75,macro));
         col = mix(col, col*vec3(1.05,0.86,0.72), smoothstep(0.55,0.8,fb(vWPos.xz*0.04+5.0))*0.5*(1.0-gMask.g));
@@ -380,6 +435,7 @@ export function mapColor(x, z) {
   if (IS_MARSH) { const h = heightAt(x, z); return h < DEEP_Y ? '#1e4a4c' : h < WATER_Y ? '#3a6a5e' : roadDist(x, z) < 3 ? '#7a6644' : '#4a5a2a'; }
   const cd = Math.abs(x - canalX(z));
   if (IS_KARKH) return cd < 3 ? '#2a6a6a' : roadDist(x, z) < 3.5 ? '#8a7254' : '#4a3e34';
+  if (IS_HAMRIN) { const h = heightAt(x, z); return cd < 4 ? '#2a6a6a' : h > HAMRIN_WALK ? (h > 9 ? '#8a7a66' : '#6e604e') : roadDist(x, z) < 3.5 ? '#8a7254' : '#5a5236'; }
   if (IS_DOCKS) return cd < CANAL_W / 2 ? '#24585c' : DECKS.some(([x0, x1, dz, w]) => x >= x0 && x <= x1 && Math.abs(z - dz) < w / 2) ? '#7a5a36' : roadDist(x, z) < 3.5 ? '#8a7254' : x > canalX(z) ? '#4a5a2a' : '#5a4e40';
   return cd < 3 ? '#2a6a6a' : (cd < 25 ? '#4a4a26' : '#6a5032');
 }

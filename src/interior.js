@@ -18,7 +18,7 @@ let DOOR = 3.4;
 
 // Round 19: dungeon floors use the baked ground materials (groundtex.js) in world space: worn flagstones or
 // trodden earth with cavity shading and relief, and standing puddles in the wet dungeons
-function floorMat(color, kind, roughness = 1, wet = 0) {
+export function floorMat(color, kind, roughness = 1, wet = 0) {
   const m = new THREE.MeshStandardMaterial({ color, roughness });
   const K = { flag: ['tFlagD', 'tFlagN', '3.4'], earth: ['tEarthD', 'tEarthN', '4.2'], sand: ['tSandD', 'tSandN', '3.4'], road: ['tRoadD', 'tRoadN', '3.0'] }[kind];
   m.onBeforeCompile = (sh) => {

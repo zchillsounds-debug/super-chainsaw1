@@ -43,6 +43,8 @@ import { setupTrials } from './trials.js';
 import { setupCraft } from './craft.js';
 import { setupBench } from './bench.js';
 import { setupRivals } from './rivals.js';
+import { setupHamrin } from './hamrin.js';
+import { setupHolds } from './holds.js';
 import { CombatFX } from './combatfx.js';
 import { Ambient } from './ambient.js';
 import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, IS_CITY, FIRST_ACT, STORY, REGION_NAME } from './region.js';
@@ -60,7 +62,7 @@ let __t0 = performance.now();
 const world = buildWorld(scene);
 console.debug('LOG world ' + (performance.now() - __t0).toFixed(0)); __t0 = performance.now();
 scene.fog = new THREE.FogExp2(0xd4a47a, 0.0048);
-scene.add(skyDome(world.sunDir));
+{ const sky = skyDome(world.sunDir); sky.userData.sky = true; scene.add(sky); }
 scene.environment = envFromSky(renderer, world.sunDir);
 scene.environmentIntensity = 0.4;
 
@@ -119,6 +121,8 @@ setupCompanion(game);
 setupTrials(game);
 setupCraft(game);
 setupRivals(game);
+setupHamrin(game);
+setupHolds(game);
 const combatFx = game.combatFx = new CombatFX(game);
 const ambient = game.ambient = new Ambient(game, QUALITY);
 const tutorial = new Tutorial(game);
@@ -140,6 +144,8 @@ audio.occluded = (pos) => !lineClear(game.player.pos.x, game.player.pos.z, pos.x
 ui.aspects = ASPECTS; ui.sets = SETS; ui.classNames = Object.fromEntries(Object.entries(CLASSES).map(([k, c]) => [k, c.name]));
 if (IS_TOUCH) setupMobile(game, ui);
 if (gtao) game.holeInGBuffer(gtao.normalMaterial);
+// Round 21: compile whatever a hold just added, against the real targets, while the screen is still faded out
+game.warmCompile = async () => { const prev = renderer.getRenderTarget(); try { renderer.setRenderTarget(composer.readBuffer); await renderer.compileAsync(scene, camera); } catch (e) { /* lazily */ } renderer.setRenderTarget(prev); };
 const director = game.director = new Director({ game, camera, ui, audio, grade, bokeh, renderer, scene });
 
 // title-screen cinematic camera
