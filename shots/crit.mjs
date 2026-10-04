@@ -15,6 +15,10 @@ const SC = [
   ['hero', 915, 412, 'play&mobile&q=high&noadapt', '__close(25,3.4,1.7,1.1);__sim(0.3)'],
   ['marsh', 915, 412, 'play&mobile&q=high&noadapt&region=marsh', '__sim(0.5)'],
   ['karkh', 915, 412, 'play&mobile&q=high&noadapt&region=karkh', '__sim(0.5)'],
+  ['hamrin', 915, 412, 'play&mobile&q=high&noadapt&region=hamrin', '__sim(0.5)'],
+  ['hamrinwide', 915, 412, 'play&mobile&q=high&noadapt&region=hamrin', '__game.camZoom=2.4;__sim(1.5)'],
+  ['hamringorge', 915, 412, 'play&mobile&q=high&noadapt&region=hamrin&x=-40&z=40', '__game.player.level=26;__game.recalcStats();__game.player.hp=__game.player.stats.maxHp;'+fight(-40, 40)],
+  ['hamrinfort', 915, 412, 'play&mobile&q=high&noadapt&region=hamrin&x=52&z=40', '__sim(0.5)'],
   ['portrait', 412, 915, 'play&mobile&q=high&noadapt', fight(56, 14)],
 ];
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });

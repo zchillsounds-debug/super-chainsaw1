@@ -1650,13 +1650,13 @@ export class Game {
     const fx = Math.sin(this.camYaw), fz = Math.cos(this.camYaw);
     let k = 1; // pull in toward Salim while rock is in the way
     for (; k > 0.3; k -= 0.1) if (lineClearCam(p.x, p.z, p.x - fx * dist * k, p.z - fz * dist * k)) break;
-    const target = tmp.set(p.x - fx * dist * k, p.y + h * (0.75 + 0.25 * k), p.z - fz * dist * k);
+    const target = tmp.set(p.x - fx * dist * k, p.y + h + (1 - k) * 1.2, p.z - fz * dist * k); // pulled in: rise over his shoulder, never into his head
     if (!this.camInit) { this.camPos.copy(target); this.camInit = true; }
     this.camPos.lerp(target, Math.min(1, dt * 7));
     this.camera.position.copy(this.camPos);
     if (this.camKick) { this.camera.position.addScaledVector(this.camKick, 0.6); this.camKick.multiplyScalar(Math.max(0, 1 - dt * 12)); }
     if (this.shake > 0) { this.shake = Math.max(0, this.shake - dt * 1.8); const s = this.shake * this.shake * 0.5; this.camera.position.x += (Math.random() - 0.5) * s; this.camera.position.y += (Math.random() - 0.5) * s; this.camera.position.z += (Math.random() - 0.5) * s; }
-    const look = tmp2.set(p.x + fx * 2.2, p.y + 1.35, p.z + fz * 2.2);
+    const look = tmp2.set(p.x + fx * 2.2 * k, p.y + 1.35, p.z + fz * 2.2 * k);
     if (L) look.lerp(tmp.set(L.pos.x, L.pos.y + 1.3, L.pos.z), 0.45);
     this.camera.lookAt(look);
     if (Math.abs(this.camera.fov - 52) > 0.01) { this.camera.fov = 52; this.camera.updateProjectionMatrix(); }

@@ -165,7 +165,7 @@ function hamrinHeight(x, z) {
   const rdg = 1 - Math.abs(noise2(x * 0.021 + 3, z * 0.021) * 2 - 1);
   let ridge = 6.5 + fbm(x * 0.017 + 3, z * 0.017, 4) * 9 + rdg * rdg * 7 + Math.max(0, fbm(x * 0.09, z * 0.09, 2) - 0.5) * 3;
   // banded badlands: the soft beds weather back into terraces between harder ledges
-  const st = 1.9, q = ridge / st, f = q - Math.floor(q); ridge = (Math.floor(q) + smooth(0.55, 0.95, f)) * st;
+  const st = 1.9, q = ridge / st, f = q - Math.floor(q); ridge = (Math.floor(q) + smooth(0.72, 0.93, f)) * st;
   const open = hamrinOpen(x, z);
   let h = THREE.MathUtils.lerp(ridge, floor, open);
   // the Diyala in its own cut gorge to the east, below the cliffs
@@ -261,7 +261,7 @@ export function createTerrain() {
         float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
           return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
         float fb(vec2 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*vn(p); p*=2.03; a*=.5; } return s; }
-        vec4 gMask; float gRock; vec4 gDet; float gSand; float gWet = 0.0;
+        vec4 gMask; float gRock; vec4 gDet; float gSand; float gWet = 0.0; float gCliff = 0.0; float gLedge = 0.0;
         uniform sampler2D tSandD, tSandN, tEarthD, tEarthN, tFlagD, tFlagN, tRoadD, tRoadN;
         // anti-tiling: a second lookup turned 90 degrees and shifted, blended in by low-frequency noise
         vec4 gTex(sampler2D t, vec2 uv, float k){ vec4 a = texture2D(t, uv); if (k <= 0.001) return a; vec4 b = texture2D(t, vec2(-uv.y, uv.x) + vec2(0.37, 0.61)); return mix(a, b, k); }
@@ -376,14 +376,23 @@ export function createTerrain() {
             rock = mix(rock, vec3(0.40,0.32,0.26), smoothstep(0.6, 0.9, fb(vWPos.xz * 0.07 + 13.0)) * 0.5);
             rock *= mix(0.62, 1.0, smoothstep(0.0, 0.12, band) * smoothstep(1.0, 0.88, band));
             rock *= 1.0 - smoothstep(0.55, 0.9, fb(vec2(vWPos.x * 0.6 + vWPos.z * 0.6, vWPos.y * 0.15))) * 0.25;
-            col = mix(col, rock * mix(0.9, 1.05, dE.r), sl); gDet = mix(gDet, nE, sl * 0.6); }
+            // the ledge lip of each hard bed juts out: lit on top, a shadowed undercut below it
+            float bed = fract(vWPos.y * 0.52 + fb(vWPos.xz * 0.04) * 0.8);
+            gLedge = (smoothstep(0.0, 0.06, bed) - smoothstep(0.1, 0.22, bed)) * sl;
+            rock *= mix(1.0, 0.55, smoothstep(0.78, 0.98, bed) * sl);
+            rock *= 1.0 + gLedge * 0.25;
+            // fine grain from a vertical (side-on) lookup, so the face never shows the ground's top-down detail
+            float fy = fb(vec2(vWPos.x + vWPos.z, vWPos.y * 3.0) * 1.3);
+            rock *= 0.86 + fy * 0.28;
+            gCliff = sl;
+            col = mix(col, rock, sl); gDet = mix(gDet, vec4(0.5, 0.5, 1.0, 1.0), sl); }
         #endif
         float macro = fb(vWPos.xz*0.012+11.0);
         col *= mix(vec3(0.82,0.74,0.66), vec3(1.08,1.02,0.95), smoothstep(0.25,0.75,macro));
         col = mix(col, col*vec3(1.05,0.86,0.72), smoothstep(0.55,0.8,fb(vWPos.xz*0.04+5.0))*0.5*(1.0-gMask.g));
         col *= 0.94 + 0.12*n3;
         // baked cavity: dark crevices between stones, under pebbles and in cracks
-        col *= mix(1.0, nB.b, 0.85);
+        col *= mix(1.0, nB.b, 0.85 * (1.0 - gCliff));
         #if RG == 1
           // standing water in the low, trodden ground of the marsh
           gWet = smoothstep(0.6, 0.72, fb(wq*0.11 + 7.0) + (0.5 - dS.a)*0.3) * (1.0 - kGrass) * (1.0 - kSite);
@@ -414,6 +423,12 @@ export function createTerrain() {
           float e = 0.6; float h0 = fb(q*0.18);
           g += vec2(fb((q+vec2(e,0.))*0.18)-h0, fb((q+vec2(0.,e))*0.18)-h0) / e * 0.35 * rip;
           vec3 wn = normalize(vec3(-g.x, 1.0, -g.y));
+          #if RG == 4
+            // cliff faces: tip the normal up on the ledge lips (they catch the sun) and break the face side-on
+            { float e2 = 0.35; vec2 qs = vec2(vWPos.x + vWPos.z, vWPos.y * 3.0) * 1.3; float f0 = fb(qs);
+              vec3 fn = normalize(vWN + vec3(0.0, gLedge * 1.4, 0.0) + normalize(vec3(vWN.z, 0.0, -vWN.x) + 1e-4) * (fb(qs + vec2(e2, 0.0)) - f0) / e2 * 0.5);
+              wn = normalize(mix(wn, vec3(0.0, 1.0, 0.0) + (fn - normalize(vWN)), gCliff)); }
+          #endif
           vec3 vn2 = normalize((viewMatrix * vec4(wn,0.0)).xyz);
           normal = normalize(normal + (vn2 - (viewMatrix*vec4(0,1,0,0)).xyz));
         }

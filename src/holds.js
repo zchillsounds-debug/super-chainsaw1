@@ -340,7 +340,7 @@ export function buildHold(scene, id) {
       I.torches.push({ pos: V(x, 0.4, z), light: V(x, 1.2, z), intensity: 0.8, fire: true });
       colliders.push({ type: 'circle', x, z, r: 0.9, interior: true });
     }
-    if (ch === 'E') I.entrance = V(x, 0, z + 1);
+    if (ch === 'E') { I.entrance = V(x, 0, z + 1); I.start = V(x, 0, z - 2.5); } // he arrives a step in, so the camera has room behind him
     if (ch === 'm' || ch === 'a') I.spawns.push({ kind: ch, x, z });
     if (ch === 'M') I.midAt = V(x, 0, z);
     if (ch === 'B') I.bossAt = V(x, 0, z);
@@ -577,7 +577,7 @@ export function setupHolds(g) {
       if (T && !T.opened) return [T.pos, 'Open the master\'s chest'];
       return [I.entrance, 'Climb back out of the hold'];
     };
-    p.pos.copy(s.lastFire != null && I.fires[s.lastFire] ? I.fires[s.lastFire].pos.clone().add(V(0, 0, 2)) : I.entrance); p.target = null; p.moveTo = null; p.vel?.set(0, 0, 0);
+    p.pos.copy(s.lastFire != null && I.fires[s.lastFire] ? I.fires[s.lastFire].pos.clone().add(V(0, 0, 2)) : I.start); p.target = null; p.moveTo = null; p.vel?.set(0, 0, 0);
     g.camInit = false; g.camAction = true; g.lighting?.set('gorge', 0);
     for (const o of g.world.staticRoots || []) { o.userData.wasVis = o.visible; o.visible = !!o.userData.sky; }
     g.world.cullPaused = true;
@@ -701,7 +701,7 @@ export function setupHolds(g) {
     p.dead = false; p.st.dead = false; p.rig.children[0].rotation.x = 0; p.rig.children[0].position.y = 0;
     p.hp = p.stats.maxHp; p.mp = p.stats.maxMp; p.invuln = 2; p.target = null; p.moveTo = null; p.gold = Math.floor(p.gold * 0.95);
     const F = s.lastFire != null ? I.fires[s.lastFire] : null;
-    p.pos.copy(F ? F.pos.clone().add(V(0, 0, 2)) : I.entrance);
+    p.pos.copy(F ? F.pos.clone().add(V(0, 0, 2)) : I.start);
     g.holdArena = null; ringM.visible = false; g.ui.bossBar(null);
     for (const e of g.interior.enemies) if (e.holdBoss && !e.dead) { e.hp = e.maxHp; e.engaged = false; e.p2 = false; e.mv = null; e.curMove = null; e.st.action = null; e.moves = [...e.holdBoss.moves]; e.cds = {}; e.pos.copy(e.holdKey === 'mid' ? I.midAt : I.bossAt); e.ghost = false; e.rig.visible = true; }
     for (const e of g.interior.enemies) if (e.summoned && !e.dead) { g.scene.remove(e.rig); e.removed = true; e.dead = true; }

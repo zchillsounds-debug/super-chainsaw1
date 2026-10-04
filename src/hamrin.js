@@ -118,7 +118,7 @@ export function buildHamrin(scene, rnd, out) {
   const rk = [], sh = [], gr = [], big = [];
   for (let i = 0; i < 2600; i++) {
     const x = (rnd() - 0.5) * 262, z = (rnd() - 0.5) * 262, h = rawHeight(x, z);
-    if (h > HAMRIN_WALK + 4) { if (rnd() < 0.08) big.push({ x, y: h - 0.4, z, s: 1.2 + rnd() * 2.2 }); continue; }
+    if (h > HAMRIN_WALK + 4) { if (rnd() < 0.08) big.push({ x, y: h - 0.3, z, s: 0.8 + rnd() * 0.8, sx: 1.3 + rnd() * 0.5, sy: 0.45 + rnd() * 0.2, ry: rnd() * 6.3 }); continue; }
     if (Math.abs(x - canalX(z)) < 8 || roadDist(x, z) < 2.4 || blocked(x, z, 0.5)) continue;
     const nearCliff = rawHeight(x + 3, z) > HAMRIN_WALK || rawHeight(x - 3, z) > HAMRIN_WALK || rawHeight(x, z + 3) > HAMRIN_WALK || rawHeight(x, z - 3) > HAMRIN_WALK;
     const y = heightAt(x, z);
@@ -127,7 +127,18 @@ export function buildHamrin(scene, rnd, out) {
     else if (rnd() < 0.5) gr.push({ x, y, z });
     else if (rnd() < 0.04) rk.push({ x, y: y - 0.05, z, s: 0.2 + rnd() * 0.4 });
   }
-  const R = rocks(rk, 21, 0xd8ccb8); scene.add(R); const RB = rocks(big, 23, 0xc8b8a0); RB.castShadow = false; scene.add(RB);
+  // bedded slabs jutting from the cliff faces (the hard beds weather out as ledges), and talus fallen from them
+  const slab = [];
+  for (let i = 0; i < 5200 && slab.length < 600; i++) {
+    const x = (rnd() - 0.5) * 262, z = (rnd() - 0.5) * 262, h = rawHeight(x, z);
+    if (h < HAMRIN_WALK + 0.6) continue;
+    const gx = rawHeight(x + 1, z) - rawHeight(x - 1, z), gz = rawHeight(x, z + 1) - rawHeight(x, z - 1), sl = Math.hypot(gx, gz) / 2;
+    if (sl < 0.9) continue;
+    const s0 = 0.5 + rnd() * 0.6, sy = 0.3 + rnd() * 0.15; slab.push({ x, y: h - s0 * sy * 0.35, z, s: s0, sx: 1.5 + rnd() * 0.6, sy, ry: Math.atan2(gx, gz) + (rnd() - 0.5) * 0.6 });
+    if (rnd() < 0.35) { const k = 2 + rnd() * 3, tx = x - gx / (sl * 2) * k, tz = z - gz / (sl * 2) * k; if (rawHeight(tx, tz) < HAMRIN_WALK && !blocked(tx, tz, 0.6) && roadDist(tx, tz) > 3) rk.push({ x: tx, y: heightAt(tx, tz) - 0.1, z: tz, s: 0.4 + rnd() * 0.9 }); }
+  }
+  const RS = rocks(slab, 27, 0xe0d0b4); RS.castShadow = true; scene.add(RS);
+  const R = rocks(rk, 21, 0xd8ccb8); scene.add(R); const RB = rocks(big, 23, 0xdccab0); RB.castShadow = false; scene.add(RB);
   scene.add(shrubs(sh, 24)); scene.add(grassField(gr, 'dry', 25));
   for (let i = 0; i < 18; i++) { const x = (rnd() - 0.5) * 240, z = (rnd() - 0.5) * 240; if (rawHeight(x, z) > HAMRIN_WALK || roadDist(x, z) < 3 || blocked(x, z, 1.5)) continue; place(scene, deadTree(rnd), x, z, rnd() * 6, false); colliders.push({ type: 'circle', x, z, r: 0.4 }); }
   // tamarisk along the Diyala far below the eastern cliffs

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { mulberry32, noise2 } from './noise.js';
 import { triplanarMaterial } from './triplanar.js';
 import { mudBrick } from './textures.js';
@@ -184,7 +184,8 @@ export function grassField(points, kind = 'grass', seed = 2) {
 // ---------------------------------------------------------------- rocks
 export function rocks(points, seed = 3, color = 0xf4e6d4) {
   const rnd = mulberry32(seed);
-  const g = new THREE.IcosahedronGeometry(1, 2);
+  let g = new THREE.IcosahedronGeometry(1, 2);
+  g.deleteAttribute('normal'); g.deleteAttribute('uv'); g = mergeVertices(g); // shared vertices: smooth weathered faces, not facets
   const p = g.attributes.position;
   for (let i = 0; i < p.count; i++) {
     const v = new THREE.Vector3().fromBufferAttribute(p, i);
@@ -199,7 +200,7 @@ export function rocks(points, seed = 3, color = 0xf4e6d4) {
   const d = new THREE.Object3D();
   points.forEach((pt, i) => {
     d.position.set(pt.x, pt.y, pt.z); d.rotation.set(rnd(), rnd() * 6, rnd() * 0.4);
-    const s = pt.s ?? (0.3 + rnd() * 1.2); d.scale.set(s * (0.8 + rnd() * 0.5), s, s * (0.8 + rnd() * 0.5)); d.updateMatrix();
+    const s = pt.s ?? (0.3 + rnd() * 1.2); d.scale.set(s * (0.8 + rnd() * 0.5) * (pt.sx ?? 1), s * (pt.sy ?? 1), s * (0.8 + rnd() * 0.5) * (pt.sx ?? 1)); if (pt.ry !== undefined) d.rotation.set(rnd() * 0.12, pt.ry, rnd() * 0.12); d.updateMatrix();
     m.setMatrixAt(i, d.matrix);
   });
   m.castShadow = true; m.receiveShadow = true;
