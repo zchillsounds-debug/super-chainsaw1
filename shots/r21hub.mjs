@@ -44,7 +44,7 @@ if (hasSpots) {
   await shot('cast');
   log.push(await pg.evaluate(() => { const g = __game, H = g.hubLife; if (!H.F) H.cast(H.fishSpots[0]); let n = 0; while (H.F?.phase === 'wait' && n++ < 100) __sim(0.1); const ph = H.F?.phase; H.strike(); return `after ${(n * 0.1).toFixed(1)} s: ${ph}, struck -> ${H.F?.phase}`; }));
   // play it: tap only when the needle is in the zone
-  log.push(await pg.evaluate(() => { const g = __game, H = g.hubLife, p = g.player, f = H.F.fish; let n = 0; const c0 = p.fish[f] || 0;
+  log.push(await pg.evaluate(() => { const g = __game, H = g.hubLife, p = g.player; if (!H.F) return 'the fish got away before the reel (strike timing)'; const f = H.F.fish; let n = 0; const c0 = p.fish[f] || 0;
     while (H.F && n++ < 400) { __sim(0.03); const F = H.F; if (F && Math.abs(F.nd - F.zone) < F.zw / 2 * 0.6) H.strike(); }
     return `landed ${f}: ${c0} -> ${p.fish[f]} msg "${document.querySelector('#fishing .fmsg').textContent}"`; }));
   await shot('landed');

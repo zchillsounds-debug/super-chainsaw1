@@ -402,12 +402,9 @@ The user approved the full plan: everything on the Round 20 menu, a **post-game 
    - Checked front, side and back on High (simulated) and Low (kinematic).
 
 ### Remaining
-1. **Test sweep, part done.** `shots/sweep.sh` runs everything in order (one vite via `withvite.sh`; about 2 h in all).
-   - **Passed, no errors:** r15test ×4 (sawad, marsh, karkh, docks), r16test ×4, r17test sawad and marsh.
-   - **Still to run:** r17test karkh and docks, r18test ×4 classes, ngtest, traveltest (now includes the Hamrin leg: docks → Hamrin → docks), finaletest sawad/karkh/docks, trialtest, crafttest, benchtest, r21comp, r21rival ×3, r21mount, r21holds ×4, r21rift, r21hub marsh/docks, and `perf.mjs` (High hub about 570 draws; Low, Hamrin, docks).
-   - Run it in two halves so neither passes the two-hour limit on background jobs.
-2. **Publish the Artifact:** `npx vite build`, `node shots/inline.mjs out.html`, read https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c, then publish `out.html` with that `url`. Not done yet.
-3. **APK:** trigger `apk.yml` on the branch, wait for `apk-builds` to show the new short SHA, send it.
+1. **Test sweep: done, all clean** (Round 21 close-out session). Every test in `shots/sweep.sh` passed, plus traveltest and r18test naffat rerun after the robe fix. r21hub marsh failed once when the hooked fish got away before the reel step; the test now handles that (it passed on rerun). Perf: High Sawad hub 679 draws, Low 372, Hamrin 460, docks 623.
+2. **Artifact published** (version 18 of https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c), touch UI checked on the inlined build.
+3. **APK:** built by CI from the `claude/artifact-session-2nd2ew` push.
 4. Optional polish:
    - The falcon is small and blobby on the shoulder.
    - The forge prop sits right behind Bishr.
