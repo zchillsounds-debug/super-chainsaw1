@@ -437,7 +437,7 @@ export class Game {
   pickHover() {
     let best = null, bd = 46;
     for (const e of this.enemies) {
-      if (e.dead || e.hidden || e.rig.visible === false) continue;
+      if (e.dead || e.hidden || e.ghost || e.rig.visible === false) continue;
       if (e.pos.distanceTo(this.player.pos) > 40) continue;
       const sp = this.ui.project(tmp.copy(e.pos).setY(e.pos.y + (e.boss ? 4 : 1.1)), this.camera);
       const d = Math.hypot(sp.x - this.mouseScreen.x, sp.y - this.mouseScreen.y) / (e.boss ? 3 : 1);
@@ -466,7 +466,7 @@ export class Game {
 
   // o: { weight (hit-stop / kick / knockback scale), stagger (poise damage), knock (metres), unblockable }
   damageEnemy(e, dmg, crit, src, kind = 'normal', o = {}) {
-    if (e.dead || e.hidden) return;
+    if (e.dead || e.hidden || e.ghost) return;
     const tick = kind === 'dot';
     const p = this.player, w = o.weight ?? this.kit.weight;
     e.alerted = true; e.lost = 0;
@@ -729,7 +729,7 @@ export class Game {
     if (this.hover && !this.hover.dead && this.hover.pos.distanceTo(p.pos) < r) return this.hover;
     if (p.target && !p.target.dead && p.target.pos.distanceTo(p.pos) < r) return p.target;
     let best = null, bd = r;
-    for (const e of this.enemies) { if (e.dead || e.hidden) continue; const d = e.pos.distanceTo(p.pos); if (d < bd) { bd = d; best = e; } }
+    for (const e of this.enemies) { if (e.dead || e.hidden || e.ghost) continue; const d = e.pos.distanceTo(p.pos); if (d < bd) { bd = d; best = e; } }
     return best;
   }
   // camera impulse in world space (decays in updateCamera)
@@ -1132,7 +1132,7 @@ export class Game {
         if (joyOn) goal = { x: p.pos.x + this.joy.x * 3, y: p.pos.y, z: p.pos.z + this.joy.y * 3 };
         if (atkHeld && !p.target) { const e = this.pickTarget(this.kit.attack.kind === 'melee' ? 4 : this.kit.attack.range); if (e) p.target = e; }
       }
-      if (p.target && (p.target.dead || p.target.hidden)) p.target = null;
+      if (p.target && (p.target.dead || p.target.hidden || p.target.ghost)) p.target = null;
       if (p.target) { const dd = p.pos.distanceTo(p.target.pos); if (dd < (p.tgtBest ?? 1e9) - 0.5) { p.tgtBest = dd; p.tgtStall = 0; } else p.tgtStall = (p.tgtStall || 0) + dt; if (p.tgtStall > 4 && dd > 3) { p.target = null; p.tgtStall = 0; p.tgtBest = undefined; } } else { p.tgtBest = undefined; p.tgtStall = 0; }
       const A = this.kit.attack;
       const steering = !!goal;
@@ -1308,7 +1308,7 @@ export class Game {
       const dist = e.pos.distanceTo(p.pos);
       // only rigs inside the top-down view (plus a margin) are drawn and skinned
       const vdx = Math.abs(e.pos.x - p.pos.x), vdz = e.pos.z - p.pos.z;
-      const vz = Math.max(1, this.camZoom) * (this.camZoom < 0.85 ? 1.5 : 1); e.rig.visible = vdx < 30 * vz && vdz > -36 * vz && vdz < 20 * Math.max(1, this.camZoom) || (e.boss && dist < 60);
+      const vz = Math.max(1, this.camZoom) * (this.camZoom < 0.85 ? 1.5 : 1); e.rig.visible = !e.ghost && !e.removed && (vdx < 30 * vz && vdz > -36 * vz && vdz < 20 * Math.max(1, this.camZoom) || (e.boss && dist < 60));
       if (e.rig.visible) setCharLOD(e.rig, dist > 15 && !this.cinematic);
       if (e.dead) {
         e.st.deadT += dt; e.deadT += dt;

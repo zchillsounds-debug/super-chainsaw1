@@ -80,7 +80,10 @@ CLIPS.aimXbow = [[0, null], [0.25, { shR: [-1.35, 0.35, 0.1], elR: [-1.25, 0, 0]
 { const w = { shR: [-1.25, -0.45, 0.25], elR: [-2.35, 0, 0], hR: [0.3, 0, 0], neck: [-0.12, 0, 0], head: [-0.12, 0, 0], chest: [-0.05, 0, 0], jaw: 0.08 };
   CLIPS.whistle = [[0, null], [0.28, w, 'io'], [0.78, w, 'lin'], [1, null, 'io']];
   const pt = { shR: [-1.55, 0.1, 0.05], elR: [-0.08, 0, 0], hR: [-0.1, 0, 0], chest: [0, 0.18, 0], neck: [0, 0.15, 0] };
-  CLIPS.point = [[0, null], [0.25, pt, 'snap'], [0.8, pt, 'lin'], [1, null, 'io']]; }
+  CLIPS.point = [[0, null], [0.25, pt, 'snap'], [0.8, pt, 'lin'], [1, null, 'io']];
+  // both hands into the chest of someone too close: a shove
+  CLIPS.shove = [[0, null], [0.4, { shR: [-0.5, 0, 0.3], elR: [-1.9, 0, 0], shL: [-0.5, 0, -0.3], elL: [-1.9, 0, 0], chest: [-0.1, 0, 0], drop: 0.06 }, 'io'],
+    [0.55, { shR: [-1.45, 0, 0.15], elR: [-0.2, 0, 0], shL: [-1.45, 0, -0.15], elL: [-0.2, 0, 0], chest: [0.2, 0, 0], spine: [0.1, 0, 0], lunge: 0.25, drop: 0.04, jaw: 0.4 }, 'snap'], [1, null, 'io']]; }
 const COMBO = ['slashA', 'slashB', 'chop'];
 // which moves an action cycles through, by weapon; a chain resets after a pause
 const VARIANTS = { attack: { sword: COMBO, mallet: ['chop', 'slashA', 'chop'], dagger: ['stabA', 'stabB', 'stabC'], spear: ['thrust', 'thrustHigh', 'sweep'] }, thrust: ['thrust', 'thrustHigh', 'sweep'], shoot: ['shoot', 'shootQuick', 'shootKneel'], throw: ['throw', 'throwSide', 'throwLow'] };
