@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { humanoid, animateHumanoid, camel, animateCamel } from './characters.js';
+import { humanoid, animateHumanoid, camel, animateCamel, horse, animateHorse } from './characters.js';
+import { IS_CITY } from './region.js';
 import { heightAt } from './terrain.js';
 import { HUB } from './region.js';
 import { resolve } from './collision.js';
@@ -63,8 +64,9 @@ export function setupCompanion(g) {
   function despawn() { if (C) { g.scene.remove(C.rig); C = null; g.companion = null; } btn.classList.add('hide'); camelRig.visible = false; }
   const maxHp = () => Math.round((p.stats?.maxHp || 100) * 0.8);
   // his own camel, made at load and hidden; shown while Salim rides and the guard follows
-  const camelRig = camel(0xa88050, 0x6a1a14); camelRig.visible = false; g.scene.add(camelRig);
-  const cst = { phase: 0, walkBlend: 0, seed: 2.7 }, seat = new THREE.Vector3(-0.05, -0.03, 0);
+  const camelRig = IS_CITY ? horse(0x3a2a20, 0x6a1a14) : camel(0xa88050, 0x6a1a14); camelRig.visible = false; g.scene.add(camelRig);
+  const ride = IS_CITY ? animateHorse : animateCamel;
+  const cst = { phase: 0, walkBlend: 0, seed: 2.7, speedK: 1.5 }, seat = IS_CITY ? new THREE.Vector3(0.02, -0.66, 0) : new THREE.Vector3(-0.05, -0.03, 0);
 
   // ---------------- wounds: foes call this when a blow lands on him (game.js updateEnemies)
   g.hurtCompanion = (dmg, from) => {
@@ -206,7 +208,7 @@ export function setupCompanion(g) {
     if (riding !== !!C.st.mounted) { C.st.mounted = riding; g.fx.dust(C.pos, 8, 1); if (!riding) { C.rig.position.copy(C.pos); } }
     if (riding) {
       camelRig.position.copy(C.pos); camelRig.rotation.y = C.facing - Math.PI / 2;
-      cst.walkBlend = C.st.walkBlend; cst.phase += dt * (moving ? spd * 0.8 : 0); animateCamel(camelRig, cst, g.t); camelRig.updateMatrixWorld(true);
+      cst.walkBlend = C.st.walkBlend; cst.phase += dt * (moving ? spd * 0.8 : 0); ride(camelRig, cst, g.t); camelRig.updateMatrixWorld(true);
       camelRig.userData.parts.body.localToWorld(tmp.copy(seat)); C.rig.position.copy(tmp);
     } else C.rig.position.copy(C.pos);
     C.rig.rotation.y = C.facing;
