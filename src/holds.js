@@ -571,9 +571,9 @@ export function setupHolds(g) {
     // the trail: the captain halfway, the fire beyond him, the master, his chest, then the way out
     I.objective = () => {
       const st = state(id), mid = g.interior.enemies.find((e) => e.holdKey === 'mid' && !e.dead), boss = g.interior.enemies.find((e) => e.holdKey === 'boss' && !e.dead), T = I.chests.find((c) => c.kind === 'T');
-      if (mid) return [mid.pos, 'Defeat ' + t(mid.name)];
+      if (mid) return [mid.pos, `${t('Defeat')} ${t(mid.name)}`];
       const nextFire = I.fires.find((f) => !f.lit && f.pos.z < (I.midAt?.z ?? 0)); if (nextFire && boss) return [nextFire.pos, 'Light the campfire ahead'];
-      if (boss) return [boss.pos, 'Defeat ' + t(boss.name)];
+      if (boss) return [boss.pos, `${t('Defeat')} ${t(boss.name)}`];
       if (T && !T.opened) return [T.pos, 'Open the master\'s chest'];
       return [I.entrance, 'Climb back out of the hold'];
     };
