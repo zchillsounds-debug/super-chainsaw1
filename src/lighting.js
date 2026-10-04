@@ -23,7 +23,7 @@ export const PRESETS = {
   haze: { sun: v(-0.7, 0.36, 0.42), sunCol: c(0xffc090), sunI: 2.7, hemiSky: c(0xa8a098), hemiGnd: c(0x4a3e34), hemiI: 0.55, fog: c(0x8a7c70), fogD: 0.0066, exp: 1.0, env: 0.32, hero: 4, vol: 0.04, fire: 1.25,
     sky: { zen: c(0x3e4458), mid: c(0x9a8478), hor: c(0xd8a078), gnd: c(0x4a3a30), glow: c(0xff9a50), cloud: c(0xb09080), stars: 0, disk: 12 }, water: c(0xc89a78), dusk: 0.08, lut: 6 },
   // Round 21: the Hamrin hills in the late afternoon: clear high air, a cooler sky, long shadows off the ridges
-  highland: { sun: v(-0.62, 0.48, 0.42), sunCol: c(0xffd2a0), sunI: 3.1, hemiSky: c(0xb4c0d4), hemiGnd: c(0x6a5440), hemiI: 0.55, fog: c(0xb8b4b0), fogD: 0.0042, exp: 0.98, env: 0.4, hero: 1.5, vol: 0.028, fire: 1,
+  highland: { sun: v(-0.62, 0.48, 0.42), sunCol: c(0xffd2a0), sunI: 3.1, hemiSky: c(0xb4c0d4), hemiGnd: c(0x5a4434), hemiI: 0.48, fog: c(0xa8a098), fogD: 0.0034, exp: 0.9, // Round 22: less washed out env: 0.4, hero: 1.5, vol: 0.028, fire: 1,
     sky: { zen: c(0x2a5aa0), mid: c(0xa8b0c0), hor: c(0xf0c8a0), gnd: c(0x6a5440), glow: c(0xffb070), cloud: c(0xf8e0c8), stars: 0, disk: 18 }, water: c(0xc8d0d8), dusk: 0.02, lut: 0 },
   // inside the holds: the gorges at evening, deep in shadow under a bright strip of sky
   gorge: { sun: v(-0.4, 0.72, 0.55), sunCol: c(0xffc490), sunI: 2.8, hemiSky: c(0xa4acc4), hemiGnd: c(0x6a5440), hemiI: 1.0, fog: c(0x9a8a80), fogD: 0.0085, exp: 1.12, env: 0.36, hero: 5, vol: 0.035, fire: 1.3,

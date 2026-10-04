@@ -402,49 +402,14 @@ The user approved the full plan: everything on the Round 20 menu, a **post-game 
    - The swing clamp now runs before collision. The hem is cut fuller (flare 0.15) and deeper at the back so the seat stays inside. Steps are 0.82× as long in a long robe.
    - Checked front, side and back on High (simulated) and Low (kinematic).
 
-### Remaining
-1. **Test sweep: done, all clean** (Round 21 close-out session). Every test in `shots/sweep.sh` passed, plus traveltest and r18test naffat rerun after the robe fix. r21hub marsh failed once when the hooked fish got away before the reel step; the test now handles that (it passed on rerun). Perf: High Sawad hub 679 draws, Low 372, Hamrin 460, docks 623.
-2. **Artifact published** (version 18 of https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c), touch UI checked on the inlined build.
-3. **APK:** built by CI from the `claude/artifact-session-2nd2ew` push.
-4. Optional polish:
-   - The falcon is small and blobby on the shoulder.
-   - The forge prop sits right behind Bishr.
-   - The set craft section is below the fold in the Craft tab.
-   - Translate the old set-piece names.
-
-### Notes
-- Naming rule: avoid names of religious figures (no Hamza, 'Ali, etc.).
-- The holds' interior lives at x 160–280. `g.interior.hold` is true there; the sky stays visible (`userData.sky`).
-- `game.killEnemy` is wrapped by `rivals.js`: a non-final Zubayr never dies.
-
-## Round 22: approved plan and status (in progress)
-
-**Standing rule from the user:** when the chat's context reaches about 300k tokens, write a handoff (this file plus the paste prompt at the top) so a new chat can continue and save tokens.
-
-**User decisions:** the holds, 2 per region; a mix of story and optional (one per act on the story path); Hamrin holds stay as the top tier of one system; the close camera is a setting usable anywhere; every gameplay, graphics and feature option (combat feel, enemies and AI, controls and targeting, pacing and difficulty; characters and faces, world and lighting, combat effects, hold interiors; hold puzzles and secrets, new enemy types, new skills, carried-over polish); ship once at the end.
-
-### Done (committed, tested unless noted)
-1. **Holds in the act regions** (`holds.js`, data in `holdmaps.js`: `MAPS22`, `HOLDS22`, `BOSS22`).
-   - Eight maps: Sawad caravan (The Sand-Choked Khan) + kilnpits (story, Hisham); marsh reedisle (story, Sahl) + weir; Karkh lanes (story, Layth) + undercroft; docks hulk (story, Mus'ab) + warehouse. 16 new captains.
-   - Kits per hold (`kit`: rock, brick, reed, timber) and drops (`drop`: deep, pit, water). New tiles: `h` loose stones (a glint shows them within 8 m), `L` lever, `D` portcullis, `b` sunken bridge (both raised by the lever), `K` pressure plate (hurts Salim and foes), `o` shallows (slow). Legend in `holdmaps.js`.
-   - Doors on the map (`g.holdDoors`, `holdDoor()`), found as waypoints (interactable `area`). Level = max(hold level, Salim's level). Hamrin holds keep their formula and drop one extra legendary.
-   - Story holds: the act's second lieutenant is parked out of the field (`e.parked`, skipped in `updateEnemies`) and stands at the hold's end (`storyIn`); his death is the act's own (killEnemy plays his scene and checkpoint). Hisham and Layth keep their special fights; Sahl and Mus'ab get hold moves (`STORY_MOVES`). The quest texts for the second lieutenants now point to the holds.
-   - Optional holds are daily bounty "clear" targets (`g.onHoldCleared`).
-   - Codex entries (khans, claypits, reedisles, weirs, lanes, vaults, hulks, bales). Arabic in `story22_ar.js` (`AR22`).
-   - Tests: `node shots/holdcheck.mjs` (maps can be finished, pure data) and `node shots/r22holds.mjs <id> [out]` (passed: kilnpits, caravan, weir, lanes, undercroft, hulk; reedisle, warehouse and hulk being rerun after fixes).
-2. **Gameplay** (`feel22.js`, `foes22.js`).
-   - Foes: hookman (drags Salim along a marked line), pavise shield-bearer (blocks frontal blows; a heavy blow, a skill or a side hit breaks his guard; walks a bowman behind him), sling-lad (runs when you close in). Mixed into packs by `mixPack` in `game.spawnPack`.
-   - Pack leaders (packs of 4 or more): red pennant, +20% damage to his men; when he dies they falter. `shapePack` (also applies difficulty to life).
-   - Smarter `pickTarget` (facing or joystick direction, wounded, last target, leaders; sticky). Hit-stop ×1.35 plus a beat on kills; parry window 0.26 s (`game.js`), the parry cue rings and buzzes, and a parry restores a little life and mana.
-   - Settings → Controls: Camera (Overhead / Close) and Difficulty (Story / Normal / Hard; `DIFFICULTY` in `foes22.js`). The close camera keeps above terrain outside.
-   - Test: `node shots/r22feel.mjs [region]` (not yet run).
-3. **Features:** level-25 skills (`classes.js` `ALT_SKILLS`): Shield Rush (Faris), Piercing Shot (Rami), Wall of Fire (Naffat), Shadow Step ('Ayyar). Craft tab: set pieces first once a recipe is known. Forge prop moved away from Bishr. Arabic for old set-piece names and "Walking".
-4. **Graphics so far:** falcon rebuilt (`hublife.js` `falconRig`, folded wings, 1.3× size; needs a look in shots); `fx.naftBurst`, hotter sparks and fire core.
-
-### Remaining
-- Run `r22feel`, then a critique pass with shots: faces and characters, town lighting at dusk and night (Karkh, docks), the Hamrin overworld (still washed out?), hold interiors per kit, effects, falcon, forge.
-- Full sweep (`shots/sweep.sh` in two halves) plus `r22holds` for all 8 and `r22feel`; add them to `sweep.sh`.
-- Publish the Artifact, push, APK via CI (trigger `apk.yml` by hand: the session branch is `ccr-...`), new handoff.
+### Remaining (pick up here)
+1. **Fix first: Shield Rush and Wall of Fire still deal 0 damage** in `r22feel.mjs` (Piercing Shot 80, Shadow Step 484). They now use `g.after` (game time), so look at whether `useSkill('s4')` actually fires them (loadout/s4 slot, mana, cooldown) or whether `alive()` / the hit test misses. Background: `node shots/r22feel.mjs sawad` after renaming the new skills to `rush` / `longshot` (the old ids clashed with Faris's `bash` and Rami's `pierce`) and moving them onto game-time timers (`g.after(sec, fn)` in `feel22.js`). Before the fix Shield Rush and Wall of Fire dealt 0 damage under `__sim` because they used `setTimeout`.
+2. **All 8 holds passed** `r22holds.mjs`. Since that run, the only change is the reed/timber wall texture fix (`K.woodT`; `K.wood` was the chest material). Rerun reedisle once to confirm the "reading 'elements'" error is gone.
+3. **Graphics critique** (shots in `node shots/crit.mjs <out> <names>`; new scenes: karkhnight, docksdusk, falcon, face, door):
+   - Hamrin overworld still looked pale and flat. Just changed `highland` in `lighting.js` (exp 0.9, fog 0.0034, darker ground): re-shoot hamrin and hamrinwide.
+   - Falcon: the shot's camera was on the wrong side, so she wasn't visible. Try `__close(-70, ...)` and check the folded wings and size.
+   - Still to judge or do: faces (face.png), town lighting (karkhnight, docksdusk), hold interiors per kit (`r22holds.mjs <id> <outdir>` takes shots), effects, forge placement. The Naffat's torch flame reads as a big flat cone up close.
+4. **Ship:** full sweep (`sh shots/testvite.sh`, then `shots/sweep.sh` in two halves; it now includes holdcheck, r22holds ×8 and r22feel ×2), publish the Artifact, push, trigger `apk.yml` on the session branch and send the APK, then write the next handoff.
 
 **Test server note:** use `sh shots/testvite.sh` to (re)start a dev server on :5173 that never reloads mid-run (`shots/vite.test.config.js`); restart it after editing `src/`. The normal `npx vite` reloads the page on every save and kills running tests.
 
