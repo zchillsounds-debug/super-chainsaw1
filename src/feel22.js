@@ -36,8 +36,10 @@ export function setupFeel22(g) {
     }
     return best;
   };
+  // game-time timers (they pause with the game and run under __sim in tests, unlike setTimeout)
+  const timers = []; g.after = (sec, fn) => timers.push({ t: sec, fn });
   const prevTick = g.tickExtra;
-  g.tickExtra = (dt) => { prevTick?.(dt); g.lastTargetT = Math.max(0, (g.lastTargetT || 0) - dt); tick(dt); };
+  g.tickExtra = (dt) => { prevTick?.(dt); g.lastTargetT = Math.max(0, (g.lastTargetT || 0) - dt); for (let i = timers.length - 1; i >= 0; i--) if ((timers[i].t -= dt) <= 0) { const T = timers.splice(i, 1)[0]; T.fn(); } tick(dt); };
 
   // ---------------- combat feel
   const dmgE = g.damageEnemy.bind(g);

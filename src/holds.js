@@ -256,16 +256,16 @@ function kit() {
 function styleMats(id) {
   const K = kit(), H = HOLDS[id], kitN = H.kit || 'rock';
   if (K.styles[id]) return K.styles[id];
-  K.wood ||= woodTex();
+  K.woodT ||= woodTex();
   const tri = (map, normalMap, color, scale, ns, grime) => triplanarMaterial({ map, normalMap, color, scale, roughness: 0.95, normalStrength: ns, grime });
   const rock = kitN === 'brick' ? tri(K.brick.map, K.brick.normalMap, H.rock, 0.5, 1.4, 0.75)
-    : kitN === 'timber' ? tri(K.wood, K.rt.normal, H.rock, 0.42, 0.6, 0.5)
-    : kitN === 'reed' ? new THREE.MeshStandardMaterial({ color: H.rock, map: K.wood, roughness: 1 })
+    : kitN === 'timber' ? tri(K.woodT, K.rt.normal, H.rock, 0.42, 0.6, 0.5)
+    : kitN === 'reed' ? new THREE.MeshStandardMaterial({ color: H.rock, map: K.woodT, roughness: 1 })
     : tri(K.rt.map, K.rt.normal, H.rock, 0.55, 1.6, 0.55);
   return (K.styles[id] = {
     kit: kitN, rock,
     wall: tri(K.brick.map, K.brick.normalMap, H.wall, 0.5, 1.2, 0.6),
-    crack: kitN === 'brick' ? tri(K.brick.map, K.brick.normalMap, new THREE.Color(H.rock).multiplyScalar(1.12), 0.55, 2.2, 1.0) : kitN === 'rock' ? tri(K.rt.map, K.rt.normal, new THREE.Color(H.rock).multiplyScalar(1.15), 0.6, 2.6, 1.0) : tri(K.wood, K.rt.normal, new THREE.Color(H.rock).multiplyScalar(0.9), 0.42, 1.2, 0.9),
+    crack: kitN === 'brick' ? tri(K.brick.map, K.brick.normalMap, new THREE.Color(H.rock).multiplyScalar(1.12), 0.55, 2.2, 1.0) : kitN === 'rock' ? tri(K.rt.map, K.rt.normal, new THREE.Color(H.rock).multiplyScalar(1.15), 0.6, 2.6, 1.0) : tri(K.woodT, K.rt.normal, new THREE.Color(H.rock).multiplyScalar(0.9), 0.42, 1.2, 0.9),
     floor: floorMat(H.floor[0], H.floor[1], 1, H.wet ?? (id === 'gorge' ? 0.25 : 0)),
     mud: floorMat(0x4a3e2c, 'earth', 1, 0.9),
     water: new THREE.MeshStandardMaterial({ color: H.water ?? 0x2a3c34, roughness: 0.08, metalness: 0.25, transparent: true, opacity: 0.82, depthWrite: false }),

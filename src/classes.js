@@ -168,8 +168,8 @@ export const SLOT_KEYS = { attack: 'LMB', rmb: 'RMB', s1: '1', s2: '2', s3: '3',
 // ------------------------------------------------------------------ Round 18: alternate skills (one opens at level 15, one at 20)
 Object.assign(SKILL_ICONS, {
   // Round 22: the level-25 skills
-  bash: svg('<path d="M22 12 H44 Q48 30 33 54 Q18 30 22 12Z" fill="#7a5a3a" stroke="#ffd870" stroke-width="2.5"/><path d="M6 32 H18 M8 24 H16 M8 40 H16" stroke="#f0c070" stroke-width="3" stroke-linecap="round"/>'),
-  pierce: svg('<path d="M6 32 H58" stroke="#dfe6ee" stroke-width="4"/><path d="M58 32 l-10 -6 v12z" fill="#dfe6ee"/><circle cx="24" cy="32" r="7" fill="none" stroke="#e07050" stroke-width="3"/><circle cx="40" cy="32" r="7" fill="none" stroke="#e07050" stroke-width="3"/>'),
+  rush: svg('<path d="M22 12 H44 Q48 30 33 54 Q18 30 22 12Z" fill="#7a5a3a" stroke="#ffd870" stroke-width="2.5"/><path d="M6 32 H18 M8 24 H16 M8 40 H16" stroke="#f0c070" stroke-width="3" stroke-linecap="round"/>'),
+  longshot: svg('<path d="M6 32 H58" stroke="#dfe6ee" stroke-width="4"/><path d="M58 32 l-10 -6 v12z" fill="#dfe6ee"/><circle cx="24" cy="32" r="7" fill="none" stroke="#e07050" stroke-width="3"/><circle cx="40" cy="32" r="7" fill="none" stroke="#e07050" stroke-width="3"/>'),
   firewall: svg('<path d="M6 52 H58" stroke="#5a3a20" stroke-width="4"/><path d="M12 50 Q8 36 16 26 Q16 38 22 34 Q20 22 28 14 Q30 30 36 26 Q34 36 42 30 Q44 40 50 34 Q54 44 52 50Z" fill="#ff8a30" stroke="#ffd870" stroke-width="2"/>'),
   shadowstep: svg('<circle cx="22" cy="20" r="6" fill="#3a3a48"/><path d="M14 54 L20 30 L30 36 L26 54" fill="#3a3a48"/><circle cx="44" cy="20" r="6" fill="#dfe6ee"/><path d="M36 54 L42 30 L52 36 L48 54" fill="#dfe6ee"/><path d="M26 26 Q34 14 40 24" fill="none" stroke="#9a7ad0" stroke-width="2.5" stroke-dasharray="3 3"/>'),
   rally: svg('<path d="M14 54 V10" stroke="#c89a5a" stroke-width="4"/><path d="M16 12 H50 L42 22 L50 32 H16Z" fill="#9a2a1c" stroke="#ffd870" stroke-width="2"/><path d="M24 44 l8 -8 l8 8" fill="none" stroke="#ffd870" stroke-width="3"/>'),
@@ -187,12 +187,12 @@ export const ALT_SKILLS = {
     { lvl: 15, id: 'rally', name: 'Rallying Cry', icon: 'rally', cd: 18, mana: 20, buff: 'rally', desc: '+25% damage and +20 armour for 6 seconds', use(g, p) {
       p.buffs.rally = 6; g.audio.levelUp?.(); g.fx.ring(p.pos, C(3, 1.4, 0.6), 0.5, 6, 0.8); g.recalcStats();
     } },
-    { lvl: 25, id: 'bash', name: 'Shield Rush', icon: 'bash', cd: 9, mana: 18, aim: true, desc: 'Rush 7 m behind your shield, knocking foes aside and staggering them', use(g, p) {
+    { lvl: 25, id: 'rush', name: 'Shield Rush', icon: 'rush', cd: 9, mana: 18, aim: true, desc: 'Rush 7 m behind your shield, knocking foes aside and staggering them', use(g, p) {
       const { dir } = dirToCursor(g); faceDir(p, dir); p.st.action = 'attack'; p.st.actionT = 0.2; p.actionDur = 0.45; g.audio.whoosh(); p.invuln = Math.max(p.invuln || 0, 0.45);
       const from = p.pos.clone(), hit = new Set();
-      for (let k = 1; k <= 14; k++) setTimeout(() => { if (p.dead) return; p.pos.addScaledVector(dir, 0.5); resolve(p.pos, 0.45); p.pos.y = g.interior ? 0 : heightAt(p.pos.x, p.pos.z); g.fx.dust(p.pos, 2, 0.6);
-        alive(g, (e) => { if (hit.has(e) || e.pos.distanceTo(p.pos) > 1.8 + e.radius) return; hit.add(e); const r = g.rollDamage(1.3); g.damageEnemy(e, r.d, r.crit, from, 'normal', { weight: 1.6, knock: 2.6, skill: true }); if (!e.boss) e.staggerT = Math.max(e.staggerT || 0, 1.4); }); }, k * 22);
-      setTimeout(() => { g.shake = Math.max(g.shake, 0.35); g.fx.ring(p.pos, C(2.6, 2, 1.2), 0.4, 3, 0.4); }, 330);
+      for (let k = 1; k <= 14; k++) g.after((k * 22) / 1000, () => { if (p.dead) return; p.pos.addScaledVector(dir, 0.5); resolve(p.pos, 0.45); p.pos.y = g.interior ? 0 : heightAt(p.pos.x, p.pos.z); g.fx.dust(p.pos, 2, 0.6);
+        alive(g, (e) => { if (hit.has(e) || e.pos.distanceTo(p.pos) > 1.8 + e.radius) return; hit.add(e); const r = g.rollDamage(1.3); g.damageEnemy(e, r.d, r.crit, from, 'normal', { weight: 1.6, knock: 2.6, skill: true }); if (!e.boss) e.staggerT = Math.max(e.staggerT || 0, 1.4); }); });
+      g.after((330) / 1000, () => { g.shake = Math.max(g.shake, 0.35); g.fx.ring(p.pos, C(2.6, 2, 1.2), 0.4, 3, 0.4); });
     } },
     { lvl: 20, id: 'sweep', name: 'Sweeping Cut', icon: 'sweep', cd: 6, mana: 16, aim: true, desc: 'A wide cut through every foe in front of you', use(g, p) {
       const { dir } = dirToCursor(g); faceDir(p, dir); p.st.action = 'attack'; p.st.actionT = 0; p.actionDur = 0.55; g.audio.whoosh();
@@ -206,10 +206,10 @@ export const ALT_SKILLS = {
       g.playerShot(dir, { speed: 40, mult: 1.8, kind: 'arrow', glow: C(2.4, 1.4, 1), weight: 1 }); g.audio.whoosh();
       setTimeout(() => { if (!e.dead) { e.slowT = 2.5; e.slowK = 0.95; e.staggerT = Math.max(e.staggerT || 0, 0.6); } }, Math.min(500, e.pos.distanceTo(p.pos) / 40 * 1000));
     } },
-    { lvl: 25, id: 'pierce', name: 'Piercing Shot', icon: 'pierce', cd: 6, mana: 16, aim: true, desc: 'A heavy arrow that passes through every foe in a line', use(g, p) {
+    { lvl: 25, id: 'longshot', name: 'Piercing Shot', icon: 'longshot', cd: 6, mana: 16, aim: true, desc: 'A heavy arrow that passes through every foe in a line', use(g, p) {
       const { dir } = dirToCursor(g); faceDir(p, dir); p.st.action = 'shootKneel'; p.st.actionT = 0.35; p.actionDur = 0.5; g.audio.whoosh();
       const from = p.pos.clone(); g.playerShot(dir.clone(), { speed: 46, mult: 0.01, kind: 'arrow', glow: C(2.6, 1.8, 1.2), weight: 0.2 });
-      for (let k = 1; k <= 11; k++) setTimeout(() => { const c = from.clone().addScaledVector(dir, k * 2); g.fx.sparks?.(tmp.copy(c).setY(c.y + 1.2), C(2.4, 1.6, 1)); alive(g, (e) => { const v = tmp.copy(e.pos).sub(from).setY(0), along = v.dot(dir), side = Math.abs(v.x * dir.z - v.z * dir.x); if (along > k * 2 - 2 && along <= k * 2 && side < 0.9 + e.radius) { const r = g.rollDamage(2.0); g.damageEnemy(e, r.d, r.crit, from, 'normal', { weight: 1, skill: true }); } }); }, k * 40);
+      for (let k = 1; k <= 11; k++) g.after((k * 40) / 1000, () => { const c = from.clone().addScaledVector(dir, k * 2); g.fx.sparks?.(tmp.copy(c).setY(c.y + 1.2), C(2.4, 1.6, 1)); alive(g, (e) => { const v = tmp.copy(e.pos).sub(from).setY(0), along = v.dot(dir), side = Math.abs(v.x * dir.z - v.z * dir.x); if (along > k * 2 - 2 && along <= k * 2 && side < 0.9 + e.radius) { const r = g.rollDamage(2.0); g.damageEnemy(e, r.d, r.crit, from, 'normal', { weight: 1, skill: true }); } }); });
     } },
     { lvl: 20, id: 'scatter', name: 'Scatter Volley', icon: 'scatter', cd: 7, mana: 18, aim: true, desc: 'Seven arrows loosed in a wide fan', use(g, p) {
       const { dir } = dirToCursor(g); faceDir(p, dir); p.st.action = 'shoot'; p.st.actionT = 0.2; p.actionDur = 0.45; g.audio.whoosh();
@@ -229,8 +229,8 @@ export const ALT_SKILLS = {
       const pts = []; for (let i = -3; i <= 3; i++) { const q = mid.clone().addScaledVector(side, i * 1.4); q.y = g.interior ? 0 : heightAt(q.x, q.z); pts.push(q); }
       let t0 = 0; const tick = () => { t0 += 0.25; for (const q of pts) { if (Math.random() < 0.8) g.fx.fire(tmp.copy(q).setY(q.y + 0.2), 0.9); }
         alive(g, (e) => { for (const q of pts) if (e.pos.distanceTo(q) < 1.1 + e.radius) { const r = g.rollDamage(0.32, true); g.damageEnemy(e, r.d, false, q, 'dot'); e.burn = Math.max(e.burn || 0, 2); break; } });
-        if (t0 < 5) setTimeout(tick, 250); };
-      setTimeout(() => { g.audio.boom(); g.fx.flash?.(tmp.copy(mid).setY(mid.y + 1), 0xff7a30, 20, 0.3, 8); for (const q of pts) if (Math.random() < 0.5) g.fx.naftBurst?.(q, 1.2); for (const q of pts) g.decal?.(q, 1.6, 'scorch'); tick(); }, 300);
+        if (t0 < 5) g.after(0.25, tick); };
+      g.after((300) / 1000, () => { g.audio.boom(); g.fx.flash?.(tmp.copy(mid).setY(mid.y + 1), 0xff7a30, 20, 0.3, 8); for (const q of pts) if (Math.random() < 0.5) g.fx.naftBurst?.(q, 1.2); for (const q of pts) g.decal?.(q, 1.6, 'scorch'); tick(); });
     } },
     { lvl: 20, id: 'brand', name: 'Burning Brand', icon: 'brand', cd: 16, mana: 24, buff: 'brand', desc: 'For 8 seconds every hit sets the foe alight', use(g, p) {
       p.buffs.brand = 8; g.audio.boom(); g.fx.flash(tmp.copy(p.pos).setY(p.pos.y + 1.4), 0xff7a30, 20, 0.4, 8);
@@ -246,7 +246,7 @@ export const ALT_SKILLS = {
       g.fx.burst(tmp.copy(p.pos).setY(p.pos.y + 1), 18, { speed: 1.5, life: 0.8, size: 0.5, size1: 1.4, color: C(0.3, 0.28, 0.36), alpha: 0.5, smoke: true, drag: 2 });
       const b = new THREE.Vector3(-Math.sin(e.facing), 0, -Math.cos(e.facing)); p.pos.copy(e.pos).addScaledVector(b, 1.3 + e.radius); resolve(p.pos, 0.45); p.pos.y = g.interior ? 0 : heightAt(p.pos.x, p.pos.z);
       p.facing = e.facing; p.target = e; p.invuln = Math.max(p.invuln || 0, 0.3); p.st.action = 'attack'; p.st.actionT = 0.3; p.actionDur = 0.35; g.camInit = false; g.audio.whoosh();
-      setTimeout(() => { if (e.dead) return; const r = g.rollDamage(2.4); g.damageEnemy(e, Math.round(r.d * 1.3), true, p.pos, 'normal', { weight: 0.9, skill: true }); }, 160);
+      g.after((160) / 1000, () => { if (e.dead) return; const r = g.rollDamage(2.4); g.damageEnemy(e, Math.round(r.d * 1.3), true, p.pos, 'normal', { weight: 0.9, skill: true }); });
     } },
     { lvl: 20, id: 'powder', name: 'Blinding Powder', icon: 'powder', cd: 9, mana: 14, aim: true, desc: 'A cloud of powder that dazes every foe in front of you', use(g, p) {
       const { dir } = dirToCursor(g); faceDir(p, dir); p.st.action = 'throw'; p.st.actionT = 0.2; p.actionDur = 0.3; g.audio.whoosh();

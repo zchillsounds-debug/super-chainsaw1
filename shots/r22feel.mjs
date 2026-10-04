@@ -58,7 +58,7 @@ for (const cls of ['faris', 'rami', 'naffat', 'ayyar']) {
     for (const e of g.enemies) if (!e.dead && !e.parked && e.pos.distanceTo(p.pos) < 40) { e.dead = true; e.removed = true; g.scene.remove(e.rig); }
     const P0 = p.pos.clone(), foes = g.spawnPack('bandit', P0.x, P0.z + 5, 3, 20, { spread: 1, noLeader: true }); for (const e of foes) { e.alerted = true; e.maxHp = e.hp = 5000; }
     p.facing = 0; g.groundPoint = () => foes[0].pos.clone(); g.hover = foes[0];
-    const id = { faris: 'bash', rami: 'pierce', naffat: 'firewall', ayyar: 'shadowstep' }[p.cls];
+    const id = { faris: 'rush', rami: 'longshot', naffat: 'firewall', ayyar: 'shadowstep' }[p.cls];
     (p.loadout ||= {})[p.cls] = { ...(p.loadout[p.cls] || {}), s4: id }; g.ui.refreshSkills?.(); p.cds = {};
     const before = foes.reduce((a, e) => a + e.hp, 0); g.useSkill('s4'); for (let i = 0; i < 30; i++) { p.hp = p.stats.maxHp; __sim(0.1); }
     return `${p.cls} ${id}: damage dealt ${before - foes.reduce((a, e) => a + e.hp, 0)}`;
