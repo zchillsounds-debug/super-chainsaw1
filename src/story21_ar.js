@@ -103,5 +103,6 @@ export const AR21 = {
   'Panoply of the Abna\'': 'عُدّة الأبناء', 'Abna\' Lamellar': 'صفائح الأبناء', 'Abna\' Bayda': 'بيضة الأبناء', 'Abna\' Signet': 'ختم الأبناء', 'Abna\' Badge': 'شارة الأبناء',
   'Outfit of the Basra Nakhuda': 'كسوة ناخذاة البصرة', 'Nakhuda\'s Coat': 'قباء الناخذاة', 'Nakhuda\'s Turban': 'عمامة الناخذاة', 'Nakhuda\'s Seal': 'خاتم الناخذاة', 'Nakhuda\'s Compass-stone': 'حجر الهداية للناخذاة',
   'Tools of the Warraq': 'أدوات الورّاق', 'Warraq\'s Apron': 'مئزر الورّاق', 'Warraq\'s Cap': 'طاقية الورّاق', 'Warraq\'s Pen-ring': 'خاتم قلم الورّاق', 'Warraq\'s Inkwell': 'محبرة الورّاق',
+  'Iron Scrap': 'خردة حديد', 'Silk Thread': 'خيط حرير', 'Gem Shard': 'شظية جوهر', 'Gems': 'الجواهر', 'Salvaged': 'فُكِّك',
   'Rare to order': 'نادرة حسب الطلب', 'Walking': 'في الطريق', 'Walking to the marker': 'إلى العلامة',
 };

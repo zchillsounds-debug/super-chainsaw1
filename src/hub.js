@@ -13,6 +13,7 @@ import { TAB_COST, stashPage } from './build.js';
 // Each is an interactable; the panels are plain DOM in the HUD layer and work with mouse and touch alike.
 // (each region sets its hub corner up in its own place: see region.js)
 import { HUB } from './region.js';
+import { t } from './i18n.js';
 export const MAX_RANK = 5;
 let DISC = 0;
 const price = (it) => Math.round(({ common: 8, magic: 30, rare: 90, set: 160, legendary: 400 })[it.rarity] * (1 + it.level * 0.25) * (1 - DISC));
@@ -95,7 +96,7 @@ let panel = null;
 function closePanel() { if (panel) { panel.remove(); panel = null; document.body.classList.remove('inshop'); } }
 export function panelOpen() { return !!panel && panel.isConnected; }
 function el(html) { const d = document.createElement('div'); d.innerHTML = html; return d.firstElementChild; }
-function matsLine(p) { return Object.entries(MAT_NAMES).map(([k, n]) => `<span class="mat m-${k}">${n}: <b>${p.mats[k] || 0}</b></span>`).join(''); }
+function matsLine(p) { return Object.entries(MAT_NAMES).map(([k, n]) => `<span class="mat m-${k}">${t(n)}: <b>${p.mats[k] || 0}</b></span>`).join(''); }
 function cell(it, extra = '') { return `<div class="cell ${it ? 'r-' + it.rarity : ''}" ${extra}>${it ? `<span class="ic">${itemIcon(it)}</span>${it.rank ? `<i class="rk">+${it.rank}</i>` : ''}` : ''}</div>`; }
 
 export function openPanel(game, kind, tab) {
@@ -155,7 +156,7 @@ export function openPanel(game, kind, tab) {
       });
       body.appendChild(list);
     } else if (tab === 'salvage') {
-      body.appendChild(bagGrid((i, it) => { const g = SALVAGE[it.rarity] || SALVAGE.common; for (const k in g) p.mats[k] = (p.mats[k] || 0) + g[k]; p.bag[i] = null; game.audio.clang(); ui.toast('Salvaged: ' + Object.entries(g).map(([k, v]) => `${v} ${MAT_NAMES[k]}`).join(', ')); refresh(); }, 'Tap an item in your pack to break it down', 'Salvage'));
+      body.appendChild(bagGrid((i, it) => { const g = SALVAGE[it.rarity] || SALVAGE.common; for (const k in g) p.mats[k] = (p.mats[k] || 0) + g[k]; p.bag[i] = null; game.audio.clang(); ui.toast(t('Salvaged') + ': ' + Object.entries(g).map(([k, v]) => `${v} ${t(MAT_NAMES[k])}`).join(', ')); refresh(); }, 'Tap an item in your pack to break it down', 'Salvage'));
       const all = el(`<button class="sbtn">Salvage all common and magic items</button>`);
       all.onclick = () => { let n = 0; p.bag.forEach((it, i) => { if (it && (it.rarity === 'common' || it.rarity === 'magic')) { const g = SALVAGE[it.rarity] || SALVAGE.common; for (const k in g) p.mats[k] = (p.mats[k] || 0) + g[k]; p.bag[i] = null; n++; } }); if (n) game.audio.clang(); refresh(); };
       body.appendChild(all);
