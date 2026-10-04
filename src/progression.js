@@ -64,8 +64,13 @@ export const ASPECTS = {
   shade: { cls: 'ayyar', name: 'Aspect of the Shade', desc: 'Your first blow from stealth deals 50% more damage and resets Evade.' },
   alley: { cls: 'ayyar', name: 'Aspect of the Alley', desc: 'Each kill resets Shadowstep.' },
   edge: { cls: 'ayyar', name: 'Aspect of the Knife\'s Edge', desc: 'You deal 30% more damage to foes below 35% life.' },
+  // Round 21: only on the Siege Trials legendaries (never rolled onto a drop)
+  breach: { trial: true, name: 'Aspect of the Breach', desc: 'You deal 40% more damage to captains and their like.' },
+  lastgate: { trial: true, name: 'Aspect of the Last Gate', desc: 'Below 30% life you take 40% less damage.' },
+  clock: { trial: true, name: 'Aspect of the Water-Clock', desc: 'Each kill takes 1 second off every skill.' },
+  sapper: { trial: true, name: 'Aspect of the Sapper', desc: 'Drinking sherbet throws back and staggers foes within 4 metres.' },
 };
-const ASPECT_KEYS = Object.keys(ASPECTS);
+const ASPECT_KEYS = Object.keys(ASPECTS).filter((k) => !ASPECTS[k].trial);
 
 // ------------------------------------------------------------------ item sets
 export const SETS = {

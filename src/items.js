@@ -47,7 +47,13 @@ const UNIQUES = [
   { slot: 'amulet', name: 'Astrolabe of the Banu Musa', base: 'Brass Astrolabe', stats: { dmgPct: 25, mana: 50, regen: 5, move: 10 }, flavor: '"The heavens turn; so too shall your enemies."' },
   { slot: 'belt', name: 'Girdle of the Water-Carrier', base: 'Studded Mintaqa', armor: 6, stats: { potHeal: 45, potCapB: 1, life: 50, regen: 2 }, flavor: '"He carried water through the siege, and asked no coin for it."' },
   { slot: 'armor', name: 'Jawshan of Harun', base: 'Lamellar Jawshan', armor: 34, stats: { life: 80, armor: 20, leech: 3 }, flavor: '"Worn at the gates of the Round City."' },
+  // Round 21: won only in the Siege Trials, each with its own aspect
+  { trial: 'breach', slot: 'weapon', name: 'Edge of the Breach', base: 'Hindi Sayf', min: 18, max: 30, stats: { dmgPct: 35, crit: 8, speed: 10 }, flavor: '"It went first through the gap in the wall, and came back."' },
+  { trial: 'lastgate', slot: 'armor', name: 'Coat of the Last Gate', base: 'Lamellar Jawshan', armor: 38, stats: { life: 110, armor: 25, regen: 3 }, flavor: '"The Khurasan gate held a day longer than the rest."' },
+  { trial: 'clock', slot: 'ring', name: 'Ring of the Water-Clock', base: 'Silver Signet', stats: { cdr: 12, crit: 6, mana: 30 }, flavor: '"Measured out in drops, like the clock the caliph sent to the Franks."' },
+  { trial: 'sapper', slot: 'belt', name: 'Sapper\'s Cord', base: 'Studded Mintaqa', armor: 8, stats: { potHeal: 30, life: 60, armor: 10 }, flavor: '"Knotted by the men who dug under the walls."' },
 ];
+export const TRIAL_UNIQUES = UNIQUES.filter((u) => u.trial);
 
 let uid = 1;
 // loot follows the hero's discipline: bows for the Rami, siphons for the Naffat, knives for the 'Ayyar
@@ -66,13 +72,24 @@ export function rollRarity(level, bonus = 0) {
 export function makeItem(level, rarity, slot) {
   slot = slot || pick(['weapon', 'weapon', 'armor', 'helm', 'ring', 'amulet', 'belt']);
   if (rarity === 'legendary') {
-    const pool = UNIQUES.filter((u) => u.slot === slot);
-    const u = pool.length ? pick(pool) : pick(UNIQUES);
-    const it = { id: uid++, slot: u.slot, rarity, name: u.name, base: u.base, level, stats: { ...u.stats }, flavor: u.flavor, icon: (BASES[u.slot][0] || {}).icon };
+    const any = UNIQUES.filter((u) => !u.trial), pool = any.filter((u) => u.slot === slot);
+    const u = pool.length ? pick(pool) : pick(any);
+    return uniqueItem(u, level);
+  }
+  return rolledItem(level, rarity, slot);
+}
+function uniqueItem(u, level) {
+  {
+    const it = { id: uid++, slot: u.slot, rarity: 'legendary', name: u.name, base: u.base, level, stats: { ...u.stats }, flavor: u.flavor, icon: (BASES[u.slot][0] || {}).icon };
     if (u.min) { it.min = u.min + level; it.max = u.max + level * 2; it.cls = weaponCls; if (weaponCls !== 'faris') { it.base = weaponPool[3].name; } }
     if (u.armor) it.armor = u.armor + level * 2;
+    if (u.trial) { it.aspect = u.trial; it.trial = true; }
     return it;
   }
+}
+// Round 21: a Siege Trials legendary (random one if no key)
+export function makeTrialUnique(level, key) { return uniqueItem(TRIAL_UNIQUES.find((u) => u.trial === key) || pick(TRIAL_UNIQUES), level); }
+function rolledItem(level, rarity, slot) {
   const bases = slot === 'weapon' && weaponPool ? weaponPool : BASES[slot];
   const tier = Math.min(bases.length - 1, Math.floor(Math.random() * (1 + level / 3)));
   const b = bases[tier];

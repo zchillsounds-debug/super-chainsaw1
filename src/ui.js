@@ -198,7 +198,7 @@ export class UI {
     const el = document.createElement('div'); el.className = 'loot r-' + drop.item.rarity;
     el.textContent = drop.item.gold ? `${drop.item.gold} Dinars` : drop.item.potion ? 'Pomegranate Sherbet' : drop.item.name;
     el.onmousedown = (e) => { e.stopPropagation(); onClick(drop); };
-    el.onmouseenter = () => !drop.item.gold && !drop.item.potion && this.showTooltip(drop.item, el.getBoundingClientRect());
+    el.onmouseenter = () => !drop.item.gold && !drop.item.potion && !drop.item.recipe && this.showTooltip(drop.item, el.getBoundingClientRect());
     el.onmouseleave = () => this.hideTooltip();
     this.labels.appendChild(el); this.labelMap.set(drop, el);
   }

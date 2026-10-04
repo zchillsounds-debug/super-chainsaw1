@@ -654,6 +654,17 @@ export class Game {
       const pm = new THREE.MeshStandardMaterial({ color: 0x8a0a1a, emissive: 0x500010, roughness: 0.1 });
       const b = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), pm); b.position.y = 0.16; grp.add(b);
       const n = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.15, 8), pm); n.position.y = 0.34; grp.add(n);
+    } else if (item.recipe) {
+      // Round 21: a recipe scroll: a rolled sheet tied with cord
+      const pm = new THREE.MeshStandardMaterial({ color: 0xe8d8b0, roughness: 0.9 }), cm = new THREE.MeshStandardMaterial({ color: 0x8a2a1a, roughness: 0.8 });
+      const sc = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.42, 10), pm); sc.rotation.z = Math.PI / 2; sc.position.y = 0.08; grp.add(sc);
+      const cd = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.04, 10), cm); cd.rotation.z = Math.PI / 2; cd.position.y = 0.08; grp.add(cd);
+      const bm = new THREE.ShaderMaterial({
+        uniforms: { uC: { value: new THREE.Color(r.beam).multiplyScalar(2.5) }, uT: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, toneMapped: false,
+        vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+        fragmentShader: 'uniform vec3 uC; varying vec2 vUv; void main(){ float a = (1.0-vUv.y)*(1.0-vUv.y) * (0.5+0.5*sin(vUv.x*6.283*1.0)) ; a *= smoothstep(0.0,0.05,vUv.y); gl_FragColor = vec4(uC, a*0.55); }',
+      });
+      grp.add(new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.32, 6, 16, 1, true).translate(0, 3, 0), bm));
     } else {
       let m;
       if (item.slot === 'weapon') { m = sword(); m.rotation.z = Math.PI / 2; m.position.y = 0.06; m.scale.setScalar(1.1); }
@@ -694,6 +705,7 @@ export class Game {
     const p = this.player;
     if (d.item.gold) { p.gold += d.item.gold; this.audio.gold(); }
     else if (d.item.potion) { if (p.potions >= 5 + (p.potCap || 0) + (p.stats.potCapB || 0)) return false; p.potions++; this.audio.pickup(); }
+    else if (d.item.recipe) { this.onRecipe?.(d.item); this.audio.pickup(); }
     else {
       const slot = p.bag.indexOf(null);
       if (slot < 0) { this.ui.toast('Your pack is full'); return false; }
