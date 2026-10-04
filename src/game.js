@@ -9,6 +9,7 @@ const lineClearCam = (ax, az, bx, bz) => lineClear(ax, az, bx, bz);
 import { buildNav, findPath, navClear } from './nav.js';
 import { makeEnemy, TYPES } from './entities.js';
 import { fleeTick } from './foes20.js';
+import { mixPack, shapePack } from './foes22.js';
 import * as SCENES from './scenes.js';
 import { saveGame } from './save.js';
 import { makeItem, rollRarity, RARITY, setWeaponPool } from './items.js';
@@ -230,7 +231,7 @@ export class Game {
   }
 
   spawnPack(type, x, z, n, level, opts = {}) {
-    const out = [];
+    const out = []; type = mixPack(type, n, opts); // Round 22: the new foes join in (foes22.js)
     for (let i = 0; i < n; i++) {
       const t = Array.isArray(type) ? type[Math.floor(Math.random() * type.length)] : type;
       const e = makeEnemy(t, level, opts);
@@ -241,6 +242,7 @@ export class Game {
       e.home.copy(e.pos); e.facing = Math.random() * 6;
       this.scene.add(e.rig); this.enemies.push(e); out.push(e);
     }
+    shapePack(out, opts); // Round 22: difficulty, a leader for a big pack, a shield-bearer's bowman
     return out;
   }
 
@@ -609,7 +611,7 @@ export class Game {
   damagePlayer(dmg, src, attacker = null) {
     const p = this.player; if (p.dead) return;
     // parry: an evade started just before a melee blow lands turns it aside and leaves the attacker reeling
-    if (attacker && p.rollT > 0 && p.rollAge < 0.2 && !attacker.boss) {
+    if (attacker && p.rollT > 0 && p.rollAge < 0.26 && !attacker.boss) { // Round 22: 0.26 s (was 0.2)
       attacker.staggerT = 1.6; attacker.st.action = null; attacker.st.hitT = 1; attacker.poise = attacker.maxPoise;
       this.ui.damageNumber(p.pos, 'Parry!', 'parry'); this.audio.clang(); this.audio.stagger?.();
       this.fx.sparks(tmp.copy(p.pos).lerp(attacker.pos, 0.5).setY(p.pos.y + 1.3), new THREE.Color(5, 4, 2.4));
@@ -1350,8 +1352,9 @@ export class Game {
       const dist = e.pos.distanceTo(p.pos);
       // only rigs inside the top-down view (plus a margin) are drawn and skinned
       const vdx = Math.abs(e.pos.x - p.pos.x), vdz = e.pos.z - p.pos.z;
-      const vz = Math.max(1, this.camZoom) * (this.camZoom < 0.85 ? 1.5 : 1); e.rig.visible = !e.ghost && !e.removed && (this.camAction ? dist < 60 : (vdx < 30 * vz && vdz > -36 * vz && vdz < 20 * Math.max(1, this.camZoom) || (e.boss && dist < 60)));
+      const vz = Math.max(1, this.camZoom) * (this.camZoom < 0.85 ? 1.5 : 1); e.rig.visible = !e.ghost && !e.removed && !e.parked && (this.camAction ? dist < 60 : (vdx < 30 * vz && vdz > -36 * vz && vdz < 20 * Math.max(1, this.camZoom) || (e.boss && dist < 60)));
       if (e.rig.visible) setCharLOD(e.rig, dist > 15 && !this.cinematic);
+      if (e.parked) continue; // Round 22: a lieutenant waiting inside his hold, out of the field
       if (e.dead) {
         e.st.deadT += dt; e.deadT += dt;
         if (e.fleeing) fleeTick(this, e, dt);
@@ -1663,6 +1666,7 @@ export class Game {
     let k = 1; // pull in toward Salim while rock is in the way
     for (; k > 0.3; k -= 0.1) if (lineClearCam(p.x, p.z, p.x - fx * dist * k, p.z - fz * dist * k)) break;
     const target = tmp.set(p.x - fx * dist * k, p.y + h + (1 - k) * 1.2, p.z - fz * dist * k); // pulled in: rise over his shoulder, never into his head
+    if (!this.interior) target.y = Math.max(target.y, heightAt(target.x, target.z) + 1.0); // Round 22: the close camera out in the world keeps above the ground
     if (!this.camInit) { this.camPos.copy(target); this.camInit = true; }
     this.camPos.lerp(target, Math.min(1, dt * 7));
     this.camera.position.copy(this.camPos);

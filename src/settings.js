@@ -6,7 +6,7 @@ const KEY = 'sob.settings.v1';
 export const DEFAULTS = {
   quality: null, res: 1, sharp: 'smooth', shadows: true, ao: true, bloom: true, atmos: true, fps: false,
   master: 1, music: 1, sfx: 1, amb: 1,
-  attackMode: 'hold', shake: 1, tscale: 0.85, topa: 0.65,
+  attackMode: 'hold', cam: 'overhead', diff: 'normal', shake: 1, tscale: 0.85, topa: 0.65,
   subs: 1, cvd: 0, reduceFlash: false, tutorial: true,
   lang: 'en',
 };
@@ -35,7 +35,7 @@ export class Settings {
     document.body.style.setProperty('--subscale', s.subs);
     document.body.style.setProperty('--tscale', s.tscale); document.body.style.setProperty('--topa', s.topa);
     if (grade) grade.uniforms.uCVD.value = s.cvd;
-    if (game) { game.shakeScale = s.reduceFlash ? 0 : s.shake; game.reduceFlash = s.reduceFlash; game.attackMode = s.attackMode; game.tutorialOn = s.tutorial; }
+    if (game) { game.shakeScale = s.reduceFlash ? 0 : s.shake; game.reduceFlash = s.reduceFlash; game.attackMode = s.attackMode; game.tutorialOn = s.tutorial; game.difficulty = s.diff; game.closeCam = s.cam === 'close'; if (!game.interior) { if (game.camAction !== game.closeCam) game.camInit = false; game.camAction = game.closeCam; if (!game.camAction) game.lockOn = null; } }
     document.body.classList.toggle('noflash', s.reduceFlash);
     if (first || document.documentElement.lang !== s.lang) setLanguage(s.lang);
   }
@@ -50,7 +50,7 @@ export class Settings {
       <section><h4>Graphics</h4>${sel('quality', 'Quality', [['low', 'Low'], ['high', 'High']]).replace(`value="${q}"`, `value="${q}" selected`)}<small class="note">Reload to apply</small>
         ${sel('sharp', 'Sharpness', [['smooth', 'Smooth (sharpest)'], ['balanced', 'Balanced'], ['fast', 'Fast (best frame rate)']])}${range('res', 'Resolution', 0.5, 1.5, 0.05)}${tog('shadows', 'Shadows')}${tog('ao', 'Ambient occlusion')}${tog('bloom', 'Bloom')}${tog('atmos', 'Atmosphere')}${tog('fps', 'Show FPS')}<button class="sbtn benchbtn">Run benchmark (30 s)</button><small class="note">A short fly-through and fight that measures this device and suggests settings.</small></section>
       <section><h4>Audio</h4>${range('master', 'Master', 0, 1, 0.05)}${range('music', 'Music', 0, 1, 0.05)}${range('sfx', 'Effects', 0, 1, 0.05)}${range('amb', 'Ambience', 0, 1, 0.05)}</section>
-      <section><h4>Controls</h4>${sel('attackMode', 'Attack button', [['hold', 'Hold to repeat'], ['toggle', 'Tap to toggle']])}${range('shake', 'Camera shake', 0, 1, 0.1)}${document.body.classList.contains('touch') ? range('tscale', 'Button size', 0.7, 1.2, 0.05) + range('topa', 'Button opacity', 0.3, 1, 0.05) : ''}
+      <section><h4>Controls</h4>${sel('attackMode', 'Attack button', [['hold', 'Hold to repeat'], ['toggle', 'Tap to toggle']])}${sel('cam', 'Camera', [['overhead', 'Overhead'], ['close', 'Close (behind the shoulder)']])}${sel('diff', 'Difficulty', [['story', 'Story'], ['normal', 'Normal'], ['hard', 'Hard']])}${range('shake', 'Camera shake', 0, 1, 0.1)}${document.body.classList.contains('touch') ? range('tscale', 'Button size', 0.7, 1.2, 0.05) + range('topa', 'Button opacity', 0.3, 1, 0.05) : ''}
         <div class="note">Gamepad: left stick move · A attack · B evade · X right skill · Y / LB / RB skills 1–3 · RT sherbet · Start settings · Back journal</div></section>
       <section><h4>Accessibility</h4>${sel('subs', 'Subtitle size', [[0.85, 'Small'], [1, 'Medium'], [1.25, 'Large'], [1.55, 'Huge']])}${sel('cvd', 'Colour vision', [[0, 'Off'], [1, 'Protanopia'], [2, 'Deuteranopia'], [3, 'Tritanopia']])}${tog('reduceFlash', 'Reduce flashing')}${tog('tutorial', 'Tutorial hints')}</section>
       <section><h4>Language</h4>${sel('lang', 'Language', [['en', 'English'], ['ar', 'العربية']])}<small class="note">The Arabic interface covers menus and the HUD; story dialogue and the codex are in English for now.</small></section>

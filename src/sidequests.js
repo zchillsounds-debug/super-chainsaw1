@@ -1,3 +1,4 @@
+import { HOLDS22 } from './holdmaps.js';
 import * as THREE from 'three';
 import { heightAt, SITES, ROADS, waterDepth } from './terrain.js';
 import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, HUB } from './region.js';
@@ -245,7 +246,8 @@ function rollBounties(g) {
   const roadPt = () => { const r = ROADS[Math.floor(rnd() * ROADS.length)], k = Math.floor(rnd() * (r.length - 1)), u = 0.2 + rnd() * 0.6; return [r[k][0] + (r[k + 1][0] - r[k][0]) * u, r[k][1] + (r[k + 1][1] - r[k][1]) * u]; };
   const farPt = () => { for (let i = 0; i < 30; i++) { const p = roadPt(); if (Math.hypot(p[0] - SITES.village.x, p[1] - SITES.village.z) > 45) return p; } return roadPt(); };
   const pool = { sawad: ['bandit', 'archer', 'spearman', 'deserter'], marsh: ['bandit', 'slinger', 'netter', 'reedman'], karkh: ['guard', 'archer', 'naffat', 'deserter'], docks: ['guard', 'crossbow', 'deserter', 'spearman'], hamrin: ['guard', 'crossbow', 'spearman', 'deserter', 'archer'] }[REGION];
-  const areas = [{ kind: 'qanat', name: 'the ruined qanats' }, ...({ sawad: [{ kind: 'kiln', name: 'the kiln tunnels' }, { kind: 'cellar', name: 'the caravanserai storerooms' }], marsh: [{ kind: 'granary', name: 'the drowned granary' }], karkh: [{ kind: 'cellars', name: 'the merchants\' cellars' }], docks: [{ kind: 'customs', name: 'the customs vaults' }], hamrin: [] }[REGION]), ...DUNGEONS.map((d) => ({ kind: d.id, name: d.title.replace(/^The /, 'the ') }))];
+  const areas = [{ kind: 'qanat', name: 'the ruined qanats' }, ...({ sawad: [{ kind: 'kiln', name: 'the kiln tunnels' }, { kind: 'cellar', name: 'the caravanserai storerooms' }], marsh: [{ kind: 'granary', name: 'the drowned granary' }], karkh: [{ kind: 'cellars', name: 'the merchants\' cellars' }], docks: [{ kind: 'customs', name: 'the customs vaults' }], hamrin: [] }[REGION]), ...DUNGEONS.map((d) => ({ kind: d.id, name: d.title.replace(/^The /, 'the ') })),
+    ...Object.entries(HOLDS22).filter(([, H]) => H.region === REGION && !H.story).map(([id, H]) => ({ kind: id, name: H.title.replace(/^The /, 'the ') }))]; // Round 22: the optional holds
   const sites = Object.entries({ serai: SITES.serai, kiln: SITES.kiln }).map(([, s]) => s);
   const kinds = ['hunt', 'recover', 'escort', 'clear', 'hunt', 'recover'];
   const out = []; const used = new Set();
@@ -441,6 +443,7 @@ export function setupSideQuests(game) {
   // clearing an interior counts for a 'clear' bounty when its chest is opened
   const zones = g.zones, openChest = zones.openChest.bind(zones);
   zones.openChest = () => { const kind = g.interior?.def.kind; openChest(); const S = B(); for (const b of bounties) if (b.kind === 'clear' && S.taken[b.i] && !S.done[b.i] && kind === b.area) finishBounty(b); };
+  g.onHoldCleared = (id) => { const S = B(); for (const b of bounties) if (b.kind === 'clear' && S.taken[b.i] && !S.done[b.i] && id === b.area) finishBounty(b); };
 
   // ---------------- world events
   const ev = { next: 150 + Math.random() * 120, cur: null };

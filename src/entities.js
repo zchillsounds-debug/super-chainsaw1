@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { humanoid } from './characters.js';
 import { TYPES20 } from './foes20.js';
+import { TYPES22 } from './foes22.js';
 
 // Enemy archetypes.
 // Raiders and deserters loose in the Sawad after the siege of 813. All human foes.
@@ -68,6 +69,7 @@ TYPES.ghanim = {
   build: (x) => humanoid({ robe: '#1e1620', robe2: '#c8a050', hem: true, qaba: true, mail: true, helm: true, turban: null, cloak: 0x2a1a30, beard: 0x8a8070, beardLen: 0.9, skin: 0x9a6a44, weapon: 'sword', offhand: 'shield', sash: 0x5a2a6a, scale: 1.5, build: 1.15, belly: 0.3, hemY: 0.3, detail: 'hi', armour: 'heavy', leather: 0x2a1a2e, crest: 'plume', ...x }),
 };
 Object.assign(TYPES, TYPES20); // Round 20: crossbowmen, siege engineers and their mangonels, camel raiders
+Object.assign(TYPES, TYPES22); // Round 22: hookmen, shield-bearers, sling-lads
 
 // Round 20: captains get a silhouette of their own: heavy armour, the full-detail sculpt and one crest chosen
 // from the name (a plume, a mantle, a tall felt cap, a pennant on the back, or great shoulders and greaves)

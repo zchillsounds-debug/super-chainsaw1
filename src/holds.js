@@ -7,7 +7,7 @@ import { buildNav, setInteriorFloor, INTERIOR_X, navClear } from './nav.js';
 import { triplanarMaterial } from './triplanar.js';
 import { rockTex } from './vegetation.js';
 import { floorMat } from './interior.js';
-import { mudBrick } from './textures.js';
+import { mudBrick, woodTex } from './textures.js';
 import { firePit } from './props.js';
 import { mergeStatic } from './world.js';
 import { makeItem } from './items.js';
@@ -16,6 +16,10 @@ import { CODEX, unlock } from './narrative.js';
 import * as SCENES from './scenes.js';
 import { haptic } from './sheets.js';
 import { t } from './i18n.js';
+import { MAPS22, HOLDS22, BOSS22 } from './holdmaps.js';
+import { REGION } from './region.js';
+import { SITES, heightAt } from './terrain.js';
+import { freeSpot } from './sidequests.js';
 
 // Round 21: the holds of the Hamrin hills, four dungeons laid out by hand rather than rolled at random. Each is a
 // tile map (3 m tiles) of rock and ravine: rope-railed plank bridges over chasms, ledges, low walls to fight round,
@@ -31,7 +35,9 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
 const angDiff = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
 const rand = (a, b) => a + Math.random() * (b - a);
-const WALK = new Set(['.', 'E', 'C', 'm', 'a', 'M', 'B', 'T', 'S', '=']);
+const WALK = new Set(['.', 'E', 'C', 'm', 'a', 'M', 'B', 'T', 'S', '=', 'o', 'K', 'L']);
+// tiles that block until something opens them (a gate, a cracked wall, loose stones, the lever's portcullis and bridge)
+const SHUT = 'xghDb';
 
 const MAPS = {
   quarry: [
@@ -191,9 +197,11 @@ const MAPS = {
   ],
 };
 
+Object.assign(MAPS, MAPS22); // Round 22: the holds of the four act regions (holdmaps.js)
+
 // ------------------------------------------------------------------ the eight captains
 // look: built like any captain (heavy coat, a crest), each in his own colour; moves: what he can do, how often
-const BOSS = {
+export const BOSS = {
   sakhr: { name: 'Sakhr', sub: 'Master of the quarry gangs', type: 'engineer', look: { scale: 1.45, belly: 0.5, cap: 0x3a2a1e, capBand: 0x6a3a1a, helm: false, crest: 'hat', sash: 0x6a3a1a }, hp: 14, dmg: 1.5,
     moves: ['swing', 'crack', 'slam'], p2: { at: 0.5, line: 'Bring the face down on him!', add: ['rockfall'] } },
   ghaylan: { name: 'Ghaylan', sub: 'Overseer of the galleries', type: 'spearman', look: { scale: 1.5, crest: 'plume', sash: 0x5a4a1a }, hp: 22, dmg: 1.6,
@@ -217,6 +225,9 @@ export const HOLDS = {
   gorge: { title: 'The Gorge Bridge', sub: 'Plank ways across the ravine of the Diyala', rock: 0x9a8270, floor: [0x7a6a58, 'earth'], wall: 0x8a7462, pool: ['spearman', 'deserter', 'guard', 'netter'], ranged: ['archer', 'slinger'], mid: 'dhuayb', boss: 'hanzala', codex: 'diyala', quest: 'gorge', step: 2 },
   rivalhold: { title: 'Zubayr\'s Hold', sub: 'The bowman\'s ravine', rock: 0x9a6a50, floor: [0x6a4e3a, 'earth'], wall: 0x8a5a44, pool: ['deserter', 'guard', 'deserter', 'naffat'], ranged: ['archer', 'archer', 'crossbow'], mid: 'nahshal', boss: 'zubayr', codex: 'hamrin', quest: 'rivalhold', step: 3 },
 };
+// Round 22: the holds of the four act regions join the four of the hills (the hills' holds keep region 'hamrin')
+for (const H of Object.values(HOLDS)) H.region ||= 'hamrin';
+Object.assign(HOLDS, HOLDS22); Object.assign(BOSS, BOSS22);
 for (const [k, B] of Object.entries(BOSS)) if (B.type !== 'zubayr') {
   // each captain is his own type, built from his men's look with his crest and colour
   const base = TYPES[B.type];
@@ -233,19 +244,32 @@ function kit() {
     rope: new THREE.MeshStandardMaterial({ color: 0x9a8058, roughness: 1 }), void: new THREE.MeshBasicMaterial({ color: 0x050403 }),
     river: new THREE.MeshStandardMaterial({ color: 0x2a4a48, roughness: 0.15, metalness: 0.3, emissive: 0x081412 }), deep: new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 }),
     iron: new THREE.MeshStandardMaterial({ color: 0x2a2624, metalness: 0.8, roughness: 0.5 }), ember: new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.2, 0.3), toneMapped: false }),
+    glint: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 2.1, 1.5), transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
+    plate: new THREE.MeshStandardMaterial({ color: 0x6a5e50, roughness: 0.8 }),
     gold: new THREE.MeshStandardMaterial({ color: 0xc9973c, metalness: 0.85, roughness: 0.4 }), wood: new THREE.MeshStandardMaterial({ color: 0x5a3a20, roughness: 0.85 }),
     styles: {},
   };
   return KIT;
 }
+// Round 22: each hold has a kit, the stuff its walls are made of: rock (the hills, the weir's banks), brick (ruined
+// serais, burned houses, vaults), reed (the marsh islands' bundled reed walls) or timber (a hulk, a warehouse)
 function styleMats(id) {
-  const K = kit(), H = HOLDS[id];
+  const K = kit(), H = HOLDS[id], kitN = H.kit || 'rock';
   if (K.styles[id]) return K.styles[id];
+  K.wood ||= woodTex();
+  const tri = (map, normalMap, color, scale, ns, grime) => triplanarMaterial({ map, normalMap, color, scale, roughness: 0.95, normalStrength: ns, grime });
+  const rock = kitN === 'brick' ? tri(K.brick.map, K.brick.normalMap, H.rock, 0.5, 1.4, 0.75)
+    : kitN === 'timber' ? tri(K.wood, K.rt.normal, H.rock, 0.42, 0.6, 0.5)
+    : kitN === 'reed' ? new THREE.MeshStandardMaterial({ color: H.rock, map: K.wood, roughness: 1 })
+    : tri(K.rt.map, K.rt.normal, H.rock, 0.55, 1.6, 0.55);
   return (K.styles[id] = {
-    rock: triplanarMaterial({ map: K.rt.map, normalMap: K.rt.normal, color: H.rock, scale: 0.55, roughness: 0.95, normalStrength: 1.6, grime: 0.55 }),
-    wall: triplanarMaterial({ map: K.brick.map, normalMap: K.brick.normalMap, color: H.wall, scale: 0.5, roughness: 0.95, normalStrength: 1.2, grime: 0.6 }),
-    crack: triplanarMaterial({ map: K.rt.map, normalMap: K.rt.normal, color: new THREE.Color(H.rock).multiplyScalar(1.15), scale: 0.6, roughness: 1, normalStrength: 2.6, grime: 1.0 }),
-    floor: floorMat(H.floor[0], H.floor[1], 1, id === 'gorge' ? 0.25 : 0),
+    kit: kitN, rock,
+    wall: tri(K.brick.map, K.brick.normalMap, H.wall, 0.5, 1.2, 0.6),
+    crack: kitN === 'brick' ? tri(K.brick.map, K.brick.normalMap, new THREE.Color(H.rock).multiplyScalar(1.12), 0.55, 2.2, 1.0) : kitN === 'rock' ? tri(K.rt.map, K.rt.normal, new THREE.Color(H.rock).multiplyScalar(1.15), 0.6, 2.6, 1.0) : tri(K.wood, K.rt.normal, new THREE.Color(H.rock).multiplyScalar(0.9), 0.42, 1.2, 0.9),
+    floor: floorMat(H.floor[0], H.floor[1], 1, H.wet ?? (id === 'gorge' ? 0.25 : 0)),
+    mud: floorMat(0x4a3e2c, 'earth', 1, 0.9),
+    water: new THREE.MeshStandardMaterial({ color: H.water ?? 0x2a3c34, roughness: 0.08, metalness: 0.25, transparent: true, opacity: 0.82, depthWrite: false }),
+    beam: new THREE.MeshStandardMaterial({ color: 0x2a1c12, roughness: 0.9 }),
   });
 }
 // one lumpy rock (a noisy dodecahedron), shared by every cliff and column
@@ -265,15 +289,68 @@ export function buildHold(scene, id) {
   const grp = new THREE.Group(), dyn = new THREE.Group();
   const add = (geo, m, x, y, z, ry = 0, into = grp) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.y = ry; o.castShadow = true; o.receiveShadow = true; into.add(o); return o; };
   const col = (x, z, hw, hd, extra = {}) => { const c = { type: 'box', x, z, hw, hd, rot: 0, interior: true, ...extra }; colliders.push(c); return c; };
-  const I = { hold: id, mist: [], group: grp, rooms: [], torches: [], style: 'hold', floors: [], hazards: [], water: [], fades: [], spawns: [], fires: [], gates: [], cracks: [], chests: [], tiles: rows, W, H, X, Z, at };
-  const walkable = (c, r) => WALK.has(at(c, r)) || (at(c, r) === 'x' && I.cracks.find((k) => k.c === c && k.r === r)?.open) || (at(c, r) === 'g' && I.gates.find((k) => k.c === c && k.r === r)?.open);
+  const HD = HOLDS[id], DROP = HD.drop || { rock: 'deep', brick: 'pit' }[M.kit] || 'water';
+  const I = { hold: id, levers: [], doors: [], bridges: [], plates: [], shallows: [], glints: [], mist: [], group: grp, rooms: [], torches: [], style: 'hold', floors: [], hazards: [], water: [], fades: [], spawns: [], fires: [], gates: [], cracks: [], chests: [], tiles: rows, W, H, X, Z, at };
+  const walkable = (c, r) => {
+    const ch = at(c, r); if (WALK.has(ch)) return true;
+    if (ch === 'x' || ch === 'h') return !!I.cracks.find((k) => k.c === c && k.r === r)?.open;
+    if (ch === 'g') return !!I.gates.find((k) => k.c === c && k.r === r)?.open;
+    if (ch === 'D' || ch === 'b') return !!I.leverOn;
+    return false;
+  };
   I.walkable = walkable;
   const floorG = new THREE.PlaneGeometry(TILE, TILE).rotateX(-Math.PI / 2);
+  // the drop below a '~' (and below a sunken bridge until it is raised): a chasm, a pit, or deep water
+  const dropTile = (c, r, x, z) => {
+    const cl = col(x, z, TILE / 2, TILE / 2, { chasm: true });
+    const deepY = DROP === 'deep' ? -12 : DROP === 'pit' ? -5.5 : -1.6;
+    add(new THREE.PlaneGeometry(TILE, TILE).rotateX(-Math.PI / 2), DROP === 'water' ? M.mud : (id === 'gorge' ? K.river : K.deep), x, deepY, z).castShadow = false;
+    if (DROP === 'water') { add(new THREE.PlaneGeometry(TILE, TILE).rotateX(-Math.PI / 2), M.water, x, -0.45, z).castShadow = false; if (hash(c, r * 7) < 0.1) I.mist.push(V(x, 0.2, z)); }
+    else {
+      if (hash(c * 3, r) < 0.35) { const b = add(rockLump(), M.kit === 'rock' ? M.rock : K.deep, x + (hash(c, r * 5) - 0.5) * 2, deepY, z + (hash(c * 5, r) - 0.5) * 2); const bs = 0.5 + hash(r, c * 2) * 0.9; b.scale.set(bs, bs * 0.7, bs); b.castShadow = false; }
+      if (DROP === 'deep' && hash(c, r * 3) < 0.12) I.mist.push(V(x, -9, z));
+      if (DROP === 'pit' && hash(c, r * 3) < 0.08) I.mist.push(V(x, -4, z));
+    }
+    for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const n = at(c + dc, r + dr); if (n === '~' || n === 'b' || n === '#') continue;
+      const fh = -deepY + 0.2, face = add(new THREE.BoxGeometry(dc ? 0.7 : TILE, fh, dr ? 0.7 : TILE), DROP === 'water' ? M.mud : M.rock, x + dc * (TILE / 2 - 0.35), deepY / 2, z + dr * (TILE / 2 - 0.35)); face.castShadow = false;
+    }
+    return cl;
+  };
+  // a wall tile in the hold's kit; near = it borders a path (it gets a collider and its full height)
+  const wallTile = (c, r, x, z, near, into = grp) => {
+    const h0 = hash(c, r), h1 = hash(c + 5, r + 2), h2 = hash(c + 9, r + 7);
+    if (M.kit === 'brick') {
+      if (!near) { if (h0 < 0.5) return null; const h = 2.5 + h1 * 5.5; add(new THREE.BoxGeometry(TILE + 0.04, h, TILE + 0.04), M.rock, x, h / 2 - 0.2, z, 0, into).castShadow = false; return null; }
+      // a burned house wall: full brick, a broken top, a charred beam end left in it
+      const h = 4.2 + h1 * 2.4, m = add(new THREE.BoxGeometry(TILE + 0.06, h, TILE + 0.06), M.rock, x, h / 2 - 0.2, z, 0, into);
+      for (let k = 0; k < 2; k++) add(new THREE.BoxGeometry(0.8 + hash(c + k, r) * 1.2, 0.6 + hash(r, c + k) * 1.4, TILE * 0.9), M.rock, x + (k - 0.5) * 1.2, h - 0.2 + 0.3, z, (hash(c * k, r) - 0.5) * 0.2, into);
+      if (h2 < 0.3) add(new THREE.BoxGeometry(0.28, 0.28, TILE + 1.2), M.beam, x, h * (0.55 + h0 * 0.3), z, h1 * 3, into);
+      return m;
+    }
+    if (M.kit === 'timber') {
+      if (!near) { if (h0 < 0.55) return null; for (let k = 0; k < 1 + (h1 < 0.5 ? 1 : 0); k++) { const s0 = 1.6 + hash(c + k, r) * 0.9; add(new THREE.BoxGeometry(s0, s0 * 0.8, s0), M.rock, x + (hash(c, r + k) - 0.5), s0 * 0.4 + k * s0 * 0.8, z + (hash(c + k, r) - 0.5), h2 * 3, into).castShadow = false; } return null; }
+      // planking on a frame: boards, a heavy post, a rail along the top
+      const h = HD.wallH ?? (3.4 + h1 * 1.2), m = add(new THREE.BoxGeometry(TILE + 0.06, h, TILE + 0.06), M.rock, x, h / 2 - 0.2, z, 0, into);
+      add(new THREE.BoxGeometry(0.42, h + 0.5, 0.42), M.beam, x - TILE / 2 + 0.2, (h + 0.5) / 2 - 0.2, z - TILE / 2 + 0.2, 0, into);
+      add(new THREE.BoxGeometry(TILE + 0.3, 0.3, TILE + 0.3), M.beam, x, h - 0.1, z, 0, into);
+      return m;
+    }
+    if (M.kit === 'reed') {
+      // bundled reed walls (the mudhif's ribs), tied in bands; beyond the paths, standing reed beds
+      const n = near ? 5 : (h0 < 0.4 ? 0 : 3), H0 = near ? 3.2 : 2.4; let m = null;
+      for (let k = 0; k < n; k++) { const hh = H0 + hash(c + k, r * 3) * 1.4, b = add(new THREE.CylinderGeometry(near ? 0.36 : 0.12, near ? 0.44 : 0.3, hh, 7), M.rock, x + (hash(c * 3 + k, r) - 0.5) * 2.4, hh / 2 - 0.1, z + (hash(c, r * 3 + k) - 0.5) * 2.4, h0 * 6, into); b.rotation.z = (hash(k, c + r) - 0.5) * 0.12; m ||= b; if (near) add(new THREE.TorusGeometry(0.4, 0.05, 4, 10).rotateX(Math.PI / 2), M.beam, b.position.x, hh * 0.6, b.position.z, 0, into); }
+      return m;
+    }
+    return null;
+  };
   for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
-    const ch = at(c, r), x = X(c), z = Z(r), near = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dc, dr]) => WALK.has(at(c + dc, r + dr)) || '~xgwp'.includes(at(c + dc, r + dr)));
-    if (WALK.has(ch) && ch !== '=') { add(floorG, M.floor, x, 0, z).castShadow = false; I.floors.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]); }
-    if ('wpCgx'.includes(ch)) { add(floorG, M.floor, x, 0, z).castShadow = false; I.floors.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]); }
-    if (ch === '#' && !near) {
+    const ch = at(c, r), x = X(c), z = Z(r), near = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dc, dr]) => WALK.has(at(c + dc, r + dr)) || '~xgwphDb'.includes(at(c + dc, r + dr)));
+    if (WALK.has(ch) && ch !== '=') { add(floorG, ch === 'o' ? M.mud : M.floor, x, 0, z).castShadow = false; I.floors.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]); }
+    if ('wpCgxhD'.includes(ch)) { add(floorG, M.floor, x, 0, z).castShadow = false; I.floors.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]); }
+    if (ch === '#' && M.kit !== 'rock') {
+      wallTile(c, r, x, z, near); if (near) col(x, z, TILE / 2, TILE / 2);
+    } else if (ch === '#' && !near) {
       // the rock beyond the paths: big weathered lumps at mixed heights, a ridge line against the sky
       if (hash(c, r) < 0.7) continue;
       const lr = 2.6 + hash(c + 9, r) * 2.4, lump = add(rockLump(), M.rock, x, 4 + hash(r, c + 4) * 6, z); lump.scale.set(lr, lr * (0.9 + hash(c, r + 6) * 0.9), lr); lump.rotation.set(hash(c, r) * 3, hash(r, c) * 6, 0); lump.castShadow = false;
@@ -290,16 +367,31 @@ export function buildHold(scene, id) {
       }
       if (near && hash(c + 7, r) < 0.3) { const b = add(new THREE.DodecahedronGeometry(0.6 + hash(r, c + 3) * 0.7, 0), M.rock, x + (hash(c, r + 9) - 0.5) * 2, 0.3, z + (hash(c + 2, r) - 0.5) * 2); b.rotation.set(hash(c, r) * 3, hash(r, c) * 3, 0); }
     } else if (ch === '~') {
-      // the drop: dark below, rock faces going down at its edges
-      col(x, z, TILE / 2, TILE / 2, { chasm: true });
-      // far below: the river (the gorge) or rubble on a dark floor (the quarry, the fort's drop, the ravine)
-      add(new THREE.PlaneGeometry(TILE, TILE).rotateX(-Math.PI / 2), id === 'gorge' ? K.river : K.deep, x, -12, z).castShadow = false;
-      if (hash(c * 3, r) < 0.35) { const b = add(rockLump(), M.rock, x + (hash(c, r * 5) - 0.5) * 2, -12, z + (hash(c * 5, r) - 0.5) * 2); const bs = 0.5 + hash(r, c * 2) * 0.9; b.scale.set(bs, bs * 0.7, bs); b.castShadow = false; }
-      if (hash(c, r * 3) < 0.12) I.mist.push(V(x, -9, z));
-      for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const n = at(c + dc, r + dr); if (n === '~' || n === '#') continue;
-        const face = add(new THREE.BoxGeometry(dc ? 0.7 : TILE, 12.2, dr ? 0.7 : TILE), M.rock, x + dc * (TILE / 2 - 0.35), -6.05, z + dr * (TILE / 2 - 0.35)); face.castShadow = false;
-      }
+      dropTile(c, r, x, z);
+    } else if (ch === 'b') {
+      // a sunken bridge: the drop until the lever raises its boards out of the water (or up from the pit)
+      const cl = dropTile(c, r, x, z), bg = new THREE.Group(); bg.position.set(x, 0, z); dyn.add(bg);
+      const alongZ = at(c - 1, r) === '~' || at(c + 1, r) === '~';
+      for (let k = 0; k < 6; k++) { const o = k / 6 * TILE - TILE / 2 + TILE / 12; add(new THREE.BoxGeometry(alongZ ? TILE * 0.96 : 0.44, 0.12, alongZ ? 0.44 : TILE * 0.96), k % 2 ? K.plank : K.plank2, alongZ ? 0 : o, -0.03, alongZ ? o : 0, 0, bg); }
+      for (const s2 of [-1, 1]) add(new THREE.BoxGeometry(alongZ ? 0.2 : TILE, 0.26, alongZ ? TILE : 0.2), K.plank2, alongZ ? s2 * (TILE / 2 - 0.1) : 0, -0.14, alongZ ? 0 : s2 * (TILE / 2 - 0.1), 0, bg);
+      bg.position.y = DROP === 'water' ? -1.2 : -4; bg.visible = DROP === 'water';
+      I.bridges.push({ c, r, x, z, grp: bg, col: cl });
+    } else if (ch === 'D') {
+      // a portcullis of iron-shod timber in a brick frame; the lever lifts it
+      const fr = add(new THREE.BoxGeometry(TILE + 0.1, 0.6, 0.7), M.wall, x, 3.6, z);
+      const alongX = WALK.has(at(c, r - 1)) || WALK.has(at(c, r + 1)); if (!alongX) fr.rotation.y = Math.PI / 2;
+      const leaf = new THREE.Group(); leaf.position.set(x, 0, z); dyn.add(leaf);
+      for (let k = 0; k < 6; k++) add(new THREE.BoxGeometry(0.14, 3.3, 0.14), K.iron, alongX ? -TILE / 2 + 0.3 + k * 0.48 : 0, 1.65, alongX ? 0 : -TILE / 2 + 0.3 + k * 0.48, 0, leaf);
+      for (let k = 0; k < 3; k++) add(new THREE.BoxGeometry(alongX ? TILE : 0.12, 0.12, alongX ? 0.12 : TILE), K.iron, 0, 0.5 + k * 1.1, 0, 0, leaf);
+      I.doors.push({ c, r, x, z, leaf, col: col(x, z, TILE / 2, TILE / 2) });
+    } else if (ch === 'h') {
+      // loose stones: the wall looks like any other, but a draught stirs dust at one stone (a glint shows it close up)
+      const wrap = new THREE.Group(); dyn.add(wrap);
+      if (!wallTile(c, r, x, z, true, wrap)) add(new THREE.BoxGeometry(TILE + 0.06, 5, TILE + 0.06), M.rock, x, 2.3, z, 0, wrap);
+      const face = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dc, dr]) => WALK.has(at(c + dc, r + dr))) || [0, 1];
+      const gl = add(new THREE.SphereGeometry(0.09, 6, 4), K.glint, x + face[0] * (TILE / 2 + 0.06), 1.3, z + face[1] * (TILE / 2 + 0.06), 0, dyn); gl.castShadow = false; gl.visible = false;
+      I.glints.push(gl);
+      I.cracks.push({ c, r, x, z, mesh: wrap, col: col(x, z, TILE / 2, TILE / 2), open: false, secret: true, glint: gl, face });
     } else if (ch === '=') {
       // a plank way: boards across, a rope rail on each chasm side, posts at the corners
       const alongZ = at(c - 1, r) === '~' || at(c + 1, r) === '~';
@@ -340,6 +432,22 @@ export function buildHold(scene, id) {
       I.torches.push({ pos: V(x, 0.4, z), light: V(x, 1.2, z), intensity: 0.8, fire: true });
       colliders.push({ type: 'circle', x, z, r: 0.9, interior: true });
     }
+    if (ch === 'L') {
+      // a lever against the nearest wall: an iron-bound post and a long handle
+      const w = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dc, dr]) => at(c + dc, r + dr) === '#') || [0, -1];
+      const lx = x + w[0] * 1.05, lz = z + w[1] * 1.05, base = new THREE.Group(); base.position.set(lx, 0, lz); base.rotation.y = Math.atan2(-w[0], -w[1]); dyn.add(base);
+      add(new THREE.BoxGeometry(0.5, 1.0, 0.4), K.wood, 0, 0.5, 0, 0, base); add(new THREE.BoxGeometry(0.56, 0.1, 0.46), K.iron, 0, 0.8, 0, 0, base);
+      const handle = new THREE.Group(); handle.position.set(0, 0.95, 0); base.add(handle);
+      add(new THREE.CylinderGeometry(0.05, 0.05, 1.3, 6), K.iron, 0, 0.6, 0, 0, handle); add(new THREE.SphereGeometry(0.1, 6, 5), K.wood, 0, 1.25, 0, 0, handle);
+      handle.rotation.x = -0.7;
+      I.levers.push({ c, r, pos: V(x, 0, z), handle });
+      colliders.push({ type: 'circle', x: lx, z: lz, r: 0.35, interior: true });
+    }
+    if (ch === 'K') { // a pressure plate: a cracked slab a little proud of the floor
+      add(new THREE.BoxGeometry(2.3, 0.06, 2.3), K.plate, x, 0.03, z, hash(c, r) * 0.3).castShadow = false;
+      I.plates.push({ pos: V(x, 0, z), cd: 0, fuse: -1 });
+    }
+    if (ch === 'o') { add(floorG, M.water, x, 0.24, z).castShadow = false; I.shallows.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]); }
     if (ch === 'E') { I.entrance = V(x, 0, z + 1); I.start = V(x, 0, z - 2.5); } // he arrives a step in, so the camera has room behind him
     if (ch === 'm' || ch === 'a') I.spawns.push({ kind: ch, x, z });
     if (ch === 'M') I.midAt = V(x, 0, z);
@@ -374,7 +482,7 @@ export function buildHold(scene, id) {
   buildGrid(); buildNav(INTERIOR_X, 290);
   // which side of each gate is the far one (reached later along the way from the entrance)
   const dist = new Map(), q = [], [ec, er] = tileOf(I.entrance.x, I.entrance.z); dist.set(ec + ',' + er, 0); q.push([ec, er]);
-  while (q.length) { const [c, r] = q.shift(), d = dist.get(c + ',' + r); for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (c + dc) + ',' + (r + dr); if (dist.has(k) || !(WALK.has(at(c + dc, r + dr)) || at(c + dc, r + dr) === 'x')) continue; dist.set(k, d + 1); q.push([c + dc, r + dr]); } }
+  while (q.length) { const [c, r] = q.shift(), d = dist.get(c + ',' + r); for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (c + dc) + ',' + (r + dr); if (dist.has(k) || !(WALK.has(at(c + dc, r + dr)) || 'xhDb'.includes(at(c + dc, r + dr)))) continue; dist.set(k, d + 1); q.push([c + dc, r + dr]); } }
   for (const G of I.gates) {
     const sides = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dc, dr]) => [G.c + dc, G.r + dr]).filter(([c, r]) => WALK.has(at(c, r)));
     sides.sort((a, b) => (dist.get(b.join()) ?? 0) - (dist.get(a.join()) ?? 0));
@@ -387,6 +495,36 @@ function destroyHold(scene, I) {
   scene.remove(I.group);
   I.group.traverse((o) => { if (o.isMesh && o.geometry) o.geometry.dispose(); });
   for (let i = colliders.length - 1; i >= 0; i--) if (colliders[i].interior) colliders.splice(i, 1);
+}
+
+// ------------------------------------------------------------------ the doors of the act holds on the map
+const DOORM = {};
+function holdDoor(H, face) {
+  const K = kit(), grp = new THREE.Group(); grp.rotation.y = face;
+  DOORM[H.rock] ||= new THREE.MeshStandardMaterial({ color: H.rock, roughness: 0.95 });
+  const m = DOORM[H.rock], dark = K.void;
+  const box = (w, h, d, x, y, z, mat = m) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; grp.add(o); return o; };
+  if (H.door === 'reed') {
+    // a reed arch: two bound bundles bent together over a mat doorway
+    for (const sx of [-1, 1]) { const b = new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.28, 6, 10, Math.PI / 2), m); b.position.set(0, 0, -1.5); b.rotation.y = sx < 0 ? Math.PI : 0; b.scale.set(1, 1.6, 1); b.castShadow = true; grp.add(b); }
+    box(2.4, 2.4, 0.1, 0, 1.2, -1.6, dark);
+  } else if (H.door === 'plank') {
+    // a gangplank up to a dark hatch in a hull side
+    box(4.4, 2.6, 0.5, 0, 1.3, -1.6, K.wood); box(1.4, 1.8, 0.1, 0, 1.2, -1.32, dark);
+    const pl = box(1.1, 0.1, 2.6, 0, 0.6, -0.2, K.plank); pl.rotation.x = -0.4;
+  } else if (H.door === 'pit') {
+    // steps going down behind a broken wall stub
+    box(4.4, 1.1, 0.5, 0, 0.55, -1.6); for (const sx of [-1.9, 1.9]) box(0.5, 1.4, 2.8, sx, 0.7, -0.4);
+    box(3.2, 0.06, 2.6, 0, 0.03, -0.3, dark);
+  } else {
+    // a broken arch in a wall stub, dark inside
+    box(4.6, 3.6, 0.6, 0, 1.8, -1.6); box(1.6, 2.4, 0.1, 0, 1.2, -1.28, dark);
+    const a = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.18, 6, 12, Math.PI), m); a.position.set(0, 2.4, -1.25); grp.add(a);
+  }
+  // a torch on a post beside it, so it reads at a distance
+  const post = box(0.12, 2.2, 0.12, 1.4, 1.1, -0.9, K.wood); post.castShadow = false;
+  const fl = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 5), K.ember); fl.position.set(1.4, 2.3, -0.9); grp.add(fl);
+  return grp;
 }
 
 // ------------------------------------------------------------------ captains' moves
@@ -437,7 +575,7 @@ const MOVES = {
     tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(1, M.t / 1.2); return M.t >= M.dur; } },
   // pots of naft thrown onto marked rings that burn where they land
   firepots: { range: [0, 16], cd: 7, start(g, e) { e.st.action = 'throw'; e.mv = { t: 0, dur: 1.2 }; const p = g.player.pos;
-      for (let i = 0; i < 4; i++) { const q = V(p.x + (i ? rand(-5, 5) : 0), 0, p.z + (i ? rand(-5, 5) : 0)); g.telegraph(q, 2.0, 1.0 + i * 0.15, () => { g.decal(q, 4, 'scorch'); g.fires2.push({ pos: q, r: 2.0, life: 4, t: 0, tick: 0, dmg: e.dmg * 0.35 }); g.audio.boom?.(); }); } },
+      for (let i = 0; i < 4; i++) { const q = V(p.x + (i ? rand(-5, 5) : 0), 0, p.z + (i ? rand(-5, 5) : 0)); g.telegraph(q, 2.0, 1.0 + i * 0.15, () => { g.decal(q, 4, 'scorch'); g.fx.naftBurst?.(q, 2); g.fires2.push({ pos: q, r: 2.0, life: 4, t: 0, tick: 0, dmg: e.dmg * 0.35 }); g.audio.boom?.(); }); } },
     tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(1, M.t / M.dur); return M.t >= M.dur; } },
   // a casting net (the marsh men's trick): it pins Salim unless he evades through it
   net: { range: [3, 10], cd: 7, start(g, e) { e.st.action = 'throw'; e.mv = { t: 0, dur: 1.0, done: false }; },
@@ -551,7 +689,8 @@ export function setupHolds(g) {
     g.ui.fade(1); g.paused = true; await new Promise((r) => setTimeout(r, 600));
     g.returnPos = p.pos.clone();
     const I = buildHold(g.scene, id);
-    const level = Math.max(22, Math.min(30, p.level + 1)) + H.step;
+    // the hills' holds are fought after the chronicle; the act holds scale with Salim like the dungeons (never below their act)
+    const level = H.region === 'hamrin' ? Math.max(22, Math.min(30, p.level + 1)) + H.step : Math.min(30, Math.max(H.level, p.level) + (H.step || 0));
     g.interior = { def: { kind: 'hold', id, title: H.title, level }, I, enemies: [], hold: true };
     for (const tch of I.torches) g.lightPool?.add({ pos: tch.light, color: tch.fire ? 0xff9a40 : 0xffa860, power: tch.fire ? 22 : 14, dist: tch.fire ? 12 : 9, interior: true });
     for (const e of g.enemies) if (!e.dead) e.rig.visible = false;
@@ -560,13 +699,16 @@ export function setupHolds(g) {
     for (const C of I.cracks) if (s.cracks[C.c + ',' + C.r]) breakCrack(I, C, true);
     for (const T of I.chests) if (s.chests[T.kind]) { T.opened = true; T.mesh.children[1].rotation.x = -1.1; }
     for (const F of I.fires) if (s.fires[F.idx]) F.lit = true;
+    if (s.lever) pullLever(I, true);
     populate(I, level, s);
+    storyIn(I, H, s);
     // interactables: the way out, the fires, the gates (from the far side), the cracked walls, the chests
     g.interactables.push({ pos: I.entrance, r: 2.6, label: 'Climb back out of the hold', act: () => exit(), interior: true });
     for (const F of I.fires) g.interactables.push({ pos: F.pos, r: 2.4, interior: true, get label() { return F.lit ? 'Rest at the campfire' : 'Light the campfire'; }, act: () => rest(I, F) });
     for (const G of I.gates) g.interactables.push({ pos: G.far, r: 2.4, interior: true, get hidden() { return G.open; }, label: 'Lift the bar from the gate', act: () => { openGate(I, G); state(id).gates[G.c + ',' + G.r] = true; saveGame(g); g.ui.toast(t('A shortcut back to the entrance')); } });
     for (const G of I.gates) g.interactables.push({ pos: G.near, r: 2.0, interior: true, get hidden() { return G.open; }, label: 'Barred from the other side', act: () => { g.audio.denied?.(); } });
-    for (const C of I.cracks) g.interactables.push({ pos: V(C.x, 0, C.z), r: 3.0, interior: true, get hidden() { return C.open; }, label: 'Break through the cracked wall', act: () => { breakCrack(I, C); state(id).cracks[C.c + ',' + C.r] = true; saveGame(g); } });
+    for (const C of I.cracks) g.interactables.push({ pos: C.secret ? V(C.x + C.face[0] * 2.2, 0, C.z + C.face[1] * 2.2) : V(C.x, 0, C.z), r: C.secret ? 1.9 : 3.0, interior: true, get hidden() { return C.open; }, label: C.secret ? 'Push the loose stones' : 'Break through the cracked wall', act: () => { breakCrack(I, C); state(id).cracks[C.c + ',' + C.r] = true; saveGame(g); } });
+    for (const L of I.levers) g.interactables.push({ pos: L.pos, r: 2.2, interior: true, get hidden() { return I.leverOn; }, label: 'Pull the lever', act: () => { pullLever(I); state(id).lever = true; saveGame(g); } });
     for (const T of I.chests) g.interactables.push({ pos: T.pos, r: 2.2, interior: true, get hidden() { return T.opened; }, label: 'Open the chest', act: () => openChest(I, T, level) });
     // the trail: the captain halfway, the fire beyond him, the master, his chest, then the way out
     I.objective = () => {
@@ -578,7 +720,7 @@ export function setupHolds(g) {
       return [I.entrance, 'Climb back out of the hold'];
     };
     p.pos.copy(s.lastFire != null && I.fires[s.lastFire] ? I.fires[s.lastFire].pos.clone().add(V(0, 0, 2)) : I.start); p.target = null; p.moveTo = null; p.vel?.set(0, 0, 0);
-    g.camInit = false; g.camAction = true; g.lighting?.set('gorge', 0);
+    g.camInit = false; g.camAction = true; g.lighting?.set(H.light || 'gorge', 0);
     for (const o of g.world.staticRoots || []) { o.userData.wasVis = o.visible; o.visible = !!o.userData.sky; }
     g.world.cullPaused = true;
     g.ui.setMapRegion?.('interior', I);
@@ -588,7 +730,7 @@ export function setupHolds(g) {
   }
   function populate(I, level, s, menOnly = false) {
     const H = HOLDS[I.hold];
-    for (const e of g.interior.enemies) if (!menOnly || !e.holdBoss) { g.scene.remove(e.rig); e.removed = true; }
+    for (const e of g.interior.enemies) if (!menOnly || (!e.holdBoss && !e.storyBoss)) { if (e.storyBoss && !e.dead) { park(e); continue; } g.scene.remove(e.rig); e.removed = true; }
     g.enemies = g.enemies.filter((e) => !e.removed); g.interior.enemies = g.interior.enemies.filter((e) => !e.removed);
     for (const sp of I.spawns) {
       const ranged = sp.kind === 'a', pool = ranged ? H.ranged : H.pool, n = ranged ? 1 + (Math.random() < 0.5 ? 1 : 0) : 2 + Math.floor(Math.random() * 2);
@@ -597,10 +739,11 @@ export function setupHolds(g) {
     }
     for (const [key, atK] of [['mid', 'midAt'], ['boss', 'bossAt']]) {
       if (menOnly || (key === 'mid' ? s.mid : s.done)) continue;
+      if (key === 'boss' && storyLieut(H)) continue; // the act's lieutenant waits here instead (storyIn)
       const bid = H[key], K = BOSS[bid], type = K.type === 'zubayr' ? 'zubayr' : 'hb_' + bid;
       const e = g.spawnPack(type, I[atK].x, I[atK].z, 1, level + (key === 'boss' ? 2 : 1), { spread: 0, interior: true })[0];
       e.interior = true; e.holdBoss = K; e.holdKey = key; e.name = K.name; e.elite = true; e.final = true;
-      e.maxHp = e.hp = Math.round(e.maxHp * K.hp); e.dmg *= K.dmg; e.maxPoise = e.poise = e.maxPoise * 6; e.xp *= 12; e.speed *= 1.1;
+      e.maxHp = e.hp = Math.round(e.maxHp * K.hp * (H.hpK || 1)); e.dmg *= K.dmg; e.maxPoise = e.poise = e.maxPoise * 6; e.xp *= 12; e.speed *= 1.1;
       if (K.block) { e.shield = true; e.blockK = K.block; }
       if (K.rival) { e.volleyN = 5; e.T = { ...e.T, hold: [7, 13] }; }
       e.T = { ...e.T, ai: holdBossAI }; e.moves = [...K.moves]; e.cds = {}; e.facing = Math.PI; e.alerted = true; e.engaged = false;
@@ -614,8 +757,38 @@ export function setupHolds(g) {
   }
   function breakCrack(I, C, quiet) {
     C.open = true; const i = colliders.indexOf(C.col); if (i >= 0) colliders.splice(i, 1);
-    C.mesh.visible = false; buildGrid(); buildNav(INTERIOR_X, 290);
-    if (!quiet) { g.audio.boom?.(); g.shake = 0.5; for (let k = 0; k < 4; k++) g.fx.dust(V(C.x + rand(-1, 1), 0.5, C.z + rand(-1, 1)), 16, 1.6); g.ui.toast(t('A hidden chamber')); }
+    C.mesh.visible = false; if (C.glint) C.glint.visible = false; buildGrid(); buildNav(INTERIOR_X, 290);
+    if (!quiet) { g.audio.boom?.(); g.shake = C.secret ? 0.25 : 0.5; for (let k = 0; k < 4; k++) g.fx.dust(V(C.x + rand(-1, 1), 0.5, C.z + rand(-1, 1)), 16, 1.6); g.ui.toast(t(C.secret ? 'The stones give way. A hidden way' : 'A hidden chamber')); haptic(14); }
+  }
+  // the lever: up go the portcullis and the sunken bridge (they stay up; the hold remembers)
+  function pullLever(I, quiet) {
+    if (I.leverOn) return; I.leverOn = true;
+    for (const L of I.levers) L.handle.rotation.x = 0.7;
+    for (const D of I.doors) { const i = colliders.indexOf(D.col); if (i >= 0) colliders.splice(i, 1); D.leaf.position.y = 3.2; }
+    for (const B of I.bridges) { const i = colliders.indexOf(B.col); if (i >= 0) colliders.splice(i, 1); B.grp.visible = true; B.rise = quiet ? 1 : 0; if (quiet) B.grp.position.y = 0; }
+    buildGrid(); buildNav(INTERIOR_X, 290);
+    if (!quiet) { g.audio.clang?.(); haptic(18); g.shake = 0.3; g.ui.toast(t(I.doors.length ? 'Somewhere a portcullis grinds up' : 'Boards rise out of the drop')); for (const D of I.doors) g.fx.dust(V(D.x, 0.5, D.z), 12, 1.2); }
+  }
+  // the act's second lieutenant holds the story hold while his quest is open: he waits out of the field (parked)
+  // and stands at the hold's end when Salim comes in; his fall is the act's own (game.killEnemy plays his scene)
+  function storyLieut(H) {
+    if (H.story !== 'second' || H.region !== REGION) return null;
+    const L = g.matriarch; if (!L || L.dead || L.removed) return null;
+    return g.quests.find((q) => q.id === L.quest)?.done ? null : L;
+  }
+  function park(L) {
+    L.parked = true; L.ghost = true; L.interior = false; L.alerted = false; L.barOn = false; L.hook = null; L.smoke = null;
+    const m = g.holdDoors?.[Object.keys(HOLDS).find((k) => storyLieut(HOLDS[k]) === L)]; if (m) L.pos.set(m.x, m.y, m.z);
+  }
+  g.holds22 = { park, storyLieut };
+  function storyIn(I, H) {
+    const L = storyLieut(H); if (!L) return;
+    // at the end of a whole hold he is a master in his own right: tougher than in the field (once)
+    if (!L.holdHp) { L.holdHp = true; L.maxHp = Math.round(L.maxHp * 2.4); L.dmg *= 1.15; L.maxPoise = (L.maxPoise || 40) * 3; L.poise = L.maxPoise; L.xp *= 3; }
+    L.parked = false; L.ghost = false; L.interior = true; L.storyBoss = true; L.holdKey = 'boss'; L.hp = L.maxHp; L.alerted = false;
+    L.pos.copy(I.bossAt); L.pos.y = 0; L.home = I.bossAt.clone(); L.facing = Math.PI; L.rig.visible = true;
+    if (!g.enemies.includes(L)) g.enemies.push(L);
+    g.interior.enemies.push(L);
   }
   function openChest(I, T, level) {
     const s = state(I.hold);
@@ -625,7 +798,11 @@ export function setupHolds(g) {
     for (let i = 0; i < n; i++) g.dropItem(makeItem(level + 1, i < (T.kind === 'T' ? 2 : 1) ? 'legendary' : 'rare'), at2);
     g.dropItem({ gold: Math.round((T.kind === 'T' ? 140 : 70) * level), rarity: 'common' }, at2);
     const gem = ['ruby', 'lapis', 'carnelian'][Math.floor(Math.random() * 3)] + (T.kind === 'T' ? 3 : 2); (p.gems ||= {})[gem] = (p.gems[gem] || 0) + 1; g.ui.toast(t('A cut gem') + ' · ' + gem);
-    p.renown = (p.renown || 0) + (T.kind === 'T' ? 40 : 15); saveGame(g);
+    p.renown = (p.renown || 0) + (T.kind === 'T' ? 40 : 15);
+    if (T.kind === 'T') g.onHoldCleared?.(I.hold);
+    // the hills' holds are the top tier: their masters' chests always give one more legendary
+    if (T.kind === 'T' && HOLDS[I.hold].region === 'hamrin') g.dropItem(makeItem(level + 2, 'legendary'), at2);
+    saveGame(g);
   }
   // resting: heal, refill, his men back at their posts, and this fire is where Salim wakes
   function rest(I, F) {
@@ -655,13 +832,13 @@ export function setupHolds(g) {
     if (!g.interior?.hold) return;
     g.ui.fade(1); g.paused = true; await new Promise((r) => setTimeout(r, 600));
     const I = g.interior.I;
-    for (const e of g.enemies) if (e.interior) { g.scene.remove(e.rig); e.removed = true; }
+    for (const e of g.enemies) if (e.interior) { if (e.storyBoss && !e.dead) { park(e); continue; } g.scene.remove(e.rig); e.removed = true; }
     g.enemies = g.enemies.filter((e) => !e.removed);
     for (const d of [...g.drops]) if (d.to.x > 148) { g.scene.remove(d.mesh); g.ui.removeLootLabel(d); g.drops.splice(g.drops.indexOf(d), 1); }
     g.interactables = g.interactables.filter((x) => !x.interior);
     g.lightPool?.remove((e) => e.interior);
     destroyHold(g.scene, I); buildGrid(); setInteriorFloor(null); buildNav(INTERIOR_X, 290);
-    g.interior = null; g.camAction = false; g.lockOn = null; g.holdArena = null; ringM.visible = false;
+    g.interior = null; g.camAction = !!g.closeCam; g.lockOn = null; g.holdArena = null; ringM.visible = false;
     g.ui.bossBar(null); g.audio.setMusicIntensity?.(0);
     p.pos.copy(g.returnPos); p.pos.y = 0; p.target = null; p.moveTo = null;
     const { heightAt } = await import('./terrain.js'); p.pos.y = heightAt(p.pos.x, p.pos.z);
@@ -677,6 +854,9 @@ export function setupHolds(g) {
   const prevKill = g.onKill;
   g.onKill = (e) => {
     prevKill?.(e);
+    if (e.storyBoss && g.interior?.hold) { // the lieutenant falls in his hold: it is broken (his own scene plays from killEnemy)
+      const s2 = state(g.interior.I.hold); s2.done = true; e.storyBoss = false; p.renown = (p.renown || 0) + 30; saveGame(g); return;
+    }
     if (!e.holdBoss || !g.interior?.hold) return;
     const id = g.interior.I.hold, s = state(id), H = HOLDS[id];
     e.barOn = false; g.ui.bossBar(null); g.holdArena = null; ringM.visible = false; g.audio.setMusicIntensity?.(0);
@@ -689,7 +869,7 @@ export function setupHolds(g) {
         p.rival = { ...(p.rival || {}), final: 'fallen' };
         g.director?.play(SCENES.lieutenantFalls(g, e, { who: 'Zubayr', text: 'It was only ever the pay.', card: { ar: 'زبير', en: 'Zubayr', sub: t('Jabir\'s account is kept') } }));
       } else g.ui.banner(t(H.title), t('The hold is broken. Its master\'s chest is yours.'), 3800);
-      if (Object.keys(HOLDS).every((k) => state(k).done)) setTimeout(() => g.ui.banner(t('The Hamrin Hills'), t('Every hold is broken'), 4200), 4500);
+      if (H.region === 'hamrin' && Object.keys(HOLDS).filter((k) => HOLDS[k].region === 'hamrin').every((k) => state(k).done)) setTimeout(() => g.ui.banner(t('The Hamrin Hills'), t('Every hold is broken'), 4200), 4500);
     }
     saveGame(g);
   };
@@ -705,7 +885,7 @@ export function setupHolds(g) {
     g.holdArena = null; ringM.visible = false; g.ui.bossBar(null);
     for (const e of g.interior.enemies) if (e.holdBoss && !e.dead) { e.hp = e.maxHp; e.engaged = false; e.p2 = false; e.mv = null; e.curMove = null; e.st.action = null; e.moves = [...e.holdBoss.moves]; e.cds = {}; e.pos.copy(e.holdKey === 'mid' ? I.midAt : I.bossAt); e.ghost = false; e.rig.visible = true; }
     for (const e of g.interior.enemies) if (e.summoned && !e.dead) { g.scene.remove(e.rig); e.removed = true; e.dead = true; }
-    for (const e of g.interior.enemies) if (!e.dead && !e.holdBoss) { e.alerted = false; e.hp = e.maxHp; e.pos.copy(e.home); }
+    for (const e of g.interior.enemies) if (!e.dead && !e.holdBoss) { e.alerted = false; e.hp = e.maxHp; e.pos.copy(e.home); e.hook = null; e.smoke = null; e.ghost = false; }
     g.camInit = false;
   };
   // per frame: the board holes, the shrinking arena, the telegraph lines
@@ -719,6 +899,26 @@ export function setupHolds(g) {
       A.t += dt; A.r = Math.max(A.to, 13 - A.t * 0.35);
       ringM.visible = true; ringM.position.set(A.c.x, 0.1, A.c.z); ringM.scale.setScalar(A.r);
       if (!p.dead && p.pos.distanceTo(A.c) > A.r) { if ((A.tick = (A.tick || 0) - dt) <= 0) { A.tick = 0.5; g.damagePlayer(8 + p.level * 1.5, A.c); g.ui.damageNumber(p.pos, t('Keep to the middle'), 'block'); } }
+    }
+  };
+  // Round 22: the traps and water of the act holds; a glint at loose stones when Salim is close; boards rising
+  const prevTick3 = g.tickExtra;
+  g.tickExtra = (dt) => {
+    prevTick3?.(dt);
+    const I = g.interior?.I; if (!I?.hold) return;
+    for (const B of I.bridges) if (B.rise != null && B.rise < 1) { B.rise = Math.min(1, B.rise + dt * 0.8); B.grp.position.y = THREE.MathUtils.lerp(B.grp.position.y, 0, B.rise); }
+    for (const gl of I.glints) { const d = Math.hypot(gl.position.x - p.pos.x, gl.position.z - p.pos.z); gl.visible = d < 8 && !I.cracks.find((C) => C.glint === gl)?.open; if (gl.visible) { gl.scale.setScalar(0.7 + Math.sin(g.t * 5) * 0.35); if (Math.random() < dt * 1.5) g.fx.dust(gl.position, 2, 0.3); } }
+    // shallows: slower, splashing
+    if (!p.dead) for (const [x0, z0, x1, z1] of I.shallows) if (p.pos.x > x0 && p.pos.x < x1 && p.pos.z > z0 && p.pos.z < z1) { g.hazSlowK = Math.min(g.hazSlowK ?? 1, 0.72); p.wadingHold = true; if (p.vel && p.vel.lengthSq() > 1 && Math.random() < dt * 4) g.fx.ring?.(V(p.pos.x, 0.26, p.pos.z), new THREE.Color(0.8, 0.9, 1), 0.2, 1.2, 0.5); break; }
+    // pressure plates: whoever steps on one (Salim or his foes) sets it off; darts from the walls 0.55 s later
+    for (const P of I.plates) {
+      P.cd -= dt;
+      if (P.fuse >= 0) { P.fuse -= dt; if (P.fuse < 0) { P.cd = 2.6; g.audio.at?.(P.pos, () => g.audio.swing?.()); for (let k = 0; k < 6; k++) g.fx.dust(V(P.pos.x + rand(-1.2, 1.2), 0.6, P.pos.z + rand(-1.2, 1.2)), 2, 0.4);
+        if (!p.dead && Math.hypot(p.pos.x - P.pos.x, p.pos.z - P.pos.z) < 1.9) g.damagePlayer(6 + p.level * 1.6, P.pos);
+        for (const e of g.interior.enemies) if (!e.dead && !e.holdBoss && !e.storyBoss && e.pos.distanceTo(P.pos) < 1.9) g.damageEnemy(e, e.maxHp * 0.35, false, P.pos, 'normal', { unblockable: true }); } continue; }
+      if (P.cd > 0) continue;
+      const on = (q) => Math.abs(q.x - P.pos.x) < 1.15 && Math.abs(q.z - P.pos.z) < 1.15;
+      if ((!p.dead && on(p.pos)) || g.interior.enemies.some((e) => !e.dead && on(e.pos))) { P.fuse = 0.55; g.telegraph(P.pos.clone(), 1.9, 0.55, () => {}); g.audio.at?.(P.pos, () => g.audio.clang?.()); }
     }
   };
   // the telegraph lines tick with the game's hazards
@@ -760,6 +960,32 @@ export function setupHolds(g) {
     if (g.lockOn) { reticle.visible = true; reticle.position.set(g.lockOn.pos.x, (g.lockOn.pos.y || 0) + 0.06, g.lockOn.pos.z); reticle.scale.setScalar(g.lockOn.radius * 1.6 + 0.3); reticle.rotation.y += dt * 1.5; if (!p.target) p.target = g.lockOn; }
     else reticle.visible = false;
   };
+  // ---------------- Round 22: the act regions' holds: a door on the map for each, found like any waypoint
+  g.holdDoors = {};
+  for (const [id, H] of Object.entries(HOLDS)) {
+    if (H.region !== REGION || H.region === 'hamrin') continue;
+    const S = SITES[H.near[0]], [x, z] = freeSpot(S.x + H.near[1], S.z + H.near[2], 3.2), y = heightAt(x, z);
+    const face = Math.atan2(S.x - x, S.z - z), door = holdDoor(H, face); door.position.set(x, y, z); g.scene.add(door);
+    const bx = x - Math.sin(face) * 1.5, bz = z - Math.cos(face) * 1.5;
+    colliders.push({ type: 'box', x: bx, z: bz, hw: 2.2, hd: 0.5, rot: face });
+    const pos = V(x + Math.sin(face) * 1.2, y, z + Math.cos(face) * 1.2); g.holdDoors[id] = pos;
+    g.lightPool?.add({ pos: V(x + Math.sin(face) * 0.6, y + 2.2, z + Math.cos(face) * 0.6), color: 0xff8a3a, power: 7, dist: 7, flicker: 1.2 });
+    g.interactables.push({ pos, r: 3, area: id, get label() { return g.holds.label(id); }, act: () => g.holds.enter(id) });
+    g.pois?.push({ x, z, icon: H.story ? '◆' : '⛫', color: H.story ? '#f0c040' : '#e0a060' });
+  }
+  buildGrid();
+  // a lieutenant who waits in his hold is out of the field until Salim comes in
+  for (const H of Object.values(HOLDS)) { const L = storyLieut(H); if (L) park(L); }
+  Object.assign(CODEX, {
+    khans: { t: 'Khans on the Road', cat: 'Places', x: 'Along the main roads stood walled stations where caravans could water their animals and sleep behind a gate. When trade stopped, as it did in the years of the siege, the sand and the thieves moved in.' },
+    claypits: { t: 'Clay for the Kilns', cat: 'Craft', x: 'Brick-makers dug their clay close to the kilns, leaving deep pits that filled with water in winter. Old pits were often used as dumps, or as hiding places by men who knew the ground.' },
+    reedisles: { t: 'Islands of Reed', cat: 'Places', x: 'In the marshes villages stood on mounds built up from layers of reed and mud. A family could raise a new island in a season; whole settlements moved as the water rose and fell.' },
+    weirs: { t: 'The Old Weirs', cat: 'Craft', x: 'Sasanian engineers dammed the rivers of the Sawad with weirs of fired brick and stone, raising the water to feed the canals. Many were broken in the floods and wars of later centuries and never mended.' },
+    lanes: { t: 'After the Fire', cat: 'War', x: 'The siege of 812–813 left whole quarters of western Baghdad burned. Survivors came back to roofless houses and fallen cellars, and for a time the ruins belonged to whoever held them.' },
+    vaults: { t: 'Under the Khans', cat: 'Places', x: 'Merchants stored their goods in brick vaults beneath the khans, cool in summer and safe from fire. When the buildings above burned, the vaults often survived, full of whatever had been left behind.' },
+    hulks: { t: 'River Hulks', cat: 'Craft', x: 'Old river craft that could no longer be trusted on the water were run aground and used as stores, workshops or homes. Their timber was worth more than the rest of the boat.' },
+    bales: { t: 'The Bale Stores', cat: 'Trade', x: 'Cotton, linen and wool came down the Tigris in bales and were stacked in warehouses on the quays. A warehouse of bales was a fortune, and a fire risk, in equal measure.' },
+  });
   Object.assign(CODEX, {
     holds: { t: 'Holds in the Hills', cat: 'War', x: 'A band of deserters needed three things: water, a way out and a place that could be held by a few men. Old quarries, frontier forts and gorges crossed by a single plank way gave all three, which is why the same places were held again and again by whoever came through.' },
   });

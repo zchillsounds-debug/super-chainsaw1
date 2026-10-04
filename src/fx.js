@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+const _c = new THREE.Color(), _c2 = new THREE.Color(); // scratch colours (spawn copies them)
 import { particleSprite } from './textures.js';
 
 // Pooled CPU particle system with two blend layers (additive glow + alpha smoke).
@@ -150,10 +151,24 @@ export class FX {
       });
     }
   }
-  sparks(pos, color = new THREE.Color(4, 2.4, 1)) { this.burst(pos, 14, { speed: 7, life: 0.35, size: 0.12, size1: 0.02, color, gravity: 12, drag: 2 }); }
+  // Round 22: a white-hot core flick under the coloured sparks, and a few that bounce on longer
+  sparks(pos, color = new THREE.Color(4, 2.4, 1)) {
+    this.burst(pos, 14, { speed: 7, life: 0.35, size: 0.12, size1: 0.02, color, gravity: 12, drag: 2 });
+    this.glow.spawn({ pos: { x: pos.x, y: pos.y, z: pos.z }, life: 0.09, size: 0.7, size1: 0.2, color: _c.set(6, 5.4, 4.4) });
+    this.burst(pos, 5, { speed: 9, life: 0.7, size: 0.07, size1: 0.02, color: _c2.copy(color).multiplyScalar(1.3), gravity: 16, drag: 0.6 });
+  }
+  // a pot of naft bursting: a flash of fire, a ball of flame rolling up into black smoke, embers flung out
+  naftBurst(pos, r = 2.2) {
+    this.glow.spawn({ pos: { x: pos.x, y: pos.y + 0.4, z: pos.z }, life: 0.18, size: r * 1.6, size1: r * 0.6, color: _c.set(5, 2.6, 0.8) });
+    for (let i = 0; i < 18; i++) { const a = Math.random() * Math.PI * 2, d = Math.random() * r * 0.8; this.glow.spawn({ pos: { x: pos.x + Math.cos(a) * d, y: pos.y + 0.2, z: pos.z + Math.sin(a) * d }, vel: { x: Math.cos(a) * 1.5, y: 2.2 + Math.random() * 2.5, z: Math.sin(a) * 1.5 }, life: 0.5 + Math.random() * 0.5, size: 0.7 + Math.random() * 0.6, size1: 0.15, color: _c.set(2.4, 0.7 + Math.random() * 0.5, 0.12), drag: 1.2 }); }
+    for (let i = 0; i < 7; i++) this.smoke.spawn({ pos: { x: pos.x + (Math.random() - 0.5) * r, y: pos.y + 1 + Math.random(), z: pos.z + (Math.random() - 0.5) * r }, vel: { x: (Math.random() - 0.5) * 0.6, y: 1.6 + Math.random(), z: (Math.random() - 0.5) * 0.6 }, life: 2.6, size: 1, size1: 3.2, color: _c.set(0.1, 0.08, 0.07), alpha: 0.5, drag: 0.4, fadeIn: 0.15 });
+    this.burst({ x: pos.x, y: pos.y + 0.3, z: pos.z }, 16, { speed: 6, life: 1.1, size: 0.07, size1: 0.02, color: _c2.set(4, 1.8, 0.4), gravity: 9, drag: 0.5, up: 2 });
+    this.ring({ x: pos.x, y: pos.y, z: pos.z }, _c2.set(2.6, 1.1, 0.3), 0.3, r * 1.3, 0.35);
+  }
   blood(pos, color = new THREE.Color(0.35, 0.02, 0.02)) { this.burst(pos, 16, { speed: 4, life: 0.6, size: 0.18, size1: 0.1, color, gravity: 14, drag: 1, smoke: true, alpha: 0.9 }); }
   dust(pos, n = 10, scale = 1) { this.burst(pos, n, { speed: 1.5 * scale, life: 1.4, size: 0.8 * scale, size1: 2.2 * scale, color: new THREE.Color(0.75, 0.62, 0.46), alpha: 0.35, up: 0.6, drag: 1.5, smoke: true, spread: 0.6 }); }
   fire(pos, intensity = 1) {
+    if (Math.random() < 0.35) this.glow.spawn({ pos: { x: pos.x, y: pos.y + 0.1, z: pos.z }, vel: { x: 0, y: 1.1, z: 0 }, life: 0.35, size: 0.35 * intensity, size1: 0.05, color: _c.set(3.2, 2.2, 0.9), drag: 0.8 }); // the hot yellow core
     this.glow.spawn({ pos: { x: pos.x + (Math.random() - 0.5) * 0.5 * intensity, y: pos.y, z: pos.z + (Math.random() - 0.5) * 0.5 * intensity }, vel: { x: (Math.random() - 0.5) * 0.4, y: 1.6 + Math.random() * 1.6, z: (Math.random() - 0.5) * 0.4 }, life: 0.5 + Math.random() * 0.5, size: 0.6 * intensity, size1: 0.1, color: new THREE.Color(1.9, 0.55 + Math.random() * 0.35, 0.1), drag: 0.6 });
     if (Math.random() < 0.25) this.smoke.spawn({ pos: { x: pos.x, y: pos.y + 1.2 * intensity, z: pos.z }, vel: { x: 0.3, y: 1.2, z: 0.1 }, life: 2.2, size: 0.6 * intensity, size1: 2.4 * intensity, color: new THREE.Color(0.12, 0.1, 0.09), alpha: 0.35, drag: 0.3 });
     if (Math.random() < 0.2) this.glow.spawn({ pos: { x: pos.x, y: pos.y + 0.4, z: pos.z }, vel: { x: (Math.random() - 0.5) * 1.5, y: 2 + Math.random() * 2, z: (Math.random() - 0.5) * 1.5 }, life: 1.5, size: 0.08, size1: 0.02, color: new THREE.Color(4, 1.8, 0.4), drag: 0.4 });

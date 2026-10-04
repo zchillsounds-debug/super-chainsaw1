@@ -80,6 +80,7 @@ export function setupCraft(g) {
       g.audio.clang?.(); g.audio.legendary?.(); g.ui.toast(`${t('Forged')}: ${t(it.name)}`);
       saveGame(g); refresh(); g.ui.itemCard?.(it, { cmp: p.equip[it.slot] });
     };
-    body.appendChild(w2);
+    // Round 22: once Bishr knows a recipe the set pieces come first, above the fold
+    if (R.length) body.insertBefore(w2, w); else body.appendChild(w2);
   };
 }

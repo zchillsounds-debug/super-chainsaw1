@@ -1,6 +1,7 @@
 // Arabic text for the story: dialogue, cutscene lines, tasks and the codex. Keyed by the English text with any
 // markup removed (see t() in i18n.js). Missing keys simply fall back to English.
 import { AR21 } from './story21_ar.js';
+import { AR22 } from './story22_ar.js';
 export const STORY_AR = {
   // ---------------------------------------------------------------- names
   'Salim': 'سالم', 'Ishaq': 'إسحاق', 'Ghassan': 'غسّان', 'Farud': 'فرود', 'Hisham': 'هشام', 'Yusuf': 'يوسف', 'Bishr': 'بشر', '\'Amr': 'عمرو',
@@ -563,3 +564,4 @@ Object.assign(STORY_AR, {
   'Grain came down the Tigris and Euphrates to Baghdad\'s markets, and most households bought their bread from the bakers of their quarter rather than baking it at home. When the siege cut the grain boats, the price of bread was the first sign of hunger in the city.': 'كانت الحبوب تنحدر في دجلة والفرات إلى أسواق بغداد، وكانت أكثر البيوت تشتري خبزها من خبّازي حيّها بدل أن تخبزه في البيت. ولمّا قطع الحصار سفن الحبوب كان سعر الخبز أوّل علامات الجوع في المدينة.',
 });
 Object.assign(STORY_AR, AR21);
+Object.assign(STORY_AR, AR22);

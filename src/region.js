@@ -37,7 +37,7 @@ export const STORY = {
   sawad: {
     quests: [
       { id: 'serai', text: 'Defeat Farud at the old caravanserai' },
-      { id: 'graves', text: 'Drive Hisham\'s men from the kiln yard' },
+      { id: 'graves', text: 'Find Hisham at the bottom of the kiln pits' },
       { id: 'boss', text: 'Face Ghassan at the ruined Persian arch' },
     ],
     chief: 'serai', second: 'graves', boss: 'boss',
@@ -46,7 +46,7 @@ export const STORY = {
   marsh: {
     quests: [
       { id: 'reedcamp', text: 'Find Marwan in the reed camp to the west' },
-      { id: 'landing', text: 'Take Rawh\'s boats from Sahl at the fish racks' },
+      { id: 'landing', text: 'Take Rawh\'s boats from Sahl on the reed islands' },
       { id: 'rawh', text: 'Face Rawh at the old weir' },
     ],
     chief: 'reedcamp', second: 'landing', boss: 'rawh',
@@ -55,7 +55,7 @@ export const STORY = {
   karkh: {
     quests: [
       { id: 'burnedsuq', text: 'Find \'Asim in the burned suq' },
-      { id: 'warraqin', text: 'Drive Layth from the paper-sellers\' lane' },
+      { id: 'warraqin', text: 'Drive Layth from the burned lanes behind the paper-sellers' },
       { id: 'utba', text: 'Stop \'Utba in the square before sunset' },
     ],
     chief: 'burnedsuq', second: 'warraqin', boss: 'utba',
@@ -64,7 +64,7 @@ export const STORY = {
   docks: {
     quests: [
       { id: 'warehouses', text: 'Find Bilal among the river warehouses' },
-      { id: 'boatyard', text: 'Free the copyists\' boat from Mus\'ab at the boatyard' },
+      { id: 'boatyard', text: 'Free the copyists\' boat from Mus\'ab on the beached hulk' },
       { id: 'ghanim', text: 'Face Ghanim at the bridge of boats' },
     ],
     chief: 'warehouses', second: 'boatyard', boss: 'ghanim',

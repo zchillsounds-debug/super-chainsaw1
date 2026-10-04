@@ -113,25 +113,49 @@ function forgeAfter(k) {
   return g;
 }
 
-// the falcon: a saker, built from a few shapes; the wings are hinged groups that flap or fold
+// the falcon: a saker. Round 22: rebuilt larger and truer to the bird: a tapered body leaning forward, a pale barred
+// breast, the dark moustache stripe under the eye, a hooked beak with a yellow cere, long pointed wings that fold
+// along the back and cross over the tail, yellow feet gripping. The wings are hinged groups that flap or fold.
 function falconRig() {
   const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
-  const brown = new THREE.MeshStandardMaterial({ color: 0x7a5a3c, roughness: 0.85 }), pale = new THREE.MeshStandardMaterial({ color: 0xd8c8a8, roughness: 0.9 }), dark = new THREE.MeshStandardMaterial({ color: 0x1a1612, roughness: 0.5 }), beakM = new THREE.MeshStandardMaterial({ color: 0x8a8070, roughness: 0.6 });
-  const torso = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), brown); torso.scale.set(0.85, 1.25, 0.85); body.add(torso);
-  const breast = new THREE.Mesh(new THREE.SphereGeometry(0.085, 10, 8), pale); breast.scale.set(0.8, 1.15, 0.7); breast.position.set(0, -0.01, 0.035); body.add(breast);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 8), brown); head.position.set(0, 0.14, 0.02); body.add(head);
-  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.045, 6), beakM); beak.rotation.x = Math.PI / 2 + 0.5; beak.position.set(0, 0.13, 0.075); body.add(beak);
-  for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.011, 6, 4), dark); e.position.set(s * 0.032, 0.15, 0.05); body.add(e); }
-  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.16, 0.015), brown); tail.position.set(0, -0.17, -0.03); tail.rotation.x = -0.25; body.add(tail);
+  const M = (color, roughness = 0.85) => new THREE.MeshStandardMaterial({ color, roughness });
+  const brown = M(0x6e4e32), rufous = M(0x8a6040), pale = M(0xe0d2b4, 0.9), bar = M(0x5a4030), dark = M(0x1a1410, 0.5), beakM = M(0x3a3a40, 0.4), yellow = M(0xd8b040, 0.6);
+  const add = (geo, m, x, y, z, rx = 0, ry = 0, rz = 0, sx = 1, sy = 1, sz = 1, into = body) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, ry, rz); o.scale.set(sx, sy, sz); into.add(o); return o; };
+  // body: a tapered capsule, leaning forward; the breast pale with brown bars
+  add(new THREE.CapsuleGeometry(0.075, 0.15, 4, 10), brown, 0, 0, -0.01, -0.35, 0, 0, 1, 1, 0.9);
+  add(new THREE.SphereGeometry(0.07, 10, 8), pale, 0, 0.0, 0.035, -0.35, 0, 0, 0.95, 1.5, 0.7);
+  for (let i = 0; i < 4; i++) add(new THREE.TorusGeometry(0.05 - i * 0.004, 0.006, 3, 10, Math.PI * 0.9), bar, 0, 0.04 - i * 0.035, 0.07 - i * 0.008, 0.2, 0, Math.PI * 1.05, 1, 0.6, 1);
+  // head: rounded, brown cap, pale cheek, dark moustache stripe, big dark eye with a yellow ring, hooked beak
+  const head = new THREE.Group(); head.position.set(0, 0.155, 0.04); body.add(head);
+  add(new THREE.SphereGeometry(0.058, 12, 10), rufous, 0, 0, 0, 0, 0, 0, 1, 0.95, 1.05, head);
+  add(new THREE.SphereGeometry(0.045, 10, 8), pale, 0, -0.018, 0.022, 0, 0, 0, 1.1, 0.8, 0.8, head);
+  for (const sd of [-1, 1]) {
+    add(new THREE.BoxGeometry(0.012, 0.04, 0.012), dark, sd * 0.04, -0.03, 0.03, 0, 0, sd * 0.2, 1, 1, 1, head);
+    add(new THREE.SphereGeometry(0.014, 8, 6), yellow, sd * 0.034, 0.008, 0.035, 0, 0, 0, 1, 1, 1, head);
+    add(new THREE.SphereGeometry(0.011, 8, 6), dark, sd * 0.038, 0.009, 0.039, 0, 0, 0, 1, 1, 1, head);
+  }
+  add(new THREE.SphereGeometry(0.014, 6, 5), yellow, 0, 0.0, 0.055, 0, 0, 0, 1, 0.8, 1, head); // the cere
+  add(new THREE.ConeGeometry(0.014, 0.04, 6), beakM, 0, -0.012, 0.072, Math.PI / 2 + 0.9, 0, 0, 1, 1, 1, head);
+  // tail: long, a little fanned, barred at the tip
+  add(new THREE.BoxGeometry(0.075, 0.2, 0.012), brown, 0, -0.18, -0.07, -0.5);
+  add(new THREE.BoxGeometry(0.078, 0.03, 0.014), dark, 0, -0.27, -0.115, -0.5);
+  // feet: yellow, gripping
+  for (const sd of [-1, 1]) { add(new THREE.CylinderGeometry(0.01, 0.009, 0.06, 5), yellow, sd * 0.03, -0.11, 0.02); add(new THREE.BoxGeometry(0.03, 0.01, 0.045), yellow, sd * 0.03, -0.14, 0.03); }
+  // wings: a long pointed blade from the shoulder, swept back, darker at the primaries
+  const blade = new THREE.Shape(); blade.moveTo(0, 0.05); blade.quadraticCurveTo(0.18, 0.07, 0.42, -0.06); blade.quadraticCurveTo(0.2, -0.06, 0, -0.07); blade.lineTo(0, 0.05);
+  const bladeG = new THREE.ExtrudeGeometry(blade, { depth: 0.01, bevelEnabled: false }).rotateX(-Math.PI / 2).translate(0, 0.005, 0);
+  const tipS = new THREE.Shape(); tipS.moveTo(0.26, 0.0); tipS.quadraticCurveTo(0.36, 0.0, 0.42, -0.06); tipS.quadraticCurveTo(0.33, -0.06, 0.24, -0.06); tipS.lineTo(0.26, 0.0);
+  const tipG = new THREE.ExtrudeGeometry(tipS, { depth: 0.012, bevelEnabled: false }).rotateX(-Math.PI / 2).translate(0, 0.006, 0);
   const wings = [];
   for (const s of [-1, 1]) {
-    const hinge = new THREE.Group(); hinge.position.set(s * 0.06, 0.04, -0.01); body.add(hinge);
-    const w = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.012, 0.13), brown); w.position.set(s * 0.17, 0, 0); hinge.add(w);
-    const tip = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.01, 0.08), dark); tip.position.set(s * 0.38, 0, -0.02); hinge.add(tip);
+    const hinge = new THREE.Group(); hinge.position.set(s * 0.055, 0.06, -0.02); body.add(hinge);
+    const w = new THREE.Mesh(bladeG, brown); w.scale.x = s; hinge.add(w);
+    const tp = new THREE.Mesh(tipG, dark); tp.scale.x = s; hinge.add(tp);
     wings.push({ hinge, s });
   }
-  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
-  g.userData = { body, wings };
+  g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.material.side = THREE.DoubleSide; } });
+  g.scale.setScalar(1.3);
+  g.userData = { body, wings, head };
   return g;
 }
 
@@ -193,7 +217,7 @@ export function setupHubLife(g) {
   { const o = ledger(k); o.position.set(lx, heightAt(lx, lz), lz); o.rotation.y = Math.atan2(H.spawn[0] - lx, H.spawn[1] - lz); g.scene.add(o); colliders.push({ type: 'circle', x: lx, z: lz, r: 0.7 }); }
   g.interactables.push({ pos: V(lx, heightAt(lx, lz), lz), r: 2.4, label: 'The camp\'s needs', act: () => campPanel() });
   const spots = {};
-  for (const [key, at, mk0, mk1] of [['well', [H.ishaq[0] - 4, H.ishaq[1] - 4], wellBefore, wellAfter], ['stalls', [H.merchant[0] + 3.2, H.merchant[1] - 1.5], stallsBefore, stallsAfter], ['forge', [H.smith[0] + 3.4, H.smith[1] + 1.4], forgeBefore, forgeAfter]]) {
+  for (const [key, at, mk0, mk1] of [['well', [H.ishaq[0] - 4, H.ishaq[1] - 4], wellBefore, wellAfter], ['stalls', [H.merchant[0] + 3.2, H.merchant[1] - 1.5], stallsBefore, stallsAfter], ['forge', [H.smith[0] + 4.8, H.smith[1] - 2.6], forgeBefore, forgeAfter]]) {
     const [x, z] = freeSpot(at[0], at[1], 1.6), y = heightAt(x, z), ry = Math.atan2(H.spawn[0] - x, H.spawn[1] - z);
     const a = mk0(k), b = mk1(k); for (const o of [a, b]) { o.position.set(x, y, z); o.rotation.y = ry; g.scene.add(o); }
     colliders.push({ type: 'circle', x, z, r: key === 'stalls' ? 0.4 : 1.0 });
@@ -383,7 +407,8 @@ export function setupHubLife(g) {
       else tmp.copy(p.pos).setY(p.pos.y + 1.5);
       FC.pos.lerp(tmp, FC.mode === 'perch' ? 1 : Math.min(1, dt * 4)); FC.mode = FC.pos.distanceTo(tmp) < 0.3 ? 'perch' : 'land';
       falcon.position.copy(FC.pos).setY(FC.pos.y + 0.12); falcon.rotation.set(0, p.facing + 0.6, 0);
-      for (const w of W) w.hinge.rotation.z = FC.mode === 'perch' ? -w.s * 1.35 + Math.sin(g.t * 1.3) * 0.02 : Math.sin(g.t * 22) * 0.9 * w.s;
+      for (const w of W) { const fold = FC.mode === 'perch'; w.hinge.rotation.set(fold ? -0.35 : 0, fold ? w.s * 1.25 : 0, fold ? -w.s * 1.25 + Math.sin(g.t * 1.3) * 0.02 : Math.sin(g.t * 22) * 0.9 * w.s); }
+      if (falcon.userData.head) falcon.userData.head.rotation.y = Math.sin(g.t * 0.7) * 0.6 * (Math.sin(g.t * 0.23) > 0 ? 1 : 0); // she looks about
       body.rotation.x = FC.mode === 'perch' ? 0 : 0.9;
       return;
     }
@@ -395,7 +420,7 @@ export function setupHubLife(g) {
     const vx = FC.pos.x - prev.x, vz = FC.pos.z - prev.z;
     falcon.position.copy(FC.pos); if (Math.abs(vx) + Math.abs(vz) > 1e-4) falcon.rotation.set(0, Math.atan2(vx, vz), 0);
     body.rotation.x = Math.PI / 2 - 0.15; body.rotation.z = Math.sin(FC.ang) * 0.3;
-    for (const w of W) w.hinge.rotation.z = FC.dive ? -w.s * 0.6 : Math.sin(g.t * (Math.sin(g.t * 0.4) > 0.3 ? 0 : 14)) * 0.7 * w.s;
+    for (const w of W) { w.hinge.rotation.set(0, 0, FC.dive ? -w.s * 0.6 : Math.sin(g.t * (Math.sin(g.t * 0.4) > 0.3 ? 0 : 14)) * 0.7 * w.s); }
     // the scan: hidden men and archers within 32 m
     if ((FC.scanT -= dt) <= 0) {
       FC.scanT = 9;

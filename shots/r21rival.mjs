@@ -26,6 +26,8 @@ const res = await pg.evaluate(async (region) => {
     __director.skip(); await new Promise((r) => setTimeout(r, 60)); __sim(0.5);
     log.push('gone ' + !!z.removed + ' rival ' + JSON.stringify(p.rival));
   }
+  // Round 22: the lieutenant waits at the end of his story hold; go in to fight him there
+  if (region === 'sawad' || region === 'karkh') { log.push('parked ' + !!g.matriarch.parked); await g.holds.enter({ sawad: 'kilnpits', karkh: 'lanes' }[region]); __sim(0.2); }
   const L = g.matriarch;
   if (region === 'sawad' || region === 'karkh') {
     for (const e of g.enemies) if (e !== L && !e.dead && e.pos.distanceTo(L.pos) < 20) { e.dead = true; e.removed = true; g.scene.remove(e.rig); }
