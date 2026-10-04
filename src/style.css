@@ -588,3 +588,10 @@ body.benching #tskills,body.benching #joy,body.benching #mountbtn,body.benching 
 #shop.bench .benchbig{text-align:center;margin:6px 0 10px}#shop.bench .benchbig b{display:block;font:700 54px/1 serif;color:#ffd870}#shop.bench .benchbig small{color:#cdb890}
 #shop.bench .benchline{font:500 12px monospace;color:#a89878;margin:8px 0;user-select:text}
 #settings .benchbtn{margin-top:10px;width:100%}
+/* Round 21: the guard's health under his orders; green while Salim helps him up */
+#compbtn{position:absolute}
+#compbtn .chp{position:absolute;left:10px;right:10px;bottom:4px;height:3px;border-radius:2px;background:#0008;overflow:hidden}
+#compbtn .chp i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#a02a1a,#d84a2a)}
+#compbtn.down{border-color:#7ab070;animation:compdown 1.2s ease-in-out infinite}
+#compbtn.down .chp i{background:linear-gradient(90deg,#4a9a4a,#8ad07a)}
+@keyframes compdown{50%{box-shadow:0 0 12px #6ac06a}}

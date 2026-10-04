@@ -763,22 +763,22 @@ export class Game {
     this.hazards.push({ ...z, kind: 'zone' });
   }
 
-  throwFlask(from, to) {
+  throwFlask(from, to, mult = 1) {
     const jar = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8).scale(1, 1.3, 1), new THREE.MeshStandardMaterial({ color: 0x7a3d1e, roughness: 0.6, emissive: 0xff5010, emissiveIntensity: 0.4 }));
     jar.position.copy(from); this.scene.add(jar);
     const T = 0.55, vel = new THREE.Vector3((to.x - from.x) / T, 0, (to.z - from.z) / T);
     vel.y = (to.y - from.y + 0.5 * 22 * T * T) / T;
-    this.projectiles.push({ mesh: jar, vel, grav: 22, life: T, owner: 'player', kind: 'flask', target: to });
+    this.projectiles.push({ mesh: jar, vel, grav: 22, life: T, owner: 'player', kind: 'flask', target: to, mult });
   }
 
-  explodeFlask(pos) {
+  explodeFlask(pos, mult = 1) {
     this.audio.boom(); this.shake = Math.max(this.shake, 0.35);
     this.fx.flash(tmp.copy(pos).setY(pos.y + 1.5), 0xff7a30, 80, 0.5, 16);
     this.fx.ring(pos, new THREE.Color(4, 1.6, 0.4), 0.5, 4.2, 0.45);
     this.fx.burst(tmp.copy(pos).setY(pos.y + 0.5), 60, { speed: 7, life: 0.7, size: 0.9, size1: 0.1, color: new THREE.Color(3, 1.1, 0.25), up: 2, drag: 2.5 });
     this.fx.burst(tmp.copy(pos).setY(pos.y + 0.5), 20, { speed: 3, life: 2, size: 1.2, size1: 3.5, color: new THREE.Color(0.1, 0.08, 0.07), alpha: 0.5, up: 2, smoke: true, drag: 1 });
     this.fx.sparks(tmp.copy(pos).setY(pos.y + 0.5), new THREE.Color(5, 2.5, 0.6));
-    for (const e of this.enemies) if (!e.dead && !e.hidden && e.pos.distanceTo(pos) < 3.6 + e.radius) { const r = this.rollDamage(1.8, true); this.damageEnemy(e, r.d, r.crit, pos, 'fire'); e.burn = 3; }
+    for (const e of this.enemies) if (!e.dead && !e.hidden && e.pos.distanceTo(pos) < 3.6 + e.radius) { const r = this.rollDamage(1.8 * mult, true); this.damageEnemy(e, r.d, r.crit, pos, 'fire'); e.burn = 3; }
     this.decal(pos, 6.5, 'scorch');
     // lingering fire pool
     const gm = new THREE.MeshBasicMaterial({ map: glowDecal(), color: new THREE.Color(2.5, 0.8, 0.15), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
@@ -1360,6 +1360,7 @@ export class Game {
           else if (e.T.ranged === 'net') this.throwNet(e, tmp.copy(p.pos).sub(e.pos).setY(0).normalize().clone());
           else if (e.T.ranged === 'bolt') { this.shootBolt(e); this.aimLine(e, null); }
           else if (e.T.ranged) this.shootArrow(e);
+          else if (e.atkGuard) { const G = this.companion; if (G && !G.down && G.pos.distanceTo(e.pos) < e.range + 1.0) this.hurtCompanion?.(e.dmg, e.pos); }
           else if (dist < e.range + 0.9 && !p.dead) this.damagePlayer(e.dmg, e.pos, e);
         }
         if (e.T.ranged === 'bolt' && !e.didHit) this.aimLine(e, e.st.actionT);
@@ -1369,7 +1370,15 @@ export class Game {
         e.facing += angDiff(e.facing, face) * Math.min(1, dt * 8);
         // where this foe wants to stand
         let want = null;
-        if (e.T.ranged) {
+        // Round 21: melee foes without an attack token go for a hired guard close by instead of circling Salim
+        const G = this.companion;
+        e.onGuard = !e.T.ranged && !e.token && !!G && !G.down && !G.st.mounted && G.pos.distanceTo(e.pos) < 7 && !this.cinematic;
+        if (e.onGuard) {
+          const gd = G.pos.distanceTo(e.pos);
+          e.facing += angDiff(e.facing, Math.atan2(G.pos.x - e.pos.x, G.pos.z - e.pos.z)) * Math.min(1, dt * 10);
+          if (gd > e.range + G.radius) want = G.pos;
+          else if (e.atkCd <= 0) { e.st.action = e.T.action; e.st.actionT = 0; e.didHit = false; e.atkCd = e.T.atk * rand(1.0, 1.4); e.atkGuard = true; }
+        } else if (e.T.ranged) {
           // archers hold 8–13 m, backing off from a closing hero and side-stepping to keep a clear line
           const [h0, h1] = e.T.hold || [7.5, 13];
           if (dist > h1 || !navClear(e.pos.x, e.pos.z, p.pos.x, p.pos.z)) want = p.pos;
@@ -1391,8 +1400,8 @@ export class Game {
           const sp = (e.token || e.T.ranged ? e.speed : e.speed * 0.6) * slow * (IS_MARSH && waterDepth(e.pos.x, e.pos.z) > 0.08 ? 0.65 : 1);
           e.pos.addScaledVector(dir, sp * dt); moving = true;
           if (e.path || dist > 6) e.facing += angDiff(e.facing, Math.atan2(dir.x, dir.z)) * Math.min(1, dt * 8);
-        } else if (e.atkCd <= 0 && (e.T.ranged || (e.token && dist <= e.range + 0.4))) {
-          e.st.action = e.T.action; e.st.actionT = 0; e.didHit = false; e.atkCd = e.T.atk * rand(0.9, 1.3);
+        } else if (!e.onGuard && e.atkCd <= 0 && (e.T.ranged || (e.token && dist <= e.range + 0.4))) {
+          e.st.action = e.T.action; e.st.actionT = 0; e.didHit = false; e.atkCd = e.T.atk * rand(0.9, 1.3); e.atkGuard = false;
           if (!e.T.ranged) this.telegraphTell?.(e);
         }
       } else if (!e.alerted) {
@@ -1488,7 +1497,7 @@ export class Game {
       if (q.kind === 'flask') {
         q.mesh.rotation.x += dt * 12;
         this.fx.fire(mp, 0.25);
-        if (dead || mp.y < heightAt(mp.x, mp.z)) { this.explodeFlask(q.target); dead = true; }
+        if (dead || mp.y < heightAt(mp.x, mp.z)) { this.explodeFlask(q.target, q.mult ?? 1); dead = true; }
       } else if (q.kind === 'fireball') {
         this.fx.fire(mp, 0.6);
         if (p.pos.distanceTo(tmp.copy(mp).setY(p.pos.y)) < 0.9 && Math.abs(mp.y - p.pos.y - 1) < 1.6) { this.damagePlayer(q.dmg, mp); dead = true; this.fx.burst(mp, 30, { speed: 5, life: 0.5, size: 0.5, size1: 0.05, color: new THREE.Color(4, 1.4, 0.3) }); }
