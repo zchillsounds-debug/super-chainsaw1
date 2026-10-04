@@ -394,6 +394,13 @@ The user approved the full plan: everything on the Round 20 menu, a **post-game 
    - Test: `r21hub.mjs <marsh|docks> [out]`.
 4. **Arabic** for all of the above plus the Hamrin, hold and boss text (`AR21`). Remaining English: the set-piece names (Courier's Qaba, Khurasani Jawshan, etc., from R6/R18) and the R19 "Walking: " prefix. Both are older gaps.
 
+5. **Long robes fixed (`cloth.js`, `human.js`, `anim.js`), user request.** The Naffat's legs strode out through the robe's front split while the robe swung off to one side and trailed behind; Round 20's `maxSwing` clamp also ran after the leg collision and pulled cloth back into the legs.
+   - Long robes (hem below 0.3, i.e. not a qaba) are now a closed tube (`closed`, with a duplicated seam column at the back so the texture wraps cleanly and the seam shares one normal).
+   - `slack` 1.9: the cloth around the body only resists stretching, so the hem gathers as it hangs and spreads when a leg pushes it. `shape` 0.06 pulls each particle gently back toward the drape so the robe stays centred.
+   - `outside`: each column stays outside any leg in its own direction (out from the hips through its pin), however far a stride or a kicked-up heel reaches. This replaces the plain push-out for leg capsules.
+   - The swing clamp now runs before collision. The hem is cut fuller (flare 0.15) and deeper at the back so the seat stays inside. Steps are 0.82× as long in a long robe.
+   - Checked front, side and back on High (simulated) and Low (kinematic).
+
 ### Remaining
 1. **Test sweep, part done.** `shots/sweep.sh` runs everything in order (one vite via `withvite.sh`; about 2 h in all).
    - **Passed, no errors:** r15test ×4 (sawad, marsh, karkh, docks), r16test ×4, r17test sawad and marsh.

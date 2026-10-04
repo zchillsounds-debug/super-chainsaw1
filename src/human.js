@@ -449,15 +449,20 @@ export function humanoid(opts = {}) {
   root.updateMatrixWorld(true);
   const hemY = o.hemY ?? (o.qaba ? 0.36 : 0.13);
   const skirtM = addWrinkles(addRim(new THREE.MeshStandardMaterial({ map: fabricTex(o.robe, o.robe2, o.hem || !o.qaba ? 'hem' : true), roughness: 0.9, side: THREE.DoubleSide })));
-  const rows = LOW ? 6 : 9, cols = LOW ? 12 : 18, gap = o.qaba ? 0.62 : 0.52, top = 1.02, flare = o.qaba ? 0.13 : 0.11;
+  // Round 21: a long robe is a closed skirt (the old front split let both legs stride out through it while the robe
+  // swung off to one side); it is cut fuller at the hem so a stride fits inside it
+  const long = hemY < 0.3;
+  const rows = LOW ? 6 : 9, cols = LOW ? 12 : 18, gap = long ? 0 : o.qaba ? 0.62 : 0.52, top = 1.02, flare = o.qaba ? 0.13 : long ? 0.15 : 0.11;
   const skirt = new Cloth({
-    rows, cols, anchor: bones.hips, material: skirtM, uvRepeat: 3,
+    rows, cols, anchor: bones.hips, material: skirtM, uvRepeat: 3, closed: long, outside: long, slack: long ? 1.9 : 1, shape: long ? 0.06 : 0,
     // long robes ride with the legs rather than streaming out (they read as a flag in front of or behind the body)
-    carry: hemY < 0.3 ? 0.8 : 0.55, maxSwing: hemY < 0.3 ? 0.62 : 0.85,
+    carry: long ? 0.8 : 0.55, maxSwing: long ? 0.62 : 0.85,
     rest: (r, c) => {
-      const t = r / (rows - 1), a = gap / 2 + (c / (cols - 1)) * (Math.PI * 2 - gap);
+      const t = r / (rows - 1), a = long ? Math.PI + (c / cols) * Math.PI * 2 : gap / 2 + (c / (cols - 1)) * (Math.PI * 2 - gap);
       const y = top + (hemY - top) * t, rx = (0.168 * o.girth + 0.012) + flare * Math.pow(t, 0.8), rz = (0.132 * o.girth + 0.012 + o.belly * 0.02) + flare * 0.85 * Math.pow(t, 0.8);
-      return V(Math.sin(a) * rx, y, Math.cos(a) * rz + (t > 0.2 ? -0.01 : 0));
+      // a long robe is cut deeper at the back so the seat stays inside it
+      const seat = long && Math.cos(a) < 0 ? -Math.cos(a) * 0.05 : 0;
+      return V(Math.sin(a) * rx, y, Math.cos(a) * (rz + seat) + (t > 0.2 ? -0.01 : 0));
     },
   });
   root.add(skirt.mesh); parts.cloths.push(skirt); parts.skirt = skirt;

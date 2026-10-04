@@ -28,8 +28,8 @@ export function addWrinkles(mat) {
 }
 
 export class Cloth {
-  constructor({ rows, cols, rest, anchor, material, closed = false, uvRepeat = 1, stiff = 1, gravity = 1, carry = 0.45, maxSwing = 0 }) {
-    this.carry = carry; this.maxSwing = maxSwing; this.rows = rows; this.cols = cols; this.anchor = anchor; this.closed = closed; this.gravity = gravity;
+  constructor({ rows, cols, rest, anchor, material, closed = false, uvRepeat = 1, stiff = 1, gravity = 1, carry = 0.45, maxSwing = 0, outside = false, slack = 1, shape = 0 }) {
+    this.carry = carry; this.maxSwing = maxSwing; this.outside = outside; this.shape = shape; this.rows = rows; this.cols = cols; this.anchor = anchor; this.closed = closed; this.gravity = gravity;
     const n = rows * cols;
     this.p = new Float32Array(n * 3); this.q = new Float32Array(n * 3);
     this.local = new Float32Array(n * 3); // rest positions in the anchor bone's bind space
@@ -43,26 +43,30 @@ export class Cloth {
     const id = (r, c) => r * cols + ((c + cols) % cols);
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
       if (r + 1 < rows) cons.push(id(r, c), id(r + 1, c), L(id(r, c), id(r + 1, c)));
-      if (c + 1 < cols || closed) cons.push(id(r, c), id(r, c + 1), L(id(r, c), id(r, c + 1)) * 1.0);
+      // slack > 1: the cloth round the body only resists stretching past slack x its rest width (stored negative), so a
+      // robe gathers as it hangs and spreads when a leg pushes it
+      if (c + 1 < cols || closed) cons.push(id(r, c), id(r, c + 1), r && slack > 1 ? -L(id(r, c), id(r, c + 1)) * slack : L(id(r, c), id(r, c + 1)));
       if (r + 2 < rows) cons.push(id(r, c), id(r + 2, c), L(id(r, c), id(r + 2, c)));
-      if (r > 0 && (c + 2 < cols || closed)) cons.push(id(r, c), id(r, c + 2), L(id(r, c), id(r, c + 2)));
+      if (r > 0 && (c + 2 < cols || closed)) cons.push(id(r, c), id(r, c + 2), slack > 1 ? -L(id(r, c), id(r, c + 2)) * slack : L(id(r, c), id(r, c + 2)));
     }
     this.cons = new Float32Array(cons); this.stiff = stiff;
     // tether: maximum distance of each particle to its column's pinned particle
     this.tether = new Float32Array(n);
     for (let r = 1; r < rows; r++) for (let c = 0; c < cols; c++) this.tether[r * cols + c] = L(id(r, c), id(0, c)) * 1.03;
     // render geometry
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
-    const uv = new Float32Array(n * 2);
-    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { uv[(r * cols + c) * 2] = c / (cols - 1) * uvRepeat; uv[(r * cols + c) * 2 + 1] = 1 - r / (rows - 1); }
+    // a closed tube gets one extra seam column (a copy of column 0) so its texture wraps without a smeared strip
+    const g = new THREE.BufferGeometry(), nv = closed ? n + rows : n, uw = closed ? cols : cols - 1;
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(nv * 3), 3));
+    const uv = new Float32Array(nv * 2);
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { uv[(r * cols + c) * 2] = c / uw * uvRepeat; uv[(r * cols + c) * 2 + 1] = 1 - r / (rows - 1); }
+    for (let r = 0; closed && r < rows; r++) { uv[(n + r) * 2] = uvRepeat; uv[(n + r) * 2 + 1] = 1 - r / (rows - 1); }
     g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-    const idx = [];
+    const idx = [], vid = (r, c) => c === cols ? n + r : r * cols + c;
     const cc = closed ? cols : cols - 1;
-    for (let r = 0; r < rows - 1; r++) for (let c = 0; c < cc; c++) { const a = id(r, c), b = id(r, c + 1), d = id(r + 1, c), e = id(r + 1, c + 1); idx.push(a, d, b, b, d, e); }
+    for (let r = 0; r < rows - 1; r++) for (let c = 0; c < cc; c++) { const a = vid(r, c), b = vid(r, c + 1), d = vid(r + 1, c), e = vid(r + 1, c + 1); idx.push(a, d, b, b, d, e); }
     g.setIndex(idx);
     // compression per particle (0 = at rest, 1 = bunched up): drives the wrinkle normal in the cloth shader
-    g.setAttribute('aWr', new THREE.BufferAttribute(new Float32Array(n), 1));
+    g.setAttribute('aWr', new THREE.BufferAttribute(new Float32Array(nv), 1));
     this.restV = new Float32Array(n); this.restH = new Float32Array(n);
     for (let r = 1; r < rows; r++) for (let c = 0; c < cols; c++) this.restV[r * cols + c] = L(id(r, c), id(r - 1, c));
     for (let r = 0; r < rows; r++) for (let c = 1; c < cols; c++) this.restH[r * cols + c] = L(id(r, c), id(r, c - 1));
@@ -77,13 +81,24 @@ export class Cloth {
     this.inited = true;
   }
   collide(i, ground) {
-    const P = this.p;
-    for (const cap of this.colliders) {
+    const P = this.p, out = this.outside;
+    if (out) this.anchor.getWorldPosition(_c);
+    for (let ci = 0; ci < this.colliders.length; ci++) {
+      const cap = this.colliders[ci];
       // closest point on segment a-b
       const ax = cap.a.x, ay = cap.a.y, az = cap.a.z, bx = cap.b.x - ax, by = cap.b.y - ay, bz = cap.b.z - az;
       const px = P[i * 3] - ax, py = P[i * 3 + 1] - ay, pz = P[i * 3 + 2] - az;
       let t = (px * bx + py * by + pz * bz) / (bx * bx + by * by + bz * bz || 1); t = t < 0 ? 0 : t > 1 ? 1 : t;
       const dx = px - bx * t, dy = py - by * t, dz = pz - bz * t, d = Math.sqrt(dx * dx + dy * dy + dz * dz), r = cap.r;
+      // a closed robe (outside): each column keeps outside the legs in its own direction (out from the hips through
+      // its pin), however far a stride or a kicked-up heel reaches. Plain push-out lets a leg that has passed a
+      // particle shove it inward, and the leg pokes through
+      if (out && ci < 4) {
+        const c0 = (i % this.cols) * 3; let nx = P[c0] - _c.x, nz = P[c0 + 2] - _c.z; const nl = Math.sqrt(nx * nx + nz * nz) || 1; nx /= nl; nz /= nl;
+        const qx = ax + bx * t - P[i * 3], qz = az + bz * t - P[i * 3 + 2], lat = Math.abs(qx * nz - qz * nx);
+        if (lat < r * 2 && Math.abs(dy) < r * 2.5) { const face = qx * nx + qz * nz + Math.sqrt(Math.max(0, r * r - lat * lat)); if (face > 0) { P[i * 3] += nx * face; P[i * 3 + 2] += nz * face; } }
+        continue;
+      }
       if (d < r && d > 1e-6) { const k = (r - d) / d; P[i * 3] += dx * k; P[i * 3 + 1] += dy * k; P[i * 3 + 2] += dz * k; }
     }
     if (ground !== undefined && P[i * 3 + 1] < ground) P[i * 3 + 1] = ground;
@@ -127,12 +142,16 @@ export class Cloth {
           P[i * 3 + 2] += (z - Q[i * 3 + 2]) * damp + wind * h * h * (Math.cos(i * 2.3 + performance.now() * 0.003) * 6);
           Q[i * 3] = x; Q[i * 3 + 1] = y; Q[i * 3 + 2] = z;
         }
+        // shape: a light pull (across, not up or down) toward the draped rest shape, so a robe stays centred on the body
+        if (this.shape) for (let i = cols; i < n; i++) { this.pinWorld(i, _a); P[i * 3] += (_a.x - P[i * 3]) * this.shape; P[i * 3 + 2] += (_a.z - P[i * 3 + 2]) * this.shape; }
         const C = this.cons;
         for (let it = 0; it < 3; it++) {
           for (let k = 0; k < C.length; k += 3) {
-            const a = C[k], b = C[k + 1], L = C[k + 2];
+            const a = C[k], b = C[k + 1]; let L = C[k + 2];
             const dx = P[b * 3] - P[a * 3], dy = P[b * 3 + 1] - P[a * 3 + 1], dz = P[b * 3 + 2] - P[a * 3 + 2];
-            const d = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1e-6, diff = (d - L * ws) / d * 0.5 * this.stiff;
+            const d = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1e-6;
+            if (L < 0) { L = -L; if (d < L * ws) continue; }
+            const diff = (d - L * ws) / d * 0.5 * this.stiff;
             const wa = a < cols ? 0 : 1, wb = b < cols ? 0 : 1, s = wa + wb; if (!s) continue;
             const fa = diff * 2 * wa / s, fb = diff * 2 * wb / s;
             P[a * 3] += dx * fa; P[a * 3 + 1] += dy * fa; P[a * 3 + 2] += dz * fa;
@@ -142,7 +161,6 @@ export class Cloth {
             const c0 = i % cols, mx = this.tether[i] * ws;
             const dx = P[i * 3] - P[c0 * 3], dy = P[i * 3 + 1] - P[c0 * 3 + 1], dz = P[i * 3 + 2] - P[c0 * 3 + 2], d = Math.sqrt(dx * dx + dy * dy + dz * dz);
             if (d > mx) { const k = mx / d; P[i * 3] = P[c0 * 3] + dx * k; P[i * 3 + 1] = P[c0 * 3 + 1] + dy * k; P[i * 3 + 2] = P[c0 * 3 + 2] + dz * k; }
-            this.collide(i, groundY);
             // Round 20: a long robe can't swing up like a flag (a striding leg pushed the front of the Naffat's robe
             // up and out in front of him): keep each particle within maxSwing of hanging straight down from its pin
             if (this.maxSwing) {
@@ -152,6 +170,8 @@ export class Cloth {
                 P[i * 3] = P[c0 * 3] + hx * nh; P[i * 3 + 2] = P[c0 * 3 + 2] + hz * nh; P[i * 3 + 1] = P[c0 * 3 + 1] - L * Math.cos(this.maxSwing);
               }
             }
+            // collide last, so the swing limit can't pull the cloth back into a leg (Round 21)
+            this.collide(i, groundY);
           }
         }
       }
@@ -159,8 +179,14 @@ export class Cloth {
     // write into the mesh (local to its parent)
     const parentInv = _m.copy(this.mesh.parent.matrixWorld).invert(), pos = this.geo.attributes.position;
     for (let i = 0; i < n; i++) { _a.set(P[i * 3], P[i * 3 + 1], P[i * 3 + 2]).applyMatrix4(parentInv); pos.setXYZ(i, _a.x, _a.y, _a.z); }
+    if (this.closed) for (let r = 0; r < this.rows; r++) pos.setXYZ(n + r, pos.getX(r * cols), pos.getY(r * cols), pos.getZ(r * cols));
     pos.needsUpdate = true;
     this.geo.computeVertexNormals();
+    if (this.closed) {
+      // the seam's two copies share one normal, so no shading line runs down the back
+      const nr = this.geo.attributes.normal;
+      for (let r = 0; r < this.rows; r++) { const a = r * cols, b = n + r; _a.set(nr.getX(a) + nr.getX(b), nr.getY(a) + nr.getY(b), nr.getZ(a) + nr.getZ(b)).normalize(); nr.setXYZ(a, _a.x, _a.y, _a.z); nr.setXYZ(b, _a.x, _a.y, _a.z); }
+    }
     // wrinkles: where an edge is shorter than at rest, the cloth has bunched
     const wr = this.geo.attributes.aWr, ws2 = this.anchor.matrixWorld.getMaxScaleOnAxis(), dist = (a, b) => Math.hypot(P[a * 3] - P[b * 3], P[a * 3 + 1] - P[b * 3 + 1], P[a * 3 + 2] - P[b * 3 + 2]);
     for (let i = cols; i < n; i++) {
@@ -168,6 +194,7 @@ export class Cloth {
       const w = Math.min(1, Math.max(0, cv * 5) + Math.max(0, ch * 4));
       wr.array[i] = wr.array[i] * 0.7 + w * 0.3;
     }
+    if (this.closed) for (let r = 0; r < this.rows; r++) wr.array[n + r] = wr.array[r * cols];
     wr.needsUpdate = true;
   }
 }

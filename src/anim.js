@@ -114,6 +114,7 @@ export class Animator {
     this.chan = { hips: B.hips, spine: B.spine, chest: B.chest, uc: B.upperChest, neck: B.neck, head: B.head, shR: B.armR, elR: B.foreR, hR: B.handR, shL: B.armL, elL: B.foreL, hL: B.handL };
     this.caps = [0, 1, 2, 3, 4, 5].map(() => ({ a: new THREE.Vector3(), b: new THREE.Vector3(), r: 0.1 }));
     if (parts.skirt) parts.skirt.colliders = this.caps.slice(0, 5);
+    this.longRobe = !!parts.skirt?.outside; // shorter steps in a long robe (Round 21)
     if (parts.mantle) parts.mantle.colliders = this.caps;
   }
   restSpot(f, out) {
@@ -144,7 +145,7 @@ export class Animator {
     // with a wider stance, hips and feet turned into the step while the chest stays on the target
     const lat = moving ? (this.vel.x * rgtX + this.vel.z * rgtZ) / Math.max(speed, 1e-4) : 0, latK = Math.abs(lat) * (1 - runK * 0.5);
     this.lat = (this.lat || 0) + (lat * (1 - runK * 0.5) - (this.lat || 0)) * Math.min(1, dt * 8);
-    const stepLen = Math.min(1.35, 0.34 + 0.19 * v) * (1 - 0.4 * latK), rate = moving ? v / (2 * stepLen) : 0;
+    const stepLen = Math.min(1.35, 0.34 + 0.19 * v) * (1 - 0.4 * latK) * (this.longRobe ? 0.82 : 1), rate = moving ? v / (2 * stepLen) : 0;
     const duty = 0.62 - 0.26 * runK;
     this.gp += rate * dt;
     const footYaw = fy - this.lat * 0.55;
