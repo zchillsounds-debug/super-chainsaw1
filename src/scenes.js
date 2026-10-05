@@ -220,7 +220,7 @@ export function epilogue(g, b) {
   const ang = yawTo(salim.pos, boss.pos);
   const text = 'Thanks to you, his words will be read. And we will remember Jabir.';
   // Round 24: the first time the envoy is seen. A rider on the far bank watches the lamps, then turns for Baghdad.
-  const RZ = 98, rx = canalX(RZ) - 11, envoy = actor(horseRider(byzify({ ...LOOK.officer('#4a1a4a', 0x3a1440), beard: 0x8a8070, beardLen: 0.9, skin: 0xb07a52, sash: 0x5a1a5a, build: 1.1, belly: 0.25, hemY: 0.3, leather: 0x6a5a3a })), ground(rx, RZ), Math.PI / 2);
+  const RZ = 96, rx = canalX(RZ) - CANAL_W / 2 - 2.6, envoy = actor(horseRider(byzify({ ...LOOK.officer('#4a1a4a', 0x3a1440), beard: 0x8a8070, beardLen: 0.9, skin: 0xb07a52, sash: 0x5a1a5a, build: 1.1, belly: 0.25, hemY: 0.3, leather: 0x6a5a3a })), ground(rx, RZ), Math.PI / 2);
   envoy.rig.visible = false; g.scene.add(envoy.rig); actors.push(envoy);
   const lamps = [];
   const floatLamps = () => {
@@ -243,10 +243,11 @@ export function epilogue(g, b) {
       run: (d, k, dt) => { for (const l of lamps) { l.position.z += l.userData.v * dt; l.position.x = canalX(l.position.z) + Math.sin(l.position.z * 2) * 0.4; } } },
     { dur: 5.4, caption: 'On the far bank, a rider in a Roman cloak watched the lamps.',
       enter: () => { envoy.rig.visible = true; envoy.facing = yawTo(envoy.pos, V(canalX(RZ), 0, RZ - 6)); },
-      cam: { p0: () => dry(canalX(RZ - 12) + 3, RZ - 12, 1.2), t0: () => at(envoy, 2.0)(), p1: () => dry(canalX(RZ - 11.5) + 2.6, RZ - 11.5, 1.15), t1: () => at(envoy, 2.1)(), fov: 13 },
+      // straight across the water from the near bank, low, the lamps drifting between
+      cam: { p0: () => dry(canalX(RZ - 4) + CANAL_W / 2 + 1.4, RZ - 4, 1.0), t0: () => at(envoy, 1.9)(), p1: () => dry(canalX(RZ - 3.6) + CANAL_W / 2 + 1.2, RZ - 3.6, 0.95), t1: () => at(envoy, 2.0)(), fov: 24 },
       run: (d, k, dt) => { for (const l of lamps) { l.position.z += l.userData.v * dt; l.position.x = canalX(l.position.z) + Math.sin(l.position.z * 2) * 0.4; } } },
     { dur: 4.6, caption: 'Arsaber, the envoy. Then he turned his horse toward Baghdad.',
-      cam: { follow: true, p0: () => dry(canalX(RZ - 11.5) + 2.6, RZ - 11.5, 1.15), t0: () => at(envoy, 1.9)(), fov: 15 },
+      cam: { follow: true, p0: () => dry(canalX(RZ - 3.6) + CANAL_W / 2 + 1.2, RZ - 3.6, 0.95), t0: () => at(envoy, 1.8)(), fov: 26 },
       run: (d, k, dt) => {
         const want = Math.PI; envoy.facing += Math.max(-dt * 1.4, Math.min(dt * 1.4, ((want - envoy.facing + Math.PI * 3) % (Math.PI * 2)) - Math.PI));
         if (k > 0.3) { envoy.moving = true; envoy.st.walkBlend = 1; envoy.st.phase += dt * 4; envoy.pos.x += Math.sin(envoy.facing) * dt * 1.6; envoy.pos.z += Math.cos(envoy.facing) * dt * 1.6; envoy.pos.y = heightAt(envoy.pos.x, envoy.pos.z); }
