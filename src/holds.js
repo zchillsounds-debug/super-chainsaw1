@@ -409,8 +409,14 @@ export function buildHold(scene, id) {
         // a great bundle of reed bound with rope, like the ribs of a guest hall
         add(new THREE.CylinderGeometry(0.5, 0.7, 4.6, 9), R.reedRib, x, 2.3, z); for (let k = 0; k < 4; k++) add(new THREE.TorusGeometry(0.6 - k * 0.04, 0.05, 4, 12).rotateX(Math.PI / 2), K.rope, x, 0.6 + k * 1.1, z).castShadow = false;
       } else if (theme === 'timber') {
-        // a post with a cross-tree and a coil of rope
-        add(new THREE.CylinderGeometry(0.24, 0.3, 6.5, 8), K.plank2, x, 3.25, z); add(new THREE.BoxGeometry(2.2, 0.2, 0.2), K.plank2, x, 5.6, z, hash(c, r) * 3); add(new THREE.TorusGeometry(0.42, 0.1, 5, 12).rotateX(Math.PI / 2), K.rope, x, 0.12, z + 0.2).castShadow = false;
+        // a hoisting post: one jib leans up and out to a side, a rope and a bale hang from its tip, a coil of rope at
+        // the foot (a level cross-tree made the post read as a cross)
+        const ry = hash(c, r) * 6.28;
+        add(new THREE.CylinderGeometry(0.24, 0.3, 6.5, 8), K.plank2, x, 3.25, z);
+        add(new THREE.BoxGeometry(0.18, 4, 0.18).translate(0, 2, 0).rotateZ(-0.6).translate(0, 2.6, 0), K.plank2, x, 0, z, ry);
+        add(new THREE.CylinderGeometry(0.025, 0.025, 2.2, 4).translate(2.26, 4.8, 0), K.rope, x, 0, z, ry).castShadow = false;
+        add(new THREE.BoxGeometry(0.7, 0.55, 0.55).translate(2.26, 3.42, 0), K.plank2, x, 0, z, ry);
+        add(new THREE.TorusGeometry(0.42, 0.1, 5, 12).rotateX(Math.PI / 2), K.rope, x, 0.12, z + 0.2).castShadow = false;
       } else {
         // a column of rock the quarrymen left standing: rough lumps stacked on a broad foot
         add(new THREE.CylinderGeometry(0.9, 1.15, 2.2, 7), M.rock, x, 1.1, z, hash(c, r) * 3);

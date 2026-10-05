@@ -62,10 +62,11 @@ export function barge(rnd, len = 10) {
   g.add(mesh(new THREE.BoxGeometry(1.8, 1.2, 2.2).translate(0, 0.95, -len * 0.28), D.plank));
   const roof = mesh(new THREE.CylinderGeometry(1.15, 1.15, 2.5, 10, 1, false, 0, Math.PI).rotateZ(Math.PI / 2).rotateY(Math.PI / 2).translate(0, 1.55, -len * 0.28), R.reedMat); g.add(roof);
   for (let i = 0; i < 4 + Math.floor(rnd() * 4); i++) g.add(mesh(new THREE.BoxGeometry(0.7, 0.55, 0.9).translate((i % 2 - 0.5) * 0.8, 0.62 + Math.floor(i / 4) * 0.55, -0.4 + (Math.floor(i / 2) % 2) * 1.0 + len * 0.05), D.bales[i % 4]));
-  // a steering oar and a short mast with its sail furled on the yard
+  // a steering oar and a short mast with its lateen sail furled on a slanting yard that runs fore and aft (a level
+  // yard across the mast read as a cross)
   g.add(mesh(new THREE.BoxGeometry(0.1, 0.1, 3.4).rotateX(-0.35).translate(0.5, 0.8, -len / 2 - 0.6), D.plank));
   g.add(mesh(new THREE.CylinderGeometry(0.08, 0.1, 5, 6).translate(0, 2.7, len * 0.15), D.plank));
-  g.add(mesh(new THREE.CylinderGeometry(0.16, 0.16, 3.6, 8).rotateZ(Math.PI / 2).translate(0, 4.6, len * 0.15), D.sail));
+  g.add(mesh(new THREE.CylinderGeometry(0.15, 0.15, 4.6, 8).rotateX(1.05).translate(0, 4.5, len * 0.15 + 0.3), D.sail));
   return g;
 }
 // a hull being built on the slip: keel, stem and sternposts, ribs, a few strakes, the stands that hold it up
