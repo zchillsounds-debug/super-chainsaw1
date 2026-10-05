@@ -124,7 +124,7 @@ function falconRig() {
   // paint a geometry's vertices from a function of position (and normal)
   const paint = (geo, fn) => {
     const P = geo.attributes.position, N = geo.attributes.normal, col = new Float32Array(P.count * 3), c = new THREE.Color();
-    for (let i = 0; i < P.count; i++) { fn(c, P.getX(i), P.getY(i), P.getZ(i), N ? N.getZ(i) : 0); col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
+    for (let i = 0; i < P.count; i++) { fn(c, P.getX(i), P.getY(i), P.getZ(i), N ? N.getZ(i) : 0, N ? N.getY(i) : 0); col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); return geo;
   };
   const mesh = (geo, parent) => { const m = new THREE.Mesh(geo, M); m.castShadow = true; parent.add(m); return m; };
@@ -156,10 +156,18 @@ function falconRig() {
   const wings = [];
   for (const s of [-1, 1]) {
     const hinge = new THREE.Group(); hinge.position.set(s * 0.055, 0.05, -0.01); body.add(hinge);
-    const pts = [[0, 0.05], [0.12, 0.072], [0.26, 0.052], [0.36, 0.0], [0.45, -0.07], [0.41, -0.085], [0.38, -0.075], [0.35, -0.1], [0.31, -0.09], [0.27, -0.115], [0.22, -0.105], [0.17, -0.12], [0.11, -0.11], [0.05, -0.115], [0, -0.09]];
+    // long, narrow and pointed (a falcon, not a buzzard): a smooth leading edge sweeping back to the tip, and only a
+    // light scallop along the trailing edge
+    const pts = [[0, 0.045], [0.1, 0.06], [0.22, 0.05], [0.33, 0.02], [0.43, -0.03], [0.5, -0.075], [0.46, -0.08], [0.41, -0.078], [0.36, -0.088], [0.3, -0.084], [0.24, -0.094], [0.17, -0.09], [0.1, -0.098], [0.04, -0.094], [0, -0.08]];
     const ws = new THREE.Shape(); pts.forEach(([x, y], i) => (i ? ws.lineTo(s * x, y) : ws.moveTo(s * x, y)));
     const wg = new THREE.ExtrudeGeometry(ws, { depth: 0.01, bevelEnabled: false }); wg.translate(0, 0, -0.005); wg.rotateX(Math.PI / 2);
-    paint(wg, (c, x, y, z) => { const ax = Math.abs(x); c.copy(BROWN).lerp(RUST, hn(ax * 20, z * 20, 3) * 0.3); if (z > 0.03 && hn(Math.round(ax * 50), Math.round(z * 30), 4) > 0.6) c.lerp(PALE, 0.4); c.lerp(DARK, THREE.MathUtils.smoothstep(ax, 0.24, 0.4) * 0.8); if (z < -0.06) c.lerp(DARK, 0.3); });
+    // upper side warm brown with paler edging, the underside pale buff with fine dark flecks; the primaries darken
+    // toward the tip on both faces
+    paint(wg, (c, x, y, z, nz, ny) => {
+      const ax = Math.abs(x), under = ny < -0.5;
+      if (under) { c.copy(PALE); if (hn(Math.round(ax * 70), Math.round(z * 45), 5) > 0.7) c.lerp(RUST, 0.6); c.lerp(DARK, THREE.MathUtils.smoothstep(ax, 0.38, 0.5) * 0.6); return; }
+      c.copy(BROWN).lerp(RUST, hn(ax * 20, z * 20, 3) * 0.3); if (z < -0.07) c.lerp(PALE, 0.25); c.lerp(DARK, THREE.MathUtils.smoothstep(ax, 0.3, 0.48) * 0.7);
+    });
     mesh(wg, hinge);
     wings.push({ hinge, s });
   }

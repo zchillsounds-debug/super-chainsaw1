@@ -474,7 +474,7 @@ export function docksFinale(g, b) {
     { dur: lineDur('You burn your own city, and call me the thief.'), line: { who: 'Arsaber', text: 'You burn your own city, and call me the thief.', rig: b.rig, cue: 'breath', expr: 'stern', react: 'resolve' },
       cam: { follow: true, p0: at(salim, 2.0, -1.4, 0.7), t0: headOf(boss), fov: 32 }, dof: headOf(boss), aperture: 1.2, run: () => kneel() },
     { dur: lineDur('We copy. That is the difference.'), line: { who: 'Salim', text: 'We copy. That is the difference.', rig: g.player.rig, cue: 'hm', expr: 'resolve' },
-      cam: { follow: true, p0: () => { const h = headOf(salim)(), f = yawTo(salim.pos, boss.pos); return V(h.x + Math.sin(f) * 1.3 + Math.cos(f) * 0.45, h.y - 0.35, h.z + Math.cos(f) * 1.3 - Math.sin(f) * 0.45); }, t0: headOf(salim), fov: 30 }, dof: headOf(salim), aperture: 1.4, run: () => kneel() },
+      cam: { follow: true, p0: () => { const h = headOf(salim)(), f = yawTo(salim.pos, boss.pos); return V(h.x + Math.sin(f) * 1.9 + Math.cos(f) * 0.6, h.y - 0.08, h.z + Math.cos(f) * 1.9 - Math.sin(f) * 0.6); }, t0: () => headOf(salim)().add(V(0, -0.06, 0)), fov: 32 }, dof: headOf(salim), aperture: 1.4, run: () => kneel() },
     { dur: 4.2, caption: 'Arsaber\'s men threw down their bows. The copyists\' barge came down from the yard.', enter: (d) => d.fade(1, 0.8) },
     // on the quay: Hakam and Ishaq see the first copies off
     { dur: 3.6, fadeIn: 1.0, enter: () => {
