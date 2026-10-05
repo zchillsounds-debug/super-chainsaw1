@@ -304,6 +304,8 @@ export function buildHold(scene, id) {
   for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
     const ch = at(c, r), x = X(c), z = Z(r), near = N4.some(([dc, dr]) => WALK.has(at(c + dc, r + dr)) || '~xgwph'.includes(at(c + dc, r + dr)));
     if (WALK.has(ch) && ch !== '=' && ch !== '%') { add(floorG, M.floor, x, 0, z).castShadow = false; I.floors.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]); }
+    // a deck: the seams between its boards
+    if (D.floor === 'deck' && (WALK.has(ch) || 'wpCgxh'.includes(ch)) && ch !== '=' && ch !== '%') for (let k = 0; k < 5; k++) add(new THREE.BoxGeometry(TILE, 0.012, 0.045), K.void, x, 0.006, z - TILE / 2 + (k + 0.5) * TILE / 5).castShadow = false;
     if ('wpCgxh'.includes(ch)) { add(floorG, M.floor, x, 0, z).castShadow = false; I.floors.push([x - TILE / 2, z - TILE / 2, x + TILE / 2, z + TILE / 2]); }
     if (ch === '#') {
       if (theme === 'rock') {
@@ -340,7 +342,7 @@ export function buildHold(scene, id) {
         }
       } else if (theme === 'reed') {
         // the marsh: mud banks thick with reed; beyond them reed beds stand in open water
-        if (near) { const b = add(new THREE.BoxGeometry(TILE + 0.1, 1.2, TILE + 0.1), M.rock, x, -0.25, z, (hash(c, r) - 0.5) * 0.2); b.castShadow = false; col(x, z, TILE / 2, TILE / 2); reedClump(x, z, 8, c, r, 2.6, 4.6); }
+        if (near) { for (let k = 0; k < 2; k++) { const b = add(rockLump(), M.rock, x + (hash(c + k, r) - 0.5) * 1.2, -0.35, z + (hash(c, r + k) - 0.5) * 1.2, hash(r, c + k) * 6); b.scale.set(1.9, 0.55 + hash(c * 2 + k, r) * 0.25, 1.9); b.castShadow = false; } col(x, z, TILE / 2, TILE / 2); reedClump(x, z, 8, c, r, 2.6, 4.6); }
         else if (hash(c, r) < 0.45) reedClump(x, z, 5, c, r, 2.2, 4);
       } else if (theme === 'timber') {
         if (near) {
@@ -419,9 +421,10 @@ export function buildHold(scene, id) {
       // a stack in the way: fired brick, bundled reed, bales of cargo, or a fallen boulder
       const rnd = seeded(c, r), ry = hash(c, r) * 3;
       const o = theme === 'masonry' ? brickStack(rnd) : theme === 'reed' ? reedStack(rnd) : theme === 'timber' ? (hash(r, c) < 0.5 ? baleStack(rnd) : crate()) : null;
+      if (o && D.char) o.traverse((m) => { if (m.isMesh && m.material.color) { m.material = m.material.clone(); m.material.color.multiplyScalar(0.42); } });
       if (o) { o.position.set(x, 0, z); o.rotation.y = ry; if (theme === 'masonry') o.scale.setScalar(2.1); if (theme === 'timber' && !o.userData.colliders) o.scale.setScalar(2.2); o.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); grp.add(o); }
       else { const b = add(rockLump(), M.rock, x, 0.6, z, ry); b.scale.set(1.3, 1.1, 1.2); }
-      if (theme === 'masonry') { const o2 = brickStack(seeded(c + 3, r)); o2.position.set(x + 0.7, 0, z - 0.6); o2.rotation.y = ry + 0.5; o2.scale.setScalar(1.6); grp.add(o2); }
+      if (theme === 'masonry') { const o2 = brickStack(seeded(c + 3, r)); if (D.char) o2.traverse((m) => { if (m.isMesh) { m.material = m.material.clone(); m.material.color.multiplyScalar(0.42); } }); o2.position.set(x + 0.7, 0, z - 0.6); o2.rotation.y = ry + 0.5; o2.scale.setScalar(1.6); grp.add(o2); }
       colliders.push({ type: 'circle', x, z, r: 1.3, interior: true });
     } else if (ch === 'x') {
       const m = add(new THREE.BoxGeometry(TILE + 0.06, 7, TILE + 0.06), theme === 'timber' ? K.timber : M.crack, x, 3.3, z, 0, dyn); m.userData.noMerge = true;
@@ -641,6 +644,14 @@ export function setupHolds(g) {
   const holeG = new THREE.CircleGeometry(1.2, 12).rotateX(-Math.PI / 2), holeM = new THREE.MeshBasicMaterial({ color: 0x050403 });
   const holes = []; for (let i = 0; i < 8; i++) { const h = new THREE.Mesh(holeG, holeM); h.visible = false; g.scene.add(h); holes.push({ m: h, t: 0, life: 0 }); }
   g.holdHole = (q) => { const h = holes.find((x) => !x.m.visible) || holes[0]; h.m.visible = true; h.m.position.set(q.x, 0.04, q.z); h.t = 0; h.life = 9; };
+  // the close camera pulls in only for what stands taller than Salim: rock, walls, a closed gate or cracked wall
+  // (not campfires, chests, stacks, rope rails or a hulk's low bulwark)
+  g.holdCamClear = (ax, az, bx, bz) => {
+    const I = g.interior?.I; if (!I?.hold) return true; const low = HOLDS[I.hold].low, n = Math.ceil(Math.hypot(bx - ax, bz - az) / 0.5);
+    for (let i = 1; i <= n; i++) { const [c, r] = I.tileOf(ax + (bx - ax) * i / n, az + (bz - az) * i / n), ch = I.at(c, r);
+      if ((ch === '#' && !low) || (ch === 'x' && !I.cracks.find((k) => k.c === c && k.r === r)?.open) || (ch === 'g' && !I.gates.find((k) => k.c === c && k.r === r)?.open)) return false; }
+    return true;
+  };
   g.holdWalk = (q) => { const I = g.interior?.I; if (!I?.hold) return true; const [c, r] = I.tileOf(q.x, q.z); return I.walkable(c, r); };
   g.rivalAI = (g2, e, dt, dist) => g.__rivals?.zubayrAI(g2, e, dt, dist);
 
@@ -855,7 +866,7 @@ export function setupHolds(g) {
     if (IH?.hold && !g.cinematic && !p.dead && !g.paused) {
       for (const v of IH.vents) {
         v.t = (v.t ?? v.off) + dt; const k = v.t % 5.5, d = Math.hypot(p.pos.x - v.pos.x, p.pos.z - v.pos.z);
-        v.glow.scale.setScalar(k > 3.8 ? 0.6 + Math.min(1, (k - 3.8) / 0.8) * 0.75 : 0.55 + 0.08 * Math.sin(g.t * 3 + v.off));
+        v.glow.scale.setScalar(k > 3.8 ? 0.55 + Math.min(1, (k - 3.8) / 0.8) * 0.45 : 0.5 + 0.06 * Math.sin(g.t * 3 + v.off));
         if ((v.prev ?? 0) < 3.8 && k >= 3.8 && d < 26) g.telegraph(v.pos.clone(), 1.6, 0.8, () => { g.fires2.push({ pos: v.pos.clone(), r: 1.5, life: 1.4, t: 0, tick: 0, dmg: 5 + p.level * 1.8 }); g.fx.burst(tmp.copy(v.pos).setY(0.4), 26, { speed: 3.5, life: 0.8, size: 0.35, size1: 0.05, color: new THREE.Color(3, 1.3, 0.35), up: 6, drag: 1.2 }); g.audio.at(v.pos, () => g.audio.boom?.()); });
         v.prev = k;
       }

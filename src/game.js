@@ -1653,7 +1653,8 @@ export class Game {
     const z = THREE.MathUtils.clamp(this.camZoom / 1.25, 0.7, 1.6), dist = 4.4 * z, h = 1.6 + 0.9 * z;
     const fx = Math.sin(this.camYaw), fz = Math.cos(this.camYaw);
     let k = 1; // pull in toward Salim while rock is in the way
-    for (; k > 0.3; k -= 0.1) if (lineClearCam(p.x, p.z, p.x - fx * dist * k, p.z - fz * dist * k)) break;
+    const clear = this.interior?.I.hold && this.holdCamClear ? this.holdCamClear : lineClearCam; // in a hold only tall rock and walls pull it in
+    for (; k > 0.3; k -= 0.1) if (clear(p.x, p.z, p.x - fx * dist * k, p.z - fz * dist * k)) break;
     const target = tmp.set(p.x - fx * dist * k, p.y + h + (1 - k) * 1.2, p.z - fz * dist * k); // pulled in: rise over his shoulder, never into his head
     if (!this.camInit) { this.camPos.copy(target); this.camInit = true; }
     this.camPos.lerp(target, Math.min(1, dt * 7));

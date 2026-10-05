@@ -363,7 +363,7 @@ const HOLDS = {
     wall: 0xa8906a, rock: 0x6a5a44, floor: [0x6a5a44, 'earth'], wet: 0.6, water: 0x34443a, waterY: -0.45, sea: true, wallH: [2.2, 3.8],
     pool: ['spearman', 'netter', 'bandit', 'reedman'], ranged: ['slinger', 'slinger'], mid: 'shibl', boss: 'sahl', codex: 'h_sunken', step: 1 },
   quarter: { region: 'karkh', site: 'serai', lieut: 'chief', quest: 'burnedsuq', title: 'The Burned Quarter', sub: 'Lanes still smouldering behind the suq', theme: 'masonry', light: 'haze', char: true,
-    wall: 0x5e4e42, rock: 0x4a4038, floor: [0x4e443a, 'flag'], wallH: [4.6, 7.4], braziers: 0.08,
+    wall: 0x6e5c4e, rock: 0x4a4038, floor: [0x4e443a, 'flag'], wallH: [4.6, 7.4], braziers: 0.08,
     pool: ['guard', 'deserter', 'guard', 'naffat'], ranged: ['archer', 'crossbow'], mid: 'hajib', boss: 'asim', codex: 'h_quarter', step: 0 },
   vaults: { region: 'karkh', site: 'kiln', lieut: 'second', quest: 'warraqin', needs: 'burnedsuq', lockMsg: 'The vaults are barred. Find \'Asim first.', title: 'The Warehouse Vaults', sub: 'Store-rooms under the paper-sellers\' lane', theme: 'masonry', light: 'haze',
     wall: 0x9a8268, rock: 0x7a6a54, floor: [0x8a7a64, 'flag'], wallH: [4.6, 6.6],
