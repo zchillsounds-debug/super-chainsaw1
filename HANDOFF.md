@@ -1,12 +1,12 @@
-# Madinat al-Salam: Handoff (Round 21 done and shipped)
+# Madinat al-Salam: Handoff (Round 22 done and shipped)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-w9ig9m` of zchillsounds-debug/super-chainsaw1 (Round 21 complete and shipped).
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-2oveca` of zchillsounds-debug/super-chainsaw1 (Round 22 complete and shipped).
 >
 > Please:
-> 1. Fetch the branch and read HANDOFF.md fully, especially "Round 21" → "Shipped" and "Next round: ideas".
+> 1. Fetch the branch and read HANDOFF.md fully, especially "Round 22" and "Next round: ideas".
 > 2. Run `npm install`. Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Don't leave a background vite running; it is killed after two hours.
-> 3. Ask me clarifying questions and propose a plan for Round 22; confirm with me before building.
+> 3. Ask me clarifying questions and propose a plan for Round 23; confirm with me before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
@@ -19,7 +19,7 @@ unzip madinat-round19-handoff.zip -d madinat && cd madinat
 git clone repo.bundle game && cd game        # Round 20 is on branch ccr-c97baf64-6kbn83 (Round 19: ccr-56d2fa55-vx1w3y)
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
-If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-c97baf64-6kbn83`. If the repo has the branch, just `git fetch origin claude/new-session-w9ig9m && git checkout -B <session-branch> FETCH_HEAD` (Round 21 complete; Round 21 before its final session is `ccr-a81550d1-0nkldn`, Round 20 alone is `ccr-c97baf64-6kbn83`).
+If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-c97baf64-6kbn83`. If the repo has the branch, just `git fetch origin claude/new-session-2oveca && git checkout -B <session-branch> FETCH_HEAD` (Round 22 complete; Round 21 alone is `claude/new-session-w9ig9m`; Round 21 before its final session is `ccr-a81550d1-0nkldn`, Round 20 alone is `ccr-c97baf64-6kbn83`).
 
 URL flags:
 - `?play` skips the title screen.
@@ -318,6 +318,27 @@ User decisions: everything on the menu, shipped once at the end; Act VI at the T
 - **Draws:** Sawad hub 781 High / 409 Low (was 648/341: wider default view, more characters); docks hub 860.
 - **Known issue (also in Round 19):** in the marshes four standard-material programs (some with the wall-cutaway `occ` variant) compile during the Rawh fight; investigate with a programs diff like the one used this round.
 
+## Round 22 (done): story holds in every region
+User decisions: hand-built holds like the Hamrin four, but through the whole story; new layouts themed per region; two per region (8); **required story steps**, with each region's two lieutenants fought inside as the holds' masters (the act bosses stay in the open); everything inside **matches the hero's level**; Hanzala keeps his name. Playtest list: none sent this round (the user said "holds for now").
+
+- **`storyholds.js`** (new): the 8 maps (`MAPS`), 16 captains (`BOSS`: a new captain halfway plus the lieutenant), the 8 holds (`HOLDS`), the doors at the old sites, codex entries. Registered into `holds.js` with `registerHolds(maps, bosses, holds)`.
+
+  | Region | Hold 1 (chief) | Hold 2 (second, barred until hold 1) |
+  |---|---|---|
+  | Sawad | The Broken Dam: Durayd, then Farud (golden) | The Kiln Galleries: Mazin, then Hisham with his hooked chain (vents) |
+  | Marsh | The Reed Stockade: Farqad, then Marwan (reed, open water) | The Sunken Village: Shibl, then Sahl (drowned mud houses, shallows) |
+  | Karkh | The Burned Quarter: Hajib, then 'Asim (charred, vents, falling beams) | The Warehouse Vaults: Ghiyath, then Layth in his smoke |
+  | Docks | The Shipyard: Hawtha, then Bilal (timber, hoists) | The Hulks: Murra, then Mus'ab (barges in mid-river, low bulwarks) |
+
+- **`holds.js` generalised:** `HOLDS[id].theme` = `rock` (Hamrin) | `masonry` | `reed` | `timber`, each with its own walls, chasm faces, piers, low walls, stacks and door. Per-hold keys: `light` (preset), `wall`/`rock`/`floor` (`'deck'` = planks with seams)/`wet`/`water`, `waterY` and `chasm` (`river` | `deep`), `sea` (open water to the horizon), `low` (hull bulwarks), `wallH`, `char` (soot), `braziers`. New tiles: `%` shallow water (wade, 0.72 speed, water footsteps), `v` fire vent (5.5 s cycle: glow, ring telegraph, burst), `k` hoist or charred beam (drops a load at Salim's feet every 5–7.5 s within 7 m), `h` a stack in the way. Story keys: `region`, `site` (`serai`/`kiln`), `lieut` (`chief`/`second`), `quest`, `needs` + `lockMsg`.
+- **Lieutenants:** the master of a story hold gets `e.quest` and becomes `g.chief`/`g.matriarch`, so `game.killEnemy` completes the quest and plays `SCENES.lieutenantFalls` exactly as before. `BOSS[k].own` = `'hookAI'` | `'smokeAI'` runs his own fight from `rivals.js` between hold moves. The open-world lieutenant spawns are gone (`spawnEnemies` sets `chief`/`matriarch` to null); their packs stay at the sites.
+- **Story text:** quest lines in `region.js` and three lieutenant lines/cards in `story15.js` now point to the holds. The guide trail leads to the door (`g.storyDoor`). Level inside = `p.level` (mids +1, masters +2). An old save whose lieutenant already fell counts that hold as broken. New Game+ clears the story holds and every region's saved quests (`savedQuests`).
+- **Camera:** inside a hold the close camera only pulls in for tall tiles (`g.holdCamClear`: `#` unless `low`, closed `x`/`g`), not campfires, chests, stacks or rope rails. First hold entry shows a hint about the close camera and lock-on (`p.tutHold`).
+- **Fixes:** holds no longer unlock the "Baked Brick" codex entry (the interior catch-all in `narrative.js`). Footsteps in holds follow the theme.
+- **Arabic:** `story22_ar.js` (`AR22`) for every new string.
+- **Tests:** `shots/r22holds.mjs <id> [out]` (door, trail, lock, hazards, both captains, fire, crack, gate, chests, the lieutenant's own fight and last words, quest, act, way out): all 8 clean. `shots/r22crit.mjs <id> <out>` (critique shots: door, way in, walk, mid ground, past the fire). The full sweep is clean (see "Shipped" below). `r21rival` now notes the lieutenants live in holds; `r15test` prints `holdDoors`.
+- **Pitfall:** never edit `src/` while a `withvite.sh` test runs: Vite reloads the page and the test dies with "Execution context was destroyed". And `pkill -f vite` kills your own shell when the command line contains "vite"; kill by PID.
+
 ## Round 21: approved plan and status
 The user approved the full plan: everything on the Round 20 menu, a **post-game region** (the Hamrin ravines: an endgame hub plus four endgame dungeons), and the **Black Myth: Wukong close action camera** inside those dungeons, with **campfires** as rest points (no shrines). It ships **once at the end**: the Artifact, the push and the APK.
 
@@ -445,6 +466,7 @@ The goal is about 8–12 hours for a first playthrough, up from about 1.5 today,
 3. (Fixed in Round 20: new camera work for the lieutenants' last words and the boss intro.)
 
 ## File map (src/)
+- **Round 22:** storyholds.js, story22_ar.js (holds.js gained themes and the registry)
 - **Round 21:** rivals.js, hamrin.js, holds.js, hublife.js, story21_ar.js
 - **Round 20:** foes20.js, companion.js, mount.js, trials.js, craft.js, bench.js, docksprops.js
 - **Core:** main.js (boot, loop, wiring), game.js (gameplay, AI, combat), classes.js, entities.js, items.js, save.js, content.js (R10 captains, areas, tasks, engines, duel, NG+), region.js + story15.js (R15 regions, quest chains, boss kits), sidequests.js (R16 side quests, bounties, world events, tracking)
