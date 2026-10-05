@@ -1,12 +1,12 @@
-# Madinat al-Salam: Handoff (Round 22 done and shipped)
+# Madinat al-Salam: Handoff (Round 22 shipped; Round 23 approved, not started)
 
 ## Paste this into the new chat
 > I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-2oveca` of zchillsounds-debug/super-chainsaw1 (Round 22 complete and shipped).
 >
 > Please:
-> 1. Fetch the branch and read HANDOFF.md fully, especially "Round 22" and "Next round: ideas".
+> 1. Fetch the branch and read HANDOFF.md fully, especially "Round 23: approved plan" (the user has already approved it) and "Round 22".
 > 2. Run `npm install`. Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Don't leave a background vite running; it is killed after two hours.
-> 3. Ask me clarifying questions and propose a plan for Round 23; confirm with me before building.
+> 3. Round 23 is approved: build it as written in "Round 23: approved plan". Ask me only if something in it is unclear or turns out impossible.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
@@ -317,6 +317,56 @@ User decisions: everything on the menu, shipped once at the end; Act VI at the T
 - **Tests (all clean):** `r15test` (all four regions), `r16test` (all four), `r17test docks`, `r18test` (four classes), `ngtest`, `traveltest` (Sawad → marsh → Karkh → docks), `finaletest <region>`, `trialtest`, `crafttest`, `benchtest`, `errs.mjs <query>` (page errors without waiting for ready).
 - **Draws:** Sawad hub 781 High / 409 Low (was 648/341: wider default view, more characters); docks hub 860.
 - **Known issue (also in Round 19):** in the marshes four standard-material programs (some with the wall-cutaway `occ` variant) compile during the Rawh fight; investigate with a programs diff like the one used this round.
+
+## Round 23: approved plan (not started): the Byzantine mission
+The user asked for **every adversary to become Byzantine** (looks, names, everything), with the **main story rewritten** around it. Decisions (all answered by the user):
+- **Frame:** a covert mission. Under cover of the brothers' civil war, a Byzantine envoy, **Arsaber**, slips into Iraq with a picked company and hired turncoats, ordered to carry Baghdad's best learning to Constantinople. **The Teacher's Pages** are the prize. (Historically no Byzantine army reached Baghdad in 813, which is why it is a mission, not an invasion.)
+- **Names:** period Greek names, **no saints' or biblical names** (no Michael, John/Ioannes, George, Peter, Stephen, Nikephoros, Theodore, Manuel, Theophilos, Andronikos, Thomas, Basil, Constantine, Kosmas, Leontios...). Single names, no epithets (family names used as single names are fine: Skleros, Kourkouas...).
+- **Scope: everything.** All regions, the Hamrin endgame, side quests, bounties, world events, dungeons, the Gauntlet, contracts, qanat captains and all story-hold captains, plus a full story and codex rewrite with Arabic. Shipped once at the end (Artifact, push, APK).
+- **Rival:** Zubayr becomes **Tatzates**, an Armenian bowman in Byzantine pay, with the same arc (three ambushes, escapes, last stand in his Hamrin hold). His line about the Hamrin hills stays.
+- **Hanzala** (Round 22: "keep") is renamed too, because the new rule is that every adversary is Byzantine.
+
+**Stays Abbasid:** Salim, Ishaq, Hakam, the hub NPCs (Yusuf, Bishr, 'Amr, Kathir, side-quest givers), the hired guards (Ma'n, Dirar, Tamim, Talha), the four classes, the music, the maps, the holds' layouts. The civil war stays as the backdrop, not the enemy.
+
+### Story beats
+| Act | Beat |
+|---|---|
+| Prologue | Riders in Byzantine mail on the dunes; the attack at dusk stays off screen; Jabir dies from an arrow loosed by Arsaber's bowman (Tatzates). |
+| Briefing | Ishaq: "A Byzantine envoy came under the war's smoke. His soldiers took the Pages. Bardanes leads them in the Sawad. Start with Photeinos at the caravanserai." |
+| I–III Sawad | **Photeinos** (Broken Dam, was Farud) → **Olbianos** (Kiln Galleries, was Hisham; keeps the hooked chain) → **Bardanes**, the company's commander, at the ruined arch (was Ghassan). |
+| IV Marshes | The Pages go by boat. **Katakylas** (Reed Stockade, was Marwan) → **Petronas** (Sunken Village, was Sahl) → **Kallinikos**, master of the liquid-fire siphons, at the weir (was Rawh). |
+| V Al-Karkh | **Narses** (Burned Quarter, was 'Asim) → **Kalokyros** (Vaults, was Layth; keeps the smoke fight) → **Krateros** in the square, ready to burn the Pages rather than lose them (was 'Utba). |
+| VI River quays | **Rhentakios** (Shipyard, was Bilal) → **Skleros** (Hulks, was Mus'ab) → **Arsaber** himself at the ship meant to carry the Pages north (was Ghanim; the "unnamed buyer" is now Arsaber). Then the lamps on the canal: "We keep the account." |
+| Hamrin | The company's last fortified road toward the frontier; Tatzates' hold. |
+
+Story-hold mid captains (suggested): Durayd → Lalakon, Mazin → Bryennios, Farqad → Kourkouas, Shibl → Genesios, Hajib → Mousele, Ghiyath → Gongylios, Hawtha → Aetios, Murra → Monomachos. Other candidates checked against the rule: Arsaber, Bardanes, Tatzates, Artabasdos, Photeinos, Olbianos, Katakylas, Krateros, Kalokyros, Kallinikos, Narses, Petronas, Rhentakios, Skleros, Lalakon, Bryennios, Kourkouas, Genesios, Mousele, Gongylios, Aetios, Monomachos, Belisarios (very famous; avoid for a minor captain). Pick the rest (field captains Qays, Thabit, Mundhir, Zuhayr, Muhriz, Hammad, Shabib, Kulayb, Dhuhl, Asbagh, Kahmas; R17 captains Wahb, Bujayr, Hurayth, Sinan, Unays, Habib; area captains Ghalib, Qutayba, Hubaysh, Mudrik, Sawwar; Gauntlet Malik, Sa'd, 'Ubayd, Hani, Mukhariq; Hamrin hold captains Sakhr, Ghaylan, Shaddad, Jabala, Dhuayb, Hanzala, Nahshal; qanat and contract captains; rivals/mid lines) the same way and list the full mapping here when done. `grep -n "bossName\|name: '" src/*.js` finds most of them; `captainLook`'s `NAMED` table in `entities.js` keys crests by name and must follow the renames.
+
+### Enemy types (keep the AI, change look and name)
+| Type key (keep) | New name | Kit |
+|---|---|---|
+| bandit | Psilos (light infantry) | spear, small round shield, felt cap |
+| guard | Skoutatos (shield infantry) | spathion, large oval shield, helmet with aventail, lamellar |
+| spearman | Menavlatos (pikeman) | heavy menavlion pike |
+| archer | Toxotes | Byzantine bow |
+| deserter (hidden) | Trapezites (raider) | knives, springs from cover |
+| naffat | Siphon-bearer | hand siphon of liquid fire (same fire mechanics; rename "naft" text to liquid fire where it is the enemy's) |
+| slinger | Slinger (sphendonistes) | sling |
+| netter | Marine (river-fleet sailor) | weighted net |
+| reedman | Trapezites in the reeds | as above, marsh dress |
+| crossbow | Solenarion archer | the arrow-guide (solenarion) shooting short darts far; crossbows are later. Keep the kneeling aim and red line. |
+| engineer | Mechanikos | raises a mangonel |
+| rider (camel) | Kataphraktos | armoured horseman on a **horse** (the horse sculpt exists in `creatures.js`) |
+
+**Look:** lamellar klibanion over padded kavadion coats, crested helmets with mail aventails (felt caps for light troops), officers' cloaks, oval and round shields in unit colours with plain bands or animal devices, beards and short hair (no turbans, no qalansuwa). **No crosses, icons, chi-rho, saints, church buildings or religious emblems anywhere** (the design rule still holds). Bosses keep their kits (`story15.js` BOSS) but get Byzantine looks and lines.
+
+### Text to rewrite
+`scenes.js` (prologue, briefing, lieutenant falls, boss intros, finales), `story15.js` (LIEUT, BOSS intros and phase lines, ISHAQ_TALK), `rivals.js` (RIVAL lines), `region.js` (quest texts, banners), `storyholds.js` and `holds.js` (captains, subs, phase lines), `content.js`, `dungeons.js`, `sidequests.js` (bounty and event text that names foes), `progression.js` (Gauntlet), `STORY.md`, codex entries that call the foes brigands or deserters, the tutorial if it does. New codex entries: the Byzantine army (themata and tagmata), the frontier (al-thughur), liquid fire, embassies between Baghdad and Constantinople, prisoner exchanges on the Lamis river, Leo the Mathematician. **Arabic for all of it** (new `story23_ar.js`, merged in `story_ar.js`; the Arabic for the Byzantines is الروم).
+
+### Check before shipping
+- No religious symbol slipped into a shield, banner or helmet (critique shots of every foe type close up: `shots/faces.mjs`, `shots/crit.mjs`, `shots/r22crit.mjs`).
+- Geometry cache: bump `VERSION` in `geocache.js` if sculpts change.
+- Saves: renamed captains in `p.slain`, `p.named`, `p.rival` must still load. Map the old names or reset those keys.
+- Full test sweep (see Round 22 "Shipped"). Tests that match old names (`r21rival`, `r22holds` last words, `finaletest`) need their expectations updated.
 
 ## Round 22 (done): story holds in every region
 User decisions: hand-built holds like the Hamrin four, but through the whole story; new layouts themed per region; two per region (8); **required story steps**, with each region's two lieutenants fought inside as the holds' masters (the act bosses stay in the open); everything inside **matches the hero's level**; Hanzala keeps his name. Playtest list: none sent this round (the user said "holds for now").
