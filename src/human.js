@@ -118,7 +118,8 @@ function garmentPrims(B, o) {
   for (const [, s] of SIDES) L.push(ell('hips', [s * 0.072, -0.075, -0.045], [0.085, 0.09, 0.075], null, { k: 0.05, ...T, mat: R.CLOTH }));
   L.push(ell('spine', [0, 0.08, 0.008 + o.belly * 0.03], [0.146 * o.girth, 0.125, 0.11 + o.belly * 0.03], null, { k: 0.06, ...T }));
   L.push(ell('chest', [0, 0.09, 0.012], [0.17 * b, 0.15, 0.122], null, { k: 0.06, ...T }));
-  for (const [, s] of SIDES) L.push(ell('chest', [s * 0.066 * b, 0.11, 0.058], [0.078 * b, 0.062, 0.05], null, { k: 0.04, ...T }));
+  for (const [, s] of SIDES) L.push(ell('chest', [s * 0.07 * b, 0.135, 0.05], [0.085 * b, 0.055, 0.04], null, { k: 0.06, ...T })); // flat pectorals
+  L.push(ell('spine', [0, 0.17, 0.012 + o.belly * 0.02], [0.158 * b, 0.17, 0.118 + o.belly * 0.025], null, { k: 0.06, ...T })); // ribcage to waist, no undercut
   L.push(cap('upperChest', [-0.148 * b, 0.065, -0.012], [0.148 * b, 0.065, -0.012], 0.072, 0.072, { k: 0.05, ...T }));
   L.push(ell('upperChest', [0, 0.02, -0.045], [0.158 * b, 0.13, 0.085], null, { k: 0.05, ...T }));
   for (const [, s] of SIDES) L.push(cap('upperChest', [s * 0.1 * b, 0.085, -0.02], [0, 0.138, -0.015], 0.046, 0.04, { k: 0.04, ...T }));
@@ -211,8 +212,9 @@ function headwearPrims(B, o) {
 function veilPrims(B, o) {
   // litham: a cloth veil drawn over nose and mouth
   const { cap, ell } = helpers(B, HS), L = [], H = 'head';
-  L.push(ell(H, [0, 0.06, 0.035], [0.074, 0.062, 0.085], null, { k: 0.02, mat: R.MASK }));
-  L.push(cap('neck', [0, 0.0, 0.0], [0, 0.09, 0.0], 0.06, 0.066, { k: 0.03, mat: R.MASK }));
+  L.push(ell(H, [0, 0.055, 0.04], [0.08, 0.075, 0.095], null, { k: 0.02, mat: R.MASK }));
+  L.push(ell('jaw', [0, -0.055, 0.05], [0.064, 0.05, 0.062], null, { k: 0.025, mat: R.MASK })); // under the chin
+  L.push(cap('neck', [0, -0.01, 0.0], [0, 0.09, 0.01], 0.064, 0.07, { k: 0.03, mat: R.MASK }));
   L.push(halfspace(V(0, 0.088 * HS, 0).applyMatrix4(B.mats.head), V(0, -1, 0), { sub: true, k: 0.008 }));
   return L;
 }
@@ -309,12 +311,13 @@ export function humanoid(opts = {}) {
   root.updateMatrixWorld(true);
   const hemY = o.hemY ?? (o.qaba ? 0.36 : 0.13);
   const skirtM = addWrinkles(addRim(new THREE.MeshStandardMaterial({ map: fabricTex(o.robe, o.robe2, o.hem || !o.qaba ? 'hem' : true), roughness: 0.9, side: THREE.DoubleSide })));
-  const rows = LOW ? 6 : 9, cols = LOW ? 12 : 18, gap = o.qaba ? 0.62 : 0.34, top = 1.02, flare = o.qaba ? 0.13 : 0.11;
+  const rows = LOW ? 6 : 9, cols = LOW ? 12 : 18, gap = o.qaba ? 0.62 : -0.3, top = 1.02, flare = o.qaba ? 0.13 : 0.11;
   const skirt = new Cloth({
-    rows, cols, anchor: bones.hips, material: skirtM, uvRepeat: 3,
+    rows, cols, anchor: bones.hips, material: skirtM, uvRepeat: 3, hold: 0.07, damp: 0.9,
     rest: (r, c) => {
       const t = r / (rows - 1), a = gap / 2 + (c / (cols - 1)) * (Math.PI * 2 - gap);
-      const y = top + (hemY - top) * t, rx = (0.168 * o.girth + 0.012) + flare * Math.pow(t, 0.8), rz = (0.132 * o.girth + 0.012 + o.belly * 0.02) + flare * 0.85 * Math.pow(t, 0.8);
+      const wrap = gap < 0 ? 0.014 * c / (cols - 1) : 0; // the overlapping flap lies just outside the one beneath it
+      const y = top + (hemY - top) * t, rx = (0.168 * o.girth + 0.012 + wrap) + flare * Math.pow(t, 0.8), rz = (0.132 * o.girth + 0.012 + o.belly * 0.045 + wrap) + flare * 0.85 * Math.pow(t, 0.8);
       return V(Math.sin(a) * rx, y, Math.cos(a) * rz + (t > 0.2 ? -0.01 : 0));
     },
   });
@@ -323,7 +326,7 @@ export function humanoid(opts = {}) {
     const cm = addWrinkles(addRim(new THREE.MeshStandardMaterial({ map: fabricTex('#' + C(o.cloak).getHexString(), '#b8913e', 'hem'), roughness: 0.95, side: THREE.DoubleSide })));
     const mr = LOW ? 6 : 9, mc = LOW ? 7 : 11;
     const mantle = new Cloth({
-      rows: mr, cols: mc, anchor: bones.upperChest, material: cm, uvRepeat: 2, gravity: 1,
+      rows: mr, cols: mc, anchor: bones.upperChest, material: cm, uvRepeat: 2, gravity: 1, hold: 0.05, damp: 0.9,
       rest: (r, c) => {
         const t = r / (mr - 1), u = c / (mc - 1) * 2 - 1;
         const a = u * 1.25, x0 = Math.sin(a) * 0.17 * o.build, z0 = -Math.cos(a) * 0.11 - 0.01;
@@ -341,10 +344,10 @@ export function humanoid(opts = {}) {
   const grip = (h, w, s) => { w.position.set(-s * 0.018, -0.1, 0.004); h.add(w); return w; };
   if (o.weapon === 'sword') { const w = sword(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
   if (o.weapon === 'dagger') { for (const [S, s] of SIDES) { const w = dagger(); w.rotation.x = Math.PI / 2; grip(bones['hand' + S], w, s); } }
-  if (o.weapon === 'torch') { const w = torch(); w.rotation.x = Math.PI / 2.4; parts.weapon = grip(bones.handR, w, 1); }
+  if (o.weapon === 'torch') { const w = torch(); w.rotation.x = Math.PI * 0.56; parts.weapon = grip(bones.handR, w, 1); }
   if (o.weapon === 'spear') { const w = spear(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
-  if (o.weapon === 'bow') { const w = bow(); w.position.set(0.018, -0.1, 0); bones.handL.add(w); parts.weapon = w; }
-  if (o.offhand === 'shield') { const sd = shield(); sd.scale.setScalar(0.92); sd.position.set(-0.075, -0.14, 0.02); sd.rotation.set(0, -Math.PI / 2 + 0.5, 0); bones.foreL.add(sd); parts.shield = sd; }
+  if (o.weapon === 'bow') { const w = bow(); w.position.set(0.012, -0.095, 0); w.rotation.x = -Math.PI / 2; bones.handL.add(w); parts.weapon = w; parts.bow = w; }
+  if (o.offhand === 'shield') { const sd = shield(); sd.scale.setScalar(0.92); sd.position.set(-0.062, -0.2, 0.0); sd.rotation.set(0, -Math.PI / 2 + 0.5, 0); bones.foreL.add(sd); parts.shield = sd; }
   if (o.scabbard) {
     const piv = new THREE.Group(); piv.position.set(-0.165, 0.03, 0.02); piv.rotation.set(0.55, 0, -0.18); bones.hips.add(piv);
     const sc = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.02, 0.9, 8).translate(0, -0.45, 0).scale(1, 1, 0.55), leatherM); sc.castShadow = true; piv.add(sc);

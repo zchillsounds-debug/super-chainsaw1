@@ -28,8 +28,8 @@ export function addWrinkles(mat) {
 }
 
 export class Cloth {
-  constructor({ rows, cols, rest, anchor, material, closed = false, uvRepeat = 1, stiff = 1, gravity = 1, carry = 0.45 }) {
-    this.carry = carry; this.rows = rows; this.cols = cols; this.anchor = anchor; this.closed = closed; this.gravity = gravity;
+  constructor({ rows, cols, rest, anchor, material, closed = false, uvRepeat = 1, stiff = 1, gravity = 1, carry = 0.45, hold = 0, damp = 0.94 }) {
+    this.carry = carry; this.hold = hold; this.rows = rows; this.cols = cols; this.anchor = anchor; this.closed = closed; this.gravity = gravity;
     const n = rows * cols;
     this.p = new Float32Array(n * 3); this.q = new Float32Array(n * 3);
     this.local = new Float32Array(n * 3); // rest positions in the anchor bone's bind space
@@ -68,7 +68,7 @@ export class Cloth {
     for (let r = 0; r < rows; r++) for (let c = 1; c < cols; c++) this.restH[r * cols + c] = L(id(r, c), id(r, c - 1));
     this.geo = g;
     this.mesh = new THREE.Mesh(g, material); this.mesh.castShadow = true; this.mesh.receiveShadow = true; this.mesh.frustumCulled = false;
-    this.inited = false; this.acc = 0; this.colliders = []; this.damp = 0.94;
+    this.inited = false; this.acc = 0; this.colliders = []; this.damp = damp; this.T = hold ? new Float32Array(n * 3) : null;
   }
   pinWorld(i, out) { return out.set(this.local[i * 3], this.local[i * 3 + 1], this.local[i * 3 + 2]).applyMatrix4(this.anchor.matrixWorld); }
   reset() {
@@ -111,6 +111,10 @@ export class Cloth {
     } else {
       this.acc = Math.min(this.acc + dt, 0.05);
       const h = 1 / 60, g = -9.8 * this.gravity * h * h, ws = this.anchor.matrixWorld.getMaxScaleOnAxis();
+      // shape targets for this frame (the garment's rest shape carried by the bone); the pull keeps a robe
+      // hanging like a robe instead of streaming out flat when the legs kick it during a stride
+      const T = this.T, hold = this.hold;
+      if (T) for (let i = cols; i < n; i++) { this.pinWorld(i, _a); T[i * 3] = _a.x; T[i * 3 + 1] = _a.y; T[i * 3 + 2] = _a.z; }
       while (this.acc >= h) {
         this.acc -= h;
         // the pinned edge's motion this step; free particles are partly carried along with it (heavy wool and
@@ -126,6 +130,7 @@ export class Cloth {
           P[i * 3 + 1] += (y - Q[i * 3 + 1]) * damp + g;
           P[i * 3 + 2] += (z - Q[i * 3 + 2]) * damp + wind * h * h * (Math.cos(i * 2.3 + performance.now() * 0.003) * 6);
           Q[i * 3] = x; Q[i * 3 + 1] = y; Q[i * 3 + 2] = z;
+          if (T) { P[i * 3] += (T[i * 3] - P[i * 3]) * hold; P[i * 3 + 1] += (T[i * 3 + 1] - P[i * 3 + 1]) * hold; P[i * 3 + 2] += (T[i * 3 + 2] - P[i * 3 + 2]) * hold; }
         }
         const C = this.cons;
         for (let it = 0; it < 3; it++) {

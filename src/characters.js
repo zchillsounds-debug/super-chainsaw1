@@ -78,8 +78,14 @@ export function dagger() {
 export function torch() {
   const g = new THREE.Group();
   g.add(mesh(new THREE.CylinderGeometry(0.03, 0.025, 0.7, 6).translate(0, 0.25, 0), leather));
-  const f = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.26, 7).translate(0, 0.7, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.3, 0.3), toneMapped: false }));
-  g.add(f);
+  g.add(mesh(new THREE.CylinderGeometry(0.045, 0.036, 0.12, 7).translate(0, 0.6, 0), new THREE.MeshStandardMaterial({ color: 0x1a120c, roughness: 1 }))); // pitch-soaked rag wrap
+  // flame: a hot core inside a soft outer tongue, both additive so they glow rather than read as solid cones
+  const fm = (c, o) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+  const outer = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8).scale(1, 2.3, 1).translate(0, 0.76, 0), fm(new THREE.Color(1.6, 0.55, 0.1), 0.35));
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6).scale(1, 2.0, 1).translate(0, 0.71, 0), fm(new THREE.Color(2.4, 1.6, 0.6), 0.7));
+  g.add(outer, core);
+  // flicker: the tongue stretches and leans a little every frame
+  outer.onBeforeRender = () => { const t = performance.now() * 0.001; outer.scale.set(1 + Math.sin(t * 23) * 0.06, 1 + Math.sin(t * 17) * 0.12 + Math.sin(t * 31) * 0.06, 1); outer.rotation.z = Math.sin(t * 9) * 0.08; };
   return g;
 }
 export function spear() {
@@ -88,10 +94,23 @@ export function spear() {
   g.add(mesh(new THREE.ConeGeometry(0.06, 0.35, 4).translate(0, 1.95, 0), steel));
   return g;
 }
+// Composite recurve bow. Grip at the origin, limbs along Z, the belly and string toward +Y (the archer when
+// the bow hand points at the target along -Y), tips flicking forward again at the ends.
 export function bow() {
-  const g = new THREE.Group();
-  const c = new THREE.TorusGeometry(0.6, 0.02, 5, 20, Math.PI * 0.9);
-  const b = mesh(c, leather); b.rotation.z = Math.PI / 2 - Math.PI * 0.45; g.add(b);
+  const g = new THREE.Group(), pts = [];
+  const prof = [[0, 0], [0.12, 0.012], [0.26, 0.04], [0.4, 0.085], [0.5, 0.12], [0.56, 0.128], [0.61, 0.11]];
+  for (let i = prof.length - 1; i > 0; i--) pts.push(new THREE.Vector3(0, prof[i][1] * 1.25, -prof[i][0]));
+  for (const [z, y] of prof) pts.push(new THREE.Vector3(0, y * 1.25, z));
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const limb = new THREE.TubeGeometry(curve, 40, 0.011, 6, false), p = limb.attributes.position;
+  // taper toward the tips, thicker at the grip
+  for (let i = 0; i < p.count; i++) { const z = p.getZ(i), k = 1.2 - Math.min(1, Math.abs(z) / 0.6) * 0.7; const c = curve.getPointAt(Math.min(1, Math.max(0, (z + 0.61) / 1.22))); p.setX(i, c.x + (p.getX(i) - c.x) * k); p.setY(i, c.y + (p.getY(i) - c.y) * k); }
+  limb.computeVertexNormals();
+  g.add(mesh(limb, new THREE.MeshStandardMaterial({ color: 0x5a3418, roughness: 0.55 })));
+  g.add(mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.11, 8).rotateX(Math.PI / 2), leather)); // leather grip wrap
+  const tipY = 0.11 * 1.25, s0 = new THREE.Vector3(0, tipY, -0.61), s1 = new THREE.Vector3(0, tipY, 0.61);
+  const string = new THREE.Mesh(new THREE.CylinderGeometry(0.0022, 0.0022, s0.distanceTo(s1), 3).rotateX(Math.PI / 2).translate(0, tipY, 0), new THREE.MeshStandardMaterial({ color: 0xd8ccb0, roughness: 0.8 }));
+  g.add(string);
   return g;
 }
 export function shield() {

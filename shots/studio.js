@@ -10,7 +10,7 @@ window.__studio = async (list, { gap = 1.7, face = 0, at = null } = {}) => {
   const { heightAt } = await import('/src/terrain.js');
   for (const r of window.__rigs || []) r.rig.parent?.remove(r.rig);
   g.player.rig.visible = false; g.player.invuln = 1e9;
-  for (const e of g.enemies) e.rig.visible = false;
+  for (const e of g.enemies) g.scene.remove(e.rig); g.enemies.length = 0; // nobody wanders into the shot
   const P = at ? new (g.player.pos.constructor)(at[0], 0, at[1]) : g.player.pos.clone(); window.__hAt = heightAt;
   if (at) { g.player.pos.set(at[0] + 2, 0, at[1] + 6); window.__sim(0.2); }
   window.__rigs = list.map((d, i) => {

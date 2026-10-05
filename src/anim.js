@@ -153,6 +153,19 @@ export class Animator {
       b.shR[0] = -swR + breathe * 0.02; b.shR[1] = 0; b.shR[2] = -0.26 + runK * 0.1;
       b.elR[0] = elB - Math.max(0, swR) * 0.35; b.elR[1] = 0; b.elR[2] = 0; b.hR[0] = 0; b.hR[1] = 0; b.hR[2] = 0;
     }
+    if (o.weapon === 'spear') {
+      // the spear rides upright: forearm forward, shaft standing beside the body
+      const g = 1 - walkK * 0.25;
+      b.shR[0] = -0.12 * g - swR * 0.3; b.shR[1] = 0.12; b.shR[2] = -0.2;
+      b.elR[0] = -1.3 * g + elB * 0.15; b.elR[1] = 0; b.elR[2] = 0;
+      b.hR[0] = 0.05 + breathe * 0.02; b.hR[1] = 0; b.hR[2] = 0.05;
+    } else if (o.weapon === 'torch') {
+      // the torch is held out to the side and a little forward, flame well clear of the face
+      const g = 1 - walkK * 0.25;
+      b.shR[0] = -0.2 * g - swR * 0.3; b.shR[1] = 0.1; b.shR[2] = 0.12;
+      b.elR[0] = -0.85 * g + elB * 0.15; b.elR[1] = 0; b.elR[2] = 0;
+      b.hR[0] = 0.15 + breathe * 0.02; b.hR[1] = 0; b.hR[2] = -0.3;
+    }
     if (this.shield) {
       b.shL[0] = -0.3 - swL * 0.4; b.shL[1] = 0.35; b.shL[2] = 0.12; b.elL[0] = -1.15 + runK * 0.2; b.elL[1] = 0; b.elL[2] = 0;
     } else {
@@ -187,6 +200,8 @@ export class Animator {
       this.clip = null;
     }
     this.lastAct = act;
+    // the bow is carried upright at the side and swings level with the arm only while shooting
+    if (p.bow) { this.bowA = (this.bowA || 0) + ((act === 'shoot' ? 1 : 0) - (this.bowA || 0)) * Math.min(1, dt * 10); p.bow.rotation.x = -Math.PI / 2 * (1 - this.bowA); }
 
     // ---------------- additive layers: flinch, crouch
     const hit = clamp01(st.hitT || 0), hs = this.hitSide ??= Math.random() < 0.5 ? -1 : 1;
