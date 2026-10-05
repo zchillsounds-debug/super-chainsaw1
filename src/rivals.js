@@ -10,41 +10,43 @@ import { saveGame } from './save.js';
 import { makeItem } from './items.js';
 import * as SCENES from './scenes.js';
 import { t } from './i18n.js';
+import { byzify } from './byz.js';
 
 // Round 21: the rival, and two lieutenants with fights of their own.
 //
-// Zubayr is the hired bowman who loosed the arrow that killed Jabir on the dune. He works for whoever pays:
-// Ghassan, then Rawh, then the buyer's steward. He waits on Salim's road three times (Acts II, IV and VI) with a
+// Tatzates (Round 23; was Zubayr) is the Armenian bowman in Byzantine pay who loosed the arrow that killed Jabir on
+// the dune. He works for whoever pays: Bardanes, then Kallinikos, then Arsaber himself. He waits on Salim's road three times (Acts II, IV and VI) with a
 // few of his men, fights at range, and slips away in smoke when he is down to a third of his life. The last time he
 // says where he is going: the Hamrin hills, where his hold is the deepest of the endgame dungeons (hamrin.js).
 //   His kit: a fan of arrows; a marked shot (he kneels, a red line runs to Salim, then a heavy arrow that shoves);
 //   a leap back with a smoke pot when Salim closes on him; a kick if he is cornered.
-// Hisham, the kiln-master who sold out (Act II), throws a hooked chain (the kind that drags bricks out of a kiln):
-//   a red line shows its path, and if it catches Salim he is hauled in and Hisham brings his spear down on him.
+// Olbianos, the Teacher's old student who sold out (Act II; was Hisham), throws a hooked chain (the kind that drags bricks out of a kiln):
+//   a red line shows its path, and if it catches Salim he is hauled in and Olbianos brings his spear down on him.
 //   An evade through the throw, or as the blow falls, slips it.
-// Layth, who holds the paper-sellers' lane (Act V), fights in smoke: he breaks a pot at his feet, is gone, and
+// Kalokyros, who holds the vaults under the paper-sellers' lane (Act V; was Layth), fights in smoke: he breaks a pot at his feet, is gone, and
 //   steps out behind Salim; his blade glints a moment before the cut, and an evade then turns it aside.
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
 const angDiff = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
 const rand = (a, b) => a + Math.random() * (b - a);
 
-// ------------------------------------------------------------------ Zubayr
-const ZLOOK = { robe: '#1e2430', robe2: '#8a2a1a', qaba: true, turban: null, cap: 0x2a2420, capBand: 0x8a2a1a, beard: 0x1a120c, beardLen: 0.35, beardStyle: 'trim', hair: 'locks', skin: 0x9a6a44, weapon: 'bow', sash: 0x8a2a1a, armour: 'leather', leather: 0x2a1a14, cloak: 0x1a1a22, detail: 'hi', build: 1.02 };
+// ------------------------------------------------------------------ Tatzates (the type key stays 'zubayr')
+// an Armenian of the frontier: long hair under a felt cap, a dark coat and cloak, a hunting bow
+const ZLOOK = { robe: '#1e2430', robe2: '#8a2a1a', qaba: true, turban: null, pilos: true, beard: 0x1a120c, beardLen: 0.45, beardStyle: 'trim', hair: 'long', keepHair: true, skin: 0xa8724a, weapon: 'bow', sash: 0x8a2a1a, armour: 'leather', leather: 0x2a1a14, cloak: 0x1a1a22, detail: 'hi', build: 1.02 };
 TYPES.zubayr = {
-  name: 'Zubayr', hp: 70, dmg: 9, speed: 5.4, range: 16, atk: 1.7, xp: 40, radius: 0.5, action: 'shoot', ranged: 'arrow', hold: [8, 14],
-  build: (x) => humanoid({ ...ZLOOK, ...x }), ai: zubayrAI,
+  name: 'Tatzates', hp: 70, dmg: 9, speed: 5.4, range: 16, atk: 1.7, xp: 40, radius: 0.5, action: 'shoot', ranged: 'arrow', hold: [8, 14],
+  build: (x) => humanoid(byzify({ ...ZLOOK, ...x })), ai: zubayrAI,
 };
 // where he waits on each road, and what he says (one sentence each: no villain speech runs longer)
 export const RIVAL = {
   sawad: { act: 2, at: [-22, -14], level: 4, men: ['archer', 'archer', 'bandit', 'bandit'],
-    intro: [['Zubayr', 'So the brother lived. I was paid for one arrow, not two.'], ['Salim', 'You loosed it?'], ['Zubayr', 'Ghassan paid. I shot. That is all it was.']],
-    escape: 'Not today, guard. Ghassan\'s silver does not cover this.' },
+    intro: [['Tatzates', 'So the brother lived. I was paid for one arrow, not two.'], ['Salim', 'You loosed it?'], ['Tatzates', 'Bardanes paid. I shot. That is all it was.']],
+    escape: 'Not today, guard. The envoy\'s silver does not cover this.' },
   marsh: { act: 4, at: [-16, -40], level: 9, men: ['slinger', 'archer', 'netter', 'reedman'],
-    intro: [['Zubayr', 'Rawh pays better than Ghassan did.'], ['Salim', 'Then he wasted his silver.']],
+    intro: [['Tatzates', 'Kallinikos pays better than Bardanes did.'], ['Salim', 'Then he wasted his silver.']],
     escape: 'The reeds will hide me. They hide everyone.' },
   docks: { act: 6, at: [14, 4], level: 15, men: ['crossbow', 'archer', 'guard', 'guard'],
-    intro: [['Zubayr', 'One more job, and I go north for good.'], ['Salim', 'Then I will follow you north.']],
+    intro: [['Tatzates', 'One more job, and I go north with the envoy.'], ['Salim', 'Then I will follow you north.']],
     escape: 'If you want me, look for me in the Hamrin hills.' },
 };
 
@@ -115,7 +117,7 @@ function puff(g, pos, n = 20, life = 2.6) {
   for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, r = Math.random() * 1.6; g.fx.smoke.spawn({ pos: { x: pos.x + Math.cos(a) * r, y: (pos.y || 0) + Math.random() * 1.4, z: pos.z + Math.sin(a) * r }, vel: { x: Math.cos(a) * 0.8, y: 0.5, z: Math.sin(a) * 0.8 }, life, size: 1.2, size1: 3.4, color: new THREE.Color(0.46, 0.44, 0.42), alpha: 0.6, drag: 0.6, fadeIn: 0.1 }); }
 }
 
-// ------------------------------------------------------------------ Hisham's hooked chain
+// ------------------------------------------------------------------ Olbianos' hooked chain
 function hookAI(g, e, dt, dist) {
   const p = g.player;
   if (!e.alerted || p.dead) return;
@@ -170,7 +172,7 @@ function hookAI(g, e, dt, dist) {
   return undefined; // otherwise he fights with the spear like any captain
 }
 
-// ------------------------------------------------------------------ Layth in the smoke
+// ------------------------------------------------------------------ Kalokyros in the smoke
 function smokeAI(g, e, dt, dist) {
   const p = g.player;
   if (!e.alerted || p.dead) return;
@@ -227,7 +229,7 @@ function meetScene(g, z, lines, card) {
 function escapeScene(g, z, line) {
   const salim = actorOf(g.player, true), zub = actorOf(z);
   const shots = [
-    { dur: lineDur(line), line: { who: 'Zubayr', text: line, rig: z.rig, cue: 'breath', expr: 'stern', react: 'anger' }, cam: ots(salim, zub, 0.45), dof: headOf(z.rig), enter: () => { zub.facing = yawTo(zub.pos, salim.pos); zub.st.crouch = 0.3; } },
+    { dur: lineDur(line), line: { who: 'Tatzates', text: line, rig: z.rig, cue: 'breath', expr: 'stern', react: 'anger' }, cam: ots(salim, zub, 0.45), dof: headOf(z.rig), enter: () => { zub.facing = yawTo(zub.pos, salim.pos); zub.st.crouch = 0.3; } },
     { dur: 1.8, cam: { follow: true, p0: () => V(zub.pos.x + 4.5, zub.pos.y + 2.2, zub.pos.z + 4.5), t0: () => zub.pos.clone().setY(zub.pos.y + 1), fov: 40 },
       enter: () => { puff(g, z.pos, 40, 3.5); g.audio.whoosh?.(); }, run: (d, k) => { if (k > 0.35) z.rig.visible = false; } },
   ];
@@ -245,9 +247,9 @@ export function setupRivals(g) {
     const hook = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.03, 5, 10, Math.PI * 1.3), m); chain.add(hook); chain.userData.hook = hook;
     chain.visible = false; chain.castShadow = true; g.scene.add(chain); g.rivalChain = chain;
   }
-  // Hisham and Layth get their own fights; their death scenes and quests are unchanged
+  // Olbianos and Kalokyros get their own fights; their death scenes and quests are unchanged
   const special = () => {
-    const H = IS_SAWAD && g.matriarch?.name === 'Hisham' ? g.matriarch : null, L = IS_KARKH && g.matriarch?.name === 'Layth' ? g.matriarch : null;
+    const H = IS_SAWAD && g.matriarch?.name === 'Olbianos' ? g.matriarch : null, L = IS_KARKH && g.matriarch?.name === 'Kalokyros' ? g.matriarch : null;
     if (H) { H.T = { ...H.T, ai: hookAI }; H.maxHp = H.hp = Math.round(H.maxHp * 1.6); }
     if (L) { L.T = { ...L.T, ai: smokeAI }; L.maxHp = L.hp = Math.round(L.maxHp * 1.5); L.dmg *= 1.15; }
   };
@@ -262,7 +264,7 @@ export function setupRivals(g) {
     prevKill(e, src);
   };
 
-  // Zubayr's road ambush in this region
+  // Tatzates' road ambush in this region
   const R = RIVAL[REGION];
   let spot = null;
   if (R) { const [x, z] = freeSpot(R.at[0], R.at[1], 1.4); spot = V(x, heightAt(x, z), z); }
@@ -272,7 +274,7 @@ export function setupRivals(g) {
     e.rig.visible = false; e.dead = true; e.removed = true; g.scene.remove(e.rig); e.barOn = false; g.ui.bossBar(null);
     // what he leaves behind in the smoke: his purse, and something from his kit
     p.xp += Math.round(e.xp * (p.xpK || 1)); g.dropItem({ gold: Math.round(rand(40, 70) * e.level), rarity: 'common' }, e.pos); g.dropItem(makeItem(e.level + 1, Math.random() < 0.35 ? 'legendary' : 'rare'), e.pos);
-    p.rival[REGION] = 'escaped'; if (REGION === 'docks') g.ui.banner('Zubayr Is Gone North', 'He waits in the Hamrin hills', 4500);
+    p.rival[REGION] = 'escaped'; if (REGION === 'docks') g.ui.banner('Tatzates Is Gone North', 'He waits in the Hamrin hills', 4500);
     saveGame(g);
   };
   let met = null;
@@ -290,7 +292,7 @@ export function setupRivals(g) {
     z.maxHp = z.hp = Math.round(z.maxHp * 3.2); z.dmg *= 1.25; z.elite = true; z.xp *= 4; z.volleyN = REGION === 'sawad' ? 3 : 5;
     z.facing = Math.atan2(p.pos.x - z.pos.x, p.pos.z - z.pos.z);
     const men = g.spawnPack(R.men, spot.x, spot.z, R.men.length, lvl - 1, { spread: 6 });
-    if (g.director) g.director.play(meetScene(g, z, R.intro, REGION === 'sawad' ? { ar: 'زبير', en: 'Zubayr', sub: 'The bowman on the dune' } : null)).then(() => { z.alerted = true; for (const m of men) m.alerted = true; });
+    if (g.director) g.director.play(meetScene(g, z, R.intro, REGION === 'sawad' ? { ar: 'تاتزاتيس', en: 'Tatzates', sub: 'The bowman on the dune' } : null)).then(() => { z.alerted = true; for (const m of men) m.alerted = true; });
     else { z.alerted = true; for (const m of men) m.alerted = true; }
   };
   g.__rivals = { RIVAL, spot: () => spot, met: () => met, hookAI, smokeAI, zubayrAI, special, meetScene };

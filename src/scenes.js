@@ -4,6 +4,7 @@ import { heightAt, canalX, SITES, WATER_Y, CANAL_W } from './terrain.js';
 import { barge } from './docksprops.js';
 import { REGION, HUB } from './region.js';
 import { mashuf } from './regionprops.js';
+import { LOOK, byzify } from './byz.js';
 
 // The story's cinematics. Each returns a scene definition for the Director.
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -51,9 +52,10 @@ export function prologue(g) {
   const camelB = add(Object.assign(actor(camel(0xa07850), ground(road(130) + 1.3, 130), Math.PI), { camel: true }));
   const guard1 = add(actor(humanoid({ robe: '#3a3428', robe2: '#8a6a3a', turban: 0xd8cfb8, weapon: 'spear', beard: 0x2a1a10, skin: 0x9a6a44 }), ground(road(127) - 1.2, 127.5), Math.PI));
   const guard2 = add(actor(humanoid({ robe: '#4a3a2a', robe2: '#2a3a5a', turban: 0xc8b890, weapon: 'spear', skin: 0x8a5a3a }), ground(road(134) - 0.6, 134), Math.PI));
-  const archer = add(actor(humanoid({ robe: '#5a4a32', robe2: '#3a2a1a', turban: 0xc8b890, mask: 0x8a7a5a, skin: 0x9a6a44, weapon: 'bow' }), ground(27, 113), -Math.PI / 2));
-  const b1 = add(actor(humanoid({ robe: '#4a3a2a', robe2: '#7a3a1a', turban: 0x6a2a1a, mask: 0x1e1a16, skin: 0x8a5a3a, weapon: 'sword', sash: 0x5a1a10 }), ground(28.5, 117), -Math.PI / 2));
-  const b2 = add(actor(humanoid({ robe: '#3a3226', robe2: '#5a2a1a', turban: 0x2a2018, mask: 0x1e1a16, skin: 0x7a4a2a, weapon: 'sword', offhand: 'shield', sash: 0x3a1a10 }), ground(26, 121), -Math.PI / 2));
+  // Round 23: riders of Arsaber's company in Byzantine mail; the bowman is Tatzates
+  const archer = add(actor(humanoid(byzify({ ...LOOK.toxotes(), robe: '#1e2430', robe2: '#8a2a1a', beard: 0x1a120c, cloak: 0x1a1a22 })), ground(27, 113), -Math.PI / 2));
+  const b1 = add(actor(humanoid(byzify({ ...LOOK.skoutatos(), shieldTint: 0 })), ground(28.5, 117), -Math.PI / 2));
+  const b2 = add(actor(humanoid(byzify({ ...LOOK.kataphraktos(), weapon: 'sword', offhand: 'shield', shieldTint: 0 })), ground(26, 121), -Math.PI / 2));
   for (const b of [archer, b1, b2]) b.st.crouch = 1;
   add(salim);
   const startZ = 125.5;
@@ -85,9 +87,9 @@ export function prologue(g) {
       cam: { follow: true, p0: at(salim, 1.75, 2.6, 1.6), t0: at(salim, 1.6, -1.5, -0.6), p1: at(salim, 1.7, 2.3, 1.3), t1: at(salim, 1.6, -1.5, -0.6) }, dof: headOf(salim), aperture: 1.6,
       run: (d, k, dt) => { march(dt); salim.st.headYaw = -Math.sin(k * Math.PI) * 0.6; } },
     // riders on the ridge, seen from far away; they only stand and watch
-    { dur: 3.6, caption: 'Riders were waiting on the dunes.', noWait: true, cam: { p0: () => ground(17, 109, 1.8), t0: () => ground(27, 116, 1.6), p1: () => ground(17.6, 110.2, 1.9), t1: () => ground(27, 116, 1.6), fov: 32 }, stinger: 'ambush',
+    { dur: 3.6, caption: 'Riders in Byzantine mail were waiting on the dunes.', noWait: true, cam: { p0: () => ground(17, 109, 1.8), t0: () => ground(27, 116, 1.6), p1: () => ground(17.6, 110.2, 1.9), t1: () => ground(27, 116, 1.6), fov: 32 }, stinger: 'ambush',
       run: (d, k, dt) => { march(dt, 0.8); for (const b of [archer, b1, b2]) b.st.crouch = Math.max(0, 1 - k * 1.6); salim.st.headYaw = 0; if (k > 0.7) d.fade(1, 1.0); } },
-    { dur: 3.4, caption: 'Bandits attacked the caravan at dusk.',
+    { dur: 3.4, caption: 'They attacked the caravan at dusk.',
       enter: (d) => { d.fade(1, 0.01); d.audio.vocal('shout', 0.9); for (const a of caravan) a.halt = true; hideBandits(); } },
     { dur: 4.8, fadeIn: 1.4, line: { who: 'Jabir', text: 'Salim... the chest. Do not let them burn it.', rig: guard1.rig, cue: 'breath', expr: 'pain', react: 'grief' },
       cam: { follow: true, p0: at(salim, 2.5, -1.9, -2.3), t0: at(salim, 0.35, 1.3), p1: at(salim, 2.35, -1.75, -2.15), t1: at(salim, 0.38, 1.28), fov: 40 }, dof: headOf(salim), aperture: 1.4,
@@ -106,7 +108,7 @@ export function prologue(g) {
     { dur: 3.6, line: { who: 'Salim', text: 'I will bring it back, brother. I promise.', rig: g.player.rig, cue: 'breath', expr: 'grief' },
       cam: { follow: true, p0: at(salim, 1.5, 1.9, 1.0), t0: headOf(salim), p1: at(salim, 1.45, 1.7, 0.9), t1: headOf(salim), fov: 32 }, dof: headOf(salim), aperture: 1.3,
       run: () => { salim.st.crouch = 0.85; } },
-    { dur: 4.2, caption: 'Jabir did not live to see Baghdad. The bandits had taken the chest.', enter: (d) => d.fade(1, 1.2) },
+    { dur: 4.2, caption: 'Jabir did not live to see Baghdad. The raiders had taken the chest.', enter: (d) => d.fade(1, 1.2) },
   ];
   const _end = cleanup; cleanup = () => { _end(); if (lamp) { lamp.intensity = 0; lamp.color.set(0xff8a40); lamp.distance = 16; } for (const b of [archer, b1, b2]) b.rig.visible = true; };
   return {
@@ -121,8 +123,8 @@ export function briefing(g) {
   const salim = playerActor(g), ishaq = npcActor(g), actors = [salim, ishaq];
   const L = [
     'I am Ishaq. I hired your caravan. I am sorry about Jabir.',
-    'The Pages: the writings of my old teacher. A powerful man in Baghdad wants them burned. He paid a bandit chief, Ghassan, to steal them.',
-    'Ghassan split the Pages between his men. Get them back. Start with Farud, at the old caravanserai.',
+    'The Pages: the writings of my old teacher. A Byzantine envoy came under the smoke of the war. His soldiers took the Pages.',
+    'Bardanes leads them in the Sawad, and he split the Pages between his men. Get them back. Start with Photeinos, at the old caravanserai.',
   ];
   const face = () => { salim.facing = yawTo(salim.pos, ishaq.pos); ishaq.facing = yawTo(ishaq.pos, salim.pos); };
   const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b = to.pos, f = yawTo(a, b); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * side, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * side); }, t0: headOf(to), fov: 30 });
@@ -166,9 +168,9 @@ export function lieutenantFalls(g, e, { who, text, card }) {
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { salim.st.crouch = 0; for (const o of hidden) o.rig.visible = true; } };
 }
 
-// ------------------------------------------------------------------ Ghassan at the arch
+// ------------------------------------------------------------------ the act's commander (Bardanes at the arch)
 export function bossIntro(g, b, intro = null) {
-  const who = b.T.name, I = intro || { text: 'Turn back, guard. Those Pages are not worth your life.', card: { ar: 'غسّان', en: 'Ghassan', sub: 'The man who paid for the ambush' } };
+  const who = b.T.name, I = intro || { text: 'Turn back, guard. Those Pages are going to Constantinople.', card: { ar: 'بردانس', en: 'Bardanes', sub: 'Commander of the envoy\'s company' } };
   const salim = playerActor(g), boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st };
   const actors = [salim, boss];
   const face = () => { boss.facing = yawTo(boss.pos, salim.pos); };
@@ -196,7 +198,7 @@ export function bossPhase(g, b, enginesBurnt = false, line = null) {
   return { actors: [boss, salim], shots, tick: (d, dt) => { tickActor(g, boss, dt); tickActor(g, salim, dt); } };
 }
 
-// Ghassan, at a quarter of his life, throws down his shield: fire rings the arena and he fights with the sword alone
+// Bardanes, at a quarter of his life, throws down his shield: fire rings the arena and he fights with the sword alone
 export function bossDuel(g, b, enginesBurnt, K = null) {
   const boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st }, salim = playerActor(g);
   const text = K?.duel || (enginesBurnt ? 'No engines left. Then it is just you and me.' : 'You would die for paper? Then die.');
@@ -204,7 +206,7 @@ export function bossDuel(g, b, enginesBurnt, K = null) {
     { dur: 4.2, slow: 0.4, stinger: 'phase', line: { who: b.T.name, text, rig: b.rig, cue: 'growl' },
       cam: { follow: true, p0: at(boss, 1.6, 4.2, 1.8), t0: at(boss, 2.3), p1: at(boss, 1.9, 3.0, 0.8), t1: at(boss, 2.4), fov: 32, shake: 0.08 }, dof: headOf(boss),
       enter: (d) => { act(boss, 'command', 1.8); d.audio.roar?.(); }, run: () => { boss.facing = yawTo(boss.pos, salim.pos); } },
-    { dur: 2.2, caption: K?.duelCaption || 'Ghassan rings the arena with fire. Stay inside it.', cam: { follow: true, p0: at(salim, 7, -9, 0), t0: at(boss, 1.2), fov: 44 } },
+    { dur: 2.2, caption: K?.duelCaption || 'Bardanes rings the arena with fire. Stay inside it.', cam: { follow: true, p0: at(salim, 7, -9, 0), t0: at(boss, 1.2), fov: 44 } },
   ];
   return { actors: [boss, salim], shots, tick: (d, dt) => { tickActor(g, boss, dt); tickActor(g, salim, dt); } };
 }
@@ -229,7 +231,7 @@ export function epilogue(g, b) {
     { dur: 4.2, cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.4), p1: () => V(boss.pos.x + Math.sin(ang + 1.6) * 6, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.6) * 6), t1: at(boss, 0.6), fov: 34 } },
     { dur: 4.4, line: { who: 'Salim', text: 'Not for paper. For my brother.', rig: g.player.rig, cue: 'hm', expr: 'resolve' },
       cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim), run: () => { salim.facing = yawTo(salim.pos, boss.pos); } },
-    { dur: 3.6, caption: 'Most of the Pages were in Ghassan\'s tent.', enter: (d) => d.fade(1, 0.8) },
+    { dur: 3.6, caption: 'Most of the Pages were in Bardanes\'s tent.', enter: (d) => d.fade(1, 0.8) },
     { dur: 7, fadeIn: 1.6, caption: 'That evening the village floated a lamp on the canal for each guard who died.',
       enter: () => { floatLamps(); g.lighting?.set?.('dusk', 0); },
       cam: { p0: () => V(canalX(70) + 7, 3.2, 66), t0: () => V(canalX(84), 0.2, 84), p1: () => V(canalX(72) + 5, 2.2, 70), t1: () => V(canalX(88), 0.2, 88), fov: 40 },
@@ -243,12 +245,12 @@ export function epilogue(g, b) {
         const p = g.player; p.pos.set(1, 0, 88); p.pos.y = heightAt(1, 88); salim.facing = yawTo(salim.pos, ishaq.pos); ishaq.facing = yawTo(ishaq.pos, salim.pos); ishaq.st.talk = true;
       },
       cam: { follow: true, p0: at(salim, 1.75, -0.9, 0.4), t0: headOf(ishaq), fov: 30 }, dof: headOf(ishaq) },
-    ...[['Ishaq', 'But the chest is light. Some of the Pages are missing.'], ['Salim', 'Who has them?'], ['Ishaq', 'Rawh, Ghassan\'s paymaster. He fled east, into the Nahrawan marshes.']].map(([who, line]) => {
+    ...[['Ishaq', 'But the chest is light. Some of the Pages are missing.'], ['Salim', 'Who has them?'], ['Ishaq', 'Kallinikos, the master of their fire siphons. He fled east, into the Nahrawan marshes.']].map(([who, line]) => {
       const sp = who === 'Salim' ? salim : ishaq, li = who === 'Salim' ? ishaq : salim;
       return { dur: lineDur(line), line: { who, text: line, rig: sp.rig, cue: who === 'Salim' ? 'hm' : 'breath' }, enter: () => { ishaq.st.talk = who === 'Ishaq'; salim.st.talk = who === 'Salim'; },
         cam: { follow: true, p0: () => { const a = li.pos, f = yawTo(a, sp.pos); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * 0.35, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * 0.35); }, t0: headOf(sp), fov: 30 }, dof: headOf(sp) };
     }),
-    { dur: 6, card: { ar: 'الأهوار', en: 'Act IV · The Marshes', sub: 'Rawh has the last Pages. Follow him into the reeds.' }, stinger: 'title', enter: () => { ishaq.st.talk = false; salim.st.talk = false; },
+    { dur: 6, card: { ar: 'الأهوار', en: 'Act IV · The Marshes', sub: 'Kallinikos has the last Pages. Follow him into the reeds.' }, stinger: 'title', enter: () => { ishaq.st.talk = false; salim.st.talk = false; },
       cam: { p0: V(8, 6, 98), t0: V(4, 3, 80), p1: V(22, 26, 118), t1: V(14, 2, 70), ease: 'io2' } },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { for (const l of lamps) g.scene.remove(l); } };
@@ -308,9 +310,9 @@ export function arrival(g) {
         cam: { follow: true, p0: () => V(g.player.pos.x + 4, 2.6, g.player.pos.z + 5), t0: at(salim, 1.5), p1: () => V(g.player.pos.x + 3, 2.2, g.player.pos.z + 4), t1: at(salim, 1.5), fov: 36 }, dof: headOf(salim), run: (d, k) => { glide(0.45 + k * 0.55); if (k > 0.75) d.fade(1, 0.9); } },
       { dur: 3.2, fadeIn: 1.0, enter: () => { boat.visible = false; poler.rig.visible = false; land(); },
         cam: { p0: () => V(ishaq.pos.x + 6, ishaq.pos.y + 3, ishaq.pos.z + 7), t0: at(ishaq, 1.3), p1: () => V(ishaq.pos.x + 4, ishaq.pos.y + 2.4, ishaq.pos.z + 5), t1: at(ishaq, 1.3) } },
-      say('Ishaq', 'The fishermen say Rawh paid for boats, and for silence.'),
+      say('Ishaq', 'The fishermen say Kallinikos paid for boats, and for silence.'),
       say('Salim', 'Then someone here will talk.'),
-      say('Ishaq', 'Start with Marwan. His men hold the reed camp to the west.'),
+      say('Ishaq', 'Start with Katakylas. His men hold the reed stockade to the west.'),
     ];
   } else if (REGION === 'docks') {
     // Round 20, the river quays: a crane shot along the Tigris at dawn, barges at the quay, then the khan
@@ -322,8 +324,8 @@ export function arrival(g) {
         cam: { p0: () => V(bx - 4, 3.2, S.z + 16), t0: () => V(bx + 10, 0.5, S.z - 4), p1: () => V(bx - 2, 2.6, S.z + 10), t1: () => V(bx + 12, 0.5, S.z - 12), fov: 40 }, run: (d, k) => { if (k > 0.8) d.fade(1, 0.8); } },
       { dur: 3.0, fadeIn: 1.0, cam: { p0: () => V(ishaq.pos.x + 6, ishaq.pos.y + 3, ishaq.pos.z + 7), t0: at(ishaq, 1.3), p1: () => V(ishaq.pos.x + 4, ishaq.pos.y + 2.4, ishaq.pos.z + 5), t1: at(ishaq, 1.3) }, enter: () => face() },
       say('Ishaq', 'Hakam\'s copyists worked all night. The first copies sail at dawn, for Wasit and Basra.'),
-      say('Salim', 'And the buyer?'),
-      say('Ishaq', 'His steward, Ghanim, holds the quays. Start with Bilal, at the warehouses.'),
+      say('Salim', 'And Arsaber?'),
+      say('Ishaq', 'He holds the quays himself, and a ship of his waits there. Start with Rhentakios, at the shipyard.'),
     ];
   } else {
     // al-Karkh: a crane shot down a burned lane toward the Round City's wall, then the khan
@@ -336,26 +338,26 @@ export function arrival(g) {
       { dur: 3.0, fadeIn: 1.0, cam: { p0: () => V(ishaq.pos.x + 6, ishaq.pos.y + 3, ishaq.pos.z + 7), t0: at(ishaq, 1.3), p1: () => V(ishaq.pos.x + 4, ishaq.pos.y + 2.4, ishaq.pos.z + 5), t1: at(ishaq, 1.3) }, enter: () => face() },
       say('Ishaq', 'The scholars of the House of Wisdom will keep the Pages safe, if we can get them there.'),
       say('Salim', 'Who holds them now?'),
-      say('Ishaq', 'The buyer\'s men. Their captain is \'Utba. Start with \'Asim, in the burned suq.'),
+      say('Ishaq', 'Arsaber\'s men. Their captain is Krateros. Start with Narses, in the burned quarter.'),
     ];
   }
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
     end: () => { for (const r of extra) sc.remove(r); talk(null); land(); g.player.st.action = null; } };
 }
 
-// Rawh falls at the weir: he says where the last bundle went, and Rawh's own boats carry Salim on to al-Karkh
+// Kallinikos falls at the weir: he says where the last bundle went, and his own boats carry Salim on to al-Karkh
 export function rawhFalls(g, b) {
   const salim = playerActor(g), boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st };
   const actors = [salim, boss], ang = yawTo(salim.pos, boss.pos);
   const shots = [
     { dur: 3.6, cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.0), p1: () => V(boss.pos.x + Math.sin(ang + 1.8) * 6, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.8) * 6), t1: at(boss, 0.5), fov: 34 } },
-    { dur: lineDur('Too late. I sent the last bundle up the canal at dawn.'), line: { who: 'Rawh', text: 'Too late. I sent the last bundle up the canal at dawn.', rig: b.rig, cue: 'breath' },
+    { dur: lineDur('Too late. I sent the last bundle up the canal at dawn.'), line: { who: 'Kallinikos', text: 'Too late. I sent the last bundle up the canal at dawn.', rig: b.rig, cue: 'breath' },
       cam: { follow: true, p0: at(salim, 2.2, -2.8, 1.4), t0: at(boss, 0.6), p1: at(salim, 2.1, -2.5, 1.2), t1: at(boss, 0.6), fov: 38 }, dof: at(boss, 0.6), aperture: 1.0 },
     { dur: 3.2, line: { who: 'Salim', text: 'To whom?', rig: g.player.rig, cue: 'hm' }, cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim), run: () => { salim.facing = yawTo(salim.pos, boss.pos); } },
-    { dur: lineDur('The buyer\'s men, in al-Karkh. They will burn it where the city can watch.'), line: { who: 'Rawh', text: 'The buyer\'s men, in al-Karkh. They will burn it where the city can watch.', rig: b.rig, cue: 'breath' },
+    { dur: lineDur('To Krateros, in al-Karkh. He will burn it before he lets your caliph\'s men take it back.'), line: { who: 'Kallinikos', text: 'To Krateros, in al-Karkh. He will burn it before he lets your caliph\'s men take it back.', rig: b.rig, cue: 'breath' },
       cam: { follow: true, p0: at(salim, 2.2, -2.8, 1.4), t0: at(boss, 0.6), fov: 38 }, dof: at(boss, 0.6), aperture: 1.0 },
-    { dur: 4.0, caption: 'That night Rawh\'s own boats carried Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
-    { dur: 6, card: { ar: 'الكرخ', en: 'Act V · Al-Karkh', sub: 'The buyer\'s men will burn the Pages. Get there first.' }, stinger: 'title', fadeIn: 1.2,
+    { dur: 4.0, caption: 'That night Kallinikos\'s own boats carried Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
+    { dur: 6, card: { ar: 'الكرخ', en: 'Act V · Al-Karkh', sub: 'Krateros will burn the Pages. Get there first.' }, stinger: 'title', fadeIn: 1.2,
       cam: { p0: () => V(boss.pos.x, 30, boss.pos.z + 30), t0: () => V(boss.pos.x, 0, boss.pos.z - 30), p1: () => V(boss.pos.x - 10, 40, boss.pos.z + 50), t1: () => V(boss.pos.x - 20, 0, boss.pos.z - 60), ease: 'io2' } },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); } };
@@ -399,14 +401,14 @@ export function finale(g, b) {
     L('Ishaq', g.npc, 'Then no one can burn them again.', ots(scholar, ishaq, 0.35), headOf(ishaq), () => { scholar.st.talk = false; ishaq.st.talk = true; }),
     // Round 20: the chronicle goes on to the river quays (Act VI); the lamps are lit there, at its end
     { dur: 4.4, caption: 'Hakam\'s copyists began that night. By dawn the first copies were bound for the river.', enter: (d) => { ishaq.st.talk = false; d.fade(1, 0.8); } },
-    { dur: 6, card: { ar: 'الشطّ', en: 'Act VI · The River Quays', sub: 'The buyer\'s steward means to sink the copies before they sail.' }, stinger: 'title', fadeIn: 1.2, enter: () => { scholar.rig.visible = false; },
+    { dur: 6, card: { ar: 'الشطّ', en: 'Act VI · The River Quays', sub: 'Arsaber means to carry the copies north before they sail.' }, stinger: 'title', fadeIn: 1.2, enter: () => { scholar.rig.visible = false; },
       cam: { p0: () => V(V0.x + 10, 30, V0.z + 30), t0: () => V(V0.x + 60, 0, V0.z - 40), p1: () => V(V0.x + 30, 40, V0.z + 50), t1: () => V(V0.x + 120, 0, V0.z - 80), ease: 'io2' } },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
     end: () => { for (const l of lamps) sc.remove(l); for (const r of extra) sc.remove(r); const [ix, iz] = HUB.ishaq; ishaq.pos.set(ix, heightAt(ix, iz), iz); } };
 }
 
-// Round 20: the docks finale. Ghanim falls at the bridge; the copyists' barge sails downriver with the first copies;
+// Round 20: the docks finale. Arsaber falls at the bridge; the copyists' barge sails downriver with the first copies;
 // that evening Salim sets lamps on the Tigris for his brother. The chronicle ends here.
 export function docksFinale(g, b) {
   const salim = playerActor(g), boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st }, ishaq = npcActor(g);
@@ -431,7 +433,7 @@ export function docksFinale(g, b) {
   const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b2 = to.pos, f = yawTo(a, b2), sd = side * 1.9; return V(a.x - Math.sin(f) * 1.2 + Math.cos(f) * sd, a.y + 1.95, a.z - Math.cos(f) * 1.2 - Math.sin(f) * sd); }, t0: headOf(to), fov: 32 });
   const shots = [
     { dur: 3.8, cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.0), p1: () => V(boss.pos.x + Math.sin(ang + 1.7) * 6, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.7) * 6), t1: at(boss, 0.5), fov: 34 } },
-    { dur: 4.2, caption: 'Ghanim\'s men threw down their crossbows. The copyists\' barge came down from the yard.', enter: (d) => d.fade(1, 0.8) },
+    { dur: 4.2, caption: 'Arsaber\'s men threw down their bows. The copyists\' barge came down from the yard.', enter: (d) => d.fade(1, 0.8) },
     // on the quay: Hakam and Ishaq see the first copies off
     { dur: 3.6, fadeIn: 1.0, enter: () => {
       scholar.rig.visible = true; boat.visible = true; sail(0);
@@ -439,7 +441,7 @@ export function docksFinale(g, b) {
       ishaq.pos.set(bank(QZ) - 3.6, heightAt(bank(QZ) - 3.6, QZ), QZ); salim.facing = Math.PI / 2; ishaq.facing = Math.PI / 2 + 0.3; scholar.facing = Math.PI / 2;
     }, cam: { p0: () => V(bank(QZ) - 8, 3.2, QZ + 6), t0: () => V(bank(QZ) + 8, 0.5, QZ - 3), p1: () => V(bank(QZ) - 7, 2.6, QZ + 4), t1: () => V(bank(QZ) + 9, 0.6, QZ - 6), fov: 40 }, run: (d, k) => sail(k * 0.12) },
     L('Hakam', scholar.rig, 'Two copies to Wasit, two to Basra. The rest go north when the river allows.', ots(ishaq, scholar, -0.35), headOf(scholar), () => { scholar.st.talk = true; scholar.facing = yawTo(scholar.pos, ishaq.pos); ishaq.facing = yawTo(ishaq.pos, scholar.pos); }),
-    L('Ishaq', g.npc, 'Let him try to gather them now.', ots(scholar, ishaq, 0.35), headOf(ishaq), () => { scholar.st.talk = false; ishaq.st.talk = true; }),
+    L('Ishaq', g.npc, 'Let Constantinople try to gather them now.', ots(scholar, ishaq, 0.35), headOf(ishaq), () => { scholar.st.talk = false; ishaq.st.talk = true; }),
     { dur: 5.5, caption: 'The barge took the current, and was gone around the bend by noon.', noWait: true,
       cam: { p0: () => V(bank(QZ) - 1, 2.2, QZ + 2), t0: () => boat.position.clone().add(V(0, 1.2, 0)), p1: () => V(bank(QZ) - 1.5, 2.6, QZ + 3), t1: () => boat.position.clone().add(V(0, 1.2, 0)), fov: 36 },
       enter: () => { ishaq.st.talk = false; }, run: (d, k) => { sail(0.12 + k * 0.88); if (k > 0.82) d.fade(1, 0.8); } },

@@ -12,10 +12,10 @@ import { saveGame } from './save.js';
 import { freeSpot } from './sidequests.js';
 import { t } from './i18n.js';
 
-// Round 21: the Hamrin hills, the endgame map. A ridge of limestone north-east of Baghdad where deserters from both
+// Round 21: the Hamrin hills, the endgame map (Round 23: the last of Arsaber's company holds it, on the road toward the frontier). A ridge of limestone north-east of Baghdad where deserters from both
 // armies went to ground after the siege. The gorge floors are the only ground a man can walk; the rock between them
 // rises in cliffs. The deserters' camp is the hub; the four holds open off the gorges (holds.js builds their insides):
-//   the Quarry Galleries (west), the Cliff Fort (east), the Gorge Bridge (south) and Zubayr's hold (south-west).
+//   the Quarry Galleries (west), the Cliff Fort (east), the Gorge Bridge (south) and Tatzates' hold (south-west).
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const M = () => {
   const m = mats();
@@ -157,7 +157,7 @@ export function setupHamrin(g) {
     quarry: { t: 'Stone and Brick', cat: 'Craft', x: 'Baghdad was built of mud-brick and baked brick, but stone was quarried where it lay near the surface, for foundations, thresholds, millstones and the bases of columns. Cut blocks were levered out along their beds and dragged to the nearest water.' },
   });
   if (IS_DOCKS) {
-    // after the chronicle: Kathir knows the road north, where Zubayr went
+    // after the chronicle: Kathir knows the road north, where Tatzates went
     const [x, z] = freeSpot(HUB.ishaq[0] - 7, HUB.ishaq[1] + 4, 1.2);
     const it = { pos: V(x, heightAt(x, z), z), r: 2.6, label: DOCKS_TO_HILLS, act: () => {
       if ((g.act || 1) < 7) { g.ui.toast(t('The road north can wait until the copies have sailed')); return; }
@@ -199,7 +199,7 @@ export function setupHamrin(g) {
   g.tickExtra = (dt) => {
     prevTick?.(dt);
     if (g.t > 15) unlock(g, 'hamrin');
-    if (g.t > 40) unlock(g, 'deserters');
+    if (g.t > 40) unlock(g, 'deserters'); if (g.t > 80) unlock(g, 'thughur');
     if (Math.abs(p.pos.x - canalX(p.pos.z)) < 30) unlock(g, 'diyala');
     if (Math.hypot(p.pos.x - SITES.serai.x, p.pos.z - SITES.serai.z) < 24) unlock(g, 'quarry');
   };

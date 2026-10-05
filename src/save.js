@@ -1,5 +1,6 @@
 import { heightAt, SITES } from './terrain.js';
 import { IS_SAWAD, HUB } from './region.js';
+import { renameSlain } from './byz.js';
 
 // Auto-save at each act checkpoint (localStorage). Continue restores the hero and the story so far.
 const KEY = 'sob.save.v1';
@@ -26,6 +27,7 @@ export function applySave(g, s) {
   if (s.player.mats) p.mats = s.player.mats; if (s.player.stash) p.stash = s.player.stash;
   if (s.player.tree) p.tree = s.player.tree; p.codex = s.player.codex || {}; p.side = s.player.side || {}; p.discount = s.player.discount || 0; p.worldTier = s.player.worldTier || 1; p.named = s.player.named || {}; p.enginesBurnt = s.player.enginesBurnt || 0; p.renown = s.player.renown || 0; p.bounty = s.player.bounty || {}; p.freeTemper = s.player.freeTemper || 0; g.ng = s.ng || 0; p.unlockedTier = s.player.unlockedTier || 1;
   for (const k of EXTRA) if (s.player[k] !== undefined) p[k] = s.player[k];
+  p.slain = renameSlain(p.slain); // Round 23: captains slain under their old names keep their place as contract targets
   g.recalcStats(); p.hp = p.stats.maxHp; p.mp = p.stats.maxMp;
   g.act = s.act; g.t = s.t || 0; g.kills = s.kills || 0; g.arrived = s.arrived || {}; g.savedQuests = s.quests || {};
   for (const q of g.quests) q.done = !!s.quests?.[q.id];

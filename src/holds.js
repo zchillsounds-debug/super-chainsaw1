@@ -200,28 +200,28 @@ const MAPS = {
 // ------------------------------------------------------------------ the eight captains
 // look: built like any captain (heavy coat, a crest), each in his own colour; moves: what he can do, how often
 const BOSS = {
-  sakhr: { name: 'Sakhr', sub: 'Master of the quarry gangs', type: 'engineer', look: { scale: 1.45, belly: 0.5, cap: 0x3a2a1e, capBand: 0x6a3a1a, helm: false, crest: 'hat', sash: 0x6a3a1a }, hp: 14, dmg: 1.5,
+  sakhr: { name: 'Phobenos', sub: 'Master of the quarry gangs', type: 'engineer', look: { scale: 1.45, belly: 0.5, cap: 0x3a2a1e, capBand: 0x6a3a1a, helm: false, crest: 'hat', sash: 0x6a3a1a }, hp: 14, dmg: 1.5,
     moves: ['swing', 'crack', 'slam'], p2: { at: 0.5, line: 'Bring the face down on him!', add: ['rockfall'] } },
-  ghaylan: { name: 'Ghaylan', sub: 'Overseer of the galleries', type: 'spearman', look: { scale: 1.5, crest: 'plume', sash: 0x5a4a1a }, hp: 22, dmg: 1.6,
+  ghaylan: { name: 'Krambonites', sub: 'Overseer of the galleries', type: 'spearman', look: { scale: 1.5, crest: 'plume', sash: 0x5a4a1a }, hp: 22, dmg: 1.6,
     moves: ['swing', 'charge', 'rockfall', 'sweep'], p2: { at: 0.5, line: 'Every man to me!', add: ['summon', 'crack'], summon: ['guard', 'spearman', 'crossbow'] } },
-  shaddad: { name: 'Shaddad', sub: 'The shield of the fort', type: 'guard', look: { scale: 1.55, crest: 'heavy', sash: 0x1a3a5a, offhand: 'shield' }, hp: 16, dmg: 1.5, block: 0.9,
+  shaddad: { name: 'Tarchaneiotes', sub: 'The shield of the fort', type: 'guard', look: { scale: 1.55, crest: 'heavy', sash: 0x1a3a5a, offhand: 'shield' }, hp: 16, dmg: 1.5, block: 0.9,
     moves: ['swing', 'charge', 'slam'], p2: { at: 0.5, line: 'Close the wall!', add: ['summon'], summon: ['guard', 'guard'] } },
-  jabala: { name: 'Jabala', sub: 'Commander of the cliff fort', type: 'guard', look: { scale: 1.5, crest: 'banner', sash: 0x6a1a14, cloak: 0x3a0e0a }, hp: 24, dmg: 1.6,
+  jabala: { name: 'Charsianites', sub: 'Commander of the cliff fort', type: 'guard', look: { scale: 1.5, crest: 'banner', sash: 0x6a1a14, cloak: 0x3a0e0a }, hp: 24, dmg: 1.6,
     moves: ['swing', 'arrows', 'sweep'], p2: { at: 0.55, line: 'Archers! Fire on the yard!', add: ['fireline', 'summon'], summon: ['archer', 'archer', 'crossbow'] } },
-  dhuayb: { name: 'Dhuayb', sub: 'Keeper of the bridge', type: 'spearman', look: { scale: 1.45, crest: 'mantle', sash: 0x2a4a2a, cloak: 0x2a4a2a }, hp: 16, dmg: 1.5,
+  dhuayb: { name: 'Apokaukos', sub: 'Keeper of the bridge', type: 'spearman', look: { scale: 1.45, crest: 'mantle', sash: 0x2a4a2a, cloak: 0x2a4a2a }, hp: 16, dmg: 1.5,
     moves: ['swing', 'sweep', 'stomp', 'charge'], p2: { at: 0.45, line: 'Break the boards under him!', add: ['stomp'] } },
-  hanzala: { name: 'Hanzala', sub: 'Master of the gorge', type: 'spearman', look: { scale: 1.5, crest: 'hat', sash: 0x4a1a3a, hat: 0xb8a468, helm: false }, hp: 24, dmg: 1.6,
+  hanzala: { name: 'Pankalos', sub: 'Master of the gorge', type: 'spearman', look: { scale: 1.5, crest: 'hat', sash: 0x4a1a3a, hat: 0xb8a468, helm: false }, hp: 24, dmg: 1.6,
     moves: ['swing', 'net', 'charge', 'sweep'], p2: { at: 0.5, line: 'Cut the ropes. Let the gorge have him.', add: ['shrink', 'arrows'] } },
-  nahshal: { name: 'Nahshal', sub: 'Zubayr\'s naft-master', type: 'naffat', look: { scale: 1.45, crest: 'hat', sash: 0x7a2a10 }, hp: 16, dmg: 1.5,
+  nahshal: { name: 'Brachamios', sub: 'Tatzates\' siphon-master', type: 'naffat', look: { scale: 1.45, crest: 'hat', sash: 0x7a2a10 }, hp: 16, dmg: 1.5,
     moves: ['swing', 'fireline', 'firepots'], p2: { at: 0.5, line: 'Burn it all!', add: ['summon'], summon: ['naffat', 'naffat', 'deserter'] } },
-  zubayr: { name: 'Zubayr', sub: 'The bowman on the dune', type: 'zubayr', look: { scale: 1.12 }, hp: 30, dmg: 1.5, rival: true,
+  zubayr: { name: 'Tatzates', sub: 'The bowman on the dune', type: 'zubayr', look: { scale: 1.12 }, hp: 30, dmg: 1.5, rival: true,
     moves: ['arrows', 'rockfall'], p2: { at: 0.5, line: 'You will not see the next one coming.', add: ['vanish'] } },
 };
 export const HOLDS = {
   quarry: { title: 'The Quarry Galleries', sub: 'Old workings in the western cliff', rock: 0xd8c8a8, floor: [0x9a8a70, 'earth'], wall: 0xc8b898, pool: ['guard', 'deserter', 'spearman', 'engineer'], ranged: ['crossbow', 'archer'], mid: 'sakhr', boss: 'ghaylan', codex: 'quarry', quest: 'quarry', step: 0 },
-  fort: { title: 'The Cliff Fort', sub: 'A border fort the deserters hold', rock: 0xb8a890, floor: [0x8a7a62, 'flag'], wall: 0xa89878, pool: ['guard', 'spearman', 'guard', 'deserter'], ranged: ['archer', 'crossbow'], mid: 'shaddad', boss: 'jabala', codex: 'deserters', quest: 'fort', step: 1 },
+  fort: { title: 'The Cliff Fort', sub: 'A border fort the company holds', rock: 0xb8a890, floor: [0x8a7a62, 'flag'], wall: 0xa89878, pool: ['guard', 'spearman', 'guard', 'deserter'], ranged: ['archer', 'crossbow'], mid: 'shaddad', boss: 'jabala', codex: 'deserters', quest: 'fort', step: 1 },
   gorge: { title: 'The Gorge Bridge', sub: 'Plank ways across the ravine of the Diyala', rock: 0x9a8270, floor: [0x7a6a58, 'earth'], wall: 0x8a7462, pool: ['spearman', 'deserter', 'guard', 'netter'], ranged: ['archer', 'slinger'], mid: 'dhuayb', boss: 'hanzala', codex: 'diyala', quest: 'gorge', step: 2 },
-  rivalhold: { title: 'Zubayr\'s Hold', sub: 'The bowman\'s ravine', rock: 0x9a6a50, floor: [0x6a4e3a, 'earth'], wall: 0x8a5a44, pool: ['deserter', 'guard', 'deserter', 'naffat'], ranged: ['archer', 'archer', 'crossbow'], mid: 'nahshal', boss: 'zubayr', codex: 'hamrin', quest: 'rivalhold', step: 3 },
+  rivalhold: { title: 'Tatzates\' Hold', sub: 'The bowman\'s ravine', rock: 0x9a6a50, floor: [0x6a4e3a, 'earth'], wall: 0x8a5a44, pool: ['deserter', 'guard', 'deserter', 'naffat'], ranged: ['archer', 'archer', 'crossbow'], mid: 'nahshal', boss: 'zubayr', codex: 'hamrin', quest: 'rivalhold', step: 3 },
 };
 function registerTypes(bosses) {
   for (const [k, B] of Object.entries(bosses)) if (B.type !== 'zubayr') {
@@ -575,7 +575,7 @@ const MOVES = {
   // the bridge's ropes cut: the safe ground shrinks toward the middle
   shrink: { range: [0, 40], cd: 99, once: true, start(g, e) { e.st.action = 'command'; e.mv = { t: 0, dur: 1.2 }; g.holdArena = { c: (g.interior?.I.bossAt || e.pos).clone(), r: 13, to: 6.5, t: 0 }; g.ui.toast(t('The ropes are cut. Keep to the middle')); },
     tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(1, M.t / M.dur); return M.t >= M.dur; } },
-  // into the smoke and out behind him (Zubayr's last trick)
+  // into the smoke and out behind him (Tatzates' last trick)
   vanish: { range: [0, 30], cd: 8, start(g, e) { e.mv = { t: 0, phase: 'break' }; for (let i = 0; i < 26; i++) { const a = Math.random() * 6.28, r = Math.random() * 1.6; g.fx.smoke.spawn({ pos: { x: e.pos.x + Math.cos(a) * r, y: e.pos.y + Math.random() * 1.4, z: e.pos.z + Math.sin(a) * r }, vel: { x: Math.cos(a) * 0.8, y: 0.5, z: Math.sin(a) * 0.8 }, life: 3, size: 1.2, size1: 3.4, color: new THREE.Color(0.46, 0.44, 0.42), alpha: 0.6, drag: 0.6, fadeIn: 0.1 }); } },
     tick(g, e, dt, M) { M.t += dt; const p = g.player;
       if (M.phase === 'break' && M.t > 0.35) { M.phase = 'gone'; e.ghost = true; e.rig.visible = false; M.hold = rand(1.2, 1.8); }
@@ -604,7 +604,7 @@ function holdBossAI(g, e, dt, dist) {
   if (e.mv && e.curMove) {
     if (MOVES[e.curMove].tick(g, e, dt, e.mv)) { e.mv = null; e.curMove = null; e.st.action = null; e.st.crouch = 0; e.idleT = rand(0.35, 0.9); }
   } else if (K.rival && !e.mvOwn) {
-    // Zubayr keeps his own fight (rivals.js) between the moves of his last stand
+    // Tatzates keeps his own fight (rivals.js) between the moves of his last stand
     e.idleT = (e.idleT ?? 1) - dt;
     if (e.idleT <= 0 && pickMove(g, e, dist)) return 'skip';
     return g.rivalAI(g, e, dt, dist);
@@ -672,8 +672,8 @@ export function setupHolds(g) {
     ], tick: (d, dt) => { e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; g2.anim(e.rig, e.st, dt); }, end: () => { e.st.action = null; } };
   };
   const rivalLast = (g2, e) => {
-    const lines = [['Zubayr', 'All this way, for one arrow?'], ['Salim', 'For my brother.']];
-    return g2.__rivals.meetScene(g2, e, lines, { ar: 'زبير', en: 'Zubayr', sub: t('The last of the men from the dune') });
+    const lines = [['Tatzates', 'All this way, for one arrow?'], ['Salim', 'For my brother.']];
+    return g2.__rivals.meetScene(g2, e, lines, { ar: 'تاتزاتيس', en: 'Tatzates', sub: t('The last of the men from the dune') });
   };
 
   // the label on each hold's door (hamrin.js): what is left to do there
@@ -835,7 +835,7 @@ export function setupHolds(g) {
       if (H.lieut) { /* his last words play from game.killEnemy */ }
       else if (e.holdBoss.rival) {
         p.rival = { ...(p.rival || {}), final: 'fallen' };
-        g.director?.play(SCENES.lieutenantFalls(g, e, { who: 'Zubayr', text: 'It was only ever the pay.', card: { ar: 'زبير', en: 'Zubayr', sub: t('Jabir\'s account is kept') } }));
+        g.director?.play(SCENES.lieutenantFalls(g, e, { who: 'Tatzates', text: 'It was only ever the pay.', card: { ar: 'تاتزاتيس', en: 'Tatzates', sub: t('Jabir\'s account is kept') } }));
       } else g.ui.banner(t(H.title), t('The hold is broken. Its master\'s chest is yours.'), 3800);
       if (!H.region && Object.keys(HOLDS).filter((k) => !HOLDS[k].region).every((k) => state(k).done)) setTimeout(() => g.ui.banner(t('The Hamrin Hills'), t('Every hold is broken'), 4200), 4500);
     }
@@ -926,6 +926,6 @@ export function setupHolds(g) {
     else reticle.visible = false;
   };
   Object.assign(CODEX, {
-    holds: { t: 'Holds in the Hills', cat: 'War', x: 'A band of deserters needed three things: water, a way out and a place that could be held by a few men. Old quarries, frontier forts and gorges crossed by a single plank way gave all three, which is why the same places were held again and again by whoever came through.' },
+    holds: { t: 'Holds in the Hills', cat: 'War', x: 'A company far from home needed three things: water, a way out and a place that could be held by a few men. Old quarries, frontier forts and gorges crossed by a single plank way gave all three, which is why the same places were held again and again by whoever came through.' },
   });
 }

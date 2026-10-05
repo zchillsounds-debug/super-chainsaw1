@@ -151,7 +151,7 @@ export function reedStack(rnd) {
   return g;
 }
 
-// The old weir on the Nahrawan: a Sasanian brick sluice with timber gates, across the channel by Rawh's landing.
+// The old weir on the Nahrawan: a Sasanian brick sluice with timber gates, across the channel by Kallinikos' landing.
 export function weir() {
   const m = mats(), R = rmats(), g = new THREE.Group();
   const piers = [];

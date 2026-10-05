@@ -11,7 +11,7 @@ import { t } from './i18n.js';
 import { REGION, IS_SAWAD } from './region.js';
 
 // Round 10 content: named elites with affixes, a new area per act (each held by a named captain), three more
-// side tasks, the siege engines at the arch, Ghassan's final duel, and New Game+.
+// side tasks, the siege engines at the arch, Bardanes' final duel, and New Game+.
 
 const tmp = new THREE.Vector3();
 const AFFIX = {
@@ -25,39 +25,39 @@ const AFFIX = {
 };
 // named captains in the open field, two per act
 const NAMED = [
-  { id: 'uqba', act: 1, name: '\'Uqba', type: 'bandit', at: [36, 26], level: 2, affix: 'swift', guard: ['bandit', 'archer'] },
-  { id: 'nasr', act: 1, name: 'Nasr', type: 'archer', at: [SITES.serai.x + 18, SITES.serai.z + 22], level: 2, affix: 'volley', guard: ['bandit', 'bandit'] },
-  { id: 'bakr', act: 2, name: 'Bakr', type: 'deserter', at: [-30, -52], level: 3, affix: 'swift', guard: ['deserter', 'deserter'] },
-  { id: 'hamdan', act: 2, name: 'Hamdan', type: 'spearman', at: [SITES.kiln.x + 20, SITES.kiln.z + 18], level: 3, affix: 'ironclad', guard: ['spearman', 'deserter'] },
-  { id: 'rabia', act: 3, name: 'Rabi\'a', type: 'naffat', at: [SITES.arch.x - 22, SITES.arch.z + 26], level: 5, affix: 'firebrand', guard: ['naffat', 'archer'] },
-  { id: 'jarir', act: 3, name: 'Jarir', type: 'spearman', at: [SITES.arch.x + 24, SITES.arch.z + 22], level: 5, affix: 'rally', guard: ['spearman', 'bandit', 'archer'] },
-  { id: 'zuhayr', region: 'marsh', name: 'Zuhayr', type: 'netter', at: [-36, -28], level: 8, affix: 'snare', guard: ['netter', 'slinger'] },
-  { id: 'muhriz', region: 'marsh', name: 'Muhriz', type: 'spearman', at: [52, -34], level: 8, affix: 'ambush', guard: ['reedman', 'slinger'] },
-  { id: 'hammad', region: 'karkh', name: 'Hammad', type: 'guard', at: [60, 20], level: 10, affix: 'rally', guard: ['guard', 'archer', 'spearman'] },
-  { id: 'shabib', region: 'karkh', name: 'Shabib', type: 'archer', at: [-46, -56], level: 10, affix: 'volley', guard: ['guard', 'naffat'] },
+  { id: 'uqba', act: 1, name: 'Kalamanos', type: 'bandit', at: [36, 26], level: 2, affix: 'swift', guard: ['bandit', 'archer'] },
+  { id: 'nasr', act: 1, name: 'Doukas', type: 'archer', at: [SITES.serai.x + 18, SITES.serai.z + 22], level: 2, affix: 'volley', guard: ['bandit', 'bandit'] },
+  { id: 'bakr', act: 2, name: 'Chalkoutzes', type: 'deserter', at: [-30, -52], level: 3, affix: 'swift', guard: ['deserter', 'deserter'] },
+  { id: 'hamdan', act: 2, name: 'Pegonites', type: 'spearman', at: [SITES.kiln.x + 20, SITES.kiln.z + 18], level: 3, affix: 'ironclad', guard: ['spearman', 'deserter'] },
+  { id: 'rabia', act: 3, name: 'Kamoulianos', type: 'naffat', at: [SITES.arch.x - 22, SITES.arch.z + 26], level: 5, affix: 'firebrand', guard: ['naffat', 'archer'] },
+  { id: 'jarir', act: 3, name: 'Bourtzes', type: 'spearman', at: [SITES.arch.x + 24, SITES.arch.z + 22], level: 5, affix: 'rally', guard: ['spearman', 'bandit', 'archer'] },
+  { id: 'zuhayr', region: 'marsh', name: 'Kontoleon', type: 'netter', at: [-36, -28], level: 8, affix: 'snare', guard: ['netter', 'slinger'] },
+  { id: 'muhriz', region: 'marsh', name: 'Rhangabes', type: 'spearman', at: [52, -34], level: 8, affix: 'ambush', guard: ['reedman', 'slinger'] },
+  { id: 'hammad', region: 'karkh', name: 'Kontomytes', type: 'guard', at: [60, 20], level: 10, affix: 'rally', guard: ['guard', 'archer', 'spearman'] },
+  { id: 'shabib', region: 'karkh', name: 'Triphyllios', type: 'archer', at: [-46, -56], level: 10, affix: 'volley', guard: ['guard', 'naffat'] },
   // Round 20: Act VI, the river quays
-  { id: 'kulayb', region: 'docks', name: 'Kulayb', type: 'crossbow', at: [-70, 40], level: 13, affix: 'volley', guard: ['crossbow', 'guard'] },
-  { id: 'dhuhl', region: 'docks', name: 'Dhuhl', type: 'engineer', at: [-20, -40], level: 14, affix: 'ironclad', guard: ['engineer', 'guard', 'spearman'] },
+  { id: 'kulayb', region: 'docks', name: 'Tzourakes', type: 'crossbow', at: [-70, 40], level: 13, affix: 'volley', guard: ['crossbow', 'guard'] },
+  { id: 'dhuhl', region: 'docks', name: 'Melissenos', type: 'engineer', at: [-20, -40], level: 14, affix: 'ironclad', guard: ['engineer', 'guard', 'spearman'] },
   // Round 21: the Hamrin hills
-  { id: 'asbagh', region: 'hamrin', name: 'Asbagh', type: 'deserter', at: [30, 54], level: 22, affix: 'swift', guard: ['deserter', 'archer', 'guard'] },
-  { id: 'kahmas', region: 'hamrin', name: 'Kahmas', type: 'crossbow', at: [-30, -38], level: 22, affix: 'volley', guard: ['crossbow', 'guard', 'spearman'] },
+  { id: 'asbagh', region: 'hamrin', name: 'Karteroukas', type: 'deserter', at: [30, 54], level: 22, affix: 'swift', guard: ['deserter', 'archer', 'guard'] },
+  { id: 'kahmas', region: 'hamrin', name: 'Baanes', type: 'crossbow', at: [-30, -38], level: 22, affix: 'volley', guard: ['crossbow', 'guard', 'spearman'] },
 ].filter((n) => (n.region || 'sawad') === REGION);
 // a new area per act; each ends in a named captain guarding the chest
 const AREAS = [
-  { id: 'cellar', act: 1, style: 'cellar', at: [SITES.serai.x + 9, SITES.serai.z + 9], seed: 761, rooms: 6, level: 2, title: 'The Caravanserai Storerooms', sub: 'Vaulted stores beneath Farud\'s camp', pool: ['bandit', 'bandit', 'archer'], bossType: 'archer', bossName: 'Qays', label: 'Go down into the storerooms', icon: '▼', look: 'mud' },
-  { id: 'pit', act: 2, style: 'pit', at: [SITES.kiln.x - 16, SITES.kiln.z + 14], seed: 806, rooms: 7, level: 3, title: 'The Clay Pits', sub: 'Where the kiln yard digs its clay', pool: ['deserter', 'deserter', 'spearman'], bossType: 'spearman', bossName: 'Thabit', label: 'Climb down into the clay pits', icon: '▼', look: 'clay' },
-  { id: 'vault', act: 3, style: 'vault', at: [SITES.arch.x + 30, SITES.arch.z + 12], seed: 637, rooms: 8, level: 5, title: 'The Sasanian Vaults', sub: 'Brick halls older than Baghdad', pool: ['naffat', 'spearman', 'archer', 'deserter'], bossType: 'spearman', bossName: 'Mundhir', label: 'Enter the Sasanian vaults', icon: '▼', look: 'brick' },
-  { id: 'granary', region: 'marsh', style: 'flood', at: [SITES.kiln.x - 6, SITES.kiln.z + 15], seed: 904, rooms: 8, level: 8, title: 'The Drowned Granary', sub: 'Grain stores the floods took', pool: ['reedman', 'netter', 'slinger', 'bandit'], bossType: 'spearman', bossName: 'Ghalib', label: 'Wade down into the drowned granary', icon: '▼', look: 'clay' },
-  { id: 'customs', region: 'docks', style: 'cellar', at: [SITES.serai.x - 22, SITES.serai.z + 14], seed: 1813, rooms: 8, level: 14, title: 'The Customs Vaults', sub: 'Bonded stores under the river warehouses', pool: ['guard', 'crossbow', 'deserter', 'engineer'], bossType: 'crossbow', bossName: 'Sawwar', label: 'Go down into the customs vaults', icon: '▼', look: 'brick' },
-  { id: 'cellars', region: 'karkh', style: 'scorched', at: [SITES.serai.x + 14, SITES.serai.z - 13], seed: 812, rooms: 8, level: 11, title: 'The Merchants\' Cellars', sub: 'Vaults under the burned suq', pool: ['guard', 'deserter', 'archer', 'naffat'], bossType: 'guard', bossName: 'Qutayba', label: 'Go down into the merchants\' cellars', icon: '▼', look: 'brick' },
+  { id: 'cellar', act: 1, style: 'cellar', at: [SITES.serai.x + 9, SITES.serai.z + 9], seed: 761, rooms: 6, level: 2, title: 'The Caravanserai Storerooms', sub: 'Vaulted stores beneath Photeinos\' camp', pool: ['bandit', 'bandit', 'archer'], bossType: 'archer', bossName: 'Kamateros', label: 'Go down into the storerooms', icon: '▼', look: 'mud' },
+  { id: 'pit', act: 2, style: 'pit', at: [SITES.kiln.x - 16, SITES.kiln.z + 14], seed: 806, rooms: 7, level: 3, title: 'The Clay Pits', sub: 'Where the kiln yard digs its clay', pool: ['deserter', 'deserter', 'spearman'], bossType: 'spearman', bossName: 'Argyros', label: 'Climb down into the clay pits', icon: '▼', look: 'clay' },
+  { id: 'vault', act: 3, style: 'vault', at: [SITES.arch.x + 30, SITES.arch.z + 12], seed: 637, rooms: 8, level: 5, title: 'The Sasanian Vaults', sub: 'Brick halls older than Baghdad', pool: ['naffat', 'spearman', 'archer', 'deserter'], bossType: 'spearman', bossName: 'Tornikios', label: 'Enter the Sasanian vaults', icon: '▼', look: 'brick' },
+  { id: 'granary', region: 'marsh', style: 'flood', at: [SITES.kiln.x - 6, SITES.kiln.z + 15], seed: 904, rooms: 8, level: 8, title: 'The Drowned Granary', sub: 'Grain stores the floods took', pool: ['reedman', 'netter', 'slinger', 'bandit'], bossType: 'spearman', bossName: 'Kourtikios', label: 'Wade down into the drowned granary', icon: '▼', look: 'clay' },
+  { id: 'customs', region: 'docks', style: 'cellar', at: [SITES.serai.x - 22, SITES.serai.z + 14], seed: 1813, rooms: 8, level: 14, title: 'The Customs Vaults', sub: 'Bonded stores under the river warehouses', pool: ['guard', 'crossbow', 'deserter', 'engineer'], bossType: 'crossbow', bossName: 'Dalassenos', label: 'Go down into the customs vaults', icon: '▼', look: 'brick' },
+  { id: 'cellars', region: 'karkh', style: 'scorched', at: [SITES.serai.x + 14, SITES.serai.z - 13], seed: 812, rooms: 8, level: 11, title: 'The Merchants\' Cellars', sub: 'Vaults under the burned suq', pool: ['guard', 'deserter', 'archer', 'naffat'], bossType: 'guard', bossName: 'Sarantapechos', label: 'Go down into the merchants\' cellars', icon: '▼', look: 'brick' },
 ].filter((a) => (a.region || 'sawad') === REGION);
 
 export function setupContent(game) {
   const p = game.player; game.fires2 = []; game.named = {};
   Object.assign(SIDE, {
-    satchel: { t: 'The Courier\'s Satchel', giver: 'Rafi\'', steps: ['Qays took a barid courier\'s satchel into the storerooms under the caravanserai. Recover it.', 'You have the satchel. Return it to Rafi\' in the suq.', 'The letters reached Baghdad.'] },
-    ingots: { t: 'Indian Steel', giver: 'Bishr', steps: ['Thabit\'s men carried off Bishr\'s Indian steel ingots to the clay pits by the kilns. Bring them back.', 'You have the ingots. Take them to Bishr.', 'Bishr has his steel again.'] },
-    engines: { t: 'Ash for the Engines', giver: '\'Amr', steps: ['Ghassan has three mangonels on the approach to the arch. Burn them before you face him (0/3).', 'The engines are ash. Tell \'Amr.', 'Ghassan fights without his engines.'] },
+    satchel: { t: 'The Courier\'s Satchel', giver: 'Rafi\'', steps: ['Kamateros took a barid courier\'s satchel into the storerooms under the caravanserai. Recover it.', 'You have the satchel. Return it to Rafi\' in the suq.', 'The letters reached Baghdad.'] },
+    ingots: { t: 'Indian Steel', giver: 'Bishr', steps: ['Argyros\'s men carried off Bishr\'s Indian steel ingots to the clay pits by the kilns. Bring them back.', 'You have the ingots. Take them to Bishr.', 'Bishr has his steel again.'] },
+    engines: { t: 'Ash for the Engines', giver: '\'Amr', steps: ['Bardanes has three mangonels on the approach to the arch. Burn them before you face him (0/3).', 'The engines are ash. Tell \'Amr.', 'Bardanes fights without his engines.'] },
   });
   Object.assign(CODEX, {
     teacher: { t: 'The Teacher', cat: 'People', x: 'Salim never learns his name; his students only ever say "the Teacher". He taught wherever people would listen, lived simply, and spoke plainly to men who preferred flattery. He was held for years in a prison beside the Tigris and died there in 799. His sayings were copied and passed hand to hand, because written words outlive the people who try to silence them.' },
@@ -107,12 +107,12 @@ export function setupContent(game) {
         { who: 'Rafi\'', text: 'Unbroken! Then the postmaster in Baghdad will have his reports by tomorrow, and I will keep my post. Take this, and my thanks.' },
       ])).then(() => { takeItem(p, 'satchel'); p.gold += 120 + p.level * 15; game.audio.gold(); giveItem(game, makeItem(p.level + 1, 'rare', 'ring')); setQuest(game, 'satchel', 2); unlock(game, 'barid'); });
     }
-    converse(game, { start: { who: 'Rafi\'', text: s === -1 ? 'Forgive me, I cannot stand for long. Brigands ran down my horse on the Khurasan road and took my satchel.' : s === 2 ? 'The relay horses run again. If you ever need a letter carried, ask for Rafi\'.' : 'Qays and his archers hide in the storerooms under the caravanserai. Be careful.', choices: [
+    converse(game, { start: { who: 'Rafi\'', text: s === -1 ? 'Forgive me, I cannot stand for long. Byzantine raiders ran down my horse on the road and took my satchel.' : s === 2 ? 'The relay horses run again. If you ever need a letter carried, ask for Rafi\'.' : 'Kamateros and his archers hide in the storerooms under the caravanserai. Be careful.', choices: [
       ...(s === -1 ? [{ label: 'What was in it?', to: 'what' }] : []),
       { label: 'What is the barid?', to: 'barid', fx: () => unlock(game, 'barid') },
       { label: 'Farewell.' },
     ] },
-    what: { who: 'Rafi\'', text: 'Letters for the postmaster in Baghdad: reports on prices and governors, sealed. If they are opened or lost, I lose my post. Qays took them into the storerooms under the caravanserai.', choices: [{ label: 'I will bring it back.', fx: () => setQuest(game, 'satchel', 0) }, { label: 'Not now.' }] },
+    what: { who: 'Rafi\'', text: 'Letters for the postmaster in Baghdad: reports on prices and governors, sealed. If they are opened or lost, I lose my post. Kamateros took them into the storerooms under the caravanserai.', choices: [{ label: 'I will bring it back.', fx: () => setQuest(game, 'satchel', 0) }, { label: 'Not now.' }] },
     barid: { who: 'Rafi\'', text: 'The caliph\'s post. Relays of horses along the great roads, a fresh mount at every station. We carry the state\'s letters, and the postmasters write to Baghdad about everything they see.', choices: [{ label: 'Back.', to: 'start' }] },
     });
   });
@@ -122,7 +122,7 @@ export function setupContent(game) {
   if (bishr) bishr.talk = () => {
     const s = questState(p, 'ingots');
     if (bagHas(p, 'ingots') && s < 2) return game.director.play(SCENES.conversation(game, bishr, [
-      { who: 'Salim', text: 'Your ingots, from the clay pits. Thabit will not need them.' },
+      { who: 'Salim', text: 'Your ingots, from the clay pits. Argyros will not need them.' },
       { who: 'Bishr', text: 'Ha! Feel the weight of that. I will forge you something worthy of it, and your next tempering is on my anvil, free.' },
     ])).then(() => { takeItem(p, 'ingots'); p.freeTemper = (p.freeTemper || 0) + 1; giveItem(game, makeItem(p.level + 2, 'rare', 'weapon')); setQuest(game, 'ingots', 2); unlock(game, 'steel'); });
     converse(game, { start: { who: 'Bishr', text: s === -1 ? 'Mind the sparks. You have the look of someone who could do me a favour.' : 'The forge is hot. What do you need?', choices: [
@@ -130,7 +130,7 @@ export function setupContent(game) {
       ...(s === -1 ? [{ label: 'What favour?', to: 'favour' }] : []),
       { label: 'Farewell.' },
     ] },
-    favour: { who: 'Bishr', text: 'Six ingots of Indian steel, come up from Basra, and Thabit\'s men took them off the cart at the kilns. They will be hiding in the clay pits. Steel like that does not come twice a year.', choices: [{ label: 'I will get them back.', fx: () => { setQuest(game, 'ingots', 0); unlock(game, 'steel'); } }, { label: 'Not now.' }] },
+    favour: { who: 'Bishr', text: 'Six ingots of Indian steel, come up from Basra, and Argyros\'s men took them off the cart at the kilns. They will be hiding in the clay pits. Steel like that does not come twice a year.', choices: [{ label: 'I will get them back.', fx: () => { setQuest(game, 'ingots', 0); unlock(game, 'steel'); } }, { label: 'Not now.' }] },
     });
   };
   // ---------------------------------------------------------------- 'Amr: the engines at the arch
@@ -138,9 +138,9 @@ export function setupContent(game) {
   if (amr) amr.talk = () => {
     const s = questState(p, 'engines');
     if (s === 1) return game.director.play(SCENES.conversation(game, amr, [
-      { who: '\'Amr', text: 'I saw the smoke from here. Without his engines, Ghassan is just a big man with a sword. Here, for the road.' },
+      { who: '\'Amr', text: 'I saw the smoke from here. Without his engines, Bardanes is just a big man with a sword. Here, for the road.' },
     ])).then(() => { p.gold += 180; p.potions += 2; setQuest(game, 'engines', 2); });
-    if (s === -1 && (game.act || 1) >= 3) return converse(game, { start: { who: '\'Amr', text: 'One more thing, before you go south. Ghassan has mangonels on the road to the arch. If he gets them loosing naft at you, you will burn. Burn them first.', choices: [{ label: 'Consider it done.', fx: () => { setQuest(game, 'engines', 0); unlock(game, 'mangonel'); } }, { label: 'Later.', fx: () => setTimeout(aTalk, 0) }] } });
+    if (s === -1 && (game.act || 1) >= 3) return converse(game, { start: { who: '\'Amr', text: 'One more thing, before you go south. Bardanes has mangonels on the road to the arch. If he gets them loosing fire at you, you will burn. Burn them first.', choices: [{ label: 'Consider it done.', fx: () => { setQuest(game, 'engines', 0); unlock(game, 'mangonel'); } }, { label: 'Later.', fx: () => setTimeout(aTalk, 0) }] } });
     aTalk();
   };
   for (const [dx, dz, r] of [[-14, 30, 0.3], [6, 34, -0.2], [20, 28, 0.5]]) addEngine(game, SITES.arch.x + dx, SITES.arch.z + dz, r);
@@ -256,7 +256,7 @@ function burnEngine(game, E, quiet = false) {
   p.enginesBurnt = n;
 }
 
-// ------------------------------------------------------------------ Ghassan's final duel (below a quarter of his life)
+// ------------------------------------------------------------------ Bardanes' final duel (below a quarter of his life)
 function tickDuel(game, b, dt) {
   const p = game.player;
   const K = b.kit; if (!K?.duelAt) return;

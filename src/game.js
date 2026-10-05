@@ -269,12 +269,12 @@ export class Game {
     this.spawnPack(['deserter', 'bandit'], 6, -30, 4, 3);
     this.spawnPack(['naffat', 'archer', 'spearman'], 8, -58, 5, 4, { spread: 5 });
     this.spawnPack('naffat', 20, -66, 1, 4, { elite: true });
-    // Round 20: camel raiders on the open sand, crossbowmen on the serai's flank, Ghassan's engineers on the arch road
+    // Round 20: horsemen on the open sand, solenarion archers on the serai's flank, Bardanes' engineers on the arch road
     this.spawnPack('rider', -40, 28, 1, 2); this.spawnPack('rider', 34, -36, 2, 3, { spread: 8 });
     this.spawnPack(['crossbow', 'bandit'], S.x + 12, S.z + 12, 2, 2);
     this.spawnPack(['engineer', 'spearman'], 2, -46, 2, 4); this.spawnPack(['engineer', 'crossbow', 'naffat'], 26, -60, 3, 4, { spread: 5 });
   }
-  // Act IV: Rawh's hired marsh men hold the causeways; ambushers crouch in the reed beds beside them
+  // Act IV: Kallinikos' marines and slingers hold the causeways; raiders crouch in the reed beds beside them
   spawnMarsh() {
     const S = SITES.serai, G = SITES.kiln, A = SITES.arch;
     this.spawnPack(['bandit', 'slinger'], -6, 62, 3, 6);
@@ -325,8 +325,8 @@ export class Game {
     this.spawnPack(['engineer', 'guard'], 30, 30, 2, 10); this.spawnPack(['engineer', 'guard', 'crossbow'], A.x + 14, A.z + 20, 3, 11, { spread: 5 });
   }
 
-  // Act VI (Round 20): Ghanim's hired men hold the river quays: crossbowmen on the warehouse roofs' edges, guards on
-  // the quay road, engineers raising mangonels by the boatyard, camel raiders on the open ground inland
+  // Act VI (Round 20): Arsaber's men hold the river quays: solenarion archers on the warehouse roofs' edges, guards on
+  // the quay road, engineers raising mangonels by the boatyard, horsemen on the open ground inland
   spawnDocks() {
     const S = SITES.serai, G = SITES.kiln, A = SITES.arch;
     this.spawnPack(['guard', 'crossbow'], -20, 72, 3, 12);
@@ -349,7 +349,7 @@ export class Game {
     this.spawnPack('crossbow', A.x - 16, A.z + 14, 1, 15, { elite: true });
   }
 
-  // Round 21: the Hamrin hills: deserters from both armies in the gorges (levels are raised to Salim's when he arrives)
+  // Round 21: the Hamrin hills: the last of Arsaber's company in the gorges (levels are raised to Salim's when he arrives)
   spawnHamrin() {
     const S = SITES.serai, G = SITES.kiln, A = SITES.arch, H = SITES.hold;
     this.spawnPack(['guard', 'archer', 'spearman'], -26, 58, 4, 22, { spread: 5 });
@@ -594,7 +594,7 @@ export class Game {
     const q = this.quests.find((x) => x.id === id); if (!q || q.done) return;
     q.done = true; this.refreshTracker ? this.refreshTracker() : this.ui.quest(this.quests);
     if (silent) return;
-    const msgs = { serai: ['Farud Confesses', 'The buyer\'s name was Ghassan'], graves: ['The Kilns Fall Silent', 'Some pages were saved from the fire'], boss: ['The Silence Is Broken', 'The Pages are recovered; the water runs again'] };
+    const msgs = { serai: ['Photeinos Confesses', 'The envoy\'s name was Arsaber'], graves: ['The Kilns Fall Silent', 'Some pages were saved from the fire'], boss: ['The Silence Is Broken', 'The Pages are recovered; the water runs again'] };
     this.ui.banner(...msgs[id]);
   }
 
@@ -888,7 +888,7 @@ export class Game {
           const n = b.phase >= 2 ? 9 : 6;
           for (let i = 0; i < n; i++) { const a = face + (i - (n - 1) / 2) * 0.16; this.shootArrow(b, new THREE.Vector3(Math.sin(a), 0, Math.cos(a)), b.dmg * 0.45); }
         } else if (b.castKind === 'volley' && K.volley === 'bolts') {
-          // Round 20 (Ghanim): his crossbowmen loose a spread of heavy bolts; each lane is marked on the ground first
+          // Round 20 (Arsaber): his solenarion archers loose a spread of heavy bolts; each lane is marked on the ground first
           const n = b.phase >= 2 ? 5 : 3, from = b.pos.clone().setY(b.pos.y + 2.2);
           for (let i = 0; i < n; i++) {
             const a = face + (i - (n - 1) / 2) * 0.2, dir = new THREE.Vector3(Math.sin(a), 0, Math.cos(a));
@@ -897,7 +897,7 @@ export class Game {
           }
           this.audio.clang?.();
         } else if (b.castKind === 'meteor' && K.barrage === 'stones') {
-          // (Ghanim) mangonels on the far bank: big stones onto wide marked rings around the hero
+          // (Arsaber) mangonels on the far bank: big stones onto wide marked rings around the hero
           for (let i = 0; i < 4; i++) { const q = new THREE.Vector3(p.pos.x + (i ? rand(-7, 7) : 0), 0, p.pos.z + (i ? rand(-7, 7) : 0)); q.y = heightAt(q.x, q.z); this.lobStone(new THREE.Vector3(p.pos.x + 40, 14, p.pos.z + rand(-10, 10)), q, b.dmg * 0.8, 1.7 + i * 0.25, 2.3); }
           this.audio.boom?.();
         } else if (b.castKind === 'volley') {

@@ -6,7 +6,7 @@ import { fabricTex } from './textures.js';
 
 // Round 20 set dressing for Act VI, the river quays of al-Karkh on the Tigris: the cut-stone quay with its
 // bollards and water stairs, timber jetties, river barges, a boatyard's hulls on the slip, shear-leg cranes,
-// bales and pitch cauldrons, and the bridge of boats (cut in the middle by Ghanim's men).
+// bales and pitch cauldrons, and the bridge of boats (cut in the middle by Arsaber's men).
 
 function mesh(g, m, cast = true) { const o = new THREE.Mesh(g, m); o.castShadow = cast; o.receiveShadow = true; return o; }
 let DM = null;
@@ -103,7 +103,7 @@ export function cauldron() {
   g.userData.colliders = [{ type: 'circle', x: 0, z: 0, r: 0.95 }];
   return g;
 }
-// the bridge of boats: barges moored side by side across the river under a plank road. Ghanim's men cut it:
+// the bridge of boats: barges moored side by side across the river under a plank road. Arsaber's men cut it:
 // boats between gap0 and gap1 (fractions of the span) are gone, their burned stubs low in the water.
 export function boatBridge(span, gap0 = 0.35, gap1 = 0.55) {
   const R = rmats(), D = dmats(), g = new THREE.Group(), deck = [], hulls = [], stubs = [];

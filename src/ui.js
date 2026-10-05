@@ -34,7 +34,7 @@ export class UI {
       <div id="hud" class="hidden">
         <div id="target"><div class="tname"></div><div class="tbar"><div class="tfill"></div></div></div>
         <div id="bossbar" class="hidden"><div class="bname"></div><div class="bbar"><div class="bfill"></div><div class="bghost"></div></div></div>
-        <div id="quest"><div class="qtitle">The Renegade of the Sawad</div><div class="qnow hidden"><i>◆</i><span class="qtx"></span><b class="qd"></b></div><div class="qlines"></div></div>
+        <div id="quest"><div class="qtitle">The Teacher's Pages</div><div class="qnow hidden"><i>◆</i><span class="qtx"></span><b class="qd"></b></div><div class="qlines"></div></div>
         <div id="toasts"></div>
         <div id="minimap"><canvas width="180" height="180"></canvas></div>
         <div id="bar">

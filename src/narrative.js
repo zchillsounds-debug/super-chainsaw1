@@ -24,6 +24,14 @@ export const CODEX = {
   barid: { t: 'The Barid', cat: 'History', x: 'The caliphal post and intelligence service. Relays of horses and couriers carried official letters along the main roads. Its local masters also sent the capital reports on governors, prices and unrest.' },
   dinar: { t: 'Dinars and Dirhams', cat: 'Trade', x: 'The gold dinar (about 4.25 g) and the silver dirham were the coins of the caliphate. After the reform of the 690s they carried only inscriptions, with no images. Bills of exchange (suftaja) and cheques (sakk) let merchants move money without carrying coin across the empire.' },
   paper: { t: 'Paper in Baghdad', cat: 'Craft', x: 'Papermaking reached the Islamic world from Central Asia. Later writers credit the Barmakid al-Fadl ibn Yahya with founding a paper mill in Baghdad in the 790s. Cheaper than parchment or papyrus, paper fed the bureaucracy, the book markets of the city and, soon, the translators of the House of Wisdom.' },
+  // Round 23: Arsaber's mission. The Romans of Constantinople (al-Rum), their frontier with the caliphate, and the
+  // learning that passed between the two capitals
+  byzarmy: { t: 'The Army of the Romans', cat: 'War', x: 'The empire ruled from Constantinople called itself Roman; the Arabs called its people al-Rum. Its provinces, the themata, were each held by a strategos with soldiers who were granted land in return for service. Beside them stood the tagmata, paid regiments kept near the capital. Its line infantry fought in lamellar and mail behind large oval shields, with light troops, archers and armoured horsemen around them.' },
+  thughur: { t: 'The Frontier', cat: 'Places', x: 'Between the caliphate and the Roman empire ran al-Thughur, the frontier marches of the Taurus mountains and northern Syria: a belt of fortified towns, mountain passes and burned fields. Raids crossed it nearly every summer from both sides, and men of the borderlands, Arab, Greek and Armenian, sold their swords to whoever paid.' },
+  liquidfire: { t: 'Liquid Fire', cat: 'War', x: 'The Romans\' most feared weapon was a fire that burned on water. Their own writers called it "liquid" or "sea" fire, and said an architect named Kallinikos, a refugee from Syria, brought the secret to Constantinople around 672. It was pumped through bronze tubes, or siphons, from ships and from hand-held devices. The recipe was a state secret, and it is still not known.' },
+  embassy: { t: 'Embassies', cat: 'History', x: 'Baghdad and Constantinople fought often, but they also wrote to each other. Envoys travelled between the two courts to arrange truces, ransoms and exchanges of prisoners, and they brought back gifts and news. Books passed along the same roads: within a few years of this story the caliph al-Ma\'mun would be asking the emperors for Greek manuscripts to translate.' },
+  lamis: { t: 'The Exchange on the Lamis', cat: 'History', x: 'Prisoners taken on the frontier were ransomed or exchanged on the Lamis, a small river in Cilicia near the coast. Each side brought its captives to its own bank, and they crossed one for one at a bridge. The first recorded exchange there was held under Harun al-Rashid, in 805.' },
+  leo: { t: 'Leo the Mathematician', cat: 'Learning', x: 'A young scholar of Constantinople in these years, who taught himself geometry, astronomy and philosophy from old books he sought out on the islands of the Aegean. Later Roman writers tell that al-Ma\'mun heard of him from a captured student, and wrote to the emperor offering gold and lasting peace if Leo would come to Baghdad. The emperor kept him at home.' },
   barmakids: { t: 'The Barmakids', cat: 'History', x: 'A family of Persian administrators from Balkh. As viziers under Harun al-Rashid they ran the empire\'s government and patronised scholars and poets. In 803 Harun abruptly had them arrested and their leader Ja\'far executed. The reasons are still debated.' },
 };
 export function unlock(game, id) {
@@ -34,9 +42,9 @@ export function unlock(game, id) {
 
 // ------------------------------------------------------------------ quests
 export const SIDE = {
-  astrolabe: { t: 'The Lost Astrolabe', giver: 'Ishaq', steps: ['Ishaq\'s finest astrolabe was taken with the caravan. Search the kiln tunnels beneath Hisham\'s yard.', 'You found the astrolabe. Bring it back to Ishaq.', 'Ishaq has his astrolabe again.'] },
-  water: { t: 'Sweet Water', giver: 'Yusuf', steps: ['Renegades are fouling the qanat that feeds the suq. Clear a descent of the ruined qanats.', 'The galleries are quiet. Tell Yusuf.', 'The water runs clean, and the suq owes you.'] },
-  captains: { t: '\'Amr\'s Wager', giver: '\'Amr', steps: ['\'Amr wagers you cannot defeat three captains of the renegades (elite foes) in the field.', 'Three captains have fallen. Collect your winnings from \'Amr.', 'You won the wager.'] },
+  astrolabe: { t: 'The Lost Astrolabe', giver: 'Ishaq', steps: ['Ishaq\'s finest astrolabe was taken with the caravan. Search the kiln tunnels beneath the yard Olbianos holds.', 'You found the astrolabe. Bring it back to Ishaq.', 'Ishaq has his astrolabe again.'] },
+  water: { t: 'Sweet Water', giver: 'Yusuf', steps: ['Bardanes\' men are fouling the qanat that feeds the suq. Clear a descent of the ruined qanats.', 'The galleries are quiet. Tell Yusuf.', 'The water runs clean, and the suq owes you.'] },
+  captains: { t: '\'Amr\'s Wager', giver: '\'Amr', steps: ['\'Amr wagers you cannot defeat three of Arsaber\'s captains (elite foes) in the field.', 'Three captains have fallen. Collect your winnings from \'Amr.', 'You won the wager.'] },
 };
 export function questState(p, id) { return (p.side ||= {})[id] ?? -1; }
 export function setQuest(game, id, step) {
@@ -85,7 +93,7 @@ export function setupNarrative(game) {
     if (!game.briefed) { game.briefed = true; return ishaqTalk(); }
     const s = questState(p, 'astrolabe');
     converse(game, {
-      start: { who: 'Ishaq', text: s === 1 ? 'Salim! Is that... the brass glints in your pack!' : 'The stars do not hurry, Salim, but Ghassan does. What do you need?',
+      start: { who: 'Ishaq', text: s === 1 ? 'Salim! Is that... the brass glints in your pack!' : 'The stars do not hurry, Salim, but Bardanes does. What do you need?',
         choices: [
           ...(s === 1 ? [{ label: 'Your astrolabe, teacher. Recovered from the kiln tunnels.', to: null, fx: () => returnAstrolabe() }] : []),
           ...(s === -1 ? [{ label: 'You seem troubled. What did the raiders take?', to: 'lost' }] : []),
@@ -93,20 +101,23 @@ export function setupNarrative(game) {
           { label: 'Tell me about the House of Wisdom.', to: 'wisdom', fx: () => unlock(game, 'wisdom') },
           { label: 'How did the siege come to this?', to: 'siege', fx: () => unlock(game, 'siege') },
           { label: 'Who were the men fighting in the streets?', to: 'ayyar', fx: () => unlock(game, 'ayyarun') },
+          { label: 'Why would Constantinople want the Pages?', to: 'rum', fx: () => unlock(game, 'embassy') },
           { label: 'Farewell.' },
         ] },
-      lost: { who: 'Ishaq', text: 'My best astrolabe, with a rete cut like lace. I made it myself over three winters. The raiders will have dragged it to their tunnels under the kilns. Hisham\'s men hoard brass to melt.', choices: [{ label: 'I will find it.', fx: () => { setQuest(game, 'astrolabe', 0); unlock(game, 'astrolabe'); } }, { label: 'Another time, teacher.' }] },
+      lost: { who: 'Ishaq', text: 'My best astrolabe, with a rete cut like lace. I made it myself over three winters. The raiders will have dragged it to their tunnels under the kilns. Olbianos\' men hoard brass to melt.', choices: [{ label: 'I will find it.', fx: () => { setQuest(game, 'astrolabe', 0); unlock(game, 'astrolabe'); } }, { label: 'Another time, teacher.' }] },
       teacher: { who: 'Ishaq', text: 'A quiet man who gave away more than he owned. He told the powerful the truth, gently, and they never forgave him for it. They kept him in a cell by the river until he died. His students say it was poison. We copied what he said so it could not be buried with him.', choices: [{ label: 'And my brother died for those pages.', to: 'jabir' }, { label: 'Back.', to: 'start' }] },
       jabir: { who: 'Ishaq', text: 'Your brother died so that a dead man\'s words would not die a second time. That is not nothing, Salim. When this is over, we will speak his name aloud, so the people who killed him do not get to write the story.', choices: [{ label: 'Back.', to: 'start' }] },
       wisdom: { who: 'Ishaq', text: 'A library that became a workshop. We copy, we translate Ptolemy and the Indian tables, and we argue about them. The caliph pays for paper; we pay with sleep.', choices: [{ label: 'Back.', to: 'start', fx: () => unlock(game, 'paper') }] },
       siege: { who: 'Ishaq', text: 'Two brothers, one throne. Tahir\'s Khurasanis came from the east. The city was burned street by street. Now al-Amin is dead, and men who learned to loot do not unlearn it.', choices: [{ label: 'Back.', to: 'start', fx: () => unlock(game, 'khurasan') }] },
-      ayyar: { who: 'Ishaq', text: 'The \'ayyarun: boys from the poor quarters with reed shields and slings, holding alleys against armoured men. Some of them are on the roads now too. Not all of them are Ghassan\'s.', choices: [{ label: 'Back.', to: 'start' }] },
+      rum: { who: 'Ishaq', text: 'Their emperors and ours send embassies back and forth, and the envoys come home with books as often as with treaties. They have scholars of their own who would give a great deal for what we know. Arsaber came for learning the way other men come for gold.', choices: [{ label: 'And the Teacher\'s Pages?', to: 'rum2' }, { label: 'Back.', to: 'start' }] },
+      rum2: { who: 'Ishaq', text: 'Words that men copy by hand in secret are worth more than a library. Carried to Constantinople, they would be read there and lost here. That is the loss I fear, Salim: not the burning, the silence after.', choices: [{ label: 'Back.', to: 'start', fx: () => unlock(game, 'leo') }] },
+      ayyar: { who: 'Ishaq', text: 'The \'ayyarun: boys from the poor quarters with reed shields and slings, holding alleys against armoured men. Some of them are on the roads now too, and a few have taken the envoy\'s silver.', choices: [{ label: 'Back.', to: 'start' }] },
     });
   };
   const returnAstrolabe = async () => {
     const bi = p.bag.findIndex((it) => it?.questId === 'astrolabe'); if (bi >= 0) p.bag[bi] = null;
     await play(ishaq, [
-      { who: 'Salim', text: 'It was in a chest, among Hisham\'s brass. Not a scratch.' },
+      { who: 'Salim', text: 'It was in a chest, among Olbianos\' brass. Not a scratch.' },
       { who: 'Ishaq', text: 'Three winters... and the rete is whole. Look, the star-pointers still sit true. You have saved more than brass, Salim.', act: 'cast' },
       { who: 'Ishaq', text: 'I have little coin. But take this: a sky-chart I drew of the Sawad. With it, no road at night will lose you.' },
     ]);
@@ -126,8 +137,8 @@ export function setupNarrative(game) {
       { label: 'How does a merchant pay, out here?', to: 'coin', fx: () => unlock(game, 'dinar') },
       { label: 'Farewell.' },
     ] },
-    water: { who: 'Yusuf', text: 'The qanat under the well feeds this whole suq. Ghassan\'s men camp in its galleries and foul the water on purpose. A man can go a long time without bread, guard. Not without water. Clear them out.', choices: [{ label: 'I will go down.', fx: () => setQuest(game, 'water', 0) }, { label: 'Not now.' }] },
-    coin: { who: 'Yusuf', text: 'Gold dinars for the great deals, silver dirhams for bread. And for long roads, a suftaja: a letter my cousin in Basra will honour. Paper weighs less than gold, and bandits cannot spend it.', choices: [{ label: 'Back.', to: 'start' }] },
+    water: { who: 'Yusuf', text: 'The qanat under the well feeds this whole suq. Bardanes\' men camp in its galleries and foul the water on purpose. A man can go a long time without bread, guard. Not without water. Clear them out.', choices: [{ label: 'I will go down.', fx: () => setQuest(game, 'water', 0) }, { label: 'Not now.' }] },
+    coin: { who: 'Yusuf', text: 'Gold dinars for the great deals, silver dirhams for bread. And for long roads, a suftaja: a letter my cousin in Basra will honour. Paper weighs less than gold, and raiders cannot spend it.', choices: [{ label: 'Back.', to: 'start' }] },
     });
   };
   // 'Amr: the wager
@@ -141,7 +152,7 @@ export function setupNarrative(game) {
       { label: 'You fought in the siege?', to: 'siege', fx: () => unlock(game, 'khurasan') },
       { label: 'Farewell.' },
     ] },
-    wager: { who: '\'Amr', text: 'Ghassan\'s captains ride with a golden ring of men around them. Kill three of them in the field, and my purse is yours.', choices: [{ label: 'Done.', fx: () => { setQuest(game, 'captains', 0); game.captainKills = 0; } }, { label: 'Not today.' }] },
+    wager: { who: '\'Amr', text: 'Bardanes\' captains ride with a golden ring of men around them. Kill three of them in the field, and my purse is yours.', choices: [{ label: 'Done.', fx: () => { setQuest(game, 'captains', 0); game.captainKills = 0; } }, { label: 'Not today.' }] },
     siege: { who: '\'Amr', text: 'On Tahir\'s side. Khurasani archers, mangonels, naft... and still the \'ayyarun held the Harbiyya for weeks. I do not boast about that year.', choices: [{ label: 'Back.', to: 'start', fx: () => unlock(game, 'naft') }] },
     });
   };
@@ -163,9 +174,10 @@ export function setupNarrative(game) {
   game.discover = (dt) => {
     if ((game.discoverT -= dt) > 0) return; game.discoverT = 1;
     const P = p.pos; const near = (s, r) => Math.hypot(P.x - s.x, P.z - s.z) < r;
+    if (game.t > 75) unlock(game, 'byzarmy'); // Round 23: the foes are al-Rum
     if (game.interior) { const k = game.interior.def.kind; if (k === 'hold') return; unlock(game, k === 'qanat' ? 'qanat' : k === 'granary' ? 'nahrawan' : k === 'cellars' ? 'warraqin' : k === 'customs' ? 'rivercraft' : 'kilns'); return; }
-    if (IS_MARSH) { if (game.t > 20) unlock(game, 'nahrawan'); if (near(SITES.village, 30)) unlock(game, 'mudhif'); if (p.wading) unlock(game, 'mashuf'); return; }
-    if (IS_DOCKS) { if (game.t > 20) unlock(game, 'tigris'); if (near(SITES.kiln, 26)) unlock(game, 'rivercraft'); if (near(SITES.arch, 34)) unlock(game, 'jisr'); if (near(SITES.village, 26)) unlock(game, 'copyists'); return; }
+    if (IS_MARSH) { if (game.t > 20) unlock(game, 'nahrawan'); if (game.t > 110) unlock(game, 'liquidfire'); if (near(SITES.village, 30)) unlock(game, 'mudhif'); if (p.wading) unlock(game, 'mashuf'); return; }
+    if (IS_DOCKS) { if (game.t > 20) unlock(game, 'tigris'); if (game.t > 110) unlock(game, 'lamis'); if (near(SITES.kiln, 26)) unlock(game, 'rivercraft'); if (near(SITES.arch, 34)) unlock(game, 'jisr'); if (near(SITES.village, 26)) unlock(game, 'copyists'); return; }
     if (IS_KARKH) { if (game.t > 20) unlock(game, 'karkh'); if (near(SITES.kiln, 26)) unlock(game, 'warraqin'); if (near(SITES.serai, 26)) unlock(game, 'siege'); if (near(SITES.village, 26)) unlock(game, 'wisdom'); if (near(SITES.arch, 34)) unlock(game, 'round'); return; }
     if (near({ x: 56, z: 0 }, 26)) unlock(game, 'khan');
     if (near({ x: -56, z: -36 }, 26)) unlock(game, 'kilns');
@@ -195,7 +207,7 @@ export function journalPanel(game, tab = 'journal') {
   const st = game.stats || {};
   w.innerHTML = `<div class="ptitle">${tab === 'journal' ? 'Journal' : 'Codex'} <span class="close" role="button" aria-label="Close">✕</span></div>
     <div class="stabs"><button data-t="journal" class="${tab === 'journal' ? 'on' : ''}">Journal</button><button data-t="codex" class="${tab === 'codex' ? 'on' : ''}">Codex (${known}/${Object.keys(CODEX).length})</button></div>
-    <div class="jbody">${tab === 'journal' ? `<div class="slabel">The Renegade of the Sawad</div>${main}<div class="slabel">Tasks</div>${side}<div class="slabel">Deeds</div><div class="jq"><small>Foes slain ${game.kills || 0} · parries ${st.parries || 0} · qanats cleared ${st.qanats || 0} · gauntlets run ${st.rushes || 0}</small></div>` : codex}</div>`;
+    <div class="jbody">${tab === 'journal' ? `<div class="slabel">The Teacher's Pages</div>${main}<div class="slabel">Tasks</div>${side}<div class="slabel">Deeds</div><div class="jq"><small>Foes slain ${game.kills || 0} · parries ${st.parries || 0} · qanats cleared ${st.qanats || 0} · gauntlets run ${st.rushes || 0}</small></div>` : codex}</div>`;
   game.ui.root.appendChild(w);
   const close = () => { w.remove(); document.body.classList.remove('inshop'); };
   w.querySelector('.close').onclick = close;

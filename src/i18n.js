@@ -6,10 +6,7 @@ import { STORY_AR } from './story_ar.js';
 const AR = {
   'Enter the Sands': 'ادخل الرمال', 'Continue': 'متابعة', 'New Chronicle': 'سيرة جديدة', 'Settings': 'الإعدادات',
   'Inventory': 'المتاع', 'Disciplines': 'المهارات', 'Journal': 'اليوميات', 'Codex': 'الموسوعة', 'Map': 'الخريطة', 'Controls': 'التحكّم',
-  'The Renegade of the Sawad': 'المتمرّد في السواد',
-  'Defeat Farud at the old caravanserai': 'اهزم فرودًا عند الخان القديم',
-  'Drive Hisham\'s men from the kiln yard': 'اطرد رجال هشام من ساحة الأفران',
-  'Face Ghassan at the ruined Persian arch': 'واجه غسّان عند الطاق الفارسي المهدّم',
+  'The Teacher\'s Pages': 'أوراق المعلّم',
   'Choose Salim\'s Discipline': 'اختر فنّ سالم', 'You can change it later at the training yard in the suq.': 'يمكنك تغييره لاحقًا في ساحة التدريب في السوق.',
   'Faris': 'فارس', 'Rami': 'رامٍ', 'Naffat': 'نفّاط', '\'Ayyar': 'عيّار',
   'You Have Fallen': 'لقد سقطت', 'Rise Again': 'انهض من جديد', 'Victory': 'النصر', 'Continue Exploring': 'تابع الاستكشاف',
@@ -32,16 +29,15 @@ const AR = {
   'Show me your wares.': 'أرني بضاعتك.', 'Training.': 'التدريب.',
   // captains: "Name · Role" labels (names come from story_ar.js)
   'Swift': 'السريع', 'Ironclad': 'المدرّع', 'Volley': 'الرشّاق', 'Firebrand': 'مُضرم النار', 'Rallying': 'المحرِّض',
-  'Snaring': 'صاحب الشِّباك', 'Reed-born': 'ابن القصب', 'Slinger': 'مِقلاعيّ', 'Net-thrower': 'رامي الشِّباك', 'Reed Ambusher': 'كمين القصب', 'Hired Guard': 'حارس مأجور', 'Crossbowman': 'رامي القوس الرِّجليّ', 'Siege Engineer': 'مهندس الحصار', 'Mangonel': 'منجنيق', 'Camel Raider': 'غازٍ على جمل', 'Unhorsed Raider': 'غازٍ مُترجِّل',
+  'Snaring': 'صاحب الشِّباك', 'Reed-born': 'ابن القصب', 'Mangonel': 'منجنيق', // Round 23: troop names are in story23_ar.js
   'Raider': 'مُغير', 'Deserter': 'فارّ', 'Archer': 'رامٍ', 'Champion': 'بطل', 'Captain': 'قائد',
-  'Malik': 'مالك', 'Sa\'d': 'سعد', '\'Ubayd': 'عبيد', 'Hani': 'هانئ', 'Mukhariq': 'مخارق',
   // round 12 sheets
   'Equip': 'جهّز', 'Unequip': 'انزع', 'Compare': 'قارن', 'Close': 'إغلاق', 'Selected': 'المختار', 'Equipped': 'المُجهَّز', 'Take': 'خذ', 'Store': 'خزّن',
 };
 const PATTERNS = [
   [/^Level (\d+)$/, (m) => `المستوى ${m[1]}`],
   // Round 16 bounties
-  [/^Hunt (.+), a renegade captain on the roads\.$/, (m) => `طارد ${STORY_AR[m[1]] || m[1]}، قائدًا متمرّدًا على الطرق.`],
+  [/^Hunt (.+), one of Arsaber's captains on the roads\.$/, (m) => `طارد ${STORY_AR[m[1]] || m[1]}، أحد قادة أرسابر على الطرق.`],
   [/^Escort a laden (camel|buffalo) from the hub to the (.+)\.$/, (m) => `رافق ${m[1] === 'camel' ? 'جملًا محمّلًا' : 'جاموسًا محمّلًا'} من المخيّم إلى ${STORY_AR[m[2]] || m[2]}.`],
   [/^Clear (.+) and open the chest at the bottom\.$/, (m) => `طهّر ${STORY_AR[m[1]] || m[1]} وافتح الصندوق في أعماقها.`],
   [/^Bounty: (.+)$/, (m) => `مكافأة: ${STORY_AR[m[1]] || m[1]}`],

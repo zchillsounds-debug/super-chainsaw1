@@ -120,6 +120,61 @@ function shieldRaw() {
   return g;
 }
 
+// Round 23: the Byzantine company's kit. Shields are painted in unit colours with plain bands only (no device that
+// could read as a sign): the tall oval skoutarion of the line infantry and the small round shield of the light troops.
+// Four colours, each its own material (same shader program as the old round shield).
+const UNIT = [['#8a1e18', '#d8cdb0'], ['#1e3a6a', '#d8cdb0'], ['#d8cdb0', '#7a1a14'], ['#b8862a', '#2a1e16']];
+function bandTex(field, band, oval) {
+  const W = 128, c = document.createElement('canvas'); c.width = c.height = W; const x = c.getContext('2d');
+  x.fillStyle = field; x.fillRect(0, 0, W, W);
+  // weathering: a little grime and scuffing on the paint
+  for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(${Math.random() < 0.5 ? '0,0,0' : '255,240,210'},${Math.random() * 0.07})`; x.fillRect(Math.random() * W, Math.random() * W, 2 + Math.random() * 6, 1 + Math.random() * 3); }
+  x.strokeStyle = band; x.lineWidth = oval ? 9 : 11; x.beginPath(); x.ellipse(W / 2, W / 2, W / 2 - 8, W / 2 - 8, 0, 0, Math.PI * 2); x.stroke();
+  x.lineWidth = 4; x.beginPath(); x.ellipse(W / 2, W / 2, W * 0.19, W * 0.19, 0, 0, Math.PI * 2); x.stroke();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+function byzShieldRaw(oval, k) {
+  const g = new THREE.Group(), [field, band] = UNIT[k];
+  const face = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.62, map: bandTex(field, band, oval) });
+  const r = oval ? 0.3 : 0.24, sy = oval ? 1.55 : 1;
+  // a shallow dished board: the disc is domed a little so the light rolls across it
+  const disc = new THREE.CylinderGeometry(r, r, 0.04, 28, 1).rotateX(Math.PI / 2), dp = disc.attributes.position;
+  for (let i = 0; i < dp.count; i++) { const px = dp.getX(i), py = dp.getY(i), q = (px * px + py * py) / (r * r); dp.setZ(i, dp.getZ(i) + (1 - q) * 0.035); }
+  disc.computeVertexNormals(); disc.scale(1, sy, 1);
+  g.add(mesh(disc, face));
+  g.add(mesh(new THREE.TorusGeometry(r, 0.018, 6, 32).scale(1, sy, 1), leather)); // rawhide edging
+  g.add(mesh(new THREE.SphereGeometry(oval ? 0.07 : 0.065, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2).rotateX(Math.PI / 2).translate(0, 0, 0.05), steel));
+  return g;
+}
+// the menavlion: a short, very stout pike with a long blade, for stopping horsemen
+function pikeRaw() {
+  const g = new THREE.Group();
+  g.add(mesh(new THREE.CylinderGeometry(0.034, 0.038, 2.2, 7).translate(0, 0.55, 0), leather));
+  g.add(mesh(new THREE.ConeGeometry(0.075, 0.55, 4).scale(1, 1, 0.35).translate(0, 1.92, 0), steel));
+  g.add(mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.1, 7).translate(0, 1.64, 0), goldM));
+  return g;
+}
+// a hand siphon of liquid fire: a bronze tube with a nozzle, the flame burning at its mouth
+function siphonRaw() {
+  const g = new THREE.Group();
+  g.add(mesh(new THREE.CylinderGeometry(0.035, 0.04, 0.62, 8).translate(0, 0.22, 0), goldM));
+  g.add(mesh(new THREE.CylinderGeometry(0.018, 0.03, 0.16, 8).translate(0, 0.6, 0), goldM));
+  g.add(mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.05, 8).translate(0, 0.0, 0), steel));
+  g.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.22, 5).rotateZ(Math.PI / 2).translate(0.05, -0.02, 0), leather)); // the plunger grip
+  const f = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.18, 7).translate(0, 0.77, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.2, 0.25), toneMapped: false }));
+  g.add(f);
+  return g;
+}
+// the solenarion: a short bow shot through a wooden arrow-guide, so short darts fly far and flat
+function solenRaw() {
+  const g = new THREE.Group();
+  g.add(mesh(new THREE.CylinderGeometry(0.022, 0.026, 0.72, 7).translate(0, 0.32, 0), leather)); // the guide tube
+  const prod = mesh(new THREE.TorusGeometry(0.36, 0.016, 5, 16, Math.PI * 0.75), leather); prod.rotation.z = Math.PI / 2 - Math.PI * 0.375; prod.position.y = 0.3; g.add(prod);
+  g.add(mesh(new THREE.BoxGeometry(0.66, 0.005, 0.005).translate(0, 0.44, 0.0), new THREE.MeshStandardMaterial({ color: 0xd8c8a0, roughness: 0.9 })));
+  g.add(mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.04, 7).translate(0, 0.66, 0), goldM));
+  return g;
+}
+
 // Round 21: every weapon is built once, its pieces merged by material (a sword was five draws, now three), and each
 // copy shares those geometries. Unlit pieces (the torch flame) stay separate.
 const _wcache = new Map();
@@ -145,6 +200,8 @@ function mergedGear(name, build) {
 export const sword = () => mergedGear('sword', swordRaw), dagger = () => mergedGear('dagger', daggerRaw), torch = () => mergedGear('torch', torchRaw);
 export const spear = () => mergedGear('spear', spearRaw), crossbow = () => mergedGear('crossbow', crossbowRaw), mallet = () => mergedGear('mallet', malletRaw);
 export const bow = () => mergedGear('bow', bowRaw), shield = () => mergedGear('shield', shieldRaw);
+export const byzShield = (oval, k = 0) => mergedGear('bshield' + (oval ? 'o' : 'r') + k, () => byzShieldRaw(oval, k));
+export const pike = () => mergedGear('pike', pikeRaw), siphon = () => mergedGear('siphon', siphonRaw), solenarion = () => mergedGear('solen', solenRaw);
 
 // Humanoids are sculpted, skinned and animated in human.js / anim.js.
 export { humanoid, animateHumanoid, setCharLOD } from './human.js';

@@ -1,71 +1,75 @@
 import * as THREE from 'three';
 import { humanoid } from './characters.js';
 import { TYPES20 } from './foes20.js';
+import { LOOK, byzify } from './byz.js';
 
 // Enemy archetypes.
-// Raiders and deserters loose in the Sawad after the siege of 813. All human foes.
+// Round 23: Arsaber's company, a Byzantine embassy's picked men and hired turncoats loose in Iraq under cover of
+// the civil war of 813. All human foes.
 export const TYPES = {
+  // Round 23: Arsaber's company. The type keys stay (the AI keys off them); names and looks are Byzantine.
   bandit: {
-    name: 'Brigand', hp: 24, dmg: 5, speed: 4.3, range: 1.9, atk: 1.1, xp: 14, radius: 0.5, action: 'attack',
-    build: (x) => { const R = [['#3a2f26', '#6a2a1a', 0x2a2420], ['#4a3020', '#8a6a2a', 0x5a1a10], ['#2a2a30', '#7a2a2a', 0x1a1a1a], ['#5a4a3a', '#2a3a2a', 0x8a7a5a]][Math.floor(Math.random() * 4)];
-      return humanoid({ robe: R[0], robe2: R[1], turban: R[2], mask: 0x1e1a16, skin: [0x8a5a3a, 0x7a4a2a, 0x9a6a44][Math.floor(Math.random() * 3)], weapon: 'sword', sash: 0x5a1a10, offhand: Math.random() < 0.3 ? 'shield' : null, armour: Math.random() < 0.6 ? 'leather' : null, leather: 0x3a2414, ...x }); },
+    name: 'Psilos', hp: 24, dmg: 5, speed: 4.3, range: 1.9, atk: 1.1, xp: 14, radius: 0.5, action: 'attack',
+    build: (x) => humanoid(byzify({ ...LOOK.psilos(), ...x })),
   },
   spearman: {
-    name: 'Deserter Lancer', hp: 34, dmg: 7, speed: 3.8, range: 2.7, atk: 1.4, xp: 18, radius: 0.5, action: 'thrust',
-    build: (x) => humanoid({ robe: '#4a3a2a', robe2: '#2a3a5a', turban: null, helm: true, skin: 0x7a4a30, weapon: 'spear', offhand: 'shield', mail: true, armour: 'lamellar', leather: 0x1c1a1c, robe: '#1e1c1e', ...x }),
+    name: 'Menavlatos', hp: 34, dmg: 7, speed: 3.8, range: 2.7, atk: 1.4, xp: 18, radius: 0.5, action: 'thrust',
+    build: (x) => humanoid(byzify({ ...LOOK.menavlatos(), ...x })),
   },
   archer: {
-    name: 'Brigand Archer', hp: 20, dmg: 5, speed: 4.0, range: 15, atk: 1.8, xp: 15, radius: 0.5, action: 'shoot', ranged: 'arrow',
-    build: (x) => humanoid({ robe: '#5a4a32', robe2: '#3a2a1a', turban: 0xc8b890, mask: 0x8a7a5a, skin: 0x9a6a44, weapon: 'bow', armour: 'leather', leather: 0x4a3020, ...x }),
+    name: 'Toxotes', hp: 20, dmg: 5, speed: 4.0, range: 15, atk: 1.8, xp: 15, radius: 0.5, action: 'shoot', ranged: 'arrow',
+    build: (x) => humanoid(byzify({ ...LOOK.toxotes(), ...x })),
   },
   deserter: {
-    name: 'Knife-man', hp: 30, dmg: 6, speed: 5.0, range: 1.7, atk: 1.0, xp: 16, radius: 0.5, action: 'attack',
-    build: (x) => humanoid({ robe: '#4a4234', robe2: '#2a261c', turban: 0x3a3228, mask: 0x2a241c, skin: [0x8a5a3a, 0x9a6a44][Math.floor(Math.random() * 2)], weapon: 'dagger', hunch: 0.25, sash: 0x3a2a1a, armour: 'leather', leather: 0x2a1c14, ...x }),
+    name: 'Trapezites', hp: 30, dmg: 6, speed: 5.0, range: 1.7, atk: 1.0, xp: 16, radius: 0.5, action: 'attack',
+    build: (x) => humanoid(byzify({ ...LOOK.trapezites(), ...x })),
   },
   naffat: {
-    name: 'Torch-bearer', hp: 30, dmg: 8, speed: 5.0, range: 1.8, atk: 1.0, xp: 12, radius: 0.48, action: 'attack', fiery: true,
-    build: (x) => humanoid({ robe: '#3a2418', robe2: '#a04a18', turban: 0x2a1a10, mask: 0x1a120c, skin: 0x7a4a30, weapon: 'torch', sash: 0x7a2a10, ...x }),
+    name: 'Siphon-bearer', hp: 30, dmg: 8, speed: 5.0, range: 1.8, atk: 1.0, xp: 12, radius: 0.48, action: 'attack', fiery: true,
+    build: (x) => humanoid(byzify({ ...LOOK.siphon(), ...x })),
   },
-  // ---- Act IV: the marsh men Rawh hired (Round 15)
+  // ---- Act IV: the river-fleet men in the marshes
   slinger: {
     name: 'Slinger', hp: 22, dmg: 7, speed: 4.2, range: 15, atk: 2.2, xp: 16, radius: 0.48, action: 'chop', ranged: 'stone', hold: [8, 14],
-    build: (x) => humanoid({ robe: '#6a5a40', robe2: '#3a4a3a', turban: 0xd8ccb0, skin: [0x8a5a3a, 0x7a4a2a][Math.floor(Math.random() * 2)], weapon: 'sling', sash: 0x3a4a3a, build: 0.9, hat: 0xb8a468, armour: 'reed', leather: 0x9a8a50, ...x }),
+    build: (x) => humanoid(byzify({ ...LOOK.slinger(), ...x })),
   },
   netter: {
-    name: 'Net-thrower', hp: 30, dmg: 4, speed: 4.4, range: 9, atk: 3.6, xp: 18, radius: 0.5, action: 'throw', ranged: 'net', hold: [4.5, 9],
-    build: (x) => humanoid({ robe: '#4a4a3a', robe2: '#6a5a3a', turban: 0x8a7a5a, beard: 0x2a1a10, skin: 0x7a4a2a, weapon: 'net', sash: 0x5a4a2a, build: 1.05, armour: 'reed', leather: 0x8a7a48, ...x }),
+    name: 'Marine', hp: 30, dmg: 4, speed: 4.4, range: 9, atk: 3.6, xp: 18, radius: 0.5, action: 'throw', ranged: 'net', hold: [4.5, 9],
+    build: (x) => humanoid(byzify({ ...LOOK.marine(), ...x })),
   },
   reedman: {
-    name: 'Reed Ambusher', hp: 28, dmg: 7, speed: 5.2, range: 2.4, atk: 1.1, xp: 17, radius: 0.48, action: 'thrust',
-    build: (x) => humanoid({ robe: '#4a5236', robe2: '#2a3020', turban: 0x5a5a3a, mask: 0x3a3a26, skin: 0x7a4a2a, weapon: 'spear', hunch: 0.2, sash: 0x2a3020, armour: 'reed', leather: 0x7a7444, ...x }),
+    name: 'Trapezites', hp: 28, dmg: 7, speed: 5.2, range: 2.4, atk: 1.1, xp: 17, radius: 0.48, action: 'thrust',
+    build: (x) => humanoid(byzify({ ...LOOK.reed(), ...x })),
   },
-  // ---- Act V: the buyer's hired guards in al-Karkh
+  // ---- the line infantry of the company
   guard: {
-    name: 'Hired Guard', hp: 46, dmg: 8, speed: 3.7, range: 2.0, atk: 1.3, xp: 22, radius: 0.52, action: 'attack',
-    build: (x) => humanoid({ robe: '#2a2a2a', robe2: '#5a4a2a', qaba: true, turban: null, helm: true, mail: true, skin: [0x8a5a3a, 0x9a6a44][Math.floor(Math.random() * 2)], weapon: 'sword', offhand: 'shield', sash: 0x5a4a2a, build: 1.1, armour: 'scale', ...x }),
+    name: 'Skoutatos', hp: 46, dmg: 8, speed: 3.7, range: 2.0, atk: 1.3, xp: 22, radius: 0.52, action: 'attack',
+    build: (x) => humanoid(byzify({ ...LOOK.skoutatos(), ...x })),
   },
+  // Bardanes, commander of the company in the Sawad: red-cloaked, plumed, heavy lamellar
   commander: {
-    name: 'Ghassan', hp: 2200, dmg: 14, speed: 3.0, range: 3.2, atk: 2.4, xp: 600, radius: 1.1, boss: true,
-    build: (x) => humanoid({ robe: '#141414', robe2: '#8a1a14', hem: true, qaba: true, mail: true, helm: true, turban: null, cloak: 0x5a0e0a, beard: 0x1a120c, beardLen: 0.8, skin: 0x8a5a3a, weapon: 'sword', offhand: 'shield', sash: 0x8a1a14, scale: 1.55, build: 1.15, belly: 0.4, hemY: 0.3, detail: 'hi', armour: 'heavy', leather: 0x1a1414, crest: 'plume', ...x }),
+    name: 'Bardanes', hp: 2200, dmg: 14, speed: 3.0, range: 3.2, atk: 2.4, xp: 600, radius: 1.1, boss: true,
+    build: (x) => humanoid(byzify({ ...LOOK.officer('#8a1a14', 0x5a0e0a), beard: 0x1a120c, beardLen: 0.8, skin: 0xb07a52, sash: 0x8a1a14, scale: 1.55, build: 1.15, belly: 0.4, hemY: 0.3, leather: 0x3a3a3e, ...x })),
   },
-  // Rawh, Ghassan's paymaster: a merchant's coat over mail, quick with a blade and quicker with his purse
+  // Kallinikos, master of the siphons: a scorched leather coat over mail, a felt cap, the big siphon's bronze
   rawh: {
-    name: 'Rawh', hp: 2900, dmg: 15, speed: 3.6, range: 3.0, atk: 2.2, xp: 900, radius: 1.0, boss: true,
-    build: (x) => humanoid({ robe: '#3a5a6a', robe2: '#c8a050', hem: true, qaba: true, mail: true, turban: 0xe8dcc0, beard: 0x2a1c12, beardLen: 0.6, skin: 0x9a6a44, weapon: 'sword', sash: 0xc8a050, scale: 1.4, build: 1.0, belly: 0.5, hemY: 0.3, detail: 'hi', ...x }),
+    name: 'Kallinikos', hp: 2900, dmg: 15, speed: 3.6, range: 3.0, atk: 2.2, xp: 900, radius: 1.0, boss: true,
+    build: (x) => humanoid(byzify({ ...LOOK.officer('#8a4a1a', null), helm: null, pilos: true, crest: null, offhand: null, armour: 'scale', beard: 0x3a2a1a, beardLen: 0.6, skin: 0xc08a60, sash: 0xc8a050, scale: 1.4, build: 1.0, belly: 0.5, hemY: 0.3, leather: 0x4a3020, ...x })),
   },
-  // 'Utba, captain of the buyer's men: black-dressed, iron-capped, shield and sayf
+  // Krateros, commander in al-Karkh: black lamellar, iron helmet, shield and spathion
   utba: {
-    name: '\'Utba', hp: 3800, dmg: 18, speed: 3.2, range: 3.2, atk: 2.3, xp: 1400, radius: 1.1, boss: true,
-    build: (x) => humanoid({ robe: '#141414', robe2: '#3a3a3a', hem: true, qaba: true, mail: true, helm: true, turban: null, cloak: 0x1a1a1a, beard: 0x141010, beardLen: 0.7, skin: 0x8a5a3a, weapon: 'sword', offhand: 'shield', sash: 0x5a4a2a, scale: 1.5, build: 1.2, belly: 0.2, hemY: 0.3, detail: 'hi', armour: 'heavy', leather: 0x141414, ...x }),
+    name: 'Krateros', hp: 3800, dmg: 18, speed: 3.2, range: 3.2, atk: 2.3, xp: 1400, radius: 1.1, boss: true,
+    build: (x) => humanoid(byzify({ ...LOOK.officer('#3a3a3a', 0x1a1a1a), crest: null, beard: 0x141010, beardLen: 0.7, skin: 0xa06c46, sash: 0x5a4a2a, scale: 1.5, build: 1.2, belly: 0.2, hemY: 0.3, leather: 0x1e1e20, shieldTint: 1, ...x })),
   },
 };
 
-const ELITE_NAMES = ['Fadl', 'Khalid', 'Sinan', 'Hudhayl', 'Mukhariq', 'Sa\'d', 'Kulayb', 'Harith'];
+const ELITE_NAMES = ['Bryas', 'Kamytzes', 'Melias', 'Tzirithon', 'Sarantenos', 'Hexamilites', 'Choumnos', 'Mouzalon'];
 
-// Round 20: Ghanim, the buyer's steward, at the bridge of boats (Act VI)
+// Round 20: the act VI boss at the bridge of boats. Round 23: Arsaber, the envoy himself: a court dignitary's
+// purple-bordered cloak over gilded lamellar, a grey beard, the plumed helmet
 TYPES.ghanim = {
-  name: 'Ghanim', hp: 4600, dmg: 20, speed: 3.3, range: 3.2, atk: 2.2, xp: 1900, radius: 1.1, boss: true,
-  build: (x) => humanoid({ robe: '#1e1620', robe2: '#c8a050', hem: true, qaba: true, mail: true, helm: true, turban: null, cloak: 0x2a1a30, beard: 0x8a8070, beardLen: 0.9, skin: 0x9a6a44, weapon: 'sword', offhand: 'shield', sash: 0x5a2a6a, scale: 1.5, build: 1.15, belly: 0.3, hemY: 0.3, detail: 'hi', armour: 'heavy', leather: 0x2a1a2e, crest: 'plume', ...x }),
+  name: 'Arsaber', hp: 4600, dmg: 20, speed: 3.3, range: 3.2, atk: 2.2, xp: 1900, radius: 1.1, boss: true,
+  build: (x) => humanoid(byzify({ ...LOOK.officer('#4a1a4a', 0x3a1440), beard: 0x8a8070, beardLen: 0.9, skin: 0xb07a52, sash: 0xc8a050, scale: 1.5, build: 1.15, belly: 0.3, hemY: 0.3, leather: 0x6a5a3a, shieldTint: 3, ...x })),
 };
 Object.assign(TYPES, TYPES20); // Round 20: crossbowmen, siege engineers and their mangonels, camel raiders
 
@@ -74,13 +78,13 @@ Object.assign(TYPES, TYPES20); // Round 20: crossbowmen, siege engineers and the
 const CRESTS = ['plume', 'mantle', 'hat', 'banner', 'heavy'];
 export function captainLook(name = '') {
   let h = 7; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  const NAMED = { Farud: 'mantle', Hisham: 'hat', Marwan: 'banner', Sahl: 'plume', '\'Asim': 'heavy', Layth: 'banner' };
+  const NAMED = { Photeinos: 'mantle', Olbianos: 'hat', Katakylas: 'banner', Petronas: 'plume', Narses: 'heavy', Kalokyros: 'banner' };
   const crest = NAMED[name.split(' ·')[0]] || CRESTS[h % CRESTS.length], tint = [0x6a1a14, 0x1a3a5a, 0x5a4a1a, 0x2a4a2a, 0x4a1a3a][(h >>> 3) % 5];
   // the coat is lacquered in the captain's own colour, so each reads apart from his men even from overhead
   const L = { armour: 'heavy', crest, detail: 'hi', sash: tint, leather: new THREE.Color(tint).multiplyScalar(0.55).getHex() };
   if (crest === 'plume') L.helm = true;
   if (crest === 'mantle') L.cloak = tint;
-  if (crest === 'hat') { L.helm = false; L.cap = 0x1e1a16; L.capBand = tint; }
+  if (crest === 'hat') { L.helm = false; L.pilos = true; L.cloak = tint; } // Round 23: a felt pilos and a cloak in his colour
   if (crest === 'banner') L.helm = true;
   return L;
 }

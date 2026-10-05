@@ -50,24 +50,24 @@ const people = {
 const Q = {
   sawad: [
     { id: 'potter', t: 'The Potter\'s Tools', giver: { name: 'Zayd', title: 'Potter', look: 'potter', at: [17, 74], face: -1.4 },
-      offer: 'Hisham\'s knife-men took my kiln tools when they took the yard. Without them I am a man who knows how to make pots, and nothing else.',
+      offer: 'Olbianos\' raiders took my kiln tools when they took the yard. Without them I am a man who knows how to make pots, and nothing else.',
       steps: [
-        { kind: 'take', text: 'Recover Zayd\'s kiln tools from the deserters at the kiln yard.', at: [SITES.kiln.x + 16, SITES.kiln.z - 12], label: 'Take the potter\'s tools', item: 'Bundle of Kiln Tools', guard: { pack: ['deserter', 'deserter', 'spearman'], n: 4 } },
+        { kind: 'take', text: 'Recover Zayd\'s kiln tools from the raiders at the kiln yard.', at: [SITES.kiln.x + 16, SITES.kiln.z - 12], label: 'Take the potter\'s tools', item: 'Bundle of Kiln Tools', guard: { pack: ['deserter', 'deserter', 'spearman'], n: 4 } },
         { kind: 'return', text: 'Bring the tools back to Zayd.', lines: [['Salim', 'Your tools. The knife-men will not miss them.'], ['Zayd', 'My father\'s scrapers! Come back in a month, guard. The first good jar from the new firing is yours.']] },
         { text: 'Zayd is firing his kiln again.' }],
       reward: { gold: 90, item: 'rare', renown: 10 } },
     { id: 'ledger', t: 'The Scribe\'s Ledger', giver: { name: 'Nadr', title: 'Scribe', look: 'scribe', at: [6, 62], face: 0.8 },
-      offer: 'Brigands robbed me on the east road. They took my ledger: three years of every debt and sale in this village. Without it, honest men cannot prove what they paid.',
+      offer: 'Byzantine soldiers robbed me on the east road. They took my ledger: three years of every debt and sale in this village. Without it, honest men cannot prove what they paid.',
       steps: [
-        { kind: 'kill', text: 'Drive off the brigands on the east road.', at: [40, 30], pack: ['bandit', 'archer', 'bandit'], n: 4, elite: 'Bujayr' },
-        { kind: 'take', text: 'Find Nadr\'s ledger among the brigands\' plunder.', at: [43, 32], label: 'Take the ledger', item: 'Nadr\'s Ledger' },
+        { kind: 'kill', text: 'Drive off the soldiers on the east road.', at: [40, 30], pack: ['bandit', 'archer', 'bandit'], n: 4, elite: 'Lekapenos' },
+        { kind: 'take', text: 'Find Nadr\'s ledger among the soldiers\' plunder.', at: [43, 32], label: 'Take the ledger', item: 'Nadr\'s Ledger' },
         { kind: 'return', text: 'Return the ledger to Nadr.', lines: [['Nadr', 'Every page there. You have saved a dozen families from paying twice.']] },
         { text: 'The village\'s accounts are whole again.' }],
       reward: { gold: 110, item: 'rare', renown: 10, codex: 'paper' } },
     { id: 'string', t: 'The Camel Trader\'s String', giver: { name: 'Hudba', title: 'Camel trader', look: 'trader', at: [26, 70], face: -2.4 },
-      offer: 'My camels bolted when the deserters came. Two of them are standing in the desert east of the road, and the men who scared them are still out there.',
+      offer: 'My camels bolted when the Byzantine horsemen came. Two of them are standing in the desert east of the road, and the men who scared them are still out there.',
       steps: [
-        { kind: 'kill', text: 'Scatter the deserters near Hudba\'s camels.', at: [38, -22], pack: ['deserter', 'spearman'], n: 4 },
+        { kind: 'kill', text: 'Scatter the horsemen near Hudba\'s camels.', at: [38, -22], pack: ['deserter', 'spearman'], n: 4 },
         { kind: 'escort', text: 'Lead Hudba\'s two camels back to the village.', at: [40, -26], who: 'camels', to: [26, 66] },
         { kind: 'return', text: 'Tell Hudba his camels are home.', lines: [['Hudba', 'Both of them! And not a scratch. Here: a trader pays his debts.']] },
         { text: 'Hudba\'s camels are safe.' }],
@@ -82,22 +82,22 @@ const Q = {
   ],
   marsh: [
     { id: 'son', t: 'The Boatman\'s Son', giver: { name: 'Hilal', title: 'Boatman', look: 'boatman', at: [26, 82], face: -1.6 },
-      offer: 'Rawh\'s men took my boy Saqr to make me carry their boats. They keep him in a hut on the west causeway. He is eleven.',
+      offer: 'Kallinikos\' men took my boy Saqr to make me carry their boats. They keep him in a hut on the west causeway. He is eleven.',
       steps: [
-        { kind: 'kill', text: 'Free Saqr from Rawh\'s men on the west causeway.', at: [-18, 55], pack: ['netter', 'bandit', 'slinger'], n: 4, elite: 'Kharija' },
+        { kind: 'kill', text: 'Free Saqr from Kallinikos\' men on the west causeway.', at: [-18, 55], pack: ['netter', 'bandit', 'slinger'], n: 4, elite: 'Spondyles' },
         { kind: 'escort', text: 'Bring Saqr home to his father.', at: [-16, 56], who: 'child', name: 'Saqr', to: [24, 80] },
         { kind: 'return', text: 'Speak with Hilal.', lines: [['Hilal', 'Saqr! ... Thank you. My boat is yours, whenever you need it.']] },
         { text: 'Saqr is home.' }],
       reward: { gold: 150, item: 'rare', renown: 15 } },
     { id: 'nets', t: 'Cut Nets', giver: { name: 'Jamil', title: 'Fisherman', look: 'fisher', at: [-2, 70], face: 0.6 },
-      offer: 'Every night someone cuts our nets on the east causeway. Rawh\'s ambushers, hiding in the reeds. A village that cannot fish cannot eat.',
+      offer: 'Every night someone cuts our nets on the east causeway. Kallinikos\' raiders, hiding in the reeds. A village that cannot fish cannot eat.',
       steps: [
         { kind: 'kill', text: 'Root the ambushers out of the reeds on the east causeway.', at: [36, 44], pack: ['reedman'], n: 5, hidden: true },
         { kind: 'return', text: 'Tell Jamil the reeds are clear.', lines: [['Jamil', 'Then tonight we fish. Take some of the catch money. You earned it.']] },
         { text: 'The fishermen mend their nets in peace.' }],
       reward: { gold: 120, item: 'rare', renown: 10, codex: 'mashuf' } },
     { id: 'buffalo', t: 'The Strayed Buffalo', giver: { name: 'Rabah', title: 'Herdsman', look: 'herder', at: [-6, 92], face: 0.9 },
-      offer: 'My best buffalo swam off in the night and came ashore by the reed camp road. Rawh\'s men have her tied, and they are arguing about who eats her.',
+      offer: 'My best buffalo swam off in the night and came ashore by the reed camp road. Kallinikos\' men have her tied, and they are arguing about who eats her.',
       steps: [
         { kind: 'kill', text: 'Drive the men away from Rabah\'s buffalo, south of the reed camp.', at: [-46, 4], pack: ['bandit', 'netter', 'slinger'], n: 4 },
         { kind: 'escort', text: 'Lead the buffalo back to Rabah.', at: [-44, 6], who: 'buffalo', to: [-4, 88] },
@@ -105,29 +105,29 @@ const Q = {
         { text: 'The buffalo is home.' }],
       reward: { gold: 160, item: 'rare', renown: 15, codex: 'buffalo' } },
     { id: 'debts', t: 'The Debt Ledger', giver: { name: 'Bashshar', title: 'Reed cutter', look: 'cutter', at: [2, 74], face: 1.2 },
-      offer: 'Rawh lent the whole village money in the bad year, and wrote it all down. His men use that book to take our boats and our reed. Burn it, and we are free.',
+      offer: 'Kallinikos bought up the whole village\'s debts when he came, and wrote them all down. His men use that book to take our boats and our reed. Burn it, and we are free.',
       steps: [
-        { kind: 'take', text: 'Take Rawh\'s debt ledger from his clerk\'s guards on the south-east causeway.', at: [30, -60], label: 'Take the debt ledger', item: 'Rawh\'s Debt Ledger', guard: { pack: ['spearman', 'slinger', 'netter'], n: 4, elite: 'Murra' } },
+        { kind: 'take', text: 'Take Kallinikos\' debt ledger from his clerk\'s guards on the south-east causeway.', at: [30, -60], label: 'Take the debt ledger', item: 'Kallinikos\' Debt Ledger', guard: { pack: ['spearman', 'slinger', 'netter'], n: 4, elite: 'Kanabos' } },
         { kind: 'return', text: 'Bring the ledger to Bashshar.', lines: [['Bashshar', 'Into the fire with it. ... There. My grandchildren will never know what was owed.']] },
-        { text: 'The village owes Rawh nothing.' }],
+        { text: 'The village owes Kallinikos nothing.' }],
       reward: { gold: 180, item: 'legendary', renown: 18 } },
     // Round 20: four more for the marshes
     { id: 'sluice', t: 'The Dry Channel', giver: { name: 'Mazin', title: 'Water-keeper', look: 'herder', at: [16, 92], face: 2.6 },
-      offer: 'Rawh\'s men have closed the old sluice on the west channel. The water we drink comes down that channel. Three days now, and the children drink from the marsh.',
+      offer: 'Kallinikos\' men have closed the old sluice on the west channel. The water we drink comes down that channel. Three days now, and the children drink from the marsh.',
       steps: [
-        { kind: 'kill', text: 'Drive Rawh\'s men from the sluice on the west channel.', at: [-26, 24], pack: ['bandit', 'netter', 'slinger'], n: 4 },
+        { kind: 'kill', text: 'Drive Kallinikos\' men from the sluice on the west channel.', at: [-26, 24], pack: ['bandit', 'netter', 'slinger'], n: 4 },
         { kind: 'return', text: 'Tell Mazin the channel runs again.', lines: [['Mazin', 'I hear it already. Sweet water, coming home. Take this, and drink first, guard.']] },
         { text: 'The west channel runs again.' }],
       reward: { gold: 170, item: 'rare', renown: 14, codex: 'sluices' } },
     { id: 'decoys', t: 'The Fowler\'s Nets', giver: { name: 'Asad', title: 'Fowler', look: 'fisher', at: [22, 78], face: -1.6 },
-      offer: 'Every winter the ducks come down to the marsh, and every winter I feed my family with my nets. Rawh\'s men took them all to their camp in the south-west, to snare men instead of birds.',
+      offer: 'Every winter the ducks come down to the marsh, and every winter I feed my family with my nets. Kallinikos\' men took them all to their camp in the south-west, to snare men instead of birds.',
       steps: [
         { kind: 'take', text: 'Take back Asad\'s nets from the camp in the south-west.', at: [-46, -10], label: 'Take the fowler\'s nets', item: 'Fowling Nets', guard: { pack: ['netter', 'netter', 'bandit'], n: 4 } },
         { kind: 'return', text: 'Bring the nets to Asad.', lines: [['Asad', 'Torn here and here, but I can mend them. The ducks will not know what happened. Here, for your trouble.']] },
         { text: 'Asad is fowling again.' }],
       reward: { gold: 180, item: 'rare', renown: 14 } },
     { id: 'roof', t: 'Reed for the Roof', giver: { name: '\'Umayr', title: 'Reed builder', look: 'cutter', at: [-2, 84], face: 1.6 },
-      offer: 'The great mudhif lost half its roof in the spring flood. I have cut reed enough to mend it, out on the east beds, but Rawh\'s ambushers lie in the reeds there and my buffalo will not go alone.',
+      offer: 'The great mudhif lost half its roof in the spring flood. I have cut reed enough to mend it, out on the east beds, but Kallinikos\' raiders lie in the reeds there and my buffalo will not go alone.',
       steps: [
         { kind: 'kill', text: 'Clear the ambushers from the east reed beds.', at: [42, 30], pack: ['reedman', 'reedman', 'slinger'], n: 4, hidden: true },
         { kind: 'escort', text: 'Lead the laden buffalo back to the village.', at: [40, 28], who: 'buffalo', to: [6, 84], ambush: [[24, 52, ['reedman', 'netter']]] },
@@ -137,28 +137,28 @@ const Q = {
     { id: 'bitter', t: 'Bitter Water', giver: { name: 'Aws', title: 'Healer', look: 'scribe', at: [6, 70], face: 0.2 },
       offer: 'Half the village has the flux. Someone has been fouling the sweet-water tank by the reed camp road with dead fish. I know who pays them.',
       steps: [
-        { kind: 'kill', text: 'Catch the men fouling the water tank on the reed camp road.', at: [-18, 54], pack: ['bandit', 'bandit', 'slinger'], n: 3, elite: 'Shamir' },
+        { kind: 'kill', text: 'Catch the men fouling the water tank on the reed camp road.', at: [-18, 54], pack: ['bandit', 'bandit', 'slinger'], n: 3, elite: 'Apsimar' },
         { kind: 'return', text: 'Tell Aws the tank is safe.', lines: [['Aws', 'Then I can clean it, and in a week no one will be sick. To deny a village water. There is no lower thing a man can do.']] },
         { text: 'The sweet water is clean again.' }],
       reward: { gold: 190, item: 'rare', renown: 16 } },
   ],
   karkh: [
     { id: 'vats', t: 'The Dyers\' Vats', giver: { name: '\'Abbad', title: 'Dyer', look: 'dyer', at: [-50, 74], face: -0.6 },
-      offer: 'Looters squat in my dye yard by the north lane. They broke half the vats looking for coin. Indigo is worth more than coin, if they only knew.',
+      offer: 'Krateros\' soldiers squat in my dye yard by the north lane. They broke half the vats looking for coin. Indigo is worth more than coin, if they only knew.',
       steps: [
-        { kind: 'kill', text: 'Clear the looters out of the dye yard on the north lane.', at: [-28, 62], pack: ['deserter', 'guard', 'archer'], n: 4 },
+        { kind: 'kill', text: 'Clear the soldiers out of the dye yard on the north lane.', at: [-28, 62], pack: ['deserter', 'guard', 'archer'], n: 4 },
         { kind: 'return', text: 'Tell \'Abbad his yard is clear.', lines: [['\'Abbad', 'Then the blue comes back to al-Karkh. Take this. A dyer remembers his friends.']] },
         { text: '\'Abbad\'s vats are filling again.' }],
       reward: { gold: 160, item: 'rare', renown: 12 } },
     { id: 'pens', t: 'The Copyist\'s Pens', giver: { name: 'Sa\'id', title: 'Paper-seller', look: 'seller', at: [-70, 76], face: 0.4 },
-      offer: 'The buyer\'s men took my pens and my inks, and my best paper, and stacked them in their camp on the east lane. Without pens I cannot copy, and without copying I cannot eat.',
+      offer: 'Krateros\' men took my pens and my inks, and my best paper, and stacked them in their camp on the east lane. Without pens I cannot copy, and without copying I cannot eat.',
       steps: [
-        { kind: 'take', text: 'Take back Sa\'id\'s pens and inks from the camp on the east lane.', at: [61, 4], label: 'Take the pens and inks', item: 'Reed Pens and Inks', guard: { pack: ['guard', 'archer', 'naffat'], n: 4, elite: 'Tarafa' } },
+        { kind: 'take', text: 'Take back Sa\'id\'s pens and inks from the camp on the east lane.', at: [61, 4], label: 'Take the pens and inks', item: 'Reed Pens and Inks', guard: { pack: ['guard', 'archer', 'naffat'], n: 4, elite: 'Garidas' } },
         { kind: 'return', text: 'Bring the pens to Sa\'id.', lines: [['Sa\'id', 'My good reeds, and the iron-gall ink! I will copy you anything you like, for free, for as long as I live.']] },
         { text: 'Sa\'id is copying again.' }],
       reward: { gold: 170, item: 'rare', renown: 12, codex: 'paper' } },
     { id: 'children', t: 'Lost in the Ruins', giver: { name: 'Ma\'mar', title: 'Weaver', look: 'father', at: [-56, 96], face: 3.0 },
-      offer: 'My two children went looking for our old house, south of the canal. They have not come back, and the lanes there are full of the buyer\'s men.',
+      offer: 'My two children went looking for our old house, south of the canal. They have not come back, and the lanes there are full of Krateros\' men.',
       steps: [
         { kind: 'kill', text: 'Find Ma\'mar\'s children south of the bridge, and drive off the men around them.', at: [22, -26], pack: ['guard', 'deserter'], n: 4 },
         { kind: 'escort', text: 'Lead the two children back to the khan.', at: [20, -24], who: 'children', to: [-56, 92], ambush: [[-8, 14, ['deserter', 'deserter', 'archer']]] },
@@ -166,36 +166,36 @@ const Q = {
         { text: 'The children are home.' }],
       reward: { gold: 150, item: 'legendary', renown: 18 } },
     { id: 'toll', t: 'The Bridge Toll', giver: { name: 'Nu\'aym', title: 'Carter', look: 'carter', at: [-46, 80], face: -1.0 },
-      offer: 'The buyer\'s men stand on the north bridge and take a dirham from everyone who crosses. From widows, from children, from me. Someone should make them stop.',
+      offer: 'Krateros\' men stand on the north bridge and take a dirham from everyone who crosses. From widows, from children, from me. Someone should make them stop.',
       steps: [
-        { kind: 'kill', text: 'Throw the toll-takers off the north bridge.', at: [16, 62], pack: ['guard', 'guard', 'spearman'], n: 4, elite: 'Zafir' },
+        { kind: 'kill', text: 'Throw the toll-takers off the north bridge.', at: [16, 62], pack: ['guard', 'guard', 'spearman'], n: 4, elite: 'Mavrianos' },
         { kind: 'return', text: 'Tell Nu\'aym the bridge is free.', lines: [['Nu\'aym', 'Free! I will tell every carter in the quarter whose name to bless. Here, for the road.']] },
         { text: 'Anyone may cross the north bridge.' }],
       reward: { gold: 140, item: 'rare', renown: 12 } },
     // Round 20: four more for al-Karkh
     { id: 'bread', t: 'The Baker\'s Flour', giver: { name: 'Fadl', title: 'Baker', look: 'potter', at: [-66, 100], face: 2.8 },
-      offer: 'The quarter eats from my oven, and the buyer\'s men took my flour for their own. Twenty sacks, stacked in their store by the paper-sellers\' lane.',
+      offer: 'The quarter eats from my oven, and Krateros\' men took my flour for their own. Twenty sacks, stacked in their store by the paper-sellers\' lane.',
       steps: [
         { kind: 'take', text: 'Take back Fadl\'s flour from the store near the paper-sellers\' lane.', at: [-44, -36], label: 'Take the flour sacks', item: 'Sacks of Flour', guard: { pack: ['guard', 'guard', 'archer'], n: 4 } },
         { kind: 'return', text: 'Bring the flour to Fadl.', lines: [['Fadl', 'Bread tomorrow, for everyone. The first loaf is yours, and this as well.']] },
         { text: 'Fadl\'s oven is lit.' }],
       reward: { gold: 180, item: 'rare', renown: 14, codex: 'bread' } },
     { id: 'letters', t: 'The Letter-Writer', giver: { name: 'Hayyan', title: 'Letter-writer', look: 'seller', at: [-74, 88], face: 1.4 },
-      offer: 'I write letters for those who cannot. Families to their sons in Basra, in Kufa, in Khurasan. The courier who carried them was robbed on the east lanes.',
+      offer: 'I write letters for those who cannot. Families to their sons in Basra, in Kufa, in Khurasan. The courier who carried them was robbed on the east lanes by Krateros\' men.',
       steps: [
-        { kind: 'kill', text: 'Find the robbers on the east lanes.', at: [48, 34], pack: ['deserter', 'guard', 'archer'], n: 4 },
+        { kind: 'kill', text: 'Find the men who robbed him on the east lanes.', at: [48, 34], pack: ['deserter', 'guard', 'archer'], n: 4 },
         { kind: 'return', text: 'Bring the letters back to Hayyan.', lines: [['Hayyan', 'Not one opened. These mothers will hear from their sons, and their sons from them. Thank you.']] },
         { text: 'The letters go out again.' }],
       reward: { gold: 170, item: 'rare', renown: 14 } },
     { id: 'carriers', t: 'The Water-Carriers', giver: { name: 'Rufay\'', title: 'Water-carrier', look: 'carter', at: [-52, 92], face: -2.0 },
-      offer: 'We carry water from the Sarat to every house that has no well. Now the buyer\'s men stand on the canal steps and take a coin for every skin we fill.',
+      offer: 'We carry water from the Sarat to every house that has no well. Now Krateros\' men stand on the canal steps and take a coin for every skin we fill.',
       steps: [
-        { kind: 'kill', text: 'Clear the buyer\'s men from the canal steps south of the bridge.', at: [12, -40], pack: ['guard', 'guard', 'spearman'], n: 4, elite: 'Hawshab' },
+        { kind: 'kill', text: 'Clear Krateros\' men from the canal steps south of the bridge.', at: [12, -40], pack: ['guard', 'guard', 'spearman'], n: 4, elite: 'Chalkeus' },
         { kind: 'return', text: 'Tell Rufay\' the steps are free.', lines: [['Rufay\'', 'Free water for al-Karkh. My father carried water in the siege, and no one taxed it even then.']] },
         { text: 'The water-carriers fill their skins for nothing.' }],
       reward: { gold: 200, item: 'legendary', renown: 18 } },
     { id: 'binder', t: 'The Bookbinder\'s Tools', giver: { name: 'Thumama', title: 'Bookbinder', look: 'scribe', at: [-60, 74], face: 0.4 },
-      offer: 'My awls, my bone folders and my presses are in my old shop, under the ash on the south lane. Thieves camp in the ruins there now. Without my tools no book in this quarter gets a cover.',
+      offer: 'My awls, my bone folders and my presses are in my old shop, under the ash on the south lane. Krateros\' men camp in the ruins there now. Without my tools no book in this quarter gets a cover.',
       steps: [
         { kind: 'take', text: 'Recover Thumama\'s tools from the ruins on the south lane.', at: [-20, -66], label: 'Take the bookbinder\'s tools', item: 'Bookbinding Tools', guard: { pack: ['deserter', 'deserter', 'naffat'], n: 4 } },
         { kind: 'return', text: 'Bring the tools to Thumama.', lines: [['Thumama', 'My press! Hakam\'s copies will need covers, and now they shall have the best in Baghdad.']] },
@@ -205,23 +205,23 @@ const Q = {
   // Round 20: Act VI, the river quays
   docks: [
     { id: 'skiff', t: 'The Ferryman\'s Skiff', giver: { name: 'Yazid', title: 'Ferryman', look: 'carter', at: [-40, 104], face: -0.8 },
-      offer: 'Ghanim\'s men took my skiff at the north jetty. They use it to row out and search the barges. Forty years I have ferried this river, and now I stand on the bank like a stranger.',
+      offer: 'Arsaber\'s men took my skiff at the north jetty. They use it to row out and search the barges. Forty years I have ferried this river, and now I stand on the bank like a stranger.',
       steps: [
-        { kind: 'kill', text: 'Drive Ghanim\'s men off the north jetty.', at: [36, 60], pack: ['guard', 'crossbow', 'deserter'], n: 4 },
+        { kind: 'kill', text: 'Drive Arsaber\'s men off the north jetty.', at: [36, 60], pack: ['guard', 'crossbow', 'deserter'], n: 4 },
         { kind: 'return', text: 'Tell Yazid his skiff is free.', lines: [['Yazid', 'My skiff! Then I will row the copyists across myself, if they ask. Take this, with an old man\'s thanks.']] },
         { text: 'Yazid ferries the river again.' }],
       reward: { gold: 200, item: 'rare', renown: 14 } },
     { id: 'pitch', t: 'Pitch for the Hulls', giver: { name: 'Ma\'qil', title: 'Shipwright', look: 'dyer', at: [-56, 90], face: 0.6 },
-      offer: 'Without pitch my hulls leak like sieves. Ghanim\'s engineers carried off every jar of it from the yard, to their camp inland. They want the boats to sink.',
+      offer: 'Without pitch my hulls leak like sieves. Arsaber\'s engineers carried off every jar of it from the yard, to their camp inland. They want the boats to sink.',
       steps: [
         { kind: 'take', text: 'Take back the pitch jars from the engineers\' camp inland.', at: [-58, -30], label: 'Take the pitch jars', item: 'Jars of Pitch', guard: { pack: ['engineer', 'guard', 'crossbow'], n: 4 } },
         { kind: 'return', text: 'Bring the pitch to Ma\'qil.', lines: [['Ma\'qil', 'Good black pitch from Hit. The copyists\' boat will ride dry all the way to Basra.']] },
         { text: 'Ma\'qil\'s hulls are tight again.' }],
       reward: { gold: 210, item: 'rare', renown: 14, codex: 'rivercraft' } },
     { id: 'wages', t: 'The Porters\' Wages', giver: { name: 'Jundub', title: 'Porter', look: 'father', at: [-44, 88], face: -0.2 },
-      offer: 'We carried bales for Bilal\'s masters all season, and when we asked for our wages his toll-men beat us off the quay road. Every porter on the river is owed.',
+      offer: 'We carried bales for the warehouse masters all season. Now Rhentakios holds the quay, and his toll-men beat us off the road. Every porter on the river is owed.',
       steps: [
-        { kind: 'kill', text: 'Break the toll-men on the quay road by the warehouses.', at: [32, 22], pack: ['guard', 'guard', 'spearman'], n: 4, elite: 'Qurra' },
+        { kind: 'kill', text: 'Break the toll-men on the quay road by the warehouses.', at: [32, 22], pack: ['guard', 'guard', 'spearman'], n: 4, elite: 'Barys' },
         { kind: 'return', text: 'Tell Jundub the road is open.', lines: [['Jundub', 'The road is ours again. The porters made a purse for whoever did this. It is yours.']] },
         { text: 'The porters are paid.' }],
       reward: { gold: 240, item: 'rare', renown: 16 } },
@@ -238,7 +238,7 @@ const Q = {
 }[REGION];
 
 // ------------------------------------------------------------------ bounty board (daily)
-const BOUNTY_NAMES = ['Ka\'b', 'Hubaysh', 'Suhaym', 'Juwayn', 'Qatada', 'Bistam', 'Ruzayq', '\'Umayr', 'Dirar', 'Sharik'];
+const BOUNTY_NAMES = ['Sphenos', 'Pastilas', 'Tzoulas', 'Kolybas', 'Gouber', 'Rodophyles', 'Maleses', 'Petzeas', 'Chasanes', 'Zoupas'];
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 function rollBounties(g) {
   const seed = [...(today() + REGION)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7), rnd = mulberry32(seed);
@@ -251,7 +251,7 @@ function rollBounties(g) {
   const out = []; const used = new Set();
   while (out.length < 3) {
     const k = kinds[Math.floor(rnd() * kinds.length)]; if (used.has(k) && rnd() < 0.7) continue; used.add(k);
-    if (k === 'hunt') { const at = farPt(), name = BOUNTY_NAMES[Math.floor(rnd() * BOUNTY_NAMES.length)], type = pool[Math.floor(rnd() * pool.length)]; out.push({ kind: k, at, name, type, text: `Hunt ${name}, a renegade captain on the roads.` }); }
+    if (k === 'hunt') { const at = farPt(), name = BOUNTY_NAMES[Math.floor(rnd() * BOUNTY_NAMES.length)], type = pool[Math.floor(rnd() * pool.length)]; out.push({ kind: k, at, name, type, text: `Hunt ${name}, one of Arsaber\'s captains on the roads.` }); }
     else if (k === 'recover') { const at = farPt(); out.push({ kind: k, at, text: 'Recover stolen goods from a band on the roads.' }); }
     else if (k === 'escort') { const s = sites[Math.floor(rnd() * sites.length)]; const [x, z] = freeSpot(s.x + 6, s.z + 8); out.push({ kind: k, to: [x, z], text: `Escort a laden ${IS_MARSH ? 'buffalo' : 'camel'} from the hub to the ${s === SITES.serai ? (IS_MARSH ? 'reed camp' : IS_KARKH ? 'burned suq' : IS_DOCKS ? 'warehouses' : 'caravanserai') : (IS_MARSH ? 'fish racks' : IS_KARKH ? 'paper-sellers\' lane' : IS_DOCKS ? 'boatyard' : 'kiln yard')}.` }); }
     else { const a = areas[Math.floor(rnd() * areas.length)]; out.push({ kind: k, area: a.kind, text: `Clear ${a.name} and open the chest at the bottom.` }); }
@@ -263,23 +263,23 @@ function rollBounties(g) {
 const EVENTS = {
   sawad: [
     { id: 'caravan', t: 'A caravan under attack', text: 'Help the caravan on the road before the raiders take it.', at: [12, 30], pack: ['bandit', 'archer', 'bandit', 'spearman'], prop: 'caravan' },
-    { id: 'well', t: 'A well being fouled', text: 'Stop the deserters fouling the well by the kiln road.', at: [-34, -12], pack: ['deserter', 'deserter', 'naffat'], prop: 'well' },
+    { id: 'well', t: 'A well being fouled', text: 'Stop the soldiers fouling the well by the kiln road.', at: [-34, -12], pack: ['deserter', 'deserter', 'naffat'], prop: 'well' },
   ],
   marsh: [
     { id: 'boats', t: 'An ambush on the water', text: 'Fishermen are ambushed on the west causeway. Break the ambush.', at: [-34, 40], pack: ['reedman', 'reedman', 'slinger', 'netter'], prop: 'boats' },
     { id: 'reedfire', t: 'The reed stacks are burning', text: 'Raiders fired the reed stacks on the east causeway. Drive them off.', at: [30, 50], pack: ['bandit', 'slinger', 'naffat'], prop: 'fire' },
   ],
   karkh: [
-    { id: 'granary', t: 'A granary on fire', text: 'Looters set a granary alight on the east lane. Stop them before they carry off the grain.', at: [60, 24], pack: ['naffat', 'guard', 'deserter', 'naffat'], prop: 'fire' },
-    { id: 'convoy', t: 'A grain convoy ambushed', text: 'The buyer\'s men are robbing a grain convoy near the north bridge.', at: [-2, 60], pack: ['guard', 'archer', 'deserter'], prop: 'caravan' },
+    { id: 'granary', t: 'A granary on fire', text: 'Krateros\' men set a granary alight on the east lane. Stop them before they carry off the grain.', at: [60, 24], pack: ['naffat', 'guard', 'deserter', 'naffat'], prop: 'fire' },
+    { id: 'convoy', t: 'A grain convoy ambushed', text: 'Krateros\' men are robbing a grain convoy near the north bridge.', at: [-2, 60], pack: ['guard', 'archer', 'deserter'], prop: 'caravan' },
   ],
   docks: [
-    { id: 'storefire', t: 'A warehouse on fire', text: 'Ghanim\'s men have fired a warehouse by the quay road. Drive them off before it spreads.', at: [-6, 18], pack: ['naffat', 'guard', 'crossbow', 'naffat'], prop: 'fire' },
+    { id: 'storefire', t: 'A warehouse on fire', text: 'Arsaber\'s men have fired a warehouse by the quay road. Drive them off before it spreads.', at: [-6, 18], pack: ['naffat', 'guard', 'crossbow', 'naffat'], prop: 'fire' },
     { id: 'porters', t: 'Porters ambushed', text: 'A file of porters is being robbed on the quay road, south of the warehouses.', at: [30, -8], pack: ['guard', 'deserter', 'crossbow'], prop: 'caravan' },
   ],
   // Round 21: the Hamrin hills
   hamrin: [
-    { id: 'salters', t: 'Salt traders waylaid', text: 'Deserters have stopped a salt caravan in the western gorge. Drive them off.', at: [-34, 50], pack: ['guard', 'crossbow', 'deserter', 'spearman'], prop: 'caravan' },
+    { id: 'salters', t: 'Salt traders waylaid', text: 'Soldiers of the company have stopped a salt caravan in the western gorge. Drive them off.', at: [-34, 50], pack: ['guard', 'crossbow', 'deserter', 'spearman'], prop: 'caravan' },
     { id: 'shepherds', t: 'The shepherds\' fold is burning', text: 'Raiders fired a fold in the southern valley to drive off the flock.', at: [-6, -14], pack: ['naffat', 'guard', 'deserter', 'naffat'], prop: 'fire' },
   ],
 }[REGION];

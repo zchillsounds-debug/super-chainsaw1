@@ -1,4 +1,4 @@
-# Madinat al-Salam: Handoff (Round 22 shipped; Round 23 approved, not started)
+# Madinat al-Salam: Handoff (Round 23 in progress)
 
 ## Paste this into the new chat
 > I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-2oveca` of zchillsounds-debug/super-chainsaw1 (Round 22 complete and shipped).
@@ -318,7 +318,32 @@ User decisions: everything on the menu, shipped once at the end; Act VI at the T
 - **Draws:** Sawad hub 781 High / 409 Low (was 648/341: wider default view, more characters); docks hub 860.
 - **Known issue (also in Round 19):** in the marshes four standard-material programs (some with the wall-cutaway `occ` variant) compile during the Rawh fight; investigate with a programs diff like the one used this round.
 
-## Round 23: approved plan (not started): the Byzantine mission
+## Round 23 (done): the Byzantine mission
+Every adversary is now one of the envoy **Arsaber**'s company (al-Rum), and the story is rewritten around his covert mission to carry the Teacher's Pages to Constantinople. User decisions this round: Claude picks the remaining names and lists them here; old saves map old names to new.
+
+- **Look (`byz.js`, new):** `LOOK` presets per troop type and `byzify(o)`, which every foe build passes through last (TYPES, foes20, hold captains, Tatzates, the prologue riders): no turbans, caps or veils; felt caps become the **pilos**; any helmet becomes the **ribbed Byzantine helmet** (`helm: 'byz'`: six dark-iron ribs so nothing reads as a cross from above, brow band, mail aventail to the shoulders, open face; officers get a horsehair tuft with `crest: 'plume'`); shields become **oval skoutaria** (helmeted men) or **small round shields**, painted in four unit colours with plain rings only (`byzShield` in `characters.js`); hair is cropped (`keepHair` keeps a look's own, used for Tatzates' long hair); beards are dark; the qaba is the padded kavadion. New gear in `characters.js`: `pike` (menavlion, `o.pike`), `siphon` (bronze hand siphon with a flame, `o.siphon` on the torch weapon), `solenarion` (arrow-guide, `o.solen` on the crossbow weapon). Geometry cache `VERSION` is `r23.0`.
+- **Troops (type keys unchanged, the AI keys off them):** bandit = Psilos, guard = Skoutatos, spearman = Menavlatos, archer = Toxotes, deserter and reedman = Trapezites, naffat = Siphon-bearer, slinger = Slinger, netter = Marine, crossbow = Solenarion Archer, engineer = Mechanikos, rider = **Kataphraktos on a horse** (`horseRider` in `foes20.js`, the horse sculpt; thrown at half health as "Unhorsed Kataphraktos"). Bosses: commander = Bardanes, rawh = Kallinikos, utba = Krateros, ghanim = Arsaber, zubayr = Tatzates.
+- **Story text:** `story15.js`, `scenes.js`, `rivals.js`, `region.js`, `storyholds.js`, `holds.js`, `content.js`, `dungeons.js`, `sidequests.js`, `progression.js`, `narrative.js`, `game.js`, `travel.js` (the Hamrin hub is now "The Hill Camp"), `STORY.md`. The journal and tracker title is "The Teacher's Pages". Ishaq has a new topic, "Why would Constantinople want the Pages?".
+- **New codex entries (`narrative.js`):** The Army of the Romans (`byzarmy`, after 75 s anywhere), The Frontier (`thughur`, Hamrin), Liquid Fire (`liquidfire`, marsh), Embassies (`embassy`, Ishaq's new topic), The Exchange on the Lamis (`lamis`, docks), Leo the Mathematician (`leo`, Ishaq's topic).
+- **Arabic:** `story23_ar.js` (`AR23`, merged last in `story_ar.js`). The Byzantines are الروم. The bounty "Hunt …" pattern in `i18n.js` follows the new wording.
+- **Saves:** `OLD_NAMES` and `renameSlain` in `byz.js`; `save.js` renames `p.slain` keys on load. `p.named` (ids), `p.rival` (regions) and `p.holds` (hold ids) were already keyed by id. The BOSS and hold keys in `storyholds.js` and `holds.js` keep the old names (`farud`, `hisham`, …) so saved progress still loads.
+
+### Name mapping (old → new)
+| Role | Mapping |
+|---|---|
+| Envoy, commanders, rival | Ghanim → **Arsaber** · Ghassan → **Bardanes** · Rawh → **Kallinikos** · 'Utba → **Krateros** · Zubayr → **Tatzates** |
+| Lieutenants | Farud → Photeinos · Hisham → Olbianos · Marwan → Katakylas · Sahl → Petronas · 'Asim → Narses · Layth → Kalokyros · Bilal → Rhentakios · Mus'ab → Skleros |
+| Story-hold mids | Durayd → Lalakon · Mazin → Bryennios · Farqad → Kourkouas · Shibl → **Tzantzes** (the plan's Genesios is also a saint's name) · Hajib → Mousele · Ghiyath → Gongylios · Hawtha → Aetios · Murra → Monomachos |
+| Field captains | 'Uqba → Kalamanos · Nasr → Doukas · Bakr → Chalkoutzes · Hamdan → Pegonites · Rabi'a → Kamoulianos · Jarir → Bourtzes · Zuhayr → Kontoleon · Muhriz → Rhangabes · Hammad → Kontomytes · Shabib → Triphyllios · Kulayb → Tzourakes · Dhuhl → Melissenos · Asbagh → Karteroukas · Kahmas → Baanes |
+| Area captains | Qays → Kamateros · Thabit → Argyros · Mundhir → Tornikios · Ghalib → Kourtikios · Qutayba → Sarantapechos · Sawwar → Dalassenos |
+| R17 dungeon captains | Wahb → Taronites · Bujayr → Artabasdos · Hurayth → Krenites · Sinan → Rhadenos · Unays → Bringas · Habib → Xylinites · Hubaysh → Boilas · Mudrik → Gabalas |
+| Gauntlet | Malik → Kekaumenos · Sa'd → Kaballarios · 'Ubayd → Maniakes · Hani → Alyates · Mukhariq → Exazenos (also a qanat captain; the qanat set is Exazenos, Argyros, Pegonites, Doukas) |
+| Hamrin holds | Sakhr → Phobenos · Ghaylan → Krambonites · Shaddad → Tarchaneiotes · Jabala → Charsianites · Dhuayb → Apokaukos · Hanzala → Pankalos · Nahshal → Brachamios |
+| Side-quest elites | Bujayr → Lekapenos · Kharija → Spondyles · Murra → Kanabos · Shamir → Apsimar · Tarafa → Garidas · Zafir → Mavrianos · Hawshab → Chalkeus · Qurra → Barys |
+| Elites (random) | Bryas, Kamytzes, Melias, Tzirithon, Sarantenos, Hexamilites, Choumnos, Mouzalon |
+| Bounty targets | Sphenos, Pastilas, Tzoulas, Kolybas, Gouber, Rodophyles, Maleses, Petzeas, Chasanes, Zoupas |
+
+## Round 23: the approved plan (kept for reference)
 The user asked for **every adversary to become Byzantine** (looks, names, everything), with the **main story rewritten** around it. Decisions (all answered by the user):
 - **Frame:** a covert mission. Under cover of the brothers' civil war, a Byzantine envoy, **Arsaber**, slips into Iraq with a picked company and hired turncoats, ordered to carry Baghdad's best learning to Constantinople. **The Teacher's Pages** are the prize. (Historically no Byzantine army reached Baghdad in 813, which is why it is a mission, not an invasion.)
 - **Names:** period Greek names, **no saints' or biblical names** (no Michael, John/Ioannes, George, Peter, Stephen, Nikephoros, Theodore, Manuel, Theophilos, Andronikos, Thomas, Basil, Constantine, Kosmas, Leontios...). Single names, no epithets (family names used as single names are fine: Skleros, Kourkouas...).

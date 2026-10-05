@@ -172,7 +172,7 @@ function buildSawad(scene, rnd, out, sunDir) {
   for (const [dx, dz] of [[-4, 20], [4, 20], [10, -12]]) place(scene, banner('#151515'), S.x + dx, S.z + dz, rnd() * 6, false);
   for (let i = 0; i < 10; i++) { const x = S.x + (rnd() - 0.5) * 26, z = S.z + (rnd() - 0.5) * 26; if (!blocked(x, z, 0.8)) { place(scene, rnd() > 0.5 ? crate() : jar(0x7a5a3a), x, z, rnd() * 6, false); colliders.push({ type: 'circle', x, z, r: 0.5 }); } }
 
-  // ---------------- brick kilns & clay quarry (with the ruined Sasanian vault the deserters hide in)
+  // ---------------- brick kilns & clay quarry (with the ruined Sasanian vault the company's men hide in)
   const G = SITES.kiln;
   place(scene, palaceVault(), G.x - 4, G.z - 8, 0.3, true, true);
   for (const [dx, dz] of [[9, -4], [-12, 6], [6, 9]]) {

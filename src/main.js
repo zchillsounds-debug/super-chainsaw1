@@ -345,7 +345,7 @@ const hiddenForCompile = []; scene.traverse((o) => { if (!o.visible && (o.isMesh
 // Round 21: compile for the targets the frame really draws into. The composer renders the scene into a linear
 // half-float target (not the screen), the water reflection into its own target and sees fewer lights, and the
 // shadow and AO passes have their own programs: compiling against the screen alone left all of those to compile
-// the first time something came into view mid-fight (the Rawh hitch). So: compile against each target, then draw
+// the first time something came into view mid-fight (the Rawh hitch, now Kallinikos). So: compile against each target, then draw
 // one real frame of the whole map (no culling, wide shadow box, reflection on) while the loader is still up.
 // the reflection shares the renderer's light state with the shadow pass: if it saw fewer lights, every shadow and
 // mirrored material needed a second variant, built by turns mid-game. It sees all of them now (one variant).

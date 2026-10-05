@@ -4,7 +4,7 @@ import { sculpt, capsule, ellipsoid, torus, halfspace, V } from './sculpt.js';
 import { charMaterial, defaultPalette, R, eyeTexture, blobTexture } from './charmats.js';
 import { Cloth, Jiggle, addWrinkles } from './cloth.js';
 import { fabricTex } from './textures.js';
-import { sword, dagger, torch, spear, bow, shield, crossbow, mallet, addRim } from './characters.js';
+import { sword, dagger, torch, spear, bow, shield, crossbow, mallet, addRim, byzShield, pike, siphon, solenarion } from './characters.js';
 import { QUALITY } from './graphics.js';
 import { Animator } from './anim.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -202,7 +202,27 @@ function hairPrims(B, o) {
 }
 function headwearPrims(B, o) {
   const { cap, ell, tor } = helpers(B, HS), L = [], H = 'head';
-  if (o.helm) {
+  if (o.helm === 'byz') {
+    // Round 23: a Byzantine ribbed helmet, a little pointed, with dark iron ribs (six, so nothing reads as a cross
+    // from above), a brow band, and a mail aventail hanging to the shoulders around an open face
+    L.push(ell(H, [0, 0.14, -0.012], [0.09, 0.108, 0.1], null, { k: 0.02, mat: R.STEEL }));
+    L.push(cap(H, [0, 0.19, -0.013], [0, 0.272, -0.018], 0.05, 0.007, { k: 0.04, mat: R.STEEL }));
+    L.push(ell(H, [0, 0.03, -0.01], [0.2, 0.087, 0.2], null, { sub: true, k: 0.01 }));
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + Math.PI / 6, sx = Math.sin(a), cz = Math.cos(a); L.push(cap(H, [sx * 0.089, 0.122, -0.012 + cz * 0.099], [sx * 0.012, 0.262, -0.017 + cz * 0.012], 0.0075, 0.005, { k: 0.006, mat: R.DARK })); }
+    L.push(tor(H, [0, 0.12, -0.012], 0.091, 0.011, [0.1, 0, 0], { k: 0.006, mat: R.DARK }));
+    // the aventail: a mail hood from under the rim down over the neck and shoulders, cut open at the face
+    L.push(ell(H, [0, 0.0, -0.022], [0.104, 0.15, 0.112], null, { k: 0.02, mat: R.MAIL }));
+    L.push(cap('neck', [0, 0.02, -0.01], [0, -0.07, -0.02], 0.085, 0.12, { k: 0.03, mat: R.MAIL }));
+    L.push(ell(H, [0, 0.045, 0.098], [0.066, 0.078, 0.075], null, { sub: true, k: 0.012 }));
+    L.push(ell(H, [0, 0.13, -0.012], [0.084, 0.03, 0.094], null, { sub: true, k: 0.004 }));
+    // an officer's tuft of dyed horsehair (the toupha) on the point
+    if (o.crest === 'plume') { L.push(cap(H, [0, 0.27, -0.018], [0, 0.33, -0.03], 0.012, 0.036, { k: 0.02, mat: R.SASH })); L.push(cap(H, [0, 0.33, -0.03], [0, 0.2, -0.17], 0.036, 0.012, { k: 0.03, mat: R.SASH })); }
+  } else if (o.pilos) {
+    // Round 23: the light troops' rounded felt cap with a rolled brim
+    L.push(ell(H, [0, 0.15, -0.012], [0.092, 0.095, 0.1], null, { k: 0.02, mat: R.FELT }));
+    L.push(tor(H, [0, 0.105, -0.01], 0.092, 0.017, [0.12, 0, 0], { k: 0.012, mat: R.FELT }));
+    L.push(ell(H, [0, 0.03, -0.01], [0.2, 0.075, 0.2], null, { sub: true, k: 0.01 }));
+  } else if (o.helm) {
     // steel bayda dome with a gilt rim and nasal, over a mail aventail open at the face
     L.push(ell(H, [0, 0.14, -0.012], [0.088, 0.1, 0.098], null, { k: 0.02, mat: R.STEEL }));
     L.push(cap(H, [0, 0.2, -0.012], [0, 0.255, -0.016], 0.03, 0.006, { k: 0.03, mat: R.STEEL }));
@@ -239,7 +259,7 @@ function headwearPrims(B, o) {
 // Round 20: faction armour, sculpted like the rest of the body (one extra piece, one draw) and keyed by kind.
 // Material ids that touch inside one sculpt must be neighbours (the id is interpolated across a triangle):
 // GOLD 2 / LEATHER 3 / MAIL 4 for torso shells, STEEL 8 / DARK 9 for plates.
-//   leather: brigands' studded jerkin, one shoulder guard, leather bracers
+//   leather: light troops' studded jerkin, one shoulder guard, leather bracers
 //   lamellar: the old army's black-lacquered lamellar coat laced in bronze, layered shoulders, skirt plates, steel bracers
 //   scale: hired mercenaries' scale shirt with bronze edging, steel shoulder plates and greaves
 //   reed: marsh men's woven-reed vest bound with cord
@@ -363,7 +383,7 @@ function blobMesh(root, mat) {
 export function humanoid(opts = {}) {
   const o = Object.assign({ skin: 0xa8714a, robe: '#e8dcc0', robe2: '#a03020', sash: 0x8a1c1c, turban: 0xf0ead8, weapon: 'sword', offhand: null, hunch: 0, scale: 1,
     mail: false, cloak: null, cap: null, helm: null, mask: null, beard: null, qaba: false, build: 1, girth: 1, belly: 0, neck: 1, beardLen: 0.5, hemY: null }, opts);
-  if (o.helm) o.turban = null;
+  if (o.helm || o.pilos) o.turban = null;
   // crowds and foes get a hair style and beard cut at random (heroes keep what their look names)
   if (o.hair == null) o.hair = o.detail === 'hi' ? 'crop' : HAIRS[Math.floor(Math.random() * HAIRS.length)];
   if (o.beardStyle == null) o.beardStyle = o.detail !== 'hi' && o.hair === 'crop' && Math.random() < 0.5 ? 'trim' : 'full';
@@ -399,7 +419,7 @@ export function humanoid(opts = {}) {
     piece('garment', [tier, sk, o.qaba, o.mail, !!o.sash, o.tiraz], () => sculpt(garmentPrims(B, o), { voxel: vox(0.0105, 0.0185), blend: 0.03, paint: garmentPaint(o) })),
   ];
   const hp = hairPrims(B, o); if (hp.length) geos.push(piece('hair', [tier, o.neck, !!o.beard, o.beardLen, !!o.bald, 3, o.hair, o.beardStyle], () => sculpt(hp, { voxel: vox(0.0032, 0.0075), blend: 0.012 })));
-  const hw = headwearPrims(B, o); if (hw.length) geos.push(piece('headwear', [tier, o.neck, !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume'], () => sculpt(hw, { voxel: vox(0.0048, 0.0085), blend: 0.02 })));
+  const hw = headwearPrims(B, o); if (hw.length) geos.push(piece('headwear', [tier, o.neck, o.helm === 'byz' ? 'byz' : !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume', !!o.pilos], () => sculpt(hw, { voxel: vox(0.0048, 0.0085), blend: 0.02 })));
   const ap = o.armour ? armourPrims(B, o) : []; if (ap.length) geos.push(piece('armour', [tier, sk, o.armour, 2], () => sculpt(ap, { voxel: vox(0.008, 0.014), blend: 0.02, paint: armourPaint(o) })));
   if (o.mask) geos.push(piece('veil', [tier, o.neck], () => sculpt(veilPrims(B, o), { voxel: vox(0.0045, 0.0085), blend: 0.02 })));
   // far LOD (crowds only): the same pieces sculpted at ~2.2x the voxel size, about a fifth of the triangles
@@ -410,7 +430,7 @@ export function humanoid(opts = {}) {
   ];
   if (farGeos) {
     if (hp.length) farGeos.push(piece('hair', ['far', o.neck, !!o.beard, o.beardLen, !!o.bald, o.hair, o.beardStyle], () => sculpt(hp, { voxel: 0.016, blend: 0.014 })));
-    if (hw.length) farGeos.push(piece('headwear', ['far', o.neck, !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume'], () => sculpt(hw, { voxel: 0.018, blend: 0.02 })));
+    if (hw.length) farGeos.push(piece('headwear', ['far', o.neck, o.helm === 'byz' ? 'byz' : !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume', !!o.pilos], () => sculpt(hw, { voxel: 0.018, blend: 0.02 })));
     if (ap.length) farGeos.push(piece('armour', ['far', sk, o.armour, 2], () => sculpt(ap, { voxel: 0.03, blend: 0.03, paint: armourPaint(o) })));
     if (o.mask) farGeos.push(piece('veil', ['far', o.neck], () => sculpt(veilPrims(B, o), { voxel: 0.018, blend: 0.02 })));
   }
@@ -483,9 +503,9 @@ export function humanoid(opts = {}) {
   const grip = (h, w, s) => { w.position.set(-s * 0.018, -0.1, 0.004); h.add(w); return w; };
   if (o.weapon === 'sword') { const w = sword(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
   if (o.weapon === 'dagger') { parts.trails = []; for (const [S, s] of SIDES) { const w = dagger(); w.rotation.x = Math.PI / 2; grip(bones['hand' + S], w, s); parts.trails.push({ obj: w, a: 0.12, b: 0.46 }); } }
-  if (o.weapon === 'torch') { const w = torch(); w.rotation.x = Math.PI / 2.4; parts.weapon = grip(bones.handR, w, 1); }
-  if (o.weapon === 'spear') { const w = spear(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
-  if (o.weapon === 'crossbow') { const w = crossbow(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
+  if (o.weapon === 'torch') { const w = o.siphon ? siphon() : torch(); w.rotation.x = Math.PI / 2.4; parts.weapon = grip(bones.handR, w, 1); }
+  if (o.weapon === 'spear') { const w = o.pike ? pike() : spear(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
+  if (o.weapon === 'crossbow') { const w = o.solen ? solenarion() : crossbow(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
   if (o.weapon === 'mallet') { const w = mallet(); w.rotation.x = Math.PI / 2; parts.weapon = grip(bones.handR, w, 1); }
   if (o.weapon === 'sling') { // a cord sling hanging from the right hand, the pouch loaded with a stone
     const w = new THREE.Group(), cord = new THREE.MeshStandardMaterial({ color: 0x8a6a40, roughness: 1 });
@@ -499,7 +519,7 @@ export function humanoid(opts = {}) {
   // blade segments for swing trails (combatfx.js): local base and tip along the weapon's +y
   if (!parts.trails && parts.weapon && o.weapon !== 'bow' && o.weapon !== 'sling' && o.weapon !== 'net' && o.weapon !== 'crossbow') parts.trails = [{ obj: parts.weapon, ...({ sword: { a: 0.22, b: 1.12 }, spear: { a: 1.55, b: 2.12 }, torch: { a: 0.45, b: 0.86, fire: true }, mallet: { a: 0.4, b: 0.66 } }[o.weapon] || { a: 0.2, b: 0.9 }) }];
   if (o.weapon === 'bow') { const w = bow(); w.position.set(0.018, -0.1, 0); bones.handL.add(w); parts.weapon = w; }
-  if (o.offhand === 'shield') { const sd = shield(); sd.scale.setScalar(0.92); sd.position.set(-0.075, -0.14, 0.02); sd.rotation.set(0, -Math.PI / 2 + 0.5, 0); bones.foreL.add(sd); parts.shield = sd; }
+  if (o.offhand === 'shield') { const sd = o.shieldKind ? byzShield(o.shieldKind === 'oval', o.shieldTint || 0) : shield(); sd.scale.setScalar(0.92); sd.position.set(-0.075, -0.14, 0.02); sd.rotation.set(0, -Math.PI / 2 + 0.5, 0); bones.foreL.add(sd); parts.shield = sd; }
   if (o.crest === 'banner') {
     // Round 20: a captain's plain pennant on a short pole across the back (no device on it)
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 1.5, 6).translate(0, 0.55, 0), leatherM); pole.position.set(0.09, 0.05, -0.12); pole.rotation.z = -0.12; pole.castShadow = true; bones.upperChest.add(pole);

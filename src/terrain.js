@@ -51,7 +51,7 @@ export const ROADS = {
     [[-8, 60], [-42, 30], [-62, -10], [-44, -60], [-4, -84], [24, -88]],
     [[14, 40], [32, 30]], [[14, -30], [30, -30]],
   ],
-  // Round 21: the deserters' camp -> the quarry (west), the cliff fort (east), the gorge bridge (south) and Zubayr's hold
+  // Round 21: the deserters' camp -> the quarry (west), the cliff fort (east), the gorge bridge (south) and Tatzates' hold
   hamrin: [
     [[-8, 124], [-8, 84], [-24, 62], [-44, 44], [-64, 30]],
     [[-8, 84], [14, 66], [40, 50], [62, 36]],
@@ -81,7 +81,7 @@ export const SITES = {
   marsh: { village: { x: 12, z: 80, r: 24 }, serai: { x: -52, z: 28, r: 20 }, kiln: { x: 58, z: -6, r: 20 }, arch: { x: -6, z: -84, r: 26 } },
   karkh: { village: { x: -62, z: 86, r: 20 }, serai: { x: -8, z: 36, r: 24 }, kiln: { x: -58, z: -24, r: 20 }, arch: { x: 44, z: -62, r: 26 } },
   docks: { village: { x: -48, z: 98, r: 20 }, serai: { x: 12, z: 40, r: 24 }, kiln: { x: 16, z: -30, r: 22 }, arch: { x: 20, z: -88, r: 26 } },
-  // Round 21: the hub camp and the four holds' mouths (serai = the quarry, kiln = the fort, arch = the bridge, hold = Zubayr)
+  // Round 21: the hub camp and the four holds' mouths (serai = the quarry, kiln = the fort, arch = the bridge, hold = Tatzates)
   hamrin: { village: { x: -8, z: 84, r: 24 }, serai: { x: -64, z: 30, r: 15 }, kiln: { x: 62, z: 36, r: 15 }, arch: { x: 36, z: -64, r: 17 }, hold: { x: -54, z: -74, r: 15 } },
 }[REGION];
 // Round 20: wooden decks (jetties) the hero can walk out on over the river: [x0, x1, z, width, y]

@@ -36,47 +36,47 @@ export const HUB = {
 export const STORY = {
   sawad: {
     quests: [
-      { id: 'serai', text: 'Follow Farud into the broken dam behind the caravanserai' },
-      { id: 'graves', text: 'Find Hisham in the galleries under the kiln yard' },
-      { id: 'boss', text: 'Face Ghassan at the ruined Persian arch' },
+      { id: 'serai', text: 'Follow Photeinos into the broken dam behind the caravanserai' },
+      { id: 'graves', text: 'Find Olbianos in the galleries under the kiln yard' },
+      { id: 'boss', text: 'Face Bardanes at the ruined Persian arch' },
     ],
     chief: 'serai', second: 'graves', boss: 'boss',
     banner: ['', 'The road from the village', 'The kiln yard', 'The road to the arch'],
   },
   marsh: {
     quests: [
-      { id: 'reedcamp', text: 'Find Marwan in the reed stockade to the west' },
-      { id: 'landing', text: 'Take Rawh\'s boats from Sahl in the sunken village' },
-      { id: 'rawh', text: 'Face Rawh at the old weir' },
+      { id: 'reedcamp', text: 'Find Katakylas in the reed stockade to the west' },
+      { id: 'landing', text: 'Take Kallinikos\'s boats from Petronas in the sunken village' },
+      { id: 'rawh', text: 'Face Kallinikos at the old weir' },
     ],
     chief: 'reedcamp', second: 'landing', boss: 'rawh',
     banner: ['', '', '', '', 'The Nahrawan marshes'],
   },
   karkh: {
     quests: [
-      { id: 'burnedsuq', text: 'Find \'Asim in the burned quarter behind the suq' },
-      { id: 'warraqin', text: 'Drive Layth from the vaults under the paper-sellers\' lane' },
-      { id: 'utba', text: 'Stop \'Utba in the square before sunset' },
+      { id: 'burnedsuq', text: 'Find Narses in the burned quarter behind the suq' },
+      { id: 'warraqin', text: 'Drive Kalokyros from the vaults under the paper-sellers\' lane' },
+      { id: 'utba', text: 'Stop Krateros in the square before sunset' },
     ],
     chief: 'burnedsuq', second: 'warraqin', boss: 'utba',
     banner: ['', '', '', '', '', 'Al-Karkh', 'Al-Karkh'],
   },
   docks: {
     quests: [
-      { id: 'warehouses', text: 'Find Bilal in the shipyard by the warehouses' },
-      { id: 'boatyard', text: 'Free the copyists\' boat from Mus\'ab among the hulks' },
-      { id: 'ghanim', text: 'Face Ghanim at the bridge of boats' },
+      { id: 'warehouses', text: 'Find Rhentakios in the shipyard by the warehouses' },
+      { id: 'boatyard', text: 'Free the copyists\' boat from Skleros among the hulks' },
+      { id: 'ghanim', text: 'Face Arsaber at the bridge of boats' },
     ],
     chief: 'warehouses', second: 'boatyard', boss: 'ghanim',
     banner: ['', '', '', '', '', '', 'The river quays', 'The river quays'],
   },
-  // Round 21: the endgame: four holds in the ravines, the last of them Zubayr's (no field boss on this map)
+  // Round 21: the endgame: four holds in the ravines, the last of them Tatzates' (Round 23; was Zubayr) (no field boss on this map)
   hamrin: {
     quests: [
       { id: 'quarry', text: 'Clear the Quarry Galleries' },
       { id: 'fort', text: 'Take the Cliff Fort' },
       { id: 'gorge', text: 'Cross the Gorge Bridge' },
-      { id: 'rivalhold', text: 'Find Zubayr in his hold' },
+      { id: 'rivalhold', text: 'Find Tatzates in his hold' },
     ],
     chief: null, second: null, boss: null,
     banner: ['', '', '', '', '', '', '', 'The Hamrin hills'],

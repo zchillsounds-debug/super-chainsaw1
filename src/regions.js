@@ -79,7 +79,7 @@ export function buildMarsh(scene, rnd, out) {
   scatterJars(scene, rnd, V, 16, 34, ['jar', 'jar', 'crate']);
   for (let i = 0; i < 6; i++) moor(V.x, V.z, 30);
 
-  // ---------------- the reed camp (Marwan)
+  // ---------------- the reed camp (Katakylas)
   const S = SITES.serai;
   for (const [dx, dz, r] of [[-8, -9, 0.4], [9, -8, -0.5], [-10, 8, 2.7]]) place(scene, mudhif(7.5, 3.8, 3.3), S.x + dx, S.z + dz, r, true, true);
   for (const [dx, dz, r, c] of [[8, 7, -2.6, '#2a2420'], [0, -14, 0.1, '#3a1c18']]) { place(scene, tent(c), S.x + dx, S.z + dz, r, false); colliders.push({ type: 'box', x: S.x + dx, z: S.z + dz, hw: 3, hd: 2.3, rot: r }); }
@@ -89,7 +89,7 @@ export function buildMarsh(scene, rnd, out) {
   scatterJars(scene, rnd, S, 10, 26);
   for (let i = 0; i < 4; i++) moor(S.x, S.z, 24);
 
-  // ---------------- the fish racks: Rawh's boats, kept by Sahl
+  // ---------------- the fish racks: Kallinikos' boats, kept by Petronas
   const G = SITES.kiln;
   for (const [dx, dz, r] of [[-8, -6, 0.3], [-2, -9, 0.1], [5, -7, -0.2], [9, 2, 1.4], [-10, 5, 1.7], [2, 9, 0.05]]) place(scene, col(fishRack(rnd)), G.x + dx, G.z + dz, r);
   for (const [dx, dz, r] of [[-14, -2, 0.9], [13, 8, -0.8], [0, -15, 0.2], [14, -9, 2.2]]) place(scene, col(netPoles()), G.x + dx, G.z + dz, r);
@@ -99,7 +99,7 @@ export function buildMarsh(scene, rnd, out) {
   scatterJars(scene, rnd, G, 12, 28, ['jar', 'jar', 'crate']);
   for (let i = 0; i < 6; i++) moor(G.x, G.z, 24);
 
-  // ---------------- the old weir (Rawh)
+  // ---------------- the old weir (Kallinikos)
   const A = SITES.arch;
   place(scene, col(weir()), A.x + 1.5, A.z - 25, 0, true, true);
   for (const [dx, dz] of [[-12, 8], [12, 8], [-12, -10], [12, -10], [-6, 13], [6, 13]]) brazier(scene, out, A.x + dx, A.z + dz);
@@ -188,7 +188,7 @@ export function buildKarkh(scene, rnd, out) {
   scatterJars(scene, rnd, V, 14, 30);
   place(scene, cart(), V.x + 12, V.z + 10, 0.7, false); colliders.push({ type: 'circle', x: V.x + 12, z: V.z + 10, r: 1.3 });
 
-  // ---------------- the burned suq ('Asim)
+  // ---------------- the burned suq (Narses)
   const S = SITES.serai;
   for (let i = 0; i < 14; i++) {
     const row = i % 2 ? 1 : -1, k = Math.floor(i / 2), x = S.x + row * 6.5 + (rnd() - 0.5), z = S.z - 16 + k * 5;
@@ -201,7 +201,7 @@ export function buildKarkh(scene, rnd, out) {
   for (const [dx, dz, k] of [[-11, -3, 0.5], [11, -7, 0.4], [-4, 10, 0.45]]) { fire(scene, out, S.x + dx, S.z + dz, k); out.smokers.push(new THREE.Vector3(S.x + dx, heightAt(S.x + dx, S.z + dz) + 0.5, S.z + dz)); }
   scatterJars(scene, rnd, S, 10, 30, ['jar', 'crate']);
 
-  // ---------------- the paper-sellers' lane (Layth)
+  // ---------------- the paper-sellers' lane (Kalokyros)
   const G = SITES.kiln, ga = Math.atan2(-6 - -24, -32 - -58); // the lane runs along the road into the site
   for (let k = -3; k <= 3; k++) for (const side of [-1, 1]) {
     const along = k * 5.2, x = G.x + Math.cos(ga) * along - Math.sin(ga) * side * 6.4, z = G.z + Math.sin(ga) * along + Math.cos(ga) * side * 6.4;
@@ -211,7 +211,7 @@ export function buildKarkh(scene, rnd, out) {
   scatterJars(scene, rnd, G, 14, 22, ['paper', 'paper', 'jar']);
   { const f = [G.x + 3, G.z + 2]; fire(scene, out, f[0], f[1], 0.5); out.smokers.push(new THREE.Vector3(f[0], heightAt(...f) + 0.5, f[1])); }
 
-  // ---------------- the square by the Kufa road ('Utba): a pyre of paper and a ring of stalls
+  // ---------------- the square by the Kufa road (Krateros): a pyre of paper and a ring of stalls
   const A = SITES.arch;
   place(scene, col(pyre(rnd)), A.x, A.z - 13, 0);
   for (let i = 0; i < 12; i++) {
@@ -311,7 +311,7 @@ export function buildDocks(scene, rnd, out) {
   scatterJars(scene, rnd, V, 14, 30);
   place(scene, cart(), V.x + 12, V.z + 10, 0.7, false); colliders.push({ type: 'circle', x: V.x + 12, z: V.z + 10, r: 1.3 });
 
-  // ---------------- the river warehouses (Bilal): long stores, bales, cranes at the quay
+  // ---------------- the river warehouses (Rhentakios): long stores, bales, cranes at the quay
   const S = SITES.serai;
   for (const [dx, dz, w, d, r] of [[-12, -10, 13, 6.5, 0], [-12, 6, 13, 6.5, 0], [-13, 20, 10, 6, 0.05], [10, -16, 6.5, 12, 0], [-30, -2, 7, 12, Math.PI / 2]]) {
     const x = S.x + dx, z = S.z + dz; if (blocked(x, z, 2)) continue;
@@ -323,7 +323,7 @@ export function buildDocks(scene, rnd, out) {
   scatterJars(scene, rnd, S, 12, 30, ['jar', 'crate', 'jar']);
   for (const [dx, dz] of [[-6, -2], [6, 14]]) lantern(scene, out, S.x + dx, S.z + dz, rnd);
 
-  // ---------------- the boatyard (Mus'ab): hulls on the slip running down to the river, pitch boiling, timber
+  // ---------------- the boatyard (Skleros): hulls on the slip running down to the river, pitch boiling, timber
   const G = SITES.kiln;
   for (const [dz, len] of [[-9, 11], [0, 13], [9, 10]]) { const f = boatFrame(len); place(scene, f, G.x + 10, G.z + dz, Math.PI / 2, false); colliders.push({ type: 'box', x: G.x + 10, z: G.z + dz, hw: len / 2, hd: 1.5 }); }
   for (const [dx, dz] of [[-6, -10], [-4, 10]]) { place(scene, col(cauldron()), G.x + dx, G.z + dz); out.fires.push({ pos: new THREE.Vector3(G.x + dx, heightAt(G.x + dx, G.z + dz) + 0.4, G.z + dz), intensity: 0.6 }); out.smokers.push(new THREE.Vector3(G.x + dx, heightAt(G.x + dx, G.z + dz) + 1.1, G.z + dz)); }
@@ -332,7 +332,7 @@ export function buildDocks(scene, rnd, out) {
   // the copyists' boat, held at the yard's jetty
   moor(bank(G.z) + 4, G.z + 4.5, 0, 9);
 
-  // ---------------- the bridge landing (Ghanim): a paved square at the foot of the bridge of boats, cut mid-river
+  // ---------------- the bridge landing (Arsaber): a paved square at the foot of the bridge of boats, cut mid-river
   const A = SITES.arch;
   { const br = boatBridge(CANAL_W + 2, 0.36, 0.56); br.position.set(bank(-88) - 1, -0.05, -88); scene.add(br); }
   for (const [dx, dz] of [[-9, 8], [9, 8], [-9, -8], [9, -8]]) brazier(scene, out, A.x + dx, A.z + dz);

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { humanoid, camel, animateCamel } from './characters.js';
+import { humanoid, horse, animateHorse } from './characters.js';
+import { LOOK, byzify } from './byz.js';
 import { heightAt } from './terrain.js';
 import { navClear } from './nav.js';
 
@@ -9,8 +10,9 @@ import { navClear } from './nav.js';
 //   engineer:    a siege carpenter. When he sees the hero he runs to open ground 12-16 m away and spends a few
 //                seconds raising a field mangonel, then fights with his mallet. The mangonel is a target of its
 //                own: it keeps lobbing stones onto a wide marked ring until it is broken.
-//   rider:       a raider on a camel. He charges past with his lance, wheels round and charges again; wound him
-//                badly enough and he is thrown, and fights on foot while the camel bolts.
+//   rider:       a kataphraktos, an armoured horseman (Round 23; was a camel raider). He charges past with his lance,
+//                wheels round and charges again; wound him badly enough and he is thrown, and fights on foot while
+//                the horse bolts.
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const tmp = new THREE.Vector3();
 const angDiff = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
@@ -49,20 +51,21 @@ export function mangonel() {
   return g;
 }
 
-// ------------------------------------------------------------------ the camel rider
-export function camelRider(look) {
-  const g = new THREE.Group();
-  const c = camel([0xb88a58, 0xa07648, 0xc89a68][Math.floor(Math.random() * 3)], [0x5a1a14, 0x2a2a30, 0x4a3a1a][Math.floor(Math.random() * 3)]);
-  c.rotation.y = -Math.PI / 2; g.add(c); // the camel model faces +X; the group faces +Z like everyone else
+// ------------------------------------------------------------------ the horseman
+const COATS = [[0x4a3020, 0x5a1a14], [0x2a2420, 0x1e3a6a], [0x8a8070, 0x5a1a14], [0x5a3a24, 0x2a2a2a]];
+export function horseRider(look) {
+  const g = new THREE.Group(), [coat, cloth] = COATS[Math.floor(Math.random() * COATS.length)];
+  const c = horse(coat, cloth);
+  c.rotation.y = -Math.PI / 2; g.add(c); // the horse model faces +X; the group faces +Z like everyone else
   const rider = humanoid(look);
-  rider.rotation.y = Math.PI / 2; rider.position.set(-0.05, -0.03, 0); // on the saddle over the hump (hump top 2.84 m)
+  rider.rotation.y = Math.PI / 2; rider.position.set(0.02, -0.66, 0); // in the saddle (the hero's seat in mount.js)
   c.userData.parts.body.add(rider);
-  const cst = { phase: 0, walkBlend: 0, seed: Math.random() * 9 };
+  const cst = { phase: 0, walkBlend: 0, seed: Math.random() * 9, speedK: 1 };
   const ra = rider.userData.anim;
   g.userData.rider = rider; g.userData.camel = c; g.userData.cst = cst;
   g.userData.anim = { update(st, t, dt) {
-    cst.walkBlend = st.walkBlend; cst.phase = st.phase * 0.55;
-    animateCamel(c, cst, t);
+    cst.walkBlend = st.walkBlend; cst.phase = st.phase * 0.62; cst.speedK = 1 + st.walkBlend * 0.9;
+    animateHorse(c, cst, t);
     st.mounted = !st.thrown; if (rider.visible) ra.update(st, t, dt);
   } };
   return g;
@@ -70,12 +73,12 @@ export function camelRider(look) {
 
 export const TYPES20 = {
   crossbow: {
-    name: 'Crossbowman', hp: 26, dmg: 14, speed: 3.6, range: 18, atk: 2.8, xp: 20, radius: 0.5, action: 'aimXbow', ranged: 'bolt', hold: [9, 17],
-    build: (x) => humanoid({ robe: '#3a3a30', robe2: '#6a4a2a', turban: null, helm: true, skin: [0x8a5a3a, 0x9a6a44][Math.floor(Math.random() * 2)], weapon: 'crossbow', sash: 0x4a3a20, armour: 'leather', leather: 0x3a2a1a, ...x }),
+    name: 'Solenarion Archer', hp: 26, dmg: 14, speed: 3.6, range: 18, atk: 2.8, xp: 20, radius: 0.5, action: 'aimXbow', ranged: 'bolt', hold: [9, 17],
+    build: (x) => humanoid(byzify({ ...LOOK.solen(), ...x })),
   },
   engineer: {
-    name: 'Siege Engineer', hp: 32, dmg: 7, speed: 4.4, range: 1.9, atk: 1.3, xp: 22, radius: 0.5, action: 'attack',
-    build: (x) => humanoid({ robe: '#5a4a34', robe2: '#8a6a3a', turban: null, cap: 0x4a3a2a, capBand: 0x2a2018, skin: 0x8a5a3a, beard: 0x2a1a10, weapon: 'mallet', sash: 0x6a4a2a, build: 1.08, belly: 0.2, armour: 'leather', leather: 0x5a3a1e, ...x }),
+    name: 'Mechanikos', hp: 32, dmg: 7, speed: 4.4, range: 1.9, atk: 1.3, xp: 22, radius: 0.5, action: 'attack',
+    build: (x) => humanoid(byzify({ ...LOOK.mechanikos(), ...x })),
     ai: engineerAI,
   },
   mangonel: {
@@ -83,8 +86,8 @@ export const TYPES20 = {
     build: () => mangonel(), ai: mangonelAI,
   },
   rider: {
-    name: 'Camel Raider', hp: 44, dmg: 11, speed: 8.2, range: 2.6, atk: 1.2, xp: 30, radius: 1.0, action: 'thrust',
-    build: (x) => camelRider({ robe: '#4a3a2a', robe2: '#8a2a1a', turban: 0x6a2a1a, mask: 0x2a1e16, skin: 0x8a5a3a, weapon: 'spear', sash: 0x6a1a10, armour: Math.random() < 0.5 ? 'leather' : null, leather: 0x3a2414, ...x }),
+    name: 'Kataphraktos', hp: 44, dmg: 11, speed: 8.2, range: 2.6, atk: 1.2, xp: 30, radius: 1.0, action: 'thrust',
+    build: (x) => horseRider(byzify({ ...LOOK.kataphraktos(), ...x })),
     ai: riderAI,
   },
 };
@@ -147,11 +150,11 @@ function mangonelAI(g, e, dt, dist) {
 
 function riderAI(g, e, dt, dist) {
   const p = g.player;
-  // thrown: badly wounded, the raider is pitched off and fights on foot; the camel bolts
+  // thrown: badly wounded, the horseman is pitched off and fights on foot; the horse bolts
   if (!e.st.thrown && e.hp < e.maxHp * 0.5 && !e.dead) {
     e.st.thrown = true;
     const side = V(Math.cos(e.facing), 0, -Math.sin(e.facing));
-    const foot = g.spawnPack('bandit', e.pos.x + side.x * 1.4, e.pos.z + side.z * 1.4, 1, e.level, { spread: 0, name: 'Unhorsed Raider' })[0];
+    const foot = g.spawnPack('bandit', e.pos.x + side.x * 1.4, e.pos.z + side.z * 1.4, 1, e.level, { spread: 0, name: 'Unhorsed Kataphraktos' })[0];
     foot.hp = foot.maxHp = Math.max(8, Math.round(e.hp * 0.9)); foot.alerted = true; foot.staggerT = 1.2; foot.riseT = 0;
     e.rig.userData.rider.visible = false; e.dead = true; e.fleeing = true; e.deadT = 0; e.st.dead = false; e.xp = 0;
     g.fx.dust(e.pos, 16, 1.4); g.audio.at(e.pos, () => g.audio.grunt?.());
@@ -187,7 +190,7 @@ function riderAI(g, e, dt, dist) {
   return 'skip';
 }
 
-// a riderless camel runs off and is gone
+// a riderless horse runs off and is gone
 export function fleeTick(g, e, dt) {
   const p = g.player.pos, away = tmp.set(e.pos.x - p.x, 0, e.pos.z - p.z); if (away.lengthSq() < 1e-4) away.set(1, 0, 0); away.normalize();
   e.facing += angDiff(e.facing, Math.atan2(away.x, away.z)) * Math.min(1, dt * 3);

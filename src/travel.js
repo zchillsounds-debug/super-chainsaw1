@@ -14,7 +14,7 @@ const SITE_NAMES = {
   marsh: { village: 'Reed Village', serai: 'Reed Camp', kiln: 'Fish Racks', arch: 'Old Weir' },
   karkh: { village: 'The Khan', serai: 'Burned Suq', kiln: 'Paper-Sellers\' Lane', arch: 'The Square' },
   docks: { village: 'The Quay Khan', serai: 'The Warehouses', kiln: 'The Boatyard', arch: 'The Bridge of Boats' },
-  hamrin: { village: 'The Deserters\' Camp', serai: 'The Quarry Galleries', kiln: 'The Cliff Fort', arch: 'The Gorge Bridge', hold: 'Zubayr\'s Hold' },
+  hamrin: { village: 'The Hill Camp', serai: 'The Quarry Galleries', kiln: 'The Cliff Fort', arch: 'The Gorge Bridge', hold: 'Tatzates\' Hold' },
 }[REGION];
 const KEY = 'sob.zoom2'; // Round 20: new key so the new overhead default replaces older saved zooms
 
