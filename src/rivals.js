@@ -32,7 +32,7 @@ const rand = (a, b) => a + Math.random() * (b - a);
 
 // ------------------------------------------------------------------ Tatzates (the type key stays 'zubayr')
 // an Armenian of the frontier: long hair under a felt cap, a dark coat and cloak, a hunting bow
-const ZLOOK = { robe: '#1e2430', robe2: '#8a2a1a', qaba: true, turban: null, pilos: true, beard: 0x1a120c, beardLen: 0.45, beardStyle: 'trim', hair: 'long', keepHair: true, skin: 0xa8724a, weapon: 'bow', sash: 0x8a2a1a, armour: 'leather', leather: 0x2a1a14, cloak: 0x1a1a22, detail: 'hi', build: 1.02 };
+const ZLOOK = { robe: '#1e2430', robe2: '#8a2a1a', qaba: true, turban: null, pilos: 0x3a3028, beard: 0x1a120c, beardLen: 0.45, beardStyle: 'trim', hair: 'long', keepHair: true, skin: 0xa8724a, weapon: 'bow', sash: 0x8a2a1a, armour: 'leather', leather: 0x2a1a14, cloak: 0x1a1a22, detail: 'hi', build: 1.02 };
 TYPES.zubayr = {
   name: 'Tatzates', hp: 70, dmg: 9, speed: 5.4, range: 16, atk: 1.7, xp: 40, radius: 0.5, action: 'shoot', ranged: 'arrow', hold: [8, 14],
   build: (x) => humanoid(byzify({ ...ZLOOK, ...x })), ai: zubayrAI,

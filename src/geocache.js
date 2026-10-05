@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 // Sculpted character geometry persisted in IndexedDB, so a second visit skips the slow SDF meshing.
 // Key = piece key + VERSION; bump VERSION whenever sculpt.js / human.js change what they produce.
-const VERSION = 'r23.0';
+const VERSION = 'r23.1';
 const DB = 'sob-geo', STORE = 'geo';
 const loaded = new Map(), fresh = new Map();
 let db = null;

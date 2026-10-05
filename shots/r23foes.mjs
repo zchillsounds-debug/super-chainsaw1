@@ -30,8 +30,8 @@ await pg.evaluate(async (KEYS) => {
 }, KEYS);
 const shot = async (name, fn) => { await pg.evaluate(fn); await pg.evaluate(() => { __pose(); __sim(0.2); __pose(); }); await pg.waitForTimeout(500); await pg.screenshot({ path: `${out}/${name}.png`, timeout: 240000 }); };
 // the whole line, from the front, in three parts
-for (let part = 0; part < 4; part++) {
-  await shot(`line${part}`, `(() => { const g = __game, r = __row, a = r[${part} * 5], c = r[Math.min(r.length - 1, ${part} * 5 + 4)]; const mx = (a.x + c.x) / 2, z = a.z; g.updateCamera = function () { this.camera.position.set(mx, a.rig.position.y + 1.6, z + 7.5); this.camera.lookAt(mx, a.rig.position.y + 1.05, z); }; document.getElementById('ui').style.display = 'none'; })()`);
+for (const [part, i0, i1] of [[0, 0, 4], [1, 4, 8], [2, 9, 13], [3, 13, 16]]) {
+  await shot(`line${part}`, `(() => { const g = __game, r = __row, a = r[${i0}], c = r[${i1}]; const mx = (a.x + c.x) / 2, z = a.z; g.updateCamera = function () { this.camera.position.set(mx, a.rig.position.y + 1.6, z + 7.5); this.camera.lookAt(mx, a.rig.position.y + 1.05, z); }; document.getElementById('ui').style.display = 'none'; })()`);
 }
 // heads and shields, close
 for (const k of ['bandit', 'guard', 'spearman', 'crossbow', 'naffat', 'zubayr', 'commander', 'ghanim']) {

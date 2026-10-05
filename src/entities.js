@@ -54,7 +54,7 @@ export const TYPES = {
   // Kallinikos, master of the siphons: a scorched leather coat over mail, a felt cap, the big siphon's bronze
   rawh: {
     name: 'Kallinikos', hp: 2900, dmg: 15, speed: 3.6, range: 3.0, atk: 2.2, xp: 900, radius: 1.0, boss: true,
-    build: (x) => humanoid(byzify({ ...LOOK.officer('#8a4a1a', null), helm: null, pilos: true, crest: null, offhand: null, armour: 'scale', beard: 0x3a2a1a, beardLen: 0.6, skin: 0xc08a60, sash: 0xc8a050, scale: 1.4, build: 1.0, belly: 0.5, hemY: 0.3, leather: 0x4a3020, ...x })),
+    build: (x) => humanoid(byzify({ ...LOOK.officer('#8a4a1a', null), helm: null, pilos: 0x5a2a1a, crest: null, offhand: null, armour: 'scale', beard: 0x3a2a1a, beardLen: 0.6, skin: 0xc08a60, sash: 0xc8a050, scale: 1.4, build: 1.0, belly: 0.5, hemY: 0.3, leather: 0x4a3020, ...x })),
   },
   // Krateros, commander in al-Karkh: black lamellar, iron helmet, shield and spathion
   utba: {
@@ -69,7 +69,7 @@ const ELITE_NAMES = ['Bryas', 'Kamytzes', 'Melias', 'Tzirithon', 'Sarantenos', '
 // purple-bordered cloak over gilded lamellar, a grey beard, the plumed helmet
 TYPES.ghanim = {
   name: 'Arsaber', hp: 4600, dmg: 20, speed: 3.3, range: 3.2, atk: 2.2, xp: 1900, radius: 1.1, boss: true,
-  build: (x) => humanoid(byzify({ ...LOOK.officer('#4a1a4a', 0x3a1440), beard: 0x8a8070, beardLen: 0.9, skin: 0xb07a52, sash: 0xc8a050, scale: 1.5, build: 1.15, belly: 0.3, hemY: 0.3, leather: 0x6a5a3a, shieldTint: 3, ...x })),
+  build: (x) => humanoid(byzify({ ...LOOK.officer('#4a1a4a', 0x3a1440), beard: 0x8a8070, beardLen: 0.9, skin: 0xb07a52, sash: 0x5a1a5a, scale: 1.5, build: 1.15, belly: 0.3, hemY: 0.3, leather: 0x6a5a3a, shieldTint: 3, ...x })),
 };
 Object.assign(TYPES, TYPES20); // Round 20: crossbowmen, siege engineers and their mangonels, camel raiders
 
@@ -84,7 +84,7 @@ export function captainLook(name = '') {
   const L = { armour: 'heavy', crest, detail: 'hi', sash: tint, leather: new THREE.Color(tint).multiplyScalar(0.55).getHex() };
   if (crest === 'plume') L.helm = true;
   if (crest === 'mantle') L.cloak = tint;
-  if (crest === 'hat') { L.helm = false; L.pilos = true; L.cloak = tint; } // Round 23: a felt pilos and a cloak in his colour
+  if (crest === 'hat') { L.helm = false; L.pilos = 0x3a2e24; L.cloak = tint; } // Round 23: a felt pilos and a cloak in his colour
   if (crest === 'banner') L.helm = true;
   return L;
 }

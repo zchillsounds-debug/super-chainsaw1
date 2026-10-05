@@ -219,8 +219,9 @@ function headwearPrims(B, o) {
     if (o.crest === 'plume') { L.push(cap(H, [0, 0.27, -0.018], [0, 0.33, -0.03], 0.012, 0.036, { k: 0.02, mat: R.SASH })); L.push(cap(H, [0, 0.33, -0.03], [0, 0.2, -0.17], 0.036, 0.012, { k: 0.03, mat: R.SASH })); }
   } else if (o.pilos) {
     // Round 23: the light troops' rounded felt cap with a rolled brim
-    L.push(ell(H, [0, 0.15, -0.012], [0.092, 0.095, 0.1], null, { k: 0.02, mat: R.FELT }));
-    L.push(tor(H, [0, 0.105, -0.01], 0.092, 0.017, [0.12, 0, 0], { k: 0.012, mat: R.FELT }));
+    L.push(ell(H, [0, 0.165, -0.016], [0.09, 0.115, 0.098], null, { k: 0.02, mat: R.FELT }));
+    L.push(cap(H, [0, 0.22, -0.02], [0, 0.275, -0.04], 0.05, 0.022, { k: 0.04, mat: R.FELT })); // the crown rises a little and leans back
+    L.push(tor(H, [0, 0.108, -0.01], 0.094, 0.02, [0.12, 0, 0], { k: 0.012, mat: R.FELT }));
     L.push(ell(H, [0, 0.03, -0.01], [0.2, 0.075, 0.2], null, { sub: true, k: 0.01 }));
   } else if (o.helm) {
     // steel bayda dome with a gilt rim and nasal, over a mail aventail open at the face
@@ -400,6 +401,7 @@ export function humanoid(opts = {}) {
   if (o.beard) { pal[R.HAIR].c = C(o.beard); pal[R.BROW].c = C(o.beard).lerp(C(0x1a120c), 0.3); }
   if (o.turban) pal[R.WRAP].c = C(o.turban);
   if (o.cap) { pal[R.FELT].c = C(o.cap); pal[R.WRAP].c = C(o.capBand || 0x1a1814); }
+  if (o.pilos) pal[R.FELT].c = C(typeof o.pilos === 'number' ? o.pilos : 0x7a5a3a); // Round 23: undyed or madder felt
   if (o.mask) pal[R.MASK].c = C(o.mask);
   if (o.leather) pal[R.LEATHER].c = C(o.leather);
   if (o.hat) pal[R.WRAP].c = C(o.hat);

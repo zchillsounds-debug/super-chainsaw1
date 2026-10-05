@@ -13,30 +13,32 @@ const base = () => {
   return { robe: c[0], robe2: c[1], turban: null, mask: null, skin: pick(SKINS), beard: pick(BEARDS), hair: 'crop', qaba: true, sash: 0x3a2a1e, trousers: 0x2a2620 };
 };
 const tint = () => Math.floor(Math.random() * 4);
+// felt: undyed brown, tan, madder red, grey
+const felt = () => pick([0x7a5a3a, 0x9a7a52, 0x7a2a1e, 0x6a625a]);
 
 export const LOOK = {
   // psilos: light infantry, spear and small round shield, a felt cap, no armour but the padded coat
-  psilos: () => ({ ...base(), pilos: true, weapon: 'spear', offhand: 'shield', shieldKind: 'round', shieldTint: tint(), armour: Math.random() < 0.4 ? 'leather' : null, leather: 0x4a3420 }),
+  psilos: () => ({ ...base(), pilos: felt(), weapon: 'spear', offhand: 'shield', shieldKind: 'round', shieldTint: tint(), armour: Math.random() < 0.4 ? 'leather' : null, leather: 0x4a3420 }),
   // skoutatos: the line, spathion and the tall oval shield, helmet with aventail, steel lamellar
   skoutatos: () => ({ ...base(), helm: 'byz', mail: true, weapon: 'sword', offhand: 'shield', shieldKind: 'oval', shieldTint: tint(), armour: 'lamellar', leather: 0x5a5e62, build: 1.08 }),
   // menavlatos: the pikeman with the heavy menavlion
   menavlatos: () => ({ ...base(), helm: 'byz', mail: true, weapon: 'spear', pike: true, armour: 'lamellar', leather: 0x54585c, build: 1.12, belly: 0.1 }),
   // toxotes: an archer in a felt cap and padded coat
-  toxotes: () => ({ ...base(), pilos: true, weapon: 'bow', armour: 'leather', leather: 0x5a3e24 }),
+  toxotes: () => ({ ...base(), pilos: felt(), weapon: 'bow', armour: 'leather', leather: 0x5a3e24 }),
   // trapezites: a raider of the frontier, knives, lightly dressed, a dark cap
-  trapezites: () => ({ ...base(), robe: pick(['#3a3428', '#2e2a24', '#4a3a2a']), robe2: '#2a2018', pilos: true, weapon: 'dagger', hunch: 0.25, armour: 'leather', leather: 0x2a1c14 }),
+  trapezites: () => ({ ...base(), robe: pick(['#3a3428', '#2e2a24', '#4a3a2a']), robe2: '#2a2018', pilos: felt(), weapon: 'dagger', hunch: 0.25, armour: 'leather', leather: 0x2a1c14 }),
   // the same raiders in the reeds, in dun marsh dress
-  reed: () => ({ ...base(), robe: '#4a5236', robe2: '#2a3020', pilos: true, weapon: 'spear', hunch: 0.2, armour: 'reed', leather: 0x7a7444 }),
+  reed: () => ({ ...base(), robe: '#4a5236', robe2: '#2a3020', pilos: felt(), weapon: 'spear', hunch: 0.2, armour: 'reed', leather: 0x7a7444 }),
   // siphon-bearer: a hand siphon of liquid fire, a leather hood-cap, a scorched coat
-  siphon: () => ({ ...base(), robe: '#3a2418', robe2: '#8a4a1a', pilos: true, weapon: 'torch', siphon: true, armour: 'leather', leather: 0x3a2214, sash: 0x5a2a10 }),
+  siphon: () => ({ ...base(), robe: '#3a2418', robe2: '#8a4a1a', pilos: felt(), weapon: 'torch', siphon: true, armour: 'leather', leather: 0x3a2214, sash: 0x5a2a10 }),
   // sphendonistes: a slinger
-  slinger: () => ({ ...base(), robe: pick(['#6a5a40', '#8a7a5a']), robe2: '#3a4a3a', pilos: true, weapon: 'sling', build: 0.9, armour: Math.random() < 0.5 ? 'leather' : null, leather: 0x6a5030 }),
+  slinger: () => ({ ...base(), robe: pick(['#6a5a40', '#8a7a5a']), robe2: '#3a4a3a', pilos: felt(), weapon: 'sling', build: 0.9, armour: Math.random() < 0.5 ? 'leather' : null, leather: 0x6a5030 }),
   // a marine of the river fleet with a weighted net
-  marine: () => ({ ...base(), robe: pick(['#2a3a5a', '#3a4a6a']), robe2: '#b8ac90', pilos: true, weapon: 'net', build: 1.05, armour: 'leather', leather: 0x4a3a28 }),
+  marine: () => ({ ...base(), robe: pick(['#2a3a5a', '#3a4a6a']), robe2: '#b8ac90', pilos: felt(), weapon: 'net', build: 1.05, armour: 'leather', leather: 0x4a3a28 }),
   // solenarion archer: kneels to shoot short darts far and flat through the arrow-guide
   solen: () => ({ ...base(), helm: 'byz', weapon: 'crossbow', solen: true, armour: 'leather', leather: 0x3a2a1a }),
   // mechanikos: the company's engineer, a mallet and a leather apron
-  mechanikos: () => ({ ...base(), robe: '#5a4a34', robe2: '#8a6a3a', pilos: true, weapon: 'mallet', build: 1.08, belly: 0.2, armour: 'leather', leather: 0x5a3a1e }),
+  mechanikos: () => ({ ...base(), robe: '#5a4a34', robe2: '#8a6a3a', pilos: felt(), weapon: 'mallet', build: 1.08, belly: 0.2, armour: 'leather', leather: 0x5a3a1e }),
   // kataphraktos: an armoured horseman (the horse is added by foes20.js)
   kataphraktos: () => ({ ...base(), helm: 'byz', mail: true, weapon: 'spear', armour: 'scale', leather: 0x2a2a2c, cloak: Math.random() < 0.5 ? 0x5a1a14 : null }),
   // the company's commanders and officers: heavy lamellar, a cloak, the plumed helmet (captainLook adds the crest)
@@ -48,7 +50,7 @@ export const LOOK = {
 export function byzify(o) {
   const r = { ...o };
   r.turban = null; r.mask = null;
-  if (r.cap || r.hat) { r.pilos = true; r.cap = null; r.hat = null; }
+  if (r.cap || r.hat) { r.pilos = r.cap || r.hat; r.cap = null; r.hat = null; }
   if (r.helm) { r.helm = 'byz'; r.pilos = false; }
   if (!r.keepHair) r.hair = 'crop';
   if (r.beard == null) r.beard = pick(BEARDS);

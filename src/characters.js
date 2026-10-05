@@ -129,20 +129,20 @@ function bandTex(field, band, oval) {
   x.fillStyle = field; x.fillRect(0, 0, W, W);
   // weathering: a little grime and scuffing on the paint
   for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(${Math.random() < 0.5 ? '0,0,0' : '255,240,210'},${Math.random() * 0.07})`; x.fillRect(Math.random() * W, Math.random() * W, 2 + Math.random() * 6, 1 + Math.random() * 3); }
-  x.strokeStyle = band; x.lineWidth = oval ? 9 : 11; x.beginPath(); x.ellipse(W / 2, W / 2, W / 2 - 8, W / 2 - 8, 0, 0, Math.PI * 2); x.stroke();
-  x.lineWidth = 4; x.beginPath(); x.ellipse(W / 2, W / 2, W * 0.19, W * 0.19, 0, 0, Math.PI * 2); x.stroke();
+  // a single painted band inside the rim (an inner ring as well read as an archery target)
+  x.strokeStyle = band; x.lineWidth = oval ? 10 : 12; x.beginPath(); x.ellipse(W / 2, W / 2, W / 2 - 9, W / 2 - 9, 0, 0, Math.PI * 2); x.stroke();
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 function byzShieldRaw(oval, k) {
   const g = new THREE.Group(), [field, band] = UNIT[k];
   const face = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.62, map: bandTex(field, band, oval) });
-  const r = oval ? 0.3 : 0.24, sy = oval ? 1.55 : 1;
+  const r = oval ? 0.28 : 0.24, sx = oval ? 1.6 : 1; // the forearm runs along local y: the long axis is x
   // a shallow dished board: the disc is domed a little so the light rolls across it
   const disc = new THREE.CylinderGeometry(r, r, 0.04, 28, 1).rotateX(Math.PI / 2), dp = disc.attributes.position;
   for (let i = 0; i < dp.count; i++) { const px = dp.getX(i), py = dp.getY(i), q = (px * px + py * py) / (r * r); dp.setZ(i, dp.getZ(i) + (1 - q) * 0.035); }
-  disc.computeVertexNormals(); disc.scale(1, sy, 1);
+  disc.computeVertexNormals(); disc.scale(sx, 1, 1);
   g.add(mesh(disc, face));
-  g.add(mesh(new THREE.TorusGeometry(r, 0.018, 6, 32).scale(1, sy, 1), leather)); // rawhide edging
+  g.add(mesh(new THREE.TorusGeometry(r, 0.018, 6, 32).scale(sx, 1, 1), leather)); // rawhide edging
   g.add(mesh(new THREE.SphereGeometry(oval ? 0.07 : 0.065, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2).rotateX(Math.PI / 2).translate(0, 0, 0.05), steel));
   return g;
 }
@@ -161,7 +161,7 @@ function siphonRaw() {
   g.add(mesh(new THREE.CylinderGeometry(0.018, 0.03, 0.16, 8).translate(0, 0.6, 0), goldM));
   g.add(mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.05, 8).translate(0, 0.0, 0), steel));
   g.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.22, 5).rotateZ(Math.PI / 2).translate(0.05, -0.02, 0), leather)); // the plunger grip
-  const f = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.18, 7).translate(0, 0.77, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.2, 0.25), toneMapped: false }));
+  const f = new THREE.Mesh(new THREE.SphereGeometry(0.028, 7, 5).scale(1, 1.6, 1).translate(0, 0.71, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 0.8, 0.18), toneMapped: false })); // the pilot flame at the nozzle
   g.add(f);
   return g;
 }
