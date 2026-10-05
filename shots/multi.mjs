@@ -11,6 +11,7 @@ const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console
 await pg.goto('http://localhost:5173/?' + q);
 await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
 await pg.evaluate(fs.readFileSync(new URL('./close.js', import.meta.url), 'utf8'));
+if (fs.existsSync(new URL('./audit.js', import.meta.url))) await pg.evaluate(fs.readFileSync(new URL('./audit.js', import.meta.url), 'utf8'));
 for (const [name, js, wait = 600] of steps) {
   if (js) await pg.evaluate(js);
   await pg.waitForTimeout(wait);
