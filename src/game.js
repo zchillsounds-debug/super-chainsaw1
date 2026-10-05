@@ -1351,6 +1351,7 @@ export class Game {
       const vdx = Math.abs(e.pos.x - p.pos.x), vdz = e.pos.z - p.pos.z;
       const vz = Math.max(1, this.camZoom) * (this.camZoom < 0.85 ? 1.5 : 1); e.rig.visible = !e.ghost && !e.removed && (this.camAction ? dist < 60 : (vdx < 30 * vz && vdz > -36 * vz && vdz < 20 * Math.max(1, this.camZoom) || (e.boss && dist < 60)));
       if (e.rig.visible) setCharLOD(e.rig, dist > 15 && !this.cinematic);
+      if (e.dead && e.spared) { this.animEnemy(e, dt, dist); continue; } // Round 24: Arsaber is beaten, not killed: he stays
       if (e.dead) {
         e.st.deadT += dt; e.deadT += dt;
         if (e.fleeing) fleeTick(this, e, dt);

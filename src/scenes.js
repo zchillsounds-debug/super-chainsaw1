@@ -10,6 +10,7 @@ import { horseRider } from './foes20.js';
 // The story's cinematics. Each returns a scene definition for the Director.
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const ground = (x, z, y = 0) => V(x, heightAt(x, z) + y, z);
+const dry = (x, z, y = 0) => V(x, Math.max(heightAt(x, z), 0) + y, z); // never below the water line
 const yawTo = (a, b) => Math.atan2(b.x - a.x, b.z - a.z);
 const lineDur = (s) => 2.2 + s.length / 17;
 
@@ -242,10 +243,10 @@ export function epilogue(g, b) {
       run: (d, k, dt) => { for (const l of lamps) { l.position.z += l.userData.v * dt; l.position.x = canalX(l.position.z) + Math.sin(l.position.z * 2) * 0.4; } } },
     { dur: 5.4, caption: 'On the far bank, a rider in a Roman cloak watched the lamps.',
       enter: () => { envoy.rig.visible = true; envoy.facing = yawTo(envoy.pos, V(canalX(RZ), 0, RZ - 6)); },
-      cam: { p0: () => V(canalX(RZ - 10) + 3.5, 1.1, RZ - 13), t0: () => at(envoy, 2.2)(), p1: () => V(canalX(RZ - 9) + 2.8, 1.0, RZ - 11.5), t1: () => at(envoy, 2.3)(), fov: 30 },
+      cam: { p0: () => dry(canalX(RZ - 12) + 3, RZ - 12, 1.2), t0: () => at(envoy, 2.0)(), p1: () => dry(canalX(RZ - 11.5) + 2.6, RZ - 11.5, 1.15), t1: () => at(envoy, 2.1)(), fov: 13 },
       run: (d, k, dt) => { for (const l of lamps) { l.position.z += l.userData.v * dt; l.position.x = canalX(l.position.z) + Math.sin(l.position.z * 2) * 0.4; } } },
     { dur: 4.6, caption: 'Arsaber, the envoy. Then he turned his horse toward Baghdad.',
-      cam: { p0: () => V(canalX(RZ - 9) + 2.8, 1.0, RZ - 11.5), t0: () => at(envoy, 2.2)(), p1: () => V(canalX(RZ - 8) + 2.4, 1.2, RZ - 10.5), t1: () => at(envoy, 2.0)(), fov: 32 },
+      cam: { follow: true, p0: () => dry(canalX(RZ - 11.5) + 2.6, RZ - 11.5, 1.15), t0: () => at(envoy, 1.9)(), fov: 15 },
       run: (d, k, dt) => {
         const want = Math.PI; envoy.facing += Math.max(-dt * 1.4, Math.min(dt * 1.4, ((want - envoy.facing + Math.PI * 3) % (Math.PI * 2)) - Math.PI));
         if (k > 0.3) { envoy.moving = true; envoy.st.walkBlend = 1; envoy.st.phase += dt * 4; envoy.pos.x += Math.sin(envoy.facing) * dt * 1.6; envoy.pos.z += Math.cos(envoy.facing) * dt * 1.6; envoy.pos.y = heightAt(envoy.pos.x, envoy.pos.z); }
@@ -466,15 +467,16 @@ export function docksFinale(g, b) {
   const L = (who, rig, text, cam, dof, enter) => ({ dur: lineDur(text), line: { who, text, rig, cue: who === 'Salim' ? 'hm' : 'breath' }, cam, dof, enter });
   const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b2 = to.pos, f = yawTo(a, b2), sd = side * 1.9; return V(a.x - Math.sin(f) * 1.2 + Math.cos(f) * sd, a.y + 1.95, a.z - Math.cos(f) * 1.2 - Math.sin(f) * sd); }, t0: headOf(to), fov: 32 });
   // Round 24: Arsaber is beaten, not killed: down on one knee, his sword out of reach
-  const kneel = () => { b.st.dead = false; b.st.deadT = 0; b.st.action = null; b.st.crouch = 0.85; boss.facing = yawTo(boss.pos, salim.pos); };
+  b.spared = true; b.removed = false; if (!b.rig.parent) sc.add(b.rig); b.rig.visible = true;
+  const kneel = () => { b.st.dead = false; b.st.deadT = 0; b.deadT = 0; b.st.action = null; b.st.crouch = 0.85; b.rig.visible = true; boss.facing = yawTo(boss.pos, salim.pos); };
   const spot = () => { const f = yawTo(boss.pos, salim.pos); return V(boss.pos.x + Math.sin(f) * 2.4, salim.pos.y, boss.pos.z + Math.cos(f) * 2.4); };
   const shots = [
     { dur: 3.4, enter: () => { kneel(); const s2 = spot(); salim.pos.copy(s2); salim.pos.y = heightAt(s2.x, s2.z); salim.facing = yawTo(salim.pos, boss.pos); },
       cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.2), p1: () => V(boss.pos.x + Math.sin(ang + 1.9) * 5.5, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.9) * 5.5), t1: at(boss, 1.0), fov: 34 }, run: () => kneel() },
     { dur: lineDur('You burn your own city, and call me the thief.'), line: { who: 'Arsaber', text: 'You burn your own city, and call me the thief.', rig: b.rig, cue: 'breath', expr: 'stern', react: 'resolve' },
-      cam: { follow: true, p0: at(salim, 2.0, -1.4, 0.7), t0: headOf(boss), fov: 32 }, dof: headOf(boss), aperture: 1.2, run: () => kneel() },
+      cam: { follow: true, p0: at(salim, 1.6, -0.9, 1.0), t0: headOf(boss), fov: 32 }, dof: headOf(boss), aperture: 1.2, run: () => kneel() },
     { dur: lineDur('We copy. That is the difference.'), line: { who: 'Salim', text: 'We copy. That is the difference.', rig: g.player.rig, cue: 'hm', expr: 'resolve' },
-      cam: { follow: true, p0: () => { const h = headOf(salim)(), f = yawTo(salim.pos, boss.pos); return V(h.x + Math.sin(f) * 1.9 + Math.cos(f) * 0.6, h.y - 0.08, h.z + Math.cos(f) * 1.9 - Math.sin(f) * 0.6); }, t0: () => headOf(salim)().add(V(0, -0.06, 0)), fov: 32 }, dof: headOf(salim), aperture: 1.4, run: () => kneel() },
+      cam: { follow: true, p0: () => { const h = headOf(salim)(), f = yawTo(salim.pos, boss.pos); return V(h.x + Math.sin(f) * 1.3 + Math.cos(f) * 1.35, h.y - 0.05, h.z + Math.cos(f) * 1.3 - Math.sin(f) * 1.35); }, t0: () => headOf(salim)().add(V(0, -0.06, 0)), fov: 32 }, dof: headOf(salim), aperture: 1.4, run: () => kneel() },
     { dur: 4.2, caption: 'Arsaber\'s men threw down their bows. The copyists\' barge came down from the yard.', enter: (d) => d.fade(1, 0.8) },
     // on the quay: Hakam and Ishaq see the first copies off
     { dur: 3.6, fadeIn: 1.0, enter: () => {
