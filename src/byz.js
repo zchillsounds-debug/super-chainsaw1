@@ -13,8 +13,8 @@ const base = () => {
   return { robe: c[0], robe2: c[1], turban: null, mask: null, skin: pick(SKINS), beard: pick(BEARDS), hair: 'crop', qaba: true, sash: 0x3a2a1e, trousers: 0x2a2620 };
 };
 const tint = () => Math.floor(Math.random() * 4);
-// felt: undyed brown, tan, madder red, grey
-const felt = () => pick([0x7a5a3a, 0x9a7a52, 0x7a2a1e, 0x6a625a]);
+// felt: undyed brown, tan, dark, grey (a red one read as a fez)
+const felt = () => pick([0x7a5a3a, 0x9a7a52, 0x5a4a3a, 0x6a625a]);
 
 export const LOOK = {
   // psilos: light infantry, spear and small round shield, a felt cap, no armour but the padded coat

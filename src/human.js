@@ -220,7 +220,7 @@ function headwearPrims(B, o) {
   } else if (o.pilos) {
     // Round 23: the light troops' rounded felt cap with a rolled brim
     L.push(ell(H, [0, 0.165, -0.016], [0.09, 0.115, 0.098], null, { k: 0.02, mat: R.FELT }));
-    L.push(cap(H, [0, 0.22, -0.02], [0, 0.275, -0.04], 0.05, 0.022, { k: 0.04, mat: R.FELT })); // the crown rises a little and leans back
+    L.push(cap(H, [0, 0.21, -0.022], [0, 0.245, -0.045], 0.05, 0.026, { k: 0.04, mat: R.FELT })); // the crown rises a little and leans back
     L.push(tor(H, [0, 0.108, -0.01], 0.094, 0.02, [0.12, 0, 0], { k: 0.012, mat: R.FELT }));
     L.push(ell(H, [0, 0.03, -0.01], [0.2, 0.075, 0.2], null, { sub: true, k: 0.01 }));
   } else if (o.helm) {
