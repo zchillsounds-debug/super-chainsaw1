@@ -219,10 +219,11 @@ function headwearPrims(B, o) {
     if (o.crest === 'plume') { L.push(cap(H, [0, 0.27, -0.018], [0, 0.33, -0.03], 0.012, 0.036, { k: 0.02, mat: R.SASH })); L.push(cap(H, [0, 0.33, -0.03], [0, 0.2, -0.17], 0.036, 0.012, { k: 0.03, mat: R.SASH })); }
   } else if (o.pilos) {
     // Round 23: the light troops' rounded felt cap with a rolled brim
-    L.push(ell(H, [0, 0.165, -0.016], [0.09, 0.115, 0.098], null, { k: 0.02, mat: R.FELT }));
-    L.push(cap(H, [0, 0.21, -0.022], [0, 0.245, -0.045], 0.05, 0.026, { k: 0.04, mat: R.FELT })); // the crown rises a little and leans back
-    L.push(tor(H, [0, 0.108, -0.01], 0.094, 0.02, [0.12, 0, 0], { k: 0.012, mat: R.FELT }));
-    L.push(ell(H, [0, 0.03, -0.01], [0.2, 0.075, 0.2], null, { sub: true, k: 0.01 }));
+    // (the brim rests on the forehead above the brows: lower, it crossed the eyes like a blindfold)
+    L.push(ell(H, [0, 0.182, -0.016], [0.09, 0.105, 0.098], null, { k: 0.02, mat: R.FELT }));
+    L.push(cap(H, [0, 0.225, -0.022], [0, 0.258, -0.045], 0.05, 0.026, { k: 0.04, mat: R.FELT })); // the crown rises a little and leans back
+    L.push(tor(H, [0, 0.136, -0.012], 0.09, 0.015, [0.12, 0, 0], { k: 0.012, mat: R.FELT }));
+    L.push(ell(H, [0, 0.05, -0.01], [0.2, 0.084, 0.2], null, { sub: true, k: 0.01 }));
   } else if (o.helm) {
     // steel bayda dome with a gilt rim and nasal, over a mail aventail open at the face
     L.push(ell(H, [0, 0.14, -0.012], [0.088, 0.1, 0.098], null, { k: 0.02, mat: R.STEEL }));
