@@ -5,30 +5,30 @@ import fs from 'fs';
 const require = createRequire('/opt/node22/lib/node_modules/');
 const { chromium } = require('playwright');
 const out = process.argv[2]; fs.mkdirSync(out, { recursive: true });
-const region = process.argv[3] || 'sawad';
+const region = process.argv[3] || 'sawad', spot = process.argv[4] || 'x=40&z=-30';
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: 960, height: 540 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
-await pg.goto(`http://localhost:5173/?play&q=high&noadapt&cls=faris&region=${region}&tod=golden`);
+await pg.goto(`http://localhost:5173/?play&q=high&noadapt&cls=faris&region=${region}&tod=golden&${spot}`);
 await pg.waitForFunction(() => window.__ready, null, { timeout: 500000 });
 await pg.evaluate(fs.readFileSync(new URL('./close.js', import.meta.url), 'utf8'));
 const KEYS = ['bandit', 'guard', 'spearman', 'archer', 'deserter', 'naffat', 'slinger', 'netter', 'reedman', 'crossbow', 'engineer', 'rider', 'zubayr', 'commander', 'rawh', 'utba', 'ghanim'];
 await pg.evaluate(async (KEYS) => {
   const { TYPES } = await import('/src/entities.js');
   await import('/src/rivals.js');
-  const g = __game, P = g.player.pos;
+  const g = __game, P = g.player.pos; const { heightAt } = await import('/src/terrain.js'); g.heightAt = heightAt; g.player.rig.visible = false;
   for (const e of g.enemies) { e.rig.visible = false; e.dead = true; }
   window.__row = [];
   KEYS.forEach((k, i) => {
-    const rig = TYPES[k].build({}), x = P.x - 16 + i * 2.2, z = P.z - 6;
-    rig.position.set(x, P.y, z); rig.rotation.y = 0; g.scene.add(rig);
+    const rig = TYPES[k].build({}), x = P.x - 8 + (i % 9) * 2.0, z = P.z - 6 - Math.floor(i / 9) * 5;
+    rig.position.set(x, g.heightAt ? g.heightAt(x, z) : P.y, z); rig.rotation.y = 0; g.scene.add(rig);
     const st = { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, dead: false, deadT: 0, fallDir: 1 };
     __row.push({ k, rig, st, x, z });
   });
   window.__pose = () => { for (const r of __row) for (let i = 0; i < 4; i++) (r.rig.userData.anim ? r.rig.userData.anim.update(r.st, g.t, 0.016) : g.anim(r.rig, r.st, 0.016)); };
   __pose();
 }, KEYS);
-const shot = async (name, fn) => { await pg.evaluate(fn); await pg.evaluate(() => { __pose(); __sim(0.2); __pose(); }); await pg.waitForTimeout(500); await pg.screenshot({ path: `${out}/${name}.png` }); };
+const shot = async (name, fn) => { await pg.evaluate(fn); await pg.evaluate(() => { __pose(); __sim(0.2); __pose(); }); await pg.waitForTimeout(500); await pg.screenshot({ path: `${out}/${name}.png`, timeout: 240000 }); };
 // the whole line, from the front, in three parts
 for (let part = 0; part < 4; part++) {
   await shot(`line${part}`, `(() => { const g = __game, r = __row, a = r[${part} * 5], c = r[Math.min(r.length - 1, ${part} * 5 + 4)]; const mx = (a.x + c.x) / 2, z = a.z; g.updateCamera = function () { this.camera.position.set(mx, a.rig.position.y + 1.6, z + 7.5); this.camera.lookAt(mx, a.rig.position.y + 1.05, z); }; document.getElementById('ui').style.display = 'none'; })()`);
