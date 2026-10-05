@@ -22,5 +22,6 @@ for (let i = 0; i < 70 && !reloaded; i++) {
   if (st.line && log[log.length - 1] !== st.line) { log.push(st.line); if (out && shots < 12) await pg.screenshot({ path: `${out}/${region}-${String(shots++).padStart(2, '0')}.png` }); }
   if (st.victory) { log.push('VICTORY'); break; }
 }
+await pg.waitForTimeout(4000); // Round 24: a travel reload starts as the loop's last evaluate dies; give the navigation event time to land
 console.log(region, 'boss', r0, '\n ' + log.join('\n '), '\nreloaded', reloaded);
 console.log('errors:', errs.slice(0, 5).join(' | ') || 'none'); await b.close();
