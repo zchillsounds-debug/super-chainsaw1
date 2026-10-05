@@ -44,7 +44,7 @@ if (hasSpots) {
   await shot('cast');
   log.push(await pg.evaluate(() => { const g = __game, H = g.hubLife; if (!H.F) H.cast(H.fishSpots[0]); let n = 0; while (H.F?.phase === 'wait' && n++ < 100) __sim(0.1); const ph = H.F?.phase; H.strike(); return `after ${(n * 0.1).toFixed(1)} s: ${ph}, struck -> ${H.F?.phase}`; }));
   // play it: tap only when the needle is in the zone
-  log.push(await pg.evaluate(() => { const g = __game, H = g.hubLife, p = g.player, f = H.F.fish; let n = 0; const c0 = p.fish[f] || 0;
+  log.push(await pg.evaluate(() => { const g = __game, H = g.hubLife, p = g.player, S = H.fishSpots[0]; if (!H.F) throw new Error(`the cast ended before play: msg "${document.querySelector('#fishing .fmsg').textContent}" off spot ${Math.hypot(p.pos.x - S.x, p.pos.z - S.z).toFixed(2)} m, foes within 30 m [${g.enemies.filter((e) => !e.dead && e.pos.distanceTo(p.pos) < 30).map((e) => e.type + '@' + e.pos.distanceTo(p.pos).toFixed(1) + (e.alerted ? ' alerted' : ''))}] dead ${p.dead} cine ${!!g.cinematic}`); const f = H.F.fish; let n = 0; const c0 = p.fish[f] || 0;
     while (H.F && n++ < 400) { __sim(0.03); const F = H.F; if (F && Math.abs(F.nd - F.zone) < F.zw / 2 * 0.6) H.strike(); }
     return `landed ${f}: ${c0} -> ${p.fish[f]} msg "${document.querySelector('#fishing .fmsg').textContent}"`; }));
   await shot('landed');
