@@ -1,7 +1,7 @@
-# Madinat al-Salam: Handoff (Round 24 in progress)
+# Madinat al-Salam: Handoff (Round 24 shipped)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-fobl3t` of zchillsounds-debug/super-chainsaw1. Round 24 (smooth transitions, Arsaber's new story beats, a graphics pass) is the latest work.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-fobl3t` of zchillsounds-debug/super-chainsaw1. Round 24 (smooth transitions, Arsaber's new story beats, a graphics pass) is shipped.
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
@@ -38,6 +38,16 @@ User decisions: a visual and graphics pass plus "stories and transitions for a s
 - **Touch notices:** at the top left under the minimap, at most four at once (they stacked over the fight).
 
 **New scripts:** `shots/r24scene.mjs <out> <region> <scene> [tod]` (play one story scene and shoot each shot; for `epilogue`, `rawhFalls`, `finale` and `docksFinale` it spawns and fells the boss first), `shots/r24close.mjs <out> [names]` (falcon perched and flying, Byzantine troops close up).
+
+**Shipped:** full sweep clean (exit 0, "errors: none"): traveltest, finaletest ×4 (marsh re-run after the test fix: `reloaded true`), r15test ×4, ngtest, r16test ×4, r17test ×4, r18test ×4 classes, r21rival ×4, r21holds ×4, r22holds ×8, r21hub marsh and docks, r21comp, r21mount, r21rift, trialtest, crafttest, benchtest, plus r24scene (docks arrival, sawad epilogue, docks finale) and r24close. Artifact **version 22** at https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (1.65 MB inlined; smoke-tested from `file://` with mobile emulation: ready, touch UI on, new game into the prologue, no page errors). APK built by CI from the final push.
+
+**Test fix:** `finaletest` reported `reloaded false` for the travelling endings: the travel reload kills the loop's last evaluate before Playwright's `framenavigated` lands. It now waits 4 s before reporting.
+
+**Next round: ideas (not approved):**
+- Device check on Android: the travel card while loading, audio after a region change (it resumes on the first tap), the blend in and out of cutscenes, the new music changes.
+- Small pink squares appeared near the horizon in two dusk shots of the Sawad epilogue (not identified; check whether they show on a device).
+- Characters are small at the default overhead zoom; the brighter rim light helps, but a subtle outline or a slightly closer default may read better on a phone.
+- The marsh hub still reads muted under its morning mist.
 
 **Workflow note:** this round edited in the main checkout and tested from a git worktree (`/home/user/wt24`, synced by a small copy script), so tests and edits never collided. `pgrep -f <pattern>` inside a waiting loop matches the loop's own command line; wait on a task's output file instead.
 
@@ -599,6 +609,7 @@ The goal is about 8–12 hours for a first playthrough, up from about 1.5 today,
 3. (Fixed in Round 20: new camera work for the lieutenants' last words and the boss intro.)
 
 ## File map (src/)
+- **Round 24:** story24_ar.js (most changes are in cinema.js, main.js, audio.js, audio2.js, scenes.js, terrain.js, lighting.js, hublife.js, index.html)
 - **Round 22:** storyholds.js, story22_ar.js (holds.js gained themes and the registry)
 - **Round 21:** rivals.js, hamrin.js, holds.js, hublife.js, story21_ar.js
 - **Round 20:** foes20.js, companion.js, mount.js, trials.js, craft.js, bench.js, docksprops.js
