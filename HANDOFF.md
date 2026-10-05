@@ -1,17 +1,33 @@
-# Madinat al-Salam: Handoff (Round 23 in progress)
+# Madinat al-Salam: Handoff (Round 23 built and mostly tested; not shipped)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-2oveca` of zchillsounds-debug/super-chainsaw1 (Round 22 complete and shipped).
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-eqeuig` of zchillsounds-debug/super-chainsaw1. Round 23 (every adversary Byzantine, story rewritten around the envoy Arsaber) is built and committed, but not shipped.
 >
 > Please:
-> 1. Fetch the branch and read HANDOFF.md fully, especially "Round 23: approved plan" (the user has already approved it) and "Round 22".
-> 2. Run `npm install`. Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Don't leave a background vite running; it is killed after two hours.
-> 3. Round 23 is approved: build it as written in "Round 23: approved plan". Ask me only if something in it is unclear or turns out impossible.
+> 1. Fetch the branch and read HANDOFF.md fully, especially "Round 23: status and what is left".
+> 2. Run `npm install`. Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Don't leave a background vite running; it is killed after two hours. Never edit `src/` while a test runs.
+> 3. Finish Round 23 as listed under "What is left", then ship it.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
+
+## Round 23: status and what is left
+**Done and committed** (details in "Round 23 (done): the Byzantine mission" below): names, looks, story, codex, Arabic, save migration, STORY.md.
+
+**Critique so far** (`shots/r23foes.mjs <outdir> [region] [x=..&z=..]`, a lineup of every troop type and boss on open ground, with head and shield close-ups):
+- Fixed: shields were round with an inner ring (read as archery targets); now tall ovals stretched across local x (the forearm runs along local y), one band inside the rim. The siphon's flame was a big glowing cone that read as a spear tip; now a small pilot flame. Felt caps read as black beanies, then a red one read as a fez; now lower, rounded, in brown, tan, dark and grey. Arsaber's plume is purple.
+- **Not yet re-shot:** the last felt-cap change (geometry cache `r23.2`). Re-run `r23foes.mjs` and look at `head-naffat.png`, `head-bandit.png` and the lines.
+- Nothing in any shield, helmet or banner reads as a religious symbol in the shots taken.
+
+**Test sweep** (script: run each test in sequence under one `withvite.sh`; the list is in "Round 22 · Shipped" plus `r21holds` ×4): **32 of 48 passed, all with exit 0 and "errors: none"**: r15test ×4 (bosses Bardanes L6, Kallinikos L9, Krateros L12 with duel, Arsaber L14), r16test ×4, r17test ×4, r18test ×4 classes, finaletest ×4, r21rival ×4, r22holds ×8. The sweep was cut off at that point by the end of the session. **Still to run:** r21holds ×4 (quarry, fort, gorge, rivalhold), ngtest, traveltest, trialtest, crafttest, benchtest, r21comp, r21mount, r21rift, r21hub marsh and docks. Also read the r21rival and r22holds logs to check the last words and names print as the new ones (exit codes were all 0, but the log contents were not read line by line).
+
+**What is left, in order:**
+1. Re-shoot the felt caps (above) and do a wider critique pass: `shots/crit.mjs` and `shots/r22crit.mjs` at a few holds, the prologue riders (`?tod=dusk`, new game), a kataphraktos charging in play, and Tatzates' look.
+2. Run the rest of the sweep (above).
+3. Ship: `npx vite build`, `node shots/inline.mjs out.html`, smoke-test from `file://` with mobile emulation, republish the Artifact (version 21), push, fetch the APK from `apk-builds` once its commit message shows the final short SHA, send it.
+4. Update this file's title and the "Round 23" section with the shipped state.
 
 ## Restore the code
 ```
@@ -19,7 +35,7 @@ unzip madinat-round19-handoff.zip -d madinat && cd madinat
 git clone repo.bundle game && cd game        # Round 20 is on branch ccr-c97baf64-6kbn83 (Round 19: ccr-56d2fa55-vx1w3y)
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
-If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-c97baf64-6kbn83`. If the repo has the branch, just `git fetch origin claude/new-session-2oveca && git checkout -B <session-branch> FETCH_HEAD` (Round 22 complete; Round 21 alone is `claude/new-session-w9ig9m`; Round 21 before its final session is `ccr-a81550d1-0nkldn`, Round 20 alone is `ccr-c97baf64-6kbn83`).
+If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-c97baf64-6kbn83`. If the repo has the branch, just `git fetch origin claude/new-session-eqeuig && git checkout -B <session-branch> FETCH_HEAD` (Round 23 built, not shipped; Round 22 alone is `claude/new-session-2oveca`; Round 21 alone is `claude/new-session-w9ig9m`; Round 21 before its final session is `ccr-a81550d1-0nkldn`, Round 20 alone is `ccr-c97baf64-6kbn83`).
 
 URL flags:
 - `?play` skips the title screen.
