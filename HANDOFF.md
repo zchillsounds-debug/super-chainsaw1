@@ -1,33 +1,38 @@
-# Madinat al-Salam: Handoff (Round 23 built and mostly tested; not shipped)
+# Madinat al-Salam: Handoff (Round 23 shipped)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-eqeuig` of zchillsounds-debug/super-chainsaw1. Round 23 (every adversary Byzantine, story rewritten around the envoy Arsaber) is built and committed, but not shipped.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-e8f6al` of zchillsounds-debug/super-chainsaw1. Round 23 (every adversary Byzantine, story rewritten around the envoy Arsaber) is shipped.
 >
 > Please:
-> 1. Fetch the branch and read HANDOFF.md fully, especially "Round 23: status and what is left".
-> 2. Run `npm install`. Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Don't leave a background vite running; it is killed after two hours. Never edit `src/` while a test runs.
-> 3. Finish Round 23 as listed under "What is left", then ship it.
+> 1. Fetch the branch and read HANDOFF.md fully.
+> 2. Run `npm install`. Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs.
+> 3. Ask me what Round 24 should be, and confirm the plan with me before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
 
-## Round 23: status and what is left
-**Done and committed** (details in "Round 23 (done): the Byzantine mission" below): names, looks, story, codex, Arabic, save migration, STORY.md.
+## Round 23 · Shipped
+Details of the work are in "Round 23 (done): the Byzantine mission" below.
 
-**Critique so far** (`shots/r23foes.mjs <outdir> [region] [x=..&z=..]`, a lineup of every troop type and boss on open ground, with head and shield close-ups):
-- Fixed: shields were round with an inner ring (read as archery targets); now tall ovals stretched across local x (the forearm runs along local y), one band inside the rim. The siphon's flame was a big glowing cone that read as a spear tip; now a small pilot flame. Felt caps read as black beanies, then a red one read as a fez; now lower, rounded, in brown, tan, dark and grey. Arsaber's plume is purple.
-- **Not yet re-shot:** the last felt-cap change (geometry cache `r23.2`). Re-run `r23foes.mjs` and look at `head-naffat.png`, `head-bandit.png` and the lines.
-- Nothing in any shield, helmet or banner reads as a religious symbol in the shots taken.
+**Critique, final session** (all fixed and re-shot):
+- **Felt caps:** the rolled brim sat at brow height and crossed the eyes like a blindfold. Now it rests on the forehead above the brows, with a thinner roll (geometry cache `r23.3`).
+- **No cross shapes:** the shipyard's timber posts had a level cross-tree near the top and read as crosses. Now each has one jib leaning up and out to a side, with a rope and a bale hanging from it (`holds.js`, `p` glyph, timber theme). The barges' furled yard was level across the mast; now it is a lateen yard slanting fore and aft (`docksprops.js`). Wells (two posts and a windlass) were checked and are fine.
+- **Cutscenes:** the hero's gold play ring showed under him in cutscenes. It is now hidden whenever the director runs (`game.heroRing`, toggled in `cineTick` and `update`).
+- **Looked at and fine:** crit.mjs (every scene); r22crit for the stockade, burned quarter and shipyard; the prologue riders at dusk (two Byzantine riders with shields and spears on the dune against a purple sky); a kataphraktos charging past with his lance in play; Tatzates mounted with his riders. A white glow on one foe's head in a stockade shot was a crit hit flash caught in the frame.
 
-**Test sweep** (script: run each test in sequence under one `withvite.sh`; the list is in "Round 22 · Shipped" plus `r21holds` ×4): **32 of 48 passed, all with exit 0 and "errors: none"**: r15test ×4 (bosses Bardanes L6, Kallinikos L9, Krateros L12 with duel, Arsaber L14), r16test ×4, r17test ×4, r18test ×4 classes, finaletest ×4, r21rival ×4, r22holds ×8. The sweep was cut off at that point by the end of the session. **Still to run:** r21holds ×4 (quarry, fort, gorge, rivalhold), ngtest, traveltest, trialtest, crafttest, benchtest, r21comp, r21mount, r21rift, r21hub marsh and docks. Also read the r21rival and r22holds logs to check the last words and names print as the new ones (exit codes were all 0, but the log contents were not read line by line).
+**New scripts:** `shots/r23intro.mjs <out> [tod]` (one shot per prologue shot; card and caption shots move on with time, so it steps the sim until the index changes). `shots/r23charge.mjs <out> [region] [spot]` (a kataphraktos and Tatzates spawned on screen on open ground; the overhead camera only sees about 7 m around the hero, and the Sawad hub and Hamrin camp don't suit it).
 
-**What is left, in order:**
-1. Re-shoot the felt caps (above) and do a wider critique pass: `shots/crit.mjs` and `shots/r22crit.mjs` at a few holds, the prologue riders (`?tod=dusk`, new game), a kataphraktos charging in play, and Tatzates' look.
-2. Run the rest of the sweep (above).
-3. Ship: `npx vite build`, `node shots/inline.mjs out.html`, smoke-test from `file://` with mobile emulation, republish the Artifact (version 21), push, fetch the APK from `apk-builds` once its commit message shows the final short SHA, send it.
-4. Update this file's title and the "Round 23" section with the shipped state.
+**Test fixes:**
+- `withvite.sh` now runs `node_modules/.bin/vite` directly. With `npx`, the kill reached npx and left vite running.
+- `r21hub docks` failed about half the time. The falcon step teleports the hero to the farthest archer, which was sometimes within 24 m of Arsaber's ground. That spawned the boss, and his intro then played over the fishing (the fish never bit, and the strike scared it off). The step now picks an archer more than 45 m from `SITES.arch`, and the fishing step says why if a cast ends early. It passed 5 of 5 after the fix.
+
+**Test sweep, all clean (exit 0, "errors: none"):** r15test ×4, r16test ×4, r17test ×4, r18test ×4 classes, finaletest ×4, r21rival ×4, r22holds ×8 (previous session); r21holds ×4, ngtest, traveltest, trialtest, crafttest, benchtest, r21comp, r21mount, r21rift, r21hub marsh and docks, plus r22holds shipyard, finaletest sawad and r21rival sawad again after the fixes (this session). The logs print the new names and lines: Brachamios and Tatzates ("All this way, for one arrow?"); Aetios and Rhentakios ("Arsaber pays us to hold the river…"); Tatzates escaping ("The envoy's silver does not cover this").
+
+**Shipped:** Artifact **version 21** at https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (1.65 MB inlined; smoke-tested from `file://` with mobile emulation: ready, touch UI on, new game into the prologue, no page errors). The APK was built by CI from the final push and sent to the user.
+
+**Next round:** not planned yet. Ask the user.
 
 ## Restore the code
 ```
@@ -35,7 +40,7 @@ unzip madinat-round19-handoff.zip -d madinat && cd madinat
 git clone repo.bundle game && cd game        # Round 20 is on branch ccr-c97baf64-6kbn83 (Round 19: ccr-56d2fa55-vx1w3y)
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
-If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-c97baf64-6kbn83`. If the repo has the branch, just `git fetch origin claude/new-session-eqeuig && git checkout -B <session-branch> FETCH_HEAD` (Round 23 built, not shipped; Round 22 alone is `claude/new-session-2oveca`; Round 21 alone is `claude/new-session-w9ig9m`; Round 21 before its final session is `ccr-a81550d1-0nkldn`, Round 20 alone is `ccr-c97baf64-6kbn83`).
+If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-c97baf64-6kbn83`. If the repo has the branch, just `git fetch origin claude/new-session-e8f6al && git checkout -B <session-branch> FETCH_HEAD` (Round 23 shipped; Round 23 before its final session is `claude/new-session-eqeuig`; Round 22 alone is `claude/new-session-2oveca`; Round 21 alone is `claude/new-session-w9ig9m`; Round 21 before its final session is `ccr-a81550d1-0nkldn`, Round 20 alone is `ccr-c97baf64-6kbn83`).
 
 URL flags:
 - `?play` skips the title screen.
