@@ -1,17 +1,45 @@
-# Madinat al-Salam: Handoff (Round 23 shipped)
+# Madinat al-Salam: Handoff (Round 24 in progress)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-e8f6al` of zchillsounds-debug/super-chainsaw1. Round 23 (every adversary Byzantine, story rewritten around the envoy Arsaber) is shipped.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-fobl3t` of zchillsounds-debug/super-chainsaw1. Round 24 (smooth transitions, Arsaber's new story beats, a graphics pass) is the latest work.
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
 > 2. Run `npm install`. Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs.
-> 3. Ask me what Round 24 should be, and confirm the plan with me before building.
+> 3. Ask me what the next round should be, and confirm the plan with me before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
+
+## Round 24: transitions, story, graphics
+User decisions: a visual and graphics pass plus "stories and transitions for a smooth gameplay feel"; all four kinds of transition (region travel, cutscene in/out, hold and dungeon doors, combat to calm and boss entries); polish the story and add new beats; graphics targets: the Hamrin overworld, Byzantine close-ups, lighting and FX, and whatever the critique finds; ship the usual way at the end. Arsaber is spared, not killed.
+
+**Transitions**
+- **Cutscenes (`cinema.js`):** the first shot blends out of the play camera over 0.85 s (position, rotation, fov). If the first shot is more than 28 m away it dips through black instead, and shots that open on black (`fadeIn`) skip the blend. When a scene ends, `director.blendOut()` (called every frame from `main.js`) eases the play camera out of the last framing over 0.9 s and lets the film grade (`uCine`) fall away. A scene that ended on black fades back up with `ui.fade` unless travel holds it black (`ui.holdBlack`, `director.endedBlack`). The HUD and touch controls fade back in after a short delay (`style.css`). `def.noBlend` turns blending off.
+- **Region travel (`main.js` `game.travel`, `index.html`):** the act card now shows once. The act-ending scenes (`epilogue`, `rawhFalls`, `finale`) no longer end on a card: they fade to black, and the loader shows a **travel card** (`TRAVEL_CARD`: Arabic name, act title, the reason to go) stored in `sessionStorage['sob.travelcard']` and drawn by an inline script in `index.html`. After the reload the game resumes straight out of the loader once the map is ready (`resumeTravel`, `start(saved, true)`), with no second fade to black and no arrival scene half-played under the loader. The mix fades out before the reload (`audio.fadeOutAll`) and back in after it (`fadeInAll`).
+- **Audio after a reload (`audio2.js`):** an AudioContext made without a tap starts suspended, so a one-time pointer or key listener now resumes it. The music runs through a duck gain: `ui.onFade` dips it while the screen is black.
+- **Doors:** `ui.fade(v, sec)` fades out in 0.5 s, so the 0.6 s swap behind it is always covered (it used to show at 0.8 s). The fire-to-fire travel in holds now waits 560 ms.
+- **Music (`audio.js`, `game.js`):** the score changes between explore and combat only on a bar line. A daff fill leads into the fight, and a qanun cadence down to the tonic closes it. The fight music holds 3 s after the last foe falls. A boss's death plays a `settle` stinger and the camera eases in (`settleZoom`) for 1.9 s before the ending scene.
+
+**Story (`scenes.js`, Arabic in `story24_ar.js` as `AR24`, merged last)**
+- **Act III epilogue:** after the lamps, Arsaber (on horseback, `horseRider` with the officer look) watches from the opposite bank of the canal, then turns for Baghdad. This is his first appearance.
+- **Act VI arrival (docks):** a parley at the khan under a truce. Arsaber offers to take Ishaq and the Pages to Constantinople ("a library, not a prison"); Ishaq: "He had a prison here. He still chose to teach here." Arsaber leaves; Salim: "Let him try." Ishaq then names Rhentakios.
+- **Docks finale:** Arsaber is beaten, not killed (`b.spared`; `game.js` skips the sink-and-remove for spared foes). He kneels: "You burn your own city, and call me the thief." Salim: "We copy. That is the difference." A caption: he went home that winter in an exchange of prisoners on the Lamis.
+- **Framing:** the arrival scenes' over-the-shoulder shots are wider (the turban and mail filled half the frame).
+
+**Graphics**
+- **Hamrin:** warmer ground with broad red-earth and scree patches (`terrain.js` RG 4); the `highland` preset has a lower sun, a warmer and lighter haze (fog 0.003) and grade 3; boulders are weathered grey-brown, not cream.
+- **Readability:** in play the character rim light is 1.6× (scenes keep the softer one); the vignette is 0.55 (was 0.75).
+- **Black banner:** the Abbasid banner at the caravanserai was `#151515` with roughness 1 and read as a hole from above; now `#2e2a26` with a woven sheen.
+- **Marsh causeway:** trodden brown silt with darker wet patches and few pebbles (it read as a grey sheet).
+- **Falcon (`hublife.js` `falconRig`):** a new sculpt: lathe body with a streaked pale breast, long pointed wings (pale underside, dark tips), a barred fan tail, hooked beak, moustache stripe, yellow legs. The hinge interface is unchanged.
+- **Touch notices:** at the top left under the minimap, at most four at once (they stacked over the fight).
+
+**New scripts:** `shots/r24scene.mjs <out> <region> <scene> [tod]` (play one story scene and shoot each shot; for `epilogue`, `rawhFalls`, `finale` and `docksFinale` it spawns and fells the boss first), `shots/r24close.mjs <out> [names]` (falcon perched and flying, Byzantine troops close up).
+
+**Workflow note:** this round edited in the main checkout and tested from a git worktree (`/home/user/wt24`, synced by a small copy script), so tests and edits never collided. `pgrep -f <pattern>` inside a waiting loop matches the loop's own command line; wait on a task's output file instead.
 
 ## Round 23 · Shipped
 Details of the work are in "Round 23 (done): the Byzantine mission" below.
