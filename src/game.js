@@ -205,7 +205,7 @@ export class Game {
     const rig = p.rig = humanoid(K.look); this.scene.add(rig);
     rig.position.copy(p.pos); rig.rotation.y = p.facing;
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.68, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffd890, transparent: true, opacity: 0.35, depthWrite: false }));
-    ring.position.y = 0.06; rig.add(ring);
+    ring.position.y = 0.06; rig.add(ring); this.heroRing = ring;
     if (fresh || !p.equip.weapon || p.equip.weapon.cls !== p.cls) p.equip.weapon = { id: 0, slot: 'weapon', rarity: 'common', name: K.weapon.name, base: K.weapon.base, min: K.weapon.min, max: K.weapon.max, level: 1, stats: {}, cls: p.cls };
     setWeaponPool(p.cls, K.weapons);
     p.cds = {}; this.recalcStats(); p.hp = p.stats.maxHp; p.mp = p.stats.maxMp;
@@ -569,6 +569,7 @@ export class Game {
   // while a cinematic plays: the world keeps breathing, everyone else holds still
   cineTick(dt) {
     if (this.mount?.on) this.mount.dismount(true); // cutscenes start on foot
+    if (this.heroRing) this.heroRing.visible = false; // the play ring at the hero's feet has no place in a cutscene
     // no see-through hole in cutscenes: the camera is free, and the dither read as grain on walls
     if (this.occU) this.occU.uHole.value.set(-9999, -9999);
     if (this.guide) { this.guide.mesh.count = 0; this.guide.vis = 0; }
@@ -1036,6 +1037,7 @@ export class Game {
 
   // ------------------------------------------------------------------ update loop
   update(dt) {
+    if (this.heroRing) this.heroRing.visible = true;
     if (this.hitStop > 0) { this.hitStop -= dt; dt *= 0.1; }
     if (this.slowMo > 0) { this.slowMo -= dt; dt *= 0.35; }
     this.t += dt; this.frameN = (this.frameN || 0) + 1;
