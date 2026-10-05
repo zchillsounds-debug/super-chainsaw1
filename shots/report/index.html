@@ -1,0 +1,279 @@
+<title>Sands of Baghdad Character Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column; shared problems first, then a card per character with its stills beside its problem list. */
+:root {
+  --bg: #eef0f2; --panel: #ffffff; --ink: #1b2230; --muted: #5b6474; --line: #d5d9e0;
+  --accent: #1f4fa3; --accent-soft: #e2eaf8;
+  --code: #2d6a4f; --code-soft: #ddf0e6; --gem: #8a4b0f; --gem-soft: #f8e7d2;
+  --sev-hi: #b42318; --sev-md: #b26a00; --sev-lo: #5b6474;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12161f; --panel: #1a202c; --ink: #e6e9ef; --muted: #9aa3b2; --line: #2c3444;
+  --accent: #8fb3f5; --accent-soft: #1e2a42; --code: #7fd1a8; --code-soft: #18302a; --gem: #f0b27a; --gem-soft: #3a2a1a;
+  --sev-hi: #ff8a7a; --sev-md: #f2b950; --sev-lo: #9aa3b2; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12161f; --panel: #1a202c; --ink: #e6e9ef; --muted: #9aa3b2; --line: #2c3444;
+  --accent: #8fb3f5; --accent-soft: #1e2a42; --code: #7fd1a8; --code-soft: #18302a; --gem: #f0b27a; --gem-soft: #3a2a1a;
+  --sev-hi: #ff8a7a; --sev-md: #f2b950; --sev-lo: #9aa3b2; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 17px/1.6 var(--f-body); }
+.wrap { max-width: 1060px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 80px; display: grid; gap: 48px }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; line-height: 1.15; margin: 0 }
+h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; letter-spacing: -0.01em }
+h2 { font-size: 1.6rem; font-weight: 700 }
+h3 { font-size: 1.2rem; font-weight: 700 }
+p { margin: 0; max-width: 68ch }
+.eyebrow { font: 600 12px/1 var(--f-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent) }
+.lede { color: var(--muted); font-size: 1.08rem }
+header { display: grid; gap: 14px }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 18px; font: 13px/1.4 var(--f-mono); color: var(--muted) }
+section { display: grid; gap: 18px }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font: 13px var(--f-mono); color: var(--muted) }
+.tag { display: inline-block; font: 600 11px/1 var(--f-mono); letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 6px; border-radius: 4px; white-space: nowrap; vertical-align: 2px }
+.tag.code { background: var(--code-soft); color: var(--code) }
+.tag.gem { background: var(--gem-soft); color: var(--gem) }
+.sev { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; flex: none }
+.sev.hi { background: var(--sev-hi) } .sev.md { background: var(--sev-md) } .sev.lo { background: var(--sev-lo) }
+nav.jump { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); padding-block: 10px; display: flex; flex-wrap: wrap; gap: 6px }
+nav.jump a { font: 600 12px/1 var(--f-mono); color: var(--ink); text-decoration: none; padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel) }
+nav.jump a:hover, nav.jump a:focus-visible { border-color: var(--accent); color: var(--accent); outline: none }
+.shared { display: grid; gap: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden }
+.shared .row { display: grid; grid-template-columns: 7.5rem 1fr auto; gap: 14px; padding: 14px 18px; border-top: 1px solid var(--line); align-items: start }
+.shared .row:first-child { border-top: 0 }
+.shared .cat { font: 600 12px/1.6 var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em }
+.shared .txt { min-width: 0 }
+.shared .txt b { font-weight: 600 }
+.shared .who { font: 12px/1.5 var(--f-mono); color: var(--muted); display: block; margin-top: 4px }
+@media (max-width: 640px) { .shared .row { grid-template-columns: 1fr auto } .shared .cat { grid-column: 1 / -1 } }
+.group-h { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 2px solid var(--ink); padding-bottom: 8px }
+.group-h p { color: var(--muted); font-size: 0.95rem }
+.char { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 22px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px }
+@media (max-width: 820px) { .char { grid-template-columns: 1fr } }
+.char-h { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline }
+.char-h .role { font: 13px var(--f-mono); color: var(--muted) }
+.shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-content: start }
+.shots figure { margin: 0; display: grid; gap: 4px }
+.shots figure.wide { grid-column: 1 / -1 }
+.shots button { padding: 0; border: 0; background: none; cursor: zoom-in; border-radius: 6px; overflow: hidden; display: block }
+.shots button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px }
+.shots img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover }
+.shots figcaption { font: 11px var(--f-mono); color: var(--muted) }
+.issues { display: grid; gap: 14px; align-content: start; min-width: 0 }
+.issues h4 { margin: 0; font: 600 12px/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent) }
+.issues ul { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 7px }
+.issues li { display: flex; gap: 0; align-items: baseline; font-size: 0.97rem; line-height: 1.5 }
+.issues li .t { flex: 1; min-width: 0 }
+.issues li .tag { margin-left: 8px }
+ol.plan { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 14px }
+ol.plan > li { counter-increment: s; display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: 4px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px }
+ol.plan > li::before { content: counter(s); font: 700 1.8rem/1 var(--f-display); color: var(--accent); grid-row: span 3 }
+ol.plan p { color: var(--muted); font-size: 0.97rem }
+ol.plan .track { font: 12px var(--f-mono); color: var(--muted) }
+.callout { background: var(--accent-soft); border-radius: 10px; padding: 16px 18px; display: grid; gap: 8px }
+.tbl { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; min-width: 560px }
+th, td { text-align: left; padding: 10px 14px; border-top: 1px solid var(--line); vertical-align: top }
+th { font: 600 12px var(--f-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-top: 0 }
+td.fn { font: 13px var(--f-mono); white-space: nowrap; color: var(--accent) }
+td.n { font: 600 13px var(--f-mono); font-variant-numeric: tabular-nums; color: var(--muted) }
+code { font: 0.88em var(--f-mono); background: var(--accent-soft); padding: 1px 4px; border-radius: 3px }
+ul.plain { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; max-width: 72ch }
+dialog { border: 0; padding: 0; background: transparent; max-width: min(92vw, 860px) }
+dialog::backdrop { background: rgb(0 0 0 / 0.8) }
+dialog img { display: block; width: 100%; border-radius: 8px }
+dialog p { color: #fff; font: 13px var(--f-mono); margin-top: 8px }
+footer { font: 13px var(--f-mono); color: var(--muted) }
+@media (prefers-reduced-motion: no-preference) { nav.jump a { transition: border-color .15s, color .15s } }
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Characters round · step 1 · audit</span>
+  <h1>Who looks wrong, and why</h1>
+  <p class="lede">Close-ups of Salim's four disciplines, seven enemy types and captains, and the five named NPCs, all shot in the game at golden hour. Below each set of stills is a problem list under your four headings: body, face and head, clothing, and animation.</p>
+  <div class="meta"><span>42 stills · 800×800 in game, SwiftShader</span><span>branch ccr-1cf868f2-jemuvq</span><span>no game code changed</span></div>
+</header>
+
+<div class="callout">
+  <h3>The short version</h3>
+  <p>Almost every problem lives in shared code. All 18 characters use one skeleton, one head, one torso and one set of animation clips, so a fix in <code>human.js</code> or <code>anim.js</code> lands on everyone at once. That is good news for effort. It is also why NPCs and enemies barely look like different people: they share one face and differ only in colours, beards and hats.</p>
+  <div class="legend"><span><span class="sev hi"></span>breaks the look</span><span><span class="sev md"></span>clearly off</span><span><span class="sev lo"></span>polish</span><span><span class="tag code">code</span> I fix in the sculpt or animation code</span><span><span class="tag gem">gemini</span> your textures or references help</span></div>
+</div>
+
+<nav class="jump" aria-label="Jump to section">
+  <a href="#shared">Shared</a><a href="#classes">Salim and classes</a><a href="#enemies">Enemies</a><a href="#npcs">NPCs</a><a href="#anim">Animation</a><a href="#plan">Fix order</a><a href="#gemini">Gemini list</a>
+</nav>
+
+<section id="shared">
+  <div class="group-h"><h2>Shared problems</h2><p>Seen on every character</p></div>
+  <div class="shared" id="sharedRows"></div>
+</section>
+
+<section id="classes"><div class="group-h"><h2>Salim and the four classes</h2><p>Hero tier: the finest sculpt, with separate fingers</p></div><div id="g-classes" style="display:grid;gap:18px"></div></section>
+<section id="enemies"><div class="group-h"><h2>Enemies and captains</h2><p>Crowd tier: coarser sculpt and mitten hands. Ghassan is hero tier</p></div><div id="g-enemies" style="display:grid;gap:18px"></div></section>
+<section id="npcs"><div class="group-h"><h2>Named NPCs</h2><p>Ishaq is hero tier; the suq NPCs are crowd tier</p></div><div id="g-npcs" style="display:grid;gap:18px"></div></section>
+
+<section id="anim">
+  <div class="group-h"><h2>Animation</h2><p>From reading <code>anim.js</code>; stills cannot show motion</p></div>
+  <div class="shared" id="animRows"></div>
+</section>
+
+<section id="plan">
+  <div class="group-h"><h2>Proposed fix order</h2><p>Each step ends with before and after shots plus a draw-call check</p></div>
+  <ol class="plan">
+    <li><h3>Quick bug fixes</h3><p>Veils that let the chin and nose through, the bow hanging behind the back, the flat torch flame, the shield floating off the arm, the spear passing through the helmet, the dark slit in robe fronts, crowd-tier eyes buried in the head, and cloth that flares out after a jump. Small, isolated changes that improve every screen.</p><span class="track">code · while you start on Gemini</span></li>
+    <li><h3>Faces and heads</h3><p>Rebuild the head: skull, brow ridge, chin and jaw, a thicker neck, smaller eyes set into sockets with relaxed lids, tapered eyebrows on the skin, a closed resting mouth, and beards that grow from the face. Then add face settings (age, nose, jaw, cheeks, brow) so Ishaq, Yusuf, Bishr, 'Amr, Rafi', Farud, Hisham and Ghassan look like different men. Rework turbans and the qalansuwa so they read as wound cloth and tall felt, not soft caps.</p><span class="track">code · guided by Gemini refs 13–18</span></li>
+    <li><h3>Bodies</h3><p>A male torso: remove the chest bulges, flatter pecs, a wider waist, trapezius and shoulders. Let bellies show through robes. Real builds per role (heavy smith, plump merchant, wiry 'ayyar, stooped elder). Boots with soles and heels.</p><span class="track">code</span></li>
+    <li><h3>Clothing</h3><p>Wire in your cloth, leather, felt and mail textures and the trim bands. Layered garments (qaba over a shirt, robes hitched into belts for fighters), sleeve folds, a cloak that hangs from the shoulders, and distinct gear for the captains.</p><span class="track">code + Gemini textures 1–12</span></li>
+    <li><h3>Animation</h3><p>Proper strafing steps, idle weight shifts and personality (elder stoop, merchant sway), weapon-specific attacks for dagger, torch, spear and bow (with a real draw), directional hit reactions, and deaths that land on the ground, including Jabir's fall in the prologue.</p><span class="track">code</span></li>
+  </ol>
+</section>
+
+<section id="gemini">
+  <div class="group-h"><h2>Gemini request list</h2><p>Upload to <code>assets/raw/textures/</code> and <code>assets/raw/refs/</code>, with a line per file in <code>assets/raw/CREDITS.md</code></p></div>
+  <div class="callout">
+    <h3>Rules for every texture</h3>
+    <ul class="plain">
+      <li>Seamless and tileable, square 1024×1024 PNG. Tile it 2×2 to check; any visible seam means regenerate.</li>
+      <li>Add to the prompt: "flat even lighting, no shadows, no highlights, no vignette, straight top-down orthographic view, fills the whole frame, no objects, no text, no watermark".</li>
+      <li>Check before uploading: no crescents, crosses, stars (8-pointed included), domes or minarets, and no letters or script, even decorative. Leave the word "Islamic" out of prompts; it invites all of these.</li>
+    </ul>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>#</th><th>Filename</th><th>Prompt core</th><th>Fixes</th></tr></thead>
+    <tbody id="gemRows"></tbody>
+  </table></div>
+  <div class="callout">
+    <h3>Optional: a one-character Meshy test</h3>
+    <p>If you want to judge AI-made rigged models before committing, make Salim in Meshy from ref 13 (rigged, GLB, about 10–20k triangles) and upload it to <code>assets/raw/models/</code>. I will put him side by side with the procedural Salim at golden hour and check phone cost. Nothing on this page is wasted either way; the animation, bow, torch and veil fixes apply to both.</p>
+  </div>
+</section>
+
+<footer>Stills taken with <code>shots/multi.mjs</code> + <code>shots/audit.js</code>, query <code>?play&amp;tod=golden&amp;noadapt</code>. Other characters sometimes stand in the background; the game's culling sets their visibility every frame.</footer>
+</div>
+
+<dialog id="lb"><img id="lbImg" alt=""><p id="lbCap"></p></dialog>
+
+<script>
+const S = { hi: 'hi', md: 'md', lo: 'lo' };
+const C = 'code', G = 'gem';
+const shared = [
+  ['Face', 'hi', '<b>One face for everyone.</b> The head sculpt takes no settings except neck width, so every man has the same nose, jaw, cheeks and eyes. Beard colour and headgear are the only differences.', 'all 18', C],
+  ['Face', 'hi', '<b>Startled, bulging eyes.</b> Eyeballs sit on the surface rather than in sockets, and the upper lids rest well above the iris, so white shows all round it.', 'hero tier; crowd-tier eyes are the reverse: buried and invisible', C],
+  ['Face', 'hi', '<b>Mouth hangs open</b> with swollen red lips at rest, even when the character is idle.', 'all', C],
+  ['Face', 'md', '<b>Eyebrows are thick, flat bars</b> floating in front of the forehead, the same shape on every face.', 'all', C],
+  ['Face', 'md', '<b>Flat profile.</b> The forehead runs straight into the nose with no brow ridge; the chin is small and set back, and the ears are dark rings.', 'all', C],
+  ['Face', 'md', '<b>Glossy orange skin.</b> Skin reads as polished plastic: too shiny, and the subsurface tint pushes it orange.', 'all', C + '+' + G],
+  ['Body', 'hi', '<b>Chest bulges read as breasts</b> on every man, and the waist is pinched. The chest is built from two forward ellipsoids at nipple height.', 'all', C],
+  ['Body', 'md', '<b>Pencil neck.</b> The neck is a thin cylinder, too narrow for the head and helmet, with no trapezius shoulder slope.', 'all', C],
+  ['Body', 'md', '<b>Every body is the same.</b> The build, girth and belly settings barely change the silhouette; Yusuf\'s belly (0.5) is invisible even in profile.', 'all', C],
+  ['Body', 'md', '<b>Boots look like socks:</b> no sole, heel or turned top. Crowd-tier hands are mittens.', 'all', C],
+  ['Clothing', 'hi', '<b>Wetsuit look.</b> Shirts and coats are skin-tight smooth shells with a faint procedural weave; no folds, seams or thickness.', 'all', C + '+' + G],
+  ['Clothing', 'hi', '<b>Robes are stiff tubes</b> split at the front. The split shows a dark trouser stripe that reads as a tear. When walking it flares out as a rigid flat sheet, and a hard light-dark band runs across most skirts at knee height.', 'all robed', C],
+  ['Clothing', 'md', '<b>Headgear reads as soft caps.</b> Turbans and the qalansuwa look like beanies or muffins; the wound cloth is lost in one smooth blob.', 'all', C + '+' + G],
+  ['Clothing', 'md', '<b>Litham veils are a black balaclava</b> with the nose poking through and the chin showing below it.', 'bandit, archer, knife-man, torch-bearer, \'Ayyar', C],
+  ['Clothing', 'md', '<b>Cloak is a flat board</b> hanging straight down the back, not draped over the shoulders.', 'Faris, Ghassan', C],
+];
+const anim = [
+  ['Idle', 'hi', '<b>Stands at attention.</b> Feet together, arms hanging straight, perfectly symmetric. The only life is breathing; no weight shift, head turns or eye movement.', 'all', C],
+  ['Walk', 'hi', '<b>Sideways movement glides.</b> Hip turn and arm swing come from how far each foot is ahead along the facing direction; walking sideways gives zero, so the body slides with planted-looking feet.', 'all, worst on the Rami while kiting', C],
+  ['Attacks', 'md', '<b>One sword combo for every weapon.</b> Daggers, the torch and the brigands\' swords all play the same three sword swings. The bow "shoot" pose has no draw: the string hand never reaches the string.', 'all', C],
+  ['Hits', 'md', '<b>One flinch for every hit,</b> randomly left or right, with no direction from the blow and no stagger step.', 'all', C],
+  ['Death', 'hi', '<b>Falls like a plank.</b> The whole body pivots on the feet, forward or back only, then bounces. In cutscenes the fall never finishes, which is why Jabir slumps instead of lying down.', 'all', C],
+  ['Character', 'md', '<b>No personality in motion.</b> The elder, the merchant, the smith and the wounded courier all stand and move like Salim.', 'NPCs', C],
+];
+const groups = {
+  classes: [
+    { name: 'Faris', role: 'Salim · mailed swordsman', shots: [['cls_faris_body', 'Front three-quarter'], ['cls_faris_face', 'Face'], ['cls_faris_side', 'Side'], ['cls_faris_face_side', 'Face profile'], ['cls_faris_back', 'Back', 1]],
+      issues: { Body: [['md', 'Shield hangs away from the forearm in mid-air instead of being strapped to it.', C], ['md', 'Sword is held point-down beside the hip at idle, with the wrist bent oddly.', C]],
+        'Face and head': [['hi', 'Salim\'s face (shared by all four classes): bulging eyes, open mouth, bar brows, flat profile with a weak chin.', C], ['md', 'Beard hangs as a separate lump from the jaw with a gap to the neck; the sideburn is a thin dark stroke detached from the beard.', C], ['md', 'Back of the hair cap bulges out below the qalansuwa like a helmet rim.', C]],
+        Clothing: [['md', 'Qaba crossover and gold trim are only a painted line; no overlap or thickness.', C + '+' + G], ['md', 'Red cloak is a straight flat panel down the back.', C], ['lo', 'Mail collar is good; mail is not visible elsewhere under the coat.', C]] } },
+    { name: 'Rami', role: 'Horse-archer', shots: [['cls_rami_body', 'Front three-quarter'], ['cls_rami_face', 'Face'], ['cls_rami_side', 'Side']],
+      issues: { Body: [['hi', 'Bow is held at the hip with its arc swung behind the back; from the side it is just a stick.', C]],
+        'Face and head': [['md', 'Same face as the Faris; only the cap colour changes.', C]],
+        Clothing: [['md', 'No quiver, arm guard or anything archer-specific.', C], ['md', 'Robe skirt is a stiff barrel from the side.', C]],
+        Animation: [['hi', 'Kiting is the class\'s whole style, so it shows the sideways glide more than anyone.', C]] } },
+    { name: 'Naffat', role: 'Fire-thrower', shots: [['cls_naffat_body', 'Front three-quarter'], ['cls_naffat_face', 'Face'], ['cls_naffat_side', 'Side']],
+      issues: { Body: [['hi', 'The torch is held like a spear, and its flame is a large flat, unlit yellow cone that hides the chest from the front.', C]],
+        'Face and head': [['md', 'Turban is a flat squashed cushion.', C + '+' + G]],
+        Clothing: [['md', 'Nothing says fire-thrower: no flasks or pouches, no scorch marks on the cloth.', C + '+' + G]] } },
+    { name: '\'Ayyar', role: 'Street fighter', shots: [['cls_ayyar_body', 'Front three-quarter'], ['cls_ayyar_face', 'Face'], ['cls_ayyar_side', 'Side']],
+      issues: { 'Face and head': [['hi', 'Veil: the nose sticks through it and the chin hangs out below it; the veil wraps the neck as a tube.', C]],
+        Body: [['md', 'Daggers held point-down like small swords; reverse grip would suit the class.', C], ['md', 'Same build as the Faris, though the class should look lean and quick.', C]],
+        Clothing: [['md', 'Ankle-length robe reads as a dress on a nimble fighter; it needs a hitched or shorter robe and wrapped shins.', C]] } },
+  ],
+  enemies: [
+    { name: 'Brigand', role: 'bandit · crowd tier', shots: [['en_bandit_body', 'Front three-quarter'], ['en_bandit_face', 'Face']],
+      issues: { 'Face and head': [['hi', 'Veil shows nose and chin; the eyes are buried and invisible.', C]], Body: [['md', 'Sword blade is wide, flat and blue-lit; it reads as a toy.', C]], Clothing: [['md', 'Skirt flares out sideways as a rigid sheet.', C]] } },
+    { name: 'Deserter Lancer', role: 'spearman · crowd tier', shots: [['en_spearman_body', 'Front three-quarter'], ['en_spearman_face', 'Face']],
+      issues: { 'Face and head': [['hi', 'Face is smeared: no readable eyes, nose blurred, a bright stripe down the forehead.', C], ['md', 'Mail aventail is a fat doughnut round the face.', C]], Body: [['md', 'Spear held level at the hip; the head is oversized and flat.', C]] } },
+    { name: 'Brigand Archer', role: 'archer · crowd tier', shots: [['en_archer_body', 'Front three-quarter'], ['en_archer_face', 'Face']],
+      issues: { Body: [['hi', 'Same bow problem as the Rami: the arc hangs behind the body.', C]], 'Face and head': [['hi', 'Light veil makes the nose and chin problem very visible.', C]] } },
+    { name: 'Knife-man', role: 'deserter · crowd tier', shots: [['en_deserter_body', 'Front three-quarter'], ['en_deserter_face', 'Face']],
+      issues: { Body: [['md', 'Hunch setting barely shows; reads as the same upright man.', C]], Clothing: [['md', 'Skirt flared sideways as a rigid sheet.', C]] } },
+    { name: 'Torch-bearer', role: 'naffat · crowd tier', shots: [['en_torch_body', 'Front three-quarter'], ['en_torch_face', 'Face']],
+      issues: { Body: [['hi', 'Torch flame is a glowing octagon at the hip.', C]], 'Face and head': [['hi', 'Veil leaves the nose out and stops above the chin.', C]] } },
+    { name: 'Farud', role: 'captain · elite lancer', shots: [['en_farud_body', 'Body'], ['en_farud_face', 'Face']],
+      issues: { 'Face and head': [['hi', 'Identical to a common lancer, scaled 1.3×, with the same smeared crowd-tier face. A named captain who confesses on screen needs his own face.', C]], Clothing: [['md', 'No captain gear: no cloak, rank colours or better armour.', C + '+' + G]] } },
+    { name: 'Hisham', role: 'captain · elite lancer', shots: [['en_hisham_body', 'Body'], ['en_hisham_face', 'Face']],
+      issues: { 'Face and head': [['hi', 'Same model as Farud and every lancer. The story makes him a former student of the Teacher; nothing shows it.', C]], Body: [['md', 'Spear shaft passes through the helmet at idle.', C]] } },
+    { name: 'Ghassan', role: 'boss · hero tier', shots: [['en_ghassan_body', 'Body'], ['en_ghassan_face', 'Face'], ['en_ghassan_settled', 'Body after 4 s']],
+      issues: { 'Face and head': [['md', 'Best face in the game, but it keeps the shared open mouth and bar brows; the nasal guard floats on the forehead.', C]], Clothing: [['hi', 'Cloak flips forward over his shoulder as a flat sheet and is still stuck there 4 seconds later; his skirt flares out stiffly as he walks. Cloth is probably not scaled with his 1.55× body.', C]], Body: [['md', 'Big frame, but the belly setting does not show through the coat.', C]] } },
+  ],
+  npcs: [
+    { name: 'Ishaq', role: 'scholar · hero tier', shots: [['npc_ishaq_body', 'Body'], ['npc_ishaq_face', 'Face']],
+      issues: { 'Face and head': [['md', 'White beard is the best hair in the game; the face under it is Salim\'s, with no age lines.', C]], Body: [['md', 'Young man\'s posture; no stoop. Pinched waist.', C]], Clothing: [['md', 'Dark slit down the white robe front reads as a tear.', C], ['lo', 'Astrolabe floats at the hip.', C]] } },
+    { name: 'Yusuf', role: 'merchant · crowd tier', shots: [['npc_yusuf_body', 'Body'], ['npc_yusuf_face', 'Face'], ['npc_yusuf_side', 'Side']],
+      issues: { Body: [['hi', 'Belly 0.5 does not show; he is as slim as Salim.', C]], 'Face and head': [['md', 'Turban looks like a chef\'s hat.', C + '+' + G]], Clothing: [['md', 'Tight white shirt looks like a wetsuit; robe front split.', C + '+' + G]] } },
+    { name: 'Bishr', role: 'blacksmith · crowd tier', shots: [['npc_bishr_body', 'Body'], ['npc_bishr_face', 'Face']],
+      issues: { Body: [['md', 'Build 1.2 reads as average; a smith needs heavy arms and shoulders.', C]], Clothing: [['md', 'No leather apron or rolled sleeves.', C + '+' + G]] } },
+    { name: '\'Amr', role: 'trainer · crowd tier', shots: [['npc_amr_body', 'Body'], ['npc_amr_face', 'Face']],
+      issues: { 'Face and head': [['md', 'Grey-bearded Salim. A veteran needs a weathered, harder face.', C]], Clothing: [['lo', 'Mail collar and qaba match the Faris, which suits his role.', C]] } },
+    { name: 'Rafi\'', role: 'courier · crowd tier', shots: [['npc_rafi_body', 'Body'], ['npc_rafi_face', 'Face']],
+      issues: { Body: [['md', 'Says he cannot stand for long but stands straight; no bandage or sling.', C]], Clothing: [['md', 'Dark patch in the robe front reads as a tear.', C]] } },
+  ],
+};
+const gem = [
+  ['1', 'wool_black.png', 'Black wool twill, visible diagonal weave, slight fibre fuzz, faint wear, very dark charcoal', 'Faris, Ghassan, \'Ayyar coats'],
+  ['2', 'linen_cream.png', 'Undyed cream linen, plain weave, uneven slubby threads', 'Ishaq, Yusuf, robes'],
+  ['3', 'wool_coarse_brown.png', 'Coarse homespun brown wool, loose uneven weave, a little dusty', 'brigands'],
+  ['4', 'felt_dark.png', 'Dense pressed felt, dark brown-black, matted fibres, no weave', 'qalansuwa caps'],
+  ['5', 'leather_brown.png', 'Soft worn dark-brown goat leather, fine grain, light creasing, scuffs', 'boots, belts, aprons'],
+  ['6', 'mail_iron.png', 'Riveted iron mail, small 4-in-1 rings, dull grey, slight rust in the gaps, seen straight on', 'lancers, captains, Faris'],
+  ['7', 'turban_linen.png', 'Fine white cotton muslin, very fine weave, subtle thread variation', 'turbans, veils'],
+  ['8', 'skin_detail.png', 'Greyscale skin micro-detail, pores and fine lines only, mid-grey, no colour', 'plastic skin'],
+  ['9', 'trim_gold_vine.png', '2048×256 strip: gold thread vine scroll with leaves on black wool, border lines top and bottom', 'qaba edges, hems'],
+  ['10', 'trim_chevron_red.png', '2048×256 strip: woven red and ochre chevrons on dark brown', 'brigand hems'],
+  ['11', 'trim_circles.png', '2048×256 strip: gold-on-dark-green linked circles and small dots', 'Ishaq\'s sleeve band'],
+  ['12', 'trim_plain_stripes.png', '2048×256 strip: three stripes, ochre, rust and cream, on dark cloth', 'sashes, villagers'],
+  ['13', 'ref_salim.png', 'Reference sheet, front and profile: man about 30, short dark beard, felt qalansuwa wrapped with dark cloth, black qaba left over right with gold trim, sash, trousers into soft boots', 'face and costume target'],
+  ['14', 'ref_face_sheet.png', 'Five adult male faces, Middle Eastern and Central Asian, front and profile: young, middle-aged, elderly white-bearded, heavy-set, gaunt; natural eyes, relaxed closed mouths', 'face variety'],
+  ['15', 'ref_brigand.png', 'Desert raider: litham over nose and mouth, tucked under the chin and round the neck, short turban, coarse robe hitched into a belt', 'veils, enemy look'],
+  ['16', 'ref_ghassan.png', 'Big commander: conical steel helmet with mail aventail, mail under a black qaba, red cloak over one shoulder, straight sword, round shield', 'boss and captains'],
+  ['17', 'ref_yusuf.png', 'Plump merchant: cream robe, red sash, white turban, grey-brown beard', 'body builds'],
+  ['18', 'ref_ishaq.png', 'Elderly scholar: long white beard, cream robe with a green woven band on the upper sleeve, teal turban', 'age, posture'],
+];
+const tag = (t) => t.split('+').map((k) => `<span class="tag ${k}">${k === 'gem' ? 'gemini' : 'code'}</span>`).join('');
+const esc = (s) => s;
+document.getElementById('sharedRows').innerHTML = shared.map(([c, s, t, w, k]) => `<div class="row"><span class="cat">${c}</span><span class="txt"><span class="sev ${s}"></span>${t}<span class="who">${w}</span></span><span>${tag(k)}</span></div>`).join('');
+document.getElementById('animRows').innerHTML = anim.map(([c, s, t, w, k]) => `<div class="row"><span class="cat">${c}</span><span class="txt"><span class="sev ${s}"></span>${t}<span class="who">${w}</span></span><span>${tag(k)}</span></div>`).join('');
+for (const [g, list] of Object.entries(groups)) {
+  document.getElementById('g-' + g).innerHTML = list.map((ch) => `<article class="char" id="${ch.name.replace(/\W/g, '').toLowerCase()}">
+    <div class="char-h"><h3>${ch.name}</h3><span class="role">${ch.role}</span></div>
+    <div class="shots">${ch.shots.map(([f, cap, wide]) => `<figure${wide || (ch.shots.length % 2 && f === ch.shots[ch.shots.length - 1][0]) ? ' class="wide"' : ''}><button type="button" data-src="img/${f}.jpg" data-cap="${ch.name} · ${cap}" aria-label="Enlarge ${ch.name}, ${cap}"><img src="img/${f}.jpg" alt="${ch.name}, ${cap}" loading="lazy"></button><figcaption>${cap}</figcaption></figure>`).join('')}</div>
+    <div class="issues">${Object.entries(ch.issues).map(([h, items]) => `<div><h4>${h}</h4><ul>${items.map(([s, t, k]) => `<li><span class="sev ${s}"></span><span class="t">${t}</span>${tag(k)}</li>`).join('')}</ul></div>`).join('')}</div>
+  </article>`).join('');
+}
+document.getElementById('gemRows').innerHTML = gem.map(([n, f, p, x]) => `<tr><td class="n">${n}</td><td class="fn">${f}</td><td>${p}</td><td>${x}</td></tr>`).join('');
+const lb = document.getElementById('lb');
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('.shots button');
+  if (b) { document.getElementById('lbImg').src = b.dataset.src; document.getElementById('lbImg').alt = b.dataset.cap; document.getElementById('lbCap').textContent = b.dataset.cap; lb.showModal(); return; }
+  if (e.target === lb || e.target.closest('dialog')) lb.close();
+});
+</script>
