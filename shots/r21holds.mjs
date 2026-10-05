@@ -37,7 +37,7 @@ log.push(await pg.evaluate(async () => { const g = __game, p = g.player, I = g.i
 // the master
 log.push(await pg.evaluate(async () => { const g = __game, p = g.player, I = g.interior.I; const B = g.interior.enemies.find((e) => e.holdKey === 'boss'); p.pos.set(B.pos.x, 0, B.pos.z + 9); __sim(0.4); const card = __director.shot?.card?.en || __director.shot?.line?.text; __director.skip(); await new Promise((r) => setTimeout(r, 50));
   const seen = new Set(); for (let i = 0; i < 180; i++) { p.hp = p.stats.maxHp; p.dead = false; p.st.dead = false; p.invuln = 0.2; __sim(0.1); if (B.curMove) seen.add(B.curMove); if (i === 70) B.hp = B.maxHp * 0.45; }
-  const r = `master ${B.name} card "${card}" p2 ${!!B.p2} moves ${[...seen].join(',')}`; g.damageEnemy(B, B.hp + 10, false, p.pos, 'normal', { unblockable: true }); __sim(0.4); __director.skip?.(); await new Promise((r2) => setTimeout(r2, 60)); __sim(0.4);
+  const r = `master ${B.name} card "${card}" p2 ${!!B.p2} moves ${[...seen].join(',')}`; if (B.ghost) { B.mv = null; B.curMove = null; B.ghost = false; B.rig.visible = true; } g.damageEnemy(B, B.hp + 10, false, p.pos, 'normal', { unblockable: true }); __sim(0.4); __director.skip?.(); await new Promise((r2) => setTimeout(r2, 60)); __sim(0.4);
   const T = I.chests.find((c) => c.kind === 'T'); p.pos.copy(T.pos).add(new p.pos.constructor(0, 0, 1.5)); __sim(0.1); g.interactables.find((x) => x.pos === T.pos).act();
   return r + ` | dead ${B.dead} done ${g.holds.state(I.hold).done} chest ${T.opened} quest ${g.quests.find((q) => q.id === g.interior.def.id || q.id === I.hold)?.done}`; }));
 // a fall inside wakes him at the fire; then out

@@ -339,6 +339,15 @@ User decisions: hand-built holds like the Hamrin four, but through the whole sto
 - **Tests:** `shots/r22holds.mjs <id> [out]` (door, trail, lock, hazards, both captains, fire, crack, gate, chests, the lieutenant's own fight and last words, quest, act, way out): all 8 clean. `shots/r22crit.mjs <id> <out>` (critique shots: door, way in, walk, mid ground, past the fire). The full sweep is clean (see "Shipped" below). `r21rival` now notes the lieutenants live in holds; `r15test` prints `holdDoors`.
 - **Pitfall:** never edit `src/` while a `withvite.sh` test runs: Vite reloads the page and the test dies with "Execution context was destroyed". And `pkill -f vite` kills your own shell when the command line contains "vite"; kill by PID.
 
+- **Shipped:** full sweep clean: r15test ×4, r16test ×4, r17test ×4, finaletest ×4, r21rival ×4, r18test ×4 classes, ngtest, traveltest, r22holds ×8, r21holds ×4 (rivalhold's last blow now un-vanishes Zubayr first, as r22holds does for Layth), trialtest, crafttest, benchtest, r21comp, r21mount, r21rift, r21hub marsh and docks. No page errors. Artifact **version 20** at https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (1.65 MB inlined; smoke-tested from `file://` with mobile emulation: ready, touch HUD, both hold doors). APK built by CI from the final push.
+- **Next round: ideas (not approved):**
+  - Device check of the close camera on Android: lock-on button reach, camera speed when steering with the joystick in tight corridors.
+  - The falcon is still small and blobby on the shoulder (a proper sculpt).
+  - Holds are about 30 tiles from door to master; longer second holds per region, or a third optional hold, if the user wants more.
+  - Rising water in the Sunken Village (the R17 cistern mechanic) and fire spreading in the Burned Quarter would make the hazards more than set dressing.
+  - Gate shortcuts in the story holds save only a few tiles (the validator in the Round 22 scratch notes flags them as "weak"); route the late areas further from the start so the shortcut matters.
+  - One headless High-quality capture came out black once (Vaults, not reproducible). Watch for it.
+
 ## Round 21: approved plan and status
 The user approved the full plan: everything on the Round 20 menu, a **post-game region** (the Hamrin ravines: an endgame hub plus four endgame dungeons), and the **Black Myth: Wukong close action camera** inside those dungeons, with **campfires** as rest points (no shrines). It ships **once at the end**: the Artifact, the push and the APK.
 
