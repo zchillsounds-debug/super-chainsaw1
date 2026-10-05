@@ -51,8 +51,8 @@ export const AR22 = {
   // codex
   'Dams and Sluices': 'السدود والنواظم',
   'The Sasanian kings raised the rivers of the Sawad into its canals with weirs and dams of brick and stone. Each sluice had its keeper. When a dam was left to crack, the canals behind it silted up and the villages along them emptied.': 'رفع ملوك الساسانيين مياه أنهار السواد إلى قنواته بسدود ونواظم من الآجرّ والحجر. ولكلّ ناظم حارسه. فإذا تُرك السدّ يتشقّق، طُمرت القنوات خلفه بالطمي وخلت القرى على ضفافها.',
-  'Fired Brick': 'الآجرّ',
-  'Most walls in Iraq were of sun-dried mud brick. Fired brick, harder and dearer, went where water or weight demanded it: foundations, quays, bridges, the lower courses of great walls. The kilns stood outside the towns and burned reed, brushwood and dung day and night.': 'كانت أكثر الجدران في العراق من اللَّبِن المجفّف بالشمس. أمّا الآجرّ، وهو أصلب وأغلى، فكان يوضع حيث يقتضيه الماء أو الثقل: الأسس والأرصفة والجسور والمداميك السفلى من الأسوار الكبيرة. وكانت الأفران خارج المدن توقد بالقصب والحطب والروث ليلًا ونهارًا.',
+  'The Brick-Makers': 'صنّاع الآجرّ',
+  'Brick was made by gangs: diggers cut the clay, moulders pressed it into wooden frames, carriers stacked the dried bricks in the kiln, and the firemen kept it burning for days. A single firing could hold tens of thousands of bricks, and a kiln yard was a small town of its own, black with smoke.': 'كان الآجرّ يُصنع على أيدي جماعات: الحفّارون يقطعون الطين، والضرّابون يكبسونه في قوالب من خشب، والحمّالون يرصّون اللَّبِن الجافّ في الأتون، والوقّادون يُبقونه مشتعلًا أيّامًا. وقد تسع الشيّة الواحدة عشرات الآلاف من الآجرّ، وكانت ساحة الأفران بلدة صغيرة قائمة بذاتها، سوداء من الدخان.',
   'Reed Islands': 'جزر القصب',
   'The marsh people built on platforms of reed and mud laid down layer on layer, and fenced their islands with reed. Such places were hard to reach for anyone without a boat and a guide, and the marshes sheltered rebels and runaways for centuries.': 'بنى أهل البطائح على مصاطب من القصب والطين تُرصف طبقة فوق طبقة، وسيّجوا جزرهم بالقصب. وكان بلوغ هذه الأماكن عسيرًا على من لا قارب له ولا دليل، فآوت البطائح الثائرين والفارّين قرونًا.',
   'Drowned Villages': 'القرى الغارقة',
