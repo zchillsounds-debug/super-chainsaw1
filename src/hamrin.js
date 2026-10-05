@@ -137,8 +137,9 @@ export function buildHamrin(scene, rnd, out) {
     const s0 = 0.5 + rnd() * 0.6, sy = 0.3 + rnd() * 0.15; slab.push({ x, y: h - s0 * sy * 0.35, z, s: s0, sx: 1.5 + rnd() * 0.6, sy, ry: Math.atan2(gx, gz) + (rnd() - 0.5) * 0.6 });
     if (rnd() < 0.35) { const k = 2 + rnd() * 3, tx = x - gx / (sl * 2) * k, tz = z - gz / (sl * 2) * k; if (rawHeight(tx, tz) < HAMRIN_WALK && !blocked(tx, tz, 0.6) && roadDist(tx, tz) > 3) rk.push({ x: tx, y: heightAt(tx, tz) - 0.1, z: tz, s: 0.4 + rnd() * 0.9 }); }
   }
-  const RS = rocks(slab, 27, 0xe0d0b4); RS.castShadow = true; scene.add(RS);
-  const R = rocks(rk, 21, 0xd8ccb8); scene.add(R); const RB = rocks(big, 23, 0xdccab0); RB.castShadow = false; scene.add(RB);
+  // Round 24: weathered grey-brown stone (the old cream read as flat yellow lumps in the sun)
+  const RS = rocks(slab, 27, 0xb0a08a); RS.castShadow = true; scene.add(RS);
+  const R = rocks(rk, 21, 0xa89884); scene.add(R); const RB = rocks(big, 23, 0xa49482); RB.castShadow = false; scene.add(RB);
   scene.add(shrubs(sh, 24)); scene.add(grassField(gr, 'dry', 25));
   for (let i = 0; i < 18; i++) { const x = (rnd() - 0.5) * 240, z = (rnd() - 0.5) * 240; if (rawHeight(x, z) > HAMRIN_WALK || roadDist(x, z) < 3 || blocked(x, z, 1.5)) continue; place(scene, deadTree(rnd), x, z, rnd() * 6, false); colliders.push({ type: 'circle', x, z, r: 0.4 }); }
   // tamarisk along the Diyala far below the eastern cliffs

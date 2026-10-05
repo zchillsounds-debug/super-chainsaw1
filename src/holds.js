@@ -797,7 +797,7 @@ export function setupHolds(g) {
       <div class="srow"><div class="bico">⇱</div><div class="sinfo"><span>${t('Leave the hold')}</span></div><button class="sbtn" data-out="1">${t('Leave')}</button></div></div></div>`;
     g.ui.root.appendChild(w);
     w.querySelector('.close').onclick = () => w.remove();
-    w.querySelectorAll('[data-f]').forEach((b) => b.onclick = () => { w.remove(); const T2 = I.fires[+b.dataset.f]; s.lastFire = T2.idx; g.ui.fade(1); setTimeout(() => { p.pos.copy(T2.pos).add(V(0, 0, 2)); g.camInit = false; g.ui.fade(0); }, 450); });
+    w.querySelectorAll('[data-f]').forEach((b) => b.onclick = () => { w.remove(); const T2 = I.fires[+b.dataset.f]; s.lastFire = T2.idx; g.ui.fade(1); setTimeout(() => { p.pos.copy(T2.pos).add(V(0, 0, 2)); g.camInit = false; g.ui.fade(0); }, 560); });
     w.querySelector('[data-out]').onclick = () => { w.remove(); exit(); };
     // and his men come back to their posts (the captains already beaten stay beaten)
     populate(I, g.interior.def.level, s, true);

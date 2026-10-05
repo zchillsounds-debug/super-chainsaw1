@@ -161,7 +161,9 @@ export class UI {
   }
   toast(text, cls = '') {
     const el = document.createElement('div'); el.className = 'toast ' + cls; el.innerHTML = text;
-    this.$('#toasts').appendChild(el); setTimeout(() => el.classList.add('out'), 3200); setTimeout(() => el.remove(), 4000);
+    const box = this.$('#toasts'); box.appendChild(el); setTimeout(() => el.classList.add('out'), 3200); setTimeout(() => el.remove(), 4000);
+    // Round 24: never more than four at once (a burst of pickups used to stack a wall of text over the fight)
+    const live = [...box.children].filter((c) => !c.classList.contains('out')); for (const c of live.slice(0, Math.max(0, live.length - 4))) { c.classList.add('out'); setTimeout(() => c.remove(), 800); }
   }
   banner(title, sub, ms = 3500) {
     const b = this.$('#banner'); b.querySelector('.btitle').textContent = title; b.querySelector('.bsub').textContent = sub || '';
@@ -182,7 +184,8 @@ export class UI {
     this.$('#vcont').onclick = () => { v.classList.add('hidden'); document.body.classList.remove('overlay'); };
     this.$('#vng').onclick = () => { v.classList.add('hidden'); document.body.classList.remove('overlay'); this.onNewGamePlus?.(); };
   }
-  fade(v) { this.$('#fade').style.opacity = v; }
+  // Round 24: fades to black are quick (0.5 s, so the swap behind them is always covered), fades back are slower
+  fade(v, sec = v ? 0.5 : 0.8) { const f = this.$('#fade'); f.style.transition = `opacity ${sec}s`; f.style.opacity = v; this.onFade?.(v, sec); }
 
   // ---------------- world-anchored elements
   project(pos, camera) {

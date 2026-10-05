@@ -852,7 +852,9 @@ export class Game {
     // each region's last fight closes its act: the Sawad and the marshes travel on, al-Karkh ends the chronicle
     // Round 20: al-Karkh now travels on to the river quays (Act VI), whose last fight ends the chronicle
     const ending = IS_SAWAD ? [SCENES.epilogue, 4, () => this.travel?.()] : IS_MARSH ? [SCENES.rawhFalls, 5, () => this.travel?.()] : IS_DOCKS ? [SCENES.docksFinale, 7, win] : [SCENES.finale, 6, () => this.travel?.()];
-    if (this.director) setTimeout(() => this.director.play(ending[0](this, b)).then(() => { this.checkpoint(ending[1]); ending[2](); }), 1200);
+    // Round 24: a moment to settle before the scene: the fight music resolves and the camera eases in a little
+    this.audio.stinger?.('settle'); this.settleZoom = 0.82;
+    if (this.director) setTimeout(() => { this.settleZoom = 1; this.director.play(ending[0](this, b)).then(() => { this.checkpoint(ending[1]); ending[2](); }); }, 1900);
     else { setTimeout(() => this.ui.banner('Victory', 'The Pages are recovered.', 5000), 2500); setTimeout(() => { this.checkpoint(ending[1]); ending[2](); }, 8000); }
     if (this.bossLight) setTimeout(() => { this.bossLight.intensity = 0; }, 2000);
   }
@@ -1073,7 +1075,10 @@ export class Game {
     if (this.musicT <= 0) {
       this.musicT = 1;
       const fight = this.bossActive || this.enemies.some((e) => !e.dead && e.alerted && e.pos.distanceTo(p.pos) < 16);
-      if (fight !== this.inFight) { this.inFight = fight; this.audio.setMusicIntensity(fight ? 1 : 0); }
+      // Round 24: the fight music holds for a few seconds after the last foe falls, so a lull doesn't flip it back and forth
+      this.calmT = fight ? 0 : (this.calmT || 0) + 1;
+      const want = fight || (this.inFight && this.calmT < 3);
+      if (want !== this.inFight) { this.inFight = want; this.audio.setMusicIntensity(want ? 1 : 0); }
     }
     // UI
     this.ui.setOrbs(p.hp, p.stats.maxHp, p.mp, p.stats.maxMp, this.t);
@@ -1674,7 +1679,7 @@ export class Game {
     const p = this.player.pos;
     // ease back a little when a fight grows (more foes alerted close by), more for a captain
     if ((this.fightCountT = (this.fightCountT || 0) - dt) <= 0) { this.fightCountT = 0.5; let n = 0; for (const e of this.enemies) if (!e.dead && e.alerted && Math.abs(e.pos.x - p.x) < 14 && Math.abs(e.pos.z - p.z) < 14) n++; this.fightN = n; }
-    const ease = this.bossActive ? 1.3 : 1 + 0.14 * Math.min(1, Math.max(0, (this.fightN || 0) - 2) / 4);
+    const ease = (this.bossActive ? 1.3 : 1 + 0.14 * Math.min(1, Math.max(0, (this.fightN || 0) - 2) / 4)) * (this.settleZoom || 1);
     this.autoZoom = THREE.MathUtils.lerp(this.autoZoom || 1, ease, Math.min(1, dt * 1.2));
     // zoom: close in, the camera drops toward an over-the-shoulder angle; out, it rises to a high wide view
     // Round 20: past 1.0 the view keeps tilting toward a steep Diablo-style overhead (about 60° at the default 1.25)

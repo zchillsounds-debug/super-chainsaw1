@@ -169,7 +169,7 @@ function buildSawad(scene, rnd, out, sunDir) {
     out.fires.push({ pos: f.position.clone().add(new THREE.Vector3(0, 0.3, 0)), intensity: 1.0 });
     colliders.push({ type: 'circle', x: S.x + dx, z: S.z + dz, r: 1.1 });
   }
-  for (const [dx, dz] of [[-4, 20], [4, 20], [10, -12]]) place(scene, banner('#151515'), S.x + dx, S.z + dz, rnd() * 6, false);
+  for (const [dx, dz] of [[-4, 20], [4, 20], [10, -12]]) place(scene, banner('#2e2a26'), S.x + dx, S.z + dz, rnd() * 6, false);
   for (let i = 0; i < 10; i++) { const x = S.x + (rnd() - 0.5) * 26, z = S.z + (rnd() - 0.5) * 26; if (!blocked(x, z, 0.8)) { place(scene, rnd() > 0.5 ? crate() : jar(0x7a5a3a), x, z, rnd() * 6, false); colliders.push({ type: 'circle', x, z, r: 0.5 }); } }
 
   // ---------------- brick kilns & clay quarry (with the ruined Sasanian vault the company's men hide in)

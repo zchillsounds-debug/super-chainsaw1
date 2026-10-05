@@ -7,6 +7,7 @@ import { t } from './i18n.js';
 // Tap to hurry the current line; press and hold anywhere (or hold Space/Esc) to skip the scene.
 const sm = (t) => t * t * (3 - 2 * t);
 const EASE = { io: sm, lin: (t) => t, out: (t) => 1 - Math.pow(1 - t, 3), in: (t) => t * t * t, io2: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2) };
+const _q = new THREE.Quaternion();
 const v3 = (a) => (a.isVector3 ? a.clone() : Array.isArray(a) ? new THREE.Vector3(...a) : typeof a === 'function' ? a() : a);
 
 // Round 21: faces act the lines. A line may name its expression (line.expr); otherwise it is read from the words.
@@ -51,6 +52,8 @@ export class Director {
     return new Promise((resolve) => {
       if (this.def) this.end(true);
       this.def = def; this.resolve = resolve; this.i = -1; this.t = 0; this.timeScale = 1;
+      // Round 24: remember the play camera, so the first shot glides out of it (or dips to black if it is far)
+      this.inPos = this.camera.position.clone(); this.inQuat = this.camera.quaternion.clone(); this.inFov = this.camera.fov; this.inK = def.noBlend ? 1 : 0; this.inChecked = false; this.outBlend = null;
       this.el.classList.remove('hidden'); document.body.classList.add('incine');
       this.ui.hud?.classList.add('cinehide');
       this.game.setLootBeams?.(false);
@@ -89,11 +92,15 @@ export class Director {
     const d = this.def; if (!d) return;
     for (const r of this.faces()) r.userData.expr = null;
     this.def = null; this.shot = null; this.timeScale = 1;
+    this.endedBlack = this.fadeCur > 0.9;
+    // Round 24: hand the camera back gently: the play camera eases out of the last shot instead of cutting to it
+    this.outBlend = d.noBlend || this.endedBlack ? null : { pos: this.camera.position.clone(), quat: this.camera.quaternion.clone(), fov: this.camera.fov, t: 0, dur: 0.9 };
     this.el.classList.remove('on'); setTimeout(() => { if (!this.def) this.el.classList.add('hidden'); }, 700);
     document.body.classList.remove('incine'); this.ui.hud?.classList.remove('cinehide');
+    // a scene that ended on black comes back up softly (unless travel keeps it black for the reload)
+    if (this.endedBlack) { this.ui.fade(1, 0); setTimeout(() => { if (!this.ui.holdBlack && !this.def) this.ui.fade(0, 0.8); }, 60); }
     this.setLine(null); this.setCard(null); this.setCaption(null); this.fade(0, 0);
     if (this.bokeh) this.bokeh.enabled = false;
-    this.grade.uniforms.uCine.value = 0;
     this.game.cinematic = false; this.game.camInit = false; this.game.setLootBeams?.(true);
     d.end?.(this, skipped);
     this.resolve?.(skipped);
@@ -150,6 +157,18 @@ export class Director {
     } catch (e) { /* portraits are decoration only */ }
   }
 
+  // Round 24: after a scene, ease the play camera out of the last shot's framing and let the film grade fall away
+  blendOut(rawDt) {
+    if (this.def) return;
+    const g = this.grade.uniforms; if (g.uCine.value > 0) g.uCine.value = Math.max(0, g.uCine.value - rawDt * 1.2);
+    const B = this.outBlend; if (!B) return;
+    B.t += rawDt; const k = Math.min(1, B.t / B.dur), w = sm(k);
+    if (B.pos.distanceTo(this.camera.position) > 30) { this.outBlend = null; return; } // the scene moved Salim far away: cut
+    this.camera.position.lerpVectors(B.pos, this.camera.position, w);
+    _q.copy(this.camera.quaternion); this.camera.quaternion.copy(B.quat).slerp(_q, w);
+    const f = B.fov + (this.camera.fov - B.fov) * w; if (Math.abs(this.camera.fov - f) > 1e-3) { this.camera.fov = f; this.camera.updateProjectionMatrix(); }
+    if (k >= 1) this.outBlend = null;
+  }
   update(rawDt) {
     if (!this.def) return false;
     const s = this.shot; if (!s) return true;
@@ -169,7 +188,22 @@ export class Director {
     this.look.lerpVectors(T0, T1, e);
     if (cam.shake) { const a = cam.shake * (1 - k); this.camera.position.x += (Math.random() - 0.5) * a; this.camera.position.y += (Math.random() - 0.5) * a; }
     this.camera.lookAt(this.look);
-    const fov = this.fov0 + (this.fov1 - this.fov0) * e;
+    let fov = this.fov0 + (this.fov1 - this.fov0) * e;
+    // Round 24: blend in from the play camera on the first shot. A shot that opens on black needs no blend; a shot far
+    // from where the camera was (another part of the map) dips through black instead of sweeping across the world.
+    if (this.inK < 1) {
+      if (!this.inChecked) {
+        this.inChecked = true;
+        if (this.i > 0 || s.fadeIn != null || this.fadeCur > 0.5) this.inK = 1;
+        else if (this.inPos.distanceTo(this.camera.position) > 28) { this.inK = 1; this.fadeCur = 1; this.fade(0, 0.45); }
+      }
+      if (this.inK < 1) {
+        this.inK = Math.min(1, this.inK + rawDt / 0.85); const w = sm(this.inK);
+        this.camera.position.lerpVectors(this.inPos, this.camera.position, w);
+        _q.copy(this.camera.quaternion); this.camera.quaternion.copy(this.inQuat).slerp(_q, w);
+        fov = this.inFov + (fov - this.inFov) * w;
+      }
+    }
     if (Math.abs(this.camera.fov - fov) > 1e-3) { this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
     // grade + depth of field
     const g = this.grade.uniforms; g.uCine.value = Math.min(1, g.uCine.value + rawDt * 1.5); g.uDusk.value = this.def.dusk ?? 0;

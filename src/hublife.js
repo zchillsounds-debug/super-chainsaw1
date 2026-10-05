@@ -112,24 +112,57 @@ function forgeAfter(k) {
   return g;
 }
 
-// the falcon: a saker, built from a few shapes; the wings are hinged groups that flap or fold
+// the falcon: a saker. Round 24: a proper sculpt in place of the old spheres and boxes: a teardrop body with a pale,
+// streaked breast, long pointed wings (the primaries darker toward the tip, the trailing edge notched into feathers),
+// a barred fan tail, a hooked beak, the pale face with its dark moustache stripe, yellow legs. The wings are still
+// hinged groups that flap or fold (tickFalcon), so the motion code is unchanged.
 function falconRig() {
   const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
-  const brown = new THREE.MeshStandardMaterial({ color: 0x7a5a3c, roughness: 0.85 }), pale = new THREE.MeshStandardMaterial({ color: 0xd8c8a8, roughness: 0.9 }), dark = new THREE.MeshStandardMaterial({ color: 0x1a1612, roughness: 0.5 }), beakM = new THREE.MeshStandardMaterial({ color: 0x8a8070, roughness: 0.6 });
-  const torso = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), brown); torso.scale.set(0.85, 1.25, 0.85); body.add(torso);
-  const breast = new THREE.Mesh(new THREE.SphereGeometry(0.085, 10, 8), pale); breast.scale.set(0.8, 1.15, 0.7); breast.position.set(0, -0.01, 0.035); body.add(breast);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 8), brown); head.position.set(0, 0.14, 0.02); body.add(head);
-  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.045, 6), beakM); beak.rotation.x = Math.PI / 2 + 0.5; beak.position.set(0, 0.13, 0.075); body.add(beak);
-  for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.011, 6, 4), dark); e.position.set(s * 0.032, 0.15, 0.05); body.add(e); }
-  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.16, 0.015), brown); tail.position.set(0, -0.17, -0.03); tail.rotation.x = -0.25; body.add(tail);
+  const M = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, side: THREE.DoubleSide });
+  const C = (h) => new THREE.Color(h), BROWN = C(0x7a5534), DARK = C(0x2e2218), PALE = C(0xe2d4b8), RUST = C(0x9a6a40), YEL = C(0xd8b040), GREY = C(0x5a5650);
+  const hn = (x, y, z) => { const v = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return v - Math.floor(v); };
+  // paint a geometry's vertices from a function of position (and normal)
+  const paint = (geo, fn) => {
+    const P = geo.attributes.position, N = geo.attributes.normal, col = new Float32Array(P.count * 3), c = new THREE.Color();
+    for (let i = 0; i < P.count; i++) { fn(c, P.getX(i), P.getY(i), P.getZ(i), N ? N.getZ(i) : 0); col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); return geo;
+  };
+  const mesh = (geo, parent) => { const m = new THREE.Mesh(geo, M); m.castShadow = true; parent.add(m); return m; };
+  // body: a teardrop turned on a lathe, pale and streaked in front, brown and scalloped on the back
+  const prof = [[0.0, -0.17], [0.03, -0.15], [0.068, -0.09], [0.088, -0.02], [0.086, 0.04], [0.068, 0.09], [0.04, 0.125], [0.0, 0.14]].map(([r, y]) => new THREE.Vector2(r, y));
+  const torso = new THREE.LatheGeometry(prof, 14); torso.scale(1, 1, 0.92); torso.computeVertexNormals();
+  paint(torso, (c, x, y, z, nz) => { const front = THREE.MathUtils.smoothstep(nz, -0.1, 0.45); c.copy(BROWN).lerp(RUST, hn(x * 9, y * 9, 0) * 0.35); if (hn(Math.round(x * 40), Math.round(y * 30), 1) > 0.7) c.lerp(DARK, 0.35); const br = PALE.clone(); if (hn(Math.round(x * 55), Math.round(y * 22), 2) > 0.72) br.lerp(RUST, 0.7); c.lerp(br, front); });
+  mesh(torso, body);
+  // head: rounded, pale cheeks, a dark crown and the moustache stripe under the eye
+  const headG = new THREE.SphereGeometry(0.052, 14, 10); headG.scale(1, 0.95, 1.08);
+  paint(headG, (c, x, y, z) => { c.copy(PALE); if (y > 0.018) c.copy(BROWN).lerp(DARK, 0.25); if (z > 0.01 && y < 0.008 && y > -0.03 && Math.abs(x) > 0.022 && Math.abs(x) < 0.04) c.copy(DARK); if (z < -0.01) c.copy(BROWN); });
+  const head = mesh(headG, body); head.position.set(0, 0.165, 0.02);
+  // beak: grey and hooked, on a yellow cere
+  const cere = mesh(paint(new THREE.CylinderGeometry(0.012, 0.016, 0.014, 8).rotateX(Math.PI / 2), (c) => c.copy(YEL)), head); cere.position.set(0, -0.004, 0.05);
+  const beakG = new THREE.ConeGeometry(0.012, 0.03, 8); beakG.rotateX(Math.PI / 2 + 0.75); paint(beakG, (c) => c.copy(GREY));
+  const beak = mesh(beakG, head); beak.position.set(0, -0.012, 0.064);
+  for (const s2 of [-1, 1]) { const e = mesh(paint(new THREE.SphereGeometry(0.011, 8, 6), (c, x, y, z) => c.copy(z > 0.008 ? DARK : YEL)), head); e.position.set(s2 * 0.028, 0.008, 0.038); e.rotation.y = s2 * 0.5; }
+  // tail: a fan, barred dark and buff, with a pale tip
+  const ts = new THREE.Shape(); ts.moveTo(-0.025, 0); ts.lineTo(0.025, 0); ts.lineTo(0.052, -0.17); ts.quadraticCurveTo(0, -0.19, -0.052, -0.17); ts.lineTo(-0.025, 0);
+  const tailG = new THREE.ExtrudeGeometry(ts, { depth: 0.008, bevelEnabled: false }); tailG.translate(0, 0, -0.004);
+  paint(tailG, (c, x, y) => { c.copy(BROWN).lerp(PALE, 0.25); if (Math.floor(-y * 60) % 3 === 0) c.copy(DARK).lerp(BROWN, 0.4); if (y < -0.165) c.copy(PALE); });
+  const tail = mesh(tailG, body); tail.position.set(0, -0.13, -0.035); tail.rotation.x = -0.28;
+  // legs and talons (seen when she perches)
+  for (const s2 of [-1, 1]) {
+    const leg = mesh(paint(new THREE.CylinderGeometry(0.008, 0.009, 0.06, 6), (c) => c.copy(YEL)), body); leg.position.set(s2 * 0.03, -0.16, 0.03);
+    for (const a of [-0.5, 0, 0.5]) { const t2 = mesh(paint(new THREE.ConeGeometry(0.005, 0.03, 5).rotateX(Math.PI / 2), (c) => c.copy(DARK)), leg); t2.position.set(Math.sin(a) * 0.012, -0.03, Math.cos(a) * 0.012); t2.rotation.y = a; }
+  }
+  // wings: long and pointed; the outline is notched along the trailing edge into feathers
   const wings = [];
   for (const s of [-1, 1]) {
-    const hinge = new THREE.Group(); hinge.position.set(s * 0.06, 0.04, -0.01); body.add(hinge);
-    const w = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.012, 0.13), brown); w.position.set(s * 0.17, 0, 0); hinge.add(w);
-    const tip = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.01, 0.08), dark); tip.position.set(s * 0.38, 0, -0.02); hinge.add(tip);
+    const hinge = new THREE.Group(); hinge.position.set(s * 0.055, 0.05, -0.01); body.add(hinge);
+    const pts = [[0, 0.05], [0.12, 0.072], [0.26, 0.052], [0.36, 0.0], [0.45, -0.07], [0.41, -0.085], [0.38, -0.075], [0.35, -0.1], [0.31, -0.09], [0.27, -0.115], [0.22, -0.105], [0.17, -0.12], [0.11, -0.11], [0.05, -0.115], [0, -0.09]];
+    const ws = new THREE.Shape(); pts.forEach(([x, y], i) => (i ? ws.lineTo(s * x, y) : ws.moveTo(s * x, y)));
+    const wg = new THREE.ExtrudeGeometry(ws, { depth: 0.01, bevelEnabled: false }); wg.translate(0, 0, -0.005); wg.rotateX(Math.PI / 2);
+    paint(wg, (c, x, y, z) => { const ax = Math.abs(x); c.copy(BROWN).lerp(RUST, hn(ax * 20, z * 20, 3) * 0.3); if (z > 0.03 && hn(Math.round(ax * 50), Math.round(z * 30), 4) > 0.6) c.lerp(PALE, 0.4); c.lerp(DARK, THREE.MathUtils.smoothstep(ax, 0.24, 0.4) * 0.8); if (z < -0.06) c.lerp(DARK, 0.3); });
+    mesh(wg, hinge);
     wings.push({ hinge, s });
   }
-  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   g.userData = { body, wings };
   return g;
 }

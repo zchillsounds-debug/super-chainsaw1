@@ -301,7 +301,10 @@ export function createTerrain() {
           mud = vec3(0.15,0.13,0.10);
         #elif RG == 4
           // the Hamrin hills: pale limestone grit, red-brown earth, dry steppe grass yellowed by the summer
-          sand = mix(vec3(0.50,0.43,0.35), vec3(0.58,0.50,0.40), n1); sand = mix(sand, vec3(0.46,0.36,0.28), smoothstep(0.5,0.8,n2)*0.5);
+          // Round 24: warmer grit, with broad patches of red-brown earth and darker scree, so the floor is never one flat pale sheet
+          sand = mix(vec3(0.54,0.42,0.31), vec3(0.63,0.50,0.37), n1); sand = mix(sand, vec3(0.45,0.33,0.24), smoothstep(0.5,0.8,n2)*0.55);
+          sand = mix(sand, vec3(0.58,0.36,0.24), smoothstep(0.52,0.78,fb(vWPos.xz*0.05+31.0))*0.6);
+          sand = mix(sand, vec3(0.36,0.31,0.27), smoothstep(0.6,0.85,fb(vWPos.xz*0.09+17.0))*0.55);
           dirt = mix(vec3(0.50,0.34,0.24), vec3(0.60,0.42,0.30), n2);
           grass = mix(vec3(0.50,0.46,0.26), vec3(0.60,0.54,0.30), n1); grass = mix(grass, vec3(0.34,0.38,0.18), smoothstep(0.6,0.85,n2)*0.6);
         #elif RG >= 2

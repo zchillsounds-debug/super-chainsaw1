@@ -89,9 +89,30 @@ P.setAmbience = function (crowd, under) {
   this.crowd.gain.setTargetAtTime(crowd * 0.07, t, 0.8); this.under.gain.setTargetAtTime(under * 0.05, t, 0.8);
 };
 P.setVolumes = function ({ master, music, sfx, amb }) {
-  this.musicVol = music; this.ambVol = amb;
+  this.musicVol = music; this.ambVol = amb; this.masterLevel = 0.55 * master;
   if (!this.ctx) return; const t = this.ctx.currentTime;
   this.master.gain.setTargetAtTime(0.55 * master, t, 0.1); this.sfx.gain.setTargetAtTime(0.8 * sfx, t, 0.1);
   this.music.gain.setTargetAtTime((0.17 + (this.intensity || 0) * 0.07) * music, t, 0.1); this.amb?.gain.setTargetAtTime(amb, t, 0.1);
+};
+// ------------------------------------------------------------------ Round 24: transitions
+// Browsers start an AudioContext made without a tap suspended (after a region reload nothing has been tapped yet):
+// resume it on the first touch or key. The music ducks while the screen is black between places, and the whole mix
+// fades out before a reload and back in after it.
+const baseInit = P.init;
+P.init = function () {
+  baseInit.call(this);
+  if (!this.ctx || this.duckG) return;
+  // music -> duck -> master (the duck is only ever moved by transitions, so it never fights the volume settings)
+  this.duckG = this.ctx.createGain(); this.music.disconnect(); this.music.connect(this.duckG); this.duckG.connect(this.master);
+  if (this.ctx.state === 'suspended') {
+    const wake = () => { this.ctx.resume?.(); if (this.ctx.state !== 'suspended') for (const e of ['pointerdown', 'keydown', 'touchend']) removeEventListener(e, wake, true); };
+    for (const e of ['pointerdown', 'keydown', 'touchend']) addEventListener(e, wake, true);
+  }
+};
+P.duck = function (on, sec = 0.5) { if (!this.duckG) return; this.duckG.gain.setTargetAtTime(on ? 0.3 : 1, this.ctx.currentTime, Math.max(0.05, sec / 3)); };
+P.fadeOutAll = function (sec = 0.8) { if (!this.ctx) return; const t = this.ctx.currentTime; this.master.gain.cancelScheduledValues(t); this.master.gain.setTargetAtTime(0, t, sec / 3); };
+P.fadeInAll = function (sec = 2) {
+  if (!this.ctx) return; const t = this.ctx.currentTime, to = this.masterLevel ?? 0.55;
+  this.master.gain.cancelScheduledValues(t); this.master.gain.setValueAtTime(0.0001, t); this.master.gain.linearRampToValueAtTime(to, t + sec);
 };
 export { Audio };

@@ -5,6 +5,7 @@ import { barge } from './docksprops.js';
 import { REGION, HUB } from './region.js';
 import { mashuf } from './regionprops.js';
 import { LOOK, byzify } from './byz.js';
+import { horseRider } from './foes20.js';
 
 // The story's cinematics. Each returns a scene definition for the Director.
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -217,6 +218,9 @@ export function epilogue(g, b) {
   const actors = [salim, boss, ishaq];
   const ang = yawTo(salim.pos, boss.pos);
   const text = 'Thanks to you, his words will be read. And we will remember Jabir.';
+  // Round 24: the first time the envoy is seen. A rider on the far bank watches the lamps, then turns for Baghdad.
+  const RZ = 98, rx = canalX(RZ) - 11, envoy = actor(horseRider(byzify({ ...LOOK.officer('#4a1a4a', 0x3a1440), beard: 0x8a8070, beardLen: 0.9, skin: 0xb07a52, sash: 0x5a1a5a, build: 1.1, belly: 0.25, hemY: 0.3, leather: 0x6a5a3a })), ground(rx, RZ), Math.PI / 2);
+  envoy.rig.visible = false; g.scene.add(envoy.rig); actors.push(envoy);
   const lamps = [];
   const floatLamps = () => {
     const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.6, 0.5), toneMapped: false });
@@ -236,8 +240,19 @@ export function epilogue(g, b) {
       enter: () => { floatLamps(); g.lighting?.set?.('dusk', 0); },
       cam: { p0: () => V(canalX(70) + 7, 3.2, 66), t0: () => V(canalX(84), 0.2, 84), p1: () => V(canalX(72) + 5, 2.2, 70), t1: () => V(canalX(88), 0.2, 88), fov: 40 },
       run: (d, k, dt) => { for (const l of lamps) { l.position.z += l.userData.v * dt; l.position.x = canalX(l.position.z) + Math.sin(l.position.z * 2) * 0.4; } } },
+    { dur: 5.4, caption: 'On the far bank, a rider in a Roman cloak watched the lamps.',
+      enter: () => { envoy.rig.visible = true; envoy.facing = yawTo(envoy.pos, V(canalX(RZ), 0, RZ - 6)); },
+      cam: { p0: () => V(canalX(RZ - 10) + 3.5, 1.1, RZ - 13), t0: () => at(envoy, 2.2)(), p1: () => V(canalX(RZ - 9) + 2.8, 1.0, RZ - 11.5), t1: () => at(envoy, 2.3)(), fov: 30 },
+      run: (d, k, dt) => { for (const l of lamps) { l.position.z += l.userData.v * dt; l.position.x = canalX(l.position.z) + Math.sin(l.position.z * 2) * 0.4; } } },
+    { dur: 4.6, caption: 'Arsaber, the envoy. Then he turned his horse toward Baghdad.',
+      cam: { p0: () => V(canalX(RZ - 9) + 2.8, 1.0, RZ - 11.5), t0: () => at(envoy, 2.2)(), p1: () => V(canalX(RZ - 8) + 2.4, 1.2, RZ - 10.5), t1: () => at(envoy, 2.0)(), fov: 32 },
+      run: (d, k, dt) => {
+        const want = Math.PI; envoy.facing += Math.max(-dt * 1.4, Math.min(dt * 1.4, ((want - envoy.facing + Math.PI * 3) % (Math.PI * 2)) - Math.PI));
+        if (k > 0.3) { envoy.moving = true; envoy.st.walkBlend = 1; envoy.st.phase += dt * 4; envoy.pos.x += Math.sin(envoy.facing) * dt * 1.6; envoy.pos.z += Math.cos(envoy.facing) * dt * 1.6; envoy.pos.y = heightAt(envoy.pos.x, envoy.pos.z); }
+        for (const l of lamps) l.position.z += l.userData.v * dt;
+      } },
     { dur: 4.2, line: { who: 'Salim', text: 'Jabir.', rig: g.player.rig, cue: 'breath', expr: 'sad' },
-      enter: () => { const p = g.player; p.pos.set(canalX(84) - 3, 0, 84); p.pos.y = heightAt(p.pos.x, 84); salim.facing = Math.PI / 2; },
+      enter: () => { envoy.rig.visible = false; const p = g.player; p.pos.set(canalX(84) - 3, 0, 84); p.pos.y = heightAt(p.pos.x, 84); salim.facing = Math.PI / 2; },
       cam: { follow: true, p0: at(salim, 1.6, 2.2, -1.2), t0: headOf(salim), fov: 28 }, dof: headOf(salim), aperture: 1.2,
       run: (d, k, dt) => { for (const l of lamps) l.position.z += l.userData.v * dt; } },
     { dur: lineDur(text), line: { who: 'Ishaq', text, rig: g.npc, cue: 'breath' },
@@ -250,10 +265,10 @@ export function epilogue(g, b) {
       return { dur: lineDur(line), line: { who, text: line, rig: sp.rig, cue: who === 'Salim' ? 'hm' : 'breath' }, enter: () => { ishaq.st.talk = who === 'Ishaq'; salim.st.talk = who === 'Salim'; },
         cam: { follow: true, p0: () => { const a = li.pos, f = yawTo(a, sp.pos); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * 0.35, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * 0.35); }, t0: headOf(sp), fov: 30 }, dof: headOf(sp) };
     }),
-    { dur: 6, card: { ar: 'الأهوار', en: 'Act IV · The Marshes', sub: 'Kallinikos has the last Pages. Follow him into the reeds.' }, stinger: 'title', enter: () => { ishaq.st.talk = false; salim.st.talk = false; },
-      cam: { p0: V(8, 6, 98), t0: V(4, 3, 80), p1: V(22, 26, 118), t1: V(14, 2, 70), ease: 'io2' } },
+    // Round 24: the act card is shown once, on the travel card while the marshes load (main.js TRAVEL_CARD)
+    { dur: 1.5, enter: (d) => { ishaq.st.talk = false; salim.st.talk = false; d.fade(1, 1.2); } },
   ];
-  return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { for (const l of lamps) g.scene.remove(l); } };
+  return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { for (const l of lamps) g.scene.remove(l); g.scene.remove(envoy.rig); } };
 }
 
 // ------------------------------------------------------------------ side-quest conversations
@@ -283,10 +298,24 @@ export function conversation(g, npc, lines, { establish = true } = {}) {
 export function arrival(g) {
   const salim = playerActor(g), ishaq = npcActor(g), actors = [salim, ishaq], extra = [], sc = g.scene;
   const V0 = SITES.village, face = () => { salim.facing = yawTo(salim.pos, ishaq.pos); ishaq.facing = yawTo(ishaq.pos, salim.pos); };
-  const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b = to.pos, f = yawTo(a, b); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * side, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * side); }, t0: headOf(to), fov: 30 });
+  // Round 24: a wider over-the-shoulder (Ishaq's turban and Arsaber's mailed back filled half of a tight one)
+  const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b = to.pos, f = yawTo(a, b), sd = side * 1.9; return V(a.x - Math.sin(f) * 1.25 + Math.cos(f) * sd, a.y + 1.95, a.z - Math.cos(f) * 1.25 - Math.sin(f) * sd); }, t0: headOf(to), fov: 32 });
   const talk = (who) => { ishaq.st.talk = who === 'Ishaq'; salim.st.talk = who === 'Salim'; };
   const say = (who, text) => ({ dur: lineDur(text), line: { who, text, rig: who === 'Salim' ? g.player.rig : g.npc, cue: who === 'Salim' ? 'hm' : 'breath' }, cam: who === 'Salim' ? ots(ishaq, salim, -0.35) : ots(salim, ishaq, 0.35), dof: headOf(who === 'Salim' ? salim : ishaq), enter: () => { face(); talk(who); }, run: () => face() });
   const land = () => { const p = g.player; p.pos.set(HUB.spawn[0], 0, HUB.spawn[1]); p.pos.y = heightAt(p.pos.x, p.pos.z); face(); };
+  // Round 24: Arsaber at the khan (docks only), at a man's size rather than the boss fight's
+  let envoy = null, meet = null, away = null, envoySay = null, ishaqToEnvoy = null;
+  if (REGION === 'docks') {
+    envoy = actor(humanoid(byzify({ ...LOOK.officer('#4a1a4a', 0x3a1440), weapon: null, offhand: null, beard: 0x8a8070, beardLen: 0.9, skin: 0xb07a52, sash: 0x5a1a5a, scale: 1.08, build: 1.12, belly: 0.3, hemY: 0.3, leather: 0x6a5a3a })), V(0, -50, 0), 0);
+    envoy.rig.visible = false; sc.add(envoy.rig); extra.push(envoy.rig); actors.push(envoy);
+    meet = () => { const f = yawTo(ishaq.pos, salim.pos) + 1.2; return ground(ishaq.pos.x + Math.sin(f) * 2.3, ishaq.pos.z + Math.cos(f) * 2.3); };
+    away = ground(HUB.ishaq[0] + 12, HUB.ishaq[1] + 9);
+    const three = () => { envoy.facing = yawTo(envoy.pos, ishaq.pos); ishaq.facing = yawTo(ishaq.pos, envoy.pos); salim.facing = yawTo(salim.pos, envoy.pos); };
+    envoySay = (text) => ({ dur: lineDur(text), line: { who: 'Arsaber', text, rig: envoy.rig, cue: 'hm', expr: 'neutral', react: 'wary' }, cam: ots(ishaq, envoy, 0.4), dof: headOf(envoy),
+      enter: () => { if (envoy.pos.distanceTo(meet()) > 0.3) envoy.pos.copy(meet()); envoy.st.walkBlend = 0; three(); envoy.st.talk = true; ishaq.st.talk = false; salim.st.talk = false; }, run: () => three() });
+    ishaqToEnvoy = (text) => ({ dur: lineDur(text), line: { who: 'Ishaq', text, rig: g.npc, cue: 'breath', expr: 'resolve', react: 'stern' }, cam: ots(envoy, ishaq, -0.4), dof: headOf(ishaq),
+      enter: () => { three(); envoy.st.talk = false; ishaq.st.talk = true; }, run: () => three() });
+  }
   let shots;
   if (REGION === 'marsh') {
     // a reed boat poled down a channel toward the fishing village
@@ -324,8 +353,17 @@ export function arrival(g) {
         cam: { p0: () => V(bx - 4, 3.2, S.z + 16), t0: () => V(bx + 10, 0.5, S.z - 4), p1: () => V(bx - 2, 2.6, S.z + 10), t1: () => V(bx + 12, 0.5, S.z - 12), fov: 40 }, run: (d, k) => { if (k > 0.8) d.fade(1, 0.8); } },
       { dur: 3.0, fadeIn: 1.0, cam: { p0: () => V(ishaq.pos.x + 6, ishaq.pos.y + 3, ishaq.pos.z + 7), t0: at(ishaq, 1.3), p1: () => V(ishaq.pos.x + 4, ishaq.pos.y + 2.4, ishaq.pos.z + 5), t1: at(ishaq, 1.3) }, enter: () => face() },
       say('Ishaq', 'Hakam\'s copyists worked all night. The first copies sail at dawn, for Wasit and Basra.'),
-      say('Salim', 'And Arsaber?'),
-      say('Ishaq', 'He holds the quays himself, and a ship of his waits there. Start with Rhentakios, at the shipyard.'),
+      // Round 24: the parley. The envoy comes to the khan himself, unarmed, and makes his offer
+      { dur: 4.2, caption: 'At noon, Arsaber himself came to the khan, under a truce.',
+        enter: () => { envoy.rig.visible = true; envoy.pos.copy(ground(ishaq.pos.x + 7, ishaq.pos.z + 5)); face(); },
+        cam: { follow: true, p0: () => V(ishaq.pos.x - 3.5, ishaq.pos.y + 2.2, ishaq.pos.z - 2.5), t0: at(envoy, 1.4), fov: 38 },
+        run: (d, k, dt) => { walk(envoy, meet(), 1.3, dt); envoy.st.walkBlend = envoy.pos.distanceTo(meet()) > 0.1 ? 1 : 0; envoy.st.phase += dt * 4 * envoy.st.walkBlend; } },
+      envoySay('I am Arsaber, envoy of the Emperor. I did not come to fight you, astronomer.'),
+      envoySay('Your city is burning itself. Come north with the Pages. In Constantinople your Teacher would have a library, not a prison.'),
+      ishaqToEnvoy('He had a prison here. He still chose to teach here.'),
+      { ...envoySay('Then I will take them without you.'), run: (d, k, dt) => { envoy.facing = yawTo(envoy.pos, ishaq.pos); } },
+      { ...say('Salim', 'Let him try.'), run: (d, k, dt) => { face(); if (k > 0.15) { envoy.facing = yawTo(envoy.pos, away); walk(envoy, away, 1.4, dt); envoy.st.walkBlend = 1; envoy.st.phase += dt * 4; } } },
+      { ...say('Ishaq', 'He holds the quays, and his ship waits there. Start with Rhentakios, at the shipyard.'), enter: () => { envoy.rig.visible = false; face(); talk('Ishaq'); } },
     ];
   } else {
     // al-Karkh: a crane shot down a burned lane toward the Round City's wall, then the khan
@@ -357,8 +395,6 @@ export function rawhFalls(g, b) {
     { dur: lineDur('To Krateros, in al-Karkh. He will burn it before he lets your caliph\'s men take it back.'), line: { who: 'Kallinikos', text: 'To Krateros, in al-Karkh. He will burn it before he lets your caliph\'s men take it back.', rig: b.rig, cue: 'breath' },
       cam: { follow: true, p0: at(salim, 2.2, -2.8, 1.4), t0: at(boss, 0.6), fov: 38 }, dof: at(boss, 0.6), aperture: 1.0 },
     { dur: 4.0, caption: 'That night Kallinikos\'s own boats carried Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
-    { dur: 6, card: { ar: 'الكرخ', en: 'Act V · Al-Karkh', sub: 'Krateros will burn the Pages. Get there first.' }, stinger: 'title', fadeIn: 1.2,
-      cam: { p0: () => V(boss.pos.x, 30, boss.pos.z + 30), t0: () => V(boss.pos.x, 0, boss.pos.z - 30), p1: () => V(boss.pos.x - 10, 40, boss.pos.z + 50), t1: () => V(boss.pos.x - 20, 0, boss.pos.z - 60), ease: 'io2' } },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); } };
 }
@@ -401,8 +437,6 @@ export function finale(g, b) {
     L('Ishaq', g.npc, 'Then no one can burn them again.', ots(scholar, ishaq, 0.35), headOf(ishaq), () => { scholar.st.talk = false; ishaq.st.talk = true; }),
     // Round 20: the chronicle goes on to the river quays (Act VI); the lamps are lit there, at its end
     { dur: 4.4, caption: 'Hakam\'s copyists began that night. By dawn the first copies were bound for the river.', enter: (d) => { ishaq.st.talk = false; d.fade(1, 0.8); } },
-    { dur: 6, card: { ar: 'الشطّ', en: 'Act VI · The River Quays', sub: 'Arsaber means to carry the copies north before they sail.' }, stinger: 'title', fadeIn: 1.2, enter: () => { scholar.rig.visible = false; },
-      cam: { p0: () => V(V0.x + 10, 30, V0.z + 30), t0: () => V(V0.x + 60, 0, V0.z - 40), p1: () => V(V0.x + 30, 40, V0.z + 50), t1: () => V(V0.x + 120, 0, V0.z - 80), ease: 'io2' } },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
     end: () => { for (const l of lamps) sc.remove(l); for (const r of extra) sc.remove(r); const [ix, iz] = HUB.ishaq; ishaq.pos.set(ix, heightAt(ix, iz), iz); } };
@@ -431,8 +465,16 @@ export function docksFinale(g, b) {
   const drift = (dt) => { for (const l of lamps) l.position.z -= l.userData.v * dt; }; // the river runs south, toward Basra
   const L = (who, rig, text, cam, dof, enter) => ({ dur: lineDur(text), line: { who, text, rig, cue: who === 'Salim' ? 'hm' : 'breath' }, cam, dof, enter });
   const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b2 = to.pos, f = yawTo(a, b2), sd = side * 1.9; return V(a.x - Math.sin(f) * 1.2 + Math.cos(f) * sd, a.y + 1.95, a.z - Math.cos(f) * 1.2 - Math.sin(f) * sd); }, t0: headOf(to), fov: 32 });
+  // Round 24: Arsaber is beaten, not killed: down on one knee, his sword out of reach
+  const kneel = () => { b.st.dead = false; b.st.deadT = 0; b.st.action = null; b.st.crouch = 0.85; boss.facing = yawTo(boss.pos, salim.pos); };
+  const spot = () => { const f = yawTo(boss.pos, salim.pos); return V(boss.pos.x + Math.sin(f) * 2.4, salim.pos.y, boss.pos.z + Math.cos(f) * 2.4); };
   const shots = [
-    { dur: 3.8, cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.0), p1: () => V(boss.pos.x + Math.sin(ang + 1.7) * 6, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.7) * 6), t1: at(boss, 0.5), fov: 34 } },
+    { dur: 3.4, enter: () => { kneel(); const s2 = spot(); salim.pos.copy(s2); salim.pos.y = heightAt(s2.x, s2.z); salim.facing = yawTo(salim.pos, boss.pos); },
+      cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.2), p1: () => V(boss.pos.x + Math.sin(ang + 1.9) * 5.5, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.9) * 5.5), t1: at(boss, 1.0), fov: 34 }, run: () => kneel() },
+    { dur: lineDur('You burn your own city, and call me the thief.'), line: { who: 'Arsaber', text: 'You burn your own city, and call me the thief.', rig: b.rig, cue: 'breath', expr: 'stern', react: 'resolve' },
+      cam: { follow: true, p0: at(salim, 2.0, -1.4, 0.7), t0: headOf(boss), fov: 32 }, dof: headOf(boss), aperture: 1.2, run: () => kneel() },
+    { dur: lineDur('We copy. That is the difference.'), line: { who: 'Salim', text: 'We copy. That is the difference.', rig: g.player.rig, cue: 'hm', expr: 'resolve' },
+      cam: { follow: true, p0: () => { const h = headOf(salim)(), f = yawTo(salim.pos, boss.pos); return V(h.x + Math.sin(f) * 1.3 + Math.cos(f) * 0.45, h.y - 0.35, h.z + Math.cos(f) * 1.3 - Math.sin(f) * 0.45); }, t0: headOf(salim), fov: 30 }, dof: headOf(salim), aperture: 1.4, run: () => kneel() },
     { dur: 4.2, caption: 'Arsaber\'s men threw down their bows. The copyists\' barge came down from the yard.', enter: (d) => d.fade(1, 0.8) },
     // on the quay: Hakam and Ishaq see the first copies off
     { dur: 3.6, fadeIn: 1.0, enter: () => {
@@ -445,6 +487,7 @@ export function docksFinale(g, b) {
     { dur: 5.5, caption: 'The barge took the current, and was gone around the bend by noon.', noWait: true,
       cam: { p0: () => V(bank(QZ) - 1, 2.2, QZ + 2), t0: () => boat.position.clone().add(V(0, 1.2, 0)), p1: () => V(bank(QZ) - 1.5, 2.6, QZ + 3), t1: () => boat.position.clone().add(V(0, 1.2, 0)), fov: 36 },
       enter: () => { ishaq.st.talk = false; }, run: (d, k) => { sail(0.12 + k * 0.88); if (k > 0.82) d.fade(1, 0.8); } },
+    { dur: 4.6, caption: 'Arsaber went home that winter, in an exchange of prisoners on the Lamis river.', enter: () => { boat.visible = false; b.rig.visible = false; } },
     { dur: 7, fadeIn: 1.6, caption: 'That evening he set a lamp on the river for his brother, and one for each guard of the caravan.',
       enter: () => { boat.visible = false; scholar.rig.visible = false; floatLamps(); g.lighting?.set?.('dusk', 0); },
       cam: { p0: () => V(bank(LZ) - 4, 3.2, LZ + 14), t0: () => V(bank(LZ) + 5, -0.4, LZ), p1: () => V(bank(LZ) - 3, 2.4, LZ + 10), t1: () => V(bank(LZ) + 6, -0.4, LZ - 6), fov: 40 },

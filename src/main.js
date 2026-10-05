@@ -49,6 +49,8 @@ import { setupStoryHolds } from './storyholds.js';
 import { setupHubLife } from './hublife.js';
 import { CombatFX } from './combatfx.js';
 import { Ambient } from './ambient.js';
+import { regionForAct } from './region.js';
+import { t as tr24, LANG } from './i18n.js';
 import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, IS_CITY, FIRST_ACT, STORY, REGION_NAME } from './region.js';
 
 const P = new URLSearchParams(location.search);
@@ -160,10 +162,10 @@ const titleCam = (t) => {
   camera.position.set(cx, heightAt(cx, cz) + 14, cz);
   camera.lookAt(V.x, 9, V.z - 10);
 };
-function start(cont) {
+function start(cont, fromTravel = false) {
   if (mode !== 'title') return;
-  audio.init();
-  ui.fade(1);
+  audio.init(); if (fromTravel) audio.fadeInAll?.(2.5);
+  if (!fromTravel) ui.fade(1);
   setTimeout(async () => {
     mode = 'game'; game.started = true; ui.show(); ui.fade(0);
     if (cont) {
@@ -182,20 +184,37 @@ function start(cont) {
     await director.play(SCENES.prologue(game));
     await director.play(SCENES.briefing(game));
     game.act = 1; game.briefed = true; game.refreshTracker?.(); saveGame(game);
-  }, 800);
+  }, fromTravel ? 0 : 800);
 }
 // Travel to the next region: save, then reload the page into it (see region.js)
+// Round 24: the loader shows where Salim is going while the next map is raised (index.html reads sob.travelcard),
+// the score fades out with the picture, and a scene that already ended on black stays black (no flash of the HUD)
+const TRAVEL_CARD = {
+  marsh: { ar: 'الأهوار', en: 'Act IV · The Marshes', sub: 'Kallinikos has the last Pages. Follow him into the reeds.' },
+  karkh: { ar: 'الكرخ', en: 'Act V · Al-Karkh', sub: 'Krateros will burn the Pages. Get there first.' },
+  docks: { ar: 'الشطّ', en: 'Act VI · The River Quays', sub: 'Arsaber means to carry the copies north before they sail.' },
+  hamrin: { ar: 'حمرين', en: 'The Hamrin Hills', sub: 'What is left of Arsaber\'s company holds the road north.' },
+  back: { ar: 'الشطّ', en: 'The River Quays', sub: 'Back to the Tigris, and the camp on the quays.' },
+};
+ui.onFade = (v, sec) => audio.duck?.(v > 0.5, sec); // Round 24: the score dips while the screen is black
 game.travel = () => {
   saveGame(game);
-  try { sessionStorage.setItem('sob.autocontinue', '1'); } catch { /* ignore */ }
-  ui.fade(1); setTimeout(() => location.reload(), 900);
+  const to = regionForAct(game.act || 1), C = to === REGION ? null : to === 'docks' && REGION === 'hamrin' ? TRAVEL_CARD.back : TRAVEL_CARD[to];
+  try {
+    sessionStorage.setItem('sob.autocontinue', '1');
+    if (C) sessionStorage.setItem('sob.travelcard', JSON.stringify({ ar: C.ar, en: tr24(C.en), sub: tr24(C.sub), rtl: LANG === 'ar' }));
+  } catch { /* ignore */ }
+  audio.fadeOutAll?.(0.8); ui.holdBlack = true;
+  ui.fade(1, director.endedBlack ? 0 : 0.5); setTimeout(() => location.reload(), 900);
 };
 // Continue button when a save exists
 let newGame = false; try { newGame = !!sessionStorage.getItem('sob.newgame'); sessionStorage.removeItem('sob.newgame'); } catch { /* ignore */ }
 const saved = loadSave();
 if (newGame) setTimeout(() => start(), 50);
 let autoCont = false; try { autoCont = sessionStorage.getItem('sob.autocontinue') === '1'; sessionStorage.removeItem('sob.autocontinue'); } catch { /* ignore */ }
-if (saved && autoCont) setTimeout(() => { if (mode === 'title') start(saved); else { applySave(game, saved); restoreContent(game); applyNG(game); game.restoreSide?.(); lighting.forAct(saved.act, 0); game.briefed = true; game.refreshTracker?.(); } }, 50);
+// Round 24: arriving from another region, resume straight out of the loader (no second fade to black), and only once
+// the map is ready, so the arrival scene is not half-played under the loading screen
+const resumeTravel = saved && autoCont ? () => { if (mode === 'title') start(saved, true); else { applySave(game, saved); restoreContent(game); applyNG(game); game.restoreSide?.(); lighting.forAct(saved.act, 0); game.briefed = true; game.refreshTracker?.(); } } : null;
 if (saved) {
   const cb = document.createElement('button'); cb.id = 'contbtn'; cb.textContent = 'Continue'; cb.onclick = () => start(saved);
   document.getElementById('startbtn').after(cb);
@@ -273,6 +292,7 @@ function frame() {
     if (Math.random() < 0.45) fx.smoke.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 44, y: (focus.y || 0) + 0.5 + Math.random() * 3, z: focus.z + (Math.random() - 0.5) * 36 }, vel: { x: 0.3 * (Math.random() - 0.5), y: 0.05, z: 0.3 * (Math.random() - 0.5) }, life: 5, size: 0.05, size1: 0.05, color: new THREE.Color(1, 0.98, 0.9), alpha: 0.55, drag: 0, fadeIn: 0.5 });
   } else if (Math.random() < 0.5) fx.smoke.spawn({ pos: { x: focus.x + (Math.random() - 0.5) * 50, y: (focus.y || 0) + Math.random() * 6, z: focus.z + (Math.random() - 0.5) * 40 }, vel: { x: 1.5, y: 0.1, z: 0.4 }, life: 4, size: 0.06, size1: 0.06, color: new THREE.Color(1, 0.9, 0.7), alpha: 0.6, drag: 0, fadeIn: 0.3 });
   if (mode === 'title') { titleCam(t); game.t += dt; game.updateAmbientLife(dt); } else if (director.update(dt)) game.cineTick(dt * director.timeScale); else game.update(dt * (game.timeScale ?? 1));
+  director.blendOut(rawDt);
   lighting.update(dt);
   if (mode === 'game') combatFx.update(dt * (game.timeScale ?? 1));
   ambient.update(dt, mode === 'game' ? game.player.pos : SITES.village, lighting);
@@ -309,7 +329,8 @@ function frame() {
       _ck.set(1.6, 0.9, -0.6).applyQuaternion(camera.quaternion).add(camera.position);
       heroLight.position.copy(_ck); heroLight.intensity = 7 + hk * 0.5;
     } else { heroLight.intensity = mode === 'game' ? hk : 0; heroLight.position.set(c.x, (c.y || 0) + 3.4, c.z + 1.2); }
-    RIM_G.value.copy(L.sunCol).lerp(L.hemiSky, 0.35).multiplyScalar(0.9 + (L.hero || 0) / 12);
+    // Round 24: from the overhead play camera figures are small: a brighter rim lifts them off the ground (scenes keep the softer one)
+    RIM_G.value.copy(L.sunCol).lerp(L.hemiSky, 0.35).multiplyScalar((0.9 + (L.hero || 0) / 12) * (game.cinematic || mode !== 'game' ? 1 : 1.6));
   }
   if (vol) {
     const L = lighting.cur, U = vol.u; vol.enabled = (!gtao || gtao.enabled) && !game.interior && (L.vol ?? 0.02) > 0.001 && settings.s.volumetric !== false;
@@ -372,6 +393,7 @@ if (reflection) scene.traverse((o) => { if (o.isLight) o.layers.enable(REFLECT_L
 }
 for (const o of hiddenForCompile) o.visible = false;
 world.cull(mode === 'game' ? game.player.pos : camera.position, mode === 'game' ? 95 : 200);
+resumeTravel?.();
 document.getElementById('loader')?.classList.add('done'); setTimeout(() => document.getElementById('loader')?.remove(), 1200);
 // installable PWA: register the offline worker on the standalone build (not in dev, not inside an embedding frame)
 if (import.meta.env.PROD && 'serviceWorker' in navigator && window.top === window && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { /* offline install unavailable */ });

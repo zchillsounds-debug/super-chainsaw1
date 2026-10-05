@@ -109,6 +109,16 @@ button:hover{filter:brightness(1.15)}
 .eslot .ic,.cell .ic{display:block;width:80%;height:80%}.eslot .ic svg,.cell .ic svg{width:100%;height:100%;filter:drop-shadow(0 0 3px #000)}
 #loader{position:fixed;inset:0;z-index:50;background:radial-gradient(#2a1a0c,#050302);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1s}
 #loader.done{opacity:0;pointer-events:none}
+/* Round 24: the travel card shown while the next region loads */
+#loader.travel{background:radial-gradient(ellipse at 50% 45%,#2a1a0c 0%,#0a0604 70%,#030201 100%)}
+#loader.travel .tar{font:700 64px/1.1 'Reem Kufi',Amiri,serif;color:#f2d27a;text-shadow:0 0 28px #a0602088,0 3px 4px #000;direction:rtl;animation:tcard 1.6s ease-out both}
+#loader.travel .trule{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px auto 12px;width:min(420px,70vw);animation:tcard 1.6s .2s ease-out both}
+#loader.travel .trule i{flex:1;height:1px;background:linear-gradient(90deg,#0000,#d9a441,#0000)}
+#loader.travel .trule b{width:9px;height:9px;transform:rotate(45deg);border:1px solid #d9a441;background:#3a2410}
+#loader.travel .ten{font:700 26px 'Cinzel Decorative',Cinzel,serif;color:#f2e6cc;letter-spacing:4px;text-align:center;padding:0 16px;animation:tcard 1.6s .35s ease-out both}
+#loader.travel .tsub{font:italic 19px Amiri,serif;color:#d8c49c;margin:8px 0 28px;text-align:center;padding:0 16px;max-width:640px;animation:tcard 1.6s .6s ease-out both}
+@keyframes tcard{from{opacity:0;letter-spacing:10px;filter:blur(5px)}to{opacity:1;filter:none}}
+@media (max-height:480px){#loader.travel .tar{font-size:46px}#loader.travel .ten{font-size:20px}#loader.travel .tsub{font-size:16px;margin-bottom:18px}}
 #loader .lt{font:700 54px 'Cinzel Decorative',Cinzel,serif;color:#f2d27a;letter-spacing:4px;text-shadow:0 0 30px #a06020}
 #loader .ls{font:italic 20px Amiri,serif;color:#c8b088;margin:10px 0 24px}
 #loader .lbar{width:320px;height:4px;background:#2a1c10;overflow:hidden;border:1px solid #6a4a20}
@@ -245,6 +255,8 @@ body.touch #quest{max-width:min(56vw,320px)}
 #cine .skip .bg{stroke:#ffffff22}#cine .skip .fg{stroke:#f2d27a;stroke-dasharray:94.25;stroke-dashoffset:94.25}
 #hud.cinehide,body.incine #touch,body.incine #hpbars,body.incine #labels{opacity:0!important;pointer-events:none!important;transition:opacity .4s}
 #hud{transition:opacity .4s}
+/* Round 24: the HUD and touch controls come back with a fade after a scene, instead of popping in */
+#hud,#touch,#hpbars,#labels{transition:opacity .6s .25s}
 body.touch #cine .sub{bottom:calc(11vh + 6px);padding:6px 10px;gap:10px}
 body.touch #cine .por{width:48px;height:48px}
 body.touch #cine .sline{font-size:16px}
@@ -494,7 +506,9 @@ body.overlay #touch,body.overlay #hud,body.overlay #hpbars,body.overlay #labels{
   #victory #vng{margin-top:8px}#victory .vngnote{font-size:13px}
   #death .dt{font-size:44px;margin-bottom:20px}
 }
-body.touch #toasts{top:auto;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%)}
+/* Round 24: on touch the notices sit at the top left, under the minimap, clear of the fight around Salim */
+body.touch #toasts{top:calc(112px + env(safe-area-inset-top,0px));bottom:auto;left:calc(10px + env(safe-area-inset-left,0px));transform:none;text-align:left;max-width:42vw}
+body.touch #toasts .toast{margin:3px 0;padding:2px 10px;background:linear-gradient(90deg,#0d0806cc,#0d080600);border-left:2px solid #d9a44188}
 body.touch .toast{font-size:15px}body.touch .toast.lvl{font-size:22px}body.touch .toast.leg{font-size:18px}
 body.touch #dialog{padding:12px 16px 10px;border-radius:12px;max-height:44vh;display:flex;flex-direction:column}
 body.touch .dname{font-size:15px;letter-spacing:1px;margin-bottom:4px}

@@ -136,7 +136,7 @@ export function deadTree(rnd) {
 export function banner(color = '#1d1d1d') {
   const m = mats(), g = new THREE.Group();
   g.add(mesh(new THREE.CylinderGeometry(0.05, 0.06, 5).translate(0, 2.5, 0), m.wood));
-  const cloth = new THREE.MeshStandardMaterial({ map: fabricTex(color, '#a02020', false), side: THREE.DoubleSide, roughness: 1 });
+  const cloth = new THREE.MeshStandardMaterial({ map: fabricTex(color, '#a02020', false), side: THREE.DoubleSide, roughness: 0.78, emissive: 0x0a0806 }); // Round 24: a woven sheen, so the black banner never reads as a hole
   const cg = new THREE.PlaneGeometry(1.4, 2.2, 6, 8);
   const cl = mesh(cg, cloth); cl.position.set(0.72, 3.7, 0); g.add(cl);
   g.userData.cloth = cl; g.userData.dynamic = true;

@@ -128,7 +128,15 @@ export class Audio {
     const sched = () => {
       // each act colours the score: maqam, tempo, register and how busy the melody is (see setAct)
       const A = this.actCfg || { ex: 'rast', bpm: 76, cbpm: 108, dens: 0.45, oct: 1, qan: 0.15 };
-      const combat = this.intensity > 0.5, m0 = MAQ[combat ? 'bayati' : A.ex], m = { tonic: m0.tonic * (combat ? 1 : A.oct), cents: m0.cents }, bpm = combat ? A.cbpm : A.bpm, s16 = 60 / bpm / 4;
+      // Round 24: the score changes mode only on a bar line (step 0 of 16), never mid-phrase: a daff fill leads into
+      // the fight, and a qanun cadence down to the tonic closes it
+      if (step % 16 === 0 && (this.intensity > 0.5) !== !!this.combatOn) {
+        this.combatOn = this.intensity > 0.5;
+        const pm = MAQ[this.combatOn ? (A.ex) : 'bayati'], s0 = 60 / (this.combatOn ? A.bpm : A.cbpm) / 4;
+        if (this.combatOn) { for (let i = 0; i < 6; i++) this.drum(i === 5 ? 'dum' : 'tak', next + s0 * i * 0.5, 0.5 + i * 0.12); }
+        else { [4, 3, 2, 1, 0].forEach((dg, i) => this.qanun(freq({ tonic: pm.tonic, cents: pm.cents }, dg + 7), next + i * s0 * 1.2, 0.06 - i * 0.006, i === 4 ? 3 : 0)); this.drum('dum', next + s0 * 6, 0.8); rest = 6; phraseLeft = 0; }
+      }
+      const combat = !!this.combatOn, m0 = MAQ[combat ? 'bayati' : A.ex], m = { tonic: m0.tonic * (combat ? 1 : A.oct), cents: m0.cents }, bpm = combat ? A.cbpm : A.bpm, s16 = 60 / bpm / 4;
       while (next < c.currentTime + 0.25) {
         const pat = combat ? MAQSUM : WAHDA, ch = pat[step % 16];
         if (ch === 'D') this.drum('dum', next, combat ? 1 : 0.7);
@@ -170,6 +178,7 @@ export class Audio {
     if (kind === 'ambush') { roll(14, 0.06, 1); this.boom(); [1200, 1000, 800, 700, 500].forEach((ct, i) => this.qanun(B * 2 * Math.pow(2, ct / 1200), t + 0.8 + i * 0.06, 0.07)); }
     if (kind === 'boss') { roll(20, 0.07, 1.2); setTimeout(() => this.boom(), 1400); this.tone(55, 2.4, 'sawtooth', 0.12, 1, this.music); }
     if (kind === 'phase') { roll(10, 0.05, 1.3); this.boom(); }
+    if (kind === 'settle') { [7, 5, 4, 2, 0].forEach((dg, i) => { const ct = [0, 200, 350, 500, 700, 900, 1050, 1200][dg]; this.qanun(R * 2 * Math.pow(2, ct / 1200), t + 0.3 + i * 0.28, 0.07 - i * 0.008, i === 4 ? 4 : 0); }); this.oud(R, t + 1.75, 0.22); this.drum('dum', t + 1.75, 0.7); }
     if (kind === 'victory') { [0, 350, 700, 1200, 700, 1200].forEach((ct, i) => { this.oud(R * Math.pow(2, ct / 1200), t + i * 0.22, 0.25); this.qanun(R * 2 * Math.pow(2, ct / 1200), t + i * 0.22 + 0.11, 0.06, 2); }); this.drum('dum', t + 1.32, 1.5); }
   }
   // non-verbal vocal cues: a formant-filtered voice (hum, shout, grunt of effort, pain, growl, a soft sigh)

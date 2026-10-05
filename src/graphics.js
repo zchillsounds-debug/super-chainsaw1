@@ -119,7 +119,7 @@ const GradeShader = {
       // vignette
       vec2 vc = c*vec2(uAspect,1.0);
       float v = smoothstep(1.05, 0.25, length(vc)*1.05);
-      col *= mix(1.0, v, 0.75*uVignette);
+      col *= mix(1.0, v, 0.55*uVignette); // Round 24: lighter (the corners sit under the HUD; the cinematic grade adds its own)
       // low health pulse
       float pulse = (0.6+0.4*sin(uTime*6.0))*uLowHp;
       col = mix(col, col*vec3(1.2,0.3,0.25), smoothstep(0.3,1.2,length(vc))*pulse);

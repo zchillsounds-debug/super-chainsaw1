@@ -14,6 +14,17 @@
 </head>
 <body>
 <div id="loader"><div class="lt">Madinat al-Salam</div><div class="ls">Raising the Round City…</div><div class="lbar"><i></i></div></div>
+<script>
+// Round 24: travelling between regions, the loader becomes a travel card: where Salim is going, and why
+try {
+  var c = JSON.parse(sessionStorage.getItem('sob.travelcard') || 'null'); sessionStorage.removeItem('sob.travelcard');
+  if (c) {
+    var L = document.getElementById('loader'), esc = function (x) { return String(x || '').replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; }); };
+    L.classList.add('travel'); if (c.rtl) L.setAttribute('dir', 'rtl');
+    L.innerHTML = '<div class="tar">' + esc(c.ar) + '</div><div class="trule"><i></i><b></b><i></i></div><div class="ten">' + esc(c.en) + '</div><div class="tsub">' + esc(c.sub) + '</div><div class="lbar"><i></i></div>';
+  }
+} catch (e) { /* the plain loader */ }
+</script>
 <div id="game"></div>
 <div id="ui"></div>
 <script type="module" src="/src/main.js"></script>
