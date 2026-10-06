@@ -1,17 +1,44 @@
-# Madinat al-Salam: Handoff (Round 26 built and tested; shipping not finished)
+# Madinat al-Salam: Handoff (Round 27 shipped)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-45lek3` of zchillsounds-debug/super-chainsaw1. Round 26 (new troop types, boss second halves, Hamrin content and story, the camp's own stories, phone fixes) is built, committed and pushed, and passes the full test sweep, but the Artifact publish and the APK are not done yet. See "Round 26: finish shipping" in HANDOFF.md first.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-v9ykar` of zchillsounds-debug/super-chainsaw1. Round 27 (a new move for each of the 16 story-hold masters, the new troops in dungeons, contracts and trials, sculpted camp props, boss callouts under the boss bar) is shipped.
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
-> 2. Run `npm install`. When pushing the session branch, `git push -u origin <session-branch>` (a fresh branch carries the earlier rounds' history). Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs.
+> 2. Run `npm install`. When pushing the session branch, `git push -u origin <session-branch>` (a fresh branch carries the earlier rounds' history). Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs from the same folder: vite reloads the page and the test dies ("Execution context was destroyed"). Run tests from a copy (see "Test workflow" under Round 27).
 > 3. Ask me what the next round should be, and confirm the plan with me before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
+
+## Round 27: masters, troops below ground, camp props, phone readability
+User decisions: all four areas (the story-hold masters' new moves, the new troops in more places, sculpted camp props, phone feel); a full round until about 300k context. The user gave no device notes, so the phone pass was done from phone-sized shots.
+
+**Masters (`masters27.js`, merged into `holds.js` MOVES by `makeMoves27({ lineTele, inLine })`; each master's `p2.add` in `storyholds.js` lists his move):**
+- Sawad: Lalakon `sluice` (a 5 m water lane across Salim's ground: a throw, then slowing water for 5 s), Photeinos `bandon` (once: a standard-bearer and two bandits; the Round 26 rally), Bryennios `bellows` (a cone of sparks, then a ring of vent fire from 3.2 to 5.6 m), Olbianos `chainsweep` (the band from 3 to 7.5 m is struck: step in close or stay out).
+- Marsh: Kourkouas `causeway` (three marked patches become mud: slow 0.4 for 5.5 s), Katakylas `reedfire` (three rings of fire closing in, 8.5, 6 and 3.6 m, all with the same gap), Tzantzes `hooks` (a lane; caught, Salim is dragged to him), Petronas `polesweep` (a 4.2 m sweep, then a 12 m jab).
+- Karkh: Mousele `roofs` (three collapses walking toward Salim), Narses `testudo` (the Round 26 shield wall), Gongylios `crossfire` (three 24 m lanes, 0.6 s apart), Kalokyros `embertrail` (fire lands where Salim stood 0.6 s before, for about 3 s).
+- Docks: Aetios `slipway` (a lane, then a rolling banded log), Rhentakios `cargonet` (a marked net drop that pins: `p.netT`), Monomachos `chainpull` (an arc in front: caught, pulled in), Skleros `feintstrike` (a glint with no blow, then the real one).
+- Plan changes: Olbianos already had a hook-and-pull and Kalokyros already struck from the smoke, so they got the chain sweep and the fire trail instead.
+- Shared parts in `setupMasters27(g)`: `g.m27band(c, inner, outer, delay, onDone, gapAt, gap)` (a ring band telegraph, in `g.hazards` as kind `m27band`; the game's `updateHazards` advances its clock), `g.m27zone('lane'|'mud', at, o)` (pooled slowing ground through `g.hazSlowK`), the pooled log, `g.m27clear()` (called on hold reset, death and exit). Waves are driven by the move's own clock, not `setTimeout` (timers ran on while paused).
+
+**New troops below ground (`zones.js` enter):** dungeons of level 8 and up, every contract and every Siege Trial get a standard-bearer with the pack in one room (40% of the way) and a shield wall in another (75%), with two fewer men beside it. No horse archers indoors: rooms are 12 m cells, too tight for his circle (he stays on the open maps).
+
+**Camp props (`props27.js`):** `wasitGoods()` (slatted crates with rope lashings, a lumpy date sack with spilled dates, an indigo cloth bolt with its loose end), `anvil()` (an extruded and bevelled body with horn, face, heel and feet, a bright face, a hammer, tongs and a quench bucket on a banded stump), `drillGround()` (a straw-bound post with a straw texture pinched at three rope bands, cut marks, arms, and an A-frame rack of blunted spears and wooden swords). Each is merged per material (6 to 8 meshes, 1.3k to 2.5k triangles). `g.campProp26(k)` places one (for tests).
+
+**Phone readability:** callouts ("Fire the reeds!", "Cart!", "Again!", "Feint!") floated over the boss and landed on his name in the boss bar. They now show as a line under the bar (`ui.bossCall(text)`, `#bossbar .bcall`), translated. The band markers are brighter (they were faint on the orange kiln floor). Callouts drawn by `damageNumber` had never been translated (Round 26's "Cart!" Arabic never showed); master and act-boss announcements now go through `t()`.
+
+**Fixes found on the way:** local `let t` counters in `combat25.js` renamed `tt` (they would have shadowed the new `t()` import and crashed `firewave` and `beams`).
+
+**Arabic:** `story27_ar.js` (`AR27`, merged last).
+
+**New scripts:** `r27hold.mjs <hold> <mid|boss> [out]` (a master's new move; prints slowing ground, bands, the log, the net, men called up), `r27dungeon.mjs [region] [out]` (a dungeon, a contract and a trial: counts, rally, the wall waking), `r27props.mjs [region] [out]` (close shots of the three props and one at play distance).
+
+**Test workflow:** `/home/user/wt26` (5173, `/home/user/sweep.sh <list> <logdir>`) and `/home/user/wt27` (5174, `/home/user/vite2.sh`, `/home/user/sweep2.sh <list> <logdir>`, synced by `/home/user/sync27.sh`) are copies of the checkout, so code can be edited while tests run. These live outside the repo and have to be recreated in a new container (copy with tar; `wt27` symlinks `node_modules`). Run at most two lanes: the container has 4 cores, and a third browser makes page loads time out (a 180 s `__ready` wait failed this way).
+
+STATUS27
 
 ## Round 26: troops, bosses, Hamrin, the camp
 User decisions: all four areas: Hamrin endgame content, fixes for the phone (the user hadn't played Round 25 yet, so Claude ran the device checklist from phone-sized shots), a polish and bug sweep, and new content (all four offered: Hamrin story arc, boss depth, hub NPC arcs, enemy variety). Tatzates' ending: chains for Baghdad or let him go (approved as recommended).
@@ -68,32 +95,10 @@ User decisions: all four areas: Hamrin endgame content, fixes for the phone (the
 
 **Workflow:** edits in the main checkout; tests run from the copy at `/home/user/wt26` (`/home/user/sync26.sh`); `/home/user/sweep26.sh <list>` runs a list of tests one after another and writes `/home/user/logs26/SUMMARY`.
 
-**Status when this handoff was written (the round is not shipped yet):**
-- Everything above is committed and pushed to `claude/new-session-45lek3` (last commit `aaa028f`).
-- The skipped Round 25 tests were all run first and all passed (30 tests: r15/r16/r17 for the other regions, r18 for the other classes, r21holds fort/gorge/rivalhold, r22holds ×7, trial, craft, bench, r21comp, r21mount, r21rift, r21hub ×2).
-- **The final sweep is clean: all 44 tests passed** (rc 0, "errors: none"). They are:
-  - r15 ×4, r16 marsh, r17 karkh, r18 faris
-  - r21holds ×4, r22holds dam and hulks
-  - finaletest ×4, r21rival sawad and docks
-  - traveltest, ngtest, trialtest, crafttest, benchtest, r21comp, r21hub ×2
-  - r25boss sawad and docks, r25story sawad, r25end docks
-  - r26foes sawad and hamrin, r26boss ×4, r26hold ×4
-  - r26hamrin with both options, r26camp
-- The Artifact build was made from the final code (`npx vite build` then `node shots/inline.mjs <out>.html`, 1.75 MB) but **not published**. Artifact version 23 (Round 25) is still live.
+**Shipped:** see "Round 26 · Shipped" below.
 
-## Round 26: finish shipping (do this first in the next chat)
-1. `npm install`. The sweep is already clean; no tests are needed before shipping.
-2. Build and inline (`npx vite build && node shots/inline.mjs /tmp/madinat.html`). Smoke-test the file with `node shots/smoke26.mjs /tmp/madinat.html shot.png`. It should show touch on, the `t-attack` button, troop counts and "errors: none".
-3. Read https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c, then publish the file to it with `url` (version 24). Touch controls must work.
-4. Push to the new session's branch. Then trigger `apk.yml` on that branch if its name isn't `claude/**`, fetch `origin/apk-builds` once the commit message shows the new SHA, and send the user `sands-of-baghdad.apk`.
-5. Update this file: replace "Status when this handoff was written" with a "Shipped" line (sweep results, Artifact version 24, APK).
-
-
-**Next round: ideas (not approved):**
-- Device check on Android: the new troops (the rally ring, the shield line's turn speed, whether the horse archer's circle feels fair), Kallinikos' fire rings and the liquid-fire lanes at real frame rate, the bark under the tracker, the 8 px poise bar.
-- Story-hold masters (16) still have only their Round 22 phase twos.
-- The camp props are plain boxes and cylinders; sculpted versions would sit better beside the stalls.
-- New troops are not yet in the dungeons, the rift or contracts.
+## Round 26 · Shipped
+The full sweep was clean (44 of 44, run by the Round 26 chat). Artifact version 24 was published from this chat, and the APK from `ad30f04` (same code) was sent to the user.
 
 ## Round 25: gameplay and story
 User decisions: all four gameplay areas (combat feel and bosses, encounter pacing, the first hour, phone readability) and all four story areas (character arcs, companion and NPC voices, environmental storytelling, choices with consequences); rework of weak existing lines allowed; critique loops until the context limit, then ship. The three choices were approved as proposed.
