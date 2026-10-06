@@ -35,7 +35,7 @@ const p2 = await ev(() => {
   for (let n = 0; n < 4; n++) {
     R.sigCd = 0; b.atkCd = 99; R.combo = null; R.sig = null; b.st.action = null; b.staggerT = 0;
     const p = g.player; p.pos.set(b.pos.x + 0.3, 0, b.pos.z + (b.type === 'ghanim' ? 3.2 : 7));
-    for (let i = 0; i < 40; i++) { __sim(0.1); if (R.combo?.steps?.some((s) => s[5] === 'feint')) feintSeen = true; }
+    for (let i = 0; i < 40; i++) { if (__director.def) { __director.skip(); __sim(0.05); } __sim(0.1); if (R.combo?.steps?.some((s) => s[5] === 'feint')) feintSeen = true; }
   }
   const after = g.enemies.filter((e) => !e.dead);
   return { phase: b.phase, p2: !!R.p2, callouts: calls.splice(0).join(' | '), toasts: toasts.join(' | '), standard: after.filter((e) => e.type === 'standard').length, spawned: after.length - before, feintSeen, fires: g.fires2.length };
