@@ -56,7 +56,8 @@ export class Guide {
       const text = g.walk && !g.interior ? (g.walk.label ? t('Walking') + ': ' + t(g.walk.label) : null) || q?.text : g.interior ? (g.interior.I.objective ? g.interior.I.objective()[1] : g.interior.I.chest && !g.interior.I.chest.opened ? 'Find the chest' : 'Climb back to the surface') : tr?.text || q?.text;
       g.ui.objective(g.cinematic ? null : text, goal ? Math.hypot(goal.x - P.x, goal.z - P.z) : null);
     }
-    const fighting = g.player.target && !g.player.target.dead;
+    // Round 25: a boss fight, or any foe alerted close by, also counts (the trail showed through the boss fights)
+    const fighting = (g.player.target && !g.player.target.dead) || g.bossActive || (g.fightN || 0) >= 1;
     this.vis += ((far && !fighting ? 1 : 0) - this.vis) * Math.min(1, dt * 3);
     if (this.vis < 0.02 || !goal) { this.mesh.count = 0; return; }
     if ((this.repath -= dt) <= 0 || !this.path) {

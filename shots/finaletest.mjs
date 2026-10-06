@@ -17,7 +17,7 @@ await pg.evaluate(() => { const g = __game; g.player.pos.set(g.bossPos?.x ?? 0, 
 const r0 = await pg.evaluate(() => { const g = __game; g.spawnBoss(); const b = g.boss || g.enemies.find((e) => e.boss); __director.skip?.(); __sim(0.5); b.rise = 1; b.hp = 1; g.damageEnemy(b, 1e9, false, b.pos); return b.name; });
 let shots = 0, log = [];
 for (let i = 0; i < 70 && !reloaded; i++) {
-  const st = await pg.evaluate(() => { __sim(0.5); const d = __director; if (d.def) { d.advance(); __sim(0.05); d.advance(); } const v = document.querySelector('#victory, .victory'); return { cine: !!d.def, shot: d.i, line: d.shot?.line?.text || d.shot?.caption || d.shot?.card?.en || '', victory: !!(v && getComputedStyle(v).display !== 'none' && v.offsetParent) }; }).catch(() => ({ gone: true }));
+  const st = await pg.evaluate(() => { __sim(0.5); const d = __director; if (d.shot?.choice) document.querySelector("#cine .copt")?.click(); if (d.def) { d.advance(); __sim(0.05); d.advance(); } const v = document.querySelector('#victory, .victory'); return { cine: !!d.def, shot: d.i, line: d.shot?.line?.text || d.shot?.caption || d.shot?.card?.en || '', victory: !!(v && getComputedStyle(v).display !== 'none' && v.offsetParent) }; }).catch(() => ({ gone: true }));
   if (st.gone) break;
   if (st.line && log[log.length - 1] !== st.line) { log.push(st.line); if (out && shots < 12) await pg.screenshot({ path: `${out}/${region}-${String(shots++).padStart(2, '0')}.png` }); }
   if (st.victory) { log.push('VICTORY'); break; }

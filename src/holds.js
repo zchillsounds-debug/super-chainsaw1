@@ -795,6 +795,8 @@ export function setupHolds(g) {
     w.innerHTML = `<div class="ptitle">${t('Campfire')} <span class="close" role="button" aria-label="Close">✕</span></div><div class="sbody"><div class="slabel">${t('You rest. Wounds bound, sherbet filled. His men are back at their posts.')}</div>
       <div class="slist">${lit.map((x) => `<div class="srow"><div class="bico">🔥</div><div class="sinfo"><span>${t('Campfire')} ${x.idx + 1}</span></div><button class="sbtn" data-f="${x.idx}">${t('Travel')}</button></div>`).join('')}
       <div class="srow"><div class="bico">⇱</div><div class="sinfo"><span>${t('Leave the hold')}</span></div><button class="sbtn" data-out="1">${t('Leave')}</button></div></div></div>`;
+    // Round 25: the first rest at a fire in each region brings back a memory of Jabir
+    const mem = g.memory25?.(); if (mem) w.querySelector('.sbody')?.insertAdjacentHTML('afterbegin', `<div class="mem25">${mem}</div>`);
     g.ui.root.appendChild(w);
     w.querySelector('.close').onclick = () => w.remove();
     w.querySelectorAll('[data-f]').forEach((b) => b.onclick = () => { w.remove(); const T2 = I.fires[+b.dataset.f]; s.lastFire = T2.idx; g.ui.fade(1); setTimeout(() => { p.pos.copy(T2.pos).add(V(0, 0, 2)); g.camInit = false; g.ui.fade(0); }, 560); });

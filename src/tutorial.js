@@ -43,7 +43,7 @@ export class Tutorial {
   }
   update(dt) {
     const g = this.g;
-    if (!g.tutorialOn || !g.started || g.cinematic || !g.briefed || g.interior && !this.cur) { this.el.classList.add('hidden'); return; }
+    if (!g.tutorialOn || !g.started || g.cinematic || !g.briefed || g.interior && !this.cur || g.bossActive) { this.el.classList.add('hidden'); return; } // Round 25: no cards over a boss bar
     const p = g.player.pos; if (this.last) this.moved += Math.hypot(p.x - this.last.x, p.z - this.last.z); this.last = { x: p.x, z: p.z };
     if (this.moved > 8) this.finish('move');
     if (g.player.level >= 3) this.finish('level');

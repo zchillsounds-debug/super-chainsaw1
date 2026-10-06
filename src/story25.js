@@ -225,6 +225,15 @@ export function setupStory25(g) {
       if (d < 1.5 && !g.ui.dialogOpen && !p.dead && !fightWas) showLeaf(it.L); // never mid-fight: it waits on the ground
     }
   };
+  // a memory of Jabir by the first hold fire in each region (holds.js puts it at the top of the rest panel)
+  const MEM = {
+    sawad: 'By the fire, Salim remembers Jabir teaching him to hold a spear: "Not like a stick, little brother. Like a promise."',
+    marsh: 'By the fire, Salim remembers the year the river flooded, and Jabir wading through it with their mother\'s loom on his back.',
+    karkh: 'By the fire, Salim remembers Jabir counting out coins for a book neither of them could read. "For when you learn."',
+    docks: 'By the fire, Salim remembers the night before the caravan left. Jabir, laughing: "Two more days to Baghdad, and then we rest."',
+    hamrin: 'By the fire, Salim tries to remember Jabir\'s voice, and for a moment cannot. Then it comes back.',
+  };
+  g.memory25 = () => { const s = S25(g); if (s.mem[REGION] || !MEM[REGION]) return null; s.mem[REGION] = true; return t(MEM[REGION]); };
   // ambushes and champions speak through the guard too
   g.enc25Say = (ctx) => guardSay(ctx);
 }

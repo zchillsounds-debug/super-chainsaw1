@@ -665,3 +665,6 @@ body.incine #bark25,body.overlay #bark25{display:none}
 #tskills .tut-pulse::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:3px solid #f2d27a;box-shadow:0 0 16px #f2d27a;animation:tutr 1s ease-out infinite;pointer-events:none}
 @keyframes tutp{50%{transform:scale(1.1)}}
 @keyframes tutr{from{opacity:1;transform:scale(.9)}to{opacity:0;transform:scale(1.35)}}
+
+/* Round 25: a memory of Jabir at the top of the campfire panel */
+.mem25{margin:2px 0 12px;padding:10px 14px;border-left:3px solid #a88a4a;background:#1a120a99;color:#e8d9b5;font:italic 17px/1.45 Amiri,serif}

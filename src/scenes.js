@@ -386,7 +386,10 @@ export function arrival(g) {
       { ...envoySay('Then I will take them without you.'), run: (d, k, dt) => { envoy.facing = yawTo(envoy.pos, ishaq.pos); } },
       { ...say('Salim', ''), line: null, dur: 0.8, choice: { prompt: 'Arsaber turns to go.', options: [
         { label: 'Refuse him.', fx: () => choose(g, 'arsaber', 'refuse') },
-        { label: 'Promise him a copy, freely given.', fx: () => choose(g, 'arsaber', 'promise') }] } },
+        { label: 'Promise him a copy, freely given.', fx: () => choose(g, 'arsaber', 'promise') }] },
+        // over Salim's shoulder onto Arsaber, who stands in the top third of the frame, clear of the buttons
+        cam: { follow: true, p0: () => { const f = yawTo(salim.pos, envoy.pos), h = headOf(salim)(); return V(h.x - Math.sin(f) * 1.5 + Math.cos(f) * 0.75, h.y + 0.3, h.z - Math.cos(f) * 1.5 - Math.sin(f) * 0.75); }, t0: at(envoy, 0.75), fov: 34 }, dof: headOf(envoy),
+        run: () => { salim.facing = yawTo(salim.pos, envoy.pos); envoy.facing = yawTo(envoy.pos, salim.pos); } },
       { ...say('Salim', 'Let him try.'), when: () => chosen(g, 'arsaber') !== 'promise', run: (d, k, dt) => { face(); if (k > 0.15) { envoy.facing = yawTo(envoy.pos, away); walk(envoy, away, 1.4, dt); envoy.st.walkBlend = 1; envoy.st.phase += dt * 4; } } },
       { ...say('Salim', 'Wait. When the copying is done, one copy goes north. Freely given. My word on it.'), when: () => chosen(g, 'arsaber') === 'promise', run: () => { face(); envoy.facing = yawTo(envoy.pos, salim.pos); } },
       { ...envoySay('A caravan guard\'s word. My orders are the originals, but I will remember it.'), when: () => chosen(g, 'arsaber') === 'promise', run: (d, k, dt) => { if (k > 0.55) { envoy.facing = yawTo(envoy.pos, away); walk(envoy, away, 1.4, dt); envoy.st.walkBlend = 1; envoy.st.phase += dt * 4; } } },
@@ -414,6 +417,8 @@ export function arrival(g) {
 export function rawhFalls(g, b) {
   const salim = playerActor(g), boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st };
   const actors = [salim, boss], ang = yawTo(salim.pos, boss.pos);
+  // Round 25: the reed village burning beyond the weir (for the choice), on dry ground past Kallinikos
+  const burnAt = dry(boss.pos.x + Math.sin(ang) * 26, boss.pos.z + Math.cos(ang) * 26);
   const shots = [
     { dur: 3.6, cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.0), p1: () => V(boss.pos.x + Math.sin(ang + 1.8) * 6, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.8) * 6), t1: at(boss, 0.5), fov: 34 } },
     { dur: lineDur('Too late. I sent the last bundle up the canal at dawn.'), line: { who: 'Kallinikos', text: 'Too late. I sent the last bundle up the canal at dawn.', rig: b.rig, cue: 'breath' },
@@ -425,7 +430,10 @@ export function rawhFalls(g, b) {
     { dur: 0.8, choice: { prompt: 'Behind the weir, the reed village is burning.', options: [
       { label: 'Chase the bundle up the canal tonight.', fx: () => choose(g, 'marsh', 'chase') },
       { label: 'Stay and fight the fire with the marsh-folk.', fx: () => choose(g, 'marsh', 'stay') }] },
-      cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
+      // over his shoulder, out across the water to the village burning beyond the weir (Salim in the upper left, clear of the buttons)
+      cam: { follow: true, p0: () => { const f = yawTo(salim.pos, burnAt), h = headOf(salim)(); return V(h.x - Math.sin(f) * 1.9 - Math.cos(f) * 0.9, h.y + 0.25, h.z - Math.cos(f) * 1.9 + Math.sin(f) * 0.9); }, t0: () => V(burnAt.x, burnAt.y + 1.2, burnAt.z), fov: 40 },
+      enter: () => { salim.facing = yawTo(salim.pos, burnAt); },
+      run: (d, k, dt) => { for (let i = 0; i < 6; i++) { const a2 = Math.random() * 6.28, r2 = Math.random() * 7; g.fx.fire(V(burnAt.x + Math.cos(a2) * r2, burnAt.y + Math.random() * 1.5, burnAt.z + Math.sin(a2) * r2), 2.6 + Math.random() * 1.4); } } },
     { when: () => chosen(g, 'marsh') === 'chase', dur: 3.2, line: { who: 'Salim', text: 'Ishaq. Find us a boat.', rig: g.player.rig, cue: 'hm', expr: 'resolve' }, cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
     { when: () => chosen(g, 'marsh') === 'chase', dur: 4.0, caption: 'That night Kallinikos\'s own boats carried Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
     { when: () => chosen(g, 'marsh') === 'stay', dur: lineDur('The Pages can wait one night. These people cannot.'), line: { who: 'Salim', text: 'The Pages can wait one night. These people cannot.', rig: g.player.rig, cue: 'hm', expr: 'resolve' }, cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
@@ -546,7 +554,8 @@ export function docksFinale(g, b) {
       cam: { follow: true, p0: at(salim, 1.6, 2.2, -1.2), t0: headOf(salim), fov: 28 }, dof: headOf(salim), aperture: 1.2, run: (d, k, dt) => drift(dt || 1 / 60) },
     // Round 25: if Ishaq confessed on the road, the account between them is settled here
     { when: () => chosen(g, 'ishaq') === 'heard', dur: lineDur('I chose his road. I will not forget it.'), line: { who: 'Ishaq', text: 'I chose his road. I will not forget it.', rig: g.npc, cue: 'breath', expr: 'sad' },
-      cam: { p0: () => V(bank(LZ) + 1.2, 0.9, LZ + 1.2), t0: () => V(ishaq.pos.x, ishaq.pos.y + 1.5, ishaq.pos.z), fov: 32 }, enter: () => { ishaq.facing = yawTo(ishaq.pos, salim.pos); ishaq.st.talk = true; }, run: (d, k, dt) => drift(dt || 1 / 60) },
+      cam: { follow: true, p0: () => { const f = yawTo(salim.pos, ishaq.pos), h = headOf(salim)(); return V(h.x - Math.sin(f) * 1.3 + Math.cos(f) * 0.6, h.y + 0.1, h.z - Math.cos(f) * 1.3 - Math.sin(f) * 0.6); }, t0: headOf(ishaq), fov: 30 }, dof: headOf(ishaq), aperture: 1.2,
+      enter: () => { ishaq.facing = yawTo(ishaq.pos, salim.pos); salim.facing = yawTo(salim.pos, ishaq.pos); ishaq.st.talk = true; }, run: (d, k, dt) => drift(dt || 1 / 60) },
     { when: () => chosen(g, 'ishaq') === 'heard', dur: lineDur('Neither will I. Light the next one, Ishaq.'), line: { who: 'Salim', text: 'Neither will I. Light the next one, Ishaq.', rig: g.player.rig, cue: 'hm', expr: 'warm' },
       cam: { follow: true, p0: at(salim, 1.6, 2.2, -1.2), t0: headOf(salim), fov: 28 }, dof: headOf(salim), aperture: 1.2, enter: () => { ishaq.st.talk = false; }, run: (d, k, dt) => drift(dt || 1 / 60) },
     { dur: 4.0, line: { who: 'Ishaq', text: 'We keep the account.', rig: g.npc, cue: 'breath' },

@@ -74,6 +74,11 @@ export const AR25 = {
   'He wanted to see the paper-sellers\' lane. He said I should learn to read.': 'كان يريد أن يرى سوق الورّاقين. وكان يقول إنّ عليّ أن أتعلّم القراءة.',
   'Jabir would have counted every barge on this river, and argued the tolls.': 'كان جابر سيعدّ كلّ مركب في هذا النهر، ويجادل في المكوس.',
   'Tatzates is up here somewhere. The one who loosed the arrow.': 'تاتزاتيس هنا في مكان ما. هو من أطلق السهم.',
+  'By the fire, Salim remembers Jabir teaching him to hold a spear: "Not like a stick, little brother. Like a promise."': 'عند النار يتذكّر سالم جابرًا يعلّمه كيف يمسك الرمح: «لا كما تمسك عصا يا أخي الصغير. بل كما تمسك وعدًا».',
+  'By the fire, Salim remembers the year the river flooded, and Jabir wading through it with their mother\'s loom on his back.': 'عند النار يتذكّر سالم عام فاض النهر، وجابرًا يخوض الماء ونَول أمّهما على ظهره.',
+  'By the fire, Salim remembers Jabir counting out coins for a book neither of them could read. "For when you learn."': 'عند النار يتذكّر سالم جابرًا يعدّ الدراهم ثمنًا لكتاب لا يقرؤه أيٌّ منهما. «لِحين تتعلّم».',
+  'By the fire, Salim remembers the night before the caravan left. Jabir, laughing: "Two more days to Baghdad, and then we rest."': 'عند النار يتذكّر سالم الليلة التي سبقت رحيل القافلة. جابر يضحك: «يومان إلى بغداد، ثم نستريح».',
+  'By the fire, Salim tries to remember Jabir\'s voice, and for a moment cannot. Then it comes back.': 'عند النار يحاول سالم أن يتذكّر صوت جابر، فلا يقدر لحظةً. ثم يعود إليه.',
   // ---- the hired guards
   'That is the last of them. Breathe.': 'هذا آخرهم. التقط أنفاسك.',
   'Shield up next time. You took one on the arm.': 'ارفع الترس في المرّة القادمة. أصابتك واحدة في الذراع.',
