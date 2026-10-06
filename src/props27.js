@@ -25,13 +25,18 @@ function mats() {
   y.fillStyle = '#1f4a6e'; y.fillRect(0, 0, 64, 64); y.strokeStyle = 'rgba(10,25,40,0.7)'; y.lineWidth = 1.2; y.beginPath();
   for (let a = 0; a < Math.PI * 14; a += 0.1) { const r = 3 + a * 0.62; y.lineTo(32 + Math.cos(a) * r, 32 + Math.sin(a) * r); } y.stroke();
   const spiral = new THREE.CanvasTexture(c2); spiral.colorSpace = THREE.SRGBColorSpace;
+  // straw: fine streaks running along the stalks, pale and dark
+  const c3 = document.createElement('canvas'); c3.width = 128; c3.height = 64; const z = c3.getContext('2d');
+  z.fillStyle = '#a88c54'; z.fillRect(0, 0, 128, 64);
+  for (let i = 0; i < 260; i++) { const x0 = Math.random() * 128, l = 10 + Math.random() * 40, y0 = Math.random() * 64; const v = Math.random(); z.strokeStyle = v < 0.5 ? `rgba(230,205,140,${0.3 + v})` : `rgba(80,60,30,${(v - 0.5) * 0.8})`; z.lineWidth = 0.6 + Math.random() * 0.8; z.beginPath(); z.moveTo(x0, y0); z.lineTo(x0 + (Math.random() - 0.5) * 2, y0 + l); z.stroke(); }
+  const strawT = new THREE.CanvasTexture(c3); strawT.colorSpace = THREE.SRGBColorSpace; strawT.wrapS = strawT.wrapT = THREE.RepeatWrapping; strawT.repeat.set(3, 1);
   MATS = {
-    plank: M({ map: wt, color: 0xd8b890 }), plankDark: M({ map: wt, color: 0x9a7a58 }), timber: M({ map: wt, color: 0xb89870 }),
-    rope: M({ color: 0xb8a070, roughness: 1 }), sack: M({ color: 0xb59c72, roughness: 1 }), date: M({ color: 0x4a2414, roughness: 0.45 }),
+    plank: M({ map: wt, color: 0xc8d4d8 }), plankDark: M({ map: wt, color: 0x9aa4a6 }), timber: M({ map: wt, color: 0xe0d8c8 }),
+    rope: M({ color: 0x8a7450, roughness: 1 }), sack: M({ color: 0xb59c72, roughness: 1 }), date: M({ color: 0x4a2414, roughness: 0.45 }),
     cloth: M({ color: 0x24527a, roughness: 0.85 }), clothEnd: M({ map: spiral, roughness: 0.9 }), trim: M({ color: 0xc89a3a, roughness: 0.7 }),
     iron: M({ color: 0x3a3a3e, metalness: 0.75, roughness: 0.45 }), face: M({ color: 0xb8b8bc, metalness: 0.95, roughness: 0.18 }),
-    bark: M({ color: 0x5a4430, roughness: 1 }), ringTop: M({ map: rings, roughness: 0.95 }), straw: M({ color: 0xcfae62, roughness: 1 }),
-    strawDark: M({ color: 0x9a7e40, roughness: 1 }), leather: M({ color: 0x5a3820, roughness: 0.75 }), water: M({ color: 0x2a3438, metalness: 0.2, roughness: 0.1 }),
+    bark: M({ color: 0x3a2e26, roughness: 1 }), ringTop: M({ map: rings, roughness: 0.95 }), straw: M({ map: strawT, color: 0xf0e4cc, roughness: 1 }),
+    strawDark: M({ color: 0x5a4422, roughness: 1 }), leather: M({ color: 0x5a3820, roughness: 0.75 }), water: M({ color: 0x2a3438, metalness: 0.2, roughness: 0.1 }),
   };
   return MATS;
 }
@@ -72,7 +77,7 @@ function crate(B, M, w, h, d, x, y, z, ry, dark = false) {
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) B.put(box(0.06, h + 0.01, 0.06), M.plankDark, ...at(sx * (w / 2 - 0.01), h / 2, sz * (d / 2 - 0.01)), 0, ry, 0);
   for (let i = 0; i < 4; i++) B.put(box(w + 0.02, 0.03, d / 4 - 0.015), P, ...at(0, h + 0.015, -d / 2 + d / 8 + i * d / 4), jit(0.02), ry, jit(0.02));
   B.put(box(0.03, 0.04, d + 0.04), M.plankDark, ...at(0, h + 0.045, 0), 0, ry, 0); // the lid's batten
-  for (const lx of [-w * 0.28, w * 0.3]) { B.put(box(0.03, h + 0.07, d + 0.07), M.rope, ...at(lx, h / 2 + 0.01, 0), 0, ry, 0); B.put(box(0.03, 0.03, d + 0.07), M.rope, ...at(lx, h + 0.06, 0), 0, ry, 0); }
+  for (const lx of [-w * 0.28, w * 0.3]) { for (const sz of [-1, 1]) B.put(cyl(0.012, 0.012, h + 0.04, 5), M.rope, ...at(lx, h / 2, sz * (d / 2 + 0.02)), 0, ry, 0); B.put(cyl(0.012, 0.012, d + 0.04, 5), M.rope, ...at(lx, h + 0.04, 0), Math.PI / 2, ry, 0); }
 }
 
 export function wasitGoods() {
@@ -97,16 +102,16 @@ export function wasitGoods() {
   for (let i = 0; i < tp.count; i++) { const u = tp.getX(i), v = tp.getY(i) + 0.21; tp.setXYZ(i, u, -v * 0.85, 0.02 * Math.sin(u * 14) + v * v * 0.35); }
   tail.computeVertexNormals();
   const tailG = tail; tailG.translate(0, 0, 0);
-  B.put(tailG, M.cloth, 0.84 + 0.02, 0.56, 0.14 + 0.13, 0, -0.2, 0);
+  B.put(tailG, M.cloth, 0.84 + 0.08, 0.6, 0.14 + 0.32, 0, -0.2, 0);
   return B.finish();
 }
 
 export function anvil() {
   const M = mats(), B = builder();
   // the stump: a flared lathe with roots, a ringed top and an iron band
-  const sp = [[0, 0], [0.5, 0], [0.46, 0.05], [0.36, 0.14], [0.33, 0.3], [0.33, 0.5], [0.34, 0.56], [0, 0.56]].map(([r, h]) => new THREE.Vector2(r, h));
+  const sp = [[0, 0], [0.37, 0], [0.36, 0.03], [0.33, 0.08], [0.32, 0.2], [0.32, 0.5], [0.33, 0.56], [0, 0.56]].map(([r, h]) => new THREE.Vector2(r, h));
   const st = new THREE.LatheGeometry(sp, 16), sp2 = st.attributes.position;
-  for (let i = 0; i < sp2.count; i++) { const px = sp2.getX(i), py = sp2.getY(i), pz = sp2.getZ(i), a = Math.atan2(pz, px), k = 1 + (py < 0.2 ? 0.25 * Math.max(0, Math.sin(a * 5)) * (0.2 - py) * 5 : 0) + 0.02 * Math.sin(a * 11); sp2.setXYZ(i, px * k, py, pz * k); }
+  for (let i = 0; i < sp2.count; i++) { const px = sp2.getX(i), py = sp2.getY(i), pz = sp2.getZ(i), a = Math.atan2(pz, px), k = 1 + (py < 0.15 ? 0.22 * Math.max(0, Math.sin(a * 5)) * (0.15 - py) * 6.7 : 0) + 0.035 * Math.max(0, Math.sin(a * 23 + py * 4)) - 0.015; sp2.setXYZ(i, px * k, py, pz * k); }
   st.computeVertexNormals(); B.put(st, M.bark);
   B.put(new THREE.CircleGeometry(0.335, 18), M.ringTop, 0, 0.562, 0, -Math.PI / 2, 0, 0);
   B.put(cyl(0.345, 0.345, 0.06, 18), M.iron, 0, 0.44, 0);
@@ -139,12 +144,12 @@ export function drillGround() {
   // the post: a squared timber, a crossbar with two straw-wrapped arms, the body bound in straw with rope bands
   B.put(box(0.13, 1.85, 0.13), M.timber, 0, 0.92, 0, 0, 0.05, jit(0.02));
   B.put(box(0.36, 0.06, 0.36), M.plankDark, 0, 0.03, 0); B.put(box(0.08, 0.14, 0.4), M.plankDark, 0, 0.1, 0, 0, 0.785, 0); B.put(box(0.08, 0.14, 0.4), M.plankDark, 0, 0.1, 0, 0, -0.785, 0);
-  const bundle = new THREE.LatheGeometry([[0, 0], [0.18, 0], [0.23, 0.08], [0.25, 0.3], [0.24, 0.55], [0.2, 0.7], [0, 0.72]].map(([r, h]) => new THREE.Vector2(r, h)), 16), bdp = bundle.attributes.position;
-  for (let i = 0; i < bdp.count; i++) { const px = bdp.getX(i), py = bdp.getY(i), pz = bdp.getZ(i), a = Math.atan2(pz, px), k = 1 + 0.06 * Math.sin(a * 13 + py * 3) + 0.03 * Math.sin(a * 29); bdp.setXYZ(i, px * k, py, pz * k); }
+  const bundle = new THREE.LatheGeometry([[0, 0], [0.17, 0], [0.22, 0.04], [0.24, 0.12], [0.245, 0.2], [0.245, 0.3], [0.245, 0.42], [0.24, 0.54], [0.21, 0.66], [0, 0.72]].map(([r, h]) => new THREE.Vector2(r, h)), 18), bdp = bundle.attributes.position;
+  for (let i = 0; i < bdp.count; i++) { const px = bdp.getX(i), py = bdp.getY(i), pz = bdp.getZ(i), a = Math.atan2(pz, px), pinch = [0.07, 0.3, 0.54].reduce((m, hb) => m - 0.09 * Math.exp(-(((py - hb) / 0.035) ** 2)), 0), k = 1 + 0.06 * Math.sin(a * 13 + py * 3) + 0.03 * Math.sin(a * 29) + pinch; bdp.setXYZ(i, px * k, py, pz * k); }
   bundle.computeVertexNormals(); B.put(bundle, M.straw, 0, 0.88, 0);
-  for (const h of [0.95, 1.18, 1.42]) B.put(new THREE.TorusGeometry(0.245, 0.016, 5, 18), M.rope, 0, h, 0, Math.PI / 2, 0, 0);
+  for (const h of [0.95, 1.18, 1.42]) B.put(new THREE.TorusGeometry(0.228, 0.016, 5, 18), M.rope, 0, h, 0, Math.PI / 2, 0, 0);
   // cut marks: dark slashes across the straw where Nasim's blows land
-  for (let i = 0; i < 5; i++) B.put(box(0.16, 0.012, 0.02), M.strawDark, Math.sin(i * 0.5 - 1) * 0.24, 1.05 + i * 0.07, Math.cos(i * 0.5 - 1) * 0.24, 0, i * 0.5 - 1, 0.5 - (i % 2) * 0.9);
+  for (let i = 0; i < 5; i++) B.put(box(0.12, 0.01, 0.006), M.strawDark, Math.sin(i * 0.5 - 1) * 0.243, 1.05 + i * 0.07, Math.cos(i * 0.5 - 1) * 0.243, 0, i * 0.5 - 1, 0.5 - (i % 2) * 0.9);
   // straw tufts poking out at the top and bottom of the bundle
   for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28, top = i % 2; B.put(new THREE.ConeGeometry(0.02, 0.14, 3), M.straw, Math.cos(a) * 0.2, top ? 1.6 : 0.88, Math.sin(a) * 0.2, top ? Math.sin(a) * 0.6 : Math.PI + Math.sin(a) * 0.6, 0, top ? -Math.cos(a) * 0.6 : Math.cos(a) * 0.6); }
   B.put(box(0.9, 0.07, 0.07), M.timber, 0, 1.62, 0);

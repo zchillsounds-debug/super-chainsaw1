@@ -17,7 +17,7 @@ const r = await pg.evaluate(() => { const g = __game; for (const k of ['yusuf', 
 console.log(JSON.stringify(r));
 for (const k of ['yusuf', 'bishr', 'amr']) {
   for (const [ang, dist, h, ly, tag] of [[25, 2.6, 1.3, 0.5, 'close'], [-40, 3.4, 1.9, 0.6, 'side']]) {
-    await pg.evaluate(([k, ang, dist, h, ly]) => { const g = __game, P = g.campProps27[k]; g.player.pos.set(P.position.x + 3, P.position.y, P.position.z + 3); g.player.facing = P.rotation.y; __close(ang, dist, h, ly, () => P.position); __sim(0.2); }, [k, ang, dist, h, ly]);
+    await pg.evaluate(([k, ang, dist, h, ly]) => { const g = __game, P = g.campProps27[k]; g.player.pos.set(P.position.x + 14, P.position.y, P.position.z + 14); g.player.facing = P.rotation.y; g.player.rig.visible = false; __close(ang, dist, h, ly, () => P.position); __sim(0.2); }, [k, ang, dist, h, ly]);
     await pg.waitForTimeout(500); await pg.screenshot({ path: `${out}/prop-${k}-${tag}.png`, timeout: 180000 });
   }
 }
