@@ -10,6 +10,7 @@ const EXTRA = ['rb', 'slain', 'loadout', 'gems', 'stashTabs', 'stashPages', 'vis
 const CHECKPOINTS = IS_SAWAD ? { 1: [1, 88], 2: [SITES.serai.x - 8, SITES.serai.z + 6], 3: [SITES.kiln.x + 10, SITES.kiln.z + 6] } : {};
 
 export function saveGame(g) {
+  if (window.__noSave) return;
   const p = g.player;
   const data = {
     act: g.act || 1, ng: g.ng || 0, t: g.t, kills: g.kills || 0, quests: { ...(g.savedQuests || {}), ...Object.fromEntries(g.quests.map((q) => [q.id, q.done])) }, arrived: g.arrived || {},

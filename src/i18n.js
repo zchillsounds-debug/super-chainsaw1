@@ -25,6 +25,12 @@ const AR = {
   'Attack button': 'زر الهجوم', 'Hold to repeat': 'اضغط باستمرار للتكرار', 'Tap to toggle': 'انقر للتبديل', 'Camera shake': 'اهتزاز الكاميرا', 'Button size': 'حجم الأزرار', 'Button opacity': 'شفافية الأزرار',
   'Subtitle size': 'حجم الترجمة', 'Colour vision': 'رؤية الألوان', 'Off': 'إيقاف', 'On': 'تشغيل', 'Protanopia': 'عمى الأحمر', 'Deuteranopia': 'عمى الأخضر', 'Tritanopia': 'عمى الأزرق',
   'Reduce flashing': 'تقليل الوميض', 'Tutorial hints': 'تلميحات تعليمية', 'Low': 'منخفضة', 'High': 'عالية', 'Small': 'صغير', 'Medium': 'متوسّط', 'Large': 'كبير', 'Huge': 'ضخم',
+  'Saved game': 'اللعبة المحفوظة', 'Back up save': 'انسخ الحفظ احتياطيًا', 'Restore save': 'استرجع الحفظ', 'Copy code': 'انسخ الرمز', 'Restore': 'استرجع',
+  'Back up your progress before reinstalling the app, then restore it after.': 'انسخ تقدّمك احتياطيًا قبل إعادة تثبيت التطبيق، ثم استرجعه بعدها.',
+  'Copy this code and keep it somewhere safe (a note or a message to yourself).': 'انسخ هذا الرمز واحفظه في مكان آمن (ملاحظة أو رسالة إلى نفسك).',
+  'Copied.': 'نُسخ.', 'Select the code and copy it by hand.': 'حدّد الرمز وانسخه يدويًا.',
+  'Paste a backup code. This replaces the progress on this device.': 'الصق رمز النسخة الاحتياطية. سيحلّ محلّ التقدّم على هذا الجهاز.',
+  'Restored. Reloading…': 'تمّ الاسترجاع. إعادة التحميل…', 'That code is not a valid backup.': 'هذا الرمز ليس نسخة احتياطية صالحة.',
   'Reload to apply': 'أعد التحميل للتطبيق', 'Gamepad': 'يد التحكّم', 'Tasks': 'المهام', 'Deeds': 'المآثر',
   'Show me your wares.': 'أرني بضاعتك.', 'Training.': 'التدريب.',
   // captains: "Name · Role" labels (names come from story_ar.js)

@@ -19,7 +19,14 @@ jobs:
       - run: npx vite build
       - run: npx cap sync android
       - run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+      # the permanent signing key, from the repo secrets ANDROID_KEYSTORE_B64 and ANDROID_KEYSTORE_PASSWORD
+      - name: Signing key
+        env: { KS_B64: '${{ secrets.ANDROID_KEYSTORE_B64 }}' }
+        run: |
+          if [ -n "$KS_B64" ]; then echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.jks"; echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"; echo "KEYNOTE=" >> "$GITHUB_ENV"
+          else echo "::warning::No ANDROID_KEYSTORE_B64 secret: this APK uses a throwaway key and will not install over an earlier one"; echo "KEYNOTE= (throwaway key)" >> "$GITHUB_ENV"; fi
       - name: Build APK (retries the Gradle download on network resets)
+        env: { ANDROID_KEYSTORE_PASSWORD: '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}' }
         run: cd android && chmod +x gradlew && for i in 1 2 3 4; do ./gradlew assembleDebug --no-daemon && exit 0; echo "retry $i"; sleep $((i*10)); done; exit 1
       - run: cp android/app/build/outputs/apk/debug/app-debug.apk sands-of-baghdad.apk
       - uses: actions/upload-artifact@v4
@@ -30,5 +37,5 @@ jobs:
           mkdir out && cp sands-of-baghdad.apk out/ && cd out
           git init -q && git checkout -q -b apk-builds
           git config user.name "github-actions" && git config user.email "actions@github.com"
-          git add sands-of-baghdad.apk && git commit -qm "APK from ${GITHUB_SHA::7}"
+          git add sands-of-baghdad.apk && git commit -qm "APK from ${GITHUB_SHA::7}, build ${GITHUB_RUN_NUMBER}${KEYNOTE}"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" apk-builds

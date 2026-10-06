@@ -682,3 +682,6 @@ body.touch .bpoise{height:8px;width:66%;margin-top:4px}
 /* the tracker's objective keeps to two lines on a phone (a long one ran to three and covered the fight) */
 body.touch #quest .qnow .qtx{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 body.touch #quest.open .qnow .qtx{-webkit-line-clamp:unset;display:block}
+/* Round 29: save backup and restore */
+#settings .savebox{display:flex;flex-direction:column;gap:6px}#settings .savebox.hidden{display:none}
+#settings .savebox textarea{width:100%;box-sizing:border-box;min-height:84px;resize:vertical;background:#0b0704;color:#eadab8;border:1px solid #5a4028;border-radius:4px;padding:6px;font:12px ui-monospace,monospace;word-break:break-all;user-select:text;-webkit-user-select:text}

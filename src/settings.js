@@ -1,5 +1,6 @@
 import { setLanguage } from './i18n.js';
 import { SHARP_RATIO } from './graphics.js';
+import { saveGame } from './save.js';
 
 // Settings: graphics, audio, controls, accessibility, language. Stored per device in localStorage.
 const KEY = 'sob.settings.v1';
@@ -11,6 +12,24 @@ export const DEFAULTS = {
   lang: 'en',
 };
 export function loadSettings() { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return { ...DEFAULTS }; } }
+// Round 29: back up and restore every 'sob.*' key as one text code, so progress survives a reinstall of the app
+const CODE_TAG = 'MAS1:';
+export function exportSave() {
+  const o = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('sob.')) o[k] = localStorage.getItem(k); }
+  const u = new TextEncoder().encode(JSON.stringify(o)); let bin = '';
+  for (let i = 0; i < u.length; i += 0x8000) bin += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+  return CODE_TAG + btoa(bin);
+}
+export function importSave(code) {
+  const c = String(code || '').replace(/\s+/g, '');
+  if (!c.startsWith(CODE_TAG)) return false;
+  let o; try { const bin = atob(c.slice(CODE_TAG.length)); o = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (ch) => ch.charCodeAt(0)))); } catch { return false; }
+  if (!o || typeof o !== 'object' || !o['sob.save.v1']) return false;
+  window.__noSave = true; // the game must not write its current state over the restored one before the reload
+  for (const k of Object.keys(localStorage)) if (k.startsWith('sob.')) localStorage.removeItem(k);
+  for (const [k, v] of Object.entries(o)) if (k.startsWith('sob.') && typeof v === 'string') localStorage.setItem(k, v);
+  return true;
+}
 function store(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* private mode */ } }
 
 export class Settings {
@@ -53,11 +72,24 @@ export class Settings {
       <section><h4>Controls</h4>${sel('attackMode', 'Attack button', [['hold', 'Hold to repeat'], ['toggle', 'Tap to toggle']])}${range('shake', 'Camera shake', 0, 1, 0.1)}${document.body.classList.contains('touch') ? range('tscale', 'Button size', 0.7, 1.2, 0.05) + range('topa', 'Button opacity', 0.3, 1, 0.05) : ''}
         <div class="note">Gamepad: left stick move · A attack · B evade · X right skill · Y / LB / RB skills 1–3 · RT sherbet · Start settings · Back journal</div></section>
       <section><h4>Accessibility</h4>${sel('subs', 'Subtitle size', [[0.85, 'Small'], [1, 'Medium'], [1.25, 'Large'], [1.55, 'Huge']])}${sel('cvd', 'Colour vision', [[0, 'Off'], [1, 'Protanopia'], [2, 'Deuteranopia'], [3, 'Tritanopia']])}${tog('reduceFlash', 'Reduce flashing')}${tog('tutorial', 'Tutorial hints')}</section>
-      <section><h4>Language</h4>${sel('lang', 'Language', [['en', 'English'], ['ar', 'العربية']])}<small class="note">The Arabic interface covers menus and the HUD; story dialogue and the codex are in English for now.</small></section>
+      <section><h4>Language</h4>${sel('lang', 'Language', [['en', 'English'], ['ar', 'العربية']])}</section>
+      <section><h4>Saved game</h4><small class="note">Back up your progress before reinstalling the app, then restore it after.</small><div class="row2"><button class="sbtn sbak">Back up save</button><button class="sbtn sres">Restore save</button></div>
+        <div class="savebox hidden"><textarea rows="4" spellcheck="false" autocomplete="off"></textarea><small class="note sbnote"></small><div class="row2"><button class="sbtn sbgo"></button></div></div></section>
     </div>`;
     document.getElementById('ui').appendChild(w); document.body.classList.add('inshop');
     w.querySelector('.close').onclick = () => this.close();
     w.querySelector('.benchbtn').onclick = () => this.ctx.game.runBench?.();
+    const box = w.querySelector('.savebox'), ta = box.querySelector('textarea'), note = box.querySelector('.sbnote'), go = box.querySelector('.sbgo');
+    w.querySelector('.sbak').onclick = () => {
+      if (document.body.classList.contains('playing') && this.ctx.game) saveGame(this.ctx.game); /* never from the title, where it would overwrite the save */ box.classList.remove('hidden'); ta.readOnly = true; ta.value = exportSave(); go.textContent = 'Copy code';
+      note.textContent = 'Copy this code and keep it somewhere safe (a note or a message to yourself).';
+      go.onclick = async () => { ta.select(); let ok = false; try { await navigator.clipboard.writeText(ta.value); ok = true; } catch { try { ok = document.execCommand('copy'); } catch { /* no clipboard */ } } note.textContent = ok ? 'Copied.' : 'Select the code and copy it by hand.'; };
+    };
+    w.querySelector('.sres').onclick = () => {
+      box.classList.remove('hidden'); ta.readOnly = false; ta.value = ''; go.textContent = 'Restore';
+      note.textContent = 'Paste a backup code. This replaces the progress on this device.';
+      go.onclick = () => { if (importSave(ta.value)) { note.textContent = 'Restored. Reloading…'; setTimeout(() => location.reload(), 400); } else note.textContent = 'That code is not a valid backup.'; };
+    };
     w.querySelectorAll('[data-k]').forEach((i) => {
       const k = i.dataset.k;
       const read = () => i.type === 'checkbox' ? i.checked : i.type === 'range' ? +i.value : (isNaN(+i.value) ? i.value : +i.value);
