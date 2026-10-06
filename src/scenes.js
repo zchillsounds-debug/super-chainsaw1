@@ -157,7 +157,7 @@ export function lieutenantFalls(g, e, { who, text, card }) {
   const faceDown = () => V(foe.pos.x - dir.x * 2.3 + side.x * 1.2, foe.pos.y + 0.62, foe.pos.z - dir.z * 2.3 + side.z * 1.2);
   let kneel = 0;
   // Round 25: Photeinos is beaten, not killed: he kneels, confesses, and Salim decides what becomes of him
-  const spare = who === 'Photeinos';
+  const spare = who === 'Photeinos' || who === 'Tatzates'; // Round 26: Tatzates too
   if (spare) { e.spared = true; e.removed = false; if (!e.rig.parent) g.scene.add(e.rig); e.rig.visible = true; }
   const up = () => { if (!spare) return; e.st.dead = false; e.st.deadT = 0; e.deadT = 0; e.st.action = null; e.st.crouch = 0.85; e.rig.visible = true; foe.facing = yawTo(foe.pos, salim.pos); };
   const closeSalim = { follow: true, p0: () => { const h = headOf(salim)(); return V(h.x - dir.x * 1.1 + side.x * 0.35, h.y - 0.25, h.z - dir.z * 1.1 + side.z * 0.35); }, t0: headOf(salim), fov: 30 };
@@ -165,7 +165,24 @@ export function lieutenantFalls(g, e, { who, text, card }) {
   // the choice is framed wide from the side, both men in the top half of the frame, clear of the buttons below
   const twoShot = { follow: true, p0: () => V(spot.x * 0.5 + foe.pos.x * 0.5 + side.x * 4.2, salim.pos.y + 1.9, spot.z * 0.5 + foe.pos.z * 0.5 + side.z * 4.2), t0: () => V(spot.x * 0.5 + foe.pos.x * 0.5, salim.pos.y + 0.55, spot.z * 0.5 + foe.pos.z * 0.5), fov: 36 };
   const pho = (k) => () => chosen(g, 'photeinos') === k;
-  const choiceShots = !spare ? [] : [
+  // Round 26: Tatzates, the bowman who shot Jabir: chains for Baghdad, or a cut bowstring and the road north
+  const tz = (k) => () => chosen(g, 'tatzates') === k;
+  const tzShots = [
+    { dur: 0.8, choice: { prompt: 'Tatzates is beaten. His arrow killed Jabir. What becomes of him?', options: [
+      { label: 'Bind him. Baghdad will judge him.', fx: () => choose(g, 'tatzates', 'chains') },
+      { label: 'Cut his bowstring and let him walk.', fx: () => choose(g, 'tatzates', 'free') }] }, cam: twoShot, dof: headOf(foe), aperture: 0.6, run: () => up() },
+    { when: tz('chains'), dur: lineDur('Baghdad will hear every name you were paid for. Jabir\'s first.'), line: { who: 'Salim', text: 'Baghdad will hear every name you were paid for. Jabir\'s first.', rig: g.player.rig, cue: 'hm', expr: 'resolve' }, cam: closeSalim, dof: headOf(salim), run: () => up() },
+    { when: tz('chains'), dur: lineDur('And when it is done, guard, the dune will still be there.'), line: { who: 'Tatzates', text: 'And when it is done, guard, the dune will still be there.', rig: e.rig, cue: 'breath', expr: 'sad' }, cam: overSalim, dof: headOf(foe), run: () => up() },
+    { when: tz('free'), dur: lineDur('No more arrows. Walk north, and do not turn round.'), line: { who: 'Salim', text: 'No more arrows. Walk north, and do not turn round.', rig: g.player.rig, cue: 'hm', expr: 'stern' }, cam: closeSalim, dof: headOf(salim), run: () => up() },
+    { when: tz('free'), dur: lineDur('You let me live. I do not know what to do with that.'), line: { who: 'Tatzates', text: 'You let me live. I do not know what to do with that.', rig: e.rig, cue: 'breath', expr: 'sad' }, cam: overSalim, dof: headOf(foe), run: () => up() },
+  ];
+  // after the card: the bowman's road, then a lamp on the Diyala for Jabir (over black, the scene ends on it)
+  const tzClose = who !== 'Tatzates' ? [] : [
+    { when: tz('chains'), dur: 4.4, caption: 'The bowman was taken down the Diyala to Baghdad in chains, to answer before the qadi.', enter: (d) => d.fade(1, 1.2) },
+    { when: tz('free'), dur: 4.4, caption: 'Tatzates walked north toward the frontier with a cut bowstring. No one on the Diyala saw him again.', enter: (d) => d.fade(1, 1.2) },
+    { dur: 4.6, caption: 'That night Salim set a lamp on the Diyala for Jabir, and let the current take it.' },
+  ];
+  const choiceShots = !spare ? [] : who === 'Tatzates' ? tzShots : [
     { dur: 0.8, choice: { prompt: 'Photeinos is beaten. What becomes of him?', options: [
       { label: 'Bind him for the qadi in Baghdad.', fx: () => choose(g, 'photeinos', 'qadi') },
       { label: 'Let him go. He has confessed.', fx: () => choose(g, 'photeinos', 'free') }] }, cam: twoShot, dof: headOf(foe), aperture: 0.6, run: () => up() },
@@ -183,6 +200,7 @@ export function lieutenantFalls(g, e, { who, text, card }) {
     ...choiceShots,
     { dur: 5.6, card, stinger: 'title', cam: { p0: at(salim, 1.6, -2.4, 0.8), t0: at(foe, 0.4), p1: () => at(salim, 9, -10, 3)(), t1: at(foe, 0), ease: 'io2' },
       run: (d, k) => { salim.st.crouch = 0.65 * Math.max(0, 1 - k * 3); } },
+    ...tzClose,
   ];
   // his surviving men step out of the frame for the scene (they are back when it ends)
   const hidden = g.enemies.filter((o) => o !== e && !o.dead && o.rig.visible && o.pos.distanceTo(e.pos) < 14);
@@ -566,4 +584,50 @@ export function docksFinale(g, b) {
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
     end: () => { for (const l of lamps) sc.remove(l); for (const r of extra) sc.remove(r); const [ix, iz] = HUB.ishaq; ishaq.pos.set(ix, heightAt(ix, iz), iz); } };
+}
+
+// ------------------------------------------------------------------ Round 26: the Hamrin hills
+// the hill men bring in one of Tatzates' scouts, bound; he tells Salim what waits on the frontier road
+export function hamrinScout(g) {
+  const salim = playerActor(g), ishaq = npcActor(g);
+  const fwd = V(Math.sin(ishaq.facing), 0, Math.cos(ishaq.facing)), side = V(fwd.z, 0, -fwd.x);
+  const sp = ishaq.pos.clone().addScaledVector(fwd, 1.6).addScaledVector(side, 1.2); sp.y = heightAt(sp.x, sp.z);
+  const rig = humanoid(byzify({ ...LOOK.psilos(), offhand: null, weapon: null }));
+  const scout = actor(rig, sp, 0); g.scene.add(rig); scout.st.crouch = 0.85;
+  const sal = ishaq.pos.clone().addScaledVector(fwd, 2.6).addScaledVector(side, -0.9); sal.y = heightAt(sal.x, sal.z);
+  const actors = [salim, ishaq, scout];
+  const face = () => { salim.facing = yawTo(salim.pos, scout.pos); ishaq.facing = yawTo(ishaq.pos, salim.pos); scout.facing = yawTo(scout.pos, salim.pos); scout.st.crouch = 0.85; };
+  const ots = (from, to, s2) => ({ follow: true, p0: () => { const a = from.pos, b = to.pos, f = yawTo(a, b); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * s2, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * s2); }, t0: headOf(to), fov: 30 });
+  // low and level with the kneeling man (from Salim's standing head height the cap filled the frame)
+  const low = { follow: true, p0: () => { const h = headOf(scout)(), f = yawTo(scout.pos, salim.pos); return V(h.x + Math.sin(f) * 1.5 + Math.cos(f) * 0.45, h.y + 0.05, h.z + Math.cos(f) * 1.5 - Math.sin(f) * 0.45); }, t0: headOf(scout), fov: 32 };
+  const L = (who, text, a, cam, expr) => ({ dur: lineDur(text), line: { who, text, rig: a.rig, cue: who === 'Salim' ? 'hm' : 'breath', expr }, cam, dof: headOf(a), run: () => face() });
+  const shots = [
+    { dur: 3.0, fadeIn: 0.8, cam: { follow: true, p0: () => V(sp.x + side.x * 5 + fwd.x * 3, sp.y + 2.4, sp.z + side.z * 5 + fwd.z * 3), t0: () => V(sp.x, sp.y + 0.9, sp.z), p1: () => V(sp.x + side.x * 4 + fwd.x * 2.4, sp.y + 2.0, sp.z + side.z * 4 + fwd.z * 2.4), t1: () => V(sp.x, sp.y + 0.9, sp.z), fov: 36 },
+      enter: () => { salim.pos.copy(sal); face(); g.npcMark && (g.npcMark.visible = false); } },
+    L('Ishaq', 'The hill men brought this one in at dawn. One of Tatzates\' scouts.', ishaq, ots(salim, ishaq, 0.35)),
+    L('Scout', 'He holds the frontier road. Four holds, and his ravine is the last. He will not run again.', scout, low, 'wary'),
+    L('Salim', 'Good. Neither will I.', salim, ots(scout, salim, -0.35), 'resolve'),
+    L('Ishaq', 'Salim. Whatever waits at the end of that road, it will not give Jabir back.', ishaq, ots(salim, ishaq, 0.35), 'sad'),
+    L('Salim', 'I know. I am not going for Jabir. I am going so that it ends.', salim, ots(ishaq, salim, -0.35), 'resolve'),
+  ];
+  return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { g.scene.remove(rig); } };
+}
+// after the second hold: an arrow into the post beside Salim, with a strip of cloth tied to it
+export function hamrinArrow(g) {
+  const salim = playerActor(g), actors = [salim];
+  const f = salim.facing, fwd = V(Math.sin(f), 0, Math.cos(f)), side = V(fwd.z, 0, -fwd.x);
+  const ap = salim.pos.clone().addScaledVector(fwd, 1.3).addScaledVector(side, 0.8); ap.y = heightAt(ap.x, ap.z);
+  const arrow = new THREE.Mesh(g.arrowGeo, g.arrowMat); arrow.scale.setScalar(2.4); arrow.position.copy(ap).setY(ap.y + 0.45);
+  arrow.lookAt(ap.x - fwd.x * 0.4, ap.y - 0.6, ap.z - fwd.z * 0.4); g.scene.add(arrow);
+  const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.22), new THREE.MeshStandardMaterial({ color: 0xc8b890, roughness: 1, side: THREE.DoubleSide })); cloth.position.set(0, 0, 0.1); arrow.add(cloth);
+  arrow.visible = false;
+  const onArrow = { follow: true, p0: () => V(ap.x + side.x * 1.1 - fwd.x * 0.4, ap.y + 0.75, ap.z + side.z * 1.1 - fwd.z * 0.4), t0: () => V(ap.x, ap.y + 0.45, ap.z), fov: 28 };
+  const closeSalim = { follow: true, p0: () => { const h = headOf(salim)(); return V(h.x + fwd.x * 1.2 + side.x * 0.4, h.y - 0.15, h.z + fwd.z * 1.2 + side.z * 0.4); }, t0: headOf(salim), fov: 30 };
+  const shots = [
+    { dur: 3.6, caption: 'An arrow strikes the ground beside Salim. A strip of cloth is tied to the shaft.', cam: onArrow, stinger: 'ambush', enter: (d) => { arrow.visible = true; d.audio.whoosh?.(); } },
+    { dur: lineDur('"Two holds. You are better than I was paid to expect. Come to the ravine, guard. I will not hide from you."'), line: { who: 'Tatzates', text: '"Two holds. You are better than I was paid to expect. Come to the ravine, guard. I will not hide from you."', rig: null, cue: 'breath' }, cam: onArrow, run: () => { salim.facing = yawTo(salim.pos, ap); } },
+    { dur: lineDur('He wants me angry.'), line: { who: 'Salim', text: 'He wants me angry.', rig: g.player.rig, cue: 'hm', expr: 'anger' }, cam: closeSalim, dof: headOf(salim) },
+    { dur: lineDur('Then go to him calm. Anger misses.'), line: { who: 'Ishaq', text: 'Then go to him calm. Anger misses.', rig: null, cue: 'breath' }, cam: closeSalim, dof: headOf(salim) },
+  ];
+  return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { g.scene.remove(arrow); } };
 }

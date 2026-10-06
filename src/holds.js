@@ -703,7 +703,7 @@ export function setupHolds(g) {
     ], tick: (d, dt) => { e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; g2.anim(e.rig, e.st, dt); }, end: () => { e.st.action = null; } };
   };
   const rivalLast = (g2, e) => {
-    const lines = [['Tatzates', 'All this way, for one arrow?'], ['Salim', 'For my brother.']];
+    const lines = [['Tatzates', 'All this way, for one arrow?'], ['Salim', 'For my brother.'], ['Tatzates', 'The boy on the dune. I remember the wind that day. Not his face.'], ['Salim', 'I remember it for both of us.']]; // Round 26: two more lines
     return g2.__rivals.meetScene(g2, e, lines, { ar: 'تاتزاتيس', en: 'Tatzates', sub: t('The last of the men from the dune') });
   };
 
@@ -867,7 +867,7 @@ export function setupHolds(g) {
       s.done = true; g.completeQuest?.(H.quest, true);
       if (H.lieut) { /* his last words play from game.killEnemy */ }
       else if (e.holdBoss.rival) {
-        p.rival = { ...(p.rival || {}), final: 'fallen' };
+        p.rival = { ...(p.rival || {}), final: 'fallen' }; // Round 26: the choice in the scene sets 'chains' or 'free'
         g.director?.play(SCENES.lieutenantFalls(g, e, { who: 'Tatzates', text: 'It was only ever the pay.', card: { ar: 'تاتزاتيس', en: 'Tatzates', sub: t('Jabir\'s account is kept') } }));
       } else g.ui.banner(t(H.title), t('The hold is broken. Its master\'s chest is yours.'), 3800);
       if (!H.region && Object.keys(HOLDS).filter((k) => !HOLDS[k].region).every((k) => state(k).done)) setTimeout(() => g.ui.banner(t('The Hamrin Hills'), t('Every hold is broken'), 4200), 4500);
