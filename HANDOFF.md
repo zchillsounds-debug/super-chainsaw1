@@ -1,7 +1,7 @@
 # Madinat al-Salam: Handoff (Round 26 built and tested; shipping not finished)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-45lek3` of zchillsounds-debug/super-chainsaw1. Round 26 (new troop types, boss second halves, Hamrin content and story, the camp's own stories, phone fixes) is built, committed and pushed, but the final test sweep, the Artifact publish and the APK are not done yet. See "Round 26: finish shipping" in HANDOFF.md first.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-45lek3` of zchillsounds-debug/super-chainsaw1. Round 26 (new troop types, boss second halves, Hamrin content and story, the camp's own stories, phone fixes) is built, committed and pushed, and passes the full test sweep, but the Artifact publish and the APK are not done yet. See "Round 26: finish shipping" in HANDOFF.md first.
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
@@ -71,17 +71,18 @@ User decisions: all four areas: Hamrin endgame content, fixes for the phone (the
 **Status when this handoff was written (the round is not shipped yet):**
 - Everything above is committed and pushed to `claude/new-session-45lek3` (last commit `aaa028f`).
 - The skipped Round 25 tests were all run first and all passed (30 tests: r15/r16/r17 for the other regions, r18 for the other classes, r21holds fort/gorge/rivalhold, r22holds ×7, trial, craft, bench, r21comp, r21mount, r21rift, r21hub ×2).
-- The final sweep (44 tests) was halfway through, with **22 clean so far**: r15 ×4, r16 marsh, r17 karkh, r18 faris, r21holds ×4, r22holds dam and hulks, finaletest ×4, r21rival sawad and docks, traveltest, ngtest, trialtest. Not yet confirmed:
-  - crafttest, benchtest, r21comp, r21hub marsh and docks
+- **The final sweep is clean: all 44 tests passed** (rc 0, "errors: none"). They are:
+  - r15 ×4, r16 marsh, r17 karkh, r18 faris
+  - r21holds ×4, r22holds dam and hulks
+  - finaletest ×4, r21rival sawad and docks
+  - traveltest, ngtest, trialtest, crafttest, benchtest, r21comp, r21hub ×2
   - r25boss sawad and docks, r25story sawad, r25end docks
   - r26foes sawad and hamrin, r26boss ×4, r26hold ×4
-  - r26hamrin with options 0 and 1, r26camp marsh beat 0
-  
-  All the r25/r26 scripts passed during development. They just weren't re-run on the final commit.
+  - r26hamrin with both options, r26camp
 - The Artifact build was made from the final code (`npx vite build` then `node shots/inline.mjs <out>.html`, 1.75 MB) but **not published**. Artifact version 23 (Round 25) is still live.
 
 ## Round 26: finish shipping (do this first in the next chat)
-1. `npm install`, then copy the checkout to a test folder (tar, no rsync) and run the 22 remaining tests listed above, one at a time, with `shots/withvite.sh node shots/<test>.mjs ...`. Fix anything that fails.
+1. `npm install`. The sweep is already clean; no tests are needed before shipping.
 2. Build and inline (`npx vite build && node shots/inline.mjs /tmp/madinat.html`). Smoke-test the file with `node shots/smoke26.mjs /tmp/madinat.html shot.png`. It should show touch on, the `t-attack` button, troop counts and "errors: none".
 3. Read https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c, then publish the file to it with `url` (version 24). Touch controls must work.
 4. Push to the new session's branch. Then trigger `apk.yml` on that branch if its name isn't `claude/**`, fetch `origin/apk-builds` once the commit message shows the new SHA, and send the user `sands-of-baghdad.apk`.
