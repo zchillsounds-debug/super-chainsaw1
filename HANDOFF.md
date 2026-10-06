@@ -1,4 +1,4 @@
-# Madinat al-Salam: Handoff (Round 29 built; see its status)
+# Madinat al-Salam: Handoff (Round 29 shipped; APK signing waits on the user's secrets)
 
 ## Paste this into the new chat
 > I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-59dadb04-xy78e6` of zchillsounds-debug/super-chainsaw1. Round 29 (APK signing fix and save backup, four new troops, five side quest chains, the epilogue) is on branch `claude/new-session-9masup`; check its "Status" list below for what is left.
@@ -52,10 +52,10 @@ User decisions: side quests, the post-game epilogue and new enemy types (camp pr
 
 **Test notes:** lanes as in Round 28 (`/home/user/wt28` port 5173 and `/home/user/wt28b` port 5174, `lane.sh`, `sweep28.sh`, `sync29.sh`). Syncing a lane while a test runs in it reloads the page and kills the test, even for a change in `shots/` only. A background command is killed after 2 hours; long tests in SwiftShader (the quest and epilogue tests take 10–30 min) should run one per command. Cutscene lines wait for a tap (or 20 s): tests must call `__director.advance()`.
 
-**Status (update as you go):**
-- Built, committed and pushed.
-- Regression sweep: running when this note was written (see the next section if it was finished).
-- Artifact (version 27) and APK: not yet. The APK should come after the user adds the two secrets (check the `apk-builds` commit message for "(throwaway key)").
+**Status:**
+- Built, committed and pushed. Regression sweep clean (34 of 34, rc 0, "errors: none"): r16test ×4 (every old and new quest completes), r29quests ×5, r29foes ×4, r29epilogue, r29save, finaletest sawad and docks, r21holds quarry and rivalhold, r22holds dam and shipyard, r25boss marsh and karkh, r26boss sawad and docks, r26hold quarry and rivalhold, r27hold stockade and hulks boss, r27dungeon marsh, trialtest, r21rift, crafttest, ngtest, traveltest, benchtest. (The shipyard run once hit a page-load timeout with two browsers going, passed on re-run.)
+- Artifact version 27 published (1.83 MB; `smoke26.mjs` now waits for `domcontentloaded`, since the font request can hold up `load`).
+- APK: CI builds every push. **If the `apk-builds` commit message says "(throwaway key)", the user has not added the secrets yet**: remind them (steps: repo Settings → Secrets and variables → Actions → `ANDROID_KEYSTORE_B64` = keystore-base64.txt, `ANDROID_KEYSTORE_PASSWORD` = password.txt), then re-run `apk.yml` by hand and send that APK. Tell them it needs one last uninstall.
 
 **Round 30 ideas (not approved):** camp props (the sculpted forge, cooking gear, tents, water jars: carried over twice), a device check of Rounds 26–29 on the user's phone, quest markers on the map for meet steps, Arabic voice for the epilogue card.
 
