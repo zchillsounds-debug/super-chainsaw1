@@ -643,3 +643,45 @@ export function hamrinArrow(g) {
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { g.scene.remove(arrow); } };
 }
+
+// ================================================================== Round 29: the epilogue
+// Baghdad at dusk, after the Hamrin: Ishaq crosses the river to the House of Wisdom, and Salim sets the last lamp.
+export function quaysAtDusk(g) {
+  const salim = playerActor(g), ishaq = npcActor(g), actors = [salim, ishaq], sc = g.scene;
+  const bank = (z) => canalX(z) - CANAL_W / 2, LZ = 34;
+  const lamps = [];
+  const floatLamp = (x, z) => {
+    const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 1.6, 0.5), toneMapped: false }), cupM = new THREE.MeshStandardMaterial({ color: 0x8a5a34, roughness: 0.9 });
+    const l = new THREE.Group(); l.scale.setScalar(1.8); const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.06, 0.07, 8), cupM);
+    const flame = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 5), m); flame.position.y = 0.08; flame.scale.y = 1.8; l.add(cup, flame);
+    l.position.set(x, -0.5, z); l.userData.v = 0.16 + Math.random() * 0.12; sc.add(l); lamps.push(l); return l;
+  };
+  const drift = (dt) => { for (const l of lamps) l.position.z -= l.userData.v * dt; };
+  const place = () => { const p = g.player; p.pos.set(bank(LZ) - 1.4, 0, LZ); p.pos.y = heightAt(p.pos.x, LZ); salim.facing = Math.PI / 2; ishaq.pos.set(p.pos.x - 1.5, heightAt(p.pos.x - 1.5, LZ - 1.2), LZ - 1.2); ishaq.facing = yawTo(ishaq.pos, salim.pos); };
+  const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b2 = to.pos, f = yawTo(a, b2), sd = side * 1.9; return V(a.x - Math.sin(f) * 1.2 + Math.cos(f) * sd, a.y + 1.95, a.z - Math.cos(f) * 1.2 - Math.sin(f) * sd); }, t0: headOf(to), fov: 32 });
+  const L = (who, text, when) => {
+    const isS = who === 'Salim', spk = isS ? salim : ishaq, lis = isS ? ishaq : salim;
+    return { when, dur: lineDur(text), line: { who, text, rig: spk.rig, cue: isS ? 'hm' : 'breath' }, cam: ots(lis, spk, isS ? -0.35 : 0.35), dof: headOf(spk), aperture: 1.2,
+      enter: () => { salim.facing = yawTo(salim.pos, ishaq.pos); ishaq.facing = yawTo(ishaq.pos, salim.pos); salim.st.talk = isS; ishaq.st.talk = !isS; }, run: (d, k, dt) => drift(dt || 1 / 60) };
+  };
+  const shots = [
+    { dur: 4.2, fadeIn: 1.2, caption: 'Baghdad, at dusk. The quays were lit for the first time since the siege.', enter: () => { place(); g.lighting?.set?.('dusk', 0); for (let i = 0; i < 14; i++) floatLamp(bank(LZ + 30 - i * 3) + 2 + Math.random() * 8, LZ + 30 - i * 3 + Math.random()); },
+      cam: { p0: () => V(bank(LZ) - 10, 6, LZ + 22), t0: () => V(bank(LZ) + 6, 0, LZ), p1: () => V(bank(LZ) - 7, 4, LZ + 14), t1: () => V(bank(LZ) + 5, 0, LZ - 2), fov: 40 }, run: (d, k, dt) => drift(dt || 1 / 60) },
+    L('Ishaq', 'They have given me a table at the House of Wisdom, across the river. A table, Salim, and lamps, and other men\'s books.'),
+    L('Salim', 'And the Pages?'),
+    L('Ishaq', 'Copied, seven times. No one will ever gather them all into one fire again.'),
+    L('Ishaq', 'Even the copy you promised Arsaber reached Constantinople. Let them read it. That was always the point.', () => chosen(g, 'arsaber') === 'promise'),
+    L('Ishaq', 'I still owe you a brother. I will spend the rest of my life on that account.', () => chosen(g, 'ishaq') === 'heard'),
+    L('Salim', 'Then spend it at that table. He would have liked that better than a debt.', () => chosen(g, 'ishaq') === 'heard'),
+    L('Salim', 'And me?'),
+    L('Ishaq', 'You were a caravan guard. Baghdad needs safe roads more than it needs one more scholar. Go home first, and take Jabir\'s spear with you.'),
+    { dur: 6.5, caption: 'Salim set one more lamp on the water: for the guards of the caravan, and for everyone the road had taken.',
+      enter: () => { ishaq.st.talk = false; salim.st.talk = false; salim.st.crouch = 0.7; floatLamp(bank(LZ) + 0.6, LZ + 0.4).userData.v = 0.22; },
+      cam: { follow: true, p0: at(salim, 1.2, 2.4, -1.6), t0: () => V(bank(LZ) + 1.5, -0.3, LZ - 1), p1: () => V(bank(LZ) - 3, 2.2, LZ + 6), t1: () => V(bank(LZ) + 4, -0.4, LZ - 8), fov: 34 },
+      run: (d, k, dt) => { drift(dt || 1 / 60); if (k > 0.35) salim.st.crouch = 0; } },
+    { dur: 7, card: { ar: 'مدينة السلام', en: 'Madinat al-Salam', sub: 'The City of Peace' },
+      cam: { p0: () => V(bank(LZ) - 6, 4, LZ + 8), t0: () => V(bank(LZ) + 6, 0, LZ - 10), p1: () => V(bank(LZ) - 20, 30, LZ + 40), t1: () => V(bank(LZ) + 20, 10, LZ - 140), ease: 'io2' }, run: (d, k, dt) => drift(dt || 1 / 60) },
+  ];
+  return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
+    end: () => { for (const l of lamps) sc.remove(l); salim.st.crouch = 0; const [ix, iz] = HUB.ishaq; ishaq.pos.set(ix, heightAt(ix, iz), iz); } };
+}

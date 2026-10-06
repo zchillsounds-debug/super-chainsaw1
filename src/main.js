@@ -23,6 +23,7 @@ import { setupEncounters25 } from './encounters25.js';
 import { setupStory25 } from './story25.js';
 import { setupFoes26 } from './foes26.js';
 import { setupFoes29 } from './foes29.js';
+import { setupEpilogue29 } from './epilogue29.js';
 import { setupStory26 } from './story26.js';
 import { setupCamp26 } from './camp26.js';
 import { WEATHER } from './triplanar.js';
@@ -127,6 +128,7 @@ setupNarrative(game);
 game.journal = (t) => { if (document.getElementById('journal')) { document.getElementById('journal').remove(); document.body.classList.remove('inshop'); } else journalPanel(game, t); };
 setupContent(game);
 setupSideQuests(game);
+setupEpilogue29(game); // Round 29: the epilogue on the quays at dusk
 setupDungeons(game);
 setupBuild(game);
 setupTravel(game);
@@ -213,11 +215,13 @@ const TRAVEL_CARD = {
   docks: { ar: 'الشطّ', en: 'Act VI · The River Quays', sub: 'Arsaber means to carry the copies north before they sail.' },
   hamrin: { ar: 'حمرين', en: 'The Hamrin Hills', sub: 'What is left of Arsaber\'s company holds the road north.' },
   back: { ar: 'الشطّ', en: 'The River Quays', sub: 'Back to the Tigris, and the camp on the quays.' },
+  home: { ar: 'مدينة السلام', en: 'Baghdad, at Dusk', sub: 'The road is safe. Time to say farewell.' }, // Round 29: the epilogue
 };
 ui.onFade = (v, sec) => audio.duck?.(v > 0.5, sec); // Round 24: the score dips while the screen is black
 game.travel = () => {
   saveGame(game);
-  const to = regionForAct(game.act || 1), C = to === REGION ? null : to === 'docks' && REGION === 'hamrin' ? TRAVEL_CARD.back : TRAVEL_CARD[to];
+  let ep = false; try { ep = localStorage.getItem('sob.endgame') === 'epilogue'; } catch { /* ignore */ }
+  const to = regionForAct(game.act || 1), C = ep ? TRAVEL_CARD.home : to === REGION ? null : to === 'docks' && REGION === 'hamrin' ? TRAVEL_CARD.back : TRAVEL_CARD[to];
   try {
     sessionStorage.setItem('sob.autocontinue', '1');
     if (C) sessionStorage.setItem('sob.travelcard', JSON.stringify({ ar: C.ar, en: tr24(C.en), sub: tr24(C.sub), rtl: LANG === 'ar' }));

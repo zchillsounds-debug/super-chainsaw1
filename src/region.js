@@ -16,11 +16,14 @@ function pick() {
 // choice is remembered (sob.endgame) so a reload comes back to wherever he last was
 export function regionForAct(act) {
   if (act >= 7) { try { if (localStorage.getItem('sob.endgame') === 'hamrin') return 'hamrin'; } catch { /* storage unavailable */ } }
+  // Round 29: the epilogue is played on the quays at dusk (epilogue29.js)
   return act >= 6 ? 'docks' : act === 5 ? 'karkh' : act === 4 ? 'marsh' : 'sawad';
 }
 export const REGION = pick();
 export const IS_SAWAD = REGION === 'sawad', IS_MARSH = REGION === 'marsh', IS_KARKH = REGION === 'karkh', IS_DOCKS = REGION === 'docks';
 export const IS_HAMRIN = REGION === 'hamrin';
+// Round 29: the epilogue, on the quays at dusk (?epilogue forces it for tests)
+export const IS_EPILOGUE = REGION === 'docks' && (P.has('epilogue') || (() => { try { return localStorage.getItem('sob.endgame') === 'epilogue'; } catch { return false; } })());
 export const IS_CITY = IS_KARKH || IS_DOCKS; // the two Baghdad maps share their ground, weather and street life
 
 // Hub corner: the merchant, smith, stash and trainer travel with Salim and Ishaq and set up in each region.
