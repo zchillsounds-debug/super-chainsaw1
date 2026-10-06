@@ -1,19 +1,19 @@
-# Madinat al-Salam: Handoff (Round 28 built, not yet shipped)
+# Madinat al-Salam: Handoff (Round 28 shipped)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-59dadb04-xy78e6` of zchillsounds-debug/super-chainsaw1. Round 28 (a phone performance and controls pass, plus new boss moves for captains, dungeon bosses, act bosses and Hamrin masters) is built and pushed, but not shipped yet: the regression sweep, the Artifact update and the APK are still to do (see "Round 28" below).
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-59dadb04-xy78e6` of zchillsounds-debug/super-chainsaw1. Round 28 (a phone performance and controls pass, plus new boss moves) is shipped. The latest code is on branch `claude/new-session-9masup`.
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
 > 2. Run `npm install`. When pushing the session branch, `git push -u origin <session-branch>` (a fresh branch carries the earlier rounds' history). Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs from the same folder: vite reloads the page and the test dies ("Execution context was destroyed"). Run tests from a copy (see "Test workflow" under Round 27).
-> 3. First finish shipping Round 28 (sweep, Artifact, APK: the "Still to do" list under Round 28). Then ask me about Round 29 and confirm the plan with me before building.
+> 3. Ask me about Round 29 and confirm the plan with me before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
 
-## Round 28: phone pass and boss moves (built and pushed, NOT shipped yet)
+## Round 28: phone pass and boss moves (shipped)
 User decisions: all four areas were chosen (boss moves, camp props, phone fixes, story or content), as a full round. Approved build order: (1) phone pass, (2) boss moves, (3) camp props, (4) side quests, post-game epilogue and new enemy types if context allowed. Items 1 and 2 are done. Items 3 and 4 move to Round 29. The user hadn't played on the phone but ticked frame drops, readability and controls, so the phone pass was done from probes and phone-sized shots.
 
 **Commits:** `82f4ad8` (phone pass), `26c77c4` (boss moves), both on `ccr-59dadb04-xy78e6`.
@@ -49,10 +49,11 @@ User decisions: all four areas were chosen (boss moves, camp props, phone fixes,
 
 **Test workflow:** `/home/user/wt28` (lane a, port 5173) and `/home/user/wt28b` (lane b, port 5174) are tar copies of the checkout. `/home/user/sync28.sh` refreshes both (never while a test runs). `/home/user/lane.sh <a|b> <cmd>` runs one test with its own vite. `/home/user/sweep28.sh <a|b> <list> <logdir>` writes a SUMMARY. These live outside the repo: recreate them in a new container. Older tests hardcode 5173: run them in lane a only.
 
-**Still to do before Round 28 ships:**
-1. Regression sweep (not run yet): finaletest ×4, r15test, r16test, r17test (one region each at least), r18test faris, r21holds ×4, r22holds ×8, r25boss ×4, r26boss ×4, r26hold ×4, r27hold (a few), r27dungeon marsh, trialtest, r21rift, crafttest, ngtest, traveltest, benchtest. Watch the changed areas: `pickTarget` (aim assist), the `ui.project` return object (it is now reused), `setCharLOD` (play LOD), and the decal keepers.
-2. Republish the Artifact (version 26) at https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c: read it first, build with `shots/inline.mjs`, and smoke-test from `file://` with mobile emulation.
-3. APK: the branch is `ccr-...`, so trigger `apk.yml` by hand (GitHub MCP `actions_run_trigger`, ref = the branch), then fetch it from `apk-builds` and send it.
+**Shipped (session branch `claude/new-session-9masup`):**
+- Regression sweep, all clean (43 of 43, rc 0, "errors: none"): finaletest ×4, r15test sawad, r16test marsh, r17test karkh, r18test faris, r21holds ×4, r22holds ×8, r25boss ×4, r26boss ×4, r26hold ×4, r27hold dam/stockade/quarter/hulks boss, r27dungeon marsh, trialtest, r21rift, crafttest, ngtest, traveltest, benchtest.
+- The Round 28 scripts (r28perf, r28prof, r28progs, r28look, r28hud, r28phase, r28touch, r28moves, r28hold) were never committed (`shots/` is gitignored; use `git add -f`) and are lost. Rewrite them if needed.
+- Artifact version 26 published (1.79 MB inlined; `shots/smoke26.mjs` from `file://` with phone emulation: touch UI on, troops present, no page errors).
+- APK: CI's build of `f9a924b` (same code as this note), sent to the user.
 
 **Round 29 (approved last round, carried over):** camp props (a sculpted forge with hearth, bellows and chimney hood in place of Bishr's plain stump, plus cooking gear, tents and water jars), new side quests (one 2–3 step chain per region), a post-game epilogue (Salim back in Baghdad, Ishaq at the House of Wisdom, the camp men's endings), and 2–3 new enemy types. Confirm with the user before building.
 
