@@ -27,6 +27,8 @@ const SLOT_NAMES = { weapon: 'Weapon', armor: 'Armor', helm: 'Helm', ring: 'Ring
 const DOLL = `<svg class="doll" viewBox="0 0 120 200" aria-hidden="true"><g fill="#d9a44114" stroke="#d9a44140" stroke-width="1.5"><circle cx="60" cy="26" r="15"/><path d="M38 50 Q60 42 82 50 L92 108 L80 110 L76 72 L74 120 L80 192 L64 192 L60 132 L56 192 L40 192 L46 120 L44 72 L40 110 L28 108 Z"/></g></svg>`;
 const avgDmg = (it) => it && it.min ? (it.min + it.max) / 2 : 0;
 
+// Round 28: write an inline style only when it changes (each write costs a style recalc on a phone)
+function setS(el, k, v) { const c = el._s || (el._s = {}); if (c[k] !== v) { c[k] = v; el.style[k] = v; } }
 export class UI {
   constructor(root) {
     this.root = root;
@@ -195,9 +197,10 @@ export class UI {
   fade(v, sec = v ? 0.5 : 0.8) { const f = this.$('#fade'); f.style.transition = `opacity ${sec}s`; f.style.opacity = v; this.onFade?.(v, sec); }
 
   // ---------------- world-anchored elements
+  // Round 28: one reused result (callers read it at once), so projecting no longer makes garbage every frame
   project(pos, camera) {
-    this.v.copy(pos).project(camera);
-    return { x: (this.v.x * 0.5 + 0.5) * innerWidth, y: (-this.v.y * 0.5 + 0.5) * innerHeight, vis: this.v.z < 1 };
+    this.v.copy(pos).project(camera); const r = this._pr || (this._pr = { x: 0, y: 0, vis: false });
+    r.x = (this.v.x * 0.5 + 0.5) * innerWidth; r.y = (-this.v.y * 0.5 + 0.5) * innerHeight; r.vis = this.v.z < 1 && this.v.z > -1 && Math.abs(this.v.x) < 1.3 && Math.abs(this.v.y) < 1.3; return r;
   }
   damageNumber(pos, text, kind = 'normal') {
     const el = this.dmgPool.find((d) => !d.active) || (() => { const e = { el: document.createElement('div') }; this.dmg.appendChild(e.el); this.dmgPool.push(e); return e; })();
@@ -222,17 +225,18 @@ export class UI {
       d.el.style.opacity = 1 - Math.max(0, k - 0.6) / 0.4;
       if (d.t > 1) { d.active = false; d.el.style.display = 'none'; }
     }
-    const used = [];
+    const used = this._used || (this._used = []); used.length = 0; const cp = camera.position;
     for (const [drop, el] of this.labelMap) {
       const show = showAll || drop.item.rarity !== 'common' || drop.item.gold || drop.age < 4;
-      const p = this.project(drop.mesh.position, camera);
-      if (!p.vis || !show) { el.style.display = 'none'; continue; }
-      el.style.display = 'block';
-      let y = p.y - 26;
+      const mp = drop.mesh.position, far = Math.abs(mp.x - cp.x) > 60 || Math.abs(mp.z - cp.z) > 60;
+      const p = !show || far ? null : this.project(mp, camera);
+      if (!p || !p.vis) { setS(el, 'display', 'none'); continue; }
+      setS(el, 'display', 'block');
+      let y = p.y - 26; const x = Math.round(p.x);
       // naive label stacking to avoid overlap
-      for (const u of used) if (Math.abs(u.x - p.x) < 90 && Math.abs(u.y - y) < 20) y = u.y - 22;
-      used.push({ x: p.x, y });
-      el.style.transform = `translate(${p.x}px, ${y}px) translate(-50%,-50%)`;
+      for (const u of used) if (Math.abs(u.x - x) < 90 && Math.abs(u.y - y) < 20) y = u.y - 22;
+      used.push({ x, y });
+      setS(el, 'transform', `translate(${x}px, ${Math.round(y)}px) translate(-50%,-50%)`);
     }
   }
   enemyBars(enemies, camera) {
@@ -244,12 +248,12 @@ export class UI {
       if (!p.vis) continue;
       let b = this.barPool[n];
       if (!b) { b = document.createElement('div'); b.className = 'ehp'; b.innerHTML = '<i></i>'; this.barRoot.appendChild(b); this.barPool.push(b); }
-      b.style.display = 'block'; b.className = 'ehp' + (e.elite ? ' el' : '');
-      b.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%,-50%)`;
-      b.firstChild.style.width = (e.hp / e.maxHp * 100) + '%';
+      setS(b, 'display', 'block'); const cn = e.elite ? 'ehp el' : 'ehp'; if (b.className !== cn) b.className = cn;
+      setS(b, 'transform', `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px) translate(-50%,-50%)`);
+      setS(b.firstChild, 'width', Math.round(e.hp / e.maxHp * 100) + '%');
       n++;
     }
-    for (let i = n; i < (this.barPool?.length || 0); i++) this.barPool[i].style.display = 'none';
+    for (let i = n; i < (this.barPool?.length || 0); i++) setS(this.barPool[i], 'display', 'none');
   }
   drawMinimap(player, enemies, drops, pois) {
     const c = this.mini, S = 180, sc = 1.1;

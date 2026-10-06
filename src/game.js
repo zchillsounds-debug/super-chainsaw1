@@ -53,6 +53,11 @@ export class Game {
     ];
     this.setupOccluders(this.world.occluders);
     this.decals = []; this.splatTexs = [splatTex(1), splatTex(2), splatTex(3)]; this.scorchTex = splatTex(4, true);
+    // Round 28: one blood and one scorch decal live for good, far below the ground: they are compiled at load with
+    // everything else and keep the decal programs alive (every decal disposes its own material when it fades, and
+    // once the last one went the program was freed, so the next first blood compiled it again mid-fight)
+    for (const blood of [true, false]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.1).rotateX(-Math.PI / 2), this.decalMat(blood, 'blood')); m.position.set(0, -500, 0); m.renderOrder = 1; this.scene.add(m); }
+    { this.ensureSlashMat(); const m = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.1), this.slashMat); m.position.set(0, -500, 0); this.scene.add(m); }
     this.fires2 = [];
     // a casting net that can pin the hero (made at load, shown when a net-thrower lands one)
     const nc = document.createElement('canvas'); nc.width = nc.height = 64; const nx = nc.getContext('2d'); nx.strokeStyle = '#fff'; nx.lineWidth = 3;
@@ -76,11 +81,14 @@ export class Game {
     warm.visible = false; this.scene.add(warm);
   }
 
-  decal(pos, size, kind) {
-    const blood = kind !== 'scorch';
+  decalMat(blood, kind) {
     const col = kind === 'fire' ? new THREE.Color(0.25, 0.08, 0.02) : new THREE.Color(0.11, 0.008, 0.008);
     const mat = new THREE.MeshStandardMaterial({ map: blood ? this.splatTexs[Math.floor(Math.random() * 3)] : this.scorchTex, color: blood ? col : 0xffffff, transparent: true, depthWrite: false, roughness: blood ? 0.25 : 1, polygonOffset: true, polygonOffsetFactor: -2, alphaTest: 0.02 });
     if (blood) { mat.alphaMap = mat.map; mat.map = null; }
+    return mat;
+  }
+  decal(pos, size, kind) {
+    const blood = kind !== 'scorch', mat = this.decalMat(blood, kind);
     const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size).rotateX(-Math.PI / 2), mat);
     m.position.set(pos.x, heightAt(pos.x, pos.z) + 0.03 + Math.random() * 0.01, pos.z); m.rotation.y = Math.random() * 6.28;
     m.renderOrder = 1; this.scene.add(m);
@@ -778,8 +786,15 @@ export class Game {
     const p = this.player;
     if (this.hover && !this.hover.dead && this.hover.pos.distanceTo(p.pos) < r) return this.hover;
     if (p.target && !p.target.dead && p.target.pos.distanceTo(p.pos) < r) return p.target;
+    // Round 28 aim assist: with the stick pushed, a foe the stick points at counts as nearer (up to 40% for one dead
+    // ahead, none for one behind), so on a phone the swing or skill goes where the thumb is steering
+    const j = this.joy && Math.hypot(this.joy.x, this.joy.y) > 0.3 ? this.joyWorld() : null, jl = j ? Math.hypot(j.x, j.z) : 0;
     let best = null, bd = r;
-    for (const e of this.enemies) { if (e.dead || e.hidden || e.ghost) continue; const d = e.pos.distanceTo(p.pos); if (d < bd) { bd = d; best = e; } }
+    for (const e of this.enemies) {
+      if (e.dead || e.hidden || e.ghost) continue; const d = e.pos.distanceTo(p.pos); if (d >= r) continue;
+      let sc = d; if (j && d > 0.01) { const c = ((e.pos.x - p.pos.x) * j.x + (e.pos.z - p.pos.z) * j.z) / (d * jl); sc = d * (1 - 0.4 * Math.max(0, c)); }
+      if (sc < bd) { bd = sc; best = e; }
+    }
     return best;
   }
   // camera impulse in world space (decays in updateCamera)
@@ -1325,8 +1340,8 @@ export class Game {
     return { x: w.x, z: w.z, y: goal.y };
   }
 
-  slashTrail() {
-    const p = this.player;
+  // Round 28: made at load (with a keeper mesh below the ground), so the first swing of a session never compiles it
+  ensureSlashMat() {
     if (!this.slashMat) {
       this.slashMat = new THREE.ShaderMaterial({
         uniforms: { uA: { value: 1 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, toneMapped: false,
@@ -1343,6 +1358,9 @@ export class Game {
           }`,
       });
     }
+  }
+  slashTrail() {
+    const p = this.player; this.ensureSlashMat();
     const g = new THREE.RingGeometry(1.1, 2.35, 40, 1, -Math.PI * 0.45, Math.PI * 0.9);
     const m = this.slashMat.clone();
     const mesh = new THREE.Mesh(g, m);

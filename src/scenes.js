@@ -7,6 +7,7 @@ import { mashuf } from './regionprops.js';
 import { LOOK, byzify } from './byz.js';
 import { horseRider } from './foes20.js';
 import { choose, chosen } from './story25.js';
+import { lineClear } from './collision.js';
 
 // The story's cinematics. Each returns a scene definition for the Director.
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -24,6 +25,17 @@ const at = (a, y = 1.5, fwd = 0, side = 0) => () => {
   return V(a.pos.x + Math.sin(f) * fwd + Math.cos(f) * side, a.pos.y + y * s, a.pos.z + Math.cos(f) * fwd - Math.sin(f) * side);
 };
 const headOf = (a) => () => a.rig.userData.parts.head.getWorldPosition(new THREE.Vector3()).add(V(0, 0.08, 0));
+// Round 28: a camera spot in front of an actor on the first of the given sides with a clear line to him (walls and
+// piers used to fill half the frame), at a height set from his head, so a tall or scaled man is framed by his face
+function faceCam(a, fwd, sides, dy = -0.2) {
+  let side = null;
+  return () => {
+    if (side === null) { side = sides[0]; for (const sd of sides) { const p = at(a, 1, fwd, sd)(); if (lineClear(a.pos.x, a.pos.z, p.x, p.z)) { side = sd; break; } } }
+    const p = at(a, 1, fwd, side)(); p.y = headOf(a)().y + dy; return p;
+  };
+}
+// a look point under the head, so the face sits in the upper part of the frame, clear of the subtitle bar
+const faceAim = (a, dy = -0.4) => () => headOf(a)().add(V(0, dy, 0));
 function walk(a, target, speed, dt) {
   const d = Math.hypot(target.x - a.pos.x, target.z - a.pos.z);
   if (d < 0.05) return true;
@@ -232,7 +244,7 @@ export function bossPhase(g, b, enginesBurnt = false, line = null) {
   const boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st }, salim = playerActor(g);
   const shots = [
     { dur: 3.6, slow: 0.5, stinger: 'phase', line: { who: b.T.name, text: line || (enginesBurnt ? 'You burned my engines? Then my men will burn you by hand!' : 'Fire the engines! Burn the road!'), rig: b.rig, cue: 'growl' },
-      cam: { follow: true, p0: at(boss, 1.4, 5, 2), t0: at(boss, 2.3), p1: at(boss, 2.0, 3.4, 1.0), t1: at(boss, 2.4), fov: 34, shake: 0.12 }, dof: headOf(boss),
+      cam: { follow: true, p0: faceCam(boss, 5, [2, -2, 0.6]), t0: faceAim(boss), p1: faceCam(boss, 3.6, [1.2, -1.2, 0.4], -0.1), t1: faceAim(boss, -0.35), fov: 34, shake: 0.12 }, dof: headOf(boss),
       enter: (d) => { act(boss, 'command', 1.6); d.audio.roar?.(); } },
   ];
   return { actors: [boss, salim], shots, tick: (d, dt) => { tickActor(g, boss, dt); tickActor(g, salim, dt); } };
@@ -244,7 +256,7 @@ export function bossDuel(g, b, enginesBurnt, K = null) {
   const text = K?.duel || (enginesBurnt ? 'No engines left. Then it is just you and me.' : 'You would die for paper? Then die.');
   const shots = [
     { dur: 4.2, slow: 0.4, stinger: 'phase', line: { who: b.T.name, text, rig: b.rig, cue: 'growl' },
-      cam: { follow: true, p0: at(boss, 1.6, 4.2, 1.8), t0: at(boss, 2.3), p1: at(boss, 1.9, 3.0, 0.8), t1: at(boss, 2.4), fov: 32, shake: 0.08 }, dof: headOf(boss),
+      cam: { follow: true, p0: faceCam(boss, 4.2, [1.8, -1.8, 0.6]), t0: faceAim(boss), p1: faceCam(boss, 3.0, [0.8, -0.8, 0.3], -0.1), t1: faceAim(boss, -0.35), fov: 32, shake: 0.08 }, dof: headOf(boss),
       enter: (d) => { act(boss, 'command', 1.8); d.audio.roar?.(); }, run: () => { boss.facing = yawTo(boss.pos, salim.pos); } },
     { dur: 2.2, caption: K?.duelCaption || 'Bardanes rings the arena with fire. Stay inside it.', cam: { follow: true, p0: at(salim, 7, -9, 0), t0: at(boss, 1.2), fov: 44 } },
   ];

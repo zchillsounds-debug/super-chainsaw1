@@ -108,7 +108,10 @@ export function setupStory25(g) {
     if (!force && (barkCd > 0 || g.cinematic)) return false;
     box.querySelector('b').textContent = t(who); box.querySelector('span').textContent = t(text);
     // Round 26: a context prompt sits where the bark would be on a phone: then the bark goes under the tracker
-    const pr = document.getElementById('prompt'); box.classList.toggle('top', !!pr && !pr.classList.contains('hidden') && document.body.classList.contains('touch'));
+    const pr = document.getElementById('prompt'), top = !!pr && !pr.classList.contains('hidden') && document.body.classList.contains('touch'); box.classList.toggle('top', top);
+    // Round 28: a tutorial hint card also lives under the tracker: the bark then sits under the card, not behind it
+    const hn = document.getElementById('hint'), hr = top && hn && !hn.classList.contains('hidden') ? hn.getBoundingClientRect() : null;
+    box.style.top = hr && hr.height ? Math.round(hr.bottom + 8) + 'px' : '';
     box.classList.add('show'); barkT = ms / 1000 + text.length / 40; barkCd = barkT + 4; return true;
   };
   const guardSay = (ctx) => {

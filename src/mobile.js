@@ -61,10 +61,12 @@ export function setupMobile(game, ui) {
   const wire = (els) => {
     for (const [k, el] of Object.entries(els)) {
       if (el.parentNode !== cl) cl.appendChild(el);
-      el.addEventListener('pointerdown', (ev) => { ev.preventDefault(); ev.stopPropagation(); el.classList.add('down'); haptic(k === 'attack' ? 6 : 12); press(k);
-        if (k === 'attack' && game.attackMode !== 'toggle') el._hold = setInterval(() => press('attack'), 150); });
+      // Round 28: the button keeps the finger (pointer capture), so a thumb that slides a little while holding attack
+      // no longer drops the hold; the button only lets go when the finger lifts
+      el.addEventListener('pointerdown', (ev) => { ev.preventDefault(); ev.stopPropagation(); try { el.setPointerCapture(ev.pointerId); } catch (_) {} el.classList.add('down'); haptic(k === 'attack' ? 6 : 12); press(k);
+        if (k === 'attack' && game.attackMode !== 'toggle') { clearInterval(el._hold); el._hold = setInterval(() => press('attack'), 150); } });
       const up = () => { el.classList.remove('down'); clearInterval(el._hold); };
-      el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('pointerleave', up);
+      el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('lostpointercapture', up);
     }
   };
   ui.onSkillsBuilt = wire; ui.buildSkills(game.slotDefs());
@@ -81,7 +83,7 @@ export function setupMobile(game, ui) {
     if (e.clientX < innerWidth * 0.4 && jid === null) {
       jid = game.joyId = e.pointerId; jx = e.clientX; jy = e.clientY;
       joy.style.left = jx + 'px'; joy.style.top = jy + 'px'; joy.classList.add('on');
-      canvas.setPointerCapture(e.pointerId);
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* a synthetic or already-lifted pointer */ }
     } else {
       // tap to move / attack (not the second finger of a pinch)
       if (game.pinching) return;
@@ -93,12 +95,16 @@ export function setupMobile(game, ui) {
       else { game.player.target = null; game.setMoveTarget(); game.showMarker(); }
     }
   });
+  // Round 28: a floating stick. Past the rim the base follows the thumb, so turning round never needs the thumb to
+  // travel back across the whole pad; the dead zone is remapped so speed starts at zero just outside it
   canvas.addEventListener('pointermove', (e) => {
     if (e.pointerId !== jid) return;
-    let dx = e.clientX - jx, dy = e.clientY - jy; const l = Math.hypot(dx, dy), R = 50;
-    if (l > R) { dx = dx / l * R; dy = dy / l * R; }
-    knob.style.transform = `translate(${dx}px, ${dy}px)`;
-    game.joy = l > 8 ? { x: dx / R, y: dy / R } : null;
+    const R = 52 * (game.settings?.s?.tscale ?? 0.85) / 0.85, DZ = 7;
+    let dx = e.clientX - jx, dy = e.clientY - jy; const l = Math.hypot(dx, dy);
+    if (l > R) { jx += dx / l * (l - R); jy += dy / l * (l - R); joy.style.left = jx + 'px'; joy.style.top = jy + 'px'; dx = dx / l * R; dy = dy / l * R; }
+    knob.style.transform = `translate(${dx / R * 50}px, ${dy / R * 50}px)`;
+    const m = Math.min(1, Math.max(0, (Math.min(l, R) - DZ) / (R * 0.8 - DZ)));
+    game.joy = l > DZ ? { x: dx / Math.max(1, Math.min(l, R)) * m, y: dy / Math.max(1, Math.min(l, R)) * m } : null;
   });
   const end = (e) => { if (e.pointerId !== jid) return; jid = game.joyId = null; game.joy = null; joy.classList.remove('on'); knob.style.transform = ''; };
   canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);

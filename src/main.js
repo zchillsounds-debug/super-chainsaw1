@@ -16,6 +16,7 @@ import { preloadGeo, flushGeo } from './geocache.js';
 import { Lighting } from './lighting.js';
 import { RIM_G } from './charmats.js';
 import { showOutlines } from './outline.js';
+import { installShadowProxy, SHADOW_PROXY, updatePlayLOD } from './human.js';
 import { setupCombat25 } from './combat25.js';
 import { setupEncounters25 } from './encounters25.js';
 import { setupStory25 } from './story25.js';
@@ -63,7 +64,7 @@ import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, IS_CITY, FIRST_ACT, STO
 const P = new URLSearchParams(location.search);
 await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30))); // let the loader paint first
 const __cached = await preloadGeo(); console.debug('LOG geo cache ' + __cached);
-const renderer = createRenderer(document.getElementById('game'));
+const renderer = createRenderer(document.getElementById('game')); installShadowProxy(renderer);
 bakeGround(renderer, QUALITY);
 WEATHER.uDustCol.value.set(IS_MARSH ? 0x6a604a : IS_CITY ? 0x6e655a : 0xa8835a);
 const scene = new THREE.Scene();
@@ -345,6 +346,7 @@ function frame() {
     } else { heroLight.intensity = mode === 'game' ? hk : 0; heroLight.position.set(c.x, (c.y || 0) + 3.4, c.z + 1.2); }
     // Round 24: from the overhead play camera figures are small: a brighter rim lifts them off the ground (scenes keep the softer one)
     showOutlines(camera, mode === 'game' && !game.cinematic); // Round 25: outlines in play only
+    updatePlayLOD(mode === 'game' && !game.cinematic && !game.camAction); // Round 28: phones show hero-class rigs at crowd detail in play
     RIM_G.value.copy(L.sunCol).lerp(L.hemiSky, 0.35).multiplyScalar((0.9 + (L.hero || 0) / 12) * (game.cinematic || mode !== 'game' ? 1 : 1.6));
   }
   if (vol) {
@@ -401,8 +403,9 @@ if (reflection) scene.traverse((o) => { if (o.isLight) o.layers.enable(REFLECT_L
   shadowSnap(new THREE.Vector3(0, 0, 0)); sun.position.copy(sun.target.position).addScaledVector(world.sunDir, 200); sun.updateMatrixWorld(); sun.target.updateMatrixWorld();
   try {
     if (reflection) { const was = reflection.active; reflection.active = true; reflection.update(1); reflection.active = was; }
-    renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; composer.render();
+    renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; SHADOW_PROXY.on = false; composer.render();
   } catch (e) { console.warn('warm-up frame', e); }
+  SHADOW_PROXY.on = true;
   for (const o of fc) o.frustumCulled = true; for (const o of hid2) o.visible = false;
   Object.assign(sc, keep); sc.updateProjectionMatrix(); renderer.shadowMap.needsUpdate = true;
   world.cullPaused = false;

@@ -6,7 +6,8 @@ import { QUALITY } from './graphics.js';
 // Layers: locomotion (planted feet, two-bone leg IK, pelvis bob/sway, counter-rotation, arm swing)
 // -> upper-body action clips (keyframed with anticipation / strike / follow-through / recovery)
 // -> additive flinch -> face (blink, jaw, brow) -> cloth and spring bones.
-export const CharLOD = { center: new THREE.Vector3(), simDist: 24 };
+// Round 28: phones simulate cloth within 12 m of Salim (24 m elsewhere); further out it rides the bones
+export const CharLOD = { center: new THREE.Vector3(), simDist: matchMedia('(pointer: coarse)').matches || /[?&]mobile\b/.test(location.search) ? 12 : 24 };
 // Round 21: facial expressions. brow: both brows up (+) or down (-); inner: the inner ends lift (+, grief, worry)
 // or knot down (-, anger); lid: eyes wide (+) or narrowed (-); smile: mouth corners up (+) or down (-); jaw: open.
 // A cutscene sets one by name on the speaker (rig.userData.expr, see cinema.js); fights set their own.
@@ -401,7 +402,9 @@ export class Animator {
     const near = !LOW && r.position.distanceTo(CharLOD.center) < CharLOD.simDist;
     const g = r.position.y + 0.02;
     const sw = { x: 0.1 + (st.walkBlend || 0) * 0.25 + (st.fwdLean || 0) * 0.4 + Math.sin(t * 3 + r.id) * 0.03, z: (st.lean || 0) * 0.35 };
-    for (const cl of p.cloths) cl.update(dt, near, g, sw, near ? 0.6 : 0);
+    // Round 28: a rig showing its far sculpt moves its cloth every third step (the cloth rides the bone there anyway)
+    this._clk = (this._clk || 0) + 1; this._cdt = (this._cdt || 0) + dt;
+    if (!p.lodFar || p.playLod || this._clk % 3 === 0) { for (const cl of p.cloths) cl.update(this._cdt, near, g, sw, near ? 0.6 : 0); this._cdt = 0; }
     if (!LOW || near) for (const j of p.jiggles) j.update(dt);
     // contact shadows
     const bl = p.blobs;

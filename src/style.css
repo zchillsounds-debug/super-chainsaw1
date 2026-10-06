@@ -677,3 +677,8 @@ body.touch .bpoise{height:8px;width:66%;margin-top:4px}
 
 /* Round 27: a master's callout under his bar */
 #bossbar .bcall{margin-top:6px;font:italic 700 18px Amiri,serif;color:#ffd890;letter-spacing:1px;text-shadow:0 0 8px #000,0 2px 2px #000;opacity:0;transform:translateY(-4px);transition:opacity .2s,transform .2s;min-height:1.2em}#bossbar .bcall.show{opacity:1;transform:none}body.touch #bossbar .bcall{font-size:16px;margin-top:4px}
+
+/* ---- Round 28: phone readability ---- */
+/* the tracker's objective keeps to two lines on a phone (a long one ran to three and covered the fight) */
+body.touch #quest .qnow .qtx{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body.touch #quest.open .qnow .qtx{-webkit-line-clamp:unset;display:block}

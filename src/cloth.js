@@ -27,6 +27,8 @@ export function addWrinkles(mat) {
   return mat;
 }
 
+// Round 28: phones relax the cloth twice a step (three times elsewhere); the difference doesn't show at play size
+const CLOTH_ITERS = matchMedia('(pointer: coarse)').matches || /[?&]mobile\b/.test(location.search) ? 2 : 3;
 export class Cloth {
   constructor({ rows, cols, rest, anchor, material, closed = false, uvRepeat = 1, stiff = 1, gravity = 1, carry = 0.45, maxSwing = 0 }) {
     this.carry = carry; this.maxSwing = maxSwing; this.rows = rows; this.cols = cols; this.anchor = anchor; this.closed = closed; this.gravity = gravity;
@@ -118,17 +120,17 @@ export class Cloth {
         let mx = 0, mz = 0;
         for (let c = 0; c < cols; c++) { this.pinWorld(c, _a); mx += _a.x - P[c * 3]; mz += _a.z - P[c * 3 + 2]; P[c * 3] = Q[c * 3] = _a.x; P[c * 3 + 1] = Q[c * 3 + 1] = _a.y; P[c * 3 + 2] = Q[c * 3 + 2] = _a.z; }
         mx /= cols; mz /= cols; if (mx * mx + mz * mz > 0.04) mx = mz = 0; // teleports
-        const carry = this.carry;
+        const carry = this.carry, now = performance.now(), w1 = now * 0.004, w2 = now * 0.003; // Round 28: the clock once a step, not twice a particle
         for (let i = cols; i < n; i++) {
           const x = P[i * 3], y = P[i * 3 + 1], z = P[i * 3 + 2], damp = this.damp;
           P[i * 3] += mx * carry; P[i * 3 + 2] += mz * carry;
-          P[i * 3] += (x - Q[i * 3]) * damp + wind * h * h * (Math.sin(i * 1.7 + performance.now() * 0.004) * 6);
+          P[i * 3] += (x - Q[i * 3]) * damp + wind * h * h * (Math.sin(i * 1.7 + w1) * 6);
           P[i * 3 + 1] += (y - Q[i * 3 + 1]) * damp + g;
-          P[i * 3 + 2] += (z - Q[i * 3 + 2]) * damp + wind * h * h * (Math.cos(i * 2.3 + performance.now() * 0.003) * 6);
+          P[i * 3 + 2] += (z - Q[i * 3 + 2]) * damp + wind * h * h * (Math.cos(i * 2.3 + w2) * 6);
           Q[i * 3] = x; Q[i * 3 + 1] = y; Q[i * 3 + 2] = z;
         }
         const C = this.cons;
-        for (let it = 0; it < 3; it++) {
+        for (let it = 0; it < CLOTH_ITERS; it++) {
           for (let k = 0; k < C.length; k += 3) {
             const a = C[k], b = C[k + 1], L = C[k + 2];
             const dx = P[b * 3] - P[a * 3], dy = P[b * 3 + 1] - P[a * 3 + 1], dz = P[b * 3 + 2] - P[a * 3 + 2];

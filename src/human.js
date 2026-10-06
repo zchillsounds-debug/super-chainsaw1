@@ -10,6 +10,7 @@ import { Animator } from './anim.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const LOW = QUALITY === 'low';
+const TOUCH = matchMedia('(pointer: coarse)').matches || /[?&]mobile\b/.test(location.search);
 
 // ---------------------------------------------------------------- skeleton
 // [name, parent, x, y, z, bindRotZ]. Model space: feet at y=0, facing +Z, character's right is +X.
@@ -413,18 +414,23 @@ export function humanoid(opts = {}) {
   // sculpted, skinned pieces (geometry is shared between characters with the same build)
   const sk = JSON.stringify([o.build, o.girth, o.belly, o.neck]);
   // detail tiers: hero-class characters get the full sculpt, crowds a lighter one (and everyone is light on q=low)
-  const hiTier = !LOW && o.detail === 'hi', tier = hiTier ? 'hi' : 'lo';
-  const vox = (hi, lo) => (hiTier ? hi : lo);
-  o._mitten = !hiTier;
-  const geos = [
-    piece('head', [tier, o.neck], () => sculpt(headPrims(B, o), { voxel: vox(0.0034, 0.0072), blend: 0.012 })),
-    piece('hands', [tier, sk], () => sculpt(handPrims(B, o), { voxel: vox(0.0034, 0.0075), blend: 0.01 })),
-    piece('garment', [tier, sk, o.qaba, o.mail, !!o.sash, o.tiraz], () => sculpt(garmentPrims(B, o), { voxel: vox(0.0105, 0.0185), blend: 0.03, paint: garmentPaint(o) })),
-  ];
-  const hp = hairPrims(B, o); if (hp.length) geos.push(piece('hair', [tier, o.neck, !!o.beard, o.beardLen, !!o.bald, 3, o.hair, o.beardStyle], () => sculpt(hp, { voxel: vox(0.0032, 0.0075), blend: 0.012 })));
-  const hw = headwearPrims(B, o); if (hw.length) geos.push(piece('headwear', [tier, o.neck, o.helm === 'byz' ? 'byz' : !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume', !!o.pilos], () => sculpt(hw, { voxel: vox(0.0048, 0.0085), blend: 0.02 })));
-  const ap = o.armour ? armourPrims(B, o) : []; if (ap.length) geos.push(piece('armour', [tier, sk, o.armour, 2], () => sculpt(ap, { voxel: vox(0.008, 0.014), blend: 0.02, paint: armourPaint(o) })));
-  if (o.mask) geos.push(piece('veil', [tier, o.neck], () => sculpt(veilPrims(B, o), { voxel: vox(0.0045, 0.0085), blend: 0.02 })));
+  const hiTier = !LOW && o.detail === 'hi', tier0 = hiTier ? 'hi' : 'lo';
+  const hp = hairPrims(B, o), hw = headwearPrims(B, o), ap = o.armour ? armourPrims(B, o) : [];
+  // Round 28: the pieces for one tier; on a phone a hero-class character also gets the crowd tier as its play LOD
+  const build = (tier) => {
+    const hiT = tier === 'hi', vox = (hi, lo) => (hiT ? hi : lo); o._mitten = !hiT;
+    const geos = [
+      piece('head', [tier, o.neck], () => sculpt(headPrims(B, o), { voxel: vox(0.0034, 0.0072), blend: 0.012 })),
+      piece('hands', [tier, sk], () => sculpt(handPrims(B, o), { voxel: vox(0.0034, 0.0075), blend: 0.01 })),
+      piece('garment', [tier, sk, o.qaba, o.mail, !!o.sash, o.tiraz], () => sculpt(garmentPrims(B, o), { voxel: vox(0.0105, 0.0185), blend: 0.03, paint: garmentPaint(o) })),
+    ];
+    if (hp.length) geos.push(piece('hair', [tier, o.neck, !!o.beard, o.beardLen, !!o.bald, 3, o.hair, o.beardStyle], () => sculpt(hp, { voxel: vox(0.0032, 0.0075), blend: 0.012 })));
+    if (hw.length) geos.push(piece('headwear', [tier, o.neck, o.helm === 'byz' ? 'byz' : !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume', !!o.pilos], () => sculpt(hw, { voxel: vox(0.0048, 0.0085), blend: 0.02 })));
+    if (ap.length) geos.push(piece('armour', [tier, sk, o.armour, 2], () => sculpt(ap, { voxel: vox(0.008, 0.014), blend: 0.02, paint: armourPaint(o) })));
+    if (o.mask) geos.push(piece('veil', [tier, o.neck], () => sculpt(veilPrims(B, o), { voxel: vox(0.0045, 0.0085), blend: 0.02 })));
+    return geos;
+  };
+  const geos = build(tier0), playGeos = hiTier && TOUCH ? build('lo') : null; o._mitten = !hiTier; const tier = tier0;
   // far LOD (crowds only): the same pieces sculpted at ~2.2x the voxel size, about a fifth of the triangles
   const farGeos = hiTier ? null : [
     piece('head', ['far', o.neck], () => sculpt(headPrims(B, o), { voxel: 0.016, blend: 0.014 })),
@@ -442,8 +448,8 @@ export function humanoid(opts = {}) {
   near.boundingSphere = new THREE.Sphere(V(0, 0.95, 0), 1.35); near.castShadow = true; near.receiveShadow = true; body.add(near);
   const meshes = [near];
   let farMeshes = null;
-  if (farGeos) {
-    const far = new THREE.SkinnedMesh(mergedPieces(farGeos), mat); far.bind(skeleton, new THREE.Matrix4());
+  if (farGeos || playGeos) {
+    const far = new THREE.SkinnedMesh(mergedPieces(farGeos || playGeos), mat); far.bind(skeleton, new THREE.Matrix4());
     far.boundingSphere = new THREE.Sphere(V(0, 0.95, 0), 1.35); far.castShadow = true; far.receiveShadow = true; far.visible = false; body.add(far);
     farMeshes = [far];
   }
@@ -461,7 +467,7 @@ export function humanoid(opts = {}) {
   const eyes = [piv], lids = [{ up, lo }];
 
   const parts = {
-    body, bones, skeleton, mats: [mat], mat, meshes, farMeshes, lodFar: false, eyes, lids, cloths: [], jiggles: [], o,
+    body, bones, skeleton, mats: [mat], mat, meshes, farMeshes, lodFar: false, playLod: !!playGeos, eyes, lids, cloths: [], jiggles: [], o,
     hips: bones.hips, spine: bones.spine, chest: bones.chest, upperChest: bones.upperChest, neck: bones.neck, head: bones.head, jaw: bones.jaw, brow: bones.brow,
     browL: bones.browL, browR: bones.browR, mouthL: bones.mouthL, mouthR: bones.mouthR,
     shL: bones.armL, elL: bones.foreL, handL: bones.handL, shR: bones.armR, elR: bones.foreR, handR: bones.handR,
@@ -575,15 +581,46 @@ export function humanoid(opts = {}) {
   // Round 21: rigid gear (weapons, shields, sash ends, scabbards) is small: it stays out of the AO pass, and only
   // hero-class characters cast its shadow (crowds' blades and sash strips were a third of the shadow draws)
   bones.hips.traverse((m) => { if (!m.isMesh || m.isSkinnedMesh || m.userData.noAO) return; m.userData.noAO = true; if (!hiTier || m.geometry.type === 'PlaneGeometry') m.castShadow = false; });
-  root.userData.parts = parts;
+  root.userData.parts = parts; if (parts.playLod) { PLAY_RIGS.add(root); if (PLAY_LOD.on) setCharLOD(root, true); }
   root.userData.anim = new Animator(root, parts, o);
   return root;
 }
 
 export function animateHumanoid(rig, st, t, dt) { rig.userData.anim?.update(st, t, dt); }
+// Round 28: the shadow map draws the far sculpt (a fifth of the triangles) for every crowd rig, even one shown near:
+// at shadow-map resolution the two are indistinguishable, and near sculpts in the shadow pass were most of a fight's
+// triangles. installShadowProxy wraps the renderer's shadow pass to swap them for its duration only.
+const SHADOW_RIGS = new Set();
+export const SHADOW_PROXY = { on: true };
+// Round 28: on a phone, hero-class characters (Salim, companions, bosses, story people) show the crowd-tier sculpt
+// while playing (about a quarter of the triangles at a size where the difference can't be seen), and the full sculpt
+// in cutscenes and the close camera. The game sets PLAY_LOD.on each frame; updatePlayLOD applies it to them all.
+export const PLAY_LOD = { on: false };
+const PLAY_RIGS = new Set();
+export function updatePlayLOD(on) {
+  PLAY_LOD.on = on;
+  for (const r of PLAY_RIGS) { if (!r.parent) { PLAY_RIGS.delete(r); continue; } setCharLOD(r, on); }
+} // off for the load-time warm-up frame, so both sculpts compile their shadow programs
+export function installShadowProxy(renderer) {
+  const sm = renderer.shadowMap, orig = sm.render.bind(sm), swapped = [];
+  sm.render = (...a) => {
+    if (!SHADOW_PROXY.on || !sm.enabled || (!sm.autoUpdate && !sm.needsUpdate)) return orig(...a);
+    for (const r of SHADOW_RIGS) {
+      if (!r.parent) { SHADOW_RIGS.delete(r); continue; }
+      const P = r.userData.parts; if (P.lodFar || !r.visible) continue;
+      for (const m of P.meshes) m.visible = false; for (const m of P.farMeshes) m.visible = true; swapped.push(P);
+    }
+    try { return orig(...a); } finally {
+      for (const P of swapped) { for (const m of P.meshes) m.visible = true; for (const m of P.farMeshes) m.visible = false; }
+      swapped.length = 0;
+    }
+  };
+}
 // swap between the near and far sculpts (eyes and lids are hidden at range too)
 export function setCharLOD(rig, far) {
-  const P = rig.userData.parts; if (!P?.farMeshes || P.lodFar === far) return;
+  const P = rig.userData.parts; if (!P?.farMeshes) return; SHADOW_RIGS.add(rig);
+  if (P.playLod) far = PLAY_LOD.on; // a hero-class rig on a phone: the crowd sculpt in play, the full one in scenes and close
+  if (P.lodFar === far) return;
   P.lodFar = far;
   for (const m of P.meshes) m.visible = !far;
   for (const m of P.farMeshes) m.visible = far;
