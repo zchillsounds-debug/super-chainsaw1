@@ -48,4 +48,18 @@ export const AR26 = {
   'Tatzates walks north with a cut bowstring.': 'يمضي تاتزاتيس شمالًا بوترٍ مقطوع.',
   'A qadi, not a blade. Jabir would have argued for the same.': 'قاضٍ لا سيف. كان جابر سيجادل في الشيء نفسه.',
   'You let him walk. Good. We keep the account by remembering, not by killing.': 'تركته يمضي. حسنًا. نحفظ الحساب بالتذكّر، لا بالقتل.',
+  // ---- the camp's own stories
+  'a gift, and the camp is changed': 'هديّة، وتغيّر المخيّم',
+  'Sulayk\'s Scale-Weight': 'صنجة سُليك', '"Honest to the grain, in Wasit and in Baghdad."': '«أمينة حتى الحبّة، في واسط وفي بغداد.»',
+  'The Other Half': 'النصف الآخر', '"Paid in full, a year late, and gladly."': '«دُفع كاملًا، متأخرًا عامًا، وعن طيب نفس.»',
+  'The Drill-Master\'s Sash': 'حزام معلّم الصفّ', '"Hold. Breathe. Hold."': '«اثبت. تنفّس. اثبت.»',
+  'My partner Sulayk kept our second stall in al-Karkh. When the siege came I left the city; he stayed to watch the goods. I have heard nothing from him since spring.': 'شريكي سُليك كان يقوم على دكّاننا الثاني في الكرخ. حين جاء الحصار غادرتُ المدينة، وبقي هو يحرس البضاعة. لم أسمع عنه شيئًا منذ الربيع.',
+  'I found his stall. Ash, and his scales still hanging. A paper-seller says he took his family to Wasit before the fire. Before, Salim. Do you hear? Before.': 'وجدتُ دكّانه. رماد، وميزانه ما زال معلّقًا. يقول ورّاق إنه أخذ أهله إلى واسط قبل الحريق. قبله يا سالم. أتسمع؟ قبله.',
+  'A letter from Wasit, by a boatman. Sulayk lives, with a cough, a new stall, and opinions about my prices. He wants dates. Take this. You brought the roads back, and the letters with them.': 'رسالة من واسط مع ملّاح. سُليك حيّ، به سعال، وله دكّان جديد، وآراء في أسعاري. يريد تمرًا. خذ هذه. أعدتَ الطرق، والرسائل معها.',
+  'Before the war I made a sword for a young soldier of the Abna\'. He paid half and swore he would pay the rest when he came back. His name is scratched on my anvil.': 'قبل الحرب صنعتُ سيفًا لجندي شابّ من الأبناء. دفع نصف الثمن وأقسم أن يدفع الباقي حين يعود. اسمه محفور على سندياني.',
+  'His name was on a list of the wounded at the Anbar gate. Wounded is not dead, Salim. Wounded is not dead.': 'كان اسمه في قائمة الجرحى عند باب الأنبار. الجريح ليس ميتًا يا سالم. الجريح ليس ميتًا.',
+  'He came to the forge this morning. One arm in a sling, and the other half of the price in his good hand. I told him to keep it. He would not. So I made something with it. For you.': 'جاء إلى الكور هذا الصباح. ذراع في رباط، ونصف الثمن الآخر في يده السليمة. قلتُ له احتفظ به. فأبى. فصنعتُ به شيئًا. لك.',
+  'I fought for al-Amin, if you must know. The losing side. I taught boys to hold a line, and then I watched the line break.': 'قاتلتُ مع الأمين، إن شئتَ أن تعرف. الجانب الخاسر. علّمتُ الفتيان أن يثبتوا في الصفّ، ثم رأيتُ الصفّ ينكسر.',
+  'A boy from the camp, Nasim, asked me to teach him the spear. I said no. Then I watched him practise it wrong for an hour, and I could not stand it.': 'فتى من المخيّم، نسيم، سألني أن أعلّمه الرمح. قلتُ لا. ثم رأيته يتدرّب خطأً ساعة كاملة، فلم أحتمل.',
+  'Nasim holds a line now. Not for a caliph. For the camp\'s wells, and the women who draw from them. That is a line I can teach. Here. I will not need it at the dummies.': 'نسيم يثبت في الصفّ الآن. لا من أجل خليفة. من أجل آبار المخيّم، والنساء اللواتي يستقين منها. هذا صفّ أستطيع أن أعلّمه. خذ. لن أحتاجه عند الدُّمى.',
 };
