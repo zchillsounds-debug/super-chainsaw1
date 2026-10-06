@@ -6,6 +6,7 @@ import { REGION, HUB } from './region.js';
 import { mashuf } from './regionprops.js';
 import { LOOK, byzify } from './byz.js';
 import { horseRider } from './foes20.js';
+import { choose, chosen } from './story25.js';
 
 // The story's cinematics. Each returns a scene definition for the Director.
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -155,19 +156,38 @@ export function lieutenantFalls(g, e, { who, text, card }) {
   const mid = () => V(spot.x * 0.6 + foe.pos.x * 0.4, salim.pos.y + 0.72, spot.z * 0.6 + foe.pos.z * 0.4);
   const faceDown = () => V(foe.pos.x - dir.x * 2.3 + side.x * 1.2, foe.pos.y + 0.62, foe.pos.z - dir.z * 2.3 + side.z * 1.2);
   let kneel = 0;
+  // Round 25: Photeinos is beaten, not killed: he kneels, confesses, and Salim decides what becomes of him
+  const spare = who === 'Photeinos';
+  if (spare) { e.spared = true; e.removed = false; if (!e.rig.parent) g.scene.add(e.rig); e.rig.visible = true; }
+  const up = () => { if (!spare) return; e.st.dead = false; e.st.deadT = 0; e.deadT = 0; e.st.action = null; e.st.crouch = 0.85; e.rig.visible = true; foe.facing = yawTo(foe.pos, salim.pos); };
+  const closeSalim = { follow: true, p0: () => { const h = headOf(salim)(); return V(h.x - dir.x * 1.1 + side.x * 0.35, h.y - 0.25, h.z - dir.z * 1.1 + side.z * 0.35); }, t0: headOf(salim), fov: 30 };
+  const overSalim = { follow: true, p0: () => { const h = headOf(salim)(); return V(h.x + dir.x * 0.5 + side.x * 0.9, h.y + 0.1, h.z + dir.z * 0.5 + side.z * 0.9); }, t0: headOf(foe), fov: 32 };
+  // the choice is framed wide from the side, both men in the top half of the frame, clear of the buttons below
+  const twoShot = { follow: true, p0: () => V(spot.x * 0.5 + foe.pos.x * 0.5 + side.x * 4.2, salim.pos.y + 1.9, spot.z * 0.5 + foe.pos.z * 0.5 + side.z * 4.2), t0: () => V(spot.x * 0.5 + foe.pos.x * 0.5, salim.pos.y + 0.55, spot.z * 0.5 + foe.pos.z * 0.5), fov: 36 };
+  const pho = (k) => () => chosen(g, 'photeinos') === k;
+  const choiceShots = !spare ? [] : [
+    { dur: 0.8, choice: { prompt: 'Photeinos is beaten. What becomes of him?', options: [
+      { label: 'Bind him for the qadi in Baghdad.', fx: () => choose(g, 'photeinos', 'qadi') },
+      { label: 'Let him go. He has confessed.', fx: () => choose(g, 'photeinos', 'free') }] }, cam: twoShot, dof: headOf(foe), aperture: 0.6, run: () => up() },
+    { when: pho('qadi'), dur: lineDur('The qadi will hear the rest of it.'), line: { who: 'Salim', text: 'The qadi will hear the rest of it.', rig: g.player.rig, cue: 'hm', expr: 'resolve' }, cam: closeSalim, dof: headOf(salim), run: () => up() },
+    { when: pho('qadi'), dur: lineDur('Then I will tell it. All of it.'), line: { who: 'Photeinos', text: 'Then I will tell it. All of it.', rig: e.rig, cue: 'breath', expr: 'sad' }, cam: overSalim, dof: headOf(foe), run: () => up() },
+    { when: pho('free'), dur: lineDur('Go. If I see you with a sword again, I will not ask twice.'), line: { who: 'Salim', text: 'Go. If I see you with a sword again, I will not ask twice.', rig: g.player.rig, cue: 'hm', expr: 'stern' }, cam: closeSalim, dof: headOf(salim), run: () => up() },
+    { when: pho('free'), dur: lineDur('You will not. I read one page, guard. One was enough.'), line: { who: 'Photeinos', text: 'You will not. I read one page, guard. One was enough.', rig: e.rig, cue: 'breath', expr: 'sad' }, cam: overSalim, dof: headOf(foe), run: () => up() },
+  ];
   const shots = [
     { dur: 2.6, cam: { follow: true, p0: () => V(spot.x + side.x * 3.2 + dir.x * 1.5, spot.y + 1.1, spot.z + side.z * 3.2 + dir.z * 1.5), t0: at(salim, 1.0), p1: () => V(spot.x + side.x * 2.6 + dir.x * 0.6, spot.y + 0.9, spot.z + side.z * 2.6 + dir.z * 0.6), t1: at(foe, 0.4), fov: 36 },
       run: (d, k, dt) => { walk(salim, spot, 1.6, dt || 1 / 60); } },
     { dur: lineDur(text), line: { who, text, rig: e.rig, cue: 'breath' }, cam: { follow: true, p0: faceDown, t0: mid, p1: () => faceDown().add(V(0, -0.1, 0)).lerp(mid(), 0.15), t1: mid, fov: 36 }, dof: headOf(foe), aperture: 1.6,
-      enter: () => { salim.pos.copy(spot); salim.facing = yawTo(salim.pos, foe.pos); }, run: (d, k, dt) => { kneel = Math.min(1, kneel + (dt || 1 / 60) * 2.5); salim.st.crouch = 0.65 * kneel; } },
-    { dur: 2.2, cam: { follow: true, p0: () => { const h = headOf(salim)(); return V(h.x - dir.x * 1.1 + side.x * 0.35, h.y - 0.25, h.z - dir.z * 1.1 + side.z * 0.35); }, t0: headOf(salim), fov: 30 }, dof: headOf(salim), aperture: 1.4 },
+      enter: () => { salim.pos.copy(spot); salim.facing = yawTo(salim.pos, foe.pos); }, run: (d, k, dt) => { up(); kneel = Math.min(1, kneel + (dt || 1 / 60) * 2.5); salim.st.crouch = 0.65 * kneel; } },
+    { dur: 2.2, cam: { follow: true, p0: () => { const h = headOf(salim)(); return V(h.x - dir.x * 1.1 + side.x * 0.35, h.y - 0.25, h.z - dir.z * 1.1 + side.z * 0.35); }, t0: headOf(salim), fov: 30 }, dof: headOf(salim), aperture: 1.4, run: () => up() },
+    ...choiceShots,
     { dur: 5.6, card, stinger: 'title', cam: { p0: at(salim, 1.6, -2.4, 0.8), t0: at(foe, 0.4), p1: () => at(salim, 9, -10, 3)(), t1: at(foe, 0), ease: 'io2' },
       run: (d, k) => { salim.st.crouch = 0.65 * Math.max(0, 1 - k * 3); } },
   ];
   // his surviving men step out of the frame for the scene (they are back when it ends)
   const hidden = g.enemies.filter((o) => o !== e && !o.dead && o.rig.visible && o.pos.distanceTo(e.pos) < 14);
   for (const o of hidden) o.rig.visible = false;
-  return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { salim.st.crouch = 0; for (const o of hidden) o.rig.visible = true; } };
+  return { actors, shots, tick: (d, dt) => { up(); for (const a of actors) tickActor(g, a, dt); }, end: () => { salim.st.crouch = 0; for (const o of hidden) o.rig.visible = true; if (spare) e.rig.visible = false; } };
 }
 
 // ------------------------------------------------------------------ the act's commander (Bardanes at the arch)
@@ -364,7 +384,12 @@ export function arrival(g) {
       envoySay('Your city is burning itself. Come north with the Pages. In Constantinople your Teacher would have a library, not a prison.'),
       ishaqToEnvoy('He had a prison here. He still chose to teach here.'),
       { ...envoySay('Then I will take them without you.'), run: (d, k, dt) => { envoy.facing = yawTo(envoy.pos, ishaq.pos); } },
-      { ...say('Salim', 'Let him try.'), run: (d, k, dt) => { face(); if (k > 0.15) { envoy.facing = yawTo(envoy.pos, away); walk(envoy, away, 1.4, dt); envoy.st.walkBlend = 1; envoy.st.phase += dt * 4; } } },
+      { ...say('Salim', ''), line: null, dur: 0.8, choice: { prompt: 'Arsaber turns to go.', options: [
+        { label: 'Refuse him.', fx: () => choose(g, 'arsaber', 'refuse') },
+        { label: 'Promise him a copy, freely given.', fx: () => choose(g, 'arsaber', 'promise') }] } },
+      { ...say('Salim', 'Let him try.'), when: () => chosen(g, 'arsaber') !== 'promise', run: (d, k, dt) => { face(); if (k > 0.15) { envoy.facing = yawTo(envoy.pos, away); walk(envoy, away, 1.4, dt); envoy.st.walkBlend = 1; envoy.st.phase += dt * 4; } } },
+      { ...say('Salim', 'Wait. When the copying is done, one copy goes north. Freely given. My word on it.'), when: () => chosen(g, 'arsaber') === 'promise', run: () => { face(); envoy.facing = yawTo(envoy.pos, salim.pos); } },
+      { ...envoySay('A caravan guard\'s word. My orders are the originals, but I will remember it.'), when: () => chosen(g, 'arsaber') === 'promise', run: (d, k, dt) => { if (k > 0.55) { envoy.facing = yawTo(envoy.pos, away); walk(envoy, away, 1.4, dt); envoy.st.walkBlend = 1; envoy.st.phase += dt * 4; } } },
       { ...say('Ishaq', 'He holds the quays, and his ship waits there. Start with Rhentakios, at the shipyard.'), enter: () => { envoy.rig.visible = false; face(); talk('Ishaq'); } },
     ];
   } else {
@@ -377,8 +402,8 @@ export function arrival(g) {
         cam: { p0: () => V(S.x + 6, 3.5, S.z + 12), t0: () => V(S.x, 1.5, S.z - 6), p1: () => V(S.x + 2, 3, S.z + 6), t1: () => V(S.x - 2, 1.4, S.z - 12), fov: 40 }, run: (d, k) => { if (k > 0.8) d.fade(1, 0.8); } },
       { dur: 3.0, fadeIn: 1.0, cam: { p0: () => V(ishaq.pos.x + 6, ishaq.pos.y + 3, ishaq.pos.z + 7), t0: at(ishaq, 1.3), p1: () => V(ishaq.pos.x + 4, ishaq.pos.y + 2.4, ishaq.pos.z + 5), t1: at(ishaq, 1.3) }, enter: () => face() },
       say('Ishaq', 'The scholars of the House of Wisdom will keep the Pages safe, if we can get them there.'),
-      say('Salim', 'Who holds them now?'),
-      say('Ishaq', 'Arsaber\'s men. Their captain is Krateros. Start with Narses, in the burned quarter.'),
+      say('Salim', 'Jabir wanted to see Baghdad. Not like this.'),
+      say('Ishaq', 'Arsaber\'s men hold the Pages here. Their captain is Krateros. Start with Narses, in the burned quarter.'),
     ];
   }
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
@@ -396,7 +421,15 @@ export function rawhFalls(g, b) {
     { dur: 3.2, line: { who: 'Salim', text: 'To whom?', rig: g.player.rig, cue: 'hm' }, cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim), run: () => { salim.facing = yawTo(salim.pos, boss.pos); } },
     { dur: lineDur('To Krateros, in al-Karkh. He will burn it before he lets your caliph\'s men take it back.'), line: { who: 'Kallinikos', text: 'To Krateros, in al-Karkh. He will burn it before he lets your caliph\'s men take it back.', rig: b.rig, cue: 'breath' },
       cam: { follow: true, p0: at(salim, 2.2, -2.8, 1.4), t0: at(boss, 0.6), fov: 38 }, dof: at(boss, 0.6), aperture: 1.0 },
-    { dur: 4.0, caption: 'That night Kallinikos\'s own boats carried Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
+    // Round 25: the choice. Behind the weir the reed village is burning
+    { dur: 0.8, choice: { prompt: 'Behind the weir, the reed village is burning.', options: [
+      { label: 'Chase the bundle up the canal tonight.', fx: () => choose(g, 'marsh', 'chase') },
+      { label: 'Stay and fight the fire with the marsh-folk.', fx: () => choose(g, 'marsh', 'stay') }] },
+      cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
+    { when: () => chosen(g, 'marsh') === 'chase', dur: 3.2, line: { who: 'Salim', text: 'Ishaq. Find us a boat.', rig: g.player.rig, cue: 'hm', expr: 'resolve' }, cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
+    { when: () => chosen(g, 'marsh') === 'chase', dur: 4.0, caption: 'That night Kallinikos\'s own boats carried Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
+    { when: () => chosen(g, 'marsh') === 'stay', dur: lineDur('The Pages can wait one night. These people cannot.'), line: { who: 'Salim', text: 'The Pages can wait one night. These people cannot.', rig: g.player.rig, cue: 'hm', expr: 'resolve' }, cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
+    { when: () => chosen(g, 'marsh') === 'stay', dur: 4.6, caption: 'They fought the fire until dawn. Then the marsh-folk poled Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); } };
 }
@@ -424,7 +457,10 @@ export function finale(g, b) {
   const LZ = 92;
   const shots = [
     { dur: 3.8, cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.0), p1: () => V(boss.pos.x + Math.sin(ang + 1.7) * 6, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.7) * 6), t1: at(boss, 0.5), fov: 34 } },
-    { dur: 4.4, caption: 'The Pages were still on the pyre. Not one had burned.',
+    { dur: 4.4, caption: 'The Pages were still on the pyre. Not one had burned.', when: () => chosen(g, 'marsh') !== 'stay',
+      enter: () => { const p = g.player; p.pos.set(pyre.x + 1.8, 0, pyre.z + 2.2); p.pos.y = heightAt(p.pos.x, p.pos.z); salim.facing = yawTo(salim.pos, pyre); act(salim, 'command', 2.4); },
+      cam: { p0: () => V(pyre.x + 5, pyre.y + 2.4, pyre.z + 5), t0: () => V(pyre.x, pyre.y + 1.2, pyre.z), p1: () => V(pyre.x + 4, pyre.y + 2, pyre.z + 4.2), t1: () => V(pyre.x, pyre.y + 1.2, pyre.z), fov: 36 }, run: (d, k) => { if (k > 0.8) d.fade(1, 0.7); } },
+    { dur: 4.8, caption: 'The Pages were still on the pyre. The edges of a few had caught. Hakam\'s copyists would mend them from memory.', when: () => chosen(g, 'marsh') === 'stay',
       enter: () => { const p = g.player; p.pos.set(pyre.x + 1.8, 0, pyre.z + 2.2); p.pos.y = heightAt(p.pos.x, p.pos.z); salim.facing = yawTo(salim.pos, pyre); act(salim, 'command', 2.4); },
       cam: { p0: () => V(pyre.x + 5, pyre.y + 2.4, pyre.z + 5), t0: () => V(pyre.x, pyre.y + 1.2, pyre.z), p1: () => V(pyre.x + 4, pyre.y + 2, pyre.z + 4.2), t1: () => V(pyre.x, pyre.y + 1.2, pyre.z), fov: 36 }, run: (d, k) => { if (k > 0.8) d.fade(1, 0.7); } },
     // the khan: Ishaq gives the Pages to a scholar of the House of Wisdom
@@ -478,6 +514,10 @@ export function docksFinale(g, b) {
       cam: { follow: true, p0: at(salim, 1.6, -0.9, 1.0), t0: headOf(boss), fov: 32 }, dof: headOf(boss), aperture: 1.2, run: () => kneel() },
     { dur: lineDur('We copy. That is the difference.'), line: { who: 'Salim', text: 'We copy. That is the difference.', rig: g.player.rig, cue: 'hm', expr: 'resolve' },
       cam: { follow: true, p0: () => { const h = headOf(salim)(), f = yawTo(salim.pos, boss.pos); return V(h.x + Math.sin(f) * 1.3 + Math.cos(f) * 1.35, h.y - 0.05, h.z + Math.cos(f) * 1.3 - Math.sin(f) * 1.35); }, t0: () => headOf(salim)().add(V(0, -0.06, 0)), fov: 32 }, dof: headOf(salim), aperture: 1.4, run: () => kneel() },
+    { when: () => chosen(g, 'arsaber') === 'promise', dur: lineDur('And I keep my word. The first copy that is not spoken for goes north, with you.'), line: { who: 'Salim', text: 'And I keep my word. The first copy that is not spoken for goes north, with you.', rig: g.player.rig, cue: 'hm', expr: 'resolve' },
+      cam: { follow: true, p0: () => { const h = headOf(salim)(), f = yawTo(salim.pos, boss.pos); return V(h.x + Math.sin(f) * 1.3 + Math.cos(f) * 1.35, h.y - 0.05, h.z + Math.cos(f) * 1.3 - Math.sin(f) * 1.35); }, t0: () => headOf(salim)().add(V(0, -0.06, 0)), fov: 32 }, dof: headOf(salim), aperture: 1.4, run: () => kneel() },
+    { when: () => chosen(g, 'arsaber') === 'promise', dur: lineDur('Then I go home with a book, and not a theft.'), line: { who: 'Arsaber', text: 'Then I go home with a book, and not a theft.', rig: b.rig, cue: 'breath', expr: 'sad' },
+      cam: { follow: true, p0: at(salim, 1.6, -0.9, 1.0), t0: headOf(boss), fov: 32 }, dof: headOf(boss), aperture: 1.2, run: () => kneel() },
     { dur: 4.2, caption: 'Arsaber\'s men threw down their bows. The copyists\' barge came down from the yard.', enter: (d) => d.fade(1, 0.8) },
     // on the quay: Hakam and Ishaq see the first copies off
     { dur: 3.6, fadeIn: 1.0, enter: () => {
@@ -490,7 +530,13 @@ export function docksFinale(g, b) {
     { dur: 5.5, caption: 'The barge took the current, and was gone around the bend by noon.', noWait: true,
       cam: { p0: () => V(bank(QZ) - 1, 2.2, QZ + 2), t0: () => boat.position.clone().add(V(0, 1.2, 0)), p1: () => V(bank(QZ) - 1.5, 2.6, QZ + 3), t1: () => boat.position.clone().add(V(0, 1.2, 0)), fov: 36 },
       enter: () => { ishaq.st.talk = false; }, run: (d, k) => { sail(0.12 + k * 0.88); if (k > 0.82) d.fade(1, 0.8); } },
-    { dur: 4.6, caption: 'Arsaber went home that winter, in an exchange of prisoners on the Lamis river.', enter: () => { boat.visible = false; b.rig.visible = false; } },
+    { dur: 4.6, caption: 'Arsaber went home that winter, in an exchange of prisoners on the Lamis river.', when: () => chosen(g, 'arsaber') !== 'promise', enter: () => { boat.visible = false; b.rig.visible = false; } },
+    { dur: 5.2, caption: 'Arsaber went home that winter, in an exchange of prisoners on the Lamis river. In his baggage was a copy of the Pages, freely given.', when: () => chosen(g, 'arsaber') === 'promise', enter: () => { boat.visible = false; b.rig.visible = false; } },
+    // Round 25: what became of the people Salim let live, or bound, or stayed for
+    { dur: 4.8, caption: 'Photeinos told the qadi everything. His testimony put the envoy\'s name before the court.', when: () => chosen(g, 'photeinos') === 'qadi' },
+    { dur: 4.8, caption: 'Photeinos never carried a sword again. A scribe in Wasit took on a Greek assistant that spring.', when: () => chosen(g, 'photeinos') === 'free' },
+    { dur: 4.8, caption: 'In the Nahrawan the reed village was rebuilt before the floods. They named a boat for Salim.', when: () => chosen(g, 'marsh') === 'stay' },
+    { dur: 4.8, caption: 'In the Nahrawan the burned village was a long time rebuilding.', when: () => chosen(g, 'marsh') === 'chase' },
     { dur: 7, fadeIn: 1.6, caption: 'That evening he set a lamp on the river for his brother, and one for each guard of the caravan.',
       enter: () => { boat.visible = false; scholar.rig.visible = false; floatLamps(); g.lighting?.set?.('dusk', 0); },
       cam: { p0: () => V(bank(LZ) - 4, 3.2, LZ + 14), t0: () => V(bank(LZ) + 5, -0.4, LZ), p1: () => V(bank(LZ) - 3, 2.4, LZ + 10), t1: () => V(bank(LZ) + 6, -0.4, LZ - 6), fov: 40 },
@@ -498,6 +544,11 @@ export function docksFinale(g, b) {
     { dur: 4.4, line: { who: 'Salim', text: 'Jabir. It is done.', rig: g.player.rig, cue: 'breath', expr: 'sad', react: 'warm' },
       enter: () => { const p = g.player; p.pos.set(bank(LZ) - 1.4, 0, LZ); p.pos.y = heightAt(p.pos.x, LZ); salim.facing = Math.PI / 2; ishaq.pos.set(p.pos.x - 1.4, heightAt(p.pos.x - 1.4, LZ - 1.2), LZ - 1.2); ishaq.facing = Math.PI / 2; },
       cam: { follow: true, p0: at(salim, 1.6, 2.2, -1.2), t0: headOf(salim), fov: 28 }, dof: headOf(salim), aperture: 1.2, run: (d, k, dt) => drift(dt || 1 / 60) },
+    // Round 25: if Ishaq confessed on the road, the account between them is settled here
+    { when: () => chosen(g, 'ishaq') === 'heard', dur: lineDur('I chose his road. I will not forget it.'), line: { who: 'Ishaq', text: 'I chose his road. I will not forget it.', rig: g.npc, cue: 'breath', expr: 'sad' },
+      cam: { p0: () => V(bank(LZ) + 1.2, 0.9, LZ + 1.2), t0: () => V(ishaq.pos.x, ishaq.pos.y + 1.5, ishaq.pos.z), fov: 32 }, enter: () => { ishaq.facing = yawTo(ishaq.pos, salim.pos); ishaq.st.talk = true; }, run: (d, k, dt) => drift(dt || 1 / 60) },
+    { when: () => chosen(g, 'ishaq') === 'heard', dur: lineDur('Neither will I. Light the next one, Ishaq.'), line: { who: 'Salim', text: 'Neither will I. Light the next one, Ishaq.', rig: g.player.rig, cue: 'hm', expr: 'warm' },
+      cam: { follow: true, p0: at(salim, 1.6, 2.2, -1.2), t0: headOf(salim), fov: 28 }, dof: headOf(salim), aperture: 1.2, enter: () => { ishaq.st.talk = false; }, run: (d, k, dt) => drift(dt || 1 / 60) },
     { dur: 4.0, line: { who: 'Ishaq', text: 'We keep the account.', rig: g.npc, cue: 'breath' },
       cam: { p0: () => V(bank(LZ) + 1.2, 0.9, LZ + 1.2), t0: () => V(salim.pos.x - 0.7, salim.pos.y + 1.45, LZ - 0.6), p1: () => V(bank(LZ) + 1.0, 0.95, LZ + 0.6), t1: () => V(salim.pos.x - 0.7, salim.pos.y + 1.45, LZ - 0.6), fov: 34 },
       enter: () => { ishaq.facing = yawTo(ishaq.pos, salim.pos); ishaq.st.talk = true; }, run: (d, k, dt) => drift(dt || 1 / 60) },

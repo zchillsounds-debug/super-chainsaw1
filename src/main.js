@@ -15,6 +15,10 @@ import { loadSave, applySave, saveGame } from './save.js';
 import { preloadGeo, flushGeo } from './geocache.js';
 import { Lighting } from './lighting.js';
 import { RIM_G } from './charmats.js';
+import { showOutlines } from './outline.js';
+import { setupCombat25 } from './combat25.js';
+import { setupEncounters25 } from './encounters25.js';
+import { setupStory25 } from './story25.js';
 import { WEATHER } from './triplanar.js';
 import { PlanarReflection, reflects, REFL, REFLECT_LAYER } from './reflect.js';
 import { canalX, WATER_Y } from './terrain.js';
@@ -28,7 +32,7 @@ import { PerfHUD } from './perf.js';
 import { setupProgression, qanatBurnTick, ASPECTS, SETS } from './progression.js';
 import { CLASSES } from './classes.js';
 import { lineClear } from './collision.js';
-import { setupNarrative, journalPanel } from './narrative.js';
+import { setupNarrative, journalPanel, converse } from './narrative.js';
 import { Settings } from './settings.js';
 import { Gamepads } from './gamepad.js';
 import { Tutorial } from './tutorial.js';
@@ -129,6 +133,9 @@ setupHamrin(game);
 setupHolds(game);
 setupStoryHolds(game);
 setupHubLife(game);
+setupStory25(game); game.converse25 = (n) => converse(game, n); // Round 25: barks, choices' effects, Ishaq, leaves and letters
+setupEncounters25(game); // Round 25: ambushes and champions on the main path
+setupCombat25(game); // Round 25: boss stagger, combos, signature moves (wraps last)
 const combatFx = game.combatFx = new CombatFX(game);
 const ambient = game.ambient = new Ambient(game, QUALITY);
 const tutorial = new Tutorial(game);
@@ -330,6 +337,7 @@ function frame() {
       heroLight.position.copy(_ck); heroLight.intensity = 7 + hk * 0.5;
     } else { heroLight.intensity = mode === 'game' ? hk : 0; heroLight.position.set(c.x, (c.y || 0) + 3.4, c.z + 1.2); }
     // Round 24: from the overhead play camera figures are small: a brighter rim lifts them off the ground (scenes keep the softer one)
+    showOutlines(camera, mode === 'game' && !game.cinematic); // Round 25: outlines in play only
     RIM_G.value.copy(L.sunCol).lerp(L.hemiSky, 0.35).multiplyScalar((0.9 + (L.hero || 0) / 12) * (game.cinematic || mode !== 'game' ? 1 : 1.6));
   }
   if (vol) {
@@ -347,7 +355,7 @@ function frame() {
       for (let z = c.z - 60; z <= c.z + 30 && !near; z += 3) if (_frus.containsPoint(_pp.set(canalX(z), -0.55, z))) near = true;
     }
     reflection.active = near && !game.interior && settings.s.reflections !== false;
-    if ((reflTagT -= dt) <= 0) { reflTagT = 1.5; scene.traverse((o) => { if (o.isSkinnedMesh && !o.layers.isEnabled(REFLECT_LAYER)) o.layers.enable(REFLECT_LAYER); }); }
+    if ((reflTagT -= dt) <= 0) { reflTagT = 1.5; scene.traverse((o) => { if (o.isSkinnedMesh && !o.userData.outline && !o.layers.isEnabled(REFLECT_LAYER)) o.layers.enable(REFLECT_LAYER); }); }
     reflection.update(perfLevel >= 2 ? 3 : 2);
   }
   REFL.uRipT.value = t;
@@ -374,6 +382,7 @@ if (reflection) scene.traverse((o) => { if (o.isLight) o.layers.enable(REFLECT_L
 {
   world.cullPaused = true; // the loop keeps running while the compile awaits: don't let it hide far props again
   const prevRT = renderer.getRenderTarget();
+  showOutlines(camera, true);
   try { renderer.setRenderTarget(composer.readBuffer); await renderer.compileAsync(scene, camera); } catch (e) { /* compile lazily */ }
   if (reflection) try { renderer.setRenderTarget(reflection.rt); await renderer.compileAsync(scene, reflection.cam); } catch (e) { /* compile lazily */ }
   renderer.setRenderTarget(prevRT);

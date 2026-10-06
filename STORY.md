@@ -44,3 +44,14 @@ While the caliph's two sons fight over Baghdad, an envoy from Constantinople, **
 
 ## Who stays Abbasid
 Salim, Ishaq, Hakam, the hub people (Yusuf, Bishr, 'Amr, Kathir, the side-quest givers), the hired guards (Ma'n, Dirar, Tamim, Talha), the four classes, the music, the maps and the holds' layouts.
+
+## Round 25: choices, voices, letters
+- **Three choices** (in the scenes; the first option is taken if a scene is skipped before it):
+  1. **Photeinos** is beaten, not killed. Bind him for the qadi in Baghdad (+15 Renown; the ending: his testimony names the envoy before the court) or let him go (on the quays a purse waits, signed "P.": "One page was enough"; the ending: he copies letters for a scribe in Wasit).
+  2. **Behind the weir the reed village burns** after Kallinikos falls. Chase the bundle that night (+10 Renown; not one Page burns) or stay and fight the fire (a legendary gift from the marsh in al-Karkh; a few Pages' edges catch and are mended from memory; the ending: they named a boat for Salim).
+  3. **The parley:** refuse Arsaber, or promise him a copy, freely given. If promised, Salim keeps his word at the end ("Then I go home with a book, and not a theft") and Arsaber goes home with a copy.
+- **Ishaq's confession** (the first talk outside the Sawad): he hid the chest in the caravan because no one searches a guard's mules; he chose Jabir's road. Salim answers either way; at the lamps Ishaq says "I chose his road. I will not forget it." and Salim: "Neither will I. Light the next one, Ishaq."
+- **Salim's grief,** a line as each region opens: Two more days to Baghdad / Jabir hated boats / he wanted to see the paper-sellers' lane / he would have counted every barge / Tatzates is up here somewhere.
+- **The hired guards speak** after fights, at ambushes, champions, bosses and low health. The hub people (Yusuf, Bishr, 'Amr) have a line for each act.
+- **Leaves and Letters:** twelve pieces of writing, three per story region: burned leaves of the Pages (secular sayings), soldiers' letters home, and Arsaber's dispatches to the Logothete, which show him doubting the burning. All twelve: the Teacher's Inkwell.
+- **Champions:** Rhaptes (Sawad), Kontos (marsh), Mylonas (al-Karkh), Karykes (the quays), each camped beside the main road with his men.

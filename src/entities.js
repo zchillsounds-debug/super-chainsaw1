@@ -1,3 +1,4 @@
+import { addOutline } from './outline.js';
 import * as THREE from 'three';
 import { humanoid } from './characters.js';
 import { TYPES20 } from './foes20.js';
@@ -91,6 +92,7 @@ export function captainLook(name = '') {
 export function makeEnemy(type, level, opts = {}) {
   const T = TYPES[type];
   const rig = T.build(opts.elite && !T.boss ? captainLook(opts.name || type) : {});
+  addOutline(rig.userData?.parts ? rig : rig.userData?.rider || rig, opts.elite || T.boss ? 'elite' : 'foe');
   const scale = 1 + (level - 1) * 0.04;
   const e = {
     type, T, rig, level, name: opts.name || T.name, elite: !!opts.elite, boss: !!T.boss,

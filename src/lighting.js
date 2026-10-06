@@ -17,7 +17,8 @@ export const PRESETS = {
   dawn: { sun: v(0.7, 0.24, 0.45), sunCol: c(0xffb090), sunI: 2.6, hemiSky: c(0xb0b8d0), hemiGnd: c(0x6a4a3a), hemiI: 0.5, fog: c(0xd8a898), fogD: 0.0052, exp: 1.0, env: 0.35, hero: 2.5, vol: 0.032, fire: 0.8,
     sky: { zen: c(0x3a5a98), mid: c(0xc8a0a8), hor: c(0xffb490), gnd: c(0x705048), glow: c(0xffa070), cloud: c(0xffd0c0), stars: 0, disk: 16 }, water: c(0xe8b0a0), dusk: 0.1, lut: 3 },
   // Act IV: a hazy marsh morning, the sun low and white through the mist off the water
-  mist: { sun: v(0.6, 0.42, 0.5), sunCol: c(0xfff0d0), sunI: 2.4, hemiSky: c(0xb8c8c8), hemiGnd: c(0x4a5038), hemiI: 0.62, fog: c(0xb4bcb0), fogD: 0.0072, exp: 1.02, env: 0.42, hero: 2, vol: 0.05, fire: 0.8,
+  mist: { sun: v(0.6, 0.42, 0.5), sunCol: c(0xffe6b8), sunI: 2.9, hemiSky: c(0xb4c8cc), hemiGnd: c(0x4e5a30), hemiI: 0.62, fog: c(0xbcc0a8), fogD: 0.0054, // Round 25: warmer, clearer morning (it read muted and grey)
+    exp: 1.02, env: 0.42, hero: 2, vol: 0.05, fire: 0.8,
     sky: { zen: c(0x5a7a98), mid: c(0xb8c4c0), hor: c(0xe8e0c8), gnd: c(0x5a6050), glow: c(0xfff0c8), cloud: c(0xf0ece0), stars: 0, disk: 14 }, water: c(0xd8dcd0), dusk: 0, lut: 5 },
   // Act V: al-Karkh in the late afternoon, the light thick and amber with smoke
   haze: { sun: v(-0.7, 0.36, 0.42), sunCol: c(0xffc090), sunI: 2.7, hemiSky: c(0xa8a098), hemiGnd: c(0x4a3e34), hemiI: 0.55, fog: c(0x8a7c70), fogD: 0.0066, exp: 1.0, env: 0.32, hero: 4, vol: 0.04, fire: 1.25,

@@ -1,3 +1,4 @@
+import { addOutline } from './outline.js';
 import * as THREE from 'three';
 import { humanoid, animateHumanoid, camel, animateCamel, horse, animateHorse } from './characters.js';
 import { IS_CITY } from './region.js';
@@ -53,7 +54,7 @@ export function setupCompanion(g) {
   function spawn(kind) {
     despawn();
     const K = KINDS[kind];
-    const rig = humanoid(K.look); g.scene.add(rig);
+    const rig = humanoid(K.look); g.scene.add(rig); addOutline(rig, 'ally');
     const back = tmp.set(-Math.sin(p.facing), 0, -Math.cos(p.facing));
     const pos = p.pos.clone().addScaledVector(back, 2).add(new THREE.Vector3(1, 0, 0)); resolve(pos, 0.4); pos.y = heightAt(pos.x, pos.z);
     C = { kind, K, rig, pos, facing: p.facing, cd: 0, st: { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, dead: false, deadT: 0 }, holdAt: pos.clone(), path: null, radius: 0.45, hp: 1, maxHp: 1, down: false, helpT: 0, upT: 0 };

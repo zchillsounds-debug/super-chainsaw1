@@ -16,7 +16,7 @@ const SITE_NAMES = {
   docks: { village: 'The Quay Khan', serai: 'The Warehouses', kiln: 'The Boatyard', arch: 'The Bridge of Boats' },
   hamrin: { village: 'The Hill Camp', serai: 'The Quarry Galleries', kiln: 'The Cliff Fort', arch: 'The Gorge Bridge', hold: 'Tatzates\' Hold' },
 }[REGION];
-const KEY = 'sob.zoom2'; // Round 20: new key so the new overhead default replaces older saved zooms
+const KEY = 'sob.zoom3'; // Round 25: new key so the closer default (1.1) replaces older saved zooms
 
 export function setupTravel(g) {
   // ---------------------------------------------------------------- zoom

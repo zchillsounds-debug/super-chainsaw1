@@ -331,14 +331,14 @@ export function createTerrain() {
         vec3 cMud = mud * mix(0.85, 1.1, dE.r);
         vec3 road = mix(vec3(0.40,0.31,0.22), vec3(0.47,0.37,0.27), n3);
         #if RG == 1
-          road = mix(vec3(0.29,0.23,0.16), vec3(0.36,0.28,0.19), n3); // Round 24: trodden brown silt (it read as a grey sheet)
+          road = mix(vec3(0.41,0.34,0.24), vec3(0.49,0.40,0.28), n3); // Round 25: a pale, dry trodden causeway (the darker silt still read as a dark smear under the mist)
         #elif RG >= 2
           road = mix(vec3(0.40,0.35,0.30), vec3(0.47,0.41,0.34), n3);
         #endif
         vec3 cRoad = road * dR.r;
         #if RG == 1
           cRoad = mix(cRoad, peb(dR.b) * 0.9, dR.g * 0.35); // few pebbles on a marsh causeway
-          cRoad *= 1.0 - smoothstep(0.55, 0.75, fb(wq*0.3 + 4.0)) * 0.3; // darker, wetter patches
+          cRoad *= 1.0 - smoothstep(0.55, 0.75, fb(wq*0.3 + 4.0)) * 0.16; // darker, wetter patches
         #else
           cRoad = mix(cRoad, peb(dR.b) * 1.05, dR.g * 0.8);
         #endif

@@ -179,43 +179,43 @@ Object.assign(SKILL_ICONS, {
 const arc = (g, p, dir, r, cos, fn) => alive(g, (e) => { const v = tmp.copy(e.pos).sub(p.pos).setY(0), d = v.length(); if (d < r + e.radius && (d < 0.8 || v.normalize().dot(dir) > cos)) fn(e); });
 export const ALT_SKILLS = {
   faris: [
-    { lvl: 15, id: 'rally', name: 'Rallying Cry', icon: 'rally', cd: 18, mana: 20, buff: 'rally', desc: '+25% damage and +20 armour for 6 seconds', use(g, p) {
+    { lvl: 5, id: 'rally', name: 'Rallying Cry', icon: 'rally', cd: 18, mana: 20, buff: 'rally', desc: '+25% damage and +20 armour for 6 seconds', use(g, p) {
       p.buffs.rally = 6; g.audio.levelUp?.(); g.fx.ring(p.pos, C(3, 1.4, 0.6), 0.5, 6, 0.8); g.recalcStats();
     } },
-    { lvl: 20, id: 'sweep', name: 'Sweeping Cut', icon: 'sweep', cd: 6, mana: 16, aim: true, desc: 'A wide cut through every foe in front of you', use(g, p) {
+    { lvl: 12, id: 'sweep', name: 'Sweeping Cut', icon: 'sweep', cd: 6, mana: 16, aim: true, desc: 'A wide cut through every foe in front of you', use(g, p) {
       const { dir } = dirToCursor(g); faceDir(p, dir); p.st.action = 'attack'; p.st.actionT = 0; p.actionDur = 0.55; g.audio.whoosh();
       p.pendingHit = { at: 0.4, fn: () => { arc(g, p, dir, 3.6, -0.2, (e) => { const r = g.rollDamage(1.7); g.damageEnemy(e, r.d, r.crit, p.pos, 'normal', { weight: 1.4, knock: 2 }); }); g.fx.ring(tmp.copy(p.pos).addScaledVector(dir, 1.2), C(2.4, 2, 1.4), 0.5, 3.6, 0.3, 0.6); } };
     } },
   ],
   rami: [
-    { lvl: 15, id: 'pin', name: 'Pinning Shot', icon: 'pin', cd: 5, mana: 12, desc: 'A heavy arrow that pins a foe in place for 2.5 seconds', use(g, p) {
+    { lvl: 5, id: 'pin', name: 'Pinning Shot', icon: 'pin', cd: 5, mana: 12, desc: 'A heavy arrow that pins a foe in place for 2.5 seconds', use(g, p) {
       const e = g.pickTarget(16); if (!e) { g.ui.toast('No foe in reach'); return false; }
       const dir = tmp.copy(e.pos).sub(p.pos).setY(0).normalize().clone(); faceDir(p, dir); p.st.action = 'shoot'; p.st.actionT = 0.3; p.actionDur = 0.4;
       g.playerShot(dir, { speed: 40, mult: 1.8, kind: 'arrow', glow: C(2.4, 1.4, 1), weight: 1 }); g.audio.whoosh();
       setTimeout(() => { if (!e.dead) { e.slowT = 2.5; e.slowK = 0.95; e.staggerT = Math.max(e.staggerT || 0, 0.6); } }, Math.min(500, e.pos.distanceTo(p.pos) / 40 * 1000));
     } },
-    { lvl: 20, id: 'scatter', name: 'Scatter Volley', icon: 'scatter', cd: 7, mana: 18, aim: true, desc: 'Seven arrows loosed in a wide fan', use(g, p) {
+    { lvl: 12, id: 'scatter', name: 'Scatter Volley', icon: 'scatter', cd: 7, mana: 18, aim: true, desc: 'Seven arrows loosed in a wide fan', use(g, p) {
       const { dir } = dirToCursor(g); faceDir(p, dir); p.st.action = 'shoot'; p.st.actionT = 0.2; p.actionDur = 0.45; g.audio.whoosh();
       for (let i = -3; i <= 3; i++) { const a = Math.atan2(dir.x, dir.z) + i * 0.17; g.playerShot(new THREE.Vector3(Math.sin(a), 0, Math.cos(a)), { speed: 32, mult: 0.9, kind: 'arrow', weight: 0.5 }); }
     } },
   ],
   naffat: [
-    { lvl: 15, id: 'mortar', name: 'Naft Mortar', icon: 'mortar', cd: 9, mana: 26, aim: true, desc: 'Three pots fall in turn on the target ground', use(g, p) {
+    { lvl: 5, id: 'mortar', name: 'Naft Mortar', icon: 'mortar', cd: 9, mana: 26, aim: true, desc: 'Three pots fall in turn on the target ground', use(g, p) {
       const { dir, point } = dirToCursor(g); faceDir(p, dir); p.st.action = 'throw'; p.st.actionT = 0; p.actionDur = 0.45; g.audio.whoosh();
       const d = Math.min(14, Math.hypot(point.x - p.pos.x, point.z - p.pos.z));
       for (let i = 0; i < 3; i++) { const c = p.pos.clone().addScaledVector(dir, d).add(new THREE.Vector3((Math.random() - 0.5) * 3, 0, (Math.random() - 0.5) * 3)); c.y = heightAt(c.x, c.z);
         g.telegraph(c, 2.4, 0.6 + i * 0.35, () => { g.fx.flash(tmp.copy(c).setY(c.y + 1), 0xff7a30, 30, 0.3, 10); g.audio.boom(); alive(g, (e) => { if (e.pos.distanceTo(c) < 2.4 + e.radius) { const r = g.rollDamage(1.4, true); g.damageEnemy(e, r.d, r.crit, c, 'fire', { weight: 0.8, knock: 1.2 }); e.burn = Math.max(e.burn || 0, 2); } }); }, false, true); }
     } },
-    { lvl: 20, id: 'brand', name: 'Burning Brand', icon: 'brand', cd: 16, mana: 24, buff: 'brand', desc: 'For 8 seconds every hit sets the foe alight', use(g, p) {
+    { lvl: 12, id: 'brand', name: 'Burning Brand', icon: 'brand', cd: 16, mana: 24, buff: 'brand', desc: 'For 8 seconds every hit sets the foe alight', use(g, p) {
       p.buffs.brand = 8; g.audio.boom(); g.fx.flash(tmp.copy(p.pos).setY(p.pos.y + 1.4), 0xff7a30, 20, 0.4, 8);
     } },
   ],
   ayyar: [
-    { lvl: 15, id: 'mark', name: 'Death Mark', icon: 'mark', cd: 10, mana: 14, desc: 'Marked foe takes 35% more damage for 8 seconds', use(g, p) {
+    { lvl: 5, id: 'mark', name: 'Death Mark', icon: 'mark', cd: 10, mana: 14, desc: 'Marked foe takes 35% more damage for 8 seconds', use(g, p) {
       const e = g.pickTarget(14); if (!e) { g.ui.toast('No foe in reach'); return false; }
       e.markT = 8; p.target = e; g.audio.whoosh(); g.fx.ring(e.pos, C(3, 0.6, 0.4), 0.3, 1.6, 0.6);
     } },
-    { lvl: 20, id: 'powder', name: 'Blinding Powder', icon: 'powder', cd: 9, mana: 14, aim: true, desc: 'A cloud of powder that dazes every foe in front of you', use(g, p) {
+    { lvl: 12, id: 'powder', name: 'Blinding Powder', icon: 'powder', cd: 9, mana: 14, aim: true, desc: 'A cloud of powder that dazes every foe in front of you', use(g, p) {
       const { dir } = dirToCursor(g); faceDir(p, dir); p.st.action = 'throw'; p.st.actionT = 0.2; p.actionDur = 0.3; g.audio.whoosh();
       g.fx.burst(tmp.copy(p.pos).addScaledVector(dir, 2).setY(p.pos.y + 1.2), 30, { speed: 3, life: 1.2, size: 0.8, size1: 2.2, color: C(0.85, 0.82, 0.72), alpha: 0.5, smoke: true, drag: 2 });
       arc(g, p, dir, 4.5, 0.35, (e) => { if (!e.boss) { e.staggerT = 2.2; e.st.action = null; e.alerted = false; e.lost = 1.5; } else e.staggerT = Math.max(e.staggerT || 0, 0.5); });

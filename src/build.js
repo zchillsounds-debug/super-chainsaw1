@@ -7,7 +7,7 @@ import { t } from './i18n.js';
 
 // Round 18: the fifth skill slot and alternate skills, discipline aspects, gems at Bishr's forge, and stash tabs.
 
-export const SLOT5_LEVEL = 15;
+export const SLOT5_LEVEL = 5; // Round 25: the fifth slot and the first new skill come before the first lieutenant (was 15)
 const SLOTS = ['rmb', 's1', 's2', 's3', 's4'];
 const SLOT_LABEL = { rmb: 'Right', s1: '1', s2: '2', s3: '3', s4: '4' };
 
@@ -62,7 +62,7 @@ export function setupBuild(game) {
   const lvlUp = g.levelUp.bind(g);
   g.levelUp = () => {
     lvlUp();
-    if (p.level === SLOT5_LEVEL) g.ui.banner(t('A Fifth Skill'), t('A new skill slot opens. Choose your skills in Disciplines.'), 3200);
+    if (p.level === SLOT5_LEVEL) { const a = (ALT_SKILLS[p.cls] || []).find((x) => x.lvl === p.level); g.ui.banner(t('A Fifth Skill'), a ? `${t('New skill')}: ${t(a.name)}` : t('A new skill slot opens. Choose your skills in Disciplines.'), 3600); g.audio.stinger?.('title'); }
     else for (const a of ALT_SKILLS[p.cls] || []) if (a.lvl === p.level) g.ui.toast(`${t('New skill')}: <b>${t(a.name)}</b>`, 'lvl');
     if (p.level >= SLOT5_LEVEL) g.rebuildSkills();
   };

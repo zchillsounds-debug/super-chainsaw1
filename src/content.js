@@ -328,6 +328,7 @@ export function startNewGamePlus(game) {
   for (const q of game.quests) q.done = false;
   game.savedQuests = {}; // every region's story starts over, not just this one's
   p.side = {}; p.named = {}; p.enginesBurnt = 0;
+  if (p.s25) { p.s25.ch = {}; p.s25.said = {}; } // Round 25: the choices are made again (found leaves stay found)
   // Round 22: the story holds fill again (the Hamrin holds keep their state)
   if (p.holds) for (const k of ['dam', 'kilns', 'stockade', 'sunken', 'quarter', 'vaults', 'shipyard', 'hulks']) delete p.holds[k];
   saveGame(game);

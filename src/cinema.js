@@ -32,6 +32,7 @@ export class Director {
       <div class="sub"><div class="por"><canvas width="96" height="96"></canvas></div><div class="stx"><div class="sname"></div><div class="sline"></div></div></div>
       <div class="card"><div class="ar"></div><div class="rule"><i></i><b></b><i></i></div><div class="en"></div><div class="csub"></div></div>
       <div class="caption"></div>
+      <div class="cchoice"></div>
       <div class="tapnext"><span>Tap to continue</span><i>▸</i></div>
       <div class="skip"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" class="bg"/><circle cx="18" cy="18" r="15" class="fg"/></svg><span>Hold to skip</span></div>
       <div class="cfade"></div>`;
@@ -68,30 +69,49 @@ export class Director {
     this.i++;
     if (this.i >= d.shots.length) { this.end(false); return; }
     const s = this.shot = d.shots[this.i]; this.t = 0; this.lineDone = false;
+    if (s.when && !s.when()) { this.next(); return; } // Round 25: shots that only play after a given choice
     s.enter?.(this, s);
     const cam = s.cam || {};
     this.p0.copy(v3(cam.p0 || this.camera.position)); this.t0.copy(v3(cam.t0 || this.look));
     this.p1.copy(v3(cam.p1 || cam.p0 || this.p0)); this.t1.copy(v3(cam.t1 || cam.t0 || this.t0));
     this.fov0 = cam.fov0 ?? cam.fov ?? 36; this.fov1 = cam.fov1 ?? cam.fov ?? this.fov0;
     this.timeScale = s.slow ?? 1;
-    this.setLine(s.line); this.setCard(s.card); this.setCaption(s.caption);
+    this.setLine(s.line); this.setCard(s.card); this.setCaption(s.caption); this.setChoice(s);
     if (s.stinger) this.audio.stinger?.(s.stinger);
     if (s.fadeIn != null) { this.fadeCur = 1; this.fade(0, s.fadeIn); }
   }
+  // Round 25: a choice shot shows its options as buttons and waits for one (keys 1 and 2 work too)
+  setChoice(s) {
+    const box = this.$('.cchoice'); box.innerHTML = ''; box.classList.toggle('show', !!s?.choice);
+    if (!s?.choice) return;
+    s.chosen = null;
+    const pick = (i) => { if (s.chosen != null || this.shot !== s) return; s.chosen = i; removeEventListener('keydown', key); box.classList.remove('show'); s.choice.options[i].fx?.(); this.audio.click?.(); this.next(); };
+    const key = (e) => { const k = +e.key; if (k >= 1 && k <= s.choice.options.length) pick(k - 1); };
+    addEventListener('keydown', key);
+    if (s.choice.prompt) { const h = document.createElement('div'); h.className = 'cprompt'; h.textContent = t(s.choice.prompt); box.appendChild(h); }
+    s.choice.options.forEach((o, i) => {
+      const b = document.createElement('button'); b.className = 'copt'; b.innerHTML = `<span>${i + 1}</span>${t(o.label)}`;
+      b.addEventListener('pointerdown', (e) => e.stopPropagation()); b.addEventListener('pointerup', (e) => e.stopPropagation());
+      b.addEventListener('click', (e) => { e.stopPropagation(); pick(i); }); box.appendChild(b);
+    });
+  }
   advance() {
+    if (this.shot?.choice) return; // a choice is never tapped past
     // a tap finishes the typed line first, then moves on
     if (this.shot?.line && !this.lineDone) { this.typed = 1e9; return; }
     if (this.shot?.line || this.shot?.caption || this.shot?.tapNext) this.next();
   }
   skip() {
     const d = this.def; if (!d) return;
-    for (let i = this.i; i < d.shots.length; i++) d.shots[i].skip?.(this);
+    if (this.shot?.choice && this.shot.chosen == null) return; // the choice itself can't be skipped
+    // choices in the part skipped take their first option
+    for (let i = this.i; i < d.shots.length; i++) { const s = d.shots[i]; if (s.choice && s.chosen == null) { s.chosen = 0; s.choice.options[0].fx?.(); } s.skip?.(this); }
     this.end(true);
   }
   end(skipped) {
     const d = this.def; if (!d) return;
     for (const r of this.faces()) r.userData.expr = null;
-    this.def = null; this.shot = null; this.timeScale = 1;
+    this.def = null; this.shot = null; this.timeScale = 1; this.$('.cchoice').classList.remove('show');
     this.endedBlack = this.fadeCur > 0.9;
     // Round 24: hand the camera back gently: the play camera eases out of the last shot instead of cutting to it
     this.outBlend = d.noBlend || this.endedBlack ? null : { pos: this.camera.position.clone(), quat: this.camera.quaternion.clone(), fov: this.camera.fov, t: 0, dur: 0.9 };
@@ -234,7 +254,7 @@ export class Director {
     const waits = !!(s.line || s.caption) && !s.noWait;
     const ready = this.t >= s.dur && (!s.line || this.lineDone);
     this.$('.tapnext').classList.toggle('show', waits && ready);
-    if (this.def && this.shot === s && ready && (!waits || this.t >= s.dur + 20)) this.next();
+    if (this.def && this.shot === s && ready && !s.choice && (!waits || this.t >= s.dur + 20)) this.next();
     return true;
   }
 }

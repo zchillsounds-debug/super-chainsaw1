@@ -1,3 +1,4 @@
+import { addOutline } from './outline.js';
 import { sellPrice, SALVAGE, MAT_NAMES } from './hub.js';
 import * as THREE from 'three';
 import { REFL } from './reflect.js';
@@ -35,7 +36,7 @@ export class Game {
     this.npcs = []; this.interactables = [];
     this.t = 0; this.enemies = []; this.projectiles = []; this.hazards = []; this.drops = []; this.trails = [];
     this.mouse = new THREE.Vector2(); this.mouseScreen = { x: 0, y: 0 };
-    this.keys = {}; this.lmb = false; this.shake = 0; this.camZoom = 1.25; this.hitStop = 0;
+    this.keys = {}; this.lmb = false; this.shake = 0; this.camZoom = 1.1; // Round 25: a little closer (was 1.25), figures read better on a phone this.hitStop = 0;
     this.camPos = new THREE.Vector3(); this.started = false;
     this.createPlayer();
     this.spawnEnemies();
@@ -202,7 +203,7 @@ export class Game {
   setClass(cls, fresh = false) {
     const p = this.player, K = this.kit = CLASSES[cls] || CLASSES.faris; p.cls = cls in CLASSES ? cls : 'faris'; this.ui.curCls = p.cls;
     if (p.rig) this.scene.remove(p.rig);
-    const rig = p.rig = humanoid(K.look); this.scene.add(rig);
+    const rig = p.rig = humanoid(K.look); this.scene.add(rig); addOutline(rig, 'hero');
     rig.position.copy(p.pos); rig.rotation.y = p.facing;
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.68, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffd890, transparent: true, opacity: 0.35, depthWrite: false }));
     ring.position.y = 0.06; rig.add(ring); this.heroRing = ring;
