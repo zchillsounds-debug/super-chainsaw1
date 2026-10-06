@@ -1,7 +1,7 @@
-# Madinat al-Salam: Handoff (Round 24 shipped)
+# Madinat al-Salam: Handoff (Round 25 shipped)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-fobl3t` of zchillsounds-debug/super-chainsaw1. Round 24 (smooth transitions, Arsaber's new story beats, a graphics pass) is shipped.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-93087f37-t3mvls` of zchillsounds-debug/super-chainsaw1. Round 25 (boss combat, encounter pacing, onboarding, phone readability, story choices, banter and letters) is shipped.
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
@@ -12,6 +12,70 @@
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
+
+## Round 25: gameplay and story
+User decisions: all four gameplay areas (combat feel and bosses, encounter pacing, the first hour, phone readability) and all four story areas (character arcs, companion and NPC voices, environmental storytelling, choices with consequences); rework of weak existing lines allowed; critique loops until the context limit, then ship. The three choices were approved as proposed.
+
+**Readability (`outline.js`, new):** a thin inverted-hull outline on Salim (dark brown), foes (dark red), elites and bosses (bright red), and the hired guard (dark teal). One shader program (`customProgramCacheKey 'outline25'`), compiled at load. The outline width is constant on screen. The outlines are on camera layer 3 (`showOutlines(camera, on)` every frame in `main.js`: in play only, hidden in cutscenes) and are kept off the reflection layer. The default zoom is 1.1 (was 1.25; new key `sob.zoom3`). The touch target bar moved below the tracker pill (it overlapped). The marsh is warmer and clearer (`mist` preset) with a pale causeway (it read as a dark smear).
+
+**Combat (`combat25.js`, new, set up last in `main.js`; it wraps `bossAI`, `damageEnemy`, `damagePlayer` and `killEnemy`):**
+- **Boss poise:** every act boss has a poise bar (`.bpoise` under the boss bar), sized at 2.2% of max HP. Emptying it **breaks** him for 3.2 s: he reels and takes ×1.5 damage (the old `staggerT` bonus). Each break raises the next threshold by 20%. A toast on the first break: "He reels: strike now!"
+- **Combos (`KITS`):** up close, a boss strings 2–3 swings (clip, duration, hit point, reach, damage). The finisher glints and marks its ground, and it can be **parried** (an evade inside 0.22 s), which removes half his poise.
+- **Signature moves:**
+  - Bardanes: `charge`, a marked lane. If he misses he is winded for 1.6 s.
+  - Kallinikos: `fireline`, 3–5 lanes of liquid fire spreading outward.
+  - Krateros: `collapse`, a ring of burning stalls with one gap, then the middle falls in.
+  - Arsaber: `guard`, blade raised. A hit into it triggers a parryable riposte; if the guard runs out, he lunges in a combo.
+- **Last foe:** when the last of a 3+ foe fight falls, a short slow-motion beat.
+
+**Pacing (`encounters25.js`, new):** per story region, two **ambushes** on the main path (hub → first site and second site → last fight, found with `findPath`):
+- Wave 1 is 4–5 foes rising around Salim. When it is down to one, wave 2 comes from a flank with archers. Clearing it pays gold, an item and 2 Renown.
+- They only spring after 6 s of quiet.
+
+Also one **champion** per region (Rhaptes, Kontos, Mylonas, Karykes), an elite with his retinue camped 7 m off the path between the first two sites. He calls out on aggro and drops a rare (30% legendary). Champions are spawned at load. `g.enc25` holds the state (per session, not saved).
+
+**First hour:**
+- `tutorial.js` hints wait for their moment: attack when a foe is near, skills when 3+ are near. On touch, the button they name pulses (`.tut-pulse`).
+- Evade and parry are taught at the first 3 glints within 6 m, with a short slow-down and the evade button pulsing. The lesson finishes on a parry.
+- No hint cards during boss fights.
+- The fifth skill slot and the first alternate skill open at **level 5** (`SLOT5_LEVEL`, was 15), the second at **12** (was 20), with a banner naming the new skill.
+- The guide trail also hides in boss fights and whenever a foe is alerted close by.
+
+**Story (`story25.js` + `scenes.js`, Arabic in `story25_ar.js` as `AR25`, merged last; see `STORY.md` "Round 25"):**
+- **Director (`cinema.js`):**
+  - A shot can carry `choice: { prompt, options: [{ label, fx }] }`. It shows buttons (keys 1/2 work), never auto-advances, and can't be skipped while showing. Skipping a scene before its choice takes option 0.
+  - `when: () => bool` skips a shot unless it holds.
+  - Choices are saved in `p.s25.ch` (`save.js` EXTRA `s25`; NG+ clears `ch` and `said`, while found letters stay).
+- **The three choices:**
+  - Photeinos is now **spared** (kneels like Arsaber, `e.spared`): qadi or free.
+  - After Kallinikos: chase the bundle, or stay for the burning reed village (fire shown in the distance).
+  - The parley: refuse Arsaber, or promise a copy.
+  - Consequences: Renown (`onChoice25`), the marsh gift in al-Karkh, Photeinos's purse on the quays, the Karkh pyre caption, Arsaber's lines and caption at the end, and consequence captions in `docksFinale`.
+- **Ishaq's confession:** the first talk outside the Sawad, then a `converse` reply. It closes at the lamps ("I chose his road…").
+- **Barks (`g.bark(who, text)`, `#bark25`):**
+  - Salim's Jabir line as each region opens (never mid-fight).
+  - Hired-guard lines (`GUARD[kind][ctx]`: fight, ambush, champion, hurt, boss).
+  - Yusuf, Bishr and 'Amr once per act.
+- **Campfire memories:** the first rest at a hold fire in each region shows a memory of Jabir at the top of the rest panel (`g.memory25`, hook in `holds.js` rest).
+- **Leaves and Letters:** 12 papers (3 per story region, `LEAVES`) near the sites. They glint, are picked up by walking over them (never mid-fight), and are read in the dialog box. All 12 earn the Teacher's Inkwell (a legendary amulet).
+- **Rewrites:** in al-Karkh, Salim's "Who holds them now?" became "Jabir wanted to see Baghdad. Not like this."
+
+**New scripts:**
+- `shots/r25boss.mjs <region> [out]`: combo, parry, break, signature and riposte.
+- `shots/r25story.mjs <region> [out] [option]`: the choice scene, the ambush in two waves, the champion, a letter, barks.
+- `shots/r25end.mjs <region> <photeinos> <marsh> <arsaber> [out]`: plays the ending with those choices and lists every line and caption.
+- `finaletest` now clicks a choice when one shows.
+
+**Workflow:** edits in the main checkout; tests run from a copy at `/home/user/wt25` (`/home/user/sync25.sh`, a tar copy; there is no rsync). **Never sync while a test runs**: Vite reloads and the test dies with "Execution context was destroyed".
+
+**Shipped:** sweep clean (exit 0, "errors: none"): r22holds dam, finaletest marsh/docks/sawad, r18test faris, r15test sawad, r16test marsh, r17test karkh, r21holds quarry, traveltest, ngtest, r21rival docks; plus r25boss ×4 regions, r25story ×3 (both options), r25end docks. Artifact **version 23** at https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (1.71 MB inlined; smoke-tested from `file://` with mobile emulation: ready, touch UI, outlines and encounters present, no page errors). APK built by CI from the final push. Not re-run this round: r15/r16/r17 for the other regions, r18 for the other classes, r21/r22 for the other holds, trialtest, crafttest, benchtest, r21comp, r21mount, r21rift, r21hub. Run them first next round.
+
+**Next round: ideas (not approved):**
+- Device check on Android: the outline width and colours, the choice buttons, the bark position over the orbs, boss poise readability, the tutorial pulses.
+- Hamrin has no ambushes, champions or letters yet.
+- The headless shots can't judge the burning reed village in the marsh choice or the liquid-fire lanes at real frame rate; check them on a device.
+- A blade-trail ribbon was caught around Salim in one ending shot right after a kill (the trails may need hiding when a scene starts).
+- Still open from Round 24: the small pink squares at dusk.
 
 ## Round 24: transitions, story, graphics
 User decisions: a visual and graphics pass plus "stories and transitions for a smooth gameplay feel"; all four kinds of transition (region travel, cutscene in/out, hold and dungeon doors, combat to calm and boss entries); polish the story and add new beats; graphics targets: the Hamrin overworld, Byzantine close-ups, lighting and FX, and whatever the critique finds; ship the usual way at the end. Arsaber is spared, not killed.
@@ -609,6 +673,7 @@ The goal is about 8–12 hours for a first playthrough, up from about 1.5 today,
 3. (Fixed in Round 20: new camera work for the lieutenants' last words and the boss intro.)
 
 ## File map (src/)
+- **Round 25:** outline.js, combat25.js, encounters25.js, story25.js, story25_ar.js (also cinema.js choices, scenes.js, tutorial.js, holds.js rest, build.js, classes.js)
 - **Round 24:** story24_ar.js (most changes are in cinema.js, main.js, audio.js, audio2.js, scenes.js, terrain.js, lighting.js, hublife.js, index.html)
 - **Round 22:** storyholds.js, story22_ar.js (holds.js gained themes and the registry)
 - **Round 21:** rivals.js, hamrin.js, holds.js, hublife.js, story21_ar.js
