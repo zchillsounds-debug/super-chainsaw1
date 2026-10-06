@@ -8,4 +8,9 @@ export const AR26 = {
   'A shield wall: get round it, or break a guard with heavy blows': 'جدار من الدروع: التفّ حوله، أو اكسر دفاع أحدهم بضربات ثقيلة',
   'A horse archer circles: close in as he passes': 'رامي خيل يدور حولك: انقضّ عليه حين يمرّ',
   'Guard broken!': 'انكسر دفاعه!',
+  // ---- the bosses' second half
+  'Bardanes calls up his standard': 'بردانس يستدعي رايته',
+  'Again!': 'مرّة أخرى!', 'Fire on the water!': 'نار على الماء!', 'Burning beams!': 'جذوع مشتعلة!', 'Feint!': 'خدعة!',
+  'A feint: wait for the second glint': 'خدعة: انتظر اللمعة الثانية',
+  'Cart!': 'عربة!', 'Marked': 'مُستهدَف',
 };

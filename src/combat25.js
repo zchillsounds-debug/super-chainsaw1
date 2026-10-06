@@ -7,6 +7,9 @@
 //   in lanes, Krateros brings the burning stalls down in a ring around Salim (one way out), Arsaber stands on guard and
 //   ripostes anyone who strikes into it.
 // - The last foe of a fight falls in a short slow-motion beat.
+// Round 26: the second half of each fight plays differently (sig2, alternating with the first signature):
+//   Bardanes calls up a standard and two men and charges twice; Kallinikos sends liquid fire out in rings with gaps;
+//   Krateros drags burning beams down lanes that keep burning; Arsaber feints (a first glint with no blow behind it).
 import * as THREE from 'three';
 import { heightAt } from './terrain.js';
 import { resolve } from './collision.js';
@@ -16,10 +19,12 @@ const GOLD = new THREE.Color(3.2, 2.4, 1.0), WHITE = new THREE.Color(3.4, 3.2, 2
 
 // per boss type: the combo (clip, duration, hit point 0..1, reach, damage ×, arc) and the signature move
 const KITS = {
-  commander: { combo: [['slashA', 0.8, 0.55, 3.0, 0.7], ['slashB', 0.75, 0.55, 3.0, 0.7], ['slam', 1.25, 0.62, 3.4, 1.35, 'ring']], sig: 'charge', sigCd: 13 },
-  rawh: { combo: [['sweep', 0.85, 0.55, 3.2, 0.7], ['chop', 1.15, 0.62, 3.0, 1.25, 'ring']], sig: 'fireline', sigCd: 12 },
-  utba: { combo: [['slashA', 0.75, 0.55, 3.0, 0.65], ['thrust', 0.7, 0.55, 3.6, 0.7], ['slam', 1.2, 0.62, 3.4, 1.3, 'ring']], sig: 'collapse', sigCd: 14 },
-  ghanim: { combo: [['thrust', 0.6, 0.55, 3.8, 0.65], ['thrustHigh', 0.6, 0.55, 3.8, 0.65], ['sweep', 1.0, 0.6, 3.4, 1.25, 'arc']], sig: 'guard', sigCd: 9 },
+  commander: { combo: [['slashA', 0.8, 0.55, 3.0, 0.7], ['slashB', 0.75, 0.55, 3.0, 0.7], ['slam', 1.25, 0.62, 3.4, 1.35, 'ring']], sig: 'charge', sig2: 'doubleCharge', sigCd: 13 },
+  rawh: { combo: [['sweep', 0.85, 0.55, 3.2, 0.7], ['chop', 1.15, 0.62, 3.0, 1.25, 'ring']], sig: 'fireline', sig2: 'firewave', sigCd: 12 },
+  utba: { combo: [['slashA', 0.75, 0.55, 3.0, 0.65], ['thrust', 0.7, 0.55, 3.6, 0.7], ['slam', 1.2, 0.62, 3.4, 1.3, 'ring']], sig: 'collapse', sig2: 'beams', sigCd: 14 },
+  ghanim: { combo: [['thrust', 0.6, 0.55, 3.8, 0.65], ['thrustHigh', 0.6, 0.55, 3.8, 0.65], ['sweep', 1.0, 0.6, 3.4, 1.25, 'arc']], sig: 'guard', sig2: 'feint', sigCd: 9 },
+  // Round 26: Arsaber's second half: a false glint first, then the real blow on the second glint
+  ghanimFeint: [['thrustHigh', 0.55, 0.6, 3.8, 0, 'feint'], ['sweep', 0.85, 0.55, 3.6, 1.35, 'arc']],
 };
 
 export function setupCombat25(g) {
@@ -65,7 +70,7 @@ export function setupCombat25(g) {
   const beginStep = (b) => {
     const C = b.r25.combo, [clip, dur, , reach, , shape] = C.steps[C.i];
     b.st.action = clip; b.st.actionT = 0; C.t = 0; C.hit = false;
-    b.r25.parryable = !!shape;
+    b.r25.parryable = !!shape && shape !== 'feint';
     if (shape) {
       // the finisher: a glint on the blade and its ground marked a beat ahead
       g.telegraphTell(b); setTimeout(() => !b.dead && b.r25.combo && g.telegraphTell(b), 160);
@@ -80,6 +85,11 @@ export function setupCombat25(g) {
     // turn toward Salim until the blow commits, and step into each swing
     if (b.st.actionT < hitAt * 0.8) { const face = Math.atan2(p.pos.x - b.pos.x, p.pos.z - b.pos.z); b.facing += angDiff(b.facing, face) * Math.min(1, dt * 5); }
     if (b.st.actionT > 0.25 && b.st.actionT < hitAt) { b.pos.addScaledVector(tmp.set(Math.sin(b.facing), 0, Math.cos(b.facing)), dt * 1.8); resolve(b.pos, b.radius); b.pos.y = heightAt(b.pos.x, b.pos.z); }
+    if (!C.hit && b.st.actionT >= hitAt && shape === 'feint') {
+      C.hit = true; b.r25.parryable = false; g.audio.whoosh?.();
+      g.ui.damageNumber(b.pos, 'Feint!', 'block');
+      if (!b.r25.feintHint && !g.cinematic) { b.r25.feintHint = true; g.ui.toast('A feint: wait for the second glint', 'quest'); }
+    }
     if (!C.hit && b.st.actionT >= hitAt) {
       C.hit = true;
       const c = shape === 'ring' ? C.at : b.pos, d = p.pos.distanceTo(c);
@@ -99,9 +109,10 @@ export function setupCombat25(g) {
   // ---------------------------------------------------------------- signature moves
   const SIGS = {
     // Bardanes lowers his shield and charges down a marked lane; if he misses he is winded (open to blows)
-    charge(b) {
-      const p = g.player, dir = tmp.copy(p.pos).sub(b.pos).setY(0); const d = dir.length(); if (d < 5 || d > 22) return null;
+    charge(b, again = false) {
+      const p = g.player, dir = tmp.copy(p.pos).sub(b.pos).setY(0); const d = dir.length(); if (d < (again === 'back' ? 1 : 5) || d > 22) return null;
       dir.normalize(); const D = dir.clone(), end = b.pos.clone().addScaledVector(D, Math.min(18, d + 4)); end.y = heightAt(end.x, end.z);
+      if (again === 'back') end.copy(b.pos).addScaledVector(D, Math.max(10, d + 5)).setY(0), end.y = heightAt(end.x, end.z);
       for (let i = 1; i <= 6; i++) { const q = b.pos.clone().lerp(end, i / 6); q.y = heightAt(q.x, q.z); g.telegraph(q, 1.7, 0.95, null); }
       b.st.action = 'command'; b.st.actionT = 0.2; g.audio.roar?.();
       g.ui.damageNumber(b.pos, 'Shield charge', 'stagger');
@@ -115,7 +126,7 @@ export function setupCombat25(g) {
         if (!hit && b.pos.distanceTo(p.pos) < 2.3) { hit = true; g.damagePlayer(b.dmg * 1.15, b.pos, b); g.shake = 0.6; }
         if (b.pos.distanceTo(end) < 1 || tmp2.copy(end).sub(b.pos).dot(D) < 0) {
           g.audio.boom?.(); g.fx.ring(b.pos, new THREE.Color(2, 1.4, 0.8), 0.5, 3.4, 0.35); b.st.action = null;
-          if (!hit) { b.staggerT = 1.6; g.ui.damageNumber(b.pos, 'Winded', 'stagger'); } // the miss is the punish window
+          if (!hit && again !== true) { b.staggerT = 1.6; g.ui.damageNumber(b.pos, 'Winded', 'stagger'); } // the miss is the punish window
           return false;
         }
         return true;
@@ -169,6 +180,61 @@ export function setupCombat25(g) {
         return true;
       };
     },
+    // ---- Round 26: the second half
+    // Bardanes: down the lane and straight back up it; only the second miss winds him
+    doubleCharge(b) {
+      const first = SIGS.charge(b, true); if (!first) return null;
+      let second = null;
+      return (dt) => {
+        if (!second) {
+          if (first(dt)) return true;
+          second = SIGS.charge(b, 'back'); if (!second) return false;
+          g.ui.damageNumber(b.pos, 'Again!', 'stagger'); return true;
+        }
+        return second(dt);
+      };
+    },
+    // Kallinikos: fire on the water: two rings of liquid fire roll outward from him, each with a gap to stand in; it burns on
+    firewave(b) {
+      const p = g.player; b.st.action = 'cast'; b.st.actionT = 0; g.audio.roar?.();
+      g.ui.damageNumber(b.pos, 'Fire on the water!', 'stagger');
+      const toHero = Math.atan2(p.pos.x - b.pos.x, p.pos.z - b.pos.z);
+      [[4.2, 0.9], [7.6, 1.6]].forEach(([R, delay], k) => {
+        const N = Math.round((Math.PI * 2 * R) / 2.3), gapA = toHero + (k ? 1 : -1) * (0.6 + Math.random() * 1.2);
+        for (let i = 0; i < N; i++) {
+          const a = (i / N) * Math.PI * 2; if (Math.abs(angDiff(a, gapA)) < 2.4 / R) continue; // the gap: about two flames wide
+          const q = new THREE.Vector3(b.pos.x + Math.sin(a) * R, 0, b.pos.z + Math.cos(a) * R); q.y = heightAt(q.x, q.z);
+          g.telegraph(q, 1.3, delay + (i % 2) * 0.05, () => {
+            g.fx.burst(tmp.copy(q).setY(q.y + 0.3), 10, { speed: 3, life: 0.5, size: 0.6, size1: 0.1, color: FIRE, up: 2, drag: 2 });
+            g.decal(q, 2.4, 'scorch'); g.fires2.push({ pos: q.clone(), r: 1.3, life: 6, t: 0, tick: 0, dmg: b.dmg * 0.2 });
+            if (p.pos.distanceTo(q) < 1.35) g.damagePlayer(b.dmg * 0.45, q);
+          });
+        }
+      });
+      let t = 0; return (dt) => { t += dt; b.st.actionT = Math.min(1, t / 1.3); if (t > 1.3) { b.st.action = null; return false; } return true; };
+    },
+    // Krateros: burning beams dragged down three lanes at Salim, one after another; each lane burns on for a while
+    beams(b) {
+      const p = g.player; b.st.action = 'command'; b.st.actionT = 0; g.audio.roar?.();
+      g.ui.damageNumber(b.pos, 'Burning beams!', 'stagger');
+      for (let n = 0; n < 3; n++) setTimeout(() => {
+        if (b.dead || g.cinematic) return;
+        const from = b.pos.clone(), d = tmp2.copy(p.pos).sub(from).setY(0); if (d.lengthSq() < 1) return; d.normalize(); const D = d.clone();
+        for (let i = 1; i <= 7; i++) {
+          const q = from.clone().addScaledVector(D, 1.2 + i * 2); q.y = heightAt(q.x, q.z);
+          g.telegraph(q, 1.25, 0.8 + i * 0.07, () => {
+            g.fx.dust(q, 6, 1.2); g.decal(q, 2.4, 'scorch'); g.fires2.push({ pos: q.clone(), r: 1.25, life: 6.5, t: 0, tick: 0, dmg: b.dmg * 0.22 });
+            if (p.pos.distanceTo(q) < 1.3) g.damagePlayer(b.dmg * 0.55, q);
+          });
+        }
+      }, n * 700);
+      let t = 0; return (dt) => { t += dt; b.st.actionT = Math.min(1, t / 2.0); if (t > 2.0) { b.st.action = null; return false; } return true; };
+    },
+    // Arsaber: a feint, then the real blow (parry the second glint, not the first)
+    feint(b) {
+      if (b.pos.distanceTo(g.player.pos) > 5.5) return SIGS.guard(b);
+      startCombo(b, KITS.ghanimFeint); return null;
+    },
   };
   const riposte = (b) => {
     const R = b.r25; R.guard = null; R.sig = null;
@@ -189,13 +255,19 @@ export function setupCombat25(g) {
       return;
     }
     if (g.cinematic || b.lunge) return baseAI(b, dt);
+    if (b.phase < 2 && b.hp < b.maxHp * (b.kit?.phaseAt ?? 0.6) && !R.combo && !R.sig) return baseAI(b, dt); // Round 26: the phase change (and its scene) is the base AI's
     g.ui.bossBar(b.name, b.hp / b.maxHp);
     if (R.combo) { comboTick(b, dt); return; }
     if (R.sig) { if (!R.sig(dt)) R.sig = null; return; }
     if (!b.st.action) {
       const d = b.pos.distanceTo(g.player.pos);
       R.sigCd -= dt;
-      if (R.sigCd <= 0 && !g.player.dead) { R.sigCd = R.K.sigCd * (b.phase >= 2 ? 0.8 : 1); R.sig = SIGS[R.K.sig](b); if (R.sig) return; }
+      if (b.phase >= 2 && !R.p2) { R.p2 = true; R.sigCd = Math.min(R.sigCd, 1.2); R.alt = false; g.onBossPhase26?.(b); }
+      if (R.sigCd <= 0 && !g.player.dead) {
+        R.sigCd = R.K.sigCd * (b.phase >= 2 ? 0.8 : 1);
+        const k = b.phase >= 2 && R.K.sig2 && (R.alt = !R.alt) ? R.K.sig2 : R.K.sig; // the second half alternates, opening with the new move
+        R.sig = SIGS[k](b); if (R.sig || R.combo) return;
+      }
       if (d < 4.6 && b.atkCd <= 0 && Math.random() < 0.7) { startCombo(b, R.K.combo); return; }
     }
     b.atkCd = Math.max(b.atkCd, 0); return baseAI(b, dt);

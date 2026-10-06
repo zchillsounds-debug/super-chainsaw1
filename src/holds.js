@@ -203,19 +203,19 @@ const BOSS = {
   sakhr: { name: 'Phobenos', sub: 'Master of the quarry gangs', type: 'engineer', look: { scale: 1.45, belly: 0.5, cap: 0x3a2a1e, capBand: 0x6a3a1a, helm: false, crest: 'hat', sash: 0x6a3a1a }, hp: 14, dmg: 1.5,
     moves: ['swing', 'crack', 'slam'], p2: { at: 0.5, line: 'Bring the face down on him!', add: ['rockfall'] } },
   ghaylan: { name: 'Krambonites', sub: 'Overseer of the galleries', type: 'spearman', look: { scale: 1.5, crest: 'plume', sash: 0x5a4a1a }, hp: 22, dmg: 1.6,
-    moves: ['swing', 'charge', 'rockfall', 'sweep'], p2: { at: 0.5, line: 'Every man to me!', add: ['summon', 'crack'], summon: ['guard', 'spearman', 'crossbow'] } },
+    moves: ['swing', 'charge', 'rockfall', 'sweep'], p2: { at: 0.5, line: 'Every man to me!', add: ['summon', 'crack', 'cartroll'], summon: ['guard', 'spearman', 'crossbow'] } },
   shaddad: { name: 'Tarchaneiotes', sub: 'The shield of the fort', type: 'guard', look: { scale: 1.55, crest: 'heavy', sash: 0x1a3a5a, offhand: 'shield' }, hp: 16, dmg: 1.5, block: 0.9,
     moves: ['swing', 'charge', 'slam'], p2: { at: 0.5, line: 'Close the wall!', add: ['summon'], summon: ['guard', 'guard'] } },
   jabala: { name: 'Charsianites', sub: 'Commander of the cliff fort', type: 'guard', look: { scale: 1.5, crest: 'banner', sash: 0x6a1a14, cloak: 0x3a0e0a }, hp: 24, dmg: 1.6,
-    moves: ['swing', 'arrows', 'sweep'], p2: { at: 0.55, line: 'Archers! Fire on the yard!', add: ['fireline', 'summon'], summon: ['archer', 'archer', 'crossbow'] } },
+    moves: ['swing', 'arrows', 'sweep'], p2: { at: 0.55, line: 'Archers! Fire on the yard!', add: ['fireline', 'summon', 'testudo'], summon: ['archer', 'archer', 'crossbow'] } },
   dhuayb: { name: 'Apokaukos', sub: 'Keeper of the bridge', type: 'spearman', look: { scale: 1.45, crest: 'mantle', sash: 0x2a4a2a, cloak: 0x2a4a2a }, hp: 16, dmg: 1.5,
     moves: ['swing', 'sweep', 'stomp', 'charge'], p2: { at: 0.45, line: 'Break the boards under him!', add: ['stomp'] } },
   hanzala: { name: 'Pankalos', sub: 'Master of the gorge', type: 'spearman', look: { scale: 1.5, crest: 'hat', sash: 0x4a1a3a, hat: 0xb8a468, helm: false }, hp: 24, dmg: 1.6,
-    moves: ['swing', 'net', 'charge', 'sweep'], p2: { at: 0.5, line: 'Cut the ropes. Let the gorge have him.', add: ['shrink', 'arrows'] } },
+    moves: ['swing', 'net', 'charge', 'sweep'], p2: { at: 0.5, line: 'Cut the ropes. Let the gorge have him.', add: ['shrink', 'arrows', 'leap'] } },
   nahshal: { name: 'Brachamios', sub: 'Tatzates\' siphon-master', type: 'naffat', look: { scale: 1.45, crest: 'hat', sash: 0x7a2a10 }, hp: 16, dmg: 1.5,
     moves: ['swing', 'fireline', 'firepots'], p2: { at: 0.5, line: 'Burn it all!', add: ['summon'], summon: ['naffat', 'naffat', 'deserter'] } },
   zubayr: { name: 'Tatzates', sub: 'The bowman on the dune', type: 'zubayr', look: { scale: 1.12 }, hp: 30, dmg: 1.5, rival: true,
-    moves: ['arrows', 'rockfall'], p2: { at: 0.5, line: 'You will not see the next one coming.', add: ['vanish'] } },
+    moves: ['arrows', 'rockfall'], p2: { at: 0.5, line: 'You will not see the next one coming.', add: ['vanish', 'snipe'] } },
 };
 export const HOLDS = {
   quarry: { title: 'The Quarry Galleries', sub: 'Old workings in the western cliff', rock: 0xd8c8a8, floor: [0x9a8a70, 'earth'], wall: 0xc8b898, pool: ['guard', 'deserter', 'spearman', 'engineer'], ranged: ['crossbow', 'archer'], mid: 'sakhr', boss: 'ghaylan', codex: 'quarry', quest: 'quarry', step: 0 },
@@ -579,6 +579,31 @@ const MOVES = {
   summon: { range: [0, 30], cd: 99, once: true, start(g, e) { e.st.action = 'command'; e.mv = { t: 0, dur: 1.4 }; const K = e.holdBoss; const men = g.spawnPack(K.p2?.summon || ['guard', 'guard'], e.pos.x, e.pos.z, (K.p2?.summon || []).length || 2, Math.max(1, e.level - 2), { spread: 5, interior: true }); for (const m of men) { m.alerted = true; m.interior = true; m.summoned = true; g.interior?.enemies.push(m); g.fx.dust(m.pos, 10, 1.2); } g.audio.roar?.(); },
     tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(1, M.t / M.dur); return M.t >= M.dur; } },
   // the bridge's ropes cut: the safe ground shrinks toward the middle
+  // Round 26: phase-two moves of the Hamrin masters
+  // Krambonites: a laden stone-cart sent rolling down a lane across Salim's ground (the lane is marked; it throws him)
+  cartroll: { range: [0, 30], cd: 9, start(g, e) { e.st.action = 'command'; e.mv = { t: 0, dur: 1.3 }; const p = g.player.pos, a = Math.random() * Math.PI * 2, d = V(Math.sin(a), 0, Math.cos(a)), from = p.clone().addScaledVector(d, -11); from.y = 0;
+      lineTele(g, from, d, 22, 2.6, 1.25, () => { const H = { from, dir: d, len: 22, w: 2.6 }; for (let k = 0; k < 11; k++) g.fx.dust(tmp2.copy(from).addScaledVector(d, k * 2), 5, 1.3); g.audio.boom?.(); g.shake = Math.max(g.shake, 0.45); if (inLine(g.player.pos, H)) { g.damagePlayer(e.dmg * 1.4, from); g.player.knock = (g.player.knock || new THREE.Vector3()).addScaledVector(d, 18); } });
+      g.ui.damageNumber(e.pos, 'Cart!', 'stagger'); },
+    tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(1, M.t / M.dur); return M.t >= M.dur; } },
+  // Charsianites: "Shields!": a shield wall of three forms in front of him, and he stands behind it shooting orders
+  testudo: { range: [0, 30], cd: 99, once: true, start(g, e) { e.st.action = 'command'; e.mv = { t: 0, dur: 1.4 }; const p = g.player.pos, d = tmp.set(p.x - e.pos.x, 0, p.z - e.pos.z).normalize(), at = e.pos.clone().addScaledVector(d, 3.2);
+      const men = g.spawnWall26?.(at.x, at.z, Math.max(1, e.level - 2), { interior: true }) || [];
+      for (const m of men) { m.alerted = true; m.interior = true; m.summoned = true; m.pos.y = 0; g.interior?.enemies.push(m); g.fx.dust(m.pos, 10, 1.2); }
+      g.audio.roar?.(); },
+    tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(1, M.t / M.dur); return M.t >= M.dur; } },
+  // Pankalos: a leap across the gorge planks onto Salim's ground: the landing is marked, and it slams in a ring
+  leap: { range: [5, 18], cd: 8, start(g, e) { const q = g.player.pos.clone(); q.y = 0; e.mv = { t: 0, from: e.pos.clone(), to: q, done: false }; e.st.crouch = 0.5; e.st.action = 'command'; g.telegraph(q.clone().setY(0.02), 3.0, 1.15, null); g.audio.at(e.pos, () => g.audio.roar?.()); },
+    tick(g, e, dt, M) { M.t += dt;
+      if (M.t < 0.6) return false; // crouched, gathering
+      const k = Math.min(1, (M.t - 0.6) / 0.55); e.st.crouch = 0; e.st.action = 'slam'; e.st.actionT = 0.3 + k * 0.4;
+      e.pos.lerpVectors(M.from, M.to, k); e.liftY = Math.sin(k * Math.PI) * 2.2; e.facing = Math.atan2(M.to.x - M.from.x, M.to.z - M.from.z);
+      if (k >= 1 && !M.done) { M.done = true; e.liftY = 0; resolve(e.pos, e.radius); g.audio.boom?.(); g.shake = Math.max(g.shake, 0.6); g.fx.dust(e.pos, 22, 2.2); g.fx.ring(e.pos, new THREE.Color(2, 1.7, 1.2), 0.6, 3.6, 0.45); if (g.player.pos.distanceTo(e.pos) < 3.1) g.damagePlayer(e.dmg * 1.5, e.pos); }
+      return M.t > 1.5; } },
+  // Tatzates: the arrow that killed Jabir: a long aim down a marked line, then one heavy shaft along it
+  snipe: { range: [4, 30], cd: 10, start(g, e) { const p = g.player.pos, d = tmp.set(p.x - e.pos.x, 0, p.z - e.pos.z).normalize().clone(), from = e.pos.clone().setY(0); e.facing = Math.atan2(d.x, d.z); e.st.action = 'shoot'; e.mv = { t: 0, dur: 1.5 };
+      g.ui.damageNumber(e.pos, 'Marked', 'crit');
+      lineTele(g, from, d, 30, 1.3, 1.2, () => { const H = { from, dir: d, len: 30, w: 1.3 }; g.audio.whoosh?.(); for (let k = 0; k < 10; k++) g.fx.glow.spawn({ pos: { x: from.x + d.x * k * 3, y: 1.3, z: from.z + d.z * k * 3 }, life: 0.3, size: 0.35, size1: 0.05, color: new THREE.Color(3, 2.6, 2) }); if (inLine(g.player.pos, H)) g.damagePlayer(e.dmg * 2.2, e.pos); }); },
+    tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(0.55, M.t / M.dur); return M.t >= M.dur; } },
   shrink: { range: [0, 40], cd: 99, once: true, start(g, e) { e.st.action = 'command'; e.mv = { t: 0, dur: 1.2 }; g.holdArena = { c: (g.interior?.I.bossAt || e.pos).clone(), r: 13, to: 6.5, t: 0 }; g.ui.toast(t('The ropes are cut. Keep to the middle')); },
     tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(1, M.t / M.dur); return M.t >= M.dur; } },
   // into the smoke and out behind him (Tatzates' last trick)
@@ -606,7 +631,7 @@ function holdBossAI(g, e, dt, dist) {
   if (!e.p2 && K.p2 && e.hp < e.maxHp * K.p2.at) { e.p2 = true; g.ui.banner(K.name, K.p2.line, 2600); g.audio.stinger?.('phase'); e.moves = [...e.moves, ...K.p2.add]; for (const m of K.p2.add) if (MOVES[m]?.once || m === 'vanish') e.cds[m] = m === 'vanish' ? 2 : 0; }
   for (const k in e.cds) e.cds[k] -= dt;
   const face = Math.atan2(p.pos.x - e.pos.x, p.pos.z - e.pos.z);
-  if (e.staggerT > 0) { e.staggerT -= dt; e.st.hitT = 0.8; e.mv = null; e.st.action = null; e.rig.position.copy(e.pos); g.animEnemy(e, dt, dist); return 'skip'; }
+  if (e.staggerT > 0) { e.staggerT -= dt; e.st.hitT = 0.8; e.mv = null; e.liftY = 0; e.st.action = null; e.rig.position.copy(e.pos); g.animEnemy(e, dt, dist); return 'skip'; }
   if (e.mv && e.curMove) {
     if (MOVES[e.curMove].tick(g, e, dt, e.mv)) { e.mv = null; e.curMove = null; e.st.action = null; e.st.crouch = 0; e.idleT = rand(0.35, 0.9); }
   } else if (K.rival && !e.mvOwn) {
@@ -625,7 +650,7 @@ function holdBossAI(g, e, dt, dist) {
     resolve(e.pos, e.radius);
     e.st.walkBlend = THREE.MathUtils.lerp(e.st.walkBlend, moving ? 1 : 0, Math.min(1, dt * 6)); e.st.phase += dt * (moving ? e.speed * 1.4 : 0);
   }
-  e.pos.y = 0; e.rig.position.copy(e.pos); e.rig.rotation.y = e.facing; g.animEnemy(e, dt, dist);
+  e.pos.y = 0; e.rig.position.copy(e.pos); if (e.liftY) e.rig.position.y += e.liftY; e.rig.rotation.y = e.facing; g.animEnemy(e, dt, dist);
   return 'skip';
 }
 function pickMove(g, e, dist) {

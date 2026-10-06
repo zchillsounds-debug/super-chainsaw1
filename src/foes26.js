@@ -159,6 +159,16 @@ function hippoAI(g, e, dt, dist) {
 
 // ------------------------------------------------------------------ wiring (set up from main.js)
 export function setupFoes26(g) {
+  g.spawnWall26 = (x, z, level, opts) => spawnWall(g, x, z, level, opts);
+  // Round 26: Bardanes' second half opens with his standard brought up from the flank, with two men
+  g.onBossPhase26 = (b) => {
+    if (b.type !== 'commander') return;
+    const p = g.player.pos, side = Math.atan2(p.x - b.pos.x, p.z - b.pos.z) + Math.PI / 2 * (Math.random() < 0.5 ? 1 : -1);
+    const x = b.pos.x + Math.sin(side) * 9, z = b.pos.z + Math.cos(side) * 9;
+    const men = [...g.spawnPack('standard', x, z, 1, Math.max(1, b.level - 1), { spread: 0 }), ...g.spawnPack(['guard', 'spearman'], x, z, 2, Math.max(1, b.level - 1), { spread: 2.5 })];
+    for (const m of men) { m.alerted = true; m.riseT = 1; g.fx.dust(m.pos, 10, 1.2); }
+    g.ui.toast(t('Bardanes calls up his standard'), 'quest');
+  };
   // the rally wears off a moment after a man leaves the bearer's reach
   const upd = g.updateEnemies.bind(g);
   g.updateEnemies = (dt) => {
