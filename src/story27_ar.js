@@ -14,4 +14,6 @@ export const AR27 = {
   'Let the log go!': 'أطلقوا الجذع!',
   'Drop the net!': 'أسقطوا الشبكة!', 'Netted! Evade to cut yourself free': 'وقعتَ في الشبكة! تفادَ لتتحرّر',
   'The mooring chain!': 'سلسلة المرساة!',
+  // the act bosses' announcements, now shown under the boss bar
+  'Shield charge': 'هجمة الترس', 'On guard': 'متأهّب',
 };

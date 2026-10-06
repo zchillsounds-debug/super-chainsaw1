@@ -674,3 +674,6 @@ body.touch #bark25.top{bottom:auto;top:calc(84px + env(safe-area-inset-top,0px))
 body.touch #bark25.top.show{transform:translate(-50%,0)}
 /* Round 26: the poise bar thicker on phones (5 px read as a line) */
 body.touch .bpoise{height:8px;width:66%;margin-top:4px}
+
+/* Round 27: a master's callout under his bar */
+#bossbar .bcall{margin-top:6px;font:italic 700 18px Amiri,serif;color:#ffd890;letter-spacing:1px;text-shadow:0 0 8px #000,0 2px 2px #000;opacity:0;transform:translateY(-4px);transition:opacity .2s,transform .2s;min-height:1.2em}#bossbar .bcall.show{opacity:1;transform:none}body.touch #bossbar .bcall{font-size:16px;margin-top:4px}

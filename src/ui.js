@@ -33,7 +33,7 @@ export class UI {
     root.innerHTML = `
       <div id="hud" class="hidden">
         <div id="target"><div class="tname"></div><div class="tbar"><div class="tfill"></div></div></div>
-        <div id="bossbar" class="hidden"><div class="bname"></div><div class="bbar"><div class="bfill"></div><div class="bghost"></div></div></div>
+        <div id="bossbar" class="hidden"><div class="bname"></div><div class="bbar"><div class="bfill"></div><div class="bghost"></div></div><div class="bcall"></div></div>
         <div id="quest"><div class="qtitle">The Teacher's Pages</div><div class="qnow hidden"><i>◆</i><span class="qtx"></span><b class="qd"></b></div><div class="qlines"></div></div>
         <div id="toasts"></div>
         <div id="minimap"><canvas width="180" height="180"></canvas></div>
@@ -149,6 +149,13 @@ export class UI {
     b.querySelector('.bfill').style.width = (frac * 100) + '%';
     const gh = b.querySelector('.bghost'); const cur = parseFloat(gh.style.width || '100');
     gh.style.width = Math.max(frac * 100, cur - 0.4) + '%';
+  }
+  // Round 27: a master's callout ("Fire the reeds!") as a line under his bar; floating over him it landed on his name
+  bossCall(text) {
+    const c = this.$('#bossbar .bcall'); if (!c) return false;
+    c.textContent = text; c.classList.remove('show'); void c.offsetWidth; c.classList.add('show');
+    clearTimeout(this.bcallT); this.bcallT = setTimeout(() => c.classList.remove('show'), 1800);
+    return true;
   }
   // side tasks, bounties and events can be tapped to put them on the trail (data-k); the tracked one is marked
   quest(lines) { this.$('#quest .qlines').innerHTML = lines.map((l) => `<div class="${l.done ? 'done' : ''} ${l.side ? 'side' : ''} ${l.on ? 'on' : ''}"${l.key ? ` data-k="${l.key}"` : ''}>${l.done ? '✦' : l.on ? '➤' : l.side ? '·' : '◇'} ${l.text}</div>`).join(''); }

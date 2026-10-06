@@ -13,6 +13,7 @@
 import * as THREE from 'three';
 import { heightAt } from './terrain.js';
 import { resolve } from './collision.js';
+import { t } from './i18n.js';
 
 const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
 const GOLD = new THREE.Color(3.2, 2.4, 1.0), WHITE = new THREE.Color(3.4, 3.2, 2.8), FIRE = new THREE.Color(3.5, 1.2, 0.25);
@@ -87,7 +88,7 @@ export function setupCombat25(g) {
     if (b.st.actionT > 0.25 && b.st.actionT < hitAt) { b.pos.addScaledVector(tmp.set(Math.sin(b.facing), 0, Math.cos(b.facing)), dt * 1.8); resolve(b.pos, b.radius); b.pos.y = heightAt(b.pos.x, b.pos.z); }
     if (!C.hit && b.st.actionT >= hitAt && shape === 'feint') {
       C.hit = true; b.r25.parryable = false; g.audio.whoosh?.();
-      g.ui.damageNumber(b.pos, 'Feint!', 'block');
+      (g.ui.bossCall?.(t('Feint!')) || g.ui.damageNumber(b.pos, t('Feint!'), 'block'));
       if (!b.r25.feintHint && !g.cinematic) { b.r25.feintHint = true; g.ui.toast('A feint: wait for the second glint', 'quest'); }
     }
     if (!C.hit && b.st.actionT >= hitAt) {
@@ -115,7 +116,7 @@ export function setupCombat25(g) {
       if (again === 'back') end.copy(b.pos).addScaledVector(D, Math.max(10, d + 5)).setY(0), end.y = heightAt(end.x, end.z);
       for (let i = 1; i <= 6; i++) { const q = b.pos.clone().lerp(end, i / 6); q.y = heightAt(q.x, q.z); g.telegraph(q, 1.7, 0.95, null); }
       b.st.action = 'command'; b.st.actionT = 0.2; g.audio.roar?.();
-      g.ui.damageNumber(b.pos, 'Shield charge', 'stagger');
+      (g.ui.bossCall?.(t('Shield charge')) || g.ui.damageNumber(b.pos, t('Shield charge'), 'stagger'));
       let w = 0.95, hit = false;
       return (dt) => {
         b.facing = Math.atan2(D.x, D.z);
@@ -147,7 +148,7 @@ export function setupCombat25(g) {
           });
         }
       }
-      let t = 0; return (dt) => { t += dt; b.st.actionT = Math.min(1, t / 1.2); if (t > 1.2) { b.st.action = null; return false; } return true; };
+      let tt = 0; return (dt) => { tt += dt; b.st.actionT = Math.min(1, tt / 1.2); if (tt > 1.2) { b.st.action = null; return false; } return true; };
     },
     // Krateros: the burning stalls come down in a ring around Salim, with one gap; then the middle falls in
     collapse(b) {
@@ -165,12 +166,12 @@ export function setupCombat25(g) {
         g.fx.burst(tmp.copy(mid).setY(mid.y + 0.3), 40, { speed: 6, life: 0.6, size: 0.7, size1: 0.1, color: FIRE, up: 2, drag: 2 }); g.decal(mid, 6, 'scorch');
         if (p.pos.distanceTo(mid) < R - 0.4) g.damagePlayer(b.dmg * 1.1, mid);
       }, true);
-      let t = 0; return (dt) => { t += dt; b.st.actionT = Math.min(1, t / 1.4); if (t > 1.4) { b.st.action = null; return false; } return true; };
+      let tt = 0; return (dt) => { tt += dt; b.st.actionT = Math.min(1, tt / 1.4); if (tt > 1.4) { b.st.action = null; return false; } return true; };
     },
     // Arsaber: blade raised on guard. Strike into it and he ripostes (parryable); wait it out and he lunges
     guard(b) {
       const R = b.r25; R.guard = { t: b.phase >= 2 ? 2.0 : 2.6, glintT: 0 };
-      g.ui.damageNumber(b.pos, 'On guard', 'block');
+      (g.ui.bossCall?.(t('On guard')) || g.ui.damageNumber(b.pos, t('On guard'), 'block'));
       return (dt) => {
         const G = R.guard; if (!G) return false;
         b.moving = false; b.st.action = 'thrustHigh'; b.st.actionT = 0.18;
@@ -189,7 +190,7 @@ export function setupCombat25(g) {
         if (!second) {
           if (first(dt)) return true;
           second = SIGS.charge(b, 'back'); if (!second) return false;
-          g.ui.damageNumber(b.pos, 'Again!', 'stagger'); return true;
+          (g.ui.bossCall?.(t('Again!')) || g.ui.damageNumber(b.pos, t('Again!'), 'stagger')); return true;
         }
         return second(dt);
       };
@@ -197,7 +198,7 @@ export function setupCombat25(g) {
     // Kallinikos: fire on the water: two rings of liquid fire roll outward from him, each with a gap to stand in; it burns on
     firewave(b) {
       const p = g.player; b.st.action = 'cast'; b.st.actionT = 0; g.audio.roar?.();
-      g.ui.damageNumber(b.pos, 'Fire on the water!', 'stagger');
+      (g.ui.bossCall?.(t('Fire on the water!')) || g.ui.damageNumber(b.pos, t('Fire on the water!'), 'stagger'));
       const toHero = Math.atan2(p.pos.x - b.pos.x, p.pos.z - b.pos.z);
       [[4.2, 0.9], [7.6, 1.6]].forEach(([R, delay], k) => {
         const N = Math.round((Math.PI * 2 * R) / 2.3), gapA = toHero + (k ? 1 : -1) * (0.6 + Math.random() * 1.2);
@@ -211,12 +212,12 @@ export function setupCombat25(g) {
           });
         }
       });
-      let t = 0; return (dt) => { t += dt; b.st.actionT = Math.min(1, t / 1.3); if (t > 1.3) { b.st.action = null; return false; } return true; };
+      let tt = 0; return (dt) => { tt += dt; b.st.actionT = Math.min(1, tt / 1.3); if (tt > 1.3) { b.st.action = null; return false; } return true; };
     },
     // Krateros: burning beams dragged down three lanes at Salim, one after another; each lane burns on for a while
     beams(b) {
       const p = g.player; b.st.action = 'command'; b.st.actionT = 0; g.audio.roar?.();
-      g.ui.damageNumber(b.pos, 'Burning beams!', 'stagger');
+      (g.ui.bossCall?.(t('Burning beams!')) || g.ui.damageNumber(b.pos, t('Burning beams!'), 'stagger'));
       for (let n = 0; n < 3; n++) setTimeout(() => {
         if (b.dead || g.cinematic) return;
         const from = b.pos.clone(), d = tmp2.copy(p.pos).sub(from).setY(0); if (d.lengthSq() < 1) return; d.normalize(); const D = d.clone();
@@ -228,7 +229,7 @@ export function setupCombat25(g) {
           });
         }
       }, n * 700);
-      let t = 0; return (dt) => { t += dt; b.st.actionT = Math.min(1, t / 2.0); if (t > 2.0) { b.st.action = null; return false; } return true; };
+      let tt = 0; return (dt) => { tt += dt; b.st.actionT = Math.min(1, tt / 2.0); if (tt > 2.0) { b.st.action = null; return false; } return true; };
     },
     // Arsaber: a feint, then the real blow (parry the second glint, not the first)
     feint(b) {

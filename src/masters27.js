@@ -13,7 +13,7 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const rand = (a, b) => a + Math.random() * (b - a);
 const tmp = new THREE.Vector3();
 const toward = (e, p) => V(p.x - e.pos.x, 0, p.z - e.pos.z).normalize();
-const say = (g, e, txt) => g.ui.damageNumber(e.pos, t(txt), 'stagger');
+const say = (g, e, txt) => { if (!(e.barOn && g.ui.bossCall?.(t(txt)))) g.ui.damageNumber(e.pos, t(txt), 'stagger'); };
 const once = (g, key, txt) => { g.m27told ||= {}; if (g.m27told[key] || g.cinematic) return; g.m27told[key] = true; g.ui.toast(t(txt), 'quest'); };
 const done = (dur) => (g, e, dt, M) => { M.t += dt; e.st.actionT = Math.min(1, M.t / dur); return M.t >= dur; };
 
@@ -48,7 +48,7 @@ export function setupMasters27(g) {
     prev?.(dt);
     const p = g.player;
     // band telegraphs (held in g.hazards, whose loop in game.js advances their clocks)
-    for (let i = g.hazards.length - 1; i >= 0; i--) { const H = g.hazards[i]; if (H.kind !== 'm27band') continue; const k = H.t / H.life; H.mesh.material.opacity = 0.18 + 0.5 * k * (0.75 + 0.25 * Math.sin(H.t * 22));
+    for (let i = g.hazards.length - 1; i >= 0; i--) { const H = g.hazards[i]; if (H.kind !== 'm27band') continue; const k = H.t / H.life; H.mesh.material.opacity = 0.3 + 0.55 * k * (0.75 + 0.25 * Math.sin(H.t * 22));
       if (k >= 1) { g.scene.remove(H.mesh); H.mesh.geometry.dispose(); H.mesh.material.dispose(); g.hazards.splice(i, 1); if (!g.cinematic) H.onDone?.(); } }
     for (const z of Z.zones) { if (z.life <= 0) continue; z.life -= dt; z.t += dt;
       const fade = Math.min(1, z.life / 0.8, z.t / 0.3); (z.kind === 'lane' ? z.m : z.disc).material.opacity = (z.kind === 'lane' ? 0.55 : 0.75) * fade;

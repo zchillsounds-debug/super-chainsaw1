@@ -15,7 +15,7 @@ await pg.evaluate("{const s=document.createElement('style');s.textContent='*{ani
 await pg.evaluate(() => { const p = __game.player; p.level = 14; __game.recalcStats(); p.hp = p.stats.maxHp; p.invuln = 1e9; __game.briefed = true; });
 // what the run holds, then Salim goes to the standard's room and the wall's room in turn
 const probe = (tag, shoot) => pg.evaluate(async ([tag, shoot]) => {
-  const g = __game, p = g.player, E = g.interior.enemies, live = E.filter((e) => !e.dead);
+  const g = __game, p = g.player; if (!g.interior) return { tag, err: 'not inside' }; const E = g.interior.enemies, live = E.filter((e) => !e.dead);
   const cnt = {}; for (const e of live) cnt[e.type] = (cnt[e.type] || 0) + 1;
   const std = live.find((e) => e.type === 'standard'), wall = live.filter((e) => e.type === 'wall');
   const r = { tag, kind: g.interior.def.kind || 'dungeon', level: g.interior.def.level, rooms: g.interior.I.rooms.length, std: cnt.standard || 0, wall: wall.length, hippo: cnt.hippo || 0, foes: live.length };
@@ -25,7 +25,7 @@ const probe = (tag, shoot) => pg.evaluate(async ([tag, shoot]) => {
 }, [tag, shoot]);
 const res = [];
 // a dungeon of the region
-await pg.evaluate(async () => { const g = __game, d = g.interactables.find((x) => /go down|descend|enter the reed/i.test(x.label || '')); g.player.pos.copy(d.pos); await d.act(); __sim(0.3); });
+await pg.evaluate(async () => { const g = __game, { DUNGEONS } = await import('/src/dungeons.js'), d = g.interactables.find((x) => x.area === DUNGEONS[0].id); g.player.pos.copy(d.pos); await d.act(); __sim(0.3); });
 res.push(await probe('dungeon')); if (out) await pg.screenshot({ path: `${out}/dungeon-${region}.png`, timeout: 180000 });
 await pg.evaluate(async () => { await __game.zones.exit(); __sim(0.3); });
 // a contract
