@@ -5,7 +5,7 @@
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
-> 2. Run `npm install`. Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs.
+> 2. Run `npm install`. When pushing the session branch, `git push -u origin <session-branch>` (a fresh branch carries the earlier rounds' history). Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs.
 > 3. Ask me what the next round should be, and confirm the plan with me before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
@@ -78,7 +78,7 @@ unzip madinat-round19-handoff.zip -d madinat && cd madinat
 git clone repo.bundle game && cd game        # Round 20 is on branch ccr-c97baf64-6kbn83 (Round 19: ccr-56d2fa55-vx1w3y)
 npm install && npx vite --port 5173          # http://localhost:5173
 ```
-If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-c97baf64-6kbn83`. If the repo has the branch, just `git fetch origin claude/new-session-e8f6al && git checkout -B <session-branch> FETCH_HEAD` (Round 23 shipped; Round 23 before its final session is `claude/new-session-eqeuig`; Round 22 alone is `claude/new-session-2oveca`; Round 21 alone is `claude/new-session-w9ig9m`; Round 21 before its final session is `ccr-a81550d1-0nkldn`, Round 20 alone is `ccr-c97baf64-6kbn83`).
+If the session's repo is empty, run `git fetch <path>/repo.bundle 'refs/heads/*:refs/remotes/bundle/*'` and then `git checkout -B <session-branch> bundle/ccr-c97baf64-6kbn83`. If the repo has the branch, just `git fetch origin claude/new-session-fobl3t && git checkout -B <session-branch> FETCH_HEAD` (Round 24 shipped; Round 23 alone is `claude/new-session-e8f6al`; Round 23 before its final session is `claude/new-session-eqeuig`; Round 22 alone is `claude/new-session-2oveca`; Round 21 alone is `claude/new-session-w9ig9m`; Round 21 before its final session is `ccr-a81550d1-0nkldn`, Round 20 alone is `ccr-c97baf64-6kbn83`).
 
 URL flags:
 - `?play` skips the title screen.
