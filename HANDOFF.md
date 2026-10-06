@@ -1,7 +1,7 @@
-# Madinat al-Salam: Handoff (Round 25 shipped)
+# Madinat al-Salam: Handoff (Round 26 shipped)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-93087f37-t3mvls` of zchillsounds-debug/super-chainsaw1. Round 25 (boss combat, encounter pacing, onboarding, phone readability, story choices, banter and letters) is shipped.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-45lek3` of zchillsounds-debug/super-chainsaw1. Round 26 (new troop types, boss second halves, Hamrin content and story, the camp's own stories, phone fixes) is shipped.
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
@@ -12,6 +12,69 @@
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
+
+## Round 26: troops, bosses, Hamrin, the camp
+User decisions: all four areas: Hamrin endgame content, fixes for the phone (the user hadn't played Round 25 yet, so Claude ran the device checklist from phone-sized shots), a polish and bug sweep, and new content (all four offered: Hamrin story arc, boss depth, hub NPC arcs, enemy variety). Tatzates' ending: chains for Baghdad or let him go (approved as recommended).
+
+**New troops (`foes26.js`, types merged into `TYPES` in `entities.js`, placed in every region's `spawnX` in `game.js`):**
+- **Bandophoros** (`standard`): a skoutatos carrying a plain bandon (`o.standard` in `human.js`: a pole in the left hand, plain cloth, a light band and two tails, no device). While alerted, his men within 9 m get `rallyT`: ×1.25 speed and ×1.25 damage. A faint gold ring shows the reach. He keeps 5–8 m behind his men while any are near him. When he falls, his men within 12 m reel for 1.3 s ("The standard falls: his men waver").
+- **Skoutatos of the Wall** (`wall`, made by `spawnWall(g, x, z, level, opts)`, also `g.spawnWall26`): three men abreast with big oval shields (1.3×). The line turns slowly toward Salim and advances. Front blows are blocked 95% of the time (`blockK`), and blocked hits drain poise ×2.6 (`blockPoiseK`). When poise empties: "Guard broken!" and a 1.8 s stagger (new lines in `game.js` damageEnemy's block branch). Shield bash (`shove`) shoves Salim back. With one man left he fights as a normal skoutatos.
+- **Hippotoxotes** (`hippo`): a horse archer (`horseRider` with the toxotes look). He circles Salim at 5.7–7.1 m (wider circles left the phone view), shoots when `lineClear` (the nav grid is padded around props, so `navClear` failed at the hub), and reverses when a wall eats his step. He is thrown at half health and fights on as an archer. `T.shootH` sets the arrow height (`shootArrow`).
+- Each type shows a one-time toast the first time it is met. Bardanes' second half spawns a standard and two men (`g.onBossPhase26`).
+
+**Boss second halves:**
+- **Act bosses (`combat25.js`):** `KITS[type].sig2` alternates with the first signature once `b.phase >= 2`, opening with the new move. The wrapper now hands control to the base AI for the phase change (before, a boss busy with his own moves never reached it).
+  - Bardanes `doubleCharge`: charges down the lane, then charges back (`charge(b, 'back')`); only the second miss winds him.
+  - Kallinikos `firewave`: two rings of liquid fire (4.2 m, then 7.6 m) roll out, each with a gap about two flames wide; the fire burns for 6 s.
+  - Krateros `beams`: three lanes at Salim, 0.7 s apart, burning for 6.5 s.
+  - Arsaber `feint`: `KITS.ghanimFeint`, a first glint with no blow behind it (shape `'feint'`, not parryable), then the real arc swing on the second glint. A toast teaches it once. Beyond 5.5 m he takes his guard instead.
+- **Hamrin masters (`holds.js` MOVES, added to their `p2.add`):**
+  - Krambonites `cartroll`: a 22 m lane across Salim's ground, with damage and a throw.
+  - Charsianites `testudo`: once per fight, a shield wall of three in front of him.
+  - Pankalos `leap`: a marked landing and a 2.2 m arc (`e.liftY`, applied after `e.pos.y = 0`, reset when staggered), then a slam.
+  - Tatzates `snipe`: a 30 m marked line, then a heavy shaft (×2.2).
+
+**Hamrin content:**
+- Ambushes and the champion **Varazes**: `encounters25.js` ROSTER `hamrin`, with a standard-bearer in the retinue and horse archers in the second wave.
+- Three letters (`story25.js` LEAVES `hamrin`, new kind `tally`, "Tatzates' quiver lid"), placed with `freeSpot` so they land on the gorge floors. `LEAVES_TOTAL` is now **15** ("All fifteen found").
+- Salim's arrival line and the campfire memory already existed (Round 25).
+
+**Hamrin story (`story26.js`, `scenes.js` `hamrinScout` / `hamrinArrow`, `lieutenantFalls`, `holds.js` rivalLast):**
+1. **Scout:** the first time Salim is within 12 m of Ishaq in the camp, a bound scout (made for the scene, removed after) names the frontier road. Ishaq: "it will not give Jabir back"; Salim: "I am going so that it ends."
+2. **Arrow:** after two of the quarry, fort and gorge holds fall, back in the camp: an arrow lands beside Salim with Tatzates' message; Salim: "He wants me angry"; Ishaq (off screen): "Then go to him calm. Anger misses."
+3. **Face-off:** two more lines in the ravine ("The boy on the dune. I remember the wind that day. Not his face." / "I remember it for both of us.").
+4. **The fall:** Tatzates is now spared like Photeinos (he kneels). Choice `p.s25.ch.tatzates`: `chains` (+30 Renown) or `free` (cut bowstring, +15). Two lines each, the card, then over black: the bowman's road, and "That night Salim set a lamp on the Diyala for Jabir, and let the current take it." `p.rival.final` is set to the choice. Back in the camp, Ishaq says a line for each choice. Beats seen: `s25.said.h26scout`, `h26arrow`, `h26ishaq`.
+
+**The camp's own stories (`camp26.js`):**
+- Yusuf (his partner Sulayk, found alive in Wasit), Bishr (the Abna' soldier who owed half a sword's price comes back wounded and pays) and 'Amr (he fought for al-Amin; he takes on a boy, Nasim).
+- Three beats each, one per region visit from the marshes on. A beat is told in the dialog box when Salim stands calm within 3.6 m of the man.
+- The third beat gives a named legendary (Sulayk's Scale-Weight ring, The Other Half amulet, The Drill-Master's Sash belt) and +20 Renown, and adds a prop by the man in every camp from then on (Wasit crates, a new anvil, a practice post and spear rack).
+- State: `p.s25.camp` (saved with `s25`).
+
+**Fixes:**
+- Blade trails and slashes are cleared while the director runs (`combatFx.clear()`).
+- On phones, a bark moves under the tracker while a context prompt shows (they overlapped: `#bark25.top`).
+- The poise bar is 8 px on touch (it was 5 px).
+- **The pink squares at dusk (Round 24) were side-quest giver markers** (blue diamonds, tinted by the dusk grade) left visible in cutscenes. They are now hidden in `cineTick` (`g.sideMarks`); a pixel scan of the epilogue shots finds none.
+
+**Arabic:** `story26_ar.js` (`AR26`, merged last).
+
+**New scripts** (all take `PORT`; `/home/user/vite2.sh` runs vite from the main checkout on 5174, so a second test can run beside a `withvite.sh` sweep):
+- `r26foes.mjs [region] [out] [spot]`: the rally, the wall, the horse archer. Use the spot `x=-44&z=22` for open sand.
+- `r26boss.mjs <region> [out]`: the second-half moves by their callouts.
+- `r26hold.mjs <quarry|fort|gorge|rivalhold> [out]`: the masters' new moves.
+- `r26hamrin.mjs [out] [0|1]`: the whole Hamrin story with either choice.
+- `r26camp.mjs [region] [out] [beat]`: the camp beats.
+
+**Workflow:** edits in the main checkout; tests run from the copy at `/home/user/wt26` (`/home/user/sync26.sh`); `/home/user/sweep26.sh <list>` runs a list of tests one after another and writes `/home/user/logs26/SUMMARY`.
+
+SHIPPED_PLACEHOLDER
+
+**Next round: ideas (not approved):**
+- Device check on Android: the new troops (the rally ring, the shield line's turn speed, whether the horse archer's circle feels fair), Kallinikos' fire rings and the liquid-fire lanes at real frame rate, the bark under the tracker, the 8 px poise bar.
+- Story-hold masters (16) still have only their Round 22 phase twos.
+- The camp props are plain boxes and cylinders; sculpted versions would sit better beside the stalls.
+- New troops are not yet in the dungeons, the rift or contracts.
 
 ## Round 25: gameplay and story
 User decisions: all four gameplay areas (combat feel and bosses, encounter pacing, the first hour, phone readability) and all four story areas (character arcs, companion and NPC voices, environmental storytelling, choices with consequences); rework of weak existing lines allowed; critique loops until the context limit, then ship. The three choices were approved as proposed.
@@ -673,6 +736,7 @@ The goal is about 8–12 hours for a first playthrough, up from about 1.5 today,
 3. (Fixed in Round 20: new camera work for the lieutenants' last words and the boss intro.)
 
 ## File map (src/)
+- **Round 26:** foes26.js, story26.js, camp26.js, story26_ar.js (also combat25.js, holds.js, scenes.js, story25.js, encounters25.js, human.js, game.js)
 - **Round 25:** outline.js, combat25.js, encounters25.js, story25.js, story25_ar.js (also cinema.js choices, scenes.js, tutorial.js, holds.js rest, build.js, classes.js)
 - **Round 24:** story24_ar.js (most changes are in cinema.js, main.js, audio.js, audio2.js, scenes.js, terrain.js, lighting.js, hublife.js, index.html)
 - **Round 22:** storyholds.js, story22_ar.js (holds.js gained themes and the registry)
