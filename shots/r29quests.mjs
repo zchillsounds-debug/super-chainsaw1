@@ -41,7 +41,8 @@ for (let guard = 0; guard < 8; guard++) {
     await shot(`step${st.s}-${st.kind}`);
     await pg.evaluate((k) => { killTag(Q29.id); __sim(0.3); if (k === 'take') { const st = Q29.steps[__game.player.side[Q29.id]]; __game.interactables.find((i) => i.label === st.label)?.act(); } __sim(0.3); }, st.kind);
   } else if (st.kind === 'meet') {
-    await pg.evaluate(() => { killTag(Q29.id); __game.__side.live.get(Q29.id).meetNpc.talk(); __sim(2.6); });
+    const dbg = await pg.evaluate(() => { killTag(Q29.id); const n = __game.__side.live.get(Q29.id).meetNpc; n.talk(); __sim(2.6); const h = n.rig.userData.parts?.head?.getWorldPosition(new (n.pos.constructor)()); let vis = true, o = n.rig; while (o) { if (!o.visible) vis = false; o = o.parent; } const c = __game.camera.position; return { rigVisible: vis, inScene: !!n.rig.parent, pos: [n.pos.x, n.pos.y, n.pos.z].map((v) => +v.toFixed(1)), head: h && [h.x, h.y, h.z].map((v) => +v.toFixed(1)), cam: [c.x, c.y, c.z].map((v) => +v.toFixed(1)) }; });
+    console.log('meet scene:', JSON.stringify(dbg));
     await shot(`step${st.s}-meet-a`);
     await pg.evaluate(() => { __director.skip(); __sim(1.6); }); await shot(`step${st.s}-meet-b`);
     await pg.evaluate(async () => { skip(); await new Promise((r) => setTimeout(r, 60)); __sim(0.3); });
