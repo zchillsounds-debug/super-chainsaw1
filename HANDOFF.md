@@ -1,17 +1,64 @@
-# Madinat al-Salam: Handoff (Round 28 shipped)
+# Madinat al-Salam: Handoff (Round 29 built; see its status)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-59dadb04-xy78e6` of zchillsounds-debug/super-chainsaw1. Round 28 (a phone performance and controls pass, plus new boss moves) is shipped. The latest code is on branch `claude/new-session-9masup`.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-59dadb04-xy78e6` of zchillsounds-debug/super-chainsaw1. Round 29 (APK signing fix and save backup, four new troops, five side quest chains, the epilogue) is on branch `claude/new-session-9masup`; check its "Status" list below for what is left.
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
 > 2. Run `npm install`. When pushing the session branch, `git push -u origin <session-branch>` (a fresh branch carries the earlier rounds' history). Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs from the same folder: vite reloads the page and the test dies ("Execution context was destroyed"). Run tests from a copy (see "Test workflow" under Round 27).
-> 3. Ask me about Round 29 and confirm the plan with me before building.
+> 3. Finish whatever Round 29's "Status" list says is left, then ask me about Round 30 and confirm the plan with me before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
+
+## Round 29: APK updates, new troops, side quests, the epilogue
+User decisions: side quests, the post-game epilogue and new enemy types (camp props dropped). The user has not played Round 28 on the phone yet. Phones keep **High** quality by default (the user declined a middle default). Build order: APK fix, foes, side quests, epilogue (the epilogue was to be cut first if context ran short; it was not).
+
+**APK installs over the old one (the user's report: every new APK had to be uninstalled first, losing progress):**
+- Cause: CI signed each build with a fresh throwaway debug key, and `versionCode` was always 1.
+- `apk.yml` now decodes the repo secrets `ANDROID_KEYSTORE_B64` and `ANDROID_KEYSTORE_PASSWORD` into a keystore (`ANDROID_KEYSTORE_FILE`); `android/app/build.gradle` signs the debug build with it (alias `madinat`) when present, and `versionCode` is the CI run number. Without the secrets it falls back to the throwaway key, and the `apk-builds` commit message says "(throwaway key)".
+- The key was generated in the session and sent to the user (keystore-base64.txt, password.txt, madinat-release.jks) with steps to add the two secrets. **It is not in the repo.** If the user loses it, a new key means one more uninstall.
+- The first install of a fixed-key APK still needs one uninstall (the phone's app has a throwaway key). From then on, updates keep the saves.
+- **Settings → Saved game: Back up save / Restore save** (`settings.js` `exportSave`/`importSave`): every `sob.*` localStorage key as one text code (`MAS1:` + base64 JSON). Backup saves first (only while playing, never from the title). Restore sets `window.__noSave` (`saveGame` returns early) and reloads. Test: `shots/r29save.mjs`.
+
+**New troops (`foes29.js`, `TYPES29` merged in `entities.js`, `setupFoes29` in `main.js`; new anim clips `javelin`, `brace`, `tend` in `anim.js`):**
+- **Akontistes** (javelin): keeps 7–11 m, throws a javelin with a 0.35 s lead on an arc (a projectile with `jav`, nose-first, stops in the ground), then backs off.
+- **Kontaratos** (braced spear; the existing `spearman` is already called Menavlatos, so the user-picked "menavlatos" became this): braces for 1.4 s with a red wedge (4.8 m, ±0.62 rad). Walking in: ×1.4 damage; an evade or dash in: ×2.4 and the evade's invulnerability is cancelled. After the brace he recovers 1.1 s and takes ×1.35 damage.
+- **Caltrop Thrower** (`tribolos`): keeps behind his men, throws a marked patch (pooled, 4) that lasts 9 s: slow 0.5 and cuts every 0.5 s (not while evading). `g.caltropsClear29()` on hold reset, exit and dungeon exit.
+- **Deputatos** (field surgeon): finds the worst-hurt man under 50% within 16 m, drags him 1.2 s away from Salim, binds him 2.2 s (heal 45%, once per man, `patched`). Any blow on the surgeon breaks it off ("Interrupted").
+- Stale wedges and rings are swept each frame (`g.marks29`).
+- Placed in every region's `spawnX` (game.js, "Round 29" lines), in the ambush and champion rosters (`encounters25.js`), and below ground: from level 5 one middle room adds a surgeon, caltrop man or kontaratos, and qanats and contracts from level 4 add a javelin man (`zones.js`).
+- Test: `shots/r29foes.mjs [region] [out] [spot]`.
+
+**Side quests (`sidequests.js`):** one chain per region, each with a "meet" step (a new step kind: a person out on the land, a conversation scene, optional guard band) and a turn in the story:
+- Sawad `seed` (Rifa'a, miller; the thief Sa'd is a burned-out farmer; they end up sowing together).
+- Marsh `mashuf` (Khalaf, boat-builder; the boy Dahir took it under threat; Khalaf takes him on).
+- Karkh `copper` (Hammad, bath-keeper; the coppersmith Ghalib bought it honestly; drive off his extortioners). **It first landed in the world-events table by mistake; fixed in `f9d3ad5`, needs `r29quests karkh` and `r16test karkh` re-run.**
+- Docks `pilot` (Bakr, river pilot; escort the hiding lamplighter Mundhir home through an ambush).
+- Hamrin `flock` (Ghaylan, shepherd; the old deserter Niketas kept the sheep alive; escort him to the east road while his company hunts him). Hamrin's first side quest.
+- Engine: `meet` steps (`npc()` placed with `freeSpot`, removed with its collider on clear; shows the rig before its scene, since `animateHub` hides people more than 60 m from Salim), escort `who: 'man'` with a `look`, new looks `oldman` and `miller`. `freeSpot` refuses Hamrin rock faces (`hamrinOpen > 0.6`). Mundhir was moved twice to open ground (`[-52, -40]`).
+- Tests: `shots/r29quests.mjs <region> [out]` (plays the region's new chain, prints where people and bands land); `r16test` now handles `meet` steps.
+
+**The epilogue (`epilogue29.js`, scene `quaysAtDusk` in `scenes.js`):**
+- Once Tatzates has fallen (`p.rival.final`), "Ride home to Baghdad" by the Hamrin camp's south gate, or "Walk the quays at dusk" by Ishaq on the quays, sets `sob.endgame = 'epilogue'` and travels (card "Baghdad, at Dusk").
+- `IS_EPILOGUE` (region.js; `?epilogue` forces it): the docks map at dusk, every foe removed each frame, world events off, the tracker leads to Yusuf, Bishr and 'Amr in turn, then Ishaq.
+- Farewells follow the camp stories (`s25.camp[k] >= 3`) and the choices (photeinos, marsh, tatzates). Ishaq's scene: the House of Wisdom across the river, the Pages copied seven times, lines for `arsaber: promise` and `ishaq: heard`, "Go home first, and take Jabir's spear", Salim's lamp, the card "The City of Peace", then the victory screen (New Game+).
+- State: `s25.said.ep29_<who>` and `ep29_done` (New Game+ clears `said`, so it plays again). `sob.endgame` is cleared after.
+- Test: `shots/r29epilogue.mjs [out] [lang]` (`FAST=1` skips the farewells). All lines play, then victory, `done: true`.
+
+**Also:** damage numbers hidden in cutscenes (`body.incine #dmg`). Arabic for all of it in `story29_ar.js` (`AR29`).
+
+**Test notes:** lanes as in Round 28 (`/home/user/wt28` port 5173 and `/home/user/wt28b` port 5174, `lane.sh`, `sweep28.sh`, `sync29.sh`). Syncing a lane while a test runs in it reloads the page and kills the test, even for a change in `shots/` only. A background command is killed after 2 hours; long tests in SwiftShader (the quest and epilogue tests take 10–30 min) should run one per command. Cutscene lines wait for a tap (or 20 s): tests must call `__director.advance()`.
+
+**Status (update as you go):**
+- Built, committed and pushed.
+- Regression sweep: running when this note was written (see the next section if it was finished).
+- Artifact (version 27) and APK: not yet. The APK should come after the user adds the two secrets (check the `apk-builds` commit message for "(throwaway key)").
+
+**Round 30 ideas (not approved):** camp props (the sculpted forge, cooking gear, tents, water jars: carried over twice), a device check of Rounds 26–29 on the user's phone, quest markers on the map for meet steps, Arabic voice for the epilogue card.
+
 
 ## Round 28: phone pass and boss moves (shipped)
 User decisions: all four areas were chosen (boss moves, camp props, phone fixes, story or content), as a full round. Approved build order: (1) phone pass, (2) boss moves, (3) camp props, (4) side quests, post-game epilogue and new enemy types if context allowed. Items 1 and 2 are done. Items 3 and 4 move to Round 29. The user hadn't played on the phone but ticked frame drops, readability and controls, so the phone pass was done from probes and phone-sized shots.
