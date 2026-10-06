@@ -237,6 +237,8 @@ export function setupCombat25(g) {
       startCombo(b, KITS.ghanimFeint); return null;
     },
   };
+  g.SIGS25 = SIGS; g.KITS25 = KITS; g.startCombo25 = startCombo; // Round 28: bosses28.js adds the last-quarter moves
+
   const riposte = (b) => {
     const R = b.r25; R.guard = null; R.sig = null;
     g.ui.damageNumber(b.pos, 'Riposte!', 'crit'); g.audio.clang?.();
@@ -266,7 +268,7 @@ export function setupCombat25(g) {
       if (b.phase >= 2 && !R.p2) { R.p2 = true; R.sigCd = Math.min(R.sigCd, 1.2); R.alt = false; g.onBossPhase26?.(b); }
       if (R.sigCd <= 0 && !g.player.dead) {
         R.sigCd = R.K.sigCd * (b.phase >= 2 ? 0.8 : 1);
-        const k = b.phase >= 2 && R.K.sig2 && (R.alt = !R.alt) ? R.K.sig2 : R.K.sig; // the second half alternates, opening with the new move
+        const k = g.pickSig28?.(b, R) || (b.phase >= 2 && R.K.sig2 && (R.alt = !R.alt) ? R.K.sig2 : R.K.sig); // the second half alternates, opening with the new move; Round 28: the last quarter adds a third (bosses28.js)
         R.sig = SIGS[k](b); if (R.sig || R.combo) return;
       }
       if (d < 4.6 && b.atkCd <= 0 && Math.random() < 0.7) { startCombo(b, R.K.combo); return; }

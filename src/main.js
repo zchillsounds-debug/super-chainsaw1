@@ -18,6 +18,7 @@ import { RIM_G } from './charmats.js';
 import { showOutlines } from './outline.js';
 import { installShadowProxy, SHADOW_PROXY, updatePlayLOD } from './human.js';
 import { setupCombat25 } from './combat25.js';
+import { setupBosses28 } from './bosses28.js';
 import { setupEncounters25 } from './encounters25.js';
 import { setupStory25 } from './story25.js';
 import { setupFoes26 } from './foes26.js';
@@ -143,6 +144,7 @@ setupStory26(game); // Round 26: the Hamrin story (scout, arrow, Tatzates' choic
 setupCamp26(game); // Round 26: Yusuf, Bishr and 'Amr's own stories
 setupEncounters25(game); // Round 25: ambushes and champions on the main path
 setupCombat25(game); // Round 25: boss stagger, combos, signature moves (wraps last)
+setupBosses28(game); // Round 28: captains' and dungeon bosses' moves, act bosses' last-quarter move
 const combatFx = game.combatFx = new CombatFX(game);
 const ambient = game.ambient = new Ambient(game, QUALITY);
 const tutorial = new Tutorial(game);

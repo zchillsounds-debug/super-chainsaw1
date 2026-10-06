@@ -71,7 +71,7 @@ export class Zones {
       const pack = n > 0 ? g.spawnPack(pool, c.x, c.z, n, lv, { spread: 3, interior: true }) : [];
       if (stdRoom) pack.push(...g.spawnPack('standard', c.x, c.z + 2, 1, lv, { spread: 1, interior: true }));
       if (wallRoom) pack.push(...g.spawnWall26(c.x, c.z + 1.5, lv, { interior: true }));
-      if (last) pack.push(...g.spawnPack(def.bossType || 'spearman', c.x, c.z - 1.5, 1, def.level + 1, { elite: true, interior: true, name: def.bossName }).map((e) => Object.assign(e, { bossOf: def.bossOf })));
+      if (last) pack.push(...g.spawnPack(def.bossType || 'spearman', c.x, c.z - 1.5, 1, def.level + 1, { elite: true, interior: true, name: def.bossName }).map((e) => Object.assign(e, { bossOf: def.bossOf, dboss: true }))); // Round 28: dboss gets the ground's move (bosses28.js)
       for (const e of pack) { e.interior = true; def.mods?.apply?.(e); }
       g.interior.enemies.push(...pack);
     });

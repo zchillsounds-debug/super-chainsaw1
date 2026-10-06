@@ -9,6 +9,7 @@ import { rockTex } from './vegetation.js';
 import { floorMat } from './interior.js';
 import { mudBrick, woodTex } from './textures.js';
 import { makeMoves27, setupMasters27 } from './masters27.js';
+import { makeMoves28 } from './bosses28.js';
 import { firePit, brickStack, crate } from './props.js';
 import { rmats, reedStack } from './regionprops.js';
 import { baleStack } from './docksprops.js';
@@ -204,19 +205,19 @@ const BOSS = {
   sakhr: { name: 'Phobenos', sub: 'Master of the quarry gangs', type: 'engineer', look: { scale: 1.45, belly: 0.5, cap: 0x3a2a1e, capBand: 0x6a3a1a, helm: false, crest: 'hat', sash: 0x6a3a1a }, hp: 14, dmg: 1.5,
     moves: ['swing', 'crack', 'slam'], p2: { at: 0.5, line: 'Bring the face down on him!', add: ['rockfall'] } },
   ghaylan: { name: 'Krambonites', sub: 'Overseer of the galleries', type: 'spearman', look: { scale: 1.5, crest: 'plume', sash: 0x5a4a1a }, hp: 22, dmg: 1.6,
-    moves: ['swing', 'charge', 'rockfall', 'sweep'], p2: { at: 0.5, line: 'Every man to me!', add: ['summon', 'crack', 'cartroll'], summon: ['guard', 'spearman', 'crossbow'] } },
+    moves: ['swing', 'charge', 'rockfall', 'sweep'], p2: { at: 0.5, line: 'Every man to me!', add: ['summon', 'crack', 'cartroll', 'propfall'], summon: ['guard', 'spearman', 'crossbow'] } },
   shaddad: { name: 'Tarchaneiotes', sub: 'The shield of the fort', type: 'guard', look: { scale: 1.55, crest: 'heavy', sash: 0x1a3a5a, offhand: 'shield' }, hp: 16, dmg: 1.5, block: 0.9,
     moves: ['swing', 'charge', 'slam'], p2: { at: 0.5, line: 'Close the wall!', add: ['summon'], summon: ['guard', 'guard'] } },
   jabala: { name: 'Charsianites', sub: 'Commander of the cliff fort', type: 'guard', look: { scale: 1.5, crest: 'banner', sash: 0x6a1a14, cloak: 0x3a0e0a }, hp: 24, dmg: 1.6,
-    moves: ['swing', 'arrows', 'sweep'], p2: { at: 0.55, line: 'Archers! Fire on the yard!', add: ['fireline', 'summon', 'testudo'], summon: ['archer', 'archer', 'crossbow'] } },
+    moves: ['swing', 'arrows', 'sweep'], p2: { at: 0.55, line: 'Archers! Fire on the yard!', add: ['fireline', 'summon', 'testudo', 'wallvolley'], summon: ['archer', 'archer', 'crossbow'] } },
   dhuayb: { name: 'Apokaukos', sub: 'Keeper of the bridge', type: 'spearman', look: { scale: 1.45, crest: 'mantle', sash: 0x2a4a2a, cloak: 0x2a4a2a }, hp: 16, dmg: 1.5,
     moves: ['swing', 'sweep', 'stomp', 'charge'], p2: { at: 0.45, line: 'Break the boards under him!', add: ['stomp'] } },
   hanzala: { name: 'Pankalos', sub: 'Master of the gorge', type: 'spearman', look: { scale: 1.5, crest: 'hat', sash: 0x4a1a3a, hat: 0xb8a468, helm: false }, hp: 24, dmg: 1.6,
-    moves: ['swing', 'net', 'charge', 'sweep'], p2: { at: 0.5, line: 'Cut the ropes. Let the gorge have him.', add: ['shrink', 'arrows', 'leap'] } },
+    moves: ['swing', 'net', 'charge', 'sweep'], p2: { at: 0.5, line: 'Cut the ropes. Let the gorge have him.', add: ['shrink', 'arrows', 'leap', 'gorgerush'] } },
   nahshal: { name: 'Brachamios', sub: 'Tatzates\' siphon-master', type: 'naffat', look: { scale: 1.45, crest: 'hat', sash: 0x7a2a10 }, hp: 16, dmg: 1.5,
     moves: ['swing', 'fireline', 'firepots'], p2: { at: 0.5, line: 'Burn it all!', add: ['summon'], summon: ['naffat', 'naffat', 'deserter'] } },
   zubayr: { name: 'Tatzates', sub: 'The bowman on the dune', type: 'zubayr', look: { scale: 1.12 }, hp: 30, dmg: 1.5, rival: true,
-    moves: ['arrows', 'rockfall'], p2: { at: 0.5, line: 'You will not see the next one coming.', add: ['vanish', 'snipe'] } },
+    moves: ['arrows', 'rockfall'], p2: { at: 0.5, line: 'You will not see the next one coming.', add: ['vanish', 'snipe', 'threeshafts'] } },
 };
 export const HOLDS = {
   quarry: { title: 'The Quarry Galleries', sub: 'Old workings in the western cliff', rock: 0xd8c8a8, floor: [0x9a8a70, 'earth'], wall: 0xc8b898, pool: ['guard', 'deserter', 'spearman', 'engineer'], ranged: ['crossbow', 'archer'], mid: 'sakhr', boss: 'ghaylan', codex: 'quarry', quest: 'quarry', step: 0 },
@@ -619,6 +620,7 @@ const MOVES = {
 };
 
 Object.assign(MOVES, makeMoves27({ lineTele, inLine })); // Round 27: the story-hold masters' new moves
+Object.assign(MOVES, makeMoves28({ lineTele, inLine })); // Round 28: one more for each Hamrin master
 
 function holdBossAI(g, e, dt, dist) {
   const p = g.player, K = e.holdBoss;
