@@ -286,6 +286,8 @@ export class Game {
     // Round 26: horse archers on the open sand, a shield wall on the road south, a standard with the arch road pack
     this.spawnPack('hippo', -46, 20, 1, 2); this.spawnPack('hippo', 30, -30, 1, 3);
     spawnWall(this, 2, -38, 3); this.spawnPack('standard', 12, -54, 1, 4);
+    // Round 29: javelin men with the arch road pack, a braced spear by the shield wall, a surgeon behind the standard
+    this.spawnPack('akontistes', 15, -50, 2, 4, { spread: 3 }); this.spawnPack('kontaratos', 5, -41, 1, 3); this.spawnPack('deputatos', 14, -58, 1, 4);
   }
   // Act IV: Kallinikos' marines and slingers hold the causeways; raiders crouch in the reed beds beside them
   spawnMarsh() {
@@ -315,6 +317,8 @@ export class Game {
     this.spawnPack(['crossbow', 'netter'], -36, 40, 2, 7); this.spawnPack(['crossbow', 'spearman', 'crossbow'], 20, -50, 3, 9);
     // Round 26: a standard in the reed camp, a shield wall across the road to the weir
     this.spawnPack('standard', S.x + 2, S.z + 9, 1, 7); spawnWall(this, -24, -46, 9); this.spawnPack('standard', -22, -56, 1, 9);
+    // Round 29: caltrops and javelins on the causeways, a surgeon with the standard's men
+    this.spawnPack('tribolos', -20, -58, 1, 9); this.spawnPack('akontistes', S.x + 5, S.z + 11, 2, 7, { spread: 3 }); this.spawnPack('deputatos', -26, -52, 1, 9);
   }
   // Act V: the buyer's guards hold the lanes of burned al-Karkh; knife-men hide in the ruins
   spawnKarkh() {
@@ -340,6 +344,8 @@ export class Game {
     this.spawnPack(['engineer', 'guard'], 30, 30, 2, 10); this.spawnPack(['engineer', 'guard', 'crossbow'], A.x + 14, A.z + 20, 3, 11, { spread: 5 });
     // Round 26: shield walls hold the lanes; standards with the paper-sellers' lane pack and the square road
     spawnWall(this, 20, -16, 11); spawnWall(this, 8, 58, 10); this.spawnPack('standard', G.x + 6, G.z + 6, 1, 11); this.spawnPack('standard', 46, -36, 1, 11);
+    // Round 29: braced spears in the lanes, a caltrop man by the gate, javelins and a surgeon with the east pack
+    this.spawnPack('kontaratos', 22, -12, 2, 11, { spread: 3 }); this.spawnPack('tribolos', G.x + 8, G.z + 3, 1, 11); this.spawnPack('akontistes', 10, 54, 2, 10, { spread: 3 }); this.spawnPack('deputatos', 48, -40, 1, 11);
   }
 
   // Act VI (Round 20): Arsaber's men hold the river quays: solenarion archers on the warehouse roofs' edges, guards on
@@ -365,6 +371,8 @@ export class Game {
     this.spawnPack(['guard', 'crossbow', 'naffat'], 28, -66, 4, 15, { spread: 5 });
     // Round 26: horse archers inland with the horsemen, a shield wall on the quay road, standards with the inland packs
     this.spawnPack('hippo', -54, 0, 2, 13, { spread: 8 }); spawnWall(this, 26, 14, 13); this.spawnPack('standard', -58, -10, 1, 14); this.spawnPack('standard', 4, -60, 1, 15);
+    // Round 29: all four on the quays
+    this.spawnPack('akontistes', -56, -14, 2, 14, { spread: 3 }); this.spawnPack('kontaratos', 28, 18, 1, 13); this.spawnPack('tribolos', 6, -56, 1, 15); this.spawnPack('deputatos', 2, -64, 1, 15);
     this.spawnPack('crossbow', A.x - 16, A.z + 14, 1, 15, { elite: true });
   }
 
@@ -386,6 +394,8 @@ export class Game {
     this.spawnPack(['guard', 'spearman'], 50, -14, 3, 24);
     // Round 26: the frontier road's last line: shield walls in the gorges, horse archers on the flats, standards
     spawnWall(this, -6, 26, 23); spawnWall(this, -24, -28, 24); this.spawnPack('hippo', 6, -4, 1, 23); this.spawnPack('standard', A.x - 6, A.z + 14, 1, 24); this.spawnPack('standard', -24, 60, 1, 22);
+    // Round 29: the frontier company's skirmishers, spears, caltrops and surgeons
+    this.spawnPack('akontistes', A.x - 9, A.z + 16, 2, 24, { spread: 3 }); this.spawnPack('kontaratos', -4, 30, 2, 23, { spread: 3 }); this.spawnPack('tribolos', -22, -32, 1, 24); this.spawnPack('deputatos', -26, 58, 1, 22); this.spawnPack('deputatos', A.x - 4, A.z + 18, 1, 24);
   }
   makeMinimap() {
     const c = document.createElement('canvas'); c.width = c.height = 280; const x = c.getContext('2d');

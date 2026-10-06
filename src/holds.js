@@ -847,7 +847,7 @@ export function setupHolds(g) {
     g.lightPool?.remove((e) => e.interior);
     destroyHold(g.scene, I); buildGrid(); setInteriorFloor(null); buildNav(INTERIOR_X, 290);
     if (g.chief?.removed && !g.chief.dead) g.chief = null; if (g.matriarch?.removed && !g.matriarch.dead) g.matriarch = null;
-    g.interior = null; g.camAction = false; g.lockOn = null; g.holdArena = null; ringM.visible = false; g.m27clear?.();
+    g.interior = null; g.camAction = false; g.lockOn = null; g.holdArena = null; ringM.visible = false; g.m27clear?.(); g.caltropsClear29?.();
     g.ui.bossBar(null); g.audio.setMusicIntensity?.(0);
     p.pos.copy(g.returnPos); p.pos.y = 0; p.target = null; p.moveTo = null;
     const { heightAt } = await import('./terrain.js'); p.pos.y = heightAt(p.pos.x, p.pos.z);
@@ -865,7 +865,7 @@ export function setupHolds(g) {
     prevKill?.(e);
     if (!e.holdBoss || !g.interior?.hold) return;
     const id = g.interior.I.hold, s = state(id), H = HOLDS[id];
-    e.barOn = false; g.ui.bossBar(null); g.holdArena = null; ringM.visible = false; g.m27clear?.(); g.audio.setMusicIntensity?.(0);
+    e.barOn = false; g.ui.bossBar(null); g.holdArena = null; ringM.visible = false; g.m27clear?.(); g.caltropsClear29?.(); g.audio.setMusicIntensity?.(0);
     for (const m of g.interior.enemies) if (m.summoned && !m.dead) { m.hp = 0; g.killEnemy(m, e.pos); }
     p.renown = (p.renown || 0) + (e.holdKey === 'boss' ? 30 : 15);
     if (e.holdKey === 'mid') { s.mid = true; g.ui.banner(t(e.name) + ' ' + t('falls'), t('The way on is open. A fire waits ahead.'), 3200); }
@@ -889,7 +889,7 @@ export function setupHolds(g) {
     p.hp = p.stats.maxHp; p.mp = p.stats.maxMp; p.invuln = 2; p.target = null; p.moveTo = null; p.gold = Math.floor(p.gold * 0.95);
     const F = s.lastFire != null ? I.fires[s.lastFire] : null;
     p.pos.copy(F ? F.pos.clone().add(V(0, 0, 2)) : I.start);
-    g.holdArena = null; ringM.visible = false; g.m27clear?.(); g.ui.bossBar(null);
+    g.holdArena = null; ringM.visible = false; g.m27clear?.(); g.caltropsClear29?.(); g.ui.bossBar(null);
     for (const e of g.interior.enemies) if (e.holdBoss && !e.dead) { e.hp = e.maxHp; e.engaged = false; e.p2 = false; e.mv = null; e.curMove = null; e.st.action = null; e.moves = [...e.holdBoss.moves]; e.cds = {}; e.pos.copy(e.holdKey === 'mid' ? I.midAt : I.bossAt); e.ghost = false; e.rig.visible = true; e.hook = null; e.smoke = null; if (g.rivalChain) g.rivalChain.visible = false; }
     for (const e of g.interior.enemies) if (e.summoned && !e.dead) { g.scene.remove(e.rig); e.removed = true; e.dead = true; }
     for (const e of g.interior.enemies) if (!e.dead && !e.holdBoss) { e.alerted = false; e.hp = e.maxHp; e.pos.copy(e.home); }

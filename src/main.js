@@ -22,6 +22,7 @@ import { setupBosses28 } from './bosses28.js';
 import { setupEncounters25 } from './encounters25.js';
 import { setupStory25 } from './story25.js';
 import { setupFoes26 } from './foes26.js';
+import { setupFoes29 } from './foes29.js';
 import { setupStory26 } from './story26.js';
 import { setupCamp26 } from './camp26.js';
 import { WEATHER } from './triplanar.js';
@@ -140,6 +141,7 @@ setupStoryHolds(game);
 setupHubLife(game);
 setupStory25(game); game.converse25 = (n) => converse(game, n); // Round 25: barks, choices' effects, Ishaq, leaves and letters
 setupFoes26(game); // Round 26: standard-bearers, shield walls, horse archers
+setupFoes29(game); // Round 29: javelin men, braced spearmen, caltrop throwers, field surgeons
 setupStory26(game); // Round 26: the Hamrin story (scout, arrow, Tatzates' choice)
 setupCamp26(game); // Round 26: Yusuf, Bishr and 'Amr's own stories
 setupEncounters25(game); // Round 25: ambushes and champions on the main path

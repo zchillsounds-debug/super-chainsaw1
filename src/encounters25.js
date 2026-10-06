@@ -13,16 +13,16 @@ import { makeItem } from './items.js';
 import { t } from './i18n.js';
 
 const ROSTER = {
-  sawad: { light: ['bandit', 'bandit', 'spearman'], ranged: ['archer', 'crossbow'], champ: 'guard', retinue: ['spearman', 'archer', 'bandit'], name: 'Rhaptes',
+  sawad: { light: ['bandit', 'bandit', 'spearman'], ranged: ['archer', 'crossbow', 'akontistes'], champ: 'guard', retinue: ['spearman', 'deputatos', 'bandit'], name: 'Rhaptes',
     call: 'Arsaber pays by the head. Yours will do.' },
-  marsh: { light: ['reedman', 'netter', 'bandit'], ranged: ['slinger', 'slinger'], champ: 'netter', retinue: ['reedman', 'slinger', 'netter'], name: 'Kontos',
+  marsh: { light: ['reedman', 'netter', 'bandit'], ranged: ['slinger', 'slinger', 'tribolos'], champ: 'netter', retinue: ['reedman', 'deputatos', 'netter'], name: 'Kontos',
     call: 'The reeds are ours now, Baghdadi.' },
-  karkh: { light: ['bandit', 'deserter', 'spearman'], ranged: ['archer', 'crossbow'], champ: 'guard', retinue: ['spearman', 'naffat', 'archer'], name: 'Mylonas',
+  karkh: { light: ['bandit', 'deserter', 'spearman'], ranged: ['archer', 'crossbow', 'tribolos'], champ: 'guard', retinue: ['kontaratos', 'naffat', 'deputatos'], name: 'Mylonas',
     call: 'Your city burned before we came. We only warm our hands.' },
-  docks: { light: ['guard', 'netter', 'bandit'], ranged: ['crossbow', 'archer'], champ: 'guard', retinue: ['crossbow', 'guard', 'netter'], name: 'Karykes',
+  docks: { light: ['guard', 'netter', 'bandit'], ranged: ['crossbow', 'archer', 'akontistes'], champ: 'guard', retinue: ['crossbow', 'kontaratos', 'deputatos'], name: 'Karykes',
     call: 'One more crate for the ship. You will fit in it.' },
   // Round 26: the last of the company on the frontier road, with a standard and a horse archer in the second wave
-  hamrin: { light: ['guard', 'deserter', 'spearman'], ranged: ['archer', 'crossbow', 'hippo'], champ: 'guard', retinue: ['standard', 'spearman', 'archer'], name: 'Varazes',
+  hamrin: { light: ['guard', 'deserter', 'spearman'], ranged: ['archer', 'crossbow', 'hippo', 'akontistes', 'tribolos'], champ: 'guard', retinue: ['standard', 'kontaratos', 'deputatos'], name: 'Varazes',
     call: 'The frontier is three days north. You will not see it.' },
 }[REGION];
 

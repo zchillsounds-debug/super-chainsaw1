@@ -44,6 +44,10 @@ const CLIPS = {
     [0.7, { shR: [-0.45, 0, -0.1], elR: [-0.1, 0, 0], chest: [0.5, 0, 0], spine: [0.28, 0, 0], drop: 0.15, lunge: 0.34, jaw: 0.3 }, 'out'], [1, null, 'io']],
   thrust: [[0, null], [0.4, { shR: [-0.4, 0, 0.1], elR: [-1.6, 0, 0], chest: [0, 0.4, 0], spine: [0, 0.2, 0], hips: [0, 0.2, 0], drop: 0.04 }, 'io'],
     [0.6, { shR: [-1.45, 0, -0.1], elR: [-0.05, 0, 0], chest: [0.15, -0.35, 0], spine: [0.08, -0.15, 0], lunge: 0.3, drop: 0.07, jaw: 0.4 }, 'snap'], [1, null, 'io']],
+  // Round 29: the javelin overhand (right arm), the kontaratos' brace (held), the surgeon kneeling to bind a man (held)
+  javelin: [[0, null], [0.45, { shR: [-2.9, 0, 0.45], elR: [-1.3, 0, 0], shL: [-0.9, 0, -0.3], chest: [-0.12, 0.5, 0], spine: [-0.05, 0.2, 0], hips: [0, 0.2, 0] }, 'io'], [0.62, { shR: [-1.1, 0, 0.2], elR: [-0.2, 0, 0], shL: [-0.4, 0, -0.2], chest: [0.25, -0.35, 0], spine: [0.1, -0.15, 0], drop: 0.05 }, 'snap'], [1, null, 'io']],
+  brace: [[0, null], [0.3, { shR: [-0.95, 0, 0.25], elR: [-0.9, 0, 0], shL: [-1.05, 0, -0.35], elL: [-0.75, 0, 0], chest: [0.28, 0, 0], spine: [0.16, 0, 0], hips: [-0.1, 0, 0], drop: 0.2 }, 'io'], [1, { shR: [-0.95, 0, 0.25], elR: [-0.9, 0, 0], shL: [-1.05, 0, -0.35], elL: [-0.75, 0, 0], chest: [0.28, 0, 0], spine: [0.16, 0, 0], hips: [-0.1, 0, 0], drop: 0.2 }, 'lin']],
+  tend: [[0, null], [0.3, { shR: [-0.9, 0, 0.1], elR: [-0.7, 0, 0], shL: [-0.9, 0, -0.1], elL: [-0.7, 0, 0], chest: [0.55, 0, 0], spine: [0.3, 0, 0], neck: [0.3, 0, 0], drop: 0.38 }, 'io'], [1, { shR: [-0.8, 0, 0.1], elR: [-0.9, 0, 0], shL: [-1.0, 0, -0.1], elL: [-0.5, 0, 0], chest: [0.55, 0, 0], spine: [0.3, 0, 0], neck: [0.3, 0, 0], drop: 0.38 }, 'lin']],
   throw: [[0, null], [0.45, { shL: [-2.8, 0, -0.3], elL: [-1.2, 0, 0], chest: [-0.1, -0.5, 0], spine: [0, -0.2, 0] }, 'io'],
     [0.62, { shL: [-0.6, 0, 0], elL: [-0.2, 0, 0], chest: [0.12, 0.45, 0], spine: [0.05, 0.2, 0], lunge: 0.1 }, 'snap'], [1, null, 'io']],
   slam: [[0, null], [0.5, { shR: [-3.0, 0, 0.2], shL: [-2.6, 0, -0.2], elR: [-0.8, 0, 0], elL: [-0.8, 0, 0], chest: [-0.35, 0, 0], spine: [-0.15, 0, 0], drop: -0.03 }, 'io'],
