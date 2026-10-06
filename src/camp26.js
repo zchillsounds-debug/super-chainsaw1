@@ -10,6 +10,7 @@ import { REGION, HUB } from './region.js';
 import { heightAt } from './terrain.js';
 import { makeItem } from './items.js';
 import { S25 } from './story25.js';
+import { wasitGoods, anvil, drillGround } from './props27.js';
 import { t } from './i18n.js';
 
 const ORDER = ['sawad', 'marsh', 'karkh', 'docks', 'hamrin'];
@@ -31,30 +32,12 @@ const ARCS = {
   ], gift: ['belt', 'The Drill-Master\'s Sash', '"Hold. Breathe. Hold."'] },
 };
 
-// the camp, changed: built from plain boxes and cylinders beside the man, in every region once his arc is done
+// the camp, changed: a prop beside the man, in every region once his arc is done (Round 27: sculpted, props27.js)
 function campProp(g, k) {
   const A = ARCS[k], at = HUB[A.at]; if (!at) return;
-  const grp = new THREE.Group(), wood = new THREE.MeshStandardMaterial({ color: 0x7a5a38, roughness: 0.9 }), dark = new THREE.MeshStandardMaterial({ color: 0x4a3622, roughness: 0.95 });
-  const box = (w, h, d, m, x, y, z, ry = 0) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.rotation.y = ry; o.castShadow = o.receiveShadow = true; grp.add(o); return o; };
-  const cyl = (r, h, m, x, y, z, rx = 0, rz = 0) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 8), m); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); o.castShadow = true; grp.add(o); return o; };
-  if (k === 'yusuf') {
-    // crates of Wasit goods, a sack of dates and a bolt of dyed cloth
-    const cloth = new THREE.MeshStandardMaterial({ color: 0x2a5a7a, roughness: 0.8 }), sack = new THREE.MeshStandardMaterial({ color: 0xb09a70, roughness: 1 });
-    box(0.7, 0.5, 0.6, wood, 0, 0.25, 0, 0.2); box(0.6, 0.45, 0.55, dark, 0.75, 0.22, 0.1, -0.15); box(0.55, 0.4, 0.5, wood, 0.35, 0.7, 0.05, 0.4);
-    const s = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 8), sack); s.scale.set(1, 1.2, 1); s.position.set(-0.6, 0.34, 0.2); s.castShadow = true; grp.add(s);
-    cyl(0.12, 0.9, cloth, 0.2, 0.62, 0.45, 0, Math.PI / 2);
-  } else if (k === 'bishr') {
-    // a new anvil on a stump, bright on the face
-    const iron = new THREE.MeshStandardMaterial({ color: 0x5a5a5e, metalness: 0.8, roughness: 0.35 });
-    cyl(0.32, 0.55, dark, 0, 0.27, 0); box(0.62, 0.2, 0.26, iron, 0, 0.66, 0); box(0.34, 0.14, 0.2, iron, 0, 0.5, 0);
-    const horn = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.32, 8), iron); horn.rotation.z = Math.PI / 2; horn.position.set(0.46, 0.68, 0); grp.add(horn);
-  } else {
-    // a straw practice post with a crossbar of rope bundles, and a rack of wooden spears
-    const straw = new THREE.MeshStandardMaterial({ color: 0xc8a860, roughness: 1 });
-    cyl(0.06, 1.8, wood, 0, 0.9, 0); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.2, 0.75, 10), straw); b.position.set(0, 1.25, 0); b.castShadow = true; grp.add(b);
-    box(0.06, 1.0, 0.06, dark, 1.0, 0.5, -0.3); box(0.06, 1.0, 0.06, dark, 1.8, 0.5, -0.3); box(0.9, 0.06, 0.06, dark, 1.4, 0.85, -0.3);
-    for (let i = 0; i < 4; i++) cyl(0.025, 1.9, wood, 1.1 + i * 0.2, 0.95, -0.22, 0.12, 0);
-  }
+  if (g.campProps27?.[k]) return;
+  const grp = k === 'yusuf' ? wasitGoods() : k === 'bishr' ? anvil() : drillGround();
+  (g.campProps27 ||= {})[k] = grp;
   // beside the man, a step toward the camp's middle
   const I = HUB.ishaq || at, dx = I[0] - at[0], dz = I[1] - at[1], L = Math.hypot(dx, dz) || 1;
   const x = at[0] + (dx / L) * 1.6 + (dz / L) * 1.8, z = at[1] + (dz / L) * 1.6 - (dx / L) * 1.8;
@@ -63,6 +46,7 @@ function campProp(g, k) {
 }
 
 export function setupCamp26(g) {
+  g.campProp26 = (k) => campProp(g, k); // for tests and shots
   const ri = ORDER.indexOf(REGION); if (ri < 0) return;
   const C = () => { const s = S25(g); return (s.camp ||= { yusuf: 0, bishr: 0, amr: 0, at: {} }); };
   for (const k in ARCS) if (C()[k] >= 3) campProp(g, k);

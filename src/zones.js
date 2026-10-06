@@ -62,8 +62,15 @@ export class Zones {
     I.rooms.forEach((r, i) => {
       if (i === 0) return;
       const c = roomCenter(r), last = i === I.rooms.length - 1;
-      const n = (last ? 3 : 2 + Math.floor(Math.random() * 3)) + (def.extraFoes || 0);
-      const pack = g.spawnPack(pool, c.x, c.z, n, def.level + (def.mods?.levelUp || 0), { spread: 3, interior: true });
+      // Round 27: the new troops below ground (marsh dungeons on, and every contract and trial): a standard-bearer with the
+      // pack in one room, a shield wall holding another with fewer men beside it. No horse archers: the rooms are too
+      // tight for his circle.
+      const lv = def.level + (def.mods?.levelUp || 0), troops = !last && (def.level >= 8 || def.kind === 'contract' || def.kind === 'trial') && I.rooms.length > 3;
+      const stdRoom = troops && i === Math.max(1, Math.floor((I.rooms.length - 1) * 0.4)), wallRoom = troops && !stdRoom && !!g.spawnWall26 && i === Math.max(2, Math.floor((I.rooms.length - 1) * 0.75));
+      const n = (last ? 3 : 2 + Math.floor(Math.random() * 3)) + (def.extraFoes || 0) - (wallRoom ? 2 : 0);
+      const pack = n > 0 ? g.spawnPack(pool, c.x, c.z, n, lv, { spread: 3, interior: true }) : [];
+      if (stdRoom) pack.push(...g.spawnPack('standard', c.x, c.z + 2, 1, lv, { spread: 1, interior: true }));
+      if (wallRoom) pack.push(...g.spawnWall26(c.x, c.z + 1.5, lv, { interior: true }));
       if (last) pack.push(...g.spawnPack(def.bossType || 'spearman', c.x, c.z - 1.5, 1, def.level + 1, { elite: true, interior: true, name: def.bossName }).map((e) => Object.assign(e, { bossOf: def.bossOf })));
       for (const e of pack) { e.interior = true; def.mods?.apply?.(e); }
       g.interior.enemies.push(...pack);

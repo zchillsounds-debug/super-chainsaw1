@@ -8,6 +8,7 @@ import { triplanarMaterial } from './triplanar.js';
 import { rockTex } from './vegetation.js';
 import { floorMat } from './interior.js';
 import { mudBrick, woodTex } from './textures.js';
+import { makeMoves27, setupMasters27 } from './masters27.js';
 import { firePit, brickStack, crate } from './props.js';
 import { rmats, reedStack } from './regionprops.js';
 import { baleStack } from './docksprops.js';
@@ -583,7 +584,7 @@ const MOVES = {
   // Krambonites: a laden stone-cart sent rolling down a lane across Salim's ground (the lane is marked; it throws him)
   cartroll: { range: [0, 30], cd: 9, start(g, e) { e.st.action = 'command'; e.mv = { t: 0, dur: 1.3 }; const p = g.player.pos, a = Math.random() * Math.PI * 2, d = V(Math.sin(a), 0, Math.cos(a)), from = p.clone().addScaledVector(d, -11); from.y = 0;
       lineTele(g, from, d, 22, 2.6, 1.25, () => { const H = { from, dir: d, len: 22, w: 2.6 }; for (let k = 0; k < 11; k++) g.fx.dust(tmp2.copy(from).addScaledVector(d, k * 2), 5, 1.3); g.audio.boom?.(); g.shake = Math.max(g.shake, 0.45); if (inLine(g.player.pos, H)) { g.damagePlayer(e.dmg * 1.4, from); g.player.knock = (g.player.knock || new THREE.Vector3()).addScaledVector(d, 18); } });
-      g.ui.damageNumber(e.pos, 'Cart!', 'stagger'); },
+      g.ui.damageNumber(e.pos, t('Cart!'), 'stagger'); },
     tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(1, M.t / M.dur); return M.t >= M.dur; } },
   // Charsianites: "Shields!": a shield wall of three forms in front of him, and he stands behind it shooting orders
   testudo: { range: [0, 30], cd: 99, once: true, start(g, e) { e.st.action = 'command'; e.mv = { t: 0, dur: 1.4 }; const p = g.player.pos, d = tmp.set(p.x - e.pos.x, 0, p.z - e.pos.z).normalize(), at = e.pos.clone().addScaledVector(d, 3.2);
@@ -601,7 +602,7 @@ const MOVES = {
       return M.t > 1.5; } },
   // Tatzates: the arrow that killed Jabir: a long aim down a marked line, then one heavy shaft along it
   snipe: { range: [4, 30], cd: 10, start(g, e) { const p = g.player.pos, d = tmp.set(p.x - e.pos.x, 0, p.z - e.pos.z).normalize().clone(), from = e.pos.clone().setY(0); e.facing = Math.atan2(d.x, d.z); e.st.action = 'shoot'; e.mv = { t: 0, dur: 1.5 };
-      g.ui.damageNumber(e.pos, 'Marked', 'crit');
+      g.ui.damageNumber(e.pos, t('Marked'), 'crit');
       lineTele(g, from, d, 30, 1.3, 1.2, () => { const H = { from, dir: d, len: 30, w: 1.3 }; g.audio.whoosh?.(); for (let k = 0; k < 10; k++) g.fx.glow.spawn({ pos: { x: from.x + d.x * k * 3, y: 1.3, z: from.z + d.z * k * 3 }, life: 0.3, size: 0.35, size1: 0.05, color: new THREE.Color(3, 2.6, 2) }); if (inLine(g.player.pos, H)) g.damagePlayer(e.dmg * 2.2, e.pos); }); },
     tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(0.55, M.t / M.dur); return M.t >= M.dur; } },
   shrink: { range: [0, 40], cd: 99, once: true, start(g, e) { e.st.action = 'command'; e.mv = { t: 0, dur: 1.2 }; g.holdArena = { c: (g.interior?.I.bossAt || e.pos).clone(), r: 13, to: 6.5, t: 0 }; g.ui.toast(t('The ropes are cut. Keep to the middle')); },
@@ -616,6 +617,8 @@ const MOVES = {
         if (e.st.actionT >= 1) { e.st.action = null; return true; } }
       return false; } },
 };
+
+Object.assign(MOVES, makeMoves27({ lineTele, inLine })); // Round 27: the story-hold masters' new moves
 
 function holdBossAI(g, e, dt, dist) {
   const p = g.player, K = e.holdBoss;
@@ -674,6 +677,7 @@ export function setupHolds(g) {
   const ringM = new THREE.Mesh(new THREE.RingGeometry(0.97, 1, 64).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 0.4, 0.1), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })); ringM.visible = false; g.scene.add(ringM);
   const holeG = new THREE.CircleGeometry(1.2, 12).rotateX(-Math.PI / 2), holeM = new THREE.MeshBasicMaterial({ color: 0x050403 });
   const holes = []; for (let i = 0; i < 8; i++) { const h = new THREE.Mesh(holeG, holeM); h.visible = false; g.scene.add(h); holes.push({ m: h, t: 0, life: 0 }); }
+  setupMasters27(g);
   g.holdHole = (q) => { const h = holes.find((x) => !x.m.visible) || holes[0]; h.m.visible = true; h.m.position.set(q.x, 0.04, q.z); h.t = 0; h.life = 9; };
   // the close camera pulls in only for what stands taller than Salim: rock, walls, a closed gate or cracked wall
   // (not campfires, chests, stacks, rope rails or a hulk's low bulwark)
@@ -841,7 +845,7 @@ export function setupHolds(g) {
     g.lightPool?.remove((e) => e.interior);
     destroyHold(g.scene, I); buildGrid(); setInteriorFloor(null); buildNav(INTERIOR_X, 290);
     if (g.chief?.removed && !g.chief.dead) g.chief = null; if (g.matriarch?.removed && !g.matriarch.dead) g.matriarch = null;
-    g.interior = null; g.camAction = false; g.lockOn = null; g.holdArena = null; ringM.visible = false;
+    g.interior = null; g.camAction = false; g.lockOn = null; g.holdArena = null; ringM.visible = false; g.m27clear?.();
     g.ui.bossBar(null); g.audio.setMusicIntensity?.(0);
     p.pos.copy(g.returnPos); p.pos.y = 0; p.target = null; p.moveTo = null;
     const { heightAt } = await import('./terrain.js'); p.pos.y = heightAt(p.pos.x, p.pos.z);
@@ -859,7 +863,7 @@ export function setupHolds(g) {
     prevKill?.(e);
     if (!e.holdBoss || !g.interior?.hold) return;
     const id = g.interior.I.hold, s = state(id), H = HOLDS[id];
-    e.barOn = false; g.ui.bossBar(null); g.holdArena = null; ringM.visible = false; g.audio.setMusicIntensity?.(0);
+    e.barOn = false; g.ui.bossBar(null); g.holdArena = null; ringM.visible = false; g.m27clear?.(); g.audio.setMusicIntensity?.(0);
     for (const m of g.interior.enemies) if (m.summoned && !m.dead) { m.hp = 0; g.killEnemy(m, e.pos); }
     p.renown = (p.renown || 0) + (e.holdKey === 'boss' ? 30 : 15);
     if (e.holdKey === 'mid') { s.mid = true; g.ui.banner(t(e.name) + ' ' + t('falls'), t('The way on is open. A fire waits ahead.'), 3200); }
@@ -883,7 +887,7 @@ export function setupHolds(g) {
     p.hp = p.stats.maxHp; p.mp = p.stats.maxMp; p.invuln = 2; p.target = null; p.moveTo = null; p.gold = Math.floor(p.gold * 0.95);
     const F = s.lastFire != null ? I.fires[s.lastFire] : null;
     p.pos.copy(F ? F.pos.clone().add(V(0, 0, 2)) : I.start);
-    g.holdArena = null; ringM.visible = false; g.ui.bossBar(null);
+    g.holdArena = null; ringM.visible = false; g.m27clear?.(); g.ui.bossBar(null);
     for (const e of g.interior.enemies) if (e.holdBoss && !e.dead) { e.hp = e.maxHp; e.engaged = false; e.p2 = false; e.mv = null; e.curMove = null; e.st.action = null; e.moves = [...e.holdBoss.moves]; e.cds = {}; e.pos.copy(e.holdKey === 'mid' ? I.midAt : I.bossAt); e.ghost = false; e.rig.visible = true; e.hook = null; e.smoke = null; if (g.rivalChain) g.rivalChain.visible = false; }
     for (const e of g.interior.enemies) if (e.summoned && !e.dead) { g.scene.remove(e.rig); e.removed = true; e.dead = true; }
     for (const e of g.interior.enemies) if (!e.dead && !e.holdBoss) { e.alerted = false; e.hp = e.maxHp; e.pos.copy(e.home); }
