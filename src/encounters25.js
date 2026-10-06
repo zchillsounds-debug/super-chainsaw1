@@ -21,6 +21,9 @@ const ROSTER = {
     call: 'Your city burned before we came. We only warm our hands.' },
   docks: { light: ['guard', 'netter', 'bandit'], ranged: ['crossbow', 'archer'], champ: 'guard', retinue: ['crossbow', 'guard', 'netter'], name: 'Karykes',
     call: 'One more crate for the ship. You will fit in it.' },
+  // Round 26: the last of the company on the frontier road, with a standard and a horse archer in the second wave
+  hamrin: { light: ['guard', 'deserter', 'spearman'], ranged: ['archer', 'crossbow', 'hippo'], champ: 'guard', retinue: ['standard', 'spearman', 'archer'], name: 'Varazes',
+    call: 'The frontier is three days north. You will not see it.' },
 }[REGION];
 
 // a point a fraction of the way along a polyline (by length)

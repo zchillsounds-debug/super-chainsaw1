@@ -10,6 +10,7 @@ import { SITES, heightAt, waterDepth } from './terrain.js';
 import { resolve } from './collision.js';
 import { REGION, HUB } from './region.js';
 import { makeItem } from './items.js';
+import { freeSpot } from './sidequests.js';
 import { t } from './i18n.js';
 
 export const S25 = (g) => (g.player.s25 ||= { ch: {}, leaves: {}, mem: {}, said: {} });
@@ -39,9 +40,15 @@ export const LEAVES = {
     { id: 'd2', kind: 'letter', at: ['kiln', -9, 9], text: 'A ship\'s manifest: "Cedar chest, one. Brass instruments, eleven. Copyists, none." In another hand: "The envoy asked for copyists. Not one would come."' },
     { id: 'd3', kind: 'dispatch', at: ['arch', -11, -9], text: 'Arsaber\'s last dispatch, never sent: "The guard who hunts us does not want gold. I have nothing else to offer a man like that."' },
   ],
+  // Round 26: the Hamrin hills, on the road to the frontier
+  hamrin: [
+    { id: 'h1', kind: 'letter', at: ['serai', 7, -6], text: 'A letter in a soldier\'s hand: "The frontier is eight days off. Tatzates says the hill men will let us through for silver. We have no silver left. We have the Pages, and they eat nothing."' },
+    { id: 'h2', kind: 'leaf', at: ['kiln', -7, 6], text: 'A leaf of the Pages, pressed flat in a saddlebag: "Count the stars you can name. Then count the ones you cannot. Begin with the second number."' },
+    { id: 'h3', kind: 'tally', at: ['arch', 6, 7], text: 'A quiver lid scratched with a bowman\'s tally, marks in rows of five. Beside one mark, cut later and deeper: "the boy on the dune."' },
+  ],
 }[REGION] || [];
-const KIND_NAME = { leaf: 'A leaf of the Pages', letter: 'A soldier\'s letter', dispatch: 'Arsaber\'s dispatch' };
-export const LEAVES_TOTAL = 12;
+const KIND_NAME = { leaf: 'A leaf of the Pages', letter: 'A soldier\'s letter', dispatch: 'Arsaber\'s dispatch', tally: 'Tatzates\' quiver lid' };
+export const LEAVES_TOTAL = 15; // Round 26: three in the Hamrin hills (was 12)
 
 // ---------------------------------------------------------------- lines spoken while playing
 // Salim, as each region opens: Jabir, a little at a time (the grief is said once and briefly)
@@ -168,6 +175,7 @@ export function setupStory25(g) {
   for (const L of LEAVES) {
     const S = SITES[L.at[0]]; if (!S) continue;
     const pos = new THREE.Vector3(S.x + L.at[1], 0, S.z + L.at[2]);
+    if (REGION === 'hamrin') { const [fx, fz] = freeSpot(pos.x, pos.z, 1.0); pos.set(fx, 0, fz); } // the gorge floors only
     for (let k = 0; k < 8 && waterDepth?.(pos.x, pos.z) > 0.25; k++) pos.lerp(new THREE.Vector3(S.x, 0, S.z), 0.25);
     resolve(pos, 0.5); pos.y = heightAt(pos.x, pos.z);
     const grp = new THREE.Group();
@@ -185,7 +193,7 @@ export function setupStory25(g) {
       if (n >= LEAVES_TOTAL && !s.said.inkwell) {
         s.said.inkwell = true;
         try { const it = makeItem(Math.max(1, g.player.level), 'legendary', 'amulet'); it.name = 'The Teacher\'s Inkwell'; it.flavor = '"' + t('Every word you found, kept.') + '"'; g.dropItem(it, g.player.pos.clone().add(new THREE.Vector3(1, 0, 0.5))); } catch (e) { /* none */ }
-        g.ui.toast(t('All twelve found. The Teacher\'s Inkwell is yours.'), 'quest');
+        g.ui.toast(t('All fifteen found. The Teacher\'s Inkwell is yours.'), 'quest');
       }
     });
   };
