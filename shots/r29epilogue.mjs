@@ -22,7 +22,8 @@ const r0 = await pg.evaluate(() => {
 console.log('arrive:', JSON.stringify(r0));
 await shot('arrive');
 const lines = [];
-for (const name of ['Yusuf', 'Bishr', '\'Amr']) {
+if (process.env.FAST) await pg.evaluate(() => { const s = __game.player.s25.said; s.ep29_yusuf = s.ep29_bishr = s.ep29_amr = true; });
+for (const name of process.env.FAST ? [] : ['Yusuf', 'Bishr', '\'Amr']) {
   const r = await pg.evaluate((name) => { const g = __game, n = g.npcs.find((x) => x.name === name); g.player.pos.set(n.pos.x + 1.6, 0, n.pos.z + 1.2); n.talk(); __sim(2.8); const L = []; return { track: g.trackTarget?.()?.text, playing: !!__director.def }; }, name);
   await shot('farewell-' + name.replace('\'', ''));
   const said = await pg.evaluate(async () => { const seen = []; let n = 0; while (__director.def && n++ < 400) { const t = document.querySelector('#cine .sline')?.textContent; __sim(0.5); const t2 = document.querySelector('#cine .sline')?.textContent; if (t && t2 !== t && seen[seen.length - 1] !== t) seen.push(t); } await new Promise((r) => setTimeout(r, 60)); __sim(0.3); return seen; });
@@ -35,10 +36,10 @@ console.log('after farewells:', JSON.stringify(r2));
 // Ishaq's scene: step it on, shooting the captions, the lamp and the card
 await pg.evaluate(() => { const g = __game, n = g.npcs.find((x) => x.name === 'Ishaq'); g.player.pos.set(n.pos.x + 1.6, 0, n.pos.z + 1.2); n.talk(); __sim(0.2); });
 const seen = new Set();
-for (let i = 0; i < 200; i++) {
-  const st = await pg.evaluate(() => { __sim(0.5); const d = __director; if (!d.def) return null; return { i: d.i, n: d.def.shots.length, cap: document.querySelector('#cine .caption.show')?.textContent || '', line: document.querySelector('#cine .sline')?.textContent || '', card: !!document.querySelector('#cine .card.show'), k: d.t / (d.shot?.dur || 1) }; });
+for (let i = 0; i < 120; i++) {
+  const st = await pg.evaluate(() => { __sim(1.0); const d = __director; if (!d.def) return null; return { i: d.i, n: d.def.shots.length, cap: document.querySelector('#cine .caption.show')?.textContent || '', line: document.querySelector('#cine .sline')?.textContent || '', card: !!document.querySelector('#cine .card.show'), k: d.t / (d.shot?.dur || 1) }; });
   if (!st) break;
-  if (!seen.has(st.i) && st.k > 0.7) { seen.add(st.i); console.log('shot', st.i, '/', st.n, st.card ? '[card]' : '', st.line || st.cap); if (st.cap || st.card || st.i === 1 || st.i === 3) await shot('quay-' + st.i); }
+  if (!seen.has(st.i) && st.k > 0.5) { seen.add(st.i); console.log('shot', st.i, '/', st.n, st.card ? '[card]' : '', st.line || st.cap); if (st.cap || st.card) await shot('quay-' + st.i); }
 }
 await pg.evaluate(async () => { await new Promise((r) => setTimeout(r, 100)); __sim(0.3); });
 const r3 = await pg.evaluate(() => { const g = __game; let eg = null; try { eg = localStorage.getItem('sob.endgame'); } catch { /* */ } return { done: !!g.player.s25.said.ep29_done, victory: !document.getElementById('victory').classList.contains('hidden'), endgame: eg }; });
