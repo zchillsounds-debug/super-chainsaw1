@@ -672,3 +672,5 @@ body.incine #bark25,body.overlay #bark25{display:none}
 /* Round 26: with a context prompt on screen the bark moves up under the tracker pill (they overlapped on phones) */
 body.touch #bark25.top{bottom:auto;top:calc(84px + env(safe-area-inset-top,0px));transform:translate(-50%,-8px)}
 body.touch #bark25.top.show{transform:translate(-50%,0)}
+/* Round 26: the poise bar thicker on phones (5 px read as a line) */
+body.touch .bpoise{height:8px;width:66%;margin-top:4px}

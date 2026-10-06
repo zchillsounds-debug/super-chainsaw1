@@ -589,6 +589,7 @@ export class Game {
     if (this.occU) this.occU.uHole.value.set(-9999, -9999);
     if (this.guide) { this.guide.mesh.count = 0; this.guide.vis = 0; }
     if (this.npcMark) this.npcMark.visible = false;
+    for (const m of this.sideMarks || []) if (m) m.visible = false;
     this.t += dt;
     const actors = this.director?.def?.actors || [];
     const busy = new Set(actors.map((a) => a.rig));

@@ -510,6 +510,7 @@ export function setupSideQuests(game) {
     }
     return L.follow.every((f) => f.pos.distanceTo(L.dest) < 7);
   };
+  g.sideMarks = Q.map((q) => q.mark); // Round 26: hidden in cutscenes (game.cineTick); they showed as specks on the dusk horizon
   let lt = 0;
   g.sideTick = (dt) => {
     if (g.interior) return;
