@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { heightAt, SITES, ROADS, waterDepth } from './terrain.js';
-import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, HUB } from './region.js';
+import { heightAt, SITES, ROADS, waterDepth, hamrinOpen } from './terrain.js';
+import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, IS_HAMRIN, HUB } from './region.js';
 import { colliders } from './buildings.js';
 import { blocked } from './world.js';
 import { resolve, buildGrid } from './collision.js';
@@ -25,7 +25,7 @@ const V3 = (x, z, y = 0) => new THREE.Vector3(x, heightAt(x, z) + y, z);
 export function freeSpot(x, z, pad = 1.2) {
   for (let r = 0; r < 14; r += 0.8) for (let k = 0; k < 10; k++) {
     const a = k / 10 * Math.PI * 2 + r, px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r;
-    if (!blocked(px, pz, pad) && waterDepth(px, pz) < 0.12 && Math.abs(px) < 126 && Math.abs(pz) < 126) return [px, pz];
+    if (!blocked(px, pz, pad) && waterDepth(px, pz) < 0.12 && Math.abs(px) < 126 && Math.abs(pz) < 126 && (!IS_HAMRIN || hamrinOpen(px, pz) > 0.6)) return [px, pz]; // Round 29: not on a Hamrin rock face
   }
   return [x, z];
 }
@@ -41,6 +41,8 @@ const people = {
   seller: { robe: '#e0d4b8', robe2: '#5a3a2a', turban: 0xe8e0d0, beard: 0x3a2a1a, beardLen: 0.7, skin: 0xa8714a, weapon: null, sash: 0x5a3a2a, build: 0.95, belly: 0.3 },
   father: { robe: '#5a4a3a', robe2: '#2a4a3a', turban: 0xc8b890, beard: 0x2a1a10, beardLen: 0.6, skin: 0x8a5a3a, weapon: null, sash: 0x2a4a3a, build: 1.0 },
   carter: { robe: '#7a5a3a', robe2: '#3a2a1a', turban: 0x5a3a20, beard: 0x1a120c, beardLen: 0.5, skin: 0x8a5a3a, weapon: null, sash: 0x3a2a1a, build: 1.1 },
+  oldman: { robe: '#5a5446', robe2: '#3a362c', turban: null, cap: 0x4a4236, capBand: 0x2a241c, beard: 0xb8b4a8, beardLen: 0.8, skin: 0x9a7050, weapon: null, sash: 0x3a362c, build: 0.95, hunch: 0.15 },
+  miller: { robe: '#d8d0bc', robe2: '#6a5a3e', turban: 0xe8e2d2, beard: 0x5a4a3a, beardLen: 0.7, skin: 0x9a6a44, weapon: null, sash: 0x6a5a3e, build: 1.1, belly: 0.35 },
   child: { robe: '#c8a878', robe2: '#6a3a2a', turban: null, cap: 0x5a3a2a, capBand: 0x2a1a10, skin: 0xa8714a, weapon: null, sash: 0x6a3a2a, scale: 0.66, build: 0.85 },
 };
 
@@ -79,6 +81,17 @@ const Q = {
         { kind: 'return', text: 'Tell Ishaq you have brought it home.', lines: [['Salim', 'I have it. I will carry it to Baghdad, and home after that.'], ['Ishaq', 'Then he finishes the journey with you.']] },
         { text: 'Salim carries his brother\'s spear.' }],
       reward: { gold: 0, legend: 'Jabir\'s Spearhead', renown: 15 } },
+    // Round 29: one more chain per region, each with a turn in the middle and a meeting out on the land
+    { id: 'seed', t: 'Seed for the Sowing', giver: { name: 'Rifa\'a', title: 'Miller', look: 'miller', at: [22, 64], face: -2.0 },
+      offer: 'Someone emptied my storehouse in the night: the village\'s seed grain, kept back for the autumn sowing. Without it there is no harvest next year. The tracks go west.',
+      steps: [
+        { kind: 'kill', text: 'Follow the tracks west and drive off the foragers with the grain cart.', at: [-30, 20], pack: ['akontistes', 'bandit', 'deserter'], n: 4 },
+        { kind: 'meet', text: 'The cart was already empty. Find the farmer the foragers spoke of, south-west of the road.', at: [-40, -4], label: 'Speak with Sa\'d', who: { name: 'Sa\'d', title: 'Farmer', look: 'oldman', face: 1.2 },
+          lines: [['Sa\'d', 'Yes, I took it. The Rum burned my fields to the root, and I have four children who ate grass last week.'], ['Salim', 'Rifa\'a has a village behind him too.'], ['Sa\'d', 'Then take it back. Half is buried by the old well. The soldiers dug up the rest and kept it.']] },
+        { kind: 'take', text: 'Take the rest of the seed back from the soldiers\' camp to the south.', at: [-20, -30], label: 'Take the seed sacks', item: 'Sacks of Seed Grain', guard: { pack: ['kontaratos', 'deserter', 'deputatos'], n: 3 } },
+        { kind: 'return', text: 'Bring the seed to Rifa\'a, and tell him about Sa\'d.', lines: [['Salim', 'Your seed. Half of it was taken by a man whose fields were burned. He told me where the rest was.'], ['Rifa\'a', 'A thief who gives back half is a neighbour. ... Send him to me. He can sow beside us this autumn, and we will see how the bread comes out.']] },
+        { text: 'Rifa\'a and Sa\'d will sow the same fields.' }],
+      reward: { gold: 130, item: 'rare', renown: 14 } },
   ],
   marsh: [
     { id: 'son', t: 'The Boatman\'s Son', giver: { name: 'Hilal', title: 'Boatman', look: 'boatman', at: [26, 82], face: -1.6 },
@@ -141,6 +154,17 @@ const Q = {
         { kind: 'return', text: 'Tell Aws the tank is safe.', lines: [['Aws', 'Then I can clean it, and in a week no one will be sick. To deny a village water. There is no lower thing a man can do.']] },
         { text: 'The sweet water is clean again.' }],
       reward: { gold: 190, item: 'rare', renown: 16 } },
+    // Round 29
+    { id: 'mashuf', t: 'The Missing Mashuf', giver: { name: 'Khalaf', title: 'Boat-builder', look: 'boatman', at: [12, 76], face: 2.2 },
+      offer: 'My new mashuf is gone from the landing: forty days of work, the pitch still soft. Someone saw it poled west into the reeds at dawn.',
+      steps: [
+        { kind: 'kill', text: 'Search the reeds to the west for Khalaf\'s boat.', at: [-36, 36], pack: ['reedman', 'reedman', 'tribolos'], n: 4, hidden: true },
+        { kind: 'meet', text: 'Someone is hiding in the reeds nearby. Find him.', at: [-30, 42], label: 'Speak with the boy', who: { name: 'Dahir', title: '', look: 'child', face: 2.6 },
+          lines: [['Dahir', 'Do not tell Khalaf it was me! Kallinikos\' men said they would burn our hut if I did not bring them a boat.'], ['Salim', 'Where is it now?'], ['Dahir', 'At their landing in the south. They load it with what they take from the villages.']] },
+        { kind: 'take', text: 'Take the mashuf\'s pole and paddle from the raiders\' landing in the south.', at: [10, -40], label: 'Take the pole and paddle', item: 'Khalaf\'s Punting Pole', guard: { pack: ['netter', 'akontistes', 'reedman'], n: 4, elite: 'Moschos' } },
+        { kind: 'return', text: 'Tell Khalaf where his boat is, and who took it.', lines: [['Salim', 'Your boat is at their landing; you can pole it home now. A boy took it, because they threatened his family.'], ['Khalaf', 'Dahir. His father taught me to bend reed. ... Tell him he can come and learn the pitch from me. A boy who can steal a mashuf can build one.']] },
+        { text: 'Dahir is learning to build boats.' }],
+      reward: { gold: 170, item: 'rare', renown: 15 } },
   ],
   karkh: [
     { id: 'vats', t: 'The Dyers\' Vats', giver: { name: '\'Abbad', title: 'Dyer', look: 'dyer', at: [-50, 74], face: -0.6 },
@@ -233,8 +257,30 @@ const Q = {
         { kind: 'return', text: 'Speak with Wasil.', lines: [['Wasil', 'And the quires are safe in her bag, every one. You have saved two things I love tonight.']] },
         { text: 'Wasil\'s daughter is home.' }],
       reward: { gold: 190, item: 'legendary', renown: 18, codex: 'copyists' } },
+    // Round 29
+    { id: 'pilot', t: 'The Pilot\'s Lantern', giver: { name: 'Bakr', title: 'River pilot', look: 'boatman', at: [-44, 96], face: 0.8 },
+      offer: 'My brother-in-law Mundhir went to the far boatyard with a lantern last night and did not come back. His wife has not slept.',
+      steps: [
+        { kind: 'kill', text: 'Search the boatyard east of the quays.', at: [30, 30], pack: ['crossbow', 'guard', 'akontistes'], n: 4 },
+        { kind: 'meet', text: 'His lantern lay broken on the slip. Follow the trail into the warehouse lanes.', at: [-50, -20], label: 'Speak with Mundhir', who: { name: 'Mundhir', title: 'Lamplighter', look: 'fisher', face: 1.0 },
+          lines: [['Mundhir', 'I saw them loading stolen bales onto a barge, and they saw me. I have been hiding here since.'], ['Salim', 'Can you walk?'], ['Mundhir', 'If you walk beside me. They will be watching the quays.']] },
+        { kind: 'escort', text: 'Bring Mundhir home to the quays.', at: [-48, -18], who: 'man', look: 'fisher', to: [-44, 92], ambush: [[-40, 40, ['guard', 'deputatos', 'crossbow']]] },
+        { kind: 'return', text: 'Speak with Bakr.', lines: [['Bakr', 'Home, and on his own feet. My sister will cry for an hour and then shout at him for two.'], ['Bakr', 'Any boat on this river will carry you, guard. Say my name.']] },
+        { text: 'Mundhir is home.' }],
+      reward: { gold: 190, item: 'legendary', renown: 18 } },
   ],
-  hamrin: [], // Round 21: the endgame's work is in the holds, the bounties and the events
+  hamrin: [ // Round 21: the endgame's work is in the holds, the bounties and the events; Round 29: one chain here too
+    { id: 'flock', t: 'The Shepherd\'s Flock', giver: { name: 'Ghaylan', title: 'Shepherd', look: 'herder', at: [6, 88], face: -1.8 },
+      offer: 'Tatzates\' men drove my flock into the western gorges when they came through. Three hundred head. Someone has been watering them; I see the tracks at the springs.',
+      steps: [
+        { kind: 'kill', text: 'Clear the men holding the western pass.', at: [-58, 36], pack: ['akontistes', 'guard', 'spearman'], n: 4 },
+        { kind: 'meet', text: 'Find whoever has been watering the flock, up the gorge.', at: [-50, 20], label: 'Speak with the old soldier', who: { name: 'Niketas', title: 'Deserter', look: 'oldman', face: 0.6 },
+          lines: [['Niketas', 'The sheep? I have kept them alive. Thirty years I have marched for the Rum. I am done with it.'], ['Salim', 'Your company will hang you if they find you.'], ['Niketas', 'Then walk me to the east road, Baghdadi, and I will tell your shepherd where every ewe is penned.']] },
+        { kind: 'escort', text: 'Walk Niketas to the east road. His old company is looking for him.', at: [-48, 22], who: 'man', look: 'oldman', to: [50, 40], ambush: [[0, 40, ['kontaratos', 'akontistes', 'deputatos']]] },
+        { kind: 'return', text: 'Tell Ghaylan where his flock is penned.', lines: [['Salim', 'In the old fold under the cliff fort. A Rum soldier kept them alive, and then went home.'], ['Ghaylan', 'Then there is one less soldier in the world, and three hundred more sheep. A good trade.']] },
+        { text: 'Ghaylan\'s flock is home.' }],
+      reward: { gold: 260, item: 'legendary', renown: 20 } },
+  ],
 }[REGION];
 
 // ------------------------------------------------------------------ bounty board (daily)
@@ -272,6 +318,17 @@ const EVENTS = {
   karkh: [
     { id: 'granary', t: 'A granary on fire', text: 'Krateros\' men set a granary alight on the east lane. Stop them before they carry off the grain.', at: [60, 24], pack: ['naffat', 'guard', 'deserter', 'naffat'], prop: 'fire' },
     { id: 'convoy', t: 'A grain convoy ambushed', text: 'Krateros\' men are robbing a grain convoy near the north bridge.', at: [-2, 60], pack: ['guard', 'archer', 'deserter'], prop: 'caravan' },
+    // Round 29
+    { id: 'copper', t: 'The Bath-Keeper\'s Copper', giver: { name: 'Hammad', title: 'Bath-keeper', look: 'carter', at: [-50, 86], face: -0.4 },
+      offer: 'Krateros\' men tore the great copper boiler out of my bathhouse and carted it off. A quarter that cannot wash cannot stay well. They went east.',
+      steps: [
+        { kind: 'kill', text: 'Catch the men who carted off the boiler, east of the khan.', at: [30, 40], pack: ['guard', 'akontistes', 'deserter'], n: 4 },
+        { kind: 'meet', text: 'The boiler was sold. Find the coppersmith who bought it, in the south lanes.', at: [-20, 20], label: 'Speak with Ghalib', who: { name: 'Ghalib', title: 'Coppersmith', look: 'potter', face: 0.4 },
+          lines: [['Ghalib', 'I paid good silver for that boiler, and I did not know whose it was. Now the same men come back each week for more.'], ['Salim', 'Then they will not come back again.'], ['Ghalib', 'If they do not, Hammad can have his boiler for the price of the cart. They wait for me by the old wall.']] },
+        { kind: 'kill', text: 'Drive off the men who squeeze Ghalib, by the old wall.', at: [40, -10], pack: ['kontaratos', 'guard', 'tribolos'], n: 4, elite: 'Doukitzes' },
+        { kind: 'return', text: 'Tell Hammad his boiler is coming home.', lines: [['Hammad', 'Ghalib is an honest man, then. I will pay the cart and his trouble.'], ['Hammad', 'Come and wash when it is hot again, guard. The first bath is yours.']] },
+        { text: 'The bathhouse is warm again.' }],
+      reward: { gold: 180, item: 'rare', renown: 15 } },
   ],
   docks: [
     { id: 'storefire', t: 'A warehouse on fire', text: 'Arsaber\'s men have fired a warehouse by the quay road. Drive them off before it spreads.', at: [-6, 18], pack: ['naffat', 'guard', 'crossbow', 'naffat'], prop: 'fire' },
@@ -361,12 +418,26 @@ export function setupSideQuests(game) {
     }
     if (st.kind === 'escort') {
       const [x, z] = freeSpot(...st.at);
-      const make = () => st.who === 'buffalo' ? { rig: buffalo(0x2c2a2a), beast: 'buffalo' } : st.who === 'camels' ? { rig: camel(0xb88a58), beast: 'camel' } : { rig: humanoid({ detail: 'lo', ...people.child }), beast: null };
+      const make = () => st.who === 'buffalo' ? { rig: buffalo(0x2c2a2a), beast: 'buffalo' } : st.who === 'camels' ? { rig: camel(0xb88a58), beast: 'camel' } : st.who === 'man' ? { rig: humanoid({ detail: 'lo', ...people[st.look || 'father'] }), beast: null } : { rig: humanoid({ detail: 'lo', ...people.child }), beast: null };
       const count = st.who === 'camels' || st.who === 'children' ? 2 : 1;
       L.follow = [];
       for (let i = 0; i < count; i++) { const f = make(); f.pos = V3(x + i * 1.6, z + i); f.st = { phase: 0, walkBlend: 0, action: null, actionT: 0, hitT: 0, seed: Math.random() * 9 }; f.facing = 0; f.rig.position.copy(f.pos); g.scene.add(f.rig); L.objs.push(f.rig); L.follow.push(f); }
       L.dest = V3(...st.to); L.target = L.follow[0].pos;
       for (const [ax, az, pack] of st.ambush || []) L.pack.push(...spawnBand([ax, az], { pack, n: pack.length }, q.id));
+    }
+    // Round 29: meet someone out in the world (a short conversation scene); for a twist, a band can come at the end
+    if (st.kind === 'meet') {
+      const [x, z] = freeSpot(...st.at), n0 = colliders.length;
+      const n = npc(g, people[st.who.look], [x, z], st.who.face ?? 0, st.who.name, st.who.title || '', () => {});
+      const col = colliders.slice(n0); L.objs.push(n.rig); const bc = beacon(n.rig.position); L.objs.push(bc);
+      const act = g.interactables.find((i) => i.npc === n); if (act) { act.label = st.label; L.acts.push(act); }
+      L.meetNpc = n; L.meetCol = col; L.target = n.rig.position;
+      n.talk = () => {
+        if (L.pack.some((e) => !e.dead)) { g.ui.toast(t('Deal with the men around first')); return; }
+        bc.visible = false;
+        g.director.play(SCENES.conversation(g, n, st.lines.map(([who, text]) => ({ who, text })))).then(() => advance(q));
+      };
+      if (st.guard) L.pack = spawnBand([x + 4, z + 4], st.guard, q.id);
     }
     if (st.kind === 'return') L.target = q.npc.pos;
     if (st.kind === 'kill') L.target = null; // the band itself
@@ -375,6 +446,7 @@ export function setupSideQuests(game) {
     const L = live.get(q.id); if (!L) return;
     for (const o of L.objs) g.scene.remove(o);
     g.interactables = g.interactables.filter((i) => !L.acts.includes(i));
+    if (L.meetNpc) { g.npcs = g.npcs.filter((n) => n !== L.meetNpc); for (const c of L.meetCol) { const k = colliders.indexOf(c); if (k >= 0) colliders.splice(k, 1); } }
     live.delete(q.id);
   }
   function mark(rig) {

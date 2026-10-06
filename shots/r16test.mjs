@@ -23,6 +23,7 @@ const out = await pg.evaluate(async () => {
       if (st.kind === 'kill') { killTag(q.id); __sim(0.3); }
       else if (st.kind === 'take') { killTag(q.id); const it = g.interactables.find((i) => i.label === st.label); it?.act(); __sim(0.2); }
       else if (st.kind === 'visit') { g.interactables.find((i) => i.label === st.label)?.act(); __sim(0.5); skip(); await new Promise((r) => setTimeout(r, 50)); __sim(0.3); }
+      else if (st.kind === 'meet') { killTag(q.id); S.live.get(q.id)?.meetNpc?.talk(); __sim(0.5); skip(); await new Promise((r) => setTimeout(r, 50)); __sim(0.3); } // Round 29
       else if (st.kind === 'escort') { const L = S.live.get(q.id); killTag(q.id); for (const f of L.follow) f.pos.copy(L.dest); p.pos.copy(L.dest); __sim(0.3); }
       else if (st.kind === 'return') { q.npc.talk(); __sim(0.5); skip(); await new Promise((r) => setTimeout(r, 50)); __sim(0.3); }
       await new Promise((r) => setTimeout(r, 30));
