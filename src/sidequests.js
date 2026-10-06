@@ -434,7 +434,7 @@ export function setupSideQuests(game) {
       L.meetNpc = n; L.meetCol = col; L.target = n.rig.position;
       n.talk = () => {
         if (L.pack.some((e) => !e.dead)) { g.ui.toast(t('Deal with the men around first')); return; }
-        bc.visible = false;
+        bc.visible = false; n.rig.visible = true; // the hub hides people far from Salim; make sure he is shown for his scene
         g.director.play(SCENES.conversation(g, n, st.lines.map(([who, text]) => ({ who, text })))).then(() => advance(q));
       };
       if (st.guard) L.pack = spawnBand([x + 4, z + 4], st.guard, q.id);
