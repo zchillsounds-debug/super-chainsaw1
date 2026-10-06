@@ -225,6 +225,17 @@ const Q = {
         { kind: 'return', text: 'Bring the tools to Thumama.', lines: [['Thumama', 'My press! Hakam\'s copies will need covers, and now they shall have the best in Baghdad.']] },
         { text: 'Thumama is binding again.' }],
       reward: { gold: 190, item: 'rare', renown: 16 } },
+    // Round 29
+    { id: 'copper', t: 'The Bath-Keeper\'s Copper', giver: { name: 'Hammad', title: 'Bath-keeper', look: 'carter', at: [-50, 86], face: -0.4 },
+      offer: 'Krateros\' men tore the great copper boiler out of my bathhouse and carted it off. A quarter that cannot wash cannot stay well. They went east.',
+      steps: [
+        { kind: 'kill', text: 'Catch the men who carted off the boiler, east of the khan.', at: [30, 40], pack: ['guard', 'akontistes', 'deserter'], n: 4 },
+        { kind: 'meet', text: 'The boiler was sold. Find the coppersmith who bought it, in the south lanes.', at: [-20, 20], label: 'Speak with Ghalib', who: { name: 'Ghalib', title: 'Coppersmith', look: 'potter', face: 0.4 },
+          lines: [['Ghalib', 'I paid good silver for that boiler, and I did not know whose it was. Now the same men come back each week for more.'], ['Salim', 'Then they will not come back again.'], ['Ghalib', 'If they do not, Hammad can have his boiler for the price of the cart. They wait for me by the old wall.']] },
+        { kind: 'kill', text: 'Drive off the men who squeeze Ghalib, by the old wall.', at: [40, -10], pack: ['kontaratos', 'guard', 'tribolos'], n: 4, elite: 'Doukitzes' },
+        { kind: 'return', text: 'Tell Hammad his boiler is coming home.', lines: [['Hammad', 'Ghalib is an honest man, then. I will pay the cart and his trouble.'], ['Hammad', 'Come and wash when it is hot again, guard. The first bath is yours.']] },
+        { text: 'The bathhouse is warm again.' }],
+      reward: { gold: 180, item: 'rare', renown: 15 } },
   ],
   // Round 20: Act VI, the river quays
   docks: [
@@ -318,17 +329,6 @@ const EVENTS = {
   karkh: [
     { id: 'granary', t: 'A granary on fire', text: 'Krateros\' men set a granary alight on the east lane. Stop them before they carry off the grain.', at: [60, 24], pack: ['naffat', 'guard', 'deserter', 'naffat'], prop: 'fire' },
     { id: 'convoy', t: 'A grain convoy ambushed', text: 'Krateros\' men are robbing a grain convoy near the north bridge.', at: [-2, 60], pack: ['guard', 'archer', 'deserter'], prop: 'caravan' },
-    // Round 29
-    { id: 'copper', t: 'The Bath-Keeper\'s Copper', giver: { name: 'Hammad', title: 'Bath-keeper', look: 'carter', at: [-50, 86], face: -0.4 },
-      offer: 'Krateros\' men tore the great copper boiler out of my bathhouse and carted it off. A quarter that cannot wash cannot stay well. They went east.',
-      steps: [
-        { kind: 'kill', text: 'Catch the men who carted off the boiler, east of the khan.', at: [30, 40], pack: ['guard', 'akontistes', 'deserter'], n: 4 },
-        { kind: 'meet', text: 'The boiler was sold. Find the coppersmith who bought it, in the south lanes.', at: [-20, 20], label: 'Speak with Ghalib', who: { name: 'Ghalib', title: 'Coppersmith', look: 'potter', face: 0.4 },
-          lines: [['Ghalib', 'I paid good silver for that boiler, and I did not know whose it was. Now the same men come back each week for more.'], ['Salim', 'Then they will not come back again.'], ['Ghalib', 'If they do not, Hammad can have his boiler for the price of the cart. They wait for me by the old wall.']] },
-        { kind: 'kill', text: 'Drive off the men who squeeze Ghalib, by the old wall.', at: [40, -10], pack: ['kontaratos', 'guard', 'tribolos'], n: 4, elite: 'Doukitzes' },
-        { kind: 'return', text: 'Tell Hammad his boiler is coming home.', lines: [['Hammad', 'Ghalib is an honest man, then. I will pay the cart and his trouble.'], ['Hammad', 'Come and wash when it is hot again, guard. The first bath is yours.']] },
-        { text: 'The bathhouse is warm again.' }],
-      reward: { gold: 180, item: 'rare', renown: 15 } },
   ],
   docks: [
     { id: 'storefire', t: 'A warehouse on fire', text: 'Arsaber\'s men have fired a warehouse by the quay road. Drive them off before it spreads.', at: [-6, 18], pack: ['naffat', 'guard', 'crossbow', 'naffat'], prop: 'fire' },
