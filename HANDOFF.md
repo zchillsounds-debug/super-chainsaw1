@@ -1,17 +1,62 @@
-# Madinat al-Salam: Handoff (Round 27 shipped)
+# Madinat al-Salam: Handoff (Round 28 built, not yet shipped)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-v9ykar` of zchillsounds-debug/super-chainsaw1. Round 27 (a new move for each of the 16 story-hold masters, the new troops in dungeons, contracts and trials, sculpted camp props, boss callouts under the boss bar) is shipped.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-59dadb04-xy78e6` of zchillsounds-debug/super-chainsaw1. Round 28 (a phone performance and controls pass, plus new boss moves for captains, dungeon bosses, act bosses and Hamrin masters) is built and pushed, but not shipped yet: the regression sweep, the Artifact update and the APK are still to do (see "Round 28" below).
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
 > 2. Run `npm install`. When pushing the session branch, `git push -u origin <session-branch>` (a fresh branch carries the earlier rounds' history). Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs from the same folder: vite reloads the page and the test dies ("Execution context was destroyed"). Run tests from a copy (see "Test workflow" under Round 27).
-> 3. Ask me what the next round should be, and confirm the plan with me before building.
+> 3. First finish shipping Round 28 (sweep, Artifact, APK: the "Still to do" list under Round 28). Then ask me about Round 29 and confirm the plan with me before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
+
+## Round 28: phone pass and boss moves (built and pushed, NOT shipped yet)
+User decisions: all four areas were chosen (boss moves, camp props, phone fixes, story or content), as a full round. Approved build order: (1) phone pass, (2) boss moves, (3) camp props, (4) side quests, post-game epilogue and new enemy types if context allowed. Items 1 and 2 are done. Items 3 and 4 move to Round 29. The user hadn't played on the phone but ticked frame drops, readability and controls, so the phone pass was done from probes and phone-sized shots.
+
+**Commits:** `82f4ad8` (phone pass), `26c77c4` (boss moves), both on `ccr-59dadb04-xy78e6`.
+
+**Phone pass: frame cost**
+- **Shadow proxy (`human.js` `installShadowProxy`, `SHADOW_PROXY`):** the shadow pass draws every crowd rig's far sculpt (about a fifth of the triangles), even when the near one is shown. The renderer's `shadowMap.render` is wrapped to swap the sculpts only for that pass. It is turned off for the load-time warm-up frame (`main.js`), so both sculpts compile their depth programs at load.
+- **Outline hull (`outline.js` `LITE`):** on touch devices or Low, the hull under a near crowd sculpt uses the far geometry, pushed out 1.2 cm (`LITE_MATS`, uniform `uOB`, same program). Outline triangles went from 1.67M to 0.36M in the pack probe.
+- **Play LOD for hero-class rigs (`human.js` `PLAY_LOD`, `updatePlayLOD`, `build(tier)`):** on a phone, rigs with `detail: 'hi'` (Salim was 199k triangles; also companions, bosses and story people) also get the crowd-tier sculpt and show it in play. They switch back to full detail in cutscenes and the close camera (`main.js`, next to `showOutlines`). Their cloth is not throttled.
+- **Cloth (`cloth.js`, `anim.js`):** phones simulate cloth within 12 m (24 m elsewhere) with 2 relax passes (3 elsewhere). `performance.now()` is read once per step (it was called twice per particle, 7% of the update). Far-LOD rigs move their cloth every third step. The High update went from 14.6 to 8.5 ms per step in the pack probe.
+- **World UI (`ui.js` `setS`):** health bars, loot labels and damage numbers write a style only when it changes. `project()` reuses one result object. Loot more than 60 m away isn't projected.
+- **Shaders compiled mid-fight:** blood and scorch decals disposed their material on fade; once the last one went, the program was freed and the next first blood recompiled it. Keeper meshes at y -500 now hold the programs (`game.js` `decalMat`). The slash-trail material is made at load (`ensureSlashMat`). `shots/r28progs.mjs` shows 0 new programs in fights, except one pre-existing depth program for Krateros' arm gear in al-Karkh (it was there before Round 28).
+
+**Phone pass: controls (`mobile.js`, `game.js` `pickTarget`)**
+- Floating stick: past the rim the base follows the thumb. The 7 px dead zone is remapped so speed starts from zero, and full speed is reached at 80% of the radius.
+- Buttons take pointer capture: a thumb that slides off the attack button while holding no longer drops the hold.
+- Aim assist: with the stick pushed, a foe the stick points at counts as up to 40% nearer.
+- Tested by `shots/r28touch.mjs` (synthetic pointer events, all ok).
+
+**Phone pass: readability and framing**
+- Boss phase and duel lines (`scenes.js` `faceCam`, `faceAim`): the camera picks a side with a clear line to the boss and frames his face in the upper third. Before, Bardanes and Arsaber were shot from the waist with the face behind the subtitle bar, and the arch pier filled half the frame.
+- A bark sits under a tutorial card when both show (`story25.js`). The tracker objective keeps to two lines on phones (`style.css` Round 28 block).
+- Checked and fine in `r28hud` shots: inventory, disciplines, journal, map, settings. No touch target under 44 px.
+
+**Boss moves (`bosses28.js`; Arabic in `story28_ar.js` as `AR28`)**
+- Field captains, one per affix (in a custom `T.ai` wrapper; a stagger breaks a move off): Swift `dashcuts`, Ironclad `slam`, Volley `rain`, Firebrand `firering`, Rallying `warcry` (once, two men), Snaring `netline` (pins with `p.netT`), Reed-born `reedstrike`.
+- Dungeon bosses (`zones.js` marks `dboss`; the move comes from `g.interior.def.style`): cistern `sluice`, kiln2 `vents`, grainvault `stacks`, warren `hutfire`, salt `saltburst`, palace `tiles`, older grounds `slam`. Contracts and trials use their ground.
+- Act bosses, under 30% life (`combat25.js` now exposes `g.SIGS25`, `g.KITS25`, `g.startCombo25`; selector `g.pickSig28`): Bardanes `javelins` (thrown with a lead), Kallinikos `siphon` (a fan of fire lanes), Krateros `smokerush` (he vanishes and strikes from behind; the boss is made visible again if a scene or the duel interrupts), Arsaber `flurry` (5 thrusts, only the last parryable).
+- Hamrin masters (`holds.js` MOVES via `makeMoves28`, added to `p2.add`): Krambonites `propfall`, Charsianites `wallvolley`, Pankalos `gorgerush`, Tatzates `threeshafts`.
+- All timing runs on the game clock (no `setTimeout`). A one-time hint shows for captains and one for dungeon bosses.
+- Tests: `shots/r28moves.mjs` (all 13 captain and ground moves, 4 act bosses, a real marsh dungeon) is all ok. `shots/r28hold.mjs quarry|fort|gorge|rivalhold` ran the new move in all four, errors: none.
+
+**New scripts:** r28perf (draws, triangles, particle coverage; `DETAIL=1` for a per-pass breakdown), r28prof (CPU profile of the update; `Q=high`), r28progs (shaders compiled mid-fight), r28look, r28hud (`<out> [region] [lang]`), r28phase, r28touch, r28moves, r28hold. All take `PORT`.
+
+**Test workflow:** `/home/user/wt28` (lane a, port 5173) and `/home/user/wt28b` (lane b, port 5174) are tar copies of the checkout. `/home/user/sync28.sh` refreshes both (never while a test runs). `/home/user/lane.sh <a|b> <cmd>` runs one test with its own vite. `/home/user/sweep28.sh <a|b> <list> <logdir>` writes a SUMMARY. These live outside the repo: recreate them in a new container. Older tests hardcode 5173: run them in lane a only.
+
+**Still to do before Round 28 ships:**
+1. Regression sweep (not run yet): finaletest ×4, r15test, r16test, r17test (one region each at least), r18test faris, r21holds ×4, r22holds ×8, r25boss ×4, r26boss ×4, r26hold ×4, r27hold (a few), r27dungeon marsh, trialtest, r21rift, crafttest, ngtest, traveltest, benchtest. Watch the changed areas: `pickTarget` (aim assist), the `ui.project` return object (it is now reused), `setCharLOD` (play LOD), and the decal keepers.
+2. Republish the Artifact (version 26) at https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c: read it first, build with `shots/inline.mjs`, and smoke-test from `file://` with mobile emulation.
+3. APK: the branch is `ccr-...`, so trigger `apk.yml` by hand (GitHub MCP `actions_run_trigger`, ref = the branch), then fetch it from `apk-builds` and send it.
+
+**Round 29 (approved last round, carried over):** camp props (a sculpted forge with hearth, bellows and chimney hood in place of Bishr's plain stump, plus cooking gear, tents and water jars), new side quests (one 2–3 step chain per region), a post-game epilogue (Salim back in Baghdad, Ishaq at the House of Wisdom, the camp men's endings), and 2–3 new enemy types. Confirm with the user before building.
+
+**Ideas (not approved):** the default quality is High on phones too, and AO plus reflections roughly double the character draws there; adaptive quality drops AO only after two slow 3 s windows. Consider a phone default of a middle setting. The JS update is still about 6–8 ms per step in a 12-foe fight on the desktop CPU.
 
 ## Round 27: masters, troops below ground, camp props, phone readability
 User decisions: all four areas (the story-hold masters' new moves, the new troops in more places, sculpted camp props, phone feel); a full round until about 300k context. The user gave no device notes, so the phone pass was done from phone-sized shots.
