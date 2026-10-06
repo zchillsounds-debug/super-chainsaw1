@@ -262,9 +262,9 @@ const Q = {
       offer: 'My brother-in-law Mundhir went to the far boatyard with a lantern last night and did not come back. His wife has not slept.',
       steps: [
         { kind: 'kill', text: 'Search the boatyard east of the quays.', at: [30, 30], pack: ['crossbow', 'guard', 'akontistes'], n: 4 },
-        { kind: 'meet', text: 'His lantern lay broken on the slip. Follow the trail into the warehouse lanes.', at: [-58, -32], label: 'Speak with Mundhir', who: { name: 'Mundhir', title: 'Lamplighter', look: 'fisher', face: 1.0 },
+        { kind: 'meet', text: 'His lantern lay broken on the slip. Follow the trail into the warehouse lanes.', at: [-52, -40], label: 'Speak with Mundhir', who: { name: 'Mundhir', title: 'Lamplighter', look: 'fisher', face: 1.0 },
           lines: [['Mundhir', 'I saw them loading stolen bales onto a barge, and they saw me. I have been hiding here since.'], ['Salim', 'Can you walk?'], ['Mundhir', 'If you walk beside me. They will be watching the quays.']] },
-        { kind: 'escort', text: 'Bring Mundhir home to the quays.', at: [-56, -30], who: 'man', look: 'fisher', to: [-44, 92], ambush: [[-40, 40, ['guard', 'deputatos', 'crossbow']]] },
+        { kind: 'escort', text: 'Bring Mundhir home to the quays.', at: [-50, -38], who: 'man', look: 'fisher', to: [-44, 92], ambush: [[-40, 40, ['guard', 'deputatos', 'crossbow']]] },
         { kind: 'return', text: 'Speak with Bakr.', lines: [['Bakr', 'Home, and on his own feet. My sister will cry for an hour and then shout at him for two.'], ['Bakr', 'Any boat on this river will carry you, guard. Say my name.']] },
         { text: 'Mundhir is home.' }],
       reward: { gold: 190, item: 'legendary', renown: 18 } },
