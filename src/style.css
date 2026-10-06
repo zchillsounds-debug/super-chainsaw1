@@ -668,3 +668,7 @@ body.incine #bark25,body.overlay #bark25{display:none}
 
 /* Round 25: a memory of Jabir at the top of the campfire panel */
 .mem25{margin:2px 0 12px;padding:10px 14px;border-left:3px solid #a88a4a;background:#1a120a99;color:#e8d9b5;font:italic 17px/1.45 Amiri,serif}
+
+/* Round 26: with a context prompt on screen the bark moves up under the tracker pill (they overlapped on phones) */
+body.touch #bark25.top{bottom:auto;top:calc(84px + env(safe-area-inset-top,0px));transform:translate(-50%,-8px)}
+body.touch #bark25.top.show{transform:translate(-50%,0)}

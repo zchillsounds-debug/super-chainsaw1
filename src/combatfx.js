@@ -125,6 +125,12 @@ export class CombatFX {
     c.t = 0; c.m.visible = true; c.m.scale.setScalar(size); c.m.rotation.y = Math.random() * 6.28;
     c.m.position.set(pos.x, heightAt(pos.x, pos.z) + 0.04, pos.z);
   }
+  // hide everything in flight and release the trails (cutscenes)
+  clear() {
+    for (const tr of this.trails) { tr.m.visible = false; tr.samples.length = 0; tr.owner = null; }
+    this.owned.clear();
+    for (const s of [...this.slashes, ...this.shocks]) s.m.visible = false;
+  }
   // ---------------------------------------------------------------- per frame
   update(dt) {
     const g = this.g;

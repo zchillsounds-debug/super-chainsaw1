@@ -100,6 +100,8 @@ export function setupStory25(g) {
   g.bark = (who, text, ms = 4200, force = false) => {
     if (!force && (barkCd > 0 || g.cinematic)) return false;
     box.querySelector('b').textContent = t(who); box.querySelector('span').textContent = t(text);
+    // Round 26: a context prompt sits where the bark would be on a phone: then the bark goes under the tracker
+    const pr = document.getElementById('prompt'); box.classList.toggle('top', !!pr && !pr.classList.contains('hidden') && document.body.classList.contains('touch'));
     box.classList.add('show'); barkT = ms / 1000 + text.length / 40; barkCd = barkT + 4; return true;
   };
   const guardSay = (ctx) => {

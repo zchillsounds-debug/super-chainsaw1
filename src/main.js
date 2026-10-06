@@ -19,6 +19,7 @@ import { showOutlines } from './outline.js';
 import { setupCombat25 } from './combat25.js';
 import { setupEncounters25 } from './encounters25.js';
 import { setupStory25 } from './story25.js';
+import { setupFoes26 } from './foes26.js';
 import { WEATHER } from './triplanar.js';
 import { PlanarReflection, reflects, REFL, REFLECT_LAYER } from './reflect.js';
 import { canalX, WATER_Y } from './terrain.js';
@@ -134,6 +135,7 @@ setupHolds(game);
 setupStoryHolds(game);
 setupHubLife(game);
 setupStory25(game); game.converse25 = (n) => converse(game, n); // Round 25: barks, choices' effects, Ishaq, leaves and letters
+setupFoes26(game); // Round 26: standard-bearers, shield walls, horse archers
 setupEncounters25(game); // Round 25: ambushes and champions on the main path
 setupCombat25(game); // Round 25: boss stagger, combos, signature moves (wraps last)
 const combatFx = game.combatFx = new CombatFX(game);
@@ -301,7 +303,8 @@ function frame() {
   if (mode === 'title') { titleCam(t); game.t += dt; game.updateAmbientLife(dt); } else if (director.update(dt)) game.cineTick(dt * director.timeScale); else game.update(dt * (game.timeScale ?? 1));
   director.blendOut(rawDt);
   lighting.update(dt);
-  if (mode === 'game') combatFx.update(dt * (game.timeScale ?? 1));
+  // no blade ribbons or slashes in cutscenes: a trail caught mid-swing as a scene starts hung beside Salim
+  if (mode === 'game') { if (director.active) combatFx.clear(); else combatFx.update(dt * (game.timeScale ?? 1)); }
   ambient.update(dt, mode === 'game' ? game.player.pos : SITES.village, lighting);
   { // a sandstorm thickens the air: denser, sandier fog, a dimmer sun, dust driven along the ground
     const S = ambient.storm, L = lighting.cur;

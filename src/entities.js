@@ -2,6 +2,7 @@ import { addOutline } from './outline.js';
 import * as THREE from 'three';
 import { humanoid } from './characters.js';
 import { TYPES20 } from './foes20.js';
+import { TYPES26 } from './foes26.js';
 import { LOOK, byzify } from './byz.js';
 
 // Enemy archetypes.
@@ -73,6 +74,7 @@ TYPES.ghanim = {
   build: (x) => humanoid(byzify({ ...LOOK.officer('#4a1a4a', 0x3a1440), beard: 0x8a8070, beardLen: 0.9, skin: 0xb07a52, sash: 0x5a1a5a, scale: 1.5, build: 1.15, belly: 0.3, hemY: 0.3, leather: 0x6a5a3a, shieldTint: 3, ...x })),
 };
 Object.assign(TYPES, TYPES20); // Round 20: crossbowmen, siege engineers and their mangonels, camel raiders
+Object.assign(TYPES, TYPES26); // Round 26: standard-bearers, the shield wall, horse archers
 
 // Round 20: captains get a silhouette of their own: heavy armour, the full-detail sculpt and one crest chosen
 // from the name (a plume, a mantle, a tall felt cap, a pennant on the back, or great shoulders and greaves)

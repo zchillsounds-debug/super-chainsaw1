@@ -10,6 +10,7 @@ const lineClearCam = (ax, az, bx, bz) => lineClear(ax, az, bx, bz);
 import { buildNav, findPath, navClear } from './nav.js';
 import { makeEnemy, TYPES } from './entities.js';
 import { fleeTick } from './foes20.js';
+import { spawnWall } from './foes26.js';
 import * as SCENES from './scenes.js';
 import { saveGame } from './save.js';
 import { makeItem, rollRarity, RARITY, setWeaponPool } from './items.js';
@@ -274,6 +275,9 @@ export class Game {
     this.spawnPack('rider', -40, 28, 1, 2); this.spawnPack('rider', 34, -36, 2, 3, { spread: 8 });
     this.spawnPack(['crossbow', 'bandit'], S.x + 12, S.z + 12, 2, 2);
     this.spawnPack(['engineer', 'spearman'], 2, -46, 2, 4); this.spawnPack(['engineer', 'crossbow', 'naffat'], 26, -60, 3, 4, { spread: 5 });
+    // Round 26: horse archers on the open sand, a shield wall on the road south, a standard with the arch road pack
+    this.spawnPack('hippo', -46, 20, 1, 2); this.spawnPack('hippo', 30, -30, 1, 3);
+    spawnWall(this, 2, -38, 3); this.spawnPack('standard', 12, -54, 1, 4);
   }
   // Act IV: Kallinikos' marines and slingers hold the causeways; raiders crouch in the reed beds beside them
   spawnMarsh() {
@@ -301,6 +305,8 @@ export class Game {
     this.spawnPack(['spearman', 'netter'], 28, -62, 4, 9);
     this.spawnPack('slinger', A.x + 14, A.z + 16, 1, 9, { elite: true });
     this.spawnPack(['crossbow', 'netter'], -36, 40, 2, 7); this.spawnPack(['crossbow', 'spearman', 'crossbow'], 20, -50, 3, 9);
+    // Round 26: a standard in the reed camp, a shield wall across the road to the weir
+    this.spawnPack('standard', S.x + 2, S.z + 9, 1, 7); spawnWall(this, -24, -46, 9); this.spawnPack('standard', -22, -56, 1, 9);
   }
   // Act V: the buyer's guards hold the lanes of burned al-Karkh; knife-men hide in the ruins
   spawnKarkh() {
@@ -324,6 +330,8 @@ export class Game {
     this.spawnPack('naffat', A.x - 16, A.z + 14, 1, 11, { elite: true });
     this.spawnPack(['crossbow', 'guard'], -20, 40, 2, 10); this.spawnPack(['crossbow', 'crossbow', 'guard'], 40, -20, 3, 11);
     this.spawnPack(['engineer', 'guard'], 30, 30, 2, 10); this.spawnPack(['engineer', 'guard', 'crossbow'], A.x + 14, A.z + 20, 3, 11, { spread: 5 });
+    // Round 26: shield walls hold the lanes; standards with the paper-sellers' lane pack and the square road
+    spawnWall(this, 20, -16, 11); spawnWall(this, 8, 58, 10); this.spawnPack('standard', G.x + 6, G.z + 6, 1, 11); this.spawnPack('standard', 46, -36, 1, 11);
   }
 
   // Act VI (Round 20): Arsaber's men hold the river quays: solenarion archers on the warehouse roofs' edges, guards on
@@ -347,6 +355,8 @@ export class Game {
     this.spawnPack(['guard', 'spearman', 'archer'], -60, -14, 4, 14);
     this.spawnPack(['crossbow', 'guard', 'engineer'], 2, -64, 4, 15, { spread: 5 });
     this.spawnPack(['guard', 'crossbow', 'naffat'], 28, -66, 4, 15, { spread: 5 });
+    // Round 26: horse archers inland with the horsemen, a shield wall on the quay road, standards with the inland packs
+    this.spawnPack('hippo', -54, 0, 2, 13, { spread: 8 }); spawnWall(this, 26, 14, 13); this.spawnPack('standard', -58, -10, 1, 14); this.spawnPack('standard', 4, -60, 1, 15);
     this.spawnPack('crossbow', A.x - 16, A.z + 14, 1, 15, { elite: true });
   }
 
@@ -366,6 +376,8 @@ export class Game {
     this.spawnPack(['archer', 'archer', 'guard'], -28, -34, 4, 24, { spread: 5 });
     this.spawnPack(['crossbow', 'deserter', 'guard'], H.x + 14, H.z + 10, 4, 25, { spread: 5 });
     this.spawnPack(['guard', 'spearman'], 50, -14, 3, 24);
+    // Round 26: the frontier road's last line: shield walls in the gorges, horse archers on the flats, standards
+    spawnWall(this, -6, 26, 23); spawnWall(this, -24, -28, 24); this.spawnPack('hippo', 6, -4, 1, 23); this.spawnPack('standard', A.x - 6, A.z + 14, 1, 24); this.spawnPack('standard', -24, 60, 1, 22);
   }
   makeMinimap() {
     const c = document.createElement('canvas'); c.width = c.height = 280; const x = c.getContext('2d');
@@ -499,7 +511,9 @@ export class Game {
     if (e.shield && !o.unblockable && !e.staggerT && !e.st.action && front > 0.45 && Math.random() < (e.blockK ?? 0.65)) {
       dmg = Math.max(1, Math.round(dmg * 0.2)); crit = false;
       e.flash = 0.4; this.audio.at(e.pos, () => this.audio.clang()); this.fx.sparks(tmp2.copy(e.pos).setY(e.pos.y + 1.2).addScaledVector(from, 0.5), new THREE.Color(4, 3, 1.6));
-      this.ui.damageNumber(e.pos, 'Blocked', 'block'); e.hp -= dmg; e.poise -= w * 4; e.st.hitT = 0.3;
+      this.ui.damageNumber(e.pos, 'Blocked', 'block'); e.hp -= dmg; e.poise -= w * 4 * (e.blockPoiseK ?? 1); e.st.hitT = 0.3;
+      // Round 26: enough heavy blows into a shield break the guard (the shield wall's answer)
+      if (e.blockPoiseK && e.poise <= 0) { e.staggerT = 1.8; e.poise = e.maxPoise; this.ui.damageNumber(e.pos, 'Guard broken!', 'parry'); this.audio.stagger?.(); }
       if (e.hp <= 0) this.killEnemy(e, src); return;
     }
     // backstab: knives in the back hit harder
@@ -1478,7 +1492,7 @@ export class Game {
 
   shootArrow(e, aim = null, dmg = e.dmg) {
     const p = this.player;
-    const from = e.pos.clone(); from.y += e.boss ? 2.6 : 1.4;
+    const from = e.pos.clone(); from.y += e.T.shootH ?? (e.boss ? 2.6 : 1.4);
     const to = p.pos.clone(); to.y += 1.0;
     const dir = aim ? aim.clone().setY((to.y - from.y) / Math.max(1, from.distanceTo(to))).normalize() : to.sub(from).normalize();
     const m = new THREE.Mesh(this.arrowGeo, this.arrowMat);

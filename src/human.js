@@ -532,6 +532,21 @@ export function humanoid(opts = {}) {
     g.computeVertexNormals();
     const flag = new THREE.Mesh(g, pm); flag.position.set(0, 0.95, 0); flag.rotation.y = Math.PI * 0.75; flag.castShadow = true; pole.add(flag); parts.banner = flag;
   }
+  if (o.standard) {
+    // Round 26: a standard-bearer's bandon: a tall pole in the left hand with a plain cloth and two tails (no device on it)
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 3.3, 6).translate(0, 1.05, 0), leatherM); pole.position.set(0, -0.05, 0.02); pole.castShadow = true; bones.handL.add(pole);
+    const pm = addRim(new THREE.MeshStandardMaterial({ color: C(o.standard), roughness: 0.9, side: THREE.DoubleSide }));
+    const bm = addRim(new THREE.MeshStandardMaterial({ color: C(o.standardBand ?? 0xc8b890), roughness: 0.9, side: THREE.DoubleSide }));
+    const fg = new THREE.Group(); fg.position.set(0, 2.45, 0); pole.add(fg);
+    const cloth = new THREE.PlaneGeometry(0.85, 0.62, 6, 1).translate(0.43, 0, 0), cp = cloth.attributes.position;
+    for (let i = 0; i < cp.count; i++) { const x = cp.getX(i); cp.setZ(i, Math.sin(x * 7) * 0.05); }
+    cloth.computeVertexNormals();
+    const flag = new THREE.Mesh(cloth, pm); flag.castShadow = true; fg.add(flag);
+    const band = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.07).translate(0.43, -0.29, 0.004), bm); fg.add(band);
+    for (const y of [0.16, -0.16]) { const tg = new THREE.PlaneGeometry(0.55, 0.09, 4, 1).translate(1.12, y, 0), tp = tg.attributes.position; for (let i = 0; i < tp.count; i++) { const x = tp.getX(i) - 0.85; tp.setY(i, tp.getY(i) * (1 - x * 1.4) - x * 0.12); tp.setZ(i, Math.sin(x * 9) * 0.04); } tg.computeVertexNormals(); const tl = new THREE.Mesh(tg, pm); fg.add(tl); }
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), goldM); cap.position.y = 2.72; pole.add(cap);
+    parts.standard = fg;
+  }
   if (o.scabbard) {
     const piv = new THREE.Group(); piv.position.set(-0.165, 0.03, 0.02); piv.rotation.set(0.55, 0, -0.18); bones.hips.add(piv);
     const sc = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.02, 0.9, 8).translate(0, -0.45, 0).scale(1, 1, 0.55), leatherM); sc.castShadow = true; piv.add(sc);
