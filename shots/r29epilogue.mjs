@@ -40,6 +40,7 @@ for (let i = 0; i < 120; i++) {
   const st = await pg.evaluate(() => { __sim(1.0); const d = __director; if (!d.def) return null; return { i: d.i, n: d.def.shots.length, cap: document.querySelector('#cine .caption.show')?.textContent || '', line: document.querySelector('#cine .sline')?.textContent || '', card: !!document.querySelector('#cine .card.show'), k: d.t / (d.shot?.dur || 1) }; });
   if (!st) break;
   if (!seen.has(st.i) && st.k > 0.5) { seen.add(st.i); console.log('shot', st.i, '/', st.n, st.card ? '[card]' : '', st.line || st.cap); if (st.cap || st.card) await shot('quay-' + st.i); }
+  if (seen.has(st.i)) await pg.evaluate(() => { const d = __director; if (d.def && d.t >= (d.shot?.dur || 0)) { d.advance(); d.advance(); } }); // tap on, as a player does
 }
 await pg.evaluate(async () => { await new Promise((r) => setTimeout(r, 100)); __sim(0.3); });
 const r3 = await pg.evaluate(() => { const g = __game; let eg = null; try { eg = localStorage.getItem('sob.endgame'); } catch { /* */ } return { done: !!g.player.s25.said.ep29_done, victory: !document.getElementById('victory').classList.contains('hidden'), endgame: eg }; });
