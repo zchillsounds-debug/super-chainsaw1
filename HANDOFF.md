@@ -38,7 +38,16 @@ User decisions: all four areas (the story-hold masters' new moves, the new troop
 
 **Test workflow:** `/home/user/wt26` (5173, `/home/user/sweep.sh <list> <logdir>`) and `/home/user/wt27` (5174, `/home/user/vite2.sh`, `/home/user/sweep2.sh <list> <logdir>`, synced by `/home/user/sync27.sh`) are copies of the checkout, so code can be edited while tests run. These live outside the repo and have to be recreated in a new container (copy with tar; `wt27` symlinks `node_modules`). Run at most two lanes: the container has 4 cores, and a third browser makes page loads time out (a 180 s `__ready` wait failed this way).
 
-STATUS27
+**Shipped:**
+- Final sweep, all clean (35 tests, rc 0, "errors: none"): r22holds ×8, r21holds ×4, r26hold ×4, r26camp marsh and docks, r25boss sawad and docks, r26boss ×4, trialtest, r21rift, crafttest, ngtest, r26foes sawad, r27dungeon sawad and docks, r27hold stockade/kilns/hulks/dam boss. All 16 `r27hold` runs and `r27dungeon marsh` passed during the round.
+- Note: `r25boss`, `trialtest`, `r21rift`, `crafttest`, `ngtest` (and other older scripts) hardcode port 5173, so run them only on the 5173 lane.
+- Artifact version 25 published. The APK is CI's build of the commit that carries this note.
+
+**Next round: ideas (not approved):**
+- Device check on Android: the masters' new moves at real frame rate (the reed fire rings, the chain sweep band, the rolling log), the callout line under the boss bar, the troops in tight dungeon rooms (the shield wall's turn in a 12 m room).
+- The Round 26 device items are still unchecked on a real phone (the rally ring, the horse archer's circle, Kallinikos' fire rings, the 8 px poise bar).
+- Act bosses and Hamrin masters could get one more move each; field captains and dungeon bosses still fight with the base kit.
+- More sculpted props in the camps (the old forge stump beside Bishr's new anvil is a plain cylinder).
 
 ## Round 26: troops, bosses, Hamrin, the camp
 User decisions: all four areas: Hamrin endgame content, fixes for the phone (the user hadn't played Round 25 yet, so Claude ran the device checklist from phone-sized shots), a polish and bug sweep, and new content (all four offered: Hamrin story arc, boss depth, hub NPC arcs, enemy variety). Tatzates' ending: chains for Baghdad or let him go (approved as recommended).
