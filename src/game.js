@@ -555,6 +555,7 @@ export class Game {
     const hp = tmp2.copy(e.pos); hp.y += e.boss ? 3.5 : 1.2;
     if (e.T.fiery) this.fx.sparks(hp, new THREE.Color(4, 1.4, 0.3));
     this.fx.blood(hp); if (crit || w > 0.8) this.fx.sparks(hp);
+    this.fx.impact?.(hp, e.pos, crit, w > 0.8);
     if (Math.random() < 0.25 + w * 0.2) this.decal(e.pos, 0.5 + Math.random() * 0.6, 'blood');
     // hit-stop and camera kick scale with weapon weight
     this.hitStop = Math.max(this.hitStop, (crit ? 0.07 : 0.035) * (0.4 + w));
@@ -577,7 +578,9 @@ export class Game {
     e.st.twist = hf ? Math.sign(hf.x * Math.cos(e.facing) - hf.z * Math.sin(e.facing)) || 1 : 1;
     this.audio.at(e.pos, () => this.audio.death());
     const p = this.player; p.xp += Math.round(e.xp * (p.xpK || 1));
-    this.fx.dust(e.pos, 6);
+    // Round 33: a kill lands harder: a short hit-stop and a burst of dust as the body goes down
+    this.fx.dust(e.pos, e.elite ? 12 : 8, e.elite ? 1.2 : 0.9); this.hitStop = Math.max(this.hitStop || 0, e.elite ? 0.1 : 0.06);
+    if (e.elite) this.fx.ring(e.pos, 0xd9a060, 0.4, 2.6, 0.5, 0.5);
     if (!e.boss) this.decal(e.pos, 1.6 + Math.random(), 'blood');
     if (e.aura) e.aura.visible = false;
     if (p.level >= MAX_LEVEL) p.xp = 0;
@@ -1407,7 +1410,7 @@ export class Game {
         e.st.deadT += dt; e.deadT += dt;
         if (e.fleeing) fleeTick(this, e, dt);
         this.animEnemy(e, dt, dist);
-        if (e.deadT > 5) { e.rig.position.y -= dt * 0.4; }
+        if (e.deadT > 5) { if (!e.settled) { e.settled = true; this.fx.dust(e.pos, 5, 0.8); } e.rig.position.y -= dt * 0.4; } // Round 33: the body settles into a puff of dust
         if (e.deadT > 8) { this.scene.remove(e.rig); e.removed = true; }
         continue;
       }

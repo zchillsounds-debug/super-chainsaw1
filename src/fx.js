@@ -150,6 +150,13 @@ export class FX {
       });
     }
   }
+  // Round 33: the moment of contact: one bright pop where the blow lands (a crit adds a light flash and a shockwave
+  // at the feet), and a puff of dust kicked up from the ground under a heavy blow
+  impact(pos, feet, crit = false, heavy = false) {
+    this.glow.spawn({ pos: { x: pos.x, y: pos.y, z: pos.z }, vel: { x: 0, y: 0, z: 0 }, life: crit ? 0.16 : 0.1, size: crit ? 1.25 : 0.7, size1: 0.05, color: crit ? new THREE.Color(6, 5, 3.2) : new THREE.Color(3.2, 2.4, 1.4) });
+    if (crit) { this.flash(pos, 0xffd9a0, 22, 0.16, 7); this.ring(feet, 0xffc070, 0.3, 1.8, 0.32, 0.7); }
+    if (heavy || crit) this.burst({ x: feet.x, y: feet.y + 0.1, z: feet.z }, 4, { speed: 1.2, life: 0.9, size: 0.5, size1: 1.4, color: new THREE.Color(0.72, 0.6, 0.45), alpha: 0.3, up: 0.5, drag: 1.8, smoke: true, spread: 0.5 });
+  }
   sparks(pos, color = new THREE.Color(4, 2.4, 1)) { this.burst(pos, 14, { speed: 7, life: 0.35, size: 0.12, size1: 0.02, color, gravity: 12, drag: 2 }); }
   blood(pos, color = new THREE.Color(0.35, 0.02, 0.02)) { this.burst(pos, 16, { speed: 4, life: 0.6, size: 0.18, size1: 0.1, color, gravity: 14, drag: 1, smoke: true, alpha: 0.9 }); }
   dust(pos, n = 10, scale = 1) { this.burst(pos, n, { speed: 1.5 * scale, life: 1.4, size: 0.8 * scale, size1: 2.2 * scale, color: new THREE.Color(0.75, 0.62, 0.46), alpha: 0.35, up: 0.6, drag: 1.5, smoke: true, spread: 0.6 }); }
