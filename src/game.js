@@ -38,7 +38,7 @@ export class Game {
     this.npcs = []; this.interactables = [];
     this.t = 0; this.enemies = []; this.projectiles = []; this.hazards = []; this.drops = []; this.trails = [];
     this.mouse = new THREE.Vector2(); this.mouseScreen = { x: 0, y: 0 };
-    this.keys = {}; this.lmb = false; this.shake = 0; this.camZoom = 1.1; // Round 25: a little closer (was 1.25), figures read better on a phone this.hitStop = 0;
+    this.keys = {}; this.lmb = false; this.shake = 0; this.camZoom = matchMedia('(pointer: coarse)').matches || /[?&]mobile\b/.test(location.search) ? 0.95 : 1.1; // Round 25: a little closer (was 1.25), figures read better on a phone; Round 33: closer still on a phone (Salim was a thumbnail) this.hitStop = 0;
     this.camPos = new THREE.Vector3(); this.started = false;
     this.createPlayer();
     this.spawnEnemies();
