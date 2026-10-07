@@ -45,6 +45,8 @@ User decisions: the build list in the order proposed (Arsaber's chapter, act sce
 
 **Test:** `shots/r32story.mjs <region> [out] [pick 0|1] [lang]` plays every beat in the region by its own trigger, walks over every Thing Found, kills an elite for a letter, checks a shout, and walks with a hired guard. Run in all five regions (en; marsh and docks also ar).
 
+**Shipped:** branch `claude/round32-story` (commit 54325bb), Artifact version 31, APK build 104 (throwaway key). Regression sweep (finale sawad/karkh/docks, r16 karkh/docks, r21comp, r26hamrin, r29epilogue, r29quests hamrin, r29save, r30marks, ngtest, smoke26): all clean. ngtest and two finale runs first timed out on cold loads before the 900 s wait; they passed on rerun.
+
 **Not built (ideas):** a found object inside each dungeon (letters on fallen captains cover the dungeons for now); a scene for Arsaber watching from the far bank in Act I is still the only Sawad one; more Rafi' news for the Hamrin.
 
 ## Round 31: the siege mines, the Wanted board, a graphics pass
