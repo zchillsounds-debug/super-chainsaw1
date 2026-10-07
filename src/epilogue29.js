@@ -23,12 +23,14 @@ function lines(g, key) {
     if (chosen(g, 'photeinos') === 'free') L.push(['Yusuf', 'A boatman from Wasit says a quiet Greek copies ledgers for the scribes there now. He never says where he learned his letters.']);
     if (chosen(g, 'marsh') === 'stay') L.push(['Yusuf', 'And the reed village sends me mats to sell. They always ask after you.']);
     if (task) L.push(['Yusuf', 'I keep a new ledger now. One page. It says: nobody owes Yusuf anything. \'Abbad the water-carrier brings me a jar every morning anyway.']);
+    g.epAdd32?.(key, L); // Round 32: the family, Jabir's spear, the deserters
     L.push(['Salim', 'Then I will know where to find good dates, and bad prices.'], ['Yusuf', 'Ha! Go with a full purse, guard.']);
   } else if (key === 'bishr') {
     if (done) L.push(['Bishr', 'The soldier who paid me works my bellows now, one arm and all. Best striker I have had in twenty years.']);
     else L.push(['Bishr', 'I will light the forge in the Karkh lanes again. Iron forgets a war faster than men do.']);
     if (chosen(g, 'photeinos') === 'qadi') L.push(['Bishr', 'They read the Greek\'s testimony at the qadi\'s court. Half the market went to hear it. I went for the shouting.']);
     if (task) L.push(['Bishr', 'Mukhariq and I hung the last chain on the Bridge of Boats yesterday. Walk across it on your way home. Slowly. Admire it.']);
+    g.epAdd32?.(key, L);
     L.push(['Bishr', 'Bring me that blade of yours once a year. I want to see what the road does to my work.']);
   } else {
     if (done) L.push(['\'Amr', 'Nasim holds a line better than half the men I trained for al-Amin. I will make a teacher of him. Not a soldier.']);
@@ -36,6 +38,7 @@ function lines(g, key) {
     if (chosen(g, 'tatzates') === 'chains') L.push(['\'Amr', 'You brought the bowman back in chains. Good. Let a court do what a sword cannot.']);
     if (chosen(g, 'tatzates') === 'free') L.push(['\'Amr', 'You let the bowman go. I would not have. Maybe that is why they will remember you, and not me.']);
     if (task) L.push(['\'Amr', 'Hasan sends his greeting. He would not come into the city. Some men hold a line better from the hills.']);
+    g.epAdd32?.(key, L);
     L.push(['Salim', 'They will remember who taught the boys, \'Amr.']);
   }
   return L;

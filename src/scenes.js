@@ -411,6 +411,9 @@ export function arrival(g) {
         cam: { follow: true, p0: () => V(ishaq.pos.x - 3.5, ishaq.pos.y + 2.2, ishaq.pos.z - 2.5), t0: at(envoy, 1.4), fov: 38 },
         run: (d, k, dt) => { walk(envoy, meet(), 1.3, dt); envoy.st.walkBlend = envoy.pos.distanceTo(meet()) > 0.1 ? 1 : 0; envoy.st.phase += dt * 4 * envoy.st.walkBlend; } },
       envoySay('I am Arsaber, envoy of the Emperor. I did not come to fight you, astronomer.'),
+      // Round 32: what happened in the paper-sellers' lane
+      { ...envoySay('And the guard. You let me walk in al-Karkh. So I come to you under a truce, and not with an army.'), when: () => chosen(g, 'lane') === 'walk' },
+      { ...envoySay('And the guard who set the watch on me in al-Karkh. I came anyway. Under a truce, this time.'), when: () => chosen(g, 'lane') === 'watch' },
       envoySay('Your city is burning itself. Come north with the Pages. In Constantinople your Teacher would have a library, not a prison.'),
       ishaqToEnvoy('He had a prison here. He still chose to teach here.'),
       { ...envoySay('Then I will take them without you.'), run: (d, k, dt) => { envoy.facing = yawTo(envoy.pos, ishaq.pos); } },
@@ -673,15 +676,31 @@ export function quaysAtDusk(g) {
     L('Ishaq', 'Even the copy you promised Arsaber reached Constantinople. Let them read it. That was always the point.', () => chosen(g, 'arsaber') === 'promise'),
     L('Ishaq', 'I still owe you a brother. I will spend the rest of my life on that account.', () => chosen(g, 'ishaq') === 'heard'),
     L('Salim', 'Then spend it at that table. He would have liked that better than a debt.', () => chosen(g, 'ishaq') === 'heard'),
+    // Round 32: a letter from Constantinople
+    L('Ishaq', 'A letter came by the prisoners\' road, from Constantinople. From Arsaber.'),
+    L('Ishaq', '"Your Pages sit in the palace library. The young men argue over them at night. I think your Teacher would have liked the argument better than the library."', () => chosen(g, 'arsaber') === 'promise'),
+    L('Ishaq', '"I came home with nothing, and was told so for a year. Then I found I could remember whole lines of your Teacher. So I came home with something after all."', () => chosen(g, 'arsaber') !== 'promise'),
+    L('Ishaq', '"Tell the guard I have not forgotten the lane. A man who lets his enemy walk is the man I hoped to meet in Baghdad."', () => chosen(g, 'lane') === 'walk'),
+    L('Ishaq', '"Tell the guard he was right to call the watch. I would have done the same. I still think of the lane."', () => chosen(g, 'lane') === 'watch'),
+    L('Salim', 'Will you answer him?'),
+    L('Ishaq', 'Of course. Scholars always answer letters. It is how wars end, slowly.'),
     L('Salim', 'And me?'),
     L('Ishaq', 'You were a caravan guard. Baghdad needs safe roads more than it needs one more scholar. Go home first, and take Jabir\'s spear with you.'),
     { dur: 6.5, caption: 'Salim set one more lamp on the water: for the guards of the caravan, and for everyone the road had taken.',
       enter: () => { ishaq.st.talk = false; salim.st.talk = false; salim.st.crouch = 0.7; floatLamp(bank(LZ) + 0.6, LZ + 0.4).userData.v = 0.22; },
       cam: { follow: true, p0: at(salim, 1.2, 2.4, -1.6), t0: () => V(bank(LZ) + 1.5, -0.3, LZ - 1), p1: () => V(bank(LZ) - 3, 2.2, LZ + 6), t1: () => V(bank(LZ) + 4, -0.4, LZ - 8), fov: 34 },
       run: (d, k, dt) => { drift(dt || 1 / 60); if (k > 0.35) salim.st.crouch = 0; } },
+    // Round 32: the sweep of it. Six years on, al-Ma'mun comes home, and the House of Wisdom grows
+    { dur: 6.2, caption: 'Six years later, al-Ma\'mun came home to Baghdad, and the House of Wisdom grew into the greatest library of its age.',
+      cam: { p0: () => V(bank(LZ) - 4, 3, LZ + 4), t0: () => V(bank(LZ) + 30, 4, LZ - 40), p1: () => V(bank(LZ) - 8, 9, LZ + 14), t1: () => V(bank(LZ) + 40, 8, LZ - 80), fov: 40, ease: 'io2' }, run: (d, k, dt) => drift(dt || 1 / 60) },
+    { dur: 6.2, caption: 'Greek, Persian and Indian books were copied there by the thousand, and the Teacher\'s Pages sat among them, in ten cities at once.',
+      cam: { p0: () => V(bank(LZ) - 8, 9, LZ + 14), t0: () => V(bank(LZ) + 40, 8, LZ - 80), p1: () => V(bank(LZ) - 12, 14, LZ + 24), t1: () => V(bank(LZ) + 40, 6, LZ - 120), fov: 40 }, run: (d, k, dt) => drift(dt || 1 / 60) },
     { dur: 7, card: { ar: 'مدينة السلام', en: 'Madinat al-Salam', sub: 'The City of Peace' },
       cam: { p0: () => V(bank(LZ) - 6, 4, LZ + 8), t0: () => V(bank(LZ) + 6, 0, LZ - 10), p1: () => V(bank(LZ) - 20, 30, LZ + 40), t1: () => V(bank(LZ) + 20, 10, LZ - 140), ease: 'io2' }, run: (d, k, dt) => drift(dt || 1 / 60) },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
     end: () => { for (const l of lamps) sc.remove(l); salim.st.crouch = 0; const [ix, iz] = HUB.ishaq; ishaq.pos.set(ix, heightAt(ix, iz), iz); } };
 }
+
+// Round 32: the helpers, for the scenes in scenes32.js
+export const H32 = { V, ground, dry, yawTo, lineDur, actor, at, headOf, faceCam, faceAim, walk, act, tickActor, playerActor, npcActor };

@@ -29,7 +29,7 @@ export function freeSpot(x, z, pad = 1.2) {
   }
   return [x, z];
 }
-const people = {
+export const people = {
   potter: { robe: '#8a6a4a', robe2: '#4a3a2a', turban: 0xd8cfb8, beard: 0x3a2a1a, beardLen: 0.6, skin: 0x9a6a44, weapon: null, sash: 0x6a3a1a, build: 1.05, belly: 0.4 },
   scribe: { robe: '#e8e0cc', robe2: '#3a4a6a', turban: 0xf0ead8, beard: 0x2a1c12, beardLen: 0.5, skin: 0xa8714a, weapon: null, sash: 0x3a4a6a, build: 0.9 },
   trader: { robe: '#5a3a2a', robe2: '#c8a050', turban: 0x8a2a1a, beard: 0x1a120c, beardLen: 0.8, skin: 0x8a5a3a, weapon: null, sash: 0xc8a050, build: 1.1, belly: 0.3 },

@@ -249,6 +249,13 @@ function headwearPrims(B, o) {
     L.push(ell(H, [0, 0.19, -0.012], [0.22, 0.03, 0.22], null, { k: 0.03, mat: R.WRAP }));
     L.push(cap(H, [0, 0.19, -0.012], [0, 0.27, -0.012], 0.09, 0.012, { k: 0.04, mat: R.WRAP }));
     L.push(ell(H, [0, 0.05, -0.01], [0.2, 0.07, 0.2], null, { sub: true, k: 0.01 }));
+  } else if (o.wrap) {
+    // Round 32: a woman's head shawl (the period's mi'jar): over the crown and the back of the head, framing the face, falling to the shoulders
+    L.push(ell(H, [0, 0.112, -0.024], [0.091, 0.088, 0.104], null, { k: 0.02, mat: R.WRAP }));
+    L.push(ell(H, [0, 0.02, -0.072], [0.088, 0.11, 0.07], null, { k: 0.025, mat: R.WRAP }));
+    for (const s of [-1, 1]) L.push(cap(H, [s * 0.08, 0.08, 0.0], [s * 0.092, -0.07, -0.016], 0.03, 0.038, { k: 0.02, mat: R.WRAP }));
+    L.push(cap('neck', [0, 0.06, -0.055], [0, -0.1, -0.095], 0.075, 0.115, { k: 0.03, mat: R.WRAP }));
+    L.push(ell(H, [0, -0.005, 0.088], [0.066, 0.098, 0.064], null, { sub: true, k: 0.012 })); // the face stays open
   } else if (o.turban) {
     L.push(ell(H, [0, 0.155, -0.012], [0.09, 0.07, 0.1], null, { k: 0.02, mat: R.WRAP }));
     L.push(tor(H, [0, 0.13, -0.01], 0.087, 0.026, [-0.14, 0, 0], { k: 0.015, mat: R.WRAP }, 0.85));
@@ -386,7 +393,7 @@ function blobMesh(root, mat) {
 export function humanoid(opts = {}) {
   const o = Object.assign({ skin: 0xa8714a, robe: '#e8dcc0', robe2: '#a03020', sash: 0x8a1c1c, turban: 0xf0ead8, weapon: 'sword', offhand: null, hunch: 0, scale: 1,
     mail: false, cloak: null, cap: null, helm: null, mask: null, beard: null, qaba: false, build: 1, girth: 1, belly: 0, neck: 1, beardLen: 0.5, hemY: null }, opts);
-  if (o.helm || o.pilos) o.turban = null;
+  if (o.helm || o.pilos || o.wrap) o.turban = null;
   // crowds and foes get a hair style and beard cut at random (heroes keep what their look names)
   if (o.hair == null) o.hair = o.detail === 'hi' ? 'crop' : HAIRS[Math.floor(Math.random() * HAIRS.length)];
   if (o.beardStyle == null) o.beardStyle = o.detail !== 'hi' && o.hair === 'crop' && Math.random() < 0.5 ? 'trim' : 'full';
@@ -407,6 +414,7 @@ export function humanoid(opts = {}) {
   if (o.mask) pal[R.MASK].c = C(o.mask);
   if (o.leather) pal[R.LEATHER].c = C(o.leather);
   if (o.hat) pal[R.WRAP].c = C(o.hat);
+  if (o.wrap) pal[R.WRAP].c = C(o.wrap);
   pal[R.DARK].c = C(o.trousers ?? 0x2c241e);
   const mat = charMaterial(pal);
   ['foreL', 'foreR', 'shinL', 'shinR'].forEach((n, i) => mat.userData.uni.uJ.value[i].setFromMatrixPosition(B.mats[n]));
@@ -425,7 +433,7 @@ export function humanoid(opts = {}) {
       piece('garment', [tier, sk, o.qaba, o.mail, !!o.sash, o.tiraz], () => sculpt(garmentPrims(B, o), { voxel: vox(0.0105, 0.0185), blend: 0.03, paint: garmentPaint(o) })),
     ];
     if (hp.length) geos.push(piece('hair', [tier, o.neck, !!o.beard, o.beardLen, !!o.bald, 3, o.hair, o.beardStyle], () => sculpt(hp, { voxel: vox(0.0032, 0.0075), blend: 0.012 })));
-    if (hw.length) geos.push(piece('headwear', [tier, o.neck, o.helm === 'byz' ? 'byz' : !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume', !!o.pilos], () => sculpt(hw, { voxel: vox(0.0048, 0.0085), blend: 0.02 })));
+    if (hw.length) geos.push(piece('headwear', [tier, o.neck, o.helm === 'byz' ? 'byz' : !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume', !!o.pilos, !!o.wrap], () => sculpt(hw, { voxel: vox(0.0048, 0.0085), blend: 0.02 })));
     if (ap.length) geos.push(piece('armour', [tier, sk, o.armour, 2], () => sculpt(ap, { voxel: vox(0.008, 0.014), blend: 0.02, paint: armourPaint(o) })));
     if (o.mask) geos.push(piece('veil', [tier, o.neck], () => sculpt(veilPrims(B, o), { voxel: vox(0.0045, 0.0085), blend: 0.02 })));
     return geos;
@@ -439,7 +447,7 @@ export function humanoid(opts = {}) {
   ];
   if (farGeos) {
     if (hp.length) farGeos.push(piece('hair', ['far', o.neck, !!o.beard, o.beardLen, !!o.bald, o.hair, o.beardStyle], () => sculpt(hp, { voxel: 0.016, blend: 0.014 })));
-    if (hw.length) farGeos.push(piece('headwear', ['far', o.neck, o.helm === 'byz' ? 'byz' : !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume', !!o.pilos], () => sculpt(hw, { voxel: 0.018, blend: 0.02 })));
+    if (hw.length) farGeos.push(piece('headwear', ['far', o.neck, o.helm === 'byz' ? 'byz' : !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume', !!o.pilos, !!o.wrap], () => sculpt(hw, { voxel: 0.018, blend: 0.02 })));
     if (ap.length) farGeos.push(piece('armour', ['far', sk, o.armour, 2], () => sculpt(ap, { voxel: 0.03, blend: 0.03, paint: armourPaint(o) })));
     if (o.mask) farGeos.push(piece('veil', ['far', o.neck], () => sculpt(veilPrims(B, o), { voxel: 0.018, blend: 0.02 })));
   }
