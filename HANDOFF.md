@@ -1,17 +1,38 @@
-# Madinat al-Salam: Handoff (Round 29 shipped; APK signing waits on the user's secrets)
+# Madinat al-Salam: Handoff (Round 30 shipped; APK signing still waits on the user's secrets)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-59dadb04-xy78e6` of zchillsounds-debug/super-chainsaw1. Round 29 (APK signing fix and save backup, four new troops, five side quest chains, the epilogue) is on branch `claude/new-session-9masup`; check its "Status" list below for what is left.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-6cf1ec9e-okhaii` of zchillsounds-debug/super-chainsaw1 (Round 30: phone pass, map markers, camp props, the camp men's quests, lancers and dog handlers). Check Round 30's "Status" list below for what is left.
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
 > 2. Run `npm install`. When pushing the session branch, `git push -u origin <session-branch>` (a fresh branch carries the earlier rounds' history). Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs from the same folder: vite reloads the page and the test dies ("Execution context was destroyed"). Run tests from a copy (see "Test workflow" under Round 27).
-> 3. Finish whatever Round 29's "Status" list says is left, then ask me about Round 30 and confirm the plan with me before building.
+> 3. Finish whatever Round 30's "Status" list says is left, then ask me about Round 31 and confirm the plan with me before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
+
+## Round 30: phone pass, map markers, camp props, camp men's quests, new troops
+User decisions: all four areas (camp props, map quest markers, phone polish, new content), a full round. New content picked: camp-men quests, new troops, a new dungeon type and a bounty board. The user has not played on the phone yet (the phone pass was done from 915x412 shots). The APK secrets were put off ("later"): CI still signs with the throwaway key. Context ran out before the dungeon type and the bounty board.
+
+**Phone pass:** barks at the top sit below the opened tracker and the tutorial card, every frame (`story25.js` `placeTop`). On a phone the toast stack keeps 3 lines and drops repeats (`ui.toast`). Behind a full-screen sheet on a phone the 3D view is drawn every 10th frame (`sheets.js` body class `fullsheet`, `main.js` `coverN`). Tracker lines are translated (`ui.quest`), the big map and the place names have Arabic (they never had), the Arabic bark name had no gap. `shots/r30artrans.mjs` lists `t('...')` strings with no Arabic (0 now).
+- Headless note: SwiftShader at 915x412 draws about one frame per 5 s, so CSS sheet animations (opacity 0 at start) never run in shots: a "missing" map in a shot is that, not a bug. Wait on `__game.__mapView.s > 0` before tapping the map.
+
+**Map markers (`sidequests.js` `g.questMarks()`, `ui.js` `drawMark`, `travel.js`):** givers with work to offer (!), each live step's target (a diamond; meet steps too), return steps (?), taken bounties, the world event. Minimap: markers past the rim wait on the rim. Big map: the story's next place (gold ring), the markers (the tracked one named), a tap opens a card: Walk there / Track. `trackTarget` is now `targetFor(key)`. Test: `shots/r30marks.mjs [region] [out] [lang]`.
+
+**Camp props (`props30.js`, placed by `camp30.js`, `hub.js`, `hublife.js`):** `fieldForge()` (clay bowl hearth, stone ring, bellows, charcoal basket) and `oldAnvil()` replace the fire pit and box anvil by Bishr; the forge upgrade's built state is `forgeHearth()` (brick hearth, sunken coals, plaster hood and flue, double bellows, tool rail, quench trough). Every camp: `cookFire()` (tripod cauldron with a fire and light, tannur, pots, mortar, rug), two `tent()` (linen with seams; one goat hair), `waterJars()` (zir stand). Placed outward from the camp's middle on dry ground, off colliders and the camp men's spots. `props27.js` now exports `builder` and `mats`. Test: `shots/r30camp.mjs [region] [out]` (overhead, closeups, the rebuilt forge, reachability). The cook fire is 15 draws (many materials): merge if draws matter.
+
+**The camp men's quests (`sidequests.js`, `camp: 'yusuf'|'bishr'|'amr'`):** Karkh `ledger` (Yusuf's ledger of debts; the water-carrier 'Abbad; Yusuf burns it), docks `chains` (iron bars for the Bridge of Boats; the chain-maker Mukhariq), Hamrin `lastline` ('Amr's comrade Hasan from the Anbar gate; Durayd's riders). The giver is the camp man himself: "Not now" and talking after it open his trade. Finishing sets `p.campq30[man]` (saved), which adds a line to his epilogue farewell. Test: `QID=ledger node shots/r29quests.mjs karkh` (also `chains docks`, `lastline hamrin`): all QUEST OK.
+
+**New troops (`foes30.js`, `TYPES30` in `entities.js`, `setupFoes30` in `main.js`):** `kontophoros` (mounted lancer: keeps ~14 m, a 0.9 s red chevron lane, a 17 m/s charge, x2.2 damage and a throw, then 2 s wheeling; below half life he is thrown and fights on as a kontaratos), `kynegos` (dog handler: slips two `molossos` war dogs on sight; dogs circle, lunge, bite, dart out; the handler dead, they flee and are removed). Dogs are saluki rigs (`quad: true`; `g.animEnemy` is wrapped so they never run the humanoid animation; a dead dog lies on its side). Placed on every map (no lancers on the marsh causeways), handlers in dungeon rooms from level 6. Test: `shots/r30foes.mjs [region] [out]` (uses the open spot `x=-44&z=22`; in the camp the lancer never gets a clear line).
+
+**Status:**
+- Committed and pushed. Tests run this round, all clean: r30look (sawad, hamrin, karkh ar), r30marks sawad (en, ar), r30camp sawad and marsh, r30foes sawad, r29quests with QID ledger/chains/lastline, r29quests marsh, r29epilogue ar and en (FAST=1), smoke26 on the inlined build. **No full regression sweep was run** (context ran out): run the Round 29 list first next round.
+- Artifact version 28 published (1.87 MB).
+- APK: CI builds on push; the session branch is `ccr-...`, so trigger `apk.yml` by hand. Still the throwaway key until the user adds the secrets.
+- Not built (carry to Round 31): the new dungeon type with its boss move, and the bounty board upgrade (a daily board already exists in every camp: `sidequests.js` `rollBounties`, hunt/recover/escort/clear; the idea was named "Wanted" captains with a poster and a ladder).
+- Tip: reading the Artifact pulls a large head of the page into context (~25k tokens). Read it once, with a `prompt`, at the very end.
 
 ## Round 29: APK updates, new troops, side quests, the epilogue
 User decisions: side quests, the post-game epilogue and new enemy types (camp props dropped). The user has not played Round 28 on the phone yet. Phones keep **High** quality by default (the user declined a middle default). Build order: APK fix, foes, side quests, epilogue (the epilogue was to be cut first if context ran short; it was not).
