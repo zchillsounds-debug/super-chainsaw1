@@ -461,9 +461,10 @@ export function setupStory32(g) {
     let fresh = null;
     for (const e of g.enemies) if (!e.dead && e.alerted && !alerted.has(e)) { alerted.add(e); if (!e.boss && !e.T?.quad && e.pos.distanceTo(p.pos) < 20) fresh = e; }
     if (alerted.size > 300) alerted = new Set([...alerted].filter((e) => !e.dead));
-    if (fresh && shoutCd <= 0 && !shout && Math.random() < 0.6) shout = { e: fresh, t: 3, text: SHOUTS[Math.floor(Math.random() * SHOUTS.length)] };
-    if (shout && ((shout.t -= dt) <= 0 || shout.e.dead)) shout = null; // it waits a moment for the guard's line to clear
-    else if (shout && g.bark?.(shout.e.name || shout.e.T?.name || 'Soldier', shout.text, 2600)) { shout = null; shoutCd = 22; }
+    if (fresh && shoutCd <= 0 && !shout && Math.random() < 0.75) shout = { e: fresh, t: 3, text: SHOUTS[Math.floor(Math.random() * SHOUTS.length)] };
+    if (shout && ((shout.t -= dt) <= 0 || shout.e.dead)) shout = null;
+    // the enemy's call goes over the guard's chatter after a moment (a story line or a cutscene is never cut)
+    else if (shout && g.bark?.(shout.e.name || shout.e.T?.name || 'Soldier', shout.text, 2600, shout.t < 2.4)) { shout = null; shoutCd = 22; }
     if (roadReply && (roadReply.t -= dt) <= 0) { const C = g.companion; if (C && !C.down) g.bark(C.K.name, roadReply.text, 4200, true); roadReply = null; }
     // the beats wait for quiet
     const quiet = !g.interior && !p.dead && !g.ui.dialogOpen && g.briefed && !g.bossActive && calmNear() && !!g.director;

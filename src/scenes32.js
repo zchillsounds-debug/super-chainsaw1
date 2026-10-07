@@ -20,8 +20,12 @@ export function chat(g, o, script, { establish = true, onEnd = null, closeIn = 1
   const salim = playerActor(g), actors = [salim, o, ...Object.values(cast)];
   let look = o; // whoever spoke last: Salim faces him, the others face Salim
   const face = () => { salim.facing = yawTo(salim.pos, look.pos); for (const a of actors) if (a !== salim) a.facing = yawTo(a.pos, salim.pos); };
-  const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b = to.pos, f = yawTo(a, b); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * side, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * side); }, t0: headOf(to), fov: 30 });
-  const wide = { follow: true, p0: at(o, 2.2, 3.4, 2.6), t0: at(o, 1.3, -0.8, 0), p1: at(o, 2.0, 3.0, 2.0), t1: at(o, 1.3, -0.8, 0), fov: 34 };
+  // over the shoulder, further back and wider than a tight two-shot (a head filled a third of the frame on a phone)
+  const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b = to.pos, f = yawTo(a, b), sd = side * 1.6; return V(a.x - Math.sin(f) * 1.25 + Math.cos(f) * sd, a.y + 1.85, a.z - Math.cos(f) * 1.25 - Math.sin(f) * sd); }, t0: headOf(to), fov: 32 });
+  // the wide shot takes the first side with a clear line to the speaker (a wall filled it on the quays)
+  let ws = null;
+  const wsSide = () => { if (ws) return ws; ws = [3.4, 2.6]; for (const [fw, sd] of [[3.4, 2.6], [3.4, -2.6], [2.4, 3.4], [2.4, -3.4], [-3.0, 2.6], [-3.0, -2.6], [1.6, 1.4]]) { const q = at(o, 0, fw, sd)(); if (lineClear(o.pos.x, o.pos.z, q.x, q.z)) { ws = [fw, sd]; break; } } return ws; };
+  const wide = { follow: true, p0: () => at(o, 2.2, wsSide()[0], wsSide()[1])(), t0: at(o, 1.3, -0.8, 0), p1: () => at(o, 2.0, wsSide()[0] * 0.88, wsSide()[1] * 0.77)(), t1: at(o, 1.3, -0.8, 0), fov: 34 };
   const d = Math.hypot(salim.pos.x - o.pos.x, salim.pos.z - o.pos.z);
   if (closeIn && (d > 2.4 || d < 1.2)) { const f = yawTo(o.pos, salim.pos); salim.pos.set(o.pos.x + Math.sin(f) * closeIn, 0, o.pos.z + Math.cos(f) * closeIn); salim.pos.y = heightAt(salim.pos.x, salim.pos.z); }
   const shots = [];
@@ -57,7 +61,7 @@ export function extra(g, look, pos, face = 0) {
 // He walks up the burned lane alone, unarmed, in a plain cloak. Salim lets him walk on, or calls the watch.
 export function arsaberLane(g, choose) {
   const start = spotAhead(g, 9);
-  const look = byzify({ ...LOOK.officer('#3a2a2a', 0x2a201a), weapon: null, offhand: null, beard: 0x8a8070, beardLen: 0.9, skin: 0xb07a52, sash: 0x3a2a24, scale: 1.04, build: 1.1, belly: 0.3, hemY: 0.3, cloak: 0x3a3028, helm: null, pilos: null, turban: null, cap: 0x2a2420, capBand: 0x1a1612 });
+  const look = byzify({ ...LOOK.officer('#3a2a2a', 0x2a201a), weapon: null, offhand: null, beard: 0x8a8070, beardLen: 0.9, skin: 0xb07a52, sash: 0x3a2a24, scale: 1.04, build: 1.1, belly: 0.3, hemY: 0.3, cloak: 0x3a3028, helm: null, pilos: null, turban: null, cap: 0x2a2420, capBand: 0x1a1612 }); look.mail = false; look.armour = null; // no armour: he walks the lane as a private man
   const E = extra(g, look, start, yawTo(start, g.player.pos)), o = other(E);
   const p = g.player.pos, f = yawTo(start, p), meet = V(p.x - Math.sin(f) * 2.0, 0, p.z - Math.cos(f) * 2.0); meet.y = heightAt(meet.x, meet.z);
   const away = V(start.x - Math.sin(f) * 12, 0, start.z - Math.cos(f) * 12);
