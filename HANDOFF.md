@@ -1,17 +1,43 @@
-# Madinat al-Salam: Handoff (Round 31 shipped; Round 32 = story everywhere; APK signing still waits on the user's secrets)
+# Madinat al-Salam: Handoff (Round 32 shipped: story everywhere; APK signing still waits on the user's secrets)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-1luc29` of zchillsounds-debug/super-chainsaw1 (Round 31: the siege mines and the sapper, the Wanted board, a graphics pass). Check Round 31's "Status" list below for what is left.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-ba5w2i` of zchillsounds-debug/super-chainsaw1 (Round 32: story everywhere: Arsaber's lane, a scene in each act, the guards' and a family's stories, deserters, letters, finds). Check Round 32's "Status" list below for what is left.
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
 > 2. Run `npm install`. When pushing the session branch, `git push -u origin <session-branch>` (a fresh branch carries the earlier rounds' history). Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs from the same folder: vite reloads the page and the test dies ("Execution context was destroyed"). Run tests from a copy (see "Test workflow" under Round 27).
-> 3. Read the "Round 32 plan" section below (the direction I chose at the end of Round 31), turn it into a concrete build list with me, and confirm it before building.
+> 3. Ask me what Round 33 should be (Round 32's "Ideas for Round 33" are a start), turn it into a concrete build list with me, and confirm it before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
+
+## Round 32: story everywhere
+User decisions: the build list below, as ranked. Arsaber's lane choice: let him walk / call the watch. The hired guards: all four have arcs, and each guard keeps his own count, whoever is hired. The family's names are Umayma, her brother Nadr and her boy Qays (the user picked them from three sets). APK secrets: still "later".
+
+**New files:** `story32.js` (setupStory32, last in `main.js` after setupCamp26), `scenes32.js` (`chat()`: a two-hander with captions, choices, `when` lines and a `cast` of extra speakers; `arsaberLane`; `MIDACT`; `spotAhead`; `extra`), `story32_ar.js` (`AR32`, backtick keys, merged last in `story_ar.js`). `scenes.js` now exports its helpers as `H32`; `sidequests.js` exports `people`.
+
+**What was built:**
+1. **Arsaber's chapter.** In al-Karkh, once Narses is down and before Kalokyros falls, on calm ground more than 30 m from Ishaq: Arsaber walks up the burned paper-sellers' lane, unarmed, in a plain cloak (`arsaberLane`). Choice `ch.lane`: `walk` / `watch` (+10 Renown). Payoffs: a line at the docks parley (`scenes.js` arrival, `when`), Arsaber's bridge intro line (`BOSS.intro` patched at load), and `watch` gives him +1 level. Ishaq reads his letter from Constantinople at the end (`quaysAtDusk`): the text follows `arsaber` (promise/refuse) and `lane`.
+2. **A scene inside each act** (`MIDACT`, `said.mid32_<region>`): once the act's first captain is down, beside Ishaq: Sawad, the names of the dead guards (Ka'b, Sinan, 'Awf, Mazin, and Jabir); marsh, the flood when Salim was nine; al-Karkh, Ishaq's instrument maker Nu'aym; docks, the copyists' night and the ten cities. Hamrin: after one hold falls (and after the scout scene), the hill man Shabib brings Jabir's spear from the quarry: the legendary amulet "Jabir's Spear-Grip" (`s25.spear32`).
+3. **The hired guards' stories** (`GUARD_ARC`, `p.s25.g32[kind] = { n, at }`, kept through New Game+): three talks each for Ma'n (the Sarat canal, his sister), Dirar (the baker on the roof), Tamim (the houses by the Harb gate, lamp oil), Talha (the 'ayyarun, the purse). One per region per guard, after 6 kills and 75 s since the last one, on calm ground with him within 6 m. The third pays back (Renown, potions or gold). The epilogue: the hired guard says farewell before Ishaq's last scene (`GUARD_BYE`, `said.ep32_guard`).
+4. **The family going home to al-Karkh** (`FAMILY`, three NPCs near the camp, `said.fam32_<region>`): Sawad (choice `ch.fam`: give them your water (-1 potion, +5 Renown) / point them to the well), marsh, al-Karkh (their burned house; choice `ch.famgold`: pay 100 gold for timber (+10 Renown) / wish them well), docks, and on the quays at dusk. Yusuf mentions the timber in the epilogue. **The woman's rig:** new `wrap` option in `human.js` (a head shawl framing the face, with a face cut-out; it replaces the turban). Nasim, 'Amr's boy, stands by 'Amr in every camp with a line per region.
+5. **The other side:** a soldier shouts as a fight starts (`SHOUTS`, shown as a bark under his troop's name, 60%, at most every 22 s). Letters on bodies (`LETTERS`, 16, one body in fifteen, elites 35%, each found once, picked up by walking over them when no fight is on). One deserter per act region by a site (`DESERTER`: Doukitzes, who wrote the Round 25 letter, Leon, Zonaras, Kosmas; a '?' on the map). Choice `ch.des_<region>`: spare / turn in (+10 Renown). If 3+ are spared, Ishaq tells of a deserter's warning in the hills (+10 Renown), and 'Amr's farewell changes.
+6. **Finds** (Codex categories "Finds" and "Letters from the Company"): 3 objects per region (`FINDS_ALL`, examined in place) and one in every named dungeon (`DFINDS`, placed in a middle room on entry). 41 in all with the letters; all 41 earn "The Chronicler's Satchel" (legendary belt). They are kept in `p.codex` (`f32_*`).
+7. **Lines on the road** (`ROAD`): at each region's three story sites, a line from Salim, and the hired guard answers 5 s later.
+8. **The epilogue:** the camp men's farewells take extra lines (`g.epAdd32`, hooked into `epilogue29.js` `lines`), the guard's farewell, the family on the quays, Arsaber's letter, and two closing captions with the sweep of history (al-Ma'mun comes home in 819; the House of Wisdom; the Pages in ten cities) before "The City of Peace".
+
+**Tests:** `shots/r32story.mjs <region> [out] [pick] [lang]` plays the act scene, the lane (al-Karkh), the family, the deserter, the guard's three talks, a shout, a letter and a find, and prints every line. `shots/r32face.mjs [out]` takes close-ups of Umayma, Qays, Nasim and the Sawad deserter. Test hook: `g.s32test` (arc, mid, lane, hills, glints).
+
+**Fixes found by the critique loop:** the act beats now wait on the act's first hold (`FIRST_HOLD`; `g.chief` has been null since Round 22); a soldier's shout pushes past the guard's chatter after 0.6 s; Arsaber wears no armour in the lane; the conversation camera is further back and wider; the wide shot takes the first spot with a clear line to the speaker (`lineClear`) *and* a clear ray through the scene meshes (tents and awnings are not colliders). The Umayma shawl first rendered as bald (the hat's carve-out ate it); it now has its own face cut-out, in undyed linen.
+
+**Status (end of the Round 32 session):**
+- Committed and pushed on `claude/new-session-ba5w2i`.
+- r32story clean ("errors: none") in all five regions (sawad, karkh, docks, marsh, hamrin); every scene ran to its end, with both options of each choice covered across the runs. r29epilogue (en) clean: the new letter lines and the closing captions play, then victory. The regression batch (r32story docks ar, r25story docks, finaletest docks, r16test karkh, r29quests sawad, r22holds dam, r27dungeon marsh) was run from `/home/user/wt32` (a tar copy, `node_modules` symlinked); see the next session's notes for its results if they are not listed here.
+- Not yet checked: the soldier's shout after its fix (re-run r32story in any region and look for `shout "<troop>..."`), the docks family wide shot after the ray fix, the Arabic subtitles in a screenshot, the Arsaber lane on real burned-lane ground (the test stands him on open ground), the woman's rig at a cutscene distance.
+- Ideas for Round 33 (not approved): a woman's face sculpt (the shared face reads male), a seated pose and a cold fire for the deserters, Nasim with a practice spear animation, voice cues for the new lines, the rest of the graphics pass.
+- APK secrets: still not added (throwaway key). Remind the user to back up the save before installing.
 
 ## Round 32 plan: story everywhere (direction chosen by the user; confirm the concrete list before building)
 User decisions at the end of Round 31:
