@@ -102,6 +102,10 @@ export class UI {
   setSkill(k, cdFrac, usable = true, count = null) {
     const el = this.skillEls[k]; if (!el) return;
     el.querySelector('.cd').style.height = (cdFrac * 100) + '%';
+    // Round 33: the touch buttons sweep the cooldown round the dial, and glow once when the skill comes ready
+    el.style.setProperty('--cd', cdFrac.toFixed(3));
+    if (el._cd > 0 && cdFrac <= 0) { el.classList.remove('ready'); void el.offsetWidth; el.classList.add('ready'); clearTimeout(el._rt); el._rt = setTimeout(() => el.classList.remove('ready'), 700); }
+    el._cd = cdFrac;
     el.classList.toggle('nomana', !usable);
     if (count !== null) el.querySelector('.cnt').textContent = count;
   }
