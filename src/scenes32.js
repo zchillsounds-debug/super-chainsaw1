@@ -9,6 +9,7 @@ import { lineClear } from './collision.js';
 import { LOOK, byzify } from './byz.js';
 import { H32 } from './scenes.js';
 
+const RAY = new THREE.Raycaster();
 const { V, yawTo, lineDur, at, headOf, walk, act, tickActor, playerActor } = H32;
 
 // a stand-in for anyone with a rig and an animation state (an NPC, the hired guard, a rig made for the scene)
@@ -24,7 +25,10 @@ export function chat(g, o, script, { establish = true, onEnd = null, closeIn = 1
   const ots = (from, to, side) => ({ follow: true, p0: () => { const a = from.pos, b = to.pos, f = yawTo(a, b), sd = side * 1.6; return V(a.x - Math.sin(f) * 1.25 + Math.cos(f) * sd, a.y + 1.85, a.z - Math.cos(f) * 1.25 - Math.sin(f) * sd); }, t0: headOf(to), fov: 32 });
   // the wide shot takes the first side with a clear line to the speaker (a wall filled it on the quays)
   let ws = null;
-  const wsSide = () => { if (ws) return ws; ws = [3.4, 2.6]; for (const [fw, sd] of [[3.4, 2.6], [3.4, -2.6], [2.4, 3.4], [2.4, -3.4], [-3.0, 2.6], [-3.0, -2.6], [1.6, 1.4]]) { const q = at(o, 0, fw, sd)(); if (lineClear(o.pos.x, o.pos.z, q.x, q.z)) { ws = [fw, sd]; break; } } return ws; };
+  // Round 32: and nothing drawn in between (tents and awnings are not colliders): a ray from each spot to the speaker's head
+  const own = new Set(); for (const a of actors) a.rig.traverse((x) => own.add(x));
+  const seen = (q, h) => { RAY.set(q, h.clone().sub(q).normalize()); RAY.far = q.distanceTo(h) - 0.4; return !RAY.intersectObjects(g.scene.children, true).some((i) => !own.has(i.object) && i.object.visible && !i.object.isSprite && !i.object.isPoints); };
+  const wsSide = () => { if (ws) return ws; ws = [3.4, 2.6]; const h = headOf(o)(); for (const [fw, sd] of [[3.4, 2.6], [3.4, -2.6], [2.4, 3.4], [2.4, -3.4], [-3.0, 2.6], [-3.0, -2.6], [2.0, 1.4], [2.0, -1.4]]) { const q = at(o, 2.2, fw, sd)(); if (lineClear(o.pos.x, o.pos.z, q.x, q.z) && seen(q, h)) { ws = [fw, sd]; break; } } return ws; };
   const wide = { follow: true, p0: () => at(o, 2.2, wsSide()[0], wsSide()[1])(), t0: at(o, 1.3, -0.8, 0), p1: () => at(o, 2.0, wsSide()[0] * 0.88, wsSide()[1] * 0.77)(), t1: at(o, 1.3, -0.8, 0), fov: 34 };
   const d = Math.hypot(salim.pos.x - o.pos.x, salim.pos.z - o.pos.z);
   if (closeIn && (d > 2.4 || d < 1.2)) { const f = yawTo(o.pos, salim.pos); salim.pos.set(o.pos.x + Math.sin(f) * closeIn, 0, o.pos.z + Math.cos(f) * closeIn); salim.pos.y = heightAt(salim.pos.x, salim.pos.z); }
