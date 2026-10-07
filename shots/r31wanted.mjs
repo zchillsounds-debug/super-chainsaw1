@@ -40,7 +40,7 @@ for (let r = 0; r <= 5; r++) {
     const info = { name: L.C.name, type: L.boss.type, affix: L.boss.affix, move: L.boss.m28key, level: L.boss.level, men: L.guard.length };
     for (const e of L.guard) if (!e.dead) g.killEnemy(e, e.pos); g.killEnemy(L.boss, L.boss.pos); __sim(0.5);
     const drop = g.drops.slice(drops0).map((d) => d.item?.rarity + ':' + (d.item?.name || d.item?.gold));
-    return { tag: 'hunt' + r, ...info, dist: d0, marks, trail: !!tr?.pos, line: line?.text, over: !W.live, gold: p.gold - gold0, renown: (p.renown || 0) - ren0, drop, rank: W.S().rank, week: W.S().week.done };
+    const bag = (p.bag || []).filter(Boolean).map((i) => i.name); return { tag: 'hunt' + r, ...info, unique: bag.some((n) => /Canal Roads|Reed-Cutter|Karkh Market|Bridge of Boats|Hamrin Passes/.test(n)), dist: d0, marks, trail: !!tr?.pos, line: line?.text, over: !W.live, gold: p.gold - gold0, renown: (p.renown || 0) - ren0, drop, rank: W.S().rank, week: W.S().week.done };
   }, r));
   await pg.evaluate(() => __game.__wanted.openBoard()); await pg.waitForTimeout(200);
   if (r === 2) await shot(`wanted-panel-mid-${region}`);

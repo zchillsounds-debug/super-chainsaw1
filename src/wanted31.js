@@ -131,7 +131,10 @@ export function setupWanted31(g) {
   const state = (rank) => { const s = S(); if (rank < 5) return rank < s.rank ? 'done' : rank === s.rank ? 'open' : 'locked'; return s.rank < 5 ? 'locked' : s.week.n === week() && s.week.done ? 'done' : 'open'; };
   // ---- the board (posters redrawn when the ladder moves)
   const board = wantedBoard([0, 1, 2, 3, 4].map((r) => posterCanvas(cap(r), state(r))));
-  const [bx, bz] = freeSpot(HUB.ishaq[0] + 9, HUB.ishaq[1] - 1, 1.8);
+  // a clear spot near the other boards, 4.5 m from anyone or anything the hero talks to (the prompt goes to the nearest)
+  const clear = ([x, z]) => g.interactables.every((i) => !i.pos || Math.hypot(i.pos.x - x, i.pos.z - z) > 4.5);
+  const tries = [[9, -1], [10, -6], [-10, -6], [12, 3], [-12, 2], [6, -10], [-6, -10], [14, -3]].map(([dx, dz]) => freeSpot(HUB.ishaq[0] + dx, HUB.ishaq[1] + dz, 1.8));
+  const [bx, bz] = tries.find(clear) || tries[0];
   board.group.position.copy(V3(bx, bz)); board.group.rotation.y = Math.atan2(HUB.spawn[0] - bx, HUB.spawn[1] - bz);
   g.scene.add(board.group); colliders.push({ type: 'box', x: bx, z: bz, hw: 1.5, hd: 0.3, rot: board.group.rotation.y }); buildGrid();
   g.interactables.push({ pos: board.group.position, r: 3, label: 'Read the Wanted board', act: () => openBoard() });
