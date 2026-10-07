@@ -33,7 +33,7 @@ const play = async (tag, wantShots = 2) => {
   }
 };
 await clear();
-const beats = await pg.evaluate(() => __game.__r32.beats().map((b) => b.id));
+const beats = (await pg.evaluate(() => __game.__r32.beats().map((b) => b.id))).filter((id) => !process.env.ONLY || id === process.env.ONLY);
 console.log('beats:', beats.join(', '));
 // prerequisites per beat: holds done, earlier beats said, choices made
 const PRE = {
@@ -60,6 +60,7 @@ for (const id of beats) {
   console.log(`beat ${id}:`, started);
   if (started) await play(id);
 }
+if (process.env.ONLY) { console.log('errors:', errs.join('\n') || 'none'); await b.close(); process.exit(0); }
 await pg.evaluate((region) => { const g = __game, s = g.player.s25; for (const b of g.__r32.beats()) s.said['r32_' + b.id] ||= true; for (const k of ['serai', 'kiln', 'arch']) s.said['r32_lm_' + region + k] = true; s.said['r32_news_' + region] = true; while (__director.def) { __director.skip(); __sim(0.1); } }, region);
 console.log('choices:', JSON.stringify(await pg.evaluate(() => __game.player.s25.ch)));
 // Things Found: walk over each one
