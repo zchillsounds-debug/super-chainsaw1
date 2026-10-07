@@ -1,4 +1,4 @@
-# Madinat al-Salam: Handoff (Round 31 shipped; APK signing still waits on the user's secrets)
+# Madinat al-Salam: Handoff (Round 31 shipped; Round 32 = story everywhere; APK signing still waits on the user's secrets)
 
 ## Paste this into the new chat
 > I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-1luc29` of zchillsounds-debug/super-chainsaw1 (Round 31: the siege mines and the sapper, the Wanted board, a graphics pass). Check Round 31's "Status" list below for what is left.
@@ -6,12 +6,29 @@
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
 > 2. Run `npm install`. When pushing the session branch, `git push -u origin <session-branch>` (a fresh branch carries the earlier rounds' history). Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs from the same folder: vite reloads the page and the test dies ("Execution context was destroyed"). Run tests from a copy (see "Test workflow" under Round 27).
-> 3. Finish whatever Round 31's "Status" list says is left, then ask me about Round 32 and confirm the plan with me before building.
+> 3. Read the "Round 32 plan" section below (the direction I chose at the end of Round 31), turn it into a concrete build list with me, and confirm it before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
+
+## Round 32 plan: story everywhere (direction chosen by the user; confirm the concrete list before building)
+User decisions at the end of Round 31:
+- **The whole round is story.** The game should feel story-led everywhere: "lots of story throughout the game". Build story first. Graphics part 2 and other ideas wait.
+- **Where:** all four areas:
+  - Deepen the main acts: more scenes and choices inside the existing acts, for example why Arsaber is here, Salim's past, Jabir, Ishaq, and the siege's cost.
+  - Every region's people: villagers, travellers and camp people with short stories and faces that recur.
+  - Companions and camp men: Yusuf, Bishr, 'Amr and the companions get personal arcs that run across the whole game. Their Round 25 and Round 30 camp stories and their epilogue farewells already exist: build on them.
+  - The enemy side: Byzantine captains and soldiers with voices. Letters found on bodies, deserters who talk, Arsaber's own chapter. The Wanted captains' crimes and the bosses are hooks.
+- **Delivery:** all four:
+  - Cutscenes: `scenes.js` / `director`, the epilogue's style.
+  - Walk-and-talk barks: `story25.js` barks, companions while travelling and fighting.
+  - Found lore: letters, ledgers and objects in the world and the dungeons, collected in the Codex (`narrative.js` `CODEX`).
+  - Choices with consequences that change later scenes, people and the ending (existing flags: `s25.camp`, `p.rival`, the photeinos, marsh and tatzates choices).
+- **Tone:** grounded and human (the current voice: plain, quiet, people rebuilding after a siege, small kindnesses and hard choices) *and* more epic (bigger stakes, a sense of history turning). Both, so keep it human at the small scale and let the act climaxes and the epilogue carry the sweep. The design rules still hold: no religious buildings, symbols, Quranic text or religious greetings; short single period names; true to 813 CE.
+- **APK secrets:** still "later" (throwaway key; remind the user to back up the save before each install).
+- Suggested first step for the new chat: read the story bible, `narrative.js`, `story15.js`, `story25.js`, `story26.js`, `sidequests.js` and `epilogue29.js`, list where the story is thin (regions, acts, people, the enemy), then propose a ranked build list (for example: per-act new scenes, a companion arc each, a lore-object set per region and dungeon, barks for the open road and fights, 2–3 new choices that pay off in the epilogue) with Arabic for everything. Confirm with the user, then build.
 
 ## Round 31: the siege mines, the Wanted board, a graphics pass
 User decisions: the two items carried from Round 30 (new dungeon type with its boss move; the bounty board upgrade) plus graphics polish in all four areas (combat effects, maps and lighting, characters, HUD), built in that order. Dungeon pick: **siege mines**. Wanted board: **both** (a ladder of 5, then a weekly captain). The APK secrets are still "later". The user has not played on the phone since Round 26. Round 30's skipped regression sweep was run first: 39 of 39 clean.
