@@ -27,6 +27,7 @@ import { setupEpilogue29 } from './epilogue29.js';
 import { setupStory26 } from './story26.js';
 import { setupCamp26 } from './camp26.js';
 import { setupCamp30 } from './camp30.js';
+import { setupFoes30 } from './foes30.js';
 import { WEATHER } from './triplanar.js';
 import { PlanarReflection, reflects, REFL, REFLECT_LAYER } from './reflect.js';
 import { canalX, WATER_Y } from './terrain.js';
@@ -145,6 +146,7 @@ setupHubLife(game);
 setupStory25(game); game.converse25 = (n) => converse(game, n); // Round 25: barks, choices' effects, Ishaq, leaves and letters
 setupFoes26(game); // Round 26: standard-bearers, shield walls, horse archers
 setupFoes29(game); // Round 29: javelin men, braced spearmen, caltrop throwers, field surgeons
+setupFoes30(game); // Round 30: mounted lancers, dog handlers and their dogs
 setupStory26(game); // Round 26: the Hamrin story (scout, arrow, Tatzates' choice)
 setupCamp26(game); // Round 26: Yusuf, Bishr and 'Amr's own stories
 setupCamp30(game); // Round 30: the camp furnished (cooking fire, tents, water stand)

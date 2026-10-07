@@ -236,6 +236,17 @@ const Q = {
         { kind: 'return', text: 'Tell Hammad his boiler is coming home.', lines: [['Hammad', 'Ghalib is an honest man, then. I will pay the cart and his trouble.'], ['Hammad', 'Come and wash when it is hot again, guard. The first bath is yours.']] },
         { text: 'The bathhouse is warm again.' }],
       reward: { gold: 180, item: 'rare', renown: 15 } },
+    // Round 30: Yusuf's ledger in the burned suq
+    { id: 'ledger', camp: 'yusuf', t: 'The Ledger of Debts', giver: { name: 'Yusuf', title: '', look: 'trader', at: [-52, 80], face: -0.9 },
+      offer: 'Under the floor of my old stall in the burned suq I kept a ledger. Every debt in this quarter, forty years of them. Krateros\' men are digging the ruins for silver. If they find that book, they will sell the debts to the worst men in Baghdad.',
+      steps: [
+        { kind: 'kill', text: 'Drive Krateros\' diggers out of the ruins of Yusuf\'s stall in the burned suq.', at: [16, 62], pack: ['guard', 'deserter', 'naffat'], n: 4, elite: 'Trypes' },
+        { kind: 'meet', text: 'The floor was dug up and the ledger is gone. A water-carrier was seen running from the ruins; find him.', at: [30, 40], label: 'Speak with \'Abbad', who: { name: '\'Abbad', title: 'Water-carrier', look: 'carter', face: 0.6 },
+          lines: [['\'Abbad', 'The ledger? I have it. I pulled it out before the soldiers came.'], ['\'Abbad', 'My own name is in it. Twelve dirhams, for my daughter\'s wedding, two years ago. I meant to burn that page. I could not do it.'], ['Salim', 'Yusuf asked for his book back, not for your debt.'], ['\'Abbad', 'Then let him read it himself. But the diggers\' captain knows I took it. His men are camped by the canal.']] },
+        { kind: 'kill', text: 'Break the diggers\' camp by the canal before they hunt the water-carrier down.', at: [40, -10], pack: ['guard', 'crossbow', 'deserter', 'deputatos'], n: 4, elite: 'Maleinos' },
+        { kind: 'return', text: 'Bring Yusuf his ledger, and tell him who saved it.', lines: [['Salim', 'Your ledger. A water-carrier, \'Abbad, saved it from the diggers. His name is in it.'], ['Yusuf', 'Twelve dirhams, for a wedding. ... Forty years of debts, and half the people in this book are dead, or ruined by the siege.'], ['Yusuf', 'Hand me that lamp. ... There. Now nobody in al-Karkh owes Yusuf a single dirham. It is the best trade I ever made.']] },
+        { text: 'Yusuf burned his ledger. The quarter owes him nothing.' }],
+      reward: { gold: 160, item: 'rare', renown: 18 } },
   ],
   // Round 20: Act VI, the river quays
   docks: [
@@ -279,6 +290,17 @@ const Q = {
         { kind: 'return', text: 'Speak with Bakr.', lines: [['Bakr', 'Home, and on his own feet. My sister will cry for an hour and then shout at him for two.'], ['Bakr', 'Any boat on this river will carry you, guard. Say my name.']] },
         { text: 'Mundhir is home.' }],
       reward: { gold: 190, item: 'legendary', renown: 18 } },
+    // Round 30: Bishr's iron for the Bridge of Boats
+    { id: 'chains', camp: 'bishr', t: 'Iron for the Bridge', giver: { name: 'Bishr', title: '', look: 'father', at: [-41, 104], face: -2.4 },
+      offer: 'The Bridge of Boats has been held together with rope since the siege. Its chains went into Tahir\'s engines. There is a barge of iron bars at the boatyard, and Arsaber\'s men sit on it like hens on eggs. Bring me that iron and I will forge the bridge new chains.',
+      steps: [
+        { kind: 'take', text: 'Take the barge of iron bars back from Arsaber\'s men at the boatyard.', at: [36, 60], label: 'Take the iron bars', item: 'Iron Bars', guard: { pack: ['guard', 'crossbow', 'kontaratos'], n: 3 } },
+        { kind: 'meet', text: 'Bishr will need hands. Find the old chain-maker who lives by the warehouses.', at: [30, 22], label: 'Speak with Mukhariq', who: { name: 'Mukhariq', title: 'Chain-maker', look: 'carter', face: -0.8 },
+          lines: [['Mukhariq', 'Bishr has iron? Then he will need hands. I made the old bridge chains, before the siege took them for the engines.'], ['Salim', 'Then come and make them again.'], ['Mukhariq', 'My tools are in my old shop by the south slips. Arsaber\'s men keep it as a guardhouse now.']] },
+        { kind: 'kill', text: 'Clear Arsaber\'s guardhouse out of the chain-maker\'s shop by the south slips.', at: [-58, -30], pack: ['guard', 'spearman', 'deserter', 'tribolos'], n: 4, elite: 'Kamytzes' },
+        { kind: 'return', text: 'Bring Bishr his iron and a chain-maker with his tools.', lines: [['Salim', 'Your iron. And a chain-maker, with his tools.'], ['Bishr', 'Mukhariq! I thought the river had you, with the rest of them.'], ['Bishr', 'Twelve links a day, the two of us. The bridge will hold by the spring floods. Then this city can walk to work again.']] },
+        { text: 'Bishr and Mukhariq forge the bridge\'s chains.' }],
+      reward: { gold: 180, item: 'rare', renown: 18 } },
   ],
   hamrin: [ // Round 21: the endgame's work is in the holds, the bounties and the events; Round 29: one chain here too
     { id: 'flock', t: 'The Shepherd\'s Flock', giver: { name: 'Ghaylan', title: 'Shepherd', look: 'herder', at: [6, 88], face: -1.8 },
@@ -291,6 +313,16 @@ const Q = {
         { kind: 'return', text: 'Tell Ghaylan where his flock is penned.', lines: [['Salim', 'In the old fold under the cliff fort. A Rum soldier kept them alive, and then went home.'], ['Ghaylan', 'Then there is one less soldier in the world, and three hundred more sheep. A good trade.']] },
         { text: 'Ghaylan\'s flock is home.' }],
       reward: { gold: 260, item: 'legendary', renown: 20 } },
+    // Round 30: the camp men's own tasks. 'Amr: his old comrade from the Anbar gate
+    { id: 'lastline', camp: 'amr', t: 'The Last Line', giver: { name: '\'Amr', title: '', look: 'father', at: [-20, 78], face: 0.9 },
+      offer: 'There is a man in these hills who stood beside me at the Anbar gate. Hasan. We held a line for al-Amin together, and when it broke he ran north. The shepherds say he leads a band on the salt road now. Find him before the company does. I want to speak to him once.',
+      steps: [
+        { kind: 'meet', text: 'Find Hasan, \'Amr\'s old comrade, in the western hills.', at: [-58, 36], label: 'Speak with Hasan', who: { name: 'Hasan', title: 'Deserter', look: 'herder', face: 1.4 },
+          lines: [['Hasan', '\'Amr sent you? Tell him I am not coming down to be lectured.'], ['Salim', 'He wants to talk. That is all.'], ['Hasan', 'My men are not my men. They take what they want, and I keep them from taking worse. Durayd and his lot in the gorge are the worst. While they ride, I cannot leave.']] },
+        { kind: 'kill', text: 'Break Durayd\'s riders in the western gorge, so Hasan can leave his band.', at: [-34, 50], pack: ['deserter', 'spearman', 'crossbow', 'akontistes'], n: 4, elite: 'Durayd' },
+        { kind: 'return', text: 'Tell \'Amr that Hasan is free to come down.', lines: [['Salim', 'Durayd\'s riders are broken. Hasan can come down, if he wants to.'], ['\'Amr', 'He came to the camp at dawn. We did not say much. We stood at the drill post and watched Nasim hold a line.'], ['\'Amr', 'He will teach the shepherds\' boys the sling. Two old men, holding something worth holding. Thank you, Salim.']] },
+        { text: '\'Amr and Hasan teach the camp\'s boys together.' }],
+      reward: { gold: 220, item: 'rare', renown: 20 } },
   ],
 }[REGION];
 
@@ -358,9 +390,10 @@ export function setupSideQuests(game) {
     q.mark = mark(n.rig);
     n.talk = () => {
       const s = questState(p, q.id), st = q.steps[s];
-      if (s === -1) return converse(g, { start: { who: q.giver.name, text: q.offer, choices: [{ label: 'I will help.', fx: () => accept(q) }, { label: 'Not now.', ...(prev && q.giver.name === 'Ishaq' ? { fx: () => setTimeout(prev, 0) } : {}) }] } });
+      const hubMan = prev && (q.giver.name === 'Ishaq' || q.camp); // Round 30: the camp men keep their own panels
+      if (s === -1) return converse(g, { start: { who: q.giver.name, text: q.offer, choices: [{ label: 'I will help.', fx: () => accept(q) }, { label: q.camp ? 'Not now. Show me your trade.' : 'Not now.', ...(hubMan ? { fx: () => setTimeout(prev, 0) } : {}) }] } });
       if (st?.kind === 'return') return g.director.play(SCENES.conversation(g, n, st.lines.map(([who, text]) => ({ who, text })))).then(() => advance(q));
-      if (prev && q.giver.name === 'Ishaq') return prev();
+      if (hubMan) return prev();
       converse(g, { start: { who: q.giver.name, text: s >= q.steps.length - 1 ? t(q.steps[q.steps.length - 1].text) : t(st.text), choices: [{ label: 'Farewell.' }] } });
     };
   }
@@ -374,6 +407,7 @@ export function setupSideQuests(game) {
   }
   function reward(q) {
     const R = q.reward;
+    if (q.camp) (p.campq30 ||= {})[q.camp] = true;
     if (R.gold) { p.gold += R.gold + p.level * 10; g.audio.gold?.(); }
     if (R.item) giveItem(g, makeItem(p.level + 1, R.item));
     if (R.legend) { const it = makeItem(p.level + 1, 'legendary', 'amulet'); it.name = R.legend; it.flavor = '"Carried the whole road home."'; giveItem(g, it); }

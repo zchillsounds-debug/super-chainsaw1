@@ -5,7 +5,7 @@ import { renameSlain } from './byz.js';
 // Auto-save at each act checkpoint (localStorage). Continue restores the hero and the story so far.
 const KEY = 'sob.save.v1';
 // later rounds' player state (Renown board, slain captains, skill loadouts, gems, stash tabs)
-const EXTRA = ['rb', 'slain', 'loadout', 'gems', 'stashTabs', 'stashPages', 'visited', 'companion', 'rift', 'belt', 'rival', 'holds', 'recipes', 'hound', 'falcon', 'fish', 'food', 'hubUp', 's25'];
+const EXTRA = ['rb', 'slain', 'loadout', 'gems', 'stashTabs', 'stashPages', 'visited', 'companion', 'rift', 'belt', 'rival', 'holds', 'recipes', 'hound', 'falcon', 'fish', 'food', 'hubUp', 's25', 'campq30'];
 // where Continue puts the hero: in the Sawad by act; in the later regions always at the hub corner
 const CHECKPOINTS = IS_SAWAD ? { 1: [1, 88], 2: [SITES.serai.x - 8, SITES.serai.z + 6], 3: [SITES.kiln.x + 10, SITES.kiln.z + 6] } : {};
 

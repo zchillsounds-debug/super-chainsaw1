@@ -4,7 +4,7 @@ import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
 const { chromium } = require('playwright');
 const [region = 'sawad', out] = process.argv.slice(2);
-const ID = { sawad: 'seed', marsh: 'mashuf', karkh: 'copper', docks: 'pilot', hamrin: 'flock' }[region];
+const ID = process.env.QID || { sawad: 'seed', marsh: 'mashuf', karkh: 'copper', docks: 'pilot', hamrin: 'flock' }[region];
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: true, isMobile: true });
 const errs = []; pg.on('pageerror', (e) => errs.push('PAGEERR ' + e.message)); pg.on('console', (m) => m.type() === 'error' && !m.text().includes('CERT') && errs.push(m.text()));
