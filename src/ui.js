@@ -373,7 +373,7 @@ export class UI {
 
 // Round 30: one marker style for the minimap and the big map. offer: a task to take (!), meet/return/task: the
 // tracked task's next place (a diamond, bright when tracked), bounty: crossed blades, event: a red flag
-export const MARK_COL = { offer: '#ffd24a', meet: '#7fd0ff', return: '#ffd24a', task: '#7fd0ff', bounty: '#ff9a3a', event: '#ff5040' };
+export const MARK_COL = { offer: '#ffd24a', meet: '#7fd0ff', return: '#ffd24a', task: '#7fd0ff', bounty: '#ff9a3a', event: '#ff5040', wanted: '#ff4a3a' };
 export function drawMark(c, x, y, kind, on, k = 1) {
   const col = MARK_COL[kind] || '#fff', r = (on ? 7.5 : 6) * k;
   c.save(); c.translate(x, y);
@@ -382,6 +382,7 @@ export function drawMark(c, x, y, kind, on, k = 1) {
   else {
     c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); c.stroke(); c.fillStyle = col; c.strokeStyle = col;
     if (kind === 'offer' || kind === 'return') { c.font = `bold ${Math.round(r * 1.5)}px Cinzel, serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(kind === 'offer' ? '!' : '?', 0, r * 0.08); }
+    else if (kind === 'wanted') { c.fillRect(-r * 0.42, -r * 0.55, r * 0.84, r * 1.1); c.fillStyle = 'rgba(14,9,5,0.88)'; c.beginPath(); c.arc(0, -r * 0.12, r * 0.24, 0, 7); c.fill(); c.fillRect(-r * 0.3, r * 0.18, r * 0.6, r * 0.12); }
     else if (kind === 'bounty') { c.lineWidth = 1.6 * k; c.beginPath(); c.moveTo(-r * 0.5, -r * 0.5); c.lineTo(r * 0.5, r * 0.5); c.moveTo(r * 0.5, -r * 0.5); c.lineTo(-r * 0.5, r * 0.5); c.stroke(); }
     else { c.fillRect(-r * 0.35, -r * 0.55, r * 0.14, r * 1.1); c.beginPath(); c.moveTo(-r * 0.21, -r * 0.55); c.lineTo(r * 0.55, -r * 0.3); c.lineTo(-r * 0.21, -r * 0.05); c.fill(); }
   }

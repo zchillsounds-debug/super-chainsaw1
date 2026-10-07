@@ -199,7 +199,7 @@ export function setupTravel(g) {
     };
     const showMark = (m) => {
       sel = null; selM = m.key || null;
-      const what = { offer: 'A task is offered here', meet: 'Someone to meet', return: 'Return here', task: 'The task leads here', bounty: 'Bounty', event: 'World event' }[m.kind];
+      const what = { offer: 'A task is offered here', meet: 'Someone to meet', return: 'Return here', task: 'The task leads here', bounty: 'Bounty', event: 'World event', wanted: 'Wanted' }[m.kind];
       card.innerHTML = `<b>${t(m.name)}</b><div class="mcsub">${t(what)}</div><div class="mcb"><button class="go">${t('Walk there')}</button>${m.key ? `<button class="tr">${t(m.on ? 'Stop tracking' : 'Track')}</button>` : ''}</div>`;
       card.classList.remove('hidden');
       card.querySelector('.go').onclick = () => { if (g.walkTo(m.pos.x, m.pos.z, m.name)) g.sheets?.closeAll(); };

@@ -52,8 +52,15 @@ const UNIQUES = [
   { trial: 'lastgate', slot: 'armor', name: 'Coat of the Last Gate', base: 'Lamellar Jawshan', armor: 38, stats: { life: 110, armor: 25, regen: 3 }, flavor: '"The Khurasan gate held a day longer than the rest."' },
   { trial: 'clock', slot: 'ring', name: 'Ring of the Water-Clock', base: 'Silver Signet', stats: { cdr: 12, crit: 6, mana: 30 }, flavor: '"Measured out in drops, like the clock the caliph sent to the Franks."' },
   { trial: 'sapper', slot: 'belt', name: 'Sapper\'s Cord', base: 'Studded Mintaqa', armor: 8, stats: { potHeal: 30, life: 60, armor: 10 }, flavor: '"Knotted by the men who dug under the walls."' },
+  // Round 31: won from the last captain on each region's Wanted board
+  { wanted: 'sawad', slot: 'helm', name: 'Cap of the Canal Roads', base: 'Mailed Bayda', armor: 12, stats: { life: 70, armor: 15, move: 8 }, flavor: '"The last road captain of the Sawad wore it. The farmers sleep now."' },
+  { wanted: 'marsh', slot: 'weapon', name: 'Reed-Cutter', base: 'Hindi Sayf', min: 17, max: 29, stats: { dmgPct: 30, speed: 12, leech: 5 }, flavor: '"It cleared a way through the reeds for the fishing boats."' },
+  { wanted: 'karkh', slot: 'amulet', name: 'Weight of the Karkh Market', base: 'Brass Astrolabe', stats: { crit: 9, dmgPct: 20, mana: 40 }, flavor: '"A market inspector\'s brass weight, honest to the grain."' },
+  { wanted: 'docks', slot: 'belt', name: 'Rope of the Bridge of Boats', base: 'Studded Mintaqa', armor: 8, stats: { potHeal: 35, life: 70, armor: 12 }, flavor: '"Cut from the cables that held the boats in line across the Tigris."' },
+  { wanted: 'hamrin', slot: 'armor', name: 'Coat of the Hamrin Passes', base: 'Lamellar Jawshan', armor: 36, stats: { life: 100, regen: 4, armor: 18 }, flavor: '"Taken from the last captain in the hills, and patched where he was beaten."' },
 ];
 export const TRIAL_UNIQUES = UNIQUES.filter((u) => u.trial);
+export const WANTED_UNIQUES = UNIQUES.filter((u) => u.wanted);
 
 let uid = 1;
 // loot follows the hero's discipline: bows for the Rami, siphons for the Naffat, knives for the 'Ayyar
@@ -72,7 +79,7 @@ export function rollRarity(level, bonus = 0) {
 export function makeItem(level, rarity, slot) {
   slot = slot || pick(['weapon', 'weapon', 'armor', 'helm', 'ring', 'amulet', 'belt']);
   if (rarity === 'legendary') {
-    const any = UNIQUES.filter((u) => !u.trial), pool = any.filter((u) => u.slot === slot);
+    const any = UNIQUES.filter((u) => !u.trial && !u.wanted), pool = any.filter((u) => u.slot === slot);
     const u = pool.length ? pick(pool) : pick(any);
     return uniqueItem(u, level);
   }
@@ -88,6 +95,7 @@ function uniqueItem(u, level) {
   }
 }
 // Round 21: a Siege Trials legendary (random one if no key)
+export function makeWantedUnique(level, region) { return uniqueItem(WANTED_UNIQUES.find((u) => u.wanted === region) || WANTED_UNIQUES[0], level); }
 export function makeTrialUnique(level, key) { return uniqueItem(TRIAL_UNIQUES.find((u) => u.trial === key) || pick(TRIAL_UNIQUES), level); }
 function rolledItem(level, rarity, slot) {
   const bases = slot === 'weapon' && weaponPool ? weaponPool : BASES[slot];

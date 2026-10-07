@@ -6,13 +6,15 @@
 //   dungeon bosses (by the dungeon's style; contracts and trials fought on that ground too):
 //     cistern: a sluice of slowing water. lower kilns: the vents ring fire. granary: stacks fall toward Salim.
 //     reed warren: a line of burning huts. salt: a burst of salt shards. palace: the tiles burst in two waves.
+//     siege mines (Round 31): a lane of roof brought down, the fallen earth left as cover.
 //     older grounds: a ground slam.
 //   act bosses, last quarter (a third signature, opening the last phase):
 //     Bardanes javelins, Kallinikos siphon sweep, Krateros smoke rush, Arsaber flurry.
 //   Hamrin masters (holds.js MOVES): Krambonites propfall, Charsianites wallvolley, Pankalos gorgerush, Tatzates threeshafts.
 // Every move is told by a callout and a marker on the ground before it lands.
 import * as THREE from 'three';
-import { resolve } from './collision.js';
+import { resolve, buildGrid } from './collision.js';
+import { colliders } from './buildings.js';
 import { heightAt } from './terrain.js';
 import { t } from './i18n.js';
 
@@ -106,6 +108,24 @@ const MOVES = {
         if (g.player.pos.distanceTo(c) < 4.2) { hurt(g, e, 0.9, c); g.shake = Math.max(g.shake, 0.3); } });
       return { t: 0 }; },
     tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(1, M.t / 1.2); return M.t > 1.3; } },
+  // Round 31: the siege mines: he fires a prop and a lane of roof comes down; the fallen earth stays a while as cover
+  cavein: { cd: 10, range: [2, 15], say: 'Bring down the roof!',
+    start(g, e) { e.st.action = 'throw'; e.st.actionT = 0; const d = dirTo(e.pos, g.player.pos), from = e.pos.clone().addScaledVector(d, 1.2), len = 12;
+      g.fx.fire(tmp.copy(from).setY(1.4), 0.8);
+      laneMarks(g, from, d, len, 1.4, 1.0, 6, () => { if (e.dead || g.cinematic) return;
+        g.audio.boom?.(); g.shake = Math.max(g.shake, 0.45);
+        for (let k = 1; k <= 6; k++) g.fx.dust(ground(from.clone().addScaledVector(d, len * k / 6)), 12, 1.8);
+        if (onLane(g.player.pos, from, d, len, 1.5)) hurt(g, e, 1.1, from);
+        // three heaps of fallen earth along the lane: cover for 6 s (interior colliders, gone with the dungeon)
+        const I = g.interior?.I; if (!I) return; const mat = (g.m31spoil ||= new THREE.MeshStandardMaterial({ color: 0x45362a, roughness: 1 })), made = [];
+        for (const k of [0.3, 0.55, 0.8]) { const q = ground(from.clone().addScaledVector(d, len * k)); if (q.distanceTo(g.player.pos) < 1.3) continue;
+          const h = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.0, 0.6, 0.85), mat); h.position.copy(q); h.rotation.y = rand(0, 6); h.castShadow = true; I.group.add(h);
+          const c = { type: 'circle', x: q.x, z: q.z, r: 0.9, interior: true }; colliders.push(c); made.push([h, c]); }
+        buildGrid();
+        g.telegraph(from, 0.01, 6, () => { for (const [h, c] of made) { h.parent?.remove(h); h.geometry.dispose(); const ci = colliders.indexOf(c); if (ci >= 0) colliders.splice(ci, 1); } buildGrid(); });
+      });
+      return { t: 0 }; },
+    tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(1, M.t / 1.1); return M.t > 1.2; } },
   tiles: { cd: 10, range: [0, 16], say: 'The tiles!',
     start(g, e) { e.st.action = 'command'; const p = g.player.pos.clone();
       for (let w = 0; w < 2; w++) for (const [sx, sz] of w ? [[1, -1], [-1, 1]] : [[1, 1], [-1, -1]]) { const q = ground(V(p.x + sx * 1.6, 0, p.z + sz * 1.6)); g.telegraph(q, 1.7, 0.95 + w * 0.7, () => { g.fx.dust(q, 12, 1.4); g.audio.boom?.(); if (g.player.pos.distanceTo(q) < 1.7) hurt(g, e, 0.9, q); }); }
@@ -113,7 +133,7 @@ const MOVES = {
     tick(g, e, dt, M) { M.t += dt; e.st.actionT = Math.min(1, M.t); return M.t > 1.1; } },
 };
 const AFFIX_MOVE = { swift: 'dashcuts', ironclad: 'slam', volley: 'rain', firebrand: 'firering', rally: 'warcry', snare: 'netline', ambush: 'reedstrike' };
-const STYLE_MOVE = { cistern: 'sluice', kiln2: 'vents', grainvault: 'stacks', warren: 'hutfire', salt: 'saltburst', palace: 'tiles' };
+const STYLE_MOVE = { mines: 'cavein', cistern: 'sluice', kiln2: 'vents', grainvault: 'stacks', warren: 'hutfire', salt: 'saltburst', palace: 'tiles' };
 
 // the custom AI: a running move is played out here (the base AI is skipped); otherwise a move starts when it is off
 // cooldown and Salim is in its range, and the foe's own AI (if any) or the base one runs

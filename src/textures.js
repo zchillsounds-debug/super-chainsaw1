@@ -74,6 +74,37 @@ export function mudBrick(base = [176, 140, 98]) {
   return { map: tex(c), normalMap: tex(heightToNormal(hc, 3), false), roughness: 0.95 };
 }
 
+// Round 31: a face of cut earth in a mine: layered strata, the scars of the picks, pebbles in the clay.
+export function cutEarth() {
+  const S = 256, rnd = mulberry32(31);
+  const [c, x] = canvas(S); const [hc, hx] = canvas(S);
+  const img = x.createImageData(S, S), himg = hx.createImageData(S, S);
+  for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) {
+    const n = fbm(i / 40, j / 40, 4), band = Math.sin(j / S * Math.PI * 2 * 5 + fbm(i / 60, j / 30, 2) * 3) * 0.5 + 0.5, fine = fbm(i / 7 + 9, j / 7, 2);
+    const k = (j * S + i) * 4, l = 0.78 + n * 0.35 + band * 0.12 + fine * 0.1;
+    img.data[k] = 150 * l; img.data[k + 1] = 116 * l; img.data[k + 2] = 82 * l; img.data[k + 3] = 255;
+    const h = 120 + n * 70 + fine * 40 + band * 20; himg.data[k] = himg.data[k + 1] = himg.data[k + 2] = h; himg.data[k + 3] = 255;
+  }
+  x.putImageData(img, 0, 0); hx.putImageData(himg, 0, 0);
+  // pick scars: short curved grooves struck downward at a slant
+  for (let q = 0; q < 140; q++) {
+    const px = rnd() * S, py = rnd() * S, len = 10 + rnd() * 18, a = 1.1 + (rnd() - 0.5) * 0.6, bend = (rnd() - 0.5) * 6;
+    for (const [ctx, col, w] of [[x, 'rgba(50,34,20,0.35)', 2.2], [hx, 'rgba(30,30,30,0.6)', 2.6]]) {
+      ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(px, py);
+      ctx.quadraticCurveTo(px + Math.cos(a) * len / 2 + bend, py + Math.sin(a) * len / 2, px + Math.cos(a) * len, py + Math.sin(a) * len); ctx.stroke();
+    }
+    x.strokeStyle = 'rgba(210,180,140,0.18)'; x.lineWidth = 1; x.beginPath(); x.moveTo(px + 1.5, py - 1); x.lineTo(px + 1.5 + Math.cos(a) * len, py - 1 + Math.sin(a) * len); x.stroke();
+  }
+  // pebbles
+  for (let q = 0; q < 70; q++) {
+    const px = rnd() * S, py = rnd() * S, r = 1.5 + rnd() * 3.5, v = 120 + rnd() * 60 | 0;
+    x.fillStyle = `rgb(${v},${v * 0.92 | 0},${v * 0.8 | 0})`; x.beginPath(); x.ellipse(px, py, r, r * 0.75, rnd() * 3, 0, 7); x.fill();
+    hx.fillStyle = 'rgba(240,240,240,0.9)'; hx.beginPath(); hx.ellipse(px, py, r, r * 0.75, 0, 0, 7); hx.fill();
+  }
+  grain(x, S, S, rnd, 5000);
+  return { map: tex(c), normalMap: tex(heightToNormal(hc, 4), false), roughness: 1 };
+}
+
 // Glazed girih tile band: eight-pointed stars, turquoise/cobalt/white.
 export function girihTile() {
   const S = 512, [c, x] = canvas(S), [hc, hx] = canvas(S);

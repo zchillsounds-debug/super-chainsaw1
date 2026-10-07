@@ -28,6 +28,7 @@ import { setupStory26 } from './story26.js';
 import { setupCamp26 } from './camp26.js';
 import { setupCamp30 } from './camp30.js';
 import { setupFoes30 } from './foes30.js';
+import { setupFoes31 } from './foes31.js';
 import { WEATHER } from './triplanar.js';
 import { PlanarReflection, reflects, REFL, REFLECT_LAYER } from './reflect.js';
 import { canalX, WATER_Y } from './terrain.js';
@@ -47,6 +48,7 @@ import { Gamepads } from './gamepad.js';
 import { Tutorial } from './tutorial.js';
 import { setupContent, restoreContent, applyNG, startNewGamePlus } from './content.js';
 import { setupSideQuests } from './sidequests.js';
+import { setupWanted31 } from './wanted31.js';
 import { setupDungeons } from './dungeons.js';
 import { setupBuild } from './build.js';
 import { setupTravel } from './travel.js';
@@ -130,6 +132,7 @@ setupNarrative(game);
 game.journal = (t) => { if (document.getElementById('journal')) { document.getElementById('journal').remove(); document.body.classList.remove('inshop'); } else journalPanel(game, t); };
 setupContent(game);
 setupSideQuests(game);
+setupWanted31(game); // Round 31: the Wanted board (wraps the side-quest tracker, trail and markers)
 setupEpilogue29(game); // Round 29: the epilogue on the quays at dusk
 setupDungeons(game);
 setupBuild(game);
@@ -147,6 +150,7 @@ setupStory25(game); game.converse25 = (n) => converse(game, n); // Round 25: bar
 setupFoes26(game); // Round 26: standard-bearers, shield walls, horse archers
 setupFoes29(game); // Round 29: javelin men, braced spearmen, caltrop throwers, field surgeons
 setupFoes30(game); // Round 30: mounted lancers, dog handlers and their dogs
+setupFoes31(game); // Round 31: sappers (the siege mines)
 setupStory26(game); // Round 26: the Hamrin story (scout, arrow, Tatzates' choice)
 setupCamp26(game); // Round 26: Yusuf, Bishr and 'Amr's own stories
 setupCamp30(game); // Round 30: the camp furnished (cooking fire, tents, water stand)

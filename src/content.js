@@ -155,6 +155,16 @@ export function setupContent(game) {
 }
 
 // ------------------------------------------------------------------ named captains
+// Round 31: a captain spawned by another system (the Wanted board): the same affix, trick and move, not saved here
+export function spawnCaptain(game, N) {
+  const [x, z] = N.at, lvl = N.level;
+  const guard = game.spawnPack(N.guard, x, z, N.guard.length, lvl, { spread: 4 });
+  const e = game.spawnPack(N.type, x, z, 1, lvl + 1, { elite: true, spread: 0, name: `${t(N.name)} · ${t(AFFIX[N.affix].label)}` })[0];
+  e.namedId = N.id; e.baseName = N.name; e.affix = N.affix; e.affixT = 2 + Math.random() * 2; AFFIX[N.affix].apply(e);
+  e.guards = guard; game.named[N.id] = e;
+  return { boss: e, guard };
+}
+export const affixLabel = (k) => AFFIX[k]?.label || k;
 function spawnNamed(game, N) {
   if (game.player.named?.[N.id]) return;
   const [x, z] = N.at, lvl = N.level;
@@ -200,12 +210,18 @@ function tickFires(game, dt) {
 // ------------------------------------------------------------------ area entrances (stairs down)
 export function addEntrance(game, A) {
   const p = new THREE.Vector3(A.at[0], 0, A.at[1]); resolve(p, 2.4); p.y = heightAt(p.x, p.z);
-  const col = { mud: 0x8a6a4a, clay: 0x7a4a30, brick: 0x6a5a4a, stone: 0x9a968a, salt: 0xc8c4b8, reed: 0x9a804a }[A.look];
+  const col = { mud: 0x8a6a4a, clay: 0x7a4a30, brick: 0x6a5a4a, stone: 0x9a968a, salt: 0xc8c4b8, reed: 0x9a804a, earth: 0x5e4a36 }[A.look];
   const grp = new THREE.Group(), m = new THREE.MeshStandardMaterial({ color: col, roughness: 1 });
   const dark = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 3).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x050302 })); dark.position.y = 0.03; grp.add(dark);
   for (const sx of [-1.3, 1.3]) { const w = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.8, 3.2), m); w.position.set(sx, 0.4, 0); w.castShadow = true; grp.add(w); }
   const back = new THREE.Mesh(new THREE.BoxGeometry(3, 1.5, 0.4), m); back.position.set(0, 0.75, -1.6); back.castShadow = true; grp.add(back);
   if (A.look === 'brick' || A.look === 'stone') { const arch = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.22, 6, 12, Math.PI), m); arch.position.set(0, 1.4, -1.6); grp.add(arch); }
+  if (A.look === 'earth') { // Round 31: a mine head: a timber set over the shaft and a heap of spoil beside it
+    const tw = new THREE.MeshStandardMaterial({ color: 0x6a4a2c, roughness: 0.9 });
+    for (const sx of [-1.1, 1.1]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.26, 2.2, 0.26), tw); post.position.set(sx, 1.1, -1.2); post.castShadow = true; grp.add(post); }
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.28, 0.32), tw); cap.position.set(0, 2.25, -1.2); cap.castShadow = true; grp.add(cap);
+    const heap = new THREE.Mesh(new THREE.SphereGeometry(1, 9, 5, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.4, 0.8, 1.1), m); heap.position.set(2.6, 0, 0.4); heap.castShadow = true; grp.add(heap);
+  }
   grp.position.copy(p); game.scene.add(grp);
   colliders.push({ type: 'box', x: p.x, z: p.z - 1.6, hw: 1.5, hd: 0.3, rot: 0 }); buildGrid();
   game.lightPool?.add({ pos: p.clone().add(new THREE.Vector3(0, 1, 0.5)), color: 0xff7a30, power: 6, dist: 6, flicker: 1.2 });

@@ -55,7 +55,7 @@ export class Zones {
     const I = buildInterior(g.scene, { seed: def.seed, rooms: def.rooms, style: def.style || (def.kind === 'qanat' ? 'qanat' : 'kiln'), styles: def.styles });
     g.setupOccluders([I.group]);
     g.interior = { def, I, enemies: [] };
-    for (const t of I.torches) { t.interior = true; g.lightPool?.add({ pos: t.light, color: ({ vault: 0xffb878, cellar: 0xffa860, pit: 0xffa060, flood: 0xffb070, scorched: 0xff9040, cistern: 0xc8d0c0, grainvault: 0xffb870, salt: 0xfff0d8, kiln2: 0xff7030, palace: 0xffc890, warren: 0xffa850 })[def.style] || 0xff8a3a, power: 18, dist: 11, interior: true }); }
+    for (const t of I.torches) { t.interior = true; g.lightPool?.add({ pos: t.light, color: ({ vault: 0xffb878, cellar: 0xffa860, pit: 0xffa060, flood: 0xffb070, scorched: 0xff9040, cistern: 0xc8d0c0, grainvault: 0xffb870, salt: 0xfff0d8, kiln2: 0xff7030, palace: 0xffc890, warren: 0xffa850, mines: 0xffa048 })[def.style] || 0xff8a3a, power: 18, dist: 11, interior: true }); }
     for (const e of g.enemies) if (!e.dead) e.rig.visible = false;
     // foes per room; the deepest room holds an elite guarding the chest
     const pool = def.pool || (def.kind === 'qanat' ? ['bandit', 'deserter', 'archer', 'spearman', 'naffat'] : ['deserter', 'deserter', 'naffat', 'bandit']);

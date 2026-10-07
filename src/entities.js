@@ -5,6 +5,7 @@ import { TYPES20 } from './foes20.js';
 import { TYPES26 } from './foes26.js';
 import { TYPES29 } from './foes29.js';
 import { TYPES30 } from './foes30.js';
+import { TYPES31 } from './foes31.js';
 import { LOOK, byzify } from './byz.js';
 
 // Enemy archetypes.
@@ -77,7 +78,7 @@ TYPES.ghanim = {
 };
 Object.assign(TYPES, TYPES20); // Round 20: crossbowmen, siege engineers and their mangonels, camel raiders
 Object.assign(TYPES, TYPES26); // Round 26: standard-bearers, the shield wall, horse archers
-Object.assign(TYPES, TYPES29); Object.assign(TYPES, TYPES30); // Round 29: javelin men, braced spearmen, caltrop throwers, field surgeons
+Object.assign(TYPES, TYPES29); Object.assign(TYPES, TYPES30); Object.assign(TYPES, TYPES31); // Round 29: javelin men, braced spearmen, caltrop throwers, field surgeons
 
 // Round 20: captains get a silhouette of their own: heavy armour, the full-detail sculpt and one crest chosen
 // from the name (a plume, a mantle, a tall felt cap, a pennant on the back, or great shoulders and greaves)

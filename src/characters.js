@@ -105,6 +105,15 @@ function malletRaw() {
   g.add(mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.22, 8).rotateZ(Math.PI / 2).translate(0, 0.55, 0), new THREE.MeshStandardMaterial({ color: 0x6a4a2a, roughness: 0.85 })));
   return g;
 }
+// Round 31: a sapper's pick: an ash haft, an iron head with a point one side and a narrow adze blade the other
+function pickRaw() {
+  const g = new THREE.Group(), iron = new THREE.MeshStandardMaterial({ color: 0x3a3634, metalness: 0.75, roughness: 0.5 });
+  g.add(mesh(new THREE.CylinderGeometry(0.019, 0.024, 0.78, 6).translate(0, 0.28, 0), new THREE.MeshStandardMaterial({ color: 0x8a6a44, roughness: 0.8 })));
+  g.add(mesh(new THREE.CylinderGeometry(0.034, 0.034, 0.09, 7).translate(0, 0.64, 0), iron)); // the eye
+  g.add(mesh(new THREE.ConeGeometry(0.026, 0.3, 5).rotateZ(-Math.PI / 2 - 0.18).translate(0.17, 0.62, 0), iron)); // the point, curving down
+  g.add(mesh(new THREE.BoxGeometry(0.2, 0.026, 0.05).rotateZ(0.16).translate(-0.12, 0.63, 0), iron)); // the adze
+  return g;
+}
 function bowRaw() {
   const g = new THREE.Group();
   const c = new THREE.TorusGeometry(0.6, 0.02, 5, 20, Math.PI * 0.9);
@@ -198,7 +207,7 @@ function mergedGear(name, build) {
   return g;
 }
 export const sword = () => mergedGear('sword', swordRaw), dagger = () => mergedGear('dagger', daggerRaw), torch = () => mergedGear('torch', torchRaw);
-export const spear = () => mergedGear('spear', spearRaw), crossbow = () => mergedGear('crossbow', crossbowRaw), mallet = () => mergedGear('mallet', malletRaw);
+export const spear = () => mergedGear('spear', spearRaw), crossbow = () => mergedGear('crossbow', crossbowRaw), mallet = () => mergedGear('mallet', malletRaw), pickaxe = () => mergedGear('pick', pickRaw);
 export const bow = () => mergedGear('bow', bowRaw), shield = () => mergedGear('shield', shieldRaw);
 export const byzShield = (oval, k = 0) => mergedGear('bshield' + (oval ? 'o' : 'r') + k, () => byzShieldRaw(oval, k));
 export const pike = () => mergedGear('pike', pikeRaw), siphon = () => mergedGear('siphon', siphonRaw), solenarion = () => mergedGear('solen', solenRaw);

@@ -692,3 +692,18 @@ body.touch #toasts{max-width:38vw}
 body.touch #toasts .toast{font-size:14px;line-height:1.3}
 body.ar #bark25 b{margin-right:0;margin-left:8px}
 #shop.bigmap .mapcard .mcsub{font:13px Amiri,serif;color:#cdb890;margin-top:2px}
+
+/* Round 31: the Wanted board: the posters in a row (scrolls sideways on a phone) */
+#shop.wanted{width:min(980px,calc(100vw - 20px))}
+#shop.wanted .wrow{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+#shop.wanted .wcard{flex:0 0 168px;scroll-snap-align:start;display:flex;flex-direction:column;gap:6px;background:#1a110a;border:1px solid #5a4028;border-radius:6px;padding:6px}
+#shop.wanted .wcard.open{border-color:#c8503a;box-shadow:0 0 12px #c8503a55}
+#shop.wanted .wcard.weekly{flex-basis:100%;flex-direction:row;align-items:center}
+#shop.wanted .wcard.weekly img{width:120px}
+#shop.wanted .wcard img{width:100%;border-radius:3px;display:block}
+#shop.wanted .wtxt{display:flex;flex-direction:column;gap:3px;flex:1}
+#shop.wanted .wtxt em{font:700 11px Cinzel;color:#ffd84a;font-style:normal;letter-spacing:.06em}
+#shop.wanted .wtxt small{font:13px/1.25 Amiri,serif;color:#d8c8a8}
+#shop.wanted .wtxt small.wrew{color:#f0c070}
+#shop.wanted .wlock{font:12px Amiri,serif;color:#8a7a60;text-align:center}
+#shop.wanted .sbtn{min-height:44px}

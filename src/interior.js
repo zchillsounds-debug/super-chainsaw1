@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { colliders, mats } from './buildings.js';
-import { mudBrick } from './textures.js';
+import { mudBrick, cutEarth } from './textures.js';
 import { triplanarMaterial } from './triplanar.js';
 import { GROUND } from './groundtex.js';
 import { mulberry32 } from './noise.js';
@@ -92,6 +92,9 @@ function kit() {
     // the reed-hut warren: woven reed walls, mud floor, matting
     warren: { wall: triplanarMaterial({ map: fired.map, normalMap: fired.normalMap, color: 0xc8a868, scale: 0.12, roughness: 1, normalStrength: 2.6, grime: 0.4 }),
       floor: floorMat(0x5a4a32, 'earth', 1, 0.15), trim: new THREE.MeshStandardMaterial({ color: 0x7a6238, roughness: 1 }) },
+    // Round 31: the siege mines: raw cut earth, shored with timber sets and boards
+    timber: new THREE.MeshStandardMaterial({ color: 0x6a4a2c, roughness: 0.9 }), board: new THREE.MeshStandardMaterial({ color: 0x5a422a, roughness: 1 }),
+    spoil: new THREE.MeshStandardMaterial({ color: 0x5e4a36, roughness: 1 }), splinter: new THREE.MeshStandardMaterial({ color: 0xb08a5a, roughness: 0.9 }),
     reed: new THREE.MeshStandardMaterial({ color: 0xb89a5a, roughness: 1 }),
     cisternW: new THREE.MeshStandardMaterial({ color: 0x3a6a66, emissive: 0x0c2422, roughness: 0.05, metalness: 0.4, transparent: true, opacity: 0.72, depthWrite: false }),
     tile: new THREE.MeshStandardMaterial({ color: 0x3a6a72, roughness: 0.5 }),
@@ -109,6 +112,9 @@ function kit() {
     sack: new THREE.MeshStandardMaterial({ color: 0xb09a70, roughness: 1 }), basket: new THREE.MeshStandardMaterial({ color: 0x8a6a38, roughness: 1 }),
     ash: new THREE.MeshStandardMaterial({ color: 0x2a2622, roughness: 1 }), stone: new THREE.MeshStandardMaterial({ color: 0x8a8274, roughness: 0.95 }),
     rope: new THREE.MeshStandardMaterial({ color: 0x8a7050, roughness: 1 }), carpet: new THREE.MeshStandardMaterial({ color: 0x6a1e18, roughness: 1 }),
+    get mines() { // made on first use (the cut-earth texture takes a moment)
+      return this._mines ||= { wall: (() => { const E = cutEarth(); return triplanarMaterial({ map: E.map, normalMap: E.normalMap, color: 0xd8c0a0, scale: 0.32, roughness: 1, normalStrength: 2.2, grime: 0.8 }); })(),
+        floor: floorMat(0x4e3e2e, 'earth', 1, 0.05), trim: new THREE.MeshStandardMaterial({ color: 0x4a3420, roughness: 0.95 }) }; },
     glow: {}, // additive cone and pool materials by colour (made on first use, one per style)
   };
   return KIT;
@@ -161,7 +167,7 @@ function glowMats(K, hex) {
   const m = (map, op) => new THREE.MeshBasicMaterial({ color: col, map, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
   return (K.glow[hex] = { cone: m(cone, 0.13), pool: m(pool, 0.3), sky: m(skyT, 0.09), skyPool: m(pool, 0.3) });
 }
-const TORCH_HEX = { cistern: 0xb8c8c0, salt: 0xfff0d8, kiln2: 0xe88a50, palace: 0xffc890, scorched: 0xff8a3a };
+const TORCH_HEX = { mines: 0xffa048, cistern: 0xb8c8c0, salt: 0xfff0d8, kiln2: 0xe88a50, palace: 0xffc890, scorched: 0xff8a3a };
 const SKY_STYLES = new Set(['cistern', 'qanat', 'grainvault', 'palace', 'vault', 'cellar', 'flood']);
 // a half cone, open toward the wall (it must not show through the wall's far side), and a pool clear of the wall
 const _cone = new THREE.CylinderGeometry(0.1, 1.35, 2.4, 10, 1, true, -Math.PI / 2, Math.PI).translate(0, -1.2, 0), _pool = new THREE.CircleGeometry(1.9, 18).rotateX(-Math.PI / 2);
@@ -179,7 +185,12 @@ function dressProp(style, rnd, K) {
   const reeds = () => { for (let i = 0; i < 4; i++) { const o = add(new THREE.CylinderGeometry(0.16, 0.16, 1.7, 7), K.reed, (i - 1.5) * 0.3, 0.85, 0); o.rotation.z = (rnd() - 0.5) * 0.3; } add(new THREE.TorusGeometry(0.62, 0.03, 4, 14).rotateX(Math.PI / 2), K.rope, 0, 1.0, 0); return 0.7; };
   const drum = () => { const o = add(new THREE.CylinderGeometry(0.42, 0.42, 0.8, 12), K.stone, 0, 0.42, 0); o.rotation.z = Math.PI / 2; add(new THREE.CylinderGeometry(0.42, 0.42, 0.6, 12), K.stone, 0.9, 0.3, 0.2); return 0.9; };
   const bench = () => { add(new THREE.BoxGeometry(1.6, 0.4, 0.5), K.wood, 0, 0.2, 0); add(new THREE.PlaneGeometry(1.8, 1.1).rotateX(-Math.PI / 2), K.carpet, 0, 0.015, 0.9); return 0.6; };
+  // Round 31: the mines: heaps of spoil with a basket, picks and shovels against the wall, a lamp on a stool
+  const spoil = () => { add(new THREE.SphereGeometry(1, 9, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.0, 0.6, 0.8), K.spoil, 0, 0, 0); for (let i = 0; i < 4; i++) add(new THREE.DodecahedronGeometry(0.12 + rnd() * 0.12, 0), K.spoil, (rnd() - 0.5) * 2, 0.06, (rnd() - 0.5) * 1.4, rnd() * 6); add(new THREE.CylinderGeometry(0.3, 0.24, 0.42, 9, 1, true), K.basket, 0.9, 0.21, 0.3); return 1.0; };
+  const tools = () => { for (let i = 0; i < 2; i++) { const h = add(new THREE.CylinderGeometry(0.025, 0.03, 1.1, 5), K.wood, (i - 0.5) * 0.5, 0.52, -0.25); h.rotation.x = -0.28; const hd = add(new THREE.BoxGeometry(i ? 0.22 : 0.42, i ? 0.3 : 0.05, 0.05), K.iron, (i - 0.5) * 0.5, i ? 0.12 : 1.02, i ? -0.1 : -0.4); hd.rotation.x = -0.28; } add(new THREE.BoxGeometry(0.4, 0.3, 0.35), K.wood, 0.7, 0.15, 0); add(new THREE.SphereGeometry(0.07, 6, 4).scale(1.4, 0.6, 1), K.ember, 0.7, 0.34, 0); return 0.6; };
+  const timbers = () => { for (let i = 0; i < 4; i++) add(new THREE.BoxGeometry(2.0, 0.18, 0.2), K.timber, 0, 0.09 + Math.floor(i / 2) * 0.18, (i % 2 - 0.5) * 0.3 + (i > 1 ? 0.15 : 0), (rnd() - 0.5) * 0.1); return 0.9; };
   const pick = {
+    mines: [spoil, tools, timbers, spoil],
     cistern: [bucket, drum, rubble, blocks], qanat: [bucket, rubble, blocks, post], kiln: [ash, rubble, post], kiln2: [ash, rubble, blocks], pit: [rubble, basket, ash],
     cellar: [sacks, post, basket, rubble], scorched: [ash, rubble, post], flood: [sacks, basket, rubble], grainvault: [sacks, basket, sacks, post],
     salt: [blocks, post, rubble], palace: [bench, drum, rubble], warren: [reeds, basket, reeds, sacks], vault: [drum, rubble, blocks],
@@ -188,7 +199,7 @@ function dressProp(style, rnd, K) {
   return [g, r];
 }
 
-// style: 'kiln' | 'qanat' | 'cellar' | 'pit' | 'vault' | 'flood' | 'scorched' | (R17) 'cistern' | 'grainvault' | 'salt' | 'kiln2' | 'palace' | 'warren'. Returns { rooms, entrance, exit, torches, chests, group, spawnRooms }
+// style: 'kiln' | 'qanat' | 'cellar' | 'pit' | 'vault' | 'flood' | 'scorched' | (R17) 'cistern' | 'grainvault' | 'salt' | 'kiln2' | 'palace' | 'warren' | (R31) 'mines'. Returns { rooms, entrance, exit, torches, chests, group, spawnRooms }
 // styles (Round 20): an optional list of room styles, used in turn (the Siege Trials mix rooms from every region)
 export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln', styles = null } = {}) {
   destroyInterior(scene);
@@ -256,6 +267,7 @@ export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln', styl
     for (let q = 0, n2 = 3 + Math.floor(rnd() * 3); q < n2; q++) {
       const side = Math.floor(rnd() * 4), along = (rnd() - 0.5) * (S - 3.2), inset = S / 2 - T - 0.9;
       if (Math.abs(along) < DOOR / 2 + 0.9) continue;
+      if (style === 'mines' && side >= 2 && Math.abs(Math.abs(along) - 3.6) < 1.6) continue; // clear of the timber sets
       const [x, z] = [[along, -inset], [along, inset], [-inset, along], [inset, along]][side];
       const [o, r] = dressProp(style, rnd, K); o.position.set(c.x + x, 0, c.z + z); o.rotation.y = side < 2 ? 0 : Math.PI / 2; grp.add(o);
       colliders.push({ type: 'circle', x: c.x + x, z: c.z + z, r, interior: true });
@@ -338,6 +350,31 @@ export function buildInterior(scene, { seed = 1, rooms = 7, style = 'kiln', styl
         haz.push({ kind: 'hut', x, z, mesh: h, room: r });
       }
       const mat = new THREE.Mesh(new THREE.PlaneGeometry(3, 5).rotateX(-Math.PI / 2), M.trim); mat.position.set(c.x, 0.02, c.z); mat.rotation.y = rnd(); grp.add(mat);
+    } else if (style === 'mines') {
+      // timber sets every few metres: a post against each side wall and a cap across, with boards lagged behind them;
+      // in the deeper rooms one post is cracked and leaning (strike it to bring that stretch of roof down)
+      const sets = [-3.6, 3.6], crackAt = r.depth ? Math.floor(rnd() * 4) : -1; let k = 0;
+      for (const sz of sets) {
+        const z = c.z + sz;
+        for (const sx of [-1, 1]) {
+          const x = c.x + sx * (S / 2 - T / 2 - 0.35), cracked = k++ === crackAt;
+          if (!cracked) { box(0.3, WALL_H - 0.1, 0.3, x, (WALL_H - 0.1) / 2, z, K.timber); col(x, z, 0.2, 0.2); }
+          else {
+            const pg = new THREE.Group(), post = new THREE.Mesh(new THREE.BoxGeometry(0.3, WALL_H - 0.1, 0.3), K.timber); post.position.y = (WALL_H - 0.1) / 2; post.castShadow = true; pg.add(post);
+            for (const [yy, rz] of [[1.5, 0.5], [1.75, -0.4]]) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.5, 0.32), K.splinter); sp.position.set(0.12 * sx, yy, 0); sp.rotation.z = rz; pg.add(sp); }
+            const rope = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.025, 4, 10).rotateX(Math.PI / 2), K.rope); rope.position.y = 1.2; pg.add(rope);
+            pg.position.set(x, 0, z); pg.rotation.z = -sx * 0.09; dyn.add(pg);
+            const cl = { type: 'circle', x, z, r: 0.25, interior: true }; colliders.push(cl);
+            haz.push({ kind: 'prop', x, z, mesh: pg, col: cl, room: r, cx: c.x, sx });
+          }
+          // boards lagged behind the posts along the wall
+          for (let b = 0; b < 3; b++) box(0.06, 0.24, 2.6, c.x + sx * (S / 2 - T / 2 - 0.12), 0.5 + b * 0.9, z, K.board);
+        }
+        box(S - T, 0.28, 0.32, c.x, WALL_H - 0.2, z, K.timber); // the cap
+      }
+      // a spoil heap in the open half the time, and earth trodden dark down the middle
+      if (rnd() < 0.5) { const x = c.x + (rnd() < 0.5 ? -1 : 1) * (2 + rnd() * 1.5), z = c.z + (rnd() - 0.5) * 3; const h = new THREE.Mesh(new THREE.SphereGeometry(1, 9, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.3, 0.7, 1.0), K.spoil); h.position.set(x, 0, z); h.castShadow = true; h.receiveShadow = true; grp.add(h); colliders.push({ type: 'circle', x, z, r: 1.1, interior: true }); }
+      const tr = new THREE.Mesh(new THREE.PlaneGeometry(2.2, S).rotateX(-Math.PI / 2), (K.trod ||= new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18, depthWrite: false }))); tr.position.set(c.x, 0.012, c.z); grp.add(tr);
     } else if (style === 'cellar') { // roof beams across each storeroom
       for (let b = -1; b <= 1; b++) box(S, 0.28, 0.32, c.x, WALL_H - 0.1, c.z + b * 3.6, M.trim);
     } else if (style === 'vault') { // heavy square piers along the long walls carry the (unseen) vault

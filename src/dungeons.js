@@ -22,6 +22,9 @@ const ALL = [
   // Round 20: Act VI, the river quays
   { id: 'undercroft', region: 'docks', style: 'cistern', near: ['village', 22, -18], seed: 1707, rooms: 8, level: 13, title: 'The Flooded Undercroft', sub: 'The river seeps in and out of these vaults. Keep to the stone landings.', pool: ['guard', 'crossbow', 'deserter'], bossType: 'guard', bossName: 'Boilas', label: 'Go down into the flooded undercroft', look: 'stone' },
   { id: 'wharfvault', region: 'docks', style: 'grainvault', near: ['kiln', -20, 16], seed: 1708, rooms: 8, level: 15, title: 'The Wharf Vaults', sub: 'Strike a stack of bales to bring it down on your foes.', pool: ['guard', 'engineer', 'crossbow', 'spearman'], bossType: 'engineer', bossName: 'Gabalas', label: 'Go down into the wharf vaults', look: 'mud' },
+  // Round 31: the siege mines, dug under the walls in the siege and held now by Arsaber's sappers
+  { id: 'mines', region: 'karkh', style: 'mines', near: ['kiln', 16, 14], seed: 1711, rooms: 9, level: 12, title: 'The Siege Mines', sub: 'Sappers dug these under the walls. Strike a cracked prop to bring the roof down on your foes.', pool: ['sapper', 'guard', 'deserter', 'archer'], bossType: 'sapper', bossName: 'Gabrades', label: 'Go down into the siege mines', look: 'earth' },
+  { id: 'countermine', region: 'docks', style: 'mines', near: ['kiln', 20, 14], seed: 1712, rooms: 9, level: 15, title: 'The Counter-Mines', sub: 'The defenders dug to meet the sappers here. Strike a cracked prop to bring the roof down on your foes.', pool: ['sapper', 'guard', 'crossbow', 'deserter'], bossType: 'sapper', bossName: 'Tzykes', label: 'Go down into the counter-mines', look: 'earth' },
   { id: 'palace', region: 'karkh', style: 'palace', near: ['kiln', 18, -12], seed: 1706, rooms: 8, level: 12, title: 'The Palace Cellars', sub: 'Cracked tiles hide triggers. Foes set them off too.', pool: ['guard', 'archer', 'naffat', 'spearman'], bossType: 'guard', bossName: 'Xylinites', label: 'Go down into the palace cellars', look: 'brick' },
 ];
 export const DUNGEONS = ALL.filter((d) => d.region === REGION);
@@ -29,9 +32,9 @@ export const DUNGEONS = ALL.filter((d) => d.region === REGION);
 const GROUNDS = {
   sawad: [['cistern', 'The Old Cistern'], ['kiln2', 'The Lower Kilns'], ['vault', 'The Sasanian Vaults'], ['pit', 'The Clay Pits']],
   marsh: [['grainvault', 'The Granary Vaults'], ['warren', 'The Reed Warren'], ['flood', 'The Drowned Granary']],
-  karkh: [['salt', 'The Salt Workings'], ['palace', 'The Palace Cellars'], ['scorched', 'The Merchants\' Cellars']],
-  docks: [['cistern', 'The Flooded Undercroft'], ['grainvault', 'The Wharf Vaults'], ['cellar', 'The Customs Vaults']],
-  hamrin: [['salt', 'The Salt Workings'], ['vault', 'The Sasanian Vaults'], ['kiln2', 'The Lower Kilns'], ['cistern', 'The Old Cistern']],
+  karkh: [['salt', 'The Salt Workings'], ['palace', 'The Palace Cellars'], ['scorched', 'The Merchants\' Cellars'], ['mines', 'The Siege Mines']],
+  docks: [['cistern', 'The Flooded Undercroft'], ['grainvault', 'The Wharf Vaults'], ['cellar', 'The Customs Vaults'], ['mines', 'The Counter-Mines']],
+  hamrin: [['salt', 'The Salt Workings'], ['vault', 'The Sasanian Vaults'], ['kiln2', 'The Lower Kilns'], ['cistern', 'The Old Cistern'], ['mines', 'The Siege Mines']],
 }[REGION];
 const BASE = { sawad: 3, marsh: 8, karkh: 11, docks: 14, hamrin: 20 }[REGION];
 
@@ -135,6 +138,39 @@ function hazardTick(g, H, dt, glare) {
       const dry = I.hazards.some((h) => h.kind === 'landing' && Math.abs(p.pos.x - h.x) < h.hw + 0.3 && Math.abs(p.pos.z - h.z) < h.hd + 0.3);
       if (!dry) { g.hazSlow = 1 - 0.5 * lv; p.wading = true; }
       for (const e of foes) { e.slowT = 0.2; e.slowK = 0.4 * lv; }
+    }
+  } else if (style === 'mines') {
+    // a cracked prop struck by the hero gives way: 0.7 s later that stretch of roof comes down across the room
+    const acting = p.st.action && p.st.action !== 'dodge';
+    for (const h of I.hazards) {
+      if (h.kind !== 'prop' || h.done) continue;
+      if (!(acting && Math.hypot(p.pos.x - h.x, p.pos.z - h.z) < 2.4)) continue;
+      h.done = true; g.audio.at?.(v.set(h.x, 0, h.z), () => g.audio.clang?.());
+      h.mesh.rotation.z = -h.sx * 0.25;
+      const marks = [-4.2, -2.1, 0, 2.1, 4.2].map((ox) => new THREE.Vector3(h.cx + ox, 0, h.z));
+      marks.forEach((q, i) => g.telegraph(q, 1.6, 0.7, i ? null : () => {
+        g.audio.boom?.(); g.shake = Math.max(g.shake || 0, 0.4);
+        for (const q2 of marks) g.fx.dust(q2, 14, 2.0);
+        h.mesh.rotation.z = -h.sx * 1.35; h.mesh.position.y = -0.2;
+        const ci = colliders.indexOf(h.col); if (ci >= 0) colliders.splice(ci, 1);
+        // the fallen earth: low mounds across the room and broken lumps of roof
+        const sm = (H.spoilM ||= new THREE.MeshStandardMaterial({ color: 0x45362a, roughness: 1 }));
+        for (let q = 0; q < 4; q++) { const heap = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.1 + Math.random() * 0.5, 0.32 + Math.random() * 0.2, 0.8 + Math.random() * 0.4), sm); heap.position.set(h.cx - 3.6 + q * 2.4 + (Math.random() - 0.5), 0, h.z + (Math.random() - 0.5) * 0.8); heap.rotation.y = Math.random() * 3; heap.receiveShadow = true; heap.castShadow = true; g.interior.I.group.add(heap); }
+        for (let q = 0; q < 7; q++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.14 + Math.random() * 0.18, 0), sm); r.position.set(h.cx + (Math.random() - 0.5) * 9, 0.1, h.z + (Math.random() - 0.5) * 2.4); r.rotation.set(Math.random() * 3, Math.random() * 3, 0); r.castShadow = true; g.interior.I.group.add(r); }
+        const inBand = (o) => Math.abs(o.pos.z - h.z) < 1.7 && Math.abs(o.pos.x - h.cx) < 6;
+        for (const e of foes) if (inBand(e)) { g.damageEnemy(e, Math.round(base * (e.elite ? 2 : 4)), false, v.set(h.cx, 0, h.z), 'normal', { weight: 2, knock: 3, unblockable: true }); e.staggerT = 2; }
+        if (inBand(p)) hurt(base * 0.8, v.set(p.pos.x, 0, h.z));
+      }));
+      if (!H.propTold) { H.propTold = true; g.ui.toast(t('The prop gives way!'), 'quest'); }
+    }
+    // in a fight the old roof sheds earth: a marked patch near the hero now and then
+    H.cool -= dt;
+    if (H.cool <= 0 && alive && foes.some((e) => e.alerted && e.pos.distanceTo(p.pos) < 14)) {
+      H.cool = 9 + Math.random() * 4;
+      const a = Math.random() * 6.28, rr = Math.random() * 1.6, at = new THREE.Vector3(p.pos.x + Math.cos(a) * rr, 0, p.pos.z + Math.sin(a) * rr);
+      for (let i = 0; i < 6; i++) g.fx.dust(v.set(at.x + (Math.random() - 0.5), 2.6, at.z + (Math.random() - 0.5)), 1, 0.4);
+      g.telegraph(at, 1.4, 1.2, () => { g.fx.dust(at, 16, 1.6); g.audio.at?.(at, () => g.audio.boom?.()); if (p.pos.distanceTo(at) < 1.4) hurt(base * 0.5, at); for (const e of foes) if (e.pos.distanceTo(at) < 1.4) g.damageEnemy(e, Math.round(base), false, at, 'normal'); });
+      if (!H.shedTold) { H.shedTold = true; g.ui.toast(t('The roof is shedding earth: step out of the marks'), 'quest'); }
     }
   } else if (style === 'grainvault') {
     // a grain stack struck by the hero comes down 0.6 s later on everyone around it
