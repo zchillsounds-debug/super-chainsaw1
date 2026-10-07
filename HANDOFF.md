@@ -1,17 +1,37 @@
-# Madinat al-Salam: Handoff (Round 32 shipped: story everywhere; APK signing still waits on the user's secrets)
+# Madinat al-Salam: Handoff (Round 33 shipped: women in the world, graphics pass part 2, a permanent APK key)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-ba5w2i` of zchillsounds-debug/super-chainsaw1 (Round 32: story everywhere: Arsaber's lane, a scene in each act, the guards' and a family's stories, deserters, letters, finds). Check Round 32's "Status" list below for what is left.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-hfxqkf` of zchillsounds-debug/super-chainsaw1 (Round 33: a woman's face and figure, women in every camp and village, open-ground detail, new touch ability buttons, hit and death effects, a closer phone camera, the permanent APK key). Check Round 33's "Status" list below for what is left.
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
-> 2. Run `npm install`. When pushing the session branch, `git push -u origin <session-branch>` (a fresh branch carries the earlier rounds' history). Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs from the same folder: vite reloads the page and the test dies ("Execution context was destroyed"). Run tests from a copy (see "Test workflow" under Round 27).
-> 3. Ask me what Round 33 should be (Round 32's "Ideas for Round 33" are a start), turn it into a concrete build list with me, and confirm it before building.
+> 2. Run `npm install`. When pushing the session branch, `git push -u origin <session-branch>` (a fresh branch carries the earlier rounds' history). Run tests from the lane copies (see "Test workflow" under Round 33): never edit `src/` while a test runs from the same folder.
+> 3. Ask me what Round 34 should be (Round 33's "Ideas for Round 34" are a start), turn it into a concrete build list with me, and confirm it before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
+
+## Round 33: women in the world, graphics pass part 2, the APK key
+User decisions: fold the Round 32 Arabic bug into the round; women's faces with **women in the world** (camps, villages, crowds); the whole graphics pass (ground and midday light, ability buttons, hit and death effects, character readability); the APK key **this round** (generated in the session).
+
+**What was built:**
+1. **Round 32 fixes.** The Arabic docks errors came from the cutscene camera's line-of-sight ray (`scenes32.js` `seen`) hitting a skinned person with a freed buffer: it now tests only static, non-skinned visible meshes (collected once per scene). The finds' "Examine: …" label is a getter, so it follows the language. `r32story` records every bark over several fights (the soldier's shout was confirmed: "Menavlatos: Archers! On him!"), and prints page error stacks.
+2. **A woman's face and figure** (`human.js`, option `fem`): a slimmer neck, a narrower, softer jaw and small chin, a light brow ridge, rounder cheeks, a smaller nose, fuller lips in a rose tone with skin-coloured corners, shallower eye sockets, thinner arched brows, a darker upper lid (kohl), and a robe that hangs loose and straight from chest to hip. `fem` is in the head, hair and garment cache keys. **The shawl** (`wrap`): the crown piece is now larger than the skull (the forehead and crown poked through bare), and the face cut-out is a deep ellipsoid (`[0, 0.07, 0.15]`, radii `[0.075, 0.106, 0.11]`) so the face is open from the brows to the chin and the cloth frames it. Umayma uses it.
+3. **Women in the world** (`women33.js`, `setupWomen33` before setupStory32 in `main.js`; Arabic in `story33_ar.js`, `AR33`, merged last):
+   - The camp, every region: **Hind** keeps the cooking pot (three stones, a clay pot, embers, a fire flicker) by Ishaq; **Su'da** carries the camp's water by the well, a jar on her head (`headJar`, on the head bone). One line each per region.
+   - One named woman in each region's village, two lines each (cycling, `p.s25.w33`): **Khawla** at the Sawad well (jar on her head), **Layla** weaving reed mats (marsh, a mat and a reed bundle), **Asma'** sorting the bricks of her street (al-Karkh, brick stacks), **Barra** selling bread to the boats (docks, a bread board), **Fakhita** with the goats (Hamrin).
+   - The village crowd is now 9, and every third villager is a woman (`womanLook(i)` in `game.js` `addAmbientLife`). Robes are kept clear of skin tones (a brown robe read as bare skin from the camera).
+4. **Ground and midday light** (`terrain.js`, Sawad only, `RG == 0`): the wind ripples show in the colour (pale crests, shaded troughs) as well as the normals, with broad pale drifts and darker wind-scoured gravel with speckles; the sand palette is a little less orange. `lighting.js` golden: a cooler sky fill (`hemiSky 0xaebcd4`) so the shade reads apart from the lit sand.
+5. **Ability buttons** (`style.css` end, `ui.js` `setSkill`): on touch, each button is a dark bronze dial in an iron ring with a gilt rim, the icon in pale gold; the cooldown is a radial sweep (`--cd`, a conic gradient on `.cd`); a skill that comes ready glows once (`.ready`); out of mana turns the rim blue. The mount and companion buttons got the same dial.
+6. **Hit and death effects** (`fx.js` `impact`, `game.js`): a bright pop where every blow lands; a crit adds a light flash and a shockwave ring at the feet; heavy blows kick up dust; a kill gets a short hit-stop (0.06 s, 0.1 s for elites) and a burst of dust (elites a ring too); a body settles into a puff of dust when it starts to sink.
+7. **Character readability:** the phone camera starts closer (`camZoom` 0.95 on touch, 1.1 on desktop; a saved pinch zoom still wins). Characters already had outlines (Round 25).
+8. **The APK key:** generated in the session (`keytool`, alias `madinat`, RSA 2048, 10000 days) and sent to the user as `madinat-release.jks`, `ANDROID_KEYSTORE_B64.txt` and `ANDROID_KEYSTORE_PASSWORD.txt`. The key is **not** in the repo. The user adds the two secrets in GitHub (Settings, Secrets and variables, Actions). `apk.yml` and `build.gradle` already use them. The first signed APK needs one uninstall: back up the save (Settings, Back up save), uninstall, install, restore.
+
+**Tests:** `shots/r33face.mjs [out] [who,...]` (front, three-quarter, side and body shots of named people), `shots/r33women.mjs <region> [out] [lang]` (the camp women and the village woman: talk to each, screenshots). `r32face.mjs` also takes a wide shot.
+
+**Test workflow:** `/home/user/wt33` (lane a, 5173) and `/home/user/wt33b` (lane b, 5174) are tar copies (`node_modules` symlinked); `/home/user/sync33.sh` refreshes both (never while a test runs), `/home/user/lane.sh <a|b> <cmd>`, `/home/user/sweep33.sh <a|b> <logdir> "<test args>"...` (one SUMMARY line each), `/home/user/multishot.sh <a|b> <outdir> name=query...` (several `shot.mjs` screenshots in one vite). These live outside the repo: recreate them in a new container.
 
 ## Round 32: story everywhere
 User decisions: the build list below, as ranked. Arsaber's lane choice: let him walk / call the watch. The hired guards: all four have arcs, and each guard keeps his own count, whoever is hired. The family's names are Umayma, her brother Nadr and her boy Qays (the user picked them from three sets). APK secrets: still "later".
