@@ -87,9 +87,9 @@ export function cutEarth() {
   }
   x.putImageData(img, 0, 0); hx.putImageData(himg, 0, 0);
   // pick scars: short curved grooves struck downward at a slant
-  for (let q = 0; q < 140; q++) {
+  for (let q = 0; q < 90; q++) {
     const px = rnd() * S, py = rnd() * S, len = 10 + rnd() * 18, a = 1.1 + (rnd() - 0.5) * 0.6, bend = (rnd() - 0.5) * 6;
-    for (const [ctx, col, w] of [[x, 'rgba(50,34,20,0.35)', 2.2], [hx, 'rgba(30,30,30,0.6)', 2.6]]) {
+    for (const [ctx, col, w] of [[x, 'rgba(50,34,20,0.22)', 2.0], [hx, 'rgba(30,30,30,0.45)', 2.4]]) {
       ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(px, py);
       ctx.quadraticCurveTo(px + Math.cos(a) * len / 2 + bend, py + Math.sin(a) * len / 2, px + Math.cos(a) * len, py + Math.sin(a) * len); ctx.stroke();
     }
