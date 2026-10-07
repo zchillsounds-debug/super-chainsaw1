@@ -74,7 +74,7 @@ export const GUARD_BYE = {
 
 // ---------------------------------------------------------------- the family going home to al-Karkh
 const FAMILY_LOOK = {
-  Umayma: { robe: '#6a4a5a', robe2: '#3a2a3a', wrap: 0xb8a68a, skin: 0xa8714a, weapon: null, sash: 0x8a5a3a, build: 0.82, girth: 0.92, hemY: 0.06, hair: 'long' },
+  Umayma: { robe: '#6a4a5a', robe2: '#3a2a3a', wrap: 0xb8a68a, skin: 0xa8714a, weapon: null, sash: 0x8a5a3a, build: 0.82, girth: 0.92, fem: true, hemY: 0.06, hair: 'long' },
   Nadr: { robe: '#7a6a4a', robe2: '#3a3020', turban: 0xd8cfb8, beard: 0x2a1a10, beardLen: 0.5, skin: 0x9a6a44, weapon: null, sash: 0x5a4a2a, build: 1.0 },
   Qays: { robe: '#c8a878', robe2: '#5a3a2a', turban: null, cap: 0x7a4a2a, capBand: 0x3a2010, skin: 0xa8714a, weapon: null, sash: 0x5a3a2a, scale: 0.62, build: 0.85 },
 };

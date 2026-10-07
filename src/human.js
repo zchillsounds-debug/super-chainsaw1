@@ -71,38 +71,42 @@ const HAIRS = ['crop', 'crop', 'long', 'locks', 'tied'];
 
 function headPrims(B, o) {
   const { cap, ell } = helpers(B, HS), H = 'head', L = [];
-  const sk = { mat: R.SKIN };
-  L.push(cap('neck', [0, -0.05, 0.0], [0, 0.1, -0.008], 0.054 * o.neck, 0.049, { k: 0.03, ...sk }));
+  const sk = { mat: R.SKIN }, F = !!o.fem;
+  // Round 33: a woman's face (o.fem): a slimmer neck, a narrower, softer jaw and a small chin, a light brow ridge,
+  // higher, rounder cheeks, a smaller nose and fuller lips
+  const jw = F ? 0.86 : 1, nz = F ? 0.84 : 1;
+  L.push(cap('neck', [0, -0.05, 0.0], [0, 0.1, -0.008], (F ? 0.045 : 0.054) * o.neck, F ? 0.041 : 0.049, { k: 0.03, ...sk }));
   L.push(ell(H, [0, 0.115, -0.014], [0.077, 0.092, 0.097], null, { k: 0.03, ...sk }));
   L.push(ell(H, [0, 0.128, 0.028], [0.066, 0.062, 0.062], null, { k: 0.03, ...sk }));
   L.push(ell(H, [0, 0.077, 0.03], [0.061, 0.072, 0.07], null, { k: 0.03, ...sk }));
   // jaw and chin hang from the jaw bone so the mouth can open
-  L.push(ell('jaw', [0, -0.04, 0.03], [0.05, 0.034, 0.05], null, { k: 0.03, ...sk }));
-  for (const [, s] of SIDES) L.push(cap('jaw', [s * 0.05, -0.02, -0.012], [s * 0.022, -0.068, 0.058], 0.017, 0.014, { k: 0.025, ...sk }));
-  L.push(ell('jaw', [0, -0.072, 0.07], [0.024, 0.021, 0.018], null, { k: 0.02, ...sk }));
+  L.push(ell('jaw', [0, -0.04 * (F ? 0.94 : 1), 0.03], [0.05 * jw, 0.034 * (F ? 0.9 : 1), 0.05 * (F ? 0.94 : 1)], null, { k: F ? 0.036 : 0.03, ...sk }));
+  for (const [, s] of SIDES) L.push(cap('jaw', [s * 0.05 * jw, -0.02, -0.012], [s * 0.022 * (F ? 0.8 : 1), F ? -0.062 : -0.068, F ? 0.055 : 0.058], F ? 0.014 : 0.017, F ? 0.011 : 0.014, { k: F ? 0.032 : 0.025, ...sk }));
+  L.push(F ? ell('jaw', [0, -0.066, 0.066], [0.017, 0.016, 0.015], null, { k: 0.022, ...sk }) : ell('jaw', [0, -0.072, 0.07], [0.024, 0.021, 0.018], null, { k: 0.02, ...sk }));
   for (const [, s] of SIDES) {
-    L.push(ell(H, [s * 0.046, 0.084, 0.062], [0.024, 0.015, 0.022], null, { k: 0.02, ...sk })); // cheekbone
-    L.push(cap('brow', [s * 0.052, -0.004, 0.0], [s * 0.012, 0.0, 0.018], 0.0115, 0.011, { k: 0.016, ...sk, bone: B.idx[s < 0 ? 'browL' : 'browR'] })); // brow ridge
+    L.push(F ? ell(H, [s * 0.045, 0.081, 0.066], [0.025, 0.019, 0.023], null, { k: 0.024, ...sk }) : ell(H, [s * 0.046, 0.084, 0.062], [0.024, 0.015, 0.022], null, { k: 0.02, ...sk })); // cheekbone
+    L.push(cap('brow', [s * 0.052, -0.004, F ? -0.004 : 0.0], [s * 0.012, 0.0, F ? 0.011 : 0.018], F ? 0.0085 : 0.0115, F ? 0.008 : 0.011, { k: 0.016, ...sk, bone: B.idx[s < 0 ? 'browL' : 'browR'] })); // brow ridge
     L.push(ell(H, [s * 0.077, 0.09, -0.006], [0.011, 0.03, 0.019], [0, -s * 0.35, 0], { k: 0.008, ...sk })); // ear
     L.push(ell(H, [s * 0.084, 0.088, -0.001], [0.005, 0.016, 0.009], null, { sub: true, k: 0.005 }));
-    L.push(ell(H, [s * 0.033, 0.096, 0.09], [0.019, 0.0125, 0.017], null, { sub: true, k: 0.012 })); // eye socket
+    L.push(ell(H, [s * 0.033, 0.096, F ? 0.092 : 0.09], [0.019, F ? 0.011 : 0.0125, F ? 0.0135 : 0.017], null, { sub: true, k: F ? 0.015 : 0.012 })); // eye socket
   }
   // nose
-  L.push(cap(H, [0, 0.113, 0.088], [0, 0.07, 0.114], 0.0085, 0.012, { k: 0.012, ...sk }));
-  L.push(ell(H, [0, 0.064, 0.112], [0.0135, 0.0125, 0.0125], null, { k: 0.008, ...sk }));
+  L.push(cap(H, [0, 0.113, 0.088], [0, 0.07, 0.114 - (1 - nz) * 0.03], 0.0085 * nz, 0.012 * nz, { k: 0.012, ...sk }));
+  L.push(ell(H, [0, 0.064 + (1 - nz) * 0.02, 0.112 - (1 - nz) * 0.03], [0.0135 * nz, 0.0125 * nz, 0.0125 * nz], null, { k: 0.008, ...sk }));
   for (const [, s] of SIDES) {
-    L.push(ell(H, [s * 0.0145, 0.061, 0.101], [0.0095, 0.008, 0.009], null, { k: 0.006, ...sk }));
+    L.push(ell(H, [s * 0.0145 * nz, 0.061 + (1 - nz) * 0.02, 0.101 - (1 - nz) * 0.02], [0.0095 * nz, 0.008 * nz, 0.009 * nz], null, { k: 0.006, ...sk }));
     L.push(ell(H, [s * 0.008, 0.055, 0.107], [0.0038, 0.003, 0.0045], null, { sub: true, k: 0.003 }));
   }
   // lips (upper on the head, lower on the jaw) and the mouth line
-  L.push(ell(H, [0, 0.0415, 0.098], [0.021, 0.0062, 0.0082], null, { k: 0.007, mat: R.LIPS }));
-  L.push(ell('jaw', [0, -0.036, 0.093], [0.019, 0.0066, 0.0095], null, { k: 0.007, mat: R.LIPS }));
-  L.push(cap(H, [-0.021, 0.0375, 0.103], [0.021, 0.0375, 0.103], 0.0016, 0.0016, { sub: true, k: 0.003 }));
+  const lz = F ? -0.004 : 0;
+  L.push(ell(H, [0, 0.0415, 0.098 + lz], [F ? 0.018 : 0.021, F ? 0.0066 : 0.0062, F ? 0.0078 : 0.0082], null, { k: 0.007, mat: R.LIPS }));
+  L.push(ell('jaw', [0, -0.036, 0.093 + lz], [F ? 0.0165 : 0.019, F ? 0.0072 : 0.0066, F ? 0.0086 : 0.0095], null, { k: 0.007, mat: R.LIPS }));
+  L.push(cap(H, [-0.019 * (F ? 0.9 : 1), 0.0375, 0.103 + lz], [0.019 * (F ? 0.9 : 1), 0.0375, 0.103 + lz], F ? 0.0011 : 0.0016, F ? 0.0011 : 0.0016, { sub: true, k: 0.003 }));
   // mouth corners and the cheek above each: they carry the corner's weight so a smile or a frown moves the skin
   for (const [S, s] of SIDES) {
     const mb = { bone: B.idx['mouth' + S] };
-    L.push(ell(H, [s * 0.021, 0.04, 0.095], [0.0065, 0.0055, 0.0065], null, { k: 0.006, mat: R.LIPS, ...mb }));
-    L.push(ell(H, [s * 0.031, 0.05, 0.088], [0.009, 0.009, 0.008], null, { k: 0.01, ...sk, ...mb, w: 0.7 }));
+    L.push(ell(H, [s * 0.021 * (F ? 0.9 : 1), 0.04, 0.095 + lz], [F ? 0.005 : 0.0065, F ? 0.0045 : 0.0055, F ? 0.005 : 0.0065], null, { k: 0.006, mat: F ? R.SKIN : R.LIPS, ...mb }));
+    L.push(ell(H, [s * 0.031, 0.05, F ? 0.084 : 0.088], [0.009, 0.009, 0.008], null, { k: F ? 0.018 : 0.01, ...sk, ...mb, w: 0.7 }));
   }
   return L;
 }
@@ -125,14 +129,18 @@ function handPrims(B, o) {
 function garmentPrims(B, o) {
   const { cap, ell, tor } = helpers(B), L = [], b = o.build;
   const body = o.mail && !o.qaba ? R.MAIL : R.CLOTH;
+  // Round 33: a woman (o.fem) is narrower through the chest and waist and a little fuller at the hip, under the same loose robe
+  const F = !!o.fem, wst = F ? 0.88 : 1, hip = F ? 1.08 : 1;
   const T = { torso: true, mat: body };
-  L.push(ell('hips', [0, -0.01, -0.005], [0.16 * o.girth, 0.125, 0.118 * o.girth], null, { k: 0.05, ...T, mat: R.CLOTH }));
+  L.push(ell('hips', [0, -0.01, -0.005], [0.16 * o.girth * hip, 0.125, 0.118 * o.girth * hip], null, { k: 0.05, ...T, mat: R.CLOTH }));
   for (const [, s] of SIDES) L.push(ell('hips', [s * 0.072, -0.075, -0.045], [0.085, 0.09, 0.075], null, { k: 0.05, ...T, mat: R.CLOTH }));
   // Round 20: a straighter, broader male torso (the old waist and rounded pectorals read as feminine)
-  L.push(ell('spine', [0, 0.08, 0.008 + o.belly * 0.03], [0.157 * o.girth, 0.13, 0.115 + o.belly * 0.03], null, { k: 0.06, ...T }));
-  L.push(ell('chest', [0, 0.09, 0.008], [0.176 * b, 0.155, 0.12], null, { k: 0.06, ...T }));
-  L.push(ell('chest', [0, 0.13, 0.04], [0.155 * b, 0.055, 0.075], null, { k: 0.06, ...T }));
-  L.push(cap('upperChest', [-0.148 * b, 0.065, -0.012], [0.148 * b, 0.065, -0.012], 0.072, 0.072, { k: 0.05, ...T }));
+  L.push(ell('spine', [0, 0.08, 0.008 + o.belly * 0.03], [0.157 * o.girth * wst, 0.13, 0.115 + o.belly * 0.03], null, { k: 0.06, ...T }));
+  L.push(ell('chest', [0, 0.09, 0.008], [0.176 * b * (F ? 0.9 : 1), 0.155, F ? 0.112 : 0.12], null, { k: 0.06, ...T }));
+  // a woman's robe hangs loose and straight from the chest to the hip (no waist, no figure)
+  if (F) L.push(ell('spine', [0, 0.06, 0.0], [0.165 * o.girth, 0.22, 0.118], null, { k: 0.09, ...T }), ell('chest', [0, 0.1, 0.03], [0.15 * b, 0.12, 0.1], null, { k: 0.09, ...T }));
+  else L.push(ell('chest', [0, 0.13, 0.04], [0.155 * b, 0.055, 0.075], null, { k: 0.06, ...T }));
+  L.push(cap('upperChest', [-0.148 * b * (F ? 0.88 : 1), 0.065, -0.012], [0.148 * b * (F ? 0.88 : 1), 0.065, -0.012], F ? 0.062 : 0.072, F ? 0.062 : 0.072, { k: 0.05, ...T }));
   L.push(ell('upperChest', [0, 0.02, -0.045], [0.158 * b, 0.13, 0.085], null, { k: 0.05, ...T }));
   for (const [, s] of SIDES) L.push(cap('upperChest', [s * 0.1 * b, 0.085, -0.02], [0, 0.138, -0.015], 0.046, 0.04, { k: 0.04, ...T }));
   // collar: qaba band over a mail collar, or a plain robe neckline
@@ -181,7 +189,8 @@ function hairPrims(B, o) {
   if (!o.bald && o.hair === 'locks') for (const [, s] of SIDES) L.push(cap('head', [s * 0.071, 0.085, 0.012], [s * 0.077, -0.02, 0.022], 0.012, 0.0095, { k: 0.008, ...hm }), cap('head', [s * 0.077, -0.02, 0.022], [s * 0.072, -0.1, 0.034], 0.0095, 0.007, { k: 0.006, ...hm }));
   if (!o.bald && o.hair === 'tied') L.push(ell('head', [0, 0.06, -0.104], [0.036, 0.033, 0.03], null, { k: 0.015, ...hm }), cap('head', [0, 0.08, -0.094], [0, 0.045, -0.112], 0.021, 0.018, { k: 0.015, ...hm }));
   // brows: a thin arch, heavier at the inner end, tapering down at the temple
-  for (const [S, s] of SIDES) { const bb = { bone: B.idx['brow' + S] }; L.push(cap('brow', [s * 0.012, 0.006, 0.031], [s * 0.034, 0.011, 0.027], 0.0052, 0.0045, { k: 0.004, mat: R.BROW, ...bb }), cap('brow', [s * 0.034, 0.011, 0.027], [s * 0.056, 0.0, 0.011], 0.0045, 0.0028, { k: 0.004, mat: R.BROW, ...bb })); }
+  if (o.fem) for (const [S, s] of SIDES) { const bb = { bone: B.idx['brow' + S] }; L.push(cap('brow', [s * 0.012, 0.004, 0.031], [s * 0.034, 0.01, 0.027], 0.0042, 0.0037, { k: 0.004, mat: R.BROW, ...bb }), cap('brow', [s * 0.034, 0.01, 0.027], [s * 0.055, 0.0, 0.012], 0.0037, 0.0022, { k: 0.004, mat: R.BROW, ...bb })); }
+  else for (const [S, s] of SIDES) { const bb = { bone: B.idx['brow' + S] }; L.push(cap('brow', [s * 0.012, 0.006, 0.031], [s * 0.034, 0.011, 0.027], 0.0052, 0.0045, { k: 0.004, mat: R.BROW, ...bb }), cap('brow', [s * 0.034, 0.011, 0.027], [s * 0.056, 0.0, 0.011], 0.0045, 0.0028, { k: 0.004, mat: R.BROW, ...bb })); }
   if (o.beard) {
     const len = o.beardLen;
     for (const [, s] of SIDES) {
@@ -251,11 +260,13 @@ function headwearPrims(B, o) {
     L.push(ell(H, [0, 0.05, -0.01], [0.2, 0.07, 0.2], null, { sub: true, k: 0.01 }));
   } else if (o.wrap) {
     // Round 32: a woman's head shawl (the period's mi'jar): over the crown and the back of the head, framing the face, falling to the shoulders
-    L.push(ell(H, [0, 0.112, -0.024], [0.091, 0.088, 0.104], null, { k: 0.02, mat: R.WRAP }));
+    // Round 33: the crown piece is larger than the skull (the forehead and crown poked through bare), and the cut-out
+    // reaches the hairline only at the front, so the cloth frames the brow
+    L.push(ell(H, [0, 0.122, -0.012], [0.095, 0.101, 0.113], null, { k: 0.02, mat: R.WRAP }));
     L.push(ell(H, [0, 0.02, -0.072], [0.088, 0.11, 0.07], null, { k: 0.025, mat: R.WRAP }));
     for (const s of [-1, 1]) L.push(cap(H, [s * 0.08, 0.08, 0.0], [s * 0.092, -0.07, -0.016], 0.03, 0.038, { k: 0.02, mat: R.WRAP }));
     L.push(cap('neck', [0, 0.06, -0.055], [0, -0.1, -0.095], 0.075, 0.115, { k: 0.03, mat: R.WRAP }));
-    L.push(ell(H, [0, -0.005, 0.088], [0.066, 0.098, 0.064], null, { sub: true, k: 0.012 })); // the face stays open
+    L.push(ell(H, [0, 0.07, 0.15], [0.075, 0.106, 0.11], null, { sub: true, k: 0.01 })); // the face stays open
   } else if (o.turban) {
     L.push(ell(H, [0, 0.155, -0.012], [0.09, 0.07, 0.1], null, { k: 0.02, mat: R.WRAP }));
     L.push(tor(H, [0, 0.13, -0.01], 0.087, 0.026, [-0.14, 0, 0], { k: 0.015, mat: R.WRAP }, 0.85));
@@ -407,6 +418,7 @@ export function humanoid(opts = {}) {
   pal[R.CLOTH].c = C(o.robe); pal[R.CLOTH2].c = C(o.robe2); pal[R.SASH].c = C(o.sash);
   pal[R.SKIN].c = C(o.skin); pal[R.LIPS].c = C(o.skin).multiply(C(0xc49a8c)).multiplyScalar(0.8); // Round 21: less red, so closed lips under a moustache don't read as an open mouth
   pal[R.SKIN].c.offsetHSL(0, -0.12, -0.02);
+  if (o.fem) { pal[R.LIPS].c = C(o.skin).lerp(C(0xa04a48), 0.22).multiplyScalar(0.9); pal[R.BROW].c = C(o.hairC ?? 0x24180f).lerp(C(o.skin), 0.3); pal[R.HAIR].c = C(o.hairC ?? 0x24180f); }
   if (o.beard) { pal[R.HAIR].c = C(o.beard); pal[R.BROW].c = C(o.beard).lerp(C(0x1a120c), 0.3); }
   if (o.turban) pal[R.WRAP].c = C(o.turban);
   if (o.cap) { pal[R.FELT].c = C(o.cap); pal[R.WRAP].c = C(o.capBand || 0x1a1814); }
@@ -420,7 +432,7 @@ export function humanoid(opts = {}) {
   ['foreL', 'foreR', 'shinL', 'shinR'].forEach((n, i) => mat.userData.uni.uJ.value[i].setFromMatrixPosition(B.mats[n]));
 
   // sculpted, skinned pieces (geometry is shared between characters with the same build)
-  const sk = JSON.stringify([o.build, o.girth, o.belly, o.neck]);
+  const sk = JSON.stringify([o.build, o.girth, o.belly, o.neck, !!o.fem]);
   // detail tiers: hero-class characters get the full sculpt, crowds a lighter one (and everyone is light on q=low)
   const hiTier = !LOW && o.detail === 'hi', tier0 = hiTier ? 'hi' : 'lo';
   const hp = hairPrims(B, o), hw = headwearPrims(B, o), ap = o.armour ? armourPrims(B, o) : [];
@@ -428,11 +440,11 @@ export function humanoid(opts = {}) {
   const build = (tier) => {
     const hiT = tier === 'hi', vox = (hi, lo) => (hiT ? hi : lo); o._mitten = !hiT;
     const geos = [
-      piece('head', [tier, o.neck], () => sculpt(headPrims(B, o), { voxel: vox(0.0034, 0.0072), blend: 0.012 })),
+      piece('head', [tier, o.neck, !!o.fem], () => sculpt(headPrims(B, o), { voxel: vox(0.0034, 0.0072), blend: 0.012 })),
       piece('hands', [tier, sk], () => sculpt(handPrims(B, o), { voxel: vox(0.0034, 0.0075), blend: 0.01 })),
       piece('garment', [tier, sk, o.qaba, o.mail, !!o.sash, o.tiraz], () => sculpt(garmentPrims(B, o), { voxel: vox(0.0105, 0.0185), blend: 0.03, paint: garmentPaint(o) })),
     ];
-    if (hp.length) geos.push(piece('hair', [tier, o.neck, !!o.beard, o.beardLen, !!o.bald, 3, o.hair, o.beardStyle], () => sculpt(hp, { voxel: vox(0.0032, 0.0075), blend: 0.012 })));
+    if (hp.length) geos.push(piece('hair', [tier, o.neck, !!o.fem, !!o.beard, o.beardLen, !!o.bald, 3, o.hair, o.beardStyle], () => sculpt(hp, { voxel: vox(0.0032, 0.0075), blend: 0.012 })));
     if (hw.length) geos.push(piece('headwear', [tier, o.neck, o.helm === 'byz' ? 'byz' : !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume', !!o.pilos, !!o.wrap], () => sculpt(hw, { voxel: vox(0.0048, 0.0085), blend: 0.02 })));
     if (ap.length) geos.push(piece('armour', [tier, sk, o.armour, 2], () => sculpt(ap, { voxel: vox(0.008, 0.014), blend: 0.02, paint: armourPaint(o) })));
     if (o.mask) geos.push(piece('veil', [tier, o.neck], () => sculpt(veilPrims(B, o), { voxel: vox(0.0045, 0.0085), blend: 0.02 })));
@@ -441,12 +453,12 @@ export function humanoid(opts = {}) {
   const geos = build(tier0), playGeos = hiTier && TOUCH ? build('lo') : null; o._mitten = !hiTier; const tier = tier0;
   // far LOD (crowds only): the same pieces sculpted at ~2.2x the voxel size, about a fifth of the triangles
   const farGeos = hiTier ? null : [
-    piece('head', ['far', o.neck], () => sculpt(headPrims(B, o), { voxel: 0.016, blend: 0.014 })),
+    piece('head', ['far', o.neck, !!o.fem], () => sculpt(headPrims(B, o), { voxel: 0.016, blend: 0.014 })),
     piece('hands', ['far', sk], () => sculpt(handPrims(B, o), { voxel: 0.017, blend: 0.012 })),
     piece('garment', ['far', sk, o.qaba, o.mail, !!o.sash, o.tiraz], () => sculpt(garmentPrims(B, o), { voxel: 0.04, blend: 0.035, paint: garmentPaint(o) })),
   ];
   if (farGeos) {
-    if (hp.length) farGeos.push(piece('hair', ['far', o.neck, !!o.beard, o.beardLen, !!o.bald, o.hair, o.beardStyle], () => sculpt(hp, { voxel: 0.016, blend: 0.014 })));
+    if (hp.length) farGeos.push(piece('hair', ['far', o.neck, !!o.fem, !!o.beard, o.beardLen, !!o.bald, o.hair, o.beardStyle], () => sculpt(hp, { voxel: 0.016, blend: 0.014 })));
     if (hw.length) farGeos.push(piece('headwear', ['far', o.neck, o.helm === 'byz' ? 'byz' : !!o.helm, !!o.cap, !!o.turban, !!o.hat, o.crest === 'plume', !!o.pilos, !!o.wrap], () => sculpt(hw, { voxel: 0.018, blend: 0.02 })));
     if (ap.length) farGeos.push(piece('armour', ['far', sk, o.armour, 2], () => sculpt(ap, { voxel: 0.03, blend: 0.03, paint: armourPaint(o) })));
     if (o.mask) farGeos.push(piece('veil', ['far', o.neck], () => sculpt(veilPrims(B, o), { voxel: 0.018, blend: 0.02 })));
@@ -470,7 +482,9 @@ export function humanoid(opts = {}) {
   const piv = new THREE.Group(); piv.position.set(0, 0.095, 0.0715); eyeRoot.add(piv);
   const balls = new THREE.Mesh(pairGeo('ball', hiTier), eyeM); balls.userData.noAO = true; piv.add(balls);
   const lidPiv = new THREE.Group(); lidPiv.position.copy(piv.position); eyeRoot.add(lidPiv);
-  const up = new THREE.Mesh(pairGeo('up', 1), lidM), lo = new THREE.Mesh(pairGeo('lo', 1), lidM); up.userData.noAO = lo.userData.noAO = true;
+  // Round 33: a woman's upper lid is darker, so a kohl line and lashes read at a distance
+  const upM = o.fem ? addRim(new THREE.MeshStandardMaterial({ color: C(o.skin).multiplyScalar(0.5).lerp(C(0x1a1210), 0.45), roughness: 0.6 })) : lidM;
+  const up = new THREE.Mesh(pairGeo('up', 1), upM), lo = new THREE.Mesh(pairGeo('lo', 1), lidM); up.userData.noAO = lo.userData.noAO = true;
   lidPiv.add(up, lo); up.rotation.x = -0.3; lo.rotation.x = 0.25;
   const eyes = [piv], lids = [{ up, lo }];
 

@@ -27,6 +27,7 @@ import { setupEpilogue29 } from './epilogue29.js';
 import { setupStory26 } from './story26.js';
 import { setupCamp26 } from './camp26.js';
 import { setupStory32 } from './story32.js';
+import { setupWomen33 } from './women33.js';
 import { setupCamp30 } from './camp30.js';
 import { setupFoes30 } from './foes30.js';
 import { setupFoes31 } from './foes31.js';
@@ -154,6 +155,7 @@ setupFoes30(game); // Round 30: mounted lancers, dog handlers and their dogs
 setupFoes31(game); // Round 31: sappers (the siege mines)
 setupStory26(game); // Round 26: the Hamrin story (scout, arrow, Tatzates' choice)
 setupCamp26(game); // Round 26: Yusuf, Bishr and 'Amr's own stories
+setupWomen33(game); // Round 33: women in the camps and villages
 setupStory32(game); // Round 32: Arsaber's lane, a scene in each act, the guards' and the family's stories, deserters, letters and finds
 setupCamp30(game); // Round 30: the camp furnished (cooking fire, tents, water stand)
 setupEncounters25(game); // Round 25: ambushes and champions on the main path

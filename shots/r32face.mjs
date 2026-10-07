@@ -14,6 +14,8 @@ for (const who of ['Umayma', 'Qays', 'Nasim', 'Doukitzes']) {
     __director.play({ actors: [], shots: [{ dur: 99, cam: { p0: () => P.clone().add({ x: Math.sin(f) * 1.5 * s + Math.cos(f) * 0.4, y: 1.55 * s, z: Math.cos(f) * 1.5 * s - Math.sin(f) * 0.4, isVector3: true }), t0: () => P.clone().add({ x: 0, y: 1.45 * s, z: 0, isVector3: true }), fov: 30 } }] });
     __sim(0.5); return true; }, who);
   if (ok) await pg.screenshot({ path: `${out}/face-${who}.png`, timeout: 180000 });
+  // and at a cutscene's wide-shot distance
+  if (ok) { await pg.evaluate((who) => { const n = __game.npcs.find((x) => x.name === who), P = n.rig.position, f = n.rig.rotation.y; __director.def.shots[0].cam = { p0: () => P.clone().add({ x: Math.sin(f) * 3.6 + Math.cos(f) * 1.6, y: 2.0, z: Math.cos(f) * 3.6 - Math.sin(f) * 1.6, isVector3: true }), t0: () => P.clone().add({ x: 0, y: 1.2, z: 0, isVector3: true }), fov: 34 }; __sim(0.3); }, who).catch(() => {}); await pg.screenshot({ path: `${out}/wide-${who}.png`, timeout: 180000 }); }
   await pg.evaluate(() => { while (__director.def) __director.skip(); });
 }
 console.log('errors:', errs.length ? errs.slice(0, 5).join(' | ') : 'none');

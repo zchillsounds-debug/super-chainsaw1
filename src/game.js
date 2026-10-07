@@ -19,6 +19,7 @@ import { CLASSES, COMMON } from './classes.js';
 import { REGION, IS_SAWAD, IS_MARSH, IS_KARKH, IS_DOCKS, IS_CITY, IS_HAMRIN, STORY, HUB } from './region.js';
 import { LIEUT, BOSS, ISHAQ_TALK } from './story15.js';
 import { WATER_Y, roadDist, DECKS, CANAL_W } from './terrain.js';
+import { womanLook } from './women33.js';
 
 const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
 const BOUND = 132;
@@ -1046,9 +1047,10 @@ export class Game {
     if (IS_MARSH) for (const [dx, dz, c] of [[-14, 14, 0x2c2a2a], [-10, 18, 0x343030], [22, 6, 0x262424]]) add(buffalo(c), V0.x + dx, V0.z + dz, 'buffalo', { range: 3, speed: 0.7 });
     const garb = [['#e8dcc0', '#2a6a5a', 0xf0ead8], ['#6a3a2a', '#d0a040', 0x2a2420], ['#2a4a6a', '#e0c070', 0xe8e0d0], ['#8a6a3a', '#3a2a1a', 0x6a3020]];
     const V = SITES.village;
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 9; i++) {
       const [r1, r2, tb] = garb[i % garb.length];
-      add(humanoid({ robe: r1, robe2: r2, turban: tb, weapon: null, beard: i % 2 ? 0x2a1a10 : null, skin: [0xa8714a, 0x8a5a3a, 0xb88a60][i % 3] }), V.x + rand(-12, 12), V.z + (IS_SAWAD ? rand(-6, 22) : rand(-8, 10)), 'villager', { range: IS_SAWAD ? 8 : 6, speed: 1.3 });
+      // Round 33: every third villager is a woman, in a head shawl and a long robe
+      add(humanoid(i % 3 === 2 ? womanLook(i) : { robe: r1, robe2: r2, turban: tb, weapon: null, beard: i % 2 ? 0x2a1a10 : null, skin: [0xa8714a, 0x8a5a3a, 0xb88a60][i % 3] }), V.x + rand(-12, 12), V.z + (IS_SAWAD ? rand(-6, 22) : rand(-8, 10)), 'villager', { range: IS_SAWAD ? 8 : 6, speed: 1.3 });
     }
   }
   updateAmbientLife(dt) {
