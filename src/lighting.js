@@ -8,7 +8,8 @@ import { SKY, envFromSky } from './graphics.js';
 const c = (h) => new THREE.Color(h);
 const v = (x, y, z) => new THREE.Vector3(x, y, z).normalize();
 export const PRESETS = {
-  golden: { sun: v(-0.55, 0.62, 0.35), sunCol: c(0xffc488), sunI: 3.3, hemiSky: c(0xc4c2c4), hemiGnd: c(0x7a5236), hemiI: 0.5, fog: c(0xd4a47a), fogD: 0.0048, exp: 0.95, env: 0.4, hero: 0.0, vol: 0.022, fire: 1,
+  golden: { sun: v(-0.55, 0.62, 0.35), sunCol: c(0xffc488), sunI: 3.3, hemiSky: c(0xaebcd4), // Round 33: a cooler sky fill, so shade reads apart from the lit sand
+    hemiGnd: c(0x7a5236), hemiI: 0.5, fog: c(0xd4a47a), fogD: 0.0048, exp: 0.95, env: 0.4, hero: 0.0, vol: 0.022, fire: 1,
     sky: { zen: c(0x2e5ca8), mid: c(0xc7a88f), hor: c(0xffad66), gnd: c(0x805c3d), glow: c(0xff8c40), cloud: c(0xffc79a), stars: 0, disk: 20 }, water: c(0xf3c999), dusk: 0, lut: 0 },
   dusk: { sun: v(-0.85, 0.26, 0.35), sunCol: c(0xffa070), sunI: 2.7, hemiSky: c(0x6a84a8), hemiGnd: c(0x4a3a30), hemiI: 0.6, fog: c(0x8a7c84), fogD: 0.0055, exp: 1.0, env: 0.3, hero: 5, vol: 0.03, fire: 1.3,
     sky: { zen: c(0x1c2450), mid: c(0x8a5a70), hor: c(0xff6a3a), gnd: c(0x4a2a20), glow: c(0xff5a20), cloud: c(0xff8a6a), stars: 0.15, disk: 14 }, water: c(0xd09070), dusk: 0.12, lut: 1 },

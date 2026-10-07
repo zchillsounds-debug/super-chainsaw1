@@ -286,7 +286,7 @@ export function createTerrain() {
       .replace('#include <map_fragment>', `
         gMask = texture2D(uMask, vWPos.xz/uWorld + 0.5);
         float n1 = fb(vWPos.xz*0.08), n2 = fb(vWPos.xz*0.6), n3 = fb(vWPos.xz*2.5);
-        vec3 sand = mix(vec3(0.62,0.45,0.29), vec3(0.72,0.55,0.36), n1);
+        vec3 sand = mix(vec3(0.63,0.48,0.33), vec3(0.74,0.59,0.42), n1); // Round 33: a little less orange
         sand = mix(sand, vec3(0.55,0.39,0.25), smoothstep(0.55,0.8,n2)*0.5);
         vec3 dirt = mix(vec3(0.46,0.34,0.22), vec3(0.58,0.44,0.30), n2);
         vec3 grass = mix(vec3(0.30,0.36,0.14), vec3(0.46,0.47,0.20), n1);
@@ -402,6 +402,23 @@ export function createTerrain() {
         col *= 0.94 + 0.12*n3;
         // baked cavity: dark crevices between stones, under pebbles and in cracks
         col *= mix(1.0, nB.b, 0.85 * (1.0 - gCliff));
+        #if RG == 0
+          // Round 33: the open sand read as one flat sheet under a high sun. The wind ripples now show in the colour
+          // too (pale crests, shaded troughs; the normals alone washed out from the overhead camera), with broad
+          // pale drifts of fresh-blown sand and darker patches of wind-scoured gravel between them
+          { float sa = gSand * (1.0 - smoothstep(0.1, 0.5, gMask.r)) * (1.0 - smoothstep(0.2, 0.6, gMask.a));
+            float amp = 0.35 + 0.65 * smoothstep(0.35, 0.7, fb(wq * 0.025 + 3.0));
+            vec2 dir = normalize(vec2(0.82, 0.57) + vec2(fb(wq * 0.01) - 0.5, fb(wq * 0.012 + 7.0) - 0.5) * 0.8);
+            float ph = dot(wq, dir) * 2.6 + fb(wq * 0.07) * 5.0;
+            float crest = pow(0.5 + 0.5 * sin(ph), 3.0);
+            col *= 1.0 + (crest - 0.3) * 0.3 * amp * sa;
+            float drift = smoothstep(0.5, 0.72, fb(wq * 0.032 + 41.0));
+            col = mix(col, col * vec3(1.16, 1.1, 1.02), drift * 0.85 * sa);
+            float grav = smoothstep(0.52, 0.74, fb(wq * 0.055 + 57.0)) * (1.0 - drift);
+            float speck = step(0.62, h21(floor(wq * 9.0))) * grav;
+            col = mix(col, col * vec3(0.72, 0.68, 0.66), grav * 0.6 * sa);
+            col *= 1.0 - speck * 0.35 * sa; }
+        #endif
         #if RG == 1
           // standing water in the low, trodden ground of the marsh
           gWet = smoothstep(0.6, 0.72, fb(wq*0.11 + 7.0) + (0.5 - dS.a)*0.3) * (1.0 - kGrass) * (1.0 - kSite);
