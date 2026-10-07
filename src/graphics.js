@@ -88,7 +88,7 @@ const GradeShader = {
     // per-act colour grade (a compact stand-in for a 3D LUT): lift / gamma / gain + saturation per preset
     vec3 actGrade(vec3 c, float id){
       vec3 lift = vec3(0.0), gain = vec3(1.0); float sat = 1.0, gam = 1.0;
-      if (id < 0.5) { lift = vec3(0.0); gain = vec3(1.02,1.0,0.96); }                         // golden afternoon
+      if (id < 0.5) { lift = vec3(0.0); gain = vec3(1.04,1.0,0.95); gam = 1.05; }             // golden afternoon (Round 31: a touch more contrast: the open sand read flat)
       else if (id < 1.5) { lift = vec3(0.0,0.008,0.016); gain = vec3(1.04,0.98,0.93); sat = 0.92; } // dusk: ember highs, teal lows
       else if (id < 2.5) { lift = vec3(0.0,0.006,0.014); gain = vec3(0.98,0.99,1.03); sat = 0.7; gam = 0.97; } // night: cool, desaturated
       else if (id < 3.5) { lift = vec3(0.01,0.005,0.01); gain = vec3(1.04,0.98,0.98); sat = 0.95; } // dawn

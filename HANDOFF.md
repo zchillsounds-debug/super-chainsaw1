@@ -1,17 +1,45 @@
-# Madinat al-Salam: Handoff (Round 30 shipped; APK signing still waits on the user's secrets)
+# Madinat al-Salam: Handoff (Round 31 shipped; APK signing still waits on the user's secrets)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `ccr-6cf1ec9e-okhaii` of zchillsounds-debug/super-chainsaw1 (Round 30: phone pass, map markers, camp props, the camp men's quests, lancers and dog handlers). Check Round 30's "Status" list below for what is left.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-1luc29` of zchillsounds-debug/super-chainsaw1 (Round 31: the siege mines and the sapper, the Wanted board, a graphics pass). Check Round 31's "Status" list below for what is left.
 >
 > Please:
 > 1. Fetch the branch and read HANDOFF.md fully.
 > 2. Run `npm install`. When pushing the session branch, `git push -u origin <session-branch>` (a fresh branch carries the earlier rounds' history). Run tests with `shots/withvite.sh node shots/<test>.mjs ...`: it starts vite, runs the test, then stops vite. Run one `withvite.sh` at a time (a second one can't bind the port and loses its server when the first stops). Never edit `src/` while a test runs from the same folder: vite reloads the page and the test dies ("Execution context was destroyed"). Run tests from a copy (see "Test workflow" under Round 27).
-> 3. Finish whatever Round 30's "Status" list says is left, then ask me about Round 31 and confirm the plan with me before building.
+> 3. Finish whatever Round 31's "Status" list says is left, then ask me about Round 32 and confirm the plan with me before building.
 >
 > The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar. Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
 > - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
+
+## Round 31: the siege mines, the Wanted board, a graphics pass
+User decisions: the two items carried from Round 30 (new dungeon type with its boss move; the bounty board upgrade) plus graphics polish in all four areas (combat effects, maps and lighting, characters, HUD), built in that order. Dungeon pick: **siege mines**. Wanted board: **both** (a ladder of 5, then a weekly captain). The APK secrets are still "later". The user has not played on the phone since Round 26. Round 30's skipped regression sweep was run first: 39 of 39 clean.
+
+**Test lanes (recreate in a new container):** `/home/user/wt31` (lane a, 5173) and `/home/user/wt31b` (lane b, 5174) are tar copies; `wt31b`'s `shots/*.mjs` have 5173 rewritten to 5174, so every test runs in either lane. `/home/user/sync31.sh` refreshes both (never while a test runs), `/home/user/lane.sh <a|b> <cmd>`, `/home/user/sweep.sh <a|b> <list> <logdir>` (appends to SUMMARY; one line per test "name args"). A worker restart kills detached tests: re-run from where SUMMARY stops.
+
+**The siege mines (style `mines`; `interior.js`, `dungeons.js`, `bosses28.js`, `content.js`):**
+- Two dungeons: Karkh `mines` "The Siege Mines" (by the kiln site, level 12, boss Gabrades) and docks `countermine` "The Counter-Mines" (level 15, boss Tzykes). Both are on the contract grounds of Karkh, the docks and Hamrin, and in the clear bounties.
+- Look: a cut-earth wall texture (`textures.js` `cutEarth`: strata, pick scars, pebbles; built lazily through the `KIT.mines` getter), timber sets (two posts and a cap at z ±3.6 per room, boards lagged behind), spoil heaps, picks and a lamp, a trodden path, lamp light 0xffa048. The mine head entrance (`look: 'earth'`) has a timber set and a spoil heap.
+- Hazards: deeper rooms have one cracked, leaning, rope-lashed prop. A blow within 2.4 m brings that stretch of roof down 0.7 s later across the room (5 marks): heavy damage and a stagger to foes in the band, less to Salim, and low mounds and rubble left behind. In fights the roof also sheds earth on a marked patch near Salim every 9–13 s.
+- Boss move `cavein` (bosses28 `STYLE_MOVE.mines`): he fires a prop, a 12 m lane is marked for 1 s, then it comes down. Three heaps along the lane are cover (interior colliders plus `buildGrid`) for 6 s, removed by a 6 s telegraph's onDone.
+- **Sapper** (`foes31.js`, `TYPES31`, `setupFoes31`; new weapon `pick` in characters/human/anim): close in, he fights with the pick. At 4–15 m he goes to ground (0.6 s), a ridge of clods chases Salim under the floor for up to 2.2 s, a ring is marked (0.8 s), then he bursts up (×1.3 damage and a knock). He is winded for 1.2 s and takes ×1.35 then (`g.dmgMod`). He appears in the mines' pools, as both mine bosses (who also burrow), and as the Karkh Wanted captain Hikanatos.
+- Test: `shots/r31mines.mjs [region] [out]` (entry, room, close-up of the prop, the prop's fall, the sapper's dig, the boss move). Clean in Karkh and the docks.
+
+**The Wanted board (`wanted31.js`, `items.js` `WANTED_UNIQUES`/`makeWantedUnique`, `content.js` `spawnCaptain`/`affixLabel`):**
+- In every camp, a board with five posters (canvas ink sketches: headgear by troop kind, a beard and scar per name; crossed out when taken, a ? when locked). It stands 4.5 m clear of anyone the hero talks to.
+- Five named captains per region, each with a type, an affix (so the Round 28 affix move too), a guard, a crime line and a reward: rare weapon, rare coat or cap, rare ring plus 3 gems, a legendary, then the region's own legendary (Cap of the Canal Roads, Reed-Cutter, Weight of the Karkh Market, Rope of the Bridge of Boats, Coat of the Hamrin Passes; never in the random pool). Captain level is max(base, hero) + 1 + rank.
+- One hunt at a time. The captain and his men wait at a hideout (a road point more than 50 m from the camp, the same one each time) with crates, a jar and a fire light. He gets a tracker line ("☗ Wanted: …"), a trail, and a map marker (kind `wanted`, a red poster icon; "Wanted" on the map card). After all five are down, a weekly captain (name from `WEEKLY_NAMES`, kit from the ladder, ×1.5 life) pays a legendary and a large purse.
+- State: `p.wanted31[region] = { rank, on, week: { n, done } }` (saved, in `save.js` EXTRA). A hunt that was out comes back after a load (`g.restoreSide` is wrapped).
+- Panel: horizontal cards (poster on the left, text on the right), scrolling sideways on a phone; the weekly card is a full-width row below.
+- Test: `shots/r31wanted.mjs [region] [out] [lang]` plays all five hunts plus the weekly one, checks rewards and the reload. Clean in the Sawad (en) and the docks (ar).
+
+**Graphics pass (small, context ran short):** phone orbs got a bezel (dark iron ring, gold rims, 8 gold studs; CSS `body.touch .orb::before`). The golden-afternoon grade has a little more contrast (`graphics.js` `actGrade` id 0: gain 1.04/1.0/0.95, gamma 1.05). The mine walls' pick scars were softened. Critique notes for next time: the open Sawad sand still reads flat at midday (ground detail and the lighting need a real pass); characters are small at the default zoom; the HUD's ability buttons are plain outline circles next to Diablo Immortal's.
+
+Arabic for all of Round 31 is in `story31_ar.js` (`AR31`).
+
+**Status:**
+- STATUS_PLACEHOLDER
 
 ## Round 30: phone pass, map markers, camp props, camp men's quests, new troops
 User decisions: all four areas (camp props, map quest markers, phone polish, new content), a full round. New content picked: camp-men quests, new troops, a new dungeon type and a bounty board. The user has not played on the phone yet (the phone pass was done from 915x412 shots). The APK secrets were put off ("later"): CI still signs with the throwaway key. Context ran out before the dungeon type and the bounty board.
