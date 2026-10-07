@@ -9,7 +9,7 @@ const [region = 'sawad', out, pick = '1', lang = 'en'] = process.argv.slice(2);
 if (out) fs.mkdirSync(out, { recursive: true });
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: true, isMobile: true });
-const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
+const errs = []; pg.on('pageerror', (e) => { errs.push(e.message); console.log('PAGEERR', e.stack); });
 if (lang === 'ar') await pg.addInitScript(() => { try { localStorage.setItem('sob.settings.v1', JSON.stringify({ lang: 'ar' })); } catch (e) { /* none */ } });
 await pg.goto(`http://localhost:5173/?play&mobile&q=high&noadapt&region=${region}`);
 await pg.waitForFunction(() => window.__ready, null, { timeout: 500000 });
@@ -45,7 +45,7 @@ for (const i of [1, 2, 3]) {
 }
 console.log('guard', JSON.stringify(await ev(() => ({ g32: __game.player.s25.g32, toast: [...document.querySelectorAll('#toasts > *, .toast')].map((x) => x.textContent).slice(-3) }))));
 // ---- a soldier's shout
-const sh = await ev(() => { const g = __game, p = g.player; const pk = g.spawnPack(['spearman', 'archer', 'bandit'], p.pos.x + 9, p.pos.z + 4, 3, 5); let bark = ''; for (let i = 0; i < 40 && !bark; i++) { for (const e of pk) e.alerted = true; __sim(0.5); const el = document.querySelector('#bark25'); if (el?.classList.contains('show')) bark = el.textContent; } for (const e of pk) { e.dead = true; e.hp = 0; e.rig.visible = false; } return bark; });
+const sh = await ev(() => { const g = __game, p = g.player, seenB = []; for (let n = 0; n < 4 && !seenB.some((b) => !b.startsWith(g.companion?.K?.name || '~')); n++) { const pk = g.spawnPack(['spearman', 'archer', 'bandit'], p.pos.x + 9, p.pos.z + 4, 3, 5); for (let i = 0; i < 60; i++) { for (const e of pk) e.alerted = true; __sim(0.4); const el = document.querySelector('#bark25'); if (el?.classList.contains('show') && !seenB.includes(el.textContent)) seenB.push(el.textContent); } for (const e of pk) { e.dead = true; e.hp = 0; e.rig.visible = false; } } return seenB.join(' || '); });
 console.log('shout', JSON.stringify(sh));
 await shot('shout');
 // ---- a letter on a body

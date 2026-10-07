@@ -27,7 +27,9 @@ export function chat(g, o, script, { establish = true, onEnd = null, closeIn = 1
   let ws = null;
   // Round 32: and nothing drawn in between (tents and awnings are not colliders): a ray from each spot to the speaker's head
   const own = new Set(); for (const a of actors) a.rig.traverse((x) => own.add(x));
-  const seen = (q, h) => { RAY.set(q, h.clone().sub(q).normalize()); RAY.far = q.distanceTo(h) - 0.4; return !RAY.intersectObjects(g.scene.children, true).some((i) => !own.has(i.object) && i.object.visible && !i.object.isSprite && !i.object.isPoints); };
+  // Round 33: only static scenery blocks the view: skinned people are skipped (one with a freed buffer threw in the Arabic docks run)
+  let solid = null;
+  const seen = (q, h) => { if (!solid) { solid = []; g.scene.traverseVisible((x) => { if (x.isMesh && !x.isSkinnedMesh && !own.has(x) && x.geometry?.attributes?.position?.array) solid.push(x); }); } RAY.set(q, h.clone().sub(q).normalize()); RAY.far = q.distanceTo(h) - 0.4; return !RAY.intersectObjects(solid, false).length; };
   const wsSide = () => { if (ws) return ws; ws = [3.4, 2.6]; const h = headOf(o)(); for (const [fw, sd] of [[3.4, 2.6], [3.4, -2.6], [2.4, 3.4], [2.4, -3.4], [-3.0, 2.6], [-3.0, -2.6], [2.0, 1.4], [2.0, -1.4]]) { const q = at(o, 2.2, fw, sd)(); if (lineClear(o.pos.x, o.pos.z, q.x, q.z) && seen(q, h)) { ws = [fw, sd]; break; } } return ws; };
   const wide = { follow: true, p0: () => at(o, 2.2, wsSide()[0], wsSide()[1])(), t0: at(o, 1.3, -0.8, 0), p1: () => at(o, 2.0, wsSide()[0] * 0.88, wsSide()[1] * 0.77)(), t1: at(o, 1.3, -0.8, 0), fov: 34 };
   const d = Math.hypot(salim.pos.x - o.pos.x, salim.pos.z - o.pos.z);

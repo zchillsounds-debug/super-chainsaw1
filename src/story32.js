@@ -285,7 +285,7 @@ export function setupStory32(g) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.16, 0.22), objM); m.position.copy(pos).setY(pos.y + 0.08); m.rotation.y = Math.random() * 3; g.scene.add(m);
     const done = () => !!p.codex?.['f32_' + id];
     m.visible = !done();
-    const it = { pos, r: 2.2, label: t('Examine') + ': ' + t(name), act: () => { if (done()) return; m.visible = false; g.interactables = g.interactables.filter((q) => q !== it); found(id, name, text); } };
+    const it = { pos, r: 2.2, get label() { return t('Examine') + ': ' + t(name); }, act: () => { if (done()) return; m.visible = false; g.interactables = g.interactables.filter((q) => q !== it); found(id, name, text); } };
     if (!done()) g.interactables.push(it);
     glint(pos, () => !done(), null);
   }
@@ -313,7 +313,7 @@ export function setupStory32(g) {
     const rooms = I.I.rooms, r = rooms[Math.max(1, Math.floor(rooms.length / 2))], base = roomCenter(r);
     const pos = new THREE.Vector3(base.x + 2.2, I.I.entrance.y, base.z + 2.2);
     const m = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.18, 0.24), objM); m.position.copy(pos).setY(pos.y + 0.09); (I.I.group || g.scene).add(m);
-    const it = { pos, r: 2.2, interior: true, label: t('Examine') + ': ' + t(F[0]), act: () => { m.visible = false; g.interactables = g.interactables.filter((q) => q !== it); found('d_' + id, F[0], F[1]); } };
+    const it = { pos, r: 2.2, interior: true, get label() { return t('Examine') + ': ' + t(F[0]); }, act: () => { m.visible = false; g.interactables = g.interactables.filter((q) => q !== it); found('d_' + id, F[0], F[1]); } };
     g.interactables.push(it);
     glint(pos, () => g.interior === I && !p.codex?.['f32_d_' + id], null);
   };
