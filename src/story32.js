@@ -29,6 +29,8 @@ import * as S32 from './scenes32.js';
 import { t } from './i18n.js';
 
 const ACT_REGIONS = ['sawad', 'marsh', 'karkh', 'docks'];
+// Round 22 put each act's two captains in holds: the first and second hold of each act region
+const FIRST_HOLD = { sawad: 'dam', marsh: 'stockade', karkh: 'quarter', docks: 'shipyard' }, SECOND_HOLD = { sawad: 'kilns', marsh: 'sunken', karkh: 'vaults', docks: 'hulks' };
 const REG = IS_EPILOGUE ? 'epilogue' : REGION;
 
 // ---------------------------------------------------------------- the hired guards' stories
@@ -250,6 +252,8 @@ export function setupStory32(g) {
   const calmNear = (r = 24) => !g.enemies.some((e) => !e.dead && e.alerted && e.pos.distanceTo(p.pos) < r);
   const dist = (a) => Math.hypot(p.pos.x - a[0], p.pos.z - a[1]);
   const lv = () => Math.max(1, p.level);
+  const holdDone = (id) => !!id && !!g.holds?.state(id)?.done;
+  const firstDown = () => holdDone(FIRST_HOLD[REGION]) || !!g.chief?.dead, secondDown = () => holdDone(SECOND_HOLD[REGION]) || !!g.matriarch?.dead;
 
   // ---------------- the Codex: finds and letters
   for (const [id, text] of LETTERS) CODEX['f32_' + id] = { t: 'A soldier\'s letter', cat: 'Letters from the Company', x: text };
@@ -410,14 +414,14 @@ export function setupStory32(g) {
       });
       return true;
     }
-    if (!g.chief?.dead || !g.npc || Math.hypot(p.pos.x - g.npc.position.x, p.pos.z - g.npc.position.z) > 9) return false;
+    if (!firstDown() || !g.npc || Math.hypot(p.pos.x - g.npc.position.x, p.pos.z - g.npc.position.z) > 9) return false;
     said()[midKey] = true;
     play(S32.chat(g, asOther(ishaq()), S32.MIDACT[REGION])).then(() => saveGame(g));
     if (g.npcMark) g.npcMark.visible = false;
     return true;
   };
   const tryLane = () => {
-    if (REGION !== 'karkh' || said().lane32 || ch().lane || !g.chief?.dead || g.matriarch?.dead || g.bossActive) return false;
+    if (REGION !== 'karkh' || said().lane32 || ch().lane || !firstDown() || secondDown() || g.bossActive) return false;
     if (HUB?.ishaq && dist(HUB.ishaq) < 30) return false;
     said().lane32 = true;
     play(S32.arsaberLane(g, choose)).then(() => saveGame(g));

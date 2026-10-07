@@ -28,7 +28,7 @@ const play = async (name, js) => {
 console.log('setup', JSON.stringify(await ev(() => { const g = __game; return { family: ['Umayma', 'Nadr', 'Qays', 'Nasim'].map((n) => !!g.npcs.find((x) => x.name === n)), deserter: g.npcs.find((x) => x.title && /Deserter|فارّ/.test(x.title))?.name || null, examine: g.interactables.filter((i) => /Examine|تفحّص/.test(i.label)).length, glints: g.s32test.glints() }; })));
 // ---- the scene inside the act
 await play('mid', () => { const g = __game, p = g.player, H = { sawad: [-2, 84], marsh: [8, 80], karkh: [-64, 86], docks: [-50, 98], hamrin: [-10, 84] }[new URLSearchParams(location.search).get('region')];
-  if (g.chief) g.chief.dead = true; if (g.holds) { const s = g.holds.state('quarry'); if (s) s.done = true; } g.player.s25 ||= { ch: {}, leaves: {}, mem: {}, said: {} }; g.player.s25.said.h26scout = true;
+  const F = { sawad: 'dam', marsh: 'stockade', karkh: 'quarter', docks: 'shipyard' }[new URLSearchParams(location.search).get('region')]; if (F && g.holds) g.holds.state(F).done = true; if (g.holds) { const s = g.holds.state('quarry'); if (s) s.done = true; } g.player.s25 ||= { ch: {}, leaves: {}, mem: {}, said: {} }; g.player.s25.said.h26scout = true;
   p.pos.set(H[0] + 2, 0, H[1] + 2); __calm(); __sim(0.2); return g.s32test.mid(); });
 // ---- Arsaber's lane
 if (region === 'karkh') await play('lane', () => { const g = __game, p = g.player; p.pos.set(-30, 0, 40); __calm(); __sim(0.2); return g.s32test.lane(); });
