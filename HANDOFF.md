@@ -39,7 +39,15 @@ User decisions: the two items carried from Round 30 (new dungeon type with its b
 Arabic for all of Round 31 is in `story31_ar.js` (`AR31`).
 
 **Status:**
-- STATUS_PLACEHOLDER
+- Committed and pushed on `claude/new-session-1luc29`. Tests run this round, all clean ("errors: none"):
+  - Round 30's skipped sweep: 39 of 39.
+  - r31mines in Karkh and the docks.
+  - r31wanted in the Sawad (en) and the docks (ar).
+  - A Round 31 regression set (12 of 12): r16test karkh and docks, r27dungeon marsh, trialtest, r21rift, crafttest, ngtest, r29save, r30marks sawad, r26boss docks, r29quests hamrin, r30foes sawad.
+  - smoke26 on the inlined build.
+- Artifact version 29 published (1.9 MB).
+- APK: CI builds every push to `claude/**`. Still the throwaway key: the user put the secrets off again.
+- Left for Round 32 (ideas, not approved): the rest of the graphics pass (open-ground detail and midday lighting, character close-ups and animation, the ability buttons, hit and death effects), a Wanted captain with his own move, rubble from the cave-in that blocks arrows, a third mines dungeon for Hamrin. The user has still not played on the phone since Round 26.
 
 ## Round 30: phone pass, map markers, camp props, camp men's quests, new troops
 User decisions: all four areas (camp props, map quest markers, phone polish, new content), a full round. New content picked: camp-men quests, new troops, a new dungeon type and a bounty board. The user has not played on the phone yet (the phone pass was done from 915x412 shots). The APK secrets were put off ("later"): CI still signs with the throwaway key. Context ran out before the dungeon type and the bounty board.
