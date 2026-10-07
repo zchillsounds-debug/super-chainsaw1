@@ -695,10 +695,11 @@ body.ar #bark25 b{margin-right:0;margin-left:8px}
 
 /* Round 31: the Wanted board: the posters in a row (scrolls sideways on a phone) */
 #shop.wanted{width:min(980px,calc(100vw - 20px))}
-#shop.wanted .wrow{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+#shop.wanted .wrow{flex-shrink:0;display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
 #shop.wanted .wcard{flex:0 0 290px;scroll-snap-align:start;display:grid;grid-template-columns:112px 1fr;grid-template-rows:1fr auto;column-gap:8px;row-gap:6px;background:#1a110a;border:1px solid #5a4028;border-radius:6px;padding:6px}
 #shop.wanted .wcard.open{border-color:#c8503a;box-shadow:0 0 12px #c8503a55}
-#shop.wanted .wcard.weekly{flex-basis:100%;grid-template-columns:112px 1fr auto}
+#shop.wanted .wcard.weekly{flex-basis:100%;grid-template-columns:84px 1fr auto}
+#shop.wanted .wcard.weekly img{width:84px}
 #shop.wanted .wcard img{width:112px;border-radius:3px;display:block;grid-row:1/span 2}
 #shop.wanted .wcard>button,#shop.wanted .wcard>b{grid-column:2;align-self:end}
 #shop.wanted .wcard.weekly>button,#shop.wanted .wcard.weekly>b{grid-column:3;grid-row:1/span 2;align-self:center}
