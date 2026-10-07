@@ -550,8 +550,9 @@ export function setupSideQuests(game) {
   g.trackedKey = () => tracked.key;
   g.track = (key) => { tracked.key = tracked.key === key ? null : key; g.refreshTracker?.(); g.guide && (g.guide.path = null, g.guide.repath = 0); g.ui.toast(tracked.key ? t('Tracking on the trail') : t('Trail follows the story'), ''); };
   // where the trail leads for the tracked task (null: fall back to the main story)
-  g.trackTarget = () => {
-    const k = tracked.key; if (!k) return null;
+  g.trackTarget = () => targetFor(tracked.key);
+  const targetFor = (k) => {
+    if (!k) return null;
     const bandPos = (pack) => { const e = pack.find((x) => !x.dead); return e ? e.pos : null; };
     if (k === 'ev') return ev.cur ? { pos: bandPos(ev.cur.pack) || ev.cur.pos, text: ev.cur.E.text } : null;
     if (k.startsWith('b:')) {
@@ -566,6 +567,21 @@ export function setupSideQuests(game) {
     if (st.kind === 'escort' && L) { const f = L.follow[0]; return { pos: f.pos.distanceTo(p.pos) > 12 ? f.pos : L.dest, text: st.text }; }
     if (L?.pack.some((e) => !e.dead)) return { pos: bandPos(L.pack), text: st.text };
     return { pos: L?.target || V3(...(st.at || q.giver.at)), text: st.text };
+  };
+
+  // Round 30: every task on the maps: givers with work to offer, each live step's target, taken bounties, the event
+  g.questMarks = () => {
+    if (g.interior) return [];
+    const out = [], S = B();
+    for (const q of Q) {
+      const s = questState(p, q.id), st = q.steps[s];
+      if (s === -1) { out.push({ pos: q.npc.pos || q.npc.rig.position, kind: 'offer', name: q.t }); continue; }
+      if (!st || s >= q.steps.length - 1) continue;
+      const tg = targetFor('q:' + q.id); if (tg?.pos) out.push({ pos: tg.pos, kind: st.kind === 'meet' ? 'meet' : st.kind === 'return' ? 'return' : 'task', name: q.t, key: 'q:' + q.id, on: tracked.key === 'q:' + q.id });
+    }
+    for (const b of bounties) if (S.taken[b.i] && !S.done[b.i]) { const tg = targetFor('b:' + b.i); if (tg?.pos) out.push({ pos: tg.pos, kind: 'bounty', name: b.text, key: 'b:' + b.i, on: tracked.key === 'b:' + b.i }); }
+    if (ev.cur) { const tg = targetFor('ev'); if (tg?.pos) out.push({ pos: tg.pos, kind: 'event', name: ev.cur.E.t, key: 'ev', on: tracked.key === 'ev' }); }
+    return out;
   };
 
   // ---------------- per frame

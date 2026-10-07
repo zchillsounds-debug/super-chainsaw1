@@ -26,6 +26,7 @@ import { setupFoes29 } from './foes29.js';
 import { setupEpilogue29 } from './epilogue29.js';
 import { setupStory26 } from './story26.js';
 import { setupCamp26 } from './camp26.js';
+import { setupCamp30 } from './camp30.js';
 import { WEATHER } from './triplanar.js';
 import { PlanarReflection, reflects, REFL, REFLECT_LAYER } from './reflect.js';
 import { canalX, WATER_Y } from './terrain.js';
@@ -146,6 +147,7 @@ setupFoes26(game); // Round 26: standard-bearers, shield walls, horse archers
 setupFoes29(game); // Round 29: javelin men, braced spearmen, caltrop throwers, field surgeons
 setupStory26(game); // Round 26: the Hamrin story (scout, arrow, Tatzates' choice)
 setupCamp26(game); // Round 26: Yusuf, Bishr and 'Amr's own stories
+setupCamp30(game); // Round 30: the camp furnished (cooking fire, tents, water stand)
 setupEncounters25(game); // Round 25: ambushes and champions on the main path
 setupCombat25(game); // Round 25: boss stagger, combos, signature moves (wraps last)
 setupBosses28(game); // Round 28: captains' and dungeon bosses' moves, act bosses' last-quarter move
@@ -282,6 +284,7 @@ function adaptQuality(dt) {
   else if (fastN >= 4 && perfLevel > 0 && clock.elapsedTime > holdUntil) { perfLevel--; QSTEPS[perfLevel].up(); console.info('quality: restored ' + QSTEPS[perfLevel].name); fastN = 0; holdUntil = clock.elapsedTime + 20; }
   game.perfLevel = perfLevel;
 }
+let coverN = 0;
 function frame() {
   const rawDt = clock.getDelta(); const dt = Math.min(rawDt, 0.05); t += dt;
   game.benchTick?.(rawDt);
@@ -364,7 +367,9 @@ function frame() {
   }
   grade.uniforms.uTime.value = t;
   renderer.info.reset();
-  if (reflection) {
+  // Round 30: behind a full-screen sheet on a phone (map, bag, journal, settings) only every tenth frame is drawn
+  const covered = document.body.classList.contains('fullsheet') && document.body.classList.contains('touch') && (coverN++ % 10) !== 0;
+  if (!covered && reflection) {
     // only when water could be on screen: the marsh always, elsewhere near the canal
     let near = IS_MARSH;
     if (!near && !game.interior) { // is any stretch of the canal inside the view?
@@ -376,7 +381,7 @@ function frame() {
     reflection.update(perfLevel >= 2 ? 3 : 2);
   }
   REFL.uRipT.value = t;
-  composer.render();
+  if (!covered) composer.render();
   perf.frame(rawDt);
   requestAnimationFrame(frame);
 }

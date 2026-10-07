@@ -160,7 +160,7 @@ export class UI {
     return true;
   }
   // side tasks, bounties and events can be tapped to put them on the trail (data-k); the tracked one is marked
-  quest(lines) { this.$('#quest .qlines').innerHTML = lines.map((l) => `<div class="${l.done ? 'done' : ''} ${l.side ? 'side' : ''} ${l.on ? 'on' : ''}"${l.key ? ` data-k="${l.key}"` : ''}>${l.done ? '✦' : l.on ? '➤' : l.side ? '·' : '◇'} ${l.text}</div>`).join(''); }
+  quest(lines) { this.$('#quest .qlines').innerHTML = lines.map((l) => `<div class="${l.done ? 'done' : ''} ${l.side ? 'side' : ''} ${l.on ? 'on' : ''}"${l.key ? ` data-k="${l.key}"` : ''}>${l.done ? '✦' : l.on ? '➤' : l.side ? '·' : '◇'} ${t(l.text)}</div>`).join(''); }
   // the active objective and how far it is (kept in step with the ground trail)
   objective(text, dist) {
     const el = this.$('#quest .qnow'); el.classList.toggle('hidden', !text); if (!text) return;
@@ -170,7 +170,11 @@ export class UI {
   }
   toast(text, cls = '') {
     const el = document.createElement('div'); el.className = 'toast ' + cls; el.innerHTML = text;
-    const box = this.$('#toasts'); box.appendChild(el); setTimeout(() => el.classList.add('out'), 3200); setTimeout(() => el.remove(), 4000);
+    const box = this.$('#toasts');
+    // Round 30: on a phone the stack keeps to three lines (the oldest goes first) and the same line never shows twice
+    for (const o of box.children) if (o.innerHTML === el.innerHTML && !o.classList.contains('out')) o.remove();
+    if (document.body.classList.contains('touch')) { const live = [...box.children].filter((o) => !o.classList.contains('out')); for (const o of live.slice(0, Math.max(0, live.length - 2))) { o.classList.add('out'); setTimeout(() => o.remove(), 500); } }
+    box.appendChild(el); setTimeout(() => el.classList.add('out'), 3200); setTimeout(() => el.remove(), 4000);
     // Round 24: never more than four at once (a burst of pickups used to stack a wall of text over the fight)
     const live = [...box.children].filter((c) => !c.classList.contains('out')); for (const c of live.slice(0, Math.max(0, live.length - 4))) { c.classList.add('out'); setTimeout(() => c.remove(), 800); }
   }
@@ -255,7 +259,7 @@ export class UI {
     }
     for (let i = n; i < (this.barPool?.length || 0); i++) setS(this.barPool[i], 'display', 'none');
   }
-  drawMinimap(player, enemies, drops, pois) {
+  drawMinimap(player, enemies, drops, pois, marks) {
     const c = this.mini, S = 180, sc = 1.1;
     c.clearRect(0, 0, S, S);
     c.save(); c.beginPath(); c.arc(S / 2, S / 2, S / 2 - 4, 0, Math.PI * 2); c.clip();
@@ -267,6 +271,12 @@ export class UI {
     for (const e of enemies) if (!e.dead) { c.fillStyle = e.boss ? '#ff6020' : e.elite ? '#ffd040' : '#e03030'; c.beginPath(); c.arc(tx(e.pos.x), tz(e.pos.z), e.boss ? 4 : 2.2, 0, 7); c.fill(); }
     for (const d of drops) if (d.item.rarity !== 'common') { c.fillStyle = RARITY[d.item.rarity].color; c.fillRect(tx(d.mesh.position.x) - 1.5, tz(d.mesh.position.z) - 1.5, 3, 3); }
     c.restore();
+    // Round 30: task markers; one beyond the rim waits on the rim, pointing the way
+    if (marks) for (const m of marks) {
+      let x = tx(m.pos.x) - S / 2, y = tz(m.pos.z) - S / 2; const d = Math.hypot(x, y), R0 = S / 2 - 18, out = d > R0;
+      if (out) { x *= R0 / d; y *= R0 / d; }
+      drawMark(c, S / 2 + x, S / 2 + y, m.kind, m.on, (out ? 1.25 : 1.5) * (document.body.classList.contains('touch') ? 1.3 : 1)); // the minimap shows at half size on a phone
+    }
     c.fillStyle = '#fff'; c.beginPath(); c.arc(S / 2, S / 2, 3.2, 0, 7); c.fill();
   }
 
@@ -359,4 +369,22 @@ export class UI {
   }
   closeCard() { this.root.querySelector('#icard')?.remove(); }
 
+}
+
+// Round 30: one marker style for the minimap and the big map. offer: a task to take (!), meet/return/task: the
+// tracked task's next place (a diamond, bright when tracked), bounty: crossed blades, event: a red flag
+export const MARK_COL = { offer: '#ffd24a', meet: '#7fd0ff', return: '#ffd24a', task: '#7fd0ff', bounty: '#ff9a3a', event: '#ff5040' };
+export function drawMark(c, x, y, kind, on, k = 1) {
+  const col = MARK_COL[kind] || '#fff', r = (on ? 7.5 : 6) * k;
+  c.save(); c.translate(x, y);
+  c.fillStyle = 'rgba(14,9,5,0.88)'; c.strokeStyle = col; c.lineWidth = on ? 2.2 * k : 1.5 * k;
+  if (kind === 'meet' || kind === 'task') { c.beginPath(); c.moveTo(0, -r - 1); c.lineTo(r + 1, 0); c.lineTo(0, r + 1); c.lineTo(-r - 1, 0); c.closePath(); c.fill(); c.stroke(); c.fillStyle = col; c.beginPath(); c.arc(0, 0, r * 0.32, 0, 7); c.fill(); }
+  else {
+    c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); c.stroke(); c.fillStyle = col; c.strokeStyle = col;
+    if (kind === 'offer' || kind === 'return') { c.font = `bold ${Math.round(r * 1.5)}px Cinzel, serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(kind === 'offer' ? '!' : '?', 0, r * 0.08); }
+    else if (kind === 'bounty') { c.lineWidth = 1.6 * k; c.beginPath(); c.moveTo(-r * 0.5, -r * 0.5); c.lineTo(r * 0.5, r * 0.5); c.moveTo(r * 0.5, -r * 0.5); c.lineTo(-r * 0.5, r * 0.5); c.stroke(); }
+    else { c.fillRect(-r * 0.35, -r * 0.55, r * 0.14, r * 1.1); c.beginPath(); c.moveTo(-r * 0.21, -r * 0.55); c.lineTo(r * 0.55, -r * 0.3); c.lineTo(-r * 0.21, -r * 0.05); c.fill(); }
+  }
+  if (on) { c.strokeStyle = col; c.globalAlpha = 0.45; c.lineWidth = 1.2 * k; c.beginPath(); c.arc(0, 0, r + 4 * k, 0, 7); c.stroke(); }
+  c.restore();
 }

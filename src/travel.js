@@ -4,6 +4,8 @@ import { SITES, heightAt, mapColor } from './terrain.js';
 import { REGION, HUB } from './region.js';
 import { haptic } from './sheets.js';
 import { t } from './i18n.js';
+import { drawMark, MARK_COL } from './ui.js';
+import { objectiveTarget } from './guide.js';
 
 // Round 19: camera zoom (pinch / mouse wheel), a full-screen map you can pan and pinch, walk-to targets that
 // follow a navigable path (from the map, or from a long tap-to-move on the ground), and fast travel between
@@ -160,7 +162,8 @@ export function setupTravel(g) {
     const fit = () => { const r = wrap.getBoundingClientRect(); cv.width = r.width * dpr; cv.height = r.height * dpr; cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px'; if (!view.s) view.s = Math.min(r.width, r.height) / 190; };
     const toS = (wx, wz) => [(wx - view.cx) * view.s * dpr + cv.width / 2, (wz - view.cz) * view.s * dpr + cv.height / 2];
     const toW = (sx, sy) => [(sx * dpr - cv.width / 2) / (view.s * dpr) + view.cx, (sy * dpr - cv.height / 2) / (view.s * dpr) + view.cz];
-    let sel = null;
+    let sel = null, selM = null, marks = [];
+    g.__mapView = view; // for tests
     const draw = () => {
       if (!W.isConnected) return;
       x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = '#120c07'; x.fillRect(0, 0, cv.width, cv.height);
@@ -179,6 +182,13 @@ export function setupTravel(g) {
         x.fillStyle = sel === pl ? '#1a1008' : on ? '#ffe8b0' : '#8a7a68'; x.font = `bold ${F}px Cinzel, serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(pl.icon, sx, sy + 1);
         if (on && view.s > 1.6) { x.font = `${12 * dpr}px Amiri, serif`; x.fillStyle = '#f0e0c0'; x.shadowColor = '#000'; x.shadowBlur = 4 * dpr; x.fillText(t(pl.name), sx, sy + 20 * dpr); x.shadowBlur = 0; }
       }
+      // Round 30: the story's next place (a gold ring) and every task marker, the tracked one named
+      if (!g.walk) { const tk = g.trackTarget; g.trackTarget = null; const sg = objectiveTarget(g); g.trackTarget = tk; if (sg) { const [gx, gy] = toS(sg.x, sg.z); x.strokeStyle = '#ffd870'; x.lineWidth = 2.5 * dpr; x.beginPath(); x.arc(gx, gy, 9 * dpr, 0, 7); x.stroke(); x.fillStyle = '#ffd870'; x.beginPath(); x.arc(gx, gy, 3 * dpr, 0, 7); x.fill(); } }
+      marks = g.questMarks?.() || [];
+      for (const m of marks) {
+        const [sx, sy] = toS(m.pos.x, m.pos.z); drawMark(x, sx, sy, m.kind, m.on || selM === m.key, 1.5 * dpr);
+        if (m.on || (selM && selM === m.key)) { x.font = `${12 * dpr}px Amiri, serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = MARK_COL[m.kind]; x.shadowColor = '#000'; x.shadowBlur = 4 * dpr; x.fillText(t(m.name), sx, sy + 22 * dpr); x.shadowBlur = 0; }
+      }
       // objective, enemies, hero
       const goal = g.walk?.goal; if (goal) { const [gx, gy] = toS(goal.x, goal.z); x.strokeStyle = '#ffd870'; x.lineWidth = 2.5 * dpr; x.beginPath(); x.arc(gx, gy, 7 * dpr, 0, 7); x.stroke(); }
       for (const e of g.enemies) if (!e.dead && (e.boss || e.elite)) { const [sx, sy] = toS(e.pos.x, e.pos.z); x.fillStyle = e.boss ? '#ff6020' : '#ffd040'; x.beginPath(); x.arc(sx, sy, 3.5 * dpr, 0, 7); x.fill(); }
@@ -187,7 +197,16 @@ export function setupTravel(g) {
       x.beginPath(); x.moveTo(0, -9 * dpr); x.lineTo(6 * dpr, 7 * dpr); x.lineTo(0, 3 * dpr); x.lineTo(-6 * dpr, 7 * dpr); x.closePath(); x.fill(); x.stroke(); x.restore();
       requestAnimationFrame(draw);
     };
+    const showMark = (m) => {
+      sel = null; selM = m.key || null;
+      const what = { offer: 'A task is offered here', meet: 'Someone to meet', return: 'Return here', task: 'The task leads here', bounty: 'Bounty', event: 'World event' }[m.kind];
+      card.innerHTML = `<b>${t(m.name)}</b><div class="mcsub">${t(what)}</div><div class="mcb"><button class="go">${t('Walk there')}</button>${m.key ? `<button class="tr">${t(m.on ? 'Stop tracking' : 'Track')}</button>` : ''}</div>`;
+      card.classList.remove('hidden');
+      card.querySelector('.go').onclick = () => { if (g.walkTo(m.pos.x, m.pos.z, m.name)) g.sheets?.closeAll(); };
+      const tr = card.querySelector('.tr'); if (tr) tr.onclick = () => { g.track(m.key); showMark({ ...m, on: !m.on }); };
+    };
     const showCard = (pl) => {
+      selM = null;
       sel = pl; if (!pl) { card.classList.add('hidden'); return; }
       const why = travelBlock();
       card.innerHTML = `<b>${t(pl.name)}</b><div class="mcb"><button class="go">${t('Walk there')}</button><button class="ft" ${why ? 'disabled' : ''}>${t('Fast travel')}</button></div>${why ? `<i>${t(why)}</i>` : ''}`;
@@ -212,6 +231,10 @@ export function setupTravel(g) {
       ptr.delete(e.pointerId); if (ptr.size) return;
       if (moved > 10) return;
       const r = cv.getBoundingClientRect(), [wx, wz] = toW(e.clientX - r.left, e.clientY - r.top), v = visited();
+      // Round 30: a tap on a task marker opens its card (track it, or walk there)
+      let bm = null, bmd = 16 / view.s;
+      for (const m of marks) { const d = Math.hypot(m.pos.x - wx, m.pos.z - wz); if (d < bmd) { bmd = d; bm = m; } }
+      if (bm) { haptic(8); showMark(bm); return; }
       let best = null, bd = 18 / view.s;
       for (const pl of places()) { const d = Math.hypot(pl.x - wx, pl.z - wz); if (d < bd) { bd = d; best = pl; } }
       if (best && v[best.id]) { haptic(8); showCard(best); return; }

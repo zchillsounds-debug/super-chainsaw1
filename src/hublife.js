@@ -10,6 +10,7 @@ import { HUBK, MAT_NAMES } from './hub.js';
 import { saveGame } from './save.js';
 import { haptic } from './sheets.js';
 import { t } from './i18n.js';
+import { forgeHearth } from './props30.js';
 
 // Round 21: life about the camp.
 //  - the kennel and mews (beside the training yard): a saluki that trots at Salim's heel and fetches dinars, coat of
@@ -99,18 +100,6 @@ function stallsAfter(k) {
   return g;
 }
 function forgeBefore(k) { const g = new THREE.Group(); for (let i = 0; i < 6; i++) box(g, 0.32, 0.18, 0.2, k.brick, (i % 3 - 1) * 0.36, 0.09 + Math.floor(i / 3) * 0.18, Math.floor(i / 3) * 0.1, i * 0.4); return g; }
-function forgeAfter(k) {
-  const g = new THREE.Group();
-  box(g, 1.4, 0.85, 1.0, k.brick, 0, 0.42, 0); box(g, 1.5, 0.1, 1.1, k.stone, 0, 0.88, 0);
-  const coals = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.38, 0.08, 10), k.ember); coals.position.set(0, 0.94, 0); g.add(coals);
-  box(g, 1.5, 0.7, 0.18, k.brick, 0, 1.24, -0.46); // a low back wall to the hearth, blackened above the coals
-  box(g, 0.7, 0.4, 0.02, k.dark, 0, 1.2, -0.36);
-  // the bellows: two boards and a leather bag, its nozzle at the hearth
-  const bel = new THREE.Group(); bel.position.set(-1.1, 0.5, 0); g.add(bel); box(bel, 0.6, 0.05, 0.4, k.wood, 0, 0.12, 0); box(bel, 0.6, 0.05, 0.4, k.wood, 0, -0.12, 0); box(bel, 0.5, 0.2, 0.36, k.leather, 0, 0, 0); const nz = cyl(bel, 0.03, 0.05, 0.4, k.iron, 0.45, 0, 0, 6); nz.rotation.z = Math.PI / 2;
-  const tr = box(g, 0.9, 0.35, 0.45, k.wood, 1.25, 0.18, 0.2); const w = box(g, 0.8, 0.03, 0.36, k.water, 1.25, 0.34, 0.2); w.castShadow = false; tr.castShadow = true;
-  for (let i = 0; i < 3; i++) { const tl = box(g, 0.04, 0.6, 0.04, k.iron, 0.7 + i * 0.12, 1.1, 0.52); tl.rotation.z = 0.1; }
-  return g;
-}
 
 // the falcon: a saker. Round 24: a proper sculpt in place of the old spheres and boxes: a teardrop body with a pale,
 // streaked breast, long pointed wings (the primaries darker toward the tip, the trailing edge notched into feathers),
@@ -235,7 +224,7 @@ export function setupHubLife(g) {
   const spots = {};
   // the forge stands at Bishr's side, never in line with him from the camp's centre (it hid him from the spawn)
   const besideSmith = () => { const dx = H.smith[0] - H.spawn[0], dz = H.smith[1] - H.spawn[1], l = Math.hypot(dx, dz) || 1; return [H.smith[0] - dz / l * 3.4 + dx / l * 0.5, H.smith[1] + dx / l * 3.4 + dz / l * 0.5]; };
-  for (const [key, at, mk0, mk1] of [['well', [H.ishaq[0] - 4, H.ishaq[1] - 4], wellBefore, wellAfter], ['stalls', [H.merchant[0] + 3.2, H.merchant[1] - 1.5], stallsBefore, stallsAfter], ['forge', besideSmith(), forgeBefore, forgeAfter]]) {
+  for (const [key, at, mk0, mk1] of [['well', [H.ishaq[0] - 4, H.ishaq[1] - 4], wellBefore, wellAfter], ['stalls', [H.merchant[0] + 3.2, H.merchant[1] - 1.5], stallsBefore, stallsAfter], ['forge', besideSmith(), forgeBefore, () => forgeHearth()]]) {
     const [x, z] = freeSpot(at[0], at[1], 1.6), y = heightAt(x, z), ry = Math.atan2(H.spawn[0] - x, H.spawn[1] - z);
     // merged by material like every placed prop: loose boxes cost a draw each in the main, shadow and AO passes
     const a = mk0(k), b = mk1(k); for (const o of [a, b]) { o.position.set(x, y, z); o.rotation.y = ry; g.scene.add(mergeStatic(o)); }

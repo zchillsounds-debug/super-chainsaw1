@@ -69,7 +69,7 @@ export function setupEpilogue29(g) {
   const goal = () => {
     const s = said(); const man = MEN.find((m) => !s['ep29_' + m.key]);
     if (man) { const n = g.npcs.find((x) => x.name === man.name); return n ? { pos: n.pos, text: t('Say farewell to') + ' ' + t(man.name) } : null; }
-    if (!s.ep29_done) return { pos: g.npc.position, text: 'Find Ishaq on the quay' };
+    if (!s.ep29_done) return { pos: g.npc.position, text: t('Find Ishaq on the quay') };
     return null;
   };
   const tr = g.trackTarget; g.trackTarget = () => goal() || tr?.();

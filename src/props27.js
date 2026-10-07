@@ -10,7 +10,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { woodTex } from './textures.js';
 
 let MATS = null;
-function mats() {
+export function mats() {
   if (MATS) return MATS;
   const wt = woodTex(); wt.wrapS = wt.wrapT = THREE.RepeatWrapping;
   const M = (o) => new THREE.MeshStandardMaterial({ roughness: 0.9, ...o });
@@ -42,7 +42,7 @@ function mats() {
 }
 
 // a group builder that collects geometries per material and merges them at the end
-function builder() {
+export function builder() {
   const parts = new Map();
   const put = (geo, mat, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0, s = null) => {
     const m = new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'YXZ')), s || new THREE.Vector3(1, 1, 1));

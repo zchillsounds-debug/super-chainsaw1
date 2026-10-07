@@ -1135,7 +1135,7 @@ export class Game {
     this.ui.updateWorld(this.camera, dt, this.keys['alt']);
     this.ui.enemyBars(this.enemies, this.camera);
     this.minimapT = (this.minimapT || 0) - dt;
-    if (this.minimapT <= 0) { this.minimapT = 0.1; this.ui.drawMinimap(p.pos, this.enemies, this.drops, this.pois); }
+    if (this.minimapT <= 0) { this.minimapT = 0.1; this.ui.drawMinimap(p.pos, this.enemies, this.drops, this.pois, this.questMarks?.()); }
     this.marker.material.opacity = Math.max(0, this.marker.material.opacity - dt * 2.5);
     this.marker.scale.setScalar(Math.max(0.6, this.marker.scale.x - dt * 3));
     this.grade && (this.grade.uniforms.uLowHp.value = THREE.MathUtils.lerp(this.grade.uniforms.uLowHp.value, p.hp / p.stats.maxHp < 0.3 ? 1 : 0, dt * 3));

@@ -104,14 +104,23 @@ export function setupStory25(g) {
   const box = document.createElement('div'); box.id = 'bark25'; box.innerHTML = '<b></b><span></span>';
   document.getElementById('ui').appendChild(box);
   let barkT = 0, barkCd = 0;
+  // Round 30: a bark at the top sits under whatever is open there (the tutorial card, the opened tracker), every frame
+  const placeTop = () => {
+    if (!box.classList.contains('top')) return;
+    let y = 0;
+    for (const id of ['hint', 'quest']) {
+      const el = document.getElementById(id); if (!el || el.classList.contains('hidden') || (id === 'quest' && !el.classList.contains('open'))) continue;
+      const r = el.getBoundingClientRect(); if (r.height) y = Math.max(y, r.bottom + 8);
+    }
+    const v = y ? Math.round(y) + 'px' : ''; if (box.style.top !== v) box.style.top = v;
+  };
   g.bark = (who, text, ms = 4200, force = false) => {
     if (!force && (barkCd > 0 || g.cinematic)) return false;
     box.querySelector('b').textContent = t(who); box.querySelector('span').textContent = t(text);
     // Round 26: a context prompt sits where the bark would be on a phone: then the bark goes under the tracker
     const pr = document.getElementById('prompt'), top = !!pr && !pr.classList.contains('hidden') && document.body.classList.contains('touch'); box.classList.toggle('top', top);
     // Round 28: a tutorial hint card also lives under the tracker: the bark then sits under the card, not behind it
-    const hn = document.getElementById('hint'), hr = top && hn && !hn.classList.contains('hidden') ? hn.getBoundingClientRect() : null;
-    box.style.top = hr && hr.height ? Math.round(hr.bottom + 8) + 'px' : '';
+    box.style.top = ''; placeTop();
     box.classList.add('show'); barkT = ms / 1000 + text.length / 40; barkCd = barkT + 4; return true;
   };
   const guardSay = (ctx) => {
@@ -207,6 +216,7 @@ export function setupStory25(g) {
   g.tickExtra = (dt) => {
     prevTick?.(dt);
     if (barkT > 0 && (barkT -= dt) <= 0) box.classList.remove('show');
+    else if (barkT > 0) placeTop();
     if (g.cinematic || g.ui.dialogOpen) box.classList.remove('show');
     barkCd -= dt; hurtCd -= dt;
     if (!g.started || g.cinematic) return;

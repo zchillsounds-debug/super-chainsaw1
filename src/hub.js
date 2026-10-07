@@ -6,7 +6,7 @@ import { buildGrid } from './collision.js';
 import { makeItem, rollRarity, RARITY, statLines } from './items.js';
 import { itemIcon } from './ui.js';
 import { CLASSES, CLASS_ORDER, SKILL_ICONS } from './classes.js';
-import { firePit } from './props.js';
+import { fieldForge, oldAnvil } from './props30.js';
 import { TAB_COST, stashPage } from './build.js';
 
 // The suq at the village gate: merchant, blacksmith, stash and training yard.
@@ -34,14 +34,6 @@ export function npc(game, look, [x, z], face, name, title, talk, prop) {
   game.npcs.push(n);
   game.interactables.push({ pos: rig.position, r: 3.2, label: `Talk to ${name}`, act: () => n.talk(), npc: n });
   return n;
-}
-function anvilProp() {
-  const g = new THREE.Group(), iron = new THREE.MeshStandardMaterial({ color: 0x2c2a28, metalness: 0.85, roughness: 0.45 });
-  const st = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.4, 0.6, 10), mats().wood); st.position.y = 0.3; g.add(st);
-  const a = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.22, 0.3), iron); a.position.y = 0.72; g.add(a);
-  const horn = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.38, 8).rotateZ(-Math.PI / 2), iron); horn.position.set(0.52, 0.74, 0); g.add(horn);
-  g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  return g;
 }
 function chestProp() {
   const g = new THREE.Group(), w = mats().wood, gold = mats().gold;
@@ -71,9 +63,10 @@ export function setupHub(game) {
   npc(game, { robe: '#4a3a2a', robe2: '#2a2018', turban: null, cap: 0x3a2a1a, capBand: 0x1a1410, beard: 0x1a120c, weapon: null, skin: 0x8a5a3a, sash: 0x3a2a1a, build: 1.2, belly: 0.2 }, H.smith, -2.4, 'Bishr', 'Blacksmith', () => openPanel(game, 'smith'));
   npc(game, { robe: '#3a3a2a', robe2: '#a08040', qaba: true, turban: null, cap: 0x2a2620, capBand: 0x141210, beard: 0x8a8070, weapon: 'sword', offhand: 'shield', mail: true, skin: 0x9a6a44, build: 1.1 }, H.trainer, 0.9, '\'Amr', 'Master of the training yard', () => openPanel(game, 'trainer'));
   // props
-  const anvil = put(game, anvilProp(), H.smith[0] - 1.2, H.smith[1] - 0.6, 0.4, 0.5);
-  const forge = put(game, firePit(), H.smith[0] + 1.6, H.smith[1] - 1.0, 0, 1.0);
-  game.world.fires.push({ pos: forge.position.clone().add(new THREE.Vector3(0, 0.3, 0)), intensity: 0.7 });
+  // Round 30: a worn anvil on a split stump and a clay field forge with its bellows (were a box and a fire pit)
+  const anvil = put(game, oldAnvil(), H.smith[0] - 1.2, H.smith[1] - 0.6, 0.4, 0.5);
+  const forge = put(game, fieldForge(), H.smith[0] + 1.6, H.smith[1] - 1.0, 0, 1.0);
+  game.world.fires.push({ pos: forge.position.clone().add(new THREE.Vector3(0, 0.38, 0)), intensity: 0.55 });
   game.lightPool?.add({ pos: forge.position.clone().add(new THREE.Vector3(0, 1.2, 0)), color: 0xff7a30, power: 18, dist: 11 });
   const chest = put(game, chestProp(), H.stash[0], H.stash[1], 0.3, 0.8);
   game.interactables.push({ pos: chest.position, r: 2.4, label: 'Open your stash', act: () => openPanel(game, 'stash') });

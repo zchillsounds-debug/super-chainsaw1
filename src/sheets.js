@@ -21,6 +21,8 @@ export function setupSheets(ui, closers) {
     bg.classList.toggle('on', open);
     document.body.classList.toggle('insheet', open);
     document.body.classList.toggle('inshop', now.length > 0);
+    // Round 30: a phone sheet covers the screen (all but the small menu): the 3D view behind it is barely redrawn
+    document.body.classList.toggle('fullsheet', now.some((el) => el.id !== 'tmenupop'));
     for (const el of now) if (!el.dataset.sheet) { el.dataset.sheet = '1'; el.classList.add('sheet'); }
     if (fresh.length) haptic(10);
     // one history entry stands for "a sheet is open"; it is reused rather than popped on close (popping it
