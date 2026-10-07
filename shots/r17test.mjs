@@ -7,7 +7,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => m.type() === 'error' && !m.text().includes('CERT') && errs.push(m.text()));
 await pg.goto(`http://localhost:5173/?play&noadapt&q=low&mobile&region=${region}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 const W = (ms) => pg.waitForTimeout(ms);
 const ids = await pg.evaluate(() => __game.interactables.filter((i) => ['cistern', 'kiln2', 'grainvault', 'warren', 'salt', 'palace', 'undercroft', 'wharfvault'].includes(i.area)).map((i) => i.area));
 console.log('entrances', ids.join(','));

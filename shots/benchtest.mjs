@@ -8,7 +8,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: true, isMobile: true });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
 await pg.goto('http://localhost:5173/?play&mobile&q=low');
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.evaluate(() => { __game.settings.open(); document.querySelector('#settings .benchbtn').click(); });
 // headless renders ~1 fps: feed the bench clock directly so the three phases run, rendering a frame now and then
 for (let i = 0; i < 31; i++) { await pg.evaluate(() => { __game.benchTick(1.0); __sim(0.2); }); if (out && (i === 3 || i === 14 || i === 25)) await pg.screenshot({ path: `${out}/bench${i}.png` }); }

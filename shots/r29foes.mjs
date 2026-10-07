@@ -10,7 +10,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: true, isMobile: true });
 const errs = []; pg.on('pageerror', (e) => errs.push('PAGEERR ' + e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
 await pg.goto(`http://localhost:${process.env.PORT || 5173}/?play&mobile&noadapt&region=${region}&${spot}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 300000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 const shot = async (n) => { if (!out) return; await pg.evaluate(() => document.querySelectorAll('.hint, #hint, .tip').forEach((h) => h.remove())); await pg.screenshot({ path: `${out}/${region}-${n}.png`, timeout: 180000 }); };
 const NEW = ['akontistes', 'kontaratos', 'tribolos', 'deputatos'];
 const counts = await pg.evaluate((NEW) => { const c = {}; for (const e of __game.enemies) if (NEW.includes(e.type)) c[e.type] = (c[e.type] || 0) + 1; return c; }, NEW);

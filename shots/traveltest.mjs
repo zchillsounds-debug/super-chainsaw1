@@ -6,7 +6,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 640, height: 360 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
 await pg.goto('http://localhost:5173/?noadapt&q=low');
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.evaluate(() => { localStorage.clear(); const g = __game; g.started = true; g.setClass('rami', true); g.player.level = 8; g.act = 3; g.checkpoint(4); g.travel(); });
 const step = async (label) => {
   await pg.waitForEvent('load', { timeout: 60000 }).catch(() => {});

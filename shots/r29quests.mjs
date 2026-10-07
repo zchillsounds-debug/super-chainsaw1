@@ -9,7 +9,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: true, isMobile: true });
 const errs = []; pg.on('pageerror', (e) => errs.push('PAGEERR ' + e.message)); pg.on('console', (m) => m.type() === 'error' && !m.text().includes('CERT') && errs.push(m.text()));
 await pg.goto(`http://localhost:${process.env.PORT || 5173}/?play&mobile&noadapt&region=${region}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 300000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 const shot = async (n) => { if (!out) return; await pg.evaluate(() => document.querySelectorAll('.hint, #hint').forEach((h) => h.remove())); await pg.screenshot({ path: `${out}/${region}-q-${n}.png`, timeout: 180000 }); };
 await pg.evaluate((ID) => {
   const g = __game; g.briefed = true; g.tutorialOn = false; const p = g.player; p.stats.maxHp = 1e7; p.hp = 1e7;

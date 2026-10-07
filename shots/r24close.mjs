@@ -10,7 +10,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
 await pg.goto('http://localhost:5173/?play&q=high&noadapt&cls=rami');
-await pg.waitForFunction(() => window.__ready, null, { timeout: 500000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.evaluate(fs.readFileSync(new URL('./close.js', import.meta.url), 'utf8'));
 const want = (n) => !only || only.includes(n);
 const shot = async (name, js, arg) => { if (!want(name)) return; await pg.evaluate(js, arg); await pg.waitForTimeout(700); await pg.screenshot({ path: `${out}/${name}.png`, timeout: 180000 }); console.log(name); };

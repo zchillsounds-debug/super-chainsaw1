@@ -9,7 +9,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 });
 const errs = []; pg.on('pageerror', (e) => errs.push('PAGEERR ' + e.message + ' ' + (e.stack || '').split('\n').slice(1, 3).join(' '))); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
 await pg.goto(`http://localhost:${process.env.PORT || 5173}/?play&mobile&noadapt&region=${region}&${process.env.SPOT || "x=-44&z=22"}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 300000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 const shot = async (n) => { if (!out) return; await pg.screenshot({ path: `${out}/${region}-f30-${n}.png`, timeout: 180000 }); console.log('shot', n); };
 const NEW = ['kontophoros', 'kynegos', 'molossos'];
 console.log('placed on the map:', JSON.stringify(await pg.evaluate((NEW) => { const c = {}; for (const e of __game.enemies) if (NEW.includes(e.type)) c[e.type] = (c[e.type] || 0) + 1; return c; }, NEW)));

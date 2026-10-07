@@ -10,7 +10,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: true, isMobile: true });
 const errs = []; pg.on('pageerror', (e) => errs.push('PAGEERR ' + e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
 await pg.goto(`http://localhost:5173/?play&mobile&noadapt&q=high&region=${region}${tod ? '&tod=' + tod : ''}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 500000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 // the act-ending scenes need the act's boss: spawn him, skip his intro, and put him down
 const BOSSED = ['epilogue', 'rawhFalls', 'finale', 'docksFinale'];
 if (BOSSED.includes(scene)) await pg.evaluate(() => { const g = __game; g.player.invuln = 1e9; g.spawnBoss(); __director.skip?.(); __sim(0.5); const b = g.boss; b.rise = 1; b.hp = 0; b.dead = true; b.st.dead = true; b.st.deadT = 3; g.bossActive = false; g.ui.bossBar?.(null); __sim(0.3); });

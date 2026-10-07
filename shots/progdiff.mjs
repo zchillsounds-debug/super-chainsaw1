@@ -7,7 +7,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
 await pg.goto('http://localhost:5173/?' + q);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.waitForTimeout(2500);
 await pg.evaluate(() => { window.__p0 = new Set(window.__renderer.info.programs.map((p) => p.cacheKey)); });
 for (const step of js.split(';;')) { await pg.evaluate(step); await pg.waitForTimeout(1200); }

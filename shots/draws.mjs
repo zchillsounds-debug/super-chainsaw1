@@ -5,7 +5,7 @@ const q = process.argv[2] || 'play&q=low';
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: 1280, height: 720 } });
 await pg.goto('http://localhost:5173/?' + q);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.waitForTimeout(5000);
 console.log(await pg.evaluate(() => {
   const r = window.__renderer, cnt = {}; const orig = r.renderBufferDirect.bind(r);

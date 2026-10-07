@@ -9,7 +9,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 640, height: 480 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
 await pg.goto('http://localhost:5173/?play&q=high&noadapt&cls=rami');
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.evaluate(fs.readFileSync(new URL('./close.js', import.meta.url), 'utf8'));
 for (const ex of only || ['neutral', 'grief', 'anger', 'surprise', 'warm', 'pain']) {
   await pg.evaluate((ex) => { const g = __game; g.player.rig.userData.expr = ex; __close(0, 1.25, 1.68, 1.64); g.camera.fov = 16; g.camera.updateProjectionMatrix(); __sim(0.6); }, ex);

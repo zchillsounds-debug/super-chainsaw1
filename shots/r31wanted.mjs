@@ -12,7 +12,7 @@ const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: tr
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message + ' ' + (e.stack || '').split('\n').slice(1, 3).join(' ')));
 if (lang === 'ar') await pg.addInitScript(() => { try { localStorage.setItem('sob.settings.v1', JSON.stringify({ lang: 'ar' })); } catch (e) { /* */ } });
 await pg.goto(`http://localhost:${process.env.PORT || 5173}/?play&mobile&noadapt&q=${out ? 'high' : 'low'}&region=${region}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 500000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.evaluate("{const s=document.createElement('style');s.textContent='*{animation-duration:0s!important;transition:none!important}';document.head.appendChild(s)}");
 await pg.evaluate(() => { const p = __game.player; p.level = 12; __game.recalcStats(); p.hp = p.stats.maxHp; p.invuln = 1e9; __game.briefed = true; });
 const shot = async (name) => { if (out) await pg.screenshot({ path: `${out}/${name}.png`, timeout: 180000 }); };

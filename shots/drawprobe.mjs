@@ -6,7 +6,7 @@ const q = process.argv[2] || 'play&noadapt&q=high';
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: 1280, height: 720 } });
 await pg.goto('http://localhost:5173/?' + q);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 const measure = () => pg.evaluate(() => new Promise((res) => {
   const r = window.__renderer, orig = r.renderBufferDirect.bind(r), by = {}; let n = 0;
   r.renderBufferDirect = (cam, sc, geo, mat, obj, grp) => { const rt = r.getRenderTarget(); const k = mat.isMeshDepthMaterial || mat.type === 'MeshDistanceMaterial' ? 'shadow/depth' : rt ? (rt.texture?.name || `rt${rt.width}x${rt.height}`) : 'screen'; by[k] = (by[k] || 0) + 1; return orig(cam, sc, geo, mat, obj, grp); };

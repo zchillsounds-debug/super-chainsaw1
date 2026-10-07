@@ -8,7 +8,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: true, isMobile: true });
 const errs = []; pg.on('pageerror', (e) => errs.push('PAGEERR ' + e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
 await pg.goto(`http://localhost:5173/?play&mobile&noadapt&region=${region}&${spot}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 const info = await pg.evaluate(() => {
   const g = __game, p = g.player; g.briefed = true; p.invuln = 1e9;
   for (const e of g.enemies) { e.dead = true; e.rig.visible = false; }

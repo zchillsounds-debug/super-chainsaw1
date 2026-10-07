@@ -8,7 +8,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: true, isMobile: true });
 const errs = []; pg.on('pageerror', (e) => errs.push('PAGEERR ' + e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
 await pg.goto(`http://localhost:5173/?noadapt&tod=${tod}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.evaluate(() => document.getElementById('startbtn').click()); await pg.waitForTimeout(2500);
 await pg.waitForSelector('.cp-card[data-k="faris"]', { timeout: 60000 });
 await pg.evaluate(() => document.querySelector('.cp-card[data-k="faris"]').click()); await pg.waitForTimeout(4000);

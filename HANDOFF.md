@@ -1,4 +1,4 @@
-# Madinat al-Salam: Handoff (Round 31 shipped; Round 32 = story everywhere; APK signing still waits on the user's secrets)
+# Madinat al-Salam: Handoff (Round 32 shipped: story everywhere; APK signing still waits on the user's secrets)
 
 ## Paste this into the new chat
 > I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. The code is on branch `claude/new-session-1luc29` of zchillsounds-debug/super-chainsaw1 (Round 31: the siege mines and the sapper, the Wanted board, a graphics pass). Check Round 31's "Status" list below for what is left.
@@ -13,22 +13,39 @@
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
 
-## Round 32 plan: story everywhere (direction chosen by the user; confirm the concrete list before building)
-User decisions at the end of Round 31:
-- **The whole round is story.** The game should feel story-led everywhere: "lots of story throughout the game". Build story first. Graphics part 2 and other ideas wait.
-- **Where:** all four areas:
-  - Deepen the main acts: more scenes and choices inside the existing acts, for example why Arsaber is here, Salim's past, Jabir, Ishaq, and the siege's cost.
-  - Every region's people: villagers, travellers and camp people with short stories and faces that recur.
-  - Companions and camp men: Yusuf, Bishr, 'Amr and the companions get personal arcs that run across the whole game. Their Round 25 and Round 30 camp stories and their epilogue farewells already exist: build on them.
-  - The enemy side: Byzantine captains and soldiers with voices. Letters found on bodies, deserters who talk, Arsaber's own chapter. The Wanted captains' crimes and the bosses are hooks.
-- **Delivery:** all four:
-  - Cutscenes: `scenes.js` / `director`, the epilogue's style.
-  - Walk-and-talk barks: `story25.js` barks, companions while travelling and fighting.
-  - Found lore: letters, ledgers and objects in the world and the dungeons, collected in the Codex (`narrative.js` `CODEX`).
-  - Choices with consequences that change later scenes, people and the ending (existing flags: `s25.camp`, `p.rival`, the photeinos, marsh and tatzates choices).
-- **Tone:** grounded and human (the current voice: plain, quiet, people rebuilding after a siege, small kindnesses and hard choices) *and* more epic (bigger stakes, a sense of history turning). Both, so keep it human at the small scale and let the act climaxes and the epilogue carry the sweep. The design rules still hold: no religious buildings, symbols, Quranic text or religious greetings; short single period names; true to 813 CE.
-- **APK secrets:** still "later" (throwaway key; remind the user to back up the save before each install).
-- Suggested first step for the new chat: read the story bible, `narrative.js`, `story15.js`, `story25.js`, `story26.js`, `sidequests.js` and `epilogue29.js`, list where the story is thin (regions, acts, people, the enemy), then propose a ranked build list (for example: per-act new scenes, a companion arc each, a lore-object set per region and dungeon, barks for the open road and fights, 2–3 new choices that pay off in the epilogue) with Arabic for everything. Confirm with the user, then build.
+## Round 32: story everywhere (shipped)
+User decisions: the build list in the order proposed (Arsaber's chapter, act scenes, recurring faces, guard arcs, enemy voices, found lore, choices, road barks, epilogue); the names Lubna, Shabib and Niketas (recurring); the hired guard Talha renamed **Nahshal** (saves key the guard by kind, so nothing to map). **npm was blocked in this session** (the network allowlist refused registry.npmjs.org): see "Tooling without npm" below. The user said "do the workaround".
+
+**Tooling without npm (`shots/devserver.mjs`, committed):** `node shots/devserver.mjs [--port N]` serves the game unbundled like `vite` (it rewrites `three` imports to `/node_modules/three/...` and `import.meta.env`); `node shots/devserver.mjs build` bundles with esbuild into `dist/` in the shape `shots/inline.mjs` expects. three r170 came from GitHub (`git clone --depth 1 --branch r170 --filter=blob:none --sparse https://github.com/mrdoob/three.js`, then `git sparse-checkout set build examples/jsm`, copy `build`, `examples`, `package.json` into `node_modules/three`). esbuild is in `/opt/npm-tools/node_modules/esbuild`. A shim at `node_modules/.bin/vite` runs the dev server, so `withvite.sh` and the lane scripts work unchanged. **The dev server never hot-reloads**, so editing `src/` while a test runs no longer kills it (a new page load picks the edit up). The esbuild bundle is about 2.2 MB inlined (vite's was 1.9 MB). If npm works in the next session, `npm install` brings vite back and nothing else changes.
+
+**The stage (`scenes32.js` `stage32(g, def)`):** small scenes as data. A cast (people made for the scene, or people already in the world by `npc: 'Name'`; `past: true` for a flashback, which hides Salim) and beats: lines (`who`, `text`, `expr`, `to`, `when`, `act`, `walk: { who, to: [fwd, side], vanish }`, `pov: true` for an overheard line framed from between Salim and the speakers, `close: true` for a close-up), captions (`fade`, `past`), cards and choices. `props(g, cast, add, frame)` adds scene-only props (the handcart, the burned doorway). Over-the-shoulder shots are 1.3 m back and 0.67 m to the side (tighter ones let a turban fill the frame).
+
+**The beats (`story32.js` `beats()`), once each when Salim is calm (no alerted foe within 24 m) in the right place:**
+- Sawad: `caravanBoys` (at the caravanserai: Jabir at seventeen, Salim at twelve), `niketasMeet` (near the kilns once the Broken Dam is done; **choice `niketas`: `qadi` | `hide`**), `lubnaRoad` (out on the land: Lubna, Shabib and their cart).
+- Marsh: `reedCount` (Muhalhil, by the camp), `lubnaMarsh` (**choice `lubna`: `paid` (30 dinars, if Salim has them) | `word`**), `niketasMarsh` (out on the land), `reedsOverheard` (after the Reed Stockade: Arsaber and Kallinikos argue across the water).
+- Karkh: `lastLesson` (by Ishaq, after his confession: the Teacher's lesson about lamps), `lubnaHome` (their burned house), `truceInAsh` (near the paper-sellers' lane between the two holds: Arsaber, unarmed, warns Salim about Krateros).
+- Docks: `ferrymanDebt` (Sumayr and Jabir's eight dirhams), `niketasDocks` (the bridge will be fired; with `hide` he names the quay-road ambush), `lubnaQuays` (Shabib learns his letters), `copiesWhere` (by Ishaq after the Shipyard: Hakam and Ishaq disagree; **choice `copies`: `wisdom` | `market`**).
+- Hamrin: `envoyLetter` (after the scout: Rafi' brings Arsaber's letter from Constantinople; it follows the parley choice and warns about Tatzates).
+- The docks finale has **choice `crews`: `lamis` | `bridge`** after Arsaber kneels. Renown: niketas 10/5, copies 10, crews 15/10, lubna paid 5.
+- Payoffs: the docks finale's captions (crews, copies), the closing history card ("Six years later the new caliph came home..."), the Karkh finale's war's-end caption, `quaysAtDusk` (Ishaq's written lesson and Jabir's saying if `lastLesson` played, Shabib's lamp, Niketas in the Hamrin, each guard's ending once his story is told), the camp men's farewells (`epilogue29.js`: Yusuf for `market`, Bishr for `bridge`, 'Amr for each Niketas choice), Niketas in the Hamrin flock quest remembers Salim (`g.meetLines32`, hooked in `sidequests.js` meet steps).
+
+**Also in `story32.js`:**
+- Rafi' the courier's news in the camp, a region later (barks in sequence): Photeinos, the reed village, Niketas, Lubna.
+- Salim at each region's three landmarks (serai, kiln, arch sites), once.
+- The hired guards' stories (`GUARD32`): four beats each, told while walking the land together (55 s of walking, one beat per region visit; beat i from the (i+1)th region). State `p.s25.g32[kind]`, `g32at`.
+- The Rum shout as they come at Salim (`SHOUT` by troop type, 45% per man, 9 s apart) and each hold master speaks as Salim comes through his door (`DOOR`, all 12 holds).
+- Things Found: four per region (two of Arsaber's dispatches and two objects), walked over when no fight is on. All twenty: the legendary amulet **The Account Kept** (+25 Renown). Sixteen **Letters of the Rum** drop one at a time from elites, bosses, Wanted captains and hold masters (40%, 80% for bosses and masters). Both sets and the Round 25 Leaves and Letters are now readable in the Codex (categories Things Found, Letters of the Rum, Leaves and Letters). State `p.s25.found32`.
+- Test hook `g.__r32` (items, drops, beats, the scenes).
+
+**Characters:** a woman's mantle (`o.mantle` in `human.js`: over the head, down to the shoulders, open at the face; its headwear key gets `'mantle'` only when set, so cached geometry is unchanged). Looks in `scenes32.js` `LOOKS32`.
+
+**Fixes:** the panels' background pattern (`style.css`) was a field of four-pointed stars; now plain diamonds. Test scripts wait up to 900 s for `__ready` (cold loads with two lanes took more than 5 minutes).
+
+**Arabic:** `story32_ar.js` (`AR32`, merged last), generated from the English by `/tmp/claude-0/ar` scripts (extract and check). Every new string has Arabic (checked by extraction).
+
+**Test:** `shots/r32story.mjs <region> [out] [pick 0|1] [lang]` plays every beat in the region by its own trigger, walks over every Thing Found, kills an elite for a letter, checks a shout, and walks with a hired guard. Run in all five regions (en; marsh and docks also ar).
+
+**Not built (ideas):** a found object inside each dungeon (letters on fallen captains cover the dungeons for now); a scene for Arsaber watching from the far bank in Act I is still the only Sawad one; more Rafi' news for the Hamrin.
 
 ## Round 31: the siege mines, the Wanted board, a graphics pass
 User decisions: the two items carried from Round 30 (new dungeon type with its boss move; the bounty board upgrade) plus graphics polish in all four areas (combat effects, maps and lighting, characters, HUD), built in that order. Dungeon pick: **siege mines**. Wanted board: **both** (a ladder of 5, then a weekly captain). The APK secrets are still "later". The user has not played on the phone since Round 26. Round 30's skipped regression sweep was run first: 39 of 39 clean.

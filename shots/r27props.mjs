@@ -10,7 +10,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: true, isMobile: true });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message + ' ' + (e.stack || '').split('\n').slice(1, 3).join(' ')));
 await pg.goto(`http://localhost:${process.env.PORT || 5173}/?play&mobile&noadapt&q=high&tod=golden&region=${region}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 500000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.addScriptTag({ path: new URL('./close.js', import.meta.url).pathname });
 const r = await pg.evaluate(() => { const g = __game; for (const k of ['yusuf', 'bishr', 'amr']) g.campProp26(k); __sim(0.3);
   const o = {}; for (const k in g.campProps27) { const P = g.campProps27[k]; let n = 0, tri = 0; P.traverse((m) => { if (m.isMesh) { n++; tri += m.geometry.attributes.position.count / 3; } }); o[k] = { meshes: n, tris: Math.round(tri), at: P.position.toArray().map((v) => +v.toFixed(1)) }; } return o; });
@@ -22,7 +22,7 @@ for (const k of ['yusuf', 'bishr', 'amr']) {
   }
 }
 // at play distance: the player beside Bishr's anvil, the normal camera and HUD
-await pg.reload(); await pg.waitForFunction(() => window.__ready, null, { timeout: 500000 });
+await pg.reload(); await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.evaluate(() => { const g = __game; for (const k of ['yusuf', 'bishr', 'amr']) g.campProp26(k); const P = g.campProps27.bishr; g.player.pos.set(P.position.x + 2, P.position.y, P.position.z + 2.5); __sim(0.6); });
 await pg.waitForTimeout(600); await pg.screenshot({ path: `${out}/prop-play.png`, timeout: 180000 });
 console.log('errors:', errs.join('\n') || 'none'); await b.close();

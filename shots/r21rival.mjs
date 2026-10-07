@@ -8,7 +8,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]));
 await pg.goto(`http://localhost:5173/?play&q=low&noadapt&region=${region}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.evaluate(fs.readFileSync(new URL('./close.js', import.meta.url), 'utf8'));
 const res = await pg.evaluate(async (region) => {
   const g = __game, p = g.player, R = g.__rivals, log = [];

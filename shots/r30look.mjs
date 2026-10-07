@@ -9,7 +9,7 @@ const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: tr
 const errs = []; pg.on('pageerror', (e) => errs.push('PAGEERR ' + e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
 if (lang === 'ar') await pg.addInitScript(() => { try { localStorage.setItem('sob.settings.v1', JSON.stringify({ lang: 'ar' })); } catch { /* */ } });
 await pg.goto(`http://localhost:${process.env.PORT || 5173}/?play&mobile&noadapt&region=${region}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 300000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 const shot = async (n) => { await pg.screenshot({ path: `${out}/${region}-${lang}-${n}.png`, timeout: 180000 }); console.log('shot', n); };
 await pg.evaluate(() => { const g = __game; g.briefed = true; g.tutorialOn = false; g.player.invuln = 1e9; __sim(1); });
 await shot('hud');

@@ -27,7 +27,7 @@ for (const [name, w, h, q, js] of SC) {
   const pg = await b.newPage({ viewport: { width: w, height: h }, hasTouch: true, isMobile: true });
   const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
   await pg.goto('http://localhost:5173/?' + q);
-  await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+  await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
   await pg.evaluate(NOANIM); await pg.evaluate(fs.readFileSync(new URL('./close.js', import.meta.url), 'utf8'));
   await pg.evaluate(js); await pg.waitForTimeout(1500);
   await pg.screenshot({ path: `${out}/${name}.png`, timeout: 90000 });

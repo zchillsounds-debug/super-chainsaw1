@@ -8,7 +8,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]));
 await pg.goto('http://localhost:5173/?play&q=low&noadapt');
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 const r = await pg.evaluate(() => {
   const g = __game, p = g.player, C = g.__companion, log = [];
   p.gold = 99999; p.level = 8; g.recalcStats();

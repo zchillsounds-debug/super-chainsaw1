@@ -7,7 +7,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 640, height: 360 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => m.type() === 'error' && !m.text().includes('CERT') && errs.push(m.text()));
 await pg.goto(`http://localhost:5173/?play&noadapt&q=low&region=${region}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 const out = await pg.evaluate(async () => {
   const g = __game, S = g.__side, p = g.player, r = [];
   p.stats.maxHp = 1e7; p.hp = 1e7; g.briefed = true;

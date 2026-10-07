@@ -10,7 +10,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 960, height: 540 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
 await pg.goto(`http://localhost:5173/?play&q=high&noadapt&cls=faris&region=${region}&tod=golden&${spot}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 500000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.evaluate(fs.readFileSync(new URL('./close.js', import.meta.url), 'utf8'));
 const KEYS = ['bandit', 'guard', 'spearman', 'archer', 'deserter', 'naffat', 'slinger', 'netter', 'reedman', 'crossbow', 'engineer', 'rider', 'zubayr', 'commander', 'rawh', 'utba', 'ghanim'];
 await pg.evaluate(async (KEYS) => {

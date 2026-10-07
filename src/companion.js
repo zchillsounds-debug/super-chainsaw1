@@ -17,7 +17,7 @@ import { t } from './i18n.js';
 // (he travels between regions and goes underground too). He can't be killed. Orders, from his button or G:
 // Round 21: foes that can't reach Salim go for the guard instead. Beaten down, he falls and waits to be helped up
 // (stand beside him for a few seconds), or gets up by himself once the fight has moved away. Two more hires:
-// Tamim, a naft-thrower, and Talha, an 'ayyar with two knives. When Salim rides, the guard rides a camel too.
+// Tamim, a naft-thrower, and Nahshal, an 'ayyar with two knives. When Salim rides, the guard rides a camel too.
 //   Follow: keeps at Salim's shoulder and fights whatever comes near him.
 //   Hold:   stands where he was told and fights what comes to him.
 //   Attack: goes after Salim's target, or the nearest foe, further afield.
@@ -29,7 +29,7 @@ const KINDS = {
 };
 KINDS.naft = { name: 'Tamim', role: 'Naft-thrower', desc: 'Throws pots of naft that burn where they land. Fights from a few paces back.', mult: 0.5, range: 9, cd: 2.4, action: 'throw', weight: 0.4,
   look: { robe: '#4a2a1a', robe2: '#c8782a', qaba: true, turban: null, cap: 0x2a1a12, capBand: 0x6a3a1a, weapon: 'torch', beard: 0x2a1a10, beardLen: 0.6, skin: 0x9a6a44, sash: 0x1f3f5c, armour: 'leather', leather: 0x3a2414, build: 1.02, detail: 'hi' } };
-KINDS.knives = { name: 'Talha', role: '\'Ayyar', desc: 'Two knives and quick feet. Slips round to the foe\'s back and cuts.', mult: 0.34, range: 1.7, cd: 0.55, action: 'attack', weight: 0.25, backstab: 1.8,
+KINDS.knives = { name: 'Nahshal', role: '\'Ayyar', desc: 'Two knives and quick feet. Slips round to the foe\'s back and cuts.', mult: 0.34, range: 1.7, cd: 0.55, action: 'attack', weight: 0.25, backstab: 1.8,
   look: { robe: '#2e2a26', robe2: '#5a4a3a', qaba: false, turban: 0x3a3430, mask: 0x2a2622, weapon: 'dagger', beard: null, skin: 0xa8714a, sash: 0x1f3f5c, armour: 'leather', leather: 0x2a2018, build: 0.94, detail: 'hi' } };
 const ICONS = { spear: '⛨', bow: '➶', naft: '♨', knives: '⚔' };
 const ORDERS = ['follow', 'hold', 'attack'];

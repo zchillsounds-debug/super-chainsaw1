@@ -49,6 +49,7 @@ import { Tutorial } from './tutorial.js';
 import { setupContent, restoreContent, applyNG, startNewGamePlus } from './content.js';
 import { setupSideQuests } from './sidequests.js';
 import { setupWanted31 } from './wanted31.js';
+import { setupStory32 } from './story32.js';
 import { setupDungeons } from './dungeons.js';
 import { setupBuild } from './build.js';
 import { setupTravel } from './travel.js';
@@ -153,6 +154,7 @@ setupFoes30(game); // Round 30: mounted lancers, dog handlers and their dogs
 setupFoes31(game); // Round 31: sappers (the siege mines)
 setupStory26(game); // Round 26: the Hamrin story (scout, arrow, Tatzates' choice)
 setupCamp26(game); // Round 26: Yusuf, Bishr and 'Amr's own stories
+setupStory32(game); // Round 32: story everywhere (beats, people who come back, guards' stories, the Rum speak, Things Found)
 setupCamp30(game); // Round 30: the camp furnished (cooking fire, tents, water stand)
 setupEncounters25(game); // Round 25: ambushes and champions on the main path
 setupCombat25(game); // Round 25: boss stagger, combos, signature moves (wraps last)

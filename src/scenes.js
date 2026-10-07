@@ -512,7 +512,9 @@ export function finale(g, b) {
     L('Hakam', scholar.rig, 'We will copy them, ten times over, for ten cities.', ots(ishaq, scholar, -0.35), headOf(scholar), () => { ishaq.st.talk = false; scholar.st.talk = true; }),
     L('Ishaq', g.npc, 'Then no one can burn them again.', ots(scholar, ishaq, 0.35), headOf(ishaq), () => { scholar.st.talk = false; ishaq.st.talk = true; }),
     // Round 20: the chronicle goes on to the river quays (Act VI); the lamps are lit there, at its end
-    { dur: 4.4, caption: 'Hakam\'s copyists began that night. By dawn the first copies were bound for the river.', enter: (d) => { ishaq.st.talk = false; d.fade(1, 0.8); } },
+    // Round 32: the history turning, over black
+    { dur: 5.4, caption: 'That autumn the brothers\' war was over. Baghdad began to count what it had lost: whole quarters, a caliph, and the paper-sellers\' lane.', enter: (d) => { ishaq.st.talk = false; d.fade(1, 0.8); } },
+    { dur: 4.4, caption: 'Hakam\'s copyists began that night, by one lamp. By dawn the first copies were bound for the river.' },
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
     end: () => { for (const l of lamps) sc.remove(l); for (const r of extra) sc.remove(r); const [ix, iz] = HUB.ishaq; ishaq.pos.set(ix, heightAt(ix, iz), iz); } };
@@ -556,7 +558,12 @@ export function docksFinale(g, b) {
       cam: { follow: true, p0: () => { const h = headOf(salim)(), f = yawTo(salim.pos, boss.pos); return V(h.x + Math.sin(f) * 1.3 + Math.cos(f) * 1.35, h.y - 0.05, h.z + Math.cos(f) * 1.3 - Math.sin(f) * 1.35); }, t0: () => headOf(salim)().add(V(0, -0.06, 0)), fov: 32 }, dof: headOf(salim), aperture: 1.4, run: () => kneel() },
     { when: () => chosen(g, 'arsaber') === 'promise', dur: lineDur('Then I go home with a book, and not a theft.'), line: { who: 'Arsaber', text: 'Then I go home with a book, and not a theft.', rig: b.rig, cue: 'breath', expr: 'sad' },
       cam: { follow: true, p0: at(salim, 1.6, -0.9, 1.0), t0: headOf(boss), fov: 32 }, dof: headOf(boss), aperture: 1.2, run: () => kneel() },
-    { dur: 4.2, caption: 'Arsaber\'s men threw down their bows. The copyists\' barge came down from the yard.', enter: (d) => d.fade(1, 0.8) },
+    // Round 32: what becomes of Arsaber's crews
+    { dur: 0.8, choice: { prompt: 'Arsaber\'s men throw down their bows. What becomes of his crews?', options: [
+      { label: 'Send them home in the exchange on the Lamis.', fx: () => choose(g, 'crews', 'lamis') },
+      { label: 'Put them to work mending the bridge of boats.', fx: () => choose(g, 'crews', 'bridge') }] },
+      cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 1.9) * 6.5, boss.pos.y + 2.4, boss.pos.z + Math.cos(ang + 1.9) * 6.5), t0: at(boss, 0.6), fov: 36 }, run: () => kneel() },
+    { dur: 4.2, caption: 'His crews threw down their bows. The copyists\' barge came down from the yard.', enter: (d) => d.fade(1, 0.8) },
     // on the quay: Hakam and Ishaq see the first copies off
     { dur: 3.6, fadeIn: 1.0, enter: () => {
       scholar.rig.visible = true; boat.visible = true; sail(0);
@@ -575,6 +582,11 @@ export function docksFinale(g, b) {
     { dur: 4.8, caption: 'Photeinos never carried a sword again. A scribe in Wasit took on a Greek assistant that spring.', when: () => chosen(g, 'photeinos') === 'free' },
     { dur: 4.8, caption: 'In the Nahrawan the reed village was rebuilt before the floods. They named a boat for Salim.', when: () => chosen(g, 'marsh') === 'stay' },
     { dur: 4.8, caption: 'In the Nahrawan the burned village was a long time rebuilding.', when: () => chosen(g, 'marsh') === 'chase' },
+    // Round 32: the crews, the copies, Niketas
+    { dur: 5.0, caption: 'In the spring exchange on the Lamis, forty men of the Rum walked east over the bridge, and forty men of Baghdad came home.', when: () => chosen(g, 'crews') === 'lamis' },
+    { dur: 5.0, caption: 'Arsaber\'s sailors mended the bridge of boats all winter. Bishr said he had never seen better rope-work.', when: () => chosen(g, 'crews') === 'bridge' },
+    { dur: 4.8, caption: 'The House of Wisdom kept the Pages in its finest hand. Scholars came from Basra to read them.', when: () => chosen(g, 'copies') === 'wisdom' },
+    { dur: 4.8, caption: 'Within a year the Pages were sold on the paper-sellers\' lane for the price of a week\'s bread, and argued over in every market.', when: () => chosen(g, 'copies') === 'market' },
     { dur: 7, fadeIn: 1.6, caption: 'That evening he set a lamp on the river for his brother, and one for each guard of the caravan.',
       enter: () => { boat.visible = false; scholar.rig.visible = false; floatLamps(); g.lighting?.set?.('dusk', 0); },
       cam: { p0: () => V(bank(LZ) - 4, 3.2, LZ + 14), t0: () => V(bank(LZ) + 5, -0.4, LZ), p1: () => V(bank(LZ) - 3, 2.4, LZ + 10), t1: () => V(bank(LZ) + 6, -0.4, LZ - 6), fov: 40 },
@@ -591,6 +603,9 @@ export function docksFinale(g, b) {
     { dur: 4.0, line: { who: 'Ishaq', text: 'We keep the account.', rig: g.npc, cue: 'breath' },
       cam: { p0: () => V(bank(LZ) + 1.2, 0.9, LZ + 1.2), t0: () => V(salim.pos.x - 0.7, salim.pos.y + 1.45, LZ - 0.6), p1: () => V(bank(LZ) + 1.0, 0.95, LZ + 0.6), t1: () => V(salim.pos.x - 0.7, salim.pos.y + 1.45, LZ - 0.6), fov: 34 },
       enter: () => { ishaq.facing = yawTo(ishaq.pos, salim.pos); ishaq.st.talk = true; }, run: (d, k, dt) => drift(dt || 1 / 60) },
+    // Round 32: the history turning
+    { dur: 5.6, caption: 'Six years later the new caliph came home to Baghdad, and the House of Wisdom became a place where the books of every people were copied into Arabic.', enter: () => { ishaq.st.talk = false; }, run: (d, k, dt) => drift(dt || 1 / 60),
+      cam: { p0: () => V(bank(LZ) - 6, 3, LZ + 6), t0: () => V(bank(LZ) + 6, 0, LZ - 8), p1: () => V(bank(LZ) - 8, 5, LZ + 10), t1: () => V(bank(LZ) + 8, 0, LZ - 12), fov: 40 } },
     { dur: 6.5, card: { ar: 'مدينة السلام', en: 'Madinat al-Salam', sub: 'Here ends the chronicle of Salim' }, enter: () => { ishaq.st.talk = false; },
       cam: { p0: () => V(bank(LZ) - 6, 4, LZ + 8), t0: () => V(bank(LZ) + 6, 0, LZ - 10), p1: () => V(bank(LZ) - 20, 30, LZ + 40), t1: () => V(bank(LZ) + 20, 10, LZ - 140), ease: 'io2' }, run: (d, k, dt) => drift(dt || 1 / 60) },
   ];
@@ -673,12 +688,23 @@ export function quaysAtDusk(g) {
     L('Ishaq', 'Even the copy you promised Arsaber reached Constantinople. Let them read it. That was always the point.', () => chosen(g, 'arsaber') === 'promise'),
     L('Ishaq', 'I still owe you a brother. I will spend the rest of my life on that account.', () => chosen(g, 'ishaq') === 'heard'),
     L('Salim', 'Then spend it at that table. He would have liked that better than a debt.', () => chosen(g, 'ishaq') === 'heard'),
+    // Round 32: the lesson about lamps, and Jabir's sayings, written down
+    L('Ishaq', 'I wrote down the Teacher\'s lesson about lamps. And three of Jabir\'s sayings, the way you told them to me.', () => !!g.player.s25?.said?.r32_lastLesson),
+    L('Salim', 'Loads come back. Hands do not.', () => !!g.player.s25?.said?.r32_lastLesson),
+    L('Ishaq', 'That one is on the first page now. Before the Teacher\'s. I think he would have liked that.', () => !!g.player.s25?.said?.r32_lastLesson),
     L('Salim', 'And me?'),
     L('Ishaq', 'You were a caravan guard. Baghdad needs safe roads more than it needs one more scholar. Go home first, and take Jabir\'s spear with you.'),
     { dur: 6.5, caption: 'Salim set one more lamp on the water: for the guards of the caravan, and for everyone the road had taken.',
       enter: () => { ishaq.st.talk = false; salim.st.talk = false; salim.st.crouch = 0.7; floatLamp(bank(LZ) + 0.6, LZ + 0.4).userData.v = 0.22; },
       cam: { follow: true, p0: at(salim, 1.2, 2.4, -1.6), t0: () => V(bank(LZ) + 1.5, -0.3, LZ - 1), p1: () => V(bank(LZ) - 3, 2.2, LZ + 6), t1: () => V(bank(LZ) + 4, -0.4, LZ - 8), fov: 34 },
       run: (d, k, dt) => { drift(dt || 1 / 60); if (k > 0.35) salim.st.crouch = 0; } },
+    // Round 32: the people of the road, and where it took them
+    { dur: 5.2, caption: 'On the last lamp, in a boy\'s careful letters, Shabib had written Jabir\'s name.', when: () => !!g.player.s25?.said?.r32_lubnaQuays, run: (d, k, dt) => drift(dt || 1 / 60) },
+    { dur: 5.2, caption: 'North, in the Hamrin, an old Greek kept sheep for a shepherd, and never once asked whose side anyone was on.', when: () => !!chosen(g, 'niketas'), run: (d, k, dt) => drift(dt || 1 / 60) },
+    { dur: 5.2, caption: 'Ma\'n joined the river guard, and took \'Amr\'s boys out on their first watch.', when: () => (g.player.s25?.g32?.spear || 0) >= 4, run: (d, k, dt) => drift(dt || 1 / 60) },
+    { dur: 5.2, caption: 'Dirar hired on the Basra barge. A month later a shell came up the river, wrapped in a scrap of sail.', when: () => (g.player.s25?.g32?.bow || 0) >= 4, run: (d, k, dt) => drift(dt || 1 / 60) },
+    { dur: 5.2, caption: 'Tamim sold lamp oil on the quays. Nobody was ever hurt by it again.', when: () => (g.player.s25?.g32?.naft || 0) >= 4, run: (d, k, dt) => drift(dt || 1 / 60) },
+    { dur: 5.2, caption: 'Nahshal taught the boys of the quays to climb, and stole the bricks to rebuild the Harbiyya.', when: () => (g.player.s25?.g32?.knives || 0) >= 4, run: (d, k, dt) => drift(dt || 1 / 60) },
     { dur: 7, card: { ar: 'مدينة السلام', en: 'Madinat al-Salam', sub: 'The City of Peace' },
       cam: { p0: () => V(bank(LZ) - 6, 4, LZ + 8), t0: () => V(bank(LZ) + 6, 0, LZ - 10), p1: () => V(bank(LZ) - 20, 30, LZ + 40), t1: () => V(bank(LZ) + 20, 10, LZ - 140), ease: 'io2' }, run: (d, k, dt) => drift(dt || 1 / 60) },
   ];

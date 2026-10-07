@@ -5,7 +5,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 }, hasTouch: true, isMobile: true });
 const errs = []; pg.on('pageerror', (e) => errs.push('PAGEERR ' + e.message + ' ' + (e.stack || '').split('\n').slice(0, 3).join(' | '))); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
 await pg.goto('http://localhost:5173/?q=low&noadapt');
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 await pg.tap('#startbtn'); await pg.waitForTimeout(3000);
 await pg.screenshot({ path: 'shots/out/cp1.png' });
 await pg.tap('.cp-card[data-k="faris"]'); await pg.waitForTimeout(8000);

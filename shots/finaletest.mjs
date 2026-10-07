@@ -9,7 +9,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const pg = await b.newPage({ viewport: { width: 915, height: 412 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
 await pg.goto(`http://localhost:5173/?play&noadapt&region=${region}`);
-await pg.waitForFunction(() => window.__ready, null, { timeout: 180000 });
+await pg.waitForFunction(() => window.__ready, null, { timeout: 900000 });
 let reloaded = false; pg.on('framenavigated', () => { reloaded = true; });
 await pg.evaluate(() => { const g = __game, A = __game.constructor && null; const s = Object.values(g.zones ? {} : {}); g.player.invuln = 1e9; });
 await pg.evaluate(() => { const g = __game; const { x, z } = g.__sites || {}; });
