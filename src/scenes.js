@@ -343,8 +343,8 @@ export function epilogue(g, b) {
     ...[['I heard them, in the vault. The rest went east by boat, into the marshes.', 0], ['Kallinikos has them. And he has the fire.', 2]].map(([line, beat]) => ({
       dur: lineDur(line), line: { who: 'Jabir', text: line, rig: jabir.rig, cue: 'breath', expr: 'pain' }, tight: beat > 0, beat,
       enter: () => { ishaq.st.talk = false; salim.st.talk = false; salim.facing = yawTo(salim.pos, jabir.pos); ishaq.facing = yawTo(ishaq.pos, jabir.pos); },
-      // side-on to him, a little above, over the head end: his face and the fire beyond
-      cam: { follow: true, p0: () => { const q = jabir.pos, f = jabir.facing, sd = Math.sign(Math.sin(f - yawTo(q, salim.pos))) || 1; return V(q.x + Math.sin(f) * 1.9 + Math.cos(f) * 1.5 * sd, q.y + 1.25, q.z + Math.cos(f) * 1.9 - Math.sin(f) * 1.5 * sd); }, t0: () => { const f = jabir.facing; return V(jabir.pos.x + Math.sin(f) * 1.1, jabir.pos.y + 0.3, jabir.pos.z + Math.cos(f) * 1.1); }, fov: 36 }, dof: () => { const f = jabir.facing; return V(jabir.pos.x + Math.sin(f) * 1.3, jabir.pos.y + 0.3, jabir.pos.z + Math.cos(f) * 1.3); }, aperture: 1.3 })),
+      // over Salim's shoulder, down onto Jabir on his pallet (only the two positions are trusted: a lying rig's bones are not)
+      cam: { follow: true, p0: () => { const f = yawTo(salim.pos, jabir.pos); return V(salim.pos.x - Math.sin(f) * 0.9 + Math.cos(f) * 0.45, salim.pos.y + 2.0, salim.pos.z - Math.cos(f) * 0.9 - Math.sin(f) * 0.45); }, t0: () => { const f = jabir.facing; return V(jabir.pos.x + Math.sin(f) * 0.6, jabir.pos.y + 0.25, jabir.pos.z + Math.cos(f) * 0.6); }, fov: 40 }, dof: () => jabir.pos.clone().add(V(0, 0.3, 0)), aperture: 1.0 })),
     // Round 24: the act card is shown once, on the travel card while the marshes load (main.js TRAVEL_CARD)
     { dur: 1.5, enter: (d) => { ishaq.st.talk = false; salim.st.talk = false; d.fade(1, 1.2); } },
   ];
