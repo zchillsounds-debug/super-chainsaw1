@@ -35,6 +35,8 @@ export const AR35 = {
   [`What does it say?`]: `ماذا تقول؟`,
   [`"The astronomer, for your brother."`]: `«الفلكيّ، مقابل أخيك.»`,
   // ---- Episode Two
+  [`Who knew the chest was in our caravan?`]: `من كان يعلم أن الصندوق في قافلتنا؟`,
+  [`East, to the old caravanserai by the broken dam.`]: `شرقًا، إلى الخان القديم عند السدّ المكسور.`,
   [`Why would they want you?`]: `ولماذا يريدونك أنت؟`,
   [`Because the chest never held instruments. It held the Pages of my teacher. There is no other copy in the world.`]: `لأن الصندوق لم يكن فيه آلات قط. كانت فيه أوراق أستاذي. وليس في الدنيا نسخةٌ غيرها.`,
   [`He wrote them in a cipher of his own. I am the only man alive who can read it.`]: `كتبها بشيفرةٍ من وضعه. وأنا الحيّ الوحيد الذي يقرؤها.`,

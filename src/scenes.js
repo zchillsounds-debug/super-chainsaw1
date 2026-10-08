@@ -275,7 +275,6 @@ export function epilogue(g, b) {
   const jabir = actor(humanoid({ ...JABIR_LOOK, weapon: null }), V(0, -50, 0), 0); jabir.rig.visible = false; g.scene.add(jabir.rig); actors.push(jabir);
   jabir.st.dead = true; jabir.st.fallDir = 1; jabir.st.deadT = 4;
   const pallet = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.12, 2.0), new THREE.MeshStandardMaterial({ color: 0x8a7a5a, roughness: 1 })); pallet.visible = false; g.scene.add(pallet);
-  const vault = () => { const f = ang + Math.PI; return ground(salim.pos.x + Math.sin(f) * 1.1, salim.pos.z + Math.cos(f) * 1.1); };
   const lamp = g.bossLight;
   // Round 24: the first time the envoy is seen. A rider on the far bank watches the lamps, then turns for Baghdad.
   const RZ = 96, rx = canalX(RZ) - CANAL_W / 2 - 2.6, envoy = actor(horseRider(byzify({ ...LOOK.officer('#4a1a4a', 0x3a1440), beard: 0x8a8070, beardLen: 0.9, skin: 0xb07a52, sash: 0x5a1a5a, build: 1.1, belly: 0.25, hemY: 0.3, leather: 0x6a5a3a })), ground(rx, RZ), Math.PI / 2);
@@ -298,10 +297,11 @@ export function epilogue(g, b) {
     // the vault: Jabir on the floor, alive; Salim on his knees beside him, in the light of one lamp
     { dur: lineDur('You took your time, little brother.'), fadeIn: 1.4, line: { who: 'Jabir', text: 'You took your time, little brother.', rig: jabir.rig, cue: 'breath', expr: 'pain', react: 'grief' }, beat: 1,
       enter: () => {
-        jabir.rig.visible = true; jabir.pos.copy(vault()); jabir.facing = ang + Math.PI / 2; salim.facing = yawTo(salim.pos, jabir.pos); salim.st.crouch = 0.85; boss.rig.visible = false;
+        jabir.rig.visible = true; jabir.pos.copy(ground(salim.pos.x + Math.cos(ang) * 1.1, salim.pos.z - Math.sin(ang) * 1.1)); jabir.facing = ang; salim.facing = yawTo(salim.pos, jabir.pos); salim.st.crouch = 0.85; boss.rig.visible = false;
         if (lamp) { lamp.color.set(0xffa050); lamp.distance = 7; lamp.position.copy(jabir.pos).add(V(0.5, 1.0, 0.7)); lamp.intensity = 6; }
       },
-      cam: { follow: true, p0: () => { const q = jabir.pos, f = yawTo(q, salim.pos); return V(q.x - Math.sin(f) * 1.6 + Math.cos(f) * 1.2, q.y + 1.2, q.z - Math.cos(f) * 1.6 - Math.sin(f) * 1.2); }, t0: () => headOf(jabir)(), fov: 34 }, dof: headOf(jabir), aperture: 1.4, run: () => { salim.st.crouch = 0.85; } },
+      // raised, on the far side of Jabir from Salim, so both of them are whole in the frame
+      cam: { follow: true, p0: () => { const m = jabir.pos.clone().lerp(salim.pos, 0.5), f = yawTo(salim.pos, jabir.pos); return V(m.x + Math.sin(f) * 2.4, m.y + 1.9, m.z + Math.cos(f) * 2.4); }, t0: () => jabir.pos.clone().lerp(salim.pos, 0.5).add(V(0, 0.35, 0)), fov: 38 }, dof: () => jabir.pos.clone().add(V(0, 0.3, 0)), aperture: 1.2, run: () => { salim.st.crouch = 0.85; } },
     { dur: lineDur('You came back for me once, in the flood. I owed you.'), line: { who: 'Salim', text: 'You came back for me once, in the flood. I owed you.', rig: g.player.rig, cue: 'breath', expr: 'grief', react: 'warm' },
       cam: { follow: true, p0: at(salim, 1.3, 1.5, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim), aperture: 1.3, run: () => { salim.st.crouch = 0.85; } },
     { dur: 3.6, caption: 'Most of the Pages were in Bardanes\'s tent.', enter: (d) => { d.fade(1, 0.8); salim.st.crouch = 0; if (lamp) lamp.intensity = 0; } },
@@ -331,7 +331,7 @@ export function epilogue(g, b) {
         // Jabir on a pallet by Ishaq's fire, between the two of them and a little back
         const mx = (salim.pos.x + ishaq.pos.x) / 2, mz = (salim.pos.z + ishaq.pos.z) / 2, f = yawTo(salim.pos, ishaq.pos) + Math.PI / 2;
         jabir.pos.copy(ground(mx + Math.sin(f) * 1.6, mz + Math.cos(f) * 1.6)); jabir.pos.y += 0.12; jabir.facing = f; jabir.rig.visible = true;
-        pallet.position.set(jabir.pos.x, jabir.pos.y - 0.06, jabir.pos.z); pallet.rotation.y = f + Math.PI / 2; pallet.visible = true;
+        pallet.position.set(jabir.pos.x - Math.sin(f) * 0.7, jabir.pos.y - 0.06, jabir.pos.z - Math.cos(f) * 0.7); pallet.rotation.y = f; pallet.visible = true; // under him, head to feet
       },
       cam: { follow: true, p0: at(salim, 1.75, -0.9, 0.4), t0: headOf(ishaq), fov: 30 }, dof: headOf(ishaq) },
     ...[['Ishaq', 'But the chest is light. Some of the Pages are missing.'], ['Salim', 'Who has them?']].map(([who, line]) => {
@@ -343,7 +343,7 @@ export function epilogue(g, b) {
     ...[['I heard them, in the vault. The rest went east by boat, into the marshes.', 0], ['Kallinikos has them. And he has the fire.', 2]].map(([line, beat]) => ({
       dur: lineDur(line), line: { who: 'Jabir', text: line, rig: jabir.rig, cue: 'breath', expr: 'pain' }, tight: beat > 0, beat,
       enter: () => { ishaq.st.talk = false; salim.st.talk = false; salim.facing = yawTo(salim.pos, jabir.pos); ishaq.facing = yawTo(ishaq.pos, jabir.pos); },
-      cam: { follow: true, p0: () => { const q = jabir.pos; return V(q.x + (salim.pos.x - q.x) * 0.55, q.y + 1.15, q.z + (salim.pos.z - q.z) * 0.55); }, t0: () => headOf(jabir)(), fov: 30 }, dof: headOf(jabir), aperture: 1.4 })),
+      cam: { follow: true, p0: () => { const q = jabir.pos, f = yawTo(q, salim.pos); return V(q.x + Math.sin(f) * 2.2, q.y + 1.5, q.z + Math.cos(f) * 2.2); }, t0: () => jabir.pos.clone().add(V(0, 0.3, 0)), fov: 34 }, dof: () => jabir.pos.clone().add(V(0, 0.3, 0)), aperture: 1.3 })),
     // Round 24: the act card is shown once, on the travel card while the marshes load (main.js TRAVEL_CARD)
     { dur: 1.5, enter: (d) => { ishaq.st.talk = false; salim.st.talk = false; d.fade(1, 1.2); } },
   ];

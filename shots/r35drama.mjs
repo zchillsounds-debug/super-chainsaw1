@@ -23,7 +23,7 @@ await ev((f) => { const g = __game; g.player.invuln = 1e9; if (+f > 1) g.drama34
 const state = () => ev(() => { const g = __game, E = g.player.ep34 || {}, o = document.getElementById('ep34');
   return { n: E.n, b: E.b, card: o && !o.classList.contains('hidden') ? o.className : null, scene: !!__director.def, obj: g.drama34.target()?.text || null, interior: !!g.interior, dialog: !!g.ui.dialogOpen }; });
 let last = '', idle = 0, guard = 0, lastShot = null;
-const shotsFor = (n) => n <= 2;
+const SHOTS = (process.env.SHOTS || '1,2').split(',').map(Number), shotsFor = (n) => SHOTS.includes(n);
 while (guard++ < 4000) {
   const s = await state();
   if (s.n > +to) break;
@@ -49,10 +49,10 @@ while (guard++ < 4000) {
   }
   if (s.dialog) { await ev(() => document.querySelector('#dialog .dbtn')?.click()); await ev(() => __sim(0.3)); continue; }
   // no scene: kill the episode's foes, or walk to the objective
-  const did = await ev(() => { const g = __game, p = g.player, live = g.enemies.filter((e) => !e.dead && !e.hidden && (e.ep34 || e.pos.distanceTo(p.pos) < 26));
-    if (live.length) { for (const e of live.slice(0, 3)) g.damageEnemy(e, 1e6, false, p.pos); __sim(0.5); return 'kill ' + live.length; }
+  const did = await ev(() => { const g = __game, p = g.player, live = g.enemies.filter((e) => !e.dead && !e.hidden && (e.ep34 || g.interior?.hold || e.pos.distanceTo(p.pos) < 26));
+    if (live.length) { for (const e of live.slice(0, 3)) { if (g.interior?.hold) p.pos.set(e.pos.x + 1.2, e.pos.y, e.pos.z + 1.2); g.damageEnemy(e, 1e6, false, p.pos); } __sim(0.5); return 'kill ' + live.length; }
     if (g.interior?.hold) { const B = g.boss && !g.boss.dead ? g.boss : null; if (B) { g.damageEnemy(B, 1e6, false, p.pos); __sim(1); return 'boss'; } __sim(1); return 'in hold'; }
-    const T = g.drama34.target(); if (!T?.pos) { __sim(0.5); return 'wait'; }
+    const T = g.drama34.target(); if (!T?.pos || g.drama34.busy) { __sim(0.5); return 'wait'; }
     p.pos.set(T.pos.x + 1.2, 0, T.pos.z + 1.2); __sim(0.6);
     const it = g.interactables.find((i) => !i.hidden && i.pos && Math.hypot(i.pos.x - p.pos.x, i.pos.z - p.pos.z) < 4 && (i.area || i.npc));
     if (it && (it.area || /Umayma|Doukitzes/.test(it.npc?.name || ''))) { it.act?.(); __sim(1); return 'act ' + (it.area || it.npc.name); }

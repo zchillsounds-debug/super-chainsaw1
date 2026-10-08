@@ -149,6 +149,8 @@ export function setupDrama34(g) {
   if (g.holds) {
     const prevLocked = g.holds.locked.bind(g.holds);
     g.holds.locked = (id) => {
+      // Round 35: no door opens while a beat is still running (the way out of a hold into the next scene)
+      if (live() && busy) return 'Not now.';
       if (live()) {
         if (id === 'dam' && E().n < 3) return 'Not yet. Find out who took the chest first.';
         if (id === 'kilns' && E().n < 4) return 'The galleries are barred. Find Photeinos first.';
@@ -369,6 +371,8 @@ export function setupDrama34(g) {
     const jabir = add(actor(humanoid({ ...JABIR_LOOK, weapon: null }), C.clone(), Math.atan2(-gz, gx))); // his spear is gone
     jabir.st.dead = true; jabir.st.fallDir = 1; jabir.st.deadT = 4; // fallDir 1: on his back, the head behind him
     const jf = jabir.facing, J = { head: () => ground(C.x - Math.sin(jf) * 1.45, C.z - Math.cos(jf) * 1.45) };
+    // the head bone does not follow the lying pose (it reads at standing height), so his face is placed from the body
+    const jhead = () => J.head().add(V(0, 0.22, 0));
     const s1 = add(actor(humanoid(byzify({ ...LOOK.skoutatos(), shieldTint: 0 })), ground(C.x + 5, C.z + 10), Math.PI));
     const s2 = add(actor(humanoid(byzify({ ...LOOK.psilos(), offhand: null })), ground(C.x + 8, C.z + 7), Math.PI));
     const s3 = add(actor(humanoid(byzify({ ...LOOK.kataphraktos(), weapon: 'sword', offhand: 'shield', shieldTint: 0 })), ground(C.x - 5, C.z + 3.5), Math.PI / 2));
@@ -388,7 +392,7 @@ export function setupDrama34(g) {
     };
     const grab = (dt) => { walk(s1, V(C.x + 1.0, 0, C.z + 0.8), 2.2, dt); walk(s2, V(C.x + 0.5, 0, C.z - 0.9), 2.2, dt); for (const s of [s1, s2]) { s.st.walkBlend = 1; s.st.phase += dt * 5; } };
     // a point across Jabir's head from Salim (d metres beyond it, h up, slid s along his body), for the two-shots
-    const across = (d, h, s = 0) => { const hj = headOf(jabir)(), hs = headOf(salim)(), f = yawTo(hs, hj); return above(V(hj.x + Math.sin(f) * d + Math.sin(jf) * s, hj.y + h, hj.z + Math.cos(f) * d + Math.cos(jf) * s), 0.5); };
+    const across = (d, h, s = 0) => { const hj = jhead(), hs = headOf(salim)(), f = yawTo(hs, hj); return above(V(hj.x + Math.sin(f) * d + Math.sin(jf) * s, hj.y + h, hj.z + Math.cos(f) * d + Math.cos(jf) * s), 0.5); };
     const drag = (e, dt) => { const f = jabir.facing; walk(jabir, e, 1.6, dt); jabir.facing = f; };
     const shots = [
       { dur: 3.4, fadeIn: 0.5, tight: true, beat: 2, stinger: 'ambush',
@@ -397,7 +401,7 @@ export function setupDrama34(g) {
         cam: { p0: () => above(V(C.x + 4.6, C.y + 2.4, C.z - 3.4), 1.8), t0: () => V(C.x - 0.4, C.y + 0.7, C.z + 0.6), p1: () => above(V(C.x + 3.6, C.y + 2.0, C.z - 2.6), 1.6), t1: () => V(C.x - 0.4, C.y + 0.7, C.z + 0.6), fov: 38 },
         run: (d, k, dt) => { burn(); salim.st.crouch = 0.85; walk(s1, V(C.x + 2.5, 0, C.z + 5), 1.4, dt); walk(s2, V(C.x + 4.5, 0, C.z + 3.5), 1.4, dt); for (const s of [s1, s2]) { s.st.walkBlend = 1; s.st.phase += dt * 4; } } },
       { dur: lineDur('Leave me, Salim. Run!'), line: { who: 'Jabir', text: 'Leave me, Salim. Run!', rig: jabir.rig, cue: 'breath', expr: 'pain' }, tight: true,
-        cam: { follow: true, p0: () => across(1.5, 0.75), t0: () => headOf(jabir)().lerp(headOf(salim)(), 0.3), fov: 34 }, dof: headOf(jabir), aperture: 1.6,
+        cam: { follow: true, p0: () => { const m = C.clone().lerp(salim.pos, 0.5), f = yawTo(salim.pos, C); return above(V(m.x + Math.sin(f) * 2.3, m.y + 1.9, m.z + Math.cos(f) * 2.3), 1.6); }, t0: () => C.clone().lerp(salim.pos, 0.5).add(V(0, 0.35, 0)), fov: 38 }, dof: () => C.clone().add(V(0, 0.3, 0)), aperture: 1.2,
         run: (d, k, dt) => { burn(); salim.st.crouch = 0.85; } },
       { dur: lineDur('Not without you.'), line: { who: 'Salim', text: 'Not without you.', rig: p.rig, cue: 'shout', expr: 'anger' }, tight: true, beat: 1,
         cam: { follow: true, p0: () => across(1.25, 0.95, 0.35), t0: () => headOf(salim)(), fov: 30 }, dof: headOf(salim), aperture: 1.6,
@@ -598,6 +602,7 @@ export function setupDrama34(g) {
 
   // ================================================================ the runner
   let busy = false, introDone = false, cur = null;
+  Object.defineProperty(D, 'busy', { get: () => busy, configurable: true });
   const beat = () => BEATS[E().n]?.[E().b];
   const nextBeat = () => { E().b++; cur = null; saveGame(g); g.refreshTracker?.(); };
   const endEpisode = () => { const e = E(); e.n++; e.b = 0; cur = null; introDone = false; saveGame(g); };
