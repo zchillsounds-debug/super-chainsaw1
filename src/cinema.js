@@ -55,6 +55,9 @@ export class Director {
       // Round 24: remember the play camera, so the first shot glides out of it (or dips to black if it is far)
       this.inPos = this.camera.position.clone(); this.inQuat = this.camera.quaternion.clone(); this.inFov = this.camera.fov; this.inK = def.noBlend ? 1 : 0; this.inChecked = false; this.outBlend = null;
       this.el.classList.remove('hidden'); document.body.classList.add('incine');
+      // Round 35: straight on from a scene that ended on black: the black stays, as the director's own fade, which the
+      // first shot lifts (the screen fade it leaves up was only lifted when no scene followed, so the next scene played black)
+      if (this.endedBlack && !this.ui.holdBlack) { this.fadeCur = 1; this.$('.cfade').style.opacity = 1; this.fade(0, 0.8); this.ui.fade(0, 0); }
       this.ui.hud?.classList.add('cinehide');
       this.game.setLootBeams?.(false);
       this.game.cinematic = true; this.game.joy = null; this.game.lmb = false; this.game.player.moveTo = null; this.game.player.target = null;

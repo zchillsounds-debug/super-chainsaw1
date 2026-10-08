@@ -2,12 +2,15 @@
 // hook, one objective at a time, a turn, and a cliffhanger card. Nothing is skipped (cinema.js). Between scenes the
 // map holds only the episode's own fights and people; the boards, bounties, dungeons and trials wait for the end of
 // the chronicle ("After the Chronicle", act 7).
-//   Ep 1 Dusk on the Dune   the caravan; the ambush is fought; an arrow from the ridge; Salim wakes by Ishaq
-//   Ep 2 The Cedar Chest    what the chest held; Khawla saw the riders; the watcher; a voice at the broken dam
-//   Ep 3 The Broken Dam     Photeinos' hold and his choice; smoke rises over the kiln yard
-//   Ep 4 Ash in the Kilns   a clock: every second costs leaves; Olbianos names Ishaq
-//   Ep 5 Thirst             Ishaq's confession; the canal fouled; the family's water; the deserter; Bardanes' herald
-//   Ep 6 The Arch           the names of the dead; a race to the arch before dawn; Bardanes; the chest is light
+// Round 35: rebuilt around one question: why keep a wounded guard alive? The raiders took Jabir to trade for Ishaq,
+// the only man who can read the Pages' cipher. A new chronicle opens on the night raid (cold open), then rewinds.
+//   Ep 1 Dusk on the Dune   the caravan halts; the ambush; an arrow wounds Jabir; the raid; "The astronomer, for your brother."
+//   Ep 2 The Cedar Chest    why they need Ishaq; Khawla saw Jabir tied over a horse; the watcher; his headcloth on the dam door
+//   Ep 3 The Broken Dam     Photeinos: Jabir is at the kilns, and Ishaq has a friend who writes to the envoy; smoke
+//   Ep 4 Ash in the Kilns   a clock; the last cell is empty; Olbianos, who once copied for Ishaq, names him
+//   Ep 5 Thirst             the confession; the canal; the deserter; the herald's terms and the choice (trade34)
+//   Ep 6 The Arch           four names, not five; a race to the arch before dawn; Bardanes; Jabir found alive
+// A cliffhanger runs straight on into the next title card; "previously" only plays when a saved chronicle is resumed.
 // State: p.ep34 = { n, b, leaves, dawn } (saved). Every line has Arabic in story34_ar.js.
 import * as THREE from 'three';
 import { H32, JABIR_LOOK } from './scenes.js';
@@ -271,27 +274,27 @@ export function setupDrama34(g) {
   // whole scene, 40 m down the road and into the village houses); the raiders stay hidden behind the ridge until the reveal
   const rt = {};
   const road = (z) => 13.5 + (z - 100) * 0.02;
-  const HALT = 124; // where the caravan stops: the ridge with the raiders is east of it, at x 26
-  const LANE = { camel: -2.4, salim: 0.6, jabir: 1.5, guard: 0.3 }; // the camels on the dune side; the men face the ridge
+  const HALT = 128; // where the caravan stops (z 128-136 is the flattest stretch of the road; the map ends at z 140)
+  const LANE = { camel: -4.2, salim: 0.4, jabir: 2.0, guard: 1.2 }; // the camels on the dune side; the men face the ridge
   // a camera point kept at least `h` above the sand (the dune bank west of the road rises fast)
   const above = (v, h = 1.0) => { v.y = Math.max(v.y, heightAt(v.x, v.z) + h); return v; };
   function caravanA() {
     const sc = g.scene, actors = [];
     const salim = playerActor(g);
     const add = (a) => { actors.push(a); if (a.rig !== p.rig) sc.add(a.rig); return a; };
-    const Z0 = HALT + 20;
-    const camelA = add(Object.assign(actor(camel(0xb88a58), ground(road(Z0 - 1) + LANE.camel, Z0 - 1), Math.PI), { camel: true, stop: HALT - 1 }));
-    const camelB = add(Object.assign(actor(camel(0xa07850), ground(road(Z0 + 5) + LANE.camel, Z0 + 5), Math.PI), { camel: true, stop: HALT + 5 }));
-    const jabir = add(Object.assign(actor(humanoid(JABIR_LOOK), ground(road(Z0 + 2.5) + LANE.jabir, Z0 + 2.5), Math.PI), { stop: HALT + 2.5, lane: LANE.jabir }));
-    const guard2 = add(Object.assign(actor(humanoid({ robe: '#4a3a2a', robe2: '#2a3a5a', turban: 0xc8b890, weapon: 'spear', skin: 0x8a5a3a }), ground(road(Z0 + 9) + LANE.guard, Z0 + 9), Math.PI), { stop: HALT + 9, lane: LANE.guard }));
+    const start = (stop) => Math.min(139.5, stop + 6); // each walks the last few metres to his place
+    const camelA = add(Object.assign(actor(camel(0xb88a58), ground(road(start(HALT)) + LANE.camel, start(HALT)), Math.PI), { camel: true, stop: HALT }));
+    const camelB = add(Object.assign(actor(camel(0xa07850), ground(road(start(HALT + 4)) + LANE.camel, start(HALT + 4)), Math.PI), { camel: true, stop: HALT + 4 }));
+    const jabir = add(Object.assign(actor(humanoid(JABIR_LOOK), ground(road(start(HALT + 2)) + LANE.jabir, start(HALT + 2)), Math.PI), { stop: HALT + 2, lane: LANE.jabir }));
+    const guard2 = add(Object.assign(actor(humanoid({ robe: '#4a3a2a', robe2: '#2a3a5a', turban: 0xc8b890, weapon: 'spear', skin: 0x8a5a3a }), ground(road(start(HALT + 4.5)) + LANE.guard, start(HALT + 4.5)), Math.PI), { stop: HALT + 4.5, lane: LANE.guard }));
     const archer = add(actor(humanoid(byzify({ ...LOOK.toxotes(), robe: '#1e2430', robe2: '#8a2a1a', beard: 0x1a120c, cloak: 0x1a1a22 })), ground(27, 111), -Math.PI / 2));
     // the two riders on the ridge lie flat behind its crest until the reveal
     const b1 = add(actor(humanoid(byzify({ ...LOOK.skoutatos(), shieldTint: 0 })), ground(29.5, 117), -Math.PI / 2));
     const b2 = add(actor(humanoid(byzify({ ...LOOK.kataphraktos(), weapon: 'sword', offhand: 'shield', shieldTint: 0 })), ground(29, 121), -Math.PI / 2));
     archer.rig.visible = false; b1.rig.visible = false; b2.rig.visible = false;
     actors.push(salim);
-    salim.pos.copy(ground(road(Z0 + 4) + LANE.salim, Z0 + 4)); salim.facing = Math.PI; salim.st.action = null; salim.st.crouch = 0;
-    Object.assign(salim, { stop: HALT + 4, lane: LANE.salim });
+    salim.pos.copy(ground(road(start(HALT + 2)) + LANE.salim, start(HALT + 2))); salim.facing = Math.PI; salim.st.action = null; salim.st.crouch = 0;
+    Object.assign(salim, { stop: HALT + 2, lane: LANE.salim });
     const caravan = [camelA, camelB, jabir, guard2, salim];
     for (const a of caravan) if (a.camel) a.lane = LANE.camel;
     const march = (dt, speed = 1.35) => { for (const a of caravan) {
@@ -300,13 +303,14 @@ export function setupDrama34(g) {
       if (!a.camel) { a.st.walkBlend = 1; a.st.phase += dt * 4; }
     } };
     Object.assign(rt, { camelA, camelB, jabir, guard2, archer, keep: [camelA, camelB, jabir, guard2, archer] });
-    // close shots from the ridge side (east), so the camels, on the dune side, never come between camera and speaker
+    // the brothers walk side by side; each is filmed from his own side (Jabir from the south-east, Salim from the south-west),
+    // so the other is never between the camera and the speaker, and the camels walk well back on the dune side
     const L = (who, text, a, extra = {}) => ({ dur: lineDur(text), line: { who, text, rig: a.rig, cue: who === 'Salim' ? 'hm' : 'breath', ...(extra.line || {}) },
-      cam: { follow: true, p0: () => { const q = a.pos; return above(V(q.x + 2.1, q.y + 1.62, q.z - 2.5)); }, t0: () => headOf(a)().add(V(0, -0.15, 0)), p1: () => { const q = a.pos; return above(V(q.x + 1.9, q.y + 1.6, q.z - 2.2)); }, t1: () => headOf(a)().add(V(0, -0.15, 0)), fov: 32 }, dof: headOf(a), aperture: 1.4,
+      cam: { follow: true, p0: () => { const q = a.pos, sd = a === salim ? -1.3 : 2.1; return above(V(q.x + sd, q.y + 1.62, q.z - 2.5)); }, t0: () => headOf(a)().add(V(0, -0.15, 0)), p1: () => { const q = a.pos, sd = a === salim ? -1.15 : 1.9; return above(V(q.x + sd, q.y + 1.6, q.z - 2.2)); }, t1: () => headOf(a)().add(V(0, -0.15, 0)), fov: 32 }, dof: headOf(a), aperture: 1.4,
       run: (d, k, dt) => march(dt), ...extra.shot });
     const shots = [
       { dur: 6.0, fadeIn: 1.4, caption: 'The Sawad, outside Baghdad, in the year 813. The caliph\'s sons are at war. The roads belong to no one.',
-        cam: { p0: () => above(ground(road(HALT) + 12, HALT + 2, 6), 4), t0: () => ground(road(HALT + 14), HALT + 14, 1.4), p1: () => above(ground(road(HALT) + 8, HALT + 2, 3.6), 2.6), t1: () => ground(road(HALT + 6), HALT + 6, 1.4), fov: 40 },
+        cam: { p0: () => above(ground(road(HALT) + 12, HALT - 4, 6), 4), t0: () => ground(road(HALT + 8), HALT + 8, 1.4), p1: () => above(ground(road(HALT) + 8, HALT - 3, 3.6), 2.6), t1: () => ground(road(HALT + 3), HALT + 3, 1.4), fov: 40 },
         run: (d, k, dt) => march(dt) },
       L('Jabir', 'Two more days to Baghdad, Salim. Then home.', jabir, { line: { expr: 'warm' } }),
       L('Salim', 'Too quiet, brother. I do not like it.', salim, { line: { expr: 'wary' }, shot: { run: (d, k, dt) => { march(dt); salim.st.headYaw = -Math.sin(k * Math.PI) * 0.6; } } }),
@@ -319,7 +323,7 @@ export function setupDrama34(g) {
         run: (d, k, dt) => { for (const b of [b1, b2]) { b.st.crouch = Math.max(0, 1 - k * 1.8); if (k > 0.5) walk(b, V(b.pos.x - 3, 0, b.pos.z), 1.6, dt); } salim.st.headYaw = 0; } },
       L('Jabir', 'Riders! Guard the camels, Salim!', jabir, { line: { expr: 'anger', cue: 'shout' }, shot: { tight: true, enter: () => { jabir.facing = yawTo(jabir.pos, b1.pos); act(jabir, 'command', 1.2); }, run: () => {} } }),
     ];
-    return { dusk: 0.7, actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
+    return { dusk: 0.55, actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
       end: () => { for (const b of [b1, b2]) sc.remove(b.rig); for (const a of caravan) { a.halt = true; a.moving = false; } salim.st.headYaw = 0; } };
   }
   // the fight: real raiders down off the ridge; Jabir and the other guard hold beside the camels
@@ -334,18 +338,20 @@ export function setupDrama34(g) {
     const actors = [salim, ...rt.keep];
     const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.8, 4).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x2a2018 }));
     shaft.visible = false; sc.add(shaft);
+    // the highest point of the ridge 9-13 m east of Jabir, so the bowman stands against the sky
+    const crest = () => { let best = null; for (let dx = 9; dx <= 13; dx += 1) for (let dz = -6; dz <= 2; dz += 2) { const q = ground(jabir.pos.x + dx, jabir.pos.z + dz); if (!best || q.y > best.y) best = q; } return best; };
     const from = () => at(archer, 1.55, 0.4)(), to = () => at(jabir, 1.15)();
     const shots = [
       { dur: lineDur('Ha! Is that all the Rum could send?'), line: { who: 'Jabir', text: 'Ha! Is that all the Rum could send?', rig: jabir.rig, cue: 'hm', expr: 'warm' },
         cam: { follow: true, p0: () => { const q = jabir.pos; return above(V(q.x + 2.2, q.y + 1.6, q.z - 1.8)); }, t0: headOf(jabir), fov: 32 }, dof: headOf(jabir),
-        enter: () => { salim.pos.copy(jabir.pos).add(V(1.6, 0, -1.2)); salim.pos.y = heightAt(salim.pos.x, salim.pos.z); jabir.st.action = null; jabir.facing = yawTo(jabir.pos, salim.pos); salim.facing = yawTo(salim.pos, jabir.pos); } },
+        enter: () => { salim.pos.copy(jabir.pos).add(V(-1.7, 0, -0.9)); salim.pos.y = heightAt(salim.pos.x, salim.pos.z); jabir.st.action = null; jabir.facing = yawTo(jabir.pos, salim.pos); salim.facing = yawTo(salim.pos, jabir.pos); } },
       // on the ridge, a bowman nobody saw
-      { dur: 2.6, slow: 0.45, tight: true, beat: 2, cam: { p0: () => at(jabir, 1.6, -2.0, 1.0)(), t0: () => at(archer, 1.6)(), p1: () => at(jabir, 1.6, -1.6, 0.8)(), t1: () => at(archer, 1.6)(), fov: 22 },
-        enter: () => { archer.rig.visible = true; archer.pos.copy(ground(27, 111)); archer.facing = yawTo(archer.pos, jabir.pos); act(archer, 'attack', 2.2); } },
+      { dur: 2.6, slow: 0.45, tight: true, beat: 2, cam: { p0: () => { const f = yawTo(archer.pos, jabir.pos); return above(V(jabir.pos.x + Math.sin(f) * 1.8 + Math.cos(f) * 0.6, jabir.pos.y + 1.7, jabir.pos.z + Math.cos(f) * 1.8 - Math.sin(f) * 0.6)); }, t0: () => at(archer, 1.4)(), p1: () => { const f = yawTo(archer.pos, jabir.pos); return above(V(jabir.pos.x + Math.sin(f) * 1.4 + Math.cos(f) * 0.5, jabir.pos.y + 1.7, jabir.pos.z + Math.cos(f) * 1.4 - Math.sin(f) * 0.5)); }, t1: () => at(archer, 1.4)(), fov: 22 },
+        enter: () => { archer.rig.visible = true; archer.pos.copy(crest()); archer.facing = yawTo(archer.pos, jabir.pos); act(archer, 'attack', 2.2); } },
       { dur: 1.6, slow: 0.35, tight: true, cam: { follow: true, p0: () => { const q = jabir.pos; return above(V(q.x + 1.2, q.y + 1.5, q.z - 3.2)); }, t0: at(jabir, 1.2), fov: 30 },
         enter: () => { shaft.visible = true; shaft.position.copy(from()); },
         run: (d, k) => { const a = from(), b = to(), q = Math.min(1, k * 1.3); shaft.position.lerpVectors(a, b, q); shaft.lookAt(b); if (q >= 1 && !jabir.st.dead) { jabir.st.dead = true; jabir.st.fallDir = -1; jabir.st.deadT = 0; d.audio.voice?.('hurt'); g.audio.hit?.(); } } },
-      { dur: lineDur('Jabir!'), line: { who: 'Salim', text: 'Jabir!', rig: p.rig, cue: 'shout', expr: 'fear' }, tight: true,
+      { dur: lineDur('Jabir!'), line: { who: 'Salim', text: 'Jabir!', rig: p.rig, cue: 'shout', expr: 'anger' }, tight: true,
         cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.8), t0: headOf(salim), fov: 30 }, dof: headOf(salim), enter: () => { shaft.visible = false; salim.facing = yawTo(salim.pos, jabir.pos); } },
       { dur: 3.4, caption: 'The arrow took him under the ribs. Then the dark came, and the raiders came back with it.', enter: (d) => { d.fade(1, 0.9); archer.rig.visible = false; } },
     ];
@@ -357,28 +363,33 @@ export function setupDrama34(g) {
     const sc = g.scene, actors = [], extra = [];
     const salim = playerActor(g), lamp = g.bossLight;
     const add = (a) => { actors.push(a); sc.add(a.rig); extra.push(a.rig); return a; };
-    const C = ground(road(HALT + 2) + 1.2, HALT + 2);
-    const jabir = add(actor(humanoid(JABIR_LOOK), C.clone(), Math.PI / 2));
-    jabir.st.dead = true; jabir.st.fallDir = -1; jabir.st.deadT = 4; // on his back
-    const camelA = add(Object.assign(actor(camel(0xb88a58), ground(road(HALT + 7) - 2.4, HALT + 7), Math.PI * 0.8), { camel: true }));
+    const C = ground(road(136) - 1.0, 136);
+    // laid along the slope's contour (a body lying across a slope sinks into the uphill sand), on his back
+    const gx = heightAt(C.x + 0.5, C.z) - heightAt(C.x - 0.5, C.z), gz = heightAt(C.x, C.z + 0.5) - heightAt(C.x, C.z - 0.5);
+    const jabir = add(actor(humanoid({ ...JABIR_LOOK, weapon: null }), C.clone(), Math.atan2(-gz, gx))); // his spear is gone
+    jabir.st.dead = true; jabir.st.fallDir = 1; jabir.st.deadT = 4; // fallDir 1: on his back, the head behind him
+    const jf = jabir.facing, J = { head: () => ground(C.x - Math.sin(jf) * 1.45, C.z - Math.cos(jf) * 1.45) };
     const s1 = add(actor(humanoid(byzify({ ...LOOK.skoutatos(), shieldTint: 0 })), ground(C.x + 5, C.z + 10), Math.PI));
     const s2 = add(actor(humanoid(byzify({ ...LOOK.psilos(), offhand: null })), ground(C.x + 8, C.z + 7), Math.PI));
     const s3 = add(actor(humanoid(byzify({ ...LOOK.kataphraktos(), weapon: 'sword', offhand: 'shield', shieldTint: 0 })), ground(C.x - 5, C.z + 3.5), Math.PI / 2));
     actors.push(salim);
     // the cargo burning: bales and the chest's empty frame, lit by the fire
     const bales = [];
-    const baleM = new THREE.MeshStandardMaterial({ color: 0x2a1c12, roughness: 1 });
+    const baleM = new THREE.MeshStandardMaterial({ color: 0x6a5238, roughness: 1 }); // sacking
     for (const [dx, dz, s] of [[-2.2, 2.6, 0.9], [-2.8, -1.8, 0.7], [-1.0, 4.4, 0.8]]) {
       const m = new THREE.Mesh(new THREE.BoxGeometry(1.1 * s, 0.7 * s, 0.8 * s), baleM); const q = ground(C.x + dx, C.z + dz); m.position.set(q.x, q.y + 0.3 * s, q.z); m.rotation.y = dx; sc.add(m); extra.push(m); bales.push(m.position);
     }
     const burn = () => { for (const b of bales) if (Math.random() < 0.6) g.fx.fire(V(b.x + (Math.random() - 0.5) * 0.6, b.y + 0.3, b.z + (Math.random() - 0.5) * 0.6), 1.6 + Math.random()); };
     const place = () => {
-      salim.pos.copy(C).add(V(-0.85, 0, 0.35)); // on the fire side, so the bales burn behind him salim.pos.y = heightAt(salim.pos.x, salim.pos.z); salim.facing = yawTo(salim.pos, C); salim.st.crouch = 0.85; salim.st.action = null;
+      // on his knees at his brother's head and shoulders
+      { const h = J.head(); salim.pos.set(h.x + Math.cos(jf) * 1.0 + Math.sin(jf) * 0.5, 0, h.z - Math.sin(jf) * 1.0 + Math.cos(jf) * 0.5); } salim.pos.y = heightAt(salim.pos.x, salim.pos.z); salim.facing = yawTo(salim.pos, J.head()); salim.st.crouch = 0.85; salim.st.action = null;
       g.lighting?.set?.('night', 0);
       if (lamp) { lamp.color.set(0xff8a3a); lamp.distance = 14; lamp.position.copy(C).add(V(-1.6, 1.4, 1.6)); lamp.intensity = 10; }
     };
     const grab = (dt) => { walk(s1, V(C.x + 1.0, 0, C.z + 0.8), 2.2, dt); walk(s2, V(C.x + 0.5, 0, C.z - 0.9), 2.2, dt); for (const s of [s1, s2]) { s.st.walkBlend = 1; s.st.phase += dt * 5; } };
-    const toward = (a, b) => yawTo(a.pos, b.pos);
+    // a point across Jabir's head from Salim (d metres beyond it, h up, slid s along his body), for the two-shots
+    const across = (d, h, s = 0) => { const hj = headOf(jabir)(), hs = headOf(salim)(), f = yawTo(hs, hj); return above(V(hj.x + Math.sin(f) * d + Math.sin(jf) * s, hj.y + h, hj.z + Math.cos(f) * d + Math.cos(jf) * s), 0.5); };
+    const drag = (e, dt) => { const f = jabir.facing; walk(jabir, e, 1.6, dt); jabir.facing = f; };
     const shots = [
       { dur: 3.4, fadeIn: 0.5, tight: true, beat: 2, stinger: 'ambush',
         enter: () => place(),
@@ -386,21 +397,21 @@ export function setupDrama34(g) {
         cam: { p0: () => above(V(C.x + 4.6, C.y + 2.4, C.z - 3.4), 1.8), t0: () => V(C.x - 0.4, C.y + 0.7, C.z + 0.6), p1: () => above(V(C.x + 3.6, C.y + 2.0, C.z - 2.6), 1.6), t1: () => V(C.x - 0.4, C.y + 0.7, C.z + 0.6), fov: 38 },
         run: (d, k, dt) => { burn(); salim.st.crouch = 0.85; walk(s1, V(C.x + 2.5, 0, C.z + 5), 1.4, dt); walk(s2, V(C.x + 4.5, 0, C.z + 3.5), 1.4, dt); for (const s of [s1, s2]) { s.st.walkBlend = 1; s.st.phase += dt * 4; } } },
       { dur: lineDur('Leave me, Salim. Run!'), line: { who: 'Jabir', text: 'Leave me, Salim. Run!', rig: jabir.rig, cue: 'breath', expr: 'pain' }, tight: true,
-        cam: { follow: true, p0: () => { const hj = headOf(jabir)(), f = yawTo(salim.pos, hj); return above(V(hj.x + Math.sin(f) * 1.1 + Math.cos(f) * 0.5, hj.y + 0.55, hj.z + Math.cos(f) * 1.1 - Math.sin(f) * 0.5), 0.5); }, t0: () => headOf(jabir)().lerp(headOf(salim)(), 0.3), fov: 34 }, dof: headOf(jabir), aperture: 1.6,
+        cam: { follow: true, p0: () => across(1.5, 0.75), t0: () => headOf(jabir)().lerp(headOf(salim)(), 0.3), fov: 34 }, dof: headOf(jabir), aperture: 1.6,
         run: (d, k, dt) => { burn(); salim.st.crouch = 0.85; } },
       { dur: lineDur('Not without you.'), line: { who: 'Salim', text: 'Not without you.', rig: p.rig, cue: 'shout', expr: 'anger' }, tight: true, beat: 1,
-        cam: { follow: true, p0: () => above(V(C.x + 0.5, salim.pos.y + 0.95, C.z - 0.6), 0.6), t0: () => headOf(salim)(), fov: 30 }, dof: headOf(salim), aperture: 1.6,
+        cam: { follow: true, p0: () => across(1.25, 0.95, 0.35), t0: () => headOf(salim)(), fov: 30 }, dof: headOf(salim), aperture: 1.6,
         run: (d, k, dt) => { burn(); salim.st.crouch = 0.85; grab(dt * 0.4); } },
       // they take him: two soldiers drag Jabir off; Salim comes up off his knees
       { dur: 2.4, slow: 0.6, tight: true,
         // wide, side-on from the south, so the three of them and the dragging read at once
         cam: { p0: () => above(V(C.x + 1.5, C.y + 1.8, C.z - 5.6), 1.4), t0: () => V(C.x + 1.6, C.y + 0.8, C.z + 0.6), p1: () => above(V(C.x + 2.2, C.y + 1.7, C.z - 5.0), 1.4), t1: () => V(C.x + 2.4, C.y + 0.8, C.z + 1.2), fov: 40 },
-        run: (d, k, dt) => { burn(); grab(dt); salim.st.crouch = Math.max(0, 0.85 - k * 1.6); if (k > 0.45) { const e = V(C.x + 6, 0, C.z + 4); walk(jabir, e, 1.6, dt); s1.pos.copy(jabir.pos).add(V(0.5, 0, -0.6)); s2.pos.copy(jabir.pos).add(V(0.4, 0, 0.7)); for (const s of [s1, s2]) { s.pos.y = heightAt(s.pos.x, s.pos.z); s.facing = yawTo(s.pos, e); } jabir.facing = Math.PI / 2; } } },
+        run: (d, k, dt) => { burn(); grab(dt); salim.st.crouch = Math.max(0, 0.85 - k * 1.6); if (k > 0.45) { const e = V(C.x + 6, 0, C.z + 4); drag(e, dt); s1.pos.copy(jabir.pos).add(V(0.5, 0, -0.6)); s2.pos.copy(jabir.pos).add(V(0.4, 0, 0.7)); for (const s of [s1, s2]) { s.pos.y = heightAt(s.pos.x, s.pos.z); s.facing = yawTo(s.pos, e); } jabir.facing = Math.PI / 2; } } },
       // the blow from behind
       { dur: 1.5, slow: 0.5, tight: true, beat: 2,
         enter: () => { s3.pos.copy(salim.pos).add(V(-1.3, 0, 0.5)); s3.pos.y = heightAt(s3.pos.x, s3.pos.z); s3.facing = yawTo(s3.pos, salim.pos); act(s3, 'attack', 0.9); },
         cam: { follow: true, p0: () => V(salim.pos.x + 1.6, salim.pos.y + 1.5, salim.pos.z + 1.4), t0: () => headOf(salim)(), fov: 32 },
-        run: (d, k, dt) => { burn(); walk(jabir, V(C.x + 6, 0, C.z + 4), 1.6, dt); if (k > 0.55 && !salim.st.hitT) { salim.st.hitT = 1; g.audio.hit?.(); d.audio.voice?.('hurt'); if (open) document.body.classList.add('ep34freeze'); d.fade(1, open ? 0.6 : 0.12); } } },
+        run: (d, k, dt) => { burn(); drag(V(C.x + 6, 0, C.z + 4), dt); if (k > 0.55 && !salim.st.hitT) { salim.st.hitT = 1; g.audio.hit?.(); d.audio.voice?.('hurt'); if (open) document.body.classList.add('ep34freeze'); d.fade(1, open ? 0.6 : 0.12); } } },
       ...(open ? [] : [{ dur: 4.2, caption: 'They took Jabir alive. And the cedar chest.', enter: (d) => d.fade(1, 0) }]),
     ];
     return { dusk: 1, actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
@@ -462,12 +473,15 @@ export function setupDrama34(g) {
     const dark = () => V(door.x, heightAt(door.x, door.z) + 1.5, door.z);
     // Jabir's headcloth, bloodied, tied to the door post
     const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.5), new THREE.MeshStandardMaterial({ color: 0xd8cfb8, roughness: 1, side: THREE.DoubleSide }));
-    const blood = new THREE.Mesh(new THREE.CircleGeometry(0.09, 10), new THREE.MeshStandardMaterial({ color: 0x5a1210, roughness: 1, side: THREE.DoubleSide }));
-    blood.position.set(0.03, -0.08, 0.002); cloth.add(blood);
+    const blood = new THREE.Mesh(new THREE.CircleGeometry(0.13, 12), new THREE.MeshStandardMaterial({ color: 0x4a0c0a, roughness: 1, side: THREE.DoubleSide }));
+    blood.position.set(0.03, -0.06, 0.003); blood.scale.set(0.9, 1.3, 1); cloth.add(blood);
     const toward = yawTo(door, salim.pos); cloth.position.set(door.x + Math.sin(toward) * 0.9, heightAt(door.x, door.z) + 1.35, door.z + Math.cos(toward) * 0.9); cloth.rotation.y = toward; g.scene.add(cloth);
     const cl = () => cloth.position.clone();
     const shots = [
-      { dur: 3.6, caption: 'Tied to the door of the broken dam: a headcloth, stiff with blood.', tight: true, beat: 2, cam: { follow: true, p0: at(salim, 1.9, -2.6, 0.9), t0: cl, p1: at(salim, 1.8, -1.8, 0.7), t1: cl, fov: 30 }, dof: cl, enter: () => { salim.facing = yawTo(salim.pos, door); } },
+      // an insert: the cloth close, from the side, Salim's shoulder soft at the edge of the frame
+      { dur: 3.6, caption: 'Tied to the door of the broken dam: a headcloth, stiff with blood.', tight: true, beat: 2,
+        cam: { p0: () => { const c = cl(); return V(c.x + Math.sin(toward) * 1.3 + Math.cos(toward) * 0.55, c.y + 0.12, c.z + Math.cos(toward) * 1.3 - Math.sin(toward) * 0.55); }, t0: cl, p1: () => { const c = cl(); return V(c.x + Math.sin(toward) * 1.0 + Math.cos(toward) * 0.45, c.y + 0.1, c.z + Math.cos(toward) * 1.0 - Math.sin(toward) * 0.45); }, t1: cl, fov: 32 }, dof: cl, aperture: 1.6,
+        enter: () => { salim.pos.set(cloth.position.x + Math.sin(toward) * 2.2, 0, cloth.position.z + Math.cos(toward) * 2.2); salim.pos.y = heightAt(salim.pos.x, salim.pos.z); salim.facing = yawTo(salim.pos, door); } },
       { dur: lineDur('Jabir\'s.'), line: { who: 'Salim', text: 'Jabir\'s.', rig: p.rig, cue: 'breath', expr: 'grief' }, tight: true, cam: { follow: true, p0: at(salim, 1.7, 1.6, 0.6), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
       { dur: lineDur('You are the brother.'), line: { who: 'A voice in the dark', text: 'You are the brother.', expr: 'neutral' }, tight: true, beat: 1,
         cam: { p0: () => { const s = salim.pos; return V(s.x * 0.5 + door.x * 0.5, heightAt(door.x, door.z) + 1.3, s.z * 0.5 + door.z * 0.5); }, t0: dark, fov: 26 } },

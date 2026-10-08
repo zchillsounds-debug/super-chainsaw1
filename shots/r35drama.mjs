@@ -19,7 +19,7 @@ await pg.evaluate("{const s=document.createElement('style');s.textContent='*{ani
 let shotN = 0;
 const shot = async (n) => { if (out) await pg.screenshot({ path: `${out}/${String(++shotN).padStart(3, '0')}-${n}.png`, timeout: 180000 }); };
 const ev = (f, a) => pg.evaluate(f, a);
-await ev((f) => { const g = __game; g.player.invuln = 1e9; if (+f > 1) g.drama34.jump(+f); });
+await ev((f) => { const g = __game; g.player.invuln = 1e9; if (+f > 1) g.drama34.jump(+f); }, from);
 const state = () => ev(() => { const g = __game, E = g.player.ep34 || {}, o = document.getElementById('ep34');
   return { n: E.n, b: E.b, card: o && !o.classList.contains('hidden') ? o.className : null, scene: !!__director.def, obj: g.drama34.target()?.text || null, interior: !!g.interior, dialog: !!g.ui.dialogOpen }; });
 let last = '', idle = 0, guard = 0, lastShot = null;
