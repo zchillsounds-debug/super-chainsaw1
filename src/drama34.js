@@ -178,7 +178,7 @@ export function setupDrama34(g) {
   const rtl = LANG === 'ar' ? ' dir="rtl"' : '';
   D.titleCard = async (n) => {
     const Ep = EPISODES[n];
-    $o('.box').innerHTML = `<div class="eyebrow">${t('Episode')} ${t(NUM[n] || String(n))}</div><div class="arline">${Ep.ar}</div><div class="rule"><i></i><b></b><i></i></div><div class="title"${rtl}>${t(Ep.title)}</div><div class="where">${t('The Sawad, outside Baghdad, 813')}</div>`;
+    $o('.box').innerHTML = `<div class="eyebrow">${t('Episode')} ${t(NUM[n] || String(n))}</div>${LANG === 'ar' ? '' : `<div class="arline">${Ep.ar}</div>`}<div class="rule"><i></i><b></b><i></i></div><div class="title"${rtl}>${t(Ep.title)}</div><div class="where">${t('The Sawad, outside Baghdad, 813')}</div>`;
     show('title'); audio.stinger?.('title');
     await sleep(900); await waitTap(2600, 4800, 'Tap to begin'); await hide();
   };

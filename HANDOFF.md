@@ -39,6 +39,15 @@ Changes elsewhere: `story32.js` exposes `g.s32` (talkFamily, talkDeserter, des),
 
 **Tests:** `shots/r34drama.mjs [out] [pick] [lang] [port] [from]` plays a new chronicle from the title screen through the six episodes (taps the cards, plays every scene, enters the holds, fells the captains) and follows the travel to the marshes; `from` starts at an episode (`g.drama34.jump(n)`, applied when the runner is idle). `shots/r34clock.mjs` checks the clocks.
 
+**Status (end of the Round 34 session):**
+- Committed and pushed on `claude/story-microdrama-game-xbqf76`. Artifact version 32 published (2.0 MB).
+- r34drama: a new chronicle (en) from the title screen through Episodes 1 to 3 (cards, scenes, the ambush, the watcher, the dam), and from Episode 4 to the season's end in English (choice 2) and Arabic (choice 1): every card, scene, choice and cliffhanger played, no page errors. r34clock: the leaves clock runs down (120 to 103 in 60 s) and the dawn clock replaces it.
+- Regression (from the lane, `?play`, so the drama is off): r32story sawad, r29quests sawad, r22holds dam, finaletest docks, r33women sawad, all clean.
+- Fixed by the critique loop: the HUD fell back to the old quest text between beats; a test-only jump could run a beat twice (the clock outlived Ep 4); the cliffhanger text sat over faces (now in the dark band at the foot); the freeze frame was too dark at night; the season card showed the HUD (now solid black); a hold's warm-up compile could still be running when the episode led Salim out (three.js `isReady` error; `game.warmPending` is awaited now); the Arabic title card showed the title twice.
+- APK: CI still signs with the **throwaway key** (build 112 says so): the two secrets (`ANDROID_KEYSTORE_B64`, `ANDROID_KEYSTORE_PASSWORD`, from Round 33's `madinat-release.jks`) are not in GitHub yet. Remind the user to back up the save before installing.
+- Not yet checked on a real phone: the pacing of the episodes in real time (the clocks' lengths: 420 s and 480 s), and how long a player spends between beats.
+- Ideas for Round 35 (not approved): **Season Two, the marshes**, as episodes (Kallinikos, the reed village burning, the boats); then al-Karkh, the quays and the Hamrin as Seasons Three to Five. Also: voiced cues for the cliffhanger lines, a short "next time" teaser shot instead of text, a pursuit beat (a rider with the bundle), the deserters' seated pose and cold fire, and episode rewards (a named item at each episode's end).
+
 **Test workflow:** `/home/user/wt34` is a tar copy (`node_modules` symlinked), refreshed by `/home/user/sync34.sh` (never while a test runs there); vite runs from it on 5173. Kill processes with a pattern that cannot match the shell's own command line (`pkill -f "[v]ite --port"`), and never in the same command that starts the test. These live outside the repo: recreate them in a new container.
 
 ## Round 33: women in the world, graphics pass part 2, the APK key
