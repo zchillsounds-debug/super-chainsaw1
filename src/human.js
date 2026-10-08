@@ -266,6 +266,11 @@ function headwearPrims(B, o) {
     L.push(ell(H, [0, 0.02, -0.072], [0.088, 0.11, 0.07], null, { k: 0.025, mat: R.WRAP }));
     for (const s of [-1, 1]) L.push(cap(H, [s * 0.08, 0.08, 0.0], [s * 0.092, -0.07, -0.016], 0.03, 0.038, { k: 0.02, mat: R.WRAP }));
     L.push(cap('neck', [0, 0.06, -0.055], [0, -0.1, -0.095], 0.075, 0.115, { k: 0.03, mat: R.WRAP }));
+    // Round 33: a full hijab: the cloth wraps under the chin and round the throat, and falls over the chest and
+    // shoulders, so only the face shows
+    L.push(cap(H, [-0.066, -0.012, 0.022], [0.066, -0.012, 0.022], 0.036, 0.036, { k: 0.03, mat: R.WRAP }));
+    L.push(cap('neck', [0, 0.05, 0.02], [0, -0.07, 0.045], 0.062, 0.095, { k: 0.035, mat: R.WRAP }));
+    L.push(ell('upperChest', [0, 0.06, 0.0], [0.165, 0.12, 0.085], null, { k: 0.04, mat: R.WRAP }), cap('upperChest', [-0.12, 0.09, -0.01], [0.12, 0.09, -0.01], 0.06, 0.06, { k: 0.04, mat: R.WRAP }));
     L.push(ell(H, [0, 0.07, 0.15], [0.075, 0.106, 0.11], null, { sub: true, k: 0.01 })); // the face stays open
   } else if (o.turban) {
     L.push(ell(H, [0, 0.155, -0.012], [0.09, 0.07, 0.1], null, { k: 0.02, mat: R.WRAP }));
