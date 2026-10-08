@@ -369,8 +369,8 @@ export function setupDrama34(g) {
     // laid along the slope's contour (a body lying across a slope sinks into the uphill sand), on his back
     const gx = heightAt(C.x + 0.5, C.z) - heightAt(C.x - 0.5, C.z), gz = heightAt(C.x, C.z + 0.5) - heightAt(C.x, C.z - 0.5);
     const jabir = add(actor(humanoid({ ...JABIR_LOOK, weapon: null }), C.clone(), Math.atan2(-gz, gx))); // his spear is gone
-    jabir.st.dead = true; jabir.st.fallDir = 1; jabir.st.deadT = 4; // fallDir 1: on his back, the head behind him
-    const jf = jabir.facing, J = { head: () => ground(C.x - Math.sin(jf) * 1.45, C.z - Math.cos(jf) * 1.45) };
+    jabir.st.dead = true; jabir.st.fallDir = 1; jabir.st.deadT = 4; // fallDir 1: on his back
+    const jf = jabir.facing, J = { head: () => ground(C.x + Math.sin(jf) * 1.45, C.z + Math.cos(jf) * 1.45) }; // on his back, the head lies forward of the feet
     // the head bone does not follow the lying pose (it reads at standing height), so his face is placed from the body
     const jhead = () => J.head().add(V(0, 0.22, 0));
     const s1 = add(actor(humanoid(byzify({ ...LOOK.skoutatos(), shieldTint: 0 })), ground(C.x + 5, C.z + 10), Math.PI));
@@ -386,7 +386,7 @@ export function setupDrama34(g) {
     const burn = () => { for (const b of bales) if (Math.random() < 0.6) g.fx.fire(V(b.x + (Math.random() - 0.5) * 0.6, b.y + 0.3, b.z + (Math.random() - 0.5) * 0.6), 1.6 + Math.random()); };
     const place = () => {
       // on his knees at his brother's head and shoulders
-      { const h = J.head(); salim.pos.set(h.x + Math.cos(jf) * 1.0 + Math.sin(jf) * 0.5, 0, h.z - Math.sin(jf) * 1.0 + Math.cos(jf) * 0.5); } salim.pos.y = heightAt(salim.pos.x, salim.pos.z); salim.facing = yawTo(salim.pos, J.head()); salim.st.crouch = 0.85; salim.st.action = null;
+      { const h = J.head(); salim.pos.set(h.x + Math.cos(jf) * 1.0 - Math.sin(jf) * 0.4, 0, h.z - Math.sin(jf) * 1.0 - Math.cos(jf) * 0.4); } salim.pos.y = heightAt(salim.pos.x, salim.pos.z); salim.facing = yawTo(salim.pos, J.head()); salim.st.crouch = 0.85; salim.st.action = null;
       g.lighting?.set?.('night', 0);
       if (lamp) { lamp.color.set(0xff8a3a); lamp.distance = 14; lamp.position.copy(C).add(V(-1.6, 1.4, 1.6)); lamp.intensity = 10; }
     };
@@ -439,8 +439,10 @@ export function setupDrama34(g) {
         }, cam: { follow: true, p0: () => { const a = salim.pos, b = g.npc.position, f = yawTo(a, b); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * 0.35, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * 0.35); }, t0: head, fov: 30 } },
       say('Salim', 'Jabir. Where is Jabir?', { expr: 'fear' }),
       say('Ishaq', 'They took him. Alive. And the chest.', { expr: 'sad', tight: true, beat: 2 }),
-      say('Ishaq', 'They left this in the sand, where the chest had stood.', { expr: 'sad', enter: () => { arrow.position.copy(g.npc.position).add(V(0, 0.9, 0)); const hand = g.npc.userData?.parts?.handR; if (hand) { hand.getWorldPosition(arrow.position); } g.scene.add(arrow); } }),
-      { dur: 3.6, caption: 'An arrow, with a strip of linen tied to the shaft. Salim could not read it.', cam: { follow: true, p0: () => arrow.position.clone().add(V(0.9, 0.35, 0.6)), t0: () => arrow.position.clone().add(V(0, 0.45, 0)), fov: 30 }, dof: () => arrow.position.clone().add(V(0, 0.5, 0)), aperture: 1.6 },
+      // he drives it into the sand between them
+      say('Ishaq', 'They left this in the sand, where the chest had stood.', { expr: 'sad', enter: () => { const m = salim.pos.clone().lerp(g.npc.position, 0.5); arrow.position.set(m.x, heightAt(m.x, m.z) - 0.08, m.z); arrow.rotation.set(0, yawTo(salim.pos, g.npc.position), 0.18); g.scene.add(arrow); } }),
+      { dur: 3.6, caption: 'An arrow, with a strip of linen tied to the shaft. Salim could not read it.',
+        cam: { follow: true, p0: () => { const f = yawTo(salim.pos, g.npc.position) + Math.PI / 2; return arrow.position.clone().add(V(Math.sin(f) * 1.0, 0.6, Math.cos(f) * 1.0)); }, t0: () => arrow.position.clone().add(V(0, 0.55, 0)), fov: 30 }, dof: () => arrow.position.clone().add(V(0, 0.6, 0)), aperture: 1.6 },
       say('Salim', 'What does it say?', { expr: 'stern' }),
       say('Ishaq', '"The astronomer, for your brother."', { expr: 'fear', tight: true, beat: 2 }),
     ];
@@ -476,9 +478,10 @@ export function setupDrama34(g) {
     const door = g.storyDoor?.chief || V(SITES.serai.x, 0, SITES.serai.z), salim = playerActor(g);
     const dark = () => V(door.x, heightAt(door.x, door.z) + 1.5, door.z);
     // Jabir's headcloth, bloodied, tied to the door post
-    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.5), new THREE.MeshStandardMaterial({ color: 0xd8cfb8, roughness: 1, side: THREE.DoubleSide }));
+    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.62, 1, 6), new THREE.MeshStandardMaterial({ color: 0xd8cfb8, roughness: 1, side: THREE.DoubleSide }));
+    { const pa = cloth.geometry.attributes.position; for (let i = 0; i < pa.count; i++) pa.setZ(i, Math.sin(pa.getY(i) * 9) * 0.02); cloth.geometry.computeVertexNormals(); } // folds
     const blood = new THREE.Mesh(new THREE.CircleGeometry(0.13, 12), new THREE.MeshStandardMaterial({ color: 0x4a0c0a, roughness: 1, side: THREE.DoubleSide }));
-    blood.position.set(0.03, -0.06, 0.003); blood.scale.set(0.9, 1.3, 1); cloth.add(blood);
+    blood.position.set(0.01, 0.02, 0.025); blood.scale.set(0.55, 1.5, 1); cloth.add(blood);
     const toward = yawTo(door, salim.pos); cloth.position.set(door.x + Math.sin(toward) * 0.9, heightAt(door.x, door.z) + 1.35, door.z + Math.cos(toward) * 0.9); cloth.rotation.y = toward; g.scene.add(cloth);
     const cl = () => cloth.position.clone();
     const shots = [

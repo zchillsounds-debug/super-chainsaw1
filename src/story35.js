@@ -70,7 +70,9 @@ export function setupStory35(g) {
     if (g.cinematic) return;
     if (said()[key]) { g.ui.dialog('Jabir', t(AGAIN[R])); return; }
     const script = TALK[R].map((L) => ({ ...L, when: L.when ? () => L.when(g) : undefined }));
-    g.director.play(S32.chat(g, S32.other(n), script, { onEnd: () => { n.st.crouch = sitting ? 0.85 : 0; } })).then(() => { said()[key] = true; saveGame(g); });
+    // at his pallet, Salim crouches down to him, so the two are face to face
+    const P = g.player; if (sitting) P.st.crouch = 0.75;
+    g.director.play(S32.chat(g, S32.other(n), script, { onEnd: () => { n.st.crouch = sitting ? 0.85 : 0; P.st.crouch = 0; }, tick: () => { if (sitting) P.st.crouch = 0.75; } })).then(() => { said()[key] = true; P.st.crouch = 0; saveGame(g); });
   }
   // he stays seated on the pallet whatever the camp animation does
   const prev = g.tickExtra;

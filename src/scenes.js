@@ -331,7 +331,7 @@ export function epilogue(g, b) {
         // Jabir on a pallet by Ishaq's fire, between the two of them and a little back
         const mx = (salim.pos.x + ishaq.pos.x) / 2, mz = (salim.pos.z + ishaq.pos.z) / 2, f = yawTo(salim.pos, ishaq.pos) + Math.PI / 2;
         jabir.pos.copy(ground(mx + Math.sin(f) * 1.6, mz + Math.cos(f) * 1.6)); jabir.pos.y += 0.12; jabir.facing = f; jabir.rig.visible = true;
-        pallet.position.set(jabir.pos.x - Math.sin(f) * 0.7, jabir.pos.y - 0.06, jabir.pos.z - Math.cos(f) * 0.7); pallet.rotation.y = f; pallet.visible = true; // under him, head to feet
+        pallet.position.set(jabir.pos.x + Math.sin(f) * 0.7, jabir.pos.y - 0.06, jabir.pos.z + Math.cos(f) * 0.7); pallet.rotation.y = f; pallet.visible = true; // under him: lying on his back (fallDir 1), his head is forward of his feet
       },
       cam: { follow: true, p0: at(salim, 1.75, -0.9, 0.4), t0: headOf(ishaq), fov: 30 }, dof: headOf(ishaq) },
     ...[['Ishaq', 'But the chest is light. Some of the Pages are missing.'], ['Salim', 'Who has them?']].map(([who, line]) => {
@@ -343,7 +343,8 @@ export function epilogue(g, b) {
     ...[['I heard them, in the vault. The rest went east by boat, into the marshes.', 0], ['Kallinikos has them. And he has the fire.', 2]].map(([line, beat]) => ({
       dur: lineDur(line), line: { who: 'Jabir', text: line, rig: jabir.rig, cue: 'breath', expr: 'pain' }, tight: beat > 0, beat,
       enter: () => { ishaq.st.talk = false; salim.st.talk = false; salim.facing = yawTo(salim.pos, jabir.pos); ishaq.facing = yawTo(ishaq.pos, jabir.pos); },
-      cam: { follow: true, p0: () => { const q = jabir.pos, f = yawTo(q, salim.pos); return V(q.x + Math.sin(f) * 2.2, q.y + 1.5, q.z + Math.cos(f) * 2.2); }, t0: () => jabir.pos.clone().add(V(0, 0.3, 0)), fov: 34 }, dof: () => jabir.pos.clone().add(V(0, 0.3, 0)), aperture: 1.3 })),
+      // side-on to him, a little above, over the head end: his face and the fire beyond
+      cam: { follow: true, p0: () => { const q = jabir.pos, f = jabir.facing, sd = Math.sign(Math.sin(f - yawTo(q, salim.pos))) || 1; return V(q.x + Math.sin(f) * 1.9 + Math.cos(f) * 1.5 * sd, q.y + 1.25, q.z + Math.cos(f) * 1.9 - Math.sin(f) * 1.5 * sd); }, t0: () => { const f = jabir.facing; return V(jabir.pos.x + Math.sin(f) * 1.1, jabir.pos.y + 0.3, jabir.pos.z + Math.cos(f) * 1.1); }, fov: 36 }, dof: () => { const f = jabir.facing; return V(jabir.pos.x + Math.sin(f) * 1.3, jabir.pos.y + 0.3, jabir.pos.z + Math.cos(f) * 1.3); }, aperture: 1.3 })),
     // Round 24: the act card is shown once, on the travel card while the marshes load (main.js TRAVEL_CARD)
     { dur: 1.5, enter: (d) => { ishaq.st.talk = false; salim.st.talk = false; d.fade(1, 1.2); } },
   ];

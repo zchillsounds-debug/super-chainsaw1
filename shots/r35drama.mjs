@@ -49,6 +49,9 @@ while (guard++ < 4000) {
   }
   if (s.dialog) { await ev(() => document.querySelector('#dialog .dbtn')?.click()); await ev(() => __sim(0.3)); continue; }
   // no scene: kill the episode's foes, or walk to the objective
+  // a hold compiles its materials in the background when it opens (minutes in SwiftShader): no fighting before it is done
+  const warm = await ev(() => { const g = __game; if (!g.interior?.hold) { window.__wpFor = null; return true; } if (window.__wpFor !== g.interior) { window.__wpFor = g.interior; window.__wpDone = false; Promise.resolve(g.warmPending).catch(() => {}).then(() => { window.__wpDone = true; }); } return window.__wpDone; });
+  if (!warm) { await ev(() => __sim(0.2)); await new Promise((r) => setTimeout(r, 500)); idle = 0; continue; }
   const did = await ev(() => { const g = __game, p = g.player, live = g.enemies.filter((e) => !e.dead && !e.hidden && (e.ep34 || g.interior?.hold || e.pos.distanceTo(p.pos) < 26));
     if (live.length) { for (const e of live.slice(0, 3)) { if (g.interior?.hold) p.pos.set(e.pos.x + 1.2, e.pos.y, e.pos.z + 1.2); g.damageEnemy(e, 1e6, false, p.pos); } __sim(0.5); return 'kill ' + live.length; }
     if (g.interior?.hold) { const B = g.boss && !g.boss.dead ? g.boss : null; if (B) { g.damageEnemy(B, 1e6, false, p.pos); __sim(1); return 'boss'; } __sim(1); return 'in hold'; }
