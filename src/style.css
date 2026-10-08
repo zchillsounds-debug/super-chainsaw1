@@ -780,3 +780,5 @@ body.ep34freeze #game{filter:saturate(.25) contrast(1.18) brightness(.72) sepia(
 @keyframes clockpulse{0%,100%{box-shadow:0 2px 10px #000a,0 0 0 #ff3a0a00}40%{box-shadow:0 2px 10px #000a,0 0 18px #ff3a0aaa}}
 body.touch #clock34{top:calc(6px + env(safe-area-inset-top,0px));width:min(40vw,300px)}
 #ep34.cliff{align-items:flex-end;padding-bottom:calc(7vh + env(safe-area-inset-bottom,0px))}
+#ep34.cliff.final{background:#000}
+body.ep34freeze #game{filter:saturate(.3) contrast(1.15) brightness(.86) sepia(.22)}

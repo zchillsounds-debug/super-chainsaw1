@@ -203,7 +203,7 @@ export function setupDrama34(g) {
     if (still) await snap(n);
     const N = EPISODES[n + 1];
     $o('.box').innerHTML = `<div class="tbc"${rtl}>${t('To be continued')}</div><div class="nextep"${rtl}>${n >= 6 ? t('End of Season One') : t('Next') + ' · ' + t('Episode') + ' ' + t(NUM[n + 1] || '')}</div><div class="nexttitle"${rtl}>${t(N?.title || '')}</div><div class="teaser"${rtl}>${t(N?.next || '')}</div>`;
-    await sleep(500); show('cliff');
+    await sleep(500); show(n >= 6 ? 'cliff final' : 'cliff');
     await waitTap(2600, 60000);
     await hide(); document.body.classList.remove('ep34freeze');
   };
@@ -454,7 +454,7 @@ export function setupDrama34(g) {
       holdBeat('Enter the Broken Dam. Find the voice in the dark.', 'chief', STORY.chief, async () => { await leaveHold(); await play(smokeScene()); }),
     ],
     4: [
-      { enter: () => { kilnSmoke.on = true; startClock({ label: 'The Pages are burning', total: 420, unit: () => t('{n} leaves left').replace('{n}', leavesLeft()) }); },
+      { enter: () => { kilnSmoke.on = true; if (!clock) startClock({ label: 'The Pages are burning', total: 420, unit: () => t('{n} leaves left').replace('{n}', leavesLeft()) }); },
         obj: 'Get to the kiln galleries before the Pages burn', at: () => g.storyDoor?.second, done: () => questDone(STORY.second),
         then: async () => { E().leaves = leavesLeft(); stopClock(); kilnSmoke.on = false; await leaveHold(); await play(ishaqKnew()); } },
     ],
@@ -466,7 +466,7 @@ export function setupDrama34(g) {
     ],
     6: [
       { then: async () => { await play(night()); } },
-      { enter: () => { if (!g.boss && !g.bossActive) g.bossSpawned = false; if (!clock && !E().dawn) startClock({ label: 'Dawn', total: 480, unit: (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`, out: () => { E().dawn = 'late'; BOSS.intro = { ...BOSS.intro, text: 'Dawn, guard. You are late, and the village is thirsty.' }; bark('Salim', 'The sky is going grey. Faster.'); } }); },
+      { enter: () => { if (!g.boss && !g.bossActive) g.bossSpawned = false; if (clock?.label !== 'Dawn' && !E().dawn) startClock({ label: 'Dawn', total: 480, unit: (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`, out: () => { E().dawn = 'late'; BOSS.intro = { ...BOSS.intro, text: 'Dawn, guard. You are late, and the village is thirsty.' }; bark('Salim', 'The sky is going grey. Faster.'); } }); },
         obj: 'Reach the old arch before dawn. Bardanes waits there.', at: () => g.boss && !g.boss.dead ? g.boss.pos : V(SITES.arch.x, 0, SITES.arch.z), done: () => false }, // ends with the epilogue: g.travel below shows the season's cliffhanger
     ],
   };
@@ -481,6 +481,7 @@ export function setupDrama34(g) {
   async function intro(fromLoad) {
     const n = E().n;
     applyZones(); floorLevel(n);
+    if (clock && !(n === 4 && clock.label !== 'Dawn') && !(n === 6 && clock.label === 'Dawn')) stopClock(); // no clock outlives its episode
     g.paused = true;
     if (n > 1 || fromLoad) await D.recap(n);
     if (E().b === 0 || fromLoad) await D.titleCard(n);
@@ -537,8 +538,10 @@ export function setupDrama34(g) {
   }
   D.fromSave = fromSave;
   // headless tests: start at an episode, with what came before marked done (shots/r34drama.mjs)
-  D.jump = (n) => {
-    p.ep34 = { n, b: 0, leaves: 60 }; introDone = false; cur = null; busy = false;
+  let jumpTo = 0;
+  D.jump = (n) => { jumpTo = n; };
+  const doJump = (n) => {
+    p.ep34 = { n, b: 0, leaves: 60 }; introDone = false; cur = null; stopClock();
     const done = (id, hold) => { const q = g.quests.find((x) => x.id === id); if (q) q.done = true; const s = g.holds?.state(hold); if (s) s.done = true; };
     if (n >= 4) done(STORY.chief, 'dam'); if (n >= 5) done(STORY.second, 'kilns');
     if (n >= 4) choose(g, 'photeinos', 'qadi'); g.act = Math.max(g.act || 1, n >= 5 ? 3 : n >= 4 ? 2 : 1);
@@ -582,6 +585,7 @@ export function setupDrama34(g) {
     if (!live()) return;
     if (E().n < 6 && !g.bossActive) g.bossSpawned = true; // Bardanes waits for the last episode
     if (busy || !g.started || g.cinematic || g.paused || p.dead || g.ui.dialogOpen || !g.director) return;
+    if (jumpTo) { doJump(jumpTo); jumpTo = 0; return; }
     step();
   };
   // a chronicle continued from a save outside the episodes still has its gate and troops set
