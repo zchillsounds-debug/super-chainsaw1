@@ -438,7 +438,7 @@ export function setupDrama34(g) {
   const fight = (obj, spawn, then) => { const B = { obj, foes: null, enter: () => { if (!B.foes || B.foes.every((e) => e.dead)) B.foes = spawn(); }, at: () => B.foes?.find((e) => !e.dead)?.pos || null, done: () => !!B.foes && B.foes.every((e) => e.dead), then }; return B; };
   const scene = (def) => ({ then: async () => { await play(def()); } });
   const holdBeat = (obj, door, quest, then) => ({ obj, at: () => g.storyDoor?.[door], done: () => questDone(quest), then });
-  const leaveHold = async () => { if (g.interior?.hold) await g.holds.exit(); await sleep(700); };
+  const leaveHold = async () => { await g.warmPending?.catch?.(() => {}); if (g.interior?.hold) await g.holds.exit(); await sleep(700); };
   const BEATS = {
     1: [
       { then: async () => { await play(caravanA()); } },

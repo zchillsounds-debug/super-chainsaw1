@@ -186,7 +186,7 @@ ui.aspects = ASPECTS; ui.sets = SETS; ui.classNames = Object.fromEntries(Object.
 if (IS_TOUCH) setupMobile(game, ui);
 if (gtao) game.holeInGBuffer(gtao.normalMaterial);
 // Round 21: compile whatever a hold just added, against the real targets, while the screen is still faded out
-game.warmCompile = async () => { const prev = renderer.getRenderTarget(); try { renderer.setRenderTarget(composer.readBuffer); await renderer.compileAsync(scene, camera); } catch (e) { /* lazily */ } renderer.setRenderTarget(prev); };
+game.warmCompile = () => (game.warmPending = (async () => { const prev = renderer.getRenderTarget(); try { renderer.setRenderTarget(composer.readBuffer); await renderer.compileAsync(scene, camera); } catch (e) { /* lazily */ } renderer.setRenderTarget(prev); })()); // Round 34: drama34 waits on it before leaving a hold
 const director = game.director = new Director({ game, camera, ui, audio, grade, bokeh, renderer, scene });
 
 // title-screen cinematic camera
