@@ -28,6 +28,7 @@ import { setupStory26 } from './story26.js';
 import { setupCamp26 } from './camp26.js';
 import { setupStory32 } from './story32.js';
 import { setupWomen33 } from './women33.js';
+import { setupDrama34 } from './drama34.js';
 import { setupCamp30 } from './camp30.js';
 import { setupFoes30 } from './foes30.js';
 import { setupFoes31 } from './foes31.js';
@@ -133,15 +134,17 @@ game.tickExtra = (dt) => qanatBurnTick(game, dt);
 setupNarrative(game);
 game.journal = (t) => { if (document.getElementById('journal')) { document.getElementById('journal').remove(); document.body.classList.remove('inshop'); } else journalPanel(game, t); };
 setupContent(game);
-setupSideQuests(game);
-setupWanted31(game); // Round 31: the Wanted board (wraps the side-quest tracker, trail and markers)
+// Round 34: what each side system adds to the map is noted, so the chronicle can keep it back until its end (drama34.js)
+const side34 = (fn) => { const i0 = game.interactables.length, n0 = game.npcs.length, p0 = game.pois?.length || 0, c0 = scene.children.length; fn(); (game.side34 ||= []).push({ its: game.interactables.slice(i0), npcs: game.npcs.slice(n0), pois: (game.pois || []).slice(p0), objs: scene.children.slice(c0) }); };
+side34(() => setupSideQuests(game));
+side34(() => setupWanted31(game)); // Round 31: the Wanted board (wraps the side-quest tracker, trail and markers)
 setupEpilogue29(game); // Round 29: the epilogue on the quays at dusk
-setupDungeons(game);
+side34(() => setupDungeons(game));
 setupBuild(game);
 setupTravel(game);
 setupMount(game);
 setupCompanion(game);
-setupTrials(game);
+side34(() => setupTrials(game));
 setupCraft(game);
 setupRivals(game);
 setupHamrin(game);
@@ -202,6 +205,8 @@ function start(cont, fromTravel = false) {
     mode = 'game'; game.started = true; ui.show(); ui.fade(0);
     if (cont) {
       applySave(game, cont); restoreContent(game); applyNG(game); game.restoreSide?.(); lighting.forAct(cont.act, 0); game.briefed = true; game.refreshTracker?.();
+      // Round 34: the Sawad is told in episodes: "previously", then the episode's card
+      if (game.drama34?.on && IS_SAWAD && await game.drama34.resume()) return;
       // first time in a new region: the arrival scene; otherwise a banner
       if (!IS_SAWAD && !game.arrived?.[REGION]) { game.act = Math.max(game.act, FIRST_ACT[REGION]); await director.play(SCENES.arrival(game)); (game.arrived ||= {})[REGION] = true; game.refreshTracker?.(); saveGame(game); }
       else ui.banner('The Chronicle Continues', STORY.banner[cont.act] || REGION_NAME, 3500);
@@ -213,6 +218,7 @@ function start(cont, fromTravel = false) {
     }
     const cls = P.get('cls') || await ui.classPick();
     game.setClass(cls, true);
+    if (game.drama34?.on) { await game.drama34.begin(); saveGame(game); return; } // Round 34: Episode 1 begins (drama34.js runs it)
     await director.play(SCENES.prologue(game));
     await director.play(SCENES.briefing(game));
     game.act = 1; game.briefed = true; game.refreshTracker?.(); saveGame(game);
@@ -241,6 +247,7 @@ game.travel = () => {
   audio.fadeOutAll?.(0.8); ui.holdBlack = true;
   ui.fade(1, director.endedBlack ? 0 : 0.5); setTimeout(() => location.reload(), 900);
 };
+setupDrama34(game); // Round 34: the chronicle as a microdrama (after game.travel, which it wraps)
 // Continue button when a save exists
 let newGame = false; try { newGame = !!sessionStorage.getItem('sob.newgame'); sessionStorage.removeItem('sob.newgame'); } catch { /* ignore */ }
 const saved = loadSave();
@@ -391,7 +398,7 @@ function frame() {
     reflection.update(perfLevel >= 2 ? 3 : 2);
   }
   REFL.uRipT.value = t;
-  if (!covered) composer.render();
+  if (!covered) { composer.render(); if (game.afterRender) { const f = game.afterRender; game.afterRender = null; f(renderer.domElement); } } // Round 34: stills for "previously" 
   perf.frame(rawDt);
   requestAnimationFrame(frame);
 }

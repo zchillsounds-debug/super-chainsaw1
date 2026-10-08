@@ -586,7 +586,8 @@ export class Game {
     if (p.level >= MAX_LEVEL) p.xp = 0;
     while (p.level < MAX_LEVEL && p.xp >= this.xpFor(p.level)) { p.xp -= this.xpFor(p.level); this.levelUp(); }
     // loot
-    const n = e.boss ? 6 : e.elite ? 3 : (Math.random() < 0.35 ? 1 : 0);
+    // Round 34: story-paced while the chronicle runs: the rank and file carry no loot, captains one piece
+    const n = this.storyLoot ? (e.boss ? 3 : e.elite ? 1 : 0) : e.boss ? 6 : e.elite ? 3 : (Math.random() < 0.35 ? 1 : 0);
     for (let i = 0; i < n; i++) {
       const rar = e.boss && i === 0 ? 'legendary' : e.elite && i === 0 ? (Math.random() < 0.3 ? 'legendary' : 'rare') : rollRarity(e.level, e.elite ? 0.1 : 0);
       this.dropItem(makeItem(e.level + (e.elite ? 1 : 0), rar), e.pos);

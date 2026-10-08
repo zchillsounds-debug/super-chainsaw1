@@ -16,7 +16,7 @@ export class Gamepads {
       if (down(0)) { if (ch.length) ch[this.sel]?.click(); else ui.querySelector('.dbtn')?.click(); this.sel = 0; }
       return;
     }
-    if (g.cinematic) { if (down(0)) g.director?.advance(); if (down(9)) g.director?.skip(); return; }
+    if (g.cinematic) { if (down(0)) g.director?.advance(); return; } // Round 34: scenes are never skipped
     if (mag > 0.18) { g.joy = { x: ax, y: ay }; this.wasJoy = true; } else if (this.wasJoy) { g.joy = null; this.wasJoy = false; }
     if (down(9)) this.h.settings();
     if (down(8)) this.h.journal();

@@ -4,7 +4,8 @@ import { t } from './i18n.js';
 
 // Cinematic director: plays a list of shots with eased camera moves, letterbox bars, a subtitle bar
 // with a speaker portrait, act title cards, slow motion, depth of field and a warm film grade.
-// Tap to hurry the current line; press and hold anywhere (or hold Space/Esc) to skip the scene.
+// Round 34: nothing is skipped. A tap (or Space/Enter) moves on only once the current line has been shown in full
+// and held a moment; a caption once it has been up long enough to read. Choices wait for an answer.
 const sm = (t) => t * t * (3 - 2 * t);
 const EASE = { io: sm, lin: (t) => t, out: (t) => 1 - Math.pow(1 - t, 3), in: (t) => t * t * t, io2: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2) };
 const _q = new THREE.Quaternion();
@@ -34,17 +35,15 @@ export class Director {
       <div class="caption"></div>
       <div class="cchoice"></div>
       <div class="tapnext"><span>Tap to continue</span><i>▸</i></div>
-      <div class="skip"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" class="bg"/><circle cx="18" cy="18" r="15" class="fg"/></svg><span>Hold to skip</span></div>
       <div class="cfade"></div>`;
     document.getElementById('ui').appendChild(el);
     this.$ = (s) => el.querySelector(s);
-    // hold-to-skip / tap-to-advance
-    this.hold = 0; this.holding = false; this.downAt = 0;
-    const down = (e) => { if (!this.def) return; e.preventDefault?.(); this.holding = true; this.downAt = performance.now(); this.audio.init(); };
-    const up = () => { if (!this.def) return; const tap = this.holding && performance.now() - this.downAt < 280; this.holding = false; this.hold = 0; if (tap) this.advance(); };
-    el.addEventListener('pointerdown', down); addEventListener('pointerup', up); addEventListener('pointercancel', up);
-    addEventListener('keydown', (e) => { if (this.def && (e.code === 'Space' || e.code === 'Escape') && !e.repeat) down(e); });
-    addEventListener('keyup', (e) => { if (this.def && (e.code === 'Space' || e.code === 'Escape')) up(); });
+    // tap-to-advance (Round 34: no hold-to-skip)
+    this.downAt = 0;
+    const down = (e) => { if (!this.def) return; e.preventDefault?.(); this.downAt = performance.now(); this.audio.init(); };
+    const up = () => { if (!this.def || !this.downAt) return; const tap = performance.now() - this.downAt < 600; this.downAt = 0; if (tap) this.advance(); };
+    el.addEventListener('pointerdown', down); addEventListener('pointerup', up); addEventListener('pointercancel', () => { this.downAt = 0; });
+    addEventListener('keydown', (e) => { if (this.def && (e.code === 'Space' || e.code === 'Enter') && !e.repeat) { e.preventDefault(); this.advance(); } });
     this.p0 = new THREE.Vector3(); this.t0 = new THREE.Vector3(); this.p1 = new THREE.Vector3(); this.t1 = new THREE.Vector3(); this.look = new THREE.Vector3();
   }
   get active() { return !!this.def; }
@@ -68,7 +67,7 @@ export class Director {
     const d = this.def; if (!d) return;
     this.i++;
     if (this.i >= d.shots.length) { this.end(false); return; }
-    const s = this.shot = d.shots[this.i]; this.t = 0; this.lineDone = false;
+    const s = this.shot = d.shots[this.i]; this.t = 0; this.lineDone = false; this.doneAt = null;
     if (s.when && !s.when()) { this.next(); return; } // Round 25: shots that only play after a given choice
     s.enter?.(this, s);
     const cam = s.cam || {};
@@ -77,6 +76,9 @@ export class Director {
     this.fov0 = cam.fov0 ?? cam.fov ?? 36; this.fov1 = cam.fov1 ?? cam.fov ?? this.fov0;
     this.timeScale = s.slow ?? 1;
     this.setLine(s.line); this.setCard(s.card); this.setCaption(s.caption); this.setChoice(s);
+    // Round 34: the bars close in at the turns of the story (a shot marked tight), and open again after
+    this.el.classList.toggle('tight', !!(s.tight ?? d.tight));
+    if (s.beat) this.audio.heart?.(s.beat);
     if (s.stinger) this.audio.stinger?.(s.stinger);
     if (s.fadeIn != null) { this.fadeCur = 1; this.fade(0, s.fadeIn); }
   }
@@ -95,16 +97,22 @@ export class Director {
       b.addEventListener('click', (e) => { e.stopPropagation(); pick(i); }); box.appendChild(b);
     });
   }
+  // Round 34: can this shot be moved on yet? A line once it is fully shown and has held 0.6 s; a caption once it has
+  // been up long enough to read; a shot with neither once it has run its length
+  ready() {
+    const s = this.shot; if (!s || s.choice) return false;
+    if (s.line) return this.lineDone && this.doneAt != null && this.t - this.doneAt >= 0.6;
+    if (s.caption) return this.t >= Math.min(s.dur, 1.4 + s.caption.length / 28);
+    return this.t >= s.dur;
+  }
   advance() {
-    if (this.shot?.choice) return; // a choice is never tapped past
-    // a tap finishes the typed line first, then moves on
-    if (this.shot?.line && !this.lineDone) { this.typed = 1e9; return; }
+    if (!this.ready()) return; // nothing is skipped: not even a typed line is hurried
     if (this.shot?.line || this.shot?.caption || this.shot?.tapNext) this.next();
   }
+  // headless tests only (there is no control for it in the game): run the rest of the scene out, choices taking option 1
   skip() {
     const d = this.def; if (!d) return;
-    if (this.shot?.choice && this.shot.chosen == null) return; // the choice itself can't be skipped
-    // choices in the part skipped take their first option
+    if (this.shot?.choice && this.shot.chosen == null) return;
     for (let i = this.i; i < d.shots.length; i++) { const s = d.shots[i]; if (s.choice && s.chosen == null) { s.chosen = 0; s.choice.options[0].fx?.(); } s.skip?.(this); }
     this.end(true);
   }
@@ -192,11 +200,6 @@ export class Director {
   update(rawDt) {
     if (!this.def) return false;
     const s = this.shot; if (!s) return true;
-    // hold to skip
-    if (this.holding) { this.hold = Math.min(1, this.hold + rawDt / 0.9); if (this.hold >= 1) { this.holding = false; this.skip(); return true; } }
-    else this.hold = Math.max(0, this.hold - rawDt * 3);
-    this.$('.skip').classList.toggle('show', this.hold > 0.02 || this.t < 2.5);
-    this.$('.skip .fg').style.strokeDashoffset = String(94.25 * (1 - this.hold));
     const dt = rawDt * this.timeScale;
     this.t += rawDt;
     const k = Math.min(1, this.t / s.dur), e = EASE[s.cam?.ease || 'io'](k);
@@ -247,13 +250,14 @@ export class Director {
       const n = Math.min(this.lineText.length, Math.floor(this.typed));
       this.$('.sline').textContent = this.lineText.slice(0, n);
       this.lineDone = n >= this.lineText.length;
+      if (this.lineDone && this.doneAt == null) this.doneAt = this.t;
     }
     s.run?.(this, k, dt, s);
     this.def?.tick?.(this, dt);
     // spoken lines and captions hold until tapped, so nothing is missed (they move on by themselves after 20 s)
     const waits = !!(s.line || s.caption) && !s.noWait;
     const ready = this.t >= s.dur && (!s.line || this.lineDone);
-    this.$('.tapnext').classList.toggle('show', waits && ready);
+    this.$('.tapnext').classList.toggle('show', waits && this.ready());
     if (this.def && this.shot === s && ready && !s.choice && (!waits || this.t >= s.dur + 20)) this.next();
     return true;
   }

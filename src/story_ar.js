@@ -13,6 +13,7 @@ import { AR30 } from './story30_ar.js';
 import { AR31 } from './story31_ar.js';
 import { AR32 } from './story32_ar.js';
 import { AR33 } from './story33_ar.js';
+import { AR34 } from './story34_ar.js';
 export const STORY_AR = {
   // ---------------------------------------------------------------- names
   'Salim': 'سالم', 'Ishaq': 'إسحاق', 'Ghassan': 'غسّان', 'Farud': 'فرود', 'Hisham': 'هشام', 'Yusuf': 'يوسف', 'Bishr': 'بشر', '\'Amr': 'عمرو',
@@ -587,3 +588,4 @@ Object.assign(STORY_AR, AR30);
 Object.assign(STORY_AR, AR31);
 Object.assign(STORY_AR, AR32);
 Object.assign(STORY_AR, AR33);
+Object.assign(STORY_AR, AR34);

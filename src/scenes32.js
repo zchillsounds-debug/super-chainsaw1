@@ -37,11 +37,11 @@ export function chat(g, o, script, { establish = true, onEnd = null, closeIn = 1
   const shots = [];
   if (establish) shots.push({ dur: 2.4, fadeIn: 0.6, cam: wide, enter: () => face() });
   for (const L of script) {
-    if (L.caption) { shots.push({ when: L.when, dur: L.dur || 2.6 + L.caption.length / 22, caption: L.caption, cam: L.cam || wide, enter: () => { face(); salim.st.talk = false; o.st.talk = false; L.enter?.(); }, run: L.run }); continue; }
+    if (L.caption) { shots.push({ when: L.when, dur: L.dur || 2.6 + L.caption.length / 22, caption: L.caption, cam: L.cam || wide, tight: L.tight, beat: L.beat, enter: () => { face(); salim.st.talk = false; o.st.talk = false; L.enter?.(); }, run: L.run }); continue; }
     if (L.choice) { shots.push({ when: L.when, dur: 0.8, choice: L.choice, cam: ots(salim, o, 0.6), dof: headOf(o), enter: () => { face(); salim.st.talk = false; o.st.talk = false; }, run: () => face() }); continue; }
     const isS = L.who === 'Salim', spk = isS ? salim : cast[L.who] || o;
     let lis = o; // Salim speaks to whoever spoke before him
-    shots.push({ when: L.when, dur: lineDur(L.text), line: { who: L.who, text: L.text, rig: spk.rig, cue: isS ? 'hm' : 'breath', expr: L.expr }, cam: isS ? ots({ get pos() { return lis.pos; } }, salim, -0.35) : ots(salim, spk, 0.35), dof: headOf(spk),
+    shots.push({ when: L.when, dur: lineDur(L.text), tight: L.tight, beat: L.beat, line: { who: L.who, text: L.text, rig: spk.rig, cue: isS ? 'hm' : 'breath', expr: L.expr }, cam: isS ? ots({ get pos() { return lis.pos; } }, salim, -0.35) : ots(salim, spk, 0.35), dof: headOf(spk),
       enter: () => { if (isS) lis = look; else look = spk; face(); for (const a of actors) a.st.talk = a === spk; if (L.act) act(spk, L.act, 1.6); L.enter?.(); }, run: (dd, k, dt) => { if (L.run) L.run(dd, k, dt); else face(); } });
   }
   return { actors, shots, tick: (dd, dt) => { for (const a of actors) tickActor(g, a, dt); tick?.(dd, dt); }, end: () => { for (const a of actors) a.st.talk = false; onEnd?.(); } };

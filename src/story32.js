@@ -144,6 +144,8 @@ const DESERTER = {
     { who: 'Doukitzes', text: 'I wrote to my mother every week. I never sent one. The officers read everything.' },
     { who: 'Salim', text: 'Where will you go?' },
     { who: 'Doukitzes', text: 'South, to the Gulf ports. A ship to anywhere that is not a war. If you let me.' },
+    // Round 34: what he knows of Bardanes turns the episode
+    { who: 'Doukitzes', text: 'Bardanes waits at the old arch. He fouled the canal so the village would give you up to him. By dawn, they will.', drama: true },
   ] },
   marsh: { name: 'Leon', at: ['kiln', 24, -18], lines: [
     { who: 'Leon', text: 'Kallinikos made us pour the fire on the reed houses. There were people in them. I heard them.' },
@@ -357,7 +359,7 @@ export function setupStory32(g) {
     if (ch()[desKey] || g.cinematic) return;
     if (!calmNear(20)) { g.ui.toast(t('Deal with the men around first')); return; }
     n.rig.visible = true; n.st.crouch = 0;
-    const script = [...D.lines, { choice: { prompt: t('He waits for your answer.'), options: [
+    const script = [...D.lines.filter((L) => !L.drama || g.drama34?.live()), { choice: { prompt: t('He waits for your answer.'), options: [
       { label: 'Spare him. Let him go south.', fx: () => choose(desKey, 'spare') },
       { label: 'Turn him in to the qadi\'s men.', fx: () => choose(desKey, 'turn') }] } },
     ...DES_AFTER.spare.map((L) => ({ ...L, when: () => ch()[desKey] === 'spare' })), ...DES_AFTER.turn.map((L) => ({ ...L, when: () => ch()[desKey] === 'turn' }))];
@@ -369,6 +371,8 @@ export function setupStory32(g) {
       saveGame(g);
     });
   }
+  // Round 34: the episodes start these scenes themselves (drama34.js)
+  g.s32 = { talkFamily, talkDeserter: () => { const n = g.npcs.find((x) => x.name === D?.name); if (n) talkDeserter(n); }, get des() { return g.npcs.find((x) => x.name === D?.name); } };
   const spared = () => ACT_REGIONS.filter((r) => ch()['des_' + r] === 'spare').length;
   g.spared32 = spared;
 
@@ -402,7 +406,7 @@ export function setupStory32(g) {
   // ---------------- the scene inside each act
   const midKey = 'mid32_' + REGION;
   const tryMid = () => {
-    if (said()[midKey] || !S32.MIDACT[REGION] || !HUB?.ishaq) return false;
+    if (said()[midKey] || !S32.MIDACT[REGION] || !HUB?.ishaq || g.drama34?.live()) return false; // Round 34: an episode tells it
     if (REGION === 'hamrin') {
       const done = ['quarry', 'fort', 'gorge'].filter((id) => g.holds?.state(id)?.done).length;
       if (!done || !said().h26scout || !g.npc || Math.hypot(p.pos.x - g.npc.position.x, p.pos.z - g.npc.position.z) > 16) return false;

@@ -731,3 +731,52 @@ body.touch #tskills .skill.ready{animation:skready .7s ease-out}
 body.touch #tskills .skill.nomana{box-shadow:0 0 0 2px #120c08,0 0 0 4px #4a6a9a,0 0 0 5.5px #1a2a4a,0 4px 10px #000b,inset 0 -7px 12px #000b}
 body.touch #mountbtn,body.touch #compbtn{border:none;background:radial-gradient(circle at 50% 34%,#4a3522 0%,#22170e 55%,#0b0704 100%);
   box-shadow:0 0 0 2px #120c08,0 0 0 3.5px #c8963c,0 0 0 5px #4a3416,0 3px 8px #000b,inset 0 2px 5px #ffd99a40,inset 0 -6px 10px #000b}
+/* ---------------- Round 34: the chronicle as a microdrama (drama34.js) ---------------- */
+#cine.tight.on .lb{height:17vh}
+@media (orientation:landscape) and (max-height:500px){#cine.tight.on .lb{height:14vh}}
+body.ep34freeze #game{filter:saturate(.25) contrast(1.18) brightness(.72) sepia(.25);transform:scale(1.045);transition:filter .35s ease-out,transform 3s cubic-bezier(.2,.7,.2,1)}
+#game{transition:filter .6s,transform .8s}
+#ep34{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .45s;pointer-events:auto;color:#efe2c2;text-align:center;font-family:Cinzel,Georgia,serif}
+#ep34.hidden{display:none}
+#ep34.on{opacity:1}
+#ep34 .still{position:absolute;inset:0;background:center/cover no-repeat;filter:sepia(.55) saturate(.6) brightness(.42) blur(1px);transform:scale(1.04);animation:ep34kb 14s linear forwards}
+@keyframes ep34kb{to{transform:scale(1.14) translate(-1.5%,-1%)}}
+#ep34 .veil{position:absolute;inset:0;background:radial-gradient(ellipse at center,#0000 0,#000a 60%,#000e 100%)}
+#ep34.title{background:#050403}
+#ep34.recap{background:#070605}
+#ep34.cliff{background:linear-gradient(180deg,#0000 0,#0000 38%,#000d 70%,#000 100%)}
+#ep34.cliff .veil{background:radial-gradient(ellipse at center,#0000 0,#0006 70%,#000c 100%)}
+#ep34 .box{position:relative;max-width:min(86vw,720px);padding:0 16px}
+#ep34 .eyebrow{font:600 13px Cinzel,serif;letter-spacing:6px;color:#c9a35a;text-transform:uppercase;margin-bottom:10px}
+#ep34 .arline{font:700 34px 'Reem Kufi',Amiri,serif;color:#d9b66e;margin-bottom:4px}
+#ep34 .rule{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0 10px}
+#ep34 .rule i{display:block;width:64px;height:1px;background:linear-gradient(90deg,#0000,#c9a35a)}#ep34 .rule i:last-child{transform:scaleX(-1)}
+#ep34 .rule b{display:block;width:7px;height:7px;transform:rotate(45deg);border:1px solid #c9a35a}
+#ep34 .title .title,#ep34 .title{font-weight:700}
+#ep34 .box .title{font:700 clamp(28px,6vw,48px) Cinzel,serif;letter-spacing:2px;color:#f6e7c4;text-shadow:0 0 30px #c98a3a55;animation:ep34in 1.4s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ep34in{from{letter-spacing:14px;filter:blur(6px);opacity:0}to{letter-spacing:2px;filter:none;opacity:1}}
+#ep34 .where{margin-top:12px;font:italic 400 14px Georgia,serif;color:#b8a27a}
+#ep34 .lines{min-height:120px}
+#ep34 .rl{font:400 clamp(16px,2.6vw,21px)/1.5 Georgia,serif;color:#efe2c2;margin:8px 0;text-shadow:0 2px 6px #000}
+#ep34 .rl:not(:last-child){opacity:.62}
+#ep34 .tbc{font:700 clamp(26px,5.4vw,44px) Cinzel,serif;letter-spacing:4px;color:#f2d27a;text-shadow:0 0 24px #000,0 2px 2px #000;animation:ep34hit .7s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes ep34hit{from{transform:scale(1.5);opacity:0;filter:blur(8px)}to{transform:none;opacity:1}}
+#ep34 .nextep{margin-top:18px;font:600 12px Cinzel,serif;letter-spacing:5px;color:#c9a35a;text-transform:uppercase;animation:ep34fade 1s .9s both}
+#ep34 .nexttitle{margin-top:4px;font:700 clamp(18px,3.4vw,26px) Cinzel,serif;color:#efe2c2;animation:ep34fade 1s 1.1s both}
+#ep34 .teaser{margin-top:8px;font:italic 400 clamp(14px,2.4vw,18px) Georgia,serif;color:#d8c8a4;animation:ep34fade 1s 1.5s both}
+@keyframes ep34fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#ep34 .tap{position:absolute;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;align-items:center;font:600 13px Cinzel,serif;color:#f2d27a;letter-spacing:1px;opacity:0;transition:opacity .4s}
+#ep34 .tap.show{opacity:.9}
+#ep34 .tap i{font-style:normal;font-size:18px;animation:tapnudge 1s ease-in-out infinite}
+#ep34 [dir=rtl]{font-family:'Amiri','Noto Naskh Arabic',serif;letter-spacing:0}
+#clock34{position:absolute;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(44vw,340px);padding:6px 12px 7px;background:linear-gradient(180deg,#160d08e6,#0d0805d9);border:1px solid #7a4a24;border-radius:8px;box-shadow:0 2px 10px #000a,inset 0 0 12px #ff6a2018;text-align:center;pointer-events:none;z-index:30}
+#clock34.hidden{display:none}
+#clock34 .cl{font:700 11px Cinzel,serif;letter-spacing:2px;color:#f2b866;text-transform:uppercase}
+#clock34 .bar{height:7px;margin:5px 0 4px;background:#2a1a10;border:1px solid #4a2a14;border-radius:4px;overflow:hidden}
+#clock34 .bar i{display:block;height:100%;background:linear-gradient(90deg,#ff5a1a,#ffb040);box-shadow:0 0 8px #ff7a20}
+#clock34 .cn{font:600 12px Georgia,serif;color:#efe2c2}
+#clock34.low{border-color:#c0401a;animation:clockpulse 1.7s ease-in-out infinite}
+#clock34.low .cn{color:#ffb090}
+@keyframes clockpulse{0%,100%{box-shadow:0 2px 10px #000a,0 0 0 #ff3a0a00}40%{box-shadow:0 2px 10px #000a,0 0 18px #ff3a0aaa}}
+body.touch #clock34{top:calc(6px + env(safe-area-inset-top,0px));width:min(40vw,300px)}
+#ep34.cliff{align-items:flex-end;padding-bottom:calc(7vh + env(safe-area-inset-bottom,0px))}
