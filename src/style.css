@@ -782,3 +782,7 @@ body.touch #clock34{top:calc(6px + env(safe-area-inset-top,0px));width:min(40vw,
 #ep34.cliff{align-items:flex-end;padding-bottom:calc(7vh + env(safe-area-inset-bottom,0px))}
 #ep34.cliff.final{background:#000}
 body.ep34freeze #game{filter:saturate(.3) contrast(1.15) brightness(.86) sepia(.22)}
+/* Round 35: the black between a cliffhanger and the next title card; the cold open's slate */
+#ep34.hold{background:#050403}
+#ep34 .slate{font:italic 400 clamp(20px,3.6vw,30px) Georgia,serif;color:#e8d6b0;letter-spacing:1px;animation:ep34fade 1.2s both}
+#ep34 .slate[dir=rtl]{font-family:'Amiri','Noto Naskh Arabic',serif}

@@ -254,7 +254,7 @@ export function setupStory25(g) {
     marsh: 'By the fire, Salim remembers the year the river flooded, and Jabir wading through it with their mother\'s loom on his back.',
     karkh: 'By the fire, Salim remembers Jabir counting out coins for a book neither of them could read. "For when you learn."',
     docks: 'By the fire, Salim remembers the night before the caravan left. Jabir, laughing: "Two more days to Baghdad, and then we rest."',
-    hamrin: 'By the fire, Salim tries to remember Jabir\'s voice, and for a moment cannot. Then it comes back.',
+    hamrin: 'By the fire, Salim thinks of Jabir on his pallet in the camp, complaining about the food. It is the best sound he knows.',
   };
   g.memory25 = () => { const s = S25(g); if (s.mem[REGION] || !MEM[REGION]) return null; s.mem[REGION] = true; return t(MEM[REGION]); };
   // ambushes and champions speak through the guard too

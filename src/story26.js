@@ -2,7 +2,7 @@
 //   - a scout of his, brought in bound, names the frontier road (first time Salim comes near Ishaq in the camp)
 //   - after two holds fall, an arrow lands beside Salim in the camp with a message tied to it
 //   - the face-off in his ravine (holds.js rivalLast) and his fall (scenes.js lieutenantFalls): Salim chooses chains for
-//     Baghdad or a cut bowstring and the road north; a lamp on the Diyala for Jabir closes it
+//     Baghdad or a cut bowstring and the road north; lamps on the Diyala for the dead guards close it
 // Choices live in p.s25.ch.tatzates ('chains' | 'free'); the beats seen in p.s25.said (h26scout, h26arrow, h26ishaq).
 import { REGION, HUB } from './region.js';
 import * as SCENES from './scenes.js';
@@ -10,7 +10,7 @@ import { S25 } from './story25.js';
 import { t } from './i18n.js';
 
 const ISHAQ_AFTER = {
-  chains: 'A qadi, not a blade. Jabir would have argued for the same.',
+  chains: 'A qadi, not a blade. Jabir will say the same.',
   free: 'You let him walk. Good. We keep the account by remembering, not by killing.',
 };
 

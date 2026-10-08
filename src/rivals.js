@@ -14,8 +14,8 @@ import { byzify } from './byz.js';
 
 // Round 21: the rival, and two lieutenants with fights of their own.
 //
-// Tatzates (Round 23; was Zubayr) is the Armenian bowman in Byzantine pay who loosed the arrow that killed Jabir on
-// the dune. He works for whoever pays: Bardanes, then Kallinikos, then Arsaber himself. He waits on Salim's road three times (Acts II, IV and VI) with a
+// Tatzates (Round 23; was Zubayr) is the Armenian bowman in Byzantine pay who loosed the arrow that wounded Jabir on
+// the dune (Round 35: Jabir lives). He works for whoever pays: Bardanes, then Kallinikos, then Arsaber himself. He waits on Salim's road three times (Acts II, IV and VI) with a
 // few of his men, fights at range, and slips away in smoke when he is down to a third of his life. The last time he
 // says where he is going: the Hamrin hills, where his hold is the deepest of the endgame dungeons (hamrin.js).
 //   His kit: a fan of arrows; a marked shot (he kneels, a red line runs to Salim, then a heavy arrow that shoves);
@@ -40,7 +40,7 @@ TYPES.zubayr = {
 // where he waits on each road, and what he says (one sentence each: no villain speech runs longer)
 export const RIVAL = {
   sawad: { act: 2, at: [-22, -14], level: 4, men: ['archer', 'archer', 'bandit', 'bandit'],
-    intro: [['Tatzates', 'So the brother lived. I was paid for one arrow, not two.'], ['Salim', 'You loosed it?'], ['Tatzates', 'Bardanes paid. I shot. That is all it was.']],
+    intro: [['Tatzates', 'The other brother. Bardanes wanted one of you alive and one dead. I only managed the first.'], ['Salim', 'You loosed it?'], ['Tatzates', 'Bardanes paid. I shot. That is all it was.']],
     escape: 'Not today, guard. The envoy\'s silver does not cover this.' },
   marsh: { act: 4, at: [-16, -40], level: 9, men: ['slinger', 'archer', 'netter', 'reedman'],
     intro: [['Tatzates', 'Kallinikos pays better than Bardanes did.'], ['Salim', 'Then he wasted his silver.']],

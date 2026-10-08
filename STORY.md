@@ -17,15 +17,25 @@ While the caliph's two sons fight over Baghdad, an envoy from Constantinople, **
 
 ## Characters
 - **Salim:** a caravan guard. He is practical, quiet, and not a believer in causes until the cause is his brother's last request.
-- **Jabir:** Salim's older brother and captain of the caravan guard. He dies in the ambush with an arrow in the chest, loosed by Tatzates. His last words are "The chest. Do not let them burn it."
+- **Jabir:** Salim's older brother and captain of the caravan guard. **Round 35: he lives.** Tatzates' arrow wounds him on the dune and the raiders take him alive, to trade him for Ishaq (only Ishaq can read the Pages' cipher). Salim finds him in the vault under the arch at the end of Season One; from then on he heals in Ishaq's camp, one talk per region, and stands on the quays in the epilogue.
 - **Ishaq:** an astronomer. He grieves without spectacle, and his line is "We keep the account."
 - **Arsaber:** the envoy. He came for learning the way other men come for gold. He holds the river quays himself in Act VI.
-- **Tatzates:** an Armenian bowman in Byzantine pay, who shot Jabir. "Bardanes paid. I shot. That is all it was." He escapes three times and makes his last stand in his Hamrin hold.
+- **Tatzates:** an Armenian bowman in Byzantine pay, who shot Jabir (Round 35: Bardanes wanted one brother alive and one dead). "Bardanes paid. I shot. That is all it was." He escapes three times and makes his last stand in his Hamrin hold.
 - **Photeinos** (Act I): one of the company. He took the envoy's gold, then read a page by firelight and never slept well again. His dying words name Bardanes and Olbianos; the banner names the envoy, Arsaber.
 - **Olbianos** (Act II): a Greek copyist who once sat at the Teacher's lessons, and sold out. "I chose silver over a dead man's words." He is the betrayer, and his death is shame, not defiance.
 - **Bardanes** (Act III): commander of the company in the Sawad. "Turn back, guard. Those Pages are going to Constantinople." He fouls the canal to starve the village of water.
 
-## Act structure
+## Round 35: Season One, as told now
+The question that drives the season: why keep a wounded guard alive? Because the envoy needs the Pages **and** the only man who can read them. The trade: Ishaq for Jabir.
+- **Cold open:** night, the caravan burning. Salim over Jabir ("Leave me, Salim. Run!" "Not without you."); soldiers drag Jabir off; a blow from behind; freeze; "One hour earlier".
+1. **Dusk on the Dune:** the caravan halts, riders on the ridge, the ambush is fought; an arrow wounds Jabir; the night raid again, to its end; Salim wakes by Ishaq. The arrow's message: *"The astronomer, for your brother."*
+2. **The Cedar Chest:** the Pages are in the Teacher's cipher, and only Ishaq reads it; Khawla saw a wounded man tied over a horse; the Watcher; Jabir's bloodied headcloth on the dam door: *"He is alive. Come in, and I will tell you for how long."*
+3. **The Broken Dam:** Photeinos: Jabir is at the kilns, and someone close to Ishaq writes to the envoy. *"They are burning the Pages. And Jabir is in there."*
+4. **Ash in the Kilns:** the clock; the last cell is empty (a spear and Salim's name scratched on the wall); Olbianos, who once copied for Ishaq, names him: *"Ishaq knew."*
+5. **Thirst:** the confession; the fouled canal; Doukitzes: Jabir is in the vault under the arch; the herald's terms, and the choice `trade34` (feign / refuse). *"Ishaq, for Jabir. At dawn."*
+6. **The Arch:** the four names (not five); the dawn clock; Bardanes' greeting follows the choice; Jabir found in the vault; the lamps for the four dead guards; Jabir's hook: *"Kallinikos has them. And he has the fire."*
+
+## Act structure (before Round 35)
 1. **The Caravan.** Riders in Byzantine mail on the dunes; the attack at dusk stays off screen. Jabir falls. Salim wakes in the village with Ishaq, and the chest is gone.
 2. **The Kilns.** Olbianos burns pages in the kilns to buy his life. Salim saves what he can.
 3. **The Arch.** Bardanes cuts the water. The duel. The Pages are recovered from his tent.

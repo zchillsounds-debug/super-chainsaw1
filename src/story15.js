@@ -59,7 +59,7 @@ export const BOSS = {
 // Ishaq's words when Salim speaks with him in each region's hub corner
 export const ISHAQ_TALK = {
   sawad: [
-    'You are Jabir\'s brother. I am <b>Ishaq</b>. I hired your caravan, and I am sorry. He was a better man than my coin deserved.',
+    'You are Jabir\'s brother. I am <b>Ishaq</b>. I hired your caravan. He is alive, and he is on my account now: I mean to bring him home.',
     'Under my instruments was a cedar chest: the Pages of <b>the Teacher</b>, who died in a prison by the river fourteen years ago. While the caliph\'s sons fight over Baghdad, an envoy from Constantinople, <b>Arsaber</b>, came in under the smoke of their war. He wants the best learning of this city carried north, and the Pages most of all.',
     'His company in the Sawad answers to <b>Bardanes</b>. <b>Photeinos</b> holds the old caravanserai, <b>Olbianos</b> the kilns, and Bardanes the broken arch. Your brother asked you for one thing.',
   ],

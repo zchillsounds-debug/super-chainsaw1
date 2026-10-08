@@ -123,7 +123,7 @@ export function prologue(g) {
     { dur: 3.6, line: { who: 'Salim', text: 'I will bring it back, brother. I promise.', rig: g.player.rig, cue: 'breath', expr: 'grief' },
       cam: { follow: true, p0: at(salim, 1.5, 1.9, 1.0), t0: headOf(salim), p1: at(salim, 1.45, 1.7, 0.9), t1: headOf(salim), fov: 32 }, dof: headOf(salim), aperture: 1.3,
       run: () => { salim.st.crouch = 0.85; } },
-    { dur: 4.2, caption: 'Jabir did not live to see Baghdad. The raiders had taken the chest.', enter: (d) => d.fade(1, 1.2) },
+    { dur: 4.2, caption: 'The raiders took Jabir alive. And the chest.', enter: (d) => d.fade(1, 1.2) },
   ];
   const _end = cleanup; cleanup = () => { _end(); if (lamp) { lamp.intensity = 0; lamp.color.set(0xff8a40); lamp.distance = 16; } for (const b of [archer, b1, b2]) b.rig.visible = true; };
   return {
@@ -137,7 +137,7 @@ export function prologue(g) {
 export function briefing(g) {
   const salim = playerActor(g), ishaq = npcActor(g), actors = [salim, ishaq];
   const L = [
-    'I am Ishaq. I hired your caravan. I am sorry about Jabir.',
+    'I am Ishaq. I hired your caravan. They took your brother alive, and I am sorry.',
     'The Pages: the writings of my old teacher. A Byzantine envoy came under the smoke of the war. His soldiers took the Pages.',
     'Bardanes leads them in the Sawad, and he split the Pages between his men. Get them back. Start with Photeinos, at the old caravanserai.',
   ];
@@ -177,10 +177,10 @@ export function lieutenantFalls(g, e, { who, text, card }) {
   // the choice is framed wide from the side, both men in the top half of the frame, clear of the buttons below
   const twoShot = { follow: true, p0: () => V(spot.x * 0.5 + foe.pos.x * 0.5 + side.x * 4.2, salim.pos.y + 1.9, spot.z * 0.5 + foe.pos.z * 0.5 + side.z * 4.2), t0: () => V(spot.x * 0.5 + foe.pos.x * 0.5, salim.pos.y + 0.55, spot.z * 0.5 + foe.pos.z * 0.5), fov: 36 };
   const pho = (k) => () => chosen(g, 'photeinos') === k;
-  // Round 26: Tatzates, the bowman who shot Jabir: chains for Baghdad, or a cut bowstring and the road north
+  // Round 26: Tatzates, the bowman who shot Jabir (Round 35: wounded him, on the dune): chains for Baghdad, or a cut bowstring and the road north
   const tz = (k) => () => chosen(g, 'tatzates') === k;
   const tzShots = [
-    { dur: 0.8, choice: { prompt: 'Tatzates is beaten. His arrow killed Jabir. What becomes of him?', options: [
+    { dur: 0.8, choice: { prompt: 'Tatzates is beaten. His arrow nearly killed Jabir. What becomes of him?', options: [
       { label: 'Bind him. Baghdad will judge him.', fx: () => choose(g, 'tatzates', 'chains') },
       { label: 'Cut his bowstring and let him walk.', fx: () => choose(g, 'tatzates', 'free') }] }, cam: twoShot, dof: headOf(foe), aperture: 0.6, run: () => up() },
     { when: tz('chains'), dur: lineDur('Baghdad will hear every name you were paid for. Jabir\'s first.'), line: { who: 'Salim', text: 'Baghdad will hear every name you were paid for. Jabir\'s first.', rig: g.player.rig, cue: 'hm', expr: 'resolve' }, cam: closeSalim, dof: headOf(salim), run: () => up() },
@@ -188,11 +188,11 @@ export function lieutenantFalls(g, e, { who, text, card }) {
     { when: tz('free'), dur: lineDur('No more arrows. Walk north, and do not turn round.'), line: { who: 'Salim', text: 'No more arrows. Walk north, and do not turn round.', rig: g.player.rig, cue: 'hm', expr: 'stern' }, cam: closeSalim, dof: headOf(salim), run: () => up() },
     { when: tz('free'), dur: lineDur('You let me live. I do not know what to do with that.'), line: { who: 'Tatzates', text: 'You let me live. I do not know what to do with that.', rig: e.rig, cue: 'breath', expr: 'sad' }, cam: overSalim, dof: headOf(foe), run: () => up() },
   ];
-  // after the card: the bowman's road, then a lamp on the Diyala for Jabir (over black, the scene ends on it)
+  // after the card: the bowman's road, then a lamp on the Diyala for the dead guards (over black, the scene ends on it)
   const tzClose = who !== 'Tatzates' ? [] : [
     { when: tz('chains'), dur: 4.4, caption: 'The bowman was taken down the Diyala to Baghdad in chains, to answer before the qadi.', enter: (d) => d.fade(1, 1.2) },
     { when: tz('free'), dur: 4.4, caption: 'Tatzates walked north toward the frontier with a cut bowstring. No one on the Diyala saw him again.', enter: (d) => d.fade(1, 1.2) },
-    { dur: 4.6, caption: 'That night Salim set a lamp on the Diyala for Jabir, and let the current take it.' },
+    { dur: 4.6, caption: 'That night Salim set four lamps on the Diyala, one for each guard of the caravan, and let the current take them.' },
   ];
   const choiceShots = !spare ? [] : who === 'Tatzates' ? tzShots : [
     { dur: 0.8, choice: { prompt: 'Photeinos is beaten. What becomes of him?', options: [
@@ -264,11 +264,19 @@ export function bossDuel(g, b, enginesBurnt, K = null) {
 }
 
 // ------------------------------------------------------------------ epilogue
+// Round 35: Jabir lives. Taken wounded on the dune, found in the vault under the arch, he heals in Ishaq's camp
+export const JABIR_LOOK = { robe: '#3a3428', robe2: '#8a6a3a', turban: 0xd8cfb8, weapon: 'spear', beard: 0x2a1a10, skin: 0x9a6a44 };
 export function epilogue(g, b) {
   const salim = playerActor(g), boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st }, ishaq = npcActor(g);
   const actors = [salim, boss, ishaq];
   const ang = yawTo(salim.pos, boss.pos);
-  const text = 'Thanks to you, his words will be read. And we will remember Jabir.';
+  const text = 'Thanks to you, his words will be read. And your brother will see Baghdad after all.';
+  // Jabir: on the floor of the vault under the arch, then on a pallet by Ishaq's fire
+  const jabir = actor(humanoid({ ...JABIR_LOOK, weapon: null }), V(0, -50, 0), 0); jabir.rig.visible = false; g.scene.add(jabir.rig); actors.push(jabir);
+  jabir.st.dead = true; jabir.st.fallDir = 1; jabir.st.deadT = 4;
+  const pallet = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.12, 2.0), new THREE.MeshStandardMaterial({ color: 0x8a7a5a, roughness: 1 })); pallet.visible = false; g.scene.add(pallet);
+  const vault = () => { const f = ang + Math.PI; return ground(salim.pos.x + Math.sin(f) * 1.1, salim.pos.z + Math.cos(f) * 1.1); };
+  const lamp = g.bossLight;
   // Round 24: the first time the envoy is seen. A rider on the far bank watches the lamps, then turns for Baghdad.
   const RZ = 96, rx = canalX(RZ) - CANAL_W / 2 - 2.6, envoy = actor(horseRider(byzify({ ...LOOK.officer('#4a1a4a', 0x3a1440), beard: 0x8a8070, beardLen: 0.9, skin: 0xb07a52, sash: 0x5a1a5a, build: 1.1, belly: 0.25, hemY: 0.3, leather: 0x6a5a3a })), ground(rx, RZ), Math.PI / 2);
   envoy.rig.visible = false; g.scene.add(envoy.rig); actors.push(envoy);
@@ -284,9 +292,19 @@ export function epilogue(g, b) {
   };
   const shots = [
     { dur: 4.2, cam: { follow: true, p0: () => V(boss.pos.x + Math.sin(ang + 2.4) * 7, boss.pos.y + 2.6, boss.pos.z + Math.cos(ang + 2.4) * 7), t0: at(boss, 1.4), p1: () => V(boss.pos.x + Math.sin(ang + 1.6) * 6, boss.pos.y + 2.0, boss.pos.z + Math.cos(ang + 1.6) * 6), t1: at(boss, 0.6), fov: 34 } },
-    { dur: 4.4, line: { who: 'Salim', text: 'Not for paper. For my brother.', rig: g.player.rig, cue: 'hm', expr: 'resolve' },
+    { dur: 4.4, line: { who: 'Salim', text: 'Where is my brother?', rig: g.player.rig, cue: 'shout', expr: 'anger' }, tight: true, beat: 2,
       cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim), run: () => { salim.facing = yawTo(salim.pos, boss.pos); } },
-    { dur: 3.6, caption: 'Most of the Pages were in Bardanes\'s tent.', enter: (d) => d.fade(1, 0.8) },
+    { dur: 3.8, caption: 'Under the arch, in a vault that smelled of lamp oil, Salim found him.', enter: (d) => d.fade(1, 0.8) },
+    // the vault: Jabir on the floor, alive; Salim on his knees beside him, in the light of one lamp
+    { dur: lineDur('You took your time, little brother.'), fadeIn: 1.4, line: { who: 'Jabir', text: 'You took your time, little brother.', rig: jabir.rig, cue: 'breath', expr: 'pain', react: 'grief' }, beat: 1,
+      enter: () => {
+        jabir.rig.visible = true; jabir.pos.copy(vault()); jabir.facing = ang + Math.PI / 2; salim.facing = yawTo(salim.pos, jabir.pos); salim.st.crouch = 0.85; boss.rig.visible = false;
+        if (lamp) { lamp.color.set(0xffa050); lamp.distance = 7; lamp.position.copy(jabir.pos).add(V(0.5, 1.0, 0.7)); lamp.intensity = 6; }
+      },
+      cam: { follow: true, p0: () => { const q = jabir.pos, f = yawTo(q, salim.pos); return V(q.x - Math.sin(f) * 1.6 + Math.cos(f) * 1.2, q.y + 1.2, q.z - Math.cos(f) * 1.6 - Math.sin(f) * 1.2); }, t0: () => headOf(jabir)(), fov: 34 }, dof: headOf(jabir), aperture: 1.4, run: () => { salim.st.crouch = 0.85; } },
+    { dur: lineDur('You came back for me once, in the flood. I owed you.'), line: { who: 'Salim', text: 'You came back for me once, in the flood. I owed you.', rig: g.player.rig, cue: 'breath', expr: 'grief', react: 'warm' },
+      cam: { follow: true, p0: at(salim, 1.3, 1.5, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim), aperture: 1.3, run: () => { salim.st.crouch = 0.85; } },
+    { dur: 3.6, caption: 'Most of the Pages were in Bardanes\'s tent.', enter: (d) => { d.fade(1, 0.8); salim.st.crouch = 0; if (lamp) lamp.intensity = 0; } },
     { dur: 7, fadeIn: 1.6, caption: 'That evening the village floated a lamp on the canal for each guard who died.',
       enter: () => { floatLamps(); g.lighting?.set?.('dusk', 0); },
       cam: { p0: () => V(canalX(70) + 7, 3.2, 66), t0: () => V(canalX(84), 0.2, 84), p1: () => V(canalX(72) + 5, 2.2, 70), t1: () => V(canalX(88), 0.2, 88), fov: 40 },
@@ -303,24 +321,33 @@ export function epilogue(g, b) {
         if (k > 0.3) { envoy.moving = true; envoy.st.walkBlend = 1; envoy.st.phase += dt * 4; envoy.pos.x += Math.sin(envoy.facing) * dt * 1.6; envoy.pos.z += Math.cos(envoy.facing) * dt * 1.6; envoy.pos.y = heightAt(envoy.pos.x, envoy.pos.z); }
         for (const l of lamps) l.position.z += l.userData.v * dt;
       } },
-    { dur: 4.2, line: { who: 'Salim', text: 'Jabir.', rig: g.player.rig, cue: 'breath', expr: 'sad' },
+    { dur: lineDur('Ka\'b. Sinan. \'Awf. Mazin.'), line: { who: 'Salim', text: 'Ka\'b. Sinan. \'Awf. Mazin.', rig: g.player.rig, cue: 'breath', expr: 'sad' },
       enter: () => { envoy.rig.visible = false; const p = g.player; p.pos.set(canalX(84) - 3, 0, 84); p.pos.y = heightAt(p.pos.x, 84); salim.facing = Math.PI / 2; },
       cam: { follow: true, p0: at(salim, 1.6, 2.2, -1.2), t0: headOf(salim), fov: 28 }, dof: headOf(salim), aperture: 1.2,
       run: (d, k, dt) => { for (const l of lamps) l.position.z += l.userData.v * dt; } },
     { dur: lineDur(text), line: { who: 'Ishaq', text, rig: g.npc, cue: 'breath' },
       enter: () => {
         const p = g.player; p.pos.set(1, 0, 88); p.pos.y = heightAt(1, 88); salim.facing = yawTo(salim.pos, ishaq.pos); ishaq.facing = yawTo(ishaq.pos, salim.pos); ishaq.st.talk = true;
+        // Jabir on a pallet by Ishaq's fire, between the two of them and a little back
+        const mx = (salim.pos.x + ishaq.pos.x) / 2, mz = (salim.pos.z + ishaq.pos.z) / 2, f = yawTo(salim.pos, ishaq.pos) + Math.PI / 2;
+        jabir.pos.copy(ground(mx + Math.sin(f) * 1.6, mz + Math.cos(f) * 1.6)); jabir.pos.y += 0.12; jabir.facing = f; jabir.rig.visible = true;
+        pallet.position.set(jabir.pos.x, jabir.pos.y - 0.06, jabir.pos.z); pallet.rotation.y = f + Math.PI / 2; pallet.visible = true;
       },
       cam: { follow: true, p0: at(salim, 1.75, -0.9, 0.4), t0: headOf(ishaq), fov: 30 }, dof: headOf(ishaq) },
-    ...[['Ishaq', 'But the chest is light. Some of the Pages are missing.'], ['Salim', 'Who has them?'], ['Ishaq', 'Kallinikos, the master of their fire siphons. He fled east, into the Nahrawan marshes.']].map(([who, line]) => {
+    ...[['Ishaq', 'But the chest is light. Some of the Pages are missing.'], ['Salim', 'Who has them?']].map(([who, line]) => {
       const sp = who === 'Salim' ? salim : ishaq, li = who === 'Salim' ? ishaq : salim;
       return { dur: lineDur(line), line: { who, text: line, rig: sp.rig, cue: who === 'Salim' ? 'hm' : 'breath' }, enter: () => { ishaq.st.talk = who === 'Ishaq'; salim.st.talk = who === 'Salim'; },
         cam: { follow: true, p0: () => { const a = li.pos, f = yawTo(a, sp.pos); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * 0.35, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * 0.35); }, t0: headOf(sp), fov: 30 }, dof: headOf(sp) };
     }),
+    // Round 35: Jabir heard them in the vault. The season's last hook is his
+    ...[['I heard them, in the vault. The rest went east by boat, into the marshes.', 0], ['Kallinikos has them. And he has the fire.', 2]].map(([line, beat]) => ({
+      dur: lineDur(line), line: { who: 'Jabir', text: line, rig: jabir.rig, cue: 'breath', expr: 'pain' }, tight: beat > 0, beat,
+      enter: () => { ishaq.st.talk = false; salim.st.talk = false; salim.facing = yawTo(salim.pos, jabir.pos); ishaq.facing = yawTo(ishaq.pos, jabir.pos); },
+      cam: { follow: true, p0: () => { const q = jabir.pos; return V(q.x + (salim.pos.x - q.x) * 0.55, q.y + 1.15, q.z + (salim.pos.z - q.z) * 0.55); }, t0: () => headOf(jabir)(), fov: 30 }, dof: headOf(jabir), aperture: 1.4 })),
     // Round 24: the act card is shown once, on the travel card while the marshes load (main.js TRAVEL_CARD)
     { dur: 1.5, enter: (d) => { ishaq.st.talk = false; salim.st.talk = false; d.fade(1, 1.2); } },
   ];
-  return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { for (const l of lamps) g.scene.remove(l); g.scene.remove(envoy.rig); } };
+  return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { for (const l of lamps) g.scene.remove(l); g.scene.remove(envoy.rig); g.scene.remove(jabir.rig); g.scene.remove(pallet); salim.st.crouch = 0; boss.rig.visible = true; } };
 }
 
 // ------------------------------------------------------------------ side-quest conversations
@@ -438,7 +465,7 @@ export function arrival(g) {
         cam: { p0: () => V(S.x + 6, 3.5, S.z + 12), t0: () => V(S.x, 1.5, S.z - 6), p1: () => V(S.x + 2, 3, S.z + 6), t1: () => V(S.x - 2, 1.4, S.z - 12), fov: 40 }, run: (d, k) => { if (k > 0.8) d.fade(1, 0.8); } },
       { dur: 3.0, fadeIn: 1.0, cam: { p0: () => V(ishaq.pos.x + 6, ishaq.pos.y + 3, ishaq.pos.z + 7), t0: at(ishaq, 1.3), p1: () => V(ishaq.pos.x + 4, ishaq.pos.y + 2.4, ishaq.pos.z + 5), t1: at(ishaq, 1.3) }, enter: () => face() },
       say('Ishaq', 'The scholars of the House of Wisdom will keep the Pages safe, if we can get them there.'),
-      say('Salim', 'Jabir wanted to see Baghdad. Not like this.'),
+      say('Salim', 'Jabir always wanted to see Baghdad. I am glad he is not seeing it like this.'),
       say('Ishaq', 'Arsaber\'s men hold the Pages here. Their captain is Krateros. Start with Narses, in the burned quarter.'),
     ];
   }
@@ -522,7 +549,7 @@ export function finale(g, b) {
 }
 
 // Round 20: the docks finale. Arsaber falls at the bridge; the copyists' barge sails downriver with the first copies;
-// that evening Salim sets lamps on the Tigris for his brother. The chronicle ends here.
+// that evening Salim and Jabir set lamps on the Tigris for the dead guards. The chronicle ends here.
 export function docksFinale(g, b) {
   const salim = playerActor(g), boss = { rig: b.rig, pos: b.pos, get facing() { return b.facing; }, set facing(v) { b.facing = v; }, st: b.st }, ishaq = npcActor(g);
   const sc = g.scene, extra = [], actors = [salim, boss, ishaq], ang = yawTo(salim.pos, boss.pos);
@@ -578,7 +605,7 @@ export function docksFinale(g, b) {
     { dur: 4.8, caption: 'Photeinos never carried a sword again. A scribe in Wasit took on a Greek assistant that spring.', when: () => chosen(g, 'photeinos') === 'free' },
     { dur: 4.8, caption: 'In the Nahrawan the reed village was rebuilt before the floods. They named a boat for Salim.', when: () => chosen(g, 'marsh') === 'stay' },
     { dur: 4.8, caption: 'In the Nahrawan the burned village was a long time rebuilding.', when: () => chosen(g, 'marsh') === 'chase' },
-    { dur: 7, fadeIn: 1.6, caption: 'That evening he set a lamp on the river for his brother, and one for each guard of the caravan.',
+    { dur: 7, fadeIn: 1.6, caption: 'That evening Salim and Jabir set a lamp on the river for each guard of the caravan. Jabir could stand by then.',
       enter: () => { boat.visible = false; scholar.rig.visible = false; floatLamps(); g.lighting?.set?.('dusk', 0); },
       cam: { p0: () => V(bank(LZ) - 4, 3.2, LZ + 14), t0: () => V(bank(LZ) + 5, -0.4, LZ), p1: () => V(bank(LZ) - 3, 2.4, LZ + 10), t1: () => V(bank(LZ) + 6, -0.4, LZ - 6), fov: 40 },
       run: (d, k, dt) => drift(dt || 1 / 60) },
@@ -622,7 +649,7 @@ export function hamrinScout(g) {
     L('Ishaq', 'The hill men brought this one in at dawn. One of Tatzates\' scouts.', ishaq, ots(salim, ishaq, 0.35)),
     L('Scout', 'He holds the frontier road. Four holds, and his ravine is the last. He will not run again.', scout, low, 'wary'),
     L('Salim', 'Good. Neither will I.', salim, ots(scout, salim, -0.35), 'resolve'),
-    L('Ishaq', 'Salim. Whatever waits at the end of that road, it will not give Jabir back.', ishaq, ots(salim, ishaq, 0.35), 'sad'),
+    L('Ishaq', 'Salim. Whatever waits at the end of that road, it will not heal Jabir any faster.', ishaq, ots(salim, ishaq, 0.35), 'sad'),
     L('Salim', 'I know. I am not going for Jabir. I am going so that it ends.', salim, ots(ishaq, salim, -0.35), 'resolve'),
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { g.scene.remove(rig); } };
@@ -674,7 +701,7 @@ export function quaysAtDusk(g) {
     L('Salim', 'And the Pages?'),
     L('Ishaq', 'Copied, seven times. No one will ever gather them all into one fire again.'),
     L('Ishaq', 'Even the copy you promised Arsaber reached Constantinople. Let them read it. That was always the point.', () => chosen(g, 'arsaber') === 'promise'),
-    L('Ishaq', 'I still owe you a brother. I will spend the rest of my life on that account.', () => chosen(g, 'ishaq') === 'heard'),
+    L('Ishaq', 'I nearly cost you a brother. I will spend the rest of my life on that account.', () => chosen(g, 'ishaq') === 'heard'),
     L('Salim', 'Then spend it at that table. He would have liked that better than a debt.', () => chosen(g, 'ishaq') === 'heard'),
     // Round 32: a letter from Constantinople
     L('Ishaq', 'A letter came by the prisoners\' road, from Constantinople. From Arsaber.'),
@@ -685,7 +712,7 @@ export function quaysAtDusk(g) {
     L('Salim', 'Will you answer him?'),
     L('Ishaq', 'Of course. Scholars always answer letters. It is how wars end, slowly.'),
     L('Salim', 'And me?'),
-    L('Ishaq', 'You were a caravan guard. Baghdad needs safe roads more than it needs one more scholar. Go home first, and take Jabir\'s spear with you.'),
+    L('Ishaq', 'You were a caravan guard. Baghdad needs safe roads more than it needs one more scholar. Go home first. Your brother is waiting for you on the quays.'),
     { dur: 6.5, caption: 'Salim set one more lamp on the water: for the guards of the caravan, and for everyone the road had taken.',
       enter: () => { ishaq.st.talk = false; salim.st.talk = false; salim.st.crouch = 0.7; floatLamp(bank(LZ) + 0.6, LZ + 0.4).userData.v = 0.22; },
       cam: { follow: true, p0: at(salim, 1.2, 2.4, -1.6), t0: () => V(bank(LZ) + 1.5, -0.3, LZ - 1), p1: () => V(bank(LZ) - 3, 2.2, LZ + 6), t1: () => V(bank(LZ) + 4, -0.4, LZ - 8), fov: 34 },

@@ -10,7 +10,7 @@
 //   Ep 6 The Arch           the names of the dead; a race to the arch before dawn; Bardanes; the chest is light
 // State: p.ep34 = { n, b, leaves, dawn } (saved). Every line has Arabic in story34_ar.js.
 import * as THREE from 'three';
-import { H32 } from './scenes.js';
+import { H32, JABIR_LOOK } from './scenes.js';
 import { chat, other, extra, spotAhead, MIDACT } from './scenes32.js';
 import { humanoid, camel } from './characters.js';
 import { LOOK, byzify } from './byz.js';
@@ -28,22 +28,22 @@ export const DRAMA_ON = !P.has('nodrama') && (!P.has('play') || P.has('drama'));
 
 // ---------------------------------------------------------------- the episodes' words
 export const EPISODES = {
-  1: { title: 'Dusk on the Dune', ar: 'غسقٌ على الكثيب', next: 'Two more days to Baghdad. Jabir will not see them.' },
-  2: { title: 'The Cedar Chest', ar: 'صندوق الأرز', next: 'What is worth a brother?' },
-  3: { title: 'The Broken Dam', ar: 'السدّ المكسور', next: 'Someone in the dark has been waiting for Salim.' },
-  4: { title: 'Ash in the Kilns', ar: 'رمادٌ في الأتون', next: 'Every heartbeat, another page burns.' },
+  1: { title: 'Dusk on the Dune', ar: 'غسقٌ على الكثيب', next: '' },
+  2: { title: 'The Cedar Chest', ar: 'صندوق الأرز', next: 'Why keep a wounded guard alive?' },
+  3: { title: 'The Broken Dam', ar: 'السدّ المكسور', next: 'The voice in the dark knows where Jabir is.' },
+  4: { title: 'Ash in the Kilns', ar: 'رمادٌ في الأتون', next: 'The kilns are burning. Jabir is inside.' },
   5: { title: 'Thirst', ar: 'العطش', next: 'Ishaq has answers. Salim may not want them.' },
-  6: { title: 'The Arch', ar: 'الطاق', next: 'Dawn is coming. So is Salim.' },
+  6: { title: 'The Arch', ar: 'الطاق', next: 'Ishaq, for Jabir. At dawn.' },
   7: { title: 'Season Two · The Marshes', ar: 'الموسم الثاني · الأهوار', next: 'Kallinikos has the last Pages. And he has the fire.' },
 };
 const NUM = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six'];
-// "previously": what the player must carry into each episode (choices change the lines)
+// Round 35: "previously" is only for a player coming back to a saved chronicle (choices change the lines)
 const RECAP = {
-  2: () => ['Jabir fell on the dune, to an arrow no one saw loosed.', 'The raiders took the cedar chest he died for.', 'And Ishaq said: it was never the instruments they wanted.'],
-  3: () => ['The chest held the Pages: the only copy of a dead teacher\'s words.', 'A watcher on the rise knew Salim by sight.', 'At the broken dam, a voice in the dark was waiting for him.'],
-  4: (g) => ['Photeinos fell in the broken dam, and named the envoy\'s men.', chosen(g, 'photeinos') === 'free' ? 'Salim let him go.' : 'Salim bound him for the qadi.', 'Then the smoke rose over the kiln yard. Olbianos is burning the Pages.'],
-  5: (g) => ['Salim fought through the kiln galleries to the fire.', ...leavesLines(g), 'Olbianos died with a name in his mouth: Ishaq.'],
-  6: () => ['Ishaq confessed: he chose Jabir\'s road for the chest.', 'Bardanes fouled the canal. The village is dying of thirst.', 'His herald gave the elders until dawn to give Salim up.'],
+  2: () => ['On the dune, the raiders wounded Jabir and took him alive, with the cedar chest.', 'They left a message tied to an arrow: "The astronomer, for your brother."'],
+  3: () => ['The chest held the Pages, in Ishaq\'s own cipher. Only he can read them.', 'The riders carried Jabir east, to the old caravanserai.', 'At the broken dam, a voice in the dark knew Salim\'s name.'],
+  4: (g) => ['Photeinos fell in the broken dam.', chosen(g, 'photeinos') === 'free' ? 'Salim let him go.' : 'Salim bound him for the qadi.', 'He said Jabir was at the kilns, and that someone close to Ishaq writes to the envoy.', 'Then the kilns began to burn.'],
+  5: (g) => ['Salim fought through the burning kilns. Jabir was already gone.', ...leavesLines(g), 'Olbianos died with a name in his mouth: Ishaq.'],
+  6: (g) => ['Ishaq confessed: he put the chest on Jabir\'s mules on purpose.', 'Bardanes fouled the canal, and named his price: Ishaq for Jabir, at the old arch, at dawn.', chosen(g, 'trade34') === 'feign' ? 'Salim sent word that they would come.' : 'Salim sent word: no trade.'],
 };
 function leavesLines(g) {
   const n = g.player.ep34?.leaves ?? 60;
@@ -155,9 +155,11 @@ export function setupDrama34(g) {
   }
   // the lieutenants' last words carry the episodes' turns; the act cards give way to the episode cards
   if (IS_SAWAD && DRAMA_ON && LIEUT?.chief) {
-    LIEUT.chief = { ...LIEUT.chief, text: 'Bardanes paid me in the envoy\'s gold. Olbianos has the Pages at the kilns. He means to burn them.', card: null };
-    LIEUT.second = { ...LIEUT.second, text: 'Ishaq always hid things where no one would look. A guard\'s mules. I knew him. I told them where to look.', card: null };
-    BOSS.intro = { ...BOSS.intro, text: 'So the village did not give you up. Then I will take you myself.' };
+    LIEUT.chief = { ...LIEUT.chief, text: 'Your brother is at the kilns, with Olbianos. And your astronomer has a friend who writes to the envoy.', card: null };
+    LIEUT.second = { ...LIEUT.second, text: 'Your brother left an hour ago, for Bardanes. I copied for Ishaq once. I know how he hides things. A guard\'s mules.', card: null };
+    // Bardanes' greeting follows Salim's answer to the herald (set when the last episode begins)
+    D.bossLine = () => chosen(g, 'trade34') === 'feign' ? 'You came, guard. But where is the astronomer? No matter. I will take him after you.' : 'No trade, then. Your brother said you were stubborn. I will take you both.';
+    BOSS.intro = { ...BOSS.intro, text: D.bossLine() };
   }
 
   // ------------------------------------------------ stills: a frame of the cliffhanger, for the next "previously"
@@ -179,7 +181,9 @@ export function setupDrama34(g) {
   D.titleCard = async (n) => {
     const Ep = EPISODES[n];
     $o('.box').innerHTML = `<div class="eyebrow">${t('Episode')} ${t(NUM[n] || String(n))}</div>${LANG === 'ar' ? '' : `<div class="arline">${Ep.ar}</div>`}<div class="rule"><i></i><b></b><i></i></div><div class="title"${rtl}>${t(Ep.title)}</div><div class="where">${t('The Sawad, outside Baghdad, 813')}</div>`;
-    show('title'); audio.stinger?.('title');
+    // Round 35: straight on from the cliffhanger: the overlay is already black, so the card comes up on it with no gap
+    if (D.chained) { D.chained = false; overlay().className = 'title on'; } else show('title');
+    audio.stinger?.('title');
     await sleep(900); await waitTap(2600, 4800, 'Tap to begin'); await hide();
   };
   D.recap = async (n) => {
@@ -202,10 +206,18 @@ export function setupDrama34(g) {
     document.body.classList.add('ep34freeze'); audio.stinger?.('ambush'); audio.heart(2);
     if (still) await snap(n);
     const N = EPISODES[n + 1];
-    $o('.box').innerHTML = `<div class="tbc"${rtl}>${t('To be continued')}</div><div class="nextep"${rtl}>${n >= 6 ? t('End of Season One') : t('Next') + ' · ' + t('Episode') + ' ' + t(NUM[n + 1] || '')}</div><div class="nexttitle"${rtl}>${t(N?.title || '')}</div><div class="teaser"${rtl}>${t(N?.next || '')}</div>`;
+    $o('.box').innerHTML = `<div class="tbc"${rtl}>${t('To be continued')}</div><div class="nextep"${rtl}>${n >= 6 ? t('End of Season One') : t('Next') + ' · ' + t('Episode') + ' ' + t(NUM[n + 1] || '')}</div>${n >= 6 ? `<div class="nexttitle"${rtl}>${t(N?.title || '')}</div>` : ''}<div class="teaser"${rtl}>${t(N?.next || '')}</div>`;
     await sleep(500); show(n >= 6 ? 'cliff final' : 'cliff');
     await waitTap(2600, 60000);
-    await hide(); document.body.classList.remove('ep34freeze');
+    // Round 35: the frozen frame goes to black and stays black: the next episode's title card comes up on it
+    if (n < 6) { const o = overlay(); o.className = 'hold on'; $o('.box').innerHTML = ''; D.chained = true; D.chainT = performance.now(); await sleep(450); }
+    else await hide();
+    document.body.classList.remove('ep34freeze');
+  };
+  // Round 35: a black frame with one line on it ("One hour earlier"), between the cold open and the episode
+  D.slate = async (text) => {
+    $o('.box').innerHTML = `<div class="slate"${rtl}>${t(text)}</div>`;
+    show('hold'); await sleep(2600); D.chained = true; D.chainT = performance.now();
   };
   // a shot that holds the frame while the cliffhanger card plays over it, then lets the scene end
   const cliffShot = (n) => { const s = { dur: 1e6, slow: 0.03, tight: true, enter: (d) => { D.cliff(n).then(() => { if (d.shot === s) d.next(); }); } }; return s; };
@@ -255,39 +267,57 @@ export function setupDrama34(g) {
 
   // ================================================================ the scenes
   // ---------------- Ep 1: the caravan on the road at dusk (part one, to the attack)
+  // Round 35: the caravan walks in from the north and halts at the place of the ambush (it used to keep walking for the
+  // whole scene, 40 m down the road and into the village houses); the raiders stay hidden behind the ridge until the reveal
   const rt = {};
   const road = (z) => 13.5 + (z - 100) * 0.02;
+  const HALT = 124; // where the caravan stops: the ridge with the raiders is east of it, at x 26
+  const LANE = { camel: -2.4, salim: 0.6, jabir: 1.5, guard: 0.3 }; // the camels on the dune side; the men face the ridge
+  // a camera point kept at least `h` above the sand (the dune bank west of the road rises fast)
+  const above = (v, h = 1.0) => { v.y = Math.max(v.y, heightAt(v.x, v.z) + h); return v; };
   function caravanA() {
     const sc = g.scene, actors = [];
     const salim = playerActor(g);
     const add = (a) => { actors.push(a); if (a.rig !== p.rig) sc.add(a.rig); return a; };
-    const camelA = add(Object.assign(actor(camel(0xb88a58), ground(road(124) + 1.3, 124), Math.PI), { camel: true }));
-    const camelB = add(Object.assign(actor(camel(0xa07850), ground(road(130) + 1.3, 130), Math.PI), { camel: true }));
-    const jabir = add(actor(humanoid({ robe: '#3a3428', robe2: '#8a6a3a', turban: 0xd8cfb8, weapon: 'spear', beard: 0x2a1a10, skin: 0x9a6a44 }), ground(road(127) - 1.2, 127.5), Math.PI));
-    const guard2 = add(actor(humanoid({ robe: '#4a3a2a', robe2: '#2a3a5a', turban: 0xc8b890, weapon: 'spear', skin: 0x8a5a3a }), ground(road(134) - 0.6, 134), Math.PI));
+    const Z0 = HALT + 20;
+    const camelA = add(Object.assign(actor(camel(0xb88a58), ground(road(Z0 - 1) + LANE.camel, Z0 - 1), Math.PI), { camel: true, stop: HALT - 1 }));
+    const camelB = add(Object.assign(actor(camel(0xa07850), ground(road(Z0 + 5) + LANE.camel, Z0 + 5), Math.PI), { camel: true, stop: HALT + 5 }));
+    const jabir = add(Object.assign(actor(humanoid(JABIR_LOOK), ground(road(Z0 + 2.5) + LANE.jabir, Z0 + 2.5), Math.PI), { stop: HALT + 2.5, lane: LANE.jabir }));
+    const guard2 = add(Object.assign(actor(humanoid({ robe: '#4a3a2a', robe2: '#2a3a5a', turban: 0xc8b890, weapon: 'spear', skin: 0x8a5a3a }), ground(road(Z0 + 9) + LANE.guard, Z0 + 9), Math.PI), { stop: HALT + 9, lane: LANE.guard }));
     const archer = add(actor(humanoid(byzify({ ...LOOK.toxotes(), robe: '#1e2430', robe2: '#8a2a1a', beard: 0x1a120c, cloak: 0x1a1a22 })), ground(27, 111), -Math.PI / 2));
-    const b1 = add(actor(humanoid(byzify({ ...LOOK.skoutatos(), shieldTint: 0 })), ground(28.5, 117), -Math.PI / 2));
-    const b2 = add(actor(humanoid(byzify({ ...LOOK.kataphraktos(), weapon: 'sword', offhand: 'shield', shieldTint: 0 })), ground(26, 121), -Math.PI / 2));
-    archer.rig.visible = false;
-    for (const b of [b1, b2]) b.st.crouch = 1;
+    // the two riders on the ridge lie flat behind its crest until the reveal
+    const b1 = add(actor(humanoid(byzify({ ...LOOK.skoutatos(), shieldTint: 0 })), ground(29.5, 117), -Math.PI / 2));
+    const b2 = add(actor(humanoid(byzify({ ...LOOK.kataphraktos(), weapon: 'sword', offhand: 'shield', shieldTint: 0 })), ground(29, 121), -Math.PI / 2));
+    archer.rig.visible = false; b1.rig.visible = false; b2.rig.visible = false;
     actors.push(salim);
-    salim.pos.copy(ground(road(125.5) - 0.2, 125.5)); salim.facing = Math.PI; salim.st.action = null; salim.st.crouch = 0;
+    salim.pos.copy(ground(road(Z0 + 4) + LANE.salim, Z0 + 4)); salim.facing = Math.PI; salim.st.action = null; salim.st.crouch = 0;
+    Object.assign(salim, { stop: HALT + 4, lane: LANE.salim });
     const caravan = [camelA, camelB, jabir, guard2, salim];
-    const march = (dt, speed = 1.35) => { for (const a of caravan) { if (a.halt) { a.moving = false; continue; } a.moving = true; walk(a, V(road(a.pos.z - 2) + (a.camel ? 1.3 : a === salim ? -0.2 : a === jabir ? -1.2 : -0.6), 0, a.pos.z - 2), speed, dt); } };
+    for (const a of caravan) if (a.camel) a.lane = LANE.camel;
+    const march = (dt, speed = 1.35) => { for (const a of caravan) {
+      if (a.halt || a.pos.z <= a.stop + 0.05) { a.moving = false; a.st.walkBlend = 0; continue; }
+      a.moving = true; const z = Math.max(a.stop, a.pos.z - 2); walk(a, V(road(z) + a.lane, 0, z), speed, dt);
+      if (!a.camel) { a.st.walkBlend = 1; a.st.phase += dt * 4; }
+    } };
     Object.assign(rt, { camelA, camelB, jabir, guard2, archer, keep: [camelA, camelB, jabir, guard2, archer] });
+    // close shots from the ridge side (east), so the camels, on the dune side, never come between camera and speaker
     const L = (who, text, a, extra = {}) => ({ dur: lineDur(text), line: { who, text, rig: a.rig, cue: who === 'Salim' ? 'hm' : 'breath', ...(extra.line || {}) },
-      cam: { follow: true, p0: at(a, 1.75, 2.6, 1.6), t0: at(a, 1.55, -1.2, -0.4), p1: at(a, 1.7, 2.2, 1.2), t1: at(a, 1.55, -1.2, -0.4), fov: 33 }, dof: headOf(a), aperture: 1.4,
+      cam: { follow: true, p0: () => { const q = a.pos; return above(V(q.x + 2.1, q.y + 1.62, q.z - 2.5)); }, t0: () => headOf(a)().add(V(0, -0.15, 0)), p1: () => { const q = a.pos; return above(V(q.x + 1.9, q.y + 1.6, q.z - 2.2)); }, t1: () => headOf(a)().add(V(0, -0.15, 0)), fov: 32 }, dof: headOf(a), aperture: 1.4,
       run: (d, k, dt) => march(dt), ...extra.shot });
     const shots = [
-      { dur: 6.0, fadeIn: 1.4, caption: 'The Sawad, outside Baghdad, in the year 813. The war between the caliph\'s sons is almost over.', cam: { p0: () => ground(36, 140, 14), t0: () => ground(14, 124, 1.2), p1: () => ground(26, 132, 6), t1: () => ground(13.5, 121, 1.4) }, run: (d, k, dt) => march(dt) },
+      { dur: 6.0, fadeIn: 1.4, caption: 'The Sawad, outside Baghdad, in the year 813. The caliph\'s sons are at war. The roads belong to no one.',
+        cam: { p0: () => above(ground(road(HALT) + 12, HALT + 2, 6), 4), t0: () => ground(road(HALT + 14), HALT + 14, 1.4), p1: () => above(ground(road(HALT) + 8, HALT + 2, 3.6), 2.6), t1: () => ground(road(HALT + 6), HALT + 6, 1.4), fov: 40 },
+        run: (d, k, dt) => march(dt) },
       L('Jabir', 'Two more days to Baghdad, Salim. Then home.', jabir, { line: { expr: 'warm' } }),
       L('Salim', 'Too quiet, brother. I do not like it.', salim, { line: { expr: 'wary' }, shot: { run: (d, k, dt) => { march(dt); salim.st.headYaw = -Math.sin(k * Math.PI) * 0.6; } } }),
       L('Jabir', 'Ishaq checks that cedar chest every hour. Star-glasses do not need that much love.', jabir, { line: { expr: 'warm' } }),
       L('Salim', 'Then do not ask him what is in it.', salim, { line: { expr: 'neutral' } }),
+      // the reveal: the riders rise over the crest of the ridge
       { dur: 3.8, caption: 'Riders in Byzantine mail were waiting on the dunes.', tight: true, beat: 2, stinger: 'ambush',
-        cam: { p0: () => ground(17, 109, 1.8), t0: () => ground(27, 116, 1.6), p1: () => ground(17.6, 110.2, 1.9), t1: () => ground(27, 116, 1.6), fov: 32 },
-        run: (d, k, dt) => { march(dt, 0.8); for (const b of [b1, b2]) b.st.crouch = Math.max(0, 1 - k * 1.6); salim.st.headYaw = 0; } },
-      L('Jabir', 'Riders! Guard the camels, Salim!', jabir, { line: { expr: 'anger', cue: 'shout' }, shot: { tight: true, enter: () => { for (const a of caravan) a.halt = true; jabir.facing = yawTo(jabir.pos, b1.pos); act(jabir, 'command', 1.2); }, run: () => {} } }),
+        enter: () => { for (const a of caravan) { a.halt = true; a.moving = false; a.st.walkBlend = 0; } b1.rig.visible = true; b2.rig.visible = true; b1.st.crouch = 1; b2.st.crouch = 1; },
+        cam: { p0: () => ground(road(HALT) + 3, HALT + 6, 1.7), t0: () => ground(28, 118, 1.8), p1: () => ground(road(HALT) + 3.6, HALT + 5.2, 1.8), t1: () => ground(28, 118, 1.8), fov: 30 },
+        run: (d, k, dt) => { for (const b of [b1, b2]) { b.st.crouch = Math.max(0, 1 - k * 1.8); if (k > 0.5) walk(b, V(b.pos.x - 3, 0, b.pos.z), 1.6, dt); } salim.st.headYaw = 0; } },
+      L('Jabir', 'Riders! Guard the camels, Salim!', jabir, { line: { expr: 'anger', cue: 'shout' }, shot: { tight: true, enter: () => { jabir.facing = yawTo(jabir.pos, b1.pos); act(jabir, 'command', 1.2); }, run: () => {} } }),
     ];
     return { dusk: 0.7, actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
       end: () => { for (const b of [b1, b2]) sc.remove(b.rig); for (const a of caravan) { a.halt = true; a.moving = false; } salim.st.headYaw = 0; } };
@@ -298,70 +328,130 @@ export function setupDrama34(g) {
     for (const e of foes) { e.alerted = true; e.ep34 = true; }
     return foes;
   }
-  // ---------------- Ep 1, part two: the arrow from the ridge, Jabir's last words, and Salim wakes by Ishaq
+  // ---------------- Ep 1, part two: the arrow from the ridge. Jabir goes down, wounded
   function caravanB() {
-    const sc = g.scene, { jabir, guard2, archer, camelA, camelB } = rt, salim = playerActor(g);
+    const sc = g.scene, { jabir, archer } = rt, salim = playerActor(g);
     const actors = [salim, ...rt.keep];
-    const lamp = g.bossLight;
     const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.8, 4).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x2a2018 }));
     shaft.visible = false; sc.add(shaft);
-    const from = () => at(archer, 1.55, 0.4)(), to = () => at(jabir, 1.25)();
+    const from = () => at(archer, 1.55, 0.4)(), to = () => at(jabir, 1.15)();
     const shots = [
       { dur: lineDur('Ha! Is that all the Rum could send?'), line: { who: 'Jabir', text: 'Ha! Is that all the Rum could send?', rig: jabir.rig, cue: 'hm', expr: 'warm' },
-        cam: { follow: true, p0: at(jabir, 1.75, 2.6, 1.4), t0: headOf(jabir), fov: 32 }, dof: headOf(jabir),
+        cam: { follow: true, p0: () => { const q = jabir.pos; return above(V(q.x + 2.2, q.y + 1.6, q.z - 1.8)); }, t0: headOf(jabir), fov: 32 }, dof: headOf(jabir),
         enter: () => { salim.pos.copy(jabir.pos).add(V(1.6, 0, -1.2)); salim.pos.y = heightAt(salim.pos.x, salim.pos.z); jabir.st.action = null; jabir.facing = yawTo(jabir.pos, salim.pos); salim.facing = yawTo(salim.pos, jabir.pos); } },
+      // on the ridge, a bowman nobody saw
       { dur: 2.6, slow: 0.45, tight: true, beat: 2, cam: { p0: () => at(jabir, 1.6, -2.0, 1.0)(), t0: () => at(archer, 1.6)(), p1: () => at(jabir, 1.6, -1.6, 0.8)(), t1: () => at(archer, 1.6)(), fov: 22 },
         enter: () => { archer.rig.visible = true; archer.pos.copy(ground(27, 111)); archer.facing = yawTo(archer.pos, jabir.pos); act(archer, 'attack', 2.2); } },
-      { dur: 1.6, slow: 0.35, tight: true, cam: { follow: true, p0: at(jabir, 1.5, 3.2, 1.6), t0: at(jabir, 1.3), fov: 30 },
+      { dur: 1.6, slow: 0.35, tight: true, cam: { follow: true, p0: () => { const q = jabir.pos; return above(V(q.x + 1.2, q.y + 1.5, q.z - 3.2)); }, t0: at(jabir, 1.2), fov: 30 },
         enter: () => { shaft.visible = true; shaft.position.copy(from()); },
-        run: (d, k) => { const a = from(), b = to(), q = Math.min(1, k * 1.3); shaft.position.lerpVectors(a, b, q); shaft.lookAt(b); if (q >= 1 && !jabir.st.dead) { jabir.st.dead = true; jabir.st.fallDir = -1; jabir.st.deadT = 0; d.audio.vocal?.('hurt', 0.9); } } },
+        run: (d, k) => { const a = from(), b = to(), q = Math.min(1, k * 1.3); shaft.position.lerpVectors(a, b, q); shaft.lookAt(b); if (q >= 1 && !jabir.st.dead) { jabir.st.dead = true; jabir.st.fallDir = -1; jabir.st.deadT = 0; d.audio.voice?.('hurt'); g.audio.hit?.(); } } },
       { dur: lineDur('Jabir!'), line: { who: 'Salim', text: 'Jabir!', rig: p.rig, cue: 'shout', expr: 'fear' }, tight: true,
         cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.8), t0: headOf(salim), fov: 30 }, dof: headOf(salim), enter: () => { shaft.visible = false; salim.facing = yawTo(salim.pos, jabir.pos); } },
-      { dur: 3.6, caption: 'The raiders came back over the dune while Salim held his brother.', enter: (d) => { d.fade(1, 0.9); archer.rig.visible = false; } },
-      { dur: 4.8, fadeIn: 1.4, line: { who: 'Jabir', text: 'Salim... the chest. Do not let them burn it.', rig: jabir.rig, cue: 'breath', expr: 'pain', react: 'grief' }, beat: 1,
-        cam: { follow: true, p0: at(salim, 2.5, -1.9, -2.3), t0: at(salim, 0.35, 1.3), p1: at(salim, 2.35, -1.75, -2.15), t1: at(salim, 0.38, 1.28), fov: 40 }, dof: headOf(salim), aperture: 1.4,
-        enter: () => {
-          jabir.st.dead = true; jabir.st.fallDir = 1; jabir.st.deadT = Math.max(jabir.st.deadT || 0, 4);
-          { let best = 0, bd = 1e9; const h0 = heightAt(jabir.pos.x, jabir.pos.z); for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, dh = Math.abs(heightAt(jabir.pos.x + Math.sin(a) * 1.6, jabir.pos.z + Math.cos(a) * 1.6) - h0) + Math.abs(heightAt(jabir.pos.x + Math.sin(a) * 0.8, jabir.pos.z + Math.cos(a) * 0.8) - h0); if (dh < bd) { bd = dh; best = a; } } jabir.facing = best + Math.PI; jabir.pos.y = h0; }
-          salim.pos.copy(jabir.pos).add(V(0.9, 0, -0.2)); salim.pos.y = heightAt(salim.pos.x, salim.pos.z); salim.facing = yawTo(salim.pos, jabir.pos); salim.st.crouch = 0.85;
-          guard2.pos.copy(salim.pos).add(V(1.4, 0, -1.6)); guard2.pos.y = heightAt(guard2.pos.x, guard2.pos.z); guard2.facing = Math.PI / 2;
-          for (const c of [camelA, camelB]) { c.pos.x += 3; c.pos.y = heightAt(c.pos.x, c.pos.z); }
-          if (lamp) { lamp.color.set(0xff9a50); lamp.distance = 8; lamp.position.copy(jabir.pos).add(V(0.4, 1.1, 0.9)); lamp.intensity = 7; }
-        }, run: () => { salim.st.crouch = 0.85; } },
-      { dur: lineDur('I will bring it back, brother. I promise.'), line: { who: 'Salim', text: 'I will bring it back, brother. I promise.', rig: p.rig, cue: 'breath', expr: 'grief' },
-        cam: { follow: true, p0: at(salim, 1.5, 1.9, 1.0), t0: headOf(salim), p1: at(salim, 1.45, 1.7, 0.9), t1: headOf(salim), fov: 32 }, dof: headOf(salim), aperture: 1.3, run: () => { salim.st.crouch = 0.85; } },
-      { dur: 4.4, caption: 'Jabir did not live to see Baghdad. The raiders had taken the cedar chest.', enter: (d) => d.fade(1, 1.2) },
-      // he wakes in the village, Ishaq beside him
-      { dur: lineDur('You are awake. Good. Listen to me, guard.'), fadeIn: 1.6, line: { who: 'Ishaq', text: 'You are awake. Good. Listen to me, guard.', rig: g.npc, cue: 'breath', expr: 'sad' },
-        cam: { follow: true, p0: () => { const a = salim.pos, b = g.npc.position, f = yawTo(a, b); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * 0.35, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * 0.35); }, t0: () => g.npc.userData?.parts?.head ? g.npc.userData.parts.head.getWorldPosition(new THREE.Vector3()) : g.npc.position.clone().add(V(0, 1.6, 0)), fov: 30 },
-        enter: () => {
-          for (const a of rt.keep) sc.remove(a.rig); rt.keep = [];
-          if (lamp) { lamp.intensity = 0; lamp.color.set(0xff8a40); lamp.distance = 16; }
-          p.pos.set(1, 0, 88); p.pos.y = heightAt(1, 88); salim.st.crouch = 0; salim.st.action = null; salim.facing = yawTo(p.pos, g.npc.position); g.npc.rotation.y = yawTo(g.npc.position, p.pos); g.npcSt.talk = true;
-        } },
-      { dur: lineDur('It was never the instruments they wanted.'), line: { who: 'Ishaq', text: 'It was never the instruments they wanted.', rig: g.npc, cue: 'breath', expr: 'sad' }, tight: true, beat: 2,
-        cam: { follow: true, p0: () => { const h = g.npc.userData.parts.head.getWorldPosition(new THREE.Vector3()), f = g.npc.rotation.y; return V(h.x + Math.sin(f) * 1.3 + Math.cos(f) * 0.3, h.y - 0.1, h.z + Math.cos(f) * 1.3 - Math.sin(f) * 0.3); }, t0: () => g.npc.userData.parts.head.getWorldPosition(new THREE.Vector3()), p1: () => { const h = g.npc.userData.parts.head.getWorldPosition(new THREE.Vector3()), f = g.npc.rotation.y; return V(h.x + Math.sin(f) * 1.0 + Math.cos(f) * 0.2, h.y - 0.08, h.z + Math.cos(f) * 1.0 - Math.sin(f) * 0.2); }, fov: 28 } },
+      { dur: 3.4, caption: 'The arrow took him under the ribs. Then the dark came, and the raiders came back with it.', enter: (d) => { d.fade(1, 0.9); archer.rig.visible = false; } },
     ];
-    return withCliff({ dusk: 0.7, actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { sc.remove(shaft); g.npcSt.talk = false; for (const a of rt.keep || []) sc.remove(a.rig); rt.keep = []; } }, 1);
+    return { dusk: 0.7, actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); }, end: () => { sc.remove(shaft); for (const a of rt.keep || []) sc.remove(a.rig); rt.keep = []; } };
+  }
+  // ---------------- the night raid: the cold open (open = true: it ends on a freeze, then "One hour earlier") and the
+  // same moment again at the end of Episode 1 (open = false: the blow lands, and they take Jabir)
+  function nightRaid(open) {
+    const sc = g.scene, actors = [], extra = [];
+    const salim = playerActor(g), lamp = g.bossLight;
+    const add = (a) => { actors.push(a); sc.add(a.rig); extra.push(a.rig); return a; };
+    const C = ground(road(HALT + 2) + 1.2, HALT + 2);
+    const jabir = add(actor(humanoid(JABIR_LOOK), C.clone(), Math.PI / 2));
+    jabir.st.dead = true; jabir.st.fallDir = -1; jabir.st.deadT = 4; // on his back
+    const camelA = add(Object.assign(actor(camel(0xb88a58), ground(road(HALT + 7) - 2.4, HALT + 7), Math.PI * 0.8), { camel: true }));
+    const s1 = add(actor(humanoid(byzify({ ...LOOK.skoutatos(), shieldTint: 0 })), ground(C.x + 5, C.z + 10), Math.PI));
+    const s2 = add(actor(humanoid(byzify({ ...LOOK.psilos(), offhand: null })), ground(C.x + 8, C.z + 7), Math.PI));
+    const s3 = add(actor(humanoid(byzify({ ...LOOK.kataphraktos(), weapon: 'sword', offhand: 'shield', shieldTint: 0 })), ground(C.x - 5, C.z + 3.5), Math.PI / 2));
+    actors.push(salim);
+    // the cargo burning: bales and the chest's empty frame, lit by the fire
+    const bales = [];
+    const baleM = new THREE.MeshStandardMaterial({ color: 0x2a1c12, roughness: 1 });
+    for (const [dx, dz, s] of [[-2.2, 2.6, 0.9], [-2.8, -1.8, 0.7], [-1.0, 4.4, 0.8]]) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(1.1 * s, 0.7 * s, 0.8 * s), baleM); const q = ground(C.x + dx, C.z + dz); m.position.set(q.x, q.y + 0.3 * s, q.z); m.rotation.y = dx; sc.add(m); extra.push(m); bales.push(m.position);
+    }
+    const burn = () => { for (const b of bales) if (Math.random() < 0.6) g.fx.fire(V(b.x + (Math.random() - 0.5) * 0.6, b.y + 0.3, b.z + (Math.random() - 0.5) * 0.6), 1.6 + Math.random()); };
+    const place = () => {
+      salim.pos.copy(C).add(V(-0.85, 0, 0.35)); // on the fire side, so the bales burn behind him salim.pos.y = heightAt(salim.pos.x, salim.pos.z); salim.facing = yawTo(salim.pos, C); salim.st.crouch = 0.85; salim.st.action = null;
+      g.lighting?.set?.('night', 0);
+      if (lamp) { lamp.color.set(0xff8a3a); lamp.distance = 14; lamp.position.copy(C).add(V(-1.6, 1.4, 1.6)); lamp.intensity = 10; }
+    };
+    const grab = (dt) => { walk(s1, V(C.x + 1.0, 0, C.z + 0.8), 2.2, dt); walk(s2, V(C.x + 0.5, 0, C.z - 0.9), 2.2, dt); for (const s of [s1, s2]) { s.st.walkBlend = 1; s.st.phase += dt * 5; } };
+    const toward = (a, b) => yawTo(a.pos, b.pos);
+    const shots = [
+      { dur: 3.4, fadeIn: 0.5, tight: true, beat: 2, stinger: 'ambush',
+        enter: () => place(),
+        // low over the burning bales, onto Salim crouched over his brother; the soldiers walk in out of the dark
+        cam: { p0: () => above(V(C.x + 4.6, C.y + 2.4, C.z - 3.4), 1.8), t0: () => V(C.x - 0.4, C.y + 0.7, C.z + 0.6), p1: () => above(V(C.x + 3.6, C.y + 2.0, C.z - 2.6), 1.6), t1: () => V(C.x - 0.4, C.y + 0.7, C.z + 0.6), fov: 38 },
+        run: (d, k, dt) => { burn(); salim.st.crouch = 0.85; walk(s1, V(C.x + 2.5, 0, C.z + 5), 1.4, dt); walk(s2, V(C.x + 4.5, 0, C.z + 3.5), 1.4, dt); for (const s of [s1, s2]) { s.st.walkBlend = 1; s.st.phase += dt * 4; } } },
+      { dur: lineDur('Leave me, Salim. Run!'), line: { who: 'Jabir', text: 'Leave me, Salim. Run!', rig: jabir.rig, cue: 'breath', expr: 'pain' }, tight: true,
+        cam: { follow: true, p0: () => { const hj = headOf(jabir)(), f = yawTo(salim.pos, hj); return above(V(hj.x + Math.sin(f) * 1.1 + Math.cos(f) * 0.5, hj.y + 0.55, hj.z + Math.cos(f) * 1.1 - Math.sin(f) * 0.5), 0.5); }, t0: () => headOf(jabir)().lerp(headOf(salim)(), 0.3), fov: 34 }, dof: headOf(jabir), aperture: 1.6,
+        run: (d, k, dt) => { burn(); salim.st.crouch = 0.85; } },
+      { dur: lineDur('Not without you.'), line: { who: 'Salim', text: 'Not without you.', rig: p.rig, cue: 'shout', expr: 'anger' }, tight: true, beat: 1,
+        cam: { follow: true, p0: () => above(V(C.x + 0.5, salim.pos.y + 0.95, C.z - 0.6), 0.6), t0: () => headOf(salim)(), fov: 30 }, dof: headOf(salim), aperture: 1.6,
+        run: (d, k, dt) => { burn(); salim.st.crouch = 0.85; grab(dt * 0.4); } },
+      // they take him: two soldiers drag Jabir off; Salim comes up off his knees
+      { dur: 2.4, slow: 0.6, tight: true,
+        // wide, side-on from the south, so the three of them and the dragging read at once
+        cam: { p0: () => above(V(C.x + 1.5, C.y + 1.8, C.z - 5.6), 1.4), t0: () => V(C.x + 1.6, C.y + 0.8, C.z + 0.6), p1: () => above(V(C.x + 2.2, C.y + 1.7, C.z - 5.0), 1.4), t1: () => V(C.x + 2.4, C.y + 0.8, C.z + 1.2), fov: 40 },
+        run: (d, k, dt) => { burn(); grab(dt); salim.st.crouch = Math.max(0, 0.85 - k * 1.6); if (k > 0.45) { const e = V(C.x + 6, 0, C.z + 4); walk(jabir, e, 1.6, dt); s1.pos.copy(jabir.pos).add(V(0.5, 0, -0.6)); s2.pos.copy(jabir.pos).add(V(0.4, 0, 0.7)); for (const s of [s1, s2]) { s.pos.y = heightAt(s.pos.x, s.pos.z); s.facing = yawTo(s.pos, e); } jabir.facing = Math.PI / 2; } } },
+      // the blow from behind
+      { dur: 1.5, slow: 0.5, tight: true, beat: 2,
+        enter: () => { s3.pos.copy(salim.pos).add(V(-1.3, 0, 0.5)); s3.pos.y = heightAt(s3.pos.x, s3.pos.z); s3.facing = yawTo(s3.pos, salim.pos); act(s3, 'attack', 0.9); },
+        cam: { follow: true, p0: () => V(salim.pos.x + 1.6, salim.pos.y + 1.5, salim.pos.z + 1.4), t0: () => headOf(salim)(), fov: 32 },
+        run: (d, k, dt) => { burn(); walk(jabir, V(C.x + 6, 0, C.z + 4), 1.6, dt); if (k > 0.55 && !salim.st.hitT) { salim.st.hitT = 1; g.audio.hit?.(); d.audio.voice?.('hurt'); if (open) document.body.classList.add('ep34freeze'); d.fade(1, open ? 0.6 : 0.12); } } },
+      ...(open ? [] : [{ dur: 4.2, caption: 'They took Jabir alive. And the cedar chest.', enter: (d) => d.fade(1, 0) }]),
+    ];
+    return { dusk: 1, actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); },
+      end: () => { for (const r of extra) sc.remove(r); salim.st.crouch = 0; document.body.classList.remove('ep34freeze'); g.lighting?.forAct?.(g.act || 1, 0); if (lamp) { lamp.intensity = 0; lamp.color.set(0xff8a40); lamp.distance = 16; } } };
+  }
+  const coldOpen = () => nightRaid(true);
+  // ---------------- Ep 1, part three: Salim wakes in the village. A message on an arrow
+  function wake() {
+    const salim = playerActor(g), ish = ishaq();
+    const arrow = new THREE.Group();
+    { const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.8, 5), new THREE.MeshStandardMaterial({ color: 0x5a4028, roughness: 0.9 })); sh.position.y = 0.4; const cloth = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.05, 0.004), new THREE.MeshStandardMaterial({ color: 0xd8ccb0, roughness: 1 })); cloth.position.set(0.05, 0.62, 0); arrow.add(sh, cloth); arrow.rotation.z = 0.5; }
+    const head = () => g.npc.userData?.parts?.head ? g.npc.userData.parts.head.getWorldPosition(new THREE.Vector3()) : g.npc.position.clone().add(V(0, 1.6, 0));
+    const ots = (lis, spk, side) => ({ follow: true, p0: () => { const a = lis.pos, f = yawTo(a, spk.pos); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * side, a.y + 1.72, a.z - Math.cos(f) * 0.9 - Math.sin(f) * side); }, t0: () => headOf(spk)(), fov: 30 });
+    const say = (who, text, extra = {}) => { const sp = who === 'Salim' ? salim : ish, li = who === 'Salim' ? ish : salim;
+      return { dur: lineDur(text), line: { who, text, rig: sp.rig, cue: who === 'Salim' ? 'hm' : 'breath', expr: extra.expr }, cam: ots(li, sp, who === 'Salim' ? -0.35 : 0.35), dof: headOf(sp), tight: extra.tight, beat: extra.beat,
+        enter: () => { g.npcSt.talk = who === 'Ishaq'; salim.st.talk = who === 'Salim'; extra.enter?.(); } }; };
+    const shots = [
+      { ...say('Ishaq', 'Easy. You were struck from behind. Do not stand yet.', { expr: 'sad' }), fadeIn: 1.6,
+        enter: () => {
+          p.pos.set(1, 0, 88); p.pos.y = heightAt(1, 88); salim.st.crouch = 0; salim.st.action = null; salim.facing = yawTo(p.pos, g.npc.position); g.npc.rotation.y = yawTo(g.npc.position, p.pos); g.npcSt.talk = true;
+        }, cam: { follow: true, p0: () => { const a = salim.pos, b = g.npc.position, f = yawTo(a, b); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * 0.35, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * 0.35); }, t0: head, fov: 30 } },
+      say('Salim', 'Jabir. Where is Jabir?', { expr: 'fear' }),
+      say('Ishaq', 'They took him. Alive. And the chest.', { expr: 'sad', tight: true, beat: 2 }),
+      say('Ishaq', 'They left this in the sand, where the chest had stood.', { expr: 'sad', enter: () => { arrow.position.copy(g.npc.position).add(V(0, 0.9, 0)); const hand = g.npc.userData?.parts?.handR; if (hand) { hand.getWorldPosition(arrow.position); } g.scene.add(arrow); } }),
+      { dur: 3.6, caption: 'An arrow, with a strip of linen tied to the shaft. Salim could not read it.', cam: { follow: true, p0: () => arrow.position.clone().add(V(0.9, 0.35, 0.6)), t0: () => arrow.position.clone().add(V(0, 0.45, 0)), fov: 30 }, dof: () => arrow.position.clone().add(V(0, 0.5, 0)), aperture: 1.6 },
+      say('Salim', 'What does it say?', { expr: 'stern' }),
+      say('Ishaq', '"The astronomer, for your brother."', { expr: 'fear', tight: true, beat: 2 }),
+    ];
+    return withCliff({ actors: [salim, ish], shots, tick: (d, dt) => { tickActor(g, salim, dt); }, end: () => { g.scene.remove(arrow); g.npcSt.talk = false; salim.st.talk = false; } }, 1);
   }
 
   // ---------------- Ep 2
   const briefing = () => chat(g, ishaq(), [
-    { who: 'Ishaq', text: 'I am Ishaq. I hired your caravan. I am sorry about Jabir.' },
-    { who: 'Salim', text: 'He died for a chest of star-glasses?', expr: 'grief' },
-    { who: 'Ishaq', text: 'Not star-glasses. Pages. The writings of my old teacher. There is no other copy in the world.' },
-    { who: 'Salim', text: 'My brother is dead for a book.', expr: 'anger' },
-    { who: 'Ishaq', text: 'For the only copy of one. An envoy from Constantinople came under the smoke of the war, and his soldiers took it.' },
-    { who: 'Salim', text: 'Who knew it was in our caravan?', expr: 'stern' },
+    { who: 'Salim', text: 'Why would they want you?', expr: 'anger' },
+    { who: 'Ishaq', text: 'Because the chest never held instruments. It held the Pages of my teacher. There is no other copy in the world.' },
+    { who: 'Ishaq', text: 'He wrote them in a cipher of his own. I am the only man alive who can read it.' },
+    { who: 'Salim', text: 'So the Pages are worthless to them without you. And my brother is the price.', expr: 'stern', tight: true, beat: 1 },
+    { who: 'Ishaq', text: 'An envoy from Constantinople came under the smoke of this war. His men want the book, and the man who reads it.' },
+    { who: 'Salim', text: 'Who knew the chest was in our caravan?', expr: 'stern' },
     { who: 'Ishaq', text: '...Few. Fewer than should have.', expr: 'sad', tight: true, beat: 2 },
     { who: 'Ishaq', text: 'Khawla, at the village well, saw riders pass at first light. Start with her.' },
+    { who: 'Salim', text: 'Do not leave this village, astronomer. If you run, I will find you before they do.', expr: 'anger', tight: true },
   ]);
   const khawla = () => { const n = npcNamed('Khawla'); return chat(g, other(n), [
-    { who: 'Khawla', text: 'Riders, at first light. A mule with a cedar chest, and a man walking beside it like it was his child.' },
-    { who: 'Salim', text: 'Where did they go?' },
-    { who: 'Khawla', text: 'East, to the old caravanserai, where the dam is broken.' },
-    { who: 'Khawla', text: 'And one stayed. He sat his horse on the rise and watched the village all morning. He watched your tent, guard.', tight: true, beat: 2, expr: 'fear' },
-    { who: 'Salim', text: 'Then he is still out there.', expr: 'resolve' },
+    { who: 'Khawla', text: 'Riders, at first light. A mule with a cedar chest. And a man tied over a horse, bleeding through his shirt.' },
+    { who: 'Salim', text: 'Alive?', expr: 'fear', tight: true, beat: 1 },
+    { who: 'Khawla', text: 'He lifted his head when they passed the well. He was looking back down the road. For you, I think.' },
+    { who: 'Salim', text: 'Where did they take him?' },
+    { who: 'Khawla', text: 'East, to the old caravanserai by the broken dam.' },
+    { who: 'Khawla', text: 'And one stayed behind. He sat his horse on the rise and watched your tent all morning.', tight: true, beat: 2, expr: 'fear' },
+    { who: 'Salim', text: 'Then he can show me the way.', expr: 'resolve' },
   ]); };
   const watcher = () => {
     const foes = [...g.spawnPack('rider', 40, 26, 1, Math.max(2, p.level), { elite: true, spread: 0, name: 'The Watcher' }), ...g.spawnPack(['bandit', 'spearman'], 42, 22, 2, Math.max(1, p.level - 1), { spread: 3 })];
@@ -370,13 +460,21 @@ export function setupDrama34(g) {
   const damDoor = () => {
     const door = g.storyDoor?.chief || V(SITES.serai.x, 0, SITES.serai.z), salim = playerActor(g);
     const dark = () => V(door.x, heightAt(door.x, door.z) + 1.5, door.z);
+    // Jabir's headcloth, bloodied, tied to the door post
+    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.5), new THREE.MeshStandardMaterial({ color: 0xd8cfb8, roughness: 1, side: THREE.DoubleSide }));
+    const blood = new THREE.Mesh(new THREE.CircleGeometry(0.09, 10), new THREE.MeshStandardMaterial({ color: 0x5a1210, roughness: 1, side: THREE.DoubleSide }));
+    blood.position.set(0.03, -0.08, 0.002); cloth.add(blood);
+    const toward = yawTo(door, salim.pos); cloth.position.set(door.x + Math.sin(toward) * 0.9, heightAt(door.x, door.z) + 1.35, door.z + Math.cos(toward) * 0.9); cloth.rotation.y = toward; g.scene.add(cloth);
+    const cl = () => cloth.position.clone();
     const shots = [
-      { dur: 3.0, tight: true, beat: 2, cam: { follow: true, p0: at(salim, 2.1, -3.2, 1.1), t0: dark, p1: at(salim, 1.9, -2.2, 0.8), t1: dark, fov: 34 }, enter: () => { salim.facing = yawTo(salim.pos, door); } },
-      { dur: lineDur('You are the brother. Jabir\'s brother.'), line: { who: 'A voice in the dark', text: 'You are the brother. Jabir\'s brother.', expr: 'neutral' }, tight: true, cam: { p0: () => at(salim, 1.7, 1.6, 0.6)(), t0: () => headOf(salim)(), fov: 30 }, dof: headOf(salim) },
-      { dur: lineDur('Come in, then. I have been waiting to meet the man who keeps coming.'), line: { who: 'A voice in the dark', text: 'Come in, then. I have been waiting to meet the man who keeps coming.' }, tight: true, beat: 1,
+      { dur: 3.6, caption: 'Tied to the door of the broken dam: a headcloth, stiff with blood.', tight: true, beat: 2, cam: { follow: true, p0: at(salim, 1.9, -2.6, 0.9), t0: cl, p1: at(salim, 1.8, -1.8, 0.7), t1: cl, fov: 30 }, dof: cl, enter: () => { salim.facing = yawTo(salim.pos, door); } },
+      { dur: lineDur('Jabir\'s.'), line: { who: 'Salim', text: 'Jabir\'s.', rig: p.rig, cue: 'breath', expr: 'grief' }, tight: true, cam: { follow: true, p0: at(salim, 1.7, 1.6, 0.6), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
+      { dur: lineDur('You are the brother.'), line: { who: 'A voice in the dark', text: 'You are the brother.', expr: 'neutral' }, tight: true, beat: 1,
         cam: { p0: () => { const s = salim.pos; return V(s.x * 0.5 + door.x * 0.5, heightAt(door.x, door.z) + 1.3, s.z * 0.5 + door.z * 0.5); }, t0: dark, fov: 26 } },
+      { dur: lineDur('He is alive. Come in, and I will tell you for how long.'), line: { who: 'A voice in the dark', text: 'He is alive. Come in, and I will tell you for how long.' }, tight: true, beat: 2,
+        cam: { p0: () => at(salim, 1.7, 1.6, 0.6)(), t0: () => headOf(salim)(), fov: 28 }, dof: headOf(salim) },
     ];
-    return withCliff({ actors: [salim], shots, tick: (d, dt) => tickActor(g, salim, dt) }, 2);
+    return withCliff({ actors: [salim], shots, tick: (d, dt) => tickActor(g, salim, dt), end: () => g.scene.remove(cloth) }, 2);
   };
   // ---------------- Ep 3: smoke over the kiln yard, seen from the broken dam
   const smokeScene = () => {
@@ -384,7 +482,7 @@ export function setupDrama34(g) {
     kilnSmoke.on = true;
     const shots = [
       { dur: 4.2, caption: 'Black smoke over the kiln yard. Not brick smoke. Paper.', tight: true, beat: 2, cam: { follow: true, p0: at(salim, 2.4, -3.0, 1.0), t0: () => K, p1: at(salim, 2.2, -2.4, 0.8), t1: () => K, fov: 30 }, enter: () => { salim.facing = yawTo(salim.pos, K); } },
-      { dur: lineDur('They are burning them.'), line: { who: 'Salim', text: 'They are burning them.', rig: p.rig, cue: 'hm', expr: 'anger' }, tight: true, cam: { follow: true, p0: at(salim, 1.7, 1.7, 0.7), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
+      { dur: lineDur('They are burning the Pages. And Jabir is in there.'), line: { who: 'Salim', text: 'They are burning the Pages. And Jabir is in there.', rig: p.rig, cue: 'hm', expr: 'anger' }, tight: true, cam: { follow: true, p0: at(salim, 1.7, 1.7, 0.7), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
     ];
     return withCliff({ actors: [salim], shots, tick: (d, dt) => tickActor(g, salim, dt) }, 3);
   };
@@ -392,7 +490,8 @@ export function setupDrama34(g) {
   const ishaqKnew = () => {
     const salim = playerActor(g), n = p.ep34.leaves ?? 60;
     const shots = [
-      { dur: 4.4, caption: t('Salim came out of the galleries with {n} scorched leaves held against his chest.').replace('{n}', n), cam: { follow: true, p0: at(salim, 2.2, 3.4, 1.8), t0: at(salim, 1.2), fov: 34 } },
+      { dur: 4.4, caption: 'The last cell in the galleries was empty. Scratched into the wall with a buckle: a spear, and Salim\'s name.', tight: true, beat: 1, cam: { follow: true, p0: at(salim, 2.2, 3.4, 1.8), t0: at(salim, 1.2), fov: 34 } },
+      { dur: 4.2, caption: t('He came out with {n} scorched leaves held against his chest. Jabir was gone. Olbianos had said where: to Bardanes.').replace('{n}', n), cam: { follow: true, p0: at(salim, 2.0, 2.6, 1.2), t0: at(salim, 1.3), fov: 32 } },
       { dur: lineDur('A guard\'s mules. Ishaq knew. He put the chest on my brother\'s mules.'), line: { who: 'Salim', text: 'A guard\'s mules. Ishaq knew. He put the chest on my brother\'s mules.', rig: p.rig, cue: 'hm', expr: 'anger' }, tight: true, beat: 2,
         cam: { follow: true, p0: at(salim, 1.65, 1.5, 0.5), t0: headOf(salim), p1: at(salim, 1.65, 1.2, 0.4), t1: headOf(salim), fov: 28 }, dof: headOf(salim) },
     ];
@@ -402,7 +501,7 @@ export function setupDrama34(g) {
   const confession = () => {
     const sud = npcNamed('Su\'da'), cast = sud ? { 'Su\'da': other(sud) } : {};
     return chat(g, ishaq(), [
-      { who: 'Salim', text: 'Olbianos named you before he died. The chest rode on Jabir\'s mules because you put it there.', expr: 'anger' },
+      { who: 'Salim', text: 'Olbianos copied for you once. He said you put the chest on Jabir\'s mules. On purpose.', expr: 'anger' },
       { who: 'Ishaq', text: 'Yes.', expr: 'sad', tight: true, beat: 2 },
       { who: 'Ishaq', text: 'No one searches a caravan guard\'s mules. I chose your brother\'s road for the Pages. I did not know about the envoy.' },
       { who: 'Salim', text: 'He asked me what was in the crates. I told him not to ask.', expr: 'grief' },
@@ -412,24 +511,34 @@ export function setupDrama34(g) {
       { who: 'Ishaq', text: 'Yes. I should have. I will carry that with the rest of the account.', when: () => chosen(g, 'conf34') === 'told' },
       { who: 'Ishaq', text: 'Perhaps. It is kind of you to say it. It does not make it lighter.', when: () => chosen(g, 'conf34') !== 'told' },
       ...(sud ? [{ who: 'Su\'da', text: 'Ishaq! The canal! The water has gone black, and the goats will not drink it!', expr: 'fear', tight: true, beat: 2 }] : []),
-      { who: 'Ishaq', text: 'Bardanes. He has fouled the canal above the village. Without water, the village has days. Not weeks.', tight: true },
+      { who: 'Ishaq', text: 'Bardanes has fouled the canal above the village. He wants them thirsty enough to hand me over.', tight: true },
     ], { cast, onEnd: () => { const s = S25(g); s.said.ishaq = true; s.ch.ishaq = 'heard'; } });
   };
   const herald = () => {
     const pos = spotAhead(g, 7), h = extra(g, byzify({ ...LOOK.skoutatos(), weapon: null, offhand: null, cloak: 0xd8d0c0 }), pos, yawTo(pos, p.pos));
     const def = chat(g, other(h), [
       { caption: 'A rider came up the canal road under a white cloth.' },
-      { who: 'Herald', text: 'From Bardanes, to the guard. The village drinks again on the day the guard is given up.' },
-      { who: 'Herald', text: 'The elders have until dawn to choose. So do you.', tight: true, beat: 2 },
+      { who: 'Herald', text: 'From Bardanes, to the guard. The astronomer, for your brother. At the old arch, at dawn.' },
+      { who: 'Herald', text: 'Bring him, and the village drinks again. Come without him, and your brother does not see the sun.', tight: true, beat: 2 },
+      { choice: { prompt: 'Behind you, Ishaq has heard every word.', options: [
+        { label: 'Tell Bardanes we will come. Both of us.', fx: () => choose(g, 'trade34', 'feign') },
+        { label: 'Tell Bardanes there is no trade.', fx: () => choose(g, 'trade34', 'refuse') }] } },
+      { who: 'Salim', text: 'Tell him we will be there.', expr: 'stern', when: () => chosen(g, 'trade34') === 'feign' },
+      { who: 'Salim', text: 'No trade. Tell him I am coming for my brother. Alone.', expr: 'anger', when: () => chosen(g, 'trade34') !== 'feign' },
+      { who: 'Herald', text: 'Then I will tell him.', when: () => chosen(g, 'trade34') !== 'feign' },
     ], { closeIn: 2.0, onEnd: () => h.remove() });
     return withCliff(def, 5);
   };
   // ---------------- Ep 6: the night before, the names of the dead
   const night = () => chat(g, ishaq(), [
     ...(MIDACT.sawad || []),
+    { who: 'Ishaq', text: 'You told him we would both come. Did you mean it?', when: () => chosen(g, 'trade34') === 'feign' },
+    { who: 'Salim', text: 'You walk with me until I say stop. Then you run, and you do not look back.', expr: 'stern', when: () => chosen(g, 'trade34') === 'feign' },
+    { who: 'Ishaq', text: 'You could have traded me. No one would have blamed you.', when: () => chosen(g, 'trade34') !== 'feign' },
+    { who: 'Salim', text: 'Jabir would. He would never forgive me.', expr: 'sad', when: () => chosen(g, 'trade34') !== 'feign' },
     { who: 'Ishaq', text: 'When this is done, I will tell the qadi what I did. All of it.', when: () => chosen(g, 'conf34') === 'told' },
-    { who: 'Ishaq', text: 'Bring yourself back, Salim. I cannot carry two of you.', when: () => chosen(g, 'conf34') !== 'told' },
-    { who: 'Salim', text: 'Light a lamp for him. I will be back before it burns down.', expr: 'resolve', tight: true },
+    { who: 'Ishaq', text: 'Bring yourself back, Salim. And bring him.', when: () => chosen(g, 'conf34') !== 'told' },
+    { who: 'Salim', text: 'Light a lamp. I will bring him home before it burns down.', expr: 'resolve', tight: true },
   ], { onEnd: () => { said().mid32_sawad = true; } });
 
   // ================================================================ the beats
@@ -442,32 +551,32 @@ export function setupDrama34(g) {
   const BEATS = {
     1: [
       { then: async () => { await play(caravanA()); } },
-      fight('Hold the caravan. Drive off the riders.', raiders, async () => { await sleep(900); await play(caravanB()); }),
+      fight('Hold the caravan. Drive off the riders.', raiders, async () => { await sleep(900); await play(caravanB()); await play(nightRaid(false)); await play(wake()); }),
     ],
     2: [
       { then: async () => { await play(briefing()); g.act = Math.max(g.act || 1, 1); g.briefed = true; } },
       goto('Ask Khawla at the village well what she saw', () => npcNamed('Khawla')?.pos, 3.4, async () => { await play(khawla()); }),
-      fight('The watcher rides out to meet you', watcher, async () => { bark('Salim', 'He was waiting for me. They know who I am.'); await sleep(1500); }),
-      goto('Follow the chest to the broken dam behind the caravanserai', () => g.storyDoor?.chief, 5, async () => { await play(damDoor()); }),
+      fight('The watcher rides out to meet you', watcher, async () => { bark('Salim', 'He knew which tent was mine. They know who I am.'); await sleep(1500); }),
+      goto('Follow Jabir to the broken dam behind the caravanserai', () => g.storyDoor?.chief, 5, async () => { await play(damDoor()); }),
     ],
     3: [
-      holdBeat('Enter the Broken Dam. Find the voice in the dark.', 'chief', STORY.chief, async () => { await leaveHold(); await play(smokeScene()); }),
+      holdBeat('Enter the Broken Dam. Make the voice in the dark talk.', 'chief', STORY.chief, async () => { await leaveHold(); await play(smokeScene()); }),
     ],
     4: [
       { enter: () => { kilnSmoke.on = true; if (!clock) startClock({ label: 'The Pages are burning', total: 420, unit: () => t('{n} leaves left').replace('{n}', leavesLeft()) }); },
-        obj: 'Get to the kiln galleries before the Pages burn', at: () => g.storyDoor?.second, done: () => questDone(STORY.second),
+        obj: 'Get into the kiln galleries. Jabir and the Pages are inside.', at: () => g.storyDoor?.second, done: () => questDone(STORY.second),
         then: async () => { E().leaves = leavesLeft(); stopClock(); kilnSmoke.on = false; await leaveHold(); await play(ishaqKnew()); } },
     ],
     5: [
-      goto('Go back to the camp. Ishaq has answers to give.', () => g.npc?.position, 4, async () => { await play(confession()); }),
+      goto('Go back to the camp. Ishaq has some answering to do.', () => g.npc?.position, 4, async () => { await play(confession()); }),
       goto('A family on the canal road has had no clean water in two days', () => npcNamed('Umayma')?.pos, 3.6, async () => { const n = npcNamed('Umayma'); if (n && !said()['fam32_sawad']) { g.s32?.talkFamily('Umayma'); await idle(); } }),
-      goto('A Rum deserter hides by the kiln yard. He may know where Bardanes is.', () => npcNamed('Doukitzes')?.pos || g.s32?.des?.pos, 3.4, async () => { if (g.s32?.des && !ch().des_sawad) { g.s32.talkDeserter(); await idle(); } }),
+      goto('A Rum deserter hides by the kiln yard. He may know where Jabir is held.', () => npcNamed('Doukitzes')?.pos || g.s32?.des?.pos, 3.4, async () => { if (g.s32?.des && !ch().des_sawad) { g.s32.talkDeserter(); await idle(); } }),
       { then: async () => { await sleep(600); await play(herald()); } },
     ],
     6: [
-      { then: async () => { await play(night()); } },
-      { enter: () => { if (!g.boss && !g.bossActive) g.bossSpawned = false; if (clock?.label !== 'Dawn' && !E().dawn) startClock({ label: 'Dawn', total: 480, unit: (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`, out: () => { E().dawn = 'late'; BOSS.intro = { ...BOSS.intro, text: 'Dawn, guard. You are late, and the village is thirsty.' }; bark('Salim', 'The sky is going grey. Faster.'); } }); },
-        obj: 'Reach the old arch before dawn. Bardanes waits there.', at: () => g.boss && !g.boss.dead ? g.boss.pos : V(SITES.arch.x, 0, SITES.arch.z), done: () => false }, // ends with the epilogue: g.travel below shows the season's cliffhanger
+      { then: async () => { BOSS.intro = { ...BOSS.intro, text: D.bossLine?.() || BOSS.intro.text }; await play(night()); } },
+      { enter: () => { if (!g.boss && !g.bossActive) g.bossSpawned = false; if (clock?.label !== 'Dawn' && !E().dawn) startClock({ label: 'Dawn', total: 480, unit: (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`, out: () => { E().dawn = 'late'; BOSS.intro = { ...BOSS.intro, text: 'Dawn, guard. You are late. Your brother has been watching the sky.' }; bark('Salim', 'The sky is going grey. Faster.'); } }); },
+        obj: 'Reach the old arch before dawn. Bardanes has Jabir.', at: () => g.boss && !g.boss.dead ? g.boss.pos : V(SITES.arch.x, 0, SITES.arch.z), done: () => false }, // ends with the epilogue: g.travel below shows the season's cliffhanger
     ],
   };
   // wait for the director to be free (a scene started by another system)
@@ -483,13 +592,16 @@ export function setupDrama34(g) {
     applyZones(); floorLevel(n);
     if (clock && !(n === 4 && clock.label !== 'Dawn') && !(n === 6 && clock.label === 'Dawn')) stopClock(); // no clock outlives its episode
     g.paused = true;
-    if (n > 1 || fromLoad) await D.recap(n);
+    // Round 35: a new chronicle opens in the middle of the night raid, then rewinds; "previously" only on a return
+    if (n === 1 && E().b === 0 && !fromLoad) { await play(coldOpen()); await D.slate('One hour earlier'); }
+    if (fromLoad && n > 1) await D.recap(n);
     if (E().b === 0 || fromLoad) await D.titleCard(n);
     g.paused = false;
     // the people of later episodes wait out of sight
     gateNpc('Umayma', n > 5 || (n === 5 && E().b >= 1)); gateNpc('Nadr', n > 5 || (n === 5 && E().b >= 1)); gateNpc('Qays', n > 5 || (n === 5 && E().b >= 1));
     gateNpc('Doukitzes', n === 5 && E().b >= 2);
     if (n >= 4 && n < 6) kilnSmoke.on = n === 4;
+    if (n === 6 && D.bossLine) BOSS.intro = { ...BOSS.intro, text: E().dawn === 'late' ? BOSS.intro.text : D.bossLine() };
     g.refreshTracker?.();
   }
   D.target = () => {
@@ -582,6 +694,8 @@ export function setupDrama34(g) {
     }
     // the season's last still: Bardanes down at the arch (the epilogue ends on black)
     if (live() && E().n === 6 && questDone(STORY.boss) && !E().snap6 && !g.cinematic) { E().snap6 = true; snap(6); }
+    // a black hold left by a cliffhanger never outlives its title card
+    if (D.chained && !busy && performance.now() - (D.chainT || 0) > 9000) { D.chained = false; hide(); }
     if (!live()) return;
     if (E().n < 6 && !g.bossActive) g.bossSpawned = true; // Bardanes waits for the last episode
     if (busy || !g.started || g.cinematic || g.paused || p.dead || g.ui.dialogOpen || !g.director) return;

@@ -145,7 +145,7 @@ const DESERTER = {
     { who: 'Salim', text: 'Where will you go?' },
     { who: 'Doukitzes', text: 'South, to the Gulf ports. A ship to anywhere that is not a war. If you let me.' },
     // Round 34: what he knows of Bardanes turns the episode
-    { who: 'Doukitzes', text: 'Bardanes waits at the old arch. He fouled the canal so the village would give you up to him. By dawn, they will.', drama: true },
+    { who: 'Doukitzes', text: 'Your brother is alive. Bardanes keeps him in the vault under the old arch. He will not trade fairly. He never has.', drama: true },
   ] },
   marsh: { name: 'Leon', at: ['kiln', 24, -18], lines: [
     { who: 'Leon', text: 'Kallinikos made us pour the fire on the reed houses. There were people in them. I heard them.' },
@@ -180,7 +180,7 @@ export const LETTERS = [
   ['l4', 'A list in a careful hand: "Things to say to Maria: that I am sorry about the goat. That I will mend the roof. That I am sorry about the goat."'],
   ['l5', '"Captain: the men ask why we burn the villages if we came only for books. I could not answer them. Can you?"'],
   ['l6', 'A child\'s drawing of a horse, folded small. Under it, in a soldier\'s hand: "From Niko, aged six. Keep it dry."'],
-  ['l7', '"The Arab guard killed Doukas at the kilns. He fought like a man with nothing to lose. They say his brother died on the road."'],
+  ['l7', '"The Arab guard killed Doukas at the kilns. He fought like a man with nothing to lose. They say we took his brother on the road."'],
   ['l8', '"Mother, I have learned some of their words. Water is maa. Bread is khubz. Enough is kafa. I say that one most."'],
   ['l9', 'Orders, half burned: "...no copyist to be harmed. The envoy wants them living. Any man who..." The rest is ash.'],
   ['l10', '"If I do not come back, the vineyard goes to Kale, not to my cousin. He drinks."'],
@@ -235,7 +235,7 @@ export const DFINDS = {
 const FIND_TOTAL = 15 + Object.keys(DFINDS).length + LETTERS.length;
 // lines on the road (Salim, then the hired guard), once each, at the places the story passed through
 const ROAD = {
-  sawad: [['serai', 'We were meant to sleep at this khan the night Jabir died.', 'Then sleep here when this is over. Somebody has to.'], ['kiln', 'The kilns made bricks for the Round City once. Now they burn paper.', 'Paper burns quicker than brick, at least.'], ['arch', 'The old Persian arch. Jabir said it was built by giants. He knew it was not.', 'Big men, then. Big men with a lot of slaves.']],
+  sawad: [['serai', 'We were meant to sleep at this khan the night they took Jabir.', 'Then sleep here when this is over. Somebody has to.'], ['kiln', 'The kilns made bricks for the Round City once. Now they burn paper.', 'Paper burns quicker than brick, at least.'], ['arch', 'The old Persian arch. Jabir said it was built by giants. He knew it was not.', 'Big men, then. Big men with a lot of slaves.']],
   marsh: [['serai', 'Reed houses. They build one in four days, they say.', 'And lose it in an hour, if Kallinikos comes by.'], ['kiln', 'Nothing here but water and reeds and men who want to kill us.', 'And fish. Do not forget the fish.'], ['arch', 'The old weir. When it held, this was all fields.', 'When it held, I would have been a farmer.']],
   karkh: [['serai', 'The paper-sellers\' lane. Jabir wanted me to learn to read here.', 'You still could. Ash washes off a page.'], ['kiln', 'Every door on this street is burned. Every one.', 'Not every one. Look, that family is back.'], ['arch', 'The square. They held markets here that the whole world came to.', 'They will again. Markets come back before people do.']],
   docks: [['serai', 'Everything Baghdad eats comes up this river.', 'And everything it fears goes down it.'], ['kiln', 'Burned hulks. The Rum fired them so no one could follow.', 'Then we follow on foot.'], ['arch', 'The Bridge of Boats. Jabir would have argued the toll.', 'And won, from what you say of him.']],

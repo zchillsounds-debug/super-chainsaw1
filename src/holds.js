@@ -601,7 +601,7 @@ const MOVES = {
       e.pos.lerpVectors(M.from, M.to, k); e.liftY = Math.sin(k * Math.PI) * 2.2; e.facing = Math.atan2(M.to.x - M.from.x, M.to.z - M.from.z);
       if (k >= 1 && !M.done) { M.done = true; e.liftY = 0; resolve(e.pos, e.radius); g.audio.boom?.(); g.shake = Math.max(g.shake, 0.6); g.fx.dust(e.pos, 22, 2.2); g.fx.ring(e.pos, new THREE.Color(2, 1.7, 1.2), 0.6, 3.6, 0.45); if (g.player.pos.distanceTo(e.pos) < 3.1) g.damagePlayer(e.dmg * 1.5, e.pos); }
       return M.t > 1.5; } },
-  // Tatzates: the arrow that killed Jabir: a long aim down a marked line, then one heavy shaft along it
+  // Tatzates: the arrow that wounded Jabir: a long aim down a marked line, then one heavy shaft along it
   snipe: { range: [4, 30], cd: 10, start(g, e) { const p = g.player.pos, d = tmp.set(p.x - e.pos.x, 0, p.z - e.pos.z).normalize().clone(), from = e.pos.clone().setY(0); e.facing = Math.atan2(d.x, d.z); e.st.action = 'shoot'; e.mv = { t: 0, dur: 1.5 };
       (g.ui.bossCall?.(t('Marked')) || g.ui.damageNumber(e.pos, t('Marked'), 'crit'));
       lineTele(g, from, d, 30, 1.3, 1.2, () => { const H = { from, dir: d, len: 30, w: 1.3 }; g.audio.whoosh?.(); for (let k = 0; k < 10; k++) g.fx.glow.spawn({ pos: { x: from.x + d.x * k * 3, y: 1.3, z: from.z + d.z * k * 3 }, life: 0.3, size: 0.35, size1: 0.05, color: new THREE.Color(3, 2.6, 2) }); if (inLine(g.player.pos, H)) g.damagePlayer(e.dmg * 2.2, e.pos); }); },

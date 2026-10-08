@@ -99,14 +99,15 @@ export function arsaberLane(g, choose) {
 }
 
 // ------------------------------------------------------------------ a scene inside each act
-// Each is told with Ishaq in the camp, or (in the hills) with the hill man who brings Jabir's spear.
+// Each is told with Ishaq in the camp, or (in the hills) with the hill man who brings Jabir's spear (Round 35: Jabir lives;
+// he was taken on the dune and rescued at the arch, and heals in Ishaq's camp)
 export const MIDACT = {
   sawad: [
     { who: 'Ishaq', text: 'The village asks for the names of the men who died on the road. They want to say them at the canal.' },
     { who: 'Salim', text: 'Ka\'b, who sang badly. Sinan, and his brother \'Awf. Old Mazin, who walked that road for thirty years.' },
-    { who: 'Salim', text: 'And Jabir.', expr: 'sad' },
+    { who: 'Salim', text: 'Four names. Not five. Not Jabir.', expr: 'sad' },
     { who: 'Ishaq', text: 'Say them again tomorrow, and the day after. That is how the account is kept.' },
-    { caption: 'That evening the village children learned five names, and said them at the water.' },
+    { caption: 'That evening the village children learned four names, and said them at the water.' },
   ],
   marsh: [
     { who: 'Ishaq', text: 'You do not like the water either, I think.' },
@@ -134,9 +135,9 @@ export const MIDACT = {
   hamrin: [
     { who: 'Shabib', text: 'We found this in the quarry, among their trophies. The men said it was taken on the caravan road, in the spring.' },
     { who: 'Salim', text: '...That is Jabir\'s spear. He wound the grip himself. Badly.', expr: 'sad' },
-    { who: 'Shabib', text: 'Then it is yours. A trophy belongs with the dead man\'s family, not with the men who killed him.' },
-    { who: 'Salim', text: 'He would want it carried, not hung on a wall.' },
-    { caption: 'Salim tied his brother\'s spear behind his saddle. It rode with him from then on.' },
+    { who: 'Shabib', text: 'Then it is yours. A trophy belongs with the man it was taken from, not with the men who took it.' },
+    { who: 'Salim', text: 'He will want it back. He will say I carried it wrong.' },
+    { caption: 'Salim tied his brother\'s spear behind his saddle, to give back to him on the quays.' },
   ],
 };
 export function midAct(g, region, o) { return chat(g, o, MIDACT[region]); }
