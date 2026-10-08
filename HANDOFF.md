@@ -13,6 +13,21 @@
 > - Push to the session's assigned branch.
 > - Send me the APK that CI builds (see "Getting the APK to the user").
 
+## Round 35 plan (approved by the user): Season One rebuilt, Jabir lives
+User feedback on Season One: not enough tension, no hook; Jabir should not die at the start (injured); "Previously" right after a cliffhanger is jarring; early cutscenes not clean (the caravan/ambush, camera framing in general, people walking through buildings in the opening); the plot should be cohesive, smooth and easy to follow, with sharper twists. Season Two waits.
+User decisions: Jabir is **taken captive, innocent** (no betrayal); the reel-style cold open; reword every later scene that assumes Jabir died **this round**; after the rescue Jabir **heals in Ishaq's camp** (a pallet, a short line per region, on the quays in the epilogue).
+The spine: the raiders took Jabir alive to trade him for **Ishaq** (only Ishaq reads the Pages: his own cipher). Salim is caught between his brother and the man he guards.
+- **Cold open:** night, the caravan burning; Salim drags Jabir (arrow in his side), riders tear Jabir away; freeze, "Six hours earlier".
+- **Ep 1 Dusk on the Dune:** short caravan, the ambush fight, the arrow wounds Jabir, catch up to the cold open, Salim clubbed down, wakes by Ishaq. Cliff: an arrow with a note where the chest stood: "The astronomer, for your brother."
+- **Ep 2 The Cedar Chest:** what the Pages are and why they need Ishaq; Khawla saw a wounded man tied over a horse toward the serai; the Watcher fight. Cliff: Jabir's bloodied headcloth at the serai; "You are the brother."
+- **Ep 3 The Broken Dam:** Photeinos' hold; his last words: Jabir moved to the kilns, and someone close to Ishaq writes to the envoy. Cliff: smoke over the kilns, "They are burning them. And he is in there."
+- **Ep 4 Ash in the Kilns:** the clock; the cell is empty (Jabir's scratched marks); Olbianos names Ishaq. Cliff: "Ishaq knew."
+- **Ep 5 Thirst:** Ishaq confesses he chose Jabir's mules for the chest; the fouled canal; Bardanes' herald: the trade at the arch at dawn. Choice: feign the trade / refuse; it changes Ep 6. Cliff: "Ishaq, for Jabir. At dawn."
+- **Ep 6 The Arch:** the dawn clock, Bardanes, Jabir rescued alive and wounded; the chest is light. Cliff: Jabir: "The rest went east by boat. Kallinikos has the fire." Next: Season Two.
+- **Cards:** the cliffhanger flows straight into the next title card; "Previously" only when resuming a saved game (new session).
+- **Cutscenes:** clean the ambush shots; keep people off building colliders; framing and hard cuts; critique with screenshots.
+- **Later acts:** reword every line assuming Jabir died (lamps for the dead guards, Tatzates wounded Jabir, the Hamrin spear given by Jabir himself, the epilogue, MIDACT names of the dead, codex, STORY.md). Arabic for everything.
+
 ## Round 34: the chronicle as a microdrama (Season One: the Sawad)
 User decisions: rework the game itself (not a separate mode) into a linear story told in episodes with cliffhangers; between scenes, **short story fights** (every fight has a reason); **restructure the current plot** (same cast) with sharper hooks and reveals; side content: **both** fold the best of it into the story as required beats **and** hold the rest until the chronicle is finished; this round = **the system plus Season One (the Sawad, Episodes 1 to 6)**; no-skip = **a tap moves on only after the line has fully shown**; roaming = **free, but only the episode's objective exists**; RPG layer = **story-paced** (classes and skills stay, no loot showers, levels at set story points).
 
