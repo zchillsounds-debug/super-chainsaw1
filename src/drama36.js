@@ -310,7 +310,7 @@ export function season2(C) {
   ], { cast: jabCast(), onEnd: () => { const j = jab(); if (j) j.stand36 = false; } });
   const fireRaid = () => {
     const foes = [];
-    for (const a of [chan.a + 0.6, chan.a - 0.7]) { const q = dryNear(hx + Math.sin(a) * 15, hz + Math.cos(a) * 15); foes.push(...g.spawnPack(['archer', 'reedman', 'siphon'], q.x, q.z, 3, lvl(-1), { spread: 2.5 })); }
+    for (const a of [chan.a + 0.6, chan.a - 0.7]) { const q = dryNear(hx + Math.sin(a) * 15, hz + Math.cos(a) * 15); foes.push(...g.spawnPack(['archer', 'reedman', 'naffat'], q.x, q.z, 3, lvl(-1), { spread: 2.5 })); }
     for (const e of foes) e.alerted = true; return foes;
   };
   const quireGone = () => {
