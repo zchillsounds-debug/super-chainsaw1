@@ -330,11 +330,13 @@ export function season2(C) {
 
   // ---------------- Ep 5: dawn; Ishaq comes up from the water
   const dawnBack = () => {
-    const ish = ishaq(), home = g.npc.position.clone(), from = ground(chan.land.x, chan.land.z);
+    const ish = ishaq(), home = g.npc.position.clone();
+    // he walks the last few metres up from the landing, toward the camera
+    const dl = Math.atan2(chan.land.x - home.x, chan.land.z - home.z), from = ground(home.x + Math.sin(dl) * 6.5, home.z + Math.cos(dl) * 6.5);
     return { actors: [playerActor(g), ish], shots: [
       { dur: 5.0, fadeIn: 1.2, caption: 'At first light Ishaq came up from the water. Wet to the knee. Ash on his fingers.',
         enter: () => { g.lighting?.set?.('dawn', 0); g.npc.visible = true; lidOpen(0); ish.pos.copy(from); p.pos.copy(ground(home.x + 1.6, home.z + 1.2)); },
-        cam: { p0: () => home.clone().add(V(4, 2.2, 4)), t0: () => at(ish, 1.2)(), p1: () => home.clone().add(V(3, 1.8, 3)), t1: () => at(ish, 1.2)(), fov: 38 },
+        cam: { follow: true, p0: () => ground(home.x - Math.sin(dl) * 1.5 + Math.cos(dl) * 1.8, home.z - Math.cos(dl) * 1.5 - Math.sin(dl) * 1.8, 1.5), t0: () => at(ish, 1.0)(), fov: 34 }, dof: () => at(ish, 1.4)(),
         run: (d, k, dt) => { const done = walk(ish, home, 1.1, dt); ish.st.walkBlend = done ? 0 : 1; ish.st.phase += dt * 4 * ish.st.walkBlend; } },
     ], tick: (d, dt) => { g.npc.position.copy(ish.pos); }, end: () => { g.npc.position.copy(home); g.npcSt.walkBlend = 0; } };
   };
