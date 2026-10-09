@@ -199,8 +199,10 @@ const titleCam = (t) => {
   camera.position.set(cx, heightAt(cx, cz) + 14, cz);
   camera.lookAt(V.x, 9, V.z - 10);
 };
+let starting = false; // Round 37: a second tap during the fade used to start the opening again
 function start(cont, fromTravel = false) {
-  if (mode !== 'title') return;
+  if (mode !== 'title' || starting) return;
+  starting = true;
   audio.init(); if (fromTravel) audio.fadeInAll?.(2.5);
   if (!fromTravel) ui.fade(1);
   setTimeout(async () => {
