@@ -72,9 +72,10 @@ export function setupStory35(g) {
     const script = TALK[R].map((L) => ({ ...L, when: L.when ? () => L.when(g) : undefined }));
     // at his pallet, Salim crouches down to him, so the two are face to face
     const P = g.player; if (sitting) P.st.crouch = 0.75;
-    g.director.play(S32.chat(g, S32.other(n), script, { onEnd: () => { n.st.crouch = sitting ? 0.85 : 0; P.st.crouch = 0; }, tick: () => { if (sitting) P.st.crouch = 0.75; } })).then(() => { said()[key] = true; P.st.crouch = 0; saveGame(g); });
+    g.director.play(S32.chat(g, S32.other(n), script, { onEnd: () => { n.st.crouch = sitting && !n.stand36 ? 0.85 : 0; P.st.crouch = 0; }, tick: () => { if (sitting) P.st.crouch = 0.75; } })).then(() => { said()[key] = true; P.st.crouch = 0; saveGame(g); });
   }
   // he stays seated on the pallet whatever the camp animation does
   const prev = g.tickExtra;
-  if (sitting) g.tickExtra = (dt) => { prev?.(dt); n.st.crouch = 0.85; n.st.walkBlend = 0; };
+  if (sitting) g.tickExtra = (dt) => { prev?.(dt); n.st.crouch = n.stand36 ? 0 : 0.85; n.st.walkBlend = 0; };
+  g.jabir35 = n; // Round 36: Season Two's scenes use him (and stand him up: stand36)
 }

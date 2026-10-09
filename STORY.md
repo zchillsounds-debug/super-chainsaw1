@@ -35,6 +35,29 @@ The question that drives the season: why keep a wounded guard alive? Because the
 5. **Thirst:** the confession; the fouled canal; Doukitzes: Jabir is in the vault under the arch; the herald's terms, and the choice `trade34` (feign / refuse). *"Ishaq, for Jabir. At dawn."*
 6. **The Arch:** the four names (not five); the dawn clock; Bardanes' greeting follows the choice; Jabir found in the vault; the lamps for the four dead guards; Jabir's hook: *"Kallinikos has them. And he has the fire."*
 
+## Round 36: the whole arc (approved by the user)
+**The truth, told last:** Ishaq is "the friend who writes to the envoy". The last quire of the Pages is the Teacher's own account of his prison, naming the men who poisoned him; some of them still sit at court. In Baghdad it would be burned and its reader killed. So Ishaq wrote to Arsaber himself and arranged a quiet theft that would carry the quire beyond the caliphs' reach: no blood was to be spilled. Bardanes broke the bargain. He shot Jabir, then held him to force Ishaq to come in person ("The astronomer, for your brother" betrays both sides). Ishaq has lied to Salim since the Sawad ("I did not know about the envoy").
+
+| Season | The question | How it ends |
+|---|---|---|
+| 1 · the Sawad | Why keep a wounded guard alive? | Jabir rescued. Plants: the envoy asks for Ishaq by name; Ishaq's wet sandals the night the canal is fouled, and he knows it is fouled before anyone tells him; a man came to the vault at night, "Bardanes called him the friend". |
+| 2 · the Marshes | Who is the Friend? | Red herring: Rabab the boatwoman (her son Hani rows for Kallinikos). Midpoint: the last quire. End: Kallinikos' letters are all in the Teacher's cipher. "Only one man alive writes this hand." |
+| 3 · al-Karkh | Did Ishaq sell us? | Ishaq calls the letters Olbianos' forgeries; Hakam vouches for him; Jabir walks and fights. End: Jabir hears Ishaq read aloud: "That voice. He came to the vault." |
+| 4 · the Quays | Why? | The full confession. Arsaber: "Your astronomer invited me." The choice: Ishaq to the qadi, or let him finish the account. Either way the copies scatter: Ishaq's aim, reached honestly. The lamps. |
+| 5 · the Hamrin | What is justice worth? | Tatzates; the price of the choice; the brothers ride together, and Jabir gets his spear back. |
+
+Rules for the arc: every twist is planted at least a season earlier; a choice comes back later (trade34 decides how Ishaq speaks of the last quire); Ishaq is never a villain: he is a man who chose the account over the living, and pays.
+
+## Round 36: Season Two, the Marshes (as built)
+The question: who is the Friend? Cold open, then "Three days earlier".
+- **Cold open:** night on the weir, fire on the water, the reed village burning. Kallinikos with his siphon: *"Your friend in the camp writes a fine hand, guard."* "What friend?" The fire comes; freeze.
+1. **The Light Chest:** Rabab poles Salim into the marshes. The chest from Bardanes' tent is light (eleven quires of twenty); Ishaq shuts the lid on the last before Salim sees. Jabir: a man came to the vault at night, "Bardanes called him the friend". Reed-men raid the landing. That night an arrow lands by Jabir's pallet, a message in the Teacher's cipher. *"Who else writes your teacher's cipher?" "No one. No one alive."*
+2. **The Reed Stockade:** three learned the cipher (Ishaq, Olbianos, a student lost in the siege). The causeway; the stockade; Katakylas: the letters come by boat from the camp, and a woman poles it. *Rabab's boat is gone.*
+3. **The Boatwoman:** Layla: Rabab poles east every night, Kallinikos has her son Hani. The drowned village's sentries. Rabab cannot read; the letters are left under a stone at the old mooring post by the camp, with a coin. Choice **`rabab36`** (trust / bind). *"Then the friend sleeps in our camp."*
+4. **The Last Quire:** Ishaq tells what the last quire is (the names of the poisoners). trade34 comes back. Jabir stands for the first time. Fire-arrows on the camp at night. *The chest is open, the last quire gone. And Ishaq.*
+5. **The Drowned Village:** Ishaq at the landing at dawn, wet to the knee, ash on his fingers: he hid the quire. Salim remembers the Sawad: the wet sandals, the canal he knew was fouled. Jabir: the boy first. Petronas falls: the friend came to the weir two nights ago, *"an old man, coughing in the damp."*
+6. **The Weir:** the brothers before the fight (the flood: "So we are even"); Ishaq: "When you come back, ask me. I will answer." The clock to dawn; Kallinikos ("Your friend in the camp writes a fine hand, guard."); the reed village and the choice (chase / stay, Round 25); Hani freed. *Kallinikos' letters, every one in the cipher: "Only one man alive writes this hand."* End of Season Two.
+
 ## Act structure (before Round 35)
 1. **The Caravan.** Riders in Byzantine mail on the dunes; the attack at dusk stays off screen. Jabir falls. Salim wakes in the village with Ishaq, and the chest is gone.
 2. **The Kilns.** Olbianos burns pages in the kilns to buy his life. Salim saves what he can.

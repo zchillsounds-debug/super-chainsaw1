@@ -17,7 +17,8 @@ import { H32, JABIR_LOOK } from './scenes.js';
 import { chat, other, extra, spotAhead, MIDACT } from './scenes32.js';
 import { humanoid, camel } from './characters.js';
 import { LOOK, byzify } from './byz.js';
-import { REGION, IS_SAWAD, STORY } from './region.js';
+import { REGION, IS_SAWAD, IS_MARSH, STORY } from './region.js';
+import { season2 } from './drama36.js';
 import { SITES, heightAt } from './terrain.js';
 import { LIEUT, BOSS } from './story15.js';
 import { S25, choose, chosen } from './story25.js';
@@ -28,6 +29,8 @@ const { V, ground, yawTo, lineDur, actor, at, headOf, walk, act, tickActor, play
 const P = new URLSearchParams(location.search);
 // on for every real chronicle; the old headless tests (?play) run without it unless they ask (?drama)
 export const DRAMA_ON = !P.has('nodrama') && (!P.has('play') || P.has('drama'));
+// Round 36: each story region is a season: the Sawad is Season One, the marshes Season Two (drama36.js)
+const SEASON = IS_SAWAD ? 1 : IS_MARSH ? 2 : 0;
 
 // ---------------------------------------------------------------- the episodes' words
 export const EPISODES = {
@@ -86,18 +89,21 @@ function waitTap(min, max, label = 'Tap to continue') {
     addEventListener('pointerdown', on, true); addEventListener('keydown', on, true);
   });
 }
-function stillKey(n) { return 'sob.ep34.still.' + n; }
+function stillKey(n) { return 'sob.ep34.still.' + (SEASON === 2 ? 's2.' : '') + n; }
 function getStill(n) { try { return localStorage.getItem(stillKey(n)); } catch { return null; } }
 
 export function setupDrama34(g) {
   const p = g.player, audio = g.audio;
-  const E = () => (p.ep34 ||= { n: 1, b: 0 });
+  const KEY = SEASON === 2 ? 'ep36' : 'ep34';
+  const E = () => (p[KEY] ||= { n: 1, b: 0 });
   // the side content waits until the chronicle is finished (act 7)
   const locked = () => DRAMA_ON && (g.act || 1) < 7;
-  // the Sawad's six episodes are played as episodes (later seasons follow in later rounds)
-  const live = () => DRAMA_ON && IS_SAWAD && g.started && E().n <= 6;
+  // the Sawad's and the marshes' six episodes are played as episodes (later seasons follow in later rounds)
+  const live = () => DRAMA_ON && SEASON > 0 && g.started && E().n <= 6;
+  // the season's words and beats (Season Two fills these in from drama36.js once the helpers below exist)
+  const SN = { EPISODES, RECAP, FLOOR, ZONES, where: 'The Sawad, outside Baghdad, 813', end: 'End of Season One', slate: 'One hour earlier', eyebrow: '' };
   g.storyLoot = false;
-  const D = g.drama34 = { on: DRAMA_ON, live, locked, E };
+  const D = g.drama34 = { on: DRAMA_ON, live, locked, E, season: SEASON };
 
   // ------------------------------------------------ the heartbeat, for the turns of the story and a running clock
   audio.heart = (n = 2) => {
@@ -134,10 +140,10 @@ export function setupDrama34(g) {
 
   // ------------------------------------------------ the Sawad's troops, held off the map outside their episode
   const zoned = [];
-  if (IS_SAWAD) for (const e of g.enemies) if (!e.interior && !e.boss) zoned.push({ e, zone: zoneOf(e.pos.x, e.pos.z) });
+  if (SEASON) for (const e of g.enemies) if (!e.interior && !e.boss) zoned.push({ e, zone: zoneOf(e.pos.x, e.pos.z) });
   const applyZones = () => {
-    if (!IS_SAWAD) return;
-    const ok = new Set(live() ? ZONES[E().n] || [] : ['serai', 'kiln', 'south', 'open']);
+    if (!SEASON) return;
+    const ok = new Set(live() ? SN.ZONES[E().n] || [] : ['serai', 'kiln', 'south', 'open']);
     for (const Z of zoned) {
       const want = ok.has(Z.zone), there = g.enemies.includes(Z.e);
       if (want && !there && !Z.e.dead) { g.enemies.push(Z.e); g.scene.add(Z.e.rig); Z.e.rig.visible = true; }
@@ -151,7 +157,8 @@ export function setupDrama34(g) {
     g.holds.locked = (id) => {
       // Round 35: no door opens while a beat is still running (the way out of a hold into the next scene)
       if (live() && busy) return 'Not now.';
-      if (live()) {
+      if (live() && SN.lock) { const m = SN.lock(id); if (m) return m; }
+      if (live() && SEASON === 1) {
         if (id === 'dam' && E().n < 3) return 'Not yet. Find out who took the chest first.';
         if (id === 'kilns' && E().n < 4) return 'The galleries are barred. Find Photeinos first.';
       }
@@ -184,15 +191,15 @@ export function setupDrama34(g) {
   const hide = async () => { overlay().classList.remove('on'); await sleep(450); overlay().className = 'hidden'; $o('.still').style.backgroundImage = ''; };
   const rtl = LANG === 'ar' ? ' dir="rtl"' : '';
   D.titleCard = async (n) => {
-    const Ep = EPISODES[n];
-    $o('.box').innerHTML = `<div class="eyebrow">${t('Episode')} ${t(NUM[n] || String(n))}</div>${LANG === 'ar' ? '' : `<div class="arline">${Ep.ar}</div>`}<div class="rule"><i></i><b></b><i></i></div><div class="title"${rtl}>${t(Ep.title)}</div><div class="where">${t('The Sawad, outside Baghdad, 813')}</div>`;
+    const Ep = SN.EPISODES[n];
+    $o('.box').innerHTML = `<div class="eyebrow">${SN.eyebrow ? t(SN.eyebrow) + ' · ' : ''}${t('Episode')} ${t(NUM[n] || String(n))}</div>${LANG === 'ar' ? '' : `<div class="arline">${Ep.ar}</div>`}<div class="rule"><i></i><b></b><i></i></div><div class="title"${rtl}>${t(Ep.title)}</div><div class="where">${t(SN.where)}</div>`;
     // Round 35: straight on from the cliffhanger: the overlay is already black, so the card comes up on it with no gap
     if (D.chained) { D.chained = false; overlay().className = 'title on'; } else show('title');
     audio.stinger?.('title');
     await sleep(900); await waitTap(2600, 4800, 'Tap to begin'); await hide();
   };
   D.recap = async (n) => {
-    const lines = (RECAP[n]?.(g) || []).map((s) => t(s));
+    const lines = (SN.RECAP[n]?.(g) || []).map((s) => t(s));
     if (!lines.length) return;
     const st = getStill(n - 1); $o('.still').style.backgroundImage = st ? `url(${st})` : '';
     $o('.box').innerHTML = `<div class="eyebrow">${t('Previously')}</div><div class="lines"${rtl}></div>`;
@@ -210,8 +217,8 @@ export function setupDrama34(g) {
   D.cliff = async (n, still = true) => {
     document.body.classList.add('ep34freeze'); audio.stinger?.('ambush'); audio.heart(2);
     if (still) await snap(n);
-    const N = EPISODES[n + 1];
-    $o('.box').innerHTML = `<div class="tbc"${rtl}>${t('To be continued')}</div><div class="nextep"${rtl}>${n >= 6 ? t('End of Season One') : t('Next') + ' · ' + t('Episode') + ' ' + t(NUM[n + 1] || '')}</div>${n >= 6 ? `<div class="nexttitle"${rtl}>${t(N?.title || '')}</div>` : ''}<div class="teaser"${rtl}>${t(N?.next || '')}</div>`;
+    const N = SN.EPISODES[n + 1];
+    $o('.box').innerHTML = `<div class="tbc"${rtl}>${t('To be continued')}</div><div class="nextep"${rtl}>${n >= 6 ? t(SN.end) : t('Next') + ' · ' + t('Episode') + ' ' + t(NUM[n + 1] || '')}</div>${n >= 6 ? `<div class="nexttitle"${rtl}>${t(N?.title || '')}</div>` : ''}<div class="teaser"${rtl}>${t(N?.next || '')}</div>`;
     await sleep(500); show(n >= 6 ? 'cliff final' : 'cliff');
     await waitTap(2600, 60000);
     // Round 35: the frozen frame goes to black and stays black: the next episode's title card comes up on it
@@ -233,7 +240,7 @@ export function setupDrama34(g) {
   clockEl.innerHTML = '<div class="cl"></div><div class="bar"><i></i></div><div class="cn"></div>';
   document.getElementById('ui').appendChild(clockEl);
   let clock = null; // { label, total, left, unit(left) -> text, out() }
-  const startClock = (C) => { clock = { ...C, left: C.left ?? C.total }; clockEl.classList.remove('hidden'); heartT = 0; };
+  const startClock = (C) => { clock = { ep: E().n, ...C, left: C.left ?? C.total }; clockEl.classList.remove('hidden'); heartT = 0; };
   const stopClock = () => { clock = null; clockEl.classList.add('hidden'); };
   let heartT = 0;
   const tickClock = (dt) => {
@@ -261,7 +268,7 @@ export function setupDrama34(g) {
   const calm = (r = 22) => !g.enemies.some((e) => !e.dead && !e.hidden && e.alerted && e.pos.distanceTo(p.pos) < r);
   const questDone = (id) => !!g.quests.find((q) => q.id === id)?.done;
   const bark = (who, text, ms = 4200) => g.bark?.(who, text, ms, true);
-  const floorLevel = (n) => { while (p.level < (FLOOR[n] || 1)) g.levelUp(); };
+  const floorLevel = (n) => { while (p.level < (SN.FLOOR[n] || 1)) g.levelUp(); };
   // the people folded into the story stay out of sight until their episode
   const gateNpc = (name, show) => {
     const n = npcNamed(name); if (!n) return;
@@ -401,7 +408,8 @@ export function setupDrama34(g) {
         cam: { p0: () => above(V(C.x + 4.6, C.y + 2.4, C.z - 3.4), 1.8), t0: () => V(C.x - 0.4, C.y + 0.7, C.z + 0.6), p1: () => above(V(C.x + 3.6, C.y + 2.0, C.z - 2.6), 1.6), t1: () => V(C.x - 0.4, C.y + 0.7, C.z + 0.6), fov: 38 },
         run: (d, k, dt) => { burn(); salim.st.crouch = 0.85; walk(s1, V(C.x + 2.5, 0, C.z + 5), 1.4, dt); walk(s2, V(C.x + 4.5, 0, C.z + 3.5), 1.4, dt); for (const s of [s1, s2]) { s.st.walkBlend = 1; s.st.phase += dt * 4; } } },
       { dur: lineDur('Leave me, Salim. Run!'), line: { who: 'Jabir', text: 'Leave me, Salim. Run!', rig: jabir.rig, cue: 'breath', expr: 'pain' }, tight: true,
-        cam: { follow: true, p0: () => { const m = C.clone().lerp(salim.pos, 0.5), f = yawTo(salim.pos, C); return above(V(m.x + Math.sin(f) * 2.3, m.y + 1.9, m.z + Math.cos(f) * 2.3), 1.6); }, t0: () => C.clone().lerp(salim.pos, 0.5).add(V(0, 0.35, 0)), fov: 38 }, dof: () => C.clone().add(V(0, 0.3, 0)), aperture: 1.2,
+        // Round 36: low, from the far side of Jabir: his face in profile in the foreground, Salim kneeling above him, facing us
+        cam: { follow: true, p0: () => { const h = jhead(), f = yawTo(salim.pos, h); return above(V(h.x + Math.sin(f) * 1.35 + Math.sin(jf) * 0.25, h.y + 0.45, h.z + Math.cos(f) * 1.35 + Math.cos(jf) * 0.25), 0.55); }, t0: () => jhead().lerp(headOf(salim)(), 0.45), fov: 36 }, dof: jhead, aperture: 1.0,
         run: (d, k, dt) => { burn(); salim.st.crouch = 0.85; } },
       { dur: lineDur('Not without you.'), line: { who: 'Salim', text: 'Not without you.', rig: p.rig, cue: 'shout', expr: 'anger' }, tight: true, beat: 1,
         cam: { follow: true, p0: () => across(1.25, 0.95, 0.35), t0: () => headOf(salim)(), fov: 30 }, dof: headOf(salim), aperture: 1.6,
@@ -456,8 +464,9 @@ export function setupDrama34(g) {
     { who: 'Ishaq', text: 'He wrote them in a cipher of his own. I am the only man alive who can read it.' },
     { who: 'Salim', text: 'So the Pages are worthless to them without you. And my brother is the price.', expr: 'stern', tight: true, beat: 1 },
     { who: 'Ishaq', text: 'An envoy from Constantinople came under the smoke of this war. His men want the book, and the man who reads it.' },
-    { who: 'Salim', text: 'Who knew the chest was in our caravan?', expr: 'stern' },
-    { who: 'Ishaq', text: '...Few. Fewer than should have.', expr: 'sad', tight: true, beat: 2 },
+    // Round 36: a plant for the whole chronicle: how did the envoy know to ask for Ishaq?
+    { who: 'Salim', text: 'Then how did a Rum envoy know to ask for you by name?', expr: 'stern' },
+    { who: 'Ishaq', text: '...Few knew. Fewer than should have.', expr: 'sad', tight: true, beat: 2 },
     { who: 'Ishaq', text: 'Khawla, at the village well, saw riders pass at first light. Start with her.' },
     { who: 'Salim', text: 'Do not leave this village, astronomer. If you run, I will find you before they do.', expr: 'anger', tight: true },
   ]);
@@ -522,6 +531,10 @@ export function setupDrama34(g) {
   const confession = () => {
     const sud = npcNamed('Su\'da'), cast = sud ? { 'Su\'da': other(sud) } : {};
     return chat(g, ishaq(), [
+      // Round 36: a plant. Salim told him not to leave the village; he knows the canal is fouled before Su'da cries it
+      { caption: 'Ishaq\'s lamp was out. His sandals by the door were wet with canal mud.', tight: true },
+      { who: 'Salim', text: 'You went out. I told you not to leave the village.', expr: 'stern' },
+      { who: 'Ishaq', text: 'Only to the canal. I wanted to see the water for myself.' },
       { who: 'Salim', text: 'Olbianos copied for you once. He said you put the chest on Jabir\'s mules. On purpose.', expr: 'anger' },
       { who: 'Ishaq', text: 'Yes.', expr: 'sad', tight: true, beat: 2 },
       { who: 'Ishaq', text: 'No one searches a caravan guard\'s mules. I chose your brother\'s road for the Pages. I did not know about the envoy.' },
@@ -602,27 +615,33 @@ export function setupDrama34(g) {
   };
   // wait for the director to be free (a scene started by another system)
   const idle = async () => { await sleep(200); while (g.cinematic || g.director?.active) await sleep(200); };
+  SN.BEATS = BEATS;
+  // the people of later episodes wait out of sight
+  SN.gate = (n, b) => { for (const w of ['Umayma', 'Nadr', 'Qays']) gateNpc(w, n > 5 || (n === 5 && b >= 1)); gateNpc('Doukitzes', n === 5 && b >= 2); };
+  // Round 36: Season Two, the marshes: its scenes and beats are built from the same helpers
+  if (SEASON === 2) Object.assign(SN, season2({ g, D, E, play, sleep, said, ch, ishaq, npcNamed, near, calm, questDone, bark, gateNpc, goto, fight, scene, holdBeat, leaveHold, withCliff, cliffShot, idle,
+    startClock, stopClock, clock: () => clock, saveGame }));
 
   // ================================================================ the runner
   let busy = false, introDone = false, cur = null;
   Object.defineProperty(D, 'busy', { get: () => busy, configurable: true });
-  const beat = () => BEATS[E().n]?.[E().b];
+  const beat = () => SN.BEATS[E().n]?.[E().b];
   const nextBeat = () => { E().b++; cur = null; saveGame(g); g.refreshTracker?.(); };
   const endEpisode = () => { const e = E(); e.n++; e.b = 0; cur = null; introDone = false; saveGame(g); };
   async function intro(fromLoad) {
     const n = E().n;
     applyZones(); floorLevel(n);
-    if (clock && !(n === 4 && clock.label !== 'Dawn') && !(n === 6 && clock.label === 'Dawn')) stopClock(); // no clock outlives its episode
+    if (clock && clock.ep !== n) stopClock(); // no clock outlives its episode
     g.paused = true;
     // Round 35: a new chronicle opens in the middle of the night raid, then rewinds; "previously" only on a return
-    if (n === 1 && E().b === 0 && !fromLoad) { await play(coldOpen()); await D.slate('One hour earlier'); }
+    // Round 36: Season Two arrives by travel (a page load), so its cold open is marked as played instead
+    if (n === 1 && E().b === 0 && (SEASON === 1 ? !fromLoad : !E().opened)) { E().opened = true; await play((SN.coldOpen || coldOpen)()); await D.slate(SN.slate); }
     if (fromLoad && n > 1) await D.recap(n);
     if (E().b === 0 || fromLoad) await D.titleCard(n);
     g.paused = false;
     // the people of later episodes wait out of sight
-    gateNpc('Umayma', n > 5 || (n === 5 && E().b >= 1)); gateNpc('Nadr', n > 5 || (n === 5 && E().b >= 1)); gateNpc('Qays', n > 5 || (n === 5 && E().b >= 1));
-    gateNpc('Doukitzes', n === 5 && E().b >= 2);
-    if (n >= 4 && n < 6) kilnSmoke.on = n === 4;
+    SN.gate?.(n, E().b);
+    if (SEASON === 1 && n >= 4 && n < 6) kilnSmoke.on = n === 4;
     if (n === 6 && D.bossLine) BOSS.intro = { ...BOSS.intro, text: E().dawn === 'late' ? BOSS.intro.text : D.bossLine() };
     g.refreshTracker?.();
   }
@@ -635,7 +654,7 @@ export function setupDrama34(g) {
   const prevRefresh = g.refreshTracker;
   g.refreshTracker = () => {
     if (!live()) return prevRefresh?.();
-    const n = E().n; g.ui.quest([{ text: `${t('Episode')} ${t(NUM[n])} · ${t(EPISODES[n].title)}`, on: true, done: false }]);
+    const n = E().n; g.ui.quest([{ text: `${t('Episode')} ${t(NUM[n])} · ${t(SN.EPISODES[n].title)}`, on: true, done: false }]);
   };
   const prevTrack = g.trackTarget;
   g.trackTarget = (...a) => D.target() || (live() ? null : prevTrack?.(...a));
@@ -646,7 +665,7 @@ export function setupDrama34(g) {
     if (!B) { endEpisode(); return; }
     if (cur !== B) { cur = B; B.enter?.(); g.refreshTracker?.(); }
     // the people of the episode come out as their beat arrives
-    if (E().n === 5) { const b = E().b; for (const w of ['Umayma', 'Nadr', 'Qays']) gateNpc(w, b >= 1); gateNpc('Doukitzes', b >= 2); }
+    SN.gate?.(E().n, E().b);
     if (B.done && !B.done()) return;
     busy = true;
     try { await B.then?.(); } catch (e) { console.warn('drama34 beat', e); }
@@ -657,8 +676,8 @@ export function setupDrama34(g) {
     for (let i = 1; i <= 6; i++) try { localStorage.removeItem(stillKey(i)); } catch { /* none */ }
   };
   D.resume = async () => { // Continue from the title screen
-    if (!p.ep34) p.ep34 = fromSave();
-    if (p.ep34.n === 1) p.ep34.b = 0; // the first episode is played through in one sitting
+    if (!p[KEY]) p[KEY] = (SN.fromSave || fromSave)();
+    if (p[KEY].n === 1) p[KEY].b = 0; // the first episode is played through in one sitting
     if (!live()) return false;
     busy = true; try { await intro(true); } finally { introDone = true; busy = false; }
     return true;
@@ -721,7 +740,7 @@ export function setupDrama34(g) {
     if (!live()) return;
     if (E().n < 6 && !g.bossActive) g.bossSpawned = true; // Bardanes waits for the last episode
     if (busy || !g.started || g.cinematic || g.paused || p.dead || g.ui.dialogOpen || !g.director) return;
-    if (jumpTo) { doJump(jumpTo); jumpTo = 0; return; }
+    if (jumpTo) { (SN.jump || doJump)(jumpTo); introDone = false; cur = null; jumpTo = 0; return; }
     step();
   };
   // a chronicle continued from a save outside the episodes still has its gate and troops set

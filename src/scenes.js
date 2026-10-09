@@ -340,7 +340,7 @@ export function epilogue(g, b) {
         cam: { follow: true, p0: () => { const a = li.pos, f = yawTo(a, sp.pos); return V(a.x - Math.sin(f) * 0.9 + Math.cos(f) * 0.35, a.y + 1.75, a.z - Math.cos(f) * 0.9 - Math.sin(f) * 0.35); }, t0: headOf(sp), fov: 30 }, dof: headOf(sp) };
     }),
     // Round 35: Jabir heard them in the vault. The season's last hook is his
-    ...[['I heard them, in the vault. The rest went east by boat, into the marshes.', 0], ['Kallinikos has them. And he has the fire.', 2]].map(([line, beat]) => ({
+    ...[['I heard them, in the vault. The rest went east by boat, into the marshes.', 0], ['And a man came to Bardanes there, at night. I never saw his face. Bardanes called him the friend.', 1], ['Kallinikos has them. And he has the fire.', 2]].map(([line, beat]) => ({
       dur: lineDur(line), line: { who: 'Jabir', text: line, rig: jabir.rig, cue: 'breath', expr: 'pain' }, tight: beat > 0, beat,
       enter: () => { ishaq.st.talk = false; salim.st.talk = false; salim.facing = yawTo(salim.pos, jabir.pos); ishaq.facing = yawTo(ishaq.pos, jabir.pos); },
       // over Salim's shoulder, down onto Jabir on his pallet (only the two positions are trusted: a lying rig's bones are not)
@@ -467,6 +467,9 @@ export function arrival(g) {
       { dur: 3.0, fadeIn: 1.0, cam: { p0: () => V(ishaq.pos.x + 6, ishaq.pos.y + 3, ishaq.pos.z + 7), t0: at(ishaq, 1.3), p1: () => V(ishaq.pos.x + 4, ishaq.pos.y + 2.4, ishaq.pos.z + 5), t1: at(ishaq, 1.3) }, enter: () => face() },
       say('Ishaq', 'The scholars of the House of Wisdom will keep the Pages safe, if we can get them there.'),
       say('Salim', 'Jabir always wanted to see Baghdad. I am glad he is not seeing it like this.'),
+      // Round 36: Season Two ended on the letters in the Teacher's cipher (Season Three takes this up)
+      { ...say('Salim', 'You owe me an answer, Ishaq. About the letters.'), when: () => g.player.ep36?.n >= 7 },
+      { ...say('Ishaq', 'In Baghdad, when the Pages are safe. You will have all of it. I swear it.'), when: () => g.player.ep36?.n >= 7 },
       say('Ishaq', 'Arsaber\'s men hold the Pages here. Their captain is Krateros. Start with Narses, in the burned quarter.'),
     ];
   }
@@ -499,6 +502,8 @@ export function rawhFalls(g, b) {
     { when: () => chosen(g, 'marsh') === 'chase', dur: 4.0, caption: 'That night Kallinikos\'s own boats carried Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
     { when: () => chosen(g, 'marsh') === 'stay', dur: lineDur('The Pages can wait one night. These people cannot.'), line: { who: 'Salim', text: 'The Pages can wait one night. These people cannot.', rig: g.player.rig, cue: 'hm', expr: 'resolve' }, cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
     { when: () => chosen(g, 'marsh') === 'stay', dur: 4.6, caption: 'They fought the fire until dawn. Then the marsh-folk poled Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
+    // Round 36: Season Two ends on the letters in Kallinikos' satchel (drama36.js)
+    ...(g.drama34?.live?.() && g.drama34.rawhTail ? g.drama34.rawhTail(salim) : []),
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); } };
 }

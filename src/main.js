@@ -208,7 +208,7 @@ function start(cont, fromTravel = false) {
     if (cont) {
       applySave(game, cont); restoreContent(game); applyNG(game); game.restoreSide?.(); lighting.forAct(cont.act, 0); game.briefed = true; game.refreshTracker?.();
       // Round 34: the Sawad is told in episodes: "previously", then the episode's card
-      if (game.drama34?.on && IS_SAWAD && await game.drama34.resume()) return;
+      if (game.drama34?.on && (IS_SAWAD || IS_MARSH) && await game.drama34.resume()) return; // Round 36: and the marshes (Season Two)
       // first time in a new region: the arrival scene; otherwise a banner
       if (!IS_SAWAD && !game.arrived?.[REGION]) { game.act = Math.max(game.act, FIRST_ACT[REGION]); await director.play(SCENES.arrival(game)); (game.arrived ||= {})[REGION] = true; game.refreshTracker?.(); saveGame(game); }
       else ui.banner('The Chronicle Continues', STORY.banner[cont.act] || REGION_NAME, 3500);
@@ -230,7 +230,7 @@ function start(cont, fromTravel = false) {
 // Round 24: the loader shows where Salim is going while the next map is raised (index.html reads sob.travelcard),
 // the score fades out with the picture, and a scene that already ended on black stays black (no flash of the HUD)
 const TRAVEL_CARD = {
-  marsh: { ar: 'الأهوار', en: 'Act IV · The Marshes', sub: 'Kallinikos has the last Pages. Follow him into the reeds.' },
+  marsh: { ar: 'الأهوار', en: 'Season Two · The Marshes', sub: 'Who is the friend who writes to the envoy?' }, // Round 36
   karkh: { ar: 'الكرخ', en: 'Act V · Al-Karkh', sub: 'Krateros will burn the Pages. Get there first.' },
   docks: { ar: 'الشطّ', en: 'Act VI · The River Quays', sub: 'Arsaber means to carry the copies north before they sail.' },
   hamrin: { ar: 'حمرين', en: 'The Hamrin Hills', sub: 'What is left of Arsaber\'s company holds the road north.' },

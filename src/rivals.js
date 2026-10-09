@@ -284,7 +284,7 @@ export function setupRivals(g) {
     // a lieutenant's bar comes down if Salim walks away from him
     for (const e of [g.matriarch]) if (e?.barOn && (e.dead || e.pos.distanceTo(p.pos) > 32 || !e.alerted)) { e.barOn = false; if (!g.bossActive) g.ui.bossBar(null); }
     if (met?.barOn && (met.pos.distanceTo(p.pos) > 34 || !met.alerted || met.dead)) { met.barOn = false; if (!g.bossActive) g.ui.bossBar(null); }
-    if (!R || !spot || met || p.rival[REGION] || g.cinematic || g.interior || g.bossActive || (g.act || 1) < R.act || !g.started) return;
+    if (!R || !spot || met || p.rival[REGION] || g.rivalWait?.() || g.cinematic || g.interior || g.bossActive || (g.act || 1) < R.act || !g.started) return;
     if (Math.hypot(p.pos.x - spot.x, p.pos.z - spot.z) > 17) return;
     // he is waiting on the road with his men
     const lvl = Math.max(R.level, p.level - 1);
