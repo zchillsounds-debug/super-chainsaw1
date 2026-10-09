@@ -244,7 +244,7 @@ export function season2(C) {
     const shots = [
       { dur: 4.2, fadeIn: 0.8, caption: 'When Salim came back to the landing, Rabab\'s boat was gone. Her pole was floating in the reeds.', tight: true, beat: 1,
         enter: () => { sc.add(pole); p.pos.copy(L); salim.facing = yawTo(L, W); },
-        cam: { follow: true, p0: () => V(L.x - Math.sin(chan.a) * 2.4 + Math.cos(chan.a) * 1.4, L.y + 2.0, L.z - Math.cos(chan.a) * 2.4 - Math.sin(chan.a) * 1.4), t0: () => W.clone(), fov: 36 } },
+        cam: { follow: true, p0: () => V(L.x - Math.sin(chan.a) * 0.8 + Math.cos(chan.a) * 2.8, L.y + 1.7, L.z - Math.cos(chan.a) * 0.8 - Math.sin(chan.a) * 2.8), t0: () => W.clone().lerp(L, 0.3).add(V(0, 0.4, 0)), fov: 40 } },
       { dur: lineDur('She knew every channel. Of course she did.'), line: { who: 'Salim', text: 'She knew every channel. Of course she did.', rig: p.rig, cue: 'hm', expr: 'anger' }, tight: true, beat: 2,
         cam: { follow: true, p0: at(salim, 1.65, 1.5, 0.5), t0: headOf(salim), fov: 28 }, dof: headOf(salim) },
     ];
