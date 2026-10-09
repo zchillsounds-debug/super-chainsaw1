@@ -499,10 +499,10 @@ export function rawhFalls(g, b) {
       enter: () => { salim.facing = yawTo(salim.pos, burnAt); },
       run: (d, k, dt) => { for (let i = 0; i < 6; i++) { const a2 = Math.random() * 6.28, r2 = Math.random() * 7; g.fx.fire(V(burnAt.x + Math.cos(a2) * r2, burnAt.y + Math.random() * 1.5, burnAt.z + Math.sin(a2) * r2), 2.6 + Math.random() * 1.4); } } },
     { when: () => chosen(g, 'marsh') === 'chase', dur: 3.2, line: { who: 'Salim', text: 'Ishaq. Find us a boat.', rig: g.player.rig, cue: 'hm', expr: 'resolve' }, cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
-    { when: () => chosen(g, 'marsh') === 'chase', dur: 4.0, caption: 'That night Kallinikos\'s own boats carried Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
+    { when: () => chosen(g, 'marsh') === 'chase' && !g.drama34?.live?.(), dur: 4.0, caption: 'That night Kallinikos\'s own boats carried Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
     { when: () => chosen(g, 'marsh') === 'stay', dur: lineDur('The Pages can wait one night. These people cannot.'), line: { who: 'Salim', text: 'The Pages can wait one night. These people cannot.', rig: g.player.rig, cue: 'hm', expr: 'resolve' }, cam: { follow: true, p0: at(salim, 1.7, 1.8, 0.9), t0: headOf(salim), fov: 30 }, dof: headOf(salim) },
-    { when: () => chosen(g, 'marsh') === 'stay', dur: 4.6, caption: 'They fought the fire until dawn. Then the marsh-folk poled Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
-    // Round 36: Season Two ends on the letters in Kallinikos' satchel (drama36.js)
+    { when: () => chosen(g, 'marsh') === 'stay' && !g.drama34?.live?.(), dur: 4.6, caption: 'They fought the fire until dawn. Then the marsh-folk poled Salim and Ishaq up the canal to Baghdad.', enter: (d) => d.fade(1, 0.8) },
+    // Round 36: Season Two ends on the letters in Kallinikos' satchel (drama36.js); the season card carries the journey on
     ...(g.drama34?.live?.() && g.drama34.rawhTail ? g.drama34.rawhTail(salim) : []),
   ];
   return { actors, shots, tick: (d, dt) => { for (const a of actors) tickActor(g, a, dt); } };

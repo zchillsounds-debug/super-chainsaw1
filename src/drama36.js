@@ -376,19 +376,26 @@ export function season2(C) {
       { who: 'Jabir', text: 'So we are even. Go and bring that boy back to his mother.', expr: 'resolve' },
       { who: 'Ishaq', text: 'Salim. When you come back, ask me. I will answer. All of it.', expr: 'sad', tight: true, beat: 1 },
       { who: 'Salim', text: 'Keep the lamp lit, Ishaq. I will hold you to that.', expr: 'stern' },
-    ], { cast: { Ishaq: ishaq() }, tick: () => { p.st.crouch = 0.75; }, onEnd: () => { p.st.crouch = 0; } });
+    ], { cast: { Ishaq: ishaq() }, tick: () => { j.stand36 = true; j.st.crouch = 0; } });
   };
   // after Kallinikos falls (scenes.rawhFalls): Hani; the letters; the season's last line
   D.rawhTail = (salim) => {
     const letters = new THREE.Group();
-    for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.24), new THREE.MeshStandardMaterial({ color: 0xd8ccb0, roughness: 1, side: THREE.DoubleSide })); m.position.set(i * 0.03, i * 0.004, i * 0.02); m.rotation.set(-Math.PI / 2 + 0.2, 0, i * 0.15); letters.add(m); }
-    const hand = () => at(salim, 1.05, 0.45, 0.05)();
+    // the Teacher's cipher: rows of small hooked marks in brown ink (no script, no symbols)
+    const cv = document.createElement('canvas'); cv.width = 128; cv.height = 170; const cx = cv.getContext('2d');
+    cx.fillStyle = '#d8c8a2'; cx.fillRect(0, 0, 128, 170); cx.strokeStyle = '#4a2a18'; cx.lineWidth = 1.6;
+    for (let y = 18; y < 160; y += 13) for (let x = 112; x > 14;) { const w = 4 + Math.random() * 7; cx.beginPath(); cx.moveTo(x, y); cx.quadraticCurveTo(x - w / 2, y - 5 - Math.random() * 4, x - w, y + (Math.random() - 0.5) * 3); cx.stroke(); x -= w + 3 + Math.random() * 4; }
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+    for (let i = 0; i < 3; i++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.13, 0.17), new THREE.MeshStandardMaterial({ map: tex, roughness: 1, side: THREE.DoubleSide })); m.position.set(i * 0.012, -i * 0.008, -i * 0.006); m.rotation.z = (i - 1) * 0.12; letters.add(m); }
+    // held up in front of his chest, tilted toward his face
+    const hand = () => at(salim, 1.3, 0.38, 0.06)();
     return [
       { dur: 4.4, fadeIn: 1.0, caption: chosen(g, 'rabab36') === 'trust' ? 'Hani was in Kallinikos\' boat, under the nets. Rabab had him out before Salim reached the water.' : 'Hani was in Kallinikos\' boat, under the nets. Salim carried him to the shore himself.',
         enter: () => { night(); }, cam: { follow: true, p0: at(salim, 2.4, 3.6, 1.8), t0: at(salim, 1.2), fov: 36 } },
       { dur: 4.6, caption: 'In Kallinikos\' satchel: a bundle of letters. Every one in the marks Salim had seen on the arrow.', tight: true, beat: 1,
-        enter: () => { sc.add(letters); letters.position.copy(hand()); letters.rotation.y = salim.facing; salim.st.action = null; },
-        cam: { follow: true, p0: () => hand().add(V(Math.sin(salim.facing + 0.9) * 0.7, 0.45, Math.cos(salim.facing + 0.9) * 0.7)), t0: hand, fov: 30 }, dof: hand, aperture: 1.8,
+        enter: () => { sc.add(letters); letters.position.copy(hand()); letters.rotation.set(-0.5, salim.facing + Math.PI, 0, 'YXZ'); salim.st.action = null; },
+        // over his shoulder, down onto the page in his hands
+        cam: { follow: true, p0: () => at(salim, 1.75, -0.35, 0.3)(), t0: hand, fov: 30 }, dof: hand, aperture: 1.8,
         run: () => { letters.position.copy(hand()); } },
       { dur: lineDur('Only one man alive writes this hand.'), line: { who: 'Salim', text: 'Only one man alive writes this hand.', rig: g.player.rig, cue: 'breath', expr: 'grief' }, tight: true, beat: 2,
         cam: { follow: true, p0: at(salim, 1.65, 1.4, 0.45), t0: headOf(salim), p1: at(salim, 1.65, 1.15, 0.4), t1: headOf(salim), fov: 28 }, dof: headOf(salim), aperture: 1.4,
