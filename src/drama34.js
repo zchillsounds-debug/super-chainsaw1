@@ -408,8 +408,9 @@ export function setupDrama34(g) {
         cam: { p0: () => above(V(C.x + 4.6, C.y + 2.4, C.z - 3.4), 1.8), t0: () => V(C.x - 0.4, C.y + 0.7, C.z + 0.6), p1: () => above(V(C.x + 3.6, C.y + 2.0, C.z - 2.6), 1.6), t1: () => V(C.x - 0.4, C.y + 0.7, C.z + 0.6), fov: 38 },
         run: (d, k, dt) => { burn(); salim.st.crouch = 0.85; walk(s1, V(C.x + 2.5, 0, C.z + 5), 1.4, dt); walk(s2, V(C.x + 4.5, 0, C.z + 3.5), 1.4, dt); for (const s of [s1, s2]) { s.st.walkBlend = 1; s.st.phase += dt * 4; } } },
       { dur: lineDur('Leave me, Salim. Run!'), line: { who: 'Jabir', text: 'Leave me, Salim. Run!', rig: jabir.rig, cue: 'breath', expr: 'pain' }, tight: true,
-        // Round 36: low, from the far side of Jabir: his face in profile in the foreground, Salim kneeling above him, facing us
-        cam: { follow: true, p0: () => { const h = jhead(), f = yawTo(salim.pos, h); return above(V(h.x + Math.sin(f) * 1.35 + Math.sin(jf) * 0.25, h.y + 0.45, h.z + Math.cos(f) * 1.35 + Math.cos(jf) * 0.25), 0.55); }, t0: () => jhead().lerp(headOf(salim)(), 0.45), fov: 36 }, dof: jhead, aperture: 1.0,
+        // Round 36: side-on, a little raised, on the side Salim faces: Jabir lying in the lower middle of the frame (clear of
+        // the subtitle bar), Salim on his knees over him, half toward us (his position is reliable, a lying head bone is not)
+        cam: { follow: true, p0: () => { const m = C.clone().lerp(salim.pos, 0.5), f = yawTo(salim.pos, C) + Math.PI / 2, s = Math.cos(salim.facing - f) > 0 ? 1 : -1; return above(V(m.x + Math.sin(f) * 3.9 * s, m.y + 1.35, m.z + Math.cos(f) * 3.9 * s), 1.1); }, t0: () => C.clone().lerp(salim.pos, 0.5).add(V(0, 0.55, 0)), fov: 42 }, dof: () => C.clone().lerp(salim.pos, 0.5).add(V(0, 0.4, 0)), aperture: 1.0,
         run: (d, k, dt) => { burn(); salim.st.crouch = 0.85; } },
       { dur: lineDur('Not without you.'), line: { who: 'Salim', text: 'Not without you.', rig: p.rig, cue: 'shout', expr: 'anger' }, tight: true, beat: 1,
         cam: { follow: true, p0: () => across(1.25, 0.95, 0.35), t0: () => headOf(salim)(), fov: 30 }, dof: headOf(salim), aperture: 1.6,
