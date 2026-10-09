@@ -317,7 +317,7 @@ export function season2(C) {
     const salim = playerActor(g);
     const shots = [
       { dur: 4.0, fadeIn: 0.8, caption: 'When the last fire was out, Salim went to Ishaq\'s place. The chest stood open.', tight: true, beat: 1,
-        enter: () => { night(); g.npc.visible = false; lidOpen(1); const f = chest.rotation.y; p.pos.copy(ground(chest.position.x + Math.sin(f) * 1.6, chest.position.z + Math.cos(f) * 1.6)); salim.facing = yawTo(p.pos, chest.position); },
+        enter: () => { night(); g.npc.visible = false; lidOpen(1); const f = chest.rotation.y; p.pos.copy(ground(chest.position.x - Math.cos(f) * 1.5, chest.position.z + Math.sin(f) * 1.5)); salim.facing = yawTo(p.pos, chest.position); }, // to the side, out of the insert
         cam: chestCam(1.6, 1.3) },
       { dur: lineDur('The last quire is gone.'), line: { who: 'Salim', text: 'The last quire is gone.', rig: p.rig, cue: 'hm', expr: 'fear' }, tight: true,
         cam: { follow: true, p0: at(salim, 1.65, 1.5, 0.5), t0: headOf(salim), fov: 28 }, dof: headOf(salim) },
