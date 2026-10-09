@@ -1,17 +1,29 @@
 # Madinat al-Salam: Handoff (Round 36 shipped: the whole arc, Season Two in the marshes)
 
 ## Paste this into the new chat
-> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. **The story is the game**: it is told as a microdrama, in short episodes with cliffhangers, and nothing can be skipped. Round 36 planned the whole five-season arc (the secret: Ishaq himself is "the friend who writes to the envoy") and built Season Two, the marshes, as six episodes. The code is on branch `ccr-8d999d75-lk9r6m` of zchillsounds-debug/super-chainsaw1. Check Round 36's "Status" and "Next" below.
+> I'm continuing a game project called **Madinat al-Salam**: a Diablo-style 3D ARPG in Three.js, set on the outskirts of Abbasid Baghdad just after the siege of 813 CE. **The story is the game**: it is told as a microdrama, in short episodes with cliffhangers. Round 36 built Season Two (the marshes). **Round 37's build list is already agreed** (see "Round 37 plan (approved)" below). The code is on branch `ccr-2d2d77df-agvi8i` of zchillsounds-debug/super-chainsaw1 (identical to Round 36's `ccr-8d999d75-lk9r6m` plus this plan).
 >
 > Please:
-> 1. Fetch the branch and read HANDOFF.md (Rounds 36 and 35 fully; the older rounds as needed) and STORY.md's Round 36 sections (the arc).
-> 2. Run `npm install`. Push to the session branch with `git push -u origin <session-branch>`. Run tests from a lane copy (see "Test workflow" under Round 36): never edit `src/` while a test runs from the same folder.
-> 3. Ask me how Seasons One and Two play on the phone, then ask what Round 37 should be (Round 36's "Next" is a start: Season Three, al-Karkh, "Did Ishaq sell us?"), turn it into a concrete build list with me, and confirm it before building.
+> 1. Fetch that branch and read HANDOFF.md: "Round 37 plan (approved)", then Rounds 36 and 35 fully, and STORY.md's Round 36 sections.
+> 2. Run `npm install`. Push to the session branch with `git push -u origin <session-branch>`. Run tests from a lane copy (see "Test workflow" under Round 36).
+> 3. Confirm the Round 37 list with me in one message, then build it. Run the critique loop (screenshot, critique, improve).
 >
-> The goal is AAA mobile quality, with Diablo IV and Diablo Immortal as the bar, and story first ("award winning": sharp writing, cinematic staging, emotional stakes, a whole-arc structure). Run the critique loop every round (screenshot, critique, improve). I play on Android. When a round is done:
-> - Republish the game as a playable Artifact, updating https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`). Touch controls must keep working.
-> - Push to the session's assigned branch.
-> - Send me the APK that CI builds (see "Getting the APK to the user").
+> The goal is AAA mobile quality (Diablo IV / Diablo Immortal) and story first. I play on Android, landscape. When the round is done: republish the Artifact https://claude.ai/artifact/KMb1Ng8m9siBf7AHpNJD7c (read it first, then publish with `url`; touch controls must keep working), push to the session branch, and send me the APK that CI builds (see "Getting the APK to the user"; trigger `apk.yml` by hand if the branch isn't `claude/**`). When context reaches about 300k, wrap up and write a handoff.
+
+## Round 37 plan (approved by the user, not built yet)
+Feedback from the user's phone playtest of Round 36 (APK build 123): "The opening scene is a mess, it repeats the hook 2 or 3 times before the story" and "too many pop-ups when I roam around for a story-oriented game". Panels are fine as they are (no panel work).
+
+**Found (Round 37 investigation, not yet fixed):**
+- **Double start (the main cause):** `start()` in `src/main.js` (~line 202) returns early only once `mode` changes, which happens inside an 800 ms `setTimeout`. Each extra tap on New Chronicle / Continue during the fade runs `start()` again, so the class picker, the cold open and Episode 1 play two or three times. The same bug existed in the Round 11 code: measured there, three taps gave 3 class pickers, 3 prologues and 3 briefings (headless test, Round 12 session).
+- **The hook is told twice by design:** the cold open (`nightRaid(true)`) plays the raid ("Leave me, Salim. Run!", Jabir dragged off); after "One hour earlier", Episode 1's fight beat plays `caravanB()` then `nightRaid(false)` (the same moment again, to its end), then `wake()` (`drama34.js` BEATS[1], ~line 589).
+
+**Build list:**
+1. **Guard the start:** a `starting` flag set at the top of `start()` (and the same for the Continue button and the `sob.autocontinue` path). Test: tap the start button three times quickly from the title (`?mobile`) and check one class picker and one cold open (wrap `__director.play` to count plays).
+2. **Tell the hook once (user's choice: shorten the Episode 1 replay):** keep the cold open. In Episode 1, after the arrow (`caravanB`), skip what the cold open already showed ("Leave me, Salim. Run!" / "Not without you.") and go straight to what is new: the blow from behind, Jabir taken, the chest gone ("They took Jabir alive. And the cedar chest."), then `wake()`. Probably a `nightRaid(false, { from: 'blow' })` option that drops the shots shared with the cold open. Check that `wake()` and the briefing don't re-explain it either.
+3. **Quiet notices (user's choice):** loot, gold, codex, "not enough resource", pack full, task steps and similar go to a small corner feed (one line each, fades out, repeats merged as "×2"). The centre of the screen keeps only story beats: episode cards, cliffhangers, level-ups at story points, a legendary. Toast call sites: game.js 11, hub.js 9, holds.js 9, story32.js 8, sidequests.js 7, story25/mount/hublife 5 each. A `ui.note()` next to `ui.toast()` that routes by class is the smallest change (as done in the Round 12 prototype, tag `r12-stale-base`, `src/ui.js`).
+4. **Fewer tutorial hints (user's choice):** `tutorial.js` has 7 steps. Keep move, attack, evade (contextual) and potion. Drop skill, suq and level (an unspent-points dot on the menu button replaces "level"). Each hint dismisses itself after about 8 s.
+
+**Prototype reference:** tag `r12-stale-base` (commit 92355f8; on GitHub only through this tag if pushed, otherwise unreferenced) is a Round 12 built by mistake on the Round 11 code (this session's checkout started from the old default branch). It has a start guard, a sheet system with Android back via `@capacitor/app`, a quiet feed (`ui.note`) and a trimmed tutorial. Its UI is superseded by Round 13+ and must not be merged, but its small pieces can be copied.
 
 ## Round 36: the whole arc, and Season Two in the marshes
 User decisions: make the story "award winning" = sharper writing, cinematic staging, emotional stakes and whole-arc structure; this round = a story bible for every season, then Season One's plants, then Season Two. **The traitor ("the Friend") is Ishaq himself** (the user's pick over Hakam): he wrote to Arsaber to carry the last quire (the Teacher's account of his poisoning, naming men still at court) beyond the court's reach; Bardanes broke the bargain with blood. Full reveal in Season Four. The Season Two red herring is **Rabab the boatwoman** (her son Hani rows for Kallinikos). The arc and the episode list are in STORY.md ("Round 36: the whole arc", "Round 36: Season Two").
