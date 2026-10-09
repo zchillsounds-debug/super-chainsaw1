@@ -264,10 +264,13 @@ export function season2(C) {
     for (const e of foes) e.alerted = true; return foes;
   };
   let rab3 = null;
-  const rababAt = () => { if (!rab3) { const q = dryNear(SHORE.x - 1.5, SHORE.z + 1.5); rab3 = extra(g, RABAB, q, yawTo(q, SHORE)); rab3.rig.visible = live3(); } return rab3.rig.position; };
+  const rababAt = () => { if (!rab3) { const q = dryNear(SHORE.x - 1.5, SHORE.z + 1.5); rab3 = extra(g, { ...RABAB, weapon: null }, q, yawTo(q, SHORE)); rab3.rig.visible = live3();
+    // her basket of bread at her feet
+    const bk = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.16, 0.24, 10, 1, true), new THREE.MeshStandardMaterial({ color: 0x9a7a4a, roughness: 1, side: THREE.DoubleSide }));
+    const f = yawTo(q, SHORE) + 0.9; bk.position.set(q.x + Math.sin(f) * 0.55, heightAt(q.x, q.z) + 0.12, q.z + Math.cos(f) * 0.55); bk.castShadow = true; rab3.rig.parent.add(bk); rab3.basket = bk; bk.visible = rab3.rig.visible; } return rab3.rig.position; };
   const live3 = () => E().n === 3 && E().b >= 2;
   const rababScene = () => {
-    rababAt(); rab3.rig.visible = true;
+    rababAt(); rab3.rig.visible = true; rab3.basket.visible = true;
     const def = chat(g, other(rab3), [
       { caption: 'On the shore below the drowned village, Rabab was packing bread into a basket.' },
       { who: 'Salim', text: 'You carried their letters.', expr: 'anger' },
@@ -283,7 +286,7 @@ export function season2(C) {
       { who: 'Salim', text: 'The old mooring post. That is by our camp.', expr: 'wary', tight: true, beat: 1 },
       { who: 'Rabab', text: 'A stone\'s throw from your own fire.' },
       { who: 'Salim', text: 'Then the friend sleeps in our camp.', expr: 'anger', tight: true, beat: 2 },
-    ], { onEnd: () => { if (rab3) rab3.rig.visible = false; } });
+    ], { onEnd: () => { if (rab3) { rab3.rig.visible = false; rab3.basket.visible = false; } } });
     return withCliff(def, 3);
   };
 
@@ -442,6 +445,7 @@ export function season2(C) {
     for (const w of ['Umayma', 'Nadr', 'Qays', 'Leon']) gateNpc(w, false);
     if (g.npc) g.npc.visible = !(n === 4 && b >= 2) && !(n === 5 && b === 0 && !g.cinematic);
     if (rab3 && !g.cinematic) rab3.rig.visible = live3();
+    if (rab3?.basket) rab3.basket.visible = rab3.rig.visible;
   };
   // an older save (played in the marshes before the episodes): the nearest episode
   const fromSave = () => {
