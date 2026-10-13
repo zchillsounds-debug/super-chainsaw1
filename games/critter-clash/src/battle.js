@@ -10,6 +10,7 @@ import { Tutorial } from './tutorial.js';
 import { save } from './save.js';
 import { sayLine } from './personality.js';
 import { Items } from './items.js';
+import { Hazards } from './hazards.js';
 
 const ROUND_TIME = 60;
 const INTRO_FIRST = 4.2, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
@@ -43,6 +44,7 @@ export class Battle {
     this.pbrain = game.autoplay ? new CpuBrain(this.fighters[0], 0.7) : null;
     this.projectiles = [];
     this.items = new Items(this);
+    this.hazards = new Hazards(this);
     this.winsNeeded = rounds;
     this.wins = [0, 0];
     this.round = 0;
@@ -76,6 +78,7 @@ export class Battle {
     for (const pr of this.projectiles) this.scene.remove(pr.mesh);
     this.projectiles.length = 0;
     this.items.clear();
+    this.hazards.clear();
     this.fx.clear();
     this.time = ROUND_TIME;
     this.phase = 'intro';
@@ -967,6 +970,7 @@ export class Battle {
     this.updateProjectiles(sdt);
     this.runAnims(sdt);
     this.items.update(sdt);
+    this.hazards.update(sdt);
     if (fighting) {
       const tense = p.hp / p.maxHp < 0.25 || c.hp / c.maxHp < 0.25 || this.time < 10 ? 1 : 0;
       if (tense !== this.tense) { this.tense = tense; setIntensity(tense); }
@@ -1077,6 +1081,7 @@ export class Battle {
   dispose() {
     this.modChip?.remove();
     this.items.clear();
+    this.hazards.clear();
     if (this.anims) { for (const fn of this.anims) fn(99); this.anims.length = 0; }
     this.arena.drawScreen();
     this.hud.speedLines(false);

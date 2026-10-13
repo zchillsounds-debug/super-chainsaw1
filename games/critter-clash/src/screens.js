@@ -1,6 +1,7 @@
 // Title, tournament cups/ladder, critter select, VS splash, results and pause overlays.
 import { CRITTERS, TYPES, CUPS, SHINY, BADGES, MODS, STARTERS, skinned, withGear, gearFor, GEAR, dailyChallenge } from './data.js';
 import { sfx, playMusic } from './audio.js';
+import { HAZARDS } from './hazards.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
@@ -584,6 +585,7 @@ export class Screens {
         <div class="vs-side l" style="--tc:${TYPES[p.type].color}"><img src="${g.portrait(p)}" alt=""><b>${p.name}</b><small>YOU · Lv ${opts.playerLevel}</small></div>
         <div class="vs-mark">VS</div>
         <div class="vs-side r" style="--tc:${TYPES[c.type].color}"><img src="${g.portrait(c)}" alt=""><b>${c.name}</b><small>${label}</small></div>
+        ${HAZARDS[opts.arena] && save.settings.hazards !== false ? `<div class="vs-hazard">⚠ Arena hazard: ${HAZARDS[opts.arena].name}</div>` : ''}
       </div>`;
     sfx.boom();
     setTimeout(() => g.startBattle(p, c, opts), 1900);

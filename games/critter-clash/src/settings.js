@@ -22,6 +22,7 @@ export function openSettings(game, root) {
       <label class="set"><span>Sound effects</span><input type="range" min="0" max="1" step="0.05" data-k="sfx" value="${s.sfx}"></label>
       <div class="set"><span>Graphics</span><div class="seg" data-k="quality">${q.map((v) => `<button data-v="${v}" class="${s.quality === v ? 'on' : ''}">${{ auto: 'Auto', low: 'Low', med: 'Medium', high: 'High' }[v]}</button>`).join('')}</div></div>
       <label class="set"><span>Vibration</span><input type="checkbox" class="tog" data-k="vibrate" ${s.vibrate ? 'checked' : ''}></label>
+      <label class="set"><span>Arena hazards</span><input type="checkbox" class="tog" data-k="hazards" ${s.hazards !== false ? 'checked' : ''}></label>
       <label class="set"><span>Reduce flashing</span><input type="checkbox" class="tog" data-k="reduceFlash" ${s.reduceFlash ? 'checked' : ''}></label>
     </div>
     <div class="set-foot"><button class="btn ghost-dark reset">Reset progress</button><button class="btn primary done">Done</button></div>

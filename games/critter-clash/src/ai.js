@@ -51,6 +51,13 @@ export class CpuBrain {
       }
       if (r < pDodge + pGuard && f.guardHp > 40) { this.guardT = 0.35 + Math.random() * 0.4; c.guard = true; c.mx = c.mz = 0; return; }
     }
+    // step out of an arena hazard's warning ring (sharper CPUs react sooner)
+    const hz = f.battle.hazards?.danger(f.x, f.z);
+    if (hz && f.actionable && hz.t > 0.5 - D * 0.4) {
+      const hx = f.x - hz.x, hzz = f.z - hz.z, l = Math.hypot(hx, hzz) || 1;
+      c.mx = hx / l; c.mz = hzz / l;
+      return;
+    }
     // grab a nearby power-up
     const item = f.battle.items?.nearest(f);
     if (item && f.actionable && item.d < 5 * S.items && item.d < d + 1 && Math.random() < 0.9) {
