@@ -147,6 +147,16 @@ export const CUPS = [
       { name: 'Aurora', style: 'trickster', title: 'Reigning Champion', critter: 'hootsy', skin: 'shiny', level: 12, taunt: "You came this far. Cute. Let's see how far you fly.", boss: true },
     ],
   },
+  {
+    id: 'legend', arena: 'frost', name: 'Legend Cup', color: '#7ad8ff', desc: 'Old rivals return at full power, with a twist.', diff: [0.85, 1], requires: 'champion',
+    matches: [
+      { name: 'Pip', style: 'rushdown', title: 'All Grown Up', critter: 'bubbalotl', level: 14, mods: ['turbo'], taunt: 'I trained every single day since you beat me. Every. Day.' },
+      { name: 'Yuki', style: 'trickster', title: 'Snow Ranger', critter: 'pengsicle', skin: 'shiny', level: 15, mods: ['lowgrav'], taunt: 'Brr-ace yourself.' },
+      { name: 'Chef Bao', style: 'zoner', title: 'Head Chef', critter: 'emberfly', level: 16, mods: ['supercharged'], taunt: "Tonight's special: flambé!" },
+      { name: 'Big Boulder', style: 'turtle', title: 'Comeback Kid', critter: 'rolladillo', skin: 'shiny', level: 17, mods: ['bighead'], taunt: "I've been doing roll day AND leg day." },
+      { name: 'Aurora', style: 'trickster', title: 'Living Legend', critter: 'hootsy', skin: 'shiny', level: 19, mods: ['itemrain'], boss: true, taunt: 'The real final round starts now.' },
+    ],
+  },
 ];
 
 // Combo chain for every critter (scaled by stats.power). t = seconds.
@@ -166,6 +176,7 @@ export const BADGES = [
   { id: 'sprout', icon: '🌱', name: 'Sprout Champ', desc: 'Clear the Sprout Cup.', test: (s) => !!s.cups.sprout },
   { id: 'thunder', icon: '⚡', name: 'Thunder Champ', desc: 'Clear the Thunder Cup.', test: (s) => !!s.cups.thunder },
   { id: 'champion', icon: '👑', name: 'Grand Champion', desc: 'Clear the Champion Cup.', test: (s) => !!s.cups.champion },
+  { id: 'legend', icon: '🌟', name: 'Living Legend', desc: 'Clear the Legend Cup.', test: (s) => !!s.cups.legend },
   { id: 'team', icon: '🐾', name: 'Full Team', desc: 'Recruit every critter.', test: (s) => s.unlocked.length >= CRITTERS.length },
   { id: 'lv10', icon: '📈', name: 'Best Buds', desc: 'Raise a critter to Lv 10.', test: (s) => Object.values(s.critters).some((c) => c.level >= 10) },
   { id: 'streak5', icon: '🔥', name: 'Survivor', desc: 'Win 5 in a row in Survival.', test: (s) => (s.stats.bestStreak || 0) >= 5 },
@@ -192,7 +203,7 @@ export function dailyChallenge(date = new Date()) {
   return {
     key,
     foe: CRITTERS[Math.floor(rnd() * CRITTERS.length)].id,
-    arena: ['meadow', 'beach', 'volcano'][Math.floor(rnd() * 3)],
+    arena: ['meadow', 'beach', 'volcano', 'frost'][Math.floor(rnd() * 4)],
     mod: mods[Math.floor(rnd() * mods.length)],
     shiny: rnd() < 0.3,
   };

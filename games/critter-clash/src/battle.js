@@ -89,7 +89,7 @@ export class Battle {
     this.tense = 0;
     this.camFocusWas = undefined;
     this.hud.roundIntro(this.round, this.wins, first);
-    if (this.round === 1) playMusic(this.trainer?.boss ? 'boss' : { beach: 'beach', volcano: 'volcano' }[this.arena.key] || 'battle');
+    if (this.round === 1) playMusic(this.trainer?.boss ? 'boss' : { beach: 'beach', volcano: 'volcano', frost: 'frost' }[this.arena.key] || 'battle');
     setIntensity(0);
   }
 

@@ -272,6 +272,22 @@ const SONGS = {
     ],
     drums: 'kkhskhhkk.hsk.ss',
   },
+  frost: {
+    bpm: 136,
+    inst: { lead: 'sine', leadVol: 0.13, steel: true, bass: 'triangle', stab: 'triangle' },
+    chords: [[55, 59, 62], [52, 55, 59], [48, 52, 55], [50, 54, 57], [55, 59, 62], [52, 55, 59], [48, 52, 55, 59], [50, 54, 57, 60]],
+    lead: [
+      [79, null, 83, null, 86, null, 83, null, 81, null, 79, null, 78, null, 79, null],
+      [76, null, 79, null, 83, null, 81, null, 79, null, null, null, 76, null, null, null],
+      [72, null, 76, null, 79, null, 84, null, 83, null, 79, null, 76, null, 79, null],
+      [78, null, 81, null, 86, null, 84, null, 81, null, null, null, 78, null, null, null],
+      [91, null, 86, null, 83, null, 86, null, 88, null, 86, null, 83, null, 81, null],
+      [83, null, 79, null, 76, null, 79, null, 83, null, 86, null, 88, null, null, null],
+      [84, null, 83, null, 79, null, 76, null, 79, null, 83, null, 84, null, 86, null],
+      [86, null, null, null, 90, null, null, null, 91, null, null, null, null, null, null, null],
+    ],
+    drums: 'k...s..hk.k.s..h',
+  },
   victory: {
     bpm: 132,
     chords: [[48, 52, 55], [53, 57, 60], [55, 59, 62], [48, 52, 55]],

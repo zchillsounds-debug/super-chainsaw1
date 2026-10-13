@@ -5,7 +5,8 @@ import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { openSettings } from './settings.js';
 
 const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zoner: '🎯 Keeps away', turtle: '🛡️ Defensive', trickster: '🌀 Tricky' };
-const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater' };
+const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater', frost: 'Frostpeak Dome' };
+const ARENA_KEYS = Object.keys(ARENA_NAME);
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const DIFFS = [{ name: 'Easy', v: 0.2 }, { name: 'Normal', v: 0.5 }, { name: 'Hard', v: 0.85 }];
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -140,7 +141,7 @@ export class Screens {
         <div class="cup-trophy">${done ? '🏆' : locked ? '🔒' : '★'}</div>
         <h2>${cup.name}</h2>
         <p>${locked ? 'Clear the ' + CUPS.find((c) => c.id === cup.requires).name + ' to enter.' : cup.desc}</p>
-        <div class="cup-foes">${cup.matches.map((m) => `<img src="${g.portrait(byId(m.critter))}" alt="">`).join('')}</div>
+        <div class="cup-foes">${cup.matches.map((m) => `<img src="${g.portrait(skinned(byId(m.critter), m.skin))}" alt="">`).join('')}</div>
         <div class="cup-meta">${cup.matches.length} battles · Lv ${cup.matches[0].level}–${cup.matches[cup.matches.length - 1].level}</div>`;
       b.addEventListener('click', () => {
         if (locked) { sfx.ui('back'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); return; }
@@ -399,7 +400,7 @@ export class Screens {
           <h2>${m.name}</h2>
           <div class="bubble">“${m.taunt}”</div>
           <div class="tc-critter"><span class="mini-type" style="background:${TYPES[foe.type].color}">${TYPES[foe.type].name}</span> ${m.skin ? '✦ Shiny ' : ''}${foe.name} · Lv ${m.level}</div>
-          <div class="tc-style">${STYLE_TAG[m.style] || ''}</div>
+          <div class="tc-style">${STYLE_TAG[m.style] || ''}</div>${(m.mods || []).map((k) => `<div class="tc-style mod">${MODS[k].icon} ${MODS[k].name}</div>`).join('')}
           <div class="go"></div>
         </div>
       </div>`;
@@ -420,8 +421,8 @@ export class Screens {
       const m = cup.matches[idx];
       c = skinned(byId(m.critter), m.skin);
       const k = cup.matches.length > 1 ? idx / (cup.matches.length - 1) : 1;
-      opts = { cpuLevel: m.level, difficulty: cup.diff[0] + (cup.diff[1] - cup.diff[0]) * k, playerLevel: save.critters[p.id].level, trainer: m, arena: cup.arena };
-      label = `${m.name} · Lv ${m.level}`;
+      opts = { cpuLevel: m.level, difficulty: cup.diff[0] + (cup.diff[1] - cup.diff[0]) * k, playerLevel: save.critters[p.id].level, trainer: m, arena: cup.arena, mods: m.mods || [] };
+      label = `${m.name} · Lv ${m.level}${m.mods?.length ? ' · ' + m.mods.map((k) => MODS[k].icon).join('') : ''}`;
     } else if (this.ctx.kind === 'survival') {
       const S = this.ctx, n = S.streak;
       const pool = CRITTERS.filter((x) => x.id !== p.id && x.id !== S.last);
@@ -429,7 +430,7 @@ export class Screens {
       S.last = c.id;
       const pl = save.critters[p.id].level;
       const mods = n >= 3 && Math.random() < 0.5 ? [pick(Object.keys(MODS))] : [];
-      opts = { cpuLevel: pl + Math.floor(n / 2), difficulty: Math.min(0.95, 0.35 + n * 0.07), playerLevel: pl, arena: pick(['meadow', 'beach', 'volcano']), rounds: 1, playerHp: S.hp, mods };
+      opts = { cpuLevel: pl + Math.floor(n / 2), difficulty: Math.min(0.95, 0.35 + n * 0.07), playerLevel: pl, arena: pick(ARENA_KEYS), rounds: 1, playerHp: S.hp, mods };
       label = `Challenger #${n + 1}${mods.length ? ' · ' + MODS[mods[0]].icon : ''}`;
     } else if (this.ctx.kind === 'daily') {
       const d = this.ctx.d;
@@ -441,7 +442,7 @@ export class Screens {
       const others = CRITTERS.filter((x) => x.id !== p.id);
       c = others[Math.floor(Math.random() * others.length)];
       const pl = save.critters[p.id].level;
-      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: ['meadow', 'beach', 'volcano'][Math.floor(Math.random() * 3)] };
+      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: pick(ARENA_KEYS) };
       label = `CPU · ${DIFFS[this.diff].name}`;
     }
     this.root.innerHTML = `

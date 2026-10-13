@@ -32,6 +32,15 @@ export const ARENAS = {
     hill: 0x3a2a40, trunk: 0x3a2a30, leaves: [0x5a4a5a, 0x6a5a6a, 0x4a3a4a], scenery: 'rocks', cloud: 0x6a4a6a, cloudShade: 0x2a1a3a, sunI: 1.8,
     lava: 0xff5a1a,
   },
+  frost: {
+    name: 'Frostpeak Dome',
+    skyTop: 0x060c34, skyHorizon: 0x34509a, sun: 0xdfe8ff, sunDir: [0.45, 0.55, -0.6],
+    hemiSky: 0xb0c4ff, hemiGround: 0x5a6aa8, fieldA: '#eef4ff', fieldB: '#e3ecfb', line: '#5ab8ff', floor: 'snow',
+    wallA: 0x5ab8ff, wallB: 0xffffff, ground: 0xe8f0ff, fog: 0x24346e,
+    accent: 0x9ad8ff, seat: [0x5ab8ff, 0xffffff, 0xb39cff, 0x3a4a8a],
+    hill: 0xeef4ff, trunk: 0x5a3a2a, leaves: [0x2f6a5a, 0x3a7a64, 0x24584a], scenery: 'pines', cloud: 0x8a9ac8, cloudShade: 0x2a3060, sunI: 1.7,
+    aurora: true, snow: true,
+  },
 };
 
 function skyDome(A) {
@@ -41,9 +50,11 @@ function skyDome(A) {
     uniforms: {
       top: { value: new THREE.Color(A.skyTop) }, hor: { value: new THREE.Color(A.skyHorizon) },
       sunDir: { value: new THREE.Vector3(...A.sunDir).normalize() }, sunCol: { value: new THREE.Color(A.sun) },
+      uAurora: { value: A.aurora ? 1 : 0 }, uTime: { value: 0 },
     },
     vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); gl_Position.z = gl_Position.w; }',
-    fragmentShader: `uniform vec3 top, hor, sunDir, sunCol; varying vec3 vP;
+    fragmentShader: `uniform vec3 top, hor, sunDir, sunCol; uniform float uAurora, uTime; varying vec3 vP;
+      float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       void main(){
         float h = clamp(vP.y, 0.0, 1.0);
         vec3 c = mix(hor, top, pow(h, 0.55));
@@ -51,6 +62,21 @@ function skyDome(A) {
         c += sunCol * (smoothstep(0.9975, 0.998, s) * 1.6 + pow(s, 24.0) * 0.35);
         // stylised horizon band
         c = mix(c, hor * 1.08, smoothstep(0.08, 0.0, h) * 0.6);
+        if (uAurora > 0.0) {
+          // twinkling stars and soft ribbons of aurora
+          vec2 sp = vec2(atan(vP.z, vP.x) * 60.0, vP.y * 60.0);
+          vec2 cell = floor(sp);
+          float st = step(0.985, hash(cell)) * smoothstep(0.1, 0.5, h);
+          float tw = 0.6 + 0.4 * sin(uTime * 3.0 + hash(cell + 7.0) * 40.0);
+          float d = length(fract(sp) - 0.5);
+          c += vec3(st * tw * smoothstep(0.25, 0.0, d)) * 1.4;
+          float a = atan(vP.z, vP.x);
+          float band = sin(a * 3.0 + uTime * 0.15 + sin(a * 7.0 + uTime * 0.3) * 0.6);
+          float y0 = 0.32 + band * 0.08;
+          float rib = smoothstep(0.16, 0.0, abs(h - y0)) * (0.55 + 0.45 * sin(a * 23.0 + uTime * 0.8));
+          vec3 ac = mix(vec3(0.2, 1.0, 0.6), vec3(0.6, 0.4, 1.0), smoothstep(0.2, 0.5, h + band * 0.1));
+          c += ac * rib * 0.55 * uAurora;
+        }
         gl_FragColor = vec4(c, 1.0);
         #include <colorspace_fragment>
       }`,
@@ -87,7 +113,8 @@ export class Arena {
     const rand = rng(7);
 
     scene.fog = new THREE.Fog(A.fog, 70, 260);
-    G.add(skyDome(A));
+    this.sky = skyDome(A);
+    G.add(this.sky);
 
     // lights
     this.hemi = new THREE.HemisphereLight(A.hemiSky, A.hemiGround, 1.25);
@@ -144,6 +171,23 @@ export class Arena {
             for (let k = -2; k <= 2; k++) { c.beginPath(); c.moveTo(0, 10); c.lineTo(k * 5, -9); c.stroke(); }
           }
           c.restore();
+        }
+      } else if (A.floor === 'snow') {
+        c.fillStyle = A.fieldA; c.fillRect(0, 0, w, h);
+        // soft drifts and blue shadows
+        for (let i = 0; i < 70; i++) {
+          const x = Math.random() * w, y = Math.random() * h, r = 40 + Math.random() * 120;
+          const g = c.createRadialGradient(x, y, 0, x, y, r);
+          g.addColorStop(0, Math.random() < 0.5 ? 'rgba(170,200,255,0.18)' : 'rgba(255,255,255,0.5)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+          c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
+        }
+        // sparkles
+        for (let i = 0; i < 2500; i++) { c.fillStyle = Math.random() < 0.7 ? 'rgba(255,255,255,0.9)' : 'rgba(150,200,255,0.6)'; c.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+        // little paw-print trails
+        c.fillStyle = 'rgba(120,150,210,0.25)';
+        for (let t = 0; t < 4; t++) {
+          let x = Math.random() * w, y = Math.random() * h; const a = Math.random() * 6;
+          for (let k = 0; k < 14; k++) { x += Math.cos(a) * 26; y += Math.sin(a) * 26; c.beginPath(); c.ellipse(x + (k % 2 ? 6 : -6), y, 5, 6, a, 0, Math.PI * 2); c.fill(); }
         }
       } else if (A.floor === 'basalt') {
         c.fillStyle = A.fieldB; c.fillRect(0, 0, w, h);
@@ -402,6 +446,24 @@ export class Arena {
           tops[k % 3].push(fr);
         }
       }
+    } else if (A.scenery === 'pines') {
+      // stacked-cone pines with snowy tips
+      const snowCaps = [];
+      for (let i = 0; i < 54; i++) {
+        const a = rand() * Math.PI * 2, r = 33 + rand() * 45, sc = 1.1 + rand() * 1.3;
+        const x = Math.cos(a) * r, z = Math.sin(a) * r;
+        const tr = new THREE.CylinderGeometry(0.22 * sc, 0.3 * sc, 1.4 * sc, 6); tr.translate(x, 0.7 * sc, z);
+        trunks.push(tr);
+        for (let k = 0; k < 3; k++) {
+          const cone = new THREE.ConeGeometry((1.9 - k * 0.5) * sc, 2.2 * sc, 8);
+          cone.translate(x, (2 + k * 1.25) * sc, z);
+          tops[i % 3].push(cone);
+          const cap = new THREE.ConeGeometry((1.0 - k * 0.25) * sc, 1.0 * sc, 8);
+          cap.translate(x, (2.6 + k * 1.25) * sc, z);
+          snowCaps.push(cap);
+        }
+      }
+      G.add(new THREE.Mesh(mergeGeometries(snowCaps), toon(0xffffff, { env: true, rim: 0.2 })));
     } else if (A.scenery === 'rocks') {
       for (let i = 0; i < 40; i++) {
         const a = rand() * Math.PI * 2, r = 32 + rand() * 50;
@@ -414,6 +476,21 @@ export class Arena {
     }
     if (trunks.length) G.add(new THREE.Mesh(mergeGeometries(trunks), toon(A.trunk, { env: true, rim: 0 })));
     A.leaves.forEach((c, k) => { if (tops[k].length) G.add(inked(mergeGeometries(tops[k]), toon(c, { env: true, rim: 0.3 }), 0.06)); });
+    if (A.snow) {
+      // drifting snowflakes in a box around the camera's usual view
+      const n = 900, pos = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) { pos[i * 3] = (rand() - 0.5) * 60; pos[i * 3 + 1] = rand() * 22; pos[i * 3 + 2] = (rand() - 0.5) * 60; }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const flakeTex = canvasTex(32, 32, (c, w, h) => {
+        const gr = c.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+        gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.5, 'rgba(255,255,255,0.6)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = gr; c.fillRect(0, 0, w, h);
+      });
+      this.snow = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.22, map: flakeTex, transparent: true, depthWrite: false, color: 0xffffff }));
+      this.snow.frustumCulled = false;
+      G.add(this.snow);
+    }
     if (A.water) {
       // shallow lagoon ring with bright foam edge
       const sea = new THREE.Mesh(new THREE.RingGeometry(62, 320, 64), toon(A.water, { env: true, rim: 0 }));
@@ -542,6 +619,16 @@ export class Arena {
   }
 
   update(dt, t) {
+    this.sky.material.uniforms.uTime.value = t;
+    if (this.snow) {
+      const p = this.snow.geometry.attributes.position, a = p.array;
+      for (let i = 0; i < a.length; i += 3) {
+        a[i + 1] -= dt * (1.2 + (i % 7) * 0.12);
+        a[i] += Math.sin(t * 0.8 + i) * dt * 0.4;
+        if (a[i + 1] < 0) a[i + 1] += 22;
+      }
+      p.needsUpdate = true;
+    }
     if (this.cracks) this.cracks.material.opacity = 0.75 + Math.sin(t * 1.7) * 0.2;
     this.excite = Math.max(0.15, this.excite - dt * 0.25);
     this.updateCrowd(t);
