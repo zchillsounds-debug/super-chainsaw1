@@ -121,6 +121,15 @@ export class Screens {
     gear.setAttribute('aria-label', 'Settings');
     this.root.querySelector('.title-screen').appendChild(gear);
     playMusic('menu');
+    // news for returning trainers: new critters turned up in cups they may already have cleared
+    if (!g.autoplay && save.cups.sprout && !save.news?.includes('frogmole')) {
+      (save.news ||= []).push('frogmole'); persist();
+      const where = [['lilypop', 'Paddy in the Thunder Cup'], ['diggles', 'Dusty in the Midnight Cup']].filter(([id]) => !save.unlocked.includes(id));
+      if (where.length) setTimeout(() => this.mode === 'title' && this.profTalk([
+        `Big news, {name}! Two new critters have been spotted: Lilypop, a frog with a very long tongue, and Diggles, a mole in a hard hat.`,
+        `Beat ${where.map(([, w]) => w).join(' or ')} and they might just join your team!`,
+      ]), 600);
+    }
   }
 
   // ---------- first launch: the professor, a trainer name and a partner ----------
