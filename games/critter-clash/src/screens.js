@@ -914,7 +914,10 @@ export class Screens {
       col.appendChild(this.btn('Move List', '', () => this.moveModal(this.game.battle.player.def)));
       const dm = this.btn(`Dummy: ${DUMMY[tr.mode].name}`, '', () => { tr.cycle(); dm.textContent = `Dummy: ${DUMMY[tr.mode].name}`; });
       col.appendChild(dm);
-    } else col.appendChild(this.btn('How to Play', '', () => this.howTo()));
+    } else {
+      col.appendChild(this.btn('Move List', '', () => this.moveModal(this.game.battle.player.def)));
+      col.appendChild(this.btn('How to Play', '', () => this.howTo()));
+    }
     col.appendChild(this.btn('Photo Mode', '', () => {
       const g = this.game;
       p.remove();

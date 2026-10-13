@@ -607,7 +607,7 @@ body.portrait .sel-info { bottom: calc(346px + var(--sab)); }
 kbd { font-family: var(--display); font-size: 12px; background: #fff; color: var(--ink); border-radius: 6px; padding: 2px 6px; box-shadow: 0 2px 0 var(--ink), inset 0 0 0 2px var(--ink); }
 .dex-moves { margin-top: 8px; }
 @media (max-height: 450px) { .movelist .modal { padding: 12px 16px; } .movelist h2 { margin: 0 0 4px; } .mv { padding: 5px 8px; } .mv p { font-size: 12px; } }
-@media (max-height: 500px) { .pause .col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .pause .col .btn.primary { grid-column: span 2; } .pause h2 { margin-bottom: 8px; } }
+@media (max-height: 500px) { .pause .col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .pause .col .btn.primary, .pause .col .btn:last-child:nth-child(even) { grid-column: span 2; } .pause h2 { margin-bottom: 8px; } }
 
 /* photo mode */
 .photo { position: absolute; inset: 0; z-index: 25; touch-action: none; cursor: grab; }
