@@ -147,6 +147,16 @@ export const CRITTERS = [
     special: 'tongue', super: 'lilysplash',
     moves: { special: 'Tongue Lash', super: 'Lily Splash' },
   },
+  {
+    id: 'diggles', name: 'Diggles', type: 'stone', species: 'Miner Mole',
+    blurb: 'Tunnels under stadiums looking for shiny pebbles. Its helmet lamp is mostly for style.',
+    colors: { body: 0x9a7a6a, belly: 0xf4dcc8, accent: 0xff8ab0, dark: 0x4a3428, eye: '#20140e', iris: '#8a5a3a' },
+    body: { w: 0.6, h: 0.56, headR: 0.47, legLen: 0.13, armLen: 0.2, chubby: 1.1 },
+    ears: 'none', tail: 'stub', extra: 'mole', voice: 0.9,
+    stats: { hp: 1100, speed: 5.9, power: 1.04, weight: 1.15 },
+    special: 'burrow', super: 'molerush',
+    moves: { special: 'Burrow Ambush', super: 'Mole Rush' },
+  },
 ];
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
@@ -162,6 +172,7 @@ export const SHINY = {
   woolt:       { body: 0x3a3a52, belly: 0xbfe8ff, accent: 0x6af0ff, dark: 0x101020, iris: '#3ae0ff' },
   pebblepup:   { body: 0x6a6a88, belly: 0xe8e4ff, accent: 0xff8ad8, dark: 0x262438, iris: '#ff6ad0' },
   whirlwhisk:  { body: 0xffb38a, belly: 0xfff4e4, accent: 0xffe2c8, dark: 0x8a3a2a, iris: '#3ac07a' },
+  diggles:     { body: 0xd8d0ec, belly: 0xffffff, accent: 0x6ad0ff, dark: 0x4a4a6a, iris: '#3a7bff' },
   lilypop:     { body: 0xffd84a, belly: 0xfffbe8, accent: 0x6ad0ff, dark: 0x8a5a10, iris: '#3a7bff' },
   emberfly:    { body: 0x2f8a6a, belly: 0xdcffe6, accent: 0x7dffb0, dark: 0x113a2c, iris: '#3affa0' },
 };
@@ -225,6 +236,7 @@ export const CUPS = [
     matches: [
       { name: 'DJ Tumble', style: 'rushdown', title: 'Beat Dropper', critter: 'woolt', level: 13, taunt: 'Drop the bass? I drop RIVALS.', beat: "You dropped ME. That's a first. Sick set, honestly.", gloat: "Mic drop. Rival drop. Same thing." },
       { name: 'Marigold', style: 'zoner', title: 'Night Gardener', critter: 'pricklepuff', skin: 'shiny', level: 14, taunt: 'My garden grows best by moonlight.', beat: "Even moonflowers wilt sometimes. Lovely match, dear.", gloat: "Goodnight, sweetie. Sleep in the flowerbed." },
+      { name: 'Dusty', style: 'trickster', title: 'Subway Busker', critter: 'diggles', level: 14, taunt: "Diggles knows every tunnel under this city. Watch your feet!", beat: "Dug myself into a hole there. Nice moves!", gloat: "Down you go. Mind the gap!" },
       { name: 'Neko', style: 'trickster', title: 'Rooftop Runner', critter: 'voltferret', level: 15, mods: ['turbo'], taunt: "Catch me if you- oh, you can't.", beat: "You... caught me?! Nobody catches me!", gloat: "Too slow! See you on the next roof." },
       { name: 'Madame Vee', style: 'balanced', title: 'Club Owner', critter: 'emberfly', skin: 'shiny', level: 16, boss: true, bossTitle: 'BOSS', taunt: 'Welcome to my rooftop, darling. Nobody leaves unbonked.', beat: "Darling, you can stay. You've earned a VIP pass.", gloat: "The door's that way, darling. Mind the step." },
     ],
@@ -334,6 +346,8 @@ export const MOVE_DESC = {
   rocktoss: 'Lobs a boulder in an arc. It thuds down where the rival is standing.',
   swoop: 'Leaps up and glides down onto the rival, tail first.',
   jetstream: 'Puffs its cheeks and blows a long gust that shoves the rival back, hit after hit.',
+  burrow: 'Dives underground, tunnels over and bursts up right under the rival.',
+  molerush: 'Pops up under the rival three times in a row. The last one sends them flying.',
   tongue: 'Lashes out its long tongue and reels the rival in, ready for a combo.',
   lilysplash: 'Leaps sky-high and belly-flops down. A ring of lily pads and water bursts out.',
   avalanche: 'Howls at the sky and a rockslide rains down on the rival, ending with one giant boulder.',

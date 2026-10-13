@@ -248,6 +248,36 @@ export class Critter {
         b.position.set(0, -headR * (0.16 + k * 0.1), headR * 1.02);
         skull.add(b);
       }
+    } else if (def.extra === 'mole') {
+      // pink star nose and a miner's hard hat with a lamp
+      const nose = new THREE.Group();
+      nose.position.set(0, -headR * 0.2, headR * 0.98);
+      const pink = toon(C.accent, { uniforms: U });
+      const nb = inked(sphere(headR * 0.13), pink, OL * 0.5);
+      nb.scale.set(1.2, 1, 0.8); nose.add(nb);
+      for (let k = 0; k < 8; k++) {
+        const a = k / 8 * Math.PI * 2, t = new THREE.Mesh(sphere(headR * 0.06), pink);
+        t.position.set(Math.cos(a) * headR * 0.15, Math.sin(a) * headR * 0.13, headR * 0.02);
+        nose.add(t);
+      }
+      skull.add(nose);
+      const hat = new THREE.Group();
+      hat.position.set(0, headR * 0.42, -headR * 0.04); hat.rotation.x = -0.12;
+      const hatM = toon(0xffc83a, { uniforms: U });
+      const dome = inked(new THREE.SphereGeometry(headR * 0.86, 22, 10, 0, Math.PI * 2, 0, Math.PI / 2), hatM, OL * 0.8);
+      hat.add(dome);
+      const brim = inked(new THREE.CylinderGeometry(headR * 1.0, headR * 1.0, headR * 0.07, 24), hatM, OL * 0.6);
+      brim.scale.set(1, 1, 1.08); brim.position.z = headR * 0.08;
+      hat.add(brim);
+      const ridge = new THREE.Mesh(new THREE.TorusGeometry(headR * 0.6, headR * 0.06, 6, 20, Math.PI), toon(0xe0a020, { uniforms: U }));
+      ridge.rotation.y = Math.PI / 2; hat.add(ridge);
+      const lamp = inked(new THREE.CylinderGeometry(headR * 0.17, headR * 0.2, headR * 0.16, 14), toon(0x5a5a6a, { uniforms: U }), OL * 0.5);
+      lamp.rotation.x = Math.PI / 2; lamp.position.set(0, headR * 0.38, headR * 0.74);
+      hat.add(lamp);
+      const lens = new THREE.Mesh(new THREE.CircleGeometry(headR * 0.14, 16), new THREE.MeshBasicMaterial({ color: 0xfff6b0 }));
+      lens.position.set(0, headR * 0.38, headR * 0.83);
+      hat.add(lens);
+      skull.add(hat);
     } else if (def.extra === 'frog') {
       // wide flat head with two eye domes on top and a pink lily flower on one of them
       skull.scale.set(1.2, 0.86, 1.0);
@@ -331,7 +361,7 @@ export class Critter {
     eyeL.renderOrder = eyeR.renderOrder = 2;
     skull.add(eyeL, eyeR);
     this.eyes = [eyeL, eyeR];
-    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' ? -0.52 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
+    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' || def.extra === 'mole' ? -0.52 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
     mouth.renderOrder = 2;
     skull.add(mouth);
     const blushMat = decalMat(ft.blush);

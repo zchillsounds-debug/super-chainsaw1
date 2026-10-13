@@ -713,6 +713,43 @@ export class Battle {
         P.sy = 0.9;
         if (t > 0.4) this.endSuper(f);
       }
+    } else if (id === 'molerush') {
+      const P = f.critter.pose;
+      if (f.superPhase === 'go') { f.superPhase = 'dive'; f.st = 0; f.popN = 0; sfx.rumble?.(); }
+      if (f.superPhase === 'dive') {
+        P.lean = 1.2; P.armLx = P.armRx = -2.6; P.sy = Math.max(0.3, 1 - t * 3); P.y = -t * 3;
+        if (t > 0.2) { f.superPhase = 'tunnel'; f.st = 0; f.under = true; f.root.visible = false; this.fx.dust(f, 8, 1.2); this.shake(0.3); }
+      } else if (f.superPhase === 'tunnel') {
+        // race underground to the rival, faster each time; the ground rumbles
+        const a = f.angleTo(o), sp = 15 + f.popN * 3;
+        f.face = a; f.vx = Math.sin(a) * sp; f.vz = Math.cos(a) * sp;
+        if (Math.random() < 0.9) fx.spawn({ x: f.x + (Math.random() - 0.5) * 0.7, y: 0.12, z: f.z + (Math.random() - 0.5) * 0.7, vy: 2, color: 0x8a6a4a, size: 0.5, life: 0.5, shape: 'puff', additive: false, grav: 6 });
+        if (f.distTo(o) < 0.5 || t > 0.8) {
+          const last = f.popN === 2;
+          f.superPhase = 'pop'; f.st = 0; f.under = false; f.root.visible = true;
+          f.vx = f.vz = 0; f.vy = last ? 12 : 8; f.y = 0.05;
+          sfx.boom(); this.shake(last ? 0.8 : 0.45); this.game.impactFrame(last ? 0.1 : 0.05);
+          fx.burst({ x: f.x, y: 0.2, z: f.z }, { n: last ? 26 : 14, speed: last ? 9 : 6, up: 8, color: 0x9a7a5a, size: 0.3, life: 0.8, shape: 'puff', additive: false, grav: 16 });
+          fx.burst({ x: f.x, y: 0.3, z: f.z }, { n: 8, speed: 5, up: 6, color: 0xffc83a, size: 0.25, life: 0.6, shape: 'star', additive: false, grav: 10 });
+          fx.shock({ x: f.x, z: f.z }, 0xc08a55, last ? 4 : 2.6, 0.35);
+          if (o.alive && f.distTo(o) < 1.6) {
+            const ang = f.angleTo(o);
+            this.applyHit(f, o, last
+              ? { dmg: 130 * f.power, kb: 6, lift: 13, stun: 0.8, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: f.type, launch: true, dizzy: 35 }
+              : { dmg: 60 * f.power, kb: 0.5, lift: 0, stun: 1.0, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: f.type, dizzy: 12 });
+          }
+          f.popN++;
+        }
+      } else if (f.superPhase === 'pop') {
+        P.sy = 1.25; P.armLz = P.armRz = 2.6; P.legL = P.legR = 0.5; P.head = -0.3;
+        f.critter.emote('happy', 'grin', 0.2);
+        if (t > 0.1 && f.y <= 0) {
+          if (f.popN < 3) { f.superPhase = 'dive'; f.st = 0; } else { f.superPhase = 'recover'; f.st = 0; }
+        }
+      } else if (f.superPhase === 'recover') {
+        P.sy = 0.9;
+        if (t > 0.45) this.endSuper(f);
+      }
     } else if (id === 'lilysplash') {
       const P = f.critter.pose;
       if (f.superPhase === 'go') { f.superPhase = 'leap'; f.st = 0; f.vy = 17; f.y = 0.05; f.target = { x: o.x, z: o.z }; sfx.whoosh(0.8); sfx.voice(f.def.voice, 'win'); }

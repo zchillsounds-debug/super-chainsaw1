@@ -23,6 +23,7 @@ Object.assign(LINES, {
   pricklepuff: { intro: ["Don't touch the spines!", 'Prickly and proud!', "Hmph. Fine. Let's go."], win: ['Told you. Prickly.', 'Leaf me alone now.', 'Hmph! Too easy.'] },
   pebblepup:   { intro: ['Arf! Rock and ruff!', 'Fetch THIS!', 'Bark is worse than my bite. Bite is rocks.'], win: ['Good pup! Me!', 'Ruff day for you!', 'Stone cold. Arf!'] },
   whirlwhisk:  { intro: ['Wheee! Incoming!', 'Nuts to you!', 'Catch the breeze!'], win: ['Blown away!', "Nuttin' to it!", 'Wind beneath my tail!'] },
+  diggles:     { intro: ['Dig it!', 'Hard hat? Check!', 'Mind the hole!'], win: ['Struck gold!', 'You dig?', 'Hole in one!'] },
   lilypop:     { intro: ['Ribbit! Ready!', 'Hop hop, here I come!', "Don't make me lick you."], win: ['Toad-ally awesome!', 'Ribbit-ing win!', 'Snack caught!'] },
   woolt:       { intro: ['Baa-zzt!', 'Static cling, incoming!', 'Fluffed up and ready!'], win: ['Shear power!', 'Baa-rilliant!', 'Hair-raising!'] },
 });
@@ -121,6 +122,18 @@ const INTRO = {
       P.sy = 0.9 + abs(sin(k * 12)) * 0.15; P.tail = 2.2 + sin(k * 20) * 0.4; P.armLx = P.armRx = -1.2;
       f.critter.emote('happy', 'grin', 0.1);
       if (once(f, 'land')) { sfx.land(); fx.dust(f, 6, 0.8); }
+    } else ready(f, P, k);
+  },
+  diggles(f, P, k) {
+    const fx = f.battle.fx;
+    if (k < 0.5) { // still underground: just a wobbling mound
+      P.y = -1.4; P.sy = 0.6;
+      if (Math.random() < 0.5) fx.spawn({ x: f.x + rnd(0.6), y: 0.1, z: f.z + rnd(0.6), vy: 1.5, color: 0x8a6a4a, size: 0.4, life: 0.4, shape: 'puff', additive: false, grav: 5 });
+    } else if (k < 1.2) { // POP! out of the dirt, helmet lamp flashing
+      const u = Math.min(1, (k - 0.5) / 0.18);
+      P.y = -1.4 + u * 1.7 - Math.max(0, k - 0.68) * 0.6; P.sy = 1.15; P.armLz = P.armRz = 2.5;
+      f.critter.emote('happy', 'open', 0.1);
+      if (once(f, 'pop')) { sfx.boom(); fx.burst({ x: f.x, y: 0.2, z: f.z }, { n: 12, speed: 5, up: 6, color: 0x9a7a5a, size: 0.26, life: 0.6, shape: 'puff', additive: false, grav: 14 }); fx.spawn({ ...head(f, 0.1), color: 0xfff6b0, size: 2.2, life: 0.25, shape: 'glow' }); }
     } else ready(f, P, k);
   },
   lilypop(f, P, k) {
@@ -247,6 +260,13 @@ const WIN = {
     if ((k % 3) > 1.6) P.yaw = 0; // pause facing front between spins
     f.critter.emote('happy', 'open', 0.1);
     if (Math.random() < 0.15) f.battle.fx.spawn({ x: f.x + rnd(1.5), y: f.y + 0.4 + Math.random(), z: f.z + rnd(1.5), vy: 1.5, color: 0xffffff, size: 0.3, life: 0.5, shape: 'leaf', additive: false, spin: 6 });
+  },
+  diggles(f, P, k) { // holds up a shiny find, then polishes the helmet
+    const show = (k % 3) < 1.7;
+    if (show) { P.armLz = 2.6; P.armRz = 0.5 + abs(sin(k * 4)) * 0.3; P.sy = 1.08; P.y = abs(sin(k * 5)) * 0.1; P.headRoll = 0.15; }
+    else { P.armLz = P.armRz = 2.2; P.armLx = P.armRx = -1.4 + sin(k * 18) * 0.4; P.head = 0.2; }
+    f.critter.emote('happy', show ? 'open' : 'grin', 0.1);
+    if (show && Math.random() < 0.2) { const h = head(f, 0.5); f.battle.fx.spawn({ x: h.x + rnd(1.2), y: h.y + rnd(0.6), z: h.z + rnd(1.2), color: 0x9ae4ff, size: 0.35, life: 0.4, shape: 'star', additive: false }); }
   },
   lilypop(f, P, k) { // happy hops in a little circle, croaking
     const ph = (k * 1.6) % 1;

@@ -24,6 +24,7 @@ export const SPECIALS = {
   rocktoss:  { cd: 4.0, range: [2.5, 8] },
   swoop:     { cd: 3.4, range: [2.5, 8] },
   tongue:    { cd: 3.6, range: [1.8, 5.2] },
+  burrow:    { cd: 4.2, range: [2.5, 9] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -47,7 +48,7 @@ const tailwhip = (P, i, w, s) => {
   if (!s) { P.yaw = 0.8 * w; P.sy = 0.85; return; }
   P.yaw = Math.PI * 0.95; P.tail = 3; P.lean = -0.2; P.armLz = P.armRz = 1.2;
 };
-const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip, pricklepuff: kick, woolt: headbutt, pebblepup: headbutt, whirlwhisk: tailwhip, lilypop: kick };
+const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip, pricklepuff: kick, woolt: headbutt, pebblepup: headbutt, whirlwhisk: tailwhip, lilypop: kick, diggles: headbutt };
 
 // translucent fresnel bubble shown while guarding
 function makeShield(color, h) {
@@ -96,6 +97,7 @@ export class Fighter {
 
   reset(x, z) {
     this.root.scale.setScalar(1); // a super (Mega Fluff) may have been cut off mid-inflate
+    this.under = false; this.digPhase = undefined; this.root.visible = true; // a burrow may have been cut off underground
     this.x = x; this.z = z; this.y = 0;
     this.vx = this.vz = this.vy = 0;
     this.face = this.x < 0 ? Math.PI / 2 : -Math.PI / 2;
@@ -125,7 +127,10 @@ export class Fighter {
   get actionable() { return ['idle', 'run'].includes(this.state) || (this.state === 'attack' && this.st > this.atkEnd()); }
   get airborne() { return this.y > 0.02; }
 
-  setState(s) { this.state = s; this.st = 0; this.fxOnce = null; }
+  setState(s) {
+    if (this.under && s !== 'special' && s !== 'super') { this.under = false; this.root.visible = true; }
+    this.state = s; this.st = 0; this.fxOnce = null;
+  }
 
   distTo(o) { return Math.hypot(o.x - this.x, o.z - this.z); }
   angleTo(o) { return Math.atan2(o.x - this.x, o.z - this.z); }
@@ -251,7 +256,7 @@ export class Fighter {
       }
     }
     const o = this.opp;
-    if (o && this.state !== 'dodge' && o.state !== 'dodge' && this.state !== 'super' && o.state !== 'super') {
+    if (o && this.state !== 'dodge' && o.state !== 'dodge' && this.state !== 'super' && o.state !== 'super' && !this.under && !o.under) {
       const dx = this.x - o.x, dz = this.z - o.z, d = Math.hypot(dx, dz), min = 0.95;
       if (d < min && d > 1e-4 && Math.abs(this.y - o.y) < 0.8) {
         const push = (min - d) * 0.5;
@@ -392,6 +397,7 @@ export class Fighter {
     this.hitIds.clear();
     this.specFired = false;
     this.swoopLand = false;
+    this.digPhase = undefined;
     const o = this.opp;
     if (o) this.face = this.angleTo(o);
     this.vx = this.vz = 0;
@@ -607,6 +613,42 @@ export class Fighter {
         sfx.whoosh?.(0.5);
       }
       if (this.st > 0.6) this.endSpecial();
+    } else if (id === 'burrow') {
+      // dive into the ground, tunnel to the rival (a dirt trail gives it away), then burst up under them
+      const P = this.critter.pose;
+      if (this.digPhase === undefined) this.digPhase = 'dive';
+      if (this.digPhase === 'dive') {
+        if (o) this.turnTo(this.angleTo(o), 14, dt);
+        this.vx = this.vz = 0;
+        P.lean = 1.2; P.armLx = P.armRx = -2.6; P.sy = 1 - this.st * 2; P.y = -this.st * 2.5;
+        if (Math.random() < 0.6) B.fx.dust(this, 1, 0.5);
+        if (this.st > 0.22) { this.digPhase = 'tunnel'; this.digT = this.st; this.under = true; this.root.visible = false; this.invuln = 2; sfx.rumble?.(); B.fx.dust(this, 8, 1.1); }
+      } else if (this.digPhase === 'tunnel') {
+        if (o) this.turnTo(this.angleTo(o), 6, dt);
+        const sp = 12;
+        this.vx = Math.sin(this.face) * sp; this.vz = Math.cos(this.face) * sp;
+        this.invuln = Math.max(this.invuln, 0.2);
+        if (Math.random() < 0.8) B.fx.spawn({ x: this.x + (Math.random() - 0.5) * 0.6, y: 0.12, z: this.z + (Math.random() - 0.5) * 0.6, vy: 1.6, color: 0x8a6a4a, size: 0.42, life: 0.5, shape: 'puff', additive: false, grav: 5 });
+        if ((o && this.distTo(o) < 0.6) || this.st - this.digT > 0.85) {
+          this.digPhase = 'pop'; this.under = false; this.root.visible = true; this.invuln = 0.15;
+          this.vx = this.vz = 0; this.vy = 9; this.y = 0.05;
+          sfx.boom(); B.shake(0.35);
+          B.fx.burst({ x: this.x, y: 0.2, z: this.z }, { n: 14, speed: 6, up: 7, color: 0x9a7a5a, size: 0.26, life: 0.7, shape: 'puff', additive: false, grav: 16 });
+          B.fx.shock({ x: this.x, z: this.z }, 0xc08a55, 2.4, 0.3);
+          if (o && o.alive && this.distTo(o) < 1.5 && o.y < 1.2) {
+            this.hitIds.add(o);
+            const ang = this.angleTo(o);
+            B.applyHit(this, o, { dmg: 92 * this.power, kb: 3, lift: 9, stun: 0.6, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, launch: true, dizzy: 22 });
+          }
+        }
+      } else if (this.digPhase === 'pop') {
+        P.sy = 1.2; P.armLz = P.armRz = 2.6; P.legL = P.legR = 0.5;
+        this.critter.emote('happy', 'grin', 0.2);
+        if (this.y <= 0 && this.vy <= 0) { this.digPhase = 'land'; this.digT = this.st; }
+      } else {
+        P.sy = 0.85;
+        if (this.st - this.digT > 0.22) { this.digPhase = undefined; this.endSpecial(); }
+      }
     } else if (id === 'tongue') {
       // wind up, lash the tongue out; if it catches the rival, reel them in for a free combo
       const P = this.critter.pose, REACH = 5.4;
@@ -663,7 +705,7 @@ export class Fighter {
     void tcol;
   }
 
-  endSpecial() { this.setState('idle'); this.critter.emote('open', 'smile'); if (this.tongue) { this.tongue.visible = false; this.grabbed = null; this.tongueDone = false; } }
+  endSpecial() { this.setState('idle'); this.critter.emote('open', 'smile'); if (this.under || this.digPhase) { this.under = false; this.digPhase = undefined; this.root.visible = true; } if (this.tongue) { this.tongue.visible = false; this.grabbed = null; this.tongueDone = false; } }
 
   // Lilypop's tongue: a pink strip from the mouth along +z, scaled in z to its length
   makeTongue() {
@@ -787,9 +829,9 @@ export class Fighter {
     } else if (S === 'special' && this.def.special === 'iceslide' && this.st >= 0.2 && this.st < 0.95) {
       P.lean = 1.45; P.y = 0.12; P.armLz = P.armRz = 1.2; P.armLx = P.armRx = 0.6; P.legL = P.legR = 1.2; P.head = -0.9; P.sx = 1.1; P.sy = 0.95;
       this.critter.emote('happy', 'grin', 0.1);
-    } else if (S === 'special' && (this.def.special === 'rocktoss' || this.def.special === 'swoop' || this.def.special === 'tongue')) {
+    } else if (S === 'special' && (this.def.special === 'rocktoss' || this.def.special === 'swoop' || this.def.special === 'tongue' || this.def.special === 'burrow')) {
       // posed frame by frame in updateSpecial
-    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche' || this.def.super === 'jetstream' || this.def.super === 'lilysplash') && this.superPhase !== 'cutin') {
+    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche' || this.def.super === 'jetstream' || this.def.super === 'lilysplash' || this.def.super === 'molerush') && this.superPhase !== 'cutin') {
       // posed frame by frame in Battle.updateSuper
     } else if (S === 'special' || S === 'super') {
       if (this.st < 0.28) { P.sy = 0.8; P.sx = 1.15; P.lean = -0.25; P.armLz = P.armRz = 0.8; P.ear = 0.8; }
