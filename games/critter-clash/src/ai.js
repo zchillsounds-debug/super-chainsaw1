@@ -69,14 +69,24 @@ export class CpuBrain {
     if (this.think <= 0) {
       this.think = 0.35 - D * 0.2 + Math.random() * 0.2;
       const sp = SPECIALS[f.def.special];
-      if (f.superM >= 100 && d < 6 && Math.random() < 0.3 + D * 0.5) this.plan = 'super';
+      // a rival who is reeling, knocked down or stuck in recovery is an opening; sharper CPUs pounce on it
+      const open = o.state === 'dizzy' || o.state === 'getup' || o.state === 'hit' || (o.state === 'special' && o.st > 0.45);
+      const lead = f.hp / f.maxHp - o.hp / o.maxHp, clock = f.battle.time;
+      if (open && d < 5.5 && Math.random() < 0.25 + D * 0.65) {
+        this.plan = o.state === 'dizzy' && f.superM >= 100 ? 'super' : 'attack';
+        this.comboLen = 3;
+        this.think = 0.15;
+        // fall through to movement with the new plan
+      } else if (f.superM >= 100 && d < 6 && Math.random() < (f.hp / f.maxHp < 0.3 ? 0.6 : 0.3) + D * 0.5) this.plan = 'super';
+      // ahead late in the round: careful trainers play keep-away and run the clock down
+      else if (lead > 0.2 && clock < 15 && S.aggro < 1.2 && Math.random() < 0.5 * S.guard) this.plan = 'retreat';
       else if (f.specCd <= 0 && d >= sp.range[0] && d <= sp.range[1] && Math.random() < (0.25 + D * 0.35) * S.special) this.plan = 'special';
       else if (d < 1.7) this.plan = Math.random() < (0.15 + (1 - D) * 0.2) / S.aggro ? 'retreat' : 'attack';
       else if (S.special > 1.3 && d < 3.5 && Math.random() < 0.4) this.plan = 'retreat';
       else if (Math.random() < 0.18) this.plan = 'circle';
       else this.plan = 'approach';
       if (Math.random() < 0.3) this.strafe *= -1;
-      this.comboLen = Math.random() < 0.3 + D * 0.6 ? 3 : 1 + Math.floor(Math.random() * 2);
+      if (this.think !== 0.15) this.comboLen = Math.random() < 0.3 + D * 0.6 ? 3 : 1 + Math.floor(Math.random() * 2);
     }
 
     // movement intent
