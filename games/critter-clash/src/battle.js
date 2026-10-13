@@ -685,8 +685,9 @@ export class Battle {
         const a0 = new THREE.Vector3(f.x, 1, f.z).project(this.camera), a1 = new THREE.Vector3(f.x + dx, 1, f.z + dz).project(this.camera);
         const rot = Math.atan2((a1.y - a0.y) / this.camera.aspect, a1.x - a0.x) - Math.PI / 2;
         for (let k = 0; k < 3; k++) {
-          const r = 1 + Math.random() * 8, w = (Math.random() - 0.5) * (1 + r * 0.35);
-          fx.spawn({ x: f.x + dx * r + dz * w, y: 0.3 + Math.random() * 1.8, z: f.z + dz * r - dx * w, vx: dx * 22, vz: dz * 22, color: 0xffffff, size: 0.32, stretch: 8, rot, life: 0.3, shape: 'glow' });
+          // born just ahead of the cheeks so they sweep across the gap toward the rival
+          const r = 0.5 + Math.random() * 4, w = (Math.random() - 0.5) * (1 + r * 0.35);
+          fx.spawn({ x: f.x + dx * r + dz * w, y: 0.3 + Math.random() * 1.8, z: f.z + dz * r - dx * w, vx: dx * 13, vz: dz * 13, color: 0xffffff, size: 0.26, stretch: 9, rot, life: 0.3, shape: 'spark', additive: false, alpha: 0.95 });
         }
         // is the rival inside the gust cone?
         const ox = o.x - f.x, oz = o.z - f.z, along = ox * dx + oz * dz, side = Math.abs(ox * dz - oz * dx);

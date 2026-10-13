@@ -124,7 +124,7 @@ const TYPE_SPARKS = {
     fx.burst({ x: p.x, y: p.y - 0.3, z: p.z }, { n: 5 * s, speed: 2.5, up: 1, color: 0xd8c0a0, size: 0.6, life: 0.6, shape: 'puff', additive: false, grav: -1, drag: 4, grow: 1 });
   },
   gust(fx, p, s) {
-    for (let i = 0; i < 3; i++) fx.spawn({ ...p, color: 0xe0e8ff, size: (1.2 + i * 0.7) * s, life: 0.25 + i * 0.07, shape: 'ring', grow: 1.6, alpha: 0.7 });
+    for (let i = 0; i < 3; i++) fx.spawn({ ...p, color: 0xe0e8ff, size: (0.8 + i * 0.45) * s, life: 0.25 + i * 0.07, shape: 'ring', grow: 1.4, alpha: 0.7 });
     fx.burst(p, { n: 6 * s, speed: 5, up: 1.5, color: 0xf2f4ff, size: 0.45, life: 0.45, shape: 'puff', additive: false, grav: 0, drag: 5, grow: 1.2 });
   },
 };
