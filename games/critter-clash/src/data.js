@@ -127,6 +127,16 @@ export const CRITTERS = [
     special: 'rocktoss', super: 'avalanche',
     moves: { special: 'Rock Toss', super: 'Avalanche' },
   },
+  {
+    id: 'whirlwhisk', name: 'Whirlwhisk', type: 'gust', species: 'Glider Squirrel',
+    blurb: 'Stores acorns in its cheeks and wind in its tail. Has never once landed where it meant to.',
+    colors: { body: 0xb8a4e0, belly: 0xfff8ee, accent: 0xe9defc, dark: 0x4a3a78, eye: '#1a1238', iris: '#38b4ff' },
+    body: { w: 0.54, h: 0.54, headR: 0.48, legLen: 0.15, armLen: 0.2, chubby: 1.0 },
+    ears: 'tufts', tail: 'bushy', extra: 'glider', voice: 1.3,
+    stats: { hp: 940, speed: 7.0, power: 0.98, weight: 0.8 },
+    special: 'swoop', super: 'jetstream',
+    moves: { special: 'Sky Swoop', super: 'Jet Stream' },
+  },
 ];
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
@@ -141,6 +151,7 @@ export const SHINY = {
   pricklepuff: { body: 0xf2e6ff, belly: 0xffffff, accent: 0xff7eb6, dark: 0xc23a7a, iris: '#ff4f9a' },
   woolt:       { body: 0x3a3a52, belly: 0xbfe8ff, accent: 0x6af0ff, dark: 0x101020, iris: '#3ae0ff' },
   pebblepup:   { body: 0x6a6a88, belly: 0xe8e4ff, accent: 0xff8ad8, dark: 0x262438, iris: '#ff6ad0' },
+  whirlwhisk:  { body: 0xffb38a, belly: 0xfff4e4, accent: 0xffe2c8, dark: 0x8a3a2a, iris: '#3ac07a' },
   emberfly:    { body: 0x2f8a6a, belly: 0xdcffe6, accent: 0x7dffb0, dark: 0x113a2c, iris: '#3affa0' },
 };
 
@@ -180,7 +191,7 @@ export const CUPS = [
     matches: [
       { name: 'Chef Bao', style: 'rushdown', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered." },
       { name: 'Gran Pebbles', style: 'turtle', title: 'Retired Champ', critter: 'pebblepup', level: 5, taunt: 'Back in my day we threw rocks uphill. Both ways.' },
-      { name: 'Wren', style: 'zoner', title: 'Kite Flyer', critter: 'hootsy', level: 6, taunt: "Hootsy, let's blow them away!" },
+      { name: 'Wren', style: 'zoner', title: 'Kite Flyer', critter: 'whirlwhisk', level: 6, taunt: "Whirlwhisk, let's blow them away!" },
       { name: 'Captain Splash', style: 'balanced', title: 'Lifeguard', critter: 'pengsicle', level: 7, taunt: 'No running by the pool. Only sliding.' },
     ],
   },
@@ -297,5 +308,7 @@ export const MOVE_DESC = {
   fuzzball: 'Rolls a crackling ball of static wool along the ground. Leaves the rival twitchy.',
   megafluff: 'Puffs up to giant size and body-slams the rival three times.',
   rocktoss: 'Lobs a boulder in an arc. It thuds down where the rival is standing.',
+  swoop: 'Leaps up and glides down onto the rival, tail first.',
+  jetstream: 'Puffs its cheeks and blows a long gust that shoves the rival back, hit after hit.',
   avalanche: 'Howls at the sky and a rockslide rains down on the rival, ending with one giant boulder.',
 };

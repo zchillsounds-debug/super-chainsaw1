@@ -667,6 +667,40 @@ export class Battle {
         }
         if (t > 1.15) this.endSuper(f);
       }
+    } else if (id === 'jetstream') {
+      const P = f.critter.pose;
+      if (f.superPhase === 'go') { f.superPhase = 'blow'; f.st = 0; f.gustN = 0; sfx.whoosh?.(0.6); }
+      if (f.superPhase === 'blow') {
+        // cheeks puffed, a long gust shoves the rival back; ticks of damage, a launch to finish
+        const a = f.face, dx = Math.sin(a), dz = Math.cos(a);
+        P.sx = 1.12; P.lean = -0.25; P.armLz = P.armRz = 1.1; P.tail = 2.2 + Math.sin(t * 30) * 0.3;
+        f.critter.emote('closed', 'o', 0.2);
+        f.vx = -dx * 1.2; f.vz = -dz * 1.2; // braced, sliding back a touch
+        for (let k = 0; k < 4; k++) {
+          const r = 0.8 + Math.random() * 8, w = (Math.random() - 0.5) * r * 0.35;
+          fx.spawn({ x: f.x + dx * r + dz * w, y: 0.4 + Math.random() * 1.4, z: f.z + dz * r - dx * w, vx: dx * 16, vz: dz * 16, color: 0xffffff, size: 0.35 + Math.random() * 0.3, life: 0.25, shape: 'glow', alpha: 0.55 });
+        }
+        if (Math.random() < 0.5) fx.spawn({ x: f.x + dx * (1 + Math.random() * 6), y: 0.5 + Math.random(), z: f.z + dz * (1 + Math.random() * 6), vx: dx * 12, vz: dz * 12, color: 0xd8ffd0, size: 0.3, life: 0.4, shape: 'leaf', additive: false, spin: 10 });
+        // is the rival inside the gust cone?
+        const ox = o.x - f.x, oz = o.z - f.z, along = ox * dx + oz * dz, side = Math.abs(ox * dz - oz * dx);
+        const inCone = along > 0 && along < 12 && side < 1.2 + along * 0.2;
+        if (inCone && o.alive && o.state !== 'dodge') {
+          o.x += dx * dt * 2.5; o.z += dz * dt * 2.5;
+          const due = Math.floor(t / 0.2);
+          if (due > f.gustN && f.gustN < 6) {
+            f.gustN = due;
+            this.applyHit(f, o, { dmg: 24 * f.power, kb: 0.6, lift: 0, stun: 0.3, dirX: dx, dirZ: dz, heavy: false, type: f.type, dizzy: 5 });
+          }
+        }
+        if (t > 1.45) {
+          if (inCone && o.alive) { this.applyHit(f, o, { dmg: 90 * f.power, kb: 12, lift: 9, stun: 0.8, dirX: dx, dirZ: dz, heavy: true, type: f.type, launch: true, dizzy: 30 }); this.shake(0.6); this.game.impactFrame(0.07); }
+          fx.shock({ x: f.x + dx * 2, z: f.z + dz * 2 }, 0xeaffea, 3, 0.4);
+          f.superPhase = 'recover'; f.st = 0;
+        }
+      } else if (f.superPhase === 'recover') {
+        P.sy = 0.9;
+        if (t > 0.4) this.endSuper(f);
+      }
     } else if (id === 'avalanche') {
       const P = f.critter.pose;
       if (f.superPhase === 'go') { f.superPhase = 'rain'; f.st = 0; f.rockN = 0; sfx.voice(f.def.voice, 'win'); sfx.rumble?.(); this.shake(0.5); }

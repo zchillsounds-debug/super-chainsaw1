@@ -22,6 +22,7 @@ export const LINES = {
 Object.assign(LINES, {
   pricklepuff: { intro: ["Don't touch the spines!", 'Prickly and proud!', "Hmph. Fine. Let's go."], win: ['Told you. Prickly.', 'Leaf me alone now.', 'Hmph! Too easy.'] },
   pebblepup:   { intro: ['Arf! Rock and ruff!', 'Fetch THIS!', 'Bark is worse than my bite. Bite is rocks.'], win: ['Good pup! Me!', 'Ruff day for you!', 'Stone cold. Arf!'] },
+  whirlwhisk:  { intro: ['Wheee! Incoming!', 'Nuts to you!', 'Catch the breeze!'], win: ['Blown away!', "Nuttin' to it!", 'Wind beneath my tail!'] },
   woolt:       { intro: ['Baa-zzt!', 'Static cling, incoming!', 'Fluffed up and ready!'], win: ['Shear power!', 'Baa-rilliant!', 'Hair-raising!'] },
 });
 
@@ -106,6 +107,19 @@ const INTRO = {
       P.sy = 1.15; P.armLz = P.armRz = 2.4; P.legL = 0.4; P.legR = -0.4; P.ear = -0.4; P.tail = 1.8; P.y = 0.15;
       f.critter.emote('happy', 'open', 0.1);
       if (once(f, 'zap')) { sfx.spark(); const c = f.chestPos(); fx.hit(c, 0xfff060, false, 'spark'); }
+    } else ready(f, P, k);
+  },
+  whirlwhisk(f, P, k) {
+    const fx = f.battle.fx;
+    if (k < 1.0) { // drifts down from the sky on its glider flaps
+      const h = Math.max(0, 1 - k) * 2.5;
+      P.y = h; P.armLz = P.armRz = 1.5 + sin(k * 9) * 0.15; P.legL = 0.6; P.legR = -0.6; P.lean = 0.2; P.roll = sin(k * 5) * 0.2; P.tail = 1.6;
+      f.critter.emote('happy', 'open', 0.1);
+      if (Math.random() < 0.3) fx.spawn({ x: f.x + rnd(1.4), y: f.y + h + 0.6, z: f.z + rnd(1.4), vx: rnd(2), color: 0xffffff, size: 0.35, life: 0.4, shape: 'glow', alpha: 0.5 });
+    } else if (k < 1.6) { // lands, cheeks stuffed, tail flick
+      P.sy = 0.9 + abs(sin(k * 12)) * 0.15; P.tail = 2.2 + sin(k * 20) * 0.4; P.armLx = P.armRx = -1.2;
+      f.critter.emote('happy', 'grin', 0.1);
+      if (once(f, 'land')) { sfx.land(); fx.dust(f, 6, 0.8); }
     } else ready(f, P, k);
   },
   pebblepup(f, P, k) {
@@ -213,6 +227,12 @@ const WIN = {
     P.y = abs(sin(k * 5)) * 0.12;
     f.critter.emote('happy', 'grin', 0.1);
     if (Math.random() < 0.25) { const c = f.chestPos(); f.battle.fx.spawn({ x: c.x + rnd(1.2), y: c.y + rnd(1.2), z: c.z + rnd(1.2), color: 0xfff060, size: 0.6, stretch: 0.15, rot: Math.random() * 6, life: 0.12, shape: 'spark' }); }
+  },
+  whirlwhisk(f, P, k) { // twirls on one foot, tail swirling, little gusts
+    P.yaw = (k * 4) % (Math.PI * 2); P.armLz = P.armRz = 1.4; P.legL = 0.5; P.tail = 1.8 + sin(k * 10) * 0.4; P.y = 0.1 + abs(sin(k * 8)) * 0.08;
+    if ((k % 3) > 1.6) P.yaw = 0; // pause facing front between spins
+    f.critter.emote('happy', 'open', 0.1);
+    if (Math.random() < 0.15) f.battle.fx.spawn({ x: f.x + rnd(1.5), y: f.y + 0.4 + Math.random(), z: f.z + rnd(1.5), vy: 1.5, color: 0xffffff, size: 0.3, life: 0.5, shape: 'leaf', additive: false, spin: 6 });
   },
   pebblepup(f, P, k) { // zoomies: tail-wag spin and happy hops
     P.tail = 1.5 + sin(k * 30) * 0.8; P.y = abs(sin(k * 6)) * 0.2; P.yaw = sin(k * 2.2) * 0.8; P.armLz = P.armRz = 0.8 + abs(sin(k * 6)) * 0.6; P.ear = sin(k * 12) * 0.6;

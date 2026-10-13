@@ -504,6 +504,24 @@ export class Critter {
       skull.add(lf);
     }
 
+    // flying squirrel: soft glider flaps from wrist to hip on each side
+    if (def.extra === 'glider') {
+      for (const s of [-1, 1]) {
+        const g = sphere(1);
+        g.scale(0.07, B.h * 0.36, B.w * 0.3);
+        const flap = inked(g, this.mats.accent, OL * 0.6);
+        flap.position.set(s * B.w * B.chubby * 0.5, B.h * 0.45, -B.w * 0.02);
+        flap.rotation.z = s * 0.25;
+        torso.add(flap);
+      }
+      // stuffed acorn cheeks
+      for (const s of [-1, 1]) {
+        const ch = inked(sphere(headR * 0.2), this.mats.belly, OL * 0.5);
+        ch.scale.set(1, 0.85, 0.8); ch.position.set(s * headR * 0.62, -headR * 0.32, headR * 0.6);
+        skull.add(ch);
+      }
+    }
+
     // pebble pug: glassy crystals sprouting from the back, one on the head
     if (def.extra === 'crystals') {
       const gem = (r, h) => { const g = new THREE.OctahedronGeometry(r, 0); g.scale(1, h / r, 1); g.translate(0, h * 0.55, 0); return g; };
@@ -626,6 +644,21 @@ export class Critter {
     } else if (def.tail === 'puff') {
       const p = inked(sphere(0.15), this.mats.belly, OL);
       tail.add(p);
+    } else if (def.tail === 'bushy') {
+      // big fluffy squirrel tail curling up the back
+      tail.position.y = B.h * 0.2;
+      tail.rotation.x = 0.12;
+      const pieces = [];
+      for (let k = 0; k < 5; k++) {
+        const a = k / 4, r = 0.17 + Math.sin(a * Math.PI) * 0.1;
+        const g = sphere(r);
+        g.translate(0, 0.12 + a * 0.62, -Math.sin(a * 2.4) * 0.26);
+        pieces.push(g);
+      }
+      tail.add(inked(mergeGeometries(pieces), this.mats.body, OL));
+      const tip = inked(sphere(0.15), this.mats.belly, OL * 0.8);
+      tip.position.set(0, 0.8, 0.02);
+      tail.add(tip);
     } else if (def.tail === 'stub') {
       tail.position.y = B.h * 0.18;
       tail.rotation.x = -1.9;

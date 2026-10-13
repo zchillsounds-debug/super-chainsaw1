@@ -21,6 +21,7 @@ export const SPECIALS = {
   seedspray: { cd: 3.6, range: [1.5, 5.5] },
   fuzzball:  { cd: 4.0, range: [3, 9] },
   rocktoss:  { cd: 4.0, range: [2.5, 8] },
+  swoop:     { cd: 4.0, range: [2.5, 8] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -44,7 +45,7 @@ const tailwhip = (P, i, w, s) => {
   if (!s) { P.yaw = 0.8 * w; P.sy = 0.85; return; }
   P.yaw = Math.PI * 0.95; P.tail = 3; P.lean = -0.2; P.armLz = P.armRz = 1.2;
 };
-const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip, pricklepuff: kick, woolt: headbutt, pebblepup: headbutt };
+const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip, pricklepuff: kick, woolt: headbutt, pebblepup: headbutt, whirlwhisk: tailwhip };
 
 // translucent fresnel bubble shown while guarding
 function makeShield(color, h) {
@@ -388,6 +389,7 @@ export class Fighter {
     this.atkId++;
     this.hitIds.clear();
     this.specFired = false;
+    this.swoopLand = false;
     const o = this.opp;
     if (o) this.face = this.angleTo(o);
     this.vx = this.vz = 0;
@@ -554,6 +556,38 @@ export class Fighter {
         B.fx.burst({ x: this.x + fx * 0.6, y: 0.6, z: this.z + fz * 0.6 }, { n: 8, speed: 4, color: 0x7cff6a, shape: 'leaf', additive: false, size: 0.22, life: 0.45, grav: 3 });
       }
       if (this.st > 0.55) this.endSpecial();
+    } else if (id === 'swoop') {
+      // crouch, spring up, then glide down onto the rival
+      const P = this.critter.pose;
+      if (this.st < 0.18) {
+        if (o) this.turnTo(this.angleTo(o), 14, dt);
+        this.vx = this.vz = 0; P.sy = 0.8; P.sx = 1.1;
+      } else if (!this.specFired) {
+        this.specFired = true;
+        this.vy = 6; this.y = 0.05;
+        // time the glide so it comes down right on the rival
+        const d = o ? THREE.MathUtils.clamp(this.distTo(o), 2, 8) : 5, air = 2 * 6 / (B.grav * 0.45);
+        this.swoopV = d / air;
+        sfx.whoosh?.(1.2);
+      } else if (this.y > 0 || this.vy > 0) {
+        // the glider flaps slow the fall
+        this.vy += B.grav * 0.55 * dt;
+        if (o) this.turnTo(this.angleTo(o), 4, dt);
+        this.vx = Math.sin(this.face) * this.swoopV; this.vz = Math.cos(this.face) * this.swoopV;
+        P.armLz = P.armRz = 1.6; P.legL = 0.7; P.legR = 0.7; P.lean = 0.6; P.tail = 1.5;
+        if (Math.random() < 0.6) B.fx.spawn({ x: this.x + (Math.random() - 0.5) * 0.8, y: this.y + 0.6, z: this.z + (Math.random() - 0.5) * 0.8, color: 0xffffff, size: 0.5, life: 0.3, shape: 'glow', alpha: 0.4 });
+        if (o && o.alive && !this.hitIds.has(o) && this.distTo(o) < 1.3 && Math.abs(this.y - o.y) < 1.4) {
+          this.hitIds.add(o);
+          const ang = this.angleTo(o);
+          B.applyHit(this, o, { dmg: 78 * this.power, kb: 6, lift: 5, stun: 0.5, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, launch: true, dizzy: 18 });
+          this.vx *= -0.3; this.vz *= -0.3; this.swoopV *= -0.3;
+        }
+      } else {
+        this.vx = THREE.MathUtils.damp(this.vx, 0, 10, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 10, dt);
+        P.sy = 0.85;
+        if (!this.swoopLand) { this.swoopLand = true; B.fx.dust(this, 5, 0.7); this.specLandT = this.st; }
+        if (this.st - this.specLandT > 0.25) { this.swoopLand = false; this.endSpecial(); }
+      }
     } else if (id === 'rocktoss') {
       // heave a boulder overhead, then lob it onto where the rival is standing
       const P = this.critter.pose;
@@ -697,7 +731,9 @@ export class Fighter {
     } else if (S === 'special' && this.def.special === 'iceslide' && this.st >= 0.2 && this.st < 0.95) {
       P.lean = 1.45; P.y = 0.12; P.armLz = P.armRz = 1.2; P.armLx = P.armRx = 0.6; P.legL = P.legR = 1.2; P.head = -0.9; P.sx = 1.1; P.sy = 0.95;
       this.critter.emote('happy', 'grin', 0.1);
-    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche') && this.superPhase !== 'cutin') {
+    } else if (S === 'special' && (this.def.special === 'rocktoss' || this.def.special === 'swoop')) {
+      // posed frame by frame in updateSpecial
+    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche' || this.def.super === 'jetstream') && this.superPhase !== 'cutin') {
       // posed frame by frame in Battle.updateSuper
     } else if (S === 'special' || S === 'super') {
       if (this.st < 0.28) { P.sy = 0.8; P.sx = 1.15; P.lean = -0.25; P.armLz = P.armRz = 0.8; P.ear = 0.8; }

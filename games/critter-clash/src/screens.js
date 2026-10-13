@@ -342,7 +342,7 @@ export class Screens {
     g.showcase[0].cheer = 0.8;
     const trial = this.free && !save.unlocked.includes(c.id);
     this.root.querySelector('.sel-info').innerHTML = this.infoCard(c, trial ? `<div class="ic-trial">Trial · recruit in the ${cupOfShiny(c.id)?.name || 'Tournament'}</div>` : '');
-    this.root.querySelectorAll('.rcard').forEach((b, k) => b.classList.toggle('on', k === i));
+    this.root.querySelectorAll('.rcard').forEach((b, k) => { b.classList.toggle('on', k === i); if (k === i) b.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); });
   }
 
   infoCard(c, extra = '') {

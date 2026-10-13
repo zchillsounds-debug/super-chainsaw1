@@ -682,3 +682,15 @@ body.portrait .timer { width: 50px; height: 50px; font-size: 26px; }
 /* scroll hint: fade the bottom edge while a panel has more below */
 .more { -webkit-mask-image: linear-gradient(#000 calc(100% - 36px), transparent); mask-image: linear-gradient(#000 calc(100% - 36px), transparent); }
 .prof-wrap { position: absolute; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center; padding: 16px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); background: linear-gradient(transparent 30%, rgba(20,10,40,.55)); animation: fade .3s; }
+/* twelve critters: the roster scrolls sideways when it can't fit, so Fight never gets pushed off */
+.sel-bottom > .roster { flex: 0 1 auto; min-width: 0; overflow-x: auto; overflow-y: hidden; padding: 14px 8px 6px; margin: -14px -8px -6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.sel-bottom > .roster::-webkit-scrollbar { display: none; }
+.sel-bottom > .roster > * { flex: none; }
+.sel-actions { flex: none; }
+body.portrait .sel-bottom > .roster { overflow: visible; margin: 0; padding: 0; }
+body.portrait .roster { grid-template-columns: repeat(6, 56px); gap: 6px; }
+body.portrait .rcard { width: 56px; }
+body.portrait .rcard span { font-size: 9.5px; }
+@media (max-height: 380px) and (min-aspect-ratio: 1/1) {
+  .sel-actions { flex-direction: row; align-items: flex-end; }
+}
