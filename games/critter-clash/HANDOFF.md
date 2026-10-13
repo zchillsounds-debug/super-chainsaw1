@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 90)
+# Critter Clash: Handoff (after Round 98)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -20,7 +20,8 @@
 - Session 6 (16:35–17:35 UTC) sent the user the Round 44 APK (arena hazards + Camp) and asked again about the character-pick fix (no reply yet), then did Rounds 45–61 and chained to keep context small (~200k).
 - Session 7 (17:31–18:35 UTC) sent the user the Round 59 APK (Pebblepup, Whirlwhisk, Camp fetch/activities, cup story beats) and asked a third time about the character-pick fix (no reply yet), then did Rounds 62–74 and chained to keep context small.
 - Session 8 (18:31–19:22 UTC, then a worker stall until 22:32, then 22:32–22:45) sent the user the Round 74 APK (asked a 4th time about the character-pick fix; no reply yet), then did Rounds 75–90.
-- Time used so far: about 6.6 hours of actual work (5.5 h before session 8 + ~1.1 h in session 8).
+- Session 9 (22:43–23:45 UTC) sent the user the Round 90 APK, then the e99089f APK (with the user's Camp/cup-finish fixes from session 8's reply, plus Ripples). Asked again about the character-pick fix (no reply yet). Did Rounds 91–98 and chained near the context limit.
+- Time used so far: about 7.6 hours of actual work (6.6 h before session 9 + ~1.0 h in session 9).
 - **Target end of the whole effort: about 02:15 UTC on 2026-10-14** (the old 23:00 target pushed back by session 8's 3.2 h stall). Check `date -u`. Keep chaining sessions until then, then stop and summarise. If another stall happens, extend again by its length.
 
 ## Run it
@@ -36,7 +37,7 @@ URL flags:
 
 - `&arena=frost`, `&arena=neon` and `&arena=sky` also work now, and `&mods=bighead,turbo,lowgrav,itemrain,supercharged` applies match modifiers.
 
-Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt, pebblepup, whirlwhisk, lilypop, diggles, ripples.
+Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt, pebblepup, whirlwhisk, lilypop, diggles, ripples, jiggawatt.
 - Gotcha: `tools/multi.mjs` adds the `?` itself, so pass `play&p=...`, not `?play&p=...` (a double `??` silently shows the title).
 Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - `&train` starts a training match (e.g. `?play&train&p=woolt`).
@@ -168,6 +169,11 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 
 ## New in session 9
 - **Ripples** (water river otter, `extra: 'otter'` muzzle/whiskers/scallop clip, `tail: 'otter'`). Special `puddle` (lobbed `splash` projectile → `splashLand()` → stationary `puddle` projectile, r 1.7, 4.5 s; one per owner; the rival inside gets `f.slick`, which cuts speed to 60% and traction to ~2, with flailing arms). Super `whirlpool` (stationary `whirl` projectile disc with a canvas swirl; the rival orbits inward, 4 small hits, then a geyser launch). Shared textures `getPuddleTex`/`getSwirlTex` in battle.js. Trainer Brook (Glowcap Cup, replaced Moss), Pecan news `otter`.
+- **Jiggawatt** (spark jelly sprite, `extra: 'jelly'` translucent bell cap + frills + glow spots, `tail: 'tentacles'` swaying in `Critter.update`). Special `staticfield` (1.1 s aura, drifts at 45% speed, zaps every 0.34 s within 2.3, removes enemy non-big projectiles in range). Super `stormcloud` (a summon: `cloud` projectile follows the rival for 4.4 s at y 3.1, zaps every 0.62 s, a big final strike; the super state ends after 0.6 s so Jiggawatt keeps fighting). `lightning(x, z, big, top)` takes a start height. Trainer DJ Tumble (Midnight Cup, replaced Woolt), Pecan news `jelly`.
+- ai.js: the CPU leaves a rival's puddle (only when the rival isn't in reach), runs from storm clouds, backs off static fields.
+- **Boss Rush** (Challenges, needs the Champion Cup): `bossList()` in screens.js (unique `boss: true` matches by level: Oakley, Aurora, Madame Vee, Pecan), ctx `{ kind: 'bossrush', idx, hp }`, one round each, HP carries (+35%). `save.stats.bossBest`, `save.stats.bossRush`, badge `rush` (Boss Buster). Results show `opts.trainer`'s beat/gloat line for any trainer match.
+- **Finale** (`Screens.finale()`): after the trophy screen when every cup is cleared and `!save.finaleSeen`: Pecan speech → parade (team in waves of 4, shifted left in landscape) + CSS credits roll. Badge `master` (Critter Master) and a title-foot tag.
+- Balance after session 9 (focused round robins): Ripples 58%, Jiggawatt 35% (then +power). Full 15-critter run had most critters 43–68%; Emberfly 21% in that run (got +40 hp after). Re-run a full `tools/robin.mjs 1` with all 16 to confirm.
 - `window.__cups` = CUPS (for tools).
 - **tools/tapcheck.mjs** `[WxH ...]`: opens every screen/modal (incl. pause and results) and reports buttons that are OFF-screen, CLIPPED, or COVERED (only the topmost modal layer is checked). `SHOTS=1` saves screenshots. Portrait battle screens report "covered by rotate-hint", which is expected.
 - **tools/cupflow.mjs** `[WxH] [cupIndex]`: taps through a whole cup like a player (wins forced via `onKO`) and prints the screen path or `STUCK at <mode>` + a screenshot.
@@ -278,7 +284,12 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 91. (session 8) Camp back button and stuck tournament finish fixed (user report).
 91. Ripples, the river otter (Slick Puddle / Whirlpool), in the Glowcap Cup.
 92. Tap-check sweep: Critterdex grid scrolls in landscape, results fit 360 px tall phones.
-94. Tap anywhere to advance Pecan's dialog; tools/cupflow.mjs (Sprout Cup clears by tapping at 740×360).
+93. Balance pass with 15 critters (Voltferret, Diggles nerfs; Cindermunch, Bubbalotl, Hootsy, Emberfly buffs).
+94. Tap anywhere to advance Pecan's dialog; tools/cupflow.mjs (Sprout and Thunder Cups clear by tapping at 740×360).
+95. Jiggawatt, the jelly sprite (Static Field / Storm Cloud), in the Midnight Cup.
+96. CPU escapes puddles, storm clouds and static fields; Storm Cloud no longer stun-locks; new-critter nerfs.
+97. Finale for clearing every cup: Pecan's speech, team parade, credits roll, Critter Master badge.
+98. Boss Rush challenge (all cup bosses back to back) + Boss Buster badge; trainer quotes on every trainer match.
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
@@ -289,7 +300,9 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - No localisation.
 
 ## Suggested next rounds
-- **First:** fetch the latest APK (check that the `apk-critter-clash` commit message names the latest SHA) and send it to the user with SendUserFile. Mention: two new critters (Lilypop the tongue-lashing frog, Diggles the burrowing mole), the Glowcap Grove arena and Glowcap Cup, chasing hazards, a smarter CPU, Camp trophies and a Move List in pause. Ask once more whether picking a character works now.
+- **First:** fetch the latest APK (check that the `apk-critter-clash` commit message names the latest SHA; if the CI run failed at the final push with a GitHub 500, any new push rebuilds it) and send it to the user with SendUserFile. Mention: Jiggawatt the jelly sprite, Boss Rush, a finale with credits for clearing every cup, smarter CPU vs puddles/clouds. The user is actively playtesting (they reported bugs at ~22:45), so ask them to report anything that gets stuck.
+- Run `node tools/tapcheck.mjs` and `node tools/cupflow.mjs 740x360 <cupIndex>` (against `PORT=5181` preview of a fresh build, so edits don't reload it) after UI changes.
+- Full balance run with 16 critters: `PORT=5181 node tools/robin.mjs 1` (~10 min).
 - Re-run the balance round robin for all 14 (`tools/robin.mjs 2` against a production build).
 - Ideas: Grove-specific CPU trainer flavour, a 15th/16th critter, localisation, more Camp interactions with the new critters.
 - Battle: per-arena second hazard pattern; CPU variety.
