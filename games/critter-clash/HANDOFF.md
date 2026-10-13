@@ -173,6 +173,7 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 - Not verified on a real phone; APK CI runs through Round 26 succeeded (check the later runs).
 
 ## Suggested next rounds
+- **First thing next session:** fetch the APK built from the Round 32 commit (check the `apk-critter-clash` commit message names it) and send it to the user with SendUserFile, saying it has the character-pick fix and asking them to confirm.
 - Gear callout on the results screen and a gear row in the Critterdex.
 - Real-phone check of the latest APK, especially photo Save/Share.
 - Localisation, a second boss cup, or arena hazards.
