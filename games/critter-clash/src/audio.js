@@ -133,6 +133,13 @@ export const sfx = {
     else if (kind === 'back') osc('square', 440, 330, 0.08, 0.07);
   },
   beep(hi = false) { if (ctx) { osc('square', hi ? 1320 : 660, hi ? 1320 : 660, hi ? 0.4 : 0.15, 0.12); } },
+  // short rising arpeggio for announcer callouts; level 0..3 climbs higher
+  jingle(level = 1) {
+    if (!ctx) return;
+    const t = now(), base = [523, 587, 659, 784][Math.min(3, level)];
+    [1, 1.26, 1.5, 2].forEach((m, i) => osc('square', base * m, base * m, 0.09, 0.07, { t: t + i * 0.055 }));
+    osc('triangle', base * 2, base * 2.02, 0.35, 0.08, { t: t + 0.22 });
+  },
   gong() { if (!ctx) return; osc('triangle', 220, 210, 1.6, 0.35); osc('sine', 330, 320, 1.4, 0.2); osc('sine', 554, 540, 1.0, 0.1); },
   ko() { if (!ctx) return; osc('sawtooth', 600, 60, 1.0, 0.25); this.boom(); },
 };

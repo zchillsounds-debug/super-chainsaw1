@@ -1,5 +1,6 @@
 // Billboard particle pools (shapes drawn in the shader) and screen-space comic text.
 import * as THREE from 'three';
+import { TYPES } from './data.js';
 
 const SHAPE = { glow: 0, star: 1, spark: 2, ring: 3, puff: 4, drop: 5, leaf: 6, bolt: 7, burst: 8, confetti: 9 };
 
@@ -98,6 +99,35 @@ class Pool {
 
 const tmpC = new THREE.Color();
 
+// elemental flavour layered on top of the generic impact
+const TYPE_SPARKS = {
+  fire(fx, p, s) {
+    fx.burst(p, { n: 7 * s, speed: 3, up: 3.5, color: 0xff7a1a, size: 0.6, life: 0.45, shape: 'glow', grav: -3, drag: 3, grow: -0.6 });
+    fx.burst(p, { n: 8 * s, speed: 6, up: 4, color: 0xffd040, size: 0.12, life: 0.7, shape: 'glow', grav: 6, drag: 1 });
+    fx.burst(p, { n: 3 * s, speed: 1.5, up: 2, color: 0x5a4a48, size: 0.5, life: 0.8, shape: 'puff', additive: false, grav: -2, drag: 3, grow: 1 });
+  },
+  water(fx, p, s) {
+    fx.burst(p, { n: 12 * s, speed: 6, up: 4, color: 0x7fd4ff, size: 0.28, life: 0.6, shape: 'drop', additive: false, grav: 16, drag: 1, stretch: 1 });
+    fx.spawn({ ...p, color: 0xbfeaff, size: 2.2 * s, life: 0.3, shape: 'ring', additive: false, grow: 1.2, alpha: 0.8 });
+  },
+  leaf(fx, p, s) {
+    fx.burst(p, { n: 9 * s, speed: 5, up: 3, color: 0x6cdc5a, size: 0.34, life: 0.9, shape: 'leaf', additive: false, grav: 4, drag: 3, spin: 12, grow: 0 });
+    fx.burst(p, { n: 4 * s, speed: 4, up: 3, color: 0xfff1a8, size: 0.26, life: 0.7, shape: 'star', additive: false, grav: 5, drag: 2, spin: 8 });
+  },
+  spark(fx, p, s) {
+    for (let i = 0; i < 4 * s; i++) fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.8, y: p.y + (Math.random() - 0.5) * 0.8, z: p.z + (Math.random() - 0.5) * 0.8, color: 0xfff060, size: 1.1, life: 0.16, shape: 'bolt', rot: Math.random() * 6 });
+    fx.burst(p, { n: 10 * s, speed: 9, up: 1, color: 0xbff4ff, size: 0.14, life: 0.25, shape: 'glow', grav: 0, drag: 6 });
+  },
+  stone(fx, p, s) {
+    fx.burst(p, { n: 9 * s, speed: 6, up: 5, color: 0x9a7350, size: 0.24, life: 0.8, shape: 'star', additive: false, grav: 20, drag: 0.5, spin: 16, grow: 0 });
+    fx.burst({ x: p.x, y: p.y - 0.3, z: p.z }, { n: 5 * s, speed: 2.5, up: 1, color: 0xd8c0a0, size: 0.6, life: 0.6, shape: 'puff', additive: false, grav: -1, drag: 4, grow: 1 });
+  },
+  gust(fx, p, s) {
+    for (let i = 0; i < 3; i++) fx.spawn({ ...p, color: 0xe0e8ff, size: (1.2 + i * 0.7) * s, life: 0.25 + i * 0.07, shape: 'ring', grow: 1.6, alpha: 0.7 });
+    fx.burst(p, { n: 6 * s, speed: 5, up: 1.5, color: 0xf2f4ff, size: 0.45, life: 0.45, shape: 'puff', additive: false, grav: 0, drag: 5, grow: 1.2 });
+  },
+};
+
 export class FX {
   constructor(scene, ui, camera) {
     this.add = new Pool(scene, 1400, THREE.AdditiveBlending);
@@ -131,7 +161,8 @@ export class FX {
     }
   }
 
-  hit(p, color = 0xffe070, big = false) {
+  hit(p, color = 0xffe070, big = false, type = null) {
+    if (type && TYPE_SPARKS[type]) TYPE_SPARKS[type](this, p, big ? 1.4 : 1);
     this.spawn({ ...p, color: 0xffffff, size: big ? 2.4 : 1.5, life: 0.14, shape: 'glow', grow: 0.6, alpha: 0.9 });
     // anime impact star
     this.spawn({ ...p, color, size: big ? 2.6 : 1.5, life: big ? 0.2 : 0.13, shape: 'burst', additive: false, rot: Math.random() * 6, grow: 0.35, hold: 0.6 });
@@ -164,6 +195,17 @@ export class FX {
     this.shocks.push({ m, t: 0, life, r });
   }
 
+  // speech bubble that rides above a fighter's head
+  say(f, str, type) {
+    for (const t of this.texts) if (t.follow === f) t.life = Math.min(t.life, t.t + 0.1);
+    const el = document.createElement('div');
+    el.className = 'fxtext say';
+    el.textContent = str;
+    el.style.setProperty('--tc', TYPES[type]?.color || '#fff');
+    this.layer.appendChild(el);
+    this.texts.push({ el, p: new THREE.Vector3(), t: 0, life: 1.5, dx: 0, rot: (Math.random() - 0.5) * 6, follow: f });
+  }
+
   // comic text popping at a world position
   text(p, str, cls = '', life = 0.8) {
     const el = document.createElement('div');
@@ -190,12 +232,22 @@ export class FX {
       const tx = this.texts[i];
       tx.t += dt;
       if (tx.t > tx.life) { tx.el.remove(); this.texts.splice(i, 1); continue; }
+      if (tx.follow) { const h = tx.follow.headPos(); tx.p.set(h.x, h.y + 0.45, h.z); }
       v.copy(tx.p).project(this.camera);
       const k = tx.t / tx.life;
       const pop = k < 0.15 ? 0.4 + (k / 0.15) * 0.9 : k < 0.25 ? 1.3 - (k - 0.15) * 3 : 1;
-      const x = (v.x * 0.5 + 0.5) * W + tx.dx * k, y = (-v.y * 0.5 + 0.5) * H - k * 50;
+      const x = (v.x * 0.5 + 0.5) * W + tx.dx * k, y = (-v.y * 0.5 + 0.5) * H - (tx.follow ? 0 : k * 50);
       tx.el.style.transform = `translate(${x}px, ${y}px) translate(-50%,-50%) rotate(${tx.rot}deg) scale(${pop})`;
       tx.el.style.opacity = k > 0.75 ? (1 - k) / 0.25 : 1;
+      if (tx.follow) {
+        // bubble above the head; in tight close-ups it would leave the screen, so it moves beside the head
+        const side = y < 150;
+        let bx = x, by = y;
+        if (side) { const h = tx.follow.headPos(); v.set(h.x, h.y - 0.45, h.z).project(this.camera); bx = (v.x * 0.5 + 0.5) * W + 150; by = (-v.y * 0.5 + 0.5) * H; }
+        bx = Math.min(W - 110, Math.max(110, bx)); by = Math.max(110, by);
+        tx.el.classList.toggle('side', side);
+        tx.el.style.transform = `translate(${bx}px, ${by}px) translate(-50%,${side ? '-50%' : '-100%'}) rotate(${tx.rot}deg) scale(${Math.min(1, pop)})`;
+      }
     }
   }
 

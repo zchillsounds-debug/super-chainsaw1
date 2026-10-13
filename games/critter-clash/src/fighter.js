@@ -4,6 +4,7 @@ import { Critter } from './critters.js';
 import { COMBO, TYPES } from './data.js';
 import { ARENA_R } from './arena.js';
 import { sfx } from './audio.js';
+import { introAnim, winAnim } from './personality.js';
 
 const TAU = Math.PI * 2;
 const angDiff = (a, b) => { let d = (b - a) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; };
@@ -65,7 +66,7 @@ export class Fighter {
   get actionable() { return ['idle', 'run'].includes(this.state) || (this.state === 'attack' && this.st > this.atkEnd()); }
   get airborne() { return this.y > 0.02; }
 
-  setState(s) { this.state = s; this.st = 0; }
+  setState(s) { this.state = s; this.st = 0; this.fxOnce = null; }
 
   distTo(o) { return Math.hypot(o.x - this.x, o.z - this.z); }
   angleTo(o) { return Math.atan2(o.x - this.x, o.z - this.z); }
@@ -513,15 +514,19 @@ export class Fighter {
         this.battle.fx.spawn({ x: hp.x + Math.cos(a) * 0.5, y: hp.y - 0.15, z: hp.z + Math.sin(a) * 0.5, color: 0xffe14d, size: 0.32, life: 0.4, shape: 'star', additive: false, spin: 6 });
       }
     } else if (S === 'win') {
-      const j = Math.abs(Math.sin(t * 6));
-      P.y = j * 0.5; P.sy = 0.9 + j * 0.2; P.armLz = P.armRz = 2.4; P.ear = -0.3; P.tail = 1.5;
-      P.yaw = Math.sin(t * 3) * 0.3;
-      this.critter.emote('happy', 'open', 0.2);
+      winAnim(this, P, this.st, dt);
+      const cam = this.battle.camera.position;
+      this.turnTo(Math.atan2(cam.x - this.x, cam.z - this.z), 4, dt);
     } else if (S === 'intro') {
-      const k = this.st;
-      P.y = Math.max(0, Math.sin(Math.min(k, 0.6) * Math.PI / 0.6)) * 0.6;
-      P.armLz = P.armRz = k < 0.8 ? 2.2 : 0.4; P.ear = -0.2; P.tail = 1.2;
-      this.critter.emote(k < 1 ? 'happy' : 'angry', k < 1 ? 'open' : 'grin', 0.2);
+      const k = this.st - (this.introDelay || 0) + (this.introK0 || 0);
+      if (k < 0) {
+        const b = Math.sin(t * 5.5);
+        P.sy = 1 + b * 0.035; P.armLx = Math.sin(t * 5.5) * 0.15; P.armRx = -P.armLx;
+      } else introAnim(this, P, k, dt);
+      // play to the camera while it is on us, then square up to the rival
+      const B = this.battle, cam = B.camera.position;
+      const onMe = B.introFocus === this;
+      this.turnTo(onMe ? Math.atan2(cam.x - this.x, cam.z - this.z) : this.angleTo(this.opp), onMe ? 5 : 7, dt);
     } else if (S === 'lose') {
       P.lean = 0.5; P.head = 0.5; P.sy = 0.85; P.ear = 1.5; P.armLz = P.armRz = -0.1;
       this.critter.emote('closed', 'wobbly', 0.2);

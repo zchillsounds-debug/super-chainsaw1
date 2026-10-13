@@ -7,8 +7,10 @@ import { ARENA_R } from './arena.js';
 import { sfx, playMusic } from './audio.js';
 import { Tutorial } from './tutorial.js';
 import { save } from './save.js';
+import { sayLine } from './personality.js';
 
 const ROUND_TIME = 60;
+const INTRO_FIRST = 3.6, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
 
 export class Battle {
   constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null } = {}) {
@@ -63,7 +65,13 @@ export class Battle {
     this.phaseT = 0;
     this.roundDmgTaken = 0;
     p.setState('intro'); c.setState('intro');
-    this.hud.roundIntro(this.round, this.wins, this.round === 1);
+    const first = this.round === 1;
+    p.introDelay = first ? INTRO_FOCUS : 0; c.introDelay = 0;
+    p.introK0 = c.introK0 = first ? 0 : 1.5;
+    this.introFocus = first ? c : null;
+    this.introSaid = 0;
+    this.camFocusWas = undefined;
+    this.hud.roundIntro(this.round, this.wins, first);
     if (this.round === 1) playMusic('battle');
   }
 
@@ -90,7 +98,7 @@ export class Battle {
     const p = def.chestPos();
     p.x -= h.dirX * 0.2; p.z -= h.dirZ * 0.2;
     const tcol = h.type && h.type !== 'normal' ? TYPES[h.type].glow : 0xffe070;
-    this.fx.hit(p, tcol, heavy);
+    this.fx.hit(p, tcol, heavy, h.type && h.type !== 'normal' ? h.type : heavy ? att.type : null);
     sfx.hit(heavy);
     if (heavy) { sfx.bonk(); this.game.impactFrame(0.07); }
     // combo counter (player only)
@@ -100,7 +108,10 @@ export class Battle {
       this.stats.maxCombo = Math.max(this.stats.maxCombo, this.comboCount);
       this.stats.dmgDealt += dmg;
       this.hud.combo(this.comboCount);
+      const cc = { 5: ['NICE!', 1], 8: ['GREAT COMBO!', 2], 12: ['UNSTOPPABLE!', 3] }[this.comboCount];
+      if (cc) this.hud.callout(cc[0], 0, cc[1]);
     }
+    if (!this.firstHit) { this.firstHit = true; this.hud.callout('FIRST STRIKE!', att.side, att === this.player ? 1 : 0); }
     // comic text
     const words = heavy ? ['BONK!', 'POW!', 'WHAM!', 'KAPOW!', 'BOOF!'] : ['bap!', 'pok!', 'tap!', 'bop!'];
     if (heavy || Math.random() < 0.4) this.fx.text({ x: p.x, y: p.y + 0.7, z: p.z }, words[Math.floor(Math.random() * words.length)], heavy ? 'big' : '', 0.7);
@@ -497,10 +508,13 @@ export class Battle {
   endRound() {
     const w = this.koWinner, l = this.koLoser;
     this.wins[w.side]++;
+    if (w === this.player && this.roundDmgTaken === 0) this.hud.callout('PERFECT!', 0, 3);
+    else if (w.alive && w.hp / w.maxHp < 0.15) this.hud.callout('CLUTCH!', w.side, 2);
     this.hud.setWins(this.wins);
     w.setState('win'); w.vx = w.vz = 0;
     if (l.alive) { l.setState('lose'); l.vx = l.vz = 0; }
     sfx.voice(w.def.voice, 'win');
+    sayLine(w, 'win');
     this.phase = 'winpose'; this.phaseT = 0;
     if (this.wins[w.side] >= this.winsNeeded) {
       this.hud.announce(w === this.player ? 'YOU WIN!' : 'YOU LOSE...', w === this.player ? 'win' : 'lose');
@@ -540,7 +554,12 @@ export class Battle {
 
     const [p, c] = this.fighters;
     if (this.phase === 'intro') {
-      if (this.phaseT > (this.round === 1 ? 2.2 : 0.9)) { this.phase = 'countdown'; this.phaseT = 0; this.hud.countdown(); p.setState('idle'); c.setState('idle'); }
+      if (this.round === 1) {
+        this.introFocus = this.phaseT < INTRO_FOCUS ? c : this.phaseT < INTRO_FOCUS * 2 ? p : null;
+        if (this.introSaid === 0 && this.phaseT > 0.15) { this.introSaid = 1; sayLine(c, 'intro'); this.hud.nameCard(c, this.trainer); }
+        if (this.introSaid === 1 && this.phaseT > INTRO_FOCUS + 0.15) { this.introSaid = 2; sayLine(p, 'intro'); this.hud.nameCard(p, null); }
+      }
+      if (this.phaseT > (this.round === 1 ? INTRO_FIRST : 0.9)) { this.introFocus = null; this.phase = 'countdown'; this.phaseT = 0; this.hud.countdown(); p.setState('idle'); c.setState('idle'); }
     } else if (this.phase === 'countdown') {
       if (this.phaseT > 1.9) { this.phase = 'fight'; this.phaseT = 0; }
     } else if (this.phase === 'fight') {
@@ -594,16 +613,19 @@ export class Battle {
     let look, pos, fov = 42;
     if (this.camOverride) ({ look, pos, fov } = this.camOverride);
     else if (this.phase === 'intro') {
-      // swing past the opponent then the player
-      const k = Math.min(1, this.phaseT / (this.round === 1 ? 2.2 : 0.9));
-      const f = k < 0.5 && this.round === 1 ? c : p;
-      const mid = new THREE.Vector3((p.x + c.x) / 2, 1, (p.z + c.z) / 2);
-      if (this.round === 1 && k < 0.85) {
-        look = new THREE.Vector3(f.x, 0.9, f.z);
+      // close-up on the rival, then on us, then pull out wide
+      const f = this.introFocus;
+      if (f !== this.camFocusWas) { this.camFocusWas = f; if (f) this.camSnap = true; }
+      if (f) {
         const side = f === c ? -1 : 1;
-        pos = new THREE.Vector3(f.x + side * 2.6, 1.3, f.z + 3.4);
-        fov = 36;
-      } else { look = mid; pos = new THREE.Vector3(mid.x, 6, mid.z + 15); }
+        const hy = f.critter.P.y * 0.8;
+        look = new THREE.Vector3(f.x, 1.1 + hy, f.z);
+        pos = new THREE.Vector3(f.x + side * 2.8, 1.4 + hy, f.z + 4.1);
+        fov = 42;
+      } else {
+        const mid = new THREE.Vector3((p.x + c.x) / 2, 1, (p.z + c.z) / 2);
+        look = mid; pos = new THREE.Vector3(mid.x, 6, mid.z + 15);
+      }
     } else if ((this.phase === 'ko' || this.phase === 'winpose') && this.koWinner) {
       const f = this.phase === 'ko' ? this.koLoser : this.koWinner;
       look = new THREE.Vector3(f.x, f.y + 0.8, f.z);
@@ -627,6 +649,7 @@ export class Battle {
       if (pr > lim) { const k = lim / pr; pos.x *= k; pos.z *= k; pos.y += (pr - lim) * 0.45; }
     }
     const rate = this.camOverride ? 10 : this.phase === 'intro' ? 3 : 4;
+    if (this.camSnap) { this.camSnap = false; cs.pos.copy(pos); cs.look.copy(look); cs.fov = fov; }
     cs.pos.x = THREE.MathUtils.damp(cs.pos.x, pos.x, rate, dt);
     cs.pos.y = THREE.MathUtils.damp(cs.pos.y, pos.y, rate, dt);
     cs.pos.z = THREE.MathUtils.damp(cs.pos.z, pos.z, rate, dt);
