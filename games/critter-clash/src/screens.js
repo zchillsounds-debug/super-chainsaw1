@@ -1,5 +1,5 @@
 // Title, tournament cups/ladder, critter select, VS splash, results and pause overlays.
-import { CRITTERS, TYPES, CUPS, SHINY, BADGES, MODS, skinned, dailyChallenge } from './data.js';
+import { CRITTERS, TYPES, CUPS, SHINY, BADGES, MODS, STARTERS, skinned, dailyChallenge } from './data.js';
 import { sfx, playMusic } from './audio.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { openSettings } from './settings.js';
@@ -59,6 +59,7 @@ export class Screens {
   // ---------- title ----------
   title() {
     const g = this.game;
+    if (!save.trainer?.name && !g.autoplay) { this.welcome(); return; }
     g.endBattle();
     g.setArena('meadow');
     this.mode = 'title';
@@ -74,7 +75,7 @@ export class Screens {
           <div class="logo-sub">Tiny critters. Huge bonks.</div>
         </div>
         <div class="title-menu"></div>
-        <div class="title-foot"><span>Team ${save.unlocked.length}/${CRITTERS.length}</span><span>🏆 ${trophies}/${CUPS.length}</span></div>
+        <div class="title-foot"><span>🧢 ${save.trainer.name}</span><span>Team ${save.unlocked.length}/${CRITTERS.length}</span><span>🏆 ${trophies}/${CUPS.length}</span></div>
       </div>`;
     const m = this.root.querySelector('.title-menu');
     m.appendChild(this.btn('Tournament', 'primary big', () => this.cups()));
@@ -89,6 +90,79 @@ export class Screens {
     gear.setAttribute('aria-label', 'Settings');
     this.root.querySelector('.title-screen').appendChild(gear);
     playMusic('menu');
+  }
+
+  // ---------- first launch: the professor, a trainer name and a partner ----------
+  welcome() {
+    const g = this.game;
+    g.endBattle();
+    g.setArena('meadow');
+    this.mode = 'title';
+    this.backFn = null;
+    const starters = STARTERS.map(byId);
+    g.setShowcase(starters, 'line');
+    playMusic('menu');
+    this.root.innerHTML = `
+      <div class="welcome">
+        <div class="prof">
+          <div class="prof-icon"><svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg></div>
+          <div class="prof-box"><small>Professor Pecan</small><p class="prof-text"></p><div class="prof-ctrl"></div></div>
+        </div>
+      </div>`;
+    const text = this.root.querySelector('.prof-text'), ctrl = this.root.querySelector('.prof-ctrl');
+    const say = (msg, buttons) => {
+      text.textContent = '';
+      ctrl.innerHTML = '';
+      let i = 0;
+      clearInterval(this._typeT);
+      this._typeT = setInterval(() => {
+        text.textContent = msg.slice(0, ++i);
+        if (i % 3 === 0) sfx.ui('move');
+        if (i >= msg.length) { clearInterval(this._typeT); buttons(); }
+      }, 22);
+      text.onclick = () => { if (i < msg.length) { i = msg.length - 1; } };
+    };
+    const next = (label, fn) => ctrl.appendChild(this.btn(label, 'primary', fn));
+    let name = '';
+    const askName = () => say("First things first. What's your name, trainer?", () => {
+      const inp = document.createElement('input');
+      inp.className = 'name-in'; inp.maxLength = 12; inp.placeholder = 'Your name'; inp.autocomplete = 'off';
+      ctrl.appendChild(inp);
+      const ok = () => { name = inp.value.trim().slice(0, 12) || 'Sam'; inp.blur(); pickPartner(); };
+      inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') ok(); });
+      next('OK!', ok);
+      setTimeout(() => inp.focus(), 50);
+    });
+    const pickPartner = () => say(`Nice to meet you, ${name}! These three are looking for a partner. Who will it be?`, () => {
+      const row = document.createElement('div');
+      row.className = 'partner-row';
+      starters.forEach((c, k) => {
+        const b = document.createElement('button');
+        b.className = 'pcard';
+        b.style.setProperty('--tc', TYPES[c.type].color);
+        b.innerHTML = `<img src="${g.portrait(c)}" alt=""><b>${c.name}</b><small>${TYPES[c.type].name} type</small>`;
+        b.addEventListener('click', () => {
+          sfx.voice(c.voice, 'win');
+          g.showcase.forEach((sc, j) => { sc.cheer = j === k ? 1.5 : 0; });
+          confirm(c);
+        });
+        row.appendChild(b);
+      });
+      ctrl.appendChild(row);
+    });
+    const confirm = (c) => say(`${c.name}! ${c.blurb} Is that your partner?`, () => {
+      next('Yes!', () => done(c));
+      ctrl.appendChild(this.btn('Let me think', 'ghost', pickPartner));
+    });
+    const done = (c) => {
+      save.trainer = { name, partner: c.id };
+      save.critters[c.id].level = Math.max(save.critters[c.id].level, 2);
+      persist();
+      this.sel = CRITTERS.indexOf(c);
+      sfx.jingle(3); sfx.cheer(1);
+      say(`${c.name} is now your partner! The other two want to tag along too. Now go win some trophies, ${name}!`, () => next("Let's go!", () => this.title()));
+    };
+    say('Welcome to Critter Clash! I study the bonkiest critters in the world, and I could use a trainer like you.', () => next('Next', askName));
   }
 
   howTo() {
@@ -190,7 +264,7 @@ export class Screens {
       const b = document.createElement('button');
       b.className = 'rcard' + (locked ? ' locked' : '');
       b.style.setProperty('--tc', TYPES[c.type].color);
-      b.innerHTML = `<img src="${g.portrait(c)}" alt=""><span>${locked ? '???' : c.name}</span>${locked ? '<em>🔒</em>' : `<i>Lv${save.critters[c.id].level}</i>`}`;
+      b.innerHTML = `<img src="${g.portrait(c)}" alt=""><span>${save.trainer?.partner === c.id ? '♥ ' : ''}${locked ? '???' : c.name}</span>${locked ? '<em>🔒</em>' : `<i>Lv${save.critters[c.id].level}</i>`}`;
       b.addEventListener('click', () => {
         if (locked) { sfx.ui('back'); this.toast(unlockHint(c.id)); return; }
         this.pick(i);

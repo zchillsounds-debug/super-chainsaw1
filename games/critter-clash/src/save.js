@@ -10,6 +10,7 @@ const fresh = () => ({
   settings: { music: 0.55, sfx: 0.9, vibrate: true, quality: 'auto', reduceFlash: false },
   stats: { battles: 0, wins: 0, bestCombo: 0, perfects: 0, supers: 0 },
   shinies: [],
+  trainer: { name: '', partner: null },
   skins: {},
 });
 
@@ -21,7 +22,7 @@ function load() {
   const f = fresh();
   if (!s) return f;
   // merge so new critters/settings appear in old saves
-  return { ...f, ...s, critters: { ...f.critters, ...s.critters }, settings: { ...f.settings, ...s.settings }, stats: { ...f.stats, ...s.stats } };
+  return { ...f, ...s, critters: { ...f.critters, ...s.critters }, settings: { ...f.settings, ...s.settings }, stats: { ...f.stats, ...s.stats }, trainer: { ...f.trainer, ...s.trainer } };
 }
 
 export function persist() {
