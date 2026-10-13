@@ -278,6 +278,7 @@ export class Screens {
     this.free = free;
     if (!playable(CRITTERS[this.sel])) this.sel = CRITTERS.findIndex((c) => save.unlocked.includes(c.id));
     const cup = this.ctx.kind === 'cup';
+    if (cup && !g.autoplay) g.setArena(this.ctx.cup.arena);
     const chal = this.ctx.kind === 'survival' || this.ctx.kind === 'daily' || this.ctx.kind === 'training';
     const badge = cup ? `<div class="cup-badge" style="--tc:${this.ctx.cup.color}">${this.ctx.cup.name}</div>`
       : chal ? `<div class="cup-badge" style="--tc:${{ daily: '#3dc8ff', survival: '#ff7a3d', training: '#7ad36b' }[this.ctx.kind]}">${{ daily: 'Daily Challenge', survival: 'Survival', training: 'Training' }[this.ctx.kind]}</div>` : '<div class="diff"></div>';
@@ -614,6 +615,7 @@ export class Screens {
     this.mode = 'ladder';
     const m = cup.matches[idx];
     const foe = skinned(byId(m.critter), m.skin);
+    if (!g.autoplay) g.setArena(cup.arena); // a preview of where the match will be fought
     g.setShowcase([foe], 'single');
     g.showcase[0].cheer = 1;
     this.root.innerHTML = `

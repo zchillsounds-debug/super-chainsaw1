@@ -342,7 +342,7 @@ body.portrait.is-touch.in-battle:not(.at-results) .rotate-hint { display: grid; 
 .ladder { display: flex; align-items: center; justify-content: flex-start; margin: 14px 0 0 6px; max-width: 46vw; }
 .rung { display: flex; flex-direction: column; align-items: center; width: 70px; position: relative; opacity: .65; }
 .rung img { width: 54px; height: 54px; border-radius: 50%; background: #efe8fb; box-shadow: inset 0 0 0 3px var(--ink), 0 3px 0 rgba(0,0,0,.25); }
-.rung span { font-size: 11px; color: #fff; text-shadow: 0 1px 0 var(--ink); margin-top: 3px; white-space: nowrap; }
+.rung span { font-size: 11px; color: #fff; background: rgba(27,17,64,.72); padding: 1px 7px; border-radius: 99px; margin-top: 3px; white-space: nowrap; }
 .rung b { position: absolute; top: -2px; right: 6px; background: #3fd36a; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; box-shadow: inset 0 0 0 2px var(--ink); }
 .rung.beat { opacity: 1; }
 .rung.now { opacity: 1; transform: scale(1.18); }
