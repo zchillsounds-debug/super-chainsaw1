@@ -17,7 +17,7 @@ export const ARENAS = {
   beach: {
     name: 'Seashell Bay Arena',
     skyTop: 0x4a6ad8, skyHorizon: 0xffc9a0, sun: 0xffe0b8, sunDir: [0.6, 0.45, -0.5],
-    hemiSky: 0xffe4d0, hemiGround: 0x9a7cc8, fieldA: '#f6dfa6', fieldB: '#efd294', line: '#ffffff',
+    hemiSky: 0xffe4d0, hemiGround: 0x9a7cc8, fieldA: '#e9c784', fieldB: '#dfba74', line: '#ffffff', floor: 'sand',
     wallA: 0x2fb8d8, wallB: 0xfff4dc, ground: 0xf3d9a0, fog: 0xffd2b0,
     accent: 0xff7a5a, seat: [0x2fb8d8, 0xff7a5a, 0xffe066, 0xffffff],
     hill: 0xe8c890, trunk: 0x9a6a40, leaves: [0x3cb86a, 0x52c870, 0x2f9a58], scenery: 'palms', cloud: 0xfff0e8, cloudShade: 0x9a6a8a, sunI: 2.2,
@@ -26,7 +26,7 @@ export const ARENAS = {
   volcano: {
     name: 'Magma Crater Coliseum',
     skyTop: 0x1a0f3a, skyHorizon: 0xff7a3a, sun: 0xffb070, sunDir: [-0.3, 0.55, -0.7],
-    hemiSky: 0xffa070, hemiGround: 0x6a3a8a, fieldA: '#7a6a8a', fieldB: '#6e5e7e', line: '#ffd06a',
+    hemiSky: 0xffa070, hemiGround: 0x6a3a8a, fieldA: '#5a4c66', fieldB: '#52465e', line: '#ffd06a', floor: 'basalt',
     wallA: 0xff5a2a, wallB: 0x3a2a4a, ground: 0x4a3a52, fog: 0x5a2a4a,
     accent: 0xff7a2a, seat: [0xff5a2a, 0xffc940, 0x8a5aff, 0x3a2a4a],
     hill: 0x3a2a40, trunk: 0x3a2a30, leaves: [0x5a4a5a, 0x6a5a6a, 0x4a3a4a], scenery: 'rocks', cloud: 0x6a4a6a, cloudShade: 0x2a1a3a, sunI: 1.8,
@@ -112,18 +112,67 @@ export class Arena {
 
     // field with mowed stripes, rings and a paw emblem
     const fieldTex = canvasTex(1024, 1024, (c, w, h) => {
-      for (let i = 0; i < 16; i++) { c.fillStyle = i % 2 ? A.fieldA : A.fieldB; c.fillRect(i * w / 16, 0, w / 16 + 1, h); }
-      // subtle checker
-      c.globalAlpha = 0.06; c.fillStyle = '#000';
-      for (let i = 0; i < 16; i++) if (i % 2) c.fillRect(0, i * h / 16, w, h / 16);
-      // painterly grass flecks
-      for (let i = 0; i < 9000; i++) {
-        const x = Math.random() * w, y = Math.random() * h;
-        c.globalAlpha = 0.04 + Math.random() * 0.07;
-        c.fillStyle = Math.random() < 0.5 ? '#ffffff' : '#000000';
-        c.fillRect(x, y, 1.5, 3 + Math.random() * 4);
+      if (A.floor === 'sand') {
+        c.fillStyle = A.fieldA; c.fillRect(0, 0, w, h);
+        // wind ripples
+        c.lineWidth = 5;
+        for (let y = -40; y < h + 40; y += 26) {
+          c.strokeStyle = (y / 26) % 2 ? 'rgba(160,110,50,0.18)' : 'rgba(255,245,215,0.22)';
+          c.beginPath();
+          for (let x = 0; x <= w; x += 16) c.lineTo(x, y + Math.sin(x * 0.012 + y * 0.05) * 14);
+          c.stroke();
+        }
+        for (let i = 0; i < 7000; i++) {
+          c.globalAlpha = 0.08 + Math.random() * 0.1;
+          c.fillStyle = Math.random() < 0.5 ? '#fff6dc' : '#9a6a38';
+          c.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+        }
+        c.globalAlpha = 1;
+        // shells and starfish scattered near the rim
+        for (let i = 0; i < 26; i++) {
+          const a = Math.random() * Math.PI * 2, r = w * (0.36 + Math.random() * 0.1);
+          const x = w / 2 + Math.cos(a) * r, y = h / 2 + Math.sin(a) * r;
+          c.save(); c.translate(x, y); c.rotate(Math.random() * 6);
+          if (i % 2) {
+            c.fillStyle = ['#ff8a6a', '#ffb070', '#ff6a8a'][i % 3];
+            c.beginPath();
+            for (let k = 0; k < 10; k++) { const rr = k % 2 ? 6 : 15; c.lineTo(Math.cos(k * Math.PI / 5) * rr, Math.sin(k * Math.PI / 5) * rr); }
+            c.fill();
+          } else {
+            c.fillStyle = '#fff1e0'; c.beginPath(); c.moveTo(0, 10); c.arc(0, 0, 12, Math.PI * 0.15, Math.PI * 0.85, true); c.closePath(); c.fill();
+            c.strokeStyle = '#e0b090'; c.lineWidth = 2;
+            for (let k = -2; k <= 2; k++) { c.beginPath(); c.moveTo(0, 10); c.lineTo(k * 5, -9); c.stroke(); }
+          }
+          c.restore();
+        }
+      } else if (A.floor === 'basalt') {
+        c.fillStyle = A.fieldB; c.fillRect(0, 0, w, h);
+        // hexagonal basalt columns
+        const R = 46, hx = R * Math.sqrt(3);
+        for (let row = -1; row < h / (R * 1.5) + 1; row++) for (let col = -1; col < w / hx + 1; col++) {
+          const x = col * hx + (row % 2 ? hx / 2 : 0), y = row * R * 1.5;
+          const l = 0.9 + Math.random() * 0.2;
+          c.fillStyle = `rgba(${Math.round(90 * l)},${Math.round(76 * l)},${Math.round(104 * l)},1)`;
+          c.beginPath();
+          for (let k = 0; k < 6; k++) c.lineTo(x + Math.cos(k * Math.PI / 3 + Math.PI / 6) * (R - 3), y + Math.sin(k * Math.PI / 3 + Math.PI / 6) * (R - 3));
+          c.fill();
+          c.fillStyle = 'rgba(255,255,255,0.05)';
+          c.beginPath(); c.ellipse(x - 8, y - 10, R * 0.5, R * 0.3, -0.4, 0, Math.PI * 2); c.fill();
+        }
+      } else {
+        for (let i = 0; i < 16; i++) { c.fillStyle = i % 2 ? A.fieldA : A.fieldB; c.fillRect(i * w / 16, 0, w / 16 + 1, h); }
+        // subtle checker
+        c.globalAlpha = 0.06; c.fillStyle = '#000';
+        for (let i = 0; i < 16; i++) if (i % 2) c.fillRect(0, i * h / 16, w, h / 16);
+        // painterly grass flecks
+        for (let i = 0; i < 9000; i++) {
+          const x = Math.random() * w, y = Math.random() * h;
+          c.globalAlpha = 0.04 + Math.random() * 0.07;
+          c.fillStyle = Math.random() < 0.5 ? '#ffffff' : '#000000';
+          c.fillRect(x, y, 1.5, 3 + Math.random() * 4);
+        }
+        c.globalAlpha = 1;
       }
-      c.globalAlpha = 1;
       const cx = w / 2, cy = h / 2;
       c.strokeStyle = A.line; c.lineWidth = 12;
       c.beginPath(); c.arc(cx, cy, w * 0.47, 0, Math.PI * 2); c.stroke();
@@ -144,6 +193,26 @@ export class Arena {
     field.rotation.x = -Math.PI / 2;
     field.receiveShadow = true;
     G.add(field);
+
+    // volcano: glowing lava seams over the basalt, pulsing gently (blooms nicely)
+    if (A.floor === 'basalt') {
+      const crackTex = canvasTex(1024, 1024, (c, w, h) => {
+        c.lineCap = 'round'; c.lineJoin = 'round';
+        for (let i = 0; i < 18; i++) {
+          let x = Math.random() * w, y = Math.random() * h, a = Math.random() * 6;
+          const pts = [[x, y]];
+          for (let k = 0; k < 9; k++) { a += (Math.random() - 0.5) * 1.4; x += Math.cos(a) * 34; y += Math.sin(a) * 34; pts.push([x, y]); }
+          for (const [lw, col] of [[14, 'rgba(255,90,20,0.35)'], [6, 'rgba(255,140,40,0.9)'], [2.5, 'rgba(255,230,140,1)']]) {
+            c.strokeStyle = col; c.lineWidth = lw;
+            c.beginPath(); pts.forEach(([px, py]) => c.lineTo(px, py)); c.stroke();
+          }
+        }
+      });
+      const cracks = new THREE.Mesh(new THREE.CircleGeometry(ARENA_R + 0.5, 72), new THREE.MeshBasicMaterial({ map: crackTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+      cracks.rotation.x = -Math.PI / 2; cracks.position.y = 0.012;
+      G.add(cracks);
+      this.cracks = cracks;
+    }
 
     // dirt ring between field and wall
     const ring = new THREE.Mesh(new THREE.RingGeometry(ARENA_R + 0.5, ARENA_R + 1.4, 72), toon(0xd9b07a, { env: true, rim: 0 }));
@@ -473,6 +542,7 @@ export class Arena {
   }
 
   update(dt, t) {
+    if (this.cracks) this.cracks.material.opacity = 0.75 + Math.sin(t * 1.7) * 0.2;
     this.excite = Math.max(0.15, this.excite - dt * 0.25);
     this.updateCrowd(t);
     for (const fl of this.flags) {
