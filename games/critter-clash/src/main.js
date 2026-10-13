@@ -340,7 +340,13 @@ class Game {
     if (this.photo) this.photo.update();
     if (!this.paused) {
       if (this.battle) this.battle.update(rawDt);
-      else this.screens.update(rawDt);
+      else {
+        this.screens.update(rawDt);
+        // menus: same soft camera-side fill the battle uses in backlit arenas
+        const fill = this.arena.fill, cp = this.camera.position;
+        fill.position.set(cp.x, cp.y + 3, cp.z); fill.target.position.set(0, 0.8, 0);
+        fill.intensity = (this.arena.A.fillI || 0) + 0.15;
+      }
       this.updateShowcase(rawDt);
       this.arena.update(rawDt, this.t);
       this.fx.update(rawDt);

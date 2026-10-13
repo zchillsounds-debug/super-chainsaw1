@@ -63,7 +63,9 @@ export class Screens {
     const g = this.game;
     if (!save.trainer?.name && !g.autoplay) { this.welcome(); return; }
     g.endBattle();
-    g.setArena('meadow');
+    // the title backdrop moves to the newest stadium the player has reached
+    const open = CUPS.filter((c) => !c.requires || save.cups[c.requires]);
+    g.setArena(g.autoplay ? 'meadow' : open[open.length - 1].arena);
     this.mode = 'title';
     this.t = 0;
     this.backFn = null;
@@ -98,7 +100,9 @@ export class Screens {
   welcome() {
     const g = this.game;
     g.endBattle();
-    g.setArena('meadow');
+    // the title backdrop moves to the newest stadium the player has reached
+    const open = CUPS.filter((c) => !c.requires || save.cups[c.requires]);
+    g.setArena(g.autoplay ? 'meadow' : open[open.length - 1].arena);
     this.mode = 'title';
     this.backFn = null;
     const starters = STARTERS.map(byId);

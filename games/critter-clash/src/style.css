@@ -443,7 +443,7 @@ body.portrait .cup { flex: none; width: 100%; }
 /* ---------- Critterdex ---------- */
 .dex-screen { position: absolute; inset: 0; padding: calc(10px + var(--sat)) calc(14px + var(--sar)) calc(10px + var(--sab)) calc(14px + var(--sal)); }
 .dex-count { font-family: var(--body); font-size: .5em; -webkit-text-stroke: 3px var(--ink); margin-left: 6px; opacity: .9; }
-.dex-list { position: absolute; left: calc(14px + var(--sal)); top: calc(62px + var(--sat)); display: grid; grid-template-columns: repeat(3, 62px); gap: 6px; z-index: 2; }
+.dex-list { position: absolute; left: calc(14px + var(--sal)); top: calc(62px + var(--sat)); display: grid; grid-template-columns: repeat(4, 56px); gap: 5px; z-index: 2; }
 .dcard { position: relative; padding: 4px 4px 5px; border-radius: 14px; background: rgba(255,255,255,.88); color: var(--ink); box-shadow: 0 4px 0 rgba(0,0,0,.2); transition: transform .15s; }
 .dcard .pic { border-radius: 10px; background: radial-gradient(circle at 50% 40%, #fff, var(--tc)); }
 .dcard img { width: 100%; aspect-ratio: 1; display: block; }
