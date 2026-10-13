@@ -9,7 +9,7 @@ export const ARENAS = {
   meadow: {
     name: 'Sunny Meadow Stadium',
     skyTop: 0x2f7fe8, skyHorizon: 0xbfe8ff, sun: 0xfff2d8, sunDir: [-0.5, 0.8, 0.35],
-    hemiSky: 0xcfe8ff, hemiGround: 0x6fa860, fieldA: '#6cc84a', fieldB: '#5cb842', line: '#ffffff',
+    hemiSky: 0xcfe8ff, hemiGround: 0x9a7cc8, fieldA: '#6cc84a', fieldB: '#5cb842', line: '#ffffff',
     wallA: 0xff5a6e, wallB: 0xffffff, ground: 0x7ccf5a, fog: 0xbfe8ff,
     accent: 0xffc940, seat: [0x3d7bff, 0xff5a6e, 0xffc940, 0x4fd38a],
   },
@@ -72,6 +72,7 @@ export class Arena {
 
     // lights
     this.hemi = new THREE.HemisphereLight(A.hemiSky, A.hemiGround, 1.25);
+    // lavender bounce reads as an anime shadow tint on the critters
     G.add(this.hemi);
     const sun = this.sun = new THREE.DirectionalLight(A.sun, 2.4);
     sun.position.set(...A.sunDir).multiplyScalar(30);
@@ -96,6 +97,13 @@ export class Arena {
       // subtle checker
       c.globalAlpha = 0.06; c.fillStyle = '#000';
       for (let i = 0; i < 16; i++) if (i % 2) c.fillRect(0, i * h / 16, w, h / 16);
+      // painterly grass flecks
+      for (let i = 0; i < 9000; i++) {
+        const x = Math.random() * w, y = Math.random() * h;
+        c.globalAlpha = 0.08 + Math.random() * 0.12;
+        c.fillStyle = Math.random() < 0.5 ? '#9be86a' : '#2f8a3a';
+        c.fillRect(x, y, 1.5, 3 + Math.random() * 4);
+      }
       c.globalAlpha = 1;
       const cx = w / 2, cy = h / 2;
       c.strokeStyle = A.line; c.lineWidth = 12;
@@ -156,7 +164,20 @@ export class Arena {
     prof.push(new THREE.Vector2(rOut, 0.6 + (tiers - 1) * 0.75), new THREE.Vector2(rOut, 0));
     // lathe needs points in order; reverse so faces point outward/up
     const standGeo = new THREE.LatheGeometry(prof.reverse(), 72, Math.PI * 0.17, Math.PI * 1.66);
-    const standMat = toon(0x8f7fd0, { env: true, rim: 0, side: THREE.DoubleSide });
+    {
+      // seat rows: alternate the seat colours by tier, risers stay pale
+      const pos = standGeo.attributes.position, cols = new Float32Array(pos.count * 3);
+      const c = new THREE.Color();
+      for (let i = 0; i < pos.count; i++) {
+        const r = Math.hypot(pos.getX(i), pos.getZ(i)), y = pos.getY(i);
+        const t = Math.max(0, Math.min(tiers - 1, Math.floor((r - r0 + 0.3) / 1.25)));
+        c.setHex(A.seat[t % A.seat.length]).lerp(new THREE.Color(0xffffff), 0.25);
+        if (y < 0.3) c.setHex(0x8f7fd0);
+        cols.set([c.r, c.g, c.b], i * 3);
+      }
+      standGeo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+    }
+    const standMat = toon(0xffffff, { env: true, rim: 0, side: THREE.DoubleSide, vertexColors: true });
     const stands = new THREE.Mesh(standGeo, standMat);
     stands.receiveShadow = true;
     // the gap in the stands (theta ~ 0, +z) is where the camera sits
@@ -176,6 +197,7 @@ export class Arena {
     const earL = new THREE.SphereGeometry(0.1, 6, 6); earL.translate(-0.17, 1.28, 0);
     const earR = earL.clone(); earR.translate(0.34, 0, 0);
     const crowdGeo = mergeGeometries([body, head, earL, earR]);
+    crowdGeo.scale(0.85, 0.85, 0.85);
     const crowdMat = toon(0xffffff, { env: true, rim: 0.4 });
     const fans = [];
     for (let t = 0; t < tiers; t++) {
@@ -245,31 +267,78 @@ export class Arena {
       G.add(fl);
     }
 
-    // scenery: rolling hills and puffy toon trees
-    const hillMat = toon(0x6fbf55, { env: true, rim: 0 });
+    // scenery: rolling hills and puffy toon trees, merged into a handful of draws
+    const hillGeos = [];
     for (let i = 0; i < 14; i++) {
       const a = (i / 14) * Math.PI * 2 + rand() * 0.3;
       const r = 120 + rand() * 60;
-      const h = new THREE.Mesh(new THREE.SphereGeometry(30 + rand() * 25, 20, 12), hillMat);
-      h.scale.set(1.6, 0.5 + rand() * 0.4, 1.2);
-      h.position.set(Math.cos(a) * r, -6, Math.sin(a) * r);
-      G.add(h);
+      const h = new THREE.SphereGeometry(30 + rand() * 25, 20, 12);
+      h.scale(1.6, 0.5 + rand() * 0.4, 1.2);
+      h.translate(Math.cos(a) * r, -6, Math.sin(a) * r);
+      hillGeos.push(h);
     }
-    const trunkMat = toon(0x8a5a3a, { env: true, rim: 0 });
-    const leafMats = [toon(0x47b04a, { env: true, rim: 0.3 }), toon(0x5cc85a, { env: true, rim: 0.3 }), toon(0x3a9a48, { env: true, rim: 0.3 })];
-    const treeTop = mergeGeometries([0, 1, 2].map((k) => { const s = new THREE.SphereGeometry(1.6 - k * 0.3, 12, 10); s.translate((k - 1) * 0.9, 3.2 + (k % 2) * 0.6, 0); return s; }));
+    G.add(new THREE.Mesh(mergeGeometries(hillGeos), toon(0x6fbf55, { env: true, rim: 0 })));
+    const trunks = [], tops = [[], [], []];
+    const m4 = new THREE.Matrix4(), q4 = new THREE.Quaternion(), v4 = new THREE.Vector3(), s4 = new THREE.Vector3();
     for (let i = 0; i < 46; i++) {
       const a = rand() * Math.PI * 2;
       const r = 34 + rand() * 40;
-      const t = new THREE.Group();
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.4, 2.6, 6), trunkMat);
-      trunk.position.y = 1.3;
-      const top = inked(treeTop, leafMats[i % 3], 0.06);
-      t.add(trunk, top);
-      t.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
-      t.scale.setScalar(1.2 + rand() * 1.4);
-      t.rotation.y = rand() * 6;
-      G.add(t);
+      v4.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+      q4.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rand() * 6);
+      s4.setScalar(1.2 + rand() * 1.4);
+      m4.compose(v4, q4, s4);
+      const tr = new THREE.CylinderGeometry(0.25, 0.4, 2.6, 6); tr.translate(0, 1.3, 0); tr.applyMatrix4(m4);
+      trunks.push(tr);
+      for (let k = 0; k < 3; k++) {
+        const sp = new THREE.SphereGeometry(1.6 - k * 0.3, 12, 10);
+        sp.translate((k - 1) * 0.9, 3.2 + (k % 2) * 0.6, 0);
+        sp.applyMatrix4(m4);
+        tops[i % 3].push(sp);
+      }
+    }
+    G.add(new THREE.Mesh(mergeGeometries(trunks), toon(0x8a5a3a, { env: true, rim: 0 })));
+    [0x47b04a, 0x5cc85a, 0x3a9a48].forEach((c, k) => G.add(inked(mergeGeometries(tops[k]), toon(c, { env: true, rim: 0.3 }), 0.06)));
+
+    // jumbotron above the far stands
+    this.screenCanvas = document.createElement('canvas');
+    this.screenCanvas.width = 1024; this.screenCanvas.height = 384;
+    this.screenTex = new THREE.CanvasTexture(this.screenCanvas);
+    this.screenTex.colorSpace = THREE.SRGBColorSpace;
+    const scr = new THREE.Group();
+    const frame = inked(new THREE.BoxGeometry(13.6, 5.4, 0.6), toon(0x2a2050, { env: true, rim: 0.2 }), 0.06);
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(12.8, 4.8), new THREE.MeshBasicMaterial({ map: this.screenTex, toneMapped: false }));
+    panel.position.z = 0.31;
+    scr.add(frame, panel);
+    for (const sx of [-4, 4]) {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 8, 8), toon(0xdedbe8, { env: true, rim: 0 }));
+      leg.position.set(sx, -6, -0.2);
+      scr.add(leg);
+    }
+    const rScr = r0 + tiers * 1.25 + 1.8;
+    scr.position.set(0, 9.8, -rScr);
+    G.add(scr);
+    this.drawScreen();
+
+    // soft volumetric beams from the floodlights
+    const beamMat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+      uniforms: { uCol: { value: new THREE.Color(0xfff4d0) } },
+      vertexShader: 'varying float vY; varying vec3 vN; varying vec3 vV; void main(){ vY = uv.y; vec4 mv = modelViewMatrix * vec4(position,1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }',
+      fragmentShader: 'uniform vec3 uCol; varying float vY; varying vec3 vN; varying vec3 vV; void main(){ float f = pow(abs(dot(vN, vV)), 1.5); gl_FragColor = vec4(uCol * f * vY * 0.11, 1.0); }',
+    });
+    for (const a of [0.75, 1.25]) {
+      const ang = a * Math.PI;
+      const R = r0 + tiers * 1.25 + 3;
+      const top = new THREE.Vector3(Math.cos(ang) * R, 20.5, Math.sin(ang) * R);
+      const target = new THREE.Vector3(Math.cos(ang) * 2, 0, Math.sin(ang) * 2);
+      const len = top.distanceTo(target);
+      const cone = new THREE.CylinderGeometry(1.8, 7, len, 24, 1, true);
+      cone.translate(0, -len / 2, 0);
+      const beam = new THREE.Mesh(cone, beamMat);
+      beam.position.copy(top);
+      beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), target.clone().sub(top).normalize());
+      beam.renderOrder = 4;
+      G.add(beam);
     }
 
     // clouds
@@ -285,6 +354,37 @@ export class Arena {
       this.clouds.push(c);
       G.add(c);
     }
+  }
+
+  // scoreboard: names, portraits and a live HP readout
+  drawScreen(info) {
+    const c = this.screenCanvas.getContext('2d'), w = 1024, h = 384;
+    const g = c.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#3a2a8a'); g.addColorStop(1, '#1b1140');
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+    c.globalAlpha = 0.1; c.fillStyle = '#fff';
+    for (let y = 0; y < h; y += 6) c.fillRect(0, y, w, 2);
+    c.globalAlpha = 1;
+    c.textAlign = 'center'; c.lineJoin = 'round';
+    const text = (s, x, y, size, fill = '#fff') => {
+      c.font = `400 ${size}px "Lilita One", sans-serif`;
+      c.lineWidth = size * 0.22; c.strokeStyle = '#2a1630'; c.strokeText(s, x, y);
+      c.fillStyle = fill; c.fillText(s, x, y);
+    };
+    if (!info) {
+      text('CRITTER', w / 2, 170, 120);
+      text('CLASH!', w / 2, 300, 140, '#ffc940');
+    } else {
+      if (info.imgs) info.imgs.forEach((im, i) => { if (im.complete) c.drawImage(im, i ? w - 300 : 20, 40, 280, 280); });
+      text('VS', w / 2, 220, 120, '#ffc940');
+      info.names.forEach((n, i) => text(n, i ? w - 160 : 160, 360, 44));
+      info.hp?.forEach((v, i) => {
+        const x = i ? w / 2 + 90 : 330, bw = 160;
+        c.fillStyle = '#2a1630'; c.fillRect(x, 260, bw, 22);
+        c.fillStyle = v < 0.3 ? '#ff6a3d' : '#5ce06a'; c.fillRect(x + 3, 263, (bw - 6) * v, 16);
+      });
+    }
+    this.screenTex.needsUpdate = true;
   }
 
   updateCrowd(t) {

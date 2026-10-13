@@ -25,7 +25,7 @@ export class Hud {
       <div class="combo"><b>0</b><span>HITS!</span></div>
       <div class="announce"></div>
       <div class="cutin"><div class="cutin-band"><div class="cutin-lines"></div><img alt=""><div class="cutin-text"><small></small><b></b></div></div></div>
-      <div class="impact"></div>`;
+      <div class="impact"></div><div class="speedlines"></div>`;
     ui.appendChild(el);
     this.q = (s) => el.querySelector(s);
     this.bars = [0, 1].map((i) => {
@@ -38,6 +38,12 @@ export class Hud {
     this.cutEl = this.q('.cutin');
     this.q('.pause-btn').addEventListener('click', () => game.pause());
     this.lastTime = -1;
+  }
+
+  speedLines(on) {
+    if (on === this._sl) return;
+    this._sl = on;
+    this.q('.speedlines').classList.toggle('on', !!on);
   }
 
   show(on) { this.el.classList.toggle('hidden', !on); }

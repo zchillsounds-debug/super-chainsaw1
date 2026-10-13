@@ -1,7 +1,7 @@
 // Billboard particle pools (shapes drawn in the shader) and screen-space comic text.
 import * as THREE from 'three';
 
-const SHAPE = { glow: 0, star: 1, spark: 2, ring: 3, puff: 4, drop: 5, leaf: 6, bolt: 7 };
+const SHAPE = { glow: 0, star: 1, spark: 2, ring: 3, puff: 4, drop: 5, leaf: 6, bolt: 7, burst: 8, confetti: 9 };
 
 const vert = `
 attribute vec3 iPos; attribute vec4 iCol; attribute vec4 iData; // size, rot, shape, stretch
@@ -36,6 +36,8 @@ void main(){
   else if (sh == 4) { float l = length(p); a = smoothstep(1.0, 0.94, l); col = mix(col * 0.72, col, smoothstep(-0.4, 0.5, p.y - p.x * 0.3)); col = mix(col * 0.5, col, smoothstep(1.0, 0.86, l)); }
   else if (sh == 5) { vec2 q = p; q.y += 0.25; float d = length(q * vec2(1.0, 0.8)) - 0.6 + max(p.y, 0.0) * 0.5; a = smoothstep(0.05, -0.05, d); col += smoothstep(0.0,-0.3,length(p - vec2(-0.2,-0.2)) - 0.18) * 0.6; }
   else if (sh == 6) { float d = length(p * vec2(1.8, 1.0)) - 0.9 + abs(p.x) * 0.2; a = smoothstep(0.05, -0.05, d); col *= 0.8 + 0.4 * step(abs(p.x), 0.05); }
+  else if (sh == 8) { float d = star(p, 9.0, 1.0, 0.45); a = smoothstep(0.04, -0.04, d); float inner = smoothstep(0.02, -0.06, star(p, 9.0, 0.7, 0.3)); col = mix(vec3(0.16,0.07,0.2), mix(col, vec3(1.0), inner), smoothstep(0.0, -0.07, d)); }
+  else if (sh == 9) { a = step(abs(p.x), 0.45) * step(abs(p.y), 0.9); col *= 0.85 + 0.3 * step(0.0, p.x); }
   else { vec2 q = p; float d = abs(q.x + sin(q.y * 6.0) * 0.35) - 0.16 * (1.0 - abs(q.y)); a = smoothstep(0.06, -0.02, d) * step(abs(q.y), 0.95); }
   a *= vCol.a;
   if (a < 0.01) discard;
@@ -131,6 +133,8 @@ export class FX {
 
   hit(p, color = 0xffe070, big = false) {
     this.spawn({ ...p, color: 0xffffff, size: big ? 2.4 : 1.5, life: 0.14, shape: 'glow', grow: 0.6, alpha: 0.9 });
+    // anime impact star
+    this.spawn({ ...p, color, size: big ? 2.6 : 1.5, life: big ? 0.2 : 0.13, shape: 'burst', additive: false, rot: Math.random() * 6, grow: 0.35, hold: 0.6 });
     this.spawn({ ...p, color, size: big ? 3.2 : 2.0, life: 0.22, shape: 'ring', grow: 1.4 });
     for (let i = 0; i < (big ? 10 : 6); i++) {
       const a = Math.random() * Math.PI * 2;
@@ -138,6 +142,15 @@ export class FX {
     }
     this.burst(p, { n: big ? 14 : 7, speed: big ? 9 : 6, up: 2, color, size: 0.16, life: 0.4, grav: 10 });
     this.burst(p, { n: big ? 5 : 3, speed: 3, up: 3, color: 0xffe14d, size: 0.42, life: 0.7, shape: 'star', additive: false, grav: 9, spin: 14, grow: -0.5 });
+  }
+
+  confetti(p, n = 90) {
+    const cols = [0xff5a8a, 0xffd23f, 0x3dc8ff, 0x6cff6a, 0xb39cff, 0xffffff];
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, s = 2 + Math.random() * 6;
+      this.spawn({ x: p.x + (Math.random() - 0.5) * 3, y: p.y + Math.random() * 2, z: p.z + (Math.random() - 0.5) * 3, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: 5 + Math.random() * 7,
+        color: cols[i % cols.length], size: 0.22, stretch: 0.6, life: 2.2 + Math.random(), shape: 'confetti', additive: false, grav: 5, drag: 1.6, spin: (Math.random() - 0.5) * 20, rot: Math.random() * 6, hold: 0.75 });
+    }
   }
 
   dust(p, n = 6, s = 1) {

@@ -37,6 +37,10 @@ export class Battle {
     this.comboCount = 0;
     this.comboT = 0;
     this.hud.setup(this);
+    // jumbotron shows the matchup and live health
+    this.screenImgs = this.fighters.map((f) => { const im = new Image(); im.src = game.portrait(f.def); return im; });
+    this.screenNames = this.fighters.map((f) => f.def.name);
+    this.screenT = 0;
     this.startRound();
   }
 
@@ -471,6 +475,7 @@ export class Battle {
     sfx.cheer(1.2);
     this.arena.cheer(1);
     this.game.impactFrame(0.14);
+    this.fx.confetti({ x: def.x, y: 4, z: def.z }, 70);
     if (def === this.cpu && this.roundDmgTaken === 0) this.stats.perfect = true;
   }
 
@@ -496,7 +501,7 @@ export class Battle {
     this.phase = 'winpose'; this.phaseT = 0;
     if (this.wins[w.side] >= this.winsNeeded) {
       this.hud.announce(w === this.player ? 'YOU WIN!' : 'YOU LOSE...', w === this.player ? 'win' : 'lose');
-      if (w === this.player) { playMusic('victory'); sfx.cheer(1.5); } else sfx.aww();
+      if (w === this.player) { playMusic('victory'); sfx.cheer(1.5); this.fx.confetti({ x: w.x, y: 5, z: w.z }, 140); } else sfx.aww();
     }
   }
 
@@ -569,6 +574,12 @@ export class Battle {
     this.comboT -= sdt;
     if (this.comboT <= 0 && this.comboCount) { this.comboCount = 0; this.hud.combo(0); }
     this.hud.update(this);
+    this.screenT -= dt;
+    if (this.screenT <= 0) {
+      this.screenT = 0.5;
+      this.arena.drawScreen({ imgs: this.screenImgs, names: this.screenNames, hp: this.fighters.map((f) => f.hp / f.maxHp) });
+    }
+    this.hud.speedLines(this.superUser && this.cutinT > 0 || this.fighters.some((f) => f.state === 'launched' && f.vy > 4) || this.phase === 'ko' && this.phaseT < 0.6);
     inp.setCooldowns(1 - p.specCd / SPECIALS[p.def.special].cd, 1 - p.dodgeCd / 0.55, p.superM / 100, p.superM >= 100);
     this.updateCamera(dt);
   }
@@ -603,8 +614,8 @@ export class Battle {
       const want = Math.max(-0.35, Math.min(0.35, Math.atan(-dz / (Math.abs(dx) < 1e-3 ? 1e-3 : dx)))) * (Math.abs(dx) / (sep || 1));
       this.camYaw = THREE.MathUtils.damp(this.camYaw ?? 0, want, 1.2, dt);
       const yaw = this.camYaw;
-      const dist = Math.min(17, Math.max(9, 6.5 + sep * 0.85));
-      const pitch = 0.4;
+      const dist = Math.min(15, Math.max(7.2, 5.2 + sep * 0.85));
+      const pitch = 0.36;
       look = new THREE.Vector3(mx, 0.9, mz - 0.4);
       pos = new THREE.Vector3(mx + Math.sin(yaw) * Math.cos(pitch) * dist, 0.9 + Math.sin(pitch) * dist, mz + Math.cos(yaw) * Math.cos(pitch) * dist);
       // never back the camera into the stands: pull it in and lift it instead
@@ -630,6 +641,8 @@ export class Battle {
   }
 
   dispose() {
+    this.arena.drawScreen();
+    this.hud.speedLines(false);
     for (const f of this.fighters) f.dispose();
     for (let i = this.projectiles.length - 1; i >= 0; i--) this.removeProjectile(i);
     this.fx.clear();
