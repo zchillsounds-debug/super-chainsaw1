@@ -681,6 +681,7 @@ export class Screens {
   results(won, stats, pDef, cDef, opts) {
     const g = this.game;
     this.mode = 'results';
+    document.body.classList.add('at-results'); // results have a portrait layout, so no rotate hint here
     g.input.showTouch(false);
     g.hud.show(false);
     save.stats.battles++;

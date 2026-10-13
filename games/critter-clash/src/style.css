@@ -287,7 +287,7 @@ body.portrait .btns { transform: scale(.82); transform-origin: right bottom; }
 .rotate-hint b { display: block; font-family: var(--display); font-weight: 400; font-size: 30px; margin-top: 14px; }
 .rotate-hint svg { width: 90px; animation: tilt 1.6s ease-in-out infinite; }
 @keyframes tilt { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
-body.portrait.is-touch.in-battle .rotate-hint { display: grid; }
+body.portrait.is-touch.in-battle:not(.at-results) .rotate-hint { display: grid; }
 
 /* ---------- Round 2: tournament, progression ---------- */
 .title-menu .row { display: flex; gap: 10px; }

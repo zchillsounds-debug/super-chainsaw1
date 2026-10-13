@@ -303,7 +303,7 @@ class Game {
     this.setShowcase([]);
     this.screens.hideAll();
     this.input.showTouch(true);
-    document.body.classList.add('in-battle');
+    document.body.classList.add('in-battle'); document.body.classList.remove('at-results');
     screen.orientation?.lock?.('landscape').catch(() => {});
     this.battle = new Battle(this, pDef, cDef, {
       ...opts,
@@ -315,7 +315,7 @@ class Game {
     if (this.battle) { this.battle.dispose(); this.battle = null; }
     this.hud.show(false);
     this.input.showTouch(false);
-    document.body.classList.remove('in-battle');
+    document.body.classList.remove('in-battle', 'at-results');
   }
 
   pause() {
@@ -330,13 +330,13 @@ class Game {
     const rawDt = Math.min(this.clock.getDelta(), 0.1);
     if (this.booted) this.trackPerf(rawDt); // boot frames are slow on purpose; don't let them lower the quality
     this.step(rawDt);
-    this.impactT -= rawDt;
     this.grade.uniforms.uImpact.value = this.impactT > 0 ? 1 : 0;
     this.composer.render(rawDt);
   }
 
   step(rawDt) {
     this.t += rawDt;
+    this.impactT -= rawDt; // counted here so __sim steps it too
     this.input.poll();
     if (this.input.pressed.pause) this.pause();
     if (this.photo) this.photo.update();
