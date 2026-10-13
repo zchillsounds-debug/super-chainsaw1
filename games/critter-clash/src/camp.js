@@ -1,7 +1,8 @@
 // Critter Camp: the whole team roams the meadow. Tap a critter to pet it (hearts, and a little
 // XP the first time each day) or feed it a berry earned from battles for a big XP boost.
 import * as THREE from 'three';
-import { CRITTERS, TYPES, gearFor, GEAR } from './data.js';
+import { CRITTERS, TYPES, gearFor, GEAR, CUPS } from './data.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx } from './audio.js';
 import { toon, inked, canvasTex } from './toon.js';
@@ -19,7 +20,7 @@ export class Camp {
     this.team = team;
     this.sel = null;
     this.t = 0;
-    this.props = buildProps();
+    this.props = buildProps(save.cups || {});
     this.g.scene.add(this.props);
     // soft ring under whoever is selected
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.72, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false }));
@@ -234,6 +235,9 @@ export class Camp {
     // campfire flicker
     const fp = this.props.userData.fire;
     if (Math.random() < dt * 24) this.g.fx.spawn({ x: fp.x + (Math.random() - 0.5) * 0.3, y: 0.55, z: fp.z + (Math.random() - 0.5) * 0.3, vy: 1.4 + Math.random(), color: Math.random() < 0.5 ? 0xff8a2a : 0xffd04a, size: 0.42, life: 0.55, shape: 'glow', grow: -0.8 });
+    const bal = this.props.userData.balloon;
+    if (bal) { bal.position.y = Math.sin(this.t * 0.9) * 0.12; bal.rotation.z = Math.sin(this.t * 0.7) * 0.04; }
+    for (const pn of this.props.userData.pennants) pn.rotation.x = Math.sin(this.t * 2.2 + pn.userData.ph) * 0.25;
     this.props.userData.flames.forEach((fl, k) => { const f = 1 + Math.sin(this.t * (11 + k * 4)) * 0.12 + Math.sin(this.t * 23) * 0.06; fl.scale.set(1 / Math.sqrt(f), f, 1 / Math.sqrt(f)); fl.rotation.y = this.t * (k ? -2 : 1.5); });
     if (Math.random() < dt * 2) this.g.fx.spawn({ x: fp.x, y: 0.9, z: fp.z, vy: 0.8, vx: 0.2, color: 0xb8b0a8, size: 0.4, life: 1.6, shape: 'puff', additive: false, grow: 1.2, alpha: 0.5 });
     for (const c of this.g.showcase) {
@@ -286,7 +290,7 @@ export class Camp {
         } else for (let tries = 0; tries < 6; tries++) {
           const r = 1 + Math.random() * 4.2, ang = Math.random() * Math.PI * 2;
           // keep the wander zone a little back from the camera so the front row doesn't wall off the camp
-          m.tx = Math.cos(ang) * r * (port ? 0.7 : 1.45); m.tz = Math.min(2.4, Math.sin(ang) * r * (port ? 0.95 : 0.75) - 0.3);
+          m.tx = Math.cos(ang) * r * (port ? 0.7 : 1.45); m.tz = Math.min(port ? 3.6 : 2.4, Math.sin(ang) * r * (port ? 1.05 : 0.75) - 0.3);
           if (!this.props.userData.keepOut.some(([px, pz, pr]) => Math.hypot(m.tx - px, m.tz - pz) < pr)
             && !this.g.showcase.some((o) => o !== c && o.camp && Math.hypot(m.tx - o.camp.tx, m.tz - o.camp.tz) < 1.3)) break;
         }
@@ -352,7 +356,7 @@ export class Camp {
 }
 
 // campfire, tent, picnic blanket and a berry basket, kept at the edges so the critters have room
-function buildProps() {
+function buildProps(cups) {
   const g = new THREE.Group();
   const OL = 0.03;
   // campfire: ring of stones, crossed logs, warm point light
@@ -414,7 +418,6 @@ function buildProps() {
     b.position.set(2.8 + Math.cos(i * 1.3) * 0.13, 0.36 + (i % 2) * 0.05, 1.8 + Math.sin(i * 1.3) * 0.13);
     g.add(b);
   }
-  g.traverse((o) => { if (o.isMesh && !o.userData.hull) o.castShadow = true; });
   // no lights here: adding one would recompile every shader on the way in and out
   // spots where a critter can settle in: warm up by the fire, nap at the tent door, picnic on the blanket
   const spots = [];
@@ -422,6 +425,62 @@ function buildProps() {
   const td = -0.6; // the tent faces along its rotated +z
   spots.push({ kind: 'nap', prop: 1, x: 3.3 + Math.sin(td) * 1.5, z: -2.5 + Math.cos(td) * 1.5, face: td });
   for (const a of [Math.PI + 0.4, Math.PI * 1.5 + 0.2]) spots.push({ kind: 'picnic', prop: 2, x: 2.6 + Math.cos(a) * 1.15, z: 1.9 + Math.sin(a) * 1.15, face: Math.atan2(-Math.cos(a), -Math.sin(a)) });
-  g.userData = { fire: fire.position, flames, spots, keepOut: [[-2.9, -1.3, 1.0], [3.3, -2.5, 1.7], [2.6, 1.9, 1.3]] };
+  const keepOut = [[-2.9, -1.3, 1.0], [3.3, -2.5, 1.7], [2.6, 1.9, 1.3]];
+  // trophies: a bunting line with a pennant for every cup cleared, and a hot-air balloon once the Sky Cup is won
+  const won = CUPS.filter((c) => cups[c.id]);
+  const pennants = [];
+  if (won.length) {
+    const x0 = -2.8, x1 = 1.8, z = -4.3, H = 1.9, pole = toon(0xb07a4a);
+    for (const x of [x0, x1]) {
+      const p = inked(new THREE.CylinderGeometry(0.06, 0.07, H + 0.2, 8), pole, OL * 0.5);
+      p.position.set(x, (H + 0.2) / 2, z); g.add(p);
+      const knob = inked(new THREE.SphereGeometry(0.1, 10, 8), toon(0xffd04a), OL * 0.4);
+      knob.position.set(x, H + 0.25, z); g.add(knob);
+    }
+    // the string sags between the poles
+    const N = 24, sag = (u) => H - Math.sin(u * Math.PI) * 0.35, ropePts = [];
+    for (let i = 0; i <= N; i++) { const u = i / N; ropePts.push(new THREE.Vector3(x0 + (x1 - x0) * u, sag(u), z)); }
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ropePts), 32, 0.022, 5), toon(0xfff4e0)));
+    const tri = new THREE.Shape([new THREE.Vector2(-0.24, 0), new THREE.Vector2(0.24, 0), new THREE.Vector2(0, -0.5)]);
+    const triG = new THREE.ShapeGeometry(tri);
+    won.forEach((c, i) => {
+      const u = (i + 1) / (won.length + 1);
+      const pn = new THREE.Group();
+      pn.position.set(x0 + (x1 - x0) * u, sag(u), z);
+      pn.userData.ph = i * 1.3;
+      const flag = new THREE.Mesh(triG, toon(new THREE.Color(c.color).getHex(), { side: THREE.DoubleSide }));
+      pn.add(flag);
+      const star = new THREE.Mesh(new THREE.CircleGeometry(0.07, 5), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+      star.position.set(0, -0.17, 0.005); pn.add(star);
+      g.add(pn); pennants.push(pn);
+    });
+  }
+  let balloon = null;
+  if (cups.sky) {
+    const tex = canvasTex(128, 64, (c, w, h) => { for (let k = 0; k < 8; k++) { c.fillStyle = k % 2 ? '#fff4e0' : '#ff6a8a'; c.fillRect(k * w / 8, 0, w / 8 + 1, h); } });
+    const bg = new THREE.Group(); // the whole balloon bobs
+    const env = new THREE.SphereGeometry(1.15, 22, 16); env.scale(1, 1.18, 1);
+    const e = inked(env, toon(0xffffff, { map: tex, rim: 0.3 }), OL * 1.2);
+    e.position.y = 3.25; bg.add(e);
+    const bask = inked(new THREE.CylinderGeometry(0.42, 0.34, 0.5, 12), toon(0x9a6a3a), OL * 0.7);
+    bask.position.y = 0.55; bg.add(bask);
+    const ropes = [];
+    for (let k = 0; k < 4; k++) { const rg = new THREE.CylinderGeometry(0.02, 0.02, 1.5, 4); rg.translate(Math.cos(k * 1.57 + 0.78) * 0.36, 1.55, Math.sin(k * 1.57 + 0.78) * 0.36); ropes.push(rg); }
+    bg.add(new THREE.Mesh(mergeGeometries(ropes), toon(0x6a4a3a)));
+    const bw = new THREE.Group();
+    bw.position.set(-4.4, 0, -3.0);
+    bw.scale.setScalar(0.72);
+    bw.add(bg);
+    // tether stake and line
+    const stake = inked(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 6), toon(0x8a5a32), OL * 0.4);
+    stake.position.set(0.7, 0.2, 0.3); bw.add(stake);
+    const line = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.75, 4), toon(0xfff4e0));
+    line.position.set(0.5, 0.4, 0.2); line.rotation.z = 0.9; bw.add(line);
+    g.add(bw);
+    balloon = bg;
+    keepOut.push([-4.4, -3.0, 0.8]);
+  }
+  g.traverse((o) => { if (o.isMesh && !o.userData.hull) o.castShadow = true; });
+  g.userData = { fire: fire.position, flames, spots, keepOut, balloon, pennants };
   return g;
 }
