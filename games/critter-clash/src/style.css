@@ -482,3 +482,25 @@ body.portrait .cup { flex: none; width: 100%; }
   .dex-badges { left: 50%; transform: translateX(-50%); }
 }
 .fxtext.heal { font-size: 30px; color: #7dff8a; }
+
+/* eight critters: slimmer roster cards and a compact info card on short landscape screens */
+.sel-info .stats { display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; }
+.sel-info .stat { grid-template-columns: 50px 1fr; font-size: 12px; margin: 2px 0; }
+@media (max-height: 460px) and (min-aspect-ratio: 1/1) {
+  .roster { gap: 6px; }
+  .rcard { width: 56px; padding: 3px 3px 4px; border-radius: 12px; }
+  .rcard img { border-radius: 9px; }
+  .rcard span { font-size: 9.5px; }
+  .rcard.locked em { top: 14px; font-size: 18px; }
+  .sel-info { width: min(330px, 38vw); top: calc(58px + var(--sat)); }
+  .sel-info .info-card { padding: 10px 14px 12px; }
+  .sel-info .info-card h2 { font-size: 28px; }
+  .sel-info .info-card p { font-size: 12.5px; margin-bottom: 6px; }
+  .sel-info .moves { margin-top: 6px; }
+}
+@media (max-height: 460px) and (min-aspect-ratio: 1/1) {
+  .sel-info .info-card p, .sel-info .xpbar { display: none; }
+}
+body.portrait .roster { display: grid; grid-template-columns: repeat(4, 66px); justify-content: center; gap: 8px; }
+body.portrait .rcard { width: 66px; }
+body.portrait .sel-info { bottom: calc(332px + var(--sab)); }

@@ -142,7 +142,11 @@ export class Battle {
     const words = heavy ? ['BONK!', 'POW!', 'WHAM!', 'KAPOW!', 'BOOF!'] : ['bap!', 'pok!', 'tap!', 'bop!'];
     if (heavy || Math.random() < 0.4) this.fx.text({ x: p.x, y: p.y + 0.7, z: p.z }, words[Math.floor(Math.random() * words.length)], heavy ? 'big' : '', 0.7);
     this.fx.text({ x: p.x, y: p.y + 0.3, z: p.z }, String(dmg), 'dmg' + (eff > 1 ? ' super-eff' : eff < 1 ? ' weak' : ''), 0.75);
-    if (eff > 1 && Math.random() < 0.6) this.fx.text({ x: p.x, y: p.y + 1.3, z: p.z }, "It's super effective!", 'eff', 1.1);
+    // one "super effective" pill at a time (the round clock counts down)
+    if (eff > 1 && Math.random() < 0.6 && !(this.effAt - this.time < 0.9)) {
+      this.effAt = this.time;
+      this.fx.text({ x: p.x, y: p.y + 1.3, z: p.z }, "It's super effective!", 'eff', 1.1);
+    }
     this.arena.cheer(heavy ? 0.35 : 0.12);
     if (heavy) sfx.cheer(0.6);
     if (!def.alive) this.onKO(att, def);
@@ -539,6 +543,13 @@ export class Battle {
     void tcol;
   }
 
+  // short-lived scene effects that run on game time (so they pause and slow with the fight)
+  anim(fn) { (this.anims ||= []).push(fn); }
+  runAnims(dt) {
+    if (!this.anims) return;
+    for (let i = this.anims.length - 1; i >= 0; i--) if (!this.anims[i](dt)) this.anims.splice(i, 1);
+  }
+
   // a falling icicle that shatters on the ground
   icicle(x, z, big) {
     const s = big ? 2.2 : 1;
@@ -549,13 +560,13 @@ export class Battle {
     this.fx.burst({ x, y: 0.3, z }, { n: big ? 24 : 9, speed: big ? 7 : 4, up: 4, color: 0xdff6ff, size: big ? 0.3 : 0.2, life: 0.6, shape: 'star', additive: false, grav: 14, spin: 10 });
     this.fx.spawn({ x, y: 0.4, z, color: 0xffffff, size: big ? 3 : 1.4, life: 0.15, shape: 'glow' });
     let t = 0;
-    const tick = () => {
-      t += 1 / 60;
+    this.anim((dt) => {
+      t += dt;
       m.scale.setScalar(Math.max(0.01, 1 - Math.max(0, t - 0.4) * 3));
-      if (t < 0.75 && m.parent) requestAnimationFrame(tick);
-      else { this.scene.remove(m); m.geometry.dispose(); m.material.dispose(); }
-    };
-    requestAnimationFrame(tick);
+      if (t < 0.75) return true;
+      this.scene.remove(m); m.geometry.dispose(); m.material.dispose();
+      return false;
+    });
   }
 
   rockRing(x, z, R) {
@@ -579,13 +590,14 @@ export class Battle {
       this.fx.dust({ x: x + Math.cos(a) * R, z: z + Math.sin(a) * R }, 2, 1.2);
     }
     let t = 0;
-    const tick = () => {
-      t += 1 / 60;
+    this.anim((dt) => {
+      t += dt;
       const up = t < 0.12 ? t / 0.12 : t > 0.8 ? Math.max(0, 1 - (t - 0.8) / 0.3) : 1;
       g.children.forEach((m) => { m.position.y = -0.6 + up * 0.9 * m.scale.y; });
-      if (t < 1.1) requestAnimationFrame(tick); else { this.scene.remove(g); geo.dispose(); mat.dispose(); }
-    };
-    requestAnimationFrame(tick);
+      if (t < 1.1) return true;
+      this.scene.remove(g); geo.dispose(); mat.dispose();
+      return false;
+    });
   }
 
   superLand(f) {
@@ -623,8 +635,12 @@ export class Battle {
     this.fx.burst({ x, y: 0.2, z }, { n: big ? 24 : 10, speed: 7, up: 4, color: 0xfff060, size: 0.25, life: 0.4, grav: 12 });
     this.fx.spawn({ x, y: 1, z, color: 0xffffaa, size: big ? 7 : 4, life: 0.2, shape: 'glow' });
     let life = 0.22;
-    const tick = () => { life -= 1 / 60; if (life <= 0) { this.scene.remove(m, g); geo.dispose(); m.material.dispose(); g.material.dispose(); } else requestAnimationFrame(tick); };
-    requestAnimationFrame(tick);
+    this.anim((dt) => {
+      life -= dt;
+      if (life > 0) return true;
+      this.scene.remove(m, g); geo.dispose(); m.material.dispose(); g.material.dispose();
+      return false;
+    });
   }
 
   endSuper(f) {
@@ -756,6 +772,7 @@ export class Battle {
     }
     for (const f of this.fighters) { f.perfectT = (f.perfectT || 0) - dt; f.update(sdt); }
     this.updateProjectiles(sdt);
+    this.runAnims(sdt);
     this.items.update(sdt);
     if (fighting) {
       const tense = p.hp / p.maxHp < 0.25 || c.hp / c.maxHp < 0.25 || this.time < 10 ? 1 : 0;
@@ -841,6 +858,7 @@ export class Battle {
 
   dispose() {
     this.items.clear();
+    if (this.anims) { for (const fn of this.anims) fn(99); this.anims.length = 0; }
     this.arena.drawScreen();
     this.hud.speedLines(false);
     this.tutorial?.dispose();

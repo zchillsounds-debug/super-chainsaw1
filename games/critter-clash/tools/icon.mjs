@@ -12,7 +12,7 @@ const url = await pg.evaluate(async () => {
   const g = window.__game;
   const { CRITTERS } = await import('/src/data.js');
   const load = (src) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = src; });
-  const ham = await load(g.portrait(CRITTERS[0]));
+  const ham = await load(g.portrait(CRITTERS[0], 512));
   const c = document.createElement('canvas'); c.width = c.height = 512;
   const x = c.getContext('2d');
   const gr = x.createRadialGradient(256, 200, 40, 256, 256, 360);

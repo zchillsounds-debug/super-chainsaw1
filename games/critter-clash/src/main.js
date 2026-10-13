@@ -101,17 +101,50 @@ class Game {
     addEventListener('keydown', unlock, { once: false });
 
     this.autoplay = Q.has('auto');
-    if (Q.has('play')) {
-      const p = CRITTERS.find((c) => c.id === Q.get('p')) || CRITTERS[0];
-      const c = CRITTERS.find((c) => c.id === Q.get('c')) || CRITTERS[1];
-      this.startBattle(p, c, { difficulty: +(Q.get('d') ?? 0.5) });
-    } else this.screens.title();
-
     r.setAnimationLoop(() => this.frame());
     window.__game = this;
     window.__save = save;
     // headless helper: advance the simulation in fixed steps without rendering
     window.__sim = (sec, dt = 1 / 60) => { for (let t = 0; t < sec; t += dt) this.step(dt); this.clock.getDelta(); };
+    this.boot();
+  }
+
+  // splash: bake portraits and compile every critter's shaders up front so the first fight doesn't hitch
+  async boot() {
+    const splash = document.getElementById('splash');
+    const bar = splash?.querySelector('.sp-bar i'), msg = splash?.querySelector('.sp-msg');
+    const lines = ['Waking up the critters...', 'Fluffing tails...', 'Polishing the stadium...', 'Warming up the crowd...'];
+    const tick = () => new Promise((res) => setTimeout(res, 0));
+    const jobs = CRITTERS.length + 2;
+    let done = 0;
+    const progress = () => { done++; if (bar) bar.style.width = Math.round(done / jobs * 100) + '%'; if (msg) msg.textContent = lines[Math.min(lines.length - 1, Math.floor(done / jobs * lines.length))]; };
+    try {
+      await document.fonts?.ready;
+      const warm = [];
+      for (const def of CRITTERS) {
+        this.portrait(def);
+        const c = new Critter(def);
+        c.root.position.set(0, -40, 0);
+        this.scene.add(c.root);
+        warm.push(c);
+        progress();
+        await tick();
+      }
+      this.renderer.compile(this.scene, this.camera);
+      progress();
+      await tick();
+      this.composer.render();
+      for (const c of warm) this.scene.remove(c.root);
+      progress();
+    } catch (e) { console.warn('prewarm', e); }
+    if (Q.has('play')) {
+      const p = CRITTERS.find((c) => c.id === Q.get('p')) || CRITTERS[0];
+      const c = CRITTERS.find((c) => c.id === Q.get('c')) || CRITTERS[1];
+      this.startBattle(p, c, { difficulty: +(Q.get('d') ?? 0.5) });
+    } else this.screens.title();
+    if (splash) { splash.classList.add('out'); setTimeout(() => splash.remove(), 500); }
+    this.booted = true;
+    this.clock.getDelta();
     window.__ready = true;
   }
 
@@ -192,10 +225,9 @@ class Game {
   impactFrame(t) { if (!this.reduceFlash) this.impactT = Math.max(this.impactT, t); }
 
   // 3D-rendered portrait of a critter's head, cached as a data URL
-  portrait(def) {
-    const key = def.id + (def.skin || '');
+  portrait(def, S = 256) {
+    const key = def.id + (def.skin || '') + (S !== 256 ? '@' + S : '');
     if (this.portraits.has(key)) return this.portraits.get(key);
-    const S = 256;
     const scene = new THREE.Scene();
     const cr = new Critter(def);
     cr.update(0.016);
@@ -292,7 +324,7 @@ class Game {
 
   frame() {
     const rawDt = Math.min(this.clock.getDelta(), 0.1);
-    this.trackPerf(rawDt);
+    if (this.booted) this.trackPerf(rawDt); // boot frames are slow on purpose; don't let them lower the quality
     this.step(rawDt);
     this.impactT -= rawDt;
     this.grade.uniforms.uImpact.value = this.impactT > 0 ? 1 : 0;

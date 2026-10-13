@@ -548,7 +548,7 @@ export class Screens {
       // frame the critter off-centre so the side card has room
       const ox = portrait ? 0 : this.mode === 'ladder' ? -1.1 : this.mode === 'trophy' ? 0 : this.mode === 'dex' ? 0.35 : 1.0;
       cam.position.set(ox, 1.3, portrait ? 4.6 : 4.4);
-      cam.lookAt(ox, portrait ? (this.mode === 'dex' ? -0.55 : 0.35) : this.mode === 'trophy' ? 1.25 : 0.75, 0);
+      cam.lookAt(ox, portrait ? (this.mode === 'dex' ? -0.55 : this.mode === 'select' ? -0.4 : 0.35) : this.mode === 'trophy' ? 1.25 : 0.75, 0);
       cam.fov = Math.min(70, 40 * Math.max(1, 1.4 / cam.aspect));
       cam.updateProjectionMatrix();
     }
