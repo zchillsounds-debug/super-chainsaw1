@@ -213,7 +213,13 @@ export class FX {
     el.className = 'fxtext ' + cls;
     el.textContent = str;
     this.layer.appendChild(el);
-    this.texts.push({ el, p: new THREE.Vector3(p.x, p.y, p.z), t: 0, life, dx: (Math.random() - 0.5) * 40, rot: (Math.random() - 0.5) * 18 });
+    const tx = { el, p: new THREE.Vector3(p.x, p.y, p.z), t: 0, life, dx: (Math.random() - 0.5) * 40, rot: (Math.random() - 0.5) * 18, oy: 0 };
+    // rapid combo numbers fan out instead of piling on one spot
+    if (cls.startsWith('dmg')) {
+      const n = this.dmgSeq = this.texts.some((o) => o.dmg && o.t < 0.4) ? (this.dmgSeq || 0) + 1 : 0;
+      tx.dmg = true; tx.oy = -(n % 2) * 22; tx.dx = (n % 2 ? 1 : -1) * (26 + (n % 3) * 14);
+    }
+    this.texts.push(tx);
   }
 
   update(dt) {
@@ -237,7 +243,7 @@ export class FX {
       v.copy(tx.p).project(this.camera);
       const k = tx.t / tx.life;
       const pop = k < 0.15 ? 0.4 + (k / 0.15) * 0.9 : k < 0.25 ? 1.3 - (k - 0.15) * 3 : 1;
-      const x = (v.x * 0.5 + 0.5) * W + tx.dx * k, y = (-v.y * 0.5 + 0.5) * H - (tx.follow ? 0 : k * 50);
+      const x = (v.x * 0.5 + 0.5) * W + tx.dx * k, y = (-v.y * 0.5 + 0.5) * H - (tx.follow ? 0 : k * 50) + (tx.oy || 0);
       tx.el.style.transform = `translate(${x}px, ${y}px) translate(-50%,-50%) rotate(${tx.rot}deg) scale(${pop})`;
       tx.el.style.opacity = k > 0.75 ? (1 - k) / 0.25 : 1;
       if (tx.follow) {
