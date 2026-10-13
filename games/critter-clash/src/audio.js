@@ -276,6 +276,23 @@ const SONGS = {
     ],
     drums: 'k..hs.h.k.hhs.h.',
   },
+  grove: {
+    // a sleepy forest waltz-ish groove in D dorian, plinky like a music box
+    bpm: 112,
+    inst: { lead: 'sine', lead2: 'triangle', leadVol: 0.13, bass: 'triangle', bassVol: 0.22, stab: 'sine' },
+    chords: [[50, 53, 57, 60], [48, 52, 55, 59], [50, 53, 57, 60], [55, 59, 62, 65], [53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 62], [52, 57, 59, 64]],
+    lead: [
+      [74, null, 77, null, 81, null, 79, 77, 76, null, 74, null, 72, null, 74, null],
+      [72, null, 76, null, 79, null, 76, null, 74, null, 72, null, 71, null, null, null],
+      [74, null, 77, null, 81, null, 84, null, 83, null, 81, null, 79, null, 77, null],
+      [79, null, null, 83, null, null, 86, null, 84, null, 83, null, 81, null, null, null],
+      [77, null, 81, null, 84, null, 81, null, 79, 77, 76, null, 77, null, 79, null],
+      [76, null, 79, null, 83, null, 79, null, 76, null, 74, null, 71, null, null, null],
+      [74, 77, 81, null, 86, null, 84, null, 81, null, 79, null, 77, null, 74, null],
+      [76, null, null, null, 73, null, null, null, 74, null, null, null, null, null, null, null],
+    ],
+    drums: 'k...h.s.k.h.s.hh',
+  },
   beach: {
     bpm: 120,
     inst: { lead: 'triangle', lead2: 'sine', leadVol: 0.12, steel: true, bass: 'sine', stab: 'triangle' },

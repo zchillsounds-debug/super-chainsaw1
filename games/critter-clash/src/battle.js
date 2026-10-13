@@ -106,7 +106,7 @@ export class Battle {
       return;
     }
     this.hud.roundIntro(this.round, this.wins, first);
-    if (this.round === 1) playMusic(this.trainer?.boss ? 'boss' : { beach: 'beach', volcano: 'volcano', frost: 'frost', neon: 'neon', sky: 'sky' }[this.arena.key] || 'battle');
+    if (this.round === 1) playMusic(this.trainer?.boss ? 'boss' : { beach: 'beach', volcano: 'volcano', frost: 'frost', neon: 'neon', sky: 'sky', grove: 'grove' }[this.arena.key] || 'battle');
     setIntensity(0);
   }
 

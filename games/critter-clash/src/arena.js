@@ -59,6 +59,15 @@ export const ARENAS = {
     hill: 0xffffff, trunk: 0x9a6a4a, leaves: [0xff9ac8, 0xffc4de, 0x7cd07a], scenery: 'islands', cloud: 0xffffff, cloudShade: 0x8a90c8, sunI: 2.3,
     fogNear: 150, fogFar: 520, back: 0xa890d8,
   },
+  grove: {
+    name: 'Glowcap Grove',
+    skyTop: 0x1c1656, skyHorizon: 0xff9a7a, sun: 0xffe0c0, sunDir: [-0.5, 0.45, -0.6],
+    hemiSky: 0xd8ccff, hemiGround: 0x4a6a5a, fieldA: '#3f8a5a', fieldB: '#387f52', line: '#d8ff9a',
+    wallA: 0x8a5ad8, wallB: 0xfff0d0, ground: 0x3a6a3a, fog: 0x3a2a5a,
+    accent: 0xc8ff6a, seat: [0x8a5ad8, 0xff7ab0, 0xc8ff6a, 0xffb04a],
+    hill: 0x2f5a3a, trunk: 0xf4e8d0, leaves: [0xff5a6a, 0x8a6aff, 0xffa040], scenery: 'mushrooms', cloud: 0x7a5a9a, cloudShade: 0x2a1a4a, sunI: 1.9,
+    stars: true, fireflies: true, fillI: 0.4,
+  },
 };
 
 function skyDome(A) {
@@ -553,6 +562,36 @@ export class Arena {
         tops[i % 3].push(g);
       }
     }
+    else if (A.scenery === 'mushrooms') {
+      // a ring of giant toadstools with white spots, plus small glowing caps along the outer wall
+      const spots = [], glow = [];
+      for (let i = 0; i < 44; i++) {
+        const a = rand() * Math.PI * 2, r = 36 + rand() * 46, sc = 2.4 + rand() * 2.8;
+        const x = Math.cos(a) * r, z = Math.sin(a) * r, h = (2.2 + rand() * 1.6) * sc;
+        const st = new THREE.CylinderGeometry(0.32 * sc, 0.5 * sc, h, 8); st.translate(x, h / 2, z);
+        trunks.push(st);
+        const cap = new THREE.SphereGeometry(1.5 * sc, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+        cap.scale(1, 0.7, 1); cap.translate(x, h - 0.15 * sc, z);
+        tops[i % 3].push(cap);
+        for (let k = 0; k < 5; k++) {
+          const sa = rand() * 6.28, sl = 0.25 + rand() * 0.9;
+          const d = new THREE.SphereGeometry(0.22 * sc, 6, 4);
+          d.scale(1, 0.4, 1);
+          d.translate(x + Math.cos(sa) * Math.sin(sl) * 1.45 * sc, h - 0.15 * sc + Math.cos(sl) * 1.02 * sc, z + Math.sin(sa) * Math.sin(sl) * 1.45 * sc);
+          spots.push(d);
+        }
+      }
+      for (let i = 0; i < 60; i++) {
+        const a = rand() * Math.PI * 2, r = r0 + tiers * 1.25 + 2 + rand() * 8, sc = 0.4 + rand() * 0.5;
+        const x = Math.cos(a) * r, z = Math.sin(a) * r;
+        const g = new THREE.SphereGeometry(sc, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2); g.scale(1, 0.8, 1); g.translate(x, sc * 1.2, z);
+        glow.push(g);
+        const st = new THREE.CylinderGeometry(0.1 * sc, 0.14 * sc, sc * 1.3, 6); st.translate(x, sc * 0.6, z);
+        trunks.push(st);
+      }
+      G.add(new THREE.Mesh(mergeGeometries(spots), toon(0xfff8ee, { env: true, rim: 0 })));
+      G.add(new THREE.Mesh(mergeGeometries(glow), new THREE.MeshBasicMaterial({ color: 0x9affd8 })));
+    }
     else if (A.scenery === 'city') this.buildCity(G, rand, r0 + tiers * 1.25);
     else if (A.scenery === 'islands') this.buildSky(G, rand, r0 + tiers * 1.25, ground, trunks, tops);
     if (trunks.length) G.add(new THREE.Mesh(mergeGeometries(trunks), toon(A.trunk, { env: true, rim: 0 })));
@@ -571,6 +610,22 @@ export class Arena {
       this.snow = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.22, map: flakeTex, transparent: true, depthWrite: false, color: 0xffffff }));
       this.snow.frustumCulled = false;
       G.add(this.snow);
+    }
+    if (A.fireflies) {
+      // drifting fireflies that glow through the bloom
+      const n = 220, pos = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) { const a = rand() * 6.28, r = 6 + rand() * 40; pos[i * 3] = Math.cos(a) * r; pos[i * 3 + 1] = 0.6 + rand() * 9; pos[i * 3 + 2] = Math.sin(a) * r; }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const tex = canvasTex(32, 32, (c, w, h) => {
+        const gr = c.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+        gr.addColorStop(0, 'rgba(255,255,220,1)'); gr.addColorStop(0.3, 'rgba(220,255,140,0.8)'); gr.addColorStop(1, 'rgba(160,255,120,0)');
+        c.fillStyle = gr; c.fillRect(0, 0, w, h);
+      });
+      this.flies = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.9, map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffffff }));
+      this.flies.frustumCulled = false;
+      this.flies.userData.base = pos.slice();
+      G.add(this.flies);
     }
     if (A.water) {
       // shallow lagoon ring with bright foam edge
@@ -885,6 +940,14 @@ export class Arena {
         if (a[i + 1] < 0) a[i + 1] += 22;
       }
       p.needsUpdate = true;
+    }
+    if (this.flies) {
+      const p = this.flies.geometry.attributes.position, a = p.array, b = this.flies.userData.base;
+      for (let i = 0; i < a.length; i += 3) {
+        a[i] = b[i] + Math.sin(t * 0.5 + i) * 1.2; a[i + 1] = b[i + 1] + Math.sin(t * 0.8 + i * 0.7) * 0.6; a[i + 2] = b[i + 2] + Math.cos(t * 0.45 + i * 1.3) * 1.2;
+      }
+      p.needsUpdate = true;
+      this.flies.material.opacity = 0.75 + Math.sin(t * 3) * 0.2;
     }
     if (this.cracks) this.cracks.material.opacity = 0.75 + Math.sin(t * 1.7) * 0.2;
     this.excite = Math.max(0.15, this.excite - dt * 0.25);

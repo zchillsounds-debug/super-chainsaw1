@@ -1,6 +1,6 @@
 // Arena hazards: a glowing warning ring appears on the floor, then the arena erupts there.
 // Volcano: lava geyser (launches). Frost: falling icicle. Neon: shock tile (brief paralysis). Beach: coconut.
-// Sky: updraft (launches, gently).
+// Sky: updraft (launches, gently). Grove: spore puff (fills the dizzy meter).
 // Hazards never KO (they leave at least 1 HP) and a guard soaks them fully.
 import * as THREE from 'three';
 import { toon, inked } from './toon.js';
@@ -13,6 +13,7 @@ export const HAZARDS = {
   frost:   { name: 'Falling icicles', color: 0x1f6fe0, solid: true, glow: 0xd8f6ff, r: 1.0, warn: 1.2, dmg: 8, stun: 0.55, kb: 3, word: 'CLONK!' },
   neon:    { name: 'Shock tiles', color: 0xff3fd8, glow: 0x9af4ff, r: 1.3, warn: 1.1, dmg: 6, stun: 0.3, paralyze: 0.6, kb: 1.5, word: 'ZZAP!' },
   sky:     { name: 'Updrafts', color: 0x4aa8ff, solid: true, glow: 0xffffff, r: 1.2, warn: 1.3, dmg: 6, lift: 9, kb: 1, word: 'WHOOSH!' },
+  grove:   { name: 'Spore puffs', color: 0x9adf4a, solid: true, glow: 0xe8ffa0, r: 1.3, warn: 1.2, dmg: 5, stun: 0.5, kb: 1, dizzy: 45, word: 'ACHOO!' },
   beach:   { name: 'Coconuts', color: 0xe0482a, solid: true, glow: 0xfff2c0, r: 0.9, warn: 1.2, dmg: 7, stun: 0.5, kb: 3, word: 'BONK!' },
 };
 
@@ -180,6 +181,10 @@ export class Hazards {
     } else if (key === 'frost') {
       B.fx.burst(p, { n: 16, speed: 5, up: 3, color: 0xd8f6ff, size: 0.22, life: 0.5, shape: 'star', additive: false, grav: 8 });
       sfx.bonk();
+    } else if (key === 'grove') {
+      B.fx.burst({ x: h.x, y: 0.3, z: h.z }, { n: 22, speed: 3.5, up: 4, color: 0xc8ff7a, size: 0.55, life: 1.1, shape: 'puff', additive: false, grav: -0.5, grow: 1.3, alpha: 0.7 });
+      B.fx.burst({ x: h.x, y: 0.5, z: h.z }, { n: 10, speed: 2, up: 3, color: 0xfff6a0, size: 0.2, life: 1, shape: 'star', additive: true, grav: 0.5 });
+      sfx.whoosh?.(0.4);
     } else if (key === 'neon') {
       for (let k = 0; k < 6; k++) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * H.r * 1.4, y: 0.6 + Math.random() * 0.8, z: h.z + (Math.random() - 0.5) * H.r * 1.4, color: H.glow, size: 1.1, life: 0.22, shape: 'bolt', rot: Math.random() * 6 });
       sfx.spark();
@@ -195,7 +200,7 @@ export class Hazards {
       if (f.state === 'guard') { f.shield.userData.flash = 1; B.fx.text(f.headPos(), 'BLOCK', '', 0.5); continue; }
       const dirX = d > 0.05 ? dx / d : Math.random() - 0.5, dirZ = d > 0.05 ? dz / d : 0.5;
       const dmg = Math.min(H.dmg, f.hp - 1);
-      f.takeHit({ dmg: Math.max(0, dmg), kb: H.kb, dirX, dirZ, stun: H.stun || 0.4, lift: H.lift || 0, launch: !!H.lift, paralyze: H.paralyze });
+      f.takeHit({ dmg: Math.max(0, dmg), kb: H.kb, dirX, dirZ, stun: H.stun || 0.4, lift: H.lift || 0, launch: !!H.lift, paralyze: H.paralyze, dizzy: H.dizzy || 0 });
       f.dmgDelay = 0.3;
       if (f === B.player) { B.roundDmgTaken += Math.max(0, dmg); B.stats.hazardHits = (B.stats.hazardHits || 0) + 1; }
       const hp = f.headPos();

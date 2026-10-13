@@ -315,7 +315,7 @@ export function dailyChallenge(date = new Date()) {
   return {
     key,
     foe: CRITTERS[Math.floor(rnd() * CRITTERS.length)].id,
-    arena: ['meadow', 'beach', 'volcano', 'frost', 'neon', 'sky'][Math.floor(rnd() * 6)],
+    arena: ['meadow', 'beach', 'volcano', 'frost', 'neon', 'sky', 'grove'][Math.floor(rnd() * 7)],
     mod: mods[Math.floor(rnd() * mods.length)],
     shiny: rnd() < 0.3,
   };
