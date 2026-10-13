@@ -741,7 +741,7 @@ export class Screens {
     this.root.innerHTML = `
       <div class="results ${won ? 'won' : 'lost'}">
         <h1>${won ? 'VICTORY!' : 'DEFEAT'}</h1>
-        ${quote ? `<div class="res-quote"><b>${quote.who}</b> “${quote.line}”</div>` : ''}
+        ${quote ? `<div class="res-quote"><img src="${g.portrait(cDef)}" alt=""><span><b>${quote.who}</b> “${quote.line.replaceAll('{name}', save.trainer?.name || 'Trainer')}”</span></div>` : ''}
         <div class="res-card">
           <div class="grade g-${grade}"><small>Rank</small>${grade}</div>
           <img src="${g.portrait(pDef)}" alt="">
