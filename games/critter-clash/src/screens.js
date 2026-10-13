@@ -1,4 +1,5 @@
 // Title, tournament cups/ladder, critter select, VS splash, results and pause overlays.
+import { buzz } from './haptics.js';
 import { CRITTERS, TYPES, CUPS, SHINY, BADGES, MODS, STARTERS, skinned, withGear, gearFor, GEAR, dailyChallenge } from './data.js';
 import { sfx, playMusic } from './audio.js';
 import { HAZARDS } from './hazards.js';
@@ -65,7 +66,7 @@ export class Screens {
     const b = document.createElement('button');
     b.className = 'btn ' + cls;
     b.innerHTML = label;
-    b.addEventListener('click', (e) => { e.stopPropagation(); sfx.ui('ok'); if (save.settings.vibrate) navigator.vibrate?.(10); fn(); });
+    b.addEventListener('click', (e) => { e.stopPropagation(); sfx.ui('ok'); buzz('light'); fn(); });
     return b;
   }
 

@@ -1,4 +1,5 @@
 // Unified input: keyboard, a floating touch joystick + action buttons, and gamepads.
+import { buzz } from './haptics.js';
 export const isTouch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || /[?&]mobile/.test(location.search);
 
 const ICONS = {
@@ -97,7 +98,7 @@ export class Input {
         btn.setPointerCapture(e.pointerId);
         this._queued[b] = true; this.touchHeld[b] = true;
         btn.classList.add('down');
-        navigator.vibrate?.(12);
+        buzz('light');
       });
       const up = () => { this.touchHeld[b] = false; btn.classList.remove('down'); };
       btn.addEventListener('pointerup', up);

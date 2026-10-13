@@ -1,4 +1,5 @@
 // One match: two fighters, rounds, hit resolution, projectiles, supers, camera direction.
+import { buzz } from './haptics.js';
 import * as THREE from 'three';
 import { Fighter, SPECIALS } from './fighter.js';
 import { Training } from './training.js';
@@ -150,6 +151,8 @@ export class Battle {
     def.superM = Math.min(100, def.superM + dmg * 0.05 * this.superMult);
     const heavy = h.heavy || dmg > 90;
     this.hitstop = heavy ? 0.13 : 0.065;
+    // feel the big ones in your hands: landing them or taking them
+    if (heavy && (att === this.player || def === this.player) && !this.game.autoplay) buzz('medium');
     this.shake(heavy ? 0.5 : 0.18);
     const p = def.chestPos();
     p.x -= h.dirX * 0.2; p.z -= h.dirZ * 0.2;
@@ -418,6 +421,7 @@ export class Battle {
 
   // -------- supers --------
   startSuper(f) {
+    if (f === this.player && !this.game.autoplay) buzz('heavy');
     f.superM = 0;
     f.setState('super');
     f.superPhase = 'cutin';
@@ -921,6 +925,7 @@ export class Battle {
 
   // -------- KO & rounds --------
   onKO(att, def) {
+    if (!this.game.autoplay) buzz('heavy');
     this.phase = 'ko';
     this.phaseT = 0;
     this.slowmo = 1.6;
