@@ -18,6 +18,8 @@ export const SPECIALS = {
   gale:    { cd: 3.8, range: [3, 9] },
   iceslide:{ cd: 4.2, range: [2, 8] },
   wisps:   { cd: 4.0, range: [3, 9] },
+  seedspray: { cd: 3.6, range: [1.5, 5.5] },
+  fuzzball:  { cd: 4.0, range: [3, 9] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -41,7 +43,7 @@ const tailwhip = (P, i, w, s) => {
   if (!s) { P.yaw = 0.8 * w; P.sy = 0.85; return; }
   P.yaw = Math.PI * 0.95; P.tail = 3; P.lean = -0.2; P.armLz = P.armRz = 1.2;
 };
-const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip };
+const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip, pricklepuff: kick, woolt: headbutt };
 
 // translucent fresnel bubble shown while guarding
 function makeShield(color, h) {
@@ -533,6 +535,39 @@ export class Fighter {
         sfx.fire();
       }
       if (this.st > 0.75) { this.wispN = 0; this.endSpecial(); }
+    } else if (id === 'seedspray') {
+      // puff up the spines, then spit a fan of seeds
+      if (this.st < 0.2) { if (o) this.turnTo(this.angleTo(o), 12, dt); this.critter.pose.sx = 1.2; this.critter.pose.sy = 0.85; }
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 10, dt);
+      this.vz = THREE.MathUtils.damp(this.vz, 0, 10, dt);
+      if (!this.specFired && this.st > 0.2) {
+        this.specFired = true;
+        for (let k = -2; k <= 2; k++) {
+          const a = this.face + k * 0.2;
+          B.spawnProjectile(this, { kind: 'seed', x: this.x + Math.sin(a) * 0.55, z: this.z + Math.cos(a) * 0.55, y: 0.6, vx: Math.sin(a) * 14, vz: Math.cos(a) * 14, r: 0.28, life: 0.5,
+            hit: { dmg: 27 * this.power, kb: 2.4, lift: 0, stun: 0.26, type: this.type, dizzy: 7 } });
+        }
+        sfx.leaf(); sfx.whoosh?.(0.4);
+        this.vx = -fx * 4; this.vz = -fz * 4; // a little recoil hop
+        B.fx.burst({ x: this.x + fx * 0.6, y: 0.6, z: this.z + fz * 0.6 }, { n: 8, speed: 4, color: 0x7cff6a, shape: 'leaf', additive: false, size: 0.22, life: 0.45, grav: 3 });
+      }
+      if (this.st > 0.55) this.endSpecial();
+    } else if (id === 'fuzzball') {
+      // shake the wool into a crackling ball and bowl it
+      if (this.st < 0.25) {
+        if (o) this.turnTo(this.angleTo(o), 12, dt);
+        this.vx = this.vz = 0;
+        this.critter.pose.roll = Math.sin(this.st * 60) * 0.25;
+        if (Math.random() < 0.5) B.fx.spawn({ x: this.x + (Math.random() - 0.5) * 0.9, y: 0.4 + Math.random() * 0.9, z: this.z + (Math.random() - 0.5) * 0.9, color: 0xffe14d, size: 0.3, life: 0.15, shape: 'bolt', rot: Math.random() * 6 });
+      }
+      if (!this.specFired && this.st > 0.25) {
+        this.specFired = true;
+        const a = this.face;
+        B.spawnProjectile(this, { kind: 'fuzz', x: this.x + fx * 0.8, z: this.z + fz * 0.8, y: 0.42, vx: Math.sin(a) * 8.5, vz: Math.cos(a) * 8.5, r: 0.5, life: 1.5,
+          hit: { dmg: 72 * this.power, kb: 3.2, lift: 0, stun: 0.45, type: this.type, dizzy: 14, paralyze: 0.9 } });
+        sfx.spark();
+      }
+      if (this.st > 0.6) this.endSpecial();
     }
     void tcol;
   }
@@ -643,6 +678,8 @@ export class Fighter {
     } else if (S === 'special' && this.def.special === 'iceslide' && this.st >= 0.2 && this.st < 0.95) {
       P.lean = 1.45; P.y = 0.12; P.armLz = P.armRz = 1.2; P.armLx = P.armRx = 0.6; P.legL = P.legR = 1.2; P.head = -0.9; P.sx = 1.1; P.sy = 0.95;
       this.critter.emote('happy', 'grin', 0.1);
+    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble') && this.superPhase !== 'cutin') {
+      // posed frame by frame in Battle.updateSuper
     } else if (S === 'special' || S === 'super') {
       if (this.st < 0.28) { P.sy = 0.8; P.sx = 1.15; P.lean = -0.25; P.armLz = P.armRz = 0.8; P.ear = 0.8; }
       else { P.sy = 1.15; P.sx = 0.9; P.lean = 0.6; P.armLx = P.armRx = -1.8; P.ear = 1; P.legL = 0.7; P.legR = 0.7; }

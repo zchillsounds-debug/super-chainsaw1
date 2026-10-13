@@ -19,6 +19,11 @@ export const LINES = {
   emberfly:    { intro: ['Light it up!', 'Glow time!', 'Bzz... I mean, hi!'], win: ['Glowing victory!', 'Lights out!', 'Not a bug. A STAR.'] },
 };
 
+Object.assign(LINES, {
+  pricklepuff: { intro: ["Don't touch the spines!", 'Prickly and proud!', "Hmph. Fine. Let's go."], win: ['Told you. Prickly.', 'Leaf me alone now.', 'Hmph! Too easy.'] },
+  woolt:       { intro: ['Baa-zzt!', 'Static cling, incoming!', 'Fluffed up and ready!'], win: ['Shear power!', 'Baa-rilliant!', 'Hair-raising!'] },
+});
+
 export function sayLine(f, kind) {
   const L = LINES[f.def.id]?.[kind];
   if (!L) return;
@@ -28,6 +33,33 @@ export function sayLine(f, kind) {
 
 // ---------------- intros (about 1.5 s, then a held "ready" pose) ----------------
 const INTRO = {
+  pricklepuff(f, P, k) {
+    const fx = f.battle.fx;
+    if (k < 0.8) { // curled-up spiky ball, rolling on the spot
+      P.lean = k * 16; P.sy = 0.72; P.sx = 1.12; P.head = 0.9; P.armLx = P.armRx = 1.4; P.legL = P.legR = 1.2; P.y = 0.12;
+      f.critter.emote('closed', 'o', 0.1);
+      if (Math.random() < 0.3) fx.dust(f, 1, 0.5);
+    } else if (k < 1.4) { // POP! spines out, little grumpy huff
+      if (once(f, 'pop')) { sfx.leaf(); fx.burst({ x: f.x, y: 0.7, z: f.z }, { n: 14, speed: 5, up: 3, color: 0x7cff6a, shape: 'leaf', additive: false, size: 0.26, life: 0.7, grav: 6, spin: 8 }); sfx.voice(f.def.voice, 'attack'); }
+      const j = Math.max(0, 1 - (k - 0.8) * 4);
+      P.y = j * 0.4; P.sx = 1.15; P.sy = 1.05; P.armLz = P.armRz = 1.2; P.head = -0.2;
+      f.critter.emote('angry', 'grin', 0.1);
+    } else ready(f, P, k);
+  },
+  woolt(f, P, k) {
+    const fx = f.battle.fx;
+    if (k < 0.9) { // wet-dog shake to build up static
+      const w = sin(k * 38);
+      P.roll = w * 0.22; P.yaw = w * 0.3; P.headRoll = -w * 0.3; P.ear = 0.8 + w * 0.6; P.sx = 1.05;
+      f.critter.emote('closed', 'wobbly', 0.1);
+      if (Math.random() < 0.5) { const h = head(f, 0.1); fx.spawn({ x: h.x + rnd(1.4), y: h.y + rnd(1), z: h.z + rnd(1.4), color: 0xffe14d, size: 0.35, life: 0.12, shape: 'bolt', rot: Math.random() * 6 }); }
+      if (once(f, 'shake')) sfx.whoosh?.(1.3);
+    } else if (k < 1.4) { // ZAP! fluff stands on end
+      if (once(f, 'zap')) { sfx.spark(); fx.burst(head(f), { n: 16, speed: 6, color: 0xffe14d, size: 0.24, life: 0.4, shape: 'spark' }); sfx.voice(f.def.voice, 'attack'); }
+      P.sy = 1.18; P.sx = 1.1; P.armLz = P.armRz = 2.4; P.ear = -0.6;
+      f.critter.emote('happy', 'open', 0.1);
+    } else ready(f, P, k);
+  },
   cindermunch(f, P, k) {
     const fx = f.battle.fx;
     if (k < 0.7) { // chew chew chew
@@ -133,6 +165,18 @@ function ready(f, P, k) {
 
 // ---------------- victories (loop for the winpose) ----------------
 const WIN = {
+  pricklepuff(f, P, k) { // arms folded, proud little hops, leaves drifting
+    const j = abs(sin(k * 4));
+    P.y = j * 0.25; P.armLx = P.armRx = -1.1; P.armLz = P.armRz = -0.9; P.head = -0.25; P.headYaw = sin(k * 1.3) * 0.4; P.sx = 1.06;
+    f.critter.emote('closed', 'grin', 0.1);
+    if (Math.random() < 0.08) f.battle.fx.spawn({ x: f.x + rnd(1.6), y: f.y + 2, z: f.z + rnd(1.6), vy: -0.5, color: 0x7cff6a, size: 0.28, life: 1.5, shape: 'leaf', additive: false, spin: 4, drag: 2 });
+  },
+  woolt(f, P, k) { // bouncy fluffball, crackling with joy
+    const j = abs(sin(k * 5));
+    P.y = j * 0.45; P.sy = j > 0.2 ? 1.08 : 0.85; P.armLz = P.armRz = 1.8 + sin(k * 10) * 0.4; P.ear = 0.4 + j;
+    f.critter.emote('happy', 'open', 0.1);
+    if (Math.random() < 0.15) { const h = head(f, 0.3); f.battle.fx.spawn({ x: h.x + rnd(1), y: h.y + rnd(0.6), z: h.z + rnd(1), color: 0xffe14d, size: 0.3, life: 0.12, shape: 'bolt', rot: Math.random() * 6 }); }
+  },
   cindermunch(f, P, k) { // happy munching with flame puffs
     const c = abs(sin(k * 9));
     P.y = abs(sin(k * 4.5)) * 0.3; P.sx = 1 + c * 0.12; P.sy = 1 - c * 0.06; P.armLx = P.armRx = -1.6; P.armLz = P.armRz = -0.4;

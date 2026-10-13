@@ -2,6 +2,7 @@
 // driven by a springy pose so every motion squashes and overshoots.
 import * as THREE from 'three';
 import { toon, inked, canvasTex } from './toon.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const SEG = 36;
 const sphere = (r = 1) => new THREE.SphereGeometry(r, SEG, Math.round(SEG * 0.75));
@@ -353,6 +354,15 @@ export class Critter {
         bulb.position.y = headR * 0.72;
         ear.add(bulb);
         (this.glows ||= []).push(bulb);
+      } else if (def.ears === 'floppy') {
+        // sheepy ears that droop out sideways
+        ear.position.set(s * headR * 0.78, headR * 0.28, -headR * 0.05);
+        const e = inked(capsule(headR * 0.14, headR * 0.42), this.mats.body, OL);
+        e.scale.set(1, 1, 0.55); e.rotation.z = s * 1.9; e.position.x = s * headR * 0.22;
+        ear.add(e);
+        const inner = new THREE.Mesh(capsule(headR * 0.08, headR * 0.3), this.mats.accent);
+        inner.scale.set(1, 1, 0.4); inner.rotation.z = s * 1.9; inner.position.set(s * headR * 0.22, -headR * 0.02, headR * 0.06);
+        ear.add(inner);
       } else if (def.ears === 'gills') {
         ear.position.set(s * headR * 0.86, headR * 0.05, -headR * 0.1);
         for (let k = 0; k < 3; k++) {
@@ -407,6 +417,66 @@ export class Critter {
       dome.scale.set(B.w * B.chubby * 1.06, B.h * 1.02, B.w * 0.9);
       dome.position.set(0, B.h * 0.5, -B.w * 0.12);
       torso.add(dome);
+    }
+
+    // fluffy static wool: merged puffs over the body and a big tuft on the head
+    if (def.extra === 'wool') {
+      const parts = [], add = (r, x, y, z) => { const g = sphere(r); g.translate(x, y, z); parts.push(g); };
+      const ex = B.w * B.chubby * 0.5, ey = B.h * 0.5, ez = B.w * 0.95 * 0.5, cy = B.h * 0.48;
+      for (let i = 0; i < 44; i++) {
+        // golden-spiral points over the body, skipping the belly window
+        const y = 1 - (i + 0.5) / 44 * 1.75, r = Math.sqrt(1 - y * y), a = i * 2.39996;
+        const dx = Math.cos(a) * r, dz = Math.sin(a) * r;
+        if (dz > 0.45 && y < 0.5 && y > -0.7) continue;
+        add(0.13 + (i % 3) * 0.025, dx * ex * 0.97, cy + y * ey * 0.97, dz * ez * 0.97);
+      }
+      const torsoWool = inked(mergeGeometries(parts), this.mats.belly, OL);
+      torso.add(torsoWool);
+      const hp = [];
+      for (let i = 0; i < 11; i++) {
+        const a = i / 11 * Math.PI * 2, pol = i % 2 ? 0.55 : 0.8;
+        if (Math.sin(a) > 0.2 && pol > 0.6) continue; // keep the brow clear
+        const g = sphere(headR * (0.26 + (i % 3) * 0.03));
+        g.translate(Math.cos(a) * Math.sin(pol) * headR, Math.cos(pol) * headR + headR * 0.04, Math.sin(a) * Math.sin(pol) * headR * 0.95 - headR * 0.05);
+        hp.push(g);
+      }
+      const top = sphere(headR * 0.36); top.translate(0, headR * 0.98, -headR * 0.05); hp.push(top);
+      const bang = sphere(headR * 0.24); bang.translate(0, headR * 0.86, headR * 0.42); hp.push(bang);
+      skull.add(inked(mergeGeometries(hp), this.mats.belly, OL));
+      // a little static spark poking out of the tuft
+      const spark = inked(boltGeo(), new THREE.MeshBasicMaterial({ color: C.accent }), OL * 0.6);
+      spark.scale.setScalar(0.55); spark.position.set(headR * 0.22, headR * 1.12, 0); spark.rotation.z = -0.3;
+      skull.add(spark);
+      (this.glows ||= []).push(spark);
+      this.spark = spark;
+    }
+
+    // leafy hedgehog spines: one merged mesh over the back of the body and head
+    if (def.extra === 'spines') {
+      const cone = (r, h) => { const g = new THREE.ConeGeometry(r, h, 6); g.translate(0, h / 2, 0); return g; };
+      const place = (list, g, pos, nrm) => { g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), nrm)); g.translate(pos.x, pos.y, pos.z); list.push(g); };
+      const bp = [], hp = [];
+      const ex = B.w * B.chubby * 0.5, ey = B.h * 0.5, ez = B.w * 0.95 * 0.5, cy = B.h * 0.48;
+      for (let i = 0; i < 40; i++) {
+        const y = 1 - (i + 0.5) / 40 * 1.6, r = Math.sqrt(1 - y * y), a = i * 2.39996;
+        const d = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+        if (d.z > -0.15 || d.y < -0.55) continue;
+        const n = new THREE.Vector3(d.x / ex, d.y / ey, d.z / ez).normalize().lerp(new THREE.Vector3(0, 0.3, -1), 0.35).normalize();
+        place(bp, cone(0.075, 0.26 + (i % 3) * 0.04), new THREE.Vector3(d.x * ex * 0.92, cy + d.y * ey * 0.92, d.z * ez * 0.92), n);
+      }
+      for (let i = 0; i < 46; i++) {
+        const y = 1 - (i + 0.5) / 46 * 1.5, r = Math.sqrt(1 - y * y), a = i * 2.39996;
+        const d = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+        if (d.z > -0.05 + Math.max(0, d.y - 0.6) * -1 || d.y < -0.35) continue;
+        const n = d.clone().lerp(new THREE.Vector3(0, 0.4, -1), 0.4).normalize();
+        place(hp, cone(headR * 0.15, headR * (0.5 + (i % 3) * 0.08)), d.clone().multiplyScalar(headR * 0.9), n);
+      }
+      torso.add(inked(mergeGeometries(bp), this.mats.accent, OL * 0.7));
+      skull.add(inked(mergeGeometries(hp), this.mats.accent, OL * 0.7));
+      // a single clover leaf tucked behind one ear
+      const lf = inked(leafGeo().scale(headR * 0.5, headR * 0.5, headR * 0.5), this.mats.dark, OL * 0.6);
+      lf.position.set(headR * 0.55, headR * 0.7, 0); lf.rotation.set(-1.1, 0.6, 0.3);
+      skull.add(lf);
     }
 
     // gauzy insect wings on the back

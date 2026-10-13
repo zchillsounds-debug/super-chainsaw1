@@ -268,6 +268,24 @@ export class Battle {
       const c = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), new THREE.MeshToonMaterial({ color: 0xffe066 }));
       mesh.add(c);
     }
+    else if (p.kind === 'seed') {
+      const sd = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), new THREE.MeshToonMaterial({ color: 0x9a6a34, emissive: 0x2a1808 }));
+      sd.scale.set(0.8, 0.8, 1.6);
+      const lf = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), new THREE.MeshToonMaterial({ color: 0x5bd36a, emissive: 0x1d5a20 }));
+      lf.scale.set(1, 0.25, 1.4); lf.position.set(0, 0.06, -0.18);
+      mesh.add(sd, lf);
+      mesh.rotation.y = Math.atan2(p.vx, p.vz);
+    } else if (p.kind === 'fuzz') {
+      const wool = new THREE.MeshToonMaterial({ color: 0xfff6d6, emissive: 0x3a3010 });
+      const ball = new THREE.Group();
+      for (let k = 0; k < 7; k++) {
+        const w = new THREE.Mesh(new THREE.SphereGeometry(k ? 0.2 : 0.34, 12, 9), wool);
+        if (k) { const a = k * 2.4, y = Math.cos(k * 1.7) * 0.22; w.position.set(Math.cos(a) * 0.24, y, Math.sin(a) * 0.24); }
+        ball.add(w);
+      }
+      const halo = new THREE.Mesh(new THREE.SphereGeometry(0.62, 14, 10), new THREE.MeshBasicMaterial({ color: 0xffe14d, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false }));
+      mesh.add(ball, halo);
+    }
     mesh.position.set(p.x, p.y, p.z);
     this.scene.add(mesh);
     this.projectiles.push({ ...p, owner, mesh, t: 0, hitOnce: new Set(), outbound: true });
@@ -311,6 +329,18 @@ export class Battle {
         const tg = this.fighters[1 - pr.owner.side];
         const dd = Math.hypot(tg.x - pr.x, tg.z - pr.z);
         if (dd < 2.2 && tg.state !== 'dodge') { tg.x += (pr.x - tg.x) * dt * 3; tg.z += (pr.z - tg.z) * dt * 3; }
+      } else if (pr.kind === 'seed') {
+        pr.vx *= Math.exp(-1.5 * dt); pr.vz *= Math.exp(-1.5 * dt);
+        if (Math.random() < 0.4) this.fx.spawn({ x: pr.x, y: pr.y, z: pr.z, color: 0xc8ff9a, size: 0.18, life: 0.2, shape: 'glow', grow: -1 });
+        if (pr.hitOnce.size) { this.fx.burst({ x: pr.x, y: pr.y, z: pr.z }, { n: 5, speed: 3, color: 0x7cff6a, shape: 'leaf', additive: false, size: 0.16, life: 0.35, grav: 5 }); this.removeProjectile(i); continue; }
+      } else if (pr.kind === 'fuzz') {
+        const sp = Math.hypot(pr.vx, pr.vz);
+        pr.mesh.children[0].rotation.x += dt * sp / 0.42; // roll along the ground
+        pr.mesh.rotation.y = Math.atan2(pr.vx, pr.vz);
+        pr.mesh.children[1].scale.setScalar(1 + Math.sin(pr.t * 30) * 0.12);
+        if (Math.random() < 0.45) this.fx.spawn({ x: pr.x + (Math.random() - 0.5) * 0.8, y: pr.y + (Math.random() - 0.3) * 0.8, z: pr.z + (Math.random() - 0.5) * 0.8, color: 0xffe14d, size: 0.32, life: 0.12, shape: 'bolt', rot: Math.random() * 6 });
+        if (Math.random() < 0.25) this.fx.dust({ x: pr.x, z: pr.z }, 1, 0.5);
+        if (pr.hitOnce.size) { this.fx.burst({ x: pr.x, y: pr.y, z: pr.z }, { n: 12, speed: 6, color: 0xffe14d, size: 0.22, life: 0.35, shape: 'spark' }); this.removeProjectile(i); continue; }
       } else if (pr.kind === 'bubble') {
         pr.mesh.scale.setScalar(1 + Math.sin(pr.t * 12) * 0.06);
         pr.y = 0.7 + Math.sin(pr.t * 6) * 0.1;
@@ -564,7 +594,97 @@ export class Battle {
         else if (t > 1.2) { f.y = 0; this.endSuper(f); }
       }
     }
+    else if (id === 'bramble') {
+      if (f.superPhase === 'go') {
+        f.superPhase = 'vines'; f.st = 0; f.vineN = 0;
+        f.vine = { x: f.x, z: f.z, a: f.angleTo(o) };
+        sfx.leaf(); this.shake(0.3);
+      }
+      if (f.superPhase === 'vines') {
+        const P = f.critter.pose;
+        P.armLz = P.armRz = 2.2; P.sy = 0.9; P.lean = -0.2;
+        // a line of thorns bursts up, curling toward the rival as it goes
+        const n = Math.floor(t / 0.055);
+        while (f.vineN <= n && f.vineN < 14) {
+          const V = f.vine;
+          const want = Math.atan2(o.x - V.x, o.z - V.z);
+          let da = want - V.a; da = Math.atan2(Math.sin(da), Math.cos(da));
+          V.a += THREE.MathUtils.clamp(da, -0.35, 0.35);
+          V.x += Math.sin(V.a) * 0.75; V.z += Math.cos(V.a) * 0.75;
+          const big = f.vineN === 13;
+          this.thorns(V.x, V.z, big);
+          if (f.vineN % 3 === 0) sfx.hit(false);
+          if (!f.hitIds.has(o) && !o.airborne && Math.hypot(o.x - V.x, o.z - V.z) < 1.05) {
+            f.hitIds.add(o);
+            const a = V.a;
+            this.applyHit(f, o, { dmg: 250 * f.power, kb: 4, lift: 13, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 40 });
+            fx.burst({ x: o.x, y: 0.8, z: o.z }, { n: 24, speed: 8, up: 6, color: 0xff7eb6, shape: 'leaf', additive: false, size: 0.3, life: 0.9, grav: 6, spin: 8 });
+            fx.shock({ x: o.x, z: o.z }, 0x7cff6a, 3, 0.4);
+            sfx.boom(); this.shake(0.6); this.game.impactFrame(0.08);
+          }
+          f.vineN++;
+        }
+        if (t > 1.15) this.endSuper(f);
+      }
+    } else if (id === 'megafluff') {
+      const P = f.critter.pose;
+      if (f.superPhase === 'go') { f.superPhase = 'inflate'; f.st = 0; f.bounceN = 0; sfx.superCharge(); }
+      if (f.superPhase === 'inflate') {
+        const k = Math.min(1, t / 0.45);
+        f.root.scale.setScalar(1 + k * 0.9 + Math.sin(t * 40) * 0.04 * (1 - k));
+        P.armLz = P.armRz = 1.6; P.sx = 1.15;
+        f.critter.emote('angry', 'grin', 0.2);
+        if (Math.random() < 0.6) fx.spawn({ x: f.x + (Math.random() - 0.5) * 2, y: Math.random() * 2.2, z: f.z + (Math.random() - 0.5) * 2, color: 0xffe14d, size: 0.5, life: 0.12, shape: 'bolt', rot: Math.random() * 6 });
+        if (t > 0.5) this.fluffHop(f, o);
+      } else if (f.superPhase === 'hop') {
+        P.legL = P.legR = -0.6; P.armLz = P.armRz = 2.3; P.sy = f.vy > 0 ? 1.1 : 0.95;
+        if (Math.random() < 0.5) fx.spawn({ x: f.x + (Math.random() - 0.5) * 1.6, y: f.y + Math.random() * 2, z: f.z + (Math.random() - 0.5) * 1.6, color: 0xffe14d, size: 0.45, life: 0.12, shape: 'bolt', rot: Math.random() * 6 });
+      } else if (f.superPhase === 'squash') {
+        P.sy = 0.7; P.sx = 1.3;
+        if (t > 0.12) { if (f.bounceN < 3) this.fluffHop(f, o); else { f.superPhase = 'deflate'; f.st = 0; sfx.whoosh?.(0.5); } }
+      } else if (f.superPhase === 'deflate') {
+        f.root.scale.setScalar(Math.max(1, 1.9 - t * 2.4));
+        if (t > 0.4) { f.root.scale.setScalar(1); this.endSuper(f); }
+      }
+    }
     void tcol;
+  }
+
+  fluffHop(f, o) {
+    f.superPhase = 'hop'; f.st = 0;
+    f.vy = 10; f.y = 0.05;
+    const T = 2 * f.vy / this.grav, tx = o.x - f.x, tz = o.z - f.z;
+    f.vx = tx / T; f.vz = tz / T;
+    f.face = Math.atan2(tx, tz);
+    sfx.whoosh?.(0.6);
+  }
+
+  thorns(x, z, big) {
+    const mat = this.thornMat ||= new THREE.MeshToonMaterial({ color: 0x3fae4a });
+    const geo = this.thornGeo ||= new THREE.ConeGeometry(0.16, 1, 5);
+    const g = new THREE.Group();
+    const n = big ? 6 : 3;
+    for (let i = 0; i < n; i++) {
+      const m = new THREE.Mesh(geo, mat);
+      const a = Math.random() * 6.28, r = Math.random() * (big ? 0.6 : 0.3);
+      m.position.set(x + Math.cos(a) * r, -0.6, z + Math.sin(a) * r);
+      m.rotation.set((Math.random() - 0.5) * 0.7, 0, (Math.random() - 0.5) * 0.7);
+      m.scale.set(1, (big ? 1.8 : 1) * (0.7 + Math.random() * 0.6), 1);
+      m.castShadow = true;
+      g.add(m);
+    }
+    this.scene.add(g);
+    this.fx.dust({ x, z }, big ? 6 : 2, big ? 1.4 : 0.8);
+    this.fx.burst({ x, y: 0.3, z }, { n: big ? 10 : 3, speed: 3, up: 3, color: 0x7cff6a, shape: 'leaf', additive: false, size: 0.22, life: 0.5, grav: 6, spin: 6 });
+    let t = 0;
+    this.anim((dt) => {
+      t += dt;
+      const up = t < 0.08 ? t / 0.08 : t > 0.7 ? Math.max(0, 1 - (t - 0.7) / 0.3) : 1;
+      g.children.forEach((m) => { m.position.y = -0.6 + up * 0.95 * m.scale.y; });
+      if (t < 1.0) return true;
+      this.scene.remove(g);
+      return false;
+    });
   }
 
   // short-lived scene effects that run on game time (so they pause and slow with the fight)
@@ -625,6 +745,23 @@ export class Battle {
   }
 
   superLand(f) {
+    if (f.def.super === 'megafluff' && f.superPhase === 'hop') {
+      const o = f.opp;
+      f.bounceN++;
+      f.superPhase = 'squash'; f.st = 0; f.vx = f.vz = 0;
+      const last = f.bounceN >= 3;
+      sfx.boom(); sfx.spark(); this.shake(last ? 0.8 : 0.45); this.game.impactFrame(last ? 0.1 : 0.05);
+      this.fx.shock(f, 0xffe14d, last ? 4.5 : 3, 0.4);
+      this.fx.dust(f, 12, 1.8);
+      this.fx.burst({ x: f.x, y: 0.4, z: f.z }, { n: 14, speed: 8, up: 3, color: 0xffe14d, size: 0.25, life: 0.4, shape: 'spark' });
+      if (o.alive && f.distTo(o) < (last ? 2.8 : 2.3) && o.y < 1.4) {
+        const a = f.angleTo(o);
+        this.applyHit(f, o, last
+          ? { dmg: 140 * f.power, kb: 9, lift: 10, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 30 }
+          : { dmg: 70 * f.power, kb: 1.5, lift: 0, stun: 1.1, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, paralyze: 0.5, dizzy: 12 });
+      }
+      return;
+    }
     if (f.def.super === 'quake' && f.superPhase === 'hop') {
       f.superPhase = 'quake'; f.st = 0; f.ringN = 0;
       this.game.impactFrame(0.08);
@@ -668,6 +805,7 @@ export class Battle {
   }
 
   endSuper(f) {
+    f.root.scale.setScalar(1);
     f.superInvuln = false;
     f.invuln = 0.3;
     f.y = Math.max(0, f.y);

@@ -97,6 +97,26 @@ export const CRITTERS = [
     special: 'wisps', super: 'supernova',
     moves: { special: 'Wisp Swarm', super: 'Supernova' },
   },
+  {
+    id: 'pricklepuff', name: 'Pricklepuff', type: 'leaf', species: 'Thicket Hedgehog',
+    blurb: 'Its spines are soft leaves until it gets grumpy. It gets grumpy a lot.',
+    colors: { body: 0xd9a46c, belly: 0xfff0d8, accent: 0x4fc45a, dark: 0x2f7a3a, eye: '#2a160c', iris: '#3fae4a' },
+    body: { w: 0.62, h: 0.52, headR: 0.5, legLen: 0.13, armLen: 0.18, chubby: 1.12 },
+    ears: 'round', tail: 'puff', extra: 'spines', voice: 1.3,
+    stats: { hp: 1000, speed: 6.0, power: 1.05, weight: 0.95 },
+    special: 'seedspray', super: 'bramble',
+    moves: { special: 'Seed Spray', super: 'Bramble Rush' },
+  },
+  {
+    id: 'woolt', name: 'Woolt', type: 'spark', species: 'Static Sheep',
+    blurb: 'One good shake and its wool crackles for hours. Nobody wants to hug it. It wants hugs.',
+    colors: { body: 0x7d76b0, belly: 0xfff6d6, accent: 0xffd23a, dark: 0x2e2a48, eye: '#1a1430', iris: '#ffc21a' },
+    body: { w: 0.66, h: 0.56, headR: 0.5, legLen: 0.15, armLen: 0.19, chubby: 1.18 },
+    ears: 'floppy', tail: 'puff', extra: 'wool', voice: 1.15,
+    stats: { hp: 1080, speed: 5.7, power: 1.0, weight: 1.15 },
+    special: 'fuzzball', super: 'megafluff',
+    moves: { special: 'Fuzz Ball', super: 'Mega Fluff Slam' },
+  },
 ];
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
@@ -108,6 +128,8 @@ export const SHINY = {
   rolladillo:  { body: 0x8cc7bf, belly: 0xe0f4ef, accent: 0x3c6e6a, dark: 0x1f3d3a, iris: '#2fd3c0' },
   hootsy:      { body: 0xf4f6ff, belly: 0xffffff, accent: 0xc9b6ff, dark: 0x5a4a8a, iris: '#7a4dff' },
   pengsicle:   { body: 0x2a2a34, belly: 0xfff4e0, accent: 0xff5a6a, dark: 0x101016, iris: '#ff7aa8' },
+  pricklepuff: { body: 0xf2e6ff, belly: 0xffffff, accent: 0xff7eb6, dark: 0xc23a7a, iris: '#ff4f9a' },
+  woolt:       { body: 0x3a3a52, belly: 0xbfe8ff, accent: 0x6af0ff, dark: 0x101020, iris: '#3ae0ff' },
   emberfly:    { body: 0x2f8a6a, belly: 0xdcffe6, accent: 0x7dffb0, dark: 0x113a2c, iris: '#3affa0' },
 };
 
@@ -125,7 +147,7 @@ export const CUPS = [
     id: 'sprout', arena: 'meadow', name: 'Sprout Cup', color: '#4fd35a', desc: 'A friendly warm-up for brand-new trainers.', diff: [0.15, 0.3],
     matches: [
       { name: 'Pip', style: 'balanced', title: 'Rookie', critter: 'bubbalotl', level: 1, taunt: "My Bubbalotl's never lost! ...today." },
-      { name: 'Marigold', style: 'turtle', title: 'Gardener', critter: 'clovebun', level: 2, taunt: 'Prepare to be weeded out!' },
+      { name: 'Marigold', style: 'turtle', title: 'Gardener', critter: 'pricklepuff', level: 2, taunt: 'Prepare to be weeded out!' },
       { name: 'Sparky Dee', style: 'trickster', title: 'Electrician', critter: 'voltferret', level: 3, taunt: "Shocking, isn't it?" },
     ],
   },
@@ -142,7 +164,7 @@ export const CUPS = [
     id: 'champion', arena: 'volcano', name: 'Champion Cup', color: '#ff5a8a', desc: 'Only the bonkiest survive.', diff: [0.65, 0.9], requires: 'thunder',
     matches: [
       { name: 'Lux', style: 'zoner', title: 'Night Ranger', critter: 'emberfly', level: 8, taunt: 'Lights out. Well... lights ON, actually.' },
-      { name: 'Volt Twins', style: 'rushdown', title: 'Double Trouble', critter: 'voltferret', level: 9, taunt: 'We finish each other\'s... ZAPS!' },
+      { name: 'Stormy', style: 'rushdown', title: 'Weather Girl', critter: 'woolt', level: 9, taunt: "Today's forecast: a 100% chance of getting zapped!" },
       { name: 'Big Boulder', style: 'turtle', title: 'Gym Owner', critter: 'rolladillo', level: 10, taunt: 'Leg day? Every day is roll day.' },
       { name: 'Aurora', style: 'trickster', title: 'Reigning Champion', critter: 'hootsy', skin: 'shiny', level: 12, taunt: "You came this far. Cute. Let's see how far you fly.", boss: true },
     ],
@@ -227,4 +249,8 @@ export const MOVE_DESC = {
   cyclone: 'Spins up a tornado that lifts the rival off their feet.',
   blizzard: 'A snow cloud chases the rival, pelting it with ice, then drops one huge icicle.',
   supernova: 'Glows brighter and brighter until... BOOM.',
+  seedspray: 'Puffs out a fan of five spiky seeds. Deadly up close.',
+  bramble: 'Thorny vines burst out of the ground in a line, chasing the rival down.',
+  fuzzball: 'Rolls a crackling ball of static wool along the ground. Leaves the rival twitchy.',
+  megafluff: 'Puffs up to giant size and body-slams the rival three times.',
 };
