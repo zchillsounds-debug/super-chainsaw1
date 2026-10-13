@@ -11,6 +11,7 @@ import { save } from './save.js';
 import { sayLine } from './personality.js';
 import { Items } from './items.js';
 import { Hazards } from './hazards.js';
+import { toon, inked } from './toon.js';
 
 const ROUND_TIME = 60;
 const INTRO_FIRST = 4.2, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
@@ -293,6 +294,17 @@ export class Battle {
       const halo = new THREE.Mesh(new THREE.SphereGeometry(0.62, 14, 10), new THREE.MeshBasicMaterial({ color: 0xffe14d, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false }));
       mesh.add(ball, halo);
     }
+    else if (p.kind === 'boulder') {
+      // chunky rock with a glinting crystal and a cartoon outline (shared toon materials, kept on removal)
+      const rock = inked(new THREE.DodecahedronGeometry(0.42, 0), toon(0xb8a690, { rim: 0.7 }), 0.03);
+      rock.scale.set(1, 0.85, 0.95);
+      const gem = inked(new THREE.OctahedronGeometry(0.14, 0), toon(0x9ae4ff, { rim: 1 }), 0.02);
+      gem.scale.set(0.7, 1.5, 0.7); gem.position.set(0.18, 0.3, 0.1); gem.rotation.z = -0.4;
+      const spin = new THREE.Group();
+      spin.add(rock, gem);
+      mesh.add(spin);
+      mesh.scale.setScalar(p.size || 1);
+    }
     mesh.position.set(p.x, p.y, p.z);
     this.scene.add(mesh);
     this.projectiles.push({ ...p, owner, mesh, t: 0, hitOnce: new Set(), outbound: true });
@@ -348,6 +360,13 @@ export class Battle {
         if (Math.random() < 0.45) this.fx.spawn({ x: pr.x + (Math.random() - 0.5) * 0.8, y: pr.y + (Math.random() - 0.3) * 0.8, z: pr.z + (Math.random() - 0.5) * 0.8, color: 0xffe14d, size: 0.32, life: 0.12, shape: 'bolt', rot: Math.random() * 6 });
         if (Math.random() < 0.25) this.fx.dust({ x: pr.x, z: pr.z }, 1, 0.5);
         if (pr.hitOnce.size) { this.fx.burst({ x: pr.x, y: pr.y, z: pr.z }, { n: 12, speed: 6, color: 0xffe14d, size: 0.22, life: 0.35, shape: 'spark' }); this.removeProjectile(i); continue; }
+      } else if (pr.kind === 'boulder') {
+        // a lob under gravity; it only hurts where it lands
+        pr.vy -= pr.g * dt;
+        pr.y += pr.vy * dt;
+        pr.mesh.children[0].rotation.x += dt * 9; pr.mesh.children[0].rotation.z += dt * 5;
+        if (pr.y > 2.5 && Math.random() < 0.3) this.fx.spawn({ x: pr.x, y: pr.y, z: pr.z, color: 0xd8c8b0, size: 0.4 * (pr.size || 1), life: 0.3, shape: 'puff', additive: false, alpha: 0.5 });
+        if (pr.vy < 0 && pr.y <= 0.35 * (pr.size || 1)) { this.boulderLand(pr, target); this.removeProjectile(i); continue; }
       } else if (pr.kind === 'bubble') {
         pr.mesh.scale.setScalar(1 + Math.sin(pr.t * 12) * 0.06);
         pr.y = 0.7 + Math.sin(pr.t * 6) * 0.1;
@@ -375,10 +394,25 @@ export class Battle {
     }
   }
 
+  boulderLand(pr, target) {
+    const big = (pr.size || 1) > 1.5, p = { x: pr.x, y: 0.05, z: pr.z };
+    this.fx.shock(p, 0xd8c8a8, pr.landR * 2, 0.35);
+    this.fx.dust(p, big ? 12 : 6, big ? 1.4 : 0.9);
+    this.fx.burst({ x: pr.x, y: 0.4, z: pr.z }, { n: big ? 18 : 8, speed: big ? 6 : 4, up: 4, color: 0x9a8a7a, size: big ? 0.3 : 0.2, life: 0.6, shape: 'puff', additive: false, grav: 14 });
+    this.shake(big ? 0.7 : 0.25);
+    big ? sfx.boom() : sfx.land();
+    const d = Math.hypot(target.x - pr.x, target.z - pr.z);
+    if (target.alive && d < pr.landR + 0.35 && target.y < 1.6) {
+      const dx = d > 0.05 ? (target.x - pr.x) / d : Math.sin(pr.owner.face), dz = d > 0.05 ? (target.z - pr.z) / d : Math.cos(pr.owner.face);
+      this.applyHit(pr.owner, target, { ...pr.hit, dirX: dx, dirZ: dz, heavy: big, projectile: true });
+    }
+  }
+
   removeProjectile(i) {
     const pr = this.projectiles[i];
     this.scene.remove(pr.mesh);
-    pr.mesh.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+    // toon/outline materials are shared from a cache, so only per-projectile materials are freed
+    pr.mesh.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); if (pr.kind !== 'boulder') o.material.dispose(); } });
     this.projectiles.splice(i, 1);
   }
 
@@ -632,6 +666,28 @@ export class Battle {
           f.vineN++;
         }
         if (t > 1.15) this.endSuper(f);
+      }
+    } else if (id === 'avalanche') {
+      const P = f.critter.pose;
+      if (f.superPhase === 'go') { f.superPhase = 'rain'; f.st = 0; f.rockN = 0; sfx.voice(f.def.voice, 'win'); sfx.rumble?.(); this.shake(0.5); }
+      if (f.superPhase === 'rain') {
+        // howl at the sky, stomping, while the rocks come down around the rival
+        P.head = -0.6; P.armLz = P.armRz = 2.4; P.sy = 1.08; P.y = Math.abs(Math.sin(t * 14)) * 0.1;
+        f.critter.emote('closed', 'yell', 0.2);
+        const N = 7;
+        if (f.rockN < N && t > 0.12 + f.rockN * 0.17) {
+          const last = f.rockN === N - 1, sp = last ? 0 : 2.2;
+          const x = o.x + (Math.random() - 0.5) * sp + o.vx * 0.25, z = o.z + (Math.random() - 0.5) * sp + o.vz * 0.25;
+          this.spawnProjectile(f, { kind: 'boulder', big: true, x, z, y: last ? 13 : 10, vx: 0, vz: 0, vy: -4, g: 34, landR: last ? 2.1 : 1.1, life: 4, size: last ? 2.4 : 1 + Math.random() * 0.3,
+            hit: last ? { dmg: 110 * f.power, kb: 6, lift: 11, stun: 0.8, type: f.type, launch: true, dizzy: 30 } : { dmg: 30 * f.power, kb: 2, lift: 0, stun: 0.45, type: f.type, dizzy: 8 } });
+          // a shadow-ring marks each landing spot
+          fx.spawn({ x, y: 0.06, z, color: 0x6a5a4a, size: last ? 4.4 : 2.4, life: 0.5, shape: 'ring', additive: false, alpha: 0.6 });
+          f.rockN++;
+        }
+        if (Math.random() < 0.4) fx.spawn({ x: o.x + (Math.random() - 0.5) * 4, y: 9, z: o.z + (Math.random() - 0.5) * 4, vy: -8, color: 0xb8a890, size: 0.25, life: 1, shape: 'puff', additive: false });
+        if (f.rockN >= N && !this.projectiles.some((p) => p.owner === f && p.kind === 'boulder')) { f.superPhase = 'recover'; f.st = 0; }
+      } else if (f.superPhase === 'recover') {
+        if (t > 0.45) this.endSuper(f);
       }
     } else if (id === 'megafluff') {
       const P = f.critter.pose;

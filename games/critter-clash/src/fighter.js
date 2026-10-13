@@ -20,6 +20,7 @@ export const SPECIALS = {
   wisps:   { cd: 4.0, range: [3, 9] },
   seedspray: { cd: 3.6, range: [1.5, 5.5] },
   fuzzball:  { cd: 4.0, range: [3, 9] },
+  rocktoss:  { cd: 4.0, range: [2.5, 8] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -43,7 +44,7 @@ const tailwhip = (P, i, w, s) => {
   if (!s) { P.yaw = 0.8 * w; P.sy = 0.85; return; }
   P.yaw = Math.PI * 0.95; P.tail = 3; P.lean = -0.2; P.armLz = P.armRz = 1.2;
 };
-const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip, pricklepuff: kick, woolt: headbutt };
+const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip, pricklepuff: kick, woolt: headbutt, pebblepup: headbutt };
 
 // translucent fresnel bubble shown while guarding
 function makeShield(color, h) {
@@ -553,6 +554,23 @@ export class Fighter {
         B.fx.burst({ x: this.x + fx * 0.6, y: 0.6, z: this.z + fz * 0.6 }, { n: 8, speed: 4, color: 0x7cff6a, shape: 'leaf', additive: false, size: 0.22, life: 0.45, grav: 3 });
       }
       if (this.st > 0.55) this.endSpecial();
+    } else if (id === 'rocktoss') {
+      // heave a boulder overhead, then lob it onto where the rival is standing
+      const P = this.critter.pose;
+      if (this.st < 0.32) {
+        if (o) this.turnTo(this.angleTo(o), 12, dt);
+        this.vx = THREE.MathUtils.damp(this.vx, 0, 12, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 12, dt);
+        P.armLz = P.armRz = 2.6; P.armLx = P.armRx = -0.6; P.sy = 0.9; P.lean = -0.25;
+      } else { P.armLz = P.armRz = 1.2; P.armLx = P.armRx = -2.2; P.lean = 0.35; }
+      if (!this.specFired && this.st > 0.32) {
+        this.specFired = true;
+        const d = o ? THREE.MathUtils.clamp(this.distTo(o), 2.5, 8) : 5, T = 0.7, g = 22, y0 = 1.5;
+        const tx = this.x + fx * d, tz = this.z + fz * d;
+        B.spawnProjectile(this, { kind: 'boulder', big: true, x: this.x + fx * 0.3, z: this.z + fz * 0.3, y: y0, vx: (tx - this.x) / T, vz: (tz - this.z) / T, vy: (0.35 - y0 + 0.5 * g * T * T) / T, g, landR: 1.25, r: 0.4, life: 3, size: 1,
+          hit: { dmg: 70 * this.power, kb: 3, lift: 4, stun: 0.5, type: this.type, dizzy: 14 } });
+        sfx.whoosh?.(0.5);
+      }
+      if (this.st > 0.6) this.endSpecial();
     } else if (id === 'fuzzball') {
       // shake the wool into a crackling ball and bowl it
       if (this.st < 0.25) {
@@ -679,7 +697,7 @@ export class Fighter {
     } else if (S === 'special' && this.def.special === 'iceslide' && this.st >= 0.2 && this.st < 0.95) {
       P.lean = 1.45; P.y = 0.12; P.armLz = P.armRz = 1.2; P.armLx = P.armRx = 0.6; P.legL = P.legR = 1.2; P.head = -0.9; P.sx = 1.1; P.sy = 0.95;
       this.critter.emote('happy', 'grin', 0.1);
-    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble') && this.superPhase !== 'cutin') {
+    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche') && this.superPhase !== 'cutin') {
       // posed frame by frame in Battle.updateSuper
     } else if (S === 'special' || S === 'super') {
       if (this.st < 0.28) { P.sy = 0.8; P.sx = 1.15; P.lean = -0.25; P.armLz = P.armRz = 0.8; P.ear = 0.8; }

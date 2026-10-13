@@ -117,6 +117,16 @@ export const CRITTERS = [
     special: 'fuzzball', super: 'megafluff',
     moves: { special: 'Fuzz Ball', super: 'Mega Fluff Slam' },
   },
+  {
+    id: 'pebblepup', name: 'Pebblepup', type: 'stone', species: 'Pebble Pug',
+    blurb: 'Buries its favourite rocks and forgets where. Crystals grow on its back when it naps in the sun.',
+    colors: { body: 0xb3a08c, belly: 0xf2e8d8, accent: 0x8fd8ff, dark: 0x4a3c34, eye: '#20160f', iris: '#8a5a32' },
+    body: { w: 0.6, h: 0.5, headR: 0.5, legLen: 0.16, armLen: 0.17, chubby: 1.12 },
+    ears: 'pug', tail: 'stub', extra: 'crystals', voice: 0.95,
+    stats: { hp: 1120, speed: 5.6, power: 1.08, weight: 1.25 },
+    special: 'rocktoss', super: 'avalanche',
+    moves: { special: 'Rock Toss', super: 'Avalanche' },
+  },
 ];
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
@@ -130,6 +140,7 @@ export const SHINY = {
   pengsicle:   { body: 0x2a2a34, belly: 0xfff4e0, accent: 0xff5a6a, dark: 0x101016, iris: '#ff7aa8' },
   pricklepuff: { body: 0xf2e6ff, belly: 0xffffff, accent: 0xff7eb6, dark: 0xc23a7a, iris: '#ff4f9a' },
   woolt:       { body: 0x3a3a52, belly: 0xbfe8ff, accent: 0x6af0ff, dark: 0x101020, iris: '#3ae0ff' },
+  pebblepup:   { body: 0x6a6a88, belly: 0xe8e4ff, accent: 0xff8ad8, dark: 0x262438, iris: '#ff6ad0' },
   emberfly:    { body: 0x2f8a6a, belly: 0xdcffe6, accent: 0x7dffb0, dark: 0x113a2c, iris: '#3affa0' },
 };
 
@@ -168,7 +179,7 @@ export const CUPS = [
     outro: ["Thunder Cup champion! Even Captain Splash wants your autograph.", "Only one cup left: the Champion Cup in Magma Crater. Aurora is waiting..."],
     matches: [
       { name: 'Chef Bao', style: 'rushdown', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered." },
-      { name: 'Gran Pebbles', style: 'turtle', title: 'Retired Champ', critter: 'rolladillo', level: 5, taunt: 'Back in my day we rolled uphill. Both ways.' },
+      { name: 'Gran Pebbles', style: 'turtle', title: 'Retired Champ', critter: 'pebblepup', level: 5, taunt: 'Back in my day we threw rocks uphill. Both ways.' },
       { name: 'Wren', style: 'zoner', title: 'Kite Flyer', critter: 'hootsy', level: 6, taunt: "Hootsy, let's blow them away!" },
       { name: 'Captain Splash', style: 'balanced', title: 'Lifeguard', critter: 'pengsicle', level: 7, taunt: 'No running by the pool. Only sliding.' },
     ],
@@ -285,4 +296,6 @@ export const MOVE_DESC = {
   bramble: 'Thorny vines burst out of the ground in a line, chasing the rival down.',
   fuzzball: 'Rolls a crackling ball of static wool along the ground. Leaves the rival twitchy.',
   megafluff: 'Puffs up to giant size and body-slams the rival three times.',
+  rocktoss: 'Lobs a boulder in an arc. It thuds down where the rival is standing.',
+  avalanche: 'Howls at the sky and a rockslide rains down on the rival, ending with one giant boulder.',
 };

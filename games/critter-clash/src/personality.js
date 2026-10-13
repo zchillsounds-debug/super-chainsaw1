@@ -21,6 +21,7 @@ export const LINES = {
 
 Object.assign(LINES, {
   pricklepuff: { intro: ["Don't touch the spines!", 'Prickly and proud!', "Hmph. Fine. Let's go."], win: ['Told you. Prickly.', 'Leaf me alone now.', 'Hmph! Too easy.'] },
+  pebblepup:   { intro: ['Arf! Rock and ruff!', 'Fetch THIS!', 'Bark is worse than my bite. Bite is rocks.'], win: ['Good pup! Me!', 'Ruff day for you!', 'Stone cold. Arf!'] },
   woolt:       { intro: ['Baa-zzt!', 'Static cling, incoming!', 'Fluffed up and ready!'], win: ['Shear power!', 'Baa-rilliant!', 'Hair-raising!'] },
 });
 
@@ -105,6 +106,18 @@ const INTRO = {
       P.sy = 1.15; P.armLz = P.armRz = 2.4; P.legL = 0.4; P.legR = -0.4; P.ear = -0.4; P.tail = 1.8; P.y = 0.15;
       f.critter.emote('happy', 'open', 0.1);
       if (once(f, 'zap')) { sfx.spark(); const c = f.chestPos(); fx.hit(c, 0xfff060, false, 'spark'); }
+    } else ready(f, P, k);
+  },
+  pebblepup(f, P, k) {
+    const fx = f.battle.fx;
+    if (k < 0.8) { // dig dig dig, rocks flying out behind
+      P.lean = 0.7; P.head = 0.4; P.armLx = -1.6 + sin(k * 30) * 0.9; P.armRx = -1.6 - sin(k * 30) * 0.9; P.tail = 1.5 + sin(k * 25) * 0.5;
+      f.critter.emote('happy', 'grin', 0.1);
+      if (Math.random() < 0.35) fx.spawn({ x: f.x - Math.sin(f.face) * 0.4, y: 0.3, z: f.z - Math.cos(f.face) * 0.4, vy: 4, vx: -Math.sin(f.face) * 2 + rnd(2), vz: -Math.cos(f.face) * 2 + rnd(2), color: 0x9a8a7a, size: 0.18, life: 0.6, shape: 'puff', additive: false, grav: 12 });
+    } else if (k < 1.5) { // found one! holds a crystal up proudly
+      P.sy = 1.1; P.armLz = P.armRz = 2.5; P.y = abs(sin(k * 10)) * 0.12; P.tail = 2;
+      f.critter.emote('happy', 'open', 0.1);
+      if (once(f, 'gem')) { sfx.jingle?.(1); fx.burst(head(f, 0.6), { n: 10, speed: 2, up: 1, color: 0x9ae4ff, size: 0.2, life: 0.5, shape: 'star', additive: false, grav: 2 }); }
     } else ready(f, P, k);
   },
   rolladillo(f, P, k) {
@@ -200,6 +213,11 @@ const WIN = {
     P.y = abs(sin(k * 5)) * 0.12;
     f.critter.emote('happy', 'grin', 0.1);
     if (Math.random() < 0.25) { const c = f.chestPos(); f.battle.fx.spawn({ x: c.x + rnd(1.2), y: c.y + rnd(1.2), z: c.z + rnd(1.2), color: 0xfff060, size: 0.6, stretch: 0.15, rot: Math.random() * 6, life: 0.12, shape: 'spark' }); }
+  },
+  pebblepup(f, P, k) { // zoomies: tail-wag spin and happy hops
+    P.tail = 1.5 + sin(k * 30) * 0.8; P.y = abs(sin(k * 6)) * 0.2; P.yaw = sin(k * 2.2) * 0.8; P.armLz = P.armRz = 0.8 + abs(sin(k * 6)) * 0.6; P.ear = sin(k * 12) * 0.6;
+    f.critter.emote('happy', 'open', 0.1);
+    if (abs(sin(k * 6)) < 0.05 && once(f, 'h' + Math.floor(k * 6 / Math.PI))) f.battle.fx.dust(f, 3, 0.6);
   },
   rolladillo(f, P, k) { // proud flex, alternating arms
     const s = sin(k * 3.5) > 0;

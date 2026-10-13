@@ -379,6 +379,15 @@ export class Critter {
         const inner = new THREE.Mesh(capsule(headR * 0.08, headR * 0.3), this.mats.accent);
         inner.scale.set(1, 1, 0.4); inner.rotation.z = s * 1.9; inner.position.set(s * headR * 0.22, -headR * 0.02, headR * 0.06);
         ear.add(inner);
+      } else if (def.ears === 'pug') {
+        // soft flaps that hang from the top of the head and flop outward
+        ear.position.set(s * headR * 0.7, headR * 0.66, 0);
+        const eg = sphere(headR * 0.28);
+        eg.scale(0.8, 1.35, 0.35);
+        eg.translate(0, -headR * 0.28, 0); // hang from the top
+        const e = inked(eg, this.mats.dark, OL);
+        e.rotation.set(0.15, 0, s * 0.95);
+        ear.add(e);
       } else if (def.ears === 'gills') {
         ear.position.set(s * headR * 0.86, headR * 0.05, -headR * 0.1);
         for (let k = 0; k < 3; k++) {
@@ -493,6 +502,28 @@ export class Critter {
       const lf = inked(leafGeo().scale(headR * 0.5, headR * 0.5, headR * 0.5), this.mats.dark, OL * 0.6);
       lf.position.set(headR * 0.55, headR * 0.7, 0); lf.rotation.set(-1.1, 0.6, 0.3);
       skull.add(lf);
+    }
+
+    // pebble pug: glassy crystals sprouting from the back, one on the head
+    if (def.extra === 'crystals') {
+      const gem = (r, h) => { const g = new THREE.OctahedronGeometry(r, 0); g.scale(1, h / r, 1); g.translate(0, h * 0.55, 0); return g; };
+      const up = new THREE.Vector3(0, 1, 0), parts = [];
+      for (const [x, y, z, r, h, tx, tz] of [[0, 0.95, -0.36, 0.14, 0.46, -0.55, 0], [0.2, 0.84, -0.38, 0.11, 0.34, -0.5, 0.9], [-0.19, 0.86, -0.37, 0.115, 0.36, -0.5, -0.9], [0.05, 0.6, -0.47, 0.08, 0.22, -1.1, 0.2]]) {
+        const g = gem(r, h);
+        g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(up, new THREE.Vector3(tz * 0.6, 1, tx).normalize()));
+        g.translate(x * B.w * 1.6, y * B.h, z * B.w * 1.5);
+        parts.push(g);
+      }
+      const cm = toon(def.colors.accent, { uniforms: U, rim: 1 });
+      torso.add(inked(mergeGeometries(parts), cm, OL * 0.6));
+      const hg = gem(headR * 0.13, headR * 0.38);
+      const hc = inked(hg, cm, OL * 0.6);
+      hc.position.set(headR * 0.2, headR * 0.86, -headR * 0.1); hc.rotation.set(-0.3, 0, -0.35);
+      skull.add(hc);
+      // little button nose
+      const nose = inked(sphere(headR * 0.085), this.mats.dark, OL * 0.4);
+      nose.scale.set(1.3, 0.9, 0.8); nose.position.set(0, -headR * 0.02, headR * 0.97);
+      skull.add(nose);
     }
 
     // gauzy insect wings on the back
