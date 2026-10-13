@@ -713,6 +713,37 @@ export class Battle {
         P.sy = 0.9;
         if (t > 0.4) this.endSuper(f);
       }
+    } else if (id === 'lilysplash') {
+      const P = f.critter.pose;
+      if (f.superPhase === 'go') { f.superPhase = 'leap'; f.st = 0; f.vy = 17; f.y = 0.05; f.target = { x: o.x, z: o.z }; sfx.whoosh(0.8); sfx.voice(f.def.voice, 'win'); }
+      if (f.superPhase === 'leap' || f.superPhase === 'flop') {
+        // home in on the spot the rival was standing, tucked going up, sprawled coming down
+        const tx = f.target.x - f.x, tz = f.target.z - f.z;
+        f.vx = tx * 1.7; f.vz = tz * 1.7;
+        if (f.superPhase === 'leap') {
+          P.sy = 1.2; P.legL = P.legR = 0.9; P.armLz = P.armRz = 0.3; P.lean = -0.3;
+          f.critter.emote('happy', 'grin', 0.2);
+          if (t > 0.3) fx.spawn({ x: f.target.x, y: 0.06, z: f.target.z, color: 0x48b8ff, size: 4.8, life: 0.12, shape: 'ring', alpha: 0.6 });
+          if (f.vy < 0) { f.vy = -24; f.superPhase = 'flop'; sfx.whoosh(0.5); }
+        } else {
+          P.lean = 1.25; P.armLz = P.armRz = 2.2; P.legL = P.legR = -1.0; P.sx = 1.2; P.sy = 0.9;
+          f.critter.emote('closed', 'open', 0.2);
+          if (Math.random() < 0.7) fx.spawn({ x: f.x + (Math.random() - 0.5), y: f.y + 0.5, z: f.z + (Math.random() - 0.5), vy: 4, color: 0x9fe0ff, size: 0.35, life: 0.3, shape: 'drop', additive: false });
+        }
+      } else if (f.superPhase === 'splash') {
+        P.lean = 1.25; P.sy = 0.6; P.sx = 1.4; P.armLz = P.armRz = 2.2; P.legL = P.legR = -1.0;
+        // a second ring of water rolls outward and catches anyone who dodged the flop
+        const R = 1 + t * 9;
+        if (!f.hitIds.has(o) && o.alive && Math.abs(f.distTo(o) - R) < 0.8 && o.y < 1 && R < 6) {
+          f.hitIds.add(o);
+          const a = f.angleTo(o);
+          this.applyHit(f, o, { dmg: 95 * f.power, kb: 9, lift: 6, stun: 0.6, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 20 });
+        }
+        if (t > 0.65) { f.superPhase = 'recover'; f.st = 0; }
+      } else if (f.superPhase === 'recover') {
+        P.sy = 1.05; P.lean = 0;
+        if (t > 0.35) this.endSuper(f);
+      }
     } else if (id === 'avalanche') {
       const P = f.critter.pose;
       if (f.superPhase === 'go') { f.superPhase = 'rain'; f.st = 0; f.rockN = 0; sfx.voice(f.def.voice, 'win'); sfx.rumble?.(); this.shake(0.5); }
@@ -874,6 +905,24 @@ export class Battle {
     if (f.def.super === 'quake' && f.superPhase === 'hop') {
       f.superPhase = 'quake'; f.st = 0; f.ringN = 0;
       this.game.impactFrame(0.08);
+      return;
+    }
+    if (f.def.super === 'lilysplash' && f.superPhase === 'flop') {
+      // BELLY FLOP: water and lily pads everywhere
+      f.superPhase = 'splash'; f.st = 0; f.vx = f.vz = 0;
+      const o = f.opp;
+      sfx.boom(); sfx.water(); this.shake(0.9); this.game.impactFrame(0.1);
+      this.fx.shock(f, 0x48b8ff, 6, 0.6);
+      this.fx.shock(f, 0x6cff6a, 3.4, 0.4);
+      this.fx.burst({ x: f.x, y: 0.3, z: f.z }, { n: 34, speed: 9, up: 9, color: 0x9fe0ff, size: 0.4, life: 0.8, shape: 'drop', additive: false, grav: 18 });
+      this.fx.burst({ x: f.x, y: 0.4, z: f.z }, { n: 18, speed: 7, up: 7, color: 0x5ad04a, size: 0.42, life: 1.0, shape: 'leaf', additive: false, grav: 10, spin: 6 });
+      this.fx.burst({ x: f.x, y: 0.6, z: f.z }, { n: 8, speed: 5, up: 8, color: 0xff8ac0, size: 0.3, life: 1.1, shape: 'leaf', additive: false, grav: 8, spin: 8 });
+      this.fx.dust(f, 10, 1.6);
+      if (o.alive && f.distTo(o) < 2.6 && o.y < 1.6) {
+        f.hitIds.add(o);
+        const a = f.angleTo(o);
+        this.applyHit(f, o, { dmg: 240 * f.power, kb: 10, lift: 11, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 40 });
+      }
       return;
     }
     if (f.def.super !== 'meteor' || f.superPhase !== 'fall') return;

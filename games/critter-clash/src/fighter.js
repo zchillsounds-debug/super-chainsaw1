@@ -1,6 +1,7 @@
 // A critter in battle: movement, combo/special/super state machine, hit reactions.
 import * as THREE from 'three';
 import { Critter } from './critters.js';
+import { toon } from './toon.js';
 import { COMBO, TYPES } from './data.js';
 import { ARENA_R } from './arena.js';
 import { sfx } from './audio.js';
@@ -22,6 +23,7 @@ export const SPECIALS = {
   fuzzball:  { cd: 4.0, range: [3, 9] },
   rocktoss:  { cd: 4.0, range: [2.5, 8] },
   swoop:     { cd: 3.4, range: [2.5, 8] },
+  tongue:    { cd: 3.6, range: [1.8, 5.2] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -45,7 +47,7 @@ const tailwhip = (P, i, w, s) => {
   if (!s) { P.yaw = 0.8 * w; P.sy = 0.85; return; }
   P.yaw = Math.PI * 0.95; P.tail = 3; P.lean = -0.2; P.armLz = P.armRz = 1.2;
 };
-const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip, pricklepuff: kick, woolt: headbutt, pebblepup: headbutt, whirlwhisk: tailwhip };
+const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip, pricklepuff: kick, woolt: headbutt, pebblepup: headbutt, whirlwhisk: tailwhip, lilypop: kick };
 
 // translucent fresnel bubble shown while guarding
 function makeShield(color, h) {
@@ -605,6 +607,42 @@ export class Fighter {
         sfx.whoosh?.(0.5);
       }
       if (this.st > 0.6) this.endSpecial();
+    } else if (id === 'tongue') {
+      // wind up, lash the tongue out; if it catches the rival, reel them in for a free combo
+      const P = this.critter.pose, REACH = 5.4;
+      const tg = this.tongue || this.makeTongue();
+      if (this.st < 0.16) {
+        if (o) this.turnTo(this.angleTo(o), 14, dt);
+        this.vx = this.vz = 0; P.lean = -0.3; P.sy = 0.88; P.head = -0.25;
+        this.critter.emote('closed', 'grin', 0.2);
+        this.tongueL = 0; this.grabbed = null;
+      } else {
+        P.lean = 0.3; P.head = 0.15; P.sy = 1.05;
+        this.critter.emote('angry', 'open', 0.2);
+        if (!this.specFired) { this.specFired = true; sfx.thwip(); }
+        if (this.grabbed) {
+          // reel in: the rival is dragged to just in front
+          this.tongueL = Math.max(0.4, this.tongueL - dt * 16);
+          const g = this.grabbed;
+          g.x = this.x + fx * (this.tongueL + 0.55); g.z = this.z + fz * (this.tongueL + 0.55);
+          if (this.tongueL <= 0.6) { this.grabbed = null; this.tongueDone = true; g.vx = g.vz = 0; sfx.slurp(); }
+        } else if (!this.tongueDone && this.st < 0.42) {
+          this.tongueL = Math.min(REACH, this.tongueL + dt * 30);
+          const tx = this.x + fx * (this.tongueL + 0.4), tz = this.z + fz * (this.tongueL + 0.4);
+          if (o && o.alive && !this.hitIds.has(o) && Math.hypot(o.x - tx, o.z - tz) < 0.85 && o.y < 1.6) {
+            this.hitIds.add(o);
+            const ang = this.angleTo(o);
+            if (B.applyHit(this, o, { dmg: 46 * this.power, kb: 0, lift: 0, stun: 1.0, dirX: -Math.sin(ang), dirZ: -Math.cos(ang), heavy: false, type: this.type, dizzy: 14 })) {
+              this.grabbed = o; this.tongueL = Math.hypot(o.x - this.x, o.z - this.z) - 0.55;
+              B.fx.text(o.headPos(), 'GOTCHA!', 'big', 0.8);
+            } else this.tongueDone = true;
+          }
+        } else { this.tongueDone = true; this.tongueL = Math.max(0, this.tongueL - dt * 26); }
+        if (this.tongueDone && !this.grabbed) this.tongueL = Math.max(0, this.tongueL - dt * 26);
+      }
+      tg.visible = this.tongueL > 0.05;
+      tg.scale.set(1, 1, Math.max(0.01, this.tongueL));
+      if (this.st > 0.85 || (this.tongueDone && this.tongueL <= 0 && this.st > 0.3)) { this.tongueDone = false; tg.visible = false; this.endSpecial(); }
     } else if (id === 'fuzzball') {
       // shake the wool into a crackling ball and bowl it
       if (this.st < 0.25) {
@@ -625,7 +663,25 @@ export class Fighter {
     void tcol;
   }
 
-  endSpecial() { this.setState('idle'); this.critter.emote('open', 'smile'); }
+  endSpecial() { this.setState('idle'); this.critter.emote('open', 'smile'); if (this.tongue) { this.tongue.visible = false; this.grabbed = null; this.tongueDone = false; } }
+
+  // Lilypop's tongue: a pink strip from the mouth along +z, scaled in z to its length
+  makeTongue() {
+    const B = this.def.body;
+    const geo = new THREE.CylinderGeometry(0.075, 0.075, 1, 8); geo.rotateX(Math.PI / 2); geo.translate(0, 0, 0.5);
+    const tg = this.tongue = new THREE.Group();
+    const strip = new THREE.Mesh(geo, toon(0xff6a9a));
+    strip.scale.set(1, 0.6, 1);
+    tg.add(strip);
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), toon(0xff6a9a));
+    tip.position.z = 1; tip.scale.set(1, 0.7, 1 / 1);
+    tg.add(tip);
+    tg.userData.tip = tip;
+    tg.position.set(0, B.legLen * 0.9 + B.h * 0.82 + B.headR * 0.5, B.headR * 0.85);
+    tg.visible = false;
+    this.root.add(tg);
+    return tg;
+  }
 
   trail(c1, c2) {
     const B = this.battle;
@@ -731,9 +787,9 @@ export class Fighter {
     } else if (S === 'special' && this.def.special === 'iceslide' && this.st >= 0.2 && this.st < 0.95) {
       P.lean = 1.45; P.y = 0.12; P.armLz = P.armRz = 1.2; P.armLx = P.armRx = 0.6; P.legL = P.legR = 1.2; P.head = -0.9; P.sx = 1.1; P.sy = 0.95;
       this.critter.emote('happy', 'grin', 0.1);
-    } else if (S === 'special' && (this.def.special === 'rocktoss' || this.def.special === 'swoop')) {
+    } else if (S === 'special' && (this.def.special === 'rocktoss' || this.def.special === 'swoop' || this.def.special === 'tongue')) {
       // posed frame by frame in updateSpecial
-    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche' || this.def.super === 'jetstream') && this.superPhase !== 'cutin') {
+    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche' || this.def.super === 'jetstream' || this.def.super === 'lilysplash') && this.superPhase !== 'cutin') {
       // posed frame by frame in Battle.updateSuper
     } else if (S === 'special' || S === 'super') {
       if (this.st < 0.28) { P.sy = 0.8; P.sx = 1.15; P.lean = -0.25; P.armLz = P.armRz = 0.8; P.ear = 0.8; }

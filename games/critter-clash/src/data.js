@@ -137,6 +137,16 @@ export const CRITTERS = [
     special: 'swoop', super: 'jetstream',
     moves: { special: 'Sky Swoop', super: 'Jet Stream' },
   },
+  {
+    id: 'lilypop', name: 'Lilypop', type: 'leaf', species: 'Lily Frog',
+    blurb: 'Naps on lily pads and catches flies without opening its eyes. Its tongue is faster than its manners.',
+    colors: { body: 0x86d95a, belly: 0xfff3c4, accent: 0xff8ac0, dark: 0x2f6a3a, eye: '#14240e', iris: '#ffb020' },
+    body: { w: 0.66, h: 0.5, headR: 0.5, legLen: 0.14, armLen: 0.18, chubby: 1.15 },
+    ears: 'none', tail: 'none', extra: 'frog', voice: 1.05,
+    stats: { hp: 1060, speed: 6.4, power: 1.02, weight: 1.0 },
+    special: 'tongue', super: 'lilysplash',
+    moves: { special: 'Tongue Lash', super: 'Lily Splash' },
+  },
 ];
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
@@ -152,6 +162,7 @@ export const SHINY = {
   woolt:       { body: 0x3a3a52, belly: 0xbfe8ff, accent: 0x6af0ff, dark: 0x101020, iris: '#3ae0ff' },
   pebblepup:   { body: 0x6a6a88, belly: 0xe8e4ff, accent: 0xff8ad8, dark: 0x262438, iris: '#ff6ad0' },
   whirlwhisk:  { body: 0xffb38a, belly: 0xfff4e4, accent: 0xffe2c8, dark: 0x8a3a2a, iris: '#3ac07a' },
+  lilypop:     { body: 0xffd84a, belly: 0xfffbe8, accent: 0x6ad0ff, dark: 0x8a5a10, iris: '#3a7bff' },
   emberfly:    { body: 0x2f8a6a, belly: 0xdcffe6, accent: 0x7dffb0, dark: 0x113a2c, iris: '#3affa0' },
 };
 
@@ -189,7 +200,7 @@ export const CUPS = [
     intro: ["Seashell Bay! Mind the coconuts, {name}. The palms drop them when the crowd gets loud.", "These trainers have real experience. Gran Pebbles once won this cup three years running!"],
     outro: ["Thunder Cup champion! Even Captain Splash wants your autograph.", "Only one cup left: the Champion Cup in Magma Crater. Aurora is waiting..."],
     matches: [
-      { name: 'Chef Bao', style: 'rushdown', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered.", beat: "Overcooked it. Happens to the best of us.", gloat: "Order up! One trainer, well done." },
+      { name: 'Paddy', style: 'rushdown', title: 'Pond Ranger', critter: 'lilypop', level: 4, taunt: "Lilypop's tongue is faster than your eyes. Blink and you're lunch!", beat: "Ribbit... I mean, rats. That was a great match!", gloat: "Hop along now, {name}. The pond's closed." },
       { name: 'Gran Pebbles', style: 'turtle', title: 'Retired Champ', critter: 'pebblepup', level: 5, taunt: 'Back in my day we threw rocks uphill. Both ways.', beat: "Oh, you remind me of me. Fifty years ago. Off you go!", gloat: "Never underestimate a grandma with a rock." },
       { name: 'Wren', style: 'zoner', title: 'Kite Flyer', critter: 'whirlwhisk', level: 6, taunt: "Whirlwhisk, let's blow them away!", beat: "Huh. The wind changed. Nice flying!", gloat: "Caught the breeze. You just caught the floor." },
       { name: 'Captain Splash', style: 'balanced', title: 'Lifeguard', critter: 'pengsicle', level: 7, taunt: 'No running by the pool. Only sliding.', beat: "Okay, OKAY, I'm blowing the whistle. You win!", gloat: "Rule one of the pool: don't splash the Captain." },
@@ -225,7 +236,7 @@ export const CUPS = [
     matches: [
       { name: 'Pip', style: 'rushdown', title: 'All Grown Up', critter: 'bubbalotl', level: 14, mods: ['turbo'], taunt: 'I trained every single day since you beat me. Every. Day.', beat: "Still not enough... but next time. Next time for sure!", gloat: "I told you I trained every day!" },
       { name: 'Yuki', style: 'trickster', title: 'Snow Ranger', critter: 'pengsicle', skin: 'shiny', level: 15, mods: ['lowgrav'], taunt: 'Brr-ace yourself.', beat: "Brr... you're colder than the mountain.", gloat: "Snow way you were winning that one." },
-      { name: 'Chef Bao', style: 'zoner', title: 'Head Chef', critter: 'emberfly', level: 16, mods: ['supercharged'], taunt: "Tonight's special: flambé!", beat: "Flambé fizzled. My compliments to YOU, chef.", gloat: "Chef's kiss. Mwah. You're done." },
+      { name: 'Paddy', style: 'zoner', title: 'Pond Champion', critter: 'lilypop', skin: 'shiny', level: 16, mods: ['supercharged'], taunt: "Lilypop and I trained at the big lake. The REALLY big lake.", beat: "Ribbit. Okay. You're still the champ of the pond.", gloat: "Told you. Really big lake." },
       { name: 'Big Boulder', style: 'turtle', title: 'Comeback Kid', critter: 'rolladillo', skin: 'shiny', level: 17, mods: ['bighead'], taunt: "I've been doing roll day AND leg day.", beat: "Rolled right over me. Again! See you next season.", gloat: "The Comeback Kid has come back!" },
       { name: 'Aurora', style: 'trickster', title: 'Living Legend', critter: 'hootsy', skin: 'shiny', level: 19, mods: ['itemrain'], boss: true, taunt: 'The real final round starts now.', beat: "You really are the champion. The ice is yours.", gloat: "Legends don't fall that easily. Try again." },
     ],
@@ -323,5 +334,7 @@ export const MOVE_DESC = {
   rocktoss: 'Lobs a boulder in an arc. It thuds down where the rival is standing.',
   swoop: 'Leaps up and glides down onto the rival, tail first.',
   jetstream: 'Puffs its cheeks and blows a long gust that shoves the rival back, hit after hit.',
+  tongue: 'Lashes out its long tongue and reels the rival in, ready for a combo.',
+  lilysplash: 'Leaps sky-high and belly-flops down. A ring of lily pads and water bursts out.',
   avalanche: 'Howls at the sky and a rockslide rains down on the rival, ending with one giant boulder.',
 };

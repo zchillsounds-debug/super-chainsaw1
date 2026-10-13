@@ -23,6 +23,7 @@ Object.assign(LINES, {
   pricklepuff: { intro: ["Don't touch the spines!", 'Prickly and proud!', "Hmph. Fine. Let's go."], win: ['Told you. Prickly.', 'Leaf me alone now.', 'Hmph! Too easy.'] },
   pebblepup:   { intro: ['Arf! Rock and ruff!', 'Fetch THIS!', 'Bark is worse than my bite. Bite is rocks.'], win: ['Good pup! Me!', 'Ruff day for you!', 'Stone cold. Arf!'] },
   whirlwhisk:  { intro: ['Wheee! Incoming!', 'Nuts to you!', 'Catch the breeze!'], win: ['Blown away!', "Nuttin' to it!", 'Wind beneath my tail!'] },
+  lilypop:     { intro: ['Ribbit! Ready!', 'Hop hop, here I come!', "Don't make me lick you."], win: ['Toad-ally awesome!', 'Ribbit-ing win!', 'Snack caught!'] },
   woolt:       { intro: ['Baa-zzt!', 'Static cling, incoming!', 'Fluffed up and ready!'], win: ['Shear power!', 'Baa-rilliant!', 'Hair-raising!'] },
 });
 
@@ -120,6 +121,19 @@ const INTRO = {
       P.sy = 0.9 + abs(sin(k * 12)) * 0.15; P.tail = 2.2 + sin(k * 20) * 0.4; P.armLx = P.armRx = -1.2;
       f.critter.emote('happy', 'grin', 0.1);
       if (once(f, 'land')) { sfx.land(); fx.dust(f, 6, 0.8); }
+    } else ready(f, P, k);
+  },
+  lilypop(f, P, k) {
+    const fx = f.battle.fx;
+    if (k < 0.9) { // big frog hops into place
+      const ph = (k / 0.45) % 1;
+      P.y = sin(ph * Math.PI) * 0.9; P.legL = P.legR = ph < 0.5 ? -0.9 : 0.6; P.sy = ph > 0.85 || ph < 0.1 ? 0.8 : 1.1; P.armLz = P.armRz = 0.9;
+      f.critter.emote('happy', 'open', 0.1);
+      if (ph > 0.9 && once(f, 'h' + Math.floor(k / 0.45))) { sfx.land(); fx.dust(f, 4, 0.6); }
+    } else if (k < 1.6) { // catches a fly mid-air: thwip!
+      P.head = -0.4; P.sy = 1.08;
+      f.critter.emote(k < 1.2 ? 'open' : 'happy', k < 1.2 ? 'open' : 'grin', 0.1);
+      if (once(f, 'fly')) { sfx.thwip(); fx.burst(head(f, 0.4), { n: 6, speed: 2, up: 2, color: 0xffffff, size: 0.18, life: 0.4, shape: 'star', additive: false, grav: 3 }); }
     } else ready(f, P, k);
   },
   pebblepup(f, P, k) {
@@ -233,6 +247,13 @@ const WIN = {
     if ((k % 3) > 1.6) P.yaw = 0; // pause facing front between spins
     f.critter.emote('happy', 'open', 0.1);
     if (Math.random() < 0.15) f.battle.fx.spawn({ x: f.x + rnd(1.5), y: f.y + 0.4 + Math.random(), z: f.z + rnd(1.5), vy: 1.5, color: 0xffffff, size: 0.3, life: 0.5, shape: 'leaf', additive: false, spin: 6 });
+  },
+  lilypop(f, P, k) { // happy hops in a little circle, croaking
+    const ph = (k * 1.6) % 1;
+    P.y = sin(ph * Math.PI) * 0.45; P.yaw = sin(k * 1.4) * 0.9; P.legL = P.legR = ph < 0.5 ? -0.7 : 0.4; P.armLz = P.armRz = 1.2 + sin(ph * Math.PI) * 1.0;
+    P.sx = 1 + abs(sin(k * 9)) * 0.06;
+    f.critter.emote('happy', 'grin', 0.1);
+    if (ph > 0.92 && once(f, 'w' + Math.floor(k * 1.6))) f.battle.fx.spawn({ x: f.x, y: 0.05, z: f.z, color: 0x9fe0ff, size: 1.6, life: 0.35, shape: 'ring', alpha: 0.6 });
   },
   pebblepup(f, P, k) { // zoomies: tail-wag spin and happy hops
     P.tail = 1.5 + sin(k * 30) * 0.8; P.y = abs(sin(k * 6)) * 0.2; P.yaw = sin(k * 2.2) * 0.8; P.armLz = P.armRz = 0.8 + abs(sin(k * 6)) * 0.6; P.ear = sin(k * 12) * 0.6;

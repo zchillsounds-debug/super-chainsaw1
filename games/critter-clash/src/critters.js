@@ -248,6 +248,26 @@ export class Critter {
         b.position.set(0, -headR * (0.16 + k * 0.1), headR * 1.02);
         skull.add(b);
       }
+    } else if (def.extra === 'frog') {
+      // wide flat head with two eye domes on top and a pink lily flower on one of them
+      skull.scale.set(1.2, 0.86, 1.0);
+      for (const s of [-1, 1]) {
+        const dome = inked(sphere(headR * 0.38), this.mats.body, OL * 0.8);
+        dome.position.set(s * headR * 0.44, headR * 0.74, headR * 0.36);
+        skull.add(dome);
+      }
+      const flower = new THREE.Group();
+      flower.position.set(-headR * 0.56, headR * 1.08, headR * 0.2); flower.rotation.set(-0.2, 0, 0.45); flower.scale.setScalar(1.5);
+      const petal = toon(C.accent, { uniforms: U });
+      for (let k = 0; k < 5; k++) {
+        const pt = inked(sphere(headR * 0.13), petal, OL * 0.4);
+        const a = k / 5 * Math.PI * 2;
+        pt.scale.set(1, 0.5, 1.5); pt.position.set(Math.sin(a) * headR * 0.13, headR * 0.06, Math.cos(a) * headR * 0.13); pt.rotation.set(-0.6, a, 0, 'YXZ');
+        flower.add(pt);
+      }
+      const ctr = new THREE.Mesh(sphere(headR * 0.07), toon(0xffe066));
+      ctr.position.y = headR * 0.04; flower.add(ctr);
+      skull.add(flower);
     } else {
       const nose = new THREE.Mesh(sphere(headR * 0.08), this.mats.dark);
       nose.scale.set(1.3, 0.8, 1);
@@ -295,12 +315,23 @@ export class Critter {
       });
       skull.add(new THREE.Mesh(spherePatch(headR * 1.005, 0, -0.18, 1.05, 0.75), decalMat(faceTex)));
     }
-    const eyeL = new THREE.Mesh(spherePatch(er, 0.36, -0.02, 0.28, 0.35, false), this.eyeMatL);
-    const eyeR = new THREE.Mesh(spherePatch(er, -0.36, -0.02, 0.28, 0.35, true), this.eyeMatR);
+    const frog = def.extra === 'frog';
+    let eyeL, eyeR;
+    if (frog) {
+      // the eyes sit on the front of the domes
+      const dr = headR * 0.38 * 1.015;
+      eyeL = new THREE.Mesh(spherePatch(dr, 0.28, -0.1, 0.82, 0.95, false), this.eyeMatL);
+      eyeR = new THREE.Mesh(spherePatch(dr, -0.28, -0.1, 0.82, 0.95, true), this.eyeMatR);
+      eyeL.position.set(headR * 0.44, headR * 0.74, headR * 0.36);
+      eyeR.position.set(-headR * 0.44, headR * 0.74, headR * 0.36);
+    } else {
+      eyeL = new THREE.Mesh(spherePatch(er, 0.36, -0.02, 0.28, 0.35, false), this.eyeMatL);
+      eyeR = new THREE.Mesh(spherePatch(er, -0.36, -0.02, 0.28, 0.35, true), this.eyeMatR);
+    }
     eyeL.renderOrder = eyeR.renderOrder = 2;
     skull.add(eyeL, eyeR);
     this.eyes = [eyeL, eyeR];
-    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' ? -0.52 : -0.38, 0.27, 0.18), this.mouthMat);
+    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' ? -0.52 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
     mouth.renderOrder = 2;
     skull.add(mouth);
     const blushMat = decalMat(ft.blush);
