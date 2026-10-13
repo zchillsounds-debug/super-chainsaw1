@@ -9,7 +9,7 @@ import { sfx, playMusic } from './audio.js';
 const ROUND_TIME = 60;
 
 export class Battle {
-  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd } = {}) {
+  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null } = {}) {
     this.game = game;
     this.scene = game.scene;
     this.fx = game.fx;
@@ -17,6 +17,7 @@ export class Battle {
     this.camera = game.camera;
     this.arena = game.arena;
     this.onEnd = onEnd;
+    this.trainer = trainer;
     this.fighters = [];
     this.fighters.push(new Fighter(this, pDef, { level: playerLevel, side: 0 }));
     this.fighters.push(new Fighter(this, cDef, { level: cpuLevel, cpu: true, side: 1 }));
@@ -132,6 +133,14 @@ export class Battle {
       hl.position.set(-0.17, 0.2, 0.25);
       const rimm = new THREE.Mesh(new THREE.SphereGeometry(0.45, 20, 14), new THREE.MeshBasicMaterial({ color: 0xdff4ff, side: THREE.BackSide, transparent: true, opacity: 0.6 }));
       mesh.add(b, hl, rimm);
+    } else if (p.kind === 'gale') {
+      // stacked translucent cones read as a cartoon twister
+      for (let k = 0; k < 4; k++) {
+        const c = new THREE.Mesh(new THREE.CylinderGeometry(0.35 + k * 0.22, 0.12 + k * 0.2, 0.55, 14, 1, true),
+          new THREE.MeshBasicMaterial({ color: k % 2 ? 0xdfe8ff : 0xb8c8ff, transparent: true, opacity: 0.38, side: THREE.DoubleSide, depthWrite: false }));
+        c.position.y = 0.3 + k * 0.45;
+        mesh.add(c);
+      }
     } else if (p.kind === 'leafrang') {
       const mat = new THREE.MeshToonMaterial({ color: 0x5bd36a, emissive: 0x1d5a20 });
       for (let k = 0; k < 4; k++) {
@@ -166,6 +175,15 @@ export class Battle {
           if (d < 0.7) { this.removeProjectile(i); continue; }
         } else { pr.vx *= Math.exp(-2.6 * dt); pr.vz *= Math.exp(-2.6 * dt); }
         if (Math.random() < 0.5) this.fx.spawn({ x: pr.x, y: pr.y, z: pr.z, color: 0x7cff6a, size: 0.25, life: 0.3, shape: 'leaf', additive: false, rot: Math.random() * 6, grav: 2, spin: 5 });
+      } else if (pr.kind === 'gale') {
+        pr.mesh.rotation.y += dt * 16;
+        pr.mesh.children.forEach((c, k) => { c.position.x = Math.sin(pr.t * 9 + k) * 0.12; });
+        if (Math.random() < 0.6) this.fx.spawn({ x: pr.x + (Math.random() - 0.5), y: Math.random() * 2, z: pr.z + (Math.random() - 0.5), vy: 2, color: 0xffffff, size: 0.3, life: 0.4, shape: 'glow', alpha: 0.5 });
+        // re-hit every `multi` seconds and drag the target along
+        if (pr.multi && pr.t - (pr.lastHit || 0) > pr.multi) pr.hitOnce.clear();
+        const tg = this.fighters[1 - pr.owner.side];
+        const dd = Math.hypot(tg.x - pr.x, tg.z - pr.z);
+        if (dd < 2.2 && tg.state !== 'dodge') { tg.x += (pr.x - tg.x) * dt * 3; tg.z += (pr.z - tg.z) * dt * 3; }
       } else if (pr.kind === 'bubble') {
         pr.mesh.scale.setScalar(1 + Math.sin(pr.t * 12) * 0.06);
         pr.y = 0.7 + Math.sin(pr.t * 6) * 0.1;
@@ -173,10 +191,11 @@ export class Battle {
       pr.x += pr.vx * dt; pr.z += pr.vz * dt;
       pr.mesh.position.set(pr.x, pr.y, pr.z);
       // hit check
-      if (target.alive && !pr.hitOnce.has(target)) {
+      if (!pr.big && target.alive && !pr.hitOnce.has(target)) {
         const d = Math.hypot(target.x - pr.x, target.z - pr.z);
         if (d < pr.r + 0.45 && Math.abs(target.y + 0.6 - pr.y) < 1.2) {
           pr.hitOnce.add(target);
+          pr.lastHit = pr.t;
           const l = Math.hypot(pr.vx, pr.vz) || 1;
           const landed = this.applyHit(pr.owner, target, { ...pr.hit, dirX: pr.vx / l, dirZ: pr.vz / l, heavy: false });
           if (pr.kind === 'bubble' && (landed || target.state !== 'dodge')) {
@@ -309,11 +328,95 @@ export class Battle {
         }
         if (t > 1.8) this.endSuper(f);
       }
+    } else if (id === 'quake') {
+      if (f.superPhase === 'go') { f.superPhase = 'hop'; f.st = 0; f.vy = 9; f.y = 0.05; sfx.whoosh(0.7); }
+      if (f.superPhase === 'hop') { f.critter.pose.sy = 0.8; f.critter.pose.armLz = f.critter.pose.armRz = 2.5; }
+      if (f.superPhase === 'quake') {
+        // three expanding rings of rock spikes
+        const rings = [0, 0.35, 0.7];
+        f.ringN = f.ringN || 0;
+        if (f.ringN < 3 && t > rings[f.ringN]) {
+          const R = 2.2 + f.ringN * 2.2;
+          this.rockRing(f.x, f.z, R);
+          sfx.boom(); this.shake(0.6);
+          const d = f.distTo(o);
+          if (!o.airborne && d > R - 1.6 && d < R + 1.2 && !f.hitIds.has(o)) {
+            f.hitIds.add(o);
+            const a = f.angleTo(o);
+            this.applyHit(f, o, { dmg: 255 * f.power, kb: 6, lift: 12, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 40 });
+          }
+          f.ringN++;
+        }
+        if (t > 1.3) { f.ringN = 0; this.endSuper(f); }
+      }
+    } else if (id === 'cyclone') {
+      if (f.superPhase === 'go') {
+        f.superPhase = 'twist'; f.st = 0;
+        f.target = { x: o.x, z: o.z };
+        sfx.leaf(); sfx.superCharge();
+        this.spawnProjectile(f, { kind: 'gale', x: o.x, z: o.z, y: 0, vx: 0, vz: 0, r: 0.1, life: 1.6, hit: { dmg: 0 }, big: true });
+        this.cyclone = this.projectiles[this.projectiles.length - 1];
+        this.cyclone.mesh.scale.set(2.2, 2.6, 2.2);
+      }
+      if (f.superPhase === 'twist') {
+        const cy = this.cyclone;
+        if (t < 0.7) { f.target.x += (o.x - f.target.x) * 0.06; f.target.z += (o.z - f.target.z) * 0.06; }
+        cy.x = f.target.x; cy.z = f.target.z;
+        for (let k = 0; k < 4; k++) {
+          const a = Math.random() * Math.PI * 2, r = 1 + Math.random() * 2.5;
+          this.fx.spawn({ x: cy.x + Math.cos(a) * r, y: Math.random() * 4, z: cy.z + Math.sin(a) * r, vx: -Math.sin(a) * 6, vz: Math.cos(a) * 6, vy: 3, color: 0xe8eeff, size: 0.4, life: 0.4, shape: 'leaf', additive: false, spin: 12 });
+        }
+        if (t > 0.95 && !f.hitIds.has(o)) {
+          f.hitIds.add(o);
+          const d = Math.hypot(o.x - cy.x, o.z - cy.z);
+          sfx.boom(); this.shake(0.6);
+          if (d < 2.6) {
+            const a = Math.atan2(o.x - cy.x, o.z - cy.z) || 0;
+            this.applyHit(f, o, { dmg: 260 * f.power, kb: 2, lift: 15, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 40 });
+          }
+        }
+        if (t > 1.5) { this.cyclone = null; this.endSuper(f); }
+      }
     }
     void tcol;
   }
 
+  rockRing(x, z, R) {
+    const n = Math.round(R * 3.2);
+    const mat = new THREE.MeshToonMaterial({ color: 0xa88358 });
+    const geo = new THREE.ConeGeometry(0.32, 1.2, 5);
+    const g = new THREE.Group();
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + Math.random() * 0.2;
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(x + Math.cos(a) * R, -0.6, z + Math.sin(a) * R);
+      m.rotation.set((Math.random() - 0.5) * 0.5, Math.random() * 3, (Math.random() - 0.5) * 0.5);
+      m.scale.setScalar(0.7 + Math.random() * 0.7);
+      m.castShadow = true;
+      g.add(m);
+    }
+    this.scene.add(g);
+    this.fx.shock({ x, z }, 0xffc080, R + 0.6, 0.35);
+    for (let i = 0; i < n; i += 2) {
+      const a = (i / n) * Math.PI * 2;
+      this.fx.dust({ x: x + Math.cos(a) * R, z: z + Math.sin(a) * R }, 2, 1.2);
+    }
+    let t = 0;
+    const tick = () => {
+      t += 1 / 60;
+      const up = t < 0.12 ? t / 0.12 : t > 0.8 ? Math.max(0, 1 - (t - 0.8) / 0.3) : 1;
+      g.children.forEach((m) => { m.position.y = -0.6 + up * 0.9 * m.scale.y; });
+      if (t < 1.1) requestAnimationFrame(tick); else { this.scene.remove(g); geo.dispose(); mat.dispose(); }
+    };
+    requestAnimationFrame(tick);
+  }
+
   superLand(f) {
+    if (f.def.super === 'quake' && f.superPhase === 'hop') {
+      f.superPhase = 'quake'; f.st = 0; f.ringN = 0;
+      this.game.impactFrame(0.08);
+      return;
+    }
     if (f.def.super !== 'meteor' || f.superPhase !== 'fall') return;
     f.superPhase = 'recover'; f.st = 0;
     const o = f.opp;
@@ -405,8 +508,10 @@ export class Battle {
       this.cutinT -= dt;
       const f = this.superUser;
       f.critter.update(dt);
+      // isolate the super user for the close-up, like an anime cut-in
+      for (const o of this.fighters) o.root.visible = o === f || this.cutinT <= 0;
       this.camOverride = { look: new THREE.Vector3(f.x, f.y + 0.9, f.z), pos: new THREE.Vector3(f.x + Math.sin(f.face) * 2.4 + Math.cos(f.face) * 0.9, f.y + 1.25, f.z + Math.cos(f.face) * 2.4 - Math.sin(f.face) * 0.9), fov: 34 };
-      if (this.cutinT <= 0) { f.superPhase = 'go'; f.st = 0; this.camOverride = null; this.shake(0.4); }
+      if (this.cutinT <= 0) { for (const o of this.fighters) o.root.visible = true; f.superPhase = 'go'; f.st = 0; this.camOverride = null; this.shake(0.4); }
       this.updateCamera(dt);
       return;
     }

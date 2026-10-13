@@ -215,10 +215,17 @@ export class Critter {
     skull.scale.set(1.08, 0.94, 0.98);
     head.add(skull);
     skull.add(inked(sphere(headR), this.mats.body, OL));
-    const nose = new THREE.Mesh(sphere(headR * 0.08), this.mats.dark);
-    nose.scale.set(1.3, 0.8, 1);
-    nose.position.set(0, -headR * 0.17, headR * 0.985);
-    skull.add(nose);
+    if (def.extra === 'owl') {
+      const beak = inked(new THREE.ConeGeometry(headR * 0.11, headR * 0.26, 12), toon(0xffb020, { uniforms: U }), OL * 0.6);
+      beak.rotation.x = Math.PI * 0.62;
+      beak.position.set(0, -headR * 0.2, headR * 1.0);
+      skull.add(beak);
+    } else {
+      const nose = new THREE.Mesh(sphere(headR * 0.08), this.mats.dark);
+      nose.scale.set(1.3, 0.8, 1);
+      nose.position.set(0, -headR * 0.17, headR * 0.985);
+      skull.add(nose);
+    }
 
     // face decals
     const ft = this.faceTex = faceTextures(def);
@@ -235,12 +242,22 @@ export class Critter {
       });
       skull.add(new THREE.Mesh(spherePatch(headR * 1.006, 0, 0.0, 0.95, 0.36), decalMat(maskTex)));
     }
+    if (def.extra === 'owl') {
+      // pale facial disc around both eyes
+      const belly = '#' + new THREE.Color(C.belly).getHexString();
+      const diskTex = canvasTex(256, 128, (c, w, h) => {
+        c.fillStyle = belly;
+        c.beginPath(); c.ellipse(w * 0.3, h * 0.5, w * 0.27, h * 0.46, 0, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.ellipse(w * 0.7, h * 0.5, w * 0.27, h * 0.46, 0, 0, Math.PI * 2); c.fill();
+      });
+      skull.add(new THREE.Mesh(spherePatch(headR * 1.006, 0, -0.04, 0.95, 0.5), decalMat(diskTex)));
+    }
     const eyeL = new THREE.Mesh(spherePatch(er, 0.36, -0.02, 0.28, 0.35, false), this.eyeMatL);
     const eyeR = new THREE.Mesh(spherePatch(er, -0.36, -0.02, 0.28, 0.35, true), this.eyeMatR);
     eyeL.renderOrder = eyeR.renderOrder = 2;
     skull.add(eyeL, eyeR);
     this.eyes = [eyeL, eyeR];
-    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, -0.36, 0.22, 0.15), this.mouthMat);
+    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' ? -0.5 : -0.38, 0.27, 0.18), this.mouthMat);
     mouth.renderOrder = 2;
     skull.add(mouth);
     const blushMat = decalMat(ft.blush);
@@ -253,9 +270,9 @@ export class Critter {
     // cheeks
     if (def.extra === 'cheeks') {
       for (const s of [-1, 1]) {
-        const ch = inked(sphere(headR * 0.42), this.mats.belly, OL * 0.8);
-        ch.position.set(s * headR * 0.7, -headR * 0.36, headR * 0.35);
-        ch.scale.set(1, 0.85, 0.9);
+        const ch = new THREE.Mesh(sphere(headR * 0.36), this.mats.body);
+        ch.position.set(s * headR * 0.6, -headR * 0.4, headR * 0.42);
+        ch.scale.set(1, 0.82, 0.85);
         skull.add(ch);
       }
     }
@@ -294,6 +311,12 @@ export class Critter {
         const inner = new THREE.Mesh(new THREE.ConeGeometry(headR * 0.18, headR * 0.42, 16), this.mats.accent);
         inner.scale.set(1, 1, 0.4); inner.position.set(0, headR * 0.2, headR * 0.07);
         ear.add(inner);
+      } else if (def.ears === 'tufts') {
+        ear.position.set(s * headR * 0.62, headR * 0.7, 0);
+        ear.rotation.z = -s * 0.75;
+        const e = inked(new THREE.ConeGeometry(headR * 0.16, headR * 0.6, 14), this.mats.accent, OL);
+        e.scale.set(1, 1, 0.55); e.position.y = headR * 0.24;
+        ear.add(e);
       } else if (def.ears === 'gills') {
         ear.position.set(s * headR * 0.86, headR * 0.05, -headR * 0.1);
         for (let k = 0; k < 3; k++) {
@@ -331,18 +354,49 @@ export class Critter {
       }
     }
 
+    // armadillo shell bands over the back
+    if (def.extra === 'shell') {
+      const shellMat = toon(C.accent, { uniforms: U });
+      for (let k = 0; k < 4; k++) {
+        // great-circle bands over the dome, fanned from front to back
+        const band = inked(new THREE.TorusGeometry(0.5, 0.06, 8, 28, Math.PI), this.mats.dark, OL * 0.6);
+        const g = new THREE.Group();
+        g.scale.set(B.w * B.chubby * 1.08, B.h * 1.04, B.w * 0.92);
+        g.position.set(0, B.h * 0.5, -B.w * 0.12);
+        band.rotation.x = -0.15 - k * 0.38;
+        g.add(band);
+        torso.add(g);
+      }
+      const dome = inked(sphere(0.5), shellMat, OL);
+      dome.scale.set(B.w * B.chubby * 1.06, B.h * 1.02, B.w * 0.9);
+      dome.position.set(0, B.h * 0.5, -B.w * 0.12);
+      torso.add(dome);
+    }
+
     // arms
     this.arms = [];
     for (const s of [-1, 1]) {
       const sh = new THREE.Group();
       sh.position.set(s * B.w * B.chubby * 0.45, B.h * 0.66, B.w * 0.1);
       torso.add(sh);
-      const a = inked(capsule(0.075, B.armLen), this.mats.body, OL * 0.8);
-      a.position.y = -B.armLen * 0.5;
-      sh.add(a);
-      const paw = new THREE.Mesh(sphere(0.085), this.mats.belly);
-      paw.position.y = -B.armLen - 0.02;
-      sh.add(paw);
+      if (def.extra === 'owl') {
+        // stubby wings with a darker feather tip
+        const w = inked(sphere(0.5), this.mats.body, OL * 0.8);
+        w.scale.set(0.09, B.armLen * 1.7, 0.36);
+        w.position.set(s * 0.02, -B.armLen * 0.7, -0.02);
+        sh.add(w);
+        const tip = new THREE.Mesh(sphere(0.5), this.mats.accent);
+        tip.scale.set(0.08, B.armLen * 0.9, 0.3);
+        tip.position.set(s * 0.025, -B.armLen * 1.12, -0.03);
+        sh.add(tip);
+      } else {
+        const a = inked(capsule(0.075, B.armLen), this.mats.body, OL * 0.8);
+        a.position.y = -B.armLen * 0.5;
+        sh.add(a);
+        const paw = new THREE.Mesh(sphere(0.085), this.mats.belly);
+        paw.position.y = -B.armLen - 0.02;
+        sh.add(paw);
+      }
       sh.rotation.z = s * 0.35;
       sh.userData.side = s;
       this.arms.push(sh);
@@ -390,6 +444,21 @@ export class Critter {
     } else if (def.tail === 'puff') {
       const p = inked(sphere(0.15), this.mats.belly, OL);
       tail.add(p);
+    } else if (def.tail === 'stub') {
+      tail.position.y = B.h * 0.18;
+      tail.rotation.x = -1.9;
+      const t = inked(new THREE.ConeGeometry(0.1, 0.42, 12), this.mats.dark, OL);
+      t.position.y = 0.2;
+      tail.add(t);
+    } else if (def.tail === 'feathers') {
+      tail.position.y = B.h * 0.2;
+      for (let k = -1; k <= 1; k++) {
+        const f = inked(sphere(0.5), k ? this.mats.body : this.mats.accent, OL * 0.8);
+        f.scale.set(0.14, 0.05, 0.42);
+        f.position.set(k * 0.1, 0, -0.16);
+        f.rotation.y = k * 0.45;
+        tail.add(f);
+      }
     } else if (def.tail === 'bolt') {
       tail.position.y = B.h * 0.3;
       tail.rotation.x = -0.9;

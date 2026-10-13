@@ -46,7 +46,7 @@ export class Hud {
     b.fighters.forEach((f, i) => {
       const B = this.bars[i];
       B.img.src = this.game.portrait(f.def);
-      B.nm.textContent = f.def.name;
+      B.nm.textContent = i === 1 && b.trainer ? `${b.trainer.name}'s ${f.def.name}` : f.def.name;
       B.lv.textContent = 'Lv' + f.level;
       B.chip.textContent = TYPES[f.type].name;
       B.chip.style.background = TYPES[f.type].color;

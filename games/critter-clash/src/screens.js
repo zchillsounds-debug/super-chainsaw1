@@ -1,10 +1,16 @@
-// Title, critter select, VS splash, results and pause overlays.
-import * as THREE from 'three';
-import { CRITTERS, TYPES } from './data.js';
-import { SPECIALS } from './fighter.js';
+// Title, tournament cups/ladder, critter select, VS splash, results and pause overlays.
+import { CRITTERS, TYPES, CUPS } from './data.js';
 import { sfx, playMusic } from './audio.js';
+import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 
 const DIFFS = [{ name: 'Easy', v: 0.2 }, { name: 'Normal', v: 0.5 }, { name: 'Hard', v: 0.85 }];
+const byId = (id) => CRITTERS.find((c) => c.id === id);
+
+// which cup match unlocks a critter (for the locked-card hint)
+function unlockHint(id) {
+  for (const cup of CUPS) for (const m of cup.matches) if (m.critter === id) return `Beat ${m.name} in the ${cup.name}`;
+  return 'Keep battling!';
+}
 
 export class Screens {
   constructor(game) {
@@ -16,41 +22,48 @@ export class Screens {
     this.t = 0;
     this.sel = 0;
     this.diff = 1;
+    this.ctx = { kind: 'quick' };
   }
 
   hideAll() { this.root.innerHTML = ''; this.mode = null; }
 
   onAudioUnlocked() {
-    if (this.mode === 'title' || this.mode === 'select') playMusic('menu');
+    if (['title', 'select', 'cups', 'ladder'].includes(this.mode)) playMusic('menu');
   }
 
   btn(label, cls, fn) {
     const b = document.createElement('button');
     b.className = 'btn ' + cls;
     b.innerHTML = label;
-    b.addEventListener('click', (e) => { e.stopPropagation(); sfx.ui('ok'); navigator.vibrate?.(10); fn(); });
+    b.addEventListener('click', (e) => { e.stopPropagation(); sfx.ui('ok'); if (save.settings.vibrate) navigator.vibrate?.(10); fn(); });
     return b;
   }
 
+  // ---------- title ----------
   title() {
     const g = this.game;
     g.endBattle();
     this.mode = 'title';
     this.t = 0;
-    g.setShowcase(CRITTERS, 'line');
+    g.setShowcase(CRITTERS.filter((c) => save.unlocked.includes(c.id)), 'line');
+    const trophies = CUPS.filter((c) => save.cups[c.id]).length;
     this.root.innerHTML = `
       <div class="title-screen">
         <div class="logo">
-          <div class="logo-top" data-t="CRITTER">CRITTER</div>
-          <div class="logo-bot" data-t="CLASH!">CLASH!</div>
+          <div class="logo-top">CRITTER</div>
+          <div class="logo-bot">CLASH!</div>
           <div class="logo-sub">Tiny critters. Huge bonks.</div>
         </div>
         <div class="title-menu"></div>
-        <div class="title-foot">v0.1 · Round 1 build</div>
+        <div class="title-foot"><span>Team ${save.unlocked.length}/${CRITTERS.length}</span><span>🏆 ${trophies}/${CUPS.length}</span></div>
       </div>`;
     const m = this.root.querySelector('.title-menu');
-    m.appendChild(this.btn('Quick Battle', 'primary big', () => this.select()));
-    m.appendChild(this.btn('How to Play', 'ghost', () => this.howTo()));
+    m.appendChild(this.btn('Tournament', 'primary big', () => this.cups()));
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.appendChild(this.btn('Quick Battle', '', () => { this.ctx = { kind: 'quick' }; this.select(); }));
+    row.appendChild(this.btn('How to Play', 'ghost', () => this.howTo()));
+    m.appendChild(row);
     playMusic('menu');
   }
 
@@ -64,7 +77,7 @@ export class Screens {
         <li><b>Special</b><span>Your critter's signature move, on a cooldown · K</span></li>
         <li><b>Dodge</b><span>Quick roll with invincibility; dodge at the last moment for bonus Super · L / Shift</span></li>
         <li><b>Super</b><span>Fills as you trade hits. When it glows, unleash it! · I</span></li>
-        <li><b>Types</b><span>Blaze &gt; Sprout &gt; Splash &gt; Blaze, and Zap &gt; Splash. Hitting a weakness deals extra damage.</span></li>
+        <li><b>Types</b><span>Each type beats two others (Blaze burns Sprout, Splash douses Blaze, Pebble grounds Zap...). Hitting a weakness deals extra damage.</span></li>
         <li><b>Dizzy</b><span>Too many hits in a row makes a critter see stars. Mash buttons to shake it off!</span></li>
       </ul></div>`;
     const close = this.btn('Got it!', 'primary', () => d.remove());
@@ -73,55 +86,112 @@ export class Screens {
     this.root.appendChild(d);
   }
 
+  header(title, back) {
+    const h = document.createElement('div');
+    h.className = 'sel-head';
+    h.innerHTML = `<button class="icon-btn back" aria-label="Back">‹</button><h1>${title}</h1>`;
+    h.querySelector('.back').addEventListener('click', () => { sfx.ui('back'); back(); });
+    return h;
+  }
+
+  // ---------- tournament cups ----------
+  cups() {
+    const g = this.game;
+    g.endBattle();
+    this.mode = 'cups';
+    g.setShowcase([]);
+    this.root.innerHTML = '<div class="cups-screen"><div class="cup-list"></div></div>';
+    const S = this.root.firstElementChild;
+    S.prepend(this.header('Tournament', () => this.title()));
+    const list = S.querySelector('.cup-list');
+    CUPS.forEach((cup) => {
+      const locked = cup.requires && !save.cups[cup.requires];
+      const done = save.cups[cup.id];
+      const b = document.createElement('button');
+      b.className = 'cup' + (locked ? ' locked' : '') + (done ? ' done' : '');
+      b.style.setProperty('--tc', cup.color);
+      b.innerHTML = `
+        <div class="cup-trophy">${done ? '🏆' : locked ? '🔒' : '★'}</div>
+        <h2>${cup.name}</h2>
+        <p>${locked ? 'Clear the ' + CUPS.find((c) => c.id === cup.requires).name + ' to enter.' : cup.desc}</p>
+        <div class="cup-foes">${cup.matches.map((m) => `<img src="${g.portrait(byId(m.critter))}" alt="">`).join('')}</div>
+        <div class="cup-meta">${cup.matches.length} battles · Lv ${cup.matches[0].level}–${cup.matches[cup.matches.length - 1].level}</div>`;
+      b.addEventListener('click', () => {
+        if (locked) { sfx.ui('back'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); return; }
+        sfx.ui('ok');
+        this.ctx = { kind: 'cup', cup, idx: 0 };
+        this.select();
+      });
+      list.appendChild(b);
+    });
+  }
+
+  // ---------- critter select ----------
   select() {
     const g = this.game;
     this.mode = 'select';
     this.t = 0;
-    g.setShowcase([CRITTERS[this.sel]], 'single');
+    if (!save.unlocked.includes(CRITTERS[this.sel].id)) this.sel = CRITTERS.findIndex((c) => save.unlocked.includes(c.id));
+    const cup = this.ctx.kind === 'cup';
     this.root.innerHTML = `
       <div class="select-screen">
-        <div class="sel-head"><button class="icon-btn back" aria-label="Back">‹</button><h1>Choose your Critter</h1></div>
         <div class="sel-info"></div>
         <div class="sel-arrows"><button class="arrow l" aria-label="Previous">‹</button><button class="arrow r" aria-label="Next">›</button></div>
         <div class="sel-bottom">
           <div class="roster"></div>
           <div class="sel-actions">
-            <div class="diff"></div>
+            ${cup ? `<div class="cup-badge" style="--tc:${this.ctx.cup.color}">${this.ctx.cup.name}</div>` : '<div class="diff"></div>'}
             <div class="go"></div>
           </div>
         </div>
       </div>`;
     const R = this.root;
-    R.querySelector('.back').addEventListener('click', () => { sfx.ui('back'); this.title(); });
-    R.querySelector('.arrow.l').addEventListener('click', () => this.pick((this.sel + CRITTERS.length - 1) % CRITTERS.length));
-    R.querySelector('.arrow.r').addEventListener('click', () => this.pick((this.sel + 1) % CRITTERS.length));
+    R.firstElementChild.prepend(this.header('Choose your Critter', () => (cup ? this.cups() : this.title())));
+    const step = (d) => {
+      let i = this.sel;
+      for (let k = 0; k < CRITTERS.length; k++) { i = (i + d + CRITTERS.length) % CRITTERS.length; if (save.unlocked.includes(CRITTERS[i].id)) break; }
+      this.pick(i);
+    };
+    R.querySelector('.arrow.l').addEventListener('click', () => step(-1));
+    R.querySelector('.arrow.r').addEventListener('click', () => step(1));
     const roster = R.querySelector('.roster');
     CRITTERS.forEach((c, i) => {
+      const locked = !save.unlocked.includes(c.id);
       const b = document.createElement('button');
-      b.className = 'rcard';
+      b.className = 'rcard' + (locked ? ' locked' : '');
       b.style.setProperty('--tc', TYPES[c.type].color);
-      b.innerHTML = `<img src="${g.portrait(c)}" alt=""><span>${c.name}</span>`;
-      b.addEventListener('click', () => this.pick(i));
+      b.innerHTML = `<img src="${g.portrait(c)}" alt=""><span>${locked ? '???' : c.name}</span>${locked ? '<em>🔒</em>' : `<i>Lv${save.critters[c.id].level}</i>`}`;
+      b.addEventListener('click', () => {
+        if (locked) { sfx.ui('back'); this.toast(unlockHint(c.id)); return; }
+        this.pick(i);
+      });
       roster.appendChild(b);
     });
     const diff = R.querySelector('.diff');
-    DIFFS.forEach((d, i) => {
+    if (diff) DIFFS.forEach((d, i) => {
       const b = document.createElement('button');
       b.className = 'chip' + (i === this.diff ? ' on' : '');
       b.textContent = d.name;
       b.addEventListener('click', () => { this.diff = i; sfx.ui('move'); diff.querySelectorAll('.chip').forEach((x, k) => x.classList.toggle('on', k === i)); });
       diff.appendChild(b);
     });
-    R.querySelector('.go').appendChild(this.btn('FIGHT!', 'primary big', () => this.vs()));
+    R.querySelector('.go').appendChild(this.btn(cup ? 'GO!' : 'FIGHT!', 'primary big', () => (cup ? this.ladder() : this.vs())));
     this.pick(this.sel, true);
-    this.keyNav = (e) => {
-      if (this.mode !== 'select') return;
-      if (e.code === 'ArrowLeft' || e.code === 'KeyA') this.pick((this.sel + CRITTERS.length - 1) % CRITTERS.length);
-      if (e.code === 'ArrowRight' || e.code === 'KeyD') this.pick((this.sel + 1) % CRITTERS.length);
-      if (e.code === 'Enter' || e.code === 'Space') this.vs();
-    };
     removeEventListener('keydown', this._kn);
-    addEventListener('keydown', this._kn = this.keyNav);
+    addEventListener('keydown', this._kn = (e) => {
+      if (this.mode !== 'select') return;
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') step(-1);
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') step(1);
+      if (e.code === 'Enter') cup ? this.ladder() : this.vs();
+    });
+  }
+
+  toast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    this.root.appendChild(t);
+    setTimeout(() => t.remove(), 2200);
   }
 
   pick(i, silent) {
@@ -132,61 +202,185 @@ export class Screens {
     g.setShowcase([c], 'single');
     g.showcase[0].cheer = 0.8;
     const T = TYPES[c.type];
-    const st = c.stats;
-    const bar = (label, v) => `<div class="stat"><span>${label}</span><i><b style="width:${Math.round(v * 100)}%"></b></i></div>`;
+    const st = c.stats, prog = save.critters[c.id];
+    const bar = (label, v) => `<div class="stat"><span>${label}</span><i><b style="width:${Math.round(Math.max(0.08, Math.min(1, v)) * 100)}%"></b></i></div>`;
+    const beats = T.beats.map((b) => `<span class="mini-type" style="background:${TYPES[b].color}">${TYPES[b].name}</span>`).join('');
     this.root.querySelector('.sel-info').innerHTML = `
       <div class="info-card" style="--tc:${T.color}">
-        <div class="ic-type">${T.name} type</div>
+        <div class="ic-row"><span class="ic-type">${T.name} type</span><span class="ic-lv">Lv ${prog.level}</span></div>
         <h2>${c.name}</h2>
         <div class="ic-species">${c.species}</div>
         <p>${c.blurb}</p>
-        ${bar('Health', (st.hp - 800) / 300)}${bar('Speed', (st.speed - 5) / 3)}${bar('Power', (st.power - 0.8) / 0.35)}${bar('Weight', (st.weight - 0.6) / 0.5)}
+        ${bar('Health', (st.hp - 800) / 400)}${bar('Speed', (st.speed - 5) / 3)}${bar('Power', (st.power - 0.85) / 0.3)}${bar('Weight', (st.weight - 0.6) / 0.8)}
+        <div class="ic-beats"><small>Strong vs</small>${beats}</div>
         <div class="moves"><div><small>Special</small><b>${c.moves.special}</b></div><div><small>Super</small><b>${c.moves.super}</b></div></div>
+        <div class="xpbar"><i style="width:${(prog.xp / xpNeeded(prog.level)) * 100}%"></i></div>
       </div>`;
     this.root.querySelectorAll('.rcard').forEach((b, k) => b.classList.toggle('on', k === i));
-    void SPECIALS;
   }
 
+  // ---------- tournament ladder ----------
+  ladder() {
+    const g = this.game;
+    const { cup, idx } = this.ctx;
+    this.mode = 'ladder';
+    const m = cup.matches[idx];
+    const foe = byId(m.critter);
+    g.setShowcase([foe], 'single');
+    g.showcase[0].cheer = 1;
+    this.root.innerHTML = `
+      <div class="ladder-screen" style="--tc:${cup.color}">
+        <div class="ladder">${cup.matches.map((mm, k) => `
+          <div class="rung ${k < idx ? 'beat' : k === idx ? 'now' : ''} ${mm.boss ? 'boss' : ''}">
+            <img src="${g.portrait(byId(mm.critter))}" alt=""><span>${mm.name}</span>${k < idx ? '<b>✓</b>' : ''}
+          </div>`).join('<i class="rung-link"></i>')}
+        </div>
+        <div class="trainer-card">
+          <div class="tc-title">${m.boss ? 'CHAMPION · ' : ''}${m.title}</div>
+          <h2>${m.name}</h2>
+          <div class="bubble">“${m.taunt}”</div>
+          <div class="tc-critter"><span class="mini-type" style="background:${TYPES[foe.type].color}">${TYPES[foe.type].name}</span> ${foe.name} · Lv ${m.level}</div>
+          <div class="go"></div>
+        </div>
+      </div>`;
+    this.root.firstElementChild.prepend(this.header(`${cup.name} · Battle ${idx + 1}/${cup.matches.length}`, () => this.select()));
+    this.root.querySelector('.go').appendChild(this.btn('Battle!', 'primary big', () => this.vs()));
+    sfx.voice(foe.voice, 'taunt');
+  }
+
+  // ---------- VS ----------
   vs() {
     const g = this.game;
-    if (this.mode !== 'select') return;
+    if (this.mode !== 'select' && this.mode !== 'ladder') return;
     this.mode = 'vs';
     const p = CRITTERS[this.sel];
-    const others = CRITTERS.filter((c) => c !== p);
-    const c = others[Math.floor(Math.random() * others.length)];
+    let c, opts, label;
+    if (this.ctx.kind === 'cup') {
+      const { cup, idx } = this.ctx;
+      const m = cup.matches[idx];
+      c = byId(m.critter);
+      const k = cup.matches.length > 1 ? idx / (cup.matches.length - 1) : 1;
+      opts = { cpuLevel: m.level, difficulty: cup.diff[0] + (cup.diff[1] - cup.diff[0]) * k, playerLevel: save.critters[p.id].level, trainer: m };
+      label = `${m.name} · Lv ${m.level}`;
+    } else {
+      const others = CRITTERS.filter((x) => x !== p);
+      c = others[Math.floor(Math.random() * others.length)];
+      const pl = save.critters[p.id].level;
+      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl };
+      label = `CPU · ${DIFFS[this.diff].name}`;
+    }
     this.root.innerHTML = `
       <div class="vs-screen">
-        <div class="vs-side l" style="--tc:${TYPES[p.type].color}"><img src="${g.portrait(p)}" alt=""><b>${p.name}</b><small>YOU</small></div>
+        <div class="vs-side l" style="--tc:${TYPES[p.type].color}"><img src="${g.portrait(p)}" alt=""><b>${p.name}</b><small>YOU · Lv ${opts.playerLevel}</small></div>
         <div class="vs-mark">VS</div>
-        <div class="vs-side r" style="--tc:${TYPES[c.type].color}"><img src="${g.portrait(c)}" alt=""><b>${c.name}</b><small>CPU · ${DIFFS[this.diff].name}</small></div>
+        <div class="vs-side r" style="--tc:${TYPES[c.type].color}"><img src="${g.portrait(c)}" alt=""><b>${c.name}</b><small>${label}</small></div>
       </div>`;
     sfx.boom();
-    setTimeout(() => g.startBattle(p, c, { difficulty: DIFFS[this.diff].v }), 1900);
+    setTimeout(() => g.startBattle(p, c, opts), 1900);
   }
 
+  // ---------- results ----------
   results(won, stats, pDef, cDef, opts) {
     const g = this.game;
     this.mode = 'results';
     g.input.showTouch(false);
     g.hud.show(false);
+    save.stats.battles++;
+    if (won) save.stats.wins++;
+    const cup = this.ctx.kind === 'cup' ? this.ctx : null;
+    // XP: winning pays more, tougher foes pay more
+    const xp = Math.round((won ? 50 : 18) + opts.cpuLevel * (won ? 14 : 5) + stats.maxCombo * 2 + (stats.perfect ? 30 : 0));
+    const prog = save.critters[pDef.id];
+    const before = { level: prog.level, xp: prog.xp };
+    if (won) prog.wins++;
+    const lv = grantXp(pDef.id, xp);
+    let joined = false, cupDone = false;
+    if (won && cup) {
+      joined = unlock(cDef.id);
+      if (cup.idx === cup.cup.matches.length - 1) { cupDone = true; save.cups[cup.cup.id] = true; persist(); }
+    }
     this.root.innerHTML = `
       <div class="results ${won ? 'won' : 'lost'}">
-        <h1 data-t="${won ? 'VICTORY!' : 'DEFEAT'}">${won ? 'VICTORY!' : 'DEFEAT'}</h1>
+        <h1>${won ? 'VICTORY!' : 'DEFEAT'}</h1>
         <div class="res-card">
           <img src="${g.portrait(pDef)}" alt="">
           <div class="res-stats">
-            <div><small>Damage dealt</small><b>${stats.dmgDealt}</b></div>
-            <div><small>Best combo</small><b>${stats.maxCombo} hits</b></div>
-            <div><small>Supers used</small><b>${stats.supers}</b></div>
+            <div class="res-grid">
+              <div><small>Damage</small><b>${stats.dmgDealt}</b></div>
+              <div><small>Best combo</small><b>${stats.maxCombo}</b></div>
+              <div><small>Supers</small><b>${stats.supers}</b></div>
+            </div>
             ${stats.perfect ? '<div class="perfect">PERFECT ROUND!</div>' : ''}
+            <div class="res-xp"><span>+${xp} XP</span><span class="res-lv">Lv ${before.level}</span></div>
+            <div class="xpbar big"><i style="width:${(before.xp / xpNeeded(before.level)) * 100}%"></i></div>
           </div>
         </div>
         <div class="res-btns"></div>
       </div>`;
+    // animate the XP bar, rolling over on level-ups
+    const bar = this.root.querySelector('.xpbar i'), lvEl = this.root.querySelector('.res-lv');
+    let level = before.level;
+    const fill = () => {
+      if (!bar.isConnected) return;
+      if (level < lv.to) {
+        bar.style.width = '100%';
+        setTimeout(() => {
+          if (!bar.isConnected) return;
+          level++; lvEl.textContent = 'Lv ' + level; lvEl.classList.add('up');
+          sfx.voice(pDef.voice, 'win');
+          this.toast(`${pDef.name} grew to Lv ${level}!`);
+          bar.style.transition = 'none'; bar.style.width = '0%'; void bar.offsetWidth; bar.style.transition = '';
+          fill();
+        }, 700);
+      } else bar.style.width = (prog.xp / xpNeeded(prog.level)) * 100 + '%';
+    };
+    setTimeout(fill, 500);
+
     const b = this.root.querySelector('.res-btns');
-    b.appendChild(this.btn('Rematch', 'primary', () => g.startBattle(pDef, cDef, opts)));
-    b.appendChild(this.btn('Change Critter', '', () => { g.endBattle(); this.select(); playMusic('menu'); }));
-    b.appendChild(this.btn('Title', 'ghost', () => this.title()));
+    if (cup) {
+      if (won && !cupDone) b.appendChild(this.btn('Next Battle', 'primary', () => { cup.idx++; g.endBattle(); playMusic('menu'); this.ladder(); }));
+      else if (!won) {
+        b.appendChild(this.btn('Try Again', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
+        b.appendChild(this.btn('Give Up', 'ghost', () => this.cups()));
+      } else b.appendChild(this.btn('Collect Trophy', 'primary', () => this.trophy(cup.cup)));
+    } else {
+      b.appendChild(this.btn('Rematch', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
+      b.appendChild(this.btn('Change Critter', '', () => { g.endBattle(); this.select(); playMusic('menu'); }));
+      b.appendChild(this.btn('Title', 'ghost', () => this.title()));
+    }
+    if (joined) setTimeout(() => this.recruit(cDef), 1600);
+  }
+
+  recruit(def) {
+    const d = document.createElement('div');
+    d.className = 'modal-wrap recruit';
+    d.innerHTML = `<div class="modal" style="--tc:${TYPES[def.type].color}">
+      <div class="burst"></div>
+      <img src="${this.game.portrait(def)}" alt="">
+      <h2>${def.name} joined your team!</h2>
+      <p>${def.blurb}</p></div>`;
+    d.querySelector('.modal').appendChild(this.btn('Yay!', 'primary', () => d.remove()));
+    this.root.appendChild(d);
+    sfx.voice(def.voice, 'win');
+    sfx.cheer(1);
+  }
+
+  trophy(cup) {
+    const g = this.game;
+    g.endBattle();
+    this.mode = 'trophy';
+    g.setShowcase([CRITTERS[this.sel]], 'single');
+    g.showcase[0].cheer = 99;
+    playMusic('victory');
+    this.root.innerHTML = `
+      <div class="trophy-screen" style="--tc:${cup.color}">
+        <div class="big-trophy">🏆</div>
+        <h1>${cup.name} Champion!</h1>
+        <p>${CRITTERS[this.sel].name} and you are the talk of the stadium.</p>
+        <div class="res-btns"></div>
+      </div>`;
+    this.root.querySelector('.res-btns').appendChild(this.btn('Continue', 'primary big', () => this.cups()));
+    sfx.cheer(1.5);
   }
 
   pauseMenu(on) {
@@ -213,14 +407,14 @@ export class Screens {
       cam.lookAt(0, cam.aspect < 1 ? 1.6 : 1.1, 0);
       cam.fov = Math.min(78, 40 * Math.max(1, 1.6 / cam.aspect));
       cam.updateProjectionMatrix();
-    } else if (this.mode === 'select' || this.mode === 'vs') {
+    } else if (['select', 'vs', 'ladder', 'trophy', 'cups'].includes(this.mode)) {
       const c = this.game.showcase[0];
-      if (c) c.root.rotation.y = Math.sin(this.t * 0.6) * 0.5 + 0.2;
+      if (c) c.root.rotation.y = Math.sin(this.t * 0.6) * 0.5 + (this.mode === 'ladder' ? -0.3 : 0.2);
       const portrait = cam.aspect < 1;
-      // frame the critter off-centre so the info card has room
-      const ox = portrait ? 0 : 1.0;
+      // frame the critter off-centre so the side card has room
+      const ox = portrait ? 0 : this.mode === 'ladder' ? -1.1 : this.mode === 'trophy' ? 0 : 1.0;
       cam.position.set(ox, 1.3, portrait ? 4.6 : 4.4);
-      cam.lookAt(ox, portrait ? 0.35 : 0.75, 0);
+      cam.lookAt(ox, portrait ? 0.35 : this.mode === 'trophy' ? 1.25 : 0.75, 0);
       cam.fov = Math.min(70, 40 * Math.max(1, 1.4 / cam.aspect));
       cam.updateProjectionMatrix();
     }

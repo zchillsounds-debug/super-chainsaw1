@@ -13,6 +13,8 @@ export const SPECIALS = {
   bubble:  { cd: 3.6, range: [3, 9] },
   leafrang:{ cd: 3.8, range: [3, 8] },
   zipzap:  { cd: 4.0, range: [1.5, 6] },
+  rollout: { cd: 4.5, range: [2, 8] },
+  gale:    { cd: 3.8, range: [3, 9] },
 };
 
 export class Fighter {
@@ -361,6 +363,42 @@ export class Fighter {
         this.vz = THREE.MathUtils.damp(this.vz, 0, 10, dt);
         if (this.st > 0.75) this.endSpecial();
       }
+    } else if (id === 'rollout') {
+      if (this.st < 0.3) {
+        // curl up and rev in place
+        this.vx = this.vz = 0;
+        if (o) this.turnTo(this.angleTo(o), 10, dt);
+        if (Math.random() < 0.5) B.fx.dust(this, 1, 0.6);
+      } else if (this.st < 1.45) {
+        if (!this.specFired) { this.specFired = true; sfx.land(); }
+        if (o && o.alive) this.turnTo(this.angleTo(o), 2.6, dt);
+        this.vx = Math.sin(this.face) * 13; this.vz = Math.cos(this.face) * 13;
+        if (Math.random() < 0.6) B.fx.dust(this, 1, 0.8);
+        if (o && !this.hitIds.has(o) && this.distTo(o) < 1.3 && o.alive) {
+          this.hitIds.add(o);
+          const ang = this.angleTo(o);
+          B.applyHit(this, o, { dmg: 115 * this.power, kb: 9, lift: 5, stun: 0.6, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, launch: true, dizzy: 28 });
+          this.vx *= -0.4; this.vz *= -0.4; this.st = 1.45;
+        }
+      } else {
+        this.vx = THREE.MathUtils.damp(this.vx, 0, 6, dt);
+        this.vz = THREE.MathUtils.damp(this.vz, 0, 6, dt);
+        if (this.st > 1.8) this.endSpecial();
+      }
+    } else if (id === 'gale') {
+      if (this.st < 0.22 && o) this.turnTo(this.angleTo(o), 12, dt);
+      if (!this.specFired && this.st > 0.22) {
+        this.specFired = true;
+        const a = this.face;
+        // the puff kicks Hootsy backwards a little
+        this.vx = -Math.sin(a) * 5; this.vz = -Math.cos(a) * 5;
+        B.spawnProjectile(this, { kind: 'gale', x: this.x + fx * 0.8, z: this.z + fz * 0.8, y: 0.1, vx: Math.sin(a) * 7.5, vz: Math.cos(a) * 7.5, r: 0.9, life: 1.5, multi: 0.28,
+          hit: { dmg: 30 * this.power, kb: 1, lift: 0, stun: 0.32, type: this.type, dizzy: 9 } });
+        sfx.leaf();
+      }
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 6, dt);
+      this.vz = THREE.MathUtils.damp(this.vz, 0, 6, dt);
+      if (this.st > 0.6) this.endSpecial();
     }
     void tcol;
   }
@@ -447,6 +485,11 @@ export class Fighter {
       P.sy = 0.75; P.sx = 1.2; P.lean = 0.5; P.y = 0.05;
       P.legL = 1; P.legR = 1; P.armLx = P.armRx = 1.2; P.ear = 1;
       P.roll = this.st * 18;
+    } else if (S === 'special' && this.def.special === 'rollout') {
+      P.sx = 1.05; P.sy = 0.78; P.head = 0.9; P.armLx = P.armRx = -2.4; P.legL = P.legR = -1.6; P.ear = 1;
+      this.rollSpin = (this.rollSpin || 0) + dt * (this.st < 0.3 ? 30 * this.st : 22);
+      P.lean = 0.9;
+      this.critter.P.lean = this.rollSpin; this.critter.V.lean = 0;
     } else if (S === 'special' || S === 'super') {
       if (this.st < 0.28) { P.sy = 0.8; P.sx = 1.15; P.lean = -0.25; P.armLz = P.armRz = 0.8; P.ear = 0.8; }
       else { P.sy = 1.15; P.sx = 0.9; P.lean = 0.6; P.armLx = P.armRx = -1.8; P.ear = 1; P.legL = 0.7; P.legR = 0.7; }

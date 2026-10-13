@@ -57,14 +57,58 @@ export const CRITTERS = [
     special: 'zipzap', super: 'thunder',
     moves: { special: 'Zip Zap', super: 'Thunder Tumble' },
   },
+  {
+    id: 'rolladillo', name: 'Rolladillo', type: 'stone', species: 'Pebble Armadillo',
+    blurb: 'Naps inside its own shell. Rolls downhill on purpose, uphill by accident.',
+    colors: { body: 0xc9a27a, belly: 0xf3e2c6, accent: 0x8a6a4a, dark: 0x5a3e28, eye: '#24160c', iris: '#c08a55' },
+    body: { w: 0.62, h: 0.52, headR: 0.44, legLen: 0.15, armLen: 0.17, chubby: 1.15 },
+    ears: 'round', tail: 'stub', extra: 'shell', voice: 0.8,
+    stats: { hp: 1150, speed: 5.4, power: 1.1, weight: 1.3 },
+    special: 'rollout', super: 'quake',
+    moves: { special: 'Roly-Poly', super: 'Boulder Quake' },
+  },
+  {
+    id: 'hootsy', name: 'Hootsy', type: 'gust', species: 'Breeze Owlet',
+    blurb: 'Too round to fly properly, so it flaps up little tornadoes instead.',
+    colors: { body: 0x9aa8e8, belly: 0xf2f0ff, accent: 0x6a74c8, dark: 0x3a3a7a, eye: '#1a1040', iris: '#ffb020' },
+    body: { w: 0.6, h: 0.6, headR: 0.5, legLen: 0.13, armLen: 0.22, chubby: 1.05 },
+    ears: 'tufts', tail: 'feathers', extra: 'owl', voice: 1.15,
+    stats: { hp: 980, speed: 6.6, power: 1.0, weight: 0.85 },
+    special: 'gale', super: 'cyclone',
+    moves: { special: 'Gale Puff', super: 'Mega Cyclone' },
+  },
 ];
 
-// Light-hearted opponent trainers for the tournament ladder (Round 2+)
-export const TRAINERS = [
-  { name: 'Pip', title: 'Rookie', critter: 'bubbalotl', level: 1, taunt: "My Bubbalotl's never lost! ...today." },
-  { name: 'Marigold', title: 'Gardener', critter: 'clovebun', level: 2, taunt: 'Prepare to be weeded out!' },
-  { name: 'Sparky Dee', title: 'Electrician', critter: 'voltferret', level: 3, taunt: "Shocking, isn't it?" },
-  { name: 'Chef Bao', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered." },
+export const STARTERS = ['cindermunch', 'bubbalotl', 'clovebun'];
+
+// Light-hearted rival trainers. Each cup is a ladder of matches.
+export const CUPS = [
+  {
+    id: 'sprout', name: 'Sprout Cup', color: '#4fd35a', desc: 'A friendly warm-up for brand-new trainers.', diff: [0.15, 0.3],
+    matches: [
+      { name: 'Pip', title: 'Rookie', critter: 'bubbalotl', level: 1, taunt: "My Bubbalotl's never lost! ...today." },
+      { name: 'Marigold', title: 'Gardener', critter: 'clovebun', level: 2, taunt: 'Prepare to be weeded out!' },
+      { name: 'Sparky Dee', title: 'Electrician', critter: 'voltferret', level: 3, taunt: "Shocking, isn't it?" },
+    ],
+  },
+  {
+    id: 'thunder', name: 'Thunder Cup', color: '#ffd52e', desc: 'The rivals get serious. Mostly.', diff: [0.4, 0.6], requires: 'sprout',
+    matches: [
+      { name: 'Chef Bao', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered." },
+      { name: 'Gran Pebbles', title: 'Retired Champ', critter: 'rolladillo', level: 5, taunt: 'Back in my day we rolled uphill. Both ways.' },
+      { name: 'Wren', title: 'Kite Flyer', critter: 'hootsy', level: 6, taunt: "Hootsy, let's blow them away!" },
+      { name: 'Captain Splash', title: 'Lifeguard', critter: 'bubbalotl', level: 7, taunt: 'No running by the pool. Only fighting.' },
+    ],
+  },
+  {
+    id: 'champion', name: 'Champion Cup', color: '#ff5a8a', desc: 'Only the bonkiest survive.', diff: [0.65, 0.9], requires: 'thunder',
+    matches: [
+      { name: 'Professor Fern', title: 'Botanist', critter: 'clovebun', level: 8, taunt: 'A fascinating specimen. Let us test it.' },
+      { name: 'Volt Twins', title: 'Double Trouble', critter: 'voltferret', level: 9, taunt: 'We finish each other\'s... ZAPS!' },
+      { name: 'Big Boulder', title: 'Gym Owner', critter: 'rolladillo', level: 10, taunt: 'Leg day? Every day is roll day.' },
+      { name: 'Aurora', title: 'Reigning Champion', critter: 'hootsy', level: 12, taunt: "You came this far. Cute. Let's see how far you fly.", boss: true },
+    ],
+  },
 ];
 
 // Combo chain for every critter (scaled by stats.power). t = seconds.
