@@ -5,6 +5,8 @@ import { CpuBrain } from './ai.js';
 import { TYPES, typeMult } from './data.js';
 import { ARENA_R } from './arena.js';
 import { sfx, playMusic } from './audio.js';
+import { Tutorial } from './tutorial.js';
+import { save } from './save.js';
 
 const ROUND_TIME = 60;
 
@@ -41,6 +43,7 @@ export class Battle {
     this.screenImgs = this.fighters.map((f) => { const im = new Image(); im.src = game.portrait(f.def); return im; });
     this.screenNames = this.fighters.map((f) => f.def.name);
     this.screenT = 0;
+    this.tutorial = !save.tutorialDone && !game.autoplay ? new Tutorial(this) : null;
     this.startRound();
   }
 
@@ -566,6 +569,7 @@ export class Battle {
       p.ctl.dodge = inp.pressed.dodge;
       p.ctl.super = inp.pressed.super;
       this.brain.update(sdt);
+      if (this.tutorial) this.tutorial.update(sdt);
     } else {
       for (const f of this.fighters) Object.assign(f.ctl, { mx: 0, mz: 0, attack: false, special: false, dodge: false, super: false });
     }
@@ -643,6 +647,7 @@ export class Battle {
   dispose() {
     this.arena.drawScreen();
     this.hud.speedLines(false);
+    this.tutorial?.dispose();
     for (const f of this.fighters) f.dispose();
     for (let i = this.projectiles.length - 1; i >= 0; i--) this.removeProjectile(i);
     this.fx.clear();

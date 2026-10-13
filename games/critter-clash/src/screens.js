@@ -2,6 +2,7 @@
 import { CRITTERS, TYPES, CUPS } from './data.js';
 import { sfx, playMusic } from './audio.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
+import { openSettings } from './settings.js';
 
 const DIFFS = [{ name: 'Easy', v: 0.2 }, { name: 'Normal', v: 0.5 }, { name: 'Hard', v: 0.85 }];
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -45,6 +46,7 @@ export class Screens {
     g.endBattle();
     this.mode = 'title';
     this.t = 0;
+    this.backFn = null;
     g.setShowcase(CRITTERS.filter((c) => save.unlocked.includes(c.id)), 'line');
     const trophies = CUPS.filter((c) => save.cups[c.id]).length;
     this.root.innerHTML = `
@@ -64,6 +66,9 @@ export class Screens {
     row.appendChild(this.btn('Quick Battle', '', () => { this.ctx = { kind: 'quick' }; this.select(); }));
     row.appendChild(this.btn('How to Play', 'ghost', () => this.howTo()));
     m.appendChild(row);
+    const gear = this.btn('<svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 3.5c0-.5 0-1-.1-1.4l2-1.6-2-3.4-2.4 1a8 8 0 0 0-2.4-1.4L15 2.6h-4l-.4 2.6A8 8 0 0 0 8.2 6.6l-2.4-1-2 3.4 2 1.6a8 8 0 0 0 0 2.8l-2 1.6 2 3.4 2.4-1a8 8 0 0 0 2.4 1.4l.4 2.6h4l.4-2.6a8 8 0 0 0 2.4-1.4l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.4z"/></svg>', 'icon-btn gear', () => openSettings(g, this.root));
+    gear.setAttribute('aria-label', 'Settings');
+    this.root.querySelector('.title-screen').appendChild(gear);
     playMusic('menu');
   }
 
@@ -91,6 +96,7 @@ export class Screens {
     h.className = 'sel-head';
     h.innerHTML = `<button class="icon-btn back" aria-label="Back">‹</button><h1>${title}</h1>`;
     h.querySelector('.back').addEventListener('click', () => { sfx.ui('back'); back(); });
+    this.backFn = back;
     return h;
   }
 
@@ -392,6 +398,7 @@ export class Screens {
     const col = p.querySelector('.col');
     col.appendChild(this.btn('Resume', 'primary', () => this.game.pause()));
     col.appendChild(this.btn('How to Play', '', () => this.howTo()));
+    col.appendChild(this.btn('Settings', '', () => openSettings(this.game, this.root)));
     col.appendChild(this.btn('Quit to Title', 'ghost', () => { this.game.paused = false; this.title(); }));
     p.addEventListener('click', (e) => { if (e.target === p) this.game.pause(); });
     this.root.appendChild(p);

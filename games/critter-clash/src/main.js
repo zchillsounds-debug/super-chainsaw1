@@ -17,6 +17,8 @@ import { Critter } from './critters.js';
 import { CRITTERS } from './data.js';
 import { Screens } from './screens.js';
 import { initAudio, playMusic, sfx } from './audio.js';
+import { save } from './save.js';
+import { applySettings } from './settings.js';
 
 const Q = new URLSearchParams(location.search);
 
@@ -50,7 +52,10 @@ class Game {
     r.toneMappingExposure = 1.0;
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.quality = Q.get('q') || (isTouch ? 'med' : 'high');
+    // 'auto' starts at medium on phones and steps down if frames run long
+    this.qualityPref = Q.get('q') || save.settings.quality;
+    this.quality = this.qualityPref === 'auto' ? (isTouch ? 'med' : 'high') : this.qualityPref;
+    this.perf = { acc: 0, n: 0, slow: 0 };
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(42, 1, 0.1, 900);
     this.camera.position.set(0, 6, 16);
@@ -83,6 +88,8 @@ class Game {
     this.ui.appendChild(rh);
     this.screens = new Screens(this);
     this.battle = null;
+    applySettings(this);
+    this.setupLifecycle();
     this.paused = false;
     this.clock = new THREE.Clock();
     this.t = 0;
@@ -104,6 +111,54 @@ class Game {
     // headless helper: advance the simulation in fixed steps without rendering
     window.__sim = (sec, dt = 1 / 60) => { for (let t = 0; t < sec; t += dt) this.step(dt); this.clock.getDelta(); };
     window.__ready = true;
+  }
+
+  setQuality(pref) {
+    this.qualityPref = pref;
+    const q = pref === 'auto' ? this.quality : pref;
+    this.quality = q;
+    this.bloom.enabled = q !== 'low';
+    const sm = q === 'low' ? 1024 : 2048;
+    const sun = this.arena.sun;
+    if (sun.shadow.mapSize.x !== sm) { sun.shadow.mapSize.set(sm, sm); sun.shadow.map?.dispose(); sun.shadow.map = null; }
+    this.resize();
+  }
+
+  // frame-time watchdog for 'auto' quality
+  trackPerf(dt) {
+    if (this.qualityPref !== 'auto' || !this.battle || this.battle.phase !== 'fight') return;
+    const P = this.perf;
+    P.acc += dt; P.n++;
+    if (P.acc < 2) return;
+    const avg = P.acc / P.n;
+    P.acc = 0; P.n = 0;
+    if (avg > 1 / 42) P.slow++; else P.slow = 0;
+    if (P.slow >= 2 && this.quality !== 'low') {
+      P.slow = 0;
+      this.quality = this.quality === 'high' ? 'med' : 'low';
+      this.setQuality('auto');
+    }
+  }
+
+  // Android back button (history), app switching, audio suspend
+  setupLifecycle() {
+    history.replaceState({ base: true }, '');
+    history.pushState({ guard: true }, '');
+    addEventListener('popstate', () => {
+      history.pushState({ guard: true }, '');
+      this.back();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && this.battle && !this.paused && this.battle.phase !== 'done') this.pause();
+    });
+  }
+
+  back() {
+    const modal = this.ui.querySelector('.modal-wrap:not(.pause)');
+    if (this.modalClose) { this.modalClose(); return; }
+    if (modal) { modal.remove(); return; }
+    if (this.battle && this.battle.phase !== 'done') { this.pause(); return; }
+    this.screens.backFn?.();
   }
 
   resize() {
@@ -221,6 +276,7 @@ class Game {
 
   frame() {
     const rawDt = Math.min(this.clock.getDelta(), 0.1);
+    this.trackPerf(rawDt);
     this.step(rawDt);
     this.impactT -= rawDt;
     this.grade.uniforms.uImpact.value = this.impactT > 0 ? 1 : 0;
