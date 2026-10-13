@@ -33,6 +33,9 @@ export class Battle {
     this.fighters = [];
     this.fighters.push(new Fighter(this, pDef, { level: playerLevel, side: 0 }));
     this.fighters.push(new Fighter(this, cDef, { level: cpuLevel, cpu: true, side: 1 }));
+    // best friends (5 hearts in Critter Camp) start the match with a head start on their super
+    this.bestFriend = !training && (save.critters[pDef.id]?.pets || 0) >= 20;
+    if (this.bestFriend) this.fighters[0].superM = 25;
     if (this.mods.has('bighead')) for (const f of this.fighters) f.critter.head.scale.setScalar(1.5);
     if (this.mods.size) {
       this.modChip = document.createElement('div');

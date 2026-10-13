@@ -56,7 +56,8 @@ export class Hud {
       const B = this.bars[i];
       B.img.src = this.game.portrait(f.def);
       B.nm.textContent = i === 1 && b.trainer ? `${b.trainer.name}'s ${f.def.name}` : f.def.name;
-      B.lv.textContent = 'Lv' + f.level;
+      B.lv.textContent = 'Lv' + f.level + (i === 0 && b.bestFriend ? ' 💗' : '');
+      B.lv.title = i === 0 && b.bestFriend ? 'Best friends: starts with super meter' : '';
       B.chip.textContent = TYPES[f.type].name;
       B.chip.style.background = TYPES[f.type].color;
       B.r.style.setProperty('--tc', TYPES[f.type].color);

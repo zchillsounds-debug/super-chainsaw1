@@ -665,6 +665,7 @@ body.portrait .timer { width: 50px; height: 50px; font-size: 26px; }
 .camp-info b { font-family: var(--display); font-weight: 400; font-size: 20px; }
 .camp-info small { font-family: Nunito, sans-serif; font-size: 13px; opacity: .7; }
 .camp-hearts { font-size: 14px; letter-spacing: 1px; margin: 2px 0 4px; }
+.camp-hearts em { display: block; font-style: normal; font-size: 11px; letter-spacing: 0; color: #ff6fa8; font-weight: 800; }
 .camp-feed { white-space: nowrap; }
 .camp-feed small { display: block; font-size: 11px; opacity: .8; }
 .title-menu .row { flex-wrap: wrap; justify-content: center; max-width: calc(100vw - 24px); }

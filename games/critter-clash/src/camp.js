@@ -86,7 +86,7 @@ export class Camp {
       this.xp(c, PET_XP, `${c.def.name} is happy to see you! +${PET_XP} XP`);
     } else persist();
     this.badges();
-    if (hearts(prog.pets) > before) { this.S.toast(`💗 ${c.def.name}'s friendship grew!`); sfx.jingle(1); }
+    if (hearts(prog.pets) > before) { this.S.toast(hearts(prog.pets) >= 5 ? `💗 Best friends! ${c.def.name} now starts battles with super meter` : `💗 ${c.def.name}'s friendship grew!`); sfx.jingle(1); }
     this.panel();
   }
 
@@ -131,7 +131,7 @@ export class Camp {
     el.innerHTML = `<div class="camp-card${this.popCard ? ' pop' : ''}" style="--tc:${TYPES[def.type].color}">
       <img src="${this.g.portrait(c.def)}" alt="">
       <div class="camp-info"><b>${def.name} <small>Lv ${prog.level}</small></b>
-        <div class="camp-hearts" title="Friendship">${'💗'.repeat(h)}${'🤍'.repeat(5 - h)}</div>
+        <div class="camp-hearts" title="Friendship">${'💗'.repeat(h)}${'🤍'.repeat(5 - h)}${h >= 5 ? '<em>Best friends! Starts battles with super meter</em>' : ''}</div>
         <div class="xpbar"><i style="width:${(prog.xp / xpNeeded(prog.level)) * 100}%"></i></div></div>
     </div>`;
     this.popCard = false;
