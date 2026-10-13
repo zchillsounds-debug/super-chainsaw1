@@ -1,6 +1,7 @@
 // One match: two fighters, rounds, hit resolution, projectiles, supers, camera direction.
 import * as THREE from 'three';
 import { Fighter, SPECIALS } from './fighter.js';
+import { Training } from './training.js';
 import { CpuBrain } from './ai.js';
 import { TYPES, typeMult, MODS } from './data.js';
 import { ARENA_R } from './arena.js';
@@ -14,7 +15,7 @@ const ROUND_TIME = 60;
 const INTRO_FIRST = 3.6, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
 
 export class Battle {
-  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1 } = {}) {
+  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, training = false } = {}) {
     this.game = game;
     this.scene = game.scene;
     this.fx = game.fx;
@@ -59,7 +60,8 @@ export class Battle {
     this.screenImgs = this.fighters.map((f) => { const im = new Image(); im.src = game.portrait(f.def); return im; });
     this.screenNames = this.fighters.map((f) => f.def.name);
     this.screenT = 0;
-    this.tutorial = !save.tutorialDone && !game.autoplay ? new Tutorial(this) : null;
+    this.training = training ? new Training(this) : null;
+    this.tutorial = !save.tutorialDone && !game.autoplay && !training ? new Tutorial(this) : null;
     this.startRound();
   }
 
@@ -88,6 +90,13 @@ export class Battle {
     this.introSaid = 0;
     this.tense = 0;
     this.camFocusWas = undefined;
+    if (this.training) {
+      this.phase = 'fight'; this.time = Infinity;
+      p.setState('idle'); c.setState('idle');
+      this.hud.announce('TRAINING', 'round', 1200);
+      playMusic('battle'); setIntensity(0);
+      return;
+    }
     this.hud.roundIntro(this.round, this.wins, first);
     if (this.round === 1) playMusic(this.trainer?.boss ? 'boss' : { beach: 'beach', volcano: 'volcano', frost: 'frost' }[this.arena.key] || 'battle');
     setIntensity(0);
@@ -126,6 +135,7 @@ export class Battle {
     if (def.state === 'down') dmg *= 0.5;
     dmg = Math.round(dmg * (0.92 + Math.random() * 0.16));
     h.dmg = dmg;
+    this.training?.guardKO(def, dmg);
     def.takeHit(h);
     if (def === this.player) this.roundDmgTaken += dmg;
     // super meter: attacker gains more than defender
@@ -150,6 +160,7 @@ export class Battle {
       const cc = { 5: ['NICE!', 1], 8: ['GREAT COMBO!', 2], 12: ['UNSTOPPABLE!', 3] }[this.comboCount];
       if (cc) this.hud.callout(cc[0], 0, cc[1]);
     }
+    this.training?.onHit(att, dmg);
     if (!this.firstHit) { this.firstHit = true; this.hud.callout('FIRST STRIKE!', att.side, att === this.player ? 1 : 0); }
     // comic text
     const words = heavy ? ['BONK!', 'POW!', 'WHAM!', 'KAPOW!', 'BOOF!'] : ['bap!', 'pok!', 'tap!', 'bop!'];
@@ -780,7 +791,7 @@ export class Battle {
     // controls
     const fighting = this.phase === 'fight';
     const inp = this.game.input;
-    if (fighting && this.pbrain) { this.pbrain.update(sdt); this.brain.update(sdt); }
+    if (fighting && this.pbrain) { this.pbrain.update(sdt); if (this.training) this.training.update(sdt); else this.brain.update(sdt); }
     else if (fighting) {
       const yaw = this.camYaw ?? 0;
       const rx = Math.cos(yaw), rz = -Math.sin(yaw), fx = -Math.sin(yaw), fz = -Math.cos(yaw);
@@ -791,7 +802,7 @@ export class Battle {
       p.ctl.dodge = inp.pressed.dodge;
       p.ctl.guard = inp.held.guard;
       p.ctl.super = inp.pressed.super;
-      this.brain.update(sdt);
+      if (this.training) { this.training.update(sdt); this.training.logInput(inp); } else this.brain.update(sdt);
       if (this.tutorial) this.tutorial.update(sdt);
     } else {
       for (const f of this.fighters) Object.assign(f.ctl, { mx: 0, mz: 0, attack: false, special: false, dodge: false, super: false, guard: false });
@@ -898,6 +909,7 @@ export class Battle {
     this.arena.drawScreen();
     this.hud.speedLines(false);
     this.tutorial?.dispose();
+    this.training?.dispose();
     for (const f of this.fighters) f.dispose();
     for (let i = this.projectiles.length - 1; i >= 0; i--) this.removeProjectile(i);
     this.fx.clear();

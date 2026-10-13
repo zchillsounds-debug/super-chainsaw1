@@ -3,6 +3,7 @@ import { CRITTERS, TYPES, CUPS, SHINY, BADGES, MODS, STARTERS, skinned, dailyCha
 import { sfx, playMusic } from './audio.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { openSettings } from './settings.js';
+import { DUMMY, moveList } from './training.js';
 
 const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zoner: '🎯 Keeps away', turtle: '🛡️ Defensive', trickster: '🌀 Tricky' };
 const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater', frost: 'Frostpeak Dome' };
@@ -234,9 +235,9 @@ export class Screens {
     this.t = 0;
     if (!save.unlocked.includes(CRITTERS[this.sel].id)) this.sel = CRITTERS.findIndex((c) => save.unlocked.includes(c.id));
     const cup = this.ctx.kind === 'cup';
-    const chal = this.ctx.kind === 'survival' || this.ctx.kind === 'daily';
+    const chal = this.ctx.kind === 'survival' || this.ctx.kind === 'daily' || this.ctx.kind === 'training';
     const badge = cup ? `<div class="cup-badge" style="--tc:${this.ctx.cup.color}">${this.ctx.cup.name}</div>`
-      : chal ? `<div class="cup-badge" style="--tc:${this.ctx.kind === 'daily' ? '#3dc8ff' : '#ff7a3d'}">${this.ctx.kind === 'daily' ? 'Daily Challenge' : 'Survival'}</div>` : '<div class="diff"></div>';
+      : chal ? `<div class="cup-badge" style="--tc:${{ daily: '#3dc8ff', survival: '#ff7a3d', training: '#7ad36b' }[this.ctx.kind]}">${{ daily: 'Daily Challenge', survival: 'Survival', training: 'Training' }[this.ctx.kind]}</div>` : '<div class="diff"></div>';
     this.root.innerHTML = `
       <div class="select-screen">
         <div class="sel-info"></div>
@@ -279,14 +280,16 @@ export class Screens {
       b.addEventListener('click', () => { this.diff = i; sfx.ui('move'); diff.querySelectorAll('.chip').forEach((x, k) => x.classList.toggle('on', k === i)); });
       diff.appendChild(b);
     });
-    R.querySelector('.go').appendChild(this.btn(cup ? 'GO!' : 'FIGHT!', 'primary big', () => (cup ? this.ladder() : this.vs())));
+    const train = this.ctx.kind === 'training';
+    const go = () => (cup ? this.ladder() : train ? this.training() : this.vs());
+    R.querySelector('.go').appendChild(this.btn(cup ? 'GO!' : train ? 'PRACTICE!' : 'FIGHT!', 'primary big', go));
     this.pick(this.sel, true);
     removeEventListener('keydown', this._kn);
     addEventListener('keydown', this._kn = (e) => {
       if (this.mode !== 'select') return;
       if (e.code === 'ArrowLeft' || e.code === 'KeyA') step(-1);
       if (e.code === 'ArrowRight' || e.code === 'KeyD') step(1);
-      if (e.code === 'Enter') cup ? this.ladder() : this.vs();
+      if (e.code === 'Enter') go();
     });
   }
 
@@ -361,6 +364,22 @@ export class Screens {
       <div class="cup-foes"><img src="${g.portrait(skinned(foe, d.shiny ? 'shiny' : 'base'))}" alt=""></div>
       <div class="cup-meta">vs ${d.shiny ? '✦ ' : ''}${foe.name} · ${ARENA_NAME[d.arena]} · ${doneToday ? 'Cleared today!' : 'Double XP'}</div>`,
     () => { this.ctx = { kind: 'daily', d }; this.select(); });
+    card('training', '#7ad36b', `
+      <div class="cup-trophy">🎯</div>
+      <h2>Training</h2>
+      <p>Practice combos on a dummy that never runs out of health. Set it to guard, dodge or fight back, and check the move list.</p>
+      <div class="cup-meta">No timer · No XP</div>`,
+    () => { this.ctx = { kind: 'training' }; this.select(); });
+  }
+
+  training() {
+    const g = this.game;
+    const p = skinOf(CRITTERS[this.sel]);
+    const others = CRITTERS.filter((x) => x.id !== p.id);
+    const c = others[Math.floor(Math.random() * others.length)];
+    this.mode = 'battle';
+    playMusic('battle');
+    g.startBattle(p, c, { training: true, playerLevel: save.critters[p.id].level, cpuLevel: save.critters[p.id].level, arena: 'meadow' });
   }
 
   // ---------- Critterdex: collection, skins and badges ----------
@@ -429,7 +448,8 @@ export class Screens {
       ${hasShiny ? '' : `<div class="dex-hint">Clear the ${cup ? cup.name : 'tournament'} to unlock.</div>`}` : '';
     const record = `<div class="dex-record"><span><b>${prog.wins || 0}</b> wins</span><span>Lv <b>${prog.level}</b></span><span>${TYPES[c.type].name}</span></div>`;
     const info = this.root.querySelector('.dex-info');
-    info.innerHTML = this.infoCard(c, record + skins);
+    info.innerHTML = this.infoCard(c, record + skins + '<button class="chip dex-moves">📜 Move List</button>');
+    info.querySelector('.dex-moves').addEventListener('click', () => this.moveModal(c));
     info.querySelectorAll('.skin').forEach((b) => b.addEventListener('click', () => {
       if (b.dataset.skin === 'shiny' && !hasShiny) { sfx.ui('back'); this.toast(`Clear the ${cup ? cup.name : 'tournament'} to unlock`); return; }
       sfx.ui('ok');
@@ -685,6 +705,16 @@ export class Screens {
     sfx.cheer(1.5);
   }
 
+  moveModal(def) {
+    const d = document.createElement('div');
+    d.className = 'modal-wrap movelist';
+    d.innerHTML = `<div class="modal"><h2>${def.name}'s Moves</h2>${moveList(def, document.body.classList.contains('is-touch'))}</div>`;
+    d.querySelector('.modal').appendChild(this.btn('Got it', 'primary', () => d.remove()));
+    d.addEventListener('click', (e) => { if (e.target === d) d.remove(); });
+    this.root.appendChild(d);
+    sfx.ui('ok');
+  }
+
   pauseMenu(on) {
     let p = this.root.querySelector('.pause');
     if (!on) { p?.remove(); return; }
@@ -693,9 +723,15 @@ export class Screens {
     p.innerHTML = '<div class="modal"><h2>Paused</h2><div class="col"></div></div>';
     const col = p.querySelector('.col');
     col.appendChild(this.btn('Resume', 'primary', () => this.game.pause()));
-    col.appendChild(this.btn('How to Play', '', () => this.howTo()));
+    const tr = this.game.battle?.training;
+    if (tr) {
+      col.appendChild(this.btn('Move List', '', () => this.moveModal(this.game.battle.player.def)));
+      const dm = this.btn(`Dummy: ${DUMMY[tr.mode].name}`, '', () => { tr.cycle(); dm.textContent = `Dummy: ${DUMMY[tr.mode].name}`; });
+      col.appendChild(dm);
+    } else col.appendChild(this.btn('How to Play', '', () => this.howTo()));
     col.appendChild(this.btn('Settings', '', () => openSettings(this.game, this.root)));
-    col.appendChild(this.btn('Quit to Title', 'ghost', () => { this.game.paused = false; this.title(); }));
+    if (tr) col.appendChild(this.btn('Exit Training', 'ghost-dark', () => { this.game.paused = false; this.game.endBattle(); playMusic('menu'); this.select(); }));
+    col.appendChild(this.btn('Quit to Title', 'ghost-dark', () => { this.game.paused = false; this.title(); }));
     p.addEventListener('click', (e) => { if (e.target === p) this.game.pause(); });
     this.root.appendChild(p);
   }

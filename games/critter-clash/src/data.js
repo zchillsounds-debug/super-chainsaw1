@@ -208,3 +208,23 @@ export function dailyChallenge(date = new Date()) {
     shiny: rnd() < 0.3,
   };
 }
+
+// Move-list blurbs (training mode and the Critterdex)
+export const MOVE_DESC = {
+  comet: 'Rockets forward headfirst. Plows through anyone in the way.',
+  bubble: 'Blows a big bubble that drifts forward and pops on contact.',
+  leafrang: 'Throws a clover that curves out and back. It can hit twice!',
+  zipzap: 'Zips through the rival in a flash. Leaves them twitchy and slow.',
+  rollout: 'Curls into a ball and rolls in. Big knockback.',
+  gale: 'A gust that drags the rival in with several small hits.',
+  iceslide: 'Flops onto its belly and toboggans at the rival. Freezes on contact.',
+  wisps: 'Releases little flames that home in on the rival.',
+  meteor: 'Leaps into the sky and crashes down as a flaming meteor.',
+  tsunami: 'Summons a towering wave that sweeps the arena.',
+  bloom: 'A flower bud tracks the rival, then bursts into bloom beneath them.',
+  thunder: 'Calls down a storm of lightning bolts.',
+  quake: 'Slams the ground. Shockwaves ripple out in rings.',
+  cyclone: 'Spins up a tornado that lifts the rival off their feet.',
+  blizzard: 'A snow cloud chases the rival, pelting it with ice, then drops one huge icicle.',
+  supernova: 'Glows brighter and brighter until... BOOM.',
+};

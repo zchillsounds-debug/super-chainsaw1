@@ -140,7 +140,7 @@ class Game {
     if (Q.has('play')) {
       const p = CRITTERS.find((c) => c.id === Q.get('p')) || CRITTERS[0];
       const c = CRITTERS.find((c) => c.id === Q.get('c')) || CRITTERS[1];
-      this.startBattle(p, c, { difficulty: +(Q.get('d') ?? 0.5), mods: Q.get('mods')?.split(',') || [] });
+      this.startBattle(p, c, { difficulty: +(Q.get('d') ?? 0.5), mods: Q.get('mods')?.split(',') || [], training: Q.has('train') });
     } else this.screens.title();
     if (splash) { splash.classList.add('out'); setTimeout(() => splash.remove(), 500); }
     this.booted = true;

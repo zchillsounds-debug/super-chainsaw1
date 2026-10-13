@@ -80,7 +80,7 @@ export class Hud {
     const t = Math.ceil(b.time);
     if (t !== this.lastTime) {
       this.lastTime = t;
-      this.timerEl.textContent = t;
+      this.timerEl.textContent = Number.isFinite(t) ? t : '∞';
       this.timerEl.parentElement.classList.toggle('hurry', t <= 10 && b.phase === 'fight');
       if (t <= 5 && t > 0 && b.phase === 'fight') sfx.beep(false);
     }
