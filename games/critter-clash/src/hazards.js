@@ -78,6 +78,7 @@ export class Hazards {
       B.scene.add(h.drop);
     }
     this.list.push(h);
+    B.stats.hazardsSeen = (B.stats.hazardsSeen || 0) + 1;
     if (!this.warned) { this.warned = true; B.fx.text({ x, y: 1.4, z }, 'WATCH OUT!', 'eff', 1.1); }
     sfx.ui('move');
   }
@@ -147,7 +148,7 @@ export class Hazards {
       const dmg = Math.min(H.dmg, f.hp - 1);
       f.takeHit({ dmg: Math.max(0, dmg), kb: H.kb, dirX, dirZ, stun: H.stun || 0.4, lift: H.lift || 0, launch: !!H.lift, paralyze: H.paralyze });
       f.dmgDelay = 0.3;
-      if (f === B.player) B.roundDmgTaken += Math.max(0, dmg);
+      if (f === B.player) { B.roundDmgTaken += Math.max(0, dmg); B.stats.hazardHits = (B.stats.hazardHits || 0) + 1; }
       const hp = f.headPos();
       B.fx.text({ x: hp.x, y: hp.y + 0.3, z: hp.z }, H.word, 'big', 0.8);
       B.fx.text({ x: hp.x, y: hp.y - 0.1, z: hp.z }, String(Math.max(0, dmg)), 'dmg', 0.7);

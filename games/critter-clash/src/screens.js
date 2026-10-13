@@ -646,6 +646,7 @@ export class Screens {
     save.stats.bestCombo = Math.max(save.stats.bestCombo || 0, stats.maxCombo);
     save.stats.supers = (save.stats.supers || 0) + stats.supers;
     if (stats.perfect) save.stats.perfects = (save.stats.perfects || 0) + 1;
+    if (won && HAZARDS[opts.arena || 'meadow'] && stats.hazardsSeen >= 2 && !stats.hazardHits) save.stats.hazardClean = (save.stats.hazardClean || 0) + 1;
     let joined = false, cupDone = false, shinies = [];
     if (won && cup) {
       joined = unlock(cDef.id);

@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { CRITTERS, TYPES, gearFor, GEAR } from './data.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx } from './audio.js';
+import { newBadges } from './screens.js';
 
 const FEED_XP = 45, PET_XP = 10;
 const today = () => new Date().toISOString().slice(0, 10);
@@ -65,6 +66,7 @@ export class Camp {
       save.petDay[id] = today();
       this.xp(c, PET_XP, `${c.def.name} is happy to see you! +${PET_XP} XP`);
     } else persist();
+    this.badges();
     if (hearts(prog.pets) > before) { this.S.toast(`💗 ${c.def.name}'s friendship grew!`); sfx.jingle(1); }
     this.panel();
   }
@@ -74,6 +76,7 @@ export class Camp {
     if (!c) return;
     if (!(save.berries > 0)) { sfx.ui('back'); this.S.toast('Win battles to earn berries 🍓'); return; }
     save.berries--;
+    save.stats.fed = (save.stats.fed || 0) + 1;
     c.camp.munch = 1.4; c.camp.wait = Math.max(c.camp.wait, 1.6);
     c.emote('happy', 'grin', 1.4);
     sfx.pickup();
@@ -86,11 +89,16 @@ export class Camp {
   xp(c, n, msg) {
     const lv = grantXp(c.def.id, n);
     persist();
+    this.badges();
     if (lv.to > lv.from) {
       this.S.toast(`${c.def.name} grew to Lv ${lv.to}!`);
       sfx.jingle(2);
       if (gearFor(lv.to) > gearFor(lv.from)) setTimeout(() => this.S.mode === 'camp' && this.S.toast(`${GEAR[gearFor(lv.to) - 1].icon} New gear: ${GEAR[gearFor(lv.to) - 1].name}!`), 2300);
     } else this.S.toast(msg);
+  }
+
+  badges() {
+    newBadges().forEach((b, k) => setTimeout(() => { if (this.S.mode === 'camp') { this.S.toast(`${b.icon} Badge earned: ${b.name}`); sfx.jingle(2); } }, 1200 + k * 2300));
   }
 
   panel() {

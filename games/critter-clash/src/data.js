@@ -222,6 +222,9 @@ export const BADGES = [
   { id: 'lv10', icon: '📈', name: 'Best Buds', desc: 'Raise a critter to Lv 10.', test: (s) => Object.values(s.critters).some((c) => c.level >= 10) },
   { id: 'streak5', icon: '🔥', name: 'Survivor', desc: 'Win 5 in a row in Survival.', test: (s) => (s.stats.bestStreak || 0) >= 5 },
   { id: 'daily', icon: '📅', name: 'Daily Doer', desc: 'Clear a Daily Challenge.', test: (s) => Object.keys(s.daily || {}).length >= 1 },
+  { id: 'friend', icon: '💗', name: 'Best Friends', desc: 'Fill a critter\'s friendship hearts in Camp.', test: (s) => Object.values(s.critters).some((c) => (c.pets || 0) >= 20) },
+  { id: 'snack', icon: '🍓', name: 'Snack Time', desc: 'Feed 10 berries in Camp.', test: (s) => (s.stats.fed || 0) >= 10 },
+  { id: 'hazard', icon: '🌋', name: 'Hot Feet', desc: 'Win a battle without being hit by an arena hazard.', test: (s) => (s.stats.hazardClean || 0) >= 1 },
   { id: 'shiny', icon: '💎', name: 'Shiny Hunter', desc: 'Unlock every shiny palette.', test: (s) => (s.shinies || []).length >= CRITTERS.length },
 ];
 
