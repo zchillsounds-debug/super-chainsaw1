@@ -165,6 +165,21 @@ function leafGeo() {
   return g;
 }
 
+let _wingTex = null;
+function wingTexture() {
+  if (_wingTex) return _wingTex;
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(64, 64, 4, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,246,210,0.95)'); g.addColorStop(0.45, 'rgba(170,240,255,0.75)');
+  g.addColorStop(0.8, 'rgba(255,150,230,0.7)'); g.addColorStop(1, 'rgba(255,150,230,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  x.strokeStyle = 'rgba(60,40,110,0.45)'; x.lineWidth = 2;
+  for (let k = -2; k <= 2; k++) { x.beginPath(); x.moveTo(64, 64); x.quadraticCurveTo(64 + 40, 64 + k * 10, 124, 64 + k * 22); x.stroke(); x.beginPath(); x.moveTo(64, 64); x.quadraticCurveTo(24, 64 + k * 10, 4, 64 + k * 22); x.stroke(); }
+  _wingTex = new THREE.CanvasTexture(c); _wingTex.colorSpace = THREE.SRGBColorSpace;
+  return _wingTex;
+}
+
 export class Critter {
   constructor(def, { lod = 'high' } = {}) {
     this.def = def;
@@ -482,16 +497,18 @@ export class Critter {
     // gauzy insect wings on the back
     this.wings = [];
     if (def.extra === 'wings') {
-      const wingMat = new THREE.MeshBasicMaterial({ color: 0xfff6d8, transparent: true, opacity: 0.72, side: THREE.DoubleSide, depthWrite: false });
+      // iridescent membrane: warm core, cyan-pink sheen, inked veins
+      const wingTex = wingTexture();
+      const wingMat = new THREE.MeshBasicMaterial({ map: wingTex, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false });
       const veinMat = new THREE.MeshBasicMaterial({ color: C.dark, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false });
       for (const s of [-1, 1]) for (const k of [0, 1]) {
         const w = new THREE.Group();
         w.position.set(s * 0.08, B.h * (0.72 - k * 0.2), -B.w * 0.38);
         w.userData = { s, k };
         const leaf = new THREE.Mesh(new THREE.CircleGeometry(0.5, 20), wingMat);
-        leaf.scale.set(k ? 0.36 : 0.5, k ? 0.16 : 0.22, 1);
-        leaf.position.x = s * (k ? 0.18 : 0.26);
-        const edge = new THREE.Mesh(new THREE.RingGeometry(0.47, 0.5, 24), veinMat);
+        leaf.scale.set(k ? 0.5 : 0.72, k ? 0.22 : 0.3, 1);
+        leaf.position.x = s * (k ? 0.24 : 0.36);
+        const edge = new THREE.Mesh(new THREE.RingGeometry(0.46, 0.5, 24), veinMat);
         edge.scale.copy(leaf.scale); edge.position.copy(leaf.position);
         w.add(leaf, edge);
         w.rotation.y = s * 0.5;

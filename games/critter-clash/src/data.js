@@ -90,7 +90,7 @@ export const CRITTERS = [
   {
     id: 'emberfly', name: 'Emberfly', type: 'fire', species: 'Lantern Firefly',
     blurb: 'Its glowing tail doubles as a night-light. Hates being called a bug.',
-    colors: { body: 0x6a58b8, belly: 0xffe9a8, accent: 0xffc93a, dark: 0x2e2250, eye: '#20103a', iris: '#ffb020' },
+    colors: { body: 0x7a62d8, belly: 0xffe9a8, accent: 0xffc93a, dark: 0x2e2250, eye: '#20103a', iris: '#ffb020' },
     body: { w: 0.5, h: 0.56, headR: 0.5, legLen: 0.14, armLen: 0.19, chubby: 0.95 },
     ears: 'antennae', tail: 'lantern', extra: 'wings', voice: 1.7,
     stats: { hp: 900, speed: 7.0, power: 1.05, weight: 0.7 },

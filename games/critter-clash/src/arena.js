@@ -25,12 +25,12 @@ export const ARENAS = {
   },
   volcano: {
     name: 'Magma Crater Coliseum',
-    skyTop: 0x1a0f3a, skyHorizon: 0xff7a3a, sun: 0xffb070, sunDir: [-0.3, 0.55, -0.7],
-    hemiSky: 0xffa070, hemiGround: 0x6a3a8a, fieldA: '#5a4c66', fieldB: '#52465e', line: '#ffd06a', floor: 'basalt',
+    skyTop: 0x1a0f3a, skyHorizon: 0xff7a3a, sun: 0xffe0c8, sunDir: [-0.3, 0.55, -0.7],
+    hemiSky: 0xffd0c0, hemiGround: 0x6a3a8a, fieldA: '#5a4c66', fieldB: '#52465e', line: '#ffd06a', floor: 'basalt',
     wallA: 0xff5a2a, wallB: 0x3a2a4a, ground: 0x4a3a52, fog: 0x5a2a4a,
     accent: 0xff7a2a, seat: [0xff5a2a, 0xffc940, 0x8a5aff, 0x3a2a4a],
     hill: 0x3a2a40, trunk: 0x3a2a30, leaves: [0x5a4a5a, 0x6a5a6a, 0x4a3a4a], scenery: 'rocks', cloud: 0x6a4a6a, cloudShade: 0x2a1a3a, sunI: 1.8,
-    lava: 0xff5a1a,
+    lava: 0xff5a1a, fillI: 0.45,
   },
   frost: {
     name: 'Frostpeak Dome',
@@ -39,7 +39,7 @@ export const ARENAS = {
     wallA: 0x5ab8ff, wallB: 0xffffff, ground: 0xe8f0ff, fog: 0x24346e,
     accent: 0x9ad8ff, seat: [0x5ab8ff, 0xffffff, 0xb39cff, 0x3a4a8a],
     hill: 0xeef4ff, trunk: 0x5a3a2a, leaves: [0x2f6a5a, 0x3a7a64, 0x24584a], scenery: 'pines', cloud: 0x8a9ac8, cloudShade: 0x2a3060, sunI: 1.7,
-    aurora: true, snow: true,
+    aurora: true, snow: true, fillI: 0.35,
   },
   neon: {
     name: 'Neon Rooftop Arena',
@@ -48,7 +48,7 @@ export const ARENAS = {
     wallA: 0x2a1f5a, wallB: 0xff4fb8, ground: 0x1c1838, fog: 0x2a1a52,
     accent: 0x3af0ff, seat: [0xff4fb8, 0x3af0ff, 0xffd84a, 0x8a5aff],
     hill: 0x1a1434, trunk: 0x2a2244, leaves: [0x2a2450, 0x241e46, 0x30285a], scenery: 'city', cloud: 0x3a2a6a, cloudShade: 0x5a2a6a, sunI: 2.1,
-    stars: true, beam: 0xff8ae0, sun2: 0x7af0ff,
+    stars: true, beam: 0xff8ae0, fillI: 0.5,
   },
 };
 
@@ -275,7 +275,7 @@ export class Arena {
           let x = Math.random() * w, y = Math.random() * h, a = Math.random() * 6;
           const pts = [[x, y]];
           for (let k = 0; k < 9; k++) { a += (Math.random() - 0.5) * 1.4; x += Math.cos(a) * 34; y += Math.sin(a) * 34; pts.push([x, y]); }
-          for (const [lw, col] of [[14, 'rgba(255,90,20,0.35)'], [6, 'rgba(255,140,40,0.9)'], [2.5, 'rgba(255,230,140,1)']]) {
+          for (const [lw, col] of [[22, 'rgba(255,70,20,0.22)'], [11, 'rgba(255,110,30,0.6)'], [5, 'rgba(255,190,80,1)'], [2, 'rgba(255,250,210,1)']]) {
             c.strokeStyle = col; c.lineWidth = lw;
             c.beginPath(); pts.forEach(([px, py]) => c.lineTo(px, py)); c.stroke();
           }
@@ -576,12 +576,12 @@ export class Arena {
     panel.position.z = 0.31;
     scr.add(frame, panel);
     for (const sx of [-4, 4]) {
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 8, 8), toon(0xdedbe8, { env: true, rim: 0 }));
-      leg.position.set(sx, -6, -0.2);
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 12, 8), toon(0xdedbe8, { env: true, rim: 0 }));
+      leg.position.set(sx, -7.5, -0.2);
       scr.add(leg);
     }
     const rScr = r0 + tiers * 1.25 + 1.8;
-    scr.position.set(0, 9.8, -rScr);
+    scr.position.set(0, 12, -rScr);
     G.add(scr);
     this.drawScreen();
 

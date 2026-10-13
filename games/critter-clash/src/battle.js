@@ -12,7 +12,7 @@ import { sayLine } from './personality.js';
 import { Items } from './items.js';
 
 const ROUND_TIME = 60;
-const INTRO_FIRST = 3.6, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
+const INTRO_FIRST = 4.2, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
 
 export class Battle {
   constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, training = false } = {}) {
@@ -924,7 +924,12 @@ export class Battle {
       fill.position.set(this.camera.position.x + 1, this.camera.position.y + 2, this.camera.position.z);
       fill.target.position.set(w.x, w.y + 0.8, w.z);
       fill.intensity = THREE.MathUtils.damp(fill.intensity, 0.65, 3, dt);
-    } else if (fill) fill.intensity = 0;
+    } else if (fill) {
+      // backlit night/volcano arenas get a soft camera-side fill so faces stay readable
+      fill.position.set(this.camera.position.x, this.camera.position.y + 3, this.camera.position.z);
+      fill.target.position.set(0, 0.8, 0);
+      fill.intensity = this.arena.A.fillI || 0;
+    }
 
     // controls
     const fighting = this.phase === 'fight';
@@ -988,7 +993,8 @@ export class Battle {
         fov = 42;
       } else {
         const mid = new THREE.Vector3((p.x + c.x) / 2, 1, (p.z + c.z) / 2);
-        look = mid; pos = new THREE.Vector3(mid.x, 6, mid.z + 15);
+        // low establishing shot that tilts up enough to catch the jumbotron over the far stands
+        look = new THREE.Vector3(mid.x, 4.6, mid.z); pos = new THREE.Vector3(mid.x, 3.2, mid.z + 17);
       }
     } else if ((this.phase === 'ko' || this.phase === 'winpose') && this.koWinner) {
       const f = this.phase === 'ko' ? this.koLoser : this.koWinner;
