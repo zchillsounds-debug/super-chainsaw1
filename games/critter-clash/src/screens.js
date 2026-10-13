@@ -489,7 +489,7 @@ export class Screens {
     const gear = `<div class="dex-gear"><small>Gear</small>${GEAR.map((x) => prog.level >= x.lv
       ? `<span class="got" title="${x.name}"><i>${x.icon}</i>${x.name}</span>`
       : `<span title="Reach Lv ${x.lv}"><i>🔒</i>Lv ${x.lv}</span>`).join('')}</div>`;
-    const record = `<div class="dex-record"><span><b>${prog.wins || 0}</b> wins</span><span>Lv <b>${prog.level}</b></span><span>${TYPES[c.type].name}</span></div>`;
+    const record = `<div class="dex-record"><span><b>${prog.wins || 0}</b> wins</span><span>Lv <b>${prog.level}</b></span><span title="Friendship">💗 <b>${Math.min(5, Math.floor((prog.pets || 0) / 4))}</b>/5</span></div>`;
     const info = this.root.querySelector('.dex-info');
     info.innerHTML = this.infoCard(c, record + gear + skins + '<button class="chip dex-moves">📜 Move List</button>');
     info.querySelector('.dex-moves').addEventListener('click', () => this.moveModal(c));
