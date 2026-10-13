@@ -878,8 +878,31 @@ export class Fighter {
 
   syncRoot() {
     this.root.position.set(this.x, this.y, this.z);
+    // a burrowing critter shows as a rolling mound of dirt with its hard hat poking out
+    if (this.under || this.mound?.visible) {
+      if (!this.mound) {
+        const m = this.mound = new THREE.Group();
+        const dirt = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toon(0x8a6448));
+        dirt.scale.set(1.1, 0.5, 1.3); dirt.castShadow = true; m.add(dirt);
+        for (let k = 0; k < 5; k++) {
+          const c = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), toon(0x6e4e38));
+          const a = k * 1.3; c.position.set(Math.cos(a) * 0.45, 0.06, Math.sin(a) * 0.55); m.add(c);
+        }
+        if (this.def.extra === 'mole') {
+          const hat = new THREE.Mesh(new THREE.SphereGeometry(0.24, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xffc83a));
+          hat.position.set(0, 0.16, 0.25); hat.rotation.x = 0.35; m.add(hat);
+          const lens = new THREE.Mesh(new THREE.CircleGeometry(0.07, 12), new THREE.MeshBasicMaterial({ color: 0xfff6b0 }));
+          lens.position.set(0, 0.3, 0.44); lens.rotation.x = -0.3; m.add(lens);
+        }
+        this.battle.scene.add(m);
+      }
+      const m = this.mound;
+      m.visible = this.under;
+      m.position.set(this.x, 0, this.z); m.rotation.y = this.face;
+      m.scale.setScalar(1 + Math.sin(this.battle.clock * 30) * 0.06);
+    }
     this.root.rotation.y = this.face;
   }
 
-  dispose() { this.battle.scene.remove(this.root); }
+  dispose() { this.battle.scene.remove(this.root); if (this.mound) this.battle.scene.remove(this.mound); }
 }
