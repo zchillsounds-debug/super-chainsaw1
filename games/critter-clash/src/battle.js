@@ -681,6 +681,13 @@ export class Battle {
           fx.spawn({ x: f.x + dx * r + dz * w, y: 0.4 + Math.random() * 1.4, z: f.z + dz * r - dx * w, vx: dx * 16, vz: dz * 16, color: 0xffffff, size: 0.35 + Math.random() * 0.3, life: 0.25, shape: 'glow', alpha: 0.55 });
         }
         if (Math.random() < 0.5) fx.spawn({ x: f.x + dx * (1 + Math.random() * 6), y: 0.5 + Math.random(), z: f.z + dz * (1 + Math.random() * 6), vx: dx * 12, vz: dz * 12, color: 0xd8ffd0, size: 0.3, life: 0.4, shape: 'leaf', additive: false, spin: 10 });
+        // long anime wind streaks, rotated to the gust's on-screen direction
+        const a0 = new THREE.Vector3(f.x, 1, f.z).project(this.camera), a1 = new THREE.Vector3(f.x + dx, 1, f.z + dz).project(this.camera);
+        const rot = Math.atan2((a1.y - a0.y) / this.camera.aspect, a1.x - a0.x) - Math.PI / 2;
+        for (let k = 0; k < 3; k++) {
+          const r = 1 + Math.random() * 8, w = (Math.random() - 0.5) * (1 + r * 0.35);
+          fx.spawn({ x: f.x + dx * r + dz * w, y: 0.3 + Math.random() * 1.8, z: f.z + dz * r - dx * w, vx: dx * 22, vz: dz * 22, color: 0xffffff, size: 0.32, stretch: 8, rot, life: 0.3, shape: 'glow' });
+        }
         // is the rival inside the gust cone?
         const ox = o.x - f.x, oz = o.z - f.z, along = ox * dx + oz * dz, side = Math.abs(ox * dz - oz * dx);
         const inCone = along > 0 && along < 12 && side < 1.2 + along * 0.2;
