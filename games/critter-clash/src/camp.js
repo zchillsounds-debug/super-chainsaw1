@@ -34,6 +34,7 @@ export class Camp {
         const ox = c.camp.x - px, oz = c.camp.z - pz, od = Math.hypot(ox, oz) || 1e-3;
         if (od < pr) { c.camp.x = px + ox / od * pr; c.camp.z = pz + oz / od * pr; }
       }
+      c.camp.tx = c.camp.x; c.camp.tz = c.camp.z; // start by idling where they stand
       c.root.position.set(c.camp.x, 0, c.camp.z);
     });
   }
@@ -143,10 +144,11 @@ export class Camp {
   update(dt) {
     this.t += dt;
     const cam = this.g.camera, port = cam.aspect < 1;
-    const a = Math.sin(this.t * 0.1) * 0.25, D = port ? 10.5 : 8;
-    cam.position.set(Math.sin(a) * D, port ? 7 : 4.2, Math.cos(a) * D);
-    cam.lookAt(0, port ? 0.6 : 0, 0.4);
-    cam.fov = Math.min(70, 40 * Math.max(1, 1.5 / cam.aspect));
+    // portrait looks down more steeply so the field, not the stands, fills the tall screen
+    const a = Math.sin(this.t * 0.1) * (port ? 0.12 : 0.25), D = port ? 9 : 8;
+    cam.position.set(Math.sin(a) * D, port ? 8 : 4.2, Math.cos(a) * D);
+    cam.lookAt(0, 0, port ? -0.6 : 0.4);
+    cam.fov = port ? Math.min(78, 2 * Math.atan(Math.tan(0.33) / cam.aspect) * 180 / Math.PI) : 40 * Math.max(1, 1.5 / cam.aspect);
     cam.updateProjectionMatrix();
     if (this.sel) { const p = this.sel.root.position; this.ring.position.set(p.x, 0.03, p.z); this.ring.scale.setScalar(1 + Math.sin(this.t * 5) * 0.06); }
     // campfire flicker
@@ -194,11 +196,20 @@ export class Camp {
         // pick a new spot to amble to, then idle for a bit
         for (let tries = 0; tries < 6; tries++) {
           const r = 1 + Math.random() * 4.2, ang = Math.random() * Math.PI * 2;
-          m.tx = Math.cos(ang) * r; m.tz = Math.sin(ang) * r * 0.75;
-          if (!this.props.userData.keepOut.some(([px, pz, pr]) => Math.hypot(m.tx - px, m.tz - pz) < pr)) break;
+          m.tx = Math.cos(ang) * r * (port ? 0.7 : 1); m.tz = Math.sin(ang) * r * (port ? 0.95 : 0.75);
+          if (!this.props.userData.keepOut.some(([px, pz, pr]) => Math.hypot(m.tx - px, m.tz - pz) < pr)
+            && !this.g.showcase.some((o) => o !== c && o.camp && Math.hypot(m.tx - o.camp.tx, m.tz - o.camp.tz) < 1.3)) break;
         }
         m.wait = 1 + Math.random() * 3;
         m.walkT = 0;
+      }
+      if (!walking) {
+        // standing critters shuffle apart so nobody idles inside a friend
+        for (const o of this.g.showcase) {
+          if (o === c || !o.camp) continue;
+          const ox = m.x - o.camp.x, oz = m.z - o.camp.z, od = Math.hypot(ox, oz);
+          if (od < 0.85 && od > 1e-3) { const k = (0.85 - od) * dt * 2; m.x += ox / od * k; m.z += oz / od * k; m.tx = m.x; m.tz = m.z; }
+        }
       }
       // the selected critter turns to face the camera
       const want = c === this.sel && !walking ? Math.atan2(cam.position.x - m.x, cam.position.z - m.z) : m.face;
