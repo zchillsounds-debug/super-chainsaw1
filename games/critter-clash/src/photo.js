@@ -1,6 +1,17 @@
 // Photo mode (from the pause menu): orbit the frozen battle, pick a frame and filter, snap and save.
 import * as THREE from 'three';
 import { sfx } from './audio.js';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+
+// Inside the Android app an <a download> does nothing, so write the PNG with the Filesystem plugin.
+const native = Capacitor.isNativePlatform();
+async function writeNative(dataUrl, name, dir) {
+  const data = dataUrl.slice(dataUrl.indexOf(',') + 1);
+  const r = await Filesystem.writeFile({ path: dir === Directory.Cache ? name : `CritterClash/${name}`, data, directory: dir, recursive: true });
+  return r.uri;
+}
 
 const FILTERS = [
   { id: 'none', name: 'Normal', css: 'none' },
@@ -193,11 +204,21 @@ export class PhotoMode {
     const row = d.querySelector('.row');
     const name = `critter-clash-${Date.now()}.png`;
     const mk = (label, cls, fn) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = label; b.addEventListener('click', fn); row.appendChild(b); };
-    canvas.toBlob((blob) => {
+    const status = (msg) => { d.querySelector('h2').textContent = msg; };
+    if (native) {
+      mk('Share', 'primary', async () => {
+        try { const uri = await writeNative(url, name, Directory.Cache); await Share.share({ title: 'Critter Clash', files: [uri] }); } catch (e) { /* cancelled */ }
+      });
+      mk('Save', '', async () => {
+        try { await writeNative(url, name, Directory.Documents); status('Saved to Documents/CritterClash!'); sfx.ui('ok'); } catch (e) { status("Couldn't save. Try Share instead."); sfx.ui('back'); }
+      });
+      mk('Back', 'ghost-dark', () => d.remove());
+    } else canvas.toBlob((blob) => {
       const file = blob && new File([blob], name, { type: 'image/png' });
       if (file && navigator.canShare?.({ files: [file] })) mk('Share', 'primary', () => navigator.share({ files: [file], title: 'Critter Clash' }).catch(() => {}));
       mk('Save', file && navigator.canShare?.({ files: [file] }) ? '' : 'primary', () => {
         const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+        status('Saved!');
         sfx.ui('ok');
       });
       mk('Back', 'ghost-dark', () => d.remove());

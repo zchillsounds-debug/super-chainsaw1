@@ -30,6 +30,8 @@ jobs:
           m = pathlib.Path('android/app/src/main/AndroidManifest.xml')
           s = m.read_text()
           s = s.replace('<activity', '<activity android:screenOrientation="sensorLandscape"', 1)
+          if 'WRITE_EXTERNAL_STORAGE' not in s:
+              s = s.replace('</manifest>', '    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />\n</manifest>')
           m.write_text(s)
           st = pathlib.Path('android/app/src/main/res/values/styles.xml')
           s = st.read_text()
