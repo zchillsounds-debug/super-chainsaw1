@@ -180,7 +180,7 @@ export const CUPS = [
     outro: ["Look at you, a Sprout Cup champion! The whole meadow is cheering.", "The Thunder Cup on Seashell Bay is open now. Pack some sunscreen!"],
     matches: [
       { name: 'Pip', style: 'balanced', title: 'Rookie', critter: 'bubbalotl', level: 1, taunt: "My Bubbalotl's never lost! ...today." },
-      { name: 'Marigold', style: 'turtle', title: 'Gardener', critter: 'pricklepuff', level: 2, taunt: 'Prepare to be weeded out!' },
+      { name: 'Marigold', style: 'turtle', title: 'Gardener', critter: 'clovebun', level: 2, taunt: 'Prepare to be weeded out!' },
       { name: 'Sparky Dee', style: 'trickster', title: 'Electrician', critter: 'voltferret', level: 3, taunt: "Shocking, isn't it?" },
     ],
   },
