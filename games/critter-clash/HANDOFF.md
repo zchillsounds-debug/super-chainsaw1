@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 61)
+# Critter Clash: Handoff (after Round 74)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -18,7 +18,8 @@
 - User playtest (15:30 UTC): "it wouldn't let me choose a character". Couldn't reproduce a hard failure in phone emulation; Round 32 makes every critter playable in Quick Battle/Training and hardens the name prompt. Ask the user to confirm it's fixed in the next APK.
 - Session 5 (15:50–16:40 UTC) sent the user the Round 32 APK (asked them to confirm the character-pick fix; no reply yet), then did Rounds 33–44 and chained at ~190k context.
 - Session 6 (16:35–17:35 UTC) sent the user the Round 44 APK (arena hazards + Camp) and asked again about the character-pick fix (no reply yet), then did Rounds 45–61 and chained to keep context small (~200k).
-- Time used so far: about 4.4 hours of actual work (2.6 h before the stall + ~0.8 h in session 5 + ~1.0 h in session 6).
+- Session 7 (17:31–18:35 UTC) sent the user the Round 59 APK (Pebblepup, Whirlwhisk, Camp fetch/activities, cup story beats) and asked a third time about the character-pick fix (no reply yet), then did Rounds 62–74 and chained to keep context small.
+- Time used so far: about 5.5 hours of actual work (2.6 h before the stall + ~0.8 h in session 5 + ~1.0 h in session 6 + ~1.1 h in session 7).
 - Target end of the whole effort: about **23:00 UTC on 2026-10-13** (see above). Check `date -u`. Keep chaining sessions until then, then stop and summarise.
 
 ## Run it
@@ -32,7 +33,7 @@ URL flags:
 - `?mobile` forces the touch UI.
 - `?q=low|med|high` sets the quality.
 
-- `&arena=frost` and `&arena=neon` also work now, and `&mods=bighead,turbo,lowgrav,itemrain,supercharged` applies match modifiers.
+- `&arena=frost`, `&arena=neon` and `&arena=sky` also work now, and `&mods=bighead,turbo,lowgrav,itemrain,supercharged` applies match modifiers.
 
 Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt, pebblepup, whirlwhisk.
 - `&train` starts a training match (e.g. `?play&train&p=woolt`).
@@ -143,6 +144,15 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 - fx.js: damage numbers fan out (`dmgSeq`). Results fill light is arena-relative.
 - Testing a special/super directly: `b.brain.update=()=>{}; p.startSpecial()` or `b.startSuper(p)`, then `__sim(...)`. Setting `p.ctl.*` doesn't work (input overwrites it each frame).
 
+## New in session 7
+- **Cloudtop Gardens** (`sky` arena in arena.js): `floor: 'marble'`, `buildSky()` (stadium island base, blossom islets `this.islands`, cloud sea, hot-air `this.balloons`, animated in `update`). Arenas can now set `fogNear`/`fogFar` and `back` (back-wall colour). Hazard `sky` = updraft (hazards.js). Song `sky` in audio.js. Daily can roll it.
+- **Sky Cup** (data.js, requires `champion`): Sora, Captain Puff, Gran Pebbles, then **Professor Pecan** (boss, `bossTitle: 'FINAL TEST'`, shiny Pricklepuff). Badge `sky` (Head in the Clouds). Taunts and parting lines may use `{name}`.
+- Every cup trainer has `beat` / `gloat` lines shown as `.res-quote` (with the rival portrait) on the results screen.
+- **haptics.js:** `buzz('light'|'medium'|'heavy')` uses `@capacitor/haptics` in the APK, `navigator.vibrate` on the web; throttled; honours `save.settings.vibrate`. Used for button taps, heavy hits on/by the player, player supers, KOs.
+- `body.at-results` hides the portrait rotate hint on the results screen. `impactT` now counts down in `step()` (so `__sim` clears it).
+- **tools/robin.mjs** `[reps] [id,id]`: CPU-vs-CPU round robin at difficulty 0.8, prints win rates. Run it against a production build so HMR reloads don't kill it: `npx vite build --outDir <scratch>/dist && npx vite preview --outDir <scratch>/dist --port 5181 &` then `PORT=5181 node tools/robin.mjs 2`. A full 2× run (528 matches) takes about 12 minutes. `window.__critters` is the CRITTERS list.
+- Test gotcha: when you set `__game.paused = true` to freeze a frame, call `__game.fx.norm.update(0); __game.fx.add.update(0)` or freshly spawned particles won't be uploaded.
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -214,19 +224,32 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 59. Jet Stream wind streaks.
 60. Clovebun now appears in the Sprout Cup (its shiny was unobtainable).
 61. Checked gear on the new critters (fine).
+62. Roomier Camp for 12 critters (two starting rings, wider wander zone, higher camera, critters face you when they stop).
+63. Pricklepuff joins the Champion Cup (Thistle, 2nd of 5 matches); tools/robin.mjs.
+64. Jet Stream wind streaks you can see (crisp lines across the gap); smaller gust hit rings.
+65. Balance: Pebblepup nerf, Whirlwhisk buff (round robin had them at 77% / 23%).
+66. Small-phone (740×360) menu check; results quote groundwork.
+67. Rival parting lines on the results screen.
+68. Roster balance: Woolt nerf (Fuzz Ball paralysis 0.6 s), Pricklepuff and Whirlwhisk buffs.
+69. Results screen works in portrait (no rotate hint); impact frame timed in game time.
+70. Cloudtop Gardens arena + Sky Cup with Professor Pecan as the final test.
+71. Six auto matches with mods in the new arena, error-free; +11 draw calls only.
+72. Real haptics in the APK via @capacitor/haptics (hits, supers, KOs).
+73. Ghost buttons readable on light arenas.
+74. Rival portrait next to the parting line.
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - Native photo Save/Share (Round 27) is untested on a real phone.
-- Jet Stream streaks are hard to verify in headless (timing); maybe make the gust more visible.
-- Pricklepuff can now only be recruited in the Midnight Cup (Marigold's Sprout critter became Clovebun). Consider whether that's too late.
-- Camp is crowded with 12 critters; the nap spot sits in front of the tent.
+- Haptics (Round 72) are untested on a real phone.
+- Last balance run (difficulty 0.8, small samples): Woolt ~61%, Whirlwhisk ~36-41% even after buffs. Re-run `tools/robin.mjs 2` after any combat change.
+- The Sky Cup outro promises a picnic; Camp could have a sky-themed reward (e.g. a balloon prop) for clearing it.
 - No localisation.
 
 ## Suggested next rounds
-- **First:** fetch the latest APK (check that the `apk-critter-clash` commit message names the latest SHA) and send it to the user with SendUserFile. Mention the two new critters (Pebblepup, Whirlwhisk), Camp fetch and activities, and the cup story beats. Ask again whether picking a character works now.
-- Battle: per-arena second hazard pattern for normal fights; a quick sweep of the new critters vs CPU at high difficulty (balance).
-- Content: rival story beats inside matches (mid-cup Pecan lines?), a 13th critter, or a bonus cup that features the new critters.
+- **First:** fetch the latest APK (check that the `apk-critter-clash` commit message names the latest SHA) and send it to the user with SendUserFile. Mention the new Cloudtop Gardens arena and Sky Cup (with a surprise final opponent), real phone vibration, rival parting lines and the balance pass. Ask again whether picking a character works now.
+- Battle: per-arena second hazard pattern; CPU variety.
+- Content: Sky Cup reward in Camp, a 13th/14th critter pair, more Pecan story beats.
 - Keep doing critique passes on phone sizes (915×412, 412×915, 740×360).
 
 ## Chaining (do this at the end of each session)
@@ -237,5 +260,5 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
    - `source_revision`: `ccr-4fc93d6e-suxlhd`
    - `outcome_branch`: `ccr-4fc93d6e-suxlhd`
    - `title`: "Critter Clash – rounds N+"
-   - `prompt`: "Continue building Critter Clash. Read games/critter-clash/HANDOFF.md fully and follow it: run the critique loop round after round, commit and push each round to branch ccr-4fc93d6e-suxlhd, and chain to a fresh session about every 2 hours or near 300k context, until about 23:00 UTC on 2026-10-13. The user has approved continuous building; don't stop to ask questions."
+   - `prompt`: "Continue building Critter Clash. Read games/critter-clash/HANDOFF.md fully and follow it: run the critique loop round after round, commit and push each round to branch ccr-4fc93d6e-suxlhd, and chain to a fresh session about every 2 hours or near 300k context, until about 23:00 UTC on 2026-10-13 (the goal is ~10 hours of actual work; if a worker stalls, extend the end time rather than stopping). The user has approved continuous building; don't stop to ask questions."
 4. Tell the user in one short message what was done and that the next session has started.
