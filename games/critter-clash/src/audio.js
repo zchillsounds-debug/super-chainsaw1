@@ -153,6 +153,7 @@ export const sfx = {
     if (kind === 'move') osc('square', 880, 880, 0.04, 0.06);
     else if (kind === 'ok') { osc('square', 660, 660, 0.05, 0.08); osc('square', 990, 990, 0.09, 0.08, { t: now() + 0.06 }); }
     else if (kind === 'back') osc('square', 440, 330, 0.08, 0.07);
+    else if (kind === 'bounce') osc('triangle', 320, 170, 0.09, 0.14);
   },
   beep(hi = false) { if (ctx) { osc('square', hi ? 1320 : 660, hi ? 1320 : 660, hi ? 0.4 : 0.15, 0.12); } },
   block() { if (!ctx) return; osc('triangle', 520, 380, 0.09, 0.18); noise(0.08, 0.15, { f0: 3000, f1: 1500, q: 2 }); },

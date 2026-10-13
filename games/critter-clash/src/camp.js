@@ -26,6 +26,13 @@ export class Camp {
     this.ring.rotation.x = -Math.PI / 2;
     this.ring.visible = false;
     this.g.scene.add(this.ring);
+    // a striped play ball for fetch
+    const ballTex = canvasTex(64, 32, (x, w, h) => { for (let i = 0; i < 6; i++) { x.fillStyle = ['#ff5a6e', '#ffd04a', '#5ab8ff'][i % 3]; x.fillRect(i * w / 6, 0, w / 6, h); } });
+    this.ball = inked(new THREE.SphereGeometry(0.2, 16, 12), toon(0xffffff, { map: ballTex }), 0.025);
+    this.ball.castShadow = true;
+    this.ball.visible = false;
+    this.g.scene.add(this.ball);
+    this.fetch = null;
     // scatter the team around the field, each with its own wander plan
     this.g.showcase.forEach((c, i) => {
       const a = (i / Math.max(1, team.length)) * Math.PI * 2;
@@ -40,7 +47,8 @@ export class Camp {
   }
 
   dispose() {
-    this.g.scene.remove(this.props, this.ring);
+    this.g.scene.remove(this.props, this.ring, this.ball);
+    this.ball.traverse((o) => { o.geometry?.dispose(); });
     this.ring.geometry.dispose(); this.ring.material.dispose();
     this.props.traverse((o) => { o.geometry?.dispose(); });
   }
@@ -106,6 +114,76 @@ export class Camp {
     this.panel();
   }
 
+  // fetch: the ball arcs onto the field, everyone races for it and the winner gets a friendship point
+  toss() {
+    if (this.fetch) return;
+    const port = this.g.camera.aspect < 1;
+    let tx = 0, tz = 0;
+    for (let tries = 0; tries < 10; tries++) {
+      const r = 1.5 + Math.random() * 2.5, ang = Math.random() * Math.PI * 2;
+      tx = Math.cos(ang) * r * (port ? 0.7 : 1); tz = Math.sin(ang) * r * 0.75;
+      if (!this.props.userData.keepOut.some(([px, pz, pr]) => Math.hypot(tx - px, tz - pz) < pr + 0.3)) break;
+    }
+    const T = 0.9, from = new THREE.Vector3(0, 2.6, 4.5);
+    this.fetch = { phase: 'fly', t: 0, pos: from.clone(), vel: new THREE.Vector3((tx - from.x) / T, 0, (tz - from.z) / T), winner: null };
+    // solve the vertical launch so it lands at y = 0.2 after T seconds under gravity 14
+    this.fetch.vel.y = (0.2 - from.y + 0.5 * 14 * T * T) / T;
+    this.ball.visible = true;
+    this.ball.position.copy(from);
+    sfx.ui('ok');
+    this.S.root.querySelector('.camp-toy')?.classList.add('busy');
+  }
+
+  updateFetch(dt) {
+    const F = this.fetch;
+    if (!F) return;
+    F.t += dt;
+    const b = this.ball;
+    if (F.phase === 'fly' || F.phase === 'roll') {
+      F.vel.y -= 14 * dt;
+      F.pos.addScaledVector(F.vel, dt);
+      if (F.pos.y < 0.2) {
+        F.pos.y = 0.2;
+        if (F.vel.y < -1.5) { F.vel.y *= -0.45; sfx.ui('bounce'); if (F.phase === 'fly') this.g.fx.dust(F.pos, 4, 0.6); }
+        else F.vel.y = 0;
+        F.vel.x *= 0.7; F.vel.z *= 0.7;
+        F.phase = 'roll';
+      }
+      b.position.copy(F.pos);
+      b.rotation.x += F.vel.z * dt * 5; b.rotation.z -= F.vel.x * dt * 5;
+      if (F.phase === 'roll') {
+        // everyone chases the ball; the first to reach it wins
+        for (const c of this.g.showcase) {
+          const m = c.camp;
+          if (!m) continue;
+          if (!m.chase) { m.chase = true; m.wait = Math.random() * 0.25; c.emote('open', 'o', 0.6); }
+          m.tx = F.pos.x; m.tz = F.pos.z;
+          if (Math.hypot(m.x - F.pos.x, m.z - F.pos.z) < 0.55) { F.winner = c; break; }
+        }
+        if (F.winner) {
+          F.phase = 'caught'; F.t = 0;
+          for (const c of this.g.showcase) if (c.camp) { c.camp.chase = false; c.camp.tx = c.camp.x; c.camp.tz = c.camp.z; if (c !== F.winner) { c.camp.wait = 1.2; c.emote('closed', 'wobbly', 1); } }
+          this.select(F.winner);
+          this.pet(F.winner);
+          this.S.toast(`${F.winner.def.name} caught the ball!`);
+        } else if (F.t > 10) this.endFetch();
+      }
+    } else if (F.phase === 'caught') {
+      // the winner shows off the ball above its head, then it pops away
+      const p = F.winner.root.position;
+      b.position.set(p.x, 1.75 + Math.abs(Math.sin(F.t * 8)) * 0.15, p.z);
+      if (F.t > 1.6) this.endFetch();
+    }
+  }
+
+  endFetch() {
+    if (this.fetch?.winner) { const p = this.ball.position; this.g.fx.burst({ x: p.x, y: p.y, z: p.z }, { n: 8, speed: 2, up: 1, color: 0xffd04a, size: 0.16, life: 0.4, shape: 'star' }); }
+    for (const c of this.g.showcase) if (c.camp) c.camp.chase = false;
+    this.fetch = null;
+    this.ball.visible = false;
+    this.S.root.querySelector('.camp-toy')?.classList.remove('busy');
+  }
+
   xp(c, n, msg) {
     const lv = grantXp(c.def.id, n);
     persist();
@@ -150,6 +228,7 @@ export class Camp {
     cam.lookAt(0, 0, port ? -0.6 : 0.4);
     cam.fov = port ? Math.min(78, 2 * Math.atan(Math.tan(0.33) / cam.aspect) * 180 / Math.PI) : 40 * Math.max(1, 1.5 / cam.aspect);
     cam.updateProjectionMatrix();
+    this.updateFetch(dt);
     if (this.sel) { const p = this.sel.root.position; this.ring.position.set(p.x, 0.03, p.z); this.ring.scale.setScalar(1 + Math.sin(this.t * 5) * 0.06); }
     // campfire flicker
     const fp = this.props.userData.fire;
@@ -181,7 +260,7 @@ export class Camp {
           const ox = m.x - o.camp.x, oz = m.z - o.camp.z, od = Math.hypot(ox, oz);
           if (od < 0.9 && od > 1e-3) { const w = (0.9 - od) / 0.9; sx += ox / od * w; sz += oz / od * w; }
         }
-        const sl = Math.hypot(sx, sz) || 1, sp = 1.3 * dt;
+        const sl = Math.hypot(sx, sz) || 1, sp = (m.chase ? 2.8 : 1.3) * dt;
         m.x += sx / sl * Math.min(sp, d); m.z += sz / sl * Math.min(sp, d);
         for (const [px, pz, pr] of this.props.userData.keepOut) {
           const ox = m.x - px, oz = m.z - pz, od = Math.hypot(ox, oz) || 1e-3, lim = pr * 0.8;
@@ -189,10 +268,10 @@ export class Camp {
         }
         m.walkT = (m.walkT || 0) + dt;
         // give up on a target that can't be reached and pick another
-        if (m.walkT > 8) { m.tx = m.x; m.tz = m.z; m.walkT = 0; }
+        if (m.walkT > 8 && !m.chase) { m.tx = m.x; m.tz = m.z; m.walkT = 0; }
         m.face = Math.atan2(sx, sz);
         walking = true;
-      } else if (m.wait <= 0) {
+      } else if (m.wait <= 0 && !m.chase) {
         // pick a new spot to amble to, then idle for a bit
         for (let tries = 0; tries < 6; tries++) {
           const r = 1 + Math.random() * 4.2, ang = Math.random() * Math.PI * 2;
@@ -208,7 +287,7 @@ export class Camp {
         for (const o of this.g.showcase) {
           if (o === c || !o.camp) continue;
           const ox = m.x - o.camp.x, oz = m.z - o.camp.z, od = Math.hypot(ox, oz);
-          if (od < 0.85 && od > 1e-3) { const k = (0.85 - od) * dt * 2; m.x += ox / od * k; m.z += oz / od * k; m.tx = m.x; m.tz = m.z; }
+          if (od < 0.85 && od > 1e-3) { const k = (0.85 - od) * dt * 2; m.x += ox / od * k; m.z += oz / od * k; if (!m.chase) { m.tx = m.x; m.tz = m.z; } }
         }
       }
       // the selected critter turns to face the camera

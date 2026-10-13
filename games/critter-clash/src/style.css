@@ -654,6 +654,9 @@ body.portrait .timer { width: 50px; height: 50px; font-size: 26px; }
 .camp-screen > * { pointer-events: auto; }
 .camp-touch { position: absolute; inset: 0; touch-action: none; }
 .camp-berries { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right)); padding: 6px 14px; border-radius: 999px; background: #fff8ec; color: var(--ink); box-shadow: 0 0 0 3px var(--ink), 0 4px 0 rgba(0,0,0,.25); font-size: 18px; }
+.camp-toy { position: absolute; top: calc(62px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right)); padding: 6px 14px; border: 0; border-radius: 999px; background: #5ab8ff; color: #fff; font: 400 17px var(--display); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; box-shadow: 0 0 0 3px var(--ink), 0 4px 0 rgba(0,0,0,.25); cursor: pointer; }
+.camp-toy:active { transform: translateY(2px); }
+.camp-toy.busy { opacity: .5; pointer-events: none; }
 .camp-berries b { font-family: var(--display); font-weight: 400; font-size: 22px; }
 .camp-panel { position: absolute; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(560px, calc(100% - 32px)); pointer-events: none; }
 .camp-panel > * { pointer-events: auto; }

@@ -520,12 +520,14 @@ export class Screens {
     g.setShowcase(team, 'line');
     this.root.innerHTML = `<div class="camp-screen"><div class="camp-touch"></div>
       <div class="camp-berries">🍓 <b>${save.berries || 0}</b></div>
+      <button class="camp-toy">⚽ Toss ball</button>
       <div class="camp-panel"></div></div>`;
     const S = this.root.querySelector('.camp-screen');
     S.prepend(this.header('Critter Camp', () => this.title()));
     this.campObj?.dispose();
     this.campObj = new Camp(this, team);
     S.querySelector('.camp-touch').addEventListener('pointerdown', (e) => this.campObj?.tap(e.clientX, e.clientY));
+    S.querySelector('.camp-toy').addEventListener('click', () => this.campObj?.toss());
     this.campObj.panel();
     playMusic('camp');
     // once a day the camp has a little basket of berries waiting
