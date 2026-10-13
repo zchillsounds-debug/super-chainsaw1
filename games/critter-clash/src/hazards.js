@@ -1,5 +1,6 @@
 // Arena hazards: a glowing warning ring appears on the floor, then the arena erupts there.
 // Volcano: lava geyser (launches). Frost: falling icicle. Neon: shock tile (brief paralysis). Beach: coconut.
+// Sky: updraft (launches, gently).
 // Hazards never KO (they leave at least 1 HP) and a guard soaks them fully.
 import * as THREE from 'three';
 import { toon, inked } from './toon.js';
@@ -11,6 +12,7 @@ export const HAZARDS = {
   volcano: { name: 'Lava geysers', color: 0xff7a1a, glow: 0xffb040, r: 1.25, warn: 1.3, dmg: 9, lift: 7.5, kb: 2, word: 'HOT!' },
   frost:   { name: 'Falling icicles', color: 0x1f6fe0, solid: true, glow: 0xd8f6ff, r: 1.0, warn: 1.2, dmg: 8, stun: 0.55, kb: 3, word: 'CLONK!' },
   neon:    { name: 'Shock tiles', color: 0xff3fd8, glow: 0x9af4ff, r: 1.3, warn: 1.1, dmg: 6, stun: 0.3, paralyze: 0.6, kb: 1.5, word: 'ZZAP!' },
+  sky:     { name: 'Updrafts', color: 0x4aa8ff, solid: true, glow: 0xffffff, r: 1.2, warn: 1.3, dmg: 6, lift: 9, kb: 1, word: 'WHOOSH!' },
   beach:   { name: 'Coconuts', color: 0xe0482a, solid: true, glow: 0xfff2c0, r: 0.9, warn: 1.2, dmg: 7, stun: 0.5, kb: 3, word: 'BONK!' },
 };
 
@@ -139,6 +141,7 @@ export class Hazards {
         fill.material.opacity = Math.max(0, 0.4 * (1 - e));
         h.mesh.scale.setScalar(H.r * (1 + e * 0.3));
         if (h.drop) { h.drop.scale.setScalar(Math.max(0.01, 1 - e)); }
+        if (B.arena.key === 'sky' && e < 0.8) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * 1.2, y: 0.2, z: h.z + (Math.random() - 0.5) * 1.2, vy: 10 + Math.random() * 4, color: 0xffffff, size: 0.28, stretch: 5, life: 0.4, shape: 'spark', additive: false, alpha: 0.85 });
         if (B.arena.key === 'volcano' && e < 0.8) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * 0.7, y: 0.2, z: h.z + (Math.random() - 0.5) * 0.7, vy: 9 + Math.random() * 4, color: Math.random() < 0.5 ? 0xff7a1a : 0xffd040, size: 0.5, life: 0.5, shape: 'puff', grav: 9, grow: 1 });
         if (e >= 1) this.remove(i);
       }
@@ -153,6 +156,10 @@ export class Hazards {
     if (key === 'volcano') {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 20, speed: 3, up: 10, color: 0xff9a2a, size: 0.4, life: 0.7, shape: 'puff', grav: 10 });
       sfx.boom(); sfx.rumble();
+    } else if (key === 'sky') {
+      B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 14, speed: 3, up: 9, color: 0xffffff, size: 0.5, life: 0.7, shape: 'puff', additive: false, grav: 4, grow: 1.2 });
+      for (let k = 0; k < 6; k++) B.fx.spawn({ x: h.x + (Math.random() - 0.5), y: 0.6, z: h.z + (Math.random() - 0.5), vy: 7, color: 0xffc4de, size: 0.3, life: 1, shape: 'leaf', additive: false, spin: 8, drag: 1 });
+      sfx.whoosh?.(1.2);
     } else if (key === 'frost') {
       B.fx.burst(p, { n: 16, speed: 5, up: 3, color: 0xd8f6ff, size: 0.22, life: 0.5, shape: 'star', additive: false, grav: 8 });
       sfx.bonk();

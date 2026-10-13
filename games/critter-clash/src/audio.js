@@ -256,6 +256,23 @@ const SONGS = {
     ],
     drums: 'k.......s.......',
   },
+  // Cloudtop Gardens: a breezy, bouncy tune with a music-box lead
+  sky: {
+    bpm: 132,
+    inst: { lead: 'triangle', lead2: 'square', leadVol: 0.1, bass: 'sine', bassVol: 0.2, stab: 'triangle' },
+    chords: [[53, 57, 60, 64], [50, 53, 57, 60], [46, 50, 53, 57], [48, 52, 55, 58], [53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [48, 52, 55, 60]],
+    lead: [
+      [77, null, 81, null, 84, null, 81, null, 79, null, 77, null, 76, null, 77, null],
+      [74, null, 77, null, 81, null, 77, null, 76, null, 74, null, 72, null, null, null],
+      [70, null, 74, null, 77, null, 82, null, 81, null, 79, null, 77, null, 74, null],
+      [76, null, null, 79, null, null, 84, null, 82, null, 81, null, 79, null, null, null],
+      [77, 79, 81, null, 84, null, 89, null, 88, null, 86, null, 84, null, 81, null],
+      [83, null, 79, null, 76, null, 79, null, 83, null, 86, null, 84, null, null, null],
+      [81, null, 77, null, 74, null, 77, null, 81, null, 84, null, 82, null, 81, null],
+      [79, null, null, null, 76, null, null, null, 77, null, null, null, null, null, null, null],
+    ],
+    drums: 'k..hs.h.k.hhs.h.',
+  },
   beach: {
     bpm: 120,
     inst: { lead: 'triangle', lead2: 'sine', leadVol: 0.12, steel: true, bass: 'sine', stab: 'triangle' },

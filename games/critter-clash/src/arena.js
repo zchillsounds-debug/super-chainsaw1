@@ -50,6 +50,15 @@ export const ARENAS = {
     hill: 0x1a1434, trunk: 0x2a2244, leaves: [0x2a2450, 0x241e46, 0x30285a], scenery: 'city', cloud: 0x3a2a6a, cloudShade: 0x5a2a6a, sunI: 2.1,
     stars: true, beam: 0xff8ae0, fillI: 0.5,
   },
+  sky: {
+    name: 'Cloudtop Gardens',
+    skyTop: 0x3f86f0, skyHorizon: 0xffe0ee, sun: 0xfff2e0, sunDir: [0.45, 0.7, -0.5],
+    hemiSky: 0xe8f0ff, hemiGround: 0xa08ad8, fieldA: '#f3eee4', fieldB: '#e8e0d2', line: '#ff9ac8', floor: 'marble',
+    wallA: 0xffffff, wallB: 0xff9ac8, ground: 0xf4f2ff, fog: 0xf2e8ff,
+    accent: 0xffb0d4, seat: [0xff9ac8, 0x8ad0ff, 0xffe08a, 0xc4a4ff],
+    hill: 0xffffff, trunk: 0x9a6a4a, leaves: [0xff9ac8, 0xffc4de, 0x7cd07a], scenery: 'islands', cloud: 0xffffff, cloudShade: 0x8a90c8, sunI: 2.3,
+    fogNear: 150, fogFar: 520, back: 0xa890d8,
+  },
 };
 
 function skyDome(A) {
@@ -124,7 +133,7 @@ export class Arena {
     const G = this.group;
     const rand = rng(7);
 
-    scene.fog = new THREE.Fog(A.fog, 70, 260);
+    scene.fog = new THREE.Fog(A.fog, A.fogNear || 70, A.fogFar || 260);
     this.sky = skyDome(A);
     G.add(this.sky);
 
@@ -218,6 +227,26 @@ export class Arena {
           c.fillStyle = 'rgba(255,255,255,0.05)';
           c.beginPath(); c.ellipse(x - 8, y - 10, R * 0.5, R * 0.3, -0.4, 0, Math.PI * 2); c.fill();
         }
+      } else if (A.floor === 'marble') {
+        // pale garden flagstones with pink petals blown across them
+        c.fillStyle = '#d8cfc0'; c.fillRect(0, 0, w, h);
+        const T = 85;
+        for (let y = 0; y < h; y += T) for (let x = 0; x < w; x += T) {
+          const l = 0.96 + Math.random() * 0.06;
+          c.fillStyle = (x / T + y / T) % 2 ? A.fieldA : A.fieldB;
+          c.globalAlpha = l; c.fillRect(x + 3, y + 3, T - 6, T - 6); c.globalAlpha = 1;
+          // faint marble veins
+          c.strokeStyle = 'rgba(170,150,190,0.16)'; c.lineWidth = 1.5;
+          c.beginPath(); c.moveTo(x + Math.random() * T, y + 3);
+          c.bezierCurveTo(x + Math.random() * T, y + T * 0.4, x + Math.random() * T, y + T * 0.6, x + Math.random() * T, y + T - 3); c.stroke();
+        }
+        for (let i = 0; i < 260; i++) {
+          c.save(); c.translate(Math.random() * w, Math.random() * h); c.rotate(Math.random() * 6);
+          c.fillStyle = ['#ff9ac8', '#ffc4de', '#ffffff'][i % 3]; c.globalAlpha = 0.75;
+          c.beginPath(); c.ellipse(0, 0, 7, 4, 0, 0, Math.PI * 2); c.fill();
+          c.restore();
+        }
+        c.globalAlpha = 1;
       } else if (A.floor === 'neon') {
         // glossy rooftop tiles with soft reflections of the skyline
         c.fillStyle = A.fieldA; c.fillRect(0, 0, w, h);
@@ -363,7 +392,7 @@ export class Arena {
     // the gap in the stands (theta ~ 0, +z) is where the camera sits
     G.add(stands);
     // big back wall behind stands
-    const back = new THREE.Mesh(new THREE.CylinderGeometry(r0 + tiers * 1.25 + 1.3, r0 + tiers * 1.25 + 1.6, 9, 64, 1, true, Math.PI * 0.17, Math.PI * 1.66), toon(0x5a4c9a, { env: true, rim: 0, side: THREE.DoubleSide }));
+    const back = new THREE.Mesh(new THREE.CylinderGeometry(r0 + tiers * 1.25 + 1.3, r0 + tiers * 1.25 + 1.6, 9, 64, 1, true, Math.PI * 0.17, Math.PI * 1.66), toon(A.back || 0x5a4c9a, { env: true, rim: 0, side: THREE.DoubleSide }));
     back.position.y = 4.5;
     G.add(back);
     // colour band on the top lip
@@ -525,6 +554,7 @@ export class Arena {
       }
     }
     else if (A.scenery === 'city') this.buildCity(G, rand, r0 + tiers * 1.25);
+    else if (A.scenery === 'islands') this.buildSky(G, rand, r0 + tiers * 1.25, ground, trunks, tops);
     if (trunks.length) G.add(new THREE.Mesh(mergeGeometries(trunks), toon(A.trunk, { env: true, rim: 0 })));
     A.leaves.forEach((c, k) => { if (tops[k].length) G.add(inked(mergeGeometries(tops[k]), toon(c, { env: true, rim: 0.3 }), 0.06)); });
     if (A.snow) {
@@ -620,6 +650,76 @@ export class Arena {
       this.clouds.push(c);
       G.add(c);
     }
+  }
+
+  // Cloudtop Gardens: the stadium floats on a rock island above a sea of clouds,
+  // with blossom-tree islets and hot-air balloons drifting past
+  buildSky(G, rand, rOut, ground, trunks, tops) {
+    ground.position.y = -16;
+    const rock = toon(0xb4a4c8, { env: true, rim: 0.2 }), grass = toon(0x7cd07a, { env: true, rim: 0 });
+    // the stadium's own island: a rocky underside under a grassy rim
+    const baseG = new THREE.CylinderGeometry(rOut + 4, 5, 18, 28, 3);
+    const bp = baseG.attributes.position;
+    for (let i = 0; i < bp.count; i++) { if (bp.getY(i) < 8.9) { const k = 1 + (rand() - 0.5) * 0.18; bp.setX(i, bp.getX(i) * k); bp.setZ(i, bp.getZ(i) * k); } }
+    baseG.computeVertexNormals();
+    baseG.translate(0, -9.05, 0);
+    const rocks = [baseG], caps = [];
+    const lip = new THREE.CylinderGeometry(rOut + 4.4, rOut + 4.2, 0.5, 40); lip.translate(0, -0.27, 0); caps.push(lip);
+    // floating islets, each with a blossom tree or two
+    this.islands = [];
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * Math.PI * 2 + rand() * 0.4, r = 55 + rand() * 60, sc = 1.6 + rand() * 2.4;
+      const x = Math.cos(a) * r, z = Math.sin(a) * r, y = 4 + rand() * 22;
+      const isl = new THREE.Group();
+      isl.position.set(x, y, z);
+      const cone = new THREE.ConeGeometry(3 * sc, 5 * sc, 7); cone.rotateX(Math.PI); cone.translate(0, -2.5 * sc, 0);
+      const top = new THREE.CylinderGeometry(3.15 * sc, 3 * sc, 0.6 * sc, 14); top.translate(0, 0.1 * sc, 0);
+      isl.add(new THREE.Mesh(cone, rock), new THREE.Mesh(top, grass));
+      const tr = [], lv = [];
+      for (let k = 0; k < 1 + (i % 2); k++) {
+        const tx = (k ? 1.2 : -0.6) * sc, tz = (rand() - 0.5) * sc;
+        const t = new THREE.CylinderGeometry(0.18 * sc, 0.28 * sc, 1.6 * sc, 6); t.translate(tx, 1.1 * sc, tz); tr.push(t);
+        for (let j = 0; j < 3; j++) { const b = new THREE.SphereGeometry((1 - j * 0.15) * sc, 10, 8); b.translate(tx + (j - 1) * 0.6 * sc, (2.2 + (j % 2) * 0.4) * sc, tz); lv.push(b); }
+      }
+      isl.add(new THREE.Mesh(mergeGeometries(tr), toon(0x9a6a4a, { env: true, rim: 0 })));
+      isl.add(inked(mergeGeometries(lv), toon(i % 3 ? 0xff9ac8 : 0xffc4de, { env: true, rim: 0.3 }), 0.05));
+      isl.userData = { y, ph: rand() * 6 };
+      G.add(isl);
+      this.islands.push(isl);
+    }
+    G.add(new THREE.Mesh(mergeGeometries(rocks), rock));
+    G.add(new THREE.Mesh(mergeGeometries(caps), grass));
+    // the sea of clouds below
+    const puffs = [];
+    for (let i = 0; i < 70; i++) {
+      const a = rand() * Math.PI * 2, r = 30 + rand() * 170;
+      const g = new THREE.SphereGeometry(6 + rand() * 10, 12, 8);
+      g.scale(1.6, 0.55, 1.2);
+      g.translate(Math.cos(a) * r, -15 + rand() * 6, Math.sin(a) * r);
+      puffs.push(g);
+    }
+    G.add(new THREE.Mesh(mergeGeometries(puffs), toon(0xffffff, { env: true, rim: 0, emissive: 0x6a70a8 })));
+    // hot-air balloons with striped envelopes
+    this.balloons = [];
+    const cols = [['#ff6a8a', '#fff4e0'], ['#5ab8ff', '#ffe066'], ['#8a6aff', '#ffffff'], ['#ffb040', '#ff6a8a'], ['#5ad08a', '#fff4e0']];
+    for (let i = 0; i < 6; i++) {
+      const [c1, c2] = cols[i % cols.length];
+      const tex = canvasTex(128, 64, (c, w, h) => { for (let k = 0; k < 8; k++) { c.fillStyle = k % 2 ? c2 : c1; c.fillRect(k * w / 8, 0, w / 8 + 1, h); } });
+      const b = new THREE.Group();
+      const env = new THREE.SphereGeometry(2.4, 20, 14); env.scale(1, 1.18, 1);
+      b.add(inked(env, toon(0xffffff, { map: tex, env: true, rim: 0.3 }), 0.06));
+      const bask = inked(new THREE.CylinderGeometry(0.55, 0.45, 0.7, 10), toon(0x9a6a3a, { env: true, rim: 0 }), 0.04);
+      bask.position.y = -3.9; b.add(bask);
+      const ropeG = [];
+      for (let k = 0; k < 4; k++) { const rg = new THREE.CylinderGeometry(0.03, 0.03, 1.4, 4); rg.translate(Math.cos(k * 1.57 + 0.78) * 0.45, -2.95, Math.sin(k * 1.57 + 0.78) * 0.45); ropeG.push(rg); }
+      b.add(new THREE.Mesh(mergeGeometries(ropeG), toon(0x6a4a3a)));
+      const a = rand() * Math.PI * 2, r = 40 + rand() * 50;
+      b.userData = { a, r, y: 14 + rand() * 18, sp: (0.008 + rand() * 0.012) * (i % 2 ? 1 : -1), ph: rand() * 6 };
+      b.scale.setScalar(1 + rand() * 0.6);
+      G.add(b);
+      this.balloons.push(b);
+    }
+    void trunks; void tops;
   }
 
   // night skyline: merged towers with lit windows, neon signs and sweeping searchlights
@@ -805,6 +905,14 @@ export class Arena {
       for (const m of this.signs) m.material.opacity = Math.sin(t * 7 + m.userData.ph) > 0.97 ? 0.35 : 1;
     }
     if (this.foam) this.foam.scale.setScalar(1 + Math.sin(t * 1.3) * 0.012);
+    if (this.balloons) {
+      for (const b of this.balloons) {
+        const u = b.userData; u.a += u.sp * dt * 6;
+        b.position.set(Math.cos(u.a) * u.r, u.y + Math.sin(t * 0.6 + u.ph) * 0.8, Math.sin(u.a) * u.r);
+        b.rotation.z = Math.sin(t * 0.8 + u.ph) * 0.04;
+      }
+      for (const isl of this.islands) isl.position.y = isl.userData.y + Math.sin(t * 0.4 + isl.userData.ph) * 0.6;
+    }
   }
 
   dispose() {

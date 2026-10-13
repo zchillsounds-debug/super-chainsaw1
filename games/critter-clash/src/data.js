@@ -230,6 +230,17 @@ export const CUPS = [
       { name: 'Aurora', style: 'trickster', title: 'Living Legend', critter: 'hootsy', skin: 'shiny', level: 19, mods: ['itemrain'], boss: true, taunt: 'The real final round starts now.', beat: "You really are the champion. The ice is yours.", gloat: "Legends don't fall that easily. Try again." },
     ],
   },
+  {
+    id: 'sky', arena: 'sky', name: 'Sky Cup', color: '#ff9ac8', desc: 'A garden stadium floating above the clouds.', diff: [0.7, 0.95], requires: 'champion',
+    intro: ["Look down, {name}. No, actually, don't. Cloudtop Gardens floats a mile above the ground!", "Watch for blue rings on the floor: updrafts will toss you sky-high. And there's a special guest at the end..."],
+    outro: ["Ha! You beat me fair and square, {name}. Turns out the professor still has a lot to learn.", "From your very first critter to the top of the sky. I couldn't be prouder. Now, who wants a picnic?"],
+    matches: [
+      { name: 'Sora', style: 'zoner', title: 'Cloud Gardener', critter: 'clovebun', skin: 'shiny', level: 14, taunt: 'Every cloud has a silver lining. Yours is a loss.', beat: "Oh! You've got a green thumb for battling.", gloat: "Weeded. Out. Of. The. Sky." },
+      { name: 'Captain Puff', style: 'trickster', title: 'Balloon Pilot', critter: 'whirlwhisk', level: 15, mods: ['lowgrav'], taunt: 'Hold onto your hat. Up here, everything floats!', beat: "Blimey. You've let all the air out of me.", gloat: "Up, up and away... with the win!" },
+      { name: 'Gran Pebbles', style: 'turtle', title: 'Mountain Climber', critter: 'pebblepup', skin: 'shiny', level: 16, taunt: 'Climbed all the way up here with Pebblepup on my back. Your turn to be carried.', beat: "Well, I'll be. Time to take the stairs down.", gloat: "Grandma's still got it!" },
+      { name: 'Professor Pecan', style: 'balanced', title: 'Your Mentor', critter: 'pricklepuff', skin: 'shiny', level: 18, boss: true, bossTitle: 'FINAL TEST', taunt: "Surprise! Did you think I only hand out critters? Let's see what you've learned, {name}!", beat: "Ha! The student has become the master!", gloat: "Lesson one: never underestimate your professor!" },
+    ],
+  },
 ];
 
 // Combo chain for every critter (scaled by stats.power). t = seconds.
@@ -251,6 +262,7 @@ export const BADGES = [
   { id: 'champion', icon: '👑', name: 'Grand Champion', desc: 'Clear the Champion Cup.', test: (s) => !!s.cups.champion },
   { id: 'midnight', icon: '🌙', name: 'Night Owl', desc: 'Clear the Midnight Cup.', test: (s) => !!s.cups.midnight },
   { id: 'legend', icon: '🌟', name: 'Living Legend', desc: 'Clear the Legend Cup.', test: (s) => !!s.cups.legend },
+  { id: 'sky', icon: '☁️', name: 'Head in the Clouds', desc: 'Clear the Sky Cup.', test: (s) => !!s.cups.sky },
   { id: 'team', icon: '🐾', name: 'Full Team', desc: 'Recruit every critter.', test: (s) => s.unlocked.length >= CRITTERS.length },
   { id: 'lv10', icon: '📈', name: 'Best Buds', desc: 'Raise a critter to Lv 10.', test: (s) => Object.values(s.critters).some((c) => c.level >= 10) },
   { id: 'streak5', icon: '🔥', name: 'Survivor', desc: 'Win 5 in a row in Survival.', test: (s) => (s.stats.bestStreak || 0) >= 5 },
@@ -280,7 +292,7 @@ export function dailyChallenge(date = new Date()) {
   return {
     key,
     foe: CRITTERS[Math.floor(rnd() * CRITTERS.length)].id,
-    arena: ['meadow', 'beach', 'volcano', 'frost', 'neon'][Math.floor(rnd() * 5)],
+    arena: ['meadow', 'beach', 'volcano', 'frost', 'neon', 'sky'][Math.floor(rnd() * 6)],
     mod: mods[Math.floor(rnd() * mods.length)],
     shiny: rnd() < 0.3,
   };
