@@ -142,6 +142,12 @@ export const sfx = {
     for (let i = 0; i < 3; i++) noise(1.3 + i * 0.3, 0.07 * amount, { t: t + i * 0.08, f0: 900 + i * 400, f1: 1600 + i * 300, q: 0.6, attack: 0.25 });
   },
   aww() { if (ctx) noise(1.2, 0.08, { f0: 1200, f1: 500, q: 1.2, attack: 0.2 }); },
+  shutter() {
+    if (!ctx) return;
+    noise(0.05, 0.35, { type: 'highpass', f0: 3000 });
+    noise(0.07, 0.3, { type: 'bandpass', f0: 1800, q: 2, t: now() + 0.07 });
+    osc('square', 1400, 900, 0.04, 0.08, { t: now() + 0.07 });
+  },
   ui(kind = 'move') {
     if (!ctx) return;
     if (kind === 'move') osc('square', 880, 880, 0.04, 0.06);

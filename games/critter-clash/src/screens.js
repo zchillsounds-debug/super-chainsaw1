@@ -4,6 +4,7 @@ import { sfx, playMusic } from './audio.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
+import { PhotoMode } from './photo.js';
 
 const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zoner: '🎯 Keeps away', turtle: '🛡️ Defensive', trickster: '🌀 Tricky' };
 const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater', frost: 'Frostpeak Dome' };
@@ -729,6 +730,11 @@ export class Screens {
       const dm = this.btn(`Dummy: ${DUMMY[tr.mode].name}`, '', () => { tr.cycle(); dm.textContent = `Dummy: ${DUMMY[tr.mode].name}`; });
       col.appendChild(dm);
     } else col.appendChild(this.btn('How to Play', '', () => this.howTo()));
+    col.appendChild(this.btn('Photo Mode', '', () => {
+      const g = this.game;
+      p.remove();
+      g.photo = new PhotoMode(g, () => { g.photo = null; g.hud.show(true); g.input.showTouch(true); this.pauseMenu(true); });
+    }));
     col.appendChild(this.btn('Settings', '', () => openSettings(this.game, this.root)));
     if (tr) col.appendChild(this.btn('Exit Training', 'ghost-dark', () => { this.game.paused = false; this.game.endBattle(); playMusic('menu'); this.select(); }));
     col.appendChild(this.btn('Quit to Title', 'ghost-dark', () => { this.game.paused = false; this.title(); }));

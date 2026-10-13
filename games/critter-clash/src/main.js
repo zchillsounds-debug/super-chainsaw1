@@ -317,6 +317,7 @@ class Game {
   }
 
   pause() {
+    if (this.photo) { this.photo.close(); return; }
     if (!this.battle || this.battle.phase === 'done') return;
     this.paused = !this.paused;
     this.screens.pauseMenu(this.paused);
@@ -336,6 +337,7 @@ class Game {
     this.t += rawDt;
     this.input.poll();
     if (this.input.pressed.pause) this.pause();
+    if (this.photo) this.photo.update();
     if (!this.paused) {
       if (this.battle) this.battle.update(rawDt);
       else this.screens.update(rawDt);
