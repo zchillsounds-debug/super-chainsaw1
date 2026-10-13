@@ -101,7 +101,7 @@ export class Screens {
           <div class="logo-sub">Tiny critters. Huge bonks.</div>
         </div>
         <div class="title-menu"></div>
-        <div class="title-foot"><span>🧢 ${save.trainer.name}</span><span>Team ${save.unlocked.length}/${CRITTERS.length}</span><span>🏆 ${trophies}/${CUPS.length}</span></div>
+        <div class="title-foot"><span>🧢 ${save.trainer.name}</span><span>Team ${save.unlocked.length}/${CRITTERS.length}</span><span>🏆 ${trophies}/${CUPS.length}</span>${trophies === CUPS.length ? '<span class="master">🌟 Critter Master</span>' : ''}</div>
       </div>`;
     const m = this.root.querySelector('.title-menu');
     m.appendChild(this.btn('Tournament', 'primary big', () => this.cups()));
@@ -906,10 +906,60 @@ export class Screens {
       </div>`;
     const btns = this.root.querySelector('.res-btns');
     // Continue is there from the start, so nothing (a popup, a slow phone) can leave you stuck here
-    btns.appendChild(this.btn('Continue', 'primary big', () => { this.root.querySelector('.prof-wrap')?.remove(); this.cups(); }));
-    this.backFn = () => this.cups();
+    // clearing the last cup rolls the finale once
+    const next = () => (CUPS.every((c) => save.cups[c.id]) && !save.finaleSeen ? this.finale() : this.cups());
+    btns.appendChild(this.btn('Continue', 'primary big', () => { this.root.querySelector('.prof-wrap')?.remove(); next(); }));
+    this.backFn = next;
     sfx.cheer(1.5);
     if (cup.outro) setTimeout(() => { if (this.mode === 'trophy') this.profTalk(cup.outro); }, 1400);
+  }
+
+  // ---------- every cup cleared: a parade of the whole team and the credits ----------
+  finale() {
+    const g = this.game;
+    g.endBattle();
+    this.mode = 'finale';
+    save.finaleSeen = true; persist();
+    g.setArena('meadow');
+    g.setShowcase([]);
+    playMusic('victory');
+    const team = CRITTERS.filter((c) => save.unlocked.includes(c.id));
+    const rivals = [...new Set(CUPS.flatMap((c) => c.matches.map((m) => m.name)))].filter((n) => n !== 'Professor Pecan');
+    const name = save.trainer?.name || 'Trainer';
+    this.root.innerHTML = `
+      <div class="finale">
+        <div class="credits"><div class="roll">
+          <div class="logo-top ol">CRITTER</div><div class="logo-bot ol">CLASH!</div>
+          <h2>🌟 Critter Master 🌟</h2><p class="cr-big">${name}</p>
+          <h3>Starring</h3>${CRITTERS.map((c) => `<p><b>${c.name}</b> <small>${c.species}</small></p>`).join('')}
+          <h3>Rivals</h3><p>${rivals.join(' · ')}</p>
+          <h3>Special thanks</h3><p>Professor Pecan, as himself</p><p>The crowd, for all the cheering</p>
+          <h3>And you</h3><p>for playing!</p>
+          <p class="cr-big">Thanks for playing!</p>
+        </div></div>
+        <div class="res-btns"></div>
+      </div>`;
+    const S = this.root.firstElementChild;
+    S.querySelector('.res-btns').appendChild(this.btn('Back to Title', 'primary', () => this.title()));
+    this.backFn = () => this.title();
+    // the team parades by, four at a time, cheering
+    let wave = 0;
+    const parade = () => {
+      if (this.mode !== 'finale') return;
+      const group = team.slice(wave * 4, wave * 4 + 4);
+      if (!group.length) wave = 0;
+      g.setShowcase((group.length ? group : team.slice(0, 4)).map(skinOf), 'line');
+      const wide = innerWidth > innerHeight;
+      for (const c of g.showcase) { c.cheer = 2.4; if (wide) c.root.position.x -= 2.4; }
+      sfx.cheer(0.8);
+      wave++;
+      setTimeout(parade, 3200);
+    };
+    this.profTalk([
+      "You did it, {name}! Every single cup has your name on it.",
+      "Sprout, Thunder, Champion, Glowcap, Midnight, Legend AND Sky... Even I couldn't stop you!",
+      "From today you're a Critter Master. That calls for a parade!",
+    ], () => { S.classList.add('rolling'); parade(); });
   }
 
   moveModal(def) {

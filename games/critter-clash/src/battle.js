@@ -449,7 +449,7 @@ export class Battle {
           sfx.spark(); if (last) { sfx.boom(); this.shake(0.5); }
           if (target.alive && !target.under && d < (last ? 1.6 : 1.15)) {
             const a = Math.atan2(target.x - pr.x, target.z - pr.z) || 0;
-            this.applyHit(pr.owner, target, { dmg: (last ? 70 : 26) * pr.owner.power, kb: last ? 7 : 0.8, lift: last ? 8 : 0, stun: 0.45, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: last, type: pr.owner.type, launch: last, paralyze: last ? 0 : 0.35, dizzy: last ? 20 : 8, projectile: true });
+            this.applyHit(pr.owner, target, { dmg: (last ? 70 : 26) * pr.owner.power, kb: last ? 7 : 0.8, lift: last ? 8 : 0, stun: last ? 0.45 : 0.25, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: last, type: pr.owner.type, launch: last, dizzy: last ? 20 : 8, projectile: true });
           }
         }
       } else if (pr.kind === 'puddle') {

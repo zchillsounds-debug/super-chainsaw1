@@ -25,8 +25,8 @@ export const SPECIALS = {
   swoop:     { cd: 3.4, range: [2.5, 8] },
   tongue:    { cd: 4.0, range: [1.8, 5.2] },
   burrow:    { cd: 4.6, range: [2.5, 9] },
-  puddle:    { cd: 3.8, range: [2.5, 8] },
-  staticfield: { cd: 4.4, range: [0, 2.2] },
+  puddle:    { cd: 4.4, range: [2.5, 8] },
+  staticfield: { cd: 5.0, range: [0, 2.2] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -167,7 +167,7 @@ export class Fighter {
       if (this.paralyze > 0) { this.paralyze -= dt; }
       if (ml > 0.15 && this.paralyze <= 0) {
         if (S !== 'run') this.setState('run');
-        const sp = this.speed * Math.min(1, ml) * (this.speedBoost > 0 ? 1.3 : 1) * (this.slick > 0 ? 0.6 : 1);
+        const sp = this.speed * Math.min(1, ml) * (this.speedBoost > 0 ? 1.3 : 1) * (this.slick > 0 ? 0.7 : 1);
         const grip = this.slick > 0 ? 2.5 : 14; // a puddle makes the footing slippery
         this.vx = THREE.MathUtils.damp(this.vx, c.mx / ml * sp, grip, dt);
         this.vz = THREE.MathUtils.damp(this.vz, c.mz / ml * sp, grip, dt);
@@ -635,12 +635,13 @@ export class Fighter {
         B.fx.spawn({ x: this.x + Math.sin(a) * r, y: 0.3 + Math.random() * 1.4, z: this.z + Math.cos(a) * r, color: Math.random() < 0.5 ? 0xfff060 : 0xc8a8ff, size: 0.5, life: 0.1, shape: 'bolt', rot: Math.random() * 6 });
       }
       if (Math.random() < 0.3) B.fx.spawn({ x: this.x, y: 0.06, z: this.z, color: 0xfff060, size: R * 2, life: 0.12, shape: 'ring', alpha: 0.5 });
+      if (Math.random() < 0.5) B.fx.spawn({ x: this.x, y: 0.9, z: this.z, color: 0xffe860, size: 3.6 + Math.sin(this.st * 30) * 0.4, life: 0.1, shape: 'glow', alpha: 0.35 });
       if (this.zapT <= 0 && o && o.alive && !o.under && this.distTo(o) < R && o.y < 2) {
-        this.zapT = 0.28;
+        this.zapT = 0.34;
         const ang = this.angleTo(o);
         sfx.spark();
         B.fx.spawn({ ...o.headPos(), color: 0xffffaa, size: 1.6, life: 0.12, shape: 'glow' });
-        B.applyHit(this, o, { dmg: 19 * this.power, kb: 0.8, lift: 0, stun: 0.32, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: false, type: this.type, paralyze: 0.25, dizzy: 6 });
+        B.applyHit(this, o, { dmg: 16 * this.power, kb: 0.8, lift: 0, stun: 0.3, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: false, type: this.type, dizzy: 6 });
       }
       for (let k = B.projectiles.length - 1; k >= 0; k--) {
         const pr = B.projectiles[k];

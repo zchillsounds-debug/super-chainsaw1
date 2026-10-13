@@ -58,6 +58,17 @@ export class CpuBrain {
       c.mx = hx / l; c.mz = hzz / l;
       return;
     }
+    // get out of a rival's slippery puddle, out from under a storm cloud, and away from a crackling static field
+    if (f.actionable && D > 0.3 && Math.random() < 0.4 + D * 0.6) {
+      for (const pr of f.battle.projectiles) {
+        if (pr.owner === f) continue;
+        const R = pr.kind === 'puddle' && d > 1.8 ? pr.r + 0.3 : pr.kind === 'cloud' ? 1.8 : 0;
+        if (!R) continue;
+        const hx = f.x - pr.x, hzz = f.z - pr.z, l = Math.hypot(hx, hzz);
+        if (l < R) { c.mx = hx / (l || 1) + (Math.random() - 0.5) * 0.4; c.mz = hzz / (l || 1) + (Math.random() - 0.5) * 0.4; return; }
+      }
+      if (o.state === 'special' && o.def.special === 'staticfield' && d < 2.8) { c.mx = -ax; c.mz = -az; if (f.dodgeCd <= 0 && d < 1.6 && Math.random() < D) c.dodge = true; return; }
+    }
     // grab a nearby power-up
     const item = f.battle.items?.nearest(f);
     if (item && f.actionable && item.d < 5 * S.items && item.d < d + 1 && Math.random() < 0.9) {

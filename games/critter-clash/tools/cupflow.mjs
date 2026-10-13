@@ -31,7 +31,7 @@ for (let step = 0; step < 160; step++) {
   // the topmost thing to press, like a player would
   if (await tap('.prof-wrap')) continue;
   if (await tap('.modal-wrap button.btn')) continue;
-  if (m === 'cups') { await tap('.cup:not(.locked)', null) || 0; continue; }
+  if (m === 'cups') { const l = pg.locator('.cup').nth(cupI); try { await l.tap({ timeout: 20000 }); } catch (e) { console.log('cup tap failed'); } await pg.waitForTimeout(450); continue; }
   if (m === 'cupselect' || m === 'select') { await tap('.rcard'); if (await tap('button', /GO|FIGHT|Choose|Battle/)) continue; }
   for (const re of [/Next Battle/, /Collect/, /Battle!/, /FIGHT/, /GO/, /Continue/, /Yay/, /Tournament/]) if (await tap('button:visible', re)) break;
   await pg.waitForTimeout(300);

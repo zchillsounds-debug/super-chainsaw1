@@ -718,3 +718,20 @@ body.portrait .rcard span { font-size: 9.5px; }
   .grade { width: 56px; height: 56px; font-size: 32px; top: -30px; right: -10px; }
   .res-grid { padding-right: 22px; }
 }
+
+/* finale: credits roll over the parade */
+.finale { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; padding: calc(12px + var(--sat)) calc(16px + var(--sar)) calc(14px + var(--sab)) calc(16px + var(--sal)); pointer-events: none; }
+.finale .res-btns { pointer-events: auto; opacity: 0; transition: opacity .6s; }
+.finale.rolling .res-btns { opacity: 1; }
+.credits { position: absolute; right: calc(16px + var(--sar)); top: 0; bottom: 0; width: min(380px, 46vw); overflow: hidden; background: linear-gradient(90deg, rgba(27,17,64,0), rgba(27,17,64,.55) 18%, rgba(27,17,64,.55) 82%, rgba(27,17,64,0)); -webkit-mask-image: linear-gradient(transparent, #000 14%, #000 82%, transparent); mask-image: linear-gradient(transparent, #000 14%, #000 82%, transparent); }
+.credits .roll { text-align: center; padding-top: 100vh; color: #fff; text-shadow: 0 2px 0 var(--ink); }
+.finale.rolling .roll { animation: creditRoll 46s linear forwards; }
+@keyframes creditRoll { to { transform: translateY(calc(-100% + 60vh)); } }
+.credits .logo-top { font-size: 40px; } .credits .logo-bot { font-size: 64px; margin-bottom: 18px; }
+.credits h2 { font-family: var(--display); font-weight: 400; color: var(--yellow); margin: 10px 0 4px; font-size: 26px; }
+.credits h3 { font-family: var(--display); font-weight: 400; color: #ffb4dc; margin: 26px 0 6px; font-size: 22px; letter-spacing: 1px; }
+.credits p { margin: 4px 0; font-size: 16px; line-height: 1.35; }
+.credits p small { opacity: .75; font-size: 13px; margin-left: 4px; }
+.credits .cr-big { font-family: var(--display); font-size: 30px; color: #fff36b; margin-top: 12px; }
+.title-foot .master { background: linear-gradient(90deg, #ffb020, #ff6ad0); color: #fff; }
+@media (max-aspect-ratio: 1/1) { .credits { left: 16px; right: 16px; width: auto; top: 40%; } .finale { align-items: center; } }
