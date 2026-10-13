@@ -2,7 +2,7 @@
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
 const { chromium } = require('playwright');
-const reps = +(process.argv[2] || 1);
+const reps = +(process.argv[2] || 1), focus = process.argv[3]?.split(',');
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: 480, height: 270 } });
 pg.on('pageerror', (e) => console.log('PAGEERR', e.message));
@@ -11,7 +11,7 @@ await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 const ids = await pg.evaluate(() => __critters.map((c) => c.id));
 const W = Object.fromEntries(ids.map((i) => [i, [0, 0]])), M = {};
 for (let r = 0; r < reps; r++) for (const a of ids) for (const c of ids) {
-  if (a === c) continue;
+  if (a === c || (focus && !focus.includes(a) && !focus.includes(c))) continue;
   const won = await pg.evaluate(([a, c]) => {
     const g = __game, D = (id) => __critters.find((x) => x.id === id);
     g.startBattle(D(a), D(c), { difficulty: 0.8, playerLevel: 10, cpuLevel: 10 });

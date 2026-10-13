@@ -579,7 +579,7 @@ export class Fighter {
         if (o && o.alive && !this.hitIds.has(o) && this.distTo(o) < 1.3 && Math.abs(this.y - o.y) < 1.4) {
           this.hitIds.add(o);
           const ang = this.angleTo(o);
-          B.applyHit(this, o, { dmg: 78 * this.power, kb: 6, lift: 5, stun: 0.5, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, launch: true, dizzy: 18 });
+          B.applyHit(this, o, { dmg: 88 * this.power, kb: 6, lift: 5, stun: 0.5, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, launch: true, dizzy: 18 });
           this.vx *= -0.3; this.vz *= -0.3; this.swoopV *= -0.3;
         }
       } else {
@@ -601,7 +601,7 @@ export class Fighter {
         const d = o ? THREE.MathUtils.clamp(this.distTo(o), 2.5, 8) : 5, T = 0.7, g = 22, y0 = 1.5;
         const tx = this.x + fx * d, tz = this.z + fz * d;
         B.spawnProjectile(this, { kind: 'boulder', big: true, x: this.x + fx * 0.3, z: this.z + fz * 0.3, y: y0, vx: (tx - this.x) / T, vz: (tz - this.z) / T, vy: (0.35 - y0 + 0.5 * g * T * T) / T, g, landR: 1.25, r: 0.4, life: 3, size: 1,
-          hit: { dmg: 70 * this.power, kb: 3, lift: 4, stun: 0.5, type: this.type, dizzy: 14 } });
+          hit: { dmg: 62 * this.power, kb: 3, lift: 4, stun: 0.5, type: this.type, dizzy: 14 } });
         sfx.whoosh?.(0.5);
       }
       if (this.st > 0.6) this.endSpecial();
