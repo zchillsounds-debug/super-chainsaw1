@@ -44,6 +44,7 @@ export class Screens {
   title() {
     const g = this.game;
     g.endBattle();
+    g.setArena('meadow');
     this.mode = 'title';
     this.t = 0;
     this.backFn = null;
@@ -266,13 +267,13 @@ export class Screens {
       const m = cup.matches[idx];
       c = byId(m.critter);
       const k = cup.matches.length > 1 ? idx / (cup.matches.length - 1) : 1;
-      opts = { cpuLevel: m.level, difficulty: cup.diff[0] + (cup.diff[1] - cup.diff[0]) * k, playerLevel: save.critters[p.id].level, trainer: m };
+      opts = { cpuLevel: m.level, difficulty: cup.diff[0] + (cup.diff[1] - cup.diff[0]) * k, playerLevel: save.critters[p.id].level, trainer: m, arena: cup.arena };
       label = `${m.name} · Lv ${m.level}`;
     } else {
       const others = CRITTERS.filter((x) => x !== p);
       c = others[Math.floor(Math.random() * others.length)];
       const pl = save.critters[p.id].level;
-      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl };
+      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: ['meadow', 'beach', 'volcano'][Math.floor(Math.random() * 3)] };
       label = `CPU · ${DIFFS[this.diff].name}`;
     }
     this.root.innerHTML = `

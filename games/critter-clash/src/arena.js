@@ -12,6 +12,25 @@ export const ARENAS = {
     hemiSky: 0xcfe8ff, hemiGround: 0x9a7cc8, fieldA: '#6cc84a', fieldB: '#5cb842', line: '#ffffff',
     wallA: 0xff5a6e, wallB: 0xffffff, ground: 0x7ccf5a, fog: 0xbfe8ff,
     accent: 0xffc940, seat: [0x3d7bff, 0xff5a6e, 0xffc940, 0x4fd38a],
+    hill: 0x6fbf55, trunk: 0x8a5a3a, leaves: [0x47b04a, 0x5cc85a, 0x3a9a48], scenery: 'trees', cloud: 0xffffff, cloudShade: 0x5a6a90, sunI: 2.4,
+  },
+  beach: {
+    name: 'Seashell Bay Arena',
+    skyTop: 0x4a6ad8, skyHorizon: 0xffc9a0, sun: 0xffe0b8, sunDir: [0.6, 0.45, -0.5],
+    hemiSky: 0xffe4d0, hemiGround: 0x9a7cc8, fieldA: '#f6dfa6', fieldB: '#efd294', line: '#ffffff',
+    wallA: 0x2fb8d8, wallB: 0xfff4dc, ground: 0xf3d9a0, fog: 0xffd2b0,
+    accent: 0xff7a5a, seat: [0x2fb8d8, 0xff7a5a, 0xffe066, 0xffffff],
+    hill: 0xe8c890, trunk: 0x9a6a40, leaves: [0x3cb86a, 0x52c870, 0x2f9a58], scenery: 'palms', cloud: 0xfff0e8, cloudShade: 0x9a6a8a, sunI: 2.2,
+    water: 0x2ab0d8,
+  },
+  volcano: {
+    name: 'Magma Crater Coliseum',
+    skyTop: 0x1a0f3a, skyHorizon: 0xff7a3a, sun: 0xffb070, sunDir: [-0.3, 0.55, -0.7],
+    hemiSky: 0xffa070, hemiGround: 0x6a3a8a, fieldA: '#7a6a8a', fieldB: '#6e5e7e', line: '#ffd06a',
+    wallA: 0xff5a2a, wallB: 0x3a2a4a, ground: 0x4a3a52, fog: 0x5a2a4a,
+    accent: 0xff7a2a, seat: [0xff5a2a, 0xffc940, 0x8a5aff, 0x3a2a4a],
+    hill: 0x3a2a40, trunk: 0x3a2a30, leaves: [0x5a4a5a, 0x6a5a6a, 0x4a3a4a], scenery: 'rocks', cloud: 0x6a4a6a, cloudShade: 0x2a1a3a, sunI: 1.8,
+    lava: 0xff5a1a,
   },
 };
 
@@ -74,7 +93,7 @@ export class Arena {
     this.hemi = new THREE.HemisphereLight(A.hemiSky, A.hemiGround, 1.25);
     // lavender bounce reads as an anime shadow tint on the critters
     G.add(this.hemi);
-    const sun = this.sun = new THREE.DirectionalLight(A.sun, 2.4);
+    const sun = this.sun = new THREE.DirectionalLight(A.sun, A.sunI);
     sun.position.set(...A.sunDir).multiplyScalar(30);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
@@ -100,8 +119,8 @@ export class Arena {
       // painterly grass flecks
       for (let i = 0; i < 9000; i++) {
         const x = Math.random() * w, y = Math.random() * h;
-        c.globalAlpha = 0.08 + Math.random() * 0.12;
-        c.fillStyle = Math.random() < 0.5 ? '#9be86a' : '#2f8a3a';
+        c.globalAlpha = 0.04 + Math.random() * 0.07;
+        c.fillStyle = Math.random() < 0.5 ? '#ffffff' : '#000000';
         c.fillRect(x, y, 1.5, 3 + Math.random() * 4);
       }
       c.globalAlpha = 1;
@@ -277,10 +296,10 @@ export class Arena {
       h.translate(Math.cos(a) * r, -6, Math.sin(a) * r);
       hillGeos.push(h);
     }
-    G.add(new THREE.Mesh(mergeGeometries(hillGeos), toon(0x6fbf55, { env: true, rim: 0 })));
+    G.add(new THREE.Mesh(mergeGeometries(hillGeos), toon(A.hill, { env: true, rim: 0 })));
     const trunks = [], tops = [[], [], []];
     const m4 = new THREE.Matrix4(), q4 = new THREE.Quaternion(), v4 = new THREE.Vector3(), s4 = new THREE.Vector3();
-    for (let i = 0; i < 46; i++) {
+    for (let i = 0; i < (A.scenery === 'trees' ? 46 : 0); i++) {
       const a = rand() * Math.PI * 2;
       const r = 34 + rand() * 40;
       v4.set(Math.cos(a) * r, 0, Math.sin(a) * r);
@@ -296,8 +315,58 @@ export class Arena {
         tops[i % 3].push(sp);
       }
     }
-    G.add(new THREE.Mesh(mergeGeometries(trunks), toon(0x8a5a3a, { env: true, rim: 0 })));
-    [0x47b04a, 0x5cc85a, 0x3a9a48].forEach((c, k) => G.add(inked(mergeGeometries(tops[k]), toon(c, { env: true, rim: 0.3 }), 0.06)));
+    if (A.scenery === 'palms') {
+      // curved palm trunks with drooping fronds
+      for (let i = 0; i < 30; i++) {
+        const a = rand() * Math.PI * 2, r = 34 + rand() * 26, sc = 1 + rand() * 0.8, lean = 0.2 + rand() * 0.3, yaw = rand() * 6;
+        const base = new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r);
+        const pts = [0, 1, 2, 3, 4].map((k) => new THREE.Vector3(Math.sin(yaw) * k * k * lean * 0.35, k * 1.6, Math.cos(yaw) * k * k * lean * 0.35).multiplyScalar(sc).add(base));
+        trunks.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 12, 0.22 * sc, 6));
+        const top = pts[4];
+        for (let k = 0; k < 6; k++) {
+          const fr = new THREE.SphereGeometry(1, 10, 6);
+          fr.scale(0.5, 0.12, 2.2 * sc);
+          fr.translate(0, -0.3, 1.9 * sc);
+          fr.rotateX(0.35);
+          fr.rotateY(k / 6 * Math.PI * 2 + rand());
+          fr.translate(top.x, top.y, top.z);
+          tops[k % 3].push(fr);
+        }
+      }
+    } else if (A.scenery === 'rocks') {
+      for (let i = 0; i < 40; i++) {
+        const a = rand() * Math.PI * 2, r = 32 + rand() * 50;
+        const g = new THREE.DodecahedronGeometry(1.5 + rand() * 3, 0);
+        g.scale(1, 0.6 + rand() * 1.4, 1);
+        g.rotateY(rand() * 6);
+        g.translate(Math.cos(a) * r, 0.5, Math.sin(a) * r);
+        tops[i % 3].push(g);
+      }
+    }
+    if (trunks.length) G.add(new THREE.Mesh(mergeGeometries(trunks), toon(A.trunk, { env: true, rim: 0 })));
+    A.leaves.forEach((c, k) => { if (tops[k].length) G.add(inked(mergeGeometries(tops[k]), toon(c, { env: true, rim: 0.3 }), 0.06)); });
+    if (A.water) {
+      // shallow lagoon ring with bright foam edge
+      const sea = new THREE.Mesh(new THREE.RingGeometry(62, 320, 64), toon(A.water, { env: true, rim: 0 }));
+      sea.rotation.x = -Math.PI / 2; sea.position.y = 0.04;
+      const foam = new THREE.Mesh(new THREE.RingGeometry(60, 63, 64), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      foam.rotation.x = -Math.PI / 2; foam.position.y = 0.05;
+      G.add(sea, foam);
+      this.foam = foam;
+    }
+    if (A.lava) {
+      // glowing lava moat and a distant smoking volcano
+      const lava = new THREE.Mesh(new THREE.RingGeometry(r0 + tiers * 1.25 + 4, r0 + tiers * 1.25 + 9, 64), new THREE.MeshBasicMaterial({ color: A.lava }));
+      lava.rotation.x = -Math.PI / 2; lava.position.y = 0.06;
+      G.add(lava);
+      this.lava = lava;
+      const cone = new THREE.Mesh(new THREE.CylinderGeometry(8, 60, 55, 24, 1, true), toon(0x3a2a40, { env: true, rim: 0 }));
+      cone.position.set(-40, 20, -170);
+      const glow = new THREE.Mesh(new THREE.CircleGeometry(8, 24), new THREE.MeshBasicMaterial({ color: 0xff7a2a }));
+      glow.rotation.x = -Math.PI / 2; glow.position.set(-40, 47.4, -170);
+      G.add(cone, glow);
+      this.ventPos = new THREE.Vector3(-40, 48, -170);
+    }
 
     // jumbotron above the far stands
     this.screenCanvas = document.createElement('canvas');
@@ -343,7 +412,7 @@ export class Arena {
 
     // clouds
     this.clouds = [];
-    const cloudMat = toon(0xffffff, { env: true, rim: 0, emissive: 0x5a6a90 });
+    const cloudMat = toon(A.cloud, { env: true, rim: 0, emissive: A.cloudShade });
     for (let i = 0; i < 14; i++) {
       const c = new THREE.Mesh(cloud(rand), cloudMat);
       const a = rand() * Math.PI * 2, r = 120 + rand() * 120;
@@ -415,6 +484,14 @@ export class Arena {
       pos.needsUpdate = true;
     }
     for (const c of this.clouds) c.position.x += dt * c.userData.sp;
+    if (this.lava) this.lava.material.color.setHex(this.A.lava).multiplyScalar(1.1 + Math.sin(t * 2) * 0.25);
+    if (this.foam) this.foam.scale.setScalar(1 + Math.sin(t * 1.3) * 0.012);
+  }
+
+  dispose() {
+    this.group.parent?.remove(this.group);
+    this.group.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
+    this.screenTex.dispose();
   }
 
   cheer(amount = 1) { this.excite = Math.min(1, this.excite + amount); }

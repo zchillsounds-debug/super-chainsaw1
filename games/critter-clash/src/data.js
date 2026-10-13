@@ -84,7 +84,7 @@ export const STARTERS = ['cindermunch', 'bubbalotl', 'clovebun'];
 // Light-hearted rival trainers. Each cup is a ladder of matches.
 export const CUPS = [
   {
-    id: 'sprout', name: 'Sprout Cup', color: '#4fd35a', desc: 'A friendly warm-up for brand-new trainers.', diff: [0.15, 0.3],
+    id: 'sprout', arena: 'meadow', name: 'Sprout Cup', color: '#4fd35a', desc: 'A friendly warm-up for brand-new trainers.', diff: [0.15, 0.3],
     matches: [
       { name: 'Pip', title: 'Rookie', critter: 'bubbalotl', level: 1, taunt: "My Bubbalotl's never lost! ...today." },
       { name: 'Marigold', title: 'Gardener', critter: 'clovebun', level: 2, taunt: 'Prepare to be weeded out!' },
@@ -92,7 +92,7 @@ export const CUPS = [
     ],
   },
   {
-    id: 'thunder', name: 'Thunder Cup', color: '#ffd52e', desc: 'The rivals get serious. Mostly.', diff: [0.4, 0.6], requires: 'sprout',
+    id: 'thunder', arena: 'beach', name: 'Thunder Cup', color: '#ffd52e', desc: 'The rivals get serious. Mostly.', diff: [0.4, 0.6], requires: 'sprout',
     matches: [
       { name: 'Chef Bao', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered." },
       { name: 'Gran Pebbles', title: 'Retired Champ', critter: 'rolladillo', level: 5, taunt: 'Back in my day we rolled uphill. Both ways.' },
@@ -101,7 +101,7 @@ export const CUPS = [
     ],
   },
   {
-    id: 'champion', name: 'Champion Cup', color: '#ff5a8a', desc: 'Only the bonkiest survive.', diff: [0.65, 0.9], requires: 'thunder',
+    id: 'champion', arena: 'volcano', name: 'Champion Cup', color: '#ff5a8a', desc: 'Only the bonkiest survive.', diff: [0.65, 0.9], requires: 'thunder',
     matches: [
       { name: 'Professor Fern', title: 'Botanist', critter: 'clovebun', level: 8, taunt: 'A fascinating specimen. Let us test it.' },
       { name: 'Volt Twins', title: 'Double Trouble', critter: 'voltferret', level: 9, taunt: 'We finish each other\'s... ZAPS!' },

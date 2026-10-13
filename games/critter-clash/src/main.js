@@ -61,6 +61,7 @@ class Game {
     this.camera.position.set(0, 6, 16);
 
     this.arena = new Arena(this.scene, 'meadow');
+    this.arena.key = 'meadow';
     this.fx = new FX(this.scene, this.ui, this.camera);
     this.input = new Input(this.ui);
     this.hud = new Hud(this.ui, this);
@@ -177,6 +178,16 @@ class Game {
     document.body.classList.toggle('portrait', h > w);
   }
 
+  setArena(key) {
+    if (this.arena.key === key) return;
+    const sun = this.arena.sun;
+    this.arena.dispose();
+    this.arena = new Arena(this.scene, key);
+    this.arena.key = key;
+    void sun;
+    this.setQuality(this.qualityPref);
+  }
+
   impactFrame(t) { if (!this.reduceFlash) this.impactT = Math.max(this.impactT, t); }
 
   // 3D-rendered portrait of a critter's head, cached as a data URL
@@ -249,6 +260,7 @@ class Game {
   // ---- battles ----
   startBattle(pDef, cDef, opts = {}) {
     this.endBattle();
+    this.setArena(opts.arena || Q.get('arena') || 'meadow');
     this.setShowcase([]);
     this.screens.hideAll();
     this.input.showTouch(true);
