@@ -20,6 +20,29 @@ export const SPECIALS = {
   wisps:   { cd: 4.0, range: [3, 9] },
 };
 
+// per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
+const kick = (P, i, w, s) => {
+  if (!s) { P.lean = -0.3 * w; P[i === 1 ? 'legL' : 'legR'] = 0.8 * w; return; }
+  P.armLx = P.armRx = 0.6; P.armLz = P.armRz = 0.8; P.lean = -0.25;
+  if (i === 2) { P.legR = -2.2; P.legL = 0.4; P.yaw = -1.2; P.y = 0.3; } else P[i === 1 ? 'legL' : 'legR'] = -1.9;
+};
+const headbutt = (P, i, w, s) => {
+  if (!s) { P.lean = -0.45 * w; P.head = -0.4 * w; P.armLx = P.armRx = 0.6 * w; return; }
+  P.lean = i === 2 ? 1.1 : 0.85; P.head = 0.45; P.armLx = P.armRx = 1.0; P.yaw = 0; P.sy = 1.15;
+};
+const wing = (P, i, w, s) => {
+  const side = i === 1 ? 'L' : 'R';
+  if (!s) { P['arm' + side + 'z'] = 2.2 * w; P.yaw = (i === 1 ? 0.7 : -0.7) * w; return; }
+  P['arm' + side + 'z'] = -0.2; P['arm' + side + 'x'] = -1.6; P.yaw = i === 1 ? -0.8 : 0.8;
+  if (i === 2) { P.armLz = P.armRz = 2.5; P.armLx = P.armRx = -0.4; P.yaw = 0; P.y = 0.25; }
+};
+const tailwhip = (P, i, w, s) => {
+  if (i !== 2) return;
+  if (!s) { P.yaw = 0.8 * w; P.sy = 0.85; return; }
+  P.yaw = Math.PI * 0.95; P.tail = 3; P.lean = -0.2; P.armLz = P.armRz = 1.2;
+};
+const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip };
+
 // translucent fresnel bubble shown while guarding
 function makeShield(color, h) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(0.85, 32, 20), new THREE.ShaderMaterial({
@@ -257,6 +280,7 @@ export class Fighter {
   // -------- attacks --------
   startAttack(i) {
     this.combo = i;
+    this.swiped = false;
     this.setState('attack');
     this.queued = false;
     this.atkId++;
@@ -591,7 +615,18 @@ export class Fighter {
         P.legL = 0.5; P.legR = -0.4;
         if (i === 2) { P.yaw = 0; P.armLx = P.armRx = -1.5; P.lean = 0.7; P.y = 0.15; P.sy = 1.18; }
       }
-      P.ear = 0.6; P.tail = 1;
+      const st = STRIKE[this.def.id];
+      if (st) st(P, i, wind, strike);
+      P.ear = 0.6; P.tail = Math.max(P.tail, 1);
+      // a quick swipe arc the moment the hit comes out
+      if (strike && !this.swiped) {
+        this.swiped = true;
+        const col = i === 2 ? TYPES[this.type].glow : 0xffffff;
+        for (let n = 0; n < 7; n++) {
+          const a = this.face + (n - 3) * 0.26 * (i === 1 ? -1 : 1);
+          this.battle.fx.spawn({ x: this.x + Math.sin(a) * 0.95, y: 0.55 + n * 0.05, z: this.z + Math.cos(a) * 0.95, color: col, size: 0.42 - Math.abs(n - 3) * 0.04, life: 0.14 + n * 0.012, shape: 'glow', alpha: 0.75, grow: -0.6 });
+        }
+      }
     } else if (S === 'guard') {
       P.sy = 0.88; P.sx = 1.06; P.lean = 0.12; P.armLx = P.armRx = -1.5; P.armLz = P.armRz = -0.7; P.head = 0.15; P.ear = 0.7; P.tail = 0.2;
       P.legL = 0.3; P.legR = -0.3;
