@@ -623,7 +623,8 @@ export class Screens {
         if (i % 3 === 0) sfx.ui('move');
         if (i >= msg.length) finish();
       }, 22);
-      d.querySelector('.prof-box').onclick = (e) => { if (!e.target.closest('button')) finish(); };
+      // tapping anywhere finishes the line, a second tap moves on (like the Next button)
+      d.onclick = (e) => { if (e.target.closest('button')) return; if (text.textContent === msg && ctrl.firstElementChild) ctrl.firstElementChild.click(); else finish(); };
     };
     show();
     return d;
