@@ -8,6 +8,8 @@ import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 
+const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
+
 const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zoner: '🎯 Keeps away', turtle: '🛡️ Defensive', trickster: '🌀 Tricky' };
 const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater', frost: 'Frostpeak Dome', neon: 'Neon Rooftop' };
 const ARENA_KEYS = Object.keys(ARENA_NAME);
@@ -125,7 +127,7 @@ export class Screens {
     this.root.innerHTML = `
       <div class="welcome">
         <div class="prof">
-          <div class="prof-icon"><svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg></div>
+          <div class="prof-icon">${PROF_SVG}</div>
           <div class="prof-box"><small>Professor Pecan</small><p class="prof-text"></p><div class="prof-ctrl"></div></div>
         </div>
       </div>`;
@@ -559,6 +561,39 @@ export class Screens {
     this.root.appendChild(d);
   }
 
+  // Professor Pecan pops in with a few lines of story; tap to skip the typing, Next to go on
+  profTalk(lines, done) {
+    const d = document.createElement('div');
+    d.className = 'prof-wrap';
+    d.innerHTML = `<div class="prof"><div class="prof-icon">${PROF_SVG}</div><div class="prof-box"><small>Professor Pecan</small><p class="prof-text"></p><div class="prof-ctrl"></div></div></div>`;
+    this.root.appendChild(d);
+    const text = d.querySelector('.prof-text'), ctrl = d.querySelector('.prof-ctrl');
+    const name = save.trainer?.name || 'Trainer';
+    let k = 0;
+    const show = () => {
+      const msg = lines[k].replaceAll('{name}', name);
+      let i = 0;
+      text.textContent = ''; ctrl.innerHTML = '';
+      clearInterval(this._profT);
+      const finish = () => {
+        clearInterval(this._profT);
+        text.textContent = msg;
+        if (ctrl.childElementCount) return;
+        const last = k === lines.length - 1;
+        ctrl.appendChild(this.btn(last ? "Let's go!" : 'Next', 'primary', () => { if (last) { d.remove(); done?.(); } else { k++; show(); } }));
+      };
+      this._profT = setInterval(() => {
+        if (!d.isConnected) return clearInterval(this._profT);
+        text.textContent = msg.slice(0, ++i);
+        if (i % 3 === 0) sfx.ui('move');
+        if (i >= msg.length) finish();
+      }, 22);
+      d.querySelector('.prof-box').onclick = (e) => { if (!e.target.closest('button')) finish(); };
+    };
+    show();
+    return d;
+  }
+
   // ---------- tournament ladder ----------
   ladder() {
     const g = this.game;
@@ -587,6 +622,12 @@ export class Screens {
     this.root.firstElementChild.prepend(this.header(`${cup.name} · Battle ${idx + 1}/${cup.matches.length}`, () => this.select()));
     this.root.querySelector('.go').appendChild(this.btn('Battle!', 'primary big', () => this.vs()));
     sfx.voice(foe.voice, 'taunt');
+    // the professor sets the scene the first time you enter each cup
+    if (idx === 0 && cup.intro && !save.cupIntro?.[cup.id] && !g.autoplay) {
+      (save.cupIntro ||= {})[cup.id] = true;
+      persist();
+      this.profTalk(cup.intro);
+    }
   }
 
   // ---------- VS ----------
@@ -815,8 +856,11 @@ export class Screens {
         ${this.ctx.newShinies?.length ? `<div class="shiny-unlock"><small>✦ Shiny palettes unlocked ✦</small><div>${this.ctx.newShinies.map((id) => `<img src="${g.portrait(skinned(byId(id), 'shiny'))}" alt="">`).join('')}</div><small>Equip them in the Critterdex</small></div>` : ''}
         <div class="res-btns"></div>
       </div>`;
-    this.root.querySelector('.res-btns').appendChild(this.btn('Continue', 'primary big', () => this.cups()));
+    const btns = this.root.querySelector('.res-btns');
+    const cont = () => btns.appendChild(this.btn('Continue', 'primary big', () => this.cups()));
     sfx.cheer(1.5);
+    if (cup.outro) setTimeout(() => { if (this.mode === 'trophy') this.profTalk(cup.outro, cont); }, 1400);
+    else cont();
   }
 
   moveModal(def) {

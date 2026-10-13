@@ -154,6 +154,8 @@ export const STARTERS = ['cindermunch', 'bubbalotl', 'clovebun'];
 export const CUPS = [
   {
     id: 'sprout', arena: 'meadow', name: 'Sprout Cup', color: '#4fd35a', desc: 'A friendly warm-up for brand-new trainers.', diff: [0.15, 0.3],
+    intro: ["Welcome to the Sprout Cup, {name}! Three friendly rivals, one shiny trophy.", "Watch your rival's moves, guard the big hits, and have fun out there!"],
+    outro: ["Look at you, a Sprout Cup champion! The whole meadow is cheering.", "The Thunder Cup on Seashell Bay is open now. Pack some sunscreen!"],
     matches: [
       { name: 'Pip', style: 'balanced', title: 'Rookie', critter: 'bubbalotl', level: 1, taunt: "My Bubbalotl's never lost! ...today." },
       { name: 'Marigold', style: 'turtle', title: 'Gardener', critter: 'pricklepuff', level: 2, taunt: 'Prepare to be weeded out!' },
@@ -162,6 +164,8 @@ export const CUPS = [
   },
   {
     id: 'thunder', arena: 'beach', name: 'Thunder Cup', color: '#ffd52e', desc: 'The rivals get serious. Mostly.', diff: [0.4, 0.6], requires: 'sprout',
+    intro: ["Seashell Bay! Mind the coconuts, {name}. The palms drop them when the crowd gets loud.", "These trainers have real experience. Gran Pebbles once won this cup three years running!"],
+    outro: ["Thunder Cup champion! Even Captain Splash wants your autograph.", "Only one cup left: the Champion Cup in Magma Crater. Aurora is waiting..."],
     matches: [
       { name: 'Chef Bao', style: 'rushdown', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered." },
       { name: 'Gran Pebbles', style: 'turtle', title: 'Retired Champ', critter: 'rolladillo', level: 5, taunt: 'Back in my day we rolled uphill. Both ways.' },
@@ -171,6 +175,8 @@ export const CUPS = [
   },
   {
     id: 'champion', arena: 'volcano', name: 'Champion Cup', color: '#ff5a8a', desc: 'Only the bonkiest survive.', diff: [0.65, 0.9], requires: 'thunder',
+    intro: ["Magma Crater. The heat is real, and so are the lava geysers. Stay light on your feet!", "At the top of this ladder is Aurora, the reigning champion. Nobody has beaten her in years."],
+    outro: ["You did it, {name}! You beat Aurora! You're the new Champion!", "Word travels fast. I hear there's a secret league on the rooftops, and Aurora wants a rematch on the ice..."],
     matches: [
       { name: 'Lux', style: 'zoner', title: 'Night Ranger', critter: 'emberfly', level: 8, taunt: 'Lights out. Well... lights ON, actually.' },
       { name: 'Stormy', style: 'rushdown', title: 'Weather Girl', critter: 'woolt', level: 9, taunt: "Today's forecast: a 100% chance of getting zapped!" },
@@ -180,6 +186,8 @@ export const CUPS = [
   },
   {
     id: 'midnight', arena: 'neon', name: 'Midnight Cup', color: '#c05aff', desc: 'A secret rooftop league. Bring sunglasses.', diff: [0.7, 0.9], requires: 'champion',
+    intro: ["Psst, {name}. This is the Midnight Cup. Very exclusive, very shiny, very loud.", "The floor tiles here zap anyone who stands still. Keep moving!"],
+    outro: ["Madame Vee bowed to you! That has never happened before.", "You're a legend of the night now. Sunglasses optional."],
     matches: [
       { name: 'DJ Tumble', style: 'rushdown', title: 'Beat Dropper', critter: 'woolt', level: 13, taunt: 'Drop the bass? I drop RIVALS.' },
       { name: 'Marigold', style: 'zoner', title: 'Night Gardener', critter: 'pricklepuff', skin: 'shiny', level: 14, taunt: 'My garden grows best by moonlight.' },
@@ -189,6 +197,8 @@ export const CUPS = [
   },
   {
     id: 'legend', arena: 'frost', name: 'Legend Cup', color: '#7ad8ff', desc: 'Old rivals return at full power, with a twist.', diff: [0.85, 1], requires: 'champion',
+    intro: ["The Legend Cup. Every rival you beat has trained for this moment, with a twist or two.", "Ice is slippery and icicles are sharp. Show them how far you've come, {name}!"],
+    outro: ["{name}... you're a true Living Legend. I'm so proud I could cry. I am crying.", "Your critters will be telling this story at Critter Camp for years!"],
     matches: [
       { name: 'Pip', style: 'rushdown', title: 'All Grown Up', critter: 'bubbalotl', level: 14, mods: ['turbo'], taunt: 'I trained every single day since you beat me. Every. Day.' },
       { name: 'Yuki', style: 'trickster', title: 'Snow Ranger', critter: 'pengsicle', skin: 'shiny', level: 15, mods: ['lowgrav'], taunt: 'Brr-ace yourself.' },

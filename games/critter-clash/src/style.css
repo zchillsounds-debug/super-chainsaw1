@@ -680,3 +680,4 @@ body.portrait .timer { width: 50px; height: 50px; font-size: 26px; }
 
 /* scroll hint: fade the bottom edge while a panel has more below */
 .more { -webkit-mask-image: linear-gradient(#000 calc(100% - 36px), transparent); mask-image: linear-gradient(#000 calc(100% - 36px), transparent); }
+.prof-wrap { position: absolute; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center; padding: 16px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); background: linear-gradient(transparent 30%, rgba(20,10,40,.55)); animation: fade .3s; }
