@@ -364,8 +364,8 @@ body.portrait.is-touch.in-battle:not(.at-results) .rotate-hint { display: grid; 
 .res-xp { display: flex; justify-content: space-between; font-family: var(--display); font-size: 18px; margin-top: 6px; }
 .res-lv.up { color: #ff5a8a; animation: comboPop .4s; }
 .res-stats { min-width: 230px; }
-.recruit .modal { position: relative; overflow: hidden; box-shadow: inset 0 0 0 6px var(--tc), 0 8px 0 #c9bfe8, 0 20px 40px rgba(0,0,0,.4); }
-.recruit img { width: 170px; position: relative; animation: pop .6s cubic-bezier(.2,1.8,.4,1); }
+.recruit .modal { position: relative; overflow-x: hidden; overflow-y: auto; box-shadow: inset 0 0 0 6px var(--tc), 0 8px 0 #c9bfe8, 0 20px 40px rgba(0,0,0,.4); }
+.recruit img { width: min(170px, 30vh); position: relative; animation: pop .6s cubic-bezier(.2,1.8,.4,1); }
 .recruit h2, .recruit p, .recruit .btn { position: relative; }
 .recruit .burst { position: absolute; left: 50%; top: 110px; width: 600px; height: 600px; margin: -300px; background: repeating-conic-gradient(var(--tc) 0 10deg, transparent 10deg 20deg); opacity: .25; animation: spin 8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -659,6 +659,7 @@ body.portrait .timer { width: 50px; height: 50px; font-size: 26px; }
 .camp-screen { position: absolute; inset: 0; pointer-events: none; }
 .camp-screen > * { pointer-events: auto; }
 .camp-touch { position: absolute; inset: 0; touch-action: none; }
+.camp-screen > .sel-head { position: relative; z-index: 2; } /* above the full-screen tap layer */
 .camp-berries { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right)); padding: 6px 14px; border-radius: 999px; background: #fff8ec; color: var(--ink); box-shadow: 0 0 0 3px var(--ink), 0 4px 0 rgba(0,0,0,.25); font-size: 18px; }
 .camp-toy { position: absolute; top: calc(62px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right)); padding: 6px 14px; border: 0; border-radius: 999px; background: #5ab8ff; color: #fff; font: 400 17px var(--display); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; box-shadow: 0 0 0 3px var(--ink), 0 4px 0 rgba(0,0,0,.25); cursor: pointer; }
 .camp-toy:active { transform: translateY(2px); }
@@ -703,3 +704,4 @@ body.portrait .rcard span { font-size: 9.5px; }
 @media (max-aspect-ratio: 1/1) { .dex-list { grid-template-columns: repeat(7, min(50px, calc((100vw - 64px) / 7))); } .dex-info { bottom: calc(232px + var(--sab)); } }
 @media (max-aspect-ratio: 1/1) and (max-height: 800px) { body.portrait .sel-info .moves { display: none; } body.portrait .sel-info { bottom: calc(225px + var(--sab)); } }
 @media (max-height: 460px) and (min-aspect-ratio: 1/1) { .ladder { margin-top: 4px; } .rung img { width: 42px; height: 42px; } .rung span { font-size: 10px; margin-top: 1px; } .rung-link { margin-bottom: 14px; } .trainer-card { bottom: calc(6px + var(--sab)); padding-top: 10px; padding-bottom: 10px; } .trainer-card h2 { font-size: 30px; } .trainer-card .bubble { margin: 6px 0; } }
+@media (max-height: 460px) { .recruit .modal { padding: 12px 18px; } .recruit h2 { font-size: 26px; margin-bottom: 4px; } .recruit p { margin: 4px 0 8px; font-size: 13px; } }

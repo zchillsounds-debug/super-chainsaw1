@@ -870,6 +870,7 @@ export class Screens {
       <h2>${def.name} joined your team!</h2>
       <p>${def.blurb}</p></div>`;
     d.querySelector('.modal').appendChild(this.btn('Yay!', 'primary', () => d.remove()));
+    d.addEventListener('click', (e) => { if (e.target === d) d.remove(); }); // tapping outside closes it too
     this.root.appendChild(d);
     sfx.voice(def.voice, 'win');
     sfx.cheer(1);
@@ -891,10 +892,11 @@ export class Screens {
         <div class="res-btns"></div>
       </div>`;
     const btns = this.root.querySelector('.res-btns');
-    const cont = () => btns.appendChild(this.btn('Continue', 'primary big', () => this.cups()));
+    // Continue is there from the start, so nothing (a popup, a slow phone) can leave you stuck here
+    btns.appendChild(this.btn('Continue', 'primary big', () => { this.root.querySelector('.prof-wrap')?.remove(); this.cups(); }));
+    this.backFn = () => this.cups();
     sfx.cheer(1.5);
-    if (cup.outro) setTimeout(() => { if (this.mode === 'trophy') this.profTalk(cup.outro, cont); }, 1400);
-    else cont();
+    if (cup.outro) setTimeout(() => { if (this.mode === 'trophy') this.profTalk(cup.outro); }, 1400);
   }
 
   moveModal(def) {
