@@ -201,8 +201,9 @@ export const CUPS = [
     outro: ["You did it, {name}! You beat Aurora! You're the new Champion!", "Word travels fast. I hear there's a secret league on the rooftops, and Aurora wants a rematch on the ice..."],
     matches: [
       { name: 'Lux', style: 'zoner', title: 'Night Ranger', critter: 'emberfly', level: 8, taunt: 'Lights out. Well... lights ON, actually.' },
-      { name: 'Stormy', style: 'rushdown', title: 'Weather Girl', critter: 'woolt', level: 9, taunt: "Today's forecast: a 100% chance of getting zapped!" },
-      { name: 'Big Boulder', style: 'turtle', title: 'Gym Owner', critter: 'rolladillo', level: 10, taunt: 'Leg day? Every day is roll day.' },
+      { name: 'Thistle', style: 'zoner', title: 'Hedge Maze Keeper', critter: 'pricklepuff', level: 9, taunt: 'Careful. Everything in my maze is pointy.' },
+      { name: 'Stormy', style: 'rushdown', title: 'Weather Girl', critter: 'woolt', level: 10, taunt: "Today's forecast: a 100% chance of getting zapped!" },
+      { name: 'Big Boulder', style: 'turtle', title: 'Gym Owner', critter: 'rolladillo', level: 11, taunt: 'Leg day? Every day is roll day.' },
       { name: 'Aurora', style: 'trickster', title: 'Reigning Champion', critter: 'hootsy', skin: 'shiny', level: 12, taunt: "You came this far. Cute. Let's see how far you fly.", boss: true },
     ],
   },
