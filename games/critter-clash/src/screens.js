@@ -44,6 +44,13 @@ export class Screens {
     this.sel = 0;
     this.diff = 1;
     this.ctx = { kind: 'quick' };
+    // scrollable panels fade out at the bottom while there's more to read
+    const SCROLLERS = '.dex-info, .modal, .move-list';
+    const mark = (el) => el.classList.toggle('more', el.scrollHeight - el.scrollTop - el.clientHeight > 6);
+    const sweep = () => this.root.querySelectorAll(SCROLLERS).forEach(mark);
+    new MutationObserver(() => requestAnimationFrame(sweep)).observe(this.root, { childList: true, subtree: true });
+    this.root.addEventListener('scroll', (e) => { if (e.target.matches?.(SCROLLERS)) mark(e.target); }, true);
+    addEventListener('resize', sweep);
   }
 
   hideAll() { this.root.innerHTML = ''; this.mode = null; }
