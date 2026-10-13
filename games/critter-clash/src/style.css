@@ -133,6 +133,8 @@ body.portrait .sel-actions { align-items: center; }
 .res-stats small { display: block; font-size: 12px; opacity: .6; }
 .res-stats b { font-family: var(--display); font-weight: 400; font-size: 22px; }
 .perfect { font-family: var(--display); color: var(--pink); font-size: 20px; }
+.res-quote { background: var(--cream); color: var(--ink); border-radius: 16px; padding: 7px 14px; font-weight: 700; font-size: 15px; max-width: min(520px, 92vw); position: relative; box-shadow: 0 4px 0 rgba(0,0,0,.18); animation: pop .4s .5s both cubic-bezier(.2,1.8,.4,1); }
+.res-quote b { font-family: var(--display); font-weight: 400; color: #8a4bd8; margin-right: 4px; }
 .res-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
 /* ---------- HUD ---------- */

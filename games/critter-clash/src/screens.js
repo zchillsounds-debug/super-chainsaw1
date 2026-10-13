@@ -734,9 +734,12 @@ export class Screens {
     const grade = !won ? (score >= 40 ? 'B' : 'C') : score >= 92 ? 'S' : score >= 78 ? 'A' : score >= 62 ? 'B' : 'C';
     const berries = won && !opts.training ? (grade === 'S' ? 2 : 1) : 0;
     if (berries === 2) { save.berries++; persist(); }
+    // the cup rival has the last word: gracious in defeat, smug in victory
+    const foe = cup?.cup.matches[cup.idx], quote = foe && (won ? foe.beat : foe.gloat) ? { who: foe.name, line: won ? foe.beat : foe.gloat } : null;
     this.root.innerHTML = `
       <div class="results ${won ? 'won' : 'lost'}">
         <h1>${won ? 'VICTORY!' : 'DEFEAT'}</h1>
+        ${quote ? `<div class="res-quote"><b>${quote.who}</b> “${quote.line}”</div>` : ''}
         <div class="res-card">
           <div class="grade g-${grade}"><small>Rank</small>${grade}</div>
           <img src="${g.portrait(pDef)}" alt="">

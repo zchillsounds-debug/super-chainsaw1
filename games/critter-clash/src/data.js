@@ -179,9 +179,9 @@ export const CUPS = [
     intro: ["Welcome to the Sprout Cup, {name}! Three friendly rivals, one shiny trophy.", "Watch your rival's moves, guard the big hits, and have fun out there!"],
     outro: ["Look at you, a Sprout Cup champion! The whole meadow is cheering.", "The Thunder Cup on Seashell Bay is open now. Pack some sunscreen!"],
     matches: [
-      { name: 'Pip', style: 'balanced', title: 'Rookie', critter: 'bubbalotl', level: 1, taunt: "My Bubbalotl's never lost! ...today." },
-      { name: 'Marigold', style: 'turtle', title: 'Gardener', critter: 'clovebun', level: 2, taunt: 'Prepare to be weeded out!' },
-      { name: 'Sparky Dee', style: 'trickster', title: 'Electrician', critter: 'voltferret', level: 3, taunt: "Shocking, isn't it?" },
+      { name: 'Pip', style: 'balanced', title: 'Rookie', critter: 'bubbalotl', level: 1, taunt: "My Bubbalotl's never lost! ...today.", beat: "Wow... you're really good! I'm gonna train SO hard.", gloat: "Ha! I won? I WON! Mom's never gonna believe this." },
+      { name: 'Marigold', style: 'turtle', title: 'Gardener', critter: 'clovebun', level: 2, taunt: 'Prepare to be weeded out!', beat: "Well, I've been pruned. Fair and square.", gloat: "Back to the compost heap with you, sweetie." },
+      { name: 'Sparky Dee', style: 'trickster', title: 'Electrician', critter: 'voltferret', level: 3, taunt: "Shocking, isn't it?", beat: "I've been grounded. Literally.", gloat: "Sorry, the power's out on your side." },
     ],
   },
   {
@@ -189,10 +189,10 @@ export const CUPS = [
     intro: ["Seashell Bay! Mind the coconuts, {name}. The palms drop them when the crowd gets loud.", "These trainers have real experience. Gran Pebbles once won this cup three years running!"],
     outro: ["Thunder Cup champion! Even Captain Splash wants your autograph.", "Only one cup left: the Champion Cup in Magma Crater. Aurora is waiting..."],
     matches: [
-      { name: 'Chef Bao', style: 'rushdown', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered." },
-      { name: 'Gran Pebbles', style: 'turtle', title: 'Retired Champ', critter: 'pebblepup', level: 5, taunt: 'Back in my day we threw rocks uphill. Both ways.' },
-      { name: 'Wren', style: 'zoner', title: 'Kite Flyer', critter: 'whirlwhisk', level: 6, taunt: "Whirlwhisk, let's blow them away!" },
-      { name: 'Captain Splash', style: 'balanced', title: 'Lifeguard', critter: 'pengsicle', level: 7, taunt: 'No running by the pool. Only sliding.' },
+      { name: 'Chef Bao', style: 'rushdown', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered.", beat: "Overcooked it. Happens to the best of us.", gloat: "Order up! One trainer, well done." },
+      { name: 'Gran Pebbles', style: 'turtle', title: 'Retired Champ', critter: 'pebblepup', level: 5, taunt: 'Back in my day we threw rocks uphill. Both ways.', beat: "Oh, you remind me of me. Fifty years ago. Off you go!", gloat: "Never underestimate a grandma with a rock." },
+      { name: 'Wren', style: 'zoner', title: 'Kite Flyer', critter: 'whirlwhisk', level: 6, taunt: "Whirlwhisk, let's blow them away!", beat: "Huh. The wind changed. Nice flying!", gloat: "Caught the breeze. You just caught the floor." },
+      { name: 'Captain Splash', style: 'balanced', title: 'Lifeguard', critter: 'pengsicle', level: 7, taunt: 'No running by the pool. Only sliding.', beat: "Okay, OKAY, I'm blowing the whistle. You win!", gloat: "Rule one of the pool: don't splash the Captain." },
     ],
   },
   {
@@ -200,11 +200,11 @@ export const CUPS = [
     intro: ["Magma Crater. The heat is real, and so are the lava geysers. Stay light on your feet!", "At the top of this ladder is Aurora, the reigning champion. Nobody has beaten her in years."],
     outro: ["You did it, {name}! You beat Aurora! You're the new Champion!", "Word travels fast. I hear there's a secret league on the rooftops, and Aurora wants a rematch on the ice..."],
     matches: [
-      { name: 'Lux', style: 'zoner', title: 'Night Ranger', critter: 'emberfly', level: 8, taunt: 'Lights out. Well... lights ON, actually.' },
-      { name: 'Thistle', style: 'zoner', title: 'Hedge Maze Keeper', critter: 'pricklepuff', level: 9, taunt: 'Careful. Everything in my maze is pointy.' },
-      { name: 'Stormy', style: 'rushdown', title: 'Weather Girl', critter: 'woolt', level: 10, taunt: "Today's forecast: a 100% chance of getting zapped!" },
-      { name: 'Big Boulder', style: 'turtle', title: 'Gym Owner', critter: 'rolladillo', level: 11, taunt: 'Leg day? Every day is roll day.' },
-      { name: 'Aurora', style: 'trickster', title: 'Reigning Champion', critter: 'hootsy', skin: 'shiny', level: 12, taunt: "You came this far. Cute. Let's see how far you fly.", boss: true },
+      { name: 'Lux', style: 'zoner', title: 'Night Ranger', critter: 'emberfly', level: 8, taunt: 'Lights out. Well... lights ON, actually.', beat: "You outshone me. That's... actually kind of beautiful.", gloat: "Lights out, rookie." },
+      { name: 'Thistle', style: 'zoner', title: 'Hedge Maze Keeper', critter: 'pricklepuff', level: 9, taunt: 'Careful. Everything in my maze is pointy.', beat: "You found the way out. Nobody finds the way out.", gloat: "Lost in the maze again? Take a left. Then another left." },
+      { name: 'Stormy', style: 'rushdown', title: 'Weather Girl', critter: 'woolt', level: 10, taunt: "Today's forecast: a 100% chance of getting zapped!", beat: "Looks like the storm has passed. Clear skies for you!", gloat: "And that's the weather! Back to you in the studio." },
+      { name: 'Big Boulder', style: 'turtle', title: 'Gym Owner', critter: 'rolladillo', level: 11, taunt: 'Leg day? Every day is roll day.', beat: "You skipped leg day and STILL beat me? Respect.", gloat: "That's what roll day gets you!" },
+      { name: 'Aurora', style: 'trickster', title: 'Reigning Champion', critter: 'hootsy', skin: 'shiny', level: 12, taunt: "You came this far. Cute. Let's see how far you fly.", boss: true, beat: "So this is what losing feels like. ...I like you.", gloat: "Cute. Come back when you've grown wings." },
     ],
   },
   {
@@ -212,10 +212,10 @@ export const CUPS = [
     intro: ["Psst, {name}. This is the Midnight Cup. Very exclusive, very shiny, very loud.", "The floor tiles here zap anyone who stands still. Keep moving!"],
     outro: ["Madame Vee bowed to you! That has never happened before.", "You're a legend of the night now. Sunglasses optional."],
     matches: [
-      { name: 'DJ Tumble', style: 'rushdown', title: 'Beat Dropper', critter: 'woolt', level: 13, taunt: 'Drop the bass? I drop RIVALS.' },
-      { name: 'Marigold', style: 'zoner', title: 'Night Gardener', critter: 'pricklepuff', skin: 'shiny', level: 14, taunt: 'My garden grows best by moonlight.' },
-      { name: 'Neko', style: 'trickster', title: 'Rooftop Runner', critter: 'voltferret', level: 15, mods: ['turbo'], taunt: "Catch me if you- oh, you can't." },
-      { name: 'Madame Vee', style: 'balanced', title: 'Club Owner', critter: 'emberfly', skin: 'shiny', level: 16, boss: true, bossTitle: 'BOSS', taunt: 'Welcome to my rooftop, darling. Nobody leaves unbonked.' },
+      { name: 'DJ Tumble', style: 'rushdown', title: 'Beat Dropper', critter: 'woolt', level: 13, taunt: 'Drop the bass? I drop RIVALS.', beat: "You dropped ME. That's a first. Sick set, honestly.", gloat: "Mic drop. Rival drop. Same thing." },
+      { name: 'Marigold', style: 'zoner', title: 'Night Gardener', critter: 'pricklepuff', skin: 'shiny', level: 14, taunt: 'My garden grows best by moonlight.', beat: "Even moonflowers wilt sometimes. Lovely match, dear.", gloat: "Goodnight, sweetie. Sleep in the flowerbed." },
+      { name: 'Neko', style: 'trickster', title: 'Rooftop Runner', critter: 'voltferret', level: 15, mods: ['turbo'], taunt: "Catch me if you- oh, you can't.", beat: "You... caught me?! Nobody catches me!", gloat: "Too slow! See you on the next roof." },
+      { name: 'Madame Vee', style: 'balanced', title: 'Club Owner', critter: 'emberfly', skin: 'shiny', level: 16, boss: true, bossTitle: 'BOSS', taunt: 'Welcome to my rooftop, darling. Nobody leaves unbonked.', beat: "Darling, you can stay. You've earned a VIP pass.", gloat: "The door's that way, darling. Mind the step." },
     ],
   },
   {
@@ -223,11 +223,11 @@ export const CUPS = [
     intro: ["The Legend Cup. Every rival you beat has trained for this moment, with a twist or two.", "Ice is slippery and icicles are sharp. Show them how far you've come, {name}!"],
     outro: ["{name}... you're a true Living Legend. I'm so proud I could cry. I am crying.", "Your critters will be telling this story at Critter Camp for years!"],
     matches: [
-      { name: 'Pip', style: 'rushdown', title: 'All Grown Up', critter: 'bubbalotl', level: 14, mods: ['turbo'], taunt: 'I trained every single day since you beat me. Every. Day.' },
-      { name: 'Yuki', style: 'trickster', title: 'Snow Ranger', critter: 'pengsicle', skin: 'shiny', level: 15, mods: ['lowgrav'], taunt: 'Brr-ace yourself.' },
-      { name: 'Chef Bao', style: 'zoner', title: 'Head Chef', critter: 'emberfly', level: 16, mods: ['supercharged'], taunt: "Tonight's special: flambé!" },
-      { name: 'Big Boulder', style: 'turtle', title: 'Comeback Kid', critter: 'rolladillo', skin: 'shiny', level: 17, mods: ['bighead'], taunt: "I've been doing roll day AND leg day." },
-      { name: 'Aurora', style: 'trickster', title: 'Living Legend', critter: 'hootsy', skin: 'shiny', level: 19, mods: ['itemrain'], boss: true, taunt: 'The real final round starts now.' },
+      { name: 'Pip', style: 'rushdown', title: 'All Grown Up', critter: 'bubbalotl', level: 14, mods: ['turbo'], taunt: 'I trained every single day since you beat me. Every. Day.', beat: "Still not enough... but next time. Next time for sure!", gloat: "I told you I trained every day!" },
+      { name: 'Yuki', style: 'trickster', title: 'Snow Ranger', critter: 'pengsicle', skin: 'shiny', level: 15, mods: ['lowgrav'], taunt: 'Brr-ace yourself.', beat: "Brr... you're colder than the mountain.", gloat: "Snow way you were winning that one." },
+      { name: 'Chef Bao', style: 'zoner', title: 'Head Chef', critter: 'emberfly', level: 16, mods: ['supercharged'], taunt: "Tonight's special: flambé!", beat: "Flambé fizzled. My compliments to YOU, chef.", gloat: "Chef's kiss. Mwah. You're done." },
+      { name: 'Big Boulder', style: 'turtle', title: 'Comeback Kid', critter: 'rolladillo', skin: 'shiny', level: 17, mods: ['bighead'], taunt: "I've been doing roll day AND leg day.", beat: "Rolled right over me. Again! See you next season.", gloat: "The Comeback Kid has come back!" },
+      { name: 'Aurora', style: 'trickster', title: 'Living Legend', critter: 'hootsy', skin: 'shiny', level: 19, mods: ['itemrain'], boss: true, taunt: 'The real final round starts now.', beat: "You really are the champion. The ice is yours.", gloat: "Legends don't fall that easily. Try again." },
     ],
   },
 ];
