@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 32)
+# Critter Clash: Handoff (after Round 44)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -16,6 +16,8 @@
 - Session 4 (06:36–07:05 UTC) did Rounds 24–31, then its worker stalled until 15:22 UTC. It wrongly stopped at the old 14:30 deadline; the user asked to continue.
 - **The target is ~10 hours of actual work, not a fixed clock time.** About 2.6 hours were used by 07:05, so the new end is about **23:00 UTC on 2026-10-13**. If a worker stalls again, extend the end time by the stall rather than stopping.
 - User playtest (15:30 UTC): "it wouldn't let me choose a character". Couldn't reproduce a hard failure in phone emulation; Round 32 makes every critter playable in Quick Battle/Training and hardens the name prompt. Ask the user to confirm it's fixed in the next APK.
+- Session 5 (15:50–16:40 UTC) sent the user the Round 32 APK (asked them to confirm the character-pick fix; no reply yet), then did Rounds 33–44 and chained at ~190k context.
+- Time used so far: about 3.4 hours of actual work (2.6 h before the stall + ~0.8 h in session 5).
 - Target end of the whole effort: about **23:00 UTC on 2026-10-13** (see above). Check `date -u`. Keep chaining sessions until then, then stop and summarise.
 
 ## Run it
@@ -123,6 +125,13 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 - critters.js: `buildGear(n)` scarf / star pin / crown; Emberfly `wingTexture()`.
 - tools/wide.mjs: renders from a fixed camera after `__sim` (for arena overview shots).
 
+## New in session 5
+- **hazards.js:** `HAZARDS` per arena (volcano geyser / frost icicle / neon shock tile / beach coconut; meadow none). `Hazards` is owned by Battle (`battle.hazards`): warning ring → `fire()`. Hazards never KO (leave 1 HP), guard blocks them, no-op in training or when `save.settings.hazards === false`. `danger(x,z)` is used by ai.js to step out. Stats: `hazardsSeen`, `hazardHits`. `sfx.warn()` / `sfx.rumble()`.
+- **camp.js:** `Camp` (owned by `Screens.campObj`, created in `Screens.camp()`, disposed in `Screens.update` when the mode isn't 'camp'). Wandering showcase critters (`c.camp` state; `main.updateShowcase` skips them), props built in `buildProps()` (no lights on purpose: a light would recompile every shader), tap picking by screen-space projection, pet (hearts, `pets` count, +10 XP once/day via `save.petDay`), feed (`save.berries`, +45 XP, `stats.fed`), daily gift (`save.giftDay`, +2 berries). Berries come from wins (+1, +2 on S rank). `camp` song in audio.js.
+- data.js: `GEAR` list (names/icons per level), badges `friend`, `snack`, `hazard`. fx.js: `heart` particle shape (10).
+- Screens: `gearGet()` results callout; Critterdex Gear row and friendship; VS screen hazard chip `.vs-hazard`; title Camp button with `.btn.dot`.
+- Gotcha (again): `body.portrait` exists, so `.portrait img` styles leak into any `img` in portrait; reset margin on new image rules.
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -165,18 +174,32 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 31. Level-up gear: scarf (Lv 5), star pin (Lv 10), crown (Lv 15) on player and trainer critters.
 32. Character-pick fix: Quick Battle and Training let you play any critter as a "TRY" trial (Tournament/challenges still need recruits); name prompt accepts Android's Done key/blur and no longer auto-opens the keyboard on touch. `tools/flow.mjs` / `flow2.mjs` tap through first launch → select → battle on a fresh save.
 
+33. Gear callout on the results screen ("New gear! Scarf") and a Gear row in the Critterdex.
+34. FINAL K.O. camera locks to the impact spot and shows a three-quarter view of the winner's face.
+35. Arena hazards (lava geysers, icicles, shock tiles, coconuts) with warning rings, CPU avoidance, VS-screen chip, Settings toggle.
+36. Critter Camp: team wanders the meadow; pet for friendship, feed berries for XP; berries from wins.
+37. Title menu wraps on portrait / fits small landscape; friendship hearts in the Critterdex.
+38. Cosy Camp theme song.
+39. Badges: Best Friends, Snack Time, Hot Feet.
+40. Combo counter "HITS!" label no longer covered by the popping number.
+41. Camp props (campfire, tent, picnic blanket + basket), daily berry gift, Camp button notification dot.
+42. How to Play covers hazards and Camp.
+43. Hazard warning chirp + geyser rumble; full auto matches on all 5 arenas with mods are error-free.
+44. Pulsing selection ring in Camp.
+
 ## Critique backlog (known issues)
-- Results screen does not yet announce newly earned gear ("New gear: Scarf!").
-- The finisher's tilted close-up can frame the attacker from behind when the KO knocks the loser far away.
-- Native photo Save/Share (Round 27) is untested on a real phone; check the APK on Android 10+ and 9.
+- The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
+- Camp critters can walk through the campfire/tent on their way to a target (only targets avoid props).
+- The results 3D model doesn't show newly earned gear until the next battle (the callout says so).
+- Native photo Save/Share (Round 27) is untested on a real phone.
 - No localisation.
-- Not verified on a real phone; APK CI runs through Round 26 succeeded (check the later runs).
 
 ## Suggested next rounds
-- **First thing next session:** fetch the APK built from the Round 32 commit (check the `apk-critter-clash` commit message names it) and send it to the user with SendUserFile, saying it has the character-pick fix and asking them to confirm.
-- Gear callout on the results screen and a gear row in the Critterdex.
-- Real-phone check of the latest APK, especially photo Save/Share.
-- Localisation, a second boss cup, or arena hazards.
+- **First:** fetch the latest APK (check that the `apk-critter-clash` commit message names the latest SHA) and send it to the user with SendUserFile, mentioning arena hazards and the new Camp, and ask again whether picking a character works now.
+- Camp: path avoidance around props; a mini "fetch/catch" toy or treat-toss game; friendship perks (for example a small cheer/stat bonus at 5 hearts, shown in battle).
+- Battle: per-arena hazard variety (a second pattern per arena, e.g. a moving geyser line in the Champion/Aurora fight); boss phases that trigger hazards.
+- Content: a second boss cup or rival story beats; localisation.
+- Keep doing critique passes on phone sizes (915×412, 412×915, 740×360).
 
 ## Chaining (do this at the end of each session)
 1. Update this HANDOFF.md: rounds done, backlog, next steps, and the time used so far.
