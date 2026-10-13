@@ -119,7 +119,7 @@ export class Fighter {
 
     // gravity & air
     if (this.y > 0 || this.vy > 0) {
-      this.vy -= 24 * dt;
+      this.vy -= this.battle.grav * dt;
       this.y += this.vy * dt;
       if (this.y <= 0) { this.y = 0; this.onLand(); }
     }

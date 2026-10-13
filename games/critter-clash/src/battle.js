@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { Fighter, SPECIALS } from './fighter.js';
 import { CpuBrain } from './ai.js';
-import { TYPES, typeMult } from './data.js';
+import { TYPES, typeMult, MODS } from './data.js';
 import { ARENA_R } from './arena.js';
 import { sfx, playMusic, setIntensity } from './audio.js';
 import { Tutorial } from './tutorial.js';
@@ -14,7 +14,7 @@ const ROUND_TIME = 60;
 const INTRO_FIRST = 3.6, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
 
 export class Battle {
-  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null } = {}) {
+  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1 } = {}) {
     this.game = game;
     this.scene = game.scene;
     this.fx = game.fx;
@@ -23,9 +23,21 @@ export class Battle {
     this.arena = game.arena;
     this.onEnd = onEnd;
     this.trainer = trainer;
+    this.mods = new Set(mods);
+    this.grav = this.mods.has('lowgrav') ? 10 : 24;
+    this.superMult = this.mods.has('supercharged') ? 2 : 1;
+    this.speedMult = this.mods.has('turbo') ? 1.25 : 1;
+    this.playerHp = playerHp; // survival runs carry damage between fights
     this.fighters = [];
     this.fighters.push(new Fighter(this, pDef, { level: playerLevel, side: 0 }));
     this.fighters.push(new Fighter(this, cDef, { level: cpuLevel, cpu: true, side: 1 }));
+    if (this.mods.has('bighead')) for (const f of this.fighters) f.critter.head.scale.setScalar(1.5);
+    if (this.mods.size) {
+      this.modChip = document.createElement('div');
+      this.modChip.className = 'mod-chip';
+      this.modChip.innerHTML = [...this.mods].map((m) => `<span>${MODS[m].icon} ${MODS[m].name}</span>`).join('');
+      this.hud.el.appendChild(this.modChip);
+    }
     this.brain = new CpuBrain(this.fighters[1], difficulty, trainer?.style);
     this.pbrain = game.autoplay ? new CpuBrain(this.fighters[0], 0.7) : null;
     this.projectiles = [];
@@ -67,6 +79,7 @@ export class Battle {
     this.phase = 'intro';
     this.phaseT = 0;
     this.roundDmgTaken = 0;
+    if (this.round === 1 && this.playerHp < 1) { p.hp = Math.max(1, Math.round(p.maxHp * this.playerHp)); p.dmgTrail = p.hp; }
     p.setState('intro'); c.setState('intro');
     const first = this.round === 1;
     p.introDelay = first ? INTRO_FOCUS : 0; c.introDelay = 0;
@@ -94,7 +107,7 @@ export class Battle {
       const chip = Math.max(1, Math.round(h.dmg * (h.unblockable ? 0.3 : 0.12)));
       def.hp = Math.max(1, def.hp - chip);
       def.dmgDelay = 0.3;
-      att.superM = Math.min(100, att.superM + chip * 0.15);
+      att.superM = Math.min(100, att.superM + chip * 0.15 * this.superMult);
       this.fx.spawn({ ...cp, color: TYPES[def.type].glow, size: 1.6, life: 0.16, shape: 'ring', grow: 1.2 });
       this.fx.burst(cp, { n: 6, speed: 5, up: 1.5, color: 0xffffff, size: 0.14, life: 0.25, grav: 4 });
       sfx.block?.();
@@ -116,8 +129,8 @@ export class Battle {
     def.takeHit(h);
     if (def === this.player) this.roundDmgTaken += dmg;
     // super meter: attacker gains more than defender
-    att.superM = Math.min(100, att.superM + dmg * 0.09);
-    def.superM = Math.min(100, def.superM + dmg * 0.05);
+    att.superM = Math.min(100, att.superM + dmg * 0.09 * this.superMult);
+    def.superM = Math.min(100, def.superM + dmg * 0.05 * this.superMult);
     const heavy = h.heavy || dmg > 90;
     this.hitstop = heavy ? 0.13 : 0.065;
     this.shake(heavy ? 0.5 : 0.18);
@@ -701,7 +714,7 @@ export class Battle {
 
   // -------- main update --------
   update(rawDt) {
-    const dt = Math.min(rawDt, 1 / 20);
+    const dt = Math.min(rawDt, 1 / 20) * (this.phase === 'fight' ? this.speedMult : 1);
     this.phaseT += dt;
     if (this.cutinT > 0) {
       this.cutinT -= dt;
@@ -857,6 +870,7 @@ export class Battle {
   }
 
   dispose() {
+    this.modChip?.remove();
     this.items.clear();
     if (this.anims) { for (const fn of this.anims) fn(99); this.anims.length = 0; }
     this.arena.drawScreen();

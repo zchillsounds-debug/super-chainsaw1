@@ -168,5 +168,32 @@ export const BADGES = [
   { id: 'champion', icon: '👑', name: 'Grand Champion', desc: 'Clear the Champion Cup.', test: (s) => !!s.cups.champion },
   { id: 'team', icon: '🐾', name: 'Full Team', desc: 'Recruit every critter.', test: (s) => s.unlocked.length >= CRITTERS.length },
   { id: 'lv10', icon: '📈', name: 'Best Buds', desc: 'Raise a critter to Lv 10.', test: (s) => Object.values(s.critters).some((c) => c.level >= 10) },
+  { id: 'streak5', icon: '🔥', name: 'Survivor', desc: 'Win 5 in a row in Survival.', test: (s) => (s.stats.bestStreak || 0) >= 5 },
+  { id: 'daily', icon: '📅', name: 'Daily Doer', desc: 'Clear a Daily Challenge.', test: (s) => Object.keys(s.daily || {}).length >= 1 },
   { id: 'shiny', icon: '💎', name: 'Shiny Hunter', desc: 'Unlock every shiny palette.', test: (s) => (s.shinies || []).length >= CRITTERS.length },
 ];
+
+// Match modifiers used by the Daily Challenge and deep Survival runs.
+export const MODS = {
+  bighead:      { name: 'Big Heads', icon: '🎈', desc: 'Everyone\'s head is comically huge.' },
+  turbo:        { name: 'Turbo', icon: '⏩', desc: 'The whole fight runs 25% faster.' },
+  lowgrav:      { name: 'Moon Jump', icon: '🌙', desc: 'Low gravity: launches fly sky-high.' },
+  itemrain:     { name: 'Item Rain', icon: '🍓', desc: 'Power-ups drop constantly.' },
+  supercharged: { name: 'Supercharged', icon: '⚡', desc: 'Super meters fill twice as fast.' },
+};
+
+// deterministic daily pick from the UTC date
+export function dailyChallenge(date = new Date()) {
+  const key = date.toISOString().slice(0, 10);
+  let h = 2166136261;
+  for (const ch of key) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+  const rnd = () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
+  const mods = Object.keys(MODS);
+  return {
+    key,
+    foe: CRITTERS[Math.floor(rnd() * CRITTERS.length)].id,
+    arena: ['meadow', 'beach', 'volcano'][Math.floor(rnd() * 3)],
+    mod: mods[Math.floor(rnd() * mods.length)],
+    shiny: rnd() < 0.3,
+  };
+}

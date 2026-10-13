@@ -92,8 +92,9 @@ export class Items {
     const B = this.b;
     if (B.phase === 'fight' && B.time > 6) {
       this.timer -= dt;
-      if (this.timer <= 0 && this.list.length < 2) {
-        this.timer = 11 + Math.random() * 6;
+      const rain = B.mods.has('itemrain');
+      if (this.timer <= 0 && this.list.length < (rain ? 4 : 2)) {
+        this.timer = rain ? 3.5 + Math.random() * 2 : 11 + Math.random() * 6;
         const [p, c] = B.fighters;
         // whoever is behind is a little more likely to see a berry
         const behind = Math.min(p.hp / p.maxHp, c.hp / c.maxHp) < 0.5;

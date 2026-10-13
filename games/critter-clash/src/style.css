@@ -504,3 +504,6 @@ body.portrait .cup { flex: none; width: 100%; }
 body.portrait .roster { display: grid; grid-template-columns: repeat(4, 66px); justify-content: center; gap: 8px; }
 body.portrait .rcard { width: 66px; }
 body.portrait .sel-info { bottom: calc(332px + var(--sab)); }
+.mod-chip { position: absolute; top: calc(112px + var(--sat)); left: 50%; transform: translateX(-50%); display: flex; gap: 6px; pointer-events: none; }
+.mod-chip span { background: rgba(27,17,64,.8); color: #fff; font-family: var(--display); font-size: 13px; padding: 3px 10px; border-radius: 99px; box-shadow: 0 0 0 2px #ffd23f; }
+.streak { font-family: var(--display); color: #ff7a3d; font-size: 17px; margin-top: 2px; }

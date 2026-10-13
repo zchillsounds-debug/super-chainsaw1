@@ -1,10 +1,12 @@
 // Title, tournament cups/ladder, critter select, VS splash, results and pause overlays.
-import { CRITTERS, TYPES, CUPS, SHINY, BADGES, skinned } from './data.js';
+import { CRITTERS, TYPES, CUPS, SHINY, BADGES, MODS, skinned, dailyChallenge } from './data.js';
 import { sfx, playMusic } from './audio.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { openSettings } from './settings.js';
 
 const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zoner: '🎯 Keeps away', turtle: '🛡️ Defensive', trickster: '🌀 Tricky' };
+const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater' };
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const DIFFS = [{ name: 'Easy', v: 0.2 }, { name: 'Normal', v: 0.5 }, { name: 'Hard', v: 0.85 }];
 const byId = (id) => CRITTERS.find((c) => c.id === id);
 
@@ -78,6 +80,7 @@ export class Screens {
     const row = document.createElement('div');
     row.className = 'row';
     row.appendChild(this.btn('Quick Battle', '', () => { this.ctx = { kind: 'quick' }; this.select(); }));
+    row.appendChild(this.btn('Challenges', '', () => this.challenges()));
     row.appendChild(this.btn('Critterdex', '', () => this.dex()));
     row.appendChild(this.btn('How to Play', 'ghost', () => this.howTo()));
     m.appendChild(row);
@@ -156,6 +159,9 @@ export class Screens {
     this.t = 0;
     if (!save.unlocked.includes(CRITTERS[this.sel].id)) this.sel = CRITTERS.findIndex((c) => save.unlocked.includes(c.id));
     const cup = this.ctx.kind === 'cup';
+    const chal = this.ctx.kind === 'survival' || this.ctx.kind === 'daily';
+    const badge = cup ? `<div class="cup-badge" style="--tc:${this.ctx.cup.color}">${this.ctx.cup.name}</div>`
+      : chal ? `<div class="cup-badge" style="--tc:${this.ctx.kind === 'daily' ? '#3dc8ff' : '#ff7a3d'}">${this.ctx.kind === 'daily' ? 'Daily Challenge' : 'Survival'}</div>` : '<div class="diff"></div>';
     this.root.innerHTML = `
       <div class="select-screen">
         <div class="sel-info"></div>
@@ -163,13 +169,13 @@ export class Screens {
         <div class="sel-bottom">
           <div class="roster"></div>
           <div class="sel-actions">
-            ${cup ? `<div class="cup-badge" style="--tc:${this.ctx.cup.color}">${this.ctx.cup.name}</div>` : '<div class="diff"></div>'}
+            ${badge}
             <div class="go"></div>
           </div>
         </div>
       </div>`;
     const R = this.root;
-    R.firstElementChild.prepend(this.header('Choose your Critter', () => (cup ? this.cups() : this.title())));
+    R.firstElementChild.prepend(this.header('Choose your Critter', () => (cup ? this.cups() : chal ? this.challenges() : this.title())));
     const step = (d) => {
       let i = this.sel;
       for (let k = 0; k < CRITTERS.length; k++) { i = (i + d + CRITTERS.length) % CRITTERS.length; if (save.unlocked.includes(CRITTERS[i].id)) break; }
@@ -245,6 +251,41 @@ export class Screens {
         ${extra}
         <div class="xpbar"><i style="width:${(prog.xp / xpNeeded(prog.level)) * 100}%"></i></div>
       </div>`;
+  }
+
+  // ---------- Challenges: Survival gauntlet and the Daily Challenge ----------
+  challenges() {
+    const g = this.game;
+    g.endBattle();
+    this.mode = 'cups';
+    g.setShowcase([]);
+    const d = dailyChallenge(), foe = byId(d.foe), mod = MODS[d.mod];
+    const doneToday = save.daily?.[d.key];
+    this.root.innerHTML = '<div class="cups-screen"><div class="cup-list"></div></div>';
+    const S = this.root.firstElementChild;
+    S.prepend(this.header('Challenges', () => this.title()));
+    const list = S.querySelector('.cup-list');
+    const card = (cls, color, html, fn) => {
+      const b = document.createElement('button');
+      b.className = 'cup ' + cls;
+      b.style.setProperty('--tc', color);
+      b.innerHTML = html;
+      b.addEventListener('click', () => { sfx.ui('ok'); fn(); });
+      list.appendChild(b);
+    };
+    card('survival', '#ff7a3d', `
+      <div class="cup-trophy">🔥</div>
+      <h2>Survival</h2>
+      <p>One fight after another. Damage carries over and every rival is tougher. How far can you go?</p>
+      <div class="cup-meta">Best streak: <b>${save.stats.bestStreak || 0}</b></div>`,
+    () => { this.ctx = { kind: 'survival', streak: 0, hp: 1, last: null }; this.select(); });
+    card('daily' + (doneToday ? ' done' : ''), '#3dc8ff', `
+      <div class="cup-trophy">${doneToday ? '✅' : '📅'}</div>
+      <h2>Daily Challenge</h2>
+      <p>${mod.icon} <b>${mod.name}</b>: ${mod.desc}</p>
+      <div class="cup-foes"><img src="${g.portrait(skinned(foe, d.shiny ? 'shiny' : 'base'))}" alt=""></div>
+      <div class="cup-meta">vs ${d.shiny ? '✦ ' : ''}${foe.name} · ${ARENA_NAME[d.arena]} · ${doneToday ? 'Cleared today!' : 'Double XP'}</div>`,
+    () => { this.ctx = { kind: 'daily', d }; this.select(); });
   }
 
   // ---------- Critterdex: collection, skins and badges ----------
@@ -381,8 +422,23 @@ export class Screens {
       const k = cup.matches.length > 1 ? idx / (cup.matches.length - 1) : 1;
       opts = { cpuLevel: m.level, difficulty: cup.diff[0] + (cup.diff[1] - cup.diff[0]) * k, playerLevel: save.critters[p.id].level, trainer: m, arena: cup.arena };
       label = `${m.name} · Lv ${m.level}`;
+    } else if (this.ctx.kind === 'survival') {
+      const S = this.ctx, n = S.streak;
+      const pool = CRITTERS.filter((x) => x.id !== p.id && x.id !== S.last);
+      c = skinned(pick(pool), n >= 4 && Math.random() < 0.25 ? 'shiny' : 'base');
+      S.last = c.id;
+      const pl = save.critters[p.id].level;
+      const mods = n >= 3 && Math.random() < 0.5 ? [pick(Object.keys(MODS))] : [];
+      opts = { cpuLevel: pl + Math.floor(n / 2), difficulty: Math.min(0.95, 0.35 + n * 0.07), playerLevel: pl, arena: pick(['meadow', 'beach', 'volcano']), rounds: 1, playerHp: S.hp, mods };
+      label = `Challenger #${n + 1}${mods.length ? ' · ' + MODS[mods[0]].icon : ''}`;
+    } else if (this.ctx.kind === 'daily') {
+      const d = this.ctx.d;
+      c = skinned(byId(d.foe), d.shiny ? 'shiny' : 'base');
+      const pl = save.critters[p.id].level;
+      opts = { cpuLevel: pl + 1, difficulty: 0.6, playerLevel: pl, arena: d.arena, mods: [d.mod] };
+      label = `Daily · ${MODS[d.mod].icon} ${MODS[d.mod].name}`;
     } else {
-      const others = CRITTERS.filter((x) => x !== p);
+      const others = CRITTERS.filter((x) => x.id !== p.id);
       c = others[Math.floor(Math.random() * others.length)];
       const pl = save.critters[p.id].level;
       opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: ['meadow', 'beach', 'volcano'][Math.floor(Math.random() * 3)] };
@@ -408,7 +464,23 @@ export class Screens {
     if (won) save.stats.wins++;
     const cup = this.ctx.kind === 'cup' ? this.ctx : null;
     // XP: winning pays more, tougher foes pay more
-    const xp = Math.round((won ? 50 : 18) + opts.cpuLevel * (won ? 14 : 5) + stats.maxCombo * 2 + (stats.perfect ? 30 : 0));
+    const kind = this.ctx.kind;
+    const xp = Math.round(((won ? 50 : 18) + opts.cpuLevel * (won ? 14 : 5) + stats.maxCombo * 2 + (stats.perfect ? 30 : 0)) * (kind === 'daily' && won ? 2 : 1));
+    // survival bookkeeping: streak, carried health, personal best
+    let streakNote = '';
+    if (kind === 'survival') {
+      const S = this.ctx, pf = g.battle?.player;
+      if (won) {
+        S.streak++;
+        S.hp = Math.min(1, (pf ? pf.hp / pf.maxHp : 1) + 0.3);
+        save.stats.bestStreak = Math.max(save.stats.bestStreak || 0, S.streak);
+        streakNote = `<div class="streak">🔥 Streak ${S.streak} · ${Math.round(S.hp * 100)}% health for the next fight</div>`;
+      } else {
+        const best = save.stats.bestStreak || 0;
+        streakNote = `<div class="streak">Run over at <b>${S.streak}</b> win${S.streak === 1 ? '' : 's'}${S.streak >= best && S.streak > 0 ? ' · NEW BEST!' : ` · Best ${best}`}</div>`;
+      }
+    }
+    if (kind === 'daily' && won) { (save.daily ||= {})[this.ctx.d.key] = true; streakNote = '<div class="streak">📅 Daily Challenge cleared! Double XP</div>'; }
     const prog = save.critters[pDef.id];
     const before = { level: prog.level, xp: prog.xp };
     if (won) prog.wins++;
@@ -442,6 +514,7 @@ export class Screens {
               <div><small>Supers</small><b>${stats.supers}</b></div>
             </div>
             ${stats.perfect ? '<div class="perfect">PERFECT ROUND!</div>' : ''}
+            ${streakNote}
             <div class="res-xp"><span>+${xp} XP</span><span class="res-lv">Lv ${before.level}</span></div>
             <div class="xpbar big"><i style="width:${(before.xp / xpNeeded(before.level)) * 100}%"></i></div>
           </div>
@@ -468,7 +541,14 @@ export class Screens {
     setTimeout(fill, 500);
 
     const b = this.root.querySelector('.res-btns');
-    if (cup) {
+    if (kind === 'survival') {
+      if (won) b.appendChild(this.btn('Next Challenger', 'primary', () => { g.endBattle(); playMusic('menu'); this.mode = 'select'; this.vs(); }));
+      else b.appendChild(this.btn('New Run', 'primary', () => { this.ctx = { kind: 'survival', streak: 0, hp: 1, last: null }; g.endBattle(); playMusic('menu'); this.select(); }));
+      b.appendChild(this.btn('Challenges', 'ghost', () => this.challenges()));
+    } else if (kind === 'daily') {
+      if (!won) b.appendChild(this.btn('Try Again', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
+      b.appendChild(this.btn('Challenges', won ? 'primary' : 'ghost', () => this.challenges()));
+    } else if (cup) {
       if (won && !cupDone) b.appendChild(this.btn('Next Battle', 'primary', () => { cup.idx++; g.endBattle(); playMusic('menu'); this.ladder(); }));
       else if (!won) {
         b.appendChild(this.btn('Try Again', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
