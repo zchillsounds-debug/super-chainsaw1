@@ -35,8 +35,9 @@ export class Camp {
     this.fetch = null;
     // scatter the team around the field, each with its own wander plan
     this.g.showcase.forEach((c, i) => {
-      const a = (i / Math.max(1, team.length)) * Math.PI * 2;
-      c.camp = { x: Math.cos(a) * 3, z: Math.sin(a) * 2.2, tx: 0, tz: 0, wait: Math.random() * 2, face: a + Math.PI, munch: 0, pet: 0 };
+      // big teams spread over two rings so nobody starts in a huddle
+      const a = (i / Math.max(1, team.length)) * Math.PI * 2, rr = team.length > 7 ? (i % 2 ? 2.2 : 3.8) : 3;
+      c.camp = { x: Math.cos(a) * rr * (screens.game.camera.aspect < 1 ? 0.8 : 1.3), z: Math.sin(a) * rr * 0.7 - 0.3, tx: 0, tz: 0, wait: Math.random() * 2, face: a + Math.PI, munch: 0, pet: 0 };
       for (const [px, pz, pr] of this.props.userData.keepOut) {
         const ox = c.camp.x - px, oz = c.camp.z - pz, od = Math.hypot(ox, oz) || 1e-3;
         if (od < pr) { c.camp.x = px + ox / od * pr; c.camp.z = pz + oz / od * pr; }
@@ -223,8 +224,8 @@ export class Camp {
     this.t += dt;
     const cam = this.g.camera, port = cam.aspect < 1;
     // portrait looks down more steeply so the field, not the stands, fills the tall screen
-    const a = Math.sin(this.t * 0.1) * (port ? 0.12 : 0.25), D = port ? 9 : 8;
-    cam.position.set(Math.sin(a) * D, port ? 8 : 4.2, Math.cos(a) * D);
+    const a = Math.sin(this.t * 0.1) * (port ? 0.12 : 0.25), D = port ? 9 : 8.6;
+    cam.position.set(Math.sin(a) * D, port ? 8 : 5.4, Math.cos(a) * D);
     cam.lookAt(0, 0, port ? -0.6 : 0.4);
     cam.fov = port ? Math.min(78, 2 * Math.atan(Math.tan(0.33) / cam.aspect) * 180 / Math.PI) : 40 * Math.max(1, 1.5 / cam.aspect);
     cam.updateProjectionMatrix();
@@ -271,6 +272,8 @@ export class Camp {
         // give up on a target that can't be reached and pick another
         if (m.walkT > 8 && !m.chase) { m.tx = m.x; m.tz = m.z; m.walkT = 0; m.act = null; }
         m.face = Math.atan2(sx, sz);
+        // on arrival most of them turn round to look out at you, so the camp shows faces, not backs
+        if (Math.hypot(m.tx - m.x, m.tz - m.z) <= 0.15 && !m.act && !m.chase && Math.random() < 0.75) m.face = Math.atan2(cam.position.x - m.x, cam.position.z - m.z) + (Math.random() - 0.5) * 1.4;
         walking = true;
       } else if (m.wait <= 0 && !m.chase && !(m.act && !m.doing)) {
         // pick a new spot to amble to, then idle for a bit; sometimes settle in at a prop instead
@@ -282,7 +285,8 @@ export class Camp {
           m.tx = m.act.x; m.tz = m.act.z;
         } else for (let tries = 0; tries < 6; tries++) {
           const r = 1 + Math.random() * 4.2, ang = Math.random() * Math.PI * 2;
-          m.tx = Math.cos(ang) * r * (port ? 0.7 : 1); m.tz = Math.sin(ang) * r * (port ? 0.95 : 0.75);
+          // keep the wander zone a little back from the camera so the front row doesn't wall off the camp
+          m.tx = Math.cos(ang) * r * (port ? 0.7 : 1.45); m.tz = Math.min(2.4, Math.sin(ang) * r * (port ? 0.95 : 0.75) - 0.3);
           if (!this.props.userData.keepOut.some(([px, pz, pr]) => Math.hypot(m.tx - px, m.tz - pz) < pr)
             && !this.g.showcase.some((o) => o !== c && o.camp && Math.hypot(m.tx - o.camp.tx, m.tz - o.camp.tz) < 1.3)) break;
         }
