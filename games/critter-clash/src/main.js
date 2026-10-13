@@ -156,6 +156,7 @@ class Game {
     const sm = q === 'low' ? 1024 : 2048;
     const sun = this.arena.sun;
     if (sun.shadow.mapSize.x !== sm) { sun.shadow.mapSize.set(sm, sm); sun.shadow.map?.dispose(); sun.shadow.map = null; }
+    this.arena.setDetail(q);
     this.resize();
   }
 

@@ -341,6 +341,8 @@ export class Arena {
         fans.push({ x: Math.sin(a) * r, z: Math.cos(a) * r, y, a, ph: rand() * 6.28, sp: 0.8 + rand() * 0.8, s: 0.8 + rand() * 0.35 });
       }
     }
+    // shuffle so a reduced instance count on low quality thins the crowd evenly
+    for (let i = fans.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [fans[i], fans[j]] = [fans[j], fans[i]]; }
     const crowd = this.crowd = new THREE.InstancedMesh(crowdGeo, crowdMat, fans.length);
     const col = new THREE.Color();
     const palette = [0xff8fa3, 0xffd166, 0x8fd3ff, 0xb39cff, 0x9be59b, 0xffb37a, 0xf4f4f4, 0x6b6b8f];
@@ -602,10 +604,16 @@ export class Arena {
     this.screenTex.needsUpdate = true;
   }
 
+  // low quality: half the crowd and a third of the snow
+  setDetail(q) {
+    this.crowd.count = q === 'low' ? Math.floor(this.fans.length * 0.5) : this.fans.length;
+    if (this.snow) this.snow.geometry.setDrawRange(0, q === 'low' ? 300 : 900);
+  }
+
   updateCrowd(t) {
     const ex = this.excite;
     const m = this._m, q = this._q, e = this._e, p = new THREE.Vector3(), s = new THREE.Vector3();
-    for (let i = 0; i < this.fans.length; i++) {
+    for (let i = 0; i < this.crowd.count; i++) {
       const f = this.fans[i];
       const hop = Math.max(0, Math.sin(t * (4 + ex * 6) * f.sp + f.ph)) * (0.08 + ex * 0.5);
       p.set(f.x, f.y + hop, f.z);
