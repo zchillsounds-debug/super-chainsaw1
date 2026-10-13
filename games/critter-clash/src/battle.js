@@ -951,7 +951,7 @@ export class Battle {
           const dd = Math.hypot(o.x - W.x, o.z - W.z);
           if (o.alive && !o.under && dd < 2.2) {
             const a = Math.atan2(o.x - W.x, o.z - W.z) || 0;
-            this.applyHit(f, o, { dmg: 150 * f.power, kb: 2, lift: 15, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 36 });
+            this.applyHit(f, o, { dmg: 135 * f.power, kb: 2, lift: 15, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 36 });
           }
         }
       } else if (f.superPhase === 'geyser') {

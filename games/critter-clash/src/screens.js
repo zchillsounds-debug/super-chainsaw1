@@ -31,6 +31,13 @@ export function newBadges() {
   return out;
 }
 
+// every cup's boss, one after another (by level)
+const bossList = () => {
+  const seen = new Set(), out = [];
+  for (const cup of CUPS) for (const m of cup.matches) if (m.boss && !seen.has(m.name)) { seen.add(m.name); out.push({ ...m, arena: cup.arena }); }
+  return out.sort((a, b) => a.level - b.level);
+};
+
 function unlockHint(id) {
   for (const cup of CUPS) for (const m of cup.matches) if (m.critter === id) return `Beat ${m.name} in the ${cup.name}`;
   return 'Keep battling!';
@@ -306,9 +313,9 @@ export class Screens {
     if (!playable(CRITTERS[this.sel])) this.sel = CRITTERS.findIndex((c) => save.unlocked.includes(c.id));
     const cup = this.ctx.kind === 'cup';
     if (cup && !g.autoplay) g.setArena(this.ctx.cup.arena);
-    const chal = this.ctx.kind === 'survival' || this.ctx.kind === 'daily' || this.ctx.kind === 'training';
+    const chal = this.ctx.kind === 'survival' || this.ctx.kind === 'daily' || this.ctx.kind === 'training' || this.ctx.kind === 'bossrush';
     const badge = cup ? `<div class="cup-badge" style="--tc:${this.ctx.cup.color}">${this.ctx.cup.name}</div>`
-      : chal ? `<div class="cup-badge" style="--tc:${{ daily: '#3dc8ff', survival: '#ff7a3d', training: '#7ad36b' }[this.ctx.kind]}">${{ daily: 'Daily Challenge', survival: 'Survival', training: 'Training' }[this.ctx.kind]}</div>` : '<div class="diff"></div>';
+      : chal ? `<div class="cup-badge" style="--tc:${{ daily: '#3dc8ff', survival: '#ff7a3d', training: '#7ad36b', bossrush: '#ffb020' }[this.ctx.kind]}">${{ daily: 'Daily Challenge', survival: 'Survival', training: 'Training', bossrush: 'Boss Rush' }[this.ctx.kind]}</div>` : '<div class="diff"></div>';
     this.root.innerHTML = `
       <div class="select-screen">
         <div class="sel-info"></div>
@@ -437,6 +444,14 @@ export class Screens {
       <div class="cup-foes"><img src="${g.portrait(skinned(foe, d.shiny ? 'shiny' : 'base'))}" alt=""></div>
       <div class="cup-meta">vs ${d.shiny ? '✦ ' : ''}${foe.name} · ${ARENA_NAME[d.arena]} · ${doneToday ? 'Cleared today!' : 'Double XP'}</div>`,
     () => { this.ctx = { kind: 'daily', d }; this.select(); });
+    const bosses = bossList(), rushOpen = !!save.cups.champion;
+    card('bossrush' + (rushOpen ? '' : ' locked'), '#ffb020', `
+      <div class="cup-trophy">${rushOpen ? '👑' : '🔒'}</div>
+      <h2>Boss Rush</h2>
+      <p>${rushOpen ? `Every cup's boss, back to back. Damage carries over, so make every hit count.` : 'Clear the Champion Cup to unlock.'}</p>
+      <div class="cup-foes">${bosses.map((m) => `<img src="${g.portrait(skinned(byId(m.critter), m.skin))}" alt="">`).join('')}</div>
+      <div class="cup-meta">${save.stats.bossRush ? '👑 Cleared! ' : ''}Best: <b>${save.stats.bossBest || 0}/${bosses.length}</b></div>`,
+    () => { if (!rushOpen) { this.toast('Clear the Champion Cup first!'); return; } this.ctx = { kind: 'bossrush', idx: 0, hp: 1 }; this.select(); });
     card('training', '#7ad36b', `
       <div class="cup-trophy">🎯</div>
       <h2>Training</h2>
@@ -696,6 +711,12 @@ export class Screens {
       const mods = n >= 3 && Math.random() < 0.5 ? [pick(Object.keys(MODS))] : [];
       opts = { cpuLevel: pl + Math.floor(n / 2), difficulty: Math.min(0.95, 0.35 + n * 0.07), playerLevel: pl, arena: pick(ARENA_KEYS), rounds: 1, playerHp: S.hp, mods };
       label = `Challenger #${n + 1}${mods.length ? ' · ' + MODS[mods[0]].icon : ''}`;
+    } else if (this.ctx.kind === 'bossrush') {
+      const S = this.ctx, list = bossList(), m = list[S.idx];
+      const pl = save.critters[p.id].level;
+      c = withGear(skinned(byId(m.critter), m.skin), m.level);
+      opts = { cpuLevel: Math.max(m.level, pl), difficulty: Math.min(0.95, 0.78 + S.idx * 0.03), playerLevel: pl, trainer: m, arena: m.arena, rounds: 1, playerHp: S.hp, mods: m.mods || [] };
+      label = `Boss ${S.idx + 1}/${list.length} · ${m.name}`;
     } else if (this.ctx.kind === 'daily') {
       const d = this.ctx.d;
       c = skinned(byId(d.foe), d.shiny ? 'shiny' : 'base');
@@ -747,6 +768,16 @@ export class Screens {
         streakNote = `<div class="streak">Run over at <b>${S.streak}</b> win${S.streak === 1 ? '' : 's'}${S.streak >= best && S.streak > 0 ? ' · NEW BEST!' : ` · Best ${best}`}</div>`;
       }
     }
+    if (kind === 'bossrush') {
+      const S = this.ctx, pf = g.battle?.player, N = bossList().length;
+      if (won) {
+        S.idx++;
+        S.hp = Math.min(1, (pf ? pf.hp / pf.maxHp : 1) + 0.35);
+        save.stats.bossBest = Math.max(save.stats.bossBest || 0, S.idx);
+        if (S.idx >= N) { save.stats.bossRush = true; streakNote = `<div class="streak">👑 Boss Rush cleared! All ${N} bosses down!</div>`; }
+        else streakNote = `<div class="streak">👑 Boss ${S.idx} of ${N} down · ${Math.round(S.hp * 100)}% health for the next one</div>`;
+      } else streakNote = `<div class="streak">Run over at boss <b>${S.idx + 1}</b> of ${N} · Best ${save.stats.bossBest || 0}/${N}</div>`;
+    }
     if (kind === 'daily' && won) { (save.daily ||= {})[this.ctx.d.key] = true; streakNote = '<div class="streak">📅 Daily Challenge cleared! Double XP</div>'; }
     const prog = save.critters[pDef.id];
     const before = { level: prog.level, xp: prog.xp };
@@ -779,7 +810,7 @@ export class Screens {
     const berries = won && !opts.training ? (grade === 'S' ? 2 : 1) : 0;
     if (berries === 2) { save.berries++; persist(); }
     // the cup rival has the last word: gracious in defeat, smug in victory
-    const foe = cup?.cup.matches[cup.idx], quote = foe && (won ? foe.beat : foe.gloat) ? { who: foe.name, line: won ? foe.beat : foe.gloat } : null;
+    const foe = opts.trainer || cup?.cup.matches[cup.idx], quote = foe && (won ? foe.beat : foe.gloat) ? { who: foe.name, line: won ? foe.beat : foe.gloat } : null;
     this.root.innerHTML = `
       <div class="results ${won ? 'won' : 'lost'}">
         <h1>${won ? 'VICTORY!' : 'DEFEAT'}</h1>
@@ -836,6 +867,11 @@ export class Screens {
       if (won) b.appendChild(this.btn('Next Challenger', 'primary', () => { g.endBattle(); playMusic('menu'); this.mode = 'select'; this.vs(); }));
       else b.appendChild(this.btn('New Run', 'primary', () => { this.ctx = { kind: 'survival', streak: 0, hp: 1, last: null }; g.endBattle(); playMusic('menu'); this.select(); }));
       b.appendChild(this.btn('Challenges', 'ghost', () => this.challenges()));
+    } else if (kind === 'bossrush') {
+      const more = won && this.ctx.idx < bossList().length;
+      if (more) b.appendChild(this.btn('Next Boss', 'primary', () => { g.endBattle(); playMusic('menu'); this.mode = 'select'; this.vs(); }));
+      else if (!won) b.appendChild(this.btn('New Run', 'primary', () => { this.ctx = { kind: 'bossrush', idx: 0, hp: 1 }; g.endBattle(); playMusic('menu'); this.select(); }));
+      b.appendChild(this.btn('Challenges', more || !won ? 'ghost' : 'primary', () => this.challenges()));
     } else if (kind === 'daily') {
       if (!won) b.appendChild(this.btn('Try Again', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
       b.appendChild(this.btn('Challenges', won ? 'primary' : 'ghost', () => this.challenges()));

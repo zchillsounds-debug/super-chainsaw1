@@ -26,7 +26,7 @@ export const SPECIALS = {
   tongue:    { cd: 4.0, range: [1.8, 5.2] },
   burrow:    { cd: 4.6, range: [2.5, 9] },
   puddle:    { cd: 4.4, range: [2.5, 8] },
-  staticfield: { cd: 5.0, range: [0, 2.2] },
+  staticfield: { cd: 4.4, range: [0, 2.2] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
