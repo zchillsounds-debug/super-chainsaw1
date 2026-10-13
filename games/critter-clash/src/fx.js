@@ -104,7 +104,7 @@ const TYPE_SPARKS = {
   fire(fx, p, s) {
     fx.burst(p, { n: 7 * s, speed: 3, up: 3.5, color: 0xff7a1a, size: 0.6, life: 0.45, shape: 'glow', grav: -3, drag: 3, grow: -0.6 });
     fx.burst(p, { n: 8 * s, speed: 6, up: 4, color: 0xffd040, size: 0.12, life: 0.7, shape: 'glow', grav: 6, drag: 1 });
-    fx.burst(p, { n: 3 * s, speed: 1.5, up: 2, color: 0x5a4a48, size: 0.5, life: 0.8, shape: 'puff', additive: false, grav: -2, drag: 3, grow: 1 });
+    fx.burst(p, { n: 2 * s, speed: 1.5, up: 2, color: 0xb0a4a0, size: 0.4, life: 0.6, shape: 'puff', additive: false, grav: -2, drag: 3, grow: 1 });
   },
   water(fx, p, s) {
     fx.burst(p, { n: 12 * s, speed: 6, up: 4, color: 0x7fd4ff, size: 0.28, life: 0.6, shape: 'drop', additive: false, grav: 16, drag: 1, stretch: 1 });

@@ -238,7 +238,9 @@ class Game {
       const c = new Critter(def);
       this.scene.add(c.root);
       const n = defs.length;
-      if (layout === 'line') c.root.position.set((i - (n - 1) / 2) * 1.9, 0, Math.abs(i - (n - 1) / 2) * -0.5);
+      // a gentle arc; big teams squeeze closer and curve deeper
+      const gap = n > 6 ? 1.5 : 1.9, k = i - (n - 1) / 2;
+      if (layout === 'line') c.root.position.set(k * gap, 0, -k * k * (n > 6 ? 0.16 : 0.12) - Math.abs(k) * 0.2);
       else c.root.position.set(0, 0, 0);
       c.idx = i;
       return c;

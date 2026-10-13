@@ -222,6 +222,10 @@ export class Battle {
         c.position.y = 0.3 + k * 0.45;
         mesh.add(c);
       }
+    } else if (p.kind === 'wisp') {
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), new THREE.MeshBasicMaterial({ color: 0xfff2b0 }));
+      const halo = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 10), new THREE.MeshBasicMaterial({ color: 0xffa020, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false }));
+      mesh.add(core, halo);
     } else if (p.kind === 'leafrang') {
       const mat = new THREE.MeshToonMaterial({ color: 0x5bd36a, emissive: 0x1d5a20 });
       for (let k = 0; k < 4; k++) {
@@ -244,6 +248,18 @@ export class Battle {
       const pr = this.projectiles[i];
       pr.t += dt;
       const target = this.fighters[1 - pr.owner.side];
+      if (pr.kind === 'wisp') {
+        // lazy homing: steer toward the target, a bit of wobble
+        const tx = target.x - pr.x, tz = target.z - pr.z, tl = Math.hypot(tx, tz) || 1;
+        const sp = Math.hypot(pr.vx, pr.vz);
+        if (pr.t > 0.15 && target.alive) { pr.vx += (tx / tl * 8 - pr.vx) * Math.min(1, dt * pr.home * 0.4); pr.vz += (tz / tl * 8 - pr.vz) * Math.min(1, dt * pr.home * 0.4); }
+        const ns = Math.hypot(pr.vx, pr.vz) || 1, want = Math.min(9, sp + dt * 4);
+        pr.vx *= want / ns; pr.vz *= want / ns;
+        pr.y = 0.9 + Math.sin(pr.t * 9) * 0.15;
+        pr.mesh.children[1].scale.setScalar(1 + Math.sin(pr.t * 20) * 0.15);
+        if (Math.random() < 0.7) this.fx.spawn({ x: pr.x, y: pr.y, z: pr.z, color: 0xff9020, size: 0.45, life: 0.3, shape: 'glow', grow: -1 });
+        if (pr.hitOnce.size) { this.fx.burst({ x: pr.x, y: pr.y, z: pr.z }, { n: 8, speed: 3, color: 0xffc040, size: 0.18, life: 0.4 }); this.removeProjectile(i); continue; }
+      }
       if (pr.kind === 'leafrang') {
         pr.mesh.rotation.y += dt * 22;
         if (pr.outbound && pr.t > 0.5) { pr.outbound = false; pr.hitOnce.clear(); }
@@ -458,8 +474,86 @@ export class Battle {
         }
         if (t > 1.5) { this.cyclone = null; this.endSuper(f); }
       }
+    } else if (id === 'blizzard') {
+      if (f.superPhase === 'go') { f.superPhase = 'storm'; f.st = 0; f.target = { x: o.x, z: o.z }; f.strikeN = 0; sfx.water(); }
+      if (f.superPhase === 'storm') {
+        // a snow cloud chases the foe, pelting it with ice, then one huge icicle
+        if (t < 1.0) { f.target.x += (o.x - f.target.x) * 0.08; f.target.z += (o.z - f.target.z) * 0.08; }
+        const T = f.target;
+        for (let k = 0; k < 5; k++) fx.spawn({ x: T.x + (Math.random() - 0.5) * 4, y: 4 + Math.random() * 2, z: T.z + (Math.random() - 0.5) * 4, vy: -9, vx: 2, color: k % 2 ? 0xffffff : 0xbfeaff, size: 0.22, life: 0.6, shape: 'star', additive: false, spin: 8 });
+        if (Math.random() < 0.4) fx.spawn({ x: T.x + (Math.random() - 0.5) * 3, y: 5.2, z: T.z + (Math.random() - 0.5) * 3, color: 0xdde8f8, size: 2.4, life: 0.5, shape: 'puff', additive: false, grow: 0.5, alpha: 0.85 });
+        fx.spawn({ x: T.x, y: 0.06, z: T.z, color: 0x9fe0ff, size: 3.6, life: 0.1, shape: 'ring', alpha: 0.6 });
+        const times = [0.2, 0.42, 0.64, 0.86, 1.2];
+        if (f.strikeN < times.length && t > times[f.strikeN]) {
+          const last = f.strikeN === times.length - 1;
+          const sx = T.x + (last ? 0 : (Math.random() - 0.5) * 1.2), sz = T.z + (last ? 0 : (Math.random() - 0.5) * 1.2);
+          this.icicle(sx, sz, last);
+          if (last) { sfx.boom(); this.shake(0.7); this.game.impactFrame(0.08); fx.shock({ x: sx, z: sz }, 0xbfeaff, 3.5, 0.5); }
+          else { sfx.hit(false); this.shake(0.2); }
+          if (Math.hypot(o.x - sx, o.z - sz) < (last ? 2.2 : 1.5)) {
+            const a = Math.atan2(o.x - sx, o.z - sz) || 0;
+            this.applyHit(f, o, { dmg: (last ? 150 : 30) * f.power, kb: last ? 6 : 1, lift: last ? 11 : 0, stun: 0.5, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: last, type: f.type, launch: last, paralyze: last ? 0 : 0.35, dizzy: 10 });
+          }
+          f.strikeN++;
+        }
+        if (t > 1.7) this.endSuper(f);
+      }
+    } else if (id === 'supernova') {
+      if (f.superPhase === 'go') { f.superPhase = 'charge'; f.st = 0; sfx.superCharge(); }
+      const P = f.critter.pose;
+      if (f.superPhase === 'charge') {
+        // float up, glow brighter and brighter while sucking the foe in
+        f.y = Math.min(1.6, t * 2.2); f.vy = 0;
+        P.armLz = P.armRz = 2.5; P.legL = P.legR = 0.6; P.tail = 2; P.y = 0;
+        const k = Math.min(1, t / 0.9);
+        fx.spawn({ x: f.x, y: f.y + 0.6, z: f.z, color: 0xffd060, size: 1.5 + k * 4, life: 0.08, shape: 'glow', alpha: 0.5 + k * 0.4 });
+        for (let n = 0; n < 4; n++) {
+          const a = Math.random() * Math.PI * 2, r = 3 + Math.random() * 2;
+          fx.spawn({ x: f.x + Math.cos(a) * r, y: f.y + 0.6 + (Math.random() - 0.5) * 2, z: f.z + Math.sin(a) * r, vx: -Math.cos(a) * r * 2.5, vz: -Math.sin(a) * r * 2.5, color: 0xffb030, size: 0.3, life: 0.38, shape: 'glow' });
+        }
+        if (o.alive && !o.airborne && o.state !== 'dodge') {
+          const d = f.distTo(o) || 1, pull = 3.2 * k;
+          o.x += (f.x - o.x) / d * pull * dt; o.z += (f.z - o.z) / d * pull * dt;
+        }
+        if (t > 0.95) {
+          f.superPhase = 'nova'; f.st = 0;
+          sfx.boom(); sfx.fire(); this.shake(0.9); this.game.impactFrame(0.12);
+          fx.shock(f, 0xffd060, 5.5, 0.6); fx.shock(f, 0xff6a20, 4, 0.45);
+          fx.spawn({ x: f.x, y: f.y + 0.6, z: f.z, color: 0xffffff, size: 9, life: 0.3, shape: 'glow', grow: 0.4 });
+          fx.burst({ x: f.x, y: f.y + 0.6, z: f.z }, { n: 40, speed: 12, up: 2, color: 0xffb030, size: 0.35, life: 0.7, grav: 4, spread: 1.2 });
+          fx.burst({ x: f.x, y: f.y + 0.6, z: f.z }, { n: 16, speed: 7, up: 4, color: 0xffe14d, size: 0.45, life: 1, shape: 'star', additive: false, grav: 6, spin: 12 });
+          const d = f.distTo(o);
+          if (d < 4.6) {
+            const a = f.angleTo(o);
+            this.applyHit(f, o, { dmg: 270 * f.power, kb: 11, lift: 9, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 40 });
+          }
+        }
+      } else if (f.superPhase === 'nova') {
+        f.vy = Math.min(f.vy, 0);
+        if (!f.airborne && t > 0.5) this.endSuper(f);
+        else if (t > 1.2) { f.y = 0; this.endSuper(f); }
+      }
     }
     void tcol;
+  }
+
+  // a falling icicle that shatters on the ground
+  icicle(x, z, big) {
+    const s = big ? 2.2 : 1;
+    const m = new THREE.Mesh(new THREE.ConeGeometry(0.22 * s, 1.1 * s, 6), new THREE.MeshToonMaterial({ color: 0xbfeaff, emissive: 0x3a7ab0, transparent: true, opacity: 0.9 }));
+    m.rotation.x = Math.PI;
+    m.position.set(x, 0.5 * s, z);
+    this.scene.add(m);
+    this.fx.burst({ x, y: 0.3, z }, { n: big ? 24 : 9, speed: big ? 7 : 4, up: 4, color: 0xdff6ff, size: big ? 0.3 : 0.2, life: 0.6, shape: 'star', additive: false, grav: 14, spin: 10 });
+    this.fx.spawn({ x, y: 0.4, z, color: 0xffffff, size: big ? 3 : 1.4, life: 0.15, shape: 'glow' });
+    let t = 0;
+    const tick = () => {
+      t += 1 / 60;
+      m.scale.setScalar(Math.max(0.01, 1 - Math.max(0, t - 0.4) * 3));
+      if (t < 0.75 && m.parent) requestAnimationFrame(tick);
+      else { this.scene.remove(m); m.geometry.dispose(); m.material.dispose(); }
+    };
+    requestAnimationFrame(tick);
   }
 
   rockRing(x, z, R) {

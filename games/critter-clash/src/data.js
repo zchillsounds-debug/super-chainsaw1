@@ -77,6 +77,26 @@ export const CRITTERS = [
     special: 'gale', super: 'cyclone',
     moves: { special: 'Gale Puff', super: 'Mega Cyclone' },
   },
+  {
+    id: 'pengsicle', name: 'Pengsicle', type: 'water', species: 'Frost Penguin',
+    blurb: 'Belly-slides everywhere. Its sneezes come out as snowflakes.',
+    colors: { body: 0x3d4f96, belly: 0xffffff, accent: 0xffa42b, dark: 0x1b2552, eye: '#10183a', iris: '#56d6ff' },
+    body: { w: 0.56, h: 0.66, headR: 0.47, legLen: 0.12, armLen: 0.24, chubby: 1.05 },
+    ears: 'none', tail: 'stub', extra: 'penguin', voice: 1.3,
+    stats: { hp: 1020, speed: 6.2, power: 1.0, weight: 1.05 },
+    special: 'iceslide', super: 'blizzard',
+    moves: { special: 'Belly Slide', super: 'Blizzard Bash' },
+  },
+  {
+    id: 'emberfly', name: 'Emberfly', type: 'fire', species: 'Lantern Firefly',
+    blurb: 'Its glowing tail doubles as a night-light. Hates being called a bug.',
+    colors: { body: 0x6a58b8, belly: 0xffe9a8, accent: 0xffc93a, dark: 0x2e2250, eye: '#20103a', iris: '#ffb020' },
+    body: { w: 0.5, h: 0.56, headR: 0.5, legLen: 0.14, armLen: 0.19, chubby: 0.95 },
+    ears: 'antennae', tail: 'lantern', extra: 'wings', voice: 1.7,
+    stats: { hp: 900, speed: 7.0, power: 1.05, weight: 0.7 },
+    special: 'wisps', super: 'supernova',
+    moves: { special: 'Wisp Swarm', super: 'Supernova' },
+  },
 ];
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
@@ -87,6 +107,8 @@ export const SHINY = {
   voltferret:  { body: 0x4a4366, belly: 0x7b7299, accent: 0xffe14d, dark: 0x1a1626, iris: '#ffe14d' },
   rolladillo:  { body: 0x8cc7bf, belly: 0xe0f4ef, accent: 0x3c6e6a, dark: 0x1f3d3a, iris: '#2fd3c0' },
   hootsy:      { body: 0xf4f6ff, belly: 0xffffff, accent: 0xc9b6ff, dark: 0x5a4a8a, iris: '#7a4dff' },
+  pengsicle:   { body: 0x2a2a34, belly: 0xfff4e0, accent: 0xff5a6a, dark: 0x101016, iris: '#ff7aa8' },
+  emberfly:    { body: 0x2f8a6a, belly: 0xdcffe6, accent: 0x7dffb0, dark: 0x113a2c, iris: '#3affa0' },
 };
 
 // a def wearing a skin ('base' or 'shiny'); keeps the id so progress is shared
@@ -113,13 +135,13 @@ export const CUPS = [
       { name: 'Chef Bao', style: 'rushdown', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered." },
       { name: 'Gran Pebbles', style: 'turtle', title: 'Retired Champ', critter: 'rolladillo', level: 5, taunt: 'Back in my day we rolled uphill. Both ways.' },
       { name: 'Wren', style: 'zoner', title: 'Kite Flyer', critter: 'hootsy', level: 6, taunt: "Hootsy, let's blow them away!" },
-      { name: 'Captain Splash', style: 'balanced', title: 'Lifeguard', critter: 'bubbalotl', level: 7, taunt: 'No running by the pool. Only fighting.' },
+      { name: 'Captain Splash', style: 'balanced', title: 'Lifeguard', critter: 'pengsicle', level: 7, taunt: 'No running by the pool. Only sliding.' },
     ],
   },
   {
     id: 'champion', arena: 'volcano', name: 'Champion Cup', color: '#ff5a8a', desc: 'Only the bonkiest survive.', diff: [0.65, 0.9], requires: 'thunder',
     matches: [
-      { name: 'Professor Fern', style: 'zoner', title: 'Botanist', critter: 'clovebun', level: 8, taunt: 'A fascinating specimen. Let us test it.' },
+      { name: 'Lux', style: 'zoner', title: 'Night Ranger', critter: 'emberfly', level: 8, taunt: 'Lights out. Well... lights ON, actually.' },
       { name: 'Volt Twins', style: 'rushdown', title: 'Double Trouble', critter: 'voltferret', level: 9, taunt: 'We finish each other\'s... ZAPS!' },
       { name: 'Big Boulder', style: 'turtle', title: 'Gym Owner', critter: 'rolladillo', level: 10, taunt: 'Leg day? Every day is roll day.' },
       { name: 'Aurora', style: 'trickster', title: 'Reigning Champion', critter: 'hootsy', skin: 'shiny', level: 12, taunt: "You came this far. Cute. Let's see how far you fly.", boss: true },

@@ -15,6 +15,8 @@ export const LINES = {
   voltferret:  { intro: ['Bzzt! Ready!', 'Feel the static!', 'Zip zap zoom!'], win: ['Shockingly good!', 'Bzzt! Too easy!', 'Charged up!'] },
   rolladillo:  { intro: ["Rock 'n' roll!", 'Roll call!', 'Solid as a rock.'], win: ['Rolled you over!', 'Rock solid.', 'Nap time now.'] },
   hootsy:      { intro: ['Hoo-ray!', 'Whoosh!', 'Wings up!'], win: ['Hoo-hoo-hooray!', 'Blown away!', 'Owl always win.'] },
+  pengsicle:   { intro: ['Ice to meet you!', 'Chill out!', 'Slide time!'], win: ['Cool, cool, cool.', 'Snow problem!', 'Ice and easy!'] },
+  emberfly:    { intro: ['Light it up!', 'Glow time!', 'Bzz... I mean, hi!'], win: ['Glowing victory!', 'Lights out!', 'Not a bug. A STAR.'] },
 };
 
 export function sayLine(f, kind) {
@@ -97,6 +99,29 @@ const INTRO = {
       if (once(f, 'whoosh')) sfx.whoosh(1.2);
     } else ready(f, P, k);
   },
+  pengsicle(f, P, k) {
+    const fx = f.battle.fx;
+    if (k < 0.9) { // belly spin on the spot
+      P.lean = 1.4; P.y = 0.1; P.yaw = k * 14; P.armLz = P.armRz = 1.3; P.legL = P.legR = 1.1; P.head = -0.9;
+      f.critter.emote('happy', 'grin', 0.1);
+      if (Math.random() < 0.5) fx.spawn({ x: f.x + rnd(1), y: 0.1, z: f.z + rnd(1), vy: 1.5, color: 0xdff6ff, size: 0.22, life: 0.6, shape: 'star', additive: false, grav: 3, spin: 6 });
+      if (once(f, 'swish')) sfx.whoosh(0.9);
+    } else if (k < 1.5) { // pop up and salute with a flipper
+      P.sy = 1.1; P.armRz = 2.6; P.armRx = -0.4; P.headRoll = -0.15; P.y = Math.max(0, sin((k - 0.9) * 8)) * 0.2;
+      f.critter.emote('happy', 'open', 0.1);
+      if (once(f, 'pop')) { fx.burst(head(f, -0.2), { n: 10, speed: 2.5, up: 2, color: 0xffffff, size: 0.25, life: 0.9, shape: 'star', additive: false, grav: 2, spin: 6 }); sfx.water(); }
+    } else ready(f, P, k);
+  },
+  emberfly(f, P, k) {
+    const fx = f.battle.fx;
+    if (k < 1.4) { // flutter up, lantern blazing, loop-de-loop
+      P.y = Math.min(1, k * 1.8) * 0.8 + sin(k * 7) * 0.06; P.tail = 2.5; P.legL = P.legR = 0.6; P.armLz = P.armRz = 1 + sin(k * 9) * 0.3;
+      if (k > 0.6) { P.lean = -(k - 0.6) / 0.8 * Math.PI * 2; }
+      f.critter.emote('happy', k > 0.6 ? 'open' : 'grin', 0.1);
+      if (Math.random() < 0.6) { const c = f.chestPos(); fx.spawn({ x: c.x + rnd(0.6), y: f.y + P.y + 0.5 + rnd(0.4), z: c.z + rnd(0.6), vy: 0.6, color: Math.random() < 0.5 ? 0xffc93a : 0xff8a20, size: 0.3, life: 0.7, shape: 'glow', grow: -0.6 }); }
+      if (once(f, 'glow')) sfx.fire();
+    } else ready(f, P, k);
+  },
 };
 
 // determined, slightly bouncing "let's go" stance after the signature bit
@@ -143,6 +168,18 @@ const WIN = {
     P.y = 0.6 + sin(k * 3) * 0.15; P.armLz = P.armRz = 1.3 + w; P.yaw = k * 4; P.legL = P.legR = 0.5;
     f.critter.emote('happy', 'open', 0.1);
     if (Math.random() < 0.12) f.battle.fx.spawn({ x: f.x + rnd(1.5), y: f.y + 1.6, z: f.z + rnd(1.5), vy: -0.5, color: 0xb8c4ff, size: 0.3, life: 1.6, shape: 'leaf', additive: false, spin: 4, drag: 2 });
+  },
+  pengsicle(f, P, k) { // side-to-side waddle with flapping flippers
+    const w = sin(k * 7);
+    P.roll = w * 0.25; P.yaw = w * 0.2; P.armLz = 1.2 + abs(sin(k * 14)) * 0.9; P.armRz = 1.2 + abs(sin(k * 14 + 1)) * 0.9;
+    P.legL = w > 0 ? 0.4 : 0; P.legR = w < 0 ? 0.4 : 0; P.y = abs(w) * 0.06;
+    f.critter.emote('happy', 'open', 0.1);
+    if (Math.random() < 0.15) { const h = head(f, 0.5); f.battle.fx.spawn({ x: h.x + rnd(2), y: h.y + 1, z: h.z + rnd(2), vy: -1, color: 0xffffff, size: 0.22, life: 1.6, shape: 'star', additive: false, spin: 3, drag: 1 }); }
+  },
+  emberfly(f, P, k) { // figure-eight hover with glowing trail
+    P.y = 0.7 + sin(k * 4) * 0.2; P.yaw = sin(k * 2) * 0.8; P.roll = sin(k * 4) * 0.25; P.tail = 2.5; P.armLz = P.armRz = 1.6;
+    f.critter.emote('happy', 'open', 0.1);
+    if (Math.random() < 0.5) f.battle.fx.spawn({ x: f.x + rnd(0.4), y: f.y + P.y + 0.45, z: f.z + rnd(0.4), color: 0xffc93a, size: 0.35, life: 0.8, shape: 'glow', grow: -0.5, alpha: 0.8 });
   },
 };
 

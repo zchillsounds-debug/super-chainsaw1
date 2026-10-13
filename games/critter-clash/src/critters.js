@@ -222,6 +222,15 @@ export class Critter {
       beak.rotation.x = Math.PI * 0.62;
       beak.position.set(0, -headR * 0.2, headR * 1.0);
       skull.add(beak);
+    } else if (def.extra === 'penguin') {
+      // short wide beak, upper and lower halves
+      for (const k of [0, 1]) {
+        const b = inked(new THREE.ConeGeometry(headR * 0.16, headR * 0.3, 14), this.mats.accent, OL * 0.6);
+        b.scale.set(1.3, 1, k ? 0.45 : 0.6);
+        b.rotation.x = Math.PI / 2;
+        b.position.set(0, -headR * (0.16 + k * 0.1), headR * 1.02);
+        skull.add(b);
+      }
     } else {
       const nose = new THREE.Mesh(sphere(headR * 0.08), this.mats.dark);
       nose.scale.set(1.3, 0.8, 1);
@@ -254,12 +263,27 @@ export class Critter {
       });
       skull.add(new THREE.Mesh(spherePatch(headR * 1.006, 0, -0.04, 0.95, 0.5), decalMat(diskTex)));
     }
+    if (def.extra === 'penguin') {
+      // white heart-shaped face over the dark head
+      const belly = '#' + new THREE.Color(C.belly).getHexString();
+      const faceTex = canvasTex(256, 160, (c, w, h) => {
+        c.fillStyle = belly;
+        c.beginPath();
+        c.moveTo(w * 0.5, h * 0.3);
+        c.bezierCurveTo(w * 0.36, h * 0.0, w * 0.0, h * 0.1, w * 0.06, h * 0.55);
+        c.bezierCurveTo(w * 0.12, h * 0.9, w * 0.4, h * 1.0, w * 0.5, h * 1.0);
+        c.bezierCurveTo(w * 0.6, h * 1.0, w * 0.88, h * 0.9, w * 0.94, h * 0.55);
+        c.bezierCurveTo(w * 1.0, h * 0.1, w * 0.64, h * 0.0, w * 0.5, h * 0.3);
+        c.fill();
+      });
+      skull.add(new THREE.Mesh(spherePatch(headR * 1.005, 0, -0.18, 1.05, 0.75), decalMat(faceTex)));
+    }
     const eyeL = new THREE.Mesh(spherePatch(er, 0.36, -0.02, 0.28, 0.35, false), this.eyeMatL);
     const eyeR = new THREE.Mesh(spherePatch(er, -0.36, -0.02, 0.28, 0.35, true), this.eyeMatR);
     eyeL.renderOrder = eyeR.renderOrder = 2;
     skull.add(eyeL, eyeR);
     this.eyes = [eyeL, eyeR];
-    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' ? -0.5 : -0.38, 0.27, 0.18), this.mouthMat);
+    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' ? -0.52 : -0.38, 0.27, 0.18), this.mouthMat);
     mouth.renderOrder = 2;
     skull.add(mouth);
     const blushMat = decalMat(ft.blush);
@@ -319,6 +343,16 @@ export class Critter {
         const e = inked(new THREE.ConeGeometry(headR * 0.16, headR * 0.6, 14), this.mats.accent, OL);
         e.scale.set(1, 1, 0.55); e.position.y = headR * 0.24;
         ear.add(e);
+      } else if (def.ears === 'antennae') {
+        ear.position.set(s * headR * 0.32, headR * 0.86, headR * 0.05);
+        ear.rotation.z = -s * 0.35;
+        const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.02, headR * 0.7, 6), this.mats.dark);
+        stalk.position.y = headR * 0.35;
+        ear.add(stalk);
+        const bulb = inked(sphere(headR * 0.12), new THREE.MeshBasicMaterial({ color: C.accent }), OL * 0.6);
+        bulb.position.y = headR * 0.72;
+        ear.add(bulb);
+        (this.glows ||= []).push(bulb);
       } else if (def.ears === 'gills') {
         ear.position.set(s * headR * 0.86, headR * 0.05, -headR * 0.1);
         for (let k = 0; k < 3; k++) {
@@ -375,13 +409,40 @@ export class Critter {
       torso.add(dome);
     }
 
+    // gauzy insect wings on the back
+    this.wings = [];
+    if (def.extra === 'wings') {
+      const wingMat = new THREE.MeshBasicMaterial({ color: 0xfff6d8, transparent: true, opacity: 0.72, side: THREE.DoubleSide, depthWrite: false });
+      const veinMat = new THREE.MeshBasicMaterial({ color: C.dark, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false });
+      for (const s of [-1, 1]) for (const k of [0, 1]) {
+        const w = new THREE.Group();
+        w.position.set(s * 0.08, B.h * (0.72 - k * 0.2), -B.w * 0.38);
+        w.userData = { s, k };
+        const leaf = new THREE.Mesh(new THREE.CircleGeometry(0.5, 20), wingMat);
+        leaf.scale.set(k ? 0.36 : 0.5, k ? 0.16 : 0.22, 1);
+        leaf.position.x = s * (k ? 0.18 : 0.26);
+        const edge = new THREE.Mesh(new THREE.RingGeometry(0.47, 0.5, 24), veinMat);
+        edge.scale.copy(leaf.scale); edge.position.copy(leaf.position);
+        w.add(leaf, edge);
+        w.rotation.y = s * 0.5;
+        torso.add(w);
+        this.wings.push(w);
+      }
+    }
+
     // arms
     this.arms = [];
     for (const s of [-1, 1]) {
       const sh = new THREE.Group();
       sh.position.set(s * B.w * B.chubby * 0.45, B.h * 0.66, B.w * 0.1);
       torso.add(sh);
-      if (def.extra === 'owl') {
+      if (def.extra === 'penguin') {
+        // flat flippers
+        const w = inked(sphere(0.5), this.mats.body, OL * 0.8);
+        w.scale.set(0.07, B.armLen * 1.9, 0.26);
+        w.position.set(s * 0.03, -B.armLen * 0.78, 0);
+        sh.add(w);
+      } else if (def.extra === 'owl') {
         // stubby wings with a darker feather tip
         const w = inked(sphere(0.5), this.mats.body, OL * 0.8);
         w.scale.set(0.09, B.armLen * 1.7, 0.36);
@@ -412,7 +473,7 @@ export class Critter {
       const l = inked(capsule(0.09, B.legLen * 0.6), this.mats.body, OL * 0.8);
       l.position.y = -B.legLen * 0.4;
       hp.add(l);
-      const foot = inked(sphere(0.11), this.mats.belly, OL * 0.8);
+      const foot = inked(sphere(0.11), def.extra === 'penguin' ? this.mats.accent : this.mats.belly, OL * 0.8);
       foot.scale.set(1, 0.6, 1.35);
       foot.position.set(0, -hipY + 0.06, 0.05);
       hp.add(foot);
@@ -461,6 +522,21 @@ export class Critter {
         f.rotation.y = k * 0.45;
         tail.add(f);
       }
+    } else if (def.tail === 'lantern') {
+      // glowing firefly abdomen
+      tail.position.set(0, B.h * 0.32, -B.w * 0.3);
+      tail.rotation.x = -0.5;
+      const seg = inked(sphere(0.5), this.mats.dark, OL);
+      seg.scale.set(0.3, 0.3, 0.3); seg.position.z = -0.06;
+      tail.add(seg);
+      const bulb = inked(sphere(0.5), new THREE.MeshBasicMaterial({ color: C.accent }), OL);
+      bulb.scale.set(0.42, 0.4, 0.5); bulb.position.z = -0.3;
+      tail.add(bulb);
+      const halo = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 12), new THREE.MeshBasicMaterial({ color: C.accent, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false }));
+      halo.position.z = -0.3;
+      tail.add(halo);
+      this.lantern = halo;
+      (this.glows ||= []).push(bulb);
     } else if (def.tail === 'bolt') {
       tail.position.y = B.h * 0.3;
       tail.rotation.x = -0.9;
@@ -529,7 +605,7 @@ export class Critter {
     this.legs[1].rotation.x = P.legR;
     for (const e of this.ears) {
       const s = e.userData.side;
-      const base = this.def.ears === 'long' ? -s * 0.18 : this.def.ears === 'round' ? -s * 0.5 : this.def.ears === 'pointy' ? -s * 0.42 : 0;
+      const base = this.def.ears === 'long' ? -s * 0.18 : this.def.ears === 'round' ? -s * 0.5 : this.def.ears === 'pointy' ? -s * 0.42 : this.def.ears === 'antennae' ? -s * 0.35 : 0;
       e.rotation.z = base - s * P.ear * 0.6 + Math.sin(t * 3 + s) * 0.04;
       e.rotation.x = this.def.ears === 'long' ? -P.ear * 0.9 - 0.15 : 0;
     }
@@ -539,6 +615,16 @@ export class Critter {
       f.scale.set(base * (1 + Math.sin(t * 23 + i) * 0.08), base * (1 + Math.sin(t * 17 + i * 2) * 0.16), base);
     }
     if (this.sprout) this.sprout.rotation.z = Math.sin(t * 2.2) * 0.15 + P.roll * 0.6;
+    for (const w of this.wings) {
+      const { s, k } = w.userData;
+      w.rotation.y = s * (0.5 + Math.sin(t * (24 + P.tail * 14) + k * 1.4) * (0.35 + P.tail * 0.2));
+      w.rotation.z = s * (k ? -0.25 : 0.15);
+    }
+    if (this.lantern) {
+      const pulse = 0.8 + Math.sin(t * 4) * 0.2;
+      this.lantern.scale.setScalar(1.15 + pulse * 0.35);
+      this.lantern.material.opacity = 0.16 + pulse * 0.12;
+    }
 
     // blinking unless an emote is being held
     this.emoteHold -= dt;

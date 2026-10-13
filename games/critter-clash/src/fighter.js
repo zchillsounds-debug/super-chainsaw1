@@ -16,6 +16,8 @@ export const SPECIALS = {
   zipzap:  { cd: 4.0, range: [1.5, 6] },
   rollout: { cd: 4.5, range: [2, 8] },
   gale:    { cd: 3.8, range: [3, 9] },
+  iceslide:{ cd: 4.2, range: [2, 8] },
+  wisps:   { cd: 4.0, range: [3, 9] },
 };
 
 // translucent fresnel bubble shown while guarding
@@ -469,6 +471,44 @@ export class Fighter {
       this.vx = THREE.MathUtils.damp(this.vx, 0, 6, dt);
       this.vz = THREE.MathUtils.damp(this.vz, 0, 6, dt);
       if (this.st > 0.6) this.endSpecial();
+    } else if (id === 'iceslide') {
+      // flop onto the belly and toboggan at the foe, freezing on contact
+      if (this.st < 0.2) {
+        if (o) this.turnTo(this.angleTo(o), 12, dt);
+        this.vx = this.vz = 0;
+      } else if (this.st < 0.85) {
+        if (!this.specFired) { this.specFired = true; sfx.water(); sfx.whoosh(0.8); }
+        if (o) this.turnTo(this.angleTo(o), 1.6, dt);
+        const sp = 14 * (1 - (this.st - 0.2) * 0.6);
+        this.vx = Math.sin(this.face) * sp; this.vz = Math.cos(this.face) * sp;
+        if (Math.random() < 0.8) B.fx.spawn({ x: this.x + (Math.random() - 0.5) * 0.5, y: 0.08, z: this.z + (Math.random() - 0.5) * 0.5, vy: 1.2, color: Math.random() < 0.5 ? 0xdff6ff : 0x9fe0ff, size: 0.3, life: 0.5, shape: 'star', additive: false, grav: 3, spin: 6 });
+        if (Math.random() < 0.3) B.fx.spawn({ x: this.x, y: 0.03, z: this.z, color: 0xbfeaff, size: 1.2, life: 0.8, shape: 'ring', alpha: 0.5, floor: true });
+        if (o && !this.hitIds.has(o) && this.distTo(o) < 1.3 && o.alive) {
+          this.hitIds.add(o);
+          const ang = this.angleTo(o);
+          B.applyHit(this, o, { dmg: 105 * this.power, kb: 7, lift: 0, stun: 0.55, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, paralyze: 0.7, dizzy: 24 });
+          if (o.paralyze > 0 && o.alive) B.fx.text(o.headPos(), 'BRRR!', 'big', 0.7);
+          this.vx *= 0.3; this.vz *= 0.3;
+        }
+      } else {
+        this.vx = THREE.MathUtils.damp(this.vx, 0, 8, dt);
+        this.vz = THREE.MathUtils.damp(this.vz, 0, 8, dt);
+        if (this.st > 1.1) this.endSpecial();
+      }
+    } else if (id === 'wisps') {
+      // three homing fire-wisps fanned out from the lantern
+      if (o) this.turnTo(this.angleTo(o), 10, dt);
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 8, dt);
+      this.vz = THREE.MathUtils.damp(this.vz, 0, 8, dt);
+      const n = Math.floor((this.st - 0.18) / 0.12);
+      if (this.st > 0.18 && n >= 0 && n < 3 && (this.wispN || 0) <= n) {
+        this.wispN = n + 1;
+        const a = this.face + (n - 1) * 0.7;
+        B.spawnProjectile(this, { kind: 'wisp', x: this.x - fx * 0.3, z: this.z - fz * 0.3, y: 0.9, vx: Math.sin(a) * 6, vz: Math.cos(a) * 6, r: 0.35, life: 2.2, home: 7,
+          hit: { dmg: 36 * this.power, kb: 2, lift: 0, stun: 0.3, type: this.type, dizzy: 9 } });
+        sfx.fire();
+      }
+      if (this.st > 0.75) { this.wispN = 0; this.endSpecial(); }
     }
     void tcol;
   }
@@ -565,6 +605,9 @@ export class Fighter {
       this.rollSpin = (this.rollSpin || 0) + dt * (this.st < 0.3 ? 30 * this.st : 22);
       P.lean = 0.9;
       this.critter.P.lean = this.rollSpin; this.critter.V.lean = 0;
+    } else if (S === 'special' && this.def.special === 'iceslide' && this.st >= 0.2 && this.st < 0.95) {
+      P.lean = 1.45; P.y = 0.12; P.armLz = P.armRz = 1.2; P.armLx = P.armRx = 0.6; P.legL = P.legR = 1.2; P.head = -0.9; P.sx = 1.1; P.sy = 0.95;
+      this.critter.emote('happy', 'grin', 0.1);
     } else if (S === 'special' || S === 'super') {
       if (this.st < 0.28) { P.sy = 0.8; P.sx = 1.15; P.lean = -0.25; P.armLz = P.armRz = 0.8; P.ear = 0.8; }
       else { P.sy = 1.15; P.sx = 0.9; P.lean = 0.6; P.armLx = P.armRx = -1.8; P.ear = 1; P.legL = 0.7; P.legR = 0.7; }
