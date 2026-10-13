@@ -76,7 +76,7 @@ export class Camp {
     this.popCard = this.sel !== c;
     this.sel = c;
     this.ring.visible = true;
-    c.camp.wait = 2.5; c.camp.tx = c.camp.x; c.camp.tz = c.camp.z;
+    c.camp.wait = 2.5; c.camp.tx = c.camp.x; c.camp.tz = c.camp.z; c.camp.act = c.camp.doing = null;
     this.panel();
   }
 
@@ -156,7 +156,7 @@ export class Camp {
         for (const c of this.g.showcase) {
           const m = c.camp;
           if (!m) continue;
-          if (!m.chase) { m.chase = true; m.wait = Math.random() * 0.25; c.emote('open', 'o', 0.6); }
+          if (!m.chase) { m.chase = true; m.act = m.doing = null; m.wait = Math.random() * 0.25; c.emote('open', 'o', 0.6); }
           m.tx = F.pos.x; m.tz = F.pos.z;
           if (Math.hypot(m.x - F.pos.x, m.z - F.pos.z) < 0.55) { F.winner = c; break; }
         }
@@ -246,7 +246,8 @@ export class Camp {
       if (m.wait <= 0 && d > 0.15) {
         // steer toward the target, curving around props and other critters instead of through them
         let sx = dx / d, sz = dz / d;
-        for (const [px, pz, pr] of this.props.userData.keepOut) {
+        for (const [j, [px, pz, pr]] of this.props.userData.keepOut.entries()) {
+          if (m.act && m.act.prop === j && d < 1.6) continue; // let them walk up to the prop they're visiting
           const ox = m.x - px, oz = m.z - pz, od = Math.hypot(ox, oz) || 1e-3, reach = pr + 0.7;
           if (od < reach) {
             const w = (reach - od) / 0.7 * 1.6;
@@ -268,21 +269,31 @@ export class Camp {
         }
         m.walkT = (m.walkT || 0) + dt;
         // give up on a target that can't be reached and pick another
-        if (m.walkT > 8 && !m.chase) { m.tx = m.x; m.tz = m.z; m.walkT = 0; }
+        if (m.walkT > 8 && !m.chase) { m.tx = m.x; m.tz = m.z; m.walkT = 0; m.act = null; }
         m.face = Math.atan2(sx, sz);
         walking = true;
-      } else if (m.wait <= 0 && !m.chase) {
-        // pick a new spot to amble to, then idle for a bit
-        for (let tries = 0; tries < 6; tries++) {
+      } else if (m.wait <= 0 && !m.chase && !(m.act && !m.doing)) {
+        // pick a new spot to amble to, then idle for a bit; sometimes settle in at a prop instead
+        const was = m.act;
+        m.act = m.doing = null;
+        const free = this.props.userData.spots.filter((sp) => sp !== was && !this.g.showcase.some((o) => o.camp?.act === sp));
+        if (!was && free.length && Math.random() < 0.4) {
+          m.act = free[Math.floor(Math.random() * free.length)];
+          m.tx = m.act.x; m.tz = m.act.z;
+        } else for (let tries = 0; tries < 6; tries++) {
           const r = 1 + Math.random() * 4.2, ang = Math.random() * Math.PI * 2;
           m.tx = Math.cos(ang) * r * (port ? 0.7 : 1); m.tz = Math.sin(ang) * r * (port ? 0.95 : 0.75);
           if (!this.props.userData.keepOut.some(([px, pz, pr]) => Math.hypot(m.tx - px, m.tz - pz) < pr)
             && !this.g.showcase.some((o) => o !== c && o.camp && Math.hypot(m.tx - o.camp.tx, m.tz - o.camp.tz) < 1.3)) break;
         }
-        m.wait = 1 + Math.random() * 3;
+        m.wait = m.act ? 0 : 1 + Math.random() * 3;
         m.walkT = 0;
       }
-      if (!walking) {
+      if (m.act && !m.doing && !walking && Math.hypot(m.x - m.act.x, m.z - m.act.z) < 0.3) {
+        // arrived: settle in for a while
+        m.doing = m.act.kind; m.wait = 5 + Math.random() * 4; m.face = m.act.face;
+      }
+      if (!walking && !m.doing) {
         // standing critters shuffle apart so nobody idles inside a friend
         for (const o of this.g.showcase) {
           if (o === c || !o.camp) continue;
@@ -306,6 +317,22 @@ export class Camp {
         const br = Math.sin(c.t * 2.2 + c.idx);
         P.sy = 1 + br * 0.025; P.sx = 1 - br * 0.015;
         P.headRoll = Math.sin(c.t * 1.3 + c.idx) * 0.1; P.tail = 0.4 + br * 0.3;
+      }
+      if (m.doing && !walking && c !== this.sel) {
+        const br = Math.sin(c.t * 1.6 + c.idx);
+        if (m.doing === 'fire') {
+          // sit and hold paws out to the warmth
+          P.y = -0.12; P.legL = P.legR = -1.3; P.armLx = P.armRx = -1.1 + Math.sin(c.t * 3) * 0.08; P.lean = 0.1;
+          if (m.wait < 4 && m.wait > 3.9) c.emote('happy', 'smile', 1);
+        } else if (m.doing === 'nap') {
+          // curl up and snooze, with a floating z now and then
+          P.y = -0.2; P.legL = P.legR = -1.3; P.head = 0.35 + br * 0.04; P.headRoll = 0.25; P.sy = 1 + br * 0.04; P.armLx = P.armRx = -0.4;
+          c.emote('closed', 'o', 0.2);
+          if (Math.random() < dt * 0.8) this.g.fx.text({ x: m.x + 0.3, y: 1.4, z: m.z }, 'z', 'zzz', 1.4);
+        } else if (m.doing === 'picnic') {
+          P.y = -0.12; P.legL = P.legR = -1.3;
+          if (Math.sin(c.t * 0.9 + c.idx) > 0.3) { P.head = 0.25 + Math.abs(Math.sin(c.t * 16)) * 0.2; P.armLx = P.armRx = -1.3; c.emote('happy', 'grin', 0.2); }
+        }
       }
       if (m.pet > 0) {
         m.pet -= dt;
@@ -385,6 +412,12 @@ function buildProps() {
   }
   g.traverse((o) => { if (o.isMesh && !o.userData.hull) o.castShadow = true; });
   // no lights here: adding one would recompile every shader on the way in and out
-  g.userData = { fire: fire.position, flames, keepOut: [[-2.9, -1.3, 1.0], [3.3, -2.5, 1.7], [2.6, 1.9, 1.3]] };
+  // spots where a critter can settle in: warm up by the fire, nap at the tent door, picnic on the blanket
+  const spots = [];
+  for (const a of [-1.0, -1.6, -2.2]) spots.push({ kind: 'fire', prop: 0, x: -2.9 + Math.cos(a) * 1.15, z: -1.3 + Math.sin(a) * 1.15, face: Math.atan2(-Math.cos(a), -Math.sin(a)) });
+  const td = -0.6; // the tent faces along its rotated +z
+  spots.push({ kind: 'nap', prop: 1, x: 3.3 + Math.sin(td) * 1.5, z: -2.5 + Math.cos(td) * 1.5, face: td });
+  for (const a of [Math.PI + 0.4, Math.PI * 1.5 + 0.2]) spots.push({ kind: 'picnic', prop: 2, x: 2.6 + Math.cos(a) * 1.15, z: 1.9 + Math.sin(a) * 1.15, face: Math.atan2(-Math.cos(a), -Math.sin(a)) });
+  g.userData = { fire: fire.position, flames, spots, keepOut: [[-2.9, -1.3, 1.0], [3.3, -2.5, 1.7], [2.6, 1.9, 1.3]] };
   return g;
 }
