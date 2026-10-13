@@ -196,6 +196,7 @@ export class Battle {
     this.fx.burst(f.chestPos(), { n: 30, speed: 7, up: 3, color: 0xff7ab0, size: 0.3, life: 0.8, shape: 'star', additive: false, grav: 3, spin: 10 });
     this.fx.say(f, 'No more holding back!', f.def.type);
     this.hud.callout(`${this.trainer.name} gets serious!`, 1, 3);
+    if (this.hazards.storm()) { let t = 0; this.anim((dt) => { t += dt; if (t < 1.6) return true; if (this.phase === 'fight') this.hud.callout('The arena goes wild!', 0, 2); return false; }); }
     f.critter.emote('angry', 'yell', 1.2);
     f.critter.setRim(0xff5a8a, 2.2);
     sfx.boom(); sfx.cheer(1.2);

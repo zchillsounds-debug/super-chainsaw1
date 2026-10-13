@@ -60,18 +60,33 @@ export class Hazards {
   }
 
   spawn() {
-    const B = this.b, H = this.H;
+    const B = this.b;
     // aim near one of the fighters so it matters, but not right on top of them
     const f = B.fighters[Math.random() < 0.5 ? 0 : 1];
     const a = Math.random() * Math.PI * 2, d = 0.6 + Math.random() * 1.6;
-    let x = f.x + Math.cos(a) * d, z = f.z + Math.sin(a) * d;
+    this.spawnAt(f.x + Math.cos(a) * d, f.z + Math.sin(a) * d);
+  }
+
+  // boss storm: a staggered row of rings sweeps across the player's path
+  volley() {
+    const B = this.b, p = B.player, o = B.cpu;
+    const ax = p.x - o.x, az = p.z - o.z, al = Math.hypot(ax, az) || 1;
+    // row runs across the line between the fighters, centred a step behind the player
+    const nx = -az / al, nz = ax / al, cx = p.x + ax / al * 0.8, cz = p.z + az / al * 0.8;
+    const side = Math.random() < 0.5 ? -1 : 1, gap = this.H.r * 1.9;
+    for (let k = 0; k < 3; k++) this.spawnAt(cx + nx * (k - 1) * gap * side, cz + nz * (k - 1) * gap * side, -k * 0.35, k > 0);
+  }
+
+  spawnAt(x, z, t0 = 0, quiet = false) {
+    const B = this.b, H = this.H;
     const r = Math.hypot(x, z), lim = ARENA_R - 1.6;
     if (r > lim) { x *= lim / r; z *= lim / r; }
     const mesh = ringMesh(H.color, H.solid);
     mesh.position.set(x, 0.035, z);
     mesh.scale.setScalar(H.r);
     B.scene.add(mesh);
-    const h = { x, z, t: 0, fired: false, mesh };
+    const h = { x, z, t: t0, fired: false, mesh };
+    mesh.visible = t0 >= 0;
     if (B.arena.key === 'frost' || B.arena.key === 'beach') {
       h.drop = dropMesh(B.arena.key);
       h.drop.position.set(x, 9, z);
@@ -80,7 +95,15 @@ export class Hazards {
     this.list.push(h);
     B.stats.hazardsSeen = (B.stats.hazardsSeen || 0) + 1;
     if (!this.warned) { this.warned = true; B.fx.text({ x, y: 1.4, z }, 'WATCH OUT!', 'eff', 1.1); }
-    sfx.warn();
+    if (!quiet) sfx.warn();
+  }
+
+  // the boss's second wind turns the arena against the challenger
+  storm() {
+    if (!this.H || this.b.training || save.settings.hazards === false) return false;
+    this.stormy = true;
+    this.timer = Math.min(this.timer, 2);
+    return true;
   }
 
   update(dt) {
@@ -89,14 +112,16 @@ export class Hazards {
     const B = this.b, H = this.H;
     if (B.phase === 'fight' && B.time > 8) {
       this.timer -= dt;
-      if (this.timer <= 0 && this.list.length < 2) {
-        this.timer = 6.5 + Math.random() * 4.5;
-        this.spawn();
+      if (this.timer <= 0 && this.list.length < (this.stormy ? 4 : 2)) {
+        if (this.stormy) { this.timer = 3.5 + Math.random() * 2; Math.random() < 0.6 ? this.volley() : this.spawn(); }
+        else { this.timer = 6.5 + Math.random() * 4.5; this.spawn(); }
       }
     }
     for (let i = this.list.length - 1; i >= 0; i--) {
       const h = this.list[i];
       h.t += dt;
+      if (h.t < 0) continue; // staggered volley rings wait their turn
+      h.mesh.visible = true;
       const k = Math.min(1, h.t / H.warn);
       const { ring, fill } = h.mesh.userData;
       if (!h.fired) {
@@ -169,5 +194,5 @@ export class Hazards {
     this.list.splice(i, 1);
   }
 
-  clear() { for (let i = this.list.length - 1; i >= 0; i--) this.remove(i); this.timer = 10; }
+  clear() { for (let i = this.list.length - 1; i >= 0; i--) this.remove(i); this.timer = this.stormy ? 4 : 10; }
 }
