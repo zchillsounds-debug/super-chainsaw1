@@ -1,0 +1,13 @@
+import { createRequire } from 'module';
+const require = createRequire('/opt/node22/lib/node_modules/');
+const { chromium } = require('playwright');
+const [w, h, q, js] = process.argv.slice(2);
+const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const mobile = q.includes('mobile');
+const pg = await b.newPage({ viewport: { width: +w, height: +h }, hasTouch: mobile, isMobile: mobile });
+pg.on('pageerror', (e) => console.log('PAGEERR', e.message)); pg.on('console', (m) => m.type() !== 'debug' && console.log('CONSOLE', m.type(), m.text()));
+await pg.goto('http://localhost:5180/?' + q);
+await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
+await pg.waitForTimeout(1500);
+console.log(await pg.evaluate(js));
+await b.close();

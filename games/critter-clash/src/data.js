@@ -1,0 +1,75 @@
+// Critter roster, types and move data. All creatures are original designs.
+
+export const TYPES = {
+  fire:   { name: 'Blaze',  color: '#ff6a2b', glow: 0xff7a30, beats: ['leaf', 'gust'] },
+  water:  { name: 'Splash', color: '#2fa8ff', glow: 0x48b8ff, beats: ['fire', 'stone'] },
+  leaf:   { name: 'Sprout', color: '#4fd35a', glow: 0x6cff6a, beats: ['water', 'stone'] },
+  spark:  { name: 'Zap',    color: '#ffd52e', glow: 0xfff060, beats: ['water', 'gust'] },
+  stone:  { name: 'Pebble', color: '#c08a55', glow: 0xffc080, beats: ['fire', 'spark'] },
+  gust:   { name: 'Breeze', color: '#a7b8ff', glow: 0xc8d8ff, beats: ['leaf', 'spark'] },
+};
+
+export function typeMult(atk, def) {
+  if (TYPES[atk].beats.includes(def)) return 1.35;
+  if (TYPES[def].beats.includes(atk)) return 0.8;
+  return 1;
+}
+
+// body: proportions of the procedural sculpt. ears/tail/extra pick part builders in critters.js
+export const CRITTERS = [
+  {
+    id: 'cindermunch', name: 'Cindermunch', type: 'fire', species: 'Ember Hamster',
+    blurb: 'Stuffs its cheeks with hot coals. Headbutts like a tiny comet.',
+    colors: { body: 0xf39a4a, belly: 0xfff0d6, accent: 0xff4d1f, dark: 0x7a3418, eye: '#3a1a0c', iris: '#ff7a1a' },
+    body: { w: 0.62, h: 0.56, headR: 0.5, legLen: 0.16, armLen: 0.2, chubby: 1.15 },
+    ears: 'round', tail: 'flame', extra: 'cheeks', voice: 1.25,
+    stats: { hp: 1000, speed: 6.4, power: 1.05, weight: 0.9 },
+    special: 'comet', super: 'meteor',
+    moves: { special: 'Comet Bonk', super: 'Meteor Munch' },
+  },
+  {
+    id: 'bubbalotl', name: 'Bubbalotl', type: 'water', species: 'Bubble Axolotl',
+    blurb: 'Always smiling. Its bubbles pop with the force of a firehose.',
+    colors: { body: 0xff9fc8, belly: 0xffe0ef, accent: 0xff5fa0, dark: 0x8a2d5a, eye: '#1d1030', iris: '#5a3cff' },
+    body: { w: 0.55, h: 0.62, headR: 0.54, legLen: 0.17, armLen: 0.2, chubby: 1.0 },
+    ears: 'gills', tail: 'fin', extra: null, voice: 1.0,
+    stats: { hp: 1050, speed: 5.8, power: 0.95, weight: 1.0 },
+    special: 'bubble', super: 'tsunami',
+    moves: { special: 'Bubble Pop', super: 'Tidal Hug' },
+  },
+  {
+    id: 'clovebun', name: 'Clovebun', type: 'leaf', species: 'Clover Bunny',
+    blurb: 'Hops everywhere. Throws spinning clover leaves that always come back.',
+    colors: { body: 0xf6f3e4, belly: 0xffffff, accent: 0x5bd36a, dark: 0x2d7a3a, eye: '#10301a', iris: '#2ec060' },
+    body: { w: 0.5, h: 0.58, headR: 0.5, legLen: 0.2, armLen: 0.18, chubby: 0.95 },
+    ears: 'long', tail: 'puff', extra: 'sprout', voice: 1.4,
+    stats: { hp: 920, speed: 7.2, power: 0.95, weight: 0.8 },
+    special: 'leafrang', super: 'bloom',
+    moves: { special: 'Clover-rang', super: 'Mega Bloom' },
+  },
+  {
+    id: 'voltferret', name: 'Voltferret', type: 'spark', species: 'Static Ferret',
+    blurb: 'Rubs itself on carpets for fun. Zips around faster than you can say "ouch".',
+    colors: { body: 0xffe066, belly: 0xfff6cf, accent: 0x3a3048, dark: 0x6a5420, eye: '#1a1420', iris: '#2ad0ff' },
+    body: { w: 0.48, h: 0.66, headR: 0.46, legLen: 0.17, armLen: 0.21, chubby: 0.85 },
+    ears: 'pointy', tail: 'bolt', extra: 'mask', voice: 1.6,
+    stats: { hp: 900, speed: 7.6, power: 1.0, weight: 0.75 },
+    special: 'zipzap', super: 'thunder',
+    moves: { special: 'Zip Zap', super: 'Thunder Tumble' },
+  },
+];
+
+// Light-hearted opponent trainers for the tournament ladder (Round 2+)
+export const TRAINERS = [
+  { name: 'Pip', title: 'Rookie', critter: 'bubbalotl', level: 1, taunt: "My Bubbalotl's never lost! ...today." },
+  { name: 'Marigold', title: 'Gardener', critter: 'clovebun', level: 2, taunt: 'Prepare to be weeded out!' },
+  { name: 'Sparky Dee', title: 'Electrician', critter: 'voltferret', level: 3, taunt: "Shocking, isn't it?" },
+  { name: 'Chef Bao', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered." },
+];
+
+// Combo chain for every critter (scaled by stats.power). t = seconds.
+export const COMBO = [
+  { dmg: 50, startup: 0.08, active: 0.08, recover: 0.16, range: 1.25, arc: 1.4, kb: 2.2, lift: 0, stun: 0.28, lunge: 3.5 },
+  { dmg: 60, startup: 0.08, active: 0.08, recover: 0.18, range: 1.3, arc: 1.5, kb: 2.6, lift: 0, stun: 0.3, lunge: 3.8 },
+  { dmg: 95, startup: 0.14, active: 0.1, recover: 0.34, range: 1.45, arc: 1.7, kb: 9.5, lift: 6.5, stun: 0.6, lunge: 5.5, launch: true },
+];

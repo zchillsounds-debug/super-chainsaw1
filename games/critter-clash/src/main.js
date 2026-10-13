@@ -1,0 +1,245 @@
+import '@fontsource/lilita-one/latin-400.css';
+import '@fontsource/nunito/latin-800.css';
+import '@fontsource/nunito/latin-900.css';
+import './style.css';
+import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { Arena } from './arena.js';
+import { FX } from './fx.js';
+import { Input, isTouch } from './input.js';
+import { Hud } from './hud.js';
+import { Battle } from './battle.js';
+import { Critter } from './critters.js';
+import { CRITTERS } from './data.js';
+import { Screens } from './screens.js';
+import { initAudio, playMusic, sfx } from './audio.js';
+
+const Q = new URLSearchParams(location.search);
+
+const GradeShader = {
+  uniforms: { tDiffuse: { value: null }, uImpact: { value: 0 }, uVig: { value: 0.9 }, uSat: { value: 1.12 }, uFlash: { value: 0 } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uImpact, uVig, uSat, uFlash; varying vec2 vUv;
+    void main(){
+      vec3 c = texture2D(tDiffuse, vUv).rgb;
+      float l = dot(c, vec3(0.299, 0.587, 0.114));
+      c = mix(vec3(l), c, uSat);
+      vec2 q = vUv - 0.5;
+      c *= 1.0 - dot(q, q) * uVig * 0.55;
+      if (uImpact > 0.0) {
+        float m = step(0.42, l);
+        vec3 imp = mix(vec3(1.0, 0.96, 0.9), vec3(0.09, 0.03, 0.14), m);
+        c = mix(c, imp, uImpact);
+      }
+      c = mix(c, vec3(1.0), uFlash);
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+};
+
+class Game {
+  constructor() {
+    const canvas = document.getElementById('c');
+    this.ui = document.getElementById('ui');
+    const r = this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+    r.outputColorSpace = THREE.SRGBColorSpace;
+    r.toneMapping = THREE.NeutralToneMapping;
+    r.toneMappingExposure = 1.0;
+    r.shadowMap.enabled = true;
+    r.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.quality = Q.get('q') || (isTouch ? 'med' : 'high');
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(42, 1, 0.1, 900);
+    this.camera.position.set(0, 6, 16);
+
+    this.arena = new Arena(this.scene, 'meadow');
+    this.fx = new FX(this.scene, this.ui, this.camera);
+    this.input = new Input(this.ui);
+    this.hud = new Hud(this.ui, this);
+
+    // post: MSAA scene target -> bloom -> tone map/sRGB -> anime grade
+    const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: this.quality === 'low' ? 0 : 4 });
+    this.composer = new EffectComposer(r, rt);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.4, 0.4, 0.92);
+    this.bloom.enabled = this.quality !== 'low';
+    this.composer.addPass(this.bloom);
+    this.composer.addPass(new OutputPass());
+    this.grade = new ShaderPass(GradeShader);
+    this.composer.addPass(this.grade);
+    this.impactT = 0;
+
+    this.portraits = new Map();
+    this.resize();
+    addEventListener('resize', () => this.resize());
+
+    document.body.classList.toggle('is-touch', isTouch);
+    const rh = document.createElement('div');
+    rh.className = 'rotate-hint';
+    rh.innerHTML = '<div><svg viewBox="0 0 64 64"><rect x="18" y="4" width="28" height="56" rx="6" fill="none" stroke="#fff" stroke-width="4"/><circle cx="32" cy="52" r="3" fill="#fff"/></svg><b>Turn your phone sideways</b><span>Critter Clash plays best in landscape.</span></div>';
+    this.ui.appendChild(rh);
+    this.screens = new Screens(this);
+    this.battle = null;
+    this.paused = false;
+    this.clock = new THREE.Clock();
+    this.t = 0;
+    this.showcase = [];
+
+    const unlock = () => { initAudio(); this.screens.onAudioUnlocked?.(); };
+    addEventListener('pointerdown', unlock, { once: false });
+    addEventListener('keydown', unlock, { once: false });
+
+    this.autoplay = Q.has('auto');
+    if (Q.has('play')) {
+      const p = CRITTERS.find((c) => c.id === Q.get('p')) || CRITTERS[0];
+      const c = CRITTERS.find((c) => c.id === Q.get('c')) || CRITTERS[1];
+      this.startBattle(p, c, { difficulty: +(Q.get('d') ?? 0.5) });
+    } else this.screens.title();
+
+    r.setAnimationLoop(() => this.frame());
+    window.__game = this;
+    // headless helper: advance the simulation in fixed steps without rendering
+    window.__sim = (sec, dt = 1 / 60) => { for (let t = 0; t < sec; t += dt) this.step(dt); this.clock.getDelta(); };
+    window.__ready = true;
+  }
+
+  resize() {
+    const w = innerWidth, h = innerHeight;
+    const dprCap = this.quality === 'low' ? 1 : this.quality === 'med' ? 1.5 : 2;
+    const dpr = Math.min(devicePixelRatio || 1, dprCap);
+    this.renderer.setPixelRatio(dpr);
+    this.renderer.setSize(w, h, false);
+    this.renderer.domElement.style.width = w + 'px';
+    this.renderer.domElement.style.height = h + 'px';
+    this.composer.setPixelRatio(dpr);
+    this.composer.setSize(w, h);
+    this.bloom.resolution.set(w / 2, h / 2);
+    this.camera.aspect = w / h;
+    this.camera.updateProjectionMatrix();
+    document.body.classList.toggle('portrait', h > w);
+  }
+
+  impactFrame(t) { if (!this.reduceFlash) this.impactT = Math.max(this.impactT, t); }
+
+  // 3D-rendered portrait of a critter's head, cached as a data URL
+  portrait(def) {
+    if (this.portraits.has(def.id)) return this.portraits.get(def.id);
+    const S = 256;
+    const scene = new THREE.Scene();
+    const cr = new Critter(def);
+    cr.update(0.016);
+    cr.root.rotation.y = -0.35;
+    scene.add(cr.root);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x8888aa, 1.6));
+    const d = new THREE.DirectionalLight(0xffffff, 2.2); d.position.set(-2, 3, 4); scene.add(d);
+    const B = def.body;
+    const headY = B.legLen * 0.9 + B.h * 0.82 + B.headR * 0.78;
+    const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
+    cam.position.set(-0.35, headY + 0.15, 2.6);
+    cam.lookAt(0, headY - 0.05, 0);
+    const rt = new THREE.WebGLRenderTarget(S, S, { samples: 4 });
+    rt.texture.colorSpace = THREE.SRGBColorSpace;
+    const r = this.renderer;
+    const prevTM = r.toneMapping;
+    r.setRenderTarget(rt);
+    r.setClearColor(0x000000, 0);
+    r.clear();
+    r.render(scene, cam);
+    const px = new Uint8Array(S * S * 4);
+    r.readRenderTargetPixels(rt, 0, 0, S, S, px);
+    r.setRenderTarget(null);
+    r.toneMapping = prevTM;
+    const c = document.createElement('canvas'); c.width = c.height = S;
+    const ctx = c.getContext('2d');
+    const img = ctx.createImageData(S, S);
+    for (let y = 0; y < S; y++) img.data.set(px.subarray((S - 1 - y) * S * 4, (S - y) * S * 4), y * S * 4);
+    ctx.putImageData(img, 0, 0);
+    const url = c.toDataURL();
+    rt.dispose();
+    this.portraits.set(def.id, url);
+    return url;
+  }
+
+  // ---- showcase critters on the field (title / select) ----
+  setShowcase(defs, layout = 'line') {
+    for (const s of this.showcase) this.scene.remove(s.root);
+    this.showcase = defs.map((def, i) => {
+      const c = new Critter(def);
+      this.scene.add(c.root);
+      const n = defs.length;
+      if (layout === 'line') c.root.position.set((i - (n - 1) / 2) * 1.9, 0, Math.abs(i - (n - 1) / 2) * -0.5);
+      else c.root.position.set(0, 0, 0);
+      c.idx = i;
+      return c;
+    });
+  }
+
+  updateShowcase(dt) {
+    for (const c of this.showcase) {
+      const t = c.t, P = c.pose;
+      c.resetPose();
+      const ph = t * 5 + c.idx * 1.3;
+      const hop = Math.max(0, Math.sin(ph));
+      P.y = hop * 0.25; P.sy = 1 + Math.sin(ph * 2) * 0.05; P.sx = 1 - Math.sin(ph * 2) * 0.03;
+      P.armLz = P.armRz = 0.3 + hop * 0.8; P.tail = 0.8;
+      P.headRoll = Math.sin(t * 2 + c.idx) * 0.12;
+      if (c.cheer > 0) { c.cheer -= dt; P.y = Math.abs(Math.sin(t * 9)) * 0.6; P.armLz = P.armRz = 2.4; c.emote('happy', 'open', 0.2); }
+      c.update(dt);
+    }
+  }
+
+  // ---- battles ----
+  startBattle(pDef, cDef, opts = {}) {
+    this.endBattle();
+    this.setShowcase([]);
+    this.screens.hideAll();
+    this.input.showTouch(true);
+    document.body.classList.add('in-battle');
+    screen.orientation?.lock?.('landscape').catch(() => {});
+    this.battle = new Battle(this, pDef, cDef, {
+      ...opts,
+      onEnd: (won, stats) => setTimeout(() => this.screens.results(won, stats, pDef, cDef, opts), 900),
+    });
+  }
+
+  endBattle() {
+    if (this.battle) { this.battle.dispose(); this.battle = null; }
+    this.hud.show(false);
+    this.input.showTouch(false);
+    document.body.classList.remove('in-battle');
+  }
+
+  pause() {
+    if (!this.battle || this.battle.phase === 'done') return;
+    this.paused = !this.paused;
+    this.screens.pauseMenu(this.paused);
+    sfx.ui(this.paused ? 'ok' : 'back');
+  }
+
+  frame() {
+    const rawDt = Math.min(this.clock.getDelta(), 0.1);
+    this.step(rawDt);
+    this.impactT -= rawDt;
+    this.grade.uniforms.uImpact.value = this.impactT > 0 ? 1 : 0;
+    this.composer.render(rawDt);
+  }
+
+  step(rawDt) {
+    this.t += rawDt;
+    this.input.poll();
+    if (this.input.pressed.pause) this.pause();
+    if (!this.paused) {
+      if (this.battle) this.battle.update(rawDt);
+      else this.screens.update(rawDt);
+      this.updateShowcase(rawDt);
+      this.arena.update(rawDt, this.t);
+      this.fx.update(rawDt);
+    }
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => new Game());
+export { playMusic };

@@ -1,0 +1,6 @@
+{
+  "appId": "com.zchill.critterclash",
+  "appName": "Critter Clash",
+  "webDir": "dist",
+  "android": { "allowMixedContent": false, "backgroundColor": "#1b1140" }
+}

@@ -1,0 +1,532 @@
+// One match: two fighters, rounds, hit resolution, projectiles, supers, camera direction.
+import * as THREE from 'three';
+import { Fighter, SPECIALS } from './fighter.js';
+import { CpuBrain } from './ai.js';
+import { TYPES, typeMult } from './data.js';
+import { ARENA_R } from './arena.js';
+import { sfx, playMusic } from './audio.js';
+
+const ROUND_TIME = 60;
+
+export class Battle {
+  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd } = {}) {
+    this.game = game;
+    this.scene = game.scene;
+    this.fx = game.fx;
+    this.hud = game.hud;
+    this.camera = game.camera;
+    this.arena = game.arena;
+    this.onEnd = onEnd;
+    this.fighters = [];
+    this.fighters.push(new Fighter(this, pDef, { level: playerLevel, side: 0 }));
+    this.fighters.push(new Fighter(this, cDef, { level: cpuLevel, cpu: true, side: 1 }));
+    this.brain = new CpuBrain(this.fighters[1], difficulty);
+    this.pbrain = game.autoplay ? new CpuBrain(this.fighters[0], 0.7) : null;
+    this.projectiles = [];
+    this.winsNeeded = rounds;
+    this.wins = [0, 0];
+    this.round = 0;
+    this.hitstop = 0;
+    this.slowmo = 0;
+    this.timeScale = 1;
+    this.shakeAmt = 0;
+    this.camState = { pos: new THREE.Vector3(0, 6, 16), look: new THREE.Vector3(0, 1, 0), fov: 42 };
+    this.camOverride = null;
+    this.stats = { dmgDealt: 0, maxCombo: 0, supers: 0, perfect: false };
+    this.comboCount = 0;
+    this.comboT = 0;
+    this.hud.setup(this);
+    this.startRound();
+  }
+
+  get player() { return this.fighters[0]; }
+  get cpu() { return this.fighters[1]; }
+
+  startRound() {
+    this.round++;
+    const [p, c] = this.fighters;
+    p.reset(-4, 0.5); c.reset(4, -0.5);
+    p.face = Math.PI / 2; c.face = -Math.PI / 2;
+    for (const pr of this.projectiles) this.scene.remove(pr.mesh);
+    this.projectiles.length = 0;
+    this.fx.clear();
+    this.time = ROUND_TIME;
+    this.phase = 'intro';
+    this.phaseT = 0;
+    this.roundDmgTaken = 0;
+    p.setState('intro'); c.setState('intro');
+    this.hud.roundIntro(this.round, this.wins, this.round === 1);
+    if (this.round === 1) playMusic('battle');
+  }
+
+  // -------- hit resolution --------
+  applyHit(att, def, h) {
+    if (def.invuln > 0 || def.state === 'super' && def.superInvuln || !def.alive) {
+      if (def.state === 'dodge' && def.invuln > 0) this.perfectDodge(def);
+      return false;
+    }
+    let dmg = h.dmg;
+    let eff = 1;
+    if (h.type && h.type !== 'normal') { eff = typeMult(h.type, def.type); dmg *= eff; }
+    if (def.state === 'down') dmg *= 0.5;
+    dmg = Math.round(dmg * (0.92 + Math.random() * 0.16));
+    h.dmg = dmg;
+    def.takeHit(h);
+    if (def === this.player) this.roundDmgTaken += dmg;
+    // super meter: attacker gains more than defender
+    att.superM = Math.min(100, att.superM + dmg * 0.09);
+    def.superM = Math.min(100, def.superM + dmg * 0.05);
+    const heavy = h.heavy || dmg > 90;
+    this.hitstop = heavy ? 0.13 : 0.065;
+    this.shake(heavy ? 0.5 : 0.18);
+    const p = def.chestPos();
+    p.x -= h.dirX * 0.2; p.z -= h.dirZ * 0.2;
+    const tcol = h.type && h.type !== 'normal' ? TYPES[h.type].glow : 0xffe070;
+    this.fx.hit(p, tcol, heavy);
+    sfx.hit(heavy);
+    if (heavy) { sfx.bonk(); this.game.impactFrame(0.07); }
+    // combo counter (player only)
+    if (att === this.player) {
+      this.comboCount = this.comboT > 0 ? this.comboCount + 1 : 1;
+      this.comboT = 1.1;
+      this.stats.maxCombo = Math.max(this.stats.maxCombo, this.comboCount);
+      this.stats.dmgDealt += dmg;
+      this.hud.combo(this.comboCount);
+    }
+    // comic text
+    const words = heavy ? ['BONK!', 'POW!', 'WHAM!', 'KAPOW!', 'BOOF!'] : ['bap!', 'pok!', 'tap!', 'bop!'];
+    if (heavy || Math.random() < 0.4) this.fx.text({ x: p.x, y: p.y + 0.7, z: p.z }, words[Math.floor(Math.random() * words.length)], heavy ? 'big' : '', 0.7);
+    this.fx.text({ x: p.x, y: p.y + 0.3, z: p.z }, String(dmg), 'dmg' + (eff > 1 ? ' super-eff' : eff < 1 ? ' weak' : ''), 0.75);
+    if (eff > 1 && Math.random() < 0.6) this.fx.text({ x: p.x, y: p.y + 1.3, z: p.z }, "It's super effective!", 'eff', 1.1);
+    this.arena.cheer(heavy ? 0.35 : 0.12);
+    if (heavy) sfx.cheer(0.6);
+    if (!def.alive) this.onKO(att, def);
+    return true;
+  }
+
+  perfectDodge(f) {
+    if (f.perfectT > 0) return;
+    f.perfectT = 0.5;
+    f.superM = Math.min(100, f.superM + 8);
+    this.fx.text(f.headPos(), 'NICE DODGE!', 'eff', 0.8);
+    this.slowmo = 0.35;
+  }
+
+  wallSplat(f, v) {
+    this.shake(0.4);
+    sfx.bonk();
+    this.fx.text(f.headPos(), 'SPLAT!', 'big', 0.8);
+    this.fx.burst(f.chestPos(), { n: 10, speed: 5, color: 0xffffff, shape: 'star', additive: false, size: 0.35, life: 0.6, spin: 10 });
+    if (f.alive) { f.hp = Math.max(1, f.hp - Math.round(v * 3)); f.dizzy += 18; }
+    this.arena.cheer(0.4);
+  }
+
+  shake(a) { this.shakeAmt = Math.max(this.shakeAmt, a); }
+
+  // -------- projectiles --------
+  spawnProjectile(owner, p) {
+    const mesh = new THREE.Group();
+    if (p.kind === 'bubble') {
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.42, 20, 14), new THREE.MeshToonMaterial({ color: 0x7fd4ff, transparent: true, opacity: 0.55, emissive: 0x1a5a9a }));
+      const hl = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      hl.position.set(-0.17, 0.2, 0.25);
+      const rimm = new THREE.Mesh(new THREE.SphereGeometry(0.45, 20, 14), new THREE.MeshBasicMaterial({ color: 0xdff4ff, side: THREE.BackSide, transparent: true, opacity: 0.6 }));
+      mesh.add(b, hl, rimm);
+    } else if (p.kind === 'leafrang') {
+      const mat = new THREE.MeshToonMaterial({ color: 0x5bd36a, emissive: 0x1d5a20 });
+      for (let k = 0; k < 4; k++) {
+        const l = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 8), mat);
+        l.scale.set(0.7, 0.15, 1.2);
+        l.position.set(Math.sin(k * Math.PI / 2) * 0.3, 0, Math.cos(k * Math.PI / 2) * 0.3);
+        l.rotation.y = k * Math.PI / 2;
+        mesh.add(l);
+      }
+      const c = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), new THREE.MeshToonMaterial({ color: 0xffe066 }));
+      mesh.add(c);
+    }
+    mesh.position.set(p.x, p.y, p.z);
+    this.scene.add(mesh);
+    this.projectiles.push({ ...p, owner, mesh, t: 0, hitOnce: new Set(), outbound: true });
+  }
+
+  updateProjectiles(dt) {
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const pr = this.projectiles[i];
+      pr.t += dt;
+      const target = this.fighters[1 - pr.owner.side];
+      if (pr.kind === 'leafrang') {
+        pr.mesh.rotation.y += dt * 22;
+        if (pr.outbound && pr.t > 0.5) { pr.outbound = false; pr.hitOnce.clear(); }
+        if (!pr.outbound) {
+          // home back to owner
+          const dx = pr.owner.x - pr.x, dz = pr.owner.z - pr.z, d = Math.hypot(dx, dz);
+          const sp = 16;
+          pr.vx = THREE.MathUtils.damp(pr.vx, dx / d * sp, 5, dt);
+          pr.vz = THREE.MathUtils.damp(pr.vz, dz / d * sp, 5, dt);
+          if (d < 0.7) { this.removeProjectile(i); continue; }
+        } else { pr.vx *= Math.exp(-2.6 * dt); pr.vz *= Math.exp(-2.6 * dt); }
+        if (Math.random() < 0.5) this.fx.spawn({ x: pr.x, y: pr.y, z: pr.z, color: 0x7cff6a, size: 0.25, life: 0.3, shape: 'leaf', additive: false, rot: Math.random() * 6, grav: 2, spin: 5 });
+      } else if (pr.kind === 'bubble') {
+        pr.mesh.scale.setScalar(1 + Math.sin(pr.t * 12) * 0.06);
+        pr.y = 0.7 + Math.sin(pr.t * 6) * 0.1;
+      }
+      pr.x += pr.vx * dt; pr.z += pr.vz * dt;
+      pr.mesh.position.set(pr.x, pr.y, pr.z);
+      // hit check
+      if (target.alive && !pr.hitOnce.has(target)) {
+        const d = Math.hypot(target.x - pr.x, target.z - pr.z);
+        if (d < pr.r + 0.45 && Math.abs(target.y + 0.6 - pr.y) < 1.2) {
+          pr.hitOnce.add(target);
+          const l = Math.hypot(pr.vx, pr.vz) || 1;
+          const landed = this.applyHit(pr.owner, target, { ...pr.hit, dirX: pr.vx / l, dirZ: pr.vz / l, heavy: false });
+          if (pr.kind === 'bubble' && (landed || target.state !== 'dodge')) {
+            this.fx.burst({ x: pr.x, y: pr.y, z: pr.z }, { n: 10, speed: 4, color: 0xa8e4ff, shape: 'drop', additive: false, size: 0.2, life: 0.5, grav: 9 });
+            this.removeProjectile(i); continue;
+          }
+        }
+      }
+      if (pr.t > pr.life || Math.hypot(pr.x, pr.z) > ARENA_R + 1) {
+        if (pr.kind === 'bubble') this.fx.burst({ x: pr.x, y: pr.y, z: pr.z }, { n: 6, speed: 3, color: 0xa8e4ff, shape: 'drop', additive: false, size: 0.15, life: 0.4, grav: 9 });
+        this.removeProjectile(i);
+      }
+    }
+  }
+
+  removeProjectile(i) {
+    const pr = this.projectiles[i];
+    this.scene.remove(pr.mesh);
+    pr.mesh.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+    this.projectiles.splice(i, 1);
+  }
+
+  // -------- supers --------
+  startSuper(f) {
+    f.superM = 0;
+    f.setState('super');
+    f.superPhase = 'cutin';
+    f.superInvuln = true;
+    f.invuln = 99;
+    f.vx = f.vz = 0;
+    f.hitIds.clear();
+    if (f === this.player) this.stats.supers++;
+    const o = f.opp;
+    f.face = f.angleTo(o);
+    f.critter.emote('angry', 'yell', 1.5);
+    sfx.superCharge();
+    sfx.voice(f.def.voice, 'special');
+    this.hud.cutIn(f);
+    this.cutinT = 1.25;
+    this.superUser = f;
+    this.arena.cheer(0.6);
+  }
+
+  updateSuper(f, dt) {
+    const o = f.opp, id = f.def.super;
+    const fx = this.fx, tcol = TYPES[f.type].glow;
+    if (f.superPhase === 'cutin') {
+      // the world is frozen while the cut-in plays (see update)
+      return;
+    }
+    const t = f.st;
+    if (id === 'meteor') {
+      if (f.superPhase === 'go') {
+        f.superPhase = 'rise'; f.vy = 16; f.y = 0.05; f.st = 0;
+        f.target = { x: o.x, z: o.z };
+        sfx.fire();
+      }
+      if (f.superPhase === 'rise') {
+        f.trail(0xff6a20, 0xffe060);
+        // drift toward the target spot while airborne
+        const tx = f.target.x - f.x, tz = f.target.z - f.z;
+        f.vx = tx * 1.6; f.vz = tz * 1.6;
+        f.critter.pose.lean = -t * 20;
+        if (t > 0.35) this.fx.spawn({ x: f.target.x, y: 0.06, z: f.target.z, color: 0xff5a20, size: 4.5, life: 0.12, shape: 'ring', alpha: 0.7 });
+        if (f.vy < 0) { f.vy = -30; f.superPhase = 'fall'; }
+      } else if (f.superPhase === 'fall') {
+        f.trail(0xff6a20, 0xffe060);
+        f.trail(0xff3010, 0xffa040);
+      } else if (f.superPhase === 'recover') {
+        if (t > 0.6) this.endSuper(f);
+      }
+    } else if (id === 'tsunami') {
+      if (f.superPhase === 'go') { f.superPhase = 'wave'; f.st = 0; this.waveR = 0.5; sfx.water(); sfx.boom(); }
+      if (f.superPhase === 'wave') {
+        const prev = this.waveR;
+        this.waveR = Math.min(10, 0.5 + t * 11);
+        for (let k = 0; k < 14; k++) {
+          const a = Math.random() * Math.PI * 2;
+          fx.spawn({ x: f.x + Math.cos(a) * this.waveR, y: 0.3 + Math.random() * 1.6, z: f.z + Math.sin(a) * this.waveR, vy: 2 + Math.random() * 3, vx: Math.cos(a) * 3, vz: Math.sin(a) * 3,
+            color: Math.random() < 0.5 ? 0x48b8ff : 0xdff6ff, size: 0.5 + Math.random() * 0.5, life: 0.5, shape: 'drop', additive: false, grav: 12 });
+        }
+        if (Math.random() < 0.3) this.fx.shock(f, 0x8fd8ff, this.waveR, 0.25);
+        const d = f.distTo(o);
+        if (!f.hitIds.has(o) && d < this.waveR + 0.5 && d > prev - 0.8) {
+          f.hitIds.add(o);
+          const a = f.angleTo(o);
+          this.applyHit(f, o, { dmg: 250 * f.power, kb: 12, lift: 9, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 40 });
+        }
+        if (t > 1.0) this.endSuper(f);
+      }
+    } else if (id === 'bloom') {
+      if (f.superPhase === 'go') { f.superPhase = 'mark'; f.st = 0; f.target = { x: o.x, z: o.z }; sfx.leaf(); }
+      if (f.superPhase === 'mark') {
+        // the flower bud tracks the foe briefly, then locks
+        if (t < 0.5) { f.target.x += (o.x - f.target.x) * 0.15; f.target.z += (o.z - f.target.z) * 0.15; }
+        fx.spawn({ x: f.target.x, y: 0.06, z: f.target.z, color: 0x6cff6a, size: 3.4 + Math.sin(t * 20) * 0.3, life: 0.1, shape: 'ring' });
+        if (Math.random() < 0.5) fx.spawn({ x: f.target.x + (Math.random() - 0.5) * 2.5, y: 0.1, z: f.target.z + (Math.random() - 0.5) * 2.5, vy: 2, color: 0x9bff7a, size: 0.25, life: 0.5, shape: 'leaf', additive: false, spin: 6 });
+        if (t > 0.9) {
+          f.superPhase = 'burst'; f.st = 0;
+          sfx.boom(); this.shake(0.7); this.game.impactFrame(0.08);
+          fx.shock({ x: f.target.x, z: f.target.z }, 0x9bff7a, 4, 0.5);
+          for (let k = 0; k < 40; k++) {
+            const a = Math.random() * Math.PI * 2, s = 3 + Math.random() * 7;
+            fx.spawn({ x: f.target.x, y: 0.3, z: f.target.z, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: 6 + Math.random() * 8,
+              color: [0xff8fc8, 0xffe14d, 0xffffff, 0x9bff7a][k % 4], size: 0.3 + Math.random() * 0.3, life: 1.2, shape: k % 4 === 3 ? 'leaf' : 'star', additive: false, grav: 10, spin: 10, drag: 1 });
+          }
+          const d = Math.hypot(o.x - f.target.x, o.z - f.target.z);
+          if (d < 2.4) {
+            const a = Math.atan2(o.x - f.target.x, o.z - f.target.z);
+            this.applyHit(f, o, { dmg: 265 * f.power, kb: 3, lift: 13, stun: 0.8, dirX: Math.sin(a) || 0, dirZ: Math.cos(a) || 1, heavy: true, type: f.type, launch: true, dizzy: 40 });
+          }
+        }
+      } else if (f.superPhase === 'burst' && t > 0.6) this.endSuper(f);
+    } else if (id === 'thunder') {
+      if (f.superPhase === 'go') { f.superPhase = 'strikes'; f.st = 0; f.strikeN = 0; }
+      if (f.superPhase === 'strikes') {
+        const times = [0.15, 0.4, 0.65, 0.9, 1.3];
+        if (f.strikeN < times.length && t > times[f.strikeN]) {
+          const last = f.strikeN === times.length - 1;
+          const sx = o.x + (last ? 0 : (Math.random() - 0.5) * 1.4), sz = o.z + (last ? 0 : (Math.random() - 0.5) * 1.4);
+          this.lightning(sx, sz, last);
+          sfx.spark(); if (last) { sfx.boom(); this.game.impactFrame(0.09); }
+          this.shake(last ? 0.7 : 0.3);
+          const d = Math.hypot(o.x - sx, o.z - sz);
+          if (d < (last ? 2.2 : 1.6)) {
+            const a = f.angleTo(o);
+            this.applyHit(f, o, { dmg: (last ? 110 : 45) * f.power, kb: last ? 9 : 1, lift: last ? 8 : 0, stun: 0.5, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: last, type: f.type, launch: last, paralyze: last ? 0 : 0.4, dizzy: 10 });
+          }
+          f.strikeN++;
+        }
+        if (t > 1.8) this.endSuper(f);
+      }
+    }
+    void tcol;
+  }
+
+  superLand(f) {
+    if (f.def.super !== 'meteor' || f.superPhase !== 'fall') return;
+    f.superPhase = 'recover'; f.st = 0;
+    const o = f.opp;
+    sfx.boom(); this.shake(0.9); this.game.impactFrame(0.1);
+    this.fx.shock(f, 0xff7a30, 5, 0.5);
+    this.fx.shock(f, 0xffe060, 3.2, 0.35);
+    this.fx.burst({ x: f.x, y: 0.3, z: f.z }, { n: 40, speed: 12, up: 6, color: 0xff7a30, size: 0.4, life: 0.7, grav: 14 });
+    this.fx.dust(f, 18, 2);
+    const d = f.distTo(o);
+    if (d < 3.6) {
+      const a = f.angleTo(o);
+      this.applyHit(f, o, { dmg: 285 * f.power, kb: 10, lift: 10, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 40 });
+    }
+  }
+
+  lightning(x, z, big) {
+    const pts = [];
+    let px = x, pz = z;
+    for (let y = 14; y >= 0; y -= 1.4) { pts.push(new THREE.Vector3(px, y, pz)); px = x + (Math.random() - 0.5) * 1.2; pz = z + (Math.random() - 0.5) * 1.2; }
+    pts.push(new THREE.Vector3(x, 0, z));
+    const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0), 40, big ? 0.22 : 0.13, 5);
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xfffbd0 }));
+    const g = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xffe040, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+    g.scale.set(1, 1, 1);
+    this.scene.add(m, g);
+    this.fx.shock({ x, z }, 0xfff060, big ? 3.5 : 2, 0.3);
+    this.fx.burst({ x, y: 0.2, z }, { n: big ? 24 : 10, speed: 7, up: 4, color: 0xfff060, size: 0.25, life: 0.4, grav: 12 });
+    this.fx.spawn({ x, y: 1, z, color: 0xffffaa, size: big ? 7 : 4, life: 0.2, shape: 'glow' });
+    let life = 0.22;
+    const tick = () => { life -= 1 / 60; if (life <= 0) { this.scene.remove(m, g); geo.dispose(); m.material.dispose(); g.material.dispose(); } else requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }
+
+  endSuper(f) {
+    f.superInvuln = false;
+    f.invuln = 0.3;
+    f.y = Math.max(0, f.y);
+    f.setState('idle');
+    f.critter.emote('open', 'grin', 0.6);
+    this.superUser = null;
+  }
+
+  // -------- KO & rounds --------
+  onKO(att, def) {
+    this.phase = 'ko';
+    this.phaseT = 0;
+    this.slowmo = 1.6;
+    this.koWinner = att;
+    this.koLoser = def;
+    this.hud.announce('K.O.!', 'ko');
+    sfx.ko();
+    sfx.cheer(1.2);
+    this.arena.cheer(1);
+    this.game.impactFrame(0.14);
+    if (def === this.cpu && this.roundDmgTaken === 0) this.stats.perfect = true;
+  }
+
+  onKOLand() {}
+
+  timeUp() {
+    const [p, c] = this.fighters;
+    const pf = p.hp / p.maxHp, cf = c.hp / c.maxHp;
+    this.phase = 'ko'; this.phaseT = 0;
+    this.koWinner = pf >= cf ? p : c;
+    this.koLoser = pf >= cf ? c : p;
+    this.hud.announce('TIME!', 'ko');
+    sfx.gong();
+  }
+
+  endRound() {
+    const w = this.koWinner, l = this.koLoser;
+    this.wins[w.side]++;
+    this.hud.setWins(this.wins);
+    w.setState('win'); w.vx = w.vz = 0;
+    if (l.alive) { l.setState('lose'); l.vx = l.vz = 0; }
+    sfx.voice(w.def.voice, 'win');
+    this.phase = 'winpose'; this.phaseT = 0;
+    if (this.wins[w.side] >= this.winsNeeded) {
+      this.hud.announce(w === this.player ? 'YOU WIN!' : 'YOU LOSE...', w === this.player ? 'win' : 'lose');
+      if (w === this.player) { playMusic('victory'); sfx.cheer(1.5); } else sfx.aww();
+    }
+  }
+
+  // -------- main update --------
+  update(rawDt) {
+    const dt = Math.min(rawDt, 1 / 20);
+    this.phaseT += dt;
+    if (this.cutinT > 0) {
+      this.cutinT -= dt;
+      const f = this.superUser;
+      f.critter.update(dt);
+      this.camOverride = { look: new THREE.Vector3(f.x, f.y + 0.9, f.z), pos: new THREE.Vector3(f.x + Math.sin(f.face) * 2.4 + Math.cos(f.face) * 0.9, f.y + 1.25, f.z + Math.cos(f.face) * 2.4 - Math.sin(f.face) * 0.9), fov: 34 };
+      if (this.cutinT <= 0) { f.superPhase = 'go'; f.st = 0; this.camOverride = null; this.shake(0.4); }
+      this.updateCamera(dt);
+      return;
+    }
+
+    if (this.hitstop > 0) {
+      this.hitstop -= rawDt;
+      // jitter the struck fighters while frozen
+      for (const f of this.fighters) if (f.state === 'hit' || f.state === 'launched') {
+        f.root.position.x = f.x + (Math.random() - 0.5) * 0.08;
+        f.root.position.z = f.z + (Math.random() - 0.5) * 0.08;
+      }
+      this.updateCamera(dt);
+      return;
+    }
+
+    let sdt = dt;
+    if (this.slowmo > 0) { this.slowmo -= dt; sdt = dt * (this.phase === 'ko' ? 0.28 : 0.45); }
+
+    const [p, c] = this.fighters;
+    if (this.phase === 'intro') {
+      if (this.phaseT > (this.round === 1 ? 2.2 : 0.9)) { this.phase = 'countdown'; this.phaseT = 0; this.hud.countdown(); p.setState('idle'); c.setState('idle'); }
+    } else if (this.phase === 'countdown') {
+      if (this.phaseT > 1.9) { this.phase = 'fight'; this.phaseT = 0; }
+    } else if (this.phase === 'fight') {
+      this.time -= sdt;
+      if (this.time <= 0) { this.time = 0; this.timeUp(); }
+    } else if (this.phase === 'ko') {
+      if (this.phaseT > 2.2) this.endRound();
+    } else if (this.phase === 'winpose') {
+      if (this.phaseT > 2.6) {
+        if (Math.max(...this.wins) >= this.winsNeeded) { this.phase = 'done'; this.onEnd?.(this.wins[0] > this.wins[1], this.stats); }
+        else this.startRound();
+      }
+    }
+
+    // controls
+    const fighting = this.phase === 'fight';
+    const inp = this.game.input;
+    if (fighting && this.pbrain) { this.pbrain.update(sdt); this.brain.update(sdt); }
+    else if (fighting) {
+      const yaw = this.camYaw ?? 0;
+      const rx = Math.cos(yaw), rz = -Math.sin(yaw), fx = -Math.sin(yaw), fz = -Math.cos(yaw);
+      p.ctl.mx = inp.move.x * rx + inp.move.y * fx;
+      p.ctl.mz = inp.move.x * rz + inp.move.y * fz;
+      p.ctl.attack = inp.pressed.attack || (inp.held.attack && p.state === 'attack');
+      p.ctl.special = inp.pressed.special;
+      p.ctl.dodge = inp.pressed.dodge;
+      p.ctl.super = inp.pressed.super;
+      this.brain.update(sdt);
+    } else {
+      for (const f of this.fighters) Object.assign(f.ctl, { mx: 0, mz: 0, attack: false, special: false, dodge: false, super: false });
+    }
+    for (const f of this.fighters) { f.perfectT = (f.perfectT || 0) - dt; f.update(sdt); }
+    this.updateProjectiles(sdt);
+    this.comboT -= sdt;
+    if (this.comboT <= 0 && this.comboCount) { this.comboCount = 0; this.hud.combo(0); }
+    this.hud.update(this);
+    inp.setCooldowns(1 - p.specCd / SPECIALS[p.def.special].cd, 1 - p.dodgeCd / 0.55, p.superM / 100, p.superM >= 100);
+    this.updateCamera(dt);
+  }
+
+  updateCamera(dt) {
+    const cam = this.camera, [p, c] = this.fighters;
+    const cs = this.camState;
+    let look, pos, fov = 42;
+    if (this.camOverride) ({ look, pos, fov } = this.camOverride);
+    else if (this.phase === 'intro') {
+      // swing past the opponent then the player
+      const k = Math.min(1, this.phaseT / (this.round === 1 ? 2.2 : 0.9));
+      const f = k < 0.5 && this.round === 1 ? c : p;
+      const mid = new THREE.Vector3((p.x + c.x) / 2, 1, (p.z + c.z) / 2);
+      if (this.round === 1 && k < 0.85) {
+        look = new THREE.Vector3(f.x, 0.9, f.z);
+        const side = f === c ? -1 : 1;
+        pos = new THREE.Vector3(f.x + side * 2.6, 1.3, f.z + 3.4);
+        fov = 36;
+      } else { look = mid; pos = new THREE.Vector3(mid.x, 6, mid.z + 15); }
+    } else if ((this.phase === 'ko' || this.phase === 'winpose') && this.koWinner) {
+      const f = this.phase === 'ko' ? this.koLoser : this.koWinner;
+      look = new THREE.Vector3(f.x, f.y + 0.8, f.z);
+      const a = this.phaseT * 0.3;
+      pos = new THREE.Vector3(f.x + Math.sin(a) * 5, 2.4, f.z + Math.cos(a) * 5 + 1);
+      fov = 38;
+    } else {
+      const mx = (p.x + c.x) / 2, mz = (p.z + c.z) / 2;
+      const sep = Math.hypot(p.x - c.x, p.z - c.z);
+      // gentle yaw so the fighters' line stays across the screen
+      const dx = c.x - p.x, dz = c.z - p.z;
+      const want = Math.max(-0.35, Math.min(0.35, Math.atan(-dz / (Math.abs(dx) < 1e-3 ? 1e-3 : dx)))) * (Math.abs(dx) / (sep || 1));
+      this.camYaw = THREE.MathUtils.damp(this.camYaw ?? 0, want, 1.2, dt);
+      const yaw = this.camYaw;
+      const dist = Math.min(17, Math.max(9, 6.5 + sep * 0.85));
+      const pitch = 0.4;
+      look = new THREE.Vector3(mx, 0.9, mz - 0.4);
+      pos = new THREE.Vector3(mx + Math.sin(yaw) * Math.cos(pitch) * dist, 0.9 + Math.sin(pitch) * dist, mz + Math.cos(yaw) * Math.cos(pitch) * dist);
+      // never back the camera into the stands: pull it in and lift it instead
+      const pr = Math.hypot(pos.x, pos.z), lim = ARENA_R + 4;
+      if (pr > lim) { const k = lim / pr; pos.x *= k; pos.z *= k; pos.y += (pr - lim) * 0.45; }
+    }
+    const rate = this.camOverride ? 10 : this.phase === 'intro' ? 3 : 4;
+    cs.pos.x = THREE.MathUtils.damp(cs.pos.x, pos.x, rate, dt);
+    cs.pos.y = THREE.MathUtils.damp(cs.pos.y, pos.y, rate, dt);
+    cs.pos.z = THREE.MathUtils.damp(cs.pos.z, pos.z, rate, dt);
+    cs.look.x = THREE.MathUtils.damp(cs.look.x, look.x, rate * 1.5, dt);
+    cs.look.y = THREE.MathUtils.damp(cs.look.y, look.y, rate * 1.5, dt);
+    cs.look.z = THREE.MathUtils.damp(cs.look.z, look.z, rate * 1.5, dt);
+    cs.fov = THREE.MathUtils.damp(cs.fov, fov, 5, dt);
+    this.shakeAmt = Math.max(0, this.shakeAmt - dt * 2.2);
+    const s = this.shakeAmt * this.shakeAmt * 0.6;
+    cam.position.set(cs.pos.x + (Math.random() - 0.5) * s, cs.pos.y + (Math.random() - 0.5) * s, cs.pos.z + (Math.random() - 0.5) * s);
+    cam.lookAt(cs.look);
+    // narrow aspect (portrait-ish phones) need a wider fov
+    const aspectFix = Math.max(1, 1.6 / cam.aspect);
+    cam.fov = Math.min(80, cs.fov * aspectFix);
+    cam.updateProjectionMatrix();
+  }
+
+  dispose() {
+    for (const f of this.fighters) f.dispose();
+    for (let i = this.projectiles.length - 1; i >= 0; i--) this.removeProjectile(i);
+    this.fx.clear();
+  }
+}

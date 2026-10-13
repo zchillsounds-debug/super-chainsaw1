@@ -1,0 +1,59 @@
+# Builds the Critter Clash Android APK (Capacitor wrapper, landscape, fullscreen) and
+# publishes it to the orphan branch `apk-critter-clash` so it can be fetched over git.
+name: Critter Clash APK
+on:
+  push:
+    branches: ['ccr-**', 'claude/**', main]
+    paths: ['games/critter-clash/**', '.github/workflows/critter-apk.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: games/critter-clash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: games/critter-clash/package-lock.json }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - run: npm ci
+      - run: npx vite build
+      - run: npx cap add android
+      - name: Landscape, fullscreen, icon
+        run: |
+          python3 - <<'PY'
+          import re, pathlib
+          m = pathlib.Path('android/app/src/main/AndroidManifest.xml')
+          s = m.read_text()
+          s = s.replace('<activity', '<activity android:screenOrientation="sensorLandscape"', 1)
+          m.write_text(s)
+          st = pathlib.Path('android/app/src/main/res/values/styles.xml')
+          s = st.read_text()
+          s = re.sub(r'(<style name="AppTheme.NoActionBar"[^>]*>)', r'\1\n        <item name="android:windowFullscreen">true</item>\n        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>', s)
+          st.write_text(s)
+          PY
+          if [ -f public/icon-512.png ]; then
+            for d in android/app/src/main/res/mipmap-*; do
+              for f in ic_launcher.png ic_launcher_round.png ic_launcher_foreground.png; do
+                [ -f "$d/$f" ] && cp public/icon-512.png "$d/$f"
+              done
+            done
+          fi
+      - run: npx cap sync android
+      - run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+      - name: Build APK (retries the Gradle download on network resets)
+        run: cd android && chmod +x gradlew && for i in 1 2 3 4; do ./gradlew assembleDebug --no-daemon && exit 0; echo "retry $i"; sleep $((i*10)); done; exit 1
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk critter-clash.apk
+      - uses: actions/upload-artifact@v4
+        with: { name: critter-clash-apk, path: games/critter-clash/critter-clash.apk }
+      - name: Publish APK to the apk-critter-clash branch
+        run: |
+          mkdir out && cp critter-clash.apk out/ && cd out
+          git init -q && git checkout -q -b apk-critter-clash
+          git config user.name "github-actions" && git config user.email "actions@github.com"
+          git add critter-clash.apk && git commit -qm "APK from ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" apk-critter-clash
