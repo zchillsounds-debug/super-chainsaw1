@@ -152,7 +152,7 @@ body.portrait .sel-actions { align-items: center; }
 .pbar.p1 { order: 1; }
 .pbar.p2 { order: 3; flex-direction: row-reverse; }
 .portrait { width: 64px; height: 64px; flex: none; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #fff, var(--tc)); box-shadow: inset 0 0 0 4px var(--ink), 0 4px 0 rgba(0,0,0,.25); overflow: hidden; }
-.portrait img { width: 118%; margin: -6% 0 0 -9%; display: block; }
+div.portrait > img { width: 118%; margin: -6% 0 0 -9%; display: block; }
 .p2 .portrait img { transform: scaleX(-1); }
 .pbar-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .p2 .pbar-body { align-items: flex-end; }
@@ -336,6 +336,7 @@ body.portrait.is-touch.in-battle:not(.at-results) .rotate-hint { display: grid; 
 .cup.locked { filter: grayscale(.9); opacity: .7; }
 .cup.locked .cup-foes img { filter: brightness(0) opacity(.4); }
 .cup.done .cup-trophy { background: #fff3b0; }
+.cup.done::after { content: "CLEARED"; position: absolute; top: 18px; right: -34px; transform: rotate(35deg); background: #ffd23f; color: var(--ink); font-family: var(--display); font-size: 13px; letter-spacing: .5px; padding: 3px 40px; box-shadow: 0 0 0 2px var(--ink); }
 
 .ladder-screen { position: absolute; inset: 0; padding: calc(10px + var(--sat)) calc(14px + var(--sar)) calc(14px + var(--sab)) calc(14px + var(--sal)); }
 .ladder { display: flex; align-items: center; justify-content: flex-start; margin: 14px 0 0 6px; max-width: 46vw; }
