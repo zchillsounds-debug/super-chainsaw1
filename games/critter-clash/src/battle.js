@@ -826,6 +826,8 @@ export class Battle {
     this.hud.announce(this.finisher ? 'FINAL K.O.!' : 'K.O.!', 'ko');
     if (this.finisher) {
       this.camSnap = true;
+      // lock the framing to where the blow landed so a long knockback can't drag the shot behind the attacker
+      this.finFrame = { ax: att.x, az: att.z, dx: def.x, dz: def.z, dy: def.y };
       this.hitstop = Math.max(this.hitstop, 0.32);
       const cp = def.chestPos();
       this.fx.shock({ x: def.x, y: 0.05, z: def.z }, 0xffffff);
@@ -1009,11 +1011,16 @@ export class Battle {
       }
     } else if (this.phase === 'ko' && this.finisher && this.phaseT < 0.75) {
       // finisher: low dutch angle from the side, both fighters in frame
-      const a = this.koWinner, d = this.koLoser;
-      const mx = (a.x + d.x) / 2, mz = (a.z + d.z) / 2, dx = d.x - a.x, dz = d.z - a.z, len = Math.hypot(dx, dz) || 1;
-      look = new THREE.Vector3(d.x * 0.7 + a.x * 0.3, d.y * 0.5 + 0.8, d.z * 0.7 + a.z * 0.3);
-      pos = new THREE.Vector3(mx - dz / len * 3.6, 0.55, mz + dx / len * 3.6);
-      if (pos.z < mz) { pos.x = mx + dz / len * 3.6; pos.z = mz - dx / len * 3.6; }
+      const a = this.koWinner, F = this.finFrame;
+      // follow the loser only a little, so the attacker stays in frame
+      const ddx = F.dx + (this.koLoser.x - F.dx) * 0.25, ddz = F.dz + (this.koLoser.z - F.dz) * 0.25;
+      const mx = (F.ax + ddx) / 2, mz = (F.az + ddz) / 2, dx = ddx - F.ax, dz = ddz - F.az, len = Math.hypot(dx, dz) || 1;
+      const dist = Math.max(3.6, len * 0.95 + 1.8);
+      look = new THREE.Vector3(ddx * 0.6 + F.ax * 0.4, F.dy * 0.5 + 0.8, ddz * 0.6 + F.az * 0.4);
+      pos = new THREE.Vector3(mx - dz / len * dist, 0.55, mz + dx / len * dist);
+      if (pos.z < mz) { pos.x = mx + dz / len * dist; pos.z = mz - dx / len * dist; }
+      // swing toward the loser's side for a three-quarter view of the attacker's face
+      pos.x += dx / len * dist * 0.45; pos.z += dz / len * dist * 0.45;
       fov = 34; roll = 0.2 * (a.side ? -1 : 1);
     } else if ((this.phase === 'ko' || this.phase === 'winpose') && this.koWinner) {
       const f = this.phase === 'ko' ? this.koLoser : this.koWinner;
