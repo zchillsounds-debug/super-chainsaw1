@@ -373,14 +373,36 @@ export class Screens {
     () => { this.ctx = { kind: 'training' }; this.select(); });
   }
 
+  // training: pick the sparring dummy and the arena, then go
   training() {
     const g = this.game;
     const p = skinOf(CRITTERS[this.sel]);
     const others = CRITTERS.filter((x) => x.id !== p.id);
-    const c = others[Math.floor(Math.random() * others.length)];
-    this.mode = 'battle';
-    playMusic('battle');
-    g.startBattle(p, c, { training: true, playerLevel: save.critters[p.id].level, cpuLevel: save.critters[p.id].level, arena: 'meadow' });
+    let foe = this.trainFoe && this.trainFoe !== p.id ? this.trainFoe : 'random', arena = this.trainArena || 'meadow';
+    const d = document.createElement('div');
+    d.className = 'modal-wrap train-pick';
+    d.innerHTML = `<div class="modal"><h2>Sparring Setup</h2>
+      <small>Dummy</small><div class="tp-foes">${['random', ...others.map((c) => c.id)].map((id) => `<button class="tp-foe" data-id="${id}">${id === 'random' ? '<b>?</b>' : `<img src="${g.portrait(CRITTERS.find((c) => c.id === id))}" alt="${id}">`}</button>`).join('')}</div>
+      <small>Arena</small><div class="tp-arenas">${ARENA_KEYS.map((k) => `<button class="tp-ar" data-k="${k}">${ARENA_NAME[k]}</button>`).join('')}</div>
+      <div class="row"></div></div>`;
+    const sync = () => {
+      d.querySelectorAll('.tp-foe').forEach((b) => b.classList.toggle('on', b.dataset.id === foe));
+      d.querySelectorAll('.tp-ar').forEach((b) => b.classList.toggle('on', b.dataset.k === arena));
+    };
+    d.querySelectorAll('.tp-foe').forEach((b) => b.addEventListener('click', () => { foe = b.dataset.id; sfx.ui('move'); sync(); }));
+    d.querySelectorAll('.tp-ar').forEach((b) => b.addEventListener('click', () => { arena = b.dataset.k; sfx.ui('move'); sync(); }));
+    sync();
+    const row = d.querySelector('.row');
+    row.appendChild(this.btn('Back', 'ghost-dark', () => d.remove()));
+    row.appendChild(this.btn('PRACTICE!', 'primary', () => {
+      d.remove();
+      this.trainFoe = foe; this.trainArena = arena;
+      const c = foe === 'random' ? others[Math.floor(Math.random() * others.length)] : others.find((x) => x.id === foe);
+      this.mode = 'battle';
+      playMusic('battle');
+      g.startBattle(p, c, { training: true, playerLevel: save.critters[p.id].level, cpuLevel: save.critters[p.id].level, arena });
+    }));
+    this.root.appendChild(d);
   }
 
   // ---------- Critterdex: collection, skins and badges ----------

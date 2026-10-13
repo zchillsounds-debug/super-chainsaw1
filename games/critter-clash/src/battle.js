@@ -166,9 +166,9 @@ export class Battle {
     const words = heavy ? ['BONK!', 'POW!', 'WHAM!', 'KAPOW!', 'BOOF!'] : ['bap!', 'pok!', 'tap!', 'bop!'];
     if (heavy || Math.random() < 0.4) this.fx.text({ x: p.x, y: p.y + 0.7, z: p.z }, words[Math.floor(Math.random() * words.length)], heavy ? 'big' : '', 0.7);
     this.fx.text({ x: p.x, y: p.y + 0.3, z: p.z }, String(dmg), 'dmg' + (eff > 1 ? ' super-eff' : eff < 1 ? ' weak' : ''), 0.75);
-    // one "super effective" pill at a time (the round clock counts down)
-    if (eff > 1 && Math.random() < 0.6 && !(this.effAt - this.time < 0.9)) {
-      this.effAt = this.time;
+    // one "super effective" pill at a time
+    if (eff > 1 && Math.random() < 0.6 && !(this.clock - this.effAt < 0.9)) {
+      this.effAt = this.clock;
       this.fx.text({ x: p.x, y: p.y + 1.3, z: p.z }, "It's super effective!", 'eff', 1.1);
     }
     this.arena.cheer(heavy ? 0.35 : 0.12);
@@ -875,6 +875,7 @@ export class Battle {
   update(rawDt) {
     const dt = Math.min(rawDt, 1 / 20) * (this.phase === 'fight' ? this.speedMult : 1);
     this.phaseT += dt;
+    this.clock = (this.clock || 0) + dt;
     if (this.cutinT > 0) {
       this.cutinT -= dt;
       const f = this.superUser;

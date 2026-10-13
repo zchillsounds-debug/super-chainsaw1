@@ -614,3 +614,14 @@ kbd { font-family: var(--display); font-size: 12px; background: #fff; color: var
 @media (max-height: 450px) { .ph-prev h2 { font-size: 24px; margin-bottom: 6px; } .ph-prev img { max-height: 48vh; } }
 .photo .chip { background: rgba(27,17,64,.72); color: #fff; box-shadow: none; }
 .photo .chip.on { background: #fff; color: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
+
+/* training setup */
+.train-pick small { display: block; font-weight: 800; opacity: .6; margin: 6px 0 4px; }
+.tp-foes { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.tp-foe { width: 52px; height: 52px; border-radius: 50%; padding: 0; background: #efe8fb; box-shadow: inset 0 0 0 2px var(--ink); display: grid; place-items: center; font-family: var(--display); font-size: 26px; color: var(--violet); }
+.tp-foe img { width: 100%; height: 100%; border-radius: 50%; }
+.tp-foe.on { box-shadow: inset 0 0 0 4px var(--ink), 0 0 0 3px #7ad36b; transform: scale(1.08); }
+.tp-arenas { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.tp-ar { padding: 8px 12px; border-radius: 99px; background: #efe8fb; color: var(--ink); font-weight: 800; font-size: 14px; box-shadow: inset 0 0 0 2px var(--ink); }
+.tp-ar.on { background: #7ad36b; }
+.train-pick .row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
