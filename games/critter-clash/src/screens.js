@@ -36,6 +36,16 @@ function unlockHint(id) {
   return 'Keep battling!';
 }
 
+// in portrait, keep a bottom-anchored panel sitting just above another one, however tall that grows
+function stackAbove(el, under, gap) {
+  const fit = () => {
+    if (!el.isConnected) { ro.disconnect(); return; }
+    el.style.bottom = document.body.classList.contains('portrait') ? `${Math.round(window.innerHeight - under.getBoundingClientRect().top + gap)}px` : '';
+  };
+  const ro = new ResizeObserver(fit);
+  ro.observe(under); ro.observe(document.body);
+}
+
 export class Screens {
   constructor(game) {
     this.game = game;
@@ -292,6 +302,7 @@ export class Screens {
     };
     R.querySelector('.arrow.l').addEventListener('click', () => step(-1));
     R.querySelector('.arrow.r').addEventListener('click', () => step(1));
+    stackAbove(R.querySelector('.sel-info'), R.querySelector('.sel-bottom'), 14);
     const roster = R.querySelector('.roster');
     CRITTERS.forEach((c, i) => {
       const trial = !save.unlocked.includes(c.id) && free, locked = !playable(c);
@@ -460,6 +471,7 @@ export class Screens {
     bb.innerHTML = `🏅 Badges ${earned}/${BADGES.length}`;
     bb.addEventListener('click', () => { sfx.ui('ok'); this.badgeModal(); });
     const list = S.querySelector('.dex-list');
+    stackAbove(S.querySelector('.dex-info'), list, 12);
     CRITTERS.forEach((c, k) => {
       const locked = !save.unlocked.includes(c.id);
       const b = document.createElement('button');
