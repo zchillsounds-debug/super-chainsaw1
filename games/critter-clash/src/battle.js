@@ -328,6 +328,18 @@ export class Battle {
       disc.rotation.x = -Math.PI / 2; disc.scale.setScalar(1 / 0.88);
       disc.renderOrder = 1;
       mesh.add(disc);
+    } else if (p.kind === 'cloud') {
+      // a grumpy little thundercloud
+      const cm = new THREE.MeshToonMaterial({ color: 0x6a6a8a, emissive: 0x1a1a2a });
+      const puffs = new THREE.Group();
+      for (const [x, y, z, r] of [[0, 0, 0, 0.75], [0.7, -0.1, 0.1, 0.55], [-0.7, -0.08, -0.05, 0.6], [0.3, 0.35, -0.2, 0.55], [-0.3, 0.3, 0.25, 0.5], [0, -0.2, 0.5, 0.5]]) {
+        const pf = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), cm);
+        pf.position.set(x, y, z); puffs.add(pf);
+      }
+      const glow = new THREE.Mesh(new THREE.SphereGeometry(0.9, 14, 10), new THREE.MeshBasicMaterial({ color: 0xfff060, transparent: true, opacity: 0.0, blending: THREE.AdditiveBlending, depthWrite: false }));
+      glow.scale.set(1.6, 0.6, 1.4); glow.position.y = -0.3;
+      mesh.add(puffs, glow);
+      mesh.scale.setScalar(0.01);
     } else if (p.kind === 'whirl') {
       const disc = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ map: getSwirlTex(), transparent: true, depthWrite: false, opacity: 0 }));
       disc.rotation.x = -Math.PI / 2;
@@ -414,6 +426,32 @@ export class Battle {
         pr.mesh.scale.set(1 + Math.sin(pr.t * 25) * 0.12, 1 - Math.sin(pr.t * 25) * 0.12, 1);
         if (Math.random() < 0.6) this.fx.spawn({ x: pr.x, y: pr.y, z: pr.z, color: 0xbfeaff, size: 0.2, life: 0.3, shape: 'drop', additive: false, grav: 6 });
         if (pr.vy < 0 && pr.y <= 0.3) { this.splashLand(pr, target); this.removeProjectile(i); continue; }
+      } else if (pr.kind === 'cloud') {
+        // drifts after the rival and zaps down every so often; the last strike is a big one
+        const grow = Math.min(1, pr.t * 4, (pr.life - pr.t) * 5);
+        pr.mesh.scale.setScalar(Math.max(0.01, grow) * 1.25 * (1 + Math.sin(pr.t * 5) * 0.04));
+        pr.mesh.children[0].rotation.y += dt * 0.6;
+        const glow = pr.mesh.children[1].material;
+        glow.opacity = Math.max(0, glow.opacity - dt * 3);
+        if (target.alive) {
+          const dx = target.x - pr.x, dz = target.z - pr.z, dl = Math.hypot(dx, dz) || 1, sp = Math.min(4.4, dl * 3);
+          pr.vx = THREE.MathUtils.damp(pr.vx, dx / dl * sp, 3, dt); pr.vz = THREE.MathUtils.damp(pr.vz, dz / dl * sp, 3, dt);
+        }
+        if (Math.random() < 0.15) this.fx.spawn({ x: pr.x + (Math.random() - 0.5), y: pr.y - 0.5, z: pr.z + (Math.random() - 0.5), vy: -6, color: 0x9fd8ff, size: 0.15, life: 0.4, shape: 'drop', additive: false });
+        pr.zapT = (pr.zapT ?? 0.55) - dt;
+        const last = !pr.bigDone && pr.t > pr.life - 0.45;
+        if (pr.zapT <= 0 || last) {
+          pr.zapT = 0.62;
+          if (last) pr.bigDone = true;
+          glow.opacity = 0.7;
+          const d = Math.hypot(target.x - pr.x, target.z - pr.z);
+          this.lightning(pr.x, pr.z, last, pr.y - 0.4);
+          sfx.spark(); if (last) { sfx.boom(); this.shake(0.5); }
+          if (target.alive && !target.under && d < (last ? 1.6 : 1.15)) {
+            const a = Math.atan2(target.x - pr.x, target.z - pr.z) || 0;
+            this.applyHit(pr.owner, target, { dmg: (last ? 70 : 26) * pr.owner.power, kb: last ? 7 : 0.8, lift: last ? 8 : 0, stun: 0.45, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: last, type: pr.owner.type, launch: last, paralyze: last ? 0 : 0.35, dizzy: last ? 20 : 8, projectile: true });
+          }
+        }
       } else if (pr.kind === 'puddle') {
         // a lingering slippery zone: the rival slides around inside it
         const m = pr.mesh.children[0].material, fade = Math.min(1, pr.t * 6, (pr.life - pr.t) * 2);
@@ -848,6 +886,19 @@ export class Battle {
         P.sy = 1.05; P.lean = 0;
         if (t > 0.35) this.endSuper(f);
       }
+    } else if (id === 'stormcloud') {
+      // summon a thundercloud over the rival, then get straight back to fighting while it hunts them
+      const P = f.critter.pose;
+      if (f.superPhase === 'go') {
+        f.superPhase = 'summon'; f.st = 0;
+        sfx.spark(); sfx.superCharge();
+        for (const pr of this.projectiles) if (pr.kind === 'cloud' && pr.owner === f) pr.life = Math.min(pr.life, pr.t + 0.3);
+        this.spawnProjectile(f, { kind: 'cloud', big: true, x: o.x, z: o.z, y: 3.1, vx: 0, vz: 0, r: 0.1, life: 4.4, hit: {} });
+      }
+      P.armLz = P.armRz = 2.7; P.y = 0.25 + Math.sin(t * 10) * 0.1; P.head = -0.4;
+      f.critter.emote('happy', 'open', 0.2);
+      if (Math.random() < 0.6) fx.spawn({ x: f.x + (Math.random() - 0.5), y: 1.8 + Math.random(), z: f.z + (Math.random() - 0.5), vy: 3, color: 0xfff060, size: 0.6, life: 0.15, shape: 'bolt', rot: Math.random() * 6 });
+      if (t > 0.6) this.endSuper(f);
     } else if (id === 'whirlpool') {
       // a whirlpool opens under the rival, spins them round and round, then a geyser blasts them up
       const P = f.critter.pose;
@@ -1105,10 +1156,10 @@ export class Battle {
     }
   }
 
-  lightning(x, z, big) {
+  lightning(x, z, big, top = 14) {
     const pts = [];
     let px = x, pz = z;
-    for (let y = 14; y >= 0; y -= 1.4) { pts.push(new THREE.Vector3(px, y, pz)); px = x + (Math.random() - 0.5) * 1.2; pz = z + (Math.random() - 0.5) * 1.2; }
+    for (let y = top; y >= 0; y -= 1.4) { pts.push(new THREE.Vector3(px, y, pz)); px = x + (Math.random() - 0.5) * 1.2; pz = z + (Math.random() - 0.5) * 1.2; }
     pts.push(new THREE.Vector3(x, 0, z));
     const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0), 40, big ? 0.22 : 0.13, 5);
     const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xfffbd0 }));

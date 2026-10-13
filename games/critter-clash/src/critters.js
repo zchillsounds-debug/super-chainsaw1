@@ -278,6 +278,27 @@ export class Critter {
       lens.position.set(0, headR * 0.38, headR * 0.83);
       hat.add(lens);
       skull.add(hat);
+    } else if (def.extra === 'jelly') {
+      // a see-through jelly bell over the head, frilled rim and glowing spots
+      const bellM = new THREE.MeshToonMaterial({ color: C.body, emissive: C.body, emissiveIntensity: 0.25, transparent: true, opacity: 0.42, depthWrite: false });
+      const cap = Math.PI * 0.36, rimR = headR * 1.14 * Math.sin(cap), rimY = headR * 0.06 + headR * 1.14 * Math.cos(cap);
+      const bell = new THREE.Mesh(new THREE.SphereGeometry(headR * 1.14, 28, 12, 0, Math.PI * 2, 0, cap), bellM);
+      bell.position.y = headR * 0.06; bell.renderOrder = 3;
+      skull.add(bell);
+      for (let k = 0; k < 16; k++) {
+        const a = k / 16 * Math.PI * 2, fr = new THREE.Mesh(sphere(headR * 0.08), this.mats.accent);
+        fr.scale.set(1, 0.7, 1); fr.position.set(Math.cos(a) * rimR, rimY - headR * 0.03, Math.sin(a) * rimR);
+        skull.add(fr);
+      }
+      for (const [x, y, z, r] of [[0.3, 1.0, 0.36, 0.1], [-0.36, 0.96, 0.3, 0.075], [0.0, 1.12, 0.0, 0.085]]) {
+        const sp = new THREE.Mesh(sphere(headR * r), new THREE.MeshBasicMaterial({ color: C.accent }));
+        sp.position.set(x * headR, y * headR, z * headR);
+        skull.add(sp);
+        (this.glows ||= []).push(sp);
+      }
+      const nose = new THREE.Mesh(sphere(headR * 0.05), this.mats.dark);
+      nose.position.set(0, -headR * 0.2, headR * 0.99);
+      skull.add(nose);
     } else if (def.extra === 'otter') {
       // puffy cream muzzle with whiskers, a dark button nose, and a scallop shell clipped behind one ear
       const cream = this.mats.belly;
@@ -749,6 +770,19 @@ export class Critter {
       const tip = inked(sphere(0.15), this.mats.belly, OL * 0.8);
       tip.position.set(0, 0.8, 0.02);
       tail.add(tip);
+    } else if (def.tail === 'tentacles') {
+      // a skirt of wobbly tentacles hanging from under the body (they sway in update)
+      this.tentacles = [];
+      for (let k = 0; k < 7; k++) {
+        const a = (k / 7) * Math.PI * 2 + 0.2, g = new THREE.Group();
+        g.position.set(Math.sin(a) * B.w * 0.36, B.h * 0.12, Math.cos(a) * B.w * 0.3);
+        const pieces = [];
+        for (let j = 0; j < 5; j++) { const sp = sphere(0.07 - j * 0.009); sp.translate(Math.sin(j * 1.3) * 0.03, -j * 0.075, 0); pieces.push(sp); }
+        g.add(inked(mergeGeometries(pieces), k % 2 ? this.mats.body : this.mats.belly, OL * 0.6));
+        g.userData.k = k;
+        pelvis.add(g);
+        this.tentacles.push(g);
+      }
     } else if (def.tail === 'otter') {
       // thick tapered rudder tail that sweeps out behind
       tail.position.y = B.h * 0.12;
@@ -932,6 +966,7 @@ export class Critter {
       w.rotation.y = s * (0.5 + Math.sin(t * (24 + P.tail * 14) + k * 1.4) * (0.35 + P.tail * 0.2));
       w.rotation.z = s * (k ? -0.25 : 0.15);
     }
+    if (this.tentacles) for (const g of this.tentacles) { const k = g.userData.k; g.rotation.x = Math.sin(t * 3.2 + k) * 0.25 - (P.lean || 0) * 0.5; g.rotation.z = Math.cos(t * 2.6 + k * 1.7) * 0.2; }
     if (this.lantern) {
       const pulse = 0.8 + Math.sin(t * 4) * 0.2;
       this.lantern.scale.setScalar(1.15 + pulse * 0.35);

@@ -128,6 +128,12 @@ export class Screens {
         "Oh, {name}! A new league has opened deep in the mushroom woods: the Glowcap Cup.",
         "The fireflies are lovely, but watch out for the spore puffs. Achoo!",
       ]), 600);
+    } else if (!g.autoplay && save.cups.champion && !save.news?.includes('jelly') && !save.unlocked.includes('jiggawatt')) {
+      (save.news ||= []).push('jelly'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! Something is glowing on the Neon Rooftop. It's Jiggawatt, a jelly sprite that crackles when it giggles!",
+        "DJ Tumble brought it to the Midnight Cup as a light show. Beat them and it might drift over to your team.",
+      ]), 600);
     } else if (!g.autoplay && save.news?.includes('grove') && !save.news.includes('otter') && !save.unlocked.includes('ripples')) {
       save.news.push('otter'); persist();
       setTimeout(() => this.mode === 'title' && this.profTalk([
@@ -551,7 +557,7 @@ export class Screens {
       this.dexPick(i, b.dataset.skin === 'base');
       if (b.dataset.skin === 'shiny') { g.showcase[0].cheer = 1.2; sfx.jingle(2); }
     }));
-    this.root.querySelectorAll('.dcard').forEach((b, k) => b.classList.toggle('on', k === i));
+    this.root.querySelectorAll('.dcard').forEach((b, k) => { b.classList.toggle('on', k === i); if (k === i) b.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); });
   }
 
   // ---------- critter camp ----------

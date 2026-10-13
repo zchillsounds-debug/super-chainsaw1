@@ -36,7 +36,8 @@ URL flags:
 
 - `&arena=frost`, `&arena=neon` and `&arena=sky` also work now, and `&mods=bighead,turbo,lowgrav,itemrain,supercharged` applies match modifiers.
 
-Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt, pebblepup, whirlwhisk, lilypop, diggles.
+Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt, pebblepup, whirlwhisk, lilypop, diggles, ripples.
+- Gotcha: `tools/multi.mjs` adds the `?` itself, so pass `play&p=...`, not `?play&p=...` (a double `??` silently shows the title).
 Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - `&train` starts a training match (e.g. `?play&train&p=woolt`).
 - Force a win in tests: `(()=>{const b=__game.battle;for(let i=0;i<40&&b.phase!=='done';i++){if(b.phase==='fight')b.fighters[1].hp=1;__sim(1);}})()`, then `__sim(2)` and screenshot the results.
@@ -165,6 +166,15 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - UI: CLEARED ribbon on cups, `div.portrait > img` (fixed leaking styles), portrait roster/dex 7 columns, `stackAbove()` keeps info cards above lists in portrait, cup select/ladder show the cup's arena, Move List in every pause menu, Pecan news popups for returning players (`save.news`).
 - Last balance run (1 rep, before small nerfs): Lilypop 73% → tongue stun 0.8 / cd 4.0; Whirlwhisk hp 1040; Woolt power 0.97. Re-run `tools/robin.mjs` (build first) to check.
 
+## New in session 9
+- **Ripples** (water river otter, `extra: 'otter'` muzzle/whiskers/scallop clip, `tail: 'otter'`). Special `puddle` (lobbed `splash` projectile → `splashLand()` → stationary `puddle` projectile, r 1.7, 4.5 s; one per owner; the rival inside gets `f.slick`, which cuts speed to 60% and traction to ~2, with flailing arms). Super `whirlpool` (stationary `whirl` projectile disc with a canvas swirl; the rival orbits inward, 4 small hits, then a geyser launch). Shared textures `getPuddleTex`/`getSwirlTex` in battle.js. Trainer Brook (Glowcap Cup, replaced Moss), Pecan news `otter`.
+- `window.__cups` = CUPS (for tools).
+- **tools/tapcheck.mjs** `[WxH ...]`: opens every screen/modal (incl. pause and results) and reports buttons that are OFF-screen, CLIPPED, or COVERED (only the topmost modal layer is checked). `SHOTS=1` saves screenshots. Portrait battle screens report "covered by rotate-hint", which is expected.
+- **tools/cupflow.mjs** `[WxH] [cupIndex]`: taps through a whole cup like a player (wins forced via `onKO`) and prints the screen path or `STUCK at <mode>` + a screenshot.
+- Professor Pecan dialogs: tapping anywhere finishes the line; a second tap advances.
+- The previous session (session 8) answered a user bug report at 22:45: Camp back button covered by the tap layer, and the recruit popup's Yay button off-screen on short phones (blocking the cup finish). Both fixed in e63390e.
+- APK CI can fail at the final `git push -f` with a GitHub 500; the next push rebuilds it.
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -265,6 +275,10 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 88. Glowcap Grove arena with spore-puff hazard and forest theme.
 89. Glowcap Cup (Elder Oakley boss, Spore Sport badge); ladder names readable on short phones.
 90. Glowing toadstools in Camp for the Glowcap Cup; Pecan announces the new cup.
+91. (session 8) Camp back button and stuck tournament finish fixed (user report).
+91. Ripples, the river otter (Slick Puddle / Whirlpool), in the Glowcap Cup.
+92. Tap-check sweep: Critterdex grid scrolls in landscape, results fit 360 px tall phones.
+94. Tap anywhere to advance Pecan's dialog; tools/cupflow.mjs (Sprout Cup clears by tapping at 740×360).
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
