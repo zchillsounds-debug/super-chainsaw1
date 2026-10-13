@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 5)
+# Critter Clash: Handoff (after Round 18)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -11,6 +11,7 @@
 
 ## Timeline
 - Session 1 started at about **04:27 UTC on 2026-10-13**. Rounds 1–5 were done by 05:19 UTC.
+- Session 2 (05:20–06:12 UTC) did Rounds 6–18 and chained because context was getting large.
 - Target end of the whole effort: about **14:30 UTC on 2026-10-13**. Check `date -u`. Keep chaining sessions until then, then stop and summarise.
 
 ## Run it
@@ -24,7 +25,15 @@ URL flags:
 - `?mobile` forces the touch UI.
 - `?q=low|med|high` sets the quality.
 
-Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy.
+- `&arena=frost` also works now, and `&mods=bighead,turbo,lowgrav,itemrain,supercharged` applies match modifiers.
+
+Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly.
+
+**Test gotchas (learned in session 2):**
+- `window.__save` is the live save object. Set `__save.trainer = {name:'Sam', partner:'cindermunch'}` before calling `__game.screens.title()` in tests, or the first-launch welcome shows instead.
+- Headless frames are very slow, so real-time things (CSS animations, `setTimeout` announcer/name-card/callout timers) often finish or vanish before a screenshot. Don't chase these as bugs. To inspect one, pause its animation (`el.getAnimations()[0].pause(); .currentTime = 400`) or check the DOM.
+- `__ready` is now set after the boot/prewarm finishes (splash), so tools still work unchanged.
+- Dynamic `import('/src/x.js')` in eval can get a separate module instance after HMR edits; use `__game`/`__save` instead.
 
 ## Test tools (`games/critter-clash/tools`, headless SwiftShader is slow)
 - `node tools/multi.mjs <w> <h> "<query>" tools/out/<prefix> '[["<js>","name",waitMs],...]'` loads the page once and takes many shots. A name starting with `_` means no screenshot.
@@ -79,6 +88,18 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy.
 - **style.css:** all UI. Lilita One display font and Nunito, both bundled through @fontsource. The anime outline look comes from `-webkit-text-stroke` plus `paint-order`.
 - **Gotcha:** don't add a body class that matches a component class. `body.touch` once hid the whole page, which is why it's now `is-touch`.
 
+## New modules (session 2)
+- **personality.js:** per-critter `INTRO`/`WIN` animations and `LINES` catchphrases; `sayLine(f, kind)` shows a speech bubble (`fx.say`).
+- **items.js:** arena power-ups (berry heal, star super, shoe speed); `Items` owned by Battle; CPU seeks them.
+- Battle now has `mods` (Set), `grav`, `superMult`, `speedMult`, `playerHp` carry, `anims` (game-time effect callbacks via `this.anim(fn)`), boss `enrage()`, `parry()`.
+- Fighter has a `guard` state with a fresnel `shield` mesh, `guardHp`, `blockHit()`, `speedBoost`; per-critter combo flavour in `STRIKE`.
+- data.js: `SHINY` palettes + `skinned(def, skin)`, `BADGES`, `MODS`, `dailyChallenge()`, 4 cups (Legend Cup added), trainer `style`/`skin`/`mods` fields.
+- ai.js: `STYLES` (balanced/rushdown/zoner/turtle/trickster) and guard/item logic.
+- audio.js: songs battle/beach/volcano/frost/boss/menu/victory with `inst` options, sidechain `synthBus`, `duck()`, `setIntensity()`, `sfx.fanfare(def)`, block/parry/pickup/jingle.
+- screens.js: `welcome()` (Professor Pecan, name + partner), `challenges()` (Survival, Daily), `dex()`/`dexPick()`/`badgeModal()`, `infoCard()`.
+- arena.js: `frost` arena (aurora/star sky shader, snowfall Points, pines), floor styles `sand`/`basalt`(+lava seams)/`snow`, `setDetail(q)` for low quality.
+- index.html: inline splash; main.js `boot()` prewarms portraits + shaders.
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -93,56 +114,37 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy.
    - Closer camera.
 4. Settings, auto quality, back button and pause-on-hide, first-battle tutorial.
 5. Beach and Volcano arenas, mapped to cups.
+6. Personality: signature intros/victories, intro close-up camera, name cards, speech bubbles, type hit sparks, announcer callouts.
+7. Critterdex (spin model, stats, record), shiny palettes (cup rewards, golden rim), badges.
+8. Guard + parry, power-ups, trainer AI styles, Aurora boss enrage, touch button labels.
+9. Pengsicle (water penguin: Belly Slide / Blizzard Bash) and Emberfly (fire firefly: Wisp Swarm / Supernova).
+10. Audio: per-arena themes, boss theme, sidechain pump, ducking, tension layer, victory fanfares.
+11. Splash + shader prewarm, 512 px icon, game-time effect anims, select screen fits 8.
+12. Challenges: Survival (streak, HP carry) and Daily Challenge (seeded rival/arena/modifier, 2× XP); 5 match modifiers.
+13. Floor pass: beach sand ripples/shells, volcano basalt + glowing lava seams.
+14. Frostpeak Dome arena (aurora, snow, pines, own theme) + Legend Cup (5 modded rematches).
+15. Low-quality scaling (half crowd, less snow).
+16. Tighter fight camera, bigger damage numbers.
+17. Per-critter combo animations (kicks, headbutts, wing slaps, tail whips) + swipe arcs.
+18. First-launch welcome: Professor Pecan, trainer name, partner pick.
 
 ## Critique backlog (known issues)
-**Visual and feel:**
+- Portrait-orientation battles on desktop (non-touch) cut off the right health bar; touch shows the rotate hint so phones are fine.
+- Emberfly's wings are subtle; the purple body could pop more.
+- Volcano lava seams read as orange lines more than glow; could brighten the core.
 - The jumbotron is rarely in view.
-- Portraits are 256 px, so the icon is soft. Render the icon at 512.
-- Two "super effective!" pills can overlap.
-- The super cut-in band (CSS) runs on real time, which is fine on device.
-- Touch buttons have no text labels; the tutorial refers to them by colour.
-- Hootsy's and Rolladillo's faces haven't had a close-up check. Verify ear and shell placement in a close-up shot.
-- The rock ring and lightning animate with rAF (real time), so they don't advance under `__sim`.
+- Results screen background is just the empty arena; could show the winner doing its victory anim close up.
+- No photo mode, no training mode, no localisation.
+- Tutorial refers to button names (HIT/SPECIAL/DODGE/SUPER/GUARD labels now exist).
+- Not yet verified on a real phone this session; APK CI runs 8–13+ all succeeded.
 
-**Game feel:**
-- No blocking or guard yet.
-- The CPU can be samey.
-- No per-critter intro or victory animations; they all share one.
-
-**Audio:**
-- One battle song for every arena.
-- No announcer.
-
-**Menus:**
-- No collection ("Critterdex") screen.
-- No loading screen; the first frame compiles shaders and may hitch.
-
-## Suggested next rounds (adjust after critique)
-- **R6, character personality:**
-  - Unique idle, intro and victory animations and taunts per critter.
-  - Expression variety.
-  - Per-type hit sparks.
-  - Announcer callouts (synth jingles plus big text).
-- **R7, Critterdex/Team screen:**
-  - Rotate the 3D model, view stats and moves.
-  - Unlockable colour variants ("shiny" palettes) as cup rewards.
-  - A titles/badges system.
-- **R8, combat depth:**
-  - Guard with a shield bubble, or a perfect-guard parry.
-  - Arena power-ups: a berry heals, a star charges super, a speed shoe.
-  - Smarter CPU personalities per trainer; boss phases for the champion Aurora.
-- **R9, roster:** two more critters (for example a frost/water penguin and a spark/fire firefly) with new specials and supers. Add them to cups or a bonus cup.
-- **R10, audio:**
-  - A theme per arena.
-  - Better mix and sidechain feel.
-  - Victory jingles per critter.
-- **R11, production polish:**
-  - Loading/splash screen with shader prewarm (`renderer.compile`).
-  - Splash/icon in the APK.
-  - Performance on low-end devices.
-  - Final bug sweep and playtest checklist.
-- After R11, if time remains: daily challenge mode, survival mode, a second boss cup, or photo mode.
-- Consider offering the user a playable Artifact build (inline the Vite build into one HTML file) so they can play in the browser too. Ask once; they chose the APK and branch pushes as delivery.
+## Suggested next rounds
+- R19: results screen polish (winner close-up with victory anim behind the card, stat count-up).
+- R20: training mode (dummy, move list, input display) and a move-list page in the Critterdex.
+- R21: photo mode from pause (orbit cam, hide HUD, frames); save via download on web.
+- R22: another critter pair (leaf/stone or gust/spark), or a 5th arena.
+- R23: final bug sweep + playtest checklist; fetch the latest APK and send it to the user with SendUserFile.
+- At ~14:30 UTC stop, update this file and summarise for the user.
 
 ## Chaining (do this at the end of each session)
 1. Update this HANDOFF.md: rounds done, backlog, next steps, and the time used so far.
