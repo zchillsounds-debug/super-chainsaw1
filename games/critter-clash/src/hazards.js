@@ -57,7 +57,7 @@ export class Hazards {
 
   // is this spot inside a live warning ring? (the CPU uses it to step out)
   danger(x, z) {
-    for (const h of this.list) if (!h.fired && Math.hypot(x - h.x, z - h.z) < this.H.r + 0.4) return h;
+    for (const h of this.list) if (!h.fired && h.t >= 0 && Math.hypot(x - h.x, z - h.z) < this.H.r + 0.4) return h;
     return null;
   }
 
@@ -79,7 +79,15 @@ export class Hazards {
     for (let k = 0; k < 3; k++) this.spawnAt(cx + nx * (k - 1) * gap * side, cz + nz * (k - 1) * gap * side, -k * 0.35, k > 0);
   }
 
-  spawnAt(x, z, t0 = 0, quiet = false) {
+  // the arena picks on one fighter: rings land on them one after another, so standing still is a bad idea
+  chase() {
+    const B = this.b, f = B.fighters[Math.random() < 0.5 ? 0 : 1];
+    for (let k = 0; k < 3; k++) this.spawnAt(f.x, f.z, -k * 0.85, k > 0, f);
+    const hp = f.headPos();
+    B.fx.text({ x: hp.x, y: hp.y + 0.4, z: hp.z }, 'RUN!', 'eff', 0.9);
+  }
+
+  spawnAt(x, z, t0 = 0, quiet = false, follow = null) {
     const B = this.b, H = this.H;
     const r = Math.hypot(x, z), lim = ARENA_R - 1.6;
     if (r > lim) { x *= lim / r; z *= lim / r; }
@@ -87,7 +95,7 @@ export class Hazards {
     mesh.position.set(x, 0.035, z);
     mesh.scale.setScalar(H.r);
     B.scene.add(mesh);
-    const h = { x, z, t: t0, fired: false, mesh };
+    const h = { x, z, t: t0, fired: false, mesh, follow };
     mesh.visible = t0 >= 0;
     if (B.arena.key === 'frost' || B.arena.key === 'beach') {
       h.drop = dropMesh(B.arena.key);
@@ -116,6 +124,7 @@ export class Hazards {
       this.timer -= dt;
       if (this.timer <= 0 && this.list.length < (this.stormy ? 4 : 2)) {
         if (this.stormy) { this.timer = 3.5 + Math.random() * 2; Math.random() < 0.6 ? this.volley() : this.spawn(); }
+        else if (Math.random() < 0.35) { this.timer = 9 + Math.random() * 4; this.chase(); }
         else { this.timer = 6.5 + Math.random() * 4.5; this.spawn(); }
       }
     }
@@ -123,6 +132,14 @@ export class Hazards {
       const h = this.list[i];
       h.t += dt;
       if (h.t < 0) continue; // staggered volley rings wait their turn
+      if (h.follow) {
+        // a chasing ring lands wherever its target is standing when it appears
+        const r = Math.hypot(h.follow.x, h.follow.z), lim = ARENA_R - 1.6, sc = r > lim ? lim / r : 1;
+        h.x = h.follow.x * sc; h.z = h.follow.z * sc; h.follow = null;
+        h.mesh.position.set(h.x, 0.035, h.z);
+        if (h.drop) h.drop.position.set(h.x, 9, h.z);
+        sfx.warn();
+      }
       h.mesh.visible = true;
       const k = Math.min(1, h.t / H.warn);
       const { ring, fill } = h.mesh.userData;
