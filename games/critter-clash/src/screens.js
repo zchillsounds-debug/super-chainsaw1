@@ -1,5 +1,5 @@
 // Title, tournament cups/ladder, critter select, VS splash, results and pause overlays.
-import { CRITTERS, TYPES, CUPS, SHINY, BADGES, MODS, STARTERS, skinned, withGear, dailyChallenge } from './data.js';
+import { CRITTERS, TYPES, CUPS, SHINY, BADGES, MODS, STARTERS, skinned, withGear, gearFor, GEAR, dailyChallenge } from './data.js';
 import { sfx, playMusic } from './audio.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { openSettings } from './settings.js';
@@ -483,9 +483,12 @@ export class Screens {
         <button class="chip skin shiny ${skin === 'shiny' ? 'on' : ''} ${hasShiny ? '' : 'locked'}" data-skin="shiny">${hasShiny ? '✦ Shiny' : '🔒 Shiny'}</button>
       </div>
       ${hasShiny ? '' : `<div class="dex-hint">Clear the ${cup ? cup.name : 'tournament'} to unlock.</div>`}` : '';
+    const gear = `<div class="dex-gear"><small>Gear</small>${GEAR.map((x) => prog.level >= x.lv
+      ? `<span class="got" title="${x.name}"><i>${x.icon}</i>${x.name}</span>`
+      : `<span title="Reach Lv ${x.lv}"><i>🔒</i>Lv ${x.lv}</span>`).join('')}</div>`;
     const record = `<div class="dex-record"><span><b>${prog.wins || 0}</b> wins</span><span>Lv <b>${prog.level}</b></span><span>${TYPES[c.type].name}</span></div>`;
     const info = this.root.querySelector('.dex-info');
-    info.innerHTML = this.infoCard(c, record + skins + '<button class="chip dex-moves">📜 Move List</button>');
+    info.innerHTML = this.infoCard(c, record + gear + skins + '<button class="chip dex-moves">📜 Move List</button>');
     info.querySelector('.dex-moves').addEventListener('click', () => this.moveModal(c));
     info.querySelectorAll('.skin').forEach((b) => b.addEventListener('click', () => {
       if (b.dataset.skin === 'shiny' && !hasShiny) { sfx.ui('back'); this.toast(`Clear the ${cup ? cup.name : 'tournament'} to unlock`); return; }
@@ -680,6 +683,7 @@ export class Screens {
           level++; lvEl.textContent = 'Lv ' + level; lvEl.classList.add('up');
           sfx.voice(pDef.voice, 'win');
           this.toast(`${pDef.name} grew to Lv ${level}!`);
+          if (gearFor(level) > gearFor(level - 1)) setTimeout(() => this.gearGet(pDef, GEAR[gearFor(level) - 1]), 900);
           bar.style.transition = 'none'; bar.style.width = '0%'; void bar.offsetWidth; bar.style.transition = '';
           fill();
         }, 700);
@@ -707,6 +711,19 @@ export class Screens {
       b.appendChild(this.btn('Title', 'ghost', () => this.title()));
     }
     if (joined) setTimeout(() => this.recruit(cDef), 1600);
+  }
+
+  // callout when a level-up earns a new piece of gear
+  gearGet(def, gear) {
+    if (this.mode !== 'results') return;
+    const card = this.root.querySelector('.res-stats');
+    if (!card) return;
+    card.querySelector('.gear-get')?.remove();
+    const el = document.createElement('div');
+    el.className = 'gear-get';
+    el.innerHTML = `<i>${gear.icon}</i><span><small>New gear!</small><b>${gear.name}</b><em>${def.name} wears it from the next battle</em></span>`;
+    card.appendChild(el);
+    sfx.jingle(3);
   }
 
   recruit(def) {
