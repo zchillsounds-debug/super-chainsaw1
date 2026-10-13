@@ -520,7 +520,7 @@ export class Screens {
     this.campObj = new Camp(this, team);
     S.querySelector('.camp-touch').addEventListener('pointerdown', (e) => this.campObj?.tap(e.clientX, e.clientY));
     this.campObj.panel();
-    playMusic('menu');
+    playMusic('camp');
   }
 
   badgeModal() {

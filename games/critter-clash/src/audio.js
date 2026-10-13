@@ -230,6 +230,23 @@ const SONGS = {
     ],
     drums: 'k...s..kk...s...',
   },
+  // Critter Camp: a slow, cosy campfire tune
+  camp: {
+    bpm: 90,
+    inst: { lead: 'triangle', lead2: 'sine', leadVol: 0.11, bass: 'sine', bassVol: 0.22, stab: 'sine' },
+    chords: [[53, 57, 60, 64], [48, 52, 55, 59], [50, 53, 57, 60], [46, 50, 53, 57], [53, 57, 60, 64], [45, 48, 52, 55], [46, 50, 53, 57], [48, 52, 55, 58]],
+    lead: [
+      [72, null, null, 69, null, null, 72, null, 74, null, null, null, 72, null, null, null],
+      [71, null, null, 67, null, null, 69, null, 71, null, 72, null, null, null, null, null],
+      [74, null, null, 72, null, null, 69, null, 72, null, null, 69, null, null, null, null],
+      [70, null, null, null, 69, null, 67, null, 65, null, null, null, null, null, null, null],
+      [72, null, null, 76, null, null, 77, null, 76, null, 74, null, 72, null, null, null],
+      [72, null, null, 69, null, null, 67, null, 64, null, null, null, null, null, null, null],
+      [65, null, 67, null, 69, null, 70, null, 74, null, null, 72, null, null, null, null],
+      [72, null, null, null, 70, null, null, null, 67, null, null, null, null, null, null, null],
+    ],
+    drums: 'k.......s.......',
+  },
   beach: {
     bpm: 120,
     inst: { lead: 'triangle', lead2: 'sine', leadVol: 0.12, steel: true, bass: 'sine', stab: 'triangle' },
@@ -332,7 +349,7 @@ function playStep(song, step, t) {
   const chord = song.chords[bar % song.chords.length];
   const bus = synthBus;
   // bass: root on 8ths, octave bounce (16ths when tense)
-  if (s % 2 === 0 || intensity > 0 && song !== SONGS.menu) {
+  if (s % 2 === 0 || intensity > 0 && song !== SONGS.menu && song !== SONGS.camp) {
     const n = chord[0] - 12 + (s % 4 === 2 ? 12 : 0);
     osc(I.bass || 'triangle', N(n), N(n), spb * (s % 2 ? 0.8 : 1.6), (I.bassVol || 0.32) * (s % 2 ? 0.6 : 1), { t, bus });
   }
