@@ -178,10 +178,10 @@ body.portrait .sel-actions { align-items: center; }
 .pause-btn { position: absolute; top: calc(84px + var(--sat)); left: 50%; transform: translateX(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(27,17,64,.5); }
 .pause-btn svg { width: 20px; fill: #fff; }
 
-.combo { position: absolute; left: calc(26px + var(--sal)); top: 34%; font-family: var(--display); display: flex; align-items: baseline; gap: 6px; opacity: 0; transform: translateX(-30px); transition: opacity .2s, transform .2s; }
+.combo { position: absolute; left: calc(26px + var(--sal)); top: 34%; font-family: var(--display); display: flex; align-items: baseline; gap: 12px; opacity: 0; transform: translateX(-30px); transition: opacity .2s, transform .2s; }
 .combo.on { opacity: 1; transform: none; }
 .combo b { font-size: 64px; font-weight: 400; color: var(--yellow); }
-.combo span { font-size: 24px; color: #fff; }
+.combo span { font-size: 24px; color: #fff; position: relative; }
 .combo.pop b { animation: comboPop .25s cubic-bezier(.2,2,.4,1); display: inline-block; }
 @keyframes comboPop { from { transform: scale(1.8); } }
 
