@@ -821,11 +821,21 @@ export class Battle {
     this.slowmo = 1.6;
     this.koWinner = att;
     this.koLoser = def;
-    this.hud.announce('K.O.!', 'ko');
+    // the match-deciding KO gets a frozen, tilted impact close-up before the orbit
+    this.finisher = this.wins[att.side] + 1 >= this.winsNeeded && !this.training;
+    this.hud.announce(this.finisher ? 'FINAL K.O.!' : 'K.O.!', 'ko');
+    if (this.finisher) {
+      this.camSnap = true;
+      this.hitstop = Math.max(this.hitstop, 0.32);
+      const cp = def.chestPos();
+      this.fx.shock({ x: def.x, y: 0.05, z: def.z }, 0xffffff);
+      this.fx.burst(cp, { n: 26, speed: 11, up: 3, color: TYPES[att.type].glow, size: 0.22, life: 0.5, grav: 6 });
+      this.fx.spawn({ ...cp, color: 0xffffff, size: 5, life: 0.3, shape: 'burst', grow: 2 });
+    }
     sfx.ko();
     sfx.cheer(1.2);
     this.arena.cheer(1);
-    this.game.impactFrame(0.14);
+    this.game.impactFrame(this.finisher ? 0.26 : 0.14);
     this.fx.confetti({ x: def.x, y: 4, z: def.z }, 70);
     if (def === this.cpu && this.roundDmgTaken === 0) this.stats.perfect = true;
   }
@@ -979,7 +989,7 @@ export class Battle {
   updateCamera(dt) {
     const cam = this.camera, [p, c] = this.fighters;
     const cs = this.camState;
-    let look, pos, fov = 42;
+    let look, pos, fov = 42, roll = 0;
     if (this.camOverride) ({ look, pos, fov } = this.camOverride);
     else if (this.phase === 'intro') {
       // close-up on the rival, then on us, then pull out wide
@@ -996,6 +1006,14 @@ export class Battle {
         // low establishing shot that tilts up enough to catch the jumbotron over the far stands
         look = new THREE.Vector3(mid.x, 4.6, mid.z); pos = new THREE.Vector3(mid.x, 3.2, mid.z + 17);
       }
+    } else if (this.phase === 'ko' && this.finisher && this.phaseT < 0.75) {
+      // finisher: low dutch angle from the side, both fighters in frame
+      const a = this.koWinner, d = this.koLoser;
+      const mx = (a.x + d.x) / 2, mz = (a.z + d.z) / 2, dx = d.x - a.x, dz = d.z - a.z, len = Math.hypot(dx, dz) || 1;
+      look = new THREE.Vector3(d.x * 0.7 + a.x * 0.3, d.y * 0.5 + 0.8, d.z * 0.7 + a.z * 0.3);
+      pos = new THREE.Vector3(mx - dz / len * 3.6, 0.55, mz + dx / len * 3.6);
+      if (pos.z < mz) { pos.x = mx + dz / len * 3.6; pos.z = mz - dx / len * 3.6; }
+      fov = 34; roll = 0.2 * (a.side ? -1 : 1);
     } else if ((this.phase === 'ko' || this.phase === 'winpose') && this.koWinner) {
       const f = this.phase === 'ko' ? this.koLoser : this.koWinner;
       look = new THREE.Vector3(f.x, f.y + 0.8, f.z);
@@ -1040,6 +1058,8 @@ export class Battle {
     const s = this.shakeAmt * this.shakeAmt * 0.6;
     cam.position.set(cs.pos.x + (Math.random() - 0.5) * s, cs.pos.y + (Math.random() - 0.5) * s, cs.pos.z + (Math.random() - 0.5) * s);
     cam.lookAt(cs.look);
+    this.camRoll = THREE.MathUtils.damp(this.camRoll || 0, roll, 6, dt);
+    if (Math.abs(this.camRoll) > 1e-3) cam.rotateZ(this.camRoll);
     // narrow aspect (portrait-ish phones) need a wider fov
     const aspectFix = Math.max(1, 1.6 / cam.aspect);
     cam.fov = Math.min(80, cs.fov * aspectFix);

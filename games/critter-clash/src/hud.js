@@ -27,7 +27,7 @@ export class Hud {
       <div class="announce"></div>
       <div class="callouts"></div>
       <div class="namecard"><div class="nc-band"><small></small><b></b><span class="nc-type"></span></div></div>
-      <div class="cutin"><div class="cutin-band"><div class="cutin-lines"></div><img alt=""><div class="cutin-text"><small></small><b></b></div></div></div>
+      <div class="cutin"><div class="cutin-dim"></div><div class="cutin-band"><div class="cutin-lines"></div><div class="cutin-mark"></div><div class="cutin-burst"></div><img alt=""><div class="cutin-text"><small></small><b></b></div></div></div>
       <div class="impact"></div><div class="speedlines"></div>`;
     ui.appendChild(el);
     this.q = (s) => el.querySelector(s);
@@ -144,6 +144,7 @@ export class Hud {
   cutIn(f) {
     const c = this.cutEl;
     c.style.setProperty('--tc', TYPES[f.type].color);
+    c.querySelector('.cutin-mark').textContent = (TYPES[f.type].name + ' ').toUpperCase().repeat(8);
     c.querySelector('img').src = this.game.portrait(f.def);
     c.querySelector('small').textContent = f.def.name + ' unleashes';
     c.querySelector('b').textContent = f.def.moves.super + '!';
