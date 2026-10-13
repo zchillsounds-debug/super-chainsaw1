@@ -2,6 +2,7 @@
 import { CRITTERS, TYPES, CUPS, SHINY, BADGES, MODS, STARTERS, skinned, withGear, gearFor, GEAR, dailyChallenge } from './data.js';
 import { sfx, playMusic } from './audio.js';
 import { HAZARDS } from './hazards.js';
+import { Camp } from './camp.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
@@ -89,6 +90,7 @@ export class Screens {
     row.appendChild(this.btn('Quick Battle', '', () => { this.ctx = { kind: 'quick' }; this.select(); }));
     row.appendChild(this.btn('Challenges', '', () => this.challenges()));
     row.appendChild(this.btn('Critterdex', '', () => this.dex()));
+    row.appendChild(this.btn('Camp', '', () => this.camp()));
     row.appendChild(this.btn('How to Play', 'ghost', () => this.howTo()));
     m.appendChild(row);
     const gear = this.btn('<svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 3.5c0-.5 0-1-.1-1.4l2-1.6-2-3.4-2.4 1a8 8 0 0 0-2.4-1.4L15 2.6h-4l-.4 2.6A8 8 0 0 0 8.2 6.6l-2.4-1-2 3.4 2 1.6a8 8 0 0 0 0 2.8l-2 1.6 2 3.4 2.4-1a8 8 0 0 0 2.4 1.4l.4 2.6h4l.4-2.6a8 8 0 0 0 2.4-1.4l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.4z"/></svg>', 'icon-btn gear', () => openSettings(g, this.root));
@@ -502,6 +504,25 @@ export class Screens {
     this.root.querySelectorAll('.dcard').forEach((b, k) => b.classList.toggle('on', k === i));
   }
 
+  // ---------- critter camp ----------
+  camp() {
+    const g = this.game;
+    g.endBattle();
+    g.setArena('meadow');
+    this.mode = 'camp';
+    const team = CRITTERS.filter((c) => save.unlocked.includes(c.id)).map(skinOf);
+    g.setShowcase(team, 'line');
+    this.root.innerHTML = `<div class="camp-screen"><div class="camp-touch"></div>
+      <div class="camp-berries">🍓 <b>${save.berries || 0}</b></div>
+      <div class="camp-panel"></div></div>`;
+    const S = this.root.querySelector('.camp-screen');
+    S.prepend(this.header('Critter Camp', () => { this.campObj = null; this.title(); }));
+    this.campObj = new Camp(this, team);
+    S.querySelector('.camp-touch').addEventListener('pointerdown', (e) => this.campObj?.tap(e.clientX, e.clientY));
+    this.campObj.panel();
+    playMusic('menu');
+  }
+
   badgeModal() {
     const d = document.createElement('div');
     d.className = 'modal-wrap';
@@ -635,6 +656,8 @@ export class Screens {
         save.shinies.push(...shinies);
       }
     }
+    // berries for Critter Camp: one per win, a bonus for an S rank (added below once the rank is known)
+    if (won && !opts.training) save.berries = (save.berries || 0) + 1;
     persist();
     this.ctx.newShinies = shinies;
     const badges = newBadges();
@@ -643,6 +666,8 @@ export class Screens {
     const hpLeft = stats.hpLeft ?? 0;
     const score = (won ? 45 : 10) + hpLeft * 30 + Math.min(stats.maxCombo, 8) * 2 + Math.min(stats.supers, 2) * 4 + (stats.perfect ? 12 : 0) + Math.min(stats.parries || 0, 3) * 2;
     const grade = !won ? (score >= 40 ? 'B' : 'C') : score >= 92 ? 'S' : score >= 78 ? 'A' : score >= 62 ? 'B' : 'C';
+    const berries = won && !opts.training ? (grade === 'S' ? 2 : 1) : 0;
+    if (berries === 2) { save.berries++; persist(); }
     this.root.innerHTML = `
       <div class="results ${won ? 'won' : 'lost'}">
         <h1>${won ? 'VICTORY!' : 'DEFEAT'}</h1>
@@ -657,7 +682,7 @@ export class Screens {
             </div>
             ${stats.perfect ? '<div class="perfect">PERFECT ROUND!</div>' : ''}
             ${streakNote}
-            <div class="res-xp"><span>+${xp} XP</span><span class="res-lv">Lv ${before.level}</span></div>
+            <div class="res-xp"><span>+${xp} XP${berries ? ` · +${berries} 🍓` : ''}</span><span class="res-lv">Lv ${before.level}</span></div>
             <div class="xpbar big"><i style="width:${(before.xp / xpNeeded(before.level)) * 100}%"></i></div>
           </div>
         </div>
@@ -800,6 +825,7 @@ export class Screens {
   update(dt) {
     this.t += dt;
     const cam = this.game.camera;
+    if (this.mode === 'camp') { this.campObj?.update(dt); return; }
     if (this.mode === 'title') {
       const a = Math.sin(this.t * 0.15) * 0.35;
       const D = cam.aspect < 1 ? 11 : 7.5;

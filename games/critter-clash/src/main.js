@@ -282,6 +282,7 @@ class Game {
 
   updateShowcase(dt) {
     for (const c of this.showcase) {
+      if (c.camp) continue; // Critter Camp animates its own wanderers
       const t = c.t, P = c.pose;
       c.resetPose();
       const ph = t * 5 + c.idx * 1.3;

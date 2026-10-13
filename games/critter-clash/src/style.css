@@ -648,3 +648,22 @@ body.portrait .pname .type-chip { display: none; }
 body.portrait .timer { width: 50px; height: 50px; font-size: 26px; }
 
 .vs-hazard { position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); white-space: nowrap; padding: 6px 16px; border-radius: 999px; background: #2a1f3d; color: #ffd86b; font-weight: 800; font-size: 14px; box-shadow: 0 0 0 3px #ffd86b; animation: gearPop .5s .4s cubic-bezier(.3,1.6,.5,1) both; }
+
+/* ---------- Critter Camp ---------- */
+.camp-screen { position: absolute; inset: 0; pointer-events: none; }
+.camp-screen > * { pointer-events: auto; }
+.camp-touch { position: absolute; inset: 0; touch-action: none; }
+.camp-berries { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right)); padding: 6px 14px; border-radius: 999px; background: #fff8ec; color: var(--ink); box-shadow: 0 0 0 3px var(--ink), 0 4px 0 rgba(0,0,0,.25); font-size: 18px; }
+.camp-berries b { font-family: var(--display); font-weight: 400; font-size: 22px; }
+.camp-panel { position: absolute; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(560px, calc(100% - 32px)); pointer-events: none; }
+.camp-panel > * { pointer-events: auto; }
+.camp-hint { margin: 0 auto; width: max-content; padding: 8px 18px; border-radius: 999px; background: rgba(42,31,61,.85); color: #fff; font-weight: 800; }
+.camp-card { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 18px; background: #fff8ec; color: var(--ink); box-shadow: 0 0 0 3px var(--ink), 0 6px 0 rgba(0,0,0,.25); }
+.camp-card.pop { animation: gearPop .35s cubic-bezier(.3,1.6,.5,1) both; }
+.camp-card img { width: 64px; height: 64px; margin: 0; flex: none; border-radius: 50%; background: var(--tc); box-shadow: 0 0 0 3px var(--ink); }
+.camp-info { flex: 1; min-width: 0; }
+.camp-info b { font-family: var(--display); font-weight: 400; font-size: 20px; }
+.camp-info small { font-family: Nunito, sans-serif; font-size: 13px; opacity: .7; }
+.camp-hearts { font-size: 14px; letter-spacing: 1px; margin: 2px 0 4px; }
+.camp-feed { white-space: nowrap; }
+.camp-feed small { display: block; font-size: 11px; opacity: .8; }

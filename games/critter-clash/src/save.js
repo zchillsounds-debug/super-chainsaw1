@@ -12,6 +12,7 @@ const fresh = () => ({
   shinies: [],
   trainer: { name: '', partner: null },
   skins: {},
+  berries: 3,
 });
 
 export const save = load();

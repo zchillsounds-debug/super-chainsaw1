@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { TYPES } from './data.js';
 
-const SHAPE = { glow: 0, star: 1, spark: 2, ring: 3, puff: 4, drop: 5, leaf: 6, bolt: 7, burst: 8, confetti: 9 };
+const SHAPE = { glow: 0, star: 1, spark: 2, ring: 3, puff: 4, drop: 5, leaf: 6, bolt: 7, burst: 8, confetti: 9, heart: 10 };
 
 const vert = `
 attribute vec3 iPos; attribute vec4 iCol; attribute vec4 iData; // size, rot, shape, stretch
@@ -39,6 +39,7 @@ void main(){
   else if (sh == 6) { float d = length(p * vec2(1.8, 1.0)) - 0.9 + abs(p.x) * 0.2; a = smoothstep(0.05, -0.05, d); col *= 0.8 + 0.4 * step(abs(p.x), 0.05); }
   else if (sh == 8) { float d = star(p, 9.0, 1.0, 0.45); a = smoothstep(0.04, -0.04, d); float inner = smoothstep(0.02, -0.06, star(p, 9.0, 0.7, 0.3)); col = mix(vec3(0.16,0.07,0.2), mix(col, vec3(1.0), inner), smoothstep(0.0, -0.07, d)); }
   else if (sh == 9) { a = step(abs(p.x), 0.45) * step(abs(p.y), 0.9); col *= 0.85 + 0.3 * step(0.0, p.x); }
+  else if (sh == 10) { float x = p.x * 1.25, y = p.y * 1.25 + 0.15; float h = pow(x * x + y * y - 1.0, 3.0) - x * x * y * y * y; a = smoothstep(0.03, -0.03, h); col = mix(vec3(0.2,0.06,0.15), col, smoothstep(0.0, -0.12, h)); }
   else { vec2 q = p; float d = abs(q.x + sin(q.y * 6.0) * 0.35) - 0.16 * (1.0 - abs(q.y)); a = smoothstep(0.06, -0.02, d) * step(abs(q.y), 0.95); }
   a *= vCol.a;
   if (a < 0.01) discard;
