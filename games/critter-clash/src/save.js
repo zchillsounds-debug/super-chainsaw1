@@ -8,7 +8,9 @@ const fresh = () => ({
   critters: Object.fromEntries(CRITTERS.map((c) => [c.id, { level: 1, xp: 0, wins: 0 }])),
   cups: {},
   settings: { music: 0.55, sfx: 0.9, vibrate: true, quality: 'auto', reduceFlash: false },
-  stats: { battles: 0, wins: 0 },
+  stats: { battles: 0, wins: 0, bestCombo: 0, perfects: 0, supers: 0 },
+  shinies: [],
+  skins: {},
 });
 
 export const save = load();

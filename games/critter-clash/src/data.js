@@ -79,6 +79,22 @@ export const CRITTERS = [
   },
 ];
 
+// Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
+export const SHINY = {
+  cindermunch: { body: 0x7ab8ff, belly: 0xeaf4ff, accent: 0x2f6bff, dark: 0x1e3570, iris: '#3aa0ff', flame: 0x3a7bff, flameIn: 0xb8f0ff },
+  bubbalotl:   { body: 0xffd166, belly: 0xfff4d0, accent: 0xff9f1c, dark: 0x8a5a10, iris: '#ff6a00' },
+  clovebun:    { body: 0xffd6e8, belly: 0xffffff, accent: 0xff7eb6, dark: 0x9a3466, iris: '#ff4f9a' },
+  voltferret:  { body: 0x4a4366, belly: 0x7b7299, accent: 0xffe14d, dark: 0x1a1626, iris: '#ffe14d' },
+  rolladillo:  { body: 0x8cc7bf, belly: 0xe0f4ef, accent: 0x3c6e6a, dark: 0x1f3d3a, iris: '#2fd3c0' },
+  hootsy:      { body: 0xf4f6ff, belly: 0xffffff, accent: 0xc9b6ff, dark: 0x5a4a8a, iris: '#7a4dff' },
+};
+
+// a def wearing a skin ('base' or 'shiny'); keeps the id so progress is shared
+export function skinned(def, skin) {
+  if (!skin || skin === 'base' || !SHINY[def.id]) return def;
+  return { ...def, skin, colors: { ...def.colors, ...SHINY[def.id] } };
+}
+
 export const STARTERS = ['cindermunch', 'bubbalotl', 'clovebun'];
 
 // Light-hearted rival trainers. Each cup is a ladder of matches.
@@ -106,7 +122,7 @@ export const CUPS = [
       { name: 'Professor Fern', title: 'Botanist', critter: 'clovebun', level: 8, taunt: 'A fascinating specimen. Let us test it.' },
       { name: 'Volt Twins', title: 'Double Trouble', critter: 'voltferret', level: 9, taunt: 'We finish each other\'s... ZAPS!' },
       { name: 'Big Boulder', title: 'Gym Owner', critter: 'rolladillo', level: 10, taunt: 'Leg day? Every day is roll day.' },
-      { name: 'Aurora', title: 'Reigning Champion', critter: 'hootsy', level: 12, taunt: "You came this far. Cute. Let's see how far you fly.", boss: true },
+      { name: 'Aurora', title: 'Reigning Champion', critter: 'hootsy', skin: 'shiny', level: 12, taunt: "You came this far. Cute. Let's see how far you fly.", boss: true },
     ],
   },
 ];
@@ -116,4 +132,19 @@ export const COMBO = [
   { dmg: 50, startup: 0.08, active: 0.08, recover: 0.16, range: 1.25, arc: 1.4, kb: 2.2, lift: 0, stun: 0.28, lunge: 3.5 },
   { dmg: 60, startup: 0.08, active: 0.08, recover: 0.18, range: 1.3, arc: 1.5, kb: 2.6, lift: 0, stun: 0.3, lunge: 3.8 },
   { dmg: 95, startup: 0.14, active: 0.1, recover: 0.34, range: 1.45, arc: 1.7, kb: 9.5, lift: 6.5, stun: 0.6, lunge: 5.5, launch: true },
+];
+
+// Achievements shown in the Critterdex. test() reads the save.
+export const BADGES = [
+  { id: 'first', icon: '🥇', name: 'First Bonk', desc: 'Win your first battle.', test: (s) => s.stats.wins >= 1 },
+  { id: 'ten', icon: '🔟', name: 'Seasoned', desc: 'Win 10 battles.', test: (s) => s.stats.wins >= 10 },
+  { id: 'combo', icon: '💥', name: 'Combo Star', desc: 'Land a 10-hit combo.', test: (s) => (s.stats.bestCombo || 0) >= 10 },
+  { id: 'perfect', icon: '✨', name: 'Untouchable', desc: 'Win a round without taking damage.', test: (s) => (s.stats.perfects || 0) >= 1 },
+  { id: 'super', icon: '🌟', name: 'Show-off', desc: 'Unleash 10 supers.', test: (s) => (s.stats.supers || 0) >= 10 },
+  { id: 'sprout', icon: '🌱', name: 'Sprout Champ', desc: 'Clear the Sprout Cup.', test: (s) => !!s.cups.sprout },
+  { id: 'thunder', icon: '⚡', name: 'Thunder Champ', desc: 'Clear the Thunder Cup.', test: (s) => !!s.cups.thunder },
+  { id: 'champion', icon: '👑', name: 'Grand Champion', desc: 'Clear the Champion Cup.', test: (s) => !!s.cups.champion },
+  { id: 'team', icon: '🐾', name: 'Full Team', desc: 'Recruit every critter.', test: (s) => s.unlocked.length >= CRITTERS.length },
+  { id: 'lv10', icon: '📈', name: 'Best Buds', desc: 'Raise a critter to Lv 10.', test: (s) => Object.values(s.critters).some((c) => c.level >= 10) },
+  { id: 'shiny', icon: '💎', name: 'Shiny Hunter', desc: 'Unlock every shiny palette.', test: (s) => (s.shinies || []).length >= CRITTERS.length },
 ];

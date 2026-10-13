@@ -1,5 +1,5 @@
 // Title, tournament cups/ladder, critter select, VS splash, results and pause overlays.
-import { CRITTERS, TYPES, CUPS } from './data.js';
+import { CRITTERS, TYPES, CUPS, SHINY, BADGES, skinned } from './data.js';
 import { sfx, playMusic } from './audio.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { openSettings } from './settings.js';
@@ -8,6 +8,18 @@ const DIFFS = [{ name: 'Easy', v: 0.2 }, { name: 'Normal', v: 0.5 }, { name: 'Ha
 const byId = (id) => CRITTERS.find((c) => c.id === id);
 
 // which cup match unlocks a critter (for the locked-card hint)
+const skinOf = (c) => skinned(c, save.skins?.[c.id]);
+const cupOfShiny = (id) => CUPS.find((cup) => cup.matches.some((m) => m.critter === id));
+
+// badges newly satisfied by the save; marks them earned
+export function newBadges() {
+  save.badges ||= {};
+  const out = BADGES.filter((b) => !save.badges[b.id] && b.test(save));
+  for (const b of out) save.badges[b.id] = true;
+  if (out.length) persist();
+  return out;
+}
+
 function unlockHint(id) {
   for (const cup of CUPS) for (const m of cup.matches) if (m.critter === id) return `Beat ${m.name} in the ${cup.name}`;
   return 'Keep battling!';
@@ -29,7 +41,7 @@ export class Screens {
   hideAll() { this.root.innerHTML = ''; this.mode = null; }
 
   onAudioUnlocked() {
-    if (['title', 'select', 'cups', 'ladder'].includes(this.mode)) playMusic('menu');
+    if (['title', 'select', 'cups', 'ladder', 'dex'].includes(this.mode)) playMusic('menu');
   }
 
   btn(label, cls, fn) {
@@ -65,6 +77,7 @@ export class Screens {
     const row = document.createElement('div');
     row.className = 'row';
     row.appendChild(this.btn('Quick Battle', '', () => { this.ctx = { kind: 'quick' }; this.select(); }));
+    row.appendChild(this.btn('Critterdex', '', () => this.dex()));
     row.appendChild(this.btn('How to Play', 'ghost', () => this.howTo()));
     m.appendChild(row);
     const gear = this.btn('<svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 3.5c0-.5 0-1-.1-1.4l2-1.6-2-3.4-2.4 1a8 8 0 0 0-2.4-1.4L15 2.6h-4l-.4 2.6A8 8 0 0 0 8.2 6.6l-2.4-1-2 3.4 2 1.6a8 8 0 0 0 0 2.8l-2 1.6 2 3.4 2.4-1a8 8 0 0 0 2.4 1.4l.4 2.6h4l.4-2.6a8 8 0 0 0 2.4-1.4l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.4z"/></svg>', 'icon-btn gear', () => openSettings(g, this.root));
@@ -206,24 +219,119 @@ export class Screens {
     this.sel = i;
     const c = CRITTERS[i];
     if (!silent) { sfx.ui('move'); sfx.voice(c.voice, 'taunt'); }
-    g.setShowcase([c], 'single');
+    g.setShowcase([skinOf(c)], 'single');
     g.showcase[0].cheer = 0.8;
+    this.root.querySelector('.sel-info').innerHTML = this.infoCard(c);
+    this.root.querySelectorAll('.rcard').forEach((b, k) => b.classList.toggle('on', k === i));
+  }
+
+  infoCard(c, extra = '') {
     const T = TYPES[c.type];
     const st = c.stats, prog = save.critters[c.id];
     const bar = (label, v) => `<div class="stat"><span>${label}</span><i><b style="width:${Math.round(Math.max(0.08, Math.min(1, v)) * 100)}%"></b></i></div>`;
     const beats = T.beats.map((b) => `<span class="mini-type" style="background:${TYPES[b].color}">${TYPES[b].name}</span>`).join('');
-    this.root.querySelector('.sel-info').innerHTML = `
+    return `
       <div class="info-card" style="--tc:${T.color}">
         <div class="ic-row"><span class="ic-type">${T.name} type</span><span class="ic-lv">Lv ${prog.level}</span></div>
         <h2>${c.name}</h2>
         <div class="ic-species">${c.species}</div>
         <p>${c.blurb}</p>
-        ${bar('Health', (st.hp - 800) / 400)}${bar('Speed', (st.speed - 5) / 3)}${bar('Power', (st.power - 0.85) / 0.3)}${bar('Weight', (st.weight - 0.6) / 0.8)}
+        <div class="stats">${bar('Health', (st.hp - 800) / 400)}${bar('Speed', (st.speed - 5) / 3)}${bar('Power', (st.power - 0.85) / 0.3)}${bar('Weight', (st.weight - 0.6) / 0.8)}</div>
         <div class="ic-beats"><small>Strong vs</small>${beats}</div>
         <div class="moves"><div><small>Special</small><b>${c.moves.special}</b></div><div><small>Super</small><b>${c.moves.super}</b></div></div>
+        ${extra}
         <div class="xpbar"><i style="width:${(prog.xp / xpNeeded(prog.level)) * 100}%"></i></div>
       </div>`;
-    this.root.querySelectorAll('.rcard').forEach((b, k) => b.classList.toggle('on', k === i));
+  }
+
+  // ---------- Critterdex: collection, skins and badges ----------
+  dex(i = this.sel) {
+    const g = this.game;
+    this.mode = 'dex';
+    this.t = 0;
+    this.backFn = () => this.title();
+    this.dexYaw = this.dexYaw || 0;
+    const owned = save.unlocked.length;
+    this.root.innerHTML = `
+      <div class="dex-screen">
+        <div class="dex-list"></div>
+        <div class="dex-spin" aria-label="Drag to spin"></div>
+        <div class="dex-info"></div>
+        <button class="btn dex-badges"></button>
+      </div>`;
+    const S = this.root.firstElementChild;
+    S.prepend(this.header(`Critterdex <small class="dex-count">${owned}/${CRITTERS.length}</small>`, () => this.title()));
+    const earned = BADGES.filter((b) => save.badges?.[b.id]).length;
+    const bb = S.querySelector('.dex-badges');
+    bb.innerHTML = `🏅 Badges ${earned}/${BADGES.length}`;
+    bb.addEventListener('click', () => { sfx.ui('ok'); this.badgeModal(); });
+    const list = S.querySelector('.dex-list');
+    CRITTERS.forEach((c, k) => {
+      const locked = !save.unlocked.includes(c.id);
+      const b = document.createElement('button');
+      b.className = 'dcard' + (locked ? ' locked' : '') + (save.shinies?.includes(c.id) ? ' has-shiny' : '');
+      b.style.setProperty('--tc', TYPES[c.type].color);
+      b.innerHTML = `<i>#${String(k + 1).padStart(3, '0')}</i><div class="pic"><img src="${g.portrait(c)}" alt=""></div><span>${locked ? '???' : c.name}</span>`;
+      b.addEventListener('click', () => {
+        if (locked) { sfx.ui('back'); this.toast(unlockHint(c.id)); return; }
+        sfx.ui('move'); this.dexPick(k);
+      });
+      list.appendChild(b);
+    });
+    // drag to spin the model
+    const spin = S.querySelector('.dex-spin');
+    let lastX = null;
+    spin.addEventListener('pointerdown', (e) => { lastX = e.clientX; spin.setPointerCapture(e.pointerId); this.dexDrag = true; });
+    spin.addEventListener('pointermove', (e) => { if (lastX === null) return; this.dexYaw += (e.clientX - lastX) * 0.012; lastX = e.clientX; });
+    const up = () => { lastX = null; this.dexDrag = false; };
+    spin.addEventListener('pointerup', up); spin.addEventListener('pointercancel', up);
+    spin.addEventListener('click', () => { const c = g.showcase[0]; if (c) { c.cheer = 0.8; sfx.voice(c.def.voice, 'taunt'); } });
+    if (!save.unlocked.includes(CRITTERS[i].id)) i = CRITTERS.findIndex((c) => save.unlocked.includes(c.id));
+    this.dexPick(i, true);
+    playMusic('menu');
+  }
+
+  dexPick(i, silent) {
+    const g = this.game;
+    this.sel = i;
+    const c = CRITTERS[i];
+    const skin = save.skins?.[c.id] || 'base';
+    const def = skinOf(c);
+    g.setShowcase([def], 'single');
+    if (!silent) { g.showcase[0].cheer = 0.8; sfx.voice(c.voice, 'taunt'); }
+    const prog = save.critters[c.id];
+    const hasShiny = save.shinies?.includes(c.id);
+    const cup = cupOfShiny(c.id);
+    const skins = SHINY[c.id] ? `
+      <div class="dex-skins"><small>Palette</small>
+        <button class="chip skin ${skin === 'base' ? 'on' : ''}" data-skin="base">Classic</button>
+        <button class="chip skin shiny ${skin === 'shiny' ? 'on' : ''} ${hasShiny ? '' : 'locked'}" data-skin="shiny">${hasShiny ? '✦ Shiny' : '🔒 Shiny'}</button>
+      </div>
+      ${hasShiny ? '' : `<div class="dex-hint">Clear the ${cup ? cup.name : 'tournament'} to unlock.</div>`}` : '';
+    const record = `<div class="dex-record"><span><b>${prog.wins || 0}</b> wins</span><span>Lv <b>${prog.level}</b></span><span>${TYPES[c.type].name}</span></div>`;
+    const info = this.root.querySelector('.dex-info');
+    info.innerHTML = this.infoCard(c, record + skins);
+    info.querySelectorAll('.skin').forEach((b) => b.addEventListener('click', () => {
+      if (b.dataset.skin === 'shiny' && !hasShiny) { sfx.ui('back'); this.toast(`Clear the ${cup ? cup.name : 'tournament'} to unlock`); return; }
+      sfx.ui('ok');
+      (save.skins ||= {})[c.id] = b.dataset.skin;
+      persist();
+      this.dexPick(i, b.dataset.skin === 'base');
+      if (b.dataset.skin === 'shiny') { g.showcase[0].cheer = 1.2; sfx.jingle(2); }
+    }));
+    this.root.querySelectorAll('.dcard').forEach((b, k) => b.classList.toggle('on', k === i));
+  }
+
+  badgeModal() {
+    const d = document.createElement('div');
+    d.className = 'modal-wrap';
+    d.innerHTML = `<div class="modal badges-modal"><h2>Badges</h2><div class="badge-grid">${BADGES.map((b) => {
+      const got = save.badges?.[b.id];
+      return `<div class="badge ${got ? 'got' : ''}"><i>${got ? b.icon : '🔒'}</i><b>${b.name}</b><small>${b.desc}</small></div>`;
+    }).join('')}</div></div>`;
+    d.querySelector('.modal').appendChild(this.btn('Close', 'primary', () => d.remove()));
+    d.addEventListener('click', (e) => { if (e.target === d) d.remove(); });
+    this.root.appendChild(d);
   }
 
   // ---------- tournament ladder ----------
@@ -260,12 +368,12 @@ export class Screens {
     const g = this.game;
     if (this.mode !== 'select' && this.mode !== 'ladder') return;
     this.mode = 'vs';
-    const p = CRITTERS[this.sel];
+    const p = skinOf(CRITTERS[this.sel]);
     let c, opts, label;
     if (this.ctx.kind === 'cup') {
       const { cup, idx } = this.ctx;
       const m = cup.matches[idx];
-      c = byId(m.critter);
+      c = skinned(byId(m.critter), m.skin);
       const k = cup.matches.length > 1 ? idx / (cup.matches.length - 1) : 1;
       opts = { cpuLevel: m.level, difficulty: cup.diff[0] + (cup.diff[1] - cup.diff[0]) * k, playerLevel: save.critters[p.id].level, trainer: m, arena: cup.arena };
       label = `${m.name} · Lv ${m.level}`;
@@ -301,11 +409,23 @@ export class Screens {
     const before = { level: prog.level, xp: prog.xp };
     if (won) prog.wins++;
     const lv = grantXp(pDef.id, xp);
-    let joined = false, cupDone = false;
+    save.stats.bestCombo = Math.max(save.stats.bestCombo || 0, stats.maxCombo);
+    save.stats.supers = (save.stats.supers || 0) + stats.supers;
+    if (stats.perfect) save.stats.perfects = (save.stats.perfects || 0) + 1;
+    let joined = false, cupDone = false, shinies = [];
     if (won && cup) {
       joined = unlock(cDef.id);
-      if (cup.idx === cup.cup.matches.length - 1) { cupDone = true; save.cups[cup.cup.id] = true; persist(); }
+      if (cup.idx === cup.cup.matches.length - 1) {
+        cupDone = true; save.cups[cup.cup.id] = true;
+        save.shinies ||= [];
+        shinies = [...new Set(cup.cup.matches.map((m) => m.critter))].filter((id) => !save.shinies.includes(id));
+        save.shinies.push(...shinies);
+      }
     }
+    persist();
+    this.ctx.newShinies = shinies;
+    const badges = newBadges();
+    badges.forEach((b, k) => setTimeout(() => { if (this.mode === 'results') { this.toast(`${b.icon} Badge earned: ${b.name}`); sfx.jingle(2); } }, 2600 + k * 2300));
     this.root.innerHTML = `
       <div class="results ${won ? 'won' : 'lost'}">
         <h1>${won ? 'VICTORY!' : 'DEFEAT'}</h1>
@@ -376,7 +496,7 @@ export class Screens {
     const g = this.game;
     g.endBattle();
     this.mode = 'trophy';
-    g.setShowcase([CRITTERS[this.sel]], 'single');
+    g.setShowcase([skinOf(CRITTERS[this.sel])], 'single');
     g.showcase[0].cheer = 99;
     playMusic('victory');
     this.root.innerHTML = `
@@ -384,6 +504,7 @@ export class Screens {
         <div class="big-trophy">🏆</div>
         <h1>${cup.name} Champion!</h1>
         <p>${CRITTERS[this.sel].name} and you are the talk of the stadium.</p>
+        ${this.ctx.newShinies?.length ? `<div class="shiny-unlock"><small>✦ Shiny palettes unlocked ✦</small><div>${this.ctx.newShinies.map((id) => `<img src="${g.portrait(skinned(byId(id), 'shiny'))}" alt="">`).join('')}</div><small>Equip them in the Critterdex</small></div>` : ''}
         <div class="res-btns"></div>
       </div>`;
     this.root.querySelector('.res-btns').appendChild(this.btn('Continue', 'primary big', () => this.cups()));
@@ -415,14 +536,15 @@ export class Screens {
       cam.lookAt(0, cam.aspect < 1 ? 1.6 : 1.1, 0);
       cam.fov = Math.min(78, 40 * Math.max(1, 1.6 / cam.aspect));
       cam.updateProjectionMatrix();
-    } else if (['select', 'vs', 'ladder', 'trophy', 'cups'].includes(this.mode)) {
+    } else if (['select', 'vs', 'ladder', 'trophy', 'cups', 'dex'].includes(this.mode)) {
       const c = this.game.showcase[0];
-      if (c) c.root.rotation.y = Math.sin(this.t * 0.6) * 0.5 + (this.mode === 'ladder' ? -0.3 : 0.2);
+      if (c && this.mode === 'dex') { if (!this.dexDrag) this.dexYaw += dt * 0.25; c.root.rotation.y = this.dexYaw; }
+      else if (c) c.root.rotation.y = Math.sin(this.t * 0.6) * 0.5 + (this.mode === 'ladder' ? -0.3 : 0.2);
       const portrait = cam.aspect < 1;
       // frame the critter off-centre so the side card has room
-      const ox = portrait ? 0 : this.mode === 'ladder' ? -1.1 : this.mode === 'trophy' ? 0 : 1.0;
+      const ox = portrait ? 0 : this.mode === 'ladder' ? -1.1 : this.mode === 'trophy' ? 0 : this.mode === 'dex' ? 0.35 : 1.0;
       cam.position.set(ox, 1.3, portrait ? 4.6 : 4.4);
-      cam.lookAt(ox, portrait ? 0.35 : this.mode === 'trophy' ? 1.25 : 0.75, 0);
+      cam.lookAt(ox, portrait ? (this.mode === 'dex' ? -0.55 : 0.35) : this.mode === 'trophy' ? 1.25 : 0.75, 0);
       cam.fov = Math.min(70, 40 * Math.max(1, 1.4 / cam.aspect));
       cam.updateProjectionMatrix();
     }

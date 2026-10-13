@@ -120,7 +120,8 @@ const decalMat = (map) => new THREE.MeshBasicMaterial({
 
 const faceTexCache = new Map();
 function faceTextures(def) {
-  if (faceTexCache.has(def.id)) return faceTexCache.get(def.id);
+  const key = def.id + (def.skin || '');
+  if (faceTexCache.has(key)) return faceTexCache.get(key);
   const eyes = {}, mouths = {};
   for (const k of ['open', 'happy', 'hurt', 'dizzy', 'closed', 'angry']) eyes[k] = canvasTex(128, 160, (c, w, h) => eyeCanvas(c, w, h, def.colors, k));
   for (const k of ['smile', 'open', 'yell', 'o', 'wobbly', 'grin']) mouths[k] = canvasTex(128, 96, (c, w, h) => mouthCanvas(c, w, h, k, '#2a1428'));
@@ -132,7 +133,7 @@ function faceTextures(def) {
     for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(w * 0.3 + i * 9, h * 0.68); c.lineTo(w * 0.36 + i * 9, h * 0.32); c.stroke(); }
   });
   const out = { eyes, mouths, blush };
-  faceTexCache.set(def.id, out);
+  faceTexCache.set(key, out);
   return out;
 }
 
@@ -167,7 +168,8 @@ export class Critter {
   constructor(def, { lod = 'high' } = {}) {
     this.def = def;
     const C = def.colors, B = def.body;
-    this.rim = { uRimColor: { value: new THREE.Color(1, 0.95, 0.85) }, uRimPower: { value: 3 } };
+    // shiny skins get a warm golden rim so they read as special at a glance
+    this.rim = { uRimColor: { value: def.skin ? new THREE.Color(1.3, 1.05, 0.5) : new THREE.Color(1, 0.95, 0.85) }, uRimPower: { value: 3 } };
     const U = this.rim;
     this.mats = {
       body: toon(C.body, { uniforms: U }),
@@ -425,8 +427,8 @@ export class Critter {
     if (def.tail === 'flame') {
       tail.position.y = B.h * 0.4;
       tail.rotation.x = -0.7;
-      const outer = new THREE.Mesh(flameGeo(), new THREE.MeshBasicMaterial({ color: 0xff5a1e }));
-      const inner = new THREE.Mesh(flameGeo(), new THREE.MeshBasicMaterial({ color: 0xffe066 }));
+      const outer = new THREE.Mesh(flameGeo(), new THREE.MeshBasicMaterial({ color: C.flame ?? 0xff5a1e }));
+      const inner = new THREE.Mesh(flameGeo(), new THREE.MeshBasicMaterial({ color: C.flameIn ?? 0xffe066 }));
       outer.scale.setScalar(0.42); inner.scale.setScalar(0.27); inner.position.set(0, 0.02, 0.03);
       tail.add(outer, inner);
       this.flames.push(outer, inner);

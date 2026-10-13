@@ -109,6 +109,7 @@ class Game {
 
     r.setAnimationLoop(() => this.frame());
     window.__game = this;
+    window.__save = save;
     // headless helper: advance the simulation in fixed steps without rendering
     window.__sim = (sec, dt = 1 / 60) => { for (let t = 0; t < sec; t += dt) this.step(dt); this.clock.getDelta(); };
     window.__ready = true;
@@ -192,7 +193,8 @@ class Game {
 
   // 3D-rendered portrait of a critter's head, cached as a data URL
   portrait(def) {
-    if (this.portraits.has(def.id)) return this.portraits.get(def.id);
+    const key = def.id + (def.skin || '');
+    if (this.portraits.has(key)) return this.portraits.get(key);
     const S = 256;
     const scene = new THREE.Scene();
     const cr = new Critter(def);
@@ -225,7 +227,7 @@ class Game {
     ctx.putImageData(img, 0, 0);
     const url = c.toDataURL();
     rt.dispose();
-    this.portraits.set(def.id, url);
+    this.portraits.set(key, url);
     return url;
   }
 
