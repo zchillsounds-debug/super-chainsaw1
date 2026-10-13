@@ -376,6 +376,13 @@ function quirk(c, P, k, m, fx) {
     if (k > 1.6) { c.emote('happy', 'grin', 0.3); P.sy = 1.15; }
     return;
   }
+  if (id === 'ripples') { // rolls onto its back for a little float
+    const d = k < 0.3 ? k / 0.3 : k < 1.8 ? 1 : Math.max(0, 1 - (k - 1.8) / 0.3);
+    P.lean = -1.0 * d; P.legL = P.legR = -0.8 * d; P.armLx = P.armRx = -1.4 * d; P.armLz = P.armRz = 0.5 + Math.abs(Math.sin(k * 8)) * 0.4 * d;
+    c.emote('happy', 'grin', 0.2);
+    if (Math.random() < 0.1) fx.spawn({ ...at(0.6, 0.6), vy: 0.8, color: 0x9fe0ff, size: 0.35, life: 1, shape: 'ring', additive: false, alpha: 0.7 });
+    return;
+  }
   if (id === 'lilypop') { // big hop
     const ph = Math.min(1, k / 0.8);
     P.y = Math.sin(ph * Math.PI) * 0.8; P.legL = P.legR = ph < 0.5 ? -0.9 : 0.6; P.armLz = P.armRz = 1;

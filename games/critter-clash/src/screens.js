@@ -128,6 +128,12 @@ export class Screens {
         "Oh, {name}! A new league has opened deep in the mushroom woods: the Glowcap Cup.",
         "The fireflies are lovely, but watch out for the spore puffs. Achoo!",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('grove') && !save.news.includes('otter') && !save.unlocked.includes('ripples')) {
+      save.news.push('otter'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "News from the grove, {name}! A river otter called Ripples has been leaving puddles all over Glowcap Grove.",
+        "Its trainer Brook is in the Glowcap Cup now. Beat them and Ripples might splash over to your team!",
+      ]), 600);
     } else if (!g.autoplay && save.cups.sprout && !save.news?.includes('frogmole')) {
       (save.news ||= []).push('frogmole'); persist();
       const where = [['lilypop', 'Paddy in the Thunder Cup'], ['diggles', 'Dusty in the Midnight Cup']].filter(([id]) => !save.unlocked.includes(id));

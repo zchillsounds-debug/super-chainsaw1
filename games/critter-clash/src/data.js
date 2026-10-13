@@ -157,6 +157,16 @@ export const CRITTERS = [
     special: 'burrow', super: 'molerush',
     moves: { special: 'Burrow Ambush', super: 'Mole Rush' },
   },
+  {
+    id: 'ripples', name: 'Ripples', type: 'water', species: 'River Otter',
+    blurb: 'Floats on its back cracking clams on its tummy. Leaves puddles everywhere, mostly on purpose.',
+    colors: { body: 0x9a6a4a, belly: 0xfff0d8, accent: 0xff9ab8, dark: 0x5a3a28, eye: '#1a120c', iris: '#3a8adf' },
+    body: { w: 0.6, h: 0.62, headR: 0.46, legLen: 0.14, armLen: 0.21, chubby: 1.05 },
+    ears: 'round', tail: 'otter', extra: 'otter', voice: 1.2,
+    stats: { hp: 1020, speed: 6.6, power: 1.0, weight: 0.95 },
+    special: 'puddle', super: 'whirlpool',
+    moves: { special: 'Slick Puddle', super: 'Whirlpool' },
+  },
 ];
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
@@ -173,6 +183,7 @@ export const SHINY = {
   pebblepup:   { body: 0x6a6a88, belly: 0xe8e4ff, accent: 0xff8ad8, dark: 0x262438, iris: '#ff6ad0' },
   whirlwhisk:  { body: 0xffb38a, belly: 0xfff4e4, accent: 0xffe2c8, dark: 0x8a3a2a, iris: '#3ac07a' },
   diggles:     { body: 0xd8d0ec, belly: 0xffffff, accent: 0x6ad0ff, dark: 0x4a4a6a, iris: '#3a7bff' },
+  ripples:     { body: 0xf4f0ea, belly: 0xffffff, accent: 0x6ad0ff, dark: 0x8a8a9a, iris: '#ff6a9a' },
   lilypop:     { body: 0xffd84a, belly: 0xfffbe8, accent: 0x6ad0ff, dark: 0x8a5a10, iris: '#3a7bff' },
   emberfly:    { body: 0x2f8a6a, belly: 0xdcffe6, accent: 0x7dffb0, dark: 0x113a2c, iris: '#3affa0' },
 };
@@ -235,7 +246,7 @@ export const CUPS = [
     outro: ["Elder Oakley handed you a glowcap! That's the grove's highest honour. It also makes a lovely night light.", "The woods will always welcome you back, {name}."],
     matches: [
       { name: 'Fern', style: 'zoner', title: 'Forest Scout', critter: 'clovebun', level: 6, taunt: "I know every trail in these woods. You'll get lost in mine!", beat: "Okay, okay, I'm the lost one now. Great match!", gloat: "Follow the fireflies home, {name}." },
-      { name: 'Moss', style: 'turtle', title: 'Moss Collector', critter: 'pebblepup', level: 7, taunt: "Moss grows slow. So does my patience. Very slow.", beat: "Hm. Rolled right over me. No moss on you.", gloat: "Slow and steady. Like moss." },
+      { name: 'Brook', style: 'zoner', title: 'River Guide', critter: 'ripples', level: 7, taunt: "Ripples left puddles all over the arena. Hope you packed your wellies!", beat: "Swept away! I did not see that current coming.", gloat: "Slip, slide, splash. Thanks for playing, {name}!" },
       { name: 'Luma', style: 'trickster', title: 'Firefly Keeper', critter: 'emberfly', level: 8, taunt: "My fireflies light the way. Straight to your defeat!", beat: "You outshone a whole jar of fireflies. Wow.", gloat: "Lights out, little one." },
       { name: 'Elder Oakley', style: 'balanced', title: 'Keeper of the Grove', critter: 'lilypop', level: 9, boss: true, bossTitle: 'GROVE KEEPER', taunt: "Many trainers have come to my grove, {name}. Few have left with a glowcap.", beat: "Hoo hoo! The grove has chosen you. Take this glowcap with pride.", gloat: "Come back when the moon is higher, young one." },
     ],
@@ -360,6 +371,8 @@ export const MOVE_DESC = {
   jetstream: 'Puffs its cheeks and blows a long gust that shoves the rival back, hit after hit.',
   burrow: 'Dives underground, tunnels over and bursts up right under the rival.',
   molerush: 'Pops up under the rival three times in a row. The last one sends them flying.',
+  puddle: 'Lobs a water blob that splashes into a slippery puddle. Rivals in it slide around and slow down.',
+  whirlpool: 'Spins up a whirlpool under the rival, swirls them round and round, then blasts them up on a geyser.',
   tongue: 'Lashes out its long tongue and reels the rival in, ready for a combo.',
   lilysplash: 'Leaps sky-high and belly-flops down. A ring of lily pads and water bursts out.',
   avalanche: 'Howls at the sky and a rockslide rains down on the rival, ending with one giant boulder.',

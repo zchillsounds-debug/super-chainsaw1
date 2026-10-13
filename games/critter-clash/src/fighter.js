@@ -25,6 +25,7 @@ export const SPECIALS = {
   swoop:     { cd: 3.4, range: [2.5, 8] },
   tongue:    { cd: 4.0, range: [1.8, 5.2] },
   burrow:    { cd: 4.2, range: [2.5, 9] },
+  puddle:    { cd: 3.8, range: [2.5, 8] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -114,6 +115,7 @@ export class Fighter {
     this.paralyze = 0;
     this.guardHp = 100; this.guardRegenT = 0;
     this.speedBoost = 0;
+    this.slick = 0;
     this.stepT = 0;
     this.spinX = 0;
     this.critter.resetPose();
@@ -164,14 +166,15 @@ export class Fighter {
       if (this.paralyze > 0) { this.paralyze -= dt; }
       if (ml > 0.15 && this.paralyze <= 0) {
         if (S !== 'run') this.setState('run');
-        const sp = this.speed * Math.min(1, ml) * (this.speedBoost > 0 ? 1.3 : 1);
-        this.vx = THREE.MathUtils.damp(this.vx, c.mx / ml * sp, 14, dt);
-        this.vz = THREE.MathUtils.damp(this.vz, c.mz / ml * sp, 14, dt);
+        const sp = this.speed * Math.min(1, ml) * (this.speedBoost > 0 ? 1.3 : 1) * (this.slick > 0 ? 0.6 : 1);
+        const grip = this.slick > 0 ? 2.5 : 14; // a puddle makes the footing slippery
+        this.vx = THREE.MathUtils.damp(this.vx, c.mx / ml * sp, grip, dt);
+        this.vz = THREE.MathUtils.damp(this.vz, c.mz / ml * sp, grip, dt);
         this.turnTo(Math.atan2(c.mx, c.mz), 14, dt);
       } else {
         if (S !== 'idle') this.setState('idle');
-        this.vx = THREE.MathUtils.damp(this.vx, 0, 12, dt);
-        this.vz = THREE.MathUtils.damp(this.vz, 0, 12, dt);
+        this.vx = THREE.MathUtils.damp(this.vx, 0, this.slick > 0 ? 2 : 12, dt);
+        this.vz = THREE.MathUtils.damp(this.vz, 0, this.slick > 0 ? 2 : 12, dt);
         if (o && o.alive) this.turnTo(this.angleTo(o), 6, dt);
       }
       if (c.guard && this.guardHp > 15 && this.paralyze <= 0) this.startGuard();
@@ -212,6 +215,7 @@ export class Fighter {
 
     // guard meter refills after a short rest; the bubble scales with what's left
     this.speedBoost = Math.max(0, this.speedBoost - dt);
+    this.slick = Math.max(0, this.slick - dt);
     if (this.state !== 'guard') { this.guardRegenT -= dt; if (this.guardRegenT <= 0) this.guardHp = Math.min(100, this.guardHp + dt * 28); }
     else this.guardRegenT = 0.8;
     const sh = this.shield, on = this.state === 'guard';
@@ -613,6 +617,24 @@ export class Fighter {
         sfx.whoosh?.(0.5);
       }
       if (this.st > 0.6) this.endSpecial();
+    } else if (id === 'puddle') {
+      // spin a water blob overhead like a shot-put, then lob it at the rival's feet
+      const P = this.critter.pose;
+      if (this.st < 0.3) {
+        if (o) this.turnTo(this.angleTo(o), 12, dt);
+        this.vx = THREE.MathUtils.damp(this.vx, 0, 12, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 12, dt);
+        P.armRz = 2.7; P.armRx = -0.4 - Math.sin(this.st * 30) * 0.5; P.armLz = 0.6; P.lean = -0.2; P.yaw = Math.sin(this.st * 30) * 0.25;
+        if (Math.random() < 0.7) B.fx.spawn({ x: this.x + (Math.random() - 0.5) * 0.6, y: 1.5 + Math.random() * 0.3, z: this.z + (Math.random() - 0.5) * 0.6, vy: 1, color: 0x8fd8ff, size: 0.18, life: 0.3, shape: 'drop', additive: false, grav: 6 });
+      } else { P.armRz = 1.0; P.armRx = -2.4; P.lean = 0.3; P.armLz = 0.9; }
+      if (!this.specFired && this.st > 0.3) {
+        this.specFired = true;
+        const d = o ? THREE.MathUtils.clamp(this.distTo(o), 2.5, 8) : 5, T = 0.55, g = 22, y0 = 1.4;
+        const tx = this.x + fx * d, tz = this.z + fz * d;
+        B.spawnProjectile(this, { kind: 'splash', big: true, x: this.x + fx * 0.3, z: this.z + fz * 0.3, y: y0, vx: (tx - this.x) / T, vz: (tz - this.z) / T, vy: (0.3 - y0 + 0.5 * g * T * T) / T, g, landR: 1.2, r: 0.3, life: 3,
+          hit: { dmg: 52 * this.power, kb: 1.5, lift: 0, stun: 0.45, type: this.type, dizzy: 12 } });
+        sfx.whoosh?.(0.4); sfx.water?.();
+      }
+      if (this.st > 0.55) this.endSpecial();
     } else if (id === 'burrow') {
       // dive into the ground, tunnel to the rival (a dirt trail gives it away), then burst up under them
       const P = this.critter.pose;
@@ -785,6 +807,11 @@ export class Fighter {
       P.armLx = -s * 1.0; P.armRx = s * 1.0;
       P.ear = 0.4; P.tail = 0.8; P.head = -0.1;
       if (this.speedBoost > 0 && Math.random() < 0.6) this.battle.fx.spawn({ x: this.x + (Math.random() - 0.5) * 0.3, y: 0.15 + Math.random() * 0.5, z: this.z + (Math.random() - 0.5) * 0.3, color: 0x5ad8ff, size: 0.45, life: 0.3, shape: 'glow', grow: -1, alpha: 0.7 });
+      if (this.slick > 0) { // flailing on a slippery puddle
+        P.armLz = P.armRz = 1.9 + Math.sin(t * 14) * 0.6; P.roll = Math.sin(t * 7) * 0.3; P.lean = -0.1;
+        this.critter.emote('dizzy', 'wobbly', 0.1);
+        if (Math.random() < 0.5) this.battle.fx.spawn({ x: this.x + (Math.random() - 0.5) * 0.5, y: 0.08, z: this.z + (Math.random() - 0.5) * 0.5, vy: 2 + Math.random() * 2, vx: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2, color: 0xbfeaff, size: 0.16, life: 0.35, shape: 'drop', additive: false, grav: 10 });
+      }
       this.stepT -= dt;
       if (this.stepT <= 0) { this.stepT = 0.2; sfx.step(); if (Math.random() < 0.3) this.battle.fx.dust(this, 1, 0.5); }
     } else if (S === 'attack') {
@@ -829,9 +856,9 @@ export class Fighter {
     } else if (S === 'special' && this.def.special === 'iceslide' && this.st >= 0.2 && this.st < 0.95) {
       P.lean = 1.45; P.y = 0.12; P.armLz = P.armRz = 1.2; P.armLx = P.armRx = 0.6; P.legL = P.legR = 1.2; P.head = -0.9; P.sx = 1.1; P.sy = 0.95;
       this.critter.emote('happy', 'grin', 0.1);
-    } else if (S === 'special' && (this.def.special === 'rocktoss' || this.def.special === 'swoop' || this.def.special === 'tongue' || this.def.special === 'burrow')) {
+    } else if (S === 'special' && (this.def.special === 'rocktoss' || this.def.special === 'puddle' || this.def.special === 'swoop' || this.def.special === 'tongue' || this.def.special === 'burrow')) {
       // posed frame by frame in updateSpecial
-    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche' || this.def.super === 'jetstream' || this.def.super === 'lilysplash' || this.def.super === 'molerush') && this.superPhase !== 'cutin') {
+    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche' || this.def.super === 'jetstream' || this.def.super === 'lilysplash' || this.def.super === 'whirlpool' || this.def.super === 'molerush') && this.superPhase !== 'cutin') {
       // posed frame by frame in Battle.updateSuper
     } else if (S === 'special' || S === 'super') {
       if (this.st < 0.28) { P.sy = 0.8; P.sx = 1.15; P.lean = -0.25; P.armLz = P.armRz = 0.8; P.ear = 0.8; }

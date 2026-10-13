@@ -12,7 +12,27 @@ import { save } from './save.js';
 import { sayLine } from './personality.js';
 import { Items } from './items.js';
 import { Hazards } from './hazards.js';
-import { toon, inked } from './toon.js';
+import { toon, inked, canvasTex } from './toon.js';
+
+// shared art for Ripples' puddles and whirlpool (made once, never disposed)
+let puddleTex, swirlTex;
+const getPuddleTex = () => puddleTex ||= canvasTex(256, 256, (c, w, h) => {
+  const g = c.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w / 2);
+  g.addColorStop(0, 'rgba(120,210,255,0.85)'); g.addColorStop(0.75, 'rgba(70,170,240,0.75)'); g.addColorStop(0.92, 'rgba(220,245,255,0.9)'); g.addColorStop(1, 'rgba(220,245,255,0)');
+  c.fillStyle = g; c.beginPath();
+  for (let k = 0; k <= 40; k++) { const a = k / 40 * Math.PI * 2, r = w * (0.44 + Math.sin(a * 5) * 0.03 + Math.sin(a * 3 + 1) * 0.02); c[k ? 'lineTo' : 'moveTo'](w / 2 + Math.cos(a) * r, h / 2 + Math.sin(a) * r); }
+  c.fill();
+  c.fillStyle = 'rgba(255,255,255,0.8)';
+  for (const [x, y, rx, ry] of [[0.36, 0.34, 0.1, 0.035], [0.6, 0.62, 0.07, 0.025], [0.3, 0.6, 0.04, 0.02]]) { c.beginPath(); c.ellipse(x * w, y * h, rx * w, ry * h, -0.5, 0, Math.PI * 2); c.fill(); }
+});
+const getSwirlTex = () => swirlTex ||= canvasTex(256, 256, (c, w, h) => {
+  c.translate(w / 2, h / 2);
+  for (let arm = 0; arm < 5; arm++) {
+    c.beginPath();
+    for (let k = 0; k <= 60; k++) { const t = k / 60, a = arm / 5 * Math.PI * 2 + t * 4.2, r = 8 + t * (w / 2 - 12); c[k ? 'lineTo' : 'moveTo'](Math.cos(a) * r, Math.sin(a) * r); }
+    c.strokeStyle = arm % 2 ? 'rgba(220,248,255,0.95)' : 'rgba(110,200,255,0.9)'; c.lineWidth = 14; c.lineCap = 'round'; c.stroke();
+  }
+});
 
 const ROUND_TIME = 60;
 const INTRO_FIRST = 4.2, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
@@ -297,6 +317,24 @@ export class Battle {
       const halo = new THREE.Mesh(new THREE.SphereGeometry(0.62, 14, 10), new THREE.MeshBasicMaterial({ color: 0xffe14d, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false }));
       mesh.add(ball, halo);
     }
+    else if (p.kind === 'splash') {
+      // a wobbly water blob with a highlight
+      const blob = new THREE.Mesh(new THREE.SphereGeometry(0.36, 16, 12), new THREE.MeshToonMaterial({ color: 0x5ac8ff, emissive: 0x1a4a7a, transparent: true, opacity: 0.85 }));
+      const hl = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      hl.position.set(-0.13, 0.16, 0.2); hl.scale.set(1, 0.6, 0.6);
+      mesh.add(blob, hl);
+    } else if (p.kind === 'puddle') {
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(p.r, 32), new THREE.MeshBasicMaterial({ map: getPuddleTex(), transparent: true, depthWrite: false, opacity: 0 }));
+      disc.rotation.x = -Math.PI / 2; disc.scale.setScalar(1 / 0.88);
+      disc.renderOrder = 1;
+      mesh.add(disc);
+    } else if (p.kind === 'whirl') {
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ map: getSwirlTex(), transparent: true, depthWrite: false, opacity: 0 }));
+      disc.rotation.x = -Math.PI / 2;
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.08, 6, 40), new THREE.MeshBasicMaterial({ color: 0xdff6ff, transparent: true, opacity: 0 }));
+      rim.rotation.x = -Math.PI / 2;
+      mesh.add(disc, rim);
+    }
     else if (p.kind === 'boulder') {
       // chunky rock with a glinting crystal and a cartoon outline (shared toon materials, kept on removal)
       const rock = inked(new THREE.DodecahedronGeometry(0.42, 0), toon(0xb8a690, { rim: 0.7 }), 0.03);
@@ -370,6 +408,20 @@ export class Battle {
         pr.mesh.children[0].rotation.x += dt * 9; pr.mesh.children[0].rotation.z += dt * 5;
         if (pr.y > 2.5 && Math.random() < 0.3) this.fx.spawn({ x: pr.x, y: pr.y, z: pr.z, color: 0xd8c8b0, size: 0.4 * (pr.size || 1), life: 0.3, shape: 'puff', additive: false, alpha: 0.5 });
         if (pr.vy < 0 && pr.y <= 0.35 * (pr.size || 1)) { this.boulderLand(pr, target); this.removeProjectile(i); continue; }
+      } else if (pr.kind === 'splash') {
+        pr.vy -= pr.g * dt;
+        pr.y += pr.vy * dt;
+        pr.mesh.scale.set(1 + Math.sin(pr.t * 25) * 0.12, 1 - Math.sin(pr.t * 25) * 0.12, 1);
+        if (Math.random() < 0.6) this.fx.spawn({ x: pr.x, y: pr.y, z: pr.z, color: 0xbfeaff, size: 0.2, life: 0.3, shape: 'drop', additive: false, grav: 6 });
+        if (pr.vy < 0 && pr.y <= 0.3) { this.splashLand(pr, target); this.removeProjectile(i); continue; }
+      } else if (pr.kind === 'puddle') {
+        // a lingering slippery zone: the rival slides around inside it
+        const m = pr.mesh.children[0].material, fade = Math.min(1, pr.t * 6, (pr.life - pr.t) * 2);
+        m.opacity = Math.max(0, fade);
+        pr.mesh.scale.setScalar(0.6 + 0.4 * Math.min(1, pr.t * 5) + Math.sin(pr.t * 3) * 0.02);
+        const d = Math.hypot(target.x - pr.x, target.z - pr.z);
+        if (target.alive && !target.under && target.y < 0.3 && d < pr.r * 0.92 && pr.t < pr.life - 0.3) target.slick = Math.max(target.slick || 0, 0.25);
+        if (Math.random() < 0.08) this.fx.spawn({ x: pr.x + (Math.random() - 0.5) * pr.r * 1.4, y: 0.06, z: pr.z + (Math.random() - 0.5) * pr.r * 1.4, color: 0xdff6ff, size: 0.5, life: 0.5, shape: 'ring', alpha: 0.5 });
       } else if (pr.kind === 'bubble') {
         pr.mesh.scale.setScalar(1 + Math.sin(pr.t * 12) * 0.06);
         pr.y = 0.7 + Math.sin(pr.t * 6) * 0.1;
@@ -409,6 +461,21 @@ export class Battle {
       const dx = d > 0.05 ? (target.x - pr.x) / d : Math.sin(pr.owner.face), dz = d > 0.05 ? (target.z - pr.z) / d : Math.cos(pr.owner.face);
       this.applyHit(pr.owner, target, { ...pr.hit, dirX: dx, dirZ: dz, heavy: big, projectile: true });
     }
+  }
+
+  splashLand(pr, target) {
+    const p = { x: pr.x, y: 0.05, z: pr.z };
+    this.fx.shock(p, 0x8fd8ff, pr.landR * 2, 0.3);
+    this.fx.burst({ x: pr.x, y: 0.3, z: pr.z }, { n: 14, speed: 4, up: 4, color: 0xa8e4ff, size: 0.22, life: 0.55, shape: 'drop', additive: false, grav: 14 });
+    sfx.water?.();
+    const d = Math.hypot(target.x - pr.x, target.z - pr.z);
+    if (target.alive && !target.under && d < pr.landR + 0.35 && target.y < 1.6) {
+      const dx = d > 0.05 ? (target.x - pr.x) / d : Math.sin(pr.owner.face), dz = d > 0.05 ? (target.z - pr.z) / d : Math.cos(pr.owner.face);
+      this.applyHit(pr.owner, target, { ...pr.hit, dirX: dx, dirZ: dz, heavy: false, projectile: true });
+    }
+    // only one puddle per owner at a time
+    for (let k = this.projectiles.length - 1; k >= 0; k--) if (this.projectiles[k].kind === 'puddle' && this.projectiles[k].owner === pr.owner) this.projectiles[k].life = Math.min(this.projectiles[k].life, this.projectiles[k].t + 0.4);
+    this.spawnProjectile(pr.owner, { kind: 'puddle', big: true, x: pr.x, z: pr.z, y: 0.035, vx: 0, vz: 0, r: 1.7, life: 4.5, hit: {} });
   }
 
   removeProjectile(i) {
@@ -780,6 +847,67 @@ export class Battle {
       } else if (f.superPhase === 'recover') {
         P.sy = 1.05; P.lean = 0;
         if (t > 0.35) this.endSuper(f);
+      }
+    } else if (id === 'whirlpool') {
+      // a whirlpool opens under the rival, spins them round and round, then a geyser blasts them up
+      const P = f.critter.pose;
+      if (f.superPhase === 'go') {
+        f.superPhase = 'swirl'; f.st = 0; f.whirlN = 0;
+        sfx.water(); sfx.superCharge();
+        this.spawnProjectile(f, { kind: 'whirl', big: true, x: o.x, z: o.z, y: 0.04, vx: 0, vz: 0, r: 0.1, life: 2.3, hit: {} });
+        f.whirl = this.projectiles[this.projectiles.length - 1];
+        f.whirlA = Math.atan2(o.x - f.whirl.x, o.z - f.whirl.z) || 0;
+      }
+      const W = f.whirl;
+      if (W && f.superPhase !== 'go') {
+        // the disc grows, spins, and fades out at the end
+        const R = Math.min(2.6, 0.3 + W.t * 5), fade = Math.min(1, W.t * 4, (2.2 - W.t) * 3);
+        W.mesh.scale.setScalar(R);
+        W.mesh.children[0].rotation.z = W.t * 9;
+        W.mesh.children[0].material.opacity = Math.max(0, fade) * 0.9;
+        W.mesh.children[1].material.opacity = Math.max(0, fade) * 0.7;
+        if (Math.random() < 0.8) {
+          const a = Math.random() * Math.PI * 2, r = R * (0.5 + Math.random() * 0.5);
+          fx.spawn({ x: W.x + Math.sin(a) * r, y: 0.15, z: W.z + Math.cos(a) * r, vx: Math.cos(a) * 5, vz: -Math.sin(a) * 5, vy: 1.5, color: Math.random() < 0.5 ? 0x8fd8ff : 0xffffff, size: 0.3, life: 0.35, shape: 'drop', additive: false, grav: 6 });
+        }
+      }
+      if (f.superPhase === 'swirl') {
+        // the otter spins on the spot to drive the current
+        P.yaw = t * 18; P.armLz = P.armRz = 2.4; P.y = 0.1 + Math.abs(Math.sin(t * 9)) * 0.1;
+        f.critter.emote('happy', 'grin', 0.2);
+        const d = Math.hypot(o.x - W.x, o.z - W.z);
+        if (o.alive && !o.under && d < 3.2 && o.state !== 'dodge') {
+          // caught: orbit inward
+          f.whirlA += dt * 7;
+          const r = THREE.MathUtils.damp(d, 0.7, 3, dt);
+          o.x = W.x + Math.sin(f.whirlA) * r; o.z = W.z + Math.cos(f.whirlA) * r;
+          o.vx = o.vz = 0; o.face += dt * 9;
+          const times = [0.3, 0.55, 0.8, 1.05];
+          if (f.whirlN < times.length && t > times[f.whirlN]) {
+            f.whirlN++;
+            this.applyHit(f, o, { dmg: 24 * f.power, kb: 0, lift: 0, stun: 0.5, dirX: Math.sin(f.whirlA), dirZ: Math.cos(f.whirlA), heavy: false, type: f.type, dizzy: 6 });
+          }
+        }
+        if (t > 1.3) {
+          f.superPhase = 'geyser'; f.st = 0;
+          sfx.boom(); sfx.water(); this.shake(0.7); this.game.impactFrame(0.08);
+          fx.shock({ x: W.x, z: W.z }, 0x8fd8ff, 4, 0.5);
+          for (let k = 0; k < 46; k++) {
+            const a = Math.random() * Math.PI * 2, s = Math.random() * 2.5;
+            fx.spawn({ x: W.x + Math.sin(a) * s * 0.3, y: 0.2, z: W.z + Math.cos(a) * s * 0.3, vx: Math.sin(a) * s, vz: Math.cos(a) * s, vy: 10 + Math.random() * 10,
+              color: [0x48b8ff, 0xdff6ff, 0x8fd8ff][k % 3], size: 0.35 + Math.random() * 0.45, life: 1.1, shape: 'drop', additive: false, grav: 16 });
+          }
+          const dd = Math.hypot(o.x - W.x, o.z - W.z);
+          if (o.alive && !o.under && dd < 2.2) {
+            const a = Math.atan2(o.x - W.x, o.z - W.z) || 0;
+            this.applyHit(f, o, { dmg: 150 * f.power, kb: 2, lift: 15, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 36 });
+          }
+        }
+      } else if (f.superPhase === 'geyser') {
+        P.armLz = P.armRz = 2.8; P.y = Math.abs(Math.sin(t * 8)) * 0.25;
+        f.critter.emote('happy', 'open', 0.2);
+        if (t < 0.4) for (let k = 0; k < 4; k++) fx.spawn({ x: W.x + (Math.random() - 0.5) * 0.8, y: Math.random() * 5, z: W.z + (Math.random() - 0.5) * 0.8, vy: 12, color: 0xdff6ff, size: 0.5, life: 0.4, shape: 'drop', additive: false, grav: 10 });
+        if (t > 0.9) { f.whirl = null; this.endSuper(f); }
       }
     } else if (id === 'avalanche') {
       const P = f.critter.pose;

@@ -278,6 +278,34 @@ export class Critter {
       lens.position.set(0, headR * 0.38, headR * 0.83);
       hat.add(lens);
       skull.add(hat);
+    } else if (def.extra === 'otter') {
+      // puffy cream muzzle with whiskers, a dark button nose, and a scallop shell clipped behind one ear
+      const cream = this.mats.belly;
+      for (const s of [-1, 1]) {
+        const m = inked(sphere(headR * 0.2), cream, OL * 0.5);
+        m.scale.set(1, 0.75, 0.7); m.position.set(s * headR * 0.15, -headR * 0.36, headR * 0.84);
+        skull.add(m);
+        for (let k = 0; k < 3; k++) {
+          const w = new THREE.Mesh(new THREE.CylinderGeometry(headR * 0.012, headR * 0.012, headR * 0.5, 4), this.mats.dark);
+          w.rotation.z = s * (Math.PI / 2 + (k - 1) * 0.2); w.position.set(s * headR * 0.48, -headR * (0.33 + k * 0.05), headR * 0.84);
+          skull.add(w);
+        }
+      }
+      const nose = inked(sphere(headR * 0.085), this.mats.dark, OL * 0.4);
+      nose.scale.set(1.3, 0.85, 0.9); nose.position.set(0, -headR * 0.26, headR * 1.0);
+      skull.add(nose);
+      const shell = new THREE.Group();
+      shell.position.set(-headR * 0.3, headR * 0.92, headR * 0.3); shell.rotation.set(-0.5, -0.1, 0.35);
+      const shM = toon(C.accent, { uniforms: U });
+      for (let k = 0; k < 5; k++) {
+        const r = inked(sphere(headR * 0.1), shM, OL * 0.4);
+        const a = (k - 2) * 0.32;
+        r.scale.set(0.55, 1.6, 0.5); r.position.set(Math.sin(a) * headR * 0.1, Math.cos(a) * headR * 0.1, 0); r.rotation.z = -a;
+        shell.add(r);
+      }
+      const hinge = new THREE.Mesh(sphere(headR * 0.06), shM);
+      hinge.scale.set(1.6, 0.8, 0.8); shell.add(hinge);
+      skull.add(shell);
     } else if (def.extra === 'frog') {
       // wide flat head with two eye domes on top and a pink lily flower on one of them
       skull.scale.set(1.2, 0.86, 1.0);
@@ -361,7 +389,7 @@ export class Critter {
     eyeL.renderOrder = eyeR.renderOrder = 2;
     skull.add(eyeL, eyeR);
     this.eyes = [eyeL, eyeR];
-    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' || def.extra === 'mole' ? -0.52 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
+    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' || def.extra === 'mole' ? -0.52 : def.extra === 'otter' ? -0.5 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
     mouth.renderOrder = 2;
     skull.add(mouth);
     const blushMat = decalMat(ft.blush);
@@ -397,6 +425,7 @@ export class Critter {
         const inner = new THREE.Mesh(sphere(headR * 0.2), this.mats.pink);
         inner.scale.set(1, 1, 0.3); inner.position.z = headR * 0.08;
         ear.add(inner);
+        if (def.extra === 'otter') { ear.scale.setScalar(0.66); ear.position.set(s * headR * 0.72, headR * 0.6, -headR * 0.02); }
       } else if (def.ears === 'long') {
         ear.position.set(s * headR * 0.36, headR * 0.82, -headR * 0.08);
         ear.rotation.z = -s * 0.18;
@@ -720,6 +749,17 @@ export class Critter {
       const tip = inked(sphere(0.15), this.mats.belly, OL * 0.8);
       tip.position.set(0, 0.8, 0.02);
       tail.add(tip);
+    } else if (def.tail === 'otter') {
+      // thick tapered rudder tail that sweeps out behind
+      tail.position.y = B.h * 0.12;
+      tail.rotation.x = -1.25;
+      const pieces = [];
+      for (let k = 0; k < 4; k++) {
+        const a = k / 3, g = sphere(0.15 - a * 0.07);
+        g.scale(1.15, 1, 0.85); g.translate(0, 0.08 + a * 0.5, -a * a * 0.12);
+        pieces.push(g);
+      }
+      tail.add(inked(mergeGeometries(pieces), this.mats.dark, OL));
     } else if (def.tail === 'stub') {
       tail.position.y = B.h * 0.18;
       tail.rotation.x = -1.9;
