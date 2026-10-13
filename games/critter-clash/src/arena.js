@@ -120,6 +120,9 @@ export class Arena {
     this.hemi = new THREE.HemisphereLight(A.hemiSky, A.hemiGround, 1.25);
     // lavender bounce reads as an anime shadow tint on the critters
     G.add(this.hemi);
+    // camera-side fill for close-ups (results); always present so the light count never changes mid-game
+    this.fill = new THREE.DirectionalLight(0xfff4e8, 0);
+    G.add(this.fill, this.fill.target);
     const sun = this.sun = new THREE.DirectionalLight(A.sun, A.sunI);
     sun.position.set(...A.sunDir).multiplyScalar(30);
     sun.castShadow = true;

@@ -165,7 +165,7 @@ const WIN = {
   },
   hootsy(f, P, k) { // hovering spin with feathers
     const w = sin(k * 26);
-    P.y = 0.6 + sin(k * 3) * 0.15; P.armLz = P.armRz = 1.3 + w; P.yaw = k * 4; P.legL = P.legR = 0.5;
+    P.y = 0.6 + sin(k * 3) * 0.15; P.armLz = P.armRz = 1.3 + w; const sp = Math.min(1, (k % 2.6) / 1.1); P.yaw = (1 - Math.cos(Math.PI * sp)) * Math.PI; // spin bursts, then face front P.legL = P.legR = 0.5;
     f.critter.emote('happy', 'open', 0.1);
     if (Math.random() < 0.12) f.battle.fx.spawn({ x: f.x + rnd(1.5), y: f.y + 1.6, z: f.z + rnd(1.5), vy: -0.5, color: 0xb8c4ff, size: 0.3, life: 1.6, shape: 'leaf', additive: false, spin: 4, drag: 2 });
   },

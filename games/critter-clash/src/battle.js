@@ -759,10 +759,23 @@ export class Battle {
       if (this.phaseT > 2.2) this.endRound();
     } else if (this.phase === 'winpose') {
       if (this.phaseT > 2.6) {
-        if (Math.max(...this.wins) >= this.winsNeeded) { this.phase = 'done'; this.onEnd?.(this.wins[0] > this.wins[1], this.stats); }
+        if (Math.max(...this.wins) >= this.winsNeeded) {
+          this.phase = 'done'; this.phaseT = 0; this.camSnap = true;
+          this.stats.hpLeft = Math.max(0, this.player.hp / this.player.maxHp);
+          this.onEnd?.(this.wins[0] > this.wins[1], this.stats);
+        }
         else this.startRound();
       }
     }
+
+    const fill = this.arena.fill;
+    if (this.phase === 'done' && this.koWinner) {
+      for (const f of this.fighters) f.root.visible = f === this.koWinner;
+      const w = this.koWinner;
+      fill.position.set(this.camera.position.x + 1, this.camera.position.y + 2, this.camera.position.z);
+      fill.target.position.set(w.x, w.y + 0.8, w.z);
+      fill.intensity = THREE.MathUtils.damp(fill.intensity, 0.65, 3, dt);
+    } else if (fill) fill.intensity = 0;
 
     // controls
     const fighting = this.phase === 'fight';
@@ -834,6 +847,13 @@ export class Battle {
       const a = this.phaseT * 0.3;
       pos = new THREE.Vector3(f.x + Math.sin(a) * 5, 2.4, f.z + Math.cos(a) * 5 + 1);
       fov = 38;
+    } else if (this.phase === 'done' && this.koWinner) {
+      // results backdrop: the winner keeps celebrating in a close-up off to the side of the card
+      const f = this.koWinner, port = cam.aspect < 1;
+      const hy = f.critter.P.y * 0.5, drift = Math.sin(this.phaseT * 0.25) * 0.25;
+      look = new THREE.Vector3(f.x + (port ? 0 : 1.5), (port ? 0.3 : 0.95) + hy, f.z);
+      pos = new THREE.Vector3(f.x - 0.5 + drift, 1.45 + hy * 0.6, f.z + (port ? 7 : 5.6));
+      fov = (port ? 46 : 36) / Math.max(1, 1.6 / cam.aspect); // undo the narrow-aspect widening below
     } else {
       const mx = (p.x + c.x) / 2, mz = (p.z + c.z) / 2;
       const sep = Math.hypot(p.x - c.x, p.z - c.z);
@@ -881,5 +901,6 @@ export class Battle {
     for (const f of this.fighters) f.dispose();
     for (let i = this.projectiles.length - 1; i >= 0; i--) this.removeProjectile(i);
     this.fx.clear();
+    if (this.arena.fill) this.arena.fill.intensity = 0;
   }
 }

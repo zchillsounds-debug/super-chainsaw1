@@ -540,7 +540,7 @@ export class Screens {
     const cup = this.ctx.kind === 'cup' ? this.ctx : null;
     // XP: winning pays more, tougher foes pay more
     const kind = this.ctx.kind;
-    const xp = Math.round(((won ? 50 : 18) + opts.cpuLevel * (won ? 14 : 5) + stats.maxCombo * 2 + (stats.perfect ? 30 : 0)) * (kind === 'daily' && won ? 2 : 1));
+    const xp = Math.round(((won ? 50 : 18) + (opts.cpuLevel || 1) * (won ? 14 : 5) + stats.maxCombo * 2 + (stats.perfect ? 30 : 0)) * (kind === 'daily' && won ? 2 : 1));
     // survival bookkeeping: streak, carried health, personal best
     let streakNote = '';
     if (kind === 'survival') {
@@ -577,16 +577,21 @@ export class Screens {
     this.ctx.newShinies = shinies;
     const badges = newBadges();
     badges.forEach((b, k) => setTimeout(() => { if (this.mode === 'results') { this.toast(`${b.icon} Badge earned: ${b.name}`); sfx.jingle(2); } }, 2600 + k * 2300));
+    // performance grade: winning, health left, combos, supers and flawless rounds
+    const hpLeft = stats.hpLeft ?? 0;
+    const score = (won ? 45 : 10) + hpLeft * 30 + Math.min(stats.maxCombo, 8) * 2 + Math.min(stats.supers, 2) * 4 + (stats.perfect ? 12 : 0) + Math.min(stats.parries || 0, 3) * 2;
+    const grade = !won ? (score >= 40 ? 'B' : 'C') : score >= 92 ? 'S' : score >= 78 ? 'A' : score >= 62 ? 'B' : 'C';
     this.root.innerHTML = `
       <div class="results ${won ? 'won' : 'lost'}">
         <h1>${won ? 'VICTORY!' : 'DEFEAT'}</h1>
         <div class="res-card">
+          <div class="grade g-${grade}"><small>Rank</small>${grade}</div>
           <img src="${g.portrait(pDef)}" alt="">
           <div class="res-stats">
             <div class="res-grid">
-              <div><small>Damage</small><b>${stats.dmgDealt}</b></div>
-              <div><small>Best combo</small><b>${stats.maxCombo}</b></div>
-              <div><small>Supers</small><b>${stats.supers}</b></div>
+              <div><small>Damage</small><b data-n="${stats.dmgDealt}">0</b></div>
+              <div><small>Best combo</small><b data-n="${stats.maxCombo}">0</b></div>
+              <div><small>Health left</small><b data-n="${Math.round(hpLeft * 100)}" data-u="%">0</b></div>
             </div>
             ${stats.perfect ? '<div class="perfect">PERFECT ROUND!</div>' : ''}
             ${streakNote}
@@ -596,6 +601,16 @@ export class Screens {
         </div>
         <div class="res-btns"></div>
       </div>`;
+    // count the stats up, then slam the rank stamp down
+    const nums = [...this.root.querySelectorAll('[data-n]')], t0 = performance.now();
+    const count = () => {
+      if (!this.root.contains(nums[0])) return;
+      const k = Math.min(1, (performance.now() - t0 - 250) / 900), e = 1 - (1 - Math.max(0, k)) ** 3;
+      for (const n of nums) n.textContent = Math.round(+n.dataset.n * e) + (n.dataset.u || '');
+      if (k < 1) requestAnimationFrame(count);
+      else { this.root.querySelector('.grade')?.classList.add('in'); sfx.boom(); }
+    };
+    requestAnimationFrame(count);
     // animate the XP bar, rolling over on level-ups
     const bar = this.root.querySelector('.xpbar i'), lvEl = this.root.querySelector('.res-lv');
     let level = before.level;
