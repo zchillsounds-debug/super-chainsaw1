@@ -90,7 +90,11 @@ export class Screens {
     row.appendChild(this.btn('Quick Battle', '', () => { this.ctx = { kind: 'quick' }; this.select(); }));
     row.appendChild(this.btn('Challenges', '', () => this.challenges()));
     row.appendChild(this.btn('Critterdex', '', () => this.dex()));
-    row.appendChild(this.btn('Camp', '', () => this.camp()));
+    const campBtn = this.btn('Camp', '', () => this.camp());
+    // a dot when there's something to do: unclaimed daily gift, berries to feed, or someone not yet petted today
+    const day = new Date().toISOString().slice(0, 10);
+    if (save.giftDay !== day || save.berries > 0 || save.unlocked.some((id) => save.petDay?.[id] !== day)) campBtn.classList.add('dot');
+    row.appendChild(campBtn);
     row.appendChild(this.btn('How to Play', 'ghost', () => this.howTo()));
     m.appendChild(row);
     const gear = this.btn('<svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 3.5c0-.5 0-1-.1-1.4l2-1.6-2-3.4-2.4 1a8 8 0 0 0-2.4-1.4L15 2.6h-4l-.4 2.6A8 8 0 0 0 8.2 6.6l-2.4-1-2 3.4 2 1.6a8 8 0 0 0 0 2.8l-2 1.6 2 3.4 2.4-1a8 8 0 0 0 2.4 1.4l.4 2.6h4l.4-2.6a8 8 0 0 0 2.4-1.4l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.4z"/></svg>', 'icon-btn gear', () => openSettings(g, this.root));
@@ -516,11 +520,20 @@ export class Screens {
       <div class="camp-berries">🍓 <b>${save.berries || 0}</b></div>
       <div class="camp-panel"></div></div>`;
     const S = this.root.querySelector('.camp-screen');
-    S.prepend(this.header('Critter Camp', () => { this.campObj = null; this.title(); }));
+    S.prepend(this.header('Critter Camp', () => this.title()));
+    this.campObj?.dispose();
     this.campObj = new Camp(this, team);
     S.querySelector('.camp-touch').addEventListener('pointerdown', (e) => this.campObj?.tap(e.clientX, e.clientY));
     this.campObj.panel();
     playMusic('camp');
+    // once a day the camp has a little basket of berries waiting
+    const day = new Date().toISOString().slice(0, 10);
+    if (save.giftDay !== day) {
+      save.giftDay = day;
+      save.berries = (save.berries || 0) + 2;
+      persist();
+      setTimeout(() => { if (this.mode !== 'camp') return; this.toast('🧺 Daily gift: +2 berries!'); sfx.jingle(2); this.campObj?.panel(); }, 700);
+    }
   }
 
   badgeModal() {
@@ -827,6 +840,7 @@ export class Screens {
     this.t += dt;
     const cam = this.game.camera;
     if (this.mode === 'camp') { this.campObj?.update(dt); return; }
+    if (this.campObj) { this.campObj.dispose(); this.campObj = null; }
     if (this.mode === 'title') {
       const a = Math.sin(this.t * 0.15) * 0.35;
       const D = cam.aspect < 1 ? 11 : 7.5;

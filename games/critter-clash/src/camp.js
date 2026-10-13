@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { CRITTERS, TYPES, gearFor, GEAR } from './data.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx } from './audio.js';
+import { toon, inked, canvasTex } from './toon.js';
 import { newBadges } from './screens.js';
 
 const FEED_XP = 45, PET_XP = 10;
@@ -18,12 +19,19 @@ export class Camp {
     this.team = team;
     this.sel = null;
     this.t = 0;
+    this.props = buildProps();
+    this.g.scene.add(this.props);
     // scatter the team around the field, each with its own wander plan
     this.g.showcase.forEach((c, i) => {
       const a = (i / Math.max(1, team.length)) * Math.PI * 2;
       c.camp = { x: Math.cos(a) * 3, z: Math.sin(a) * 2.2, tx: 0, tz: 0, wait: Math.random() * 2, face: a + Math.PI, munch: 0, pet: 0 };
       c.root.position.set(c.camp.x, 0, c.camp.z);
     });
+  }
+
+  dispose() {
+    this.g.scene.remove(this.props);
+    this.props.traverse((o) => { o.geometry?.dispose(); });
   }
 
   pick(clientX, clientY) {
@@ -129,6 +137,11 @@ export class Camp {
     cam.lookAt(0, port ? 0.6 : 0, 0.4);
     cam.fov = Math.min(70, 40 * Math.max(1, 1.5 / cam.aspect));
     cam.updateProjectionMatrix();
+    // campfire flicker
+    const fp = this.props.userData.fire;
+    if (Math.random() < dt * 24) this.g.fx.spawn({ x: fp.x + (Math.random() - 0.5) * 0.3, y: 0.55, z: fp.z + (Math.random() - 0.5) * 0.3, vy: 1.4 + Math.random(), color: Math.random() < 0.5 ? 0xff8a2a : 0xffd04a, size: 0.42, life: 0.55, shape: 'glow', grow: -0.8 });
+    this.props.userData.flames.forEach((fl, k) => { const f = 1 + Math.sin(this.t * (11 + k * 4)) * 0.12 + Math.sin(this.t * 23) * 0.06; fl.scale.set(1 / Math.sqrt(f), f, 1 / Math.sqrt(f)); fl.rotation.y = this.t * (k ? -2 : 1.5); });
+    if (Math.random() < dt * 2) this.g.fx.spawn({ x: fp.x, y: 0.9, z: fp.z, vy: 0.8, vx: 0.2, color: 0xb8b0a8, size: 0.4, life: 1.6, shape: 'puff', additive: false, grow: 1.2, alpha: 0.5 });
     for (const c of this.g.showcase) {
       const m = c.camp;
       if (!m) continue;
@@ -144,8 +157,11 @@ export class Camp {
         walking = true;
       } else if (m.wait <= 0) {
         // pick a new spot to amble to, then idle for a bit
-        const r = 1 + Math.random() * 4.2, ang = Math.random() * Math.PI * 2;
-        m.tx = Math.cos(ang) * r; m.tz = Math.sin(ang) * r * 0.75;
+        for (let tries = 0; tries < 6; tries++) {
+          const r = 1 + Math.random() * 4.2, ang = Math.random() * Math.PI * 2;
+          m.tx = Math.cos(ang) * r; m.tz = Math.sin(ang) * r * 0.75;
+          if (!this.props.userData.keepOut.some(([px, pz, pr]) => Math.hypot(m.tx - px, m.tz - pz) < pr)) break;
+        }
         m.wait = 1 + Math.random() * 3;
       }
       // the selected critter turns to face the camera
@@ -176,4 +192,73 @@ export class Camp {
       c.update(dt);
     }
   }
+}
+
+// campfire, tent, picnic blanket and a berry basket, kept at the edges so the critters have room
+function buildProps() {
+  const g = new THREE.Group();
+  const OL = 0.03;
+  // campfire: ring of stones, crossed logs, warm point light
+  const fire = new THREE.Group();
+  fire.position.set(-2.9, 0, -1.3);
+  fire.scale.setScalar(1.4);
+  const stone = toon(0x9a9aa6);
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * Math.PI * 2;
+    const st = inked(new THREE.SphereGeometry(0.16, 10, 8), stone, OL * 0.6);
+    st.scale.set(1, 0.6, 0.9); st.position.set(Math.cos(a) * 0.48, 0.08, Math.sin(a) * 0.48);
+    fire.add(st);
+  }
+  const wood = toon(0x8a5a32);
+  for (let i = 0; i < 3; i++) {
+    const log = inked(new THREE.CylinderGeometry(0.07, 0.08, 0.75, 8), wood, OL * 0.6);
+    log.rotation.set(Math.PI / 2 - 0.5, i * Math.PI * 2 / 3, 0, 'YXZ');
+    log.position.y = 0.2;
+    fire.add(log);
+  }
+  // solid toon flames that flicker in update()
+  const flames = [];
+  for (const [col, r, h, y] of [[0xff7a1a, 0.26, 0.7, 0.45], [0xffd04a, 0.15, 0.45, 0.4]]) {
+    const fl = new THREE.Mesh(new THREE.ConeGeometry(r, h, 10), new THREE.MeshBasicMaterial({ color: col }));
+    fl.position.y = y;
+    fire.add(fl); flames.push(fl);
+  }
+  g.add(fire);
+  // tent: a striped triangular prism
+  const tentTex = canvasTex(128, 64, (x, w, h) => { for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? '#fff4e0' : '#ff8a5a'; x.fillRect(i * w / 8, 0, w / 8, h); } });
+  const tri = new THREE.Shape([new THREE.Vector2(-1, 0), new THREE.Vector2(1, 0), new THREE.Vector2(0, 1.35)]);
+  const tentGeo = new THREE.ExtrudeGeometry(tri, { depth: 2, bevelEnabled: false });
+  tentGeo.translate(0, 0, -1);
+  // stripes run across the roof: map them from x
+  const uv = tentGeo.attributes.uv, pos = tentGeo.attributes.position;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, (pos.getX(i) + 1) / 2, pos.getY(i) / 1.35);
+  const tent = inked(tentGeo, toon(0xffffff, { map: tentTex }), OL);
+  const tentG = new THREE.Group();
+  tentG.add(tent);
+  tentG.position.set(3.3, 0, -2.5); tentG.rotation.y = -0.6;
+  const flapS = new THREE.Shape([new THREE.Vector2(-0.4, 0), new THREE.Vector2(0.4, 0), new THREE.Vector2(0, 0.85)]);
+  const flap = new THREE.Mesh(new THREE.ShapeGeometry(flapS), toon(0x5a3a2a));
+  flap.position.set(0, 0.01, 1.01);
+  tentG.add(flap);
+  g.add(tentG);
+  // picnic blanket with a basket of berries
+  const checker = canvasTex(64, 64, (x, w, h) => { for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { x.fillStyle = (i + j) % 2 ? '#ff5a6e' : '#fff6ea'; x.fillRect(i * w / 4, j * h / 4, w / 4, h / 4); } });
+  const blanket = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.4), toon(0xffffff, { map: checker }));
+  blanket.rotation.set(-Math.PI / 2, 0, 0.3);
+  blanket.position.set(2.6, 0.02, 1.9);
+  blanket.receiveShadow = true;
+  g.add(blanket);
+  const basket = inked(new THREE.CylinderGeometry(0.3, 0.24, 0.3, 14), toon(0xd8a060), OL * 0.6);
+  basket.position.set(2.8, 0.17, 1.8);
+  g.add(basket);
+  const berry = toon(0xff3f6c);
+  for (let i = 0; i < 5; i++) {
+    const b = inked(new THREE.SphereGeometry(0.1, 10, 8), berry, OL * 0.4);
+    b.position.set(2.8 + Math.cos(i * 1.3) * 0.13, 0.36 + (i % 2) * 0.05, 1.8 + Math.sin(i * 1.3) * 0.13);
+    g.add(b);
+  }
+  g.traverse((o) => { if (o.isMesh && !o.userData.hull) o.castShadow = true; });
+  // no lights here: adding one would recompile every shader on the way in and out
+  g.userData = { fire: fire.position, flames, keepOut: [[-2.9, -1.3, 1.0], [3.3, -2.5, 1.7], [2.6, 1.9, 1.3]] };
+  return g;
 }

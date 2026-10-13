@@ -670,3 +670,6 @@ body.portrait .timer { width: 50px; height: 50px; font-size: 26px; }
 .title-menu .row { flex-wrap: wrap; justify-content: center; max-width: calc(100vw - 24px); }
 .title-menu .row .btn { white-space: nowrap; }
 @media (orientation: landscape) and (max-width: 820px) { .title-menu .row { gap: 8px; } .title-menu .row .btn { padding-left: 16px; padding-right: 16px; font-size: 15px; } }
+.btn.dot { position: relative; }
+.btn.dot::after { content: ''; position: absolute; top: -3px; right: -3px; width: 14px; height: 14px; border-radius: 50%; background: #ff4f6d; box-shadow: 0 0 0 3px var(--ink); animation: dotPulse 1.4s ease-in-out infinite; }
+@keyframes dotPulse { 50% { transform: scale(1.25); } }
