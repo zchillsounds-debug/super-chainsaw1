@@ -30,6 +30,10 @@ export class Camp {
     this.g.showcase.forEach((c, i) => {
       const a = (i / Math.max(1, team.length)) * Math.PI * 2;
       c.camp = { x: Math.cos(a) * 3, z: Math.sin(a) * 2.2, tx: 0, tz: 0, wait: Math.random() * 2, face: a + Math.PI, munch: 0, pet: 0 };
+      for (const [px, pz, pr] of this.props.userData.keepOut) {
+        const ox = c.camp.x - px, oz = c.camp.z - pz, od = Math.hypot(ox, oz) || 1e-3;
+        if (od < pr) { c.camp.x = px + ox / od * pr; c.camp.z = pz + oz / od * pr; }
+      }
       c.root.position.set(c.camp.x, 0, c.camp.z);
     });
   }
@@ -159,9 +163,32 @@ export class Camp {
       const dx = m.tx - m.x, dz = m.tz - m.z, d = Math.hypot(dx, dz);
       let walking = false;
       if (m.wait <= 0 && d > 0.15) {
-        const sp = 1.3 * dt;
-        m.x += dx / d * Math.min(sp, d); m.z += dz / d * Math.min(sp, d);
-        m.face = Math.atan2(dx, dz);
+        // steer toward the target, curving around props and other critters instead of through them
+        let sx = dx / d, sz = dz / d;
+        for (const [px, pz, pr] of this.props.userData.keepOut) {
+          const ox = m.x - px, oz = m.z - pz, od = Math.hypot(ox, oz) || 1e-3, reach = pr + 0.7;
+          if (od < reach) {
+            const w = (reach - od) / 0.7 * 1.6;
+            // push out, plus a sideways nudge so they walk around rather than stall against it
+            const side = Math.sign(ox * sz - oz * sx) || 1;
+            sx += (ox / od) * w + (-oz / od) * side * w * 0.8; sz += (oz / od) * w + (ox / od) * side * w * 0.8;
+          }
+        }
+        for (const o of this.g.showcase) {
+          if (o === c || !o.camp) continue;
+          const ox = m.x - o.camp.x, oz = m.z - o.camp.z, od = Math.hypot(ox, oz);
+          if (od < 0.9 && od > 1e-3) { const w = (0.9 - od) / 0.9; sx += ox / od * w; sz += oz / od * w; }
+        }
+        const sl = Math.hypot(sx, sz) || 1, sp = 1.3 * dt;
+        m.x += sx / sl * Math.min(sp, d); m.z += sz / sl * Math.min(sp, d);
+        for (const [px, pz, pr] of this.props.userData.keepOut) {
+          const ox = m.x - px, oz = m.z - pz, od = Math.hypot(ox, oz) || 1e-3, lim = pr * 0.8;
+          if (od < lim) { m.x = px + ox / od * lim; m.z = pz + oz / od * lim; }
+        }
+        m.walkT = (m.walkT || 0) + dt;
+        // give up on a target that can't be reached and pick another
+        if (m.walkT > 8) { m.tx = m.x; m.tz = m.z; m.walkT = 0; }
+        m.face = Math.atan2(sx, sz);
         walking = true;
       } else if (m.wait <= 0) {
         // pick a new spot to amble to, then idle for a bit
@@ -171,6 +198,7 @@ export class Camp {
           if (!this.props.userData.keepOut.some(([px, pz, pr]) => Math.hypot(m.tx - px, m.tz - pz) < pr)) break;
         }
         m.wait = 1 + Math.random() * 3;
+        m.walkT = 0;
       }
       // the selected critter turns to face the camera
       const want = c === this.sel && !walking ? Math.atan2(cam.position.x - m.x, cam.position.z - m.z) : m.face;
