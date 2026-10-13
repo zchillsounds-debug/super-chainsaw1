@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 44)
+# Critter Clash: Handoff (after Round 61)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -17,7 +17,8 @@
 - **The target is ~10 hours of actual work, not a fixed clock time.** About 2.6 hours were used by 07:05, so the new end is about **23:00 UTC on 2026-10-13**. If a worker stalls again, extend the end time by the stall rather than stopping.
 - User playtest (15:30 UTC): "it wouldn't let me choose a character". Couldn't reproduce a hard failure in phone emulation; Round 32 makes every critter playable in Quick Battle/Training and hardens the name prompt. Ask the user to confirm it's fixed in the next APK.
 - Session 5 (15:50–16:40 UTC) sent the user the Round 32 APK (asked them to confirm the character-pick fix; no reply yet), then did Rounds 33–44 and chained at ~190k context.
-- Time used so far: about 3.4 hours of actual work (2.6 h before the stall + ~0.8 h in session 5).
+- Session 6 (16:35–17:35 UTC) sent the user the Round 44 APK (arena hazards + Camp) and asked again about the character-pick fix (no reply yet), then did Rounds 45–61 and chained to keep context small (~200k).
+- Time used so far: about 4.4 hours of actual work (2.6 h before the stall + ~0.8 h in session 5 + ~1.0 h in session 6).
 - Target end of the whole effort: about **23:00 UTC on 2026-10-13** (see above). Check `date -u`. Keep chaining sessions until then, then stop and summarise.
 
 ## Run it
@@ -33,7 +34,7 @@ URL flags:
 
 - `&arena=frost` and `&arena=neon` also work now, and `&mods=bighead,turbo,lowgrav,itemrain,supercharged` applies match modifiers.
 
-Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt.
+Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt, pebblepup, whirlwhisk.
 - `&train` starts a training match (e.g. `?play&train&p=woolt`).
 - Force a win in tests: `(()=>{const b=__game.battle;for(let i=0;i<40&&b.phase!=='done';i++){if(b.phase==='fight')b.fighters[1].hp=1;__sim(1);}})()`, then `__sim(2)` and screenshot the results.
 
@@ -132,6 +133,16 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 - Screens: `gearGet()` results callout; Critterdex Gear row and friendship; VS screen hazard chip `.vs-hazard`; title Camp button with `.btn.dot`.
 - Gotcha (again): `body.portrait` exists, so `.portrait img` styles leak into any `img` in portrait; reset margin on new image rules.
 
+## New in session 6
+- camp.js: steering around props (`keepOut`) and friends, idle shuffle-apart, portrait camera, fetch toy (`toss()`/`updateFetch()`, `.camp-toy` button), activity `spots` (fire/nap/picnic; `m.act`, `m.doing`).
+- Best-friend perk: `battle.bestFriend` (pets >= 20) starts the player with 25 super meter; HUD shows a heart after Lv.
+- hazards.js: `storm()` on boss enrage, `volley()` (staggered row of 3), `spawnAt(x, z, t0, quiet)`.
+- critters.js: `buildGear(n)` is incremental (`gearN`), used by `Screens.gearGet` to dress the results winner. New parts: ears `pug`, tail `bushy`, extras `crystals`, `glider`.
+- New critters: **Pebblepup** (stone; special `rocktoss` = lobbed `boulder` projectile with `boulderLand()`, super `avalanche`) and **Whirlwhisk** (gust; special `swoop`, super `jetstream` gust cone). Both are in the Thunder Cup (Gran Pebbles, Wren). Specials that pose themselves are skipped in `Fighter.animate`.
+- Screens: `profTalk(lines, done)` Professor Pecan overlay (`PROF_SVG`), cup `intro`/`outro` lines in data.js (`save.cupIntro`), scroll-fade hint (`.more` via MutationObserver on `.dex-info, .modal, .move-list`), roster scrolls sideways in landscape and is 6-wide in portrait.
+- fx.js: damage numbers fan out (`dmgSeq`). Results fill light is arena-relative.
+- Testing a special/super directly: `b.brain.update=()=>{}; p.startSpecial()` or `b.startSuper(p)`, then `__sim(...)`. Setting `p.ctl.*` doesn't work (input overwrites it each frame).
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -186,19 +197,36 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 42. How to Play covers hazards and Camp.
 43. Hazard warning chirp + geyser rumble; full auto matches on all 5 arenas with mods are error-free.
 44. Pulsing selection ring in Camp.
+45. Camp critters walk around props.
+46. Best-friend perk (5 hearts → start with super meter).
+47. Camp spacing fix (everyone used to walk to the centre) and portrait Camp camera.
+48. Fetch toy in Camp.
+49. Boss hazard storm (volleys of rings after enrage).
+50. Results winner puts on new gear at once; crisper results lighting.
+51. Scroll-fade hint on long panels.
+52. Professor Pecan story beats for every cup (intro + trophy outro).
+53. Build check + full auto matches on all arenas (no code change).
+54. Camp activities: warm up at the fire, nap at the tent, picnic.
+55. Combo damage numbers fan out.
+56. Pebblepup (stone pug): Rock Toss / Avalanche.
+57. Whirlwhisk (gust glider squirrel): Sky Swoop / Jet Stream; roster layout for 12.
+58. Portrait Critterdex fits 12.
+59. Jet Stream wind streaks.
+60. Clovebun now appears in the Sprout Cup (its shiny was unobtainable).
+61. Checked gear on the new critters (fine).
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
-- Camp critters can walk through the campfire/tent on their way to a target (only targets avoid props).
-- The results 3D model doesn't show newly earned gear until the next battle (the callout says so).
 - Native photo Save/Share (Round 27) is untested on a real phone.
+- Jet Stream streaks are hard to verify in headless (timing); maybe make the gust more visible.
+- Pricklepuff can now only be recruited in the Midnight Cup (Marigold's Sprout critter became Clovebun). Consider whether that's too late.
+- Camp is crowded with 12 critters; the nap spot sits in front of the tent.
 - No localisation.
 
 ## Suggested next rounds
-- **First:** fetch the latest APK (check that the `apk-critter-clash` commit message names the latest SHA) and send it to the user with SendUserFile, mentioning arena hazards and the new Camp, and ask again whether picking a character works now.
-- Camp: path avoidance around props; a mini "fetch/catch" toy or treat-toss game; friendship perks (for example a small cheer/stat bonus at 5 hearts, shown in battle).
-- Battle: per-arena hazard variety (a second pattern per arena, e.g. a moving geyser line in the Champion/Aurora fight); boss phases that trigger hazards.
-- Content: a second boss cup or rival story beats; localisation.
+- **First:** fetch the latest APK (check that the `apk-critter-clash` commit message names the latest SHA) and send it to the user with SendUserFile. Mention the two new critters (Pebblepup, Whirlwhisk), Camp fetch and activities, and the cup story beats. Ask again whether picking a character works now.
+- Battle: per-arena second hazard pattern for normal fights; a quick sweep of the new critters vs CPU at high difficulty (balance).
+- Content: rival story beats inside matches (mid-cup Pecan lines?), a 13th critter, or a bonus cup that features the new critters.
 - Keep doing critique passes on phone sizes (915×412, 412×915, 740×360).
 
 ## Chaining (do this at the end of each session)
