@@ -650,14 +650,19 @@ export class Critter {
     this.t = Math.random() * 10;
 
     root.traverse((o) => { if (o.isMesh && !o.userData.hull && o.material && !o.material.transparent) o.castShadow = true; });
+    this.built = true;
   }
 
   // level-up gear: 1 = type-coloured scarf, 2 = gold star pin, 3 = tiny crown
-  buildGear(n, U, OL) {
+  buildGear(n, U = this.rim, OL = 0.02) {
+    const from = (this.gearN || 0) + 1;
+    if (n < from) return;
+    this.gearN = n;
     const B = this.def.body, headR = B.headR;
     const col = new THREE.Color(TYPES[this.def.type].color);
     const scarfMat = toon(col.getHex(), { uniforms: U });
     const gold = toon(0xffc93a, { uniforms: U, rim: 0.9 });
+    if (from <= 1) {
     const ring = inked(new THREE.TorusGeometry(B.w * 0.5, 0.085, 10, 28), scarfMat, OL * 0.8);
     ring.rotation.x = Math.PI / 2 - 0.3;
     ring.scale.set(B.chubby * 1.05, 1, 1);
@@ -674,7 +679,8 @@ export class Critter {
     }
     this.torso.add(tailG);
     this.scarfTails = tailG;
-    if (n >= 2) {
+    }
+    if (n >= 2 && from <= 2) {
       const sh = new THREE.Shape();
       for (let k = 0; k < 10; k++) { const r = k % 2 ? 0.035 : 0.08, a = k * Math.PI / 5 + Math.PI / 2; sh.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
       const star = inked(new THREE.ExtrudeGeometry(sh, { depth: 0.025, bevelEnabled: false }), gold, OL * 0.6);
@@ -682,7 +688,7 @@ export class Critter {
       star.rotation.set(-0.25, 0.35, 0.15);
       this.torso.add(star);
     }
-    if (n >= 3) {
+    if (n >= 3 && from <= 3) {
       const crown = new THREE.Group();
       const band = inked(new THREE.CylinderGeometry(headR * 0.3, headR * 0.32, headR * 0.16, 16, 1, true), gold, OL * 0.6);
       crown.add(band);
@@ -700,6 +706,7 @@ export class Critter {
       crown.rotation.set(0.12, 0, -0.22);
       this.skull.add(crown);
     }
+    if (this.built) this.root.traverse((o) => { if (o.isMesh && !o.userData.hull && o.material && !o.material.transparent) o.castShadow = true; });
   }
 
   resetPose() {

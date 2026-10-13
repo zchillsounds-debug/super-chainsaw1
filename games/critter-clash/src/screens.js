@@ -766,9 +766,17 @@ export class Screens {
     card.querySelector('.gear-get')?.remove();
     const el = document.createElement('div');
     el.className = 'gear-get';
-    el.innerHTML = `<i>${gear.icon}</i><span><small>New gear!</small><b>${gear.name}</b><em>${def.name} wears it from the next battle</em></span>`;
+    el.innerHTML = `<i>${gear.icon}</i><span><small>New gear!</small><b>${gear.name}</b><em>${def.name} puts it on!</em></span>`;
     card.appendChild(el);
     sfx.jingle(3);
+    // dress the celebrating winner right away, with a little sparkle
+    const f = this.game.battle?.player;
+    if (f && f.def.id === def.id) {
+      f.critter.buildGear(GEAR.findIndex((x) => x.lv === gear.lv) + 1);
+      const p = f.headPos();
+      this.game.fx.burst(p, { n: 16, speed: 3, up: 2, color: 0xffd04a, size: 0.2, life: 0.6, shape: 'star', additive: false, grav: 3 });
+      f.critter.emote('happy', 'grin', 1.2);
+    }
   }
 
   recruit(def) {

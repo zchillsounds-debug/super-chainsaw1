@@ -943,7 +943,7 @@ export class Battle {
       const w = this.koWinner;
       fill.position.set(this.camera.position.x + 1, this.camera.position.y + 2, this.camera.position.z);
       fill.target.position.set(w.x, w.y + 0.8, w.z);
-      fill.intensity = THREE.MathUtils.damp(fill.intensity, 0.65, 3, dt);
+      fill.intensity = THREE.MathUtils.damp(fill.intensity, Math.min(0.65, (this.arena.A.fillI || 0) + 0.25), 3, dt); // just enough to lift the face; more washes the toon colours out under bloom
     } else if (fill) {
       // backlit night/volcano arenas get a soft camera-side fill so faces stay readable
       fill.position.set(this.camera.position.x, this.camera.position.y + 3, this.camera.position.z);
