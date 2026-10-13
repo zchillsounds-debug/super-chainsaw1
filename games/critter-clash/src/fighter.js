@@ -91,6 +91,7 @@ export class Fighter {
   }
 
   reset(x, z) {
+    this.root.scale.setScalar(1); // a super (Mega Fluff) may have been cut off mid-inflate
     this.x = x; this.z = z; this.y = 0;
     this.vx = this.vz = this.vy = 0;
     this.face = this.x < 0 ? Math.PI / 2 : -Math.PI / 2;

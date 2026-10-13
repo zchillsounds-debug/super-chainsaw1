@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 18)
+# Critter Clash: Handoff (after Round 23)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -12,6 +12,7 @@
 ## Timeline
 - Session 1 started at about **04:27 UTC on 2026-10-13**. Rounds 1–5 were done by 05:19 UTC.
 - Session 2 (05:20–06:12 UTC) did Rounds 6–18 and chained because context was getting large.
+- Session 3 (06:12–06:37 UTC) did Rounds 19–23 and chained near the context limit.
 - Target end of the whole effort: about **14:30 UTC on 2026-10-13**. Check `date -u`. Keep chaining sessions until then, then stop and summarise.
 
 ## Run it
@@ -27,7 +28,9 @@ URL flags:
 
 - `&arena=frost` also works now, and `&mods=bighead,turbo,lowgrav,itemrain,supercharged` applies match modifiers.
 
-Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly.
+Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt.
+- `&train` starts a training match (e.g. `?play&train&p=woolt`).
+- Force a win in tests: `(()=>{const b=__game.battle;for(let i=0;i<40&&b.phase!=='done';i++){if(b.phase==='fight')b.fighters[1].hp=1;__sim(1);}})()`, then `__sim(2)` and screenshot the results.
 
 **Test gotchas (learned in session 2):**
 - `window.__save` is the live save object. Set `__save.trainer = {name:'Sam', partner:'cindermunch'}` before calling `__game.screens.title()` in tests, or the first-launch welcome shows instead.
@@ -100,6 +103,13 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 - arena.js: `frost` arena (aurora/star sky shader, snowfall Points, pines), floor styles `sand`/`basalt`(+lava seams)/`snow`, `setDetail(q)` for low quality.
 - index.html: inline splash; main.js `boot()` prewarms portraits + shaders.
 
+## New modules (session 3)
+- **training.js:** `Training` (owned by Battle when `opts.training`): dummy modes `DUMMY` (stand/guard/dodge/cpu, T key or tap the chip), KO guard (`guardKO` refills HP), combo damage readout, input display. `moveList(def, touch)` returns move-list HTML (used by `Screens.moveModal`, shown from the training pause menu and the Critterdex).
+- **photo.js:** `PhotoMode` from the pause menu (`game.photo`, stepped in `main.step`). Orbit/pinch/wheel camera, focus chips, frames (Snapshot/Comic/Sparkle) drawn on a 2D canvas, CSS filters (applied live to the canvas and baked with `ctx.filter`), Save/Share preview. `sfx.shutter()`.
+- Battle: `phase 'done'` now runs a results camera (winner close-up, offset left on landscape, top on portrait), hides the loser, and ramps `arena.fill` (a camera-side DirectionalLight that always exists with intensity 0 so the light count never changes). `stats.hpLeft` feeds the results rank (S/A/B/C stamp).
+- New parts in critters.js: ears `floppy`, extras `wool` and `spines` (merged geometry via `mergeGeometries`). New specials `seedspray`, `fuzzball` (projectiles `seed`, `fuzz`), supers `bramble` (`Battle.thorns`) and `megafluff` (`Battle.fluffHop`, scales `f.root`; reset in `endSuper` and `Fighter.reset`). Supers that pose themselves are skipped in `Fighter.animate`.
+- `MOVE_DESC` in data.js describes every special and super.
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -127,8 +137,17 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 16. Tighter fight camera, bigger damage numbers.
 17. Per-critter combo animations (kicks, headbutts, wing slaps, tail whips) + swipe arcs.
 18. First-launch welcome: Professor Pecan, trainer name, partner pick.
+19. Results screen: winner celebrates in a lit close-up beside the card, stat count-up, S/A/B/C rank stamp. Fixed NaN XP when cpuLevel was missing; Hootsy's win spin now pauses facing front.
+20. Training mode (Challenges → Training): dummy modes, endless HP, combo readout, input display; move lists in training pause and the Critterdex.
+21. Photo mode from pause: orbit cam, focus, frames, filters, shutter, save/share.
+22. Pricklepuff (leaf hedgehog: Seed Spray / Bramble Rush) and Woolt (spark sheep: Fuzz Ball / Mega Fluff Slam), with intros, wins, lines and shinies. Marigold (Sprout Cup) now uses Pricklepuff; Stormy replaces the Volt Twins in the Champion Cup with Woolt. Portrait roster is 5 across.
+23. Bug sweep: full auto battles with the new critters, mods and arenas run with no errors; Mega Fluff scale is reset on round reset; production build passes.
 
 ## Critique backlog (known issues)
+- In Volcano the orange light tints Woolt's cream wool tan; consider a per-arena critter fill or less saturated sun there.
+- Photo mode Save uses an `<a download>`; inside the Android APK webview this may do nothing. Consider the Capacitor Filesystem/Share plugin, or tell players to screenshot.
+- The training dummy is always a random critter; a dummy picker would be nice.
+- The quick "super effective" pill can repeat in training, because `time` is Infinity.
 - Portrait-orientation battles on desktop (non-touch) cut off the right health bar; touch shows the rotate hint so phones are fine.
 - Emberfly's wings are subtle; the purple body could pop more.
 - Volcano lava seams read as orange lines more than glow; could brighten the core.
@@ -139,11 +158,11 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 - Not yet verified on a real phone this session; APK CI runs 8–13+ all succeeded.
 
 ## Suggested next rounds
-- R19: results screen polish (winner close-up with victory anim behind the card, stat count-up).
-- R20: training mode (dummy, move list, input display) and a move-list page in the Critterdex.
-- R21: photo mode from pause (orbit cam, hide HUD, frames); save via download on web.
-- R22: another critter pair (leaf/stone or gust/spark), or a 5th arena.
-- R23: final bug sweep + playtest checklist; fetch the latest APK and send it to the user with SendUserFile.
+- R24: a 5th arena (for example a night-time "Neon Rooftop" or "Candy Canyon") with its own theme song, and a new cup that features Pricklepuff and Woolt rematches.
+- R25: visual polish pass on the backlog: Volcano lighting on light-coloured critters, Emberfly wing contrast, lava seam glow, and getting the jumbotron in view (e.g. during the intro wide shot).
+- R26: per-critter super cut-in art (portrait plus type-coloured speed burst) and a stronger KO finisher camera.
+- R27: Android photo save through Capacitor (`@capacitor/filesystem` and `@capacitor/share`; the CI workflow needs `npm i` for them), or hide Save on native.
+- R28: final bug sweep and playtest checklist. Fetch the latest APK and send it to the user with SendUserFile.
 - At ~14:30 UTC stop, update this file and summarise for the user.
 
 ## Chaining (do this at the end of each session)
