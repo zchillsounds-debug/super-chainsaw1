@@ -4,6 +4,7 @@ import { sfx, playMusic } from './audio.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { openSettings } from './settings.js';
 
+const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zoner: '🎯 Keeps away', turtle: '🛡️ Defensive', trickster: '🌀 Tricky' };
 const DIFFS = [{ name: 'Easy', v: 0.2 }, { name: 'Normal', v: 0.5 }, { name: 'Hard', v: 0.85 }];
 const byId = (id) => CRITTERS.find((c) => c.id === id);
 
@@ -95,6 +96,8 @@ export class Screens {
         <li><b>Attack</b><span>Tap for a 3-hit combo; the third hit launches · J / Space</span></li>
         <li><b>Special</b><span>Your critter's signature move, on a cooldown · K</span></li>
         <li><b>Dodge</b><span>Quick roll with invincibility; dodge at the last moment for bonus Super · L / Shift</span></li>
+        <li><b>Guard</b><span>Hold to raise a shield bubble that blocks most damage. Raise it right as a hit lands to PARRY and stagger the attacker · O</span></li>
+        <li><b>Power-ups</b><span>Berries heal, stars charge your Super, shoes give a speed burst. Grab them before your rival does!</span></li>
         <li><b>Super</b><span>Fills as you trade hits. When it glows, unleash it! · I</span></li>
         <li><b>Types</b><span>Each type beats two others (Blaze burns Sprout, Splash douses Blaze, Pebble grounds Zap...). Hitting a weakness deals extra damage.</span></li>
         <li><b>Dizzy</b><span>Too many hits in a row makes a critter see stars. Mash buttons to shake it off!</span></li>
@@ -340,21 +343,22 @@ export class Screens {
     const { cup, idx } = this.ctx;
     this.mode = 'ladder';
     const m = cup.matches[idx];
-    const foe = byId(m.critter);
+    const foe = skinned(byId(m.critter), m.skin);
     g.setShowcase([foe], 'single');
     g.showcase[0].cheer = 1;
     this.root.innerHTML = `
       <div class="ladder-screen" style="--tc:${cup.color}">
         <div class="ladder">${cup.matches.map((mm, k) => `
           <div class="rung ${k < idx ? 'beat' : k === idx ? 'now' : ''} ${mm.boss ? 'boss' : ''}">
-            <img src="${g.portrait(byId(mm.critter))}" alt=""><span>${mm.name}</span>${k < idx ? '<b>✓</b>' : ''}
+            <img src="${g.portrait(skinned(byId(mm.critter), mm.skin))}" alt=""><span>${mm.name}</span>${k < idx ? '<b>✓</b>' : ''}
           </div>`).join('<i class="rung-link"></i>')}
         </div>
         <div class="trainer-card">
           <div class="tc-title">${m.boss ? 'CHAMPION · ' : ''}${m.title}</div>
           <h2>${m.name}</h2>
           <div class="bubble">“${m.taunt}”</div>
-          <div class="tc-critter"><span class="mini-type" style="background:${TYPES[foe.type].color}">${TYPES[foe.type].name}</span> ${foe.name} · Lv ${m.level}</div>
+          <div class="tc-critter"><span class="mini-type" style="background:${TYPES[foe.type].color}">${TYPES[foe.type].name}</span> ${m.skin ? '✦ Shiny ' : ''}${foe.name} · Lv ${m.level}</div>
+          <div class="tc-style">${STYLE_TAG[m.style] || ''}</div>
           <div class="go"></div>
         </div>
       </div>`;

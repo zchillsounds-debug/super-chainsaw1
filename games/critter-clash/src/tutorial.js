@@ -5,9 +5,10 @@ import { sfx } from './audio.js';
 
 const STEPS = [
   { id: 'move', touch: 'Drag on the left side to move', keys: 'Move with WASD or the arrow keys', done: (b, s) => s.moved > 3 },
-  { id: 'combo', touch: 'Tap the pink ATTACK button 3 times for a combo!', keys: 'Press J (or Space) 3 times for a combo!', done: (b) => b.player.state === 'attack' && b.player.combo === 2 },
+  { id: 'combo', touch: 'Tap the pink HIT button 3 times for a combo!', keys: 'Press J (or Space) 3 times for a combo!', done: (b) => b.player.state === 'attack' && b.player.combo === 2 },
   { id: 'dodge', touch: 'Tap the blue DODGE button to roll', keys: 'Press L (or Shift) to dodge-roll', done: (b) => b.player.state === 'dodge' },
   { id: 'special', touch: 'Tap the yellow SPECIAL for your signature move', keys: 'Press K for your signature special', done: (b) => b.player.state === 'special' },
+  { id: 'guard', touch: 'Hold the purple GUARD to block. Tap it right as they hit to PARRY!', keys: 'Hold O to guard. Press it right as they hit to PARRY!', done: (b) => b.player.state === 'guard' && b.player.st > 0.3 },
   { id: 'fight', touch: 'Great! Now bonk them!', keys: 'Great! Now bonk them!', done: (b, s) => s.t > 3 },
 ];
 

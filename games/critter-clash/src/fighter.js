@@ -18,6 +18,29 @@ export const SPECIALS = {
   gale:    { cd: 3.8, range: [3, 9] },
 };
 
+// translucent fresnel bubble shown while guarding
+function makeShield(color, h) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.85, 32, 20), new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Color(color) }, uAmt: { value: 0.6 } },
+    vertexShader: `varying vec3 vN; varying vec3 vV; varying vec3 vP;
+      void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); vP = position; gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform vec3 uColor; uniform float uAmt; varying vec3 vN; varying vec3 vV; varying vec3 vP;
+      void main() {
+        float f = pow(1.0 - abs(dot(vN, vV)), 2.2);
+        float hex = step(0.86, fract(vP.y * 9.0 + sin(vP.x * 14.0) * 0.15)) * 0.25;
+        float a = (f * 0.9 + 0.08 + hex * f) * uAmt;
+        gl_FragColor = vec4(uColor * (0.6 + f) + vec3(f * 0.5), a);
+      }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  m.position.y = h * 0.5;
+  m.scale.setScalar(0.001);
+  m.userData = { k: 0, flash: 0 };
+  m.visible = false;
+  m.renderOrder = 5;
+  return m;
+}
+
 export class Fighter {
   constructor(battle, def, { level = 1, cpu = false, side = 0 } = {}) {
     this.battle = battle;
@@ -34,7 +57,9 @@ export class Fighter {
     this.speed = def.stats.speed;
     this.weight = def.stats.weight;
     this.type = def.type;
-    this.ctl = { mx: 0, mz: 0, attack: false, special: false, dodge: false, super: false, attackHeld: false };
+    this.ctl = { mx: 0, mz: 0, attack: false, special: false, dodge: false, super: false, guard: false };
+    this.shield = makeShield(TYPES[def.type].glow, def.body.h + def.body.headR + 0.35);
+    this.root.add(this.shield);
     this.reset(side ? 4.5 : -4.5, 0);
   }
 
@@ -53,6 +78,8 @@ export class Fighter {
     this.hitIds = new Set();
     this.atkId = 0;
     this.paralyze = 0;
+    this.guardHp = 100; this.guardRegenT = 0;
+    this.speedBoost = 0;
     this.stepT = 0;
     this.spinX = 0;
     this.critter.resetPose();
@@ -100,7 +127,7 @@ export class Fighter {
       if (this.paralyze > 0) { this.paralyze -= dt; }
       if (ml > 0.15 && this.paralyze <= 0) {
         if (S !== 'run') this.setState('run');
-        const sp = this.speed * Math.min(1, ml);
+        const sp = this.speed * Math.min(1, ml) * (this.speedBoost > 0 ? 1.3 : 1);
         this.vx = THREE.MathUtils.damp(this.vx, c.mx / ml * sp, 14, dt);
         this.vz = THREE.MathUtils.damp(this.vz, c.mz / ml * sp, 14, dt);
         this.turnTo(Math.atan2(c.mx, c.mz), 14, dt);
@@ -110,10 +137,18 @@ export class Fighter {
         this.vz = THREE.MathUtils.damp(this.vz, 0, 12, dt);
         if (o && o.alive) this.turnTo(this.angleTo(o), 6, dt);
       }
-      if (c.super && this.superM >= 100) this.battle.startSuper(this);
+      if (c.guard && this.guardHp > 15 && this.paralyze <= 0) this.startGuard();
+      else if (c.super && this.superM >= 100) this.battle.startSuper(this);
       else if (c.special && this.specCd <= 0) this.startSpecial();
       else if (c.dodge && this.dodgeCd <= 0) this.startDodge();
       else if (c.attack) this.startAttack(0);
+    } else if (S === 'guard') {
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 10, dt);
+      this.vz = THREE.MathUtils.damp(this.vz, 0, 10, dt);
+      if (o && o.alive) this.turnTo(this.angleTo(o), 10, dt);
+      this.guardHp = Math.max(0, this.guardHp - dt * 6); // holding it forever wears it down
+      if (!c.guard && this.st > 0.12) { this.setState('idle'); this.critter.emote('open', 'smile'); }
+      else if (c.dodge && this.dodgeCd <= 0) this.startDodge();
     } else if (S === 'attack') this.updateAttack(dt, c);
     else if (S === 'dodge') this.updateDodge(dt);
     else if (S === 'special') this.updateSpecial(dt);
@@ -137,6 +172,17 @@ export class Fighter {
       if (c.attack || c.special || c.dodge) this.dizzyT -= 0.12;
       if (this.st > this.dizzyT) { this.dizzy = 0; this.setState('idle'); this.critter.emote('open', 'smile'); }
     }
+
+    // guard meter refills after a short rest; the bubble scales with what's left
+    this.speedBoost = Math.max(0, this.speedBoost - dt);
+    if (this.state !== 'guard') { this.guardRegenT -= dt; if (this.guardRegenT <= 0) this.guardHp = Math.min(100, this.guardHp + dt * 28); }
+    else this.guardRegenT = 0.8;
+    const sh = this.shield, on = this.state === 'guard';
+    sh.userData.k = THREE.MathUtils.damp(sh.userData.k, on ? 1 : 0, 18, dt);
+    sh.userData.flash = Math.max(0, sh.userData.flash - dt * 5);
+    sh.visible = sh.userData.k > 0.02;
+    sh.scale.setScalar(sh.userData.k * (0.75 + 0.25 * this.guardHp / 100) * (1 + sh.userData.flash * 0.12));
+    sh.material.uniforms.uAmt.value = 0.55 + sh.userData.flash * 1.5 + (this.guardHp < 35 ? Math.sin(this.critter.t * 30) * 0.25 : 0);
 
     // integrate
     this.x += this.vx * dt;
@@ -255,6 +301,29 @@ export class Fighter {
       dmg: a.dmg * this.power, kb: a.kb, lift: a.lift, stun: a.stun, dirX: Math.sin(ang), dirZ: Math.cos(ang),
       heavy: !!a.launch, type: 'normal', launch: !!a.launch, dizzy: a.launch ? 26 : 14,
     });
+  }
+
+  startGuard() {
+    this.setState('guard');
+    this.vx *= 0.3; this.vz *= 0.3;
+    this.critter.emote('angry', 'grin', 0.2);
+  }
+
+  // returns 'parry' | 'block' | 'break'
+  blockHit(h, att) {
+    const parry = this.st < 0.2 && !h.unblockable;
+    if (parry) return 'parry';
+    this.guardHp -= h.dmg * (h.unblockable ? 0.9 : 0.4);
+    this.shield.userData.flash = 1;
+    this.face = Math.atan2(-h.dirX, -h.dirZ);
+    this.vx = h.dirX * h.kb * 0.35 / this.weight; this.vz = h.dirZ * h.kb * 0.35 / this.weight;
+    void att;
+    if (this.guardHp <= 0) {
+      this.guardHp = 0; this.guardRegenT = 2;
+      this.setState('dizzy'); this.dizzyT = 1.3; this.dizzy = 0;
+      return 'break';
+    }
+    return 'block';
   }
 
   startDodge() {
@@ -465,6 +534,7 @@ export class Fighter {
       P.legL = s * 0.9; P.legR = -s * 0.9;
       P.armLx = -s * 1.0; P.armRx = s * 1.0;
       P.ear = 0.4; P.tail = 0.8; P.head = -0.1;
+      if (this.speedBoost > 0 && Math.random() < 0.6) this.battle.fx.spawn({ x: this.x + (Math.random() - 0.5) * 0.3, y: 0.15 + Math.random() * 0.5, z: this.z + (Math.random() - 0.5) * 0.3, color: 0x5ad8ff, size: 0.45, life: 0.3, shape: 'glow', grow: -1, alpha: 0.7 });
       this.stepT -= dt;
       if (this.stepT <= 0) { this.stepT = 0.2; sfx.step(); if (Math.random() < 0.3) this.battle.fx.dust(this, 1, 0.5); }
     } else if (S === 'attack') {
@@ -482,6 +552,10 @@ export class Fighter {
         if (i === 2) { P.yaw = 0; P.armLx = P.armRx = -1.5; P.lean = 0.7; P.y = 0.15; P.sy = 1.18; }
       }
       P.ear = 0.6; P.tail = 1;
+    } else if (S === 'guard') {
+      P.sy = 0.88; P.sx = 1.06; P.lean = 0.12; P.armLx = P.armRx = -1.5; P.armLz = P.armRz = -0.7; P.head = 0.15; P.ear = 0.7; P.tail = 0.2;
+      P.legL = 0.3; P.legR = -0.3;
+      if (this.shield.userData.flash > 0.5) { P.lean = -0.15; P.sy = 0.8; }
     } else if (S === 'dodge') {
       P.sy = 0.75; P.sx = 1.2; P.lean = 0.5; P.y = 0.05;
       P.legL = 1; P.legR = 1; P.armLx = P.armRx = 1.2; P.ear = 1;

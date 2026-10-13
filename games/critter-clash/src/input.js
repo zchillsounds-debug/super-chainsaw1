@@ -5,6 +5,7 @@ const ICONS = {
   attack: '<svg viewBox="0 0 64 64"><path d="M18 30c0-6 4-10 9-10h12c6 0 9 4 9 9v9c0 9-7 15-15 15h-3c-7 0-12-5-12-12z" fill="#fff"/><path d="M22 22v-6a4 4 0 0 1 8 0v6M30 21v-8a4 4 0 0 1 8 0v8M38 22v-6a4 4 0 0 1 8 0v8" fill="#fff" stroke="#fff" stroke-width="2"/><path d="M24 34h18" stroke="#ff6a8a" stroke-width="3" stroke-linecap="round"/></svg>',
   special: '<svg viewBox="0 0 64 64"><path d="M34 6L14 36h14l-4 22 22-32H32z" fill="#fff"/></svg>',
   dodge: '<svg viewBox="0 0 64 64"><path d="M10 40c10-16 28-22 44-16" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M14 50c10-10 22-14 34-12" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".6"/><path d="M46 14l10 10-14 4z" fill="#fff"/></svg>',
+  guard: '<svg viewBox="0 0 64 64"><path d="M32 6l20 7v15c0 13-9 23-20 29C21 51 12 41 12 28V13z" fill="#fff"/><path d="M32 14v34" stroke="#6a5acd" stroke-width="3" opacity=".5"/></svg>',
   super: '<svg viewBox="0 0 64 64"><path d="M32 4l8 18 20 2-15 13 5 20-18-11-18 11 5-20L4 24l20-2z" fill="#fff"/></svg>',
 };
 
@@ -12,7 +13,7 @@ export class Input {
   constructor(ui) {
     this.keys = new Set();
     this.move = { x: 0, y: 0 };
-    this.held = { attack: false, special: false, dodge: false, super: false };
+    this.held = { attack: false, special: false, dodge: false, super: false, guard: false };
     this.pressed = { attack: false, special: false, dodge: false, super: false, pause: false, confirm: false };
     this._queued = {};
     this.enabled = true;
@@ -32,7 +33,7 @@ export class Input {
   }
 
   keyMap(code) {
-    return { KeyJ: 'attack', KeyK: 'special', KeyL: 'dodge', ShiftLeft: 'dodge', KeyI: 'super', Space: 'attack', KeyU: 'super',
+    return { KeyJ: 'attack', KeyK: 'special', KeyL: 'dodge', ShiftLeft: 'dodge', KeyI: 'super', Space: 'attack', KeyU: 'super', KeyO: 'guard', Semicolon: 'guard',
       Escape: 'pause', KeyP: 'pause', Enter: 'confirm' }[code];
   }
 
@@ -42,10 +43,11 @@ export class Input {
     root.innerHTML = `
       <div class="joyzone"><div class="joybase"><div class="joyknob"></div></div></div>
       <div class="btns">
-        <button class="tb tb-attack" data-b="attack">${ICONS.attack}</button>
-        <button class="tb tb-special" data-b="special">${ICONS.special}<i class="cd"></i></button>
-        <button class="tb tb-dodge" data-b="dodge">${ICONS.dodge}<i class="cd"></i></button>
-        <button class="tb tb-super" data-b="super">${ICONS.super}<i class="ring"></i></button>
+        <button class="tb tb-attack" data-b="attack" data-label="HIT">${ICONS.attack}</button>
+        <button class="tb tb-special" data-b="special" data-label="SPECIAL">${ICONS.special}<i class="cd"></i></button>
+        <button class="tb tb-dodge" data-b="dodge" data-label="DODGE">${ICONS.dodge}<i class="cd"></i></button>
+        <button class="tb tb-super" data-b="super" data-label="SUPER">${ICONS.super}<i class="ring"></i></button>
+        <button class="tb tb-guard" data-b="guard" data-label="GUARD">${ICONS.guard}</button>
       </div>`;
     ui.appendChild(root);
     const zone = root.querySelector('.joyzone'), base = root.querySelector('.joybase'), knob = root.querySelector('.joyknob');
@@ -125,7 +127,7 @@ export class Input {
     if (k.has('KeyD') || k.has('ArrowRight')) x += 1;
     if (k.has('KeyW') || k.has('ArrowUp')) y += 1;
     if (k.has('KeyS') || k.has('ArrowDown')) y -= 1;
-    const held = { attack: k.has('KeyJ') || k.has('Space'), special: k.has('KeyK'), dodge: k.has('KeyL') || k.has('ShiftLeft'), super: k.has('KeyI') || k.has('KeyU') };
+    const held = { attack: k.has('KeyJ') || k.has('Space'), special: k.has('KeyK'), dodge: k.has('KeyL') || k.has('ShiftLeft'), super: k.has('KeyI') || k.has('KeyU'), guard: k.has('KeyO') || k.has('Semicolon') };
     for (const b in this.touchHeld) held[b] = held[b] || this.touchHeld[b];
     if (this.joy.id !== null) { x += this.joy.x; y += this.joy.y; }
 
@@ -135,7 +137,7 @@ export class Input {
       if (!p) continue;
       const ax = p.axes[0] || 0, ay = p.axes[1] || 0;
       if (Math.hypot(ax, ay) > 0.18) { x += ax; y -= ay; }
-      const bmap = { attack: [0, 2], special: [1, 3], dodge: [4, 5, 6], super: [7, 3], pause: [9], confirm: [0] };
+      const bmap = { attack: [0, 2], special: [1, 3], dodge: [4, 5], guard: [6], super: [7, 3], pause: [9], confirm: [0] };
       for (const name in bmap) {
         const down = bmap[name].some((i) => p.buttons[i]?.pressed);
         if (name in held) held[name] = held[name] || down;

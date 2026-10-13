@@ -102,27 +102,27 @@ export const CUPS = [
   {
     id: 'sprout', arena: 'meadow', name: 'Sprout Cup', color: '#4fd35a', desc: 'A friendly warm-up for brand-new trainers.', diff: [0.15, 0.3],
     matches: [
-      { name: 'Pip', title: 'Rookie', critter: 'bubbalotl', level: 1, taunt: "My Bubbalotl's never lost! ...today." },
-      { name: 'Marigold', title: 'Gardener', critter: 'clovebun', level: 2, taunt: 'Prepare to be weeded out!' },
-      { name: 'Sparky Dee', title: 'Electrician', critter: 'voltferret', level: 3, taunt: "Shocking, isn't it?" },
+      { name: 'Pip', style: 'balanced', title: 'Rookie', critter: 'bubbalotl', level: 1, taunt: "My Bubbalotl's never lost! ...today." },
+      { name: 'Marigold', style: 'turtle', title: 'Gardener', critter: 'clovebun', level: 2, taunt: 'Prepare to be weeded out!' },
+      { name: 'Sparky Dee', style: 'trickster', title: 'Electrician', critter: 'voltferret', level: 3, taunt: "Shocking, isn't it?" },
     ],
   },
   {
     id: 'thunder', arena: 'beach', name: 'Thunder Cup', color: '#ffd52e', desc: 'The rivals get serious. Mostly.', diff: [0.4, 0.6], requires: 'sprout',
     matches: [
-      { name: 'Chef Bao', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered." },
-      { name: 'Gran Pebbles', title: 'Retired Champ', critter: 'rolladillo', level: 5, taunt: 'Back in my day we rolled uphill. Both ways.' },
-      { name: 'Wren', title: 'Kite Flyer', critter: 'hootsy', level: 6, taunt: "Hootsy, let's blow them away!" },
-      { name: 'Captain Splash', title: 'Lifeguard', critter: 'bubbalotl', level: 7, taunt: 'No running by the pool. Only fighting.' },
+      { name: 'Chef Bao', style: 'rushdown', title: 'Grill Master', critter: 'cindermunch', level: 4, taunt: "You're toast. Lightly buttered." },
+      { name: 'Gran Pebbles', style: 'turtle', title: 'Retired Champ', critter: 'rolladillo', level: 5, taunt: 'Back in my day we rolled uphill. Both ways.' },
+      { name: 'Wren', style: 'zoner', title: 'Kite Flyer', critter: 'hootsy', level: 6, taunt: "Hootsy, let's blow them away!" },
+      { name: 'Captain Splash', style: 'balanced', title: 'Lifeguard', critter: 'bubbalotl', level: 7, taunt: 'No running by the pool. Only fighting.' },
     ],
   },
   {
     id: 'champion', arena: 'volcano', name: 'Champion Cup', color: '#ff5a8a', desc: 'Only the bonkiest survive.', diff: [0.65, 0.9], requires: 'thunder',
     matches: [
-      { name: 'Professor Fern', title: 'Botanist', critter: 'clovebun', level: 8, taunt: 'A fascinating specimen. Let us test it.' },
-      { name: 'Volt Twins', title: 'Double Trouble', critter: 'voltferret', level: 9, taunt: 'We finish each other\'s... ZAPS!' },
-      { name: 'Big Boulder', title: 'Gym Owner', critter: 'rolladillo', level: 10, taunt: 'Leg day? Every day is roll day.' },
-      { name: 'Aurora', title: 'Reigning Champion', critter: 'hootsy', skin: 'shiny', level: 12, taunt: "You came this far. Cute. Let's see how far you fly.", boss: true },
+      { name: 'Professor Fern', style: 'zoner', title: 'Botanist', critter: 'clovebun', level: 8, taunt: 'A fascinating specimen. Let us test it.' },
+      { name: 'Volt Twins', style: 'rushdown', title: 'Double Trouble', critter: 'voltferret', level: 9, taunt: 'We finish each other\'s... ZAPS!' },
+      { name: 'Big Boulder', style: 'turtle', title: 'Gym Owner', critter: 'rolladillo', level: 10, taunt: 'Leg day? Every day is roll day.' },
+      { name: 'Aurora', style: 'trickster', title: 'Reigning Champion', critter: 'hootsy', skin: 'shiny', level: 12, taunt: "You came this far. Cute. Let's see how far you fly.", boss: true },
     ],
   },
 ];

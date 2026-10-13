@@ -8,6 +8,7 @@ import { sfx, playMusic } from './audio.js';
 import { Tutorial } from './tutorial.js';
 import { save } from './save.js';
 import { sayLine } from './personality.js';
+import { Items } from './items.js';
 
 const ROUND_TIME = 60;
 const INTRO_FIRST = 3.6, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
@@ -25,9 +26,10 @@ export class Battle {
     this.fighters = [];
     this.fighters.push(new Fighter(this, pDef, { level: playerLevel, side: 0 }));
     this.fighters.push(new Fighter(this, cDef, { level: cpuLevel, cpu: true, side: 1 }));
-    this.brain = new CpuBrain(this.fighters[1], difficulty);
+    this.brain = new CpuBrain(this.fighters[1], difficulty, trainer?.style);
     this.pbrain = game.autoplay ? new CpuBrain(this.fighters[0], 0.7) : null;
     this.projectiles = [];
+    this.items = new Items(this);
     this.winsNeeded = rounds;
     this.wins = [0, 0];
     this.round = 0;
@@ -59,6 +61,7 @@ export class Battle {
     p.face = Math.PI / 2; c.face = -Math.PI / 2;
     for (const pr of this.projectiles) this.scene.remove(pr.mesh);
     this.projectiles.length = 0;
+    this.items.clear();
     this.fx.clear();
     this.time = ROUND_TIME;
     this.phase = 'intro';
@@ -79,6 +82,27 @@ export class Battle {
   applyHit(att, def, h) {
     if (def.invuln > 0 || def.state === 'super' && def.superInvuln || !def.alive) {
       if (def.state === 'dodge' && def.invuln > 0) this.perfectDodge(def);
+      return false;
+    }
+    if (def.state === 'guard') {
+      if (att.state === 'super') h.unblockable = true;
+      const r = def.blockHit(h, att);
+      const cp = def.chestPos();
+      if (r === 'parry') { this.parry(def, att, h); return false; }
+      const chip = Math.max(1, Math.round(h.dmg * (h.unblockable ? 0.3 : 0.12)));
+      def.hp = Math.max(1, def.hp - chip);
+      def.dmgDelay = 0.3;
+      att.superM = Math.min(100, att.superM + chip * 0.15);
+      this.fx.spawn({ ...cp, color: TYPES[def.type].glow, size: 1.6, life: 0.16, shape: 'ring', grow: 1.2 });
+      this.fx.burst(cp, { n: 6, speed: 5, up: 1.5, color: 0xffffff, size: 0.14, life: 0.25, grav: 4 });
+      sfx.block?.();
+      this.hitstop = 0.04;
+      if (r === 'break') {
+        this.fx.text(def.headPos(), 'GUARD BREAK!', 'big', 1);
+        this.fx.hit(cp, 0xffffff, true);
+        sfx.bonk(); this.shake(0.5); this.game.impactFrame(0.06);
+        this.hud.callout('GUARD BREAK!', att.side, 2);
+      } else if (Math.random() < 0.5) this.fx.text({ x: cp.x, y: cp.y + 0.6, z: cp.z }, 'BLOCK', '', 0.5);
       return false;
     }
     let dmg = h.dmg;
@@ -121,6 +145,45 @@ export class Battle {
     if (heavy) sfx.cheer(0.6);
     if (!def.alive) this.onKO(att, def);
     return true;
+  }
+
+  // the champion's second wind: a short cinematic, then a faster, angrier rival
+  enrage(f) {
+    this.bossRage = true;
+    f.speed *= 1.15; f.power *= 1.1;
+    f.superM = 100;
+    this.brain.diff = Math.min(1, this.brain.diff + 0.15);
+    this.slowmo = 0.6;
+    this.shake(0.6);
+    this.game.impactFrame(0.1);
+    this.fx.shock(f, 0xff5a8a, 5, 0.6);
+    this.fx.burst(f.chestPos(), { n: 30, speed: 7, up: 3, color: 0xff7ab0, size: 0.3, life: 0.8, shape: 'star', additive: false, grav: 3, spin: 10 });
+    this.fx.say(f, 'No more holding back!', f.def.type);
+    this.hud.callout(`${this.trainer.name} gets serious!`, 1, 3);
+    f.critter.emote('angry', 'yell', 1.2);
+    f.critter.setRim(0xff5a8a, 2.2);
+    sfx.boom(); sfx.cheer(1.2);
+    this.arena.cheer(1);
+  }
+
+  // guard pressed just in time: no damage, attacker staggered, defender gets meter
+  parry(def, att, h) {
+    def.superM = Math.min(100, def.superM + 12);
+    def.setState('idle'); def.invuln = 0.2;
+    def.critter.emote('angry', 'grin', 0.6);
+    if (att.state !== 'super' && att.alive && !h.projectile) {
+      att.setState('hit'); att.hitstun = 0.55;
+      att.vx = h.dirX * -3; att.vz = h.dirZ * -3;
+      att.critter.emote('hurt', 'o', 0.6);
+    }
+    const cp = def.chestPos();
+    this.fx.spawn({ ...cp, color: 0xffffff, size: 3, life: 0.2, shape: 'ring', grow: 1.6 });
+    this.fx.hit(cp, 0x9ff6ff, true);
+    this.fx.text(def.headPos(), 'PARRY!', 'big', 0.9);
+    sfx.parry?.();
+    this.hitstop = 0.16; this.slowmo = 0.3;
+    this.game.impactFrame(0.05);
+    if (def === this.player) { this.hud.callout('PARRY!', 0, 2); this.stats.parries = (this.stats.parries || 0) + 1; }
   }
 
   perfectDodge(f) {
@@ -215,7 +278,7 @@ export class Battle {
           pr.hitOnce.add(target);
           pr.lastHit = pr.t;
           const l = Math.hypot(pr.vx, pr.vz) || 1;
-          const landed = this.applyHit(pr.owner, target, { ...pr.hit, dirX: pr.vx / l, dirZ: pr.vz / l, heavy: false });
+          const landed = this.applyHit(pr.owner, target, { ...pr.hit, dirX: pr.vx / l, dirZ: pr.vz / l, heavy: false, projectile: true });
           if (pr.kind === 'bubble' && (landed || target.state !== 'dodge')) {
             this.fx.burst({ x: pr.x, y: pr.y, z: pr.z }, { n: 10, speed: 4, color: 0xa8e4ff, shape: 'drop', additive: false, size: 0.2, life: 0.5, grav: 9 });
             this.removeProjectile(i); continue;
@@ -586,14 +649,21 @@ export class Battle {
       p.ctl.attack = inp.pressed.attack || (inp.held.attack && p.state === 'attack');
       p.ctl.special = inp.pressed.special;
       p.ctl.dodge = inp.pressed.dodge;
+      p.ctl.guard = inp.held.guard;
       p.ctl.super = inp.pressed.super;
       this.brain.update(sdt);
       if (this.tutorial) this.tutorial.update(sdt);
     } else {
-      for (const f of this.fighters) Object.assign(f.ctl, { mx: 0, mz: 0, attack: false, special: false, dodge: false, super: false });
+      for (const f of this.fighters) Object.assign(f.ctl, { mx: 0, mz: 0, attack: false, special: false, dodge: false, super: false, guard: false });
     }
     for (const f of this.fighters) { f.perfectT = (f.perfectT || 0) - dt; f.update(sdt); }
     this.updateProjectiles(sdt);
+    this.items.update(sdt);
+    if (fighting && this.trainer?.boss && !this.bossRage && c.alive && c.hp < c.maxHp * 0.5) this.enrage(c);
+    if (this.bossRage && c.alive && Math.random() < 0.5) {
+      const a = Math.random() * Math.PI * 2;
+      this.fx.spawn({ x: c.x + Math.cos(a) * 0.5, y: 0.1 + Math.random() * 0.4, z: c.z + Math.sin(a) * 0.5, vy: 2.5 + Math.random() * 1.5, color: Math.random() < 0.5 ? 0xff5a8a : 0xb39cff, size: 0.5, life: 0.5, shape: 'glow', grow: -0.6 });
+    }
     this.comboT -= sdt;
     if (this.comboT <= 0 && this.comboCount) { this.comboCount = 0; this.hud.combo(0); }
     this.hud.update(this);
@@ -668,6 +738,7 @@ export class Battle {
   }
 
   dispose() {
+    this.items.clear();
     this.arena.drawScreen();
     this.hud.speedLines(false);
     this.tutorial?.dispose();

@@ -133,6 +133,14 @@ export const sfx = {
     else if (kind === 'back') osc('square', 440, 330, 0.08, 0.07);
   },
   beep(hi = false) { if (ctx) { osc('square', hi ? 1320 : 660, hi ? 1320 : 660, hi ? 0.4 : 0.15, 0.12); } },
+  block() { if (!ctx) return; osc('triangle', 520, 380, 0.09, 0.18); noise(0.08, 0.15, { f0: 3000, f1: 1500, q: 2 }); },
+  parry() {
+    if (!ctx) return;
+    const t = now();
+    osc('square', 1400, 1400, 0.06, 0.12); osc('sine', 2100, 2000, 0.4, 0.14, { t: t + 0.03 });
+    noise(0.15, 0.2, { f0: 6000, f1: 3000, q: 3 });
+  },
+  pickup() { if (!ctx) return; const t = now(); [880, 1175, 1568].forEach((f, i) => osc('triangle', f, f, 0.12, 0.12, { t: t + i * 0.06 })); },
   // short rising arpeggio for announcer callouts; level 0..3 climbs higher
   jingle(level = 1) {
     if (!ctx) return;
