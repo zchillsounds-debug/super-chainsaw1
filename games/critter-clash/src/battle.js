@@ -842,7 +842,9 @@ export class Battle {
       const want = Math.max(-0.35, Math.min(0.35, Math.atan(-dz / (Math.abs(dx) < 1e-3 ? 1e-3 : dx)))) * (Math.abs(dx) / (sep || 1));
       this.camYaw = THREE.MathUtils.damp(this.camYaw ?? 0, want, 1.2, dt);
       const yaw = this.camYaw;
-      const dist = Math.min(15, Math.max(7.2, 5.2 + sep * 0.85));
+      // frame tight: the horizontal view is wide on landscape phones, so distance can grow slower than separation
+      const wide = Math.min(1.3, Math.max(0.8, cam.aspect / 1.9));
+      const dist = Math.min(13.5, Math.max(6.6, (4.6 + sep * 0.8) / wide));
       const pitch = 0.36;
       look = new THREE.Vector3(mx, 0.9, mz - 0.4);
       pos = new THREE.Vector3(mx + Math.sin(yaw) * Math.cos(pitch) * dist, 0.9 + Math.sin(pitch) * dist, mz + Math.cos(yaw) * Math.cos(pitch) * dist);

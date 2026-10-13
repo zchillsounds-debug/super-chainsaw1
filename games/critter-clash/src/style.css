@@ -224,8 +224,8 @@ body.portrait .sel-actions { align-items: center; }
 .fxtext-layer { position: absolute; inset: 0; overflow: hidden; }
 .fxtext { position: absolute; left: 0; top: 0; font-family: var(--display); font-size: 22px; color: #fff; white-space: nowrap; will-change: transform; }
 .fxtext.big { font-size: 40px; color: var(--yellow); }
-.fxtext.dmg { font-size: 26px; color: #fff; }
-.fxtext.dmg.super-eff { color: #ff6a3d; font-size: 34px; }
+.fxtext.dmg { font-size: 30px; color: #fff; }
+.fxtext.dmg.super-eff { color: #ff6a3d; font-size: 38px; }
 .fxtext.dmg.weak { color: #a9b6d9; font-size: 20px; }
 .fxtext.eff { font-size: 20px; color: #fff; background: var(--pink); padding: 2px 10px; border-radius: 99px; -webkit-text-stroke: 0; box-shadow: 0 3px 0 var(--ink); }
 .fxtext.dizzy { font-size: 32px; color: #ffd23f; }
