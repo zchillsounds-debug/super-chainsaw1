@@ -1,5 +1,5 @@
 // Title, tournament cups/ladder, critter select, VS splash, results and pause overlays.
-import { CRITTERS, TYPES, CUPS, SHINY, BADGES, MODS, STARTERS, skinned, dailyChallenge } from './data.js';
+import { CRITTERS, TYPES, CUPS, SHINY, BADGES, MODS, STARTERS, skinned, withGear, dailyChallenge } from './data.js';
 import { sfx, playMusic } from './audio.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { openSettings } from './settings.js';
@@ -14,7 +14,7 @@ const DIFFS = [{ name: 'Easy', v: 0.2 }, { name: 'Normal', v: 0.5 }, { name: 'Ha
 const byId = (id) => CRITTERS.find((c) => c.id === id);
 
 // which cup match unlocks a critter (for the locked-card hint)
-const skinOf = (c) => skinned(c, save.skins?.[c.id]);
+const skinOf = (c) => withGear(skinned(c, save.skins?.[c.id]), save.critters?.[c.id]?.level);
 const cupOfShiny = (id) => CUPS.find((cup) => cup.matches.some((m) => m.critter === id));
 
 // badges newly satisfied by the save; marks them earned
@@ -69,7 +69,7 @@ export class Screens {
     this.mode = 'title';
     this.t = 0;
     this.backFn = null;
-    g.setShowcase(CRITTERS.filter((c) => save.unlocked.includes(c.id)), 'line');
+    g.setShowcase(CRITTERS.filter((c) => save.unlocked.includes(c.id)).map(skinOf), 'line');
     const trophies = CUPS.filter((c) => save.cups[c.id]).length;
     this.root.innerHTML = `
       <div class="title-screen">
@@ -540,7 +540,7 @@ export class Screens {
     if (this.ctx.kind === 'cup') {
       const { cup, idx } = this.ctx;
       const m = cup.matches[idx];
-      c = skinned(byId(m.critter), m.skin);
+      c = withGear(skinned(byId(m.critter), m.skin), m.level);
       const k = cup.matches.length > 1 ? idx / (cup.matches.length - 1) : 1;
       opts = { cpuLevel: m.level, difficulty: cup.diff[0] + (cup.diff[1] - cup.diff[0]) * k, playerLevel: save.critters[p.id].level, trainer: m, arena: cup.arena, mods: m.mods || [] };
       label = `${m.name} · Lv ${m.level}${m.mods?.length ? ' · ' + m.mods.map((k) => MODS[k].icon).join('') : ''}`;

@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { toon, inked, canvasTex } from './toon.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { TYPES } from './data.js';
 
 const SEG = 36;
 const sphere = (r = 1) => new THREE.SphereGeometry(r, SEG, Math.round(SEG * 0.75));
@@ -637,6 +638,7 @@ export class Critter {
 
     // springy pose state: current and velocity per channel
     this.P = {};
+    if (def.gear) this.buildGear(def.gear, U, OL);
     this.V = {};
     this.pose = {};
     this.resetPose();
@@ -648,6 +650,56 @@ export class Critter {
     this.t = Math.random() * 10;
 
     root.traverse((o) => { if (o.isMesh && !o.userData.hull && o.material && !o.material.transparent) o.castShadow = true; });
+  }
+
+  // level-up gear: 1 = type-coloured scarf, 2 = gold star pin, 3 = tiny crown
+  buildGear(n, U, OL) {
+    const B = this.def.body, headR = B.headR;
+    const col = new THREE.Color(TYPES[this.def.type].color);
+    const scarfMat = toon(col.getHex(), { uniforms: U });
+    const gold = toon(0xffc93a, { uniforms: U, rim: 0.9 });
+    const ring = inked(new THREE.TorusGeometry(B.w * 0.5, 0.085, 10, 28), scarfMat, OL * 0.8);
+    ring.rotation.x = Math.PI / 2 - 0.3;
+    ring.scale.set(B.chubby * 1.05, 1, 1);
+    ring.position.set(0, B.h * 0.84, B.w * 0.04);
+    this.torso.add(ring);
+    // two tails flapping off the back
+    const tailG = new THREE.Group();
+    tailG.position.set(B.w * 0.12, B.h * 0.76, -B.w * 0.34);
+    for (const [x, rz, len] of [[0, 0.25, 0.26], [0.07, -0.15, 0.2]]) {
+      const t = inked(new THREE.BoxGeometry(0.1, len, 0.035), scarfMat, OL * 0.6);
+      t.geometry.translate(0, -len / 2, 0);
+      t.position.x = x; t.rotation.set(0.5, 0, rz);
+      tailG.add(t);
+    }
+    this.torso.add(tailG);
+    this.scarfTails = tailG;
+    if (n >= 2) {
+      const sh = new THREE.Shape();
+      for (let k = 0; k < 10; k++) { const r = k % 2 ? 0.035 : 0.08, a = k * Math.PI / 5 + Math.PI / 2; sh.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+      const star = inked(new THREE.ExtrudeGeometry(sh, { depth: 0.025, bevelEnabled: false }), gold, OL * 0.6);
+      star.position.set(B.w * 0.2, B.h * 0.66, B.w * 0.4);
+      star.rotation.set(-0.25, 0.35, 0.15);
+      this.torso.add(star);
+    }
+    if (n >= 3) {
+      const crown = new THREE.Group();
+      const band = inked(new THREE.CylinderGeometry(headR * 0.3, headR * 0.32, headR * 0.16, 16, 1, true), gold, OL * 0.6);
+      crown.add(band);
+      for (let k = 0; k < 5; k++) {
+        const a = (k / 5) * Math.PI * 2;
+        const sp = inked(new THREE.ConeGeometry(headR * 0.07, headR * 0.2, 6), gold, OL * 0.5);
+        sp.position.set(Math.sin(a) * headR * 0.3, headR * 0.15, Math.cos(a) * headR * 0.3);
+        crown.add(sp);
+        const gem = new THREE.Mesh(new THREE.SphereGeometry(headR * 0.035, 8, 6), toon(k % 2 ? 0xff4f8a : 0x48b8ff, { uniforms: U }));
+        gem.position.set(Math.sin(a) * headR * 0.315, 0, Math.cos(a) * headR * 0.315);
+        crown.add(gem);
+      }
+      crown.position.set(headR * 0.14, headR * 1.0, headR * 0.05);
+      crown.scale.setScalar(1.25);
+      crown.rotation.set(0.12, 0, -0.22);
+      this.skull.add(crown);
+    }
   }
 
   resetPose() {
@@ -669,6 +721,7 @@ export class Critter {
 
   update(dt) {
     this.t += dt;
+    if (this.scarfTails) this.scarfTails.rotation.x = 0.15 + Math.sin(this.t * 7) * 0.12 + Math.min(0.6, Math.abs(this.P.lean || 0));
     const t = this.t;
     // spring every channel toward its target (critically under-damped for overshoot)
     // fixed substeps keep the stiff springs stable through frame hitches

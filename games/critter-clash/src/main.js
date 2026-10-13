@@ -227,7 +227,7 @@ class Game {
 
   // 3D-rendered portrait of a critter's head, cached as a data URL
   portrait(def, S = 256) {
-    const key = def.id + (def.skin || '') + (S !== 256 ? '@' + S : '');
+    const key = def.id + (def.skin || '') + (def.gear || '') + (S !== 256 ? '@' + S : '');
     if (this.portraits.has(key)) return this.portraits.get(key);
     const scene = new THREE.Scene();
     const cr = new Critter(def);

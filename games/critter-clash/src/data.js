@@ -139,6 +139,10 @@ export function skinned(def, skin) {
   return { ...def, skin, colors: { ...def.colors, ...SHINY[def.id] } };
 }
 
+// level-up gear shown on the model: scarf at Lv 5, star pin at Lv 10, crown at Lv 15
+export const gearFor = (lv = 1) => (lv >= 15 ? 3 : lv >= 10 ? 2 : lv >= 5 ? 1 : 0);
+export const withGear = (def, lv) => { const g = gearFor(lv); return g ? { ...def, gear: g } : def; };
+
 export const STARTERS = ['cindermunch', 'bubbalotl', 'clovebun'];
 
 // Light-hearted rival trainers. Each cup is a ladder of matches.
