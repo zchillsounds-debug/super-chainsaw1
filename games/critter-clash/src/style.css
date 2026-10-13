@@ -694,3 +694,4 @@ body.portrait .rcard span { font-size: 9.5px; }
 @media (max-height: 380px) and (min-aspect-ratio: 1/1) {
   .sel-actions { flex-direction: row; align-items: flex-end; }
 }
+@media (max-aspect-ratio: 1/1) { .dex-list { grid-template-columns: repeat(6, 54px); } .dex-info { bottom: calc(205px + var(--sab)); } }
