@@ -451,7 +451,9 @@ body.portrait .cup { flex: none; width: 100%; }
 /* ---------- Critterdex ---------- */
 .dex-screen { position: absolute; inset: 0; padding: calc(10px + var(--sat)) calc(14px + var(--sar)) calc(10px + var(--sab)) calc(14px + var(--sal)); }
 .dex-count { font-family: var(--body); font-size: .5em; -webkit-text-stroke: 3px var(--ink); margin-left: 6px; opacity: .9; }
-.dex-list { position: absolute; left: calc(14px + var(--sal)); top: calc(62px + var(--sat)); display: grid; grid-template-columns: repeat(4, 56px); gap: 5px; z-index: 2; }
+.dex-list { position: absolute; left: calc(8px + var(--sal)); top: calc(56px + var(--sat)); bottom: calc(62px + var(--sab)); display: grid; grid-template-columns: repeat(4, 56px); grid-auto-rows: max-content; gap: 5px; z-index: 2;
+  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 6px; }
+.dex-list::-webkit-scrollbar { display: none; }
 .dcard { position: relative; padding: 4px 4px 5px; border-radius: 14px; background: rgba(255,255,255,.88); color: var(--ink); box-shadow: 0 4px 0 rgba(0,0,0,.2); transition: transform .15s; }
 .dcard .pic { border-radius: 10px; background: radial-gradient(circle at 50% 40%, #fff, var(--tc)); }
 .dcard img { width: 100%; aspect-ratio: 1; display: block; }
@@ -508,7 +510,7 @@ body.portrait .cup { flex: none; width: 100%; }
 .shiny-unlock img:nth-child(2) { animation-delay: .2s; } .shiny-unlock img:nth-child(3) { animation-delay: .4s; }
 @keyframes shinyBob { to { transform: translateY(-6px) rotate(6deg); } }
 @media (max-aspect-ratio: 1/1) {
-  .dex-list { top: auto; bottom: calc(66px + var(--sab)); left: 50%; transform: translateX(-50%); grid-template-columns: repeat(4, 58px); gap: 5px; }
+  .dex-list { top: auto; bottom: calc(60px + var(--sab)); left: 50%; transform: translateX(-50%); grid-template-columns: repeat(4, 58px); gap: 5px; overflow: visible; }
   .dcard span { display: none; }
   .dex-spin { left: 0; right: 0; top: 60px; bottom: 55%; }
   .dex-info { top: 47%; bottom: calc(150px + var(--sab)); left: calc(14px + var(--sal)); width: auto; }
@@ -705,3 +707,14 @@ body.portrait .rcard span { font-size: 9.5px; }
 @media (max-aspect-ratio: 1/1) and (max-height: 800px) { body.portrait .sel-info .moves { display: none; } body.portrait .sel-info { bottom: calc(225px + var(--sab)); } }
 @media (max-height: 460px) and (min-aspect-ratio: 1/1) { .ladder { margin-top: 4px; } .rung img { width: 42px; height: 42px; } .rung span { font-size: 10px; margin-top: 1px; } .rung-link { margin-bottom: 14px; } .trainer-card { bottom: calc(6px + var(--sab)); padding-top: 10px; padding-bottom: 10px; } .trainer-card h2 { font-size: 30px; } .trainer-card .bubble { margin: 6px 0; } }
 @media (max-height: 460px) { .recruit .modal { padding: 12px 18px; } .recruit h2 { font-size: 26px; margin-bottom: 4px; } .recruit p { margin: 4px 0 8px; font-size: 13px; } }
+/* short landscape phones: tighten the results column so the buttons stay on screen */
+@media (max-height: 380px) and (min-aspect-ratio: 1/1) {
+  .results { gap: 8px; padding-top: 8px; padding-bottom: 8px; }
+  .results h1 { font-size: 48px; }
+  .res-card { padding: 8px 16px; }
+  .res-card img { width: 84px; height: 84px; }
+  .res-quote { padding-top: 4px; padding-bottom: 4px; font-size: 13px; }
+  .res-quote img { width: 30px; height: 30px; }
+  .grade { width: 56px; height: 56px; font-size: 32px; top: -30px; right: -10px; }
+  .res-grid { padding-right: 22px; }
+}

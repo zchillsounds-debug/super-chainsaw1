@@ -282,7 +282,7 @@ const WIN = {
     if (show && Math.random() < 0.2) { const h = head(f, 0.5); f.battle.fx.spawn({ x: h.x + rnd(1.2), y: h.y + rnd(0.6), z: h.z + rnd(1.2), color: 0x9ae4ff, size: 0.35, life: 0.4, shape: 'star', additive: false }); }
   },
   ripples(f, P, k) { // floats on its back, cracking a clam on its tummy
-    P.lean = -1.0; P.y = 0.15 + sin(k * 2) * 0.05; P.legL = P.legR = -0.8;
+    P.lean = -0.55; P.y = 0.15 + sin(k * 2) * 0.05; P.legL = P.legR = -0.8;
     P.armLx = P.armRx = -1.6; P.armLz = P.armRz = 0.4 + abs(sin(k * 10)) * 0.5; P.head = 0.4;
     f.critter.emote(sin(k * 10) > 0.6 ? 'closed' : 'happy', 'grin', 0.1);
     if (abs(sin(k * 10)) > 0.97 && Math.random() < 0.5) f.battle.fx.spawn({ ...head(f, -0.2), vy: 2, vx: rnd(2), color: 0xffffff, size: 0.28, life: 0.35, shape: 'star', additive: false, grav: 6 });
