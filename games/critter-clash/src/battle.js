@@ -4,7 +4,7 @@ import { Fighter, SPECIALS } from './fighter.js';
 import { CpuBrain } from './ai.js';
 import { TYPES, typeMult } from './data.js';
 import { ARENA_R } from './arena.js';
-import { sfx, playMusic } from './audio.js';
+import { sfx, playMusic, setIntensity } from './audio.js';
 import { Tutorial } from './tutorial.js';
 import { save } from './save.js';
 import { sayLine } from './personality.js';
@@ -73,9 +73,11 @@ export class Battle {
     p.introK0 = c.introK0 = first ? 0 : 1.5;
     this.introFocus = first ? c : null;
     this.introSaid = 0;
+    this.tense = 0;
     this.camFocusWas = undefined;
     this.hud.roundIntro(this.round, this.wins, first);
-    if (this.round === 1) playMusic('battle');
+    if (this.round === 1) playMusic(this.trainer?.boss ? 'boss' : { beach: 'beach', volcano: 'volcano' }[this.arena.key] || 'battle');
+    setIntensity(0);
   }
 
   // -------- hit resolution --------
@@ -672,6 +674,8 @@ export class Battle {
     if (l.alive) { l.setState('lose'); l.vx = l.vz = 0; }
     sfx.voice(w.def.voice, 'win');
     sayLine(w, 'win');
+    if (w === this.player) sfx.fanfare(w.def);
+    setIntensity(0);
     this.phase = 'winpose'; this.phaseT = 0;
     if (this.wins[w.side] >= this.winsNeeded) {
       this.hud.announce(w === this.player ? 'YOU WIN!' : 'YOU LOSE...', w === this.player ? 'win' : 'lose');
@@ -753,6 +757,10 @@ export class Battle {
     for (const f of this.fighters) { f.perfectT = (f.perfectT || 0) - dt; f.update(sdt); }
     this.updateProjectiles(sdt);
     this.items.update(sdt);
+    if (fighting) {
+      const tense = p.hp / p.maxHp < 0.25 || c.hp / c.maxHp < 0.25 || this.time < 10 ? 1 : 0;
+      if (tense !== this.tense) { this.tense = tense; setIntensity(tense); }
+    }
     if (fighting && this.trainer?.boss && !this.bossRage && c.alive && c.hp < c.maxHp * 0.5) this.enrage(c);
     if (this.bossRage && c.alive && Math.random() < 0.5) {
       const a = Math.random() * Math.PI * 2;
