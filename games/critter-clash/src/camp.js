@@ -21,6 +21,11 @@ export class Camp {
     this.t = 0;
     this.props = buildProps();
     this.g.scene.add(this.props);
+    // soft ring under whoever is selected
+    this.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.72, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false }));
+    this.ring.rotation.x = -Math.PI / 2;
+    this.ring.visible = false;
+    this.g.scene.add(this.ring);
     // scatter the team around the field, each with its own wander plan
     this.g.showcase.forEach((c, i) => {
       const a = (i / Math.max(1, team.length)) * Math.PI * 2;
@@ -30,7 +35,8 @@ export class Camp {
   }
 
   dispose() {
-    this.g.scene.remove(this.props);
+    this.g.scene.remove(this.props, this.ring);
+    this.ring.geometry.dispose(); this.ring.material.dispose();
     this.props.traverse((o) => { o.geometry?.dispose(); });
   }
 
@@ -56,6 +62,7 @@ export class Camp {
   select(c) {
     this.popCard = this.sel !== c;
     this.sel = c;
+    this.ring.visible = true;
     c.camp.wait = 2.5; c.camp.tx = c.camp.x; c.camp.tz = c.camp.z;
     this.panel();
   }
@@ -137,6 +144,7 @@ export class Camp {
     cam.lookAt(0, port ? 0.6 : 0, 0.4);
     cam.fov = Math.min(70, 40 * Math.max(1, 1.5 / cam.aspect));
     cam.updateProjectionMatrix();
+    if (this.sel) { const p = this.sel.root.position; this.ring.position.set(p.x, 0.03, p.z); this.ring.scale.setScalar(1 + Math.sin(this.t * 5) * 0.06); }
     // campfire flicker
     const fp = this.props.userData.fire;
     if (Math.random() < dt * 24) this.g.fx.spawn({ x: fp.x + (Math.random() - 0.5) * 0.3, y: 0.55, z: fp.z + (Math.random() - 0.5) * 0.3, vy: 1.4 + Math.random(), color: Math.random() < 0.5 ? 0xff8a2a : 0xffd04a, size: 0.42, life: 0.55, shape: 'glow', grow: -0.8 });
