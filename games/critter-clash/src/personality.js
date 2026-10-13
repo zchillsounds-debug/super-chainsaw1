@@ -270,7 +270,7 @@ const WIN = {
   },
   lilypop(f, P, k) { // happy hops in a little circle, croaking
     const ph = (k * 1.6) % 1;
-    P.y = sin(ph * Math.PI) * 0.45; P.yaw = sin(k * 1.4) * 0.9; P.legL = P.legR = ph < 0.5 ? -0.7 : 0.4; P.armLz = P.armRz = 1.2 + sin(ph * Math.PI) * 1.0;
+    P.y = sin(ph * Math.PI) * 0.45; P.yaw = sin(k * 1.4) * 0.45; P.legL = P.legR = ph < 0.5 ? -0.7 : 0.4; P.armLz = P.armRz = 1.2 + sin(ph * Math.PI) * 1.0;
     P.sx = 1 + abs(sin(k * 9)) * 0.06;
     f.critter.emote('happy', 'grin', 0.1);
     if (ph > 0.92 && once(f, 'w' + Math.floor(k * 1.6))) f.battle.fx.spawn({ x: f.x, y: 0.05, z: f.z, color: 0x9fe0ff, size: 1.6, life: 0.35, shape: 'ring', alpha: 0.6 });
