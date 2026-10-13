@@ -491,6 +491,24 @@ function buildProps(cups) {
       g.add(pn); pennants.push(pn);
     });
   }
+  if (cups.grove) {
+    // the Glowcap Cup prize: a cluster of glowing toadstools
+    const shroom = new THREE.Group();
+    shroom.position.set(4.6, 0, 0.6);
+    const stalk = toon(0xf4e8d0), glowM = new THREE.MeshBasicMaterial({ color: 0x9affd8 });
+    for (const [x, z, sc, col] of [[0, 0, 1, 0x2fc8a8], [0.55, 0.35, 0.6, 0xff7ab0], [-0.45, 0.3, 0.5, 0x8a6aff]]) {
+      const st = inked(new THREE.CylinderGeometry(0.12 * sc, 0.18 * sc, 0.8 * sc, 8), stalk, OL * 0.5);
+      st.position.set(x, 0.4 * sc, z); shroom.add(st);
+      const cap = inked(new THREE.SphereGeometry(0.5 * sc, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(col), OL * 0.6);
+      cap.scale.set(1, 0.75, 1); cap.position.set(x, 0.75 * sc, z); shroom.add(cap);
+      for (let k = 0; k < 4; k++) {
+        const d = new THREE.Mesh(new THREE.SphereGeometry(0.07 * sc, 6, 4), glowM);
+        const a = k * 1.6 + x; d.position.set(x + Math.cos(a) * 0.3 * sc, 0.75 * sc + 0.28 * sc, z + Math.sin(a) * 0.3 * sc); shroom.add(d);
+      }
+    }
+    g.add(shroom);
+    keepOut.push([4.6, 0.6, 0.9]);
+  }
   let balloon = null;
   if (cups.sky) {
     const tex = canvasTex(128, 64, (c, w, h) => { for (let k = 0; k < 8; k++) { c.fillStyle = k % 2 ? '#fff4e0' : '#ff6a8a'; c.fillRect(k * w / 8, 0, w / 8 + 1, h); } });

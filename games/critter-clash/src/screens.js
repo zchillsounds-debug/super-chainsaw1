@@ -122,7 +122,13 @@ export class Screens {
     this.root.querySelector('.title-screen').appendChild(gear);
     playMusic('menu');
     // news for returning trainers: new critters turned up in cups they may already have cleared
-    if (!g.autoplay && save.cups.sprout && !save.news?.includes('frogmole')) {
+    if (!g.autoplay && save.cups.thunder && !save.news?.includes('grove')) {
+      (save.news ||= []).push('grove'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "Oh, {name}! A new league has opened deep in the mushroom woods: the Glowcap Cup.",
+        "The fireflies are lovely, but watch out for the spore puffs. Achoo!",
+      ]), 600);
+    } else if (!g.autoplay && save.cups.sprout && !save.news?.includes('frogmole')) {
       (save.news ||= []).push('frogmole'); persist();
       const where = [['lilypop', 'Paddy in the Thunder Cup'], ['diggles', 'Dusty in the Midnight Cup']].filter(([id]) => !save.unlocked.includes(id));
       if (where.length) setTimeout(() => this.mode === 'title' && this.profTalk([
