@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 23)
+# Critter Clash: Handoff (after Round 31, effort wrapped up)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -13,6 +13,7 @@
 - Session 1 started at about **04:27 UTC on 2026-10-13**. Rounds 1–5 were done by 05:19 UTC.
 - Session 2 (05:20–06:12 UTC) did Rounds 6–18 and chained because context was getting large.
 - Session 3 (06:12–06:37 UTC) did Rounds 19–23 and chained near the context limit.
+- Session 4 (06:36–07:05 UTC) did Rounds 24–31. Its worker was then restarted and only resumed at 15:22 UTC, past the 14:30 target, so it finished Round 31 and stopped without chaining. **The planned ~10-hour effort is over**; only resume if the user asks for more.
 - Target end of the whole effort: about **14:30 UTC on 2026-10-13**. Check `date -u`. Keep chaining sessions until then, then stop and summarise.
 
 ## Run it
@@ -26,7 +27,7 @@ URL flags:
 - `?mobile` forces the touch UI.
 - `?q=low|med|high` sets the quality.
 
-- `&arena=frost` also works now, and `&mods=bighead,turbo,lowgrav,itemrain,supercharged` applies match modifiers.
+- `&arena=frost` and `&arena=neon` also work now, and `&mods=bighead,turbo,lowgrav,itemrain,supercharged` applies match modifiers.
 
 Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt.
 - `&train` starts a training match (e.g. `?play&train&p=woolt`).
@@ -110,6 +111,16 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 - New parts in critters.js: ears `floppy`, extras `wool` and `spines` (merged geometry via `mergeGeometries`). New specials `seedspray`, `fuzzball` (projectiles `seed`, `fuzz`), supers `bramble` (`Battle.thorns`) and `megafluff` (`Battle.fluffHop`, scales `f.root`; reset in `endSuper` and `Fighter.reset`). Supers that pose themselves are skipped in `Fighter.animate`.
 - `MOVE_DESC` in data.js describes every special and super.
 
+## New in session 4
+- arena.js: `neon` arena (Neon Rooftop): `floor: 'neon'` glowing grid overlay (reuses `this.cracks` pulse), `buildCity()` (merged window-textured towers, blinking beacons, neon signs, wall/lip neon tubes, sweeping searchlights). Sky `uStars` uniform split from `uAurora`. Per-arena `fillI` (camera-side fill used in battle and menus) and `beam` colour. Jumbotron raised to y 12.
+- audio.js: `neon` synthwave song. data.js: Midnight Cup (`requires: 'champion'`, boss `bossTitle: 'BOSS'`), Night Owl badge, `gearFor`/`withGear`.
+- battle.js: round-one wide shot tilts up at the jumbotron (INTRO_FIRST 4.2); `finisher` on the match-deciding KO (long hitstop, burst, tilted low close-up via `roll` / `camRoll`); `clock` game time.
+- hud.js/style.css: cut-in dim/flash, sunburst, type watermark. Compact portrait-HUD rules.
+- photo.js: native Save/Share through `@capacitor/filesystem` + `@capacitor/share`.
+- screens.js: training setup sheet (dummy + arena), title backdrop = newest unlocked cup arena, `skinOf` adds gear.
+- critters.js: `buildGear(n)` scarf / star pin / crown; Emberfly `wingTexture()`.
+- tools/wide.mjs: renders from a fixed camera after `__sim` (for arena overview shots).
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -142,28 +153,26 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 21. Photo mode from pause: orbit cam, focus, frames, filters, shutter, save/share.
 22. Pricklepuff (leaf hedgehog: Seed Spray / Bramble Rush) and Woolt (spark sheep: Fuzz Ball / Mega Fluff Slam), with intros, wins, lines and shinies. Marigold (Sprout Cup) now uses Pricklepuff; Stormy replaces the Volt Twins in the Champion Cup with Woolt. Portrait roster is 5 across.
 23. Bug sweep: full auto battles with the new critters, mods and arenas run with no errors; Mega Fluff scale is reset on round reset; production build passes.
+24. Neon Rooftop arena (night skyline, neon signs, searchlights, glowing grid floor), synthwave theme, Midnight Cup + Night Owl badge; daily can roll it.
+25. Lighting polish: less orange Volcano light, brighter lava seams, camera fill in backlit arenas, bigger iridescent Emberfly wings, jumbotron in the intro wide shot.
+26. Super cut-in art (flash, sunburst, type watermark, outlined portrait) and a FINAL K.O. finisher camera.
+27. Photo Save/Share inside the Android app via Capacitor plugins.
+28. Training setup sheet (pick dummy and arena); super-effective pill no longer repeats in training.
+29. Portrait HUD fits on narrow windows; 5 full matches across all arenas error-free.
+30. Menu polish: title backdrop follows progress, menu fill light, Critterdex grid no longer under the Badges button.
+31. Level-up gear: scarf (Lv 5), star pin (Lv 10), crown (Lv 15) on player and trainer critters.
 
 ## Critique backlog (known issues)
-- In Volcano the orange light tints Woolt's cream wool tan; consider a per-arena critter fill or less saturated sun there.
-- Photo mode Save uses an `<a download>`; inside the Android APK webview this may do nothing. Consider the Capacitor Filesystem/Share plugin, or tell players to screenshot.
-- The training dummy is always a random critter; a dummy picker would be nice.
-- The quick "super effective" pill can repeat in training, because `time` is Infinity.
-- Portrait-orientation battles on desktop (non-touch) cut off the right health bar; touch shows the rotate hint so phones are fine.
-- Emberfly's wings are subtle; the purple body could pop more.
-- Volcano lava seams read as orange lines more than glow; could brighten the core.
-- The jumbotron is rarely in view.
-- Results screen background is just the empty arena; could show the winner doing its victory anim close up.
-- No photo mode, no training mode, no localisation.
-- Tutorial refers to button names (HIT/SPECIAL/DODGE/SUPER/GUARD labels now exist).
-- Not yet verified on a real phone this session; APK CI runs 8–13+ all succeeded.
+- Results screen does not yet announce newly earned gear ("New gear: Scarf!").
+- The finisher's tilted close-up can frame the attacker from behind when the KO knocks the loser far away.
+- Native photo Save/Share (Round 27) is untested on a real phone; check the APK on Android 10+ and 9.
+- No localisation.
+- Not verified on a real phone; APK CI runs through Round 26 succeeded (check the later runs).
 
-## Suggested next rounds
-- R24: a 5th arena (for example a night-time "Neon Rooftop" or "Candy Canyon") with its own theme song, and a new cup that features Pricklepuff and Woolt rematches.
-- R25: visual polish pass on the backlog: Volcano lighting on light-coloured critters, Emberfly wing contrast, lava seam glow, and getting the jumbotron in view (e.g. during the intro wide shot).
-- R26: per-critter super cut-in art (portrait plus type-coloured speed burst) and a stronger KO finisher camera.
-- R27: Android photo save through Capacitor (`@capacitor/filesystem` and `@capacitor/share`; the CI workflow needs `npm i` for them), or hide Save on native.
-- R28: final bug sweep and playtest checklist. Fetch the latest APK and send it to the user with SendUserFile.
-- At ~14:30 UTC stop, update this file and summarise for the user.
+## Suggested next rounds (only if the user asks to continue)
+- Gear callout on the results screen and a gear row in the Critterdex.
+- Real-phone check of the latest APK, especially photo Save/Share.
+- Localisation, a second boss cup, or arena hazards.
 
 ## Chaining (do this at the end of each session)
 1. Update this HANDOFF.md: rounds done, backlog, next steps, and the time used so far.
