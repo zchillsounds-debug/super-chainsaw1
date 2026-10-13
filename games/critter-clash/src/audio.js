@@ -170,6 +170,14 @@ export const sfx = {
     [1, 1.26, 1.5, 2].forEach((m, i) => osc('square', base * m, base * m, 0.09, 0.07, { t: t + i * 0.055 }));
     osc('triangle', base * 2, base * 2.02, 0.35, 0.08, { t: t + 0.22 });
   },
+  // arena hazard telegraph: a quick rising two-tone chirp
+  warn() {
+    if (!ctx) return;
+    const t = now();
+    osc('square', 880, 880, 0.07, 0.06, { t });
+    osc('square', 1175, 1175, 0.09, 0.06, { t: t + 0.09 });
+  },
+  rumble() { if (!ctx) return; noise(0.5, 0.35, { f0: 200, f1: 60, q: 1 }); osc('sine', 70, 40, 0.5, 0.3); },
   gong() { if (!ctx) return; osc('triangle', 220, 210, 1.6, 0.35); osc('sine', 330, 320, 1.4, 0.2); osc('sine', 554, 540, 1.0, 0.1); },
   ko() { if (!ctx) return; osc('sawtooth', 600, 60, 1.0, 0.25); this.boom(); },
 };

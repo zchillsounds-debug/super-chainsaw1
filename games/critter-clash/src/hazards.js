@@ -80,7 +80,7 @@ export class Hazards {
     this.list.push(h);
     B.stats.hazardsSeen = (B.stats.hazardsSeen || 0) + 1;
     if (!this.warned) { this.warned = true; B.fx.text({ x, y: 1.4, z }, 'WATCH OUT!', 'eff', 1.1); }
-    sfx.ui('move');
+    sfx.warn();
   }
 
   update(dt) {
@@ -127,7 +127,7 @@ export class Hazards {
     B.fx.shock({ x: h.x, y: 0.05, z: h.z }, H.color, H.r * 2, 0.35);
     if (key === 'volcano') {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 20, speed: 3, up: 10, color: 0xff9a2a, size: 0.4, life: 0.7, shape: 'puff', grav: 10 });
-      sfx.boom();
+      sfx.boom(); sfx.rumble();
     } else if (key === 'frost') {
       B.fx.burst(p, { n: 16, speed: 5, up: 3, color: 0xd8f6ff, size: 0.22, life: 0.5, shape: 'star', additive: false, grav: 8 });
       sfx.bonk();
