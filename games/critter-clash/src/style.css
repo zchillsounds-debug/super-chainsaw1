@@ -312,7 +312,7 @@ body.portrait.is-touch.in-battle .rotate-hint { display: grid; }
 .cup h2 { font-family: var(--display); font-weight: 400; font-size: 28px; margin: 0; }
 .cup p { font-size: 14px; margin: 4px 0 10px; min-height: 36px; }
 .cup-foes { display: flex; gap: 4px; }
-.cup-foes img { width: 44px; height: 44px; border-radius: 50%; background: #efe8fb; box-shadow: inset 0 0 0 2px var(--ink); }
+.cup-foes img { flex: 0 1 44px; min-width: 0; aspect-ratio: 1; height: auto; border-radius: 50%; background: #efe8fb; box-shadow: inset 0 0 0 2px var(--ink); }
 .cup-meta { font-size: 12px; opacity: .6; margin-top: 8px; }
 .cup.locked { filter: grayscale(.9); opacity: .7; }
 .cup.locked .cup-foes img { filter: brightness(0) opacity(.4); }

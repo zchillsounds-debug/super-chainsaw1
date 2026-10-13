@@ -294,6 +294,23 @@ const SONGS = {
     ],
     drums: 'k...s..hk.k.s..h',
   },
+  neon: {
+    // synthwave: Dm Bb F C | Dm Bb C A
+    bpm: 124,
+    inst: { lead: 'sawtooth', lead2: 'square', leadVol: 0.07, bass: 'sawtooth', bassVol: 0.2, stab: 'sawtooth' },
+    chords: [[50, 53, 57], [46, 50, 53], [53, 57, 60], [48, 52, 55], [50, 53, 57], [46, 50, 53], [48, 52, 55], [45, 49, 52]],
+    lead: [
+      [74, null, null, 77, null, null, 81, null, 79, null, 77, null, 76, null, 74, null],
+      [74, null, null, 77, null, null, 82, null, 81, null, null, null, 77, null, null, null],
+      [72, null, null, 77, null, null, 81, null, 84, null, 81, null, 79, null, 77, null],
+      [76, null, null, 79, null, null, 84, null, 83, null, null, null, 79, null, null, null],
+      [86, null, null, 84, null, 81, null, 77, 81, null, 84, null, 86, null, null, null],
+      [82, null, null, 81, null, 77, null, 74, 77, null, 81, null, 82, null, null, null],
+      [84, null, 83, 84, null, 79, null, 76, 79, null, 84, null, 88, null, null, null],
+      [85, null, null, null, 81, null, null, null, 76, null, null, null, 73, null, null, null],
+    ],
+    drums: 'k.h.s.hkk.h.s.h.',
+  },
   victory: {
     bpm: 132,
     chords: [[48, 52, 55], [53, 57, 60], [55, 59, 62], [48, 52, 55]],

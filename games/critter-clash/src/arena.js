@@ -41,6 +41,15 @@ export const ARENAS = {
     hill: 0xeef4ff, trunk: 0x5a3a2a, leaves: [0x2f6a5a, 0x3a7a64, 0x24584a], scenery: 'pines', cloud: 0x8a9ac8, cloudShade: 0x2a3060, sunI: 1.7,
     aurora: true, snow: true,
   },
+  neon: {
+    name: 'Neon Rooftop Arena',
+    skyTop: 0x0a0624, skyHorizon: 0x7a2a9a, sun: 0xfff0d8, sunDir: [-0.55, 0.5, -0.65],
+    hemiSky: 0xe4d8ff, hemiGround: 0x4a3a8a, fieldA: '#2c2452', fieldB: '#262048', line: '#ff5ad8', floor: 'neon',
+    wallA: 0x2a1f5a, wallB: 0xff4fb8, ground: 0x1c1838, fog: 0x2a1a52,
+    accent: 0x3af0ff, seat: [0xff4fb8, 0x3af0ff, 0xffd84a, 0x8a5aff],
+    hill: 0x1a1434, trunk: 0x2a2244, leaves: [0x2a2450, 0x241e46, 0x30285a], scenery: 'city', cloud: 0x3a2a6a, cloudShade: 0x5a2a6a, sunI: 2.1,
+    stars: true, beam: 0xff8ae0, sun2: 0x7af0ff,
+  },
 };
 
 function skyDome(A) {
@@ -50,10 +59,10 @@ function skyDome(A) {
     uniforms: {
       top: { value: new THREE.Color(A.skyTop) }, hor: { value: new THREE.Color(A.skyHorizon) },
       sunDir: { value: new THREE.Vector3(...A.sunDir).normalize() }, sunCol: { value: new THREE.Color(A.sun) },
-      uAurora: { value: A.aurora ? 1 : 0 }, uTime: { value: 0 },
+      uAurora: { value: A.aurora ? 1 : 0 }, uStars: { value: A.aurora || A.stars ? 1 : 0 }, uTime: { value: 0 },
     },
     vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); gl_Position.z = gl_Position.w; }',
-    fragmentShader: `uniform vec3 top, hor, sunDir, sunCol; uniform float uAurora, uTime; varying vec3 vP;
+    fragmentShader: `uniform vec3 top, hor, sunDir, sunCol; uniform float uAurora, uStars, uTime; varying vec3 vP;
       float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       void main(){
         float h = clamp(vP.y, 0.0, 1.0);
@@ -62,14 +71,17 @@ function skyDome(A) {
         c += sunCol * (smoothstep(0.9975, 0.998, s) * 1.6 + pow(s, 24.0) * 0.35);
         // stylised horizon band
         c = mix(c, hor * 1.08, smoothstep(0.08, 0.0, h) * 0.6);
-        if (uAurora > 0.0) {
-          // twinkling stars and soft ribbons of aurora
+        if (uStars > 0.0) {
+          // twinkling stars
           vec2 sp = vec2(atan(vP.z, vP.x) * 60.0, vP.y * 60.0);
           vec2 cell = floor(sp);
           float st = step(0.985, hash(cell)) * smoothstep(0.1, 0.5, h);
           float tw = 0.6 + 0.4 * sin(uTime * 3.0 + hash(cell + 7.0) * 40.0);
           float d = length(fract(sp) - 0.5);
           c += vec3(st * tw * smoothstep(0.25, 0.0, d)) * 1.4;
+        }
+        if (uAurora > 0.0) {
+          // soft ribbons of aurora
           float a = atan(vP.z, vP.x);
           float band = sin(a * 3.0 + uTime * 0.15 + sin(a * 7.0 + uTime * 0.3) * 0.6);
           float y0 = 0.32 + band * 0.08;
@@ -206,6 +218,20 @@ export class Arena {
           c.fillStyle = 'rgba(255,255,255,0.05)';
           c.beginPath(); c.ellipse(x - 8, y - 10, R * 0.5, R * 0.3, -0.4, 0, Math.PI * 2); c.fill();
         }
+      } else if (A.floor === 'neon') {
+        // glossy rooftop tiles with soft reflections of the skyline
+        c.fillStyle = A.fieldA; c.fillRect(0, 0, w, h);
+        const T = 64;
+        for (let y = 0; y < h; y += T) for (let x = 0; x < w; x += T) {
+          c.fillStyle = ((x + y) / T) % 2 ? A.fieldB : A.fieldA; c.fillRect(x + 2, y + 2, T - 4, T - 4);
+          c.fillStyle = 'rgba(255,255,255,0.04)'; c.fillRect(x + 4, y + 4, T - 8, 10);
+        }
+        for (let i = 0; i < 40; i++) {
+          const x = Math.random() * w, y = Math.random() * h, r = 30 + Math.random() * 90;
+          const g = c.createRadialGradient(x, y, 0, x, y, r);
+          g.addColorStop(0, ['rgba(255,90,216,0.14)', 'rgba(58,240,255,0.12)', 'rgba(255,216,74,0.08)'][i % 3]); g.addColorStop(1, 'rgba(0,0,0,0)');
+          c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
+        }
       } else {
         for (let i = 0; i < 16; i++) { c.fillStyle = i % 2 ? A.fieldA : A.fieldB; c.fillRect(i * w / 16, 0, w / 16 + 1, h); }
         // subtle checker
@@ -261,8 +287,27 @@ export class Arena {
       this.cracks = cracks;
     }
 
+    // rooftop: glowing neon grid lines and rings that pulse with the music
+    if (A.floor === 'neon') {
+      const gridTex = canvasTex(1024, 1024, (c, w, h) => {
+        const line = (col, lw, fn) => { c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); fn(); c.stroke(); };
+        for (const [lw, a] of [[10, 0.25], [4, 0.7], [1.5, 1]]) {
+          for (let i = 128; i < w; i += 128) {
+            line(`rgba(58,240,255,${a * 0.6})`, lw * 0.7, () => { c.moveTo(i, 0); c.lineTo(i, h); c.moveTo(0, i); c.lineTo(w, i); });
+          }
+          line(`rgba(255,90,216,${a})`, lw * 1.4, () => c.arc(w / 2, h / 2, w * 0.47, 0, Math.PI * 2));
+          line(`rgba(255,90,216,${a})`, lw, () => c.arc(w / 2, h / 2, w * 0.16, 0, Math.PI * 2));
+          line(`rgba(255,216,74,${a})`, lw, () => c.arc(w / 2, h / 2, w * 0.43, 0, Math.PI * 2));
+        }
+      });
+      const grid = new THREE.Mesh(new THREE.CircleGeometry(ARENA_R + 0.5, 72), new THREE.MeshBasicMaterial({ map: gridTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+      grid.rotation.x = -Math.PI / 2; grid.position.y = 0.012;
+      G.add(grid);
+      this.cracks = grid;
+    }
+
     // dirt ring between field and wall
-    const ring = new THREE.Mesh(new THREE.RingGeometry(ARENA_R + 0.5, ARENA_R + 1.4, 72), toon(0xd9b07a, { env: true, rim: 0 }));
+    const ring = new THREE.Mesh(new THREE.RingGeometry(ARENA_R + 0.5, ARENA_R + 1.4, 72), toon(A.floor === 'neon' ? 0x3a3060 : 0xd9b07a, { env: true, rim: 0 }));
     ring.rotation.x = -Math.PI / 2; ring.position.y = 0.005; ring.receiveShadow = true;
     G.add(ring);
 
@@ -414,7 +459,7 @@ export class Arena {
       h.translate(Math.cos(a) * r, -6, Math.sin(a) * r);
       hillGeos.push(h);
     }
-    G.add(new THREE.Mesh(mergeGeometries(hillGeos), toon(A.hill, { env: true, rim: 0 })));
+    if (A.scenery !== 'city') G.add(new THREE.Mesh(mergeGeometries(hillGeos), toon(A.hill, { env: true, rim: 0 })));
     const trunks = [], tops = [[], [], []];
     const m4 = new THREE.Matrix4(), q4 = new THREE.Quaternion(), v4 = new THREE.Vector3(), s4 = new THREE.Vector3();
     for (let i = 0; i < (A.scenery === 'trees' ? 46 : 0); i++) {
@@ -479,6 +524,7 @@ export class Arena {
         tops[i % 3].push(g);
       }
     }
+    else if (A.scenery === 'city') this.buildCity(G, rand, r0 + tiers * 1.25);
     if (trunks.length) G.add(new THREE.Mesh(mergeGeometries(trunks), toon(A.trunk, { env: true, rim: 0 })));
     A.leaves.forEach((c, k) => { if (tops[k].length) G.add(inked(mergeGeometries(tops[k]), toon(c, { env: true, rim: 0.3 }), 0.06)); });
     if (A.snow) {
@@ -542,7 +588,7 @@ export class Arena {
     // soft volumetric beams from the floodlights
     const beamMat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
-      uniforms: { uCol: { value: new THREE.Color(0xfff4d0) } },
+      uniforms: { uCol: { value: new THREE.Color(A.beam || 0xfff4d0) } },
       vertexShader: 'varying float vY; varying vec3 vN; varying vec3 vV; void main(){ vY = uv.y; vec4 mv = modelViewMatrix * vec4(position,1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }',
       fragmentShader: 'uniform vec3 uCol; varying float vY; varying vec3 vN; varying vec3 vV; void main(){ float f = pow(abs(dot(vN, vV)), 1.5); gl_FragColor = vec4(uCol * f * vY * 0.11, 1.0); }',
     });
@@ -573,6 +619,106 @@ export class Arena {
       c.userData.sp = 0.6 + rand();
       this.clouds.push(c);
       G.add(c);
+    }
+  }
+
+  // night skyline: merged towers with lit windows, neon signs and sweeping searchlights
+  buildCity(G, rand, rStands) {
+    const winTex = canvasTex(256, 256, (c, w, h) => {
+      c.fillStyle = '#141030'; c.fillRect(0, 0, w, h);
+      const cols = ['#ffd98a', '#ffe9b8', '#7af0ff', '#ff9ae0', '#2a2450', '#2a2450', '#2a2450'];
+      for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+        c.fillStyle = cols[Math.floor(Math.random() * cols.length)];
+        c.fillRect(x * 32 + 8, y * 32 + 7, 16, 18);
+      }
+    });
+    winTex.wrapS = winTex.wrapT = THREE.RepeatWrapping;
+    const boxes = [], roofs = [];
+    for (let i = 0; i < 70; i++) {
+      const a = rand() * Math.PI * 2, r = 85 + rand() * 110;
+      const bw = 8 + rand() * 10, bd = 8 + rand() * 10, bh = 18 + rand() * 50 + (r > 120 ? 20 : 0);
+      const b = new THREE.BoxGeometry(bw, bh, bd);
+      // tile windows to the face size; top faces sample a dark texel
+      const uv = b.attributes.uv, nrm = b.attributes.normal;
+      for (let k = 0; k < uv.count; k++) {
+        const ny = nrm.getY(k), nx = nrm.getX(k);
+        if (Math.abs(ny) > 0.5) uv.setXY(k, 0.02, 0.02);
+        else uv.setXY(k, uv.getX(k) * (Math.abs(nx) > 0.5 ? bd : bw) / 8, uv.getY(k) * bh / 8);
+      }
+      b.rotateY(rand() * 3);
+      b.translate(Math.cos(a) * r, bh / 2 - 8, Math.sin(a) * r);
+      boxes.push(b);
+      if (rand() < 0.4) {
+        // blinking aircraft beacon on the tallest roofs
+        const s = new THREE.SphereGeometry(0.6, 8, 6);
+        s.translate(Math.cos(a) * r, bh - 7.4, Math.sin(a) * r);
+        roofs.push(s);
+      }
+    }
+    const towers = new THREE.Mesh(mergeGeometries(boxes), new THREE.MeshBasicMaterial({ map: winTex, color: 0x9a90c8 }));
+    G.add(towers);
+    this.beacons = new THREE.Mesh(mergeGeometries(roofs), new THREE.MeshBasicMaterial({ color: 0xff3a5a, toneMapped: false }));
+    G.add(this.beacons);
+
+    // neon signs above the stands (bloom does the glow)
+    const sign = (draw, w, h, x, y, z) => {
+      const tex = canvasTex(512, Math.round(512 * h / w), draw);
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false, depthWrite: false, side: THREE.DoubleSide }));
+      m.position.set(x, y, z);
+      m.lookAt(0, y, 0);
+      G.add(m);
+      return m;
+    };
+    const glowText = (c, s, x, y, size, col) => {
+      c.font = `400 ${size}px "Lilita One", sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.shadowColor = col; c.shadowBlur = 24; c.lineWidth = size * 0.08; c.strokeStyle = col;
+      c.strokeText(s, x, y); c.strokeText(s, x, y);
+      c.shadowBlur = 0; c.fillStyle = '#fff'; c.fillText(s, x, y);
+    };
+    const R = rStands + 2.2;
+    this.signs = [
+      sign((c, w, h) => glowText(c, 'BONK!', w / 2, h / 2, 150, '#ff4fd0'), 9, 3.6, Math.cos(Math.PI * 1.25) * R, 13.2, Math.sin(Math.PI * 1.25) * R),
+      sign((c, w, h) => glowText(c, 'CLASH', w / 2, h / 2, 150, '#3af0ff'), 9, 3.6, Math.cos(Math.PI * 1.75) * R, 13.2, Math.sin(Math.PI * 1.75) * R),
+      sign((c, w, h) => {
+        c.translate(w / 2, h / 2); c.strokeStyle = '#ffd84a'; c.shadowColor = '#ffd84a'; c.shadowBlur = 22; c.lineWidth = 12;
+        c.beginPath(); for (let k = 0; k < 10; k++) { const rr = k % 2 ? 70 : 170; c.lineTo(Math.cos(k * Math.PI / 5 - Math.PI / 2) * rr, Math.sin(k * Math.PI / 5 - Math.PI / 2) * rr); } c.closePath(); c.stroke(); c.stroke();
+        c.lineWidth = 4; c.shadowBlur = 0; c.strokeStyle = '#fff'; c.stroke();
+      }, 6, 6, Math.cos(Math.PI * 0.95) * R, 14, Math.sin(Math.PI * 0.95) * R),
+      sign((c, w, h) => {
+        c.translate(w / 2, h / 2 + 20); c.strokeStyle = '#ff4fd0'; c.shadowColor = '#ff4fd0'; c.shadowBlur = 22; c.lineWidth = 12;
+        c.beginPath(); c.moveTo(0, 150); c.bezierCurveTo(-260, -20, -110, -200, 0, -70); c.bezierCurveTo(110, -200, 260, -20, 0, 150); c.stroke(); c.stroke();
+        c.lineWidth = 4; c.shadowBlur = 0; c.strokeStyle = '#fff'; c.stroke();
+      }, 6, 6, Math.cos(Math.PI * 0.05 + Math.PI * 2) * R, 14, Math.sin(Math.PI * 2.05) * R),
+    ];
+    this.signs.forEach((m, i) => { m.userData.ph = i * 1.7; });
+
+    // neon tubes along the wall cap
+    const tubeMats = [0xff4fd0, 0x3af0ff].map((c) => new THREE.MeshBasicMaterial({ color: c, toneMapped: false }));
+    const wallTube = new THREE.Mesh(new THREE.TorusGeometry(ARENA_R + 1.7, 0.07, 6, 96), tubeMats[0]);
+    wallTube.rotation.x = -Math.PI / 2; wallTube.position.y = 1.08;
+    // the stands' lip follows the lathe's angles (x = sin, z = cos), leaving the camera gap open
+    const lipPts = [];
+    for (let i = 0; i <= 80; i++) { const a = Math.PI * 0.17 + (i / 80) * Math.PI * 1.66; lipPts.push(new THREE.Vector3(Math.sin(a) * (rStands + 1.7), 9.42, Math.cos(a) * (rStands + 1.7))); }
+    G.add(wallTube, new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(lipPts), 120, 0.12, 6), tubeMats[1]));
+    this.tubes = tubeMats;
+
+    // searchlights sweeping the sky
+    const beamMat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
+      uniforms: { uCol: { value: new THREE.Color(0xc8b8ff) } },
+      vertexShader: 'varying float vY; varying vec3 vN; varying vec3 vV; void main(){ vY = uv.y; vec4 mv = modelViewMatrix * vec4(position,1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }',
+      fragmentShader: 'uniform vec3 uCol; varying float vY; varying vec3 vN; varying vec3 vV; void main(){ float f = pow(abs(dot(vN, vV)), 2.0); gl_FragColor = vec4(uCol * f * (1.0 - vY) * 0.16, 1.0); }',
+    });
+    this.searchlights = [];
+    for (const [x, z, ph] of [[-60, -110, 0], [70, -120, 2.1], [-120, -40, 4]]) {
+      const cone = new THREE.CylinderGeometry(5, 0.8, 160, 16, 1, true);
+      cone.translate(0, 80, 0);
+      const b = new THREE.Mesh(cone, beamMat);
+      b.position.set(x, 0, z);
+      b.userData.ph = ph;
+      b.renderOrder = 3;
+      G.add(b);
+      this.searchlights.push(b);
     }
   }
 
@@ -653,6 +799,11 @@ export class Arena {
     }
     for (const c of this.clouds) c.position.x += dt * c.userData.sp;
     if (this.lava) this.lava.material.color.setHex(this.A.lava).multiplyScalar(1.1 + Math.sin(t * 2) * 0.25);
+    if (this.searchlights) {
+      for (const b of this.searchlights) b.rotation.set(0.5 + Math.sin(t * 0.35 + b.userData.ph) * 0.25, 0, Math.sin(t * 0.27 + b.userData.ph) * 0.5);
+      this.beacons.visible = (t % 1.6) < 0.5;
+      for (const m of this.signs) m.material.opacity = Math.sin(t * 7 + m.userData.ph) > 0.97 ? 0.35 : 1;
+    }
     if (this.foam) this.foam.scale.setScalar(1 + Math.sin(t * 1.3) * 0.012);
   }
 

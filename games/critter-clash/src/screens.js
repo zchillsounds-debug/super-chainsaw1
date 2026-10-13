@@ -7,7 +7,7 @@ import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 
 const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zoner: '🎯 Keeps away', turtle: '🛡️ Defensive', trickster: '🌀 Tricky' };
-const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater', frost: 'Frostpeak Dome' };
+const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater', frost: 'Frostpeak Dome', neon: 'Neon Rooftop' };
 const ARENA_KEYS = Object.keys(ARENA_NAME);
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const DIFFS = [{ name: 'Easy', v: 0.2 }, { name: 'Normal', v: 0.5 }, { name: 'Hard', v: 0.85 }];
@@ -491,7 +491,7 @@ export class Screens {
           </div>`).join('<i class="rung-link"></i>')}
         </div>
         <div class="trainer-card">
-          <div class="tc-title">${m.boss ? 'CHAMPION · ' : ''}${m.title}</div>
+          <div class="tc-title">${m.boss ? (m.bossTitle || 'CHAMPION') + ' · ' : ''}${m.title}</div>
           <h2>${m.name}</h2>
           <div class="bubble">“${m.taunt}”</div>
           <div class="tc-critter"><span class="mini-type" style="background:${TYPES[foe.type].color}">${TYPES[foe.type].name}</span> ${m.skin ? '✦ Shiny ' : ''}${foe.name} · Lv ${m.level}</div>
