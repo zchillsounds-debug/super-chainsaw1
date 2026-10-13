@@ -230,6 +230,17 @@ export const CUPS = [
     ],
   },
   {
+    id: 'grove', arena: 'grove', name: 'Glowcap Cup', color: '#2fc8a8', desc: 'A twilight league deep in the mushroom woods.', diff: [0.5, 0.72], requires: 'thunder',
+    intro: ["Shh, {name}. This is Glowcap Grove. The mushrooms here are as tall as houses, and the fireflies come out to watch.", "Careful of the spore puffs! One sniff and your critter gets very, very dizzy."],
+    outro: ["Elder Oakley handed you a glowcap! That's the grove's highest honour. It also makes a lovely night light.", "The woods will always welcome you back, {name}."],
+    matches: [
+      { name: 'Fern', style: 'zoner', title: 'Forest Scout', critter: 'clovebun', level: 6, taunt: "I know every trail in these woods. You'll get lost in mine!", beat: "Okay, okay, I'm the lost one now. Great match!", gloat: "Follow the fireflies home, {name}." },
+      { name: 'Moss', style: 'turtle', title: 'Moss Collector', critter: 'pebblepup', level: 7, taunt: "Moss grows slow. So does my patience. Very slow.", beat: "Hm. Rolled right over me. No moss on you.", gloat: "Slow and steady. Like moss." },
+      { name: 'Luma', style: 'trickster', title: 'Firefly Keeper', critter: 'emberfly', level: 8, taunt: "My fireflies light the way. Straight to your defeat!", beat: "You outshone a whole jar of fireflies. Wow.", gloat: "Lights out, little one." },
+      { name: 'Elder Oakley', style: 'balanced', title: 'Keeper of the Grove', critter: 'lilypop', level: 9, boss: true, bossTitle: 'GROVE KEEPER', taunt: "Many trainers have come to my grove, {name}. Few have left with a glowcap.", beat: "Hoo hoo! The grove has chosen you. Take this glowcap with pride.", gloat: "Come back when the moon is higher, young one." },
+    ],
+  },
+  {
     id: 'midnight', arena: 'neon', name: 'Midnight Cup', color: '#c05aff', desc: 'A secret rooftop league. Bring sunglasses.', diff: [0.7, 0.9], requires: 'champion',
     intro: ["Psst, {name}. This is the Midnight Cup. Very exclusive, very shiny, very loud.", "The floor tiles here zap anyone who stands still. Keep moving!"],
     outro: ["Madame Vee bowed to you! That has never happened before.", "You're a legend of the night now. Sunglasses optional."],
@@ -285,6 +296,7 @@ export const BADGES = [
   { id: 'champion', icon: '👑', name: 'Grand Champion', desc: 'Clear the Champion Cup.', test: (s) => !!s.cups.champion },
   { id: 'midnight', icon: '🌙', name: 'Night Owl', desc: 'Clear the Midnight Cup.', test: (s) => !!s.cups.midnight },
   { id: 'legend', icon: '🌟', name: 'Living Legend', desc: 'Clear the Legend Cup.', test: (s) => !!s.cups.legend },
+  { id: 'grove', icon: '🍄', name: 'Spore Sport', desc: 'Clear the Glowcap Cup.', test: (s) => !!s.cups.grove },
   { id: 'sky', icon: '☁️', name: 'Head in the Clouds', desc: 'Clear the Sky Cup.', test: (s) => !!s.cups.sky },
   { id: 'team', icon: '🐾', name: 'Full Team', desc: 'Recruit every critter.', test: (s) => s.unlocked.length >= CRITTERS.length },
   { id: 'lv10', icon: '📈', name: 'Best Buds', desc: 'Raise a critter to Lv 10.', test: (s) => Object.values(s.critters).some((c) => c.level >= 10) },

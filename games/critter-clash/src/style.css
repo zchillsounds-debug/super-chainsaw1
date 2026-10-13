@@ -702,3 +702,4 @@ body.portrait .rcard span { font-size: 9.5px; }
 }
 @media (max-aspect-ratio: 1/1) { .dex-list { grid-template-columns: repeat(7, min(50px, calc((100vw - 64px) / 7))); } .dex-info { bottom: calc(232px + var(--sab)); } }
 @media (max-aspect-ratio: 1/1) and (max-height: 800px) { body.portrait .sel-info .moves { display: none; } body.portrait .sel-info { bottom: calc(225px + var(--sab)); } }
+@media (max-height: 460px) and (min-aspect-ratio: 1/1) { .ladder { margin-top: 4px; } .rung img { width: 42px; height: 42px; } .rung span { font-size: 10px; margin-top: 1px; } .rung-link { margin-bottom: 14px; } .trainer-card { bottom: calc(6px + var(--sab)); padding-top: 10px; padding-bottom: 10px; } .trainer-card h2 { font-size: 30px; } .trainer-card .bubble { margin: 6px 0; } }

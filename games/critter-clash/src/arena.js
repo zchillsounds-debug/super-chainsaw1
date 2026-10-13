@@ -62,11 +62,11 @@ export const ARENAS = {
   grove: {
     name: 'Glowcap Grove',
     skyTop: 0x1c1656, skyHorizon: 0xff9a7a, sun: 0xffe0c0, sunDir: [-0.5, 0.45, -0.6],
-    hemiSky: 0xd8ccff, hemiGround: 0x4a6a5a, fieldA: '#3f8a5a', fieldB: '#387f52', line: '#d8ff9a',
+    hemiSky: 0xece4ff, hemiGround: 0x5a7a6a, fieldA: '#3f8a5a', fieldB: '#387f52', line: '#d8ff9a',
     wallA: 0x8a5ad8, wallB: 0xfff0d0, ground: 0x3a6a3a, fog: 0x3a2a5a,
     accent: 0xc8ff6a, seat: [0x8a5ad8, 0xff7ab0, 0xc8ff6a, 0xffb04a],
     hill: 0x2f5a3a, trunk: 0xf4e8d0, leaves: [0xff5a6a, 0x8a6aff, 0xffa040], scenery: 'mushrooms', cloud: 0x7a5a9a, cloudShade: 0x2a1a4a, sunI: 1.9,
-    stars: true, fireflies: true, fillI: 0.4,
+    stars: true, fireflies: true, fillI: 0.6,
   },
 };
 
