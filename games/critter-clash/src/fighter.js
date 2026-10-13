@@ -18,10 +18,10 @@ export const SPECIALS = {
   gale:    { cd: 3.8, range: [3, 9] },
   iceslide:{ cd: 4.2, range: [2, 8] },
   wisps:   { cd: 4.0, range: [3, 9] },
-  seedspray: { cd: 3.6, range: [1.5, 5.5] },
+  seedspray: { cd: 3.0, range: [1.5, 5.5] },
   fuzzball:  { cd: 4.0, range: [3, 9] },
   rocktoss:  { cd: 4.0, range: [2.5, 8] },
-  swoop:     { cd: 4.0, range: [2.5, 8] },
+  swoop:     { cd: 3.4, range: [2.5, 8] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -617,7 +617,7 @@ export class Fighter {
         this.specFired = true;
         const a = this.face;
         B.spawnProjectile(this, { kind: 'fuzz', x: this.x + fx * 0.8, z: this.z + fz * 0.8, y: 0.42, vx: Math.sin(a) * 8.5, vz: Math.cos(a) * 8.5, r: 0.5, life: 1.5,
-          hit: { dmg: 72 * this.power, kb: 3.2, lift: 0, stun: 0.45, type: this.type, dizzy: 14, paralyze: 0.9 } });
+          hit: { dmg: 72 * this.power, kb: 3.2, lift: 0, stun: 0.45, type: this.type, dizzy: 14, paralyze: 0.6 } });
         sfx.spark();
       }
       if (this.st > 0.6) this.endSpecial();
