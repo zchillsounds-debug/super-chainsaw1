@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 31, effort wrapped up)
+# Critter Clash: Handoff (after Round 32)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -13,8 +13,10 @@
 - Session 1 started at about **04:27 UTC on 2026-10-13**. Rounds 1–5 were done by 05:19 UTC.
 - Session 2 (05:20–06:12 UTC) did Rounds 6–18 and chained because context was getting large.
 - Session 3 (06:12–06:37 UTC) did Rounds 19–23 and chained near the context limit.
-- Session 4 (06:36–07:05 UTC) did Rounds 24–31. Its worker was then restarted and only resumed at 15:22 UTC, past the 14:30 target, so it finished Round 31 and stopped without chaining. **The planned ~10-hour effort is over**; only resume if the user asks for more.
-- Target end of the whole effort: about **14:30 UTC on 2026-10-13**. Check `date -u`. Keep chaining sessions until then, then stop and summarise.
+- Session 4 (06:36–07:05 UTC) did Rounds 24–31, then its worker stalled until 15:22 UTC. It wrongly stopped at the old 14:30 deadline; the user asked to continue.
+- **The target is ~10 hours of actual work, not a fixed clock time.** About 2.6 hours were used by 07:05, so the new end is about **23:00 UTC on 2026-10-13**. If a worker stalls again, extend the end time by the stall rather than stopping.
+- User playtest (15:30 UTC): "it wouldn't let me choose a character". Couldn't reproduce a hard failure in phone emulation; Round 32 makes every critter playable in Quick Battle/Training and hardens the name prompt. Ask the user to confirm it's fixed in the next APK.
+- Target end of the whole effort: about **23:00 UTC on 2026-10-13** (see above). Check `date -u`. Keep chaining sessions until then, then stop and summarise.
 
 ## Run it
 ```
@@ -161,6 +163,7 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 29. Portrait HUD fits on narrow windows; 5 full matches across all arenas error-free.
 30. Menu polish: title backdrop follows progress, menu fill light, Critterdex grid no longer under the Badges button.
 31. Level-up gear: scarf (Lv 5), star pin (Lv 10), crown (Lv 15) on player and trainer critters.
+32. Character-pick fix: Quick Battle and Training let you play any critter as a "TRY" trial (Tournament/challenges still need recruits); name prompt accepts Android's Done key/blur and no longer auto-opens the keyboard on touch. `tools/flow.mjs` / `flow2.mjs` tap through first launch → select → battle on a fresh save.
 
 ## Critique backlog (known issues)
 - Results screen does not yet announce newly earned gear ("New gear: Scarf!").
@@ -169,7 +172,7 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
 - No localisation.
 - Not verified on a real phone; APK CI runs through Round 26 succeeded (check the later runs).
 
-## Suggested next rounds (only if the user asks to continue)
+## Suggested next rounds
 - Gear callout on the results screen and a gear row in the Critterdex.
 - Real-phone check of the latest APK, especially photo Save/Share.
 - Localisation, a second boss cup, or arena hazards.
@@ -182,5 +185,5 @@ Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, p
    - `source_revision`: `ccr-4fc93d6e-suxlhd`
    - `outcome_branch`: `ccr-4fc93d6e-suxlhd`
    - `title`: "Critter Clash – rounds N+"
-   - `prompt`: "Continue building Critter Clash. Read games/critter-clash/HANDOFF.md fully and follow it: run the critique loop round after round, commit and push each round to branch ccr-4fc93d6e-suxlhd, and chain to a fresh session about every 2 hours or near 300k context, until about 14:30 UTC on 2026-10-13. The user has approved continuous building; don't stop to ask questions."
+   - `prompt`: "Continue building Critter Clash. Read games/critter-clash/HANDOFF.md fully and follow it: run the critique loop round after round, commit and push each round to branch ccr-4fc93d6e-suxlhd, and chain to a fresh session about every 2 hours or near 300k context, until about 23:00 UTC on 2026-10-13. The user has approved continuous building; don't stop to ask questions."
 4. Tell the user in one short message what was done and that the next session has started.

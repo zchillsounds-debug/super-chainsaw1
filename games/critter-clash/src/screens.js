@@ -133,11 +133,16 @@ export class Screens {
     const askName = () => say("First things first. What's your name, trainer?", () => {
       const inp = document.createElement('input');
       inp.className = 'name-in'; inp.maxLength = 12; inp.placeholder = 'Your name'; inp.autocomplete = 'off';
+      inp.enterKeyHint = 'done';
       ctrl.appendChild(inp);
-      const ok = () => { name = inp.value.trim().slice(0, 12) || 'Sam'; inp.blur(); pickPartner(); };
-      inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') ok(); });
+      // Android's landscape keyboard covers the screen and its Done key doesn't always send Enter,
+      // so accept the name on Enter, on change (Done/blur) or on OK, and never auto-open the keyboard
+      let taken = false;
+      const ok = () => { if (taken) return; taken = true; name = inp.value.trim().slice(0, 12) || 'Sam'; inp.blur(); pickPartner(); };
+      inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' || e.keyCode === 13) ok(); });
+      inp.addEventListener('change', () => { if (inp.value.trim()) ok(); });
       next('OK!', ok);
-      setTimeout(() => inp.focus(), 50);
+      if (!document.body.classList.contains('is-touch')) setTimeout(() => inp.focus(), 50);
     });
     const pickPartner = () => say(`Nice to meet you, ${name}! These three are looking for a partner. Who will it be?`, () => {
       const row = document.createElement('div');
@@ -238,7 +243,11 @@ export class Screens {
     const g = this.game;
     this.mode = 'select';
     this.t = 0;
-    if (!save.unlocked.includes(CRITTERS[this.sel].id)) this.sel = CRITTERS.findIndex((c) => save.unlocked.includes(c.id));
+    // Quick Battle and Training let you try any critter; the Tournament and challenges use your team
+    const free = this.ctx.kind === 'quick' || this.ctx.kind === 'training';
+    const playable = (c) => free || save.unlocked.includes(c.id);
+    this.free = free;
+    if (!playable(CRITTERS[this.sel])) this.sel = CRITTERS.findIndex((c) => save.unlocked.includes(c.id));
     const cup = this.ctx.kind === 'cup';
     const chal = this.ctx.kind === 'survival' || this.ctx.kind === 'daily' || this.ctx.kind === 'training';
     const badge = cup ? `<div class="cup-badge" style="--tc:${this.ctx.cup.color}">${this.ctx.cup.name}</div>`
@@ -259,18 +268,18 @@ export class Screens {
     R.firstElementChild.prepend(this.header('Choose your Critter', () => (cup ? this.cups() : chal ? this.challenges() : this.title())));
     const step = (d) => {
       let i = this.sel;
-      for (let k = 0; k < CRITTERS.length; k++) { i = (i + d + CRITTERS.length) % CRITTERS.length; if (save.unlocked.includes(CRITTERS[i].id)) break; }
+      for (let k = 0; k < CRITTERS.length; k++) { i = (i + d + CRITTERS.length) % CRITTERS.length; if (playable(CRITTERS[i])) break; }
       this.pick(i);
     };
     R.querySelector('.arrow.l').addEventListener('click', () => step(-1));
     R.querySelector('.arrow.r').addEventListener('click', () => step(1));
     const roster = R.querySelector('.roster');
     CRITTERS.forEach((c, i) => {
-      const locked = !save.unlocked.includes(c.id);
+      const trial = !save.unlocked.includes(c.id) && free, locked = !playable(c);
       const b = document.createElement('button');
-      b.className = 'rcard' + (locked ? ' locked' : '');
+      b.className = 'rcard' + (locked ? ' locked' : '') + (trial ? ' trial' : '');
       b.style.setProperty('--tc', TYPES[c.type].color);
-      b.innerHTML = `<img src="${g.portrait(c)}" alt=""><span>${save.trainer?.partner === c.id ? '♥ ' : ''}${locked ? '???' : c.name}</span>${locked ? '<em>🔒</em>' : `<i>Lv${save.critters[c.id].level}</i>`}`;
+      b.innerHTML = `<img src="${g.portrait(c)}" alt=""><span>${save.trainer?.partner === c.id ? '♥ ' : ''}${locked ? '???' : c.name}</span>${locked ? '<em>🔒</em>' : trial ? '<i>TRY</i>' : `<i>Lv${save.critters[c.id].level}</i>`}`;
       b.addEventListener('click', () => {
         if (locked) { sfx.ui('back'); this.toast(unlockHint(c.id)); return; }
         this.pick(i);
@@ -313,7 +322,8 @@ export class Screens {
     if (!silent) { sfx.ui('move'); sfx.voice(c.voice, 'taunt'); }
     g.setShowcase([skinOf(c)], 'single');
     g.showcase[0].cheer = 0.8;
-    this.root.querySelector('.sel-info').innerHTML = this.infoCard(c);
+    const trial = this.free && !save.unlocked.includes(c.id);
+    this.root.querySelector('.sel-info').innerHTML = this.infoCard(c, trial ? `<div class="ic-trial">Trial · recruit in the ${cupOfShiny(c.id)?.name || 'Tournament'}</div>` : '');
     this.root.querySelectorAll('.rcard').forEach((b, k) => b.classList.toggle('on', k === i));
   }
 
