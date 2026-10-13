@@ -23,7 +23,7 @@ export const SPECIALS = {
   fuzzball:  { cd: 4.0, range: [3, 9] },
   rocktoss:  { cd: 4.0, range: [2.5, 8] },
   swoop:     { cd: 3.4, range: [2.5, 8] },
-  tongue:    { cd: 3.6, range: [1.8, 5.2] },
+  tongue:    { cd: 4.0, range: [1.8, 5.2] },
   burrow:    { cd: 4.2, range: [2.5, 9] },
 };
 
@@ -674,7 +674,7 @@ export class Fighter {
           if (o && o.alive && !this.hitIds.has(o) && Math.hypot(o.x - tx, o.z - tz) < 0.85 && o.y < 1.6) {
             this.hitIds.add(o);
             const ang = this.angleTo(o);
-            if (B.applyHit(this, o, { dmg: 46 * this.power, kb: 0, lift: 0, stun: 1.0, dirX: -Math.sin(ang), dirZ: -Math.cos(ang), heavy: false, type: this.type, dizzy: 14 })) {
+            if (B.applyHit(this, o, { dmg: 46 * this.power, kb: 0, lift: 0, stun: 0.8, dirX: -Math.sin(ang), dirZ: -Math.cos(ang), heavy: false, type: this.type, dizzy: 14 })) {
               this.grabbed = o; this.tongueL = Math.hypot(o.x - this.x, o.z - this.z) - 0.55;
               B.fx.text(o.headPos(), 'GOTCHA!', 'big', 0.8);
             } else this.tongueDone = true;

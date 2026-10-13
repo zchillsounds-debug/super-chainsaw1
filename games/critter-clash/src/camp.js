@@ -291,6 +291,9 @@ export class Camp {
           const r = 1 + Math.random() * 4.2, ang = Math.random() * Math.PI * 2;
           // keep the wander zone a little back from the camera so the front row doesn't wall off the camp
           m.tx = Math.cos(ang) * r * (port ? 0.7 : 1.45); m.tz = Math.min(port ? 3.6 : 2.4, Math.sin(ang) * r * (port ? 1.05 : 0.75) - 0.3);
+          // keep targets inside what the camera can see (the view widens toward the back)
+          const xm = (port ? 2.6 : 3.7) - m.tz * (port ? 0.25 : 0.35);
+          m.tx = Math.max(-xm, Math.min(xm, m.tx));
           if (!this.props.userData.keepOut.some(([px, pz, pr]) => Math.hypot(m.tx - px, m.tz - pz) < pr)
             && !this.g.showcase.some((o) => o !== c && o.camp && Math.hypot(m.tx - o.camp.tx, m.tz - o.camp.tz) < 1.3)) break;
         }
@@ -342,6 +345,13 @@ export class Camp {
           if (Math.sin(c.t * 0.9 + c.idx) > 0.3) { P.head = 0.25 + Math.abs(Math.sin(c.t * 16)) * 0.2; P.armLx = P.armRx = -1.3; c.emote('happy', 'grin', 0.2); }
         }
       }
+      // now and then an idle critter shows off a little type quirk
+      if (!walking && !m.doing && !m.chase && c !== this.sel && !(m.pet > 0) && !(m.munch > 0) && !m.quirk && Math.random() < dt * 0.05) m.quirk = 2.2;
+      if (m.quirk > 0) {
+        m.quirk -= dt;
+        if (walking || c === this.sel) m.quirk = 0; else quirk(c, P, 2.2 - m.quirk, m, this.g.fx);
+        if (m.quirk <= 0) m.quirk = 0;
+      }
       if (m.pet > 0) {
         m.pet -= dt;
         P.y = Math.abs(Math.sin(m.pet * 10)) * 0.35; P.armLz = P.armRz = 2.2; P.headRoll = Math.sin(m.pet * 14) * 0.25;
@@ -353,6 +363,32 @@ export class Camp {
       c.update(dt);
     }
   }
+}
+
+// idle quirks, by type (and a couple of species): k = seconds in, 0..2.2
+function quirk(c, P, k, m, fx) {
+  const at = (y, sp = 0.5) => ({ x: m.x + (Math.random() - 0.5) * sp, y, z: m.z + (Math.random() - 0.5) * sp });
+  const id = c.def.id, type = c.def.type;
+  if (id === 'diggles') { // ducks into the ground and pops back up
+    const d = k < 0.4 ? k / 0.4 : k < 1.4 ? 1 : Math.max(0, 1 - (k - 1.4) / 0.2);
+    P.y = -d * 1.1; P.armLz = P.armRz = 2.4;
+    if (k > 0.3 && k < 1.5 && Math.random() < 0.4) fx.spawn({ ...at(0.1, 0.7), vy: 1.5, color: 0x8a6a4a, size: 0.35, life: 0.5, shape: 'puff', additive: false, grav: 5 });
+    if (k > 1.6) { c.emote('happy', 'grin', 0.3); P.sy = 1.15; }
+    return;
+  }
+  if (id === 'lilypop') { // big hop
+    const ph = Math.min(1, k / 0.8);
+    P.y = Math.sin(ph * Math.PI) * 0.8; P.legL = P.legR = ph < 0.5 ? -0.9 : 0.6; P.armLz = P.armRz = 1;
+    c.emote('happy', 'open', 0.2);
+    return;
+  }
+  c.emote('happy', k < 1.2 ? 'open' : 'grin', 0.2);
+  if (type === 'fire') { P.sy = 1.08; P.head = -0.3; if (Math.random() < 0.5) fx.spawn({ ...at(1.3), vy: 1.5, color: Math.random() < 0.5 ? 0xff8a2a : 0xffd04a, size: 0.3, life: 0.5, shape: 'glow', grow: -0.6 }); }
+  else if (type === 'water') { P.head = -0.25; if (Math.random() < 0.15) fx.spawn({ ...at(1.3, 0.3), vy: 0.8, vx: (Math.random() - 0.5), color: 0x9fe0ff, size: 0.35, life: 1.2, shape: 'ring', additive: false, alpha: 0.7 }); }
+  else if (type === 'leaf') { P.armLz = P.armRz = 2.2 + Math.sin(k * 10) * 0.2; if (Math.random() < 0.2) fx.spawn({ ...at(1.8, 1.2), vy: -0.6, color: 0x7cff6a, size: 0.25, life: 1.4, shape: 'leaf', additive: false, spin: 5, drag: 1 }); }
+  else if (type === 'spark') { P.roll = Math.sin(k * 40) * 0.12; if (Math.random() < 0.35) fx.spawn({ ...at(0.6 + Math.random() * 0.8, 0.9), color: 0xfff060, size: 0.5, life: 0.12, shape: 'bolt', rot: Math.random() * 6 }); }
+  else if (type === 'stone') { P.armLx = P.armRx = -1.2; P.armLz = 1.6 + Math.sin(k * 6) * 0.6; P.armRz = 1.6 - Math.sin(k * 6) * 0.6; P.sy = 1.05; }
+  else { P.yaw = (k / 2.2) * Math.PI * 2; P.armLz = P.armRz = 1.4; if (Math.random() < 0.2) fx.spawn({ ...at(0.5, 1.2), vy: 1.4, color: 0xffffff, size: 0.28, life: 0.5, shape: 'leaf', additive: false, spin: 6 }); }
 }
 
 // campfire, tent, picnic blanket and a berry basket, kept at the edges so the critters have room
