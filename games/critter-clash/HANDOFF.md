@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 98)
+# Critter Clash: Handoff (after Round 115)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -22,7 +22,9 @@
 - Session 8 (18:31–19:22 UTC, then a worker stall until 22:32, then 22:32–22:45) sent the user the Round 74 APK (asked a 4th time about the character-pick fix; no reply yet), then did Rounds 75–90.
 - Session 9 (22:43–23:45 UTC) sent the user the Round 90 APK, then the e99089f APK (with the user's Camp/cup-finish fixes from session 8's reply, plus Ripples). Asked again about the character-pick fix (no reply yet). Did Rounds 91–98 and chained near the context limit.
 - Time used so far: about 7.6 hours of actual work (6.6 h before session 9 + ~1.0 h in session 9).
-- **Target end of the whole effort: about 02:15 UTC on 2026-10-14** (the old 23:00 target pushed back by session 8's 3.2 h stall). Check `date -u`. Keep chaining sessions until then, then stop and summarise. If another stall happens, extend again by its length.
+- The original ~10 h target ended at 02:15 UTC on 2026-10-14. At 02:09 the user asked for **about 2.4 more hours** (session 10a, 02:09–02:52 UTC, did Rounds 99 and 102–115).
+- **New target end: about 04:35 UTC on 2026-10-14.** Check `date -u`. Keep chaining until then, then stop and summarise. If a worker stalls, extend by the stall.
+- **A second session works on this branch at the same time:** `session_01N69mQniqCEkTvu2X5XzxtL` (the user's own Claude app chat). It handles the user's playtest reports (R99 tips out of the way, R100 mod chips, R101 cupflow, Settings "Battle tips" toggle and "Button size"). Before every push run `git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd` (never rebase or force-push: the classifier blocks it and it would clobber their work). Its round numbers overlap ours (two R99s); just keep counting up from the highest number in `git log`. Stay away from the tutorial/HUD tips/Settings it is changing; prefer content, arenas, modes, balance.
 
 ## Run it
 ```
@@ -181,6 +183,17 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - The previous session (session 8) answered a user bug report at 22:45: Camp back button covered by the tap layer, and the recruit popup's Yay button off-screen on short phones (blocking the cup finish). Both fixed in e63390e.
 - APK CI can fail at the final `git push -f` with a GitHub 500; the next push rebuilds it.
 
+## New in session 10a
+- **Team Battle** (Challenges, needs 3 recruits): `Screens.teamSheet()` (pick 3; selected critter leads; `this.lastTeam` remembered), ctx `{ kind: 'team', team, foes, pi, fi, php, fhp, arena }`. Each fight is one round; the winner stays in with its HP (`Battle` now takes `cpuHp` as well as `playerHp`). `teamRow(ids, hp, cur)` portrait rows on VS (`.vs-team`) and results (`.team-vs`). `save.stats.teamWins`, badge `team` (Dream Team). Pecan news `team`, How to Play line.
+- **Quick Battle Match Setup:** `Screens.matchSheet(train)` is shared with Training (Sparring Setup). Quick: rival + arena (or 🎲 random) → `this.quickPick` → `vs()`. `tools/flow.mjs`/`flow2.mjs` tap through it.
+- **Arena ambience** (arena.js): `drift` config per arena (`buildDrift`: meadow `seeds`, volcano `embers`, sky `petals`; point size capped at 14 px in the shader so menu cameras don't show blobs), neon `rain` (LineSegments drizzle), beach `buildGulls()`. All handled in `setDetail` (low quality halves them) and `update`.
+- **Stage title card** (`hud.stageCard(name, sub)`, `.stagecard`): arena name + hazard over the first intro shot.
+- Fight camera pitch 0.3 / look y 1.25 (was 0.36 / 0.9): the crowd shows above the HUD.
+- Colours: Whirlwhisk is now silver (0xbcc4d6), Jiggawatt aqua (0x62d8ec) with a pink shiny. Five lavender critters used to blur together.
+- Balance (full 16-critter robin at 02:20 had Pengsicle 80%, Whirlwhisk 30%, Bubbalotl 33%): Pengsicle hp 960 + Ice Slide cd 4.8, Whirlwhisk power 1.13, Bubbalotl hp 1100, Jiggawatt hp 1020, Emberfly hp 970. Focused rerun: those five at 47–57%. Pricklepuff and Diggles were 20% in that small focused sample (only 10 games each), so check them in the next full run.
+- Camp: landscape wander zone is much wider (16 critters no longer huddle). Critterdex tiles fit full names.
+- `tools/tapcheck.mjs` also opens `quicksetup` and `teampick` (clean at 740×360 and 412×915).
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -290,6 +303,21 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 96. CPU escapes puddles, storm clouds and static fields; Storm Cloud no longer stun-locks; new-critter nerfs.
 97. Finale for clearing every cup: Pecan's speech, team parade, credits roll, Critter Master badge.
 98. Boss Rush challenge (all cup bosses back to back) + Boss Buster badge; trainer quotes on every trainer match.
+99. Flatter fight camera shows the crowd (session 10a). (The parallel session's R99–R101 are user-report fixes: tips out of the way, mod chips, cupflow.)
+102. 16-critter balance pass; Whirlwhisk/Jiggawatt recoloured.
+103. Drifting seeds / embers / petals.
+104. Neon drizzle.
+105. Seagulls over Seashell Bay.
+106. Quick Battle Match Setup (pick rival and arena).
+107. Mote size cap for menu cameras.
+108. Silver Whirlwhisk (was too close to aqua Jiggawatt).
+109. Stage title card in the intro.
+110. Team Battle 3-on-3 + Dream Team badge.
+111. Team lineups on the VS screen; tapcheck covers the new sheets.
+112. Pecan news + How to Play for Team Battle.
+113. Camp spreads out in landscape.
+114. Arena particle geometry disposed; 7-arena auto sweep clean.
+115. Critterdex tile names fit.
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
@@ -300,7 +328,10 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - No localisation.
 
 ## Suggested next rounds
-- **First:** fetch the latest APK (check that the `apk-critter-clash` commit message names the latest SHA; if the CI run failed at the final push with a GitHub 500, any new push rebuilds it) and send it to the user with SendUserFile. Mention: Jiggawatt the jelly sprite, Boss Rush, a finale with credits for clearing every cup, smarter CPU vs puddles/clouds. The user is actively playtesting (they reported bugs at ~22:45), so ask them to report anything that gets stuck.
+- **First (session 10b):** the user already got the c018bcc APK at 02:10 (asked to report anything stuck). Send the newest APK (check `apk-critter-clash` names the latest SHA) and mention Team Battle, Quick Battle Match Setup, arena ambience, the stage title card.
+- Full balance run `PORT=5181 node tools/robin.mjs 1` (build to scratch first); check Pricklepuff and Diggles.
+- Team Battle polish ideas: a "Go, <name>!" callout when the next critter enters, a team-win trophy moment, Team Battle in the Daily rotation.
+- Old first step (done this session): fetch the latest APK (check that the `apk-critter-clash` commit message names the latest SHA; if the CI run failed at the final push with a GitHub 500, any new push rebuilds it) and send it to the user with SendUserFile. Mention: Jiggawatt the jelly sprite, Boss Rush, a finale with credits for clearing every cup, smarter CPU vs puddles/clouds. The user is actively playtesting (they reported bugs at ~22:45), so ask them to report anything that gets stuck.
 - Run `node tools/tapcheck.mjs` and `node tools/cupflow.mjs 740x360 <cupIndex>` (against `PORT=5181` preview of a fresh build, so edits don't reload it) after UI changes.
 - Full balance run with 16 critters: `PORT=5181 node tools/robin.mjs 1` (~10 min).
 - Re-run the balance round robin for all 14 (`tools/robin.mjs 2` against a production build).
