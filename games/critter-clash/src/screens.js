@@ -1026,7 +1026,13 @@ export class Screens {
         S.idx++;
         S.hp = Math.min(1, (pf ? pf.hp / pf.maxHp : 1) + 0.35);
         save.stats.bossBest = Math.max(save.stats.bossBest || 0, S.idx);
-        if (S.idx >= N) { save.stats.bossRush = true; streakNote = `<div class="streak">👑 Boss Rush cleared! All ${N} bosses down!</div>`; }
+        if (S.idx >= N) {
+          // a fat berry basket the first time, a small one after
+          const prize = save.stats.bossRush ? 2 : 5;
+          save.stats.bossRush = true;
+          save.berries = (save.berries || 0) + prize;
+          streakNote = `<div class="streak">👑 Boss Rush cleared! All ${N} bosses down! · +${prize} 🍓</div>`;
+        }
         else streakNote = `<div class="streak">👑 Boss ${S.idx} of ${N} down · ${Math.round(S.hp * 100)}% health for the next one</div>`;
       } else streakNote = `<div class="streak">Run over at boss <b>${S.idx + 1}</b> of ${N} · Best ${save.stats.bossBest || 0}/${N}</div>`;
     }
