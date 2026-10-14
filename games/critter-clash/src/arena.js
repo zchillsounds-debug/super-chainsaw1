@@ -67,7 +67,7 @@ export const ARENAS = {
     wallA: 0x8a5ad8, wallB: 0xfff0d0, ground: 0x3a6a3a, fog: 0x3a2a5a,
     accent: 0xc8ff6a, seat: [0x8a5ad8, 0xff7ab0, 0xc8ff6a, 0xffb04a],
     hill: 0x2f5a3a, trunk: 0xf4e8d0, leaves: [0xff5a6a, 0x8a6aff, 0xffa040], scenery: 'mushrooms', cloud: 0x7a5a9a, cloudShade: 0x2a1a4a, sunI: 1.9,
-    stars: true, fireflies: true, fillI: 0.6,
+    stars: true, fireflies: true, fillI: 0.6, floor: 'moss',
   },
 };
 
@@ -257,6 +257,35 @@ export class Arena {
           c.restore();
         }
         c.globalAlpha = 1;
+      } else if (A.floor === 'moss') {
+        // soft forest moss: blotchy greens, clover patches and fallen petals from the giant toadstools
+        c.fillStyle = A.fieldA; c.fillRect(0, 0, w, h);
+        for (let i = 0; i < 110; i++) {
+          const x = Math.random() * w, y = Math.random() * h, r = 30 + Math.random() * 110;
+          const g = c.createRadialGradient(x, y, 0, x, y, r);
+          g.addColorStop(0, ['rgba(110,170,80,0.28)', 'rgba(30,80,50,0.3)', 'rgba(150,200,90,0.18)'][i % 3]); g.addColorStop(1, 'rgba(0,0,0,0)');
+          c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
+        }
+        for (let i = 0; i < 9000; i++) {
+          c.globalAlpha = 0.05 + Math.random() * 0.08;
+          c.fillStyle = Math.random() < 0.5 ? '#c8f08a' : '#10301c';
+          c.fillRect(Math.random() * w, Math.random() * h, 2, 2 + Math.random() * 3);
+        }
+        c.globalAlpha = 0.5;
+        for (let i = 0; i < 60; i++) {
+          // three-leaf clovers
+          const x = Math.random() * w, y = Math.random() * h, s = 5 + Math.random() * 4;
+          c.fillStyle = '#6ec060';
+          for (let k = 0; k < 3; k++) { const a = k * 2.1 + i; c.beginPath(); c.arc(x + Math.cos(a) * s, y + Math.sin(a) * s, s, 0, Math.PI * 2); c.fill(); }
+        }
+        c.globalAlpha = 0.75;
+        for (let i = 0; i < 60; i++) {
+          c.save(); c.translate(Math.random() * w, Math.random() * h); c.rotate(Math.random() * 6);
+          c.fillStyle = ['#ff7a8a', '#b49aff', '#ffb060'][i % 3];
+          c.beginPath(); c.ellipse(0, 0, 9, 5, 0, 0, Math.PI * 2); c.fill();
+          c.restore();
+        }
+        c.globalAlpha = 1;
       } else if (A.floor === 'neon') {
         // glossy rooftop tiles with soft reflections of the skyline
         c.fillStyle = A.fieldA; c.fillRect(0, 0, w, h);
@@ -345,8 +374,38 @@ export class Arena {
       this.cracks = grid;
     }
 
+    // grove: a glowing fairy ring of tiny toadstools and spore specks, pulsing softly at dusk
+    if (A.floor === 'moss') {
+      const glowTex = canvasTex(1024, 1024, (c, w, h) => {
+        const dot = (x, y, r, col) => {
+          const g = c.createRadialGradient(x, y, 0, x, y, r);
+          g.addColorStop(0, col); g.addColorStop(0.35, col.replace(/[\d.]+\)$/, '0.45)')); g.addColorStop(1, 'rgba(0,0,0,0)');
+          c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
+        };
+        const cx = w / 2, cy = h / 2;
+        for (let i = 0; i < 64; i++) {
+          // the ring sits just inside the boundary line, never under the fight
+          const a = i / 64 * Math.PI * 2 + Math.random() * 0.04, r = w * (0.425 + Math.random() * 0.02);
+          const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+          dot(x, y, 22, i % 2 ? 'rgba(200,255,110,0.55)' : 'rgba(110,230,255,0.5)');
+          // cap seen from above: a bright disc with spots
+          c.fillStyle = i % 2 ? 'rgba(220,255,150,1)' : 'rgba(150,240,255,1)';
+          c.beginPath(); c.arc(x, y, 6, 0, Math.PI * 2); c.fill();
+          c.fillStyle = 'rgba(255,255,255,1)'; c.beginPath(); c.arc(x - 2, y - 2, 1.8, 0, Math.PI * 2); c.fill();
+        }
+        for (let i = 0; i < 160; i++) {
+          const a = Math.random() * Math.PI * 2, r = w * Math.sqrt(Math.random()) * 0.46;
+          dot(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 3 + Math.random() * 6, 'rgba(200,255,140,0.6)');
+        }
+      });
+      const glow = new THREE.Mesh(new THREE.CircleGeometry(ARENA_R + 0.5, 72), new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+      glow.rotation.x = -Math.PI / 2; glow.position.y = 0.012;
+      G.add(glow);
+      this.cracks = glow;
+    }
+
     // dirt ring between field and wall
-    const ring = new THREE.Mesh(new THREE.RingGeometry(ARENA_R + 0.5, ARENA_R + 1.4, 72), toon(A.floor === 'neon' ? 0x3a3060 : 0xd9b07a, { env: true, rim: 0 }));
+    const ring = new THREE.Mesh(new THREE.RingGeometry(ARENA_R + 0.5, ARENA_R + 1.4, 72), toon(A.floor === 'neon' ? 0x3a3060 : A.floor === 'moss' ? 0x9a7a58 : 0xd9b07a, { env: true, rim: 0 }));
     ring.rotation.x = -Math.PI / 2; ring.position.y = 0.005; ring.receiveShadow = true;
     G.add(ring);
 
