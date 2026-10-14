@@ -1130,7 +1130,15 @@ export class Arena {
 
   dispose() {
     this.group.parent?.remove(this.group);
-    this.group.traverse((o) => { if (o.isMesh || o.isPoints || o.isLineSegments) o.geometry.dispose(); });
+    // canvas textures are built per arena, so free them too (shared toon ramps live in gradientMap, which stays)
+    const maps = new Set();
+    this.group.traverse((o) => {
+      if (!(o.isMesh || o.isPoints || o.isLineSegments)) return;
+      o.geometry.dispose();
+      for (const m of [].concat(o.material || [])) if (m.map) maps.add(m.map);
+    });
+    for (const t of maps) t.dispose();
+    this.group.traverse((o) => { if (o.isLight && o.shadow?.map) { o.shadow.map.dispose(); o.shadow.map = null; } });
     this.screenTex.dispose();
   }
 
