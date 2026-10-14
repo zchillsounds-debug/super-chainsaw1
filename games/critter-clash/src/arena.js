@@ -960,6 +960,8 @@ export class Arena {
       c.fillStyle = gr; c.fillRect(0, 0, w, h);
     });
     this.drift = new THREE.Points(g, new THREE.PointsMaterial({ size: K.size, map: tex, transparent: true, depthWrite: false, blending: K.add ? THREE.AdditiveBlending : THREE.NormalBlending, color: 0xffffff, opacity: kind === 'seeds' ? 0.85 : 1 }));
+    // motes right next to the camera (menus stand inside the bowl) would bloat into big blurry blobs: cap their size
+    this.drift.material.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <fog_vertex>', '#include <fog_vertex>\n  gl_PointSize = min(gl_PointSize, 14.0);'); };
     this.drift.frustumCulled = false;
     this.drift.userData = K;
     G.add(this.drift);
