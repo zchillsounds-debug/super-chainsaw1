@@ -826,3 +826,13 @@ body.portrait .rcard span { font-size: 9.5px; }
 .bk-status { min-height: 18px; margin: 6px 0; font-size: 13px; font-weight: 800; }
 .bk-acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .bk-file { cursor: pointer; }
+
+/* Stadium Trials picker */
+.trial-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 6px 0 4px; }
+.trial { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-radius: 14px; background: #fff3e2; box-shadow: inset 0 0 0 2px var(--ink); color: var(--ink); }
+.trial img { width: 46px; height: 46px; border-radius: 50%; background: #ffd9a8; }
+.trial b { font-size: 13px; line-height: 1.1; }
+.trial .stars { font-size: 17px; }
+.stars i { font-style: normal; color: rgba(40, 20, 60, 0.18); letter-spacing: 1px; }
+.stars i.on { color: #ffb020; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
+@media (max-height: 420px) { .trial-list { grid-template-columns: repeat(6, 1fr); } .trial img { width: 40px; height: 40px; } .trial b { font-size: 11px; } }

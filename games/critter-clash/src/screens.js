@@ -15,6 +15,13 @@ const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="
 const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zoner: '🎯 Keeps away', turtle: '🛡️ Defensive', trickster: '🌀 Tricky' };
 const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater', frost: 'Frostpeak Dome', neon: 'Neon Rooftop', sky: 'Cloudtop Gardens', grove: 'Glowcap Grove' };
 const ARENA_KEYS = Object.keys(ARENA_NAME);
+// Stadium Trials: one fight per hazard stadium under Stadium Mayhem, against a critter at home there
+const TRIALS = [
+  { arena: 'beach', foe: 'ripples' }, { arena: 'volcano', foe: 'kindlekit' }, { arena: 'frost', foe: 'pengsicle' },
+  { arena: 'grove', foe: 'snoozlo' }, { arena: 'sky', foe: 'whirlwhisk' }, { arena: 'neon', foe: 'jiggawatt' },
+];
+const starRow = (n) => `<span class="stars">${[0, 1, 2].map((k) => `<i class="${k < n ? 'on' : ''}">★</i>`).join('')}</span>`;
+const trialStars = () => TRIALS.reduce((a, t) => a + (save.trials?.[t.arena] || 0), 0);
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const DIFFS = [{ name: 'Easy', v: 0.2 }, { name: 'Normal', v: 0.5 }, { name: 'Hard', v: 0.85 }];
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -141,7 +148,7 @@ export class Screens {
       (save.news ||= []).push('tricks'); persist();
       setTimeout(() => this.mode === 'title' && this.profTalk([
         "Careful out there, {name}! The stadiums have learned new tricks: fissures in the Magma Crater, ice slicks on Frostpeak, rogue waves at Seashell Bay, crosswinds over Cloudtop and spore clouds in the grove.",
-        "Neon Rooftop's laser sweeps the whole floor, so you can't outrun it. Guard, or roll right through it! Oh, and some days the Daily Challenge is a 3-on-3 Team Battle.",
+        "Neon Rooftop's laser sweeps the whole floor: guard, or roll right through it! Test yourself in the new Stadium Trials, and watch out, some days the Daily Challenge is a 3-on-3!",
       ]), 600);
     } else if (!g.autoplay && save.cups.thunder && !save.news?.includes('grove')) {
       (save.news ||= []).push('grove'); persist();
@@ -289,7 +296,7 @@ export class Screens {
         <li><b>Super</b><span>Fills as you trade hits. When it glows, unleash it! · I</span></li>
         <li><b>Types</b><span>Each type beats two others (Blaze burns Sprout, Splash douses Blaze, Pebble grounds Zap...). Hitting a weakness deals extra damage.</span></li>
         <li><b>Dizzy</b><span>Too many hits in a row makes a critter see stars. Mash buttons to shake it off!</span></li>
-        <li><b>Hazards</b><span>Later stadiums fight back: when a glowing ring appears on the floor, get out of it (or guard)! Each one has a second trick too: fissures, ice slicks, lasers (guard or roll through), rogue waves, crosswinds and spore clouds. Practise them in Training with the ⚠ Hazards chip, or switch hazards off in Settings.</span></li>
+        <li><b>Hazards</b><span>Later stadiums fight back: when a glowing ring appears on the floor, get out of it (or guard)! Each one has a second trick too: fissures, ice slicks, lasers (guard or roll through), rogue waves, crosswinds and spore clouds. Practise them in Training with the ⚠ Hazards chip, earn stars in the Stadium Trials (Challenges), or switch hazards off in Settings.</span></li>
         <li><b>Team Battle</b><span>In Challenges: pick three critters against a rival team of three. The winner of each fight stays in with the damage it took.</span></li>
         <li><b>Daily</b><span>A new Daily Challenge every day for double XP; some days it's a 3-on-3 team fight. Clear it on back-to-back days for a streak: up to +5 berries a day.</span></li>
         <li><b>Counters</b><span>A napping Snoozlo is a trap: hit it and it wakes up swinging. Wait it out, then pounce while it yawns.</span></li>
@@ -356,9 +363,9 @@ export class Screens {
     if (!playable(CRITTERS[this.sel])) this.sel = CRITTERS.findIndex((c) => save.unlocked.includes(c.id));
     const cup = this.ctx.kind === 'cup';
     if (cup && !g.autoplay) g.setArena(this.ctx.cup.arena);
-    const chal = this.ctx.kind === 'survival' || this.ctx.kind === 'daily' || this.ctx.kind === 'training' || this.ctx.kind === 'bossrush' || this.ctx.kind === 'team';
+    const chal = this.ctx.kind === 'survival' || this.ctx.kind === 'daily' || this.ctx.kind === 'training' || this.ctx.kind === 'bossrush' || this.ctx.kind === 'team' || this.ctx.kind === 'trials';
     const badge = cup ? `<div class="cup-badge" style="--tc:${this.ctx.cup.color}">${this.ctx.cup.name}</div>`
-      : chal ? `<div class="cup-badge" style="--tc:${{ daily: '#3dc8ff', survival: '#ff7a3d', training: '#7ad36b', bossrush: '#ffb020', team: this.ctx.daily ? '#3dc8ff' : '#c86bff' }[this.ctx.kind]}">${{ daily: 'Daily Challenge', survival: 'Survival', training: 'Training', bossrush: 'Boss Rush', team: this.ctx.daily ? 'Daily Team Challenge' : 'Team Battle' }[this.ctx.kind]}</div>` : '<div class="diff"></div>';
+      : chal ? `<div class="cup-badge" style="--tc:${{ daily: '#3dc8ff', survival: '#ff7a3d', training: '#7ad36b', bossrush: '#ffb020', trials: '#ff8a3d', team: this.ctx.daily ? '#3dc8ff' : '#c86bff' }[this.ctx.kind]}">${{ daily: 'Daily Challenge', survival: 'Survival', training: 'Training', bossrush: 'Boss Rush', trials: `Trial · ${ARENA_NAME[this.ctx.arena]}`, team: this.ctx.daily ? 'Daily Team Challenge' : 'Team Battle' }[this.ctx.kind]}</div>` : '<div class="diff"></div>';
     this.root.innerHTML = `
       <div class="select-screen">
         <div class="sel-info"></div>
@@ -478,6 +485,26 @@ export class Screens {
     return S.last === key || S.last === prev ? S.n : 0;
   }
 
+  // Stadium Trials picker: one row of six stadium cards with their rival and stars
+  trialSheet() {
+    const g = this.game;
+    if (this.root.querySelector('.train-pick')) return;
+    const d = document.createElement('div');
+    d.className = 'modal-wrap train-pick trial-pick';
+    d.innerHTML = `<div class="modal"><h2>Stadium Trials</h2>
+      <small>★ Win · ★★ without a hazard hit · ★★★ and with 70% health left</small>
+      <div class="trial-list">${TRIALS.map((t) => `<button class="trial" data-k="${t.arena}"><img src="${g.portrait(byId(t.foe))}" alt=""><b>${ARENA_NAME[t.arena]}</b>${starRow(save.trials?.[t.arena] || 0)}</button>`).join('')}</div>
+      <div class="row"></div></div>`;
+    d.querySelectorAll('.trial').forEach((b) => b.addEventListener('click', () => {
+      sfx.ui('ok'); d.remove();
+      const t = TRIALS.find((x) => x.arena === b.dataset.k);
+      this.ctx = { kind: 'trials', arena: t.arena, foe: t.foe };
+      this.select();
+    }));
+    d.querySelector('.row').appendChild(this.btn('Back', 'ghost-dark', () => d.remove()));
+    this.root.appendChild(d);
+  }
+
   // ---------- Challenges: Survival gauntlet and the Daily Challenge ----------
   challenges() {
     const g = this.game;
@@ -528,6 +555,17 @@ export class Screens {
       <p>${teamOpen ? 'Pick three critters and take on a rival team of three. Whoever wins stays in, damage and all.' : 'Recruit three critters to unlock.'}</p>
       <div class="cup-meta">3-on-3 · Wins: <b>${save.stats.teamWins || 0}</b></div>`,
     () => { if (!teamOpen) { this.toast('Recruit three critters first!'); return; } this.ctx = { kind: 'team' }; this.select(); });
+    const trialsOpen = !!save.cups.sprout;
+    card('trials' + (trialsOpen ? '' : ' locked'), '#ff8a3d', `
+      <div class="cup-trophy">${trialsOpen ? '🎪' : '🔒'}</div>
+      <h2>Stadium Trials</h2>
+      <p>${trialsOpen ? 'Six stadiums, every trick going off twice as often. Win for a star, dodge every hazard for two, finish healthy for three.' : 'Clear the Sprout Cup to unlock.'}</p>
+      <div class="cup-meta">⭐ <b>${trialStars()}</b>/${TRIALS.length * 3}</div>`,
+    () => {
+      if (!trialsOpen) { this.toast('Clear the Sprout Cup first!'); return; }
+      if (save.settings.hazards === false) { this.toast('Switch Arena hazards on in Settings first!'); return; }
+      this.trialSheet();
+    });
     card('training', '#7ad36b', `
       <div class="cup-trophy">🎯</div>
       <h2>Training</h2>
@@ -876,6 +914,11 @@ export class Screens {
       c = T.daily && T.fi === 0 && T.daily.shiny ? skinned(byId(T.foes[0]), 'shiny') : byId(T.foes[T.fi]);
       opts = { mods: T.daily ? [T.daily.mod] : [], cpuLevel: Math.max(1, avg) + (T.daily ? 1 : 0), difficulty: 0.55 + T.fi * 0.08, playerLevel: pl, arena: T.arena, rounds: 1, playerHp: T.php[T.pi], cpuHp: T.fhp[T.fi], stageSub: `Team Battle · ${T.pi === 2 ? 'Your last critter!' : T.fi === 2 ? 'Their last critter!' : `Fight ${T.pi + T.fi + 1}`}` };
       label = T.daily ? `Daily team ${T.fi + 1}/3 · ${MODS[T.daily.mod].icon} ${MODS[T.daily.mod].name}` : `Rival team ${T.fi + 1}/3`;
+    } else if (this.ctx.kind === 'trials') {
+      const T = this.ctx, pl = save.critters[p.id].level;
+      c = byId(T.foe);
+      opts = { cpuLevel: pl + 1, difficulty: 0.62, playerLevel: pl, arena: T.arena, rounds: 1, mods: ['mayhem'], stageSub: 'Stadium Trial · dodge every trick!' };
+      label = `Stadium Trial · ${MODS.mayhem.icon} ${MODS.mayhem.name}`;
     } else if (this.ctx.kind === 'daily') {
       const d = this.ctx.d;
       c = skinned(byId(d.foe), d.shiny ? 'shiny' : 'base');
@@ -953,6 +996,14 @@ export class Screens {
       streakNote = T.over === 'won' ? `<div class="streak">🤝 ${T.daily ? `Daily Team Challenge cleared! Double XP${st}` : 'Team Battle won!'} ${rows}</div>`
         : T.over === 'lost' ? `<div class="streak">Your team is out of critters. ${rows}</div>`
         : `<div class="streak">${won ? `${cDef.name} is out! ` : `${pDef.name} is out! `}${rows}</div>`;
+    }
+    if (kind === 'trials') {
+      const T = this.ctx, n = won ? 1 + (!stats.hazardHits ? 1 : 0) + (!stats.hazardHits && (stats.hpLeft ?? 0) >= 0.7 ? 1 : 0) : 0;
+      const was = save.trials?.[T.arena] || 0;
+      if (n > was) (save.trials ||= {})[T.arena] = n;
+      T.stars = n;
+      streakNote = won ? `<div class="streak">🎪 Trial cleared: ${starRow(n)}${n > was ? ' · new best!' : ''}${n < 3 ? (stats.hazardHits ? ' · Dodge every hazard for more stars' : ' · Finish with 70% health for ★★★') : ''}</div>`
+        : `<div class="streak">🎪 Trial failed. Best so far: ${starRow(was)}</div>`;
     }
     if (kind === 'daily' && won) { const st = this.dailyClear(this.ctx.d.key); streakNote = `<div class="streak">📅 Daily Challenge cleared! Double XP${st}</div>`; }
     const prog = save.critters[pDef.id];
@@ -1061,6 +1112,9 @@ export class Screens {
       else if (T.over === 'won') b.appendChild(this.btn('Team Trophy', 'primary', () => this.teamTrophy()));
       else b.appendChild(this.btn(T.daily ? 'Try Again' : 'New Team Battle', 'primary', () => { this.ctx = { kind: 'team', daily: T.daily }; g.endBattle(); playMusic('menu'); this.select(); }));
       b.appendChild(this.btn('Challenges', 'ghost', () => this.challenges()));
+    } else if (kind === 'trials') {
+      if ((this.ctx.stars || 0) < 3) b.appendChild(this.btn('Try Again', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
+      b.appendChild(this.btn('Trials', (this.ctx.stars || 0) < 3 ? 'ghost' : 'primary', () => { this.challenges(); this.trialSheet(); }));
     } else if (kind === 'daily') {
       if (!won) b.appendChild(this.btn('Try Again', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
       b.appendChild(this.btn('Challenges', won ? 'primary' : 'ghost', () => this.challenges()));

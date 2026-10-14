@@ -374,6 +374,7 @@ export const BADGES = [
   { id: 'snack', icon: '🍓', name: 'Snack Time', desc: 'Feed 10 berries in Camp.', test: (s) => (s.stats.fed || 0) >= 10 },
   { id: 'hazard', icon: '🌋', name: 'Hot Feet', desc: 'Win a battle without being hit by an arena hazard.', test: (s) => (s.stats.hazardClean || 0) >= 1 },
   { id: 'streak7', icon: '📆', name: 'Regular', desc: 'Clear the Daily Challenge 7 days in a row.', test: (s) => (s.stats.bestDaily || 0) >= 7 },
+  { id: 'trials', icon: '🏟️', name: 'Trick Star', desc: 'Earn all 18 stars in the Stadium Trials.', test: (s) => Object.values(s.trials || {}).reduce((a, n) => a + n, 0) >= 18 },
   { id: 'tricks', icon: '🎪', name: 'Stadium Tamer', desc: 'Win in all six hazard stadiums with hazards switched on.', test: (s) => (s.stats.hazardArenas || []).length >= 6 },
   { id: 'shiny', icon: '💎', name: 'Shiny Hunter', desc: 'Unlock every shiny palette.', test: (s) => (s.shinies || []).length >= CRITTERS.length },
 ];
