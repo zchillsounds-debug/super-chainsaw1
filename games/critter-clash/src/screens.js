@@ -991,7 +991,7 @@ export class Screens {
           sfx.voice(pDef.voice, 'win');
           this.toast(`${pDef.name} grew to Lv ${level}!`);
           if (gearFor(level) > gearFor(level - 1)) setTimeout(() => this.gearGet(pDef, GEAR[gearFor(level) - 1]), 900);
-          if (stageFor(level) > stageFor(level - 1)) { const L = level; setTimeout(() => this.mode === 'results' && this.growUp(pDef.id, L), 1300); }
+          if (stageFor(level) > stageFor(level - 1)) { const L = level; this.pendingGrow = [pDef.id, L]; setTimeout(() => this.mode === 'results' && this.pendingGrow && this.growUp(...this.pendingGrow), 1300); }
           bar.style.transition = 'none'; bar.style.width = '0%'; void bar.offsetWidth; bar.style.transition = '';
           fill();
         }, 700);
@@ -1058,6 +1058,7 @@ export class Screens {
 
   // "What? X is growing!": flickering white silhouettes of the old and new forms, a flash, then the new form's card
   growUp(id, lv, done) {
+    this.pendingGrow = null;
     const g = this.game, base = byId(id), skin = save.skins?.[id];
     const stage = stageFor(lv), from = withGear(skinned(base, skin), GROW_LV[stage - 2] - 1), to = withGear(skinned(base, skin), lv);
     const pre = from.name;
@@ -1272,6 +1273,8 @@ export class Screens {
   }
 
   update(dt) {
+    // a growth the player tapped past on the results screen plays on the next calm menu
+    if (this.pendingGrow && ['title', 'cups', 'ladder', 'select', 'dex', 'challenges'].includes(this.mode) && !this.root.querySelector('.modal-wrap, .prof-wrap')) this.growUp(...this.pendingGrow);
     this.t += dt;
     const cam = this.game.camera;
     if (this.mode === 'camp') { this.campObj?.update(dt); return; }

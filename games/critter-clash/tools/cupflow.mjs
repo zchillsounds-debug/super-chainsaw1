@@ -9,7 +9,8 @@ const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console
 await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?mobile&q=low');
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 const mode = () => pg.evaluate(() => __game.screens.mode + (__game.battle ? ':' + __game.battle.phase : ''));
-await pg.evaluate((ci) => { __save.trainer = { name: 'Zee', partner: 'bubbalotl' }; __save.tutorialDone = true; if (ci) for (const c of __cups.slice(0, ci)) __save.cups[c.id] = true; __game.screens.title(); }, cupI);
+// GROW=<lv> starts the partner just below that level, so the growing scene plays mid-cup
+await pg.evaluate(([ci, gl]) => { __save.trainer = { name: 'Zee', partner: 'bubbalotl' }; __save.tutorialDone = true; __save.news = ['grove', 'otter', 'frogmole', 'jelly', 'team', 'grow']; if (gl) { __save.critters.cindermunch.level = gl - 1; __save.critters.cindermunch.xp = 140 + gl * 40; } if (ci) for (const c of __cups.slice(0, ci)) __save.cups[c.id] = true; __game.screens.title(); }, [cupI, +(process.env.GROW || 0)]);
 await pg.waitForTimeout(800);
 const tap = async (sel, text) => {
   const l = text ? pg.locator(sel, { hasText: text }).first() : pg.locator(sel).first();
@@ -20,6 +21,7 @@ const tap = async (sel, text) => {
   try { await l.tap({ timeout: 8000 }); } catch (e) { console.log('tap failed', sel, String(text), 'on', last, cover, String(e.message).split('\n').slice(-3).join(' / ')); return false; } await pg.waitForTimeout(450); return true;
 };
 const log = [];
+let grew = 0;
 let last = '', same = 0, trophy = false;
 for (let step = 0; step < 160; step++) {
   const m = await mode();
@@ -33,6 +35,7 @@ for (let step = 0; step < 160; step++) {
   if (trophy && (m === 'cups' || m === 'title')) { console.log('CUP CLEARED'); break; }
   // the topmost thing to press, like a player would
   if (await tap('.prof-wrap')) continue;
+  if (await pg.locator('.grow-wrap').count()) { grew++; await pg.waitForTimeout(600); if (grew === 1) console.log('growing scene showed on', last); }
   if (await tap('.modal-wrap button.btn')) continue;
   if (m === 'cups') { const l = pg.locator('.cup').nth(cupI); try { await l.tap({ timeout: 20000 }); } catch (e) { console.log('cup tap failed'); } await pg.waitForTimeout(450); continue; }
   if (m === 'cupselect' || m === 'select') { await tap('.rcard'); if (await tap('button', /GO|FIGHT|Choose|Battle/)) continue; }

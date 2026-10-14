@@ -64,7 +64,7 @@ export const FORMS = {
         blurb: 'Long legs, a leafy mane and a temper like a thorn bush. It can outrun its own clover-rangs.',
         colors: { body: 0xf0ecd8, belly: 0xffffff, accent: 0x46c95a, dark: 0x2a6a34, antler: 0x8a6a48 },
         body: { w: 0.5, h: 0.72, headR: 0.46, legLen: 0.3, armLen: 0.23, chubby: 0.9, limb: 1.1 },
-        parts: { leafmane: 0.8 },
+        parts: { leafmane: 0.9, antlers: 0.5, brows: 0.35 }, // budding antlers hint at the next form
         moves: { special: 'Thorn-rang', super: 'Bramble Bloom' },
       },
       {
