@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 130)
+# Critter Clash: Handoff (after Round 131)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -24,7 +24,7 @@
 - Time used so far: about 7.6 hours of actual work (6.6 h before session 9 + ~1.0 h in session 9).
 - The original ~10 h target ended at 02:15 UTC on 2026-10-14. At 02:09 the user asked for **about 2.4 more hours** (session 10a, 02:09–02:52 UTC, did Rounds 99 and 102–115).
 - **New target end: about 04:35 UTC on 2026-10-14.** Check `date -u`. Keep chaining until then, then stop and summarise. If a worker stalls, extend by the stall.
-- Session 10b (02:52–04:35 UTC) sent the user the f427c6a APK (R113), then did Rounds 116–129 (Team Battle polish, a 16-critter balance pass, **Kindlekit** and **Squeakwing**, critters 17 and 18, trophy fireworks). This was the last planned session: the user's extra ~2.4 h ended at about 04:35 UTC on 2026-10-14.
+- Session 10b (02:52–04:35 UTC) sent the user the f427c6a APK (R113), then did Rounds 116–131 (Team Battle polish, a 16-critter balance pass, **Kindlekit** and **Squeakwing**, critters 17 and 18, trophy fireworks). This was the last planned session: the user's extra ~2.4 h ended at about 04:35 UTC on 2026-10-14.
 - **A second session works on this branch at the same time:** `session_01N69mQniqCEkTvu2X5XzxtL` (the user's own Claude app chat). It handles the user's playtest reports (R99 tips out of the way, R100 mod chips, R101 cupflow, Settings "Battle tips" toggle and "Button size"). Before every push run `git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd` (never rebase or force-push: the classifier blocks it and it would clobber their work). Its round numbers overlap ours (two R99s); just keep counting up from the highest number in `git log`. Stay away from the tutorial/HUD tips/Settings it is changing; prefer content, arenas, modes, balance.
 
 ## Run it
@@ -350,13 +350,14 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 127. Sky Cup ladder (5 rungs) and shiny Kindlekit checked (no code change).
 128. Squeakwing, the orchard bat (Sonic Squeak / Echo Boom), Nyx in the Glowcap Cup.
 129. 18-critter balance (Pengsicle, Voltferret nerfs; Squeakwing 9% -> 44%); VS timer guard (merged with the playtest session's identical fix).
-130. Results screens for the new critters checked (no code change).
+130. Results screens for the new critters checked; teamflow follows the Team Victory screen.
+131. Balance touch-ups from the final 18-critter run.
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - Native photo Save/Share (Round 27) is untested on a real phone.
 - Haptics (Round 72) are untested on a real phone.
-- Last balance run (difficulty 0.8, small samples): Woolt ~61%, Whirlwhisk ~36-41% even after buffs. Re-run `tools/robin.mjs 2` after any combat change.
+- Last full balance run (04:04, 18 critters, 1 rep = 34 games each): Voltferret, Pengsicle and Lilypop 68%, Pebblepup and Kindlekit 62%, most others 41–53%, Bubbalotl and Hootsy 35%, Squeakwing 21% (a focused run just before said 44%, so the sample is noisy). Small tweaks followed (top three power -0.02/-0.03, Bubbalotl/Hootsy/Squeakwing buffs) but were not re-measured. Re-run `tools/robin.mjs 2` first.
 - The Sky Cup outro promises a picnic; Camp could have a sky-themed reward (e.g. a balloon prop) for clearing it.
 - No localisation.
 
