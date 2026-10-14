@@ -478,6 +478,16 @@ export class Critter {
         const inner = new THREE.Mesh(new THREE.ConeGeometry(headR * 0.18, headR * 0.42, 16), this.mats.accent);
         inner.scale.set(1, 1, 0.4); inner.position.set(0, headR * 0.2, headR * 0.07);
         ear.add(inner);
+      } else if (def.ears === 'bat') {
+        // tall rounded bat ears
+        ear.position.set(s * headR * 0.52, headR * 0.7, -headR * 0.05);
+        ear.rotation.z = -s * 0.32;
+        const e = inked(new THREE.ConeGeometry(headR * 0.36, headR * 0.95, 20), this.mats.body, OL);
+        e.scale.set(1, 1, 0.42); e.position.y = headR * 0.36;
+        ear.add(e);
+        const inner = new THREE.Mesh(new THREE.ConeGeometry(headR * 0.22, headR * 0.66, 16), this.mats.accent);
+        inner.scale.set(1, 1, 0.3); inner.position.set(0, headR * 0.3, headR * 0.08);
+        ear.add(inner);
       } else if (def.ears === 'tufts') {
         ear.position.set(s * headR * 0.62, headR * 0.7, 0);
         ear.rotation.z = -s * 0.75;
@@ -670,6 +680,35 @@ export class Critter {
 
     // gauzy insect wings on the back
     this.wings = [];
+    if (def.extra === 'bat') {
+      // scalloped membrane wings (flap in update) and one tiny fang
+      const shape = new THREE.Shape();
+      shape.moveTo(0, 0.12);
+      shape.quadraticCurveTo(0.36, 0.46, 0.8, 0.26);
+      shape.quadraticCurveTo(0.66, 0.06, 0.6, -0.12);
+      shape.quadraticCurveTo(0.48, -0.0, 0.36, -0.14);
+      shape.quadraticCurveTo(0.24, -0.02, 0.1, -0.08);
+      shape.lineTo(0, 0.12);
+      const geo = new THREE.ShapeGeometry(shape, 10);
+      const memb = toon(C.wing ?? C.dark, { side: THREE.DoubleSide });
+      for (const s of [-1, 1]) {
+        const w = new THREE.Group();
+        w.position.set(s * 0.1, B.h * 0.62, -B.w * 0.34);
+        w.userData = { s, k: 0 };
+        const m = new THREE.Mesh(geo, memb);
+        m.scale.set(s, 1, 1);
+        // the ink edge sits in the same plane, pushed back in depth so the membrane wins from either side
+        const o = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x1a1020, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 4, polygonOffsetUnits: 4 }));
+        o.scale.set(s * 1.06, 1.08, 1); o.position.set(-s * 0.01, -0.01, 0);
+        w.add(o, m);
+        w.rotation.y = s * 0.5;
+        torso.add(w);
+        this.wings.push(w);
+      }
+      const fang = new THREE.Mesh(new THREE.ConeGeometry(headR * 0.05, headR * 0.12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      fang.rotation.x = Math.PI; fang.position.set(headR * 0.12, -headR * 0.5, headR * 0.92);
+      skull.add(fang);
+    }
     if (def.extra === 'wings') {
       // iridescent membrane: warm core, cyan-pink sheen, inked veins
       const wingTex = wingTexture();

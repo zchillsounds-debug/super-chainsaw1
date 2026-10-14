@@ -187,6 +187,16 @@ export const CRITTERS = [
     special: 'flametrail', super: 'fireworks',
     moves: { special: 'Flame Trail', super: 'Firework Finale' },
   },
+  {
+    id: 'squeakwing', name: 'Squeakwing', type: 'gust', species: 'Orchard Bat',
+    blurb: 'Hangs upside down in orchards and squeaks so loudly that apples fall off the trees. Then it eats them.',
+    colors: { body: 0x2f7f8f, belly: 0xfff0d8, accent: 0xffb0c8, dark: 0x163f4a, eye: '#0c1a20', iris: '#ffd23a', wing: 0x1f5a68 },
+    body: { w: 0.58, h: 0.52, headR: 0.5, legLen: 0.11, armLen: 0.18, chubby: 1.05 },
+    ears: 'bat', tail: 'none', extra: 'bat', voice: 1.75,
+    stats: { hp: 960, speed: 6.9, power: 1.0, weight: 0.75 },
+    special: 'squeak', super: 'echoboom',
+    moves: { special: 'Sonic Squeak', super: 'Echo Boom' },
+  },
 ];
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
@@ -203,6 +213,7 @@ export const SHINY = {
   pebblepup:   { body: 0x6a6a88, belly: 0xe8e4ff, accent: 0xff8ad8, dark: 0x262438, iris: '#ff6ad0' },
   whirlwhisk:  { body: 0xffb38a, belly: 0xfff4e4, accent: 0xffe2c8, dark: 0x8a3a2a, iris: '#3ac07a' },
   diggles:     { body: 0xd8d0ec, belly: 0xffffff, accent: 0x6ad0ff, dark: 0x4a4a6a, iris: '#3a7bff' },
+  squeakwing:  { body: 0xe8a63a, belly: 0xfff6dc, accent: 0xff7a9a, dark: 0x7a4a14, iris: '#ff4f7a', wing: 0x8a4a1a },
   kindlekit:   { body: 0x3a3a4a, belly: 0xe8f0ff, accent: 0x6ae0ff, dark: 0x141420, iris: '#6ae0ff', flame: 0x3a8aff, flameIn: 0xbfeaff },
   jiggawatt:   { body: 0xffa6d8, belly: 0xfff0f8, accent: 0x8af0ff, dark: 0x8a2a6a, iris: '#2ad0ff' },
   ripples:     { body: 0xf4f0ea, belly: 0xffffff, accent: 0x6ad0ff, dark: 0x8a8a9a, iris: '#ff6a9a' },
@@ -270,6 +281,7 @@ export const CUPS = [
       { name: 'Fern', style: 'zoner', title: 'Forest Scout', critter: 'clovebun', level: 6, taunt: "I know every trail in these woods. You'll get lost in mine!", beat: "Okay, okay, I'm the lost one now. Great match!", gloat: "Follow the fireflies home, {name}." },
       { name: 'Brook', style: 'zoner', title: 'River Guide', critter: 'ripples', level: 7, taunt: "Ripples left puddles all over the arena. Hope you packed your wellies!", beat: "Swept away! I did not see that current coming.", gloat: "Slip, slide, splash. Thanks for playing, {name}!" },
       { name: 'Luma', style: 'trickster', title: 'Firefly Keeper', critter: 'emberfly', level: 8, taunt: "My fireflies light the way. Straight to your defeat!", beat: "You outshone a whole jar of fireflies. Wow.", gloat: "Lights out, little one." },
+      { name: 'Nyx', style: 'trickster', title: 'Orchard Keeper', critter: 'squeakwing', level: 9, taunt: "Shh... Squeakwing is sleeping. Oops. Now it's awake. And LOUD.", beat: "You didn't even flinch at the squeak? Respect. Squeakwing wants to hang out with you now.", gloat: "Hear that? That's the sound of you losing. Very loudly." },
       { name: 'Elder Oakley', style: 'balanced', title: 'Keeper of the Grove', critter: 'lilypop', level: 9, boss: true, bossTitle: 'GROVE KEEPER', taunt: "Many trainers have come to my grove, {name}. Few have left with a glowcap.", beat: "Hoo hoo! The grove has chosen you. Take this glowcap with pride.", gloat: "Come back when the moon is higher, young one." },
     ],
   },
@@ -395,6 +407,8 @@ export const MOVE_DESC = {
   rocktoss: 'Lobs a boulder in an arc. It thuds down where the rival is standing.',
   swoop: 'Leaps up and glides down onto the rival, tail first.',
   jetstream: 'Puffs its cheeks and blows a long gust that shoves the rival back, hit after hit.',
+  squeak: 'Lets out a squeak so loud it makes a ring of sound that blasts everyone nearby away.',
+  echoboom: 'Three giant sound rings in a row. The last one sends the rival flying!',
   flametrail: 'Dashes at the rival and leaves a trail of flames that keep burning anyone who steps in.',
   fireworks: 'Launches a festival of firework shells that burst all around the rival. The big one goes last!',
   burrow: 'Dives underground, tunnels over and bursts up right under the rival.',

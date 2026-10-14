@@ -28,6 +28,7 @@ export const SPECIALS = {
   puddle:    { cd: 4.4, range: [2.5, 8] },
   staticfield: { cd: 4.4, range: [0, 2.2] },
   flametrail: { cd: 5.0, range: [1.5, 7] },
+  squeak:    { cd: 4.3, range: [0, 3.6] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -479,6 +480,15 @@ export class Fighter {
         this.vz = THREE.MathUtils.damp(this.vz, 0, 10, dt);
         if (this.st > 0.75) this.endSpecial();
       }
+    } else if (id === 'squeak') {
+      // a deep breath, then a squeak that rings outward as a wall of sound
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 10, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 10, dt);
+      if (this.st < 0.22 && o) this.turnTo(this.angleTo(o), 10, dt);
+      if (!this.specFired && this.st > 0.22) {
+        this.specFired = true;
+        B.sonic(this, 3.9, { dmg: 48 * this.power, kb: 6.5, lift: 2, stun: 0.45, type: this.type, dizzy: 14 });
+      }
+      if (this.st > 0.62) this.endSpecial();
     } else if (id === 'flametrail') {
       // a low streaking dash that leaves burning footprints behind
       if (this.st < 0.14) {
@@ -910,6 +920,9 @@ export class Fighter {
       this.rollSpin = (this.rollSpin || 0) + dt * (this.st < 0.3 ? 30 * this.st : 22);
       P.lean = 0.9;
       this.critter.P.lean = this.rollSpin; this.critter.V.lean = 0;
+    } else if (S === 'special' && this.def.special === 'squeak') {
+      if (this.st < 0.22) { P.sy = 1.12; P.sx = 1.08; P.head = -0.3; P.armLz = P.armRz = 1.4; P.ear = 0.6; this.critter.emote('closed', 'o', 0.1); }
+      else { P.sy = 0.95; P.sx = 1.1; P.head = -0.15; P.armLz = P.armRz = 2.2; P.ear = 1; P.tail = 1.5; P.y = 0.1; this.critter.emote('angry', 'yell', 0.1); }
     } else if (S === 'special' && this.def.special === 'flametrail') {
       // crouch, then a flat-out fox sprint with arms swept back and the tail streaming behind
       if (this.st < 0.14) { P.sy = 0.78; P.sx = 1.12; P.lean = 0.35; P.armLz = P.armRz = 0.5; P.ear = 0.9; }
@@ -924,7 +937,7 @@ export class Fighter {
       this.critter.emote('happy', 'grin', 0.1);
     } else if (S === 'special' && (this.def.special === 'rocktoss' || this.def.special === 'puddle' || this.def.special === 'staticfield' || this.def.special === 'swoop' || this.def.special === 'tongue' || this.def.special === 'burrow')) {
       // posed frame by frame in updateSpecial
-    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche' || this.def.super === 'jetstream' || this.def.super === 'lilysplash' || this.def.super === 'whirlpool' || this.def.super === 'stormcloud' || this.def.super === 'fireworks' || this.def.super === 'molerush') && this.superPhase !== 'cutin') {
+    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche' || this.def.super === 'jetstream' || this.def.super === 'lilysplash' || this.def.super === 'whirlpool' || this.def.super === 'stormcloud' || this.def.super === 'fireworks' || this.def.super === 'echoboom' || this.def.super === 'molerush') && this.superPhase !== 'cutin') {
       // posed frame by frame in Battle.updateSuper
     } else if (S === 'special' || S === 'super') {
       if (this.st < 0.28) { P.sy = 0.8; P.sx = 1.15; P.lean = -0.25; P.armLz = P.armRz = 0.8; P.ear = 0.8; }

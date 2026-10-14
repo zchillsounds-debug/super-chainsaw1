@@ -67,6 +67,7 @@ export class CpuBrain {
         const hx = f.x - pr.x, hzz = f.z - pr.z, l = Math.hypot(hx, hzz);
         if (l < R) { c.mx = hx / (l || 1) + (Math.random() - 0.5) * 0.4; c.mz = hzz / (l || 1) + (Math.random() - 0.5) * 0.4; return; }
       }
+      if (o.state === 'special' && o.def.special === 'squeak' && o.st < 0.2 && d < 3.6 && f.dodgeCd <= 0 && Math.random() < D * 0.08) { c.dodge = true; return; }
       if (o.state === 'special' && o.def.special === 'staticfield' && d < 2.8) { c.mx = -ax; c.mz = -az; if (f.dodgeCd <= 0 && d < 1.6 && Math.random() < D) c.dodge = true; return; }
     }
     // grab a nearby power-up

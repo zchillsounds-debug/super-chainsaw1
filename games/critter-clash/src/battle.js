@@ -342,6 +342,13 @@ export class Battle {
       scorch.rotation.x = core.rotation.x = -Math.PI / 2; core.position.y = 0.01;
       scorch.renderOrder = core.renderOrder = 1;
       mesh.add(scorch, core);
+    } else if (p.kind === 'sonic') {
+      // two stacked rings of sound; scaled up as they travel outward
+      for (const [y, o] of [[0.45, 0.85], [1.05, 0.55]]) {
+        const ring = new THREE.Mesh(new THREE.RingGeometry(0.88, 1, 56), new THREE.MeshBasicMaterial({ color: 0xe8f4ff, transparent: true, opacity: o, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }));
+        ring.rotation.x = -Math.PI / 2; ring.position.y = y - p.y; ring.userData.o = o;
+        mesh.add(ring);
+      }
     } else if (p.kind === 'shell') {
       // a firework shell: a bright ball with a little paper cap
       const ball = new THREE.Mesh(new THREE.SphereGeometry(0.26 * (p.size || 1), 12, 9), new THREE.MeshToonMaterial({ color: p.color, emissive: p.color, emissiveIntensity: 0.5 }));
@@ -485,6 +492,24 @@ export class Battle {
           const a = Math.atan2(target.x - pr.x, target.z - pr.z) || 0;
           this.applyHit(O, target, { dmg: 11 * O.power, kb: 0.7, lift: 0, stun: 0.16, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: false, type: O.type, dizzy: 4, projectile: true });
         }
+      } else if (pr.kind === 'sonic') {
+        // the ring grows fast then slows; it hits once as it sweeps past the rival
+        const k = Math.min(1, pr.t / pr.dur), R = 0.5 + (pr.maxR - 0.5) * (1 - (1 - k) ** 2);
+        pr.mesh.scale.set(R, 1, R);
+        pr.mesh.children.forEach((c) => (c.material.opacity = c.userData.o * (1 - k)));
+        pr.x = pr.owner.x; pr.z = pr.owner.z; pr.vx = pr.vz = 0; // stays centred on the squeaker
+        const d = Math.hypot(target.x - pr.x, target.z - pr.z);
+        if (!pr.hitOnce.has(target) && target.alive && !target.under && target.y < 2 && d < R + 0.45 && d > R - 1.1) {
+          pr.hitOnce.add(target);
+          const dx = d > 0.05 ? (target.x - pr.x) / d : Math.sin(pr.owner.face), dz = d > 0.05 ? (target.z - pr.z) / d : Math.cos(pr.owner.face);
+          this.applyHit(pr.owner, target, { ...pr.hit, dirX: dx, dirZ: dz, heavy: !!pr.hit.launch, projectile: true });
+        }
+        // the sound wave knocks small shots out of the air
+        for (let j = this.projectiles.length - 1; j >= 0; j--) {
+          const q = this.projectiles[j];
+          if (q !== pr && q.owner !== pr.owner && !q.big && Math.abs(Math.hypot(q.x - pr.x, q.z - pr.z) - R) < 0.6) { this.fx.burst({ x: q.x, y: q.y, z: q.z }, { n: 6, speed: 3, color: 0xe8f4ff, size: 0.2, life: 0.3 }); this.removeProjectile(j); if (j < i) i--; }
+        }
+        if (pr.t >= pr.dur) { this.removeProjectile(i); continue; }
       } else if (pr.kind === 'shell') {
         // lobbed up, bursts in the air above its mark
         pr.vy -= pr.g * dt;
@@ -539,6 +564,16 @@ export class Battle {
       const dx = d > 0.05 ? (target.x - pr.x) / d : Math.sin(pr.owner.face), dz = d > 0.05 ? (target.z - pr.z) / d : Math.cos(pr.owner.face);
       this.applyHit(pr.owner, target, { ...pr.hit, dirX: dx, dirZ: dz, heavy: big, projectile: true });
     }
+  }
+
+  // Squeakwing's ring of sound, centred on the squeaker
+  sonic(f, maxR, hit, big = false) {
+    this.spawnProjectile(f, { kind: 'sonic', big: true, x: f.x, z: f.z, y: 0.02, vx: 0, vz: 0, r: 0.1, life: 2, dur: big ? 0.6 : 0.45, maxR, hit });
+    const h = f.headPos();
+    this.fx.spawn({ ...h, color: 0xffffff, size: big ? 3 : 2, life: 0.15, shape: 'glow' });
+    for (let k = 0; k < 5; k++) this.fx.spawn({ x: h.x + (Math.random() - 0.5), y: h.y + Math.random() * 0.6, z: h.z + (Math.random() - 0.5), vy: 2, color: 0xe8f4ff, size: 0.35, life: 0.5, shape: 'star', additive: false, rot: Math.random() * 6 });
+    sfx.voice(f.def.voice * 1.4, 'special'); sfx.whoosh?.(2);
+    if (big) { sfx.boom(); this.shake(0.5); } else this.shake(0.15);
   }
 
   shellBurst(pr, target) {
@@ -945,6 +980,26 @@ export class Battle {
       } else if (f.superPhase === 'recover') {
         P.sy = 1.05; P.lean = 0;
         if (t > 0.35) this.endSuper(f);
+      }
+    } else if (id === 'echoboom') {
+      // hovers up on beating wings and lets out three huge squeaks, the last one a sonic boom
+      const P = f.critter.pose;
+      if (f.superPhase === 'go') { f.superPhase = 'boom'; f.st = 0; f.boomN = 0; }
+      if (f.superPhase === 'boom') {
+        f.turnTo(f.angleTo(o), 6, dt);
+        const pulse = f.boomN > 0 && t - (0.25 + (f.boomN - 1) * 0.45) < 0.15;
+        P.y = 0.5 + Math.sin(t * 9) * 0.12; P.tail = 1.6; P.ear = 1; P.head = -0.25;
+        P.armLz = P.armRz = pulse ? 2.6 : 1.6; P.sx = pulse ? 1.15 : 1; P.sy = pulse ? 0.92 : 1.05;
+        f.critter.emote(pulse ? 'angry' : 'closed', pulse ? 'yell' : 'o', 0.1);
+        if (f.boomN < 3 && t > 0.25 + f.boomN * 0.45) {
+          const last = f.boomN === 2;
+          this.sonic(f, last ? 6.2 : 5.2, last ? { dmg: 105 * f.power, kb: 9, lift: 10, stun: 0.8, type: f.type, launch: true, dizzy: 30 } : { dmg: 34 * f.power, kb: 3, lift: 0, stun: 0.45, type: f.type, dizzy: 10 }, last);
+          f.boomN++;
+        }
+        if (f.boomN >= 3 && t > 1.55) { f.superPhase = 'recover'; f.st = 0; }
+      } else if (f.superPhase === 'recover') {
+        P.y = 0; P.sy = 1.05;
+        if (t > 0.3) this.endSuper(f);
       }
     } else if (id === 'fireworks') {
       // a festival finale: shells launched off the tail flame, bursting all around the rival, the big one last

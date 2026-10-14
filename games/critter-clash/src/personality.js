@@ -9,6 +9,7 @@ const mouth = (f) => ({ x: f.x + Math.sin(f.face) * 0.45, y: f.y + f.def.body.h 
 const rnd = (s) => (Math.random() - 0.5) * s;
 
 export const LINES = {
+  squeakwing:  { intro: ['EEEEEK! ...hi!', 'Ready to squeak!', 'Ears up, wings out!'], win: ['Did you hear that? I WON!', 'Squeak-tacular!', 'Wing-wing!'] },
   kindlekit:   { intro: ["Let's light it up!", 'Festival time!', "Tail's warmed up!"], win: ['Ka-BOOM! Ta-da!', 'What a show!', 'Encore? Encore!'] },
   cindermunch: { intro: ['Snack time!', "I'm fired up!", 'Toasty!'], win: ['Delicious!', 'Well done. Extra crispy!', 'Munch munch!'] },
   bubbalotl:   { intro: ['Bloop bloop!', 'Hug incoming!', 'Splish splash!'], win: ['Group hug!', 'Totally bubbly!', 'Bloop-tastic!'] },
@@ -40,6 +41,17 @@ export function sayLine(f, kind) {
 
 // ---------------- intros (about 1.5 s, then a held "ready" pose) ----------------
 const INTRO = {
+  squeakwing(f, P, k) {
+    const fx = f.battle.fx;
+    if (k < 0.9) { // flutters down from above, wings beating
+      P.y = (0.9 - k) * 2.6 + sin(k * 20) * 0.08; P.tail = 1.6; P.armLz = P.armRz = 1.3 + sin(k * 20) * 0.4;
+      f.critter.emote('happy', 'o', 0.1);
+    } else if (k < 1.6) { // lands and lets out a tiny squeak ring
+      P.y = 0; P.sy = 1.08; P.armLz = P.armRz = 2; P.ear = 1; P.head = -0.2;
+      f.critter.emote('closed', 'yell', 0.1);
+      if (once(f, 'eek')) { sfx.voice(f.def.voice * 1.4, 'special'); fx.spawn({ x: f.x, y: 0.6, z: f.z, color: 0xe8f4ff, size: 3.5, life: 0.4, shape: 'ring' }); }
+    } else ready(f, P, k);
+  },
   kindlekit(f, P, k) {
     const fx = f.battle.fx;
     if (k < 0.7) { // curled up asleep in its own tail, the tail flame flickering
@@ -260,6 +272,11 @@ function ready(f, P, k) {
 
 // ---------------- victories (loop for the winpose) ----------------
 const WIN = {
+  squeakwing(f, P, k) { // loop-the-loop hovering, with notes of happy squeaks
+    P.y = 0.4 + sin(k * 3) * 0.25; P.tail = 1.6; P.roll = sin(k * 1.6) * 0.3; P.armLz = P.armRz = 1.8 + sin(k * 16) * 0.5;
+    f.critter.emote('happy', 'grin', 0.1);
+    if (Math.random() < 0.08) f.battle.fx.spawn({ ...head(f, 0.4), x: f.x + rnd(1.2), vy: 1.5, color: [0xe8f4ff, 0xffb0c8, 0xffd23a][Math.floor(Math.random() * 3)], size: 0.4, life: 0.6, shape: 'star', additive: false });
+  },
   kindlekit(f, P, k) { // twirls its tail like a sparkler while little fireworks pop overhead
     P.y = abs(sin(k * 5)) * 0.2; P.armLz = 2.2 + sin(k * 10) * 0.4; P.armRz = 2.2 - sin(k * 10) * 0.4; P.tail = 1.6; P.yaw = sin(k * 2) * 0.4;
     f.critter.emote('happy', 'grin', 0.1);

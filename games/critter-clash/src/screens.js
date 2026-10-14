@@ -135,6 +135,12 @@ export class Screens {
         "Oh, {name}! A new league has opened deep in the mushroom woods: the Glowcap Cup.",
         "The fireflies are lovely, but watch out for the spore puffs. Achoo!",
       ]), 600);
+    } else if (!g.autoplay && save.cups.thunder && !save.news?.includes('bat') && !save.unlocked.includes('squeakwing')) {
+      (save.news ||= []).push('bat'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! Something keeps knocking apples off the trees near Glowcap Grove. Meet Squeakwing, an orchard bat with a VERY loud squeak!",
+        "Nyx the orchard keeper brings it to the Glowcap Cup. Cover your ears, win the match, and it might join your team.",
+      ]), 600);
     } else if (!g.autoplay && save.cups.champion && !save.news?.includes('fox') && !save.unlocked.includes('kindlekit')) {
       (save.news ||= []).push('fox'); persist();
       setTimeout(() => this.mode === 'title' && this.profTalk([
