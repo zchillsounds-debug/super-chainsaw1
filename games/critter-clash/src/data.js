@@ -373,6 +373,7 @@ export const BADGES = [
   { id: 'friend', icon: '💗', name: 'Best Friends', desc: 'Fill a critter\'s friendship hearts in Camp.', test: (s) => Object.values(s.critters).some((c) => (c.pets || 0) >= 20) },
   { id: 'snack', icon: '🍓', name: 'Snack Time', desc: 'Feed 10 berries in Camp.', test: (s) => (s.stats.fed || 0) >= 10 },
   { id: 'hazard', icon: '🌋', name: 'Hot Feet', desc: 'Win a battle without being hit by an arena hazard.', test: (s) => (s.stats.hazardClean || 0) >= 1 },
+  { id: 'tricks', icon: '🎪', name: 'Stadium Tamer', desc: 'Win in all six hazard stadiums with hazards switched on.', test: (s) => (s.stats.hazardArenas || []).length >= 6 },
   { id: 'shiny', icon: '💎', name: 'Shiny Hunter', desc: 'Unlock every shiny palette.', test: (s) => (s.shinies || []).length >= CRITTERS.length },
 ];
 

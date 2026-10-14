@@ -933,6 +933,7 @@ export class Screens {
     if (stats.perfect) save.stats.perfects = (save.stats.perfects || 0) + 1;
     if (stats.counters) save.stats.counters = (save.stats.counters || 0) + stats.counters;
     if (won && HAZARDS[opts.arena || 'meadow'] && stats.hazardsSeen >= 2 && !stats.hazardHits) save.stats.hazardClean = (save.stats.hazardClean || 0) + 1;
+    if (won && HAZARDS[opts.arena || 'meadow'] && save.settings.hazards !== false && !(save.stats.hazardArenas ||= []).includes(opts.arena)) save.stats.hazardArenas.push(opts.arena);
     let joined = false, cupDone = false, shinies = [];
     if (won && cup) {
       joined = unlock(cDef.id);
