@@ -406,6 +406,12 @@ export class Fighter {
     const id = this.def.special;
     this.setState('special');
     this.specCd = SPECIALS[id].cd * CD_MULT[this.stage - 1];
+    if (this.stage > 1) {
+      // grown forms charge their specials with a type-coloured flare
+      const fx = this.battle.fx, c = this.chestPos(), col = TYPES[this.type].glow;
+      fx.spawn({ ...c, color: col, size: 1.6 + this.stage * 0.6, life: 0.3, shape: 'ring', grow: 1.5 });
+      fx.burst(c, { n: 6 + this.stage * 4, speed: 4, up: 2, color: col, size: 0.16, life: 0.4, shape: 'spark', grav: 2 });
+    }
     this.atkId++;
     this.hitIds.clear();
     this.specFired = false;

@@ -77,6 +77,27 @@ export const FORMS = {
       },
     ],
   },
+  voltferret: {
+    path: 'Storm',
+    forms: [
+      {
+        name: 'Voltweasel', species: 'Static Weasel', size: 1.1, tailScale: 1.15, voice: 1.4,
+        blurb: 'Its fur stands on end in a crackling mane. It can run up walls when it is charged enough.',
+        colors: { body: 0xffd43a, belly: 0xfff4c8, accent: 0x2e2a48, dark: 0x6a5018, bolt: 0x7af0ff },
+        body: { w: 0.5, h: 0.8, headR: 0.44, legLen: 0.24, armLen: 0.26, chubby: 0.85, limb: 1.1 },
+        parts: { boltmane: 0.7, brows: 0.45 },
+        moves: { special: 'Zip Zap Dash', super: 'Thunder Tackle' },
+      },
+      {
+        name: 'Stormstoat', species: 'Thunderhead Stoat', size: 1.25, tailScale: 1.3, voice: 1.1,
+        blurb: 'Wears a little thundercloud like a crown. When it sprints, you hear the boom a second later.',
+        colors: { body: 0xf4c02a, belly: 0xfff0bc, accent: 0x262440, dark: 0x5a4210, bolt: 0x7af0ff, horn: 0x9af4ff, cloud: 0x6a6a86 },
+        body: { w: 0.54, h: 0.94, headR: 0.42, legLen: 0.3, armLen: 0.3, chubby: 0.86, limb: 1.25 },
+        parts: { boltmane: 1.05, horns: 0.7, brows: 0.8, cloudcrest: 1 },
+        moves: { special: 'Storm Dash', super: 'Thunderhead Tumble' },
+      },
+    ],
+  },
   pebblepup: {
     path: 'Colossus',
     forms: [
@@ -151,7 +172,7 @@ function seg(a, b, r0, r1) {
 const tip = (a, b, r) => { const g = sphere(r); g.translate(b.x, b.y, b.z); return [seg(a, b, r, r * 0.35)]; };
 const v = (x, y, z) => new THREE.Vector3(x, y, z);
 
-export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo }) {
+export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
   const P = def.parts;
   if (!P) return;
   const B = def.body, C = def.colors, headR = B.headR;
@@ -335,6 +356,33 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo }) {
       g.position.set(x * headR * 0.22, headR * 0.82, -headR * 0.18);
       cr.skull.add(g);
     }
+  }
+
+  // a crackling mane of glowing bolts fanned over the back of the head and neck
+  if (P.boltmane) {
+    const s = P.boltmane, bm = new THREE.MeshBasicMaterial({ color: C.bolt ?? 0x7af0ff });
+    for (let k = 0; k < 7; k++) {
+      const a = (k - 3) * 0.42, b = new THREE.Mesh(boltGeo(), bm);
+      const g = new THREE.Group();
+      g.position.set(Math.sin(a) * headR * 0.7, headR * (0.35 - Math.abs(k - 3) * 0.1), -headR * 0.72);
+      g.rotation.set(-0.55 - Math.abs(k - 3) * 0.12, 0, -a * 0.9);
+      b.rotation.y = Math.PI / 2; // zigzag face side-on, so it reads from the sides and back
+      b.scale.setScalar(s * (1.0 - Math.abs(k - 3) * 0.1));
+      g.add(b);
+      cr.skull.add(g);
+    }
+  }
+
+  // a little thundercloud perched on the head, with a bolt hanging out of it
+  if (P.cloudcrest) {
+    const s = P.cloudcrest, cm = mat('cloud', C.cloud ?? 0x6a6a86), parts = [];
+    for (const [x, y, z, r] of [[0, 0, 0, 0.2], [0.17, -0.03, 0.02, 0.15], [-0.17, -0.03, 0.02, 0.15], [0.07, 0.08, -0.05, 0.14], [-0.08, 0.06, 0.07, 0.13]]) { const g = sphere(r * headR * 1.6 * s); g.translate(x * headR * 1.6 * s, y * headR * 1.6 * s, z * headR * 1.6 * s); parts.push(g); }
+    const cl = inked(mergeGeometries(parts), cm, OL * 0.6);
+    cl.position.set(-headR * 0.1, headR * 1.08, -headR * 0.1);
+    cr.skull.add(cl);
+    const bolt = new THREE.Mesh(boltGeo(), new THREE.MeshBasicMaterial({ color: C.bolt ?? 0x7af0ff }));
+    bolt.scale.setScalar(0.5 * s); bolt.position.set(headR * 0.28, headR * 0.92, headR * 0.05); bolt.rotation.z = 2.6;
+    cr.skull.add(bolt);
   }
 
   // a ridge of big crystals down the spine and a crystal tiara

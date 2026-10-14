@@ -948,7 +948,7 @@ export class Critter {
     this.P = {};
     if (def.tailScale) tail.scale.setScalar(def.tailScale);
     if (def.earScale) for (const e of this.ears) e.scale.setScalar(def.earScale);
-    buildGrowth(this, def, U, OL, { flameGeo, leafGeo });
+    buildGrowth(this, def, U, OL, { flameGeo, leafGeo, boltGeo });
     if (def.gear) this.buildGear(def.gear, U, OL);
     this.V = {};
     this.pose = {};
