@@ -656,6 +656,16 @@ export class Screens {
       sfx.ui('move'); sync(); go.disabled = team.length < 3;
     }));
     const row = d.querySelector('.row');
+    // a modifier for the whole team battle (not on daily team days, which bring their own)
+    let mod = '';
+    if (!this.ctx.daily) {
+      const modKeys = ['', ...Object.keys(MODS).filter((k) => !MODS[k].hazard || save.settings.hazards !== false)];
+      mod = modKeys.includes(this.teamMod) ? this.teamMod : '';
+      const mb = document.createElement('button'); mb.className = 'tp-mod';
+      const paint = () => { mb.classList.toggle('on', !!mod); mb.innerHTML = mod ? `${MODS[mod].icon}<span> ${MODS[mod].name}</span>` : '🎲<span> No modifier</span>'; };
+      mb.addEventListener('click', () => { mod = modKeys[(modKeys.indexOf(mod) + 1) % modKeys.length]; this.teamMod = mod; sfx.ui('move'); paint(); this.toast(mod ? `${MODS[mod].icon} ${MODS[mod].name}: ${MODS[mod].desc}` : 'No modifier'); });
+      paint(); row.appendChild(mb);
+    }
     row.appendChild(this.btn('Back', 'ghost-dark', () => d.remove()));
     const go = this.btn('FIGHT!', 'primary', () => {
       if (team.length < 3) return;
@@ -665,7 +675,8 @@ export class Screens {
       const foes = [], daily = this.ctx.daily;
       if (daily) foes.push(...daily.team);
       while (foes.length < 3) { const id = pick(pool); if (!foes.includes(id)) foes.push(id); }
-      this.ctx = { kind: 'team', team, foes, pi: 0, fi: 0, php: [1, 1, 1], fhp: [1, 1, 1], arena: daily ? daily.arena : pick(ARENA_KEYS), daily };
+      const arena = daily ? daily.arena : pick(MODS[mod]?.hazard ? ARENA_KEYS.filter((k) => HAZARDS[k]) : ARENA_KEYS);
+      this.ctx = { kind: 'team', team, foes, pi: 0, fi: 0, php: [1, 1, 1], fhp: [1, 1, 1], arena, daily, mods: !daily && mod ? [mod] : [] };
       this.sel = CRITTERS.findIndex((c) => c.id === team[0]);
       this.vs();
     });
@@ -926,8 +937,8 @@ export class Screens {
       const T = this.ctx, pl = save.critters[p.id].level;
       const avg = Math.round(T.team.reduce((a, id) => a + save.critters[id].level, 0) / 3);
       c = T.daily && T.fi === 0 && T.daily.shiny ? skinned(byId(T.foes[0]), 'shiny') : byId(T.foes[T.fi]);
-      opts = { mods: T.daily ? [T.daily.mod] : [], cpuLevel: Math.max(1, avg) + (T.daily ? 1 : 0), difficulty: 0.55 + T.fi * 0.08, playerLevel: pl, arena: T.arena, rounds: 1, playerHp: T.php[T.pi], cpuHp: T.fhp[T.fi], stageSub: `Team Battle · ${T.pi === 2 ? 'Your last critter!' : T.fi === 2 ? 'Their last critter!' : `Fight ${T.pi + T.fi + 1}`}` };
-      label = T.daily ? `Daily team ${T.fi + 1}/3 · ${MODS[T.daily.mod].icon} ${MODS[T.daily.mod].name}` : `Rival team ${T.fi + 1}/3`;
+      opts = { mods: T.daily ? [T.daily.mod] : T.mods || [], cpuLevel: Math.max(1, avg) + (T.daily ? 1 : 0), difficulty: 0.55 + T.fi * 0.08, playerLevel: pl, arena: T.arena, rounds: 1, playerHp: T.php[T.pi], cpuHp: T.fhp[T.fi], stageSub: `Team Battle · ${T.pi === 2 ? 'Your last critter!' : T.fi === 2 ? 'Their last critter!' : `Fight ${T.pi + T.fi + 1}`}` };
+      label = T.daily ? `Daily team ${T.fi + 1}/3 · ${MODS[T.daily.mod].icon} ${MODS[T.daily.mod].name}` : `Rival team ${T.fi + 1}/3${T.mods?.length ? ` · ${MODS[T.mods[0]].icon}` : ''}`;
     } else if (this.ctx.kind === 'trials') {
       const T = this.ctx, pl = save.critters[p.id].level;
       c = byId(T.foe);
