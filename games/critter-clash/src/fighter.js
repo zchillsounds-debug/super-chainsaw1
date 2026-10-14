@@ -14,7 +14,7 @@ export const SPECIALS = {
   comet:   { cd: 4.2, range: [2, 7] },
   bubble:  { cd: 3.6, range: [3, 9] },
   leafrang:{ cd: 3.8, range: [3, 8] },
-  zipzap:  { cd: 4.4, range: [1.5, 6] },
+  zipzap:  { cd: 4.9, range: [1.5, 6] },
   rollout: { cd: 4.5, range: [2, 8] },
   gale:    { cd: 3.8, range: [3, 9] },
   iceslide:{ cd: 4.8, range: [2, 8] },
