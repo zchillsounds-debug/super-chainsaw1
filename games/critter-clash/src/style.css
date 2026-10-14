@@ -815,3 +815,13 @@ body.portrait .rcard span { font-size: 9.5px; }
 .dex-growth .gstage span { font-size: 11px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .dex-growth .gstage em { font-style: normal; font-size: 10px; opacity: .6; }
 .dex-growth .gstage.on { background: #fff3c4; box-shadow: inset 0 0 0 2px #ffc93a; }
+
+/* save backup / restore sheets (backup.js) */
+.backup { z-index: 45; }
+.backup .modal { max-width: 520px; }
+.bk-note { margin: 0 0 6px; font-size: 14px; }
+.bk-sum { margin: 0 0 6px; font-weight: 800; font-size: 13px; color: var(--violet); }
+.bk-code { width: 100%; box-sizing: border-box; font: 12px/1.35 ui-monospace, monospace; border-radius: 12px; border: 3px solid var(--ink); padding: 8px; resize: none; word-break: break-all; background: #fff; color: var(--ink); }
+.bk-status { min-height: 18px; margin: 6px 0; font-size: 13px; font-weight: 800; }
+.bk-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.bk-file { cursor: pointer; }

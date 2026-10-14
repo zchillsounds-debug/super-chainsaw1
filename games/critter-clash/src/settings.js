@@ -1,5 +1,6 @@
 // Settings modal: audio, vibration, graphics quality, accessibility, save reset.
 import { save, persist, resetSave } from './save.js';
+import { backupSheet, restoreSheet } from './backup.js';
 import { vol, setVolumes, sfx } from './audio.js';
 
 export function applySettings(game) {
@@ -27,6 +28,7 @@ export function openSettings(game, root) {
       <label class="set"><span>Vibration</span><input type="checkbox" class="tog" data-k="vibrate" ${s.vibrate ? 'checked' : ''}></label>
       <label class="set"><span>Arena hazards</span><input type="checkbox" class="tog" data-k="hazards" ${s.hazards !== false ? 'checked' : ''}></label>
       <label class="set"><span>Reduce flashing</span><input type="checkbox" class="tog" data-k="reduceFlash" ${s.reduceFlash ? 'checked' : ''}></label>
+      <div class="set"><span>Save</span><div class="seg bk"><button class="bk-up">Back up</button><button class="bk-in">Restore</button></div></div>
     </div>
     <div class="set-foot"><button class="btn ghost-dark reset">Reset progress</button><button class="btn primary done">Done</button></div>
   </div>`;
@@ -45,12 +47,14 @@ export function openSettings(game, root) {
     } else s[el.dataset.k] = el.checked;
     applySettings(game); persist(); sfx.ui('move');
   }));
-  d.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+  d.querySelectorAll('.seg[data-k] button').forEach((b) => b.addEventListener('click', () => {
     const seg = b.parentElement;
     s[seg.dataset.k] = b.dataset.v; persist(); applySettings(game); sfx.ui('ok');
     seg.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
   }));
   d.querySelector('.done').addEventListener('click', () => { sfx.ui('ok'); close(); });
+  d.querySelector('.bk-up').addEventListener('click', () => { sfx.ui('ok'); backupSheet(root); });
+  d.querySelector('.bk-in').addEventListener('click', () => { sfx.ui('ok'); restoreSheet(root); });
   const reset = d.querySelector('.reset');
   reset.addEventListener('click', () => {
     if (!reset.classList.contains('armed')) { reset.classList.add('armed'); reset.textContent = 'Tap again to erase everything'; return; }

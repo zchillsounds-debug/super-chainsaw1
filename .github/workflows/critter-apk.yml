@@ -59,10 +59,38 @@ jobs:
             done
           fi
       - run: npx cap sync android
+      - name: Same signing key and a rising version on every build (so each APK installs over the last and keeps the save)
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, os
+          g = pathlib.Path('android/app/build.gradle')
+          s = g.read_text()
+          run = int(os.environ['GITHUB_RUN_NUMBER'])
+          s = re.sub(r'versionCode \d+', f'versionCode {1000 + run}', s, 1)
+          s = re.sub(r'versionName "[^"]*"', f'versionName "1.0.{run}"', s, 1)
+          sign = """
+              signingConfigs {
+                  debug {
+                      storeFile file('../../signing/debug.keystore')
+                      storePassword 'android'
+                      keyAlias 'androiddebugkey'
+                      keyPassword 'android'
+                  }
+              }
+          """
+          s = s.replace('    buildTypes {', sign + '    buildTypes {\n        debug {\n            signingConfig signingConfigs.debug\n        }', 1)
+          g.write_text(s)
+          print(s)
+          PY
       - run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
       - name: Build APK (retries the Gradle download on network resets)
         run: cd android && chmod +x gradlew && for i in 1 2 3 4; do ./gradlew assembleDebug --no-daemon && exit 0; echo "retry $i"; sleep $((i*10)); done; exit 1
       - run: cp android/app/build/outputs/apk/debug/app-debug.apk critter-clash.apk
+      - name: Check the APK is signed with the repo key
+        run: |
+          APKSIGNER=$(ls $ANDROID_HOME/build-tools/*/apksigner | tail -1)
+          $APKSIGNER verify --print-certs critter-clash.apk | tee /tmp/certs.txt
+          grep -qi "a7e761de86ab374fb8191b1df011e8fdb673947efe6eb8fa816922f5fc992c07" <(tr -d ':' < /tmp/certs.txt | tr 'A-F' 'a-f')
       - uses: actions/upload-artifact@v4
         with: { name: critter-clash-apk, path: games/critter-clash/critter-clash.apk }
       - name: Publish APK to the apk-critter-clash branch
@@ -70,5 +98,5 @@ jobs:
           mkdir out && cp critter-clash.apk out/ && cd out
           git init -q && git checkout -q -b apk-critter-clash
           git config user.name "github-actions" && git config user.email "actions@github.com"
-          git add critter-clash.apk && git commit -qm "APK from ${GITHUB_SHA::7}"
+          git add critter-clash.apk && git commit -qm "APK from ${GITHUB_SHA::7} (version 1.0.${GITHUB_RUN_NUMBER})"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" apk-critter-clash

@@ -72,6 +72,8 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - Phone sizes to test: 915×412 landscape (primary; battles show a rotate hint in portrait), 412×915 for menus.
 
 ## APK
+- **Updates keep the save (session 13):** every APK is signed with the committed debug key `signing/debug.keystore` (PKCS12, store/key password `android`, alias `androiddebugkey`, SHA-256 A7:E7:61:DE:...:2C:07), patched into `android/app/build.gradle` by the workflow, and gets `versionCode 1000 + run number` / `versionName 1.0.<run>`. A CI step fails the build if the APK isn't signed with that key. Never change or delete the key, or the user has to uninstall (and loses their save) again. The user had to uninstall once to switch from the old random CI keys.
+- **Save backup/restore:** Settings → Save → Back up (copy / Share / save `Documents/CritterClash/critter-clash-save.txt`) and Restore (paste the `CRITTERCLASH1:` code or pick the file; tap twice; reloads). `src/backup.js`.
 - `.github/workflows/critter-apk.yml` runs on pushes touching `games/critter-clash/**`. It does `npx cap add android` in CI, forces landscape and fullscreen, copies `public/icon-512.png` as the launcher icon, then builds a debug APK.
 - The APK is force-pushed to the orphan branch **`apk-critter-clash`**. Runs 1–2 succeeded.
 - To fetch it: `git fetch origin apk-critter-clash && git show origin/apk-critter-clash:critter-clash.apk > <scratchpad>/critter-clash.apk`. Check that the commit message names your SHA, then send it with SendUserFile.
