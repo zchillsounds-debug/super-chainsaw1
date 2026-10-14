@@ -14,7 +14,7 @@ try {
   await pg.evaluate(() => { __save.trainer = { name: 'Zee', partner: 'bubbalotl' }; __save.tutorialDone = true; __game.screens.title(); });
   await pg.waitForTimeout(800);
   await tapText(/Quick Battle/); await pg.locator('.rcard').nth(0).tap(); await tapText(/FIGHT/); await pg.locator('.train-pick button', { hasText: /FIGHT/ }).tap();
-  await pg.waitForTimeout(1500);
+  await pg.waitForFunction(() => __game.battle, null, { timeout: 30000 });
   await pg.evaluate(() => { const b = __game.battle; for (let i = 0; i < 60 && b.phase !== 'done'; i++) { if (b.phase === 'fight') b.fighters[1].hp = 1; __sim(1); } __sim(2); });
   await pg.waitForTimeout(2500); await shot('res'); console.log('after battle', await state());
   const btns = await pg.locator('button:visible').allTextContents(); console.log('buttons', btns.join(' | '));
