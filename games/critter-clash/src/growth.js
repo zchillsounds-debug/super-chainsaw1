@@ -98,6 +98,27 @@ export const FORMS = {
       },
     ],
   },
+  hootsy: {
+    path: 'Sky',
+    forms: [
+      {
+        name: 'Hootwind', species: 'Gale Owl', size: 1.1, voice: 1.0, earScale: 1.3,
+        blurb: 'Finally slim enough to fly, though it still prefers riding its own little tornadoes.',
+        colors: { body: 0x8e9ce6, belly: 0xf2f0ff, accent: 0x5a64c0, dark: 0x30306e, plume: 0xffd36a },
+        body: { w: 0.6, h: 0.74, headR: 0.48, legLen: 0.17, armLen: 0.3, chubby: 1.0, limb: 1.15 },
+        parts: { plumes: 0.75, leafmane: 0.8 },
+        moves: { special: 'Gale Burst', super: 'Twin Cyclone' },
+      },
+      {
+        name: 'Cyclowl', species: 'Tempest Owl', size: 1.28, voice: 0.8, earScale: 1.5, portraitZoom: 1.1,
+        blurb: 'Wind circles it like a crown. When it spreads its wings, the whole stadium leans toward it.',
+        colors: { body: 0x6c78d8, belly: 0xeef0ff, accent: 0xffcf5a, dark: 0x262668, plume: 0xffe08a },
+        body: { w: 0.64, h: 0.9, headR: 0.46, legLen: 0.2, armLen: 0.4, chubby: 1.0, limb: 1.3 },
+        parts: { plumes: 1.2, leafmane: 1.1, brows: 0.6, windring: 1 },
+        moves: { special: 'Tempest Puff', super: 'Eye of the Storm' },
+      },
+    ],
+  },
   pebblepup: {
     path: 'Colossus',
     forms: [
@@ -383,6 +404,35 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     const bolt = new THREE.Mesh(boltGeo(), new THREE.MeshBasicMaterial({ color: C.bolt ?? 0x7af0ff }));
     bolt.scale.setScalar(0.5 * s); bolt.position.set(headR * 0.28, headR * 0.92, headR * 0.05); bolt.rotation.z = 2.6;
     cr.skull.add(bolt);
+  }
+
+  // long feather plumes sweeping back from the brow
+  if (P.plumes) {
+    const s = P.plumes, pm = mat('plume', C.plume ?? C.accent);
+    for (const [x, rz, len] of [[0, 0, 1], [-0.16, 0.35, 0.8], [0.16, -0.35, 0.8]]) {
+      const f = inked(leafGeo().scale(0.2 * s, 0.25 * s, 0.9 * s * len), pm, OL * 0.5);
+      const g = new THREE.Group();
+      g.position.set(x * headR, headR * 0.8, headR * 0.15);
+      g.rotation.set(-2.3, 0, rz); // tip up and back over the crown
+      g.add(f);
+      cr.skull.add(g);
+    }
+  }
+
+  // rings of wind circling the body (spun in Critter.update)
+  if (P.windring) {
+    const s = P.windring;
+    for (let k = 0; k < 2; k++) {
+      const r = new THREE.Mesh(new THREE.TorusGeometry(B.w * (0.95 + k * 0.2) * s, 0.025, 6, 48, Math.PI * 1.4),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 - k * 0.15, depthWrite: false }));
+      const g = new THREE.Group();
+      g.position.y = B.h * (0.3 + k * 0.35);
+      g.rotation.set(Math.PI / 2 + (k ? 0.25 : -0.2), 0, 0);
+      g.add(r);
+      g.userData.spin = k ? -2.2 : 3;
+      cr.torso.add(g);
+      (cr.spinners ||= []).push(g);
+    }
   }
 
   // a ridge of big crystals down the spine and a crystal tiara
