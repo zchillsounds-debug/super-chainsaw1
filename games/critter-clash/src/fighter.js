@@ -17,7 +17,7 @@ export const SPECIALS = {
   zipzap:  { cd: 4.4, range: [1.5, 6] },
   rollout: { cd: 4.5, range: [2, 8] },
   gale:    { cd: 3.8, range: [3, 9] },
-  iceslide:{ cd: 4.2, range: [2, 8] },
+  iceslide:{ cd: 4.8, range: [2, 8] },
   wisps:   { cd: 4.0, range: [3, 9] },
   seedspray: { cd: 3.0, range: [1.5, 5.5] },
   fuzzball:  { cd: 4.0, range: [3, 9] },
