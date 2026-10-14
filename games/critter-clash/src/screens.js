@@ -298,6 +298,7 @@ export class Screens {
         <li><b>Dizzy</b><span>Too many hits in a row makes a critter see stars. Mash buttons to shake it off!</span></li>
         <li><b>Hazards</b><span>Later stadiums fight back: when a glowing ring appears on the floor, get out of it (or guard)! Each one has a second trick too: fissures, ice slicks, lasers (guard or roll through), rogue waves, crosswinds and spore clouds. Practise them in Training with the ⚠ Hazards chip, earn stars in the Stadium Trials (Challenges), or switch hazards off in Settings.</span></li>
         <li><b>Team Battle</b><span>In Challenges: pick three critters against a rival team of three. The winner of each fight stays in with the damage it took.</span></li>
+        <li><b>Survival</b><span>Fight until you fall; damage carries over. Every 5th rival is a shiny ⭐ Gatekeeper: beat it for berries and a full heal. Clearing the Boss Rush pays a berry basket too.</span></li>
         <li><b>Daily</b><span>A new Daily Challenge every day for double XP; some days it's a 3-on-3 team fight. Clear it on back-to-back days for a streak: up to +5 berries a day.</span></li>
         <li><b>Counters</b><span>A napping Snoozlo is a trap: hit it and it wakes up swinging. Wait it out, then pounce while it yawns.</span></li>
         <li><b>Camp</b><span>Pet your critters to build friendship and feed them berries for XP. Win battles to earn berries, and drop by daily for a gift. Best friends (5 hearts) start every battle with some super meter.</span></li>
