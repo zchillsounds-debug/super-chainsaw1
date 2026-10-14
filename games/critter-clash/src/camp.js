@@ -37,8 +37,8 @@ export class Camp {
     // scatter the team around the field, each with its own wander plan
     this.g.showcase.forEach((c, i) => {
       // big teams spread over two rings so nobody starts in a huddle
-      const a = (i / Math.max(1, team.length)) * Math.PI * 2, rr = team.length > 7 ? (i % 2 ? 2.2 : 3.8) : 3;
-      c.camp = { x: Math.cos(a) * rr * (screens.game.camera.aspect < 1 ? 0.8 : 1.3), z: Math.sin(a) * rr * 0.7 - 0.3, tx: 0, tz: 0, wait: Math.random() * 2, face: a + Math.PI, munch: 0, pet: 0 };
+      const a = (i / Math.max(1, team.length)) * Math.PI * 2, rr = team.length > 7 ? (i % 2 ? 2.4 : 4.2) : 3;
+      c.camp = { x: Math.cos(a) * rr * (screens.game.camera.aspect < 1 ? 0.8 : 1.45), z: Math.sin(a) * rr * 0.7 - 0.3, tx: 0, tz: 0, wait: Math.random() * 2, face: a + Math.PI, munch: 0, pet: 0 };
       for (const [px, pz, pr] of this.props.userData.keepOut) {
         const ox = c.camp.x - px, oz = c.camp.z - pz, od = Math.hypot(ox, oz) || 1e-3;
         if (od < pr) { c.camp.x = px + ox / od * pr; c.camp.z = pz + oz / od * pr; }
@@ -288,11 +288,12 @@ export class Camp {
           m.act = free[Math.floor(Math.random() * free.length)];
           m.tx = m.act.x; m.tz = m.act.z;
         } else for (let tries = 0; tries < 6; tries++) {
-          const r = 1 + Math.random() * 4.2, ang = Math.random() * Math.PI * 2;
+          // landscape phones see a wide strip of field, so a big team spreads out sideways
+          const r = 1 + Math.random() * (port ? 4.2 : 5.4), ang = Math.random() * Math.PI * 2;
           // keep the wander zone a little back from the camera so the front row doesn't wall off the camp
-          m.tx = Math.cos(ang) * r * (port ? 0.7 : 1.45); m.tz = Math.min(port ? 3.6 : 2.4, Math.sin(ang) * r * (port ? 1.05 : 0.75) - 0.3);
+          m.tx = Math.cos(ang) * r * (port ? 0.7 : 1.3); m.tz = Math.max(port ? -9 : -4.2, Math.min(port ? 3.6 : 2.4, Math.sin(ang) * r * (port ? 1.05 : 0.7) - 0.4));
           // keep targets inside what the camera can see (the view widens toward the back)
-          const xm = (port ? 2.6 : 3.7) - m.tz * (port ? 0.25 : 0.35);
+          const xm = (port ? 2.6 : 5.6) - m.tz * (port ? 0.25 : 0.45);
           m.tx = Math.max(-xm, Math.min(xm, m.tx));
           if (!this.props.userData.keepOut.some(([px, pz, pr]) => Math.hypot(m.tx - px, m.tz - pz) < pr)
             && !this.g.showcase.some((o) => o !== c && o.camp && Math.hypot(m.tx - o.camp.tx, m.tz - o.camp.tz) < 1.3)) break;
