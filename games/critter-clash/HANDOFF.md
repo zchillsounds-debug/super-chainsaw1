@@ -375,12 +375,14 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 142. A rival sung to sleep by Lullaby slumps with closed eyes and z's instead of dizzy stars (`f.asleep`).
 143. How to Play tip about the nap counter. Perf check: 211–216 draw calls, ≤530k triangles (unchanged).
 144. Drifting cloud shadows over the field in Meadow, Seashell Bay and Cloudtop (`this.cloudShade`, one draw call).
+145. Balance from the full 19-critter run: Squeakwing (power 1.24, Squeak cd 3.1) and Jiggawatt (hp 1060, power 1.08, Static Field cd 4.0) up from 22%/25% to 39%/39% (focused rerun).
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - (Fixed in R132.) A re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
 - Native photo Save/Share (Round 27) is untested on a real phone.
 - Haptics (Round 72) are untested on a real phone.
+- Full run at 05:40 (session 11, all 19 critters, 1 rep = 36 games each, no errors): Emberfly 67%, Bubbalotl 64%, Pebblepup and Snoozlo 61%, most 44–58%, Kindlekit 39%, Pengsicle 33%, Jiggawatt 25%, Squeakwing 22%. 1-rep runs swing ±15% (Pengsicle was 56% and Emberfly 41% in the previous run), so only buff critters that are low run after run: Squeakwing (21/44/38/22%) and Jiggawatt (38/25%) got buffs in R145.
 - Full run at 04:45 (session 11, 18 critters, 1 rep): Pebblepup/Whirlwhisk/Lilypop/Kindlekit 62%, Voltferret/Diggles 59%, most 38–56%, Bubbalotl 35%, Pricklepuff 24% (both buffed in R137). Run a full `tools/robin.mjs 1` with all 19 next.
 - Older: last full balance run (04:04, 18 critters, 1 rep = 34 games each): Voltferret, Pengsicle and Lilypop 68%, Pebblepup and Kindlekit 62%, most others 41–53%, Bubbalotl and Hootsy 35%, Squeakwing 21% (a focused run just before said 44%, so the sample is noisy). Small tweaks followed (top three power -0.02/-0.03, Bubbalotl/Hootsy/Squeakwing buffs) but were not re-measured. Re-run `tools/robin.mjs 2` first.
 - The Sky Cup outro promises a picnic; Camp could have a sky-themed reward (e.g. a balloon prop) for clearing it.

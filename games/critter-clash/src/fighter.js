@@ -26,9 +26,9 @@ export const SPECIALS = {
   tongue:    { cd: 4.0, range: [1.8, 5.2] },
   burrow:    { cd: 4.6, range: [2.5, 9] },
   puddle:    { cd: 4.4, range: [2.5, 8] },
-  staticfield: { cd: 4.4, range: [0, 2.2] },
+  staticfield: { cd: 4.0, range: [0, 2.2] },
   flametrail: { cd: 5.0, range: [1.5, 7] },
-  squeak:    { cd: 3.4, range: [0, 3.4] },
+  squeak:    { cd: 3.1, range: [0, 3.4] },
   powernap:  { cd: 3.8, range: [0, 2.4] },
 };
 
