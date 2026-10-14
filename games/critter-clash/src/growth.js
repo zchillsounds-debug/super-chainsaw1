@@ -119,6 +119,27 @@ export const FORMS = {
       },
     ],
   },
+  pricklepuff: {
+    path: 'Fortress',
+    forms: [
+      {
+        name: 'Thistlehog', species: 'Thistle Hedgehog', size: 1.12, voice: 1.1,
+        blurb: 'Its leaf spines have turned to real thistles. Hugs are now strictly by appointment.',
+        colors: { body: 0xc8925a, belly: 0xfff0d8, accent: 0x3fb850, dark: 0x2a6a32, blossom: 0xc89aff },
+        body: { w: 0.7, h: 0.64, headR: 0.5, legLen: 0.17, armLen: 0.24, chubby: 1.16, limb: 1.3 },
+        parts: { flowers: 0.6, brows: 0.5 },
+        moves: { special: 'Thistle Spray', super: 'Bramble Charge' },
+      },
+      {
+        name: 'Thornhulk', species: 'Briar Hedgehog', size: 1.3, voice: 0.8,
+        blurb: 'A walking hedge fortress in full bloom. Bees follow it everywhere; nobody else gets close.',
+        colors: { body: 0xa8743e, belly: 0xffe6c4, accent: 0x2fae48, dark: 0x1f5a28, blossom: 0xff8ac0, horn: 0xfff2d8 },
+        body: { w: 0.9, h: 0.84, headR: 0.48, legLen: 0.2, armLen: 0.32, chubby: 1.22, limb: 1.75 },
+        parts: { flowers: 1.1, brows: 0.9, tusks: 0.7, leafmane: 1.0 },
+        moves: { special: 'Briar Storm', super: 'Fortress Charge' },
+      },
+    ],
+  },
   pebblepup: {
     path: 'Colossus',
     forms: [
@@ -404,6 +425,22 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     const bolt = new THREE.Mesh(boltGeo(), new THREE.MeshBasicMaterial({ color: C.bolt ?? 0x7af0ff }));
     bolt.scale.setScalar(0.5 * s); bolt.position.set(headR * 0.28, headR * 0.92, headR * 0.05); bolt.rotation.z = 2.6;
     cr.skull.add(bolt);
+  }
+
+  // flowers blooming among the spines on the back
+  if (P.flowers) {
+    const s = P.flowers, pm = mat('blossom', C.blossom ?? 0xff9ac8), cm = mat('pollen', 0xffe066);
+    const n = Math.round(4 + s * 4);
+    for (let i = 0; i < n; i++) {
+      const y = 0.75 - (i / n) * 1.2, a = i * 2.39996, r = Math.sqrt(Math.max(0, 1 - y * y));
+      const d = v(Math.cos(a) * r * 0.85, y, -Math.abs(Math.sin(a) * r) - 0.2).normalize();
+      const fl = new THREE.Group();
+      for (let k = 0; k < 5; k++) { const t = (k / 5) * Math.PI * 2, pe = new THREE.Mesh(sphere(0.05 * s), pm); pe.scale.set(1, 0.5, 1); pe.position.set(Math.cos(t) * 0.055 * s, 0, Math.sin(t) * 0.055 * s); fl.add(pe); }
+      const c = new THREE.Mesh(sphere(0.035 * s), cm); c.position.y = 0.015 * s; fl.add(c);
+      fl.quaternion.setFromUnitVectors(UP, d);
+      fl.position.set(d.x * B.w * B.chubby * 0.55, B.h * 0.48 + d.y * B.h * 0.55, d.z * B.w * 0.55);
+      cr.torso.add(fl);
+    }
   }
 
   // long feather plumes sweeping back from the brow
