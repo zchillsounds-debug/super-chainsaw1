@@ -127,7 +127,7 @@ export const FORMS = {
     path: 'Fortress',
     forms: [
       {
-        name: 'Thistlehog', species: 'Thistle Hedgehog', size: 1.12, voice: 1.1,
+        name: 'Thistlehog', statMul: { power: 1.04 }, species: 'Thistle Hedgehog', size: 1.12, voice: 1.1,
         blurb: 'Its leaf spines have turned to real thistles. Hugs are now strictly by appointment.',
         colors: { body: 0xc8925a, belly: 0xfff0d8, accent: 0x3fb850, dark: 0x2a6a32, blossom: 0xc89aff },
         body: { w: 0.7, h: 0.64, headR: 0.5, legLen: 0.17, armLen: 0.24, chubby: 1.16, limb: 1.3 },
@@ -135,7 +135,7 @@ export const FORMS = {
         moves: { special: 'Thistle Spray', super: 'Bramble Charge' },
       },
       {
-        name: 'Thornhulk', species: 'Briar Hedgehog', size: 1.3, voice: 0.8,
+        name: 'Thornhulk', statMul: { hp: 1.07, power: 1.08 }, species: 'Briar Hedgehog', size: 1.3, voice: 0.8,
         blurb: 'A walking hedge fortress in full bloom. Bees follow it everywhere; nobody else gets close.',
         colors: { body: 0xa8743e, belly: 0xffe6c4, accent: 0x2fae48, dark: 0x1f5a28, blossom: 0xff8ac0, horn: 0xfff2d8 },
         body: { w: 0.9, h: 0.84, headR: 0.48, legLen: 0.2, armLen: 0.32, chubby: 1.22, limb: 1.75 },
@@ -240,7 +240,7 @@ export const FORMS = {
         moves: { special: 'Blaze Trail', super: 'Grand Fireworks' },
       },
       {
-        name: 'Solfox', species: 'Sun Fox', size: 1.25, tailScale: 1.55, voice: 1.0,
+        name: 'Solfox', statMul: { power: 0.96 }, species: 'Sun Fox', size: 1.25, tailScale: 1.55, voice: 1.0,
         blurb: 'Sparks orbit it like tiny suns. They say it chased the sunset once and caught it.',
         colors: { body: 0xd8402e, belly: 0xfff0dc, accent: 0xffc23a, dark: 0x5a160e, flame: 0xff7a1e, flameIn: 0xfff6a0, orb: 0xffd84a },
         body: { w: 0.6, h: 0.88, headR: 0.45, legLen: 0.3, armLen: 0.3, chubby: 0.98, limb: 1.25 },
@@ -391,7 +391,8 @@ export function grown(def, lv, shiny) {
   return {
     ...def, ...F, stage, baseName: def.name, body,
     colors: { ...def.colors, ...F.colors, ...(shiny || {}) },
-    stats: { ...def.stats, hp },
+    // statMul: per-form balance tweaks on top of the stage boosts
+    stats: Object.fromEntries(Object.entries({ ...def.stats, hp }).map(([k, x]) => [k, F.statMul?.[k] ? (k === 'hp' ? Math.round(x * F.statMul[k]) : +(x * F.statMul[k]).toFixed(3)) : x])),
   };
 }
 
