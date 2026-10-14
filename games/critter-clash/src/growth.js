@@ -308,10 +308,10 @@ export const FORMS = {
     forms: [
       { name: 'Jigglevolt', species: 'Volt Jelly', size: 1.1, voice: 1.3, bodyMul: GROW2,
         blurb: 'Glows bright enough to read by. Crackles when it laughs, which is constantly.',
-        colors: { body: 0x4ccce6, orb: 0xffe14d, bolt: 0xffe14d }, parts: { orbs: 0.55, boltmane: 0.5 }, moves: { special: 'Static Surge', super: 'Thunderhead' } },
+        colors: { body: 0x4ccce6, orb: 0xffe14d, bolt: 0xffe14d }, parts: { orbs: 0.55, antennae: 0.7 }, moves: { special: 'Static Surge', super: 'Thunderhead' } },
       { name: 'Megawatt', species: 'Storm Jelly', size: 1.26, voice: 1.0, bodyMul: GROW3,
         blurb: 'A floating light show with a ring of tiny lightning bugs. Rock concerts book it as the lighting.',
-        colors: { body: 0x2eb4e0, dark: 0x0e4060, orb: 0xffe14d, bolt: 0xffe14d }, parts: { orbs: 1, boltmane: 0.9 }, moves: { special: 'Mega Static', super: 'Supercell' } },
+        colors: { body: 0x2eb4e0, dark: 0x0e4060, orb: 0xffe14d, bolt: 0xffe14d }, parts: { orbs: 1, boltmane: 0.7, antennae: 1 }, moves: { special: 'Mega Static', super: 'Supercell' } },
     ],
   },
   squeakwing: {
@@ -873,6 +873,36 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     cr.torso.add(base);
     (cr.spinners ||= []).push(g, g2);
     if (cr.tail) cr.tail.visible = false; // the whirlwind is its tail now
+  }
+
+  // tesla-coil antennae on the bell: two glowing tips with a bolt arcing between them (spun so it crackles)
+  if (P.antennae) {
+    const s = P.antennae, stalk = mat('stalk', C.dark), parts = [];
+    const tips = [-1, 1].map((x) => v(x * headR * 0.62 * s, headR * (1.2 + 0.62 * s), -headR * 0.05));
+    for (const [i, x] of [-1, 1].entries()) {
+      const a = v(x * headR * 0.3, headR * 1.05, -headR * 0.05), m = v(x * headR * 0.36 * s, headR * (1.1 + 0.35 * s), -headR * 0.05);
+      parts.push(seg(a, m, headR * 0.05, headR * 0.04), seg(m, tips[i], headR * 0.04, headR * 0.03));
+      for (let k = 0; k < 3; k++) { const r = new THREE.TorusGeometry(headR * (0.09 - k * 0.012), headR * 0.022, 5, 12); r.rotateX(Math.PI / 2); const p = m.clone().lerp(tips[i], 0.25 + k * 0.25); r.translate(p.x, p.y, p.z); parts.push(r.toNonIndexed()); }
+    }
+    SK.add(inked(mergeGeometries(parts.map((g) => (g.index ? g.toNonIndexed() : g))), stalk, OL * 0.4));
+    const glowM = new THREE.MeshBasicMaterial({ color: C.bolt ?? 0xffe14d });
+    const haloM = new THREE.MeshBasicMaterial({ color: C.bolt ?? 0xffe14d, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false });
+    for (const t of tips) {
+      const b = new THREE.Mesh(sphere(headR * 0.15 * s), glowM), h = new THREE.Mesh(sphere(headR * 0.3 * s), haloM);
+      b.position.copy(t); h.position.copy(t);
+      cr.skull.add(b, h);
+      (cr.glows ||= []).push(b);
+    }
+    // the arc: a zigzag bolt laid between the tips, spun around that axis
+    const bg = boltGeo(); bg.translate(-0.05, -0.3, 0);
+    const arc = new THREE.Group(), bolt = new THREE.Mesh(bg, glowM);
+    const span = tips[1].x - tips[0].x;
+    bolt.rotation.z = Math.PI / 2; bolt.scale.set(0.6 * s, span / 0.6, 0.6 * s);
+    arc.add(bolt);
+    arc.position.set(0, tips[0].y, tips[0].z);
+    arc.userData.spin = 13; arc.userData.axis = 'x';
+    cr.skull.add(arc);
+    (cr.spinners ||= []).push(arc);
   }
 
   flatten(SK); flatten(TO);
