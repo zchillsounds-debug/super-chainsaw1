@@ -1075,7 +1075,7 @@ export class Critter {
       const f = this.flames[i], base = f.userData.base ?? (i ? 0.27 : 0.42);
       f.scale.set(base * (1 + Math.sin(t * 23 + i) * 0.08), base * (1 + Math.sin(t * 17 + i * 2) * 0.16), base);
     }
-    if (this.spinners) for (const g of this.spinners) g.rotation.z += dt * g.userData.spin;
+    if (this.spinners) for (const g of this.spinners) g.rotation[g.userData.axis || 'z'] += dt * g.userData.spin;
     if (this.sprout) this.sprout.rotation.z = Math.sin(t * 2.2) * 0.15 + P.roll * 0.6;
     for (const w of this.wings) {
       const { s, k } = w.userData;

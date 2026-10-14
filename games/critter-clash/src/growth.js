@@ -140,6 +140,48 @@ export const FORMS = {
       },
     ],
   },
+  emberfly: {
+    path: 'Mystic',
+    forms: [
+      {
+        name: 'Emberwing', species: 'Glow Firefly', size: 1.1, voice: 1.5,
+        blurb: 'Two little sparks now follow it everywhere. Nobody knows if they are friends or children.',
+        colors: { body: 0x6c56d0, belly: 0xffe49a, accent: 0xffbf2a, dark: 0x281e4a, orb: 0xffd36a },
+        body: { w: 0.52, h: 0.7, headR: 0.48, legLen: 0.18, armLen: 0.24, chubby: 0.95, limb: 1.1 },
+        parts: { orbs: 0.6, brows: 0.35 },
+        moves: { special: 'Wisp Volley', super: 'Hypernova' },
+      },
+      {
+        name: 'Pyrolume', species: 'Lantern Moth', size: 1.24, voice: 1.2, portraitZoom: 1.08,
+        blurb: 'A swirl of living lanterns orbits it. On summer nights whole towns turn their lights off to watch.',
+        colors: { body: 0x5a40b8, belly: 0xffdc88, accent: 0xff9a2a, dark: 0x1e1640, orb: 0xffc04a, flame: 0xff7a2a, flameIn: 0xffe680 },
+        body: { w: 0.56, h: 0.86, headR: 0.46, legLen: 0.22, armLen: 0.3, chubby: 0.95, limb: 1.25 },
+        parts: { orbs: 1, flamecrest: 0.6, brows: 0.6 },
+        moves: { special: 'Lantern Swarm', super: 'Solar Flare' },
+      },
+    ],
+  },
+  lilypop: {
+    path: 'Brute',
+    forms: [
+      {
+        name: 'Lilyleap', species: 'Pond Frog', size: 1.12, voice: 0.95,
+        blurb: 'A lily pad grew around its neck like a cape. It can jump clean over a rival now.',
+        colors: { body: 0x74cf4c, belly: 0xfff0b8, accent: 0xff7ab8, dark: 0x285e30, petal: 0xffb0d8 },
+        body: { w: 0.74, h: 0.62, headR: 0.5, legLen: 0.2, armLen: 0.24, chubby: 1.16, limb: 1.35 },
+        parts: { leafmane: 1.0, lotus: 0.95 },
+        moves: { special: 'Tongue Whip', super: 'Lily Crash' },
+      },
+      {
+        name: 'Lotoad', species: 'Lotus Toad', size: 1.3, voice: 0.7,
+        blurb: 'The king of the pond, crowned with a lotus. When it belly-flops, the lake goes somewhere else.',
+        colors: { body: 0x5cb446, belly: 0xffe8a8, accent: 0xff6aaa, dark: 0x1e4a24, petal: 0xffa0d0 },
+        body: { w: 0.96, h: 0.8, headR: 0.5, legLen: 0.22, armLen: 0.32, chubby: 1.24, limb: 1.8 },
+        parts: { leafmane: 1.35, lotus: 1.5 },
+        moves: { special: 'Royal Tongue', super: 'Lotus Quake' },
+      },
+    ],
+  },
   pebblepup: {
     path: 'Colossus',
     forms: [
@@ -441,6 +483,40 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       fl.position.set(d.x * B.w * B.chubby * 0.55, B.h * 0.48 + d.y * B.h * 0.55, d.z * B.w * 0.55);
       cr.torso.add(fl);
     }
+  }
+
+  // glowing lantern orbs circling the body (spun in Critter.update)
+  if (P.orbs) {
+    const s = P.orbs, n = Math.round(2 + s * 4), g = new THREE.Group();
+    const om = new THREE.MeshBasicMaterial({ color: C.orb ?? C.accent });
+    const gm = new THREE.MeshBasicMaterial({ color: C.orb ?? C.accent, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false });
+    for (let k = 0; k < n; k++) {
+      const a = (k / n) * Math.PI * 2, R = B.w * 1.05, y = Math.sin(a * 2) * B.h * 0.15;
+      const o = new THREE.Mesh(sphere(0.06 * (0.8 + s * 0.3)), om), h = new THREE.Mesh(sphere(0.1 * (0.8 + s * 0.3)), gm);
+      o.position.set(Math.cos(a) * R, y, Math.sin(a) * R); h.position.copy(o.position);
+      g.add(o, h);
+    }
+    g.position.y = B.h * 0.6;
+    g.userData.spin = 1.4; g.userData.axis = 'y';
+    cr.torso.add(g);
+    (cr.spinners ||= []).push(g);
+  }
+
+  // a lotus flower crown: two rings of pointed petals
+  if (P.lotus) {
+    const s = P.lotus, pm = mat('petal', C.petal ?? 0xffa0d0), am = cr.mats.accent, g = new THREE.Group();
+    for (const [n, tilt, len, m] of [[8, 0.75, 0.42, pm], [6, 0.35, 0.34, am]]) {
+      for (let k = 0; k < n; k++) {
+        const a = (k / n) * Math.PI * 2 + (n === 6 ? 0.3 : 0);
+        const pg = new THREE.SphereGeometry(0.5, 12, 8); pg.scale(0.3, 0.1, 1); pg.translate(0, 0, 0.5); // a petal pointing along +z from its base
+        const petal = inked(pg.scale(len * s * headR, len * s * headR, len * s * headR), m, OL * 0.4);
+        const h = new THREE.Group(); h.rotation.set(0, a, 0);
+        petal.rotation.x = -tilt - 0.4; h.add(petal); g.add(h);
+      }
+    }
+    const c = new THREE.Mesh(sphere(headR * 0.1 * s), mat('pollen', 0xffe066)); c.position.y = headR * 0.06 * s; g.add(c);
+    g.position.set(0, headR * 0.92, -headR * 0.05);
+    cr.skull.add(g);
   }
 
   // long feather plumes sweeping back from the brow
