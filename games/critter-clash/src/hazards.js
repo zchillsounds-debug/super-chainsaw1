@@ -20,12 +20,12 @@ export const HAZARDS = {
 };
 
 export const SIGS = {
-  volcano: { name: 'Fissures', word: 'FISSURE!' },
-  frost:   { name: 'Ice slicks', word: 'SLIPPY!' },
-  neon:    { name: 'Laser sweeps', word: 'LASER!' },
-  beach:   { name: 'Rogue waves', word: 'SPLASH!' },
-  sky:     { name: 'Crosswinds', word: 'GUST!' },
-  grove:   { name: 'Spore clouds', word: 'ACHOO!' },
+  volcano: { name: 'Fissures', word: 'FISSURE!', tip: 'Fissure! Get off the crack!' },
+  frost:   { name: 'Ice slicks', word: 'SLIPPY!', tip: 'Ice slick! Slippery footing!' },
+  neon:    { name: 'Laser sweeps', word: 'LASER!', tip: 'Laser! Guard or roll through it!' },
+  beach:   { name: 'Rogue waves', word: 'SPLASH!', tip: 'Rogue wave! Step out of its lane!' },
+  sky:     { name: 'Crosswinds', word: 'GUST!', tip: 'Crosswind! Hold your ground!' },
+  grove:   { name: 'Spore clouds', word: 'ACHOO!', tip: "Spore cloud! Don't breathe it in!" },
 };
 
 // shared art for the ice slick (made once, never disposed)
@@ -239,7 +239,6 @@ export class Hazards {
     } else if (key === 'sky') {
       // a crosswind sweeps the gardens and shoves everyone one way
       sg.warn = 1.1; sg.dur = 4; sg.dx = dx; sg.dz = dz;
-      B.hud.callout?.('Crosswind!', 0, 1.4);
       sfx.whoosh?.(0.5);
     } else if (key === 'grove') {
       // a big spore cloud settles near one fighter and lingers; breathing it in makes you dizzy
@@ -254,6 +253,8 @@ export class Hazards {
       sg.ring = ring;
       sfx.warn();
     }
+    // the first one each match gets a callout that says what to do about it
+    if (!this.told) { this.told = true; B.hud.callout?.(this.S.tip, 0, 1); }
     this.sig = sg;
     B.stats.hazardsSeen = (B.stats.hazardsSeen || 0) + 1;
   }
