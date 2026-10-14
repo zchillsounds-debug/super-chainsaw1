@@ -21,7 +21,9 @@ try {
   const cards = pg.locator('.rcard'); console.log('cards', await cards.count());
   await cards.nth(7).tap(); await pg.waitForTimeout(800); await shot('5');
   console.log('sel', await pg.evaluate(() => __game.screens.sel));
-  await tapText(/FIGHT/); await pg.waitForTimeout(3000); await shot('6');
+  await tapText(/FIGHT/); await shot('5b');
+  await pg.locator('.train-pick .tp-foe').nth(3).tap(); await pg.locator('.train-pick .tp-ar').nth(2).tap(); await shot('5c');
+  await pg.locator('.train-pick button', { hasText: /FIGHT/ }).tap(); await pg.waitForTimeout(3000); await shot('6');
   console.log('mode', await pg.evaluate(() => __game.screens.mode + ' battle=' + !!__game.battle + ' p=' + __game.battle?.fighters[0].def.id));
 } catch (e) { console.log('FAIL', e.message.split('\n')[0]); await shot('fail'); }
 console.log('errors:', errs.slice(0, 8).join(' | ') || 'none');

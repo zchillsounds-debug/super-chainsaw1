@@ -360,7 +360,7 @@ export class Screens {
       diff.appendChild(b);
     });
     const train = this.ctx.kind === 'training';
-    const go = () => (cup ? this.ladder() : train ? this.training() : this.vs());
+    const go = () => (cup ? this.ladder() : train ? this.training() : this.ctx.kind === 'quick' ? this.matchSheet(false) : this.vs());
     R.querySelector('.go').appendChild(this.btn(cup ? 'GO!' : train ? 'PRACTICE!' : 'FIGHT!', 'primary big', go));
     this.pick(this.sel, true);
     removeEventListener('keydown', this._kn);
@@ -461,16 +461,20 @@ export class Screens {
   }
 
   // training: pick the sparring dummy and the arena, then go
-  training() {
+  // rival + arena sheet, shared by Training ("Sparring Setup") and Quick Battle ("Match Setup")
+  matchSheet(train) {
     const g = this.game;
+    if (this.root.querySelector('.train-pick')) return;
     const p = skinOf(CRITTERS[this.sel]);
     const others = CRITTERS.filter((x) => x.id !== p.id);
-    let foe = this.trainFoe && this.trainFoe !== p.id ? this.trainFoe : 'random', arena = this.trainArena || 'meadow';
+    const key = train ? 'train' : 'quick';
+    let foe = this[key + 'Foe'] && this[key + 'Foe'] !== p.id ? this[key + 'Foe'] : 'random', arena = this[key + 'Arena'] || (train ? 'meadow' : 'random');
+    const arenas = train ? ARENA_KEYS : ['random', ...ARENA_KEYS];
     const d = document.createElement('div');
     d.className = 'modal-wrap train-pick';
-    d.innerHTML = `<div class="modal"><h2>Sparring Setup</h2>
-      <small>Dummy</small><div class="tp-foes">${['random', ...others.map((c) => c.id)].map((id) => `<button class="tp-foe" data-id="${id}">${id === 'random' ? '<b>?</b>' : `<img src="${g.portrait(CRITTERS.find((c) => c.id === id))}" alt="${id}">`}</button>`).join('')}</div>
-      <small>Arena</small><div class="tp-arenas">${ARENA_KEYS.map((k) => `<button class="tp-ar" data-k="${k}">${ARENA_NAME[k]}</button>`).join('')}</div>
+    d.innerHTML = `<div class="modal"><h2>${train ? 'Sparring Setup' : 'Match Setup'}</h2>
+      <small>${train ? 'Dummy' : 'Rival'}</small><div class="tp-foes">${['random', ...others.map((c) => c.id)].map((id) => `<button class="tp-foe" data-id="${id}">${id === 'random' ? '<b>?</b>' : `<img src="${g.portrait(CRITTERS.find((c) => c.id === id))}" alt="${id}">`}</button>`).join('')}</div>
+      <small>Arena</small><div class="tp-arenas">${arenas.map((k) => `<button class="tp-ar" data-k="${k}">${k === 'random' ? '🎲 Random' : ARENA_NAME[k]}</button>`).join('')}</div>
       <div class="row"></div></div>`;
     const sync = () => {
       d.querySelectorAll('.tp-foe').forEach((b) => b.classList.toggle('on', b.dataset.id === foe));
@@ -481,16 +485,19 @@ export class Screens {
     sync();
     const row = d.querySelector('.row');
     row.appendChild(this.btn('Back', 'ghost-dark', () => d.remove()));
-    row.appendChild(this.btn('PRACTICE!', 'primary', () => {
+    row.appendChild(this.btn(train ? 'PRACTICE!' : 'FIGHT!', 'primary', () => {
       d.remove();
-      this.trainFoe = foe; this.trainArena = arena;
+      this[key + 'Foe'] = foe; this[key + 'Arena'] = arena;
       const c = foe === 'random' ? others[Math.floor(Math.random() * others.length)] : others.find((x) => x.id === foe);
+      if (!train) { this.quickPick = { c, arena: arena === 'random' ? pick(ARENA_KEYS) : arena }; this.vs(); return; }
       this.mode = 'battle';
       playMusic('battle');
       g.startBattle(p, c, { training: true, playerLevel: save.critters[p.id].level, cpuLevel: save.critters[p.id].level, arena });
     }));
     this.root.appendChild(d);
   }
+
+  training() { this.matchSheet(true); }
 
   // ---------- Critterdex: collection, skins and badges ----------
   dex(i = this.sel) {
@@ -724,10 +731,11 @@ export class Screens {
       opts = { cpuLevel: pl + 1, difficulty: 0.6, playerLevel: pl, arena: d.arena, mods: [d.mod] };
       label = `Daily · ${MODS[d.mod].icon} ${MODS[d.mod].name}`;
     } else {
-      const others = CRITTERS.filter((x) => x.id !== p.id);
-      c = others[Math.floor(Math.random() * others.length)];
+      const others = CRITTERS.filter((x) => x.id !== p.id), q = this.quickPick;
+      this.quickPick = null;
+      c = q?.c || others[Math.floor(Math.random() * others.length)];
       const pl = save.critters[p.id].level;
-      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: pick(ARENA_KEYS) };
+      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: q?.arena || pick(ARENA_KEYS) };
       label = `CPU · ${DIFFS[this.diff].name}`;
     }
     this.root.innerHTML = `
