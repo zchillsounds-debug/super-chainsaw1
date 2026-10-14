@@ -38,7 +38,8 @@ const ROUND_TIME = 60;
 const INTRO_FIRST = 4.2, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
 
 export class Battle {
-  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, cpuHp = 1, training = false } = {}) {
+  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, cpuHp = 1, training = false, stageSub = '' } = {}) {
+    this.stageSub = stageSub;
     this.game = game;
     this.scene = game.scene;
     this.fx = game.fx;
@@ -120,7 +121,7 @@ export class Battle {
     this.introSaid = 0;
     if (first) {
       const hz = !this.training && save.settings.hazards !== false && this.hazards?.H;
-      this.hud.stageCard(this.arena.A.name, this.training ? 'Training' : hz ? `⚠ ${hz.name}` : '');
+      this.hud.stageCard(this.arena.A.name, this.training ? 'Training' : this.stageSub || (hz ? `⚠ ${hz.name}` : ''));
     }
     this.tense = 0;
     this.camFocusWas = undefined;

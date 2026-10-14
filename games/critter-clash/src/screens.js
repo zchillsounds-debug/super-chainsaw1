@@ -788,7 +788,7 @@ export class Screens {
       const T = this.ctx, pl = save.critters[p.id].level;
       const avg = Math.round(T.team.reduce((a, id) => a + save.critters[id].level, 0) / 3);
       c = byId(T.foes[T.fi]);
-      opts = { cpuLevel: Math.max(1, avg), difficulty: 0.55 + T.fi * 0.08, playerLevel: pl, arena: T.arena, rounds: 1, playerHp: T.php[T.pi], cpuHp: T.fhp[T.fi] };
+      opts = { cpuLevel: Math.max(1, avg), difficulty: 0.55 + T.fi * 0.08, playerLevel: pl, arena: T.arena, rounds: 1, playerHp: T.php[T.pi], cpuHp: T.fhp[T.fi], stageSub: `Team Battle · ${T.pi === 2 ? 'Your last critter!' : T.fi === 2 ? 'Their last critter!' : `Fight ${T.pi + T.fi + 1}`}` };
       label = `Rival team ${T.fi + 1}/3`;
     } else if (this.ctx.kind === 'daily') {
       const d = this.ctx.d;
