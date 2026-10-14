@@ -480,10 +480,10 @@ export class Battle {
         if (Math.random() < 0.45 * fade) this.fx.spawn({ x: pr.x + (Math.random() - 0.5) * pr.r, y: 0.15, z: pr.z + (Math.random() - 0.5) * pr.r, vy: 2.2 + Math.random() * 1.5, color: Math.random() < 0.5 ? 0xff6a1e : 0xffc23a, size: 0.45 + Math.random() * 0.3, life: 0.4, shape: 'glow', grow: -1 });
         if (Math.random() < 0.08 * fade) this.fx.spawn({ x: pr.x, y: 0.3, z: pr.z, vy: 4, vx: (Math.random() - 0.5) * 2, color: 0xfff07a, size: 0.12, life: 0.5, shape: 'spark' });
         const d = Math.hypot(target.x - pr.x, target.z - pr.z), O = pr.owner;
-        if (target.alive && !target.under && target.y < 0.5 && d < pr.r + 0.3 && pr.t < pr.life - 0.25 && this.clock - (O.burnAt ?? -9) > 0.5) {
+        if (target.alive && !target.under && target.y < 0.5 && d < pr.r + 0.3 && pr.t < pr.life - 0.25 && this.clock - (O.burnAt ?? -9) > 0.6) {
           O.burnAt = this.clock;
           const a = Math.atan2(target.x - pr.x, target.z - pr.z) || 0;
-          this.applyHit(O, target, { dmg: 13 * O.power, kb: 0.7, lift: 0, stun: 0.16, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: false, type: O.type, dizzy: 4, projectile: true });
+          this.applyHit(O, target, { dmg: 11 * O.power, kb: 0.7, lift: 0, stun: 0.16, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: false, type: O.type, dizzy: 4, projectile: true });
         }
       } else if (pr.kind === 'shell') {
         // lobbed up, bursts in the air above its mark

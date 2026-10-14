@@ -27,7 +27,7 @@ export const SPECIALS = {
   burrow:    { cd: 4.6, range: [2.5, 9] },
   puddle:    { cd: 4.4, range: [2.5, 8] },
   staticfield: { cd: 4.4, range: [0, 2.2] },
-  flametrail: { cd: 4.6, range: [1.5, 7] },
+  flametrail: { cd: 5.0, range: [1.5, 7] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -494,7 +494,7 @@ export class Fighter {
         this.trailAt -= dt;
         if (this.trailAt <= 0) {
           this.trailAt = 0.065;
-          B.spawnProjectile(this, { kind: 'ember', big: true, x: this.x, z: this.z, y: 0.03, vx: 0, vz: 0, r: 0.62, life: 2.6, hit: {} });
+          B.spawnProjectile(this, { kind: 'ember', big: true, x: this.x, z: this.z, y: 0.03, vx: 0, vz: 0, r: 0.62, life: 2.0, hit: {} });
         }
         if (o && !this.hitIds.has(o) && this.distTo(o) < 1.3 && o.alive) {
           this.hitIds.add(o);

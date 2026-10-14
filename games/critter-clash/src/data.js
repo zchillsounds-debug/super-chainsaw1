@@ -183,7 +183,7 @@ export const CRITTERS = [
     colors: { body: 0xe8503a, belly: 0xfff2e0, accent: 0xffc23a, dark: 0x7a2018, eye: '#2a0c08', iris: '#ffb020', flame: 0xff6a1e, flameIn: 0xfff07a },
     body: { w: 0.58, h: 0.56, headR: 0.49, legLen: 0.15, armLen: 0.2, chubby: 1.0 },
     ears: 'pointy', tail: 'foxfire', extra: 'fox', voice: 1.4,
-    stats: { hp: 990, speed: 7.0, power: 1.03, weight: 0.85 },
+    stats: { hp: 920, speed: 6.8, power: 0.95, weight: 0.85 },
     special: 'flametrail', super: 'fireworks',
     moves: { special: 'Flame Trail', super: 'Firework Finale' },
   },
