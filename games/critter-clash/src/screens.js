@@ -825,7 +825,9 @@ export class Screens {
         ${HAZARDS[opts.arena] && save.settings.hazards !== false ? `<div class="vs-hazard">⚠ Arena hazard: ${HAZARDS[opts.arena].name}</div>` : ''}
       </div>`;
     sfx.boom();
-    setTimeout(() => g.startBattle(p, c, opts), 1900);
+    // only if the player is still on this VS screen (back or a menu tap during it must not drop them into a fight)
+    const vsToken = this.vsToken = {};
+    setTimeout(() => { if (this.mode === 'vs' && this.vsToken === vsToken) g.startBattle(p, c, opts); }, 1900);
   }
 
   // ---------- results ----------
