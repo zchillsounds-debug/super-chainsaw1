@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 148)
+# Critter Clash: Handoff (after Round 158)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -27,6 +27,7 @@
 - **New target end: about 06:45 UTC on 2026-10-14.** Check `date -u`. Keep chaining until then, then stop and summarise. If a worker stalls, extend by the stall.
 - Session 10b (02:52–04:35 UTC) sent the user the f427c6a APK (R113), then did Rounds 116–131 (Team Battle polish, a 16-critter balance pass, **Kindlekit** and **Squeakwing**, critters 17 and 18, trophy fireworks). This was the last planned session: the user's extra ~2.4 h ended at about 04:35 UTC on 2026-10-14.
 - Session 11 (04:42–~06:40 UTC on 2026-10-14) fixed the robin crash (R132), re-measured balance (full 18- and 19-critter runs, both error-free), sent the user the R135 APK partway and the final APK at the end, and did Rounds 133–148 (Snoozlo is critter 19). It ended at the 06:45 target; nothing was chained after it because the user's requested time was used up.
+- Session 12 (07:03–~09:30 UTC on 2026-10-14, the user's own chat): the user asked for **growth** ("critters grow when they get stronger and change how they look, into huge or strong creatures depending on their profile, with more powerful moves, like Pokémon evolution"). Their choices: **don't call it evolve** (it's "grow/growth"), XP-based, **3 stages**, a **fixed path per critter**, **fully new models** for each form. Rounds 149–158 built it for all 19 critters (see "Growth" below).
 - **A second session works on this branch at the same time:** `session_01N69mQniqCEkTvu2X5XzxtL` (the user's own Claude app chat). It handles the user's playtest reports (R99 tips out of the way, R100 mod chips, R101 cupflow, Settings "Battle tips" toggle and "Button size"). Before every push run `git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd` (never rebase or force-push: the classifier blocks it and it would clobber their work). Its round numbers overlap ours (two R99s); just keep counting up from the highest number in `git log`. Stay away from the tutorial/HUD tips/Settings it is changing; prefer content, arenas, modes, balance.
 
 ## Run it
@@ -222,6 +223,18 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - Tools: `tools/teamflow.mjs [WxH] [w/l pattern]` taps through a whole Team Battle; `cupflow.mjs` handles the finale and logs what covers a failed tap (failed taps on results/trophy buttons in headless are animation-stability waits, not real blockers); tapcheck opens `matchsetup`, `teampick`, `teamvs`.
 - Checked by tapping on phones: Sky Cup → trophy → finale → title (740×360), Team Battle win and loss paths, first launch → battle (740×360, 360×640, 412×915), tap-check clean with 17 critters.
 
+## Growth (session 12, `src/growth.js`)
+- **Stages:** Lv 1 base, **Lv 7 stage 2, Lv 14 stage 3** (`GROW_LV`, `stageFor`). Gear (Lv 5/10/15) is separate; stage 3 forms skip the scarf.
+- **`grown(def, lv, shiny)`** returns the form for a level, keeping `id` (progress, personality, AI, quirks all still key on it). `withGear(def, lv)` in data.js now applies it, so `skinOf`, cup/boss trainers and (in `vs()`) **every rival** grow by their level. Roster, Critterdex tiles and info cards show the current form.
+- **`FORMS[id] = { path, forms: [stage2, stage3] }`**: each form sets name, species, blurb, colours, `size` (overall scale via `Critter.sizeG`), `body` (or `bodyMul`: GROW2/GROW3 multipliers on the base body), `tailScale`, `earScale`, `portraitZoom`, `voice`, `moves` (new move names) and `parts`.
+- **Parts** (`buildGrowth`, called from the Critter constructor): flamecrest, horns, brows, tusks, lavaplates, backfin (runs down the upright back), whiskers, pearl, leafmane, antlers (with blossoms), crystalridge (`colors.crystal`), stonearmor (shoulders + paw bracers), boltmane, cloudcrest, plumes, windring and orbs (both spun via `cr.spinners`), lotus, flowers. `body.limb` thickens arms/legs.
+- **Paths:** Cindermunch → Blazemunch → Magmuncher (Brute), Bubbalotl → Tidalotl → Leviatotl (Mystic), Clovebun → Bramblehare → Jackalorn (Swift), Voltferret → Voltweasel → Stormstoat (Storm), Pebblepup → Cragmutt → Montiff (Colossus), Hootsy → Hootwind → Cyclowl (Sky), Pricklepuff → Thistlehog → Thornhulk (Fortress), Emberfly → Emberwing → Pyrolume, Lilypop → Lilyleap → Lotoad, Rolladillo → Bouldillo → Citadillo, Pengsicle → Pengsleet → Emperice, Kindlekit → Kindlefox → Solfox, Woolt → Wooltage → Thunderam, Whirlwhisk → Whirlglide → Tempestail, Diggles → Drillmole → Quarrymole, Ripples → Splashotter → Torrentide, Jiggawatt → Jigglevolt → Megawatt, Squeakwing → Shriekwing → Echowing, Snoozlo → Snoozalot → Slumberking. The first 9 lines have hand-set bodies and colours; the last 10 use `bodyMul` and keep the base colours (candidates for a deeper redesign). A generic type-themed fallback still exists for any critter without a FORMS entry.
+- **Power:** `MOVE_POW` (special/super/projectile damage ×1.12 / ×1.25, applied in `Battle.applyHit`), `CD_MULT` (special cooldown ×0.92 / ×0.84), HP ×1.06 / ×1.12. Grown forms flare when they start a special.
+- **Growing scene** `Screens.growUp(id, lv, done)`: "What? X is growing!", flickering white silhouettes speeding up (`sfx.shimmer`), flash, then a card with the new name, species, path, moves and boosts (`sfx.grown`, heavy buzz). Tap to hurry; Android back hurries, then closes. On the results screen it swaps the winner's model in place (`Fighter.regrow`) and updates the card portrait. If the player taps past results first, `pendingGrow` plays it on the next calm menu (`Screens.update`). In Camp, feeding into a new stage plays it and rebuilds Camp.
+- Cameras (intro close-up, super cut-in, results) and `headPos`/`chestPos`/shield scale with `def.size`. Portrait cache key includes the stage.
+- Critterdex **Growth** row: three stage chips (unreached forms are dark silhouettes named ???; tap a reached one to view it). Info card shows "Stage N" and "🌱 Grows at Lv X". Pecan news `grow` (names critters that already grew), How to Play line. Rematch rebuilds the def so it uses the grown form.
+- Test hooks: `?play&p=..&pl=14&c=..&cl=7` (levels pick forms), `window.__grow(def, lv)`, `GROW=7 node tools/cupflow.mjs 740x360 0` (partner grows mid-cup; prints "growing scene showed"), tapcheck opens `grow`.
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -375,6 +388,16 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 142. A rival sung to sleep by Lullaby slumps with closed eyes and z's instead of dizzy stars (`f.asleep`).
 143. How to Play tip about the nap counter. Perf check: 211–216 draw calls, ≤530k triangles (unchanged).
 144. Drifting cloud shadows over the field in Meadow, Seashell Bay and Cloudtop (`this.cloudShade`, one draw call).
+149. Growth system: stages at Lv 7/14, first four lines (Cindermunch, Bubbalotl, Clovebun, Pebblepup), stronger specials/supers.
+150. Growing scene, Critterdex growth line, grown forms in roster/Camp/rivals, cameras scale with size.
+151. Back fin, antlers, Rematch uses the grown form, results card updates.
+152. Growing in Camp, Pecan's growth news, How to Play.
+153. Voltferret line; special flare for grown forms.
+154. Skipped growing scenes play on the next menu; cupflow GROW=.
+155. Hootsy line (Aurora's champion owl is now a giant Cyclowl).
+156. Pricklepuff line (Pecan's final test is Thornhulk).
+157. Emberfly and Lilypop lines.
+158. Lines for the last ten critters.
 L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (smaller, softer, per-kind `cap` on point size).
 
 ## Critique backlog (known issues)
@@ -388,7 +411,10 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - The Sky Cup outro promises a picnic; Camp could have a sky-themed reward (e.g. a balloon prop) for clearing it.
 - No localisation.
 
+- Growth (session 12) is untested on a real phone; ask the user how the growing scene and the big forms feel. Balance was not re-measured with grown forms (both sides grow by level in cups, so it's symmetric, but hand-built bodies are bigger targets visually only; hit ranges are unchanged).
+- The 10 `bodyMul` lines keep their base colours; deeper redesigns (new colours, a signature part each) would make them read as new creatures like the first nine.
 ## Suggested next rounds
+- Session 12 is done. Next, if the user asks: polish the 10 `bodyMul` growth lines, ask for playtest feedback on growing, carry on numbering from R159.
 - Session 11 is done. If the user asks for more:
   1. Ask them whether Snoozlo's counter feels fair on a phone, and whether the R135/R145 APKs feel smoother over a long session (the arena texture leak fix).
   2. Run a 2-rep full robin (`tools/robin.mjs 2`, about 35 minutes for 19 critters) to get a less noisy picture; 1-rep runs swing ±15%.
