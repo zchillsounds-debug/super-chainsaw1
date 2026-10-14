@@ -1125,8 +1125,12 @@ export class Screens {
       else b.appendChild(this.btn(T.daily ? 'Try Again' : 'New Team Battle', 'primary', () => { this.ctx = { kind: 'team', daily: T.daily }; g.endBattle(); playMusic('menu'); this.select(); }));
       b.appendChild(this.btn('Challenges', 'ghost', () => this.challenges()));
     } else if (kind === 'trials') {
+      // after a win, offer the next trial that still has stars to earn (same critter)
+      const i = TRIALS.findIndex((t) => t.arena === this.ctx.arena);
+      const next = won && [...TRIALS.slice(i + 1), ...TRIALS.slice(0, i)].find((t) => (save.trials?.[t.arena] || 0) < 3);
       if ((this.ctx.stars || 0) < 3) b.appendChild(this.btn('Try Again', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
-      b.appendChild(this.btn('Trials', (this.ctx.stars || 0) < 3 ? 'ghost' : 'primary', () => { this.challenges(); this.trialSheet(); }));
+      if (next) b.appendChild(this.btn('Next Trial', (this.ctx.stars || 0) < 3 ? 'ghost' : 'primary', () => { this.ctx = { kind: 'trials', arena: next.arena, foe: next.foe }; g.endBattle(); playMusic('menu'); this.mode = 'select'; this.vs(); }));
+      b.appendChild(this.btn('Trials', 'ghost', () => { this.challenges(); this.trialSheet(); }));
     } else if (kind === 'daily') {
       if (!won) b.appendChild(this.btn('Try Again', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
       b.appendChild(this.btn('Challenges', won ? 'primary' : 'ghost', () => this.challenges()));
