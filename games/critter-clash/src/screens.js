@@ -135,6 +135,12 @@ export class Screens {
         "Oh, {name}! A new league has opened deep in the mushroom woods: the Glowcap Cup.",
         "The fireflies are lovely, but watch out for the spore puffs. Achoo!",
       ]), 600);
+    } else if (!g.autoplay && save.cups.champion && !save.news?.includes('fox') && !save.unlocked.includes('kindlekit')) {
+      (save.news ||= []).push('fox'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! Did you see the fireworks over Cloudtop Gardens last night? That was Kindlekit, an ember fox kit with a campfire on its tail!",
+        "Fizz the festival pyro has joined the Sky Cup with it. Win that match and Kindlekit might just join your team.",
+      ]), 600);
     } else if (!g.autoplay && save.cups.champion && !save.news?.includes('jelly') && !save.unlocked.includes('jiggawatt')) {
       (save.news ||= []).push('jelly'); persist();
       setTimeout(() => this.mode === 'title' && this.profTalk([

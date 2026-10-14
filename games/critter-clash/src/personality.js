@@ -9,6 +9,7 @@ const mouth = (f) => ({ x: f.x + Math.sin(f.face) * 0.45, y: f.y + f.def.body.h 
 const rnd = (s) => (Math.random() - 0.5) * s;
 
 export const LINES = {
+  kindlekit:   { intro: ["Let's light it up!", 'Festival time!', "Tail's warmed up!"], win: ['Ka-BOOM! Ta-da!', 'What a show!', 'Encore? Encore!'] },
   cindermunch: { intro: ['Snack time!', "I'm fired up!", 'Toasty!'], win: ['Delicious!', 'Well done. Extra crispy!', 'Munch munch!'] },
   bubbalotl:   { intro: ['Bloop bloop!', 'Hug incoming!', 'Splish splash!'], win: ['Group hug!', 'Totally bubbly!', 'Bloop-tastic!'] },
   clovebun:    { intro: ['Hop to it!', 'Lucky me!', 'Ready, set, hop!'], win: ['Four-leaf win!', 'Hoppy days!', 'Too fast!'] },
@@ -39,6 +40,20 @@ export function sayLine(f, kind) {
 
 // ---------------- intros (about 1.5 s, then a held "ready" pose) ----------------
 const INTRO = {
+  kindlekit(f, P, k) {
+    const fx = f.battle.fx;
+    if (k < 0.7) { // curled up asleep in its own tail, the tail flame flickering
+      P.sy = 0.7; P.sx = 1.15; P.head = 0.35; P.tail = 0.1; P.armLz = P.armRz = 0.2;
+      f.critter.emote('closed', 'smile', 0.1);
+      if (Math.random() < 0.2) fx.spawn({ ...head(f, 0.4), vy: 0.8, color: 0xffffff, size: 0.3, life: 0.6, shape: 'glow', alpha: 0.4 });
+    } else if (k < 1.6) { // pops awake and fires a sparkler spin
+      const j = Math.min(1, (k - 0.7) * 4);
+      P.y = sin(Math.min(1, (k - 0.7) / 0.5) * Math.PI) * 0.6; P.yaw = j * Math.PI * 2; P.armLz = P.armRz = 2.5; P.tail = 1.5;
+      f.critter.emote('happy', 'grin', 0.1);
+      if (once(f, 'pop')) { sfx.fire(); fx.spawn({ ...head(f, 0.2), color: 0xffc23a, size: 2.5, life: 0.25, shape: 'glow' }); }
+      if (Math.random() < 0.6) fx.spawn({ ...head(f, rnd(0.6)), x: f.x + rnd(1.6), z: f.z + rnd(1.6), vy: 2, color: [0xff4fa0, 0xffe14d, 0x4fd8ff][Math.floor(Math.random() * 3)], size: 0.35, life: 0.4, shape: 'star' });
+    } else ready(f, P, k);
+  },
   pricklepuff(f, P, k) {
     const fx = f.battle.fx;
     if (k < 0.8) { // curled-up spiky ball, rolling on the spot
@@ -245,6 +260,14 @@ function ready(f, P, k) {
 
 // ---------------- victories (loop for the winpose) ----------------
 const WIN = {
+  kindlekit(f, P, k) { // twirls its tail like a sparkler while little fireworks pop overhead
+    P.y = abs(sin(k * 5)) * 0.2; P.armLz = 2.2 + sin(k * 10) * 0.4; P.armRz = 2.2 - sin(k * 10) * 0.4; P.tail = 1.6; P.yaw = sin(k * 2) * 0.4;
+    f.critter.emote('happy', 'grin', 0.1);
+    if (Math.random() < 0.06) {
+      const at = { x: f.x + rnd(2.4), y: 2.6 + Math.random(), z: f.z + rnd(2.4) }, c = [0xff4fa0, 0xffe14d, 0x4fd8ff, 0x9aff4f][Math.floor(Math.random() * 4)];
+      for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; f.battle.fx.spawn({ ...at, vx: Math.cos(a) * 3, vy: Math.sin(a) * 3, vz: rnd(1), color: c, size: 0.25, life: 0.5, shape: 'spark', grav: 3 }); }
+    }
+  },
   pricklepuff(f, P, k) { // arms folded, proud little hops, leaves drifting
     const j = abs(sin(k * 4));
     P.y = j * 0.25; P.armLx = P.armRx = -1.1; P.armLz = P.armRz = -0.9; P.head = -0.25; P.headYaw = sin(k * 1.3) * 0.4; P.sx = 1.06;

@@ -177,6 +177,16 @@ export const CRITTERS = [
     special: 'staticfield', super: 'stormcloud',
     moves: { special: 'Static Field', super: 'Storm Cloud' },
   },
+  {
+    id: 'kindlekit', name: 'Kindlekit', type: 'fire', species: 'Ember Fox Kit',
+    blurb: 'Its tail tip is a little campfire that never goes out. Loves festivals and anything that goes BOOM.',
+    colors: { body: 0xe8503a, belly: 0xfff2e0, accent: 0xffc23a, dark: 0x7a2018, eye: '#2a0c08', iris: '#ffb020', flame: 0xff6a1e, flameIn: 0xfff07a },
+    body: { w: 0.58, h: 0.56, headR: 0.49, legLen: 0.15, armLen: 0.2, chubby: 1.0 },
+    ears: 'pointy', tail: 'foxfire', extra: 'fox', voice: 1.4,
+    stats: { hp: 990, speed: 7.0, power: 1.03, weight: 0.85 },
+    special: 'flametrail', super: 'fireworks',
+    moves: { special: 'Flame Trail', super: 'Firework Finale' },
+  },
 ];
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
@@ -193,6 +203,7 @@ export const SHINY = {
   pebblepup:   { body: 0x6a6a88, belly: 0xe8e4ff, accent: 0xff8ad8, dark: 0x262438, iris: '#ff6ad0' },
   whirlwhisk:  { body: 0xffb38a, belly: 0xfff4e4, accent: 0xffe2c8, dark: 0x8a3a2a, iris: '#3ac07a' },
   diggles:     { body: 0xd8d0ec, belly: 0xffffff, accent: 0x6ad0ff, dark: 0x4a4a6a, iris: '#3a7bff' },
+  kindlekit:   { body: 0x3a3a4a, belly: 0xe8f0ff, accent: 0x6ae0ff, dark: 0x141420, iris: '#6ae0ff', flame: 0x3a8aff, flameIn: 0xbfeaff },
   jiggawatt:   { body: 0xffa6d8, belly: 0xfff0f8, accent: 0x8af0ff, dark: 0x8a2a6a, iris: '#2ad0ff' },
   ripples:     { body: 0xf4f0ea, belly: 0xffffff, accent: 0x6ad0ff, dark: 0x8a8a9a, iris: '#ff6a9a' },
   lilypop:     { body: 0xffd84a, belly: 0xfffbe8, accent: 0x6ad0ff, dark: 0x8a5a10, iris: '#3a7bff' },
@@ -294,6 +305,7 @@ export const CUPS = [
       { name: 'Sora', style: 'zoner', title: 'Cloud Gardener', critter: 'clovebun', skin: 'shiny', level: 14, taunt: 'Every cloud has a silver lining. Yours is a loss.', beat: "Oh! You've got a green thumb for battling.", gloat: "Weeded. Out. Of. The. Sky." },
       { name: 'Captain Puff', style: 'trickster', title: 'Balloon Pilot', critter: 'whirlwhisk', level: 15, mods: ['lowgrav'], taunt: 'Hold onto your hat. Up here, everything floats!', beat: "Blimey. You've let all the air out of me.", gloat: "Up, up and away... with the win!" },
       { name: 'Gran Pebbles', style: 'turtle', title: 'Mountain Climber', critter: 'pebblepup', skin: 'shiny', level: 16, taunt: 'Climbed all the way up here with Pebblepup on my back. Your turn to be carried.', beat: "Well, I'll be. Time to take the stairs down.", gloat: "Grandma's still got it!" },
+      { name: 'Fizz', style: 'rushdown', title: 'Festival Pyro', critter: 'kindlekit', level: 17, taunt: "Every night up here ends with fireworks. Tonight, they're for YOUR farewell!", beat: "Wow... you stole the whole show. Kindlekit wants to watch the next one from YOUR side.", gloat: "And THAT's how you end a festival. Ka-BOOM!" },
       { name: 'Professor Pecan', style: 'balanced', title: 'Your Mentor', critter: 'pricklepuff', skin: 'shiny', level: 18, boss: true, bossTitle: 'FINAL TEST', taunt: "Surprise! Did you think I only hand out critters? Let's see what you've learned, {name}!", beat: "Ha! The student has become the master!", gloat: "Lesson one: never underestimate your professor!" },
     ],
   },
@@ -383,6 +395,8 @@ export const MOVE_DESC = {
   rocktoss: 'Lobs a boulder in an arc. It thuds down where the rival is standing.',
   swoop: 'Leaps up and glides down onto the rival, tail first.',
   jetstream: 'Puffs its cheeks and blows a long gust that shoves the rival back, hit after hit.',
+  flametrail: 'Dashes at the rival and leaves a trail of flames that keep burning anyone who steps in.',
+  fireworks: 'Launches a festival of firework shells that burst all around the rival. The big one goes last!',
   burrow: 'Dives underground, tunnels over and bursts up right under the rival.',
   molerush: 'Pops up under the rival three times in a row. The last one sends them flying.',
   staticfield: 'Crackles with a field of static. Anyone close gets zapped again and again, and shots fizzle out.',

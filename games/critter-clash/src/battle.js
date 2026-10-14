@@ -335,6 +335,19 @@ export class Battle {
       disc.rotation.x = -Math.PI / 2; disc.scale.setScalar(1 / 0.88);
       disc.renderOrder = 1;
       mesh.add(disc);
+    } else if (p.kind === 'ember') {
+      // a scorched patch with a hot glowing core; the flames themselves are particles
+      const scorch = new THREE.Mesh(new THREE.CircleGeometry(p.r, 20), new THREE.MeshBasicMaterial({ color: 0x2a1008, transparent: true, opacity: 0, depthWrite: false }));
+      const core = new THREE.Mesh(new THREE.CircleGeometry(p.r * 0.6, 20), new THREE.MeshBasicMaterial({ color: 0xff7a20, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+      scorch.rotation.x = core.rotation.x = -Math.PI / 2; core.position.y = 0.01;
+      scorch.renderOrder = core.renderOrder = 1;
+      mesh.add(scorch, core);
+    } else if (p.kind === 'shell') {
+      // a firework shell: a bright ball with a little paper cap
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.26 * (p.size || 1), 12, 9), new THREE.MeshToonMaterial({ color: p.color, emissive: p.color, emissiveIntensity: 0.5 }));
+      const cap = new THREE.Mesh(new THREE.ConeGeometry(0.12 * (p.size || 1), 0.2 * (p.size || 1), 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      cap.position.y = 0.2 * (p.size || 1);
+      mesh.add(ball, cap);
     } else if (p.kind === 'cloud') {
       // a grumpy little thundercloud
       const cm = new THREE.MeshToonMaterial({ color: 0x6a6a8a, emissive: 0x1a1a2a });
@@ -459,6 +472,26 @@ export class Battle {
             this.applyHit(pr.owner, target, { dmg: (last ? 70 : 26) * pr.owner.power, kb: last ? 7 : 0.8, lift: last ? 8 : 0, stun: last ? 0.45 : 0.25, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: last, type: pr.owner.type, launch: last, dizzy: last ? 20 : 8, projectile: true });
           }
         }
+      } else if (pr.kind === 'ember') {
+        // Kindlekit's flame trail: burns whoever stands in it (one shared burn tick per owner)
+        const fade = Math.max(0, Math.min(1, pr.t * 8, (pr.life - pr.t) * 2));
+        pr.mesh.children[0].material.opacity = 0.45 * fade;
+        pr.mesh.children[1].material.opacity = (0.5 + Math.sin(pr.t * 14 + pr.x) * 0.15) * fade;
+        if (Math.random() < 0.45 * fade) this.fx.spawn({ x: pr.x + (Math.random() - 0.5) * pr.r, y: 0.15, z: pr.z + (Math.random() - 0.5) * pr.r, vy: 2.2 + Math.random() * 1.5, color: Math.random() < 0.5 ? 0xff6a1e : 0xffc23a, size: 0.45 + Math.random() * 0.3, life: 0.4, shape: 'glow', grow: -1 });
+        if (Math.random() < 0.08 * fade) this.fx.spawn({ x: pr.x, y: 0.3, z: pr.z, vy: 4, vx: (Math.random() - 0.5) * 2, color: 0xfff07a, size: 0.12, life: 0.5, shape: 'spark' });
+        const d = Math.hypot(target.x - pr.x, target.z - pr.z), O = pr.owner;
+        if (target.alive && !target.under && target.y < 0.5 && d < pr.r + 0.3 && pr.t < pr.life - 0.25 && this.clock - (O.burnAt ?? -9) > 0.5) {
+          O.burnAt = this.clock;
+          const a = Math.atan2(target.x - pr.x, target.z - pr.z) || 0;
+          this.applyHit(O, target, { dmg: 13 * O.power, kb: 0.7, lift: 0, stun: 0.16, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: false, type: O.type, dizzy: 4, projectile: true });
+        }
+      } else if (pr.kind === 'shell') {
+        // lobbed up, bursts in the air above its mark
+        pr.vy -= pr.g * dt;
+        pr.y += pr.vy * dt;
+        pr.mesh.rotation.z = Math.atan2(-pr.vx, pr.vy) * 0.6;
+        this.fx.spawn({ x: pr.x, y: pr.y - 0.1, z: pr.z, color: Math.random() < 0.5 ? 0xffe9a0 : pr.color, size: 0.3 * (pr.size || 1), life: 0.3, shape: 'spark', grow: -1 });
+        if (pr.vy < 0 && pr.y <= pr.burstY) { this.shellBurst(pr, target); this.removeProjectile(i); continue; }
       } else if (pr.kind === 'puddle') {
         // a lingering slippery zone: the rival slides around inside it
         const m = pr.mesh.children[0].material, fade = Math.min(1, pr.t * 6, (pr.life - pr.t) * 2);
@@ -503,6 +536,26 @@ export class Battle {
     big ? sfx.boom() : sfx.land();
     const d = Math.hypot(target.x - pr.x, target.z - pr.z);
     if (target.alive && d < pr.landR + 0.35 && target.y < 1.6) {
+      const dx = d > 0.05 ? (target.x - pr.x) / d : Math.sin(pr.owner.face), dz = d > 0.05 ? (target.z - pr.z) / d : Math.cos(pr.owner.face);
+      this.applyHit(pr.owner, target, { ...pr.hit, dirX: dx, dirZ: dz, heavy: big, projectile: true });
+    }
+  }
+
+  shellBurst(pr, target) {
+    const big = (pr.size || 1) > 1.4, at = { x: pr.x, y: pr.y, z: pr.z };
+    const cols = [pr.color, pr.color2];
+    const n = big ? 46 : 22;
+    for (let k = 0; k < n; k++) {
+      // a sphere of stars that droop under gravity, like real fireworks
+      const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u), sp = (big ? 8 : 5.5) * (0.8 + Math.random() * 0.3);
+      this.fx.spawn({ ...at, vx: r * Math.cos(a) * sp, vy: u * sp + 1, vz: r * Math.sin(a) * sp, color: cols[k % 2], size: (big ? 0.5 : 0.36) * (k % 3 ? 1 : 1.3), life: big ? 0.9 : 0.6, shape: k % 3 ? 'spark' : 'star', additive: k % 3 !== 0, grav: 5, rot: Math.random() * 6 });
+    }
+    this.fx.spawn({ ...at, color: 0xffffff, size: big ? 6 : 3, life: 0.18, shape: 'glow' });
+    this.fx.spawn({ ...at, color: pr.color, size: big ? 5 : 2.8, life: 0.35, shape: 'ring' });
+    this.fx.shock({ x: pr.x, y: 0.05, z: pr.z }, pr.color, pr.landR * 2, 0.3);
+    if (big) { sfx.boom(); this.shake(0.6); } else sfx.fire();
+    const d = Math.hypot(target.x - pr.x, target.z - pr.z);
+    if (target.alive && !target.under && d < pr.landR + 0.35) {
       const dx = d > 0.05 ? (target.x - pr.x) / d : Math.sin(pr.owner.face), dz = d > 0.05 ? (target.z - pr.z) / d : Math.cos(pr.owner.face);
       this.applyHit(pr.owner, target, { ...pr.hit, dirX: dx, dirZ: dz, heavy: big, projectile: true });
     }
@@ -892,6 +945,31 @@ export class Battle {
       } else if (f.superPhase === 'recover') {
         P.sy = 1.05; P.lean = 0;
         if (t > 0.35) this.endSuper(f);
+      }
+    } else if (id === 'fireworks') {
+      // a festival finale: shells launched off the tail flame, bursting all around the rival, the big one last
+      const P = f.critter.pose;
+      if (f.superPhase === 'go') { f.superPhase = 'launch'; f.st = 0; f.shellN = 0; sfx.voice(f.def.voice, 'win'); sfx.whoosh?.(1.4); }
+      if (f.superPhase === 'launch') {
+        const N = 8, PAL = [[0xff4fa0, 0xffe14d], [0x4fd8ff, 0xffffff], [0x9aff4f, 0xffe14d], [0xffa030, 0xff4f4f], [0xc87aff, 0x7af0ff]];
+        f.turnTo(f.angleTo(o), 8, dt);
+        P.armLz = P.armRz = 2.4 + Math.sin(t * 18) * 0.3; P.head = -0.35; P.tail = 1.2; P.y = Math.abs(Math.sin(t * 9)) * 0.12;
+        f.critter.emote('happy', 'grin', 0.2);
+        if (f.shellN < N && t > 0.1 + f.shellN * 0.16) {
+          const last = f.shellN === N - 1, sp = last ? 0 : 2.6, c = PAL[f.shellN % PAL.length];
+          const tx = o.x + (Math.random() - 0.5) * sp + o.vx * 0.35, tz = o.z + (Math.random() - 0.5) * sp + o.vz * 0.35;
+          const T = last ? 1.0 : 0.75, g = 18, y0 = 1.3, by = last ? 1.6 : 1.1;
+          this.spawnProjectile(f, { kind: 'shell', big: true, x: f.x, z: f.z, y: y0, vx: (tx - f.x) / T, vz: (tz - f.z) / T, vy: (by - y0 + 0.5 * g * T * T) / T, g, burstY: by, landR: last ? 2.2 : 1.15, r: 0.2, life: 3, size: last ? 1.8 : 1, color: last ? 0xffd23a : c[0], color2: last ? 0xff4fa0 : c[1],
+            hit: last ? { dmg: 115 * f.power, kb: 6, lift: 11, stun: 0.8, type: f.type, launch: true, dizzy: 30 } : { dmg: 27 * f.power, kb: 1.6, lift: 0, stun: 0.4, type: f.type, dizzy: 8 } });
+          fx.spawn({ x: tx, y: 0.06, z: tz, color: 0xffc23a, size: last ? 4.4 : 2.3, life: 0.6, shape: 'ring', alpha: 0.5 });
+          fx.spawn({ x: f.x, y: 1.4, z: f.z, color: 0xfff07a, size: 1.6, life: 0.15, shape: 'glow' });
+          sfx.whoosh?.(1.8);
+          f.shellN++;
+        }
+        if (f.shellN >= N && !this.projectiles.some((p) => p.owner === f && p.kind === 'shell')) { f.superPhase = 'recover'; f.st = 0; }
+      } else if (f.superPhase === 'recover') {
+        P.armLz = P.armRz = 1.2; P.sy = 1.05;
+        if (t > 0.4) this.endSuper(f);
       }
     } else if (id === 'stormcloud') {
       // summon a thundercloud over the rival, then get straight back to fighting while it hunts them

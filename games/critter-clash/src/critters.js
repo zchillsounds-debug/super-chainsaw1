@@ -327,6 +327,19 @@ export class Critter {
       const hinge = new THREE.Mesh(sphere(headR * 0.06), shM);
       hinge.scale.set(1.6, 0.8, 0.8); shell.add(hinge);
       skull.add(shell);
+    } else if (def.extra === 'fox') {
+      // cream cheek ruffs that flick out to points, and a little button nose
+      for (const s of [-1, 1]) {
+        const g = new THREE.ConeGeometry(headR * 0.24, headR * 0.5, 14);
+        g.rotateZ(s * 2.2);
+        const ruff = inked(g, this.mats.belly, OL * 0.6);
+        ruff.scale.set(1, 1, 0.5); ruff.position.set(s * headR * 0.74, -headR * 0.42, headR * 0.5);
+        ruff.rotation.y = s * 0.5;
+        skull.add(ruff);
+      }
+      const nose = inked(sphere(headR * 0.075), this.mats.dark, OL * 0.4);
+      nose.scale.set(1.3, 0.85, 0.9); nose.position.set(0, -headR * 0.2, headR * 1.0);
+      skull.add(nose);
     } else if (def.extra === 'frog') {
       // wide flat head with two eye domes on top and a pink lily flower on one of them
       skull.scale.set(1.2, 0.86, 1.0);
@@ -770,6 +783,27 @@ export class Critter {
       const tip = inked(sphere(0.15), this.mats.belly, OL * 0.8);
       tip.position.set(0, 0.8, 0.02);
       tail.add(tip);
+    } else if (def.tail === 'foxfire') {
+      // a big fluffy fox brush sweeping out and up, with a little campfire burning on the cream tip
+      tail.position.y = B.h * 0.12;
+      tail.rotation.x = -0.25;
+      const pieces = [];
+      for (let k = 0; k < 11; k++) {
+        const a = k / 10, r = 0.12 + Math.sin(Math.min(1, a * 1.15) * Math.PI) * 0.12;
+        const g = sphere(r);
+        g.translate(0, 0.05 + a * a * 0.55, -0.12 - Math.sin(a * 1.9) * 0.42);
+        pieces.push(g);
+      }
+      tail.add(inked(mergeGeometries(pieces), this.mats.body, OL));
+      const tip = inked(sphere(0.15), this.mats.belly, OL * 0.8);
+      tip.scale.set(1, 1.15, 1); tip.position.set(0, 0.66, -0.36);
+      tail.add(tip);
+      const outer = new THREE.Mesh(flameGeo(), new THREE.MeshBasicMaterial({ color: C.flame ?? 0xff5a1e }));
+      const inner = new THREE.Mesh(flameGeo(), new THREE.MeshBasicMaterial({ color: C.flameIn ?? 0xffe066 }));
+      outer.userData.base = 0.34; inner.userData.base = 0.22;
+      outer.position.set(0, 0.8, -0.36); inner.position.set(0, 0.81, -0.33);
+      tail.add(outer, inner);
+      this.flames.push(outer, inner);
     } else if (def.tail === 'tentacles') {
       // a skirt of wobbly tentacles hanging from under the body (they sway in update)
       this.tentacles = [];
@@ -957,7 +991,7 @@ export class Critter {
     }
     this.tail.rotation.y = Math.sin(t * (4 + P.tail * 10)) * (0.25 + P.tail * 0.35);
     for (let i = 0; i < this.flames.length; i++) {
-      const f = this.flames[i], base = i ? 0.27 : 0.42;
+      const f = this.flames[i], base = f.userData.base ?? (i ? 0.27 : 0.42);
       f.scale.set(base * (1 + Math.sin(t * 23 + i) * 0.08), base * (1 + Math.sin(t * 17 + i * 2) * 0.16), base);
     }
     if (this.sprout) this.sprout.rotation.z = Math.sin(t * 2.2) * 0.15 + P.roll * 0.6;

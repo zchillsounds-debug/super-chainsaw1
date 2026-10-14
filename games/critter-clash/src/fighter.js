@@ -27,6 +27,7 @@ export const SPECIALS = {
   burrow:    { cd: 4.6, range: [2.5, 9] },
   puddle:    { cd: 4.4, range: [2.5, 8] },
   staticfield: { cd: 4.4, range: [0, 2.2] },
+  flametrail: { cd: 4.6, range: [1.5, 7] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -478,6 +479,33 @@ export class Fighter {
         this.vz = THREE.MathUtils.damp(this.vz, 0, 10, dt);
         if (this.st > 0.75) this.endSpecial();
       }
+    } else if (id === 'flametrail') {
+      // a low streaking dash that leaves burning footprints behind
+      if (this.st < 0.14) {
+        this.vx = this.vz = 0;
+        if (o) this.turnTo(this.angleTo(o), 14, dt);
+        this.critter.pose.sy = 0.85; this.critter.pose.lean = 0.4;
+      } else if (this.st < 0.52) {
+        if (!this.specFired) { this.specFired = true; sfx.fire(); this.trailAt = 0; for (const pr of B.projectiles) if (pr.kind === 'ember' && pr.owner === this) pr.life = Math.min(pr.life, pr.t + 0.3); }
+        if (o && !this.hitIds.size) this.turnTo(this.angleTo(o), 3, dt);
+        this.vx = Math.sin(this.face) * 15; this.vz = Math.cos(this.face) * 15;
+        const P = this.critter.pose; P.lean = 0.7; P.tail = 1.4; P.legL = Math.sin(this.st * 50) * 0.9; P.legR = -P.legL;
+        this.trail(0xff6a1e, 0xffe060);
+        this.trailAt -= dt;
+        if (this.trailAt <= 0) {
+          this.trailAt = 0.065;
+          B.spawnProjectile(this, { kind: 'ember', big: true, x: this.x, z: this.z, y: 0.03, vx: 0, vz: 0, r: 0.62, life: 2.6, hit: {} });
+        }
+        if (o && !this.hitIds.has(o) && this.distTo(o) < 1.3 && o.alive) {
+          this.hitIds.add(o);
+          const ang = this.angleTo(o);
+          B.applyHit(this, o, { dmg: 72 * this.power, kb: 5, lift: 4, stun: 0.5, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, dizzy: 18 });
+        }
+      } else {
+        this.vx = THREE.MathUtils.damp(this.vx, 0, 10, dt);
+        this.vz = THREE.MathUtils.damp(this.vz, 0, 10, dt);
+        if (this.st > 0.78) this.endSpecial();
+      }
     } else if (id === 'rollout') {
       if (this.st < 0.3) {
         // curl up and rev in place
@@ -889,7 +917,7 @@ export class Fighter {
       this.critter.emote('happy', 'grin', 0.1);
     } else if (S === 'special' && (this.def.special === 'rocktoss' || this.def.special === 'puddle' || this.def.special === 'staticfield' || this.def.special === 'swoop' || this.def.special === 'tongue' || this.def.special === 'burrow')) {
       // posed frame by frame in updateSpecial
-    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche' || this.def.super === 'jetstream' || this.def.super === 'lilysplash' || this.def.super === 'whirlpool' || this.def.super === 'stormcloud' || this.def.super === 'molerush') && this.superPhase !== 'cutin') {
+    } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche' || this.def.super === 'jetstream' || this.def.super === 'lilysplash' || this.def.super === 'whirlpool' || this.def.super === 'stormcloud' || this.def.super === 'fireworks' || this.def.super === 'molerush') && this.superPhase !== 'cutin') {
       // posed frame by frame in Battle.updateSuper
     } else if (S === 'special' || S === 'super') {
       if (this.st < 0.28) { P.sy = 0.8; P.sx = 1.15; P.lean = -0.25; P.armLz = P.armRz = 0.8; P.ear = 0.8; }

@@ -377,6 +377,12 @@ function quirk(c, P, k, m, fx) {
     if (k > 1.6) { c.emote('happy', 'grin', 0.3); P.sy = 1.15; }
     return;
   }
+  if (id === 'kindlekit') { // chases its own flaming tail
+    P.yaw = k * 7; P.y = Math.abs(Math.sin(k * 7)) * 0.12; P.tail = 1.5; P.lean = 0.3;
+    c.emote('happy', 'grin', 0.2);
+    if (Math.random() < 0.3) fx.spawn({ ...at(0.5, 1), color: 0xffc23a, size: 0.35, life: 0.3, shape: 'glow' });
+    return;
+  }
   if (id === 'jiggawatt') { // floats up for a little glow
     P.y = Math.sin(Math.min(1, k / 2) * Math.PI) * 0.5; P.armLz = P.armRz = 1.5 + Math.sin(k * 8) * 0.4;
     c.emote('happy', 'grin', 0.2);
