@@ -284,8 +284,10 @@ export class Camp {
         const was = m.act;
         m.act = m.doing = null;
         const free = this.props.userData.spots.filter((sp) => sp !== was && !this.g.showcase.some((o) => o.camp?.act === sp));
-        if (!was && free.length && Math.random() < 0.4) {
-          m.act = free[Math.floor(Math.random() * free.length)];
+        // Snoozlo heads for the nap spot whenever it's free
+        const napper = c.def.id === 'snoozlo' && free.find((sp) => sp.kind === 'nap');
+        if (!was && free.length && Math.random() < (napper ? 0.8 : 0.4)) {
+          m.act = napper || free[Math.floor(Math.random() * free.length)];
           m.tx = m.act.x; m.tz = m.act.z;
         } else for (let tries = 0; tries < 6; tries++) {
           // landscape phones see a wide strip of field, so a big team spreads out sideways
