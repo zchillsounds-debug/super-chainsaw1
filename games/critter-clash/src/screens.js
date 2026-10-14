@@ -821,7 +821,9 @@ export class Screens {
   badgeModal() {
     const d = document.createElement('div');
     d.className = 'modal-wrap';
-    d.innerHTML = `<div class="modal badges-modal"><h2>Badges</h2><div class="badge-grid">${BADGES.map((b) => {
+    // earned badges first so new ones aren't buried among 30 locks
+    const has = (b) => !!save.badges?.[b.id], list = [...BADGES.filter(has), ...BADGES.filter((b) => !has(b))];
+    d.innerHTML = `<div class="modal badges-modal"><h2>Badges <small class="badge-count">${BADGES.filter(has).length}/${BADGES.length}</small></h2><div class="badge-grid">${list.map((b) => {
       const got = save.badges?.[b.id];
       return `<div class="badge ${got ? 'got' : ''}"><i>${got ? b.icon : '🔒'}</i><b>${b.name}</b><small>${b.desc}</small></div>`;
     }).join('')}</div></div>`;

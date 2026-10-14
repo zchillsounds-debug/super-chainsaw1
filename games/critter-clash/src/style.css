@@ -839,3 +839,5 @@ body.portrait .rcard span { font-size: 9.5px; }
 .stars i { font-style: normal; color: rgba(40, 20, 60, 0.18); letter-spacing: 1px; }
 .stars i.on { color: #ffb020; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
 @media (max-height: 420px) { .trial-list { grid-template-columns: repeat(6, 1fr); } .trial img { width: 40px; height: 40px; } .trial b { font-size: 11px; } }
+
+.badge-count { font-size: 0.6em; color: #8a7aa8; vertical-align: middle; margin-left: 6px; }

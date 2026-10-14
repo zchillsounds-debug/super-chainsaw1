@@ -368,7 +368,7 @@ export const BADGES = [
   { id: 'lv10', icon: '📈', name: 'Best Buds', desc: 'Raise a critter to Lv 10.', test: (s) => Object.values(s.critters).some((c) => c.level >= 10) },
   { id: 'grow', icon: '🌱', name: 'Growing Up', desc: 'Raise a critter to Lv 7 and watch it grow.', test: (s) => Object.values(s.critters).some((c) => c.level >= 7) },
   { id: 'grown', icon: '🌳', name: 'Fully Grown', desc: 'Raise a critter to its final form at Lv 14.', test: (s) => Object.values(s.critters).some((c) => c.level >= 14) },
-  { id: 'streak10', icon: '⭐', name: 'Gatebreaker', desc: 'Beat two Gatekeepers: win 10 in a row in Survival.', test: (s) => (s.stats.bestStreak || 0) >= 10 },
+  { id: 'streak10', icon: '⭐', name: 'Gatebreaker', desc: 'Win 10 in a row in Survival (two Gatekeepers).', test: (s) => (s.stats.bestStreak || 0) >= 10 },
   { id: 'streak5', icon: '🔥', name: 'Survivor', desc: 'Win 5 in a row in Survival.', test: (s) => (s.stats.bestStreak || 0) >= 5 },
   { id: 'daily', icon: '📅', name: 'Daily Doer', desc: 'Clear a Daily Challenge.', test: (s) => Object.keys(s.daily || {}).length >= 1 },
   { id: 'friend', icon: '💗', name: 'Best Friends', desc: 'Fill a critter\'s friendship hearts in Camp.', test: (s) => Object.values(s.critters).some((c) => (c.pets || 0) >= 20) },
