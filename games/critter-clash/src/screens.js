@@ -974,11 +974,12 @@ export class Screens {
       label = `CPU · ${DIFFS[this.diff].name}${opts.mods.length ? ` · ${MODS[opts.mods[0]].icon} ${MODS[opts.mods[0]].name}` : ""}`;
     }
     c = withGear(c, opts.cpuLevel); // rivals grow with their level too (Lv 7 / Lv 14 forms)
+    const gold = this.ctx.kind === 'bossrush' || opts.trainer?.boss || /^Gatekeeper/.test(opts.stageSub || ''); // big fights get a gold nameplate
     this.root.innerHTML = `
       <div class="vs-screen">
         <div class="vs-side l" style="--tc:${TYPES[p.type].color}"><img src="${g.portrait(p)}" alt=""><b>${p.name}</b><small>YOU · Lv ${opts.playerLevel}</small></div>
         <div class="vs-mark">VS</div>
-        <div class="vs-side r" style="--tc:${TYPES[c.type].color}"><img src="${g.portrait(c)}" alt=""><b>${c.name}</b><small>${label}</small></div>
+        <div class="vs-side r${gold ? ' gold' : ''}" style="--tc:${TYPES[c.type].color}"><img src="${g.portrait(c)}" alt=""><b>${c.name}</b><small>${label}</small></div>
         ${this.ctx.kind === 'team' ? `<div class="vs-team">${this.teamRow(this.ctx.team, this.ctx.php, this.ctx.pi)}${this.teamRow(this.ctx.foes, this.ctx.fhp, this.ctx.fi)}</div>${this.ctx.sent ? `<div class="vs-go ${this.ctx.sent}">${this.ctx.sent === 'you' ? `Go, ${p.name}!` : `Rival sends out ${c.name}!`}</div>` : ''}` : ''}
         ${HAZARDS[opts.arena] && save.settings.hazards !== false ? `<div class="vs-hazard">⚠ Arena hazards: ${HAZARDS[opts.arena].name} & ${SIGS[opts.arena].name.toLowerCase()}</div>` : ''}
       </div>`;
