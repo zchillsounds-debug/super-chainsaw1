@@ -1071,7 +1071,7 @@ export class Arena {
 
   dispose() {
     this.group.parent?.remove(this.group);
-    this.group.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
+    this.group.traverse((o) => { if (o.isMesh || o.isPoints || o.isLineSegments) o.geometry.dispose(); });
     this.screenTex.dispose();
   }
 
