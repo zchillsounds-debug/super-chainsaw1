@@ -50,6 +50,7 @@ export class Battle {
     this.onEnd = onEnd;
     this.trainer = trainer;
     this.mods = new Set(mods);
+    if (save.settings.hazards === false) this.mods.delete('mayhem'); // nothing to make wilder with hazards off
     this.grav = this.mods.has('lowgrav') ? 10 : 24;
     this.superMult = this.mods.has('supercharged') ? 2 : 1;
     this.speedMult = this.mods.has('turbo') ? 1.25 : 1;
