@@ -285,8 +285,8 @@ function ready(f, P, k) {
 // ---------------- victories (loop for the winpose) ----------------
 const WIN = {
   snoozlo(f, P, k) { // flops into a happy sway, then curls up for a nap with drifting z's
-    const nap = k % 6 > 3;
-    if (nap) { P.sy = 0.85; P.sx = 1.1; P.head = 0.5; P.armLz = P.armRz = 0.1; f.critter.emote('closed', 'smile', 0.1); if (Math.random() < 0.03) f.battle.fx.text(head(f, 0.3), 'z', 'zz', 0.8); }
+    const nap = k % 6 > 4;
+    if (nap) { P.sy = 0.88; P.sx = 1.08; P.head = 0.12; P.headRoll = 0.35; P.armLz = P.armRz = 0.1; f.critter.emote('closed', 'smile', 0.1); if (Math.random() < 0.03) f.battle.fx.text(head(f, 0.3), 'z', 'zz', 0.8); }
     else { P.roll = sin(k * 3) * 0.2; P.armLz = 2 + sin(k * 6) * 0.4; P.armRz = 2 - sin(k * 6) * 0.4; P.y = abs(sin(k * 3)) * 0.12; f.critter.emote('happy', 'grin', 0.1); }
   },
   squeakwing(f, P, k) { // loop-the-loop hovering, with notes of happy squeaks

@@ -370,6 +370,7 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 137. Balance: Pricklepuff 24% → 46%, Bubbalotl 35% → 59% (focused rerun).
 138. Ladder rungs visible on 360 px tall phones.
 139. Snoozlo, the drowsy koala (Power Nap counter / Lullaby Bump), Hazel in the Glowcap Cup. Focused robin 63% after buffs (was 31%).
+140. Snoozlo's victory nap keeps its face to the camera; bigger Lullaby notes.
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.

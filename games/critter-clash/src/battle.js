@@ -1002,7 +1002,7 @@ export class Battle {
         f.critter.emote('happy', 'o', 0.1);
         if (Math.random() < dt * 14) {
           const dx = o.x - f.x, dz = o.z - f.z;
-          fx.spawn({ x: f.x + (Math.random() - 0.5) * 0.6, y: 1.4, z: f.z + (Math.random() - 0.5) * 0.6, vx: dx * 0.9, vy: 0.4, vz: dz * 0.9, color: [0xb49aff, 0x8ae0ff, 0xffb0d8][Math.floor(Math.random() * 3)], size: 0.4, life: 1.0, shape: 'heart', additive: false });
+          fx.spawn({ x: f.x + (Math.random() - 0.5) * 0.6, y: 1.4, z: f.z + (Math.random() - 0.5) * 0.6, vx: dx * 0.9, vy: 0.4, vz: dz * 0.9, color: [0xb49aff, 0x8ae0ff, 0xffb0d8][Math.floor(Math.random() * 3)], size: 0.7, life: 1.0, shape: 'heart', additive: false });
         }
         if (!f.slept && t > 0.9) {
           f.slept = true;
