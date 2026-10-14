@@ -886,7 +886,7 @@ export class Critter {
         const a = (k / 7) * Math.PI * 2 + 0.2, g = new THREE.Group();
         g.position.set(Math.sin(a) * B.w * 0.36, B.h * 0.12, Math.cos(a) * B.w * 0.3);
         const pieces = [];
-        for (let j = 0; j < 5; j++) { const sp = sphere(0.07 - j * 0.009); sp.translate(Math.sin(j * 1.3) * 0.03, -j * 0.075, 0); pieces.push(sp); }
+        for (let j = 0; j < 5; j++) { const sp = new THREE.SphereGeometry(0.07 - j * 0.009, 14, 10); sp.translate(Math.sin(j * 1.3) * 0.03, -j * 0.075, 0); pieces.push(sp); }
         g.add(inked(mergeGeometries(pieces), k % 2 ? this.mats.body : this.mats.belly, OL * 0.6));
         g.userData.k = k;
         pelvis.add(g);
