@@ -23,7 +23,8 @@
 - Session 9 (22:43–23:45 UTC) sent the user the Round 90 APK, then the e99089f APK (with the user's Camp/cup-finish fixes from session 8's reply, plus Ripples). Asked again about the character-pick fix (no reply yet). Did Rounds 91–98 and chained near the context limit.
 - Time used so far: about 7.6 hours of actual work (6.6 h before session 9 + ~1.0 h in session 9).
 - The original ~10 h target ended at 02:15 UTC on 2026-10-14. At 02:09 the user asked for **about 2.4 more hours** (session 10a, 02:09–02:52 UTC, did Rounds 99 and 102–115).
-- **New target end: about 04:35 UTC on 2026-10-14.** Check `date -u`. Keep chaining until then, then stop and summarise. If a worker stalls, extend by the stall.
+- Session 10b ended at 04:19 UTC. At 04:41 the user asked to keep going in a fresh chat without naming a duration, so session 11 got a default of about 2 more hours.
+- **New target end: about 06:45 UTC on 2026-10-14.** Check `date -u`. Keep chaining until then, then stop and summarise. If a worker stalls, extend by the stall.
 - Session 10b (02:52–04:35 UTC) sent the user the f427c6a APK (R113), then did Rounds 116–131 (Team Battle polish, a 16-critter balance pass, **Kindlekit** and **Squeakwing**, critters 17 and 18, trophy fireworks). This was the last planned session: the user's extra ~2.4 h ended at about 04:35 UTC on 2026-10-14.
 - **A second session works on this branch at the same time:** `session_01N69mQniqCEkTvu2X5XzxtL` (the user's own Claude app chat). It handles the user's playtest reports (R99 tips out of the way, R100 mod chips, R101 cupflow, Settings "Battle tips" toggle and "Button size"). Before every push run `git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd` (never rebase or force-push: the classifier blocks it and it would clobber their work). Its round numbers overlap ours (two R99s); just keep counting up from the highest number in `git log`. Stay away from the tutorial/HUD tips/Settings it is changing; prefer content, arenas, modes, balance.
 
@@ -364,7 +365,11 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - No localisation.
 
 ## Suggested next rounds
-- The planned work ended at about 04:35 UTC on 2026-10-14. If the user asks for more, start by sending the newest APK (check `apk-critter-clash` names the latest SHA) and ask them to report anything that gets stuck.
+- **First (session 11):**
+  1. Investigate the robin crash (see the backlog) and fix it if it's a real game bug.
+  2. Re-measure balance with a full `tools/robin.mjs 1` (18 critters, about 15 minutes). Squeakwing's numbers have been noisy (21% vs 44%).
+  3. Then carry on with critique rounds, numbering from R132. Send the user the newest APK partway through and at the end.
+- The user has the R131 APK (cccf6e6) and a source zip. They also asked for the JSON files; they got package.json, capacitor.config.json and package-lock.json, and were offered `src/data.js` exported as JSON.
 - Balance: re-run `PORT=5181 node tools/robin.mjs 1` (build to scratch first) after any combat change; 18 critters take about 15 minutes. Keep everyone roughly within 40–65%.
 - Run `node tools/tapcheck.mjs`, `node tools/cupflow.mjs 740x360 <cupIndex>` and `tools/teamflow.mjs` after UI changes. tapcheck runs screens back to back, so a timer from one step (e.g. VS → battle) can leak into the next.
 - Ideas: Team Battle in the Daily rotation, localisation, more Camp interactions for the newest critters, per-arena second hazard pattern, a 19th critter (gust and fire now have 3 each like the other types).
