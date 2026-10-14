@@ -1422,8 +1422,9 @@ export class Battle {
       // frame tight: the horizontal view is wide on landscape phones, so distance can grow slower than separation
       const wide = Math.min(1.3, Math.max(0.8, cam.aspect / 1.9));
       const dist = Math.min(13.5, Math.max(6.6, (4.6 + sep * 0.8) / wide));
-      const pitch = 0.36;
-      look = new THREE.Vector3(mx, 0.9, mz - 0.4);
+      // a slightly flatter angle than a top-down view, so each arena's skyline shows above the HUD
+      const pitch = 0.3;
+      look = new THREE.Vector3(mx, 1.25, mz - 0.4);
       pos = new THREE.Vector3(mx + Math.sin(yaw) * Math.cos(pitch) * dist, 0.9 + Math.sin(pitch) * dist, mz + Math.cos(yaw) * Math.cos(pitch) * dist);
       // never back the camera into the stands: pull it in and lift it instead
       const pr = Math.hypot(pos.x, pos.z), lim = ARENA_R + 4;
