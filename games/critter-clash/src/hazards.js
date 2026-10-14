@@ -401,7 +401,7 @@ export class Hazards {
       this.timer -= dt;
       if (this.timer <= 0 && this.list.length < (this.stormy ? 4 : 2)) {
         if (this.stormy) { this.timer = 3.5 + Math.random() * 2; Math.random() < 0.6 ? this.volley() : this.spawn(); }
-        else if (!this.sig && this.S && Math.random() < 0.4) { this.timer = 10 + Math.random() * 4; this.signature(); }
+        else if (!this.sig && this.S && Math.random() < (this.sigN ? 0.4 : 0.65)) { this.sigN = (this.sigN || 0) + 1; this.timer = 10 + Math.random() * 4; this.signature(); }
         else if (Math.random() < 0.35) { this.timer = 9 + Math.random() * 4; this.chase(); }
         else { this.timer = 6.5 + Math.random() * 4.5; this.spawn(); }
       }

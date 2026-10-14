@@ -392,13 +392,20 @@ export function dailyChallenge(date = new Date()) {
   for (const ch of key) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
   const rnd = () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
   const mods = Object.keys(MODS);
-  return {
+  const d = {
     key,
     foe: CRITTERS[Math.floor(rnd() * CRITTERS.length)].id,
     arena: ['meadow', 'beach', 'volcano', 'frost', 'neon', 'sky', 'grove'][Math.floor(rnd() * 7)],
     mod: mods[Math.floor(rnd() * mods.length)],
     shiny: rnd() < 0.3,
   };
+  // about one day in three it's a 3-on-3 against a rival team led by the day's foe
+  // (rolled after the solo fields, so those stay the same as before)
+  if (rnd() < 0.34) {
+    d.team = [d.foe];
+    while (d.team.length < 3) { const id = CRITTERS[Math.floor(rnd() * CRITTERS.length)].id; if (!d.team.includes(id)) d.team.push(id); }
+  }
+  return d;
 }
 
 // Move-list blurbs (training mode and the Critterdex)

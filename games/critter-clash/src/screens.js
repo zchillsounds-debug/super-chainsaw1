@@ -351,7 +351,7 @@ export class Screens {
     if (cup && !g.autoplay) g.setArena(this.ctx.cup.arena);
     const chal = this.ctx.kind === 'survival' || this.ctx.kind === 'daily' || this.ctx.kind === 'training' || this.ctx.kind === 'bossrush' || this.ctx.kind === 'team';
     const badge = cup ? `<div class="cup-badge" style="--tc:${this.ctx.cup.color}">${this.ctx.cup.name}</div>`
-      : chal ? `<div class="cup-badge" style="--tc:${{ daily: '#3dc8ff', survival: '#ff7a3d', training: '#7ad36b', bossrush: '#ffb020', team: '#c86bff' }[this.ctx.kind]}">${{ daily: 'Daily Challenge', survival: 'Survival', training: 'Training', bossrush: 'Boss Rush', team: 'Team Battle' }[this.ctx.kind]}</div>` : '<div class="diff"></div>';
+      : chal ? `<div class="cup-badge" style="--tc:${{ daily: '#3dc8ff', survival: '#ff7a3d', training: '#7ad36b', bossrush: '#ffb020', team: this.ctx.daily ? '#3dc8ff' : '#c86bff' }[this.ctx.kind]}">${{ daily: 'Daily Challenge', survival: 'Survival', training: 'Training', bossrush: 'Boss Rush', team: this.ctx.daily ? 'Daily Team Challenge' : 'Team Battle' }[this.ctx.kind]}</div>` : '<div class="diff"></div>';
     this.root.innerHTML = `
       <div class="select-screen">
         <div class="sel-info"></div>
@@ -475,13 +475,15 @@ export class Screens {
       <p>One fight after another. Damage carries over and every rival is tougher. How far can you go?</p>
       <div class="cup-meta">Best streak: <b>${save.stats.bestStreak || 0}</b></div>`,
     () => { this.ctx = { kind: 'survival', streak: 0, hp: 1, last: null }; this.select(); });
+    // team days need three critters; until then the day's lead foe is a solo daily
+    const teamDay = d.team && save.unlocked.length >= 3;
     card('daily' + (doneToday ? ' done' : ''), '#3dc8ff', `
       <div class="cup-trophy">${doneToday ? '✅' : '📅'}</div>
-      <h2>Daily Challenge</h2>
-      <p>${mod.icon} <b>${mod.name}</b>: ${mod.desc}</p>
-      <div class="cup-foes"><img src="${g.portrait(skinned(foe, d.shiny ? 'shiny' : 'base'))}" alt=""></div>
-      <div class="cup-meta">vs ${d.shiny ? '✦ ' : ''}${foe.name} · ${ARENA_NAME[d.arena]} · ${doneToday ? 'Cleared today!' : 'Double XP'}</div>`,
-    () => { this.ctx = { kind: 'daily', d }; this.select(); });
+      <h2>${teamDay ? 'Daily Team Challenge' : 'Daily Challenge'}</h2>
+      <p>${teamDay ? '3-on-3 today! ' : ''}${mod.icon} <b>${mod.name}</b>: ${mod.desc}</p>
+      <div class="cup-foes">${(teamDay ? d.team : [d.foe]).map((id, k) => `<img src="${g.portrait(skinned(byId(id), d.shiny && k === 0 ? 'shiny' : 'base'))}" alt="">`).join('')}</div>
+      <div class="cup-meta">vs ${teamDay ? 'a rival team' : `${d.shiny ? '✦ ' : ''}${foe.name}`} · ${ARENA_NAME[d.arena]} · ${doneToday ? 'Cleared today!' : 'Double XP'}</div>`,
+    () => { this.ctx = teamDay ? { kind: 'team', daily: d } : { kind: 'daily', d }; this.select(); });
     const bosses = bossList(), rushOpen = !!save.cups.champion;
     card('bossrush' + (rushOpen ? '' : ' locked'), '#ffb020', `
       <div class="cup-trophy">${rushOpen ? '👑' : '🔒'}</div>
@@ -574,9 +576,10 @@ export class Screens {
       d.remove();
       this.lastTeam = team.slice();
       const pool = CRITTERS.filter((c) => !team.includes(c.id)).map((c) => c.id);
-      const foes = [];
+      const foes = [], daily = this.ctx.daily;
+      if (daily) foes.push(...daily.team);
       while (foes.length < 3) { const id = pick(pool); if (!foes.includes(id)) foes.push(id); }
-      this.ctx = { kind: 'team', team, foes, pi: 0, fi: 0, php: [1, 1, 1], fhp: [1, 1, 1], arena: pick(ARENA_KEYS) };
+      this.ctx = { kind: 'team', team, foes, pi: 0, fi: 0, php: [1, 1, 1], fhp: [1, 1, 1], arena: daily ? daily.arena : pick(ARENA_KEYS), daily };
       this.sel = CRITTERS.findIndex((c) => c.id === team[0]);
       this.vs();
     });
@@ -833,9 +836,9 @@ export class Screens {
     } else if (this.ctx.kind === 'team') {
       const T = this.ctx, pl = save.critters[p.id].level;
       const avg = Math.round(T.team.reduce((a, id) => a + save.critters[id].level, 0) / 3);
-      c = byId(T.foes[T.fi]);
-      opts = { cpuLevel: Math.max(1, avg), difficulty: 0.55 + T.fi * 0.08, playerLevel: pl, arena: T.arena, rounds: 1, playerHp: T.php[T.pi], cpuHp: T.fhp[T.fi], stageSub: `Team Battle · ${T.pi === 2 ? 'Your last critter!' : T.fi === 2 ? 'Their last critter!' : `Fight ${T.pi + T.fi + 1}`}` };
-      label = `Rival team ${T.fi + 1}/3`;
+      c = T.daily && T.fi === 0 && T.daily.shiny ? skinned(byId(T.foes[0]), 'shiny') : byId(T.foes[T.fi]);
+      opts = { mods: T.daily ? [T.daily.mod] : [], cpuLevel: Math.max(1, avg) + (T.daily ? 1 : 0), difficulty: 0.55 + T.fi * 0.08, playerLevel: pl, arena: T.arena, rounds: 1, playerHp: T.php[T.pi], cpuHp: T.fhp[T.fi], stageSub: `Team Battle · ${T.pi === 2 ? 'Your last critter!' : T.fi === 2 ? 'Their last critter!' : `Fight ${T.pi + T.fi + 1}`}` };
+      label = T.daily ? `Daily team ${T.fi + 1}/3 · ${MODS[T.daily.mod].icon} ${MODS[T.daily.mod].name}` : `Rival team ${T.fi + 1}/3`;
     } else if (this.ctx.kind === 'daily') {
       const d = this.ctx.d;
       c = skinned(byId(d.foe), d.shiny ? 'shiny' : 'base');
@@ -877,7 +880,7 @@ export class Screens {
     const cup = this.ctx.kind === 'cup' ? this.ctx : null;
     // XP: winning pays more, tougher foes pay more
     const kind = this.ctx.kind;
-    const xp = Math.round(((won ? 50 : 18) + (opts.cpuLevel || 1) * (won ? 14 : 5) + stats.maxCombo * 2 + (stats.perfect ? 30 : 0)) * (kind === 'daily' && won ? 2 : 1));
+    const xp = Math.round(((won ? 50 : 18) + (opts.cpuLevel || 1) * (won ? 14 : 5) + stats.maxCombo * 2 + (stats.perfect ? 30 : 0)) * ((kind === 'daily' || (kind === 'team' && this.ctx.daily)) && won ? 2 : 1));
     // survival bookkeeping: streak, carried health, personal best
     let streakNote = '';
     if (kind === 'survival') {
@@ -908,8 +911,9 @@ export class Screens {
       else { T.php[T.pi] = 0; T.fhp[T.fi] = cf ? Math.max(0.05, cf.hp / cf.maxHp) : 1; T.pi++; T.sent = 'you'; }
       T.over = T.fi >= 3 ? 'won' : T.pi >= 3 ? 'lost' : null;
       if (T.over === 'won') save.stats.teamWins = (save.stats.teamWins || 0) + 1;
+      if (T.over === 'won' && T.daily) (save.daily ||= {})[T.daily.key] = true;
       const rows = `<div class="team-vs">${this.teamRow(T.team, T.php, T.pi)}<b>vs</b>${this.teamRow(T.foes, T.fhp, T.fi)}</div>`;
-      streakNote = T.over === 'won' ? `<div class="streak">🤝 Team Battle won! ${rows}</div>`
+      streakNote = T.over === 'won' ? `<div class="streak">🤝 ${T.daily ? 'Daily Team Challenge cleared! Double XP' : 'Team Battle won!'} ${rows}</div>`
         : T.over === 'lost' ? `<div class="streak">Your team is out of critters. ${rows}</div>`
         : `<div class="streak">${won ? `${cDef.name} is out! ` : `${pDef.name} is out! `}${rows}</div>`;
     }
@@ -1017,7 +1021,7 @@ export class Screens {
         g.endBattle(); playMusic('menu'); this.mode = 'select'; this.vs();
       }));
       else if (T.over === 'won') b.appendChild(this.btn('Team Trophy', 'primary', () => this.teamTrophy()));
-      else b.appendChild(this.btn('New Team Battle', 'primary', () => { this.ctx = { kind: 'team' }; g.endBattle(); playMusic('menu'); this.select(); }));
+      else b.appendChild(this.btn(T.daily ? 'Try Again' : 'New Team Battle', 'primary', () => { this.ctx = { kind: 'team', daily: T.daily }; g.endBattle(); playMusic('menu'); this.select(); }));
       b.appendChild(this.btn('Challenges', 'ghost', () => this.challenges()));
     } else if (kind === 'daily') {
       if (!won) b.appendChild(this.btn('Try Again', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
@@ -1187,8 +1191,11 @@ export class Screens {
       </div>`;
     const btns = this.root.querySelector('.res-btns');
     const again = () => { this.ctx = { kind: 'team' }; playMusic('menu'); this.select(); };
-    btns.appendChild(this.btn('New Team Battle', 'primary big', again));
-    btns.appendChild(this.btn('Challenges', 'ghost', () => this.challenges()));
+    if (T.daily) btns.appendChild(this.btn('Challenges', 'primary big', () => this.challenges()));
+    else {
+      btns.appendChild(this.btn('New Team Battle', 'primary big', again));
+      btns.appendChild(this.btn('Challenges', 'ghost', () => this.challenges()));
+    }
     this.backFn = () => this.challenges();
     sfx.cheer(1.5);
   }

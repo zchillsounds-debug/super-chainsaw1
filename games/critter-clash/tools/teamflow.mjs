@@ -1,5 +1,6 @@
 // node tools/teamflow.mjs [WxH] [pattern] : taps through a whole Team Battle like a player.
 // pattern is a string of w/l for each fight's forced outcome (default "wlww" = win, lose, win, win...).
+// DAILY=2026-10-15 fakes the date so the Daily Team Challenge is played instead.
 // Prints the screen path, or STUCK at <mode> + a screenshot (tools/out/teamflow-stuck.png).
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
@@ -8,6 +9,7 @@ const [w, h] = (process.argv[2] || '740x360').split('x').map(Number), pattern = 
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: w, height: h }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
+if (process.env.DAILY) await pg.addInitScript((day) => { const RD = Date, T = RD.parse(day + 'T12:00:00Z'); window.Date = class extends RD { constructor(...a) { super(...(a.length ? a : [T + (performance.now() | 0)])); } static now() { return T + (performance.now() | 0); } }; }, process.env.DAILY);
 await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?mobile&q=low');
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 const mode = () => pg.evaluate(() => (__game.screens.mode || 'battle') + (__game.battle ? ':' + __game.battle.phase : ''));
@@ -34,12 +36,13 @@ for (let step = 0; step < 200; step++) {
   if (m === 'teamwin') { ok = true; console.log('team trophy screen buttons:', (await pg.locator('button:visible').allTextContents()).join(' | ')); break; }
   if (await tap('button:visible', /Team Trophy/)) continue; // a won team battle goes through the Team Victory screen first
   if (await tap('button:visible', /New Team Battle/)) { ok = true; break; }
+  if (process.env.DAILY && m.startsWith('results') && await pg.evaluate(() => __game.screens.ctx.over === 'lost') && await tap('button:visible', /Try Again/)) { ok = true; break; }
   if (await tap('button:visible', /Team Trophy/)) continue;
   if (await tap('.prof-wrap')) continue;
   if (await tap('.modal-wrap:not(.train-pick) button.btn')) continue;
   if (await tap('.team-pick button', /FIGHT/)) continue;
   if (m === 'title') { await tap('button:visible', /Challenges/); continue; }
-  if (m === 'challenges' || m === 'cups') { if (await tap('.cup', /Team Battle/)) continue; }
+  if (m === 'challenges' || m === 'cups') { if (process.env.DAILY) await pg.screenshot({ path: 'tools/out/teamflow-daily-card.png' }); if (await tap('.cup', process.env.DAILY ? /Daily Team/ : /Team Battle/)) continue; }
   if (m === 'select') { await tap('.rcard'); if (await tap('button:visible', /GO|FIGHT|Choose|Battle/)) continue; }
   for (const re of [/Next Rival/, /Send Next/, /Battle!/, /FIGHT/, /GO/, /Continue/, /Yay/]) if (await tap('button:visible', re)) break;
   await pg.waitForTimeout(300);
