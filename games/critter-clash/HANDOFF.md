@@ -355,6 +355,8 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
+- **Investigate first:** a re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
+- The R131 balance tweaks were not re-measured because of that crash.
 - Native photo Save/Share (Round 27) is untested on a real phone.
 - Haptics (Round 72) are untested on a real phone.
 - Last full balance run (04:04, 18 critters, 1 rep = 34 games each): Voltferret, Pengsicle and Lilypop 68%, Pebblepup and Kindlekit 62%, most others 41–53%, Bubbalotl and Hootsy 35%, Squeakwing 21% (a focused run just before said 44%, so the sample is noisy). Small tweaks followed (top three power -0.02/-0.03, Bubbalotl/Hootsy/Squeakwing buffs) but were not re-measured. Re-run `tools/robin.mjs 2` first.
