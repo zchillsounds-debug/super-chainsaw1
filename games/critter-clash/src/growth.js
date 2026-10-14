@@ -244,7 +244,7 @@ export const FORMS = {
         blurb: 'Sparks orbit it like tiny suns. They say it chased the sunset once and caught it.',
         colors: { body: 0xd8402e, belly: 0xfff0dc, accent: 0xffc23a, dark: 0x5a160e, flame: 0xff7a1e, flameIn: 0xfff6a0, orb: 0xffd84a },
         body: { w: 0.6, h: 0.88, headR: 0.45, legLen: 0.3, armLen: 0.3, chubby: 0.98, limb: 1.25 },
-        parts: { flamecrest: 1.0, orbs: 0.7, brows: 0.7 },
+        parts: { flamecrest: 0.8, sunmane: 1, orbs: 0.7, brows: 0.7 },
         moves: { special: 'Solar Trail', super: 'Sunburst Finale' },
       },
     ],
@@ -265,7 +265,7 @@ export const FORMS = {
         blurb: 'A thundercloud with legs and very big horns. Its headbutts arrive before the thunder does.',
         colors: { body: 0x5e5698, belly: 0xfff0c4, accent: 0xffd23a, dark: 0x201c36, horn: 0xffe070, bolt: 0xffe066 },
         body: { w: 0.94, h: 0.86, headR: 0.48, legLen: 0.22, armLen: 0.3, chubby: 1.24, limb: 1.8 },
-        parts: { horns: 1.3, brows: 0.9, boltmane: 0.9 },
+        parts: { horns: 1.3, brows: 0.9, boltmane: 0.9, cloudcrest: 1, cloudLift: 0.45 },
         moves: { special: 'Thunder Fuzz', super: 'Storm Ram Slam' },
       },
     ],
@@ -620,10 +620,11 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     const s = P.cloudcrest, cm = mat('cloud', C.cloud ?? 0x6a6a86), parts = [];
     for (const [x, y, z, r] of [[0, 0, 0, 0.2], [0.17, -0.03, 0.02, 0.15], [-0.17, -0.03, 0.02, 0.15], [0.07, 0.08, -0.05, 0.14], [-0.08, 0.06, 0.07, 0.13]]) { const g = sphere(r * headR * 1.6 * s); g.translate(x * headR * 1.6 * s, y * headR * 1.6 * s, z * headR * 1.6 * s); parts.push(g); }
     const cl = inked(mergeGeometries(parts), cm, OL * 0.6);
-    cl.position.set(-headR * 0.1, headR * 1.08, -headR * 0.1);
+    const lift = headR * (P.cloudLift || 0);
+    cl.position.set(-headR * 0.1, headR * 1.08 + lift, -headR * 0.1);
     SK.add(cl);
     const bolt = new THREE.Mesh(boltGeo(), new THREE.MeshBasicMaterial({ color: C.bolt ?? 0x7af0ff }));
-    bolt.scale.setScalar(0.5 * s); bolt.position.set(headR * 0.28, headR * 0.92, headR * 0.05); bolt.rotation.z = 2.6;
+    bolt.scale.setScalar(0.5 * s); bolt.position.set(headR * 0.28, headR * 0.92 + lift, headR * 0.05); bolt.rotation.z = 2.6;
     SK.add(bolt);
   }
 
@@ -965,6 +966,23 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     const flag = new THREE.Mesh(new THREE.ConeGeometry(0.07 * s, 0.22 * s, 3), mat('flag', C.flag ?? 0xff5a5a));
     flag.rotation.z = -Math.PI / 2; flag.scale.set(1, 1, 0.3); flag.position.set(0.11 * s, y0 + 0.56 * s, -R * 0.98);
     TO.add(pole, flag);
+  }
+
+  // a ring of flames round the face like the corona of a sun (animated with the other flames)
+  if (P.sunmane) {
+    const s = P.sunmane, n = 11;
+    for (let k = 0; k < n; k++) {
+      const a = (k / n) * Math.PI * 2, g = new THREE.Group();
+      if (Math.abs(Math.sin(a)) < 0.2 && Math.cos(a) < 0) continue; // keep clear under the chin
+      g.position.set(Math.sin(a) * headR * 0.92, Math.cos(a) * headR * 0.88, -headR * 0.25);
+      g.rotation.z = -a;
+      const outer = new THREE.Mesh(flameGeo(), new THREE.MeshBasicMaterial({ color: C.flame ?? 0xff7a1e }));
+      const inner = new THREE.Mesh(flameGeo(), new THREE.MeshBasicMaterial({ color: C.flameIn ?? 0xfff6a0 }));
+      outer.userData.base = 0.36 * s; inner.userData.base = 0.22 * s; inner.position.set(0, 0.02, 0.03);
+      g.add(outer, inner);
+      cr.flames.push(outer, inner);
+      cr.skull.add(g);
+    }
   }
 
   flatten(SK); flatten(TO);
