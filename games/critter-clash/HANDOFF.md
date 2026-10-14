@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 146)
+# Critter Clash: Handoff (after Round 147)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -26,7 +26,7 @@
 - Session 10b ended at 04:19 UTC. At 04:41 the user asked to keep going in a fresh chat without naming a duration, so session 11 got a default of about 2 more hours.
 - **New target end: about 06:45 UTC on 2026-10-14.** Check `date -u`. Keep chaining until then, then stop and summarise. If a worker stalls, extend by the stall.
 - Session 10b (02:52–04:35 UTC) sent the user the f427c6a APK (R113), then did Rounds 116–131 (Team Battle polish, a 16-critter balance pass, **Kindlekit** and **Squeakwing**, critters 17 and 18, trophy fireworks). This was the last planned session: the user's extra ~2.4 h ended at about 04:35 UTC on 2026-10-14.
-- Session 11 (04:42–~06:40 UTC on 2026-10-14) fixed the robin crash (R132), re-measured balance (full 18- and 19-critter runs, both error-free), sent the user the R135 APK partway and the final APK at the end, and did Rounds 133–146 (Snoozlo is critter 19). It ended at the 06:45 target; nothing was chained after it because the user's requested time was used up.
+- Session 11 (04:42–~06:40 UTC on 2026-10-14) fixed the robin crash (R132), re-measured balance (full 18- and 19-critter runs, both error-free), sent the user the R135 APK partway and the final APK at the end, and did Rounds 133–147 (Snoozlo is critter 19). It ended at the 06:45 target; nothing was chained after it because the user's requested time was used up.
 - **A second session works on this branch at the same time:** `session_01N69mQniqCEkTvu2X5XzxtL` (the user's own Claude app chat). It handles the user's playtest reports (R99 tips out of the way, R100 mod chips, R101 cupflow, Settings "Battle tips" toggle and "Button size"). Before every push run `git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd` (never rebase or force-push: the classifier blocks it and it would clobber their work). Its round numbers overlap ours (two R99s); just keep counting up from the highest number in `git log`. Stay away from the tutorial/HUD tips/Settings it is changing; prefer content, arenas, modes, balance.
 
 ## Run it
@@ -392,11 +392,11 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Session 11 is done. If the user asks for more:
   1. Ask them whether Snoozlo's counter feels fair on a phone, and whether the R135/R145 APKs feel smoother over a long session (the arena texture leak fix).
   2. Run a 2-rep full robin (`tools/robin.mjs 2`, about 35 minutes for 19 critters) to get a less noisy picture; 1-rep runs swing ±15%.
-  3. Carry on numbering from R147.
-- The user has session 11's last APK (R146); earlier they got the R131 APK and a source zip. They also asked for the JSON files; they got package.json, capacitor.config.json and package-lock.json, and were offered `src/data.js` exported as JSON.
+  3. Carry on numbering from R148.
+- The user has session 11's last APK (R147); earlier they got the R131 APK and a source zip. They also asked for the JSON files; they got package.json, capacitor.config.json and package-lock.json, and were offered `src/data.js` exported as JSON.
 - Balance: re-run `PORT=5181 node tools/robin.mjs 1` (build to scratch first) after any combat change; 18 critters take about 15 minutes. Keep everyone roughly within 40–65%.
 - Run `node tools/tapcheck.mjs`, `node tools/cupflow.mjs 740x360 <cupIndex>` and `tools/teamflow.mjs` after UI changes. tapcheck runs screens back to back, so a timer from one step (e.g. VS → battle) can leak into the next.
-- Ideas: Team Battle in the Daily rotation, localisation, per-arena second hazard pattern, a 20th critter (leaf now has 4; the others have 3), a Snoozlo hammock prop in Camp.
+- Ideas: Team Battle in the Daily rotation, localisation, per-arena second hazard pattern, a 20th critter (leaf now has 4; the others have 3).
 - Keep doing critique passes on phone sizes (915×412, 412×915, 740×360).
 
 ## Chaining (do this at the end of each session)

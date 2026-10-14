@@ -20,7 +20,7 @@ export class Camp {
     this.team = team;
     this.sel = null;
     this.t = 0;
-    this.props = buildProps(save.cups || {});
+    this.props = buildProps(save.cups || {}, save.unlocked || []);
     this.g.scene.add(this.props);
     // soft ring under whoever is selected
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.72, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false }));
@@ -268,7 +268,8 @@ export class Camp {
         }
         const sl = Math.hypot(sx, sz) || 1, sp = (m.chase ? 2.8 : 1.3) * dt;
         m.x += sx / sl * Math.min(sp, d); m.z += sz / sl * Math.min(sp, d);
-        for (const [px, pz, pr] of this.props.userData.keepOut) {
+        for (const [j, [px, pz, pr]] of this.props.userData.keepOut.entries()) {
+          if (m.act?.hammock && m.act.prop === j) continue; // climbing into the hammock
           const ox = m.x - px, oz = m.z - pz, od = Math.hypot(ox, oz) || 1e-3, lim = pr * 0.8;
           if (od < lim) { m.x = px + ox / od * lim; m.z = pz + oz / od * lim; }
         }
@@ -283,9 +284,9 @@ export class Camp {
         // pick a new spot to amble to, then idle for a bit; sometimes settle in at a prop instead
         const was = m.act;
         m.act = m.doing = null;
-        const free = this.props.userData.spots.filter((sp) => sp !== was && !this.g.showcase.some((o) => o.camp?.act === sp));
+        const free = this.props.userData.spots.filter((sp) => sp !== was && !(port && sp.hammock) && !this.g.showcase.some((o) => o.camp?.act === sp));
         // Snoozlo heads for the nap spot whenever it's free
-        const napper = c.def.id === 'snoozlo' && free.find((sp) => sp.kind === 'nap');
+        const napper = c.def.id === 'snoozlo' && ((!port && free.find((sp) => sp.hammock)) || free.find((sp) => sp.kind === 'nap' && !sp.hammock));
         if (!was && free.length && Math.random() < (napper ? 0.8 : 0.4)) {
           m.act = napper || free[Math.floor(Math.random() * free.length)];
           m.tx = m.act.x; m.tz = m.act.z;
@@ -341,6 +342,8 @@ export class Camp {
         } else if (m.doing === 'nap') {
           // curl up and snooze, with a floating z now and then
           P.y = -0.2; P.legL = P.legR = -1.3; P.head = 0.35 + br * 0.04; P.headRoll = 0.25; P.sy = 1 + br * 0.04; P.armLx = P.armRx = -0.4;
+          // in the hammock: sitting up in the sling, swaying gently
+          if (m.act?.hammock) { P.y = 0.32 + Math.sin(c.t * 1.2) * 0.03; P.roll = Math.sin(c.t * 1.2) * 0.08; P.lean = -0.25; P.legL = P.legR = -1.5; }
           c.emote('closed', 'o', 0.2);
           if (Math.random() < dt * 0.8) this.g.fx.text({ x: m.x + 0.3, y: 1.4, z: m.z }, 'z', 'zzz', 1.4);
         } else if (m.doing === 'picnic') {
@@ -426,7 +429,7 @@ function quirk(c, P, k, m, fx) {
 }
 
 // campfire, tent, picnic blanket and a berry basket, kept at the edges so the critters have room
-function buildProps(cups) {
+function buildProps(cups, team = []) {
   const g = new THREE.Group();
   const OL = 0.03;
   // campfire: ring of stones, crossed logs, warm point light
@@ -496,6 +499,28 @@ function buildProps(cups) {
   spots.push({ kind: 'nap', prop: 1, x: 3.3 + Math.sin(td) * 1.5, z: -2.5 + Math.cos(td) * 1.5, face: td });
   for (const a of [Math.PI + 0.4, Math.PI * 1.5 + 0.2]) spots.push({ kind: 'picnic', prop: 2, x: 2.6 + Math.cos(a) * 1.15, z: 1.9 + Math.sin(a) * 1.15, face: Math.atan2(-Math.cos(a), -Math.sin(a)) });
   const keepOut = [[-2.9, -1.3, 1.0], [3.3, -2.5, 1.7], [2.6, 1.9, 1.3]];
+  // Snoozlo's hammock: two posts and a sagging cloth sling, front left
+  if (team.includes('snoozlo')) {
+    const hm = new THREE.Group();
+    hm.position.set(-4.0, 0, 1.3); hm.scale.setScalar(0.85);
+    const wood = toon(0x9a6a3a);
+    for (const sx of [-1.1, 1.1]) {
+      const post = inked(new THREE.CylinderGeometry(0.07, 0.09, 1.25, 8), wood, OL * 0.6);
+      post.position.set(sx, 0.62, 0); hm.add(post);
+    }
+    // a flat, wide cloth sling (tube squashed flat; the sag is pre-stretched to undo the squash) with cream rope edges
+    const SY = 0.5, sag = (u) => 1.05 - Math.sin(u * Math.PI) * 0.5;
+    const pts = [], edge = [];
+    for (let i = 0; i <= 12; i++) { const u = i / 12; pts.push(new THREE.Vector3(-1.0 + u * 2.0, sag(u) / SY, 0)); edge.push(new THREE.Vector3(-1.0 + u * 2.0, sag(u) + 0.03, 0)); }
+    const sling = inked(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.16, 10), toon(0x5fc4a8), OL * 0.5);
+    sling.scale.set(1, SY, 2.6); hm.add(sling);
+    const rope = toon(0xfff2d0), eg = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(edge), 24, 0.03, 5);
+    for (const z of [-0.4, 0.4]) { const e = new THREE.Mesh(eg, rope); e.position.z = z; hm.add(e); }
+    hm.rotation.y = 0.35;
+    g.add(hm);
+    spots.push({ kind: 'nap', prop: 3, hammock: true, x: -4.0, z: 1.35, face: 0.35 });
+    keepOut.push([-4.0, 1.3, 1.2]);
+  }
   // trophies: a bunting line with a pennant for every cup cleared, and a hot-air balloon once the Sky Cup is won
   const won = CUPS.filter((c) => cups[c.id]);
   const pennants = [];
