@@ -859,7 +859,10 @@ export class Screens {
       S.last = c.id;
       const pl = save.critters[p.id].level;
       const mods = n >= 3 && Math.random() < 0.5 ? [pick(Object.keys(MODS))] : [];
-      opts = { cpuLevel: pl + Math.floor(n / 2), difficulty: Math.min(0.95, 0.35 + n * 0.07), playerLevel: pl, arena: pick(ARENA_KEYS), rounds: 1, playerHp: S.hp, mods };
+      // Stadium Mayhem needs a stadium with hazards
+      const arena = MODS[mods[0]]?.hazard && save.settings.hazards !== false ? pick(ARENA_KEYS.filter((k) => HAZARDS[k])) : pick(ARENA_KEYS);
+      if (MODS[mods[0]]?.hazard && save.settings.hazards === false) mods.length = 0;
+      opts = { cpuLevel: pl + Math.floor(n / 2), difficulty: Math.min(0.95, 0.35 + n * 0.07), playerLevel: pl, arena, rounds: 1, playerHp: S.hp, mods };
       label = `Challenger #${n + 1}${mods.length ? ' · ' + MODS[mods[0]].icon : ''}`;
     } else if (this.ctx.kind === 'bossrush') {
       const S = this.ctx, list = bossList(), m = list[S.idx];

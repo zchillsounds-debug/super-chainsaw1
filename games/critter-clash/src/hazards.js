@@ -398,7 +398,7 @@ export class Hazards {
     if (!this.H || (this.b.training && !this.b.trainHazards) || save.settings.hazards === false) return;
     const B = this.b, H = this.H;
     if (B.phase === 'fight' && B.time > 8) {
-      this.timer -= dt;
+      this.timer -= dt * (B.mods?.has('mayhem') ? 2 : 1);
       if (this.timer <= 0 && this.list.length < (this.stormy ? 4 : 2)) {
         if (this.stormy) { this.timer = 3.5 + Math.random() * 2; const r = Math.random(); if (!this.sig && this.S && r < 0.3) this.signature(); else r < 0.7 ? this.volley() : this.spawn(); }
         else if (!this.sig && this.S && Math.random() < (this.sigN ? 0.4 : 0.65)) { this.sigN = (this.sigN || 0) + 1; this.timer = 10 + Math.random() * 4; this.signature(); }

@@ -306,7 +306,7 @@ export const CUPS = [
     intro: ["Psst, {name}. This is the Midnight Cup. Very exclusive, very shiny, very loud.", "The floor tiles here zap anyone who stands still. Keep moving!"],
     outro: ["Madame Vee bowed to you! That has never happened before.", "You're a legend of the night now. Sunglasses optional."],
     matches: [
-      { name: 'DJ Tumble', style: 'zoner', title: 'Beat Dropper', critter: 'jiggawatt', level: 13, taunt: "Jiggawatt is my light show. Drop the bass? I drop RIVALS.", beat: "You dropped ME. That's a first. Sick set, honestly.", gloat: "Mic drop. Rival drop. Same thing." },
+      { name: 'DJ Tumble', style: 'zoner', title: 'Beat Dropper', critter: 'jiggawatt', level: 13, mods: ['mayhem'], taunt: "Jiggawatt is my light show. Drop the bass? I drop RIVALS.", beat: "You dropped ME. That's a first. Sick set, honestly.", gloat: "Mic drop. Rival drop. Same thing." },
       { name: 'Marigold', style: 'zoner', title: 'Night Gardener', critter: 'pricklepuff', skin: 'shiny', level: 14, taunt: 'My garden grows best by moonlight.', beat: "Even moonflowers wilt sometimes. Lovely match, dear.", gloat: "Goodnight, sweetie. Sleep in the flowerbed." },
       { name: 'Dusty', style: 'trickster', title: 'Subway Busker', critter: 'diggles', level: 14, taunt: "Diggles knows every tunnel under this city. Watch your feet!", beat: "Dug myself into a hole there. Nice moves!", gloat: "Down you go. Mind the gap!" },
       { name: 'Neko', style: 'trickster', title: 'Rooftop Runner', critter: 'voltferret', level: 15, mods: ['turbo'], taunt: "Catch me if you- oh, you can't.", beat: "You... caught me?! Nobody catches me!", gloat: "Too slow! See you on the next roof." },
@@ -385,6 +385,7 @@ export const MODS = {
   lowgrav:      { name: 'Moon Jump', icon: '🌙', desc: 'Low gravity: launches fly sky-high.' },
   itemrain:     { name: 'Item Rain', icon: '🍓', desc: 'Power-ups drop constantly.' },
   supercharged: { name: 'Supercharged', icon: '⚡', desc: 'Super meters fill twice as fast.' },
+  mayhem:       { name: 'Stadium Mayhem', icon: '🎪', desc: 'Arena hazards go off twice as often.', hazard: true },
 };
 
 // deterministic daily pick from the UTC date
@@ -393,7 +394,8 @@ export function dailyChallenge(date = new Date()) {
   let h = 2166136261;
   for (const ch of key) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
   const rnd = () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
-  const mods = Object.keys(MODS);
+  // the daily's modifier pool stays fixed so every date keeps the challenge it always had
+  const mods = ['bighead', 'turbo', 'lowgrav', 'itemrain', 'supercharged'];
   const d = {
     key,
     foe: CRITTERS[Math.floor(rnd() * CRITTERS.length)].id,
