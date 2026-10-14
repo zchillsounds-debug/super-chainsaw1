@@ -130,7 +130,7 @@ export const CRITTERS = [
   {
     id: 'whirlwhisk', name: 'Whirlwhisk', type: 'gust', species: 'Glider Squirrel',
     blurb: 'Stores acorns in its cheeks and wind in its tail. Has never once landed where it meant to.',
-    colors: { body: 0x8ccff2, belly: 0xfffaf0, accent: 0xdff3ff, dark: 0x2a5a8a, eye: '#10223a', iris: '#ffa21a' },
+    colors: { body: 0xbcc4d6, belly: 0xfffaf0, accent: 0xe6f2ff, dark: 0x3a4660, eye: '#141a2c', iris: '#ffa21a' },
     body: { w: 0.54, h: 0.54, headR: 0.48, legLen: 0.15, armLen: 0.2, chubby: 1.0 },
     ears: 'tufts', tail: 'bushy', extra: 'glider', voice: 1.3,
     stats: { hp: 1040, speed: 7.4, power: 1.13, weight: 0.8 },
