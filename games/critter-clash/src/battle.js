@@ -993,7 +993,7 @@ export class Battle {
         f.critter.emote(pulse ? 'angry' : 'closed', pulse ? 'yell' : 'o', 0.1);
         if (f.boomN < 3 && t > 0.25 + f.boomN * 0.45) {
           const last = f.boomN === 2;
-          this.sonic(f, last ? 6.2 : 5.2, last ? { dmg: 105 * f.power, kb: 9, lift: 10, stun: 0.8, type: f.type, launch: true, dizzy: 30 } : { dmg: 34 * f.power, kb: 3, lift: 0, stun: 0.45, type: f.type, dizzy: 10 }, last);
+          this.sonic(f, last ? 6.2 : 5.2, last ? { dmg: 125 * f.power, kb: 9, lift: 10, stun: 0.8, type: f.type, launch: true, dizzy: 30 } : { dmg: 42 * f.power, kb: 3, lift: 0, stun: 0.45, type: f.type, dizzy: 10 }, last);
           f.boomN++;
         }
         if (f.boomN >= 3 && t > 1.55) { f.superPhase = 'recover'; f.st = 0; }

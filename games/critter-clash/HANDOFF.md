@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 124)
+# Critter Clash: Handoff (after Round 129)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -24,7 +24,7 @@
 - Time used so far: about 7.6 hours of actual work (6.6 h before session 9 + ~1.0 h in session 9).
 - The original ~10 h target ended at 02:15 UTC on 2026-10-14. At 02:09 the user asked for **about 2.4 more hours** (session 10a, 02:09–02:52 UTC, did Rounds 99 and 102–115).
 - **New target end: about 04:35 UTC on 2026-10-14.** Check `date -u`. Keep chaining until then, then stop and summarise. If a worker stalls, extend by the stall.
-- Session 10b (02:52–04:35 UTC) sent the user the f427c6a APK (R113), then did Rounds 116–124 (Team Battle polish, a 16-critter balance pass, **Kindlekit** the 17th critter). This was the last planned session: the user's extra ~2.4 h ended at about 04:35 UTC on 2026-10-14.
+- Session 10b (02:52–04:35 UTC) sent the user the f427c6a APK (R113), then did Rounds 116–129 (Team Battle polish, a 16-critter balance pass, **Kindlekit** and **Squeakwing**, critters 17 and 18, trophy fireworks). This was the last planned session: the user's extra ~2.4 h ended at about 04:35 UTC on 2026-10-14.
 - **A second session works on this branch at the same time:** `session_01N69mQniqCEkTvu2X5XzxtL` (the user's own Claude app chat). It handles the user's playtest reports (R99 tips out of the way, R100 mod chips, R101 cupflow, Settings "Battle tips" toggle and "Button size"). Before every push run `git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd` (never rebase or force-push: the classifier blocks it and it would clobber their work). Its round numbers overlap ours (two R99s); just keep counting up from the highest number in `git log`. Stay away from the tutorial/HUD tips/Settings it is changing; prefer content, arenas, modes, balance.
 
 ## Run it
@@ -40,7 +40,7 @@ URL flags:
 
 - `&arena=frost`, `&arena=neon` and `&arena=sky` also work now, and `&mods=bighead,turbo,lowgrav,itemrain,supercharged` applies match modifiers.
 
-Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt, pebblepup, whirlwhisk, lilypop, diggles, ripples, jiggawatt.
+Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt, pebblepup, whirlwhisk, lilypop, diggles, ripples, jiggawatt, kindlekit, squeakwing.
 - Gotcha: `tools/multi.mjs` adds the `?` itself, so pass `play&p=...`, not `?play&p=...` (a double `??` silently shows the title).
 Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - `&train` starts a training match (e.g. `?play&train&p=woolt`).
@@ -197,6 +197,8 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 
 ## New in session 10b
 - **Kindlekit** (fire ember fox kit; `tail: 'foxfire'` = fox brush with a flame tip whose flames use `userData.base`, `extra: 'fox'` cheek ruffs + nose). Special `flametrail` (dash at 15 u/s that drops `ember` projectiles every 0.065 s: stationary scorch + additive core, r 0.62, 2.0 s; one shared burn tick per owner via `owner.burnAt` / `battle.clock`). Super `fireworks` (8 lobbed `shell` projectiles that air-burst at `burstY` via `Battle.shellBurst()`, the last is big). Trainer **Fizz** (Sky Cup, 4th of 5 before Pecan), Pecan news `fox`, Camp quirk (chases its tail), shiny = blue flame. The CPU steps out of a rival's ember patches.
+- **Squeakwing** (gust orchard bat; `ears: 'bat'`, `extra: 'bat'` = ShapeGeometry scalloped wings in `this.wings` with a polygon-offset ink edge, plus a fang; `colors.wing`). Special `squeak` and super `echoboom` both use `Battle.sonic(f, maxR, hit, big)`: a `sonic` projectile (two additive rings) centred on the owner that grows to `maxR` over `dur`, hits once as it sweeps past (`d` within the ring band) and deletes small enemy shots it crosses. Trainer **Nyx** (Glowcap Cup, 4th of 5 before Elder Oakley), Pecan news `bat` (after the Thunder Cup), Camp quirk (flutters up), golden shiny. The CPU sometimes dodges the squeak windup.
+- Trophy screens (`trophy` and `teamwin` modes) pop fireworks in `Screens.update`, placed by unprojecting a random point in the upper screen about 10 m out.
 - Team Battle: VS screen callout `.vs-go` ("Go, X!" / "Rival sends out X!", `ctx.sent`), stage card subtitle via the new Battle opt `stageSub`, `Screens.teamTrophy()` (mode `teamwin`, pulled-back trio camera in `update`), results team rows no longer inherit the 110 px `.res-card img` size.
 - Balance (full 16 run at 02:55): Voltferret was 90% → power 0.93, hp 870, Zip Zap cd 4.9 (focused rerun ~67%); Bubbalotl hp 1150/power 1.05, Pricklepuff power 1.1, Whirlwhisk power 1.16.
 
@@ -341,6 +343,12 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 121. Kindlekit, the ember fox kit (Flame Trail / Firework Finale), Fizz in the Sky Cup.
 122. CPU escapes Flame Trail patches.
 123. Kindlekit balance (was 66% in a focused robin).
+124. Fireworks over the trophy screens.
+125. Flame Trail sprint pose.
+126. Kindlekit auto matches on all 7 arenas with mods, error-free (no code change).
+127. Sky Cup ladder (5 rungs) and shiny Kindlekit checked (no code change).
+128. Squeakwing, the orchard bat (Sonic Squeak / Echo Boom), Nyx in the Glowcap Cup.
+129. Balance check with 18 critters.
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.

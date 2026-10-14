@@ -28,7 +28,7 @@ export const SPECIALS = {
   puddle:    { cd: 4.4, range: [2.5, 8] },
   staticfield: { cd: 4.4, range: [0, 2.2] },
   flametrail: { cd: 5.0, range: [1.5, 7] },
-  squeak:    { cd: 4.3, range: [0, 3.6] },
+  squeak:    { cd: 3.4, range: [0, 3.4] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -486,7 +486,7 @@ export class Fighter {
       if (this.st < 0.22 && o) this.turnTo(this.angleTo(o), 10, dt);
       if (!this.specFired && this.st > 0.22) {
         this.specFired = true;
-        B.sonic(this, 3.9, { dmg: 48 * this.power, kb: 6.5, lift: 2, stun: 0.45, type: this.type, dizzy: 14 });
+        B.sonic(this, 3.9, { dmg: 72 * this.power, kb: 6.5, lift: 2, stun: 0.6, type: this.type, dizzy: 18 });
       }
       if (this.st > 0.62) this.endSpecial();
     } else if (id === 'flametrail') {

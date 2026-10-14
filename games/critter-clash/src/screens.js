@@ -825,7 +825,7 @@ export class Screens {
         ${HAZARDS[opts.arena] && save.settings.hazards !== false ? `<div class="vs-hazard">⚠ Arena hazard: ${HAZARDS[opts.arena].name}</div>` : ''}
       </div>`;
     sfx.boom();
-    setTimeout(() => g.startBattle(p, c, opts), 1900);
+    setTimeout(() => { if (this.mode === 'vs') g.startBattle(p, c, opts); }, 1900); // not if the player left the VS screen
   }
 
   // ---------- results ----------
