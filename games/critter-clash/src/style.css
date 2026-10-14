@@ -739,6 +739,7 @@ body.portrait .rcard span { font-size: 9.5px; }
 @media (max-aspect-ratio: 1/1) { .dex-list { grid-template-columns: repeat(7, min(50px, calc((100vw - 64px) / 7))); } .dex-info { bottom: calc(232px + var(--sab)); } }
 @media (max-aspect-ratio: 1/1) and (max-height: 800px) { body.portrait .sel-info .moves { display: none; } body.portrait .sel-info { bottom: calc(225px + var(--sab)); } }
 @media (max-height: 460px) and (min-aspect-ratio: 1/1) { .ladder { margin-top: 4px; } .rung img { width: 42px; height: 42px; } .rung span { font-size: 10px; margin-top: 1px; } .rung-link { margin-bottom: 14px; } .trainer-card { bottom: calc(6px + var(--sab)); padding-top: 10px; padding-bottom: 10px; } .trainer-card h2 { font-size: 30px; } .trainer-card .bubble { margin: 6px 0; } }
+@media (max-height: 400px) and (min-aspect-ratio: 1/1) { .trainer-card .go { position: absolute; left: calc(100% + 12px); bottom: 0; } .trainer-card .tc-style { margin-bottom: 0; } .trainer-card .tc-critter { margin-bottom: 6px; } }
 @media (max-height: 460px) { .recruit .modal { padding: 12px 18px; } .recruit h2 { font-size: 26px; margin-bottom: 4px; } .recruit p { margin: 4px 0 8px; font-size: 13px; } }
 /* short landscape phones: tighten the results column so the buttons stay on screen */
 @media (max-height: 380px) and (min-aspect-ratio: 1/1) {
