@@ -1043,7 +1043,7 @@ export class Arena {
   // ambient motes that drift through the bowl: dandelion seeds (meadow), rising embers (volcano), blossom petals (sky)
   buildDrift(G, rand, kind) {
     const K = {
-      seeds:  { n: 160, size: 0.55, vy: 0.25, wind: 0.6, inner: 'rgba(255,255,255,1)', outer: 'rgba(255,255,240,0)', add: false },
+      seeds:  { n: 160, size: 0.4, vy: 0.25, wind: 0.6, inner: 'rgba(255,255,250,1)', outer: 'rgba(255,255,240,0)', add: false, cap: 8 },
       embers: { n: 260, size: 0.5, vy: 1.4, wind: 0.3, inner: 'rgba(255,240,180,1)', outer: 'rgba(255,90,20,0)', add: true },
       petals: { n: 200, size: 0.5, vy: -0.6, wind: 0.8, inner: 'rgba(255,190,220,1)', outer: 'rgba(255,150,200,0)', add: false },
     }[kind];
@@ -1053,12 +1053,12 @@ export class Arena {
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     const tex = canvasTex(32, 32, (c, w, h) => {
       const gr = c.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
-      gr.addColorStop(0, K.inner); gr.addColorStop(kind === 'embers' ? 0.25 : 0.45, K.inner); gr.addColorStop(1, K.outer);
+      gr.addColorStop(0, K.inner); gr.addColorStop(kind === 'embers' ? 0.25 : kind === 'seeds' ? 0.15 : 0.45, K.inner); gr.addColorStop(1, K.outer);
       c.fillStyle = gr; c.fillRect(0, 0, w, h);
     });
-    this.drift = new THREE.Points(g, new THREE.PointsMaterial({ size: K.size, map: tex, transparent: true, depthWrite: false, blending: K.add ? THREE.AdditiveBlending : THREE.NormalBlending, color: 0xffffff, opacity: kind === 'seeds' ? 0.85 : 1 }));
+    this.drift = new THREE.Points(g, new THREE.PointsMaterial({ size: K.size, map: tex, transparent: true, depthWrite: false, blending: K.add ? THREE.AdditiveBlending : THREE.NormalBlending, color: 0xffffff, opacity: kind === 'seeds' ? 0.7 : 1 }));
     // motes right next to the camera (menus stand inside the bowl) would bloat into big blurry blobs: cap their size
-    this.drift.material.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <fog_vertex>', '#include <fog_vertex>\n  gl_PointSize = min(gl_PointSize, 14.0);'); };
+    this.drift.material.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <fog_vertex>', '#include <fog_vertex>\n  gl_PointSize = min(gl_PointSize, ' + (K.cap || 14) + '.0);'); };
     this.drift.frustumCulled = false;
     this.drift.userData = K;
     G.add(this.drift);
