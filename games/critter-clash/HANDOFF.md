@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 129)
+# Critter Clash: Handoff (after Round 130)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -349,7 +349,8 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 126. Kindlekit auto matches on all 7 arenas with mods, error-free (no code change).
 127. Sky Cup ladder (5 rungs) and shiny Kindlekit checked (no code change).
 128. Squeakwing, the orchard bat (Sonic Squeak / Echo Boom), Nyx in the Glowcap Cup.
-129. Balance check with 18 critters.
+129. 18-critter balance (Pengsicle, Voltferret nerfs; Squeakwing 9% -> 44%); VS timer guard (merged with the playtest session's identical fix).
+130. Results screens for the new critters checked (no code change).
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
@@ -360,16 +361,10 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - No localisation.
 
 ## Suggested next rounds
-- **First (session 10b):** the user already got the c018bcc APK at 02:10 (asked to report anything stuck). Send the newest APK (check `apk-critter-clash` names the latest SHA) and mention Team Battle, Quick Battle Match Setup, arena ambience, the stage title card.
-- Full balance run `PORT=5181 node tools/robin.mjs 1` (build to scratch first); check Pricklepuff and Diggles.
-- Team Battle polish ideas: a "Go, <name>!" callout when the next critter enters, a team-win trophy moment, Team Battle in the Daily rotation.
-- Old first step (done this session): fetch the latest APK (check that the `apk-critter-clash` commit message names the latest SHA; if the CI run failed at the final push with a GitHub 500, any new push rebuilds it) and send it to the user with SendUserFile. Mention: Jiggawatt the jelly sprite, Boss Rush, a finale with credits for clearing every cup, smarter CPU vs puddles/clouds. The user is actively playtesting (they reported bugs at ~22:45), so ask them to report anything that gets stuck.
-- Run `node tools/tapcheck.mjs` and `node tools/cupflow.mjs 740x360 <cupIndex>` (against `PORT=5181` preview of a fresh build, so edits don't reload it) after UI changes.
-- Full balance run with 16 critters: `PORT=5181 node tools/robin.mjs 1` (~10 min).
-- Re-run the balance round robin for all 14 (`tools/robin.mjs 2` against a production build).
-- Ideas: Grove-specific CPU trainer flavour, a 15th/16th critter, localisation, more Camp interactions with the new critters.
-- Battle: per-arena second hazard pattern; CPU variety.
-- Content: Sky Cup reward in Camp, a 13th/14th critter pair, more Pecan story beats.
+- The planned work ended at about 04:35 UTC on 2026-10-14. If the user asks for more, start by sending the newest APK (check `apk-critter-clash` names the latest SHA) and ask them to report anything that gets stuck.
+- Balance: re-run `PORT=5181 node tools/robin.mjs 1` (build to scratch first) after any combat change; 18 critters take about 15 minutes. Keep everyone roughly within 40–65%.
+- Run `node tools/tapcheck.mjs`, `node tools/cupflow.mjs 740x360 <cupIndex>` and `tools/teamflow.mjs` after UI changes. tapcheck runs screens back to back, so a timer from one step (e.g. VS → battle) can leak into the next.
+- Ideas: Team Battle in the Daily rotation, localisation, more Camp interactions for the newest critters, per-arena second hazard pattern, a 19th critter (gust and fire now have 3 each like the other types).
 - Keep doing critique passes on phone sizes (915×412, 412×915, 740×360).
 
 ## Chaining (do this at the end of each session)
