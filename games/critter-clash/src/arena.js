@@ -13,6 +13,7 @@ export const ARENAS = {
     wallA: 0xff5a6e, wallB: 0xffffff, ground: 0x7ccf5a, fog: 0xbfe8ff,
     accent: 0xffc940, seat: [0x3d7bff, 0xff5a6e, 0xffc940, 0x4fd38a],
     hill: 0x6fbf55, trunk: 0x8a5a3a, leaves: [0x47b04a, 0x5cc85a, 0x3a9a48], scenery: 'trees', cloud: 0xffffff, cloudShade: 0x5a6a90, sunI: 2.4,
+    drift: 'seeds',
   },
   beach: {
     name: 'Seashell Bay Arena',
@@ -30,7 +31,7 @@ export const ARENAS = {
     wallA: 0xff5a2a, wallB: 0x3a2a4a, ground: 0x4a3a52, fog: 0x5a2a4a,
     accent: 0xff7a2a, seat: [0xff5a2a, 0xffc940, 0x8a5aff, 0x3a2a4a],
     hill: 0x3a2a40, trunk: 0x3a2a30, leaves: [0x5a4a5a, 0x6a5a6a, 0x4a3a4a], scenery: 'rocks', cloud: 0x6a4a6a, cloudShade: 0x2a1a3a, sunI: 1.8,
-    lava: 0xff5a1a, fillI: 0.45,
+    lava: 0xff5a1a, fillI: 0.45, drift: 'embers',
   },
   frost: {
     name: 'Frostpeak Dome',
@@ -57,7 +58,7 @@ export const ARENAS = {
     wallA: 0xffffff, wallB: 0xff9ac8, ground: 0xf4f2ff, fog: 0xf2e8ff,
     accent: 0xffb0d4, seat: [0xff9ac8, 0x8ad0ff, 0xffe08a, 0xc4a4ff],
     hill: 0xffffff, trunk: 0x9a6a4a, leaves: [0xff9ac8, 0xffc4de, 0x7cd07a], scenery: 'islands', cloud: 0xffffff, cloudShade: 0x8a90c8, sunI: 2.3,
-    fogNear: 150, fogFar: 520, back: 0xa890d8,
+    fogNear: 150, fogFar: 520, back: 0xa890d8, drift: 'petals',
   },
   grove: {
     name: 'Glowcap Grove',
@@ -627,6 +628,7 @@ export class Arena {
       this.flies.userData.base = pos.slice();
       G.add(this.flies);
     }
+    if (A.drift) this.buildDrift(G, rand, A.drift);
     if (A.water) {
       // shallow lagoon ring with bright foam edge
       const sea = new THREE.Mesh(new THREE.RingGeometry(62, 320, 64), toon(A.water, { env: true, rim: 0 }));
@@ -908,10 +910,33 @@ export class Arena {
     this.screenTex.needsUpdate = true;
   }
 
+  // ambient motes that drift through the bowl: dandelion seeds (meadow), rising embers (volcano), blossom petals (sky)
+  buildDrift(G, rand, kind) {
+    const K = {
+      seeds:  { n: 160, size: 0.55, vy: 0.25, wind: 0.6, inner: 'rgba(255,255,255,1)', outer: 'rgba(255,255,240,0)', add: false },
+      embers: { n: 260, size: 0.5, vy: 1.4, wind: 0.3, inner: 'rgba(255,240,180,1)', outer: 'rgba(255,90,20,0)', add: true },
+      petals: { n: 200, size: 0.5, vy: -0.6, wind: 0.8, inner: 'rgba(255,190,220,1)', outer: 'rgba(255,150,200,0)', add: false },
+    }[kind];
+    const n = K.n, pos = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { const a = rand() * 6.28, r = 1 + rand() * 22; pos[i * 3] = Math.cos(a) * r; pos[i * 3 + 1] = rand() * 14; pos[i * 3 + 2] = Math.sin(a) * r; }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const tex = canvasTex(32, 32, (c, w, h) => {
+      const gr = c.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+      gr.addColorStop(0, K.inner); gr.addColorStop(kind === 'embers' ? 0.25 : 0.45, K.inner); gr.addColorStop(1, K.outer);
+      c.fillStyle = gr; c.fillRect(0, 0, w, h);
+    });
+    this.drift = new THREE.Points(g, new THREE.PointsMaterial({ size: K.size, map: tex, transparent: true, depthWrite: false, blending: K.add ? THREE.AdditiveBlending : THREE.NormalBlending, color: 0xffffff, opacity: kind === 'seeds' ? 0.85 : 1 }));
+    this.drift.frustumCulled = false;
+    this.drift.userData = K;
+    G.add(this.drift);
+  }
+
   // low quality: half the crowd and a third of the snow
   setDetail(q) {
     this.crowd.count = q === 'low' ? Math.floor(this.fans.length * 0.5) : this.fans.length;
     if (this.snow) this.snow.geometry.setDrawRange(0, q === 'low' ? 300 : 900);
+    if (this.drift) this.drift.geometry.setDrawRange(0, q === 'low' ? this.drift.userData.n >> 1 : Infinity);
   }
 
   updateCrowd(t) {
@@ -938,6 +963,18 @@ export class Arena {
         a[i + 1] -= dt * (1.2 + (i % 7) * 0.12);
         a[i] += Math.sin(t * 0.8 + i) * dt * 0.4;
         if (a[i + 1] < 0) a[i + 1] += 22;
+      }
+      p.needsUpdate = true;
+    }
+    if (this.drift) {
+      const K = this.drift.userData, p = this.drift.geometry.attributes.position, a = p.array;
+      for (let i = 0; i < a.length; i += 3) {
+        const k = (i % 9) / 9;
+        a[i + 1] += dt * K.vy * (0.6 + k);
+        a[i] += (K.wind + Math.sin(t * 0.9 + i) * 0.6) * dt;
+        a[i + 2] += Math.cos(t * 0.7 + i * 0.3) * dt * 0.5;
+        if (a[i + 1] > 14) a[i + 1] -= 14; else if (a[i + 1] < 0) a[i + 1] += 14;
+        if (a[i] > 26) a[i] -= 52;
       }
       p.needsUpdate = true;
     }
