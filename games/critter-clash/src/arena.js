@@ -49,7 +49,7 @@ export const ARENAS = {
     wallA: 0x2a1f5a, wallB: 0xff4fb8, ground: 0x1c1838, fog: 0x2a1a52,
     accent: 0x3af0ff, seat: [0xff4fb8, 0x3af0ff, 0xffd84a, 0x8a5aff],
     hill: 0x1a1434, trunk: 0x2a2244, leaves: [0x2a2450, 0x241e46, 0x30285a], scenery: 'city', cloud: 0x3a2a6a, cloudShade: 0x5a2a6a, sunI: 2.1,
-    stars: true, beam: 0xff8ae0, fillI: 0.5,
+    stars: true, beam: 0xff8ae0, fillI: 0.5, rain: true,
   },
   sky: {
     name: 'Cloudtop Gardens',
@@ -629,6 +629,19 @@ export class Arena {
       G.add(this.flies);
     }
     if (A.drift) this.buildDrift(G, rand, A.drift);
+    if (A.rain) {
+      // a light city drizzle: slanted streaks that catch the neon through the bloom
+      const n = 700, pos = new Float32Array(n * 6);
+      for (let i = 0; i < n; i++) {
+        const a = rand() * 6.28, r = 1 + rand() * 24, x = Math.cos(a) * r, z = Math.sin(a) * r, y = rand() * 16;
+        pos.set([x, y, z, x + 0.12, y + 0.75, z], i * 6);
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      this.rain = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0x9ad8ff, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending }));
+      this.rain.frustumCulled = false;
+      G.add(this.rain);
+    }
     if (A.water) {
       // shallow lagoon ring with bright foam edge
       const sea = new THREE.Mesh(new THREE.RingGeometry(62, 320, 64), toon(A.water, { env: true, rim: 0 }));
@@ -936,6 +949,7 @@ export class Arena {
   setDetail(q) {
     this.crowd.count = q === 'low' ? Math.floor(this.fans.length * 0.5) : this.fans.length;
     if (this.snow) this.snow.geometry.setDrawRange(0, q === 'low' ? 300 : 900);
+    if (this.rain) this.rain.geometry.setDrawRange(0, q === 'low' ? 600 : Infinity);
     if (this.drift) this.drift.geometry.setDrawRange(0, q === 'low' ? this.drift.userData.n >> 1 : Infinity);
   }
 
@@ -963,6 +977,15 @@ export class Arena {
         a[i + 1] -= dt * (1.2 + (i % 7) * 0.12);
         a[i] += Math.sin(t * 0.8 + i) * dt * 0.4;
         if (a[i + 1] < 0) a[i + 1] += 22;
+      }
+      p.needsUpdate = true;
+    }
+    if (this.rain) {
+      const p = this.rain.geometry.attributes.position, a = p.array;
+      for (let i = 0; i < a.length; i += 6) {
+        const d = dt * (14 + (i % 5));
+        a[i + 1] -= d; a[i + 4] -= d; a[i] -= d * 0.16; a[i + 3] -= d * 0.16;
+        if (a[i + 1] < 0) { a[i + 1] += 16; a[i + 4] += 16; a[i] += 2.56; a[i + 3] += 2.56; }
       }
       p.needsUpdate = true;
     }
