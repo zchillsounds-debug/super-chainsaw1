@@ -5,6 +5,7 @@
 // a sweeping laser, a rogue wave, a crosswind, a lingering spore cloud.
 // Hazards never KO (they leave at least 1 HP) and a guard soaks them fully.
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { toon, inked, canvasTex } from './toon.js';
 import { sfx } from './audio.js';
 import { ARENA_R } from './arena.js';
@@ -223,13 +224,11 @@ export class Hazards {
       for (let q = 0; q < pos.count; q++) { const y = pos.getY(q) / 2.1; (y < 0.7 ? c.lerpColors(c0, c1, y / 0.7) : c.lerpColors(c1, c2, (y - 0.7) / 0.3)).toArray(col, q * 3); }
       geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
       const body = inked(geo, toon(0xffffff, { rim: 0.7, vertexColors: true }), 0.03);
-      const foam = new THREE.Group();
-      for (let q = 0; q < 7; q++) {
-        const b = inked(new THREE.SphereGeometry(0.3 + (q % 3) * 0.06, 12, 8), toon(0xffffff, { rim: 0.4 }), 0.02);
-        b.position.set((q / 6 - 0.5) * (sg.half * 2 - 0.3), 2.0 + (q % 2) * 0.12, 0.75 + (q % 3) * 0.1);
-        foam.add(b);
-      }
-      sg.foam = foam;
+      // foam lip: seven puffs merged into one mesh (two draw calls with its outline)
+      const puffs = [];
+      for (let q = 0; q < 7; q++) puffs.push(new THREE.SphereGeometry(0.3 + (q % 3) * 0.06, 12, 8).translate((q / 6 - 0.5) * (sg.half * 2 - 0.3), 2.0 + (q % 2) * 0.12, 0.75 + (q % 3) * 0.1));
+      const foam = inked(mergeGeometries(puffs), toon(0xffffff, { rim: 0.4 }), 0.02);
+      puffs.forEach((g) => g.dispose());
       w.add(body, foam);
       w.scale.setScalar(0.01);
       sg.wave = add(w); w.rotation.y = Math.PI / 2 - ang;
