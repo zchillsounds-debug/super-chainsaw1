@@ -388,15 +388,15 @@ export class Hazards {
 
   // the boss's second wind turns the arena against the challenger
   storm() {
-    if (!this.H || this.b.training || save.settings.hazards === false) return false;
+    if (!this.H || (this.b.training && !this.b.trainHazards) || save.settings.hazards === false) return false;
     this.stormy = true;
     this.timer = Math.min(this.timer, 2);
     return true;
   }
 
   update(dt) {
-    // off in the meadow, in training, and when switched off in Settings
-    if (!this.H || this.b.training || save.settings.hazards === false) return;
+    // off in the meadow, in training (unless Sparring Setup switched them on), and when switched off in Settings
+    if (!this.H || (this.b.training && !this.b.trainHazards) || save.settings.hazards === false) return;
     const B = this.b, H = this.H;
     if (B.phase === 'fight' && B.time > 8) {
       this.timer -= dt;

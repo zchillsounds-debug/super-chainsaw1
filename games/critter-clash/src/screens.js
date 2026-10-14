@@ -549,12 +549,16 @@ export class Screens {
     d.className = 'modal-wrap train-pick';
     d.innerHTML = `<div class="modal"><h2>${train ? 'Sparring Setup' : 'Match Setup'}</h2>
       <small>${train ? 'Dummy' : 'Rival'}</small><div class="tp-foes">${['random', ...others.map((c) => c.id)].map((id) => `<button class="tp-foe" data-id="${id}">${id === 'random' ? '<b>?</b>' : `<img src="${g.portrait(CRITTERS.find((c) => c.id === id))}" alt="${id}">`}</button>`).join('')}</div>
-      <small>Arena</small><div class="tp-arenas">${arenas.map((k) => `<button class="tp-ar" data-k="${k}">${k === 'random' ? '🎲 Random' : ARENA_NAME[k]}</button>`).join('')}</div>
+      <small>Arena</small><div class="tp-arenas">${arenas.map((k) => `<button class="tp-ar" data-k="${k}">${k === 'random' ? '🎲 Random' : ARENA_NAME[k]}${HAZARDS[k] && save.settings.hazards !== false ? ' ⚠' : ''}</button>`).join('')}${train && save.settings.hazards !== false ? '<button class="tp-hz"></button>' : ''}</div>
       <div class="row"></div></div>`;
+    let hz = this.trainHz ? '1' : '0';
     const sync = () => {
       d.querySelectorAll('.tp-foe').forEach((b) => b.classList.toggle('on', b.dataset.id === foe));
       d.querySelectorAll('.tp-ar').forEach((b) => b.classList.toggle('on', b.dataset.k === arena));
+      // one chip toggles hazard practice (only the ⚠ stadiums have any)
+      d.querySelectorAll('.tp-hz').forEach((b) => { b.classList.toggle('on', hz === '1'); b.textContent = `⚠ Hazards: ${hz === '1' ? 'On' : 'Off'}`; });
     };
+    d.querySelectorAll('.tp-hz').forEach((b) => b.addEventListener('click', () => { hz = hz === '1' ? '0' : '1'; sfx.ui('move'); sync(); }));
     d.querySelectorAll('.tp-foe').forEach((b) => b.addEventListener('click', () => { foe = b.dataset.id; sfx.ui('move'); sync(); }));
     d.querySelectorAll('.tp-ar').forEach((b) => b.addEventListener('click', () => { arena = b.dataset.k; sfx.ui('move'); sync(); }));
     sync();
@@ -567,7 +571,8 @@ export class Screens {
       if (!train) { this.quickPick = { c, arena: arena === 'random' ? pick(ARENA_KEYS) : arena }; this.vs(); return; }
       this.mode = 'battle';
       playMusic('battle');
-      g.startBattle(p, c, { training: true, playerLevel: save.critters[p.id].level, cpuLevel: save.critters[p.id].level, arena });
+      this.trainHz = hz === '1';
+      g.startBattle(p, c, { training: true, hazards: this.trainHz, playerLevel: save.critters[p.id].level, cpuLevel: save.critters[p.id].level, arena });
     }));
     this.root.appendChild(d);
   }
