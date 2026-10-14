@@ -137,6 +137,12 @@ export class Screens {
         "{name}, I've made a discovery! Critters GROW when they get strong enough. At Lv 7, and again at Lv 14, they change into a bigger, stronger form with powered-up moves.",
         already.length ? `In fact, some of yours already have: say hello to ${already.slice(0, 3).join(', ')}${already.length > 3 ? ' and more' : ''}! Every critter grows its own way, so check the Critterdex.` : "Every critter grows its own way. Keep battling, and check the Critterdex to see how far yours have come!",
       ]), 600);
+    } else if (!g.autoplay && save.cups.sprout && !save.news?.includes('tricks')) {
+      (save.news ||= []).push('tricks'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "Careful out there, {name}! The stadiums have learned new tricks: fissures in the Magma Crater, ice slicks on Frostpeak, rogue waves at Seashell Bay, crosswinds over Cloudtop and spore clouds in the grove.",
+        "Neon Rooftop's laser sweeps the whole floor, so you can't outrun it. Guard, or roll right through it! Oh, and some days the Daily Challenge is a 3-on-3 Team Battle.",
+      ]), 600);
     } else if (!g.autoplay && save.cups.thunder && !save.news?.includes('grove')) {
       (save.news ||= []).push('grove'); persist();
       setTimeout(() => this.mode === 'title' && this.profTalk([

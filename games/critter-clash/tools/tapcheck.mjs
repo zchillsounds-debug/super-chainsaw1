@@ -53,7 +53,7 @@ for (const [w, h] of sizes) {
   const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
   await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?mobile&q=low');
   await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
-  await pg.evaluate(() => { __save.trainer = { name: 'Samantha', partner: 'cindermunch' }; __save.unlocked = __critters.map((c) => c.id); __save.news = ['grove', 'otter', 'frogmole', 'grow']; __save.tutorialDone = true; __critters.forEach((c, i) => { __save.critters[c.id].level = [1, 8, 15][i % 3]; }); });
+  await pg.evaluate(() => { __save.trainer = { name: 'Samantha', partner: 'cindermunch' }; __save.unlocked = __critters.map((c) => c.id); __save.news = ['tricks', 'grove', 'otter', 'frogmole', 'grow']; __save.tutorialDone = true; __critters.forEach((c, i) => { __save.critters[c.id].level = [1, 8, 15][i % 3]; }); });
   for (const [name, js] of STEPS) {
     try {
       await pg.evaluate(`(() => { const S = __game.screens; document.querySelectorAll('.modal-wrap, .prof-wrap').forEach((m) => m.remove()); ${js}; })()`);

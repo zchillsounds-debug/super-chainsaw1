@@ -10,7 +10,7 @@ await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?mobile&q=low
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 const mode = () => pg.evaluate(() => __game.screens.mode + (__game.battle ? ':' + __game.battle.phase : ''));
 // GROW=<lv> starts the partner just below that level, so the growing scene plays mid-cup
-await pg.evaluate(([ci, gl]) => { __save.trainer = { name: 'Zee', partner: 'bubbalotl' }; __save.tutorialDone = true; __save.news = ['grove', 'otter', 'frogmole', 'jelly', 'team', 'grow']; if (gl) { __save.critters.cindermunch.level = gl - 1; __save.critters.cindermunch.xp = 140 + gl * 40; } if (ci) for (const c of __cups.slice(0, ci)) __save.cups[c.id] = true; __game.screens.title(); }, [cupI, +(process.env.GROW || 0)]);
+await pg.evaluate(([ci, gl]) => { __save.trainer = { name: 'Zee', partner: 'bubbalotl' }; __save.tutorialDone = true; __save.news = ['tricks', 'grove', 'otter', 'frogmole', 'jelly', 'team', 'grow']; if (gl) { __save.critters.cindermunch.level = gl - 1; __save.critters.cindermunch.xp = 140 + gl * 40; } if (ci) for (const c of __cups.slice(0, ci)) __save.cups[c.id] = true; __game.screens.title(); }, [cupI, +(process.env.GROW || 0)]);
 await pg.waitForTimeout(800);
 const tap = async (sel, text) => {
   const l = text ? pg.locator(sel, { hasText: text }).first() : pg.locator(sel).first();
