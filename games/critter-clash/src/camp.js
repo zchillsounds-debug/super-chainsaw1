@@ -21,7 +21,7 @@ export class Camp {
     this.team = team;
     this.sel = null;
     this.t = 0;
-    this.props = buildProps(save.cups || {}, save.unlocked || [], save.trials || {});
+    this.props = buildProps(save.cups || {}, save.unlocked || [], save.trials || {}, (save.stats?.hazardArenas || []).length >= 6);
     this.g.scene.add(this.props);
     // soft ring under whoever is selected
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.72, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false }));
@@ -432,7 +432,7 @@ function quirk(c, P, k, m, fx) {
 }
 
 // campfire, tent, picnic blanket and a berry basket, kept at the edges so the critters have room
-function buildProps(cups, team = [], trials = {}) {
+function buildProps(cups, team = [], trials = {}, tamer = false) {
   const g = new THREE.Group();
   const OL = 0.03;
   // campfire: ring of stones, crossed logs, warm point light
@@ -622,6 +622,24 @@ function buildProps(cups, team = [], trials = {}) {
     [...stars, ...posts].forEach((x) => x.dispose());
     g.add(ped);
     keepOut.push([-0.6, -3.3, 0.9]);
+  }
+  // Stadium Tamer prize: a ringmaster's top hat beside the trial pedestal
+  if (tamer) {
+    const hat = new THREE.Group();
+    hat.position.set(0.6, 0, -3.5);
+    hat.rotation.set(0, -0.4, -0.1);
+    const crown = inked(new THREE.CylinderGeometry(0.34, 0.3, 0.62, 20), toon(0xc8283a), OL * 0.7);
+    crown.position.y = 0.39; hat.add(crown);
+    const brim = inked(new THREE.CylinderGeometry(0.58, 0.58, 0.06, 24), toon(0x2a1630), OL * 0.6);
+    brim.position.y = 0.06; hat.add(brim);
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.315, 0.315, 0.12, 20), toon(0xffc940, { rim: 0.6 }));
+    band.position.y = 0.2; hat.add(band);
+    const sh = new THREE.Shape();
+    for (let k = 0; k < 10; k++) { const a = Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 0.06 : 0.14; k ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+    const star = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.03, bevelEnabled: false }), toon(0xffe070, { rim: 0.8 }));
+    star.position.set(0, 0.2, 0.31); hat.add(star);
+    g.add(hat);
+    keepOut.push([0.6, -3.5, 0.7]);
   }
   g.traverse((o) => { if (o.isMesh && !o.userData.hull) o.castShadow = true; });
   g.userData = { fire: fire.position, flames, spots, keepOut, balloon, pennants };
