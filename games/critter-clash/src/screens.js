@@ -533,12 +533,14 @@ export class Screens {
     () => { this.ctx = { kind: 'survival', streak: 0, hp: 1, last: null }; this.select(); });
     // team days need three critters; until then the day's lead foe is a solo daily
     const teamDay = d.team && save.unlocked.length >= 3;
+    const tm = dailyChallenge(new Date(Date.parse(d.key + 'T12:00:00Z') + 864e5)); // tomorrow's, previewed once today's is done
     card('daily' + (doneToday ? ' done' : ''), '#3dc8ff', `
       <div class="cup-trophy">${doneToday ? '✅' : '📅'}</div>
       <h2>${teamDay ? 'Daily Team Challenge' : 'Daily Challenge'}</h2>
       <p>${teamDay ? '3-on-3 today! ' : ''}${mod.icon} <b>${mod.name}</b>: ${mod.desc}</p>
       <div class="cup-foes">${(teamDay ? d.team : [d.foe]).map((id, k) => `<img src="${g.portrait(skinned(byId(id), d.shiny && k === 0 ? 'shiny' : 'base'))}" alt="">`).join('')}</div>
-      <div class="cup-meta">vs ${teamDay ? 'a rival team' : `${d.shiny ? '✦ ' : ''}${foe.name}`} · ${ARENA_NAME[d.arena]} · ${doneToday ? 'Cleared today!' : 'Double XP'}${this.dailyStreakNow(d.key) ? ` · 🔥 ${this.dailyStreakNow(d.key)}` : ''}</div>`,
+      <div class="cup-meta">vs ${teamDay ? 'a rival team' : `${d.shiny ? '✦ ' : ''}${foe.name}`} · ${ARENA_NAME[d.arena]} · ${doneToday ? 'Cleared today!' : 'Double XP'}${this.dailyStreakNow(d.key) ? ` · 🔥 ${this.dailyStreakNow(d.key)}` : ''}</div>
+      ${doneToday ? `<div class="cup-meta">Tomorrow: ${tm.team && save.unlocked.length >= 3 ? '🤝 3-on-3' : `vs ${byId(tm.foe).name}`} · ${MODS[tm.mod].icon} ${MODS[tm.mod].name}</div>` : ''}`,
     () => { this.ctx = teamDay ? { kind: 'team', daily: d } : { kind: 'daily', d }; this.select(); });
     const bosses = bossList(), rushOpen = !!save.cups.champion;
     card('bossrush' + (rushOpen ? '' : ' locked'), '#ffb020', `
