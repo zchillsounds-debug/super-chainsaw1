@@ -642,6 +642,7 @@ export class Arena {
       this.rain.frustumCulled = false;
       G.add(this.rain);
     }
+    if (A.water) this.buildGulls(G, rand);
     if (A.water) {
       // shallow lagoon ring with bright foam edge
       const sea = new THREE.Mesh(new THREE.RingGeometry(62, 320, 64), toon(A.water, { env: true, rim: 0 }));
@@ -923,6 +924,25 @@ export class Arena {
     this.screenTex.needsUpdate = true;
   }
 
+  // a few seagulls wheeling over the bay
+  buildGulls(G, rand) {
+    const body = toon(0xffffff, { rim: 0.4 }), tip = toon(0x3a3a4a);
+    this.gulls = [];
+    for (let i = 0; i < 6; i++) {
+      const g = new THREE.Group();
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.35, 10, 8), body); b.scale.set(0.8, 0.7, 1.8); g.add(b);
+      const beak = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.3, 6), toon(0xffb020)); beak.rotation.x = Math.PI / 2; beak.position.z = 0.7; g.add(beak);
+      for (const sd of [-1, 1]) {
+        const w = new THREE.Group(); w.position.x = sd * 0.2;
+        const inner = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 0.45), body); inner.position.x = sd * 0.45; w.add(inner);
+        const outer = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.04, 0.32), tip); outer.position.x = sd * 1.2; w.add(outer);
+        g.add(w); g.userData[sd < 0 ? 'wl' : 'wr'] = w;
+      }
+      g.scale.setScalar(1.8); g.userData.a = rand() * 6.28; g.userData.r = 16 + rand() * 12; g.userData.y = 11 + rand() * 6; g.userData.sp = (0.12 + rand() * 0.08) * (rand() < 0.5 ? -1 : 1); g.userData.ph = rand() * 6;
+      G.add(g); this.gulls.push(g);
+    }
+  }
+
   // ambient motes that drift through the bowl: dandelion seeds (meadow), rising embers (volcano), blossom petals (sky)
   buildDrift(G, rand, kind) {
     const K = {
@@ -979,6 +999,15 @@ export class Arena {
         if (a[i + 1] < 0) a[i + 1] += 22;
       }
       p.needsUpdate = true;
+    }
+    if (this.gulls) {
+      for (const g of this.gulls) {
+        const u = g.userData; u.a += u.sp * dt;
+        g.position.set(Math.cos(u.a) * u.r, u.y + Math.sin(t * 0.7 + u.ph) * 0.8, Math.sin(u.a) * u.r);
+        g.rotation.set(0, -u.a + (u.sp > 0 ? Math.PI : 0), u.sp > 0 ? -0.25 : 0.25, 'YXZ');
+        const flap = Math.sin(t * 6 + u.ph) * 0.5;
+        u.wl.rotation.z = flap; u.wr.rotation.z = -flap;
+      }
     }
     if (this.rain) {
       const p = this.rain.geometry.attributes.position, a = p.array;
