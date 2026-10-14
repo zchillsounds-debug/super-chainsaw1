@@ -223,7 +223,7 @@ export const FORMS = {
         blurb: 'Wears a golden crest and a mantle of glacier ice. Snowstorms politely wait for it to finish talking.',
         colors: { body: 0x2a3878, belly: 0xffffff, accent: 0xffb02a, dark: 0x141c42, crystal: 0xb8f4ff, plume: 0xffc84a },
         body: { w: 0.62, h: 0.96, headR: 0.44, legLen: 0.18, armLen: 0.3, chubby: 1.02, limb: 1.3 },
-        parts: { crystalridge: 1.05, plumes: 0.8, brows: 0.7 },
+        parts: { icecape: 1, plumes: 0.8, brows: 0.7 },
         moves: { special: 'Glacier Slide', super: 'Emperor Blizzard' },
       },
     ],
@@ -903,6 +903,36 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     arc.userData.spin = 13; arc.userData.axis = 'x';
     cr.skull.add(arc);
     (cr.spinners ||= []).push(arc);
+  }
+
+  // a mantle of glacier ice: a jagged cape hanging from the shoulders, wrapped round the back, with a frost collar
+  if (P.icecape) {
+    const s = P.icecape, W = B.w * B.chubby * 1.7 * s, L = B.h * 1.0 * s, sh = new THREE.Shape();
+    sh.moveTo(-W * 0.5, 0); sh.lineTo(W * 0.5, 0);
+    const n = 7;
+    for (let k = 0; k <= n; k++) { const x = W * (0.62 - (k / n) * 1.24), y = -L * (k % 2 ? 0.78 : 1) * (1 - Math.abs(k / n - 0.5) * 0.35); sh.lineTo(x, y); }
+    sh.lineTo(-W * 0.5, 0);
+    const geo = new THREE.ShapeGeometry(sh, 4), pos = geo.attributes.position;
+    // wrap it round the back: bend x around a cylinder behind the body
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), d = -pos.getY(i) / L, R = B.w * (0.8 + d * 0.3) * B.chubby, a = x / (B.w * 0.8 * B.chubby); // flares out toward the hem
+      pos.setXYZ(i, Math.sin(a) * R, pos.getY(i), -Math.cos(a) * R - 0.02 - d * 0.1 * s);
+    }
+    geo.computeVertexNormals();
+    const cm = toon(C.crystal ?? 0xb8f4ff, { uniforms: U, side: THREE.DoubleSide, rim: 1 });
+    cr.mats.g_cape = cm;
+    const g = new THREE.Group(); g.add(new THREE.Mesh(geo, cm)); // a curved sheet: no ink hull, the rim light edges it
+    g.position.y = B.h * 0.92;
+    TO.add(g);
+    // frost collar: ice shards standing up round the neck
+    const gem = (r, h) => { const q = new THREE.OctahedronGeometry(r, 0); q.scale(1, h / r, 1); q.translate(0, h * 0.5, 0); return q; }, parts = [];
+    for (let k = 0; k < 9; k++) {
+      const a = Math.PI * (0.35 + (k / 8) * 1.3), q = gem(0.06 * s, (0.2 + (k % 2) * 0.1) * s);
+      q.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, v(Math.sin(a) * 0.5, 1, Math.cos(a) * 0.5).normalize()));
+      q.translate(Math.sin(a) * B.w * 0.62 * B.chubby, B.h * 0.92, Math.cos(a) * B.w * 0.56);
+      parts.push(q);
+    }
+    TO.add(inked(mergeGeometries(parts), mat('crystal', C.crystal ?? C.accent, { rim: 1 }), OL * 0.5));
   }
 
   flatten(SK); flatten(TO);
