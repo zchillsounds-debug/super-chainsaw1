@@ -202,7 +202,7 @@ export const FORMS = {
         blurb: 'Built like a castle wall, with a horn like a battering ram. Rolling is now considered a natural disaster.',
         colors: { body: 0xa6805a, belly: 0xead2ae, accent: 0x5e4630, dark: 0x3a2618, rock: 0x5a4c3e, horn: 0xfff2d8 },
         body: { w: 0.92, h: 0.84, headR: 0.44, legLen: 0.2, armLen: 0.3, chubby: 1.24, limb: 1.85 },
-        parts: { stonearmor: 1.15, horns: 0.9, brows: 0.9, tusks: 0.6 },
+        parts: { stonearmor: 1.15, horns: 0.9, brows: 0.9, tusks: 0.6, battlements: 1 },
         moves: { special: 'Siege Roll', super: 'Citadel Quake' },
       },
     ],
@@ -944,6 +944,27 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       arc.position.set(x * headR * (1.05 + 0.02 * k), headR * 0.9, -headR * 0.05);
       SK.add(arc);
     }
+  }
+
+  // castle battlements along the top of the shell, with a little pennant flying from a turret
+  if (P.battlements) {
+    const s = P.battlements, rm = mat('rock', C.rock ?? 0x6e6258, { rim: 0.6 }), parts = [];
+    const R = B.w * B.chubby * 0.52, y0 = B.h * 0.98;
+    for (let k = 0; k < 9; k++) {
+      const a = Math.PI * (0.62 + (k / 8) * 0.76), box = new THREE.BoxGeometry(0.13 * s, (k % 2 ? 0.1 : 0.2) * s, 0.12 * s);
+      box.rotateY(a); box.translate(Math.sin(a) * R, y0 + (k % 2 ? 0.05 : 0.1) * s, Math.cos(a) * R);
+      parts.push(box.toNonIndexed());
+    }
+    const wall = new THREE.CylinderGeometry(R * 1.02, R * 1.08, 0.12 * s, 20, 1, true, Math.PI * 0.6, Math.PI * 0.8); wall.translate(0, y0 - 0.02 * s, 0);
+    parts.push(wall.toNonIndexed());
+    const tower = new THREE.CylinderGeometry(0.09 * s, 0.11 * s, 0.36 * s, 8); tower.translate(0, y0 + 0.12 * s, -R * 0.98);
+    parts.push(tower.toNonIndexed());
+    TO.add(inked(mergeGeometries(parts), rm, OL * 0.5));
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.012 * s, 0.012 * s, 0.34 * s, 5), cr.mats.dark);
+    pole.position.set(0, y0 + 0.46 * s, -R * 0.98);
+    const flag = new THREE.Mesh(new THREE.ConeGeometry(0.07 * s, 0.22 * s, 3), mat('flag', C.flag ?? 0xff5a5a));
+    flag.rotation.z = -Math.PI / 2; flag.scale.set(1, 1, 0.3); flag.position.set(0.11 * s, y0 + 0.56 * s, -R * 0.98);
+    TO.add(pole, flag);
   }
 
   flatten(SK); flatten(TO);
