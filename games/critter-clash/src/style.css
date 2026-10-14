@@ -846,3 +846,34 @@ body.portrait .rcard span { font-size: 9.5px; }
 .badge-prog span { position: relative; display: block; text-align: center; font-size: 9px; line-height: 12px; font-weight: 800; color: #5a4870; }
 .vs-side.gold img { filter: drop-shadow(0 0 14px #ffd23f) drop-shadow(0 8px 0 rgba(0,0,0,.25)); }
 .vs-side.gold small { background: linear-gradient(180deg, #ffe46a, #ffb020); color: var(--ink); font-weight: 800; box-shadow: 0 0 0 2px var(--ink); }
+
+/* ---------- Adventure world ---------- */
+body.in-world .touch .btns { display: none; }
+.world-screen { position: absolute; inset: 0; pointer-events: none; }
+.world-screen > * { pointer-events: auto; }
+.wd-menu { position: absolute; top: calc(12px + var(--sat)); right: calc(14px + env(safe-area-inset-right)); font-size: 24px; z-index: 5; }
+.wd-a { position: absolute; right: calc(28px + env(safe-area-inset-right)); bottom: calc(34px + var(--sab)); width: 76px; height: 76px; border-radius: 50%; background: #ff5a8a; color: #fff; font-family: var(--display); font-size: 34px; box-shadow: 0 5px 0 #b02a5a, 0 0 0 4px var(--ink); z-index: 5; touch-action: none; }
+.wd-a:active { transform: translateY(3px); box-shadow: 0 2px 0 #b02a5a, 0 0 0 4px var(--ink); }
+body:not(.is-touch) .wd-a { display: none; }
+.wd-box { position: absolute; left: 50%; bottom: calc(14px + var(--sab)); transform: translateX(-50%); width: min(720px, calc(100vw - 32px)); box-sizing: border-box; background: var(--cream); color: var(--ink); border-radius: 18px; padding: 10px 20px 16px; box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px #fff, 0 0 0 12px var(--ink), 0 8px 0 10px rgba(0,0,0,.25); z-index: 30; animation: fade .2s; cursor: pointer; }
+.wd-box small { font-family: var(--display); color: var(--violet); font-size: 16px; display: block; }
+.wd-box p { margin: 2px 0 0; font-size: 17px; font-weight: 800; line-height: 1.35; min-height: 2.7em; white-space: pre-line; }
+.wd-more { position: absolute; right: 16px; bottom: 8px; font-style: normal; color: var(--pink); animation: wdMore .6s ease-in-out infinite alternate; }
+@keyframes wdMore { to { transform: translateY(4px); } }
+.wd-fade { position: absolute; inset: 0; background: #000; z-index: 60; animation: fade .25s both; transition: opacity .35s; }
+.wd-fade.out { opacity: 0; }
+.wd-flash { position: absolute; inset: 0; z-index: 60; pointer-events: none; animation: wdFlash .9s steps(1) both; }
+@keyframes wdFlash { 0%, 22%, 44% { background: #fff; } 11%, 33%, 55% { background: transparent; } 66% { background: #000; clip-path: inset(0 0 50% 0); } 78% { background: #000; clip-path: inset(0 0 15% 0); } 100% { background: #000; clip-path: inset(0); } }
+.wd-banner { position: absolute; left: calc(16px + env(safe-area-inset-left)); top: calc(14px + var(--sat)); background: var(--ink); color: #fff; font-family: var(--display); font-size: 20px; padding: 8px 18px; border-radius: 14px; box-shadow: 0 0 0 3px #fff; z-index: 6; animation: wdBanner 2.6s both; pointer-events: none; }
+@keyframes wdBanner { 0% { transform: translateY(-80px); } 12%, 85% { transform: none; } 100% { transform: translateY(-80px); } }
+.wd-bubble { position: absolute; transform: translate(-50%, -100%); font-size: 34px; z-index: 20; pointer-events: none; animation: wdPop .25s both; }
+@keyframes wdPop { from { transform: translate(-50%, -100%) scale(.5); opacity: 0; } }
+.hero-pick p { margin: 0 0 10px; font-weight: 800; opacity: .8; }
+.hero-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; max-height: 56vh; overflow-y: auto; margin-bottom: 12px; }
+.hero-grid button { background: #efe8fb; border-radius: 14px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; font-family: var(--display); font-size: 13px; color: var(--ink); }
+.hero-grid button img { width: 64px; height: 64px; margin: 0; }
+.hero-grid button:hover { background: #ffe9a8; }
+.wd-hero { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; text-align: left; }
+.wd-hero img { width: 72px; height: 72px; margin: 0; }
+.wd-hero b { font-family: var(--display); font-weight: 400; font-size: 22px; display: block; }
+.wd-hero small { display: block; font-weight: 800; opacity: .75; }

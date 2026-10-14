@@ -9,6 +9,8 @@ import { grown, stageFor, FORMS, GROW_LV } from './growth.js';
 import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
+import { World, newAdventure, heroDef } from './world.js';
+import { storyIntro, storyStep, storyTalk, doorAction } from './story.js';
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
@@ -119,7 +121,8 @@ export class Screens {
         <div class="title-foot"><span>🧢 ${save.trainer.name}</span><span>Team ${save.unlocked.length}/${CRITTERS.length}</span><span>🏆 ${trophies}/${CUPS.length}</span>${trophies === CUPS.length ? '<span class="master">🌟 Critter Master</span>' : ''}</div>
       </div>`;
     const m = this.root.querySelector('.title-menu');
-    m.appendChild(this.btn('Tournament', 'primary big', () => this.cups()));
+    m.appendChild(this.btn(save.adv ? 'Adventure' : 'Adventure <small>NEW!</small>', 'primary big', () => this.adventure()));
+    m.appendChild(this.btn('Tournament', 'big', () => this.cups()));
     const row = document.createElement('div');
     row.className = 'row';
     row.appendChild(this.btn('Quick Battle', '', () => { this.ctx = { kind: 'quick' }; this.select(); }));
@@ -796,6 +799,93 @@ export class Screens {
   }
 
   // ---------- critter camp ----------
+  // ---------- Adventure: the tile world ----------
+  adventure() {
+    const g = this.game;
+    if (!save.adv || !save.unlocked.includes(save.adv.hero)) { this.heroPick(); return; }
+    g.endBattle();
+    g.setArena('meadow');
+    g.setShowcase([]);
+    this.mode = 'world';
+    this.backFn = () => this.worldMenu();
+    document.body.classList.add('in-world');
+    this.root.innerHTML = `<div class="world-screen"><button class="icon-btn wd-menu" aria-label="Menu">☰</button><button class="wd-a" aria-label="A">A</button></div>`;
+    this.root.querySelector('.wd-menu').addEventListener('click', () => { sfx.ui('ok'); this.worldMenu(); });
+    this.root.querySelector('.wd-a').addEventListener('pointerdown', (e) => { e.preventDefault(); if (this.worldObj) this.worldObj.tapA = true; });
+    g.input.showTouch(true);
+    this.worldObj?.dispose();
+    this.worldObj = new World(this);
+    storyIntro(this, this.worldObj);
+  }
+
+  leaveWorld() {
+    this.worldObj?.dispose();
+    this.worldObj = null;
+    document.body.classList.remove('in-world');
+    if (!this.game.battle) this.game.input.showTouch(false);
+  }
+
+  worldMenu() {
+    if (this.root.querySelector('.modal-wrap')) return;
+    const d = document.createElement('div');
+    d.className = 'modal-wrap';
+    const F = save.adv.flags, cups = CUPS.filter((c) => F['cup_' + c.id]).length, h = heroDef();
+    d.innerHTML = `<div class="modal wd-menu-modal"><h2>Adventure</h2>
+      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0}</small></div></div>
+      <div class="res-btns"></div></div>`;
+    const b = d.querySelector('.res-btns');
+    const close = () => { d.remove(); this.game.modalClose = null; };
+    b.appendChild(this.btn('Resume', 'primary', close));
+    b.appendChild(this.btn('Save & Quit', 'ghost', () => { close(); persist(); this.leaveWorld(); this.title(); }));
+    this.game.modalClose = close;
+    this.root.appendChild(d);
+  }
+
+  // who is the hero? any recruited critter can be
+  heroPick() {
+    const g = this.game;
+    const d = document.createElement('div');
+    d.className = 'modal-wrap';
+    const team = CRITTERS.filter((c) => save.unlocked.includes(c.id));
+    d.innerHTML = `<div class="modal hero-pick"><h2>Who is the hero?</h2><p>Every critter dreams of the Critter Crown. Whose story is this?</p><div class="hero-grid">${team.map((c) => `<button data-id="${c.id}"><img src="${g.portrait(skinOf(c))}" alt=""><span>${grown(c, save.critters[c.id].level).name}</span></button>`).join('')}</div></div>`;
+    d.querySelectorAll('.hero-grid button').forEach((btn) => btn.addEventListener('click', () => {
+      sfx.ui('ok');
+      d.remove(); this.game.modalClose = null;
+      newAdventure(btn.dataset.id);
+      this.adventure();
+    }));
+    const close = this.btn('Back', 'ghost', () => { d.remove(); this.game.modalClose = null; });
+    d.querySelector('.modal').appendChild(close);
+    this.game.modalClose = () => { d.remove(); this.game.modalClose = null; };
+    this.root.appendChild(d);
+  }
+
+  // a fight from the world: wild critters, trainers and story battles
+  worldFight(info) {
+    const g = this.game, h = heroDef(), lv = save.critters[h.id].level;
+    this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note };
+    this.leaveWorld();
+    this.mode = 'vs';
+    g.startBattle(h, info.foe, {
+      cpuLevel: info.lv, playerLevel: lv, difficulty: info.diff ?? 0.3, arena: 'meadow',
+      rounds: info.kind === 'wild' ? 1 : 2, trainer: info.trainer || null,
+      stageSub: info.kind === 'wild' ? `${info.name} appeared!` : info.kind === 'story' ? 'Story battle' : `${info.name} wants to battle!`,
+    });
+  }
+
+  worldCup(cup, front) {
+    save.adv.x = front.x; save.adv.y = front.y; save.adv.dir = 's'; persist();
+    this.leaveWorld();
+    this.ctx = { kind: 'cup', cup, idx: 0, adv: true };
+    this.sel = CRITTERS.findIndex((c) => c.id === save.adv.hero);
+    this.mode = 'ladder';
+    this.ladder();
+  }
+
+  worldDoor(b, w) { doorAction(this, b, w); }
+  worldStory(id, w, a) { storyTalk(this, id, w, a); }
+  worldStoryStep(w) { return storyStep(this, w); }
+
   camp() {
     const g = this.game;
     g.endBattle();
@@ -909,7 +999,7 @@ export class Screens {
           <div class="go"></div>
         </div>
       </div>`;
-    this.root.firstElementChild.prepend(this.header(`${cup.name} · Battle ${idx + 1}/${cup.matches.length}`, () => this.select()));
+    this.root.firstElementChild.prepend(this.header(`${cup.name} · Battle ${idx + 1}/${cup.matches.length}`, () => (this.ctx.adv ? this.adventure() : this.select())));
     this.root.querySelector('.go').appendChild(this.btn('Battle!', 'primary big', () => this.vs()));
     sfx.voice(foe.voice, 'taunt');
     // the professor sets the scene the first time you enter each cup
@@ -1081,9 +1171,23 @@ export class Screens {
       joined = unlock(cDef.id);
       if (cup.idx === cup.cup.matches.length - 1) {
         cupDone = true; save.cups[cup.cup.id] = true;
+        if (cup.adv && save.adv) save.adv.flags['cup_' + cup.cup.id] = true;
         save.shinies ||= [];
         shinies = [...new Set(cup.cup.matches.map((m) => m.critter))].filter((id) => !save.shinies.includes(id));
         save.shinies.push(...shinies);
+      }
+    }
+    if (kind === 'world') {
+      const W = this.ctx;
+      if (won) {
+        if (W.flag) save.adv.flags[W.flag] = true;
+        // a beaten wild critter may ask to come along (more likely the first time you meet its kind)
+        if (W.fight === 'wild' && !save.unlocked.includes(cDef.id) && Math.random() < 0.45) joined = unlock(cDef.id);
+        streakNote = `<div class="streak">${W.note || (W.fight === 'wild' ? (joined ? `🌿 ${cDef.name} wants to join your team!` : `🌿 The wild ${cDef.name} scampers back into the grass.`) : `🏅 You beat ${W.name}!`)}</div>`;
+      } else {
+        const sp = save.adv.spawn;
+        Object.assign(save.adv, { map: sp.map, x: sp.x, y: sp.y, dir: 's' });
+        streakNote = `<div class="streak">💫 ${pDef.name} is worn out and hurries back to rest...</div>`;
       }
     }
     // berries for Critter Camp: one per win, a bonus for an S rank (added below once the rank is known)
@@ -1154,7 +1258,9 @@ export class Screens {
     setTimeout(fill, 500);
 
     const b = this.root.querySelector('.res-btns');
-    if (kind === 'survival') {
+    if (kind === 'world') {
+      b.appendChild(this.btn('Continue', 'primary', () => this.adventure()));
+    } else if (kind === 'survival') {
       if (won) b.appendChild(this.btn('Next Challenger', 'primary', () => { g.endBattle(); playMusic('menu'); this.mode = 'select'; this.vs(); }));
       else b.appendChild(this.btn('New Run', 'primary', () => { this.ctx = { kind: 'survival', streak: 0, hp: 1, last: null, best: save.stats.bestStreak || 0 }; g.endBattle(); playMusic('menu'); this.select(); }));
       b.appendChild(this.btn('Challenges', 'ghost', () => this.challenges()));
@@ -1186,7 +1292,7 @@ export class Screens {
       if (won && !cupDone) b.appendChild(this.btn('Next Battle', 'primary', () => { cup.idx++; g.endBattle(); playMusic('menu'); this.ladder(); }));
       else if (!won) {
         b.appendChild(this.btn('Try Again', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
-        b.appendChild(this.btn('Give Up', 'ghost', () => this.cups()));
+        b.appendChild(this.btn('Give Up', 'ghost', () => (cup.adv ? this.adventure() : this.cups())));
       } else b.appendChild(this.btn('Collect Trophy', 'primary', () => this.trophy(cup.cup)));
     } else {
       b.appendChild(this.btn('Rematch', 'primary', () => g.startBattle(withGear(skinned(byId(pDef.id), pDef.skin), save.critters[pDef.id].level), cDef, { ...opts, playerLevel: save.critters[pDef.id].level }))); // fresh def: it may have grown
@@ -1321,7 +1427,7 @@ export class Screens {
     const btns = this.root.querySelector('.res-btns');
     // Continue is there from the start, so nothing (a popup, a slow phone) can leave you stuck here
     // clearing the last cup rolls the finale once
-    const next = () => (CUPS.every((c) => save.cups[c.id]) && !save.finaleSeen ? this.finale() : this.cups());
+    const next = () => (this.ctx.adv ? this.adventure() : CUPS.every((c) => save.cups[c.id]) && !save.finaleSeen ? this.finale() : this.cups());
     btns.appendChild(this.btn('Continue', 'primary big', () => { this.root.querySelector('.prof-wrap')?.remove(); next(); }));
     this.backFn = next;
     sfx.cheer(1.5);
@@ -1462,6 +1568,8 @@ export class Screens {
     const cam = this.game.camera;
     if (this.mode === 'camp') { this.campObj?.update(dt); return; }
     if (this.campObj) { this.campObj.dispose(); this.campObj = null; }
+    if (this.mode === 'world') { this.worldObj?.update(dt); return; }
+    if (this.worldObj) this.leaveWorld();
     // trophy screens: fireworks pop in the sky behind the winners
     if (this.mode === 'trophy' || this.mode === 'teamwin') {
       this.fwT = (this.fwT ?? 0.4) - dt;
