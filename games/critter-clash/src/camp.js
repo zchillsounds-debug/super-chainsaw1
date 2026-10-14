@@ -21,7 +21,7 @@ export class Camp {
     this.team = team;
     this.sel = null;
     this.t = 0;
-    this.props = buildProps(save.cups || {}, save.unlocked || []);
+    this.props = buildProps(save.cups || {}, save.unlocked || [], save.trials || {});
     this.g.scene.add(this.props);
     // soft ring under whoever is selected
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.72, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false }));
@@ -432,7 +432,7 @@ function quirk(c, P, k, m, fx) {
 }
 
 // campfire, tent, picnic blanket and a berry basket, kept at the edges so the critters have room
-function buildProps(cups, team = []) {
+function buildProps(cups, team = [], trials = {}) {
   const g = new THREE.Group();
   const OL = 0.03;
   // campfire: ring of stones, crossed logs, warm point light
@@ -595,6 +595,33 @@ function buildProps(cups, team = []) {
     g.add(bw);
     balloon = bg;
     keepOut.push([-4.4, -3.0, 0.8]);
+  }
+  // Stadium Trials prize: a striped circus pedestal with a gold star for every trial cleared at 3 stars
+  const aced = Object.values(trials).filter((n) => n >= 3).length;
+  if (aced) {
+    const ped = new THREE.Group();
+    ped.position.set(-0.6, 0, -3.3);
+    const stripes = canvasTex(128, 32, (c, w, h) => { for (let k = 0; k < 12; k++) { c.fillStyle = k % 2 ? '#fff4e0' : '#ff5a4a'; c.fillRect(k * w / 12, 0, w / 12 + 1, h); } });
+    const base = inked(new THREE.CylinderGeometry(0.62, 0.68, 0.4, 24), toon(0xffffff, { map: stripes }), OL * 0.7);
+    base.position.y = 0.2; ped.add(base);
+    const top = inked(new THREE.CylinderGeometry(0.66, 0.66, 0.08, 24), toon(0xffc940), OL * 0.5);
+    top.position.y = 0.44; ped.add(top);
+    const sh = new THREE.Shape();
+    for (let k = 0; k < 10; k++) { const a = Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 0.12 : 0.29; k ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+    const stars = [], posts = [];
+    for (let k = 0; k < aced; k++) {
+      // up to six stars on little posts in an arc facing the camera
+      const x = (k - (aced - 1) / 2) * 0.3, y = 1.0 + (k % 2) * 0.22;
+      const sg = new THREE.ExtrudeGeometry(sh, { depth: 0.06, bevelEnabled: false });
+      sg.translate(x, y, 0.1 - Math.abs(x) * 0.25);
+      stars.push(sg);
+      const post = new THREE.CylinderGeometry(0.03, 0.03, y - 0.45, 5); post.translate(x, 0.45 + (y - 0.45) / 2, 0.1 - Math.abs(x) * 0.25); posts.push(post);
+    }
+    ped.add(inked(mergeGeometries(stars), toon(0xffd040, { rim: 0.8 }), OL * 0.4));
+    ped.add(new THREE.Mesh(mergeGeometries(posts), toon(0x9a6a3a)));
+    [...stars, ...posts].forEach((x) => x.dispose());
+    g.add(ped);
+    keepOut.push([-0.6, -3.3, 0.9]);
   }
   g.traverse((o) => { if (o.isMesh && !o.userData.hull) o.castShadow = true; });
   g.userData = { fire: fire.position, flames, spots, keepOut, balloon, pennants };

@@ -1014,7 +1014,7 @@ export class Screens {
       const was = save.trials?.[T.arena] || 0;
       if (n > was) (save.trials ||= {})[T.arena] = n;
       T.stars = n;
-      streakNote = won ? `<div class="streak">🎪 Trial cleared: ${starRow(n)}${n > was ? ' · new best!' : ''}${n < 3 ? (stats.hazardHits ? ' · Dodge every hazard for more stars' : ' · Finish with 70% health for ★★★') : ''}</div>`
+      streakNote = won ? `<div class="streak">🎪 Trial cleared: ${starRow(n)}${n > was ? (n === 3 ? ' · a new star for your Camp pedestal!' : ' · new best!') : ''}${n < 3 ? (stats.hazardHits ? ' · Dodge every hazard for more stars' : ' · Finish with 70% health for ★★★') : ''}</div>`
         : `<div class="streak">🎪 Trial failed. Best so far: ${starRow(was)}</div>`;
     }
     if (kind === 'daily' && won) { const st = this.dailyClear(this.ctx.d.key); streakNote = `<div class="streak">📅 Daily Challenge cleared! Double XP${st}</div>`; }
