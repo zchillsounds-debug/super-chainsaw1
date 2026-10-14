@@ -408,6 +408,8 @@ body.portrait .cup { flex: none; width: 100%; }
 .coach.on.dim { opacity: .55; }
 .coach span { display: block; background: rgba(255,248,231,.92); color: var(--ink); padding: 6px 14px; border-radius: 999px; font-size: 14px; white-space: nowrap;
   box-shadow: inset 0 0 0 2px var(--ink), 0 3px 0 rgba(0,0,0,.2); }
+.tb.teach::after { content: ''; position: absolute; inset: -7px; border-radius: 50%; box-shadow: 0 0 0 5px #ffe066, 0 0 0 7px var(--ink), 0 0 20px 8px rgba(255,224,102,.7); animation: teachRing 1s ease-out infinite; pointer-events: none; }
+@keyframes teachRing { from { transform: scale(.9); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
 .coach.done span { background: #ffe066; transition: background .2s; }
 @keyframes coachIn { from { transform: translate(-50%, -12px) scale(.85); opacity: 0; } }
 @media (max-height: 420px) { .coach { top: calc(84px + var(--sat)); } .coach span { font-size: 13px; } }
