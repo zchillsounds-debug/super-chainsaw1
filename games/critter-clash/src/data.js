@@ -1,4 +1,5 @@
 // Critter roster, types and move data. All creatures are original designs.
+import { grown } from './growth.js';
 
 export const TYPES = {
   fire:   { name: 'Blaze',  color: '#ff6a2b', glow: 0xff7a30, beats: ['leaf', 'gust'] },
@@ -245,7 +246,11 @@ export const GEAR = [
   { lv: 10, name: 'Star Pin', icon: '⭐' },
   { lv: 15, name: 'Crown', icon: '👑' },
 ];
-export const withGear = (def, lv) => { const g = gearFor(lv); return g ? { ...def, gear: g } : def; };
+// gear plus the grown form for this level (growth.js); shiny forms keep their shiny palette
+export const withGear = (def, lv) => {
+  const d = grown(def, lv, def.skin ? SHINY[def.id] : null), g = gearFor(lv);
+  return g ? { ...d, gear: g } : d;
+};
 
 export const STARTERS = ['cindermunch', 'bubbalotl', 'clovebun'];
 

@@ -14,7 +14,7 @@ import { Input, isTouch } from './input.js';
 import { Hud } from './hud.js';
 import { Battle } from './battle.js';
 import { Critter } from './critters.js';
-import { CRITTERS, CUPS } from './data.js';
+import { CRITTERS, CUPS, withGear } from './data.js';
 import { Screens } from './screens.js';
 import { initAudio, playMusic, sfx } from './audio.js';
 import { save } from './save.js';
@@ -104,7 +104,7 @@ class Game {
     r.setAnimationLoop(() => this.frame());
     window.__game = this;
     window.__save = save;
-    window.__critters = CRITTERS; window.__cups = CUPS;
+    window.__critters = CRITTERS; window.__cups = CUPS; window.__grow = withGear;
     // headless helper: advance the simulation in fixed steps without rendering
     window.__sim = (sec, dt = 1 / 60) => { for (let t = 0; t < sec; t += dt) this.step(dt); this.clock.getDelta(); };
     this.boot();
@@ -139,8 +139,9 @@ class Game {
       progress();
     } catch (e) { console.warn('prewarm', e); }
     if (Q.has('play')) {
-      const p = CRITTERS.find((c) => c.id === Q.get('p')) || CRITTERS[0];
-      const c = CRITTERS.find((c) => c.id === Q.get('c')) || CRITTERS[1];
+      // &pl= / &cl= give each side a level, which also picks its grown form (Lv 7 / Lv 14)
+      const p = withGear(CRITTERS.find((c) => c.id === Q.get('p')) || CRITTERS[0], +(Q.get('pl') || 1));
+      const c = withGear(CRITTERS.find((c) => c.id === Q.get('c')) || CRITTERS[1], +(Q.get('cl') || 1));
       this.startBattle(p, c, { difficulty: +(Q.get('d') ?? 0.5), mods: Q.get('mods')?.split(',') || [], training: Q.has('train') });
     } else this.screens.title();
     if (splash) { splash.classList.add('out'); setTimeout(() => splash.remove(), 500); }
@@ -231,7 +232,7 @@ class Game {
 
   // 3D-rendered portrait of a critter's head, cached as a data URL
   portrait(def, S = 256) {
-    const key = def.id + (def.skin || '') + (def.gear || '') + (S !== 256 ? '@' + S : '');
+    const key = def.id + (def.skin || '') + (def.gear || '') + (def.stage ? 's' + def.stage : '') + (S !== 256 ? '@' + S : '');
     if (this.portraits.has(key)) return this.portraits.get(key);
     const scene = new THREE.Scene();
     const cr = new Critter(def);
@@ -241,10 +242,10 @@ class Game {
     scene.add(new THREE.HemisphereLight(0xffffff, 0x8888aa, 1.6));
     const d = new THREE.DirectionalLight(0xffffff, 2.2); d.position.set(-2, 3, 4); scene.add(d);
     const B = def.body;
-    const headY = B.legLen * 0.9 + B.h * 0.82 + B.headR * 0.78;
+    const Z = def.size || 1, headY = (B.legLen * 0.9 + B.h * 0.82 + B.headR * 0.78) * Z, zoom = Z * (def.portraitZoom || 1);
     const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
-    cam.position.set(-0.35, headY + 0.15, 2.6);
-    cam.lookAt(0, headY - 0.05, 0);
+    cam.position.set(-0.35 * zoom, headY + 0.15 * zoom + (zoom - Z) * 0.6, 2.6 * zoom);
+    cam.lookAt(0, headY - 0.05 + (zoom - Z) * 0.6, 0);
     const rt = new THREE.WebGLRenderTarget(S, S, { samples: 4 });
     rt.texture.colorSpace = THREE.SRGBColorSpace;
     const r = this.renderer;

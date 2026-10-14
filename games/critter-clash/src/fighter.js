@@ -1,6 +1,7 @@
 // A critter in battle: movement, combo/special/super state machine, hit reactions.
 import * as THREE from 'three';
 import { Critter } from './critters.js';
+import { MOVE_POW, CD_MULT } from './growth.js';
 import { toon } from './toon.js';
 import { COMBO, TYPES } from './data.js';
 import { ARENA_R } from './arena.js';
@@ -90,12 +91,15 @@ export class Fighter {
     battle.scene.add(this.root);
     const lv = 1 + (level - 1) * 0.06;
     this.maxHp = Math.round(def.stats.hp * lv);
+    // grown forms hit harder with specials/supers and recharge specials faster (growth.js)
+    this.stage = def.stage || 1;
+    this.movePow = MOVE_POW[this.stage - 1];
     this.power = def.stats.power * lv;
     this.speed = def.stats.speed;
     this.weight = def.stats.weight;
     this.type = def.type;
     this.ctl = { mx: 0, mz: 0, attack: false, special: false, dodge: false, super: false, guard: false };
-    this.shield = makeShield(TYPES[def.type].glow, def.body.h + def.body.headR + 0.35);
+    this.shield = makeShield(TYPES[def.type].glow, (def.body.h + def.body.headR) * (def.size || 1) + 0.35);
     this.root.add(this.shield);
     this.reset(side ? 4.5 : -4.5, 0);
   }
@@ -401,7 +405,7 @@ export class Fighter {
   startSpecial() {
     const id = this.def.special;
     this.setState('special');
-    this.specCd = SPECIALS[id].cd;
+    this.specCd = SPECIALS[id].cd * CD_MULT[this.stage - 1];
     this.atkId++;
     this.hitIds.clear();
     this.specFired = false;
@@ -887,8 +891,8 @@ export class Fighter {
     this.combo = 0;
   }
 
-  headPos() { return { x: this.x, y: this.y + this.def.body.h + this.def.body.headR * 1.8 + 0.2, z: this.z }; }
-  chestPos() { return { x: this.x, y: this.y + this.def.body.h * 0.8, z: this.z }; }
+  headPos() { return { x: this.x, y: this.y + (this.def.body.h + this.def.body.headR * 1.8) * (this.def.size || 1) + 0.2, z: this.z }; }
+  chestPos() { return { x: this.x, y: this.y + this.def.body.h * 0.8 * (this.def.size || 1), z: this.z }; }
 
   // -------- procedural animation --------
   animate(dt) {

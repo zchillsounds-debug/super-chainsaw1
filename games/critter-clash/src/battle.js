@@ -150,6 +150,8 @@ export class Battle {
       this.hitstop = Math.max(this.hitstop, 0.12);
       return false;
     }
+    // grown forms: specials, supers and their projectiles hit harder
+    if (att && att !== def && att.movePow > 1 && (h.projectile || att.state === 'special' || att.state === 'super')) h = { ...h, dmg: h.dmg * att.movePow };
     if (def.invuln > 0 || def.state === 'super' && def.superInvuln || !def.alive) {
       if (def.state === 'dodge' && def.invuln > 0) this.perfectDodge(def);
       return false;

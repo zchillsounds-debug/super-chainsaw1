@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { toon, inked, canvasTex } from './toon.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { TYPES } from './data.js';
+import { buildGrowth } from './growth.js';
 
 const SEG = 36;
 const sphere = (r = 1) => new THREE.SphereGeometry(r, SEG, Math.round(SEG * 0.75));
@@ -197,11 +198,16 @@ export class Critter {
     };
     this.flashT = 0;
     const OL = 0.02;
+    const LB = B.limb || 1; // grown forms have thicker arms and legs
 
     const root = this.root = new THREE.Group();
     root.userData.critter = this;
+    // grown forms are bigger overall (def.size); squash & stretch happens inside
+    const sizeG = this.sizeG = new THREE.Group();
+    sizeG.scale.setScalar(def.size || 1);
+    root.add(sizeG);
     const scaleG = this.scaleG = new THREE.Group(); // global squash & stretch, pivot at feet
-    root.add(scaleG);
+    sizeG.add(scaleG);
 
     const hipY = B.legLen * 0.9;
     const pelvis = this.pelvis = new THREE.Group();
@@ -783,10 +789,10 @@ export class Critter {
         tip.position.set(s * 0.025, -B.armLen * 1.12, -0.03);
         sh.add(tip);
       } else {
-        const a = inked(capsule(0.075, B.armLen), this.mats.body, OL * 0.8);
+        const a = inked(capsule(0.075 * LB, B.armLen), this.mats.body, OL * 0.8);
         a.position.y = -B.armLen * 0.5;
         sh.add(a);
-        const paw = new THREE.Mesh(sphere(0.085), this.mats.belly);
+        const paw = new THREE.Mesh(sphere(0.085 * LB), this.mats.belly);
         paw.position.y = -B.armLen - 0.02;
         sh.add(paw);
       }
@@ -800,10 +806,10 @@ export class Critter {
       const hp = new THREE.Group();
       hp.position.set(s * B.w * 0.26, 0.04, 0);
       pelvis.add(hp);
-      const l = inked(capsule(0.09, B.legLen * 0.6), this.mats.body, OL * 0.8);
+      const l = inked(capsule(0.09 * LB, B.legLen * 0.6), this.mats.body, OL * 0.8);
       l.position.y = -B.legLen * 0.4;
       hp.add(l);
-      const foot = inked(sphere(0.11), def.extra === 'penguin' ? this.mats.accent : this.mats.belly, OL * 0.8);
+      const foot = inked(sphere(0.11 * Math.sqrt(LB)), def.extra === 'penguin' ? this.mats.accent : this.mats.belly, OL * 0.8);
       foot.scale.set(1, 0.6, 1.35);
       foot.position.set(0, -hipY + 0.06, 0.05);
       hp.add(foot);
@@ -940,6 +946,9 @@ export class Critter {
 
     // springy pose state: current and velocity per channel
     this.P = {};
+    if (def.tailScale) tail.scale.setScalar(def.tailScale);
+    if (def.earScale) for (const e of this.ears) e.scale.setScalar(def.earScale);
+    buildGrowth(this, def, U, OL, { flameGeo, leafGeo });
     if (def.gear) this.buildGear(def.gear, U, OL);
     this.V = {};
     this.pose = {};
@@ -964,15 +973,16 @@ export class Critter {
     const col = new THREE.Color(TYPES[this.def.type].color);
     const scarfMat = toon(col.getHex(), { uniforms: U });
     const gold = toon(0xffc93a, { uniforms: U, rim: 0.9 });
-    if (from <= 1) {
-    const ring = inked(new THREE.TorusGeometry(B.w * 0.5, 0.085, 10, 28), scarfMat, OL * 0.8);
+    // the giant stage 3 forms outgrow the scarf (pin and crown still show)
+    if (from <= 1 && (this.def.stage || 1) < 3) {
+    const ring = inked(new THREE.TorusGeometry(B.w * 0.5, this.def.stage ? 0.062 : 0.085, 10, 28), scarfMat, OL * 0.8);
     ring.rotation.x = Math.PI / 2 - 0.3;
     ring.scale.set(B.chubby * 1.05, 1, 1);
-    ring.position.set(0, B.h * 0.84, B.w * 0.04);
+    ring.position.set(0, B.h * (this.def.stage ? 0.74 : 0.84), B.w * 0.04); // grown heads sit lower over the neck
     this.torso.add(ring);
     // two tails flapping off the back
     const tailG = new THREE.Group();
-    tailG.position.set(B.w * 0.12, B.h * 0.76, -B.w * 0.34);
+    tailG.position.set(B.w * 0.12, B.h * (this.def.stage ? 0.66 : 0.76), -B.w * 0.34);
     for (const [x, rz, len] of [[0, 0.25, 0.26], [0.07, -0.15, 0.2]]) {
       const t = inked(new THREE.BoxGeometry(0.1, len, 0.035), scarfMat, OL * 0.6);
       t.geometry.translate(0, -len / 2, 0);
