@@ -48,7 +48,7 @@ button { border: 0; cursor: pointer; color: inherit; }
 .logo-top { font-size: clamp(44px, 10vmin, 96px); color: #fff; letter-spacing: 2px; transform: rotate(-3deg); text-shadow: 0 6px 0 var(--ink), 0 10px 24px rgba(0,0,0,.35); }
 .logo-bot { font-size: clamp(60px, 15vmin, 140px); background: linear-gradient(#fff36b 20%, #ff9a2e 60%, #ff4f6a); -webkit-background-clip: text; background-clip: text; color: transparent;
   -webkit-text-stroke: 0.1em var(--ink); filter: drop-shadow(0 7px 0 var(--ink)) drop-shadow(0 12px 22px rgba(0,0,0,.35)); transform: rotate(-3deg); }
-.logo-sub { margin-top: 10px; font-size: clamp(14px, 2.6vmin, 20px); color: #fff; text-shadow: 0 2px 0 var(--ink); letter-spacing: 1px; }
+.logo-sub { display: inline-block; margin-top: 10px; padding: 3px 14px; border-radius: 99px; background: rgba(43,26,74,.62); font-family: "Lilita One", sans-serif; font-size: clamp(14px, 2.6vmin, 20px); color: #fff; text-shadow: 0 2px 0 var(--ink); letter-spacing: 1px; }
 .title-menu { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: auto 0 2vh; animation: rise .6s .3s both; }
 .title-foot { font-size: 12px; opacity: .7; text-shadow: 0 1px 0 var(--ink); }
 @keyframes logoIn { from { transform: scale(.3) rotate(-12deg); opacity: 0; } to { transform: none; opacity: 1; } }
