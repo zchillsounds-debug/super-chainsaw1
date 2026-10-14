@@ -14,7 +14,10 @@ await pg.waitForTimeout(800);
 const tap = async (sel, text) => {
   const l = text ? pg.locator(sel, { hasText: text }).first() : pg.locator(sel).first();
   if (!(await l.count()) || !(await l.isVisible())) return false;
-  try { await l.tap({ timeout: 20000 }); } catch (e) { console.log('tap failed', sel, String(text)); return false; } await pg.waitForTimeout(450); return true;
+  const cover = await l.evaluate((el) => { const r = el.getBoundingClientRect(); const t = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+    const anim = el.getAnimations({ subtree: false }).map((a) => a.animationName || a.constructor.name).join(',');
+    return (t && !el.contains(t) ? 'covered by ' + t.tagName + '.' + t.className : '') + (anim ? ' anim:' + anim : '') + ' rect:' + [r.x, r.y, r.width, r.height].map(Math.round); });
+  try { await l.tap({ timeout: 8000 }); } catch (e) { console.log('tap failed', sel, String(text), 'on', last, cover, String(e.message).split('\n').slice(-3).join(' / ')); return false; } await pg.waitForTimeout(450); return true;
 };
 const log = [];
 let last = '', same = 0, trophy = false;
@@ -27,13 +30,13 @@ for (let step = 0; step < 160; step++) {
     await pg.waitForTimeout(300); continue;
   }
   if (m === 'trophy') trophy = true;
-  if (trophy && m === 'cups') { console.log('CUP CLEARED'); break; }
+  if (trophy && (m === 'cups' || m === 'title')) { console.log('CUP CLEARED'); break; }
   // the topmost thing to press, like a player would
   if (await tap('.prof-wrap')) continue;
   if (await tap('.modal-wrap button.btn')) continue;
   if (m === 'cups') { const l = pg.locator('.cup').nth(cupI); try { await l.tap({ timeout: 20000 }); } catch (e) { console.log('cup tap failed'); } await pg.waitForTimeout(450); continue; }
   if (m === 'cupselect' || m === 'select') { await tap('.rcard'); if (await tap('button', /GO|FIGHT|Choose|Battle/)) continue; }
-  for (const re of [/Next Battle/, /Collect/, /Battle!/, /FIGHT/, /GO/, /Continue/, /Yay/, /Tournament/]) if (await tap('button:visible', re)) break;
+  for (const re of [/Next Battle/, /Collect/, /Battle!/, /FIGHT/, /GO/, /Continue/, /Yay/, /Tournament/, /Back to Title/]) if (await tap('button:visible', re)) break;
   await pg.waitForTimeout(300);
 }
 console.log('path:', log.join(' > '));
