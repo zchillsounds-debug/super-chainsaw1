@@ -661,6 +661,8 @@ kbd { font-family: var(--display); font-size: 12px; background: #fff; color: var
 .tp-foe { position: relative; }
 .tp-foe i { position: absolute; right: -4px; top: -4px; min-width: 20px; height: 20px; border-radius: 10px; background: #7ad36b; color: #fff; font-style: normal; font-size: 13px; line-height: 20px; box-shadow: 0 0 0 2px var(--ink); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; }
 .tp-foe i:empty { display: none; }
+.vs-team { position: absolute; left: 4%; right: 4%; top: calc(14px + var(--sat, 0px)); display: flex; justify-content: space-between; z-index: 3; animation: fade .4s .3s both; }
+.vs-team .team-row img { width: 40px; height: 40px; }
 .team-vs { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; }
 .team-vs > b { color: var(--ink); font-size: 14px; }
 .team-row { display: inline-flex; gap: 3px; }

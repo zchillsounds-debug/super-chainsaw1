@@ -13,6 +13,8 @@ const STEPS = [
   ['select', "S.ctx={kind:'quick'}; S.select()"],
   ['challenges', 'S.challenges()'],
   ['training', 'S.training()'],
+  ['quicksetup', "S.ctx={kind:'quick'}; S.select(); S.matchSheet(false)"],
+  ['teampick', "__save.unlocked=__critters.map(c=>c.id); S.ctx={kind:'team'}; S.select(); S.teamSheet()"],
   ['dex', 'S.dex()'],
   ['badges', 'S.dex(); S.badgeModal()'],
   ['camp', 'S.camp()'],
