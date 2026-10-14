@@ -809,7 +809,7 @@ export class Screens {
         <div class="vs-side l" style="--tc:${TYPES[p.type].color}"><img src="${g.portrait(p)}" alt=""><b>${p.name}</b><small>YOU · Lv ${opts.playerLevel}</small></div>
         <div class="vs-mark">VS</div>
         <div class="vs-side r" style="--tc:${TYPES[c.type].color}"><img src="${g.portrait(c)}" alt=""><b>${c.name}</b><small>${label}</small></div>
-        ${this.ctx.kind === 'team' ? `<div class="vs-team">${this.teamRow(this.ctx.team, this.ctx.php, this.ctx.pi)}${this.teamRow(this.ctx.foes, this.ctx.fhp, this.ctx.fi)}</div>` : ''}
+        ${this.ctx.kind === 'team' ? `<div class="vs-team">${this.teamRow(this.ctx.team, this.ctx.php, this.ctx.pi)}${this.teamRow(this.ctx.foes, this.ctx.fhp, this.ctx.fi)}</div>${this.ctx.sent ? `<div class="vs-go ${this.ctx.sent}">${this.ctx.sent === 'you' ? `Go, ${p.name}!` : `Rival sends out ${c.name}!`}</div>` : ''}` : ''}
         ${HAZARDS[opts.arena] && save.settings.hazards !== false ? `<div class="vs-hazard">⚠ Arena hazard: ${HAZARDS[opts.arena].name}</div>` : ''}
       </div>`;
     sfx.boom();
@@ -855,8 +855,8 @@ export class Screens {
     }
     if (kind === 'team') {
       const T = this.ctx, bt = g.battle, pf = bt?.player, cf = bt?.fighters[1];
-      if (won) { T.fhp[T.fi] = 0; T.php[T.pi] = pf ? Math.max(0.05, pf.hp / pf.maxHp) : 1; T.fi++; }
-      else { T.php[T.pi] = 0; T.fhp[T.fi] = cf ? Math.max(0.05, cf.hp / cf.maxHp) : 1; T.pi++; }
+      if (won) { T.fhp[T.fi] = 0; T.php[T.pi] = pf ? Math.max(0.05, pf.hp / pf.maxHp) : 1; T.fi++; T.sent = 'rival'; }
+      else { T.php[T.pi] = 0; T.fhp[T.fi] = cf ? Math.max(0.05, cf.hp / cf.maxHp) : 1; T.pi++; T.sent = 'you'; }
       T.over = T.fi >= 3 ? 'won' : T.pi >= 3 ? 'lost' : null;
       if (T.over === 'won') save.stats.teamWins = (save.stats.teamWins || 0) + 1;
       const rows = `<div class="team-vs">${this.teamRow(T.team, T.php, T.pi)}<b>vs</b>${this.teamRow(T.foes, T.fhp, T.fi)}</div>`;
