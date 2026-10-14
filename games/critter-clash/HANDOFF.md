@@ -1,10 +1,10 @@
-# Critter Clash: Handoff (after Round 172)
+# Critter Clash: Handoff (after Round 174)
 
 ## Start here (for a new chat)
 - Repo `zchillsounds-debug/super-chainsaw1`, branch **`ccr-4fc93d6e-suxlhd`**, folder `games/critter-clash/`. Clone with `--branch ccr-4fc93d6e-suxlhd`.
-- Latest work (session 13, 2026-10-14 16:05–~18:10 UTC): the user's playtest note "when they grow into their new form, there should be a screen to show when that happens" (fixed in R162: the growing scene now always plays, see "Session 13"), then signature parts for the growth lines that only looked like bigger copies (R163–R172).
+- Latest work (session 13, 2026-10-14 16:05–~18:10 UTC): the user's playtest note "when they grow into their new form, there should be a screen to show when that happens" (fixed in R162: the growing scene now always plays, see "Session 13"), then signature parts for the growth lines that only looked like bigger copies (R163–R172), a full-body growing scene (R173) and the first balance run with grown forms (R174).
 - Ask the user first: did the growing scene show for every critter that grew (including ones that were already Lv 7+ before the update)? Do the new forms look right?
-- Next ideas: see "Suggested next rounds"; numbering continues from **R173**.
+- Next ideas: see "Suggested next rounds"; numbering continues from **R175**.
 - User preferences: ask clarifying questions and confirm before building; hand off near 300k context.
 
 ## The brief (from the user)
@@ -428,6 +428,8 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 170. Shriekwing/Echowing: bigger ears with sound waves.
 171. Citadillo: castle battlements and a pennant.
 172. Solfox flame corona; Thunderam thundercloud.
+173. Growing scene shows the whole body.
+174. Lv 14 balance run with grown forms; `statMul` (Thornhulk buff, Solfox trim).
 L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (smaller, softer, per-kind `cap` on point size).
 
 ## Critique backlog (known issues)
