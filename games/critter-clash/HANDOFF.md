@@ -1,5 +1,12 @@
 # Critter Clash: Handoff (after Round 161)
 
+## Start here (for a new chat)
+- Repo `zchillsounds-debug/super-chainsaw1`, branch **`ccr-4fc93d6e-suxlhd`**, folder `games/critter-clash/`. Clone with `--branch ccr-4fc93d6e-suxlhd`.
+- Latest work (session 12, 2026-10-14): the **Growth** system. Every critter grows at Lv 7 and Lv 14 into new forms with stronger moves. Details in "Growth" below. The user has the APK built from e6df871 (R161).
+- Ask the user first: how the growing scene feels, whether any grown form looks off, and whether the big forms run smoothly on their phone.
+- Next ideas: a signature part for each of the 10 `bodyMul` growth lines, a balance robin with grown forms, numbering continues from **R162**.
+- User preferences: ask clarifying questions and confirm before building; hand off near 300k context.
+
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
 - Pick: a **cute, funny animal fighting game like Pokémon**, played as a **real-time 3D arena brawler** (Pokkén-like), with a **collect + tournament** loop and an **anime/Pokémon look**. Single-player only for now.
