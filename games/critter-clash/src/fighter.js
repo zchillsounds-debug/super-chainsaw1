@@ -484,12 +484,10 @@ export class Fighter {
       if (this.st < 0.14) {
         this.vx = this.vz = 0;
         if (o) this.turnTo(this.angleTo(o), 14, dt);
-        this.critter.pose.sy = 0.85; this.critter.pose.lean = 0.4;
       } else if (this.st < 0.52) {
         if (!this.specFired) { this.specFired = true; sfx.fire(); this.trailAt = 0; for (const pr of B.projectiles) if (pr.kind === 'ember' && pr.owner === this) pr.life = Math.min(pr.life, pr.t + 0.3); }
         if (o && !this.hitIds.size) this.turnTo(this.angleTo(o), 3, dt);
         this.vx = Math.sin(this.face) * 15; this.vz = Math.cos(this.face) * 15;
-        const P = this.critter.pose; P.lean = 0.7; P.tail = 1.4; P.legL = Math.sin(this.st * 50) * 0.9; P.legR = -P.legL;
         this.trail(0xff6a1e, 0xffe060);
         this.trailAt -= dt;
         if (this.trailAt <= 0) {
@@ -912,6 +910,15 @@ export class Fighter {
       this.rollSpin = (this.rollSpin || 0) + dt * (this.st < 0.3 ? 30 * this.st : 22);
       P.lean = 0.9;
       this.critter.P.lean = this.rollSpin; this.critter.V.lean = 0;
+    } else if (S === 'special' && this.def.special === 'flametrail') {
+      // crouch, then a flat-out fox sprint with arms swept back and the tail streaming behind
+      if (this.st < 0.14) { P.sy = 0.78; P.sx = 1.12; P.lean = 0.35; P.armLz = P.armRz = 0.5; P.ear = 0.9; }
+      else if (this.st < 0.52) {
+        const run = Math.sin(this.st * 48);
+        P.lean = 0.85; P.y = Math.abs(run) * 0.12; P.armLx = P.armRx = 1.3; P.armLz = P.armRz = 0.35;
+        P.legL = run * 1.1; P.legR = -run * 1.1; P.head = -0.5; P.tail = 1.6; P.ear = 1; P.sx = 0.95; P.sy = 1.05;
+        this.critter.emote('angry', 'grin', 0.1);
+      } else { P.lean = 0.2; P.sy = 0.92; P.armLz = P.armRz = 0.6; }
     } else if (S === 'special' && this.def.special === 'iceslide' && this.st >= 0.2 && this.st < 0.95) {
       P.lean = 1.45; P.y = 0.12; P.armLz = P.armRz = 1.2; P.armLx = P.armRx = 0.6; P.legL = P.legR = 1.2; P.head = -0.9; P.sx = 1.1; P.sy = 0.95;
       this.critter.emote('happy', 'grin', 0.1);
