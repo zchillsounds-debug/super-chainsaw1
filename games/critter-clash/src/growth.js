@@ -275,10 +275,10 @@ export const FORMS = {
     forms: [
       { name: 'Whirlglide', species: 'Gale Glider', size: 1.1, voice: 1.2, bodyMul: GROW2,
         blurb: 'Glides on its own updrafts now. It hasn\'t touched the ground in three days.',
-        colors: { plume: 0xffffff }, parts: { windring: 0.6, brows: 0.4 }, moves: { special: 'Sky Dive', super: 'Jet Gale' } },
+        colors: { body: 0xaab4cc, dark: 0x323e5a, plume: 0xffffff }, parts: { windring: 0.6, brows: 0.4 }, moves: { special: 'Sky Dive', super: 'Jet Gale' } },
       { name: 'Tempestail', species: 'Tempest Glider', size: 1.24, voice: 0.95, bodyMul: GROW3,
         blurb: 'A whirlwind with a fluffy tail. Leaves fall upward wherever it goes.',
-        colors: { plume: 0xe8f0ff }, parts: { windring: 1, plumes: 0.8, brows: 0.7 }, moves: { special: 'Tempest Dive', super: 'Hurricane Stream' } },
+        colors: { body: 0x8e9cc8, dark: 0x262e50, accent: 0xffffff, plume: 0xfff4c8 }, parts: { windring: 1, plumes: 0.8, brows: 0.7 }, moves: { special: 'Tempest Dive', super: 'Hurricane Stream' } },
     ],
   },
   diggles: {
@@ -286,10 +286,10 @@ export const FORMS = {
     forms: [
       { name: 'Drillmole', species: 'Drill Mole', size: 1.12, voice: 0.9, bodyMul: { ...GROW2, w: 1.2, chubby: 1.05 },
         blurb: 'Upgraded its hard hat and its claws. Tunnels through rock like it\'s pudding.',
-        colors: { rock: 0x6a6070 }, parts: { stonearmor: 0.6, brows: 0.5 }, moves: { special: 'Drill Ambush', super: 'Mole Stampede' } },
+        colors: { body: 0x8e6e5e, rock: 0x6a6070 }, parts: { stonearmor: 0.6, brows: 0.5 }, moves: { special: 'Drill Ambush', super: 'Mole Stampede' } },
       { name: 'Quarrymole', species: 'Gem Quarry Mole', size: 1.3, voice: 0.7, bodyMul: { ...GROW3, w: 1.38, chubby: 1.08, limb: 1.75 },
         blurb: 'Gems from the deepest mines grow along its back. It knows the underground like its own pocket.',
-        colors: { rock: 0x5a5262, crystal: 0x9ae4ff }, parts: { stonearmor: 1.1, crystalridge: 0.9, brows: 0.8, tusks: 0.5 }, moves: { special: 'Quarry Ambush', super: 'Gem Rush' } },
+        colors: { body: 0x7a5e50, dark: 0x3a2820, rock: 0x5a5262, crystal: 0x9ae4ff }, parts: { stonearmor: 1.1, crystalridge: 0.9, brows: 0.8, tusks: 0.5 }, moves: { special: 'Quarry Ambush', super: 'Gem Rush' } },
     ],
   },
   ripples: {
@@ -297,10 +297,10 @@ export const FORMS = {
     forms: [
       { name: 'Splashotter', species: 'Rapids Otter', size: 1.1, voice: 1.05, bodyMul: GROW2,
         blurb: 'A fin grew along its back for riding rapids. Its puddles now come with waves.',
-        colors: { fin: 0x6ad0ff }, parts: { backfin: 0.6, brows: 0.35 }, moves: { special: 'Rapids Puddle', super: 'Maelstrom' } },
+        colors: { body: 0x8e5e40, fin: 0x6ad0ff }, parts: { backfin: 0.6, brows: 0.35 }, moves: { special: 'Rapids Puddle', super: 'Maelstrom' } },
       { name: 'Torrentide', species: 'Torrent Otter', size: 1.25, voice: 0.85, bodyMul: GROW3,
         blurb: 'Rides a river wherever it goes, even when there isn\'t one.',
-        colors: { fin: 0x52c8ff }, parts: { backfin: 1.05, whiskers: 0.9, brows: 0.6 }, moves: { special: 'Torrent Puddle', super: 'Grand Whirlpool' } },
+        colors: { body: 0x6e4630, dark: 0x3e2618, fin: 0x52c8ff }, parts: { backfin: 1.05, whiskers: 0.9, brows: 0.6 }, moves: { special: 'Torrent Puddle', super: 'Grand Whirlpool' } },
     ],
   },
   jiggawatt: {
@@ -308,10 +308,10 @@ export const FORMS = {
     forms: [
       { name: 'Jigglevolt', species: 'Volt Jelly', size: 1.1, voice: 1.3, bodyMul: GROW2,
         blurb: 'Glows bright enough to read by. Crackles when it laughs, which is constantly.',
-        colors: { orb: 0x8af0ff, bolt: 0x8af0ff }, parts: { orbs: 0.55, boltmane: 0.5 }, moves: { special: 'Static Surge', super: 'Thunderhead' } },
+        colors: { body: 0x4ccce6, orb: 0xffe14d, bolt: 0xffe14d }, parts: { orbs: 0.55, boltmane: 0.5 }, moves: { special: 'Static Surge', super: 'Thunderhead' } },
       { name: 'Megawatt', species: 'Storm Jelly', size: 1.26, voice: 1.0, bodyMul: GROW3,
         blurb: 'A floating light show with a ring of tiny lightning bugs. Rock concerts book it as the lighting.',
-        colors: { orb: 0x8af0ff, bolt: 0x8af0ff }, parts: { orbs: 1, boltmane: 0.9 }, moves: { special: 'Mega Static', super: 'Supercell' } },
+        colors: { body: 0x2eb4e0, dark: 0x0e4060, orb: 0xffe14d, bolt: 0xffe14d }, parts: { orbs: 1, boltmane: 0.9 }, moves: { special: 'Mega Static', super: 'Supercell' } },
     ],
   },
   squeakwing: {
@@ -319,10 +319,10 @@ export const FORMS = {
     forms: [
       { name: 'Shriekwing', species: 'Orchard Bat', size: 1.1, voice: 1.1, bodyMul: GROW2,
         blurb: 'Bigger wings, bigger ears, much bigger squeak. The apples fall off the trees by themselves now.',
-        colors: { horn: 0xfff2d8 }, parts: { horns: 0.45, brows: 0.45 }, moves: { special: 'Sonic Shriek', super: 'Echo Blast' } },
+        colors: { body: 0x2a6e80, wing: 0x1a4e5e, horn: 0xfff2d8 }, parts: { horns: 0.45, brows: 0.45 }, moves: { special: 'Sonic Shriek', super: 'Echo Blast' } },
       { name: 'Echowing', species: 'Thunder Bat', size: 1.24, voice: 0.85, bodyMul: GROW3,
         blurb: 'The air rings around it like a bell. When it shouts, the jumbotron flickers.',
-        colors: { horn: 0xfff2d8 }, parts: { horns: 0.75, windring: 0.8, brows: 0.75 }, moves: { special: 'Sonic Boom', super: 'Echo Quake' } },
+        colors: { body: 0x2c4a8a, dark: 0x101e3a, wing: 0x1a2e5a, horn: 0xffe08a }, parts: { horns: 0.75, windring: 0.8, brows: 0.75 }, moves: { special: 'Sonic Boom', super: 'Echo Quake' } },
     ],
   },
   snoozlo: {
@@ -330,10 +330,10 @@ export const FORMS = {
     forms: [
       { name: 'Snoozalot', species: 'Drowsy Koala', size: 1.12, voice: 0.9, bodyMul: { ...GROW2, w: 1.2, chubby: 1.06 },
         blurb: 'Now big enough to nap anywhere it likes. Most of the time that\'s on its opponent.',
-        colors: {}, parts: { leafmane: 0.8 }, moves: { special: 'Deep Nap', super: 'Lullaby Slam' } },
+        colors: { body: 0x909cb2 }, parts: { leafmane: 0.8 }, moves: { special: 'Deep Nap', super: 'Lullaby Slam' } },
       { name: 'Slumberking', species: 'Dream Koala', size: 1.3, voice: 0.7, bodyMul: { ...GROW3, w: 1.38, chubby: 1.1, limb: 1.75 },
         blurb: 'Dreams drift around it like little moons. Waking it up is a very, very bad idea.',
-        colors: { orb: 0xffc8e8 }, parts: { leafmane: 1.15, orbs: 0.7, lotus: 0.7 }, moves: { special: 'Royal Slumber', super: 'Dreamquake' } },
+        colors: { body: 0x828aa6, belly: 0xf6f2ea, orb: 0xffc8e8, petal: 0xd8c8ff }, parts: { leafmane: 1.15, orbs: 0.7, lotus: 0.7 }, moves: { special: 'Royal Slumber', super: 'Dreamquake' } },
     ],
   },
   pebblepup: {
