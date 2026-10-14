@@ -26,6 +26,7 @@ export class Hud {
       <div class="combo"><b>0</b><span>HITS!</span></div>
       <div class="announce"></div>
       <div class="callouts"></div>
+      <div class="stagecard"><b></b><small></small></div>
       <div class="namecard"><div class="nc-band"><small></small><b></b><span class="nc-type"></span></div></div>
       <div class="cutin"><div class="cutin-dim"></div><div class="cutin-band"><div class="cutin-lines"></div><div class="cutin-mark"></div><div class="cutin-burst"></div><img alt=""><div class="cutin-text"><small></small><b></b></div></div></div>
       <div class="impact"></div><div class="speedlines"></div>`;
@@ -126,6 +127,17 @@ export class Hud {
     const steps = ['3', '2', '1'];
     steps.forEach((s, i) => setTimeout(() => { this.announce(s, 'count', 600); sfx.beep(false); }, i * 450));
     setTimeout(() => { this.announce('CLASH!', 'fight', 1000); sfx.beep(true); sfx.cheer(1); this.game.arena.cheer(1); }, 1350);
+  }
+
+  // broadcast-style stage title over the first intro shot
+  stageCard(name, sub) {
+    const c = this.q('.stagecard');
+    c.querySelector('b').textContent = name;
+    c.querySelector('small').textContent = sub || '';
+    c.querySelector('small').style.display = sub ? '' : 'none';
+    c.classList.remove('on'); void c.offsetWidth; c.classList.add('on');
+    clearTimeout(this.scT);
+    this.scT = setTimeout(() => c.classList.remove('on'), 2700);
   }
 
   // anime-style lower-third introducing a critter during the intro close-ups

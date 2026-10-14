@@ -434,6 +434,13 @@ body.portrait .cup { flex: none; width: 100%; }
 .namecard.right .nc-band { animation-name: ncInR; }
 @keyframes ncInR { 0% { translate: 0 0; opacity: 1; } 18% { translate: -110% 0; opacity: 1; } 85% { translate: -110% 0; opacity: 1; } 100% { translate: -110% 0; opacity: 0; } }
 
+/* stage title during the first intro shot */
+.stagecard { position: absolute; left: 50%; top: calc(19vh + var(--sat, 0px)); translate: -50% 0; display: flex; flex-direction: column; align-items: center; pointer-events: none; visibility: hidden; z-index: 3; white-space: nowrap; }
+.stagecard.on { visibility: visible; animation: scIn 2.7s ease-out forwards; }
+.stagecard b { font-family: var(--display); font-weight: 400; font-size: clamp(20px, 4.6vmin, 40px); color: #fff; -webkit-text-stroke: 6px var(--ink); paint-order: stroke fill; text-shadow: 0 4px 0 var(--ink); letter-spacing: 1px; padding: 0 18px; border-bottom: 4px solid rgba(255,255,255,.85); }
+.stagecard small { margin-top: 6px; font-weight: 900; font-size: clamp(11px, 2.2vmin, 15px); color: var(--ink); background: #ffd23a; padding: 2px 12px; border-radius: 99px; box-shadow: 0 0 0 2px var(--ink); }
+@keyframes scIn { 0% { opacity: 0; transform: translateY(-14px) scale(1.15); letter-spacing: 8px; } 14% { opacity: 1; transform: none; letter-spacing: 1px; } 82% { opacity: 1; } 100% { opacity: 0; transform: translateY(-6px); } }
+
 /* speech bubble over a critter */
 .fxtext.say { font-family: var(--body, 'Nunito'), sans-serif; font-weight: 900; font-size: clamp(15px, 3.4vmin, 24px); color: var(--ink); -webkit-text-stroke: 0; background: #fff; padding: 6px 16px; border-radius: 18px; box-shadow: 0 0 0 3px var(--ink), 0 5px 0 3px var(--ink); }
 .fxtext.say::after { content: ''; position: absolute; left: 50%; bottom: -13px; margin-left: -9px; border: 9px solid transparent; border-top: 12px solid #fff; border-bottom: 0; filter: drop-shadow(0 3px 0 var(--ink)); }

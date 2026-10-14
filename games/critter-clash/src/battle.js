@@ -116,6 +116,10 @@ export class Battle {
     p.introK0 = c.introK0 = first ? 0 : 1.5;
     this.introFocus = first ? c : null;
     this.introSaid = 0;
+    if (first) {
+      const hz = !this.training && save.settings.hazards !== false && this.hazards?.H;
+      this.hud.stageCard(this.arena.A.name, this.training ? 'Training' : hz ? `⚠ ${hz.name}` : '');
+    }
     this.tense = 0;
     this.camFocusWas = undefined;
     if (this.training) {
