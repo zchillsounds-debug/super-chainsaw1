@@ -348,6 +348,7 @@ export const BADGES = [
   { id: 'combo', icon: '💥', name: 'Combo Star', desc: 'Land a 10-hit combo.', test: (s) => (s.stats.bestCombo || 0) >= 10 },
   { id: 'perfect', icon: '✨', name: 'Untouchable', desc: 'Win a round without taking damage.', test: (s) => (s.stats.perfects || 0) >= 1 },
   { id: 'super', icon: '🌟', name: 'Show-off', desc: 'Unleash 10 supers.', test: (s) => (s.stats.supers || 0) >= 10 },
+  { id: 'counter', icon: '😴', name: 'Rude Awakening', desc: 'Counter 5 attacks with Snoozlo\'s Power Nap.', test: (s) => (s.stats.counters || 0) >= 5 },
   { id: 'sprout', icon: '🌱', name: 'Sprout Champ', desc: 'Clear the Sprout Cup.', test: (s) => !!s.cups.sprout },
   { id: 'thunder', icon: '⚡', name: 'Thunder Champ', desc: 'Clear the Thunder Cup.', test: (s) => !!s.cups.thunder },
   { id: 'champion', icon: '👑', name: 'Grand Champion', desc: 'Clear the Champion Cup.', test: (s) => !!s.cups.champion },

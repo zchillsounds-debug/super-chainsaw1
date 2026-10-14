@@ -142,6 +142,7 @@ export class Battle {
     // Power Nap: a rival's blow on a napping Snoozlo is shrugged off and answered with a counter slam (Fighter.updateSpecial)
     if (def.state === 'special' && def.def.special === 'powernap' && !def.napHit && def.st < 0.95 && att && att !== def && att.state !== 'super' && def.alive) {
       def.napHit = true; def.st = 0; def.specFired = false; def.invuln = 0.55;
+      if (def === this.player && !this.training) this.stats.counters = (this.stats.counters || 0) + 1;
       this.fx.text(def.headPos(), 'COUNTER!', 'big', 1);
       this.fx.spawn({ ...def.chestPos(), color: 0x9aff6a, size: 3.2, life: 0.25, shape: 'ring', grow: 1.6 });
       this.hud.callout('COUNTER!', def.side, 2);
