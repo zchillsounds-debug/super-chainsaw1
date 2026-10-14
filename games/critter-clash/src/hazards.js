@@ -281,7 +281,7 @@ export class Hazards {
         sg.line.opacity = 0.35 + 0.55 * (0.5 + 0.5 * Math.sin(t * (10 + k * 25)));
         sg.beamMat.opacity = k * 0.12;
       } else {
-        if (!sg.on) { sg.on = true; sfx.spark(); B.shake(0.15); }
+        if (!sg.on) { sg.on = true; sfx.spark(); sfx.laser(sg.dur); B.shake(0.15); }
         sg.ang += sg.dir * sg.speed * dt;
         sg.group.rotation.y = -sg.ang;
         const fade = Math.min(1, (sg.dur - e) / 0.3);
@@ -304,7 +304,7 @@ export class Hazards {
       sg.wave.scale.setScalar(Math.max(0.01, live ? Math.min(1, 1.6 * (sg.end - sg.pos) / 2.5 + 0.0) : grow * 0.9));
       sg.wave.position.set(sg.cx + sg.dx * sg.pos, 0, sg.cz + sg.dz * sg.pos);
       if (live) {
-        if (!sg.on) { sg.on = true; sfx.whoosh?.(0.35); }
+        if (!sg.on) { sg.on = true; sfx.wave(); }
         const wx = sg.wave.position.x, wz = sg.wave.position.z;
         // spray flying off the lip
         if (Math.random() < dt * 30) { const w = (Math.random() - 0.5) * sg.half * 2; fx.spawn({ x: wx - sg.dz * w + sg.dx * 0.8, y: 2.1, z: wz + sg.dx * w + sg.dz * 0.8, vx: sg.dx * 5, vz: sg.dz * 5, vy: 2.5, color: 0xffffff, size: 0.4, life: 0.5, shape: 'puff', additive: false, grav: 7, alpha: 0.9 }); }
@@ -337,14 +337,14 @@ export class Hazards {
         f.x += sg.dx * push * dt; f.z += sg.dz * push * dt;
         if (!sg.hit.has(f)) { sg.hit.add(f); const hp = f.headPos(); fx.text({ x: hp.x, y: hp.y + 0.3, z: hp.z }, 'WHOOSH!', 'eff', 0.8); }
       }
-      if (live && !sg.on) { sg.on = true; sfx.whoosh?.(0.8); }
+      if (live && !sg.on) { sg.on = true; sfx.wind(sg.dur); }
     } else if (sg.kind === 'grove') {
       const { ring, fill } = sg.ring.userData;
       const fade = Math.min(1, Math.max(0, (sg.warn + sg.dur - t) / 0.8));
       ring.material.opacity = (live ? 0.5 : 0.45 + 0.5 * (0.5 + 0.5 * Math.sin(t * (8 + k * 20)))) * fade;
       fill.material.opacity = (live ? 0.22 : 0.1 + k * 0.2) * fade;
       if (live) {
-        if (!sg.on) { sg.on = true; fx.burst({ x: sg.x, y: 0.3, z: sg.z }, { n: 26, speed: 3, up: 3, color: 0xc8ff7a, size: 0.7, life: 1.2, shape: 'puff', additive: false, grav: -0.4, grow: 1.4, alpha: 0.7 }); sfx.whoosh?.(0.4); }
+        if (!sg.on) { sg.on = true; fx.burst({ x: sg.x, y: 0.3, z: sg.z }, { n: 26, speed: 3, up: 3, color: 0xc8ff7a, size: 0.7, life: 1.2, shape: 'puff', additive: false, grav: -0.4, grow: 1.4, alpha: 0.7 }); sfx.spores(); }
         if (Math.random() < dt * 14 * fade) { const a = Math.random() * 6.28, d = Math.sqrt(Math.random()) * sg.r; fx.spawn({ x: sg.x + Math.cos(a) * d, y: 0.2 + Math.random() * 0.8, z: sg.z + Math.sin(a) * d, vy: 0.5, color: Math.random() < 0.7 ? 0xc8ff7a : 0xfff6a0, size: 0.6 + Math.random() * 0.4, life: 1.2, shape: 'puff', additive: false, grow: 1, alpha: 0.55 }); }
         if (fade > 0.3) for (const f of B.fighters) {
           if (!f.alive || f.under || f.state === 'dizzy' || f.state === 'super' || Math.hypot(f.x - sg.x, f.z - sg.z) > sg.r) continue;

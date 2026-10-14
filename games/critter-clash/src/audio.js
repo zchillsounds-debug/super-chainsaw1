@@ -28,29 +28,31 @@ export function setVolumes() {
 
 const now = () => ctx.currentTime;
 
-function env(g, t, a, peak, d, sus = 0) {
+function env(g, t, a, peak, d, sus = 0, hold = false) {
   g.gain.cancelScheduledValues(t);
   g.gain.setValueAtTime(0.0001, t);
   g.gain.linearRampToValueAtTime(peak, t + a);
+  // held sounds (drones, wind) stay up and only fade over their last 0.4 s
+  if (hold && d > 0.5) g.gain.setValueAtTime(peak, t + a + d - 0.4);
   g.gain.exponentialRampToValueAtTime(Math.max(0.0001, sus || 0.0001), t + a + d);
 }
 
-function osc(type, f0, f1, dur, peak = 0.3, { t = now(), bus = sfxBus, attack = 0.005, curve = 'exp', detune = 0 } = {}) {
+function osc(type, f0, f1, dur, peak = 0.3, { t = now(), bus = sfxBus, attack = 0.005, curve = 'exp', detune = 0, hold = false } = {}) {
   const o = ctx.createOscillator(), g = ctx.createGain();
   o.type = type; o.detune.value = detune;
   o.frequency.setValueAtTime(f0, t);
   if (f1 !== f0) curve === 'exp' ? o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur) : o.frequency.linearRampToValueAtTime(f1, t + dur);
-  env(g, t, attack, peak, dur);
+  env(g, t, attack, peak, dur, 0, hold);
   o.connect(g); g.connect(bus);
   o.start(t); o.stop(t + attack + dur + 0.05);
   return o;
 }
 
-function noise(dur, peak, { t = now(), type = 'bandpass', f0 = 1000, f1 = f0, q = 1, bus = sfxBus, attack = 0.003 } = {}) {
-  const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+function noise(dur, peak, { t = now(), type = 'bandpass', f0 = 1000, f1 = f0, q = 1, bus = sfxBus, attack = 0.003, hold = false } = {}) {
+  const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; // the buffer is 1 s; long sounds loop it
   const f = ctx.createBiquadFilter(); f.type = type; f.Q.value = q;
   f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
-  const g = ctx.createGain(); env(g, t, attack, peak, dur);
+  const g = ctx.createGain(); env(g, t, attack, peak, dur, 0, hold);
   s.connect(f); f.connect(g); g.connect(bus);
   s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.1);
 }
@@ -80,6 +82,25 @@ export const sfx = {
     if (!ctx) return;
     noise(0.16, 0.22, { f0: 600 * pitch, f1: 2800 * pitch, q: 2, attack: 0.04 });
   },
+  // stadium tricks (R179): laser sweep, rogue wave, crosswind, spore cloud
+  laser(dur = 3.2) {
+    if (!ctx) return;
+    osc('sawtooth', 220, 1400, 0.25, 0.1); // charge-up zip
+    osc('sawtooth', 110, 104, dur, 0.06, { attack: 0.08, hold: true }); // buzzing beam drone
+    osc('square', 220, 214, dur, 0.035, { attack: 0.08, hold: true });
+    noise(dur, 0.06, { f0: 3200, f1: 2600, q: 6, attack: 0.1, hold: true });
+  },
+  wave() {
+    if (!ctx) return;
+    noise(1.6, 0.32, { f0: 300, f1: 1400, q: 0.7, attack: 0.5, type: 'lowpass' }); // the swell rolling in
+    noise(0.9, 0.22, { f0: 2400, f1: 900, q: 0.8, attack: 0.25 });
+  },
+  wind(dur = 4) {
+    if (!ctx) return;
+    noise(dur, 0.2, { f0: 500, f1: 1100, q: 3, attack: 0.6, hold: true });
+    noise(dur * 0.8, 0.1, { f0: 1600, f1: 900, q: 5, attack: 0.8, hold: true });
+  },
+  spores() { if (ctx) { noise(0.6, 0.25, { f0: 1200, f1: 300, q: 1, attack: 0.03, type: 'lowpass' }); osc('sine', 300, 140, 0.3, 0.12); } },
   // a springy tongue: thwip out, slurp back
   thwip() { if (ctx) { osc('square', 300, 1400, 0.09, 0.07); noise(0.1, 0.12, { f0: 1800, f1: 4000, q: 4 }); } },
   slurp() { if (ctx) { osc('sine', 1200, 260, 0.18, 0.18); osc('triangle', 600, 180, 0.14, 0.08); } },
