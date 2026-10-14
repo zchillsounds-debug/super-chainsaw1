@@ -147,6 +147,12 @@ export class Screens {
         "News from the grove, {name}! A river otter called Ripples has been leaving puddles all over Glowcap Grove.",
         "Its trainer Brook is in the Glowcap Cup now. Beat them and Ripples might splash over to your team!",
       ]), 600);
+    } else if (!g.autoplay && save.stats.battles >= 3 && !save.news?.includes('team')) {
+      (save.news ||= []).push('team'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, try the new Team Battle in Challenges! Pick three critters and face a rival team of three.",
+        "Whoever wins stays in, bruises and all. And Quick Battle now lets you choose your rival and the stadium!",
+      ]), 600);
     } else if (!g.autoplay && save.cups.sprout && !save.news?.includes('frogmole')) {
       (save.news ||= []).push('frogmole'); persist();
       const where = [['lilypop', 'Paddy in the Thunder Cup'], ['diggles', 'Dusty in the Midnight Cup']].filter(([id]) => !save.unlocked.includes(id));
@@ -252,6 +258,7 @@ export class Screens {
         <li><b>Types</b><span>Each type beats two others (Blaze burns Sprout, Splash douses Blaze, Pebble grounds Zap...). Hitting a weakness deals extra damage.</span></li>
         <li><b>Dizzy</b><span>Too many hits in a row makes a critter see stars. Mash buttons to shake it off!</span></li>
         <li><b>Hazards</b><span>Later stadiums fight back: when a glowing ring appears on the floor, get out of it (or guard)! Switch hazards off in Settings.</span></li>
+        <li><b>Team Battle</b><span>In Challenges: pick three critters against a rival team of three. The winner of each fight stays in with the damage it took.</span></li>
         <li><b>Camp</b><span>Pet your critters to build friendship and feed them berries for XP. Win battles to earn berries, and drop by daily for a gift. Best friends (5 hearts) start every battle with some super meter.</span></li>
       </ul></div>`;
     const close = this.btn('Got it!', 'primary', () => d.remove());
