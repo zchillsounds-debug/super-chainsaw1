@@ -1142,6 +1142,11 @@ export class Screens {
     p.innerHTML = '<div class="modal"><h2>Paused</h2><div class="col"></div></div>';
     const col = p.querySelector('.col');
     col.appendChild(this.btn('Resume', 'primary', () => this.game.pause()));
+    // restart the same fight (not in runs where damage carries over, so it can't be used to dodge a loss)
+    const g = this.game, k = this.ctx?.kind;
+    if (g.lastStart && !['survival', 'bossrush', 'team'].includes(k)) col.appendChild(this.btn('Restart', '', () => {
+      this.pauseMenu(false); g.paused = false; g.startBattle(...g.lastStart);
+    }));
     const tr = this.game.battle?.training;
     if (tr) {
       col.appendChild(this.btn('Move List', '', () => this.moveModal(this.game.battle.player.def)));

@@ -194,6 +194,9 @@ class Game {
     const modal = this.ui.querySelector('.modal-wrap:not(.pause)');
     if (this.modalClose) { this.modalClose(); return; }
     if (modal) { modal.remove(); return; }
+    // Professor Pecan's dialog: back moves it on (its last line runs whatever comes next), so nothing gets skipped
+    const prof = this.ui.querySelector('.prof-wrap');
+    if (prof) { prof.click(); return; } // same as tapping it: finish the line, then move on
     if (this.battle && this.battle.phase !== 'done') { this.pause(); return; }
     this.screens.backFn?.();
   }
@@ -299,6 +302,7 @@ class Game {
   // ---- battles ----
   startBattle(pDef, cDef, opts = {}) {
     this.endBattle();
+    this.lastStart = [pDef, cDef, opts];
     this.setArena(opts.arena || Q.get('arena') || 'meadow');
     this.setShowcase([]);
     this.screens.hideAll();
