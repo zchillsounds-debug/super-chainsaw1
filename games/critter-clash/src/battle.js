@@ -1420,6 +1420,8 @@ export class Battle {
     if (this.slowmo > 0) { this.slowmo -= dt; sdt = dt * (this.phase === 'ko' ? 0.28 : 0.45); }
 
     const [p, c] = this.fighters;
+    // modifier chips stay hidden over the intro close-ups (they sat on the rival's face), then show at the countdown
+    if (this.modChip) this.modChip.style.visibility = this.phase === 'intro' ? 'hidden' : '';
     if (this.phase === 'intro') {
       if (this.round === 1) {
         this.introFocus = this.phaseT < INTRO_FOCUS ? c : this.phaseT < INTRO_FOCUS * 2 ? p : null;
