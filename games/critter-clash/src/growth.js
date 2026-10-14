@@ -2,7 +2,7 @@
 // Each critter always grows along its own fixed path. Hand-built forms get new proportions, colours
 // and parts (built here onto a Critter); every other critter gets a bigger, tougher generic form.
 import * as THREE from 'three';
-import { toon, inked } from './toon.js';
+import { toon, inked, canvasTex } from './toon.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export const GROW_LV = [7, 14];
@@ -275,10 +275,10 @@ export const FORMS = {
     forms: [
       { name: 'Whirlglide', species: 'Gale Glider', size: 1.1, voice: 1.2, bodyMul: GROW2,
         blurb: 'Glides on its own updrafts now. It hasn\'t touched the ground in three days.',
-        colors: { body: 0xaab4cc, dark: 0x323e5a, plume: 0xffffff }, parts: { windring: 0.6, brows: 0.4 }, moves: { special: 'Sky Dive', super: 'Jet Gale' } },
+        colors: { body: 0xaab4cc, dark: 0x323e5a, plume: 0xffffff }, parts: { windring: 0.6, brows: 0.4, tornado: 0.75 }, moves: { special: 'Sky Dive', super: 'Jet Gale' } },
       { name: 'Tempestail', species: 'Tempest Glider', size: 1.24, voice: 0.95, bodyMul: GROW3,
         blurb: 'A whirlwind with a fluffy tail. Leaves fall upward wherever it goes.',
-        colors: { body: 0x8e9cc8, dark: 0x262e50, accent: 0xffffff, plume: 0xfff4c8 }, parts: { windring: 1, plumes: 0.8, brows: 0.7 }, moves: { special: 'Tempest Dive', super: 'Hurricane Stream' } },
+        colors: { body: 0x8e9cc8, dark: 0x262e50, accent: 0xffffff, plume: 0xfff4c8 }, parts: { plumes: 0.8, brows: 0.7, tornado: 1.1 }, moves: { special: 'Tempest Dive', super: 'Hurricane Stream' } },
     ],
   },
   diggles: {
@@ -848,6 +848,33 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     TO.add(inked(mergeGeometries(fp), foam, OL * 0.4));
   }
 
+  // a little whirlwind spinning behind it, wrapped in streaks and a couple of upward-falling leaves
+  if (P.tornado) {
+    const s = P.tornado, H = B.h * 1.25 * s, prof = [];
+    for (let i = 0; i <= 12; i++) { const t = i / 12; prof.push(new THREE.Vector2(B.w * (0.1 + 0.75 * t ** 1.5) * s, t * H)); }
+    const tex = getStreakTex();
+    const mk = (sc, op) => {
+      const m = new THREE.Mesh(new THREE.LatheGeometry(prof, 24), new THREE.MeshBasicMaterial({ map: tex, color: C.wind ?? 0x8fd0ff, transparent: true, opacity: op, side: THREE.DoubleSide, depthWrite: false }));
+      m.scale.setScalar(sc);
+      return m;
+    };
+    const g = new THREE.Group(), g2 = new THREE.Group();
+    g.add(mk(1, 0.95)); g2.add(mk(0.7, 0.8)); g2.rotation.y = 1;
+    for (let k = 0; k < 3; k++) {
+      const lf = inked(leafGeo().scale(0.2 * s, 0.2 * s, 0.26 * s), cr.mats.accent, OL * 0.4), a = k * 2.1, t = 0.35 + k * 0.25;
+      lf.position.set(Math.cos(a) * B.w * (0.14 + 0.75 * t ** 1.5) * s, t * H, Math.sin(a) * B.w * (0.14 + 0.75 * t ** 1.5) * s);
+      lf.rotation.set(0.6, a, 0.4);
+      g.add(lf);
+    }
+    g.userData.spin = 7; g.userData.axis = 'y'; g2.userData.spin = -11; g2.userData.axis = 'y';
+    const base = new THREE.Group();
+    base.position.set(0, -0.05, -B.w * 0.85); base.rotation.x = -0.3;
+    base.add(g, g2);
+    cr.torso.add(base);
+    (cr.spinners ||= []).push(g, g2);
+    if (cr.tail) cr.tail.visible = false; // the whirlwind is its tail now
+  }
+
   flatten(SK); flatten(TO);
 }
 
@@ -871,4 +898,19 @@ function flatten(g) {
   if (!merged.length || merged.some((m) => !m.geometry)) return;
   for (const c of [...g.children]) g.remove(c);
   g.add(...merged);
+}
+
+let streakTex = null;
+// diagonal white wind streaks on a clear background, wrapped around the whirlwind
+function getStreakTex() {
+  return (streakTex ||= canvasTex(256, 128, (c, w, h) => {
+    c.clearRect(0, 0, w, h);
+    c.strokeStyle = '#fff'; c.lineCap = 'round';
+    for (let k = 0; k < 14; k++) {
+      c.globalAlpha = 0.5 + (k % 3) * 0.25; c.lineWidth = 5 + (k % 4) * 3;
+      const x = (k / 14) * w, y = ((k * 37) % h);
+      c.beginPath(); c.moveTo(x, y); c.lineTo(x + 70, y - 26); c.stroke();
+      c.beginPath(); c.moveTo(x - w, y); c.lineTo(x - w + 70, y - 26); c.stroke();
+    }
+  }, { repeat: [2, 1] }));
 }
