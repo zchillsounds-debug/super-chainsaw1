@@ -528,7 +528,7 @@ export class Screens {
     card('survival', '#ff7a3d', `
       <div class="cup-trophy">🔥</div>
       <h2>Survival</h2>
-      <p>One fight after another. Damage carries over and every rival is tougher. How far can you go?</p>
+      <p>One fight after another. Damage carries over and every rival is tougher. Every 5th is a shiny ⭐ Gatekeeper: beat it for berries and a full heal.</p>
       <div class="cup-meta">Best streak: <b>${save.stats.bestStreak || 0}</b></div>`,
     () => { this.ctx = { kind: 'survival', streak: 0, hp: 1, last: null }; this.select(); });
     // team days need three critters; until then the day's lead foe is a solo daily
@@ -917,16 +917,18 @@ export class Screens {
       label = `${m.name} · Lv ${m.level}${m.mods?.length ? ' · ' + m.mods.map((k) => MODS[k].icon).join('') : ''}`;
     } else if (this.ctx.kind === 'survival') {
       const S = this.ctx, n = S.streak;
+      // every 5th challenger is a Gatekeeper: shiny, grown two levels ahead, and worth a reward
+      const gate = (n + 1) % 5 === 0;
       const pool = CRITTERS.filter((x) => x.id !== p.id && x.id !== S.last);
-      c = skinned(pick(pool), n >= 4 && Math.random() < 0.25 ? 'shiny' : 'base');
-      S.last = c.id;
       const pl = save.critters[p.id].level;
+      c = skinned(pick(pool), gate || (n >= 4 && Math.random() < 0.25) ? 'shiny' : 'base');
+      S.last = c.id;
       const mods = n >= 3 && Math.random() < 0.5 ? [pick(Object.keys(MODS))] : [];
       // Stadium Mayhem needs a stadium with hazards
       const arena = MODS[mods[0]]?.hazard && save.settings.hazards !== false ? pick(ARENA_KEYS.filter((k) => HAZARDS[k])) : pick(ARENA_KEYS);
       if (MODS[mods[0]]?.hazard && save.settings.hazards === false) mods.length = 0;
-      opts = { cpuLevel: pl + Math.floor(n / 2), difficulty: Math.min(0.95, 0.35 + n * 0.07), playerLevel: pl, arena, rounds: 1, playerHp: S.hp, mods };
-      label = `Challenger #${n + 1}${mods.length ? ' · ' + MODS[mods[0]].icon : ''}`;
+      opts = { cpuLevel: pl + Math.floor(n / 2) + (gate ? 2 : 0), difficulty: Math.min(0.95, 0.35 + n * 0.07 + (gate ? 0.08 : 0)), playerLevel: pl, arena, rounds: 1, playerHp: S.hp, mods, stageSub: gate ? `Gatekeeper #${n + 1}` : undefined };
+      label = `${gate ? '⭐ Gatekeeper' : 'Challenger'} #${n + 1}${mods.length ? ' · ' + MODS[mods[0]].icon : ''}`;
     } else if (this.ctx.kind === 'bossrush') {
       const S = this.ctx, list = bossList(), m = list[S.idx];
       const pl = save.critters[p.id].level;
@@ -994,7 +996,13 @@ export class Screens {
         S.streak++;
         S.hp = Math.min(1, (pf ? pf.hp / pf.maxHp : 1) + 0.3);
         save.stats.bestStreak = Math.max(save.stats.bestStreak || 0, S.streak);
-        streakNote = `<div class="streak">🔥 Streak ${S.streak} · ${Math.round(S.hp * 100)}% health for the next fight</div>`;
+        if (S.streak % 5 === 0) {
+          // Gatekeeper down: berries and a full heal
+          const prize = Math.min(5, 1 + S.streak / 5);
+          save.berries = (save.berries || 0) + prize;
+          S.hp = 1;
+          streakNote = `<div class="streak">⭐ Gatekeeper beaten! Streak ${S.streak} · +${prize} 🍓 · fully healed</div>`;
+        } else streakNote = `<div class="streak">🔥 Streak ${S.streak} · ${Math.round(S.hp * 100)}% health for the next fight${S.streak % 5 === 4 ? ' · ⭐ Gatekeeper next!' : ''}</div>`;
       } else {
         const best = save.stats.bestStreak || 0;
         streakNote = `<div class="streak">Run over at <b>${S.streak}</b> win${S.streak === 1 ? '' : 's'}${S.streak >= best && S.streak > 0 ? ' · NEW BEST!' : ` · Best ${best}`}</div>`;
