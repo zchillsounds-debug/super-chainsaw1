@@ -8,6 +8,7 @@ export function applySettings(game) {
   setVolumes();
   game.reduceFlash = s.reduceFlash;
   game.setQuality(s.quality);
+  document.body.style.setProperty('--bs', { s: 0.85, m: 1, l: 1.15 }[s.btnSize] || 1);
 }
 
 export function openSettings(game, root) {
@@ -21,6 +22,8 @@ export function openSettings(game, root) {
       <label class="set"><span>Music</span><input type="range" min="0" max="1" step="0.05" data-k="music" value="${s.music}"></label>
       <label class="set"><span>Sound effects</span><input type="range" min="0" max="1" step="0.05" data-k="sfx" value="${s.sfx}"></label>
       <div class="set"><span>Graphics</span><div class="seg" data-k="quality">${q.map((v) => `<button data-v="${v}" class="${s.quality === v ? 'on' : ''}">${{ auto: 'Auto', low: 'Low', med: 'Medium', high: 'High' }[v]}</button>`).join('')}</div></div>
+      <div class="set"><span>Button size</span><div class="seg" data-k="btnSize">${['s', 'm', 'l'].map((v) => `<button data-v="${v}" class="${(s.btnSize || 'm') === v ? 'on' : ''}">${{ s: 'Small', m: 'Normal', l: 'Large' }[v]}</button>`).join('')}</div></div>
+      <label class="set"><span>Battle tips</span><input type="checkbox" class="tog" data-k="tips" ${save.tutorialDone ? '' : 'checked'}></label>
       <label class="set"><span>Vibration</span><input type="checkbox" class="tog" data-k="vibrate" ${s.vibrate ? 'checked' : ''}></label>
       <label class="set"><span>Arena hazards</span><input type="checkbox" class="tog" data-k="hazards" ${s.hazards !== false ? 'checked' : ''}></label>
       <label class="set"><span>Reduce flashing</span><input type="checkbox" class="tog" data-k="reduceFlash" ${s.reduceFlash ? 'checked' : ''}></label>
@@ -34,10 +37,18 @@ export function openSettings(game, root) {
     s[el.dataset.k] = +el.value; applySettings(game); persist();
     if (el.dataset.k === 'sfx') sfx.ui('move');
   }));
-  d.querySelectorAll('input.tog').forEach((el) => el.addEventListener('change', () => { s[el.dataset.k] = el.checked; applySettings(game); persist(); sfx.ui('move'); }));
+  d.querySelectorAll('input.tog').forEach((el) => el.addEventListener('change', () => {
+    if (el.dataset.k === 'tips') {
+      // tips on = the first-battle coach runs again next battle; off = hide it now
+      save.tutorialDone = !el.checked;
+      if (!el.checked && game.battle?.tutorial) { game.battle.tutorial.dispose(); game.battle.tutorial = null; }
+    } else s[el.dataset.k] = el.checked;
+    applySettings(game); persist(); sfx.ui('move');
+  }));
   d.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
-    s.quality = b.dataset.v; persist(); applySettings(game); sfx.ui('ok');
-    d.querySelectorAll('.seg button').forEach((x) => x.classList.toggle('on', x === b));
+    const seg = b.parentElement;
+    s[seg.dataset.k] = b.dataset.v; persist(); applySettings(game); sfx.ui('ok');
+    seg.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
   }));
   d.querySelector('.done').addEventListener('click', () => { sfx.ui('ok'); close(); });
   const reset = d.querySelector('.reset');
