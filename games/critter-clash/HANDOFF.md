@@ -1,11 +1,13 @@
-# Critter Clash: Handoff (after Round 174)
+# Critter Clash: Handoff (after Round 194)
 
 ## Start here (for a new chat)
 - Repo `zchillsounds-debug/super-chainsaw1`, branch **`ccr-4fc93d6e-suxlhd`**, folder `games/critter-clash/`. Clone with `--branch ccr-4fc93d6e-suxlhd`.
-- Latest work (session 13, 2026-10-14 16:05–~18:10 UTC): the user's playtest note "when they grow into their new form, there should be a screen to show when that happens" (fixed in R162: the growing scene now always plays, see "Session 13"), then signature parts for the growth lines that only looked like bigger copies (R163–R172), a full-body growing scene (R173) and the first balance run with grown forms (R174).
-- Ask the user first: did the growing scene show for every critter that grew (including ones that were already Lv 7+ before the update)? Do the new forms look right?
-- Next ideas: see "Suggested next rounds"; numbering continues from **R175**.
+- Latest work (session 14, 2026-10-14 20:20–~21:40 UTC): the user confirmed the growing scene and new forms look right (APK 1.0.190), picked **"Modes & polish"** as the focus, and said: "Reach 300k tokens and start new chats for handoff". So keep building, and chain to a fresh session near 300k context with this file. Session 14 did R175–R194: a signature second hazard per stadium, the Daily Team Challenge, Daily streaks, Stadium Trials, the Stadium Mayhem modifier, a Quick Battle modifier chip, hazard practice in Training, hazard sounds and a jumbotron warning (see "Session 14").
+- The user got APK **1.0.195** (R175–R182) mid-session. The last APK of session 14 is listed under "Session 14".
+- Ask the user first: how do the new stadium tricks feel on a phone (the laser, the wave, the ice slick)? Is Stadium Trials 3★ too hard?
+- Next ideas: see "Suggested next rounds"; numbering continues from **R195**.
 - User preferences: ask clarifying questions and confirm before building; hand off near 300k context.
+- **Branch note:** a new cloud session may be assigned its own `ccr-...` branch. The game lives on `ccr-4fc93d6e-suxlhd`, and the user approved pushing there (session 14). The APK workflow only builds from pushes that touch `games/critter-clash/**`.
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -253,6 +255,44 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - **Perf:** Jiggawatt's tentacle beads were full-res spheres (131k triangles); now 14×10 (Megawatt 219k -> 106k). Grown battles measure ~250–260 draw calls.
 - **Tools:** `tools/lineup.sh <prefix> id...` renders base / stage 2 / stage 3 side by side (cropped close; `ROT=2.5` shows their backs). `LV=14 node tools/robin.mjs` runs the robin with both sides grown at that level.
 
+## Session 14 (2026-10-14, 20:20–~21:40 UTC, session_013TphQ4j8zFYwCt2f8YuWoe)
+- **Signature hazards (R175, `src/hazards.js`).** `SIGS[arena]` = {name, word (hit text), jumbo (jumbotron), tip (first-time callout)}. `Hazards.signature()` builds one `this.sig` at a time; `updateSig(dt)` runs it; `clearSig()` frees meshes (materials flagged `userData.own` are disposed; toon materials are cached and never disposed). The kinds:
+  - volcano **fissure**: a glowing crack plus 5 staggered geyser rings in a line through a fighter.
+  - frost **ice slick**: a strip with blue edges across the arena; standing on it sets `f.slick` (Ripples' puddle footing).
+  - neon **laser**: a full-length beam through the centre sweeps half a turn in 3.2 s; it can't be outrun, only guarded or rolled through. `incoming(f)` tells the CPU to guard or dodge.
+  - beach **rogue wave**: an extruded curl with vertex colours and a merged foam lip rolls down one lane; `danger()` steps the CPU out of the lane.
+  - sky **crosswind**: shoves everyone one way for 4 s, with streaks and leaves; no damage.
+  - grove **spore cloud**: lingers 5.5 s and adds dizzy while you're inside it.
+  - `hurt(f, dirX, dirZ, H, word)` is the shared hazard hit (never a KO; a guard returns 'block').
+  - Frequency: the first pattern in a match is 65% signature, after that 40%. The boss storm mixes signatures in (R186).
+  - The VS screen and stage card name both hazards.
+  - `tools/sigtest.mjs <arena> <prefix> [wide]` forces one and screenshots warn/live (`wide` = overhead camera).
+- **Daily Team Challenge (R177).** `dailyChallenge()` adds `team: [foe, a, b]` about one day in three. These fields are rolled after the solo fields, and the modifier pool is pinned in R187, so every date keeps its old challenge.
+  - With 3+ critters, a team day runs as `ctx = {kind:'team', daily}`: the day's arena and modifier, double XP, Try Again on a loss.
+  - `DAILY=2026-10-15 node tools/teamflow.mjs` fakes the date. 2026-10-15, 18, 20, 21 and 22 are team days.
+- **Daily streak (R182).** `Screens.dailyClear(key)` marks the day and extends `save.dailyStreak {last, n}` on back-to-back days, paying `min(5, n)` berries. `dailyStreakNow()` feeds the card. `save.stats.bestDaily` feeds the **Regular** badge (7 days).
+- **Stadium Trials (R188, R193).** A Challenges card unlocks after the Sprout Cup and needs hazards on.
+  - `TRIALS` in screens.js pairs each hazard stadium with a home critter. `trialSheet()` is the picker; `ctx = {kind:'trials', arena, foe}`.
+  - Every trial runs under Stadium Mayhem. Stars: ★ win, ★★ no hazard hits, ★★★ also ≥70% health. They're saved in `save.trials[arena]`.
+  - Results offer Try Again (below 3★), Next Trial and Trials. The **Trick Star** badge is for all 18 stars. `starRow(n)` renders stars as styled `<i>` because the font draws ☆ like ★.
+- **Stadium Mayhem modifier (R187).** `MODS.mayhem` (`hazard: true`) makes hazards tick twice as fast. It's used by Survival (which then picks a hazard stadium), DJ Tumble in the Midnight Cup, every trial, and the Quick Battle chip. It's dropped when hazards are off (R190).
+- **Quick Battle modifier chip (R191).** It sits in the Match Setup button row and cycles None plus every modifier; a toast describes each. Below 480 px wide it shows the icon only. Toasts now wrap (`max-width: 100vw - 32px`) instead of running off narrow phones.
+- **Training hazards (R183).** Sparring Setup has a "⚠ Hazards: On/Off" chip. Battle `opts.hazards` → `battle.trainHazards`. Arena chips mark hazard stadiums with ⚠.
+- **Polish:**
+  - Sounds (R179): `sfx.laser/wave/wind/spores`. `noise()` now loops its 1 s buffer, and `osc/noise` take `hold: true` for sustained sounds.
+  - First-trick callout with a tip (R180).
+  - Jumbotron (R189): a hazard-tape WARNING plus the trick name while a signature runs (`drawScreen({alert, blink})`). Reduce flashing holds it and the laser steady (R194).
+  - Badges: **Stadium Tamer** (win in all 6 hazard stadiums with hazards on; `save.stats.hazardArenas`), **Regular** and **Trick Star**.
+  - Pecan news `tricks`. How to Play lines for Daily and hazard practice.
+- **Checks run:**
+  - Auto sweeps on all 7 arenas with Mayhem plus a second modifier: error-free.
+  - CPU vs laser: about 60% of passes guarded or rolled at d 0.9.
+  - Midnight Cup cupflow clears at 740×360.
+  - Team-daily win and loss paths, and normal teamflow, pass.
+  - tapcheck is clean at 740×360, 915×412, 412×915 and 360×640. Its only flag is the battle pause in portrait, which sits under the rotate hint by design.
+  - Perf: the wave adds +7 draw calls, the laser +9.
+- Balance was not re-run: hazards are symmetric and robin runs on the hazard-free default arena.
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -432,6 +472,26 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 172. Solfox flame corona; Thunderam thundercloud.
 173. Growing scene shows the whole body.
 174. Lv 14 balance run with grown forms; `statMul` (Thornhulk buff, Solfox trim).
+175. Signature second hazard per stadium (fissure, ice slick, laser, rogue wave, crosswind, spore cloud); CPU sidesteps/guards/rolls.
+176. First pattern of a match favours the signature.
+177. Daily Team Challenge about one day in three.
+178. Pecan news about the new tricks.
+179. Hazard sounds; looping noise buffer; held envelopes.
+180. First-trick callout with what to do.
+181. Stadium Tamer badge.
+182. Daily streak berries + Regular badge.
+183. Hazard practice chip in Sparring Setup; ⚠ on arena chips.
+184. How to Play: Daily, hazard practice.
+185. Wave foam merged (+22 → +7 draw calls).
+186. Boss storm mixes in the signature.
+187. Stadium Mayhem modifier; Daily modifier pool pinned.
+188. Stadium Trials + Trick Star badge.
+189. Jumbotron hazard warning.
+190. Mayhem dropped when hazards are off.
+191. Quick Battle modifier chip; wrapping toasts.
+192. Mayhem sweep on all 7 arenas (no code change).
+193. Next Trial button.
+194. Reduce flashing covers the jumbotron warning and laser.
 L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (smaller, softer, per-kind `cap` on point size).
 
 ## Critique backlog (known issues)
@@ -448,6 +508,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Growth (session 12) is untested on a real phone; ask the user how the growing scene and the big forms feel. Balance was not re-measured with grown forms (both sides grow by level in cups, so it's symmetric, but hand-built bodies are bigger targets visually only; hit ranges are unchanged).
 - The 10 `bodyMul` lines have new palettes and parts but share proportions; a signature part each would make them read as new creatures as strongly as the first nine.
 ## Suggested next rounds
+- After session 14: ask how the stadium tricks and Stadium Trials feel on a phone. Ideas left from "Modes & polish": a Camp prop for Trick Star / Stadium Tamer, Team Battle with modifiers, a 2-rep robin on a hazard arena, localisation, a 20th critter (the user hasn't asked for one).
 - After session 13: ask about the growing scene and the new forms; the growing scene could show the 3D model instead of portraits.
 - Session 12 is done. Next, if the user asks: polish the 10 `bodyMul` growth lines, ask for playtest feedback on growing, carry on numbering from R162.
 - Session 11 is done. If the user asks for more:
