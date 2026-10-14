@@ -47,7 +47,7 @@ export const FORMS = {
         moves: { special: 'Bubble Barrage', super: 'Tidal Crush' },
       },
       {
-        name: 'Leviatotl', species: 'Deep Sea Axolotl', size: 1.26, tailScale: 1.8, voice: 0.75, earScale: 1.45,
+        name: 'Leviatotl', species: 'Deep Sea Axolotl', size: 1.26, tailScale: 1.6, voice: 0.75, earScale: 1.45,
         blurb: 'A gentle giant of the deep. The pearl on its brow glows when it calls the tide.',
         colors: { body: 0xb070e0, belly: 0xf4e6ff, accent: 0x52e2ff, dark: 0x3e1a6a, fin: 0x52e2ff, pearl: 0xe8fbff, horn: 0x8af0ff },
         body: { w: 0.66, h: 1.0, headR: 0.44, legLen: 0.24, armLen: 0.3, chubby: 0.98, limb: 1.4 },
@@ -100,6 +100,16 @@ export const FORMS = {
   },
 };
 
+// generic grown forms get a feature themed on their type
+const TYPE_PARTS = {
+  fire: (k) => ({ flamecrest: k * 0.8 }),
+  water: (k) => ({ backfin: k }),
+  leaf: (k) => ({ leafmane: k * 1.1 }),
+  spark: (k) => ({ horns: k * 0.7 }),
+  stone: (k) => ({ crystalridge: k }),
+  gust: (k) => ({ backfin: k * 0.9 }),
+};
+
 // the form a critter def takes at this level (keeps the id, so progress stays shared)
 export function grown(def, lv, shiny) {
   const stage = stageFor(lv);
@@ -107,10 +117,12 @@ export function grown(def, lv, shiny) {
   const F = FORMS[def.id]?.forms[stage - 2];
   const hp = Math.round(def.stats.hp * HP_MULT[stage - 1]);
   if (!F) {
-    // generic growth: bigger and sturdier, same look; moves get stronger names
-    const p = stage === 2 ? 'Power' : 'Ultra';
+    // generic growth (until a critter gets hand-built forms): bigger, sturdier, plus a type-themed feature
+    const p = stage === 2 ? 'Power' : 'Ultra', k = stage === 2 ? 0.55 : 0.85;
+    const parts = { ...TYPE_PARTS[def.type](k), ...(stage === 3 ? { brows: 0.5 } : {}) };
     return {
-      ...def, stage, size: stage === 2 ? 1.08 : 1.16,
+      ...def, stage, size: stage === 2 ? 1.08 : 1.16, parts,
+      colors: { ...def.colors, fin: def.colors.accent, horn: def.colors.accent },
       body: { ...def.body, limb: stage === 2 ? 1.15 : 1.3 },
       stats: { ...def.stats, hp },
       moves: { special: `${p} ${def.moves.special}`, super: `${p} ${def.moves.super}` },
@@ -236,19 +248,21 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo }) {
   if (P.backfin) {
     const s = P.backfin, fm = toon(C.fin ?? C.accent, { uniforms: U, side: THREE.DoubleSide });
     cr.mats.g_fin = fm;
-    const sh = new THREE.Shape(), L = (B.h + headR) * 1.15, H = 0.3 * s;
+    // critters stand upright, so the 'back' runs from the crown down to the hips
+    const top = B.h * 0.82 + headR * 1.45, L = top - B.h * 0.18, H = 0.34 * s;
+    const sh = new THREE.Shape();
     sh.moveTo(0, 0);
-    for (let k = 0; k <= 4; k++) { const x = (k / 4) * L, y = H * (1 - k * 0.16); sh.quadraticCurveTo(x - L * 0.06, y * 1.15, x + L * 0.05, y * 0.55); }
+    for (let k = 0; k <= 4; k++) { const x = (k / 4) * L, y = H * (1 - k * 0.13); sh.quadraticCurveTo(x - L * 0.06, y * 1.15, x + L * 0.05, y * 0.5); }
     sh.lineTo(L, 0); sh.lineTo(0, 0);
     const geo = new THREE.ShapeGeometry(sh, 8);
+    geo.rotateZ(-Math.PI / 2); geo.rotateY(Math.PI / 2); // shape x runs down (-y), shape y sticks out the back (-z)
     const g = new THREE.Group();
     const m = new THREE.Mesh(geo, fm);
     const o = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x1a1020, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 4, polygonOffsetUnits: 4 }));
-    o.scale.set(1.02, 1.08, 1); o.position.set(-0.01, -0.005, 0);
+    o.scale.set(1, 1.02, 1.06);
     g.add(o, m);
-    g.rotation.y = Math.PI / 2; // shape x runs down the back (-z)
-    g.rotation.order = 'YXZ'; g.rotation.x = -0.72;
-    g.position.set(0, B.h * 0.82 + headR * 0.95, -headR * 0.2);
+    g.position.set(0, top, -B.w * 0.3);
+    g.rotation.x = 0.12; // lean the lower end out over the bulge of the body
     cr.torso.add(g);
     cr.fin = g;
   }
@@ -292,12 +306,12 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo }) {
 
   // branching antlers with leaves and blossoms at the tips
   if (P.antlers) {
-    const s = P.antlers * headR * 1.9, am = mat('antler', C.antler ?? 0x8a6440), bl = mat('blossom', C.blossom ?? 0xff9ac8);
+    const s = P.antlers * headR * 2.1, am = mat('antler', C.antler ?? 0x8a6440), bl = mat('blossom', C.blossom ?? 0xff9ac8);
     for (const x of [-1, 1]) {
       const p0 = v(0, 0, 0), p1 = v(x * 0.12, 0.26, -0.04), p2 = v(x * 0.3, 0.46, -0.1), p3 = v(x * 0.36, 0.7, -0.06);
       const t1 = v(x * 0.02, 0.5, 0.08), t2 = v(x * 0.52, 0.58, -0.16), t3 = v(x * 0.2, 0.76, 0.02);
       const P3 = [p0, p1, p2, p3, t1, t2, t3].map((q) => q.multiplyScalar(s));
-      const r = 0.035 * s;
+      const r = 0.05 * s;
       const geo = mergeGeometries([seg(P3[0], P3[1], r, r * 0.85), seg(P3[1], P3[2], r * 0.85, r * 0.65), seg(P3[2], P3[3], r * 0.65, r * 0.2),
         seg(P3[1], P3[4], r * 0.6, r * 0.18), seg(P3[2], P3[5], r * 0.55, r * 0.15), seg(P3[2], P3[6], r * 0.5, r * 0.15)]);
       const g = new THREE.Group();

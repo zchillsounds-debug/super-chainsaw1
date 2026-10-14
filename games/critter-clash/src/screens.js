@@ -1020,7 +1020,7 @@ export class Screens {
         b.appendChild(this.btn('Give Up', 'ghost', () => this.cups()));
       } else b.appendChild(this.btn('Collect Trophy', 'primary', () => this.trophy(cup.cup)));
     } else {
-      b.appendChild(this.btn('Rematch', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
+      b.appendChild(this.btn('Rematch', 'primary', () => g.startBattle(withGear(skinned(byId(pDef.id), pDef.skin), save.critters[pDef.id].level), cDef, { ...opts, playerLevel: save.critters[pDef.id].level }))); // fresh def: it may have grown
       b.appendChild(this.btn('Change Critter', '', () => { g.endBattle(); this.select(); playMusic('menu'); }));
       b.appendChild(this.btn('Title', 'ghost', () => this.title()));
     }
@@ -1068,6 +1068,8 @@ export class Screens {
     const close = () => {
       if (closed) return; closed = true;
       d.remove(); g.modalClose = null;
+      const img = this.mode === 'results' && this.root.querySelector('.res-card > img');
+      if (img) img.src = g.portrait(to);
       // the celebrating winner turns into the new form too
       const f = g.battle?.player;
       if (f && f.def.id === id && f.root.visible) {
