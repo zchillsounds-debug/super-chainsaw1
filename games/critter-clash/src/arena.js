@@ -217,6 +217,22 @@ export class Arena {
         }
         // sparkles
         for (let i = 0; i < 2500; i++) { c.fillStyle = Math.random() < 0.7 ? 'rgba(255,255,255,0.9)' : 'rgba(150,200,255,0.6)'; c.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+        // glassy blue ice patches with frost cracks, so the field isn't one flat white
+        for (let i = 0; i < 14; i++) {
+          const x = Math.random() * w, y = Math.random() * h, rx = 50 + Math.random() * 70, ry = rx * (0.5 + Math.random() * 0.4), a = Math.random() * 3;
+          c.save(); c.translate(x, y); c.rotate(a);
+          const g = c.createRadialGradient(0, 0, 0, 0, 0, rx);
+          g.addColorStop(0, 'rgba(150,200,245,0.42)'); g.addColorStop(0.8, 'rgba(170,215,250,0.3)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+          c.fillStyle = g; c.beginPath(); c.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); c.fill();
+          c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 1.5;
+          for (let k = 0; k < 4; k++) { let px = 0, py = 0, d = Math.random() * 6; c.beginPath(); c.moveTo(0, 0); for (let n = 0; n < 4; n++) { d += (Math.random() - 0.5) * 1.2; px += Math.cos(d) * rx * 0.22; py += Math.sin(d) * ry * 0.22; c.lineTo(px, py); } c.stroke(); }
+          c.fillStyle = 'rgba(255,255,255,0.55)'; c.beginPath(); c.ellipse(-rx * 0.3, -ry * 0.35, rx * 0.35, ry * 0.12, 0, 0, Math.PI * 2); c.fill();
+          c.restore();
+        }
+        // cooler tone toward the rim
+        const rim = c.createRadialGradient(w / 2, h / 2, w * 0.25, w / 2, h / 2, w * 0.52);
+        rim.addColorStop(0, 'rgba(120,160,230,0)'); rim.addColorStop(1, 'rgba(120,160,230,0.28)');
+        c.fillStyle = rim; c.fillRect(0, 0, w, h);
         // little paw-print trails
         c.fillStyle = 'rgba(120,150,210,0.25)';
         for (let t = 0; t < 4; t++) {
