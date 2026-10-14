@@ -530,7 +530,7 @@ export class Screens {
       <h2>Survival</h2>
       <p>One fight after another. Damage carries over and every rival is tougher. Every 5th is a shiny ⭐ Gatekeeper: beat it for berries and a full heal.</p>
       <div class="cup-meta">Best streak: <b>${save.stats.bestStreak || 0}</b></div>`,
-    () => { this.ctx = { kind: 'survival', streak: 0, hp: 1, last: null }; this.select(); });
+    () => { this.ctx = { kind: 'survival', streak: 0, hp: 1, last: null, best: save.stats.bestStreak || 0 }; this.select(); });
     // team days need three critters; until then the day's lead foe is a solo daily
     const teamDay = d.team && save.unlocked.length >= 3;
     const tm = dailyChallenge(new Date(Date.parse(d.key + 'T12:00:00Z') + 864e5)); // tomorrow's, previewed once today's is done
@@ -1002,10 +1002,10 @@ export class Screens {
           save.berries = (save.berries || 0) + prize;
           S.hp = 1;
           streakNote = `<div class="streak">⭐ Gatekeeper beaten! Streak ${S.streak} · +${prize} 🍓 · fully healed</div>`;
-        } else streakNote = `<div class="streak">🔥 Streak ${S.streak} · ${Math.round(S.hp * 100)}% health for the next fight${S.streak % 5 === 4 ? ' · ⭐ Gatekeeper next!' : ''}</div>`;
+        } else streakNote = `<div class="streak">🔥 Streak ${S.streak} · ${Math.round(S.hp * 100)}% health for the next fight${S.best && S.streak === S.best + 1 ? ' · NEW BEST!' : ''}${S.streak % 5 === 4 ? ' · ⭐ Gatekeeper next!' : ''}</div>`;
       } else {
         const best = save.stats.bestStreak || 0;
-        streakNote = `<div class="streak">Run over at <b>${S.streak}</b> win${S.streak === 1 ? '' : 's'}${S.streak >= best && S.streak > 0 ? ' · NEW BEST!' : ` · Best ${best}`}</div>`;
+        streakNote = `<div class="streak">Run over at <b>${S.streak}</b> win${S.streak === 1 ? '' : 's'}${S.streak > (S.best ?? best) ? ' · NEW BEST!' : ` · Best ${best}`}</div>`;
       }
     }
     if (kind === 'bossrush') {
@@ -1129,7 +1129,7 @@ export class Screens {
     const b = this.root.querySelector('.res-btns');
     if (kind === 'survival') {
       if (won) b.appendChild(this.btn('Next Challenger', 'primary', () => { g.endBattle(); playMusic('menu'); this.mode = 'select'; this.vs(); }));
-      else b.appendChild(this.btn('New Run', 'primary', () => { this.ctx = { kind: 'survival', streak: 0, hp: 1, last: null }; g.endBattle(); playMusic('menu'); this.select(); }));
+      else b.appendChild(this.btn('New Run', 'primary', () => { this.ctx = { kind: 'survival', streak: 0, hp: 1, last: null, best: save.stats.bestStreak || 0 }; g.endBattle(); playMusic('menu'); this.select(); }));
       b.appendChild(this.btn('Challenges', 'ghost', () => this.challenges()));
     } else if (kind === 'bossrush') {
       const more = won && this.ctx.idx < bossList().length;
