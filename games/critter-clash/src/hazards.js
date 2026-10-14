@@ -285,7 +285,7 @@ export class Hazards {
         sg.ang += sg.dir * sg.speed * dt;
         sg.group.rotation.y = -sg.ang;
         const fade = Math.min(1, (sg.dur - e) / 0.3);
-        sg.line.opacity = 0.9 * fade; sg.beamMat.opacity = (0.6 + 0.25 * Math.sin(t * 50)) * fade;
+        sg.line.opacity = 0.9 * fade; sg.beamMat.opacity = (0.6 + (B.game.reduceFlash ? 0 : 0.25 * Math.sin(t * 50))) * fade;
         const ca = Math.cos(sg.ang), sa = Math.sin(sg.ang);
         if (Math.random() < dt * 30) { const a = (Math.random() - 0.5) * ARENA_R * 2; fx.spawn({ x: ca * a, y: 0.55, z: sa * a, color: 0x9af4ff, size: 0.5, life: 0.15, shape: 'spark' }); }
         for (const f of B.fighters) {

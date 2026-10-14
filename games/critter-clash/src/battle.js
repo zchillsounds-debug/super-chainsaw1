@@ -1563,7 +1563,7 @@ export class Battle {
       this.screenT = 0.5;
       // while a stadium trick is going off, the jumbotron flashes a warning instead of the matchup
       const sig = this.hazards?.sig;
-      this.screenBlink = !this.screenBlink;
+      this.screenBlink = !this.screenBlink && !this.game.reduceFlash; // Reduce flashing holds the warning steady
       this.arena.drawScreen(sig ? { alert: this.hazards.S.jumbo, blink: this.screenBlink } : { imgs: this.screenImgs, names: this.screenNames, hp: this.fighters.map((f) => f.hp / f.maxHp) });
     }
     this.hud.speedLines(this.superUser && this.cutinT > 0 || this.fighters.some((f) => f.state === 'launched' && f.vy > 4) || this.phase === 'ko' && this.phaseT < 0.6);
