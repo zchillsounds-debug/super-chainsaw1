@@ -200,6 +200,15 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - Team Battle: VS screen callout `.vs-go` ("Go, X!" / "Rival sends out X!", `ctx.sent`), stage card subtitle via the new Battle opt `stageSub`, `Screens.teamTrophy()` (mode `teamwin`, pulled-back trio camera in `update`), results team rows no longer inherit the 110 px `.res-card img` size.
 - Balance (full 16 run at 02:55): Voltferret was 90% → power 0.93, hp 870, Zip Zap cd 4.9 (focused rerun ~67%); Bubbalotl hp 1150/power 1.05, Pricklepuff power 1.1, Whirlwhisk power 1.16.
 
+## Playtest session (the user's own chat, session_01N69mQniqCEkTvu2X5XzxtL, 01:58–04:20 UTC)
+- **If `npm install` can't reach the registry** (this sandbox blocked registry.npmjs.org): the APK workflow now publishes `node_modules` to the orphan branch **`deps-critter-clash`** (split `nm.part.*`, rebuilt only when package-lock.json changes). Restore with: `git fetch --depth 1 origin deps-critter-clash && git archive FETCH_HEAD | tar x -C <scratch>/deps && cat <scratch>/deps/nm.part.* | tar xzf - -C games/critter-clash`.
+- User report at 02:07 UTC: "The green instructions are too in the way." Cause: the tutorial prompt kept its green `done` colour on every step after the first. Now: slim cream pill at top 96 px (84 on short phones), fades to 55% after 3 s (`.coach.dim`), and the taught touch button pulses a yellow ring (`.tb.teach`, `Tutorial.teach()`). Training panel is one slim strip with `pointer-events: none` (only the dummy chip is tappable); input log hidden on touch.
+- Settings: **Button size** (`save.settings.btnSize` s/m/l → CSS var `--bs` on `.btns`) and **Battle tips** (toggles `save.tutorialDone`; switching off mid-fight disposes the coach). `.seg` handler is now generic by `data-k`.
+- Pause menu **Restart** (`game.lastStart`), hidden in survival/bossrush/team. Android back on a Pecan dialog acts like tapping it (finish line → next → "Let's go!" runs its callback) instead of skipping it.
+- Match chips (`.mod-chip.mini`) shrink to icons beside pause 2.5 s into each fight. Match/Sparring/Team setup sheets keep Back/FIGHT! in a sticky bottom row and are compact under 420 px tall.
+- Tools: `tools/teamflow.mjs [WxH] [w/l pattern]` taps through a whole Team Battle; `cupflow.mjs` handles the finale and logs what covers a failed tap (failed taps on results/trophy buttons in headless are animation-stability waits, not real blockers); tapcheck opens `matchsetup`, `teampick`, `teamvs`.
+- Checked by tapping on phones: Sky Cup → trophy → finale → title (740×360), Team Battle win and loss paths, first launch → battle (740×360, 360×640, 412×915), tap-check clean with 17 critters.
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
