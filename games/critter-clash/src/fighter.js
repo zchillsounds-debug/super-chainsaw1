@@ -135,6 +135,7 @@ export class Fighter {
 
   setState(s) {
     if (this.under && s !== 'special' && s !== 'super') { this.under = false; this.root.visible = true; }
+    if (s !== 'dizzy') this.asleep = false;
     this.state = s; this.st = 0; this.fxOnce = null;
   }
 
@@ -214,7 +215,7 @@ export class Fighter {
       this.vx = this.vz = 0;
       // mashing shortens the daze
       if (c.attack || c.special || c.dodge) this.dizzyT -= 0.12;
-      if (this.st > this.dizzyT) { this.dizzy = 0; this.setState('idle'); this.critter.emote('open', 'smile'); }
+      if (this.st > this.dizzyT) { this.dizzy = 0; this.asleep = false; this.setState('idle'); this.critter.emote('open', 'smile'); }
     }
 
     // guard meter refills after a short rest; the bubble scales with what's left
@@ -990,6 +991,12 @@ export class Fighter {
     } else if (S === 'down') {
       P.lean = -1.45; P.y = 0.05; P.sy = 0.9; P.sx = 1.08; P.armLz = P.armRz = 1.4; P.ear = 1.3; P.legL = P.legR = -0.4;
       if (!this.alive) { P.armLz = P.armRz = 1.6 + Math.sin(t * 2) * 0.05; }
+    } else if (S === 'dizzy' && this.asleep) {
+      // sung to sleep by a Lullaby: slumped, eyes shut, slow breathing and drifting z's
+      const br = Math.sin(t * 2.5);
+      P.sy = 0.9 + br * 0.03; P.sx = 1.05 - br * 0.02; P.head = 0.3; P.headRoll = 0.3; P.armLz = P.armRz = 0.1; P.ear = 0.2; P.lean = 0.05;
+      this.critter.emote('closed', 'o', 0.1);
+      if (Math.random() < 0.04) this.battle.fx.text(this.headPos(), 'z', 'zz', 0.7);
     } else if (S === 'dizzy') {
       P.roll = Math.sin(t * 4) * 0.3; P.headRoll = Math.sin(t * 4 + 1) * 0.3; P.lean = 0.05;
       P.armLz = P.armRz = 0.5 + Math.sin(t * 4) * 0.2; P.ear = 0.8;

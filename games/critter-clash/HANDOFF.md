@@ -372,6 +372,7 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 139. Snoozlo, the drowsy koala (Power Nap counter / Lullaby Bump), Hazel in the Glowcap Cup. Focused robin 63% after buffs (was 31%).
 140. Snoozlo's victory nap keeps its face to the camera; bigger Lullaby notes.
 141. In Camp, Snoozlo heads for the nap spot by the tent.
+142. A rival sung to sleep by Lullaby slumps with closed eyes and z's instead of dizzy stars (`f.asleep`).
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.

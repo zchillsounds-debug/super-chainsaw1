@@ -1007,7 +1007,7 @@ export class Battle {
         if (!f.slept && t > 0.9) {
           f.slept = true;
           if (o.alive && o.state !== 'super' && !(o.invuln > 0)) {
-            o.setState('dizzy'); o.dizzyT = 1.8; o.dizzy = 0; o.vx = o.vz = 0;
+            o.setState('dizzy'); o.asleep = true; o.dizzyT = 1.8; o.dizzy = 0; o.vx = o.vz = 0;
             o.critter.emote('closed', 'o', 1.5);
             fx.text(o.headPos(), 'Zzz...', 'dizzy', 1.1);
           }
