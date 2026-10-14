@@ -1005,7 +1005,18 @@ export class Arena {
       c.lineWidth = size * 0.22; c.strokeStyle = '#2a1630'; c.strokeText(s, x, y);
       c.fillStyle = fill; c.fillText(s, x, y);
     };
-    if (!info) {
+    if (info?.alert) {
+      // hazard-tape stripes top and bottom, blinking warning in the middle
+      c.save();
+      for (const y0 of [0, h - 56]) {
+        c.fillStyle = '#ffc940'; c.fillRect(0, y0, w, 56);
+        c.fillStyle = '#2a1630';
+        for (let x = (info.blink ? 0 : 40) - 80; x < w + 80; x += 80) { c.beginPath(); c.moveTo(x, y0 + 56); c.lineTo(x + 40, y0 + 56); c.lineTo(x + 80, y0); c.lineTo(x + 40, y0); c.fill(); }
+      }
+      c.restore();
+      text('⚠ WARNING ⚠', w / 2, 150, 70, info.blink ? '#ffc940' : '#fff');
+      text(info.alert, w / 2, 280, 120, info.blink ? '#ff5a3d' : '#ffc940');
+    } else if (!info) {
       text('CRITTER', w / 2, 170, 120);
       text('CLASH!', w / 2, 300, 140, '#ffc940');
     } else {

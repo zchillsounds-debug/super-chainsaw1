@@ -21,12 +21,12 @@ export const HAZARDS = {
 };
 
 export const SIGS = {
-  volcano: { name: 'Fissures', word: 'FISSURE!', tip: 'Fissure! Get off the crack!' },
-  frost:   { name: 'Ice slicks', word: 'SLIPPY!', tip: 'Ice slick! Slippery footing!' },
-  neon:    { name: 'Laser sweeps', word: 'LASER!', tip: 'Laser! Guard or roll through it!' },
-  beach:   { name: 'Rogue waves', word: 'SPLASH!', tip: 'Rogue wave! Step out of its lane!' },
-  sky:     { name: 'Crosswinds', word: 'GUST!', tip: 'Crosswind! Hold your ground!' },
-  grove:   { name: 'Spore clouds', word: 'ACHOO!', tip: "Spore cloud! Don't breathe it in!" },
+  volcano: { name: 'Fissures', word: 'FISSURE!', jumbo: 'FISSURE!', tip: 'Fissure! Get off the crack!' },
+  frost:   { name: 'Ice slicks', word: 'SLIPPY!', jumbo: 'ICE SLICK!', tip: 'Ice slick! Slippery footing!' },
+  neon:    { name: 'Laser sweeps', word: 'LASER!', jumbo: 'LASER!', tip: 'Laser! Guard or roll through it!' },
+  beach:   { name: 'Rogue waves', word: 'SPLASH!', jumbo: 'ROGUE WAVE!', tip: 'Rogue wave! Step out of its lane!' },
+  sky:     { name: 'Crosswinds', word: 'GUST!', jumbo: 'CROSSWIND!', tip: 'Crosswind! Hold your ground!' },
+  grove:   { name: 'Spore clouds', word: 'ACHOO!', jumbo: 'SPORES!', tip: "Spore cloud! Don't breathe it in!" },
 };
 
 // shared art for the ice slick (made once, never disposed)

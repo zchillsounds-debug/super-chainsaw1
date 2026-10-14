@@ -1560,7 +1560,10 @@ export class Battle {
     this.screenT -= dt;
     if (this.screenT <= 0) {
       this.screenT = 0.5;
-      this.arena.drawScreen({ imgs: this.screenImgs, names: this.screenNames, hp: this.fighters.map((f) => f.hp / f.maxHp) });
+      // while a stadium trick is going off, the jumbotron flashes a warning instead of the matchup
+      const sig = this.hazards?.sig;
+      this.screenBlink = !this.screenBlink;
+      this.arena.drawScreen(sig ? { alert: this.hazards.S.jumbo, blink: this.screenBlink } : { imgs: this.screenImgs, names: this.screenNames, hp: this.fighters.map((f) => f.hp / f.maxHp) });
     }
     this.hud.speedLines(this.superUser && this.cutinT > 0 || this.fighters.some((f) => f.state === 'launched' && f.vy > 4) || this.phase === 'ko' && this.phaseT < 0.6);
     inp.setCooldowns(1 - p.specCd / SPECIALS[p.def.special].cd, 1 - p.dodgeCd / 0.55, p.superM / 100, p.superM >= 100);
