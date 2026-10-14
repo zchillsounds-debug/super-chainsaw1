@@ -51,6 +51,11 @@ export class CpuBrain {
       }
       if (r < pDodge + pGuard && f.guardHp > 40) { this.guardT = 0.35 + Math.random() * 0.4; c.guard = true; c.mx = c.mz = 0; return; }
     }
+    // the neon laser can't be outrun: guard or roll through it (sharper CPUs time it better)
+    if (f.actionable && f.battle.hazards?.incoming(f) && Math.random() < 0.25 + D * 0.7) {
+      if (f.dodgeCd <= 0 && Math.random() < 0.5) { c.dodge = true; c.mx = ax; c.mz = az; return; }
+      if (f.guardHp > 30) { this.guardT = 0.5; c.guard = true; c.mx = c.mz = 0; return; }
+    }
     // step out of an arena hazard's warning ring (sharper CPUs react sooner)
     const hz = f.battle.hazards?.danger(f.x, f.z);
     if (hz && f.actionable && hz.t > 0.5 - D * 0.4) {

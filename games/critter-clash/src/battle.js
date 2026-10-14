@@ -121,7 +121,7 @@ export class Battle {
     this.introSaid = 0;
     if (first) {
       const hz = !this.training && save.settings.hazards !== false && this.hazards?.H;
-      this.hud.stageCard(this.arena.A.name, this.training ? 'Training' : this.stageSub || (hz ? `⚠ ${hz.name}` : ''));
+      this.hud.stageCard(this.arena.A.name, this.training ? 'Training' : this.stageSub || (hz ? `⚠ ${hz.name} · ${this.hazards.S?.name || ''}`.replace(/ · $/, '') : ''));
     }
     this.tense = 0;
     this.camFocusWas = undefined;
