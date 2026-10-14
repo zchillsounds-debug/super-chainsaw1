@@ -366,6 +366,8 @@ export const BADGES = [
   { id: 'master', icon: '🌟', name: 'Critter Master', desc: 'Clear every cup.', test: (s) => CUPS.every((c) => s.cups[c.id]) },
   { id: 'team', icon: '🐾', name: 'Full Team', desc: 'Recruit every critter.', test: (s) => s.unlocked.length >= CRITTERS.length },
   { id: 'lv10', icon: '📈', name: 'Best Buds', desc: 'Raise a critter to Lv 10.', test: (s) => Object.values(s.critters).some((c) => c.level >= 10) },
+  { id: 'grow', icon: '🌱', name: 'Growing Up', desc: 'Raise a critter to Lv 7 and watch it grow.', test: (s) => Object.values(s.critters).some((c) => c.level >= 7) },
+  { id: 'grown', icon: '🌳', name: 'Fully Grown', desc: 'Raise a critter to its final form at Lv 14.', test: (s) => Object.values(s.critters).some((c) => c.level >= 14) },
   { id: 'streak5', icon: '🔥', name: 'Survivor', desc: 'Win 5 in a row in Survival.', test: (s) => (s.stats.bestStreak || 0) >= 5 },
   { id: 'daily', icon: '📅', name: 'Daily Doer', desc: 'Clear a Daily Challenge.', test: (s) => Object.keys(s.daily || {}).length >= 1 },
   { id: 'friend', icon: '💗', name: 'Best Friends', desc: 'Fill a critter\'s friendship hearts in Camp.', test: (s) => Object.values(s.critters).some((c) => (c.pets || 0) >= 20) },
