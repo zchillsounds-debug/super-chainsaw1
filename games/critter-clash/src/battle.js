@@ -38,7 +38,7 @@ const ROUND_TIME = 60;
 const INTRO_FIRST = 4.2, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
 
 export class Battle {
-  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, training = false } = {}) {
+  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, cpuHp = 1, training = false } = {}) {
     this.game = game;
     this.scene = game.scene;
     this.fx = game.fx;
@@ -52,6 +52,7 @@ export class Battle {
     this.superMult = this.mods.has('supercharged') ? 2 : 1;
     this.speedMult = this.mods.has('turbo') ? 1.25 : 1;
     this.playerHp = playerHp; // survival runs carry damage between fights
+    this.cpuHp = cpuHp; // team battles carry the rival's damage too
     this.fighters = [];
     this.fighters.push(new Fighter(this, pDef, { level: playerLevel, side: 0 }));
     this.fighters.push(new Fighter(this, cDef, { level: cpuLevel, cpu: true, side: 1 }));
@@ -110,6 +111,7 @@ export class Battle {
     this.phaseT = 0;
     this.roundDmgTaken = 0;
     if (this.round === 1 && this.playerHp < 1) { p.hp = Math.max(1, Math.round(p.maxHp * this.playerHp)); p.dmgTrail = p.hp; }
+    if (this.round === 1 && this.cpuHp < 1) { c.hp = Math.max(1, Math.round(c.maxHp * this.cpuHp)); c.dmgTrail = c.hp; }
     p.setState('intro'); c.setState('intro');
     const first = this.round === 1;
     p.introDelay = first ? INTRO_FOCUS : 0; c.introDelay = 0;

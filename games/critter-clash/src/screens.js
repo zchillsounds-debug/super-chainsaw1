@@ -313,9 +313,9 @@ export class Screens {
     if (!playable(CRITTERS[this.sel])) this.sel = CRITTERS.findIndex((c) => save.unlocked.includes(c.id));
     const cup = this.ctx.kind === 'cup';
     if (cup && !g.autoplay) g.setArena(this.ctx.cup.arena);
-    const chal = this.ctx.kind === 'survival' || this.ctx.kind === 'daily' || this.ctx.kind === 'training' || this.ctx.kind === 'bossrush';
+    const chal = this.ctx.kind === 'survival' || this.ctx.kind === 'daily' || this.ctx.kind === 'training' || this.ctx.kind === 'bossrush' || this.ctx.kind === 'team';
     const badge = cup ? `<div class="cup-badge" style="--tc:${this.ctx.cup.color}">${this.ctx.cup.name}</div>`
-      : chal ? `<div class="cup-badge" style="--tc:${{ daily: '#3dc8ff', survival: '#ff7a3d', training: '#7ad36b', bossrush: '#ffb020' }[this.ctx.kind]}">${{ daily: 'Daily Challenge', survival: 'Survival', training: 'Training', bossrush: 'Boss Rush' }[this.ctx.kind]}</div>` : '<div class="diff"></div>';
+      : chal ? `<div class="cup-badge" style="--tc:${{ daily: '#3dc8ff', survival: '#ff7a3d', training: '#7ad36b', bossrush: '#ffb020', team: '#c86bff' }[this.ctx.kind]}">${{ daily: 'Daily Challenge', survival: 'Survival', training: 'Training', bossrush: 'Boss Rush', team: 'Team Battle' }[this.ctx.kind]}</div>` : '<div class="diff"></div>';
     this.root.innerHTML = `
       <div class="select-screen">
         <div class="sel-info"></div>
@@ -360,7 +360,7 @@ export class Screens {
       diff.appendChild(b);
     });
     const train = this.ctx.kind === 'training';
-    const go = () => (cup ? this.ladder() : train ? this.training() : this.ctx.kind === 'quick' ? this.matchSheet(false) : this.vs());
+    const go = () => (cup ? this.ladder() : train ? this.training() : this.ctx.kind === 'quick' ? this.matchSheet(false) : this.ctx.kind === 'team' ? this.teamSheet() : this.vs());
     R.querySelector('.go').appendChild(this.btn(cup ? 'GO!' : train ? 'PRACTICE!' : 'FIGHT!', 'primary big', go));
     this.pick(this.sel, true);
     removeEventListener('keydown', this._kn);
@@ -452,6 +452,13 @@ export class Screens {
       <div class="cup-foes">${bosses.map((m) => `<img src="${g.portrait(skinned(byId(m.critter), m.skin))}" alt="">`).join('')}</div>
       <div class="cup-meta">${save.stats.bossRush ? '👑 Cleared! ' : ''}Best: <b>${save.stats.bossBest || 0}/${bosses.length}</b></div>`,
     () => { if (!rushOpen) { this.toast('Clear the Champion Cup first!'); return; } this.ctx = { kind: 'bossrush', idx: 0, hp: 1 }; this.select(); });
+    const teamOpen = save.unlocked.length >= 3;
+    card('team' + (teamOpen ? '' : ' locked'), '#c86bff', `
+      <div class="cup-trophy">${teamOpen ? '🤝' : '🔒'}</div>
+      <h2>Team Battle</h2>
+      <p>${teamOpen ? 'Pick three critters and take on a rival team of three. Whoever wins stays in, damage and all.' : 'Recruit three critters to unlock.'}</p>
+      <div class="cup-meta">3-on-3 · Wins: <b>${save.stats.teamWins || 0}</b></div>`,
+    () => { if (!teamOpen) { this.toast('Recruit three critters first!'); return; } this.ctx = { kind: 'team' }; this.select(); });
     card('training', '#7ad36b', `
       <div class="cup-trophy">🎯</div>
       <h2>Training</h2>
@@ -498,6 +505,52 @@ export class Screens {
   }
 
   training() { this.matchSheet(true); }
+
+  // Team Battle: pick three from your team (the selected critter leads), then face three rivals
+  teamSheet() {
+    const g = this.game;
+    if (this.root.querySelector('.train-pick')) return;
+    const mine = CRITTERS.filter((c) => save.unlocked.includes(c.id));
+    const lead = CRITTERS[this.sel].id;
+    const byLv = [...mine].sort((a, b) => save.critters[b.id].level - save.critters[a.id].level).map((c) => c.id);
+    let team = (this.lastTeam || []).filter((id) => save.unlocked.includes(id) && id !== lead);
+    team = [lead, ...team, ...byLv.filter((id) => id !== lead && !team.includes(id))].slice(0, 3);
+    const d = document.createElement('div');
+    d.className = 'modal-wrap train-pick team-pick';
+    d.innerHTML = `<div class="modal"><h2>Pick Your Team</h2>
+      <small>Tap three critters. The first one leads.</small><div class="tp-foes">${mine.map((c) => `<button class="tp-foe" data-id="${c.id}"><img src="${g.portrait(skinOf(c))}" alt="${c.name}"><i></i></button>`).join('')}</div>
+      <div class="row"></div></div>`;
+    const sync = () => d.querySelectorAll('.tp-foe').forEach((b) => {
+      const k = team.indexOf(b.dataset.id);
+      b.classList.toggle('on', k >= 0); b.querySelector('i').textContent = k >= 0 ? k + 1 : '';
+    });
+    d.querySelectorAll('.tp-foe').forEach((b) => b.addEventListener('click', () => {
+      const id = b.dataset.id, k = team.indexOf(id);
+      if (k >= 0) team.splice(k, 1); else if (team.length < 3) team.push(id); else { team[2] = id; }
+      sfx.ui('move'); sync(); go.disabled = team.length < 3;
+    }));
+    const row = d.querySelector('.row');
+    row.appendChild(this.btn('Back', 'ghost-dark', () => d.remove()));
+    const go = this.btn('FIGHT!', 'primary', () => {
+      if (team.length < 3) return;
+      d.remove();
+      this.lastTeam = team.slice();
+      const pool = CRITTERS.filter((c) => !team.includes(c.id)).map((c) => c.id);
+      const foes = [];
+      while (foes.length < 3) { const id = pick(pool); if (!foes.includes(id)) foes.push(id); }
+      this.ctx = { kind: 'team', team, foes, pi: 0, fi: 0, php: [1, 1, 1], fhp: [1, 1, 1], arena: pick(ARENA_KEYS) };
+      this.sel = CRITTERS.findIndex((c) => c.id === team[0]);
+      this.vs();
+    });
+    row.appendChild(go);
+    sync();
+    this.root.appendChild(d);
+  }
+
+  // little row of team portraits for the VS and results screens: KO'd ones greyed out
+  teamRow(ids, hp, cur) {
+    return `<span class="team-row">${ids.map((id, k) => `<img class="${hp[k] <= 0 ? 'ko' : k === cur ? 'cur' : ''}" src="${this.game.portrait(skinOf(byId(id)))}" alt="">`).join('')}</span>`;
+  }
 
   // ---------- Critterdex: collection, skins and badges ----------
   dex(i = this.sel) {
@@ -724,6 +777,12 @@ export class Screens {
       c = withGear(skinned(byId(m.critter), m.skin), m.level);
       opts = { cpuLevel: Math.max(m.level, pl), difficulty: Math.min(0.95, 0.78 + S.idx * 0.03), playerLevel: pl, trainer: m, arena: m.arena, rounds: 1, playerHp: S.hp, mods: m.mods || [] };
       label = `Boss ${S.idx + 1}/${list.length} · ${m.name}`;
+    } else if (this.ctx.kind === 'team') {
+      const T = this.ctx, pl = save.critters[p.id].level;
+      const avg = Math.round(T.team.reduce((a, id) => a + save.critters[id].level, 0) / 3);
+      c = byId(T.foes[T.fi]);
+      opts = { cpuLevel: Math.max(1, avg), difficulty: 0.55 + T.fi * 0.08, playerLevel: pl, arena: T.arena, rounds: 1, playerHp: T.php[T.pi], cpuHp: T.fhp[T.fi] };
+      label = `Rival team ${T.fi + 1}/3`;
     } else if (this.ctx.kind === 'daily') {
       const d = this.ctx.d;
       c = skinned(byId(d.foe), d.shiny ? 'shiny' : 'base');
@@ -785,6 +844,17 @@ export class Screens {
         if (S.idx >= N) { save.stats.bossRush = true; streakNote = `<div class="streak">👑 Boss Rush cleared! All ${N} bosses down!</div>`; }
         else streakNote = `<div class="streak">👑 Boss ${S.idx} of ${N} down · ${Math.round(S.hp * 100)}% health for the next one</div>`;
       } else streakNote = `<div class="streak">Run over at boss <b>${S.idx + 1}</b> of ${N} · Best ${save.stats.bossBest || 0}/${N}</div>`;
+    }
+    if (kind === 'team') {
+      const T = this.ctx, bt = g.battle, pf = bt?.player, cf = bt?.fighters[1];
+      if (won) { T.fhp[T.fi] = 0; T.php[T.pi] = pf ? Math.max(0.05, pf.hp / pf.maxHp) : 1; T.fi++; }
+      else { T.php[T.pi] = 0; T.fhp[T.fi] = cf ? Math.max(0.05, cf.hp / cf.maxHp) : 1; T.pi++; }
+      T.over = T.fi >= 3 ? 'won' : T.pi >= 3 ? 'lost' : null;
+      if (T.over === 'won') save.stats.teamWins = (save.stats.teamWins || 0) + 1;
+      const rows = `<div class="team-vs">${this.teamRow(T.team, T.php, T.pi)}<b>vs</b>${this.teamRow(T.foes, T.fhp, T.fi)}</div>`;
+      streakNote = T.over === 'won' ? `<div class="streak">🤝 Team Battle won! ${rows}</div>`
+        : T.over === 'lost' ? `<div class="streak">Your team is out of critters. ${rows}</div>`
+        : `<div class="streak">${won ? `${cDef.name} is out! ` : `${pDef.name} is out! `}${rows}</div>`;
     }
     if (kind === 'daily' && won) { (save.daily ||= {})[this.ctx.d.key] = true; streakNote = '<div class="streak">📅 Daily Challenge cleared! Double XP</div>'; }
     const prog = save.critters[pDef.id];
@@ -880,6 +950,14 @@ export class Screens {
       if (more) b.appendChild(this.btn('Next Boss', 'primary', () => { g.endBattle(); playMusic('menu'); this.mode = 'select'; this.vs(); }));
       else if (!won) b.appendChild(this.btn('New Run', 'primary', () => { this.ctx = { kind: 'bossrush', idx: 0, hp: 1 }; g.endBattle(); playMusic('menu'); this.select(); }));
       b.appendChild(this.btn('Challenges', more || !won ? 'ghost' : 'primary', () => this.challenges()));
+    } else if (kind === 'team') {
+      const T = this.ctx;
+      if (!T.over) b.appendChild(this.btn(won ? 'Next Rival' : 'Send Next Critter', 'primary', () => {
+        this.sel = CRITTERS.findIndex((c) => c.id === T.team[T.pi]);
+        g.endBattle(); playMusic('menu'); this.mode = 'select'; this.vs();
+      }));
+      else b.appendChild(this.btn('New Team Battle', 'primary', () => { this.ctx = { kind: 'team' }; g.endBattle(); playMusic('menu'); this.select(); }));
+      b.appendChild(this.btn('Challenges', 'ghost', () => this.challenges()));
     } else if (kind === 'daily') {
       if (!won) b.appendChild(this.btn('Try Again', 'primary', () => g.startBattle(pDef, cDef, { ...opts, playerLevel: save.critters[pDef.id].level })));
       b.appendChild(this.btn('Challenges', won ? 'primary' : 'ghost', () => this.challenges()));
