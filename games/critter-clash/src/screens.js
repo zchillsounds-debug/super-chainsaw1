@@ -819,13 +819,23 @@ export class Screens {
   }
 
   badgeModal() {
+    const st = save.stats;
+    // [have, need] for badges that count something; locked ones show a little progress bar
+    const BADGE_PROG = {
+      ten: (s) => [st.wins || 0, 10], combo: (s) => [st.bestCombo || 0, 10], super: (s) => [st.supers || 0, 10], counter: (s) => [st.counters || 0, 5],
+      roster: (s) => [s.unlocked.length, CRITTERS.length], streak5: (s) => [st.bestStreak || 0, 5], streak10: (s) => [st.bestStreak || 0, 10],
+      snack: (s) => [st.fed || 0, 10], streak7: (s) => [st.bestDaily || 0, 7], tricks: (s) => [(st.hazardArenas || []).length, 6],
+      trials: (s) => [Object.values(s.trials || {}).reduce((a, n) => a + n, 0), 18], shiny: (s) => [(s.shinies || []).length, CRITTERS.length],
+      friend: (s) => [Math.max(0, ...Object.values(s.critters).map((c) => c.pets || 0)), 20],
+    };
     const d = document.createElement('div');
     d.className = 'modal-wrap';
     // earned badges first so new ones aren't buried among 30 locks
     const has = (b) => !!save.badges?.[b.id], list = [...BADGES.filter(has), ...BADGES.filter((b) => !has(b))];
     d.innerHTML = `<div class="modal badges-modal"><h2>Badges <small class="badge-count">${BADGES.filter(has).length}/${BADGES.length}</small></h2><div class="badge-grid">${list.map((b) => {
       const got = save.badges?.[b.id];
-      return `<div class="badge ${got ? 'got' : ''}"><i>${got ? b.icon : '🔒'}</i><b>${b.name}</b><small>${b.desc}</small></div>`;
+      const pr = !got && BADGE_PROG[b.id]?.(save);
+      return `<div class="badge ${got ? 'got' : ''}"><i>${got ? b.icon : '🔒'}</i><b>${b.name}</b><small>${b.desc}</small>${pr ? `<em class="badge-prog"><i style="width:${Math.min(100, (pr[0] / pr[1]) * 100)}%"></i><span>${Math.min(pr[0], pr[1])}/${pr[1]}</span></em>` : ''}</div>`;
     }).join('')}</div></div>`;
     d.querySelector('.modal').appendChild(this.btn('Close', 'primary', () => d.remove()));
     d.addEventListener('click', (e) => { if (e.target === d) d.remove(); });
