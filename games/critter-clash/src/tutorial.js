@@ -26,7 +26,8 @@ export class Tutorial {
 
   show(text) {
     this.el.innerHTML = `<span>${text}</span>`;
-    this.el.classList.remove('on'); void this.el.offsetWidth; this.el.classList.add('on');
+    this.el.classList.remove('on', 'dim', 'done'); void this.el.offsetWidth; this.el.classList.add('on');
+    this.shown = 0;
   }
 
   update(dt) {
@@ -35,6 +36,8 @@ export class Tutorial {
     const p = b.player;
     this.s.moved += Math.hypot(p.vx, p.vz) * dt * (p.state === 'run' ? 1 : 0);
     this.s.t += dt;
+    // after a few seconds the prompt fades back so it doesn't cover the fight
+    if (this.shown !== undefined && (this.shown += dt) > 3) this.el.classList.add('dim');
     // keep the CPU gentle while the lesson runs
     b.brain.diff = this.i < STEPS.length - 1 ? 0.02 : this.baseDiff ?? (this.baseDiff = 0.15);
     if (this.i < STEPS.length - 1) { b.cpu.ctl.attack = b.cpu.ctl.special = b.cpu.ctl.super = false; }
