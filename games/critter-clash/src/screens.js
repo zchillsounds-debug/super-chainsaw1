@@ -591,23 +591,35 @@ export class Screens {
       <small>Arena</small><div class="tp-arenas">${arenas.map((k) => `<button class="tp-ar" data-k="${k}">${k === 'random' ? '🎲 Random' : ARENA_NAME[k]}${HAZARDS[k] && save.settings.hazards !== false ? ' ⚠' : ''}</button>`).join('')}${train && save.settings.hazards !== false ? '<button class="tp-hz"></button>' : ''}</div>
       <div class="row"></div></div>`;
     let hz = this.trainHz ? '1' : '0';
+    // Quick Battle: one chip cycles through the match modifiers
+    const modKeys = ['', ...Object.keys(MODS).filter((k) => !MODS[k].hazard || save.settings.hazards !== false)];
+    let mod = modKeys.includes(this.quickMod) ? this.quickMod : '';
     const sync = () => {
       d.querySelectorAll('.tp-foe').forEach((b) => b.classList.toggle('on', b.dataset.id === foe));
       d.querySelectorAll('.tp-ar').forEach((b) => b.classList.toggle('on', b.dataset.k === arena));
       // one chip toggles hazard practice (only the ⚠ stadiums have any)
       d.querySelectorAll('.tp-hz').forEach((b) => { b.classList.toggle('on', hz === '1'); b.textContent = `⚠ Hazards: ${hz === '1' ? 'On' : 'Off'}`; });
+      d.querySelectorAll('.tp-mod').forEach((b) => { b.classList.toggle('on', !!mod); b.innerHTML = mod ? `${MODS[mod].icon}<span> ${MODS[mod].name}</span>` : '🎲<span> No modifier</span>'; });
     };
     d.querySelectorAll('.tp-hz').forEach((b) => b.addEventListener('click', () => { hz = hz === '1' ? '0' : '1'; sfx.ui('move'); sync(); }));
     d.querySelectorAll('.tp-foe').forEach((b) => b.addEventListener('click', () => { foe = b.dataset.id; sfx.ui('move'); sync(); }));
     d.querySelectorAll('.tp-ar').forEach((b) => b.addEventListener('click', () => { arena = b.dataset.k; sfx.ui('move'); sync(); }));
     sync();
     const row = d.querySelector('.row');
+    if (!train) { const mb = document.createElement('button'); mb.className = 'tp-mod'; mb.addEventListener('click', () => { mod = modKeys[(modKeys.indexOf(mod) + 1) % modKeys.length]; sfx.ui('move'); sync(); this.toast(mod ? `${MODS[mod].icon} ${MODS[mod].name}: ${MODS[mod].desc}` : 'No modifier'); }); row.appendChild(mb); }
+    sync();
     row.appendChild(this.btn('Back', 'ghost-dark', () => d.remove()));
     row.appendChild(this.btn(train ? 'PRACTICE!' : 'FIGHT!', 'primary', () => {
       d.remove();
       this[key + 'Foe'] = foe; this[key + 'Arena'] = arena;
       const c = foe === 'random' ? others[Math.floor(Math.random() * others.length)] : others.find((x) => x.id === foe);
-      if (!train) { this.quickPick = { c, arena: arena === 'random' ? pick(ARENA_KEYS) : arena }; this.vs(); return; }
+      if (!train) {
+        this.quickMod = mod;
+        // Stadium Mayhem on a random arena picks one that has hazards
+        const ar = arena !== 'random' ? arena : pick(MODS[mod]?.hazard ? ARENA_KEYS.filter((k) => HAZARDS[k]) : ARENA_KEYS);
+        this.quickPick = { c, arena: ar, mods: mod ? [mod] : [] };
+        this.vs(); return;
+      }
       this.mode = 'battle';
       playMusic('battle');
       this.trainHz = hz === '1';
@@ -930,8 +942,8 @@ export class Screens {
       this.quickPick = null;
       c = q?.c || others[Math.floor(Math.random() * others.length)];
       const pl = save.critters[p.id].level;
-      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: q?.arena || pick(ARENA_KEYS) };
-      label = `CPU · ${DIFFS[this.diff].name}`;
+      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: q?.arena || pick(ARENA_KEYS), mods: q?.mods || [] };
+      label = `CPU · ${DIFFS[this.diff].name}${opts.mods.length ? ` · ${MODS[opts.mods[0]].icon} ${MODS[opts.mods[0]].name}` : ""}`;
     }
     c = withGear(c, opts.cpuLevel); // rivals grow with their level too (Lv 7 / Lv 14 forms)
     this.root.innerHTML = `
