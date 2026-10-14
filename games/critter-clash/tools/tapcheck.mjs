@@ -11,6 +11,7 @@ const STEPS = [
   ['settings', "S.title(); document.querySelector('.gear').click()"],
   ['cups', 'S.cups()'],
   ['select', "S.ctx={kind:'quick'}; S.select()"],
+  ['matchsetup', "S.ctx={kind:'quick'}; S.select(); S.matchSheet(false)"],
   ['challenges', 'S.challenges()'],
   ['training', 'S.training()'],
   ['quicksetup', "S.ctx={kind:'quick'}; S.select(); S.matchSheet(false)"],
