@@ -420,6 +420,28 @@ export class Arena {
       this.cracks = glow;
     }
 
+    // daytime arenas: soft cloud shadows drifting slowly across the field
+    if (key === 'meadow' || key === 'beach' || key === 'sky') {
+      const shTex = canvasTex(512, 512, (c, w, h) => {
+        for (let i = 0; i < 9; i++) {
+          const x = Math.random() * w, y = Math.random() * h;
+          for (let k = 0; k < 5; k++) {
+            // each cloud is a cluster of soft blobs, drawn wrapped so the texture tiles
+            const bx = x + (Math.random() - 0.5) * 120, by = y + (Math.random() - 0.5) * 60, r = 40 + Math.random() * 50;
+            for (const [ox, oy] of [[0, 0], [w, 0], [-w, 0], [0, h], [0, -h]]) {
+              const g = c.createRadialGradient(bx + ox, by + oy, 0, bx + ox, by + oy, r);
+              g.addColorStop(0, 'rgba(20,30,70,0.5)'); g.addColorStop(1, 'rgba(20,30,70,0)');
+              c.fillStyle = g; c.fillRect(bx + ox - r, by + oy - r, r * 2, r * 2);
+            }
+          }
+        }
+      }, { repeat: [1, 1], srgb: false });
+      const cs = new THREE.Mesh(new THREE.CircleGeometry(ARENA_R + 1.4, 72), new THREE.MeshBasicMaterial({ map: shTex, transparent: true, opacity: 0.6, depthWrite: false, color: 0xffffff }));
+      cs.rotation.x = -Math.PI / 2; cs.position.y = 0.02;
+      G.add(cs);
+      this.cloudShade = shTex;
+    }
+
     // dirt ring between field and wall
     const ring = new THREE.Mesh(new THREE.RingGeometry(ARENA_R + 0.5, ARENA_R + 1.4, 72), toon(A.floor === 'neon' ? 0x3a3060 : A.floor === 'moss' ? 0x9a7a58 : 0xd9b07a, { env: true, rim: 0 }));
     ring.rotation.x = -Math.PI / 2; ring.position.y = 0.005; ring.receiveShadow = true;
@@ -1116,6 +1138,7 @@ export class Arena {
       this.flies.material.opacity = 0.75 + Math.sin(t * 3) * 0.2;
     }
     if (this.cracks) this.cracks.material.opacity = 0.75 + Math.sin(t * 1.7) * 0.2;
+    if (this.cloudShade) { this.cloudShade.offset.x = t * 0.006; this.cloudShade.offset.y = t * 0.0025; }
     this.excite = Math.max(0.15, this.excite - dt * 0.25);
     this.updateCrowd(t);
     for (const fl of this.flags) {

@@ -374,6 +374,7 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 141. In Camp, Snoozlo heads for the nap spot by the tent.
 142. A rival sung to sleep by Lullaby slumps with closed eyes and z's instead of dizzy stars (`f.asleep`).
 143. How to Play tip about the nap counter. Perf check: 211–216 draw calls, ≤530k triangles (unchanged).
+144. Drifting cloud shadows over the field in Meadow, Seashell Bay and Cloudtop (`this.cloudShade`, one draw call).
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
