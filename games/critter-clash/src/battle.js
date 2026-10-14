@@ -1325,7 +1325,8 @@ export class Battle {
     f.y = Math.max(0, f.y);
     f.setState('idle');
     f.critter.emote('open', 'grin', 0.6);
-    this.superUser = null;
+    // only clear our own super: the rival may have started one this same frame (its cut-in is still playing)
+    if (this.superUser === f) this.superUser = null;
   }
 
   // -------- KO & rounds --------
@@ -1393,6 +1394,7 @@ export class Battle {
     const dt = Math.min(rawDt, 1 / 20) * (this.phase === 'fight' ? this.speedMult : 1);
     this.phaseT += dt;
     this.clock = (this.clock || 0) + dt;
+    if (this.cutinT > 0 && !this.superUser) this.cutinT = 0;
     if (this.cutinT > 0) {
       this.cutinT -= dt;
       const f = this.superUser;
