@@ -19,7 +19,7 @@ export const SPECIALS = {
   gale:    { cd: 3.8, range: [3, 9] },
   iceslide:{ cd: 4.8, range: [2, 8] },
   wisps:   { cd: 4.0, range: [3, 9] },
-  seedspray: { cd: 3.0, range: [1.5, 5.5] },
+  seedspray: { cd: 2.7, range: [1.5, 5.8] },
   fuzzball:  { cd: 4.0, range: [3, 9] },
   rocktoss:  { cd: 4.0, range: [2.5, 8] },
   swoop:     { cd: 3.4, range: [2.5, 8] },
@@ -597,7 +597,7 @@ export class Fighter {
         this.specFired = true;
         for (let k = -2; k <= 2; k++) {
           const a = this.face + k * 0.2;
-          B.spawnProjectile(this, { kind: 'seed', x: this.x + Math.sin(a) * 0.55, z: this.z + Math.cos(a) * 0.55, y: 0.6, vx: Math.sin(a) * 14, vz: Math.cos(a) * 14, r: 0.28, life: 0.5,
+          B.spawnProjectile(this, { kind: 'seed', x: this.x + Math.sin(a) * 0.55, z: this.z + Math.cos(a) * 0.55, y: 0.6, vx: Math.sin(a) * 14, vz: Math.cos(a) * 14, r: 0.28, life: 0.56,
             hit: { dmg: 27 * this.power, kb: 2.4, lift: 0, stun: 0.26, type: this.type, dizzy: 7 } });
         }
         sfx.leaf(); sfx.whoosh?.(0.4);
