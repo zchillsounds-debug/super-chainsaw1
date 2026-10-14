@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 158)
+# Critter Clash: Handoff (after Round 161)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -233,6 +233,7 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - **Growing scene** `Screens.growUp(id, lv, done)`: "What? X is growing!", flickering white silhouettes speeding up (`sfx.shimmer`), flash, then a card with the new name, species, path, moves and boosts (`sfx.grown`, heavy buzz). Tap to hurry; Android back hurries, then closes. On the results screen it swaps the winner's model in place (`Fighter.regrow`) and updates the card portrait. If the player taps past results first, `pendingGrow` plays it on the next calm menu (`Screens.update`). In Camp, feeding into a new stage plays it and rebuilds Camp.
 - Cameras (intro close-up, super cut-in, results) and `headPos`/`chestPos`/shield scale with `def.size`. Portrait cache key includes the stage.
 - Critterdex **Growth** row: three stage chips (unreached forms are dark silhouettes named ???; tap a reached one to view it). Info card shows "Stage N" and "🌱 Grows at Lv X". Pecan news `grow` (names critters that already grew), How to Play line. Rematch rebuilds the def so it uses the grown form.
+- Static growth parts are built into two groups (`SK` on the skull, `TO` on the torso) and `flatten()`ed into one mesh per material; animated bits (flames, pearl glow, `spinners`) stay separate. Add new static parts to `SK`/`TO`, not straight to `cr.skull`/`cr.torso`.
 - Test hooks: `?play&p=..&pl=14&c=..&cl=7` (levels pick forms), `window.__grow(def, lv)`, `GROW=7 node tools/cupflow.mjs 740x360 0` (partner grows mid-cup; prints "growing scene showed"), tapcheck opens `grow`.
 
 ## Rounds done
@@ -398,6 +399,9 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 156. Pricklepuff line (Pecan's final test is Thornhulk).
 157. Emberfly and Lilypop lines.
 158. Lines for the last ten critters.
+159. Own palettes for the ten scaled lines.
+160. Growing Up (Lv 7) and Fully Grown (Lv 14) badges.
+161. Growth parts merged by material: a Thornhulk vs Jackalorn battle went from 430 to 243 draw calls (base game ~240).
 L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (smaller, softer, per-kind `cap` on point size).
 
 ## Critique backlog (known issues)
@@ -414,7 +418,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Growth (session 12) is untested on a real phone; ask the user how the growing scene and the big forms feel. Balance was not re-measured with grown forms (both sides grow by level in cups, so it's symmetric, but hand-built bodies are bigger targets visually only; hit ranges are unchanged).
 - The 10 `bodyMul` lines have new palettes and parts but share proportions; a signature part each would make them read as new creatures as strongly as the first nine.
 ## Suggested next rounds
-- Session 12 is done. Next, if the user asks: polish the 10 `bodyMul` growth lines, ask for playtest feedback on growing, carry on numbering from R159.
+- Session 12 is done. Next, if the user asks: polish the 10 `bodyMul` growth lines, ask for playtest feedback on growing, carry on numbering from R162.
 - Session 11 is done. If the user asks for more:
   1. Ask them whether Snoozlo's counter feels fair on a phone, and whether the R135/R145 APKs feel smoother over a long session (the arena texture leak fix).
   2. Run a 2-rep full robin (`tools/robin.mjs 2`, about 35 minutes for 19 critters) to get a less noisy picture; 1-rep runs swing ±15%.
