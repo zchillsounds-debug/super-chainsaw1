@@ -286,10 +286,10 @@ export const FORMS = {
     forms: [
       { name: 'Drillmole', species: 'Drill Mole', size: 1.12, voice: 0.9, bodyMul: { ...GROW2, w: 1.2, chubby: 1.05 },
         blurb: 'Upgraded its hard hat and its claws. Tunnels through rock like it\'s pudding.',
-        colors: { body: 0x8e6e5e, rock: 0x6a6070 }, parts: { stonearmor: 0.6, brows: 0.5 }, moves: { special: 'Drill Ambush', super: 'Mole Stampede' } },
+        colors: { body: 0x8e6e5e, rock: 0x6a6070 }, parts: { stonearmor: 0.6, brows: 0.5, drill: 0.7, claws: 0.8 }, moves: { special: 'Drill Ambush', super: 'Mole Stampede' } },
       { name: 'Quarrymole', species: 'Gem Quarry Mole', size: 1.3, voice: 0.7, bodyMul: { ...GROW3, w: 1.38, chubby: 1.08, limb: 1.75 },
         blurb: 'Gems from the deepest mines grow along its back. It knows the underground like its own pocket.',
-        colors: { body: 0x7a5e50, dark: 0x3a2820, rock: 0x5a5262, crystal: 0x9ae4ff }, parts: { stonearmor: 1.1, crystalridge: 0.9, brows: 0.8, tusks: 0.5 }, moves: { special: 'Quarry Ambush', super: 'Gem Rush' } },
+        colors: { body: 0x7a5e50, dark: 0x3a2820, rock: 0x5a5262, crystal: 0x9ae4ff }, parts: { stonearmor: 1.1, crystalridge: 0.9, brows: 0.8, tusks: 0.5, drill: 1, claws: 1.15 }, moves: { special: 'Quarry Ambush', super: 'Gem Rush' } },
     ],
   },
   ripples: {
@@ -330,10 +330,10 @@ export const FORMS = {
     forms: [
       { name: 'Snoozalot', species: 'Drowsy Koala', size: 1.12, voice: 0.9, bodyMul: { ...GROW2, w: 1.2, chubby: 1.06 },
         blurb: 'Now big enough to nap anywhere it likes. Most of the time that\'s on its opponent.',
-        colors: { body: 0x909cb2 }, parts: { leafmane: 0.8 }, moves: { special: 'Deep Nap', super: 'Lullaby Slam' } },
+        colors: { body: 0x909cb2, cap: 0x6a8ad8 }, parts: { leafmane: 0.8, nightcap: 0.85 }, moves: { special: 'Deep Nap', super: 'Lullaby Slam' } },
       { name: 'Slumberking', species: 'Dream Koala', size: 1.3, voice: 0.7, bodyMul: { ...GROW3, w: 1.38, chubby: 1.1, limb: 1.75 },
         blurb: 'Dreams drift around it like little moons. Waking it up is a very, very bad idea.',
-        colors: { body: 0x828aa6, belly: 0xf6f2ea, orb: 0xffc8e8, petal: 0xd8c8ff }, parts: { leafmane: 1.15, orbs: 0.7, lotus: 0.7 }, moves: { special: 'Royal Slumber', super: 'Dreamquake' } },
+        colors: { body: 0x828aa6, belly: 0xf6f2ea, orb: 0xffc8e8, petal: 0xd8c8ff, cap: 0x7a4ec8, cap2: 0xffe8f6 }, parts: { leafmane: 1.15, orbs: 0.7, nightcap: 1, capcrown: 1 }, moves: { special: 'Royal Slumber', super: 'Dreamquake' } },
     ],
   },
   pebblepup: {
@@ -750,6 +750,79 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       arm.add(br);
     }
   }
+  // a drill bit on top of the hard hat (spun in Critter.update): steel cone with a spiral ridge on a collar
+  if (P.drill) {
+    const s = P.drill * headR, steel = mat('steel', C.steel ?? 0xc8d0dc, { rim: 1 }), collarM = mat('collar', C.collar ?? 0x5a5a6a);
+    const H = 0.95 * s, R = 0.28 * s, turns = 3.2, pts = [];
+    for (let i = 0; i <= 48; i++) { const t = i / 48, a = t * turns * Math.PI * 2, r = R * (1 - t) * 1.04; pts.push(v(Math.cos(a) * r, t * H, Math.sin(a) * r)); }
+    const cone = new THREE.ConeGeometry(R, H, 18, 1, true); cone.translate(0, H / 2, 0);
+    const bit = mergeGeometries([cone, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 64, 0.035 * s, 5)]);
+    const spin = new THREE.Group();
+    spin.add(inked(bit, steel, OL * 0.5));
+    spin.userData.spin = 9; spin.userData.axis = 'y';
+    const collar = inked(new THREE.CylinderGeometry(R * 1.05, R * 1.25, 0.16 * s, 16), collarM, OL * 0.5);
+    collar.position.y = -0.04 * s;
+    const g = new THREE.Group();
+    g.add(collar, spin); spin.position.y = 0.04 * s;
+    g.position.set(0, headR * 1.2, -headR * 0.06); g.rotation.x = 0.3;
+    cr.skull.add(g);
+    (cr.spinners ||= []).push(spin);
+  }
+
+  // big digging claws on the paws
+  if (P.claws) {
+    const s = P.claws, cm = mat('claw', C.claw ?? 0xfff2dc);
+    for (const arm of cr.arms) {
+      const parts = [];
+      for (let k = -1; k <= 1; k++) {
+        const c = new THREE.ConeGeometry(0.045 * s, 0.22 * s, 7); c.translate(0, -0.11 * s, 0);
+        c.rotateX(0.5); c.rotateZ(k * 0.32);
+        c.translate(k * 0.05 * s, -B.armLen - 0.06, 0.05);
+        parts.push(c);
+      }
+      arm.add(inked(mergeGeometries(parts), cm, OL * 0.4));
+    }
+  }
+  // a floppy striped nightcap drooping to one side, with a pompom (and a little gold crown round the brim)
+  if (P.nightcap) {
+    const s = P.nightcap * headR, cap = new THREE.Group();
+    const pts = [v(0, 0, 0), v(0.02, 0.32, -0.04), v(0.12, 0.6, -0.1), v(0.32, 0.78, -0.12), v(0.56, 0.74, -0.08), v(0.7, 0.52, -0.02), v(0.74, 0.3, 0.02)].map((q) => q.multiplyScalar(s));
+    const curve = new THREE.CatmullRomCurve3(pts), TS = 48, RS = 14, r0 = 0.62 * s;
+    // one tube, tapered ring by ring, with stripes painted in as vertex colours
+    const geo = new THREE.TubeGeometry(curve, TS, 1, RS, false), pos = geo.attributes.position, cols = [];
+    const c1 = new THREE.Color(C.cap ?? 0x6a78d8), c2 = new THREE.Color(C.cap2 ?? 0xf4f0ff);
+    for (let i = 0; i < pos.count; i++) {
+      const u = Math.floor(i / (RS + 1)) / TS, c = curve.getPointAt(u), r = r0 * (1 - u) ** 1.1 + 0.035 * s;
+      pos.setXYZ(i, c.x + (pos.getX(i) - c.x) * r, c.y + (pos.getY(i) - c.y) * r, c.z + (pos.getZ(i) - c.z) * r);
+      const col = Math.floor(u * 7) % 2 ? c2 : c1; cols.push(col.r, col.g, col.b);
+    }
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+    geo.computeVertexNormals();
+    cap.add(inked(geo, mat('capv', 0xffffff, { vertexColors: true }), OL * 0.5));
+    const m2 = mat('cap2', C.cap2 ?? 0xf4f0ff);
+    const pom = inked(sphere(0.15 * s), m2, OL * 0.5);
+    pom.position.copy(curve.getPoint(1));
+    const brim = inked(new THREE.TorusGeometry(r0 * 0.98, 0.1 * s, 8, 28), m2, OL * 0.5);
+    brim.rotation.x = Math.PI / 2;
+    cap.add(pom, brim);
+    if (P.capcrown) {
+      const gold = mat('gold', 0xffc93a, { rim: 0.9 }), parts = [];
+      for (let k = 0; k < 7; k++) {
+        const a = (k / 7) * Math.PI * 2 + 0.2, c = new THREE.ConeGeometry(0.09 * s, 0.34 * s * P.capcrown, 4);
+        c.translate(Math.sin(a) * r0 * 1.0, 0.2 * s, Math.cos(a) * r0 * 1.0);
+        parts.push(c.toNonIndexed());
+      }
+      const band = new THREE.CylinderGeometry(r0 * 1.02, r0 * 1.05, 0.15 * s, 24, 1, true); band.translate(0, 0.08 * s, 0);
+      parts.push(band.toNonIndexed());
+      cap.add(inked(mergeGeometries(parts), gold, OL * 0.5));
+      const gem = new THREE.Mesh(sphere(0.07 * s), new THREE.MeshBasicMaterial({ color: C.orb ?? 0xff8ad8 }));
+      gem.position.set(0, 0.1 * s, r0 * 1.06);
+      cap.add(gem);
+    }
+    cap.position.set(0, headR * 0.7, -headR * 0.08); cap.rotation.set(-0.12, 0, 0.12);
+    SK.add(cap);
+  }
+
   flatten(SK); flatten(TO);
 }
 
@@ -762,7 +835,7 @@ function flatten(g) {
     let b = buckets.get(o.material);
     if (!b) buckets.set(o.material, b = { hull: !!o.userData.hull, geos: [] });
     const geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
-    for (const a of Object.keys(geo.attributes)) if (a !== 'position' && a !== 'normal' && a !== 'uv') geo.deleteAttribute(a);
+    for (const a of Object.keys(geo.attributes)) if (a !== 'position' && a !== 'normal' && a !== 'uv' && !(a === 'color' && o.material.vertexColors)) geo.deleteAttribute(a);
     if (!geo.attributes.uv) geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(geo.attributes.position.count * 2), 2));
     if (!geo.attributes.normal) geo.computeVertexNormals();
     geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld));
