@@ -964,6 +964,7 @@ export class Screens {
         this.sel = CRITTERS.findIndex((c) => c.id === T.team[T.pi]);
         g.endBattle(); playMusic('menu'); this.mode = 'select'; this.vs();
       }));
+      else if (T.over === 'won') b.appendChild(this.btn('Team Trophy', 'primary', () => this.teamTrophy()));
       else b.appendChild(this.btn('New Team Battle', 'primary', () => { this.ctx = { kind: 'team' }; g.endBattle(); playMusic('menu'); this.select(); }));
       b.appendChild(this.btn('Challenges', 'ghost', () => this.challenges()));
     } else if (kind === 'daily') {
@@ -1042,6 +1043,31 @@ export class Screens {
     this.backFn = next;
     sfx.cheer(1.5);
     if (cup.outro) setTimeout(() => { if (this.mode === 'trophy') this.profTalk(cup.outro); }, 1400);
+  }
+
+  // ---------- Team Battle won: the whole trio celebrates together ----------
+  teamTrophy() {
+    const g = this.game, T = this.ctx;
+    g.endBattle();
+    this.mode = 'teamwin';
+    g.setShowcase(T.team.map((id) => skinOf(byId(id))), 'line');
+    g.showcase.forEach((c) => (c.cheer = 99));
+    playMusic('victory');
+    const alive = T.php.filter((h) => h > 0).length;
+    this.root.innerHTML = `
+      <div class="trophy-screen" style="--tc:#ffb03a">
+        <div class="big-trophy">🤝</div>
+        <h1>Team Victory!</h1>
+        <p>${T.team.map((id) => byId(id).name).join(', ')}: ${alive === 3 ? 'a flawless sweep, nobody even fainted!' : alive === 2 ? 'two still standing at the end.' : 'a last-critter-standing comeback!'}</p>
+        <div class="team-vs">${this.teamRow(T.team, T.php, -1)}</div>
+        <div class="res-btns"></div>
+      </div>`;
+    const btns = this.root.querySelector('.res-btns');
+    const again = () => { this.ctx = { kind: 'team' }; playMusic('menu'); this.select(); };
+    btns.appendChild(this.btn('New Team Battle', 'primary big', again));
+    btns.appendChild(this.btn('Challenges', 'ghost', () => this.challenges()));
+    this.backFn = () => this.challenges();
+    sfx.cheer(1.5);
   }
 
   // ---------- every cup cleared: a parade of the whole team and the credits ----------
@@ -1142,6 +1168,14 @@ export class Screens {
       cam.position.set(Math.sin(a) * D, 2.2, Math.cos(a) * D);
       cam.lookAt(0, cam.aspect < 1 ? 1.6 : 1.1, 0);
       cam.fov = Math.min(78, 40 * Math.max(1, 1.6 / cam.aspect));
+      cam.updateProjectionMatrix();
+    } else if (this.mode === 'teamwin') {
+      // pulled back so the whole trio fits above the banner
+      const portrait = cam.aspect < 1;
+      this.game.showcase.forEach((c, k) => (c.root.rotation.y = Math.sin(this.t * 0.8 + k) * 0.25));
+      cam.position.set(0, 1.9, portrait ? 12 : 6.6);
+      cam.lookAt(0, portrait ? -0.4 : 0.45, 0);
+      cam.fov = Math.min(70, 40 * Math.max(1, 1.4 / cam.aspect));
       cam.updateProjectionMatrix();
     } else if (['select', 'vs', 'ladder', 'trophy', 'cups', 'dex'].includes(this.mode)) {
       const c = this.game.showcase[0];
