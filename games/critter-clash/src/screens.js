@@ -150,6 +150,12 @@ export class Screens {
         "Careful out there, {name}! The stadiums have learned new tricks: fissures in the Magma Crater, ice slicks on Frostpeak, rogue waves at Seashell Bay, crosswinds over Cloudtop and spore clouds in the grove.",
         "Neon Rooftop's laser sweeps the whole floor: guard, or roll right through it! Test yourself in the new Stadium Trials, and watch out, some days the Daily Challenge is a 3-on-3!",
       ]), 600);
+    } else if (!g.autoplay && (save.stats.bestStreak || 0) >= 1 && !save.news?.includes('gate')) {
+      (save.news ||= []).push('gate'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, word from the Survival gauntlet: every fifth challenger is now a shiny ⭐ Gatekeeper, a little stronger than the rest.",
+        "Knock one down and you'll get berries and a full heal for the road. And the Boss Rush pays out a whole berry basket now!",
+      ]), 600);
     } else if (!g.autoplay && save.cups.thunder && !save.news?.includes('grove')) {
       (save.news ||= []).push('grove'); persist();
       setTimeout(() => this.mode === 'title' && this.profTalk([
