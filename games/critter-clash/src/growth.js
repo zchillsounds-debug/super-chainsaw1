@@ -416,6 +416,9 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
   if (!P) return;
   const B = def.body, C = def.colors, headR = B.headR;
   const mat = (k, col, o = {}) => (cr.mats['g_' + k] ||= toon(col, { uniforms: U, ...o }));
+  // static parts collect here and are merged by material at the end (keeps draw calls down)
+  const SK = new THREE.Group(), TO = new THREE.Group();
+  cr.skull.add(SK); cr.torso.add(TO);
 
   // a crest of flames from the brow back over the head
   if (P.flamecrest) {
@@ -430,7 +433,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       outer.userData.base = 0.5 * big; inner.userData.base = 0.31 * big; inner.position.set(0, 0.02, 0.03);
       g.add(outer, inner);
       cr.flames.push(outer, inner);
-      cr.skull.add(g);
+      cr.skull.add(g); // animated flames stay separate
     }
   }
 
@@ -442,7 +445,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       const g = mergeGeometries([seg(a, b, headR * 0.12 * s, headR * 0.08 * s), seg(b, c, headR * 0.08 * s, headR * 0.012)]);
       const h = inked(g, hm, OL * 0.6);
       h.position.set(x * headR * 0.42, headR * 0.6, headR * 0.3);
-      cr.skull.add(h);
+      SK.add(h);
     }
   }
 
@@ -466,17 +469,17 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     };
     for (const s of [-1, 1]) {
       const sh = chunk(B.w * 0.3, s * B.w * B.chubby * 0.46, B.h * 0.8, -B.w * 0.02, s + 2);
-      cr.torso.add(sh);
+      TO.add(sh);
     }
-    cr.torso.add(chunk(B.w * 0.36, 0, B.h * 0.6, -B.w * 0.42, 5));
-    cr.torso.add(chunk(B.w * 0.26, 0, B.h * 0.28, -B.w * 0.44, 9));
+    TO.add(chunk(B.w * 0.36, 0, B.h * 0.6, -B.w * 0.42, 5));
+    TO.add(chunk(B.w * 0.26, 0, B.h * 0.28, -B.w * 0.44, 9));
     // glowing seams across the belly armour
     for (const s of [-1, 1]) {
       const seam = new THREE.Mesh(new THREE.TorusGeometry(B.w * 0.5, 0.012, 6, 24, 0.9), lava);
       seam.position.set(0, B.h * (s > 0 ? 0.5 : 0.36), 0);
       seam.rotation.set(Math.PI / 2 + 0.1, 0, Math.PI / 2 - 0.45);
       seam.scale.set(B.chubby * 1.02, 1.02, 1);
-      cr.torso.add(seam);
+      TO.add(seam);
     }
   }
 
@@ -488,7 +491,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       const b = inked(new THREE.CapsuleGeometry(headR * 0.05 * (0.7 + s * 0.3), headR * 0.26 * (0.8 + s * 0.2), 4, 8), bm, OL * 0.4);
       b.position.set(Math.sin(yaw) * Math.cos(pit) * r, Math.sin(pit) * r, Math.cos(yaw) * Math.cos(pit) * r);
       b.rotation.set(0, yaw, Math.PI / 2 + x * (0.25 + s * 0.15), 'YXZ');
-      cr.skull.add(b);
+      SK.add(b);
     }
   }
 
@@ -500,7 +503,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       const t = inked(new THREE.ConeGeometry(headR * 0.06 * s, headR * 0.2 * s, 8), tm, OL * 0.4);
       t.position.set(Math.sin(yaw) * Math.cos(pit) * r, Math.sin(pit) * r + headR * 0.05 * s, Math.cos(yaw) * Math.cos(pit) * r);
       t.rotation.set(0.3, 0, -x * 0.15);
-      cr.skull.add(t);
+      SK.add(t);
     }
   }
 
@@ -523,7 +526,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     g.add(o, m);
     g.position.set(0, top, -B.w * 0.3);
     g.rotation.x = 0.12; // lean the lower end out over the bulge of the body
-    cr.torso.add(g);
+    TO.add(g);
     cr.fin = g;
   }
 
@@ -534,7 +537,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       const c = new THREE.CatmullRomCurve3([v(0, 0, 0), v(x * 0.3, 0.02, 0.1), v(x * 0.62, -0.06, 0.06), v(x * 0.85, -0.26, -0.04), v(x * 0.9, -0.48, -0.12)].map((p) => p.multiplyScalar(headR * s)));
       const w = inked(new THREE.TubeGeometry(c, 16, headR * 0.03, 6), wm, OL * 0.4);
       w.position.set(x * headR * 0.42, -headR * 0.18, headR * 0.82);
-      cr.skull.add(w);
+      SK.add(w);
       cr.whiskers = (cr.whiskers || []).concat(w);
     }
   }
@@ -560,7 +563,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       const lf = inked(leafGeo().scale(0.32 * s, 0.32 * s, 0.4 * s), k % 2 ? cr.mats.accent : cr.mats.dark, OL * 0.5);
       lf.position.set(Math.sin(a) * B.w * 0.4, B.h * 0.84, Math.cos(a) * B.w * 0.34);
       lf.rotation.set(-0.35, a, 0, 'YXZ'); // flared up and out like a ruff
-      cr.torso.add(lf);
+      TO.add(lf);
     }
   }
 
@@ -593,7 +596,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
         }
       }
       g.position.set(x * headR * 0.22, headR * 0.82, -headR * 0.18);
-      cr.skull.add(g);
+      SK.add(g);
     }
   }
 
@@ -608,7 +611,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       b.rotation.y = Math.PI / 2; // zigzag face side-on, so it reads from the sides and back
       b.scale.setScalar(s * (1.0 - Math.abs(k - 3) * 0.1));
       g.add(b);
-      cr.skull.add(g);
+      SK.add(g);
     }
   }
 
@@ -618,10 +621,10 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     for (const [x, y, z, r] of [[0, 0, 0, 0.2], [0.17, -0.03, 0.02, 0.15], [-0.17, -0.03, 0.02, 0.15], [0.07, 0.08, -0.05, 0.14], [-0.08, 0.06, 0.07, 0.13]]) { const g = sphere(r * headR * 1.6 * s); g.translate(x * headR * 1.6 * s, y * headR * 1.6 * s, z * headR * 1.6 * s); parts.push(g); }
     const cl = inked(mergeGeometries(parts), cm, OL * 0.6);
     cl.position.set(-headR * 0.1, headR * 1.08, -headR * 0.1);
-    cr.skull.add(cl);
+    SK.add(cl);
     const bolt = new THREE.Mesh(boltGeo(), new THREE.MeshBasicMaterial({ color: C.bolt ?? 0x7af0ff }));
     bolt.scale.setScalar(0.5 * s); bolt.position.set(headR * 0.28, headR * 0.92, headR * 0.05); bolt.rotation.z = 2.6;
-    cr.skull.add(bolt);
+    SK.add(bolt);
   }
 
   // flowers blooming among the spines on the back
@@ -636,7 +639,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       const c = new THREE.Mesh(sphere(0.035 * s), cm); c.position.y = 0.015 * s; fl.add(c);
       fl.quaternion.setFromUnitVectors(UP, d);
       fl.position.set(d.x * B.w * B.chubby * 0.55, B.h * 0.48 + d.y * B.h * 0.55, d.z * B.w * 0.55);
-      cr.torso.add(fl);
+      TO.add(fl);
     }
   }
 
@@ -655,6 +658,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     g.userData.spin = 1.4; g.userData.axis = 'y';
     cr.torso.add(g);
     (cr.spinners ||= []).push(g);
+    flatten(g);
   }
 
   // a lotus flower crown: two rings of pointed petals
@@ -671,7 +675,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     }
     const c = new THREE.Mesh(sphere(headR * 0.1 * s), mat('pollen', 0xffe066)); c.position.y = headR * 0.06 * s; g.add(c);
     g.position.set(0, headR * 0.92, -headR * 0.05);
-    cr.skull.add(g);
+    SK.add(g);
   }
 
   // long feather plumes sweeping back from the brow
@@ -683,7 +687,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       g.position.set(x * headR, headR * 0.8, headR * 0.15);
       g.rotation.set(-2.3, 0, rz); // tip up and back over the crown
       g.add(f);
-      cr.skull.add(g);
+      SK.add(g);
     }
   }
 
@@ -700,6 +704,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       g.userData.spin = k ? -2.2 : 3;
       cr.torso.add(g);
       (cr.spinners ||= []).push(g);
+      flatten(g);
     }
   }
 
@@ -718,7 +723,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
         parts.push(g);
       }
     }
-    cr.torso.add(inked(mergeGeometries(parts), cm, OL * 0.6));
+    TO.add(inked(mergeGeometries(parts), cm, OL * 0.6));
     const hp = [];
     for (const [x, h] of [[0, 0.42], [-0.28, 0.28], [0.28, 0.28]]) {
       const g = gem(headR * 0.1 * s, headR * h * s);
@@ -726,7 +731,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       g.translate(x * headR, headR * 0.82, -headR * 0.1);
       hp.push(g);
     }
-    cr.skull.add(inked(mergeGeometries(hp), cm, OL * 0.6));
+    SK.add(inked(mergeGeometries(hp), cm, OL * 0.6));
   }
 
   // stone armour: shoulder slabs and heavy bracers on the paws
@@ -737,7 +742,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       const sh = inked(slab(B.w * 0.26 * s), rm, OL * 0.7);
       sh.position.set(x * B.w * B.chubby * 0.5, B.h * 0.9, 0);
       sh.rotation.set(0.2, x * 0.4, x * -0.35);
-      cr.torso.add(sh);
+      TO.add(sh);
     }
     for (const arm of cr.arms) {
       const br = inked(new THREE.CylinderGeometry(0.11 * s, 0.13 * s, B.armLen * 0.55, 7), rm, OL * 0.6);
@@ -745,4 +750,27 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       arm.add(br);
     }
   }
+  flatten(SK); flatten(TO);
+}
+
+// merge every mesh under g into one mesh per material, baked into g's local space
+function flatten(g) {
+  g.updateMatrixWorld(true);
+  const inv = g.matrixWorld.clone().invert(), buckets = new Map();
+  g.traverse((o) => {
+    if (!o.isMesh) return;
+    let b = buckets.get(o.material);
+    if (!b) buckets.set(o.material, b = { hull: !!o.userData.hull, geos: [] });
+    const geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+    for (const a of Object.keys(geo.attributes)) if (a !== 'position' && a !== 'normal' && a !== 'uv') geo.deleteAttribute(a);
+    if (!geo.attributes.uv) geo.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(geo.attributes.position.count * 2), 2));
+    if (!geo.attributes.normal) geo.computeVertexNormals();
+    geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld));
+    b.geos.push(geo);
+  });
+  let merged;
+  try { merged = [...buckets].map(([m, b]) => { const mesh = new THREE.Mesh(mergeGeometries(b.geos), m); mesh.userData.hull = b.hull; mesh.castShadow = !b.hull && !m.transparent; return mesh; }); } catch (e) { return; }
+  if (!merged.length || merged.some((m) => !m.geometry)) return;
+  for (const c of [...g.children]) g.remove(c);
+  g.add(...merged);
 }
