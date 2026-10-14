@@ -31,8 +31,10 @@ for (let step = 0; step < 200; step++) {
     if (r === 'done') fight++;
     await pg.waitForTimeout(300); continue;
   }
+  if (m === 'teamwin') { ok = true; console.log('team trophy screen buttons:', (await pg.locator('button:visible').allTextContents()).join(' | ')); break; }
   if (await tap('button:visible', /Team Trophy/)) continue; // a won team battle goes through the Team Victory screen first
   if (await tap('button:visible', /New Team Battle/)) { ok = true; break; }
+  if (await tap('button:visible', /Team Trophy/)) continue;
   if (await tap('.prof-wrap')) continue;
   if (await tap('.modal-wrap:not(.train-pick) button.btn')) continue;
   if (await tap('.team-pick button', /FIGHT/)) continue;
