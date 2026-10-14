@@ -317,12 +317,12 @@ export const FORMS = {
   squeakwing: {
     path: 'Sky',
     forms: [
-      { name: 'Shriekwing', species: 'Orchard Bat', size: 1.1, voice: 1.1, bodyMul: GROW2,
+      { name: 'Shriekwing', species: 'Orchard Bat', size: 1.1, voice: 1.1, earScale: 1.18, bodyMul: GROW2,
         blurb: 'Bigger wings, bigger ears, much bigger squeak. The apples fall off the trees by themselves now.',
-        colors: { body: 0x2a6e80, wing: 0x1a4e5e, horn: 0xfff2d8 }, parts: { horns: 0.45, brows: 0.45 }, moves: { special: 'Sonic Shriek', super: 'Echo Blast' } },
-      { name: 'Echowing', species: 'Thunder Bat', size: 1.24, voice: 0.85, bodyMul: GROW3,
+        colors: { body: 0x2a6e80, wing: 0x1a4e5e, horn: 0xfff2d8 }, parts: { horns: 0.45, brows: 0.45, soundwaves: 0.7 }, moves: { special: 'Sonic Shriek', super: 'Echo Blast' } },
+      { name: 'Echowing', species: 'Thunder Bat', size: 1.24, voice: 0.85, earScale: 1.38, bodyMul: GROW3,
         blurb: 'The air rings around it like a bell. When it shouts, the jumbotron flickers.',
-        colors: { body: 0x2c4a8a, dark: 0x101e3a, wing: 0x1a2e5a, horn: 0xffe08a }, parts: { horns: 0.75, windring: 0.8, brows: 0.75 }, moves: { special: 'Sonic Boom', super: 'Echo Quake' } },
+        colors: { body: 0x2c4a8a, dark: 0x101e3a, wing: 0x1a2e5a, horn: 0xffe08a }, parts: { horns: 0.75, brows: 0.75, soundwaves: 1 }, moves: { special: 'Sonic Boom', super: 'Echo Quake' } },
     ],
   },
   snoozlo: {
@@ -933,6 +933,17 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       parts.push(q);
     }
     TO.add(inked(mergeGeometries(parts), mat('crystal', C.crystal ?? C.accent, { rim: 1 }), OL * 0.5));
+  }
+
+  // glowing sound-wave arcs ringing out beside the ears
+  if (P.soundwaves) {
+    const s = P.soundwaves, wm = new THREE.MeshBasicMaterial({ color: C.wave ?? 0x9af0ff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    for (const x of [-1, 1]) for (let k = 0; k < 3; k++) {
+      const r = headR * (0.22 + k * 0.17) * s, arc = new THREE.Mesh(new THREE.TorusGeometry(r, headR * 0.035 * s, 5, 18, 1.5), wm);
+      arc.rotation.set(0, x > 0 ? 0 : Math.PI, -0.75);
+      arc.position.set(x * headR * (1.05 + 0.02 * k), headR * 0.9, -headR * 0.05);
+      SK.add(arc);
+    }
   }
 
   flatten(SK); flatten(TO);

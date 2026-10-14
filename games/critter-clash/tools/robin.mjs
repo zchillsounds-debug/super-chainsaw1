@@ -1,4 +1,5 @@
-// node tools/robin.mjs [reps] : CPU vs CPU round robin at difficulty 0.8, prints win rate per critter
+// node tools/robin.mjs [reps] [id,id] : CPU vs CPU round robin at difficulty 0.8, prints win rate per critter
+// LV=14 runs it with both sides at that level, in their grown forms (default Lv 10)
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
 const { chromium } = require('playwright');
@@ -12,13 +13,13 @@ const ids = await pg.evaluate(() => __critters.map((c) => c.id));
 const W = Object.fromEntries(ids.map((i) => [i, [0, 0]])), M = {};
 for (let r = 0; r < reps; r++) for (const a of ids) for (const c of ids) {
   if (a === c || (focus && !focus.includes(a) && !focus.includes(c))) continue;
-  const won = await pg.evaluate(([a, c]) => {
-    const g = __game, D = (id) => __critters.find((x) => x.id === id);
-    g.startBattle(D(a), D(c), { difficulty: 0.8, playerLevel: 10, cpuLevel: 10 });
+  const won = await pg.evaluate(([a, c, lv]) => {
+    const g = __game, D = (id) => __grow(__critters.find((x) => x.id === id), lv);
+    g.startBattle(D(a), D(c), { difficulty: 0.8, playerLevel: lv, cpuLevel: lv });
     const bt = g.battle; let t = 0;
     while (bt.phase !== 'done' && t < 400) { __sim(1); t++; }
     return bt.wins[0] > bt.wins[1];
-  }, [a, c]);
+  }, [a, c, +(process.env.LV || 10)]);
   W[a][won ? 0 : 1]++; W[c][won ? 1 : 0]++;
   const k = [a, c].sort().join('|'); M[k] = M[k] || {}; M[k][won ? a : c] = (M[k][won ? a : c] || 0) + 1;
 }
