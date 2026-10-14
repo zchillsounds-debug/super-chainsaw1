@@ -297,10 +297,10 @@ export const FORMS = {
     forms: [
       { name: 'Splashotter', species: 'Rapids Otter', size: 1.1, voice: 1.05, bodyMul: GROW2,
         blurb: 'A fin grew along its back for riding rapids. Its puddles now come with waves.',
-        colors: { body: 0x8e5e40, fin: 0x6ad0ff }, parts: { backfin: 0.6, brows: 0.35 }, moves: { special: 'Rapids Puddle', super: 'Maelstrom' } },
+        colors: { body: 0x8e5e40, fin: 0x6ad0ff }, parts: { backfin: 0.6, brows: 0.35, wave: 0.7 }, moves: { special: 'Rapids Puddle', super: 'Maelstrom' } },
       { name: 'Torrentide', species: 'Torrent Otter', size: 1.25, voice: 0.85, bodyMul: GROW3,
         blurb: 'Rides a river wherever it goes, even when there isn\'t one.',
-        colors: { body: 0x6e4630, dark: 0x3e2618, fin: 0x52c8ff }, parts: { backfin: 1.05, whiskers: 0.9, brows: 0.6 }, moves: { special: 'Torrent Puddle', super: 'Grand Whirlpool' } },
+        colors: { body: 0x6e4630, dark: 0x3e2618, fin: 0x52c8ff, orb: 0x8ae4ff }, parts: { whiskers: 0.9, brows: 0.6, wave: 1, orbs: 0.6 }, moves: { special: 'Torrent Puddle', super: 'Grand Whirlpool' } },
     ],
   },
   jiggawatt: {
@@ -821,6 +821,31 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     }
     cap.position.set(0, headR * 0.7, -headR * 0.08); cap.rotation.set(-0.12, 0, 0.12);
     SK.add(cap);
+  }
+
+  // a curling wave rising behind it, with a foam crest: it brings its own river
+  if (P.wave) {
+    const s = P.wave, W = B.w * 0.85 * s, H = B.h * 1.12 * s, Z = -B.w * 0.5;
+    const pts = [v(0, -0.12, 0.1), v(0, 0.3, -0.35), v(0, 0.72, -0.48), v(0, 1.0, -0.36), v(0, 1.08, -0.1), v(0, 0.96, 0.08)].map((q) => v(0, q.y * H, Z + q.z * H));
+    const curve = new THREE.CatmullRomCurve3(pts), TS = 40, RS = 16;
+    const geo = new THREE.TubeGeometry(curve, TS, 1, RS, false), pos = geo.attributes.position, cols = [];
+    const deep = new THREE.Color(C.wave ?? 0x2a9ee8), light = new THREE.Color(C.wave2 ?? 0x9ae8ff);
+    for (let i = 0; i < pos.count; i++) {
+      const u = Math.floor(i / (RS + 1)) / TS, c = curve.getPointAt(u), r = 0.09 * H * Math.sin(Math.PI * Math.min(1, u * 1.15)) + 0.02 * H;
+      pos.setXYZ(i, c.x + (pos.getX(i) - c.x) * W / 0.12 * r / H, c.y + (pos.getY(i) - c.y) * r, c.z + (pos.getZ(i) - c.z) * r);
+      const col = deep.clone().lerp(light, u); cols.push(col.r, col.g, col.b);
+    }
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+    geo.computeVertexNormals();
+    TO.add(inked(geo, mat('wave', 0xffffff, { vertexColors: true, rim: 1 }), OL * 0.6));
+    // foam blobs along the lip of the curl
+    const foam = mat('foam', 0xffffff), fp = [];
+    for (let k = 0; k < 9; k++) {
+      const x = (k / 8 - 0.5) * W * 1.7, q = curve.getPointAt(0.9 + Math.sin(k * 2.3) * 0.04), g = sphere(0.06 * H * (0.8 + ((k * 7) % 3) * 0.2));
+      g.translate(x, q.y + 0.02 * H, q.z);
+      fp.push(g);
+    }
+    TO.add(inked(mergeGeometries(fp), foam, OL * 0.4));
   }
 
   flatten(SK); flatten(TO);
