@@ -282,6 +282,7 @@ body.portrait .btns { transform: scale(.82); transform-origin: right bottom; }
   .portrait { width: 52px; height: 52px; }
   .timer { width: 54px; height: 54px; font-size: 28px; }
   .pause-btn { top: calc(70px + var(--sat)); }
+  .mod-chip.mini { top: calc(78px + var(--sat)); }
 }
 
 /* phones held upright during a battle */
@@ -542,6 +543,11 @@ body.portrait .rcard { width: 64px; }
 body.portrait .sel-info { bottom: calc(346px + var(--sab)); }
 .mod-chip { position: absolute; top: calc(112px + var(--sat)); left: 50%; transform: translateX(-50%); display: flex; gap: 6px; pointer-events: none; }
 .mod-chip span { background: rgba(27,17,64,.8); color: #fff; font-family: var(--display); font-size: 13px; padding: 3px 10px; border-radius: 99px; box-shadow: 0 0 0 2px #ffd23f; }
+.mod-chip { transition: top .4s, gap .4s; }
+.mod-chip.mini { top: calc(92px + var(--sat)); left: auto; right: calc(50% + 28px); transform: none; gap: 3px; }
+.mod-chip span b { font-weight: 400; }
+.mod-chip.mini span { padding: 2px 5px; font-size: 12px; opacity: .8; box-shadow: 0 0 0 1.5px #ffd23f; }
+.mod-chip.mini span b { display: none; }
 .streak { font-family: var(--display); color: #ff7a3d; font-size: 17px; margin-top: 2px; }
 .tc-style.mod { background: #2a1a50; color: #fff; margin-left: 4px; }
 @media (max-height: 460px) and (min-aspect-ratio: 1/1) {

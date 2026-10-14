@@ -62,7 +62,7 @@ export class Battle {
     if (this.mods.size) {
       this.modChip = document.createElement('div');
       this.modChip.className = 'mod-chip';
-      this.modChip.innerHTML = [...this.mods].map((m) => `<span>${MODS[m].icon} ${MODS[m].name}</span>`).join('');
+      this.modChip.innerHTML = [...this.mods].map((m) => `<span>${MODS[m].icon}<b> ${MODS[m].name}</b></span>`).join('');
       this.hud.el.appendChild(this.modChip);
     }
     this.brain = new CpuBrain(this.fighters[1], difficulty, trainer?.style);
@@ -1291,6 +1291,8 @@ export class Battle {
       if (this.phaseT > 1.9) { this.phase = 'fight'; this.phaseT = 0; }
     } else if (this.phase === 'fight') {
       this.time -= sdt;
+      // modifier chips shrink to small icons once the fight is under way, so they stay out of the action
+      if (this.modChip && !this.modMini && this.phaseT > 2.5) { this.modMini = true; this.modChip.classList.add('mini'); }
       if (this.time <= 0) { this.time = 0; this.timeUp(); }
     } else if (this.phase === 'ko') {
       if (this.phaseT > 2.2) this.endRound();
