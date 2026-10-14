@@ -14,6 +14,7 @@ const STEPS = [
   ['matchsetup', "S.ctx={kind:'quick'}; S.select(); S.matchSheet(false)"],
   ['teampick', "S.ctx={kind:'team'}; S.sel=0; S.teamSheet()"],
   ['teamvs', "S.ctx={kind:'team', team:['cindermunch','bubbalotl','clovebun'], foes:['hootsy','woolt','diggles'], pi:1, fi:0, php:[0,0.6,1], fhp:[0.4,1,1], arena:'meadow', sent:'you'}; S.sel=1; S.vs()"],
+  ['dailyteamvs', "S.ctx={kind:'team', daily:{key:'x', mod:'turbo', arena:'volcano', team:['hootsy','woolt','diggles']}, team:['cindermunch','bubbalotl','clovebun'], foes:['hootsy','woolt','diggles'], pi:0, fi:0, php:[1,1,1], fhp:[1,1,1], arena:'volcano'}; S.sel=0; S.vs()"],
   ['challenges', 'S.challenges()'],
   ['training', 'S.training()'],
   ['quicksetup', "S.ctx={kind:'quick'}; S.select(); S.matchSheet(false)"],
