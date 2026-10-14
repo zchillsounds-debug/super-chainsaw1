@@ -455,6 +455,28 @@ export class Screens {
       </div>`;
   }
 
+  // marks today's daily cleared; the first clear each day extends the streak (back-to-back days) and pays streak berries
+  dailyClear(key) {
+    save.daily ||= {};
+    if (save.daily[key]) return '';
+    save.daily[key] = true;
+    const prev = new Date(Date.parse(key + 'T00:00:00Z') - 864e5).toISOString().slice(0, 10);
+    const S = save.dailyStreak ||= { last: null, n: 0 };
+    S.n = S.last === prev ? S.n + 1 : 1; S.last = key;
+    save.stats.bestDaily = Math.max(save.stats.bestDaily || 0, S.n);
+    const bonus = Math.min(5, S.n);
+    save.berries = (save.berries || 0) + bonus;
+    return S.n > 1 ? ` · 🔥 ${S.n}-day streak, +${bonus} 🍓` : ` · +1 🍓 (come back tomorrow for a streak!)`;
+  }
+
+  // the streak only counts while it's alive: cleared today or yesterday
+  dailyStreakNow(key) {
+    const S = save.dailyStreak;
+    if (!S?.n) return 0;
+    const prev = new Date(Date.parse(key + 'T00:00:00Z') - 864e5).toISOString().slice(0, 10);
+    return S.last === key || S.last === prev ? S.n : 0;
+  }
+
   // ---------- Challenges: Survival gauntlet and the Daily Challenge ----------
   challenges() {
     const g = this.game;
@@ -488,7 +510,7 @@ export class Screens {
       <h2>${teamDay ? 'Daily Team Challenge' : 'Daily Challenge'}</h2>
       <p>${teamDay ? '3-on-3 today! ' : ''}${mod.icon} <b>${mod.name}</b>: ${mod.desc}</p>
       <div class="cup-foes">${(teamDay ? d.team : [d.foe]).map((id, k) => `<img src="${g.portrait(skinned(byId(id), d.shiny && k === 0 ? 'shiny' : 'base'))}" alt="">`).join('')}</div>
-      <div class="cup-meta">vs ${teamDay ? 'a rival team' : `${d.shiny ? '✦ ' : ''}${foe.name}`} · ${ARENA_NAME[d.arena]} · ${doneToday ? 'Cleared today!' : 'Double XP'}</div>`,
+      <div class="cup-meta">vs ${teamDay ? 'a rival team' : `${d.shiny ? '✦ ' : ''}${foe.name}`} · ${ARENA_NAME[d.arena]} · ${doneToday ? 'Cleared today!' : 'Double XP'}${this.dailyStreakNow(d.key) ? ` · 🔥 ${this.dailyStreakNow(d.key)}` : ''}</div>`,
     () => { this.ctx = teamDay ? { kind: 'team', daily: d } : { kind: 'daily', d }; this.select(); });
     const bosses = bossList(), rushOpen = !!save.cups.champion;
     card('bossrush' + (rushOpen ? '' : ' locked'), '#ffb020', `
@@ -917,13 +939,13 @@ export class Screens {
       else { T.php[T.pi] = 0; T.fhp[T.fi] = cf ? Math.max(0.05, cf.hp / cf.maxHp) : 1; T.pi++; T.sent = 'you'; }
       T.over = T.fi >= 3 ? 'won' : T.pi >= 3 ? 'lost' : null;
       if (T.over === 'won') save.stats.teamWins = (save.stats.teamWins || 0) + 1;
-      if (T.over === 'won' && T.daily) (save.daily ||= {})[T.daily.key] = true;
+      const st = T.over === 'won' && T.daily ? this.dailyClear(T.daily.key) : '';
       const rows = `<div class="team-vs">${this.teamRow(T.team, T.php, T.pi)}<b>vs</b>${this.teamRow(T.foes, T.fhp, T.fi)}</div>`;
-      streakNote = T.over === 'won' ? `<div class="streak">🤝 ${T.daily ? 'Daily Team Challenge cleared! Double XP' : 'Team Battle won!'} ${rows}</div>`
+      streakNote = T.over === 'won' ? `<div class="streak">🤝 ${T.daily ? `Daily Team Challenge cleared! Double XP${st}` : 'Team Battle won!'} ${rows}</div>`
         : T.over === 'lost' ? `<div class="streak">Your team is out of critters. ${rows}</div>`
         : `<div class="streak">${won ? `${cDef.name} is out! ` : `${pDef.name} is out! `}${rows}</div>`;
     }
-    if (kind === 'daily' && won) { (save.daily ||= {})[this.ctx.d.key] = true; streakNote = '<div class="streak">📅 Daily Challenge cleared! Double XP</div>'; }
+    if (kind === 'daily' && won) { const st = this.dailyClear(this.ctx.d.key); streakNote = `<div class="streak">📅 Daily Challenge cleared! Double XP${st}</div>`; }
     const prog = save.critters[pDef.id];
     const before = { level: prog.level, xp: prog.xp };
     if (won) prog.wins++;
