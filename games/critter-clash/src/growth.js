@@ -72,7 +72,7 @@ export const FORMS = {
         blurb: 'Blossoming antlers and legs like springs. Legends say spring arrives wherever it lands.',
         colors: { body: 0xe8e0c6, belly: 0xffffff, accent: 0x3ec456, dark: 0x2a6030, antler: 0x8a6440, blossom: 0xff9ac8 },
         body: { w: 0.54, h: 0.84, headR: 0.44, legLen: 0.38, armLen: 0.27, chubby: 0.9, limb: 1.25 },
-        parts: { leafmane: 1.1, antlers: 1 },
+        parts: { leafmane: 1.1, antlers: 1.3 },
         moves: { special: 'Antler-rang', super: 'Grove Bloom' },
       },
     ],

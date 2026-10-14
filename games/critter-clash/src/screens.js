@@ -5,6 +5,7 @@ import { sfx, playMusic } from './audio.js';
 import { HAZARDS } from './hazards.js';
 import { Camp } from './camp.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
+import { grown, stageFor, FORMS, GROW_LV } from './growth.js';
 import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
@@ -371,7 +372,8 @@ export class Screens {
       const b = document.createElement('button');
       b.className = 'rcard' + (locked ? ' locked' : '') + (trial ? ' trial' : '');
       b.style.setProperty('--tc', TYPES[c.type].color);
-      b.innerHTML = `<img src="${g.portrait(c)}" alt=""><span>${save.trainer?.partner === c.id ? '♥ ' : ''}${locked ? '???' : c.name}</span>${locked ? '<em>🔒</em>' : trial ? '<i>TRY</i>' : `<i>Lv${save.critters[c.id].level}</i>`}`;
+      const gc = locked ? c : grown(c, save.critters[c.id].level); // grown critters show their current form
+      b.innerHTML = `<img src="${g.portrait(gc)}" alt=""><span>${save.trainer?.partner === c.id ? '♥ ' : ''}${locked ? '???' : gc.name}</span>${locked ? '<em>🔒</em>' : trial ? '<i>TRY</i>' : `<i>Lv${save.critters[c.id].level}</i>`}`;
       b.addEventListener('click', () => {
         if (locked) { sfx.ui('back'); this.toast(unlockHint(c.id)); return; }
         this.pick(i);
@@ -419,14 +421,14 @@ export class Screens {
     this.root.querySelectorAll('.rcard').forEach((b, k) => { b.classList.toggle('on', k === i); if (k === i) b.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); });
   }
 
-  infoCard(c, extra = '') {
-    const T = TYPES[c.type];
-    const st = c.stats, prog = save.critters[c.id];
+  infoCard(base, extra = '') {
+    const T = TYPES[base.type], prog = save.critters[base.id];
+    const c = grown(base, prog.level), st = c.stats, nx = GROW_LV.find((l) => l > prog.level);
     const bar = (label, v) => `<div class="stat"><span>${label}</span><i><b style="width:${Math.round(Math.max(0.08, Math.min(1, v)) * 100)}%"></b></i></div>`;
     const beats = T.beats.map((b) => `<span class="mini-type" style="background:${TYPES[b].color}">${TYPES[b].name}</span>`).join('');
     return `
       <div class="info-card" style="--tc:${T.color}">
-        <div class="ic-row"><span class="ic-type">${T.name} type</span><span class="ic-lv">Lv ${prog.level}</span></div>
+        <div class="ic-row"><span class="ic-type">${T.name} type</span><span class="ic-lv">Lv ${prog.level}${c.stage ? ` · Stage ${c.stage}` : ''}</span></div>
         <h2>${c.name}</h2>
         <div class="ic-species">${c.species}</div>
         <p>${c.blurb}</p>
@@ -435,6 +437,7 @@ export class Screens {
         <div class="moves"><div><small>Special</small><b>${c.moves.special}</b></div><div><small>Super</small><b>${c.moves.super}</b></div></div>
         ${extra}
         <div class="xpbar"><i style="width:${(prog.xp / xpNeeded(prog.level)) * 100}%"></i></div>
+        <div class="ic-grow">${nx ? `🌱 Grows at Lv ${nx}` : '★ Fully grown'}</div>
       </div>`;
   }
 
@@ -607,7 +610,8 @@ export class Screens {
       const b = document.createElement('button');
       b.className = 'dcard' + (locked ? ' locked' : '') + (save.shinies?.includes(c.id) ? ' has-shiny' : '');
       b.style.setProperty('--tc', TYPES[c.type].color);
-      b.innerHTML = `<i>#${String(k + 1).padStart(3, '0')}</i><div class="pic"><img src="${g.portrait(c)}" alt=""></div><span>${locked ? '???' : c.name}</span>`;
+      const gc = locked ? c : grown(c, save.critters[c.id].level);
+      b.innerHTML = `<i>#${String(k + 1).padStart(3, '0')}</i><div class="pic"><img src="${g.portrait(gc)}" alt=""></div><span>${locked ? '???' : gc.name}</span>`;
       b.addEventListener('click', () => {
         if (locked) { sfx.ui('back'); this.toast(unlockHint(c.id)); return; }
         sfx.ui('move'); this.dexPick(k);
@@ -647,9 +651,23 @@ export class Screens {
     const gear = `<div class="dex-gear"><small>Gear</small>${GEAR.map((x) => prog.level >= x.lv
       ? `<span class="got" title="${x.name}"><i>${x.icon}</i>${x.name}</span>`
       : `<span title="Reach Lv ${x.lv}"><i>🔒</i>Lv ${x.lv}</span>`).join('')}</div>`;
+    // growth line: forms you've reached show their face and name (tap to view), later ones stay a mystery
+    const growth = `<div class="dex-growth"><small>Growth</small>${[1, ...GROW_LV].map((lv, k) => {
+      const f = grown(c, lv), got = prog.level >= lv;
+      return `${k ? '<b class="arr">›</b>' : ''}<button class="gstage ${got ? 'got' : ''}" data-lv="${lv}"><img src="${g.portrait(f, 128)}" alt=""><span>${got ? f.name : '???'}</span><em>${k ? 'Lv ' + lv : 'Base'}</em></button>`;
+    }).join('')}</div>`;
     const record = `<div class="dex-record"><span><b>${prog.wins || 0}</b> wins</span><span>Lv <b>${prog.level}</b></span><span title="Friendship">💗 <b>${Math.min(5, Math.floor((prog.pets || 0) / 4))}</b>/5</span></div>`;
     const info = this.root.querySelector('.dex-info');
-    info.innerHTML = this.infoCard(c, record + gear + skins + '<button class="chip dex-moves">📜 Move List</button>');
+    info.innerHTML = this.infoCard(c, record + growth + gear + skins + '<button class="chip dex-moves">📜 Move List</button>');
+    info.querySelectorAll('.gstage').forEach((b) => b.addEventListener('click', () => {
+      const lv = +b.dataset.lv;
+      if (prog.level < lv) { sfx.ui('back'); this.toast(`Reach Lv ${lv} to find out what ${c.name} grows into!`); return; }
+      sfx.ui('move');
+      g.setShowcase([withGear(skinned(c, skin), stageFor(prog.level) === stageFor(lv) ? prog.level : lv)], 'single'); // earlier forms show as they were
+      g.showcase[0].cheer = 0.8;
+      info.querySelectorAll('.gstage').forEach((x) => x.classList.toggle('on', x === b));
+    }));
+    info.querySelector(`.gstage[data-lv="${GROW_LV.filter((l) => l <= prog.level).pop() || 1}"]`)?.classList.add('on');
     info.querySelector('.dex-moves').addEventListener('click', () => this.moveModal(c));
     info.querySelectorAll('.skin').forEach((b) => b.addEventListener('click', () => {
       if (b.dataset.skin === 'shiny' && !hasShiny) { sfx.ui('back'); this.toast(`Clear the ${cup ? cup.name : 'tournament'} to unlock`); return; }
@@ -824,6 +842,7 @@ export class Screens {
       opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: q?.arena || pick(ARENA_KEYS) };
       label = `CPU · ${DIFFS[this.diff].name}`;
     }
+    c = withGear(c, opts.cpuLevel); // rivals grow with their level too (Lv 7 / Lv 14 forms)
     this.root.innerHTML = `
       <div class="vs-screen">
         <div class="vs-side l" style="--tc:${TYPES[p.type].color}"><img src="${g.portrait(p)}" alt=""><b>${p.name}</b><small>YOU · Lv ${opts.playerLevel}</small></div>
@@ -964,6 +983,7 @@ export class Screens {
           sfx.voice(pDef.voice, 'win');
           this.toast(`${pDef.name} grew to Lv ${level}!`);
           if (gearFor(level) > gearFor(level - 1)) setTimeout(() => this.gearGet(pDef, GEAR[gearFor(level) - 1]), 900);
+          if (stageFor(level) > stageFor(level - 1)) { const L = level; setTimeout(() => this.mode === 'results' && this.growUp(pDef.id, L), 1300); }
           bar.style.transition = 'none'; bar.style.width = '0%'; void bar.offsetWidth; bar.style.transition = '';
           fill();
         }, 700);
@@ -1026,6 +1046,62 @@ export class Screens {
       this.game.fx.burst(p, { n: 16, speed: 3, up: 2, color: 0xffd04a, size: 0.2, life: 0.6, shape: 'star', additive: false, grav: 3 });
       f.critter.emote('happy', 'grin', 1.2);
     }
+  }
+
+  // "What? X is growing!": flickering white silhouettes of the old and new forms, a flash, then the new form's card
+  growUp(id, lv, done) {
+    const g = this.game, base = byId(id), skin = save.skins?.[id];
+    const stage = stageFor(lv), from = withGear(skinned(base, skin), GROW_LV[stage - 2] - 1), to = withGear(skinned(base, skin), lv);
+    const pre = from.name;
+    const d = document.createElement('div');
+    d.className = 'modal-wrap grow-wrap';
+    d.innerHTML = `<div class="grow" style="--tc:${TYPES[base.type].color}">
+      <div class="grow-rays"></div>
+      <p class="grow-msg">What? <b>${pre}</b> is growing!</p>
+      <div class="grow-pics"><img class="g-old" src="${g.portrait(from, 512)}" alt=""><img class="g-new" src="${g.portrait(to, 512)}" alt=""></div>
+      <div class="grow-card"></div>
+    </div>`;
+    this.root.appendChild(d);
+    const G = d.querySelector('.grow');
+    let k = 0, revealed = false, closed = false;
+    const steps = [520, 470, 420, 370, 320, 280, 240, 200, 170, 140, 115, 95, 80, 70, 60, 55, 50];
+    const close = () => {
+      if (closed) return; closed = true;
+      d.remove(); g.modalClose = null;
+      // the celebrating winner turns into the new form too
+      const f = g.battle?.player;
+      if (f && f.def.id === id && f.root.visible) {
+        f.regrow(to);
+        const hp = f.headPos();
+        g.fx.burst(hp, { n: 26, speed: 4, up: 3, color: 0xffffff, size: 0.24, life: 0.7, shape: 'star', grav: 2 });
+        g.fx.spawn({ ...f.chestPos(), color: TYPES[base.type].glow, size: 4, life: 0.4, shape: 'ring', grow: 2 });
+        f.critter.emote('happy', 'grin', 1.5);
+      }
+      done?.();
+    };
+    const reveal = () => {
+      if (revealed || closed) return; revealed = true;
+      G.classList.add('done');
+      sfx.grown(); sfx.voice(to.voice, 'win'); buzz('heavy');
+      const T = (n) => `<span class="mini-type" style="background:${TYPES[base.type].color}">${n}</span>`;
+      d.querySelector('.grow-msg').innerHTML = `<b>${pre}</b> grew into <b>${to.name}</b>!`;
+      d.querySelector('.grow-card').innerHTML = `<div class="gc-sp">${to.species} · Stage ${stage}${FORMS[id] ? ` · ${FORMS[id].path} path` : ''}</div>
+        <div class="gc-moves"><div><small>Special</small><b>${to.moves.special}</b></div><div><small>Super</small><b>${to.moves.super}</b></div></div>
+        <div class="gc-up">${T(`+${stage === 2 ? 6 : 12}% Health`)}${T(`Moves +${stage === 2 ? 12 : 25}% power`)}${T('Faster specials')}</div>`;
+      d.querySelector('.grow-card').appendChild(this.btn('Awesome!', 'primary', close));
+      save.stats.grown = (save.stats.grown || 0) + 1; persist();
+    };
+    const tick = () => {
+      if (revealed || closed || !d.isConnected) return;
+      G.classList.toggle('alt');
+      sfx.shimmer(k / steps.length);
+      if (k >= steps.length) { reveal(); return; }
+      setTimeout(tick, steps[k++]);
+    };
+    sfx.jingle(1);
+    setTimeout(tick, 900);
+    d.addEventListener('click', () => { if (!revealed) { k = steps.length; } }); // tap to hurry it along
+    g.modalClose = () => (revealed ? close() : (k = steps.length));
   }
 
   recruit(def) {

@@ -142,7 +142,7 @@ class Game {
       // &pl= / &cl= give each side a level, which also picks its grown form (Lv 7 / Lv 14)
       const p = withGear(CRITTERS.find((c) => c.id === Q.get('p')) || CRITTERS[0], +(Q.get('pl') || 1));
       const c = withGear(CRITTERS.find((c) => c.id === Q.get('c')) || CRITTERS[1], +(Q.get('cl') || 1));
-      this.startBattle(p, c, { difficulty: +(Q.get('d') ?? 0.5), mods: Q.get('mods')?.split(',') || [], training: Q.has('train') });
+      this.startBattle(p, c, { playerLevel: +(Q.get('pl') || 1), cpuLevel: +(Q.get('cl') || 1), difficulty: +(Q.get('d') ?? 0.5), mods: Q.get('mods')?.split(',') || [], training: Q.has('train') });
     } else this.screens.title();
     if (splash) { splash.classList.add('out'); setTimeout(() => splash.remove(), 500); }
     this.booted = true;

@@ -978,11 +978,13 @@ export class Critter {
     const ring = inked(new THREE.TorusGeometry(B.w * 0.5, this.def.stage ? 0.062 : 0.085, 10, 28), scarfMat, OL * 0.8);
     ring.rotation.x = Math.PI / 2 - 0.3;
     ring.scale.set(B.chubby * 1.05, 1, 1);
-    ring.position.set(0, B.h * (this.def.stage ? 0.74 : 0.84), B.w * 0.04); // grown heads sit lower over the neck
+    // grown forms wear it just under the chin (their heads overlap the base neckline)
+    const sy = this.def.stage ? B.h * 0.82 - headR * 0.26 : B.h * 0.84;
+    ring.position.set(0, sy, B.w * 0.04);
     this.torso.add(ring);
     // two tails flapping off the back
     const tailG = new THREE.Group();
-    tailG.position.set(B.w * 0.12, B.h * (this.def.stage ? 0.66 : 0.76), -B.w * 0.34);
+    tailG.position.set(B.w * 0.12, sy - B.h * 0.08, -B.w * 0.34);
     for (const [x, rz, len] of [[0, 0.25, 0.26], [0.07, -0.15, 0.2]]) {
       const t = inked(new THREE.BoxGeometry(0.1, len, 0.035), scarfMat, OL * 0.6);
       t.geometry.translate(0, -len / 2, 0);

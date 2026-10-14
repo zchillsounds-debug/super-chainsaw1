@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { CRITTERS, TYPES, gearFor, GEAR, CUPS } from './data.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
+import { stageFor } from './growth.js';
 import { sfx } from './audio.js';
 import { toon, inked, canvasTex } from './toon.js';
 import { newBadges } from './screens.js';
@@ -194,6 +195,8 @@ export class Camp {
       this.S.toast(`${c.def.name} grew to Lv ${lv.to}!`);
       sfx.jingle(2);
       if (gearFor(lv.to) > gearFor(lv.from)) setTimeout(() => this.S.mode === 'camp' && this.S.toast(`${GEAR[gearFor(lv.to) - 1].icon} New gear: ${GEAR[gearFor(lv.to) - 1].name}!`), 2300);
+      // growing in Camp: play the growing scene, then rebuild Camp so the new form wanders about
+      if (stageFor(lv.to) > stageFor(lv.from)) setTimeout(() => this.S.mode === 'camp' && this.S.growUp(c.def.id, lv.to, () => this.S.mode === 'camp' && this.S.camp()), 900);
     } else this.S.toast(msg);
   }
 

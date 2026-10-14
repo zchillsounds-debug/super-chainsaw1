@@ -174,6 +174,14 @@ export const sfx = {
     [1, 1.26, 1.5, 2].forEach((m, i) => osc('square', base * m, base * m, 0.09, 0.07, { t: t + i * 0.055 }));
     osc('triangle', base * 2, base * 2.02, 0.35, 0.08, { t: t + 0.22 });
   },
+  // growing: a soft shimmer that climbs with k (0..1), then a bright chord when the new form appears
+  shimmer(k = 0) { if (!ctx) return; const f = 520 + k * 900; osc('sine', f, f * 1.5, 0.16, 0.07); osc('triangle', f * 2, f * 2.6, 0.1, 0.03); },
+  grown() {
+    if (!ctx) return;
+    const t = now();
+    [523, 659, 784, 1047].forEach((f, i) => { osc('triangle', f, f, 0.9, 0.09, { t: t + i * 0.07 }); osc('square', f * 2, f * 2, 0.08, 0.03, { t: t + i * 0.07 }); });
+    noise(0.8, 0.12, { f0: 6000, f1: 2000, q: 0.7 });
+  },
   // arena hazard telegraph: a quick rising two-tone chirp
   warn() {
     if (!ctx) return;

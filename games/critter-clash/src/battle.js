@@ -1455,7 +1455,8 @@ export class Battle {
       f.critter.update(dt);
       // isolate the super user for the close-up, like an anime cut-in
       for (const o of this.fighters) o.root.visible = o === f || this.cutinT <= 0;
-      this.camOverride = { look: new THREE.Vector3(f.x, f.y + 0.9, f.z), pos: new THREE.Vector3(f.x + Math.sin(f.face) * 2.4 + Math.cos(f.face) * 0.9, f.y + 1.25, f.z + Math.cos(f.face) * 2.4 - Math.sin(f.face) * 0.9), fov: 34 };
+      const Z = f.def.size || 1; // grown forms are bigger: pull the cut-in camera back to match
+      this.camOverride = { look: new THREE.Vector3(f.x, f.y + 0.9 * Z, f.z), pos: new THREE.Vector3(f.x + (Math.sin(f.face) * 2.4 + Math.cos(f.face) * 0.9) * Z, f.y + 1.25 * Z, f.z + (Math.cos(f.face) * 2.4 - Math.sin(f.face) * 0.9) * Z), fov: 34 };
       if (this.cutinT <= 0) { for (const o of this.fighters) o.root.visible = true; f.superPhase = 'go'; f.st = 0; this.camOverride = null; this.shake(0.4); }
       this.updateCamera(dt);
       return;
@@ -1576,9 +1577,9 @@ export class Battle {
       if (f !== this.camFocusWas) { this.camFocusWas = f; if (f) this.camSnap = true; }
       if (f) {
         const side = f === c ? -1 : 1;
-        const hy = f.critter.P.y * 0.8;
-        look = new THREE.Vector3(f.x, 1.1 + hy, f.z);
-        pos = new THREE.Vector3(f.x + side * 2.8, 1.4 + hy, f.z + 4.1);
+        const hy = f.critter.P.y * 0.8, Z = f.def.size || 1;
+        look = new THREE.Vector3(f.x, (1.1 + hy) * Z, f.z);
+        pos = new THREE.Vector3(f.x + side * 2.8 * Z, (1.4 + hy) * Z, f.z + 4.1 * Z);
         fov = 42;
       } else {
         const mid = new THREE.Vector3((p.x + c.x) / 2, 1, (p.z + c.z) / 2);
@@ -1607,9 +1608,9 @@ export class Battle {
     } else if (this.phase === 'done' && this.koWinner) {
       // results backdrop: the winner keeps celebrating in a close-up off to the side of the card
       const f = this.koWinner, port = cam.aspect < 1;
-      const hy = f.critter.P.y * 0.5, drift = Math.sin(this.phaseT * 0.25) * 0.25;
-      look = new THREE.Vector3(f.x + (port ? 0 : 1.5), (port ? 0.3 : 0.95) + hy, f.z);
-      pos = new THREE.Vector3(f.x - 0.5 + drift, 1.45 + hy * 0.6, f.z + (port ? 7 : 5.6));
+      const hy = f.critter.P.y * 0.5, drift = Math.sin(this.phaseT * 0.25) * 0.25, Z = f.def.size || 1;
+      look = new THREE.Vector3(f.x + (port ? 0 : 1.5) * Z, ((port ? 0.3 : 0.95) + hy) * Z, f.z);
+      pos = new THREE.Vector3(f.x - 0.5 + drift, (1.45 + hy * 0.6) * Z, f.z + (port ? 7 : 5.6) * Z);
       fov = (port ? 46 : 36) / Math.max(1, 1.6 / cam.aspect); // undo the narrow-aspect widening below
     } else {
       const mx = (p.x + c.x) / 2, mz = (p.z + c.z) / 2;

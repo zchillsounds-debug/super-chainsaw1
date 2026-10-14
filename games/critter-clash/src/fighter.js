@@ -891,6 +891,18 @@ export class Fighter {
     this.combo = 0;
   }
 
+  // swap to a grown form's model in place (results screen growth); keeps position, facing and pose state
+  regrow(def) {
+    const old = this.critter, scene = old.root.parent;
+    const cr = new Critter(def);
+    cr.root.position.copy(old.root.position); cr.root.rotation.copy(old.root.rotation);
+    cr.root.visible = old.root.visible;
+    scene?.remove(old.root); scene?.add(cr.root);
+    cr.root.add(this.shield);
+    this.critter = cr; this.root = cr.root; this.def = { ...def };
+    this.stage = def.stage || 1; this.movePow = MOVE_POW[this.stage - 1];
+  }
+
   headPos() { return { x: this.x, y: this.y + (this.def.body.h + this.def.body.headR * 1.8) * (this.def.size || 1) + 0.2, z: this.z }; }
   chestPos() { return { x: this.x, y: this.y + this.def.body.h * 0.8 * (this.def.size || 1), z: this.z }; }
 
