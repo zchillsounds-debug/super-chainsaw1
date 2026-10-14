@@ -991,12 +991,13 @@ export class Screens {
           sfx.voice(pDef.voice, 'win');
           this.toast(`${pDef.name} grew to Lv ${level}!`);
           if (gearFor(level) > gearFor(level - 1)) setTimeout(() => this.gearGet(pDef, GEAR[gearFor(level) - 1]), 900);
-          if (stageFor(level) > stageFor(level - 1)) { const L = level; this.pendingGrow = [pDef.id, L]; setTimeout(() => this.mode === 'results' && this.pendingGrow && this.growUp(...this.pendingGrow), 1300); }
+          if (stageFor(level) > stageFor(level - 1)) setTimeout(() => this.mode === 'results' && !this.growing && this.owedGrowth().includes(pDef.id) && this.growUp(pDef.id, save.critters[pDef.id].level), 1300);
           bar.style.transition = 'none'; bar.style.width = '0%'; void bar.offsetWidth; bar.style.transition = '';
           fill();
         }, 700);
-      } else bar.style.width = (prog.xp / xpNeeded(prog.level)) * 100 + '%';
+      } else { bar.style.width = (prog.xp / xpNeeded(prog.level)) * 100 + '%'; this.resDone = performance.now(); }
     };
+    this.resDone = 0;
     setTimeout(fill, 500);
 
     const b = this.root.querySelector('.res-btns');
@@ -1057,10 +1058,21 @@ export class Screens {
   }
 
   // "What? X is growing!": flickering white silhouettes of the old and new forms, a flash, then the new form's card
+  // unlocked critters that reached a new stage without the player seeing them grow
+  // (tapped past results, levelled before growth existed, ...); each plays its growing scene once
+  owedGrowth() {
+    const seen = save.seenStage || {};
+    return save.unlocked.filter((id) => stageFor(save.critters[id]?.level) > (seen[id] || 1));
+  }
+
   growUp(id, lv, done) {
-    this.pendingGrow = null;
+    if (this.growing) return;
+    this.growing = true;
     const g = this.game, base = byId(id), skin = save.skins?.[id];
-    const stage = stageFor(lv), from = withGear(skinned(base, skin), GROW_LV[stage - 2] - 1), to = withGear(skinned(base, skin), lv);
+    const stage = stageFor(lv), seenSt = Math.min(stage - 1, save.seenStage?.[id] || 1);
+    const from = withGear(skinned(base, skin), GROW_LV[seenSt - 1] - 1), to = withGear(skinned(base, skin), lv);
+    // mark it seen at once, so leaving mid-scene can't replay it forever
+    (save.seenStage ||= {})[id] = stage; persist();
     const pre = from.name;
     const d = document.createElement('div');
     d.className = 'modal-wrap grow-wrap';
@@ -1071,12 +1083,13 @@ export class Screens {
       <div class="grow-card"></div>
     </div>`;
     this.root.appendChild(d);
+    this.growEl = d;
     const G = d.querySelector('.grow');
     let k = 0, revealed = false, closed = false;
     const steps = [520, 470, 420, 370, 320, 280, 240, 200, 170, 140, 115, 95, 80, 70, 60, 55, 50];
     const close = () => {
       if (closed) return; closed = true;
-      d.remove(); g.modalClose = null;
+      d.remove(); g.modalClose = null; this.growing = false;
       const img = this.mode === 'results' && this.root.querySelector('.res-card > img');
       if (img) img.src = g.portrait(to);
       // the celebrating winner turns into the new form too
@@ -1273,8 +1286,15 @@ export class Screens {
   }
 
   update(dt) {
-    // a growth the player tapped past on the results screen plays on the next calm menu
-    if (this.pendingGrow && ['title', 'cups', 'ladder', 'select', 'dex', 'challenges'].includes(this.mode) && !this.root.querySelector('.modal-wrap, .prof-wrap')) this.growUp(...this.pendingGrow);
+    // a growth the player hasn't seen yet plays on the next calm screen (one at a time)
+    if (this.growing && !this.growEl?.isConnected) this.growing = false; // a screen change wiped it
+    this.growCheck = (this.growCheck || 0) - dt;
+    if (this.growCheck <= 0 && !this.growing && !this.game.autoplay) {
+      this.growCheck = 0.5;
+      const calm = ['title', 'cups', 'ladder', 'select', 'dex', 'challenges'].includes(this.mode) || (this.mode === 'results' && this.resDone && performance.now() - this.resDone > 1600);
+      const owed = calm && !this.root.querySelector('.modal-wrap, .prof-wrap, .welcome') && this.owedGrowth();
+      if (owed?.length) this.growUp(owed[0], save.critters[owed[0]].level);
+    }
     this.t += dt;
     const cam = this.game.camera;
     if (this.mode === 'camp') { this.campObj?.update(dt); return; }
