@@ -12,6 +12,10 @@ export const MOVE_POW = [1, 1.12, 1.25];
 export const CD_MULT = [1, 0.92, 0.84];
 const HP_MULT = [1, 1.06, 1.12];
 
+// proportions for forms that scale their base body: taller, longer-limbed, relatively smaller head
+const GROW2 = { w: 1.12, h: 1.26, headR: 0.97, legLen: 1.35, armLen: 1.3, chubby: 1.0, limb: 1.2 };
+const GROW3 = { w: 1.25, h: 1.55, headR: 0.93, legLen: 1.6, armLen: 1.55, chubby: 1.03, limb: 1.45 };
+
 // path: what the critter grows into (shown in the Critterdex)
 export const FORMS = {
   cindermunch: {
@@ -182,6 +186,156 @@ export const FORMS = {
       },
     ],
   },
+  rolladillo: {
+    path: 'Fortress',
+    forms: [
+      {
+        name: 'Bouldillo', species: 'Boulder Armadillo', size: 1.12, voice: 0.7,
+        blurb: 'Its shell thickened into solid stone. It rolls downhill on purpose, just for fun.',
+        colors: { body: 0xbc946c, belly: 0xf0dcbc, accent: 0x7a5c40, dark: 0x4a3220, rock: 0x6a5a4a },
+        body: { w: 0.7, h: 0.64, headR: 0.44, legLen: 0.18, armLen: 0.22, chubby: 1.18, limb: 1.4 },
+        parts: { stonearmor: 0.65, brows: 0.5 },
+        moves: { special: 'Boulder Roll', super: 'Landslide Quake' },
+      },
+      {
+        name: 'Citadillo', species: 'Citadel Armadillo', size: 1.3, voice: 0.55,
+        blurb: 'Built like a castle wall, with a horn like a battering ram. Rolling is now considered a natural disaster.',
+        colors: { body: 0xa6805a, belly: 0xead2ae, accent: 0x5e4630, dark: 0x3a2618, rock: 0x5a4c3e, horn: 0xfff2d8 },
+        body: { w: 0.92, h: 0.84, headR: 0.44, legLen: 0.2, armLen: 0.3, chubby: 1.24, limb: 1.85 },
+        parts: { stonearmor: 1.15, horns: 0.9, brows: 0.9, tusks: 0.6 },
+        moves: { special: 'Siege Roll', super: 'Citadel Quake' },
+      },
+    ],
+  },
+  pengsicle: {
+    path: 'Swift',
+    forms: [
+      {
+        name: 'Pengsleet', species: 'Sleet Penguin', size: 1.1, voice: 1.15,
+        blurb: 'Icicles grow along its back. It slides faster than most critters can run.',
+        colors: { body: 0x34468c, belly: 0xffffff, accent: 0xffa42b, dark: 0x18224c, crystal: 0xaaf0ff },
+        body: { w: 0.58, h: 0.8, headR: 0.46, legLen: 0.15, armLen: 0.3, chubby: 1.02, limb: 1.15 },
+        parts: { crystalridge: 0.6, brows: 0.4 },
+        moves: { special: 'Sleet Slide', super: 'Blizzard Crash' },
+      },
+      {
+        name: 'Emperice', species: 'Emperor Ice Penguin', size: 1.26, voice: 0.85, portraitZoom: 1.06,
+        blurb: 'Wears a golden crest and a mantle of glacier ice. Snowstorms politely wait for it to finish talking.',
+        colors: { body: 0x2a3878, belly: 0xffffff, accent: 0xffb02a, dark: 0x141c42, crystal: 0xb8f4ff, plume: 0xffc84a },
+        body: { w: 0.62, h: 0.96, headR: 0.44, legLen: 0.18, armLen: 0.3, chubby: 1.02, limb: 1.3 },
+        parts: { crystalridge: 1.05, plumes: 0.8, brows: 0.7 },
+        moves: { special: 'Glacier Slide', super: 'Emperor Blizzard' },
+      },
+    ],
+  },
+  kindlekit: {
+    path: 'Swift',
+    forms: [
+      {
+        name: 'Kindlefox', species: 'Ember Fox', size: 1.1, tailScale: 1.25, voice: 1.25,
+        blurb: 'Its flame has spread from tail to crest. Leaves a trail of warm footprints in the snow.',
+        colors: { body: 0xe04a34, belly: 0xfff0dc, accent: 0xffbf2a, dark: 0x6a1a12, flame: 0xff6a1e, flameIn: 0xfff07a },
+        body: { w: 0.58, h: 0.72, headR: 0.47, legLen: 0.22, armLen: 0.25, chubby: 0.98, limb: 1.1 },
+        parts: { flamecrest: 0.7, brows: 0.4 },
+        moves: { special: 'Blaze Trail', super: 'Grand Fireworks' },
+      },
+      {
+        name: 'Solfox', species: 'Sun Fox', size: 1.25, tailScale: 1.55, voice: 1.0,
+        blurb: 'Sparks orbit it like tiny suns. They say it chased the sunset once and caught it.',
+        colors: { body: 0xd8402e, belly: 0xfff0dc, accent: 0xffc23a, dark: 0x5a160e, flame: 0xff7a1e, flameIn: 0xfff6a0, orb: 0xffd84a },
+        body: { w: 0.6, h: 0.88, headR: 0.45, legLen: 0.3, armLen: 0.3, chubby: 0.98, limb: 1.25 },
+        parts: { flamecrest: 1.0, orbs: 0.7, brows: 0.7 },
+        moves: { special: 'Solar Trail', super: 'Sunburst Finale' },
+      },
+    ],
+  },
+  woolt: {
+    path: 'Storm',
+    forms: [
+      {
+        name: 'Wooltage', species: 'Static Ram', size: 1.12, voice: 1.0,
+        blurb: 'Its horns came in crackling. Rubbing them on a balloon is strongly discouraged.',
+        colors: { body: 0x726aa8, belly: 0xfff4d0, accent: 0xffd23a, dark: 0x28243e, horn: 0xffe58a, bolt: 0xffe066 },
+        body: { w: 0.72, h: 0.68, headR: 0.49, legLen: 0.19, armLen: 0.23, chubby: 1.2, limb: 1.35 },
+        parts: { horns: 0.8, brows: 0.45 },
+        moves: { special: 'Fuzz Bomb', super: 'Giga Fluff Slam' },
+      },
+      {
+        name: 'Thunderam', species: 'Thunder Ram', size: 1.3, voice: 0.75,
+        blurb: 'A thundercloud with legs and very big horns. Its headbutts arrive before the thunder does.',
+        colors: { body: 0x5e5698, belly: 0xfff0c4, accent: 0xffd23a, dark: 0x201c36, horn: 0xffe070, bolt: 0xffe066 },
+        body: { w: 0.94, h: 0.86, headR: 0.48, legLen: 0.22, armLen: 0.3, chubby: 1.24, limb: 1.8 },
+        parts: { horns: 1.3, brows: 0.9, boltmane: 0.9 },
+        moves: { special: 'Thunder Fuzz', super: 'Storm Ram Slam' },
+      },
+    ],
+  },
+  whirlwhisk: {
+    path: 'Sky',
+    forms: [
+      { name: 'Whirlglide', species: 'Gale Glider', size: 1.1, voice: 1.2, bodyMul: GROW2,
+        blurb: 'Glides on its own updrafts now. It hasn\'t touched the ground in three days.',
+        colors: { plume: 0xffffff }, parts: { windring: 0.6, brows: 0.4 }, moves: { special: 'Sky Dive', super: 'Jet Gale' } },
+      { name: 'Tempestail', species: 'Tempest Glider', size: 1.24, voice: 0.95, bodyMul: GROW3,
+        blurb: 'A whirlwind with a fluffy tail. Leaves fall upward wherever it goes.',
+        colors: { plume: 0xe8f0ff }, parts: { windring: 1, plumes: 0.8, brows: 0.7 }, moves: { special: 'Tempest Dive', super: 'Hurricane Stream' } },
+    ],
+  },
+  diggles: {
+    path: 'Fortress',
+    forms: [
+      { name: 'Drillmole', species: 'Drill Mole', size: 1.12, voice: 0.9, bodyMul: { ...GROW2, w: 1.2, chubby: 1.05 },
+        blurb: 'Upgraded its hard hat and its claws. Tunnels through rock like it\'s pudding.',
+        colors: { rock: 0x6a6070 }, parts: { stonearmor: 0.6, brows: 0.5 }, moves: { special: 'Drill Ambush', super: 'Mole Stampede' } },
+      { name: 'Quarrymole', species: 'Gem Quarry Mole', size: 1.3, voice: 0.7, bodyMul: { ...GROW3, w: 1.38, chubby: 1.08, limb: 1.75 },
+        blurb: 'Gems from the deepest mines grow along its back. It knows the underground like its own pocket.',
+        colors: { rock: 0x5a5262, crystal: 0x9ae4ff }, parts: { stonearmor: 1.1, crystalridge: 0.9, brows: 0.8, tusks: 0.5 }, moves: { special: 'Quarry Ambush', super: 'Gem Rush' } },
+    ],
+  },
+  ripples: {
+    path: 'Swift',
+    forms: [
+      { name: 'Splashotter', species: 'Rapids Otter', size: 1.1, voice: 1.05, bodyMul: GROW2,
+        blurb: 'A fin grew along its back for riding rapids. Its puddles now come with waves.',
+        colors: { fin: 0x6ad0ff }, parts: { backfin: 0.6, brows: 0.35 }, moves: { special: 'Rapids Puddle', super: 'Maelstrom' } },
+      { name: 'Torrentide', species: 'Torrent Otter', size: 1.25, voice: 0.85, bodyMul: GROW3,
+        blurb: 'Rides a river wherever it goes, even when there isn\'t one.',
+        colors: { fin: 0x52c8ff }, parts: { backfin: 1.05, whiskers: 0.9, brows: 0.6 }, moves: { special: 'Torrent Puddle', super: 'Grand Whirlpool' } },
+    ],
+  },
+  jiggawatt: {
+    path: 'Mystic',
+    forms: [
+      { name: 'Jigglevolt', species: 'Volt Jelly', size: 1.1, voice: 1.3, bodyMul: GROW2,
+        blurb: 'Glows bright enough to read by. Crackles when it laughs, which is constantly.',
+        colors: { orb: 0x8af0ff, bolt: 0x8af0ff }, parts: { orbs: 0.55, boltmane: 0.5 }, moves: { special: 'Static Surge', super: 'Thunderhead' } },
+      { name: 'Megawatt', species: 'Storm Jelly', size: 1.26, voice: 1.0, bodyMul: GROW3,
+        blurb: 'A floating light show with a ring of tiny lightning bugs. Rock concerts book it as the lighting.',
+        colors: { orb: 0x8af0ff, bolt: 0x8af0ff }, parts: { orbs: 1, boltmane: 0.9 }, moves: { special: 'Mega Static', super: 'Supercell' } },
+    ],
+  },
+  squeakwing: {
+    path: 'Sky',
+    forms: [
+      { name: 'Shriekwing', species: 'Orchard Bat', size: 1.1, voice: 1.1, bodyMul: GROW2,
+        blurb: 'Bigger wings, bigger ears, much bigger squeak. The apples fall off the trees by themselves now.',
+        colors: { horn: 0xfff2d8 }, parts: { horns: 0.45, brows: 0.45 }, moves: { special: 'Sonic Shriek', super: 'Echo Blast' } },
+      { name: 'Echowing', species: 'Thunder Bat', size: 1.24, voice: 0.85, bodyMul: GROW3,
+        blurb: 'The air rings around it like a bell. When it shouts, the jumbotron flickers.',
+        colors: { horn: 0xfff2d8 }, parts: { horns: 0.75, windring: 0.8, brows: 0.75 }, moves: { special: 'Sonic Boom', super: 'Echo Quake' } },
+    ],
+  },
+  snoozlo: {
+    path: 'Brute',
+    forms: [
+      { name: 'Snoozalot', species: 'Drowsy Koala', size: 1.12, voice: 0.9, bodyMul: { ...GROW2, w: 1.2, chubby: 1.06 },
+        blurb: 'Now big enough to nap anywhere it likes. Most of the time that\'s on its opponent.',
+        colors: {}, parts: { leafmane: 0.8 }, moves: { special: 'Deep Nap', super: 'Lullaby Slam' } },
+      { name: 'Slumberking', species: 'Dream Koala', size: 1.3, voice: 0.7, bodyMul: { ...GROW3, w: 1.38, chubby: 1.1, limb: 1.75 },
+        blurb: 'Dreams drift around it like little moons. Waking it up is a very, very bad idea.',
+        colors: { orb: 0xffc8e8 }, parts: { leafmane: 1.15, orbs: 0.7, lotus: 0.7 }, moves: { special: 'Royal Slumber', super: 'Dreamquake' } },
+    ],
+  },
   pebblepup: {
     path: 'Colossus',
     forms: [
@@ -233,8 +387,9 @@ export function grown(def, lv, shiny) {
       moves: { special: `${p} ${def.moves.special}`, super: `${p} ${def.moves.super}` },
     };
   }
+  const body = F.body || Object.fromEntries(Object.entries(def.body).map(([k, x]) => [k, x * (F.bodyMul[k] ?? 1)]).concat([['limb', F.bodyMul.limb]]));
   return {
-    ...def, ...F, stage, baseName: def.name,
+    ...def, ...F, stage, baseName: def.name, body,
     colors: { ...def.colors, ...F.colors, ...(shiny || {}) },
     stats: { ...def.stats, hp },
   };
@@ -550,7 +705,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
 
   // a ridge of big crystals down the spine and a crystal tiara
   if (P.crystalridge) {
-    const s = P.crystalridge, cm = mat('crystal', C.accent, { rim: 1 });
+    const s = P.crystalridge, cm = mat('crystal', C.crystal ?? C.accent, { rim: 1 });
     const gem = (r, h) => { const g = new THREE.OctahedronGeometry(r, 0); g.scale(1, h / r, 1); g.translate(0, h * 0.5, 0); return g; };
     const parts = [];
     for (let k = 0; k < 6; k++) {
