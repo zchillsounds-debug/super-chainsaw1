@@ -1079,7 +1079,7 @@ export class Screens {
     d.innerHTML = `<div class="grow" style="--tc:${TYPES[base.type].color}">
       <div class="grow-rays"></div>
       <p class="grow-msg">What? <b>${pre}</b> is growing!</p>
-      <div class="grow-pics"><img class="g-old" src="${g.portrait(from, 512)}" alt=""><img class="g-new" src="${g.portrait(to, 512)}" alt=""></div>
+      <div class="grow-pics"><img class="g-old" src="${g.portrait(from, 512, true)}" alt=""><img class="g-new" src="${g.portrait(to, 512, true)}" alt=""></div>
       <div class="grow-card"></div>
     </div>`;
     this.root.appendChild(d);

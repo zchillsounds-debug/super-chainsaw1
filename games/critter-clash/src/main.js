@@ -231,8 +231,9 @@ class Game {
   impactFrame(t) { if (!this.reduceFlash) this.impactT = Math.max(this.impactT, t); }
 
   // 3D-rendered portrait of a critter's head, cached as a data URL
-  portrait(def, S = 256) {
-    const key = def.id + (def.skin || '') + (def.gear || '') + (def.stage ? 's' + def.stage : '') + (S !== 256 ? '@' + S : '');
+  // full: frame the whole body (the growing scene) instead of the head
+  portrait(def, S = 256, full = false) {
+    const key = def.id + (def.skin || '') + (def.gear || '') + (def.stage ? 's' + def.stage : '') + (S !== 256 ? '@' + S : '') + (full ? 'F' : '');
     if (this.portraits.has(key)) return this.portraits.get(key);
     const scene = new THREE.Scene();
     const cr = new Critter(def);
@@ -244,8 +245,14 @@ class Game {
     const B = def.body;
     const Z = def.size || 1, headY = (B.legLen * 0.9 + B.h * 0.82 + B.headR * 0.78) * Z, zoom = Z * (def.portraitZoom || 1);
     const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
-    cam.position.set(-0.35 * zoom, headY + 0.15 * zoom + (zoom - Z) * 0.6, 2.6 * zoom);
-    cam.lookAt(0, headY - 0.05 + (zoom - Z) * 0.6, 0);
+    if (full) {
+      const H = (B.legLen + B.h + B.headR * 2.3) * Z + 0.2, dist = H * 1.85;
+      cam.position.set(-0.3 * dist / 2.6, H * 0.55, dist);
+      cam.lookAt(0, H * 0.47, 0);
+    } else {
+      cam.position.set(-0.35 * zoom, headY + 0.15 * zoom + (zoom - Z) * 0.6, 2.6 * zoom);
+      cam.lookAt(0, headY - 0.05 + (zoom - Z) * 0.6, 0);
+    }
     const rt = new THREE.WebGLRenderTarget(S, S, { samples: 4 });
     rt.texture.colorSpace = THREE.SRGBColorSpace;
     const r = this.renderer;
