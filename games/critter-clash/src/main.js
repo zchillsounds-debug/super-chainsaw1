@@ -299,6 +299,7 @@ class Game {
   // ---- battles ----
   startBattle(pDef, cDef, opts = {}) {
     this.endBattle();
+    this.lastStart = [pDef, cDef, opts];
     this.setArena(opts.arena || Q.get('arena') || 'meadow');
     this.setShowcase([]);
     this.screens.hideAll();
