@@ -1,8 +1,9 @@
-# Critter Clash: Handoff (after Round 197)
+# Critter Clash: Handoff (after Round 208)
 
 ## Start here (for a new chat)
 - Repo `zchillsounds-debug/super-chainsaw1`, branch **`ccr-4fc93d6e-suxlhd`**, folder `games/critter-clash/`. Clone with `--branch ccr-4fc93d6e-suxlhd`.
-- Latest work (session 14, 2026-10-14 20:20–~21:40 UTC): the user confirmed the growing scene and new forms look right (APK 1.0.190), picked **"Modes & polish"** as the focus, and said: "Reach 300k tokens and start new chats for handoff". So keep building, and chain to a fresh session near 300k context with this file. Session 14 did R175–R197: a signature second hazard per stadium, the Daily Team Challenge, Daily streaks, Stadium Trials, the Stadium Mayhem modifier, a Quick Battle modifier chip, hazard practice in Training, hazard sounds and a jumbotron warning (see "Session 14").
+- Latest work (session 15, 2026-10-14 21:42–~22:20 UTC): finished session 14's "Modes & polish" time box with R198–R208 (see "Session 15"). The user's requested time ended at ~22:25 UTC, so **nothing was chained after session 15**; wait for the user before building more. Numbering continues from **R209**.
+- Earlier (session 14, 2026-10-14 20:20–~21:40 UTC): the user confirmed the growing scene and new forms look right (APK 1.0.190), picked **"Modes & polish"** as the focus, and said: "Reach 300k tokens and start new chats for handoff". So keep building, and chain to a fresh session near 300k context with this file. Session 14 did R175–R197: a signature second hazard per stadium, the Daily Team Challenge, Daily streaks, Stadium Trials, the Stadium Mayhem modifier, a Quick Battle modifier chip, hazard practice in Training, hazard sounds and a jumbotron warning (see "Session 14").
 - The user got APK **1.0.195** (R175–R182) mid-session. The last APK of session 14 is listed under "Session 14".
 - Ask the user first: how do the new stadium tricks feel on a phone (the laser, the wave, the ice slick)? Is Stadium Trials 3★ too hard?
 - Next ideas: see "Suggested next rounds"; numbering continues from **R198**.
@@ -298,6 +299,21 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - Final gate (21:40 UTC): tapcheck clean at all 4 sizes, Sprout Cup cupflow clears, and teamflow normal and DAILY both finish.
 - **Time:** the user asked for about 2 hours in session 14 (20:23 → ~22:25 UTC on 2026-10-14). Session 14 chained at ~230k context, about 21:45 UTC.
 
+## Session 15 (2026-10-14, 21:42–~22:20 UTC)
+- **Note for new sessions:** the cloud clone can be shallow and look "ahead 50, behind 50". Run `git fetch --unshallow origin ccr-4fc93d6e-suxlhd` and then `git merge --ff-only origin/ccr-4fc93d6e-suxlhd` before working.
+- **R198:** the Full Team badge's id is now `roster`. It used to share the id `team` with Dream Team, so winning a 3-on-3 also marked Full Team as earned. No other duplicate ids exist in data.js arrays (checked).
+- **R199: Survival Gatekeepers.** Every 5th challenger (`(streak + 1) % 5 === 0`) is shiny, +2 levels, +0.08 difficulty, with stage card `Gatekeeper #N`. Beating one pays `min(5, 1 + streak / 5)` berries and a full heal. New badge **Gatebreaker** (`streak10`, a 10-win streak).
+- **R200:** Camp shows a ringmaster's top hat beside the trial pedestal once the player has Stadium Tamer. This is the 4th `buildProps` argument, `tamer`.
+- **R201:** Survival ctx stores `best` (the best streak at run start). "NEW BEST!" now shows only when the run beats it, not on a tie, and also on the win that breaks it.
+- **R202 and R203:** the Badges modal shows a count (`3/30`) and lists earned badges first. Locked counting badges show a progress bar from `BADGE_PROG` in `Screens.badgeModal`.
+- **R204:** clearing the Boss Rush pays +5 berries the first time and +2 after.
+- **R205:** How to Play has a Survival line.
+- **R206:** the VS screen adds `.vs-side.gold` (gold nameplate and glow) for bosses, Boss Rush and Gatekeepers.
+- **R207:** a jingle and a buzz when a Gatekeeper falls.
+- **R208:** Pecan news `gate` for players with a Survival streak.
+- **Checks run:** gatekeeper win and loss paths, the Boss Rush clear, and Camp with the hat were all screenshotted error-free. tapcheck is clean at 740×360 and 412×915. The Sprout Cup cupflow clears at 740×360 with no errors.
+- **Test gotcha:** forcing a win needs `?auto` (the player's CPU does the hitting). Keep the player alive with `p.hp = p.maxHp` in the sim loop. Don't edit files while tapcheck runs: HMR reloads break it (`__game is not defined`).
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -500,6 +516,17 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 195. Camp trick pedestal (a star per 3★ trial).
 196. Tomorrow's Daily preview on a cleared card.
 197. Modifier chip on the Team Battle pick sheet.
+198. Full Team badge id fix.
+199. Survival Gatekeepers + Gatebreaker badge.
+200. Camp top hat for Stadium Tamer.
+201. Survival NEW BEST only when beaten.
+202. Badges count, earned first.
+203. Badge progress bars.
+204. Boss Rush berry basket.
+205. How to Play: Survival.
+206. Gold VS nameplate for bosses/Gatekeepers.
+207. Gatekeeper jingle.
+208. Pecan news about Gatekeepers.
 L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (smaller, softer, per-kind `cap` on point size).
 
 ## Critique backlog (known issues)
@@ -516,6 +543,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Growth (session 12) is untested on a real phone; ask the user how the growing scene and the big forms feel. Balance was not re-measured with grown forms (both sides grow by level in cups, so it's symmetric, but hand-built bodies are bigger targets visually only; hit ranges are unchanged).
 - The 10 `bodyMul` lines have new palettes and parts but share proportions; a signature part each would make them read as new creatures as strongly as the first nine.
 ## Suggested next rounds
+- After session 15: ask the user how Survival Gatekeepers feel. Ideas: a Survival run summary (berries and XP earned this run), progress bars for more badges, a Camp prop for Gatebreaker, a 2-rep robin on a hazard arena, localisation.
 - After session 14: ask how the stadium tricks and Stadium Trials feel on a phone. Ideas left from "Modes & polish": a Camp prop for Trick Star / Stadium Tamer, Team Battle with modifiers, a 2-rep robin on a hazard arena, localisation, a 20th critter (the user hasn't asked for one).
 - After session 13: ask about the growing scene and the new forms; the growing scene could show the 3D model instead of portraits.
 - Session 12 is done. Next, if the user asks: polish the 10 `bodyMul` growth lines, ask for playtest feedback on growing, carry on numbering from R162.
