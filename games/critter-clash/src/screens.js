@@ -130,7 +130,14 @@ export class Screens {
     this.root.querySelector('.title-screen').appendChild(gear);
     playMusic('menu');
     // news for returning trainers: new critters turned up in cups they may already have cleared
-    if (!g.autoplay && save.cups.thunder && !save.news?.includes('grove')) {
+    if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
+      (save.news ||= []).push('grow'); persist();
+      const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, I've made a discovery! Critters GROW when they get strong enough. At Lv 7, and again at Lv 14, they change into a bigger, stronger form with powered-up moves.",
+        already.length ? `In fact, some of yours already have: say hello to ${already.slice(0, 3).join(', ')}${already.length > 3 ? ' and more' : ''}! Every critter grows its own way, so check the Critterdex.` : "Every critter grows its own way. Keep battling, and check the Critterdex to see how far yours have come!",
+      ]), 600);
+    } else if (!g.autoplay && save.cups.thunder && !save.news?.includes('grove')) {
       (save.news ||= []).push('grove'); persist();
       setTimeout(() => this.mode === 'title' && this.profTalk([
         "Oh, {name}! A new league has opened deep in the mushroom woods: the Glowcap Cup.",
@@ -280,6 +287,7 @@ export class Screens {
         <li><b>Team Battle</b><span>In Challenges: pick three critters against a rival team of three. The winner of each fight stays in with the damage it took.</span></li>
         <li><b>Counters</b><span>A napping Snoozlo is a trap: hit it and it wakes up swinging. Wait it out, then pounce while it yawns.</span></li>
         <li><b>Camp</b><span>Pet your critters to build friendship and feed them berries for XP. Win battles to earn berries, and drop by daily for a gift. Best friends (5 hearts) start every battle with some super meter.</span></li>
+        <li><b>Growing</b><span>At Lv 7 and Lv 14 a critter grows into a new form: bigger, tougher, with stronger specials and supers. Rivals grow too!</span></li>
         <li><b>Settings</b><span>Make the touch buttons bigger or smaller, switch battle tips off (or back on to replay them), and pause any fight to Restart it.</span></li>
       </ul></div>`;
     const close = this.btn('Got it!', 'primary', () => d.remove());

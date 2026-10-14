@@ -11,7 +11,7 @@ const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console
 await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?mobile&q=low');
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 const mode = () => pg.evaluate(() => (__game.screens.mode || 'battle') + (__game.battle ? ':' + __game.battle.phase : ''));
-await pg.evaluate(() => { __save.trainer = { name: 'Zee', partner: 'bubbalotl' }; __save.tutorialDone = true; __save.news = ['grove', 'otter', 'frogmole', 'jelly', 'team'];
+await pg.evaluate(() => { __save.trainer = { name: 'Zee', partner: 'bubbalotl' }; __save.tutorialDone = true; __save.news = ['grove', 'otter', 'frogmole', 'jelly', 'team', 'grow'];
   for (const id of ['bubbalotl', 'cindermunch', 'clovebun', 'voltferret']) if (!__save.unlocked.includes(id)) __save.unlocked.push(id); __game.screens.title(); });
 await pg.waitForTimeout(800);
 const tap = async (sel, text) => {

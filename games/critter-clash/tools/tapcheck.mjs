@@ -26,6 +26,7 @@ const STEPS = [
   ['recruit', "S.title(); S.recruit(__critters[14])"],
   ['trophy', "S.sel=0; S.trophy(__cups[1])"],
   ['moves', "S.title(); S.moveModal(__critters[14])"],
+  ['grow', "S.title(); S.growUp('clovebun', 14); __game.modalClose()"],
   ['pause', "__game.startBattle(__critters[14], __critters[3], { difficulty: 0.5 }); __sim(6); __game.screens.pauseMenu(true)"],
   ['results', "S.pauseMenu(false); __game.paused=false; const b=__game.battle; for(let i=0;i<60&&b.phase!=='done';i++){ if(b.phase==='fight'){ const c=b.fighters[1]; c.hp=0; b.onKO(b.fighters[0], c);} __sim(1); } __sim(3)"],
 ];
@@ -52,11 +53,11 @@ for (const [w, h] of sizes) {
   const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
   await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?mobile&q=low');
   await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
-  await pg.evaluate(() => { __save.trainer = { name: 'Samantha', partner: 'cindermunch' }; __save.unlocked = __critters.map((c) => c.id); __save.news = ['grove', 'otter', 'frogmole']; __save.tutorialDone = true; });
+  await pg.evaluate(() => { __save.trainer = { name: 'Samantha', partner: 'cindermunch' }; __save.unlocked = __critters.map((c) => c.id); __save.news = ['grove', 'otter', 'frogmole', 'grow']; __save.tutorialDone = true; __critters.forEach((c, i) => { __save.critters[c.id].level = [1, 8, 15][i % 3]; }); });
   for (const [name, js] of STEPS) {
     try {
       await pg.evaluate(`(() => { const S = __game.screens; document.querySelectorAll('.modal-wrap, .prof-wrap').forEach((m) => m.remove()); ${js}; })()`);
-      await pg.waitForTimeout(name === 'results' ? 2500 : 700);
+      await pg.waitForTimeout(name === 'results' ? 2500 : name === 'grow' ? 2600 : 700);
       const bad = await pg.evaluate(CHECK);
       if (bad.length) console.log(`${w}x${h} ${name}: ${bad.join(' | ')}`);
       if (process.env.SHOTS) await pg.screenshot({ path: `tools/out/tc-${w}x${h}-${name}.png` });
