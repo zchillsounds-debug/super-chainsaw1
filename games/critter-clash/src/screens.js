@@ -1173,6 +1173,24 @@ export class Screens {
     const cam = this.game.camera;
     if (this.mode === 'camp') { this.campObj?.update(dt); return; }
     if (this.campObj) { this.campObj.dispose(); this.campObj = null; }
+    // trophy screens: fireworks pop in the sky behind the winners
+    if (this.mode === 'trophy' || this.mode === 'teamwin') {
+      this.fwT = (this.fwT ?? 0.4) - dt;
+      if (this.fwT <= 0) {
+        this.fwT = 0.5 + Math.random() * 0.6;
+        // pick a spot in the upper part of the screen, about 10 m out from the camera
+        const fx = this.game.fx, v = (this.fwV ||= cam.position.clone());
+        v.set((Math.random() - 0.5) * 1.6, 0.4 + Math.random() * 0.4, 0.5).unproject(cam).sub(cam.position).normalize().multiplyScalar(9 + Math.random() * 3).add(cam.position);
+        const at = { x: v.x, y: v.y, z: v.z };
+        const pal = [[0xff4fa0, 0xffe14d], [0x4fd8ff, 0xffffff], [0x9aff4f, 0xffe14d], [0xffa030, 0xff4f4f], [0xc87aff, 0x7af0ff]][Math.floor(Math.random() * 5)];
+        for (let k = 0; k < 36; k++) {
+          const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u), sp = 4.5 * (0.85 + Math.random() * 0.3);
+          fx.spawn({ ...at, vx: r * Math.cos(a) * sp, vy: u * sp + 0.6, vz: r * Math.sin(a) * sp, color: pal[k % 2], size: k % 3 ? 0.55 : 0.75, life: 1.0, shape: k % 3 ? 'spark' : 'star', additive: k % 3 !== 0, grav: 2.5, rot: Math.random() * 6 });
+        }
+        fx.spawn({ ...at, color: 0xffffff, size: 3.5, life: 0.2, shape: 'glow' });
+        fx.spawn({ ...at, color: pal[0], size: 3.2, life: 0.3, shape: 'ring' });
+      }
+    }
     if (this.mode === 'title') {
       const a = Math.sin(this.t * 0.15) * 0.35;
       const D = cam.aspect < 1 ? 11 : 7.5;

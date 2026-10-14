@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 115)
+# Critter Clash: Handoff (after Round 124)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -24,6 +24,7 @@
 - Time used so far: about 7.6 hours of actual work (6.6 h before session 9 + ~1.0 h in session 9).
 - The original ~10 h target ended at 02:15 UTC on 2026-10-14. At 02:09 the user asked for **about 2.4 more hours** (session 10a, 02:09–02:52 UTC, did Rounds 99 and 102–115).
 - **New target end: about 04:35 UTC on 2026-10-14.** Check `date -u`. Keep chaining until then, then stop and summarise. If a worker stalls, extend by the stall.
+- Session 10b (02:52–04:35 UTC) sent the user the f427c6a APK (R113), then did Rounds 116–124 (Team Battle polish, a 16-critter balance pass, **Kindlekit** the 17th critter). This was the last planned session: the user's extra ~2.4 h ended at about 04:35 UTC on 2026-10-14.
 - **A second session works on this branch at the same time:** `session_01N69mQniqCEkTvu2X5XzxtL` (the user's own Claude app chat). It handles the user's playtest reports (R99 tips out of the way, R100 mod chips, R101 cupflow, Settings "Battle tips" toggle and "Button size"). Before every push run `git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd` (never rebase or force-push: the classifier blocks it and it would clobber their work). Its round numbers overlap ours (two R99s); just keep counting up from the highest number in `git log`. Stay away from the tutorial/HUD tips/Settings it is changing; prefer content, arenas, modes, balance.
 
 ## Run it
@@ -194,6 +195,11 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - Camp: landscape wander zone is much wider (16 critters no longer huddle). Critterdex tiles fit full names.
 - `tools/tapcheck.mjs` also opens `quicksetup` and `teampick` (clean at 740×360 and 412×915).
 
+## New in session 10b
+- **Kindlekit** (fire ember fox kit; `tail: 'foxfire'` = fox brush with a flame tip whose flames use `userData.base`, `extra: 'fox'` cheek ruffs + nose). Special `flametrail` (dash at 15 u/s that drops `ember` projectiles every 0.065 s: stationary scorch + additive core, r 0.62, 2.0 s; one shared burn tick per owner via `owner.burnAt` / `battle.clock`). Super `fireworks` (8 lobbed `shell` projectiles that air-burst at `burstY` via `Battle.shellBurst()`, the last is big). Trainer **Fizz** (Sky Cup, 4th of 5 before Pecan), Pecan news `fox`, Camp quirk (chases its tail), shiny = blue flame. The CPU steps out of a rival's ember patches.
+- Team Battle: VS screen callout `.vs-go` ("Go, X!" / "Rival sends out X!", `ctx.sent`), stage card subtitle via the new Battle opt `stageSub`, `Screens.teamTrophy()` (mode `teamwin`, pulled-back trio camera in `update`), results team rows no longer inherit the 110 px `.res-card img` size.
+- Balance (full 16 run at 02:55): Voltferret was 90% → power 0.93, hp 870, Zip Zap cd 4.9 (focused rerun ~67%); Bubbalotl hp 1150/power 1.05, Pricklepuff power 1.1, Whirlwhisk power 1.16.
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -318,6 +324,14 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 113. Camp spreads out in landscape.
 114. Arena particle geometry disposed; 7-arena auto sweep clean.
 115. Critterdex tile names fit.
+116. Team Battle VS callout ("Go, Bubbalotl!" / "Rival sends out Hootsy!").
+117. Team Victory trophy screen with the trio.
+118. Team Battle stage card ("Your last critter!").
+119. Team results rows fixed (portraits were 110 px).
+120. Balance: Voltferret nerf; Bubbalotl, Pricklepuff, Whirlwhisk buffs.
+121. Kindlekit, the ember fox kit (Flame Trail / Firework Finale), Fizz in the Sky Cup.
+122. CPU escapes Flame Trail patches.
+123. Kindlekit balance (was 66% in a focused robin).
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
