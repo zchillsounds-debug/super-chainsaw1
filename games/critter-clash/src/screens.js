@@ -1016,6 +1016,7 @@ export class Screens {
           save.berries = (save.berries || 0) + prize;
           S.hp = 1;
           streakNote = `<div class="streak">⭐ Gatekeeper beaten! Streak ${S.streak} · +${prize} 🍓 · fully healed</div>`;
+          setTimeout(() => { if (this.mode === 'results') { sfx.jingle(3); buzz('medium'); } }, 1400);
         } else streakNote = `<div class="streak">🔥 Streak ${S.streak} · ${Math.round(S.hp * 100)}% health for the next fight${S.best && S.streak === S.best + 1 ? ' · NEW BEST!' : ''}${S.streak % 5 === 4 ? ' · ⭐ Gatekeeper next!' : ''}</div>`;
       } else {
         const best = save.stats.bestStreak || 0;
