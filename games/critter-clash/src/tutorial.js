@@ -3,6 +3,9 @@ import { isTouch } from './input.js';
 import { save, persist } from './save.js';
 import { sfx } from './audio.js';
 
+// touch button each step teaches (it pulses while the tip is up)
+const TEACH = { combo: 'attack', dodge: 'dodge', special: 'special', guard: 'guard' };
+
 const STEPS = [
   { id: 'move', touch: 'Drag on the left side to move', keys: 'Move with WASD or the arrow keys', done: (b, s) => s.moved > 3 },
   { id: 'combo', touch: 'Tap the pink HIT button 3 times for a combo!', keys: 'Press J (or Space) 3 times for a combo!', done: (b) => b.player.state === 'attack' && b.player.combo === 2 },
@@ -24,7 +27,14 @@ export class Tutorial {
     this.superShown = false;
   }
 
-  show(text) {
+  // pulse one touch button (or none)
+  teach(b) {
+    document.querySelectorAll('.tb.teach').forEach((x) => x.classList.remove('teach'));
+    if (b && isTouch) document.querySelector(`.tb-${b}`)?.classList.add('teach');
+  }
+
+  show(text, b) {
+    this.teach(b);
     this.el.innerHTML = `<span>${text}</span>`;
     this.el.classList.remove('on', 'dim', 'done'); void this.el.offsetWidth; this.el.classList.add('on');
     this.shown = 0;
@@ -43,19 +53,20 @@ export class Tutorial {
     if (this.i < STEPS.length - 1) { b.cpu.ctl.attack = b.cpu.ctl.special = b.cpu.ctl.super = false; }
     if (!this.superShown && p.superM >= 100) {
       this.superShown = true;
-      this.show(isTouch ? 'SUPER charged! Tap the glowing ★' : 'SUPER charged! Press I to unleash it');
+      this.show(isTouch ? 'SUPER charged! Tap the glowing ★' : 'SUPER charged! Press I to unleash it', 'super');
       sfx.ui('ok');
     }
     if (this.i >= STEPS.length) return;
-    if (this.gap > 0) { this.gap -= dt; if (this.gap <= 0) { this.show(isTouch ? STEPS[this.i].touch : STEPS[this.i].keys); this.s.t = 0; } return; }
+    if (this.gap > 0) { this.gap -= dt; if (this.gap <= 0) { this.show(isTouch ? STEPS[this.i].touch : STEPS[this.i].keys, TEACH[STEPS[this.i].id]); this.s.t = 0; } return; }
     if (STEPS[this.i].done(b, this.s)) {
       sfx.ui('ok');
       this.el.classList.add('done');
+      this.teach(null);
       this.i++;
       this.gap = 0.7;
       if (this.i >= STEPS.length) { save.tutorialDone = true; persist(); setTimeout(() => this.el.classList.remove('on'), 600); }
     }
   }
 
-  dispose() { this.el.remove(); }
+  dispose() { this.teach(null); this.el.remove(); }
 }
