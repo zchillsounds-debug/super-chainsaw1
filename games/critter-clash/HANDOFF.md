@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 131)
+# Critter Clash: Handoff (after Round 139)
 
 ## The brief (from the user)
 - "Build me the coolest game with the best graphics." Run the critique loop (screenshot → critique → improve) round after round until it's a finished product at AAA studio quality. The user asked for about **10 hours** of loops in total.
@@ -26,6 +26,7 @@
 - Session 10b ended at 04:19 UTC. At 04:41 the user asked to keep going in a fresh chat without naming a duration, so session 11 got a default of about 2 more hours.
 - **New target end: about 06:45 UTC on 2026-10-14.** Check `date -u`. Keep chaining until then, then stop and summarise. If a worker stalls, extend by the stall.
 - Session 10b (02:52–04:35 UTC) sent the user the f427c6a APK (R113), then did Rounds 116–131 (Team Battle polish, a 16-critter balance pass, **Kindlekit** and **Squeakwing**, critters 17 and 18, trophy fireworks). This was the last planned session: the user's extra ~2.4 h ended at about 04:35 UTC on 2026-10-14.
+- Session 11 (04:42 UTC on 2026-10-14 →) fixed the robin crash (R132), re-measured balance, sent the user the R135 APK, and did Rounds 133–139 (Snoozlo is critter 19).
 - **A second session works on this branch at the same time:** `session_01N69mQniqCEkTvu2X5XzxtL` (the user's own Claude app chat). It handles the user's playtest reports (R99 tips out of the way, R100 mod chips, R101 cupflow, Settings "Battle tips" toggle and "Button size"). Before every push run `git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd` (never rebase or force-push: the classifier blocks it and it would clobber their work). Its round numbers overlap ours (two R99s); just keep counting up from the highest number in `git log`. Stay away from the tutorial/HUD tips/Settings it is changing; prefer content, arenas, modes, balance.
 
 ## Run it
@@ -41,7 +42,7 @@ URL flags:
 
 - `&arena=frost`, `&arena=neon` and `&arena=sky` also work now, and `&mods=bighead,turbo,lowgrav,itemrain,supercharged` applies match modifiers.
 
-Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt, pebblepup, whirlwhisk, lilypop, diggles, ripples, jiggawatt, kindlekit, squeakwing.
+Critter ids: cindermunch, bubbalotl, clovebun, voltferret, rolladillo, hootsy, pengsicle, emberfly, pricklepuff, woolt, pebblepup, whirlwhisk, lilypop, diggles, ripples, jiggawatt, kindlekit, squeakwing, snoozlo.
 - Gotcha: `tools/multi.mjs` adds the `?` itself, so pass `play&p=...`, not `?play&p=...` (a double `??` silently shows the title).
 Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - `&train` starts a training match (e.g. `?play&train&p=woolt`).
@@ -203,6 +204,14 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - Team Battle: VS screen callout `.vs-go` ("Go, X!" / "Rival sends out X!", `ctx.sent`), stage card subtitle via the new Battle opt `stageSub`, `Screens.teamTrophy()` (mode `teamwin`, pulled-back trio camera in `update`), results team rows no longer inherit the 110 px `.res-card img` size.
 - Balance (full 16 run at 02:55): Voltferret was 90% → power 0.93, hp 870, Zip Zap cd 4.9 (focused rerun ~67%); Bubbalotl hp 1150/power 1.05, Pricklepuff power 1.1, Whirlwhisk power 1.16.
 
+## New in session 11
+- **Robin crash fixed (R132):** `Battle.endSuper` cleared `superUser` unconditionally, so if one fighter started a super in the same frame the other's super ended, the next `update` read `null.critter`. `endSuper` now only clears its own super, and a cut-in without a user is dropped. Repro: `b.startSuper(b.fighters[1]); b.endSuper(b.fighters[0]); __sim(3)`. A full 612-match robin then ran clean.
+- **Arena memory (R135):** `Arena.dispose()` now frees every `material.map` in the group and any light's shadow map. Before, each tour of the 7 arenas leaked ~20 GPU textures (the 1024 px field etc.). Check with `renderer.info.memory` while switching arenas with real frames rendered (`__sim` doesn't render).
+- **Floors:** Glowcap Grove has `floor: 'moss'` (moss/clover/petal canvas + an additive glow overlay with a fairy ring of tiny glowing caps inside the boundary line, pulsing via `this.cracks`). Frostpeak's snow floor has glassy ice patches with cracks and a cooler rim.
+- **Snoozlo** (leaf drowsy koala, critter 19; `extra: 'koala'` = big dark nose with a shine + eucalyptus sprig; koala ears are the `round` ears scaled up with white tufts). Special `powernap` (Fighter.updateSpecial): naps for 0.95 s; `Battle.applyHit` checks for a napping Snoozlo first: a non-super hit is negated (`napHit`, "COUNTER!", 0.55 s invuln) and answered with a lunge slam (105 × power, launch). If nobody bites, a yawn leaves it open until 1.2 s. Super `lullaby` (Battle.updateSuper): sings (heart notes drift at the rival), at 0.9 s puts the rival into `dizzy` for 1.8 s ("Zzz..."), then a 13 u/s rolling belly bump (165 × power). Trainer **Hazel** (Glowcap Cup, 1st match, replaced Fern/Clovebun), Pecan news `koala`, Camp quirk (nods off, jolts awake), shiny = honey tan with pink. The CPU backs off a napping Snoozlo (`ai.js`). `.fxtext.zz` style for snore z's.
+- Ladder on phones ≤400 px tall: the Battle button sits beside the trainer card (`.trainer-card .go` absolute) so the rungs aren't hidden.
+- Title tagline sits on a dark pill (`.logo-sub`).
+
 ## Playtest session (the user's own chat, session_01N69mQniqCEkTvu2X5XzxtL, 01:58–04:20 UTC)
 - **If `npm install` can't reach the registry** (this sandbox blocked registry.npmjs.org): the APK workflow now publishes `node_modules` to the orphan branch **`deps-critter-clash`** (split `nm.part.*`, rebuilt only when package-lock.json changes). Restore with: `git fetch --depth 1 origin deps-critter-clash && git archive FETCH_HEAD | tar x -C <scratch>/deps && cat <scratch>/deps/nm.part.* | tar xzf - -C games/critter-clash`.
 - User report at 02:07 UTC: "The green instructions are too in the way." Cause: the tutorial prompt kept its green `done` colour on every step after the first. Now: slim cream pill at top 96 px (84 on short phones), fades to 55% after 3 s (`.coach.dim`), and the taught touch button pulses a yellow ring (`.tb.teach`, `Tutorial.teach()`). Training panel is one slim strip with `pointer-events: none` (only the dummy chip is tappable); input log hidden on touch.
@@ -353,14 +362,22 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 129. 18-critter balance (Pengsicle, Voltferret nerfs; Squeakwing 9% -> 44%); VS timer guard (merged with the playtest session's identical fix).
 130. Results screens for the new critters checked; teamflow follows the Team Victory screen.
 131. Balance touch-ups from the final 18-critter run.
+132. Fixed the rare crash when one super starts in the frame another ends (the robin crash).
+133. Glowcap Grove mossy floor with a glowing fairy ring.
+134. Title tagline readable over the crowd.
+135. Arena textures and shadow maps freed on arena change (GPU memory leak).
+136. Frostpeak ice patches and cooler rim.
+137. Balance: Pricklepuff 24% → 46%, Bubbalotl 35% → 59% (focused rerun).
+138. Ladder rungs visible on 360 px tall phones.
+139. Snoozlo, the drowsy koala (Power Nap counter / Lullaby Bump), Hazel in the Glowcap Cup. Focused robin 63% after buffs (was 31%).
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
-- **Investigate first:** a re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
-- The R131 balance tweaks were not re-measured because of that crash.
+- (Fixed in R132.) A re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
 - Native photo Save/Share (Round 27) is untested on a real phone.
 - Haptics (Round 72) are untested on a real phone.
-- Last full balance run (04:04, 18 critters, 1 rep = 34 games each): Voltferret, Pengsicle and Lilypop 68%, Pebblepup and Kindlekit 62%, most others 41–53%, Bubbalotl and Hootsy 35%, Squeakwing 21% (a focused run just before said 44%, so the sample is noisy). Small tweaks followed (top three power -0.02/-0.03, Bubbalotl/Hootsy/Squeakwing buffs) but were not re-measured. Re-run `tools/robin.mjs 2` first.
+- Full run at 04:45 (session 11, 18 critters, 1 rep): Pebblepup/Whirlwhisk/Lilypop/Kindlekit 62%, Voltferret/Diggles 59%, most 38–56%, Bubbalotl 35%, Pricklepuff 24% (both buffed in R137). Run a full `tools/robin.mjs 1` with all 19 next.
+- Older: last full balance run (04:04, 18 critters, 1 rep = 34 games each): Voltferret, Pengsicle and Lilypop 68%, Pebblepup and Kindlekit 62%, most others 41–53%, Bubbalotl and Hootsy 35%, Squeakwing 21% (a focused run just before said 44%, so the sample is noisy). Small tweaks followed (top three power -0.02/-0.03, Bubbalotl/Hootsy/Squeakwing buffs) but were not re-measured. Re-run `tools/robin.mjs 2` first.
 - The Sky Cup outro promises a picnic; Camp could have a sky-themed reward (e.g. a balloon prop) for clearing it.
 - No localisation.
 

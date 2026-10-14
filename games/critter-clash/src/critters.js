@@ -327,6 +327,27 @@ export class Critter {
       const hinge = new THREE.Mesh(sphere(headR * 0.06), shM);
       hinge.scale.set(1.6, 0.8, 0.8); shell.add(hinge);
       skull.add(shell);
+    } else if (def.extra === 'koala') {
+      // a big dark leathery nose and a eucalyptus sprig tucked behind one ear
+      const nose = inked(sphere(headR * 0.2), this.mats.dark, OL * 0.6);
+      nose.scale.set(0.85, 1.05, 0.62); nose.position.set(0, -headR * 0.22, headR * 0.94);
+      skull.add(nose);
+      const shine = new THREE.Mesh(sphere(headR * 0.05), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
+      shine.scale.set(1, 1.4, 0.5); shine.position.set(-headR * 0.06, -headR * 0.13, headR * 1.07);
+      skull.add(shine);
+      const sprig = new THREE.Group();
+      sprig.position.set(headR * 0.35, headR * 0.86, headR * 0.1); sprig.rotation.z = -0.5;
+      const leafM = toon(C.accent, { uniforms: U });
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(headR * 0.02, headR * 0.02, headR * 0.5, 5), this.mats.dark);
+      stem.position.y = headR * 0.2; sprig.add(stem);
+      for (let k = 0; k < 3; k++) {
+        const leaf = inked(sphere(headR * 0.13), leafM, OL * 0.4);
+        leaf.scale.set(0.5, 1.2, 0.2);
+        leaf.position.set((k % 2 ? 1 : -1) * headR * 0.09, headR * (0.12 + k * 0.14), 0);
+        leaf.rotation.z = (k % 2 ? -1 : 1) * 0.8;
+        sprig.add(leaf);
+      }
+      skull.add(sprig);
     } else if (def.extra === 'fox') {
       // cream cheek ruffs that flick out to points, and a little button nose
       for (const s of [-1, 1]) {
@@ -423,7 +444,7 @@ export class Critter {
     eyeL.renderOrder = eyeR.renderOrder = 2;
     skull.add(eyeL, eyeR);
     this.eyes = [eyeL, eyeR];
-    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' || def.extra === 'mole' ? -0.52 : def.extra === 'otter' ? -0.5 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
+    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' || def.extra === 'mole' ? -0.52 : def.extra === 'otter' ? -0.5 : def.extra === 'koala' ? -0.6 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
     mouth.renderOrder = 2;
     skull.add(mouth);
     const blushMat = decalMat(ft.blush);
@@ -460,6 +481,15 @@ export class Critter {
         inner.scale.set(1, 1, 0.3); inner.position.z = headR * 0.08;
         ear.add(inner);
         if (def.extra === 'otter') { ear.scale.setScalar(0.66); ear.position.set(s * headR * 0.72, headR * 0.6, -headR * 0.02); }
+        if (def.extra === 'koala') {
+          // big fluffy koala ears with white tufts poking out
+          ear.scale.setScalar(1.45); ear.position.set(s * headR * 0.8, headR * 0.5, -headR * 0.05); ear.rotation.z = -s * 0.75;
+          for (let k = 0; k < 4; k++) {
+            const tuft = new THREE.Mesh(sphere(headR * 0.07), this.mats.belly);
+            tuft.position.set((k - 1.5) * headR * 0.08, (k % 2 ? 0.05 : -0.03) * headR, headR * 0.11);
+            ear.add(tuft);
+          }
+        }
       } else if (def.ears === 'long') {
         ear.position.set(s * headR * 0.36, headR * 0.82, -headR * 0.08);
         ear.rotation.z = -s * 0.18;

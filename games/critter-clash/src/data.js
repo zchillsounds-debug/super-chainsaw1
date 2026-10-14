@@ -197,6 +197,16 @@ export const CRITTERS = [
     special: 'squeak', super: 'echoboom',
     moves: { special: 'Sonic Squeak', super: 'Echo Boom' },
   },
+  {
+    id: 'snoozlo', name: 'Snoozlo', type: 'leaf', species: 'Drowsy Koala',
+    blurb: 'Sleeps twenty hours a day and dreams about leaves. Wake it up and you will find out why nobody wakes it up.',
+    colors: { body: 0x98a3b6, belly: 0xf3f0ea, accent: 0x6ccf7a, dark: 0x3a4252, eye: '#141820', iris: '#5fc46c' },
+    body: { w: 0.66, h: 0.56, headR: 0.54, legLen: 0.12, armLen: 0.2, chubby: 1.15 },
+    ears: 'round', tail: 'stub', extra: 'koala', voice: 0.8,
+    stats: { hp: 1200, speed: 6.2, power: 1.16, weight: 1.1 },
+    special: 'powernap', super: 'lullaby',
+    moves: { special: 'Power Nap', super: 'Lullaby Bump' },
+  },
 ];
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
@@ -213,6 +223,7 @@ export const SHINY = {
   pebblepup:   { body: 0x6a6a88, belly: 0xe8e4ff, accent: 0xff8ad8, dark: 0x262438, iris: '#ff6ad0' },
   whirlwhisk:  { body: 0xffb38a, belly: 0xfff4e4, accent: 0xffe2c8, dark: 0x8a3a2a, iris: '#3ac07a' },
   diggles:     { body: 0xd8d0ec, belly: 0xffffff, accent: 0x6ad0ff, dark: 0x4a4a6a, iris: '#3a7bff' },
+  snoozlo:     { body: 0xd8b48a, belly: 0xfff6e6, accent: 0xff9ac8, dark: 0x6a4a2a, iris: '#ff7ab0' },
   squeakwing:  { body: 0xe8a63a, belly: 0xfff6dc, accent: 0xff7a9a, dark: 0x7a4a14, iris: '#ff4f7a', wing: 0x8a4a1a },
   kindlekit:   { body: 0x3a3a4a, belly: 0xe8f0ff, accent: 0x6ae0ff, dark: 0x141420, iris: '#6ae0ff', flame: 0x3a8aff, flameIn: 0xbfeaff },
   jiggawatt:   { body: 0xffa6d8, belly: 0xfff0f8, accent: 0x8af0ff, dark: 0x8a2a6a, iris: '#2ad0ff' },
@@ -278,7 +289,7 @@ export const CUPS = [
     intro: ["Shh, {name}. This is Glowcap Grove. The mushrooms here are as tall as houses, and the fireflies come out to watch.", "Careful of the spore puffs! One sniff and your critter gets very, very dizzy."],
     outro: ["Elder Oakley handed you a glowcap! That's the grove's highest honour. It also makes a lovely night light.", "The woods will always welcome you back, {name}."],
     matches: [
-      { name: 'Fern', style: 'zoner', title: 'Forest Scout', critter: 'clovebun', level: 6, taunt: "I know every trail in these woods. You'll get lost in mine!", beat: "Okay, okay, I'm the lost one now. Great match!", gloat: "Follow the fireflies home, {name}." },
+      { name: 'Hazel', style: 'turtle', title: 'Hammock Napper', critter: 'snoozlo', level: 6, taunt: "Shhh. Snoozlo is napping. Go on, poke it. I dare you.", beat: "You beat us fair and square. Snoozlo didn't even wake up for the loss.", gloat: "Told you not to poke it, {name}. Sweet dreams!" },
       { name: 'Brook', style: 'zoner', title: 'River Guide', critter: 'ripples', level: 7, taunt: "Ripples left puddles all over the arena. Hope you packed your wellies!", beat: "Swept away! I did not see that current coming.", gloat: "Slip, slide, splash. Thanks for playing, {name}!" },
       { name: 'Luma', style: 'trickster', title: 'Firefly Keeper', critter: 'emberfly', level: 8, taunt: "My fireflies light the way. Straight to your defeat!", beat: "You outshone a whole jar of fireflies. Wow.", gloat: "Lights out, little one." },
       { name: 'Nyx', style: 'trickster', title: 'Orchard Keeper', critter: 'squeakwing', level: 9, taunt: "Shh... Squeakwing is sleeping. Oops. Now it's awake. And LOUD.", beat: "You didn't even flinch at the squeak? Respect. Squeakwing wants to hang out with you now.", gloat: "Hear that? That's the sound of you losing. Very loudly." },
@@ -409,6 +420,8 @@ export const MOVE_DESC = {
   jetstream: 'Puffs its cheeks and blows a long gust that shoves the rival back, hit after hit.',
   squeak: 'Lets out a squeak so loud it makes a ring of sound that blasts everyone nearby away.',
   echoboom: 'Three giant sound rings in a row. The last one sends the rival flying!',
+  powernap: 'Nods off on the spot. Hit it while it naps and it wakes up grumpy with a counter slam. Leaves it open if nobody bites!',
+  lullaby: 'Sings a sleepy song that knocks the rival out cold, then rolls over them in a big belly bump.',
   flametrail: 'Dashes at the rival and leaves a trail of flames that keep burning anyone who steps in.',
   fireworks: 'Launches a festival of firework shells that burst all around the rival. The big one goes last!',
   burrow: 'Dives underground, tunnels over and bursts up right under the rival.',

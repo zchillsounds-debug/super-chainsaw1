@@ -9,6 +9,7 @@ const mouth = (f) => ({ x: f.x + Math.sin(f.face) * 0.45, y: f.y + f.def.body.h 
 const rnd = (s) => (Math.random() - 0.5) * s;
 
 export const LINES = {
+  snoozlo:     { intro: ['*yawn* ...is it time?', 'Five more minutes...', 'Mmh. Fine. I am awake.'], win: ['Nap time. Earned it.', 'Zzz... huh? We won?', 'Sweet dreams!'] },
   squeakwing:  { intro: ['EEEEEK! ...hi!', 'Ready to squeak!', 'Ears up, wings out!'], win: ['Did you hear that? I WON!', 'Squeak-tacular!', 'Wing-wing!'] },
   kindlekit:   { intro: ["Let's light it up!", 'Festival time!', "Tail's warmed up!"], win: ['Ka-BOOM! Ta-da!', 'What a show!', 'Encore? Encore!'] },
   cindermunch: { intro: ['Snack time!', "I'm fired up!", 'Toasty!'], win: ['Delicious!', 'Well done. Extra crispy!', 'Munch munch!'] },
@@ -41,6 +42,17 @@ export function sayLine(f, kind) {
 
 // ---------------- intros (about 1.5 s, then a held "ready" pose) ----------------
 const INTRO = {
+  snoozlo(f, P, k) {
+    if (k < 1.0) { // dozing on its feet, head nodding
+      P.sy = 0.92; P.head = 0.35 + sin(k * 5) * 0.12; P.armLz = P.armRz = 0.15; P.headRoll = sin(k * 2.5) * 0.15;
+      f.critter.emote('closed', 'o', 0.1);
+      if (once(f, 'zz')) f.battle.fx.text(head(f, 0.3), 'z z z', 'zz', 0.9);
+    } else if (k < 1.6) { // jolts awake with a big stretch
+      P.sy = 1.15; P.armLz = P.armRz = 2.7; P.head = -0.4; P.ear = 1;
+      f.critter.emote('closed', 'open', 0.1);
+      if (once(f, 'yawn')) sfx.voice(f.def.voice, 'special');
+    } else ready(f, P, k);
+  },
   squeakwing(f, P, k) {
     const fx = f.battle.fx;
     if (k < 0.9) { // flutters down from above, wings beating
@@ -272,6 +284,11 @@ function ready(f, P, k) {
 
 // ---------------- victories (loop for the winpose) ----------------
 const WIN = {
+  snoozlo(f, P, k) { // flops into a happy sway, then curls up for a nap with drifting z's
+    const nap = k % 6 > 3;
+    if (nap) { P.sy = 0.85; P.sx = 1.1; P.head = 0.5; P.armLz = P.armRz = 0.1; f.critter.emote('closed', 'smile', 0.1); if (Math.random() < 0.03) f.battle.fx.text(head(f, 0.3), 'z', 'zz', 0.8); }
+    else { P.roll = sin(k * 3) * 0.2; P.armLz = 2 + sin(k * 6) * 0.4; P.armRz = 2 - sin(k * 6) * 0.4; P.y = abs(sin(k * 3)) * 0.12; f.critter.emote('happy', 'grin', 0.1); }
+  },
   squeakwing(f, P, k) { // loop-the-loop hovering, with notes of happy squeaks
     P.y = 0.4 + sin(k * 3) * 0.25; P.tail = 1.6; P.roll = sin(k * 1.6) * 0.3; P.armLz = P.armRz = 1.8 + sin(k * 16) * 0.5;
     f.critter.emote('happy', 'grin', 0.1);

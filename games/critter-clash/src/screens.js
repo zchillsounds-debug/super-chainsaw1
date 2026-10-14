@@ -135,6 +135,12 @@ export class Screens {
         "Oh, {name}! A new league has opened deep in the mushroom woods: the Glowcap Cup.",
         "The fireflies are lovely, but watch out for the spore puffs. Achoo!",
       ]), 600);
+    } else if (!g.autoplay && save.cups.thunder && !save.news?.includes('koala') && !save.unlocked.includes('snoozlo')) {
+      (save.news ||= []).push('koala'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, tiptoe with me. Someone is snoring in a hammock in Glowcap Grove. That's Snoozlo, a drowsy koala!",
+        "Hazel brings it to the Glowcap Cup. A word of advice: don't hit it while it naps. It hits back.",
+      ]), 600);
     } else if (!g.autoplay && save.cups.thunder && !save.news?.includes('bat') && !save.unlocked.includes('squeakwing')) {
       (save.news ||= []).push('bat'); persist();
       setTimeout(() => this.mode === 'title' && this.profTalk([

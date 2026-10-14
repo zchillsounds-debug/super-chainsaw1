@@ -377,6 +377,13 @@ function quirk(c, P, k, m, fx) {
     if (k > 1.6) { c.emote('happy', 'grin', 0.3); P.sy = 1.15; }
     return;
   }
+  if (id === 'snoozlo') { // nods off standing up, then jolts awake
+    const nap = k < 2.2;
+    P.sy = nap ? 0.9 : 1.1; P.head = nap ? 0.4 + Math.sin(k * 4) * 0.1 : -0.3; P.armLz = P.armRz = nap ? 0.1 : 2.4;
+    c.emote('closed', nap ? 'o' : 'open', 0.2);
+    if (nap && Math.random() < 0.04) fx.spawn({ ...at(1.4, 0.3), vy: 0.8, color: 0xd8ccff, size: 0.3, life: 0.8, shape: 'glow', additive: false });
+    return;
+  }
   if (id === 'squeakwing') { // flutters up for a look around, then drops back down
     P.y = Math.sin(Math.min(1, k / 2) * Math.PI) * 0.9; P.tail = 1.6; P.armLz = P.armRz = 1.4 + Math.sin(k * 18) * 0.4; P.yaw = Math.sin(k * 2) * 0.8;
     c.emote('happy', 'o', 0.2);

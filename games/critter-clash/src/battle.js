@@ -139,6 +139,16 @@ export class Battle {
 
   // -------- hit resolution --------
   applyHit(att, def, h) {
+    // Power Nap: a rival's blow on a napping Snoozlo is shrugged off and answered with a counter slam (Fighter.updateSpecial)
+    if (def.state === 'special' && def.def.special === 'powernap' && !def.napHit && def.st < 0.95 && att && att !== def && att.state !== 'super' && def.alive) {
+      def.napHit = true; def.st = 0; def.specFired = false; def.invuln = 0.55;
+      this.fx.text(def.headPos(), 'COUNTER!', 'big', 1);
+      this.fx.spawn({ ...def.chestPos(), color: 0x9aff6a, size: 3.2, life: 0.25, shape: 'ring', grow: 1.6 });
+      this.hud.callout('COUNTER!', def.side, 2);
+      sfx.block?.(); sfx.voice(def.def.voice, 'special');
+      this.hitstop = Math.max(this.hitstop, 0.12);
+      return false;
+    }
     if (def.invuln > 0 || def.state === 'super' && def.superInvuln || !def.alive) {
       if (def.state === 'dodge' && def.invuln > 0) this.perfectDodge(def);
       return false;
@@ -980,6 +990,47 @@ export class Battle {
       } else if (f.superPhase === 'recover') {
         P.sy = 1.05; P.lean = 0;
         if (t > 0.35) this.endSuper(f);
+      }
+    } else if (id === 'lullaby') {
+      // sways and sings until the rival nods off, then rolls right over them
+      const P = f.critter.pose;
+      if (f.superPhase === 'go') { f.superPhase = 'sing'; f.st = 0; f.slept = false; }
+      if (f.superPhase === 'sing') {
+        f.turnTo(f.angleTo(o), 6, dt);
+        const sw = Math.sin(t * 4);
+        P.roll = sw * 0.25; P.armLz = 1.9 + sw * 0.4; P.armRz = 1.9 - sw * 0.4; P.head = -0.2; P.ear = 0.6; P.y = Math.abs(sw) * 0.08;
+        f.critter.emote('happy', 'o', 0.1);
+        if (Math.random() < dt * 14) {
+          const dx = o.x - f.x, dz = o.z - f.z;
+          fx.spawn({ x: f.x + (Math.random() - 0.5) * 0.6, y: 1.4, z: f.z + (Math.random() - 0.5) * 0.6, vx: dx * 0.9, vy: 0.4, vz: dz * 0.9, color: [0xb49aff, 0x8ae0ff, 0xffb0d8][Math.floor(Math.random() * 3)], size: 0.4, life: 1.0, shape: 'heart', additive: false });
+        }
+        if (!f.slept && t > 0.9) {
+          f.slept = true;
+          if (o.alive && o.state !== 'super' && !(o.invuln > 0)) {
+            o.setState('dizzy'); o.dizzyT = 1.8; o.dizzy = 0; o.vx = o.vz = 0;
+            o.critter.emote('closed', 'o', 1.5);
+            fx.text(o.headPos(), 'Zzz...', 'dizzy', 1.1);
+          }
+        }
+        if (t > 1.1) { f.superPhase = 'roll'; f.st = 0; f.hitIds.clear(); f.rollSpin = 0; sfx.whoosh?.(0.6); }
+      } else if (f.superPhase === 'roll') {
+        f.turnTo(f.angleTo(o), 5, dt);
+        f.vx = Math.sin(f.face) * 13; f.vz = Math.cos(f.face) * 13;
+        P.sx = 1.05; P.sy = 0.78; P.head = 0.9; P.armLx = P.armRx = -2.4; P.legL = P.legR = -1.6; P.roll = 0;
+        f.rollSpin += dt * 24;
+        f.critter.P.lean = f.rollSpin; f.critter.V.lean = 0;
+        if (Math.random() < 0.5) fx.dust({ x: f.x, y: 0, z: f.z }, 2);
+        if (!f.hitIds.has(o) && o.alive && f.distTo(o) < 1.45) {
+          f.hitIds.add(o);
+          const ang = f.angleTo(o);
+          this.applyHit(f, o, { dmg: 165 * f.power, kb: 10, lift: 9, stun: 0.8, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: f.type, launch: true, dizzy: 30 });
+          f.superPhase = 'recover'; f.st = 0;
+        } else if (t > 0.9) { f.superPhase = 'recover'; f.st = 0; }
+      } else if (f.superPhase === 'recover') {
+        f.vx = f.vz = 0;
+        f.critter.P.lean = 0; P.lean = 0; P.sy = 1.05; P.armLz = P.armRz = 1.2;
+        f.critter.emote('happy', 'grin', 0.1);
+        if (t > 0.4) this.endSuper(f);
       }
     } else if (id === 'echoboom') {
       // hovers up on beating wings and lets out three huge squeaks, the last one a sonic boom
