@@ -1,10 +1,10 @@
-# Critter Clash: Handoff (after Round 161)
+# Critter Clash: Handoff (after Round 172)
 
 ## Start here (for a new chat)
 - Repo `zchillsounds-debug/super-chainsaw1`, branch **`ccr-4fc93d6e-suxlhd`**, folder `games/critter-clash/`. Clone with `--branch ccr-4fc93d6e-suxlhd`.
-- Latest work (session 12, 2026-10-14): the **Growth** system. Every critter grows at Lv 7 and Lv 14 into new forms with stronger moves. Details in "Growth" below. The user has the APK built from e6df871 (R161).
-- Ask the user first: how the growing scene feels, whether any grown form looks off, and whether the big forms run smoothly on their phone.
-- Next ideas: a signature part for each of the 10 `bodyMul` growth lines, a balance robin with grown forms, numbering continues from **R162**.
+- Latest work (session 13, 2026-10-14 16:05–~18:10 UTC): the user's playtest note "when they grow into their new form, there should be a screen to show when that happens" (fixed in R162: the growing scene now always plays, see "Session 13"), then signature parts for the growth lines that only looked like bigger copies (R163–R172).
+- Ask the user first: did the growing scene show for every critter that grew (including ones that were already Lv 7+ before the update)? Do the new forms look right?
+- Next ideas: see "Suggested next rounds"; numbering continues from **R173**.
 - User preferences: ask clarifying questions and confirm before building; hand off near 300k context.
 
 ## The brief (from the user)
@@ -243,6 +243,14 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - Static growth parts are built into two groups (`SK` on the skull, `TO` on the torso) and `flatten()`ed into one mesh per material; animated bits (flames, pearl glow, `spinners`) stay separate. Add new static parts to `SK`/`TO`, not straight to `cr.skull`/`cr.torso`.
 - Test hooks: `?play&p=..&pl=14&c=..&cl=7` (levels pick forms), `window.__grow(def, lv)`, `GROW=7 node tools/cupflow.mjs 740x360 0` (partner grows mid-cup; prints "growing scene showed"), tapcheck opens `grow`.
 
+## Session 13 (2026-10-14, 16:05–~18:10 UTC, this chat: session_01Y2QsYyf7rBd5UC4wfqJZvo)
+- The user sent the R161 APK and this file and asked to continue. Their answers: growing needs a screen when it happens; polish the growth lines; keep going ~2 hours; push to `ccr-4fc93d6e-suxlhd`.
+- **Growing scene always plays (R162).** Before, it only fired from the results XP bar, so critters already past Lv 7/14 when growth shipped switched forms silently, and growths tapped past when going straight into the next fight could be lost. Now `save.seenStage[id]` records the stage whose scene the player saw. `Screens.owedGrowth()` lists unlocked critters whose level stage is above it; `Screens.update` plays one owed scene at a time on any calm screen (title, cups, ladder, select, dex, challenges, or results 1.6 s after the XP bar finishes: `this.resDone`). The scene starts from the last form the player saw, so 1 -> 3 jumps show base -> stage 3. `this.growing` guards re-entry; it resets if a screen change wipes the overlay (`this.growEl`). `pendingGrow` is gone.
+- **New growth parts** (all in `buildGrowth`, `src/growth.js`): `drill` (spinning steel bit on the mole's hard hat; a spinner) and `claws` (Drillmole, Quarrymole); `nightcap` (one tapered TubeGeometry with vertex-colour stripes, pompom, brim; `capcrown` adds a gold crown band) (Snoozalot, Slumberking; Slumberking lost the lotus); `wave` (vertex-coloured curling wave behind with a foam lip) (Splashotter, Torrentide; Torrentide swaps the back fin for the wave plus water-drop `orbs`); `tornado` (two counter-spinning lathe funnels with a canvas streak texture and leaves; hides `cr.tail`) (Whirlglide, Tempestail; Tempestail lost the wind rings); `antennae` (tesla coils with glowing tips and a bolt arc spun around x) (Jigglevolt, Megawatt); `icecape` (curved jagged ice sheet, no ink hull, plus a frost collar) (Emperice, replacing its crystal ridge); `soundwaves` (additive arcs beside the ears; plus `earScale`) (Shriekwing, Echowing; Echowing lost the wind rings); `battlements` (crenellated wall, turret and pennant on the shell) (Citadillo); `sunmane` (flame corona round the face) (Solfox); Thunderam adds `cloudcrest` lifted by `cloudLift`.
+- `flatten()` now keeps the `color` attribute for vertex-coloured materials (it used to strip it, which rendered them black).
+- **Perf:** Jiggawatt's tentacle beads were full-res spheres (131k triangles); now 14×10 (Megawatt 219k -> 106k). Grown battles measure ~250–260 draw calls.
+- **Tools:** `tools/lineup.sh <prefix> id...` renders base / stage 2 / stage 3 side by side (cropped close; `ROT=2.5` shows their backs). `LV=14 node tools/robin.mjs` runs the robin with both sides grown at that level.
+
 ## Rounds done
 1. Core:
    - Toon renderer, 4 critters, combat, CPU, stadium.
@@ -409,6 +417,17 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 159. Own palettes for the ten scaled lines.
 160. Growing Up (Lv 7) and Fully Grown (Lv 14) badges.
 161. Growth parts merged by material: a Thornhulk vs Jackalorn battle went from 430 to 243 draw calls (base game ~240).
+162. Every growth gets its growing scene (old saves and tapped-past growths included).
+163. Drillmole/Quarrymole: spinning hard-hat drill and digging claws.
+164. Snoozalot/Slumberking: striped nightcaps, Slumberking's with a gold crown.
+165. Splashotter/Torrentide ride a curling wave.
+166. Whirlglide/Tempestail trail a spinning whirlwind.
+167. Jigglevolt/Megawatt: tesla-coil antennae with a crackling arc.
+168. Emperice: glacier-ice mantle and frost collar.
+169. Jiggawatt tentacles low-poly (half the triangles).
+170. Shriekwing/Echowing: bigger ears with sound waves.
+171. Citadillo: castle battlements and a pennant.
+172. Solfox flame corona; Thunderam thundercloud.
 L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (smaller, softer, per-kind `cap` on point size).
 
 ## Critique backlog (known issues)
@@ -425,6 +444,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Growth (session 12) is untested on a real phone; ask the user how the growing scene and the big forms feel. Balance was not re-measured with grown forms (both sides grow by level in cups, so it's symmetric, but hand-built bodies are bigger targets visually only; hit ranges are unchanged).
 - The 10 `bodyMul` lines have new palettes and parts but share proportions; a signature part each would make them read as new creatures as strongly as the first nine.
 ## Suggested next rounds
+- After session 13: ask about the growing scene and the new forms; the growing scene could show the 3D model instead of portraits.
 - Session 12 is done. Next, if the user asks: polish the 10 `bodyMul` growth lines, ask for playtest feedback on growing, carry on numbering from R162.
 - Session 11 is done. If the user asks for more:
   1. Ask them whether Snoozlo's counter feels fair on a phone, and whether the R135/R145 APKs feel smoother over a long session (the arena texture leak fix).
