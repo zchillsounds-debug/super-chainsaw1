@@ -272,6 +272,7 @@ export class Screens {
         <li><b>Hazards</b><span>Later stadiums fight back: when a glowing ring appears on the floor, get out of it (or guard)! Switch hazards off in Settings.</span></li>
         <li><b>Team Battle</b><span>In Challenges: pick three critters against a rival team of three. The winner of each fight stays in with the damage it took.</span></li>
         <li><b>Camp</b><span>Pet your critters to build friendship and feed them berries for XP. Win battles to earn berries, and drop by daily for a gift. Best friends (5 hearts) start every battle with some super meter.</span></li>
+        <li><b>Settings</b><span>Make the touch buttons bigger or smaller, switch battle tips off (or back on to replay them), and pause any fight to Restart it.</span></li>
       </ul></div>`;
     const close = this.btn('Got it!', 'primary', () => d.remove());
     d.querySelector('.modal').appendChild(close);
@@ -825,7 +826,9 @@ export class Screens {
         ${HAZARDS[opts.arena] && save.settings.hazards !== false ? `<div class="vs-hazard">⚠ Arena hazard: ${HAZARDS[opts.arena].name}</div>` : ''}
       </div>`;
     sfx.boom();
-    setTimeout(() => { if (this.mode === 'vs') g.startBattle(p, c, opts); }, 1900); // not if the player left the VS screen
+    // only if the player is still on this VS screen (back or a menu tap during it must not drop them into a fight)
+    const vsToken = this.vsToken = {};
+    setTimeout(() => { if (this.mode === 'vs' && this.vsToken === vsToken) g.startBattle(p, c, opts); }, 1900);
   }
 
   // ---------- results ----------
