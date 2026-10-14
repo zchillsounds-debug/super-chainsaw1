@@ -1,11 +1,11 @@
-# Critter Clash: Handoff (after Round 194)
+# Critter Clash: Handoff (after Round 197)
 
 ## Start here (for a new chat)
 - Repo `zchillsounds-debug/super-chainsaw1`, branch **`ccr-4fc93d6e-suxlhd`**, folder `games/critter-clash/`. Clone with `--branch ccr-4fc93d6e-suxlhd`.
-- Latest work (session 14, 2026-10-14 20:20–~21:40 UTC): the user confirmed the growing scene and new forms look right (APK 1.0.190), picked **"Modes & polish"** as the focus, and said: "Reach 300k tokens and start new chats for handoff". So keep building, and chain to a fresh session near 300k context with this file. Session 14 did R175–R194: a signature second hazard per stadium, the Daily Team Challenge, Daily streaks, Stadium Trials, the Stadium Mayhem modifier, a Quick Battle modifier chip, hazard practice in Training, hazard sounds and a jumbotron warning (see "Session 14").
+- Latest work (session 14, 2026-10-14 20:20–~21:40 UTC): the user confirmed the growing scene and new forms look right (APK 1.0.190), picked **"Modes & polish"** as the focus, and said: "Reach 300k tokens and start new chats for handoff". So keep building, and chain to a fresh session near 300k context with this file. Session 14 did R175–R197: a signature second hazard per stadium, the Daily Team Challenge, Daily streaks, Stadium Trials, the Stadium Mayhem modifier, a Quick Battle modifier chip, hazard practice in Training, hazard sounds and a jumbotron warning (see "Session 14").
 - The user got APK **1.0.195** (R175–R182) mid-session. The last APK of session 14 is listed under "Session 14".
 - Ask the user first: how do the new stadium tricks feel on a phone (the laser, the wave, the ice slick)? Is Stadium Trials 3★ too hard?
-- Next ideas: see "Suggested next rounds"; numbering continues from **R195**.
+- Next ideas: see "Suggested next rounds"; numbering continues from **R198**.
 - User preferences: ask clarifying questions and confirm before building; hand off near 300k context.
 - **Branch note:** a new cloud session may be assigned its own `ccr-...` branch. The game lives on `ccr-4fc93d6e-suxlhd`, and the user approved pushing there (session 14). The APK workflow only builds from pushes that touch `games/critter-clash/**`.
 
@@ -292,6 +292,11 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
   - tapcheck is clean at 740×360, 915×412, 412×915 and 360×640. Its only flag is the battle pause in portrait, which sits under the rotate hint by design.
   - Perf: the wave adds +7 draw calls, the laser +9.
 - Balance was not re-run: hazards are symmetric and robin runs on the hazard-free default arena.
+- **R195:** Camp shows a striped circus pedestal (`buildProps(cups, team, trials)` in camp.js) with a gold star for each trial at 3★. The results note says so.
+- **R196:** a cleared Daily card previews tomorrow's challenge.
+- **R197:** the Team Battle pick sheet has the modifier chip (`this.teamMod`, `ctx.mods`); daily team days keep their own modifier.
+- Final gate (21:40 UTC): tapcheck clean at all 4 sizes, Sprout Cup cupflow clears, and teamflow normal and DAILY both finish.
+- **Time:** the user asked for about 2 hours in session 14 (20:23 → ~22:25 UTC on 2026-10-14). Session 14 chained at ~230k context, about 21:45 UTC.
 
 ## Rounds done
 1. Core:
@@ -492,6 +497,9 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 192. Mayhem sweep on all 7 arenas (no code change).
 193. Next Trial button.
 194. Reduce flashing covers the jumbotron warning and laser.
+195. Camp trick pedestal (a star per 3★ trial).
+196. Tomorrow's Daily preview on a cleared card.
+197. Modifier chip on the Team Battle pick sheet.
 L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (smaller, softer, per-kind `cap` on point size).
 
 ## Critique backlog (known issues)
@@ -523,11 +531,12 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 
 ## Chaining (do this at the end of each session)
 1. Update this HANDOFF.md: rounds done, backlog, next steps, and the time used so far.
-2. Commit and push to `ccr-4fc93d6e-suxlhd`.
-3. Load the tool with `ToolSearch select:mcp__claude-code-remote__create_session`, then create the next session:
+2. Commit and push to `ccr-4fc93d6e-suxlhd` (merge `origin/ccr-4fc93d6e-suxlhd` first; never rebase or force-push).
+3. Fetch the APK built from your last commit and send it to the user (see "APK").
+4. Load the tool with `ToolSearch select:mcp__claude-code-remote__create_session`, then create the next session:
    - `source_url`: `https://github.com/zchillsounds-debug/super-chainsaw1`
    - `source_revision`: `ccr-4fc93d6e-suxlhd`
    - `outcome_branch`: `ccr-4fc93d6e-suxlhd`
    - `title`: "Critter Clash – rounds N+"
-   - `prompt`: "Continue building Critter Clash. Read games/critter-clash/HANDOFF.md fully and follow it: run the critique loop round after round, commit and push each round to branch ccr-4fc93d6e-suxlhd, and chain to a fresh session about every 2 hours or near 300k context, until about 02:15 UTC on 2026-10-14 (the goal is ~10 hours of actual work; if a worker stalls, extend the end time rather than stopping). The user has approved continuous building; don't stop to ask questions."
-4. Tell the user in one short message what was done and that the next session has started.
+   - `prompt`: "Continue building Critter Clash. Read games/critter-clash/HANDOFF.md fully and follow it. Focus: modes & polish. Run the critique loop round after round, and commit and push each round to branch ccr-4fc93d6e-suxlhd (merge origin first, never force-push). The user asked for about 2 hours (until ~22:25 UTC on 2026-10-14) and to chain to a new chat near 300k context. At the end of the time, send the final APK, update HANDOFF.md, and stop with a short summary unless the user asks for more. Post a one-line status to the user when you start."
+5. Tell the user in one short message what was done and that the next session has started.
