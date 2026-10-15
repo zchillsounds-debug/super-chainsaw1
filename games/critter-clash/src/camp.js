@@ -21,7 +21,7 @@ export class Camp {
     this.team = team;
     this.sel = null;
     this.t = 0;
-    this.props = buildProps(save.cups || {}, save.unlocked || [], save.trials || {}, (save.stats?.hazardArenas || []).length >= 6);
+    this.props = buildProps(save.cups || {}, save.unlocked || [], save.trials || {}, (save.stats?.hazardArenas || []).length >= 6, !!save.adv?.flags?.crowned);
     this.g.scene.add(this.props);
     // soft ring under whoever is selected
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.72, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false }));
@@ -241,6 +241,7 @@ export class Camp {
     const bal = this.props.userData.balloon;
     if (bal) { bal.position.y = Math.sin(this.t * 0.9) * 0.12; bal.rotation.z = Math.sin(this.t * 0.7) * 0.04; }
     for (const pn of this.props.userData.pennants) pn.rotation.x = Math.sin(this.t * 2.2 + pn.userData.ph) * 0.25;
+    const cw = this.props.userData.crown; if (cw) { cw.rotation.y = this.t * 0.6; cw.position.y = 0.72 + Math.sin(this.t * 1.8) * 0.04; }
     this.props.userData.flames.forEach((fl, k) => { const f = 1 + Math.sin(this.t * (11 + k * 4)) * 0.12 + Math.sin(this.t * 23) * 0.06; fl.scale.set(1 / Math.sqrt(f), f, 1 / Math.sqrt(f)); fl.rotation.y = this.t * (k ? -2 : 1.5); });
     if (Math.random() < dt * 2) this.g.fx.spawn({ x: fp.x, y: 0.9, z: fp.z, vy: 0.8, vx: 0.2, color: 0xb8b0a8, size: 0.4, life: 1.6, shape: 'puff', additive: false, grow: 1.2, alpha: 0.5 });
     for (const c of this.g.showcase) {
@@ -432,7 +433,7 @@ function quirk(c, P, k, m, fx) {
 }
 
 // campfire, tent, picnic blanket and a berry basket, kept at the edges so the critters have room
-function buildProps(cups, team = [], trials = {}, tamer = false) {
+function buildProps(cups, team = [], trials = {}, tamer = false, crowned = false) {
   const g = new THREE.Group();
   const OL = 0.03;
   // campfire: ring of stones, crossed logs, warm point light
@@ -641,7 +642,25 @@ function buildProps(cups, team = [], trials = {}, tamer = false) {
     g.add(hat);
     keepOut.push([0.6, -3.5, 0.7]);
   }
+  // Adventure ending prize: the Critter Crown on a velvet cushion atop a tree stump
+  let crownG = null;
+  if (crowned) {
+    const cg = new THREE.Group();
+    cg.position.set(1.3, 0, -2.3); cg.scale.setScalar(1.25);
+    const stump = inked(new THREE.CylinderGeometry(0.42, 0.5, 0.5, 14), toon(0x9a6a3a), OL * 0.6); stump.position.y = 0.25; cg.add(stump);
+    const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.43, 0.43, 0.02, 14), toon(0xe8c08a)); ring.position.y = 0.51; cg.add(ring);
+    const cush = inked(new THREE.SphereGeometry(0.4, 16, 10), toon(0xc8283a, { rim: 0.5 }), OL * 0.5); cush.scale.set(1, 0.32, 1); cush.position.y = 0.6; cg.add(cush);
+    const crown = new THREE.Group(); crown.position.y = 0.72;
+    const band = inked(new THREE.CylinderGeometry(0.24, 0.22, 0.16, 16, 1, true), toon(0xffd040, { rim: 0.8, side: THREE.DoubleSide }), OL * 0.4); band.position.y = 0.08; crown.add(band);
+    const pts = [];
+    for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2, p = new THREE.ConeGeometry(0.07, 0.2, 6); p.translate(Math.cos(a) * 0.22, 0.25, Math.sin(a) * 0.22); pts.push(p); }
+    crown.add(inked(mergeGeometries(pts), toon(0xffd040, { rim: 0.8 }), OL * 0.4)); pts.forEach((x) => x.dispose());
+    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.06), toon(0xff4a8a, { rim: 1 })); gem.position.set(0, 0.08, 0.23); crown.add(gem);
+    cg.add(crown);
+    g.add(cg); crownG = crown;
+    keepOut.push([1.3, -2.3, 0.8]);
+  }
   g.traverse((o) => { if (o.isMesh && !o.userData.hull) o.castShadow = true; });
-  g.userData = { fire: fire.position, flames, spots, keepOut, balloon, pennants };
+  g.userData = { crown: crownG, fire: fire.position, flames, spots, keepOut, balloon, pennants };
   return g;
 }

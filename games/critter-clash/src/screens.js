@@ -157,7 +157,13 @@ export class Screens {
     this.root.querySelector('.title-screen').appendChild(gear);
     playMusic('menu');
     // news for returning trainers: new critters turned up in cups they may already have cleared
-    if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
+    if (!g.autoplay && save.stats.battles >= 3 && !save.adv && !save.news?.includes('adventure')) {
+      (save.news ||= []).push('adventure'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! Big news: the whole land of Clashara is open to explore. Tap ADVENTURE on the title screen!",
+        "Pick a hero, walk from town to town, battle wild critters in the tall grass, take on the seven stadium cups and face the trials on the road to the Critter Crown. I'll be waiting outside my lab!",
+      ]), 600);
+    } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
       setTimeout(() => this.mode === 'title' && this.profTalk([
