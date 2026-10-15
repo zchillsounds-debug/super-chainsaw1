@@ -37,7 +37,7 @@ export function storyIntro(S, w) {
   }
   if (w.key === 'glowwood' && F.pip_saved && !F.pip_found) {
     F.pip_found = true; save.adv.follow = 'squeakwing'; persist();
-    w.removeNpc('pip'); w.makeFollower();
+    w.removeNpc('pip'); w.refreshFollower();
     w.say([
       'Pip: Squeak... squeak? (The little Squeakwing peeks out from behind {hero}.)',
       "{hero}: It's okay, Pip. That grumpy Thistlehog is gone. Let's get you home to your mama!",
@@ -472,7 +472,7 @@ function sage(S, w) {
 function mama(S, w, a) {
   const F = flags();
   if (F.trial_friendship) { w.say(['Mama Squeak: Thank you again, {hero}! Glowcap Hollow is just through there.']); return; }
-  if (!w.follower) {
+  if (!save.adv.follow) {
     F.mama_asked = true; persist();
     w.say([
       "Mama Squeak: Squeak! Oh, please help! My baby Pip flew off chasing fireflies and hasn't come back!",

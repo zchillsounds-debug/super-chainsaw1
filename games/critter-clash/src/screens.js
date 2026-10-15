@@ -869,6 +869,7 @@ export class Screens {
     const close = () => { d.remove(); this.game.modalClose = null; };
     b.appendChild(this.btn('Resume', 'primary', close));
     b.appendChild(this.btn('🗺️ Town Map', 'secondary', () => { close(); this.worldMap(); }));
+    b.appendChild(this.btn('🐾 Buddy', 'secondary', () => { close(); this.buddyPick(); }));
     b.appendChild(this.btn('Save & Quit', 'ghost', () => { close(); persist(); this.leaveWorld(); this.title(); }));
     // start over with a new hero (tap twice: this replaces the current story)
     const fresh = this.btn('New Adventure', 'ghost small', () => {
@@ -915,6 +916,25 @@ export class Screens {
       const [x, y] = n.fly;
       w.fade(() => { w.load(k, x, y, 's'); this.toast(`🎈 Flew to ${MAPS[k].name}!`); });
     }));
+    this.game.modalClose = close;
+    this.root.appendChild(d);
+  }
+
+  // a walking buddy: any other team critter can tag along behind the hero
+  buddyPick() {
+    const g = this.game, d = document.createElement('div');
+    d.className = 'modal-wrap';
+    const team = CRITTERS.filter((c) => save.unlocked.includes(c.id) && c.id !== save.adv.hero);
+    d.innerHTML = `<div class="modal hero-pick"><h2>Walking buddy</h2><p>${save.adv.follow ? 'Pip is following you right now! Your buddy will be back once Pip is home.' : 'Who comes along for the walk?'}</p><div class="hero-grid">${team.map((c) => `<button data-id="${c.id}" class="${save.adv.buddy === c.id ? 'on' : ''}"><img src="${g.portrait(skinOf(c))}" alt=""><span>${grown(c, save.critters[c.id].level).name}</span></button>`).join('')}</div></div>`;
+    const close = () => { d.remove(); this.game.modalClose = null; };
+    d.querySelectorAll('.hero-grid button').forEach((btn) => btn.addEventListener('click', () => {
+      sfx.ui('ok'); close();
+      save.adv.buddy = btn.dataset.id; persist();
+      this.worldObj?.refreshFollower();
+    }));
+    const row = document.createElement('div'); row.className = 'res-btns';
+    row.append(this.btn('Walk alone', 'ghost', () => { close(); save.adv.buddy = null; persist(); this.worldObj?.refreshFollower(); }), this.btn('Back', 'ghost', close));
+    d.querySelector('.modal').appendChild(row);
     this.game.modalClose = close;
     this.root.appendChild(d);
   }

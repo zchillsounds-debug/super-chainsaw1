@@ -77,6 +77,12 @@ export class World {
     if (this.g.scene.fog && this.hidden?.length) this.g.scene.fog.color.setHex(m?.fog ?? 0xcfeeff);
   }
 
+  // swap the walking buddy without reloading the map
+  refreshFollower() {
+    if (this.follower) this.group.remove(this.follower.root);
+    this.makeFollower();
+  }
+
   dispose() {
     this.unload();
     this.follower = null;
@@ -472,11 +478,13 @@ export class World {
 
   // a friend who tags along one tile behind the hero (save.adv.follow)
   makeFollower() {
-    const id = save.adv.follow;
+    // Pip during the Trial of Friendship, otherwise the walking buddy picked in the ☰ menu
+    const id = save.adv.follow || (save.adv.buddy && save.adv.buddy !== save.adv.hero && save.unlocked.includes(save.adv.buddy) ? save.adv.buddy : null);
     if (!id) { this.follower = null; return; }
-    const cr = new Critter(withGear(byId(id), 2));
+    const pip = !!save.adv.follow, def = byId(id);
+    const cr = new Critter(withGear(pip ? def : skinned(def, save.skins?.[id]), pip ? 2 : save.critters[id]?.level || 1));
     cr.root.userData.critter = true;
-    cr.root.scale.setScalar(CS * 0.7);
+    cr.root.scale.setScalar(CS * (pip ? 0.7 : 0.85));
     this.group.add(cr.root);
     // start on a free tile behind the hero
     const [dx, dy] = DIRS[this.dir];
