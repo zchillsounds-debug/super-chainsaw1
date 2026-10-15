@@ -913,3 +913,32 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .wd-cups span.on { background: var(--cc); box-shadow: 0 0 0 3px var(--ink), 0 3px 0 3px var(--ink); }
 @media (max-height: 420px) { .wd-cups { margin: -6px 0 8px; } .wd-cups span { width: 26px; height: 26px; font-size: 13px; } }
 .hero-grid button.on { background: #ffe9a8; box-shadow: 0 0 0 3px var(--ink); }
+
+/* results must always show their buttons (R244): the column scrolls if it has to, the buttons stick to the bottom edge,
+   and when the content doesn't fit, .tight / .tighter (set by Screens.fitResults) squeeze the card first */
+.results { overflow-y: auto; overflow-x: hidden; touch-action: pan-y; justify-content: safe center; padding-top: calc(10px + var(--sat)); padding-bottom: calc(10px + var(--sab)); }
+.results > .res-btns { position: sticky; bottom: 0; z-index: 3; flex: none; padding-top: 4px; }
+.results > * { flex: none; }
+.results.tight { gap: 6px; }
+.results.tight h1 { font-size: 40px; }
+.results.tight .res-quote { font-size: 12px; padding-top: 3px; padding-bottom: 3px; }
+.results.tight .res-quote img { width: 26px; height: 26px; }
+.results.tight .res-card { padding-top: 6px; padding-bottom: 6px; }
+.results.tight .res-card > img { width: 64px; height: 64px; }
+.results.tight .res-stats { gap: 3px; }
+.results.tight .perfect, .results.tight .streak { font-size: 15px; margin: 0; }
+.results.tight .gear-get { margin-top: 4px; padding: 4px 10px; }
+.results.tight .gear-get i { font-size: 22px; }
+.results.tight .gear-get b { font-size: 16px; }
+.results.tight .gear-get em { display: none; }
+.results.tighter h1 { font-size: 32px; }
+.results.tighter .res-quote { display: none; }
+.results.tighter .res-card > img { display: none; }
+.results.tighter .res-grid small { font-size: 10px; }
+.results.tighter .res-stats b { font-size: 18px; }
+/* R244: battle instructions stay out of the fight: the coach pill sits low between the stick and the buttons */
+.coach { top: auto; bottom: calc(14px + var(--sab)); }
+.coach span { font-size: 12px; padding: 4px 12px; }
+@media (max-height: 420px) { .coach { top: auto; } .coach span { font-size: 12px; } }
+/* toasts on the results screen go over the celebrating winner, not the VICTORY title */
+@media (min-aspect-ratio: 1/1) { body.at-results .toast { left: 24vw; max-width: 42vw; } }

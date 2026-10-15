@@ -8,7 +8,7 @@ import { TYPES, typeMult, MODS } from './data.js';
 import { ARENA_R } from './arena.js';
 import { sfx, playMusic, setIntensity } from './audio.js';
 import { Tutorial } from './tutorial.js';
-import { save } from './save.js';
+import { save, persist } from './save.js';
 import { sayLine } from './personality.js';
 import { Items } from './items.js';
 import { Hazards } from './hazards.js';
@@ -92,6 +92,9 @@ export class Battle {
     this.screenNames = this.fighters.map((f) => f.def.name);
     this.screenT = 0;
     this.training = training ? new Training(this) : null;
+    // the first-battle coach: never in Adventure (its opening scene teaches the controls), and only ever for one battle
+    const adv = game.screens?.ctx?.kind === 'world' || game.screens?.ctx?.adv;
+    if (adv && !save.tutorialDone) { save.tutorialDone = true; persist(); }
     this.tutorial = !save.tutorialDone && !game.autoplay && !training ? new Tutorial(this) : null;
     this.startRound();
   }
@@ -1664,7 +1667,7 @@ export class Battle {
     if (this.anims) { for (const fn of this.anims) fn(99); this.anims.length = 0; }
     this.arena.drawScreen();
     this.hud.speedLines(false);
-    this.tutorial?.dispose();
+    if (this.tutorial) { this.tutorial.dispose(); if (this.phase === 'done') { save.tutorialDone = true; persist(); } } // a finished first battle ends the lesson, done or not
     this.training?.dispose();
     for (const f of this.fighters) f.dispose();
     for (let i = this.projectiles.length - 1; i >= 0; i--) this.removeProjectile(i);
