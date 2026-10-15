@@ -537,10 +537,12 @@ export class World {
   buildForest(rand) {
     const stems = [], caps = [[], [], []], spots = [], tiny = [[], [], []], thorns = [], vines = [];
     const CAP = [0xff5a8a, 0x8a6aff, 0x2fd8b8];
+    this.shrooms = [];
     for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) {
       const t = this.tile(x, y), [px, pz] = wpos(x, y);
       if (t === 'm') {
         const s = 0.95 + rand() * 0.35, k = Math.floor(rand() * 3), lean = (rand() - 0.5) * 0.25;
+        this.shrooms.push([px - lean * 1.8 * s, 1.9 * s + 0.6, pz, CAP[k]]);
         const st = new THREE.CylinderGeometry(0.32 * s, 0.45 * s, 2.0 * s, 8); st.rotateZ(lean); st.translate(px, 1.0 * s, pz); stems.push(st);
         const cap = new THREE.SphereGeometry(1.25 * s, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2); cap.scale(1, 0.62, 1); cap.translate(px - lean * 1.8 * s, 1.9 * s, pz); caps[k].push(cap);
         for (let j = 0; j < 5; j++) {
@@ -1154,6 +1156,11 @@ export class World {
     if (TC && (TC >> 16 & 255) > (TC >> 8 & 255) + 20 && !this.M.indoor && Math.random() < dt * 5) {
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 26, y: 5 + Math.random() * 2, z: p.z + (Math.random() - 0.65) * 18, vy: -0.9, vx: 0.6 + Math.random() * 0.5, vz: (Math.random() - 0.5) * 0.4, color: Math.random() < 0.5 ? TC : this.M.trees[1], size: 0.32, life: 5.5, shape: 'leaf', additive: false, spin: (Math.random() - 0.5) * 4, rot: Math.random() * 6, floor: true });
+    }
+    // the giant toadstools breathe out glowing spores, each in its cap's colour
+    if (this.shrooms?.length && Math.random() < dt * 6) {
+      const [x, y, z, c] = this.shrooms[Math.floor(Math.random() * this.shrooms.length)];
+      this.g.fx.spawn({ x: x + (Math.random() - 0.5) * 1.6, y, z: z + (Math.random() - 0.5) * 1.6, vy: 0.35 + Math.random() * 0.3, vx: (Math.random() - 0.5) * 0.3, vz: (Math.random() - 0.5) * 0.3, color: c, size: 0.22, life: 3, shape: 'glow', fadeIn: 0.4, hold: 0.5 });
     }
     if (this.M.snow && Math.random() < dt * 16) {
       const p = this.hero.root.position;

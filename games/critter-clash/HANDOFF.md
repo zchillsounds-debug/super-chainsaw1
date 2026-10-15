@@ -1,7 +1,7 @@
-# Critter Clash: Handoff (after Round 278, Adventure mode polish)
+# Critter Clash: Handoff (after Round 279, Adventure mode polish)
 
 ## Start here (for a new chat)
-- **Session 16e (02:51–~04:40 UTC on 2026-10-15) did R255–R278 and was the LAST session of the user's 5-hour Adventure window (it ended at 04:45 UTC). Nothing was chained after it: wait for the user before building more. Round numbering continues from R279.** Read "Session 16c", "16d" and "16e" below.
+- **Session 16e (02:51–~04:40 UTC on 2026-10-15) did R255–R279 and was the LAST session of the user's 5-hour Adventure window (it ended at 04:45 UTC). Nothing was chained after it: wait for the user before building more. Round numbering continues from R280.** Read "Session 16c", "16d" and "16e" below.
 - Ask the user first: how do weather (rain), the clock of day, grass sway and the smoothie blender feel on their phone? Is the win screen right now (R244b/R277)?
 - **CURRENT FOCUS (session 16+): Adventure mode**, a Pokémon Red/Blue style world with a story. Read "Session 16: ADVENTURE MODE" and "Session 16b" first. The user asked for 5 hours of chained sessions, ending at about **04:45 UTC on 2026-10-15**. The whole story (all 7 cups, 5 trials, Champion's Peak, the ending) is now playable; what's left is **polish** (see "Session 16b → next").
 - Repo `zchillsounds-debug/super-chainsaw1`, branch **`ccr-4fc93d6e-suxlhd`**, folder `games/critter-clash/`. Clone with `--branch ccr-4fc93d6e-suxlhd`.
@@ -404,7 +404,7 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - Checked: tapcheck clean at 740×360 and 412×915; advcup Sprout (915×412) lands back in the world, advstory rematch with Hiker Gus, screenshots of all towns, rooms (landscape and portrait), night/evening world and fights.
 - **Next ideas:** grass blades sway (needs a shader uniform), stadium lobbies, NPC variety per town, inner (concave) water corners, a night version of the Town Map, weather (rain on routes), shop for berries.
 
-## Session 16e (2026-10-15, 02:51–~04:40 UTC, session_01CGnqFczuvcYh4pqEyaX1eN): Adventure polish, R255–R278
+## Session 16e (2026-10-15, 02:51–~04:40 UTC, session_01CGnqFczuvcYh4pqEyaX1eN): Adventure polish, R255–R279
 - **R255/R273/R274:** tall grass sways (CPU vertex offsets on the merged blade geometry, `World.swayGrass()`, shared by the ink hull) and parts around the hero, the buddy and roaming wild critters; every other frame on low quality (~0.4 ms/frame on desktop for 10k verts).
 - **R256:** palms have arching folded leaves (`frond()` in `buildTrees`), coconut clusters and trunk rings.
 - **R257:** chimney smoke (`this.chimneys`, thicker at night/snow; the Cinder Town forge throws sparks and has a rust roof).
@@ -417,6 +417,7 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - **R267:** footprints in snow and sand (`World.footprint()`, a pool of 24 flat decals; fx billboards clip into the ground, so don't use them for ground marks).
 - **R269:** ☰ card shows ☀️/🌇/🌙/🌧️. **R271:** Town Map has evening and night colours (`.wd-map.evening/.night`, stars). **R272:** doorway lamplight on the ground at dusk/night.
 - **R275:** starfish and shells on beach sand. **R276:** falling leaves/petals on maps whose `trees[0]` is warm (Cinder Road, Cinder Town, Cloudtop).
+- **R279:** the giant toadstools (`m`) breathe out glowing spores in their cap colours (`this.shrooms`).
 - **R278:** Pecan news `adv3` (weather, clock, smoothie) for Adventure players who saw `adv2`.
 - **Tools:** `advfight.mjs` takes a 6th arg (JS run first, e.g. `__save.adv.clock=12;__save.adv.rain=true;w.load(...)`); `RAIN=1 node tools/advwins.mjs ...`.
 - **Checked at the end:** tapcheck clean at 740×360 and 412×915 (only the known portrait rotate hint in battle pause), advcup Sprout at 915×412 and 740×360 lands back in the world, advwins route1/cinder/frostpeak (+ rainy route1) error-free.
@@ -658,7 +659,7 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 218. Cloudtop Gardens (Sky Cup), Captain Puff's balloon.
 219. Frostpeak (Legend Cup), Champion's Peak ice puzzle, Dash's last battle, King Snooze, the crowning, Critter Crown badge.
 220. Professor Pecan points to the next cup's town.
-255–278. Adventure polish (session 16e): grass sway, palms, chimney smoke, rain weather (world + fights), room details, smoothie blender, inner water corners, trainer hats, wild meadow field, footprints, clock chips, night Town Map, door light, beach decor, falling leaves, Pecan weather news (see "Session 16e").
+255–279. Adventure polish (session 16e): grass sway, palms, chimney smoke, rain weather (world + fights), room details, smoothie blender, inner water corners, trainer hats, wild meadow field, footprints, clock chips, night Town Map, door light, beach decor, falling leaves, toadstool spores, Pecan weather news (see "Session 16e").
 244–254. Adventure polish (session 16d): stadium seats, roofs, Berry Center signs, footsteps, clock-of-day lighting, trainer rematches, room camera/pictures, next-goal line, rounded water and grass (see "Session 16d").
 221–243. Adventure polish (session 16c): interiors, Town Map + flying, story-fight level scaling, tapcheck world steps, Camp crown, NPC activities, open-field fight looks, title/New Adventure, running, gift boxes, Dash rematches, shinies, idle hero, badge case, walking buddy, door sounds (see "Session 16c").
 L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (smaller, softer, per-kind `cap` on point size).
