@@ -145,6 +145,9 @@ export function storyIntro(S, w) {
     'Only one critter can wear it: the strongest critter of all, crowned on top of Champion\'s Peak.',
     '{hero}: One day... that crown is going to be MINE!',
     '{hero}: But first... Mom said Professor Pecan wanted to see me. His lab is the big white building!',
+    document.body.classList.contains('is-touch')
+      ? '(Walk with the stick on the left; push it all the way to run. Tap A to talk, read signs and open doors. ☰ has the menu and the Town Map.)'
+      : '(Walk with WASD or the arrow keys; hold Shift to run. Press J or Space to talk, read signs and open doors. Esc opens the menu.)',
   ]);
 }
 
