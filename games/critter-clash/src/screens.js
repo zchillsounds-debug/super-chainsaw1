@@ -11,6 +11,16 @@ import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { World, newAdventure, heroDef } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction } from './story.js';
+import { MAPS } from './worldmaps.js';
+
+// Town Map layout (an SVG of Clashara): node positions, the cup in each town, and where a flight lands (outside the Berry Center)
+const WMAP = {
+  village: { x: 52, y: 214, fly: [4, 6] }, route1: { x: 52, y: 160 }, bloom: { x: 52, y: 100, cup: 'sprout', fly: [18, 6] },
+  route2: { x: 118, y: 100 }, seashell: { x: 188, y: 100, cup: 'thunder', fly: [18, 5] }, glowwood: { x: 188, y: 46 },
+  glowcap: { x: 262, y: 46, cup: 'grove', fly: [18, 5] }, cinder: { x: 318, y: 82 }, ember: { x: 352, y: 128, cup: 'champion', fly: [19, 12] },
+  neon: { x: 340, y: 190, cup: 'midnight', fly: [22, 12] }, cloudtop: { x: 254, y: 198, cup: 'sky', fly: [19, 5] },
+  frostpeak: { x: 170, y: 208, cup: 'legend', fly: [18, 5], ly: 26 }, peak: { x: 150, y: 158 },
+};
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
@@ -839,7 +849,47 @@ export class Screens {
     const b = d.querySelector('.res-btns');
     const close = () => { d.remove(); this.game.modalClose = null; };
     b.appendChild(this.btn('Resume', 'primary', close));
+    b.appendChild(this.btn('🗺️ Town Map', 'secondary', () => { close(); this.worldMap(); }));
     b.appendChild(this.btn('Save & Quit', 'ghost', () => { close(); persist(); this.leaveWorld(); this.title(); }));
+    this.game.modalClose = close;
+    this.root.appendChild(d);
+  }
+
+  // the map of Clashara: where you've been, where the cups are, and fly back to any town you've visited
+  worldMap() {
+    if (this.root.querySelector('.modal-wrap')) return;
+    const w = this.worldObj; if (!w) return;
+    const F = save.adv.flags, seen = save.adv.seen ||= {};
+    const here = w.key.startsWith('in:') ? w.key.split(':')[1] : w.key;
+    seen[here] = true;
+    // older saves: towns behind a cleared cup were visited
+    for (const [k, n] of Object.entries(WMAP)) if (n.cup && F['cup_' + n.cup]) seen[k] = true;
+    const links = [['village', 'route1'], ['route1', 'bloom'], ['bloom', 'route2'], ['route2', 'seashell'], ['seashell', 'glowwood'], ['glowwood', 'glowcap'], ['glowcap', 'cinder'], ['cinder', 'ember'], ['ember', 'neon'], ['neon', 'cloudtop', 1], ['cloudtop', 'frostpeak', 1], ['frostpeak', 'peak']];
+    const d = document.createElement('div');
+    d.className = 'modal-wrap';
+    const svg = links.map(([a, b, air]) => { const A = WMAP[a], B = WMAP[b], on = seen[a] && seen[b]; return `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" class="${air ? 'air' : ''} ${on ? 'on' : ''}"/>`; }).join('')
+      + Object.entries(WMAP).map(([k, n]) => {
+        const v = seen[k], won = n.cup && F['cup_' + n.cup], town = !!n.fly;
+        return `<g class="wm-node ${v ? 'seen' : ''} ${town ? 'town' : ''} ${k === here ? 'here' : ''}" data-k="${k}" transform="translate(${n.x} ${n.y})">
+          <circle r="${town ? 11 : 7}"/>${won ? '<text class="wm-cup" y="5">🏆</text>' : ''}
+          <text class="wm-name" y="${n.ly || (town ? 24 : 19)}">${v ? MAPS[k].name : '???'}</text></g>`;
+      }).join('');
+    const hp = WMAP[here];
+    d.innerHTML = `<div class="modal wd-map"><h2>Clashara</h2>
+      <svg viewBox="0 0 400 250" class="wm"><rect x="0" y="0" width="400" height="250" rx="18" class="wm-sea"/>
+      <path class="wm-land" d="M18 238 L18 70 Q20 20 90 22 L300 18 Q385 22 385 90 L380 160 Q378 205 330 214 L230 216 Q215 244 150 242 Z"/>${[['🌲', 220, 34], ['🌲', 150, 40], ['🌋', 372, 78], ['🏙️', 372, 210], ['☁️', 290, 232], ['🏔️', 118, 150], ['🌊', 236, 128], ['🌸', 90, 196]].map(([e, x, y]) => `<text class="wm-deco" x="${x}" y="${y}">${e}</text>`).join('')}${svg}
+      ${hp ? `<image href="${this.game.portrait(heroDef())}" x="${hp.x + 4}" y="${hp.y - 34}" width="30" height="30" class="wm-hero"/>` : ''}</svg>
+      <p class="wm-tip">${Object.values(seen).length > 1 ? 'Tap a town you\'ve visited to fly there with Captain Puff\'s mail balloon.' : 'Explore to fill in the map!'}</p>
+      <div class="res-btns"></div></div>`;
+    const close = () => { d.remove(); this.game.modalClose = null; };
+    d.querySelector('.res-btns').appendChild(this.btn('Close', 'ghost', close));
+    d.querySelectorAll('.wm-node.town.seen').forEach((g) => g.addEventListener('click', () => {
+      const k = g.dataset.k, n = WMAP[k];
+      if (k === here && !w.key.startsWith('in:')) { this.toast('📍 You are here!'); return; }
+      sfx.ui('ok'); close();
+      const [x, y] = n.fly;
+      w.fade(() => { w.load(k, x, y, 's'); this.toast(`🎈 Flew to ${MAPS[k].name}!`); });
+    }));
     this.game.modalClose = close;
     this.root.appendChild(d);
   }

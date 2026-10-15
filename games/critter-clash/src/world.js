@@ -119,7 +119,9 @@ export class World {
     this.camAt = null;
     this.steps = 0;
     this.encCool = 4;
-    save.adv.map = key; save.adv.x = x; save.adv.y = y; save.adv.dir = dir; persist();
+    save.adv.map = key; save.adv.x = x; save.adv.y = y; save.adv.dir = dir;
+    if (!key.startsWith('in:')) (save.adv.seen ||= {})[key] = true;
+    persist();
     playMusic(M.music || 'camp');
     this.mood(M.mood);
     this.banner(M.name);

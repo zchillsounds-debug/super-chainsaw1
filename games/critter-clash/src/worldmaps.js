@@ -391,7 +391,7 @@ export const MAPS = {
       'TT.hhhhh..l...:..l..hhhh..TT',
       'TT.hhhhh......:.....hhhh..TT',
       'TT.hhhhh..""""".....hhhh..TT',
-      'TT.hhhhh..""""".....hhhh..TT',
+      'TT....:...""""".......:...TT',
       'TT....:...""""".......:...TT',
       'TT.l..:::::::::::::::::.l.TT',
       'TT........................TT',
