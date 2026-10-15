@@ -1127,7 +1127,20 @@ export class World {
     a.dir = { n: 's', s: 'n', e: 'w', w: 'e' }[this.dir];
     if (n.story) return this.S.worldStory(n.story, this, a);
     if (n.trainer) {
-      if (save.adv.flags[n.id]) return this.say([n.trainer.after], null, n.name);
+      if (save.adv.flags[n.id]) {
+        // after the crowning, route trainers want a rematch with the Champion once a day, at the hero's level
+        const day = new Date().toISOString().slice(0, 10), rf = `re_${n.id}_${day}`;
+        if (!save.adv.flags.ending || save.adv.flags[rf]) return this.say([save.adv.flags[rf] ? `${n.name}: Phew. Same time tomorrow, Champ?` : n.trainer.after], null, n.name);
+        return this.say([`${n.name}: It's the new Champion! I've trained every day since our battle. Rematch?`], () => this.ask('Battle again?', ['Let\'s go!', 'Not now'], (i) => {
+          if (i) return this.say([`${n.name}: Aw. I'll be right here!`], null, n.name);
+          const lv = save.critters[save.adv.hero].level;
+          this.S.worldFight({
+            foe: withGear(byId(n.critter), lv), lv, kind: 'trainer', flag: rf, name: n.name, berries: 1, diff: 0.55,
+            trainer: { name: n.name, critter: n.critter, beat: n.trainer.beat.replace(/^[^:]+: /, ''), gloat: 'Ha! Training pays off!' },
+            note: `🔁 Rematch won! +1 🍓 (${n.name.split(' ').pop()} will be back tomorrow.)`,
+          });
+        }, n.name), n.name);
+      }
       return this.challenge(a);
     }
     this.say(n.lines.map((l) => l), null, n.name);
