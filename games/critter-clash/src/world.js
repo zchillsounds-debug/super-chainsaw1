@@ -179,6 +179,7 @@ export class World {
         if (t === 'R' || t === 'l' || t === 'v') { // lone props sit on whatever ground surrounds them (no grass squares on the beach)
           const n = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => this.tile(x + dx, y + dy));
           if (n.filter((k) => k === 's' || k === 'P').length >= 2) t = 's';
+          else if (n.filter((k) => k === 'i').length >= 2) t = 'i'; // boulders frozen into the ice lake sit on ice, not snow squares
         }
         c.fillStyle = (x + y) % 2 ? C.a : C.b;
         c.fillRect(x * P, y * P, P, P);
@@ -191,7 +192,9 @@ export class World {
           for (let k = 0; k < 2; k++) { const sy = y * P + k * P / 2; c.beginPath(); c.moveTo(x * P, sy); c.lineTo(x * P + P, sy); c.stroke(); const sx = x * P + ((y * 2 + k) % 3) * P / 3; c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx, sy + P / 2); c.stroke(); }
         }
         if (t === 'i') {
-          c.fillStyle = C.ice || '#b8e4ff'; c.fillRect(x * P, y * P, P, P);
+          const o = (dx, dy) => !'iR'.includes(this.tile(x + dx, y + dy)), rr = 10; // ice sheets round off at their outer corners
+          c.fillStyle = C.ice || '#b8e4ff'; c.beginPath(); c.roundRect(x * P, y * P, P, P, [o(-1, 0) && o(0, -1) ? rr : 0, o(1, 0) && o(0, -1) ? rr : 0, o(1, 0) && o(0, 1) ? rr : 0, o(-1, 0) && o(0, 1) ? rr : 0]); c.fill();
+          c.fillStyle = 'rgba(255,255,255,0.25)'; c.fillRect(x * P + ((x * 7 + y * 3) % 3) * 8 + 4, y * P + 3, 3, P - 6); // a glint
           c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 2;
           for (let k = 0; k < 2; k++) { const gx = x * P + 4 + rand() * (P - 12), gy = y * P + 4 + rand() * (P - 12); c.beginPath(); c.moveTo(gx, gy + 6); c.lineTo(gx + 6, gy); c.stroke(); }
         }
