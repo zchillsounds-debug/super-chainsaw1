@@ -1025,7 +1025,7 @@ export class World {
       F.root.position.set(ax + (bx - ax) * k, 0, az + (bz - az) * k);
       walkPose(P, this.t + 0.3);
       if (F.moveT <= 0) { F.from = null; this.setPos(F); }
-    } else { idlePose(P, this.t + 1); P.y = Math.abs(Math.sin(this.t * 3)) * 0.1; if (!this.from) F.dir = F.x < this.hx ? 'e' : F.x > this.hx ? 'w' : F.y < this.hy ? 's' : 'n'; }
+    } else { idlePose(P, this.t + 1); P.y = Math.abs(Math.sin(this.t * 3)) * 0.1; if (F.hop > 0) { F.hop -= dt; P.y = Math.sin((0.6 - F.hop) / 0.6 * Math.PI * 2) ** 2 * 0.6; P.armLz = P.armRz = 2; } if (!this.from) F.dir = F.x < this.hx ? 'e' : F.x > this.hx ? 'w' : F.y < this.hy ? 's' : 'n'; }
     F.root.rotation.y = turnTo(F.root.rotation.y, YAW[F.dir], dt * 14);
     F.cr.update(dt);
   }
@@ -1057,6 +1057,16 @@ export class World {
     // talk across a counter
     if (!a && this.tile(fx, fy) === 'K') { const [dx, dy] = DIRS[this.dir]; a = this.occupied(fx + dx, fy + dy, 'hero'); }
     if (a && a.n) return this.talk(a);
+    const B = this.follower;
+    if (B && B.x === fx && B.y === fy && !B.from) { // pet your buddy
+      B.dir = { n: 's', s: 'n', e: 'w', w: 'e' }[this.dir]; B.hop = 0.6;
+      B.cr.emote('happy', 'open', 1);
+      for (let k = 0; k < 5; k++) this.g.fx.spawn({ x: B.root.position.x + (Math.random() - 0.5), y: 1.6 + Math.random() * 0.5, z: B.root.position.z, vy: 1 + Math.random(), color: 0xff6aa8, size: 0.35, life: 0.9, shape: 'star' });
+      sfx.pickup?.();
+      const name = B.cr.def?.name || 'Your buddy';
+      const lines = save.adv.follow ? ['Pip: Squeak! (Pip nuzzles {hero}.)'] : [[`${name} looks really happy to be out exploring with {hero}!`, `${name} bounces on the spot. Adventure!`, `${name} gives {hero} a big hug.`, `${name} sniffs the air. Something good is cooking somewhere...`][Math.floor(Math.random() * 4)]];
+      return this.say(lines);
+    }
     const sign = (this.M.signs || []).find((s) => s.x === fx && s.y === fy);
     if (sign?.act) return this.S.worldStory(sign.act, this, null);
     if (sign) return this.say([sign.text], null, sign.hide ? '' : '📜 Sign');
