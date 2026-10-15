@@ -335,6 +335,48 @@ export class Arena {
     field.rotation.x = -Math.PI / 2;
     field.receiveShadow = true;
     G.add(field);
+    this.field = field; this.fieldTex = fieldTex;
+    // out in the wild the meadow isn't mowed: a natural field (patchy greens, clover, flowers) swaps in, with tufts round the edge
+    if (!A.floor) {
+      this.wildField = () => this.wildTex ||= (() => {
+        const t = canvasTex(1024, 1024, (c, w, h) => {
+          c.fillStyle = A.fieldA; c.fillRect(0, 0, w, h);
+          for (let i = 0; i < 60; i++) {
+            const x = Math.random() * w, y = Math.random() * h, r = 50 + Math.random() * 140, g = c.createRadialGradient(x, y, 0, x, y, r);
+            g.addColorStop(0, ['rgba(40,110,30,0.22)', 'rgba(190,240,120,0.22)', 'rgba(120,170,40,0.18)'][i % 3]); g.addColorStop(1, 'rgba(0,0,0,0)');
+            c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
+          }
+          for (let i = 0; i < 7; i++) { // bare earth where critters scuffle
+            const x = w * (0.2 + Math.random() * 0.6), y = h * (0.2 + Math.random() * 0.6);
+            c.fillStyle = 'rgba(150,110,60,0.28)'; c.beginPath(); c.ellipse(x, y, 20 + Math.random() * 30, 12 + Math.random() * 16, Math.random() * 3, 0, 7); c.fill();
+          }
+          for (let i = 0; i < 14000; i++) {
+            c.globalAlpha = 0.05 + Math.random() * 0.09; c.fillStyle = Math.random() < 0.5 ? '#eaffc8' : '#1e5a18';
+            c.fillRect(Math.random() * w, Math.random() * h, 1.5, 3 + Math.random() * 5);
+          }
+          c.globalAlpha = 1;
+          for (let i = 0; i < 40; i++) { // clover clumps
+            const x = Math.random() * w, y = Math.random() * h; c.fillStyle = 'rgba(60,150,50,0.55)';
+            for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(x + Math.cos(k * 2.1) * 4, y + Math.sin(k * 2.1) * 4, 4, 0, 7); c.fill(); }
+          }
+          for (let i = 0; i < 70; i++) { // little flowers
+            const x = Math.random() * w, y = Math.random() * h; c.fillStyle = ['#ffffff', '#ffe14d', '#ff8ab0', '#b89aff'][i % 4];
+            for (let k = 0; k < 5; k++) { c.beginPath(); c.arc(x + Math.cos(k * 1.26) * 3, y + Math.sin(k * 1.26) * 3, 2.2, 0, 7); c.fill(); }
+            c.fillStyle = '#ffb030'; c.beginPath(); c.arc(x, y, 1.6, 0, 7); c.fill();
+          }
+        });
+        t.colorSpace = fieldTex.colorSpace; t.anisotropy = fieldTex.anisotropy;
+        return t;
+      })();
+      const tufts = [];
+      for (let i = 0; i < 70; i++) {
+        const a = Math.random() * Math.PI * 2, r = ARENA_R * (0.62 + Math.random() * 0.36);
+        for (let k = 0; k < 4; k++) { const g = new THREE.ConeGeometry(0.07, 0.35 + Math.random() * 0.25, 3); g.rotateZ((Math.random() - 0.5) * 0.7); g.translate(Math.cos(a) * r + (Math.random() - 0.5) * 0.4, 0.17, Math.sin(a) * r + (Math.random() - 0.5) * 0.4); tufts.push(g); }
+      }
+      const tm = new THREE.Mesh(mergeGeometries(tufts), toon(0x3f9a32, { env: true, rim: 0.3 }));
+      tufts.forEach((g) => g.dispose());
+      tm.visible = false; tm.userData.openOnly = true; G.add(tm);
+    }
     // stadium markings (lines, rings, the paw emblem) on their own layer: wild fights out in the open hide them
     const markTex = canvasTex(1024, 1024, (c, w, h) => {
       const cx = w / 2, cy = h / 2;
@@ -1220,6 +1262,7 @@ export class Arena {
     if (this.open === on) return;
     this.open = on;
     for (const o of this.group.children) { if (o.userData.stadium) o.visible = !on; if (o.userData.openOnly) o.visible = on; }
+    if (this.wildField) { this.field.material.map = on ? this.wildField() : this.fieldTex; this.field.material.needsUpdate = true; }
     // the far scenery (forests, hills) was shaded by the stands; without them a low sun throws its shadow across the whole field
     this.group.traverse((o) => {
       if (!o.isMesh || o.userData.stadium || o.userData.openOnly) return;
