@@ -896,6 +896,13 @@ export class World {
         root = cr.root;
         root.scale.setScalar(CS * (n.scale || 1));
         roleHat(cr, n.name || '');
+        if (this.rain && n.act !== 'fish' && n.act !== 'sleep') { // a brolly up in the rain
+          const U = new THREE.Group(), r = cr.def.body.headR, col = [0xff5a8a, 0x5ab8ff, 0xffd84d, 0x8a6aff][(n.x + n.y) % 4];
+          const can = inked(new THREE.ConeGeometry(r * 1.6, r * 0.75, 8, 1, true), toon(col, { rim: 0.4, side: THREE.DoubleSide }), OL * 0.3); can.position.y = r * 0.45; U.add(can);
+          const tip = new THREE.Mesh(new THREE.SphereGeometry(r * 0.12, 6, 4), toon(0xffffff)); tip.position.y = r * 0.92; U.add(tip);
+          const stick = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.05, r * 0.05, r * 2.2, 5), toon(0x5a3a2a)); stick.position.y = -r * 0.6; U.add(stick);
+          U.position.set(r * 0.2, cr.def.body.h * 0.82 + r * 2.0, -r * 0.6); U.rotation.set(-0.4, 0, -0.12); cr.root.add(U);
+        }
       }
       root.userData.critter = true;
       this.group.add(root);
