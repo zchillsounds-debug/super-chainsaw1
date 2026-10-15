@@ -38,6 +38,8 @@ export class World {
     this.g = screens.game;
     this.t = 0;
     this.busy = false; // dialogue / cut-scene: no walking
+    const A = this.g.arena;
+    this.base = { sun: A.sun.color.getHex(), sunI: A.sun.intensity, sky: A.hemi.color.getHex(), gnd: A.hemi.groundColor.getHex(), hemiI: A.hemi.intensity };
     this.hideArena(true);
     this.load(save.adv.map, save.adv.x, save.adv.y, save.adv.dir);
   }
@@ -57,14 +59,24 @@ export class World {
     } else {
       for (const o of this.hidden || []) o.visible = true;
       this.hidden = [];
+      this.mood(null);
       if (this.fogWas) this.g.scene.fog = this.fogWas;
       const sun = A.sun;
       sun.position.set(...A.A.sunDir).multiplyScalar(30); sun.target.position.set(0, 0, 0);
     }
   }
 
+  // per-map light: the Glowcap woods sit in a violet dusk; null restores the meadow daylight
+  mood(m) {
+    const A = this.g.arena, B = this.base;
+    A.sun.color.setHex(m?.sun ?? B.sun); A.sun.intensity = m?.sunI ?? B.sunI;
+    A.hemi.color.setHex(m?.sky ?? B.sky); A.hemi.groundColor.setHex(m?.gnd ?? B.gnd); A.hemi.intensity = m?.hemiI ?? B.hemiI;
+    if (this.g.scene.fog && this.hidden?.length) this.g.scene.fog.color.setHex(m?.fog ?? 0xcfeeff);
+  }
+
   dispose() {
     this.unload();
+    this.follower = null;
     this.hideArena(false);
     this.dialogEl?.remove();
   }
@@ -79,12 +91,17 @@ export class World {
     this.g.scene.add(this.group);
     this.solid = new Set();
     const rand = rng(hash(key));
-    for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) if ('TP~#Rh'.includes(this.tile(tx, ty))) this.solid.add(tx + ',' + ty);
+    const shut = M.bramble && !save.adv.flags[M.bramble];
+    for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
+      const t = this.tile(tx, ty);
+      if ('TP~#Rhm'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
+    }
     for (const s of M.signs || []) this.solid.add(s.x + ',' + s.y);
     this.buildGround(rand);
     this.buildTrees(rand);
     this.buildGrass(rand);
     this.buildProps(rand);
+    this.buildForest(rand);
     this.buildBuildings();
     this.buildActors();
     // hero
@@ -93,11 +110,13 @@ export class World {
     this.group.add(this.hero.root);
     this.hx = x; this.hy = y; this.dir = dir; this.moveT = 0; this.from = null;
     this.placeHero();
+    this.makeFollower();
     this.camAt = null;
     this.steps = 0;
     this.encCool = 4;
     save.adv.map = key; save.adv.x = x; save.adv.y = y; save.adv.dir = dir; persist();
     playMusic(M.music || 'camp');
+    this.mood(M.mood);
     this.banner(M.name);
   }
 
@@ -117,13 +136,16 @@ export class World {
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
 
   buildGround(rand) {
-    const P = 32, W = this.W, H = this.H;
+    const P = 32, W = this.W, H = this.H, C = { a: '#7ad259', b: '#77cf56', tall: '#4fae3e', path: '#e8c98a', dark: 'rgba(40,120,40,0.35)', lite: 'rgba(200,255,150,0.4)', ...this.M.palette };
+    // building footprints take the ground of the tile in front of their door row
+    const under = (x, y) => { let k = y; while (this.tile(x, k) === 'h' && k < H) k++; const t = this.tile(x, k); return t === 'h' || t === 'T' ? '.' : t; };
     const tex = canvasTex(W * P, H * P, (c) => {
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        const t = this.tile(x, y);
-        c.fillStyle = (x + y) % 2 ? '#7ad259' : '#77cf56';
+        let t = this.tile(x, y);
+        if (t === 'h') t = under(x, y);
+        c.fillStyle = (x + y) % 2 ? C.a : C.b;
         c.fillRect(x * P, y * P, P, P);
-        if (t === '"') { c.fillStyle = '#4fae3e'; c.fillRect(x * P, y * P, P, P); }
+        if (t === '"') { c.fillStyle = C.tall; c.fillRect(x * P, y * P, P, P); }
         if (t === '~' || t === '=') { c.fillStyle = '#3a9ae0'; c.fillRect(x * P, y * P, P, P); }
         if (t === 's' || t === 'P') { c.fillStyle = (x + y) % 2 ? '#f4dc9a' : '#f1d894'; c.fillRect(x * P, y * P, P, P); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); } }
       }
@@ -131,7 +153,7 @@ export class World {
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         if (this.tile(x, y) !== ':' && this.tile(x, y) !== 'h') continue;
         if (this.tile(x, y) === 'h') continue;
-        c.fillStyle = '#e8c98a';
+        c.fillStyle = C.path;
         c.beginPath(); c.roundRect(x * P - 3, y * P - 3, P + 6, P + 6, 10); c.fill();
       }
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -141,7 +163,12 @@ export class World {
       // grass speckles and flowers
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const t = this.tile(x, y);
-        if (t === '.' || t === 'f' || t === 'T') for (let k = 0; k < 5; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(40,120,40,0.35)' : 'rgba(200,255,150,0.4)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 4); }
+        if ('.fTmgB'.includes(t)) for (let k = 0; k < 5; k++) { c.fillStyle = rand() < 0.5 ? C.dark : C.lite; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 4); }
+        if (t === 'g') { // a ring of moss round the little glowcaps
+          const g = c.createRadialGradient(x * P + P / 2, y * P + P / 2, 2, x * P + P / 2, y * P + P / 2, P * 0.7);
+          g.addColorStop(0, 'rgba(160,255,200,0.45)'); g.addColorStop(1, 'rgba(160,255,200,0)');
+          c.fillStyle = g; c.fillRect(x * P - P / 2, y * P - P / 2, P * 2, P * 2);
+        }
         if (t === 'f') for (let k = 0; k < 5; k++) {
           const fx = x * P + 5 + rand() * (P - 10), fy = y * P + 5 + rand() * (P - 10);
           c.fillStyle = ['#ff6a8a', '#ffe14d', '#ffffff', '#b07aff'][Math.floor(rand() * 4)];
@@ -175,7 +202,7 @@ export class World {
     }
     if (water.length) {
       const wt = canvasTex(128, 128, (c, w, h) => {
-        c.fillStyle = '#4aa8f0'; c.fillRect(0, 0, w, h);
+        c.fillStyle = this.M.palette?.water || '#4aa8f0'; c.fillRect(0, 0, w, h);
         c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 3;
         for (let k = 0; k < 7; k++) { const x = (k * 37) % w, y = (k * 53) % h; c.beginPath(); c.arc(x, y, 9, 0.2, 2.6); c.stroke(); }
       }, { repeat: [1, 1] });
@@ -219,7 +246,8 @@ export class World {
     if (nuts.length) { this.group.add(inked(mergeGeometries(nuts), toon(0x7a4a2a), OL * 0.4)); nuts.forEach((g) => g.dispose()); }
     if (fronds.length) { this.group.add(inked(mergeGeometries(fronds), toon(0x3fbf5a, { rim: 0.4, side: THREE.DoubleSide }), OL * 0.4)); fronds.forEach((g) => g.dispose()); }
     const put = (list, color, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color, { rim: 0.4 }), ink); m.castShadow = true; this.group.add(m); list.forEach((g) => g.dispose()); };
-    put(can, 0x3fae4a, OL); put(can2, 0x4cc25a, OL); put(trunks, 0x8a5a3a, OL * 0.6);
+    const TC = this.M.trees || [0x3fae4a, 0x4cc25a, 0x8a5a3a];
+    put(can, TC[0], OL); put(can2, TC[1], OL); put(trunks, TC[2], OL * 0.6);
   }
 
   buildGrass(rand) {
@@ -235,7 +263,7 @@ export class World {
       }
     }
     if (!blades.length) return;
-    const m = inked(mergeGeometries(blades), toon(0x2f9a3a, { rim: 0.5 }), OL * 0.4);
+    const m = inked(mergeGeometries(blades), toon(this.M.blades || 0x2f9a3a, { rim: 0.5 }), OL * 0.4);
     blades.forEach((g) => g.dispose());
     this.group.add(m);
   }
@@ -261,6 +289,78 @@ export class World {
     put(rocks, 0x9a94a8); put(posts, 0xfff4e0, OL * 0.6); put(rails, 0xfff4e0, OL * 0.5); put(sticks, 0x8a5a3a, OL * 0.5); put(boards, 0xc8925a);
   }
 
+  // the Glowcap woods: giant glowing toadstools (m), little glowcap clusters (g), bramble walls (B)
+  buildForest(rand) {
+    const stems = [], caps = [[], [], []], spots = [], tiny = [[], [], []], thorns = [], vines = [];
+    const CAP = [0xff5a8a, 0x8a6aff, 0x2fd8b8];
+    for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) {
+      const t = this.tile(x, y), [px, pz] = wpos(x, y);
+      if (t === 'm') {
+        const s = 0.95 + rand() * 0.35, k = Math.floor(rand() * 3), lean = (rand() - 0.5) * 0.25;
+        const st = new THREE.CylinderGeometry(0.32 * s, 0.45 * s, 2.0 * s, 8); st.rotateZ(lean); st.translate(px, 1.0 * s, pz); stems.push(st);
+        const cap = new THREE.SphereGeometry(1.25 * s, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2); cap.scale(1, 0.62, 1); cap.translate(px - lean * 1.8 * s, 1.9 * s, pz); caps[k].push(cap);
+        for (let j = 0; j < 5; j++) {
+          const a = rand() * Math.PI * 2, r = (0.3 + rand() * 0.55) * s, sp = new THREE.SphereGeometry(0.16 * s, 6, 4); sp.scale(1, 0.4, 1);
+          const h = Math.sqrt(Math.max(0, 1 - (r / (1.25 * s)) ** 2)) * 0.62 * 1.25 * s;
+          sp.translate(px - lean * 1.8 * s + Math.cos(a) * r, 1.9 * s + h, pz + Math.sin(a) * r); spots.push(sp);
+        }
+      }
+      if (t === 'g') for (let j = 0; j < 4; j++) {
+        const k = Math.floor(rand() * 3), ox = px + (rand() - 0.5) * 1.3, oz = pz + (rand() - 0.5) * 1.3, h = 0.25 + rand() * 0.25;
+        const st = new THREE.CylinderGeometry(0.05, 0.07, h, 5); st.translate(ox, h / 2, oz); stems.push(st);
+        const cp = new THREE.SphereGeometry(0.2, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2); cp.scale(1, 0.7, 1); cp.translate(ox, h, oz); tiny[k].push(cp);
+      }
+      if (t === 'B') {
+        for (let j = 0; j < 6; j++) {
+          const v = new THREE.TorusGeometry(0.6 + rand() * 0.3, 0.13, 6, 16); v.rotateY(rand() * 3); v.rotateX(Math.PI / 2 + (rand() - 0.5) * 1.6);
+          v.translate(px + (rand() - 0.5) * 0.7, 0.5 + j * 0.22, pz + (rand() - 0.5) * 0.7); vines.push(v);
+        }
+        for (let j = 0; j < 20; j++) {
+          const a = rand() * Math.PI * 2, r = 0.55 + rand() * 0.35, c = new THREE.ConeGeometry(0.1, 0.42, 4); c.rotateZ(-Math.PI / 2); c.rotateY(a);
+          c.translate(px + Math.cos(a) * r, 0.3 + rand() * 1.4, pz - Math.sin(a) * r); thorns.push(c);
+        }
+      }
+    }
+    const put = (list, mat, ink = OL, group = this.group) => { if (!list.length) return null; const m = inked(mergeGeometries(list), mat, ink); m.castShadow = true; group.add(m); list.forEach((g) => g.dispose()); return m; };
+    put(stems, toon(0xf4e8d0), OL * 0.6);
+    caps.forEach((l, k) => put(l, toon(CAP[k], { emissive: new THREE.Color(CAP[k]).multiplyScalar(0.55).getHex(), rim: 0.6 })));
+    tiny.forEach((l, k) => put(l, toon(CAP[k], { emissive: new THREE.Color(CAP[k]).multiplyScalar(0.9).getHex(), rim: 0 }), OL * 0.4));
+    put(spots, toon(0xffffff, { emissive: 0xb0a898, rim: 0 }), 0);
+    // brambles live in their own group so the Trial of Friendship can shrink them away
+    if (vines.length && !(this.M.bramble && save.adv.flags[this.M.bramble])) {
+      this.brambles = new THREE.Group(); this.group.add(this.brambles);
+      put(vines, toon(0x6a3a7a, { rim: 0.6 }), OL * 0.6, this.brambles); put(thorns, toon(0xffc8f0, { emissive: 0x5a2a5a }), OL * 0.3, this.brambles);
+    } else this.brambles = null;
+  }
+
+  // the brambles curl back into the ground (Trial of Friendship)
+  openBrambles() {
+    for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) if (this.tile(x, y) === 'B') this.solid.delete(x + ',' + y);
+    const B = this.brambles; if (!B) return;
+    this.brambleT = 1.2;
+    B.children[0].geometry.computeBoundingSphere();
+    const c = B.children[0].geometry.boundingSphere.center;
+    B.userData.c = c.clone();
+    for (let k = 0; k < 24; k++) this.g.fx.spawn({ x: c.x + (Math.random() - 0.5) * 3, y: 0.5 + Math.random() * 1.5, z: c.z + (Math.random() - 0.5) * 2, vy: 1 + Math.random() * 2, color: [0xff8ac8, 0xb08aff, 0x8affd8][k % 3], size: 0.35, life: 1.4, shape: 'star', drag: 1 });
+    sfx.shimmer?.();
+  }
+
+  // a friend who tags along one tile behind the hero (save.adv.follow)
+  makeFollower() {
+    const id = save.adv.follow;
+    if (!id) { this.follower = null; return; }
+    const cr = new Critter(withGear(byId(id), 2));
+    cr.root.userData.critter = true;
+    cr.root.scale.setScalar(CS * 0.7);
+    this.group.add(cr.root);
+    // start on a free tile behind the hero
+    const [dx, dy] = DIRS[this.dir];
+    let x = this.hx - dx, y = this.hy - dy;
+    if (!this.walkable(x, y)) { x = this.hx; y = this.hy; }
+    this.follower = { cr, root: cr.root, x, y, dir: this.dir, from: null, moveT: 0 };
+    this.setPos(this.follower);
+  }
+
   buildBuildings() {
     this.doors = [];
     for (const b of this.M.buildings || []) {
@@ -268,6 +368,7 @@ export class World {
       const G = new THREE.Group();
       G.position.set(x0 + w / 2, 0, z0 + d / 2);
       if (b.stadium) this.stadiumModel(G, b, w, d);
+      else if (b.shroom) this.shroomHouse(G, b, w, d);
       else {
         const wallH = b.lab ? 2.4 : 2.0;
         const walls = inked(new THREE.BoxGeometry(w - 0.4, wallH, d - 0.5), toon(b.wall || 0xfff1d8), OL);
@@ -297,6 +398,33 @@ export class World {
       this.group.add(G);
       this.doors.push({ x: b.x + b.door, y: b.y + b.h - 1, b });
     }
+  }
+
+  // Glowcap Hollow homes: a fat toadstool stem with a round door under a spotted glowing cap
+  shroomHouse(G, b, w, d) {
+    const rx = w / 2 - 0.45, rz = d / 2 - 0.55;
+    const stem = inked(new THREE.CylinderGeometry(1, 1.08, 2.2, 24), toon(b.wall || 0xfff1d8), OL);
+    stem.scale.set(rx, 1, rz); stem.position.y = 1.1; G.add(stem);
+    const glow = new THREE.Color(b.roof).multiplyScalar(0.4).getHex();
+    const cap = inked(new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), toon(b.roof, { emissive: glow, rim: 0.6 }), OL);
+    const cx = rx + 0.55, cz = rz + 0.5, ch = 1.45;
+    cap.scale.set(cx, ch, cz); cap.position.y = 2.05; G.add(cap);
+    const under = new THREE.Mesh(new THREE.CircleGeometry(1, 24), toon(0xf4d8c8)); under.rotation.x = Math.PI / 2; under.scale.set(cx, cz, 1); under.position.y = 2.04; G.add(under);
+    const dots = [];
+    for (let k = 0; k < 7; k++) {
+      const a = k / 7 * Math.PI * 2 + 0.3, r = k % 2 ? 0.5 : 0.78, sp = new THREE.SphereGeometry(0.45, 10, 5); sp.scale(1, 1, 0.3);
+      const nx = Math.cos(a) * r, nz = Math.sin(a) * r, ny = Math.sqrt(1 - r * r);
+      sp.lookAt(new THREE.Vector3(nx * ch / cx, ny, nz * ch / cz)); sp.translate(nx * cx, 2.05 + ny * ch, nz * cz); dots.push(sp);
+    }
+    { const sp = new THREE.SphereGeometry(0.55, 10, 5); sp.scale(1, 0.3, 1); sp.translate(0, 2.05 + ch, 0); dots.push(sp); }
+    G.add(inked(mergeGeometries(dots), toon(0xfff8e8, { emissive: 0x5a5048 }), 0)); dots.forEach((g) => g.dispose());
+    const dx = (b.door + 0.5) * TILE - w / 2, front = rz * Math.sqrt(Math.max(0, 1 - (dx / rx) ** 2));
+    const door = inked(new THREE.CylinderGeometry(0.5, 0.5, 0.12, 16, 1, false, -Math.PI / 2, Math.PI), toon(0x8a5a3a), OL * 0.5);
+    door.rotation.x = -Math.PI / 2; door.position.set(dx, 0.62, front + 0.05); G.add(door);
+    const doorBox = inked(new THREE.BoxGeometry(1.0, 0.62, 0.12), toon(0x8a5a3a), OL * 0.5); doorBox.position.set(dx, 0.31, front + 0.05); G.add(doorBox);
+    const win = inked(new THREE.CircleGeometry(0.32, 14), toon(0xfff0a0, { emissive: 0x8a7a30, rim: 0 }), 0);
+    win.position.set(dx + (b.door === 0 ? 1.1 : -1.1), 1.35, front - 0.05); G.add(win);
+    if (b.heal) { const cr = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.12), toon(0xff5a8a)); cr.position.set(dx, 1.55, front + 0.08); G.add(cr); const v2 = cr.clone(); v2.rotation.z = Math.PI / 2; G.add(v2); }
   }
 
   stadiumModel(G, b, w, d) {
@@ -331,6 +459,7 @@ export class World {
     const F = save.adv.flags;
     for (const n of this.M.npcs || []) {
       if (n.hideFlag && F[n.hideFlag]) continue;
+      if (n.showFlag && !F[n.showFlag]) continue;
       let root, cr = null;
       if (n.pecan) { root = pecanModel(); root.scale.setScalar(CS); }
       else {
@@ -417,6 +546,11 @@ export class World {
     this.from = [this.hx, this.hy];
     this.hx = nx; this.hy = ny;
     this.moveT = STEP;
+    const F = this.follower;
+    if (F && (F.x !== this.from[0] || F.y !== this.from[1])) {
+      F.dir = F.x < this.from[0] ? 'e' : F.x > this.from[0] ? 'w' : F.y < this.from[1] ? 's' : 'n';
+      F.from = [F.x, F.y]; F.x = this.from[0]; F.y = this.from[1]; F.moveT = STEP;
+    }
   }
 
   bump() {
@@ -491,6 +625,18 @@ export class World {
     H.root.rotation.y = turnTo(H.root.rotation.y, YAW[this.dir], dt * 18);
     H.update(dt);
     this.updateActors(dt);
+    this.updateFollower(dt);
+    // fireflies drift up out of the woods around the hero
+    if (this.M.fireflies && Math.random() < dt * 9) {
+      const p = this.hero.root.position;
+      this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 24, y: 0.4 + Math.random() * 2.2, z: p.z + (Math.random() - 0.7) * 16, vx: (Math.random() - 0.5) * 0.6, vy: 0.2 + Math.random() * 0.3, vz: (Math.random() - 0.5) * 0.6, color: Math.random() < 0.7 ? 0xd8ff6a : 0x8affe0, size: 0.28, life: 2.6, shape: 'glow', fadeIn: 0.3, hold: 0.5 });
+    }
+    if (this.brambleT > 0 && this.brambles) {
+      this.brambleT -= dt;
+      const k = Math.max(0, this.brambleT / 1.2), c = this.brambles.userData.c;
+      this.brambles.scale.set(k, k * k, k); this.brambles.position.set(c.x * (1 - k), 0, c.z * (1 - k));
+      if (this.brambleT <= 0) { this.brambles.visible = false; }
+    }
     // water ripples drift
     if (this.waterTex) this.waterTex.offset.set(this.t * 0.02, this.t * 0.03);
     this.updateCamera(dt);
@@ -535,6 +681,20 @@ export class World {
         a.from = [a.x, a.y]; a.x = nx; a.y = ny; a.moveT = a.wild ? STEP * 1.6 : STEP * 1.3;
       }
     }
+  }
+
+  updateFollower(dt) {
+    const F = this.follower; if (!F) return;
+    const P = F.cr.pose; F.cr.resetPose();
+    if (F.from) {
+      F.moveT -= dt;
+      const k = 1 - Math.max(0, F.moveT) / STEP, [ax, az] = wpos(...F.from), [bx, bz] = wpos(F.x, F.y);
+      F.root.position.set(ax + (bx - ax) * k, 0, az + (bz - az) * k);
+      walkPose(P, this.t + 0.3);
+      if (F.moveT <= 0) { F.from = null; this.setPos(F); }
+    } else { idlePose(P, this.t + 1); P.y = Math.abs(Math.sin(this.t * 3)) * 0.1; if (!this.from) F.dir = F.x < this.hx ? 'e' : F.x > this.hx ? 'w' : F.y < this.hy ? 's' : 'n'; }
+    F.root.rotation.y = turnTo(F.root.rotation.y, YAW[F.dir], dt * 14);
+    F.cr.update(dt);
   }
 
   updateCamera(dt) {

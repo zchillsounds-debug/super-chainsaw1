@@ -3,6 +3,7 @@
 // the cup stadiums are the gyms. Every beat is keyed on save.adv.flags.
 import { save, persist } from './save.js';
 import { CUPS, CRITTERS, withGear } from './data.js';
+import { unlock } from './save.js';
 import { sfx } from './audio.js';
 import { rivalFor } from './worldmaps.js';
 
@@ -27,7 +28,33 @@ export function storyIntro(S, w) {
     w.say([
       '{hero}: Two cups! The crowd was chanting my name!',
       'Prof. Pecan (on the phone): {hero}! I watched the whole thing on the jumbotron. Marvellous!',
-      "Prof. Pecan: The road beyond Seashell Town is still being charted. Rest up, train in the tall grass, and I'll call when it's ready.",
+      'Prof. Pecan: Your next stop is the Glowcap Cup. Take the path north of town into the Glowcap Woods.',
+      "Prof. Pecan: The woods are full of brambles, though. Strength alone won't get you through. Hmm... I'm sure you'll figure it out!",
+    ]);
+    return;
+  }
+  if (w.key === 'glowwood' && F.pip_saved && !F.pip_found) {
+    F.pip_found = true; save.adv.follow = 'squeakwing'; persist();
+    w.removeNpc('pip'); w.makeFollower();
+    w.say([
+      'Pip: Squeak... squeak? (The little Squeakwing peeks out from behind {hero}.)',
+      "{hero}: It's okay, Pip. That grumpy Thistlehog is gone. Let's get you home to your mama!",
+      'Pip: SQUEAK! (Pip flutters along right behind {hero}.)',
+    ]);
+    return;
+  }
+  if (w.key === 'glowwood' && !F.woods) {
+    F.woods = true; persist();
+    w.say(["{hero}: Whoa... it's so dark in here. But the mushrooms are glowing!", '{hero}: Glowcap Hollow and its stadium should be somewhere north.']);
+    return;
+  }
+  if (F.cup_grove && !F.post_grove && w.key === 'glowcap') {
+    F.post_grove = true; persist();
+    w.say([
+      '{hero}: Three cups! And Elder Oakley gave me a real glowcap!',
+      'Pip (far away): SQUEAK SQUEAK! (Somewhere in the woods, a whole family of bats is cheering.)',
+      'Prof. Pecan (on the phone): {hero}, splendid! Next is the Champion Cup, at the stadium inside the volcano.',
+      "Prof. Pecan: I'm still mapping the volcano road. Train up in the meantime. It gets HOT out there!",
     ]);
     return;
   }
@@ -49,6 +76,14 @@ export function storyStep(S, w) {
     if (g) g.dir = 'w';
     w.busy = true;
     w.say(['Pebblepup: Woof! Wait! The tall grass on Route 1 is full of wild critters.', 'Pebblepup: Professor Pecan made me promise: nobody goes out there without talking to him first!'], () => {
+      w.busy = false;
+      w.from = [w.hx, w.hy]; w.hy += 1; w.dir = 's'; w.moveT = 0.23;
+    });
+    return true;
+  }
+  if (w.key === 'seashell' && !F.cup_thunder && w.hy <= 1) {
+    w.busy = true;
+    w.say(["{hero}: Those woods look spooky... and they say the Glowcap Cup only lets in Thunder Cup winners. I'll win here first!"], () => {
       w.busy = false;
       w.from = [w.hx, w.hy]; w.hy += 1; w.dir = 's'; w.moveT = 0.23;
     });
@@ -140,6 +175,72 @@ export function storyTalk(S, id, w, a) {
     }));
   }
   if (id === 'rival2') rival2(S, w);
+  if (id === 'dash3') {
+    w.say([
+      "Dash: Don't bother. I already tried to bash through those brambles. Twelve times.",
+      "Dash: Some old frog told me they only open for a 'friend of the forest'. What does THAT even mean?!",
+      "Dash: Whatever. I'll figure it out before you do!",
+    ]);
+  }
+  if (id === 'pip') {
+    if (F.pip_saved) return;
+    const def = withGear(byId('pricklepuff'), 9);
+    w.say([
+      'Pip: Squeeeak! (A tiny Squeakwing is backed up against a mushroom, shaking.)',
+      `${def.name}: Grrr! These glowcaps are MINE. Scram, little bat!`,
+      '{hero}: Hey! Leave Pip alone! Pick on someone your own size!',
+      `${def.name}: ...You? You're not my size either. But fine!`,
+    ], () => S.worldFight({
+      foe: def, lv: 9, kind: 'story', flag: 'pip_saved', name: def.name, diff: 0.45,
+      trainer: { name: def.name, critter: 'pricklepuff', title: 'Grumpy bully', beat: 'Hmph! Keep your silly bat. I was leaving anyway.', gloat: 'Hah! These glowcaps stay MINE.' },
+      note: '🦇 You chased the bully away! Pip is safe.',
+    }));
+  }
+  if (id === 'mama') mama(S, w, a);
+}
+
+// Trial of Friendship: bring Pip home and the brambles open
+function mama(S, w, a) {
+  const F = flags();
+  if (F.trial_friendship) { w.say(['Mama Squeak: Thank you again, {hero}! Glowcap Hollow is just through there.']); return; }
+  if (!w.follower) {
+    F.mama_asked = true; persist();
+    w.say([
+      "Mama Squeak: Squeak! Oh, please help! My baby Pip flew off chasing fireflies and hasn't come back!",
+      'Mama Squeak: And now these brambles have grown shut. They only open for a true friend of the forest...',
+      "{hero}: Don't worry! I'll find Pip and bring them home!",
+      'Mama Squeak: Bless you! Pip loves the glowcaps in the hollow to the west.',
+    ]);
+    return;
+  }
+  const rid = rivalFor(save.adv.hero), rdef = byId(rid);
+  w.say([
+    'Pip: SQUEAK SQUEAK SQUEAK! (Pip zooms into Mama Squeak\'s wings.)',
+    "Mama Squeak: Pip! Oh, Pip! Thank you, {hero}. You're a true friend of the forest.",
+    'The glowcaps blaze bright... and the brambles curl back into the ground!',
+  ], () => {
+    F.trial_friendship = true; save.adv.follow = null;
+    if (w.follower) { w.group.remove(w.follower.root); w.follower = null; }
+    w.openBrambles();
+    let joined = false;
+    if (!save.unlocked.includes('squeakwing')) joined = unlock('squeakwing');
+    persist();
+    S.toast(joined ? '🦇 Squeakwing joined your team!' : '🤝 Trial of Friendship passed!');
+    sfx.jingle(3);
+    const d = w.npcs.find((n) => n.n.id === 'dash3');
+    w.say([
+      '🤝 Trial of Friendship passed!',
+      ...(joined ? ["Mama Squeak: Pip's big sister wants to see the world and grow strong, just like you. Please take her along!", 'Squeakwing joined your team!'] : []),
+      ...(d ? [
+        'Dash: ...So THAT\'S what "friend of the forest" meant. Helping a crybaby bat?',
+        "Dash: Fine. You opened the way. But you still have to get through ME!",
+      ] : []),
+    ], () => d && S.worldFight({
+      foe: withGear(rdef, 10), lv: 10, kind: 'story', flag: 'dash3', name: 'Rival Dash', diff: 0.55,
+      trainer: { name: 'Dash', critter: rid, title: 'Your rival', beat: "...Okay. Maybe being nice isn't ALL bad. Don't tell anyone I said that.", gloat: 'Ha! Friends are nice. Winning is nicer!' },
+      note: '🌲 You beat Dash for the third time!',
+    }));
+  });
 }
 
 // facing a door and pressing A
@@ -171,7 +272,7 @@ export function doorAction(S, b, w) {
     if (F['cup_' + cup.id]) { w.say([`The ${cup.name} trophy shines in the lobby. {hero} is the champion here!`, 'Want to battle the cup again? Use Tournament on the title screen.']); return; }
     w.say([
       `Welcome to the ${cup.name}! ${cup.matches.length} battles stand between you and the trophy.`,
-      '{hero}: This is it. My first real cup. Let\'s go!',
+      Object.keys(F).some((k) => k.startsWith('cup_')) ? "{hero}: Another cup, another trophy. Let's go!" : '{hero}: This is it. My first real cup. Let\'s go!',
     ], () => S.worldCup(cup, front));
     return;
   }
