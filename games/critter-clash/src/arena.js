@@ -497,15 +497,15 @@ export class Arena {
     const stands = new THREE.Mesh(standGeo, standMat);
     stands.receiveShadow = true;
     // the gap in the stands (theta ~ 0, +z) is where the camera sits
-    G.add(stands);
+    stands.userData.stadium = true; G.add(stands);
     // big back wall behind stands
     const back = new THREE.Mesh(new THREE.CylinderGeometry(r0 + tiers * 1.25 + 1.3, r0 + tiers * 1.25 + 1.6, 9, 64, 1, true, Math.PI * 0.17, Math.PI * 1.66), toon(A.back || 0x5a4c9a, { env: true, rim: 0, side: THREE.DoubleSide }));
     back.position.y = 4.5;
-    G.add(back);
+    back.userData.stadium = true; G.add(back);
     // colour band on the top lip
     const lip = new THREE.Mesh(new THREE.CylinderGeometry(r0 + tiers * 1.25 + 1.65, r0 + tiers * 1.25 + 1.65, 0.8, 64, 1, true, Math.PI * 0.17, Math.PI * 1.66), toon(A.accent, { env: true, rim: 0, side: THREE.DoubleSide }));
     lip.position.y = 9;
-    G.add(lip);
+    lip.userData.stadium = true; G.add(lip);
 
     // crowd: instanced blobs (body + head) bouncing in the stands
     const body = new THREE.CapsuleGeometry(0.28, 0.35, 4, 8); body.translate(0, 0.45, 0);
@@ -533,7 +533,7 @@ export class Arena {
     fans.forEach((f, i) => { col.setHex(palette[Math.floor(rand() * palette.length)]); crowd.setColorAt(i, col); });
     this.fans = fans;
     crowd.castShadow = false;
-    G.add(crowd);
+    crowd.userData.stadium = true; G.add(crowd);
     this.excite = 0.2;
     this._m = new THREE.Matrix4();
     this._q = new THREE.Quaternion();
@@ -560,7 +560,7 @@ export class Arena {
         panel.add(l); l.position.y -= 20.5 - 0.0;
       }
       tw.lookAt(0, 0, 0);
-      G.add(tw);
+      tw.userData.stadium = true; G.add(tw);
     }
 
     // pennant flags along the lip
@@ -582,7 +582,7 @@ export class Arena {
       fl.userData.flag = f; fl.userData.ph = i * 0.7;
       fl.rotation.y = rand() * 6;
       this.flags.push(fl);
-      G.add(fl);
+      fl.userData.stadium = true; G.add(fl);
     }
 
     // scenery: rolling hills and puffy toon trees, merged into a handful of draws
@@ -780,7 +780,7 @@ export class Arena {
     }
     const rScr = r0 + tiers * 1.25 + 1.8;
     scr.position.set(0, 12, -rScr);
-    G.add(scr);
+    scr.userData.stadium = true; G.add(scr);
     this.drawScreen();
 
     // soft volumetric beams from the floodlights
@@ -802,7 +802,7 @@ export class Arena {
       beam.position.copy(top);
       beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), target.clone().sub(top).normalize());
       beam.renderOrder = 4;
-      G.add(beam);
+      beam.userData.stadium = true; G.add(beam);
     }
 
     // clouds
@@ -1190,6 +1190,13 @@ export class Arena {
     for (const t of maps) t.dispose();
     this.group.traverse((o) => { if (o.isLight && o.shadow?.map) { o.shadow.map.dispose(); o.shadow.map = null; } });
     this.screenTex.dispose();
+  }
+
+  // open field: the stands, crowd, towers and screen vanish, leaving the field in the countryside (wild fights)
+  setOpen(on) {
+    if (this.open === on) return;
+    this.open = on;
+    for (const o of this.group.children) if (o.userData.stadium) o.visible = !on;
   }
 
   cheer(amount = 1) { this.excite = Math.min(1, this.excite + amount); }

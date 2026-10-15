@@ -871,6 +871,7 @@ export class Screens {
       rounds: info.kind === 'wild' ? 1 : 2, trainer: info.trainer || null,
       stageSub: info.kind === 'wild' ? `${info.name} appeared!` : info.kind === 'story' ? 'Story battle' : `${info.name} wants to battle!`,
     });
+    g.arena.setOpen(true); // out in the wild: no stadium, just the meadow
   }
 
   worldCup(cup, front) {
