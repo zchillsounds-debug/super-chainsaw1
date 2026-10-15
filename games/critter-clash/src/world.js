@@ -486,15 +486,17 @@ export class World {
   swayGrass() {
     const geo = this.grassGeo; if (!geo) return;
     const a = geo.attributes.position.array, B = this.grassBase, t = this.t;
-    const hp = this.hero.root.position, hx = hp.x, hz = hp.z;
+    // everyone walking through the grass pushes it aside: the hero, the buddy, the roaming wild critters
+    const push = [this.hero.root.position, this.follower?.root.position, ...(this.wild || []).map((w) => w.root.position)].filter(Boolean);
     for (let i = 0; i < a.length; i += 3) {
       const y = B[i + 1]; if (y < 0.15) continue;
       const x = B[i], z = B[i + 2], k = (y - 0.1) * (y - 0.1);
-      let ox = Math.sin(t * 1.7 + x * 0.35 + z * 0.2) * 0.12 * k, oz = Math.sin(t * 1.3 + z * 0.3) * 0.05 * k;
-      const dx = x - hx, dz = z - hz, d2 = dx * dx + dz * dz;
-      if (d2 < 1.6) { const d = Math.sqrt(d2) + 0.05, f = (1.3 - Math.min(1.25, d)) * 0.9 * k / d; ox += dx * f; oz += dz * f; a[i + 1] = y - (1.3 - Math.min(1.25, d)) * 0.35 * k; }
-      else a[i + 1] = y;
-      a[i] = x + ox; a[i + 2] = z + oz;
+      let ox = Math.sin(t * 1.7 + x * 0.35 + z * 0.2) * 0.12 * k, oz = Math.sin(t * 1.3 + z * 0.3) * 0.05 * k, oy = 0;
+      for (const p of push) {
+        const dx = x - p.x, dz = z - p.z, d2 = dx * dx + dz * dz;
+        if (d2 < 1.6) { const d = Math.sqrt(d2) + 0.05, f = (1.3 - Math.min(1.25, d)) * 0.9 * k / d; ox += dx * f; oz += dz * f; oy = Math.max(oy, (1.3 - Math.min(1.25, d)) * 0.35 * k); }
+      }
+      a[i] = x + ox; a[i + 1] = y - oy; a[i + 2] = z + oz;
     }
     geo.attributes.position.needsUpdate = true;
   }
