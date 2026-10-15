@@ -925,13 +925,13 @@ export class Screens {
 
   // a fight from the world: wild critters, trainers and story battles
   worldFight(info) {
-    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = this.worldObj?.M.arena || 'meadow';
+    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = this.worldObj?.M.arena || 'meadow', place = this.worldObj?.M.name;
     this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit };
     this.leaveWorld();
     this.mode = 'vs';
     g.startBattle(h, info.foe, {
       cpuLevel: info.kind === 'wild' ? info.lv : storyLevel(info.lv, lv), playerLevel: lv, difficulty: info.diff ?? 0.3, arena,
-      rounds: info.kind === 'wild' ? 1 : 2, trainer: info.trainer || null,
+      rounds: info.kind === 'wild' ? 1 : 2, trainer: info.trainer || null, stageName: place,
       stageSub: info.kind === 'wild' ? `${info.name} appeared!` : info.kind === 'story' ? 'Story battle' : `${info.name} wants to battle!`,
     });
     g.arena.setOpen(true); // out in the wild: no stadium, just the meadow

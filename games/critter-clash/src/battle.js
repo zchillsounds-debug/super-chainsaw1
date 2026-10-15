@@ -38,8 +38,8 @@ const ROUND_TIME = 60;
 const INTRO_FIRST = 4.2, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
 
 export class Battle {
-  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, cpuHp = 1, training = false, hazards = false, stageSub = '' } = {}) {
-    this.stageSub = stageSub;
+  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, cpuHp = 1, training = false, hazards = false, stageSub = '', stageName = '' } = {}) {
+    this.stageSub = stageSub; this.stageName = stageName;
     this.trainHazards = training && hazards; // Sparring Setup can switch hazards on to practise them
     this.game = game;
     this.scene = game.scene;
@@ -123,7 +123,7 @@ export class Battle {
     this.introSaid = 0;
     if (first) {
       const hz = !this.training && save.settings.hazards !== false && this.hazards?.H;
-      this.hud.stageCard(this.arena.A.name, this.training ? 'Training' : this.stageSub || (hz ? `⚠ ${hz.name} · ${this.hazards.S?.name || ''}`.replace(/ · $/, '') : ''));
+      this.hud.stageCard(this.stageName || this.arena.A.name, this.training ? 'Training' : this.stageSub || (hz ? `⚠ ${hz.name} · ${this.hazards.S?.name || ''}`.replace(/ · $/, '') : ''));
     }
     this.tense = 0;
     this.camFocusWas = undefined;

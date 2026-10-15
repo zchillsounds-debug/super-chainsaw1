@@ -330,6 +330,13 @@ export class Arena {
         }
         c.globalAlpha = 1;
       }
+    });
+    const field = new THREE.Mesh(new THREE.CircleGeometry(ARENA_R + 0.5, 72), toon(0xffffff, { env: true, rim: 0, map: fieldTex }));
+    field.rotation.x = -Math.PI / 2;
+    field.receiveShadow = true;
+    G.add(field);
+    // stadium markings (lines, rings, the paw emblem) on their own layer: wild fights out in the open hide them
+    const markTex = canvasTex(1024, 1024, (c, w, h) => {
       const cx = w / 2, cy = h / 2;
       c.strokeStyle = A.line; c.lineWidth = 12;
       c.beginPath(); c.arc(cx, cy, w * 0.47, 0, Math.PI * 2); c.stroke();
@@ -346,10 +353,10 @@ export class Arena {
       c.fillStyle = A.line;
       for (const s of [-1, 1]) c.fillRect(cx + s * w * 0.3 - 30, cy - 4, 60, 8);
     });
-    const field = new THREE.Mesh(new THREE.CircleGeometry(ARENA_R + 0.5, 72), toon(0xffffff, { env: true, rim: 0, map: fieldTex }));
-    field.rotation.x = -Math.PI / 2;
-    field.receiveShadow = true;
-    G.add(field);
+    const marks = new THREE.Mesh(new THREE.CircleGeometry(ARENA_R + 0.5, 72), new THREE.MeshLambertMaterial({ map: markTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 }));
+    marks.rotation.x = -Math.PI / 2; marks.position.y = 0.004; marks.receiveShadow = true;
+    marks.userData.stadium = true;
+    G.add(marks);
 
     // volcano: glowing lava seams over the basalt, pulsing gently (blooms nicely)
     if (A.floor === 'basalt') {
@@ -465,8 +472,24 @@ export class Arena {
     wallGeos.forEach((gs, k) => {
       const m = new THREE.Mesh(mergeGeometries(gs), wallMats[k]);
       m.castShadow = m.receiveShadow = true;
+      m.userData.stadium = true;
       G.add(m);
     });
+    // out in the open (wild and route fights) a ring of bushes or snowy rocks marks the edge instead of the padded wall
+    {
+      const bush = [], snowy = A.floor === 'snow', city = A.floor === 'neon';
+      for (let i = 0; i < 44; i++) {
+        const a = (i / 44) * Math.PI * 2 + Math.sin(i * 7.3) * 0.03, r = ARENA_R + 1.8 + Math.sin(i * 3.1) * 0.25, s = 0.75 + (Math.sin(i * 5.7) * 0.5 + 0.5) * 0.45;
+        const g = city ? new THREE.BoxGeometry(1.3 * s, 0.9, 1.3 * s) : new THREE.IcosahedronGeometry(0.85 * s, 1);
+        if (!city) g.scale(1, snowy ? 0.6 : 0.8, 1);
+        g.rotateY(a); g.translate(Math.cos(a) * r, city ? 0.45 : 0.45 * s, Math.sin(a) * r); bush.push(g);
+      }
+      const col = snowy ? 0xeaf4ff : city ? 0x4a3a7a : A.leaves?.[0] ?? 0x4cc25a;
+      const hedge = inked(mergeGeometries(bush), toon(col, { env: true, rim: 0.4 }), 0.05);
+      bush.forEach((g) => g.dispose());
+      hedge.castShadow = true; hedge.visible = false; hedge.userData.openOnly = true;
+      G.add(hedge);
+    }
 
     // stands: stepped tiers with seat colours
     const tiers = 7, r0 = ARENA_R + 3.4;
@@ -1196,7 +1219,7 @@ export class Arena {
   setOpen(on) {
     if (this.open === on) return;
     this.open = on;
-    for (const o of this.group.children) if (o.userData.stadium) o.visible = !on;
+    for (const o of this.group.children) { if (o.userData.stadium) o.visible = !on; if (o.userData.openOnly) o.visible = on; }
   }
 
   cheer(amount = 1) { this.excite = Math.min(1, this.excite + amount); }
