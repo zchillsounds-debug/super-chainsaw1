@@ -908,3 +908,7 @@ body:not(.is-touch) .wd-a { display: none; }
 body:has(.wd-ask) .wd-a { visibility: hidden; }
 @media (max-height: 420px) { .wd-map h2 { display: none; } .wm { max-height: calc(100dvh - 110px); } }
 .title-main .btn small { display: block; font-family: Nunito, sans-serif; font-weight: 900; font-size: 13px; line-height: 1.1; margin-top: 2px; opacity: .9; letter-spacing: 0; -webkit-text-stroke: 0; }
+.wd-cups { display: flex; gap: 6px; justify-content: center; margin: -4px 0 12px; }
+.wd-cups span { width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,.08); box-shadow: inset 0 0 0 3px rgba(0,0,0,.12); display: grid; place-items: center; font-size: 15px; }
+.wd-cups span.on { background: var(--cc); box-shadow: 0 0 0 3px var(--ink), 0 3px 0 3px var(--ink); }
+@media (max-height: 420px) { .wd-cups { margin: -6px 0 8px; } .wd-cups span { width: 26px; height: 26px; font-size: 13px; } }

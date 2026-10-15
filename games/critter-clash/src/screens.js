@@ -863,6 +863,7 @@ export class Screens {
     const F = save.adv.flags, cups = CUPS.filter((c) => F['cup_' + c.id]).length, h = heroDef();
     d.innerHTML = `<div class="modal wd-menu-modal"><h2>Adventure</h2>
       <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => k.startsWith('it_')).length}/24</small></div></div>
+      <div class="wd-cups">${['sprout', 'thunder', 'grove', 'champion', 'midnight', 'sky', 'legend'].map((id) => { const c = CUPS.find((x) => x.id === id), on = F['cup_' + id]; return `<span class="${on ? 'on' : ''}" style="--cc:${c.color}" title="${c.name}">${on ? '🏆' : ''}</span>`; }).join('')}${F.crowned ? '<span class="on crown" style="--cc:#ffd23f" title="Critter Crown">👑</span>' : ''}</div>
       <div class="res-btns"></div></div>`;
     const b = d.querySelector('.res-btns');
     const close = () => { d.remove(); this.game.modalClose = null; };
