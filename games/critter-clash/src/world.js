@@ -156,7 +156,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null;
+    this.group = null; this.grassGeo = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -414,9 +414,29 @@ export class World {
       }
     }
     if (!blades.length) return;
-    const m = inked(mergeGeometries(blades), toon(this.M.blades || 0x2f9a3a, { rim: 0.5 }), OL * 0.4);
+    const geo = mergeGeometries(blades);
+    const m = inked(geo, toon(this.M.blades || 0x2f9a3a, { rim: 0.5 }), OL * 0.4);
     blades.forEach((g) => g.dispose());
     this.group.add(m);
+    // the blades sway in the breeze and part around whoever walks through them (CPU, shared by the ink hull)
+    const pos = geo.attributes.position; pos.setUsage(THREE.DynamicDrawUsage);
+    this.grassGeo = geo; this.grassBase = Float32Array.from(pos.array);
+  }
+
+  swayGrass() {
+    const geo = this.grassGeo; if (!geo) return;
+    const a = geo.attributes.position.array, B = this.grassBase, t = this.t;
+    const hp = this.hero.root.position, hx = hp.x, hz = hp.z;
+    for (let i = 0; i < a.length; i += 3) {
+      const y = B[i + 1]; if (y < 0.15) continue;
+      const x = B[i], z = B[i + 2], k = (y - 0.1) * (y - 0.1);
+      let ox = Math.sin(t * 1.7 + x * 0.35 + z * 0.2) * 0.12 * k, oz = Math.sin(t * 1.3 + z * 0.3) * 0.05 * k;
+      const dx = x - hx, dz = z - hz, d2 = dx * dx + dz * dz;
+      if (d2 < 1.6) { const d = Math.sqrt(d2) + 0.05, f = (1.3 - Math.min(1.25, d)) * 0.9 * k / d; ox += dx * f; oz += dz * f; a[i + 1] = y - (1.3 - Math.min(1.25, d)) * 0.35 * k; }
+      else a[i + 1] = y;
+      a[i] = x + ox; a[i + 2] = z + oz;
+    }
+    geo.attributes.position.needsUpdate = true;
   }
 
   buildProps(rand) {
@@ -1037,6 +1057,7 @@ export class World {
       it.g.position.y = Math.abs(Math.sin(this.t * 2.5 + it.x)) * 0.12; it.g.rotation.y = Math.sin(this.t * 1.2 + it.y) * 0.4;
       if (Math.random() < dt * 2.5) this.g.fx.spawn({ x: it.g.position.x + (Math.random() - 0.5) * 0.8, y: 0.5 + Math.random() * 0.6, z: it.g.position.z + (Math.random() - 0.5) * 0.8, vy: 0.5, color: 0xfff0a0, size: 0.22, life: 0.7, shape: 'star' });
     }
+    this.swayGrass();
     // water ripples drift
     if (this.waterTex) this.waterTex.offset.set(this.t * 0.02, this.t * 0.03);
     this.updateCamera(dt);
