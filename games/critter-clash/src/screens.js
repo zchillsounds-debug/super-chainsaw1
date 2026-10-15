@@ -77,6 +77,13 @@ function stackAbove(el, under, gap) {
   ro.observe(under); ro.observe(document.body);
 }
 
+// where a beaten wild critter runs off to, by the area's battle scenery
+const HOME = {
+  meadow: '🌿', meadow_: 'scampers back into the grass', grove: '🍄', grove_: 'scurries off under the toadstools',
+  beach: '🐚', beach_: 'scuttles back into the dunes', volcano: '🌋', volcano_: 'dashes off into the ash',
+  neon: '🌃', neon_: 'zips off down a neon alley', frost: '❄️', frost_: 'slides away into the snow', sky: '☁️', sky_: 'floats off into the clouds',
+};
+
 export class Screens {
   constructor(game) {
     this.game = game;
@@ -961,7 +968,7 @@ export class Screens {
   // a fight from the world: wild critters, trainers and story battles
   worldFight(info) {
     const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = this.worldObj?.M.arena || 'meadow', place = this.worldObj?.M.name;
-    this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit, berries: info.berries, shiny: info.shiny };
+    this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit, berries: info.berries, shiny: info.shiny, arena };
     this.leaveWorld();
     this.mode = 'vs';
     g.startBattle(h, info.foe, {
@@ -1285,7 +1292,7 @@ export class Screens {
         if ((W.fight === 'wild' || W.recruit) && !save.unlocked.includes(cDef.id) && (W.recruit || W.shiny || Math.random() < 0.45)) joined = unlock(cDef.id);
         let shinyNew = false;
         if (W.shiny && !(save.shinies ||= []).includes(cDef.id)) { save.shinies.push(cDef.id); shinyNew = true; }
-        streakNote = `<div class="streak">${shinyNew ? `💎 ${cDef.name}'s shiny palette unlocked! ` : ''}${W.note || (W.fight === 'wild' ? (joined ? `🌿 ${cDef.name} wants to join your team!` : `🌿 The wild ${cDef.name} scampers back into the grass.`) : `🏅 You beat ${W.name}!`)}</div>`;
+        streakNote = `<div class="streak">${shinyNew ? `💎 ${cDef.name}'s shiny palette unlocked! ` : ''}${W.note || (W.fight === 'wild' ? (joined ? `🌿 ${cDef.name} wants to join your team!` : `${HOME[W.arena] || HOME.meadow} The wild ${cDef.name} ${(HOME[W.arena + '_'] || HOME.meadow_)}.`) : `🏅 You beat ${W.name}!`)}</div>`;
       } else {
         const sp = save.adv.spawn;
         Object.assign(save.adv, { map: sp.map, x: sp.x, y: sp.y, dir: 's' });
@@ -1643,6 +1650,10 @@ export class Screens {
     col.appendChild(this.btn('Resume', 'primary', () => this.game.pause()));
     // restart the same fight (not in runs where damage carries over, so it can't be used to dodge a loss)
     const g = this.game, k = this.ctx?.kind;
+    // Adventure: a wild fight can be fled (no running from trainers), back to the same spot in the world
+    if (k === 'world' && this.ctx.fight === 'wild') col.appendChild(this.btn('🏃 Run Away', '', () => {
+      this.pauseMenu(false); g.paused = false; sfx.ui('back'); this.adventure(); this.toast('Got away safely!');
+    }));
     if (g.lastStart && !['survival', 'bossrush', 'team'].includes(k)) col.appendChild(this.btn('Restart', '', () => {
       this.pauseMenu(false); g.paused = false; g.startBattle(...g.lastStart);
     }));
