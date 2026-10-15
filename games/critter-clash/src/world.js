@@ -146,7 +146,7 @@ export class World {
         c.fillStyle = (x + y) % 2 ? C.a : C.b;
         c.fillRect(x * P, y * P, P, P);
         if (t === '"') { c.fillStyle = C.tall; c.fillRect(x * P, y * P, P, P); }
-        if (t === '~' || t === '=') { c.fillStyle = '#3a9ae0'; c.fillRect(x * P, y * P, P, P); }
+        if (t === '~' || t === '=') { c.fillStyle = C.bank || '#8a7a5a'; c.fillRect(x * P, y * P, P, P); }
         if (t === 's' || t === 'P') { c.fillStyle = (x + y) % 2 ? '#f4dc9a' : '#f1d894'; c.fillRect(x * P, y * P, P, P); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); } }
       }
       // paths: rounded blobs so corners look worn in, not tiled
@@ -197,9 +197,17 @@ export class World {
       for (const side of [0.1, TILE - 0.1]) { const r = new THREE.BoxGeometry(TILE, 0.14, 0.12); r.translate(x * TILE + 1, 0.55, y * TILE + side); planks.push(r); const p = new THREE.BoxGeometry(0.14, 0.6, 0.14); p.translate(x * TILE + 0.1, 0.3, y * TILE + side); planks.push(p); }
     }
     if (planks.length) { this.group.add(inked(mergeGeometries(planks), toon(0xb8865a), OL * 0.5)); planks.forEach((g) => g.dispose()); }
+    // water: each tile pulls in from dry neighbours so ponds have a muddy bank, not a hard square edge
+    const wet = (x, y) => x < 0 || y < 0 || x >= W || y >= H ? this.M.outer === undefined ? false : true : '~='.includes(this.tile(x, y));
+    const pads = [];
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === '~' || this.tile(x, y) === '=') {
-      const g = new THREE.PlaneGeometry(TILE, TILE); g.rotateX(-Math.PI / 2); g.translate(...[x * TILE + 1, 0.06, y * TILE + 1]); water.push(g);
+      const i = 0.22, l = wet(x - 1, y) ? 0 : i, r = wet(x + 1, y) ? 0 : i, t = wet(x, y - 1) ? 0 : i, b = wet(x, y + 1) ? 0 : i;
+      const g = new THREE.PlaneGeometry(TILE - l - r, TILE - t - b); g.rotateX(-Math.PI / 2); g.translate(x * TILE + 1 + (l - r) / 2, 0.06, y * TILE + 1 + (t - b) / 2); water.push(g);
+      if (this.M.pads && this.tile(x, y) === '~' && rand() < 0.45) {
+        const p = new THREE.CylinderGeometry(0.42, 0.42, 0.05, 12, 1, false, 0.4, Math.PI * 1.8); p.translate(x * TILE + 0.5 + rand(), 0.1, y * TILE + 0.5 + rand()); pads.push(p);
+      }
     }
+    if (pads.length) { this.group.add(inked(mergeGeometries(pads), toon(0x4cba6a, { rim: 0.4 }), OL * 0.4)); pads.forEach((g) => g.dispose()); }
     if (water.length) {
       const wt = canvasTex(128, 128, (c, w, h) => {
         c.fillStyle = this.M.palette?.water || '#4aa8f0'; c.fillRect(0, 0, w, h);
