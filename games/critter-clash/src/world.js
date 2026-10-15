@@ -908,7 +908,19 @@ export class World {
       const k = 1 - this.moveT / (this.sliding ? STEP * 0.6 : this.stepLen || STEP), [ax, az] = wpos(...this.from), [bx, bz] = wpos(this.hx, this.hy);
       H.root.position.set(ax + (bx - ax) * k, 0, az + (bz - az) * k);
       if (this.sliding) { idlePose(P, this.t); P.lean = -0.15; P.armLz = P.armRz = 1.2; H.emote?.('happy', 'o', 0.1); } else { walkPose(P, this.running ? this.t * 1.5 : this.t); if (this.running) P.lean = 0.3; }
-    } else idlePose(P, this.t);
+    } else {
+      idlePose(P, this.t);
+      // left alone, the hero gets bored: looks around, stretches, yawns, then dozes off
+      const idle = this.dialog || this.busy ? 0 : (this.idleT = (this.idleT || 0) + dt);
+      if (idle > 5) {
+        const ph = (idle - 5) % 14;
+        if (ph < 3) { P.headYaw = Math.sin(ph * 2.2) * 0.7; }
+        else if (ph < 4.5) { P.armLz = P.armRz = 2.6; P.sy = 1.08; P.lean = -0.15; H.emote('closed', 'open', 0.1); }
+        else if (ph < 6) { P.head = -0.25; H.emote('closed', 'o', 0.1); }
+        else { P.sy = 0.88 + Math.sin(this.t * 1.5) * 0.04; P.head = 0.3; P.lean = -0.1; P.armLz = P.armRz = 0.05; H.emote('closed', 'smile', 0.1); if (Math.random() < dt * 0.7) this.g.fx.text?.({ x: H.root.position.x + 0.5, y: 2.3, z: H.root.position.z }, 'z', 'zz'); }
+      }
+    }
+    if (this.from || this.dialog) this.idleT = 0;
     H.root.rotation.y = turnTo(H.root.rotation.y, YAW[this.dir], dt * 18);
     H.update(dt);
     this.updateActors(dt);
