@@ -968,7 +968,7 @@ export class Screens {
 
   // a fight from the world: wild critters, trainers and story battles
   worldFight(info) {
-    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = this.worldObj?.M.arena || 'meadow', place = this.worldObj?.M.name, phase = this.worldObj?.phase;
+    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = this.worldObj?.M.arena || 'meadow', place = this.worldObj?.M.name, phase = this.worldObj?.phase, rain = this.worldObj?.rain;
     this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit, berries: info.berries, shiny: info.shiny, arena };
     this.leaveWorld();
     this.mode = 'vs';
@@ -978,7 +978,7 @@ export class Screens {
       stageSub: info.kind === 'wild' ? `${info.name} appeared!` : info.kind === 'story' ? 'Story battle' : `${info.name} wants to battle!`,
     });
     g.arena.setOpen(true); // out in the wild: no stadium, just the meadow
-    if (phase && phase !== 'day') g.arena.tint(phase);
+    if (phase && (phase !== 'day' || rain)) g.arena.tint(phase, rain);
   }
 
   worldCup(cup, front) {

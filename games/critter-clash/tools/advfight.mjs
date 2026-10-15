@@ -1,8 +1,8 @@
-// node tools/advfight.mjs <WxH> <prefix> <map> <wildId> [lv]: starts a wild fight on that map and screenshots intro and mid-fight
+// node tools/advfight.mjs <WxH> <prefix> <map> <wildId> [lv] [js run first, e.g. weather/clock]: starts a wild fight on that map and screenshots intro and mid-fight
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
 const { chromium } = require('playwright');
-const [size, prefix, map, id, lv = '8'] = process.argv.slice(2);
+const [size, prefix, map, id, lv = '8', pre = ''] = process.argv.slice(2);
 const [w, h] = size.split('x').map(Number);
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: w, height: h } });
@@ -15,6 +15,7 @@ await pg.evaluate(([map]) => {
   __save.adv = { hero: 'cindermunch', map, x: 18, y: 6, dir: 's', flags: f, spawn: { map: 'village', x: 4, y: 6 } };
   __game.screens.adventure(); __sim(0.5);
 }, [map]);
+if (pre) await pg.evaluate(pre);
 await pg.evaluate(([id, lv]) => __game.screens.worldObj.startWild(id, +lv), [id, lv]);
 await pg.waitForFunction(() => __game.battle, null, { timeout: 30000 });
 await pg.evaluate(() => __sim(1.2)); await pg.waitForTimeout(800);

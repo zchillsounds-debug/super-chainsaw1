@@ -355,8 +355,11 @@ class Game {
     if (this.input.pressed.pause) this.pause();
     if (this.photo) this.photo.update();
     if (!this.paused) {
-      if (this.battle) this.battle.update(rawDt);
-      else {
+      if (this.battle) {
+        this.battle.update(rawDt);
+        // the shower followed us off the route: rain over the open field
+        if (this.arena.rainy) for (let n = Math.floor(rawDt * 120 + Math.random()); n > 0; n--) this.fx.spawn({ x: (Math.random() - 0.5) * 30, y: 7 + Math.random() * 3, z: (Math.random() - 0.5) * 22, vy: -15, vx: -1.2, color: 0xe8f0ff, alpha: 0.6, size: 1.2, stretch: 0.05, rot: Math.PI / 2 + 0.08, life: 0.6, shape: 'spark', additive: false });
+      } else {
         this.screens.update(rawDt);
         // menus: same soft camera-side fill the battle uses in backlit arenas
         const fill = this.arena.fill, cp = this.camera.position;
