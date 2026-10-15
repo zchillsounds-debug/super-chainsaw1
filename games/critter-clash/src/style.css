@@ -877,3 +877,4 @@ body:not(.is-touch) .wd-a { display: none; }
 .wd-hero img { width: 72px; height: 72px; margin: 0; }
 .wd-hero b { font-family: var(--display); font-weight: 400; font-size: 22px; display: block; }
 .wd-hero small { display: block; font-weight: 800; opacity: .75; }
+.title-main { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }

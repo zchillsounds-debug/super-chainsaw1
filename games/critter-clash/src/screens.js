@@ -121,8 +121,11 @@ export class Screens {
         <div class="title-foot"><span>🧢 ${save.trainer.name}</span><span>Team ${save.unlocked.length}/${CRITTERS.length}</span><span>🏆 ${trophies}/${CUPS.length}</span>${trophies === CUPS.length ? '<span class="master">🌟 Critter Master</span>' : ''}</div>
       </div>`;
     const m = this.root.querySelector('.title-menu');
-    m.appendChild(this.btn(save.adv ? 'Adventure' : 'Adventure <small>NEW!</small>', 'primary big', () => this.adventure()));
-    m.appendChild(this.btn('Tournament', 'big', () => this.cups()));
+    // the two main modes share a row in landscape and stack on narrow portrait screens
+    const main = document.createElement('div');
+    main.className = 'title-main';
+    main.append(this.btn(save.adv ? 'Adventure' : 'Adventure <small>NEW!</small>', 'primary big', () => this.adventure()), this.btn('Tournament', 'big', () => this.cups()));
+    m.appendChild(main);
     const row = document.createElement('div');
     row.className = 'row';
     row.appendChild(this.btn('Quick Battle', '', () => { this.ctx = { kind: 'quick' }; this.select(); }));
