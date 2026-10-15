@@ -13,6 +13,10 @@ import { World, newAdventure, heroDef } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction } from './story.js';
 import { MAPS } from './worldmaps.js';
 
+// trainers and story foes meet the hero partway: an over-levelled hero still gets a fight (the foe climbs
+// halfway to the hero's level), and an under-levelled one is never more than 3 levels behind
+export const storyLevel = (fixed, hero) => Math.min(hero > fixed ? Math.round((fixed + hero - 1) / 2) : fixed, hero + 3);
+
 // Town Map layout (an SVG of Clashara): node positions, the cup in each town, and where a flight lands (outside the Berry Center)
 const WMAP = {
   village: { x: 52, y: 214, fly: [4, 6] }, route1: { x: 52, y: 160 }, bloom: { x: 52, y: 100, cup: 'sprout', fly: [18, 6] },
@@ -920,7 +924,7 @@ export class Screens {
     this.leaveWorld();
     this.mode = 'vs';
     g.startBattle(h, info.foe, {
-      cpuLevel: info.lv, playerLevel: lv, difficulty: info.diff ?? 0.3, arena,
+      cpuLevel: info.kind === 'wild' ? info.lv : storyLevel(info.lv, lv), playerLevel: lv, difficulty: info.diff ?? 0.3, arena,
       rounds: info.kind === 'wild' ? 1 : 2, trainer: info.trainer || null,
       stageSub: info.kind === 'wild' ? `${info.name} appeared!` : info.kind === 'story' ? 'Story battle' : `${info.name} wants to battle!`,
     });
