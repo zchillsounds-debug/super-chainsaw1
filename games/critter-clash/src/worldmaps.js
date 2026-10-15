@@ -35,8 +35,8 @@ export const MAPS = {
     ],
     signs: [{ x: 9, y: 8, text: 'SPROUT VILLAGE\nWhere every big dream starts small.' }],
     npcs: [
-      { id: 'mom', x: 5, y: 7, critter: '$hero', name: 'Mom', scale: 1.15, dir: 's', wander: 2, lines: ['Mom: Off on an adventure? Eat your berries and be home before the fireflies come out!', 'Mom: Professor Pecan was looking for you. His lab is the big white building.'] },
-      { id: 'kid', x: 7, y: 12, critter: 'lilypop', name: 'Lilypop', dir: 'e', wander: 2, lines: ['Lilypop: Ribbit! Did you know? Tall grass is full of wild critters. Bump into one and you have to fight!', 'Lilypop: Sometimes they just jump out at you. RIBBIT!'] },
+      { id: 'mom', x: 5, act: 'wave', y: 7, critter: '$hero', name: 'Mom', scale: 1.15, dir: 's', wander: 2, lines: ['Mom: Off on an adventure? Eat your berries and be home before the fireflies come out!', 'Mom: Professor Pecan was looking for you. His lab is the big white building.'] },
+      { id: 'kid', x: 7, act: 'hop', y: 12, critter: 'lilypop', name: 'Lilypop', dir: 'e', wander: 2, lines: ['Lilypop: Ribbit! Did you know? Tall grass is full of wild critters. Bump into one and you have to fight!', 'Lilypop: Sometimes they just jump out at you. RIBBIT!'] },
       { id: 'pecan', x: 16, y: 13, pecan: true, name: 'Prof. Pecan', dir: 's', story: 'pecan' },
       { id: 'guard', x: 11, y: 2, critter: 'pebblepup', name: 'Pebblepup', dir: 's', story: 'guard', hideFlag: 'quest' },
     ],
@@ -118,8 +118,8 @@ export const MAPS = {
     ],
     signs: [{ x: 13, y: 9, text: 'BLOOM TOWN\nHome of the Sprout Stadium. Flowers welcome, frowns not.' }],
     npcs: [
-      { id: 'fan', x: 9, y: 9, critter: 'emberfly', name: 'Emberfly', dir: 's', wander: 2, lines: ["Emberfly: The Sprout Stadium's cup is for brand-new critters. Win it and everyone will know your name!", 'Emberfly: The crowd goes wild for a good super move. Bzzzt!'] },
-      { id: 'old', x: 17, y: 12, critter: 'snoozlo', name: 'Old Snoozlo', dir: 'w', lines: ['Old Snoozlo: Zzz... huh? Oh. They say the Critter Crown sits on top of Champion\'s Peak... zzz...', "Old Snoozlo: ...seven stadiums... seven cups... then the Crown... zzz..."] },
+      { id: 'fan', x: 9, act: 'cheer', y: 9, critter: 'emberfly', name: 'Emberfly', dir: 's', wander: 2, lines: ["Emberfly: The Sprout Stadium's cup is for brand-new critters. Win it and everyone will know your name!", 'Emberfly: The crowd goes wild for a good super move. Bzzzt!'] },
+      { id: 'old', x: 17, act: 'sleep', y: 12, critter: 'snoozlo', name: 'Old Snoozlo', dir: 'w', lines: ['Old Snoozlo: Zzz... huh? Oh. They say the Critter Crown sits on top of Champion\'s Peak... zzz...', "Old Snoozlo: ...seven stadiums... seven cups... then the Crown... zzz..."] },
     ],
   },
 
@@ -186,8 +186,8 @@ export const MAPS = {
     ],
     signs: [{ x: 13, y: 8, text: 'SEASHELL TOWN\nSun, sand, and the loudest stadium on the coast.' }],
     npcs: [
-      { id: 'fisher', x: 21, y: 12, critter: 'ripples', name: 'Fisher Finn', dir: 'e', lines: ['Fisher Finn: Shh! The fish are biting. ...Okay, nothing is biting. But the Thunder Cup crowd sure bites back!', 'Fisher Finn: Grab a berry smoothie at the Berry Center before you go in.'] },
-      { id: 'surfer', x: 6, y: 13, critter: 'pengsicle', name: 'Pengsicle', dir: 's', wander: 2, lines: ['Pengsicle: Waddle waddle! I tried to surf once. The wave won.', 'Pengsicle: The Thunder Cup trainers are TOUGH. Grow strong in the grass on Route 2 first!'] },
+      { id: 'fisher', x: 21, act: 'fish', y: 12, critter: 'ripples', name: 'Fisher Finn', dir: 'e', lines: ['Fisher Finn: Shh! The fish are biting. ...Okay, nothing is biting. But the Thunder Cup crowd sure bites back!', 'Fisher Finn: Grab a berry smoothie at the Berry Center before you go in.'] },
+      { id: 'surfer', x: 6, act: 'dance', y: 13, critter: 'pengsicle', name: 'Pengsicle', dir: 's', wander: 2, lines: ['Pengsicle: Waddle waddle! I tried to surf once. The wave won.', 'Pengsicle: The Thunder Cup trainers are TOUGH. Grow strong in the grass on Route 2 first!'] },
       { id: 'rival2', x: 12, y: 7, rival: true, rlv: 7, name: 'Dash', dir: 'w', story: 'rival2', hideFlag: 'rival2' },
     ],
   },
@@ -287,7 +287,7 @@ export const MAPS = {
     npcs: [
       { id: 'oakley', x: 12, y: 7, critter: 'lilypop', lv: 9, name: 'Elder Oakley', dir: 's', scale: 1.2, lines: ['Elder Oakley: Hoo hoo. Welcome to the Hollow, young one. My stadium is just behind me.', 'Elder Oakley: Strength opens doors. Friendship opens whole forests.'] },
       { id: 'nyx', x: 20, y: 12, critter: 'squeakwing', name: 'Nyx', dir: 'w', wander: 1, lines: ['Nyx: Every bat in the woods heard about you helping Pip. Squeak squeak means thank you.', 'Nyx: I fight in the Glowcap Cup too. Bring earplugs.'] },
-      { id: 'sleepy', x: 6, y: 13, critter: 'snoozlo', name: 'Snoozlo', dir: 's', lines: ['Snoozlo: ...zzz... the Champion Cup... is past the volcano... zzz... too hot... zzz...'] },
+      { id: 'sleepy', x: 6, act: 'sleep', y: 13, critter: 'snoozlo', name: 'Snoozlo', dir: 's', lines: ['Snoozlo: ...zzz... the Champion Cup... is past the volcano... zzz... too hot... zzz...'] },
     ],
   },
 
@@ -364,8 +364,8 @@ export const MAPS = {
     signs: [{ x: 13, y: 8, text: 'CINDER TOWN\nHot springs, hot tempers, and the hottest cup in Clashara.' }],
     npcs: [
       { id: 'boulder2', x: 14, y: 6, critter: 'rolladillo', lv: 11, name: 'Big Boulder', dir: 's', lines: ["Big Boulder: I run the Champion Stadium. Only critters with three cups get a shot. You've got 'em? Then come on in!", 'Big Boulder: Rolladillo and I have never lost at home. Never! ...Okay, twice.'] },
-      { id: 'spa', x: 21, y: 4, critter: 'pengsicle', name: 'Pengsicle', dir: 'w', wander: 1, lines: ['Pengsicle: Too... hot... I came for the hot springs and I am MELTING.', 'Pengsicle: I hear the Midnight Cup is in a big city with neon lights. Somewhere cooler, I hope!'] },
-      { id: 'kid4', x: 9, y: 12, critter: 'kindlekit', name: 'Kindlekit', dir: 'e', wander: 2, lines: ['Kindlekit: Yip! The volcano rumbles every time someone wins the Champion Cup. Make it RUMBLE!'] },
+      { id: 'spa', x: 21, act: 'fan', y: 4, critter: 'pengsicle', name: 'Pengsicle', dir: 'w', wander: 1, lines: ['Pengsicle: Too... hot... I came for the hot springs and I am MELTING.', 'Pengsicle: I hear the Midnight Cup is in a big city with neon lights. Somewhere cooler, I hope!'] },
+      { id: 'kid4', x: 9, act: 'hop', y: 12, critter: 'kindlekit', name: 'Kindlekit', dir: 'e', wander: 2, lines: ['Kindlekit: Yip! The volcano rumbles every time someone wins the Champion Cup. Make it RUMBLE!'] },
     ],
   },
 
@@ -408,7 +408,7 @@ export const MAPS = {
     wild: { list: [['jiggawatt', 13, 15], ['voltferret', 13, 15], ['squeakwing', 13, 15], ['woolt', 13, 15], ['diggles', 14, 16]], roam: 2, rate: 0.1 },
     npcs: [
       { id: 'balloon', x: 25, y: 15, balloon: 0xff9ac8, name: 'Captain Puff', dir: 'w', story: 'balloon', dest: [{ map: 'cloudtop', x: 13, y: 12, dir: 'w', name: 'Cloudtop Gardens', need: 'cup_midnight' }] },
-      { id: 'tumble', x: 16, y: 5, critter: 'jiggawatt', name: 'DJ Tumble', dir: 'w', wander: 1, lines: ["DJ Tumble: Yo! The Midnight Cup is on tonight. Every night, actually. That's the point.", 'DJ Tumble: Jiggawatt and I are the opening act. Bring your dancing shoes!'] },
+      { id: 'tumble', x: 16, act: 'dance', y: 5, critter: 'jiggawatt', name: 'DJ Tumble', dir: 'w', wander: 1, lines: ["DJ Tumble: Yo! The Midnight Cup is on tonight. Every night, actually. That's the point.", 'DJ Tumble: Jiggawatt and I are the opening act. Bring your dancing shoes!'] },
       { id: 'vex', x: 15, y: 15, critter: 'kindlekit', lv: 16, name: 'Vex', dir: 'w', story: 'heart', hideFlag: 'trial_heart' },
       { id: 'gang', x: 13, y: 15, critter: 'diggles', lv: 15, name: 'Gang Grunt', dir: 'e', story: 'heart', hideFlag: 'trial_heart' },
       { id: 'dash4', x: 14, y: 15, rival: true, rlv: 14, name: 'Dash', dir: 's', story: 'heart', hideFlag: 'trial_heart' },
@@ -493,7 +493,7 @@ export const MAPS = {
     npcs: [
       { id: 'balloon3', x: 12, y: 14, balloon: 0xff9ac8, name: 'Captain Puff', dir: 'w', story: 'balloon', dest: [{ map: 'cloudtop', x: 13, y: 12, dir: 'w', name: 'Cloudtop Gardens' }, { map: 'neon', x: 24, y: 15, dir: 'w', name: 'Neon City' }] },
       { id: 'aurora', x: 14, y: 6, critter: 'pengsicle', name: 'Skater Ivy', dir: 's', wander: 1, lines: ['Skater Ivy: The frozen lake on the way up the Peak is tricky. Once you start sliding, you can\'t stop until you hit something!', 'Skater Ivy: Plan your slides before you go. Bonk a rock to stop.'] },
-      { id: 'elder', x: 6, y: 12, critter: 'snoozlo', name: 'Old Snoozlo', dir: 'e', lines: ['Old Snoozlo: ...zzz... oh! It\'s you again. Seven cups... you really did it... zzz...', "Old Snoozlo: The Crown Keeper up on the Peak... is a very... very... sleepy king... zzz..."] },
+      { id: 'elder', x: 6, act: 'sleep', y: 12, critter: 'snoozlo', name: 'Old Snoozlo', dir: 'e', lines: ['Old Snoozlo: ...zzz... oh! It\'s you again. Seven cups... you really did it... zzz...', "Old Snoozlo: The Crown Keeper up on the Peak... is a very... very... sleepy king... zzz..."] },
     ],
   },
 

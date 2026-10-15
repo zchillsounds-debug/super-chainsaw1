@@ -899,7 +899,8 @@ export class World {
           P.sy = 0.85 + Math.sin(this.t * 1.4) * 0.05; P.lean = -0.25; P.armLz = P.armRz = 0.1; P.head = 0.25;
           a.cr.emote('closed', 'o', 0.2);
           if (Math.random() < dt * 0.8) this.g.fx.text?.({ x: a.root.position.x + 0.5, y: 2.6, z: a.root.position.z }, 'z', 'zz');
-        } else idlePose(P, this.t + a.x);
+        } else if (a.n?.act && !this.dialog) actPose(this, a, P, this.t + a.x * 0.7, dt);
+        else idlePose(P, this.t + a.x);
         if (a.excl > 0) { a.excl -= dt; P.y = Math.max(P.y, Math.sin(Math.min(1, 1 - a.excl) * Math.PI) * 0.4); }
         a.root.rotation.y = turnTo(a.root.rotation.y, YAW[a.dir], dt * 14);
         a.cr.update(dt);
@@ -1181,6 +1182,46 @@ function walkPose(P, t) {
   P.ear = 0.3; P.tail = 0.7;
 }
 
+// town folk doing their own thing: fishing, napping, dancing, hopping, cheering, waving, fanning themselves
+function actPose(w, a, P, t, dt) {
+  const act = a.n.act, cr = a.cr;
+  idlePose(P, t);
+  if (act === 'sleep') {
+    P.sy = 0.88 + Math.sin(t * 1.4) * 0.05; P.lean = -0.18; P.head = 0.3; P.armLz = P.armRz = 0.05;
+    cr.emote('closed', 'o', 0.2);
+    if (Math.random() < dt * 0.6) w.g.fx.text?.({ x: a.root.position.x + 0.5, y: 2.4, z: a.root.position.z }, 'z', 'zz');
+  } else if (act === 'dance') {
+    const b = Math.abs(Math.sin(t * 6));
+    P.y = b * 0.18; P.roll = Math.sin(t * 3) * 0.2; P.yaw = Math.sin(t * 1.5) * 0.6;
+    P.armLz = 1.2 + Math.sin(t * 6) * 0.6; P.armRz = 1.2 - Math.sin(t * 6) * 0.6; P.legL = Math.sin(t * 6) * 0.5; P.legR = -P.legL;
+    cr.emote('happy', 'grin', 0.2);
+  } else if (act === 'hop') {
+    const ph = (t * 1.3) % 2, up = ph < 0.5 ? Math.sin(ph / 0.5 * Math.PI) : 0;
+    P.y = up * 0.55; P.sy = up ? 1.08 : 0.94 + Math.sin(t * 2) * 0.02; P.armLz = P.armRz = 0.3 + up * 1.2; P.legL = P.legR = -up * 0.4;
+    if (up) cr.emote('happy', 'open', 0.1);
+  } else if (act === 'cheer') {
+    const k = Math.sin(t * 4);
+    P.armLz = P.armRz = 2.2 + k * 0.3; P.y = Math.max(0, k) * 0.12; P.head = -0.15;
+    cr.emote('happy', 'open', 0.1);
+  } else if (act === 'wave') {
+    const on = (t % 5) < 1.6;
+    if (on) { P.armRz = 2.4; P.armRx = Math.sin(t * 10) * 0.5; P.headRoll = 0.15; cr.emote('happy', 'smile', 0.1); }
+  } else if (act === 'fan') { // melting in the heat
+    P.sy = 0.92 + Math.sin(t * 1.2) * 0.03; P.sx = 1.06; P.armRz = 1.4 + Math.sin(t * 9) * 0.5; P.head = 0.15; P.lean = -0.1;
+    cr.emote('dizzy', 'wobbly', 0.1);
+  } else if (act === 'fish') {
+    P.armLx = P.armRx = -1.1 + Math.sin(t * 0.8) * 0.06; P.armLz = P.armRz = 0.2; P.lean = 0.05;
+    if (!a.rod) { // a rod, a line and a bobber out over the water in front of them
+      const g = new THREE.Group();
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, 2.6, 6), toon(0x8a5a3a)); rod.rotation.x = 1.05; rod.position.set(0, 0.7, 1.2); g.add(rod);
+      const line = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1.5, 4), new THREE.MeshBasicMaterial({ color: 0xffffff })); line.position.set(0, 0.8, 2.3); g.add(line);
+      const bob = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), toon(0xff4a4a)); bob.position.set(0, 0.08, 2.3); g.add(bob);
+      g.userData.bob = bob; a.root.add(g); a.rod = g;
+    }
+    a.rod.userData.bob.position.y = 0.08 + Math.sin(t * 2.2) * 0.03;
+    a.rod.rotation.x = Math.sin(t * 0.8) * 0.05;
+  }
+}
 function idlePose(P, t) {
   P.sy = 1 + Math.sin(t * 2.4) * 0.025; P.sx = 1 - Math.sin(t * 2.4) * 0.015;
   P.armLz = P.armRz = 0.25; P.tail = 0.5 + Math.sin(t * 1.7) * 0.3;
