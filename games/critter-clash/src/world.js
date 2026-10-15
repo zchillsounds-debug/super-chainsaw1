@@ -234,9 +234,10 @@ export class World {
         for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(160,110,60,0.35)' : 'rgba(255,240,200,0.5)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 3, 2); }
       }
       // puddles collect on the paths in the rain
-      if (this.rain) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === ':' && rand() < 0.28) {
-        const px = x * P + 8 + rand() * 16, py = y * P + 8 + rand() * 16, rx = 9 + rand() * 6, ry = 5 + rand() * 3;
-        c.fillStyle = 'rgba(96,116,150,0.6)'; c.beginPath(); c.ellipse(px, py, rx, ry, rand() * 0.6, 0, 7); c.fill();
+      const pr = rng(hash(this.key + ':rain')); // its own dice, so a rainy day doesn't shuffle the trees
+      if (this.rain) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === ':' && pr() < 0.28) {
+        const px = x * P + 8 + pr() * 16, py = y * P + 8 + pr() * 16, rx = 9 + pr() * 6, ry = 5 + pr() * 3;
+        c.fillStyle = 'rgba(96,116,150,0.6)'; c.beginPath(); c.ellipse(px, py, rx, ry, pr() * 0.6, 0, 7); c.fill();
         c.fillStyle = 'rgba(220,235,255,0.55)'; c.beginPath(); c.ellipse(px - rx * 0.3, py - ry * 0.35, rx * 0.35, ry * 0.25, 0, 0, 7); c.fill();
       }
       // grass speckles and flowers
