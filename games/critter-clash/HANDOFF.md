@@ -1,7 +1,8 @@
-# Critter Clash: Handoff (after Round 254, Adventure mode polish)
+# Critter Clash: Handoff (after Round 278, Adventure mode polish)
 
 ## Start here (for a new chat)
-- **Session 16d (01:57–~03:00 UTC on 2026-10-15) did R244–R254 of Adventure polish; read "Session 16c" and "Session 16d" below. Round numbering continues from R255.** The user's 5-hour window ends at about **04:45 UTC on 2026-10-15**.
+- **Session 16e (02:51–~04:40 UTC on 2026-10-15) did R255–R278 and was the LAST session of the user's 5-hour Adventure window (it ended at 04:45 UTC). Nothing was chained after it: wait for the user before building more. Round numbering continues from R279.** Read "Session 16c", "16d" and "16e" below.
+- Ask the user first: how do weather (rain), the clock of day, grass sway and the smoothie blender feel on their phone? Is the win screen right now (R244b/R277)?
 - **CURRENT FOCUS (session 16+): Adventure mode**, a Pokémon Red/Blue style world with a story. Read "Session 16: ADVENTURE MODE" and "Session 16b" first. The user asked for 5 hours of chained sessions, ending at about **04:45 UTC on 2026-10-15**. The whole story (all 7 cups, 5 trials, Champion's Peak, the ending) is now playable; what's left is **polish** (see "Session 16b → next").
 - Repo `zchillsounds-debug/super-chainsaw1`, branch **`ccr-4fc93d6e-suxlhd`**, folder `games/critter-clash/`. Clone with `--branch ccr-4fc93d6e-suxlhd`.
 - Latest work (session 15, 2026-10-14 21:42–~22:20 UTC): finished session 14's "Modes & polish" time box with R198–R208 (see "Session 15"). The user's requested time ended at ~22:25 UTC, so **nothing was chained after session 15**; wait for the user before building more. Numbering continues from **R209**.
@@ -403,6 +404,24 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - Checked: tapcheck clean at 740×360 and 412×915; advcup Sprout (915×412) lands back in the world, advstory rematch with Hiker Gus, screenshots of all towns, rooms (landscape and portrait), night/evening world and fights.
 - **Next ideas:** grass blades sway (needs a shader uniform), stadium lobbies, NPC variety per town, inner (concave) water corners, a night version of the Town Map, weather (rain on routes), shop for berries.
 
+## Session 16e (2026-10-15, 02:51–~04:40 UTC, session_01CGnqFczuvcYh4pqEyaX1eN): Adventure polish, R255–R278
+- **R255/R273/R274:** tall grass sways (CPU vertex offsets on the merged blade geometry, `World.swayGrass()`, shared by the ink hull) and parts around the hero, the buddy and roaming wild critters; every other frame on low quality (~0.4 ms/frame on desktop for 10k verts).
+- **R256:** palms have arching folded leaves (`frond()` in `buildTrees`), coconut clusters and trunk rings.
+- **R257:** chimney smoke (`this.chimneys`, thicker at night/snow; the Cinder Town forge throws sparks and has a rust roof).
+- **R258/R259/R268/R270/R277: weather.** `World.rain` for grassy outdoor maps without `mood`/city/snow/lava/cloud, picked from the date and 3-hour slot (`hash(slot + key) % 5 === 0`); `save.adv.rain` overrides it for tests. `RAIN` light table, falling streaks (fx `spark`, stretch 0.05) and splash rings, 🌧️ on the map banner, water-type wild critters 50% of tall-grass encounters, NPC umbrellas, puddles on `:` paths (own rng), wild/route fights get `Arena.tint(phase, rain)` (grey sky, `arena.rainy` makes main.js spawn rain over the field), and the results line says the wild critter splashes off through the puddles (`ctx.rain`).
+- **R260:** room tables get stools and table-top items (mug, books, plate of berries; beakers in the lab).
+- **R261:** Berry Center blender (`act: 'smoothie'` sign in interiors.js, `storyTalk('smoothie')`): 1 berry → a quarter level of XP; Nurse Lilypop mentions it.
+- **R262/R266:** inner (concave) corners of water/lava get a curved fillet (3D) and a bank fan (canvas); sand and ice round their outer corners; boulders in the Peak's ice lake sit on ice.
+- **R263/R265:** route trainers wear role hats by name prefix (`HATS`/`roleHat(cr, name)` in critters.js), in the world and in their battle (`Battle` adds it when `trainer.name` matches).
+- **R264:** meadow wild fights swap the field texture to an unmowed meadow (`Arena.wildField()`, swapped in `setOpen`) plus edge tufts.
+- **R267:** footprints in snow and sand (`World.footprint()`, a pool of 24 flat decals; fx billboards clip into the ground, so don't use them for ground marks).
+- **R269:** ☰ card shows ☀️/🌇/🌙/🌧️. **R271:** Town Map has evening and night colours (`.wd-map.evening/.night`, stars). **R272:** doorway lamplight on the ground at dusk/night.
+- **R275:** starfish and shells on beach sand. **R276:** falling leaves/petals on maps whose `trees[0]` is warm (Cinder Road, Cinder Town, Cloudtop).
+- **R278:** Pecan news `adv3` (weather, clock, smoothie) for Adventure players who saw `adv2`.
+- **Tools:** `advfight.mjs` takes a 6th arg (JS run first, e.g. `__save.adv.clock=12;__save.adv.rain=true;w.load(...)`); `RAIN=1 node tools/advwins.mjs ...`.
+- **Checked at the end:** tapcheck clean at 740×360 and 412×915 (only the known portrait rotate hint in battle pause), advcup Sprout at 915×412 and 740×360 lands back in the world, advwins route1/cinder/frostpeak (+ rainy route1) error-free.
+- **Next ideas:** a rainy-day sky/weather in cups? (cups stay dry now), stadium lobbies, NPC variety per town (more act poses), hero umbrella or shake-off after rain, a weather forecast line from Pecan, more beach/forest decor, re-measure world FPS on a real phone (grass sway + rain particles).
+
 ## Session 15 (2026-10-14, 21:42–~22:20 UTC)
 - **Note for new sessions:** the cloud clone can be shallow and look "ahead 50, behind 50". Run `git fetch --unshallow origin ccr-4fc93d6e-suxlhd` and then `git merge --ff-only origin/ccr-4fc93d6e-suxlhd` before working.
 - **R198:** the Full Team badge's id is now `roster`. It used to share the id `team` with Dream Team, so winning a 3-on-3 also marked Full Team as earned. No other duplicate ids exist in data.js arrays (checked).
@@ -639,6 +658,7 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 218. Cloudtop Gardens (Sky Cup), Captain Puff's balloon.
 219. Frostpeak (Legend Cup), Champion's Peak ice puzzle, Dash's last battle, King Snooze, the crowning, Critter Crown badge.
 220. Professor Pecan points to the next cup's town.
+255–278. Adventure polish (session 16e): grass sway, palms, chimney smoke, rain weather (world + fights), room details, smoothie blender, inner water corners, trainer hats, wild meadow field, footprints, clock chips, night Town Map, door light, beach decor, falling leaves, Pecan weather news (see "Session 16e").
 244–254. Adventure polish (session 16d): stadium seats, roofs, Berry Center signs, footsteps, clock-of-day lighting, trainer rematches, room camera/pictures, next-goal line, rounded water and grass (see "Session 16d").
 221–243. Adventure polish (session 16c): interiors, Town Map + flying, story-fight level scaling, tapcheck world steps, Camp crown, NPC activities, open-field fight looks, title/New Adventure, running, gift boxes, Dash rematches, shinies, idle hero, badge case, walking buddy, door sounds (see "Session 16c").
 L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (smaller, softer, per-kind `cap` on point size).
@@ -680,6 +700,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
    - `source_revision`: `ccr-4fc93d6e-suxlhd`
    - `outcome_branch`: `ccr-4fc93d6e-suxlhd`
    - `title`: "Critter Clash – rounds N+"
+   - (Session 16e did not chain: the user's 5-hour window ended at 04:45 UTC on 2026-10-15.)
    - `prompt` (session 16 chain): "Continue building Critter Clash. Read games/critter-clash/HANDOFF.md fully and follow it. Start with the "Session 16: ADVENTURE MODE", "Session 16b" and "Session 16c" sections. Focus: Adventure mode polish (see Session 16c → Next ideas, and keep critiquing screenshots). Run the critique loop (screenshot, critique, improve) round after round. Commit and push each round to branch ccr-4fc93d6e-suxlhd: merge origin first, and never force-push. Round numbering continues from R<next>. The user asked for 5 hours in total, until about 04:45 UTC on 2026-10-15. Chain to a fresh session about every 2 hours or near 300k context, following the HANDOFF chaining steps (use this same prompt, updating the round number). Send the user the APK at the end of each session. At 04:45 UTC, send the final APK, update HANDOFF.md, and stop with a short summary. The user approved this plan and continuous building, so don't stop to ask questions. Post a one-line status to the user when you start."
    - older prompt (sessions 14–15): "Continue building Critter Clash. Read games/critter-clash/HANDOFF.md fully and follow it. Focus: modes & polish. Run the critique loop round after round, and commit and push each round to branch ccr-4fc93d6e-suxlhd (merge origin first, never force-push). The user asked for about 2 hours (until ~22:25 UTC on 2026-10-14) and to chain to a new chat near 300k context. At the end of the time, send the final APK, update HANDOFF.md, and stop with a short summary unless the user asks for more. Post a one-line status to the user when you start."
 5. Tell the user in one short message what was done and that the next session has started.
