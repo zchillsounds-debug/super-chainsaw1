@@ -760,11 +760,16 @@ export class World {
     if (who || !this.walkable(nx, ny)) return this.bump();
     this.from = [this.hx, this.hy];
     this.hx = nx; this.hy = ny;
-    this.moveT = STEP;
+    // run: stick pushed all the way on a phone, or Shift held on a keyboard
+    const inp = this.g.input, m = Math.hypot(inp.move.x, inp.move.y);
+    this.running = !this.M.indoor && (inp.keys.has('ShiftLeft') || inp.keys.has('ShiftRight') || (document.body.classList.contains('is-touch') && m > 0.9));
+    this.stepLen = this.running ? STEP * 0.62 : STEP;
+    this.moveT = this.stepLen;
+    if (this.running && this.tile(this.hx, this.hy) !== '"') { const [px, pz] = wpos(...this.from); this.g.fx.spawn({ x: px, y: 0.2, z: pz, vy: 0.6, color: this.M.snow ? 0xffffff : 0xe8d8b8, alpha: 0.6, size: 0.45, life: 0.45, shape: 'puff', additive: false, grow: 1.4 }); }
     const F = this.follower;
     if (F && (F.x !== this.from[0] || F.y !== this.from[1])) {
       F.dir = F.x < this.from[0] ? 'e' : F.x > this.from[0] ? 'w' : F.y < this.from[1] ? 's' : 'n';
-      F.from = [F.x, F.y]; F.x = this.from[0]; F.y = this.from[1]; F.moveT = STEP;
+      F.from = [F.x, F.y]; F.x = this.from[0]; F.y = this.from[1]; F.moveT = F.len = this.stepLen;
     }
   }
 
@@ -805,7 +810,7 @@ export class World {
       const [dx, dy] = DIRS[this.dir], nx = this.hx + dx, ny = this.hy + dy;
       if (this.walkable(nx, ny) && !this.occupied(nx, ny, 'hero')) {
         this.from = [this.hx, this.hy]; this.hx = nx; this.hy = ny; this.moveT = STEP * 0.6; this.sliding = true;
-        if (this.follower) { const F = this.follower; F.from = [F.x, F.y]; F.x = this.from[0]; F.y = this.from[1]; F.moveT = STEP * 0.6; }
+        if (this.follower) { const F = this.follower; F.from = [F.x, F.y]; F.x = this.from[0]; F.y = this.from[1]; F.moveT = F.len = STEP * 0.6; }
         return;
       }
       if (this.sliding) { sfx.ui('back'); this.bumpT = 0.35; }
@@ -847,9 +852,9 @@ export class World {
     const H = this.hero, P = H.pose;
     H.resetPose();
     if (this.from) {
-      const k = 1 - this.moveT / (this.sliding ? STEP * 0.6 : STEP), [ax, az] = wpos(...this.from), [bx, bz] = wpos(this.hx, this.hy);
+      const k = 1 - this.moveT / (this.sliding ? STEP * 0.6 : this.stepLen || STEP), [ax, az] = wpos(...this.from), [bx, bz] = wpos(this.hx, this.hy);
       H.root.position.set(ax + (bx - ax) * k, 0, az + (bz - az) * k);
-      if (this.sliding) { idlePose(P, this.t); P.lean = -0.15; P.armLz = P.armRz = 1.2; H.emote?.('happy', 'o', 0.1); } else walkPose(P, this.t);
+      if (this.sliding) { idlePose(P, this.t); P.lean = -0.15; P.armLz = P.armRz = 1.2; H.emote?.('happy', 'o', 0.1); } else { walkPose(P, this.running ? this.t * 1.5 : this.t); if (this.running) P.lean = 0.3; }
     } else idlePose(P, this.t);
     H.root.rotation.y = turnTo(H.root.rotation.y, YAW[this.dir], dt * 18);
     H.update(dt);
@@ -938,7 +943,7 @@ export class World {
     const P = F.cr.pose; F.cr.resetPose();
     if (F.from) {
       F.moveT -= dt;
-      const k = 1 - Math.max(0, F.moveT) / STEP, [ax, az] = wpos(...F.from), [bx, bz] = wpos(F.x, F.y);
+      const k = 1 - Math.max(0, F.moveT) / (F.len || STEP), [ax, az] = wpos(...F.from), [bx, bz] = wpos(F.x, F.y);
       F.root.position.set(ax + (bx - ax) * k, 0, az + (bz - az) * k);
       walkPose(P, this.t + 0.3);
       if (F.moveT <= 0) { F.from = null; this.setPos(F); }
