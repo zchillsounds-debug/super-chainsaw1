@@ -1149,6 +1149,12 @@ export class World {
       for (let n = Math.floor(dt * 150 + Math.random()); n > 0; n--) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 30, y: 6 + Math.random() * 3, z: p.z + (Math.random() - 0.6) * 20, vy: -16, vx: -1.5, color: 0xe8f0ff, alpha: 0.75, size: 1.4, stretch: 0.05, rot: Math.PI / 2 + 0.08, life: 0.5, shape: 'spark', additive: false });
       if (Math.random() < dt * 22) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 24, y: 0.08, z: p.z + (Math.random() - 0.6) * 16, color: 0xe8f2ff, alpha: 0.6, size: 0.35, life: 0.35, shape: 'ring', additive: false, grow: 1.6 });
     }
+    // autumn leaves on the volcano road, blossom petals in Cloudtop: the trees' own colour drifting down
+    const TC = this.M.trees?.[0];
+    if (TC && (TC >> 16 & 255) > (TC >> 8 & 255) + 20 && !this.M.indoor && Math.random() < dt * 5) {
+      const p = this.hero.root.position;
+      this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 26, y: 5 + Math.random() * 2, z: p.z + (Math.random() - 0.65) * 18, vy: -0.9, vx: 0.6 + Math.random() * 0.5, vz: (Math.random() - 0.5) * 0.4, color: Math.random() < 0.5 ? TC : this.M.trees[1], size: 0.32, life: 5.5, shape: 'leaf', additive: false, spin: (Math.random() - 0.5) * 4, rot: Math.random() * 6, floor: true });
+    }
     if (this.M.snow && Math.random() < dt * 16) {
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 26, y: 7, z: p.z + (Math.random() - 0.65) * 18, vy: -1.2, vx: 0.3 + (Math.random() - 0.5) * 0.4, color: 0xffffff, size: 0.16, life: 5, shape: 'glow', additive: false, floor: true });
