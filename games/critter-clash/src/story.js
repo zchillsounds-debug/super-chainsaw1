@@ -277,6 +277,19 @@ export function storyTalk(S, id, w, a) {
       : ['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.'], null, id === 'nurse' ? 'Nurse Lilypop' : '');
     return;
   }
+  if (id === 'dashpost') { // post-game: a daily rematch with Dash at the hero's level, for berries
+    const day = new Date().toISOString().slice(0, 10), rid = rivalFor(save.adv.hero), lv = save.critters[save.adv.hero].level + 2;
+    if (F['dashday_' + day]) { w.say(['Dash: Okay, okay, you win today. Same time tomorrow, Champ. I\'ll be ready this time!']); return; }
+    w.say([
+      'Dash: Hey, Champ! Being crowned doesn\'t mean you get to stop training. I sure haven\'t.',
+      'Dash: One battle a day. Every day. Until I win that Crown back. Ready?',
+    ], () => S.worldFight({
+      foe: withGear(byId(rid), lv), lv, kind: 'story', flag: 'dashday_' + day, name: 'Rival Dash', diff: 0.8, berries: 3,
+      trainer: { name: 'Dash', critter: rid, title: 'Your rival', beat: 'AGAIN?! ...Tomorrow. Tomorrow for sure.', gloat: 'HA! Did you see that?! See you tomorrow, Champ!' },
+      note: '⚡ You beat Dash again! +3 🍓 (He\'ll be back tomorrow.)',
+    }), 'Dash');
+    return;
+  }
   if (id === 'guard') {
     w.say(['Pebblepup: Woof! Talk to Professor Pecan first. He\'s standing outside his lab.']);
     return;

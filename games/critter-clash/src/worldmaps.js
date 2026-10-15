@@ -38,6 +38,7 @@ export const MAPS = {
       { id: 'mom', x: 5, act: 'wave', y: 7, critter: '$hero', name: 'Mom', scale: 1.15, dir: 's', wander: 2, lines: ['Mom: Off on an adventure? Eat your berries and be home before the fireflies come out!', 'Mom: Professor Pecan was looking for you. His lab is the big white building.'] },
       { id: 'kid', x: 7, act: 'hop', y: 12, critter: 'lilypop', name: 'Lilypop', dir: 'e', wander: 2, lines: ['Lilypop: Ribbit! Did you know? Tall grass is full of wild critters. Bump into one and you have to fight!', 'Lilypop: Sometimes they just jump out at you. RIBBIT!'] },
       { id: 'pecan', x: 16, y: 13, pecan: true, name: 'Prof. Pecan', dir: 's', story: 'pecan' },
+      { id: 'dashpost', x: 18, y: 13, rival: true, rlv: 20, name: 'Dash', dir: 'w', story: 'dashpost', showFlag: 'ending' },
       { id: 'guard', x: 11, y: 2, critter: 'pebblepup', name: 'Pebblepup', dir: 's', story: 'guard', hideFlag: 'quest' },
     ],
   },
