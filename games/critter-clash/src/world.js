@@ -185,7 +185,11 @@ export class World {
           c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 2;
           for (let k = 0; k < 2; k++) { const gx = x * P + 4 + rand() * (P - 12), gy = y * P + 4 + rand() * (P - 12); c.beginPath(); c.moveTo(gx, gy + 6); c.lineTo(gx + 6, gy); c.stroke(); }
         }
-        if (t === '~' || t === '=') { c.fillStyle = C.bank || '#8a7a5a'; c.fillRect(x * P, y * P, P, P); }
+        if (t === '~' || t === '=') { // the muddy bank, rounded at outer corners like the water on top
+          const dry = (dx, dy) => { const X = x + dx, Y = y + dy; return X < 0 || Y < 0 || X >= W || Y >= H ? this.M.outer === undefined : !'~='.includes(this.tile(X, Y)); };
+          const rr = 9, q = [dry(-1, 0) && dry(0, -1) ? rr : 0, dry(1, 0) && dry(0, -1) ? rr : 0, dry(1, 0) && dry(0, 1) ? rr : 0, dry(-1, 0) && dry(0, 1) ? rr : 0];
+          c.fillStyle = C.bank || '#8a7a5a'; c.beginPath(); c.roundRect(x * P, y * P, P, P, q); c.fill();
+        }
         if (t === 's' || t === 'P') { c.fillStyle = (x + y) % 2 ? '#f4dc9a' : '#f1d894'; c.fillRect(x * P, y * P, P, P); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); } }
       }
       // a doormat on the way out
@@ -255,7 +259,22 @@ export class World {
     const pads = [];
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === '~' || this.tile(x, y) === '=') {
       const i = 0.22, l = wet(x - 1, y) ? 0 : i, r = wet(x + 1, y) ? 0 : i, t = wet(x, y - 1) ? 0 : i, b = wet(x, y + 1) ? 0 : i;
-      const g = new THREE.PlaneGeometry(TILE - l - r, TILE - t - b); g.rotateX(-Math.PI / 2); g.translate(x * TILE + 1 + (l - r) / 2, 0.06, y * TILE + 1 + (t - b) / 2); water.push(g);
+      // outer corners (dry on both sides) are rounded so ponds and rivers don't look like cut-out squares
+      const R = 0.75, x0 = x * TILE + l, x1 = (x + 1) * TILE - r, z0 = y * TILE + t, z1 = (y + 1) * TILE - b;
+      const rTL = l && t ? R : 0, rTR = r && t ? R : 0, rBR = r && b ? R : 0, rBL = l && b ? R : 0;
+      let g;
+      if (rTL + rTR + rBR + rBL) {
+        const sh = new THREE.Shape(); // shape y = -z
+        sh.moveTo(x0 + rBL, -z1); sh.lineTo(x1 - rBR, -z1); if (rBR) sh.quadraticCurveTo(x1, -z1, x1, -z1 + rBR);
+        sh.lineTo(x1, -z0 - rTR); if (rTR) sh.quadraticCurveTo(x1, -z0, x1 - rTR, -z0);
+        sh.lineTo(x0 + rTL, -z0); if (rTL) sh.quadraticCurveTo(x0, -z0, x0, -z0 - rTL);
+        sh.lineTo(x0, -z1 + rBL); if (rBL) sh.quadraticCurveTo(x0, -z1, x0 + rBL, -z1);
+        g = new THREE.ShapeGeometry(sh, 4); g.rotateX(-Math.PI / 2); g.translate(0, 0.06, 0);
+        // match the plane's 0..1 UVs per tile so the ripple texture lines up
+        const P = g.attributes.position, U = g.attributes.uv;
+        for (let k = 0; k < P.count; k++) U.setXY(k, (P.getX(k) - x * TILE) / TILE, 1 - (P.getZ(k) - y * TILE) / TILE);
+      } else { g = new THREE.PlaneGeometry(TILE - l - r, TILE - t - b); g.rotateX(-Math.PI / 2); g.translate(x * TILE + 1 + (l - r) / 2, 0.06, y * TILE + 1 + (t - b) / 2); }
+      water.push(g);
       if (this.M.pads && this.tile(x, y) === '~' && rand() < 0.45) {
         const p = new THREE.CylinderGeometry(0.42, 0.42, 0.05, 12, 1, false, 0.4, Math.PI * 1.8); p.translate(x * TILE + 0.5 + rand(), 0.1, y * TILE + 0.5 + rand()); pads.push(p);
       }
