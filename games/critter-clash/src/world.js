@@ -1013,10 +1013,11 @@ export class World {
     const port = cam.aspect < 1;
     const H = port ? 21 : 17, D = port ? 10 : 11.5;
     const want = new THREE.Vector3(p.x, H, p.z + D);
-    if (this.M.indoor) want.set(port ? Math.max(7, Math.min(this.W * TILE - 7, p.x)) : this.W * TILE / 2, port ? 20 : 16, this.H * TILE / 2 + (port ? 9.5 : 9.8)); // rooms are small: hold the whole room in view
+    if (this.M.indoor) want.set(port ? Math.max(6, Math.min(this.W * TILE - 6, p.x)) : this.W * TILE / 2, port ? 19 : 16, this.H * TILE / 2 + (port ? 6 : 9.8)); // rooms are small: hold the whole room in view
     if (!this.camAt) this.camAt = want.clone(); else this.camAt.lerp(want, 1 - Math.exp(-dt * 8));
     cam.position.copy(this.camAt);
-    cam.lookAt(this.camAt.x, 0.4, this.camAt.z - D + (port ? 0.6 : 0.3));
+    if (this.M.indoor && port) cam.lookAt(this.camAt.x, 0.4, this.H * TILE / 2 + 1.2);
+    else cam.lookAt(this.camAt.x, 0.4, this.camAt.z - D + (port ? 0.6 : 0.3));
     // portrait keeps about the same width of world in view as landscape shows in height
     cam.fov = port ? Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) : 40; cam.updateProjectionMatrix();
     // the sun's shadow box follows the hero
