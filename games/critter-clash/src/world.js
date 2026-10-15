@@ -175,7 +175,10 @@ export class World {
         }
         c.fillStyle = (x + y) % 2 ? C.a : C.b;
         c.fillRect(x * P, y * P, P, P);
-        if (t === '"') { c.fillStyle = C.tall; c.fillRect(x * P, y * P, P, P); }
+        if (t === '"') { // tall-grass patches round off at their outer corners
+          const o = (dx, dy) => this.tile(x + dx, y + dy) !== '"', rr = 10;
+          c.fillStyle = C.tall; c.beginPath(); c.roundRect(x * P, y * P, P, P, [o(-1, 0) && o(0, -1) ? rr : 0, o(1, 0) && o(0, -1) ? rr : 0, o(1, 0) && o(0, 1) ? rr : 0, o(-1, 0) && o(0, 1) ? rr : 0]); c.fill();
+        }
         if (this.M.indoor) { // wooden floorboards, staggered seams
           c.strokeStyle = 'rgba(90,50,20,0.3)'; c.lineWidth = 1.5;
           for (let k = 0; k < 2; k++) { const sy = y * P + k * P / 2; c.beginPath(); c.moveTo(x * P, sy); c.lineTo(x * P + P, sy); c.stroke(); const sx = x * P + ((y * 2 + k) % 3) * P / 3; c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx, sy + P / 2); c.stroke(); }
