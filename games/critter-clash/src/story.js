@@ -7,6 +7,7 @@ const skinnedShiny = (id) => skinned(CRITTERS.find((c) => c.id === id), 'shiny')
 import { unlock } from './save.js';
 import { sfx } from './audio.js';
 import { rivalFor } from './worldmaps.js';
+import { getMap } from './interiors.js';
 
 const flags = () => save.adv.flags;
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -269,6 +270,13 @@ export function storyTalk(S, id, w, a) {
       : "Prof. Pecan: Seven cups! Champion's Peak is north of Frostpeak. The Crown is waiting!"]);
     return;
   }
+  if (id === 'nurse' || id === 'rest') {
+    save.adv.spawn = { ...w.M.exit }; persist();
+    sfx.jingle(2);
+    w.say(id === 'rest' ? ['{hero} hops into bed for a quick nap...', 'Mom: Sweet dreams! (If you lose a battle, you\'ll come back home.)']
+      : ['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.'], null, id === 'nurse' ? 'Nurse Lilypop' : '');
+    return;
+  }
   if (id === 'guard') {
     w.say(['Pebblepup: Woof! Talk to Professor Pecan first. He\'s standing outside his lab.']);
     return;
@@ -492,19 +500,12 @@ function mama(S, w, a) {
 export function doorAction(S, b, w) {
   const F = flags();
   const front = { map: w.key, x: b.x + b.door, y: b.y + b.h };
-  if (b.id === 'home') {
-    save.adv.spawn = front; persist();
-    w.say(['Mom: Welcome home, sweetie! Have a snack and a nap.', '{hero} feels refreshed! (If you lose a battle, you\'ll come back here.)']);
-    return;
-  }
-  if (b.heal) {
-    save.adv.spawn = front; persist();
-    sfx.jingle(2);
-    w.say(['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.']);
-    return;
-  }
-  if (b.lab) {
-    w.say([F.quest ? 'The lab is full of bubbling beakers. Professor Pecan is outside.' : 'The door is locked. A note says: "Out front! - Prof. Pecan"']);
+  if (b.lab && !F.quest) { w.say(['The door is locked. A note says: "Out front! - Prof. Pecan"']); return; }
+  if (!b.stadium && !b.altar) { // walk inside
+    sfx.ui('ok');
+    const key = `in:${w.key}:${b.id}`;
+    const E = getMap(key).enter;
+    w.fade(() => w.load(key, E.x, E.y, 'n'));
     return;
   }
   if (b.stadium === 'thunder' && !F.rival2) {

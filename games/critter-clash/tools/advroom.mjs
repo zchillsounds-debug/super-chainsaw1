@@ -1,0 +1,31 @@
+// node tools/advroom.mjs: walks into a Berry Center, talks to the nurse across the counter, walks back out; then naps in the hero's bed at home
+import { createRequire } from 'module';
+const require = createRequire('/opt/node22/lib/node_modules/');
+const { chromium } = require('playwright');
+const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const pg = await b.newPage({ viewport: { width: 915, height: 412 } });
+const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
+await pg.goto('http://localhost:5180/?q=low');
+await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
+const ev = (js) => pg.evaluate(js);
+await ev(() => {
+  Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true });
+  __save.adv = { hero: 'cindermunch', map: 'bloom', x: 18, y: 6, dir: 'n', flags: { intro: true, quest: true }, spawn: { map: 'village', x: 4, y: 6 } };
+  __game.screens.adventure(); __sim(0.5);
+});
+const w = 'const w=__game.screens.worldObj;';
+const A = async () => { await ev(w + 'w.interact()'); await pg.waitForTimeout(700); };
+const skip = async () => { for (let i = 0; i < 8; i++) { const d = await ev(w + 'if(w.dialog){w.dialog.next();true}else false'); if (!d) break; await pg.waitForTimeout(150); } };
+const where = () => ev(w + '[w.key,w.hx,w.hy].join(" ")');
+const walk = async (dirs) => { for (const d of dirs) { await ev(w + `w.tryMove('${d}');__sim(0.3)`); await pg.waitForTimeout(80); } };
+await A(); console.log('entered:', await where());
+await walk('nnn'); console.log('at counter:', await where());
+await A(); console.log('dialog:', await ev(w + 'w.dialogEl?.textContent?.slice(0,80)')); await skip();
+console.log('spawn:', JSON.stringify(await ev(() => __save.adv.spawn)));
+await walk('sss'); await walk('s'); await pg.waitForTimeout(800); console.log('outside:', await where());
+await ev(w + "w.load('village',4,6,'n')"); await pg.waitForTimeout(300); await A(); console.log('home:', await where());
+await walk('nnnn'); await walk('eee'); console.log('by bed?', await where());
+await ev(w + "w.dir='e'"); await A(); console.log('dialog:', await ev(w + 'w.dialogEl?.textContent?.slice(0,80)')); await skip();
+console.log('spawn:', JSON.stringify(await ev(() => __save.adv.spawn)));
+console.log('errors:', errs.join(' | ') || 'none');
+await b.close();

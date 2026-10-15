@@ -8,7 +8,8 @@ import { Critter } from './critters.js';
 import { CRITTERS, CUPS, withGear, skinned } from './data.js';
 import { save, persist } from './save.js';
 import { sfx, playMusic } from './audio.js';
-import { MAPS, rivalFor } from './worldmaps.js';
+import { rivalFor } from './worldmaps.js';
+import { getMap } from './interiors.js';
 import { ARENAS } from './arena.js';
 
 export const TILE = 2;
@@ -85,7 +86,8 @@ export class World {
   // ---------- map building ----------
   load(key, x, y, dir = 's') {
     this.unload();
-    const M = this.M = MAPS[key];
+    const M = this.M = getMap(key) || getMap('village');
+    if (M !== getMap(key)) { key = 'village'; x = 4; y = 6; }
     this.key = key;
     this.W = M.tiles[0].length; this.H = M.tiles.length;
     this.group = new THREE.Group();
@@ -95,7 +97,7 @@ export class World {
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
-      if ('TP~#Rhmvl'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
+      if ('TP~#RhmvlWCXQDOK'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
     }
     for (const s of M.signs || []) this.solid.add(s.x + ',' + s.y);
     this.buildGround(rand);
@@ -105,6 +107,7 @@ export class World {
     this.buildForest(rand);
     this.buildVolcano(rand);
     this.buildBuildings();
+    this.buildInterior();
     this.buildActors();
     // hero
     this.hero = new Critter(heroDef());
@@ -148,6 +151,10 @@ export class World {
         c.fillStyle = (x + y) % 2 ? C.a : C.b;
         c.fillRect(x * P, y * P, P, P);
         if (t === '"') { c.fillStyle = C.tall; c.fillRect(x * P, y * P, P, P); }
+        if (this.M.indoor) { // wooden floorboards, staggered seams
+          c.strokeStyle = 'rgba(90,50,20,0.3)'; c.lineWidth = 1.5;
+          for (let k = 0; k < 2; k++) { const sy = y * P + k * P / 2; c.beginPath(); c.moveTo(x * P, sy); c.lineTo(x * P + P, sy); c.stroke(); const sx = x * P + ((y * 2 + k) % 3) * P / 3; c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx, sy + P / 2); c.stroke(); }
+        }
         if (t === 'i') {
           c.fillStyle = C.ice || '#b8e4ff'; c.fillRect(x * P, y * P, P, P);
           c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 2;
@@ -155,6 +162,15 @@ export class World {
         }
         if (t === '~' || t === '=') { c.fillStyle = C.bank || '#8a7a5a'; c.fillRect(x * P, y * P, P, P); }
         if (t === 's' || t === 'P') { c.fillStyle = (x + y) % 2 ? '#f4dc9a' : '#f1d894'; c.fillRect(x * P, y * P, P, P); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); } }
+      }
+      // a doormat on the way out
+      if (this.M.exit) { const dx = this.M.enter.x * P, dy = (H - 1) * P; c.fillStyle = '#8a3a2a'; c.beginPath(); c.roundRect(dx + 3, dy + 4, P - 6, P - 8, 4); c.fill(); c.fillStyle = '#ffd84d'; c.font = 'bold 14px sans-serif'; c.textAlign = 'center'; c.fillText('▼', dx + P / 2, dy + P / 2 + 5); }
+      // a rug over the Y tiles
+      const rug = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === 'Y') rug.push([x, y]);
+      if (rug.length) {
+        const x0 = Math.min(...rug.map((r) => r[0])) * P, y0 = Math.min(...rug.map((r) => r[1])) * P, x1 = (Math.max(...rug.map((r) => r[0])) + 1) * P, y1 = (Math.max(...rug.map((r) => r[1])) + 1) * P;
+        c.fillStyle = this.M.rug; c.beginPath(); c.roundRect(x0 + 2, y0 + 2, x1 - x0 - 4, y1 - y0 - 4, 8); c.fill();
+        c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 3; c.setLineDash([6, 5]); c.beginPath(); c.roundRect(x0 + 8, y0 + 8, x1 - x0 - 16, y1 - y0 - 16, 5); c.stroke(); c.setLineDash([]);
       }
       // paths: rounded blobs so corners look worn in, not tiled
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -170,7 +186,7 @@ export class World {
       // grass speckles and flowers
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const t = this.tile(x, y);
-        if ('.fTmgB'.includes(t)) for (let k = 0; k < 5; k++) { c.fillStyle = rand() < 0.5 ? C.dark : C.lite; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 4); }
+        if ('.fTmgB'.includes(t) && !this.M.indoor) for (let k = 0; k < 5; k++) { c.fillStyle = rand() < 0.5 ? C.dark : C.lite; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 4); }
         if (t === 'l') {
           const g = c.createRadialGradient(x * P + P / 2, y * P + P / 2, 2, x * P + P / 2, y * P + P / 2, P * 1.6);
           g.addColorStop(0, 'rgba(255,230,160,0.55)'); g.addColorStop(1, 'rgba(255,230,160,0)');
@@ -269,6 +285,7 @@ export class World {
       const nut = new THREE.IcosahedronGeometry(0.22 * s, 0); nut.translate(top.x + 0.15, top.y - 0.2, top.z + 0.1); nuts.push(nut);
     };
     if (this.M.city) return this.buildCity(rand);
+    if (this.M.indoor) return;
     for (let y = -3; y < this.H + 3; y++) for (let x = -3; x < this.W + 3; x++) {
       const inside = x >= 0 && y >= 0 && x < this.W && y < this.H;
       const t = inside ? this.tile(x, y) : null;
@@ -368,6 +385,7 @@ export class World {
       }
     }
     for (const s of this.M.signs || []) {
+      if (s.hide) continue;
       const [px, pz] = wpos(s.x, s.y);
       const st = new THREE.BoxGeometry(0.16, 0.9, 0.16); st.translate(px, 0.45, pz); sticks.push(st);
       const b = new THREE.BoxGeometry(1.2, 0.7, 0.14); b.translate(px, 1.05, pz + 0.05); boards.push(b);
@@ -502,6 +520,57 @@ export class World {
       }
       this.group.add(G);
       this.doors.push({ x: b.x + b.door, y: b.y + b.h - 1, b });
+    }
+  }
+
+  // indoor rooms: walls (tall at the back, low at the front so the camera sees in) and furniture
+  buildInterior() {
+    if (!this.M.indoor) return;
+    const L = {}, add = (k, g) => (L[k] ||= []).push(g);
+    const box = (k, w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); add(k, g); };
+    const W = this.W, H = this.H;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const t = this.tile(x, y), [px, pz] = wpos(x, y);
+      if (t === 'W') {
+        const back = y === 0, front = y === H - 1, h = back ? 3.2 : front ? 0.5 : 1.4;
+        box(back ? 'wall' : 'wall2', TILE, h, TILE, px, h / 2, pz);
+        box('trim', TILE + 0.02, 0.16, TILE + 0.02, px, h, pz);
+        if (back) box('base', TILE + 0.01, 0.35, 0.12, px, 0.17, pz + 1.02);
+        if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); }
+      }
+      if (t === 'C') { // shelf with coloured book spines
+        box('wood', 1.8, 2.5, 0.9, px, 1.25, pz - 0.4);
+        for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) box('book' + ((x + r + k) % 3), 0.32, 0.55, 0.2, px - 0.6 + k * 0.4, 0.55 + r * 0.75, pz + 0.08);
+      }
+      if (t === 'X') { box('metal', 1.4, 2.0, 1.0, px, 1.0, pz - 0.3); box('screen', 1.0, 0.7, 0.06, px, 1.45, pz + 0.22); box('btn', 0.8, 0.12, 0.3, px, 0.95, pz + 0.3); }
+      if (t === 'Q') {
+        const head = this.tile(x, y - 1) !== 'Q';
+        box('wood', 1.7, 0.45, TILE, px, 0.22, pz);
+        box('blanket', 1.6, 0.18, head ? 1.1 : TILE, px, 0.52, pz + (head ? 0.45 : 0));
+        if (head) { box('pillow', 1.2, 0.25, 0.6, px, 0.6, pz - 0.55); box('wood', 1.7, 1.0, 0.14, px, 0.5, pz - 0.95); }
+      }
+      if (t === 'D') { // tables join up with their D neighbours; legs only at the outer corners
+        const n = (dx, dy) => this.tile(x + dx, y + dy) === 'D', l = n(-1, 0), r = n(1, 0), u = n(0, -1), d = n(0, 1);
+        const x0 = px - (l ? 1 : 0.85), x1 = px + (r ? 1 : 0.85), z0 = pz - (u ? 1 : 0.85), z1 = pz + (d ? 1 : 0.85);
+        box('wood', x1 - x0, 0.14, z1 - z0, (x0 + x1) / 2, 0.9, (z0 + z1) / 2);
+        for (const [cx, cz, ok] of [[x0, z0, !l && !u], [x1, z0, !r && !u], [x0, z1, !l && !d], [x1, z1, !r && !d]]) if (ok) box('wood', 0.14, 0.9, 0.14, cx + (cx < px ? 0.12 : -0.12), 0.45, cz + (cz < pz ? 0.12 : -0.12));
+        if (r && d) { const b = new THREE.SphereGeometry(0.3, 10, 8); b.translate(px + 1, 1.15, pz + 1); add('berry', b); }
+        if (!l && !r && !u && !d) { const b = new THREE.SphereGeometry(0.22, 8, 6); b.translate(px, 1.1, pz); add('berry', b); }
+      }
+      if (t === 'O') {
+        const p = new THREE.CylinderGeometry(0.4, 0.3, 0.6, 10); p.translate(px, 0.3, pz); add('pot', p);
+        for (let k = 0; k < 3; k++) { const l = new THREE.IcosahedronGeometry(0.45 - k * 0.08, 1); l.translate(px + Math.sin(k * 2.1) * 0.2, 0.9 + k * 0.38, pz + Math.cos(k * 2.1) * 0.2); add('leaf', l); }
+      }
+      if (t === 'K') { box('counter', TILE + 0.02, 1.1, 1.3, px, 0.55, pz); box('top', TILE + 0.04, 0.12, 1.45, px, 1.15, pz); }
+    }
+    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8 };
+    for (const k in L) {
+      const glow = k === 'screen' || k === 'glass';
+      const m = glow ? new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'screen' && this.M.indoor === 'arcade' ? 0xff8ae8 : C[k] })) : inked(mergeGeometries(L[k]), toon(C[k] ?? 0xffffff, { rim: 0.3 }), k === 'book0' || k === 'book1' || k === 'book2' ? OL * 0.3 : OL * 0.6);
+      if (glow) m.material.userData.own = true;
+      m.castShadow = !glow && k !== 'trim'; m.receiveShadow = true;
+      this.group.add(m);
+      L[k].forEach((g) => g.dispose());
     }
   }
 
@@ -680,6 +749,8 @@ export class World {
     if (nx < 0 || ny < 0 || nx >= this.W || ny >= this.H) {
       const e = this.M.edges?.[nx < 0 ? 'w' : nx >= this.W ? 'e' : ny < 0 ? 'n' : 's'];
       if (e && this.tile(this.hx, this.hy) !== 'T') { this.goTo(e, dir, nx, ny); return; }
+      const X = this.M.exit;
+      if (X && dir === 's') { sfx.ui('back'); this.fade(() => this.load(X.map, X.x, X.y, 's')); return; }
       return this.bump();
     }
     const who = this.occupied(nx, ny, 'hero');
@@ -702,7 +773,7 @@ export class World {
   }
 
   goTo(e, dir, nx, ny) {
-    const M2 = MAPS[e.to];
+    const M2 = getMap(e.to);
     let x = nx, y = ny;
     if (dir === 'n') { x = nx + e.off; y = M2.tiles.length - 1; }
     if (dir === 's') { x = nx + e.off; y = 0; }
@@ -738,6 +809,9 @@ export class World {
       if (this.sliding) { sfx.ui('back'); this.bumpT = 0.35; }
     }
     this.sliding = false;
+    // stepping on the doormat goes back outside
+    const X = this.M.exit;
+    if (X && this.hy === this.H - 1) { sfx.ui('back'); this.fade(() => this.load(X.map, X.x, X.y, 's')); return; }
     if (t === '"') {
       const [px, pz] = wpos(this.hx, this.hy);
       for (let k = 0; k < 5; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5), y: 0.4, z: pz + (Math.random() - 0.5), vy: 2 + Math.random() * 2, vx: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2, color: 0x3fae4a, size: 0.22, life: 0.5, shape: 'leaf', additive: false, grav: 6, rot: Math.random() * 6 });
@@ -875,6 +949,7 @@ export class World {
     const port = cam.aspect < 1;
     const H = port ? 21 : 17, D = port ? 10 : 11.5;
     const want = new THREE.Vector3(p.x, H, p.z + D);
+    if (this.M.indoor) want.set(port ? Math.max(7, Math.min(this.W * TILE - 7, p.x)) : this.W * TILE / 2, port ? 20 : 16, this.H * TILE / 2 + (port ? 9.5 : 9.8)); // rooms are small: hold the whole room in view
     if (!this.camAt) this.camAt = want.clone(); else this.camAt.lerp(want, 1 - Math.exp(-dt * 8));
     cam.position.copy(this.camAt);
     cam.lookAt(this.camAt.x, 0.4, this.camAt.z - D + (port ? 0.6 : 0.3));
@@ -891,10 +966,13 @@ export class World {
 
   interact() {
     const [fx, fy] = this.front();
-    const a = this.occupied(fx, fy, 'hero');
+    let a = this.occupied(fx, fy, 'hero');
+    // talk across a counter
+    if (!a && this.tile(fx, fy) === 'K') { const [dx, dy] = DIRS[this.dir]; a = this.occupied(fx + dx, fy + dy, 'hero'); }
     if (a && a.n) return this.talk(a);
     const sign = (this.M.signs || []).find((s) => s.x === fx && s.y === fy);
-    if (sign) return this.say([sign.text], null, '📜 Sign');
+    if (sign?.act) return this.S.worldStory(sign.act, this, null);
+    if (sign) return this.say([sign.text], null, sign.hide ? '' : '📜 Sign');
     const door = this.doors.find((d) => d.x === fx && d.y === fy);
     if (door && this.dir === 'n') return this.S.worldDoor(door.b, this);
   }
