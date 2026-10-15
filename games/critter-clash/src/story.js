@@ -50,8 +50,24 @@ export function storyIntro(S, w) {
       'Big Boulder: HA! The volcano only does that for a true champion. Four cups, {hero}!',
       'Prof. Pecan (on the phone): {hero}! The whole of Clashara is talking about you now.',
       'Prof. Pecan: Three cups remain: the Midnight Cup, the Legend Cup and the Sky Cup. Then... Champion\'s Peak.',
-      "Prof. Pecan: I'm still charting the roads to those far-off stadiums. Keep training, champ!",
+      'Prof. Pecan: The road east of Cinder Town leads to Neon City and its Midnight Cup. Off you go!',
     ]);
+    return;
+  }
+  if (w.key === 'neon' && F.trial_heart && !F.post_heart) {
+    F.post_heart = true; persist();
+    w.say([
+      'Dash: ...Why? Why did you help me? I\'ve been nothing but a pain since Route 1.',
+      "{hero}: Because chasing the Crown wouldn't be any fun without my rival.",
+      "Dash: ...Heh. You're weird, you know that?",
+      "Dash: Thanks, {hero}. I mean it. I'll see you on Champion's Peak. And when we meet there, I won't hold anything back!",
+      'Dash dashes off into the neon night...',
+    ]);
+    return;
+  }
+  if (w.key === 'neon' && !F.neon) {
+    F.neon = true; persist();
+    w.say(['{hero}: Whoa... so many lights! Neon City never sleeps!', "Somewhere to the south, someone is shouting. It sounds like... Dash?"]);
     return;
   }
   if (w.key === 'cinder' && !F.cinder) {
@@ -94,6 +110,14 @@ export function storyStep(S, w) {
     w.say(['Pebblepup: Woof! Wait! The tall grass on Route 1 is full of wild critters.', 'Pebblepup: Professor Pecan made me promise: nobody goes out there without talking to him first!'], () => {
       w.busy = false;
       w.from = [w.hx, w.hy]; w.hy += 1; w.dir = 's'; w.moveT = 0.23;
+    });
+    return true;
+  }
+  if (w.key === 'ember' && !F.cup_champion && w.hx >= 24) {
+    w.busy = true;
+    w.say(["{hero}: That road goes to Neon City... Big Boulder said nobody gets in without the Champion Cup. Back to the stadium!"], () => {
+      w.busy = false;
+      w.from = [w.hx, w.hy]; w.hx -= 1; w.dir = 'w'; w.moveT = 0.23;
     });
     return true;
   }
@@ -222,6 +246,25 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'mama') mama(S, w, a);
   if (id === 'sage') sage(S, w);
+  if (id === 'heart') heart(S, w);
+}
+
+// Trial of Heart: the Night Gang has Dash cornered; the hero steps in to help the rival
+function heart(S, w) {
+  const F = flags(), rid = rivalFor(save.adv.hero), rdef = byId(rid);
+  const vex = withGear(byId('kindlekit'), 16);
+  w.say([
+    `Vex: Ha! Look at your ${rdef.name}, Dash. Too tired to even spark!`,
+    "Dash: Back off, Vex! We... we can still...",
+    'Gang Grunt: The "fastest critter in Clashara" is all out of zoom!',
+    '{hero}: HEY! Leave Dash alone!',
+    "Dash: {hero}?! What are YOU doing here? I don't need your help!",
+    `Vex: Ooh, a hero. Fine. My ${vex.name} will roast you both!`,
+  ], () => S.worldFight({
+    foe: vex, lv: 16, kind: 'story', flag: 'trial_heart', name: 'Vex', diff: 0.62,
+    trainer: { name: 'Vex', critter: 'kindlekit', title: 'Night Gang boss', beat: "Tch. Whatever. C'mon, let's bail. This town's boring anyway.", gloat: 'Ha! Two losers for the price of one!' },
+    note: '💖 Trial of Heart passed! You stood up for your rival.',
+  }));
 }
 
 // Trial of Wisdom: the Stone Sage asks three questions; one wrong answer and it's a battle instead

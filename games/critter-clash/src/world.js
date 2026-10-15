@@ -95,7 +95,7 @@ export class World {
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
-      if ('TP~#Rhmv'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
+      if ('TP~#Rhmvl'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
     }
     for (const s of M.signs || []) this.solid.add(s.x + ',' + s.y);
     this.buildGround(rand);
@@ -166,6 +166,11 @@ export class World {
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const t = this.tile(x, y);
         if ('.fTmgB'.includes(t)) for (let k = 0; k < 5; k++) { c.fillStyle = rand() < 0.5 ? C.dark : C.lite; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 4); }
+        if (t === 'l') {
+          const g = c.createRadialGradient(x * P + P / 2, y * P + P / 2, 2, x * P + P / 2, y * P + P / 2, P * 1.6);
+          g.addColorStop(0, 'rgba(255,230,160,0.55)'); g.addColorStop(1, 'rgba(255,230,160,0)');
+          c.fillStyle = g; c.fillRect(x * P - P * 1.5, y * P - P * 1.5, P * 4, P * 4);
+        }
         if (t === 'g') { // a ring of moss round the little glowcaps
           const g = c.createRadialGradient(x * P + P / 2, y * P + P / 2, 2, x * P + P / 2, y * P + P / 2, P * 0.7);
           g.addColorStop(0, 'rgba(160,255,200,0.45)'); g.addColorStop(1, 'rgba(160,255,200,0)');
@@ -252,6 +257,7 @@ export class World {
       }
       const nut = new THREE.IcosahedronGeometry(0.22 * s, 0); nut.translate(top.x + 0.15, top.y - 0.2, top.z + 0.1); nuts.push(nut);
     };
+    if (this.M.city) return this.buildCity(rand);
     for (let y = -3; y < this.H + 3; y++) for (let x = -3; x < this.W + 3; x++) {
       const inside = x >= 0 && y >= 0 && x < this.W && y < this.H;
       const t = inside ? this.tile(x, y) : null;
@@ -264,6 +270,57 @@ export class World {
     const put = (list, color, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color, { rim: 0.4 }), ink); m.castShadow = true; this.group.add(m); list.forEach((g) => g.dispose()); };
     const TC = this.M.trees || [0x3fae4a, 0x4cc25a, 0x8a5a3a];
     put(can, TC[0], OL); put(can2, TC[1], OL); put(trunks, TC[2], OL * 0.6);
+  }
+
+  // Neon City: blocks of lit skyscrapers where other maps have trees, street lamps (l)
+  windowTex() {
+    const t = canvasTex(64, 64, (c, w, h) => {
+      c.fillStyle = '#2a2448'; c.fillRect(0, 0, w, h);
+      for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) {
+        const r = Math.random();
+        c.fillStyle = r < 0.45 ? '#ffd88a' : r < 0.6 ? '#8ae8ff' : '#3a3460';
+        c.fillRect(x * 16 + 4, y * 16 + 4, 8, 9);
+      }
+    }, { repeat: [1, 1] });
+    t.userData.own = true;
+    return t;
+  }
+
+  buildCity(rand) {
+    const boxes = [], roofs = [[], [], []], vents = [];
+    const box = (px, pz, w, d, h) => {
+      const b = new THREE.BoxGeometry(w, h, d), uv = b.attributes.uv;
+      // windows repeat with the wall size instead of stretching
+      for (let i = 0; i < uv.count; i++) { const f = Math.floor(i / 4); const sx = f < 2 ? d : w, sy = f === 2 || f === 3 ? d : h; uv.setXY(i, uv.getX(i) * sx / 2, uv.getY(i) * sy / 2); }
+      b.translate(px, h / 2, pz); boxes.push(b);
+      const r = new THREE.BoxGeometry(w + 0.2, 0.25, d + 0.2); r.translate(px, h + 0.12, pz); roofs[Math.floor(rand() * 3)].push(r);
+      if (rand() < 0.35) { const v = new THREE.BoxGeometry(0.6, 0.4, 0.5); v.translate(px + (rand() - 0.5) * 0.8, h + 0.45, pz + (rand() - 0.5) * 0.8); vents.push(v); }
+    };
+    for (let y = -3; y < this.H + 3; y++) for (let x = -3; x < this.W + 3; x++) {
+      const inside = x >= 0 && y >= 0 && x < this.W && y < this.H;
+      if (inside ? this.tile(x, y) !== 'T' : false) continue;
+      const [px, pz] = wpos(x, y);
+      // low along the streets so the overhead camera can see past them, taller further out
+      const edge = Math.min(x + 1, y + 1, this.W - x, this.H - y), out = edge <= 0 ? 1 - edge : 0;
+      box(px, pz, TILE * 0.98, TILE * 0.98, (y >= this.H - 2 ? 1.2 : 1.8) + Math.floor(rand() * 3) * 0.6 + out * 1.6);
+    }
+    const wm = new THREE.MeshBasicMaterial({ map: this.windowTex(), color: 0xc8c0e8 }); wm.userData.own = true;
+    const m = new THREE.Mesh(mergeGeometries(boxes), wm); this.group.add(m); boxes.forEach((g) => g.dispose());
+    [0x7a6ab8, 0x5a7ab8, 0x9a6aa8].forEach((c, k) => { if (roofs[k].length) { this.group.add(inked(mergeGeometries(roofs[k]), toon(c, { rim: 0.3 }), OL * 0.6)); roofs[k].forEach((g) => g.dispose()); } });
+    if (vents.length) { this.group.add(inked(mergeGeometries(vents), toon(0xb8b0d0), OL * 0.4)); vents.forEach((g) => g.dispose()); }
+    // street lamps with glowing heads
+    const posts = [], heads = [];
+    for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) if (this.tile(x, y) === 'l') {
+      const [px, pz] = wpos(x, y);
+      const p = new THREE.CylinderGeometry(0.08, 0.12, 2.6, 6); p.translate(px, 1.3, pz); posts.push(p);
+      const h = new THREE.SphereGeometry(0.3, 10, 8); h.translate(px, 2.75, pz); heads.push(h);
+    }
+    if (posts.length) {
+      this.group.add(inked(mergeGeometries(posts), toon(0x3a3458), OL * 0.5)); posts.forEach((g) => g.dispose());
+      const hm = new THREE.MeshBasicMaterial({ color: 0xfff0b0 }); hm.userData.own = true;
+      this.group.add(new THREE.Mesh(mergeGeometries(heads), hm)); heads.forEach((g) => g.dispose());
+      this.lamps = true;
+    }
   }
 
   buildGrass(rand) {
@@ -401,6 +458,7 @@ export class World {
       G.position.set(x0 + w / 2, 0, z0 + d / 2);
       if (b.stadium) this.stadiumModel(G, b, w, d);
       else if (b.shroom) this.shroomHouse(G, b, w, d);
+      else if (b.tower) this.towerModel(G, b, w, d);
       else {
         const wallH = b.lab ? 2.4 : 2.0;
         const walls = inked(new THREE.BoxGeometry(w - 0.4, wallH, d - 0.5), toon(b.wall || 0xfff1d8), OL);
@@ -457,6 +515,29 @@ export class World {
     const win = inked(new THREE.CircleGeometry(0.32, 14), toon(0xfff0a0, { emissive: 0x8a7a30, rim: 0 }), 0);
     win.position.set(dx + (b.door === 0 ? 1.1 : -1.1), 1.35, front - 0.05); G.add(win);
     if (b.heal) { const cr = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.12), toon(0xff5a8a)); cr.position.set(dx, 1.55, front + 0.08); G.add(cr); const v2 = cr.clone(); v2.rotation.z = Math.PI / 2; G.add(v2); }
+  }
+
+  // Neon City: a lit tower with a neon band and a glowing sign over the door
+  towerModel(G, b, w, d) {
+    const h = 3.4;
+    const bx = new THREE.BoxGeometry(w - 0.4, h, d - 0.5), uv = bx.attributes.uv;
+    for (let i = 0; i < uv.count; i++) { const f = Math.floor(i / 4); const sx = f < 2 ? d : w, sy = f === 2 || f === 3 ? d : h; uv.setXY(i, uv.getX(i) * sx / 2, uv.getY(i) * sy / 2); }
+    const wm = new THREE.MeshBasicMaterial({ map: this.windowTex(), color: 0xd8d0f0 }); wm.userData.own = true;
+    const body = new THREE.Mesh(bx, wm); body.position.y = h / 2; G.add(body);
+    const neon = new THREE.MeshBasicMaterial({ color: b.tower }); neon.userData.own = true;
+    for (const y of [1.9, h - 0.15]) { const band = new THREE.Mesh(new THREE.BoxGeometry(w - 0.3, 0.14, d - 0.4), neon); band.position.y = y; G.add(band); }
+    const roof = inked(new THREE.BoxGeometry(w - 0.2, 0.3, d - 0.3), toon(0x8a7ac8, { rim: 0.3 }), OL * 0.6); roof.position.y = h + 0.15; G.add(roof);
+    // a rooftop billboard in the building's neon colour
+    const bb = new THREE.Mesh(new THREE.BoxGeometry(w * 0.55, 0.9, 0.12), neon); bb.position.set(0, h + 0.75, 0); G.add(bb);
+    const dx = (b.door + 0.5) * TILE - w / 2, front = d / 2 - 0.25;
+    const door = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.5), new THREE.MeshBasicMaterial({ color: 0x1a1430 })); door.material.userData.own = true; door.position.set(dx, 0.75, front + 0.02); G.add(door);
+    if (b.label) {
+      const tex = canvasTex(256, 64, (c, W, H) => { c.fillStyle = '#1a1430'; c.beginPath(); c.roundRect(0, 0, W, H, 14); c.fill(); c.strokeStyle = new THREE.Color(b.tower).getStyle(); c.lineWidth = 6; c.stroke(); c.fillStyle = '#fff'; c.font = 'bold 32px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = c.strokeStyle; c.shadowBlur = 10; c.fillText(b.label.toUpperCase(), W / 2, H / 2 + 2); });
+      tex.userData.own = true;
+      const sm = new THREE.MeshBasicMaterial({ map: tex, transparent: true }); sm.userData.own = true;
+      const sg = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.75), sm); sg.position.set(dx, 2.5, front + 0.05); G.add(sg);
+    }
+    if (b.heal) { const cr = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.18, 0.1), neon); cr.position.set(dx + 1.4, 1.2, front + 0.05); G.add(cr); const v2 = cr.clone(); v2.rotation.z = Math.PI / 2; G.add(v2); }
   }
 
   stadiumModel(G, b, w, d) {
