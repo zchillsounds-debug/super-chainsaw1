@@ -11,7 +11,7 @@ const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console
 await pg.goto('http://localhost:5180/?q=low&mobile&auto');
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 await pg.evaluate(([TR, EX, TU]) => {
-  Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: !TU, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2'] });
+  Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: !TU, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3'] });
   __save.adv = { hero: 'cindermunch', map: 'route1', x: 5, y: 10, dir: 's', flags: { intro: true, quest: true }, spawn: { map: 'village', x: 4, y: 6 } };
   if (EX) { __save.critters.cindermunch.level = 9; __save.critters.cindermunch.xp = 9999; }
   __game.screens.adventure(); __sim(0.5);
