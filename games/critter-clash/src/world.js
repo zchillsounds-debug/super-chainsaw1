@@ -163,7 +163,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null;
+    this.group = null; this.grassGeo = null; this.prints = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1021,6 +1021,11 @@ export class World {
     this.steps++;
     this.encCool--;
     const t = this.tile(this.hx, this.hy);
+    // little footprints left behind in snow and sand, fading after a few seconds
+    if (!this.M.indoor && (this.M.snow && t !== 'i' && t !== ':' || t === 's' || t === 'P')) {
+      const [px, pz] = wpos(this.hx, this.hy), [dx, dy] = DIRS[this.dir];
+      for (const sd of [-1, 1]) this.footprint(px - dy * sd * 0.22 - dx * 0.5 * (sd > 0), pz + dx * sd * 0.22 - dy * 0.5 * (sd > 0), this.M.snow ? 0x7a8ac0 : 0xa87a40);
+    }
     if (!this.sliding && t !== '"') sfx.foot(this.M.indoor || t === '=' ? 'wood' : t === 's' || t === 'P' ? 'sand' : t === 'i' ? 'ice' : this.M.snow ? 'snow' : this.M.city || this.M.lava ? 'stone' : 'grass');
     // ice: keep sliding the same way until something solid is in the way
     if (t === 'i') {
@@ -1045,6 +1050,18 @@ export class World {
     }
     if (this.storyCheck()) return;
     this.trainerCheck();
+  }
+
+  // a flat print pressed into the ground (a small pool of decals per map, oldest reused first)
+  footprint(x, z, color) {
+    if (!this.prints) {
+      this.prints = [];
+      const geo = new THREE.CircleGeometry(0.17, 10); geo.scale(1, 1.35, 1);
+      for (let k = 0; k < 24; k++) { const m = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }); m.userData.own = true; const o = new THREE.Mesh(geo, m); o.rotation.x = -Math.PI / 2; o.position.y = 0.035; o.visible = false; o.userData.shared = k > 0; this.group.add(o); this.prints.push({ o, age: 9 }); }
+      this.printK = 0;
+    }
+    const P = this.prints[this.printK++ % this.prints.length];
+    P.o.position.x = x; P.o.position.z = z; P.o.rotation.z = -YAW[this.dir]; P.o.material.color.setHex(color); P.o.visible = true; P.age = 0;
   }
 
   // ---------- update loop ----------
@@ -1130,6 +1147,7 @@ export class World {
       if (Math.random() < dt * 2.5) this.g.fx.spawn({ x: it.g.position.x + (Math.random() - 0.5) * 0.8, y: 0.5 + Math.random() * 0.6, z: it.g.position.z + (Math.random() - 0.5) * 0.8, vy: 0.5, color: 0xfff0a0, size: 0.22, life: 0.7, shape: 'star' });
     }
     this.swayGrass();
+    for (const P of this.prints || []) if (P.o.visible) { P.age += dt; P.o.material.opacity = 0.6 * Math.max(0, Math.min(1, (6 - P.age) / 2)); if (P.age > 6) P.o.visible = false; }
     // water ripples drift
     if (this.waterTex) this.waterTex.offset.set(this.t * 0.02, this.t * 0.03);
     this.updateCamera(dt);
