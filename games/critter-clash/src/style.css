@@ -943,3 +943,4 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 @media (max-height: 420px) { .coach { top: auto; } .coach span { font-size: 12px; } }
 /* toasts on the results screen go over the celebrating winner, not the VICTORY title */
 @media (min-aspect-ratio: 1/1) { body.at-results .toast { left: 24vw; max-width: 42vw; } }
+@media (max-height: 380px) and (min-aspect-ratio: 1/1) and (max-width: 700px) { .res-grid { padding-right: 40px; gap: 4px 12px; } }
