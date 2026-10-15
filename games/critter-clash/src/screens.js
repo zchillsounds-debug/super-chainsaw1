@@ -138,7 +138,8 @@ export class Screens {
     // the two main modes share a row in landscape and stack on narrow portrait screens
     const main = document.createElement('div');
     main.className = 'title-main';
-    main.append(this.btn(save.adv ? 'Adventure' : 'Adventure <small>NEW!</small>', 'primary big', () => this.adventure()), this.btn('Tournament', 'big', () => this.cups()));
+    const advSub = () => { const k = save.adv.map?.startsWith('in:') ? save.adv.map.split(':')[1] : save.adv.map, cups = CUPS.filter((c) => save.adv.flags?.['cup_' + c.id]).length; return `${MAPS[k]?.name || ''} · 🏆${cups}/7`; };
+    main.append(this.btn(save.adv ? `Adventure <small>${advSub()}</small>` : 'Adventure <small>NEW!</small>', 'primary big', () => this.adventure()), this.btn('Tournament', 'big', () => this.cups()));
     m.appendChild(main);
     const row = document.createElement('div');
     row.className = 'row';
@@ -861,6 +862,12 @@ export class Screens {
     b.appendChild(this.btn('Resume', 'primary', close));
     b.appendChild(this.btn('🗺️ Town Map', 'secondary', () => { close(); this.worldMap(); }));
     b.appendChild(this.btn('Save & Quit', 'ghost', () => { close(); persist(); this.leaveWorld(); this.title(); }));
+    // start over with a new hero (tap twice: this replaces the current story)
+    const fresh = this.btn('New Adventure', 'ghost small', () => {
+      if (!fresh.classList.contains('sure')) { fresh.classList.add('sure'); fresh.innerHTML = 'Tap again: start over?'; return; }
+      close(); persist(); this.leaveWorld(); this.title(); this.heroPick();
+    });
+    b.appendChild(fresh);
     this.game.modalClose = close;
     this.root.appendChild(d);
   }

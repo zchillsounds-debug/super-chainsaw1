@@ -21,7 +21,7 @@ export class Camp {
     this.team = team;
     this.sel = null;
     this.t = 0;
-    this.props = buildProps(save.cups || {}, save.unlocked || [], save.trials || {}, (save.stats?.hazardArenas || []).length >= 6, !!save.adv?.flags?.crowned);
+    this.props = buildProps(save.cups || {}, save.unlocked || [], save.trials || {}, (save.stats?.hazardArenas || []).length >= 6, !!(save.adv?.flags?.crowned || save.badges?.crown));
     this.g.scene.add(this.props);
     // soft ring under whoever is selected
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.72, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false }));
