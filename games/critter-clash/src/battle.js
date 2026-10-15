@@ -1620,6 +1620,19 @@ export class Battle {
       look = new THREE.Vector3(f.x + (port ? 0 : 1.5) * Z, ((port ? 0.3 : 0.95) + hy) * Z, f.z);
       pos = new THREE.Vector3(f.x - 0.5 + drift, (1.45 + hy * 0.6) * Z, f.z + (port ? 7 : 5.6) * Z);
       fov = (port ? 46 : 36) / Math.max(1, 1.6 / cam.aspect); // undo the narrow-aspect widening below
+      // a winner near the edge would put the camera inside the wall or the bushes: swing the shot round the winner until it's clear
+      if (this.resYaw === undefined) {
+        const ox = pos.x - f.x, oz = pos.z - f.z;
+        this.resYaw = 0;
+        for (const t of [0, 0.35, -0.35, 0.7, -0.7, 1.05, -1.05, 1.4, -1.4, 1.75, -1.75, 2.1, -2.1, 2.6, -2.6, Math.PI]) {
+          const x = f.x + ox * Math.cos(t) + oz * Math.sin(t), z = f.z - ox * Math.sin(t) + oz * Math.cos(t);
+          if (Math.hypot(x, z) < ARENA_R - 0.3) { this.resYaw = t; break; }
+        }
+      }
+      if (this.resYaw) {
+        const t = this.resYaw, c = Math.cos(t), s = Math.sin(t);
+        for (const v of [pos, look]) { const x = v.x - f.x, z = v.z - f.z; v.x = f.x + x * c + z * s; v.z = f.z - x * s + z * c; }
+      }
     } else {
       const mx = (p.x + c.x) / 2, mz = (p.z + c.z) / 2;
       const sep = Math.hypot(p.x - c.x, p.z - c.z);
