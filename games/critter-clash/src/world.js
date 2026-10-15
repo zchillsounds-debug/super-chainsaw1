@@ -21,6 +21,10 @@ const PHASES = {
   evening: { sun: 0xffc896, sunI: 2.3, sky: 0xffe2cc, gnd: 0x6a5a48, hemiI: 1.05, fog: 0xffd8b8 },
   night: { sun: 0xbcc8ff, sunI: 1.3, sky: 0x8e9ad8, gnd: 0x3a4060, hemiI: 1.0, fog: 0x4a5888 },
 };
+const RAIN = {
+  day: { sun: 0xb8c4dc, sunI: 0.85, sky: 0xaab8d0, gnd: 0x3a4a50, hemiI: 0.9, fog: 0x9aa8b8 },
+  evening: { sun: 0xd0a898, sunI: 0.9, sky: 0xb0a4b8, gnd: 0x3a3a48, hemiI: 0.85, fog: 0x8a8898 },
+};
 const LIT = new THREE.MeshBasicMaterial({ color: 0xffd870 }); // a lamp-lit window at night
 
 const STEP = 0.23; // seconds per tile
@@ -112,6 +116,9 @@ export class World {
     // the phone's clock tints outdoor maps that have no mood of their own: golden evenings, soft blue nights
     const hr = save.adv.clock ?? new Date().getHours();
     this.phase = M.indoor || M.mood ? 'day' : hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day';
+    // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
+    const d = new Date(), slot = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}`;
+    this.rain = !M.indoor && !M.mood && !M.city && !M.snow && !M.lava && M.border !== 'cloud' && (save.adv.rain ?? hash(slot + key) % 5 === 0);
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
@@ -142,8 +149,8 @@ export class World {
     if (!key.startsWith('in:')) (save.adv.seen ||= {})[key] = true;
     persist();
     playMusic(M.music || 'camp');
-    this.mood(M.mood || PHASES[this.phase]);
-    this.banner(M.name);
+    this.mood(M.mood || (this.rain && RAIN[this.phase]) || PHASES[this.phase]);
+    this.banner(M.name + (this.rain ? ' 🌧️' : ''));
   }
 
   unload() {
@@ -1049,6 +1056,11 @@ export class World {
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 24, y: 0.4 + Math.random() * 2.2, z: p.z + (Math.random() - 0.7) * 16, vx: (Math.random() - 0.5) * 0.6, vy: 0.2 + Math.random() * 0.3, vz: (Math.random() - 0.5) * 0.6, color: Math.random() < 0.7 ? 0xd8ff6a : 0x8affe0, size: 0.28, life: 2.6, shape: 'glow', fadeIn: 0.3, hold: 0.5 });
     }
+    if (this.rain) {
+      const p = this.hero.root.position;
+      for (let n = Math.floor(dt * 150 + Math.random()); n > 0; n--) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 30, y: 6 + Math.random() * 3, z: p.z + (Math.random() - 0.6) * 20, vy: -16, vx: -1.5, color: 0xe8f0ff, alpha: 0.75, size: 1.4, stretch: 0.05, rot: Math.PI / 2 + 0.08, life: 0.5, shape: 'spark', additive: false });
+      if (Math.random() < dt * 22) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 24, y: 0.08, z: p.z + (Math.random() - 0.6) * 16, color: 0xe8f2ff, alpha: 0.6, size: 0.35, life: 0.35, shape: 'ring', additive: false, grow: 1.6 });
+    }
     if (this.M.snow && Math.random() < dt * 16) {
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 26, y: 7, z: p.z + (Math.random() - 0.65) * 18, vy: -1.2, vx: 0.3 + (Math.random() - 0.5) * 0.4, color: 0xffffff, size: 0.16, life: 5, shape: 'glow', additive: false, floor: true });
@@ -1336,7 +1348,9 @@ export class World {
 
   // a wild critter jumps out of the tall grass
   ambush() {
-    const W = this.M.wild, [id, lo, hi] = W.list[Math.floor(Math.random() * W.list.length)];
+    const W = this.M.wild, wet = this.rain ? W.list.filter(([i]) => byId(i)?.type === 'water') : [];
+    const L = wet.length && Math.random() < 0.5 ? wet : W.list; // water critters come out to play in the rain
+    const [id, lo, hi] = L[Math.floor(Math.random() * L.length)];
     const lv = lo + Math.floor(Math.random() * (hi - lo + 1));
     this.encCool = 6;
     this.startWild(id, lv, null, Math.random() < SHINY_RATE);
