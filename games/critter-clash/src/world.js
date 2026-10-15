@@ -158,6 +158,10 @@ export class World {
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         let t = this.tile(x, y);
         if (t === 'h') t = under(x, y);
+        if (t === 'R' || t === 'l' || t === 'v') { // lone props sit on whatever ground surrounds them (no grass squares on the beach)
+          const n = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => this.tile(x + dx, y + dy));
+          if (n.filter((k) => k === 's' || k === 'P').length >= 2) t = 's';
+        }
         c.fillStyle = (x + y) % 2 ? C.a : C.b;
         c.fillRect(x * P, y * P, P, P);
         if (t === '"') { c.fillStyle = C.tall; c.fillRect(x * P, y * P, P, P); }
@@ -519,6 +523,15 @@ export class World {
           const rg = new THREE.ExtrudeGeometry(sh, { depth: w - 0.1, bevelEnabled: false });
           rg.rotateY(Math.PI / 2); rg.translate(-(w - 0.1) / 2, 0, 0);
           const roof = inked(rg, toon(b.roof), OL); roof.position.y = wallH; G.add(roof);
+          // shingle bands down each slope and a ridge cap, so the roof reads as tiles from above instead of a flat slab
+          const half = d / 2 + 0.15, ang = Math.atan2(1.5, half), len = Math.hypot(1.5, half), bands = [];
+          for (const sd of [-1, 1]) for (const f of [0.18, 0.5, 0.82]) {
+            const g = new THREE.BoxGeometry(w - 0.06, 0.05, len * 0.14); g.rotateX(sd * ang);
+            g.translate(0, wallH + 1.5 * (1 - f) + 0.04, sd * half * f); bands.push(g);
+          }
+          const rc = new THREE.CylinderGeometry(0.13, 0.13, w + 0.05, 8); rc.rotateZ(Math.PI / 2); rc.translate(0, wallH + 1.52, 0); bands.push(rc);
+          const shade = new THREE.Color(b.roof).multiplyScalar(0.78).getHex();
+          G.add(new THREE.Mesh(mergeGeometries(bands), toon(shade))); bands.forEach((g) => g.dispose());
           const ch = inked(new THREE.BoxGeometry(0.4, 0.9, 0.4), toon(0xc86a4a), OL * 0.6); ch.position.set(w * 0.25, wallH + 1.1, -d * 0.12); G.add(ch);
         }
         // door and windows on the south face
@@ -707,9 +720,19 @@ export class World {
     const wm = toon(0xffffff, { map: stripes }); wm.userData.own = true;
     const bowl = inked(new THREE.CylinderGeometry(1, 0.94, 2.6, 40, 1, true), wm, OL);
     bowl.scale.set(w / 2 - 0.2, 1, d / 2 - 0.1); bowl.position.y = 1.3; G.add(bowl);
+    // inside: a sloped bank of seat rows with a speckled crowd, so the top-down view looks into a stadium, not a dark hole
+    const seats = canvasTex(512, 64, (c, W, H) => {
+      for (let r = 0; r < 4; r++) { c.fillStyle = r % 2 ? '#3a4a8a' : '#4a5aa0'; c.fillRect(0, r * H / 4, W, H / 4); }
+      const fans = ['#ff6a8a', '#ffe14d', '#ffffff', '#7ad0ff', cup.color, '#ffb070'];
+      for (let k = 0; k < 420; k++) { c.fillStyle = fans[k % fans.length]; c.beginPath(); c.arc(Math.random() * W, (Math.floor(Math.random() * 4) + 0.45) * H / 4, 2.4, 0, 7); c.fill(); }
+    });
+    seats.userData.own = true; seats.wrapS = THREE.RepeatWrapping; seats.repeat.set(3, 1);
+    const smat = toon(0xffffff, { map: seats, side: THREE.DoubleSide, rim: 0 }); smat.userData.own = true;
+    const bank = new THREE.Mesh(new THREE.CylinderGeometry(0.93, 0.8, 2.4, 40, 1, true), smat);
+    bank.scale.set(w / 2 - 0.2, 1, d / 2 - 0.1); bank.position.y = 1.25; G.add(bank);
     const rim = inked(new THREE.TorusGeometry(1, 0.08, 6, 48), toon(0xffd23f), 0);
     rim.rotation.x = Math.PI / 2; rim.scale.set(w / 2 - 0.2, d / 2 - 0.1, 1); rim.position.y = 2.6; G.add(rim);
-    const field = new THREE.Mesh(new THREE.CircleGeometry(1, 40), toon(new THREE.Color(ARENAS[cup.arena]?.fieldA || '#5ac24a').getHex())); field.rotation.x = -Math.PI / 2; field.scale.set(w / 2 - 0.4, d / 2 - 0.3, 1); field.position.y = 0.05; G.add(field);
+    const field = new THREE.Mesh(new THREE.CircleGeometry(1, 40), toon(new THREE.Color(ARENAS[cup.arena]?.fieldA || '#5ac24a').getHex())); field.rotation.x = -Math.PI / 2; field.scale.set((w / 2 - 0.2) * 0.8, (d / 2 - 0.1) * 0.8, 1); field.position.y = 0.05; G.add(field);
     // arch over the gate
     const arch = inked(new THREE.TorusGeometry(0.9, 0.18, 8, 16, Math.PI), toon(0xffd23f), OL * 0.6); arch.position.set((b.door + 0.5) * TILE - w / 2, 1.6, d / 2 - 0.1); G.add(arch);
     const gate = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.6), toon(0x2a1630)); gate.position.set(arch.position.x, 0.8, d / 2 - 0.05); G.add(gate);
