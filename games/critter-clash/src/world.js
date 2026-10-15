@@ -324,13 +324,27 @@ export class World {
       const [px, pz] = wpos(x, y), s = 0.9 + rand() * 0.25, lean = (rand() - 0.5) * 0.5;
       const pts = []; for (let k = 0; k <= 6; k++) pts.push(new THREE.Vector3(px + Math.sin(k / 6 * 1.2) * lean, k / 6 * 3.2 * s, pz));
       const tr = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 8, 0.18 * s, 6); ptrunks.push(tr);
-      const top = pts[6];
-      for (let k = 0; k < 6; k++) {
-        const f = new THREE.ConeGeometry(0.42 * s, 2.1 * s, 4); f.scale(0.22, 1, 1); f.rotateZ(Math.PI / 2 + 0.35); f.translate(1.0 * s, -0.2, 0);
-        f.rotateY(k / 6 * Math.PI * 2 + rand() * 0.4); f.translate(top.x, top.y, top.z); fronds.push(f);
+      const top = pts[6], n = 7 + Math.floor(rand() * 2);
+      for (let k = 0; k < n; k++) {
+        const f = frond(s * (0.9 + rand() * 0.3), k % 3 === 0 ? 0.5 : 0.25 + rand() * 0.15);
+        f.rotateY(k / n * Math.PI * 2 + rand() * 0.3); f.translate(top.x, top.y - 0.05, top.z); (k % 2 ? fronds : fronds2).push(f);
       }
-      const nut = new THREE.IcosahedronGeometry(0.22 * s, 0); nut.translate(top.x + 0.15, top.y - 0.2, top.z + 0.1); nuts.push(nut);
+      for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2 + rand(); const nut = new THREE.IcosahedronGeometry(0.2 * s, 1); nut.translate(top.x + Math.cos(a) * 0.22, top.y - 0.28, top.z + Math.sin(a) * 0.22); nuts.push(nut); }
+      for (let k = 1; k < 6; k++) { const r = new THREE.TorusGeometry(0.19 * s, 0.045 * s, 4, 8); r.rotateX(Math.PI / 2); r.translate(pts[k].x, pts[k].y - 0.25 * s, pts[k].z); rings.push(r); }
     };
+    // an arching palm leaf: a folded strip that rises then droops, widest in the middle
+    const frond = (s, rise) => {
+      const L = 2.0 * s, N = 7, pos = [], idx = [];
+      for (let i = 0; i <= N; i++) {
+        const u = i / N, x = 0.15 + u * L, y = Math.sin(u * Math.PI) * rise * L * 0.5 - u * u * L * 0.45;
+        const w = 0.38 * s * Math.sin(Math.PI * Math.min(1, 0.12 + u * 0.95)) + 0.02;
+        pos.push(x, y - w * 0.25, -w, x, y + 0.04, 0, x, y - w * 0.25, w);
+      }
+      for (let i = 0; i < N; i++) { const a = i * 3; idx.push(a, a + 3, a + 1, a + 1, a + 3, a + 4, a + 1, a + 4, a + 2, a + 2, a + 4, a + 5); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+      return g;
+    };
+    const fronds2 = [], rings = [];
     if (this.M.city) return this.buildCity(rand);
     if (this.M.indoor) return;
     for (let y = -3; y < this.H + 3; y++) for (let x = -3; x < this.W + 3; x++) {
@@ -344,7 +358,8 @@ export class World {
     if (puffs.length) { this.group.add(inked(mergeGeometries(puffs), toon(0xffffff, { rim: 0.8 }), OL * 0.5)); puffs.forEach((g) => g.dispose()); }
     if (ptrunks.length) { this.group.add(inked(mergeGeometries(ptrunks), toon(0xa8784a), OL * 0.6)); ptrunks.forEach((g) => g.dispose()); }
     if (nuts.length) { this.group.add(inked(mergeGeometries(nuts), toon(0x7a4a2a), OL * 0.4)); nuts.forEach((g) => g.dispose()); }
-    if (fronds.length) { this.group.add(inked(mergeGeometries(fronds), toon(0x3fbf5a, { rim: 0.4, side: THREE.DoubleSide }), OL * 0.4)); fronds.forEach((g) => g.dispose()); }
+    if (rings.length) { this.group.add(inked(mergeGeometries(rings), toon(0x8a5e38), 0)); rings.forEach((g) => g.dispose()); }
+    for (const [list, c] of [[fronds, 0x3fbf5a], [fronds2, 0x2f9e4a]]) if (list.length) { this.group.add(inked(mergeGeometries(list), toon(c, { rim: 0.4, side: THREE.DoubleSide }), OL * 0.35)); list.forEach((g) => g.dispose()); }
     const put = (list, color, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color, { rim: 0.4 }), ink); m.castShadow = true; this.group.add(m); list.forEach((g) => g.dispose()); };
     const TC = this.M.trees || [0x3fae4a, 0x4cc25a, 0x8a5a3a];
     put(can, TC[0], OL); put(can2, TC[1], OL); put(trunks, TC[2], OL * 0.6); put(caps, 0xffffff, OL * 0.6);
