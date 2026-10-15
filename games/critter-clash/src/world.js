@@ -16,6 +16,7 @@ export const TILE = 2;
 const DIRS = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
 const YAW = { n: Math.PI, s: 0, e: Math.PI / 2, w: -Math.PI / 2 };
 const STEP = 0.23; // seconds per tile
+const SHINY_RATE = 1 / 30; // a rare shiny wild critter: beat it to unlock its shiny palette
 const OL = 0.035;
 const CS = 1.4; // critters stand a bit taller than in battle so they read from the overhead camera
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -753,12 +754,12 @@ export class World {
 
   spawnWild(x, y) {
     const [id, lo, hi] = this.M.wild.list[Math.floor(Math.random() * this.M.wild.list.length)];
-    const lv = lo + Math.floor(Math.random() * (hi - lo + 1));
-    const cr = new Critter(withGear(byId(id), lv));
+    const lv = lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = Math.random() < SHINY_RATE;
+    const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv));
     cr.root.userData.critter = true;
     cr.root.scale.setScalar(CS * 0.9);
     this.group.add(cr.root);
-    const a = { id, lv, cr, root: cr.root, x, y, dir: 's', moveT: 0, from: null, wanderT: 0.5 + Math.random() * 2, wild: true };
+    const a = { id, lv, cr, root: cr.root, x, y, dir: 's', moveT: 0, from: null, wanderT: 0.5 + Math.random() * 2, wild: true, shiny };
     this.setPos(a);
     this.wild.push(a);
   }
@@ -937,6 +938,7 @@ export class World {
       this.brambles.scale.set(k, k * k, k); this.brambles.position.set(c.x * (1 - k), 0, c.z * (1 - k));
       if (this.brambleT <= 0) { this.brambles.visible = false; }
     }
+    for (const a of this.wild || []) if (a.shiny && Math.random() < dt * 4) { const p = a.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 0.4 + Math.random() * 1.4, z: p.z + (Math.random() - 0.5) * 1.2, vy: 0.4, color: 0xfff6a0, size: 0.26, life: 0.8, shape: 'star' }); }
     for (const it of this.items || []) {
       it.g.position.y = Math.abs(Math.sin(this.t * 2.5 + it.x)) * 0.12; it.g.rotation.y = Math.sin(this.t * 1.2 + it.y) * 0.4;
       if (Math.random() < dt * 2.5) this.g.fx.spawn({ x: it.g.position.x + (Math.random() - 0.5) * 0.8, y: 0.5 + Math.random() * 0.6, z: it.g.position.z + (Math.random() - 0.5) * 0.8, vy: 0.5, color: 0xfff0a0, size: 0.22, life: 0.7, shape: 'star' });
@@ -1176,24 +1178,25 @@ export class World {
     const W = this.M.wild, [id, lo, hi] = W.list[Math.floor(Math.random() * W.list.length)];
     const lv = lo + Math.floor(Math.random() * (hi - lo + 1));
     this.encCool = 6;
-    this.startWild(id, lv);
+    this.startWild(id, lv, null, Math.random() < SHINY_RATE);
   }
 
   wildFight(a) {
     if (this.busy) return;
     this.wild.splice(this.wild.indexOf(a), 1);
     a.excl = 1;
-    this.startWild(a.id, a.lv, a);
+    this.startWild(a.id, a.lv, a, a.shiny);
   }
 
-  startWild(id, lv, a) {
+  startWild(id, lv, a, shiny = false) {
     this.busy = true;
     sfx.warn?.();
     if (a) this.bubble(a, '❗');
-    const foe = withGear(byId(id), lv);
+    const foe = withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv);
     this.S.root.querySelector('.wd-flash')?.remove();
     const f = document.createElement('div'); f.className = 'wd-flash'; this.S.root.appendChild(f);
-    setTimeout(() => this.S.worldFight({ foe, lv, kind: 'wild', name: `Wild ${foe.name}`, diff: 0.18 + lv * 0.03 }), 900);
+    setTimeout(() => this.S.worldFight({ foe, lv, kind: 'wild', name: `Wild ${foe.name}`, diff: 0.18 + lv * 0.03 + (shiny ? 0.1 : 0), shiny }), 900);
+    if (shiny) this.S.toast('✨ A shiny critter!');
   }
 
   storyCheck() { return this.S.worldStoryStep?.(this) || false; }
