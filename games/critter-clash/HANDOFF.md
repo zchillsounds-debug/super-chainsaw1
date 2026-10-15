@@ -1,6 +1,7 @@
-# Critter Clash: Handoff (after Round 208)
+# Critter Clash: Handoff (after Round 211, Adventure mode in progress)
 
 ## Start here (for a new chat)
+- **CURRENT FOCUS (session 16+): Adventure mode**, a Pokémon Red/Blue style world with a story. Read "Session 16: ADVENTURE MODE" first. The user asked for 5 hours of chained sessions, ending at about **04:45 UTC on 2026-10-15**.
 - Repo `zchillsounds-debug/super-chainsaw1`, branch **`ccr-4fc93d6e-suxlhd`**, folder `games/critter-clash/`. Clone with `--branch ccr-4fc93d6e-suxlhd`.
 - Latest work (session 15, 2026-10-14 21:42–~22:20 UTC): finished session 14's "Modes & polish" time box with R198–R208 (see "Session 15"). The user's requested time ended at ~22:25 UTC, so **nothing was chained after session 15**; wait for the user before building more. Numbering continues from **R209**.
 - Earlier (session 14, 2026-10-14 20:20–~21:40 UTC): the user confirmed the growing scene and new forms look right (APK 1.0.190), picked **"Modes & polish"** as the focus, and said: "Reach 300k tokens and start new chats for handoff". So keep building, and chain to a fresh session near 300k context with this file. Session 14 did R175–R197: a signature second hazard per stadium, the Daily Team Challenge, Daily streaks, Stadium Trials, the Stadium Mayhem modifier, a Quick Battle modifier chip, hazard practice in Training, hazard sounds and a jumbotron warning (see "Session 14").
@@ -298,6 +299,39 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - **R197:** the Team Battle pick sheet has the modifier chip (`this.teamMod`, `ctx.mods`); daily team days keep their own modifier.
 - Final gate (21:40 UTC): tapcheck clean at all 4 sizes, Sprout Cup cupflow clears, and teamflow normal and DAILY both finish.
 - **Time:** the user asked for about 2 hours in session 14 (20:23 → ~22:25 UTC on 2026-10-14). Session 14 chained at ~230k context, about 21:45 UTC.
+
+## Session 16: ADVENTURE MODE (2026-10-14 23:44 UTC →, the user's new direction)
+- **The user's request (23:40 UTC):** "add a world around the battle arena, similar to pokemon, the arenas are the gym, and the critters travel around in the world and wild fighting others and going to certain arena tournaments for rewards to prove they are the strongest critter, should build a story around a critter who wants to be the best, but there are trials that critter must face along the way." They asked for **5 more hours of chained sessions**: from 23:44 UTC to about **04:45 UTC on 2026-10-15**.
+- **Their answers:**
+  - World like **Pokémon Red/Blue**: grid movement, towns, routes and tall grass, drawn as **3D top-down toon**.
+  - Wild fights: **both** visible roaming critters and random tall-grass encounters.
+  - The hero is **the critter the player chooses**.
+  - A **new Adventure mode**; Tournament, Challenges and Camp stay as they are.
+- **Code:**
+  - `src/world.js` is the `World` class (owned by `Screens.worldObj`, mode `'world'`). It hides the arena's meshes but reuses its lights (no shader recompiles) and moves the sun's shadow box with the hero.
+  - The map builder (`buildGround` canvas texture, merged `buildTrees`, `buildGrass`, `buildProps`, `buildBuildings` incl. `stadiumModel`) and actors (NPCs, trainers with sight lines, roaming wild critters) live there too, along with grid movement (`tryMove`/`arrive`), map edges (`edges` + `off`), the dialogue box `say()`, the `bubble()` "❗", `ambush()` (tall grass, `wild.rate`), `wildFight()` and the `fade`/`flash` transitions.
+  - `src/worldmaps.js`: `MAPS` (ASCII tiles: `T . : " f ~ # R h`), buildings, signs, NPCs (`trainer`, `story`, `hideFlag`, `wander`, `$hero` critter = the hero's species), `wild: {list: [[id, lo, hi]], roam, rate}`. `rivalFor(hero)` returns Dash's species.
+  - `src/story.js`: `storyIntro`, `storyStep` (after each step), `storyTalk`, `doorAction` (home and Berry Center set the respawn point, the stadium starts its cup with `ctx.adv`).
+  - Screens: `adventure()`, `heroPick()`, `worldMenu()`, `worldFight(info)` (ctx `{kind: 'world', fight, flag, note}`), `worldCup()`, `leaveWorld()`. On results, a `world` kind sets flags, may recruit (45% for a new wild species) and offers **Continue**; a loss respawns at `save.adv.spawn`. A cup started from the world has `ctx.adv`, and its trophy and Give Up return to the world (`flags['cup_' + id]`).
+  - `Arena.setOpen(on)` hides the stadium shell for wild and route fights; `endBattle` resets it.
+  - Save: `save.adv = {hero, map, x, y, dir, flags, spawn, steps}`.
+- **Story so far:**
+  - Clashara; the Critter Crown on Champion's Peak; 7 stadiums.
+  - Pecan gives the quest (a Pebblepup guard blocks Route 1 until then).
+  - **Rival Dash** (Voltferret, or Kindlekit if the hero is a Voltferret) ambushes on Route 1 as the "Trial of Courage".
+  - The Sprout Stadium in Bloom Town is gym 1.
+- **Test hooks:**
+  - Set `__save.adv = {hero, map, x, y, dir, flags: {intro: true, quest: true}, spawn}` and then call `__game.screens.adventure()`.
+  - Walk with `__game.input.keys.add('KeyW')` plus `__sim`, or call `w.tryMove('n')`. `w = __game.screens.worldObj`.
+  - Jump between maps with `w.load(map, x, y, dir)`. Start fights with `w.startWild(id, lv)` / `w.ambush()`.
+  - The VS is skipped: a fight starts 0.9 s after the flash (a real-time timer, so wait about 3.5 s in headless).
+- **Plan / next:**
+  1. Route 2 to Seashell Town (Thunder Cup), with a Trial of Strength (a giant grown wild critter blocking the road).
+  2. Glowcap forest route (a Trial of Friendship).
+  3. The volcano road and the Champion Cup.
+  4. The later towns for Midnight, Legend and Sky.
+  5. Champion's Peak: Dash's final battle and the Crown boss.
+  6. Polish: interiors, world music, wild-battle field paint, a mini-map, NPC variety.
 
 ## Session 15 (2026-10-14, 21:42–~22:20 UTC)
 - **Note for new sessions:** the cloud clone can be shallow and look "ahead 50, behind 50". Run `git fetch --unshallow origin ccr-4fc93d6e-suxlhd` and then `git merge --ff-only origin/ccr-4fc93d6e-suxlhd` before working.
