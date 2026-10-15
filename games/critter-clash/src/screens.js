@@ -970,7 +970,7 @@ export class Screens {
   // a fight from the world: wild critters, trainers and story battles
   worldFight(info) {
     const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = this.worldObj?.M.arena || 'meadow', place = this.worldObj?.M.name, phase = this.worldObj?.phase, rain = this.worldObj?.rain;
-    this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit, berries: info.berries, shiny: info.shiny, arena };
+    this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit, berries: info.berries, shiny: info.shiny, arena, rain };
     this.leaveWorld();
     this.mode = 'vs';
     g.startBattle(h, info.foe, {
@@ -1295,7 +1295,7 @@ export class Screens {
         if ((W.fight === 'wild' || W.recruit) && !save.unlocked.includes(cDef.id) && (W.recruit || W.shiny || Math.random() < 0.45)) joined = unlock(cDef.id);
         let shinyNew = false;
         if (W.shiny && !(save.shinies ||= []).includes(cDef.id)) { save.shinies.push(cDef.id); shinyNew = true; }
-        streakNote = `<div class="streak">${shinyNew ? `💎 ${cDef.name}'s shiny palette unlocked! ` : ''}${W.note || (W.fight === 'wild' ? (joined ? `🌿 ${cDef.name} wants to join your team!` : `${HOME[W.arena] || HOME.meadow} The wild ${cDef.name} ${(HOME[W.arena + '_'] || HOME.meadow_)}.`) : `🏅 You beat ${W.name}!`)}</div>`;
+        streakNote = `<div class="streak">${shinyNew ? `💎 ${cDef.name}'s shiny palette unlocked! ` : ''}${W.note || (W.fight === 'wild' ? (joined ? `🌿 ${cDef.name} wants to join your team!` : W.rain ? `🌧️ The wild ${cDef.name} splashes off through the puddles.` : `${HOME[W.arena] || HOME.meadow} The wild ${cDef.name} ${(HOME[W.arena + '_'] || HOME.meadow_)}.`) : `🏅 You beat ${W.name}!`)}</div>`;
       } else {
         const sp = save.adv.spawn;
         Object.assign(save.adv, { map: sp.map, x: sp.x, y: sp.y, dir: 's' });
