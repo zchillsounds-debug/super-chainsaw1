@@ -380,6 +380,15 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - **R242:** `sfx.door(bell)` on entering/leaving rooms. **R243:** arcade neon strips.
 - **Next ideas:** more room furniture variety (stadium lobbies?), a day/evening tint, route-trainer rematches after the ending, Town Map gift counts per town, a footstep sound per terrain, a 2-rep robin balance run (combat untouched this session).
 
+## User's playtest fixes (2026-10-15 ~02:15–02:35 UTC, the user's own chat session_01UPXMwf8USorUzs3NksZdTA, rounds suffixed "b")
+- **User report:** "whenever winning a battle the next button is either not able to be pressed or only halfway shown"; "remove the instructions in the middle of the battle, takes too much space and it ruins the battle look".
+- **R244 (results):** the `.results` column scrolls (`touch-action: pan-y`), `.res-btns` is sticky at the bottom, safe-area padding, and `Screens.fitResults()` adds `.tight`/`.tighter` (smaller title, compact gear callout, then hides quote and portrait) until it fits. It is called on render, after `gearGet`, and on resize. Toasts on results sit over the winner. Repro tool: `tools/winshot.mjs <WxH> <prefix> [trainer 0/1] [levelup+gear 0/1]` (it prints each button's top/bottom and a hit test). Before the fix, Continue was at 332–380 on a 340 px screen.
+- **R244 (instructions):** no first-battle coach in Adventure fights (opening one marks `tutorialDone`). The lesson ends after any battle that reaches `done` (it used to repeat every fight until all 5 steps were done, which short wild fights never allowed). The coach is a small pill at the bottom. Hazard tip sentences ("Laser! Guard or roll through it!") are no longer shown as callouts.
+- **R245b:** the results close-up rotates round a winner near the edge (`battle.resYaw`) so the camera is never inside the hedge or wall.
+- **R246b:** pause → 🏃 Run Away in wild Adventure fights (back to the same tile, toast "Got away safely!"). The beaten wild critter's line fits the area (`HOME` table in screens.js, `ctx.arena`). `tools/advwins.mjs` runs a wild fight and win on several maps.
+- **R247b:** on small landscape phones the rank stamp no longer covers Health left.
+- APK 1.0.264 (66ed84b) was sent to the user. Ask whether the win screen and the battle look are right on their phone now.
+
 ## Session 15 (2026-10-14, 21:42–~22:20 UTC)
 - **Note for new sessions:** the cloud clone can be shallow and look "ahead 50, behind 50". Run `git fetch --unshallow origin ccr-4fc93d6e-suxlhd` and then `git merge --ff-only origin/ccr-4fc93d6e-suxlhd` before working.
 - **R198:** the Full Team badge's id is now `roster`. It used to share the id `team` with Dream Team, so winning a 3-on-3 also marked Full Team as earned. No other duplicate ids exist in data.js arrays (checked).
