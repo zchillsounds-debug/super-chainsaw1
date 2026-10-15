@@ -108,7 +108,7 @@ export function interiorMap(key) {
     enter: { x: door, y: H - 2 },
     palette: P.dark ? { a: '#4a3a6a', b: '#46365f' } : { a: '#d8a86a', b: '#d2a264' },
     wall: P.wall || (b.heal ? '#ffe0ec' : '#fff1d8'), rug: P.rug || (b.heal ? '#ff7aa8' : '#7aa8ff'),
-    outer: 0x1a1410,
+    outer: 0x3a2a2a, // a warm dusk around the room, not a black void
     mood: P.dark ? { sun: 0xd0b0ff, sunI: 1.1, sky: 0xb09aff, gnd: 0x3a2a4a, hemiI: 1.2, fog: 0x1a1410 } : { sun: 0xfff0d8, sunI: 1.3, sky: 0xfff4e0, gnd: 0x8a6a4a, hemiI: 1.25, fog: 0x1a1410 },
   };
 }
