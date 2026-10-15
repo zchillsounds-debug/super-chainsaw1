@@ -1,4 +1,4 @@
-# Critter Clash: Handoff (after Round 211, Adventure mode in progress)
+# Critter Clash: Handoff (after Round 213, Adventure mode in progress)
 
 ## Start here (for a new chat)
 - **CURRENT FOCUS (session 16+): Adventure mode**, a Pokémon Red/Blue style world with a story. Read "Session 16: ADVENTURE MODE" first. The user asked for 5 hours of chained sessions, ending at about **04:45 UTC on 2026-10-15**.
@@ -7,7 +7,7 @@
 - Earlier (session 14, 2026-10-14 20:20–~21:40 UTC): the user confirmed the growing scene and new forms look right (APK 1.0.190), picked **"Modes & polish"** as the focus, and said: "Reach 300k tokens and start new chats for handoff". So keep building, and chain to a fresh session near 300k context with this file. Session 14 did R175–R197: a signature second hazard per stadium, the Daily Team Challenge, Daily streaks, Stadium Trials, the Stadium Mayhem modifier, a Quick Battle modifier chip, hazard practice in Training, hazard sounds and a jumbotron warning (see "Session 14").
 - The user got APK **1.0.195** (R175–R182) mid-session. The last APK of session 14 is listed under "Session 14".
 - Ask the user first: how do the new stadium tricks feel on a phone (the laser, the wave, the ice slick)? Is Stadium Trials 3★ too hard?
-- Next ideas: see "Suggested next rounds"; numbering continues from **R198**.
+- Round numbering continues from **R214**.
 - User preferences: ask clarifying questions and confirm before building; hand off near 300k context.
 - **Branch note:** a new cloud session may be assigned its own `ccr-...` branch. The game lives on `ccr-4fc93d6e-suxlhd`, and the user approved pushing there (session 14). The APK workflow only builds from pushes that touch `games/critter-clash/**`.
 
@@ -335,6 +335,8 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
     - The **Trial of Strength**: a sleeping Bouldillo on the bridge; story fights can `recruit`.
     - Dash's 2nd battle at the Thunder Stadium gate (`rival2`).
     - Post-cup scenes in `storyIntro` (`post_sprout`, `post_thunder`).
+  - R213: the title shows Adventure and Tournament side by side (`.title-main`), so the menu fits 740×360.
+  - Session 16 ran 23:44 to about 00:20 UTC and chained at about 230k context. It sent the user the APK built from its last commit.
   - `tools/advcup.mjs [WxH]` plays the Sprout Cup from the world's stadium and checks it lands back in the world (it passes).
 - **Plan / next:**
   1. ~~Route 2 to Seashell Town~~ (done in R212).
