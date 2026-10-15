@@ -31,6 +31,12 @@ const STEPS = [
   ['grow', "S.title(); S.growUp('clovebun', 14); __game.modalClose()"],
   ['pause', "__game.startBattle(__critters[14], __critters[3], { difficulty: 0.5 }); __sim(6); __game.screens.pauseMenu(true)"],
   ['results', "S.pauseMenu(false); __game.paused=false; const b=__game.battle; for(let i=0;i<60&&b.phase!=='done';i++){ if(b.phase==='fight'){ const c=b.fighters[1]; c.hp=0; b.onKO(b.fighters[0], c);} __sim(1); } __sim(3)"],
+  ['heropick', "S.title(); S.heroPick()"],
+  ['world', "__save.adv={hero:'cindermunch',map:'bloom',x:10,y:8,dir:'s',flags:{intro:true,quest:true},spawn:{map:'village',x:4,y:6}}; __game.endBattle(); S.adventure();"],
+  ['worldmenu', "__save.adv={hero:'cindermunch',map:'bloom',x:10,y:8,dir:'s',flags:{intro:true,quest:true},spawn:{map:'village',x:4,y:6}}; __game.endBattle(); S.adventure(); S.worldMenu()"],
+  ['worldmap', "__save.adv={hero:'cindermunch',map:'bloom',x:10,y:8,dir:'s',flags:{intro:true,quest:true},spawn:{map:'village',x:4,y:6}}; __game.endBattle(); S.adventure(); __save.adv.seen={village:1,route1:1,bloom:1}; S.worldMap()"],
+  ['worldask', "__save.adv={hero:'cindermunch',map:'bloom',x:10,y:8,dir:'s',flags:{intro:true,quest:true},spawn:{map:'village',x:4,y:6}}; __game.endBattle(); S.adventure(); S.worldObj.ask('Stone Sage: Which type beats a Fire critter? Think carefully, young one.',['Water','Leaf','Gust'],()=>{})"],
+  ['worldroom', "__save.adv={hero:'cindermunch',map:'bloom',x:10,y:8,dir:'s',flags:{intro:true,quest:true},spawn:{map:'village',x:4,y:6}}; __game.endBattle(); S.adventure(); S.worldObj.load('in:bloom:berry',6,6,'n')"],
 ];
 const CHECK = `(() => {
   const W = innerWidth, H = innerHeight, bad = [];

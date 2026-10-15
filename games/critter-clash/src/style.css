@@ -905,3 +905,5 @@ body:not(.is-touch) .wd-a { display: none; }
 .wm-tip { margin: 6px 0 8px; font-weight: 800; font-size: 14px; }
 @media (max-height: 420px) { .wd-map { padding: 8px 12px 10px; } .wd-map h2 { font-size: 24px; margin-bottom: 2px; } .wm-tip { margin: 2px 0 4px; font-size: 13px; } .wm { max-height: calc(100dvh - 150px); } }
 .wm-deco { font-size: 18px; text-anchor: middle; opacity: .85; pointer-events: none; }
+body:has(.wd-ask) .wd-a { visibility: hidden; }
+@media (max-height: 420px) { .wd-map h2 { display: none; } .wm { max-height: calc(100dvh - 110px); } }
