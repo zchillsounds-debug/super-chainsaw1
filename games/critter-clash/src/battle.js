@@ -2,6 +2,7 @@
 import { buzz } from './haptics.js';
 import * as THREE from 'three';
 import { Fighter, SPECIALS } from './fighter.js';
+import { roleHat } from './critters.js';
 import { Training } from './training.js';
 import { CpuBrain } from './ai.js';
 import { TYPES, typeMult, MODS } from './data.js';
@@ -59,6 +60,7 @@ export class Battle {
     this.fighters = [];
     this.fighters.push(new Fighter(this, pDef, { level: playerLevel, side: 0 }));
     this.fighters.push(new Fighter(this, cDef, { level: cpuLevel, cpu: true, side: 1 }));
+    if (trainer?.name) roleHat(this.fighters[1].critter, trainer.name); // a route Hiker keeps their hat on in the fight
     // best friends (5 hearts in Critter Camp) start the match with a head start on their super
     this.bestFriend = !training && (save.critters[pDef.id]?.pets || 0) >= 20;
     if (this.bestFriend) this.fighters[0].superM = 25;

@@ -1108,3 +1108,23 @@ export class Critter {
     this.rim.uRimColor.value.set(color).multiplyScalar(amt);
   }
 }
+
+// route trainers dress for the job, so a Hiker, a Fisher and a Skater read apart at a glance
+const HATS = [
+  [/^Hiker/, 'bucket', 0x9a7240], [/^(Camper|Picker)/, 'cap', 0x4aa04a], [/^Fisher/, 'wide', 0xf0d27a], [/^(Picnicker|Gardener)/, 'wide', 0xfff2c8, 0xff6a9a],
+  [/^(Kite Flyer|Sky Diver)/, 'cap', 0x5a8ad8], [/^Swimmer/, 'swim', 0x3ac8ff], [/^Skater/, 'back', 0xff5a8a], [/^Firewalker/, 'band', 0xff4a2a], [/^Gang/, 'band', 0x3a2a4a],
+];
+export function roleHat(cr, name) {
+  const h = HATS.find(([re]) => re.test(name)); if (!h) return;
+  const [, kind, col, band] = h, r = cr.def.body.headR, M = toon(col, { rim: 0.4 }), G = new THREE.Group();
+  const add = (geo, m = M, ink = 0.02) => { const o = inked(geo, m, ink); G.add(o); return o; };
+  if (kind === 'bucket') { add(new THREE.CylinderGeometry(r * 0.55, r * 0.72, r * 0.42, 16)).position.y = r * 0.18; add(new THREE.CylinderGeometry(r * 1.0, r * 1.0, r * 0.05, 18)); }
+  if (kind === 'wide') { add(new THREE.SphereGeometry(r * 0.62, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.7; add(new THREE.CylinderGeometry(r * 1.3, r * 1.3, r * 0.04, 22)); if (band) { add(new THREE.CylinderGeometry(r * 0.63, r * 0.63, r * 0.1, 16), toon(band), 0).position.y = r * 0.06; const f = add(new THREE.SphereGeometry(r * 0.13, 8, 6), toon(band), 0.012); f.position.set(r * 0.5, r * 0.15, r * 0.3); } }
+  if (kind === 'cap' || kind === 'back') { add(new THREE.SphereGeometry(r * 0.72, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.6; const v = add(new THREE.CylinderGeometry(r * 0.5, r * 0.5, r * 0.04, 16, 1, false, -Math.PI / 2, Math.PI)); v.position.z = r * 0.45 * (kind === 'back' ? -1 : 1); v.rotation.y = kind === 'back' ? Math.PI : 0; }
+  if (kind === 'swim') { add(new THREE.SphereGeometry(r * 0.8, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.75; G.position.y -= r * 0.25; }
+  if (kind === 'band') { add(new THREE.TorusGeometry(r * 0.95, r * 0.08, 6, 20)).rotation.x = Math.PI / 2; G.position.y -= r * 0.45; }
+  G.position.y += r * 0.72; G.rotation.x = -0.1;
+  cr.skull.add(G);
+  G.traverse((o) => { if (o.isMesh && !o.userData.hull) o.castShadow = true; });
+}
+
