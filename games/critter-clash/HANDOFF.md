@@ -325,8 +325,19 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
   - Walk with `__game.input.keys.add('KeyW')` plus `__sim`, or call `w.tryMove('n')`. `w = __game.screens.worldObj`.
   - Jump between maps with `w.load(map, x, y, dir)`. Start fights with `w.startWild(id, lv)` / `w.ambush()`.
   - The VS is skipped: a fight starts 0.9 s after the flash (a real-time timer, so wait about 3.5 s in headless).
+- **Done in session 16 (R209–R212):**
+  - The world engine and the first 3 maps (R209).
+  - The portrait camera (R210).
+  - Wild and route fights in the open meadow, with no stadium shell (R211).
+  - **Route 2 and Seashell Town** (R212):
+    - New tiles `s` sand, `P` palm, `=` bridge; per-map `arena` (the battle scenery for fights there), `outer` (ground colour beyond the map) and `border: 'palm'`.
+    - A Sprout Cup gate on Bloom Town's east road.
+    - The **Trial of Strength**: a sleeping Bouldillo on the bridge; story fights can `recruit`.
+    - Dash's 2nd battle at the Thunder Stadium gate (`rival2`).
+    - Post-cup scenes in `storyIntro` (`post_sprout`, `post_thunder`).
+  - `tools/advcup.mjs [WxH]` plays the Sprout Cup from the world's stadium and checks it lands back in the world (it passes).
 - **Plan / next:**
-  1. Route 2 to Seashell Town (Thunder Cup), with a Trial of Strength (a giant grown wild critter blocking the road).
+  1. ~~Route 2 to Seashell Town~~ (done in R212).
   2. Glowcap forest route (a Trial of Friendship).
   3. The volcano road and the Champion Cup.
   4. The later towns for Midnight, Legend and Sky.
