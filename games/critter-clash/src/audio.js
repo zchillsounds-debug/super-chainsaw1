@@ -105,6 +105,17 @@ export const sfx = {
   thwip() { if (ctx) { osc('square', 300, 1400, 0.09, 0.07); noise(0.1, 0.12, { f0: 1800, f1: 4000, q: 4 }); } },
   slurp() { if (ctx) { osc('sine', 1200, 260, 0.18, 0.18); osc('triangle', 600, 180, 0.14, 0.08); } },
   dodge() { if (ctx) { noise(0.2, 0.25, { f0: 2400, f1: 500, q: 3, attack: 0.02 }); osc('sine', 900, 1500, 0.08, 0.06); } },
+  // a soft footfall that sounds like the ground under the hero
+  foot(kind = 'grass') {
+    if (!ctx) return;
+    const v = 0.05;
+    if (kind === 'sand') noise(0.07, v * 1.3, { f0: 2600, f1: 1400, q: 0.8 });
+    else if (kind === 'snow') { noise(0.09, v * 1.5, { f0: 1800, f1: 700, q: 1.2 }); noise(0.05, v * 0.6, { f0: 5000, q: 2 }); }
+    else if (kind === 'wood') { osc('sine', 210, 120, 0.06, v * 2.2); noise(0.03, v, { f0: 700, q: 2, type: 'lowpass' }); }
+    else if (kind === 'stone') { osc('triangle', 520, 300, 0.03, v * 1.2); noise(0.03, v, { f0: 3200, q: 3 }); }
+    else if (kind === 'ice') osc('sine', 1800, 2400, 0.04, v * 0.7);
+    else noise(0.05, v, { f0: 1100, f1: 600, q: 1, type: 'lowpass' });
+  },
   step() { if (ctx) noise(0.04, 0.06, { f0: 900, q: 1.5, type: 'lowpass' }); },
   land() { if (ctx) { osc('sine', 120, 50, 0.15, 0.4); noise(0.2, 0.25, { f0: 600, f1: 200, type: 'lowpass' }); } },
   voice(pitch = 1, kind = 'attack') {

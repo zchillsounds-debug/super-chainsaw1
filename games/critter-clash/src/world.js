@@ -541,6 +541,18 @@ export class World {
           const win = inked(new THREE.BoxGeometry(0.8, 0.7, 0.1), toon(0xbfe6ff, { rim: 0.9 }), OL * 0.5);
           win.position.set((k + 0.5) * TILE - w / 2, 1.25, front + 0.03); G.add(win);
         }
+        if (b.heal && !b.lab) { // a big round Berry Center sign on the ridge, tipped toward the camera so it reads from above
+          const tex = canvasTex(128, 128, (c) => {
+            c.fillStyle = '#ffffff'; c.beginPath(); c.arc(64, 64, 62, 0, 7); c.fill();
+            c.fillStyle = '#ff5a8a'; c.beginPath(); c.arc(64, 64, 52, 0, 7); c.fill();
+            c.fillStyle = '#ffffff'; c.fillRect(52, 28, 24, 72); c.fillRect(28, 52, 72, 24);
+          });
+          tex.userData.own = true;
+          const m = new THREE.MeshBasicMaterial({ map: tex, transparent: true }); m.userData.own = true;
+          const disc = new THREE.Mesh(new THREE.CircleGeometry(0.75, 28), m);
+          disc.position.set(dx, wallH + 1.95, 0.15); disc.rotation.x = -0.55; G.add(disc);
+          const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.6, 6), toon(0xffffff)); post.position.set(dx, wallH + 1.45, 0); G.add(post);
+        }
         if (b.heal) { const cr = inked(new THREE.BoxGeometry(0.9, 0.9, 0.1), toon(0xffffff), OL * 0.5); cr.position.set(dx, wallH - 0.1, front + 0.04); G.add(cr); const h = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.12), toon(0xff5a8a)); h.position.copy(cr.position); h.position.z += 0.03; G.add(h); const v2 = h.clone(); v2.rotation.z = Math.PI / 2; G.add(v2); }
       }
       this.group.add(G);
@@ -889,6 +901,7 @@ export class World {
     this.steps++;
     this.encCool--;
     const t = this.tile(this.hx, this.hy);
+    if (!this.sliding && t !== '"') sfx.foot(this.M.indoor || t === '=' ? 'wood' : t === 's' || t === 'P' ? 'sand' : t === 'i' ? 'ice' : this.M.snow ? 'snow' : this.M.city || this.M.lava ? 'stone' : 'grass');
     // ice: keep sliding the same way until something solid is in the way
     if (t === 'i') {
       const [dx, dy] = DIRS[this.dir], nx = this.hx + dx, ny = this.hy + dy;
