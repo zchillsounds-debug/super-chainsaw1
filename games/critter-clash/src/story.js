@@ -245,6 +245,18 @@ function rivalTalk(S, w, a) {
   }));
 }
 
+// the ☰ menu's one-line "what now?" for players coming back after a break
+const GOAL_AT = { sprout: 'Bloom Town, north along Route 1', thunder: 'Seashell Town, east along Route 2', grove: 'Glowcap Hollow, through the woods north of Seashell Town', champion: 'Cinder Town, down the volcano road', midnight: 'Neon City, east of Cinder Town', sky: 'Cloudtop Gardens (Captain Puff\'s balloon, Neon City)', legend: 'Frostpeak (Captain Puff\'s balloon, Cloudtop)' };
+export function nextGoal(F) {
+  if (F.crowned) return 'You\'re the Champion! Rematch trainers and Dash, and find every gift box.';
+  if (!F.quest) return 'Visit Professor Pecan\'s lab in Sprout Village.';
+  const nx = Object.keys(GOAL_AT).find((id) => !F['cup_' + id]);
+  if (!nx) return 'Climb Champion\'s Peak, north of Frostpeak. The Crown is waiting!';
+  if (nx === 'grove' && !F.trial_friendship) return 'Brambles block Glowcap Woods. Someone in the woods needs a friend.';
+  if (nx === 'champion' && !F.trial_wisdom) return 'Cross the bridge on Cinder Road. The Stone Sage will test what you know.';
+  return `Win the ${CUPS.find((c) => c.id === nx).name} in ${GOAL_AT[nx]}.`;
+}
+
 export function storyTalk(S, id, w, a) {
   const F = flags();
   if (id === 'pecan') {
