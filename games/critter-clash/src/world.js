@@ -233,6 +233,12 @@ export class World {
         if (this.tile(x, y) !== ':') continue;
         for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(160,110,60,0.35)' : 'rgba(255,240,200,0.5)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 3, 2); }
       }
+      // at dusk and after dark, lamplight spills out of every doorway onto the ground
+      if (this.phase !== 'day') for (const b of this.M.buildings || []) {
+        const x = (b.x + b.door + 0.5) * P, y = (b.y + b.h) * P + 4, g = c.createRadialGradient(x, y, 2, x, y, P * 1.3);
+        g.addColorStop(0, `rgba(255,214,120,${this.phase === 'night' ? 0.8 : 0.45})`); g.addColorStop(1, 'rgba(255,220,140,0)');
+        c.fillStyle = g; c.fillRect(x - P * 1.4, y - P * 1.4, P * 2.8, P * 2.8);
+      }
       // puddles collect on the paths in the rain
       const pr = rng(hash(this.key + ':rain')); // its own dice, so a rainy day doesn't shuffle the trees
       if (this.rain) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === ':' && pr() < 0.28) {
