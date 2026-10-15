@@ -855,7 +855,7 @@ export class Screens {
     d.className = 'modal-wrap';
     const F = save.adv.flags, cups = CUPS.filter((c) => F['cup_' + c.id]).length, h = heroDef();
     d.innerHTML = `<div class="modal wd-menu-modal"><h2>Adventure</h2>
-      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0}</small></div></div>
+      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => k.startsWith('it_')).length}/24</small></div></div>
       <div class="res-btns"></div></div>`;
     const b = d.querySelector('.res-btns');
     const close = () => { d.remove(); this.game.modalClose = null; };

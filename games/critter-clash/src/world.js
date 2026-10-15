@@ -6,7 +6,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { toon, inked, canvasTex } from './toon.js';
 import { Critter } from './critters.js';
 import { CRITTERS, CUPS, withGear, skinned } from './data.js';
-import { save, persist } from './save.js';
+import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx, playMusic } from './audio.js';
 import { rivalFor } from './worldmaps.js';
 import { getMap } from './interiors.js';
@@ -115,6 +115,7 @@ export class World {
     this.group.add(this.hero.root);
     this.hx = x; this.hy = y; this.dir = dir; this.moveT = 0; this.from = null;
     this.placeHero();
+    this.buildItems(x, y);
     this.makeFollower();
     this.camAt = null;
     this.steps = 0;
@@ -525,6 +526,56 @@ export class World {
     }
   }
 
+  // hidden treasures: two gift boxes per outdoor map, on reachable open tiles off the beaten path; walk over one to open it
+  buildItems(x, y) {
+    this.items = [];
+    if (this.M.indoor || this.key === 'peak') return;
+    const seen = new Set([x + ',' + y]), q = [[x, y]];
+    for (let i = 0; i < q.length; i++) for (const [dx, dy] of Object.values(DIRS)) {
+      const nx = q[i][0] + dx, ny = q[i][1] + dy, k = nx + ',' + ny;
+      if (!seen.has(k) && (this.walkable(nx, ny) || this.tile(nx, ny) === 'B') && this.tile(nx, ny) !== 'i') { seen.add(k); q.push([nx, ny]); }
+    }
+    const rand = rng(hash(this.key + ':items'));
+    const npcAt = new Set((this.M.npcs || []).map((n) => n.x + ',' + n.y)), doors = new Set(this.doors.map((d) => d.x + ',' + (d.y + 1)));
+    const ok = q.filter(([tx, ty]) => '.fsg"'.includes(this.tile(tx, ty)) && !npcAt.has(tx + ',' + ty) && !doors.has(tx + ',' + ty)
+      && tx > 0 && ty > 0 && tx < this.W - 1 && ty < this.H - 1 && ![[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => this.tile(tx + dx, ty + dy) === ':'));
+    for (let k = 0; k < 2 && ok.length; k++) {
+      const [tx, ty] = ok.splice(Math.floor(rand() * ok.length), 1)[0];
+      for (let i = ok.length - 1; i >= 0; i--) if (Math.abs(ok[i][0] - tx) + Math.abs(ok[i][1] - ty) < 7) ok.splice(i, 1); // spread them out
+      const flag = `it_${this.key}_${k}`;
+      if (save.adv.flags[flag]) continue;
+      const g = new THREE.Group(), [px, pz] = wpos(tx, ty);
+      const box = inked(new THREE.BoxGeometry(0.62, 0.5, 0.62), toon(k ? 0x5ad8ff : 0xff6aa8, { rim: 0.6 }), OL * 0.5); box.position.y = 0.25; g.add(box);
+      const lid = inked(new THREE.BoxGeometry(0.7, 0.14, 0.7), toon(k ? 0x5ad8ff : 0xff6aa8, { rim: 0.6 }), OL * 0.5); lid.position.y = 0.55; g.add(lid);
+      for (const r of [0, Math.PI / 2]) { const rb = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.66, 0.12), toon(0xffd84d, { rim: 0.6 })); rb.position.y = 0.32; rb.rotation.y = r; g.add(rb); }
+      const bow = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.05, 6, 12), toon(0xffd84d)); bow.position.y = 0.7; g.add(bow);
+      g.position.set(px, 0, pz); g.scale.setScalar(1.25);
+      this.group.add(g);
+      this.items.push({ x: tx, y: ty, g, flag, kind: k });
+    }
+  }
+
+  pickItem() {
+    const it = this.items?.find((i) => i.x === this.hx && i.y === this.hy);
+    if (!it) return false;
+    this.items.splice(this.items.indexOf(it), 1);
+    this.group.remove(it.g);
+    save.adv.flags[it.flag] = true;
+    const [px, pz] = wpos(it.x, it.y);
+    for (let k = 0; k < 14; k++) this.g.fx.spawn({ x: px, y: 0.6, z: pz, vx: (Math.random() - 0.5) * 4, vy: 2 + Math.random() * 3, vz: (Math.random() - 0.5) * 4, color: [0xffd84d, 0xff6aa8, 0x5ad8ff][k % 3], size: 0.3, life: 0.9, shape: 'star', grav: 6 });
+    sfx.jingle?.(2);
+    const hero = heroDef();
+    if (it.kind === 0) {
+      const n = 2 + Math.floor(Math.random() * 2);
+      save.berries = (save.berries || 0) + n; persist();
+      this.say([`{hero} found a gift box! Inside: ${n} berries! 🍓`]);
+    } else {
+      const c = save.critters[hero.id], r = grantXp(hero.id, Math.round(xpNeeded(c.level) * 0.4));
+      this.say([`{hero} found a gift box! Inside: a Power Snack! ⭐`, r.to > r.from ? `{hero} munched it and grew to Lv ${r.to}!` : '{hero} munched it and feels stronger! (+XP)']);
+    }
+    return true;
+  }
+
   // indoor rooms: walls (tall at the back, low at the front so the camera sees in) and furniture
   buildInterior() {
     if (!this.M.indoor) return;
@@ -819,6 +870,7 @@ export class World {
     // stepping on the doormat goes back outside
     const X = this.M.exit;
     if (X && this.hy === this.H - 1) { sfx.ui('back'); this.fade(() => this.load(X.map, X.x, X.y, 's')); return; }
+    if (this.pickItem()) return;
     if (t === '"') {
       const [px, pz] = wpos(this.hx, this.hy);
       for (let k = 0; k < 5; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5), y: 0.4, z: pz + (Math.random() - 0.5), vy: 2 + Math.random() * 2, vx: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2, color: 0x3fae4a, size: 0.22, life: 0.5, shape: 'leaf', additive: false, grav: 6, rot: Math.random() * 6 });
@@ -884,6 +936,10 @@ export class World {
       const k = Math.max(0, this.brambleT / 1.2), c = this.brambles.userData.c;
       this.brambles.scale.set(k, k * k, k); this.brambles.position.set(c.x * (1 - k), 0, c.z * (1 - k));
       if (this.brambleT <= 0) { this.brambles.visible = false; }
+    }
+    for (const it of this.items || []) {
+      it.g.position.y = Math.abs(Math.sin(this.t * 2.5 + it.x)) * 0.12; it.g.rotation.y = Math.sin(this.t * 1.2 + it.y) * 0.4;
+      if (Math.random() < dt * 2.5) this.g.fx.spawn({ x: it.g.position.x + (Math.random() - 0.5) * 0.8, y: 0.5 + Math.random() * 0.6, z: it.g.position.z + (Math.random() - 0.5) * 0.8, vy: 0.5, color: 0xfff0a0, size: 0.22, life: 0.7, shape: 'star' });
     }
     // water ripples drift
     if (this.waterTex) this.waterTex.offset.set(this.t * 0.02, this.t * 0.03);
