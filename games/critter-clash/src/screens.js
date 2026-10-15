@@ -909,8 +909,9 @@ export class Screens {
           <text class="wm-name" y="${n.ly || (town ? 24 : 19)}">${v ? MAPS[k].name : '???'}</text></g>`;
       }).join('');
     const hp = WMAP[here];
-    d.innerHTML = `<div class="modal wd-map"><h2>Clashara</h2>
-      <svg viewBox="0 0 400 250" class="wm"><rect x="0" y="0" width="400" height="250" rx="18" class="wm-sea"/>
+    const ph = this.worldObj?.phase || 'day', stars = ph === 'night' ? [[30, 30], [120, 12], [210, 240], [260, 10], [392, 200], [12, 150], [360, 238], [70, 244], [330, 14], [395, 40]].map(([x, y], k) => `<circle cx="${x}" cy="${y}" r="${k % 3 ? 1.4 : 2.2}" class="wm-star"/>`).join('') : '';
+    d.innerHTML = `<div class="modal wd-map ${ph}"><h2>Clashara</h2>
+      <svg viewBox="0 0 400 250" class="wm"><rect x="0" y="0" width="400" height="250" rx="18" class="wm-sea"/>${stars}
       <path class="wm-land" d="M18 238 L18 70 Q20 20 90 22 L300 18 Q385 22 385 90 L380 160 Q378 205 330 214 L230 216 Q215 244 150 242 Z"/>${[['🌲', 220, 34], ['🌲', 150, 40], ['🌋', 372, 78], ['🏙️', 372, 210], ['☁️', 290, 232], ['🏔️', 118, 150], ['🌊', 236, 128], ['🌸', 90, 196]].map(([e, x, y]) => `<text class="wm-deco" x="${x}" y="${y}">${e}</text>`).join('')}${svg}
       ${hp ? `<image href="${this.game.portrait(heroDef())}" x="${hp.x + 4}" y="${hp.y - 34}" width="30" height="30" class="wm-hero"/>` : ''}</svg>
       <p class="wm-tip">${Object.values(seen).length > 1 ? 'Tap a town you\'ve visited to fly there with Captain Puff\'s mail balloon. 🎁 = a gift still hidden there.' : 'Explore to fill in the map!'}</p>
