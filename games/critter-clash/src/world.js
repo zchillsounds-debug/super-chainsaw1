@@ -239,6 +239,15 @@ export class World {
         g.addColorStop(0, `rgba(255,214,120,${this.phase === 'night' ? 0.8 : 0.45})`); g.addColorStop(1, 'rgba(255,220,140,0)');
         c.fillStyle = g; c.fillRect(x - P * 1.4, y - P * 1.4, P * 2.8, P * 2.8);
       }
+      // starfish and shells washed up on the sand (their own dice, so nothing else on the map moves)
+      const br = rng(hash(this.key + ':beach'));
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === 's' && br() < 0.1) {
+        const px = x * P + 6 + br() * 20, py = y * P + 6 + br() * 20;
+        c.save(); c.translate(px, py); c.rotate(br() * 6); c.scale(1.3, 1.3);
+        if (br() < 0.5) { c.fillStyle = ['#ff7a5a', '#ff9a4a', '#ff6a8a'][Math.floor(br() * 3)]; c.beginPath(); for (let k = 0; k < 10; k++) { const r = k % 2 ? 2.5 : 6.5; c.lineTo(Math.cos(k * Math.PI / 5) * r, Math.sin(k * Math.PI / 5) * r); } c.closePath(); c.fill(); }
+        else { c.fillStyle = '#fff4e4'; c.beginPath(); c.moveTo(0, 4); c.arc(0, 0, 5, Math.PI * 0.15, Math.PI * 0.85, true); c.closePath(); c.fill(); c.strokeStyle = '#e0b090'; c.lineWidth = 1; for (let k = -1; k <= 1; k++) { c.beginPath(); c.moveTo(0, 4); c.lineTo(k * 2.5, -4); c.stroke(); } }
+        c.restore();
+      }
       // puddles collect on the paths in the rain
       const pr = rng(hash(this.key + ':rain')); // its own dice, so a rainy day doesn't shuffle the trees
       if (this.rain) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === ':' && pr() < 0.28) {
