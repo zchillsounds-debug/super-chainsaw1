@@ -2,7 +2,7 @@
 // of all. Professor Pecan sets the quest; a rival, Dash, keeps turning up to test the hero;
 // the cup stadiums are the gyms. Every beat is keyed on save.adv.flags.
 import { save, persist } from './save.js';
-import { CUPS, CRITTERS, withGear } from './data.js';
+import { CUPS, CRITTERS, TYPES, withGear } from './data.js';
 import { unlock } from './save.js';
 import { sfx } from './audio.js';
 import { rivalFor } from './worldmaps.js';
@@ -43,6 +43,22 @@ export function storyIntro(S, w) {
     ]);
     return;
   }
+  if (F.cup_champion && !F.post_champion && w.key === 'ember') {
+    F.post_champion = true; persist();
+    w.say([
+      'The ground rumbles... and the volcano puffs out a giant smoke ring!',
+      'Big Boulder: HA! The volcano only does that for a true champion. Four cups, {hero}!',
+      'Prof. Pecan (on the phone): {hero}! The whole of Clashara is talking about you now.',
+      'Prof. Pecan: Three cups remain: the Midnight Cup, the Legend Cup and the Sky Cup. Then... Champion\'s Peak.',
+      "Prof. Pecan: I'm still charting the roads to those far-off stadiums. Keep training, champ!",
+    ]);
+    return;
+  }
+  if (w.key === 'cinder' && !F.cinder) {
+    F.cinder = true; persist();
+    w.say(['{hero}: Phew, it\'s HOT out here! The Champion Stadium is inside that volcano...', "{hero}: There's someone big sitting by the lava bridge."]);
+    return;
+  }
   if (w.key === 'glowwood' && !F.woods) {
     F.woods = true; persist();
     w.say(["{hero}: Whoa... it's so dark in here. But the mushrooms are glowing!", '{hero}: Glowcap Hollow and its stadium should be somewhere north.']);
@@ -78,6 +94,14 @@ export function storyStep(S, w) {
     w.say(['Pebblepup: Woof! Wait! The tall grass on Route 1 is full of wild critters.', 'Pebblepup: Professor Pecan made me promise: nobody goes out there without talking to him first!'], () => {
       w.busy = false;
       w.from = [w.hx, w.hy]; w.hy += 1; w.dir = 's'; w.moveT = 0.23;
+    });
+    return true;
+  }
+  if (w.key === 'glowcap' && !F.cup_grove && w.hx >= 22) {
+    w.busy = true;
+    w.say(["{hero}: The volcano road! But the Champion Stadium only lets in critters with three cups. Glowcap Cup first!"], () => {
+      w.busy = false;
+      w.from = [w.hx, w.hy]; w.hx -= 1; w.dir = 'w'; w.moveT = 0.23;
     });
     return true;
   }
@@ -197,6 +221,60 @@ export function storyTalk(S, id, w, a) {
     }));
   }
   if (id === 'mama') mama(S, w, a);
+  if (id === 'sage') sage(S, w);
+}
+
+// Trial of Wisdom: the Stone Sage asks three questions; one wrong answer and it's a battle instead
+const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function typeQuiz(used) {
+  const ids = Object.keys(TYPES).filter((t) => !used.includes(t)), x = ids[Math.floor(Math.random() * ids.length)];
+  used.push(x);
+  const right = Object.keys(TYPES).filter((t) => TYPES[t].beats.includes(x));
+  const wrong = shuffle(Object.keys(TYPES).filter((t) => !right.includes(t))).slice(0, 2);
+  const ans = right[Math.floor(Math.random() * right.length)];
+  const opts = shuffle([ans, ...wrong]);
+  return { q: `Stone Sage: A ${TYPES[x].name} critter blocks your path. Which type hits it hardest?`, opts: opts.map((t) => TYPES[t].name), right: opts.indexOf(ans) };
+}
+function sage(S, w) {
+  const F = flags();
+  if (F.trial_wisdom) return;
+  const used = [];
+  const tactic = shuffle(['Guard or dodge it!', 'Stand still and stare', 'Take a quick nap']);
+  const qs = [typeQuiz(used), typeQuiz(used), { q: 'Stone Sage: Your rival is winding up a HUGE super move. What do you do?', opts: tactic, right: tactic.indexOf('Guard or dodge it!') }];
+  const fail = () => {
+    const def = withGear(byId('pebblepup'), 13);
+    w.say([
+      'Stone Sage: Hmm. No, no, no. Wrong!',
+      'Stone Sage: Then show me your wisdom the other way. In battle!',
+    ], () => S.worldFight({
+      foe: def, lv: 13, kind: 'story', flag: 'trial_wisdom', name: 'Stone Sage', diff: 0.55,
+      trainer: { name: 'Stone Sage', critter: 'pebblepup', title: 'Trial of Wisdom', beat: 'Hmm-hmm. You learn in battle what you missed in thought. Cross, young one.', gloat: 'Hmm. Think it over, and come back.' },
+      note: '🧠 Trial of Wisdom passed! The Stone Sage steps aside.',
+    }));
+  };
+  const askN = (k) => {
+    if (k >= qs.length) {
+      w.say(['Stone Sage: Hmm-hmm-hmm! Three for three. Wise AND strong.', 'Stone Sage: The bridge is yours. And take these berries. Thinking makes one hungry.'], () => {
+        F.trial_wisdom = true; save.berries = (save.berries || 0) + 3; persist();
+        sfx.jingle(3); S.toast('🧠 Trial of Wisdom passed! 🍓 +3 berries');
+        const a = w.npcs.find((n) => n.n.id === 'sage');
+        if (a) { const p = a.root.position; w.g.fx.burst({ x: p.x, y: 1, z: p.z }, { n: 16, speed: 3, color: 0xd8d0c8, size: 0.6, shape: 'puff', additive: false, grav: -1 }); }
+        w.removeNpc('sage');
+      });
+      return;
+    }
+    const Q = qs[k];
+    w.ask(Q.q, Q.opts, (i) => {
+      if (i !== Q.right) return fail();
+      sfx.jingle(1);
+      w.say([['Stone Sage: Correct.', 'Stone Sage: Hmm. Correct again.', 'Stone Sage: ...Correct!'][k]], () => askN(k + 1));
+    });
+  };
+  w.say([
+    'Stone Sage: Hmmmm. Another young critter seeking the Crown.',
+    'Stone Sage: Courage, strength, friendship... you have shown them all. But a champion also needs WISDOM.',
+    'Stone Sage: Answer my three questions, and the bridge is yours.',
+  ], () => askN(0));
 }
 
 // Trial of Friendship: bring Pip home and the brambles open

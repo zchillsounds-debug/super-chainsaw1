@@ -9,6 +9,7 @@ import { CRITTERS, CUPS, withGear } from './data.js';
 import { save, persist } from './save.js';
 import { sfx, playMusic } from './audio.js';
 import { MAPS, rivalFor } from './worldmaps.js';
+import { ARENAS } from './arena.js';
 
 export const TILE = 2;
 const DIRS = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
@@ -94,7 +95,7 @@ export class World {
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
-      if ('TP~#Rhm'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
+      if ('TP~#Rhmv'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
     }
     for (const s of M.signs || []) this.solid.add(s.x + ',' + s.y);
     this.buildGround(rand);
@@ -102,6 +103,7 @@ export class World {
     this.buildGrass(rand);
     this.buildProps(rand);
     this.buildForest(rand);
+    this.buildVolcano(rand);
     this.buildBuildings();
     this.buildActors();
     // hero
@@ -209,13 +211,19 @@ export class World {
     }
     if (pads.length) { this.group.add(inked(mergeGeometries(pads), toon(0x4cba6a, { rim: 0.4 }), OL * 0.4)); pads.forEach((g) => g.dispose()); }
     if (water.length) {
+      const lava = this.M.lava;
       const wt = canvasTex(128, 128, (c, w, h) => {
         c.fillStyle = this.M.palette?.water || '#4aa8f0'; c.fillRect(0, 0, w, h);
+        if (lava) { // glowing cracks between dark cooling crust plates
+          c.fillStyle = 'rgba(255,230,120,0.7)'; for (let k = 0; k < 9; k++) { c.beginPath(); c.arc((k * 41) % w, (k * 67) % h, 6 + (k % 3) * 3, 0, 7); c.fill(); }
+          c.fillStyle = 'rgba(70,20,10,0.55)'; for (let k = 0; k < 6; k++) { c.beginPath(); c.ellipse((k * 53 + 20) % w, (k * 29 + 10) % h, 14, 8, k, 0, 7); c.fill(); }
+          return;
+        }
         c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 3;
         for (let k = 0; k < 7; k++) { const x = (k * 37) % w, y = (k * 53) % h; c.beginPath(); c.arc(x, y, 9, 0.2, 2.6); c.stroke(); }
       }, { repeat: [1, 1] });
       wt.userData.own = true;
-      const m = toon(0xffffff, { map: wt, rim: 0.2 });
+      const m = lava ? new THREE.MeshBasicMaterial({ map: wt, color: 0xffb080 }) : toon(0xffffff, { map: wt, rim: 0.2 });
       m.userData.own = true;
       this.waterTex = wt;
       const mesh = new THREE.Mesh(mergeGeometries(water), m);
@@ -341,6 +349,22 @@ export class World {
     } else this.brambles = null;
   }
 
+  // volcano country: steaming vents (v) and glowing lava
+  buildVolcano(rand) {
+    this.vents = []; this.lavaTiles = [];
+    const cones = [];
+    for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) {
+      const t = this.tile(x, y), [px, pz] = wpos(x, y);
+      if (t === 'v') { const c = new THREE.CylinderGeometry(0.35, 0.85, 0.7, 9); c.translate(px, 0.35, pz); cones.push(c); this.vents.push([px, pz]); }
+      if (t === '~' && this.M.lava) this.lavaTiles.push([px, pz]);
+    }
+    if (cones.length) {
+      this.group.add(inked(mergeGeometries(cones), toon(0x4a3a3a), OL * 0.6)); cones.forEach((g) => g.dispose());
+      const holes = this.vents.map(([px, pz]) => { const h = new THREE.CircleGeometry(0.3, 10); h.rotateX(-Math.PI / 2); h.translate(px, 0.71, pz); return h; });
+      const hm = new THREE.MeshBasicMaterial({ color: 0xffa040 }); hm.userData.own = true; this.group.add(new THREE.Mesh(mergeGeometries(holes), hm)); holes.forEach((g) => g.dispose());
+    }
+  }
+
   // the brambles curl back into the ground (Trial of Friendship)
   openBrambles() {
     for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) if (this.tile(x, y) === 'B') this.solid.delete(x + ',' + y);
@@ -444,7 +468,7 @@ export class World {
     bowl.scale.set(w / 2 - 0.2, 1, d / 2 - 0.1); bowl.position.y = 1.3; G.add(bowl);
     const rim = inked(new THREE.TorusGeometry(1, 0.08, 6, 48), toon(0xffd23f), 0);
     rim.rotation.x = Math.PI / 2; rim.scale.set(w / 2 - 0.2, d / 2 - 0.1, 1); rim.position.y = 2.6; G.add(rim);
-    const field = new THREE.Mesh(new THREE.CircleGeometry(1, 40), toon(0x5ac24a)); field.rotation.x = -Math.PI / 2; field.scale.set(w / 2 - 0.4, d / 2 - 0.3, 1); field.position.y = 0.05; G.add(field);
+    const field = new THREE.Mesh(new THREE.CircleGeometry(1, 40), toon(new THREE.Color(ARENAS[cup.arena]?.fieldA || '#5ac24a').getHex())); field.rotation.x = -Math.PI / 2; field.scale.set(w / 2 - 0.4, d / 2 - 0.3, 1); field.position.y = 0.05; G.add(field);
     // arch over the gate
     const arch = inked(new THREE.TorusGeometry(0.9, 0.18, 8, 16, Math.PI), toon(0xffd23f), OL * 0.6); arch.position.set((b.door + 0.5) * TILE - w / 2, 1.6, d / 2 - 0.1); G.add(arch);
     const gate = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.6), toon(0x2a1630)); gate.position.set(arch.position.x, 0.8, d / 2 - 0.05); G.add(gate);
@@ -610,7 +634,7 @@ export class World {
     const inp = this.g.input;
     const act = inp.pressed.attack || inp.pressed.confirm || this.tapA;
     this.tapA = false;
-    if (this.dialog) { if (act) this.dialog.next(); }
+    if (this.dialog) { this.dialog.steer?.(inp.move); if (act) this.dialog.next(); }
     else if (!this.busy) {
       if (this.moveT > 0) {
         this.moveT -= dt;
@@ -639,6 +663,12 @@ export class World {
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 24, y: 0.4 + Math.random() * 2.2, z: p.z + (Math.random() - 0.7) * 16, vx: (Math.random() - 0.5) * 0.6, vy: 0.2 + Math.random() * 0.3, vz: (Math.random() - 0.5) * 0.6, color: Math.random() < 0.7 ? 0xd8ff6a : 0x8affe0, size: 0.28, life: 2.6, shape: 'glow', fadeIn: 0.3, hold: 0.5 });
     }
+    // embers off the lava and the vents, smoke from the volcano
+    if (this.lavaTiles?.length && Math.random() < dt * 14) {
+      const [px, pz] = this.lavaTiles[Math.floor(Math.random() * this.lavaTiles.length)];
+      this.g.fx.spawn({ x: px + (Math.random() - 0.5) * 2, y: 0.2, z: pz + (Math.random() - 0.5) * 2, vy: 1.2 + Math.random() * 1.5, vx: (Math.random() - 0.5) * 0.5, color: Math.random() < 0.5 ? 0xffa030 : 0xff5a1a, size: 0.18, life: 1.2, shape: 'glow' });
+    }
+    for (const [px, pz] of this.vents || []) if (Math.random() < dt * 3) this.g.fx.spawn({ x: px, y: 0.8, z: pz, vy: 1.4, vx: 0.2, color: 0xd8d0d0, alpha: 0.5, size: 0.7, life: 1.8, shape: 'puff', additive: false, grow: 1.2 });
     if (this.brambleT > 0 && this.brambles) {
       this.brambleT -= dt;
       const k = Math.max(0, this.brambleT / 1.2), c = this.brambles.userData.c;
@@ -777,6 +807,35 @@ export class World {
     };
     el.addEventListener('pointerdown', (e) => { e.stopPropagation(); D.next(); });
     show();
+  }
+
+  // a question with answer buttons (tap one, or steer with the stick/arrows and press A)
+  ask(q, opts, cb, who = '') {
+    q = q.replaceAll('{hero}', heroDef().name);
+    this.dialogEl?.remove();
+    const el = this.dialogEl = document.createElement('div');
+    el.className = 'wd-box wd-ask';
+    const m = /^([^:]{1,20}): (.*)$/s.exec(q);
+    el.innerHTML = `<small>${m ? m[1] : who}</small><p>${m ? m[2] : q}</p><div class="wd-opts">${opts.map((o, i) => `<button data-i="${i}">${o}</button>`).join('')}</div>`;
+    this.S.root.appendChild(el);
+    const btns = [...el.querySelectorAll('button')];
+    let sel = 0, held = false;
+    const mark = () => btns.forEach((b, i) => b.classList.toggle('on', i === sel));
+    mark();
+    const pick = (i) => {
+      if (!el.isConnected) return;
+      el.remove(); this.dialog = null; this.dialogEl = null; this.g.input._queued = {};
+      sfx.ui('ok'); cb(i);
+    };
+    this.dialog = {
+      next: () => pick(sel),
+      steer: (mv) => {
+        const d = Math.abs(mv.x) > 0.5 ? Math.sign(mv.x) : Math.abs(mv.y) > 0.5 ? -Math.sign(mv.y) : 0;
+        if (d && !held) { sel = (sel + d + btns.length) % btns.length; mark(); sfx.ui('move'); }
+        held = !!d;
+      },
+    };
+    btns.forEach((b) => b.addEventListener('pointerdown', (e) => { e.stopPropagation(); pick(+b.dataset.i); }));
   }
 
   // a trainer spots the hero: "!" then they walk up and challenge

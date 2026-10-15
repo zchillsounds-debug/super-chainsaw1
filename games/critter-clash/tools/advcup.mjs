@@ -1,19 +1,20 @@
-// node tools/advcup.mjs [WxH]: enter the Sprout Stadium from the Adventure world, win the cup, and check you land back in the world
+// node tools/advcup.mjs [WxH] [map x y flags]: enter a stadium (default: Bloom Town's Sprout Stadium) from the Adventure world, win the cup, and check you land back in the world
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
 const { chromium } = require('playwright');
 const [w, h] = (process.argv[2] || '915x412').split('x').map(Number);
+const [map = 'bloom', sx = 8, sy = 7, fl = ''] = process.argv.slice(3);
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: w, height: h } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
 await pg.goto('http://localhost:5180/?auto');
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
-await pg.evaluate(() => {
+await pg.evaluate(([map, sx, sy, fl]) => {
   Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate'] });
-  __save.adv = { hero: 'cindermunch', map: 'bloom', x: 8, y: 7, dir: 'n', flags: { intro: true, quest: true, rival1: true }, spawn: { map: 'village', x: 4, y: 6 } };
+  __save.adv = { hero: 'cindermunch', map, x: +sx, y: +sy, dir: 'n', flags: Object.fromEntries(['intro', 'quest', 'rival1', ...fl.split(',').filter(Boolean)].map((k) => [k, true])), spawn: { map: 'village', x: 4, y: 6 } };
   __game.screens.adventure(); __sim(0.3);
-  const wo = __game.screens.worldObj; wo.interact(); for (let i = 0; i < 6 && wo.dialog; i++) wo.dialog.next();
-});
+  const wo = __game.screens.worldObj; for (let i = 0; i < 12 && wo.dialog; i++) wo.dialog.next(); wo.interact(); for (let i = 0; i < 6 && wo.dialog; i++) wo.dialog.next();
+}, [map, sx, sy, fl]);
 const path = [];
 const click = (re) => pg.evaluate((src) => { const r = new RegExp(src); const el = [...document.querySelectorAll('button')].find((x) => r.test(x.textContent) && x.offsetParent); if (el) { el.click(); return true; } return false; }, re.source);
 for (let step = 0; step < 60; step++) {
@@ -30,7 +31,7 @@ for (let step = 0; step < 60; step++) {
   if (mode === 'results') { await pg.evaluate(() => document.querySelector('.recruit .btn, .modal-wrap .btn')?.click()); if (!(await click(/Next Battle|Collect Trophy/))) await click(/Continue/); continue; }
   if (mode === 'trophy') { await click(/Continue/); continue; }
 }
-const end = await pg.evaluate(() => ({ mode: __game.screens.mode, map: __game.screens.worldObj?.key, x: __game.screens.worldObj?.hx, y: __game.screens.worldObj?.hy, cup: __save.adv.flags.cup_sprout, dlg: document.querySelector('.wd-box')?.textContent?.slice(0, 60) }));
+const end = await pg.evaluate(() => ({ mode: __game.screens.mode, map: __game.screens.worldObj?.key, x: __game.screens.worldObj?.hx, y: __game.screens.worldObj?.hy, cups: Object.keys(__save.adv.flags).filter((k) => k.startsWith('cup_')).join(), dlg: document.querySelector('.wd-box')?.textContent?.slice(0, 60) }));
 await pg.screenshot({ path: 'tools/out/advcup-end.png' });
 console.log('path:', path.filter((m, i) => m !== path[i - 1]).join(' > '));
 console.log('end:', JSON.stringify(end));
