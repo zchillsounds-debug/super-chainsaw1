@@ -635,6 +635,10 @@ export class World {
         box('trim', TILE + 0.02, 0.16, TILE + 0.02, px, h, pz);
         if (back) box('base', TILE + 0.01, 0.35, 0.12, px, 0.17, pz + 1.02);
         if (back && this.M.indoor === 'arcade') { box('neon', TILE + 0.01, 0.12, 0.08, px, 2.7, pz + 1.04); box('neon2', TILE + 0.01, 0.08, 0.08, px, 0.5, pz + 1.08); }
+        if (back && x % 3 !== 2 && (x % 3 === 0 || x % 4 === 1) && x > 1 && x < W - 2 && '.QOD'.includes(this.tile(x, 1)) && x % 3 !== 2 && this.M.indoor !== 'arcade') { // a little framed landscape between the windows
+          box('frame', 1.4, 1.05, 0.08, px, 2.05, pz + 1.02); box('art' + (x % 2), 1.18, 0.83, 0.06, px, 2.05, pz + 1.06); box('hill', 1.18, 0.28, 0.07, px, 1.77, pz + 1.07); box('sunny', 0.22, 0.22, 0.07, px + 0.32, 2.25, pz + 1.075);
+        }
+        if (back && this.M.indoor === 'center' && x === (W >> 1)) { box('trim', 1.3, 1.3, 0.08, px, 2.45, pz + 1.02); box('top', 0.36, 1.0, 0.08, px, 2.45, pz + 1.06); box('top', 1.0, 0.36, 0.08, px, 2.45, pz + 1.06); } // the Berry Center cross behind the nurse
         if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); }
       }
       if (t === 'C') { // shelf with coloured book spines
@@ -662,7 +666,7 @@ export class World {
       }
       if (t === 'K') { box('counter', TILE + 0.02, 1.1, 1.3, px, 0.55, pz); box('top', TILE + 0.04, 0.12, 1.45, px, 1.15, pz); }
     }
-    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff };
+    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d };
     for (const k in L) {
       const glow = k === 'screen' || k === 'glass' || k === 'neon' || k === 'neon2';
       const m = glow ? new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'screen' && this.M.indoor === 'arcade' ? 0xff8ae8 : C[k] })) : inked(mergeGeometries(L[k]), toon(C[k] ?? 0xffffff, { rim: 0.3 }), k === 'book0' || k === 'book1' || k === 'book2' ? OL * 0.3 : OL * 0.6);
