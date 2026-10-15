@@ -725,6 +725,19 @@ export class World {
         for (const [cx, cz, ok] of [[x0, z0, !l && !u], [x1, z0, !r && !u], [x0, z1, !l && !d], [x1, z1, !r && !d]]) if (ok) box('wood', 0.14, 0.9, 0.14, cx + (cx < px ? 0.12 : -0.12), 0.45, cz + (cz < pz ? 0.12 : -0.12));
         if (r && d) { const b = new THREE.SphereGeometry(0.3, 10, 8); b.translate(px + 1, 1.15, pz + 1); add('berry', b); }
         if (!l && !r && !u && !d) { const b = new THREE.SphereGeometry(0.22, 8, 6); b.translate(px, 1.1, pz); add('berry', b); }
+        // stools pulled up at the open ends, and a little something on the table top
+        for (const sd of [-1, 1]) if (this.tile(x + sd, y) === '.' && !n(sd, 0)) {
+          const sx = px + sd * 1.2; box('stool', 0.7, 0.12, 0.7, sx, 0.55, pz);
+          for (const [lx, lz] of [[-0.25, -0.25], [0.25, -0.25], [-0.25, 0.25], [0.25, 0.25]]) box('wood', 0.08, 0.5, 0.08, sx + lx, 0.25, pz + lz);
+        }
+        const v = (x * 7 + y * 3) % 4;
+        if (!(r && d) && (l || r || u || d)) {
+          if (this.M.indoor === 'lab') { // beakers of bubbling colour
+            for (let k = 0; k < 2; k++) { const gx = px - 0.3 + k * 0.6, c = new THREE.CylinderGeometry(0.12, 0.15, 0.2, 10); c.translate(gx, 1.3, pz - 0.1); add('beaker', c); const q = new THREE.CylinderGeometry(0.15, 0.16, 0.24, 10); q.translate(gx, 1.08, pz - 0.1); add('fluid' + ((x + k) % 2), q); }
+          } else if (v === 0) { const c = new THREE.CylinderGeometry(0.13, 0.11, 0.26, 10); c.translate(px - 0.2, 1.1, pz); add('mug', c); }
+          else if (v === 1) { for (let k = 0; k < 3; k++) box('book' + ((x + k) % 3), 0.55 - k * 0.05, 0.1, 0.4, px + 0.1, 1.02 + k * 0.1, pz + 0.05); }
+          else if (v === 2) { const pl = new THREE.CylinderGeometry(0.34, 0.3, 0.05, 14); pl.translate(px, 0.99, pz); add('plate', pl); for (let k = 0; k < 3; k++) { const b = new THREE.SphereGeometry(0.11, 8, 6); b.translate(px + Math.cos(k * 2.1) * 0.12, 1.08, pz + Math.sin(k * 2.1) * 0.12); add('berry', b); } }
+        }
       }
       if (t === 'O') {
         const p = new THREE.CylinderGeometry(0.4, 0.3, 0.6, 10); p.translate(px, 0.3, pz); add('pot', p);
@@ -732,9 +745,9 @@ export class World {
       }
       if (t === 'K') { box('counter', TILE + 0.02, 1.1, 1.3, px, 0.55, pz); box('top', TILE + 0.04, 0.12, 1.45, px, 1.15, pz); }
     }
-    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d };
+    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8 };
     for (const k in L) {
-      const glow = k === 'screen' || k === 'glass' || k === 'neon' || k === 'neon2';
+      const glow = k === 'screen' || k === 'glass' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1';
       const m = glow ? new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'screen' && this.M.indoor === 'arcade' ? 0xff8ae8 : C[k] })) : inked(mergeGeometries(L[k]), toon(C[k] ?? 0xffffff, { rim: 0.3 }), k === 'book0' || k === 'book1' || k === 'book2' ? OL * 0.3 : OL * 0.6);
       if (glow) m.material.userData.own = true;
       m.castShadow = !glow && k !== 'trim'; m.receiveShadow = true;
