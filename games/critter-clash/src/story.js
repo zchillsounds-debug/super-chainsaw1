@@ -1,7 +1,7 @@
 // Adventure story: the hero critter dreams of the Critter Crown, worn by the strongest critter
 // of all. Professor Pecan sets the quest; a rival, Dash, keeps turning up to test the hero;
 // the cup stadiums are the gyms. Every beat is keyed on save.adv.flags.
-import { save, persist } from './save.js';
+import { save, persist, grantXp, xpNeeded } from './save.js';
 import { CUPS, CRITTERS, TYPES, withGear, skinned } from './data.js';
 const skinnedShiny = (id) => skinned(CRITTERS.find((c) => c.id === id), 'shiny');
 import { unlock } from './save.js';
@@ -285,11 +285,24 @@ export function storyTalk(S, id, w, a) {
       : "Prof. Pecan: Seven cups! Champion's Peak is north of Frostpeak. The Crown is waiting!"]);
     return;
   }
+  if (id === 'smoothie') { // the Berry Center blender turns a berry into XP for the hero
+    const n = save.berries || 0;
+    if (!n) { w.say(["A berry smoothie blender. Bring a berry 🍓 and it'll whip up a smoothie for {hero}!"]); return; }
+    w.ask(`Blend a berry smoothie for {hero}? (1 🍓 of ${n}, +XP)`, ['Blend!', 'Not now'], (i) => {
+      if (i !== 0) return;
+      const h = save.adv.hero, c = save.critters[h];
+      save.berries = n - 1;
+      const r = grantXp(h, Math.round(xpNeeded(c.level) * 0.25)); persist();
+      sfx.jingle(2);
+      w.say(['Whirrrr... *slurp*! A berry smoothie! 🍓', r.to > r.from ? `{hero} grew to Lv ${r.to}!` : '{hero} feels refreshed! (+XP)']);
+    });
+    return;
+  }
   if (id === 'nurse' || id === 'rest') {
     save.adv.spawn = { ...w.M.exit }; persist();
     sfx.jingle(2);
     w.say(id === 'rest' ? ['{hero} hops into bed for a quick nap...', 'Mom: Sweet dreams! (If you lose a battle, you\'ll come back home.)']
-      : ['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.'], null, id === 'nurse' ? 'Nurse Lilypop' : '');
+      : ['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.', ...(save.berries > 0 ? ['Nurse Lilypop: Got spare berries? The blender over there makes smoothies that help critters grow!'] : [])], null, id === 'nurse' ? 'Nurse Lilypop' : '');
     return;
   }
   if (id === 'dashpost') { // post-game: a daily rematch with Dash at the hero's level, for berries

@@ -99,7 +99,7 @@ export function interiorMap(key) {
     if (t === 'X' && kind === 'center') text = 'A berry smoothie blender. It smells like strawberries.';
     if (t === 'C' && kind === 'center') text = 'Jars of berries line the shelf: strawberry, blueberry, glowberry...';
     if (t === 'X' && kind === 'lab') text = 'A screen shows a growing critter: small, medium, HUGE.';
-    signs.push({ x, y, text, hide: true, act: t === 'Q' && bid === 'home' ? 'rest' : null });
+    signs.push({ x, y, text, hide: true, act: t === 'Q' && bid === 'home' ? 'rest' : t === 'X' && kind === 'center' ? 'smoothie' : null });
   }));
   return {
     name: b.label || (b.id === 'home' ? 'Home' : 'House'),
