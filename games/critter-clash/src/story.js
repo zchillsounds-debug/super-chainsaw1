@@ -518,7 +518,7 @@ export function doorAction(S, b, w) {
   const front = { map: w.key, x: b.x + b.door, y: b.y + b.h };
   if (b.lab && !F.quest) { w.say(['The door is locked. A note says: "Out front! - Prof. Pecan"']); return; }
   if (!b.stadium && !b.altar) { // walk inside
-    sfx.ui('ok');
+    sfx.door(!!b.heal);
     const key = `in:${w.key}:${b.id}`;
     const E = getMap(key).enter;
     w.fade(() => w.load(key, E.x, E.y, 'n'));

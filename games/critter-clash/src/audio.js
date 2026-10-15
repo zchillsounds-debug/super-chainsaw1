@@ -187,6 +187,13 @@ export const sfx = {
     osc('square', 1400, 1400, 0.06, 0.12); osc('sine', 2100, 2000, 0.4, 0.14, { t: t + 0.03 });
     noise(0.15, 0.2, { f0: 6000, f1: 3000, q: 3 });
   },
+  // a door: a soft wooden creak, plus a shop bell for the Berry Centers
+  door(bell = false) {
+    if (!ctx) return; const t = now();
+    noise(0.18, 0.12, { t, type: 'bandpass', f0: 420, f1: 260, q: 6 });
+    osc('triangle', 150, 110, 0.12, 0.1, { t: t + 0.02 });
+    if (bell) [1568, 2093].forEach((f, i) => osc('sine', f, f, 0.5, 0.08, { t: t + 0.08 + i * 0.09 }));
+  },
   pickup() { if (!ctx) return; const t = now(); [880, 1175, 1568].forEach((f, i) => osc('triangle', f, f, 0.12, 0.12, { t: t + i * 0.06 })); },
   // short rising arpeggio for announcer callouts; level 0..3 climbs higher
   jingle(level = 1) {

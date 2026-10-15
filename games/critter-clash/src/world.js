@@ -812,7 +812,7 @@ export class World {
       const e = this.M.edges?.[nx < 0 ? 'w' : nx >= this.W ? 'e' : ny < 0 ? 'n' : 's'];
       if (e && this.tile(this.hx, this.hy) !== 'T') { this.goTo(e, dir, nx, ny); return; }
       const X = this.M.exit;
-      if (X && dir === 's') { sfx.ui('back'); this.fade(() => this.load(X.map, X.x, X.y, 's')); return; }
+      if (X && dir === 's') { sfx.door(); this.fade(() => this.load(X.map, X.x, X.y, 's')); return; }
       return this.bump();
     }
     const who = this.occupied(nx, ny, 'hero');
@@ -878,7 +878,7 @@ export class World {
     this.sliding = false;
     // stepping on the doormat goes back outside
     const X = this.M.exit;
-    if (X && this.hy === this.H - 1) { sfx.ui('back'); this.fade(() => this.load(X.map, X.x, X.y, 's')); return; }
+    if (X && this.hy === this.H - 1) { sfx.door(); this.fade(() => this.load(X.map, X.x, X.y, 's')); return; }
     if (this.pickItem()) return;
     if (t === '"') {
       const [px, pz] = wpos(this.hx, this.hy);
