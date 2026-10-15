@@ -1220,6 +1220,12 @@ export class Arena {
     if (this.open === on) return;
     this.open = on;
     for (const o of this.group.children) { if (o.userData.stadium) o.visible = !on; if (o.userData.openOnly) o.visible = on; }
+    // the far scenery (forests, hills) was shaded by the stands; without them a low sun throws its shadow across the whole field
+    this.group.traverse((o) => {
+      if (!o.isMesh || o.userData.stadium || o.userData.openOnly) return;
+      if (on) { if (!o.castShadow) return; if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); if (o.geometry.boundingSphere.radius > 25) { o.castShadow = false; o.userData.shadowOff = true; } }
+      else if (o.userData.shadowOff) { o.castShadow = true; o.userData.shadowOff = false; }
+    });
   }
 
   cheer(amount = 1) { this.excite = Math.min(1, this.excite + amount); }
