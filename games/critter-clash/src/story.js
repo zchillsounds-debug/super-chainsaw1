@@ -261,10 +261,12 @@ export function storyTalk(S, id, w, a) {
       });
       return;
     }
-    const next = CUPS.find((c) => !F['cup_' + c.id]);
-    w.say([F.cup_sprout
-      ? `Prof. Pecan: The Sprout Cup! Marvellous! ${next ? `Next, the ${next.name}. I'm still mapping the road there, so check back soon!` : ''}`
-      : 'Prof. Pecan: Bloom Town is north along Route 1. The Sprout Stadium is waiting for you!']);
+    // where the next cup is, in story order
+    const WHERE = [['sprout', 'Bloom Town, north along Route 1'], ['thunder', 'Seashell Town, east along Route 2 from Bloom Town'], ['grove', 'Glowcap Hollow, through the woods north of Seashell Town'], ['champion', 'Cinder Town, down the volcano road east of Glowcap Hollow'], ['midnight', 'Neon City, east of Cinder Town'], ['sky', 'Cloudtop Gardens. Captain Puff flies there from Neon City'], ['legend', 'Frostpeak. Captain Puff flies there from Cloudtop']];
+    const nx = WHERE.find(([id]) => !F['cup_' + id]), cup = nx && CUPS.find((c) => c.id === nx[0]);
+    w.say([F.crowned ? 'Prof. Pecan: Our very own Champion of Clashara! Come back and tell me everything sometime.'
+      : nx ? `Prof. Pecan: ${F.cup_sprout ? 'Marvellous work so far! ' : ''}Your next goal is the ${cup.name}, in ${nx[1]}.`
+      : "Prof. Pecan: Seven cups! Champion's Peak is north of Frostpeak. The Crown is waiting!"]);
     return;
   }
   if (id === 'guard') {

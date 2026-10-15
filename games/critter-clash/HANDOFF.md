@@ -1,13 +1,13 @@
-# Critter Clash: Handoff (after Round 213, Adventure mode in progress)
+# Critter Clash: Handoff (after Round 220, Adventure mode story complete)
 
 ## Start here (for a new chat)
-- **CURRENT FOCUS (session 16+): Adventure mode**, a Pokémon Red/Blue style world with a story. Read "Session 16: ADVENTURE MODE" first. The user asked for 5 hours of chained sessions, ending at about **04:45 UTC on 2026-10-15**.
+- **CURRENT FOCUS (session 16+): Adventure mode**, a Pokémon Red/Blue style world with a story. Read "Session 16: ADVENTURE MODE" and "Session 16b" first. The user asked for 5 hours of chained sessions, ending at about **04:45 UTC on 2026-10-15**. The whole story (all 7 cups, 5 trials, Champion's Peak, the ending) is now playable; what's left is **polish** (see "Session 16b → next").
 - Repo `zchillsounds-debug/super-chainsaw1`, branch **`ccr-4fc93d6e-suxlhd`**, folder `games/critter-clash/`. Clone with `--branch ccr-4fc93d6e-suxlhd`.
 - Latest work (session 15, 2026-10-14 21:42–~22:20 UTC): finished session 14's "Modes & polish" time box with R198–R208 (see "Session 15"). The user's requested time ended at ~22:25 UTC, so **nothing was chained after session 15**; wait for the user before building more. Numbering continues from **R209**.
 - Earlier (session 14, 2026-10-14 20:20–~21:40 UTC): the user confirmed the growing scene and new forms look right (APK 1.0.190), picked **"Modes & polish"** as the focus, and said: "Reach 300k tokens and start new chats for handoff". So keep building, and chain to a fresh session near 300k context with this file. Session 14 did R175–R197: a signature second hazard per stadium, the Daily Team Challenge, Daily streaks, Stadium Trials, the Stadium Mayhem modifier, a Quick Battle modifier chip, hazard practice in Training, hazard sounds and a jumbotron warning (see "Session 14").
 - The user got APK **1.0.195** (R175–R182) mid-session. The last APK of session 14 is listed under "Session 14".
 - Ask the user first: how do the new stadium tricks feel on a phone (the laser, the wave, the ice slick)? Is Stadium Trials 3★ too hard?
-- Round numbering continues from **R214**.
+- Round numbering continues from **R221**.
 - User preferences: ask clarifying questions and confirm before building; hand off near 300k context.
 - **Branch note:** a new cloud session may be assigned its own `ccr-...` branch. The game lives on `ccr-4fc93d6e-suxlhd`, and the user approved pushing there (session 14). The APK workflow only builds from pushes that touch `games/critter-clash/**`.
 
@@ -346,6 +346,18 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
   5. Champion's Peak: Dash's final battle and the Crown boss.
   6. Polish: interiors, world music, wild-battle field paint, a mini-map, NPC variety.
 
+## Session 16b (2026-10-15, 00:17–~01:05 UTC, session_01ANZ45uVgqvHmpmgKjHvGwJ): the rest of the Adventure story, R214–R220
+- **World order now:** Sprout Village → Route 1 → Bloom Town (Sprout) → Route 2 → Seashell Town (Thunder) → north: **Glowcap Woods** → **Glowcap Hollow** (Glowcap Cup) → east: **Cinder Road** → **Cinder Town** (Champion Cup) → east: **Neon City** (Midnight Cup) → Captain Puff's balloon → **Cloudtop Gardens** (Sky Cup) → balloon → **Frostpeak** (Legend Cup) → north: **Champion's Peak** (Dash's last battle, King Snooze the Crown Keeper, the crowning, THE END). Map keys: `glowwood glowcap cinder ember neon cloudtop frostpeak peak`.
+- **Gates** (storyStep, push the hero back a tile with a line): Seashell north needs `cup_thunder`; Glowcap east needs `cup_grove`; Cinder Town east needs `cup_champion`; the balloon to Cloudtop needs `cup_midnight` and to Frostpeak `cup_sky` (`dest[].need`); the Frostpeak trail needs all 7 cups.
+- **Trials (all flags in save.adv.flags):** Courage (`rival1`), Strength (`trial_strength`), **Friendship** (`mama_asked`, `pip_saved` = beat the Thistlehog bully, `pip_found` = Pip follows you (`save.adv.follow`), `trial_friendship` = Pip home, brambles open, Squeakwing joins if new; then Dash's 3rd battle `dash3`), **Wisdom** (`trial_wisdom`: the Stone Sage asks 2 random type questions + 1 tactics question via `w.ask()`; a wrong answer = a battle with Montiff), **Heart** (`trial_heart`: beat Night Gang boss Vex (Solfox) to save Dash; `post_heart` thank-you scene), **Focus** (the Champion's Peak ice lake; no flag, the puzzle is the trial). Finale flags: `seven`, `dash5`, `crowned`, `ending`. Scene flags: `woods`, `cinder`, `neon`, `cloudtop`, `frostpeak`, `post_grove`, `post_champion`, `post_sky`.
+- **New map fields (worldmaps.js):** `palette {a, b, tall, path, water, bank, ice, dark, lite}` (ground canvas colours), `trees [canopy, canopy2, trunk]`, `blades`, `mood {sun, sunI, sky, gnd, hemiI, fog}` (World.mood() re-tints the reused arena lights; restored on leave), `fireflies`, `pads` (lily pads), `bramble: flag`, `lava`, `city`, `snow`, `border: 'cloud'`. NPC fields: `showFlag`, `shiny`, `balloon: color` + `dest: [{map, x, y, dir, name, need}]`. Building fields: `shroom`, `tower: neonColor`, `altar`.
+- **New tiles:** `m` giant glowing toadstool (solid), `g` little glowcaps (walkable), `B` bramble (solid until the map's `bramble` flag), `v` steam vent (solid), `l` street lamp (solid), `i` ice (slide until blocked). Ponds pull in from dry neighbours (a bank shows) — that applies to every map.
+- **World engine additions (world.js):** `buildForest` (toadstools/glowcaps/brambles, `openBrambles()` shrink animation), `buildVolcano` (vents + lava embers; lava is a MeshBasicMaterial), `buildCity` (skyscraper blocks with a repeating window texture, coloured rooftops, lamps), `shroomHouse`, `towerModel`, `altarModel` (spinning crown, `crownScene()`), `balloonModel`, follower (`makeFollower`, `updateFollower`), ice sliding in `arrive()` (`this.sliding`), snowfall, `ask(q, opts, cb)` answer buttons (tap, or stick + A).
+- **Story order of Professor Pecan's hints:** `WHERE` table in `storyTalk('pecan')` names the next cup's town.
+- **Tools:** `tools/advshot.mjs <WxH> <prefix> <map> <x> <y> [flags] [js]` (drop in + screenshot; it does not check the tile is walkable), `tools/advstory.mjs <map> <x> <y> <dir> <flags> [WxH]` (press A there and play out dialogue/questions/forced-win battles; prints the log and flags), `tools/advtrial.mjs` (the whole Trial of Friendship), `tools/advcup.mjs [WxH] [map x y flags]` (any stadium; door fronts: bloom 8,7 · seashell 9,6 · glowcap 9,6 · ember 8,6 · neon 8,5 · cloudtop 9,6 · frostpeak 8,6). The ice puzzle solution from 9,20 is `nnwsenwswnen` (solver/generator scripts were scratch; the layout was checked for no soft-locks).
+- **Checked:** all 7 cups play from their town and land back in the world (advcup), every trial and the ending play out error-free (advstory/advtrial), screenshots of each new map at 915×412 and some at 412×915.
+- **Next (polish, plan item 5):** interiors (houses are still "Nobody seems to be home"), world music per map exists but Champion's Peak uses `boss`; a mini-map or town-map screen in the ☰ menu; NPC variety; wild-battle field paint per area; a world-map "fly" between visited Berry Centers; Pecan news `adventure` for returning players; a tapcheck pass on the world screens (ask buttons at 360 px tall); balance of story fights vs the hero's level (story fights use fixed levels until the Peak, which scales with the hero); Camp prop for the Critter Crown.
+
 ## Session 15 (2026-10-14, 21:42–~22:20 UTC)
 - **Note for new sessions:** the cloud clone can be shallow and look "ahead 50, behind 50". Run `git fetch --unshallow origin ccr-4fc93d6e-suxlhd` and then `git merge --ff-only origin/ccr-4fc93d6e-suxlhd` before working.
 - **R198:** the Full Team badge's id is now `roster`. It used to share the id `team` with Dream Team, so winning a 3-on-3 also marked Full Team as earned. No other duplicate ids exist in data.js arrays (checked).
@@ -574,6 +586,14 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 206. Gold VS nameplate for bosses/Gatekeepers.
 207. Gatekeeper jingle.
 208. Pecan news about Gatekeepers.
+209–213. Adventure mode: world engine, Sprout Village, Route 1, Bloom Town, Route 2, Seashell Town, title layout (session 16).
+214. Glowcap Woods + Glowcap Hollow, Trial of Friendship (Pip), Dash's 3rd battle.
+215. Pond banks and lily pads.
+216. Cinder Road + Cinder Town (Champion Cup), Trial of Wisdom quiz.
+217. Neon City (Midnight Cup), Trial of Heart.
+218. Cloudtop Gardens (Sky Cup), Captain Puff's balloon.
+219. Frostpeak (Legend Cup), Champion's Peak ice puzzle, Dash's last battle, King Snooze, the crowning, Critter Crown badge.
+220. Professor Pecan points to the next cup's town.
 L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (smaller, softer, per-kind `cap` on point size).
 
 ## Critique backlog (known issues)
