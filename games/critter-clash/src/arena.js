@@ -1228,5 +1228,16 @@ export class Arena {
     });
   }
 
+  // world fights follow the phone's clock: a golden evening or a starry night over the open field (null puts the day back)
+  tint(phase) {
+    const U = this.sky.material.uniforms;
+    if (!this.dayWas) this.dayWas = { top: U.top.value.clone(), hor: U.hor.value.clone(), stars: U.uStars.value, sun: this.sun.color.clone(), sunI: this.sun.intensity, hemi: this.hemi.color.clone(), hemiI: this.hemi.intensity, fog: this.scene?.fog?.color.clone() };
+    const D = this.dayWas, P = { evening: { top: 0x6a7ad0, hor: 0xffa878, sun: 0xffbe8a, k: 0.95, hemi: 0xffd8bc, hk: 1 }, night: { top: 0x141a48, hor: 0x46508e, sun: 0xbcc8ff, k: 0.6, hemi: 0x8e9ad8, hk: 0.85, stars: 1 } }[phase];
+    U.top.value.copy(P ? new THREE.Color(P.top) : D.top); U.hor.value.copy(P ? new THREE.Color(P.hor) : D.hor); U.uStars.value = P?.stars ?? D.stars;
+    this.sun.color.copy(P ? new THREE.Color(P.sun) : D.sun); this.sun.intensity = D.sunI * (P?.k ?? 1);
+    this.hemi.color.copy(P ? new THREE.Color(P.hemi) : D.hemi); this.hemi.intensity = D.hemiI * (P?.hk ?? 1);
+    if (!P) this.dayWas = null;
+  }
+
   cheer(amount = 1) { this.excite = Math.min(1, this.excite + amount); }
 }

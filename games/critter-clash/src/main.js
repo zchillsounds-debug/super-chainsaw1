@@ -326,6 +326,7 @@ class Game {
   endBattle() {
     if (this.battle) { this.battle.dispose(); this.battle = null; }
     this.arena.setOpen(false);
+    this.arena.tint(null);
     this.hud.show(false);
     this.input.showTouch(false);
     document.body.classList.remove('in-battle', 'at-results');

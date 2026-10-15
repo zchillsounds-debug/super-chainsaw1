@@ -1487,7 +1487,7 @@ export class Battle {
     if (this.phase === 'intro') {
       if (this.round === 1) {
         this.introFocus = this.phaseT < INTRO_FOCUS ? c : this.phaseT < INTRO_FOCUS * 2 ? p : null;
-        if (this.introSaid === 0 && this.phaseT > 0.15) { this.introSaid = 1; sayLine(c, 'intro'); this.hud.nameCard(c, this.trainer); }
+        if (this.introSaid === 0 && this.phaseT > 0.15) { this.introSaid = 1; sayLine(c, 'intro'); this.hud.nameCard(c, this.trainer, / appeared!$/.test(this.stageSub) ? (this.stageSub.startsWith('✨') ? 'Shiny wild' : 'Wild') : null); }
         if (this.introSaid === 1 && this.phaseT > INTRO_FOCUS + 0.15) { this.introSaid = 2; sayLine(p, 'intro'); this.hud.nameCard(p, null); }
       }
       if (this.phaseT > (this.round === 1 ? INTRO_FIRST : 0.9)) { this.introFocus = null; this.phase = 'countdown'; this.phaseT = 0; this.hud.countdown(); p.setState('idle'); c.setState('idle'); }
