@@ -485,6 +485,7 @@ export class World {
 
   swayGrass() {
     const geo = this.grassGeo; if (!geo) return;
+    if (this.g.quality === 'low' && (this.swayK = (this.swayK || 0) + 1) % 2) return; // low quality: every other frame
     const a = geo.attributes.position.array, B = this.grassBase, t = this.t;
     // everyone walking through the grass pushes it aside: the hero, the buddy, the roaming wild critters
     const push = [this.hero.root.position, this.follower?.root.position, ...(this.wild || []).map((w) => w.root.position)].filter(Boolean);
