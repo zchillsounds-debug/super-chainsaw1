@@ -1,6 +1,7 @@
 # Critter Clash: Handoff (after Round 279, Adventure mode polish)
 
 ## Start here (for a new chat)
+- Short version for a new chat: `games/critter-clash/CONTINUE.md` (what is where, the paste-in prompt, open questions).
 - **Session 16e (02:51–~04:40 UTC on 2026-10-15) did R255–R279 and was the LAST session of the user's 5-hour Adventure window (it ended at 04:45 UTC). Nothing was chained after it: wait for the user before building more. Round numbering continues from R280.** Read "Session 16c", "16d" and "16e" below.
 - Ask the user first: how do weather (rain), the clock of day, grass sway and the smoothie blender feel on their phone? Is the win screen right now (R244b/R277)?
 - **CURRENT FOCUS (session 16+): Adventure mode**, a Pokémon Red/Blue style world with a story. Read "Session 16: ADVENTURE MODE" and "Session 16b" first. The user asked for 5 hours of chained sessions, ending at about **04:45 UTC on 2026-10-15**. The whole story (all 7 cups, 5 trials, Champion's Peak, the ending) is now playable; what's left is **polish** (see "Session 16b → next").
