@@ -54,6 +54,21 @@ export function storyIntro(S, w) {
     ]);
     return;
   }
+  if (w.key === 'cloudtop' && !F.cloudtop) {
+    F.cloudtop = true; persist();
+    w.say(["{hero}: We're ABOVE the clouds! Everything smells like flowers up here.", "Captain Puff: Welcome to Cloudtop Gardens! The Sky Stadium's just up the path. I'll wait here with the balloon."]);
+    return;
+  }
+  if (F.cup_sky && !F.post_sky && w.key === 'cloudtop') {
+    F.post_sky = true; persist();
+    w.say([
+      'Prof. Pecan: Hoo! You beat me fair and square, {hero}. My Thornhulk is still dizzy.',
+      "Prof. Pecan: I had to see it for myself. You're ready... nearly.",
+      'Prof. Pecan: One cup is left: the Legend Cup, in Frostpeak at the foot of Champion\'s Peak. Every old rival returns there at full power.',
+      "Prof. Pecan: Captain Puff can fly you to Frostpeak now. Dress warmly!",
+    ]);
+    return;
+  }
   if (w.key === 'neon' && F.trial_heart && !F.post_heart) {
     F.post_heart = true; persist();
     w.say([
@@ -247,6 +262,30 @@ export function storyTalk(S, id, w, a) {
   if (id === 'mama') mama(S, w, a);
   if (id === 'sage') sage(S, w);
   if (id === 'heart') heart(S, w);
+  if (id === 'balloon') balloon(S, w, a);
+}
+
+// Captain Puff flies the hero between Neon City, Cloudtop Gardens and Frostpeak
+function balloon(S, w, a) {
+  const F = flags(), dests = a.n.dest, open = dests.filter((d) => !d.need || F[d.need]);
+  if (!open.length) {
+    w.say(["Captain Puff: Ahoy! This balloon flies to Cloudtop Gardens, way up above the clouds.", "Captain Puff: But only Midnight Cup winners get a ticket. Rules of the sky!"]);
+    return;
+  }
+  const go = (d) => {
+    w.busy = true;
+    w.say([`Captain Puff: Next stop, ${d.name}! Hold on to your ears!`], () => {
+      w.busy = true;
+      w.hero.root.visible = false; if (w.follower) w.follower.root.visible = false;
+      a.fly = 0; sfx.jingle?.(2);
+      setTimeout(() => w.fade(() => w.load(d.map, d.x, d.y, d.dir)), 1500);
+    });
+  };
+  if (open.length === 1) {
+    w.ask(`Captain Puff: Ahoy, {hero}! Fancy a ride to ${open[0].name}?`, ['Fly!', 'Not yet'], (i) => i === 0 && go(open[0]));
+    return;
+  }
+  w.ask('Captain Puff: Ahoy, {hero}! Where to?', [...open.map((d) => d.name), 'Stay here'], (i) => open[i] && go(open[i]));
 }
 
 // Trial of Heart: the Night Gang has Dash cornered; the hero steps in to help the rival

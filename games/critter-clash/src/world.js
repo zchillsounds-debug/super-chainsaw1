@@ -245,7 +245,11 @@ export class World {
       const a = new THREE.IcosahedronGeometry(1.05 * s, 1); a.scale(1, 0.85, 1); a.translate(px + jx, 1.55 * s, pz + jz); (rand() < 0.5 ? can : can2).push(a);
       const b = new THREE.IcosahedronGeometry(0.72 * s, 1); b.translate(px + jx + (rand() - 0.5) * 0.3, 2.35 * s, pz + jz); (rand() < 0.5 ? can : can2).push(b);
     };
-    const fronds = [], ptrunks = [], nuts = [];
+    const fronds = [], ptrunks = [], nuts = [], puffs = [];
+    const puff = (x, y, s = 1) => {
+      const [px, pz] = wpos(x, y);
+      for (let k = 0; k < 3; k++) { const g = new THREE.IcosahedronGeometry((0.7 + rand() * 0.6) * s, 1); g.scale(1, 0.6, 1); g.translate(px + (rand() - 0.5) * 1.6, -0.2 + rand() * 0.5, pz + (rand() - 0.5) * 1.6); puffs.push(g); }
+    };
     const palm = (x, y) => {
       const [px, pz] = wpos(x, y), s = 0.9 + rand() * 0.25, lean = (rand() - 0.5) * 0.5;
       const pts = []; for (let k = 0; k <= 6; k++) pts.push(new THREE.Vector3(px + Math.sin(k / 6 * 1.2) * lean, k / 6 * 3.2 * s, pz));
@@ -261,9 +265,12 @@ export class World {
     for (let y = -3; y < this.H + 3; y++) for (let x = -3; x < this.W + 3; x++) {
       const inside = x >= 0 && y >= 0 && x < this.W && y < this.H;
       const t = inside ? this.tile(x, y) : null;
+      if (!inside && this.M.border === 'cloud') { if (rand() < 0.45) puff(x, y); continue; }
+      if (t === '~' && this.M.border === 'cloud' && rand() < 0.12) { puff(x, y, 0.6); continue; }
       if (t === 'P' || (!inside && this.M.border === 'palm' && rand() < 0.3)) palm(x, y);
       else if (inside ? t === 'T' : rand() < 0.85) add(x, y);
     }
+    if (puffs.length) { this.group.add(inked(mergeGeometries(puffs), toon(0xffffff, { rim: 0.8 }), OL * 0.5)); puffs.forEach((g) => g.dispose()); }
     if (ptrunks.length) { this.group.add(inked(mergeGeometries(ptrunks), toon(0xa8784a), OL * 0.6)); ptrunks.forEach((g) => g.dispose()); }
     if (nuts.length) { this.group.add(inked(mergeGeometries(nuts), toon(0x7a4a2a), OL * 0.4)); nuts.forEach((g) => g.dispose()); }
     if (fronds.length) { this.group.add(inked(mergeGeometries(fronds), toon(0x3fbf5a, { rim: 0.4, side: THREE.DoubleSide }), OL * 0.4)); fronds.forEach((g) => g.dispose()); }
@@ -575,6 +582,7 @@ export class World {
       if (n.showFlag && !F[n.showFlag]) continue;
       let root, cr = null;
       if (n.pecan) { root = pecanModel(); root.scale.setScalar(CS); }
+      else if (n.balloon) { root = balloonModel(n.balloon); }
       else {
         const id = n.critter === '$hero' ? save.adv.hero : n.rival ? rivalFor(save.adv.hero) : n.critter;
         cr = new Critter(withGear(byId(id), n.rival ? (n.rlv || 4) : (n.lv || n.trainer?.lv || 3)));
@@ -779,6 +787,12 @@ export class World {
         if (a.excl > 0) { a.excl -= dt; P.y = Math.max(P.y, Math.sin(Math.min(1, 1 - a.excl) * Math.PI) * 0.4); }
         a.root.rotation.y = turnTo(a.root.rotation.y, YAW[a.dir], dt * 14);
         a.cr.update(dt);
+      } else if (a.n.balloon) {
+        // a moored balloon sways; when it takes off it rises (a.fly) with the hero aboard
+        if (a.fly != null) { a.fly += dt; a.root.position.y = a.fly * a.fly * 2.2; }
+        else a.root.position.y = Math.sin(this.t * 1.3) * 0.08;
+        a.root.rotation.z = Math.sin(this.t * 0.9) * 0.03;
+        continue;
       } else {
         // Pecan: gentle bob
         a.root.position.y = Math.abs(Math.sin(this.t * 2.2)) * 0.08;
@@ -1028,6 +1042,22 @@ function idlePose(P, t) {
   P.sy = 1 + Math.sin(t * 2.4) * 0.025; P.sx = 1 - Math.sin(t * 2.4) * 0.015;
   P.armLz = P.armRz = 0.25; P.tail = 0.5 + Math.sin(t * 1.7) * 0.3;
   P.headRoll = Math.sin(t * 0.9) * 0.06;
+}
+
+// Captain Puff's hot-air balloon: a striped envelope over a wicker basket
+function balloonModel(color) {
+  const G = new THREE.Group();
+  const stripes = canvasTex(256, 32, (c, W, H) => { for (let k = 0; k < 12; k++) { c.fillStyle = k % 2 ? '#fff4e0' : new THREE.Color(color).getStyle(); c.fillRect(k * W / 12, 0, W / 12 + 1, H); } });
+  stripes.userData.own = true;
+  const em = toon(0xffffff, { map: stripes, rim: 0.6 }); em.userData.own = true;
+  const env = inked(new THREE.SphereGeometry(1.3, 24, 16), em, OL); env.scale.set(1, 1.12, 1); env.position.y = 3.75; G.add(env);
+  const neck = inked(new THREE.CylinderGeometry(0.55, 0.3, 0.6, 16), em, OL * 0.6); neck.position.y = 2.6; G.add(neck);
+  const basket = inked(new THREE.CylinderGeometry(0.62, 0.52, 0.7, 12), toon(0xc8925a), OL * 0.6); basket.position.y = 0.35; G.add(basket);
+  const rim = inked(new THREE.TorusGeometry(0.62, 0.07, 6, 16), toon(0x8a5a3a), 0); rim.rotation.x = Math.PI / 2; rim.position.y = 0.7; G.add(rim);
+  for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + 0.78, r = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.9, 4), toon(0x8a6a4a)); r.position.set(Math.cos(a) * 0.45, 1.65, Math.sin(a) * 0.45); r.rotation.set(Math.sin(a) * 0.08, 0, -Math.cos(a) * 0.08); G.add(r); }
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.45, 8), toon(0xffb030, { emissive: 0xff7a00 })); flame.position.y = 2.15; flame.rotation.x = Math.PI; G.add(flame);
+  G.traverse((o) => { if (o.isMesh) o.castShadow = !o.userData.hull; });
+  return G;
 }
 
 // Professor Pecan in the world: a round acorn with a cap, a stem and a lab-coat collar
