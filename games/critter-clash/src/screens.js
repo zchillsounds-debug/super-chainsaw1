@@ -862,12 +862,12 @@ export class Screens {
 
   // a fight from the world: wild critters, trainers and story battles
   worldFight(info) {
-    const g = this.game, h = heroDef(), lv = save.critters[h.id].level;
-    this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note };
+    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = this.worldObj?.M.arena || 'meadow';
+    this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit };
     this.leaveWorld();
     this.mode = 'vs';
     g.startBattle(h, info.foe, {
-      cpuLevel: info.lv, playerLevel: lv, difficulty: info.diff ?? 0.3, arena: 'meadow',
+      cpuLevel: info.lv, playerLevel: lv, difficulty: info.diff ?? 0.3, arena,
       rounds: info.kind === 'wild' ? 1 : 2, trainer: info.trainer || null,
       stageSub: info.kind === 'wild' ? `${info.name} appeared!` : info.kind === 'story' ? 'Story battle' : `${info.name} wants to battle!`,
     });
@@ -1183,7 +1183,7 @@ export class Screens {
       if (won) {
         if (W.flag) save.adv.flags[W.flag] = true;
         // a beaten wild critter may ask to come along (more likely the first time you meet its kind)
-        if (W.fight === 'wild' && !save.unlocked.includes(cDef.id) && Math.random() < 0.45) joined = unlock(cDef.id);
+        if ((W.fight === 'wild' || W.recruit) && !save.unlocked.includes(cDef.id) && (W.recruit || Math.random() < 0.45)) joined = unlock(cDef.id);
         streakNote = `<div class="streak">${W.note || (W.fight === 'wild' ? (joined ? `🌿 ${cDef.name} wants to join your team!` : `🌿 The wild ${cDef.name} scampers back into the grass.`) : `🏅 You beat ${W.name}!`)}</div>`;
       } else {
         const sp = save.adv.spawn;

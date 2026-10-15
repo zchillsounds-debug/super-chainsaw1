@@ -1,5 +1,5 @@
 // Adventure world maps (Red/Blue style tile maps).
-// Tiles: T tree, . grass, : path, " tall grass, f flowers, ~ water, # fence, R rock, = bridge (walkable over water)
+// Tiles: T tree, P palm, . grass, s sand, : path, " tall grass, f flowers, ~ water, # fence, R rock, = bridge (walkable over water)
 // Buildings, signs, NPCs, trainers and wild critters are listed per map; building footprints block.
 // Edges: walking off an open edge tile moves to the neighbouring map (x/y shifted by `off`).
 
@@ -99,7 +99,7 @@ export const MAPS = {
       'TT.hhhhhhhh.....hhhh..TT',
       'TT.hhhhhhhh......:....TT',
       'TT......:........:....TT',
-      'TT.f....::::::::::::..TT',
+      'TT.f....::::::::::::::::',
       'TT..........:.........TT',
       'TT.hhhh.....:...ff....TT',
       'TT.hhhh.....:...ff.R..TT',
@@ -110,7 +110,7 @@ export const MAPS = {
       'TTTTTTTTTTT::TTTTTTTTTTT',
       'TTTTTTTTTTT::TTTTTTTTTTT',
     ],
-    edges: { s: { to: 'route1', off: -4 } },
+    edges: { s: { to: 'route1', off: -4 }, e: { to: 'route2', off: -2 } },
     buildings: [
       { id: 'stadium', x: 3, y: 3, w: 8, h: 4, stadium: 'sprout', door: 5, label: 'Sprout Stadium' },
       { id: 'berry', x: 16, y: 3, w: 4, h: 3, roof: 0xff5a8a, door: 2, label: 'Berry Center', heal: true },
@@ -120,6 +120,75 @@ export const MAPS = {
     npcs: [
       { id: 'fan', x: 9, y: 9, critter: 'emberfly', name: 'Emberfly', dir: 's', wander: 2, lines: ["Emberfly: The Sprout Stadium's cup is for brand-new critters. Win it and everyone will know your name!", 'Emberfly: The crowd goes wild for a good super move. Bzzzt!'] },
       { id: 'old', x: 17, y: 12, critter: 'snoozlo', name: 'Old Snoozlo', dir: 'w', lines: ['Old Snoozlo: Zzz... huh? Oh. They say the Critter Crown sits on top of Champion\'s Peak... zzz...', "Old Snoozlo: ...seven stadiums... seven cups... then the Crown... zzz..."] },
+    ],
+  },
+
+  route2: {
+    name: 'Route 2',
+    music: 'beach',
+    arena: 'beach',
+    tiles: [
+      'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
+      'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
+      'TT..""""""..f....~~~~ss.P..ss.s.TT',
+      'TT..""""""......~~~~~sss...""".PTT',
+      'TT..""""""...R...~~~~ss....""".sTT',
+      'TT..............~~~~ssss.P......TT',
+      '::::::::::::::::====::::::::::::::',
+      'TT...f..........~~~~sss....P....TT',
+      'TT...""""""".....~~~~s..""""..s.TT',
+      'TT...""""""".....~~~~s..""""..PPTT',
+      'TT..f.......R....~~~~ss...s.....TT',
+      'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
+      'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
+    ],
+    edges: { w: { to: 'bloom', off: 2 }, e: { to: 'seashell', off: 2 } },
+    signs: [{ x: 14, y: 5, text: 'ROUTE 2\n←  Bloom Town      Seashell Town  →\nCAUTION: big sleepy critters on the bridge.' }],
+    wild: { list: [['bubbalotl', 4, 6], ['lilypop', 4, 6], ['pebblepup', 4, 6], ['ripples', 5, 7], ['pengsicle', 5, 7], ['whirlwhisk', 4, 6], ['squeakwing', 5, 7]], roam: 4, rate: 0.1 },
+    npcs: [
+      { id: 'wren', x: 8, y: 7, critter: 'whirlwhisk', name: 'Kite Flyer Wren', dir: 'n', trainer: { lv: 5, sight: 3, intro: "Kite Flyer Wren: The wind's perfect today! Whirlwhisk and I could glide all the way to the sea. But first: a battle!", beat: 'Kite Flyer Wren: Blown away! Literally.', after: 'Kite Flyer Wren: The big critter on the bridge? It\'s been napping there for DAYS.' } },
+      { id: 'marina', x: 25, y: 7, critter: 'bubbalotl', name: 'Swimmer Marina', dir: 'w', trainer: { lv: 6, sight: 4, intro: 'Swimmer Marina: Splash! You crossed the bridge? Then you can handle a wave or two!', beat: "Swimmer Marina: Wiped out! You'd be a great surfer.", after: 'Swimmer Marina: Seashell Town is just ahead. The Thunder Cup stadium is right on the beach!' } },
+      { id: 'boulder', x: 17, y: 6, critter: 'rolladillo', lv: 8, name: 'Bouldillo', dir: 's', story: 'boulder', hideFlag: 'trial_strength', scale: 1.35 },
+    ],
+  },
+
+  seashell: {
+    name: 'Seashell Town',
+    music: 'beach',
+    arena: 'beach',
+    outer: 0x3a9ae0,
+    border: 'palm',
+    tiles: [
+      'PPPPPPPPPPPPPPPPPPPPPPPPPP',
+      'PPssssssssssssssssssssss~~',
+      'Pssshhhhhhhhsssshhhhsss~~~',
+      'Pssshhhhhhhhsssshhhhsss~~~',
+      'Pssshhhhhhhhsssshhhhsss~~~',
+      'Pssshhhhhhhhssssss:ssss~~~',
+      'Pssssssss:ssssssss:sssss~~',
+      'Pssssssss::::::::::ssss~~~',
+      ':::::::::::ssssssssssss~~~',
+      'PssssPssss:sssshhhhssss~~~',
+      'PssssssRss:sssshhhhssss~~~',
+      'Psssssssss:sssshhhhssss~~~',
+      'Psssssssss:ssssss:ssssss~~',
+      'Psssssssss:::::::::sssss~~',
+      'Pssssssssssssssssssssss~~~',
+      'Psssssssssssssssssssss~~~~',
+      '~~~~~~~~~~~~~~~~~~~~~~~~~~',
+      '~~~~~~~~~~~~~~~~~~~~~~~~~~',
+    ],
+    edges: { w: { to: 'route2', off: -2 } },
+    buildings: [
+      { id: 'stadium2', x: 4, y: 2, w: 8, h: 4, stadium: 'thunder', door: 5, label: 'Thunder Stadium' },
+      { id: 'berry2', x: 16, y: 2, w: 4, h: 3, roof: 0xff5a8a, door: 2, label: 'Berry Center', heal: true },
+      { id: 'hut', x: 15, y: 9, w: 4, h: 3, roof: 0x3ac8c8, door: 1 },
+    ],
+    signs: [{ x: 13, y: 8, text: 'SEASHELL TOWN\nSun, sand, and the loudest stadium on the coast.' }],
+    npcs: [
+      { id: 'fisher', x: 21, y: 12, critter: 'ripples', name: 'Fisher Finn', dir: 'e', lines: ['Fisher Finn: Shh! The fish are biting. ...Okay, nothing is biting. But the Thunder Cup crowd sure bites back!', 'Fisher Finn: Grab a berry smoothie at the Berry Center before you go in.'] },
+      { id: 'surfer', x: 6, y: 13, critter: 'pengsicle', name: 'Pengsicle', dir: 's', wander: 2, lines: ['Pengsicle: Waddle waddle! I tried to surf once. The wave won.', 'Pengsicle: The Thunder Cup trainers are TOUGH. Grow strong in the grass on Route 2 first!'] },
+      { id: 'rival2', x: 12, y: 7, rival: true, rlv: 7, name: 'Dash', dir: 'w', story: 'rival2', hideFlag: 'rival2' },
     ],
   },
 };

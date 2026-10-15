@@ -11,7 +11,27 @@ const byId = (id) => CRITTERS.find((c) => c.id === id);
 
 // opening narration, the first time the world loads
 export function storyIntro(S, w) {
-  if (flags().intro) return;
+  const F = flags();
+  if (F.cup_sprout && !F.post_sprout && w.key === 'bloom') {
+    F.post_sprout = true; persist();
+    w.say([
+      '{hero}: I did it... I really won the Sprout Cup!',
+      'Dash: Hmph. Not bad, for a beginner.',
+      "Dash: The next stadium is in Seashell Town, east along Route 2. But there's a HUGE critter asleep on the bridge. Nobody can wake it up.",
+      "Dash: Every critter who wants the Crown has to pass the Trial of Strength. Let's see if you can even get across! Later!",
+    ]);
+    return;
+  }
+  if (F.cup_thunder && !F.post_thunder && w.key === 'seashell') {
+    F.post_thunder = true; persist();
+    w.say([
+      '{hero}: Two cups! The crowd was chanting my name!',
+      'Prof. Pecan (on the phone): {hero}! I watched the whole thing on the jumbotron. Marvellous!',
+      "Prof. Pecan: The road beyond Seashell Town is still being charted. Rest up, train in the tall grass, and I'll call when it's ready.",
+    ]);
+    return;
+  }
+  if (F.intro) return;
   flags().intro = true; persist();
   w.say([
     'In the land of Clashara, every critter dreams of one thing: the Critter Crown.',
@@ -31,6 +51,14 @@ export function storyStep(S, w) {
     w.say(['Pebblepup: Woof! Wait! The tall grass on Route 1 is full of wild critters.', 'Pebblepup: Professor Pecan made me promise: nobody goes out there without talking to him first!'], () => {
       w.busy = false;
       w.from = [w.hx, w.hy]; w.hy += 1; w.dir = 's'; w.moveT = 0.23;
+    });
+    return true;
+  }
+  if (w.key === 'bloom' && !F.cup_sprout && w.hx >= 21) {
+    w.busy = true;
+    w.say(["{hero}: Route 2 leads to the Thunder Cup... but they only let Sprout Cup winners in. I'd better win here first!"], () => {
+      w.busy = false;
+      w.from = [w.hx, w.hy]; w.hx -= 1; w.dir = 'w'; w.moveT = 0.23;
     });
     return true;
   }
@@ -98,6 +126,20 @@ export function storyTalk(S, id, w, a) {
     return;
   }
   if (id === 'rival1') { w.say(['Dash: ...']); }
+  if (id === 'boulder') {
+    const def = withGear(byId('rolladillo'), 8);
+    w.say([
+      `A huge ${def.name} is snoring across the bridge. It's blocking the whole way!`,
+      '{hero}: Hey! HEY! Wake up! ...',
+      `${def.name}: ...Zzz... who dares... wake the mighty ${def.name}...?`,
+      '{hero}: This must be the Trial of Strength. Here goes!',
+    ], () => S.worldFight({
+      foe: def, lv: 8, kind: 'story', flag: 'trial_strength', name: def.name, diff: 0.42, recruit: true,
+      trainer: { name: def.name, critter: 'rolladillo', title: 'Trial of Strength', beat: '...Hmph. Strong little thing. Fine, I\'ll nap somewhere else.', gloat: 'Zzz... too weak... zzz...' },
+      note: `💪 Trial of Strength passed! ${def.name} rolls off the bridge.`,
+    }));
+  }
+  if (id === 'rival2') rival2(S, w);
 }
 
 // facing a door and pressing A
@@ -119,6 +161,11 @@ export function doorAction(S, b, w) {
     w.say([F.quest ? 'The lab is full of bubbling beakers. Professor Pecan is outside.' : 'The door is locked. A note says: "Out front! - Prof. Pecan"']);
     return;
   }
+  if (b.stadium === 'thunder' && !F.rival2) {
+    const a = w.npcs.find((n) => n.n.id === 'rival2');
+    w.say(['Dash: NOT so fast!'], () => rival2(S, w, a));
+    return;
+  }
   if (b.stadium) {
     const cup = CUPS.find((c) => c.id === b.stadium);
     if (F['cup_' + cup.id]) { w.say([`The ${cup.name} trophy shines in the lobby. {hero} is the champion here!`, 'Want to battle the cup again? Use Tournament on the title screen.']); return; }
@@ -129,4 +176,16 @@ export function doorAction(S, b, w) {
     return;
   }
   w.say(['Nobody seems to be home.']);
+}
+
+function rival2(S, w) {
+  const rid = rivalFor(save.adv.hero), rdef = byId(rid);
+  w.say([
+    "Dash: So you got past the big sleeper. I'm... a LITTLE impressed.",
+    "Dash: But the Thunder Cup is mine to win first. You'll have to beat me again to get through that gate!",
+  ], () => S.worldFight({
+    foe: withGear(rdef, 7), lv: 7, kind: 'story', flag: 'rival2', name: 'Rival Dash', diff: 0.48,
+    trainer: { name: 'Dash', critter: rid, title: 'Your rival', beat: 'Grr... FINE. Go win your shiny cup. But the Crown is MINE, you hear me?!', gloat: 'Ha! Still too slow!' },
+    note: '⚡ You beat Dash again! The Thunder Stadium gate is open.',
+  }));
 }

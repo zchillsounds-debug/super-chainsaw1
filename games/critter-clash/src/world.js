@@ -79,7 +79,7 @@ export class World {
     this.g.scene.add(this.group);
     this.solid = new Set();
     const rand = rng(hash(key));
-    for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) if ('T~#Rh'.includes(this.tile(tx, ty))) this.solid.add(tx + ',' + ty);
+    for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) if ('TP~#Rh'.includes(this.tile(tx, ty))) this.solid.add(tx + ',' + ty);
     for (const s of M.signs || []) this.solid.add(s.x + ',' + s.y);
     this.buildGround(rand);
     this.buildTrees(rand);
@@ -124,7 +124,8 @@ export class World {
         c.fillStyle = (x + y) % 2 ? '#7ad259' : '#77cf56';
         c.fillRect(x * P, y * P, P, P);
         if (t === '"') { c.fillStyle = '#4fae3e'; c.fillRect(x * P, y * P, P, P); }
-        if (t === '~') { c.fillStyle = '#3a9ae0'; c.fillRect(x * P, y * P, P, P); }
+        if (t === '~' || t === '=') { c.fillStyle = '#3a9ae0'; c.fillRect(x * P, y * P, P, P); }
+        if (t === 's' || t === 'P') { c.fillStyle = (x + y) % 2 ? '#f4dc9a' : '#f1d894'; c.fillRect(x * P, y * P, P, P); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); } }
       }
       // paths: rounded blobs so corners look worn in, not tiled
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -157,13 +158,19 @@ export class World {
     ground.receiveShadow = true;
     this.group.add(ground);
     // the world beyond the map: forest floor
-    const outer = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), toon(0x3f8a3a, { rim: 0 }));
+    const outer = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), toon(this.M.outer || 0x3f8a3a, { rim: 0 }));
     outer.rotation.x = -Math.PI / 2; outer.position.set(W * TILE / 2, -0.03, H * TILE / 2);
     outer.receiveShadow = true;
     this.group.add(outer);
     // water surface with drifting ripples
     const water = [];
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === '~') {
+    const planks = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === '=') {
+      for (let k = 0; k < 4; k++) { const b = new THREE.BoxGeometry(0.42, 0.14, TILE * 0.98); b.translate(x * TILE + 0.27 + k * 0.49, 0.16, y * TILE + 1); planks.push(b); }
+      for (const side of [0.1, TILE - 0.1]) { const r = new THREE.BoxGeometry(TILE, 0.14, 0.12); r.translate(x * TILE + 1, 0.55, y * TILE + side); planks.push(r); const p = new THREE.BoxGeometry(0.14, 0.6, 0.14); p.translate(x * TILE + 0.1, 0.3, y * TILE + side); planks.push(p); }
+    }
+    if (planks.length) { this.group.add(inked(mergeGeometries(planks), toon(0xb8865a), OL * 0.5)); planks.forEach((g) => g.dispose()); }
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === '~' || this.tile(x, y) === '=') {
       const g = new THREE.PlaneGeometry(TILE, TILE); g.rotateX(-Math.PI / 2); g.translate(...[x * TILE + 1, 0.06, y * TILE + 1]); water.push(g);
     }
     if (water.length) {
@@ -190,10 +197,27 @@ export class World {
       const a = new THREE.IcosahedronGeometry(1.05 * s, 1); a.scale(1, 0.85, 1); a.translate(px + jx, 1.55 * s, pz + jz); (rand() < 0.5 ? can : can2).push(a);
       const b = new THREE.IcosahedronGeometry(0.72 * s, 1); b.translate(px + jx + (rand() - 0.5) * 0.3, 2.35 * s, pz + jz); (rand() < 0.5 ? can : can2).push(b);
     };
+    const fronds = [], ptrunks = [], nuts = [];
+    const palm = (x, y) => {
+      const [px, pz] = wpos(x, y), s = 0.9 + rand() * 0.25, lean = (rand() - 0.5) * 0.5;
+      const pts = []; for (let k = 0; k <= 6; k++) pts.push(new THREE.Vector3(px + Math.sin(k / 6 * 1.2) * lean, k / 6 * 3.2 * s, pz));
+      const tr = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 8, 0.18 * s, 6); ptrunks.push(tr);
+      const top = pts[6];
+      for (let k = 0; k < 6; k++) {
+        const f = new THREE.ConeGeometry(0.42 * s, 2.1 * s, 4); f.scale(0.22, 1, 1); f.rotateZ(Math.PI / 2 + 0.35); f.translate(1.0 * s, -0.2, 0);
+        f.rotateY(k / 6 * Math.PI * 2 + rand() * 0.4); f.translate(top.x, top.y, top.z); fronds.push(f);
+      }
+      const nut = new THREE.IcosahedronGeometry(0.22 * s, 0); nut.translate(top.x + 0.15, top.y - 0.2, top.z + 0.1); nuts.push(nut);
+    };
     for (let y = -3; y < this.H + 3; y++) for (let x = -3; x < this.W + 3; x++) {
       const inside = x >= 0 && y >= 0 && x < this.W && y < this.H;
-      if (inside ? this.tile(x, y) === 'T' : rand() < 0.85) add(x, y);
+      const t = inside ? this.tile(x, y) : null;
+      if (t === 'P' || (!inside && this.M.border === 'palm' && rand() < 0.3)) palm(x, y);
+      else if (inside ? t === 'T' : rand() < 0.85) add(x, y);
     }
+    if (ptrunks.length) { this.group.add(inked(mergeGeometries(ptrunks), toon(0xa8784a), OL * 0.6)); ptrunks.forEach((g) => g.dispose()); }
+    if (nuts.length) { this.group.add(inked(mergeGeometries(nuts), toon(0x7a4a2a), OL * 0.4)); nuts.forEach((g) => g.dispose()); }
+    if (fronds.length) { this.group.add(inked(mergeGeometries(fronds), toon(0x3fbf5a, { rim: 0.4, side: THREE.DoubleSide }), OL * 0.4)); fronds.forEach((g) => g.dispose()); }
     const put = (list, color, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color, { rim: 0.4 }), ink); m.castShadow = true; this.group.add(m); list.forEach((g) => g.dispose()); };
     put(can, 0x3fae4a, OL); put(can2, 0x4cc25a, OL); put(trunks, 0x8a5a3a, OL * 0.6);
   }
@@ -311,7 +335,7 @@ export class World {
       if (n.pecan) { root = pecanModel(); root.scale.setScalar(CS); }
       else {
         const id = n.critter === '$hero' ? save.adv.hero : n.rival ? rivalFor(save.adv.hero) : n.critter;
-        cr = new Critter(withGear(byId(id), n.rival ? 4 : (n.trainer?.lv || 3)));
+        cr = new Critter(withGear(byId(id), n.rival ? (n.rlv || 4) : (n.lv || n.trainer?.lv || 3)));
         root = cr.root;
         root.scale.setScalar(CS * (n.scale || 1));
       }
@@ -482,6 +506,10 @@ export class World {
           a.root.position.set(ax + (bx - ax) * k, 0, az + (bz - az) * k);
           walkPose(P, this.t + (a.wild ? 0.5 : 0));
           if (a.moveT <= 0) { a.from = null; this.setPos(a); if (a.arrived) { const f = a.arrived; a.arrived = null; f(); } }
+        } else if (a.n?.story === 'boulder') { // fast asleep across the bridge
+          P.sy = 0.85 + Math.sin(this.t * 1.4) * 0.05; P.lean = -0.25; P.armLz = P.armRz = 0.1; P.head = 0.25;
+          a.cr.emote('closed', 'o', 0.2);
+          if (Math.random() < dt * 0.8) this.g.fx.text?.({ x: a.root.position.x + 0.5, y: 2.6, z: a.root.position.z }, 'z', 'zz');
         } else idlePose(P, this.t + a.x);
         if (a.excl > 0) { a.excl -= dt; P.y = Math.max(P.y, Math.sin(Math.min(1, 1 - a.excl) * Math.PI) * 0.4); }
         a.root.rotation.y = turnTo(a.root.rotation.y, YAW[a.dir], dt * 14);
