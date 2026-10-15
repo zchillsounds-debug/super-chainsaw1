@@ -1,7 +1,7 @@
-# Critter Clash: Handoff (after Round 243, Adventure mode polish)
+# Critter Clash: Handoff (after Round 254, Adventure mode polish)
 
 ## Start here (for a new chat)
-- **Session 16c (01:01–~02:00 UTC on 2026-10-15) did R221–R243 of Adventure polish; read "Session 16c" below. Round numbering continues from R244.** The user's 5-hour window ends at about **04:45 UTC on 2026-10-15**.
+- **Session 16d (01:57–~03:00 UTC on 2026-10-15) did R244–R254 of Adventure polish; read "Session 16c" and "Session 16d" below. Round numbering continues from R255.** The user's 5-hour window ends at about **04:45 UTC on 2026-10-15**.
 - **CURRENT FOCUS (session 16+): Adventure mode**, a Pokémon Red/Blue style world with a story. Read "Session 16: ADVENTURE MODE" and "Session 16b" first. The user asked for 5 hours of chained sessions, ending at about **04:45 UTC on 2026-10-15**. The whole story (all 7 cups, 5 trials, Champion's Peak, the ending) is now playable; what's left is **polish** (see "Session 16b → next").
 - Repo `zchillsounds-debug/super-chainsaw1`, branch **`ccr-4fc93d6e-suxlhd`**, folder `games/critter-clash/`. Clone with `--branch ccr-4fc93d6e-suxlhd`.
 - Latest work (session 15, 2026-10-14 21:42–~22:20 UTC): finished session 14's "Modes & polish" time box with R198–R208 (see "Session 15"). The user's requested time ended at ~22:25 UTC, so **nothing was chained after session 15**; wait for the user before building more. Numbering continues from **R209**.
@@ -389,6 +389,20 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - **R247b:** on small landscape phones the rank stamp no longer covers Health left.
 - APK 1.0.264 (66ed84b) was sent to the user. Ask whether the win screen and the battle look are right on their phone now.
 
+## Session 16d (2026-10-15, 01:57–~03:00 UTC, session_01RW12a1ayFyRLwLWTM3X8Ud): Adventure polish, R244–R254
+- **R244:** world stadiums have a sloped seat bank full of fans inside (the open cylinder's inside showed the black outline hull); house gable roofs get shingle bands and a ridge cap; lone `R`/`l`/`v` tiles take sand ground when sand surrounds them (no grass squares on the beach).
+- **R245:** Berry Centers have a round pink-cross sign on the ridge (tipped toward the camera); `sfx.foot(kind)` footsteps per terrain (grass/sand/snow/wood/stone/ice) in `World.arrive()`. New `tools/advfight.mjs <WxH> <prefix> <map> <wildId> [lv]` screenshots an open-field wild fight (intro and mid-fight).
+- **R246:** Town Map shows 🎁 next to visited places that still hide a gift (`it_<map>_0/1`); the map svg is a bit shorter on short phones so Close isn't clipped.
+- **R247 + R251: clock of day.** `World.phase` is `day`/`evening` (17–20 h)/`night` (20–06 h) from the device clock (`save.adv.clock` overrides it for tests), only for outdoor maps without their own `mood`. `PHASES` in world.js re-tints the reused lights; house windows use the glowing `LIT` material at evening/night; fireflies drift at night. Wild/route fights call `Arena.tint(phase)` (sky dome colours, stars, sun, hemi), and `endBattle` calls `tint(null)`. **Headless Chrome runs on UTC, so screenshots after 20:00 UTC are night; pass `__save.adv.clock = 12` and `w.load(...)` for day shots.**
+- **R248:** after `ending`, beaten route trainers offer a daily rematch at the hero's level (`re_<id>_<date>` flag, Yes/No `ask`, +1 berry).
+- **R249:** portrait room camera backs off to fit the room's width; room `outer` is a warm dusk (0x3a2a2a), not black.
+- **R250:** framed landscape pictures on room back walls; a pink cross behind the Berry Center nurse.
+- **R251:** wild critters' name card says "Wild" (not "Rival"), via `HUD.nameCard(f, trainer, tag)`.
+- **R252:** the ☰ menu shows a one-line next goal (`nextGoal(F)` in story.js).
+- **R253/R254:** rounded outer corners on water/lava/bank and on tall-grass patches.
+- Checked: tapcheck clean at 740×360 and 412×915; advcup Sprout (915×412) lands back in the world, advstory rematch with Hiker Gus, screenshots of all towns, rooms (landscape and portrait), night/evening world and fights.
+- **Next ideas:** grass blades sway (needs a shader uniform), stadium lobbies, NPC variety per town, inner (concave) water corners, a night version of the Town Map, weather (rain on routes), shop for berries.
+
 ## Session 15 (2026-10-14, 21:42–~22:20 UTC)
 - **Note for new sessions:** the cloud clone can be shallow and look "ahead 50, behind 50". Run `git fetch --unshallow origin ccr-4fc93d6e-suxlhd` and then `git merge --ff-only origin/ccr-4fc93d6e-suxlhd` before working.
 - **R198:** the Full Team badge's id is now `roster`. It used to share the id `team` with Dream Team, so winning a 3-on-3 also marked Full Team as earned. No other duplicate ids exist in data.js arrays (checked).
@@ -625,6 +639,7 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 218. Cloudtop Gardens (Sky Cup), Captain Puff's balloon.
 219. Frostpeak (Legend Cup), Champion's Peak ice puzzle, Dash's last battle, King Snooze, the crowning, Critter Crown badge.
 220. Professor Pecan points to the next cup's town.
+244–254. Adventure polish (session 16d): stadium seats, roofs, Berry Center signs, footsteps, clock-of-day lighting, trainer rematches, room camera/pictures, next-goal line, rounded water and grass (see "Session 16d").
 221–243. Adventure polish (session 16c): interiors, Town Map + flying, story-fight level scaling, tapcheck world steps, Camp crown, NPC activities, open-field fight looks, title/New Adventure, running, gift boxes, Dash rematches, shinies, idle hero, badge case, walking buddy, door sounds (see "Session 16c").
 L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (smaller, softer, per-kind `cap` on point size).
 
