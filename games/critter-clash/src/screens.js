@@ -164,6 +164,12 @@ export class Screens {
         "{name}! Big news: the whole land of Clashara is open to explore. Tap ADVENTURE on the title screen!",
         "Pick a hero, walk from town to town, battle wild critters in the tall grass, take on the seven stadium cups and face the trials on the road to the Critter Crown. I'll be waiting outside my lab!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && !save.news?.includes('adv2')) {
+      (save.news ||= []).push('adv2'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, news from Clashara! Every house and Berry Center now has its door open: pop in and say hello. And the ☰ menu has a Town Map: tap any town you've visited to fly straight there.",
+        "Push the stick all the way to run. Keep an eye out for hidden 🎁 gift boxes, and for sparkly shiny critters in the grass: beat one to unlock its shiny colours!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
