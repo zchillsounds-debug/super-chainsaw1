@@ -364,6 +364,7 @@ export const BADGES = [
   { id: 'rush', icon: '👑', name: 'Boss Buster', desc: 'Clear the Boss Rush.', test: (s) => !!s.stats.bossRush },
   { id: 'team', icon: '🤝', name: 'Dream Team', desc: 'Win a 3-on-3 Team Battle.', test: (s) => (s.stats.teamWins || 0) > 0 },
   { id: 'master', icon: '🌟', name: 'Critter Master', desc: 'Clear every cup.', test: (s) => CUPS.every((c) => s.cups[c.id]) },
+  { id: 'crown', icon: '👑', name: 'Critter Crown', desc: "Win the Critter Crown on Champion's Peak in Adventure.", test: (s) => !!s.adv?.flags?.crowned },
   { id: 'roster', icon: '🐾', name: 'Full Team', desc: 'Recruit every critter.', test: (s) => s.unlocked.length >= CRITTERS.length },
   { id: 'lv10', icon: '📈', name: 'Best Buds', desc: 'Raise a critter to Lv 10.', test: (s) => Object.values(s.critters).some((c) => c.level >= 10) },
   { id: 'grow', icon: '🌱', name: 'Growing Up', desc: 'Raise a critter to Lv 7 and watch it grow.', test: (s) => Object.values(s.critters).some((c) => c.level >= 7) },

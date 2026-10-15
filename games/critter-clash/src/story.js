@@ -2,7 +2,8 @@
 // of all. Professor Pecan sets the quest; a rival, Dash, keeps turning up to test the hero;
 // the cup stadiums are the gyms. Every beat is keyed on save.adv.flags.
 import { save, persist } from './save.js';
-import { CUPS, CRITTERS, TYPES, withGear } from './data.js';
+import { CUPS, CRITTERS, TYPES, withGear, skinned } from './data.js';
+const skinnedShiny = (id) => skinned(CRITTERS.find((c) => c.id === id), 'shiny');
 import { unlock } from './save.js';
 import { sfx } from './audio.js';
 import { rivalFor } from './worldmaps.js';
@@ -51,6 +52,37 @@ export function storyIntro(S, w) {
       'Prof. Pecan (on the phone): {hero}! The whole of Clashara is talking about you now.',
       'Prof. Pecan: Three cups remain: the Midnight Cup, the Legend Cup and the Sky Cup. Then... Champion\'s Peak.',
       'Prof. Pecan: The road east of Cinder Town leads to Neon City and its Midnight Cup. Off you go!',
+    ]);
+    return;
+  }
+  if (w.key === 'frostpeak' && !F.frostpeak) {
+    F.frostpeak = true; persist();
+    w.say(["{hero}: Brrr! So THIS is Frostpeak. And that mountain... that's Champion's Peak!", 'Captain Puff: The Legend Cup is the toughest of them all. Good luck, {hero}!']);
+    return;
+  }
+  if (CUPS.every((c) => F['cup_' + c.id]) && !F.seven && w.key === 'frostpeak') {
+    F.seven = true; persist();
+    w.say([
+      'Far above, something CRACKS. The frozen gate on the mountain trail shatters into sparkles!',
+      'Prof. Pecan (on the phone): Seven cups... {hero}, you did it. The way to Champion\'s Peak is open.',
+      'Prof. Pecan: At the top waits the Crown Keeper. Nobody has beaten them in a hundred years.',
+      "Prof. Pecan: And {hero}... I have a feeling a certain rival got there first. Go!",
+    ]);
+    return;
+  }
+  if (w.key === 'peak' && F.crowned && !F.ending) {
+    F.ending = true; persist();
+    w.crownScene?.();
+    w.say([
+      'King Snooze: ...Zzz... Hm? I lost? Hoo hoo... I mean... yawn. I lost.',
+      'King Snooze: A hundred years I have guarded this crown, waiting for a critter strong enough, brave enough, and kind enough to wear it.',
+      'King Snooze: It\'s yours, {hero}. Wear it well. I am going to have a VERY long nap.',
+      'The Critter Crown floats down from the pedestal... and settles on {hero}\'s head!',
+      'Dash: ...Hmph. Congratulations, champ. Enjoy it while it lasts. I\'m coming for that crown!',
+      'Prof. Pecan: {hero}, Champion of Clashara! I knew it from the very first day.',
+      '{hero}: I did it... I really did it! But Dash is right. There are always stronger critters out there...',
+      "{hero}: So I'll keep training! Every route, every stadium. Let's go!",
+      '★ THE END ★  Thanks for playing! The world is yours to explore. Wild critters are still out there, and every stadium welcomes a rematch.',
     ]);
     return;
   }
@@ -126,6 +158,22 @@ export function storyStep(S, w) {
       w.busy = false;
       w.from = [w.hx, w.hy]; w.hy += 1; w.dir = 's'; w.moveT = 0.23;
     });
+    return true;
+  }
+  if (w.key === 'frostpeak' && w.hy <= 1 && !CUPS.every((c) => F['cup_' + c.id])) {
+    w.busy = true;
+    const left = CUPS.filter((c) => !F['cup_' + c.id]).map((c) => c.name).join(', ');
+    w.say([`A frozen gate blocks the trail. Carved in the ice: "Seven cups, or turn back." Still to win: ${left}.`], () => {
+      w.busy = false;
+      w.from = [w.hx, w.hy]; w.hy += 1; w.dir = 's'; w.moveT = 0.23;
+    });
+    return true;
+  }
+  if (w.key === 'peak' && w.hy <= 7 && !F.dash5) {
+    const a = w.npcs.find((n) => n.n.id === 'dash5');
+    if (!a) return false;
+    w.busy = true; sfx.warn?.(); w.bubble(a, '❗');
+    setTimeout(() => { w.busy = false; dashFinal(S, w); }, 700);
     return true;
   }
   if (w.key === 'ember' && !F.cup_champion && w.hx >= 24) {
@@ -263,6 +311,41 @@ export function storyTalk(S, id, w, a) {
   if (id === 'sage') sage(S, w);
   if (id === 'heart') heart(S, w);
   if (id === 'balloon') balloon(S, w, a);
+  if (id === 'dash5') { if (!F.dash5) dashFinal(S, w); else w.say(["Dash: Go on. The Crown Keeper's waiting. Show 'em what beat me."]); }
+  if (id === 'king') king(S, w);
+}
+
+const heroLv = () => save.critters[save.adv.hero]?.level || 1;
+
+// Champion's Peak: Dash's last stand before the Crown
+function dashFinal(S, w) {
+  const rid = rivalFor(save.adv.hero), rdef = byId(rid), lv = Math.max(18, heroLv() + 1);
+  w.say([
+    "Dash: There you are. I've been waiting up here for HOURS. My ears are frozen.",
+    "Dash: Route 1, the Thunder Stadium, the woods, Neon City... you beat me every time. And you even saved my tail.",
+    "Dash: But this is the top of the world. The Crown is RIGHT THERE. One more battle, {hero}. Everything we've got!",
+    '{hero}: Everything we\'ve got. Let\'s go, Dash!',
+  ], () => S.worldFight({
+    foe: withGear(rdef, lv), lv, kind: 'story', flag: 'dash5', name: 'Rival Dash', diff: 0.78,
+    trainer: { name: 'Dash', critter: rid, title: 'Your rival, all out', beat: "...Heh. Of course. You're the real deal, {name}. Go get that crown.", gloat: "I WON? I won! ...Come back and fight me again. It doesn't count unless you're at your best!" },
+    note: '⚡ You beat Dash at the top of the world!',
+  }));
+}
+
+function king(S, w) {
+  const F = flags();
+  if (F.crowned) { w.say(['King Snooze: Zzz... zzz... (The old king is sound asleep.)']); return; }
+  if (!F.dash5) { w.say(['King Snooze: Zzz...']); return; }
+  const lv = Math.max(22, heroLv() + 2);
+  w.say([
+    'King Snooze: ...Zzz... Hm? A challenger. Seven cups, a rival beaten, four trials passed... courage, strength, friendship, wisdom... and heart.',
+    'King Snooze: I am the Crown Keeper. Wake me fully... and the Critter Crown is yours.',
+    'King Snooze: *YAWWWN* ...Let us begin.',
+  ], () => S.worldFight({
+    foe: withGear(skinnedShiny('snoozlo'), lv), lv, kind: 'story', flag: 'crowned', name: 'King Snooze', diff: 0.88,
+    trainer: { name: 'King Snooze', critter: 'snoozlo', title: 'The Crown Keeper', boss: true, beat: 'Hoo hoo... I am awake now. Truly awake. The Crown is yours.', gloat: 'Zzz... come back... when you can keep me up past my bedtime...' },
+    note: "👑 You beat the Crown Keeper! The Critter Crown is yours!",
+  }));
 }
 
 // Captain Puff flies the hero between Neon City, Cloudtop Gardens and Frostpeak

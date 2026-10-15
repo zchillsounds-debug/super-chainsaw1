@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { toon, inked, canvasTex } from './toon.js';
 import { Critter } from './critters.js';
-import { CRITTERS, CUPS, withGear } from './data.js';
+import { CRITTERS, CUPS, withGear, skinned } from './data.js';
 import { save, persist } from './save.js';
 import { sfx, playMusic } from './audio.js';
 import { MAPS, rivalFor } from './worldmaps.js';
@@ -148,6 +148,11 @@ export class World {
         c.fillStyle = (x + y) % 2 ? C.a : C.b;
         c.fillRect(x * P, y * P, P, P);
         if (t === '"') { c.fillStyle = C.tall; c.fillRect(x * P, y * P, P, P); }
+        if (t === 'i') {
+          c.fillStyle = C.ice || '#b8e4ff'; c.fillRect(x * P, y * P, P, P);
+          c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 2;
+          for (let k = 0; k < 2; k++) { const gx = x * P + 4 + rand() * (P - 12), gy = y * P + 4 + rand() * (P - 12); c.beginPath(); c.moveTo(gx, gy + 6); c.lineTo(gx + 6, gy); c.stroke(); }
+        }
         if (t === '~' || t === '=') { c.fillStyle = C.bank || '#8a7a5a'; c.fillRect(x * P, y * P, P, P); }
         if (t === 's' || t === 'P') { c.fillStyle = (x + y) % 2 ? '#f4dc9a' : '#f1d894'; c.fillRect(x * P, y * P, P, P); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); } }
       }
@@ -244,7 +249,9 @@ export class World {
       const tr = new THREE.CylinderGeometry(0.2 * s, 0.28 * s, 1.0 * s, 6); tr.translate(px + jx, 0.5 * s, pz + jz); trunks.push(tr);
       const a = new THREE.IcosahedronGeometry(1.05 * s, 1); a.scale(1, 0.85, 1); a.translate(px + jx, 1.55 * s, pz + jz); (rand() < 0.5 ? can : can2).push(a);
       const b = new THREE.IcosahedronGeometry(0.72 * s, 1); b.translate(px + jx + (rand() - 0.5) * 0.3, 2.35 * s, pz + jz); (rand() < 0.5 ? can : can2).push(b);
+      if (this.M.snow) { const c = new THREE.SphereGeometry(0.62 * s, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2.4); c.scale(1, 0.7, 1); c.translate(px + jx, 2.62 * s, pz + jz); caps.push(c); }
     };
+    const caps = [];
     const fronds = [], ptrunks = [], nuts = [], puffs = [];
     const puff = (x, y, s = 1) => {
       const [px, pz] = wpos(x, y);
@@ -276,7 +283,7 @@ export class World {
     if (fronds.length) { this.group.add(inked(mergeGeometries(fronds), toon(0x3fbf5a, { rim: 0.4, side: THREE.DoubleSide }), OL * 0.4)); fronds.forEach((g) => g.dispose()); }
     const put = (list, color, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color, { rim: 0.4 }), ink); m.castShadow = true; this.group.add(m); list.forEach((g) => g.dispose()); };
     const TC = this.M.trees || [0x3fae4a, 0x4cc25a, 0x8a5a3a];
-    put(can, TC[0], OL); put(can2, TC[1], OL); put(trunks, TC[2], OL * 0.6);
+    put(can, TC[0], OL); put(can2, TC[1], OL); put(trunks, TC[2], OL * 0.6); put(caps, 0xffffff, OL * 0.6);
   }
 
   // Neon City: blocks of lit skyscrapers where other maps have trees, street lamps (l)
@@ -466,6 +473,7 @@ export class World {
       if (b.stadium) this.stadiumModel(G, b, w, d);
       else if (b.shroom) this.shroomHouse(G, b, w, d);
       else if (b.tower) this.towerModel(G, b, w, d);
+      else if (b.altar) this.altarModel(G, b, w, d);
       else {
         const wallH = b.lab ? 2.4 : 2.0;
         const walls = inked(new THREE.BoxGeometry(w - 0.4, wallH, d - 0.5), toon(b.wall || 0xfff1d8), OL);
@@ -547,6 +555,19 @@ export class World {
     if (b.heal) { const cr = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.18, 0.1), neon); cr.position.set(dx + 1.4, 1.2, front + 0.05); G.add(cr); const v2 = cr.clone(); v2.rotation.z = Math.PI / 2; G.add(v2); }
   }
 
+  // Champion's Peak: stone steps up to a pedestal where the Critter Crown spins in a sunbeam
+  altarModel(G, b, w, d) {
+    for (let k = 0; k < 3; k++) { const st = inked(new THREE.BoxGeometry(w - 0.3 - k * 1.1, 0.35, d - 0.2 - k * 0.8), toon(k % 2 ? 0xd8dcef : 0xc4c8e0), OL * 0.6); st.position.y = 0.17 + k * 0.35; G.add(st); }
+    const ped = inked(new THREE.CylinderGeometry(0.45, 0.6, 1.0, 10), toon(0xe8ecff), OL * 0.6); ped.position.y = 1.55; G.add(ped);
+    if (save.adv.flags.crowned) { this.crown = null; return; }
+    const crown = new THREE.Group();
+    const band = inked(new THREE.CylinderGeometry(0.5, 0.45, 0.35, 16, 1, true), toon(0xffd23f, { rim: 0.9, emissive: 0x6a4a00, side: THREE.DoubleSide }), OL * 0.6); crown.add(band);
+    for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2, sp = inked(new THREE.ConeGeometry(0.12, 0.38, 6), toon(0xffd23f, { emissive: 0x6a4a00 }), OL * 0.4); sp.position.set(Math.cos(a) * 0.46, 0.33, Math.sin(a) * 0.46); crown.add(sp);
+      const gem = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), toon([0xff5a8a, 0x5ad8ff, 0x8aff6a, 0xb08aff, 0xff9a3a][k], { emissive: 0x3a1a2a })); gem.position.set(Math.cos(a) * 0.5, 0.52, Math.sin(a) * 0.5); crown.add(gem); }
+    crown.position.y = 2.6; G.add(crown);
+    this.crown = crown;
+  }
+
   stadiumModel(G, b, w, d) {
     const cup = CUPS.find((c) => c.id === b.stadium);
     const stripes = canvasTex(256, 32, (c, W, H) => { for (let k = 0; k < 16; k++) { c.fillStyle = k % 2 ? '#fff4e0' : cup.color; c.fillRect(k * W / 16, 0, W / 16 + 1, H); } });
@@ -585,7 +606,7 @@ export class World {
       else if (n.balloon) { root = balloonModel(n.balloon); }
       else {
         const id = n.critter === '$hero' ? save.adv.hero : n.rival ? rivalFor(save.adv.hero) : n.critter;
-        cr = new Critter(withGear(byId(id), n.rival ? (n.rlv || 4) : (n.lv || n.trainer?.lv || 3)));
+        cr = new Critter(withGear(n.shiny ? skinned(byId(id), 'shiny') : byId(id), n.rival ? (n.rlv || 4) : (n.lv || n.trainer?.lv || 3)));
         root = cr.root;
         root.scale.setScalar(CS * (n.scale || 1));
       }
@@ -706,6 +727,17 @@ export class World {
     this.steps++;
     this.encCool--;
     const t = this.tile(this.hx, this.hy);
+    // ice: keep sliding the same way until something solid is in the way
+    if (t === 'i') {
+      const [dx, dy] = DIRS[this.dir], nx = this.hx + dx, ny = this.hy + dy;
+      if (this.walkable(nx, ny) && !this.occupied(nx, ny, 'hero')) {
+        this.from = [this.hx, this.hy]; this.hx = nx; this.hy = ny; this.moveT = STEP * 0.6; this.sliding = true;
+        if (this.follower) { const F = this.follower; F.from = [F.x, F.y]; F.x = this.from[0]; F.y = this.from[1]; F.moveT = STEP * 0.6; }
+        return;
+      }
+      if (this.sliding) { sfx.ui('back'); this.bumpT = 0.35; }
+    }
+    this.sliding = false;
     if (t === '"') {
       const [px, pz] = wpos(this.hx, this.hy);
       for (let k = 0; k < 5; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5), y: 0.4, z: pz + (Math.random() - 0.5), vy: 2 + Math.random() * 2, vx: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2, color: 0x3fae4a, size: 0.22, life: 0.5, shape: 'leaf', additive: false, grav: 6, rot: Math.random() * 6 });
@@ -739,9 +771,9 @@ export class World {
     const H = this.hero, P = H.pose;
     H.resetPose();
     if (this.from) {
-      const k = 1 - this.moveT / STEP, [ax, az] = wpos(...this.from), [bx, bz] = wpos(this.hx, this.hy);
+      const k = 1 - this.moveT / (this.sliding ? STEP * 0.6 : STEP), [ax, az] = wpos(...this.from), [bx, bz] = wpos(this.hx, this.hy);
       H.root.position.set(ax + (bx - ax) * k, 0, az + (bz - az) * k);
-      walkPose(P, this.t);
+      if (this.sliding) { idlePose(P, this.t); P.lean = -0.15; P.armLz = P.armRz = 1.2; H.emote?.('happy', 'o', 0.1); } else walkPose(P, this.t);
     } else idlePose(P, this.t);
     H.root.rotation.y = turnTo(H.root.rotation.y, YAW[this.dir], dt * 18);
     H.update(dt);
@@ -752,12 +784,20 @@ export class World {
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 24, y: 0.4 + Math.random() * 2.2, z: p.z + (Math.random() - 0.7) * 16, vx: (Math.random() - 0.5) * 0.6, vy: 0.2 + Math.random() * 0.3, vz: (Math.random() - 0.5) * 0.6, color: Math.random() < 0.7 ? 0xd8ff6a : 0x8affe0, size: 0.28, life: 2.6, shape: 'glow', fadeIn: 0.3, hold: 0.5 });
     }
+    if (this.M.snow && Math.random() < dt * 16) {
+      const p = this.hero.root.position;
+      this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 26, y: 7, z: p.z + (Math.random() - 0.65) * 18, vy: -1.2, vx: 0.3 + (Math.random() - 0.5) * 0.4, color: 0xffffff, size: 0.16, life: 5, shape: 'glow', additive: false, floor: true });
+    }
     // embers off the lava and the vents, smoke from the volcano
     if (this.lavaTiles?.length && Math.random() < dt * 14) {
       const [px, pz] = this.lavaTiles[Math.floor(Math.random() * this.lavaTiles.length)];
       this.g.fx.spawn({ x: px + (Math.random() - 0.5) * 2, y: 0.2, z: pz + (Math.random() - 0.5) * 2, vy: 1.2 + Math.random() * 1.5, vx: (Math.random() - 0.5) * 0.5, color: Math.random() < 0.5 ? 0xffa030 : 0xff5a1a, size: 0.18, life: 1.2, shape: 'glow' });
     }
     for (const [px, pz] of this.vents || []) if (Math.random() < dt * 3) this.g.fx.spawn({ x: px, y: 0.8, z: pz, vy: 1.4, vx: 0.2, color: 0xd8d0d0, alpha: 0.5, size: 0.7, life: 1.8, shape: 'puff', additive: false, grow: 1.2 });
+    if (this.crown) {
+      this.crown.rotation.y += dt * 1.2; this.crown.position.y = 2.6 + Math.sin(this.t * 2) * 0.12;
+      if (Math.random() < dt * 5) { const p = new THREE.Vector3(); this.crown.getWorldPosition(p); this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.4, y: p.y + Math.random(), z: p.z + (Math.random() - 0.5) * 1.4, vy: 0.6, color: 0xffe070, size: 0.3, life: 1, shape: 'star' }); }
+    }
     if (this.brambleT > 0 && this.brambles) {
       this.brambleT -= dt;
       const k = Math.max(0, this.brambleT / 1.2), c = this.brambles.userData.c;
@@ -1014,6 +1054,29 @@ export class World {
   }
 
   storyCheck() { return this.S.worldStoryStep?.(this) || false; }
+
+  // the Critter Crown floats off the pedestal onto the hero's head
+  crownScene() {
+    const c = this.crown; if (!c) return;
+    this.crown = null;
+    const from = new THREE.Vector3(); c.getWorldPosition(from);
+    c.parent.remove(c); this.group.add(c); c.position.copy(from);
+    let t = 0;
+    const tick = () => {
+      if (!c.parent) return;
+      t += 1 / 60;
+      const k = Math.min(1, t / 1.6), p = this.hero.root.position, hy = 2.2 * CS;
+      c.position.set(from.x + (p.x - from.x) * k, from.y + (hy - from.y) * k + Math.sin(k * Math.PI) * 1.5, from.z + (p.z - from.z) * k);
+      c.rotation.y += 0.12;
+      if (k < 1) requestAnimationFrame(tick);
+      else {
+        c.parent.remove(c);
+        for (let i = 0; i < 40; i++) this.g.fx.spawn({ x: p.x, y: 2.5, z: p.z, vx: (Math.random() - 0.5) * 8, vy: 3 + Math.random() * 5, vz: (Math.random() - 0.5) * 8, color: [0xffd23f, 0xff5a8a, 0x5ad8ff, 0x8aff6a][i % 4], size: 0.35, life: 1.6, shape: 'confetti', additive: false, grav: 6, spin: 8, rot: Math.random() * 6 });
+        sfx.fanfare?.(heroDef()); this.banner('👑 Champion of Clashara!');
+      }
+    };
+    tick();
+  }
 
   banner(text) {
     this.S.root.querySelector('.wd-banner')?.remove();
