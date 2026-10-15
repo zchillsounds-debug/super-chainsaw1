@@ -1,6 +1,7 @@
-# Critter Clash: Handoff (after Round 220, Adventure mode story complete)
+# Critter Clash: Handoff (after Round 243, Adventure mode polish)
 
 ## Start here (for a new chat)
+- **Session 16c (01:01–~02:00 UTC on 2026-10-15) did R221–R243 of Adventure polish; read "Session 16c" below. Round numbering continues from R244.** The user's 5-hour window ends at about **04:45 UTC on 2026-10-15**.
 - **CURRENT FOCUS (session 16+): Adventure mode**, a Pokémon Red/Blue style world with a story. Read "Session 16: ADVENTURE MODE" and "Session 16b" first. The user asked for 5 hours of chained sessions, ending at about **04:45 UTC on 2026-10-15**. The whole story (all 7 cups, 5 trials, Champion's Peak, the ending) is now playable; what's left is **polish** (see "Session 16b → next").
 - Repo `zchillsounds-debug/super-chainsaw1`, branch **`ccr-4fc93d6e-suxlhd`**, folder `games/critter-clash/`. Clone with `--branch ccr-4fc93d6e-suxlhd`.
 - Latest work (session 15, 2026-10-14 21:42–~22:20 UTC): finished session 14's "Modes & polish" time box with R198–R208 (see "Session 15"). The user's requested time ended at ~22:25 UTC, so **nothing was chained after session 15**; wait for the user before building more. Numbering continues from **R209**.
@@ -358,6 +359,27 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - **Checked:** all 7 cups play from their town and land back in the world (advcup), every trial and the ending play out error-free (advstory/advtrial), screenshots of each new map at 915×412 and some at 412×915.
 - **Next (polish, plan item 5):** interiors (houses are still "Nobody seems to be home"), world music per map exists but Champion's Peak uses `boss`; a mini-map or town-map screen in the ☰ menu; NPC variety; wild-battle field paint per area; a world-map "fly" between visited Berry Centers; Pecan news `adventure` for returning players; a tapcheck pass on the world screens (ask buttons at 360 px tall); balance of story fights vs the hero's level (story fights use fixed levels until the Peak, which scales with the hero); Camp prop for the Critter Crown.
 
+## Session 16c (2026-10-15, 01:01–~02:00 UTC, session_011kJnrLcnLSxeiY2bMLFS7Q): Adventure polish, R221–R243
+- **Interiors (R221, `src/interiors.js`):** every non-stadium building can be entered. `getMap(key)` (use it instead of `MAPS[key]`) builds a room on demand for keys `in:<map>:<building id>` from `ROOMS` (house/center/lab/arcade ASCII layouts) and `PEOPLE` (residents per building, wall/rug colours, Berry Center visitors). Room tiles: `W` wall, `C` shelf, `X` machine, `Q` bed, `D` table, `O` plant, `K` counter (A talks across it), `Y` rug. Room maps have `indoor`, `exit` (outdoor door front), `enter`, `wall`, `rug`; furniture are hidden signs (`hide: true`, `act: 'rest'` for the home bed). Stepping on the doormat (bottom row) goes back out. `World.buildInterior()` draws walls/furniture; the camera holds the room (portrait follows the hero's x). Nurse Lilypop (`story: 'nurse'`) and the home bed (`'rest'`) set the respawn point. `tools/advroom.mjs` walks in/out of a Berry Center and naps at home.
+- **Town Map (R222):** ☰ → 🗺️ Town Map (`Screens.worldMap`, layout `WMAP` at the top of screens.js). `save.adv.seen` records visited maps (set in `World.load`). Tap a visited town to fly to its Berry Center (`WMAP[k].fly`). **Bug fixed:** Neon City's Berry Center and tower doors were blocked by a stray `h` row.
+- **R223:** trainer/story fights use `storyLevel(fixed, heroLv)` (exported from screens.js): over-levelled heroes meet foes halfway to their level; under-levelled ones never face more than hero+3. Wild levels unchanged. XP pacing checked: a full run gives about the XP to reach Lv 19 by the Legend Cup.
+- **R224:** tapcheck has world steps (heropick, world, worldmenu, worldmap, worldask, worldroom); clean at 740x360 and 412x915 apart from the known portrait rotate hint in battles. The A button hides while answer buttons are up.
+- **R225:** Pecan news `adventure` (returning players without an adventure); Camp shows the Critter Crown on a stump (`buildProps` 5th arg; badge `crown` or flag).
+- **R226:** NPC `act` field: `sleep`, `dance`, `hop`, `cheer`, `wave`, `fan`, `fish` (rod + bobber) in `actPose()`.
+- **R227 + R241:** open-field fights: stadium markings are a separate `marks` layer (`userData.stadium`), the padded wall is hidden, a hedge ring (`userData.openOnly`) shows, far scenery stops casting shadows, and the stage card names the map (`stageName` battle option).
+- **R228:** title Adventure button shows place and cups; ☰ → New Adventure (tap twice) starts over via heroPick.
+- **R229:** running (stick fully pushed on touch, or Shift): `stepLen` = STEP×0.62, dust puffs; rooms are walk-only.
+- **R230:** hidden gift boxes: 2 per outdoor map (24), deterministic per map (`buildItems`, BFS-reachable, off paths, spread out), flags `it_<map>_<k>`; berries or a Power Snack (40% of a level's XP). ☰ shows 🎁 n/24.
+- **R231:** portrait room camera; regression run of advcup (Sprout), advtrial, advstory (King Snooze → THE END): all clean.
+- **R232:** post-game: Dash (`dashpost`, `showFlag: 'ending'`) by Pecan's lab offers a daily rematch at hero+2 for 3 berries (`berries` field on world fights; flag `dashday_<date>`).
+- **R233:** shiny wild critters (`SHINY_RATE` 1/30) sparkle; beating one unlocks its shiny palette and always recruits it if new.
+- **R234/R235/R238:** How to Play has an Adventure line; Pecan news `adv2` for Adventure players; the intro ends with a controls hint.
+- **R236:** idle hero animations (looks around, stretches, yawns, dozes with z's).
+- **R237:** ☰ badge case: 7 cup emblems in story order (+ crown).
+- **R239/R240:** walking buddy: ☰ → 🐾 Buddy (`save.adv.buddy`; Pip's `save.adv.follow` wins), `World.refreshFollower()`; press A facing the buddy to pet it.
+- **R242:** `sfx.door(bell)` on entering/leaving rooms. **R243:** arcade neon strips.
+- **Next ideas:** more room furniture variety (stadium lobbies?), a day/evening tint, route-trainer rematches after the ending, Town Map gift counts per town, a footstep sound per terrain, a 2-rep robin balance run (combat untouched this session).
+
 ## Session 15 (2026-10-14, 21:42–~22:20 UTC)
 - **Note for new sessions:** the cloud clone can be shallow and look "ahead 50, behind 50". Run `git fetch --unshallow origin ccr-4fc93d6e-suxlhd` and then `git merge --ff-only origin/ccr-4fc93d6e-suxlhd` before working.
 - **R198:** the Full Team badge's id is now `roster`. It used to share the id `team` with Dream Team, so winning a 3-on-3 also marked Full Team as earned. No other duplicate ids exist in data.js arrays (checked).
@@ -594,6 +616,7 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 218. Cloudtop Gardens (Sky Cup), Captain Puff's balloon.
 219. Frostpeak (Legend Cup), Champion's Peak ice puzzle, Dash's last battle, King Snooze, the crowning, Critter Crown badge.
 220. Professor Pecan points to the next cup's town.
+221–243. Adventure polish (session 16c): interiors, Town Map + flying, story-fight level scaling, tapcheck world steps, Camp crown, NPC activities, open-field fight looks, title/New Adventure, running, gift boxes, Dash rematches, shinies, idle hero, badge case, walking buddy, door sounds (see "Session 16c").
 L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (smaller, softer, per-kind `cap` on point size).
 
 ## Critique backlog (known issues)
@@ -633,5 +656,6 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
    - `source_revision`: `ccr-4fc93d6e-suxlhd`
    - `outcome_branch`: `ccr-4fc93d6e-suxlhd`
    - `title`: "Critter Clash – rounds N+"
-   - `prompt`: "Continue building Critter Clash. Read games/critter-clash/HANDOFF.md fully and follow it. Focus: modes & polish. Run the critique loop round after round, and commit and push each round to branch ccr-4fc93d6e-suxlhd (merge origin first, never force-push). The user asked for about 2 hours (until ~22:25 UTC on 2026-10-14) and to chain to a new chat near 300k context. At the end of the time, send the final APK, update HANDOFF.md, and stop with a short summary unless the user asks for more. Post a one-line status to the user when you start."
+   - `prompt` (session 16 chain): "Continue building Critter Clash. Read games/critter-clash/HANDOFF.md fully and follow it. Start with the "Session 16: ADVENTURE MODE", "Session 16b" and "Session 16c" sections. Focus: Adventure mode polish (see Session 16c → Next ideas, and keep critiquing screenshots). Run the critique loop (screenshot, critique, improve) round after round. Commit and push each round to branch ccr-4fc93d6e-suxlhd: merge origin first, and never force-push. Round numbering continues from R<next>. The user asked for 5 hours in total, until about 04:45 UTC on 2026-10-15. Chain to a fresh session about every 2 hours or near 300k context, following the HANDOFF chaining steps (use this same prompt, updating the round number). Send the user the APK at the end of each session. At 04:45 UTC, send the final APK, update HANDOFF.md, and stop with a short summary. The user approved this plan and continuous building, so don't stop to ask questions. Post a one-line status to the user when you start."
+   - older prompt (sessions 14–15): "Continue building Critter Clash. Read games/critter-clash/HANDOFF.md fully and follow it. Focus: modes & polish. Run the critique loop round after round, and commit and push each round to branch ccr-4fc93d6e-suxlhd (merge origin first, never force-push). The user asked for about 2 hours (until ~22:25 UTC on 2026-10-14) and to chain to a new chat near 300k context. At the end of the time, send the final APK, update HANDOFF.md, and stop with a short summary unless the user asks for more. Post a one-line status to the user when you start."
 5. Tell the user in one short message what was done and that the next session has started.
