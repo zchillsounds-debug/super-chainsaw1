@@ -900,13 +900,14 @@ body:not(.is-touch) .wd-a { display: none; }
 .wm-node.here circle { fill: var(--yellow, #ffd23f); }
 .wm-name { font-family: var(--display); font-size: 11px; text-anchor: middle; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 3px; }
 .wm-cup { font-size: 12px; text-anchor: middle; }
+.wm-gift { font-size: 9px; text-anchor: middle; pointer-events: none; }
 .wm-hero { animation: wmBob 1s ease-in-out infinite alternate; }
 @keyframes wmBob { to { transform: translateY(-4px); } }
 .wm-tip { margin: 6px 0 8px; font-weight: 800; font-size: 14px; }
 @media (max-height: 420px) { .wd-map { padding: 8px 12px 10px; } .wd-map h2 { font-size: 24px; margin-bottom: 2px; } .wm-tip { margin: 2px 0 4px; font-size: 13px; } .wm { max-height: calc(100dvh - 150px); } }
 .wm-deco { font-size: 18px; text-anchor: middle; opacity: .85; pointer-events: none; }
 body:has(.wd-ask) .wd-a { visibility: hidden; }
-@media (max-height: 420px) { .wd-map h2 { display: none; } .wm { max-height: calc(100dvh - 110px); } }
+@media (max-height: 420px) { .wd-map h2 { display: none; } .wm { max-height: calc(100dvh - 135px); } }
 .title-main .btn small { display: block; font-family: Nunito, sans-serif; font-weight: 900; font-size: 13px; line-height: 1.1; margin-top: 2px; opacity: .9; letter-spacing: 0; -webkit-text-stroke: 0; }
 .wd-cups { display: flex; gap: 6px; justify-content: center; margin: -4px 0 12px; }
 .wd-cups span { width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,.08); box-shadow: inset 0 0 0 3px rgba(0,0,0,.12); display: grid; place-items: center; font-size: 15px; }

@@ -897,7 +897,7 @@ export class Screens {
       + Object.entries(WMAP).map(([k, n]) => {
         const v = seen[k], won = n.cup && F['cup_' + n.cup], town = !!n.fly;
         return `<g class="wm-node ${v ? 'seen' : ''} ${town ? 'town' : ''} ${k === here ? 'here' : ''}" data-k="${k}" transform="translate(${n.x} ${n.y})">
-          <circle r="${town ? 11 : 7}"/>${won ? '<text class="wm-cup" y="5">🏆</text>' : ''}
+          <circle r="${town ? 11 : 7}"/>${won ? '<text class="wm-cup" y="5">🏆</text>' : ''}${v && k !== 'peak' && [0, 1].some((j) => !F[`it_${k}_${j}`]) ? `<text class="wm-gift" x="${town ? -10 : -7}" y="${town ? -7 : -4}">🎁</text>` : ''}
           <text class="wm-name" y="${n.ly || (town ? 24 : 19)}">${v ? MAPS[k].name : '???'}</text></g>`;
       }).join('');
     const hp = WMAP[here];
@@ -905,7 +905,7 @@ export class Screens {
       <svg viewBox="0 0 400 250" class="wm"><rect x="0" y="0" width="400" height="250" rx="18" class="wm-sea"/>
       <path class="wm-land" d="M18 238 L18 70 Q20 20 90 22 L300 18 Q385 22 385 90 L380 160 Q378 205 330 214 L230 216 Q215 244 150 242 Z"/>${[['🌲', 220, 34], ['🌲', 150, 40], ['🌋', 372, 78], ['🏙️', 372, 210], ['☁️', 290, 232], ['🏔️', 118, 150], ['🌊', 236, 128], ['🌸', 90, 196]].map(([e, x, y]) => `<text class="wm-deco" x="${x}" y="${y}">${e}</text>`).join('')}${svg}
       ${hp ? `<image href="${this.game.portrait(heroDef())}" x="${hp.x + 4}" y="${hp.y - 34}" width="30" height="30" class="wm-hero"/>` : ''}</svg>
-      <p class="wm-tip">${Object.values(seen).length > 1 ? 'Tap a town you\'ve visited to fly there with Captain Puff\'s mail balloon.' : 'Explore to fill in the map!'}</p>
+      <p class="wm-tip">${Object.values(seen).length > 1 ? 'Tap a town you\'ve visited to fly there with Captain Puff\'s mail balloon. 🎁 = a gift still hidden there.' : 'Explore to fill in the map!'}</p>
       <div class="res-btns"></div></div>`;
     const close = () => { d.remove(); this.game.modalClose = null; };
     d.querySelector('.res-btns').appendChild(this.btn('Close', 'ghost', close));
