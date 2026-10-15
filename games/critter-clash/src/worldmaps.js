@@ -360,7 +360,7 @@ export const MAPS = {
     buildings: [
       { id: 'stadium4', x: 3, y: 2, w: 8, h: 4, stadium: 'champion', door: 5, label: 'Champion Stadium' },
       { id: 'berry4', x: 17, y: 9, w: 4, h: 3, roof: 0xff5a8a, door: 2, label: 'Berry Center', heal: true },
-      { id: 'forge', x: 3, y: 9, w: 4, h: 3, roof: 0x5a4a5a, wall: 0xc8a888, door: 2 },
+      { id: 'forge', x: 3, y: 9, w: 4, h: 3, roof: 0x9a5a48, wall: 0xc8a888, door: 2 },
     ],
     signs: [{ x: 13, y: 8, text: 'CINDER TOWN\nHot springs, hot tempers, and the hottest cup in Clashara.' }],
     npcs: [

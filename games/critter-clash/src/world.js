@@ -567,7 +567,7 @@ export class World {
   }
 
   buildBuildings() {
-    this.doors = [];
+    this.doors = []; this.chimneys = [];
     for (const b of this.M.buildings || []) {
       const x0 = b.x * TILE, z0 = b.y * TILE, w = b.w * TILE, d = b.h * TILE;
       const G = new THREE.Group();
@@ -601,6 +601,8 @@ export class World {
           const shade = new THREE.Color(b.roof).multiplyScalar(0.78).getHex();
           G.add(new THREE.Mesh(mergeGeometries(bands), toon(shade))); bands.forEach((g) => g.dispose());
           const ch = inked(new THREE.BoxGeometry(0.4, 0.9, 0.4), toon(0xc86a4a), OL * 0.6); ch.position.set(w * 0.25, wallH + 1.1, -d * 0.12); G.add(ch);
+          // a wisp of smoke from the chimney (thicker in the cold, at night, and from the forge)
+          this.chimneys.push({ x: x0 + w / 2 + w * 0.25, z: z0 + d / 2 - d * 0.12, y: wallH + 1.6, rate: b.id === 'forge' ? 3 : this.M.snow || this.phase !== 'day' ? 1.4 : 0.7, forge: b.id === 'forge' });
         }
         // door and windows on the south face
         const dx = (b.door + 0.5) * TILE - w / 2, front = d / 2 - 0.25;
@@ -1055,6 +1057,10 @@ export class World {
     if (this.lavaTiles?.length && Math.random() < dt * 14) {
       const [px, pz] = this.lavaTiles[Math.floor(Math.random() * this.lavaTiles.length)];
       this.g.fx.spawn({ x: px + (Math.random() - 0.5) * 2, y: 0.2, z: pz + (Math.random() - 0.5) * 2, vy: 1.2 + Math.random() * 1.5, vx: (Math.random() - 0.5) * 0.5, color: Math.random() < 0.5 ? 0xffa030 : 0xff5a1a, size: 0.18, life: 1.2, shape: 'glow' });
+    }
+    for (const c of this.chimneys || []) if (Math.random() < dt * c.rate) {
+      this.g.fx.spawn({ x: c.x, y: c.y, z: c.z, vy: 0.9, vx: 0.25, color: c.forge ? 0xb8a8a8 : 0xf0f0f0, alpha: 0.55, size: 0.45, life: 2.2, shape: 'puff', additive: false, grow: 1.4 });
+      if (c.forge && Math.random() < 0.5) this.g.fx.spawn({ x: c.x, y: c.y, z: c.z, vy: 1.6, vx: (Math.random() - 0.5) * 0.6, color: 0xffa030, size: 0.16, life: 0.9, shape: 'glow' });
     }
     for (const [px, pz] of this.vents || []) if (Math.random() < dt * 3) this.g.fx.spawn({ x: px, y: 0.8, z: pz, vy: 1.4, vx: 0.2, color: 0xd8d0d0, alpha: 0.5, size: 0.7, life: 1.8, shape: 'puff', additive: false, grow: 1.2 });
     if (this.crown) {
