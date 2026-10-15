@@ -252,8 +252,6 @@ export class Hazards {
       sg.ring = ring;
       sfx.warn();
     }
-    // the first one each match gets a callout that says what to do about it
-    if (!this.told) { this.told = true; B.hud.callout?.(this.S.tip, 0, 1); }
     this.sig = sg;
     B.stats.hazardsSeen = (B.stats.hazardsSeen || 0) + 1;
   }

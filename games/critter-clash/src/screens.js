@@ -94,7 +94,7 @@ export class Screens {
     const sweep = () => this.root.querySelectorAll(SCROLLERS).forEach(mark);
     new MutationObserver(() => requestAnimationFrame(sweep)).observe(this.root, { childList: true, subtree: true });
     this.root.addEventListener('scroll', (e) => { if (e.target.matches?.(SCROLLERS)) mark(e.target); }, true);
-    addEventListener('resize', sweep);
+    addEventListener('resize', () => { sweep(); if (this.mode === 'results') this.fitResults(); });
   }
 
   hideAll() { this.root.innerHTML = ''; this.mode = null; }
@@ -1358,6 +1358,7 @@ export class Screens {
     };
     this.resDone = 0;
     setTimeout(fill, 500);
+    requestAnimationFrame(() => this.fitResults());
 
     const b = this.root.querySelector('.res-btns');
     if (kind === 'world') {
@@ -1404,6 +1405,16 @@ export class Screens {
     if (joined) setTimeout(() => this.recruit(cDef), 1600);
   }
 
+  // squeeze the results column until its buttons fit on screen (short phones, a quote plus a gear callout...)
+  fitResults() {
+    const R = this.root.querySelector('.results');
+    if (!R) return;
+    R.classList.remove('tight', 'tighter');
+    const over = () => R.scrollHeight > R.clientHeight + 1;
+    if (over()) R.classList.add('tight');
+    if (over()) R.classList.add('tighter');
+  }
+
   // callout when a level-up earns a new piece of gear
   gearGet(def, gear) {
     if (this.mode !== 'results') return;
@@ -1413,7 +1424,7 @@ export class Screens {
     const el = document.createElement('div');
     el.className = 'gear-get';
     el.innerHTML = `<i>${gear.icon}</i><span><small>New gear!</small><b>${gear.name}</b><em>${def.name} puts it on!</em></span>`;
-    card.appendChild(el);
+    card.appendChild(el); this.fitResults();
     sfx.jingle(3);
     // dress the celebrating winner right away, with a little sparkle
     const f = this.game.battle?.player;
