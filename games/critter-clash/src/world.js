@@ -512,12 +512,13 @@ export class World {
   updateCamera(dt) {
     const cam = this.g.camera, p = this.hero.root.position;
     const port = cam.aspect < 1;
-    const H = port ? 22 : 17, D = port ? 11 : 11.5;
+    const H = port ? 21 : 17, D = port ? 10 : 11.5;
     const want = new THREE.Vector3(p.x, H, p.z + D);
     if (!this.camAt) this.camAt = want.clone(); else this.camAt.lerp(want, 1 - Math.exp(-dt * 8));
     cam.position.copy(this.camAt);
     cam.lookAt(this.camAt.x, 0.4, this.camAt.z - D + (port ? 0.6 : 0.3));
-    cam.fov = port ? 55 : 40; cam.updateProjectionMatrix();
+    // portrait keeps about the same width of world in view as landscape shows in height
+    cam.fov = port ? Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) : 40; cam.updateProjectionMatrix();
     // the sun's shadow box follows the hero
     const sun = this.g.arena.sun;
     sun.position.set(p.x - 8, 26, p.z + 10); sun.target.position.set(p.x, 0, p.z);
