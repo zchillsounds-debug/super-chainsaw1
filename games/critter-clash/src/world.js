@@ -15,6 +15,14 @@ import { ARENAS } from './arena.js';
 export const TILE = 2;
 const DIRS = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
 const YAW = { n: Math.PI, s: 0, e: Math.PI / 2, w: -Math.PI / 2 };
+// clock-of-day lighting for outdoor maps without their own mood
+const PHASES = {
+  day: null,
+  evening: { sun: 0xffc896, sunI: 2.3, sky: 0xffe2cc, gnd: 0x6a5a48, hemiI: 1.05, fog: 0xffd8b8 },
+  night: { sun: 0xbcc8ff, sunI: 1.3, sky: 0x8e9ad8, gnd: 0x3a4060, hemiI: 1.0, fog: 0x4a5888 },
+};
+const LIT = new THREE.MeshBasicMaterial({ color: 0xffd870 }); // a lamp-lit window at night
+
 const STEP = 0.23; // seconds per tile
 const SHINY_RATE = 1 / 30; // a rare shiny wild critter: beat it to unlock its shiny palette
 const OL = 0.035;
@@ -101,6 +109,9 @@ export class World {
     this.g.scene.add(this.group);
     this.solid = new Set();
     const rand = rng(hash(key));
+    // the phone's clock tints outdoor maps that have no mood of their own: golden evenings, soft blue nights
+    const hr = save.adv.clock ?? new Date().getHours();
+    this.phase = M.indoor || M.mood ? 'day' : hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day';
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
@@ -131,7 +142,7 @@ export class World {
     if (!key.startsWith('in:')) (save.adv.seen ||= {})[key] = true;
     persist();
     playMusic(M.music || 'camp');
-    this.mood(M.mood);
+    this.mood(M.mood || PHASES[this.phase]);
     this.banner(M.name);
   }
 
@@ -538,7 +549,7 @@ export class World {
         const dx = (b.door + 0.5) * TILE - w / 2, front = d / 2 - 0.25;
         const door = inked(new THREE.BoxGeometry(0.9, 1.3, 0.12), toon(0x8a5a3a), OL * 0.5); door.position.set(dx, 0.65, front + 0.03); G.add(door);
         for (let k = 0; k < b.w; k++) if (k !== b.door) {
-          const win = inked(new THREE.BoxGeometry(0.8, 0.7, 0.1), toon(0xbfe6ff, { rim: 0.9 }), OL * 0.5);
+          const win = inked(new THREE.BoxGeometry(0.8, 0.7, 0.1), this.phase === 'day' ? toon(0xbfe6ff, { rim: 0.9 }) : LIT, OL * 0.5);
           win.position.set((k + 0.5) * TILE - w / 2, 1.25, front + 0.03); G.add(win);
         }
         if (b.heal && !b.lab) { // a big round Berry Center sign on the ridge, tipped toward the camera so it reads from above
@@ -971,7 +982,7 @@ export class World {
     this.updateActors(dt);
     this.updateFollower(dt);
     // fireflies drift up out of the woods around the hero
-    if (this.M.fireflies && Math.random() < dt * 9) {
+    if ((this.M.fireflies || this.phase === 'night' && !this.M.snow) && Math.random() < dt * (this.M.fireflies ? 9 : 4)) {
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 24, y: 0.4 + Math.random() * 2.2, z: p.z + (Math.random() - 0.7) * 16, vx: (Math.random() - 0.5) * 0.6, vy: 0.2 + Math.random() * 0.3, vz: (Math.random() - 0.5) * 0.6, color: Math.random() < 0.7 ? 0xd8ff6a : 0x8affe0, size: 0.28, life: 2.6, shape: 'glow', fadeIn: 0.3, hold: 0.5 });
     }
