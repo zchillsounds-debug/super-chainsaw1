@@ -311,6 +311,7 @@ export class World {
     this.buildLamps();
     this.buildBonfire();
     this.buildCart();
+    this.buildMarket();
     this.buildThanks();
     this.buildBuildings();
     this.buildInterior();
@@ -1027,6 +1028,35 @@ export class World {
     const gm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff9ad0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5 }); gm.userData.own = true;
     const glow = new THREE.Sprite(gm); glow.scale.set(5, 3, 1); glow.position.set(0, 2.3, 0.7); g.add(glow);
     this.cart = { g, lanterns, glow, px: px + TILE / 2 - 0.7 * 1, pz };
+  }
+
+  // Neon City's night market: after dusk two stalls open on the north pavement under a sagging string of bulbs
+  buildMarket() {
+    this.stalls = [];
+    if (this.key !== 'neon' || this.phase === 'day') return;
+    const y = 6, STALLS = [[14, 'GLOW SNACKS', 0x5ae8ff, '#5ae8ff', 'snack'], [17, 'TRINKETS', 0xffc04a, '#ffc04a', 'trinket']];
+    for (const [x, label, col, css, kind] of STALLS) {
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g);
+      this.solid.add(x + ',' + y); this.stalls.push({ x, y, kind });
+      const box = (w, h, d, c, X, Y, Z, ink = 0.3) => { const m = inked(new THREE.BoxGeometry(w, h, d), toon(c), OL * ink); m.position.set(X, Y, Z); m.castShadow = true; g.add(m); return m; };
+      box(1.8, 1.0, 1.0, 0x3a2a5a, 0, 0.5, -0.1); box(1.9, 0.1, 1.1, 0xf4e8ff, 0, 1.05, -0.1);
+      for (const sx of [-0.85, 0.85]) box(0.08, 1.6, 0.08, 0x2a2438, sx, 1.85, -0.5);
+      const am = toon(col, { rim: 0.4 }), aw = inked(new THREE.BoxGeometry(2.1, 0.08, 1.3), am, OL * 0.3); aw.position.set(0, 2.7, -0.15); aw.rotation.x = 0.3; g.add(aw);
+      for (let k = 0; k < 4; k++) { // the goods on the counter: candy floss puffs or little trinkets
+        const gm = toon(kind === 'snack' ? [0xff9ad8, 0x9ae8ff, 0xfff08a, 0xc8a0ff][k] : [0xffd84d, 0x5ae8ff, 0xff5ad8, 0x8aff9a][k], { rim: 0.6 });
+        const o = inked(kind === 'snack' ? new THREE.SphereGeometry(0.17, 10, 8) : new THREE.OctahedronGeometry(0.14), gm, OL * 0.2); o.position.set(-0.6 + k * 0.4, 1.25, 0.05); g.add(o);
+        if (kind === 'snack') { const st = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.2, 4), toon(0xffffff)); st.position.set(-0.6 + k * 0.4, 1.1, 0.05); g.add(st); }
+      }
+      const tex = canvasTex(128, 32, (c) => { c.fillStyle = '#1a1430'; c.fillRect(0, 0, 128, 32); c.font = 'bold 18px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = css; c.shadowBlur = 8; c.fillStyle = css; c.fillText(label, 64, 17); });
+      tex.userData.own = true; const sm = new THREE.MeshBasicMaterial({ map: tex }); sm.userData.own = true;
+      const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), sm); sg.position.set(0, 0.65, 0.41); g.add(sg);
+      const lm = new THREE.SpriteMaterial({ map: glowTex(), color: col, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.45 }); lm.userData.own = true;
+      const gl = new THREE.Sprite(lm); gl.scale.set(4, 2.6, 1); gl.position.set(0, 1.6, 0.4); g.add(gl);
+    }
+    const [x0, z0] = wpos(13, y), [x1] = wpos(18, y), cols = [0xff6a8a, 0xffc04a, 0x5ae8ff, 0x8aff9a], bulbs = cols.map(() => []);
+    for (let k = 0; k <= 18; k++) { const f = k / 18, b = new THREE.SphereGeometry(0.1, 6, 5); b.translate(x0 + (x1 - x0) * f, 3.3 - Math.sin(f * Math.PI * 3) ** 2 * 0.35, z0 + 0.6); bulbs[k % 4].push(b); }
+    bulbs.forEach((l, i) => { const m = new THREE.Mesh(mergeGeometries(l), new THREE.MeshBasicMaterial({ color: cols[i] })); m.material.userData.own = true; this.group.add(m); l.forEach((q) => q.dispose()); });
+    for (const x of [13, 18]) { const [px] = wpos(x, y), p = inked(new THREE.CylinderGeometry(0.06, 0.08, 3.4, 6), toon(0x2a2438), OL * 0.3); p.position.set(px, 1.7, z0 + 0.6); this.group.add(p); }
   }
 
   // aurora ribbons hang over the snowy maps at night, waving slowly (they follow the camera, high up)
@@ -2615,6 +2645,16 @@ export class World {
         return this.say([snow ? 'Someone left a bag of marshmallows by the fire. {hero} toasts one on a stick until it\'s golden... and gobbles it up! (+XP)' : 'A bag of marshmallows sits by the fire. {hero} toasts one until it\'s gooey and golden... mmm! (+XP)', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : []), 'One marshmallow a night is the rule. The fire will be here tomorrow too.']);
       }
       return this.say([(snow ? ['The campfire crackles in the snow. {hero} holds out their paws. Ahh, that\'s better!', 'Sparks float up into the cold, starry sky. Somewhere, a snowman looks jealous.', '{hero} warms up by the fire until even their ears feel toasty.'] : ['The bonfire crackles and pops. {hero} holds out their paws. Toasty!', 'Sparks float up and wink out among the stars. The waves hush on the sand.', '{hero} watches the flames dance for a while. A perfect beach night.'])[Math.floor(Math.random() * 3)]]);
+    }
+    const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
+    if (stall) {
+      if (stall.kind === 'trinket') return this.say(['TRINKETS: glow rings, spark charms, a keychain shaped like a tiny Jiggawatt...', 'The stall keeper is fast asleep behind the counter. Maybe another night!']);
+      const day = new Date().toISOString().slice(0, 10);
+      if (save.adv.market !== day) { // one glowing candy floss a night: a little XP
+        save.adv.market = day; const hero = save.adv.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+        return this.say(['GLOW SNACKS: "First candy floss of the night is on the house!"', `{hero} munches a glowing blue candy floss. It fizzes! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
+      }
+      return this.say(['GLOW SNACKS: "One free floss a night, little champ. Come back tomorrow!"']);
     }
     if (this.dig && ((this.dig.x === fx && this.dig.y === fy) || (this.dig.x === this.hx && this.dig.y === this.hy))) return this.digUp();
     const lost = this.lost?.find((L) => L.x === fx && L.y === fy); if (lost) return this.S.worldStory('found:' + lost.id, this, null);
