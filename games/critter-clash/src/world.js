@@ -193,6 +193,7 @@ export class World {
     this.placeHero();
     this.buildItems(x, y);
     this.buildBush(x, y);
+    this.buildKite();
     this.makeFollower();
     this.camAt = null;
     this.steps = 0;
@@ -1004,6 +1005,24 @@ export class World {
   }
 
   // a berry bush at the edge of the trees in every outdoor map: shake it once a day for berries (and now and then a sleepy wild critter)
+  // Kite Flyer Gale's lost kite, tangled in a snowy tree in Frostpeak (side quest: flags kite_asked → kite_found → kite_done)
+  buildKite() {
+    if (this.kite) { this.group.remove(this.kite.g); this.kite.g.traverse((o) => o.geometry?.dispose()); }
+    this.kite = null;
+    const F = save.adv.flags;
+    if (this.key !== 'frostpeak' || !F.kite_asked || F.kite_found) return;
+    const x = 22, y = 10, [px, pz] = wpos(x, y), g = new THREE.Group();
+    const sh = new THREE.Shape(); sh.moveTo(0, 0.7); sh.lineTo(0.42, 0); sh.lineTo(0, -0.9); sh.lineTo(-0.42, 0); sh.closePath();
+    const half = (col, f) => { const q = new THREE.Shape(); q.moveTo(0, 0.7); q.lineTo(0.42 * f, 0); q.lineTo(0, -0.9); q.closePath(); const m = new THREE.Mesh(new THREE.ShapeGeometry(q), toon(col, { side: THREE.DoubleSide })); g.add(m); };
+    half(0xff4a4a, 1); half(0xffd84d, -1);
+    const ink = new THREE.Mesh(new THREE.ShapeGeometry(sh), toon(0x2a1630, { side: THREE.DoubleSide })); ink.scale.setScalar(1.08); ink.position.z = -0.01; g.add(ink);
+    for (const [w2, h2, r] of [[0.03, 1.6, 0], [0.84, 0.03, 0]]) { const st = new THREE.Mesh(new THREE.BoxGeometry(w2, h2, 0.03), toon(0x8a5a3a)); st.position.set(0, h2 > 1 ? -0.1 : 0, 0.02); st.rotation.z = r; g.add(st); }
+    for (let k = 0; k < 4; k++) { const bow = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.1, 0.03), toon(k % 2 ? 0xff4a4a : 0xffd84d)); bow.position.set(Math.sin(k * 1.3) * 0.15, -1.05 - k * 0.3, 0.02); bow.rotation.z = 0.6 * (k % 2 ? 1 : -1); g.add(bow); }
+    g.position.set(px - 0.5, 2.6, pz + 0.8); g.rotation.set(-0.9, 0.2, 0.5); g.scale.setScalar(1.4);
+    this.group.add(g);
+    this.kite = { x, y, g };
+  }
+
   buildBush(x, y) {
     this.bush = null;
     if (this.M.indoor || this.key === 'peak') return;
@@ -1230,7 +1249,7 @@ export class World {
         const p = new THREE.CylinderGeometry(0.07, 0.07, 1.3, 8); p.translate(px, 0.65, pz - 0.2); add('wood', p);
         const f = new THREE.CylinderGeometry(0.4, 0.45, 0.1, 12); f.translate(px, 0.05, pz - 0.2); add('wood', f);
         const k = new THREE.SphereGeometry(0.4, 12, 8); k.translate(px, 1.5, pz - 0.2); add('head', k);
-        const sold = SHOP_HATS.filter((s) => !s.trader), h = sold[(x * 3 + y) % sold.length], sk = new THREE.Group(); sk.position.set(px, 1.42, pz - 0.2); this.group.add(sk);
+        const sold = SHOP_HATS.filter((s) => !s.trader && !s.gift), h = sold[(x * 3 + y) % sold.length], sk = new THREE.Group(); sk.position.set(px, 1.42, pz - 0.2); this.group.add(sk);
         hatModel({ def: { body: { headR: 0.62 } }, skull: sk }, h.kind, h.col, h.band);
       }
       if (t === 'K') { box('counter', TILE + 0.02, 1.1, 1.3, px, 0.55, pz); box('top', TILE + 0.04, 0.12, 1.45, px, 1.15, pz); }
@@ -1862,6 +1881,7 @@ export class World {
       return this.say(lines);
     }
     if (this.bush && this.bush.x === fx && this.bush.y === fy) return this.shakeBush();
+    if (this.kite && this.kite.x === fx && this.kite.y === fy) return this.S.worldStory('kitefound', this, null);
     if (this.tile(fx, fy) === '~' && save.adv.flags.rod && !this.M.indoor && !this.M.lava) return this.cast();
     const sign = (this.M.signs || []).find((s) => s.x === fx && s.y === fy);
     if (sign?.act) return this.S.worldStory(sign.act, this, null);

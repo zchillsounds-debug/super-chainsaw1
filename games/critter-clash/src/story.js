@@ -293,6 +293,22 @@ export function storyTalk(S, id, w, a) {
   if (id === 'hatshop') return hatShop(w);
   if (id === 'board') return requestBoard(S, w);
   if (id === 'trader') return trader(w);
+  if (id === 'kite') { // Kite Flyer Gale lost a kite to the wind; it's stuck in a snowy tree in Frostpeak
+    const who = 'Kite Flyer Gale';
+    if (F.kite_done) return w.say([a.n.lines[Math.floor(Math.random() * a.n.lines.length)]], null, who);
+    if (F.kite_found) {
+      F.kite_done = true; const own = (save.adv.hats ||= []); if (!own.includes('aviator')) own.push('aviator');
+      save.berries = (save.berries || 0) + 3; persist(); sfx.jingle(3); S.toast('🪁 Kite returned!');
+      return w.say(['Kite Flyer Gale: Is that... MY KITE?! You found it! A bit frosty, but not a scratch!', 'Kite Flyer Gale: Here, my spare Aviator Cap, goggles and all. And some berries for the trip!', '{hero} got the Aviator Cap! 🧢 +3 🍓', 'Kite Flyer Gale: Wear it from the wardrobe at home or at the Hat Shop. Up, up and away!'], null, who);
+    }
+    if (F.kite_asked) return w.say(['Kite Flyer Gale: Any luck? It\'s red and yellow with a long bow tail. The wind blew it toward Frostpeak. Check the trees!'], null, who);
+    F.kite_asked = true; persist();
+    return w.say(['Kite Flyer Gale: Wheee... oh. Hello. Sorry, I\'m a bit down. A gust snatched my kite right out of my wings!', 'Kite Flyer Gale: It flew off over the clouds toward Frostpeak. If you ever go there, could you look in the snowy trees for it?', 'Kite Flyer Gale: Red and yellow, with a long bow tail. I\'d be ever so grateful!'], null, who);
+  }
+  if (id === 'kitefound') {
+    F.kite_found = true; persist(); sfx.jingle(2); w.buildKite?.(); S.toast('🪁 Found the kite!');
+    return w.say(['There\'s a red and yellow kite tangled in the branches! {hero} wiggles it free.', 'Kite Flyer Gale in Cloudtop Gardens will be so happy!']);
+  }
   if (id === 'wardrobe') return wearMenu(w, '', null);
   if (id.startsWith('case:')) { // a lobby trophy case
     const cup = CUPS.find((c) => c.id === id.slice(5));
@@ -493,7 +509,7 @@ function hatShop(w) {
   const A = save.adv, own = (A.hats ||= []), who = 'Milliner Mo';
   const menu = () => w.ask(`Milliner Mo: Welcome to the Hat Shop! A hat for every head. (You have ${save.berries || 0} 🍓)`, ['Buy a hat', 'Wear a hat', 'Bye'], (i) => {
     if (i === 0) {
-      const left = SHOP_HATS.filter((h) => !own.includes(h.id) && !h.trader);
+      const left = SHOP_HATS.filter((h) => !own.includes(h.id) && !h.trader && !h.gift);
       if (!left.length) return w.say(['Milliner Mo: You own every hat in the shop! A true hat collector. I\'m honoured!'], null, who);
       return pickPaged(w, 'Milliner Mo: Which one catches your eye?', left.map((h) => `${h.name} ${h.price}🍓`), (k) => {
         if (k < 0) return menu();
