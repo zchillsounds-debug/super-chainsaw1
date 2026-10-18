@@ -211,6 +211,7 @@ export class World {
     this.buildBush(x, y);
     this.buildLost();
     this.buildChamp();
+    this.buildDig();
     this.makeFollower();
     this.camAt = null;
     this.steps = 0;
@@ -1129,6 +1130,48 @@ export class World {
     } else for (const a of this.npcs || []) if (a.n.id === 'fan1' || a.n.id === 'fan2') a.n.lines = [`Fan: The ${cup.name} champion, right here in the lobby! Everyone, look!`, `Fan: ${h.name} beat the whole line-up. I made a poster of YOU now!`];
   }
 
+  // beaches hide one sparkly dig spot a day (a new place each day): A on it or facing it digs up a treasure
+  buildDig() {
+    this.dig = null;
+    if (this.M.arena !== 'beach' || this.M.indoor) return;
+    const day = new Date().toISOString().slice(0, 10), r = rng(hash(this.key + day));
+    if ((save.adv.dig ||= {})[this.key] === day) return;
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((d) => d.x + ',' + (d.y + 1)), ...this.itemSpots, ...(this.M.signs || []).map((g) => g.x + ',' + g.y), this.hx + ',' + this.hy]);
+    const ok = [];
+    const seen = new Set([this.hx + ',' + this.hy]), q = [[this.hx, this.hy]]; // only sand you can walk to, and not tucked behind a building or the trees
+    for (let i = 0; i < q.length; i++) for (const [dx, dy] of Object.values(DIRS)) { const nx = q[i][0] + dx, ny = q[i][1] + dy, k = nx + ',' + ny; if (!seen.has(k) && this.walkable(nx, ny)) { seen.add(k); q.push([nx, ny]); } }
+    for (const [x, y] of q) if (this.tile(x, y) === 's' && x > 1 && y > 1 && x < this.W - 2 && y < this.H - 1 && !taken.has(x + ',' + y) && !'hTP'.includes(this.tile(x, y + 1)) && !'hTP'.includes(this.tile(x, y + 2))) ok.push([x, y]);
+    ok.sort((a, b) => a[1] - b[1] || a[0] - b[0]); // the same spot all day, wherever you walked in from
+    if (!ok.length) return;
+    const [x, y] = ok[Math.floor(r() * ok.length)], [px, pz] = wpos(x, y);
+    const g = new THREE.Group(); g.position.set(px, 0, pz); // a little heap of turned sand with a pirate's X beside it
+    const heap = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xd8b068)); heap.scale.set(1, 0.38, 0.8); heap.position.set(-0.35, 0, -0.35); heap.receiveShadow = true; g.add(heap);
+    for (const a of [0.78, -0.78]) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.03, 0.17), toon(0xa8743a)); b.rotation.y = a; b.position.set(0.25, 0.02, 0.2); g.add(b); }
+    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.12), toon(0xfff4a0, { rim: 1, emissive: 0x806a20 })); gem.position.set(-0.3, 0.22, -0.2); g.add(gem);
+    this.group.add(g);
+    this.dig = { x, y, g, px, pz };
+  }
+  digUp() {
+    const D = this.dig; this.dig = null;
+    (save.adv.dig ||= {})[this.key] = new Date().toISOString().slice(0, 10); countUp('dig');
+    this.group.remove(D.g); D.g.traverse((o) => o.geometry?.dispose());
+    for (let k = 0; k < 14; k++) this.g.fx.spawn({ x: D.px + (Math.random() - 0.5) * 0.8, y: 0.3, z: D.pz + (Math.random() - 0.5) * 0.8, vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 2.5, vz: (Math.random() - 0.5) * 3, color: 0xe8c87a, alpha: 0.8, size: 0.3, life: 0.8, shape: 'puff', additive: false, grav: 8 });
+    sfx.foot?.('sand'); sfx.pickup?.();
+    const roll = Math.random(), hero = save.adv.hero;
+    if (roll < 0.15) { // a Diggles was already down there
+      const lv = Math.max(3, (save.critters[hero]?.level || 4) - 1);
+      persist();
+      return this.say(['{hero} digs and digs... and finds a nose! A wild Diggles pops up, cross about its ceiling!'], () => this.startWild('diggles', lv, null, Math.random() < SHINY_RATE));
+    }
+    if (roll < 0.3) {
+      const c = save.critters[hero], rr = grantXp(hero, Math.round(xpNeeded(c.level) * 0.4)); persist(); sfx.jingle?.(2);
+      return this.say(['{hero} digs up a sealed picnic tin. Inside: a Power Snack! ⭐', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : [])]);
+    }
+    const n = roll < 0.55 ? 3 : 1 + Math.floor(Math.random() * 2);
+    save.berries = (save.berries || 0) + n; persist(); sfx.jingle?.(n > 2 ? 3 : 1);
+    this.say([n > 2 ? `{hero} digs up a little treasure chest! It's full of berries! +${n} 🍓` : `{hero} digs in the sparkly sand and finds ${n === 1 ? 'a berry' : 'two berries'}, wrapped in seaweed. +${n} 🍓`, 'Another sparkle will turn up somewhere on the beach tomorrow.']);
+  }
+
   buildBush(x, y) {
     this.bush = null;
     if (this.M.indoor || this.key === 'peak') return;
@@ -1794,6 +1837,7 @@ export class World {
       if (c.forge && Math.random() < 0.5) this.g.fx.spawn({ x: c.x, y: c.y, z: c.z, vy: 1.6, vx: (Math.random() - 0.5) * 0.6, color: 0xffa030, size: 0.16, life: 0.9, shape: 'glow' });
     }
     for (const [px, pz] of this.vents || []) if (Math.random() < dt * 3) this.g.fx.spawn({ x: px, y: 0.8, z: pz, vy: 1.4, vx: 0.2, color: 0xd8d0d0, alpha: 0.5, size: 0.7, life: 1.8, shape: 'puff', additive: false, grow: 1.2 });
+    if (this.dig && Math.random() < dt * 4) { const D = this.dig; this.g.fx.spawn({ x: D.px + (Math.random() - 0.5) * 0.9, y: 0.25 + Math.random() * 0.3, z: D.pz + (Math.random() - 0.5) * 0.7, vy: 0.4, color: Math.random() < 0.5 ? 0xffffff : 0xfff0a0, size: 0.45, life: 0.7, shape: 'star' }); }
     if (this.bush?.shake > 0) { const B = this.bush; B.shake -= dt; B.g.rotation.z = Math.sin(B.shake * 40) * B.shake * 0.18; B.g.scale.y = 1 + Math.sin(B.shake * 30) * B.shake * 0.08; }
     for (let k = 0; k < (this.pennants?.length || 0); k++) this.pennants[k].rotation.y = Math.sin(this.t * 3.1 + k * 1.7) * 0.35; // stadium pennants flap in the breeze
     for (const m of this.medals || []) m.rotation.y = this.t * 1.6;
@@ -2002,6 +2046,7 @@ export class World {
       return this.say(lines);
     }
     if (this.bush && this.bush.x === fx && this.bush.y === fy) return this.shakeBush();
+    if (this.dig && ((this.dig.x === fx && this.dig.y === fy) || (this.dig.x === this.hx && this.dig.y === this.hy))) return this.digUp();
     const lost = this.lost?.find((L) => L.x === fx && L.y === fy); if (lost) return this.S.worldStory('found:' + lost.id, this, null);
     if (this.tile(fx, fy) === '~' && save.adv.flags.rod && !this.M.indoor && !this.M.lava) return this.cast();
     const sign = (this.M.signs || []).find((s) => s.x === fx && s.y === fy);
