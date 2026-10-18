@@ -968,6 +968,8 @@ export class Screens {
         + bar('🌿', 'Wild critters met', A.cnt?.wild || 0)
         + bar('🕹️', 'TURBO best', A.arcadeHi || 0)
         + bar('🎈', 'SKY HOP best', A.hopHi || 0)
+        + bar('🍾', 'Bottles found', A.cnt?.bottle || 0)
+        + bar('🪩', 'Nights danced', A.cnt?.dance || 0)
         + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
     } else {
       const L = save.adv.fishLog || { n: 0 }, sp = { ...(L.sp || {}) };

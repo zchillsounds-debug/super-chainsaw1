@@ -2851,13 +2851,13 @@ export class World {
         'Danced with DJ Tumble in Neon City last night. Best night of my life. My feet still flash. (signed) A Jiggawatt',
         'Each week the Peak Gauntlet has a theme. Bring a critter that beats both types! (signed) Keeper Orla',
       ];
-      save.adv.bottle = B.day; save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(1);
+      save.adv.bottle = B.day; countUp('bottle'); save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(1);
       this.solid.delete(B.x + ',' + B.y); B.g.traverse((o) => o.geometry?.dispose()); this.group.remove(B.g); this.group.remove(B.glint); this.bottle = null;
       return this.say(['A bottle washed up on the sand! {hero} pops the cork and unrolls a note...', notes[hash(B.day + 'n') % notes.length], 'A berry was tucked inside, too! +1 🍓 (Another bottle may wash up tomorrow night.)']);
     }
     if (this.dance && this.dance.y === fy && this.dance.x.includes(fx)) { // DJ Tumble's night set: dance! The first dance of the night tips a berry
       this.danceT = 3.2; sfx.jingle?.(1); const day = new Date().toISOString().slice(0, 10);
-      if (save.adv.danced !== day) { save.adv.danced = day; save.berries = (save.berries || 0) + 1; persist(); return this.say(['The beat drops! {hero} busts out their best moves on the light-up floor.', 'The crowd cheers and someone tosses {hero} a berry! +1 🍓 (One tip a night.)']); }
+      if (save.adv.danced !== day) { save.adv.danced = day; countUp('dance'); save.berries = (save.berries || 0) + 1; persist(); return this.say(['The beat drops! {hero} busts out their best moves on the light-up floor.', 'The crowd cheers and someone tosses {hero} a berry! +1 🍓 (One tip a night.)']); }
       return this.say([['{hero} dances like nobody is watching. Everybody is watching. Nobody minds!', 'Boom-tss, boom-tss! {hero} spins, hops and strikes a pose.', 'The floor flashes pink, blue and gold under {hero}\'s feet. What a groove!'][Math.floor(Math.random() * 3)]]);
     }
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
