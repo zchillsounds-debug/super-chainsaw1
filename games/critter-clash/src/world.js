@@ -1103,13 +1103,22 @@ export class World {
     if (how === 'miss') return this.say(['The bobber popped back up. Whatever it was got away!']);
     countUp('fish'); persist();
     const r = Math.random(), W = (this.M.wild?.list || []).filter(([i]) => byId(i)?.type === 'water');
-    if (r < 0.55) {
+    if (r < 0.45) {
       const lv = Math.max(2, (save.critters[save.adv.hero]?.level || 3) - 1);
       const [id, lo, hi] = W.length ? W[Math.floor(Math.random() * W.length)] : [['bubbalotl', 'ripples', 'lilypop', 'pengsicle'][Math.floor(Math.random() * 4)], lv, lv];
       const name = byId(id)?.name || 'critter';
       return this.say([`{hero} reels it in... It's a wild ${name}! And it's not happy about it!`], () => this.startWild(id, lo + Math.floor(Math.random() * (hi - lo + 1)), null, Math.random() < SHINY_RATE));
     }
-    if (r < 0.85) {
+    if (r < 0.7) { // a fish! measured, and Fisher Finn keeps the record book
+      const sea = this.M.arena === 'beach', kinds = sea ? [['Sandy Sprat', 8, 20], ['Silverfin', 18, 40], ['Bluegill Bop', 15, 32], ['Sunscale', 30, 70]] : this.M.lava ? [['Ember Eel', 30, 80], ['Cinder Carp', 20, 45]] : this.M.snow || this.M.border === 'cloud' ? [['Frostfin', 15, 35], ['Cloud Minnow', 6, 16]] : [['Pond Minnow', 5, 14], ['Speckled Trout', 18, 45], ['Puffgill', 12, 28], ['Lantern Pike', 35, 75]];
+      const k = Math.random() < 0.12 ? kinds.length - 1 : Math.floor(Math.random() * (kinds.length - 1)), [name, lo, hi] = kinds[k];
+      const cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };
+      L.n++; const rec = !L.best || cm > L.best.cm;
+      if (rec) { L.best = { name, cm }; save.berries = (save.berries || 0) + 2; }
+      persist(); sfx.jingle?.(rec ? 3 : 1);
+      return this.say([`{hero} reeled in a ${name}! It's ${cm} cm long! 🐟`, ...(rec ? [`That's {hero}'s biggest catch ever! Fisher Finn would be proud. +2 🍓`] : [`{hero}'s record is still the ${L.best.name} (${L.best.cm} cm). Splash! Back it goes.`])]);
+    }
+    if (r < 0.88) {
       const n = 1 + (Math.random() < 0.4 ? 1 : 0);
       save.berries = (save.berries || 0) + n; persist(); sfx.jingle?.(2);
       return this.say([`{hero} fished up a little net of berries! +${n} 🍓`]);
