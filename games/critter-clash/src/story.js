@@ -553,6 +553,14 @@ const LOST = {
     found: ['A tiny firefly blinks hello from the warm rock. It\'s Blink! It hops onto {hero}\'s nose. Tickly!', 'Firefly Flo in Bloom Town will be so happy!'],
     done: ['Firefly Flo: BLINK! You found Blink! Bzz bzz bzz!', 'Blink zips round the room and dives back into the jar with the others. The whole jar glows brighter!', 'Firefly Flo: Thank you! Here: berries, and the honey snack I was saving. You earned it!', '{hero} got 3 berries and a Power Snack! ⭐'],
   },
+  lamp: {
+    who: 'Mushroom Fan Fen', item: 'glowcap night-light', hat: 'nightcap', berries: 2, toast: '🍄', home: 'Glowcap Hollow', to: { npc: 'picnic', map: 'cloudtop', name: 'Picnicker Puff', home: 'Cloudtop Gardens' },
+    thanks: 'Mushroom Fan Fen: Puff says the night-light makes the clouds glow pink. Best. Naps. Ever. That\'s what the letter said!',
+    after: ['Picnicker Puff: Zzz... the little glowcap glows all night... and I nap all day... perfect... zzz...'],
+    ask: ['Mushroom Fan Fen: Ooh, a traveller! Do you ever go up to Cloudtop Gardens? Picnicker Puff naps up there all day.', 'Mushroom Fan Fen: Puff says the clouds get too dark at night to find the picnic basket. So I grew a tiny glowcap night-light! Could you carry it up?', '{hero} got a glowcap night-light! 🍄 Take it to Picnicker Puff in Cloudtop Gardens.'],
+    wait: ['Mushroom Fan Fen: Picnicker Puff is the sleepy one on the picnic blanket in Cloudtop Gardens. You may have to wake them!'],
+    done: ['Picnicker Puff: Zzz... mm? A present? ...A GLOWCAP?! It glows! Now I can find the basket in the dark!', 'Puff sets the little mushroom by the blanket. It glows a soft pink.', 'Picnicker Puff: Here, you should have my spare nightcap. Every good napper needs one... zzz...', '{hero} got the Sleepy Nightcap! 🌙 +2 🍓'],
+  },
 };
 // the ☰ card's favour line: the first favour still open (found things first)
 export function favourLine() {
