@@ -22,6 +22,7 @@ const YAW = { n: Math.PI, s: 0, e: Math.PI / 2, w: -Math.PI / 2 };
 // clock-of-day lighting for outdoor maps without their own mood
 const PHASES = {
   day: null,
+  morning: { sun: 0xfff0e0, sunI: 2.1, sky: 0xd8ecff, gnd: 0x5a7a6a, hemiI: 1.12, fog: 0xe8f4ff }, // 6-9h: a pale, cool start with mist in the low places
   evening: { sun: 0xffa868, sunI: 2.5, sky: 0xffd0b0, gnd: 0x6a4a58, hemiI: 1.08, fog: 0xffc098 }, // golden hour: an orange sun, rosy fill
   night: { sun: 0xa8b8ff, sunI: 0.95, sky: 0x7484cc, gnd: 0x2a3050, hemiI: 0.82, fog: 0x3a4878 },
 };
@@ -371,7 +372,9 @@ export class World {
     persist();
     playMusic(this.touring ? 'victory' : M.music || 'camp');
     const B = this.base, lamp = M.indoor && this.outPhase !== 'day' && M.indoor !== 'arcade' && { sun: 0xffd2a0, sunI: B.sunI * (this.outPhase === 'night' ? 0.72 : 0.85), sky: 0xffe2c4, gnd: B.gnd, hemiI: B.hemiI * 0.85, fog: 0xcfeeff }; // lamplight indoors after dark
-    this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || PHASES[this.phase]);
+    this.morning = canRain(M) && !this.rain && this.phase === 'day' && hr >= 6 && hr < 9; // misty mornings on the grassy outdoor maps
+    this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.morning && PHASES.morning) || PHASES[this.phase]);
+    this.buildMorning();
     this.banner(M.name + (this.rain ? ' 🌧️' : ''));
   }
 
@@ -1406,6 +1409,25 @@ export class World {
     const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffe08a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.35 }); sm.userData.own = true;
     const glow = new THREE.Sprite(sm); glow.scale.setScalar(4); glow.position.y = 1.6; g.add(glow);
     this.statue = { x, y, px, pz, glow };
+  }
+
+  // misty mornings: big soft banks of mist drift slowly across the map, thinning as they go
+  buildMorning() {
+    this.mornMist = null; this.mornMistIn = 0;
+    if (!this.morning) return;
+    const rand = rng(hash(this.key + 'mist')), W = this.W * TILE, H = this.H * TILE;
+    this.mornMist = Array.from({ length: 9 }, () => {
+      const m = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffffff, transparent: true, depthWrite: false, opacity: 0 }); m.userData.own = true;
+      const sp = new THREE.Sprite(m); sp.scale.set(14 + rand() * 8, 5 + rand() * 3, 1); sp.position.set(rand() * W, 0.9 + rand() * 0.8, rand() * H); this.group.add(sp);
+      return { sp, v: 0.25 + rand() * 0.35, ph: rand() * 6.28, W };
+    });
+  }
+
+  updateMorning(dt) {
+    for (const q of this.mornMist) {
+      q.sp.position.x += q.v * dt; if (q.sp.position.x > q.W + 10) q.sp.position.x = -10;
+      q.sp.material.opacity = Math.min(1, (this.mornMistIn = Math.min(1, (this.mornMistIn || 0) + dt * 0.5))) * (0.26 + Math.sin(this.t * 0.3 + q.ph) * 0.08);
+    }
   }
 
   // Bloom Town on weekend nights (Fri-Sun): fireworks pop over the rooftops every few seconds (just north of the hero, so the high camera sees them)
@@ -2927,6 +2949,7 @@ export class World {
     if (this.twirlT > 0) this.twirlT -= dt;
     if (this.bloomFw) this.updateBloomFw(dt);
     if (this.wisps) this.updateWisps(dt);
+    if (this.mornMist) this.updateMorning(dt);
     if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
