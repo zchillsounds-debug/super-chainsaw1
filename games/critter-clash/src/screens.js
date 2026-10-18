@@ -9,6 +9,7 @@ import { grown, stageFor, FORMS, GROW_LV } from './growth.js';
 import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
+import { SHOP_HATS } from './critters.js';
 import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList } from './story.js';
 import { MAPS } from './worldmaps.js';
@@ -938,6 +939,21 @@ export class Screens {
       const { rows, unasked } = favourList();
       body = rows.map((r) => { const c = giver(r.id); return `<li class="jr-row ${r.state}">${c ? `<img src="${this.game.portrait(c)}" alt="">` : ''}<div><b>${r.toast} ${r.who} <small>${r.home}</small></b><span>${r.state === 'done' ? '✅ ' : r.state === 'found' || r.deliver ? '📦 ' : '🔍 '}${r.text}</span></div></li>`; }).join('')
         + (unasked ? `<li class="jr-more">❗ ${unasked} more townsfolk need a hand. Look for a ❗ over their heads!</li>` : rows.length ? '<li class="jr-more">🌟 You\'ve asked everyone in Clashara. What a good neighbour!</li>' : '');
+    } else if (tab === 'rec') { // everything there is to find and beat, with how far along you are
+      const A = save.adv, F = A.flags, L = A.fishLog || {}, npcs = Object.values(MAPS).flatMap((M) => M.npcs || []);
+      const tr = npcs.filter((n) => n.trainer), fl = favourList(), fsp = new Set([...Object.keys(L.sp || {}), ...(L.best ? [L.best.name] : [])]);
+      const bar = (ic, name, n, of) => `<li class="jr-rec"><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`;
+      body = bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length)
+        + bar('⚔️', 'Trainers beaten', tr.filter((n) => F[n.id]).length, tr.length)
+        + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_')).length, 24)
+        + bar('🤝', 'Favours done', fl.rows.filter((r) => r.state === 'done').length, fl.rows.length + fl.unasked)
+        + bar('🎩', 'Hats collected', (A.hats || []).length, SHOP_HATS.length)
+        + bar('🐟', 'Kinds of fish', fsp.size, Object.values(FISH).flat().length)
+        + bar('📖', 'Critters on your team', save.unlocked.length, CRITTERS.length)
+        + bar('💥', 'Alphas beaten', Object.keys(F).filter((k) => k.startsWith('alpha_')).length)
+        + bar('🌿', 'Wild critters met', A.cnt?.wild || 0)
+        + bar('🕹️', 'Arcade best', A.arcadeHi || 0)
+        + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
     } else {
       const L = save.adv.fishLog || { n: 0 }, sp = { ...(L.sp || {}) };
       if (L.best && !sp[L.best.name]) sp[L.best.name] = L.best.cm;
@@ -947,7 +963,7 @@ export class Screens {
         + `<li class="jr-more">${Object.keys(sp).length}/${Object.values(FISH).flat().length} kinds · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
     }
     d.innerHTML = `<div class="modal wd-journal"><h2>Journal</h2>
-      <div class="jr-tabs"><button data-t="fav" class="${tab === 'fav' ? 'on' : ''}">🤝 Favours</button><button data-t="fish" class="${tab === 'fish' ? 'on' : ''}">🐟 Fish</button></div>
+      <div class="jr-tabs"><button data-t="fav" class="${tab === 'fav' ? 'on' : ''}">🤝 Favours</button><button data-t="fish" class="${tab === 'fish' ? 'on' : ''}">🐟 Fish</button><button data-t="rec" class="${tab === 'rec' ? 'on' : ''}">🏅 Records</button></div>
       <ul class="jr-list">${body || '<li class="jr-more">Nobody has asked for help yet. Townsfolk with a ❗ over their heads have a favour to ask!</li>'}</ul>
       <div class="res-btns"></div></div>`;
     const close = () => { d.remove(); this.game.modalClose = null; };

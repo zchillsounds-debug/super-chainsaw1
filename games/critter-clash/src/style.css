@@ -1002,3 +1002,11 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .arcade .arc-hud { color: #fff; font-family: var(--body, inherit); font-weight: 800; font-size: 13px; text-shadow: none; white-space: nowrap; }
 .arcade canvas { width: min(88vw, calc((100vh - 96px) * 4 / 3), 560px); aspect-ratio: 4 / 3; border-radius: 10px; image-rendering: pixelated; touch-action: none; background: #140e2a; }
 .arcade .arc-tip { margin: 0; color: #d8c8ff; font-size: 12px; text-align: center; }
+
+/* Journal → Records: a progress bar under each row */
+.jr-rec { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; column-gap: 8px; padding: 5px 8px; border-radius: 10px; background: rgba(42,22,48,.05); margin-bottom: 4px; }
+.jr-rec span { font-size: 17px; text-align: center; }
+.jr-rec b { font-size: 14px; }
+.jr-rec em { font-style: normal; font-weight: 800; font-size: 13px; color: #6a4ad8; }
+.jr-rec i { grid-column: 2 / 4; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #7a5aff calc(var(--p) * 100%), rgba(42,22,48,.12) 0); margin-top: 3px; }
+.jr-rec i.full { background: linear-gradient(90deg, #ffc93a, #ff9a3a); }
