@@ -811,7 +811,7 @@ export class World {
   }
 
   buildBuildings() {
-    this.doors = []; this.chimneys = []; this.labDish = this.beacon = null;
+    this.doors = []; this.chimneys = []; this.pennants = []; this.medals = []; this.labDish = this.beacon = null;
     if (!this.M.city) this.drones = null;
     for (const b of this.M.buildings || []) {
       const x0 = b.x * TILE, z0 = b.y * TILE, w = b.w * TILE, d = b.h * TILE;
@@ -1281,7 +1281,7 @@ export class World {
   }
 
   stadiumModel(G, b, w, d) {
-    const cup = CUPS.find((c) => c.id === b.stadium);
+    const cup = CUPS.find((c) => c.id === b.stadium), won = save.adv.flags['cup_' + b.stadium];
     const stripes = canvasTex(256, 32, (c, W, H) => { for (let k = 0; k < 16; k++) { c.fillStyle = k % 2 ? '#fff4e0' : cup.color; c.fillRect(k * W / 16, 0, W / 16 + 1, H); } });
     stripes.userData.own = true;
     const wm = toon(0xffffff, { map: stripes }); wm.userData.own = true;
@@ -1307,7 +1307,16 @@ export class World {
     for (let k = 0; k < 6; k++) {
       const a = k / 6 * Math.PI * 2, px = Math.cos(a) * (w / 2 - 0.2), pz = Math.sin(a) * (d / 2 - 0.1);
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.4, 5), toon(0xffffff)); pole.position.set(px, 3.2, pz); G.add(pole);
-      const fl = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.4), toon(new THREE.Color(cup.color).getHex(), { side: THREE.DoubleSide })); fl.position.set(px + 0.35, 3.7, pz); G.add(fl);
+      const fg = new THREE.PlaneGeometry(0.7, 0.4); fg.translate(0.35, 0, 0); // hinged at the pole so it can flutter
+      const fl = new THREE.Mesh(fg, toon(won && k % 2 ? 0xffd23f : new THREE.Color(cup.color).getHex(), { side: THREE.DoubleSide })); fl.position.set(px, 3.7, pz); G.add(fl);
+      this.pennants.push(fl);
+    }
+    if (won) { // a cup you've won: a gold star spins over the gate and every other pennant turns gold
+      const st = new THREE.Shape();
+      for (let k = 0; k < 10; k++) { const r = k % 2 ? 0.26 : 0.6, a = k / 10 * Math.PI * 2 + Math.PI / 2; k ? st.lineTo(Math.cos(a) * r, Math.sin(a) * r) : st.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+      const sg = new THREE.ExtrudeGeometry(st, { depth: 0.16, bevelEnabled: true, bevelSize: 0.04, bevelThickness: 0.04, bevelSegments: 1 }); sg.translate(0, 0, -0.08);
+      const star = inked(sg, toon(0xffd23f, { rim: 1 }), OL * 0.5); star.position.set((b.door + 0.5) * TILE - w / 2, 4.15, d / 2 + 0.05); G.add(star);
+      this.medals.push(star);
     }
     // the cup's emblem on a sign over the gate
     const sign = canvasTex(256, 64, (c, W, H) => { c.fillStyle = '#2a1630'; c.beginPath(); c.roundRect(0, 0, W, H, 16); c.fill(); c.fillStyle = '#fff'; c.font = 'bold 34px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(cup.name.toUpperCase(), W / 2, H / 2 + 2); });
@@ -1591,6 +1600,8 @@ export class World {
     }
     for (const [px, pz] of this.vents || []) if (Math.random() < dt * 3) this.g.fx.spawn({ x: px, y: 0.8, z: pz, vy: 1.4, vx: 0.2, color: 0xd8d0d0, alpha: 0.5, size: 0.7, life: 1.8, shape: 'puff', additive: false, grow: 1.2 });
     if (this.bush?.shake > 0) { const B = this.bush; B.shake -= dt; B.g.rotation.z = Math.sin(B.shake * 40) * B.shake * 0.18; B.g.scale.y = 1 + Math.sin(B.shake * 30) * B.shake * 0.08; }
+    for (let k = 0; k < (this.pennants?.length || 0); k++) this.pennants[k].rotation.y = Math.sin(this.t * 3.1 + k * 1.7) * 0.35; // stadium pennants flap in the breeze
+    for (const m of this.medals || []) m.rotation.y = this.t * 1.6;
     if (this.cracks) this.cracks.material.opacity = 0.75 + Math.sin(this.t * 1.7) * 0.25; // the magma breathes
     if (this.labDish) this.labDish.rotation.y = Math.sin(this.t * 0.4) * 1.2;
     if (this.beacon) this.beacon.material.color.setHex(this.t % 1.6 < 0.25 ? 0xff5050 : 0x5a1818);
