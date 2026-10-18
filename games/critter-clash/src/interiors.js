@@ -141,7 +141,7 @@ const PEOPLE = {
   'neon:tower2': { npcs: [['whirlwhisk', 'Sky Lin', ['Sky Lin: From the top of this tower you can see Captain Puff\'s balloon in the east.', 'Sky Lin: Captain Puff only flies critters who\'ve won the Midnight Cup. House rules!'], 's', 5, 2]], name: 'Sky Flat', wall: '#d0e8ff', rug: '#5ad8ff' },
   'cloudtop:berry6': { visitor: ['whirlwhisk', 'Breeze', ['Breeze: The nurse up here is the highest nurse in all of Clashara. Literally!'], 'e', 3, 4] },
   'frostpeak:berry7': { visitor: ['pengsicle', 'Snowy', ['Snowy: Warm smoothies? In Frostpeak they make them HOT. Wonderful!'], 'w', 9, 4] },
-  'frostpeak:lodge': { npcs: [['woolt', 'Lodge Keeper Fleece', ['Lodge Keeper Fleece: Come in, come in, out of the snow! The fire is lovely and warm.', 'Lodge Keeper Fleece: Many critters have climbed to the Peak. Only one gets the Crown.'], 's', 7, 2]], kind: 'lodge', name: 'Mountain Lodge', wall: '#e8d0b0', rug: '#c8443a' },
+  'frostpeak:lodge': { npcs: [['woolt', 'Lodge Keeper Fleece', ['Lodge Keeper Fleece: Come in, come in, out of the snow! The fire is lovely and warm.', 'Lodge Keeper Fleece: Many critters have climbed to the Peak. Only one gets the Crown.', 'Lodge Keeper Fleece: See a blue X in the snow out there? Dig! Ice gems turn up every day. Bring them to me and I\'ll pay in berries.'], 's', 7, 2]], kind: 'lodge', name: 'Mountain Lodge', wall: '#e8d0b0', rug: '#c8443a' },
 };
 
 const ITEMS = {
