@@ -326,6 +326,7 @@ export class World {
     this.buildSpring();
     this.buildBloomFw();
     this.buildFountain();
+    this.buildStatue();
     this.buildJellies(rand);
     this.buildSkyLanterns();
     this.buildThanks();
@@ -1378,6 +1379,21 @@ export class World {
     const arcs = cols.map((c, i) => { const m = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.55, depthWrite: false }); m.userData.own = true; const a = new THREE.Mesh(i ? rg : rg, m); a.scale.setScalar(1 - i * 0.075); a.position.set(0, 0.45, -0.1); a.rotation.y = 0.35; g.add(a); return a; });
     bakeStatic({ root: g, mats: {}, arcs });
     this.fountain = { x, y, px, pz, arcs };
+  }
+
+  // Sprout Village, once all of Clashara is explored (Journal Records at 100%): a golden statue of the hero on a stone plinth
+  buildStatue() {
+    this.statue = null;
+    if (this.key !== 'village' || !save.adv.flags.statue) return;
+    const [x, y] = [12, 10], [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(x + ',' + y);
+    const stone = toon(0xd8d0c4, { rim: 0.4 }), gold = toon(0xffc93a, { rim: 0.9, emissive: 0x3a2400 });
+    const b = inked(new THREE.CylinderGeometry(0.85, 0.95, 0.5, 8), stone, OL * 0.4); b.position.y = 0.25; b.castShadow = true; g.add(b);
+    const t = inked(new THREE.CylinderGeometry(0.72, 0.78, 0.18, 8), toon(0xb8ac9c), OL * 0.3); t.position.y = 0.59; g.add(t);
+    const cr = new Critter(heroDef(), { lod: 'low' }); cr.root.traverse((o) => { if (o.isMesh && !o.userData.hull) o.material = gold; });
+    cr.root.scale.setScalar(CS * 1.05); cr.root.position.y = 0.68; g.add(cr.root); bakeStatic(cr);
+    const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffe08a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.35 }); sm.userData.own = true;
+    const glow = new THREE.Sprite(sm); glow.scale.setScalar(4); glow.position.y = 1.6; g.add(glow);
+    this.statue = { x, y, px, pz, glow };
   }
 
   // Bloom Town on weekend nights (Fri-Sun): fireworks pop over the rooftops every few seconds (just north of the hero, so the high camera sees them)
@@ -2902,6 +2918,7 @@ export class World {
     if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
+    if (this.statue) { const T = this.statue; T.glow.material.opacity = 0.3 + Math.sin(this.t * 1.6) * 0.08; if (Math.random() < dt * 2) this.g.fx.spawn({ x: T.px + (Math.random() - 0.5) * 1.6, y: 0.8 + Math.random() * 1.8, z: T.pz + (Math.random() - 0.5) * 1.2, vy: 0.3, life: 1.2, size: 0.3, color: 0xfff0a0, shape: 'star', alpha: 0.9 }); }
     if (this.fountain) { const F = this.fountain; if (Math.random() < dt * 14) { const a = Math.random() * 6.28; this.g.fx.spawn({ x: F.px + Math.cos(a) * 0.1, y: 2.6, z: F.pz + Math.sin(a) * 0.1, vx: Math.cos(a) * 1.4, vy: 1.8, vz: Math.sin(a) * 1.4, color: 0xd8f4ff, size: 0.16, life: 0.75, shape: 'glow', grav: 6, additive: false, alpha: 0.8 }); } F.arcs.forEach((m, i) => { m.material.opacity = 0.42 + Math.sin(this.t * 1.3 + i * 0.4) * 0.12; }); } // the spray falls into the bowl; the rainbow shimmers
     if (this.sliding && save.adv.skates && Math.random() < dt * 30) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.5, y: 0.15, z: p.z + (Math.random() - 0.5) * 0.5, vy: 0.6 + Math.random(), vx: (Math.random() - 0.5), vz: (Math.random() - 0.5), color: Math.random() < 0.5 ? 0xffffff : 0x9ae0ff, size: 0.16, life: 0.6, shape: Math.random() < 0.4 ? 'star' : 'glow' }); } // skates kick up ice sparkles
     if (this.danceT > 0) { this.danceT -= dt; if (Math.random() < dt * 8) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 1.6 + Math.random(), z: p.z, vy: 1.2, color: this.dance?.cols[Math.floor(Math.random() * 5)].getHex() ?? 0xff5ad8, size: 0.2, life: 0.9, shape: Math.random() < 0.5 ? 'star' : 'glow' }); } }
@@ -3161,6 +3178,7 @@ export class World {
     if (this.ring && this.ring.x === fx && this.ring.y === fy) return this.fairyRing();
     if (this.spring?.cells.has(fx + ',' + fy)) return this.soak();
     if (this.pumpkins?.some((p) => p.x === fx && p.y === fy)) return this.pumpkin();
+    if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
     if (stall) {

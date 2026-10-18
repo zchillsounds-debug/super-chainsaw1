@@ -958,6 +958,7 @@ export class Screens {
     b.appendChild(fresh);
     this.game.modalClose = close;
     this.root.appendChild(d);
+    this.exploreCheck();
   }
 
   // the Journal: favours for townsfolk, and the fish album (every kind, biggest catch)
@@ -994,6 +995,18 @@ export class Screens {
 
   // the Journal's Records bars, and the overall 'Clashara explored' percentage (the ☰ card shows it too)
   recordsPc() { try { return this.records().pc; } catch (e) { return 0; } }
+
+  // 'Clashara explored' milestones: berries at 25/50/75%, and at 100% a golden statue of the hero in Sprout Village (paid once each)
+  exploreCheck(pc = this.recordsPc()) {
+    const A = save.adv, steps = [[25, 5], [50, 10], [75, 15], [100, 25]], next = steps.find(([p]) => p > (A.expl || 0) && pc >= p);
+    if (!next) return;
+    A.expl = next[0]; save.berries = (save.berries || 0) + next[1];
+    if (next[0] === 100) A.flags.statue = true;
+    persist(); sfx.jingle?.(next[0] === 100 ? 3 : 2);
+    this.toast(next[0] === 100 ? `🌟 All of Clashara explored! +${next[1]} 🍓 · Something golden waits in Sprout Village...` : `🗺️ ${next[0]}% of Clashara explored! +${next[1]} 🍓`);
+    if (next[0] === 100 && this.worldObj?.key === 'village') this.worldObj.buildStatue();
+    setTimeout(() => this.exploreCheck(pc), 2600); // more than one milestone at once (an old save): pay them one by one
+  }
 
   records() {
     let body = '';
@@ -1068,7 +1081,9 @@ export class Screens {
       body = rows.map((r) => { const c = giver(r.id); return `<li class="jr-row ${r.state}">${c ? `<img src="${this.game.portrait(c)}" alt="">` : ''}<div><b>${r.toast} ${r.who} <small>${r.home}</small></b><span>${r.state === 'done' ? '✅ ' : r.state === 'found' || r.deliver ? '📦 ' : '🔍 '}${r.text}</span></div></li>`; }).join('')
         + (unasked ? `<li class="jr-more">❗ ${unasked} more townsfolk need a hand. Look for a ❗ over their heads!</li>` : rows.length ? '<li class="jr-more">🌟 You\'ve asked everyone in Clashara. What a good neighbour!</li>' : '');
     } else if (tab === 'rec') { // everything there is to find and beat, with how far along you are
-      body = this.records().body;
+      const R = this.records(), nx = [25, 50, 75, 100].find((p) => p > (save.adv.expl || 0));
+      body = R.body + (nx ? `<li class="jr-more">🎁 Next reward at ${nx}% explored${nx === 100 ? ': something golden!' : '.'}</li>` : '<li class="jr-more">🌟 Every corner explored. Visit your statue in Sprout Village!</li>');
+      this.exploreCheck(R.pc);
     } else if (tab === 'today') { // every daily thing in one list: done today, or where to go for it
       const { rows, after, night } = this.todayList();
       const row = ([ic, name, where, done]) => `<li class="jr-fish jr-day ${done ? 'got' : ''}"><span>${done ? '✅' : ic}</span><b>${name}</b><em>${done ? 'done' : where}</em></li>`;
