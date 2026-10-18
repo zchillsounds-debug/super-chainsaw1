@@ -203,7 +203,7 @@ export function interiorMap(key) {
     if (t === 'C' && kind === 'center') text = 'Jars of berries line the shelf: strawberry, blueberry, glowberry...';
     if (t === 'C' && kind === 'center' && x === 1) { signs.push({ x, y, text: '', hide: true, act: 'board' }); return; }
     if (t === 'o') text = { seashell: 'A fish tank! Two little fish chase each other round and round the weeds.', ember: 'A lava lamp. The blobs rise... and sink... and rise. You could watch it all day.', neon: 'A cactus made of neon tubes. It never needs watering!', frostpeak: 'A little potted pine with real snow on it. The nurse keeps it by the window so it stays cold.', cloudtop: 'A cloud tree! Its puffs are soft as pillows.', glowcap: 'A glowcap lamp. It hums very, very quietly.' }[outer] || 'A pot of pink blossoms. They smell like berry jam.';
-    if (t === 'X' && kind === 'lab') text = 'A screen shows a growing critter: small, medium, HUGE.';
+    if (t === 'X' && kind === 'lab') text = x > W / 2 ? 'The growth chamber! A sleepy little critter shape floats in bubbly green. A label says: "DO NOT TAP THE GLASS."' : 'A screen shows a growing critter: small, medium, HUGE.';
     if (t === 'C' && bid === 'home') { signs.push({ x, y, text: '', hide: true, act: 'wardrobe' }); return; }
     if (t === 'S') { signs.push({ x, y, text: '', hide: true, act: 'shelf' }); return; }
     if (t === 'X' && kind === 'home') text = 'The TV is showing Critter Clash highlights. {hero} watches their own best move. Then again. Then once more.';
