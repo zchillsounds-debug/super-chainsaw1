@@ -52,7 +52,7 @@ export const FISH = {
   lava: [['Cinder Carp', 20, 45], ['Ember Eel', 30, 80]],
   cold: [['Cloud Minnow', 6, 16], ['Frostfin', 15, 35]],
 };
-export const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, phones: { map: 'ember', x: 23, y: 1 } };
+export const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, ball: { map: 'route1', x: 7, y: 9 }, phones: { map: 'ember', x: 23, y: 1 } };
 
 const STEP = 0.23; // seconds per tile
 const SHINY_RATE = 1 / 30; // a rare shiny wild critter: beat it to unlock its shiny palette
@@ -1080,6 +1080,11 @@ export class World {
         for (const sd of [-1, 1]) { const b = inked(new THREE.CylinderGeometry(0.12, 0.14, 0.42, 12), toon(0xffb03a), OL * 0.3); b.position.x = sd * 0.15; g.add(b); const ln = new THREE.Mesh(new THREE.CircleGeometry(0.1, 12), toon(0x9ad8ff, { rim: 1 })); ln.rotation.x = Math.PI / 2; ln.position.set(sd * 0.15, -0.22, 0); g.add(ln); }
         const strap = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.02, 4, 16, Math.PI), toon(0xc8743a)); strap.position.y = 0.2; g.add(strap);
         g.position.set(px + 0.8, 1.15, pz + 1.25); g.rotation.set(0.4, 0, 0.15); g.scale.setScalar(1.3);
+      } else if (id === 'ball') { // a red and white bouncy ball against the rock
+        const top = inked(new THREE.SphereGeometry(0.28, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xff4a4a), OL * 0.3); g.add(top);
+        const bot = inked(new THREE.SphereGeometry(0.28, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), toon(0xffffff), OL * 0.3); g.add(bot);
+        const st = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.035, 6, 20), toon(0xffd84d)); st.rotation.x = Math.PI / 2; g.add(st);
+        g.position.set(px + 0.55, 0.28, pz + 0.85); g.rotation.set(0.5, 0, 0.4); g.scale.setScalar(1.3);
       } else if (id === 'can') { // a green watering can with a sunflower, left on a rock
         g.add(inked(new THREE.CylinderGeometry(0.24, 0.27, 0.42, 14), toon(0x4cba6a), OL * 0.35));
         const sp = inked(new THREE.CylinderGeometry(0.04, 0.06, 0.5, 8), toon(0x4cba6a), OL * 0.25); sp.position.set(0.3, 0.12, 0); sp.rotation.z = -0.9; g.add(sp);

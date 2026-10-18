@@ -499,6 +499,13 @@ const LOST = {
     found: ['A pair of binoculars dangles from a low branch by its strap. {hero} unhooks them.', 'Owl Watcher Wren in Glowcap Hollow will want these!'],
     done: ['Owl Watcher Wren: My binoculars! Hoo hoo hoo! Now I can see EVERYTHING again.', 'Owl Watcher Wren: Please, have my trail snack and some berries. You\'ve earned them.', '{hero} got 2 berries and a Power Snack! ⭐'],
   },
+  ball: {
+    who: 'Lilypop', item: 'bouncy ball', hat: 'propeller', berries: 2, toast: '⚽', hint: "by the rock in the middle of Route 1", home: 'Sprout Village',
+    ask: ['Lilypop: Ribbit... I kicked my bouncy ball SO hard it bounced all the way up onto Route 1!', 'Lilypop: I\'m not allowed in the tall grass on my own. It stopped near the big rock in the middle, I think. Can you get it? Pleeease?'],
+    wait: ['Lilypop: My ball is up on Route 1, by the big rock in the middle. Red and white! Ribbit!'],
+    found: ['A red and white bouncy ball is wedged against the rock. {hero} gives it a test bounce. BOING!', 'Lilypop in Sprout Village will be so happy!'],
+    done: ['Lilypop: My ball! My BALL! RIBBIT! Thank you thank you thank you!', 'Lilypop: You can have my Propeller Cap. It doesn\'t really fly. I checked. Twice.', '{hero} got the Propeller Cap! 🧢 +2 🍓', 'Lilypop: Wear it from the wardrobe at home!'],
+  },
   can: {
     who: 'Gardener Bea', item: 'watering can', hat: 'straw', berries: 2, toast: '🪴', hint: "on a rock at the south end of Route 1", home: 'Bloom Town',
     ask: ['Gardener Bea: Oh, petals! I went to water the wild flowers on Route 1 and came back without my watering can.', 'Gardener Bea: I set it down on a rock near the bottom of the route, by the flowers. My knees aren\'t what they were. Could you fetch it?'],
