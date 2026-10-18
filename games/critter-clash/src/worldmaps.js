@@ -419,7 +419,7 @@ export const MAPS = {
     wild: { list: [['jiggawatt', 13, 15], ['voltferret', 13, 15], ['squeakwing', 13, 15], ['woolt', 13, 15], ['diggles', 14, 16]], roam: 2, rate: 0.1 },
     npcs: [
       { id: 'balloon', x: 25, y: 15, balloon: 0xff9ac8, name: 'Captain Puff', dir: 'w', story: 'balloon', dest: [{ map: 'cloudtop', x: 13, y: 12, dir: 'w', name: 'Cloudtop Gardens', need: 'cup_midnight' }] },
-      { id: 'tumble', x: 16, act: 'dance', y: 5, critter: 'jiggawatt', name: 'DJ Tumble', dir: 'w', wander: 1, story: 'lost:phones', lines: ["DJ Tumble: Yo! The Midnight Cup is on tonight. Every night, actually. That's the point.", 'DJ Tumble: Jiggawatt and I are the opening act. Bring your dancing shoes!'] },
+      { id: 'tumble', x: 16, act: 'dance', y: 5, critter: 'jiggawatt', name: 'DJ Tumble', dir: 'w', wander: 1, night: { x: 16, y: 8, dir: 's', wander: 0 }, story: 'lost:phones', lines: ["DJ Tumble: Yo! The Midnight Cup is on tonight. Every night, actually. That's the point.", 'DJ Tumble: Jiggawatt and I are the opening act. Bring your dancing shoes!'] },
       { id: 'vex', x: 15, y: 15, critter: 'kindlekit', lv: 16, name: 'Vex', dir: 'w', story: 'heart', hideFlag: 'trial_heart' },
       { id: 'gang', x: 13, y: 15, critter: 'diggles', lv: 15, name: 'Gang Grunt', dir: 'e', story: 'heart', hideFlag: 'trial_heart' },
       { id: 'dash4', x: 14, y: 15, rival: true, rlv: 14, name: 'Dash', dir: 's', story: 'heart', hideFlag: 'trial_heart' },

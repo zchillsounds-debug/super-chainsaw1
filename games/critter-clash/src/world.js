@@ -312,6 +312,7 @@ export class World {
     this.buildBonfire();
     this.buildCart();
     this.buildMarket();
+    this.buildDance();
     this.buildJellies(rand);
     this.buildSkyLanterns();
     this.buildThanks();
@@ -358,7 +359,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1093,6 +1094,32 @@ export class World {
     for (let k = 0; k <= 18; k++) { const f = k / 18, b = new THREE.SphereGeometry(0.1, 6, 5); b.translate(x0 + (x1 - x0) * f, 3.3 - Math.sin(f * Math.PI * 3) ** 2 * 0.35, z0 + 0.6); bulbs[k % 4].push(b); }
     bulbs.forEach((l, i) => { const m = new THREE.Mesh(mergeGeometries(l), new THREE.MeshBasicMaterial({ color: cols[i] })); m.material.userData.own = true; this.group.add(m); l.forEach((q) => q.dispose()); });
     for (const x of [13, 18]) { const [px] = wpos(x, y), p = inked(new THREE.CylinderGeometry(0.06, 0.08, 3.4, 6), toon(0x2a2438), OL * 0.3); p.position.set(px, 1.7, z0 + 0.6); this.group.add(p); }
+  }
+
+  // Neon City after dusk: a DJ booth on the plaza and a light-up dance floor that flashes to the beat (face the booth to dance)
+  buildDance() {
+    this.dance = null;
+    if (this.key !== 'neon' || this.phase === 'day') return;
+    const g = new THREE.Group(), [bx, bz] = wpos(15.5, 9); g.position.set(bx, 0, bz); this.group.add(g);
+    this.solid.add('15,9'); this.solid.add('16,9');
+    const box = (w, h, d, c, X, Y, Z, o = {}) => { const m = inked(new THREE.BoxGeometry(w, h, d), toon(c, o), OL * 0.3); m.position.set(X, Y, Z); m.castShadow = true; g.add(m); return m; };
+    box(2.6, 0.9, 0.9, 0x2a2438, 0, 0.45, 0); box(2.7, 0.08, 1.0, 0x5a4a8a, 0, 0.94, 0);
+    for (const sx of [-1.75, 1.75]) { box(0.7, 1.5, 0.7, 0x1a1428, sx, 0.75, -0.05); for (const y of [0.45, 1.1]) { const c = inked(new THREE.CylinderGeometry(y < 1 ? 0.24 : 0.15, y < 1 ? 0.24 : 0.15, 0.06, 14), toon(0x5a5a6a), OL * 0.2); c.rotation.x = Math.PI / 2; c.position.set(sx, y, 0.32); g.add(c); } }
+    const discs = [-0.6, 0.6].map((x) => { const d = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.04, 16), toon(0x101018)); d.position.set(x, 1.0, 0); g.add(d); const l = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.05, 0.06), toon(0xff5ad8)); l.position.set(0.12, 0.03, 0); d.add(l); return d; });
+    const tex = canvasTex(128, 32, (c) => { c.fillStyle = '#1a1430'; c.fillRect(0, 0, 128, 32); c.font = 'bold 20px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = '#ff5ad8'; c.shadowBlur = 8; c.fillStyle = '#ff9ae8'; c.fillText('DJ TUMBLE', 64, 17); });
+    tex.userData.own = true; const sm = new THREE.MeshBasicMaterial({ map: tex }); sm.userData.own = true;
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.55), sm); sg.position.set(0, 0.5, 0.46); g.add(sg);
+    const trim = new THREE.MeshBasicMaterial({ color: 0x3af0ff }); trim.userData.own = true;
+    for (const y of [0.08, 0.9]) { const t = new THREE.Mesh(new THREE.BoxGeometry(2.62, 0.06, 0.06), trim); t.position.set(0, y, 0.46); g.add(t); }
+    bakeStatic({ root: g, mats: {}, discs }); // keep the spinning records out of the merge
+    const cols = [0xff5ad8, 0x5ae8ff, 0xffd84d, 0x8aff9a, 0xc08aff], tiles = [];
+    for (let y = 10; y <= 11; y++) for (let x = 15; x <= 18; x++) {
+      const m = new THREE.MeshBasicMaterial({ color: cols[0], transparent: true, opacity: 0.55, depthWrite: false }); m.userData.own = true;
+      const q = new THREE.Mesh(new THREE.PlaneGeometry(TILE * 0.92, TILE * 0.92), m), [px, pz] = wpos(x, y); q.rotation.x = -Math.PI / 2; q.position.set(px, 0.03, pz); this.group.add(q); tiles.push({ q, k: x + y * 3 });
+    }
+    const gm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff5ad8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.35 }); gm.userData.own = true;
+    const glow = new THREE.Sprite(gm); const [fx, fz] = wpos(16.5, 10.5); glow.position.set(fx, 1.2, fz); glow.scale.set(7, 4, 1); this.group.add(glow);
+    this.dance = { tiles, cols, discs, glow, x: [15, 16], y: 9, px: bx, pz: bz };
   }
 
   // Cloudtop Gardens after dusk: paper sky lanterns drift up out of the gardens, sway, and fade into the stars
@@ -2171,7 +2198,7 @@ export class World {
   buildActors() {
     this.npcs = [];
     const F = save.adv.flags;
-    for (const n of [...(this.M.npcs || []), ...this.traderSpot()]) {
+    for (const n of [...(this.M.npcs || []), ...this.traderSpot()].map((q) => q.night && this.phase !== 'day' ? { ...q, ...q.night } : q)) { // some folk have a night spot
       if (n.hideFlag && F[n.hideFlag]) continue;
       if (n.showFlag && !F[n.showFlag]) continue;
       let root, cr = null;
@@ -2398,6 +2425,7 @@ export class World {
       if (this.sliding) { idlePose(P, this.t); P.lean = -0.15; P.armLz = P.armRz = 1.2; H.emote?.('happy', 'o', 0.1); } else { walkPose(P, this.running ? this.t * 1.5 : this.t); if (this.running) P.lean = 0.3; }
     } else {
       idlePose(P, this.t);
+      if (this.danceT > 0) { const b = Math.abs(Math.sin(this.t * 7)); P.y = b * 0.22; P.roll = Math.sin(this.t * 3.5) * 0.22; P.yaw = Math.sin(this.t * 1.8) * 0.7; P.armLz = 1.3 + Math.sin(this.t * 7) * 0.6; P.armRz = 1.3 - Math.sin(this.t * 7) * 0.6; P.legL = Math.sin(this.t * 7) * 0.5; P.legR = -P.legL; H.emote('happy', 'grin', 0.1); }
       if (this.fishing) { P.armLx = P.armRx = -1.1 + Math.sin(this.t * 0.8) * 0.06; P.armLz = P.armRz = 0.2; if (this.fishing.phase === 'bite') { P.lean = 0.2; H.emote('happy', 'open', 0.1); } }
       // left alone, the hero gets bored: looks around, stretches, yawns, then dozes off
       const idle = this.dialog || this.busy ? 0 : (this.idleT = (this.idleT || 0) + dt);
@@ -2467,6 +2495,12 @@ export class World {
       J.dome.scale.set(1 + q * 0.12, 1 - q * 0.18, 1 + q * 0.12); J.sm.opacity = 0.5 + q * 0.2;
       J.g.position.x = J.x0 + Math.sin(this.t * 0.25 + J.ph) * 0.6; J.g.position.z = J.z0 + Math.cos(this.t * 0.2 + J.ph) * 0.6; J.g.position.y = -0.05 + Math.max(0, q) * 0.06;
     }
+    if (this.dance) { // the floor flashes on the beat (faster while the hero dances); the records spin
+      const D = this.dance, fast = this.danceT > 0, beat = Math.floor(this.t * (fast ? 4 : 2));
+      for (const T of D.tiles) { T.q.material.color.setHex(D.cols[(T.k + beat) % D.cols.length]); T.q.material.opacity = 0.35 + ((T.k + beat) % 2) * 0.3; }
+      D.discs.forEach((d, k) => { d.rotation.y += dt * (k ? 3.2 : 4); }); D.glow.material.color.setHex(D.cols[beat % D.cols.length]); D.glow.material.opacity = 0.3 + (beat % 2) * 0.12;
+    }
+    if (this.danceT > 0) { this.danceT -= dt; if (Math.random() < dt * 8) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 1.6 + Math.random(), z: p.z, vy: 1.2, color: this.dance?.cols[Math.floor(Math.random() * 5)] ?? 0xff5ad8, size: 0.2, life: 0.9, shape: Math.random() < 0.5 ? 'star' : 'glow' }); } }
     if (this.skyLanterns) for (const L of this.skyLanterns) { // each lantern rises for 14 s from a random spot near the hero, then starts again
       L.t += dt; if (L.t > 14 || !L.x) { L.t %= 14; L.x = this.hero.root.position.x + (Math.random() - 0.5) * 22; L.z = this.hero.root.position.z + (Math.random() - 0.3) * 14; }
       const f = L.t / 14; L.g.position.set(L.x + Math.sin(this.t * 0.7 + L.z) * 0.6, 0.5 + f * 13, L.z - f * 3); L.g.rotation.z = Math.sin(this.t * 1.3 + L.x) * 0.12;
@@ -2705,6 +2739,11 @@ export class World {
         return this.say([snow ? 'Someone left a bag of marshmallows by the fire. {hero} toasts one on a stick until it\'s golden... and gobbles it up! (+XP)' : 'A bag of marshmallows sits by the fire. {hero} toasts one until it\'s gooey and golden... mmm! (+XP)', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : []), 'One marshmallow a night is the rule. The fire will be here tomorrow too.']);
       }
       return this.say([(snow ? ['The campfire crackles in the snow. {hero} holds out their paws. Ahh, that\'s better!', 'Sparks float up into the cold, starry sky. Somewhere, a snowman looks jealous.', '{hero} warms up by the fire until even their ears feel toasty.'] : ['The bonfire crackles and pops. {hero} holds out their paws. Toasty!', 'Sparks float up and wink out among the stars. The waves hush on the sand.', '{hero} watches the flames dance for a while. A perfect beach night.'])[Math.floor(Math.random() * 3)]]);
+    }
+    if (this.dance && this.dance.y === fy && this.dance.x.includes(fx)) { // DJ Tumble's night set: dance! The first dance of the night tips a berry
+      this.danceT = 3.2; sfx.jingle?.(1); const day = new Date().toISOString().slice(0, 10);
+      if (save.adv.danced !== day) { save.adv.danced = day; save.berries = (save.berries || 0) + 1; persist(); return this.say(['The beat drops! {hero} busts out their best moves on the light-up floor.', 'The crowd cheers and someone tosses {hero} a berry! +1 🍓 (One tip a night.)']); }
+      return this.say([['{hero} dances like nobody is watching. Everybody is watching. Nobody minds!', 'Boom-tss, boom-tss! {hero} spins, hops and strikes a pose.', 'The floor flashes pink, blue and gold under {hero}\'s feet. What a groove!'][Math.floor(Math.random() * 3)]]);
     }
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
     if (stall) {
