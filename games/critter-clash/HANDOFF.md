@@ -3,7 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 15:44 UTC** (started 2026-10-18 15:44 UTC by session 17a). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
-- **Session 17b (2026-10-18 16:40–~17:50 UTC, session_01BfaGLYCvgsBvybduPxRouW) did R379–R392 (see "Session 17b"); next round R393.**
+- **Session 17b (2026-10-18 16:40–~17:55 UTC, session_01BfaGLYCvgsBvybduPxRouW) did R379–R397 (see "Session 17b"); next round R398.**
 - **Session 17a (2026-10-18 15:44–~16:45 UTC, session_014x9MnMjYZSE8f5qyX4KEM8) did R368–R378 (see "Session 17a"); next round R379.** It chained early at ~280k context.
 - **Run checks against a build, not the dev server:** vite's hot reload kills a running headless check the moment you save a file. Build HEAD into a scratch worktree (`git worktree add <scratch>/wt HEAD --detach`, symlink node_modules, `npx vite build --outDir <scratch>/dist`, `npx vite preview --outDir <scratch>/dist --port 5181`) and run `PORT=5181 node tools/tapcheck.mjs ...` / `PORT=5181 node tools/advcup.mjs ...` (all adv* tools honour PORT now).
 
@@ -785,7 +785,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **R378:** Journal → 🏅 Records tab (screens.js `worldJournal('rec')`): progress bars for cups, trainers beaten (12), gift boxes (24), favours, hats, fish kinds, critters on the team, plus Alphas beaten, wild met, arcade best, steps.
 - **Next ideas:** the Alpha shown big in its battle and the hero's hat in fights (battle side, the user's chat); a Hat Shop mirror / more room decor; more arcade games (a second cabinet with a different game); glowcap/neon moods following the clock; a weekly post-game challenge on the Peak; reduce critter draw calls further (an LOD that hides tiny parts on far NPCs); re-measure on a phone.
 
-## Session 17b (2026-10-18, 16:40–~17:50 UTC, session_01BfaGLYCvgsBvybduPxRouW): moods, SKY HOP, Gauntlet, perf, R379–R392
+## Session 17b (2026-10-18, 16:40–~17:55 UTC, session_01BfaGLYCvgsBvybduPxRouW): moods, SKY HOP, Gauntlet, perf, R379–R397
 - The local clone started on stale history; it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start:** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town.
 - **R379:** Glowcap Woods/Hollow (`WOODS`) and Neon City (`CITY`) follow the clock after daytime like `SNOWY`/`LAVA`; `this.phase` is now the clock phase on every outdoor map (only rooms stay 'day'), so lamps, lit windows, sleeping wild critters and fireflies follow too.
 - **R380: SKY HOP**, a second arcade game (`skyHop()` in arcade.js): tap/Space to flap through neon pillars (10 a pillar, 5 a berry, speeds up; one bump ends it). The arcade's right-hand cabinets (`act: 'arcade:hop'`, cyan screens) run it; `arcade(S, w, hop)` in story.js keeps `save.adv.hopHi` / `hopDay` and pays 1/2/3 berries at 40/100/200+. Gotcha: an `ask()`/`say()` line with a colon in its first 20 characters is read as a speaker name ("SKY HOP! Top score:").
@@ -801,6 +801,8 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **R391:** a PEAK GAUNTLET signpost at peak 3,4; Journal Records counts Gauntlets cleared and the SKY HOP best.
 - **R392:** Cloudtop sky lanterns after dusk (`buildSkyLanterns()`, 7 rising/fading lanterns around the hero).
 - **Checks (17:43 UTC, after R392, on a production build):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout lands back in Bloom Town with no errors; advstory route2 boulder and peak Gauntlet battle 1 both play out clean.
+- **R393:** Journal Records uses 🏔️ for Gauntlets. **R394:** Orla names the week's five critters up front. **R395:** TURBO / SKY HOP marquees over the arcade cabinet banks (`buildMarquee()`). **R396:** Seashell night jellyfish (`buildJellies()`, Seashell's open sea only). **R397:** the market stalls and the noodle cart go through `bakeStatic({ root, mats: {}, ...keep })` too (pass anything animated as a property so it's kept); Neon at night ~385 draw calls. Triangle counts in advperf swing 530k–1M between runs because wild critters spawn at random.
+- **Final checks (17:55 UTC, production build of R397):** advcup Sprout lands back in Bloom Town with no errors (tapcheck at 17:43 was clean; R393–R397 are world-only and were shot one by one).
 - **Next ideas:** a third Neon night thing (a DJ stage?), more Gauntlet flavour (Orla's weekly theme, e.g. all one type), the Alpha shown big in its battle and the hero's hat in fights (battle side, the user's chat); merge static parts of stadium crowds/props too; more room decor (Captain's hut, Lodge); Seashell/Frostpeak night events; re-measure on a phone.
 
 ## Critique backlog (known issues)
