@@ -953,3 +953,25 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 @media (max-height: 380px) and (min-aspect-ratio: 1/1) and (max-width: 700px) { .res-grid { padding-right: 40px; gap: 4px 12px; } }
 /* 915x412-class phones: keep the rank stamp clear of "Health left" */
 @media (max-height: 480px) and (min-aspect-ratio: 1/1) { .res-grid { padding-right: 34px; } }
+
+/* Adventure journal (☰ → 📔): favours and the fish album */
+.wd-journal { width: min(460px, 94vw); }
+.jr-tabs { display: flex; gap: 8px; justify-content: center; margin: -4px 0 8px; }
+.jr-tabs button { font: inherit; font-weight: 800; font-size: 14px; border: 0; border-radius: 999px; padding: 6px 14px; background: rgba(60,40,20,.1); color: inherit; cursor: pointer; }
+.jr-tabs button.on { background: #ffd23f; color: #3a2a10; }
+.jr-list { list-style: none; margin: 0 0 10px; padding: 0 4px 0 0; max-height: min(52vh, 360px); overflow-y: auto; text-align: left; }
+.jr-row { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 12px; background: rgba(60,40,20,.07); margin-bottom: 6px; }
+.jr-row img { width: 44px; height: 44px; margin: 0; flex: none; }
+.jr-row b { display: block; font-size: 14px; }
+.jr-row b small { font-weight: 700; opacity: .6; font-size: 11px; margin-left: 4px; }
+.jr-row span { display: block; font-size: 12.5px; font-weight: 700; opacity: .85; line-height: 1.25; }
+.jr-row.found { background: rgba(255,190,40,.3); }
+.jr-row.done { opacity: .6; }
+.jr-more { font-size: 12.5px; font-weight: 700; opacity: .8; text-align: center; padding: 6px 4px; }
+.jr-head { font-weight: 800; font-size: 13px; margin: 8px 0 4px; opacity: .9; }
+.jr-head:first-child { margin-top: 0; }
+.jr-fish { display: flex; gap: 8px; align-items: center; padding: 4px 8px; border-radius: 10px; background: rgba(60,40,20,.06); margin-bottom: 4px; font-size: 13px; }
+.jr-fish b { flex: 1; } .jr-fish b small { font-size: 10px; background: #b77aff; color: #fff; border-radius: 6px; padding: 1px 5px; margin-left: 4px; }
+.jr-fish em { font-style: normal; font-weight: 800; }
+.jr-fish:not(.got) { opacity: .55; }
+@media (max-height: 420px) { .jr-list { max-height: 46vh; } .wd-journal h2 { margin-bottom: 4px; } }

@@ -520,6 +520,16 @@ export function favourLine() {
   const [id, Q] = open[0], name = Q.who.split(' ').pop();
   return (F[id + '_found'] ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `${name}'s ${Q.item}: ${Q.hint}`) + (open.length > 1 ? ` (+${open.length - 1} more)` : '');
 }
+// the ☰ Journal's favour page: every favour you've been asked for (open first), and how many townsfolk still need a hand
+export function favourList() {
+  const F = flags(), rows = Object.entries(LOST).filter(([id]) => F[id + '_asked']).map(([id, Q]) => {
+    const state = F[id + '_done'] ? 'done' : F[id + '_found'] ? 'found' : 'open';
+    const name = Q.who.split(' ').pop();
+    return { id, who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, text: state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
+  });
+  rows.sort((a, b) => ({ found: 0, open: 1, done: 2 })[a.state] - ({ found: 0, open: 1, done: 2 })[b.state]);
+  return { rows, unasked: Object.keys(LOST).length - rows.length };
+}
 function lostQuest(S, w, a, key) {
   const F = flags(), [kind, id] = key.split(':'), Q = LOST[id], who = Q.who;
   if (kind === 'found') {

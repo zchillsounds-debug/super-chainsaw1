@@ -45,6 +45,13 @@ const markMat = (k) => MARKS[k] ||= new THREE.SpriteMaterial({ depthTest: false,
   c.fillStyle = '#2a1630'; c.font = 'bold 34px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(k, 32, 32);
 }) });
 // where each side quest's lost thing turns up: a solid tile (tree, rock, palm) you face from next door
+// what bites where (name, min cm, max cm; the last of each list is the rare one). The ☰ Journal lists them as a fish album.
+export const FISH = {
+  pond: [['Pond Minnow', 5, 14], ['Speckled Trout', 18, 45], ['Puffgill', 12, 28], ['Lantern Pike', 35, 75]],
+  sea: [['Sandy Sprat', 8, 20], ['Silverfin', 18, 40], ['Bluegill Bop', 15, 32], ['Sunscale', 30, 70]],
+  lava: [['Cinder Carp', 20, 45], ['Ember Eel', 30, 80]],
+  cold: [['Cloud Minnow', 6, 16], ['Frostfin', 15, 35]],
+};
 const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, phones: { map: 'ember', x: 23, y: 1 } };
 
 const STEP = 0.23; // seconds per tile
@@ -1176,10 +1183,10 @@ export class World {
       return this.say([`{hero} reels it in... It's a wild ${name}! And it's not happy about it!`], () => this.startWild(id, lo + Math.floor(Math.random() * (hi - lo + 1)), null, Math.random() < SHINY_RATE));
     }
     if (r < 0.7) { // a fish! measured, and Fisher Finn keeps the record book
-      const sea = this.M.arena === 'beach', kinds = sea ? [['Sandy Sprat', 8, 20], ['Silverfin', 18, 40], ['Bluegill Bop', 15, 32], ['Sunscale', 30, 70]] : this.M.lava ? [['Ember Eel', 30, 80], ['Cinder Carp', 20, 45]] : this.M.snow || this.M.border === 'cloud' ? [['Frostfin', 15, 35], ['Cloud Minnow', 6, 16]] : [['Pond Minnow', 5, 14], ['Speckled Trout', 18, 45], ['Puffgill', 12, 28], ['Lantern Pike', 35, 75]];
+      const kinds = FISH[this.M.arena === 'beach' ? 'sea' : this.M.lava ? 'lava' : this.M.snow || this.M.border === 'cloud' ? 'cold' : 'pond'];
       const k = Math.random() < 0.12 ? kinds.length - 1 : Math.floor(Math.random() * (kinds.length - 1)), [name, lo, hi] = kinds[k];
       const cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };
-      L.n++; const rec = !L.best || cm > L.best.cm;
+      L.n++; const rec = !L.best || cm > L.best.cm, sp = (L.sp ||= {}); sp[name] = Math.max(sp[name] || 0, cm);
       if (rec) { L.best = { name, cm }; save.berries = (save.berries || 0) + 2; }
       persist(); sfx.jingle?.(rec ? 3 : 1);
       return this.say([`{hero} reeled in a ${name}! It's ${cm} cm long! 🐟`, ...(rec ? [`That's {hero}'s biggest catch ever! Fisher Finn would be proud. +2 🍓`] : [`{hero}'s record is still the ${L.best.name} (${L.best.cm} cm). Splash! Back it goes.`])]);

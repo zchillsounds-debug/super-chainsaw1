@@ -9,8 +9,8 @@ import { grown, stageFor, FORMS, GROW_LV } from './growth.js';
 import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
-import { World, newAdventure, heroDef, traderTown } from './world.js';
-import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine } from './story.js';
+import { World, newAdventure, heroDef, traderTown, FISH } from './world.js';
+import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList } from './story.js';
 import { MAPS } from './worldmaps.js';
 
 // trainers and story foes meet the hero partway: an over-levelled hero still gets a fight (the foe climbs
@@ -890,6 +890,7 @@ export class Screens {
     b.appendChild(this.btn('Resume', 'primary', close));
     b.appendChild(this.btn('🗺️ Town Map', 'secondary', () => { close(); this.worldMap(); }));
     b.appendChild(this.btn('🐾 Buddy', 'secondary', () => { close(); this.buddyPick(); }));
+    b.appendChild(this.btn('📔 Journal', 'secondary', () => { close(); this.worldJournal(); }));
     b.appendChild(this.btn('📸 Photo', 'secondary', () => { close(); setTimeout(() => this.worldObj?.snapshot(), 60); }));
     b.appendChild(this.btn('Save & Quit', 'ghost', () => { close(); persist(); this.leaveWorld(); this.title(); }));
     // start over with a new hero (tap twice: this replaces the current story)
@@ -898,6 +899,36 @@ export class Screens {
       close(); persist(); this.leaveWorld(); this.title(); this.heroPick();
     });
     b.appendChild(fresh);
+    this.game.modalClose = close;
+    this.root.appendChild(d);
+  }
+
+  // the Journal: favours for townsfolk, and the fish album (every kind, biggest catch)
+  worldJournal(tab = 'fav') {
+    if (this.root.querySelector('.modal-wrap')) return;
+    const d = document.createElement('div');
+    d.className = 'modal-wrap';
+    const giver = (id) => { for (const M of Object.values(MAPS)) { const n = (M.npcs || []).find((x) => x.story === 'lost:' + id); if (n) return CRITTERS.find((c) => c.id === n.critter); } return null; };
+    let body = '';
+    if (tab === 'fav') {
+      const { rows, unasked } = favourList();
+      body = rows.map((r) => { const c = giver(r.id); return `<li class="jr-row ${r.state}">${c ? `<img src="${this.game.portrait(c)}" alt="">` : ''}<div><b>${r.toast} ${r.who} <small>${r.home}</small></b><span>${r.state === 'done' ? '✅ ' : r.state === 'found' ? '📦 ' : '🔍 '}${r.text}</span></div></li>`; }).join('')
+        + (unasked ? `<li class="jr-more">❗ ${unasked} more townsfolk need a hand. Look for a ❗ over their heads!</li>` : rows.length ? '<li class="jr-more">🌟 You\'ve asked everyone in Clashara. What a good neighbour!</li>' : '');
+    } else {
+      const L = save.adv.fishLog || { n: 0 }, sp = { ...(L.sp || {}) };
+      if (L.best && !sp[L.best.name]) sp[L.best.name] = L.best.cm;
+      const where = { pond: '🌿 Ponds & rivers', sea: '🏖️ The sea', lava: '🌋 Lava pools', cold: '❄️ Icy water' };
+      body = (save.adv.flags.rod ? '' : '<li class="jr-more">🎣 Fisher Finn in Seashell Town lends out rods. Then face any water and press A!</li>')
+        + Object.entries(FISH).map(([k, list]) => `<li class="jr-head">${where[k]}</li>` + list.map(([n], i) => { const cm = sp[n]; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? '🐟' : '❔'}</span><b>${cm ? n : '???'}${i === list.length - 1 ? ' <small>rare</small>' : ''}</b><em>${cm ? cm + ' cm' : ''}${L.best?.name === n ? ' 🏅' : ''}</em></li>`; }).join('')).join('')
+        + `<li class="jr-more">${Object.keys(sp).length}/${Object.values(FISH).flat().length} kinds · ${L.n || 0} caught</li>`;
+    }
+    d.innerHTML = `<div class="modal wd-journal"><h2>Journal</h2>
+      <div class="jr-tabs"><button data-t="fav" class="${tab === 'fav' ? 'on' : ''}">🤝 Favours</button><button data-t="fish" class="${tab === 'fish' ? 'on' : ''}">🐟 Fish</button></div>
+      <ul class="jr-list">${body || '<li class="jr-more">Nobody has asked for help yet. Townsfolk with a ❗ over their heads have a favour to ask!</li>'}</ul>
+      <div class="res-btns"></div></div>`;
+    const close = () => { d.remove(); this.game.modalClose = null; };
+    d.querySelectorAll('.jr-tabs button').forEach((t) => t.addEventListener('click', () => { if (t.dataset.t === tab) return; sfx.ui('ok'); close(); this.worldJournal(t.dataset.t); }));
+    d.querySelector('.res-btns').appendChild(this.btn('Close', 'ghost', () => { close(); this.worldMenu(); }));
     this.game.modalClose = close;
     this.root.appendChild(d);
   }
