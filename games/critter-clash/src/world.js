@@ -1030,6 +1030,7 @@ export class World {
     }
     const gm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff9ad0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5 }); gm.userData.own = true;
     const glow = new THREE.Sprite(gm); glow.scale.set(5, 3, 1); glow.position.set(0, 2.3, 0.7); g.add(glow);
+    bakeStatic({ root: g, mats: {}, lanterns }); // the lanterns swing, everything else is merged
     this.cart = { g, lanterns, glow, px: px + TILE / 2 - 0.7 * 1, pz };
   }
 
@@ -1086,6 +1087,7 @@ export class World {
       const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), sm); sg.position.set(0, 0.65, 0.41); g.add(sg);
       const lm = new THREE.SpriteMaterial({ map: glowTex(), color: col, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.45 }); lm.userData.own = true;
       const gl = new THREE.Sprite(lm); gl.scale.set(4, 2.6, 1); gl.position.set(0, 1.6, 0.4); g.add(gl);
+      bakeStatic({ root: g, mats: {} }); // a stall is a pile of little static parts: merge them like a critter's
     }
     const [x0, z0] = wpos(13, y), [x1] = wpos(18, y), cols = [0xff6a8a, 0xffc04a, 0x5ae8ff, 0x8aff9a], bulbs = cols.map(() => []);
     for (let k = 0; k <= 18; k++) { const f = k / 18, b = new THREE.SphereGeometry(0.1, 6, 5); b.translate(x0 + (x1 - x0) * f, 3.3 - Math.sin(f * Math.PI * 3) ** 2 * 0.35, z0 + 0.6); bulbs[k % 4].push(b); }
