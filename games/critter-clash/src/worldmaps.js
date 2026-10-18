@@ -122,6 +122,9 @@ export const MAPS = {
     npcs: [
       { id: 'fan', x: 9, act: 'cheer', y: 9, critter: 'emberfly', name: 'Emberfly', dir: 's', wander: 2, lines: ["Emberfly: The Sprout Stadium's cup is for brand-new critters. Win it and everyone will know your name!", 'Emberfly: The crowd goes wild for a good super move. Bzzzt!', 'Emberfly: Have you seen the new Hat Shop? The one with the giant top hat on the roof! Milliner Mo takes berries.'] },
       { id: 'old', x: 20, act: 'sleep', y: 12, critter: 'snoozlo', name: 'Old Snoozlo', dir: 'w', lines: ['Old Snoozlo: Zzz... huh? Oh. They say the Critter Crown sits on top of Champion\'s Peak... zzz...', "Old Snoozlo: ...seven stadiums... seven cups... then the Crown... zzz..."] },
+      { id: 'gardener', x: 4, act: 'water', y: 15, critter: 'clovebun', name: 'Gardener Bea', dir: 'e', lines: ['Gardener Bea: These flowers love a good rain. So do water critters! They pop out of the grass all over when it pours.', 'Gardener Bea: Shake a berry bush once a day. Sometimes a sleepy critter tumbles out with the berries!'] },
+      { id: 'jogger', x: 20, act: 'hop', y: 9, critter: 'voltferret', name: 'Jogger Zip', dir: 'w', wander: 3, lines: ['Jogger Zip: Hup hup! Push the stick all the way (or hold Shift) and you RUN. Dust everywhere!', 'Jogger Zip: Running is faster, but tall grass still finds you. Hup hup!'] },
+      { id: 'prickle', x: 7, act: 'cheer', y: 2, critter: 'pricklepuff', name: 'Pricklepuff', dir: 's', wander: 2, lines: ['Pricklepuff: I saw a traveller in a tricorn hat selling hats nobody else has! A different town every day!', 'Pricklepuff: Don\'t hug me. Everyone always wants to hug me. OUCH, they say.'] },
     ],
   },
 
@@ -190,6 +193,8 @@ export const MAPS = {
     npcs: [
       { id: 'fisher', x: 21, act: 'fish', y: 12, critter: 'ripples', name: 'Fisher Finn', dir: 'e', story: 'fisher', lines: ['Fisher Finn: Shh! The fish are biting. ...Okay, nothing is biting. But the Thunder Cup crowd sure bites back!', 'Fisher Finn: Grab a berry smoothie at the Berry Center before you go in.'] },
       { id: 'surfer', x: 6, act: 'dance', y: 13, critter: 'pengsicle', name: 'Pengsicle', dir: 's', wander: 2, lines: ['Pengsicle: Waddle waddle! I tried to surf once. The wave won.', 'Pengsicle: The Thunder Cup trainers are TOUGH. Grow strong in the grass on Route 2 first!'] },
+      { id: 'castle', x: 4, act: 'cheer', y: 14, critter: 'diggles', name: 'Diggles', dir: 'e', wander: 1, lines: ['Diggles: Behold! The greatest sandcastle in Clashara! ...It\'s mostly a heap. A grand heap!', 'Diggles: At night the waves glow blue along the beach. Sea sparks! Come back after dark and see.'] },
+      { id: 'shells', x: 20, act: 'wave', y: 9, critter: 'lilypop', name: 'Shell Collector Mei', dir: 'w', wander: 2, lines: ['Shell Collector Mei: Starfish, shells, sea glass... the beach brings new treasures every tide!', 'Shell Collector Mei: Fisher Finn on the pier gives out rods. Face the water, press A, and wait for the bobber to dip!'] },
       { id: 'rival2', x: 12, y: 7, rival: true, rlv: 7, name: 'Dash', dir: 'w', story: 'rival2', hideFlag: 'rival2' },
     ],
   },
@@ -288,6 +293,8 @@ export const MAPS = {
     signs: [{ x: 13, y: 14, text: 'GLOWCAP HOLLOW\nA village of mushrooms, moonlight and very good naps.' }],
     npcs: [
       { id: 'oakley', x: 12, act: 'read', y: 7, critter: 'lilypop', lv: 9, name: 'Elder Oakley', dir: 's', scale: 1.2, lines: ['Elder Oakley: Hoo hoo. Welcome to the Hollow, young one. My stadium is just behind me.', 'Elder Oakley: Strength opens doors. Friendship opens whole forests.'] },
+      { id: 'shroomfan', x: 14, act: 'cheer', y: 9, critter: 'whirlwhisk', name: 'Mushroom Fan Fen', dir: 'w', wander: 1, lines: ['Mushroom Fan Fen: The big toadstools breathe out glowing spores. Stand close and breathe in. Smells like candy!', 'Mushroom Fan Fen: Mist rolls through these woods all day long. Spooky? No. COSY.'] },
+      { id: 'owlwatch', x: 20, act: 'read', y: 14, critter: 'hootsy', name: 'Owl Watcher Wren', dir: 'w', lines: ['Owl Watcher Wren: Shh! At night the wild critters curl up and sleep. Walk up and say hello... if you dare.', 'Owl Watcher Wren: I write down every critter I see. Do you have a photo? Open the ☰ menu and snap one!'] },
       { id: 'nyx', x: 20, y: 12, critter: 'squeakwing', name: 'Nyx', dir: 'w', wander: 1, lines: ['Nyx: Every bat in the woods heard about you helping Pip. Squeak squeak means thank you.', 'Nyx: I fight in the Glowcap Cup too. Bring earplugs.'] },
       { id: 'sleepy', x: 6, act: 'sleep', y: 13, critter: 'snoozlo', name: 'Snoozlo', dir: 's', lines: ['Snoozlo: ...zzz... the Champion Cup... is past the volcano... zzz... too hot... zzz...'] },
     ],
@@ -368,6 +375,8 @@ export const MAPS = {
       { id: 'boulder2', x: 14, act: 'flex', y: 6, critter: 'rolladillo', lv: 11, name: 'Big Boulder', dir: 's', lines: ["Big Boulder: I run the Champion Stadium. Only critters with three cups get a shot. You've got 'em? Then come on in!", 'Big Boulder: Rolladillo and I have never lost at home. Never! ...Okay, twice.'] },
       { id: 'spa', x: 21, act: 'fan', y: 4, critter: 'pengsicle', name: 'Pengsicle', dir: 'w', wander: 1, lines: ['Pengsicle: Too... hot... I came for the hot springs and I am MELTING.', 'Pengsicle: I hear the Midnight Cup is in a big city with neon lights. Somewhere cooler, I hope!'] },
       { id: 'kid4', x: 9, act: 'hop', y: 12, critter: 'kindlekit', name: 'Kindlekit', dir: 'e', wander: 2, lines: ['Kindlekit: Yip! The volcano rumbles every time someone wins the Champion Cup. Make it RUMBLE!'] },
+      { id: 'smith', x: 22, act: 'flex', y: 12, critter: 'emberfly', name: 'Smith Ash', dir: 'w', lines: ['Smith Ash: Feel that warm ground? Magma runs right under Cinder Town. Watch the cracks glow!', 'Smith Ash: The forge chimney never stops sparking. Neither do I. HAH!'] },
+      { id: 'tourist', x: 13, act: 'wave', y: 4, critter: 'bubbalotl', name: 'Tourist Bo', dir: 's', wander: 1, lines: ['Tourist Bo: I came for the lava pools and stayed for the spa. Don\'t tell my mum it\'s so hot here.', 'Tourist Bo: Captain Puff\'s balloon flies you between towns you\'ve visited. Check the Town Map in the ☰ menu!'] },
     ],
   },
 
@@ -455,6 +464,8 @@ export const MAPS = {
       { id: 'balloon2', x: 14, y: 12, balloon: 0xff9ac8, name: 'Captain Puff', dir: 'n', story: 'balloon', dest: [{ map: 'neon', x: 24, y: 15, dir: 'w', name: 'Neon City' }, { map: 'frostpeak', x: 11, y: 13, dir: 'n', name: 'Frostpeak', need: 'cup_sky' }] },
       { id: 'sora', x: 4, y: 9, critter: 'hootsy', name: 'Sky Diver Sora', dir: 'e', trainer: { lv: 16, sight: 4, intro: 'Sky Diver Sora: Hoo! I jumped off the island once. Landed on a cloud. Bounced right back! Battle me!', beat: 'Sky Diver Sora: Free-falling... in defeat.', after: 'Sky Diver Sora: Professor Pecan flew up here yesterday. He looked VERY serious.' } },
       { id: 'petal', x: 19, act: 'water', y: 9, critter: 'clovebun', name: 'Gardener Rosa', dir: 'w', wander: 1, lines: ['Gardener Rosa: Every flower up here grew from a seed a balloon dropped. Isn\'t that lovely?', 'Gardener Rosa: The Sky Cup ends with a very special guest. My lips are sealed!'] },
+      { id: 'kite', x: 20, act: 'cheer', y: 6, critter: 'squeakwing', name: 'Kite Flyer Gale', dir: 'w', wander: 1, lines: ['Kite Flyer Gale: Up here the wind never stops. Perfect kite weather! ...I lost my kite. It\'s somewhere over Frostpeak now.', 'Kite Flyer Gale: Wild critters up here are tough. Visit the Berry Center board. Finish requests for berries!'] },
+      { id: 'picnic', x: 7, act: 'sleep', y: 12, critter: 'woolt', name: 'Picnicker Puff', dir: 's', lines: ['Picnicker Puff: Zzz... a picnic on a cloud... the softest nap in the world... zzz...', 'Picnicker Puff: Mm? Try the smoothie blender in any Berry Center. One berry, a whole lot of pep. Zzz...'] },
     ],
   },
 
@@ -495,6 +506,8 @@ export const MAPS = {
     npcs: [
       { id: 'balloon3', x: 12, y: 14, balloon: 0xff9ac8, name: 'Captain Puff', dir: 'w', story: 'balloon', dest: [{ map: 'cloudtop', x: 13, y: 12, dir: 'w', name: 'Cloudtop Gardens' }, { map: 'neon', x: 24, y: 15, dir: 'w', name: 'Neon City' }] },
       { id: 'aurora', x: 14, act: 'skate', y: 6, critter: 'pengsicle', name: 'Skater Ivy', dir: 's', wander: 1, lines: ['Skater Ivy: The frozen lake on the way up the Peak is tricky. Once you start sliding, you can\'t stop until you hit something!', 'Skater Ivy: Plan your slides before you go. Bonk a rock to stop.'] },
+      { id: 'snowkid', x: 15, act: 'hop', y: 10, critter: 'pebblepup', name: 'Snowball Kid Kip', dir: 'w', wander: 2, lines: ['Snowball Kid Kip: I built all these snowmen! Well, most of them. Okay, one. The wonky one.', 'Snowball Kid Kip: Footprints in the snow fade fast. Race them!'] },
+      { id: 'cocoa', x: 20, act: 'wave', y: 12, critter: 'kindlekit', name: 'Cocoa Seller Cora', dir: 'w', lines: ['Cocoa Seller Cora: Hot cocoa! ...I\'m out of cocoa. But the Berry Center next door is lovely and warm!', 'Cocoa Seller Cora: Every climber rests here before the Peak. Heal up, and plan your path across the ice!'] },
       { id: 'elder', x: 6, act: 'sleep', y: 12, critter: 'snoozlo', name: 'Old Snoozlo', dir: 'e', lines: ['Old Snoozlo: ...zzz... oh! It\'s you again. Seven cups... you really did it... zzz...', "Old Snoozlo: The Crown Keeper up on the Peak... is a very... very... sleepy king... zzz..."] },
     ],
   },
