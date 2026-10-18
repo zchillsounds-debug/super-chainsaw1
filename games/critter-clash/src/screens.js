@@ -1009,7 +1009,8 @@ export class Screens {
     } else if (tab === 'rec') { // everything there is to find and beat, with how far along you are
       const A = save.adv, F = A.flags, L = A.fishLog || {}, npcs = Object.values(MAPS).flatMap((M) => M.npcs || []);
       const tr = npcs.filter((n) => n.trainer), fl = favourList(), fsp = new Set([...Object.keys(L.sp || {}), ...(L.best ? [L.best.name] : [])]);
-      const bar = (ic, name, n, of) => `<li class="jr-rec"><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`;
+      const parts = []; // every bar with a goal counts towards the overall completion
+      const bar = (ic, name, n, of) => (of && parts.push(Math.min(1, n / of)), `<li class="jr-rec"><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`);
       body = bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length)
         + bar('⚔️', 'Trainers beaten', tr.filter((n) => F[n.id]).length, tr.length)
         + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_')).length, 24)
@@ -1022,14 +1023,16 @@ export class Screens {
         + bar('🌿', 'Wild critters met', A.cnt?.wild || 0)
         + bar('🕹️', 'TURBO best', A.arcadeHi || 0)
         + bar('🎈', 'SKY HOP best', A.hopHi || 0)
-        + bar('🍾', 'Bottles found', A.cnt?.bottle || 0)
         + bar('🪩', 'Nights danced', A.cnt?.dance || 0)
         + bar('⛸️', 'Nights skated', A.cnt?.skate || 0)
         + bar('⛲', 'Wishes made', A.cnt?.wish || 0)
         + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
         + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
         + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length)
+        + bar('🍾', 'Bottle notes read', (A.notes || []).length, BOTTLE_NOTES.length)
         + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
+      const pc = Math.floor(parts.reduce((a, b) => a + b, 0) / parts.length * 100);
+      body = `<li class="jr-total ${pc >= 100 ? 'full' : ''}"><b>${pc >= 100 ? '🌟 Clashara complete!' : '🗺️ Clashara explored'}</b><em>${pc}%</em><i style="--p:${pc / 100}"></i></li>` + body;
     } else if (tab === 'today') { // every daily thing in one list: done today, or where to go for it
       const { rows, after, night } = this.todayList();
       const row = ([ic, name, where, done]) => `<li class="jr-fish jr-day ${done ? 'got' : ''}"><span>${done ? '✅' : ic}</span><b>${name}</b><em>${done ? 'done' : where}</em></li>`;

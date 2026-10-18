@@ -1011,6 +1011,10 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 /* Journal → Records: a progress bar under each row */
 .jr-rec { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; column-gap: 8px; padding: 5px 8px; border-radius: 10px; background: rgba(42,22,48,.05); margin-bottom: 4px; }
 .jr-rec span { font-size: 17px; text-align: center; }
+.jr-total { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 8px 12px; margin-bottom: 8px; border-radius: 14px; background: linear-gradient(135deg, #fff4c8, #ffe0f0); box-shadow: inset 0 0 0 2px #ffc93a80; }
+.jr-total b { font-size: 15px; } .jr-total em { font-style: normal; font-weight: 900; font-size: 20px; color: #e8781a; }
+.jr-total i { grid-column: 1 / -1; height: 9px; margin-top: 5px; border-radius: 5px; background: linear-gradient(90deg, #ffb020 calc(var(--p) * 100%), rgba(42,22,48,.12) 0); }
+.jr-total.full { background: linear-gradient(135deg, #ffe680, #ffb0d8); }
 .jr-rec b { font-size: 14px; }
 .jr-rec em { font-style: normal; font-weight: 800; font-size: 13px; color: #6a4ad8; }
 .jr-rec i { grid-column: 2 / 4; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #7a5aff calc(var(--p) * 100%), rgba(42,22,48,.12) 0); margin-top: 3px; }
