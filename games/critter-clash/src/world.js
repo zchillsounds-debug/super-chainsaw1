@@ -13,7 +13,7 @@ import { getMap, CUP_ORDER } from './interiors.js';
 import { countUp, deliveryFor, deliveredLine, gauntletWeek } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
-import { stargaze, tonightConst, BOTTLE_NOTES } from './stars.js';
+import { stargaze, tonightConst, BOTTLE_NOTES, CONSTELLATIONS } from './stars.js';
 import { fairyRing } from './ring.js';
 
 export const TILE = 2;
@@ -1325,10 +1325,10 @@ export class World {
       if (fresh) seen.push(C.id);
       if (A.stars !== day) {
         A.stars = day; countUp('stars'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
-        return this.say([...star, `{hero} spotted ${C.name}!${fresh ? ' A new one for the star log! ✨' : ''}`, `Counting stars is surprisingly tiring. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, `Star log: ${seen.length} of 8 constellations. A different one rises each night.`]);
+        return this.say([...star, `{hero} spotted ${C.name}!${fresh ? ' A new one for the star log! ✨' : ''}`, `Counting stars is surprisingly tiring. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, `Star log: ${seen.length} of ${CONSTELLATIONS.length} constellations. A different one rises each night.`]);
       }
       persist();
-      return this.say([...star, `${C.name} twinkles away. Another constellation will rise tomorrow night. (Star log: ${seen.length} of 8)`]);
+      return this.say([...star, `${C.name} twinkles away. Another constellation will rise tomorrow night. (Star log: ${seen.length} of ${CONSTELLATIONS.length})`]);
     }, () => { // a shooting star caught in the eyepiece: one berry a night
       if (A.shoot === day) return;
       A.shoot = day; save.berries = (save.berries || 0) + 1; persist(); this.caughtStar = true;

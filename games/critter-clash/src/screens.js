@@ -1022,7 +1022,7 @@ export class Screens {
         + bar('⛲', 'Wishes made', A.cnt?.wish || 0)
         + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
         + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
-        + bar('🔭', 'Constellations spotted', (A.consts || []).length, 8)
+        + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length)
         + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
     } else if (tab === 'today') { // every daily thing in one list: done today, or where to go for it
       const { rows, after, night } = this.todayList();
