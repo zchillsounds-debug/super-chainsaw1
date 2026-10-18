@@ -1472,6 +1472,7 @@ export class World {
         }
         if (b.heal) { const cr = inked(new THREE.BoxGeometry(0.9, 0.9, 0.1), toon(0xffffff), OL * 0.5); cr.position.set(dx, wallH - 0.1, front + 0.04); G.add(cr); const h = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.12), toon(0xff5a8a)); h.position.copy(cr.position); h.position.z += 0.03; G.add(h); const v2 = h.clone(); v2.rotation.z = Math.PI / 2; G.add(v2); }
       }
+      bakeStatic({ root: G, mats: {}, keep: [this.labDish, this.beacon, ...this.pennants, ...this.medals] }); // one mesh per material for the static parts (draw calls)
       this.group.add(G);
       this.doors.push({ x: b.x + b.door, y: b.y + b.h - 1, b });
     }
