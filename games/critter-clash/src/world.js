@@ -254,7 +254,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1646,12 +1646,13 @@ export class World {
         this.group.add(pend); this.pendulum = pend;
       }
       if (t === 'r') { // a rocking chair with a knitted blanket over the back
+        const RK = (this.rocker = { L: {}, px, pz }).L, add = (k, g) => (RK[k] ||= []).push(g), box = (k, w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); add(k, g); }; // its own group, so it can rock
         for (const sd of [-1, 1]) { const rk = new THREE.TorusGeometry(1.1, 0.06, 5, 14, 1.2); rk.rotateZ(-Math.PI / 2 - 0.6); rk.rotateY(Math.PI / 2); rk.translate(px + sd * 0.45, 1.15, pz); add('wood', rk); }
         box('wood', 1.05, 0.12, 1.0, px, 0.62, pz); for (const sd of [-1, 1]) { box('wood', 0.1, 1.5, 0.1, px + sd * 0.45, 1.3, pz - 0.45); box('wood', 0.1, 0.55, 0.1, px + sd * 0.45, 0.9, pz + 0.4); box('wood', 0.1, 0.08, 0.95, px + sd * 0.45, 1.15, pz); }
         for (let k = 0; k < 3; k++) box('wood', 0.08, 1.2, 0.06, px - 0.25 + k * 0.25, 1.35, pz - 0.47);
         box('wood', 1.0, 0.12, 0.1, px, 2.0, pz - 0.47);
         box('knit', 0.9, 0.9, 0.1, px, 1.55, pz - 0.38); box('knit2', 0.9, 0.12, 0.12, px, 1.75, pz - 0.36); box('knit2', 0.9, 0.12, 0.12, px, 1.4, pz - 0.36); box('knit', 0.7, 0.08, 0.7, px, 0.72, pz + 0.05);
-      }
+            }
       if (t === 'k') { // a basket of yarn, with one ball rolled away
         const bk = new THREE.CylinderGeometry(0.5, 0.4, 0.5, 12, 1, true); bk.translate(px, 0.25, pz); add('stool', bk);
         const bt = new THREE.CircleGeometry(0.4, 12); bt.rotateX(-Math.PI / 2); bt.translate(px, 0.05, pz); add('stool', bt);
@@ -1691,6 +1692,11 @@ export class World {
       m.castShadow = !glow && k !== 'trim'; m.receiveShadow = true;
       this.group.add(m);
       L[k].forEach((g) => g.dispose());
+    }
+    if (this.rocker) { // the rocking chair rocks on its own little pivot
+      const { L: RK, px, pz } = this.rocker, g = new THREE.Group(); g.position.set(px, 0.05, pz);
+      for (const k in RK) { const geo = mergeGeometries(RK[k]); geo.translate(-px, -0.05, -pz); const m = inked(geo, toon(C[k] ?? 0xffffff, { rim: 0.3 }), OL * 0.6); m.castShadow = true; m.receiveShadow = true; g.add(m); RK[k].forEach((q) => q.dispose()); }
+      this.group.add(g); this.rocker = g;
     }
     this.roomLamp();
     for (const [lx, lz, col] of this.lampPools || []) { // glowcap lamps light the floor around them
@@ -2142,6 +2148,7 @@ export class World {
     for (const [px, pz] of this.vents || []) if (Math.random() < dt * 3) this.g.fx.spawn({ x: px, y: 0.8, z: pz, vy: 1.4, vx: 0.2, color: 0xd8d0d0, alpha: 0.5, size: 0.7, life: 1.8, shape: 'puff', additive: false, grow: 1.2 });
     for (const [fx, fy, fz, k = 1] of this.forgeFire || []) if (Math.random() < dt * 9 * k) this.g.fx.spawn({ x: fx + (Math.random() - 0.5) * 1.4 * k, y: fy, z: fz, vy: 1.2 + Math.random() * 1.6, vx: (Math.random() - 0.5) * 0.6, vz: 0.3 + Math.random() * 0.6, color: Math.random() < 0.6 ? 0xffa030 : 0xffe060, size: 0.14 + Math.random() * 0.1, life: 0.9, shape: 'glow' });
     if (this.thanksFan) { this.thanksFan.rotation.z -= dt * 14; if (Math.random() < dt * 3) this.g.fx.spawn({ shape: 'star', x: this.thanksFan.parent.parent.position.x + (Math.random() - 0.5) * 0.3, y: 0.55 + Math.random() * 0.3, z: this.thanksFan.parent.parent.position.z + (Math.random() - 0.5) * 0.3, vx: -1.1, vz: -0.65, vy: 0.15, life: 0.9, size: 0.18, color: 0xdff6ff }); }
+    if (this.rocker?.isObject3D) { const near = this.hero && Math.hypot(this.hero.root.position.x - this.rocker.position.x, this.hero.root.position.z - this.rocker.position.z) < 3.2; this.rockA = (this.rockA ?? 0.04) + ((near ? 0.13 : 0.04) - (this.rockA ?? 0.04)) * Math.min(1, dt * 2); this.rocker.rotation.x = Math.sin(this.t * 1.7) * this.rockA; } // creak... creak...
     if (this.pendulum) this.pendulum.rotation.z = Math.sin(this.t * 2.2) * 0.22; // tick... tock...
     for (const [jx, jy, jz, col, sh] of this.jars || []) if (Math.random() < dt * 5) this.g.fx.spawn(sh ? { x: jx + (Math.random() - 0.5) * 1.0, y: jy, z: jz + (Math.random() - 0.5) * 0.6, vy: 0.6, color: col, size: 0.14, life: 0.7, shape: sh } : { x: jx + (Math.random() - 0.5) * 0.5, y: jy + (Math.random() - 0.5) * 0.6, z: jz + (Math.random() - 0.5) * 0.5, color: 0xe8ff6a, size: 0.3, life: 0.8, shape: 'glow', fadeIn: 0.3 });
     if (this.forgePool) this.forgePool.material.opacity = 0.42 + Math.sin(this.t * 7) * 0.05 + Math.sin(this.t * 17) * 0.04;
