@@ -86,6 +86,7 @@ export const FISH = {
 export const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, ball: { map: 'route1', x: 7, y: 9 }, phones: { map: 'ember', x: 23, y: 1 }, blink: { map: 'route2', x: 12, y: 10 } };
 
 const STEP = 0.23; // seconds per tile
+const ALPHA_TOLD = new Set(); // Alphas already announced this session
 const SHINY_RATE = 1 / 30; // a rare shiny wild critter: beat it to unlock its shiny palette
 const OL = 0.035;
 const CS = 1.4; // critters stand a bit taller than in battle so they read from the overhead camera
@@ -2643,7 +2644,7 @@ export class World {
           a.aura.scale.divideScalar(CS * 1.45);
           const rm = new THREE.MeshBasicMaterial({ color: 0xff4a2a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.8, side: THREE.DoubleSide }); rm.userData.own = true;
           a.ring = new THREE.Mesh(new THREE.RingGeometry(0.62, 0.8, 28), rm); a.ring.rotation.x = -Math.PI / 2; a.ring.position.y = 0.06; this.group.add(a.ring);
-          setTimeout(() => this.group && this.S.toast(`💥 An Alpha ${a.cr.def.name} prowls the tall grass here!`), 900);
+          if (!ALPHA_TOLD.has(al.flag)) { ALPHA_TOLD.add(al.flag); setTimeout(() => this.group && this.S.toast(`💥 An Alpha ${a.cr.def.name} prowls the tall grass here!`), 900); } // once per play session, not on every visit
         }
       }
     }
