@@ -288,6 +288,13 @@ export function storyTalk(S, id, w, a) {
     return;
   }
   if (id === 'hatshop') return hatShop(w);
+  if (id === 'fisher') { // Fisher Finn hands over his old rod: any pond, river or sea can be fished
+    if (F.rod) { w.say([a.n.lines[Math.floor(Math.random() * a.n.lines.length)], 'Fisher Finn: Remember: wait for the bobber to dip, THEN press A. Patience!'], null, 'Fisher Finn'); return; }
+    w.say(['Fisher Finn: Shh! ...Oh, it\'s you. You look like a natural angler.', 'Fisher Finn: Here, take my old rod! I\'ve got a new one anyway.', 'Fisher Finn: Face any water and press A to cast. When the bobber dips, press A again, quick! You might hook berries... or a grumpy water critter!'], () => {
+      F.rod = true; persist(); sfx.jingle(2); S.toast('🎣 Got the Old Rod!');
+    }, 'Fisher Finn');
+    return;
+  }
   if (id === 'smoothie') { // the Berry Center blender turns a berry into XP for the hero
     const n = save.berries || 0;
     if (!n) { w.say(["A berry smoothie blender. Bring a berry 🍓 and it'll whip up a smoothie for {hero}!"]); return; }

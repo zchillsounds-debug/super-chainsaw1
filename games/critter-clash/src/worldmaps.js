@@ -188,7 +188,7 @@ export const MAPS = {
     ],
     signs: [{ x: 13, y: 8, text: 'SEASHELL TOWN\nSun, sand, and the loudest stadium on the coast.' }],
     npcs: [
-      { id: 'fisher', x: 21, act: 'fish', y: 12, critter: 'ripples', name: 'Fisher Finn', dir: 'e', lines: ['Fisher Finn: Shh! The fish are biting. ...Okay, nothing is biting. But the Thunder Cup crowd sure bites back!', 'Fisher Finn: Grab a berry smoothie at the Berry Center before you go in.'] },
+      { id: 'fisher', x: 21, act: 'fish', y: 12, critter: 'ripples', name: 'Fisher Finn', dir: 'e', story: 'fisher', lines: ['Fisher Finn: Shh! The fish are biting. ...Okay, nothing is biting. But the Thunder Cup crowd sure bites back!', 'Fisher Finn: Grab a berry smoothie at the Berry Center before you go in.'] },
       { id: 'surfer', x: 6, act: 'dance', y: 13, critter: 'pengsicle', name: 'Pengsicle', dir: 's', wander: 2, lines: ['Pengsicle: Waddle waddle! I tried to surf once. The wave won.', 'Pengsicle: The Thunder Cup trainers are TOUGH. Grow strong in the grass on Route 2 first!'] },
       { id: 'rival2', x: 12, y: 7, rival: true, rlv: 7, name: 'Dash', dir: 'w', story: 'rival2', hideFlag: 'rival2' },
     ],

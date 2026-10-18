@@ -190,6 +190,7 @@ export class World {
 
   unload() {
     if (!this.group) return;
+    if (this.fishing) { this.fishing = null; this.busy = false; }
     this.g.scene.remove(this.group);
     const maps = new Set();
     this.group.traverse((o) => {
@@ -874,6 +875,55 @@ export class World {
     this.say([`{hero} shook the berry bush! ${n} berr${n > 1 ? 'ies' : 'y'} fell out! 🍓`]);
   }
 
+  // fishing with Fisher Finn's old rod: face water, press A, wait for the bobber to dip, then press A again
+  cast() {
+    this.busy = true;
+    const g = new THREE.Group();
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, 2.6, 6), toon(0x8a5a3a)); rod.rotation.x = 1.05; rod.position.set(0, 0.7, 1.2); g.add(rod);
+    const lm = new THREE.MeshBasicMaterial({ color: 0xffffff }); lm.userData.own = true;
+    const line = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1.5, 4), lm); line.position.set(0, 0.8, 2.3); g.add(line);
+    const bob = inked(new THREE.SphereGeometry(0.13, 10, 8), toon(0xff4a4a), OL * 0.4); bob.position.set(0, 0.08, 2.3); g.add(bob);
+    this.hero.root.add(g);
+    this.fishing = { t: 0, bite: 1.4 + Math.random() * 2.6, phase: 'wait', rod: g, bob };
+    sfx.ui?.('ok');
+  }
+
+  updateFish(dt, act) {
+    const F = this.fishing; F.t += dt;
+    F.bob.position.y = F.phase === 'bite' ? -0.06 + Math.sin(F.t * 30) * 0.05 : 0.08 + Math.sin(F.t * 2.2) * 0.03;
+    if (F.phase === 'wait') {
+      if (act) return this.reel('early');
+      if (F.t >= F.bite) {
+        F.phase = 'bite'; F.t = 0; sfx.warn?.(); this.bubble({ root: this.hero.root }, '❗');
+        const p = new THREE.Vector3(); F.bob.getWorldPosition(p);
+        for (let k = 0; k < 8; k++) this.g.fx.spawn({ x: p.x, y: 0.1, z: p.z, vx: (Math.random() - 0.5) * 2, vy: 1 + Math.random() * 1.5, vz: (Math.random() - 0.5) * 2, color: 0xe8f6ff, size: 0.18, life: 0.5, shape: 'glow', additive: false, grav: 8 });
+      }
+    } else if (act) this.reel('catch');
+    else if (F.t > 0.85) this.reel('miss');
+  }
+
+  reel(how) {
+    const F = this.fishing; this.fishing = null;
+    this.hero.root.remove(F.rod);
+    F.rod.traverse((o) => o.geometry?.dispose());
+    this.busy = false;
+    if (how === 'early') return this.say(['Too soon! The ripples fade away... Wait for the bobber to dip, then press A!']);
+    if (how === 'miss') return this.say(['The bobber popped back up. Whatever it was got away!']);
+    const r = Math.random(), W = (this.M.wild?.list || []).filter(([i]) => byId(i)?.type === 'water');
+    if (r < 0.55) {
+      const lv = Math.max(2, (save.critters[save.adv.hero]?.level || 3) - 1);
+      const [id, lo, hi] = W.length ? W[Math.floor(Math.random() * W.length)] : [['bubbalotl', 'ripples', 'lilypop', 'pengsicle'][Math.floor(Math.random() * 4)], lv, lv];
+      const name = byId(id)?.name || 'critter';
+      return this.say([`{hero} reels it in... It's a wild ${name}! And it's not happy about it!`], () => this.startWild(id, lo + Math.floor(Math.random() * (hi - lo + 1)), null, Math.random() < SHINY_RATE));
+    }
+    if (r < 0.85) {
+      const n = 1 + (Math.random() < 0.4 ? 1 : 0);
+      save.berries = (save.berries || 0) + n; persist(); sfx.jingle?.(2);
+      return this.say([`{hero} fished up a little net of berries! +${n} 🍓`]);
+    }
+    this.say([['{hero} fished up... an old boot. Squelch.', '{hero} fished up a soggy sock. Whose is this?!', '{hero} fished up a tin can. Into the bin it goes!'][Math.floor(Math.random() * 3)]]);
+  }
+
   pickItem() {
     const it = this.items?.find((i) => i.x === this.hx && i.y === this.hy);
     if (!it) return false;
@@ -1262,6 +1312,7 @@ export class World {
     const inp = this.g.input;
     const act = inp.pressed.attack || inp.pressed.confirm || this.tapA;
     this.tapA = false;
+    if (this.fishing && !this.dialog) this.updateFish(dt, act);
     if (this.dialog) { this.dialog.steer?.(inp.move); if (act) this.dialog.next(); }
     else if (!this.busy) {
       if (this.moveT > 0) {
@@ -1283,6 +1334,7 @@ export class World {
       if (this.sliding) { idlePose(P, this.t); P.lean = -0.15; P.armLz = P.armRz = 1.2; H.emote?.('happy', 'o', 0.1); } else { walkPose(P, this.running ? this.t * 1.5 : this.t); if (this.running) P.lean = 0.3; }
     } else {
       idlePose(P, this.t);
+      if (this.fishing) { P.armLx = P.armRx = -1.1 + Math.sin(this.t * 0.8) * 0.06; P.armLz = P.armRz = 0.2; if (this.fishing.phase === 'bite') { P.lean = 0.2; H.emote('happy', 'open', 0.1); } }
       // left alone, the hero gets bored: looks around, stretches, yawns, then dozes off
       const idle = this.dialog || this.busy ? 0 : (this.idleT = (this.idleT || 0) + dt);
       if (idle > 5) {
@@ -1469,6 +1521,7 @@ export class World {
       return this.say(lines);
     }
     if (this.bush && this.bush.x === fx && this.bush.y === fy) return this.shakeBush();
+    if (this.tile(fx, fy) === '~' && save.adv.flags.rod && !this.M.indoor && !this.M.lava) return this.cast();
     const sign = (this.M.signs || []).find((s) => s.x === fx && s.y === fy);
     if (sign?.act) return this.S.worldStory(sign.act, this, null);
     if (sign) return this.say([sign.text], null, sign.hide ? '' : '📜 Sign');
