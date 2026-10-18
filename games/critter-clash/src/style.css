@@ -102,7 +102,7 @@ button { border: 0; cursor: pointer; color: inherit; }
 
 body.portrait .sel-info { left: 14px; right: 14px; width: auto; top: auto; bottom: calc(230px + var(--sab)); }
 body.portrait .info-card p, body.portrait .stat { display: none; }
-body.portrait .sel-arrows { right: 14px; top: 30%; }
+body.portrait .sel-arrows { right: 14px; top: 17%; }
 body.portrait .sel-bottom { flex-direction: column; align-items: stretch; }
 body.portrait .roster { justify-content: center; }
 body.portrait .sel-actions { align-items: center; }
