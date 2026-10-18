@@ -1047,7 +1047,7 @@ body:has(.wd-box) .wd-a, body:has(.wd-box) .joybase, body:has(.stars-wrap) .wd-a
 @media (orientation: landscape) and (max-height: 380px) {
   .logo { margin-top: 1vh; }
   .logo-top { font-size: 36px; } .logo-bot { font-size: 50px; } .logo-sub { margin-top: 4px; font-size: 12px; }
-  .title-menu { gap: 7px; margin-bottom: 1vh; }
+  .title-menu { gap: 7px; margin-bottom: 1vh; animation-name: riseShort; } /* a shorter rise: the full 30px one slid the buttons over the footer chips */
   .title-main .btn { padding-top: 7px; padding-bottom: 7px; font-size: 22px; min-width: 170px; }
   .title-main .btn small { font-size: 11px; }
   .title-menu .row .btn { padding-top: 7px; padding-bottom: 7px; font-size: 14px; }
@@ -1066,3 +1066,4 @@ body.portrait .toast { top: calc(70px + var(--sat)); }
 .stars-wrap.caught .st-catch { display: block; animation: stCatch 2.4s both; }
 @keyframes stCatch { 0% { opacity: 0; margin-top: 10px; } 12%, 75% { opacity: 1; margin-top: 0; } 100% { opacity: 0; } }
 @media (orientation: landscape) and (max-height: 420px) { .stars .st-name { margin-top: 2px; font-size: 18px; } .stars .st-tip { font-size: 12px; } }
+@keyframes riseShort { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

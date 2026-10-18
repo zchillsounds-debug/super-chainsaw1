@@ -3,6 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 15:44 UTC** (started 2026-10-18 15:44 UTC by session 17a). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
+- **Session 17d (2026-10-18 19:00–~20:15 UTC, session_01Jt3NhTjr57JMGhaYdiZwXk) did R413–R428 (see "Session 17d"); next round R429.**
 - **Session 17c (2026-10-18 17:57–~19:30 UTC, session_01QTvrmqfxosdqeWGXKGsbMX) did R398–R412 (see "Session 17c"); next round R413.**
 - **Session 17b (2026-10-18 16:40–~17:55 UTC, session_01BfaGLYCvgsBvybduPxRouW) did R379–R397 (see "Session 17b"); next round R398.**
 - **Session 17a (2026-10-18 15:44–~16:45 UTC, session_014x9MnMjYZSE8f5qyX4KEM8) did R368–R378 (see "Session 17a"); next round R379.** It chained early at ~280k context.
@@ -825,6 +826,30 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **Final checks (~19:10 UTC, production build of R412):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town with no errors.
 - **Next ideas:** more night things for Bloom/Sprout (a stargazing spot?), a Lodge "skate rental" so the hero can skate the pond at night, more bottle notes / a bottle collection page, Ripples/Kindlekit balance re-check (battle side), the Alpha shown big in its battle and the hero's hat in fights (battle side, the user's chat), merge static parts of stadium fronts, re-measure on a phone.
 
+## Session 17d (2026-10-18, 19:00–~20:15 UTC, session_01Jt3NhTjr57JMGhaYdiZwXk): stars, skates, fountain, Today page, perf, R413–R428
+- The local clone started on stale history; it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start (production build of c674464):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town.
+- **New module `src/stars.js`:** `CONSTELLATIONS` (8 critter constellations: stars + lines in 0..1 sky coords), `tonightConst(day, hash)`, `stargaze(root, C, seed, onDone, onCatch)` (the canvas eyepiece view; test hook `el.__stars` with `step(sec)`, `close()`, `shoot` get/set) and `BOTTLE_NOTES` (moved out of world.js, now 12).
+- **R413: Sprout Village stargazing (after dusk).** `buildScope()`: Grandpa's brass telescope on a tripod at village 16,14 (solid) with a picnic blanket and a glowing jar; face it → `stargaze()`: tonight's constellation traces itself, first look a night +15% of a level (`save.adv.stars = day`, `countUp('stars')`), seen ones in `save.adv.consts`. Mom has a night spot by the blanket (13,14). Journal Records 🔭 Constellations spotted.
+- **R414: Journal 🌌 Night tab** (star log grid + every bottle note read, `save.adv.notes` = note indices). 4 new bottle notes.
+- **R415: skates.** Skater Ivy's night spot has `story: 'skates'` (story.js): she gives `save.adv.skates`. With skates, an ice slide (any map) kicks up sparkles and ends in a twirl (`this.twirlT`, no bump); the first twirl of a night +10% of a level (`save.adv.skated`, `countUp('skate')`, toast). The frozen-lake puzzle on the Peak is unchanged (only the look and the end of a slide differ).
+- **R416: world perf.** Each building/stadium group goes through `bakeStatic({ root: G, mats: {}, keep: [labDish, beacon, ...pennants, ...medals] })` in `buildBuildings`. Bloom 290–321 → 248 draw calls, Seashell 303 → 248, Frostpeak 281–338 → 234–284; Neon 320–381 (its night crowd: each critter is still 25–45 meshes after baking).
+- **R417:** Town Map: Glowcap Woods' label sits above its dot (`ly: -12`; it ran into Glowcap Hollow's); 🔭 on Sprout Village at night until tonight's constellation is spotted (+ 'stars' legend chip).
+- **R418: Bloom Town fireworks on Fri–Sun nights** (`buildBloomFw()` / `updateBloomFw(dt)`: rockets launch just north of the hero so the high camera sees them; new `sfx.firework`). **Gotcha:** World already has a `fireworks(b)` METHOD (cup-win volley) and `updateFireworks(dt)`; don't name fields/methods `fireworks`/`updateFireworks` (it silently overrode the method). Emberfly's night lines mention them.
+- **R419:** rooms in portrait frame 5.6 tiles across (was 7.5) and pan with the hero.
+- **R420:** title screen on short landscape (max-height 380px): smaller logo, slimmer buttons, so the menu no longer covers the critters' faces at 740×360.
+- **R421:** portrait critter select: the ‹ › arrows sit beside the critter (top 17%), not over the info card.
+- **R422:** portrait: the Critterdex card fades at its bottom edge (it scrolls under the roster); toasts sit below the screen header (`body.portrait .toast { top: 70px }`).
+- **R423: Cloudtop wishing fountain** (`buildFountain()`, cloudtop 8,9, solid): tiered sky-blue fountain, falling spray, a shimmering 6-band rainbow; face it → `storyTalk('wish')`: 1 berry, once a day (`save.adv.wish`): 20% +5 berries, 40% +30% of a level, 40% +2 berries. Records ⛲ Wishes made.
+- **R424: Journal 📅 Today tab (now the default tab):** every daily (bush, dig spots, Alpha, noodles, TURBO/SKY HOP prizes, wish, weekly Gauntlet) and after-dark thing (stars, bottle, both marshmallow fires, dance, candy floss, skating) with ✅ or where to go; only places you've seen.
+- **R425:** Pecan news `adv11` (tools' news lists include it).
+- **R426:** routes (maps with wild critters, no buildings, not woods/lava/Peak) get 3 street lamps along the path (`buildLamps`, spacing 11).
+- **R427:** Old Snoozlo is awake at night (night spot `act: 'wave'` + lines). **Fix/gotcha:** townsfolk with `act: 'hop'|'cheer'` doze at night (`dozing()`), so a night spot with lines must also set another `act` (Emberfly now waves at night).
+- **R428:** telescope: tap a 🌠 shooting star in the eyepiece to catch it (1 berry a night, `save.adv.shoot`); "Caught a shooting star!" flash over the eyepiece.
+- **Test gotcha:** particles (fireworks, spray, fireflies) expire during the screenshot tools' real-time wait; set `__game.paused = true` at the end of the stop's JS to capture them. An `ask()` answer in tests: `__game.screens.worldObj.dialog.next()` picks the highlighted option (buttons answer on pointerdown, not click).
+- Regression runs (dev server): advgauntlet battle 1 plays from the world and back with no errors.
+- **Final checks (production build of R428):** see below.
+- **Next ideas:** a Town Map ⛲ mark or Today count badge on the ☰ button; more constellation variety (a seasonal 9th?); Glowcap/Cinder night events; Route lamps could be wooden lanterns instead of Victorian; Neon crowd draw calls (LOD for far critters); Ripples/Kindlekit balance re-check and the Alpha shown big in its battle (battle side, the user's chat); re-measure on a phone.
+
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - (Fixed in R132.) A re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
@@ -882,6 +907,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
+   - Session 17d chained at R429 with the 48-hour prompt word for word.
    - Session 16j did not chain: the user's window ended at about 10:45 UTC on 2026-10-18.
    - Session 16i chained to the next session at R359 with the same prompt (end ~10:45 UTC on 2026-10-18).
    - Session 16h chained to the next session at R339 with the same prompt (end ~10:45 UTC on 2026-10-18).
