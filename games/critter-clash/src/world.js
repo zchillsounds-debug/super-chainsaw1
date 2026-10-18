@@ -446,8 +446,11 @@ export class World {
           c.fillStyle = 'rgba(70,20,10,0.55)'; for (let k = 0; k < 6; k++) { c.beginPath(); c.ellipse((k * 53 + 20) % w, (k * 29 + 10) % h, 14, 8, k, 0, 7); c.fill(); }
           return;
         }
-        c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 3;
+        const night = this.phase === 'night';
+        if (night) { c.fillStyle = this.M.palette?.water ? 'rgba(20,30,90,0.45)' : '#2f68b0'; c.fillRect(0, 0, w, h); } // night water: deeper blue, with starlight glinting on it
+        c.strokeStyle = night ? 'rgba(200,220,255,0.35)' : 'rgba(255,255,255,0.55)'; c.lineWidth = 3;
         for (let k = 0; k < 7; k++) { const x = (k * 37) % w, y = (k * 53) % h; c.beginPath(); c.arc(x, y, 9, 0.2, 2.6); c.stroke(); }
+        if (night) { c.fillStyle = 'rgba(255,248,200,0.95)'; for (let k = 0; k < 6; k++) { const x = (k * 47 + 11) % w, y = (k * 31 + 23) % h; c.fillRect(x, y, 3, 3); c.fillRect(x - 3, y + 1, 9, 1); } }
       }, { repeat: [1, 1] });
       wt.userData.own = true;
       const m = lava ? new THREE.MeshBasicMaterial({ map: wt, color: 0xffb080 }) : toon(0xffffff, { map: wt, rim: 0.2 });
