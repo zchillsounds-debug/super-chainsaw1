@@ -9,6 +9,7 @@ import { sfx } from './audio.js';
 import { rivalFor } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
+import { canRain, rainAt } from './world.js';
 
 const flags = () => save.adv.flags;
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -281,7 +282,7 @@ export function storyTalk(S, id, w, a) {
     // where the next cup is, in story order
     const WHERE = [['sprout', 'Bloom Town, north along Route 1'], ['thunder', 'Seashell Town, east along Route 2 from Bloom Town'], ['grove', 'Glowcap Hollow, through the woods north of Seashell Town'], ['champion', 'Cinder Town, down the volcano road east of Glowcap Hollow'], ['midnight', 'Neon City, east of Cinder Town'], ['sky', 'Cloudtop Gardens. Captain Puff flies there from Neon City'], ['legend', 'Frostpeak. Captain Puff flies there from Cloudtop']];
     const nx = WHERE.find(([id]) => !F['cup_' + id]), cup = nx && CUPS.find((c) => c.id === nx[0]);
-    w.say([F.crowned ? 'Prof. Pecan: Our very own Champion of Clashara! Come back and tell me everything sometime.'
+    w.say([...forecast(), F.crowned ? 'Prof. Pecan: Our very own Champion of Clashara! Come back and tell me everything sometime.'
       : nx ? `Prof. Pecan: ${F.cup_sprout ? 'Marvellous work so far! ' : ''}Your next goal is the ${cup.name}, in ${nx[1]}.`
       : "Prof. Pecan: Seven cups! Champion's Peak is north of Frostpeak. The Crown is waiting!"]);
     return;
@@ -366,6 +367,15 @@ export function storyTalk(S, id, w, a) {
   if (id === 'balloon') balloon(S, w, a);
   if (id === 'dash5') { if (!F.dash5) dashFinal(S, w); else w.say(["Dash: Go on. The Crown Keeper's waiting. Show 'em what beat me."]); }
   if (id === 'king') king(S, w);
+}
+
+// Pecan reads the weather: which places he's seen will get a shower in the next 3-hour slot
+function forecast() {
+  const later = new Date(Date.now() + 3 * 3600 * 1000), seen = Object.keys(save.adv.seen || {});
+  const wet = seen.filter((k) => { const M = getMap(k); return M && canRain(M) && rainAt(k, later); }).map((k) => getMap(k).name);
+  if (!seen.length) return [];
+  return [wet.length ? `Prof. Pecan: My weather vane says showers are coming to ${wet.slice(0, 3).join(', ')} soon. Water critters love the rain!`
+    : 'Prof. Pecan: My weather vane says clear skies everywhere for the next few hours. Splendid!'];
 }
 
 // a list too long for one row of answer buttons: three to a page, then "More"

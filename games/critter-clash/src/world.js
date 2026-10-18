@@ -54,6 +54,12 @@ export function heroDef() {
   return withGear(byId(id), lv);
 }
 
+// weather: the grassy outdoor maps get the same few rainy 3-hour slots for everyone, picked from the date
+export const canRain = (M) => !M.indoor && !M.mood && !M.city && !M.snow && !M.lava && M.border !== 'cloud';
+export function rainAt(key, d, hr = d.getHours()) {
+  return hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}` + key) % 5 === 0;
+}
+
 // an umbrella held over a critter's head in the rain
 function brolly(cr, col) {
   const U = new THREE.Group(), r = cr.def.body.headR;
@@ -143,8 +149,7 @@ export class World {
     const hr = save.adv.clock ?? new Date().getHours();
     this.phase = M.indoor || M.mood ? 'day' : hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day';
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
-    const d = new Date(), slot = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}`;
-    this.rain = !M.indoor && !M.mood && !M.city && !M.snow && !M.lava && M.border !== 'cloud' && (save.adv.rain ?? hash(slot + key) % 5 === 0);
+    this.rain = canRain(M) && (save.adv.rain ?? rainAt(key, new Date(), hr));
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
