@@ -233,6 +233,12 @@ export class Screens {
         "{name}, look up! Grandpa's old telescope stands by the trees in Sprout Village. A different critter constellation rises each night: eight in all. Bloom Town sets off fireworks on Friday, Saturday and Sunday nights, too!",
         "Cloudtop Gardens has a wishing fountain now (one berry, one wish, once a day), and Skater Ivy lends out skates on Frostpeak's pond after dark. Your Journal has a new 📅 Today page that lists everything you can do each day.",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv11') && !save.news.includes('adv12')) {
+      save.news.push('adv12'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, a song in the woods! Glowcap Hollow's fairy ring sings after dark: listen to the toadstools, then tap their tune back. And Cinder Town's hot spring is finally open. One good soak a day, Pengsicle's orders!",
+        "Stargazers, a ninth constellation has turned up: The Toadstool. Out on the routes, wooden lanterns light the paths at night. And the red number on your ☰ button counts the Journal's 📅 Today things still to do.",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
