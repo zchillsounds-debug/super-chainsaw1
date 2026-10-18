@@ -3,6 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 15:44 UTC** (started 2026-10-18 15:44 UTC by session 17a). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
+- **Session 17c (2026-10-18 17:57–~19:30 UTC, session_01QTvrmqfxosdqeWGXKGsbMX) did R398–R412 (see "Session 17c"); next round R413.**
 - **Session 17b (2026-10-18 16:40–~17:55 UTC, session_01BfaGLYCvgsBvybduPxRouW) did R379–R397 (see "Session 17b"); next round R398.**
 - **Session 17a (2026-10-18 15:44–~16:45 UTC, session_014x9MnMjYZSE8f5qyX4KEM8) did R368–R378 (see "Session 17a"); next round R379.** It chained early at ~280k context.
 - **Run checks against a build, not the dev server:** vite's hot reload kills a running headless check the moment you save a file. Build HEAD into a scratch worktree (`git worktree add <scratch>/wt HEAD --detach`, symlink node_modules, `npx vite build --outDir <scratch>/dist`, `npx vite preview --outDir <scratch>/dist --port 5181`) and run `PORT=5181 node tools/tapcheck.mjs ...` / `PORT=5181 node tools/advcup.mjs ...` (all adv* tools honour PORT now).
@@ -805,6 +806,24 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **Final checks (17:55 UTC, production build of R397):** advcup Sprout lands back in Bloom Town with no errors (tapcheck at 17:43 was clean; R393–R397 are world-only and were shot one by one).
 - **Next ideas:** a third Neon night thing (a DJ stage?), more Gauntlet flavour (Orla's weekly theme, e.g. all one type), the Alpha shown big in its battle and the hero's hat in fights (battle side, the user's chat); merge static parts of stadium crowds/props too; more room decor (Captain's hut, Lodge); Seashell/Frostpeak night events; re-measure on a phone.
 
+## Session 17c (2026-10-18, 17:57–~19:30 UTC, session_01QTvrmqfxosdqeWGXKGsbMX): night life, rooms, menus, R398–R412
+- The local clone started on stale history; it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start (production build):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town.
+- **Gotcha (tools):** don't `pkill -f "vite preview"` from a Bash call: the pattern matches the calling shell's own command line and kills it (exit 144). Keep the preview's PID in a file and `kill` that.
+- **R398: Gauntlet weekly theme.** `gauntletTheme(wk)` (story.js, exported) picks two types per week (15 pairs); `gauntletFoes` draws the five Aces from those types first (topped up from the rest when the hero is one of them). Orla announces "Blaze & Breeze week!". The battle title stays `Gauntlet n/5` (kept short for the VS card).
+- **R399: Neon DJ stage (after dusk).** `buildDance()`: a booth at 15–16,9 (solid; decks with spinning records, speakers, DJ TUMBLE sign, cyan trim; `bakeStatic`), a 4×2 light-up floor at 15–18,10–11 that flashes on the beat, a pink glow. Face the booth → `this.danceT = 3.2`: the hero dances (pose in the hero block), sparkles; the first dance a night tips 1 berry (`save.adv.danced`). **NPCs can have a night spot:** `night: { x, y, dir, wander, lines }` on an NPC is merged in by `buildActors` when `phase !== 'day'` (DJ Tumble stands behind the booth at 16,8).
+- **R400: room decor.** New interior tiles: `n` hammock (2 tall), `a` anchor + rope coil, `q` open sea chest, `L` log stack, `M` armchair, `I` skis and poles; cabin `C` is a chart desk / map rack. Captain's Hut and Mountain Lodge layouts use them. New colour keys `canvas, rope, leather, ski0, ski1`. Tile letters still unused anywhere: `d e p w x y z`.
+- **R401:** the dance floor is one merged vertex-coloured mesh recoloured only when the beat changes (Neon night ~403 → ~332 draw calls).
+- **R402: Frostpeak ice lanterns (after dusk).** `buildIceLanterns()`: six translucent ice blocks with candles and warm floor pools around the frozen pond (3 merged meshes, flicker in update); Skater Ivy skates on the pond at night (night spot 4,8).
+- **R403:** the PEAK GAUNTLET signpost (`act: 'gauntsign'`) adds this week's theme.
+- **R404: ☰ menu.** A 🎩 Hats button (once you own a hat; `wearHats(w)` exported from story.js). **Fix:** at 740×360 the menu's Save & Quit / New Adventure fell off the bottom; on short landscape (`max-height: 460px` + landscape) the menu is now two columns (hero card left, button grid right). The Golden Laurel line now says "☰ → 🎩 Hats".
+- **R405: night fishing.** `FISH.night` = Moonfin, rare Glimmer Ray: after dark 30% of catches in any water but lava are night fish. New Journal section "🌙 After dark"; Fisher Finn hints until you've caught a Moonfin.
+- **R406:** Pecan news `adv10` (tools' news lists include it).
+- **R407:** while a world dialogue box (`.wd-box`) is up, the A button and the joystick base are hidden (`body:has(.wd-box)`; the box is the tap target). Note `.wd-box` is appended to the screens root, not inside `.world-screen`.
+- **R408: Seashell message in a bottle (after dusk).** `buildBottle()`: one bottle on a shore tile picked by the date; face it → a tip note from someone in Clashara + 1 berry, once a night (`save.adv.bottle`). **R409:** Town Map 🍾 on Seashell at night while it waits. **R410:** Journal Records count bottles found / nights danced (`countUp('bottle'|'dance')`). **R411:** night lines for DJ Tumble and Skater Ivy (via the night spot). **R412:** townsfolk within 4 tiles dance along while the hero dances.
+- **Balance (production build, 18:20 UTC):** 1-rep robin: Ripples 72%, Kindlekit 69%, Voltferret 61%, most 42–56%, Emberfly 39%, Lilypop/Diggles/Squeakwing 36%. A focused 2-rep run of the three low ones: Squeakwing 44%, Diggles 43%, Lilypop 56%, all inside 40–65%, so no stat change. Ripples/Kindlekit might be worth a 2-rep check next (battle side: tell the user's chat if they stay high).
+- **Perf (advperf, high, 915×412):** towns 240–320 draw calls by day, Neon night ~330–350, Frostpeak night ~340; triangles swing with random wild spawns.
+- **Next ideas:** more night things for Bloom/Sprout (a stargazing spot?), a Lodge "skate rental" so the hero can skate the pond at night, more bottle notes / a bottle collection page, Ripples/Kindlekit balance re-check (battle side), the Alpha shown big in its battle and the hero's hat in fights (battle side, the user's chat), merge static parts of stadium fronts, re-measure on a phone.
+
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - (Fixed in R132.) A re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
@@ -844,7 +863,24 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
    - `title`: "Critter Clash – rounds N+"
    - (Session 16e did not chain: the user's 5-hour window ended at 04:45 UTC on 2026-10-15.)
    - **48-hour run (from session 17a):** chain with the user's 48-hour prompt word for word (below), `source_revision` and `outcome_branch` `ccr-4fc93d6e-suxlhd`. The end time lives at the top of this file; never reset it.
-   - 48-hour prompt (verbatim): "Continue building Critter Clash in a 48-hour chained build run. The goal is to keep developing the game until it's complete, at AAA quality.\nStart: run date -u. If HANDOFF.md doesn't already have a "48-hour run" end time, set one: now + 48 hours. Write it at the top of HANDOFF.md, then commit and push. Later sessions read that end time from HANDOFF.md and don't reset it. Post a one-line status to me when you start.\nRead first: games/critter-clash/CONTINUE.md, then games/critter-clash/HANDOFF.md fully. Begin with the newest "Session 16" sections (16i, 16j) and their "Next ideas" lists.\nFocus: move the game toward a finished product. ..." (the full text is in the session 17a transcript; each session passes on the exact prompt it received).
+   - 48-hour prompt (verbatim; pass it to create_session exactly as below, without the fence):
+```
+Continue building Critter Clash in a 48-hour chained build run. The goal is to keep developing the game until it's complete, at AAA quality.
+Start: run date -u. If HANDOFF.md doesn't already have a "48-hour run" end time, set one: now + 48 hours. Write it at the top of HANDOFF.md, then commit and push. Later sessions read that end time from HANDOFF.md and don't reset it. Post a one-line status to me when you start.
+Read first: games/critter-clash/CONTINUE.md, then games/critter-clash/HANDOFF.md fully. Begin with the newest "Session 16" sections (16i, 16j) and their "Next ideas" lists.
+Focus: move the game toward a finished product. That means Adventure mode content and polish, finishing loose ends from the backlog and "Next ideas", bug fixes, performance, balance, menus and UI polish. All creatures stay original. Each round: take screenshots at 915x412, 740x360 and 412x915 (tools/advtour.mjs takes many world shots in one page load), critique them, then improve. Do round after round.
+Git: commit and push each round to branch ccr-4fc93d6e-suxlhd. Before every push, run git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd. Never rebase or force-push. If the local clone starts on stale history, reset it to origin/ccr-4fc93d6e-suxlhd. Round numbers continue from the highest R-number in git log (R368 next).
+Ownership: my own chat also works on this branch and owns the Adventure battles, results and the flow back to the world: screens.js results/worldFight, battle.js, arena.js open mode and hud.js. Keep world work in world.js, worldmaps.js, interiors.js and story.js unless HANDOFF.md says otherwise.
+Checks: run tapcheck at 740x360 and 412x915, plus an advcup Sprout run, at the start and near the end of each session.
+Chaining: each session builds for about 100 minutes, or less if context nears 300k. Then follow the HANDOFF "Chaining" steps:
+Update HANDOFF.md and CONTINUE.md with the rounds done, the next ideas and the 48-hour end time.
+Commit and push.
+Fetch the APK built from your last commit and send it to me.
+Call create_session with source_url https://github.com/zchillsounds-debug/super-chainsaw1, source_revision and outcome_branch ccr-4fc93d6e-suxlhd, and this same prompt word for word. Then tell me in one line that the next session has started.
+If a worker stalls, push the end time back by the length of the stall.
+Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
+I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
+```
    - Session 16j did not chain: the user's window ended at about 10:45 UTC on 2026-10-18.
    - Session 16i chained to the next session at R359 with the same prompt (end ~10:45 UTC on 2026-10-18).
    - Session 16h chained to the next session at R339 with the same prompt (end ~10:45 UTC on 2026-10-18).
