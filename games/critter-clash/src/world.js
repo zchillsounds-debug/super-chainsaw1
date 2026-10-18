@@ -163,6 +163,7 @@ export class World {
     this.buildProps(rand);
     this.buildForest(rand);
     this.buildVolcano(rand);
+    this.buildFish();
     this.buildBuildings();
     this.buildInterior();
     this.buildActors();
@@ -628,6 +629,40 @@ export class World {
       this.brambles = new THREE.Group(); this.group.add(this.brambles);
       put(vines, toon(0x6a3a7a, { rim: 0.6 }), OL * 0.6, this.brambles); put(thorns, toon(0xffc8f0, { emissive: 0x5a2a5a }), OL * 0.3, this.brambles);
     } else this.brambles = null;
+  }
+
+  // now and then a little fish leaps out of open water (and plops back in)
+  buildFish() {
+    this.pond = []; this.fishJump = null; this.fishMesh = null;
+    if (this.M.lava || this.M.border === 'cloud' || this.M.indoor) return;
+    const wet = (x, y) => '~='.includes(this.tile(x, y));
+    for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if (this.tile(x, y) === '~' && wet(x + 1, y) && wet(x - 1, y) && wet(x, y + 1) && wet(x, y - 1)) this.pond.push(wpos(x, y));
+    if (!this.pond.length) return;
+    const g = new THREE.Group(), M = toon(this.M.snow ? 0x8ad0ff : 0xff8a3a, { rim: 0.8 });
+    const body = inked(new THREE.SphereGeometry(0.22, 12, 8), M, OL * 0.4); body.scale.set(0.7, 0.8, 1.5); g.add(body);
+    const tail = inked(new THREE.ConeGeometry(0.16, 0.28, 4), M, OL * 0.4); tail.rotation.x = -Math.PI / 2; tail.scale.x = 0.3; tail.position.z = -0.42; g.add(tail);
+    for (const sd of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 4), toon(0x1a1a2a)); e.position.set(sd * 0.12, 0.06, 0.2); g.add(e); }
+    g.scale.setScalar(1.6); g.visible = false; this.group.add(g); this.fishMesh = g;
+  }
+
+  updateFish2(dt) {
+    const F = this.fishJump, G = this.fishMesh;
+    if (!G) return;
+    const splash = (x, z) => { for (let k = 0; k < 6; k++) this.g.fx.spawn({ x, y: 0.1, z, vx: (Math.random() - 0.5) * 1.6, vy: 1 + Math.random(), vz: (Math.random() - 0.5) * 1.6, color: 0xe8f6ff, size: 0.14, life: 0.45, shape: 'glow', additive: false, grav: 8 }); this.g.fx.spawn({ x, y: 0.06, z, color: 0xe8f2ff, alpha: 0.7, size: 0.4, life: 0.5, shape: 'ring', additive: false, grow: 2 }); };
+    if (!F) {
+      if (Math.random() > dt * 0.3) return;
+      const p = this.hero.root.position, near = this.pond.filter(([x, z]) => Math.abs(x - p.x) < 14 && z - p.z > -10 && z - p.z < 7);
+      if (!near.length) return;
+      const [x, z] = near[Math.floor(Math.random() * near.length)], a = Math.random() * Math.PI * 2;
+      this.fishJump = { t: 0, x, z, dx: Math.cos(a), dz: Math.sin(a) };
+      G.visible = true; G.rotation.set(0, Math.atan2(Math.cos(a), Math.sin(a)), 0); splash(x, z);
+      return;
+    }
+    F.t += dt;
+    const k = Math.min(1, F.t / 0.75);
+    G.position.set(F.x + F.dx * k * 1.3, Math.sin(k * Math.PI) * 1.0 - 0.15, F.z + F.dz * k * 1.3);
+    G.rotation.x = -Math.cos(k * Math.PI) * 0.9;
+    if (k >= 1) { G.visible = false; this.fishJump = null; splash(G.position.x, G.position.z); }
   }
 
   // volcano country: steaming vents (v) and glowing lava
@@ -1449,6 +1484,7 @@ export class World {
       if (Math.random() < dt * 2.5) this.g.fx.spawn({ x: it.g.position.x + (Math.random() - 0.5) * 0.8, y: 0.5 + Math.random() * 0.6, z: it.g.position.z + (Math.random() - 0.5) * 0.8, vy: 0.5, color: 0xfff0a0, size: 0.22, life: 0.7, shape: 'star' });
     }
     this.swayGrass();
+    this.updateFish2(dt);
     for (const P of this.prints || []) if (P.o.visible) { P.age += dt; P.o.material.opacity = 0.6 * Math.max(0, Math.min(1, (6 - P.age) / 2)); if (P.age > 6) P.o.visible = false; }
     // water ripples drift
     if (this.waterTex) this.waterTex.offset.set(this.t * 0.02, this.t * 0.03);
