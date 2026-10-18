@@ -1,5 +1,9 @@
 # Critter Clash: Handoff (after Round 279, Adventure mode polish)
 
+## 48-hour run
+- **48-hour run end time: 2026-10-20 15:44 UTC** (started 2026-10-18 15:44 UTC by session 17a). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
+- Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
+
 ## Start here (for a new chat)
 - Short version for a new chat: `games/critter-clash/CONTINUE.md` (what is where, the paste-in prompt, open questions).
 - **Session 16j (2026-10-18, 09:43–~10:45 UTC) did R359–R367 (see "Session 16j") and was the LAST session of the user's window (it ended at about 10:45 UTC on 2026-10-18). Nothing was chained after it: wait for the user before building more. Round numbering continues from R368.**
