@@ -1474,6 +1474,10 @@ export class World {
   }
 
   updateMorning(dt) {
+    if (Math.random() < dt * 14) { // dew on the grass catches the low sun: little twinkles come and go around the hero
+      const x = this.hx + Math.floor((Math.random() - 0.5) * 14), y = this.hy + Math.floor((Math.random() - 0.5) * 9), t = this.tile(x, y);
+      if (t === '.' || t === 'f') { const [px, pz] = wpos(x, y); this.g.fx.spawn({ x: px + (Math.random() - 0.5) * TILE, y: 0.12, z: pz + (Math.random() - 0.5) * TILE, color: 0xffffff, size: 0.38, life: 0.9, shape: 'star', grow: -0.5, spin: 2, alpha: 0.9 }); }
+    }
     for (const q of this.mornMist) {
       q.sp.position.x += q.v * dt; if (q.sp.position.x > q.W + 10) q.sp.position.x = -10;
       q.sp.material.opacity = Math.min(1, (this.mornMistIn = Math.min(1, (this.mornMistIn || 0) + dt * 0.5))) * (0.26 + Math.sin(this.t * 0.3 + q.ph) * 0.08);
