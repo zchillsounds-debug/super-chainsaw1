@@ -20,7 +20,7 @@ const YAW = { n: Math.PI, s: 0, e: Math.PI / 2, w: -Math.PI / 2 };
 const PHASES = {
   day: null,
   evening: { sun: 0xffc896, sunI: 2.3, sky: 0xffe2cc, gnd: 0x6a5a48, hemiI: 1.05, fog: 0xffd8b8 },
-  night: { sun: 0xbcc8ff, sunI: 1.3, sky: 0x8e9ad8, gnd: 0x3a4060, hemiI: 1.0, fog: 0x4a5888 },
+  night: { sun: 0xa8b8ff, sunI: 0.95, sky: 0x7484cc, gnd: 0x2a3050, hemiI: 0.82, fog: 0x3a4878 },
 };
 const RAIN = {
   day: { sun: 0xb8c4dc, sunI: 0.85, sky: 0xaab8d0, gnd: 0x3a4a50, hemiI: 0.9, fog: 0x9aa8b8 },
@@ -867,6 +867,16 @@ export class World {
           aw.forEach((g) => g.dispose());
         }
         const door = inked(new THREE.BoxGeometry(0.9, 1.3, 0.12), toon(0x8a5a3a), OL * 0.5); door.position.set(dx, 0.65, front + 0.03); G.add(door);
+        if (!b.hatShop) { // a little wall lantern beside the door: dark glass by day, a warm glow at dusk and after dark
+          const lx = dx + (b.door === b.w - 1 ? -0.78 : 0.78), lit = this.phase !== 'day';
+          const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.5), toon(0x3a3440)); arm.position.set(lx, 1.42, front + 0.25); G.add(arm);
+          const cage = inked(new THREE.BoxGeometry(0.3, 0.36, 0.3), lit ? LIT : toon(0xfff0c0, { rim: 0.8 }), OL * 0.4); cage.position.set(lx, 1.2, front + 0.5); G.add(cage);
+          const cap = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.12, 4), toon(0x3a3440)); cap.rotation.y = Math.PI / 4; cap.position.set(lx, 1.44, front + 0.5); G.add(cap);
+          if (lit) {
+            const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffc060, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: this.phase === 'night' ? 0.85 : 0.5 }); sm.userData.own = true;
+            const glow = new THREE.Sprite(sm); glow.scale.setScalar(1.6); glow.position.set(lx, 1.2, front + 0.62); G.add(glow);
+          }
+        }
         for (let k = 0; k < b.w; k++) if (k !== b.door) {
           const win = inked(new THREE.BoxGeometry(0.8, 0.7, 0.1), this.phase === 'day' ? toon(0xbfe6ff, { rim: 0.9 }) : LIT, OL * 0.5);
           win.position.set((k + 0.5) * TILE - w / 2, 1.25, front + 0.03); G.add(win);
