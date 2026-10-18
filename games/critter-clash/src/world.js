@@ -54,6 +54,16 @@ export function heroDef() {
   return withGear(byId(id), lv);
 }
 
+// an umbrella held over a critter's head in the rain
+function brolly(cr, col) {
+  const U = new THREE.Group(), r = cr.def.body.headR;
+  const can = inked(new THREE.ConeGeometry(r * 1.6, r * 0.75, 8, 1, true), toon(col, { rim: 0.4, side: THREE.DoubleSide }), OL * 0.3); can.position.y = r * 0.45; U.add(can);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(r * 0.12, 6, 4), toon(0xffffff)); tip.position.y = r * 0.92; U.add(tip);
+  const stick = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.05, r * 0.05, r * 2.2, 5), toon(0x5a3a2a)); stick.position.y = -r * 0.6; U.add(stick);
+  U.position.set(r * 0.2, cr.def.body.h * 0.82 + r * 2.0, -r * 0.6); U.rotation.set(-0.4, 0, -0.12); cr.root.add(U);
+  return U;
+}
+
 export class World {
   constructor(screens) {
     this.S = screens;
@@ -119,6 +129,7 @@ export class World {
 
   // ---------- map building ----------
   load(key, x, y, dir = 's') {
+    const wet = this.rain && !this.M?.indoor; // came in out of the rain: shake off once inside
     this.unload();
     const M = this.M = getMap(key) || getMap('village');
     if (M !== getMap(key)) { key = 'village'; x = 4; y = 6; }
@@ -154,6 +165,8 @@ export class World {
     this.hero.root.scale.setScalar(CS);
     this.group.add(this.hero.root);
     this.wearHat();
+    if (this.rain) brolly(this.hero, 0xffd84d);
+    this.shakeT = wet && M.indoor ? 1.1 : 0;
     this.hx = x; this.hy = y; this.dir = dir; this.moveT = 0; this.from = null;
     this.placeHero();
     this.buildItems(x, y);
@@ -1054,13 +1067,7 @@ export class World {
         root = cr.root;
         root.scale.setScalar(CS * (n.scale || 1));
         roleHat(cr, n.name || '');
-        if (this.rain && n.act !== 'fish' && n.act !== 'sleep') { // a brolly up in the rain
-          const U = new THREE.Group(), r = cr.def.body.headR, col = [0xff5a8a, 0x5ab8ff, 0xffd84d, 0x8a6aff][(n.x + n.y) % 4];
-          const can = inked(new THREE.ConeGeometry(r * 1.6, r * 0.75, 8, 1, true), toon(col, { rim: 0.4, side: THREE.DoubleSide }), OL * 0.3); can.position.y = r * 0.45; U.add(can);
-          const tip = new THREE.Mesh(new THREE.SphereGeometry(r * 0.12, 6, 4), toon(0xffffff)); tip.position.y = r * 0.92; U.add(tip);
-          const stick = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.05, r * 0.05, r * 2.2, 5), toon(0x5a3a2a)); stick.position.y = -r * 0.6; U.add(stick);
-          U.position.set(r * 0.2, cr.def.body.h * 0.82 + r * 2.0, -r * 0.6); U.rotation.set(-0.4, 0, -0.12); cr.root.add(U);
-        }
+        if (this.rain && n.act !== 'fish' && n.act !== 'sleep') brolly(cr, [0xff5a8a, 0x5ab8ff, 0xffd84d, 0x8a6aff][(n.x + n.y) % 4]); // a brolly up in the rain
       }
       root.userData.critter = true;
       this.group.add(root);
@@ -1266,6 +1273,11 @@ export class World {
         else if (ph < 6) { P.head = -0.25; H.emote('closed', 'o', 0.1); }
         else { P.sy = 0.88 + Math.sin(this.t * 1.5) * 0.04; P.head = 0.3; P.lean = -0.1; P.armLz = P.armRz = 0.05; H.emote('closed', 'smile', 0.1); if (Math.random() < dt * 0.7) this.g.fx.text?.({ x: H.root.position.x + 0.5, y: 2.3, z: H.root.position.z }, 'z', 'zz'); }
       }
+    }
+    if (this.shakeT > 0 && !this.from) { // a wet-dog shake on the doormat, droplets flying
+      this.shakeT -= dt; P.roll = Math.sin(this.shakeT * 38) * 0.35 * Math.min(1, this.shakeT * 2); P.headYaw = -P.roll; H.emote('closed', 'grin', 0.1);
+      if (Math.random() < dt * 40) { const p = H.root.position, a = Math.random() * Math.PI * 2; this.g.fx.spawn({ x: p.x, y: 1.2 + Math.random() * 0.6, z: p.z, vx: Math.cos(a) * 3.5, vy: 1.5 + Math.random() * 1.5, vz: Math.sin(a) * 3.5, color: 0xbfe6ff, size: 0.16, life: 0.5, shape: 'glow', additive: false, grav: 9 }); }
+      if (this.shakeT <= 0) P.roll = 0;
     }
     if (this.from || this.dialog) this.idleT = 0;
     H.root.rotation.y = turnTo(H.root.rotation.y, YAW[this.dir], dt * 18);
