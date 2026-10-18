@@ -3185,6 +3185,10 @@ export class World {
       }
       return this.challenge(a);
     }
+    if (pumpkinNights() && !n.story && n.lines?.length && Math.random() < 0.3) { // Pumpkin Nights chatter
+      const who = n.name.split(' ').pop(), F = [`${who}: Happy Pumpkin Nights! Did you check the pumpkins by the doors after dark? Some hide treats!`, `${who}: I carved my pumpkin to look like {hero}. ...It came out looking like a potato. A HAPPY potato.`, `${who}: Pumpkin Nights only last until early November. Find three treats and there's a surprise, I hear!`, `${who}: Boo! ...Did I scare you? No? I'll practise.`, `${who}: The pumpkins glow brightest around midnight. Spooky... but cosy.`];
+      return this.say([F[(hash(n.id) + new Date().getDate()) % F.length]], null, n.name);
+    }
     this.say(n.lines.map((l) => l), null, n.name);
   }
 
