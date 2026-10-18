@@ -313,6 +313,7 @@ export class World {
     this.buildCart();
     this.buildMarket();
     this.buildDance();
+    this.buildIceLanterns();
     this.buildJellies(rand);
     this.buildSkyLanterns();
     this.buildThanks();
@@ -359,7 +360,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1122,6 +1123,26 @@ export class World {
     const gm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff5ad8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.35 }); gm.userData.own = true;
     const glow = new THREE.Sprite(gm); const [fx, fz] = wpos(16.5, 10.5); glow.position.set(fx, 1.2, fz); glow.scale.set(7, 4, 1); this.group.add(glow);
     this.dance = { tiles, cols, discs, glow, floor, beat: -1, x: [15, 16], y: 9, px: bx, pz: bz };
+  }
+
+  // Frostpeak after dusk: carved ice lanterns with candles ring the frozen pond (Skater Ivy skates there at night)
+  buildIceLanterns() {
+    this.iceLan = null;
+    if (this.key !== 'frostpeak' || this.phase === 'day') return;
+    const ice = [], fl = [], pool = [];
+    for (const [x, y] of [[2, 7], [6, 7], [2, 9], [6, 9], [7, 8], [4, 10]]) {
+      const [px, pz] = wpos(x, y); this.solid.add(x + ',' + y);
+      const b = new THREE.BoxGeometry(0.62, 0.7, 0.62); b.translate(px, 0.35, pz); ice.push(b);
+      const t = new THREE.BoxGeometry(0.72, 0.12, 0.72); t.translate(px, 0.76, pz); ice.push(t);
+      const f = new THREE.SphereGeometry(0.15, 8, 6); f.scale(1, 1.7, 1); f.translate(px, 0.45, pz); fl.push(f);
+      const q = new THREE.PlaneGeometry(3.6, 3.6); q.rotateX(-Math.PI / 2); q.translate(px, 0.04, pz); pool.push(q);
+    }
+    const im = new THREE.MeshBasicMaterial({ color: 0x8ac8f0, transparent: true, opacity: 0.38, depthWrite: false }), fm = new THREE.MeshBasicMaterial({ color: 0xffa030 });
+    const pm = new THREE.MeshBasicMaterial({ color: 0xffa850, map: glowTex(), transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
+    [im, fm, pm].forEach((m) => { m.userData.own = true; });
+    const mk = (l, m) => { const g = mergeGeometries(l); l.forEach((q) => q.dispose()); const o = new THREE.Mesh(g, m); this.group.add(o); return o; };
+    mk(pool, pm); mk(fl, fm); mk(ice, im).renderOrder = 2;
+    this.iceLan = pm;
   }
 
   // Cloudtop Gardens after dusk: paper sky lanterns drift up out of the gardens, sway, and fade into the stars
@@ -2550,6 +2571,7 @@ export class World {
       J.dome.scale.set(1 + q * 0.12, 1 - q * 0.18, 1 + q * 0.12); J.sm.opacity = 0.5 + q * 0.2;
       J.g.position.x = J.x0 + Math.sin(this.t * 0.25 + J.ph) * 0.6; J.g.position.z = J.z0 + Math.cos(this.t * 0.2 + J.ph) * 0.6; J.g.position.y = -0.05 + Math.max(0, q) * 0.06;
     }
+    if (this.iceLan) this.iceLan.opacity = 0.58 + Math.sin(this.t * 7) * 0.04 + Math.sin(this.t * 11.3) * 0.03; // candle flicker
     if (this.dance) { // the floor flashes on the beat (faster while the hero dances); the records spin
       const D = this.dance, fast = this.danceT > 0, beat = Math.floor(this.t * (fast ? 4 : 2));
       if (beat !== D.beat) { D.beat = beat; const ca = D.floor.geometry.attributes.color; D.tiles.forEach((k, i) => { const c = D.cols[(k + beat) % D.cols.length], m = (k + beat) % 2 ? 1 : 0.45; for (let v = 0; v < 4; v++) ca.setXYZ(i * 4 + v, c.r * m, c.g * m, c.b * m); }); ca.needsUpdate = true; }
