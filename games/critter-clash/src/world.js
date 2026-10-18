@@ -316,7 +316,7 @@ export class World {
     this.buildInterior();
     this.buildActors();
     // hero
-    this.hero = new Critter(heroDef());
+    this.hero = new Critter(heroDef()); bakeStatic(this.hero);
     this.hero.root.scale.setScalar(CS);
     this.group.add(this.hero.root);
     this.wearHat();
@@ -1153,7 +1153,7 @@ export class World {
     if (!id) { this.follower = null; return; }
     const pip = !!save.adv.follow, def = byId(id);
     const cr = new Critter(withGear(pip ? def : skinned(def, save.skins?.[id]), pip ? 2 : save.critters[id]?.level || 1));
-    cr.root.userData.critter = true; castLite(cr);
+    cr.root.userData.critter = true; bakeStatic(cr); castLite(cr);
     cr.root.scale.setScalar(CS * (pip ? 0.7 : 0.85));
     this.group.add(cr.root);
     // start on a free tile behind the hero
