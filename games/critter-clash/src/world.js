@@ -210,6 +210,7 @@ export class World {
     this.buildButterflies();
     this.buildMist();
     this.buildAurora();
+    this.buildLamps();
     this.buildBuildings();
     this.buildInterior();
     this.buildActors();
@@ -799,6 +800,39 @@ export class World {
 
   // butterflies flutter over the flower beds on fine days
   // low mist drifting between the trees of the glowing woods (and over any map at night after rain... just the woods for now)
+  // street lamps at the edges of town paths (on tile corners, so they never block a step); lit from dusk
+  buildLamps() {
+    const M = this.M;
+    if (M.indoor || M.city || !(M.buildings || []).some((b) => b.heal)) return;
+    const ok = (x, y) => '.:"sf'.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y), cand = [];
+    for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) { // corner between tiles (x-1..x, y-1..y)
+      const q = [[x - 1, y - 1], [x, y - 1], [x - 1, y], [x, y]];
+      if (!q.every(([a, b]) => ok(a, b))) continue;
+      const n = q.filter(([a, b]) => this.tile(a, b) === ':').length;
+      if (n === 2 && (this.tile(x - 1, y - 1) === ':') === (this.tile(x, y) === ':') === false) cand.push([x, y]); // a straight path edge
+    }
+    const r = rng(hash(this.key + ':lamps')); cand.sort(() => r() - 0.5);
+    const picked = [];
+    for (const c of cand) { if (picked.length >= 6) break; if (picked.every((p) => Math.abs(p[0] - c[0]) + Math.abs(p[1] - c[1]) >= 8)) picked.push(c); }
+    if (!picked.length) return;
+    const lit = this.phase !== 'day', iron = [], glass = [];
+    for (const [cx, cy] of picked) {
+      const px = cx * TILE, pz = cy * TILE;
+      const b = new THREE.CylinderGeometry(0.16, 0.2, 0.25, 8); b.translate(px, 0.12, pz); iron.push(b);
+      const p = new THREE.CylinderGeometry(0.06, 0.07, 2.5, 6); p.translate(px, 1.35, pz); iron.push(p);
+      const cap = new THREE.ConeGeometry(0.3, 0.25, 4); cap.rotateY(Math.PI / 4); cap.translate(px, 3.15, pz); iron.push(cap);
+      const g = new THREE.BoxGeometry(0.34, 0.42, 0.34); g.translate(px, 2.82, pz); glass.push(g);
+      if (lit) {
+        const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffc060, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: this.phase === 'night' ? 0.9 : 0.55 }); sm.userData.own = true;
+        const sp = new THREE.Sprite(sm); sp.scale.setScalar(2); sp.position.set(px, 2.85, pz); this.group.add(sp);
+        const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xffb050, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: this.phase === 'night' ? 0.45 : 0.25 }); pm.userData.own = true;
+        const pool = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), pm); pool.rotation.x = -Math.PI / 2; pool.position.set(px, 0.05, pz); this.group.add(pool);
+      }
+    }
+    const im = inked(mergeGeometries(iron), toon(0x3a3a4a), OL * 0.5); im.castShadow = true; this.group.add(im); iron.forEach((g) => g.dispose());
+    const gm = new THREE.Mesh(mergeGeometries(glass), lit ? LIT : toon(0xfff4d0, { rim: 0.8 })); this.group.add(gm); glass.forEach((g) => g.dispose());
+  }
+
   // aurora ribbons hang over the snowy maps at night, waving slowly (they follow the camera, high up)
   buildAurora() {
     this.aurora = [];
