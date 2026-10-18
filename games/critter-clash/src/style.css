@@ -1026,3 +1026,5 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
   .wd-menu-modal .res-btns .btn.primary { grid-column: 1 / -1; }
   .wd-menu-modal .res-btns .btn.small { font-size: 13px; padding: 6px; }
 }
+/* while a dialogue box is up, the box itself is the tap target: tuck the A button and the stick away so they don't peek over it */
+body:has(.wd-box) .wd-a, body:has(.wd-box) .joybase { visibility: hidden; }
