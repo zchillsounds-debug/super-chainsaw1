@@ -1602,6 +1602,7 @@ export class World {
     if (this.bush?.shake > 0) { const B = this.bush; B.shake -= dt; B.g.rotation.z = Math.sin(B.shake * 40) * B.shake * 0.18; B.g.scale.y = 1 + Math.sin(B.shake * 30) * B.shake * 0.08; }
     for (let k = 0; k < (this.pennants?.length || 0); k++) this.pennants[k].rotation.y = Math.sin(this.t * 3.1 + k * 1.7) * 0.35; // stadium pennants flap in the breeze
     for (const m of this.medals || []) m.rotation.y = this.t * 1.6;
+    this.ambience(dt);
     if (this.cracks) this.cracks.material.opacity = 0.75 + Math.sin(this.t * 1.7) * 0.25; // the magma breathes
     if (this.labDish) this.labDish.rotation.y = Math.sin(this.t * 0.4) * 1.2;
     if (this.beacon) this.beacon.material.color.setHex(this.t % 1.6 < 0.25 ? 0xff5050 : 0x5a1818);
@@ -1777,6 +1778,20 @@ export class World {
     if (!ok.length) return [];
     const [x, y] = ok[hash(day + this.key) % ok.length];
     return [{ id: 'trader', x, y, critter: 'pebblepup', name: 'Trader Tock', dir: 's', story: 'trader', act: 'wave' }];
+  }
+
+  // a soundscape of one-shots: birds by day, crickets at night, surf on the beach, rain, mountain wind, city hum, lava bubbling
+  ambience(dt) {
+    const M = this.M; if (!M || M.indoor || this.busy) return;
+    const A = this.amb ||= { bird: 3, cricket: 2, surf: 1, rain: 0, wind: 2, hum: 1, bubble: 2 }, due = [];
+    if (this.rain) due.push(['rain', 1.5]);
+    else if (M.snow || M.border === 'cloud') due.push(['wind', 3.5]);
+    else if (M.city) due.push(['hum', 2.2]);
+    else if (this.phase === 'night' || M.fireflies) due.push(['cricket', 1.1]);
+    else if (!M.lava) due.push(['bird', 2.6]);
+    if (M.arena === 'beach') due.push(['surf', 3.2]);
+    if (M.lava) due.push(['bubble', 1.8]);
+    for (const [k, gap] of due) if ((A[k] -= dt) <= 0) { A[k] = gap * (0.6 + Math.random() * 0.9); sfx.ambient?.(k); }
   }
 
   // the bouncy town kids nod off outdoors at night

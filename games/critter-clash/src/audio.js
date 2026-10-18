@@ -116,6 +116,23 @@ export const sfx = {
     else if (kind === 'ice') osc('sine', 1800, 2400, 0.04, v * 0.7);
     else noise(0.05, v, { f0: 1100, f1: 600, q: 1, type: 'lowpass' });
   },
+  // world ambience: little one-shots the World sprinkles in now and then, by place, clock and weather
+  ambient(kind) {
+    if (!ctx) return;
+    const t = now(), r = Math.random;
+    if (kind === 'bird') { // a two- or three-note chirp
+      const f = 2600 + r() * 1400, n = 2 + Math.floor(r() * 3);
+      for (let i = 0; i < n; i++) osc('sine', f * (1 + (i % 2) * 0.18), f * (1.25 + r() * 0.2), 0.07, 0.035, { t: t + i * 0.11, attack: 0.008 });
+    } else if (kind === 'cricket') { // a soft trill
+      for (let i = 0; i < 6; i++) osc('triangle', 4300, 4200, 0.025, 0.012, { t: t + i * 0.045 + (i > 2 ? 0.12 : 0), attack: 0.004 });
+    } else if (kind === 'surf') { // a wave washing up the beach and hissing back
+      noise(2.2, 0.06, { f0: 350, f1: 1200, q: 0.6, attack: 0.9, type: 'lowpass' });
+      noise(1.4, 0.025, { t: t + 1.0, f0: 3200, f1: 1600, q: 0.8, attack: 0.3 });
+    } else if (kind === 'rain') noise(1.8, 0.035, { f0: 4200, f1: 3600, q: 0.5, attack: 0.5, type: 'highpass', hold: true });
+    else if (kind === 'wind') noise(3, 0.04, { f0: 420, f1: 900, q: 2.5, attack: 1.0, hold: true });
+    else if (kind === 'hum') noise(2.5, 0.025, { f0: 140, f1: 180, q: 1.5, attack: 0.8, type: 'lowpass', hold: true });
+    else if (kind === 'bubble') for (let i = 0; i < 3; i++) osc('sine', 300 + r() * 200, 700 + r() * 300, 0.05, 0.03, { t: t + i * 0.09 + r() * 0.05 });
+  },
   step() { if (ctx) noise(0.04, 0.06, { f0: 900, q: 1.5, type: 'lowpass' }); },
   land() { if (ctx) { osc('sine', 120, 50, 0.15, 0.4); noise(0.2, 0.25, { f0: 600, f1: 200, type: 'lowpass' }); } },
   voice(pitch = 1, kind = 'attack') {
