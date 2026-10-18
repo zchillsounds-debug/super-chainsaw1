@@ -311,6 +311,7 @@ export class World {
     this.phase = M.indoor ? 'day' : this.outPhase;
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
     this.rain = canRain(M) && (save.adv.rain ?? rainAt(key, new Date(), hr));
+    this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)); // now and then a proper snowfall up in the mountains (light flurries otherwise)
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
@@ -377,7 +378,7 @@ export class World {
     this.morning = canRain(M) && !this.rain && this.phase === 'day' && hr >= 6 && hr < 9; // misty mornings on the grassy outdoor maps
     this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.morning && PHASES.morning) || PHASES[this.phase]);
     this.buildMorning();
-    this.banner(M.name + (this.rain ? ' 🌧️' : ''));
+    this.banner(M.name + (this.rain ? ' 🌧️' : this.snowing ? ' 🌨️' : ''));
   }
 
   unload() {
@@ -2955,6 +2956,10 @@ export class World {
       const p = this.hero.root.position;
       for (let n = Math.floor(dt * 150 + Math.random()); n > 0; n--) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 30, y: 6 + Math.random() * 3, z: p.z + (Math.random() - 0.6) * 20, vy: -16, vx: -1.5, color: 0xe8f0ff, alpha: 0.75, size: 1.4, stretch: 0.05, rot: Math.PI / 2 + 0.08, life: 0.5, shape: 'spark', additive: false });
       if (Math.random() < dt * 22) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 24, y: 0.08, z: p.z + (Math.random() - 0.6) * 16, color: 0xe8f2ff, alpha: 0.6, size: 0.35, life: 0.35, shape: 'ring', additive: false, grow: 1.6 });
+    }
+    if (this.M.snow && !this.M.indoor) { // snowflakes drift down round the hero: light flurries, or a real snowfall
+      const p = this.hero.root.position;
+      for (let n = Math.floor(dt * (this.snowing ? 55 : 10) + Math.random()); n > 0; n--) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 30, y: 6 + Math.random() * 4, z: p.z + (Math.random() - 0.6) * 20, vy: -1.4 - Math.random() * 0.8, vx: 0.5 + Math.random() * 0.6, vz: (Math.random() - 0.5) * 0.4, color: 0xffffff, alpha: 0.9, size: (this.snowing ? 0.2 : 0.14) + Math.random() * 0.16, life: 4, shape: 'glow', additive: false, grav: 0 });
     }
     // autumn leaves on the volcano road, blossom petals in Cloudtop: the trees' own colour drifting down
     const TC = this.M.trees?.[0];

@@ -7,7 +7,7 @@ const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftsha
 const mobile = q.includes('mobile');
 const pg = await b.newPage({ viewport: { width: +w, height: +h }, hasTouch: mobile, isMobile: mobile, deviceScaleFactor: 1 });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => (m.type() === 'error' || m.text().startsWith('REMOVED')) && errs.push(m.text()));
-await pg.goto('http://localhost:5180/?' + q);
+await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?' + q);
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 for (const [js, name, wait = 600] of JSON.parse(steps)) {
   const r = js ? await pg.evaluate(js) : null;
