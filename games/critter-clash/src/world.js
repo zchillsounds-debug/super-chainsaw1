@@ -3268,12 +3268,12 @@ export class World {
   // a soundscape of one-shots: birds by day, crickets at night, surf on the beach, rain, mountain wind, city hum, lava bubbling
   ambience(dt) {
     const M = this.M; if (!M || M.indoor || this.busy) return;
-    const A = this.amb ||= { bird: 3, cricket: 2, surf: 1, rain: 0, wind: 2, hum: 1, bubble: 2, owl: 6 }, due = [];
+    const A = this.amb ||= { bird: 3, cricket: 2, surf: 1, rain: 0, wind: 2, hum: 1, bubble: 2, owl: 6, rooster: 4 }, due = [];
     if (this.rain) due.push(['rain', 1.5]);
     else if (M.snow || M.border === 'cloud') due.push(['wind', 3.5]);
     else if (M.city) due.push(['hum', 2.2]);
     else if (this.phase === 'night' || M.fireflies) { due.push(['cricket', 1.1]); if (this.phase === 'night' && !M.city && !M.lava) due.push(['owl', 14]); }
-    else if (!M.lava) due.push(['bird', 2.6]);
+    else if (!M.lava) { due.push(['bird', this.morning ? 1.1 : 2.6]); if (this.morning && this.key === 'village') due.push(['rooster', 22]); } // a dawn chorus on misty mornings
     if (M.arena === 'beach') due.push(['surf', 3.2]);
     if (M.lava) due.push(['bubble', 1.8]);
     for (const [k, gap] of due) if ((A[k] -= dt) <= 0) { A[k] = gap * (0.6 + Math.random() * 0.9); sfx.ambient?.(k); }

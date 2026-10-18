@@ -125,6 +125,8 @@ export const sfx = {
       for (let i = 0; i < n; i++) osc('sine', f * (1 + (i % 2) * 0.18), f * (1.25 + r() * 0.2), 0.07, 0.035, { t: t + i * 0.11, attack: 0.008 });
     } else if (kind === 'owl') { // a far-off owl: hoo... hoo-hoo
       for (const [dt, d] of [[0, 0.32], [0.55, 0.16], [0.75, 0.3]]) osc('sine', 410, 360, d, 0.05, { t: t + dt, attack: 0.06 });
+    } else if (kind === 'rooster') { // a far-off rooster: cock-a-doodle-doooo
+      for (const [dt, f0, f1, d] of [[0, 520, 640, 0.12], [0.16, 600, 700, 0.1], [0.3, 640, 760, 0.12], [0.46, 780, 560, 0.55]]) { osc('sawtooth', f0, f1, d, 0.018, { t: t + dt, attack: 0.03 }); osc('sine', f0 * 2, f1 * 2, d, 0.012, { t: t + dt, attack: 0.03 }); }
     } else if (kind === 'cricket') { // a soft trill
       for (let i = 0; i < 6; i++) osc('triangle', 4300, 4200, 0.025, 0.012, { t: t + i * 0.045 + (i > 2 ? 0.12 : 0), attack: 0.004 });
     } else if (kind === 'surf') { // a wave washing up the beach and hissing back
