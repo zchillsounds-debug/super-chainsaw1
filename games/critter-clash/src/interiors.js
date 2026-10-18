@@ -103,7 +103,7 @@ const ROOMS = {
     'WWWWWWWWWWW',
     'WHHH...HHHW',
     'W...KKK...W',
-    'W.........W',
+    'WV.......ZW',
     'WH.......HW',
     'W...YYY...W',
     'WO..YYY..OW',
@@ -172,6 +172,8 @@ const ITEMS = {
   k: 'A basket of yarn balls. One has rolled under the chair.',
   j: 'A big jar of fireflies on a stool. They blink hello!',
   t: 'A toy chest. Inside: a stuffed Cindermunch, three bouncy balls and a paper crown.',
+  V: 'A tall dressing mirror.',
+  Z: 'A tower of hat boxes tied up with ribbons. Milliner Mo says the bottom one is "not for sale. Ever."',
 };
 
 export function interiorMap(key) {
@@ -212,7 +214,7 @@ export function interiorMap(key) {
     if (t === 'C' && kind === 'forge') text = 'Racks of tongs and hammers. One hammer is labelled "NOT FOR CRITTERS".';
     if (t === 'C' && kind === 'shop') text = 'Hat boxes, stacked to the ceiling. One is labelled "EXTRA FLOPPY".';
     if (t === 'U') { const n = [...row].slice(0, x).filter((c) => c === 'U').length; signs.push({ x, y, text, hide: true, act: 'case:' + CUP_ORDER[n] }); return; }
-    signs.push({ x, y, text, hide: true, act: t === 'Q' && kind === 'home' ? 'rest' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
+    signs.push({ x, y, text, hide: true, act: t === 'Q' && kind === 'home' ? 'rest' : t === 'V' ? 'mirror' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
   }));
   return {
     cup: b.stadium, shroom: outer === 'glowcap' && (bid.startsWith('shroom') || !!b.heal), cityView: !!O.city && kind === 'house',

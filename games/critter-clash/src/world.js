@@ -1809,6 +1809,23 @@ export class World {
         for (let k = 0; k < 5; k++) box('brick2', 0.3, 0.12, 0.06, cx - 1.6 + k * 0.8 + (k % 2) * 0.2, 1.5 + (k % 3) * 0.32, pz + 0.72);
         (this.forgeFire ||= []).push([cx, 0.8, pz + 0.8]);
       }
+      if (t === 'V') { // a tall dressing mirror on the left wall, facing into the room: a gilt frame, a pale glass with two bright streaks
+        box('gold', 0.25, 2.9, 1.5, px - 0.72, 1.45, pz); box('wood', 0.5, 0.15, 1.3, px - 0.6, 0.08, pz);
+        box('mirror', 0.06, 2.5, 1.18, px - 0.58, 1.5, pz);
+        const st = (y, z, l) => { const g = new THREE.BoxGeometry(0.03, l, 0.1); g.rotateX(0.6); g.translate(px - 0.54, y, z); add('shine', g); };
+        st(1.9, pz - 0.2, 0.7); st(1.6, pz + 0.05, 0.4); st(2.15, pz + 0.25, 0.3);
+        const top = new THREE.SphereGeometry(0.2, 10, 8); top.translate(px - 0.72, 3.0, pz); add('gold', top);
+      }
+      if (t === 'Z') { // a wobbly tower of striped hat boxes with ribbons and bows
+        [[0.62, 0.55, 'hb0', 0.06], [0.52, 0.48, 'hb1', -0.1], [0.42, 0.42, 'hb2', 0.08]].reduce((y, [r, h, k, dx]) => {
+          const c = new THREE.CylinderGeometry(r, r, h, 18); c.translate(px + dx, y + h / 2, pz - 0.1); add(k, c);
+          const lid = new THREE.CylinderGeometry(r * 1.06, r * 1.06, 0.08, 18); lid.translate(px + dx, y + h - 0.02, pz - 0.1); add(k, lid);
+          const rb = new THREE.TorusGeometry(r * 1.01, 0.035, 4, 20); rb.rotateX(Math.PI / 2); rb.translate(px + dx, y + h * 0.45, pz - 0.1); add('ribbon', rb);
+          return y + h + 0.04;
+        }, 0);
+        for (const sd of [-1, 1]) { const bw = new THREE.TorusGeometry(0.1, 0.035, 5, 12); bw.scale(1.3, 1, 1); bw.rotateX(-0.5); bw.translate(px + 0.08 + sd * 0.13, 1.68, pz - 0.1); add('ribbon', bw); }
+        const knot = new THREE.SphereGeometry(0.06, 8, 6); knot.translate(px + 0.08, 1.66, pz - 0.1); add('ribbon', knot);
+      }
       if (t === 'G') { // a grandfather clock: a tall case, a round face, and a pendulum that swings slowly
         box('wood', 1.2, 3.1, 0.8, px, 1.55, pz - 0.5); box('trim', 1.3, 0.14, 0.9, px, 3.12, pz - 0.5); box('stool', 1.0, 0.2, 0.85, px, 0.1, pz - 0.5);
         const fc = new THREE.CylinderGeometry(0.42, 0.42, 0.06, 18); fc.rotateX(Math.PI / 2); fc.translate(px, 2.55, pz - 0.08); add('plate', fc);
@@ -1858,10 +1875,10 @@ export class World {
         const cup = new THREE.CylinderGeometry(0.16, 0.08, 0.3, 10); cup.translate(px - 0.2, 0.95, pz); add('gold', cup);
       }
     }
-    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, ghost: 0x8a7464, ghostc: 0x2a8a5a, aqua: 0x3ab8ff, weed: 0x4cc25a, sandy: 0xf4dc9a, lava: 0xff5a2a, pine: 0x2f7a5a, knit: 0xd86a8a, knit2: 0xfff0d8, flies: 0xe8ff6a, door0: 0xc8845a, door1: 0xd8946a };
+    const C = { mirror: 0xd4ecff, hb0: 0xff8ac8, hb1: 0x5ad8c8, hb2: 0xffd84d, ribbon: 0xff4a7a, shine: 0xffffff, wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, ghost: 0x8a7464, ghostc: 0x2a8a5a, aqua: 0x3ab8ff, weed: 0x4cc25a, sandy: 0xf4dc9a, lava: 0xff5a2a, pine: 0x2f7a5a, knit: 0xd86a8a, knit2: 0xfff0d8, flies: 0xe8ff6a, door0: 0xc8845a, door1: 0xd8946a };
     for (const k in L) {
       if (k === 'pane' || k === 'goo') { const m = new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'goo' ? 0x5aff9a : 0xd8f0ff, transparent: true, opacity: k === 'goo' ? 0.5 : 0.22, depthWrite: false })); if (k === 'goo') m.renderOrder = 2; m.material.userData.own = true; this.group.add(m); L[k].forEach((g) => g.dispose()); continue; }
-      const glow = k === 'cap0' || k === 'cap1' || k === 'lit' || k === 'fire' || k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1' || k === 'flies' || k === 'aqua' || k === 'lava';
+      const glow = k === 'mirror' || k === 'shine' || k === 'cap0' || k === 'cap1' || k === 'lit' || k === 'fire' || k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1' || k === 'flies' || k === 'aqua' || k === 'lava';
       const m = glow ? new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'screen' && this.M.indoor === 'arcade' ? 0xff8ae8 : C[k] })) : inked(mergeGeometries(L[k]), toon(C[k] ?? 0xffffff, { rim: 0.3 }), k === 'book0' || k === 'book1' || k === 'book2' ? OL * 0.3 : OL * 0.6);
       if (glow) m.material.userData.own = true;
       m.castShadow = !glow && k !== 'trim'; m.receiveShadow = true;

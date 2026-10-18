@@ -306,6 +306,10 @@ export function storyTalk(S, id, w, a) {
   if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
   if (id === 'wardrobe') return wearMenu(w, '', null);
+  if (id === 'mirror') { // the Hat Shop's dressing mirror: try on any hat you own
+    if (!(save.adv.hats || []).length) return w.say(['{hero} strikes a pose in the mirror. Looking good! ...A hat would look even better.']);
+    return w.say(['{hero} strikes a pose in the mirror. Time for a new look?'], () => wearMenu(w, '', null));
+  }
   if (id === 'shelf') { // the trophy shelf at home fills up as you win
     const F = flags(), won = CUPS.filter((c) => F['cup_' + c.id]);
     return w.say([won.length ? `{hero}'s trophy shelf: ${won.length} of ${CUPS.length} cups. ${won.map((c) => c.name).join(', ')}.` : 'An empty trophy shelf, dusted and waiting. Mom says it\'s for {hero}\'s first cup.', ...(F.crowned ? ['And on top, in pride of place: the Critter Crown. 👑'] : won.length < CUPS.length ? ['There\'s still room for more!'] : [])]);
