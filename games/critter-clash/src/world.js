@@ -312,6 +312,7 @@ export class World {
     this.buildBonfire();
     this.buildCart();
     this.buildMarket();
+    this.buildSkyLanterns();
     this.buildThanks();
     this.buildBuildings();
     this.buildInterior();
@@ -355,7 +356,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1057,6 +1058,20 @@ export class World {
     for (let k = 0; k <= 18; k++) { const f = k / 18, b = new THREE.SphereGeometry(0.1, 6, 5); b.translate(x0 + (x1 - x0) * f, 3.3 - Math.sin(f * Math.PI * 3) ** 2 * 0.35, z0 + 0.6); bulbs[k % 4].push(b); }
     bulbs.forEach((l, i) => { const m = new THREE.Mesh(mergeGeometries(l), new THREE.MeshBasicMaterial({ color: cols[i] })); m.material.userData.own = true; this.group.add(m); l.forEach((q) => q.dispose()); });
     for (const x of [13, 18]) { const [px] = wpos(x, y), p = inked(new THREE.CylinderGeometry(0.06, 0.08, 3.4, 6), toon(0x2a2438), OL * 0.3); p.position.set(px, 1.7, z0 + 0.6); this.group.add(p); }
+  }
+
+  // Cloudtop Gardens after dusk: paper sky lanterns drift up out of the gardens, sway, and fade into the stars
+  buildSkyLanterns() {
+    this.skyLanterns = null;
+    if (this.key !== 'cloudtop' || this.phase === 'day') return;
+    const L = [], body = toon(0xffa04a, { emissive: 0xc85a1a, rim: 0.3 });
+    for (let k = 0; k < 7; k++) {
+      const g = new THREE.Group(), m = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.26, 0.7, 8), body); g.add(m);
+      const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffb860, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.6 }); sm.userData.own = true;
+      const gl = new THREE.Sprite(sm); gl.scale.setScalar(2.4); g.add(gl);
+      this.group.add(g); L.push({ g, sm, t: k / 7 * 14, x: 0, z: 0 });
+    }
+    this.skyLanterns = L;
   }
 
   // aurora ribbons hang over the snowy maps at night, waving slowly (they follow the camera, high up)
@@ -2412,6 +2427,11 @@ export class World {
     if (this.thanksFan) { this.thanksFan.rotation.z -= dt * 14; if (Math.random() < dt * 3) this.g.fx.spawn({ shape: 'star', x: this.thanksFan.parent.parent.position.x + (Math.random() - 0.5) * 0.3, y: 0.55 + Math.random() * 0.3, z: this.thanksFan.parent.parent.position.z + (Math.random() - 0.5) * 0.3, vx: -1.1, vz: -0.65, vy: 0.15, life: 0.9, size: 0.18, color: 0xdff6ff }); }
     if (this.rocker?.isObject3D) { const near = this.hero && Math.hypot(this.hero.root.position.x - this.rocker.position.x, this.hero.root.position.z - this.rocker.position.z) < 3.2; this.rockA = (this.rockA ?? 0.04) + ((near ? 0.13 : 0.04) - (this.rockA ?? 0.04)) * Math.min(1, dt * 2); this.rocker.rotation.x = Math.sin(this.t * 1.7) * this.rockA; } // creak... creak...
     for (const a of this.wild || []) if (a.ring) { const k = 1 + Math.sin(this.t * 4) * 0.12; a.ring.position.x = a.root.position.x; a.ring.position.z = a.root.position.z; a.ring.scale.setScalar(1.6 * k); a.ring.material.opacity = 0.55 + Math.sin(this.t * 4) * 0.25; a.aura.material.opacity = 0.5 + Math.sin(this.t * 4 + 1) * 0.2; }
+    if (this.skyLanterns) for (const L of this.skyLanterns) { // each lantern rises for 14 s from a random spot near the hero, then starts again
+      L.t += dt; if (L.t > 14 || !L.x) { L.t %= 14; L.x = this.hero.root.position.x + (Math.random() - 0.5) * 22; L.z = this.hero.root.position.z + (Math.random() - 0.3) * 14; }
+      const f = L.t / 14; L.g.position.set(L.x + Math.sin(this.t * 0.7 + L.z) * 0.6, 0.5 + f * 13, L.z - f * 3); L.g.rotation.z = Math.sin(this.t * 1.3 + L.x) * 0.12;
+      const a = Math.min(1, L.t / 1.5) * Math.min(1, (14 - L.t) / 4); L.g.scale.setScalar(0.4 + 0.6 * Math.min(1, L.t / 1.5)); L.sm.opacity = 0.6 * a * (0.85 + Math.sin(this.t * 6 + L.x) * 0.15); L.g.visible = a > 0.02;
+    }
     if (this.cart) { const C = this.cart; C.lanterns.forEach((l, k) => { l.rotation.z = Math.sin(this.t * 1.6 + k) * 0.12; }); C.glow.material.opacity = 0.42 + Math.sin(this.t * 2.2) * 0.08; if (Math.random() < dt * 2.5) this.g.fx.spawn({ x: C.px + (Math.random() - 0.5) * 0.3, y: 1.9, z: C.pz, vy: 0.8, vx: 0.15, color: 0xf4f0ff, alpha: 0.45, size: 0.35, life: 1.6, shape: 'puff', additive: false, grow: 1.3 }); }
     if (this.bonfire) { const B = this.bonfire; B.flames.forEach((f, k) => { const q = 1 + Math.sin(this.t * (9 + k * 3) + k) * 0.12 + Math.sin(this.t * 23 + k * 2) * 0.06; f.scale.set(1 / Math.sqrt(q), q, 1 / Math.sqrt(q)); }); const fl = 0.85 + Math.sin(this.t * 13) * 0.08 + Math.sin(this.t * 31) * 0.05; B.sp.material.opacity = 0.5 * fl; B.pool.material.opacity = 0.7 * fl; if (Math.random() < dt * 6) this.g.fx.spawn({ x: B.px + (Math.random() - 0.5) * 0.4, y: 0.9, z: B.pz + (Math.random() - 0.5) * 0.4, vx: (Math.random() - 0.5) * 0.6, vy: 1.6 + Math.random() * 1.2, vz: (Math.random() - 0.5) * 0.6, color: 0xffb040, size: 0.14, life: 1.1, shape: 'spark' }); }
     if (this.pendulum) this.pendulum.rotation.z = Math.sin(this.t * 2.2) * 0.22; // tick... tock...
