@@ -913,10 +913,12 @@ body:not(.is-touch) .wd-a { display: none; }
 .wm-hero { animation: wmBob 1s ease-in-out infinite alternate; }
 @keyframes wmBob { to { transform: translateY(-4px); } }
 .wm-tip { margin: 6px 0 8px; font-weight: 800; font-size: 14px; }
+.wm-key { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 6px; margin: 0 0 8px; }
+.wm-key span { background: rgba(90,60,140,.1); border-radius: 999px; padding: 1px 8px; font-weight: 800; font-size: 12px; white-space: nowrap; }
 /* the Town Map follows the clock: a warm evening, a starry night */
 .wd-map.evening .wm-sea { fill: #e89a8a; } .wd-map.evening .wm-land { fill: #a8c86a; }
 .wd-map.night .wm-sea { fill: #2a3a7a; } .wd-map.night .wm-land { fill: #4f8a5e; stroke: #c8b88a; } .wm-star { fill: #fff6c8; }
-@media (max-height: 420px) { .wd-map { padding: 8px 12px 10px; } .wd-map h2 { font-size: 24px; margin-bottom: 2px; } .wm-tip { margin: 2px 0 4px; font-size: 13px; } .wm { max-height: calc(100dvh - 150px); } }
+@media (max-height: 420px) { .wd-map { padding: 8px 12px 10px; } .wd-map h2 { font-size: 24px; margin-bottom: 2px; } .wm-tip { margin: 2px 0 2px; font-size: 13px; } .wm-key { margin-bottom: 4px; } .wm-key span { font-size: 11px; } .wm { max-height: calc(100dvh - 160px); } }
 .wm-deco { font-size: 18px; text-anchor: middle; opacity: .85; pointer-events: none; }
 body:has(.wd-ask) .wd-a { visibility: hidden; }
 @media (max-height: 420px) { .wd-map h2 { display: none; } .wm { max-height: calc(100dvh - 135px); } }
