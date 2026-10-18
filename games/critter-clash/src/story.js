@@ -88,8 +88,7 @@ export function storyIntro(S, w) {
       'Prof. Pecan: {hero}, Champion of Clashara! I knew it from the very first day.',
       '{hero}: I did it... I really did it! But Dash is right. There are always stronger critters out there...',
       "{hero}: So I'll keep training! Every route, every stadium. Let's go!",
-      '★ THE END ★  Thanks for playing! The world is yours to explore. Wild critters are still out there, and every stadium welcomes a rematch.',
-    ]);
+    ], () => (w.credits ? w.credits(() => w.say(['★ THE END ★  Thanks for playing! The world is yours to explore. Wild critters are still out there, and every stadium welcomes a rematch.'])) : null));
     return;
   }
   if (w.key === 'cloudtop' && !F.cloudtop) {

@@ -765,6 +765,12 @@ body.portrait .rcard span { font-size: 9.5px; }
 .credits { position: absolute; right: calc(16px + var(--sar)); top: 0; bottom: 0; width: min(380px, 46vw); overflow: hidden; background: linear-gradient(90deg, rgba(27,17,64,0), rgba(27,17,64,.55) 18%, rgba(27,17,64,.55) 82%, rgba(27,17,64,0)); -webkit-mask-image: linear-gradient(transparent, #000 14%, #000 82%, transparent); mask-image: linear-gradient(transparent, #000 14%, #000 82%, transparent); }
 .credits .roll { text-align: center; padding-top: 100vh; color: #fff; text-shadow: 0 2px 0 var(--ink); }
 .finale.rolling .roll { animation: creditRoll 46s linear forwards; }
+.adv-credits { z-index: 70; }
+.world-screen.touring .wd-a, .world-screen.touring .wd-menu { display: none; }
+.adv-credits.rolling .roll { animation: advRoll 50s linear forwards; }
+@keyframes advRoll { to { transform: translateY(calc(-100% + 42vh)); } }
+@media (max-aspect-ratio: 1/1) { @keyframes advRoll { to { transform: translateY(calc(-100% + 30vh)); } } }
+.adv-credits .res-btns { opacity: 1; }
 @keyframes creditRoll { to { transform: translateY(calc(-100% + 60vh)); } }
 .credits .logo-top { font-size: 40px; } .credits .logo-bot { font-size: 64px; margin-bottom: 18px; }
 .credits h2 { font-family: var(--display); font-weight: 400; color: var(--yellow); margin: 10px 0 4px; font-size: 26px; }

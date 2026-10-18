@@ -8,7 +8,7 @@ import { Critter, roleHat, shopHat, hatModel, SHOP_HATS } from './critters.js';
 import { CRITTERS, CUPS, withGear, skinned } from './data.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx, playMusic } from './audio.js';
-import { rivalFor } from './worldmaps.js';
+import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap, CUP_ORDER } from './interiors.js';
 import { countUp, deliveryFor, deliveredLine } from './story.js';
 import { ARENAS } from './arena.js';
@@ -250,7 +250,7 @@ export class World {
     save.adv.map = key; save.adv.x = x; save.adv.y = y; save.adv.dir = dir;
     if (!key.startsWith('in:')) (save.adv.seen ||= {})[key] = true;
     persist();
-    playMusic(M.music || 'camp');
+    playMusic(this.touring ? 'victory' : M.music || 'camp');
     const B = this.base, lamp = M.indoor && this.outPhase !== 'day' && M.indoor !== 'arcade' && { sun: 0xffd2a0, sunI: B.sunI * (this.outPhase === 'night' ? 0.72 : 0.85), sky: 0xffe2c4, gnd: B.gnd, hemiI: B.hemiI * 0.85, fog: 0xcfeeff }; // lamplight indoors after dark
     this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || PHASES[this.phase]);
     this.banner(M.name + (this.rain ? ' 🌧️' : ''));
@@ -2093,7 +2093,7 @@ export class World {
     const f = document.createElement('div');
     f.className = 'wd-fade';
     this.S.root.appendChild(f);
-    setTimeout(() => { fn(); f.classList.add('out'); this.busy = false; setTimeout(() => f.remove(), 400); }, 260);
+    setTimeout(() => { fn(); f.classList.add('out'); this.busy = !!this.touring; setTimeout(() => f.remove(), 400); }, 260);
   }
 
   arrive() {
@@ -2690,6 +2690,52 @@ export class World {
   }
 
   storyCheck() { return this.S.worldStoryStep?.(this) || false; }
+
+  // the Adventure ending: credits roll while the camera visits every town you've been to, like postcards, then home to the Peak
+  credits(done) {
+    const A = save.adv, F = A.flags, seen = A.seen || {}, back = [this.key, this.hx, this.hy, this.dir];
+    const stops = ['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak'].filter((k) => seen[k] && MAPS[k]);
+    const spot = (k) => { // in front of the town's stadium, or by the hero's home in Sprout Village
+      const b = (MAPS[k].buildings || []).find((q) => q.stadium);
+      return b ? [b.x + b.door, b.y + b.h + 1] : [4, 7];
+    };
+    const npcs = Object.values(MAPS).flatMap((M) => M.npcs || []);
+    const trainers = [...new Set(npcs.filter((n) => n.trainer).map((n) => n.name))];
+    const folk = [...new Set(npcs.filter((n) => !n.trainer && n.critter && n.critter !== '$hero' && !n.rival && !n.hideFlag && n.name && !/^(Gang|Vex|King)/.test(n.name)).map((n) => n.name))];
+    const beat = npcs.filter((n) => n.trainer && F[n.id]).length, fav = Object.keys(F).filter((k) => k.endsWith('_done')).length;
+    const hero = this.hero.def.name, rival = byId(rivalFor(A.hero))?.name || 'Voltferret', name = save.trainer?.name || 'Trainer';
+    const stat = (ic, t, v) => `<p>${ic} ${t} <b>${v}</b></p>`;
+    const el = document.createElement('div'); el.className = 'finale adv-credits';
+    el.innerHTML = `<div class="credits"><div class="roll" style="animation-duration:${stops.length * 5.4 + 1.5}s">
+      <div class="logo-top ol">CRITTER</div><div class="logo-bot ol">CLASH!</div>
+      <h2>👑 Champion of Clashara 👑</h2><p class="cr-big">${hero}</p><p>and ${name}</p>
+      <h3>The journey</h3>${stat('🏆', 'Cups won', `${CUPS.filter((c) => F['cup_' + c.id]).length} / ${CUPS.length}`)}${stat('👣', 'Steps walked', (A.steps || 0).toLocaleString())}${stat('⚔️', 'Trainers beaten', beat)}${stat('🌿', 'Wild critters met', A.cnt?.wild || 0)}${stat('🎣', 'Fish caught', A.fishLog?.n || 0)}${stat('🤝', 'Favours done', fav)}${stat('🎩', 'Hats collected', (A.hats || []).length)}
+      <h3>Starring</h3><p><b>${hero}</b> <small>the hero</small></p><p><b>Dash</b> <small>the rival (${rival})</small></p><p><b>Prof. Pecan</b> <small>as himself</small></p><p><b>King Snooze</b> <small>keeper of the Crown</small></p><p><b>Captain Puff</b> <small>and the mail balloon</small></p>
+      <h3>Trainers</h3><p>${trainers.join(' · ')}</p>
+      <h3>Townsfolk</h3><p>${folk.join(' · ')}</p>
+      <h3>And you</h3><p>for playing!</p>
+      <p class="cr-big">Thanks for playing!</p>
+    </div></div><div class="res-btns"><button class="btn ghost">Skip ⏭</button></div>`;
+    this.S.root.appendChild(el);
+    const scr = this.S.root.querySelector('.world-screen'); scr?.classList.add('touring'); this.g.input.showTouch(false);
+    this.busy = true; this.touring = true; playMusic('victory');
+    let i = 0, timer = 0;
+    const finish = () => {
+      if (!this.touring) return;
+      clearTimeout(timer); this.touring = false; el.remove(); scr?.classList.remove('touring'); this.g.input.showTouch(true);
+      this.fade(() => { this.load(...back); this.busy = false; done?.(); });
+    };
+    const next = () => {
+      if (!this.touring || !this.group) return;
+      if (i >= stops.length) return finish();
+      const k = stops[i++];
+      this.fade(() => { if (!this.touring) return; this.load(k, ...spot(k), 's'); this.hero.emote('happy', 'grin', 2); });
+      timer = setTimeout(next, i < stops.length ? 5400 : 8400); // linger on the last town while "Thanks for playing!" settles
+    };
+    el.querySelector('button').addEventListener('click', () => { sfx.ui('ok'); finish(); });
+    requestAnimationFrame(() => el.classList.add('rolling'));
+    timer = setTimeout(next, 2500);
+  }
 
   // the Critter Crown floats off the pedestal onto the hero's head
   crownScene() {
