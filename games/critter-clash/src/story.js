@@ -17,6 +17,9 @@ const byId = (id) => CRITTERS.find((c) => c.id === id);
 // opening narration, the first time the world loads
 export function storyIntro(S, w) {
   const F = flags();
+  // the first time you're back in a town after winning its cup, fireworks go up over the stadium
+  const st = (getMap(w.key)?.buildings || []).find((b) => b.stadium);
+  if (st && F['cup_' + st.stadium] && !F['fw_' + st.stadium]) { F['fw_' + st.stadium] = true; persist(); w.fireworks?.(st); }
   if (F.cup_sprout && !F.post_sprout && w.key === 'bloom') {
     F.post_sprout = true; persist();
     w.say([

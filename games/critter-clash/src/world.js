@@ -209,6 +209,7 @@ export class World {
   unload() {
     if (!this.group) return;
     if (this.fishing) { this.fishing = null; this.busy = false; }
+    this.fw = null;
     this.g.scene.remove(this.group);
     const maps = new Set();
     this.group.traverse((o) => {
@@ -1658,6 +1659,7 @@ export class World {
     for (let k = 0; k < (this.pennants?.length || 0); k++) this.pennants[k].rotation.y = Math.sin(this.t * 3.1 + k * 1.7) * 0.35; // stadium pennants flap in the breeze
     for (const m of this.medals || []) m.rotation.y = this.t * 1.6;
     this.ambience(dt);
+    this.updateFireworks(dt);
     for (const m of this.mist || []) { // mist banks drift and wrap round the map, breathing in and out
       const q = m.q, Wd = this.W * TILE; q.position.x += m.v * dt; if (q.position.x > Wd + 4) q.position.x = -4; if (q.position.x < -4) q.position.x = Wd + 4;
       q.position.z += Math.sin(this.t * 0.3 + m.ph) * dt * 0.15; q.scale.y = q.scale.y * 0.999 + (2.8 + Math.sin(this.t * 0.4 + m.ph) * 0.8) * 0.001;
@@ -1770,6 +1772,20 @@ export class World {
     } else { idlePose(P, this.t + 1); P.y = Math.abs(Math.sin(this.t * 3)) * 0.1; if (F.hop > 0) { F.hop -= dt; P.y = Math.sin((0.6 - F.hop) / 0.6 * Math.PI * 2) ** 2 * 0.6; P.armLz = P.armRz = 2; } if (!this.from) F.dir = F.x < this.hx ? 'e' : F.x > this.hx ? 'w' : F.y < this.hy ? 's' : 'n'; }
     F.root.rotation.y = turnTo(F.root.rotation.y, YAW[F.dir], dt * 14);
     F.cr.update(dt);
+  }
+
+  // a cup won: a volley of fireworks over the stadium
+  fireworks(b) { this.fw = { t: 0, k: 0, x: (b.x + b.w / 2) * TILE, z: (b.y + b.h * 0.8) * TILE }; }
+  updateFireworks(dt) {
+    const F = this.fw; if (!F) return;
+    F.t += dt;
+    while (F.k < 12 && F.t > F.k * 0.3) {
+      const col = [0xff5a8a, 0xffd84d, 0x5ad8ff, 0x8aff7a, 0xc89aff][F.k % 5], p = { x: F.x + (Math.random() - 0.5) * 7, y: 5 + Math.random() * 1.6, z: F.z + (Math.random() - 0.5) * 3 };
+      this.g.fx.burst(p, { n: 36, speed: 7, up: 0.8, color: col, size: 0.62, life: 1.4, shape: F.k % 2 ? 'star' : 'spark', grav: 2.2, drag: 1.3, spread: 1.2, grow: -0.5 });
+      this.g.fx.spawn({ ...p, color: col, size: 2.6, life: 0.3, shape: 'glow' });
+      sfx.ambient?.('pop'); F.k++;
+    }
+    if (F.k >= 12) this.fw = null;
   }
 
   // ☰ → 📸 Photo: a close, low snapshot of the hero (and buddy) where they stand, in a keepsake frame

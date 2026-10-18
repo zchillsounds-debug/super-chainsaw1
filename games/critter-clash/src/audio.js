@@ -131,6 +131,7 @@ export const sfx = {
     } else if (kind === 'rain') noise(1.8, 0.035, { f0: 4200, f1: 3600, q: 0.5, attack: 0.5, type: 'highpass', hold: true });
     else if (kind === 'wind') noise(3, 0.04, { f0: 420, f1: 900, q: 2.5, attack: 1.0, hold: true });
     else if (kind === 'hum') noise(2.5, 0.025, { f0: 140, f1: 180, q: 1.5, attack: 0.8, type: 'lowpass', hold: true });
+    else if (kind === 'pop') { noise(0.5, 0.12, { f0: 2400, f1: 300, q: 0.7, attack: 0.004, type: 'lowpass' }); osc('sine', 160, 60, 0.25, 0.1); for (let i = 0; i < 4; i++) noise(0.05, 0.03, { t: t + 0.15 + i * 0.07 + r() * 0.05, f0: 5000, q: 2 }); }
     else if (kind === 'bubble') for (let i = 0; i < 3; i++) osc('sine', 300 + r() * 200, 700 + r() * 300, 0.05, 0.03, { t: t + i * 0.09 + r() * 0.05 });
   },
   step() { if (ctx) noise(0.04, 0.06, { f0: 900, q: 1.5, type: 'lowpass' }); },
