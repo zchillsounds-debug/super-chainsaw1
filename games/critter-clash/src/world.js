@@ -263,7 +263,7 @@ export class World {
         }
         if (t === 's' || t === 'P') { // sand rounds off where it meets grass on two sides
           const g = (dx, dy) => { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= W || Y >= H) return false; const k = this.tile(X, Y); return !'sP~=RlvhB'.includes(k) || (k === 'h' && !'sP'.includes(under(X, Y))); }, rr = 10;
-          c.fillStyle = (x + y) % 2 ? '#f4dc9a' : '#f1d894'; c.beginPath(); c.roundRect(x * P, y * P, P, P, [g(-1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, 1) ? rr : 0, g(-1, 0) && g(0, 1) ? rr : 0]); c.fill(); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); } }
+          c.fillStyle = this.phase === 'night' ? ((x + y) % 2 ? '#eeeadc' : '#ebe6d6') : (x + y) % 2 ? '#f4dc9a' : '#f1d894'; /* moonlit sand reads silver, not mud */ c.beginPath(); c.roundRect(x * P, y * P, P, P, [g(-1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, 1) ? rr : 0, g(-1, 0) && g(0, 1) ? rr : 0]); c.fill(); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); } }
       }
       // a doormat on the way out
       if (this.M.exit) { const dx = this.M.enter.x * P, dy = (H - 1) * P; c.fillStyle = '#8a3a2a'; c.beginPath(); c.roundRect(dx + 3, dy + 4, P - 6, P - 8, 4); c.fill(); c.fillStyle = '#ffd84d'; c.font = 'bold 14px sans-serif'; c.textAlign = 'center'; c.fillText('▼', dx + P / 2, dy + P / 2 + 5); }
@@ -408,6 +408,27 @@ export class World {
       const mesh = new THREE.Mesh(mergeGeometries(water), m);
       water.forEach((g) => g.dispose());
       this.group.add(mesh);
+    }
+    this.glowTide = null;
+    if (water.length && this.phase === 'night' && this.M.arena === 'beach') { // after dark the surf along the beach glows blue (tiny sea sparks)
+      const P = 32, br = rng(hash(this.key + ':tide'));
+      const tex = canvasTex(W * P, H * P, (c) => {
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          if (this.tile(x, y) !== '~') continue;
+          for (const [dx, dy] of Object.values(DIRS)) {
+            if (wet(x + dx, y + dy)) continue;
+            const ex = (x + 0.5 + dx * 0.5) * P, ey = (y + 0.5 + dy * 0.5) * P, ix = (x + 0.5 + dx * 0.15) * P, iy = (y + 0.5 + dy * 0.15) * P;
+            const g = c.createLinearGradient(ex, ey, ix, iy); g.addColorStop(0, 'rgba(90,240,255,0)'); g.addColorStop(0.25, 'rgba(90,240,255,0.85)'); g.addColorStop(1, 'rgba(60,160,255,0)');
+            c.fillStyle = g; c.fillRect(Math.min(ex, ix) - (dy ? P / 2 : 0), Math.min(ey, iy) - (dx ? P / 2 : 0), dx ? Math.abs(ex - ix) : P, dy ? Math.abs(ey - iy) : P);
+            c.fillStyle = 'rgba(200,255,255,0.9)';
+            for (let k = 0; k < 4; k++) { const u = br(), v = 0.15 + br() * 0.25; c.fillRect(dx ? ex - dx * v * P : x * P + u * P, dy ? ey - dy * v * P : y * P + u * P, 2, 2); }
+          }
+        }
+      });
+      tex.userData.own = true;
+      const gm = new THREE.MeshBasicMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }); gm.userData.own = true;
+      const gp = this.glowTide = new THREE.Mesh(new THREE.PlaneGeometry(W * TILE, H * TILE), gm);
+      gp.rotation.x = -Math.PI / 2; gp.position.set(W * TILE / 2, 0.075, H * TILE / 2); this.group.add(gp);
     }
   }
 
@@ -1603,6 +1624,7 @@ export class World {
     for (let k = 0; k < (this.pennants?.length || 0); k++) this.pennants[k].rotation.y = Math.sin(this.t * 3.1 + k * 1.7) * 0.35; // stadium pennants flap in the breeze
     for (const m of this.medals || []) m.rotation.y = this.t * 1.6;
     this.ambience(dt);
+    if (this.glowTide) this.glowTide.material.opacity = 0.6 + Math.sin(this.t * 1.1) * 0.3 + Math.sin(this.t * 2.9) * 0.1; // waves of sea sparks
     if (this.cracks) this.cracks.material.opacity = 0.75 + Math.sin(this.t * 1.7) * 0.25; // the magma breathes
     if (this.labDish) this.labDish.rotation.y = Math.sin(this.t * 0.4) * 1.2;
     if (this.beacon) this.beacon.material.color.setHex(this.t % 1.6 < 0.25 ? 0xff5050 : 0x5a1818);
