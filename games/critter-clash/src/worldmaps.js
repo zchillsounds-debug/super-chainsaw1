@@ -463,7 +463,7 @@ export const MAPS = {
     music: 'frost',
     arena: 'frost',
     outer: 0xe8f0fb,
-    palette: { a: '#eef4ff', b: '#e6eefa', tall: '#c8dcf0', path: '#c4d0e8', ice: '#b8e4ff', dark: 'rgba(120,150,200,0.25)', lite: 'rgba(255,255,255,0.8)' },
+    palette: { a: '#eef4ff', b: '#e6eefa', tall: '#c8dcf0', path: '#b2c0de', ice: '#b8e4ff', dark: 'rgba(120,150,200,0.25)', lite: 'rgba(255,255,255,0.8)' },
     trees: [0x2f6a5a, 0x3a7a6a, 0x5a3a3a],
     snow: true,
     mood: { sun: 0xf0f4ff, sunI: 1.9, sky: 0xd8e8ff, gnd: 0x8a9ac8, hemiI: 1.25, fog: 0xe0ecff },

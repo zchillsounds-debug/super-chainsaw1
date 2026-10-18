@@ -547,9 +547,21 @@ export class World {
   }
 
   buildProps(rand) {
-    const rocks = [], posts = [], rails = [], boards = [], sticks = [];
+    const rocks = [], posts = [], rails = [], boards = [], sticks = [], snow = [], coal = [], carrot = [], drifts = [];
+    const snowmen = this.M.snow && this.key !== 'peak'; // Frostpeak's rocks are snowmen; the Peak's lake keeps its boulders
     for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) {
       const t = this.tile(x, y), [px, pz] = wpos(x, y);
+      if (t === 'R' && snowmen) {
+        for (const [r, h] of [[0.62, 0.5], [0.46, 1.2], [0.34, 1.75]]) { const g = new THREE.SphereGeometry(r, 16, 12); g.translate(px, h, pz); snow.push(g); }
+        for (const ex of [-0.12, 0.12]) { const e = new THREE.SphereGeometry(0.055, 6, 5); e.translate(px + ex, 1.82, pz + 0.3); coal.push(e); }
+        for (let k = 0; k < 3; k++) { const b = new THREE.SphereGeometry(0.06, 6, 5); b.translate(px, 1.05 + k * 0.17, pz + 0.45 - Math.abs(k - 1) * 0.02); coal.push(b); }
+        const n = new THREE.ConeGeometry(0.07, 0.34, 8); n.rotateX(Math.PI / 2); n.translate(px, 1.72, pz + 0.48); carrot.push(n);
+        for (const sd of [-1, 1]) { const a = new THREE.CylinderGeometry(0.03, 0.04, 0.8, 5); a.rotateZ(sd * 1.1); a.translate(px + sd * 0.72, 1.4, pz); sticks.push(a); }
+        continue;
+      }
+      if (snowmen && t === '.' && rand() < 0.09 && this.tile(x, y + 1) !== ':' ) { // soft wind-blown drifts
+        const g = new THREE.SphereGeometry(0.7 + rand() * 0.4, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2); g.scale(1.4, 0.32, 0.9); g.rotateY(rand() * 3); g.translate(px + (rand() - 0.5), 0, pz + (rand() - 0.5)); drifts.push(g);
+      }
       if (t === 'R') { const r = new THREE.DodecahedronGeometry(0.75, 0); r.scale(1.1, 0.75, 1); r.rotateY(rand() * 3); r.translate(px, 0.45, pz); rocks.push(r); }
       if (t === '#') {
         const p = new THREE.BoxGeometry(0.22, 1.0, 0.22); p.translate(px, 0.5, pz); posts.push(p);
@@ -565,7 +577,9 @@ export class World {
       const b = new THREE.BoxGeometry(1.2, 0.7, 0.14); b.translate(px, 1.05, pz + 0.05); boards.push(b);
     }
     const put = (list, color, ink = OL) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color), ink); this.group.add(m); list.forEach((g) => g.dispose()); };
-    put(rocks, 0x9a94a8); put(posts, 0xfff4e0, OL * 0.6); put(rails, 0xfff4e0, OL * 0.5); put(sticks, 0x8a5a3a, OL * 0.5); put(boards, 0xc8925a);
+    put(rocks, 0x9a94a8); put(snow, 0xffffff); put(coal, 0x2a2a34, 0); put(carrot, 0xff8a2a, OL * 0.4);
+    if (drifts.length) { const m = new THREE.Mesh(mergeGeometries(drifts), toon(0xf6faff, { rim: 0.8 })); m.receiveShadow = true; this.group.add(m); drifts.forEach((g) => g.dispose()); }
+    put(posts, 0xfff4e0, OL * 0.6); put(rails, 0xfff4e0, OL * 0.5); put(sticks, 0x8a5a3a, OL * 0.5); put(boards, 0xc8925a);
   }
 
   // the Glowcap woods: giant glowing toadstools (m), little glowcap clusters (g), bramble walls (B)
@@ -1309,6 +1323,10 @@ export class World {
     if (this.shrooms?.length && Math.random() < dt * 6) {
       const [x, y, z, c] = this.shrooms[Math.floor(Math.random() * this.shrooms.length)];
       this.g.fx.spawn({ x: x + (Math.random() - 0.5) * 1.6, y, z: z + (Math.random() - 0.5) * 1.6, vy: 0.35 + Math.random() * 0.3, vx: (Math.random() - 0.5) * 0.3, vz: (Math.random() - 0.5) * 0.3, color: c, size: 0.22, life: 3, shape: 'glow', fadeIn: 0.4, hold: 0.5 });
+    }
+    if (this.M.snow && !this.M.indoor && Math.random() < dt * 10) { // the snow glitters in the light
+      const p = this.hero.root.position;
+      this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 22, y: 0.08, z: p.z + (Math.random() - 0.6) * 15, color: 0xffffff, size: 0.2, life: 0.5, shape: 'star', fadeIn: 0.2 });
     }
     if (this.M.snow && Math.random() < dt * 16) {
       const p = this.hero.root.position;
