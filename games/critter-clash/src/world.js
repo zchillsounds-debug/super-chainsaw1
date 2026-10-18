@@ -38,6 +38,12 @@ const panelTex = () => PANEL ||= canvasTex(64, 64, (c) => {
   c.fillStyle = 'rgba(255,255,255,0.25)'; c.beginPath(); c.moveTo(0, 0); c.lineTo(22, 0); c.lineTo(0, 22); c.fill();
 });
 
+const MARKS = {}; // quest bubble materials (shared, never disposed)
+const markMat = (k) => MARKS[k] ||= new THREE.SpriteMaterial({ depthTest: false, map: canvasTex(64, 64, (c) => {
+  c.fillStyle = '#2a1630'; c.beginPath(); c.arc(32, 30, 27, 0, 7); c.fill();
+  c.fillStyle = k === '!' ? '#ffd84d' : '#7ae0ff'; c.beginPath(); c.arc(32, 30, 23, 0, 7); c.fill();
+  c.fillStyle = '#2a1630'; c.font = 'bold 34px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(k, 32, 32);
+}) });
 // where each side quest's lost thing turns up: a solid tile (tree, rock, palm) you face from next door
 const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 } };
 
@@ -951,7 +957,7 @@ export class World {
           const cap = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.12, 4), toon(0x3a3440)); cap.rotation.y = Math.PI / 4; cap.position.set(lx, 1.44, front + 0.5); G.add(cap);
           if (lit) {
             const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffc060, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: this.phase === 'night' ? 0.85 : 0.5 }); sm.userData.own = true;
-            const glow = new THREE.Sprite(sm); glow.scale.setScalar(1.6); glow.position.set(lx, 1.2, front + 0.62); G.add(glow);
+            const glow = new THREE.Sprite(sm); glow.userData.shared = true; glow.scale.setScalar(1.6); glow.position.set(lx, 1.2, front + 0.62); G.add(glow);
           }
         }
         for (let k = 0; k < b.w; k++) if (k !== b.door) {
@@ -1419,6 +1425,19 @@ export class World {
     const s = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.8), sm); s.position.set((b.door + 0.5) * TILE - w / 2, 3.0, d / 2 + 0.05); G.add(s);
   }
 
+  // a bobbing ! over townsfolk with a favour to ask, and a ? when you've found what they lost
+  questMarks() {
+    const F = save.adv.flags;
+    for (const a of this.npcs) {
+      if (a.mark) { this.group.remove(a.mark); a.mark = null; }
+      const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
+      const k = !id ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      if (!k) continue;
+      const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
+      this.group.add(m); a.mark = m;
+    }
+  }
+
   // ---------- NPCs, trainers, wild critters ----------
   buildActors() {
     this.npcs = [];
@@ -1443,6 +1462,7 @@ export class World {
       this.setPos(a);
       this.npcs.push(a);
     }
+    this.questMarks();
     // wild critters you can see, roaming the tall grass
     this.wild = [];
     const W = this.M.wild;
@@ -1698,6 +1718,7 @@ export class World {
     for (const m of this.medals || []) m.rotation.y = this.t * 1.6;
     this.ambience(dt);
     this.updateFireworks(dt);
+    for (const a of this.npcs || []) if (a.mark) a.mark.position.set(a.root.position.x, a.root.position.y + 2.7 + Math.sin(this.t * 4) * 0.12, a.root.position.z);
     for (const m of this.mist || []) { // mist banks drift and wrap round the map, breathing in and out
       const q = m.q, Wd = this.W * TILE; q.position.x += m.v * dt; if (q.position.x > Wd + 4) q.position.x = -4; if (q.position.x < -4) q.position.x = Wd + 4;
       q.position.z += Math.sin(this.t * 0.3 + m.ph) * dt * 0.15; q.scale.y = q.scale.y * 0.999 + (2.8 + Math.sin(this.t * 0.4 + m.ph) * 0.8) * 0.001;

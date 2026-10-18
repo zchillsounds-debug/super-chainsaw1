@@ -488,7 +488,7 @@ const LOST = {
 function lostQuest(S, w, a, key) {
   const F = flags(), [kind, id] = key.split(':'), Q = LOST[id], who = Q.who;
   if (kind === 'found') {
-    F[id + '_found'] = true; persist(); sfx.jingle(2); w.buildLost?.(); S.toast(`${Q.toast} Found the ${Q.item}!`);
+    F[id + '_found'] = true; persist(); sfx.jingle(2); w.buildLost?.(); w.questMarks?.(); S.toast(`${Q.toast} Found the ${Q.item}!`);
     return w.say(Q.found);
   }
   if (F[id + '_done']) return w.say([a.n.lines[Math.floor(Math.random() * a.n.lines.length)]], null, who);
@@ -498,11 +498,11 @@ function lostQuest(S, w, a, key) {
     save.berries = (save.berries || 0) + (Q.berries || 0);
     const out = [...Q.done];
     if (Q.snack) { const h = save.adv.hero, c = save.critters[h], r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4)); if (r.to > r.from) out.push(`{hero} grew to Lv ${r.to}!`); }
-    persist(); sfx.jingle(3); S.toast(`${Q.toast} ${Q.item[0].toUpperCase() + Q.item.slice(1)} returned!`);
+    persist(); w.questMarks?.(); sfx.jingle(3); S.toast(`${Q.toast} ${Q.item[0].toUpperCase() + Q.item.slice(1)} returned!`);
     return w.say(out, null, who);
   }
   if (F[id + '_asked']) return w.say(Q.wait, null, who);
-  F[id + '_asked'] = true; persist();
+  F[id + '_asked'] = true; persist(); w.questMarks?.();
   return w.say(Q.ask, null, who);
 }
 
