@@ -28,6 +28,9 @@ export const BOTTLE_NOTES = [
   'Roses are red, berries are too, I lost my rod somewhere, have you seen it? Boo hoo. (signed) Not a poet',
   'The ice lanterns in Frostpeak were carved by Skater Ivy. Every single one. Tell her they look nice. (signed) A friend',
   'If a bush rustles and nothing comes out, it is shy. Come back tomorrow. (signed) Old Snoozlo (I think)',
+  'The toadstools in Glowcap Hollow sing after dark. I got to the third song and sneezed. Do NOT sneeze. (signed) A hay-fever Hootsy',
+  'Cinder Town has a hot spring now. I went in a Pengsicle and came out a puddle. Worth it. (signed) Formerly Pengsicle',
+  'Any critter can lead the way! Try the Critter Box in a Berry Center. My Pebblepup has never been happier. (signed) A proud trainer',
 ];
 
 export function tonightConst(day, hash) { return CONSTELLATIONS[hash(day + ':stars') % CONSTELLATIONS.length]; }
