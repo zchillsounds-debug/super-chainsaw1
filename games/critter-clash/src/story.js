@@ -663,14 +663,21 @@ function trader(w) {
 // Each win is saved, so a loss only means trying that battle again. Clearing all five pays 8 berries, and the first clear ever the Golden Laurel.
 const ACES = ['Ace Juno', 'Ace Rocco', 'Ace Tamsin', 'Ace Kenji', 'Ace Willa', 'Ace Ozzie', 'Ace Priya', 'Ace Bram', 'Ace Suki', 'Ace Leif'];
 export function gauntletWeek(now = Date.now()) { return Math.floor((now / 864e5 + 3) / 7); } // weeks start on a Monday
+// each week has a theme: two types, so the five Aces come from those two (topped up from the rest if the hero is one of them)
+export function gauntletTheme(wk) {
+  const t = Object.keys(TYPES), pairs = [];
+  for (let i = 0; i < t.length; i++) for (let j = i + 1; j < t.length; j++) pairs.push([t[i], t[j]]);
+  return pairs[((wk * 7) % pairs.length + pairs.length) % pairs.length];
+}
 export function gauntletFoes(wk, hero) {
   let h = (wk * 2654435761) >>> 0; const r = () => ((h = (h * 1103515245 + 12345) >>> 0) >>> 8) / 16777216;
-  const pool = CRITTERS.filter((c) => c.id !== hero).map((c) => c.id), out = [];
-  while (out.length < 5) { const id = pool.splice(Math.floor(r() * pool.length), 1)[0]; out.push({ id, name: ACES[(wk + out.length * 3) % ACES.length] }); }
+  const th = gauntletTheme(wk), all = CRITTERS.filter((c) => c.id !== hero);
+  const pool = all.filter((c) => th.includes(c.type)).map((c) => c.id), rest = all.filter((c) => !th.includes(c.type)).map((c) => c.id), out = [];
+  while (out.length < 5) { const from = pool.length ? pool : rest, id = from.splice(Math.floor(r() * from.length), 1)[0]; out.push({ id, name: ACES[(wk + out.length * 3) % ACES.length] }); }
   return out;
 }
 function gauntlet(S, w) {
-  const F = save.adv.flags, A = save.adv, wk = gauntletWeek(), foes = gauntletFoes(wk, A.hero), who = 'Keeper Orla';
+  const F = save.adv.flags, A = save.adv, wk = gauntletWeek(), foes = gauntletFoes(wk, A.hero), th = gauntletTheme(wk), who = 'Keeper Orla';
   const n = foes.findIndex((_, i) => !F[`gaunt_${wk}_${i}`]);
   if (n < 0) {
     if (!F['gauntpay_' + wk]) { // paid out once per week, the first time you talk after the fifth win
@@ -684,7 +691,7 @@ function gauntlet(S, w) {
   }
   const f = foes[n], lv = Math.min(50, save.critters[A.hero].level + 1 + n), def = byId(f.id);
   w.say([
-    ...(n === 0 ? [`${who}: Hoo-hoo! Welcome to the Peak Gauntlet, Champion. Five Ace trainers, one after another. A new five every week.`, `${who}: This week's Aces bring ${foes.map((q) => byId(q.id).name).slice(0, 4).join(', ')} and ${byId(foes[4].id).name}. Win them all this week and the mountain rewards you. Lose, and you simply try that one again.`] : []),
+    ...(n === 0 ? [`${who}: Hoo-hoo! Welcome to the Peak Gauntlet, Champion. Five Ace trainers, one after another. A new five every week.`, `${who}: This is ${TYPES[th[0]].name} & ${TYPES[th[1]].name} week! The Aces bring ${foes.map((q) => byId(q.id).name).slice(0, 4).join(', ')} and ${byId(foes[4].id).name}. Win them all this week and the mountain rewards you. Lose, and you simply try that one again.`] : []),
     `${who}: Battle ${n + 1} of 5: ${f.name} and ${def.name}, Lv ${lv}. Ready?`,
   ], () => S.worldFight({
     foe: withGear(def, lv), lv, kind: 'story', flag: `gaunt_${wk}_${n}`, name: f.name, diff: Math.min(0.92, 0.74 + n * 0.04), berries: 2,
