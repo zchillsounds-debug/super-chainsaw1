@@ -1228,14 +1228,18 @@ export class World {
     this.busy = true; sfx.shimmer?.(3);
     const el = stargaze(this.g.ui, C, hash(day), () => {
       this.g.modalClose = null; this.busy = false;
+      const star = this.caughtStar ? ['{hero} caught a shooting star! It turned into a berry. +1 🍓'] : []; this.caughtStar = false;
       const seen = (A.consts ||= []), fresh = !seen.includes(C.id);
       if (fresh) seen.push(C.id);
       if (A.stars !== day) {
         A.stars = day; countUp('stars'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
-        return this.say([`{hero} spotted ${C.name}!${fresh ? ' A new one for the star log! ✨' : ''}`, `Counting stars is surprisingly tiring. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, `Star log: ${seen.length} of 8 constellations. A different one rises each night.`]);
+        return this.say([...star, `{hero} spotted ${C.name}!${fresh ? ' A new one for the star log! ✨' : ''}`, `Counting stars is surprisingly tiring. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, `Star log: ${seen.length} of 8 constellations. A different one rises each night.`]);
       }
       persist();
-      return this.say([`${C.name} twinkles away. Another constellation will rise tomorrow night. (Star log: ${seen.length} of 8)`]);
+      return this.say([...star, `${C.name} twinkles away. Another constellation will rise tomorrow night. (Star log: ${seen.length} of 8)`]);
+    }, () => { // a shooting star caught in the eyepiece: one berry a night
+      if (A.shoot === day) return;
+      A.shoot = day; save.berries = (save.berries || 0) + 1; persist(); this.caughtStar = true;
     });
     this.g.modalClose = () => el.__stars.close();
   }

@@ -34,20 +34,20 @@ export function tonightConst(day, hash) { return CONSTELLATIONS[hash(day + ':sta
 const W = 320, H = 200;
 
 // opens the eyepiece view; onDone() runs when it's closed (tap anywhere once the constellation is traced)
-export function stargaze(root, C, seed, onDone) {
+export function stargaze(root, C, seed, onDone, onCatch) {
   const el = document.createElement('div');
   el.className = 'modal-wrap stars-wrap';
-  el.innerHTML = `<div class="stars"><canvas width="${W * 2}" height="${H * 2}"></canvas><div class="st-name">${C.name}</div><p class="st-tip">${C.tip}</p><p class="st-tap">Tap to look away</p></div>`;
+  el.innerHTML = `<div class="stars"><p class="st-hint">Tap a 🌠 shooting star to catch it!</p><canvas width="${W * 2}" height="${H * 2}"></canvas><div class="st-name">${C.name}</div><p class="st-tip">${C.tip}</p><p class="st-tap">Tap to look away</p><b class="st-catch">🌠 Caught a shooting star!</b></div>`;
   root.appendChild(el);
   const cv = el.querySelector('canvas'), c = cv.getContext('2d');
   c.scale(2, 2);
   let s = seed >>> 0; const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
   const field = Array.from({ length: 140 }, () => ({ x: rnd() * W, y: rnd() * H, r: 0.3 + rnd() * 1.1, p: rnd() * 6.28, sp: 1 + rnd() * 3 }));
   const pts = C.s.map(([x, y]) => [x * W * 0.9 + W * 0.05, y * H * 0.9 + H * 0.05]);
-  let t = 0, last = performance.now(), raf = 0, shoot = null, closed = false, chimed = 0;
+  let t = 0, last = performance.now(), raf = 0, shoot = null, closed = false, chimed = 0, caught = false;
   const step = (dt) => {
     t += dt;
-    if (!shoot && rnd() < dt * 0.25) shoot = { x: rnd() * W * 0.7 + W * 0.3, y: rnd() * H * 0.3, t: 0 };
+    if (!shoot && rnd() < dt * 0.4) shoot = { x: rnd() * W * 0.7 + W * 0.3, y: rnd() * H * 0.3, t: 0 };
     if (shoot && (shoot.t += dt) > 0.9) shoot = null;
     const g = c.createRadialGradient(W / 2, H * 1.2, 20, W / 2, H * 0.6, W * 0.8);
     g.addColorStop(0, '#2a3a7a'); g.addColorStop(0.6, '#141c48'); g.addColorStop(1, '#070a22');
@@ -74,7 +74,11 @@ export function stargaze(root, C, seed, onDone) {
   const loop = (now) => { const dt = Math.min(0.05, (now - last) / 1000); last = now; step(dt); raf = requestAnimationFrame(loop); };
   raf = requestAnimationFrame(loop);
   const close = () => { if (closed) return; closed = true; cancelAnimationFrame(raf); el.remove(); onDone?.(); };
-  el.addEventListener('pointerdown', (e) => { e.preventDefault(); if (el.classList.contains('done')) close(); });
-  el.__stars = { step, close };
+  el.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (shoot && !caught && shoot.t < 0.75) { caught = true; shoot.t = 0.9; el.classList.add('caught'); sfx.jingle?.(2); onCatch?.(); return; } // tap a shooting star as it streaks past
+    if (el.classList.contains('done')) close();
+  });
+  el.__stars = { step, close, get shoot() { return shoot; }, set shoot(v) { shoot = v; } };
   return el;
 }
