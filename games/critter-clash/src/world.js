@@ -115,6 +115,13 @@ function brolly(cr, col) {
   return U;
 }
 
+// townsfolk, wild critters and the buddy only cast the shadow of their two biggest parts (body and head): from the high camera
+// it looks the same, and it saves ~20 shadow-pass draw calls per critter (the hero keeps every part)
+function castLite(cr) {
+  const ms = []; cr.root.traverse((o) => { if (o.isMesh && o.castShadow && !o.userData.hull) { o.geometry.boundingSphere || o.geometry.computeBoundingSphere(); const sc = o.scale; ms.push([o.geometry.boundingSphere.radius * Math.max(sc.x, sc.y, sc.z), o]); } });
+  ms.sort((a, b) => b[0] - a[0]).slice(2).forEach(([, o]) => { o.castShadow = false; });
+}
+
 export class World {
   constructor(screens) {
     this.S = screens;
@@ -1060,7 +1067,7 @@ export class World {
     if (!id) { this.follower = null; return; }
     const pip = !!save.adv.follow, def = byId(id);
     const cr = new Critter(withGear(pip ? def : skinned(def, save.skins?.[id]), pip ? 2 : save.critters[id]?.level || 1));
-    cr.root.userData.critter = true;
+    cr.root.userData.critter = true; castLite(cr);
     cr.root.scale.setScalar(CS * (pip ? 0.7 : 0.85));
     this.group.add(cr.root);
     // start on a free tile behind the hero
@@ -1969,6 +1976,7 @@ export class World {
         root = cr.root;
         root.scale.setScalar(CS * (n.scale || 1));
         roleHat(cr, n.name || '');
+        castLite(cr);
         if (this.rain && n.act !== 'fish' && n.act !== 'sleep') brolly(cr, [0xff5a8a, 0x5ab8ff, 0xffd84d, 0x8a6aff][(n.x + n.y) % 4]); // a brolly up in the rain
       }
       root.userData.critter = true;
@@ -1995,7 +2003,7 @@ export class World {
     const [id, lo, hi] = this.M.wild.list[Math.floor(Math.random() * this.M.wild.list.length)];
     const lv = lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = Math.random() < SHINY_RATE;
     const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv));
-    cr.root.userData.critter = true;
+    cr.root.userData.critter = true; castLite(cr);
     cr.root.scale.setScalar(CS * 0.9);
     this.group.add(cr.root);
     const a = { id, lv, cr, root: cr.root, x, y, dir: 's', moveT: 0, from: null, wanderT: 0.5 + Math.random() * 2, wild: true, shiny };
