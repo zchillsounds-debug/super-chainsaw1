@@ -145,6 +145,7 @@ export class World {
     if (H.shopHat) { H.skull.remove(H.shopHat); H.shopHat = null; }
     H.shopHat = save.adv.hat ? shopHat(H, save.adv.hat) : null;
     if (H.gearCrown) H.gearCrown.visible = !H.shopHat;
+    this.spinner = H.shopHat?.getObjectByName('spin') || null; // the Propeller Cap's spinner turns as you walk
   }
 
   // swap the walking buddy without reloading the map
@@ -1846,6 +1847,7 @@ export class World {
     if (this.bush?.shake > 0) { const B = this.bush; B.shake -= dt; B.g.rotation.z = Math.sin(B.shake * 40) * B.shake * 0.18; B.g.scale.y = 1 + Math.sin(B.shake * 30) * B.shake * 0.08; }
     for (let k = 0; k < (this.pennants?.length || 0); k++) this.pennants[k].rotation.y = Math.sin(this.t * 3.1 + k * 1.7) * 0.35; // stadium pennants flap in the breeze
     for (const m of this.medals || []) m.rotation.y = this.t * 1.6;
+    if (this.spinner) this.spinner.rotation.y += dt * (this.moveT > 0 ? 18 : 3);
     this.ambience(dt);
     this.updateFireworks(dt);
     for (const a of this.npcs || []) if (a.mark) a.mark.position.set(a.root.position.x, a.root.position.y + 2.7 + Math.sin(this.t * 4) * 0.12, a.root.position.z);
