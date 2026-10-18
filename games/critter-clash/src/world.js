@@ -318,6 +318,7 @@ export class World {
     this.buildIceLanterns();
     this.buildBottle();
     this.buildScope();
+    this.buildBloomFw();
     this.buildJellies(rand);
     this.buildSkyLanterns();
     this.buildThanks();
@@ -364,7 +365,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1172,6 +1173,31 @@ export class World {
     const glow = new THREE.Sprite(sm); glow.scale.setScalar(2.6); glow.position.set(-TILE * 1.0, 0.4, -0.2); g.add(glow);
     bakeStatic({ root: g, mats: {}, glow });
     this.scope = { x, y, glow };
+  }
+
+  // Bloom Town on weekend nights (Fri-Sun): fireworks pop over the rooftops every few seconds (just north of the hero, so the high camera sees them)
+  buildBloomFw() {
+    this.bloomFw = null;
+    if (this.key !== 'bloom' || this.phase !== 'night' || ![0, 5, 6].includes(new Date().getDay())) return;
+    const b = (this.M.buildings || []).find((q) => q.stadium); if (!b) return;
+    const [px, pz] = wpos(b.x + b.w / 2 - 0.5, b.y + 0.5);
+    this.bloomFw = { px, pz, t: 0.5, rockets: [] };
+  }
+
+  updateBloomFw(dt) {
+    const F = this.bloomFw, fx = this.g.fx;
+    if ((F.t -= dt) < 0) { F.t = 1.6 + Math.random() * 2.2; const h = this.hero.root.position; F.rockets.push({ x: h.x + (Math.random() - 0.5) * 14, z: h.z - 1 - Math.random() * 4, y: 0.5, top: 3.5 + Math.random() * 2, col: [0xff5a8a, 0xffd84d, 0x5ae8ff, 0x8aff9a, 0xc08aff, 0xff9a40][Math.floor(Math.random() * 6)] }); }
+    for (const r of F.rockets) {
+      r.y += dt * 9; fx.spawn({ x: r.x, y: r.y, z: r.z, vy: -1, color: 0xffe0a0, size: 0.18, life: 0.35, shape: 'glow' });
+      if (r.y >= r.top) { // pop!
+        r.done = true; const p = { x: r.x, y: r.y, z: r.z };
+        fx.burst(p, { n: 36, speed: 6.5, up: 0.5, color: r.col, size: 0.55, life: 1.2, shape: 'glow', grav: 2.5, drag: 1.6, spread: 1.6, grow: -0.6 });
+        fx.spawn({ ...p, color: r.col, size: 4.5, life: 0.3, shape: 'glow', alpha: 0.5, grow: 0.5 });
+        fx.burst(p, { n: 10, speed: 3, up: 0.5, color: 0xffffff, size: 0.22, life: 0.8, shape: 'star', grav: 2, drag: 2, spread: 1.4 });
+        const d = Math.hypot(r.x - this.hero.root.position.x, r.z - this.hero.root.position.z); if (d < 24 && !this.busy) sfx.firework?.();
+      }
+    }
+    F.rockets = F.rockets.filter((r) => !r.done);
   }
 
   // look through the telescope: tonight's constellation traces itself; the first look of a night is worth a little XP
@@ -2653,6 +2679,7 @@ export class World {
       D.discs.forEach((d, k) => { d.rotation.y += dt * (k ? 3.2 : 4); }); D.glow.material.color.copy(D.cols[beat % D.cols.length]); D.glow.material.opacity = 0.3 + (beat % 2) * 0.12;
     }
     if (this.twirlT > 0) this.twirlT -= dt;
+    if (this.bloomFw) this.updateBloomFw(dt);
     if (this.sliding && save.adv.skates && Math.random() < dt * 30) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.5, y: 0.15, z: p.z + (Math.random() - 0.5) * 0.5, vy: 0.6 + Math.random(), vx: (Math.random() - 0.5), vz: (Math.random() - 0.5), color: Math.random() < 0.5 ? 0xffffff : 0x9ae0ff, size: 0.16, life: 0.6, shape: Math.random() < 0.4 ? 'star' : 'glow' }); } // skates kick up ice sparkles
     if (this.danceT > 0) { this.danceT -= dt; if (Math.random() < dt * 8) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 1.6 + Math.random(), z: p.z, vy: 1.2, color: this.dance?.cols[Math.floor(Math.random() * 5)].getHex() ?? 0xff5ad8, size: 0.2, life: 0.9, shape: Math.random() < 0.5 ? 'star' : 'glow' }); } }
     if (this.skyLanterns) for (const L of this.skyLanterns) { // each lantern rises for 14 s from a random spot near the hero, then starts again
