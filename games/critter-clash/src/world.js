@@ -45,7 +45,7 @@ const markMat = (k) => MARKS[k] ||= new THREE.SpriteMaterial({ depthTest: false,
   c.fillStyle = '#2a1630'; c.font = 'bold 34px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(k, 32, 32);
 }) });
 // where each side quest's lost thing turns up: a solid tile (tree, rock, palm) you face from next door
-const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 } };
+const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 } };
 
 const STEP = 0.23; // seconds per tile
 const SHINY_RATE = 1 / 30; // a rare shiny wild critter: beat it to unlock its shiny palette
@@ -1042,6 +1042,15 @@ export class World {
         const lid = inked(new THREE.SphereGeometry(0.32, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xffd8e4), OL * 0.3); lid.scale.y = 0.4; lid.position.set(0, 0.14, -0.22); lid.rotation.x = -1.1; g.add(lid);
         const pe = new THREE.Mesh(new THREE.SphereGeometry(0.12, 14, 10), toon(0xfffaf0, { rim: 1 })); pe.position.set(0, 0.2, 0.02); g.add(pe);
         g.position.set(px - 0.3, 0.02, pz + 0.75); g.scale.setScalar(1.6);
+      }
+      else if (id === 'carrot') { // a snowman's carrot nose, dropped on a rock (with a nibble out of it)
+        const c = inked(new THREE.ConeGeometry(0.13, 0.7, 10), toon(0xff8a2a), OL * 0.3); c.rotation.z = Math.PI / 2; g.add(c);
+        for (let k = 0; k < 3; k++) { const l = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.3, 5), toon(0x4cba4a)); l.position.set(0.38, 0.05, (k - 1) * 0.07); l.rotation.z = -Math.PI / 2 + (k - 1) * 0.4; g.add(l); }
+        g.position.set(px, 0.95, pz + 0.3); g.rotation.y = 0.5;
+      } else if (id === 'binos') { // binoculars hanging by their strap from a low branch
+        for (const sd of [-1, 1]) { const b = inked(new THREE.CylinderGeometry(0.12, 0.14, 0.42, 12), toon(0xffb03a), OL * 0.3); b.position.x = sd * 0.15; g.add(b); const ln = new THREE.Mesh(new THREE.CircleGeometry(0.1, 12), toon(0x9ad8ff, { rim: 1 })); ln.rotation.x = Math.PI / 2; ln.position.set(sd * 0.15, -0.22, 0); g.add(ln); }
+        const strap = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.02, 4, 16, Math.PI), toon(0xc8743a)); strap.position.y = 0.2; g.add(strap);
+        g.position.set(px + 0.8, 1.15, pz + 1.25); g.rotation.set(0.4, 0, 0.15); g.scale.setScalar(1.3);
       }
       this.group.add(g);
       this.lost.push({ id, x: Q.x, y: Q.y, g });
