@@ -26,6 +26,13 @@ const RAIN = {
   evening: { sun: 0xd0a898, sunI: 0.9, sky: 0xb0a4b8, gnd: 0x3a3a48, hemiI: 0.85, fog: 0x8a8898 },
 };
 const LIT = new THREE.MeshBasicMaterial({ color: 0xffd870 }); // a lamp-lit window at night
+let PANEL = null; // solar panel cells on the lab roof (shared, never disposed)
+const panelTex = () => PANEL ||= canvasTex(64, 64, (c) => {
+  c.fillStyle = '#1f3a78'; c.fillRect(0, 0, 64, 64);
+  c.strokeStyle = '#7fa6ff'; c.lineWidth = 2;
+  for (let k = 0; k <= 64; k += 16) { c.beginPath(); c.moveTo(k, 0); c.lineTo(k, 64); c.stroke(); c.beginPath(); c.moveTo(0, k); c.lineTo(64, k); c.stroke(); }
+  c.fillStyle = 'rgba(255,255,255,0.25)'; c.beginPath(); c.moveTo(0, 0); c.lineTo(22, 0); c.lineTo(0, 22); c.fill();
+});
 
 const STEP = 0.23; // seconds per tile
 const SHINY_RATE = 1 / 30; // a rare shiny wild critter: beat it to unlock its shiny palette
@@ -626,7 +633,7 @@ export class World {
   }
 
   buildBuildings() {
-    this.doors = []; this.chimneys = [];
+    this.doors = []; this.chimneys = []; this.labDish = this.beacon = null;
     for (const b of this.M.buildings || []) {
       const x0 = b.x * TILE, z0 = b.y * TILE, w = b.w * TILE, d = b.h * TILE;
       const G = new THREE.Group();
@@ -643,7 +650,37 @@ export class World {
           const roof = inked(new THREE.BoxGeometry(w - 0.1, 0.35, d - 0.2), toon(b.roof), OL);
           roof.position.y = wallH + 0.17; G.add(roof);
           const dish = inked(new THREE.SphereGeometry(0.6, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xd0d8e8), OL * 0.6);
-          dish.rotation.x = -0.6; dish.position.set(w * 0.25, wallH + 0.7, 0); G.add(dish);
+          // the dish sits on a turning mount; a parapet, solar panels, a glass skylight and a blinking aerial make the flat roof read as a lab
+          const mount = new THREE.Group(); mount.position.set(w * 0.28, wallH + 0.35, -d * 0.12); G.add(mount);
+          const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 0.5, 8), toon(0x9aa4b4)); pole.position.y = 0.25; mount.add(pole);
+          dish.rotation.x = -0.6; dish.position.set(0, 0.6, 0); mount.add(dish);
+          this.labDish = mount;
+          const rim = [], pw = w - 0.1, pd = d - 0.2;
+          for (const [sx, sz, gx, gz] of [[pw, 0.14, 0, pd / 2 - 0.07], [pw, 0.14, 0, -pd / 2 + 0.07], [0.14, pd, pw / 2 - 0.07, 0], [0.14, pd, -pw / 2 + 0.07, 0]]) {
+            const g = new THREE.BoxGeometry(sx, 0.22, sz); g.translate(gx, wallH + 0.45, gz); rim.push(g);
+          }
+          G.add(inked(mergeGeometries(rim), toon(0xc8d2de), OL * 0.6)); rim.forEach((g) => g.dispose());
+          const pm = toon(0xffffff, { map: panelTex(), rim: 0.6 });
+          for (const k of [-1, 0]) {
+            const panel = inked(new THREE.BoxGeometry(1.5, 0.08, 1.0), pm, OL * 0.5);
+            panel.rotation.x = 0.35; panel.position.set(-w * 0.22 + k * 1.75, wallH + 0.62, d * 0.12); G.add(panel);
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.3, 0.08), toon(0x8a94a4)); leg.position.set(panel.position.x, wallH + 0.45, d * 0.12 - 0.35); G.add(leg);
+          }
+          const sky = inked(new THREE.SphereGeometry(0.55, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(0x9ad8ff, { rim: 1 }), OL * 0.5);
+          sky.scale.set(1.3, 0.6, 1); sky.position.set(w * 0.05, wallH + 0.34, d * 0.18); G.add(sky);
+          const aer = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 1.6, 6), toon(0x9aa4b4)); aer.position.set(w * 0.4, wallH + 1.15, d * 0.25); G.add(aer);
+          const bm = new THREE.MeshBasicMaterial({ color: 0xff4040 }); bm.userData.own = true;
+          const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), bm); bulb.position.set(w * 0.4, wallH + 1.98, d * 0.25); G.add(bulb);
+          this.beacon = bulb;
+          // a name board over the door
+          const ltex = canvasTex(256, 48, (c) => {
+            c.fillStyle = '#2a4a7a'; c.beginPath(); c.roundRect(2, 2, 252, 44, 10); c.fill();
+            c.fillStyle = '#ffffff'; c.font = 'bold 30px Lilita One, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText((b.label || 'LAB').toUpperCase(), 128, 26);
+          });
+          ltex.userData.own = true;
+          const lm = new THREE.MeshBasicMaterial({ map: ltex, transparent: true }); lm.userData.own = true;
+          const plate = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.48), lm);
+          plate.position.set((b.door + 0.5) * TILE - w / 2, wallH - 0.32, d / 2 - 0.17); G.add(plate);
         } else {
           // gable roof: a triangle extruded along the house
           const sh = new THREE.Shape(); sh.moveTo(-d / 2 - 0.15, 0); sh.lineTo(0, 1.5); sh.lineTo(d / 2 + 0.15, 0); sh.closePath();
@@ -1176,6 +1213,8 @@ export class World {
       if (c.forge && Math.random() < 0.5) this.g.fx.spawn({ x: c.x, y: c.y, z: c.z, vy: 1.6, vx: (Math.random() - 0.5) * 0.6, color: 0xffa030, size: 0.16, life: 0.9, shape: 'glow' });
     }
     for (const [px, pz] of this.vents || []) if (Math.random() < dt * 3) this.g.fx.spawn({ x: px, y: 0.8, z: pz, vy: 1.4, vx: 0.2, color: 0xd8d0d0, alpha: 0.5, size: 0.7, life: 1.8, shape: 'puff', additive: false, grow: 1.2 });
+    if (this.labDish) this.labDish.rotation.y = Math.sin(this.t * 0.4) * 1.2;
+    if (this.beacon) this.beacon.material.color.setHex(this.t % 1.6 < 0.25 ? 0xff5050 : 0x5a1818);
     if (this.crown) {
       this.crown.rotation.y += dt * 1.2; this.crown.position.y = 2.6 + Math.sin(this.t * 2) * 0.12;
       if (Math.random() < dt * 5) { const p = new THREE.Vector3(); this.crown.getWorldPosition(p); this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.4, y: p.y + Math.random(), z: p.z + (Math.random() - 0.5) * 1.4, vy: 0.6, color: 0xffe070, size: 0.3, life: 1, shape: 'star' }); }
