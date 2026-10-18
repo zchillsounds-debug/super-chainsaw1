@@ -278,7 +278,7 @@ export class World {
   // ---------- map building ----------
   load(key, x, y, dir = 's') {
     const wet = this.rain && !this.M?.indoor; // came in out of the rain: shake off once inside
-    this.unload();
+    this.unload(); this.soaking = false;
     this.g.fx.clear?.(); // last map's smoke, rain and sparkles don't follow you indoors
     const M = this.M = getMap(key) || getMap('village');
     if (M !== getMap(key)) { key = 'village'; x = 4; y = 6; }
@@ -1262,11 +1262,12 @@ export class World {
   soak() {
     const day = new Date().toISOString().slice(0, 10), A = save.adv, S = this.spring;
     sfx.water?.(); this.g.fx.burst({ x: S.px, y: 0.4, z: S.pz }, { n: 18, speed: 1.2, up: 2.2, color: 0xffffff, size: 0.9, life: 1.6, shape: 'glow', alpha: 0.5, grow: 1.2, drag: 1.2 });
+    this.soaking = true; const out = () => { this.soaking = false; this.placeHero(); }; // the hero sits in the pool until the talk ends
     if (A.soak !== day) {
       A.soak = day; countUp('soak'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.2)); persist(); sfx.jingle?.(1);
-      return this.say([this.phase === 'day' ? '{hero} slips into the hot spring. Ahhh... toasty all the way to the tail.' : '{hero} soaks in the glowing spring under the stars. The volcano rumbles a lullaby.', `${['Pengsicle fans {hero} with a flipper. Very kind.', 'Steam curls up like little critters. Was that one waving?', 'All the aches from battle melt right away.'][Math.floor(Math.random() * 3)]} ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, 'A soak a day keeps the grumpies away. Come back tomorrow!']);
+      return this.say([this.phase === 'day' ? '{hero} slips into the hot spring. Ahhh... toasty all the way to the tail.' : '{hero} soaks in the glowing spring under the stars. The volcano rumbles a lullaby.', `${['Pengsicle fans {hero} with a flipper. Very kind.', 'Steam curls up like little critters. Was that one waving?', 'All the aches from battle melt right away.'][Math.floor(Math.random() * 3)]} ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, 'A soak a day keeps the grumpies away. Come back tomorrow!'], out);
     }
-    return this.say(['{hero} dips a toe in. Still lovely! (One good long soak a day.)']);
+    return this.say(['{hero} dips a toe in... then hops all the way in. Still lovely! (One good long soak a day.)'], out);
   }
 
   // Cloudtop Gardens: a tiered wishing fountain in the middle of the lawn, with a little rainbow in its spray (toss in a berry and make a wish, once a day)
@@ -2720,6 +2721,7 @@ export class World {
       idlePose(P, this.t);
       if (this.twirlT > 0) { P.yaw = (1 - this.twirlT / 0.9) * Math.PI * 4; P.armLz = P.armRz = 1.4; P.legL = -0.4; H.emote('happy', 'grin', 0.1); }
       if (this.danceT > 0) { const b = Math.abs(Math.sin(this.t * 7)); P.y = b * 0.22; P.roll = Math.sin(this.t * 3.5) * 0.22; P.yaw = Math.sin(this.t * 1.8) * 0.7; P.armLz = 1.3 + Math.sin(this.t * 7) * 0.6; P.armRz = 1.3 - Math.sin(this.t * 7) * 0.6; P.legL = Math.sin(this.t * 7) * 0.5; P.legR = -P.legL; H.emote('happy', 'grin', 0.1); }
+      if (this.soaking && this.spring) { const S = this.spring; H.root.position.set(S.px, -0.22, S.pz + 0.3); H.root.rotation.y = YAW.s; P.armLz = P.armRz = 0.9; P.y = Math.sin(this.t * 1.5) * 0.03; H.emote('closed', 'grin', 0.1); }
       if (this.fishing) { P.armLx = P.armRx = -1.1 + Math.sin(this.t * 0.8) * 0.06; P.armLz = P.armRz = 0.2; if (this.fishing.phase === 'bite') { P.lean = 0.2; H.emote('happy', 'open', 0.1); } }
       // left alone, the hero gets bored: looks around, stretches, yawns, then dozes off
       const idle = this.dialog || this.busy ? 0 : (this.idleT = (this.idleT || 0) + dt);
