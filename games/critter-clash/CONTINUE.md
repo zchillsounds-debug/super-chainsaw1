@@ -21,6 +21,7 @@ The full, detailed handoff lives in the repo at `games/critter-clash/HANDOFF.md`
 - Final checks for the session passed: tapcheck was clean at 740×360 and 412×915, the Sprout Cup played from the world and landed back there, and the wild-fight wins ran without errors.
 
 ## Latest (2026-10-18)
+- Session 16i (R339–R358) added: Grandpa's cottage and Flo's room, a home trophy shelf, a lab growth chamber, themed Berry Centers, Frostpeak ice-gem digs, 4 deliveries between towns (new hats Seedling Sprout, Cocoa Bobble, Sleepy Nightcap), Flo's lost firefly, snowy/cloud evenings and nights with an aurora and shooting stars, street lamps, stadium floodlights, moonlit night grass/trees/water and owl hoots.
 - Sessions 16f–16h (R280–R338) added: Hat Shop, Trader Tock, fishing + fish album, stadium lobbies (and a champion lobby after a win), berry bushes, beach digs, 8 townsfolk favours with a 📔 Journal and Town Map marks, a picture hat picker, new rooms (forge, lodge, ship cabin, toadstool houses), weather/night polish. See HANDOFF.md → Session 16f/16g/16h.
 
 ## Two Claude chats share this branch

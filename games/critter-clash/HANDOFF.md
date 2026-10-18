@@ -2,7 +2,7 @@
 
 ## Start here (for a new chat)
 - Short version for a new chat: `games/critter-clash/CONTINUE.md` (what is where, the paste-in prompt, open questions).
-- **Session 16i (2026-10-18, 08:48–~10:45 UTC) did R339+ (see "Session 16i").** Session 16h (2026-10-18, 08:14–~08:50 UTC) did R324–R338 (see "Session 16h"); the next session continues from R339. Session 16g did R305–R323. Session 16f did R280–R304. The user's window, extended by a worker stall, ends at about 10:45 UTC on 2026-10-18.**
+- **Session 16i (2026-10-18, 08:48–~10:45 UTC) did R339–R358 (see "Session 16i"); the next session continues from R359.** Session 16h (2026-10-18, 08:14–~08:50 UTC) did R324–R338 (see "Session 16h"); the next session continues from R339. Session 16g did R305–R323. Session 16f did R280–R304. The user's window, extended by a worker stall, ends at about 10:45 UTC on 2026-10-18.**
 - Session 16e (02:51–~04:40 UTC on 2026-10-15) did R255–R279 and was the LAST session of the user's 5-hour Adventure window (it ended at 04:45 UTC). Nothing was chained after it: wait for the user before building more. Round numbering continues from R280.** Read "Session 16c", "16d" and "16e" below.
 - Ask the user first: how do weather (rain), the clock of day, grass sway and the smoothie blender feel on their phone? Is the win screen right now (R244b/R277)?
 - **CURRENT FOCUS (session 16+): Adventure mode**, a Pokémon Red/Blue style world with a story. Read "Session 16: ADVENTURE MODE" and "Session 16b" first. The user asked for 5 hours of chained sessions, ending at about **04:45 UTC on 2026-10-15**. The whole story (all 7 cups, 5 trials, Champion's Peak, the ending) is now playable; what's left is **polish** (see "Session 16b → next").
@@ -487,7 +487,7 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - **Checks:** every round shot at 915×412 (and 412×915 / 740×360 where UI changed); no page errors. tapcheck/advcup not re-run this session (no battle/flow code touched; main.js `portrait` change is additive).
 - **Next ideas:** more room kinds (Grandpa Woolt's cottage, Firefly Flo's house), a favour for Seashell/Cloudtop that isn't a lost item (a delivery between towns), dig spots on snow (Frostpeak) with ice gems, show favours count on the ☰ card, the hero's hat in fights (battle side, the user's chat), re-measure world FPS on a phone.
 
-## Session 16i (2026-10-18, 08:48–~10:45 UTC, session_015gjFRVdpK7cv9rSxuSLCm1): rooms, deliveries, snowy nights, R339–R354+
+## Session 16i (2026-10-18, 08:48–~10:45 UTC, session_015gjFRVdpK7cv9rSxuSLCm1): rooms, deliveries, snowy nights, R339–R358
 - Chained from 16h with the same plan; the user's window ends at about **10:45 UTC on 2026-10-18**. The local clone started on stale history; it was switched to `origin/ccr-4fc93d6e-suxlhd` (old local kept as branch `backup-old-local`, never pushed).
 - **Checks at start:** tapcheck 740×360 / 412×915 clean (only the expected portrait rotate hint over the in-battle pause menu). advcup Sprout signs up at the desk and lands back in Bloom Town (the tool now waits for the lobby with `waitForFunction` instead of a fixed 2.5 s). advwins route1/frostpeak error-free after R349.
 - **R339:** room kinds `cottage` (Grandpa Woolt: `G` grandfather clock with a swinging pendulum `this.pendulum`, `r` rocking chair, `k` yarn basket, timber beams) and `kidroom` (Firefly Flo: fairy lights on the back wall, `j` firefly jar (`this.jars` fx + floor glow), `t` toy chest). New ITEMS texts for G r k j t.
@@ -502,7 +502,11 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - **R350:** `buildLamps()`: street lamps on tile corners along straight path edges in towns with a Berry Center (not Neon), up to 6, lit with glow sprite + floor pool from dusk.
 - **R351:** favour `blink` (Firefly Flo, indoor giver: interior npc 7th field `lost:blink`; LOST fields `giverMap`, `critter` let the Journal/Town Map find indoor givers); Blink glows on the Route 2 rock at 12,10.
 - **R352–R354:** night polish on grassy maps: moonlit blue-green ground and tree canopies, gulls roost, deeper night water with star glints.
-- **Next ideas:** rocking chair/hammock animation, more deliveries (Neon ↔ Cloudtop), lava gems in Cinder Town, an owl hoot ambience at night, the hero's hat in fights (battle side, the user's chat), re-measure world FPS on a phone (lamps, aurora and new rooms add a few draw calls).
+- **R355:** `sfx.ambient('owl')` on quiet nights (the `this.amb` timer object needs a starting value for every kind, or the NaN timer never fires).
+- **R356/R357:** delivery `lamp` (Mushroom Fan Fen, Glowcap → Picnicker Puff, Cloudtop; Sleepy Nightcap, new hat kind `nightcap`); `World.buildThanks()` puts Puff's glowing pink glowcap by the blanket afterwards.
+- **R358:** `World.stadiumLights()`: four floodlight masts and a glowing pitch after dusk.
+- Chained to the next session at ~250k context (R359+), with about an hour left of the window.
+- **Next ideas:** rocking chair/hammock animation, more deliveries (Neon City has none yet), lava gems in Cinder Town, an owl hoot ambience at night, the hero's hat in fights (battle side, the user's chat), re-measure world FPS on a phone (lamps, aurora and new rooms add a few draw calls).
 
 ## Session 15 (2026-10-14, 21:42–~22:20 UTC)
 - **Note for new sessions:** the cloud clone can be shallow and look "ahead 50, behind 50". Run `git fetch --unshallow origin ccr-4fc93d6e-suxlhd` and then `git merge --ff-only origin/ccr-4fc93d6e-suxlhd` before working.
@@ -783,6 +787,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
    - `outcome_branch`: `ccr-4fc93d6e-suxlhd`
    - `title`: "Critter Clash – rounds N+"
    - (Session 16e did not chain: the user's 5-hour window ended at 04:45 UTC on 2026-10-15.)
+   - Session 16i chained to the next session at R359 with the same prompt (end ~10:45 UTC on 2026-10-18).
    - Session 16h chained to the next session at R339 with the same prompt (end ~10:45 UTC on 2026-10-18).
    - Session 16f chain prompt: the user's own prompt (read CONTINUE.md and HANDOFF.md, Session 16–16f; Adventure polish and new content; critique at 915x412, 740x360 and 412x915; commit and push each round to ccr-4fc93d6e-suxlhd, merging origin first; never rebase or force-push; the user's chat owns screens.js results/worldFight, battle.js, arena.js open mode and hud.js; keep world work in world.js, worldmaps.js, interiors.js and story.js), with the next round number, the remaining time and the end time.
    - `prompt` (session 16 chain): "Continue building Critter Clash. Read games/critter-clash/HANDOFF.md fully and follow it. Start with the "Session 16: ADVENTURE MODE", "Session 16b" and "Session 16c" sections. Focus: Adventure mode polish (see Session 16c → Next ideas, and keep critiquing screenshots). Run the critique loop (screenshot, critique, improve) round after round. Commit and push each round to branch ccr-4fc93d6e-suxlhd: merge origin first, and never force-push. Round numbering continues from R<next>. The user asked for 5 hours in total, until about 04:45 UTC on 2026-10-15. Chain to a fresh session about every 2 hours or near 300k context, following the HANDOFF chaining steps (use this same prompt, updating the round number). Send the user the APK at the end of each session. At 04:45 UTC, send the final APK, update HANDOFF.md, and stop with a short summary. The user approved this plan and continuous building, so don't stop to ask questions. Post a one-line status to the user when you start."
