@@ -1053,3 +1053,6 @@ body:has(.wd-box) .wd-a, body:has(.wd-box) .joybase, body:has(.stars-wrap) .wd-a
   .title-menu .row .btn { padding-top: 7px; padding-bottom: 7px; font-size: 14px; }
   .title-foot span { padding: 2px 10px; font-size: 12px; }
 }
+/* portrait: the Critterdex card scrolls under the roster, so fade its bottom edge; toasts drop below the screen header */
+@media (max-aspect-ratio: 1/1) { .dex-info { -webkit-mask-image: linear-gradient(#000 calc(100% - 26px), transparent); mask-image: linear-gradient(#000 calc(100% - 26px), transparent); padding-bottom: 18px; } }
+body.portrait .toast { top: calc(70px + var(--sat)); }
