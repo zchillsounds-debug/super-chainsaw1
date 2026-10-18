@@ -358,6 +358,7 @@ export function storyTalk(S, id, w, a) {
       : ['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.', ...(save.berries > 0 ? ['Nurse Lilypop: Got spare berries? The blender over there makes smoothies that help critters grow!'] : []), ...(save.adv.req?.day !== new Date().toISOString().slice(0, 10) ? ['Nurse Lilypop: Oh, and there are new requests on the cork board by the door. Berries for little jobs!'] : [])], null, id === 'nurse' ? 'Nurse Lilypop' : '');
     return;
   }
+  if (id === 'gauntlet') return gauntlet(S, w);
   if (id === 'dashpost') { // post-game: a daily rematch with Dash at the hero's level, for berries
     const day = new Date().toISOString().slice(0, 10), rid = rivalFor(save.adv.hero), lv = save.critters[save.adv.hero].level + 2;
     if (F['dashday_' + day]) { w.say(['Dash: Okay, okay, you win today. Same time tomorrow, Champ. I\'ll be ready this time!']); return; }
@@ -654,6 +655,40 @@ function trader(w) {
 }
 
 // the Neon City arcade cabinets: a 30-second berry-catching game; the first good score each day pays out in berries
+// post-game: the Peak Gauntlet. Five Ace battles in a row on the summit, a new line-up every week (Monday to Sunday).
+// Each win is saved, so a loss only means trying that battle again. Clearing all five pays 8 berries, and the first clear ever the Golden Laurel.
+const ACES = ['Ace Juno', 'Ace Rocco', 'Ace Tamsin', 'Ace Kenji', 'Ace Willa', 'Ace Ozzie', 'Ace Priya', 'Ace Bram', 'Ace Suki', 'Ace Leif'];
+export function gauntletWeek(now = Date.now()) { return Math.floor((now / 864e5 + 3) / 7); } // weeks start on a Monday
+export function gauntletFoes(wk, hero) {
+  let h = (wk * 2654435761) >>> 0; const r = () => ((h = (h * 1103515245 + 12345) >>> 0) >>> 8) / 16777216;
+  const pool = CRITTERS.filter((c) => c.id !== hero).map((c) => c.id), out = [];
+  while (out.length < 5) { const id = pool.splice(Math.floor(r() * pool.length), 1)[0]; out.push({ id, name: ACES[(wk + out.length * 3) % ACES.length] }); }
+  return out;
+}
+function gauntlet(S, w) {
+  const F = save.adv.flags, A = save.adv, wk = gauntletWeek(), foes = gauntletFoes(wk, A.hero), who = 'Keeper Orla';
+  const n = foes.findIndex((_, i) => !F[`gaunt_${wk}_${i}`]);
+  if (n < 0) {
+    if (!F['gauntpay_' + wk]) { // paid out once per week, the first time you talk after the fifth win
+      F['gauntpay_' + wk] = true; save.berries = (save.berries || 0) + 8;
+      const first = !(A.hats || []).includes('laurel');
+      if (first) (A.hats ||= []).push('laurel');
+      A.gauntWins = (A.gauntWins || 0) + 1; persist(); sfx.jingle(3);
+      return w.say([`${who}: All five Aces, down in one week! You really are the Champion.`, '{hero} got 8 🍓!', ...(first ? ['{hero} got the Golden Laurel! 🏅 (Wear it from the ☰ menu.)'] : []), `${who}: A new line-up climbs the mountain every Monday. See you then!`], null, who);
+    }
+    return w.say([`${who}: This week's Gauntlet is cleared. The next five Aces arrive on Monday!`], null, who);
+  }
+  const f = foes[n], lv = Math.min(50, save.critters[A.hero].level + 1 + n), def = byId(f.id);
+  w.say([
+    ...(n === 0 ? [`${who}: Hoo-hoo! Welcome to the Peak Gauntlet, Champion. Five Ace trainers, one after another. A new five every week.`, `${who}: Win them all this week and the mountain rewards you. Lose, and you simply try that one again.`] : []),
+    `${who}: Battle ${n + 1} of 5: ${f.name} and ${def.name}, Lv ${lv}. Ready?`,
+  ], () => S.worldFight({
+    foe: withGear(def, lv), lv, kind: 'story', flag: `gaunt_${wk}_${n}`, name: f.name, diff: Math.min(0.92, 0.74 + n * 0.04), berries: 2,
+    trainer: { name: f.name, critter: f.id, title: `Gauntlet ${n + 1}/5`, beat: n === 4 ? 'The last Ace falls! Go tell Orla!' : 'Well fought. The next Ace is waiting.', gloat: 'The Gauntlet stands! Come back and try again.' },
+    note: n === 4 ? '🏔️ Peak Gauntlet cleared! Talk to Keeper Orla.' : `🏔️ Gauntlet ${n + 1}/5 won! +2 🍓`,
+  }), who);
+}
+
 // SKY HOP (the right-hand cabinets) keeps its own best score and its own daily prize
 function arcade(S, w, hop) {
   const A = save.adv, day = new Date().toISOString().slice(0, 10), HI = hop ? 'hopHi' : 'arcadeHi', DAY = hop ? 'hopDay' : 'arcadeDay', hi = A[HI] || 0;

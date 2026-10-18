@@ -564,6 +564,7 @@ export const MAPS = {
       { id: 'acenova', x: 6, y: 21, critter: 'emberfly', name: 'Ace Trainer Nova', dir: 'e', trainer: { lv: 19, sight: 3, diff: 0.8, intro: "Ace Trainer Nova: Nobody reaches the Crown without getting past the Aces of the Peak. I've trained in this snow for three winters. Show me you're ready!", beat: 'Ace Trainer Nova: ...You\'re ready. Go. The lake above is the real test.', after: 'Ace Trainer Nova: On the ice, look where you\'ll STOP, not where you\'ll slide. Rocks are your friends.' } },
       { id: 'acebrook', x: 12, y: 20, critter: 'bubbalotl', name: 'Ace Trainer Brook', dir: 'w', trainer: { lv: 20, sight: 3, diff: 0.82, intro: "Ace Trainer Brook: Seven cups, huh? Everyone up here has seven cups. Let's see if yours are real!", beat: 'Ace Trainer Brook: Real. Very real. Ouch.', after: 'Ace Trainer Brook: Heal up in Frostpeak first if you need to. King Snooze does NOT go easy.' } },
       { id: 'dash5', x: 10, y: 6, rival: true, rlv: 20, name: 'Dash', dir: 's', story: 'dash5' },
+      { id: 'orla', x: 4, y: 5, critter: 'hootsy', name: 'Keeper Orla', dir: 'e', story: 'gauntlet', showFlag: 'ending', scale: 1.1 }, // post-game: the weekly Peak Gauntlet
     ],
   },
 };
