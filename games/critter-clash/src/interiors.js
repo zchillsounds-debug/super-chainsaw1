@@ -39,6 +39,16 @@ const ROOMS = {
     'WO....YYY..OW',
     'WWWWWW.WWWWWW',
   ],
+  forge: [
+    'WWWWWWWWWWW',
+    'WFF....CC.W',
+    'W.........W',
+    'W..A......W',
+    'W......DD.W',
+    'W.....YYY.W',
+    'WO....YYYOW',
+    'WWWWW.WWWWW',
+  ],
   shop: [
     'WWWWWWWWWWW',
     'WHHH...HHHW',
@@ -85,7 +95,7 @@ const PEOPLE = {
   'glowcap:shroom1': { npcs: [['snoozlo', 'Snoozy Sal', ['Snoozy Sal: ...zzz... shh. The mushrooms are sleeping. ...zzz...', 'Snoozy Sal: ...if you nap with a critter... you become friends... zzz...'], 'e', 3, 2]], wall: '#e0d0ff', rug: '#8a6aff' },
   'glowcap:shroom2': { npcs: [['squeakwing', 'Auntie Squeak', ['Auntie Squeak: You\'re the one who brought little Pip home! Squeak squeak! The whole family is talking about you.', 'Auntie Squeak: Gust critters blow leaf critters away. Bats know these things.'], 's', 7, 2]], wall: '#d0fff0', rug: '#2fd8b8' },
   'ember:berry4': { visitor: ['kindlekit', 'Ash', ['Ash: The nurse makes her smoothies with ice from Frostpeak. That\'s the only cold thing in Cinder Town!'], 'e', 3, 4] },
-  'ember:forge': { npcs: [['rolladillo', 'Smith Anvil', ['Smith Anvil: CLANG! CLANG! Oh, hello! I make the trophies for the Champion Cup.', 'Smith Anvil: Stone critters shrug off fire. Fire critters melt leaf. Leaf critters crack stone. Simple!'], 's', 6, 2]], wall: '#e8c8a8', rug: '#c8603a' },
+  'ember:forge': { npcs: [['rolladillo', 'Smith Anvil', ['Smith Anvil: CLANG! CLANG! Oh, hello! I make the trophies for the Champion Cup.', 'Smith Anvil: Stone critters shrug off fire. Fire critters melt leaf. Leaf critters crack stone. Simple!', 'Smith Anvil: That furnace never goes out. Smith Ash keeps it fed from the chimney side. HAH!'], 'w', 4, 3]], kind: 'forge', name: 'Forge', floor: { a: '#8a7a74', b: '#84746e' }, wall: '#c8a48a', rug: '#c8603a' },
   'neon:arcade': { npcs: [['jiggawatt', 'Gamer Volt', ['Gamer Volt: High score! ...Oh, you\'re not here to watch? Nobody ever is.', 'Gamer Volt: Pro tip: a super move freezes the whole arena. Use it when your foe is close!'], 's', 6, 2], ['voltferret', 'Pixel', ['Pixel: I\'ve played this cabinet for nine hours. I think I can see in pixels now.'], 'n', 3, 4]], kind: 'arcade', wall: '#3a2a5a', rug: '#ff5ad8', dark: true },
   'neon:berry5': { visitor: ['jiggawatt', 'Night Owl', ['Night Owl: This Berry Center never closes. Neither does the Midnight Stadium!'], 'w', 9, 4], wall: '#e8e0ff' },
   'neon:tower2': { npcs: [['whirlwhisk', 'Sky Lin', ['Sky Lin: From the top of this tower you can see Captain Puff\'s balloon in the east.', 'Sky Lin: Captain Puff only flies critters who\'ve won the Midnight Cup. House rules!'], 's', 5, 2]], wall: '#d0e8ff', rug: '#5ad8ff' },
@@ -101,6 +111,8 @@ const ITEMS = {
   D: 'A table with a bowl of berries on it.',
   O: 'A happy little plant. It looks well watered.',
   H: 'A hat stand.',
+  F: 'The furnace roars. It\'s so hot your whiskers curl!',
+  A: 'A heavy iron anvil, warm to the touch. There\'s a half-finished trophy on it.',
   U: 'A trophy case.',
 };
 
@@ -134,17 +146,18 @@ export function interiorMap(key) {
     if (t === 'C' && kind === 'center' && x === 1) { signs.push({ x, y, text: '', hide: true, act: 'board' }); return; }
     if (t === 'X' && kind === 'lab') text = 'A screen shows a growing critter: small, medium, HUGE.';
     if (t === 'C' && bid === 'home') { signs.push({ x, y, text: '', hide: true, act: 'wardrobe' }); return; }
+    if (t === 'C' && kind === 'forge') text = 'Racks of tongs and hammers. One hammer is labelled "NOT FOR CRITTERS".';
     if (t === 'C' && kind === 'shop') text = 'Hat boxes, stacked to the ceiling. One is labelled "EXTRA FLOPPY".';
     if (t === 'U') { const n = [...row].slice(0, x).filter((c) => c === 'U').length; signs.push({ x, y, text, hide: true, act: 'case:' + CUP_ORDER[n] }); return; }
     signs.push({ x, y, text, hide: true, act: t === 'Q' && bid === 'home' ? 'rest' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
   }));
   return {
     cup: b.stadium,
-    name: b.label || (b.id === 'home' ? 'Home' : 'House'),
+    name: b.label || P.name || (b.id === 'home' ? 'Home' : 'House'),
     indoor: kind, tiles, npcs, signs, music: O.music,
     exit: { map: outer, x: b.x + b.door, y: b.y + b.h, dir: 's' },
     enter: { x: door, y: H - 2 },
-    palette: P.dark ? { a: '#4a3a6a', b: '#46365f' } : { a: '#d8a86a', b: '#d2a264' },
+    palette: P.dark ? { a: '#4a3a6a', b: '#46365f' } : P.floor || { a: '#d8a86a', b: '#d2a264' },
     wall: P.wall || (b.stadium ? '#f4ecff' : b.heal ? '#ffe0ec' : '#fff1d8'), rug: P.rug || (b.stadium ? CUPS.find((c) => c.id === b.stadium).color : b.heal ? '#ff7aa8' : '#7aa8ff'),
     outer: 0x3a2a2a, // a warm dusk around the room, not a black void
     mood: P.dark ? { sun: 0xd0b0ff, sunI: 1.1, sky: 0xb09aff, gnd: 0x3a2a4a, hemiI: 1.2, fog: 0x1a1410 } : { sun: 0xfff0d8, sunI: 1.3, sky: 0xfff4e0, gnd: 0x8a6a4a, hemiI: 1.25, fog: 0x1a1410 },

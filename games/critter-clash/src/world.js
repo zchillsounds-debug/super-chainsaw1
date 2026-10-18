@@ -183,7 +183,7 @@ export class World {
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
-      if ('TP~#RhmvlWCXQDOKHUuc'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
+      if ('TP~#RhmvlWCXQDOKHUucFA'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
     }
     for (const s of M.signs || []) this.solid.add(s.x + ',' + s.y);
     this.buildGround(rand);
@@ -238,7 +238,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1353,6 +1353,13 @@ export class World {
         box('pin', 0.08, 0.2, 0.1, px - 0.08, 1.4, pz + 0.14); box('pin', 0.08, 0.2, 0.1, px + 0.08, 1.4, pz + 0.14);
         continue;
       }
+      if (t === 'C' && this.M.indoor === 'forge') { // a pegboard of hammers and tongs
+        box('wood', 1.8, 2.3, 0.2, px, 1.3, pz - 0.75);
+        for (let k = 0; k < 3; k++) { box('iron', 0.1, 0.8, 0.08, px - 0.55 + k * 0.55, 1.75, pz - 0.6); box('iron', 0.42, 0.2, 0.14, px - 0.55 + k * 0.55, 2.15, pz - 0.58); }
+        for (let k = 0; k < 2; k++) { box('iron', 0.06, 0.9, 0.06, px - 0.35 + k * 0.6, 0.85, pz - 0.6); box('iron', 0.06, 0.9, 0.06, px - 0.25 + k * 0.6, 0.85, pz - 0.6); }
+        box('coal', 1.4, 0.4, 0.7, px, 0.2, pz - 0.2);
+        continue;
+      }
       if (t === 'C') { // shelf with coloured book spines
         box('wood', 1.8, 2.5, 0.9, px, 1.25, pz - 0.4);
         for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) box('book' + ((x + r + k) % 3), 0.32, 0.55, 0.2, px - 0.6 + k * 0.4, 0.55 + r * 0.75, pz + 0.08);
@@ -1408,11 +1415,23 @@ export class World {
         hatModel({ def: { body: { headR: 0.62 } }, skull: sk }, h.kind, h.col, h.band);
       }
       if (t === 'K') { box('counter', TILE + 0.02, 1.1, 1.3, px, 0.55, pz); box('top', TILE + 0.04, 0.12, 1.45, px, 1.15, pz); }
+      if (t === 'F' && this.tile(x - 1, y) !== 'F') { // the forge furnace: a brick oven two tiles wide with a roaring mouth
+        const cx = px + TILE / 2;
+        box('brick', TILE * 2 - 0.2, 2.2, 1.6, cx, 1.1, pz - 0.1); box('brick2', TILE * 2, 0.2, 1.75, cx, 2.3, pz - 0.1); box('brick', 1.1, 1.2, 1.1, cx, 3.0, pz - 0.3);
+        box('fire', 1.5, 0.9, 0.05, cx, 0.75, pz + 0.71); box('coal', 1.7, 0.18, 0.3, cx, 0.3, pz + 0.62);
+        for (let k = 0; k < 5; k++) box('brick2', 0.3, 0.12, 0.06, cx - 1.6 + k * 0.8 + (k % 2) * 0.2, 1.5 + (k % 3) * 0.32, pz + 0.72);
+        (this.forgeFire ||= []).push([cx, 0.8, pz + 0.8]);
+      }
+      if (t === 'A') { // an anvil on a stump, with a half-made trophy
+        box('stump', 0.9, 0.55, 0.9, px, 0.28, pz); box('iron', 1.1, 0.25, 0.55, px, 0.68, pz); box('iron', 0.5, 0.18, 0.4, px, 0.47, pz);
+        const horn = new THREE.ConeGeometry(0.2, 0.55, 8); horn.rotateZ(Math.PI / 2); horn.translate(px + 0.8, 0.7, pz); add('iron', horn);
+        const cup = new THREE.CylinderGeometry(0.16, 0.08, 0.3, 10); cup.translate(px - 0.2, 0.95, pz); add('gold', cup);
+      }
     }
-    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 }[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, door0: 0xc8845a, door1: 0xd8946a };
+    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 }[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, door0: 0xc8845a, door1: 0xd8946a };
     for (const k in L) {
       if (k === 'pane') { const m = new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: 0xd8f0ff, transparent: true, opacity: 0.22, depthWrite: false })); m.material.userData.own = true; this.group.add(m); L[k].forEach((g) => g.dispose()); continue; }
-      const glow = k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1';
+      const glow = k === 'fire' || k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1';
       const m = glow ? new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'screen' && this.M.indoor === 'arcade' ? 0xff8ae8 : C[k] })) : inked(mergeGeometries(L[k]), toon(C[k] ?? 0xffffff, { rim: 0.3 }), k === 'book0' || k === 'book1' || k === 'book2' ? OL * 0.3 : OL * 0.6);
       if (glow) m.material.userData.own = true;
       m.castShadow = !glow && k !== 'trim'; m.receiveShadow = true;
@@ -1420,6 +1439,10 @@ export class World {
       L[k].forEach((g) => g.dispose());
     }
     this.roomLamp();
+    for (const [fx, , fz] of this.forgeFire || []) { // the furnace lights the floor in front of it
+      const m = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xff7a2a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.5 }); m.userData.own = true;
+      const pool = new THREE.Mesh(new THREE.PlaneGeometry(6, 4.5), m); pool.rotation.x = -Math.PI / 2; pool.position.set(fx, 0.04, fz + 1.4); this.group.add(pool); this.forgePool = pool;
+    }
   }
 
   // after dark a warm pool of lamplight on the room's floor (the arcade keeps its neon)
@@ -1843,6 +1866,8 @@ export class World {
       if (c.forge && Math.random() < 0.5) this.g.fx.spawn({ x: c.x, y: c.y, z: c.z, vy: 1.6, vx: (Math.random() - 0.5) * 0.6, color: 0xffa030, size: 0.16, life: 0.9, shape: 'glow' });
     }
     for (const [px, pz] of this.vents || []) if (Math.random() < dt * 3) this.g.fx.spawn({ x: px, y: 0.8, z: pz, vy: 1.4, vx: 0.2, color: 0xd8d0d0, alpha: 0.5, size: 0.7, life: 1.8, shape: 'puff', additive: false, grow: 1.2 });
+    for (const [fx, fy, fz] of this.forgeFire || []) if (Math.random() < dt * 9) this.g.fx.spawn({ x: fx + (Math.random() - 0.5) * 1.4, y: fy, z: fz, vy: 1.2 + Math.random() * 1.6, vx: (Math.random() - 0.5) * 0.6, vz: 0.3 + Math.random() * 0.6, color: Math.random() < 0.6 ? 0xffa030 : 0xffe060, size: 0.14 + Math.random() * 0.1, life: 0.9, shape: 'glow' });
+    if (this.forgePool) this.forgePool.material.opacity = 0.42 + Math.sin(this.t * 7) * 0.05 + Math.sin(this.t * 17) * 0.04;
     if (this.dig && Math.random() < dt * 4) { const D = this.dig; this.g.fx.spawn({ x: D.px + (Math.random() - 0.5) * 0.9, y: 0.25 + Math.random() * 0.3, z: D.pz + (Math.random() - 0.5) * 0.7, vy: 0.4, color: Math.random() < 0.5 ? 0xffffff : 0xfff0a0, size: 0.45, life: 0.7, shape: 'star' }); }
     if (this.bush?.shake > 0) { const B = this.bush; B.shake -= dt; B.g.rotation.z = Math.sin(B.shake * 40) * B.shake * 0.18; B.g.scale.y = 1 + Math.sin(B.shake * 30) * B.shake * 0.08; }
     for (let k = 0; k < (this.pennants?.length || 0); k++) this.pennants[k].rotation.y = Math.sin(this.t * 3.1 + k * 1.7) * 0.35; // stadium pennants flap in the breeze
