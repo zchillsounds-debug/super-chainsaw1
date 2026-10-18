@@ -49,6 +49,26 @@ const ROOMS = {
     'WO....YYYOW',
     'WWWWW.WWWWW',
   ],
+  lodge: [
+    'WWWWWWWWWWW',
+    'WCC.FF..OQW',
+    'W...YY...QW',
+    'W..DD.....W',
+    'W..DD.....W',
+    'W.........W',
+    'WO.......OW',
+    'WWWWW.WWWWW',
+  ],
+  cabin: [
+    'WWWWWWWWWWW',
+    'WCC..b..bQW',
+    'W........QW',
+    'W..DD.....W',
+    'Wb.DD.YYY.W',
+    'W.....YYY.W',
+    'WO.......bW',
+    'WWWWW.WWWWW',
+  ],
   shop: [
     'WWWWWWWWWWW',
     'WHHH...HHHW',
@@ -90,7 +110,7 @@ const PEOPLE = {
   'bloom:house3': { npcs: [['emberfly', 'Firefly Flo', ['Firefly Flo: Bzz! My big brother lost to the Sprout Cup three times. Then he trained in the tall grass and WON!', 'Firefly Flo: Wild critters give you lots of XP. That\'s how you grow!'], 'e', 2, 5]], wall: '#fff0b8', rug: '#ffb030' },
   'bloom:hats': { npcs: [['woolt', 'Milliner Mo', [], 's', 5, 1, 'hatshop']], kind: 'shop', wall: '#f0e0ff', rug: '#b08aff' },
   'seashell:berry2': { visitor: ['ripples', 'Diver Kai', ['Diver Kai: I dive for shells every day. The water critters around here are SO quick.'], 'e', 3, 4] },
-  'seashell:hut': { npcs: [['bubbalotl', 'Captain Coral', ['Captain Coral: Arr! This hut used to be a boat. Then it sank. Then I dragged it up the beach.', 'Captain Coral: Spark critters zap water critters hard. Mind the Thunder Cup!'], 's', 6, 2]], wall: '#c8f0f0', rug: '#3ac8c8' },
+  'seashell:hut': { npcs: [['bubbalotl', 'Captain Coral', ['Captain Coral: Arr! This hut used to be a boat. Then it sank. Then I dragged it up the beach.', 'Captain Coral: Spark critters zap water critters hard. Mind the Thunder Cup!'], 's', 6, 2]], kind: 'cabin', name: "Captain's Hut", wall: '#c8f0f0', rug: '#3ac8c8', floor: { a: '#c89a62', b: '#c0925a' } },
   'glowcap:berry3': { visitor: ['lilypop', 'Moss Kid', ['Moss Kid: The Berry Center here grows its berries on glowcaps. They taste a bit like moonlight.'], 'w', 9, 4], wall: '#e8d8ff' },
   'glowcap:shroom1': { npcs: [['snoozlo', 'Snoozy Sal', ['Snoozy Sal: ...zzz... shh. The mushrooms are sleeping. ...zzz...', 'Snoozy Sal: ...if you nap with a critter... you become friends... zzz...'], 'e', 3, 2]], wall: '#e0d0ff', rug: '#8a6aff' },
   'glowcap:shroom2': { npcs: [['squeakwing', 'Auntie Squeak', ['Auntie Squeak: You\'re the one who brought little Pip home! Squeak squeak! The whole family is talking about you.', 'Auntie Squeak: Gust critters blow leaf critters away. Bats know these things.'], 's', 7, 2]], wall: '#d0fff0', rug: '#2fd8b8' },
@@ -101,7 +121,7 @@ const PEOPLE = {
   'neon:tower2': { npcs: [['whirlwhisk', 'Sky Lin', ['Sky Lin: From the top of this tower you can see Captain Puff\'s balloon in the east.', 'Sky Lin: Captain Puff only flies critters who\'ve won the Midnight Cup. House rules!'], 's', 5, 2]], wall: '#d0e8ff', rug: '#5ad8ff' },
   'cloudtop:berry6': { visitor: ['whirlwhisk', 'Breeze', ['Breeze: The nurse up here is the highest nurse in all of Clashara. Literally!'], 'e', 3, 4] },
   'frostpeak:berry7': { visitor: ['pengsicle', 'Snowy', ['Snowy: Warm smoothies? In Frostpeak they make them HOT. Wonderful!'], 'w', 9, 4] },
-  'frostpeak:lodge': { npcs: [['woolt', 'Lodge Keeper Fleece', ['Lodge Keeper Fleece: Come in, come in, out of the snow! The fire is lovely and warm.', 'Lodge Keeper Fleece: Many critters have climbed to the Peak. Only one gets the Crown.'], 's', 3, 2]], wall: '#e8d0b0', rug: '#5a8ad8' },
+  'frostpeak:lodge': { npcs: [['woolt', 'Lodge Keeper Fleece', ['Lodge Keeper Fleece: Come in, come in, out of the snow! The fire is lovely and warm.', 'Lodge Keeper Fleece: Many critters have climbed to the Peak. Only one gets the Crown.'], 's', 7, 2]], kind: 'lodge', name: 'Mountain Lodge', wall: '#e8d0b0', rug: '#c8443a' },
 };
 
 const ITEMS = {
@@ -111,6 +131,7 @@ const ITEMS = {
   D: 'A table with a bowl of berries on it.',
   O: 'A happy little plant. It looks well watered.',
   H: 'A hat stand.',
+  b: 'A barrel of salty sea biscuits. Crunchy!',
   F: 'The furnace roars. It\'s so hot your whiskers curl!',
   A: 'A heavy iron anvil, warm to the touch. There\'s a half-finished trophy on it.',
   U: 'A trophy case.',
@@ -146,6 +167,8 @@ export function interiorMap(key) {
     if (t === 'C' && kind === 'center' && x === 1) { signs.push({ x, y, text: '', hide: true, act: 'board' }); return; }
     if (t === 'X' && kind === 'lab') text = 'A screen shows a growing critter: small, medium, HUGE.';
     if (t === 'C' && bid === 'home') { signs.push({ x, y, text: '', hide: true, act: 'wardrobe' }); return; }
+    if (t === 'F' && kind === 'lodge') text = 'A crackling log fire. {hero} warms their paws. Toasty!';
+    if (t === 'C' && kind === 'cabin') text = 'Charts of the coast, a brass telescope, and a bottle with a tiny ship inside.';
     if (t === 'C' && kind === 'forge') text = 'Racks of tongs and hammers. One hammer is labelled "NOT FOR CRITTERS".';
     if (t === 'C' && kind === 'shop') text = 'Hat boxes, stacked to the ceiling. One is labelled "EXTRA FLOPPY".';
     if (t === 'U') { const n = [...row].slice(0, x).filter((c) => c === 'U').length; signs.push({ x, y, text, hide: true, act: 'case:' + CUP_ORDER[n] }); return; }
