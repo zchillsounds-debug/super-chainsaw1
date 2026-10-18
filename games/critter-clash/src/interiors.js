@@ -69,6 +69,26 @@ const ROOMS = {
     'WO.......bW',
     'WWWWW.WWWWW',
   ],
+  cottage: [
+    'WWWWWWWWWWW',
+    'WCC.G...OQW',
+    'W........QW',
+    'W.r.......W',
+    'W.k...DD..W',
+    'W.....DD..W',
+    'WO.......OW',
+    'WWWWW.WWWWW',
+  ],
+  kidroom: [
+    'WWWWWWWWWWW',
+    'WC..j...OQW',
+    'W........QW',
+    'W...YYY...W',
+    'W...YYY..tW',
+    'W.........W',
+    'WO.......OW',
+    'WWWWW.WWWWW',
+  ],
   shop: [
     'WWWWWWWWWWW',
     'WHHH...HHHW',
@@ -104,10 +124,10 @@ const ROOMS = {
 // who lives where: [critter, name, lines, dir, x, y]; plus furniture text
 const PEOPLE = {
   'village:home': { npcs: [], wall: '#ffe2c8', rug: '#ff8a7a' },
-  'village:house2': { npcs: [['woolt', 'Grandpa Woolt', ['Grandpa Woolt: Baaah, back in my day we battled uphill, both ways, in the snow!', "Grandpa Woolt: Here's a secret: dodge THROUGH an attack, not away from it. You're safe while you roll."], 's', 3, 2]], wall: '#d8e8ff', rug: '#7aa8ff' },
+  'village:house2': { npcs: [['woolt', 'Grandpa Woolt', ['Grandpa Woolt: Baaah, back in my day we battled uphill, both ways, in the snow!', "Grandpa Woolt: Here's a secret: dodge THROUGH an attack, not away from it. You're safe while you roll.", 'Grandpa Woolt: That clock? It was a prize from the very first Sprout Cup. It still keeps perfect time. Mostly.'], 's', 3, 2]], kind: 'cottage', name: "Grandpa's Cottage", wall: '#e8dcc8', rug: '#a86a8a', floor: { a: '#b88a5a', b: '#b28454' } },
   'village:lab': { npcs: [['hootsy', 'Aide Hoot', ['Aide Hoot: Hoo! Welcome to the Pecan Lab. The professor studies how critters GROW.', 'Aide Hoot: Win enough battles and a critter gets bigger and stronger. The professor calls it growth. I call it a growth spurt!'], 's', 6, 2]], wall: '#e8f0f8', rug: '#8ad8c8' },
   'bloom:berry': { visitor: ['clovebun', 'Hopper Bea', ['Hopper Bea: The berry smoothies here are the best in Clashara. I come in even when I\'m not hurt!'], 'w', 9, 4] },
-  'bloom:house3': { npcs: [['emberfly', 'Firefly Flo', ['Firefly Flo: Bzz! My big brother lost to the Sprout Cup three times. Then he trained in the tall grass and WON!', 'Firefly Flo: Wild critters give you lots of XP. That\'s how you grow!'], 'e', 2, 5]], wall: '#fff0b8', rug: '#ffb030' },
+  'bloom:house3': { npcs: [['emberfly', 'Firefly Flo', ['Firefly Flo: Bzz! My big brother lost to the Sprout Cup three times. Then he trained in the tall grass and WON!', 'Firefly Flo: Wild critters give you lots of XP. That\'s how you grow!', 'Firefly Flo: Those are my glow friends in the jar. I let them out every morning! They always come back.'], 'e', 2, 5]], kind: 'kidroom', name: "Flo's Room", wall: '#fff0b8', rug: '#ffb030' },
   'bloom:hats': { npcs: [['woolt', 'Milliner Mo', [], 's', 5, 1, 'hatshop']], kind: 'shop', wall: '#f0e0ff', rug: '#b08aff' },
   'seashell:berry2': { visitor: ['ripples', 'Diver Kai', ['Diver Kai: I dive for shells every day. The water critters around here are SO quick.'], 'e', 3, 4] },
   'seashell:hut': { npcs: [['bubbalotl', 'Captain Coral', ['Captain Coral: Arr! This hut used to be a boat. Then it sank. Then I dragged it up the beach.', 'Captain Coral: Spark critters zap water critters hard. Mind the Thunder Cup!'], 's', 6, 2]], kind: 'cabin', name: "Captain's Hut", wall: '#c8f0f0', rug: '#3ac8c8', floor: { a: '#c89a62', b: '#c0925a' } },
@@ -135,6 +155,11 @@ const ITEMS = {
   F: 'The furnace roars. It\'s so hot your whiskers curl!',
   A: 'A heavy iron anvil, warm to the touch. There\'s a half-finished trophy on it.',
   U: 'A trophy case.',
+  G: 'A tall old clock. Tick... tock... The pendulum swings very slowly. Just like Grandpa.',
+  r: 'A creaky rocking chair with a woolly blanket. Grandpa Woolt knitted it himself. Of course he did.',
+  k: 'A basket of yarn balls. One has rolled under the chair.',
+  j: 'A big jar of fireflies on a stool. They blink hello!',
+  t: 'A toy chest. Inside: a stuffed Cindermunch, three bouncy balls and a paper crown.',
 };
 
 export function interiorMap(key) {

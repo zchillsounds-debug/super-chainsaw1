@@ -238,7 +238,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1346,6 +1346,11 @@ export class World {
           if (x === 6) { const wh = new THREE.TorusGeometry(0.5, 0.06, 6, 20); wh.translate(px, 2.0, pz + 1.08); add('wood', wh); for (let k = 0; k < 4; k++) { const sp = new THREE.BoxGeometry(1.35, 0.07, 0.07); sp.rotateZ(k * Math.PI / 4); sp.translate(px, 2.0, pz + 1.09); add('wood', sp); } const hb = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 10); hb.rotateX(Math.PI / 2); hb.translate(px, 2.0, pz + 1.1); add('gold', hb); }
         }
         if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C' && this.M.indoor !== 'lobby' && this.M.indoor !== 'cabin') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); if (this.outPhase === 'night') { box('stars', 0.07, 0.07, 0.1, px - 0.3, 2.15, pz + 1.04); box('stars', 0.05, 0.05, 0.1, px + 0.1, 2.0, pz + 1.04); box('stars', 0.06, 0.06, 0.1, px + 0.32, 2.2, pz + 1.04); box('moon', 0.2, 0.2, 0.1, px + 0.25, 1.75, pz + 1.04); } }
+        if (back && this.M.indoor === 'cottage' && x > 0 && x < W - 1 && x % 2 === 0) box('wood', 0.22, 3.1, 0.1, px - 1, 1.55, pz + 1.04); // old timber beams
+        if (back && this.M.indoor === 'kidroom' && x > 0 && x < W - 1) { // fairy lights strung along the back wall, dipping between pins
+          box('soot', TILE + 0.02, 0.03, 0.04, px, 2.86, pz + 1.05);
+          for (let k = 0; k < 2; k++) { const b = new THREE.SphereGeometry(0.14, 8, 6); b.translate(px - 0.5 + k, 2.72 - (k ? 0 : 0.08), pz + 1.1); add(['lit', 'neon', 'neon2'][(x * 2 + k) % 3], b); }
+        }
         if (back && this.M.cityView && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C') for (let k = 0; k < 4; k++) { // Neon City outside the window: a skyline with lit windows
           const bh = 0.25 + ((x * 7 + k * 5) % 6) * 0.08; box('skyline', 0.24, bh, 0.04, px - 0.39 + k * 0.26, 1.45 + bh / 2, pz + 1.07);
           if ((x + k) % 2) box('lit', 0.06, 0.06, 0.03, px - 0.39 + k * 0.26, 1.5 + bh * 0.6, pz + 1.09);
@@ -1444,6 +1449,43 @@ export class World {
         for (let k = 0; k < 5; k++) box('brick2', 0.3, 0.12, 0.06, cx - 1.6 + k * 0.8 + (k % 2) * 0.2, 1.5 + (k % 3) * 0.32, pz + 0.72);
         (this.forgeFire ||= []).push([cx, 0.8, pz + 0.8]);
       }
+      if (t === 'G') { // a grandfather clock: a tall case, a round face, and a pendulum that swings slowly
+        box('wood', 1.2, 3.1, 0.8, px, 1.55, pz - 0.5); box('trim', 1.3, 0.14, 0.9, px, 3.12, pz - 0.5); box('stool', 1.0, 0.2, 0.85, px, 0.1, pz - 0.5);
+        const fc = new THREE.CylinderGeometry(0.42, 0.42, 0.06, 18); fc.rotateX(Math.PI / 2); fc.translate(px, 2.55, pz - 0.08); add('plate', fc);
+        const rim = new THREE.TorusGeometry(0.43, 0.05, 6, 18); rim.translate(px, 2.55, pz - 0.06); add('gold', rim);
+        box('soot', 0.05, 0.3, 0.04, px, 2.66, pz - 0.03); box('soot', 0.22, 0.05, 0.04, px + 0.1, 2.55, pz - 0.03);
+        box('soot', 0.7, 1.4, 0.04, px, 1.25, pz - 0.09); box('gold', 0.78, 0.06, 0.06, px, 1.97, pz - 0.08); box('gold', 0.78, 0.06, 0.06, px, 0.53, pz - 0.08);
+        const pend = new THREE.Group(); pend.position.set(px, 1.9, pz - 0.05);
+        const rod = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.0, 0.03), toon(0xffc93a, { rim: 0.3 })); rod.position.y = -0.5; pend.add(rod);
+        const bob = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 14), toon(0xffc93a, { rim: 0.5 })); bob.rotation.x = Math.PI / 2; bob.position.y = -1.05; pend.add(bob);
+        this.group.add(pend); this.pendulum = pend;
+      }
+      if (t === 'r') { // a rocking chair with a knitted blanket over the back
+        for (const sd of [-1, 1]) { const rk = new THREE.TorusGeometry(1.1, 0.06, 5, 14, 1.2); rk.rotateZ(-Math.PI / 2 - 0.6); rk.rotateY(Math.PI / 2); rk.translate(px + sd * 0.45, 1.15, pz); add('wood', rk); }
+        box('wood', 1.05, 0.12, 1.0, px, 0.62, pz); for (const sd of [-1, 1]) { box('wood', 0.1, 1.5, 0.1, px + sd * 0.45, 1.3, pz - 0.45); box('wood', 0.1, 0.55, 0.1, px + sd * 0.45, 0.9, pz + 0.4); box('wood', 0.1, 0.08, 0.95, px + sd * 0.45, 1.15, pz); }
+        for (let k = 0; k < 3; k++) box('wood', 0.08, 1.2, 0.06, px - 0.25 + k * 0.25, 1.35, pz - 0.47);
+        box('wood', 1.0, 0.12, 0.1, px, 2.0, pz - 0.47);
+        box('knit', 0.9, 0.9, 0.1, px, 1.55, pz - 0.38); box('knit2', 0.9, 0.12, 0.12, px, 1.75, pz - 0.36); box('knit2', 0.9, 0.12, 0.12, px, 1.4, pz - 0.36); box('knit', 0.7, 0.08, 0.7, px, 0.72, pz + 0.05);
+      }
+      if (t === 'k') { // a basket of yarn, with one ball rolled away
+        const bk = new THREE.CylinderGeometry(0.5, 0.4, 0.5, 12, 1, true); bk.translate(px, 0.25, pz); add('stool', bk);
+        const bt = new THREE.CircleGeometry(0.4, 12); bt.rotateX(-Math.PI / 2); bt.translate(px, 0.05, pz); add('stool', bt);
+        for (let k = 0; k < 3; k++) { const yb = new THREE.SphereGeometry(0.22, 10, 8); yb.translate(px + Math.cos(k * 2.1) * 0.2, 0.52, pz + Math.sin(k * 2.1) * 0.2); add(['berry', 'book1', 'knit2'][k], yb); }
+        const nd = new THREE.CylinderGeometry(0.025, 0.025, 0.9, 5); nd.rotateZ(0.5); nd.translate(px + 0.1, 0.8, pz); add('iron', nd);
+        const lone = new THREE.SphereGeometry(0.18, 10, 8); lone.translate(px + 0.6, 0.18, pz - 1.2); add('book2', lone);
+      }
+      if (t === 'j') { // a jar of fireflies on a stool: they blink inside the glass and light the floor
+        box('stool', 0.9, 0.12, 0.9, px, 0.85, pz - 0.2); for (const [lx, lz] of [[-0.32, -0.32], [0.32, -0.32], [-0.32, 0.32], [0.32, 0.32]]) box('wood', 0.09, 0.82, 0.09, px + lx, 0.41, pz - 0.2 + lz);
+        const jar = new THREE.CylinderGeometry(0.48, 0.5, 1.05, 14); jar.translate(px, 1.45, pz - 0.2); add('pane', jar);
+        const lid = new THREE.CylinderGeometry(0.38, 0.4, 0.14, 14); lid.translate(px, 2.03, pz - 0.2); add('gold', lid);
+        for (let k = 0; k < 6; k++) { const fl = new THREE.SphereGeometry(0.08, 6, 4); fl.translate(px + Math.cos(k * 1.9) * 0.28, 1.1 + (k % 3) * 0.3, pz - 0.2 + Math.sin(k * 1.9) * 0.22); add('flies', fl); }
+        (this.jars ||= []).push([px, 1.35, pz - 0.2]); (this.lampPools ||= []).push([px, pz, 0xd8ff5a]);
+      }
+      if (t === 't') { // a toy chest with a ball and a paper crown on top
+        box('top', 1.5, 0.8, 1.0, px, 0.4, pz - 0.2); box('trim', 1.56, 0.14, 1.06, px, 0.82, pz - 0.2); box('gold', 0.2, 0.22, 0.06, px, 0.65, pz + 0.31);
+        const ball = new THREE.SphereGeometry(0.26, 12, 8); ball.translate(px - 0.35, 1.15, pz - 0.2); add('book1', ball);
+        const cr = new THREE.CylinderGeometry(0.22, 0.2, 0.22, 8, 1, true); cr.translate(px + 0.35, 1.0, pz - 0.2); add('sunny', cr);
+      }
       if (t === 'b') { // a ship's barrel with iron hoops
         const g = new THREE.CylinderGeometry(0.55, 0.55, 1.1, 12); g.translate(px, 0.55, pz); add('wood', g);
         for (const h of [0.22, 0.88]) { const r = new THREE.CylinderGeometry(0.57, 0.57, 0.08, 12); r.translate(px, h, pz); add('iron', r); }
@@ -1455,10 +1497,10 @@ export class World {
         const cup = new THREE.CylinderGeometry(0.16, 0.08, 0.3, 10); cup.translate(px - 0.2, 0.95, pz); add('gold', cup);
       }
     }
-    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, door0: 0xc8845a, door1: 0xd8946a };
+    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, knit: 0xd86a8a, knit2: 0xfff0d8, flies: 0xe8ff6a, door0: 0xc8845a, door1: 0xd8946a };
     for (const k in L) {
       if (k === 'pane') { const m = new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: 0xd8f0ff, transparent: true, opacity: 0.22, depthWrite: false })); m.material.userData.own = true; this.group.add(m); L[k].forEach((g) => g.dispose()); continue; }
-      const glow = k === 'cap0' || k === 'cap1' || k === 'lit' || k === 'fire' || k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1';
+      const glow = k === 'cap0' || k === 'cap1' || k === 'lit' || k === 'fire' || k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1' || k === 'flies';
       const m = glow ? new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'screen' && this.M.indoor === 'arcade' ? 0xff8ae8 : C[k] })) : inked(mergeGeometries(L[k]), toon(C[k] ?? 0xffffff, { rim: 0.3 }), k === 'book0' || k === 'book1' || k === 'book2' ? OL * 0.3 : OL * 0.6);
       if (glow) m.material.userData.own = true;
       m.castShadow = !glow && k !== 'trim'; m.receiveShadow = true;
@@ -1898,6 +1940,8 @@ export class World {
     }
     for (const [px, pz] of this.vents || []) if (Math.random() < dt * 3) this.g.fx.spawn({ x: px, y: 0.8, z: pz, vy: 1.4, vx: 0.2, color: 0xd8d0d0, alpha: 0.5, size: 0.7, life: 1.8, shape: 'puff', additive: false, grow: 1.2 });
     for (const [fx, fy, fz, k = 1] of this.forgeFire || []) if (Math.random() < dt * 9 * k) this.g.fx.spawn({ x: fx + (Math.random() - 0.5) * 1.4 * k, y: fy, z: fz, vy: 1.2 + Math.random() * 1.6, vx: (Math.random() - 0.5) * 0.6, vz: 0.3 + Math.random() * 0.6, color: Math.random() < 0.6 ? 0xffa030 : 0xffe060, size: 0.14 + Math.random() * 0.1, life: 0.9, shape: 'glow' });
+    if (this.pendulum) this.pendulum.rotation.z = Math.sin(this.t * 2.2) * 0.22; // tick... tock...
+    for (const [jx, jy, jz] of this.jars || []) if (Math.random() < dt * 5) this.g.fx.spawn({ x: jx + (Math.random() - 0.5) * 0.5, y: jy + (Math.random() - 0.5) * 0.6, z: jz + (Math.random() - 0.5) * 0.5, color: 0xe8ff6a, size: 0.3, life: 0.8, shape: 'glow', fadeIn: 0.3 });
     if (this.forgePool) this.forgePool.material.opacity = 0.42 + Math.sin(this.t * 7) * 0.05 + Math.sin(this.t * 17) * 0.04;
     if (this.dig && Math.random() < dt * 4) { const D = this.dig; this.g.fx.spawn({ x: D.px + (Math.random() - 0.5) * 0.9, y: 0.25 + Math.random() * 0.3, z: D.pz + (Math.random() - 0.5) * 0.7, vy: 0.4, color: Math.random() < 0.5 ? 0xffffff : 0xfff0a0, size: 0.45, life: 0.7, shape: 'star' }); }
     if (this.bush?.shake > 0) { const B = this.bush; B.shake -= dt; B.g.rotation.z = Math.sin(B.shake * 40) * B.shake * 0.18; B.g.scale.y = 1 + Math.sin(B.shake * 30) * B.shake * 0.08; }

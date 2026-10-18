@@ -16,7 +16,7 @@ await pg.evaluate(([map, sx, sy, fl]) => {
   const wo = __game.screens.worldObj; for (let i = 0; i < 12 && wo.dialog; i++) wo.dialog.next(); wo.interact(); for (let i = 0; i < 6 && wo.dialog; i++) wo.dialog.next();
 }, [map, sx, sy, fl]);
 // stadiums open into a lobby (R288): sign up at the front desk
-await pg.waitForTimeout(2500);
+await pg.waitForFunction(() => __game.screens.worldObj?.M?.indoor === 'lobby', null, { timeout: 20000 }).catch(() => {});
 console.log('lobby:', await pg.evaluate(() => {
   const wo = __game.screens.worldObj; if (!wo || wo.M.indoor !== 'lobby') return wo?.key;
   wo.load(wo.key, 7, 3, 'n'); wo.dir = 'n'; wo.interact();
