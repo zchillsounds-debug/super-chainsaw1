@@ -260,6 +260,7 @@ export class World {
 
   buildGround(rand) {
     const P = 32, W = this.W, H = this.H, C = { a: '#7ad259', b: '#77cf56', tall: '#4fae3e', path: '#e8c98a', dark: 'rgba(40,120,40,0.35)', lite: 'rgba(200,255,150,0.4)', ...this.M.palette };
+    if (this.phase === 'night' && !this.M.palette?.a) Object.assign(C, { a: '#5cae78', b: '#59ab75', tall: '#3e8a62', lite: 'rgba(170,230,210,0.35)' }); // moonlit grass leans blue-green
     // building footprints take the ground of the tile in front of their door row
     const under = (x, y) => { let k = y; while (this.tile(x, k) === 'h' && k < H) k++; const t = this.tile(x, k); return t === 'h' || t === 'T' ? '.' : t; };
     const tex = canvasTex(W * P, H * P, (c) => {
@@ -779,7 +780,7 @@ export class World {
   // seagulls wheel over the beach maps, wings flapping, shadows on the sand
   buildGulls() {
     this.gulls = [];
-    if (this.M.arena !== 'beach' || this.M.indoor) return;
+    if (this.M.arena !== 'beach' || this.M.indoor || this.phase === 'night') return; // gulls roost at night
     const W = toon(0xffffff, { rim: 0.6 }), T = toon(0x9aa4b4);
     for (let k = 0; k < 3; k++) {
       const g = new THREE.Group();
