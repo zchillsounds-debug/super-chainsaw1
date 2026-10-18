@@ -299,6 +299,10 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'hatshop') return hatShop(w);
   if (id === 'board') return requestBoard(S, w);
+  if (id === 'pcbox') { // the Berry Center's Critter Box: any critter on the team can take the lead
+    if (save.unlocked.length < 2) return w.say(['The CRITTER BOX hums. "Team: 1. Recruit more critters to swap who leads the way!"']);
+    return w.say(['The CRITTER BOX blinks on. "Who leads the way?"'], () => S.leadPick(w));
+  }
   if (id === 'trader') return trader(w);
   if (id === 'noodles') return noodleCart(w);
   if (id === 'arcade') return arcade(S, w);
@@ -380,7 +384,7 @@ export function storyTalk(S, id, w, a) {
     save.adv.spawn = { ...w.M.exit }; persist();
     sfx.jingle(2);
     w.say(id === 'rest' ? ['{hero} hops into bed for a quick nap...', 'Mom: Sweet dreams! (If you lose a battle, you\'ll come back home.)']
-      : ['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.', ...(save.berries > 0 ? ['Nurse Lilypop: Got spare berries? The blender over there makes smoothies that help critters grow!'] : []), ...(save.adv.req?.day !== new Date().toISOString().slice(0, 10) ? ['Nurse Lilypop: Oh, and there are new requests on the cork board by the door. Berries for little jobs!'] : [])], null, id === 'nurse' ? 'Nurse Lilypop' : '');
+      : ['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.', ...(save.berries > 0 ? ['Nurse Lilypop: Got spare berries? The blender over there makes smoothies that help critters grow!'] : []), ...(save.unlocked.length > 1 && !save.adv.flags.boxTip ? ((save.adv.flags.boxTip = true), ['Nurse Lilypop: See the Critter Box in the corner? Any critter on your team can take the lead from there.']) : []), ...(save.adv.req?.day !== new Date().toISOString().slice(0, 10) ? ['Nurse Lilypop: Oh, and there are new requests on the cork board by the door. Berries for little jobs!'] : [])], null, id === 'nurse' ? 'Nurse Lilypop' : '');
     return;
   }
   if (id === 'gauntlet') return gauntlet(S, w);

@@ -1999,6 +1999,12 @@ export class World {
         for (let k = 0; k < 3; k++) { box('note' + k, 0.42, 0.5, 0.24, px - 0.5 + k * 0.5, 1.95 + (k % 2) * 0.15, pz - 0.82); box('pin', 0.08, 0.08, 0.27, px - 0.5 + k * 0.5, 2.15 + (k % 2) * 0.15, pz - 0.8); }
         continue;
       }
+      if (t === 'C' && this.M.indoor === 'center' && x === W - 2) { // the Critter Box: a cabinet with a glowing screen and two capsule slots
+        box('iron', 1.7, 1.15, 0.85, px, 0.58, pz - 0.4); box('wood', 1.8, 0.1, 0.95, px, 1.2, pz - 0.4);
+        box('iron', 1.3, 0.95, 0.22, px, 1.75, pz - 0.6); box('lit', 1.08, 0.72, 0.24, px, 1.76, pz - 0.58);
+        for (let k = 0; k < 2; k++) { box('pin', 0.36, 0.22, 0.88, px - 0.4 + k * 0.8, 0.85, pz - 0.39); box('note' + k, 0.3, 0.16, 0.9, px - 0.4 + k * 0.8, 0.85, pz - 0.38); }
+        continue;
+      }
       if (t === 'C' && this.key === 'in:village:home') { // the hero's wardrobe (hats live here)
         box('wood', 1.8, 2.7, 0.95, px, 1.35, pz - 0.4); box('door' + (x % 2), 0.8, 2.3, 0.06, px - 0.42, 1.4, pz + 0.09); box('door' + (x % 2), 0.8, 2.3, 0.06, px + 0.42, 1.4, pz + 0.09);
         box('pin', 0.08, 0.2, 0.1, px - 0.08, 1.4, pz + 0.14); box('pin', 0.08, 0.2, 0.1, px + 0.08, 1.4, pz + 0.14);

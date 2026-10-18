@@ -1153,6 +1153,28 @@ export class Screens {
     this.root.appendChild(d);
   }
 
+  // the Berry Center's Critter Box: swap which team critter leads the Adventure (the story carries on with them)
+  leadPick(w) {
+    const g = this.game, d = document.createElement('div');
+    d.className = 'modal-wrap';
+    const team = CRITTERS.filter((c) => save.unlocked.includes(c.id)), cur = save.adv.hero;
+    d.innerHTML = `<div class="modal hero-pick"><h2>Critter Box</h2><p>Who leads the way? Your lead walks the world and fights every battle.</p><div class="hero-grid">${team.map((c) => `<button data-id="${c.id}" class="${c.id === cur ? 'on' : ''}"><img src="${g.portrait(skinOf(c))}" alt=""><span>${grown(c, save.critters[c.id].level).name}</span><i>Lv${save.critters[c.id].level}</i></button>`).join('')}</div></div>`;
+    const close = () => { d.remove(); this.game.modalClose = null; };
+    d.querySelectorAll('.hero-grid button').forEach((btn) => btn.addEventListener('click', () => {
+      const id = btn.dataset.id; close();
+      if (id === cur) { sfx.ui('ok'); return w.say(['{hero} is already leading the way. Onward!']); }
+      sfx.ui('ok');
+      if (save.adv.buddy === id) save.adv.buddy = cur; // the old lead walks behind instead
+      save.adv.hero = id; persist();
+      w.fade(() => { w.load(w.key, w.hx, w.hy, w.dir); sfx.jingle?.(1); w.say([`Whirr... ding! {hero} takes the lead! ${grown(byId(cur), save.critters[cur].level).name} hops into the box for a rest.`]); });
+    }));
+    const row = document.createElement('div'); row.className = 'res-btns';
+    row.append(this.btn('Back', 'ghost', close));
+    d.querySelector('.modal').appendChild(row);
+    this.game.modalClose = close;
+    this.root.appendChild(d);
+  }
+
   // who is the hero? any recruited critter can be
   heroPick() {
     const g = this.game;
