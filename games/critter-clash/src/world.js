@@ -9,7 +9,7 @@ import { CRITTERS, CUPS, withGear, skinned } from './data.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx, playMusic } from './audio.js';
 import { rivalFor } from './worldmaps.js';
-import { getMap } from './interiors.js';
+import { getMap, CUP_ORDER } from './interiors.js';
 import { ARENAS } from './arena.js';
 
 export const TILE = 2;
@@ -153,7 +153,7 @@ export class World {
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
-      if ('TP~#RhmvlWCXQDOKH'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
+      if ('TP~#RhmvlWCXQDOKHU'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
     }
     for (const s of M.signs || []) this.solid.add(s.x + ',' + s.y);
     this.buildGround(rand);
@@ -959,11 +959,12 @@ export class World {
         box('trim', TILE + 0.02, 0.16, TILE + 0.02, px, h, pz);
         if (back) box('base', TILE + 0.01, 0.35, 0.12, px, 0.17, pz + 1.02);
         if (back && this.M.indoor === 'arcade') { box('neon', TILE + 0.01, 0.12, 0.08, px, 2.7, pz + 1.04); box('neon2', TILE + 0.01, 0.08, 0.08, px, 0.5, pz + 1.08); }
-        if (back && x % 3 !== 2 && (x % 3 === 0 || x % 4 === 1) && x > 1 && x < W - 2 && '.QOD'.includes(this.tile(x, 1)) && x % 3 !== 2 && this.M.indoor !== 'arcade') { // a little framed landscape between the windows
+        if (back && this.M.indoor === 'lobby' && x >= 5 && x <= 9) this.poster(x - 5 - Math.floor((5 - (CUPS.find((c) => c.id === this.M.cup)?.matches.length || 5)) / 2), px, pz);
+        if (back && this.M.indoor !== 'lobby' && x % 3 !== 2 && (x % 3 === 0 || x % 4 === 1) && x > 1 && x < W - 2 && '.QOD'.includes(this.tile(x, 1)) && x % 3 !== 2 && this.M.indoor !== 'arcade') { // a little framed landscape between the windows
           box('frame', 1.4, 1.05, 0.08, px, 2.05, pz + 1.02); box('art' + (x % 2), 1.18, 0.83, 0.06, px, 2.05, pz + 1.06); box('hill', 1.18, 0.28, 0.07, px, 1.77, pz + 1.07); box('sunny', 0.22, 0.22, 0.07, px + 0.32, 2.25, pz + 1.075);
         }
         if (back && this.M.indoor === 'center' && x === (W >> 1)) { box('trim', 1.3, 1.3, 0.08, px, 2.45, pz + 1.02); box('top', 0.36, 1.0, 0.08, px, 2.45, pz + 1.06); box('top', 1.0, 0.36, 0.08, px, 2.45, pz + 1.06); } // the Berry Center cross behind the nurse
-        if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); }
+        if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C' && this.M.indoor !== 'lobby') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); }
       }
       if (t === 'C') { // shelf with coloured book spines
         box('wood', 1.8, 2.5, 0.9, px, 1.25, pz - 0.4);
@@ -1001,6 +1002,17 @@ export class World {
         const p = new THREE.CylinderGeometry(0.4, 0.3, 0.6, 10); p.translate(px, 0.3, pz); add('pot', p);
         for (let k = 0; k < 3; k++) { const l = new THREE.IcosahedronGeometry(0.45 - k * 0.08, 1); l.translate(px + Math.sin(k * 2.1) * 0.2, 0.9 + k * 0.38, pz + Math.cos(k * 2.1) * 0.2); add('leaf', l); }
       }
+      if (t === 'U') { // a trophy case: the cup's trophy shines inside once it's won
+        const n = [...this.M.tiles[y]].slice(0, x).filter((c) => c === 'U').length, cid = CUP_ORDER[n], won = save.adv.flags['cup_' + cid];
+        box('wood', 1.7, 0.7, 1.2, px, 0.35, pz - 0.3); box('trim', 1.75, 0.1, 1.25, px, 0.72, pz - 0.3);
+        box('pane', 1.6, 1.25, 1.1, px, 1.4, pz - 0.3);
+        const col = won ? 'gold' : 'dim';
+        const c1 = new THREE.CylinderGeometry(0.42, 0.16, 0.58, 14); c1.translate(px, 1.45, pz - 0.3); add(col, c1);
+        const c2 = new THREE.CylinderGeometry(0.08, 0.08, 0.28, 8); c2.translate(px, 1.02, pz - 0.3); add(col, c2);
+        const c3 = new THREE.CylinderGeometry(0.28, 0.3, 0.14, 12); c3.translate(px, 0.84, pz - 0.3); add(col, c3);
+        for (const sd of [-1, 1]) { const h = new THREE.TorusGeometry(0.16, 0.04, 6, 12); h.translate(px + sd * 0.44, 1.5, pz - 0.3); add(col, h); }
+        if (won) { const gem = new THREE.SphereGeometry(0.12, 8, 6); gem.translate(px, 1.45, pz + 0.08); add('gem' + n % 3, gem); }
+      }
       if (t === 'H') { // a hat stand wearing one of the shop's hats
         const p = new THREE.CylinderGeometry(0.07, 0.07, 1.3, 8); p.translate(px, 0.65, pz - 0.2); add('wood', p);
         const f = new THREE.CylinderGeometry(0.4, 0.45, 0.1, 12); f.translate(px, 0.05, pz - 0.2); add('wood', f);
@@ -1010,8 +1022,9 @@ export class World {
       }
       if (t === 'K') { box('counter', TILE + 0.02, 1.1, 1.3, px, 0.55, pz); box('top', TILE + 0.04, 0.12, 1.45, px, 1.15, pz); }
     }
-    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0 };
+    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050 };
     for (const k in L) {
+      if (k === 'pane') { const m = new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: 0xd8f0ff, transparent: true, opacity: 0.22, depthWrite: false })); m.material.userData.own = true; this.group.add(m); L[k].forEach((g) => g.dispose()); continue; }
       const glow = k === 'screen' || k === 'glass' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1';
       const m = glow ? new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'screen' && this.M.indoor === 'arcade' ? 0xff8ae8 : C[k] })) : inked(mergeGeometries(L[k]), toon(C[k] ?? 0xffffff, { rim: 0.3 }), k === 'book0' || k === 'book1' || k === 'book2' ? OL * 0.3 : OL * 0.6);
       if (glow) m.material.userData.own = true;
@@ -1019,6 +1032,22 @@ export class World {
       this.group.add(m);
       L[k].forEach((g) => g.dispose());
     }
+  }
+
+  // stadium lobbies: a poster of each of the cup's trainers' critters along the back wall
+  poster(k, px, pz) {
+    const cup = CUPS.find((c) => c.id === this.M.cup), m = k >= 0 && cup?.matches[k];
+    if (!m) return;
+    const tex = new THREE.TextureLoader().load(this.g.portrait(withGear(byId(m.critter), m.level)));
+    tex.colorSpace = THREE.SRGBColorSpace; tex.userData.own = true;
+    const bg = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.8), toon(new THREE.Color(cup.color).getHex(), { rim: 0 }));
+    bg.position.set(px, 2.05, pz + 1.04); this.group.add(bg);
+    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true }); mat.userData.own = true;
+    const pic = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3), mat); pic.position.set(px, 2.15, pz + 1.05); this.group.add(pic);
+    const ntex = canvasTex(192, 40, (c) => { c.fillStyle = '#ffffff'; c.font = 'bold 28px Lilita One, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(m.name.toUpperCase(), 96, 22); });
+    ntex.userData.own = true;
+    const nm = new THREE.MeshBasicMaterial({ map: ntex, transparent: true }); nm.userData.own = true;
+    const lab = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.29), nm); lab.position.set(px, 1.32, pz + 1.05); this.group.add(lab);
   }
 
   // Glowcap Hollow homes: a fat toadstool stem with a round door under a spotted glowing cap

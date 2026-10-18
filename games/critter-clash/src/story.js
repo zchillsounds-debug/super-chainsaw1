@@ -288,6 +288,23 @@ export function storyTalk(S, id, w, a) {
     return;
   }
   if (id === 'hatshop') return hatShop(w);
+  if (id.startsWith('case:')) { // a lobby trophy case
+    const cup = CUPS.find((c) => c.id === id.slice(5));
+    w.say([F['cup_' + cup.id] ? `The ${cup.name} trophy! {hero}'s name is engraved on it. ✨` : `An empty stand. A little card says: "${cup.name}".`]);
+    return;
+  }
+  if (id === 'cupdesk') { // the stadium's front desk signs you up for its cup
+    const cup = CUPS.find((c) => c.id === w.M.cup), front = w.M.exit, who = 'Front Desk';
+    if (F['cup_' + cup.id]) { w.say([`Front Desk: Hoo! The ${cup.name} champion! Your trophy has pride of place in the case.`, 'Front Desk: Want to battle the cup again? Use Tournament on the title screen.'], null, who); return; }
+    w.say([`Front Desk: Hoo! Welcome to the ${cup.name}! ${cup.matches.length} battles stand between you and the trophy.`], () => w.ask(`Front Desk: Shall I sign {hero} up for the ${cup.name}?`, ["Let's go!", 'Not yet'], (i) => {
+      if (i) { w.say(['Front Desk: No rush. Rest up at the Berry Center first!'], null, who); return; }
+      w.say([Object.keys(F).some((k) => k.startsWith('cup_')) ? "{hero}: Another cup, another trophy. Let's go!" : '{hero}: This is it. My first real cup. Let\'s go!'], () => {
+        save.adv.map = front.map; // the cup comes back out to the stadium door, not the lobby
+        S.worldCup(cup, front);
+      });
+    }, who), who);
+    return;
+  }
   if (id === 'fisher') { // Fisher Finn hands over his old rod: any pond, river or sea can be fished
     if (F.rod) { w.say([a.n.lines[Math.floor(Math.random() * a.n.lines.length)], 'Fisher Finn: Remember: wait for the bobber to dip, THEN press A. Patience!'], null, 'Fisher Finn'); return; }
     w.say(['Fisher Finn: Shh! ...Oh, it\'s you. You look like a natural angler.', 'Fisher Finn: Here, take my old rod! I\'ve got a new one anyway.', 'Fisher Finn: Face any water and press A to cast. When the bobber dips, press A again, quick! You might hook berries... or a grumpy water critter!'], () => {
@@ -600,27 +617,17 @@ function mama(S, w, a) {
 // facing a door and pressing A
 export function doorAction(S, b, w) {
   const F = flags();
-  const front = { map: w.key, x: b.x + b.door, y: b.y + b.h };
   if (b.lab && !F.quest) { w.say(['The door is locked. A note says: "Out front! - Prof. Pecan"']); return; }
-  if (!b.stadium && !b.altar) { // walk inside
-    sfx.door(!!b.heal);
-    const key = `in:${w.key}:${b.id}`;
-    const E = getMap(key).enter;
-    w.fade(() => w.load(key, E.x, E.y, 'n'));
-    return;
-  }
   if (b.stadium === 'thunder' && !F.rival2) {
     const a = w.npcs.find((n) => n.n.id === 'rival2');
     w.say(['Dash: NOT so fast!'], () => rival2(S, w, a));
     return;
   }
-  if (b.stadium) {
-    const cup = CUPS.find((c) => c.id === b.stadium);
-    if (F['cup_' + cup.id]) { w.say([`The ${cup.name} trophy shines in the lobby. {hero} is the champion here!`, 'Want to battle the cup again? Use Tournament on the title screen.']); return; }
-    w.say([
-      `Welcome to the ${cup.name}! ${cup.matches.length} battles stand between you and the trophy.`,
-      Object.keys(F).some((k) => k.startsWith('cup_')) ? "{hero}: Another cup, another trophy. Let's go!" : '{hero}: This is it. My first real cup. Let\'s go!',
-    ], () => S.worldCup(cup, front));
+  if (!b.altar) { // walk inside (a stadium opens into its lobby)
+    sfx.door(!!b.heal);
+    const key = `in:${w.key}:${b.id}`;
+    const E = getMap(key).enter;
+    w.fade(() => w.load(key, E.x, E.y, 'n'));
     return;
   }
   w.say(['Nobody seems to be home.']);

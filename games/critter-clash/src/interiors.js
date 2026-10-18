@@ -3,6 +3,10 @@
 // Tiles: W wall, C shelf, X machine (arcade cabinet, smoothie blender, lab console), Q bed, D table,
 // O potted plant, K counter (talk across it), Y rug (walkable), H hat stand (Hat Shop). Walking south off the doormat goes back out.
 import { MAPS } from './worldmaps.js';
+import { CUPS, CRITTERS } from './data.js';
+
+// stadium lobby trophy cases, left to right, in story order
+export const CUP_ORDER = ['sprout', 'thunder', 'grove', 'champion', 'midnight', 'sky', 'legend'];
 
 const ROOMS = {
   house: [
@@ -44,6 +48,16 @@ const ROOMS = {
     'W...YYY...W',
     'WO..YYY..OW',
     'WWWWW.WWWWW',
+  ],
+  lobby: [
+    'WWWWWWWWWWWWWWW',
+    'WUUUU.....UUUOW',
+    'W.....KKK.....W',
+    'W.............W',
+    'WDD.........DDW',
+    'W.....YYY.....W',
+    'WO....YYY....OW',
+    'WWWWWWW.WWWWWWW',
   ],
   arcade: [
     'WWWWWWWWWWWWW',
@@ -87,6 +101,7 @@ const ITEMS = {
   D: 'A table with a bowl of berries on it.',
   O: 'A happy little plant. It looks well watered.',
   H: 'A hat stand.',
+  U: 'A trophy case.',
 };
 
 export function interiorMap(key) {
@@ -94,10 +109,16 @@ export function interiorMap(key) {
   const O = MAPS[outer], b = O?.buildings?.find((x) => x.id === bid);
   if (!b) return null;
   const P = PEOPLE[`${outer}:${bid}`] || {};
-  const kind = P.kind || (b.heal ? 'center' : b.lab ? 'lab' : 'house');
+  const kind = P.kind || (b.stadium ? 'lobby' : b.heal ? 'center' : b.lab ? 'lab' : 'house');
   const tiles = ROOMS[kind];
   const W = tiles[0].length, H = tiles.length, door = tiles[H - 1].indexOf('.');
   const npcs = (P.npcs || []).map(([critter, name, lines, dir, x, y, story], k) => ({ id: 'in' + k, critter, name, lines, dir, x, y, wander: story ? 0 : 1, story }));
+  if (b.stadium) { // a front desk to sign up for the cup, and two fans who can't wait
+    const cup = CUPS.find((c) => c.id === b.stadium), m = cup.matches;
+    npcs.push({ id: 'desk', critter: 'hootsy', name: 'Front Desk', dir: 's', x: 7, y: 1, story: 'cupdesk' });
+    npcs.push({ id: 'fan1', critter: m[0].critter, name: 'Fan', dir: 'e', x: 3, y: 3, act: 'cheer', lines: [`Fan: ${m[0].name} is my favourite! Their ${CRITTERS.find((c) => c.id === m[0].critter).name} is first up in the ${cup.name}.`, `Fan: ${m.length} battles in a row. No breaks! That's the ${cup.name}.`] });
+    npcs.push({ id: 'fan2', critter: m[m.length - 1].critter, name: 'Fan', dir: 'w', x: 11, y: 3, act: 'wave', lines: [`Fan: Nobody beats ${m[m.length - 1].name}. Nobody! ...Well, almost nobody.`, 'Fan: The posters on the wall are this season\'s line-up. Collect them all!'] });
+  }
   if (b.heal) {
     npcs.push({ id: 'nurse', critter: 'lilypop', name: 'Nurse Lilypop', dir: 's', x: (W - 1) / 2, y: 1, story: 'nurse' });
     if (P.visitor) { const [critter, name, lines, dir, x, y] = P.visitor; npcs.push({ id: 'visitor', critter, name, lines, dir, x, y }); }
@@ -112,15 +133,17 @@ export function interiorMap(key) {
     if (t === 'C' && kind === 'center') text = 'Jars of berries line the shelf: strawberry, blueberry, glowberry...';
     if (t === 'X' && kind === 'lab') text = 'A screen shows a growing critter: small, medium, HUGE.';
     if (t === 'C' && kind === 'shop') text = 'Hat boxes, stacked to the ceiling. One is labelled "EXTRA FLOPPY".';
+    if (t === 'U') { const n = [...row].slice(0, x).filter((c) => c === 'U').length; signs.push({ x, y, text, hide: true, act: 'case:' + CUP_ORDER[n] }); return; }
     signs.push({ x, y, text, hide: true, act: t === 'Q' && bid === 'home' ? 'rest' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
   }));
   return {
+    cup: b.stadium,
     name: b.label || (b.id === 'home' ? 'Home' : 'House'),
     indoor: kind, tiles, npcs, signs, music: O.music,
     exit: { map: outer, x: b.x + b.door, y: b.y + b.h, dir: 's' },
     enter: { x: door, y: H - 2 },
     palette: P.dark ? { a: '#4a3a6a', b: '#46365f' } : { a: '#d8a86a', b: '#d2a264' },
-    wall: P.wall || (b.heal ? '#ffe0ec' : '#fff1d8'), rug: P.rug || (b.heal ? '#ff7aa8' : '#7aa8ff'),
+    wall: P.wall || (b.stadium ? '#f4ecff' : b.heal ? '#ffe0ec' : '#fff1d8'), rug: P.rug || (b.stadium ? CUPS.find((c) => c.id === b.stadium).color : b.heal ? '#ff7aa8' : '#7aa8ff'),
     outer: 0x3a2a2a, // a warm dusk around the room, not a black void
     mood: P.dark ? { sun: 0xd0b0ff, sunI: 1.1, sky: 0xb09aff, gnd: 0x3a2a4a, hemiI: 1.2, fog: 0x1a1410 } : { sun: 0xfff0d8, sunI: 1.3, sky: 0xfff4e0, gnd: 0x8a6a4a, hemiI: 1.25, fog: 0x1a1410 },
   };
