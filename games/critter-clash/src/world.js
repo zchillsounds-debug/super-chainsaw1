@@ -947,7 +947,8 @@ export class World {
   // street lamps at the edges of town paths (on tile corners, so they never block a step); lit from dusk
   buildLamps() {
     const M = this.M;
-    if (M.indoor || M.city || !((M.buildings || []).some((b) => b.heal) || this.key === 'village')) return; // towns (and home)
+    const route = !M.indoor && M.wild && !(M.buildings || []).length && !M.fireflies && !M.lava && this.key !== 'peak'; // routes get a few lamps along the path too
+    if (M.indoor || M.city || !((M.buildings || []).some((b) => b.heal) || this.key === 'village' || route)) return; // towns (and home)
     const ok = (x, y) => '.:"sf'.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y), cand = [];
     for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) { // corner between tiles (x-1..x, y-1..y)
       const q = [[x - 1, y - 1], [x, y - 1], [x - 1, y], [x, y]];
@@ -957,7 +958,7 @@ export class World {
     }
     const r = rng(hash(this.key + ':lamps')); cand.sort(() => r() - 0.5);
     const picked = [];
-    for (const c of cand) { if (picked.length >= 6) break; if (picked.every((p) => Math.abs(p[0] - c[0]) + Math.abs(p[1] - c[1]) >= 8)) picked.push(c); }
+    for (const c of cand) { if (picked.length >= (route ? 3 : 6)) break; if (picked.every((p) => Math.abs(p[0] - c[0]) + Math.abs(p[1] - c[1]) >= (route ? 11 : 8))) picked.push(c); }
     if (!picked.length) return;
     const lit = this.phase !== 'day', iron = [], glass = [];
     for (const [cx, cy] of picked) {
