@@ -1617,7 +1617,7 @@ export class World {
       if (this.busy || this.dialog || a.from || a.walking) continue;
       // wandering: town folk shuffle near home; wild critters roam their grass
       a.wanderT -= dt;
-      if ((a.n?.wander || a.wild && this.phase !== 'night') && a.wanderT <= 0) {
+      if ((a.n?.wander && !this.dozing(a.n) || a.wild && this.phase !== 'night') && a.wanderT <= 0) {
         a.wanderT = (a.wild ? 0.8 : 2) + Math.random() * 2.5;
         const ds = Object.keys(DIRS), d = ds[Math.floor(Math.random() * 4)], [dx, dy] = DIRS[d], nx = a.x + dx, ny = a.y + dy;
         a.dir = d;
@@ -1699,8 +1699,12 @@ export class World {
     if (door && this.dir === 'n') return this.S.worldDoor(door.b, this);
   }
 
+  // the bouncy town kids nod off outdoors at night
+  dozing(n) { return this.phase === 'night' && (n.act === 'hop' || n.act === 'cheer') && !n.story && !n.trainer; }
+
   talk(a) {
     const n = a.n;
+    if (this.dozing(n)) return this.say([`${n.name} is fast asleep, snoring softly. Better let them dream. Zzz...`]);
     a.dir = { n: 's', s: 'n', e: 'w', w: 'e' }[this.dir];
     if (n.story) return this.S.worldStory(n.story, this, a);
     if (n.trainer) {
@@ -1920,7 +1924,7 @@ function walkPose(P, t) {
 
 // town folk doing their own thing: fishing, napping, dancing, hopping, cheering, waving, fanning themselves
 function actPose(w, a, P, t, dt) {
-  const act = a.n.act, cr = a.cr;
+  const act = w.dozing(a.n) ? 'sleep' : a.n.act, cr = a.cr;
   idlePose(P, t);
   if (act === 'sleep') {
     P.sy = 0.88 + Math.sin(t * 1.4) * 0.05; P.lean = -0.18; P.head = 0.3; P.armLz = P.armRz = 0.05;
