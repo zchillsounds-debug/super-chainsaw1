@@ -1143,6 +1143,7 @@ export const SHOP_HATS = [
   { id: 'phones', name: 'DJ Headphones', kind: 'phones', col: 0x2a2438, band: 0xff5ad8, price: 0, gift: true },
   { id: 'seedling', name: 'Seedling Sprout', kind: 'seedling', col: 0x5ac24a, band: 0xffffff, price: 0, gift: true },
   { id: 'bobble', name: 'Cocoa Bobble Hat', kind: 'beanie', col: 0x8a4a2a, band: 0xfff4e0, price: 0, gift: true },
+  { id: 'visor', name: 'Frosty Visor', kind: 'visor', col: 0x6ad8ff, band: 0xffffff, price: 0, gift: true },
   { id: 'nightcap', name: 'Sleepy Nightcap', kind: 'nightcap', col: 0x6a8aff, band: 0xffffff, price: 0, gift: true },
 ];
 export function shopHat(cr, id) {
@@ -1159,6 +1160,7 @@ export function hatModel(cr, kind, col, band) {
   if (kind === 'swim') { add(new THREE.SphereGeometry(r * 0.8, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.75; G.position.y -= r * 0.25; }
   if (kind === 'band') { add(new THREE.TorusGeometry(r * 0.95, r * 0.08, 6, 20)).rotation.x = Math.PI / 2; G.position.y -= r * 0.45; }
   if (kind === 'beanie') { add(new THREE.SphereGeometry(r * 0.78, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.82; add(new THREE.TorusGeometry(r * 0.76, r * 0.1, 6, 20), toon(band), 0.012).rotation.x = Math.PI / 2; add(new THREE.SphereGeometry(r * 0.2, 10, 8), toon(band)).position.y = r * 0.68; G.position.y -= r * 0.2; }
+  if (kind === 'visor') { G.position.y -= r * 0.32; add(new THREE.TorusGeometry(r * 0.86, r * 0.08, 6, 24), toon(band), 0.012).rotation.x = Math.PI / 2; const v = add(new THREE.CylinderGeometry(r * 0.95, r * 0.95, r * 0.05, 20, 1, false, -Math.PI * 0.42, Math.PI * 0.84)); v.position.set(0, r * 0.02, r * 0.12); v.rotation.x = 0.18; for (const sd of [-1, 1]) { const f = add(new THREE.OctahedronGeometry(r * 0.13), toon(band), 0); f.position.set(sd * r * 0.5, r * 0.08, r * 0.82); } }
   if (kind === 'nightcap') { G.position.y -= r * 0.12; const a = add(new THREE.CylinderGeometry(r * 0.36, r * 0.76, r * 0.72, 16)); a.position.y = r * 0.3; const b = add(new THREE.ConeGeometry(r * 0.36, r * 1.0, 12)); b.position.set(r * 0.4, r * 0.76, 0); b.rotation.z = -1.1; const p = add(new THREE.SphereGeometry(r * 0.2, 10, 8), toon(band)); p.position.set(r * 0.92, r * 0.52, 0); const ring = add(new THREE.TorusGeometry(r * 0.74, r * 0.1, 6, 20), toon(band)); ring.rotation.x = Math.PI / 2; }
   if (kind === 'party') { add(new THREE.ConeGeometry(r * 0.42, r * 1.0, 16)).position.y = r * 0.5; for (let k = 0; k < 3; k++) { const s = add(new THREE.TorusGeometry(r * (0.34 - k * 0.1), r * 0.04, 4, 16), toon(band), 0); s.rotation.x = Math.PI / 2; s.position.y = r * (0.18 + k * 0.25); } add(new THREE.SphereGeometry(r * 0.13, 8, 6), toon(band)).position.y = r * 1.02; G.rotation.z = 0.15; }
   if (kind === 'flower') { add(new THREE.TorusGeometry(r * 0.78, r * 0.07, 6, 22)).rotation.x = Math.PI / 2; const P = [toon(band), toon(0xffe14d), toon(0xffffff)]; for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, f = add(new THREE.SphereGeometry(r * 0.15, 8, 6), P[k % 3], 0.012); f.position.set(Math.cos(a) * r * 0.78, r * 0.06, Math.sin(a) * r * 0.78); f.scale.y = 0.6; } G.position.y -= r * 0.3; }

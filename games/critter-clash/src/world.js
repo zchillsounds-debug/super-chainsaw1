@@ -254,7 +254,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -807,6 +807,21 @@ export class World {
   // low mist drifting between the trees of the glowing woods (and over any map at night after rain... just the woods for now)
   // little after-touches of finished deliveries: Puff's glowcap night-light by the picnic blanket
   buildThanks() {
+    this.thanksFan = null;
+    if (this.key === 'ember' && save.adv.flags.fan_done) { // Tinker Volt's pocket fan, whirring beside Pengsicle at the hot springs
+      const n = (this.M.npcs || []).find((x) => x.id === 'spa'); if (!n) return;
+      const [px, pz] = wpos(n.x, n.y), g = new THREE.Group(); g.position.set(px + 0.9, 0, pz + 0.75); g.rotation.y = -2.3; g.scale.setScalar(1.7);
+      const body = toon(0x6ad8ff), wh = toon(0xffffff);
+      const base = inked(new THREE.CylinderGeometry(0.22, 0.26, 0.12, 12), body, OL * 0.4); base.position.y = 0.06; g.add(base);
+      const st = inked(new THREE.CylinderGeometry(0.05, 0.05, 0.5, 6), wh, OL * 0.3); st.position.y = 0.36; g.add(st);
+      const head = new THREE.Group(); head.position.y = 0.66; head.rotation.x = -0.75; g.add(head);
+      const cage = inked(new THREE.TorusGeometry(0.26, 0.03, 6, 20), body, OL * 0.3); head.add(cage);
+      const hub = inked(new THREE.SphereGeometry(0.07, 10, 8), body, OL * 0.3); hub.position.z = 0.02; head.add(hub);
+      const blades = new THREE.Group(); blades.position.z = 0.03; head.add(blades);
+      for (let k = 0; k < 3; k++) { const b = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), wh); b.scale.set(0.4, 1, 0.08); b.position.set(0, 0.12, 0); const pv = new THREE.Group(); pv.rotation.z = k / 3 * Math.PI * 2; pv.add(b); blades.add(pv); }
+      this.group.add(g); this.thanksFan = blades;
+      return;
+    }
     if (this.key !== 'cloudtop' || !save.adv.flags.lamp_done) return;
     const n = (this.M.npcs || []).find((x) => x.id === 'picnic'); if (!n) return;
     const [px, pz] = wpos(n.x, n.y), g = new THREE.Group(); g.position.set(px + 1.0, 0, pz - 0.7);
@@ -2126,6 +2141,7 @@ export class World {
     }
     for (const [px, pz] of this.vents || []) if (Math.random() < dt * 3) this.g.fx.spawn({ x: px, y: 0.8, z: pz, vy: 1.4, vx: 0.2, color: 0xd8d0d0, alpha: 0.5, size: 0.7, life: 1.8, shape: 'puff', additive: false, grow: 1.2 });
     for (const [fx, fy, fz, k = 1] of this.forgeFire || []) if (Math.random() < dt * 9 * k) this.g.fx.spawn({ x: fx + (Math.random() - 0.5) * 1.4 * k, y: fy, z: fz, vy: 1.2 + Math.random() * 1.6, vx: (Math.random() - 0.5) * 0.6, vz: 0.3 + Math.random() * 0.6, color: Math.random() < 0.6 ? 0xffa030 : 0xffe060, size: 0.14 + Math.random() * 0.1, life: 0.9, shape: 'glow' });
+    if (this.thanksFan) { this.thanksFan.rotation.z -= dt * 14; if (Math.random() < dt * 3) this.g.fx.spawn({ shape: 'star', x: this.thanksFan.parent.parent.position.x + (Math.random() - 0.5) * 0.3, y: 0.55 + Math.random() * 0.3, z: this.thanksFan.parent.parent.position.z + (Math.random() - 0.5) * 0.3, vx: -1.1, vz: -0.65, vy: 0.15, life: 0.9, size: 0.18, color: 0xdff6ff }); }
     if (this.pendulum) this.pendulum.rotation.z = Math.sin(this.t * 2.2) * 0.22; // tick... tock...
     for (const [jx, jy, jz, col, sh] of this.jars || []) if (Math.random() < dt * 5) this.g.fx.spawn(sh ? { x: jx + (Math.random() - 0.5) * 1.0, y: jy, z: jz + (Math.random() - 0.5) * 0.6, vy: 0.6, color: col, size: 0.14, life: 0.7, shape: sh } : { x: jx + (Math.random() - 0.5) * 0.5, y: jy + (Math.random() - 0.5) * 0.6, z: jz + (Math.random() - 0.5) * 0.5, color: 0xe8ff6a, size: 0.3, life: 0.8, shape: 'glow', fadeIn: 0.3 });
     if (this.forgePool) this.forgePool.material.opacity = 0.42 + Math.sin(this.t * 7) * 0.05 + Math.sin(this.t * 17) * 0.04;

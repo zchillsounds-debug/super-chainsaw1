@@ -553,6 +553,14 @@ const LOST = {
     found: ['A tiny firefly blinks hello from the warm rock. It\'s Blink! It hops onto {hero}\'s nose. Tickly!', 'Firefly Flo in Bloom Town will be so happy!'],
     done: ['Firefly Flo: BLINK! You found Blink! Bzz bzz bzz!', 'Blink zips round the room and dives back into the jar with the others. The whole jar glows brighter!', 'Firefly Flo: Thank you! Here: berries, and the honey snack I was saving. You earned it!', '{hero} got 3 berries and a Power Snack! ⭐'],
   },
+  fan: {
+    who: 'Tinker Volt', item: 'pocket fan', hat: 'visor', berries: 3, toast: '🌀', home: 'Neon City', to: { npc: 'spa', map: 'ember', name: 'Pengsicle', home: 'Cinder Town' },
+    thanks: 'Tinker Volt: Pengsicle sent me a photo. It\'s just a very happy face and a lot of frost. Ten out of ten!',
+    after: ['Pengsicle: Ahhh... the little fan hums all day. I can finally enjoy the hot springs! Chilly AND cosy!'],
+    ask: ['Tinker Volt: Hey, you look like you travel! I built a thing. A pocket fan! It runs on one tiny spark and blows ice-cold air.', 'Tinker Volt: There\'s a Pengsicle melting at the hot springs in Cinder Town. It wrote to the city for help. Could you take the fan to it?', '{hero} got a pocket fan! 🌀 Take it to Pengsicle at the hot springs in Cinder Town.'],
+    wait: ['Tinker Volt: The melting Pengsicle sits by the hot springs in Cinder Town, top right. Hurry, before it\'s a puddle!'],
+    done: ['Pengsicle: Is that... a FAN? For ME? From the big city?!', 'Pengsicle switches it on. WHIRRR! A frosty breeze! Little snowflakes swirl around its beak.', 'Pengsicle: I can feel my flippers again! Here, take my visor. I won\'t need the shade any more!', '{hero} got the Frosty Visor! 🕶️ +3 🍓'],
+  },
   lamp: {
     who: 'Mushroom Fan Fen', item: 'glowcap night-light', hat: 'nightcap', berries: 2, toast: '🍄', home: 'Glowcap Hollow', to: { npc: 'picnic', map: 'cloudtop', name: 'Picnicker Puff', home: 'Cloudtop Gardens' },
     thanks: 'Mushroom Fan Fen: Puff says the night-light makes the clouds glow pink. Best. Naps. Ever. That\'s what the letter said!',
