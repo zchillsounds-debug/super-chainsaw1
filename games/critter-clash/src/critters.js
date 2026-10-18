@@ -1146,6 +1146,7 @@ export const SHOP_HATS = [
   { id: 'visor', name: 'Frosty Visor', kind: 'visor', col: 0x6ad8ff, band: 0xffffff, price: 0, gift: true },
   { id: 'boppers', name: 'Neon Boppers', kind: 'boppers', col: 0x2a2438, band: 0xff5ad8, price: 8, market: true }, // only at Chef Rumi's noodle cart in Neon City
   { id: 'nightcap', name: 'Sleepy Nightcap', kind: 'nightcap', col: 0x6a8aff, band: 0xffffff, price: 0, gift: true },
+  { id: 'pumpkin', name: 'Pumpkin Head', kind: 'pumpkin', col: 0xff8a1a, band: 0x4a7a2a, price: 0, gift: true, season: true }, // three Pumpkin Nights treats (seasonal, so not counted towards the hat total)
   { id: 'laurel', name: 'Golden Laurel', kind: 'laurel', col: 0xe8b830, band: 0xfff2a0, price: 0, gift: true }, // the Peak Gauntlet's first clear
 ];
 export function shopHat(cr, id) {
@@ -1166,6 +1167,12 @@ export function hatModel(cr, kind, col, band) {
   if (kind === 'visor') { G.position.y -= r * 0.32; add(new THREE.TorusGeometry(r * 0.86, r * 0.08, 6, 24), toon(band), 0.012).rotation.x = Math.PI / 2; const v = add(new THREE.CylinderGeometry(r * 0.95, r * 0.95, r * 0.05, 20, 1, false, -Math.PI * 0.42, Math.PI * 0.84)); v.position.set(0, r * 0.02, r * 0.12); v.rotation.x = 0.18; for (const sd of [-1, 1]) { const f = add(new THREE.OctahedronGeometry(r * 0.13), toon(band), 0); f.position.set(sd * r * 0.5, r * 0.08, r * 0.82); } }
   if (kind === 'nightcap') { G.position.y -= r * 0.12; const a = add(new THREE.CylinderGeometry(r * 0.36, r * 0.76, r * 0.72, 16)); a.position.y = r * 0.3; const b = add(new THREE.ConeGeometry(r * 0.36, r * 1.0, 12)); b.position.set(r * 0.4, r * 0.76, 0); b.rotation.z = -1.1; const p = add(new THREE.SphereGeometry(r * 0.2, 10, 8), toon(band)); p.position.set(r * 0.92, r * 0.52, 0); const ring = add(new THREE.TorusGeometry(r * 0.74, r * 0.1, 6, 20), toon(band)); ring.rotation.x = Math.PI / 2; }
   if (kind === 'party') { add(new THREE.ConeGeometry(r * 0.42, r * 1.0, 16)).position.y = r * 0.5; for (let k = 0; k < 3; k++) { const s = add(new THREE.TorusGeometry(r * (0.34 - k * 0.1), r * 0.04, 4, 16), toon(band), 0); s.rotation.x = Math.PI / 2; s.position.y = r * (0.18 + k * 0.25); } add(new THREE.SphereGeometry(r * 0.13, 8, 6), toon(band)).position.y = r * 1.02; G.rotation.z = 0.15; }
+  if (kind === 'pumpkin') { // a little carved pumpkin worn like a cap: ribbed lobes, a curly stem and a leaf
+    G.position.y -= r * 0.2;
+    for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, l = add(new THREE.SphereGeometry(r * 0.42, 12, 8), M, 0.014); l.scale.set(0.7, 0.85, 1); l.position.set(Math.cos(a) * r * 0.3, r * 0.32, Math.sin(a) * r * 0.3); l.rotation.y = -a; }
+    const st = add(new THREE.CylinderGeometry(r * 0.07, r * 0.1, r * 0.3, 6), toon(band), 0.01); st.position.y = r * 0.78; st.rotation.z = 0.3;
+    const lf = add(new THREE.SphereGeometry(r * 0.2, 8, 6), toon(0x5aa83a), 0.01); lf.scale.set(1, 0.25, 0.6); lf.position.set(r * 0.2, r * 0.72, 0);
+  }
   if (kind === 'laurel') { // a ring of golden leaves, two by two, with a bright gem at the front
     add(new THREE.TorusGeometry(r * 0.78, r * 0.045, 6, 22)).rotation.x = Math.PI / 2;
     const L = toon(col, { rim: 0.8 }), leaf = new THREE.SphereGeometry(r * 0.14, 8, 6);

@@ -1301,7 +1301,12 @@ export class World {
   pumpkin() {
     const day = new Date().toISOString().slice(0, 10), A = save.adv;
     if (this.phase === 'day') return this.say([['A carved pumpkin with a big toothy grin. Pumpkin Nights are here!', 'A pumpkin with a wonky smile. Someone carved it with love. And a spoon.', 'This pumpkin looks surprised. Maybe it heard about the Glowcap fairy ring.'][Math.floor(Math.random() * 3)], 'After dark, the pumpkins light up... and some hide treats!']);
-    if (A.pumpkin !== day) { A.pumpkin = day; countUp('pumpkin'); save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(1); return this.say(['BOO! {hero} jumps... then peeks inside the glowing pumpkin.', 'A candy-wrapped berry! Happy Pumpkin Nights! +1 🍓 (One treat a night.)']); }
+    if (A.pumpkin !== day) {
+      A.pumpkin = day; countUp('pumpkin'); save.berries = (save.berries || 0) + 1;
+      const hat = A.cnt.pumpkin >= 3 && !(A.hats ||= []).includes('pumpkin'); if (hat) A.hats.push('pumpkin'); // the third treat comes with a hat
+      persist(); sfx.jingle?.(hat ? 3 : 1);
+      return this.say(['BOO! {hero} jumps... then peeks inside the glowing pumpkin.', 'A candy-wrapped berry! Happy Pumpkin Nights! +1 🍓 (One treat a night.)', ...(hat ? ['Wait, there\'s more! A tiny pumpkin hat, just {hero}\'s size! {hero} got the Pumpkin Head! 🎃 (Wear it from ☰ → 🎩 Hats.)'] : [`Treats found: ${A.cnt.pumpkin}. ${A.cnt.pumpkin < 3 ? 'Three treats bring a surprise!' : ''}`])]);
+    }
     return this.say(['The pumpkin\'s face flickers warmly. Its treat is gone for tonight. (Come back tomorrow night!)']);
   }
 

@@ -1017,7 +1017,7 @@ export class Screens {
         + bar('⚔️', 'Trainers beaten', tr.filter((n) => F[n.id]).length, tr.length)
         + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_')).length, 24)
         + bar('🤝', 'Favours done', fl.rows.filter((r) => r.state === 'done').length, fl.rows.length + fl.unasked)
-        + bar('🎩', 'Hats collected', (A.hats || []).length, SHOP_HATS.length)
+        + bar('🎩', 'Hats collected', (A.hats || []).filter((id) => !SHOP_HATS.find((h) => h.id === id)?.season).length, SHOP_HATS.filter((h) => !h.season).length)
         + bar('🐟', 'Kinds of fish', fsp.size, Object.values(FISH).flat().length)
         + bar('📖', 'Critters on your team', save.unlocked.length, CRITTERS.length)
         + bar('🏔️', 'Peak Gauntlets cleared', A.gauntWins || 0)
