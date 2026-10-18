@@ -932,7 +932,7 @@ export class Screens {
       const where = { pond: '🌿 Ponds & rivers', sea: '🏖️ The sea', lava: '🌋 Lava pools', cold: '❄️ Icy water' };
       body = (save.adv.flags.rod ? '' : '<li class="jr-more">🎣 Fisher Finn in Seashell Town lends out rods. Then face any water and press A!</li>')
         + Object.entries(FISH).map(([k, list]) => `<li class="jr-head">${where[k]}</li>` + list.map(([n], i) => { const cm = sp[n]; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? '🐟' : '❔'}</span><b>${cm ? n : '???'}${i === list.length - 1 ? ' <small>rare</small>' : ''}</b><em>${cm ? cm + ' cm' : ''}${L.best?.name === n ? ' 🏅' : ''}</em></li>`; }).join('')).join('')
-        + `<li class="jr-more">${Object.keys(sp).length}/${Object.values(FISH).flat().length} kinds · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}</li>`;
+        + `<li class="jr-more">${Object.keys(sp).length}/${Object.values(FISH).flat().length} kinds · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
     }
     d.innerHTML = `<div class="modal wd-journal"><h2>Journal</h2>
       <div class="jr-tabs"><button data-t="fav" class="${tab === 'fav' ? 'on' : ''}">🤝 Favours</button><button data-t="fish" class="${tab === 'fish' ? 'on' : ''}">🐟 Fish</button></div>

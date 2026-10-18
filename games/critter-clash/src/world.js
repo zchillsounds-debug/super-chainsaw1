@@ -1250,30 +1250,32 @@ export class World {
   buildDig() {
     this.dig = null;
     const snow = this.M.snow && this.key !== 'peak'; // Frostpeak has one too: an ice gem under the snow
-    if ((this.M.arena !== 'beach' && !snow) || this.M.indoor) return;
+    const lava = this.key === 'ember'; // and Cinder Town: an ember gem in the warm ash
+    if ((this.M.arena !== 'beach' && !snow && !lava) || this.M.indoor) return;
     const day = new Date().toISOString().slice(0, 10), r = rng(hash(this.key + day));
     if ((save.adv.dig ||= {})[this.key] === day) return;
     const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((d) => d.x + ',' + (d.y + 1)), ...this.itemSpots, ...(this.M.signs || []).map((g) => g.x + ',' + g.y), this.hx + ',' + this.hy]);
     const ok = [];
     const seen = new Set([this.hx + ',' + this.hy]), q = [[this.hx, this.hy]]; // only sand you can walk to, and not tucked behind a building or the trees
     for (let i = 0; i < q.length; i++) for (const [dx, dy] of Object.values(DIRS)) { const nx = q[i][0] + dx, ny = q[i][1] + dy, k = nx + ',' + ny; if (!seen.has(k) && this.walkable(nx, ny)) { seen.add(k); q.push([nx, ny]); } }
-    for (const [x, y] of q) if (this.tile(x, y) === (snow ? '.' : 's') && x > 1 && y > 1 && x < this.W - 2 && y < this.H - 1 && !taken.has(x + ',' + y) && !'hTP'.includes(this.tile(x, y + 1)) && !'hTP'.includes(this.tile(x, y + 2))) ok.push([x, y]);
+    for (const [x, y] of q) if (this.tile(x, y) === (snow || lava ? '.' : 's') && x > 1 && y > 1 && x < this.W - 2 && y < this.H - 1 && !taken.has(x + ',' + y) && !'hTP'.includes(this.tile(x, y + 1)) && !'hTP'.includes(this.tile(x, y + 2))) ok.push([x, y]);
     ok.sort((a, b) => a[1] - b[1] || a[0] - b[0]); // the same spot all day, wherever you walked in from
     if (!ok.length) return;
     const [x, y] = ok[Math.floor(r() * ok.length)], [px, pz] = wpos(x, y);
     const g = new THREE.Group(); g.position.set(px, 0, pz); // a little heap of turned sand with a pirate's X beside it
-    const heap = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), toon(snow ? 0xf4f8ff : 0xd8b068)); heap.scale.set(1, 0.38, 0.8); heap.position.set(-0.35, 0, -0.35); heap.receiveShadow = true; g.add(heap);
-    for (const a of [0.78, -0.78]) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.03, 0.17), toon(snow ? 0x4a8ad8 : 0xa8743a)); b.rotation.y = a; b.position.set(0.25, 0.02, 0.2); g.add(b); }
-    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(snow ? 0.16 : 0.12), toon(snow ? 0xa8eaff : 0xfff4a0, { rim: 1, emissive: snow ? 0x2a6a90 : 0x806a20 })); gem.position.set(-0.3, 0.22, -0.2); g.add(gem);
+    const heap = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), toon(snow ? 0xf4f8ff : lava ? 0x5a4a50 : 0xd8b068)); heap.scale.set(1, 0.38, 0.8); heap.position.set(-0.35, 0, -0.35); heap.receiveShadow = true; g.add(heap);
+    for (const a of [0.78, -0.78]) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.03, 0.17), lava ? new THREE.MeshBasicMaterial({ color: 0xff8a2a }) : toon(snow ? 0x4a8ad8 : 0xa8743a)); if (lava) b.material.userData.own = true; b.rotation.y = a; b.position.set(0.25, 0.02, 0.2); g.add(b); }
+    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(snow || lava ? 0.16 : 0.12), toon(snow ? 0xa8eaff : lava ? 0xff6a3a : 0xfff4a0, { rim: 1, emissive: snow ? 0x2a6a90 : lava ? 0x902a10 : 0x806a20 })); gem.position.set(-0.3, 0.22, -0.2); g.add(gem);
     this.group.add(g);
-    this.dig = { x, y, g, px, pz, snow };
+    if (lava) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff6a2a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 }); sm.userData.own = true; const sp = new THREE.Sprite(sm); sp.scale.setScalar(1.3); sp.position.set(0.2, 0.15, 0.2); g.add(sp); }
+    this.dig = { x, y, g, px, pz, snow, lava };
   }
   digUp() {
     const D = this.dig; this.dig = null;
     (save.adv.dig ||= {})[this.key] = new Date().toISOString().slice(0, 10); countUp('dig');
     this.group.remove(D.g); D.g.traverse((o) => o.geometry?.dispose());
-    for (let k = 0; k < 14; k++) this.g.fx.spawn({ x: D.px + (Math.random() - 0.5) * 0.8, y: 0.3, z: D.pz + (Math.random() - 0.5) * 0.8, vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 2.5, vz: (Math.random() - 0.5) * 3, color: D.snow ? 0xffffff : 0xe8c87a, alpha: 0.8, size: 0.3, life: 0.8, shape: 'puff', additive: false, grav: 8 });
-    sfx.foot?.(D.snow ? 'snow' : 'sand'); sfx.pickup?.();
+    for (let k = 0; k < 14; k++) this.g.fx.spawn({ x: D.px + (Math.random() - 0.5) * 0.8, y: 0.3, z: D.pz + (Math.random() - 0.5) * 0.8, vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 2.5, vz: (Math.random() - 0.5) * 3, color: D.snow ? 0xffffff : D.lava ? 0x6a5a5a : 0xe8c87a, alpha: 0.8, size: 0.3, life: 0.8, shape: 'puff', additive: false, grav: 8 });
+    sfx.foot?.(D.snow ? 'snow' : D.lava ? 'stone' : 'sand'); sfx.pickup?.();
     const roll = Math.random(), hero = save.adv.hero;
     if (D.snow) { // under the snow: a sleepy Pengsicle, or an ice gem (gems are counted; every third one comes with a Power Snack)
       if (roll < 0.15) { persist(); return this.say(['{hero} digs into the snow... and it digs back! A wild Pengsicle was napping in there!'], () => this.startWild('pengsicle', Math.max(3, (save.critters[hero]?.level || 4) - 1), null, Math.random() < SHINY_RATE)); }
@@ -1283,6 +1285,15 @@ export class World {
       persist(); sfx.jingle?.(3);
       for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: D.px, y: 0.5, z: D.pz, vx: (Math.random() - 0.5) * 2, vy: 1.5 + Math.random() * 2, vz: (Math.random() - 0.5) * 2, color: 0xa8eaff, size: 0.4, life: 0.9, shape: 'star', grav: 4 });
       return this.say([...lines, 'Another glint will show in the snow tomorrow.']);
+    }
+    if (D.lava) { // in the warm ash: a grumpy Kindlekit, or an ember gem (Smith Ash buys them; every third one comes with a Power Snack)
+      if (roll < 0.15) { persist(); return this.say(['{hero} digs into the warm ash... and a tail flicks out! A wild Kindlekit was keeping cosy in there!'], () => this.startWild('kindlekit', Math.max(3, (save.critters[hero]?.level || 4) - 1), null, Math.random() < SHINY_RATE)); }
+      const n = (save.adv.emberGems = (save.adv.emberGems || 0) + 1), b = 2 + (n % 3 === 0 ? 0 : 1); save.berries = (save.berries || 0) + b;
+      const lines = [`{hero} digs up an EMBER GEM! It's warm, and it glows like a coal. 🔥 (${n} found) Smith Ash swaps it for ${b} berries. +${b} 🍓`];
+      if (n % 3 === 0) { const rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.4)); lines.push('Three ember gems! Smith Ash throws in a Power Snack too! ⭐', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : [])); }
+      persist(); sfx.jingle?.(3);
+      for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: D.px, y: 0.5, z: D.pz, vx: (Math.random() - 0.5) * 2, vy: 1.5 + Math.random() * 2, vz: (Math.random() - 0.5) * 2, color: 0xff8a3a, size: 0.4, life: 0.9, shape: 'spark', grav: 4 });
+      return this.say([...lines, 'Another warm glow will show in the ash tomorrow.']);
     }
     if (roll < 0.15) { // a Diggles was already down there
       const lv = Math.max(3, (save.critters[hero]?.level || 4) - 1);
