@@ -20,6 +20,9 @@ The full, detailed handoff lives in the repo at `games/critter-clash/HANDOFF.md`
 - Session 16e (R255–R279) added: grass sway, new palms, chimney smoke, rain (world and fights), room furniture, the Berry Center smoothie blender, smooth water corners, trainer role hats, a natural meadow for wild fights, footprints, a night Town Map, doorway light, beach decor, falling leaves and petals, toadstool spores, and Pecan weather news.
 - Final checks for the session passed: tapcheck was clean at 740×360 and 412×915, the Sprout Cup played from the world and landed back there, and the wild-fight wins ran without errors.
 
+## Latest (2026-10-18)
+- Sessions 16f–16h (R280–R338) added: Hat Shop, Trader Tock, fishing + fish album, stadium lobbies (and a champion lobby after a win), berry bushes, beach digs, 8 townsfolk favours with a 📔 Journal and Town Map marks, a picture hat picker, new rooms (forge, lodge, ship cabin, toadstool houses), weather/night polish. See HANDOFF.md → Session 16f/16g/16h.
+
 ## Two Claude chats share this branch
 - The user's own chat (session `01UPXMwf8USorUzs3NksZdTA`, rounds numbered "R245b+") owns the Adventure battles: the open-field scene, results and the flow back to the world (screens.js results/worldFight, battle.js, arena.js open mode, hud.js).
 - World-side work belongs in world.js, worldmaps.js, interiors.js and story.js. HANDOFF.md → "Session 16e → Ownership note" lists the small battle-side edits that session 16e made, which still need review.
