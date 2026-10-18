@@ -684,7 +684,7 @@ function gauntlet(S, w) {
   }
   const f = foes[n], lv = Math.min(50, save.critters[A.hero].level + 1 + n), def = byId(f.id);
   w.say([
-    ...(n === 0 ? [`${who}: Hoo-hoo! Welcome to the Peak Gauntlet, Champion. Five Ace trainers, one after another. A new five every week.`, `${who}: Win them all this week and the mountain rewards you. Lose, and you simply try that one again.`] : []),
+    ...(n === 0 ? [`${who}: Hoo-hoo! Welcome to the Peak Gauntlet, Champion. Five Ace trainers, one after another. A new five every week.`, `${who}: This week's Aces bring ${foes.map((q) => byId(q.id).name).slice(0, 4).join(', ')} and ${byId(foes[4].id).name}. Win them all this week and the mountain rewards you. Lose, and you simply try that one again.`] : []),
     `${who}: Battle ${n + 1} of 5: ${f.name} and ${def.name}, Lv ${lv}. Ready?`,
   ], () => S.worldFight({
     foe: withGear(def, lv), lv, kind: 'story', flag: `gaunt_${wk}_${n}`, name: f.name, diff: Math.min(0.92, 0.74 + n * 0.04), berries: 2,
