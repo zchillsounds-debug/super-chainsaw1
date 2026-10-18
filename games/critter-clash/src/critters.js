@@ -4,10 +4,11 @@ import * as THREE from 'three';
 import { toon, inked, canvasTex } from './toon.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { TYPES } from './data.js';
-import { buildGrowth } from './growth.js';
+import { buildGrowth, growthSeg } from './growth.js';
 
 const SEG = 36;
-const sphere = (r = 1) => new THREE.SphereGeometry(r, SEG, Math.round(SEG * 0.75));
+let seg = SEG; // fewer segments for far-away world critters (lod 'low' / 'mid'); battles keep the full count
+const sphere = (r = 1) => new THREE.SphereGeometry(r, seg, Math.round(seg * 0.75));
 const capsule = (r, len) => new THREE.CapsuleGeometry(r, len, 8, 18);
 
 // ---------- face textures ----------
@@ -185,6 +186,7 @@ function wingTexture() {
 export class Critter {
   constructor(def, { lod = 'high' } = {}) {
     this.def = def;
+    seg = lod === 'low' ? 14 : lod === 'mid' ? 22 : SEG; growthSeg(lod === 'low' ? 12 : lod === 'mid' ? 18 : 28);
     const C = def.colors, B = def.body;
     // shiny skins get a warm golden rim so they read as special at a glance
     this.rim = { uRimColor: { value: def.skin ? new THREE.Color(1.3, 1.05, 0.5) : new THREE.Color(1, 0.95, 0.85) }, uRimPower: { value: 3 } };
@@ -962,6 +964,7 @@ export class Critter {
 
     root.traverse((o) => { if (o.isMesh && !o.userData.hull && o.material && !o.material.transparent) o.castShadow = true; });
     this.built = true;
+    seg = SEG; growthSeg(28);
   }
 
   // level-up gear: 1 = type-coloured scarf, 2 = gold star pin, 3 = tiny crown

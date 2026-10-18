@@ -336,7 +336,7 @@ export class World {
     this.buildPumpkins();
     this.buildWisps();
     // hero
-    this.hero = new Critter(heroDef()); bakeStatic(this.hero);
+    this.hero = new Critter(heroDef(), { lod: 'mid' }); bakeStatic(this.hero);
     this.hero.root.scale.setScalar(CS);
     this.group.add(this.hero.root);
     this.wearHat();
@@ -1584,7 +1584,7 @@ export class World {
     const id = save.adv.follow || (save.adv.buddy && save.adv.buddy !== save.adv.hero && save.unlocked.includes(save.adv.buddy) ? save.adv.buddy : null);
     if (!id) { this.follower = null; return; }
     const pip = !!save.adv.follow, def = byId(id);
-    const cr = new Critter(withGear(pip ? def : skinned(def, save.skins?.[id]), pip ? 2 : save.critters[id]?.level || 1));
+    const cr = new Critter(withGear(pip ? def : skinned(def, save.skins?.[id]), pip ? 2 : save.critters[id]?.level || 1), { lod: 'mid' });
     cr.root.userData.critter = true; bakeStatic(cr); castLite(cr);
     cr.root.scale.setScalar(CS * (pip ? 0.7 : 0.85));
     this.group.add(cr.root);
@@ -2591,7 +2591,7 @@ export class World {
       else if (n.balloon) { root = balloonModel(n.balloon); }
       else {
         const id = n.critter === '$hero' ? save.adv.hero : n.rival ? rivalFor(save.adv.hero) : n.critter;
-        cr = new Critter(withGear(n.shiny ? skinned(byId(id), 'shiny') : byId(id), n.rival ? (n.rlv || 4) : (n.lv || n.trainer?.lv || 3)));
+        cr = new Critter(withGear(n.shiny ? skinned(byId(id), 'shiny') : byId(id), n.rival ? (n.rlv || 4) : (n.lv || n.trainer?.lv || 3)), { lod: 'low' });
         root = cr.root;
         root.scale.setScalar(CS * (n.scale || 1));
         roleHat(cr, n.name || '');
@@ -2636,7 +2636,7 @@ export class World {
   spawnWild(x, y, fixId, fixLv) {
     const [id0, lo, hi] = this.M.wild.list[Math.floor(Math.random() * this.M.wild.list.length)], id = fixId || id0;
     const lv = fixLv || lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = !fixId && Math.random() < SHINY_RATE;
-    const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv));
+    const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv), { lod: 'low' });
     cr.root.userData.critter = true;
     if (pumpkinNights() && !fixId && Math.random() < 0.5) { const [k, c, b] = [['wizard', 0x3a2a4a, 0xff8a1a], ['pumpkin', 0xff8a1a, 0x4a7a2a], ['bunny', 0xf4f0ff, 0xff9ac8], ['top', 0x2a2438, 0xff3a5a], ['party', 0xff8a1a, 0x2a2438]][Math.floor(Math.random() * 5)]; hatModel(cr, k, c, b); } // Pumpkin Nights: wild critters dress up too
     bakeStatic(cr); castLite(cr);

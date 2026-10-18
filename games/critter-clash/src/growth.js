@@ -397,7 +397,9 @@ export function grown(def, lv, shiny) {
 }
 
 // ---------- parts for the hand-built forms ----------
-const sphere = (r = 1) => new THREE.SphereGeometry(r, 28, 20);
+let gseg = 28; // the Critter build sets this lower for far-away world critters
+export const growthSeg = (n) => { gseg = n; };
+const sphere = (r = 1) => new THREE.SphereGeometry(r, gseg, Math.round(gseg * 0.72));
 const UP = new THREE.Vector3(0, 1, 0);
 
 // a tapered segment from a to b (merged into antlers and horns)
