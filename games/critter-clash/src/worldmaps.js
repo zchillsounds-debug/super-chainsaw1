@@ -543,13 +543,16 @@ export const MAPS = {
       'TTiiiiiiiiiiiiiiiiTT',
       'TTiiiiiRiiiiiRiiiiTT',
       'TTTTTTTT..TTTTTTTTTT',
-      'TT.......:........TT',
-      'TT..R....:....R...TT',
-      'TT.......:........TT',
+      'TT""""...:..""""""TT',
+      'TT""R"...:....R"""TT',
+      'TT"""....:..."""""TT',
       'TTT......:.......TTT',
       'TTTTTTTT::TTTTTTTTTT',
       'TTTTTTTT::TTTTTTTTTT',
     ],
+    blades: 0x8ab4d8,
+    // the last climb: frost-tipped snow grass on the lower slope, the toughest wild critters, and two Ace Trainers guarding the path
+    wild: { list: [['pengsicle', 18, 20], ['woolt', 18, 20], ['rolladillo', 18, 20], ['ripples', 19, 21], ['snoozlo', 19, 21]], roam: 2, rate: 0.1 },
     edges: { s: { to: 'frostpeak', off: 1 } },
     buildings: [
       { id: 'altar', x: 7, y: 2, w: 4, h: 2, altar: true, door: 1, label: 'Critter Crown' },
@@ -557,6 +560,8 @@ export const MAPS = {
     signs: [{ x: 13, y: 21, text: "CHAMPION'S PEAK\nTrial of Focus: cross the frozen lake. Slide wisely." }],
     npcs: [
       { id: 'king', x: 11, y: 3, critter: 'snoozlo', lv: 24, name: 'King Snooze', dir: 's', story: 'king', scale: 1.4, shiny: true },
+      { id: 'acenova', x: 6, y: 21, critter: 'emberfly', name: 'Ace Trainer Nova', dir: 'e', trainer: { lv: 19, sight: 3, diff: 0.8, intro: "Ace Trainer Nova: Nobody reaches the Crown without getting past the Aces of the Peak. I've trained in this snow for three winters. Show me you're ready!", beat: 'Ace Trainer Nova: ...You\'re ready. Go. The lake above is the real test.', after: 'Ace Trainer Nova: On the ice, look where you\'ll STOP, not where you\'ll slide. Rocks are your friends.' } },
+      { id: 'acebrook', x: 12, y: 20, critter: 'bubbalotl', name: 'Ace Trainer Brook', dir: 'w', trainer: { lv: 20, sight: 3, diff: 0.82, intro: "Ace Trainer Brook: Seven cups, huh? Everyone up here has seven cups. Let's see if yours are real!", beat: 'Ace Trainer Brook: Real. Very real. Ouch.', after: 'Ace Trainer Brook: Heal up in Frostpeak first if you need to. King Snooze does NOT go easy.' } },
       { id: 'dash5', x: 10, y: 6, rival: true, rlv: 20, name: 'Dash', dir: 's', story: 'dash5' },
     ],
   },

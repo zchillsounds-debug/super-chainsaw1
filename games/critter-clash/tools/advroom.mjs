@@ -5,7 +5,7 @@ const { chromium } = require('playwright');
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: 915, height: 412 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
-await pg.goto('http://localhost:5180/?q=low');
+await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?q=low');
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 const ev = (js) => pg.evaluate(js);
 await ev(() => {

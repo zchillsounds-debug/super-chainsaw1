@@ -6,7 +6,7 @@ const [w, h] = (process.argv[2] || '915x412').split('x').map(Number);
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: w, height: h } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
-await pg.goto('http://localhost:5180/?auto');
+await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?auto');
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 const shot = (n) => pg.screenshot({ path: `tools/out/trial-${n}.png` });
 const flags = Object.fromEntries('intro,quest,rival1,cup_sprout,trial_strength,rival2,cup_thunder,post_sprout,post_thunder,woods'.split(',').map((k) => [k, true]));

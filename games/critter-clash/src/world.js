@@ -2611,7 +2611,7 @@ export class World {
     this.say([T.intro], () => this.S.worldFight({
       foe: withGear(byId(n.critter), T.lv), lv: T.lv, kind: 'trainer', flag: n.id, name: n.name,
       trainer: { name: n.name, critter: n.critter, beat: T.beat.replace(/^[^:]+: /, ''), gloat: 'Better luck next time!' },
-      diff: 0.3,
+      diff: T.diff ?? Math.min(0.75, 0.22 + T.lv * 0.03), // route trainers get sharper as the journey goes on (a touch above the wild critters there)
     }), n.name);
   }
 
