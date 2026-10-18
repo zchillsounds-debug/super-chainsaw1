@@ -3306,6 +3306,14 @@ export class World {
       }
       return this.challenge(a);
     }
+    if (n.id === 'mom' && this.morning) { // misty mornings: Mom serves berry pancakes, once a day
+      const day = new Date().toISOString().slice(0, 10), A = save.adv;
+      if (A.breakfast !== day) {
+        A.breakfast = day; countUp('breakfast'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+        return this.say(['Mom: Good morning, sleepyhead! I made berry pancakes. Sit, sit! Adventures need breakfast.', `{hero} gobbles a whole stack! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : 'Full of energy! (+XP)'}`, 'Mom: Come by any morning before nine. There\'s always a stack with your name on it.'], null, n.name);
+      }
+      return this.say(['Mom: More pancakes? Ha! Tomorrow morning, sweetie. Now go and explore!'], null, n.name);
+    }
     if (pumpkinNights() && !n.story && n.lines?.length && Math.random() < 0.3) { // Pumpkin Nights chatter
       const who = n.name.split(' ').pop(), F = [`${who}: Happy Pumpkin Nights! Did you check the pumpkins by the doors after dark? Some hide treats!`, `${who}: I carved my pumpkin to look like {hero}. ...It came out looking like a potato. A HAPPY potato.`, `${who}: Pumpkin Nights only last until early November. Find three treats and there's a surprise, I hear!`, `${who}: Boo! ...Did I scare you? No? I'll practise.`, `${who}: The pumpkins glow brightest around midnight. Spooky... but cosy.`];
       return this.say([F[(hash(n.id) + new Date().getDate()) % F.length]], null, n.name);
