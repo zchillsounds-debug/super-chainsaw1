@@ -201,6 +201,12 @@ export class Screens {
         "{name}, Clashara keeps growing! Some townsfolk now need a parcel carried to another town. Deliver it, and the one you bring it to will thank you. Look for a ❗, then a ❓ over whoever is waiting.",
         "Frostpeak has a glinting X in the snow each day: dig for ice gems! And stay up late in the snowy towns. On clear nights an aurora ripples over the mountains, and shooting stars fly over Cloudtop.",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv6') && !save.news.includes('adv7')) {
+      save.news.push('adv7'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, news from the south! Cinder Town has a warm glowing X in the ash each day. Dig there for ember gems! And the volcano towns now go dark at night, with the magma glowing bright.",
+        "Neon City's Tinker Volt has a parcel for someone, too. And if you're in Seashell Town after dusk, there's a bonfire on the beach. Bring marshmallows!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
