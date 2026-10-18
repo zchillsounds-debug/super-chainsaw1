@@ -247,6 +247,12 @@ export class Screens {
         "Your ☰ card now shows how much of Clashara you've explored. Every quarter of the way earns berries, and at 100%... well. Sprout Village has a spot saved for something golden.",
         ...(pumpkinNights() ? ["Pumpkin Nights news: jack-o'-lanterns light the path through Glowcap Woods after dark, and five little wisps float about. Catch them all for a treat! The wild critters have dressed up too. Very spooky. Very cute."] : []),
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv13') && !save.news.includes('adv14')) {
+      save.news.push('adv14'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, fresh from the coast: Seashell Town has a driftwood bench right on the beach. Sit there in the golden evening and watch the sun melt into the sea. Fisher Finn says it's the best view in Clashara!",
+        "And up in Frostpeak, snow is falling! Snowball Kid Kip built a snow fort by the path. Hit twelve snowmen in Snowball Toss and Kip shares a berry stash. Just... don't hit Kip.",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
