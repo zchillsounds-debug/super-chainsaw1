@@ -288,6 +288,7 @@ export function storyTalk(S, id, w, a) {
     return;
   }
   if (id === 'hatshop') return hatShop(w);
+  if (id === 'board') return requestBoard(S, w);
   if (id.startsWith('case:')) { // a lobby trophy case
     const cup = CUPS.find((c) => c.id === id.slice(5));
     w.say([F['cup_' + cup.id] ? `The ${cup.name} trophy! {hero}'s name is engraved on it. ✨` : `An empty stand. A little card says: "${cup.name}".`]);
@@ -319,7 +320,7 @@ export function storyTalk(S, id, w, a) {
       if (i !== 0) return;
       const h = save.adv.hero, c = save.critters[h];
       save.berries = n - 1;
-      const r = grantXp(h, Math.round(xpNeeded(c.level) * 0.25)); persist();
+      const r = grantXp(h, Math.round(xpNeeded(c.level) * 0.25)); countUp('smoothie'); persist();
       sfx.jingle(2);
       w.say(['Whirrrr... *slurp*! A berry smoothie! 🍓', r.to > r.from ? `{hero} grew to Lv ${r.to}!` : '{hero} feels refreshed! (+XP)']);
     });
@@ -329,7 +330,7 @@ export function storyTalk(S, id, w, a) {
     save.adv.spawn = { ...w.M.exit }; persist();
     sfx.jingle(2);
     w.say(id === 'rest' ? ['{hero} hops into bed for a quick nap...', 'Mom: Sweet dreams! (If you lose a battle, you\'ll come back home.)']
-      : ['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.', ...(save.berries > 0 ? ['Nurse Lilypop: Got spare berries? The blender over there makes smoothies that help critters grow!'] : [])], null, id === 'nurse' ? 'Nurse Lilypop' : '');
+      : ['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.', ...(save.berries > 0 ? ['Nurse Lilypop: Got spare berries? The blender over there makes smoothies that help critters grow!'] : []), ...(save.adv.req?.day !== new Date().toISOString().slice(0, 10) ? ['Nurse Lilypop: Oh, and there are new requests on the cork board by the door. Berries for little jobs!'] : [])], null, id === 'nurse' ? 'Nurse Lilypop' : '');
     return;
   }
   if (id === 'dashpost') { // post-game: a daily rematch with Dash at the hero's level, for berries
@@ -400,6 +401,42 @@ function forecast() {
   if (!seen.length) return [];
   return [wet.length ? `Prof. Pecan: My weather vane says showers are coming to ${wet.slice(0, 3).join(', ')} soon. Water critters love the rain!`
     : 'Prof. Pecan: My weather vane says clear skies everywhere for the next few hours. Splendid!'];
+}
+
+// the Berry Center request board: three little jobs a day, a couple of berries each, and a Power Snack for all three
+const REQUESTS = {
+  wins: { text: 'Win 2 battles', n: 2, now: () => save.stats.wins || 0 },
+  steps: { text: 'Take 150 steps', n: 150, now: () => save.adv.steps || 0 },
+  bush: { text: 'Shake a berry bush', n: 1, now: () => save.adv.cnt?.bush || 0 },
+  fish: { text: 'Reel in a catch', n: 1, now: () => save.adv.cnt?.fish || 0, need: 'rod' },
+  smoothie: { text: 'Blend a berry smoothie', n: 1, now: () => save.adv.cnt?.smoothie || 0 },
+  wild: { text: 'Battle 3 wild critters', n: 3, now: () => save.adv.cnt?.wild || 0 },
+};
+export function countUp(k) { (save.adv.cnt ||= {})[k] = (save.adv.cnt[k] || 0) + 1; }
+function requestBoard(S, w) {
+  const day = new Date().toISOString().slice(0, 10), F = flags();
+  let R = save.adv.req;
+  if (R?.day !== day) {
+    let h = 7; for (const ch of day) h = (h * 31 + ch.charCodeAt(0)) % 2147483647;
+    const pool = Object.keys(REQUESTS).filter((k) => !REQUESTS[k].need || F[REQUESTS[k].need]), pick = [];
+    while (pick.length < 3 && pool.length) { h = (h * 16807) % 2147483647; pick.push(pool.splice(h % pool.length, 1)[0]); }
+    R = save.adv.req = { day, list: pick, base: Object.fromEntries(pick.map((k) => [k, REQUESTS[k].now()])), paid: [] };
+    persist();
+  }
+  const prog = (k) => Math.min(REQUESTS[k].n, REQUESTS[k].now() - R.base[k]);
+  const lines = R.list.map((k) => `${prog(k) >= REQUESTS[k].n ? '✅' : '⬜'} ${REQUESTS[k].text}${REQUESTS[k].n > 1 ? ` (${prog(k)}/${REQUESTS[k].n})` : ''}`);
+  const fresh = R.list.filter((k) => prog(k) >= REQUESTS[k].n && !R.paid.includes(k));
+  const out = ['📋 Today\'s requests:\n' + lines.join('\n')];
+  if (fresh.length) {
+    R.paid.push(...fresh); save.berries = (save.berries || 0) + fresh.length * 2;
+    out.push(`Request${fresh.length > 1 ? 's' : ''} done! The board pays ${fresh.length * 2} 🍓.`);
+    if (R.paid.length === R.list.length) {
+      const h = save.adv.hero, c = save.critters[h], r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4));
+      out.push(`All three done! A Power Snack for {hero}! ⭐`, r.to > r.from ? `{hero} grew to Lv ${r.to}!` : '{hero} feels stronger! (+XP)');
+    }
+    persist(); sfx.jingle(2);
+  } else out.push(R.paid.length === R.list.length ? 'All done for today. New requests tomorrow!' : 'Finish a request, then come back to this board for berries.');
+  w.say(out);
 }
 
 // a list too long for one row of answer buttons: three to a page, then "More"

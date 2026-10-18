@@ -10,6 +10,7 @@ import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx, playMusic } from './audio.js';
 import { rivalFor } from './worldmaps.js';
 import { getMap, CUP_ORDER } from './interiors.js';
+import { countUp } from './story.js';
 import { ARENAS } from './arena.js';
 
 export const TILE = 2;
@@ -863,7 +864,7 @@ export class World {
     B.berries.visible = false;
     (save.adv.bush ||= {})[this.key] = day;
     const n = 1 + Math.floor(Math.random() * 2) + (Math.random() < 0.15 ? 1 : 0);
-    save.berries = (save.berries || 0) + n; persist();
+    save.berries = (save.berries || 0) + n; countUp('bush'); persist();
     const [px, pz] = wpos(B.x, B.y), col = this.M.snow ? 0x7a5aff : 0xff3a5a;
     for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5) * 1.2, y: 1 + Math.random() * 0.5, z: pz + 0.3, vx: (Math.random() - 0.5) * 2.5, vy: 1.5 + Math.random() * 2, vz: 0.5 + Math.random(), color: col, size: 0.24, life: 0.9, shape: 'glow', additive: false, grav: 7 });
     sfx.pickup?.();
@@ -909,6 +910,7 @@ export class World {
     this.busy = false;
     if (how === 'early') return this.say(['Too soon! The ripples fade away... Wait for the bobber to dip, then press A!']);
     if (how === 'miss') return this.say(['The bobber popped back up. Whatever it was got away!']);
+    countUp('fish'); persist();
     const r = Math.random(), W = (this.M.wild?.list || []).filter(([i]) => byId(i)?.type === 'water');
     if (r < 0.55) {
       const lv = Math.max(2, (save.critters[save.adv.hero]?.level || 3) - 1);
@@ -966,6 +968,11 @@ export class World {
         if (back && this.M.indoor === 'center' && x === (W >> 1)) { box('trim', 1.3, 1.3, 0.08, px, 2.45, pz + 1.02); box('top', 0.36, 1.0, 0.08, px, 2.45, pz + 1.06); box('top', 1.0, 0.36, 0.08, px, 2.45, pz + 1.06); } // the Berry Center cross behind the nurse
         if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C' && this.M.indoor !== 'lobby') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); }
       }
+      if (t === 'C' && this.M.indoor === 'center' && x === 1) { // the request board: cork, pinned notes
+        box('wood', 1.9, 1.5, 0.2, px, 1.9, pz - 0.85); box('cork', 1.7, 1.3, 0.22, px, 1.9, pz - 0.84);
+        for (let k = 0; k < 3; k++) { box('note' + k, 0.42, 0.5, 0.24, px - 0.5 + k * 0.5, 1.95 + (k % 2) * 0.15, pz - 0.82); box('pin', 0.08, 0.08, 0.27, px - 0.5 + k * 0.5, 2.15 + (k % 2) * 0.15, pz - 0.8); }
+        continue;
+      }
       if (t === 'C') { // shelf with coloured book spines
         box('wood', 1.8, 2.5, 0.9, px, 1.25, pz - 0.4);
         for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) box('book' + ((x + r + k) % 3), 0.32, 0.55, 0.2, px - 0.6 + k * 0.4, 0.55 + r * 0.75, pz + 0.08);
@@ -1022,7 +1029,7 @@ export class World {
       }
       if (t === 'K') { box('counter', TILE + 0.02, 1.1, 1.3, px, 0.55, pz); box('top', TILE + 0.04, 0.12, 1.45, px, 1.15, pz); }
     }
-    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050 };
+    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a };
     for (const k in L) {
       if (k === 'pane') { const m = new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: 0xd8f0ff, transparent: true, opacity: 0.22, depthWrite: false })); m.material.userData.own = true; this.group.add(m); L[k].forEach((g) => g.dispose()); continue; }
       const glow = k === 'screen' || k === 'glass' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1';
@@ -1719,6 +1726,7 @@ export class World {
 
   startWild(id, lv, a, shiny = false) {
     this.busy = true;
+    countUp('wild');
     sfx.warn?.();
     if (a) this.bubble(a, '❗');
     const foe = withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv);
