@@ -296,6 +296,10 @@ export function storyTalk(S, id, w, a) {
   if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
   if (id === 'wardrobe') return wearMenu(w, '', null);
+  if (id === 'shelf') { // the trophy shelf at home fills up as you win
+    const F = flags(), won = CUPS.filter((c) => F['cup_' + c.id]);
+    return w.say([won.length ? `{hero}'s trophy shelf: ${won.length} of ${CUPS.length} cups. ${won.map((c) => c.name).join(', ')}.` : 'An empty trophy shelf, dusted and waiting. Mom says it\'s for {hero}\'s first cup.', ...(F.crowned ? ['And on top, in pride of place: the Critter Crown. 👑'] : won.length < CUPS.length ? ['There\'s still room for more!'] : [])]);
+  }
   if (id.startsWith('case:')) { // a lobby trophy case
     const cup = CUPS.find((c) => c.id === id.slice(5));
     w.say([F['cup_' + cup.id] ? `The ${cup.name} trophy! {hero}'s name is engraved on it. ✨` : `An empty stand. A little card says: "${cup.name}".`]);

@@ -69,6 +69,16 @@ const ROOMS = {
     'WO.......bW',
     'WWWWW.WWWWW',
   ],
+  home: [
+    'WWWWWWWWWWW',
+    'WCC.SX..OQW',
+    'W........QW',
+    'W..DD.....W',
+    'W..DD.YYY.W',
+    'W.....YYY.W',
+    'WO.......OW',
+    'WWWWW.WWWWW',
+  ],
   cottage: [
     'WWWWWWWWWWW',
     'WCC.G...OQW',
@@ -123,7 +133,7 @@ const ROOMS = {
 
 // who lives where: [critter, name, lines, dir, x, y]; plus furniture text
 const PEOPLE = {
-  'village:home': { npcs: [], wall: '#ffe2c8', rug: '#ff8a7a' },
+  'village:home': { npcs: [], kind: 'home', name: 'Home', wall: '#ffe2c8', rug: '#ff8a7a' },
   'village:house2': { npcs: [['woolt', 'Grandpa Woolt', ['Grandpa Woolt: Baaah, back in my day we battled uphill, both ways, in the snow!', "Grandpa Woolt: Here's a secret: dodge THROUGH an attack, not away from it. You're safe while you roll.", 'Grandpa Woolt: That clock? It was a prize from the very first Sprout Cup. It still keeps perfect time. Mostly.'], 's', 3, 2]], kind: 'cottage', name: "Grandpa's Cottage", wall: '#e8dcc8', rug: '#a86a8a', floor: { a: '#b88a5a', b: '#b28454' } },
   'village:lab': { npcs: [['hootsy', 'Aide Hoot', ['Aide Hoot: Hoo! Welcome to the Pecan Lab. The professor studies how critters GROW.', 'Aide Hoot: Win enough battles and a critter gets bigger and stronger. The professor calls it growth. I call it a growth spurt!'], 's', 6, 2]], wall: '#e8f0f8', rug: '#8ad8c8' },
   'bloom:berry': { visitor: ['clovebun', 'Hopper Bea', ['Hopper Bea: The berry smoothies here are the best in Clashara. I come in even when I\'m not hurt!'], 'w', 9, 4] },
@@ -156,6 +166,7 @@ const ITEMS = {
   A: 'A heavy iron anvil, warm to the touch. There\'s a half-finished trophy on it.',
   U: 'A trophy case.',
   o: 'A pot of pink blossoms.',
+  S: 'A trophy shelf.',
   G: 'A tall old clock. Tick... tock... The pendulum swings very slowly. Just like Grandpa.',
   r: 'A creaky rocking chair with a woolly blanket. Grandpa Woolt knitted it himself. Of course he did.',
   k: 'A basket of yarn balls. One has rolled under the chair.',
@@ -194,12 +205,14 @@ export function interiorMap(key) {
     if (t === 'o') text = { seashell: 'A fish tank! Two little fish chase each other round and round the weeds.', ember: 'A lava lamp. The blobs rise... and sink... and rise. You could watch it all day.', neon: 'A cactus made of neon tubes. It never needs watering!', frostpeak: 'A little potted pine with real snow on it. The nurse keeps it by the window so it stays cold.', cloudtop: 'A cloud tree! Its puffs are soft as pillows.', glowcap: 'A glowcap lamp. It hums very, very quietly.' }[outer] || 'A pot of pink blossoms. They smell like berry jam.';
     if (t === 'X' && kind === 'lab') text = 'A screen shows a growing critter: small, medium, HUGE.';
     if (t === 'C' && bid === 'home') { signs.push({ x, y, text: '', hide: true, act: 'wardrobe' }); return; }
+    if (t === 'S') { signs.push({ x, y, text: '', hide: true, act: 'shelf' }); return; }
+    if (t === 'X' && kind === 'home') text = 'The TV is showing Critter Clash highlights. {hero} watches their own best move. Then again. Then once more.';
     if (t === 'F' && kind === 'lodge') text = 'A crackling log fire. {hero} warms their paws. Toasty!';
     if (t === 'C' && kind === 'cabin') text = 'Charts of the coast, a brass telescope, and a bottle with a tiny ship inside.';
     if (t === 'C' && kind === 'forge') text = 'Racks of tongs and hammers. One hammer is labelled "NOT FOR CRITTERS".';
     if (t === 'C' && kind === 'shop') text = 'Hat boxes, stacked to the ceiling. One is labelled "EXTRA FLOPPY".';
     if (t === 'U') { const n = [...row].slice(0, x).filter((c) => c === 'U').length; signs.push({ x, y, text, hide: true, act: 'case:' + CUP_ORDER[n] }); return; }
-    signs.push({ x, y, text, hide: true, act: t === 'Q' && bid === 'home' ? 'rest' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
+    signs.push({ x, y, text, hide: true, act: t === 'Q' && kind === 'home' ? 'rest' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
   }));
   return {
     cup: b.stadium, shroom: outer === 'glowcap' && (bid.startsWith('shroom') || !!b.heal), cityView: !!O.city && kind === 'house',

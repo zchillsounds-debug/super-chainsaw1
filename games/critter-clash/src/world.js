@@ -1424,6 +1424,18 @@ export class World {
         box('wood', 1.8, 2.5, 0.9, px, 1.25, pz - 0.4);
         for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) box('book' + ((x + r + k) % 3), 0.32, 0.55, 0.2, px - 0.6 + k * 0.4, 0.55 + r * 0.75, pz + 0.08);
       }
+      if (t === 'S') { // the hero's trophy shelf: a mini trophy for each cup won (the crown on top once crowned)
+        box('wood', 1.9, 0.12, 0.6, px, 1.3, pz - 0.65); box('wood', 1.9, 0.12, 0.6, px, 2.1, pz - 0.65); box('wood', 0.1, 1.4, 0.6, px - 0.92, 1.65, pz - 0.65); box('wood', 0.1, 1.4, 0.6, px + 0.92, 1.65, pz - 0.65);
+        CUP_ORDER.forEach((cid, n) => { const won = save.adv.flags['cup_' + cid], tx = px - 0.66 + (n % 4) * 0.44, ty = n < 4 ? 1.36 : 2.16, col = won ? 'gold' : 'ghost';
+          const c1 = new THREE.CylinderGeometry(0.13, 0.05, 0.2, 10); c1.translate(tx, ty + 0.26, pz - 0.6); add(col, c1); const c2 = new THREE.CylinderGeometry(0.03, 0.03, 0.1, 6); c2.translate(tx, ty + 0.11, pz - 0.6); add(col, c2); const c3 = new THREE.BoxGeometry(0.18, 0.06, 0.12); c3.translate(tx, ty + 0.04, pz - 0.6); add(col, c3); });
+        if (save.adv.flags.crowned) { const cr = new THREE.CylinderGeometry(0.2, 0.17, 0.2, 8, 1, true); cr.translate(px + 0.66, 2.38, pz - 0.6); add('gold', cr); const gm = new THREE.SphereGeometry(0.06, 8, 6); gm.translate(px + 0.66, 2.4, pz - 0.39); add('gem0', gm); }
+        continue;
+      }
+      if (t === 'X' && this.M.indoor === 'home') { // a TV on a low cabinet, playing battle highlights
+        box('wood', 1.7, 0.7, 0.8, px, 0.35, pz - 0.4); box('soot', 1.6, 1.0, 0.12, px, 1.3, pz - 0.55); box('screen', 1.42, 0.82, 0.04, px, 1.3, pz - 0.48);
+        box('fire', 0.22, 0.22, 0.03, px - 0.3, 1.22, pz - 0.45); box('btn', 0.2, 0.26, 0.03, px + 0.32, 1.25, pz - 0.45); box('pillow', 0.06, 0.25, 0.03, px, 1.48, pz - 0.45);
+        continue;
+      }
       if (t === 'X') { box('metal', 1.4, 2.0, 1.0, px, 1.0, pz - 0.3); box('screen', 1.0, 0.7, 0.06, px, 1.45, pz + 0.22); box('btn', 0.8, 0.12, 0.3, px, 0.95, pz + 0.3); }
       if (t === 'Q') {
         const head = this.tile(x, y - 1) !== 'Q';
@@ -1586,7 +1598,7 @@ export class World {
         const cup = new THREE.CylinderGeometry(0.16, 0.08, 0.3, 10); cup.translate(px - 0.2, 0.95, pz); add('gold', cup);
       }
     }
-    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, aqua: 0x3ab8ff, weed: 0x4cc25a, sandy: 0xf4dc9a, lava: 0xff5a2a, pine: 0x2f7a5a, knit: 0xd86a8a, knit2: 0xfff0d8, flies: 0xe8ff6a, door0: 0xc8845a, door1: 0xd8946a };
+    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, ghost: 0x8a7464, aqua: 0x3ab8ff, weed: 0x4cc25a, sandy: 0xf4dc9a, lava: 0xff5a2a, pine: 0x2f7a5a, knit: 0xd86a8a, knit2: 0xfff0d8, flies: 0xe8ff6a, door0: 0xc8845a, door1: 0xd8946a };
     for (const k in L) {
       if (k === 'pane') { const m = new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: 0xd8f0ff, transparent: true, opacity: 0.22, depthWrite: false })); m.material.userData.own = true; this.group.add(m); L[k].forEach((g) => g.dispose()); continue; }
       const glow = k === 'cap0' || k === 'cap1' || k === 'lit' || k === 'fire' || k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1' || k === 'flies' || k === 'aqua' || k === 'lava';
