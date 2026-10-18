@@ -100,6 +100,9 @@ export function newAdventure(hero) {
   persist();
 }
 
+// Pumpkin Nights: a little harvest festival from mid-October to the start of November (carved pumpkins by the town doors)
+export function pumpkinNights(d = new Date()) { const m = d.getMonth(), day = d.getDate(); return (m === 9 && day >= 15) || (m === 10 && day <= 2) || !!save.adv?.fest; }
+
 export function heroDef() {
   const id = save.adv.hero, lv = save.critters[id]?.level || 1;
   return withGear(byId(id), lv);
@@ -330,6 +333,7 @@ export class World {
     this.buildInterior();
     this.buildMarquee();
     this.buildActors();
+    this.buildPumpkins();
     // hero
     this.hero = new Critter(heroDef()); bakeStatic(this.hero);
     this.hero.root.scale.setScalar(CS);
@@ -1268,6 +1272,37 @@ export class World {
       return this.say([this.phase === 'day' ? '{hero} slips into the hot spring. Ahhh... toasty all the way to the tail.' : '{hero} soaks in the glowing spring under the stars. The volcano rumbles a lullaby.', `${['Pengsicle fans {hero} with a flipper. Very kind.', 'Steam curls up like little critters. Was that one waving?', 'All the aches from battle melt right away.'][Math.floor(Math.random() * 3)]} ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, 'A soak a day keeps the grumpies away. Come back tomorrow!'], out);
     }
     return this.say(['{hero} dips a toe in... then hops all the way in. Still lovely! (One good long soak a day.)'], out);
+  }
+
+  // Pumpkin Nights: a carved pumpkin beside a few town doors; after dark their faces glow, and one of them hides a candy berry each night
+  buildPumpkins() {
+    this.pumpkins = [];
+    if (this.M.indoor || !pumpkinNights() || !(this.M.buildings || []).length) return;
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((d) => d.x + ',' + (d.y + 1)), ...(this.M.signs || []).map((g) => g.x + ',' + g.y)]);
+    const spots = [];
+    for (const d of this.doors) for (const dx of [-1, 1]) { const x = d.x + dx, y = d.y + 1; if ('.:"sf'.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y) && !taken.has(x + ',' + y)) { spots.push([x, y]); break; } }
+    const lit = this.phase !== 'day', orange = toon(0xff8a1a, { rim: 0.5 }), stemM = toon(0x4a7a2a);
+    const face = canvasTex(64, 64, (c) => { c.fillStyle = lit ? '#ffd040' : '#3a1a08'; c.beginPath(); c.moveTo(14, 26); c.lineTo(24, 12); c.lineTo(30, 28); c.fill(); c.beginPath(); c.moveTo(34, 28); c.lineTo(40, 12); c.lineTo(50, 26); c.fill(); c.beginPath(); c.moveTo(10, 38); c.quadraticCurveTo(32, 62, 54, 38); c.lineTo(46, 42); c.lineTo(40, 36); c.lineTo(32, 44); c.lineTo(24, 36); c.lineTo(18, 42); c.closePath(); c.fill(); });
+    face.userData.own = true;
+    const fm = new THREE.MeshBasicMaterial({ map: face, transparent: true, depthWrite: false }); fm.userData.own = true;
+    for (const [x, y] of spots.slice(0, 5)) {
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.rotation.y = (x * 7 % 5 - 2) * 0.12; g.scale.setScalar(1.7); this.group.add(g); this.solid.add(x + ',' + y);
+      for (let k = 0; k < 5; k++) { const a = (k - 2) * 0.42, r = inked(new THREE.SphereGeometry(0.32, 12, 9), orange, OL * 0.35); r.scale.set(0.62, 0.78, 0.95); r.position.set(Math.sin(a) * 0.26, 0.3, Math.cos(a) * 0.12 - 0.06); r.castShadow = k === 2; g.add(r); } // ribbed lobes
+      const st = inked(new THREE.CylinderGeometry(0.05, 0.07, 0.2, 6), stemM, OL * 0.3); st.position.y = 0.6; st.rotation.z = 0.25; g.add(st);
+      const f = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.46), fm); f.position.set(0, 0.4, 0.27); f.rotation.x = -0.65; g.add(f);
+      let glow = null;
+      if (lit) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffa030, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: this.phase === 'night' ? 0.7 : 0.45 }); sm.userData.own = true; glow = new THREE.Sprite(sm); glow.scale.setScalar(1.8); glow.position.set(0, 0.4, 0.2); g.add(glow); }
+      bakeStatic({ root: g, mats: {}, f, glow });
+      this.pumpkins.push({ x, y, glow });
+    }
+  }
+
+  // tap a pumpkin: after dark, the first one each night hides a candy berry
+  pumpkin() {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv;
+    if (this.phase === 'day') return this.say([['A carved pumpkin with a big toothy grin. Pumpkin Nights are here!', 'A pumpkin with a wonky smile. Someone carved it with love. And a spoon.', 'This pumpkin looks surprised. Maybe it heard about the Glowcap fairy ring.'][Math.floor(Math.random() * 3)], 'After dark, the pumpkins light up... and some hide treats!']);
+    if (A.pumpkin !== day) { A.pumpkin = day; countUp('pumpkin'); save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(1); return this.say(['BOO! {hero} jumps... then peeks inside the glowing pumpkin.', 'A candy-wrapped berry! Happy Pumpkin Nights! +1 🍓 (One treat a night.)']); }
+    return this.say(['The pumpkin\'s face flickers warmly. Its treat is gone for tonight. (Come back tomorrow night!)']);
   }
 
   // Cloudtop Gardens: a tiered wishing fountain in the middle of the lawn, with a little rainbow in its spray (toss in a berry and make a wish, once a day)
@@ -2807,6 +2842,7 @@ export class World {
     if (this.twirlT > 0) this.twirlT -= dt;
     if (this.bloomFw) this.updateBloomFw(dt);
     if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
+    if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
     if (this.fountain) { const F = this.fountain; if (Math.random() < dt * 14) { const a = Math.random() * 6.28; this.g.fx.spawn({ x: F.px + Math.cos(a) * 0.1, y: 2.6, z: F.pz + Math.sin(a) * 0.1, vx: Math.cos(a) * 1.4, vy: 1.8, vz: Math.sin(a) * 1.4, color: 0xd8f4ff, size: 0.16, life: 0.75, shape: 'glow', grav: 6, additive: false, alpha: 0.8 }); } F.arcs.forEach((m, i) => { m.material.opacity = 0.42 + Math.sin(this.t * 1.3 + i * 0.4) * 0.12; }); } // the spray falls into the bowl; the rainbow shimmers
     if (this.sliding && save.adv.skates && Math.random() < dt * 30) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.5, y: 0.15, z: p.z + (Math.random() - 0.5) * 0.5, vy: 0.6 + Math.random(), vx: (Math.random() - 0.5), vz: (Math.random() - 0.5), color: Math.random() < 0.5 ? 0xffffff : 0x9ae0ff, size: 0.16, life: 0.6, shape: Math.random() < 0.4 ? 'star' : 'glow' }); } // skates kick up ice sparkles
@@ -3066,6 +3102,7 @@ export class World {
     if (this.scope && this.scope.x === fx && this.scope.y === fy) return this.stargaze();
     if (this.ring && this.ring.x === fx && this.ring.y === fy) return this.fairyRing();
     if (this.spring?.cells.has(fx + ',' + fy)) return this.soak();
+    if (this.pumpkins?.some((p) => p.x === fx && p.y === fy)) return this.pumpkin();
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
     if (stall) {

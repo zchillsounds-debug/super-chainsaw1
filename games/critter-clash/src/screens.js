@@ -10,7 +10,7 @@ import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
-import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH } from './world.js';
+import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -238,6 +238,7 @@ export class Screens {
       setTimeout(() => this.mode === 'title' && this.profTalk([
         "{name}, a song in the woods! Glowcap Hollow's fairy ring sings after dark: listen to the toadstools, then tap their tune back. And Cinder Town's hot spring is finally open. One good soak a day, Pengsicle's orders!",
         "Stargazers, a ninth constellation has turned up: The Toadstool. Out on the routes, wooden lanterns light the paths at night. And the red number on your ☰ button counts the Journal's 📅 Today things still to do.",
+        ...(pumpkinNights() ? ["It's Pumpkin Nights, too! Carved pumpkins sit by the town doors until early November. After dark they glow, and one of them hides a treat each night. Boo!"] : []),
       ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
@@ -984,6 +985,7 @@ export class Screens {
         ['🍬', 'Glowing candy floss', 'Neon night market', A.market === day, seen.neon],
         ['⛸️', 'Skate a twirl', `${N('frostpeak')} pond`, A.skated === day, seen.frostpeak && A.skates],
         ['🍄', 'Sing with the fairy ring', N('glowcap'), A.ring === day, seen.glowcap],
+        ['🎃', 'Find a pumpkin treat', 'pumpkins by the town doors', A.pumpkin === day, pumpkinNights()],
       ].filter((r) => r[4]);
     return { rows, after, night };
   }
@@ -1028,6 +1030,7 @@ export class Screens {
         + bar('⛲', 'Wishes made', A.cnt?.wish || 0)
         + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
         + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
+        + (A.cnt?.pumpkin ? bar('🎃', 'Pumpkin treats', A.cnt.pumpkin) : '')
         + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length)
         + bar('🍾', 'Bottle notes read', (A.notes || []).length, BOTTLE_NOTES.length)
         + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
