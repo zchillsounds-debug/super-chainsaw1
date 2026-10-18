@@ -207,6 +207,12 @@ export class Screens {
         "{name}, news from the south! Cinder Town has a warm glowing X in the ash each day. Dig there for ember gems! And the volcano towns now go dark at night, with the magma glowing bright.",
         "Neon City's Tinker Volt has a parcel for someone, too. And if you're in Seashell Town after dusk, there's a bonfire on the beach. Bring marshmallows!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv7') && !save.news.includes('adv8')) {
+      save.news.push('adv8'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, Neon City has a noodle cart now! Chef Rumi serves one bowl of fizzy spark noodles a day, and the arcade cabinets finally work. Score well in CRITTER CLASH TURBO and they pay out in berries!",
+        "The Town Map shows a ⛏️ wherever a dig spot is waiting today. And a warning: two Ace Trainers now guard the foot of Champion's Peak, and the toughest wild critters in Clashara live in the snow grass there.",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
