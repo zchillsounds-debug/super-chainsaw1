@@ -2695,7 +2695,8 @@ export class World {
           P.sy = 0.82 + Math.sin(this.t * 1.3 + a.x) * 0.04; P.lean = -0.2; P.head = 0.35; P.armLz = P.armRz = 0.05;
           a.cr.emote('closed', 'o', 0.2);
           if (Math.random() < dt * 0.35) this.g.fx.text?.({ x: a.root.position.x + 0.4, y: 2.1, z: a.root.position.z }, 'z', 'zz');
-        } else if (a.n?.act && !this.dialog) actPose(this, a, P, this.t + a.x * 0.7, dt);
+        } else if (this.danceT > 0 && a.n && Math.abs(a.x - this.hx) + Math.abs(a.y - this.hy) <= 4) actPose(this, { ...a, n: { ...a.n, act: 'dance' } }, P, this.t + a.x * 0.7, dt); // the crowd joins in
+        else if (a.n?.act && !this.dialog) actPose(this, a, P, this.t + a.x * 0.7, dt);
         else idlePose(P, this.t + a.x);
         if (a.excl > 0) { a.excl -= dt; P.y = Math.max(P.y, Math.sin(Math.min(1, 1 - a.excl) * Math.PI) * 0.4); }
         a.root.rotation.y = turnTo(a.root.rotation.y, YAW[a.dir], dt * 14);
