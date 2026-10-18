@@ -582,11 +582,13 @@ function wearMenu(w, who, back) {
   const A = save.adv, own = A.hats || [];
   if (!own.length) return w.say([who ? "Milliner Mo: You don't have any hats yet! Have a look around." : 'The wardrobe is empty. The Hat Shop in Bloom Town sells hats for berries!'], back, who);
   const mine = SHOP_HATS.filter((h) => own.includes(h.id));
-  pickPaged(w, who ? 'Milliner Mo: Which hat today?' : 'Which hat will {hero} wear?', [...mine.map((h) => (A.hat === h.id ? '✓ ' : '') + h.name), 'No hat'], (k) => {
-    if (k < 0) return back?.();
-    A.hat = k < mine.length ? mine[k].id : null; persist(); w.wearHat(); sfx.ui('ok');
-    w.say([A.hat ? `{hero} puts on the ${mine[k].name}. Looking sharp!` : '{hero} takes the hat off. The wind feels nice!'], null, who);
-  }, who);
+  // a grid of the hero wearing each hat: tap to try one on, Done to close
+  w.busy = true;
+  w.S.hatGrid(who ? 'Milliner Mo: Which hat today?' : 'Which hat will {hero} wear?'.replace('{hero}', w.hero?.def?.name || 'your hero'), mine, (id) => { A.hat = id; persist(); w.wearHat(); }, () => {
+    w.busy = false;
+    const h = mine.find((x) => x.id === A.hat);
+    w.say([h ? `{hero} is wearing the ${h.name}. Looking sharp!` : '{hero} goes without a hat. The wind feels nice!'], back, who);
+  });
 }
 
 // Milliner Mo's Hat Shop in Bloom Town: buy hats with berries, then wear any you own

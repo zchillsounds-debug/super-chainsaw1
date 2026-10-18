@@ -976,3 +976,11 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .jr-fish em { font-style: normal; font-weight: 800; }
 .jr-fish:not(.got) { opacity: .55; }
 @media (max-height: 420px) { .jr-list { max-height: 46vh; } .wd-journal h2 { margin-bottom: 4px; } }
+
+/* Adventure hat picker */
+.hat-pick { width: min(560px, 96vw); }
+.hat-pick p { margin: -6px 0 8px; font-weight: 700; }
+.hat-pick .hero-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); max-height: min(50vh, 340px); }
+.hat-pick .hero-grid button img { width: 60px; height: 60px; }
+.hat-pick .hero-grid button span { font-size: 12px; line-height: 1.1; }
+@media (max-height: 420px) { .hat-pick h2 { display: none; } .hat-pick .hero-grid { max-height: 52vh; } }

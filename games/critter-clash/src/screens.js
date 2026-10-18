@@ -939,6 +939,22 @@ export class Screens {
     this.root.appendChild(d);
   }
 
+  // Adventure wardrobe / Hat Shop: the hero wearing each hat they own; tap to put it on
+  hatGrid(q, hats, onWear, onDone) {
+    const d = document.createElement('div');
+    d.className = 'modal-wrap';
+    const h = heroDef(), cur = () => save.adv.hat || '';
+    d.innerHTML = `<div class="modal hat-pick"><h2>Hats</h2><p>${q}</p><div class="hero-grid">${[{ id: '', name: 'No hat' }, ...hats].map((x) => `<button data-id="${x.id}" class="${cur() === x.id ? 'on' : ''}"><img src="${this.game.portrait(h, 128, false, x.id || 'none')}" alt=""><span>${x.name}</span></button>`).join('')}</div><div class="res-btns"></div></div>`;
+    const close = () => { d.remove(); this.game.modalClose = null; onDone?.(); };
+    d.querySelectorAll('.hero-grid button').forEach((b) => b.addEventListener('click', () => {
+      sfx.ui('ok'); onWear(b.dataset.id || null);
+      d.querySelectorAll('.hero-grid button').forEach((o) => o.classList.toggle('on', o === b));
+    }));
+    d.querySelector('.res-btns').appendChild(this.btn('Done', 'primary', close));
+    this.game.modalClose = close;
+    this.root.appendChild(d);
+  }
+
   // the map of Clashara: where you've been, where the cups are, and fly back to any town you've visited
   worldMap() {
     if (this.root.querySelector('.modal-wrap')) return;

@@ -13,7 +13,7 @@ import { FX } from './fx.js';
 import { Input, isTouch } from './input.js';
 import { Hud } from './hud.js';
 import { Battle } from './battle.js';
-import { Critter } from './critters.js';
+import { Critter, shopHat } from './critters.js';
 import { CRITTERS, CUPS, withGear } from './data.js';
 import { Screens } from './screens.js';
 import { initAudio, playMusic, sfx } from './audio.js';
@@ -232,18 +232,19 @@ class Game {
 
   // 3D-rendered portrait of a critter's head, cached as a data URL
   // full: frame the whole body (the growing scene) instead of the head
-  portrait(def, S = 256, full = false) {
-    const key = def.id + (def.skin || '') + (def.gear || '') + (def.stage ? 's' + def.stage : '') + (S !== 256 ? '@' + S : '') + (full ? 'F' : '');
+  portrait(def, S = 256, full = false, hat = null) {
+    const key = def.id + (def.skin || '') + (def.gear || '') + (def.stage ? 's' + def.stage : '') + (S !== 256 ? '@' + S : '') + (full ? 'F' : '') + (hat ? 'h' + hat : '');
     if (this.portraits.has(key)) return this.portraits.get(key);
     const scene = new THREE.Scene();
     const cr = new Critter(def);
+    if (hat && shopHat(cr, hat) && cr.gearCrown) cr.gearCrown.visible = false; // Adventure hat picker: the hero wearing each hat
     cr.update(0.016);
     cr.root.rotation.y = -0.35;
     scene.add(cr.root);
     scene.add(new THREE.HemisphereLight(0xffffff, 0x8888aa, 1.6));
     const d = new THREE.DirectionalLight(0xffffff, 2.2); d.position.set(-2, 3, 4); scene.add(d);
     const B = def.body;
-    const Z = def.size || 1, headY = (B.legLen * 0.9 + B.h * 0.82 + B.headR * 0.78) * Z, zoom = Z * (def.portraitZoom || 1);
+    const Z = def.size || 1, headY = (B.legLen * 0.9 + B.h * 0.82 + B.headR * (hat ? 1.05 : 0.78)) * Z, zoom = Z * (def.portraitZoom || 1) * (hat ? 1.18 : 1);
     const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
     if (full) {
       const H = (B.legLen + B.h + B.headR * 2.3) * Z + 0.2, dist = H * 1.85;
