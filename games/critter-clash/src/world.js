@@ -1504,7 +1504,7 @@ export class World {
     q = q.replaceAll('{hero}', heroDef().name);
     this.dialogEl?.remove();
     const el = this.dialogEl = document.createElement('div');
-    el.className = 'wd-box wd-ask';
+    el.className = 'wd-box wd-ask' + (opts.length > 3 ? ' many' : '');
     const m = /^([^:]{1,20}): (.*)$/s.exec(q);
     el.innerHTML = `<small>${m ? m[1] : who}</small><p>${m ? m[2] : q}</p><div class="wd-opts">${opts.map((o, i) => `<button data-i="${i}">${o}</button>`).join('')}</div>`;
     this.S.root.appendChild(el);

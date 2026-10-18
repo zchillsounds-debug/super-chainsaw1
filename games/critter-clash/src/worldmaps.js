@@ -120,7 +120,7 @@ export const MAPS = {
     ],
     signs: [{ x: 13, y: 9, text: 'BLOOM TOWN\nHome of the Sprout Stadium. Flowers welcome, frowns not.' }],
     npcs: [
-      { id: 'fan', x: 9, act: 'cheer', y: 9, critter: 'emberfly', name: 'Emberfly', dir: 's', wander: 2, lines: ["Emberfly: The Sprout Stadium's cup is for brand-new critters. Win it and everyone will know your name!", 'Emberfly: The crowd goes wild for a good super move. Bzzzt!'] },
+      { id: 'fan', x: 9, act: 'cheer', y: 9, critter: 'emberfly', name: 'Emberfly', dir: 's', wander: 2, lines: ["Emberfly: The Sprout Stadium's cup is for brand-new critters. Win it and everyone will know your name!", 'Emberfly: The crowd goes wild for a good super move. Bzzzt!', 'Emberfly: Have you seen the new Hat Shop? The one with the giant top hat on the roof! Milliner Mo takes berries.'] },
       { id: 'old', x: 20, act: 'sleep', y: 12, critter: 'snoozlo', name: 'Old Snoozlo', dir: 'w', lines: ['Old Snoozlo: Zzz... huh? Oh. They say the Critter Crown sits on top of Champion\'s Peak... zzz...', "Old Snoozlo: ...seven stadiums... seven cups... then the Crown... zzz..."] },
     ],
   },

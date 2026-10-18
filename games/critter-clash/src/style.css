@@ -884,6 +884,7 @@ body:not(.is-touch) .wd-a { display: none; }
 .wd-opts button { flex: 1 1 0; min-width: 110px; min-height: 44px; border-radius: 12px; background: #fff; color: var(--ink); font-family: var(--display); font-size: 18px; box-shadow: 0 0 0 3px var(--ink), 0 4px 0 3px var(--ink); }
 .wd-opts button.on { background: var(--yellow, #ffd23f); }
 .wd-ask p { min-height: 0; }
+.wd-ask.many .wd-opts button { font-size: 15px; min-width: 92px; padding: 0 6px; white-space: nowrap; }
 /* Adventure town map */
 .wd-map { max-width: 640px; padding: 14px 16px 16px; }
 .wd-map h2 { margin-bottom: 6px; }
