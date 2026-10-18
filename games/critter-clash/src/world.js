@@ -320,6 +320,7 @@ export class World {
     this.buildBottle();
     this.buildScope();
     this.buildRing();
+    this.buildSpring();
     this.buildBloomFw();
     this.buildFountain();
     this.buildJellies(rand);
@@ -1237,6 +1238,35 @@ export class World {
       return this.say(['The ring sings along again, just for fun. What a choir!']);
     });
     this.g.modalClose = () => el.__ring.close();
+  }
+
+  // Cinder Town's hot spring (top right, by Pengsicle): a rock-ringed pool of steaming turquoise water; a soak once a day warms the hero up (+XP)
+  buildSpring() {
+    this.spring = null;
+    if (this.key !== 'ember' || this.M.indoor) return;
+    const cells = [[21, 2], [22, 2], [21, 3], [22, 3]];
+    if (cells.some(([x, y]) => this.tile(x, y) !== '.')) return;
+    const night = this.phase !== 'day', cx = 22 * TILE, cz = 3 * TILE, g = new THREE.Group(); g.position.set(cx, 0, cz); this.group.add(g);
+    cells.forEach(([x, y]) => this.solid.add(x + ',' + y));
+    const rock = toon(0x5a4a48), rock2 = toon(0x7a6660);
+    for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2, r = 0.32 + (k % 3) * 0.06, st = inked(new THREE.DodecahedronGeometry(r, 0), k % 2 ? rock : rock2, OL * 0.35); st.scale.y = 0.6; st.position.set(Math.cos(a) * TILE * 0.98, 0.12, Math.sin(a) * TILE * 0.9); st.rotation.y = a * 3; st.castShadow = true; g.add(st); }
+    const wm = toon(0x3ad8d0, { rim: 0.9, emissive: night ? 0x1a8a8a : 0x0a4a4a }), water = new THREE.Mesh(new THREE.CircleGeometry(TILE * 0.92, 28), wm); water.rotation.x = -Math.PI / 2; water.scale.y = 0.92; water.position.y = 0.16; g.add(water);
+    const bank = new THREE.Mesh(new THREE.CircleGeometry(TILE * 1.15, 28), toon(0x3a2a28)); bank.rotation.x = -Math.PI / 2; bank.position.y = 0.03; bank.receiveShadow = true; g.add(bank);
+    let glow = null;
+    if (night) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0x6affe8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.45 }); sm.userData.own = true; glow = new THREE.Sprite(sm); glow.scale.setScalar(4.5); glow.position.y = 0.5; g.add(glow); }
+    bakeStatic({ root: g, mats: {}, water, glow });
+    this.spring = { cells: new Set(cells.map((c) => c.join(','))), px: cx, pz: cz, water, glow };
+  }
+
+  // a soak in Cinder Town's hot spring: steam billows up; the first soak of a day is worth a little XP
+  soak() {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv, S = this.spring;
+    sfx.water?.(); this.g.fx.burst({ x: S.px, y: 0.4, z: S.pz }, { n: 18, speed: 1.2, up: 2.2, color: 0xffffff, size: 0.9, life: 1.6, shape: 'glow', alpha: 0.5, grow: 1.2, drag: 1.2 });
+    if (A.soak !== day) {
+      A.soak = day; countUp('soak'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.2)); persist(); sfx.jingle?.(1);
+      return this.say([this.phase === 'day' ? '{hero} slips into the hot spring. Ahhh... toasty all the way to the tail.' : '{hero} soaks in the glowing spring under the stars. The volcano rumbles a lullaby.', `${['Pengsicle fans {hero} with a flipper. Very kind.', 'Steam curls up like little critters. Was that one waving?', 'All the aches from battle melt right away.'][Math.floor(Math.random() * 3)]} ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, 'A soak a day keeps the grumpies away. Come back tomorrow!']);
+    }
+    return this.say(['{hero} dips a toe in. Still lovely! (One good long soak a day.)']);
   }
 
   // Cloudtop Gardens: a tiered wishing fountain in the middle of the lawn, with a little rainbow in its spray (toss in a berry and make a wish, once a day)
@@ -2769,6 +2799,7 @@ export class World {
     if (this.twirlT > 0) this.twirlT -= dt;
     if (this.bloomFw) this.updateBloomFw(dt);
     if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
+    if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
     if (this.fountain) { const F = this.fountain; if (Math.random() < dt * 14) { const a = Math.random() * 6.28; this.g.fx.spawn({ x: F.px + Math.cos(a) * 0.1, y: 2.6, z: F.pz + Math.sin(a) * 0.1, vx: Math.cos(a) * 1.4, vy: 1.8, vz: Math.sin(a) * 1.4, color: 0xd8f4ff, size: 0.16, life: 0.75, shape: 'glow', grav: 6, additive: false, alpha: 0.8 }); } F.arcs.forEach((m, i) => { m.material.opacity = 0.42 + Math.sin(this.t * 1.3 + i * 0.4) * 0.12; }); } // the spray falls into the bowl; the rainbow shimmers
     if (this.sliding && save.adv.skates && Math.random() < dt * 30) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.5, y: 0.15, z: p.z + (Math.random() - 0.5) * 0.5, vy: 0.6 + Math.random(), vx: (Math.random() - 0.5), vz: (Math.random() - 0.5), color: Math.random() < 0.5 ? 0xffffff : 0x9ae0ff, size: 0.16, life: 0.6, shape: Math.random() < 0.4 ? 'star' : 'glow' }); } // skates kick up ice sparkles
     if (this.danceT > 0) { this.danceT -= dt; if (Math.random() < dt * 8) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 1.6 + Math.random(), z: p.z, vy: 1.2, color: this.dance?.cols[Math.floor(Math.random() * 5)].getHex() ?? 0xff5ad8, size: 0.2, life: 0.9, shape: Math.random() < 0.5 ? 'star' : 'glow' }); } }
@@ -3026,6 +3057,7 @@ export class World {
     }
     if (this.scope && this.scope.x === fx && this.scope.y === fy) return this.stargaze();
     if (this.ring && this.ring.x === fx && this.ring.y === fy) return this.fairyRing();
+    if (this.spring?.cells.has(fx + ',' + fy)) return this.soak();
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
     if (stall) {

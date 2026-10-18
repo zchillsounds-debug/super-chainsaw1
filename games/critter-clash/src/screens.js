@@ -966,6 +966,7 @@ export class Screens {
         ['🕹️', 'TURBO prize', 'Neon City arcade', A.arcadeDay === day, seen.neon],
         ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
         ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
+        ['♨️', 'Soak in the hot spring', N('ember'), A.soak === day, seen.ember],
         F.ending && ['🏔️', 'Peak Gauntlet (this week)', "Keeper Orla, Champion's Peak", !!F['gauntpay_' + gauntletWeek()], true],
       ].filter((r) => r && r[4]);
       const after = [
@@ -1020,6 +1021,7 @@ export class Screens {
         + bar('⛸️', 'Nights skated', A.cnt?.skate || 0)
         + bar('⛲', 'Wishes made', A.cnt?.wish || 0)
         + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
+        + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
         + bar('🔭', 'Constellations spotted', (A.consts || []).length, 8)
         + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
     } else if (tab === 'today') { // every daily thing in one list: done today, or where to go for it
