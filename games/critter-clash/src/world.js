@@ -3218,7 +3218,7 @@ export class World {
     const H = port ? 21 : 17, D = port ? 10 : 11.5;
     const want = new THREE.Vector3(p.x, H, p.z + D);
     // rooms are small: hold the whole room in view (portrait backs off far enough to fit the room's width)
-    const vw = Math.min(this.W, port ? 5.6 : 7.5); // wide rooms: portrait shows 5.6 tiles (so the room fills more of a tall screen) and pans with the hero
+    const vw = Math.min(this.W, port ? (this.M.indoor === 'arcade' ? 10 : 5.6) : 7.5); // the arcade backs off a little more, so its cabinets show from the door // wide rooms: portrait shows 5.6 tiles (so the room fills more of a tall screen) and pans with the hero
     const fit = port ? (vw * TILE + 1.2) / (2 * Math.tan(Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) * Math.PI / 360) * cam.aspect) : 0;
     const rx = vw < this.W ? Math.max(vw * TILE / 2, Math.min((this.W - vw / 2) * TILE, p.x)) : this.W * TILE / 2;
     if (this.M.indoor) want.set(port ? rx : this.W * TILE / 2, port ? Math.max(16.5, fit * 0.86) : 16, this.H * TILE / 2 + (port ? Math.max(3.6, fit * 0.2) : 9.8));
