@@ -558,7 +558,7 @@ export const MAPS = {
     buildings: [
       { id: 'altar', x: 7, y: 2, w: 4, h: 2, altar: true, door: 1, label: 'Critter Crown' },
     ],
-    signs: [{ x: 13, y: 21, text: "CHAMPION'S PEAK\nTrial of Focus: cross the frozen lake. Slide wisely." }, { x: 3, y: 4, text: 'THE PEAK GAUNTLET ⚔️\nFive Ace battles in a row. A new line-up every Monday. For Champions only: Keeper Orla comes up once the Crown has a new owner.' }],
+    signs: [{ x: 13, y: 21, text: "CHAMPION'S PEAK\nTrial of Focus: cross the frozen lake. Slide wisely." }, { x: 3, y: 4, act: 'gauntsign', text: 'THE PEAK GAUNTLET ⚔️\nFive Ace battles in a row. A new line-up every Monday. For Champions only: Keeper Orla comes up once the Crown has a new owner.' }],
     npcs: [
       { id: 'king', x: 11, y: 3, critter: 'snoozlo', lv: 24, name: 'King Snooze', dir: 's', story: 'king', scale: 1.4, shiny: true },
       { id: 'acenova', x: 6, y: 21, critter: 'emberfly', name: 'Ace Trainer Nova', dir: 'e', trainer: { lv: 19, sight: 3, diff: 0.8, intro: "Ace Trainer Nova: Nobody reaches the Crown without getting past the Aces of the Peak. I've trained in this snow for three winters. Show me you're ready!", beat: 'Ace Trainer Nova: ...You\'re ready. Go. The lake above is the real test.', after: 'Ace Trainer Nova: On the ice, look where you\'ll STOP, not where you\'ll slide. Rocks are your friends.' } },

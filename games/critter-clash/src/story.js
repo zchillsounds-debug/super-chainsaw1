@@ -363,6 +363,10 @@ export function storyTalk(S, id, w, a) {
     return;
   }
   if (id === 'gauntlet') return gauntlet(S, w);
+  if (id === 'gauntsign') { // the signpost, with this week's theme chalked underneath
+    const th = gauntletTheme(gauntletWeek()), sg = getMap('peak').signs.find((q) => q.act === 'gauntsign');
+    return w.say([sg.text, `Someone has chalked a note underneath. "THIS WEEK: ${TYPES[th[0]].name.toUpperCase()} & ${TYPES[th[1]].name.toUpperCase()}!"`], null, '📜 Sign');
+  }
   if (id === 'dashpost') { // post-game: a daily rematch with Dash at the hero's level, for berries
     const day = new Date().toISOString().slice(0, 10), rid = rivalFor(save.adv.hero), lv = save.critters[save.adv.hero].level + 2;
     if (F['dashday_' + day]) { w.say(['Dash: Okay, okay, you win today. Same time tomorrow, Champ. I\'ll be ready this time!']); return; }
