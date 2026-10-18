@@ -316,6 +316,7 @@ export class World {
     this.buildThanks();
     this.buildBuildings();
     this.buildInterior();
+    this.buildMarquee();
     this.buildActors();
     // hero
     this.hero = new Critter(heroDef()); bakeStatic(this.hero);
@@ -1029,6 +1030,17 @@ export class World {
     const gm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff9ad0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5 }); gm.userData.own = true;
     const glow = new THREE.Sprite(gm); glow.scale.set(5, 3, 1); glow.position.set(0, 2.3, 0.7); g.add(glow);
     this.cart = { g, lanterns, glow, px: px + TILE / 2 - 0.7 * 1, pz };
+  }
+
+  // the Neon arcade: a glowing marquee over each bank of cabinets says which game it plays
+  buildMarquee() {
+    if (this.M.indoor !== 'arcade') return;
+    for (const [x, label, css] of [[2, 'TURBO', '#ff5ad8'], [this.W - 3, 'SKY HOP', '#5ae8ff']]) {
+      const [px, pz] = wpos(x, 1);
+      const tex = canvasTex(192, 48, (c) => { c.fillStyle = '#140e2a'; c.beginPath(); c.roundRect(2, 2, 188, 44, 10); c.fill(); c.strokeStyle = css; c.lineWidth = 4; c.stroke(); c.font = 'bold 28px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = css; c.shadowBlur = 10; c.fillStyle = '#fff'; c.fillText(label, 96, 26); });
+      tex.userData.own = true; const m = new THREE.MeshBasicMaterial({ map: tex, transparent: true }); m.userData.own = true;
+      const sg = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.9), m); sg.position.set(px, 3.3, pz - 0.6); sg.rotation.x = -0.75; this.group.add(sg); // tipped up toward the camera
+    }
   }
 
   // Neon City's night market: after dusk two stalls open on the north pavement under a sagging string of bulbs
