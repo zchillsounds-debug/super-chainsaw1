@@ -211,6 +211,7 @@ export class World {
     this.buildMist();
     this.buildAurora();
     this.buildLamps();
+    this.buildBonfire();
     this.buildThanks();
     this.buildBuildings();
     this.buildInterior();
@@ -254,7 +255,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -863,6 +864,29 @@ export class World {
     }
     const im = inked(mergeGeometries(iron), toon(0x3a3a4a), OL * 0.5); im.castShadow = true; this.group.add(im); iron.forEach((g) => g.dispose());
     const gm = new THREE.Mesh(mergeGeometries(glass), lit ? LIT : toon(0xfff4d0, { rim: 0.8 })); this.group.add(gm); glass.forEach((g) => g.dispose());
+  }
+
+  // a beach bonfire in Seashell Town after dusk: logs, flickering flames, sparks and a warm pool of light on the sand
+  buildBonfire() {
+    this.bonfire = null;
+    if (this.key !== 'seashell' || this.phase === 'day' || this.M.indoor) return;
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((d) => d.x + ',' + (d.y + 1)), ...this.itemSpots, ...(this.M.signs || []).map((g) => g.x + ',' + g.y), this.hx + ',' + this.hy, this.dig ? this.dig.x + ',' + this.dig.y : '']);
+    const spot = [13, 15]; // on the sand between the two umbrellas, by the water (row 14 keeps the beach joined up)
+    if (this.tile(...spot) !== 's' || taken.has(spot.join(','))) return;
+    const [x, y] = spot, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(1.35);
+    this.solid.add(x + ',' + y);
+    const wood = toon(0x7a4a2a), stone = toon(0x9a94a0);
+    for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2, st = inked(new THREE.SphereGeometry(0.16, 7, 5), stone, OL * 0.3); st.scale.y = 0.6; st.position.set(Math.cos(a) * 0.62, 0.06, Math.sin(a) * 0.62); g.add(st); }
+    for (let k = 0; k < 3; k++) { const l = inked(new THREE.CylinderGeometry(0.08, 0.09, 0.9, 7), wood, OL * 0.3); l.rotation.z = Math.PI / 2; l.rotation.y = k / 3 * Math.PI; l.position.y = 0.12 + k * 0.05; g.add(l); }
+    const flames = [];
+    const fire = new THREE.Group(); fire.rotation.x = -0.5; fire.position.y = 0.18; g.add(fire); // leans away a little, so the flames read from the high camera
+    [[0xff4a1a, 0.34, 1.25, 0, 0], [0xff7a2a, 0.16, 0.8, 0.22, 0.1], [0xff7a2a, 0.15, 0.7, -0.2, -0.05], [0xffb040, 0.22, 0.95, 0, 0.05], [0xfff0a0, 0.12, 0.55, 0, 0.1]].forEach(([c, r, h, ox, oz]) => { const m = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.95 }); m.userData.own = true; const geo = new THREE.ConeGeometry(r, h, 8); geo.translate(0, h / 2, 0); const f = new THREE.Mesh(geo, m); f.position.set(ox, 0, oz); f.rotation.z = -ox * 1.2; fire.add(f); flames.push(f); });
+    const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff9a40, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5 }); sm.userData.own = true;
+    const sp = new THREE.Sprite(sm); sp.scale.setScalar(3.2); sp.position.y = 0.8; g.add(sp);
+    const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xff9040, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.55 }); pm.userData.own = true;
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), pm); pool.rotation.x = -Math.PI / 2; pool.position.y = 0.05; g.add(pool);
+    this.group.add(g);
+    this.bonfire = { g, flames, sp, pool, px, pz };
   }
 
   // aurora ribbons hang over the snowy maps at night, waving slowly (they follow the camera, high up)
@@ -2160,6 +2184,7 @@ export class World {
     for (const [fx, fy, fz, k = 1] of this.forgeFire || []) if (Math.random() < dt * 9 * k) this.g.fx.spawn({ x: fx + (Math.random() - 0.5) * 1.4 * k, y: fy, z: fz, vy: 1.2 + Math.random() * 1.6, vx: (Math.random() - 0.5) * 0.6, vz: 0.3 + Math.random() * 0.6, color: Math.random() < 0.6 ? 0xffa030 : 0xffe060, size: 0.14 + Math.random() * 0.1, life: 0.9, shape: 'glow' });
     if (this.thanksFan) { this.thanksFan.rotation.z -= dt * 14; if (Math.random() < dt * 3) this.g.fx.spawn({ shape: 'star', x: this.thanksFan.parent.parent.position.x + (Math.random() - 0.5) * 0.3, y: 0.55 + Math.random() * 0.3, z: this.thanksFan.parent.parent.position.z + (Math.random() - 0.5) * 0.3, vx: -1.1, vz: -0.65, vy: 0.15, life: 0.9, size: 0.18, color: 0xdff6ff }); }
     if (this.rocker?.isObject3D) { const near = this.hero && Math.hypot(this.hero.root.position.x - this.rocker.position.x, this.hero.root.position.z - this.rocker.position.z) < 3.2; this.rockA = (this.rockA ?? 0.04) + ((near ? 0.13 : 0.04) - (this.rockA ?? 0.04)) * Math.min(1, dt * 2); this.rocker.rotation.x = Math.sin(this.t * 1.7) * this.rockA; } // creak... creak...
+    if (this.bonfire) { const B = this.bonfire; B.flames.forEach((f, k) => { const q = 1 + Math.sin(this.t * (9 + k * 3) + k) * 0.12 + Math.sin(this.t * 23 + k * 2) * 0.06; f.scale.set(1 / Math.sqrt(q), q, 1 / Math.sqrt(q)); }); const fl = 0.85 + Math.sin(this.t * 13) * 0.08 + Math.sin(this.t * 31) * 0.05; B.sp.material.opacity = 0.5 * fl; B.pool.material.opacity = 0.7 * fl; if (Math.random() < dt * 6) this.g.fx.spawn({ x: B.px + (Math.random() - 0.5) * 0.4, y: 0.9, z: B.pz + (Math.random() - 0.5) * 0.4, vx: (Math.random() - 0.5) * 0.6, vy: 1.6 + Math.random() * 1.2, vz: (Math.random() - 0.5) * 0.6, color: 0xffb040, size: 0.14, life: 1.1, shape: 'spark' }); }
     if (this.pendulum) this.pendulum.rotation.z = Math.sin(this.t * 2.2) * 0.22; // tick... tock...
     for (const [jx, jy, jz, col, sh] of this.jars || []) if (Math.random() < dt * 5) this.g.fx.spawn(sh ? { x: jx + (Math.random() - 0.5) * 1.0, y: jy, z: jz + (Math.random() - 0.5) * 0.6, vy: 0.6, color: col, size: 0.14, life: 0.7, shape: sh } : { x: jx + (Math.random() - 0.5) * 0.5, y: jy + (Math.random() - 0.5) * 0.6, z: jz + (Math.random() - 0.5) * 0.5, color: 0xe8ff6a, size: 0.3, life: 0.8, shape: 'glow', fadeIn: 0.3 });
     if (this.forgePool) this.forgePool.material.opacity = 0.42 + Math.sin(this.t * 7) * 0.05 + Math.sin(this.t * 17) * 0.04;
