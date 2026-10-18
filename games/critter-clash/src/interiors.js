@@ -19,6 +19,28 @@ const ROOMS = {
     'WO.......OW',
     'WWWWW.WWWWW',
   ],
+  // a Glowcap toadstool home: toadstool stools round the table, more glowcap lamps
+  toad: [
+    'WWWWWWWWWWW',
+    'WCCX....OQW',
+    'WO.......QW',
+    'W.JDDJ....W',
+    'W..DD.YYY.W',
+    'W.....YYY.W',
+    'WO.......OW',
+    'WWWWW.WWWWW',
+  ],
+  // a Neon City high-rise flat: a telescope at the window and a squashy beanbag
+  flat: [
+    'WWWWWWWWWWW',
+    'WCCX..N.OQW',
+    'W........QW',
+    'W..DD..E..W',
+    'W..DD.YYY.W',
+    'W.....YYY.W',
+    'WO.......OW',
+    'WWWWW.WWWWW',
+  ],
   center: [
     'WWWWWWWWWWWWW',
     'WCCo.....oXCW',
@@ -142,13 +164,13 @@ const PEOPLE = {
   'seashell:berry2': { visitor: ['ripples', 'Diver Kai', ['Diver Kai: I dive for shells every day. The water critters around here are SO quick.'], 'e', 3, 4] },
   'seashell:hut': { npcs: [['bubbalotl', 'Captain Coral', ['Captain Coral: Arr! This hut used to be a boat. Then it sank. Then I dragged it up the beach.', 'Captain Coral: Spark critters zap water critters hard. Mind the Thunder Cup!'], 's', 6, 2]], kind: 'cabin', name: "Captain's Hut", wall: '#c8f0f0', rug: '#3ac8c8', floor: { a: '#c89a62', b: '#c0925a' } },
   'glowcap:berry3': { visitor: ['lilypop', 'Moss Kid', ['Moss Kid: The Berry Center here grows its berries on glowcaps. They taste a bit like moonlight.'], 'w', 9, 4], wall: '#e8d8ff' },
-  'glowcap:shroom1': { npcs: [['snoozlo', 'Snoozy Sal', ['Snoozy Sal: ...zzz... shh. The mushrooms are sleeping. ...zzz...', 'Snoozy Sal: ...if you nap with a critter... you become friends... zzz...'], 'e', 3, 2]], name: 'Toadstool House', wall: '#e0d0ff', rug: '#8a6aff' },
-  'glowcap:shroom2': { npcs: [['squeakwing', 'Auntie Squeak', ['Auntie Squeak: You\'re the one who brought little Pip home! Squeak squeak! The whole family is talking about you.', 'Auntie Squeak: Gust critters blow leaf critters away. Bats know these things.'], 's', 7, 2]], name: 'Toadstool House', wall: '#d0fff0', rug: '#2fd8b8' },
+  'glowcap:shroom1': { npcs: [['snoozlo', 'Snoozy Sal', ['Snoozy Sal: ...zzz... shh. The mushrooms are sleeping. ...zzz...', 'Snoozy Sal: ...if you nap with a critter... you become friends... zzz...'], 'e', 3, 2]], kind: 'toad', name: 'Toadstool House', wall: '#e0d0ff', rug: '#8a6aff' },
+  'glowcap:shroom2': { npcs: [['squeakwing', 'Auntie Squeak', ['Auntie Squeak: You\'re the one who brought little Pip home! Squeak squeak! The whole family is talking about you.', 'Auntie Squeak: Gust critters blow leaf critters away. Bats know these things.'], 's', 7, 2]], kind: 'toad', name: 'Toadstool House', wall: '#d0fff0', rug: '#2fd8b8' },
   'ember:berry4': { visitor: ['kindlekit', 'Ash', ['Ash: The nurse makes her smoothies with ice from Frostpeak. That\'s the only cold thing in Cinder Town!'], 'e', 3, 4] },
   'ember:forge': { npcs: [['rolladillo', 'Smith Anvil', ['Smith Anvil: CLANG! CLANG! Oh, hello! I make the trophies for the Champion Cup.', 'Smith Anvil: Stone critters shrug off fire. Fire critters melt leaf. Leaf critters crack stone. Simple!', 'Smith Anvil: That furnace never goes out. Smith Ash keeps it fed from the chimney side. HAH!'], 'w', 4, 3]], kind: 'forge', name: 'Forge', floor: { a: '#8a7a74', b: '#84746e' }, wall: '#c8a48a', rug: '#c8603a' },
   'neon:arcade': { npcs: [['jiggawatt', 'Gamer Volt', ['Gamer Volt: High score! ...Oh, you\'re not here to watch? Nobody ever is.', 'Gamer Volt: Pro tip: a super move freezes the whole arena. Use it when your foe is close!', 'Gamer Volt: Try CRITTER CLASH TURBO! Gold berries are worth five red ones, and a long catch streak multiplies your score. Zaps break the streak.', 'Gamer Volt: The blue cabinets on the right are SKY HOP. Little taps, not big ones! Every pillar is 10 points.'], 's', 6, 2], ['voltferret', 'Pixel', ['Pixel: I\'ve played this cabinet for nine hours. I think I can see in pixels now.', 'Pixel: SKY HOP gets faster the further you fly. My record is... seven pillars. Don\'t tell Volt.'], 'n', 3, 4]], kind: 'arcade', wall: '#3a2a5a', rug: '#ff5ad8', dark: true },
   'neon:berry5': { visitor: ['jiggawatt', 'Night Owl', ['Night Owl: This Berry Center never closes. Neither does the Midnight Stadium!'], 'w', 9, 4], wall: '#e8e0ff' },
-  'neon:tower2': { npcs: [['whirlwhisk', 'Sky Lin', ['Sky Lin: From the top of this tower you can see Captain Puff\'s balloon in the east.', 'Sky Lin: Captain Puff only flies critters who\'ve won the Midnight Cup. House rules!'], 's', 5, 2]], name: 'Sky Flat', wall: '#d0e8ff', rug: '#5ad8ff' },
+  'neon:tower2': { npcs: [['whirlwhisk', 'Sky Lin', ['Sky Lin: From the top of this tower you can see Captain Puff\'s balloon in the east.', 'Sky Lin: Captain Puff only flies critters who\'ve won the Midnight Cup. House rules!'], 's', 5, 2]], kind: 'flat', name: 'Sky Flat', wall: '#d0e8ff', rug: '#5ad8ff' },
   'cloudtop:berry6': { visitor: ['whirlwhisk', 'Breeze', ['Breeze: The nurse up here is the highest nurse in all of Clashara. Literally!'], 'e', 3, 4] },
   'frostpeak:berry7': { visitor: ['pengsicle', 'Snowy', ['Snowy: Warm smoothies? In Frostpeak they make them HOT. Wonderful!'], 'w', 9, 4] },
   'frostpeak:lodge': { npcs: [['woolt', 'Lodge Keeper Fleece', ['Lodge Keeper Fleece: Come in, come in, out of the snow! The fire is lovely and warm.', 'Lodge Keeper Fleece: Many critters have climbed to the Peak. Only one gets the Crown.', 'Lodge Keeper Fleece: See a blue X in the snow out there? Dig! Ice gems turn up every day. Bring them to me and I\'ll pay in berries.'], 's', 7, 2]], kind: 'lodge', name: 'Mountain Lodge', wall: '#e8d0b0', rug: '#c8443a' },
@@ -173,6 +195,9 @@ const ITEMS = {
   j: 'A big jar of fireflies on a stool. They blink hello!',
   t: 'A toy chest. Inside: a stuffed Cindermunch, three bouncy balls and a paper crown.',
   V: 'A tall dressing mirror.',
+  J: 'A toadstool stool. It\'s squishier than it looks.',
+  N: 'A brass telescope pointed at the sky. Far away to the east, a balloon drifts over the clouds.',
+  E: 'A huge squashy beanbag. {hero} flops into it... and might never get up again.',
   Z: 'A tower of hat boxes tied up with ribbons. Milliner Mo says the bottom one is "not for sale. Ever."',
 };
 
@@ -217,7 +242,7 @@ export function interiorMap(key) {
     signs.push({ x, y, text, hide: true, act: t === 'Q' && kind === 'home' ? 'rest' : t === 'V' ? 'mirror' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
   }));
   return {
-    cup: b.stadium, shroom: outer === 'glowcap' && (bid.startsWith('shroom') || !!b.heal), cityView: !!O.city && kind === 'house',
+    cup: b.stadium, shroom: outer === 'glowcap' && (bid.startsWith('shroom') || !!b.heal), cityView: !!O.city && (kind === 'house' || kind === 'flat'),
     name: b.heal ? `${O.name.replace(/ (Town|City|Gardens|Hollow|Village)$/, '')} Berry Center` : b.label || P.name || (b.id === 'home' ? 'Home' : 'House'),
     indoor: kind, tiles, npcs, signs, music: O.music,
     exit: { map: outer, x: b.x + b.door, y: b.y + b.h, dir: 's' },

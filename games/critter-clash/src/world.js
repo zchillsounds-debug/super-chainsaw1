@@ -1816,6 +1816,22 @@ export class World {
         st(1.9, pz - 0.2, 0.7); st(1.6, pz + 0.05, 0.4); st(2.15, pz + 0.25, 0.3);
         const top = new THREE.SphereGeometry(0.2, 10, 8); top.translate(px - 0.72, 3.0, pz); add('gold', top);
       }
+      if (t === 'J') { // a toadstool stool: a stubby white stem under a red, white-spotted cap
+        const st = new THREE.CylinderGeometry(0.28, 0.36, 0.6, 12); st.translate(px, 0.3, pz); add('trim', st);
+        const cp = new THREE.SphereGeometry(0.62, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2); cp.scale(1, 0.55, 1); cp.translate(px, 0.58, pz); add('tcap', cp);
+        for (let k = 0; k < 5; k++) { const a = k * 1.3 + 0.4, r = k ? 0.42 : 0, sp = new THREE.SphereGeometry(0.09, 8, 6); sp.scale(1, 0.5, 1); sp.translate(px + Math.cos(a) * r, 0.58 + (k ? 0.22 : 0.34), pz + Math.sin(a) * r); add('shine', sp); }
+      }
+      if (t === 'N') { // a brass telescope on a wooden tripod, aimed up at the window
+        for (let k = 0; k < 3; k++) { const a = k * 2.1 + 0.3, lg = new THREE.CylinderGeometry(0.04, 0.05, 1.5, 6); lg.rotateZ(0.28); lg.rotateY(a); lg.translate(px + Math.cos(a) * 0.2, 0.72, pz - 0.2 - Math.sin(a) * 0.2); add('wood', lg); }
+        const tb = new THREE.CylinderGeometry(0.26, 0.17, 1.7, 14); tb.rotateX(-0.8); tb.translate(px, 1.7, pz - 0.3); add('gold', tb);
+        for (const f of [-0.35, 0.3]) { const bd = new THREE.TorusGeometry(0.22 - f * 0.08, 0.035, 5, 14); bd.rotateX(Math.PI / 2 - 0.8); bd.translate(px, 1.7 + Math.cos(0.8) * f, pz - 0.3 - Math.sin(0.8) * f); add('soot', bd); }
+        const ey = new THREE.CylinderGeometry(0.08, 0.08, 0.35, 8); ey.rotateX(-0.8); ey.translate(px, 1.05, pz + 0.32); add('soot', ey);
+        const ln = new THREE.CylinderGeometry(0.24, 0.24, 0.04, 14); ln.rotateX(-0.8); ln.translate(px, 2.3, pz - 0.92); add('aqua', ln);
+      }
+      if (t === 'E') { // a squashy beanbag with a dent where someone just sat
+        const bb = new THREE.SphereGeometry(0.75, 16, 10); bb.scale(1.05, 0.55, 1); bb.translate(px, 0.4, pz); add('bean', bb);
+        const dn = new THREE.SphereGeometry(0.42, 12, 8); dn.scale(1, 0.35, 1); dn.translate(px + 0.05, 0.68, pz + 0.05); add('bean2', dn);
+      }
       if (t === 'Z') { // a wobbly tower of striped hat boxes with ribbons and bows
         [[0.62, 0.55, 'hb0', 0.06], [0.52, 0.48, 'hb1', -0.1], [0.42, 0.42, 'hb2', 0.08]].reduce((y, [r, h, k, dx]) => {
           const c = new THREE.CylinderGeometry(r, r, h, 18); c.translate(px + dx, y + h / 2, pz - 0.1); add(k, c);
@@ -1875,7 +1891,7 @@ export class World {
         const cup = new THREE.CylinderGeometry(0.16, 0.08, 0.3, 10); cup.translate(px - 0.2, 0.95, pz); add('gold', cup);
       }
     }
-    const C = { mirror: 0xd4ecff, hb0: 0xff8ac8, hb1: 0x5ad8c8, hb2: 0xffd84d, ribbon: 0xff4a7a, shine: 0xffffff, wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, ghost: 0x8a7464, ghostc: 0x2a8a5a, aqua: 0x3ab8ff, weed: 0x4cc25a, sandy: 0xf4dc9a, lava: 0xff5a2a, pine: 0x2f7a5a, knit: 0xd86a8a, knit2: 0xfff0d8, flies: 0xe8ff6a, door0: 0xc8845a, door1: 0xd8946a };
+    const C = { mirror: 0xd4ecff, hb0: 0xff8ac8, hb1: 0x5ad8c8, hb2: 0xffd84d, ribbon: 0xff4a7a, shine: 0xffffff, tcap: 0xff4a5a, bean: 0xff5ad8, bean2: 0xd83ab8, wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, ghost: 0x8a7464, ghostc: 0x2a8a5a, aqua: 0x3ab8ff, weed: 0x4cc25a, sandy: 0xf4dc9a, lava: 0xff5a2a, pine: 0x2f7a5a, knit: 0xd86a8a, knit2: 0xfff0d8, flies: 0xe8ff6a, door0: 0xc8845a, door1: 0xd8946a };
     for (const k in L) {
       if (k === 'pane' || k === 'goo') { const m = new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'goo' ? 0x5aff9a : 0xd8f0ff, transparent: true, opacity: k === 'goo' ? 0.5 : 0.22, depthWrite: false })); if (k === 'goo') m.renderOrder = 2; m.material.userData.own = true; this.group.add(m); L[k].forEach((g) => g.dispose()); continue; }
       const glow = k === 'mirror' || k === 'shine' || k === 'cap0' || k === 'cap1' || k === 'lit' || k === 'fire' || k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1' || k === 'flies' || k === 'aqua' || k === 'lava';
