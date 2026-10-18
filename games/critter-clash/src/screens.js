@@ -976,7 +976,7 @@ export class Screens {
       const digOpen = new Set(digLeft(MAPS)), digDone = dig.filter((k) => !digOpen.has(k)).length;
       const rows = [
         ['🍓', 'Shake a berry bush', 'bushes at the edge of town', Object.values(A.bush || {}).includes(day), true],
-        ['🥞', "Mom's breakfast (before 9)", N('village'), A.breakfast === day, (A.cnt?.breakfast || this.worldObj?.morning) && seen.village],
+        ['🥞', "Mom's breakfast (before 9)", N('village'), A.breakfast === day, (this.worldObj?.morning || A.breakfast === day) && seen.village], // only while it can still be done (or once it's done)
         dig.length && ['⛏️', `Dig spots (${digDone}/${dig.length})`, dig.filter((k) => digOpen.has(k)).map(N).join(', ') || 'all dug!', digDone === dig.length, true],
         al && ['💥', `Beat the Alpha ${CRITTERS.find((c) => c.id === al.id)?.name || ''}`, `tall grass in ${N(al.map)}`, al.done, true],
         ['🍜', 'Spark Noodles', N('neon'), A.noodles === day, seen.neon],
