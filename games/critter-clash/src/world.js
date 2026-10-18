@@ -190,7 +190,7 @@ export class World {
     // the phone's clock tints outdoor maps that have no mood of their own: golden evenings, soft blue nights
     const hr = save.adv.clock ?? new Date().getHours();
     this.outPhase = hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day'; // what the room windows show
-    this.phase = M.indoor || (M.mood && !M.snow) ? 'day' : this.outPhase;
+    this.phase = M.indoor || (M.mood && !M.snow && M.border !== 'cloud') ? 'day' : this.outPhase;
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
     this.rain = canRain(M) && (save.adv.rain ?? rainAt(key, new Date(), hr));
     const shut = M.bramble && !save.adv.flags[M.bramble];
@@ -236,7 +236,7 @@ export class World {
     persist();
     playMusic(M.music || 'camp');
     const B = this.base, lamp = M.indoor && this.outPhase !== 'day' && M.indoor !== 'arcade' && { sun: 0xffd2a0, sunI: B.sunI * (this.outPhase === 'night' ? 0.72 : 0.85), sky: 0xffe2c4, gnd: B.gnd, hemiI: B.hemiI * 0.85, fog: 0xcfeeff }; // lamplight indoors after dark
-    this.mood((M.snow && SNOWY[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || PHASES[this.phase]);
+    this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || PHASES[this.phase]);
     this.banner(M.name + (this.rain ? ' 🌧️' : ''));
   }
 
@@ -1998,6 +1998,10 @@ export class World {
     this.ambience(dt);
     this.updateFireworks(dt);
     for (const a of this.npcs || []) if (a.mark) a.mark.position.set(a.root.position.x, a.root.position.y + 2.7 + Math.sin(this.t * 4) * 0.12, a.root.position.z);
+    if ((this.M.snow || this.M.border === 'cloud') && this.phase === 'night' && !this.M.indoor && Math.random() < dt * 0.18) { // now and then a shooting star streaks across the top of the view
+      const p = this.hero.root.position, port = this.g.camera.aspect < 1, sx = p.x + (Math.random() - 0.5) * 14, sz = p.z + (port ? -9 : -4) - Math.random() * 2, dir = Math.random() < 0.5 ? 1 : -1;
+      for (let k = 0; k < 12; k++) this.g.fx.spawn({ x: sx - dir * k * 0.28, y: 6 + k * 0.1, z: sz, vx: dir * 9, vy: -1, color: k ? 0xd8ecff : 0xffffff, size: k ? 0.32 - k * 0.02 : 0.5, life: 0.55 - k * 0.03, shape: k ? 'glow' : 'star' });
+    }
     for (const A of this.aurora || []) { // curtains of light ripple across the top of the view
       const p = this.hero.root.position, q = A.q, a = q.geometry.attributes.position, B = A.base;
       const port = this.g.camera.aspect < 1; q.position.set(p.x + Math.sin(this.t * 0.07 + A.k) * 3, (port ? 10 : 8.5) + A.k * 0.5, p.z + (port ? -6.5 : 1.2) - A.k * 1.1);
