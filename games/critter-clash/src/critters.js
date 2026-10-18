@@ -1136,6 +1136,7 @@ export const SHOP_HATS = [
   { id: 'bunny', name: 'Bunny Band', kind: 'bunny', col: 0xffffff, band: 0xff9ac8, price: 9, trader: true },
   // gifts (never sold)
   { id: 'aviator', name: 'Aviator Cap', kind: 'aviator', col: 0x8a5a3a, band: 0x9ad8ff, price: 0, gift: true },
+  { id: 'sailor', name: 'Sailor Hat', kind: 'sailor', col: 0xffffff, band: 0x3a6aff, price: 0, gift: true },
 ];
 export function shopHat(cr, id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return null;
@@ -1160,6 +1161,7 @@ export function hatModel(cr, kind, col, band) {
   if (kind === 'helm') { add(new THREE.SphereGeometry(r * 0.8, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.85; add(new THREE.TorusGeometry(r * 0.8, r * 0.07, 6, 22), toon(0xd8a040), 0).rotation.x = Math.PI / 2; for (const sd of [-1, 1]) { const h = add(new THREE.ConeGeometry(r * 0.16, r * 0.62, 10), toon(band), 0.015); h.position.set(sd * r * 0.82, r * 0.38, 0); h.rotation.z = -sd * 0.75; } G.position.y -= r * 0.16; }
   if (kind === 'bunny') { add(new THREE.TorusGeometry(r * 0.78, r * 0.05, 6, 22, Math.PI), toon(band), 0).position.y = r * 0.0; for (const sd of [-1, 1]) { const e = new THREE.Group(); e.position.set(sd * r * 0.32, r * 0.1, 0); e.rotation.set(-0.4, 0, -sd * 0.3); G.add(e); const o = inked(new THREE.CapsuleGeometry(r * 0.18, r * 0.95, 4, 10), M, 0.02); o.position.y = r * 0.6; o.scale.z = 0.6; e.add(o); const n = inked(new THREE.CapsuleGeometry(r * 0.1, r * 0.7, 4, 8), toon(band), 0); n.position.set(0, r * 0.6, r * 0.07); n.scale.z = 0.5; e.add(n); } G.position.y -= r * 0.25; }
   if (kind === 'aviator') { add(new THREE.SphereGeometry(r * 0.8, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.8; for (const sd of [-1, 1]) { const f = add(new THREE.SphereGeometry(r * 0.24, 10, 8)); f.position.set(sd * r * 0.74, -r * 0.18, 0); f.scale.set(0.5, 1.2, 0.9); const gg = add(new THREE.TorusGeometry(r * 0.17, r * 0.06, 6, 14), toon(0x5a4a3a), 0.012); gg.position.set(sd * r * 0.22, r * 0.5, r * 0.5); gg.rotation.x = -0.9; const lens = add(new THREE.CircleGeometry(r * 0.15, 14), toon(band, { rim: 1 }), 0); lens.position.set(sd * r * 0.22, r * 0.51, r * 0.51); lens.rotation.x = -0.9; } add(new THREE.BoxGeometry(r * 0.2, r * 0.05, r * 0.08), toon(0x5a4a3a), 0).position.set(0, r * 0.52, r * 0.53); G.position.y -= r * 0.12; }
+  if (kind === 'sailor') { const c = add(new THREE.CylinderGeometry(r * 0.62, r * 0.5, r * 0.36, 18)); c.position.y = r * 0.16; add(new THREE.TorusGeometry(r * 0.56, r * 0.1, 8, 20), M, 0.015).rotation.x = Math.PI / 2; add(new THREE.CylinderGeometry(r * 0.63, r * 0.63, r * 0.06, 18), toon(band), 0).position.y = r * 0.3; const ank = add(new THREE.BoxGeometry(r * 0.08, r * 0.2, r * 0.04), toon(band), 0); ank.position.set(0, r * 0.12, r * 0.6); G.rotation.z = 0.18; }
   if (kind === 'top') { add(new THREE.CylinderGeometry(r * 0.5, r * 0.46, r * 0.85, 18)).position.y = r * 0.42; add(new THREE.CylinderGeometry(r * 0.9, r * 0.9, r * 0.05, 22)); add(new THREE.CylinderGeometry(r * 0.475, r * 0.47, r * 0.14, 18), toon(band), 0).position.y = r * 0.12; G.rotation.z = -0.12; }
   G.position.y += r * 0.72; G.rotation.x = -0.1;
   cr.skull.add(G);

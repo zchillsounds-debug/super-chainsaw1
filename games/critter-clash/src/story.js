@@ -293,22 +293,8 @@ export function storyTalk(S, id, w, a) {
   if (id === 'hatshop') return hatShop(w);
   if (id === 'board') return requestBoard(S, w);
   if (id === 'trader') return trader(w);
-  if (id === 'kite') { // Kite Flyer Gale lost a kite to the wind; it's stuck in a snowy tree in Frostpeak
-    const who = 'Kite Flyer Gale';
-    if (F.kite_done) return w.say([a.n.lines[Math.floor(Math.random() * a.n.lines.length)]], null, who);
-    if (F.kite_found) {
-      F.kite_done = true; const own = (save.adv.hats ||= []); if (!own.includes('aviator')) own.push('aviator');
-      save.berries = (save.berries || 0) + 3; persist(); sfx.jingle(3); S.toast('🪁 Kite returned!');
-      return w.say(['Kite Flyer Gale: Is that... MY KITE?! You found it! A bit frosty, but not a scratch!', 'Kite Flyer Gale: Here, my spare Aviator Cap, goggles and all. And some berries for the trip!', '{hero} got the Aviator Cap! 🧢 +3 🍓', 'Kite Flyer Gale: Wear it from the wardrobe at home or at the Hat Shop. Up, up and away!'], null, who);
-    }
-    if (F.kite_asked) return w.say(['Kite Flyer Gale: Any luck? It\'s red and yellow with a long bow tail. The wind blew it toward Frostpeak. Check the trees!'], null, who);
-    F.kite_asked = true; persist();
-    return w.say(['Kite Flyer Gale: Wheee... oh. Hello. Sorry, I\'m a bit down. A gust snatched my kite right out of my wings!', 'Kite Flyer Gale: It flew off over the clouds toward Frostpeak. If you ever go there, could you look in the snowy trees for it?', 'Kite Flyer Gale: Red and yellow, with a long bow tail. I\'d be ever so grateful!'], null, who);
-  }
-  if (id === 'kitefound') {
-    F.kite_found = true; persist(); sfx.jingle(2); w.buildKite?.(); S.toast('🪁 Found the kite!');
-    return w.say(['There\'s a red and yellow kite tangled in the branches! {hero} wiggles it free.', 'Kite Flyer Gale in Cloudtop Gardens will be so happy!']);
-  }
+  if (id.startsWith('lost:') || id.startsWith('found:')) return lostQuest(S, w, a, id);
+
   if (id === 'wardrobe') return wearMenu(w, '', null);
   if (id.startsWith('case:')) { // a lobby trophy case
     const cup = CUPS.find((c) => c.id === id.slice(5));
@@ -473,6 +459,51 @@ function pickPaged(w, q, labels, cb, who, page = 0) {
     if (more && i === slice.length) return pickPaged(w, q, labels, cb, who, (page + 1) % Math.ceil(n / per));
     cb(-1);
   }, who);
+}
+
+// townsfolk side quests: someone lost something; it turns up in another place (world.js LOST_SPOTS draws it there)
+const LOST = {
+  kite: {
+    who: 'Kite Flyer Gale', item: 'kite', hat: 'aviator', berries: 3, toast: '🪁',
+    ask: ['Kite Flyer Gale: Wheee... oh. Hello. Sorry, I\'m a bit down. A gust snatched my kite right out of my wings!', 'Kite Flyer Gale: It flew off over the clouds toward Frostpeak. If you ever go there, could you look in the snowy trees for it?', 'Kite Flyer Gale: Red and yellow, with a long bow tail. I\'d be ever so grateful!'],
+    wait: ['Kite Flyer Gale: Any luck? It\'s red and yellow with a long bow tail. The wind blew it toward Frostpeak. Check the trees!'],
+    found: ['There\'s a red and yellow kite tangled in the branches! {hero} wiggles it free.', 'Kite Flyer Gale in Cloudtop Gardens will be so happy!'],
+    done: ['Kite Flyer Gale: Is that... MY KITE?! You found it! A bit frosty, but not a scratch!', 'Kite Flyer Gale: Here, my spare Aviator Cap, goggles and all. And some berries for the trip!', '{hero} got the Aviator Cap! 🧢 +3 🍓', 'Kite Flyer Gale: Wear it from the wardrobe at home or at the Hat Shop. Up, up and away!'],
+  },
+  camera: {
+    who: 'Tourist Bo', item: 'camera', snack: true, berries: 3, toast: '📷',
+    ask: ['Tourist Bo: Oh no, oh no. My camera! I had it on Cinder Road, snapping the lava river... and then a vent went WHOOSH and I ran.', 'Tourist Bo: I think I put it down on a rock. Way out east, past the bridge. Could you have a look?'],
+    wait: ['Tourist Bo: Still no camera? I left it on a rock at the far east end of Cinder Road, up near the top. Probably toasty by now!'],
+    found: ['A camera sits on a warm rock, a bit sooty but fine. {hero} picks it up carefully.', 'Tourist Bo in Cinder Town must be missing it!'],
+    done: ['Tourist Bo: MY CAMERA! And look, it still works! ...Oh, it took a photo of a very surprised Kindlekit.', 'Tourist Bo: You\'re a hero! Please, take these berries, and my emergency Power Snack.', '{hero} got 3 berries and a Power Snack! ⭐'],
+  },
+  pearl: {
+    who: 'Shell Collector Mei', item: 'pearl', hat: 'sailor', berries: 2, toast: '🦪',
+    ask: ['Shell Collector Mei: My lucky pearl! I was showing it to the seagulls on Route 2 and one of them swooped and grabbed it!', 'Shell Collector Mei: Gulls drop shiny things by the palm trees across the river. Could you look there for me?'],
+    wait: ['Shell Collector Mei: Did you find my pearl? Try the palms on Route 2, on the sandy side of the river.'],
+    found: ['Tucked in a pink shell at the foot of a palm tree... a shining pearl! {hero} scoops it up.', 'Shell Collector Mei in Seashell Town will be thrilled!'],
+    done: ['Shell Collector Mei: My lucky pearl! You found it! Oh, I could hug you. I won\'t. Sand everywhere.', 'Shell Collector Mei: Here, this Sailor Hat was my grandpa\'s. He\'d want an adventurer to wear it!', '{hero} got the Sailor Hat! ⚓ +2 🍓'],
+  },
+};
+function lostQuest(S, w, a, key) {
+  const F = flags(), [kind, id] = key.split(':'), Q = LOST[id], who = Q.who;
+  if (kind === 'found') {
+    F[id + '_found'] = true; persist(); sfx.jingle(2); w.buildLost?.(); S.toast(`${Q.toast} Found the ${Q.item}!`);
+    return w.say(Q.found);
+  }
+  if (F[id + '_done']) return w.say([a.n.lines[Math.floor(Math.random() * a.n.lines.length)]], null, who);
+  if (F[id + '_found']) {
+    F[id + '_done'] = true;
+    if (Q.hat) { const own = (save.adv.hats ||= []); if (!own.includes(Q.hat)) own.push(Q.hat); }
+    save.berries = (save.berries || 0) + (Q.berries || 0);
+    const out = [...Q.done];
+    if (Q.snack) { const h = save.adv.hero, c = save.critters[h], r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4)); if (r.to > r.from) out.push(`{hero} grew to Lv ${r.to}!`); }
+    persist(); sfx.jingle(3); S.toast(`${Q.toast} ${Q.item[0].toUpperCase() + Q.item.slice(1)} returned!`);
+    return w.say(out, null, who);
+  }
+  if (F[id + '_asked']) return w.say(Q.wait, null, who);
+  F[id + '_asked'] = true; persist();
+  return w.say(Q.ask, null, who);
 }
 
 // Trader Tock turns up in a different town each day with hats the shop doesn't sell

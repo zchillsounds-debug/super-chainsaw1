@@ -38,6 +38,9 @@ const panelTex = () => PANEL ||= canvasTex(64, 64, (c) => {
   c.fillStyle = 'rgba(255,255,255,0.25)'; c.beginPath(); c.moveTo(0, 0); c.lineTo(22, 0); c.lineTo(0, 22); c.fill();
 });
 
+// where each side quest's lost thing turns up: a solid tile (tree, rock, palm) you face from next door
+const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 } };
+
 const STEP = 0.23; // seconds per tile
 const SHINY_RATE = 1 / 30; // a rare shiny wild critter: beat it to unlock its shiny palette
 const OL = 0.035;
@@ -193,7 +196,7 @@ export class World {
     this.placeHero();
     this.buildItems(x, y);
     this.buildBush(x, y);
-    this.buildKite();
+    this.buildLost();
     this.makeFollower();
     this.camAt = null;
     this.steps = 0;
@@ -1005,22 +1008,38 @@ export class World {
   }
 
   // a berry bush at the edge of the trees in every outdoor map: shake it once a day for berries (and now and then a sleepy wild critter)
-  // Kite Flyer Gale's lost kite, tangled in a snowy tree in Frostpeak (side quest: flags kite_asked → kite_found → kite_done)
-  buildKite() {
-    if (this.kite) { this.group.remove(this.kite.g); this.kite.g.traverse((o) => o.geometry?.dispose()); }
-    this.kite = null;
+  // lost things for townsfolk side quests (flags <id>_asked → <id>_found → <id>_done; the lines live in story.js LOST)
+  buildLost() {
+    for (const L of this.lost || []) { this.group.remove(L.g); L.g.traverse((o) => o.geometry?.dispose()); }
+    this.lost = [];
     const F = save.adv.flags;
-    if (this.key !== 'frostpeak' || !F.kite_asked || F.kite_found) return;
-    const x = 22, y = 10, [px, pz] = wpos(x, y), g = new THREE.Group();
-    const sh = new THREE.Shape(); sh.moveTo(0, 0.7); sh.lineTo(0.42, 0); sh.lineTo(0, -0.9); sh.lineTo(-0.42, 0); sh.closePath();
-    const half = (col, f) => { const q = new THREE.Shape(); q.moveTo(0, 0.7); q.lineTo(0.42 * f, 0); q.lineTo(0, -0.9); q.closePath(); const m = new THREE.Mesh(new THREE.ShapeGeometry(q), toon(col, { side: THREE.DoubleSide })); g.add(m); };
-    half(0xff4a4a, 1); half(0xffd84d, -1);
-    const ink = new THREE.Mesh(new THREE.ShapeGeometry(sh), toon(0x2a1630, { side: THREE.DoubleSide })); ink.scale.setScalar(1.08); ink.position.z = -0.01; g.add(ink);
-    for (const [w2, h2, r] of [[0.03, 1.6, 0], [0.84, 0.03, 0]]) { const st = new THREE.Mesh(new THREE.BoxGeometry(w2, h2, 0.03), toon(0x8a5a3a)); st.position.set(0, h2 > 1 ? -0.1 : 0, 0.02); st.rotation.z = r; g.add(st); }
-    for (let k = 0; k < 4; k++) { const bow = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.1, 0.03), toon(k % 2 ? 0xff4a4a : 0xffd84d)); bow.position.set(Math.sin(k * 1.3) * 0.15, -1.05 - k * 0.3, 0.02); bow.rotation.z = 0.6 * (k % 2 ? 1 : -1); g.add(bow); }
-    g.position.set(px - 0.5, 2.6, pz + 0.8); g.rotation.set(-0.9, 0.2, 0.5); g.scale.setScalar(1.4);
-    this.group.add(g);
-    this.kite = { x, y, g };
+    for (const [id, Q] of Object.entries(LOST_SPOTS)) {
+      if (Q.map !== this.key || !F[id + '_asked'] || F[id + '_found']) continue;
+      const [px, pz] = wpos(Q.x, Q.y), g = new THREE.Group();
+      if (id === 'kite') { // red and yellow, with a bow tail, tangled in the branches
+        const half = (col, f) => { const q = new THREE.Shape(); q.moveTo(0, 0.7); q.lineTo(0.42 * f, 0); q.lineTo(0, -0.9); q.closePath(); g.add(new THREE.Mesh(new THREE.ShapeGeometry(q), toon(col, { side: THREE.DoubleSide }))); };
+        half(0xff4a4a, 1); half(0xffd84d, -1);
+        const sh = new THREE.Shape(); sh.moveTo(0, 0.7); sh.lineTo(0.42, 0); sh.lineTo(0, -0.9); sh.lineTo(-0.42, 0); sh.closePath();
+        const ink = new THREE.Mesh(new THREE.ShapeGeometry(sh), toon(0x2a1630, { side: THREE.DoubleSide })); ink.scale.setScalar(1.08); ink.position.z = -0.01; g.add(ink);
+        for (const [w2, h2] of [[0.03, 1.6], [0.84, 0.03]]) { const st = new THREE.Mesh(new THREE.BoxGeometry(w2, h2, 0.03), toon(0x8a5a3a)); st.position.set(0, h2 > 1 ? -0.1 : 0, 0.02); g.add(st); }
+        for (let k = 0; k < 4; k++) { const bow = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.1, 0.03), toon(k % 2 ? 0xff4a4a : 0xffd84d)); bow.position.set(Math.sin(k * 1.3) * 0.15, -1.05 - k * 0.3, 0.02); bow.rotation.z = 0.6 * (k % 2 ? 1 : -1); g.add(bow); }
+        g.position.set(px - 0.5, 2.6, pz + 0.8); g.rotation.set(-0.9, 0.2, 0.5); g.scale.setScalar(1.4);
+      } else if (id === 'camera') { // a tourist's camera left on a warm rock
+        g.add(inked(new THREE.BoxGeometry(0.6, 0.38, 0.3), toon(0x3a3a4a), OL * 0.4));
+        const lens = inked(new THREE.CylinderGeometry(0.13, 0.15, 0.2, 14), toon(0x8a94a4), OL * 0.3); lens.rotation.x = Math.PI / 2; lens.position.z = 0.22; g.add(lens);
+        const gl = new THREE.Mesh(new THREE.CircleGeometry(0.1, 14), toon(0x5ad8ff, { rim: 1 })); gl.position.z = 0.33; g.add(gl);
+        const bt = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.1), toon(0xff5a5a)); bt.position.set(0.18, 0.22, 0); g.add(bt);
+        const strap = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.025, 4, 16, Math.PI), toon(0xff9a3a)); strap.position.y = 0.15; g.add(strap);
+        g.position.set(px, 1.0, pz + 0.3); g.rotation.set(-0.3, 0.4, 0.1);
+      } else if (id === 'pearl') { // a lucky pearl in an open shell, by a palm
+        const sh = inked(new THREE.SphereGeometry(0.32, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xffc8d8), OL * 0.3); sh.scale.y = 0.4; sh.rotation.x = Math.PI; sh.position.y = 0.13; g.add(sh);
+        const lid = inked(new THREE.SphereGeometry(0.32, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xffd8e4), OL * 0.3); lid.scale.y = 0.4; lid.position.set(0, 0.14, -0.22); lid.rotation.x = -1.1; g.add(lid);
+        const pe = new THREE.Mesh(new THREE.SphereGeometry(0.12, 14, 10), toon(0xfffaf0, { rim: 1 })); pe.position.set(0, 0.2, 0.02); g.add(pe);
+        g.position.set(px - 0.3, 0.02, pz + 0.75); g.scale.setScalar(1.6);
+      }
+      this.group.add(g);
+      this.lost.push({ id, x: Q.x, y: Q.y, g });
+    }
   }
 
   buildBush(x, y) {
@@ -1881,7 +1900,7 @@ export class World {
       return this.say(lines);
     }
     if (this.bush && this.bush.x === fx && this.bush.y === fy) return this.shakeBush();
-    if (this.kite && this.kite.x === fx && this.kite.y === fy) return this.S.worldStory('kitefound', this, null);
+    const lost = this.lost?.find((L) => L.x === fx && L.y === fy); if (lost) return this.S.worldStory('found:' + lost.id, this, null);
     if (this.tile(fx, fy) === '~' && save.adv.flags.rod && !this.M.indoor && !this.M.lava) return this.cast();
     const sign = (this.M.signs || []).find((s) => s.x === fx && s.y === fy);
     if (sign?.act) return this.S.worldStory(sign.act, this, null);
