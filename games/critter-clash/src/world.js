@@ -65,7 +65,7 @@ export const FISH = {
   lava: [['Cinder Carp', 20, 45], ['Ember Eel', 30, 80]],
   cold: [['Cloud Minnow', 6, 16], ['Frostfin', 15, 35]],
 };
-export const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, ball: { map: 'route1', x: 7, y: 9 }, phones: { map: 'ember', x: 23, y: 1 } };
+export const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, ball: { map: 'route1', x: 7, y: 9 }, phones: { map: 'ember', x: 23, y: 1 }, blink: { map: 'route2', x: 12, y: 10 } };
 
 const STEP = 0.23; // seconds per tile
 const SHINY_RATE = 1 / 30; // a rare shiny wild critter: beat it to unlock its shiny palette
@@ -1169,6 +1169,13 @@ export class World {
         const bd = inked(new THREE.TorusGeometry(0.3, 0.04, 6, 18, Math.PI), toon(0xff5ad8), OL * 0.25); g.add(bd);
         for (const sd of [-1, 1]) { const c = inked(new THREE.CylinderGeometry(0.13, 0.13, 0.1, 14), toon(0x2a2438), OL * 0.3); c.rotation.z = Math.PI / 2; c.position.set(sd * 0.3, -0.02, 0); g.add(c); const pd = new THREE.Mesh(new THREE.CircleGeometry(0.09, 12), toon(0xff5ad8, { rim: 1 })); pd.position.set(sd * 0.36, -0.02, 0); pd.rotation.y = sd * Math.PI / 2; g.add(pd); }
         g.position.set(px, 1.0, pz + 0.3); g.rotation.set(-1.1, 0.3, 0); g.scale.setScalar(1.3);
+      } else if (id === 'blink') { // Flo's firefly friend, resting on the rock and glowing softly
+        const body = inked(new THREE.SphereGeometry(0.16, 10, 8), toon(0x3a2a20), OL * 0.3); body.scale.set(1, 0.8, 1.4); g.add(body);
+        const tail = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), new THREE.MeshBasicMaterial({ color: 0xe8ff6a })); tail.material.userData.own = true; tail.position.z = -0.22; g.add(tail);
+        for (const sd of [-1, 1]) { const wg = new THREE.Mesh(new THREE.CircleGeometry(0.16, 10), toon(0xd8f0ff, { side: THREE.DoubleSide })); wg.rotation.set(-Math.PI / 2, 0, sd * 0.5); wg.position.set(sd * 0.15, 0.12, -0.02); g.add(wg); }
+        const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xe8ff6a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.85 }); sm.userData.own = true;
+        const sp = new THREE.Sprite(sm); sp.scale.setScalar(1.4); sp.position.z = -0.22; g.add(sp);
+        g.position.set(px, 1.05, pz + 0.1); g.rotation.y = 0.6; g.scale.setScalar(1.3);
       }
       this.group.add(g);
       this.lost.push({ id, x: Q.x, y: Q.y, g });

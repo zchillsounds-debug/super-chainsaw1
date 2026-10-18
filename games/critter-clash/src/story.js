@@ -546,6 +546,13 @@ const LOST = {
     wait: ['Pricklepuff: Grandpa Snoozlo lives in Frostpeak, the very last town before the Peak. He\'s usually... asleep. Just wake him gently!'],
     done: ['Old Snoozlo: ...zzz... hm? A letter? From... little Pricklepuff? ...Oh my. Oh my my.', 'Old Snoozlo reads it three times, very slowly, and smiles.', 'Old Snoozlo: Thank you, young one... Here. Berries, and my secret Power Snack... zzz...', '{hero} got 3 berries and a Power Snack! ⭐'],
   },
+  blink: {
+    who: 'Firefly Flo', critter: 'emberfly', giverMap: 'bloom', item: 'firefly', berries: 3, snack: true, toast: '✨', hint: 'glowing on a rock on Route 2, south of the path', home: 'Bloom Town',
+    ask: ['Firefly Flo: Bzz... one of my glow friends didn\'t come back this morning. Blink! The smallest one, with the brightest tail.', 'Firefly Flo: Blink loves warm rocks by the river. Could you look on Route 2? Blink glows, so you can\'t miss it!'],
+    wait: ['Firefly Flo: Still no Blink? Try the rocks on Route 2, on the grassy side south of the path. Look for a little glow!'],
+    found: ['A tiny firefly blinks hello from the warm rock. It\'s Blink! It hops onto {hero}\'s nose. Tickly!', 'Firefly Flo in Bloom Town will be so happy!'],
+    done: ['Firefly Flo: BLINK! You found Blink! Bzz bzz bzz!', 'Blink zips round the room and dives back into the jar with the others. The whole jar glows brighter!', 'Firefly Flo: Thank you! Here: berries, and the honey snack I was saving. You earned it!', '{hero} got 3 berries and a Power Snack! ⭐'],
+  },
 };
 // the ☰ card's favour line: the first favour still open (found things first)
 export function favourLine() {
@@ -559,8 +566,8 @@ export function favourList() {
   const F = flags(), rows = Object.entries(LOST).filter(([id]) => F[id + '_asked']).map(([id, Q]) => {
     const state = F[id + '_done'] ? 'done' : F[id + '_found'] ? 'found' : 'open';
     const name = Q.who.split(' ').pop();
-    const home = Object.keys(MAPS).find((k) => (MAPS[k].npcs || []).some((n) => n.story === 'lost:' + id));
-    return { id, who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, deliver: !!Q.to, at: state === 'done' ? null : Q.to ? Q.to.map : state === 'found' ? home : LOST_SPOTS[id]?.map, text: Q.to ? (state === 'done' ? `Delivered the ${Q.item} to ${Q.to.name}` : `Take the ${Q.item} to ${Q.to.name} in ${Q.to.home}`) : state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
+    const home = Q.giverMap || Object.keys(MAPS).find((k) => (MAPS[k].npcs || []).some((n) => n.story === 'lost:' + id));
+    return { id, who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, deliver: !!Q.to, critter: Q.critter, at: state === 'done' ? null : Q.to ? Q.to.map : state === 'found' ? home : LOST_SPOTS[id]?.map, text: Q.to ? (state === 'done' ? `Delivered the ${Q.item} to ${Q.to.name}` : `Take the ${Q.item} to ${Q.to.name} in ${Q.to.home}`) : state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
   });
   rows.sort((a, b) => ({ found: 0, open: 1, done: 2 })[a.state] - ({ found: 0, open: 1, done: 2 })[b.state]);
   return { rows, unasked: Object.keys(LOST).length - rows.length };

@@ -920,7 +920,7 @@ export class Screens {
     if (this.root.querySelector('.modal-wrap')) return;
     const d = document.createElement('div');
     d.className = 'modal-wrap';
-    const giver = (id) => { for (const M of Object.values(MAPS)) { const n = (M.npcs || []).find((x) => x.story === 'lost:' + id); if (n) return CRITTERS.find((c) => c.id === n.critter); } return null; };
+    const giver = (id) => { const lc = favourList().rows.find((r) => r.id === id)?.critter; if (lc) return CRITTERS.find((c) => c.id === lc); for (const M of Object.values(MAPS)) { const n = (M.npcs || []).find((x) => x.story === 'lost:' + id); if (n) return CRITTERS.find((c) => c.id === n.critter); } return null; };
     let body = '';
     if (tab === 'fav') {
       const { rows, unasked } = favourList();
