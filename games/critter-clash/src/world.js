@@ -754,6 +754,30 @@ export class World {
       const holes = this.vents.map(([px, pz]) => { const h = new THREE.CircleGeometry(0.3, 10); h.rotateX(-Math.PI / 2); h.translate(px, 0.71, pz); return h; });
       const hm = new THREE.MeshBasicMaterial({ color: 0xffa040 }); hm.userData.own = true; this.group.add(new THREE.Mesh(mergeGeometries(holes), hm)); holes.forEach((g) => g.dispose());
     }
+    this.cracks = null;
+    if (!this.M.lava) return;
+    // magma glows up through cracks in the dark rock (an unlit layer just above the ground, its own dice)
+    const cr = rng(hash(this.key + ':cracks')), P = 32, W = this.W, H = this.H;
+    const tex = canvasTex(W * P, H * P, (c) => {
+      c.lineCap = 'round'; c.lineJoin = 'round';
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (this.tile(x, y) !== '.' || cr() > 0.2) continue;
+        let px = (x + 0.2 + cr() * 0.6) * P, py = (y + 0.2 + cr() * 0.6) * P, a = cr() * 6.28;
+        const pts = [[px, py]], fork = [];
+        for (let k = 0, n = 4 + Math.floor(cr() * 3); k < n; k++) {
+          a += (k % 2 ? 1 : -1) * (0.4 + cr() * 0.7); const l = 5 + cr() * 6; px += Math.cos(a) * l; py += Math.sin(a) * l; pts.push([px, py]);
+          if (k === 2) { const b = a + (cr() < 0.5 ? 1 : -1) * 1.1; fork.push([px, py], [px + Math.cos(b) * 7, py + Math.sin(b) * 7], [px + Math.cos(b + 0.5) * 12, py + Math.sin(b + 0.5) * 12]); }
+        }
+        for (const [wd, col] of [[6, 'rgba(255,90,20,0.3)'], [2.6, 'rgba(255,130,40,0.85)'], [1, 'rgba(255,230,150,1)']]) {
+          c.strokeStyle = col; c.lineWidth = wd;
+          for (const L of [pts, fork]) { c.beginPath(); L.forEach(([u, v], k) => k ? c.lineTo(u, v) : c.moveTo(u, v)); c.stroke(); }
+        }
+      }
+    });
+    tex.userData.own = true;
+    const m = new THREE.MeshBasicMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }); m.userData.own = true;
+    const plane = this.cracks = new THREE.Mesh(new THREE.PlaneGeometry(W * TILE, H * TILE), m);
+    plane.rotation.x = -Math.PI / 2; plane.position.set(W * TILE / 2, 0.025, H * TILE / 2); this.group.add(plane);
   }
 
   // the brambles curl back into the ground (Trial of Friendship)
@@ -1567,6 +1591,7 @@ export class World {
     }
     for (const [px, pz] of this.vents || []) if (Math.random() < dt * 3) this.g.fx.spawn({ x: px, y: 0.8, z: pz, vy: 1.4, vx: 0.2, color: 0xd8d0d0, alpha: 0.5, size: 0.7, life: 1.8, shape: 'puff', additive: false, grow: 1.2 });
     if (this.bush?.shake > 0) { const B = this.bush; B.shake -= dt; B.g.rotation.z = Math.sin(B.shake * 40) * B.shake * 0.18; B.g.scale.y = 1 + Math.sin(B.shake * 30) * B.shake * 0.08; }
+    if (this.cracks) this.cracks.material.opacity = 0.75 + Math.sin(this.t * 1.7) * 0.25; // the magma breathes
     if (this.labDish) this.labDish.rotation.y = Math.sin(this.t * 0.4) * 1.2;
     if (this.beacon) this.beacon.material.color.setHex(this.t % 1.6 < 0.25 ? 0xff5050 : 0x5a1818);
     if (this.crown) {
