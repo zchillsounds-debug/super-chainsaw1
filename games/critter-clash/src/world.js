@@ -140,6 +140,7 @@ export class World {
   load(key, x, y, dir = 's') {
     const wet = this.rain && !this.M?.indoor; // came in out of the rain: shake off once inside
     this.unload();
+    this.g.fx.clear?.(); // last map's smoke, rain and sparkles don't follow you indoors
     const M = this.M = getMap(key) || getMap('village');
     if (M !== getMap(key)) { key = 'village'; x = 4; y = 6; }
     this.key = key;
