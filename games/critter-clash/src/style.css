@@ -1027,4 +1027,12 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
   .wd-menu-modal .res-btns .btn.small { font-size: 13px; padding: 6px; }
 }
 /* while a dialogue box is up, the box itself is the tap target: tuck the A button and the stick away so they don't peek over it */
-body:has(.wd-box) .wd-a, body:has(.wd-box) .joybase { visibility: hidden; }
+body:has(.wd-box) .wd-a, body:has(.wd-box) .joybase, body:has(.stars-wrap) .wd-a, body:has(.stars-wrap) .joybase, body:has(.arcade-wrap) .wd-a, body:has(.arcade-wrap) .joybase { visibility: hidden; }
+/* Sprout Village telescope: the eyepiece view of tonight's constellation */
+.stars-wrap { z-index: 40; }
+.stars { display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 96vw; }
+.stars canvas { width: min(92vw, calc((100vh - 110px) * 1.6), 620px); height: auto; aspect-ratio: 8 / 5; border-radius: 50% / 46%; box-shadow: 0 0 0 6px #3a2a24, 0 0 0 10px #e8b04a, 0 10px 30px rgba(0,0,0,.6); background: #070a22; }
+.stars .st-name { margin-top: 8px; color: #fff6c0; font-family: var(--display); font-size: 22px; text-shadow: 0 0 10px #7ad8ff, 0 2px 0 #1a1440; opacity: 0; transition: opacity .6s; }
+.stars .st-tip { margin: 0; max-width: 520px; color: #d8e4ff; font-size: 13px; text-align: center; opacity: 0; transition: opacity .6s .3s; }
+.stars .st-tap { margin: 0; color: #9aa8d8; font-size: 11px; opacity: 0; transition: opacity .4s .8s; }
+.stars-wrap.done .st-name, .stars-wrap.done .st-tip, .stars-wrap.done .st-tap { opacity: 1; }

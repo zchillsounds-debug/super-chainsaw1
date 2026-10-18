@@ -13,6 +13,7 @@ import { getMap, CUP_ORDER } from './interiors.js';
 import { countUp, deliveryFor, deliveredLine, gauntletWeek } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
+import { stargaze, tonightConst } from './stars.js';
 
 export const TILE = 2;
 const DIRS = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
@@ -316,6 +317,7 @@ export class World {
     this.buildDance();
     this.buildIceLanterns();
     this.buildBottle();
+    this.buildScope();
     this.buildJellies(rand);
     this.buildSkyLanterns();
     this.buildThanks();
@@ -362,7 +364,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1145,6 +1147,49 @@ export class World {
     const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0x9affe8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5 }); sm.userData.own = true;
     const glint = new THREE.Sprite(sm); glint.position.set(px, 0.4, pz + 0.3); glint.scale.setScalar(1.9); this.group.add(glint);
     this.bottle = { x, y, g, glint, day };
+  }
+
+  // Sprout Village after dusk: a telescope on a tripod by a picnic blanket at the south edge (look through it for tonight's constellation)
+  buildScope() {
+    this.scope = null;
+    if (this.key !== 'village' || this.phase === 'day') return;
+    const [x, y] = [16, 14];
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.itemSpots || []), this.hx + ',' + this.hy, this.dig ? this.dig.x + ',' + this.dig.y : '']);
+    if (this.tile(x, y) !== '.' || taken.has(x + ',' + y)) return;
+    const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(1.35); this.group.add(g); this.solid.add(x + ',' + y);
+    const wood = toon(0x8a5a3a), brass = toon(0xe8b04a, { rim: 0.6 });
+    for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2 + 0.3, leg = inked(new THREE.CylinderGeometry(0.045, 0.06, 1.35, 6), wood, OL * 0.25); leg.position.set(Math.cos(a) * 0.3, 0.62, Math.sin(a) * 0.3); leg.rotation.set(Math.sin(a) * 0.42, 0, -Math.cos(a) * 0.42); g.add(leg); }
+    const tube = new THREE.Group(); tube.position.y = 1.3; tube.rotation.set(-0.85, 0.35, 0, 'YXZ'); g.add(tube); // aimed up at the northern sky
+    const body = inked(new THREE.CylinderGeometry(0.15, 0.2, 1.3, 14), brass, OL * 0.3); tube.add(body);
+    for (const y of [-0.3, 0.35]) { const band = inked(new THREE.CylinderGeometry(0.205, 0.205, 0.08, 14), toon(0x8a5a2a), OL * 0.2); band.position.y = y; tube.add(band); }
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.15, 14), new THREE.MeshBasicMaterial({ color: 0x9ad8ff })); lens.material.userData.own = true; lens.rotation.x = -Math.PI / 2; lens.position.y = 0.66; tube.add(lens);
+    const eye = inked(new THREE.CylinderGeometry(0.06, 0.07, 0.22, 8), toon(0x3a2a24), OL * 0.2); eye.position.y = -0.74; tube.add(eye);
+    const tex = canvasTex(64, 64, (c) => { for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { c.fillStyle = (i + j) % 2 ? '#ff6a7a' : '#fff4e8'; c.fillRect(i * 16, j * 16, 16, 16); } });
+    tex.userData.own = true; const bm = toon(0xffffff, { map: tex });
+    const bl = new THREE.Mesh(new THREE.PlaneGeometry(TILE * 1.5, TILE * 1.1), bm); bl.rotation.x = -Math.PI / 2; bl.rotation.z = 0.12; bl.position.set(-TILE * 1.05, 0.035, 0.1); bl.receiveShadow = true; g.add(bl);
+    const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.26, 10), toon(0xfff2b0, { emissive: 0xffd060 })); jar.position.set(-TILE * 1.0, 0.16, -0.2); g.add(jar);
+    const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffd880, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 }); sm.userData.own = true;
+    const glow = new THREE.Sprite(sm); glow.scale.setScalar(2.6); glow.position.set(-TILE * 1.0, 0.4, -0.2); g.add(glow);
+    bakeStatic({ root: g, mats: {}, glow });
+    this.scope = { x, y, glow };
+  }
+
+  // look through the telescope: tonight's constellation traces itself; the first look of a night is worth a little XP
+  stargaze() {
+    const day = new Date().toISOString().slice(0, 10), C = tonightConst(day, hash), A = save.adv;
+    this.busy = true; sfx.shimmer?.(3);
+    const el = stargaze(this.g.ui, C, hash(day), () => {
+      this.g.modalClose = null; this.busy = false;
+      const seen = (A.consts ||= []), fresh = !seen.includes(C.id);
+      if (fresh) seen.push(C.id);
+      if (A.stars !== day) {
+        A.stars = day; countUp('stars'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+        return this.say([`{hero} spotted ${C.name}!${fresh ? ' A new one for the star log! ✨' : ''}`, `Counting stars is surprisingly tiring. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, `Star log: ${seen.length} of 8 constellations. A different one rises each night.`]);
+      }
+      persist();
+      return this.say([`${C.name} twinkles away. Another constellation will rise tomorrow night. (Star log: ${seen.length} of 8)`]);
+    });
+    this.g.modalClose = () => el.__stars.close();
   }
 
   // Frostpeak after dusk: carved ice lanterns with candles ring the frozen pond (Skater Ivy skates there at night)
@@ -2861,6 +2906,7 @@ export class World {
       if (save.adv.danced !== day) { save.adv.danced = day; countUp('dance'); save.berries = (save.berries || 0) + 1; persist(); return this.say(['The beat drops! {hero} busts out their best moves on the light-up floor.', 'The crowd cheers and someone tosses {hero} a berry! +1 🍓 (One tip a night.)']); }
       return this.say([['{hero} dances like nobody is watching. Everybody is watching. Nobody minds!', 'Boom-tss, boom-tss! {hero} spins, hops and strikes a pose.', 'The floor flashes pink, blue and gold under {hero}\'s feet. What a groove!'][Math.floor(Math.random() * 3)]]);
     }
+    if (this.scope && this.scope.x === fx && this.scope.y === fy) return this.stargaze();
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
     if (stall) {
       if (stall.kind === 'trinket') return this.say(['TRINKETS: glow rings, spark charms, a keychain shaped like a tiny Jiggawatt...', 'The stall keeper is fast asleep behind the counter. Maybe another night!']);

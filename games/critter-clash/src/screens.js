@@ -970,6 +970,7 @@ export class Screens {
         + bar('🎈', 'SKY HOP best', A.hopHi || 0)
         + bar('🍾', 'Bottles found', A.cnt?.bottle || 0)
         + bar('🪩', 'Nights danced', A.cnt?.dance || 0)
+        + bar('🔭', 'Constellations spotted', (A.consts || []).length, 8)
         + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
     } else {
       const L = save.adv.fishLog || { n: 0 }, sp = { ...(L.sp || {}) };
