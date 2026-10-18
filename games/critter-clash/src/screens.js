@@ -183,6 +183,12 @@ export class Screens {
         "{name}, Clashara has weather now! Rain showers roll over the routes some afternoons: water critters love to come out and play in the tall grass, and the townsfolk pop their umbrellas open.",
         "Evenings glow gold and nights are starry, all on your phone's clock. And got spare berries? The blender in any Berry Center makes a smoothie that helps your hero grow!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv3') && !save.news.includes('adv4')) {
+      save.news.push('adv4'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, more news from Clashara! Every stadium now has a lobby: sign up at the front desk, admire the line-up posters, and watch the trophy cases fill up as you win.",
+        "Shake the berry bushes by the trees for free berries each day, spend them at the new Hat Shop in Bloom Town, and ask Fisher Finn in Seashell Town about fishing!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);

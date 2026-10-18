@@ -11,7 +11,7 @@ await pg.goto('http://localhost:5180/?q=low&mobile&auto');
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 for (const map of maps.split(',')) {
   const info = await pg.evaluate(([map, rain]) => {
-    Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3'] });
+    Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3', 'adv4'] });
     const M = __game.screens.constructor.getMap?.(map);
     __save.adv = { hero: 'cindermunch', map, x: 5, y: 5, dir: 's', flags: { intro: true, quest: true }, spawn: { map: 'village', x: 4, y: 6 }, ...(rain ? { rain: true, clock: 12 } : {}) };
     __game.screens.adventure(); __sim(0.5);
