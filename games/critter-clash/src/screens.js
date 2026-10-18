@@ -943,7 +943,7 @@ export class Screens {
   }
 
   // the Journal: favours for townsfolk, and the fish album (every kind, biggest catch)
-  worldJournal(tab = 'fav') {
+  worldJournal(tab = 'today') {
     if (this.root.querySelector('.modal-wrap')) return;
     const d = document.createElement('div');
     d.className = 'modal-wrap';
@@ -975,6 +975,34 @@ export class Screens {
         + bar('⛲', 'Wishes made', A.cnt?.wish || 0)
         + bar('🔭', 'Constellations spotted', (A.consts || []).length, 8)
         + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
+    } else if (tab === 'today') { // every daily thing in one list: done today, or where to go for it
+      const A = save.adv, F = A.flags, seen = A.seen || {}, day = new Date().toISOString().slice(0, 10), night = this.worldObj?.outPhase !== 'day';
+      const N = (k) => MAPS[k].name, al = alphaToday(), dig = Object.keys(MAPS).filter((k) => seen[k] && (MAPS[k].arena === 'beach' || (MAPS[k].snow && k !== 'peak') || k === 'ember'));
+      const digOpen = new Set(digLeft(MAPS)), digDone = dig.filter((k) => !digOpen.has(k)).length;
+      const rows = [
+        ['🍓', 'Shake a berry bush', 'bushes at the edge of town', Object.values(A.bush || {}).includes(day), true],
+        dig.length && ['⛏️', `Dig spots (${digDone}/${dig.length})`, dig.filter((k) => digOpen.has(k)).map(N).join(', ') || 'all dug!', digDone === dig.length, true],
+        al && ['💥', `Beat the Alpha ${CRITTERS.find((c) => c.id === al.id)?.name || ''}`, `tall grass in ${N(al.map)}`, al.done, true],
+        ['🍜', 'Spark Noodles', N('neon'), A.noodles === day, seen.neon],
+        ['🕹️', 'TURBO prize', 'Neon City arcade', A.arcadeDay === day, seen.neon],
+        ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
+        ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
+        F.ending && ['🏔️', 'Peak Gauntlet (this week)', "Keeper Orla, Champion's Peak", !!F['gauntpay_' + gauntletWeek()], true],
+      ].filter((r) => r && r[4]);
+      const after = [
+        ['🔭', 'Spot a constellation', N('village'), A.stars === day, seen.village],
+        ['🍾', 'Message in a bottle', `${N('seashell')} shore`, A.bottle === day, seen.seashell],
+        ['🔥', 'Toast a marshmallow', `${N('seashell')} bonfire`, (A.fire || {}).seashell === day, seen.seashell],
+        ['🔥', 'Toast a marshmallow', `${N('frostpeak')} campfire`, (A.fire || {}).frostpeak === day, seen.frostpeak],
+        ['🪩', 'Dance with DJ Tumble', N('neon'), A.danced === day, seen.neon],
+        ['🍬', 'Glowing candy floss', 'Neon night market', A.market === day, seen.neon],
+        ['⛸️', 'Skate a twirl', `${N('frostpeak')} pond`, A.skated === day, seen.frostpeak && A.skates],
+      ].filter((r) => r[4]);
+      const row = ([ic, name, where, done]) => `<li class="jr-fish jr-day ${done ? 'got' : ''}"><span>${done ? '✅' : ic}</span><b>${name}</b><em>${done ? 'done' : where}</em></li>`;
+      const all = [...rows, ...after], n = all.filter((r) => r[3]).length;
+      body = `<li class="jr-head">☀️ Every day <small>${rows.filter((r) => r[3]).length}/${rows.length}</small></li>` + rows.map(row).join('')
+        + (after.length ? `<li class="jr-head">🌙 After dark${night ? '' : ' <small>(wait for the evening, or nap at home)</small>'}</li>` + after.map(row).join('') : '')
+        + `<li class="jr-more">${n === all.length ? '🌟 Everything done today! See you tomorrow.' : `${n} of ${all.length} done today. A new day brings everything back!`}</li>`;
     } else if (tab === 'night') { // the star log (Sprout Village's telescope) and the bottle notes read on Seashell's shore
       const seen = save.adv.consts || [], read = save.adv.notes || [];
       body = `<li class="jr-head">🔭 Star log <small>${seen.length}/${CONSTELLATIONS.length}</small></li>`
@@ -991,7 +1019,7 @@ export class Screens {
         + `<li class="jr-more">${Object.keys(sp).length}/${Object.values(FISH).flat().length} kinds · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
     }
     d.innerHTML = `<div class="modal wd-journal"><h2>Journal</h2>
-      <div class="jr-tabs"><button data-t="fav" class="${tab === 'fav' ? 'on' : ''}">🤝 Favours</button><button data-t="fish" class="${tab === 'fish' ? 'on' : ''}">🐟 Fish</button><button data-t="night" class="${tab === 'night' ? 'on' : ''}">🌌 Night</button><button data-t="rec" class="${tab === 'rec' ? 'on' : ''}">🏅 Records</button></div>
+      <div class="jr-tabs"><button data-t="today" class="${tab === 'today' ? 'on' : ''}">📅 Today</button><button data-t="fav" class="${tab === 'fav' ? 'on' : ''}">🤝 Favours</button><button data-t="fish" class="${tab === 'fish' ? 'on' : ''}">🐟 Fish</button><button data-t="night" class="${tab === 'night' ? 'on' : ''}">🌌 Night</button><button data-t="rec" class="${tab === 'rec' ? 'on' : ''}">🏅 Records</button></div>
       <ul class="jr-list">${body || '<li class="jr-more">Nobody has asked for help yet. Townsfolk with a ❗ over their heads have a favour to ask!</li>'}</ul>
       <div class="res-btns"></div></div>`;
     const close = () => { d.remove(); this.game.modalClose = null; };
