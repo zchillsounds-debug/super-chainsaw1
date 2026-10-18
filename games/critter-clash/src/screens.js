@@ -905,11 +905,13 @@ export class Screens {
     document.body.classList.add('in-world');
     this.root.innerHTML = `<div class="world-screen"><button class="icon-btn wd-menu" aria-label="Menu">☰</button><button class="wd-a" aria-label="A">A</button></div>`;
     this.root.querySelector('.wd-menu').addEventListener('click', () => { sfx.ui('ok'); this.worldMenu(); });
+    clearInterval(this.badgeT); this.badgeT = setInterval(() => (this.mode === 'world' ? this.todayBadge() : clearInterval(this.badgeT)), 3000);
     this.root.querySelector('.wd-a').addEventListener('pointerdown', (e) => { e.preventDefault(); if (this.worldObj) this.worldObj.tapA = true; });
     g.input.showTouch(true);
     this.worldObj?.dispose();
     this.worldObj = new World(this);
     storyIntro(this, this.worldObj);
+    this.todayBadge();
   }
 
   leaveWorld() {
@@ -935,7 +937,9 @@ export class Screens {
     b.appendChild(this.btn('🗺️ Town Map', 'secondary', () => { close(); this.worldMap(); }));
     b.appendChild(this.btn('🐾 Buddy', 'secondary', () => { close(); this.buddyPick(); }));
     if ((save.adv.hats || []).length && this.worldObj) b.appendChild(this.btn('🎩 Hats', 'secondary', () => { close(); wearHats(this.worldObj); }));
-    b.appendChild(this.btn('📔 Journal', 'secondary', () => { close(); this.worldJournal(); }));
+    const jb = this.btn('📔 Journal', 'secondary', () => { close(); this.worldJournal(); }), left = this.root.querySelector('.world-screen .wd-menu')?.dataset.n;
+    if (left) { jb.classList.add('has-badge'); jb.dataset.n = left; }
+    b.appendChild(jb);
     b.appendChild(this.btn('📸 Photo', 'secondary', () => { close(); setTimeout(() => this.worldObj?.snapshot(), 60); }));
     b.appendChild(this.btn('Save & Quit', 'ghost', () => { close(); persist(); this.leaveWorld(); this.title(); }));
     // start over with a new hero (tap twice: this replaces the current story)
@@ -949,6 +953,41 @@ export class Screens {
   }
 
   // the Journal: favours for townsfolk, and the fish album (every kind, biggest catch)
+  // the Journal's 📅 Today rows ([icon, name, where, done]); the ☰ badge counts what's left of them
+  todayList() {
+    const A = save.adv, F = A.flags, seen = A.seen || {}, day = new Date().toISOString().slice(0, 10), night = this.worldObj?.outPhase !== 'day';
+      const N = (k) => MAPS[k].name, al = alphaToday(), dig = Object.keys(MAPS).filter((k) => seen[k] && (MAPS[k].arena === 'beach' || (MAPS[k].snow && k !== 'peak') || k === 'ember'));
+      const digOpen = new Set(digLeft(MAPS)), digDone = dig.filter((k) => !digOpen.has(k)).length;
+      const rows = [
+        ['🍓', 'Shake a berry bush', 'bushes at the edge of town', Object.values(A.bush || {}).includes(day), true],
+        dig.length && ['⛏️', `Dig spots (${digDone}/${dig.length})`, dig.filter((k) => digOpen.has(k)).map(N).join(', ') || 'all dug!', digDone === dig.length, true],
+        al && ['💥', `Beat the Alpha ${CRITTERS.find((c) => c.id === al.id)?.name || ''}`, `tall grass in ${N(al.map)}`, al.done, true],
+        ['🍜', 'Spark Noodles', N('neon'), A.noodles === day, seen.neon],
+        ['🕹️', 'TURBO prize', 'Neon City arcade', A.arcadeDay === day, seen.neon],
+        ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
+        ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
+        F.ending && ['🏔️', 'Peak Gauntlet (this week)', "Keeper Orla, Champion's Peak", !!F['gauntpay_' + gauntletWeek()], true],
+      ].filter((r) => r && r[4]);
+      const after = [
+        ['🔭', 'Spot a constellation', N('village'), A.stars === day, seen.village],
+        ['🍾', 'Message in a bottle', `${N('seashell')} shore`, A.bottle === day, seen.seashell],
+        ['🔥', 'Toast a marshmallow', `${N('seashell')} bonfire`, (A.fire || {}).seashell === day, seen.seashell],
+        ['🔥', 'Toast a marshmallow', `${N('frostpeak')} campfire`, (A.fire || {}).frostpeak === day, seen.frostpeak],
+        ['🪩', 'Dance with DJ Tumble', N('neon'), A.danced === day, seen.neon],
+        ['🍬', 'Glowing candy floss', 'Neon night market', A.market === day, seen.neon],
+        ['⛸️', 'Skate a twirl', `${N('frostpeak')} pond`, A.skated === day, seen.frostpeak && A.skates],
+      ].filter((r) => r[4]);
+    return { rows, after, night };
+  }
+
+  todayBadge() {
+    const m = this.root.querySelector('.world-screen .wd-menu');
+    if (!m || !save.adv) return;
+    let n = 0;
+    try { const { rows, after, night } = this.todayList(); n = rows.filter((r) => !r[3]).length + (night ? after.filter((r) => !r[3]).length : 0); } catch (e) { n = 0; }
+    m.dataset.n = n > 9 ? '9+' : n || '';
+  }
+
   worldJournal(tab = 'today') {
     if (this.root.querySelector('.modal-wrap')) return;
     const d = document.createElement('div');
@@ -982,28 +1021,7 @@ export class Screens {
         + bar('🔭', 'Constellations spotted', (A.consts || []).length, 8)
         + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
     } else if (tab === 'today') { // every daily thing in one list: done today, or where to go for it
-      const A = save.adv, F = A.flags, seen = A.seen || {}, day = new Date().toISOString().slice(0, 10), night = this.worldObj?.outPhase !== 'day';
-      const N = (k) => MAPS[k].name, al = alphaToday(), dig = Object.keys(MAPS).filter((k) => seen[k] && (MAPS[k].arena === 'beach' || (MAPS[k].snow && k !== 'peak') || k === 'ember'));
-      const digOpen = new Set(digLeft(MAPS)), digDone = dig.filter((k) => !digOpen.has(k)).length;
-      const rows = [
-        ['🍓', 'Shake a berry bush', 'bushes at the edge of town', Object.values(A.bush || {}).includes(day), true],
-        dig.length && ['⛏️', `Dig spots (${digDone}/${dig.length})`, dig.filter((k) => digOpen.has(k)).map(N).join(', ') || 'all dug!', digDone === dig.length, true],
-        al && ['💥', `Beat the Alpha ${CRITTERS.find((c) => c.id === al.id)?.name || ''}`, `tall grass in ${N(al.map)}`, al.done, true],
-        ['🍜', 'Spark Noodles', N('neon'), A.noodles === day, seen.neon],
-        ['🕹️', 'TURBO prize', 'Neon City arcade', A.arcadeDay === day, seen.neon],
-        ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
-        ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
-        F.ending && ['🏔️', 'Peak Gauntlet (this week)', "Keeper Orla, Champion's Peak", !!F['gauntpay_' + gauntletWeek()], true],
-      ].filter((r) => r && r[4]);
-      const after = [
-        ['🔭', 'Spot a constellation', N('village'), A.stars === day, seen.village],
-        ['🍾', 'Message in a bottle', `${N('seashell')} shore`, A.bottle === day, seen.seashell],
-        ['🔥', 'Toast a marshmallow', `${N('seashell')} bonfire`, (A.fire || {}).seashell === day, seen.seashell],
-        ['🔥', 'Toast a marshmallow', `${N('frostpeak')} campfire`, (A.fire || {}).frostpeak === day, seen.frostpeak],
-        ['🪩', 'Dance with DJ Tumble', N('neon'), A.danced === day, seen.neon],
-        ['🍬', 'Glowing candy floss', 'Neon night market', A.market === day, seen.neon],
-        ['⛸️', 'Skate a twirl', `${N('frostpeak')} pond`, A.skated === day, seen.frostpeak && A.skates],
-      ].filter((r) => r[4]);
+      const { rows, after, night } = this.todayList();
       const row = ([ic, name, where, done]) => `<li class="jr-fish jr-day ${done ? 'got' : ''}"><span>${done ? '✅' : ic}</span><b>${name}</b><em>${done ? 'done' : where}</em></li>`;
       const all = [...rows, ...after], n = all.filter((r) => r[3]).length;
       body = `<li class="jr-head">☀️ Every day <small>${rows.filter((r) => r[3]).length}/${rows.length}</small></li>` + rows.map(row).join('')

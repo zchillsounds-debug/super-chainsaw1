@@ -858,6 +858,9 @@ body.in-world .touch .btns { display: none; }
 .world-screen { position: absolute; inset: 0; pointer-events: none; }
 .world-screen > * { pointer-events: auto; }
 .wd-menu { position: absolute; top: calc(12px + var(--sat)); right: calc(14px + env(safe-area-inset-right)); font-size: 24px; z-index: 5; }
+/* how many of the Journal's 📅 Today things are still open */
+.wd-menu[data-n]:not([data-n=""])::after, .has-badge::after { content: attr(data-n); position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: #ff5a5f; color: #fff; font: 800 11px/18px system-ui, sans-serif; text-align: center; box-shadow: 0 1px 3px #0006; border: 1.5px solid #fff; pointer-events: none; }
+.has-badge { position: relative; }
 .wd-a { position: absolute; right: calc(28px + env(safe-area-inset-right)); bottom: calc(34px + var(--sab)); width: 76px; height: 76px; border-radius: 50%; background: #ff5a8a; color: #fff; font-family: var(--display); font-size: 34px; box-shadow: 0 5px 0 #b02a5a, 0 0 0 4px var(--ink); z-index: 5; touch-action: none; }
 .wd-a:active { transform: translateY(3px); box-shadow: 0 2px 0 #b02a5a, 0 0 0 4px var(--ink); }
 body:not(.is-touch) .wd-a { display: none; }
