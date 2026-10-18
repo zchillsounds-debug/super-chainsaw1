@@ -1112,7 +1112,7 @@ export class Critter {
 // route trainers dress for the job, so a Hiker, a Fisher and a Skater read apart at a glance
 const HATS = [
   [/^Hiker/, 'bucket', 0x9a7240], [/^(Camper|Picker)/, 'cap', 0x4aa04a], [/^Fisher/, 'wide', 0xf0d27a], [/^(Picnicker|Gardener)/, 'wide', 0xfff2c8, 0xff6a9a],
-  [/^(Kite Flyer|Sky Diver)/, 'cap', 0x5a8ad8], [/^Swimmer/, 'swim', 0x3ac8ff], [/^Skater/, 'back', 0xff5a8a], [/^Firewalker/, 'band', 0xff4a2a], [/^Gang/, 'band', 0x3a2a4a], [/^Milliner/, 'top', 0x2a2438, 0xff3a5a],
+  [/^(Kite Flyer|Sky Diver)/, 'cap', 0x5a8ad8], [/^Swimmer/, 'swim', 0x3ac8ff], [/^Skater/, 'back', 0xff5a8a], [/^Firewalker/, 'band', 0xff4a2a], [/^Gang/, 'band', 0x3a2a4a], [/^Milliner/, 'top', 0x2a2438, 0xff3a5a], [/^Trader/, 'tricorn', 0x6a3a2a, 0xffd84d],
 ];
 export function roleHat(cr, name) {
   const h = HATS.find(([re]) => re.test(name)); if (!h) return;
@@ -1127,6 +1127,9 @@ export const SHOP_HATS = [
   { id: 'party', name: 'Party Hat', kind: 'party', col: 0xff5ad8, band: 0xffd84d, price: 5 },
   { id: 'flower', name: 'Flower Crown', kind: 'flower', col: 0x5ac24a, band: 0xff8ac8, price: 6 },
   { id: 'top', name: 'Top Hat', kind: 'top', col: 0x2a2438, band: 0xff3a5a, price: 8 },
+  // only Trader Tock has these (a different town each day)
+  { id: 'pirate', name: 'Pirate Hat', kind: 'tricorn', col: 0x2a2438, band: 0xffd84d, price: 10, trader: true },
+  { id: 'wizard', name: 'Wizard Hat', kind: 'wizard', col: 0x5a3ab8, band: 0xffe14d, price: 12, trader: true },
 ];
 export function shopHat(cr, id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return null;
@@ -1144,6 +1147,8 @@ export function hatModel(cr, kind, col, band) {
   if (kind === 'beanie') { add(new THREE.SphereGeometry(r * 0.78, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.82; add(new THREE.TorusGeometry(r * 0.76, r * 0.1, 6, 20), toon(band), 0.012).rotation.x = Math.PI / 2; add(new THREE.SphereGeometry(r * 0.2, 10, 8), toon(band)).position.y = r * 0.68; G.position.y -= r * 0.2; }
   if (kind === 'party') { add(new THREE.ConeGeometry(r * 0.42, r * 1.0, 16)).position.y = r * 0.5; for (let k = 0; k < 3; k++) { const s = add(new THREE.TorusGeometry(r * (0.34 - k * 0.1), r * 0.04, 4, 16), toon(band), 0); s.rotation.x = Math.PI / 2; s.position.y = r * (0.18 + k * 0.25); } add(new THREE.SphereGeometry(r * 0.13, 8, 6), toon(band)).position.y = r * 1.02; G.rotation.z = 0.15; }
   if (kind === 'flower') { add(new THREE.TorusGeometry(r * 0.78, r * 0.07, 6, 22)).rotation.x = Math.PI / 2; const P = [toon(band), toon(0xffe14d), toon(0xffffff)]; for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, f = add(new THREE.SphereGeometry(r * 0.15, 8, 6), P[k % 3], 0.012); f.position.set(Math.cos(a) * r * 0.78, r * 0.06, Math.sin(a) * r * 0.78); f.scale.y = 0.6; } G.position.y -= r * 0.3; }
+  if (kind === 'tricorn') { const b = add(new THREE.CylinderGeometry(r * 1.0, r * 1.0, r * 0.3, 3)); b.rotation.y = Math.PI; b.scale.z = 0.85; add(new THREE.CylinderGeometry(r * 1.02, r * 1.02, r * 0.05, 3), toon(band), 0).position.y = r * 0.14; add(new THREE.SphereGeometry(r * 0.55, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.75; const sk = add(new THREE.SphereGeometry(r * 0.13, 8, 6), toon(0xffffff), 0.012); sk.position.set(0, r * 0.2, r * 0.5); }
+  if (kind === 'wizard') { add(new THREE.CylinderGeometry(r * 1.15, r * 1.15, r * 0.05, 22)); const c = add(new THREE.ConeGeometry(r * 0.6, r * 1.5, 16)); c.position.y = r * 0.75; c.rotation.z = 0.18; for (let k = 0; k < 4; k++) { const st = add(new THREE.OctahedronGeometry(r * 0.09), toon(band), 0); const a = k * 1.7; st.position.set(Math.cos(a) * r * 0.42, r * (0.35 + k * 0.22), Math.sin(a) * r * 0.42 * (1 - k * 0.2)); } }
   if (kind === 'top') { add(new THREE.CylinderGeometry(r * 0.5, r * 0.46, r * 0.85, 18)).position.y = r * 0.42; add(new THREE.CylinderGeometry(r * 0.9, r * 0.9, r * 0.05, 22)); add(new THREE.CylinderGeometry(r * 0.475, r * 0.47, r * 0.14, 18), toon(band), 0).position.y = r * 0.12; G.rotation.z = -0.12; }
   G.position.y += r * 0.72; G.rotation.x = -0.1;
   cr.skull.add(G);

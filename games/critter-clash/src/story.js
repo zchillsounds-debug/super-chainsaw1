@@ -289,6 +289,7 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'hatshop') return hatShop(w);
   if (id === 'board') return requestBoard(S, w);
+  if (id === 'trader') return trader(w);
   if (id === 'wardrobe') return wearMenu(w, '', null);
   if (id.startsWith('case:')) { // a lobby trophy case
     const cup = CUPS.find((c) => c.id === id.slice(5));
@@ -451,6 +452,20 @@ function pickPaged(w, q, labels, cb, who, page = 0) {
   }, who);
 }
 
+// Trader Tock turns up in a different town each day with hats the shop doesn't sell
+function trader(w) {
+  const A = save.adv, own = (A.hats ||= []), who = 'Trader Tock';
+  const stock = SHOP_HATS.filter((h) => h.trader && !own.includes(h.id));
+  if (!stock.length) return w.say(['Trader Tock: Tock tock! You bought my whole stock. I\'m off to find more treasures. See you around!'], null, who);
+  w.say(['Trader Tock: Tock tock! A traveller, like me! I wander a new town every day.'], () => pickPaged(w, `Trader Tock: Rare hats from far away! (You have ${save.berries || 0} 🍓)`, stock.map((h) => `${h.name} ${h.price}🍓`), (k) => {
+    if (k < 0) return w.say(['Trader Tock: Look for me tomorrow. Different town, same hats!'], null, who);
+    const h = stock[k];
+    if ((save.berries || 0) < h.price) return w.say([`Trader Tock: ${h.price} berries, friend. Shake some bushes and catch me before the day is out!`], null, who);
+    save.berries -= h.price; own.push(h.id); A.hat = h.id; persist(); sfx.jingle(2); w.wearHat();
+    w.say([`{hero} got the ${h.name}! 🎩`, 'Trader Tock: Splendid! Nobody else in Clashara has one of those.'], null, who);
+  }, who), who);
+}
+
 // pick a hat you own (from the Hat Shop, or the wardrobe at home)
 function wearMenu(w, who, back) {
   const A = save.adv, own = A.hats || [];
@@ -468,7 +483,7 @@ function hatShop(w) {
   const A = save.adv, own = (A.hats ||= []), who = 'Milliner Mo';
   const menu = () => w.ask(`Milliner Mo: Welcome to the Hat Shop! A hat for every head. (You have ${save.berries || 0} 🍓)`, ['Buy a hat', 'Wear a hat', 'Bye'], (i) => {
     if (i === 0) {
-      const left = SHOP_HATS.filter((h) => !own.includes(h.id));
+      const left = SHOP_HATS.filter((h) => !own.includes(h.id) && !h.trader);
       if (!left.length) return w.say(['Milliner Mo: You own every hat in the shop! A true hat collector. I\'m honoured!'], null, who);
       return pickPaged(w, 'Milliner Mo: Which one catches your eye?', left.map((h) => `${h.name} ${h.price}🍓`), (k) => {
         if (k < 0) return menu();

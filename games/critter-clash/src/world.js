@@ -1267,7 +1267,7 @@ export class World {
   buildActors() {
     this.npcs = [];
     const F = save.adv.flags;
-    for (const n of this.M.npcs || []) {
+    for (const n of [...(this.M.npcs || []), ...this.traderSpot()]) {
       if (n.hideFlag && F[n.hideFlag]) continue;
       if (n.showFlag && !F[n.showFlag]) continue;
       let root, cr = null;
@@ -1697,6 +1697,23 @@ export class World {
     if (sign) return this.say([sign.text], null, sign.hide ? '' : '📜 Sign');
     const door = this.doors.find((d) => d.x === fx && d.y === fy);
     if (door && this.dir === 'n') return this.S.worldDoor(door.b, this);
+  }
+
+  // Trader Tock visits one town a day (once the first cup is won), standing beside a path
+  traderSpot() {
+    const towns = ['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak'].filter((k) => save.adv.seen?.[k]);
+    if (!save.adv.flags.cup_sprout || !towns.includes(this.key)) return [];
+    const day = new Date().toISOString().slice(0, 10);
+    if (towns[hash(day) % towns.length] !== this.key) return [];
+    const busy = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.M.signs || []).map((n) => n.x + ',' + n.y), ...(this.M.buildings || []).map((b) => (b.x + b.door) + ',' + (b.y + b.h))]);
+    const N4 = Object.values(DIRS), ok = [];
+    for (let y = 2; y < this.H - 2; y++) for (let x = 2; x < this.W - 2; x++) {
+      if (!'.s'.includes(this.tile(x, y)) || busy.has(x + ',' + y) || !this.walkable(x, y)) continue;
+      if (N4.some(([dx, dy]) => this.tile(x + dx, y + dy) === ':') && N4.filter(([dx, dy]) => this.walkable(x + dx, y + dy)).length === 4) ok.push([x, y]);
+    }
+    if (!ok.length) return [];
+    const [x, y] = ok[hash(day + this.key) % ok.length];
+    return [{ id: 'trader', x, y, critter: 'diggles', name: 'Trader Tock', dir: 's', story: 'trader', act: 'wave' }];
   }
 
   // the bouncy town kids nod off outdoors at night
