@@ -992,7 +992,7 @@ export class World {
       const x0 = b.x * TILE, z0 = b.y * TILE, w = b.w * TILE, d = b.h * TILE;
       const G = new THREE.Group();
       G.position.set(x0 + w / 2, 0, z0 + d / 2);
-      if (b.stadium) this.stadiumModel(G, b, w, d);
+      if (b.stadium) { this.stadiumModel(G, b, w, d); this.stadiumLights(G, w, d); }
       else if (b.shroom) this.shroomHouse(G, b, w, d);
       else if (b.tower) this.towerModel(G, b, w, d);
       else if (b.altar) this.altarModel(G, b, w, d);
@@ -1774,6 +1774,22 @@ export class World {
       const gem = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), toon([0xff5a8a, 0x5ad8ff, 0x8aff6a, 0xb08aff, 0xff9a3a][k], { emissive: 0x3a1a2a })); gem.position.set(Math.cos(a) * 0.5, 0.52, Math.sin(a) * 0.5); crown.add(gem); }
     crown.position.y = 2.6; G.add(crown);
     this.crown = crown;
+  }
+
+  // after dusk the stadium's floodlights come on: four masts on the rim, and the pitch glows
+  stadiumLights(G, w, d) {
+    if (this.phase === 'day') return;
+    const iron = [];
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      const x = sx * (w / 2 - 0.5) * 0.72, z = sz * (d / 2 - 0.4) * 0.72;
+      const p = new THREE.CylinderGeometry(0.08, 0.12, 2.2, 6); p.translate(x, 3.6, z); iron.push(p);
+      const h = new THREE.BoxGeometry(0.8, 0.45, 0.2); h.translate(x, 4.75, z); iron.push(h);
+      const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xfff0c8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.95 }); sm.userData.own = true;
+      const sp = new THREE.Sprite(sm); sp.scale.setScalar(2.4); sp.position.set(x, 4.8, z + 0.15); G.add(sp);
+    }
+    const im = inked(mergeGeometries(iron), toon(0x4a4a5a), OL * 0.5); G.add(im); iron.forEach((g) => g.dispose());
+    const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xd8ffd0, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: this.phase === 'night' ? 0.45 : 0.25 }); pm.userData.own = true;
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.85, d * 0.85), pm); pool.rotation.x = -Math.PI / 2; pool.position.y = 0.6; G.add(pool);
   }
 
   stadiumModel(G, b, w, d) {
