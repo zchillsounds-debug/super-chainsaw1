@@ -214,6 +214,12 @@ export class Screens {
         "{name}, Neon City has a noodle cart now! Chef Rumi serves one bowl of fizzy spark noodles a day, and the arcade cabinets finally work. Score well in CRITTER CLASH TURBO and they pay out in berries!",
         "The Town Map shows a ⛏️ wherever a dig spot is waiting today. And a warning: two Ace Trainers now guard the foot of Champion's Peak, and the toughest wild critters in Clashara live in the snow grass there.",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv8') && !save.news.includes('adv9')) {
+      save.news.push('adv9'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, the Neon arcade has a second game! The blue cabinets play SKY HOP: tap to flap through the neon pillars. And Milliner Mo put a dressing mirror in the Hat Shop, so you can try on every hat you own.",
+        "Big news for Champions: Keeper Orla runs the Peak Gauntlet on the summit. Five Ace battles, a new line-up every Monday, and a Golden Laurel for your first clear. Glowcap and Neon City now get dark at night, too. Bring a lantern!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
