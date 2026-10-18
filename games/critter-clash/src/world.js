@@ -3,7 +3,7 @@
 // some roam in plain sight; trainers spot you from a distance; stadiums are the gyms.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { toon, inked, canvasTex } from './toon.js';
+import { toon, inked, canvasTex, outlineMatW } from './toon.js';
 import { Critter, roleHat, shopHat, hatModel, SHOP_HATS } from './critters.js';
 import { CRITTERS, CUPS, withGear, skinned } from './data.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
@@ -40,7 +40,7 @@ const LAVA = {
 // the glowcap woods keep their violet daylight but sink into a deep indigo after dark, so the shroom lamps and fireflies carry the light
 const WOODS = {
   evening: { sun: 0xffb8d8, sunI: 1.05, sky: 0x9a7ae8, gnd: 0x2a3a3a, hemiI: 0.98, fog: 0x2a2244 },
-  night: { sun: 0x8a9aff, sunI: 0.7, sky: 0x5a5ab8, gnd: 0x1a2a3a, hemiI: 0.78, fog: 0x141a34 },
+  night: { sun: 0x8a9aff, sunI: 0.8, sky: 0x6464c0, gnd: 0x1e3040, hemiI: 0.9, fog: 0x141a34 },
 };
 // Neon City: a magenta dusk, then a deep navy night where every sign pops
 const CITY = {
@@ -146,6 +146,66 @@ function brolly(cr, col) {
 function castLite(cr) {
   const ms = []; cr.root.traverse((o) => { if (o.isMesh && o.castShadow && !o.userData.hull) { o.geometry.boundingSphere || o.geometry.computeBoundingSphere(); const sc = o.scale; ms.push([o.geometry.boundingSphere.radius * Math.max(sc.x, sc.y, sc.z), o]); } });
   ms.sort((a, b) => b[0] - a[0]).slice(2).forEach(([, o]) => { o.castShadow = false; });
+}
+
+// townsfolk and wild critters are built from dozens of little parts (each with its own ink hull): ~40-100 draws per critter.
+// Parts that never move on their own (only through their joint: head, arm, leg...) are merged per joint and material,
+// so a critter draws in far fewer calls. Anything the rig animates itself (ears, flames, wings, the lantern...) is kept as is,
+// as is anything transparent or named. Hulls of scaled parts keep their own mesh (the outline width lives in local space).
+const RIM_IDS = new WeakMap();
+const rimId = (u) => { if (!u) return 0; if (!RIM_IDS.has(u)) RIM_IDS.set(u, RIM_IDS.size + 1 + Math.random()); return RIM_IDS.get(u); };
+// plain toon parts that differ only in colour share a bucket: their colour moves into a vertex colour attribute
+const vcKey = (m, geo) => m.type === 'MeshToonMaterial' && m.userData.toon && !m.map && !m.vertexColors && !m.emissive.getHex() && !geo.attributes.color
+  ? ['V', m.side, m.userData.toon.env, m.userData.toon.rim, rimId(m.userData.rimU)].join('|') : null;
+function bakeStatic(cr) {
+  const keep = new Set(), mark = (v) => { if (v?.isObject3D) keep.add(v); };
+  for (const v of Object.values(cr)) { mark(v); if (Array.isArray(v)) v.forEach(mark); }
+  const groups = []; cr.root.traverse((o) => { if (!o.isMesh) groups.push(o); });
+  for (const g of groups) {
+    const buckets = new Map(), drop = [], add = [];
+    const put = (mat, geo, cast) => {
+      const vk = vcKey(mat, geo), hull = mat.side === THREE.BackSide;
+      if (vk || hull) { // these only need positions and normals (+ colour / width): drop the rest and index everything, so more parts match
+        for (const k of Object.keys(geo.attributes)) if (k !== 'position' && k !== 'normal' && k !== 'aOW') geo.deleteAttribute(k);
+        if (!geo.index) geo.setIndex([...Array(geo.attributes.position.count).keys()]);
+      }
+      if (vk) { const c = mat.color, n = geo.attributes.position.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++) a.set([c.r, c.g, c.b], i * 3); geo.setAttribute('color', new THREE.BufferAttribute(a, 3)); }
+      const k = (vk || mat.uuid) + (geo.index ? 'i' : 'n') + Object.keys(geo.attributes).sort().join();
+      let b = buckets.get(k); if (!b) buckets.set(k, b = { mat, vk, geos: [], cast: false });
+      b.geos.push(geo); b.cast ||= cast;
+    };
+    for (const m of g.children) {
+      if (!m.isMesh || keep.has(m) || m.name || Array.isArray(m.material) || m.material.transparent || m.geometry.morphAttributes?.position) continue;
+      if (m.children.some((h) => !h.isMesh || !h.userData.hull || h.children.length)) continue;
+      m.updateMatrix();
+      put(m.material, m.geometry.clone().applyMatrix4(m.matrix), m.castShadow);
+      for (const h of m.children) {
+        h.updateMatrix();
+        const M4 = m.matrix.clone().multiply(h.matrix), sc = new THREE.Vector3().setFromMatrixScale(M4), ow = h.material.userData.ow;
+        if (ow != null && !h.geometry.attributes.aOW) { // the outline width rides along per vertex, scaled like the part was
+          const geo = h.geometry.clone().applyMatrix4(M4), n = geo.attributes.position.count;
+          geo.setAttribute('aOW', new THREE.BufferAttribute(new Float32Array(n).fill(ow * (sc.x + sc.y + sc.z) / 3), 1));
+          put(outlineMatW(h.material.userData.oc), geo, false);
+        } else if (Math.abs(sc.x - 1) < 0.12 && Math.abs(sc.y - 1) < 0.12 && Math.abs(sc.z - 1) < 0.12) put(h.material, h.geometry.clone().applyMatrix4(M4), false);
+        else { const o = new THREE.Mesh(h.geometry, h.material); M4.decompose(o.position, o.quaternion, o.scale); o.userData.hull = true; o.renderOrder = h.renderOrder; add.push(o); }
+      }
+      drop.push(m);
+    }
+    const out = [];
+    for (const b of buckets.values()) {
+      const geo = mergeGeometries(b.geos);
+      if (!geo) return; // incompatible attributes: leave the rest of this critter as built
+      let mat = b.mat;
+      if (b.vk) { // one white toon material tinted per vertex; the hit flash drives it like the critter's own materials
+        const T = b.mat.userData.toon; mat = toon(0xffffff, { rim: T.rim, env: T.env, side: T.side, vertexColors: true, uniforms: b.mat.userData.rimU });
+        mat.userData.own = true; cr.mats['bake' + Object.keys(cr.mats).length] = mat;
+      }
+      const o = new THREE.Mesh(geo, mat); o.castShadow = b.cast; o.receiveShadow = true; if (b.mat.side === THREE.BackSide) o.userData.hull = true;
+      out.push(o); b.geos.forEach((q) => q.dispose());
+    }
+    for (const o of drop) g.remove(o);
+    for (const o of [...add, ...out]) g.add(o);
+  }
 }
 
 export class World {
@@ -2002,7 +2062,7 @@ export class World {
         root = cr.root;
         root.scale.setScalar(CS * (n.scale || 1));
         roleHat(cr, n.name || '');
-        castLite(cr);
+        bakeStatic(cr); castLite(cr);
         if (this.rain && n.act !== 'fish' && n.act !== 'sleep') brolly(cr, [0xff5a8a, 0x5ab8ff, 0xffd84d, 0x8a6aff][(n.x + n.y) % 4]); // a brolly up in the rain
       }
       root.userData.critter = true;
@@ -2044,7 +2104,7 @@ export class World {
     const [id0, lo, hi] = this.M.wild.list[Math.floor(Math.random() * this.M.wild.list.length)], id = fixId || id0;
     const lv = fixLv || lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = !fixId && Math.random() < SHINY_RATE;
     const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv));
-    cr.root.userData.critter = true; castLite(cr);
+    cr.root.userData.critter = true; bakeStatic(cr); castLite(cr);
     cr.root.scale.setScalar(CS * 0.9);
     this.group.add(cr.root);
     const a = { id, lv, cr, root: cr.root, x, y, dir: 's', moveT: 0, from: null, wanderT: 0.5 + Math.random() * 2, wild: true, shiny };

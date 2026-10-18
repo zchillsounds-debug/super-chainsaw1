@@ -46,6 +46,7 @@ export function toon(color, { rim = 0.55, emissive = 0x000000, env = false, map 
     };
     m.customProgramCacheKey = () => 'rim' + rim;
   }
+  m.userData.rimU = U; m.userData.toon = { rim, env, side }; // lets the world merge look-alike parts (bakeStatic in world.js)
   if (!uniforms) toonCache.set(key, m);
   return m;
 }
@@ -68,6 +69,25 @@ export function outlineMat(width = 0.022, color = 0x2a1630) {
         transformed += normalize(normal) * uW * dScale;`);
   };
   m.customProgramCacheKey = () => 'outline' + width;
+  m.userData.ow = width; m.userData.oc = color;
+  outlineMats.set(key, m);
+  return m;
+}
+// the same hull, with its width per vertex (attribute aOW), so merged parts can keep their own outline widths
+export function outlineMatW(color = 0x2a1630) {
+  const key = 'w|' + color;
+  if (outlineMats.has(key)) return outlineMats.get(key);
+  const m = new THREE.MeshBasicMaterial({ color, side: THREE.BackSide });
+  m.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute float aOW;')
+      .replace('#include <begin_vertex>', `
+        vec3 transformed = position;
+        vec4 mvp = modelViewMatrix * vec4(position, 1.0);
+        float dScale = clamp(-mvp.z * 0.09, 0.6, 2.6);
+        transformed += normalize(normal) * aOW * dScale;`);
+  };
+  m.customProgramCacheKey = () => 'outlineW';
   outlineMats.set(key, m);
   return m;
 }
