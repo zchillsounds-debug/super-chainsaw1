@@ -1280,7 +1280,7 @@ export class World {
     if (this.M.indoor || !pumpkinNights() || !(this.M.buildings || []).length) return;
     const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((d) => d.x + ',' + (d.y + 1)), ...(this.M.signs || []).map((g) => g.x + ',' + g.y)]);
     const spots = [];
-    for (const d of this.doors) for (const dx of [-1, 1]) { const x = d.x + dx, y = d.y + 1; if ('.:"sf'.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y) && !taken.has(x + ',' + y)) { spots.push([x, y]); break; } }
+    for (const d of this.doors) for (const dx of [-1, 1]) { const x = d.x + dx, y = d.y + 1; if ('."sf'.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y) && !taken.has(x + ',' + y)) { spots.push([x, y]); break; } }
     const lit = this.phase !== 'day', orange = toon(0xff8a1a, { rim: 0.5 }), stemM = toon(0x4a7a2a);
     const face = canvasTex(64, 64, (c) => { c.fillStyle = lit ? '#ffd040' : '#3a1a08'; c.beginPath(); c.moveTo(14, 26); c.lineTo(24, 12); c.lineTo(30, 28); c.fill(); c.beginPath(); c.moveTo(34, 28); c.lineTo(40, 12); c.lineTo(50, 26); c.fill(); c.beginPath(); c.moveTo(10, 38); c.quadraticCurveTo(32, 62, 54, 38); c.lineTo(46, 42); c.lineTo(40, 36); c.lineTo(32, 44); c.lineTo(24, 36); c.lineTo(18, 42); c.closePath(); c.fill(); });
     face.userData.own = true;
