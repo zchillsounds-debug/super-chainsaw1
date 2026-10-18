@@ -182,7 +182,7 @@ export class World {
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
-      if ('TP~#RhmvlWCXQDOKHU'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
+      if ('TP~#RhmvlWCXQDOKHUuc'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
     }
     for (const s of M.signs || []) this.solid.add(s.x + ',' + s.y);
     this.buildGround(rand);
@@ -249,7 +249,7 @@ export class World {
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         let t = this.tile(x, y);
         if (t === 'h') t = under(x, y);
-        if (t === 'R' || t === 'l' || t === 'v') { // lone props sit on whatever ground surrounds them (no grass squares on the beach)
+        if (t === 'R' || t === 'l' || t === 'v' || t === 'u' || t === 'c') { // lone props sit on whatever ground surrounds them (no grass squares on the beach)
           const n = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => this.tile(x + dx, y + dy));
           if (n.filter((k) => k === 's' || k === 'P').length >= 2) t = 's';
           else if (n.filter((k) => k === 'i').length >= 2) t = 'i'; // boulders frozen into the ice lake sit on ice, not snow squares
@@ -633,6 +633,7 @@ export class World {
 
   buildProps(rand) {
     const rocks = [], posts = [], rails = [], boards = [], sticks = [], snow = [], coal = [], carrot = [], drifts = [];
+    const UMB = [[0xff5a7a, 0xffffff], [0x3ac8e8, 0xfff2a0], [0xffb030, 0xffffff]], canopy = [[], [], [], [], [], []], towels = [[], [], [], [], [], []], sand = [], sandD = [], flags = []; let nu = 0;
     const snowmen = this.M.snow && this.key !== 'peak'; // Frostpeak's rocks are snowmen; the Peak's lake keeps its boulders
     for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) {
       const t = this.tile(x, y), [px, pz] = wpos(x, y);
@@ -646,6 +647,22 @@ export class World {
       }
       if (snowmen && t === '.' && rand() < 0.09 && this.tile(x, y + 1) !== ':' ) { // soft wind-blown drifts
         const g = new THREE.SphereGeometry(0.7 + rand() * 0.4, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2); g.scale(1.4, 0.32, 0.9); g.rotateY(rand() * 3); g.translate(px + (rand() - 0.5), 0, pz + (rand() - 0.5)); drifts.push(g);
+      }
+      if (t === 'u') { // a striped beach umbrella with a towel laid out beside it
+        const k = nu++ % UMB.length, pole = new THREE.CylinderGeometry(0.05, 0.05, 2.3, 6); pole.rotateZ(0.12); pole.translate(px, 1.15, pz); sticks.push(pole);
+        for (let j = 0; j < 8; j++) { const c = new THREE.ConeGeometry(1.35, 0.55, 2, 1, true, j * Math.PI / 4, Math.PI / 4); c.rotateZ(0.12); c.translate(px - 0.27, 2.3, pz); canopy[k * 2 + (j % 2)].push(c); }
+        const sd = this.tile(x + 1, y) === 's' ? 1 : -1;
+        for (let j = 0; j < 4; j++) { const tw = new THREE.BoxGeometry(0.95, 0.04, 0.4); tw.translate(px + sd * 1.2, 0.03, pz - 0.6 + j * 0.4); towels[k * 2 + (j % 2)].push(tw); }
+        continue;
+      }
+      if (t === 'c') { // Diggles' sandcastle: a keep, four towers, a gate, and a little flag
+        const keep = new THREE.BoxGeometry(1.0, 0.6, 1.0); keep.translate(px, 0.3, pz); sand.push(keep);
+        for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const tw = new THREE.CylinderGeometry(0.2, 0.24, 0.85, 8); tw.translate(px + dx * 0.55, 0.42, pz + dz * 0.55); sand.push(tw); const cr = new THREE.ConeGeometry(0.24, 0.3, 8); cr.translate(px + dx * 0.55, 1.0, pz + dz * 0.55); sandD.push(cr); }
+        const top = new THREE.CylinderGeometry(0.28, 0.32, 0.45, 8); top.translate(px, 0.82, pz); sand.push(top);
+        const gate = new THREE.BoxGeometry(0.3, 0.32, 0.06); gate.translate(px, 0.16, pz + 0.51); sandD.push(gate);
+        const fp = new THREE.CylinderGeometry(0.02, 0.02, 0.6, 4); fp.translate(px, 1.3, pz); sticks.push(fp);
+        const fl = new THREE.BoxGeometry(0.3, 0.18, 0.02); fl.translate(px + 0.16, 1.5, pz); flags.push(fl);
+        continue;
       }
       if (t === 'R') { const r = new THREE.DodecahedronGeometry(0.75, 0); r.scale(1.1, 0.75, 1); r.rotateY(rand() * 3); r.translate(px, 0.45, pz); rocks.push(r); }
       if (t === '#') {
@@ -665,6 +682,9 @@ export class World {
     put(rocks, 0x9a94a8); put(snow, 0xffffff); put(coal, 0x2a2a34, 0); put(carrot, 0xff8a2a, OL * 0.4);
     if (drifts.length) { const m = new THREE.Mesh(mergeGeometries(drifts), toon(0xf6faff, { rim: 0.8 })); m.receiveShadow = true; this.group.add(m); drifts.forEach((g) => g.dispose()); }
     put(posts, 0xfff4e0, OL * 0.6); put(rails, 0xfff4e0, OL * 0.5); put(sticks, 0x8a5a3a, OL * 0.5); put(boards, 0xc8925a);
+    canopy.forEach((l, i) => { if (!l.length) return; const m = new THREE.Mesh(mergeGeometries(l), toon(UMB[i >> 1][i & 1], { side: THREE.DoubleSide })); m.castShadow = true; this.group.add(m); l.forEach((g) => g.dispose()); });
+    towels.forEach((l, i) => { if (!l.length) return; const m = new THREE.Mesh(mergeGeometries(l), toon(UMB[i >> 1][i & 1])); m.receiveShadow = true; this.group.add(m); l.forEach((g) => g.dispose()); });
+    put(sand, 0xfbe6aa, OL * 0.6); put(sandD, 0xc2924e, OL * 0.5); put(flags, 0xff4a5a, 0);
   }
 
   // the Glowcap woods: giant glowing toadstools (m), little glowcap clusters (g), bramble walls (B)
