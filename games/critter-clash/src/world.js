@@ -98,6 +98,12 @@ export function rainAt(key, d, hr = d.getHours()) {
   return hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}` + key) % 5 === 0;
 }
 
+// maps with a daily dig spot (beach sand, Frostpeak snow, Cinder Town ash) that hasn't been dug up today: the Town Map marks them ⛏
+export function digLeft(maps) {
+  const day = new Date().toISOString().slice(0, 10);
+  return Object.keys(maps).filter((k) => { const M = maps[k]; return !M.indoor && (M.arena === 'beach' || (M.snow && k !== 'peak') || k === 'ember') && save.adv?.dig?.[k] !== day; });
+}
+
 // which visited town Trader Tock is in today (none before the Sprout Cup)
 export function traderTown() {
   const towns = ['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak'].filter((k) => save.adv?.seen?.[k]);

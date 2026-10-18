@@ -908,6 +908,7 @@ body:not(.is-touch) .wd-a { display: none; }
 .wm-name { font-family: var(--display); font-size: 11px; text-anchor: middle; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 3px; }
 .wm-cup { font-size: 12px; text-anchor: middle; }
 .wm-gift { font-size: 9px; text-anchor: middle; pointer-events: none; }
+.wm-dig { font-size: 11px; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1px #fff); }
 .wm-fav { font-size: 10px; }
 .wm-hero { animation: wmBob 1s ease-in-out infinite alternate; }
 @keyframes wmBob { to { transform: translateY(-4px); } }
