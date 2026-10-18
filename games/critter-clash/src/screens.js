@@ -941,6 +941,7 @@ export class Screens {
     const here = w.key.startsWith('in:') ? w.key.split(':')[1] : w.key;
     seen[here] = true;
     const tt = traderTown(); // 🎩 marks where Trader Tock is today
+    const fav = {}; for (const r of favourList().rows) if (r.at && !fav[r.at]) fav[r.at] = r.state === 'found' ? '📦' : '🔍'; // open favours: where to look, or who to take it back to
     // older saves: towns behind a cleared cup were visited
     for (const [k, n] of Object.entries(WMAP)) if (n.cup && F['cup_' + n.cup]) seen[k] = true;
     const links = [['village', 'route1'], ['route1', 'bloom'], ['bloom', 'route2'], ['route2', 'seashell'], ['seashell', 'glowwood'], ['glowwood', 'glowcap'], ['glowcap', 'cinder'], ['cinder', 'ember'], ['ember', 'neon'], ['neon', 'cloudtop', 1], ['cloudtop', 'frostpeak', 1], ['frostpeak', 'peak']];
@@ -950,7 +951,7 @@ export class Screens {
       + Object.entries(WMAP).map(([k, n]) => {
         const v = seen[k], won = n.cup && F['cup_' + n.cup], town = !!n.fly;
         return `<g class="wm-node ${v ? 'seen' : ''} ${town ? 'town' : ''} ${k === here ? 'here' : ''}" data-k="${k}" transform="translate(${n.x} ${n.y})">
-          <circle r="${town ? 11 : 7}"/>${won ? '<text class="wm-cup" y="5">🏆</text>' : ''}${v && k !== 'peak' && [0, 1].some((j) => !F[`it_${k}_${j}`]) ? `<text class="wm-gift" x="${town ? -10 : -7}" y="${town ? -7 : -4}">🎁</text>` : ''}${k === tt ? '<text class="wm-gift" x="11" y="-7">🎩</text>' : ''}
+          <circle r="${town ? 11 : 7}"/>${won ? '<text class="wm-cup" y="5">🏆</text>' : ''}${v && k !== 'peak' && [0, 1].some((j) => !F[`it_${k}_${j}`]) ? `<text class="wm-gift" x="${town ? -10 : -7}" y="${town ? -7 : -4}">🎁</text>` : ''}${k === tt ? '<text class="wm-gift" x="11" y="-7">🎩</text>' : ''}${fav[k] ? `<text class="wm-gift wm-fav" x="${town ? 11 : 8}" y="${town ? 12 : 9}">${fav[k]}</text>` : ''}
           <text class="wm-name" y="${n.ly || (town ? 24 : 19)}">${v ? MAPS[k].name : '???'}</text></g>`;
       }).join('');
     const hp = WMAP[here];
@@ -959,7 +960,7 @@ export class Screens {
       <svg viewBox="0 0 400 250" class="wm"><rect x="0" y="0" width="400" height="250" rx="18" class="wm-sea"/>${stars}
       <path class="wm-land" d="M18 238 L18 70 Q20 20 90 22 L300 18 Q385 22 385 90 L380 160 Q378 205 330 214 L230 216 Q215 244 150 242 Z"/>${[['🌲', 220, 34], ['🌲', 150, 40], ['🌋', 372, 78], ['🏙️', 372, 210], ['☁️', 290, 232], ['🏔️', 118, 150], ['🌊', 236, 128], ['🌸', 90, 196]].map(([e, x, y]) => `<text class="wm-deco" x="${x}" y="${y}">${e}</text>`).join('')}${svg}
       ${hp ? `<image href="${this.game.portrait(heroDef())}" x="${hp.x + 4}" y="${hp.y - 34}" width="30" height="30" class="wm-hero"/>` : ''}</svg>
-      <p class="wm-tip">${Object.values(seen).length > 1 ? 'Tap a town you\'ve visited to fly there with Captain Puff\'s mail balloon. 🎁 = a gift still hidden there.' + (tt ? ' 🎩 = Trader Tock today.' : '') : 'Explore to fill in the map!'}</p>
+      <p class="wm-tip">${Object.values(seen).length > 1 ? 'Tap a town you\'ve visited to fly there with Captain Puff\'s mail balloon. 🎁 = a gift still hidden there.' + (tt ? ' 🎩 = Trader Tock today.' : '') + (Object.keys(fav).length ? ' 🔍 = a lost thing to find, 📦 = take it back.' : '') : 'Explore to fill in the map!'}</p>
       <div class="res-btns"></div></div>`;
     const close = () => { d.remove(); this.game.modalClose = null; };
     d.querySelector('.res-btns').appendChild(this.btn('Close', 'ghost', close));

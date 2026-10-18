@@ -6,10 +6,10 @@ import { CUPS, CRITTERS, TYPES, withGear, skinned } from './data.js';
 const skinnedShiny = (id) => skinned(CRITTERS.find((c) => c.id === id), 'shiny');
 import { unlock } from './save.js';
 import { sfx } from './audio.js';
-import { rivalFor } from './worldmaps.js';
+import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
-import { canRain, rainAt } from './world.js';
+import { canRain, rainAt, LOST_SPOTS } from './world.js';
 
 const flags = () => save.adv.flags;
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -525,7 +525,8 @@ export function favourList() {
   const F = flags(), rows = Object.entries(LOST).filter(([id]) => F[id + '_asked']).map(([id, Q]) => {
     const state = F[id + '_done'] ? 'done' : F[id + '_found'] ? 'found' : 'open';
     const name = Q.who.split(' ').pop();
-    return { id, who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, text: state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
+    const home = Object.keys(MAPS).find((k) => (MAPS[k].npcs || []).some((n) => n.story === 'lost:' + id));
+    return { id, who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, at: state === 'found' ? home : state === 'open' ? LOST_SPOTS[id]?.map : null, text: state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
   });
   rows.sort((a, b) => ({ found: 0, open: 1, done: 2 })[a.state] - ({ found: 0, open: 1, done: 2 })[b.state]);
   return { rows, unasked: Object.keys(LOST).length - rows.length };
