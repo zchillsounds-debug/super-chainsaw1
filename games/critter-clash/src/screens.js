@@ -10,7 +10,7 @@ import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
-import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights } from './world.js';
+import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, LANDMARKS } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -1033,6 +1033,7 @@ export class Screens {
       + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
       + (A.cnt?.pumpkin ? bar('🎃', 'Pumpkin treats', A.cnt.pumpkin) : '')
       + (A.cnt?.wisp ? bar('👻', 'Wisp nights', A.cnt.wisp) : '')
+      + bar('📸', 'Landmark photos', (A.snaps || []).length, LANDMARKS.length)
       + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length)
       + bar('🍾', 'Bottle notes read', (A.notes || []).length, BOTTLE_NOTES.length)
       + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
@@ -1051,6 +1052,7 @@ export class Screens {
       'Berry bushes at the edge of town can be shaken once a day.',
       'Rooms look different after dark: lamps come on, and the windows fill with stars.',
       '📸 Photo in the ☰ menu saves a picture of your hero right where they stand.',
+      (A.snaps || []).length < LANDMARKS.length && `Take a 📸 Photo by each town's landmark (${(A.snaps || []).length} / ${LANDMARKS.length} so far). All eight earn a hat!`,
       F.rod && 'Night fishing catches fish you never see by day.',
       (A.hats || []).length && 'Change hats any time from ☰ → 🎩 Hats. Each hat has its own story.',
       seen.neon && 'The Neon City arcade pays berries for a good score, once a day per game.',
@@ -1082,7 +1084,8 @@ export class Screens {
         + (unasked ? `<li class="jr-more">❗ ${unasked} more townsfolk need a hand. Look for a ❗ over their heads!</li>` : rows.length ? '<li class="jr-more">🌟 You\'ve asked everyone in Clashara. What a good neighbour!</li>' : '');
     } else if (tab === 'rec') { // everything there is to find and beat, with how far along you are
       const R = this.records(), nx = [25, 50, 75, 100].find((p) => p > (save.adv.expl || 0));
-      body = R.body + (nx ? `<li class="jr-more">🎁 Next reward at ${nx}% explored${nx === 100 ? ': something golden!' : '.'}</li>` : '<li class="jr-more">🌟 Every corner explored. Visit your statue in Sprout Village!</li>');
+      const left = LANDMARKS.filter((l) => !(save.adv.snaps || []).includes(l.id) && save.adv.seen?.[l.map]);
+      body = R.body + (left.length ? `<li class="jr-more">📸 Landmarks to snap: ${left.map((l) => `${l.name} (${MAPS[l.map].name})`).join(', ')}</li>` : '') + (nx ? `<li class="jr-more">🎁 Next reward at ${nx}% explored${nx === 100 ? ': something golden!' : '.'}</li>` : '<li class="jr-more">🌟 Every corner explored. Visit your statue in Sprout Village!</li>');
       this.exploreCheck(R.pc);
     } else if (tab === 'today') { // every daily thing in one list: done today, or where to go for it
       const { rows, after, night } = this.todayList();

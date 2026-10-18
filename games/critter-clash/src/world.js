@@ -83,6 +83,17 @@ export const FISH = {
   cold: [['Cloud Minnow', 6, 16], ['Frostfin', 15, 35]],
   night: [['Moonfin', 14, 38], ['Glimmer Ray', 40, 95]], // only bite after dark (any water but lava)
 };
+// Landmark photos: snap a 📸 Photo near each of these (within 4 steps) for the Journal; all eight earn the Shutterbug Cap
+export const LANDMARKS = [
+  { id: 'lab', map: 'village', door: 'lab', name: 'Pecan Lab' },
+  { id: 'sprout', map: 'bloom', door: 'stadium', name: 'Sprout Stadium' },
+  { id: 'beach', map: 'seashell', at: [13, 15], name: 'Seashell Beach' },
+  { id: 'ring', map: 'glowcap', at: [8, 8], name: 'the fairy ring' },
+  { id: 'spring', map: 'ember', at: [21, 3], name: 'the hot spring' },
+  { id: 'arcade', map: 'neon', door: 'arcade', name: 'the Neon arcade' },
+  { id: 'fountain', map: 'cloudtop', at: [8, 9], name: 'the wishing fountain' },
+  { id: 'pond', map: 'frostpeak', at: [4, 8], name: 'the frozen pond' },
+];
 export const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, ball: { map: 'route1', x: 7, y: 9 }, phones: { map: 'ember', x: 23, y: 1 }, blink: { map: 'route2', x: 12, y: 10 } };
 
 const STEP = 0.23; // seconds per tile
@@ -3107,6 +3118,19 @@ export class World {
     sfx.shutter?.();
     const fl = document.createElement('div'); fl.className = 'ph-flash go'; g.ui.appendChild(fl); setTimeout(() => fl.remove(), 600);
     PhotoMode.prototype.preview.call({ game: g }, out.toDataURL('image/png'), out); // the photo mode's Save/Share card
+    this.landmarkSnap();
+  }
+
+  // a photo taken near a town landmark goes in the Journal (all eight: the Shutterbug Cap)
+  landmarkSnap() {
+    const A = save.adv, snaps = A.snaps ||= [];
+    const L = LANDMARKS.find((l) => l.map === this.key && !snaps.includes(l.id) && (() => { const d = l.door && this.doors.find((q) => q.b.id === l.door), [x, y] = d ? [d.x, d.y + 1] : l.at; return Math.abs(x - this.hx) + Math.abs(y - this.hy) <= 4; })());
+    if (!L) return;
+    snaps.push(L.id);
+    const all = snaps.length >= LANDMARKS.length, hat = all && !(A.hats ||= []).includes('shutter');
+    if (hat) { A.hats.push('shutter'); save.berries = (save.berries || 0) + 15; }
+    persist();
+    setTimeout(() => { sfx.jingle?.(hat ? 3 : 1); this.S.toast?.(hat ? '📸 All eight landmarks! +15 🍓 and the Shutterbug Cap! (☰ → 🎩 Hats)' : `📸 Landmark photo: ${L.name}! (${snaps.length} / ${LANDMARKS.length} in the Journal)`); }, 700);
   }
 
   updateCamera(dt) {
