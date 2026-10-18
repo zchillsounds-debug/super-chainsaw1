@@ -22,7 +22,7 @@ const YAW = { n: Math.PI, s: 0, e: Math.PI / 2, w: -Math.PI / 2 };
 // clock-of-day lighting for outdoor maps without their own mood
 const PHASES = {
   day: null,
-  evening: { sun: 0xffc896, sunI: 2.3, sky: 0xffe2cc, gnd: 0x6a5a48, hemiI: 1.05, fog: 0xffd8b8 },
+  evening: { sun: 0xffa868, sunI: 2.5, sky: 0xffd0b0, gnd: 0x6a4a58, hemiI: 1.08, fog: 0xffc098 }, // golden hour: an orange sun, rosy fill
   night: { sun: 0xa8b8ff, sunI: 0.95, sky: 0x7484cc, gnd: 0x2a3050, hemiI: 0.82, fog: 0x3a4878 },
 };
 const RAIN = {
@@ -3126,7 +3126,9 @@ export class World {
     cam.fov = port ? Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) : 40; cam.updateProjectionMatrix();
     // the sun's shadow box follows the hero
     const sun = this.g.arena.sun;
-    sun.position.set(p.x - 8, 26, p.z + 10); sun.target.position.set(p.x, 0, p.z);
+    if (this.phase === 'evening' && !this.M.indoor) sun.position.set(p.x - 17, 15, p.z + 7); // a low evening sun: long shadows
+    else sun.position.set(p.x - 8, 26, p.z + 10);
+    sun.target.position.set(p.x, 0, p.z);
     const fill = this.g.arena.fill; fill.position.copy(cam.position); fill.target.position.set(p.x, 0, p.z);
   }
 
