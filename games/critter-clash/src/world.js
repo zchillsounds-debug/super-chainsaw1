@@ -2637,7 +2637,9 @@ export class World {
     const [id0, lo, hi] = this.M.wild.list[Math.floor(Math.random() * this.M.wild.list.length)], id = fixId || id0;
     const lv = fixLv || lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = !fixId && Math.random() < SHINY_RATE;
     const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv));
-    cr.root.userData.critter = true; bakeStatic(cr); castLite(cr);
+    cr.root.userData.critter = true;
+    if (pumpkinNights() && !fixId && Math.random() < 0.5) { const [k, c, b] = [['wizard', 0x3a2a4a, 0xff8a1a], ['pumpkin', 0xff8a1a, 0x4a7a2a], ['bunny', 0xf4f0ff, 0xff9ac8], ['top', 0x2a2438, 0xff3a5a], ['party', 0xff8a1a, 0x2a2438]][Math.floor(Math.random() * 5)]; hatModel(cr, k, c, b); } // Pumpkin Nights: wild critters dress up too
+    bakeStatic(cr); castLite(cr);
     cr.root.scale.setScalar(CS * 0.9);
     this.group.add(cr.root);
     const a = { id, lv, cr, root: cr.root, x, y, dir: 's', moveT: 0, from: null, wanderT: 0.5 + Math.random() * 2, wild: true, shiny };
