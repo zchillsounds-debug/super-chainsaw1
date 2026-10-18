@@ -865,7 +865,7 @@ export class World {
   // street lamps at the edges of town paths (on tile corners, so they never block a step); lit from dusk
   buildLamps() {
     const M = this.M;
-    if (M.indoor || M.city || !(M.buildings || []).some((b) => b.heal)) return;
+    if (M.indoor || M.city || !((M.buildings || []).some((b) => b.heal) || this.key === 'village')) return; // towns (and home)
     const ok = (x, y) => '.:"sf'.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y), cand = [];
     for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) { // corner between tiles (x-1..x, y-1..y)
       const q = [[x - 1, y - 1], [x, y - 1], [x - 1, y], [x, y]];
