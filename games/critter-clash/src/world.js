@@ -1112,14 +1112,16 @@ export class World {
     const trim = new THREE.MeshBasicMaterial({ color: 0x3af0ff }); trim.userData.own = true;
     for (const y of [0.08, 0.9]) { const t = new THREE.Mesh(new THREE.BoxGeometry(2.62, 0.06, 0.06), trim); t.position.set(0, y, 0.46); g.add(t); }
     bakeStatic({ root: g, mats: {}, discs }); // keep the spinning records out of the merge
-    const cols = [0xff5ad8, 0x5ae8ff, 0xffd84d, 0x8aff9a, 0xc08aff], tiles = [];
-    for (let y = 10; y <= 11; y++) for (let x = 15; x <= 18; x++) {
-      const m = new THREE.MeshBasicMaterial({ color: cols[0], transparent: true, opacity: 0.55, depthWrite: false }); m.userData.own = true;
-      const q = new THREE.Mesh(new THREE.PlaneGeometry(TILE * 0.92, TILE * 0.92), m), [px, pz] = wpos(x, y); q.rotation.x = -Math.PI / 2; q.position.set(px, 0.03, pz); this.group.add(q); tiles.push({ q, k: x + y * 3 });
+    const cols = [0xff5ad8, 0x5ae8ff, 0xffd84d, 0x8aff9a, 0xc08aff].map((c) => new THREE.Color(c)), tiles = [], geos = [];
+    for (let y = 10; y <= 11; y++) for (let x = 15; x <= 18; x++) { // one merged mesh; the beat recolours its vertices
+      const q = new THREE.PlaneGeometry(TILE * 0.92, TILE * 0.92), [px, pz] = wpos(x, y); q.rotateX(-Math.PI / 2); q.translate(px, 0.03, pz); geos.push(q); tiles.push(x + y * 3);
     }
+    const fg = mergeGeometries(geos); geos.forEach((q) => q.dispose()); fg.setAttribute('color', new THREE.BufferAttribute(new Float32Array(fg.attributes.position.count * 3), 3));
+    const fm = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false }); fm.userData.own = true;
+    const floor = new THREE.Mesh(fg, fm); this.group.add(floor);
     const gm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff5ad8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.35 }); gm.userData.own = true;
     const glow = new THREE.Sprite(gm); const [fx, fz] = wpos(16.5, 10.5); glow.position.set(fx, 1.2, fz); glow.scale.set(7, 4, 1); this.group.add(glow);
-    this.dance = { tiles, cols, discs, glow, x: [15, 16], y: 9, px: bx, pz: bz };
+    this.dance = { tiles, cols, discs, glow, floor, beat: -1, x: [15, 16], y: 9, px: bx, pz: bz };
   }
 
   // Cloudtop Gardens after dusk: paper sky lanterns drift up out of the gardens, sway, and fade into the stars
@@ -2550,10 +2552,10 @@ export class World {
     }
     if (this.dance) { // the floor flashes on the beat (faster while the hero dances); the records spin
       const D = this.dance, fast = this.danceT > 0, beat = Math.floor(this.t * (fast ? 4 : 2));
-      for (const T of D.tiles) { T.q.material.color.setHex(D.cols[(T.k + beat) % D.cols.length]); T.q.material.opacity = 0.35 + ((T.k + beat) % 2) * 0.3; }
-      D.discs.forEach((d, k) => { d.rotation.y += dt * (k ? 3.2 : 4); }); D.glow.material.color.setHex(D.cols[beat % D.cols.length]); D.glow.material.opacity = 0.3 + (beat % 2) * 0.12;
+      if (beat !== D.beat) { D.beat = beat; const ca = D.floor.geometry.attributes.color; D.tiles.forEach((k, i) => { const c = D.cols[(k + beat) % D.cols.length], m = (k + beat) % 2 ? 1 : 0.45; for (let v = 0; v < 4; v++) ca.setXYZ(i * 4 + v, c.r * m, c.g * m, c.b * m); }); ca.needsUpdate = true; }
+      D.discs.forEach((d, k) => { d.rotation.y += dt * (k ? 3.2 : 4); }); D.glow.material.color.copy(D.cols[beat % D.cols.length]); D.glow.material.opacity = 0.3 + (beat % 2) * 0.12;
     }
-    if (this.danceT > 0) { this.danceT -= dt; if (Math.random() < dt * 8) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 1.6 + Math.random(), z: p.z, vy: 1.2, color: this.dance?.cols[Math.floor(Math.random() * 5)] ?? 0xff5ad8, size: 0.2, life: 0.9, shape: Math.random() < 0.5 ? 'star' : 'glow' }); } }
+    if (this.danceT > 0) { this.danceT -= dt; if (Math.random() < dt * 8) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 1.6 + Math.random(), z: p.z, vy: 1.2, color: this.dance?.cols[Math.floor(Math.random() * 5)].getHex() ?? 0xff5ad8, size: 0.2, life: 0.9, shape: Math.random() < 0.5 ? 'star' : 'glow' }); } }
     if (this.skyLanterns) for (const L of this.skyLanterns) { // each lantern rises for 14 s from a random spot near the hero, then starts again
       L.t += dt; if (L.t > 14 || !L.x) { L.t %= 14; L.x = this.hero.root.position.x + (Math.random() - 0.5) * 22; L.z = this.hero.root.position.z + (Math.random() - 0.3) * 14; }
       const f = L.t / 14; L.g.position.set(L.x + Math.sin(this.t * 0.7 + L.z) * 0.6, 0.5 + f * 13, L.z - f * 3); L.g.rotation.z = Math.sin(this.t * 1.3 + L.x) * 0.12;
