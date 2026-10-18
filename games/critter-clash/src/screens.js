@@ -240,6 +240,13 @@ export class Screens {
         "Stargazers, a ninth constellation has turned up: The Toadstool. Out on the routes, wooden lanterns light the paths at night. And the red number on your ☰ button counts the Journal's 📅 Today things still to do.",
         ...(pumpkinNights() ? ["It's Pumpkin Nights, too! Carved pumpkins sit by the town doors until early November. After dark they glow, and one of them hides a treat each night. Boo!"] : []),
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv12') && !save.news.includes('adv13')) {
+      save.news.push('adv13'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, say cheese! Every town has a landmark worth a picture. Stand near one and take a 📸 Photo from the ☰ menu. Snap all eight for my Journal and I'll send you a Shutterbug Cap!",
+        "Your ☰ card now shows how much of Clashara you've explored. Every quarter of the way earns berries, and at 100%... well. Sprout Village has a spot saved for something golden.",
+        ...(pumpkinNights() ? ["Pumpkin Nights news: jack-o'-lanterns light the path through Glowcap Woods after dark, and five little wisps float about. Catch them all for a treat! The wild critters have dressed up too. Very spooky. Very cute."] : []),
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
