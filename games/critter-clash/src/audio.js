@@ -123,6 +123,8 @@ export const sfx = {
     if (kind === 'bird') { // a two- or three-note chirp
       const f = 2600 + r() * 1400, n = 2 + Math.floor(r() * 3);
       for (let i = 0; i < n; i++) osc('sine', f * (1 + (i % 2) * 0.18), f * (1.25 + r() * 0.2), 0.07, 0.035, { t: t + i * 0.11, attack: 0.008 });
+    } else if (kind === 'owl') { // a far-off owl: hoo... hoo-hoo
+      for (const [dt, d] of [[0, 0.32], [0.55, 0.16], [0.75, 0.3]]) osc('sine', 410, 360, d, 0.05, { t: t + dt, attack: 0.06 });
     } else if (kind === 'cricket') { // a soft trill
       for (let i = 0; i < 6; i++) osc('triangle', 4300, 4200, 0.025, 0.012, { t: t + i * 0.045 + (i > 2 ? 0.12 : 0), attack: 0.004 });
     } else if (kind === 'surf') { // a wave washing up the beach and hissing back
