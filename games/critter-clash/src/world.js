@@ -1028,6 +1028,11 @@ export class World {
         for (let k = 0; k < 3; k++) { box('note' + k, 0.42, 0.5, 0.24, px - 0.5 + k * 0.5, 1.95 + (k % 2) * 0.15, pz - 0.82); box('pin', 0.08, 0.08, 0.27, px - 0.5 + k * 0.5, 2.15 + (k % 2) * 0.15, pz - 0.8); }
         continue;
       }
+      if (t === 'C' && this.key === 'in:village:home') { // the hero's wardrobe (hats live here)
+        box('wood', 1.8, 2.7, 0.95, px, 1.35, pz - 0.4); box('door' + (x % 2), 0.8, 2.3, 0.06, px - 0.42, 1.4, pz + 0.09); box('door' + (x % 2), 0.8, 2.3, 0.06, px + 0.42, 1.4, pz + 0.09);
+        box('pin', 0.08, 0.2, 0.1, px - 0.08, 1.4, pz + 0.14); box('pin', 0.08, 0.2, 0.1, px + 0.08, 1.4, pz + 0.14);
+        continue;
+      }
       if (t === 'C') { // shelf with coloured book spines
         box('wood', 1.8, 2.5, 0.9, px, 1.25, pz - 0.4);
         for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) box('book' + ((x + r + k) % 3), 0.32, 0.55, 0.2, px - 0.6 + k * 0.4, 0.55 + r * 0.75, pz + 0.08);
@@ -1084,7 +1089,7 @@ export class World {
       }
       if (t === 'K') { box('counter', TILE + 0.02, 1.1, 1.3, px, 0.55, pz); box('top', TILE + 0.04, 0.12, 1.45, px, 1.15, pz); }
     }
-    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a };
+    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, door0: 0xc8845a, door1: 0xd8946a };
     for (const k in L) {
       if (k === 'pane') { const m = new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: 0xd8f0ff, transparent: true, opacity: 0.22, depthWrite: false })); m.material.userData.own = true; this.group.add(m); L[k].forEach((g) => g.dispose()); continue; }
       const glow = k === 'screen' || k === 'glass' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1';

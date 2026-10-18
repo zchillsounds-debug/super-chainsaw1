@@ -289,6 +289,7 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'hatshop') return hatShop(w);
   if (id === 'board') return requestBoard(S, w);
+  if (id === 'wardrobe') return wearMenu(w, '', null);
   if (id.startsWith('case:')) { // a lobby trophy case
     const cup = CUPS.find((c) => c.id === id.slice(5));
     w.say([F['cup_' + cup.id] ? `The ${cup.name} trophy! {hero}'s name is engraved on it. ✨` : `An empty stand. A little card says: "${cup.name}".`]);
@@ -450,6 +451,18 @@ function pickPaged(w, q, labels, cb, who, page = 0) {
   }, who);
 }
 
+// pick a hat you own (from the Hat Shop, or the wardrobe at home)
+function wearMenu(w, who, back) {
+  const A = save.adv, own = A.hats || [];
+  if (!own.length) return w.say([who ? "Milliner Mo: You don't have any hats yet! Have a look around." : 'The wardrobe is empty. The Hat Shop in Bloom Town sells hats for berries!'], back, who);
+  const mine = SHOP_HATS.filter((h) => own.includes(h.id));
+  pickPaged(w, who ? 'Milliner Mo: Which hat today?' : 'Which hat will {hero} wear?', [...mine.map((h) => (A.hat === h.id ? '✓ ' : '') + h.name), 'No hat'], (k) => {
+    if (k < 0) return back?.();
+    A.hat = k < mine.length ? mine[k].id : null; persist(); w.wearHat(); sfx.ui('ok');
+    w.say([A.hat ? `{hero} puts on the ${mine[k].name}. Looking sharp!` : '{hero} takes the hat off. The wind feels nice!'], null, who);
+  }, who);
+}
+
 // Milliner Mo's Hat Shop in Bloom Town: buy hats with berries, then wear any you own
 function hatShop(w) {
   const A = save.adv, own = (A.hats ||= []), who = 'Milliner Mo';
@@ -463,18 +476,10 @@ function hatShop(w) {
         if ((save.berries || 0) < h.price) return w.say([`Milliner Mo: The ${h.name} is ${h.price} berries. Shake a few berry bushes and come back!`], menu, who);
         save.berries -= h.price; own.push(h.id); A.hat = h.id; persist();
         sfx.jingle(2); w.wearHat();
-        w.say([`{hero} got the ${h.name}! 🎩`, `Milliner Mo: Oh, it suits {hero} perfectly! Pop it on and off here any time.`], null, who);
+        w.say([`{hero} got the ${h.name}! 🎩`, `Milliner Mo: Oh, it suits {hero} perfectly! Swap hats here any time, or in the wardrobe at home.`], null, who);
       }, who);
     }
-    if (i === 1) {
-      if (!own.length) return w.say(["Milliner Mo: You don't have any hats yet! Have a look around."], menu, who);
-      const mine = SHOP_HATS.filter((h) => own.includes(h.id));
-      return pickPaged(w, 'Milliner Mo: Which hat today?', [...mine.map((h) => (A.hat === h.id ? '✓ ' : '') + h.name), 'No hat'], (k) => {
-        if (k < 0) return menu();
-        A.hat = k < mine.length ? mine[k].id : null; persist(); w.wearHat(); sfx.ui('ok');
-        w.say([A.hat ? `{hero} puts on the ${mine[k].name}. Looking sharp!` : '{hero} takes the hat off. The wind feels nice!'], null, who);
-      }, who);
-    }
+    if (i === 1) return wearMenu(w, who, menu);
     w.say(['Milliner Mo: Come again! Hats off to you!'], null, who);
   }, who);
   menu();

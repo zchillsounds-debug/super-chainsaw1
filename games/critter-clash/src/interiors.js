@@ -133,6 +133,7 @@ export function interiorMap(key) {
     if (t === 'C' && kind === 'center') text = 'Jars of berries line the shelf: strawberry, blueberry, glowberry...';
     if (t === 'C' && kind === 'center' && x === 1) { signs.push({ x, y, text: '', hide: true, act: 'board' }); return; }
     if (t === 'X' && kind === 'lab') text = 'A screen shows a growing critter: small, medium, HUGE.';
+    if (t === 'C' && bid === 'home') { signs.push({ x, y, text: '', hide: true, act: 'wardrobe' }); return; }
     if (t === 'C' && kind === 'shop') text = 'Hat boxes, stacked to the ceiling. One is labelled "EXTRA FLOPPY".';
     if (t === 'U') { const n = [...row].slice(0, x).filter((c) => c === 'U').length; signs.push({ x, y, text, hide: true, act: 'case:' + CUP_ORDER[n] }); return; }
     signs.push({ x, y, text, hide: true, act: t === 'Q' && bid === 'home' ? 'rest' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
