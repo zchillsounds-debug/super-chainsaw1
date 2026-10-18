@@ -220,6 +220,12 @@ export class Screens {
         "{name}, the Neon arcade has a second game! The blue cabinets play SKY HOP: tap to flap through the neon pillars. And Milliner Mo put a dressing mirror in the Hat Shop, so you can try on every hat you own.",
         "Big news for Champions: Keeper Orla runs the Peak Gauntlet on the summit. Five Ace battles, a new line-up every Monday, and a Golden Laurel for your first clear. Glowcap and Neon City now get dark at night, too. Bring a lantern!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv9') && !save.news.includes('adv10')) {
+      save.news.push('adv10'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, Clashara has a night life! After dark, DJ Tumble spins records on Neon City's plaza: step onto the light-up floor and dance. Frostpeak lights ice lanterns around the frozen pond, and Skater Ivy skates there under the aurora.",
+        "Anglers, listen up: some fish only bite at night. Moonfins swim in any water after dark, and some say there's a Glimmer Ray too. Champions: each week's Peak Gauntlet now has a type theme. And you can change hats any time from ☰ → 🎩 Hats!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
