@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { toon, inked, canvasTex } from './toon.js';
-import { Critter, roleHat } from './critters.js';
+import { Critter, roleHat, shopHat, hatModel, SHOP_HATS } from './critters.js';
 import { CRITTERS, CUPS, withGear, skinned } from './data.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx, playMusic } from './audio.js';
@@ -96,6 +96,14 @@ export class World {
     if (this.g.scene.fog && this.hidden?.length) this.g.scene.fog.color.setHex(m?.fog ?? 0xcfeeff);
   }
 
+  // the hero's hat from the Bloom Town Hat Shop (it covers the Lv 15 gear crown while worn)
+  wearHat() {
+    const H = this.hero; if (!H) return;
+    if (H.shopHat) { H.skull.remove(H.shopHat); H.shopHat = null; }
+    H.shopHat = save.adv.hat ? shopHat(H, save.adv.hat) : null;
+    if (H.gearCrown) H.gearCrown.visible = !H.shopHat;
+  }
+
   // swap the walking buddy without reloading the map
   refreshFollower() {
     if (this.follower) this.group.remove(this.follower.root);
@@ -129,7 +137,7 @@ export class World {
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
-      if ('TP~#RhmvlWCXQDOK'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
+      if ('TP~#RhmvlWCXQDOKH'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
     }
     for (const s of M.signs || []) this.solid.add(s.x + ',' + s.y);
     this.buildGround(rand);
@@ -145,6 +153,7 @@ export class World {
     this.hero = new Critter(heroDef());
     this.hero.root.scale.setScalar(CS);
     this.group.add(this.hero.root);
+    this.wearHat();
     this.hx = x; this.hy = y; this.dir = dir; this.moveT = 0; this.from = null;
     this.placeHero();
     this.buildItems(x, y);
@@ -673,15 +682,7 @@ export class World {
           const bm = new THREE.MeshBasicMaterial({ color: 0xff4040 }); bm.userData.own = true;
           const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), bm); bulb.position.set(w * 0.4, wallH + 1.98, d * 0.25); G.add(bulb);
           this.beacon = bulb;
-          // a name board over the door
-          const ltex = canvasTex(256, 48, (c) => {
-            c.fillStyle = '#2a4a7a'; c.beginPath(); c.roundRect(2, 2, 252, 44, 10); c.fill();
-            c.fillStyle = '#ffffff'; c.font = 'bold 30px Lilita One, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText((b.label || 'LAB').toUpperCase(), 128, 26);
-          });
-          ltex.userData.own = true;
-          const lm = new THREE.MeshBasicMaterial({ map: ltex, transparent: true }); lm.userData.own = true;
-          const plate = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.48), lm);
-          plate.position.set((b.door + 0.5) * TILE - w / 2, wallH - 0.32, d / 2 - 0.17); G.add(plate);
+
         } else {
           // gable roof: a triangle extruded along the house
           const sh = new THREE.Shape(); sh.moveTo(-d / 2 - 0.15, 0); sh.lineTo(0, 1.5); sh.lineTo(d / 2 + 0.15, 0); sh.closePath();
@@ -703,6 +704,25 @@ export class World {
         }
         // door and windows on the south face
         const dx = (b.door + 0.5) * TILE - w / 2, front = d / 2 - 0.25;
+        if (b.lab || b.hatShop) { // a name board over the door
+          const ltex = canvasTex(256, 48, (c) => {
+            c.fillStyle = b.hatShop ? '#5a2a8a' : '#2a4a7a'; c.beginPath(); c.roundRect(2, 2, 252, 44, 10); c.fill();
+            c.fillStyle = '#ffffff'; c.font = 'bold 30px Lilita One, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText((b.label || 'LAB').toUpperCase(), 128, 26);
+          });
+          ltex.userData.own = true;
+          const lm = new THREE.MeshBasicMaterial({ map: ltex, transparent: true }); lm.userData.own = true;
+          const plate = new THREE.Mesh(new THREE.PlaneGeometry(b.hatShop ? 2.2 : 2.6, b.hatShop ? 0.42 : 0.48), lm);
+          plate.position.set(dx, wallH - 0.3, d / 2 - 0.17); G.add(plate);
+        }
+        if (b.hatShop) { // a giant top hat perched on the ridge, and a striped awning over the door
+          const sk = new THREE.Group(); sk.position.set(-w * 0.18, wallH + 1.25, 0); sk.rotation.x = -0.25; G.add(sk);
+          const big = hatModel({ def: { body: { headR: 1.25 } }, skull: sk }, 'top', 0x2a2438, 0xff3a5a); big.position.y = 0;
+          const aw = [];
+          for (let k = 0; k < 6; k++) { const g = new THREE.BoxGeometry(0.28, 0.06, 0.8); g.translate(dx - 0.7 + k * 0.28, 0, 0); aw.push(g); }
+          const A0 = new THREE.Mesh(mergeGeometries(aw.filter((_, k) => k % 2)), toon(0xffffff)), A1 = new THREE.Mesh(mergeGeometries(aw.filter((_, k) => !(k % 2))), toon(0xb07aff));
+          for (const m of [A0, A1]) { m.position.set(0, 1.55, front + 0.42); m.rotation.x = 0.45; G.add(m); }
+          aw.forEach((g) => g.dispose());
+        }
         const door = inked(new THREE.BoxGeometry(0.9, 1.3, 0.12), toon(0x8a5a3a), OL * 0.5); door.position.set(dx, 0.65, front + 0.03); G.add(door);
         for (let k = 0; k < b.w; k++) if (k !== b.door) {
           const win = inked(new THREE.BoxGeometry(0.8, 0.7, 0.1), this.phase === 'day' ? toon(0xbfe6ff, { rim: 0.9 }) : LIT, OL * 0.5);
@@ -899,9 +919,16 @@ export class World {
         const p = new THREE.CylinderGeometry(0.4, 0.3, 0.6, 10); p.translate(px, 0.3, pz); add('pot', p);
         for (let k = 0; k < 3; k++) { const l = new THREE.IcosahedronGeometry(0.45 - k * 0.08, 1); l.translate(px + Math.sin(k * 2.1) * 0.2, 0.9 + k * 0.38, pz + Math.cos(k * 2.1) * 0.2); add('leaf', l); }
       }
+      if (t === 'H') { // a hat stand wearing one of the shop's hats
+        const p = new THREE.CylinderGeometry(0.07, 0.07, 1.3, 8); p.translate(px, 0.65, pz - 0.2); add('wood', p);
+        const f = new THREE.CylinderGeometry(0.4, 0.45, 0.1, 12); f.translate(px, 0.05, pz - 0.2); add('wood', f);
+        const k = new THREE.SphereGeometry(0.4, 12, 8); k.translate(px, 1.5, pz - 0.2); add('head', k);
+        const h = SHOP_HATS[(x * 3 + y) % SHOP_HATS.length], sk = new THREE.Group(); sk.position.set(px, 1.42, pz - 0.2); this.group.add(sk);
+        hatModel({ def: { body: { headR: 0.62 } }, skull: sk }, h.kind, h.col, h.band);
+      }
       if (t === 'K') { box('counter', TILE + 0.02, 1.1, 1.3, px, 0.55, pz); box('top', TILE + 0.04, 0.12, 1.45, px, 1.15, pz); }
     }
-    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8 };
+    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0 };
     for (const k in L) {
       const glow = k === 'screen' || k === 'glass' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1';
       const m = glow ? new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'screen' && this.M.indoor === 'arcade' ? 0xff8ae8 : C[k] })) : inked(mergeGeometries(L[k]), toon(C[k] ?? 0xffffff, { rim: 0.3 }), k === 'book0' || k === 'book1' || k === 'book2' ? OL * 0.3 : OL * 0.6);

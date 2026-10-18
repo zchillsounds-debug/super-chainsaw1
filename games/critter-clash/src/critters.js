@@ -1018,7 +1018,7 @@ export class Critter {
       crown.position.set(headR * 0.14, headR * 1.0, headR * 0.05);
       crown.scale.setScalar(1.25);
       crown.rotation.set(0.12, 0, -0.22);
-      this.skull.add(crown);
+      this.skull.add(crown); this.gearCrown = crown;
     }
     if (this.built) this.root.traverse((o) => { if (o.isMesh && !o.userData.hull && o.material && !o.material.transparent) o.castShadow = true; });
   }
@@ -1112,19 +1112,42 @@ export class Critter {
 // route trainers dress for the job, so a Hiker, a Fisher and a Skater read apart at a glance
 const HATS = [
   [/^Hiker/, 'bucket', 0x9a7240], [/^(Camper|Picker)/, 'cap', 0x4aa04a], [/^Fisher/, 'wide', 0xf0d27a], [/^(Picnicker|Gardener)/, 'wide', 0xfff2c8, 0xff6a9a],
-  [/^(Kite Flyer|Sky Diver)/, 'cap', 0x5a8ad8], [/^Swimmer/, 'swim', 0x3ac8ff], [/^Skater/, 'back', 0xff5a8a], [/^Firewalker/, 'band', 0xff4a2a], [/^Gang/, 'band', 0x3a2a4a],
+  [/^(Kite Flyer|Sky Diver)/, 'cap', 0x5a8ad8], [/^Swimmer/, 'swim', 0x3ac8ff], [/^Skater/, 'back', 0xff5a8a], [/^Firewalker/, 'band', 0xff4a2a], [/^Gang/, 'band', 0x3a2a4a], [/^Milliner/, 'top', 0x2a2438, 0xff3a5a],
 ];
 export function roleHat(cr, name) {
   const h = HATS.find(([re]) => re.test(name)); if (!h) return;
-  const [, kind, col, band] = h, r = cr.def.body.headR, M = toon(col, { rim: 0.4 }), G = new THREE.Group();
+  hatModel(cr, h[1], h[2], h[3]);
+}
+// hats the hero can buy at the Bloom Town Hat Shop (Adventure), priced in berries
+export const SHOP_HATS = [
+  { id: 'cap', name: 'Red Cap', kind: 'cap', col: 0xff4a4a, price: 3 },
+  { id: 'explorer', name: 'Explorer Hat', kind: 'bucket', col: 0x9a7240, price: 4 },
+  { id: 'sun', name: 'Sun Hat', kind: 'wide', col: 0xfff2c8, band: 0xff6a9a, price: 4 },
+  { id: 'beanie', name: 'Cosy Beanie', kind: 'beanie', col: 0x5ad8ff, band: 0xffffff, price: 5 },
+  { id: 'party', name: 'Party Hat', kind: 'party', col: 0xff5ad8, band: 0xffd84d, price: 5 },
+  { id: 'flower', name: 'Flower Crown', kind: 'flower', col: 0x5ac24a, band: 0xff8ac8, price: 6 },
+  { id: 'top', name: 'Top Hat', kind: 'top', col: 0x2a2438, band: 0xff3a5a, price: 8 },
+];
+export function shopHat(cr, id) {
+  const h = SHOP_HATS.find((x) => x.id === id); if (!h) return null;
+  return hatModel(cr, h.kind, h.col, h.band);
+}
+// builds a hat on cr.skull (anything with def.body.headR and a skull group works, e.g. a shop's hat stand)
+export function hatModel(cr, kind, col, band) {
+  const r = cr.def.body.headR, M = toon(col, { rim: 0.4 }), G = new THREE.Group();
   const add = (geo, m = M, ink = 0.02) => { const o = inked(geo, m, ink); G.add(o); return o; };
   if (kind === 'bucket') { add(new THREE.CylinderGeometry(r * 0.55, r * 0.72, r * 0.42, 16)).position.y = r * 0.18; add(new THREE.CylinderGeometry(r * 1.0, r * 1.0, r * 0.05, 18)); }
   if (kind === 'wide') { add(new THREE.SphereGeometry(r * 0.62, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.7; add(new THREE.CylinderGeometry(r * 1.3, r * 1.3, r * 0.04, 22)); if (band) { add(new THREE.CylinderGeometry(r * 0.63, r * 0.63, r * 0.1, 16), toon(band), 0).position.y = r * 0.06; const f = add(new THREE.SphereGeometry(r * 0.13, 8, 6), toon(band), 0.012); f.position.set(r * 0.5, r * 0.15, r * 0.3); } }
   if (kind === 'cap' || kind === 'back') { add(new THREE.SphereGeometry(r * 0.72, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.6; const v = add(new THREE.CylinderGeometry(r * 0.5, r * 0.5, r * 0.04, 16, 1, false, -Math.PI / 2, Math.PI)); v.position.z = r * 0.45 * (kind === 'back' ? -1 : 1); v.rotation.y = kind === 'back' ? Math.PI : 0; }
   if (kind === 'swim') { add(new THREE.SphereGeometry(r * 0.8, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.75; G.position.y -= r * 0.25; }
   if (kind === 'band') { add(new THREE.TorusGeometry(r * 0.95, r * 0.08, 6, 20)).rotation.x = Math.PI / 2; G.position.y -= r * 0.45; }
+  if (kind === 'beanie') { add(new THREE.SphereGeometry(r * 0.78, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.82; add(new THREE.TorusGeometry(r * 0.76, r * 0.1, 6, 20), toon(band), 0.012).rotation.x = Math.PI / 2; add(new THREE.SphereGeometry(r * 0.2, 10, 8), toon(band)).position.y = r * 0.68; G.position.y -= r * 0.2; }
+  if (kind === 'party') { add(new THREE.ConeGeometry(r * 0.42, r * 1.0, 16)).position.y = r * 0.5; for (let k = 0; k < 3; k++) { const s = add(new THREE.TorusGeometry(r * (0.34 - k * 0.1), r * 0.04, 4, 16), toon(band), 0); s.rotation.x = Math.PI / 2; s.position.y = r * (0.18 + k * 0.25); } add(new THREE.SphereGeometry(r * 0.13, 8, 6), toon(band)).position.y = r * 1.02; G.rotation.z = 0.15; }
+  if (kind === 'flower') { add(new THREE.TorusGeometry(r * 0.78, r * 0.07, 6, 22)).rotation.x = Math.PI / 2; const P = [toon(band), toon(0xffe14d), toon(0xffffff)]; for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, f = add(new THREE.SphereGeometry(r * 0.15, 8, 6), P[k % 3], 0.012); f.position.set(Math.cos(a) * r * 0.78, r * 0.06, Math.sin(a) * r * 0.78); f.scale.y = 0.6; } G.position.y -= r * 0.3; }
+  if (kind === 'top') { add(new THREE.CylinderGeometry(r * 0.5, r * 0.46, r * 0.85, 18)).position.y = r * 0.42; add(new THREE.CylinderGeometry(r * 0.9, r * 0.9, r * 0.05, 22)); add(new THREE.CylinderGeometry(r * 0.475, r * 0.47, r * 0.14, 18), toon(band), 0).position.y = r * 0.12; G.rotation.z = -0.12; }
   G.position.y += r * 0.72; G.rotation.x = -0.1;
   cr.skull.add(G);
   G.traverse((o) => { if (o.isMesh && !o.userData.hull) o.castShadow = true; });
+  return G;
 }
 

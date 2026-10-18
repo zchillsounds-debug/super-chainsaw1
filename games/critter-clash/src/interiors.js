@@ -1,7 +1,7 @@
 // Adventure interiors: every house, Berry Center, lab and shop in the world can be walked into.
 // A room is a small tile map built on demand from the building it belongs to ('in:<map>:<building id>').
 // Tiles: W wall, C shelf, X machine (arcade cabinet, smoothie blender, lab console), Q bed, D table,
-// O potted plant, K counter (talk across it), Y rug (walkable). Walking south off the doormat goes back out.
+// O potted plant, K counter (talk across it), Y rug (walkable), H hat stand (Hat Shop). Walking south off the doormat goes back out.
 import { MAPS } from './worldmaps.js';
 
 const ROOMS = {
@@ -35,6 +35,16 @@ const ROOMS = {
     'WO....YYY..OW',
     'WWWWWW.WWWWWW',
   ],
+  shop: [
+    'WWWWWWWWWWW',
+    'WHHH...HHHW',
+    'W...KKK...W',
+    'W.........W',
+    'WH.......HW',
+    'W...YYY...W',
+    'WO..YYY..OW',
+    'WWWWW.WWWWW',
+  ],
   arcade: [
     'WWWWWWWWWWWWW',
     'WXXX.....XXXW',
@@ -54,6 +64,7 @@ const PEOPLE = {
   'village:lab': { npcs: [['hootsy', 'Aide Hoot', ['Aide Hoot: Hoo! Welcome to the Pecan Lab. The professor studies how critters GROW.', 'Aide Hoot: Win enough battles and a critter gets bigger and stronger. The professor calls it growth. I call it a growth spurt!'], 's', 6, 2]], wall: '#e8f0f8', rug: '#8ad8c8' },
   'bloom:berry': { visitor: ['clovebun', 'Hopper Bea', ['Hopper Bea: The berry smoothies here are the best in Clashara. I come in even when I\'m not hurt!'], 'w', 9, 4] },
   'bloom:house3': { npcs: [['emberfly', 'Firefly Flo', ['Firefly Flo: Bzz! My big brother lost to the Sprout Cup three times. Then he trained in the tall grass and WON!', 'Firefly Flo: Wild critters give you lots of XP. That\'s how you grow!'], 'e', 2, 5]], wall: '#fff0b8', rug: '#ffb030' },
+  'bloom:hats': { npcs: [['woolt', 'Milliner Mo', [], 's', 5, 1, 'hatshop']], kind: 'shop', wall: '#f0e0ff', rug: '#b08aff' },
   'seashell:berry2': { visitor: ['ripples', 'Diver Kai', ['Diver Kai: I dive for shells every day. The water critters around here are SO quick.'], 'e', 3, 4] },
   'seashell:hut': { npcs: [['bubbalotl', 'Captain Coral', ['Captain Coral: Arr! This hut used to be a boat. Then it sank. Then I dragged it up the beach.', 'Captain Coral: Spark critters zap water critters hard. Mind the Thunder Cup!'], 's', 6, 2]], wall: '#c8f0f0', rug: '#3ac8c8' },
   'glowcap:berry3': { visitor: ['lilypop', 'Moss Kid', ['Moss Kid: The Berry Center here grows its berries on glowcaps. They taste a bit like moonlight.'], 'w', 9, 4], wall: '#e8d8ff' },
@@ -75,6 +86,7 @@ const ITEMS = {
   Q: 'A comfy bed with a fluffy pillow.',
   D: 'A table with a bowl of berries on it.',
   O: 'A happy little plant. It looks well watered.',
+  H: 'A hat stand.',
 };
 
 export function interiorMap(key) {
@@ -85,7 +97,7 @@ export function interiorMap(key) {
   const kind = P.kind || (b.heal ? 'center' : b.lab ? 'lab' : 'house');
   const tiles = ROOMS[kind];
   const W = tiles[0].length, H = tiles.length, door = tiles[H - 1].indexOf('.');
-  const npcs = (P.npcs || []).map(([critter, name, lines, dir, x, y], k) => ({ id: 'in' + k, critter, name, lines, dir, x, y, wander: 1 }));
+  const npcs = (P.npcs || []).map(([critter, name, lines, dir, x, y, story], k) => ({ id: 'in' + k, critter, name, lines, dir, x, y, wander: story ? 0 : 1, story }));
   if (b.heal) {
     npcs.push({ id: 'nurse', critter: 'lilypop', name: 'Nurse Lilypop', dir: 's', x: (W - 1) / 2, y: 1, story: 'nurse' });
     if (P.visitor) { const [critter, name, lines, dir, x, y] = P.visitor; npcs.push({ id: 'visitor', critter, name, lines, dir, x, y }); }
@@ -99,7 +111,8 @@ export function interiorMap(key) {
     if (t === 'X' && kind === 'center') text = 'A berry smoothie blender. It smells like strawberries.';
     if (t === 'C' && kind === 'center') text = 'Jars of berries line the shelf: strawberry, blueberry, glowberry...';
     if (t === 'X' && kind === 'lab') text = 'A screen shows a growing critter: small, medium, HUGE.';
-    signs.push({ x, y, text, hide: true, act: t === 'Q' && bid === 'home' ? 'rest' : t === 'X' && kind === 'center' ? 'smoothie' : null });
+    if (t === 'C' && kind === 'shop') text = 'Hat boxes, stacked to the ceiling. One is labelled "EXTRA FLOPPY".';
+    signs.push({ x, y, text, hide: true, act: t === 'Q' && bid === 'home' ? 'rest' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
   }));
   return {
     name: b.label || (b.id === 'home' ? 'Home' : 'House'),

@@ -8,6 +8,7 @@ import { unlock } from './save.js';
 import { sfx } from './audio.js';
 import { rivalFor } from './worldmaps.js';
 import { getMap } from './interiors.js';
+import { SHOP_HATS } from './critters.js';
 
 const flags = () => save.adv.flags;
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -285,6 +286,7 @@ export function storyTalk(S, id, w, a) {
       : "Prof. Pecan: Seven cups! Champion's Peak is north of Frostpeak. The Crown is waiting!"]);
     return;
   }
+  if (id === 'hatshop') return hatShop(w);
   if (id === 'smoothie') { // the Berry Center blender turns a berry into XP for the hero
     const n = save.berries || 0;
     if (!n) { w.say(["A berry smoothie blender. Bring a berry 🍓 and it'll whip up a smoothie for {hero}!"]); return; }
@@ -364,6 +366,47 @@ export function storyTalk(S, id, w, a) {
   if (id === 'balloon') balloon(S, w, a);
   if (id === 'dash5') { if (!F.dash5) dashFinal(S, w); else w.say(["Dash: Go on. The Crown Keeper's waiting. Show 'em what beat me."]); }
   if (id === 'king') king(S, w);
+}
+
+// a list too long for one row of answer buttons: three to a page, then "More"
+function pickPaged(w, q, labels, cb, who, page = 0) {
+  const per = 3, n = labels.length, slice = labels.slice(page * per, page * per + per), more = n > per;
+  const opts = [...slice, ...(more ? ['More ▶'] : []), 'Bye'];
+  w.ask(q, opts, (i) => {
+    if (i < slice.length) return cb(page * per + i);
+    if (more && i === slice.length) return pickPaged(w, q, labels, cb, who, (page + 1) % Math.ceil(n / per));
+    cb(-1);
+  }, who);
+}
+
+// Milliner Mo's Hat Shop in Bloom Town: buy hats with berries, then wear any you own
+function hatShop(w) {
+  const A = save.adv, own = (A.hats ||= []), who = 'Milliner Mo';
+  const menu = () => w.ask(`Milliner Mo: Welcome to the Hat Shop! A hat for every head. (You have ${save.berries || 0} 🍓)`, ['Buy a hat', 'Wear a hat', 'Bye'], (i) => {
+    if (i === 0) {
+      const left = SHOP_HATS.filter((h) => !own.includes(h.id));
+      if (!left.length) return w.say(['Milliner Mo: You own every hat in the shop! A true hat collector. I\'m honoured!'], null, who);
+      return pickPaged(w, 'Milliner Mo: Which one catches your eye?', left.map((h) => `${h.name} ${h.price}🍓`), (k) => {
+        if (k < 0) return menu();
+        const h = left[k];
+        if ((save.berries || 0) < h.price) return w.say([`Milliner Mo: The ${h.name} is ${h.price} berries. Shake a few berry bushes and come back!`], menu, who);
+        save.berries -= h.price; own.push(h.id); A.hat = h.id; persist();
+        sfx.jingle(2); w.wearHat();
+        w.say([`{hero} got the ${h.name}! 🎩`, `Milliner Mo: Oh, it suits {hero} perfectly! Pop it on and off here any time.`], null, who);
+      }, who);
+    }
+    if (i === 1) {
+      if (!own.length) return w.say(["Milliner Mo: You don't have any hats yet! Have a look around."], menu, who);
+      const mine = SHOP_HATS.filter((h) => own.includes(h.id));
+      return pickPaged(w, 'Milliner Mo: Which hat today?', [...mine.map((h) => (A.hat === h.id ? '✓ ' : '') + h.name), 'No hat'], (k) => {
+        if (k < 0) return menu();
+        A.hat = k < mine.length ? mine[k].id : null; persist(); w.wearHat(); sfx.ui('ok');
+        w.say([A.hat ? `{hero} puts on the ${mine[k].name}. Looking sharp!` : '{hero} takes the hat off. The wind feels nice!'], null, who);
+      }, who);
+    }
+    w.say(['Milliner Mo: Come again! Hats off to you!'], null, who);
+  }, who);
+  menu();
 }
 
 const heroLv = () => save.critters[save.adv.hero]?.level || 1;
