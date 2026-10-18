@@ -568,13 +568,13 @@ function trader(w) {
   const week = [all[(wk * 2) % all.length], all[(wk * 2 + 1) % all.length]];
   const stock = week.filter((h) => !own.includes(h.id));
   if (!stock.length) return w.say([all.every((h) => own.includes(h.id)) ? 'Trader Tock: Tock tock! You own every hat I\'ve ever found. A true collector!' : 'Trader Tock: Tock tock! You bought this week\'s hats. Come back next week. I\'ll have new ones in the bag!'], null, who);
-  w.say(['Trader Tock: Tock tock! A traveller, like me! I wander a new town every day, and my bag changes every week.'], () => pickPaged(w, `Trader Tock: Rare hats from far away! (You have ${save.berries || 0} 🍓)`, stock.map((h) => `${h.name} ${h.price}🍓`), (k) => {
-    if (k < 0) return w.say(['Trader Tock: Look for me tomorrow. Different town, and new hats every week!'], null, who);
-    const h = stock[k];
+  w.say(['Trader Tock: Tock tock! A traveller, like me! I wander a new town every day, and my bag changes every week.'], () => { w.busy = true; w.S.hatGrid('Trader Tock: Rare hats from far away!', stock, (id) => {
+    w.busy = false;
+    const h = stock.find((x) => x.id === id);
     if ((save.berries || 0) < h.price) return w.say([`Trader Tock: ${h.price} berries, friend. Shake some bushes and catch me before the day is out!`], null, who);
     save.berries -= h.price; own.push(h.id); A.hat = h.id; persist(); sfx.jingle(2); w.wearHat();
     w.say([`{hero} got the ${h.name}! 🎩`, 'Trader Tock: Splendid! Nobody else in Clashara has one of those.'], null, who);
-  }, who), who);
+  }, () => { w.busy = false; w.say(['Trader Tock: Look for me tomorrow. Different town, and new hats every week!'], null, who); }, true); }, who);
 }
 
 // pick a hat you own (from the Hat Shop, or the wardrobe at home)
@@ -598,14 +598,15 @@ function hatShop(w) {
     if (i === 0) {
       const left = SHOP_HATS.filter((h) => !own.includes(h.id) && !h.trader && !h.gift);
       if (!left.length) return w.say(['Milliner Mo: You own every hat in the shop! A true hat collector. I\'m honoured!'], null, who);
-      return pickPaged(w, 'Milliner Mo: Which one catches your eye?', left.map((h) => `${h.name} ${h.price}🍓`), (k) => {
-        if (k < 0) return menu();
-        const h = left[k];
+      w.busy = true;
+      return w.S.hatGrid('Milliner Mo: Which one catches your eye?', left, (id) => {
+        w.busy = false;
+        const h = left.find((x) => x.id === id);
         if ((save.berries || 0) < h.price) return w.say([`Milliner Mo: The ${h.name} is ${h.price} berries. Shake a few berry bushes and come back!`], menu, who);
         save.berries -= h.price; own.push(h.id); A.hat = h.id; persist();
         sfx.jingle(2); w.wearHat();
         w.say([`{hero} got the ${h.name}! 🎩`, `Milliner Mo: Oh, it suits {hero} perfectly! Swap hats here any time, or in the wardrobe at home.`], null, who);
-      }, who);
+      }, () => { w.busy = false; menu(); }, true);
     }
     if (i === 1) return wearMenu(w, who, menu);
     w.say(['Milliner Mo: Come again! Hats off to you!'], null, who);

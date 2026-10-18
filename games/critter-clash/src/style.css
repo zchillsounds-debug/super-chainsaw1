@@ -984,3 +984,6 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .hat-pick .hero-grid button img { width: 60px; height: 60px; }
 .hat-pick .hero-grid button span { font-size: 12px; line-height: 1.1; }
 @media (max-height: 420px) { .hat-pick h2 { display: none; } .hat-pick .hero-grid { max-height: 52vh; } }
+.hat-pick .hero-grid button em { font-style: normal; font-family: var(--display); font-size: 13px; color: #c2385a; }
+.hat-pick .hero-grid button.dear { opacity: .55; }
+.hat-purse { margin-left: 6px; background: rgba(60,40,20,.08); border-radius: 999px; padding: 1px 8px; }
