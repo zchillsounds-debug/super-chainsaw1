@@ -189,6 +189,12 @@ export class Screens {
         "{name}, more news from Clashara! Every stadium now has a lobby: sign up at the front desk, admire the line-up posters, and watch the trophy cases fill up as you win.",
         "Shake the berry bushes by the trees for free berries each day, spend them at the new Hat Shop in Bloom Town, and ask Fisher Finn in Seashell Town about fishing!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv4') && !save.news.includes('adv5')) {
+      save.news.push('adv5'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, the townsfolk of Clashara need you! Look for a ❗ over someone's head: they've lost something, and they'll thank you with berries or a one-of-a-kind hat. Your new 📔 Journal in the ☰ menu keeps track, and the Town Map shows where to look.",
+        "Also: sparkly X marks turn up on the beaches each day (dig!), and the Journal keeps a fish album of every kind you've caught. Win a cup, then pop into that stadium's lobby. They've got something for you!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);

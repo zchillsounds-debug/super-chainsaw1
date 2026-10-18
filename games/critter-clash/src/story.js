@@ -422,6 +422,7 @@ const REQUESTS = {
   fish: { text: 'Reel in a catch', n: 1, now: () => save.adv.cnt?.fish || 0, need: 'rod' },
   smoothie: { text: 'Blend a berry smoothie', n: 1, now: () => save.adv.cnt?.smoothie || 0 },
   wild: { text: 'Battle 3 wild critters', n: 3, now: () => save.adv.cnt?.wild || 0 },
+  dig: { text: 'Dig up a beach sparkle', n: 1, now: () => save.adv.cnt?.dig || 0, need: 'cup_sprout' },
 };
 export function countUp(k) { (save.adv.cnt ||= {})[k] = (save.adv.cnt[k] || 0) + 1; }
 function requestBoard(S, w) {
