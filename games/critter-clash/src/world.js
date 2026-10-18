@@ -874,13 +874,15 @@ export class World {
   // a beach bonfire in Seashell Town after dusk: logs, flickering flames, sparks and a warm pool of light on the sand
   buildBonfire() {
     this.bonfire = null;
-    if (this.key !== 'seashell' || this.phase === 'day' || this.M.indoor) return;
+    const at = { seashell: [13, 15, 's'], frostpeak: [9, 10, '.'] }[this.key]; // Seashell: between the umbrellas by the water; Frostpeak: in the open snow by the ice pond
+    if (!at || this.phase === 'day' || this.M.indoor) return;
     const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((d) => d.x + ',' + (d.y + 1)), ...this.itemSpots, ...(this.M.signs || []).map((g) => g.x + ',' + g.y), this.hx + ',' + this.hy, this.dig ? this.dig.x + ',' + this.dig.y : '']);
-    const spot = [13, 15]; // on the sand between the two umbrellas, by the water (row 14 keeps the beach joined up)
-    if (this.tile(...spot) !== 's' || taken.has(spot.join(','))) return;
+    const spot = at.slice(0, 2);
+    if (this.tile(...spot) !== at[2] || taken.has(spot.join(','))) return;
     const [x, y] = spot, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(1.35);
     this.solid.add(x + ',' + y);
     const wood = toon(0x7a4a2a), stone = toon(0x9a94a0);
+    if (this.M.snow) { const wet = new THREE.Mesh(new THREE.CircleGeometry(0.95, 18), toon(0x8a94b8)); wet.rotation.x = -Math.PI / 2; wet.position.y = 0.03; wet.receiveShadow = true; g.add(wet); } // the snow has melted round the fire
     for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2, st = inked(new THREE.SphereGeometry(0.16, 7, 5), stone, OL * 0.3); st.scale.y = 0.6; st.position.set(Math.cos(a) * 0.62, 0.06, Math.sin(a) * 0.62); g.add(st); }
     for (let k = 0; k < 3; k++) { const l = inked(new THREE.CylinderGeometry(0.08, 0.09, 0.9, 7), wood, OL * 0.3); l.rotation.z = Math.PI / 2; l.rotation.y = k / 3 * Math.PI; l.position.y = 0.12 + k * 0.05; g.add(l); }
     const flames = [];
@@ -2415,7 +2417,8 @@ export class World {
     if (this.bush && this.bush.x === fx && this.bush.y === fy) return this.shakeBush();
     if (this.bonfire && this.bonfire.x === fx && this.bonfire.y === fy) { // warm your paws by the beach fire
       const B = this.bonfire; for (let k = 0; k < 12; k++) this.g.fx.spawn({ x: B.px + (Math.random() - 0.5) * 0.5, y: 1, z: B.pz, vx: (Math.random() - 0.5) * 1.5, vy: 2 + Math.random() * 2, vz: (Math.random() - 0.5) * 1.5, color: 0xffc050, size: 0.18, life: 1.2, shape: 'spark' });
-      return this.say([['The bonfire crackles and pops. {hero} holds out their paws. Toasty!', 'Sparks float up and wink out among the stars. The waves hush on the sand.', '{hero} watches the flames dance for a while. A perfect beach night.'][Math.floor(Math.random() * 3)]]);
+      const snow = !!this.M.snow;
+      return this.say([(snow ? ['The campfire crackles in the snow. {hero} holds out their paws. Ahh, that\'s better!', 'Sparks float up into the cold, starry sky. Somewhere, a snowman looks jealous.', '{hero} warms up by the fire until even their ears feel toasty.'] : ['The bonfire crackles and pops. {hero} holds out their paws. Toasty!', 'Sparks float up and wink out among the stars. The waves hush on the sand.', '{hero} watches the flames dance for a while. A perfect beach night.'])[Math.floor(Math.random() * 3)]]);
     }
     if (this.dig && ((this.dig.x === fx && this.dig.y === fy) || (this.dig.x === this.hx && this.dig.y === this.hy))) return this.digUp();
     const lost = this.lost?.find((L) => L.x === fx && L.y === fy); if (lost) return this.S.worldStory('found:' + lost.id, this, null);
