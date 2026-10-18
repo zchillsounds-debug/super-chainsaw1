@@ -1089,3 +1089,13 @@ body.portrait .toast { top: calc(70px + var(--sat)); }
 @keyframes stCatch { 0% { opacity: 0; margin-top: 10px; } 12%, 75% { opacity: 1; margin-top: 0; } 100% { opacity: 0; } }
 @media (orientation: landscape) and (max-height: 420px) { .stars .st-name { margin-top: 2px; font-size: 18px; } .stars .st-tip { font-size: 12px; } }
 @keyframes riseShort { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* short landscape phones: the Journal's lists run in two columns, so a page shows twice as much without scrolling */
+@media (max-height: 420px) and (min-width: 600px) {
+  .wd-journal { max-width: min(760px, 94vw); width: min(760px, 94vw); }
+  .wd-journal .jr-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8px; align-content: start; max-height: calc(100vh - 190px); }
+  .wd-journal .jr-head, .wd-journal .jr-more, .wd-journal .jr-note, .wd-journal .jr-stars { grid-column: 1 / -1; }
+  .wd-journal .jr-head:not(:first-child) { margin-top: 4px; }
+  .wd-journal .jr-fish, .wd-journal .jr-rec, .wd-journal .jr-row { margin-bottom: 4px; min-width: 0; }
+  .wd-journal .jr-day b, .wd-journal .jr-day em { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .wd-journal .jr-day b { flex: none; max-width: 52%; } .wd-journal .jr-day em { flex: 1; max-width: none; }
+}
