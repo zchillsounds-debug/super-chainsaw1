@@ -27,6 +27,19 @@ const RAIN = {
   day: { sun: 0xb8c4dc, sunI: 0.85, sky: 0xaab8d0, gnd: 0x3a4a50, hemiI: 0.9, fog: 0x9aa8b8 },
   evening: { sun: 0xd0a898, sunI: 0.9, sky: 0xb0a4b8, gnd: 0x3a3a48, hemiI: 0.85, fog: 0x8a8898 },
 };
+// the snowy maps keep their own crisp daylight, but follow the clock after that: pink evenings, moonlit blue nights (with an aurora)
+const SNOWY = {
+  evening: { sun: 0xffb8c8, sunI: 2.0, sky: 0xffd6e4, gnd: 0x7a6aa8, hemiI: 1.1, fog: 0xf0d4e4 },
+  night: { sun: 0x9ab4ff, sunI: 1.05, sky: 0x7088d8, gnd: 0x2a3a78, hemiI: 0.95, fog: 0x2a3668 },
+};
+let AUR;
+const auroraTex = () => AUR ||= canvasTex(256, 128, (c) => {
+  for (let x = 0; x < 256; x += 2) { // soft vertical streaks, brightest along a wavy middle band, fading out top and bottom
+    const k = 0.15 + 0.85 * Math.pow(Math.abs(Math.sin(x * 0.09) * Math.sin(x * 0.031 + 1)), 1.6) + (x % 14 === 0 ? 0.3 : 0), g = c.createLinearGradient(0, 0, 0, 128);
+    g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.45, `rgba(255,255,255,${0.35 * k})`); g.addColorStop(0.8, `rgba(255,255,255,${0.9 * k})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = g; c.fillRect(x, 0, 2, 128);
+  }
+});
 const LIT = new THREE.MeshBasicMaterial({ color: 0xffd870 }); // a lamp-lit window at night
 let GLOW = null; // a soft radial glow (shared, never disposed)
 const glowTex = () => GLOW ||= canvasTex(64, 64, (c) => { const g = c.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.5, 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, 64, 64); });
@@ -177,7 +190,7 @@ export class World {
     // the phone's clock tints outdoor maps that have no mood of their own: golden evenings, soft blue nights
     const hr = save.adv.clock ?? new Date().getHours();
     this.outPhase = hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day'; // what the room windows show
-    this.phase = M.indoor || M.mood ? 'day' : this.outPhase;
+    this.phase = M.indoor || (M.mood && !M.snow) ? 'day' : this.outPhase;
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
     this.rain = canRain(M) && (save.adv.rain ?? rainAt(key, new Date(), hr));
     const shut = M.bramble && !save.adv.flags[M.bramble];
@@ -196,6 +209,7 @@ export class World {
     this.buildGulls();
     this.buildButterflies();
     this.buildMist();
+    this.buildAurora();
     this.buildBuildings();
     this.buildInterior();
     this.buildActors();
@@ -222,7 +236,7 @@ export class World {
     persist();
     playMusic(M.music || 'camp');
     const B = this.base, lamp = M.indoor && this.outPhase !== 'day' && M.indoor !== 'arcade' && { sun: 0xffd2a0, sunI: B.sunI * (this.outPhase === 'night' ? 0.72 : 0.85), sky: 0xffe2c4, gnd: B.gnd, hemiI: B.hemiI * 0.85, fog: 0xcfeeff }; // lamplight indoors after dark
-    this.mood(M.mood || lamp || (this.rain && RAIN[this.phase]) || PHASES[this.phase]);
+    this.mood((M.snow && SNOWY[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || PHASES[this.phase]);
     this.banner(M.name + (this.rain ? ' 🌧️' : ''));
   }
 
@@ -785,6 +799,17 @@ export class World {
 
   // butterflies flutter over the flower beds on fine days
   // low mist drifting between the trees of the glowing woods (and over any map at night after rain... just the woods for now)
+  // aurora ribbons hang over the snowy maps at night, waving slowly (they follow the camera, high up)
+  buildAurora() {
+    this.aurora = [];
+    if (!this.M.snow || this.phase !== 'night' || this.M.indoor) return;
+    [[0x5affb0, 0], [0x6ad8ff, 1], [0xc08aff, 2]].forEach(([col, k]) => {
+      const m = new THREE.MeshBasicMaterial({ map: auroraTex(), color: col, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide }); m.userData.own = true;
+      const geo = new THREE.PlaneGeometry(44, 3.6, 44, 1), q = new THREE.Mesh(geo, m); q.rotation.x = -0.75; q.renderOrder = 5;
+      this.group.add(q); this.aurora.push({ q, base: Float32Array.from(geo.attributes.position.array), k });
+    });
+  }
+
   buildMist() {
     this.mist = [];
     if (!this.M.fireflies) return;
@@ -1973,6 +1998,12 @@ export class World {
     this.ambience(dt);
     this.updateFireworks(dt);
     for (const a of this.npcs || []) if (a.mark) a.mark.position.set(a.root.position.x, a.root.position.y + 2.7 + Math.sin(this.t * 4) * 0.12, a.root.position.z);
+    for (const A of this.aurora || []) { // curtains of light ripple across the top of the view
+      const p = this.hero.root.position, q = A.q, a = q.geometry.attributes.position, B = A.base;
+      const port = this.g.camera.aspect < 1; q.position.set(p.x + Math.sin(this.t * 0.07 + A.k) * 3, (port ? 10 : 8.5) + A.k * 0.5, p.z + (port ? -6.5 : 1.2) - A.k * 1.1);
+      for (let i = 0; i < a.count; i++) { const x = B[i * 3]; a.array[i * 3 + 2] = Math.sin(x * 0.16 + this.t * (0.35 + A.k * 0.1) + A.k * 2) * 1.6 + Math.sin(x * 0.05 - this.t * 0.2) * 1.2; a.array[i * 3 + 1] = B[i * 3 + 1] + Math.sin(x * 0.11 + this.t * 0.5 + A.k) * 0.4; }
+      a.needsUpdate = true; q.material.opacity = 0.55 + Math.sin(this.t * 0.6 + A.k * 1.7) * 0.18;
+    }
     for (const m of this.mist || []) { // mist banks drift and wrap round the map, breathing in and out
       const q = m.q, Wd = this.W * TILE; q.position.x += m.v * dt; if (q.position.x > Wd + 4) q.position.x = -4; if (q.position.x < -4) q.position.x = Wd + 4;
       q.position.z += Math.sin(this.t * 0.3 + m.ph) * dt * 0.15; q.scale.y = q.scale.y * 0.999 + (2.8 + Math.sin(this.t * 0.4 + m.ph) * 0.8) * 0.001;
