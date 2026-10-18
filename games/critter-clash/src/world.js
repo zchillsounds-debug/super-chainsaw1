@@ -265,6 +265,15 @@ export class World {
           const g = (dx, dy) => { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= W || Y >= H) return false; const k = this.tile(X, Y); return !'sP~=RlvhB'.includes(k) || (k === 'h' && !'sP'.includes(under(X, Y))); }, rr = 10;
           c.fillStyle = this.phase === 'night' ? ((x + y) % 2 ? '#eeeadc' : '#ebe6d6') : (x + y) % 2 ? '#f4dc9a' : '#f1d894'; /* moonlit sand reads silver, not mud */ c.beginPath(); c.roundRect(x * P, y * P, P, P, [g(-1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, 1) ? rr : 0, g(-1, 0) && g(0, 1) ? rr : 0]); c.fill(); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); } }
       }
+      // ice sheets fill the inside of their bends with a curve too, so a pond reads as a pond, not a plus sign
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if ('iRT'.includes(this.tile(x, y))) continue;
+        for (const [dx, dy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+          if (this.tile(x + dx, y) !== 'i' || this.tile(x, y + dy) !== 'i') continue;
+          const cx = (x + (dx > 0)) * P, cy = (y + (dy > 0)) * P, r = 12;
+          c.fillStyle = C.ice || '#b8e4ff'; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx - dx * r, cy); c.arc(cx - dx * r, cy - dy * r, r, dy > 0 ? Math.PI / 2 : -Math.PI / 2, dx > 0 ? 0 : Math.PI, (dx > 0) === (dy > 0)); c.closePath(); c.fill();
+        }
+      }
       // a doormat on the way out
       if (this.M.exit) { const dx = this.M.enter.x * P, dy = (H - 1) * P; c.fillStyle = '#8a3a2a'; c.beginPath(); c.roundRect(dx + 3, dy + 4, P - 6, P - 8, 4); c.fill(); c.fillStyle = '#ffd84d'; c.font = 'bold 14px sans-serif'; c.textAlign = 'center'; c.fillText('▼', dx + P / 2, dy + P / 2 + 5); }
       // a rug over the Y tiles
