@@ -83,6 +83,7 @@ export const FISH = {
   lava: [['Cinder Carp', 20, 45], ['Ember Eel', 30, 80]],
   cold: [['Cloud Minnow', 6, 16], ['Frostfin', 15, 35]],
   night: [['Moonfin', 14, 38], ['Glimmer Ray', 40, 95]], // only bite after dark (any water but lava)
+  dusk: [['Sunset Snapper', 16, 42], ['Amber Koi', 22, 55]], // only bite in the golden evening (17-20h, any water but lava)
 };
 // Landmark photos: snap a 📸 Photo near each of these (within 4 steps) for the Journal; all eight earn the Shutterbug Cap
 export const LANDMARKS = [
@@ -2063,7 +2064,7 @@ export class World {
       return this.say([`{hero} reels it in... It's a wild ${name}! And it's not happy about it!`], () => this.startWild(id, lo + Math.floor(Math.random() * (hi - lo + 1)), null, Math.random() < SHINY_RATE));
     }
     if (r < 0.7) { // a fish! measured, and Fisher Finn keeps the record book
-      const kinds = FISH[this.phase === 'night' && !this.M.lava && Math.random() < 0.3 ? 'night' : this.M.arena === 'beach' ? 'sea' : this.M.lava ? 'lava' : this.M.snow || this.M.border === 'cloud' ? 'cold' : 'pond'];
+      const kinds = FISH[this.phase === 'night' && !this.M.lava && Math.random() < 0.3 ? 'night' : this.phase === 'evening' && !this.M.lava && Math.random() < 0.3 ? 'dusk' : this.M.arena === 'beach' ? 'sea' : this.M.lava ? 'lava' : this.M.snow || this.M.border === 'cloud' ? 'cold' : 'pond'];
       const k = Math.random() < 0.12 ? kinds.length - 1 : Math.floor(Math.random() * (kinds.length - 1)), [name, lo, hi] = kinds[k];
       const cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };
       L.n++; const rec = !L.best || cm > L.best.cm, sp = (L.sp ||= {}); sp[name] = Math.max(sp[name] || 0, cm);
