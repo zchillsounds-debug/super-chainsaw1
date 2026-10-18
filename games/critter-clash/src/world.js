@@ -148,6 +148,7 @@ export class World {
     this.hx = x; this.hy = y; this.dir = dir; this.moveT = 0; this.from = null;
     this.placeHero();
     this.buildItems(x, y);
+    this.buildBush(x, y);
     this.makeFollower();
     this.camAt = null;
     this.steps = 0;
@@ -728,7 +729,7 @@ export class World {
 
   // hidden treasures: two gift boxes per outdoor map, on reachable open tiles off the beaten path; walk over one to open it
   buildItems(x, y) {
-    this.items = [];
+    this.items = []; this.itemSpots = [];
     if (this.M.indoor || this.key === 'peak') return;
     const seen = new Set([x + ',' + y]), q = [[x, y]];
     for (let i = 0; i < q.length; i++) for (const [dx, dy] of Object.values(DIRS)) {
@@ -743,6 +744,7 @@ export class World {
       const [tx, ty] = ok.splice(Math.floor(rand() * ok.length), 1)[0];
       for (let i = ok.length - 1; i >= 0; i--) if (Math.abs(ok[i][0] - tx) + Math.abs(ok[i][1] - ty) < 7) ok.splice(i, 1); // spread them out
       const flag = `it_${this.key}_${k}`;
+      this.itemSpots.push(tx + ',' + ty);
       if (save.adv.flags[flag]) continue;
       const g = new THREE.Group(), [px, pz] = wpos(tx, ty);
       const box = inked(new THREE.BoxGeometry(0.62, 0.5, 0.62), toon(k ? 0x5ad8ff : 0xff6aa8, { rim: 0.6 }), OL * 0.5); box.position.y = 0.25; g.add(box);
@@ -753,6 +755,71 @@ export class World {
       this.group.add(g);
       this.items.push({ x: tx, y: ty, g, flag, kind: k });
     }
+  }
+
+  // a berry bush at the edge of the trees in every outdoor map: shake it once a day for berries (and now and then a sleepy wild critter)
+  buildBush(x, y) {
+    this.bush = null;
+    if (this.M.indoor || this.key === 'peak') return;
+    const reach = (sx, sy) => {
+      const seen = new Set([sx + ',' + sy]), q = [[sx, sy]];
+      for (let i = 0; i < q.length; i++) for (const [dx, dy] of Object.values(DIRS)) {
+        const nx = q[i][0] + dx, ny = q[i][1] + dy, k = nx + ',' + ny;
+        if (!seen.has(k) && this.walkable(nx, ny) && this.tile(nx, ny) !== 'i') { seen.add(k); q.push([nx, ny]); }
+      }
+      return q;
+    };
+    const all = reach(x, y), N4 = Object.values(DIRS);
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((d) => d.x + ',' + (d.y + 1)), ...this.itemSpots]);
+    const near = (tx, ty, ch, r) => { for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (this.tile(tx + dx, ty + dy) === ch) return true; return false; };
+    const ok = all.filter(([tx, ty]) => '."'.includes(this.tile(tx, ty)) && tx > 0 && ty > 0 && tx < this.W - 1 && ty < this.H - 1 && !taken.has(tx + ',' + ty)
+      && N4.some(([dx, dy]) => 'TP'.includes(this.tile(tx + dx, ty + dy))) && !'TPh#'.includes(this.tile(tx, ty + 1)) && near(tx, ty, ':', 2) && !(this.M.signs || []).some((s) => Math.abs(s.x - tx) + Math.abs(s.y - ty) < 2))
+      .sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    const rand = rng(hash(this.key + ':bush'));
+    while (ok.length) {
+      const [tx, ty] = ok.splice(Math.floor(rand() * ok.length), 1)[0], k = tx + ',' + ty;
+      this.solid.add(k);
+      const nb = N4.map(([dx, dy]) => [tx + dx, ty + dy]).find(([a, b]) => this.walkable(a, b));
+      if (nb && reach(...nb).length === all.length - 1) { if (k !== x + ',' + y) this.makeBush(tx, ty); else this.solid.delete(k); return; }
+      this.solid.delete(k);
+    }
+  }
+
+  makeBush(tx, ty) {
+    const g = new THREE.Group(), [px, pz] = wpos(tx, ty), leaf = this.M.snow ? 0x5aa88a : 0x6ad050;
+    for (const [bx, by, bz, r] of [[0, 0.55, 0, 0.62], [-0.4, 0.38, 0.18, 0.45], [0.4, 0.36, 0.16, 0.45], [0.05, 0.34, 0.38, 0.42]]) {
+      const m = inked(new THREE.SphereGeometry(r, 14, 10), toon(leaf), OL * 0.6); m.position.set(bx, by, bz); g.add(m);
+    }
+    const bg = [];
+    const br = rng(hash(this.key + ':berries'));
+    for (let k = 0; k < 15; k++) {
+      const a = br() * Math.PI * 2, e = 0.15 + br() * 0.9, r = 0.68;
+      const s = new THREE.SphereGeometry(0.13, 8, 6); s.translate(Math.cos(a) * Math.cos(e) * r * 0.85, 0.55 + Math.sin(e) * r * 0.8, Math.sin(a) * Math.cos(e) * r * 0.85 + 0.12); bg.push(s);
+    }
+    const berries = new THREE.Mesh(mergeGeometries(bg), toon(this.M.snow ? 0x7a5aff : 0xff3a5a, { rim: 0.9 })); bg.forEach((s) => s.dispose());
+    g.add(berries);
+    g.position.set(px, 0, pz); this.group.add(g);
+    this.bush = { x: tx, y: ty, g, berries, shake: 0 };
+    berries.visible = save.adv.bush?.[this.key] !== new Date().toISOString().slice(0, 10);
+  }
+
+  shakeBush() {
+    const B = this.bush, day = new Date().toISOString().slice(0, 10);
+    B.shake = 0.7; sfx.foot?.('grass');
+    if (!B.berries.visible) return this.say(['The berry bush rustles. No ripe berries left... They grow back by tomorrow!']);
+    B.berries.visible = false;
+    (save.adv.bush ||= {})[this.key] = day;
+    const n = 1 + Math.floor(Math.random() * 2) + (Math.random() < 0.15 ? 1 : 0);
+    save.berries = (save.berries || 0) + n; persist();
+    const [px, pz] = wpos(B.x, B.y), col = this.M.snow ? 0x7a5aff : 0xff3a5a;
+    for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5) * 1.2, y: 1 + Math.random() * 0.5, z: pz + 0.3, vx: (Math.random() - 0.5) * 2.5, vy: 1.5 + Math.random() * 2, vz: 0.5 + Math.random(), color: col, size: 0.24, life: 0.9, shape: 'glow', additive: false, grav: 7 });
+    sfx.pickup?.();
+    const W = this.M.wild?.list;
+    if (W && Math.random() < 0.15) { // something was napping in there
+      const [id, lo, hi] = W[Math.floor(Math.random() * W.length)];
+      return this.say([`{hero} shook the berry bush! ${n} berr${n > 1 ? 'ies' : 'y'} fell out! 🍓`, 'Huh? Something grumpy tumbles out of the leaves!'], () => this.startWild(id, lo + Math.floor(Math.random() * (hi - lo + 1))));
+    }
+    this.say([`{hero} shook the berry bush! ${n} berr${n > 1 ? 'ies' : 'y'} fell out! 🍓`]);
   }
 
   pickItem() {
@@ -1213,6 +1280,7 @@ export class World {
       if (c.forge && Math.random() < 0.5) this.g.fx.spawn({ x: c.x, y: c.y, z: c.z, vy: 1.6, vx: (Math.random() - 0.5) * 0.6, color: 0xffa030, size: 0.16, life: 0.9, shape: 'glow' });
     }
     for (const [px, pz] of this.vents || []) if (Math.random() < dt * 3) this.g.fx.spawn({ x: px, y: 0.8, z: pz, vy: 1.4, vx: 0.2, color: 0xd8d0d0, alpha: 0.5, size: 0.7, life: 1.8, shape: 'puff', additive: false, grow: 1.2 });
+    if (this.bush?.shake > 0) { const B = this.bush; B.shake -= dt; B.g.rotation.z = Math.sin(B.shake * 40) * B.shake * 0.18; B.g.scale.y = 1 + Math.sin(B.shake * 30) * B.shake * 0.08; }
     if (this.labDish) this.labDish.rotation.y = Math.sin(this.t * 0.4) * 1.2;
     if (this.beacon) this.beacon.material.color.setHex(this.t % 1.6 < 0.25 ? 0xff5050 : 0x5a1818);
     if (this.crown) {
@@ -1338,6 +1406,7 @@ export class World {
       const lines = save.adv.follow ? ['Pip: Squeak! (Pip nuzzles {hero}.)'] : [[`${name} looks really happy to be out exploring with {hero}!`, `${name} bounces on the spot. Adventure!`, `${name} gives {hero} a big hug.`, `${name} sniffs the air. Something good is cooking somewhere...`][Math.floor(Math.random() * 4)]];
       return this.say(lines);
     }
+    if (this.bush && this.bush.x === fx && this.bush.y === fy) return this.shakeBush();
     const sign = (this.M.signs || []).find((s) => s.x === fx && s.y === fy);
     if (sign?.act) return this.S.worldStory(sign.act, this, null);
     if (sign) return this.say([sign.text], null, sign.hide ? '' : '📜 Sign');
