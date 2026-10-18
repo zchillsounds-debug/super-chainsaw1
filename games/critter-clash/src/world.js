@@ -891,7 +891,7 @@ export class World {
     const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xff9040, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.55 }); pm.userData.own = true;
     const pool = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), pm); pool.rotation.x = -Math.PI / 2; pool.position.y = 0.05; g.add(pool);
     this.group.add(g);
-    this.bonfire = { g, flames, sp, pool, px, pz };
+    this.bonfire = { g, flames, sp, pool, px, pz, x, y };
   }
 
   // aurora ribbons hang over the snowy maps at night, waving slowly (they follow the camera, high up)
@@ -2413,6 +2413,10 @@ export class World {
       return this.say(lines);
     }
     if (this.bush && this.bush.x === fx && this.bush.y === fy) return this.shakeBush();
+    if (this.bonfire && this.bonfire.x === fx && this.bonfire.y === fy) { // warm your paws by the beach fire
+      const B = this.bonfire; for (let k = 0; k < 12; k++) this.g.fx.spawn({ x: B.px + (Math.random() - 0.5) * 0.5, y: 1, z: B.pz, vx: (Math.random() - 0.5) * 1.5, vy: 2 + Math.random() * 2, vz: (Math.random() - 0.5) * 1.5, color: 0xffc050, size: 0.18, life: 1.2, shape: 'spark' });
+      return this.say([['The bonfire crackles and pops. {hero} holds out their paws. Toasty!', 'Sparks float up and wink out among the stars. The waves hush on the sand.', '{hero} watches the flames dance for a while. A perfect beach night.'][Math.floor(Math.random() * 3)]]);
+    }
     if (this.dig && ((this.dig.x === fx && this.dig.y === fy) || (this.dig.x === this.hx && this.dig.y === this.hy))) return this.digUp();
     const lost = this.lost?.find((L) => L.x === fx && L.y === fy); if (lost) return this.S.worldStory('found:' + lost.id, this, null);
     if (this.tile(fx, fy) === '~' && save.adv.flags.rod && !this.M.indoor && !this.M.lava) return this.cast();
