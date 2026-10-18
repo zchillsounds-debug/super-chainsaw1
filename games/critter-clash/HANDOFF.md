@@ -2,7 +2,7 @@
 
 ## Start here (for a new chat)
 - Short version for a new chat: `games/critter-clash/CONTINUE.md` (what is where, the paste-in prompt, open questions).
-- **Session 16f (2026-10-18, from 02:54 UTC) is doing R280+; see "Session 16f". The user's 5-hour window, extended by a worker stall, ends at about 10:45 UTC on 2026-10-18.**
+- **Session 16g (2026-10-18, 07:12 UTC) did R305–R323 (see "Session 16g"); the next session continues from R324. Session 16f did R280–R304. The user's window, extended by a worker stall, ends at about 10:45 UTC on 2026-10-18.**
 - Session 16e (02:51–~04:40 UTC on 2026-10-15) did R255–R279 and was the LAST session of the user's 5-hour Adventure window (it ended at 04:45 UTC). Nothing was chained after it: wait for the user before building more. Round numbering continues from R280.** Read "Session 16c", "16d" and "16e" below.
 - Ask the user first: how do weather (rain), the clock of day, grass sway and the smoothie blender feel on their phone? Is the win screen right now (R244b/R277)?
 - **CURRENT FOCUS (session 16+): Adventure mode**, a Pokémon Red/Blue style world with a story. Read "Session 16: ADVENTURE MODE" and "Session 16b" first. The user asked for 5 hours of chained sessions, ending at about **04:45 UTC on 2026-10-15**. The whole story (all 7 cups, 5 trials, Champion's Peak, the ending) is now playable; what's left is **polish** (see "Session 16b → next").
@@ -452,6 +452,26 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - **Checks (07:15 UTC):** tapcheck is clean at 740×360 and 412×915. advcup Sprout signs up at the lobby desk and lands back at the stadium door. advstory Dash at the Thunder door works. advwins route1/frostpeak run error-free.
 - **Perf note:** with the new life, the world measures 277–361 draw calls (shadow pass included) at 915×412 on high quality. Re-measure on a phone if frame rate drops; butterflies (6) and gulls (3) are the easiest to trim.
 - **Next ideas:** show the hero's hat in Adventure fights (battle.js, the user's chat); a Berry Center PC or a critter storage box; more trader stock that rotates by week; a lobby banner/confetti when you return with the trophy; night lanterns on town houses; the Town Map marking the Hat Shop and fishing spots.
+
+## Session 16g (2026-10-18, 07:12–~08:15 UTC, session_01TDGxNUrdWbyYdcQxUeHRjd): Adventure polish + side quests, R305–R323
+- Chained from 16f with the same plan; the user's window ends at about **10:45 UTC on 2026-10-18**. Chained at ~250k context (the user's 300k rule).
+- **R305:** deeper blue nights (`PHASES.night` sunI 0.95, hemiI 0.82); every house (not the Hat Shop, whose awning is there) has a wall lantern by the door, lit with an additive glow sprite at dusk/night.
+- **R306:** rooms follow the clock: `World.outPhase` (the real phase even indoors) makes room windows a starry night (stars + moon boxes) or an orange sunset; `lamp` mood and `roomLamp()` (warm additive floor pool) after dark; the arcade keeps its neon.
+- **R307:** magma cracks on `lava` maps (Cinder Road, Cinder Town): an unlit additive canvas layer (`this.cracks`, forked jagged lines on `.` tiles, own rng), breathing opacity.
+- **R308:** stadium pennants flap (`this.pennants`, hinged geometry); a won stadium spins a gold extruded star over its gate (`this.medals`) and flies gold pennants.
+- **R309:** Trader Tock's bag rotates weekly (2 of 6 trader hats, `wk` from `Date.now()`); new trader hats Chef Hat, Ranger Hat, Horned Helm, Bunny Band (kinds `chef`, `ranger`, `helm`, `bunny`). Hat Shop stands only show hats it sells.
+- **R310:** world ambience: `sfx.ambient(kind)` in audio.js (bird, cricket, surf, rain, wind, hum, bubble, pop) sprinkled by `World.ambience(dt)` per place, clock and weather.
+- **R311:** night beaches: `this.glowTide` (blue sea-spark band on water tiles next to land, beach-arena maps only, pulsing); moonlit sand colours at night.
+- **R312:** Frostpeak's pond is an oval (tiles changed) and ice fills its inner corners with a curve (canvas pass before the doormat).
+- **R313:** ☰ → 📸 Photo: `World.snapshot()` renders a close, low shot of the hero, draws a snapshot frame (caption: hero · place · time icon; two lines on narrow screens) and reuses `PhotoMode.prototype.preview` for Save/Share. (screens.js `worldMenu` got the button.)
+- **R314:** mist banks (`buildMist`, 14 drifting glow planes, `fog: false`) on `fireflies` maps (Glowcap Woods/Hollow).
+- **R315:** 13 new townsfolk (Bloom 3, Seashell 2, Glowcap 2, Cinder Town 2, Cloudtop 2, Frostpeak 2), each with an `act` and a tip.
+- **R316:** fishing lands measured fish per place (`kinds` in `reel()`), 25% of casts; `save.adv.fishLog = {n, best}`; a new record pays 2 berries; Fisher Finn reports your record.
+- **R317:** `World.fireworks(b)` over the stadium the first time `storyIntro` runs in a town after its cup (`fw_<cup>` flag; old saves get one show too).
+- **R318:** portrait rooms look down a bit more steeply.
+- **R319–R323: townsfolk side quests (data-driven).** `LOST` in story.js (who, item, hint, home, ask/wait/found/done lines, reward `hat`/`berries`/`snack`) + `LOST_SPOTS` in world.js (map, solid tile to face) + models in `World.buildLost()`. NPCs with `story: 'lost:<id>'`; facing the spot runs `found:<id>`. Flags `<id>_asked/_found/_done`. Quests: kite (Gale, Cloudtop → Frostpeak tree 22,10; Aviator Cap), camera (Tourist Bo, Cinder Town → Cinder Road rock 28,2; berries + Power Snack), pearl (Mei, Seashell → Route 2 palm 27,7; Sailor Hat), carrot (Kip, Frostpeak → Cloudtop rock 16,9; Fluffy Earmuffs), binos (Wren, Glowcap → Glowcap Woods tree 11,10; berries + snack). Gift hats have `gift: true` (never sold). `questMarks()` floats a ! (favour to ask) or ? (found, return it) over the giver. The ☰ card shows the first open favour (`favourLine()`, small line under the goal).
+- **Checks:** advcup Sprout lands back in the world (a first run failed only because another headless run was hogging the CPU; timings are real-time). Each quest played through with advtour JS. tapcheck at 740×360 ran at the end (see the commit/notes).
+- **Next ideas:** more favours (Bloom's Pricklepuff, Neon City), a favour list page, fish album in the ☰ menu, cups in rain, re-measure world FPS on a phone (lanterns, mist, cracks, tide, ambience add a little), the hero's hat in fights (battle side, the user's chat).
 
 ## Session 15 (2026-10-14, 21:42–~22:20 UTC)
 - **Note for new sessions:** the cloud clone can be shallow and look "ahead 50, behind 50". Run `git fetch --unshallow origin ccr-4fc93d6e-suxlhd` and then `git merge --ff-only origin/ccr-4fc93d6e-suxlhd` before working.
