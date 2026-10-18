@@ -168,6 +168,7 @@ export class World {
     this.buildVolcano(rand);
     this.buildFish();
     this.buildGulls();
+    this.buildButterflies();
     this.buildBuildings();
     this.buildInterior();
     this.buildActors();
@@ -685,6 +686,28 @@ export class World {
       g.scale.setScalar(1.4);
       this.group.add(g);
       this.gulls.push({ g, wings, r: 5 + k * 2.5, sp: 0.35 + k * 0.08, ph: k * 2.1, y: 4 + k * 0.6 });
+    }
+  }
+
+  // butterflies flutter over the flower beds on fine days
+  buildButterflies() {
+    this.flies = [];
+    if (this.M.indoor || this.M.snow || this.M.city || this.M.lava || this.rain || this.phase === 'night') return;
+    const spots = [];
+    for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) if (this.tile(x, y) === 'f') spots.push(wpos(x, y));
+    if (!spots.length) return;
+    const cols = [0xffd84d, 0xff8ac8, 0x8ad8ff, 0xffffff, 0xff9a4a];
+    for (let k = 0; k < Math.min(6, spots.length); k++) {
+      const g = new THREE.Group(), col = cols[k % cols.length], M = toon(col, { rim: 0.6, side: THREE.DoubleSide }), wings = [];
+      for (const sd of [-1, 1]) {
+        const wg = new THREE.Group();
+        const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.bezierCurveTo(sd * 0.3, 0.25, sd * 0.42, 0.05, sd * 0.3, -0.05); sh.bezierCurveTo(sd * 0.35, -0.2, sd * 0.1, -0.25, 0, 0);
+        const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), M); m.rotation.x = -Math.PI / 2; wg.add(m); g.add(wg); wings.push([wg, sd]);
+      }
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.22, 5), toon(0x3a2a2a)); b.rotation.x = Math.PI / 2; g.add(b);
+      g.scale.setScalar(2); this.group.add(g);
+      const [sx, sz] = spots[(k * 7) % spots.length];
+      this.flies.push({ g, wings, sx, sz, ph: k * 1.7 });
     }
   }
 
@@ -1534,6 +1557,12 @@ export class World {
     }
     this.swayGrass();
     this.updateFish2(dt);
+    for (const B of this.flies || []) {
+      const a = this.t * 0.9 + B.ph, x = B.sx + Math.sin(a) * 1.4 + Math.sin(a * 2.3) * 0.4, z = B.sz + Math.cos(a * 0.8) * 1.0;
+      B.g.position.set(x, 0.7 + Math.abs(Math.sin(a * 3)) * 0.5, z);
+      B.g.rotation.y = Math.atan2(Math.cos(a) * 1.4, -Math.sin(a * 0.8) * 0.8);
+      const f = 0.2 + Math.abs(Math.sin(this.t * 14 + B.ph)) * 1.1; for (const [wg, sd] of B.wings) wg.rotation.z = sd * f;
+    }
     for (const B of this.gulls || []) {
       const c = this.hero.root.position, a = this.t * B.sp + B.ph;
       B.g.position.set(c.x + Math.cos(a) * B.r, B.y + Math.sin(a * 2) * 0.3, c.z - 3 + Math.sin(a) * B.r * 0.6);
