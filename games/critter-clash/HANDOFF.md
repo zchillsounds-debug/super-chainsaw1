@@ -867,6 +867,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **R445:** 3 more bottle notes (15).
 - **Considered, skipped:** Neon crowd LOD — Neon night is ~330 draw calls (62 of them the shadow pass); the rest is animated critter parts already merged per joint, so an LOD would save little. A 100% hat reward would count towards its own goal.
 - Regression (production build of 1e4f4bb (R442)): advwins route1/glowcap/ember — 3 wild fights won, no errors.
+- **Final checks (~21:20 UTC, production build of ad1c45c = R445):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town with no errors.
 - **Next ideas:** show "Clashara explored %" on the ☰ card; more Pumpkin Nights touches (a spooky Glowwood night, costumes on wild critters, battle side for any fight visuals); portrait rooms still leave big dark bands above/below; a Critter Box tip in the Journal; Ripples/Kindlekit balance and the Alpha shown big in its battle (battle side, the user's chat); re-measure on a phone.
 
 ## Critique backlog (known issues)
