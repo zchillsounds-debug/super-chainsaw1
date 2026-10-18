@@ -319,6 +319,7 @@ export class World {
     this.buildBottle();
     this.buildScope();
     this.buildBloomFw();
+    this.buildFountain();
     this.buildJellies(rand);
     this.buildSkyLanterns();
     this.buildThanks();
@@ -365,7 +366,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1173,6 +1174,26 @@ export class World {
     const glow = new THREE.Sprite(sm); glow.scale.setScalar(2.6); glow.position.set(-TILE * 1.0, 0.4, -0.2); g.add(glow);
     bakeStatic({ root: g, mats: {}, glow });
     this.scope = { x, y, glow };
+  }
+
+  // Cloudtop Gardens: a tiered wishing fountain in the middle of the lawn, with a little rainbow in its spray (toss in a berry and make a wish, once a day)
+  buildFountain() {
+    this.fountain = null;
+    if (this.key !== 'cloudtop') return;
+    const [x, y] = [8, 9], [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(1.3); this.group.add(g); this.solid.add(x + ',' + y);
+    const stone = toon(0xdce8f4, { rim: 0.5 }), trim = toon(0x6ab8ff), water = toon(0x4ac0ff, { rim: 0.9, emissive: 0x0a3a5a });
+    const tier = (r, h, y0, c) => { const m = inked(new THREE.CylinderGeometry(r, r * 0.92, h, 20), c, OL * 0.4); m.position.y = y0 + h / 2; m.castShadow = true; g.add(m); return m; };
+    tier(1.25, 0.4, 0, stone); tier(1.3, 0.08, 0.4, trim);
+    const pool = new THREE.Mesh(new THREE.CircleGeometry(1.12, 20), water); pool.rotation.x = -Math.PI / 2; pool.position.y = 0.41; g.add(pool);
+    tier(0.16, 0.9, 0.4, stone); tier(0.62, 0.16, 1.2, stone); tier(0.66, 0.05, 1.36, trim);
+    const bowl = new THREE.Mesh(new THREE.CircleGeometry(0.55, 16), water); bowl.rotation.x = -Math.PI / 2; bowl.position.y = 1.37; g.add(bowl);
+    tier(0.09, 0.45, 1.36, stone);
+    const top = inked(new THREE.SphereGeometry(0.2, 12, 8), toon(0xffffff, { rim: 0.8 }), OL * 0.3); top.position.y = 1.95; g.add(top); // a little cloud puff on top
+    for (const [dx, dz] of [[0.14, 0.05], [-0.13, 0.04], [0, -0.12]]) { const q = inked(new THREE.SphereGeometry(0.14, 10, 8), toon(0xffffff, { rim: 0.8 }), OL * 0.25); q.position.set(dx, 1.9, dz); g.add(q); }
+    const rg = new THREE.TorusGeometry(1.15, 0.07, 6, 28, Math.PI), cols = [0xff5a5a, 0xffa040, 0xffe04a, 0x6ae070, 0x5ab8ff, 0xb07aff]; // a rainbow arching through the spray
+    const arcs = cols.map((c, i) => { const m = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.55, depthWrite: false }); m.userData.own = true; const a = new THREE.Mesh(i ? rg : rg, m); a.scale.setScalar(1 - i * 0.075); a.position.set(0, 0.45, -0.1); a.rotation.y = 0.35; g.add(a); return a; });
+    bakeStatic({ root: g, mats: {}, arcs });
+    this.fountain = { x, y, px, pz, arcs };
   }
 
   // Bloom Town on weekend nights (Fri-Sun): fireworks pop over the rooftops every few seconds (just north of the hero, so the high camera sees them)
@@ -2680,6 +2701,7 @@ export class World {
     }
     if (this.twirlT > 0) this.twirlT -= dt;
     if (this.bloomFw) this.updateBloomFw(dt);
+    if (this.fountain) { const F = this.fountain; if (Math.random() < dt * 14) { const a = Math.random() * 6.28; this.g.fx.spawn({ x: F.px + Math.cos(a) * 0.1, y: 2.6, z: F.pz + Math.sin(a) * 0.1, vx: Math.cos(a) * 1.4, vy: 1.8, vz: Math.sin(a) * 1.4, color: 0xd8f4ff, size: 0.16, life: 0.75, shape: 'glow', grav: 6, additive: false, alpha: 0.8 }); } F.arcs.forEach((m, i) => { m.material.opacity = 0.42 + Math.sin(this.t * 1.3 + i * 0.4) * 0.12; }); } // the spray falls into the bowl; the rainbow shimmers
     if (this.sliding && save.adv.skates && Math.random() < dt * 30) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.5, y: 0.15, z: p.z + (Math.random() - 0.5) * 0.5, vy: 0.6 + Math.random(), vx: (Math.random() - 0.5), vz: (Math.random() - 0.5), color: Math.random() < 0.5 ? 0xffffff : 0x9ae0ff, size: 0.16, life: 0.6, shape: Math.random() < 0.4 ? 'star' : 'glow' }); } // skates kick up ice sparkles
     if (this.danceT > 0) { this.danceT -= dt; if (Math.random() < dt * 8) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 1.6 + Math.random(), z: p.z, vy: 1.2, color: this.dance?.cols[Math.floor(Math.random() * 5)].getHex() ?? 0xff5ad8, size: 0.2, life: 0.9, shape: Math.random() < 0.5 ? 'star' : 'glow' }); } }
     if (this.skyLanterns) for (const L of this.skyLanterns) { // each lantern rises for 14 s from a random spot near the hero, then starts again
@@ -2935,6 +2957,7 @@ export class World {
       return this.say([['{hero} dances like nobody is watching. Everybody is watching. Nobody minds!', 'Boom-tss, boom-tss! {hero} spins, hops and strikes a pose.', 'The floor flashes pink, blue and gold under {hero}\'s feet. What a groove!'][Math.floor(Math.random() * 3)]]);
     }
     if (this.scope && this.scope.x === fx && this.scope.y === fy) return this.stargaze();
+    if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
     if (stall) {
       if (stall.kind === 'trinket') return this.say(['TRINKETS: glow rings, spark charms, a keychain shaped like a tiny Jiggawatt...', 'The stall keeper is fast asleep behind the counter. Maybe another night!']);

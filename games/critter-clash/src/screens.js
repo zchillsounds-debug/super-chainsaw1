@@ -972,6 +972,7 @@ export class Screens {
         + bar('🍾', 'Bottles found', A.cnt?.bottle || 0)
         + bar('🪩', 'Nights danced', A.cnt?.dance || 0)
         + bar('⛸️', 'Nights skated', A.cnt?.skate || 0)
+        + bar('⛲', 'Wishes made', A.cnt?.wish || 0)
         + bar('🔭', 'Constellations spotted', (A.consts || []).length, 8)
         + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
     } else if (tab === 'night') { // the star log (Sprout Village's telescope) and the bottle notes read on Seashell's shore

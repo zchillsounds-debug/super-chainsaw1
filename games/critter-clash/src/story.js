@@ -305,6 +305,21 @@ export function storyTalk(S, id, w, a) {
   if (id === 'arcade:hop') return arcade(S, w, true);
   if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
+  if (id === 'wish') { // Cloudtop's wishing fountain: toss in a berry, make a wish; the clouds grant one a day
+    const A = save.adv, day = new Date().toISOString().slice(0, 10);
+    if (A.wish === day) return w.say(['The fountain bubbles happily. One wish a day is plenty, says a little sign. (Come back tomorrow!)']);
+    if ((save.berries || 0) < 1) return w.say(['A wishing fountain! A sign says: "One berry, one wish." {hero} has no berries to toss in.']);
+    return w.ask('Toss a berry into the wishing fountain?', ['Make a wish!', 'Not now'], (i) => {
+      if (i) return;
+      save.berries -= 1; A.wish = day; countUp('wish'); const r = Math.floor(Math.random() * 10);
+      let out;
+      if (r < 2) { save.berries += 5; out = 'The fountain gurgles... and spits out FIVE berries! The clouds must like {hero}. +5 🍓'; sfx.jingle(3); }
+      else if (r < 6) { const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.3)); out = `A warm breeze swirls around {hero}. They feel stronger! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`; sfx.jingle(2); }
+      else { save.berries += 2; out = 'Plip! Two shiny berries bob up out of the water. +2 🍓 (A good deal!)'; sfx.jingle(1); }
+      persist();
+      w.say(['Plop! {hero} tosses a berry into the fountain and makes a wish...', out]);
+    });
+  }
   if (id === 'skates') { // Skater Ivy's night spot on the frozen pond: she lends out a pair of skates for keeps
     const who = 'Skater Ivy', npc = MAPS.frostpeak.npcs.find((n) => n.id === 'aurora');
     if (!save.adv.skates) return w.say([`${who}: Oh! You want to skate too? Here, I always carry a spare pair. Tiny ones, just your size!`, `${who}: With skates on, you don't bonk at the end of a slide. You TWIRL. Try the pond!`], () => { save.adv.skates = true; persist(); S.toast('⛸️ Got Ivy\'s spare skates!'); sfx.jingle(2); }, who);
