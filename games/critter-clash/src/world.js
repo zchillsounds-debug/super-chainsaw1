@@ -178,6 +178,7 @@ export class World {
     this.buildFish();
     this.buildGulls();
     this.buildButterflies();
+    this.buildMist();
     this.buildBuildings();
     this.buildInterior();
     this.buildActors();
@@ -730,6 +731,20 @@ export class World {
   }
 
   // butterflies flutter over the flower beds on fine days
+  // low mist drifting between the trees of the glowing woods (and over any map at night after rain... just the woods for now)
+  buildMist() {
+    this.mist = [];
+    if (!this.M.fireflies) return;
+    const mr = rng(hash(this.key + ':mist'));
+    for (let k = 0; k < 14; k++) {
+      const m = new THREE.MeshBasicMaterial({ map: glowTex(), color: k % 3 ? 0xc8fff4 : 0xe0ccff, transparent: true, depthWrite: false, fog: false, opacity: 0.3 + mr() * 0.15 }); m.userData.own = true;
+      const q = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), m);
+      q.rotation.x = -Math.PI / 2; q.scale.set(5 + mr() * 4, 2.6 + mr() * 1.6, 1);
+      q.position.set(mr() * this.W * TILE, 1.2 + k * 0.05, mr() * this.H * TILE); this.group.add(q);
+      this.mist.push({ q, v: (mr() < 0.5 ? -1 : 1) * (0.25 + mr() * 0.3), ph: mr() * 6 });
+    }
+  }
+
   buildButterflies() {
     this.flies = [];
     if (this.M.indoor || this.M.snow || this.M.city || this.M.lava || this.rain || this.phase === 'night') return;
@@ -1634,6 +1649,10 @@ export class World {
     for (let k = 0; k < (this.pennants?.length || 0); k++) this.pennants[k].rotation.y = Math.sin(this.t * 3.1 + k * 1.7) * 0.35; // stadium pennants flap in the breeze
     for (const m of this.medals || []) m.rotation.y = this.t * 1.6;
     this.ambience(dt);
+    for (const m of this.mist || []) { // mist banks drift and wrap round the map, breathing in and out
+      const q = m.q, Wd = this.W * TILE; q.position.x += m.v * dt; if (q.position.x > Wd + 4) q.position.x = -4; if (q.position.x < -4) q.position.x = Wd + 4;
+      q.position.z += Math.sin(this.t * 0.3 + m.ph) * dt * 0.15; q.scale.y = q.scale.y * 0.999 + (2.8 + Math.sin(this.t * 0.4 + m.ph) * 0.8) * 0.001;
+    }
     if (this.glowTide) this.glowTide.material.opacity = 0.6 + Math.sin(this.t * 1.1) * 0.3 + Math.sin(this.t * 2.9) * 0.1; // waves of sea sparks
     if (this.cracks) this.cracks.material.opacity = 0.75 + Math.sin(this.t * 1.7) * 0.25; // the magma breathes
     if (this.labDish) this.labDish.rotation.y = Math.sin(this.t * 0.4) * 1.2;
