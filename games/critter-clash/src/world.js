@@ -210,6 +210,7 @@ export class World {
     this.buildItems(x, y);
     this.buildBush(x, y);
     this.buildLost();
+    this.buildChamp();
     this.makeFollower();
     this.camAt = null;
     this.steps = 0;
@@ -1074,6 +1075,38 @@ export class World {
       this.group.add(g);
       this.lost.push({ id, x: Q.x, y: Q.y, g });
     }
+  }
+
+  // a stadium lobby whose cup you've won: bunting along the back wall, a CHAMPION banner on the front desk, and confetti the first time you walk in
+  buildChamp() {
+    const M = this.M, cup = M.indoor === 'lobby' && CUPS.find((c) => c.id === M.cup), F = save.adv.flags;
+    if (!cup || !F['cup_' + cup.id]) return;
+    const col = new THREE.Color(cup.color).getHex(), [, bz] = wpos(0, 0), tri = [];
+    for (let x = 1.2 * TILE; x < (this.W - 1.2) * TILE; x += 0.62) {
+      const u = (x - 1.2 * TILE) / ((this.W - 2.4) * TILE), y = 3.02 - Math.sin(u * Math.PI * 3) ** 2 * 0.18, g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute([x - 0.26, y, bz + 1.08, x + 0.26, y, bz + 1.08, x, y - 0.42, bz + 1.12], 3)); g.computeVertexNormals();
+      tri.push([g, [col, 0xffd23f, 0xffffff][tri.length % 3]]);
+    }
+    for (const [g, c] of tri) this.group.add(new THREE.Mesh(g, toon(c, { side: THREE.DoubleSide })));
+    const h = heroDef(), [dx, dz] = wpos(7, 2);
+    const tex = canvasTex(512, 96, (c) => {
+      c.fillStyle = '#ffd23f'; c.fillRect(0, 0, 512, 96); c.fillStyle = cup.color; c.fillRect(7, 7, 498, 82);
+      c.fillStyle = '#ffffff'; c.font = 'bold 42px Lilita One, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText(`🏆 CHAMPION: ${h.name.toUpperCase()} 🏆`, 256, 50, 490);
+    });
+    tex.userData.own = true;
+    const mat = new THREE.MeshBasicMaterial({ map: tex }); mat.userData.own = true;
+    const ban = new THREE.Mesh(new THREE.PlaneGeometry(5.8, 1.08), mat); ban.position.set(dx, 0.58, dz + 0.68); this.group.add(ban);
+    if (!F['lb_' + cup.id]) { // the first time back after the win: the lobby cheers
+      F['lb_' + cup.id] = true; persist();
+      setTimeout(() => {
+        if (this.M !== M || !this.hero) return;
+        const p = this.hero.root.position;
+        for (let i = 0; i < 46; i++) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 6, y: 4 + Math.random() * 1.5, z: p.z - 2 + (Math.random() - 0.5) * 3, vx: (Math.random() - 0.5) * 2, vy: Math.random() * 1.5, vz: (Math.random() - 0.5) * 2, color: [col, 0xffd23f, 0xffffff, 0x5ad8ff][i % 4], size: 0.32, life: 2.2, shape: 'confetti', additive: false, grav: 3, spin: 8, rot: Math.random() * 6 });
+        sfx.jingle?.(3); this.S.toast(`🎉 The lobby cheers for the ${cup.name} champion!`);
+        for (const a of this.npcs || []) if (a.n.id === 'fan1' || a.n.id === 'fan2') a.n.lines = [`Fan: You're the ${cup.name} champion! Can I have your autograph? On my head? Please?`, 'Fan: I saw the whole thing from the top row. That final move... WOW!'];
+      }, 500);
+    } else for (const a of this.npcs || []) if (a.n.id === 'fan1' || a.n.id === 'fan2') a.n.lines = [`Fan: The ${cup.name} champion, right here in the lobby! Everyone, look!`, `Fan: ${h.name} beat the whole line-up. I made a poster of YOU now!`];
   }
 
   buildBush(x, y) {
