@@ -37,6 +37,16 @@ const LAVA = {
   evening: { sun: 0xffa080, sunI: 1.5, sky: 0xffb0a0, gnd: 0x5a2a3a, hemiI: 1.0, fog: 0x6a3a40 },
   night: { sun: 0xc89aff, sunI: 0.95, sky: 0x8a6ab8, gnd: 0x3a1a2a, hemiI: 0.85, fog: 0x2a1424 },
 };
+// the glowcap woods keep their violet daylight but sink into a deep indigo after dark, so the shroom lamps and fireflies carry the light
+const WOODS = {
+  evening: { sun: 0xffb8d8, sunI: 1.05, sky: 0x9a7ae8, gnd: 0x2a3a3a, hemiI: 0.98, fog: 0x2a2244 },
+  night: { sun: 0x8a9aff, sunI: 0.7, sky: 0x5a5ab8, gnd: 0x1a2a3a, hemiI: 0.78, fog: 0x141a34 },
+};
+// Neon City: a magenta dusk, then a deep navy night where every sign pops
+const CITY = {
+  evening: { sun: 0xff9ad0, sunI: 1.2, sky: 0xc88aff, gnd: 0x3a2050, hemiI: 1.1, fog: 0x2a1840 },
+  night: { sun: 0x8a8aff, sunI: 0.75, sky: 0x5a4ab8, gnd: 0x1a1438, hemiI: 0.85, fog: 0x100c28 },
+};
 let AUR;
 const auroraTex = () => AUR ||= canvasTex(256, 128, (c) => {
   for (let x = 0; x < 256; x += 2) { // soft vertical streaks, brightest along a wavy middle band, fading out top and bottom
@@ -218,7 +228,7 @@ export class World {
     // the phone's clock tints outdoor maps that have no mood of their own: golden evenings, soft blue nights
     const hr = save.adv.clock ?? new Date().getHours();
     this.outPhase = hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day'; // what the room windows show
-    this.phase = M.indoor || (M.mood && !M.snow && !M.lava && M.border !== 'cloud') ? 'day' : this.outPhase;
+    this.phase = M.indoor ? 'day' : this.outPhase;
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
     this.rain = canRain(M) && (save.adv.rain ?? rainAt(key, new Date(), hr));
     const shut = M.bramble && !save.adv.flags[M.bramble];
@@ -268,7 +278,7 @@ export class World {
     persist();
     playMusic(this.touring ? 'victory' : M.music || 'camp');
     const B = this.base, lamp = M.indoor && this.outPhase !== 'day' && M.indoor !== 'arcade' && { sun: 0xffd2a0, sunI: B.sunI * (this.outPhase === 'night' ? 0.72 : 0.85), sky: 0xffe2c4, gnd: B.gnd, hemiI: B.hemiI * 0.85, fog: 0xcfeeff }; // lamplight indoors after dark
-    this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || PHASES[this.phase]);
+    this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || PHASES[this.phase]);
     this.banner(M.name + (this.rain ? ' 🌧️' : ''));
   }
 
