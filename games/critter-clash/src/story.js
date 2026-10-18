@@ -9,7 +9,7 @@ import { sfx } from './audio.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
-import { arcadeGame } from './arcade.js';
+import { arcadeGame, skyHop } from './arcade.js';
 import { canRain, rainAt, LOST_SPOTS } from './world.js';
 
 const flags = () => save.adv.flags;
@@ -302,6 +302,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'trader') return trader(w);
   if (id === 'noodles') return noodleCart(w);
   if (id === 'arcade') return arcade(S, w);
+  if (id === 'arcade:hop') return arcade(S, w, true);
   if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
   if (id === 'wardrobe') return wearMenu(w, '', null);
@@ -653,18 +654,21 @@ function trader(w) {
 }
 
 // the Neon City arcade cabinets: a 30-second berry-catching game; the first good score each day pays out in berries
-function arcade(S, w) {
-  const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.arcadeHi || 0;
-  w.ask(`CRITTER CLASH TURBO! Top score: VOLT, 999,999 (he says). ${hi ? `{hero}'s best: ${hi}.` : 'Catch berries, dodge the zaps!'}${A.arcadeDay !== day ? ' Today\'s first good score wins berries!' : ''}`, ['Play!', 'Not now'], (i) => {
+// SKY HOP (the right-hand cabinets) keeps its own best score and its own daily prize
+function arcade(S, w, hop) {
+  const A = save.adv, day = new Date().toISOString().slice(0, 10), HI = hop ? 'hopHi' : 'arcadeHi', DAY = hop ? 'hopDay' : 'arcadeDay', hi = A[HI] || 0;
+  const [lo, mid, top] = hop ? [40, 100, 200] : [60, 150, 300];
+  w.ask(hop ? `SKY HOP! The high score board says VOLT, 8,888 (he says so, anyway). ${hi ? `{hero}'s best: ${hi}.` : 'Tap to flap through the gaps!'}${A[DAY] !== day ? ' Today\'s first good score wins berries!' : ''}`
+    : `CRITTER CLASH TURBO! Top score: VOLT, 999,999 (he says). ${hi ? `{hero}'s best: ${hi}.` : 'Catch berries, dodge the zaps!'}${A[DAY] !== day ? ' Today\'s first good score wins berries!' : ''}`, ['Play!', 'Not now'], (i) => {
     if (i) return;
     w.busy = true;
-    const el = arcadeGame(S.root, S.game.portrait(w.hero.def), (score) => {
+    const el = (hop ? skyHop : arcadeGame)(S.root, S.game.portrait(w.hero.def), (score) => {
       S.game.modalClose = null; w.busy = false;
-      const best = score > hi; if (best) A.arcadeHi = score;
+      const best = score > hi; if (best) A[HI] = score;
       let prize = 0;
-      if (A.arcadeDay !== day) { prize = score >= 300 ? 3 : score >= 150 ? 2 : score >= 60 ? 1 : 0; if (prize) { A.arcadeDay = day; save.berries = (save.berries || 0) + prize; } }
+      if (A[DAY] !== day) { prize = score >= top ? 3 : score >= mid ? 2 : score >= lo ? 1 : 0; if (prize) { A[DAY] = day; save.berries = (save.berries || 0) + prize; } }
       persist(); if (best || prize) sfx.jingle(2);
-      w.say([`GAME OVER! Score: ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`The cabinet rattles... and drops ${prize} 🍓! (One prize a day.)`] : A.arcadeDay !== day ? ['Score 60 or more to win berries! (One prize a day.)'] : [])]);
+      w.say([`GAME OVER! Score: ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`The cabinet rattles... and drops ${prize} 🍓! (One prize a day.)`] : A[DAY] !== day ? [`Score ${lo} or more to win berries! (One prize a day.)`] : [])]);
     });
     S.game.modalClose = () => el.__arcade.close();
   });

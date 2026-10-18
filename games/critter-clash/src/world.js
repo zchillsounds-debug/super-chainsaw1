@@ -1635,7 +1635,7 @@ export class World {
         box('fire', 0.22, 0.22, 0.03, px - 0.3, 1.22, pz - 0.45); box('btn', 0.2, 0.26, 0.03, px + 0.32, 1.25, pz - 0.45); box('pillow', 0.06, 0.25, 0.03, px, 1.48, pz - 0.45);
         continue;
       }
-      if (t === 'X') { box('metal', 1.4, 2.0, 1.0, px, 1.0, pz - 0.3); box('screen', 1.0, 0.7, 0.06, px, 1.45, pz + 0.22); box('btn', 0.8, 0.12, 0.3, px, 0.95, pz + 0.3); }
+      if (t === 'X') { box('metal', 1.4, 2.0, 1.0, px, 1.0, pz - 0.3); box(this.M.indoor === 'arcade' && x > W / 2 ? 'aqua' : 'screen', 1.0, 0.7, 0.06, px, 1.45, pz + 0.22); /* SKY HOP's cabinets glow cyan */ box('btn', 0.8, 0.12, 0.3, px, 0.95, pz + 0.3); }
       if (t === 'Q') {
         const head = this.tile(x, y - 1) !== 'Q';
         box('wood', 1.7, 0.45, TILE, px, 0.22, pz);
