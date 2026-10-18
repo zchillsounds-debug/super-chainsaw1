@@ -847,7 +847,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **R428:** telescope: tap a 🌠 shooting star in the eyepiece to catch it (1 berry a night, `save.adv.shoot`); "Caught a shooting star!" flash over the eyepiece.
 - **Test gotcha:** particles (fireworks, spray, fireflies) expire during the screenshot tools' real-time wait; set `__game.paused = true` at the end of the stop's JS to capture them. An `ask()` answer in tests: `__game.screens.worldObj.dialog.next()` picks the highlighted option (buttons answer on pointerdown, not click).
 - Regression runs (dev server): advgauntlet battle 1 plays from the world and back with no errors.
-- **Final checks (production build of R428):** see below.
+- **Final checks (~20:12 UTC, production build of 786b72c = R428 + handoff):** advcup Sprout wins 3 matches and lands back in Bloom Town with no errors; tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait). A first 740×360 run flagged the title's Challenges/Critterdex/Camp as covered by the footer chips: the menu's 30px `rise` animation (still at its start in headless) slid it over the footer after R420 tightened the layout; short landscape now uses a 6px `riseShort`. Running three checks at once can time out the page load (412×915 did); run tapcheck alone if so.
 - **Next ideas:** a Town Map ⛲ mark or Today count badge on the ☰ button; more constellation variety (a seasonal 9th?); Glowcap/Cinder night events; Route lamps could be wooden lanterns instead of Victorian; Neon crowd draw calls (LOD for far critters); Ripples/Kindlekit balance re-check and the Alpha shown big in its battle (battle side, the user's chat); re-measure on a phone.
 
 ## Critique backlog (known issues)
