@@ -21,7 +21,7 @@ const ROOMS = {
   ],
   center: [
     'WWWWWWWWWWWWW',
-    'WCC.......XCW',
+    'WCCo.....oXCW',
     'W...KKKKK...W',
     'W...........W',
     'WDD.......DDW',
@@ -155,6 +155,7 @@ const ITEMS = {
   F: 'The furnace roars. It\'s so hot your whiskers curl!',
   A: 'A heavy iron anvil, warm to the touch. There\'s a half-finished trophy on it.',
   U: 'A trophy case.',
+  o: 'A pot of pink blossoms.',
   G: 'A tall old clock. Tick... tock... The pendulum swings very slowly. Just like Grandpa.',
   r: 'A creaky rocking chair with a woolly blanket. Grandpa Woolt knitted it himself. Of course he did.',
   k: 'A basket of yarn balls. One has rolled under the chair.',
@@ -190,6 +191,7 @@ export function interiorMap(key) {
     if (t === 'X' && kind === 'center') text = 'A berry smoothie blender. It smells like strawberries.';
     if (t === 'C' && kind === 'center') text = 'Jars of berries line the shelf: strawberry, blueberry, glowberry...';
     if (t === 'C' && kind === 'center' && x === 1) { signs.push({ x, y, text: '', hide: true, act: 'board' }); return; }
+    if (t === 'o') text = { seashell: 'A fish tank! Two little fish chase each other round and round the weeds.', ember: 'A lava lamp. The blobs rise... and sink... and rise. You could watch it all day.', neon: 'A cactus made of neon tubes. It never needs watering!', frostpeak: 'A little potted pine with real snow on it. The nurse keeps it by the window so it stays cold.', cloudtop: 'A cloud tree! Its puffs are soft as pillows.', glowcap: 'A glowcap lamp. It hums very, very quietly.' }[outer] || 'A pot of pink blossoms. They smell like berry jam.';
     if (t === 'X' && kind === 'lab') text = 'A screen shows a growing critter: small, medium, HUGE.';
     if (t === 'C' && bid === 'home') { signs.push({ x, y, text: '', hide: true, act: 'wardrobe' }); return; }
     if (t === 'F' && kind === 'lodge') text = 'A crackling log fire. {hero} warms their paws. Toasty!';
@@ -200,8 +202,8 @@ export function interiorMap(key) {
     signs.push({ x, y, text, hide: true, act: t === 'Q' && bid === 'home' ? 'rest' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
   }));
   return {
-    cup: b.stadium, shroom: outer === 'glowcap' && bid.startsWith('shroom'), cityView: !!O.city && kind === 'house',
-    name: b.label || P.name || (b.id === 'home' ? 'Home' : 'House'),
+    cup: b.stadium, shroom: outer === 'glowcap' && (bid.startsWith('shroom') || !!b.heal), cityView: !!O.city && kind === 'house',
+    name: b.heal ? `${O.name.replace(/ (Town|City|Gardens|Hollow|Village)$/, '')} Berry Center` : b.label || P.name || (b.id === 'home' ? 'Home' : 'House'),
     indoor: kind, tiles, npcs, signs, music: O.music,
     exit: { map: outer, x: b.x + b.door, y: b.y + b.h, dir: 's' },
     enter: { x: door, y: H - 2 },
