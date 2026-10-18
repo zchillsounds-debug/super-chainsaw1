@@ -956,7 +956,7 @@ export class Screens {
         + bar('🎩', 'Hats collected', (A.hats || []).length, SHOP_HATS.length)
         + bar('🐟', 'Kinds of fish', fsp.size, Object.values(FISH).flat().length)
         + bar('📖', 'Critters on your team', save.unlocked.length, CRITTERS.length)
-        + bar('⚔️', 'Peak Gauntlets cleared', A.gauntWins || 0)
+        + bar('🏔️', 'Peak Gauntlets cleared', A.gauntWins || 0)
         + bar('💥', 'Alphas beaten', Object.keys(F).filter((k) => k.startsWith('alpha_')).length)
         + bar('🌿', 'Wild critters met', A.cnt?.wild || 0)
         + bar('🕹️', 'TURBO best', A.arcadeHi || 0)

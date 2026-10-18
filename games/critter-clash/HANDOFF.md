@@ -3,6 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 15:44 UTC** (started 2026-10-18 15:44 UTC by session 17a). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
+- **Session 17b (2026-10-18 16:40–~17:50 UTC, session_01BfaGLYCvgsBvybduPxRouW) did R379–R392 (see "Session 17b"); next round R393.**
 - **Session 17a (2026-10-18 15:44–~16:45 UTC, session_014x9MnMjYZSE8f5qyX4KEM8) did R368–R378 (see "Session 17a"); next round R379.** It chained early at ~280k context.
 - **Run checks against a build, not the dev server:** vite's hot reload kills a running headless check the moment you save a file. Build HEAD into a scratch worktree (`git worktree add <scratch>/wt HEAD --detach`, symlink node_modules, `npx vite build --outDir <scratch>/dist`, `npx vite preview --outDir <scratch>/dist --port 5181`) and run `PORT=5181 node tools/tapcheck.mjs ...` / `PORT=5181 node tools/advcup.mjs ...` (all adv* tools honour PORT now).
 
@@ -783,6 +784,24 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **R377:** Sprout Village gets street lamps (`buildLamps` runs for towns with a Berry Center or `village`).
 - **R378:** Journal → 🏅 Records tab (screens.js `worldJournal('rec')`): progress bars for cups, trainers beaten (12), gift boxes (24), favours, hats, fish kinds, critters on the team, plus Alphas beaten, wild met, arcade best, steps.
 - **Next ideas:** the Alpha shown big in its battle and the hero's hat in fights (battle side, the user's chat); a Hat Shop mirror / more room decor; more arcade games (a second cabinet with a different game); glowcap/neon moods following the clock; a weekly post-game challenge on the Peak; reduce critter draw calls further (an LOD that hides tiny parts on far NPCs); re-measure on a phone.
+
+## Session 17b (2026-10-18, 16:40–~17:50 UTC, session_01BfaGLYCvgsBvybduPxRouW): moods, SKY HOP, Gauntlet, perf, R379–R392
+- The local clone started on stale history; it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start:** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town.
+- **R379:** Glowcap Woods/Hollow (`WOODS`) and Neon City (`CITY`) follow the clock after daytime like `SNOWY`/`LAVA`; `this.phase` is now the clock phase on every outdoor map (only rooms stay 'day'), so lamps, lit windows, sleeping wild critters and fireflies follow too.
+- **R380: SKY HOP**, a second arcade game (`skyHop()` in arcade.js): tap/Space to flap through neon pillars (10 a pillar, 5 a berry, speeds up; one bump ends it). The arcade's right-hand cabinets (`act: 'arcade:hop'`, cyan screens) run it; `arcade(S, w, hop)` in story.js keeps `save.adv.hopHi` / `hopDay` and pays 1/2/3 berries at 40/100/200+. Gotcha: an `ask()`/`say()` line with a colon in its first 20 characters is read as a speaker name ("SKY HOP! Top score:").
+- **R381: Peak Gauntlet (post-game).** Keeper Orla (Hootsy, peak 4,5, `showFlag: 'ending'`, `story: 'gauntlet'`): five Ace battles a week (`gauntletWeek()` = weeks from Monday, `gauntletFoes(wk, hero)` exported from story.js), Lv hero+1..+5, diff 0.74–0.90, flags `gaunt_<wk>_<n>`, +2 berries each; the talk after the 5th win pays 8 berries (`gauntpay_<wk>`), `save.adv.gauntWins++`, and the first clear gives the **Golden Laurel** (new hat kind `laurel`). Flower Crown sits higher and tipped forward. `tools/advgauntlet.mjs [WxH]` plays battle 1 from the world and back.
+- **R382/R383: world perf.** `bakeStatic(cr)` (world.js) merges each world critter's static parts per joint: plain toon parts become one vertex-coloured toon mesh (added to `cr.mats` so the hit flash still works), hulls one mesh with the new per-vertex-width `outlineMatW()` (toon.js; `outlineMat` now stores `userData.ow/oc`, `toon()` stores `userData.rimU/toon`). Parts referenced by the Critter (ears, flames, wings, eyes, lantern...), named or transparent ones are left alone. Used for townsfolk, wild critters, the buddy and the hero. Neon City critter meshes 439 → 260; draw calls Neon 468 → 376, Bloom 367 → 325, Glowcap 300 → 255.
+- **R384:** Town Map ⚔️ on the Peak while this week's Gauntlet is open; the legend is now a short tip plus a row of icon chips (`.wm-key`), so Close fits at 740×360.
+- **R385:** Hat Shop dressing mirror (`V`, `act: 'mirror'` → try on owned hats) and a hat-box tower (`Z`).
+- **R386:** room kinds `toad` (Glowcap's two Toadstool Houses: `J` toadstool stools) and `flat` (Neon's Sky Flat: `N` telescope, `E` beanbag).
+- **R387:** Pecan news `adv9` (tools' news lists include it).
+- **R388:** Glowcap toadstool houses glow after dusk (halo sprite + floor pool in `shroomHouse`).
+- **R389:** Orla shows a ! while the week's Gauntlet is open (`questMarks`).
+- **R390:** Neon night market (`buildMarket()`): GLOW SNACKS and TRINKETS stalls at 14,6 / 17,6 after dusk under a bulb string; first candy floss a night +15% of a level (`save.adv.market`). `this.stalls` checked in `interact()`.
+- **R391:** a PEAK GAUNTLET signpost at peak 3,4; Journal Records counts Gauntlets cleared and the SKY HOP best.
+- **R392:** Cloudtop sky lanterns after dusk (`buildSkyLanterns()`, 7 rising/fading lanterns around the hero).
+- **Checks (17:43 UTC, after R392, on a production build):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout lands back in Bloom Town with no errors; advstory route2 boulder and peak Gauntlet battle 1 both play out clean.
+- **Next ideas:** a third Neon night thing (a DJ stage?), more Gauntlet flavour (Orla's weekly theme, e.g. all one type), the Alpha shown big in its battle and the hero's hat in fights (battle side, the user's chat); merge static parts of stadium crowds/props too; more room decor (Captain's hut, Lodge); Seashell/Frostpeak night events; re-measure on a phone.
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
