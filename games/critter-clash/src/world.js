@@ -1713,7 +1713,7 @@ export class World {
     }
     if (!ok.length) return [];
     const [x, y] = ok[hash(day + this.key) % ok.length];
-    return [{ id: 'trader', x, y, critter: 'diggles', name: 'Trader Tock', dir: 's', story: 'trader', act: 'wave' }];
+    return [{ id: 'trader', x, y, critter: 'pebblepup', name: 'Trader Tock', dir: 's', story: 'trader', act: 'wave' }];
   }
 
   // the bouncy town kids nod off outdoors at night
