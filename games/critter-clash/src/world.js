@@ -104,6 +104,16 @@ export function digLeft(maps) {
   return Object.keys(maps).filter((k) => { const M = maps[k]; return !M.indoor && (M.arena === 'beach' || (M.snow && k !== 'peak') || k === 'ember') && save.adv?.dig?.[k] !== day; });
 }
 
+// one big Alpha wild critter a day, waiting in the tall grass of one visited route (after the Sprout Cup): tougher, worth berries
+export function alphaToday() {
+  const A = save.adv, day = new Date().toISOString().slice(0, 10);
+  if (!A?.flags?.cup_sprout) return null;
+  const maps = Object.keys(MAPS).filter((k) => A.seen?.[k] && MAPS[k].wild?.roam && MAPS[k].tiles.some((r) => r.includes('"')));
+  if (!maps.length) return null;
+  const h = hash(day + ':alpha'), map = maps[h % maps.length], L = MAPS[map].wild.list, [id, , hi] = L[(h >> 4) % L.length];
+  return { map, id, lv: hi + 3, flag: 'alpha_' + day, done: !!A.flags['alpha_' + day] };
+}
+
 // which visited town Trader Tock is in today (none before the Sprout Cup)
 export function traderTown() {
   const towns = ['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak'].filter((k) => save.adv?.seen?.[k]);
@@ -2002,12 +2012,27 @@ export class World {
         const [x, y] = grass.splice(Math.floor(Math.random() * grass.length), 1)[0];
         this.spawnWild(x, y);
       }
+      const al = alphaToday();
+      if (al && al.map === this.key && !al.done) { // today's Alpha: twice as big, a red aura, and it stays put in its patch
+        const r = rng(hash(al.flag)), spots = grass.filter(([x, y]) => !this.occupied?.(x, y));
+        if (spots.length) {
+          const [x, y] = spots[Math.floor(r() * spots.length)];
+          this.spawnWild(x, y, al.id, al.lv);
+          const a = this.wild[this.wild.length - 1]; a.alpha = al; a.root.scale.setScalar(CS * 1.45);
+          const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff5a3a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.6 }); sm.userData.own = true;
+          a.aura = new THREE.Sprite(sm); a.aura.scale.setScalar(3.4); a.aura.position.y = 0.9; a.root.add(a.aura);
+          a.aura.scale.divideScalar(CS * 1.45);
+          const rm = new THREE.MeshBasicMaterial({ color: 0xff4a2a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.8, side: THREE.DoubleSide }); rm.userData.own = true;
+          a.ring = new THREE.Mesh(new THREE.RingGeometry(0.62, 0.8, 28), rm); a.ring.rotation.x = -Math.PI / 2; a.ring.position.y = 0.06; this.group.add(a.ring);
+          setTimeout(() => this.group && this.S.toast(`💥 An Alpha ${a.cr.def.name} prowls the tall grass here!`), 900);
+        }
+      }
     }
   }
 
-  spawnWild(x, y) {
-    const [id, lo, hi] = this.M.wild.list[Math.floor(Math.random() * this.M.wild.list.length)];
-    const lv = lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = Math.random() < SHINY_RATE;
+  spawnWild(x, y, fixId, fixLv) {
+    const [id0, lo, hi] = this.M.wild.list[Math.floor(Math.random() * this.M.wild.list.length)], id = fixId || id0;
+    const lv = fixLv || lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = !fixId && Math.random() < SHINY_RATE;
     const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv));
     cr.root.userData.critter = true; castLite(cr);
     cr.root.scale.setScalar(CS * 0.9);
@@ -2245,6 +2270,7 @@ export class World {
     for (const [fx, fy, fz, k = 1] of this.forgeFire || []) if (Math.random() < dt * 9 * k) this.g.fx.spawn({ x: fx + (Math.random() - 0.5) * 1.4 * k, y: fy, z: fz, vy: 1.2 + Math.random() * 1.6, vx: (Math.random() - 0.5) * 0.6, vz: 0.3 + Math.random() * 0.6, color: Math.random() < 0.6 ? 0xffa030 : 0xffe060, size: 0.14 + Math.random() * 0.1, life: 0.9, shape: 'glow' });
     if (this.thanksFan) { this.thanksFan.rotation.z -= dt * 14; if (Math.random() < dt * 3) this.g.fx.spawn({ shape: 'star', x: this.thanksFan.parent.parent.position.x + (Math.random() - 0.5) * 0.3, y: 0.55 + Math.random() * 0.3, z: this.thanksFan.parent.parent.position.z + (Math.random() - 0.5) * 0.3, vx: -1.1, vz: -0.65, vy: 0.15, life: 0.9, size: 0.18, color: 0xdff6ff }); }
     if (this.rocker?.isObject3D) { const near = this.hero && Math.hypot(this.hero.root.position.x - this.rocker.position.x, this.hero.root.position.z - this.rocker.position.z) < 3.2; this.rockA = (this.rockA ?? 0.04) + ((near ? 0.13 : 0.04) - (this.rockA ?? 0.04)) * Math.min(1, dt * 2); this.rocker.rotation.x = Math.sin(this.t * 1.7) * this.rockA; } // creak... creak...
+    for (const a of this.wild || []) if (a.ring) { const k = 1 + Math.sin(this.t * 4) * 0.12; a.ring.position.x = a.root.position.x; a.ring.position.z = a.root.position.z; a.ring.scale.setScalar(1.6 * k); a.ring.material.opacity = 0.55 + Math.sin(this.t * 4) * 0.25; a.aura.material.opacity = 0.5 + Math.sin(this.t * 4 + 1) * 0.2; }
     if (this.cart) { const C = this.cart; C.lanterns.forEach((l, k) => { l.rotation.z = Math.sin(this.t * 1.6 + k) * 0.12; }); C.glow.material.opacity = 0.42 + Math.sin(this.t * 2.2) * 0.08; if (Math.random() < dt * 2.5) this.g.fx.spawn({ x: C.px + (Math.random() - 0.5) * 0.3, y: 1.9, z: C.pz, vy: 0.8, vx: 0.15, color: 0xf4f0ff, alpha: 0.45, size: 0.35, life: 1.6, shape: 'puff', additive: false, grow: 1.3 }); }
     if (this.bonfire) { const B = this.bonfire; B.flames.forEach((f, k) => { const q = 1 + Math.sin(this.t * (9 + k * 3) + k) * 0.12 + Math.sin(this.t * 23 + k * 2) * 0.06; f.scale.set(1 / Math.sqrt(q), q, 1 / Math.sqrt(q)); }); const fl = 0.85 + Math.sin(this.t * 13) * 0.08 + Math.sin(this.t * 31) * 0.05; B.sp.material.opacity = 0.5 * fl; B.pool.material.opacity = 0.7 * fl; if (Math.random() < dt * 6) this.g.fx.spawn({ x: B.px + (Math.random() - 0.5) * 0.4, y: 0.9, z: B.pz + (Math.random() - 0.5) * 0.4, vx: (Math.random() - 0.5) * 0.6, vy: 1.6 + Math.random() * 1.2, vz: (Math.random() - 0.5) * 0.6, color: 0xffb040, size: 0.14, life: 1.1, shape: 'spark' }); }
     if (this.pendulum) this.pendulum.rotation.z = Math.sin(this.t * 2.2) * 0.22; // tick... tock...
@@ -2353,7 +2379,7 @@ export class World {
       if (this.busy || this.dialog || a.from || a.walking) continue;
       // wandering: town folk shuffle near home; wild critters roam their grass
       a.wanderT -= dt;
-      if ((a.n?.wander && !this.dozing(a.n) || a.wild && this.phase !== 'night') && a.wanderT <= 0) {
+      if ((a.n?.wander && !this.dozing(a.n) || a.wild && !a.alpha && this.phase !== 'night') && a.wanderT <= 0) {
         a.wanderT = (a.wild ? 0.8 : 2) + Math.random() * 2.5;
         const ds = Object.keys(DIRS), d = ds[Math.floor(Math.random() * 4)], [dx, dy] = DIRS[d], nx = a.x + dx, ny = a.y + dy;
         a.dir = d;
@@ -2685,6 +2711,12 @@ export class World {
 
   startWild(id, lv, a, shiny = false) {
     this.busy = true;
+    if (a?.alpha) { // the day's Alpha: a tougher fight, berries and a Power Snack for the win
+      const al = a.alpha, foe = withGear(byId(id), lv); countUp('wild'); sfx.warn?.(); this.bubble(a, '💥');
+      const f = document.createElement('div'); f.className = 'wd-flash'; this.S.root.appendChild(f);
+      save.adv.snackDue = al.flag; // paid out on the next storyIntro after the win
+      return setTimeout(() => this.S.worldFight({ foe, lv, kind: 'wild', name: `Alpha ${foe.name}`, diff: Math.min(0.85, 0.3 + lv * 0.03), flag: al.flag, berries: 3, note: `💥 You beat the Alpha ${foe.name}! +3 🍓 and a Power Snack` }), 900);
+    }
     countUp('wild');
     sfx.warn?.();
     if (a) this.bubble(a, '❗');

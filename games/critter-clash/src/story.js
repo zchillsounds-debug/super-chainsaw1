@@ -18,6 +18,13 @@ const byId = (id) => CRITTERS.find((c) => c.id === id);
 // opening narration, the first time the world loads
 export function storyIntro(S, w) {
   const F = flags();
+  // back from beating the day's Alpha: its Power Snack
+  const due = save.adv.snackDue;
+  if (due && F[due]) {
+    delete save.adv.snackDue;
+    const h = save.adv.hero, c = save.critters[h], r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4)); persist();
+    setTimeout(() => S.toast(r.to > r.from ? `⭐ Power Snack! {hero} grew to Lv ${r.to}!`.replace('{hero}', w.hero?.def?.name || '') : '⭐ The Alpha dropped a Power Snack! (+XP)'), 700);
+  }
   // the first time you're back in a town after winning its cup, fireworks go up over the stadium
   const st = (getMap(w.key)?.buildings || []).find((b) => b.stadium);
   if (st && F['cup_' + st.stadium] && !F['fw_' + st.stadium]) { F['fw_' + st.stadium] = true; persist(); w.fireworks?.(st); }
