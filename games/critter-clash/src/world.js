@@ -1652,8 +1652,10 @@ export class World {
     const H = port ? 21 : 17, D = port ? 10 : 11.5;
     const want = new THREE.Vector3(p.x, H, p.z + D);
     // rooms are small: hold the whole room in view (portrait backs off far enough to fit the room's width)
-    const fit = port ? (this.W * TILE + 1.2) / (2 * Math.tan(Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) * Math.PI / 360) * cam.aspect) : 0;
-    if (this.M.indoor) want.set(this.W * TILE / 2, port ? Math.max(19, fit * 0.93) : 16, this.H * TILE / 2 + (port ? Math.max(6, fit * 0.36) : 9.8));
+    const vw = Math.min(this.W, 9); // wide rooms: portrait shows 9 tiles and pans with the hero
+    const fit = port ? (vw * TILE + 1.2) / (2 * Math.tan(Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) * Math.PI / 360) * cam.aspect) : 0;
+    const rx = vw < this.W ? Math.max(vw * TILE / 2, Math.min((this.W - vw / 2) * TILE, p.x)) : this.W * TILE / 2;
+    if (this.M.indoor) want.set(port ? rx : this.W * TILE / 2, port ? Math.max(19, fit * 0.93) : 16, this.H * TILE / 2 + (port ? Math.max(6, fit * 0.36) : 9.8));
     if (!this.camAt) this.camAt = want.clone(); else this.camAt.lerp(want, 1 - Math.exp(-dt * 8));
     cam.position.copy(this.camAt);
     if (this.M.indoor && port) cam.lookAt(this.camAt.x, 0.4, this.H * TILE / 2 + 1.2);
