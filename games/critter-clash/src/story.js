@@ -9,6 +9,7 @@ import { sfx } from './audio.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
+import { arcadeGame } from './arcade.js';
 import { canRain, rainAt, LOST_SPOTS } from './world.js';
 
 const flags = () => save.adv.flags;
@@ -293,6 +294,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'board') return requestBoard(S, w);
   if (id === 'trader') return trader(w);
   if (id === 'noodles') return noodleCart(w);
+  if (id === 'arcade') return arcade(S, w);
   if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
   if (id === 'wardrobe') return wearMenu(w, '', null);
@@ -641,6 +643,24 @@ function trader(w) {
     save.berries -= h.price; own.push(h.id); A.hat = h.id; persist(); sfx.jingle(2); w.wearHat();
     w.say([`{hero} got the ${h.name}! 🎩`, 'Trader Tock: Splendid! Nobody else in Clashara has one of those.'], null, who);
   }, () => { w.busy = false; w.say(['Trader Tock: Look for me tomorrow. Different town, and new hats every week!'], null, who); }, true); }, who);
+}
+
+// the Neon City arcade cabinets: a 30-second berry-catching game; the first good score each day pays out in berries
+function arcade(S, w) {
+  const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.arcadeHi || 0;
+  w.ask(`CRITTER CLASH TURBO! Top score: VOLT, 999,999 (he says). ${hi ? `{hero}'s best: ${hi}.` : 'Catch berries, dodge the zaps!'}${A.arcadeDay !== day ? ' Today\'s first good score wins berries!' : ''}`, ['Play!', 'Not now'], (i) => {
+    if (i) return;
+    w.busy = true;
+    const el = arcadeGame(S.root, S.game.portrait(w.hero.def), (score) => {
+      S.game.modalClose = null; w.busy = false;
+      const best = score > hi; if (best) A.arcadeHi = score;
+      let prize = 0;
+      if (A.arcadeDay !== day) { prize = score >= 300 ? 3 : score >= 150 ? 2 : score >= 60 ? 1 : 0; if (prize) { A.arcadeDay = day; save.berries = (save.berries || 0) + prize; } }
+      persist(); if (best || prize) sfx.jingle(2);
+      w.say([`GAME OVER! Score: ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`The cabinet rattles... and drops ${prize} 🍓! (One prize a day.)`] : A.arcadeDay !== day ? ['Score 60 or more to win berries! (One prize a day.)'] : [])]);
+    });
+    S.game.modalClose = () => el.__arcade.close();
+  });
 }
 
 // Chef Rumi's noodle cart in Neon City: a bowl of spark noodles once a day (berries for XP), and a hat you can't get anywhere else

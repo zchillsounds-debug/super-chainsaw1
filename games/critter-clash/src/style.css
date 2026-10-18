@@ -994,3 +994,11 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .hat-pick .hero-grid button em { font-style: normal; font-family: var(--display); font-size: 13px; color: #c2385a; }
 .hat-pick .hero-grid button.dear { opacity: .55; }
 .hat-purse { margin-left: 6px; background: rgba(60,40,20,.08); border-radius: 999px; padding: 1px 8px; }
+
+/* the Neon City arcade cabinet (arcade.js) */
+.arcade-wrap { z-index: 40; }
+.arcade { background: linear-gradient(#3a2a6a, #1e1440); border: 4px solid #ff5ad8; border-radius: 18px; padding: 8px 10px 6px; box-shadow: 0 0 24px rgba(255,90,216,.55), 0 6px 0 #120a28; display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 96vw; }
+.arcade .arc-top { display: flex; justify-content: space-between; gap: 12px; width: 100%; color: #fff36b; font-family: var(--display); font-size: 15px; letter-spacing: .5px; text-shadow: 0 0 6px #ff5ad8; }
+.arcade .arc-hud { color: #fff; font-family: var(--body, inherit); font-weight: 800; font-size: 13px; text-shadow: none; white-space: nowrap; }
+.arcade canvas { width: min(88vw, calc((100vh - 96px) * 4 / 3), 560px); aspect-ratio: 4 / 3; border-radius: 10px; image-rendering: pixelated; touch-action: none; background: #140e2a; }
+.arcade .arc-tip { margin: 0; color: #d8c8ff; font-size: 12px; text-align: center; }
