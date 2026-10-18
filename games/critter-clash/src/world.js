@@ -1959,7 +1959,15 @@ export class World {
       sp.lookAt(new THREE.Vector3(nx * ch / cx, ny, nz * ch / cz)); sp.translate(nx * cx, 2.05 + ny * ch, nz * cz); dots.push(sp);
     }
     { const sp = new THREE.SphereGeometry(0.55, 10, 5); sp.scale(1, 0.3, 1); sp.translate(0, 2.05 + ch, 0); dots.push(sp); }
-    G.add(inked(mergeGeometries(dots), toon(0xfff8e8, { emissive: 0x5a5048 }), 0)); dots.forEach((g) => g.dispose());
+    const lit = this.phase !== 'day';
+    G.add(inked(mergeGeometries(dots), toon(0xfff8e8, { emissive: lit ? 0xb8a890 : 0x5a5048 }), 0)); dots.forEach((g) => g.dispose());
+    if (lit) { // after dusk the big toadstool glows: a soft halo over the cap and a coloured pool of light on the grass round its foot
+      const night = this.phase === 'night';
+      const sm = new THREE.SpriteMaterial({ map: glowTex(), color: b.roof, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: night ? 0.45 : 0.3 }); sm.userData.own = true;
+      const halo = new THREE.Sprite(sm); halo.scale.set(cx * 3.2, ch * 2.6, 1); halo.position.y = 2.6; G.add(halo);
+      const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: b.roof, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: night ? 0.5 : 0.3 }); pm.userData.own = true;
+      const pool = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), pm); pool.rotation.x = -Math.PI / 2; pool.scale.set(cx * 3.4, cz * 3.4, 1); pool.position.y = 0.06; G.add(pool);
+    }
     const dx = (b.door + 0.5) * TILE - w / 2, front = rz * Math.sqrt(Math.max(0, 1 - (dx / rx) ** 2));
     const door = inked(new THREE.CylinderGeometry(0.5, 0.5, 0.12, 16, 1, false, -Math.PI / 2, Math.PI), toon(0x8a5a3a), OL * 0.5);
     door.rotation.x = -Math.PI / 2; door.position.set(dx, 0.62, front + 0.05); G.add(door);
