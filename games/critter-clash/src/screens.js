@@ -1028,6 +1028,27 @@ export class Screens {
     return { body, pc };
   }
 
+  // one handy tip a day for the Journal's Today page (only about things the player can already use)
+  tipOfDay() {
+    const A = save.adv, F = A.flags, seen = A.seen || {}, tips = [
+      'Any critter on your team can lead the Adventure: use the Critter Box on the right-hand shelf of a Berry Center.',
+      'Tap the 🗺️ % on the ☰ card to see everything there is to find in Clashara.',
+      'Hold the stick all the way to run outdoors.',
+      'Your buddy walks behind you. Swap them from ☰ → 🐾 Buddy.',
+      'Berry bushes at the edge of town can be shaken once a day.',
+      'Rooms look different after dark: lamps come on, and the windows fill with stars.',
+      '📸 Photo in the ☰ menu saves a picture of your hero right where they stand.',
+      F.rod && 'Night fishing catches fish you never see by day.',
+      (A.hats || []).length && 'Change hats any time from ☰ → 🎩 Hats. Each hat has its own story.',
+      seen.neon && 'The Neon City arcade pays berries for a good score, once a day per game.',
+      seen.village && 'Grandpa\'s telescope in Sprout Village shows a new constellation each night.',
+      seen.cloudtop && 'Toss a berry in the Cloudtop fountain for a wish, once a day.',
+      F.crowned && 'Since you were crowned, route trainers want a rematch once a day, at your level.',
+      pumpkinNights() && 'Pumpkin Nights: the pumpkins by town doors glow after dark, and Glowcap Woods has wisps to catch.',
+    ].filter(Boolean);
+    return tips[Math.floor(Date.now() / 864e5) % tips.length];
+  }
+
   todayBadge() {
     const m = this.root.querySelector('.world-screen .wd-menu');
     if (!m || !save.adv) return;
@@ -1054,7 +1075,8 @@ export class Screens {
       const all = [...rows, ...after], n = all.filter((r) => r[3]).length;
       body = `<li class="jr-head">☀️ Every day <small>${rows.filter((r) => r[3]).length}/${rows.length}</small></li>` + rows.map(row).join('')
         + (after.length ? `<li class="jr-head">🌙 After dark${night ? '' : ' <small>(wait for the evening, or nap at home)</small>'}</li>` + after.map(row).join('') : '')
-        + `<li class="jr-more">${n === all.length ? '🌟 Everything done today! See you tomorrow.' : `${n} of ${all.length} done today. A new day brings everything back!`}</li>`;
+        + `<li class="jr-more">${n === all.length ? '🌟 Everything done today! See you tomorrow.' : `${n} of ${all.length} done today. A new day brings everything back!`}</li>`
+        + `<li class="jr-tip">💡 ${this.tipOfDay()}</li>`;
     } else if (tab === 'night') { // the star log (Sprout Village's telescope) and the bottle notes read on Seashell's shore
       const seen = save.adv.consts || [], read = save.adv.notes || [];
       body = `<li class="jr-head">🔭 Star log <small>${seen.length}/${CONSTELLATIONS.length}</small></li>`
