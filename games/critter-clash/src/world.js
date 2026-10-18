@@ -211,6 +211,7 @@ export class World {
     this.buildMist();
     this.buildAurora();
     this.buildLamps();
+    this.buildThanks();
     this.buildBuildings();
     this.buildInterior();
     this.buildActors();
@@ -804,6 +805,18 @@ export class World {
 
   // butterflies flutter over the flower beds on fine days
   // low mist drifting between the trees of the glowing woods (and over any map at night after rain... just the woods for now)
+  // little after-touches of finished deliveries: Puff's glowcap night-light by the picnic blanket
+  buildThanks() {
+    if (this.key !== 'cloudtop' || !save.adv.flags.lamp_done) return;
+    const n = (this.M.npcs || []).find((x) => x.id === 'picnic'); if (!n) return;
+    const [px, pz] = wpos(n.x, n.y), g = new THREE.Group(); g.position.set(px + 1.0, 0, pz - 0.7);
+    const st = inked(new THREE.CylinderGeometry(0.07, 0.1, 0.4, 8), toon(0xf4e4d0), OL * 0.4); st.position.y = 0.2; g.add(st);
+    const cp = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xff7ab8 })); cp.material.userData.own = true; cp.scale.y = 0.65; cp.position.y = 0.38; g.add(cp);
+    const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff6ab0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: this.phase === 'night' ? 0.9 : 0.5 }); sm.userData.own = true;
+    const sp = new THREE.Sprite(sm); sp.scale.setScalar(1.6); sp.position.y = 0.45; g.add(sp);
+    this.group.add(g);
+  }
+
   // street lamps at the edges of town paths (on tile corners, so they never block a step); lit from dusk
   buildLamps() {
     const M = this.M;
