@@ -1123,7 +1123,7 @@ export class World {
         if (this.M !== M || !this.hero) return;
         const p = this.hero.root.position;
         for (let i = 0; i < 46; i++) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 6, y: 4 + Math.random() * 1.5, z: p.z - 2 + (Math.random() - 0.5) * 3, vx: (Math.random() - 0.5) * 2, vy: Math.random() * 1.5, vz: (Math.random() - 0.5) * 2, color: [col, 0xffd23f, 0xffffff, 0x5ad8ff][i % 4], size: 0.32, life: 2.2, shape: 'confetti', additive: false, grav: 3, spin: 8, rot: Math.random() * 6 });
-        sfx.jingle?.(3); this.S.toast(`🎉 The lobby cheers for the ${cup.name} champion!`);
+        sfx.jingle?.(3); setTimeout(() => this.M === M && this.S.toast(`🎉 The lobby cheers for the ${cup.name} champion!`), 1400);
         for (const a of this.npcs || []) if (a.n.id === 'fan1' || a.n.id === 'fan2') a.n.lines = [`Fan: You're the ${cup.name} champion! Can I have your autograph? On my head? Please?`, 'Fan: I saw the whole thing from the top row. That final move... WOW!'];
       }, 500);
     } else for (const a of this.npcs || []) if (a.n.id === 'fan1' || a.n.id === 'fan2') a.n.lines = [`Fan: The ${cup.name} champion, right here in the lobby! Everyone, look!`, `Fan: ${h.name} beat the whole line-up. I made a poster of YOU now!`];
@@ -1963,7 +1963,7 @@ export class World {
     const H = port ? 21 : 17, D = port ? 10 : 11.5;
     const want = new THREE.Vector3(p.x, H, p.z + D);
     // rooms are small: hold the whole room in view (portrait backs off far enough to fit the room's width)
-    const vw = Math.min(this.W, 9); // wide rooms: portrait shows 9 tiles and pans with the hero
+    const vw = Math.min(this.W, 7.5); // wide rooms: portrait shows 7.5 tiles and pans with the hero
     const fit = port ? (vw * TILE + 1.2) / (2 * Math.tan(Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) * Math.PI / 360) * cam.aspect) : 0;
     const rx = vw < this.W ? Math.max(vw * TILE / 2, Math.min((this.W - vw / 2) * TILE, p.x)) : this.W * TILE / 2;
     if (this.M.indoor) want.set(port ? rx : this.W * TILE / 2, port ? Math.max(19, fit * 0.93) : 16, this.H * TILE / 2 + (port ? Math.max(4, fit * 0.24) : 9.8));
