@@ -856,13 +856,19 @@ export class World {
     const lit = this.phase !== 'day', iron = [], glass = [];
     for (const [cx, cy] of picked) {
       const px = cx * TILE, pz = cy * TILE;
-      const b = new THREE.CylinderGeometry(0.16, 0.2, 0.25, 8); b.translate(px, 0.12, pz); iron.push(b);
-      const p = new THREE.CylinderGeometry(0.06, 0.07, 2.5, 6); p.translate(px, 1.35, pz); iron.push(p);
-      const cap = new THREE.ConeGeometry(0.3, 0.25, 4); cap.rotateY(Math.PI / 4); cap.translate(px, 3.15, pz); iron.push(cap);
-      const g = new THREE.BoxGeometry(0.34, 0.42, 0.34); g.translate(px, 2.82, pz); glass.push(g);
+      // a stout Victorian lamp: stepped base, fluted post with a collar, a framed lantern, a peaked cap and a finial
+      const b = new THREE.CylinderGeometry(0.22, 0.28, 0.3, 8); b.translate(px, 0.15, pz); iron.push(b);
+      const b2 = new THREE.CylinderGeometry(0.14, 0.2, 0.22, 8); b2.translate(px, 0.41, pz); iron.push(b2);
+      const p = new THREE.CylinderGeometry(0.09, 0.11, 2.1, 8); p.translate(px, 1.55, pz); iron.push(p);
+      const col = new THREE.CylinderGeometry(0.15, 0.15, 0.1, 8); col.translate(px, 1.2, pz); iron.push(col);
+      const top = new THREE.CylinderGeometry(0.24, 0.12, 0.14, 4); top.rotateY(Math.PI / 4); top.translate(px, 2.62, pz); iron.push(top);
+      for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const f = new THREE.BoxGeometry(0.05, 0.5, 0.05); f.translate(px + dx * 0.19, 2.94, pz + dz * 0.19); iron.push(f); }
+      const cap = new THREE.ConeGeometry(0.36, 0.32, 4); cap.rotateY(Math.PI / 4); cap.translate(px, 3.35, pz); iron.push(cap);
+      const fin = new THREE.SphereGeometry(0.07, 6, 4); fin.translate(px, 3.56, pz); iron.push(fin);
+      const g = new THREE.BoxGeometry(0.34, 0.46, 0.34); g.translate(px, 2.94, pz); glass.push(g);
       if (lit) {
         const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffc060, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: this.phase === 'night' ? 0.9 : 0.55 }); sm.userData.own = true;
-        const sp = new THREE.Sprite(sm); sp.scale.setScalar(2); sp.position.set(px, 2.85, pz); this.group.add(sp);
+        const sp = new THREE.Sprite(sm); sp.scale.setScalar(2); sp.position.set(px, 2.94, pz); this.group.add(sp);
         const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xffb050, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: this.phase === 'night' ? 0.45 : 0.25 }); pm.userData.own = true;
         const pool = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), pm); pool.rotation.x = -Math.PI / 2; pool.position.set(px, 0.05, pz); this.group.add(pool);
       }
