@@ -4,6 +4,7 @@
 // O potted plant, K counter (talk across it), Y rug (walkable), H hat stand (Hat Shop). Walking south off the doormat goes back out.
 import { MAPS } from './worldmaps.js';
 import { CUPS, CRITTERS } from './data.js';
+const shade = (hex, k) => { const n = parseInt(String(hex).replace('#', ''), 16); return (Math.round((n >> 16 & 255) * k) << 16) | (Math.round((n >> 8 & 255) * k) << 8) | Math.round((n & 255) * k); }; // a colour, dimmed
 
 // stadium lobby trophy cases, left to right, in story order
 export const CUP_ORDER = ['sprout', 'thunder', 'grove', 'champion', 'midnight', 'sky', 'legend'];
@@ -256,8 +257,8 @@ export function interiorMap(key) {
     enter: { x: door, y: H - 2 },
     palette: P.dark ? { a: '#4a3a6a', b: '#46365f' } : P.floor || { a: '#d8a86a', b: '#d2a264' },
     wall: P.wall || (b.stadium ? '#f4ecff' : b.heal ? '#ffe0ec' : '#fff1d8'), rug: P.rug || (b.stadium ? CUPS.find((c) => c.id === b.stadium).color : b.heal ? '#ff7aa8' : '#7aa8ff'),
-    outer: 0x3a2a2a, // a warm dusk around the room, not a black void
-    mood: P.dark ? { sun: 0xd0b0ff, sunI: 1.1, sky: 0xb09aff, gnd: 0x3a2a4a, hemiI: 1.2, fog: 0x1a1410 } : { sun: 0xfff0d8, sunI: 1.3, sky: 0xfff4e0, gnd: 0x8a6a4a, hemiI: 1.25, fog: 0x1a1410 },
+    outer: shade(P.wall || (b.stadium ? '#f4ecff' : b.heal ? '#ffe0ec' : '#fff1d8'), 0.34), // a dim echo of the room's own walls around it (tall phones see a lot of it), not a black void
+    mood: P.dark ? { sun: 0xd0b0ff, sunI: 1.1, sky: 0xb09aff, gnd: 0x3a2a4a, hemiI: 1.2, fog: shade(P.wall || '#4a3a6a', 0.22) } : { sun: 0xfff0d8, sunI: 1.3, sky: 0xfff4e0, gnd: 0x8a6a4a, hemiI: 1.25, fog: shade(P.wall || (b.stadium ? '#f4ecff' : b.heal ? '#ffe0ec' : '#fff1d8'), 0.24) },
   };
 }
 
