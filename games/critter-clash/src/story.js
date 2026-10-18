@@ -464,41 +464,48 @@ function pickPaged(w, q, labels, cb, who, page = 0) {
 // townsfolk side quests: someone lost something; it turns up in another place (world.js LOST_SPOTS draws it there)
 const LOST = {
   kite: {
-    who: 'Kite Flyer Gale', item: 'kite', hat: 'aviator', berries: 3, toast: '🪁',
+    who: 'Kite Flyer Gale', item: 'kite', hat: 'aviator', berries: 3, toast: '🪁', hint: "look in Frostpeak's snowy trees", home: 'Cloudtop Gardens',
     ask: ['Kite Flyer Gale: Wheee... oh. Hello. Sorry, I\'m a bit down. A gust snatched my kite right out of my wings!', 'Kite Flyer Gale: It flew off over the clouds toward Frostpeak. If you ever go there, could you look in the snowy trees for it?', 'Kite Flyer Gale: Red and yellow, with a long bow tail. I\'d be ever so grateful!'],
     wait: ['Kite Flyer Gale: Any luck? It\'s red and yellow with a long bow tail. The wind blew it toward Frostpeak. Check the trees!'],
     found: ['There\'s a red and yellow kite tangled in the branches! {hero} wiggles it free.', 'Kite Flyer Gale in Cloudtop Gardens will be so happy!'],
     done: ['Kite Flyer Gale: Is that... MY KITE?! You found it! A bit frosty, but not a scratch!', 'Kite Flyer Gale: Here, my spare Aviator Cap, goggles and all. And some berries for the trip!', '{hero} got the Aviator Cap! 🧢 +3 🍓', 'Kite Flyer Gale: Wear it from the wardrobe at home or at the Hat Shop. Up, up and away!'],
   },
   camera: {
-    who: 'Tourist Bo', item: 'camera', snack: true, berries: 3, toast: '📷',
+    who: 'Tourist Bo', item: 'camera', snack: true, berries: 3, toast: '📷', hint: "on a rock at the east end of Cinder Road", home: 'Cinder Town',
     ask: ['Tourist Bo: Oh no, oh no. My camera! I had it on Cinder Road, snapping the lava river... and then a vent went WHOOSH and I ran.', 'Tourist Bo: I think I put it down on a rock. Way out east, past the bridge. Could you have a look?'],
     wait: ['Tourist Bo: Still no camera? I left it on a rock at the far east end of Cinder Road, up near the top. Probably toasty by now!'],
     found: ['A camera sits on a warm rock, a bit sooty but fine. {hero} picks it up carefully.', 'Tourist Bo in Cinder Town must be missing it!'],
     done: ['Tourist Bo: MY CAMERA! And look, it still works! ...Oh, it took a photo of a very surprised Kindlekit.', 'Tourist Bo: You\'re a hero! Please, take these berries, and my emergency Power Snack.', '{hero} got 3 berries and a Power Snack! ⭐'],
   },
   pearl: {
-    who: 'Shell Collector Mei', item: 'pearl', hat: 'sailor', berries: 2, toast: '🦪',
+    who: 'Shell Collector Mei', item: 'pearl', hat: 'sailor', berries: 2, toast: '🦪', hint: "under a palm on Route 2", home: 'Seashell Town',
     ask: ['Shell Collector Mei: My lucky pearl! I was showing it to the seagulls on Route 2 and one of them swooped and grabbed it!', 'Shell Collector Mei: Gulls drop shiny things by the palm trees across the river. Could you look there for me?'],
     wait: ['Shell Collector Mei: Did you find my pearl? Try the palms on Route 2, on the sandy side of the river.'],
     found: ['Tucked in a pink shell at the foot of a palm tree... a shining pearl! {hero} scoops it up.', 'Shell Collector Mei in Seashell Town will be thrilled!'],
     done: ['Shell Collector Mei: My lucky pearl! You found it! Oh, I could hug you. I won\'t. Sand everywhere.', 'Shell Collector Mei: Here, this Sailor Hat was my grandpa\'s. He\'d want an adventurer to wear it!', '{hero} got the Sailor Hat! ⚓ +2 🍓'],
   },
   carrot: {
-    who: 'Snowball Kid Kip', item: 'carrot', hat: 'muffs', berries: 2, toast: '🥕',
+    who: 'Snowball Kid Kip', item: 'carrot', hat: 'muffs', berries: 2, toast: '🥕', hint: "somewhere in Cloudtop Gardens", home: 'Frostpeak',
     ask: ['Snowball Kid Kip: Waaah! Somebody pinched my snowman\'s carrot nose! Now he just looks... surprised.', 'Snowball Kid Kip: I saw a critter fly off with it. Up toward the clouds! Cloudtop Gardens, maybe?'],
     wait: ['Snowball Kid Kip: My snowman is still noseless. Check Cloudtop Gardens! Somebody up there likes carrots.'],
     found: ['On a mossy rock: one carrot, with a tiny nibble out of the end. {hero} takes it.', 'Snowball Kid Kip in Frostpeak needs this back!'],
     done: ['Snowball Kid Kip: His NOSE! You found his nose! Ha ha, it has a bite out of it. He looks like he\'s winking now.', 'Snowball Kid Kip: Take my spare earmuffs! They\'re super toasty.', '{hero} got the Fluffy Earmuffs! +2 🍓'],
   },
   binos: {
-    who: 'Owl Watcher Wren', item: 'binoculars', snack: true, berries: 2, toast: '🔭',
+    who: 'Owl Watcher Wren', item: 'binoculars', snack: true, berries: 2, toast: '🔭', hint: "on a low branch in Glowcap Woods", home: 'Glowcap Hollow',
     ask: ['Owl Watcher Wren: Hoo... hoo... where are my binoculars? I was critter-watching in Glowcap Woods and hung them on a branch...', 'Owl Watcher Wren: A low tree just west of the path, south of the old bridge. Could you fetch them for me?'],
     wait: ['Owl Watcher Wren: My binoculars should be hanging on a low branch in Glowcap Woods, west of the path. Hoo!'],
     found: ['A pair of binoculars dangles from a low branch by its strap. {hero} unhooks them.', 'Owl Watcher Wren in Glowcap Hollow will want these!'],
     done: ['Owl Watcher Wren: My binoculars! Hoo hoo hoo! Now I can see EVERYTHING again.', 'Owl Watcher Wren: Please, have my trail snack and some berries. You\'ve earned them.', '{hero} got 2 berries and a Power Snack! ⭐'],
   },
 };
+// the ☰ card's favour line: the first favour still open (found things first)
+export function favourLine() {
+  const F = flags(), open = Object.entries(LOST).filter(([id]) => F[id + '_asked'] && !F[id + '_done']).sort(([a], [b]) => !!F[b + '_found'] - !!F[a + '_found']);
+  if (!open.length) return '';
+  const [id, Q] = open[0], name = Q.who.split(' ').pop();
+  return (F[id + '_found'] ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `${name}'s ${Q.item}: ${Q.hint}`) + (open.length > 1 ? ` (+${open.length - 1} more)` : '');
+}
 function lostQuest(S, w, a, key) {
   const F = flags(), [kind, id] = key.split(':'), Q = LOST[id], who = Q.who;
   if (kind === 'found') {

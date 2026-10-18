@@ -10,7 +10,7 @@ import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { World, newAdventure, heroDef, traderTown } from './world.js';
-import { storyIntro, storyStep, storyTalk, doorAction, nextGoal } from './story.js';
+import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine } from './story.js';
 import { MAPS } from './worldmaps.js';
 
 // trainers and story foes meet the hero partway: an over-levelled hero still gets a fight (the foe climbs
@@ -883,7 +883,7 @@ export class Screens {
     d.innerHTML = `<div class="modal wd-menu-modal"><h2>Adventure</h2>
       <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero${this.worldObj?.M && !this.worldObj.M.indoor && !this.worldObj.M.mood ? ` · ${this.worldObj.rain ? '🌧️ Rain' : { day: '☀️ Day', evening: '🌇 Evening', night: '🌙 Night' }[this.worldObj.phase] || ''}` : ''}</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => k.startsWith('it_')).length}/24 · 📋 ${save.adv.req?.day === new Date().toISOString().slice(0, 10) ? `${save.adv.req.paid.length}/3` : 'new!'}</small></div></div>
       <div class="wd-cups">${['sprout', 'thunder', 'grove', 'champion', 'midnight', 'sky', 'legend'].map((id) => { const c = CUPS.find((x) => x.id === id), on = F['cup_' + id]; return `<span class="${on ? 'on' : ''}" style="--cc:${c.color}" title="${c.name}">${on ? '🏆' : ''}</span>`; }).join('')}${F.crowned ? '<span class="on crown" style="--cc:#ffd23f" title="Critter Crown">👑</span>' : ''}</div>
-      <p class="wd-goal">📜 ${nextGoal(F)}</p>
+      <p class="wd-goal">📜 ${nextGoal(F)}${favourLine() ? `<small class="wd-fav">🤝 ${favourLine()}</small>` : ''}</p>
       <div class="res-btns"></div></div>`;
     const b = d.querySelector('.res-btns');
     const close = () => { d.remove(); this.game.modalClose = null; };

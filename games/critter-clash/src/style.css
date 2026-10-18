@@ -916,6 +916,7 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .wd-cups { display: flex; gap: 6px; justify-content: center; margin: -4px 0 12px; }
 .wd-cups span { width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,.08); box-shadow: inset 0 0 0 3px rgba(0,0,0,.12); display: grid; place-items: center; font-size: 15px; }
 .wd-cups span.on { background: var(--cc); box-shadow: 0 0 0 3px var(--ink), 0 3px 0 3px var(--ink); }
+.wd-fav { display: block; margin-top: 3px; font-size: 12px; font-weight: 700; opacity: .85; }
 .wd-goal { margin: -4px auto 10px; max-width: 420px; font-weight: 800; font-size: 14px; line-height: 1.25; background: rgba(255,210,63,.18); border-radius: 12px; padding: 6px 10px; }
 @media (max-height: 420px) { .wd-goal { font-size: 13px; margin: -6px auto 6px; padding: 4px 8px; } }
 @media (max-height: 420px) { .wd-cups { margin: -6px 0 8px; } .wd-cups span { width: 26px; height: 26px; font-size: 13px; } }
