@@ -287,7 +287,7 @@ export const MAPS = {
     ],
     signs: [{ x: 13, y: 14, text: 'GLOWCAP HOLLOW\nA village of mushrooms, moonlight and very good naps.' }],
     npcs: [
-      { id: 'oakley', x: 12, y: 7, critter: 'lilypop', lv: 9, name: 'Elder Oakley', dir: 's', scale: 1.2, lines: ['Elder Oakley: Hoo hoo. Welcome to the Hollow, young one. My stadium is just behind me.', 'Elder Oakley: Strength opens doors. Friendship opens whole forests.'] },
+      { id: 'oakley', x: 12, act: 'read', y: 7, critter: 'lilypop', lv: 9, name: 'Elder Oakley', dir: 's', scale: 1.2, lines: ['Elder Oakley: Hoo hoo. Welcome to the Hollow, young one. My stadium is just behind me.', 'Elder Oakley: Strength opens doors. Friendship opens whole forests.'] },
       { id: 'nyx', x: 20, y: 12, critter: 'squeakwing', name: 'Nyx', dir: 'w', wander: 1, lines: ['Nyx: Every bat in the woods heard about you helping Pip. Squeak squeak means thank you.', 'Nyx: I fight in the Glowcap Cup too. Bring earplugs.'] },
       { id: 'sleepy', x: 6, act: 'sleep', y: 13, critter: 'snoozlo', name: 'Snoozlo', dir: 's', lines: ['Snoozlo: ...zzz... the Champion Cup... is past the volcano... zzz... too hot... zzz...'] },
     ],
@@ -365,7 +365,7 @@ export const MAPS = {
     ],
     signs: [{ x: 13, y: 8, text: 'CINDER TOWN\nHot springs, hot tempers, and the hottest cup in Clashara.' }],
     npcs: [
-      { id: 'boulder2', x: 14, y: 6, critter: 'rolladillo', lv: 11, name: 'Big Boulder', dir: 's', lines: ["Big Boulder: I run the Champion Stadium. Only critters with three cups get a shot. You've got 'em? Then come on in!", 'Big Boulder: Rolladillo and I have never lost at home. Never! ...Okay, twice.'] },
+      { id: 'boulder2', x: 14, act: 'flex', y: 6, critter: 'rolladillo', lv: 11, name: 'Big Boulder', dir: 's', lines: ["Big Boulder: I run the Champion Stadium. Only critters with three cups get a shot. You've got 'em? Then come on in!", 'Big Boulder: Rolladillo and I have never lost at home. Never! ...Okay, twice.'] },
       { id: 'spa', x: 21, act: 'fan', y: 4, critter: 'pengsicle', name: 'Pengsicle', dir: 'w', wander: 1, lines: ['Pengsicle: Too... hot... I came for the hot springs and I am MELTING.', 'Pengsicle: I hear the Midnight Cup is in a big city with neon lights. Somewhere cooler, I hope!'] },
       { id: 'kid4', x: 9, act: 'hop', y: 12, critter: 'kindlekit', name: 'Kindlekit', dir: 'e', wander: 2, lines: ['Kindlekit: Yip! The volcano rumbles every time someone wins the Champion Cup. Make it RUMBLE!'] },
     ],
@@ -454,7 +454,7 @@ export const MAPS = {
     npcs: [
       { id: 'balloon2', x: 14, y: 12, balloon: 0xff9ac8, name: 'Captain Puff', dir: 'n', story: 'balloon', dest: [{ map: 'neon', x: 24, y: 15, dir: 'w', name: 'Neon City' }, { map: 'frostpeak', x: 11, y: 13, dir: 'n', name: 'Frostpeak', need: 'cup_sky' }] },
       { id: 'sora', x: 4, y: 9, critter: 'hootsy', name: 'Sky Diver Sora', dir: 'e', trainer: { lv: 16, sight: 4, intro: 'Sky Diver Sora: Hoo! I jumped off the island once. Landed on a cloud. Bounced right back! Battle me!', beat: 'Sky Diver Sora: Free-falling... in defeat.', after: 'Sky Diver Sora: Professor Pecan flew up here yesterday. He looked VERY serious.' } },
-      { id: 'petal', x: 19, y: 9, critter: 'clovebun', name: 'Gardener Rosa', dir: 'w', wander: 1, lines: ['Gardener Rosa: Every flower up here grew from a seed a balloon dropped. Isn\'t that lovely?', 'Gardener Rosa: The Sky Cup ends with a very special guest. My lips are sealed!'] },
+      { id: 'petal', x: 19, act: 'water', y: 9, critter: 'clovebun', name: 'Gardener Rosa', dir: 'w', wander: 1, lines: ['Gardener Rosa: Every flower up here grew from a seed a balloon dropped. Isn\'t that lovely?', 'Gardener Rosa: The Sky Cup ends with a very special guest. My lips are sealed!'] },
     ],
   },
 
@@ -494,7 +494,7 @@ export const MAPS = {
     signs: [{ x: 13, y: 12, text: "FROSTPEAK\nLast stop before Champion's Peak. Mittens recommended." }],
     npcs: [
       { id: 'balloon3', x: 12, y: 14, balloon: 0xff9ac8, name: 'Captain Puff', dir: 'w', story: 'balloon', dest: [{ map: 'cloudtop', x: 13, y: 12, dir: 'w', name: 'Cloudtop Gardens' }, { map: 'neon', x: 24, y: 15, dir: 'w', name: 'Neon City' }] },
-      { id: 'aurora', x: 14, y: 6, critter: 'pengsicle', name: 'Skater Ivy', dir: 's', wander: 1, lines: ['Skater Ivy: The frozen lake on the way up the Peak is tricky. Once you start sliding, you can\'t stop until you hit something!', 'Skater Ivy: Plan your slides before you go. Bonk a rock to stop.'] },
+      { id: 'aurora', x: 14, act: 'skate', y: 6, critter: 'pengsicle', name: 'Skater Ivy', dir: 's', wander: 1, lines: ['Skater Ivy: The frozen lake on the way up the Peak is tricky. Once you start sliding, you can\'t stop until you hit something!', 'Skater Ivy: Plan your slides before you go. Bonk a rock to stop.'] },
       { id: 'elder', x: 6, act: 'sleep', y: 12, critter: 'snoozlo', name: 'Old Snoozlo', dir: 'e', lines: ['Old Snoozlo: ...zzz... oh! It\'s you again. Seven cups... you really did it... zzz...', "Old Snoozlo: The Crown Keeper up on the Peak... is a very... very... sleepy king... zzz..."] },
     ],
   },

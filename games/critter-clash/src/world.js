@@ -1814,6 +1814,35 @@ function actPose(w, a, P, t, dt) {
     }
     a.rod.userData.bob.position.y = 0.08 + Math.sin(t * 2.2) * 0.03;
     a.rod.rotation.x = Math.sin(t * 0.8) * 0.05;
+  } else if (act === 'water') { // tending the flower beds with a watering can
+    const pour = (t % 4) < 2.2;
+    P.armRx = pour ? -1.0 : -0.4; P.armRz = 0.5; P.lean = pour ? 0.15 : 0; P.head = pour ? 0.25 : 0;
+    if (!a.prop) {
+      const g = new THREE.Group(), M = toon(0x5ab8e8);
+      const can = inked(new THREE.CylinderGeometry(0.18, 0.2, 0.3, 12), M, OL * 0.4); g.add(can);
+      const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.4, 6), M); sp.rotation.x = 1.0; sp.position.set(0, 0.06, 0.26); g.add(sp);
+      const h = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.025, 6, 10, Math.PI), M); h.position.y = 0.15; g.add(h);
+      g.position.set(0.55, 0.75, 0.45); a.root.add(g); a.prop = g;
+    }
+    a.prop.rotation.x = pour ? 0.6 : 0;
+    if (pour && Math.random() < dt * 14) { const p = new THREE.Vector3(0.55, 0.7, 0.9); a.root.localToWorld(p); w.g.fx.spawn({ x: p.x, y: p.y, z: p.z, vy: -1.5, vx: (Math.random() - 0.5) * 0.4, vz: (Math.random() - 0.5) * 0.4, color: 0x9ad8ff, size: 0.1, life: 0.45, shape: 'glow', additive: false, grav: 6 }); }
+  } else if (act === 'read') { // nose in a book, turning a page now and then
+    P.armLx = P.armRx = -1.2; P.armLz = P.armRz = 0.5; P.head = 0.35;
+    if (!a.prop) {
+      const g = new THREE.Group();
+      for (const sd of [-1, 1]) { const pg = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.03, 0.4), toon(0xfff8e8)); pg.position.x = sd * 0.15; pg.rotation.z = sd * -0.25; g.add(pg); }
+      const cv = inked(new THREE.BoxGeometry(0.66, 0.02, 0.44), toon(0x8a3a5a), OL * 0.3); cv.position.y = -0.03; g.add(cv);
+      g.position.set(0, 0.95, 0.55); g.rotation.x = -0.7; a.root.add(g); a.prop = g;
+    }
+    if ((t % 6) < 0.3) cr.emote('happy', 'o', 0.1);
+  } else if (act === 'skate') { // gliding figure-eights on the spot, arms out
+    const k = Math.sin(t * 1.6);
+    P.lean = 0.2; P.roll = k * 0.25; P.yaw = k * 0.5; P.armLz = P.armRz = 1.3; P.legL = k * 0.4; P.legR = -k * 0.4;
+    cr.emote('happy', 'smile', 0.1);
+    if (Math.random() < dt * 3) w.g.fx.spawn({ x: a.root.position.x + (Math.random() - 0.5), y: 0.1, z: a.root.position.z + (Math.random() - 0.5), color: 0xffffff, size: 0.2, life: 0.5, shape: 'star' });
+  } else if (act === 'flex') { // showing off
+    const on = (t % 3.5) < 1.4;
+    if (on) { P.armLz = P.armRz = 2.0; P.armLx = P.armRx = 0.6; P.sy = 1.05; cr.emote('angry', 'grin', 0.1); }
   }
 }
 function idlePose(P, t) {
