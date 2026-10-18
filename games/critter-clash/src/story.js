@@ -689,7 +689,7 @@ function gauntlet(S, w) {
       const first = !(A.hats || []).includes('laurel');
       if (first) (A.hats ||= []).push('laurel');
       A.gauntWins = (A.gauntWins || 0) + 1; persist(); sfx.jingle(3);
-      return w.say([`${who}: All five Aces, down in one week! You really are the Champion.`, '{hero} got 8 🍓!', ...(first ? ['{hero} got the Golden Laurel! 🏅 (Wear it from the ☰ menu.)'] : []), `${who}: A new line-up climbs the mountain every Monday. See you then!`], null, who);
+      return w.say([`${who}: All five Aces, down in one week! You really are the Champion.`, '{hero} got 8 🍓!', ...(first ? ['{hero} got the Golden Laurel! 🏅 (Wear it from ☰ → 🎩 Hats.)'] : []), `${who}: A new line-up climbs the mountain every Monday. See you then!`], null, who);
     }
     return w.say([`${who}: This week's Gauntlet is cleared. The next five Aces arrive on Monday!`], null, who);
   }
@@ -747,7 +747,8 @@ function noodleCart(w) {
   }, who);
 }
 
-// pick a hat you own (from the Hat Shop, or the wardrobe at home)
+// pick a hat you own (from the Hat Shop, the wardrobe at home, or the ☰ menu)
+export function wearHats(w) { return wearMenu(w, '', null); }
 function wearMenu(w, who, back) {
   const A = save.adv, own = A.hats || [];
   if (!own.length) return w.say([who ? "Milliner Mo: You don't have any hats yet! Have a look around." : 'The wardrobe is empty. The Hat Shop in Bloom Town sells hats for berries!'], back, who);

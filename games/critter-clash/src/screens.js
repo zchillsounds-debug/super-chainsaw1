@@ -11,7 +11,7 @@ import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
 import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH } from './world.js';
-import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek } from './story.js';
+import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats } from './story.js';
 import { MAPS } from './worldmaps.js';
 
 // trainers and story foes meet the hero partway: an over-levelled hero still gets a fight (the foe climbs
@@ -921,6 +921,7 @@ export class Screens {
     b.appendChild(this.btn('Resume', 'primary', close));
     b.appendChild(this.btn('🗺️ Town Map', 'secondary', () => { close(); this.worldMap(); }));
     b.appendChild(this.btn('🐾 Buddy', 'secondary', () => { close(); this.buddyPick(); }));
+    if ((save.adv.hats || []).length && this.worldObj) b.appendChild(this.btn('🎩 Hats', 'secondary', () => { close(); wearHats(this.worldObj); }));
     b.appendChild(this.btn('📔 Journal', 'secondary', () => { close(); this.worldJournal(); }));
     b.appendChild(this.btn('📸 Photo', 'secondary', () => { close(); setTimeout(() => this.worldObj?.snapshot(), 60); }));
     b.appendChild(this.btn('Save & Quit', 'ghost', () => { close(); persist(); this.leaveWorld(); this.title(); }));

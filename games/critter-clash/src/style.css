@@ -1012,3 +1012,17 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .jr-rec em { font-style: normal; font-weight: 800; font-size: 13px; color: #6a4ad8; }
 .jr-rec i { grid-column: 2 / 4; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #7a5aff calc(var(--p) * 100%), rgba(42,22,48,.12) 0); margin-top: 3px; }
 .jr-rec i.full { background: linear-gradient(90deg, #ffc93a, #ff9a3a); }
+/* the ☰ Adventure menu on short landscape phones: hero card on the left, buttons in a 2-column grid on the right, so everything fits without scrolling */
+@media (max-height: 460px) and (min-aspect-ratio: 1/1) {
+  .wd-menu-modal { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); grid-template-rows: auto auto auto 1fr; column-gap: 16px; align-items: start; max-width: 720px; padding: 12px 16px; }
+  .wd-menu-modal h2 { grid-column: 1 / -1; margin-bottom: 4px; font-size: 26px; }
+  .wd-menu-modal .wd-hero, .wd-menu-modal .wd-cups, .wd-menu-modal .wd-goal { grid-column: 1; }
+  .wd-menu-modal .wd-hero { margin-bottom: 8px; }
+  .wd-menu-modal .wd-hero img { width: 60px; height: 60px; }
+  .wd-menu-modal .wd-cups { margin: 0 0 8px; justify-content: flex-start; }
+  .wd-menu-modal .wd-goal { margin: 0; text-align: left; }
+  .wd-menu-modal .res-btns { grid-column: 2; grid-row: 2 / span 3; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0; }
+  .wd-menu-modal .res-btns .btn { margin: 0; padding: 8px 6px; font-size: 16px; min-width: 0; width: 100%; }
+  .wd-menu-modal .res-btns .btn.primary { grid-column: 1 / -1; }
+  .wd-menu-modal .res-btns .btn.small { font-size: 13px; padding: 6px; }
+}
