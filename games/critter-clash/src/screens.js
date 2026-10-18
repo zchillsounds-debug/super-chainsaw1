@@ -195,6 +195,12 @@ export class Screens {
         "{name}, the townsfolk of Clashara need you! Look for a ❗ over someone's head: they've lost something, and they'll thank you with berries or a one-of-a-kind hat. Your new 📔 Journal in the ☰ menu keeps track, and the Town Map shows where to look.",
         "Also: sparkly X marks turn up on the beaches each day (dig!), and the Journal keeps a fish album of every kind you've caught. Win a cup, then pop into that stadium's lobby. They've got something for you!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv5') && !save.news.includes('adv6')) {
+      save.news.push('adv6'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, Clashara keeps growing! Some townsfolk now need a parcel carried to another town. Deliver it, and the one you bring it to will thank you. Look for a ❗, then a ❓ over whoever is waiting.",
+        "Frostpeak has a glinting X in the snow each day: dig for ice gems! And stay up late in the snowy towns. On clear nights an aurora ripples over the mountains, and shooting stars fly over Cloudtop.",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
@@ -887,7 +893,7 @@ export class Screens {
     d.className = 'modal-wrap';
     const F = save.adv.flags, cups = CUPS.filter((c) => F['cup_' + c.id]).length, h = heroDef();
     d.innerHTML = `<div class="modal wd-menu-modal"><h2>Adventure</h2>
-      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero${this.worldObj?.M && !this.worldObj.M.indoor && !this.worldObj.M.mood ? ` · ${this.worldObj.rain ? '🌧️ Rain' : { day: '☀️ Day', evening: '🌇 Evening', night: '🌙 Night' }[this.worldObj.phase] || ''}` : ''}</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => k.startsWith('it_')).length}/24 · 📋 ${save.adv.req?.day === new Date().toISOString().slice(0, 10) ? `${save.adv.req.paid.length}/3` : 'new!'}</small></div></div>
+      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero${this.worldObj?.M && !this.worldObj.M.indoor && (!this.worldObj.M.mood || this.worldObj.M.snow || this.worldObj.M.border === 'cloud') ? ` · ${this.worldObj.rain ? '🌧️ Rain' : { day: '☀️ Day', evening: '🌇 Evening', night: '🌙 Night' }[this.worldObj.phase] || ''}` : ''}</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => k.startsWith('it_')).length}/24 · 📋 ${save.adv.req?.day === new Date().toISOString().slice(0, 10) ? `${save.adv.req.paid.length}/3` : 'new!'}</small></div></div>
       <div class="wd-cups">${['sprout', 'thunder', 'grove', 'champion', 'midnight', 'sky', 'legend'].map((id) => { const c = CUPS.find((x) => x.id === id), on = F['cup_' + id]; return `<span class="${on ? 'on' : ''}" style="--cc:${c.color}" title="${c.name}">${on ? '🏆' : ''}</span>`; }).join('')}${F.crowned ? '<span class="on crown" style="--cc:#ffd23f" title="Critter Crown">👑</span>' : ''}</div>
       <p class="wd-goal">📜 ${nextGoal(F)}${favourLine() ? `<small class="wd-fav">🤝 ${favourLine()}</small>` : ''}</p>
       <div class="res-btns"></div></div>`;
