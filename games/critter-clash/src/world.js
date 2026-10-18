@@ -2510,7 +2510,12 @@ export class World {
         if (this.follower) { const F = this.follower; F.from = [F.x, F.y]; F.x = this.from[0]; F.y = this.from[1]; F.moveT = F.len = STEP * 0.6; }
         return;
       }
-      if (this.sliding) { sfx.ui('back'); this.bumpT = 0.35; }
+      if (this.sliding && !save.adv.skates) { sfx.ui('back'); this.bumpT = 0.35; }
+    }
+    if (this.sliding && save.adv.skates) { // on skates a slide ends in a twirl, not a bump; the first skate of a night is worth a little XP
+      this.twirlT = 0.9; sfx.shimmer?.(4);
+      const day = new Date().toISOString().slice(0, 10);
+      if (this.phase !== 'day' && save.adv.skated !== day) { save.adv.skated = day; countUp('skate'); const hero = save.adv.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.1)); persist(); this.S.toast?.(rr.to > rr.from ? `⛸️ What a twirl! Grew to Lv ${rr.to}!` : '⛸️ What a twirl! +XP'); }
     }
     this.sliding = false;
     // stepping on the doormat goes back outside
@@ -2565,9 +2570,10 @@ export class World {
     if (this.from) {
       const k = 1 - this.moveT / (this.sliding ? STEP * 0.6 : this.stepLen || STEP), [ax, az] = wpos(...this.from), [bx, bz] = wpos(this.hx, this.hy);
       H.root.position.set(ax + (bx - ax) * k, 0, az + (bz - az) * k);
-      if (this.sliding) { idlePose(P, this.t); P.lean = -0.15; P.armLz = P.armRz = 1.2; H.emote?.('happy', 'o', 0.1); } else { walkPose(P, this.running ? this.t * 1.5 : this.t); if (this.running) P.lean = 0.3; }
+      if (this.sliding) { idlePose(P, this.t); P.lean = -0.15; P.armLz = P.armRz = 1.2; H.emote?.('happy', 'o', 0.1); if (save.adv.skates) { P.lean = 0.1; P.legL = -0.6; P.armLz = 1.5; P.armRz = 0.6; H.emote?.('happy', 'grin', 0.1); } } else { walkPose(P, this.running ? this.t * 1.5 : this.t); if (this.running) P.lean = 0.3; }
     } else {
       idlePose(P, this.t);
+      if (this.twirlT > 0) { P.yaw = (1 - this.twirlT / 0.9) * Math.PI * 4; P.armLz = P.armRz = 1.4; P.legL = -0.4; H.emote('happy', 'grin', 0.1); }
       if (this.danceT > 0) { const b = Math.abs(Math.sin(this.t * 7)); P.y = b * 0.22; P.roll = Math.sin(this.t * 3.5) * 0.22; P.yaw = Math.sin(this.t * 1.8) * 0.7; P.armLz = 1.3 + Math.sin(this.t * 7) * 0.6; P.armRz = 1.3 - Math.sin(this.t * 7) * 0.6; P.legL = Math.sin(this.t * 7) * 0.5; P.legR = -P.legL; H.emote('happy', 'grin', 0.1); }
       if (this.fishing) { P.armLx = P.armRx = -1.1 + Math.sin(this.t * 0.8) * 0.06; P.armLz = P.armRz = 0.2; if (this.fishing.phase === 'bite') { P.lean = 0.2; H.emote('happy', 'open', 0.1); } }
       // left alone, the hero gets bored: looks around, stretches, yawns, then dozes off
@@ -2645,6 +2651,8 @@ export class World {
       if (beat !== D.beat) { D.beat = beat; const ca = D.floor.geometry.attributes.color; D.tiles.forEach((k, i) => { const c = D.cols[(k + beat) % D.cols.length], m = (k + beat) % 2 ? 1 : 0.45; for (let v = 0; v < 4; v++) ca.setXYZ(i * 4 + v, c.r * m, c.g * m, c.b * m); }); ca.needsUpdate = true; }
       D.discs.forEach((d, k) => { d.rotation.y += dt * (k ? 3.2 : 4); }); D.glow.material.color.copy(D.cols[beat % D.cols.length]); D.glow.material.opacity = 0.3 + (beat % 2) * 0.12;
     }
+    if (this.twirlT > 0) this.twirlT -= dt;
+    if (this.sliding && save.adv.skates && Math.random() < dt * 30) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.5, y: 0.15, z: p.z + (Math.random() - 0.5) * 0.5, vy: 0.6 + Math.random(), vx: (Math.random() - 0.5), vz: (Math.random() - 0.5), color: Math.random() < 0.5 ? 0xffffff : 0x9ae0ff, size: 0.16, life: 0.6, shape: Math.random() < 0.4 ? 'star' : 'glow' }); } // skates kick up ice sparkles
     if (this.danceT > 0) { this.danceT -= dt; if (Math.random() < dt * 8) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 1.6 + Math.random(), z: p.z, vy: 1.2, color: this.dance?.cols[Math.floor(Math.random() * 5)].getHex() ?? 0xff5ad8, size: 0.2, life: 0.9, shape: Math.random() < 0.5 ? 'star' : 'glow' }); } }
     if (this.skyLanterns) for (const L of this.skyLanterns) { // each lantern rises for 14 s from a random spot near the hero, then starts again
       L.t += dt; if (L.t > 14 || !L.x) { L.t %= 14; L.x = this.hero.root.position.x + (Math.random() - 0.5) * 22; L.z = this.hero.root.position.z + (Math.random() - 0.3) * 14; }

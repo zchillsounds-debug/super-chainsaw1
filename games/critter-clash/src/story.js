@@ -305,6 +305,12 @@ export function storyTalk(S, id, w, a) {
   if (id === 'arcade:hop') return arcade(S, w, true);
   if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
+  if (id === 'skates') { // Skater Ivy's night spot on the frozen pond: she lends out a pair of skates for keeps
+    const who = 'Skater Ivy', npc = MAPS.frostpeak.npcs.find((n) => n.id === 'aurora');
+    if (!save.adv.skates) return w.say([`${who}: Oh! You want to skate too? Here, I always carry a spare pair. Tiny ones, just your size!`, `${who}: With skates on, you don't bonk at the end of a slide. You TWIRL. Try the pond!`], () => { save.adv.skates = true; persist(); S.toast('⛸️ Got Ivy\'s spare skates!'); sfx.jingle(2); }, who);
+    const L = npc?.night?.lines || [];
+    return w.say([Math.random() < 0.4 ? `${who}: Nice skates! Slide across the pond and finish with a twirl. The first twirl of the night makes you stronger. Probably.` : L[Math.floor(Math.random() * L.length)]], null, who);
+  }
   if (id === 'wardrobe') return wearMenu(w, '', null);
   if (id === 'mirror') { // the Hat Shop's dressing mirror: try on any hat you own
     if (!(save.adv.hats || []).length) return w.say(['{hero} strikes a pose in the mirror. Looking good! ...A hat would look even better.']);
