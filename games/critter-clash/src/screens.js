@@ -227,6 +227,12 @@ export class Screens {
         "{name}, Clashara has a night life! After dark, DJ Tumble spins records on Neon City's plaza: step onto the light-up floor and dance. Frostpeak lights ice lanterns around the frozen pond, and Skater Ivy skates there under the aurora.",
         "Anglers, listen up: some fish only bite at night. Moonfins swim in any water after dark, and some say there's a Glimmer Ray too. Champions: each week's Peak Gauntlet now has a type theme. And you can change hats any time from ☰ → 🎩 Hats!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv10') && !save.news.includes('adv11')) {
+      save.news.push('adv11'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, look up! Grandpa's old telescope stands by the trees in Sprout Village. A different critter constellation rises each night: eight in all. Bloom Town sets off fireworks on Friday, Saturday and Sunday nights, too!",
+        "Cloudtop Gardens has a wishing fountain now (one berry, one wish, once a day), and Skater Ivy lends out skates on Frostpeak's pond after dark. Your Journal has a new 📅 Today page that lists everything you can do each day.",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
