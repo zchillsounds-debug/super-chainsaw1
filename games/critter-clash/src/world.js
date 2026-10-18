@@ -167,6 +167,7 @@ export class World {
     this.buildForest(rand);
     this.buildVolcano(rand);
     this.buildFish();
+    this.buildGulls();
     this.buildBuildings();
     this.buildInterior();
     this.buildActors();
@@ -663,6 +664,28 @@ export class World {
     const tail = inked(new THREE.ConeGeometry(0.16, 0.28, 4), M, OL * 0.4); tail.rotation.x = -Math.PI / 2; tail.scale.x = 0.3; tail.position.z = -0.42; g.add(tail);
     for (const sd of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 4), toon(0x1a1a2a)); e.position.set(sd * 0.12, 0.06, 0.2); g.add(e); }
     g.scale.setScalar(1.6); g.visible = false; this.group.add(g); this.fishMesh = g;
+  }
+
+  // seagulls wheel over the beach maps, wings flapping, shadows on the sand
+  buildGulls() {
+    this.gulls = [];
+    if (this.M.arena !== 'beach' || this.M.indoor) return;
+    const W = toon(0xffffff, { rim: 0.6 }), T = toon(0x9aa4b4);
+    for (let k = 0; k < 3; k++) {
+      const g = new THREE.Group();
+      const body = inked(new THREE.SphereGeometry(0.16, 10, 8), W, OL * 0.4); body.scale.set(0.8, 0.8, 1.8); g.add(body);
+      const beak = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.16, 6), toon(0xffb030)); beak.rotation.x = Math.PI / 2; beak.position.z = 0.34; g.add(beak);
+      const wings = [];
+      for (const sd of [-1, 1]) {
+        const wg = new THREE.Group(); wg.position.x = sd * 0.08;
+        const wm = inked(new THREE.BoxGeometry(0.7, 0.03, 0.26), W, OL * 0.3); wm.position.x = sd * 0.35; wg.add(wm);
+        const tip = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.035, 0.22), T); tip.position.x = sd * 0.62; wg.add(tip);
+        g.add(wg); wings.push([wg, sd]);
+      }
+      g.scale.setScalar(1.4);
+      this.group.add(g);
+      this.gulls.push({ g, wings, r: 5 + k * 2.5, sp: 0.35 + k * 0.08, ph: k * 2.1, y: 4 + k * 0.6 });
+    }
   }
 
   updateFish2(dt) {
@@ -1511,6 +1534,12 @@ export class World {
     }
     this.swayGrass();
     this.updateFish2(dt);
+    for (const B of this.gulls || []) {
+      const c = this.hero.root.position, a = this.t * B.sp + B.ph;
+      B.g.position.set(c.x + Math.cos(a) * B.r, B.y + Math.sin(a * 2) * 0.3, c.z - 3 + Math.sin(a) * B.r * 0.6);
+      B.g.rotation.y = Math.atan2(-Math.sin(a), Math.cos(a) * 0.6); B.g.rotation.z = 0.25;
+      const f = Math.sin(this.t * 7 + B.ph) * 0.6; for (const [wg, sd] of B.wings) wg.rotation.z = sd * f;
+    }
     for (const D of this.drones || []) { // they zip past over the hero's part of town
       const c = this.hero.root.position, u = this.t * D.sp + D.ph * 4, x = (u % 36) - 18, dir = Math.floor(u / 36) % 2 ? -1 : 1;
       D.g.position.set(c.x + x * dir, D.y + Math.sin(this.t * 2 + D.ph) * 0.15, c.z - 7 + D.ph * 0.4 + Math.sin(this.t * 0.5 + D.ph) * 1.5);
