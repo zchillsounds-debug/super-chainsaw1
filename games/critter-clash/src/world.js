@@ -238,7 +238,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1346,6 +1346,10 @@ export class World {
           if (x === 6) { const wh = new THREE.TorusGeometry(0.5, 0.06, 6, 20); wh.translate(px, 2.0, pz + 1.08); add('wood', wh); for (let k = 0; k < 4; k++) { const sp = new THREE.BoxGeometry(1.35, 0.07, 0.07); sp.rotateZ(k * Math.PI / 4); sp.translate(px, 2.0, pz + 1.09); add('wood', sp); } const hb = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 10); hb.rotateX(Math.PI / 2); hb.translate(px, 2.0, pz + 1.1); add('gold', hb); }
         }
         if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C' && this.M.indoor !== 'lobby' && this.M.indoor !== 'cabin') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); if (this.outPhase === 'night') { box('stars', 0.07, 0.07, 0.1, px - 0.3, 2.15, pz + 1.04); box('stars', 0.05, 0.05, 0.1, px + 0.1, 2.0, pz + 1.04); box('stars', 0.06, 0.06, 0.1, px + 0.32, 2.2, pz + 1.04); box('moon', 0.2, 0.2, 0.1, px + 0.25, 1.75, pz + 1.04); } }
+        if (back && this.M.cityView && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C') for (let k = 0; k < 4; k++) { // Neon City outside the window: a skyline with lit windows
+          const bh = 0.25 + ((x * 7 + k * 5) % 6) * 0.08; box('skyline', 0.24, bh, 0.04, px - 0.39 + k * 0.26, 1.45 + bh / 2, pz + 1.07);
+          if ((x + k) % 2) box('lit', 0.06, 0.06, 0.03, px - 0.39 + k * 0.26, 1.5 + bh * 0.6, pz + 1.09);
+        }
       }
       if (t === 'C' && this.M.indoor === 'center' && x === 1) { // the request board: cork, pinned notes
         box('wood', 1.9, 1.5, 0.2, px, 1.9, pz - 0.85); box('cork', 1.7, 1.3, 0.22, px, 1.9, pz - 0.84);
@@ -1396,6 +1400,12 @@ export class World {
           else if (v === 2) { const pl = new THREE.CylinderGeometry(0.34, 0.3, 0.05, 14); pl.translate(px, 0.99, pz); add('plate', pl); for (let k = 0; k < 3; k++) { const b = new THREE.SphereGeometry(0.11, 8, 6); b.translate(px + Math.cos(k * 2.1) * 0.12, 1.08, pz + Math.sin(k * 2.1) * 0.12); add('berry', b); } }
         }
       }
+      if (t === 'O' && this.M.shroom) { // a glowcap lamp: a tall stem under a softly glowing spotted cap (it breathes out spores)
+        const k = (this.lampPools?.length || 0) % 2, st = new THREE.CylinderGeometry(0.14, 0.22, 1.5, 8); st.translate(px, 0.75, pz); add('head', st);
+        const cp = new THREE.SphereGeometry(0.62, 14, 7, 0, Math.PI * 2, 0, Math.PI / 2); cp.scale(1, 0.6, 1); cp.translate(px, 1.45, pz); add('cap' + k, cp);
+        this.shrooms.push([px, 1.7, pz, k ? 0xff7ab8 : 0x5affd8]); (this.lampPools ||= []).push([px, pz, k ? 0xff5aa8 : 0x3affd0]);
+        continue;
+      }
       if (t === 'O') {
         const p = new THREE.CylinderGeometry(0.4, 0.3, 0.6, 10); p.translate(px, 0.3, pz); add('pot', p);
         for (let k = 0; k < 3; k++) { const l = new THREE.IcosahedronGeometry(0.45 - k * 0.08, 1); l.translate(px + Math.sin(k * 2.1) * 0.2, 0.9 + k * 0.38, pz + Math.cos(k * 2.1) * 0.2); add('leaf', l); }
@@ -1445,10 +1455,10 @@ export class World {
         const cup = new THREE.CylinderGeometry(0.16, 0.08, 0.3, 10); cup.translate(px - 0.2, 0.95, pz); add('gold', cup);
       }
     }
-    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 }[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, door0: 0xc8845a, door1: 0xd8946a };
+    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, door0: 0xc8845a, door1: 0xd8946a };
     for (const k in L) {
       if (k === 'pane') { const m = new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: 0xd8f0ff, transparent: true, opacity: 0.22, depthWrite: false })); m.material.userData.own = true; this.group.add(m); L[k].forEach((g) => g.dispose()); continue; }
-      const glow = k === 'fire' || k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1';
+      const glow = k === 'cap0' || k === 'cap1' || k === 'lit' || k === 'fire' || k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1';
       const m = glow ? new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'screen' && this.M.indoor === 'arcade' ? 0xff8ae8 : C[k] })) : inked(mergeGeometries(L[k]), toon(C[k] ?? 0xffffff, { rim: 0.3 }), k === 'book0' || k === 'book1' || k === 'book2' ? OL * 0.3 : OL * 0.6);
       if (glow) m.material.userData.own = true;
       m.castShadow = !glow && k !== 'trim'; m.receiveShadow = true;
@@ -1456,6 +1466,10 @@ export class World {
       L[k].forEach((g) => g.dispose());
     }
     this.roomLamp();
+    for (const [lx, lz, col] of this.lampPools || []) { // glowcap lamps light the floor around them
+      const m = new THREE.MeshBasicMaterial({ map: glowTex(), color: col, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.35 }); m.userData.own = true;
+      const pool = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), m); pool.rotation.x = -Math.PI / 2; pool.position.set(lx, 0.04, lz); this.group.add(pool);
+    }
     for (const [fx, , fz, k = 1] of this.forgeFire || []) { // the furnace lights the floor in front of it
       const m = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xff7a2a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.5 }); m.userData.own = true;
       const pool = new THREE.Mesh(new THREE.PlaneGeometry(6 * k + 1, 4.5 * k + 1), m); pool.rotation.x = -Math.PI / 2; pool.position.set(fx, 0.04, fz + 1.4 * k + 0.4); this.group.add(pool); this.forgePool = pool;
