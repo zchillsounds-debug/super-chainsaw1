@@ -315,6 +315,7 @@ export class World {
     this.buildMarket();
     this.buildDance();
     this.buildIceLanterns();
+    this.buildBottle();
     this.buildJellies(rand);
     this.buildSkyLanterns();
     this.buildThanks();
@@ -361,7 +362,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1124,6 +1125,26 @@ export class World {
     const gm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff5ad8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.35 }); gm.userData.own = true;
     const glow = new THREE.Sprite(gm); const [fx, fz] = wpos(16.5, 10.5); glow.position.set(fx, 1.2, fz); glow.scale.set(7, 4, 1); this.group.add(glow);
     this.dance = { tiles, cols, discs, glow, floor, beat: -1, x: [15, 16], y: 9, px: bx, pz: bz };
+  }
+
+  // Seashell Town at night: a message in a bottle washes up somewhere on the shore (a new one each night; read it for a tip and a berry)
+  buildBottle() {
+    this.bottle = null;
+    const day = new Date().toISOString().slice(0, 10);
+    if (this.key !== 'seashell' || this.phase === 'day' || save.adv.bottle === day) return;
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.itemSpots, this.hx + ',' + this.hy, this.dig ? this.dig.x + ',' + this.dig.y : '', this.bonfire ? this.bonfire.x + ',' + this.bonfire.y : '']);
+    const spots = [[3, 15], [6, 15], [10, 15], [19, 15], [21, 15]].filter(([x, y]) => this.tile(x, y) === 's' && !taken.has(x + ',' + y));
+    if (!spots.length) return;
+    const [x, y] = spots[hash(day) % spots.length], [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0.18, pz + 0.3); g.rotation.set(0, 0.7, Math.PI / 2 - 0.15); g.scale.setScalar(1.5);
+    this.solid.add(x + ',' + y);
+    const glass = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.55, 12), toon(0x7ad8b8, { rim: 0.7 })); g.add(glass);
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.15, 0.2, 10), toon(0x7ad8b8, { rim: 0.7 })); neck.position.y = 0.37; g.add(neck);
+    const cork = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.1, 8), toon(0xc8925a)); cork.position.y = 0.5; g.add(cork);
+    const note = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.32, 8), toon(0xfff2c8)); note.position.y = -0.02; g.add(note);
+    this.group.add(g);
+    const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0x9affe8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5 }); sm.userData.own = true;
+    const glint = new THREE.Sprite(sm); glint.position.set(px, 0.4, pz + 0.3); glint.scale.setScalar(1.9); this.group.add(glint);
+    this.bottle = { x, y, g, glint, day };
   }
 
   // Frostpeak after dusk: carved ice lanterns with candles ring the frozen pond (Skater Ivy skates there at night)
@@ -2572,6 +2593,7 @@ export class World {
       J.dome.scale.set(1 + q * 0.12, 1 - q * 0.18, 1 + q * 0.12); J.sm.opacity = 0.5 + q * 0.2;
       J.g.position.x = J.x0 + Math.sin(this.t * 0.25 + J.ph) * 0.6; J.g.position.z = J.z0 + Math.cos(this.t * 0.2 + J.ph) * 0.6; J.g.position.y = -0.05 + Math.max(0, q) * 0.06;
     }
+    if (this.bottle) { const B = this.bottle; B.g.position.y = 0.18 + Math.sin(this.t * 1.5) * 0.03; B.glint.material.opacity = 0.35 + Math.max(0, Math.sin(this.t * 2.3)) * 0.4; } // the bottle rocks in the wash and glints
     if (this.iceLan) this.iceLan.opacity = 0.58 + Math.sin(this.t * 7) * 0.04 + Math.sin(this.t * 11.3) * 0.03; // candle flicker
     if (this.dance) { // the floor flashes on the beat (faster while the hero dances); the records spin
       const D = this.dance, fast = this.danceT > 0, beat = Math.floor(this.t * (fast ? 4 : 2));
@@ -2817,6 +2839,21 @@ export class World {
         return this.say([snow ? 'Someone left a bag of marshmallows by the fire. {hero} toasts one on a stick until it\'s golden... and gobbles it up! (+XP)' : 'A bag of marshmallows sits by the fire. {hero} toasts one until it\'s gooey and golden... mmm! (+XP)', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : []), 'One marshmallow a night is the rule. The fire will be here tomorrow too.']);
       }
       return this.say([(snow ? ['The campfire crackles in the snow. {hero} holds out their paws. Ahh, that\'s better!', 'Sparks float up into the cold, starry sky. Somewhere, a snowman looks jealous.', '{hero} warms up by the fire until even their ears feel toasty.'] : ['The bonfire crackles and pops. {hero} holds out their paws. Toasty!', 'Sparks float up and wink out among the stars. The waves hush on the sand.', '{hero} watches the flames dance for a while. A perfect beach night.'])[Math.floor(Math.random() * 3)]]);
+    }
+    if (this.bottle && this.bottle.x === fx && this.bottle.y === fy) { // pop the cork, read the note, pocket the berry tucked inside
+      const B = this.bottle, notes = [
+        'If you find this, know that the Alpha of the day roams wherever the 💥 is on the Town Map. Big, red and grumpy. Bring snacks. (signed) A worried hiker',
+        'Dear finder, the moon is the best bait. Moonfins bite in any water after dark. (signed) F.',
+        'Gold berries in TURBO are worth five red ones. Do NOT tell Volt. (signed) Pixel',
+        'Trader Tock never stays in one town two days running. Follow the 🎩 on the Town Map! (signed) A hat lover',
+        'Shake every berry bush once a day. Sometimes a sleepy critter tumbles out! (signed) Gardener Bea',
+        'I tried to surf all the way to Frostpeak. Do not try to surf all the way to Frostpeak. (signed) A cold Pengsicle',
+        'Danced with DJ Tumble in Neon City last night. Best night of my life. My feet still flash. (signed) A Jiggawatt',
+        'Each week the Peak Gauntlet has a theme. Bring a critter that beats both types! (signed) Keeper Orla',
+      ];
+      save.adv.bottle = B.day; save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(1);
+      this.solid.delete(B.x + ',' + B.y); B.g.traverse((o) => o.geometry?.dispose()); this.group.remove(B.g); this.group.remove(B.glint); this.bottle = null;
+      return this.say(['A bottle washed up on the sand! {hero} pops the cork and unrolls a note...', notes[hash(B.day + 'n') % notes.length], 'A berry was tucked inside, too! +1 🍓 (Another bottle may wash up tomorrow night.)']);
     }
     if (this.dance && this.dance.y === fy && this.dance.x.includes(fx)) { // DJ Tumble's night set: dance! The first dance of the night tips a berry
       this.danceT = 3.2; sfx.jingle?.(1); const day = new Date().toISOString().slice(0, 10);
