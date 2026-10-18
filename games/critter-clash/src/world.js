@@ -27,6 +27,8 @@ const RAIN = {
   evening: { sun: 0xd0a898, sunI: 0.9, sky: 0xb0a4b8, gnd: 0x3a3a48, hemiI: 0.85, fog: 0x8a8898 },
 };
 const LIT = new THREE.MeshBasicMaterial({ color: 0xffd870 }); // a lamp-lit window at night
+let GLOW = null; // a soft radial glow (shared, never disposed)
+const glowTex = () => GLOW ||= canvasTex(64, 64, (c) => { const g = c.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.5, 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, 64, 64); });
 let PANEL = null; // solar panel cells on the lab roof (shared, never disposed)
 const panelTex = () => PANEL ||= canvasTex(64, 64, (c) => {
   c.fillStyle = '#1f3a78'; c.fillRect(0, 0, 64, 64);
@@ -506,6 +508,23 @@ export class World {
       this.group.add(new THREE.Mesh(mergeGeometries(heads), hm)); heads.forEach((g) => g.dispose());
       this.lamps = true;
     }
+    // neon glow pooled on the wet street, and delivery drones blinking across the sky
+    const pools = [[], []];
+    for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) if ('.:'.includes(this.tile(x, y)) && rand() < 0.1) {
+      const [px, pz] = wpos(x, y), c = new THREE.CircleGeometry(0.5 + rand() * 0.5, 16); c.rotateX(-Math.PI / 2); c.scale(1.6, 1, 1); c.translate(px + (rand() - 0.5), 0.03, pz + (rand() - 0.5)); pools[rand() < 0.5 ? 0 : 1].push(c);
+    }
+    [0xff5ad8, 0x3af0ff].forEach((col, k) => { if (!pools[k].length) return; const pm = new THREE.MeshBasicMaterial({ color: col, map: glowTex(), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }); pm.userData.own = true; this.group.add(new THREE.Mesh(mergeGeometries(pools[k]), pm)); pools[k].forEach((g) => g.dispose()); });
+    this.drones = [];
+    for (let k = 0; k < 3; k++) {
+      const g = new THREE.Group();
+      g.add(inked(new THREE.BoxGeometry(0.5, 0.16, 0.5), toon(0xe8e4f4), OL * 0.4));
+      for (const [ax, az] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.02, 10), toon(0xb8b0d0)); r.position.set(ax * 0.36, 0.1, az * 0.36); g.add(r); }
+      const lm = new THREE.MeshBasicMaterial({ color: k % 2 ? 0x3af0ff : 0xff5ad8 }); lm.userData.own = true;
+      const light = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), lm); light.position.y = -0.12; g.add(light);
+      const pk = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.26, 0.3), toon(0xffc870)); pk.position.y = -0.3; g.add(pk);
+      g.scale.setScalar(1.5); this.group.add(g);
+      this.drones.push({ g, light, y: 3.4 + k * 0.5, z: (0.2 + k * 0.3) * this.H * TILE, sp: 2.2 + k * 0.6, ph: k * 9 });
+    }
   }
 
   buildGrass(rand) {
@@ -713,6 +732,7 @@ export class World {
 
   buildBuildings() {
     this.doors = []; this.chimneys = []; this.labDish = this.beacon = null;
+    if (!this.M.city) this.drones = null;
     for (const b of this.M.buildings || []) {
       const x0 = b.x * TILE, z0 = b.y * TILE, w = b.w * TILE, d = b.h * TILE;
       const G = new THREE.Group();
@@ -1485,6 +1505,11 @@ export class World {
     }
     this.swayGrass();
     this.updateFish2(dt);
+    for (const D of this.drones || []) { // they zip past over the hero's part of town
+      const c = this.hero.root.position, u = this.t * D.sp + D.ph * 4, x = (u % 36) - 18, dir = Math.floor(u / 36) % 2 ? -1 : 1;
+      D.g.position.set(c.x + x * dir, D.y + Math.sin(this.t * 2 + D.ph) * 0.15, c.z - 7 + D.ph * 0.4 + Math.sin(this.t * 0.5 + D.ph) * 1.5);
+      D.g.rotation.z = -dir * 0.15; D.light.visible = (this.t * 2 + D.ph) % 1 < 0.5;
+    }
     for (const P of this.prints || []) if (P.o.visible) { P.age += dt; P.o.material.opacity = 0.6 * Math.max(0, Math.min(1, (6 - P.age) / 2)); if (P.age > 6) P.o.visible = false; }
     // water ripples drift
     if (this.waterTex) this.waterTex.offset.set(this.t * 0.02, this.t * 0.03);
