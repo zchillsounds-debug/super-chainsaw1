@@ -976,6 +976,7 @@ export class Screens {
         ['🪩', 'Dance with DJ Tumble', N('neon'), A.danced === day, seen.neon],
         ['🍬', 'Glowing candy floss', 'Neon night market', A.market === day, seen.neon],
         ['⛸️', 'Skate a twirl', `${N('frostpeak')} pond`, A.skated === day, seen.frostpeak && A.skates],
+        ['🍄', 'Sing with the fairy ring', N('glowcap'), A.ring === day, seen.glowcap],
       ].filter((r) => r[4]);
     return { rows, after, night };
   }
@@ -1018,6 +1019,7 @@ export class Screens {
         + bar('🪩', 'Nights danced', A.cnt?.dance || 0)
         + bar('⛸️', 'Nights skated', A.cnt?.skate || 0)
         + bar('⛲', 'Wishes made', A.cnt?.wish || 0)
+        + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
         + bar('🔭', 'Constellations spotted', (A.consts || []).length, 8)
         + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
     } else if (tab === 'today') { // every daily thing in one list: done today, or where to go for it

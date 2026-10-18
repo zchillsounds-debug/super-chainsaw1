@@ -1033,6 +1033,25 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 body:has(.wd-box) .wd-a, body:has(.wd-box) .joybase, body:has(.stars-wrap) .wd-a, body:has(.stars-wrap) .joybase, body:has(.arcade-wrap) .wd-a, body:has(.arcade-wrap) .joybase { visibility: hidden; }
 /* Sprout Village telescope: the eyepiece view of tonight's constellation */
 .stars-wrap { z-index: 40; }
+/* Glowcap's fairy ring: four toadstool bells in a row on a moonlit card */
+.ring-wrap { z-index: 40; }
+body:has(.ring-wrap) .wd-a, body:has(.ring-wrap) .joybase { visibility: hidden; }
+.ring { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 18px 12px; border-radius: 22px; background: radial-gradient(ellipse at 50% 100%, #2a5a4a, #1a1a3a 70%); box-shadow: 0 0 0 4px #8affc8aa, 0 12px 36px #000a; max-width: 94vw; }
+.ring h3 { margin: 0; color: #e8fff4; font-family: var(--display); font-size: 22px; text-shadow: 0 0 10px #8affc8; }
+.ring .rg-msg { margin: 0; min-height: 1.3em; color: #d8f0ff; font-size: 14px; text-align: center; }
+.rg-caps { display: flex; gap: clamp(8px, 3vw, 22px); margin: 6px 0 2px; }
+.rg-cap { position: relative; width: clamp(64px, 17vw, 96px); height: clamp(70px, 19vw, 104px); background: none; border: 0; padding: 0; cursor: pointer; filter: saturate(.55) brightness(.75); transition: filter .15s, transform .15s; }
+.rg-cap i { position: absolute; left: 0; right: 0; top: 0; height: 58%; border-radius: 50% 50% 18% 18% / 70% 70% 30% 30%; background: radial-gradient(circle at 30% 40%, #fff 0 7%, transparent 8%), radial-gradient(circle at 68% 30%, #fff 0 6%, transparent 7%), radial-gradient(circle at 54% 62%, #fff 0 5%, transparent 6%), var(--cc); border: 3px solid #1a1440; }
+.rg-cap b { position: absolute; left: 32%; right: 32%; top: 52%; bottom: 0; border-radius: 6px 6px 10px 10px; background: #f4ead8; border: 3px solid #1a1440; z-index: -1; }
+.rg-cap.on { filter: none drop-shadow(0 0 14px var(--cc)) drop-shadow(0 0 6px #fff); transform: translateY(-6px) scale(1.08); }
+.ring-wrap.yours .rg-cap { filter: saturate(.85) brightness(.95); }
+.ring-wrap.yours .rg-cap.on { filter: none drop-shadow(0 0 14px var(--cc)) drop-shadow(0 0 6px #fff); }
+.rg-dots { display: flex; gap: 8px; }
+.rg-dots span { width: 12px; height: 12px; border-radius: 50%; background: #ffffff30; border: 2px solid #8affc8; }
+.rg-dots span.got { background: #8affc8; box-shadow: 0 0 8px #8affc8; }
+.ring .rg-tap { margin: 0; color: #9ab8c8; font-size: 11px; visibility: hidden; }
+.ring-wrap.done .rg-tap { visibility: visible; }
+.ring-wrap.won .ring { box-shadow: 0 0 0 4px #ffe07a, 0 0 40px #ffe07a88, 0 12px 36px #000a; }
 .stars { display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 96vw; }
 .stars canvas { width: min(92vw, calc((100vh - 110px) * 1.6), 620px); height: auto; aspect-ratio: 8 / 5; border-radius: 50% / 46%; box-shadow: 0 0 0 6px #3a2a24, 0 0 0 10px #e8b04a, 0 10px 30px rgba(0,0,0,.6); background: #070a22; }
 .stars .st-name { margin-top: 8px; color: #fff6c0; font-family: var(--display); font-size: 22px; text-shadow: 0 0 10px #7ad8ff, 0 2px 0 #1a1440; opacity: 0; transition: opacity .6s; }

@@ -14,6 +14,7 @@ import { countUp, deliveryFor, deliveredLine, gauntletWeek } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
 import { stargaze, tonightConst, BOTTLE_NOTES } from './stars.js';
+import { fairyRing } from './ring.js';
 
 export const TILE = 2;
 const DIRS = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
@@ -318,6 +319,7 @@ export class World {
     this.buildIceLanterns();
     this.buildBottle();
     this.buildScope();
+    this.buildRing();
     this.buildBloomFw();
     this.buildFountain();
     this.buildJellies(rand);
@@ -1192,6 +1194,49 @@ export class World {
     const glow = new THREE.Sprite(sm); glow.scale.setScalar(2.6); glow.position.set(-TILE * 1.0, 0.4, -0.2); g.add(glow);
     bakeStatic({ root: g, mats: {}, glow });
     this.scope = { x, y, glow };
+  }
+
+  // Glowcap Hollow's fairy ring: six little toadstools round a tall one; after dark they glow and sing (tap the tune back, once a night for a prize)
+  buildRing() {
+    this.ring = null;
+    if (this.key !== 'glowcap') return;
+    const [x, y] = [8, 8], lit = this.phase !== 'day';
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.itemSpots || []), this.hx + ',' + this.hy]);
+    if (this.tile(x, y) !== '.' || taken.has(x + ',' + y)) return;
+    const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(x + ',' + y);
+    const stem = toon(0xf4ead8), cols = [0xff6aa8, 0xffd84d, 0x5ae8c8, 0xa88aff, 0xff6aa8, 0x5ae8c8];
+    const shroom = (r, h, c, ax, az) => {
+      const st = inked(new THREE.CylinderGeometry(r * 0.32, r * 0.42, h, 8), stem, OL * 0.25); st.position.set(ax, h / 2, az); g.add(st);
+      const cap = inked(new THREE.SphereGeometry(r, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(c, lit ? { emissive: c, rim: 0.6 } : { rim: 0.5 }), OL * 0.3); cap.scale.y = 0.7; cap.position.set(ax, h - 0.02, az); g.add(cap);
+      for (let k = 0; k < 3; k++) { const a = k * 2.1 + ax, d = inked(new THREE.SphereGeometry(r * 0.16, 6, 4), toon(0xffffff), 0); d.position.set(ax + Math.cos(a) * r * 0.55, h + r * 0.38, az + Math.sin(a) * r * 0.55); g.add(d); }
+    };
+    cols.forEach((c, i) => { const a = i / cols.length * Math.PI * 2 + 0.3; shroom(0.26, 0.32, c, Math.cos(a) * TILE * 0.95, Math.sin(a) * TILE * 0.95); });
+    shroom(0.48, 0.75, 0xffffff, 0, 0);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(TILE * 0.8, TILE * 1.1, 28), new THREE.MeshBasicMaterial({ color: lit ? 0x8affc8 : 0x3a7a4a, transparent: true, opacity: lit ? 0.35 : 0.3, depthWrite: false, blending: lit ? THREE.AdditiveBlending : THREE.NormalBlending }));
+    ring.material.userData.own = true; ring.rotation.x = -Math.PI / 2; ring.position.y = 0.04; g.add(ring);
+    let glow = null;
+    if (lit) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xb08aff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.6 }); sm.userData.own = true; glow = new THREE.Sprite(sm); glow.scale.setScalar(4); glow.position.y = 0.6; g.add(glow); }
+    bakeStatic({ root: g, mats: {}, keep: glow ? [glow, ring] : [ring] });
+    this.ring = { x, y, px, pz, glow };
+  }
+
+  // face the fairy ring after dark: play back the toadstools' tune (three rounds); the first full song of a night pays 2 berries and a little XP
+  fairyRing() {
+    if (this.phase === 'day') return this.say(['A ring of little toadstools round a tall white one. They look... asleep?', 'Mushroom Fan Fen says they sing after dark. Come back in the evening!']);
+    const day = new Date().toISOString().slice(0, 10), A = save.adv;
+    this.busy = true; sfx.note?.(4);
+    const el = fairyRing(this.g.ui, hash(day + ':ring') + (this.ringTries = (this.ringTries || 0) + 1), (won) => {
+      this.g.modalClose = null; this.busy = false;
+      if (!won) return this.say(['The toadstools hum quietly. They\'d love to sing it again, any time!']);
+      countUp('ring');
+      if (A.ring !== day) {
+        A.ring = day; save.berries = (save.berries || 0) + 2; const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist();
+        return this.say(['The whole ring glows and sings along! Glowing spores swirl round {hero}.', `Two sugar-glow berries pop up between the toadstools! +2 🍓 ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, 'The ring learns a new song every night. Come back tomorrow!']);
+      }
+      persist();
+      return this.say(['The ring sings along again, just for fun. What a choir!']);
+    });
+    this.g.modalClose = () => el.__ring.close();
   }
 
   // Cloudtop Gardens: a tiered wishing fountain in the middle of the lawn, with a little rainbow in its spray (toss in a berry and make a wish, once a day)
@@ -2723,6 +2768,7 @@ export class World {
     }
     if (this.twirlT > 0) this.twirlT -= dt;
     if (this.bloomFw) this.updateBloomFw(dt);
+    if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
     if (this.fountain) { const F = this.fountain; if (Math.random() < dt * 14) { const a = Math.random() * 6.28; this.g.fx.spawn({ x: F.px + Math.cos(a) * 0.1, y: 2.6, z: F.pz + Math.sin(a) * 0.1, vx: Math.cos(a) * 1.4, vy: 1.8, vz: Math.sin(a) * 1.4, color: 0xd8f4ff, size: 0.16, life: 0.75, shape: 'glow', grav: 6, additive: false, alpha: 0.8 }); } F.arcs.forEach((m, i) => { m.material.opacity = 0.42 + Math.sin(this.t * 1.3 + i * 0.4) * 0.12; }); } // the spray falls into the bowl; the rainbow shimmers
     if (this.sliding && save.adv.skates && Math.random() < dt * 30) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.5, y: 0.15, z: p.z + (Math.random() - 0.5) * 0.5, vy: 0.6 + Math.random(), vx: (Math.random() - 0.5), vz: (Math.random() - 0.5), color: Math.random() < 0.5 ? 0xffffff : 0x9ae0ff, size: 0.16, life: 0.6, shape: Math.random() < 0.4 ? 'star' : 'glow' }); } // skates kick up ice sparkles
     if (this.danceT > 0) { this.danceT -= dt; if (Math.random() < dt * 8) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 1.6 + Math.random(), z: p.z, vy: 1.2, color: this.dance?.cols[Math.floor(Math.random() * 5)].getHex() ?? 0xff5ad8, size: 0.2, life: 0.9, shape: Math.random() < 0.5 ? 'star' : 'glow' }); } }
@@ -2979,6 +3025,7 @@ export class World {
       return this.say([['{hero} dances like nobody is watching. Everybody is watching. Nobody minds!', 'Boom-tss, boom-tss! {hero} spins, hops and strikes a pose.', 'The floor flashes pink, blue and gold under {hero}\'s feet. What a groove!'][Math.floor(Math.random() * 3)]]);
     }
     if (this.scope && this.scope.x === fx && this.scope.y === fy) return this.stargaze();
+    if (this.ring && this.ring.x === fx && this.ring.y === fy) return this.fairyRing();
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
     if (stall) {
