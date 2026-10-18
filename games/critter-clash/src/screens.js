@@ -984,6 +984,7 @@ export class Screens {
         ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
         ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
         ['♨️', 'Soak in the hot spring', N('ember'), A.soak === day, seen.ember],
+        ['🌅', 'Watch the sunset (5–8 pm)', `${N('seashell')} bench`, A.sunset === day, (this.worldObj?.outPhase === 'evening' || A.sunset === day) && seen.seashell], // only while the sun is going down (or once it's watched)
         F.ending && ['🏔️', 'Peak Gauntlet (this week)', "Keeper Orla, Champion's Peak", !!F['gauntpay_' + gauntletWeek()], true],
       ].filter((r) => r && r[4]);
       const after = [
@@ -1039,6 +1040,7 @@ export class Screens {
       + bar('⛲', 'Wishes made', A.cnt?.wish || 0)
       + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
       + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
+      + bar('🌅', 'Sunsets watched', A.cnt?.sunset || 0)
       + (A.cnt?.breakfast ? bar('🥞', 'Breakfasts at home', A.cnt.breakfast) : '')
       + (A.cnt?.pumpkin ? bar('🎃', 'Pumpkin treats', A.cnt.pumpkin) : '')
       + (A.cnt?.wisp ? bar('👻', 'Wisp nights', A.cnt.wisp) : '')
@@ -1061,6 +1063,7 @@ export class Screens {
       'Berry bushes at the edge of town can be shaken once a day.',
       'Rooms look different after dark: lamps come on, and the windows fill with stars.',
       F.rod && 'Two fish only bite in the golden evening, between five and eight.',
+      seen.seashell && 'Sit on the driftwood bench on Seashell beach in the evening and watch the sun go down.',
       '📸 Photo in the ☰ menu saves a picture of your hero right where they stand.',
       (A.snaps || []).length < LANDMARKS.length && `Take a 📸 Photo by each town's landmark (${(A.snaps || []).length} / ${LANDMARKS.length} so far). All eight earn a hat!`,
       F.rod && 'Night fishing catches fish you never see by day.',
@@ -1163,7 +1166,7 @@ export class Screens {
     const gnt = F.ending && !F['gauntpay_' + gauntletWeek()]; // ⚔️ this week's Peak Gauntlet is still open
     const btl = w.outPhase === 'night' && seen.seashell && save.adv.bottle !== new Date().toISOString().slice(0, 10); // 🍾 tonight's message in a bottle is still on Seashell's shore
     const scope = w.outPhase === 'night' && seen.village && save.adv.stars !== new Date().toISOString().slice(0, 10); // 🔭 tonight's constellation in Sprout Village is still to be spotted
-    const day = new Date().toISOString().slice(0, 10), daily = { cloudtop: save.adv.wish !== day && '⛲', ember: save.adv.soak !== day && '♨️', glowcap: w.outPhase === 'night' && save.adv.ring !== day && '🍄', village: w.morning && save.adv.breakfast !== day && '🥞' }; // a wish, a soak and tonight's fairy-ring song still to do
+    const day = new Date().toISOString().slice(0, 10), daily = { cloudtop: save.adv.wish !== day && '⛲', ember: save.adv.soak !== day && '♨️', glowcap: w.outPhase === 'night' && save.adv.ring !== day && '🍄', village: w.morning && save.adv.breakfast !== day && '🥞', seashell: w.outPhase === 'evening' && save.adv.sunset !== day && '🌅' }; // a wish, a soak and tonight's fairy-ring song still to do
     const fav = {}; for (const r of favourList().rows) if (r.at && !fav[r.at]) fav[r.at] = r.state === 'found' || r.deliver ? '📦' : '🔍'; // open favours: where to look, or who to take it back to
     // older saves: towns behind a cleared cup were visited
     for (const [k, n] of Object.entries(WMAP)) if (n.cup && F['cup_' + n.cup]) seen[k] = true;

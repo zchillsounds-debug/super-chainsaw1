@@ -295,7 +295,7 @@ export class World {
   // ---------- map building ----------
   load(key, x, y, dir = 's') {
     const wet = this.rain && !this.M?.indoor; // came in out of the rain: shake off once inside
-    this.unload(); this.soaking = false;
+    this.unload(); this.soaking = false; this.sitting = false;
     this.g.fx.clear?.(); // last map's smoke, rain and sparkles don't follow you indoors
     const M = this.M = getMap(key) || getMap('village');
     if (M !== getMap(key)) { key = 'village'; x = 4; y = 6; }
@@ -338,6 +338,7 @@ export class World {
     this.buildScope();
     this.buildRing();
     this.buildSpring();
+    this.buildSunset();
     this.buildBloomFw();
     this.buildFountain();
     this.buildStatue();
@@ -391,7 +392,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -667,6 +668,7 @@ export class World {
       const inside = x >= 0 && y >= 0 && x < this.W && y < this.H;
       const t = inside ? this.tile(x, y) : null;
       if (!inside && this.M.border === 'cloud') { if (rand() < 0.45) puff(x, y); continue; }
+      if (!inside && this.M.border !== 'cloud' && this.tile(Math.max(0, Math.min(this.W - 1, x)), Math.max(0, Math.min(this.H - 1, y))) === '~') continue; // open sea past a watery edge: no trees growing out of the waves
       if (t === '~' && this.M.border === 'cloud' && rand() < 0.12) { puff(x, y, 0.6); continue; }
       if (t === 'P' || (!inside && this.M.border === 'palm' && rand() < 0.3)) palm(x, y);
       else if (inside ? t === 'T' : rand() < 0.85) add(x, y);
@@ -1278,6 +1280,51 @@ export class World {
     if (night) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0x6affe8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.45 }); sm.userData.own = true; glow = new THREE.Sprite(sm); glow.scale.setScalar(4.5); glow.position.y = 0.5; g.add(glow); }
     bakeStatic({ root: g, mats: {}, water, glow });
     this.spring = { cells: new Set(cells.map((c) => c.join(','))), px: cx, pz: cz, water, glow };
+  }
+
+  // Seashell Town's driftwood bench on the shore: in the golden evening the sun sinks into the sea in front of it (a big sun on the horizon, a glittering path on the water)
+  buildSunset() {
+    this.sunset = null;
+    if (this.key !== 'seashell' || this.M.indoor) return;
+    const [x, y] = [11, 14];
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.itemSpots || []), this.hx + ',' + this.hy, this.dig ? this.dig.x + ',' + this.dig.y : '']);
+    if (this.tile(x, y) !== 's' || taken.has(x + ',' + y)) return;
+    const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(1.3); this.group.add(g); this.solid.add(x + ',' + y);
+    const drift = toon(0xc8a47a), drift2 = toon(0xa8845a);
+    for (const sx of [-0.62, 0.62]) { const leg = inked(new THREE.CylinderGeometry(0.15, 0.17, 0.42, 8), drift2, OL * 0.3); leg.position.set(sx, 0.21, 0); leg.castShadow = true; g.add(leg); }
+    const seat = inked(new THREE.CylinderGeometry(0.2, 0.22, 1.7, 9), drift, OL * 0.35); seat.rotation.z = Math.PI / 2; seat.scale.z = 0.6; seat.position.y = 0.5; seat.castShadow = true; g.add(seat);
+    const back = inked(new THREE.CylinderGeometry(0.11, 0.13, 1.5, 8), drift2, OL * 0.3); back.rotation.z = Math.PI / 2 + 0.06; back.position.set(0, 0.95, -0.28); g.add(back);
+    for (const sx of [-0.55, 0.55]) { const post = inked(new THREE.CylinderGeometry(0.06, 0.07, 0.6, 6), drift2, OL * 0.2); post.position.set(sx, 0.72, -0.24); post.rotation.x = -0.15; g.add(post); }
+    const shell = inked(new THREE.SphereGeometry(0.12, 8, 6), toon(0xffb8c8), OL * 0.2); shell.scale.set(1, 0.5, 0.8); shell.position.set(0.45, 0.66, 0.02); g.add(shell);
+    bakeStatic({ root: g, mats: {} });
+    let sun = null, glints = [];
+    if (this.phase === 'evening' && !this.rain) { // the sun touching the sea, straight out from the bench
+      const sz = (this.H - 0.3) * TILE, sg = new THREE.Group(); sg.position.set(px, 0, sz); this.group.add(sg);
+      const halo = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff8a3a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.85 }); halo.userData.own = true;
+      const hs = new THREE.Sprite(halo); hs.scale.set(14, 7, 1); hs.position.y = 0.4; sg.add(hs);
+      const dm = new THREE.MeshBasicMaterial({ color: 0xffd070, transparent: true, opacity: 0.95, depthWrite: false }); dm.userData.own = true;
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(2.1, 32, 0, Math.PI), dm); disc.rotation.x = -0.95; disc.position.y = 0.12; sg.add(disc);
+      const gm = new THREE.MeshBasicMaterial({ color: 0xffc060, map: glowTex(), transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }); gm.userData.own = true;
+      for (let k = 0; k < 14; k++) { // a glittering path on the water from the shore to the sun
+        const t = k / 13, gl = new THREE.Mesh(new THREE.PlaneGeometry(1.6 - t * 0.6 + Math.random() * 0.4, 0.3), gm.clone()); gl.material.userData.own = true;
+        gl.rotation.x = -Math.PI / 2; gl.position.set(px + (Math.random() - 0.5) * (2.4 - t * 1.6), 0.09, (this.H - 1.9 + t * 1.5) * TILE); this.group.add(gl); glints.push({ m: gl, ph: Math.random() * 6, sp: 2 + Math.random() * 3 });
+      }
+      sun = { sg, hs };
+    }
+    this.sunset = { x, y, px, pz, sun, glints };
+  }
+
+  // sit on the driftwood bench: in the evening, watch the sun go down (once a day: a berry and a little XP)
+  sunsetSit() {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv;
+    if (this.phase !== 'evening') return this.say(this.phase === 'day' ? ['A driftwood bench facing the sea. Someone carved a little sun into the seat.', 'Fisher Finn swears the sunsets here are the best in Clashara. Come back in the golden evening!'] : ['The sun has gone to bed, and the sea is dark and sleepy.', 'Come back tomorrow evening and watch it go down from here.']);
+    if (this.rain) return this.say(['{hero} sits on the bench. Rain clouds hide the sunset today. Drip... drip...', 'Maybe tomorrow evening will be clear!']);
+    this.sitting = true; const out = () => { this.sitting = false; this.placeHero(); };
+    if (A.sunset !== day) {
+      A.sunset = day; countUp('sunset'); save.berries = (save.berries || 0) + 1; const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+      return this.say(['{hero} hops up on the bench and watches the sun melt into the sea. The waves turn to gold.', `${['A Squeakwing flaps across the sun like a tiny shadow puppet.', 'The sky goes orange, then pink, then a deep, sleepy purple.', 'For one second, right at the end... was that a green flash?!'][Math.floor(Math.random() * 3)]} ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, 'A shell was wedged in the bench, with a berry tucked inside! +1 🍓 (One sunset a day.)'], out);
+    }
+    return this.say(['{hero} swings their feet and watches the sea glow. Still beautiful the second time. (One sunset gift a day.)'], out);
   }
 
   // a soak in Cinder Town's hot spring: steam billows up; the first soak of a day is worth a little XP
@@ -2872,6 +2919,7 @@ export class World {
       idlePose(P, this.t);
       if (this.twirlT > 0) { P.yaw = (1 - this.twirlT / 0.9) * Math.PI * 4; P.armLz = P.armRz = 1.4; P.legL = -0.4; H.emote('happy', 'grin', 0.1); }
       if (this.danceT > 0) { const b = Math.abs(Math.sin(this.t * 7)); P.y = b * 0.22; P.roll = Math.sin(this.t * 3.5) * 0.22; P.yaw = Math.sin(this.t * 1.8) * 0.7; P.armLz = 1.3 + Math.sin(this.t * 7) * 0.6; P.armRz = 1.3 - Math.sin(this.t * 7) * 0.6; P.legL = Math.sin(this.t * 7) * 0.5; P.legR = -P.legL; H.emote('happy', 'grin', 0.1); }
+      if (this.sitting && this.sunset) { const S = this.sunset; H.root.position.set(S.px, 0.62, S.pz - 0.05); H.root.rotation.y = YAW.s; P.legL = P.legR = -1.2 + Math.sin(this.t * 3) * 0.25 * (this.t % 2 < 1 ? 1 : -1); P.armLz = P.armRz = 0.5; H.emote('happy', 'grin', 0.1); }
       if (this.soaking && this.spring) { const S = this.spring; H.root.position.set(S.px, -0.22, S.pz + 0.3); H.root.rotation.y = YAW.s; P.armLz = P.armRz = 0.9; P.y = Math.sin(this.t * 1.5) * 0.03; H.emote('closed', 'grin', 0.1); }
       if (this.fishing) { P.armLx = P.armRx = -1.1 + Math.sin(this.t * 0.8) * 0.06; P.armLz = P.armRz = 0.2; if (this.fishing.phase === 'bite') { P.lean = 0.2; H.emote('happy', 'open', 0.1); } }
       // left alone, the hero gets bored: looks around, stretches, yawns, then dozes off
@@ -2966,6 +3014,7 @@ export class World {
       const a = Math.min(1, L.t / 1.5) * Math.min(1, (14 - L.t) / 4); L.g.scale.setScalar(0.4 + 0.6 * Math.min(1, L.t / 1.5)); L.sm.opacity = 0.6 * a * (0.85 + Math.sin(this.t * 6 + L.x) * 0.15); L.g.visible = a > 0.02;
     }
     if (this.cart) { const C = this.cart; C.lanterns.forEach((l, k) => { l.rotation.z = Math.sin(this.t * 1.6 + k) * 0.12; }); C.glow.material.opacity = 0.42 + Math.sin(this.t * 2.2) * 0.08; if (Math.random() < dt * 2.5) this.g.fx.spawn({ x: C.px + (Math.random() - 0.5) * 0.3, y: 1.9, z: C.pz, vy: 0.8, vx: 0.15, color: 0xf4f0ff, alpha: 0.45, size: 0.35, life: 1.6, shape: 'puff', additive: false, grow: 1.3 }); }
+    if (this.sunset?.glints.length) for (const q of this.sunset.glints) q.m.material.opacity = 0.25 + Math.max(0, Math.sin(this.t * q.sp + q.ph)) * 0.55;
     if (this.bonfire) { const B = this.bonfire; B.flames.forEach((f, k) => { const q = 1 + Math.sin(this.t * (9 + k * 3) + k) * 0.12 + Math.sin(this.t * 23 + k * 2) * 0.06; f.scale.set(1 / Math.sqrt(q), q, 1 / Math.sqrt(q)); }); const fl = 0.85 + Math.sin(this.t * 13) * 0.08 + Math.sin(this.t * 31) * 0.05; B.sp.material.opacity = 0.5 * fl; B.pool.material.opacity = 0.7 * fl; if (Math.random() < dt * 6) this.g.fx.spawn({ x: B.px + (Math.random() - 0.5) * 0.4, y: 0.9, z: B.pz + (Math.random() - 0.5) * 0.4, vx: (Math.random() - 0.5) * 0.6, vy: 1.6 + Math.random() * 1.2, vz: (Math.random() - 0.5) * 0.6, color: 0xffb040, size: 0.14, life: 1.1, shape: 'spark' }); }
     if (this.pendulum) this.pendulum.rotation.z = Math.sin(this.t * 2.2) * 0.22; // tick... tock...
     for (const [jx, jy, jz, col, sh] of this.jars || []) if (Math.random() < dt * 5) this.g.fx.spawn(sh ? { x: jx + (Math.random() - 0.5) * 1.0, y: jy, z: jz + (Math.random() - 0.5) * 0.6, vy: 0.6, color: col, size: 0.14, life: 0.7, shape: sh } : { x: jx + (Math.random() - 0.5) * 0.5, y: jy + (Math.random() - 0.5) * 0.6, z: jz + (Math.random() - 0.5) * 0.5, color: 0xe8ff6a, size: 0.3, life: 0.8, shape: 'glow', fadeIn: 0.3 });
@@ -3169,6 +3218,7 @@ export class World {
     const fit = port ? (vw * TILE + 1.2) / (2 * Math.tan(Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) * Math.PI / 360) * cam.aspect) : 0;
     const rx = vw < this.W ? Math.max(vw * TILE / 2, Math.min((this.W - vw / 2) * TILE, p.x)) : this.W * TILE / 2;
     if (this.M.indoor) want.set(port ? rx : this.W * TILE / 2, port ? Math.max(16.5, fit * 0.86) : 16, this.H * TILE / 2 + (port ? Math.max(3.6, fit * 0.2) : 9.8));
+    if (this.sitting) want.z += port ? 4 : 5.5; // on the sunset bench: look out over the sea
     if (!this.camAt) this.camAt = want.clone(); else this.camAt.lerp(want, 1 - Math.exp(-dt * 8));
     cam.position.copy(this.camAt);
     if (this.M.indoor && port) cam.lookAt(this.camAt.x, 0.4, this.H * TILE / 2 + 1.2);
@@ -3230,6 +3280,7 @@ export class World {
     if (this.scope && this.scope.x === fx && this.scope.y === fy) return this.stargaze();
     if (this.ring && this.ring.x === fx && this.ring.y === fy) return this.fairyRing();
     if (this.spring?.cells.has(fx + ',' + fy)) return this.soak();
+    if (this.sunset && this.sunset.x === fx && this.sunset.y === fy) return this.sunsetSit();
     if (this.pumpkins?.some((p) => p.x === fx && p.y === fy)) return this.pumpkin();
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
