@@ -1469,6 +1469,10 @@ export class World {
           P.sy = 0.85 + Math.sin(this.t * 1.4) * 0.05; P.lean = -0.25; P.armLz = P.armRz = 0.1; P.head = 0.25;
           a.cr.emote('closed', 'o', 0.2);
           if (Math.random() < dt * 0.8) this.g.fx.text?.({ x: a.root.position.x + 0.5, y: 2.6, z: a.root.position.z }, 'z', 'zz');
+        } else if (a.wild && this.phase === 'night') { // wild critters curl up in the grass at night
+          P.sy = 0.82 + Math.sin(this.t * 1.3 + a.x) * 0.04; P.lean = -0.2; P.head = 0.35; P.armLz = P.armRz = 0.05;
+          a.cr.emote('closed', 'o', 0.2);
+          if (Math.random() < dt * 0.35) this.g.fx.text?.({ x: a.root.position.x + 0.4, y: 2.1, z: a.root.position.z }, 'z', 'zz');
         } else if (a.n?.act && !this.dialog) actPose(this, a, P, this.t + a.x * 0.7, dt);
         else idlePose(P, this.t + a.x);
         if (a.excl > 0) { a.excl -= dt; P.y = Math.max(P.y, Math.sin(Math.min(1, 1 - a.excl) * Math.PI) * 0.4); }
@@ -1488,7 +1492,7 @@ export class World {
       if (this.busy || this.dialog || a.from || a.walking) continue;
       // wandering: town folk shuffle near home; wild critters roam their grass
       a.wanderT -= dt;
-      if ((a.n?.wander || a.wild) && a.wanderT <= 0) {
+      if ((a.n?.wander || a.wild && this.phase !== 'night') && a.wanderT <= 0) {
         a.wanderT = (a.wild ? 0.8 : 2) + Math.random() * 2.5;
         const ds = Object.keys(DIRS), d = ds[Math.floor(Math.random() * 4)], [dx, dy] = DIRS[d], nx = a.x + dx, ny = a.y + dy;
         a.dir = d;
@@ -1546,6 +1550,9 @@ export class World {
     // talk across a counter
     if (!a && this.tile(fx, fy) === 'K') { const [dx, dy] = DIRS[this.dir]; a = this.occupied(fx + dx, fy + dy, 'hero'); }
     if (a && a.n) return this.talk(a);
+    if (a?.wild && !this.busy) { // poke a roaming wild critter (a sleeping one wakes up grumpy)
+      return this.say([this.phase === 'night' ? `The wild ${a.cr.def.name} was fast asleep... and now it's wide awake and grumpy!` : `The wild ${a.cr.def.name} puffs up for a fight!`], () => this.wildFight(a));
+    }
     const B = this.follower;
     if (B && B.x === fx && B.y === fy && !B.from) { // pet your buddy
       B.dir = { n: 's', s: 'n', e: 'w', w: 'e' }[this.dir]; B.hop = 0.6;
