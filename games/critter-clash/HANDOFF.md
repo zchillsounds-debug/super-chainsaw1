@@ -2,7 +2,7 @@
 
 ## Start here (for a new chat)
 - Short version for a new chat: `games/critter-clash/CONTINUE.md` (what is where, the paste-in prompt, open questions).
-- **Session 16j (2026-10-18, 09:43–~10:45 UTC) did R359–R366 (see "Session 16j") and was the LAST session of the user's window (it ended at about 10:45 UTC on 2026-10-18). Nothing was chained after it: wait for the user before building more. Round numbering continues from R367.**
+- **Session 16j (2026-10-18, 09:43–~10:45 UTC) did R359–R367 (see "Session 16j") and was the LAST session of the user's window (it ended at about 10:45 UTC on 2026-10-18). Nothing was chained after it: wait for the user before building more. Round numbering continues from R368.**
 - **Session 16i (2026-10-18, 08:48–~10:45 UTC) did R339–R358 (see "Session 16i"); the next session continues from R359.** Session 16h (2026-10-18, 08:14–~08:50 UTC) did R324–R338 (see "Session 16h"); the next session continues from R339. Session 16g did R305–R323. Session 16f did R280–R304. The user's window, extended by a worker stall, ends at about 10:45 UTC on 2026-10-18.**
 - Session 16e (02:51–~04:40 UTC on 2026-10-15) did R255–R279 and was the LAST session of the user's 5-hour Adventure window (it ended at 04:45 UTC). Nothing was chained after it: wait for the user before building more. Round numbering continues from R280.** Read "Session 16c", "16d" and "16e" below.
 - Ask the user first: how do weather (rain), the clock of day, grass sway and the smoothie blender feel on their phone? Is the win screen right now (R244b/R277)?
@@ -509,7 +509,7 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - Chained to the next session at ~250k context (R359+), with about an hour left of the window.
 - **Next ideas:** rocking chair/hammock animation, more deliveries (Neon City has none yet), lava gems in Cinder Town, an owl hoot ambience at night, the hero's hat in fights (battle side, the user's chat), re-measure world FPS on a phone (lamps, aurora and new rooms add a few draw calls).
 
-## Session 16j (2026-10-18, 09:43–~10:45 UTC, session_012yuMPtQ3fEucWZwqKVzejU): deliveries, digs, volcano nights, R359–R366
+## Session 16j (2026-10-18, 09:43–~10:45 UTC, session_012yuMPtQ3fEucWZwqKVzejU): deliveries, digs, volcano nights, R359–R367
 - Chained from 16i with the same plan; the last session of the user's window (ends about **10:45 UTC on 2026-10-18**), so it did not chain. The local clone again started on stale history and was reset to `origin/ccr-4fc93d6e-suxlhd`.
 - **R359:** Neon City's first delivery `fan`: new npc Tinker Volt (Voltferret, Neon 17,12, `story: 'lost:fan'`) → Pengsicle at the Cinder Town hot springs (`spa`, map `ember`); reward the Frosty Visor (new hat kind `visor`, gift). `buildThanks()` now also builds a whirring pocket fan beside Pengsicle once `fan_done` (`this.thanksFan`, blades spin in `update`, frosty sparkles blow at Pengsicle).
 - **R360:** Grandpa Woolt's rocking chair (`r` tile) is built into its own group (`this.rocker`, a local `add`/`box` in that branch) and rocks gently; it rocks more while the hero stands near.
@@ -518,7 +518,8 @@ Arenas: meadow, beach, volcano, frost, neon, sky, grove.
 - **R363:** volcano maps (`M.lava`: Cinder Road, Cinder Town) follow the clock after daytime (`LAVA` evening/night moods, like `SNOWY`); cracks glow steadier and brighter after dark; no owl hoots on lava maps.
 - **R365:** Pecan news `adv7` (the tools' news lists include it).
 - **R366:** Frostpeak gets a night campfire too (9,10, a melted wet ring in the snow; `buildBonfire` takes per-map spots `{ seashell, frostpeak }`), with its own snowy A lines.
-- **Checks (10:05 UTC, after R365):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait). advcup Sprout signs up at the lobby desk, wins 3 matches, and lands back in Bloom Town with no errors. R366 only adds the Frostpeak fire (world.js), shot and tested by itself.
+- **R367:** the first A at a fire each day toasts a marshmallow (+15% of a level in XP; `save.adv.fire[map] = date`); a pink marshmallow bag sits by the fire until then.
+- **Checks (10:05 UTC, after R365):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait). advcup Sprout signs up at the lobby desk, wins 3 matches, and lands back in Bloom Town with no errors. R366/R367 only add the Frostpeak fire and the marshmallow (world.js), shot and tested by themselves.
 - **Next ideas:** a favour list/Town Map mark for dig spots, more bonfires (Frostpeak lodge fire pit?), Neon City night market, glowcap/neon moods following the clock, the hero's hat in fights (battle side, the user's chat), re-measure world FPS on a phone.
 
 ## Session 15 (2026-10-14, 21:42–~22:20 UTC)

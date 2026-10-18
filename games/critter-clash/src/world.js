@@ -892,6 +892,10 @@ export class World {
     const sp = new THREE.Sprite(sm); sp.scale.setScalar(3.2); sp.position.y = 0.8; g.add(sp);
     const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xff9040, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.55 }); pm.userData.own = true;
     const pool = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), pm); pool.rotation.x = -Math.PI / 2; pool.position.y = 0.05; g.add(pool);
+    if ((save.adv.fire || {})[this.key] !== new Date().toISOString().slice(0, 10)) { // tonight's bag of marshmallows (gone once you've had one)
+      const bag = inked(new THREE.BoxGeometry(0.34, 0.4, 0.22), toon(0xffd8ec), OL * 0.3); bag.position.set(0.85, 0.2, 0.45); bag.rotation.y = 0.4; g.add(bag);
+      for (let k = 0; k < 2; k++) { const m = inked(new THREE.CylinderGeometry(0.08, 0.08, 0.1, 10), toon(0xffffff, { rim: 0.6 }), OL * 0.2); m.position.set(0.72 + k * 0.2, 0.05, 0.75 - k * 0.05); g.add(m); }
+    }
     this.group.add(g);
     this.bonfire = { g, flames, sp, pool, px, pz, x, y };
   }
@@ -2417,7 +2421,11 @@ export class World {
     if (this.bush && this.bush.x === fx && this.bush.y === fy) return this.shakeBush();
     if (this.bonfire && this.bonfire.x === fx && this.bonfire.y === fy) { // warm your paws by the beach fire
       const B = this.bonfire; for (let k = 0; k < 12; k++) this.g.fx.spawn({ x: B.px + (Math.random() - 0.5) * 0.5, y: 1, z: B.pz, vx: (Math.random() - 0.5) * 1.5, vy: 2 + Math.random() * 2, vz: (Math.random() - 0.5) * 1.5, color: 0xffc050, size: 0.18, life: 1.2, shape: 'spark' });
-      const snow = !!this.M.snow;
+      const snow = !!this.M.snow, day = new Date().toISOString().slice(0, 10);
+      if ((save.adv.fire ||= {})[this.key] !== day) { // the first warm-up of the day: a toasted marshmallow (a little XP)
+        save.adv.fire[this.key] = day; const hero = save.adv.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+        return this.say([snow ? 'Someone left a bag of marshmallows by the fire. {hero} toasts one on a stick until it\'s golden... and gobbles it up! (+XP)' : 'A bag of marshmallows sits by the fire. {hero} toasts one until it\'s gooey and golden... mmm! (+XP)', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : []), 'One marshmallow a night is the rule. The fire will be here tomorrow too.']);
+      }
       return this.say([(snow ? ['The campfire crackles in the snow. {hero} holds out their paws. Ahh, that\'s better!', 'Sparks float up into the cold, starry sky. Somewhere, a snowman looks jealous.', '{hero} warms up by the fire until even their ears feel toasty.'] : ['The bonfire crackles and pops. {hero} holds out their paws. Toasty!', 'Sparks float up and wink out among the stars. The waves hush on the sand.', '{hero} watches the flames dance for a while. A perfect beach night.'])[Math.floor(Math.random() * 3)]]);
     }
     if (this.dig && ((this.dig.x === fx && this.dig.y === fy) || (this.dig.x === this.hx && this.dig.y === this.hy))) return this.digUp();
