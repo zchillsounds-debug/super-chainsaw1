@@ -1,4 +1,4 @@
-// Sprout Village's stargazing telescope: a night sky drawn on a 2D canvas, with tonight's critter constellation
+// Night things kept in the Journal. Sprout Village's stargazing telescope: a night sky drawn on a 2D canvas, with tonight's critter constellation
 // tracing itself star by star. Each constellation is a list of stars (x, y in 0..1 of the sky) and the lines between them.
 import { sfx } from './audio.js';
 
@@ -11,6 +11,22 @@ export const CONSTELLATIONS = [
   { id: 'hoot', name: 'The Owl\'s Eyes', tip: 'Two bright stars that never blink. Hootsy swears they\'re watching.', s: [[0.36, 0.42], [0.64, 0.42], [0.5, 0.56], [0.26, 0.24], [0.74, 0.24], [0.5, 0.82]], l: [[3, 0], [0, 2], [2, 1], [1, 4], [2, 5]] },
   { id: 'berry', name: 'The Berry Bunch', tip: 'Five fat stars and a leaf. It shows up in berry season. (Every season is berry season.)', s: [[0.42, 0.5], [0.56, 0.48], [0.5, 0.64], [0.36, 0.66], [0.62, 0.66], [0.5, 0.32], [0.62, 0.22]], l: [[5, 0], [5, 1], [0, 1], [0, 3], [1, 4], [0, 2], [1, 2], [5, 6]] },
   { id: 'ferret', name: 'The Zipping Ferret', tip: 'A zig-zag of stars, like a bolt of lightning. Faster than it looks.', s: [[0.18, 0.24], [0.36, 0.36], [0.3, 0.5], [0.54, 0.56], [0.48, 0.7], [0.82, 0.82]], l: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]] },
+];
+
+// the notes that wash up in Seashell Town's bottles (one a night, picked by the date); the Journal keeps the ones you've read
+export const BOTTLE_NOTES = [
+  'If you find this, know that the Alpha of the day roams wherever the 💥 is on the Town Map. Big, red and grumpy. Bring snacks. (signed) A worried hiker',
+  'Dear finder, the moon is the best bait. Moonfins bite in any water after dark. (signed) F.',
+  'Gold berries in TURBO are worth five red ones. Do NOT tell Volt. (signed) Pixel',
+  'Trader Tock never stays in one town two days running. Follow the 🎩 on the Town Map! (signed) A hat lover',
+  'Shake every berry bush once a day. Sometimes a sleepy critter tumbles out! (signed) Gardener Bea',
+  'I tried to surf all the way to Frostpeak. Do not try to surf all the way to Frostpeak. (signed) A cold Pengsicle',
+  'Danced with DJ Tumble in Neon City last night. Best night of my life. My feet still flash. (signed) A Jiggawatt',
+  'Each week the Peak Gauntlet has a theme. Bring a critter that beats both types! (signed) Keeper Orla',
+  'There is a telescope in Sprout Village, by the trees. Eight constellations, one a night. I have seen seven. SEVEN. (signed) A tired stargazer',
+  'Roses are red, berries are too, I lost my rod somewhere, have you seen it? Boo hoo. (signed) Not a poet',
+  'The ice lanterns in Frostpeak were carved by Skater Ivy. Every single one. Tell her they look nice. (signed) A friend',
+  'If a bush rustles and nothing comes out, it is shy. Come back tomorrow. (signed) Old Snoozlo (I think)',
 ];
 
 export function tonightConst(day, hash) { return CONSTELLATIONS[hash(day + ':stars') % CONSTELLATIONS.length]; }

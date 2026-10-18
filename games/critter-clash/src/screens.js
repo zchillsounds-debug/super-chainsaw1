@@ -13,6 +13,7 @@ import { SHOP_HATS } from './critters.js';
 import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats } from './story.js';
 import { MAPS } from './worldmaps.js';
+import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
 
 // trainers and story foes meet the hero partway: an over-levelled hero still gets a fight (the foe climbs
 // halfway to the hero's level), and an under-levelled one is never more than 3 levels behind
@@ -972,6 +973,13 @@ export class Screens {
         + bar('🪩', 'Nights danced', A.cnt?.dance || 0)
         + bar('🔭', 'Constellations spotted', (A.consts || []).length, 8)
         + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
+    } else if (tab === 'night') { // the star log (Sprout Village's telescope) and the bottle notes read on Seashell's shore
+      const seen = save.adv.consts || [], read = save.adv.notes || [];
+      body = `<li class="jr-head">🔭 Star log <small>${seen.length}/${CONSTELLATIONS.length}</small></li>`
+        + `<li class="jr-stars">${CONSTELLATIONS.map((c) => `<span class="${seen.includes(c.id) ? 'got' : ''}">${seen.includes(c.id) ? '✨ ' + c.name : '❔ ???'}</span>`).join('')}</li>`
+        + (seen.length ? '' : '<li class="jr-more">Grandpa\'s telescope stands by the trees in Sprout Village. Look through it after dark!</li>')
+        + `<li class="jr-head">🍾 Bottle notes <small>${read.length}/${BOTTLE_NOTES.length}</small></li>`
+        + (read.length ? [...read].sort((a, b) => a - b).map((i) => `<li class="jr-note">${BOTTLE_NOTES[i].replace(/\(signed\) (.*)$/, '<em>— $1</em>')}</li>`).join('') : '<li class="jr-more">A bottle washes up on Seashell Town\'s shore most nights. Pop the cork!</li>');
     } else {
       const L = save.adv.fishLog || { n: 0 }, sp = { ...(L.sp || {}) };
       if (L.best && !sp[L.best.name]) sp[L.best.name] = L.best.cm;
@@ -981,7 +989,7 @@ export class Screens {
         + `<li class="jr-more">${Object.keys(sp).length}/${Object.values(FISH).flat().length} kinds · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
     }
     d.innerHTML = `<div class="modal wd-journal"><h2>Journal</h2>
-      <div class="jr-tabs"><button data-t="fav" class="${tab === 'fav' ? 'on' : ''}">🤝 Favours</button><button data-t="fish" class="${tab === 'fish' ? 'on' : ''}">🐟 Fish</button><button data-t="rec" class="${tab === 'rec' ? 'on' : ''}">🏅 Records</button></div>
+      <div class="jr-tabs"><button data-t="fav" class="${tab === 'fav' ? 'on' : ''}">🤝 Favours</button><button data-t="fish" class="${tab === 'fish' ? 'on' : ''}">🐟 Fish</button><button data-t="night" class="${tab === 'night' ? 'on' : ''}">🌌 Night</button><button data-t="rec" class="${tab === 'rec' ? 'on' : ''}">🏅 Records</button></div>
       <ul class="jr-list">${body || '<li class="jr-more">Nobody has asked for help yet. Townsfolk with a ❗ over their heads have a favour to ask!</li>'}</ul>
       <div class="res-btns"></div></div>`;
     const close = () => { d.remove(); this.game.modalClose = null; };

@@ -967,7 +967,7 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 /* Adventure journal (☰ → 📔): favours and the fish album */
 .wd-journal { width: min(460px, 94vw); }
 .jr-tabs { display: flex; gap: 8px; justify-content: center; margin: -4px 0 8px; }
-.jr-tabs button { font: inherit; font-weight: 800; font-size: 14px; border: 0; border-radius: 999px; padding: 6px 14px; background: rgba(60,40,20,.1); color: inherit; cursor: pointer; }
+.jr-tabs button { font: inherit; font-weight: 800; font-size: 14px; border: 0; border-radius: 999px; padding: 6px 12px; white-space: nowrap; background: rgba(60,40,20,.1); color: inherit; cursor: pointer; }
 .jr-tabs button.on { background: #ffd23f; color: #3a2a10; }
 .jr-list { list-style: none; margin: 0 0 10px; padding: 0 4px 0 0; max-height: min(52vh, 360px); overflow-y: auto; text-align: left; }
 .jr-row { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 12px; background: rgba(60,40,20,.07); margin-bottom: 6px; }
@@ -1036,3 +1036,10 @@ body:has(.wd-box) .wd-a, body:has(.wd-box) .joybase, body:has(.stars-wrap) .wd-a
 .stars .st-tip { margin: 0; max-width: 520px; color: #d8e4ff; font-size: 13px; text-align: center; opacity: 0; transition: opacity .6s .3s; }
 .stars .st-tap { margin: 0; color: #9aa8d8; font-size: 11px; opacity: 0; transition: opacity .4s .8s; }
 .stars-wrap.done .st-name, .stars-wrap.done .st-tip, .stars-wrap.done .st-tap { opacity: 1; }
+.jr-head small { font-weight: 800; opacity: .6; margin-left: 4px; }
+.jr-note { padding: 6px 10px; border-radius: 10px; background: #fff8e0; border: 1px dashed rgba(120,90,40,.35); margin-bottom: 5px; font-size: 12.5px; font-weight: 700; line-height: 1.3; }
+.jr-note em { display: block; text-align: right; font-size: 11.5px; opacity: .7; }
+@media (max-width: 440px) { .jr-tabs { gap: 4px; } .jr-tabs button { font-size: 12.5px; padding: 6px 9px; } }
+.jr-stars { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px; margin-bottom: 4px; }
+.jr-stars span { padding: 4px 8px; border-radius: 10px; background: rgba(60,40,20,.06); font-size: 12.5px; font-weight: 800; opacity: .5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jr-stars span.got { opacity: 1; background: #e8ecff; }

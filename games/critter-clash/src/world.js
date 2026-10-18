@@ -13,7 +13,7 @@ import { getMap, CUP_ORDER } from './interiors.js';
 import { countUp, deliveryFor, deliveredLine, gauntletWeek } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
-import { stargaze, tonightConst } from './stars.js';
+import { stargaze, tonightConst, BOTTLE_NOTES } from './stars.js';
 
 export const TILE = 2;
 const DIRS = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
@@ -2887,19 +2887,11 @@ export class World {
       return this.say([(snow ? ['The campfire crackles in the snow. {hero} holds out their paws. Ahh, that\'s better!', 'Sparks float up into the cold, starry sky. Somewhere, a snowman looks jealous.', '{hero} warms up by the fire until even their ears feel toasty.'] : ['The bonfire crackles and pops. {hero} holds out their paws. Toasty!', 'Sparks float up and wink out among the stars. The waves hush on the sand.', '{hero} watches the flames dance for a while. A perfect beach night.'])[Math.floor(Math.random() * 3)]]);
     }
     if (this.bottle && this.bottle.x === fx && this.bottle.y === fy) { // pop the cork, read the note, pocket the berry tucked inside
-      const B = this.bottle, notes = [
-        'If you find this, know that the Alpha of the day roams wherever the 💥 is on the Town Map. Big, red and grumpy. Bring snacks. (signed) A worried hiker',
-        'Dear finder, the moon is the best bait. Moonfins bite in any water after dark. (signed) F.',
-        'Gold berries in TURBO are worth five red ones. Do NOT tell Volt. (signed) Pixel',
-        'Trader Tock never stays in one town two days running. Follow the 🎩 on the Town Map! (signed) A hat lover',
-        'Shake every berry bush once a day. Sometimes a sleepy critter tumbles out! (signed) Gardener Bea',
-        'I tried to surf all the way to Frostpeak. Do not try to surf all the way to Frostpeak. (signed) A cold Pengsicle',
-        'Danced with DJ Tumble in Neon City last night. Best night of my life. My feet still flash. (signed) A Jiggawatt',
-        'Each week the Peak Gauntlet has a theme. Bring a critter that beats both types! (signed) Keeper Orla',
-      ];
+      const B = this.bottle, notes = BOTTLE_NOTES, ni = hash(B.day + 'n') % notes.length;
+      if (!(save.adv.notes ||= []).includes(ni)) save.adv.notes.push(ni);
       save.adv.bottle = B.day; countUp('bottle'); save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(1);
       this.solid.delete(B.x + ',' + B.y); B.g.traverse((o) => o.geometry?.dispose()); this.group.remove(B.g); this.group.remove(B.glint); this.bottle = null;
-      return this.say(['A bottle washed up on the sand! {hero} pops the cork and unrolls a note...', notes[hash(B.day + 'n') % notes.length], 'A berry was tucked inside, too! +1 🍓 (Another bottle may wash up tomorrow night.)']);
+      return this.say(['A bottle washed up on the sand! {hero} pops the cork and unrolls a note...', notes[ni], 'A berry was tucked inside, too! +1 🍓 (Another bottle may wash up tomorrow night.)']);
     }
     if (this.dance && this.dance.y === fy && this.dance.x.includes(fx)) { // DJ Tumble's night set: dance! The first dance of the night tips a berry
       this.danceT = 3.2; sfx.jingle?.(1); const day = new Date().toISOString().slice(0, 10);
