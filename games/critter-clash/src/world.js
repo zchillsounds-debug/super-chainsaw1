@@ -312,6 +312,7 @@ export class World {
     this.buildBonfire();
     this.buildCart();
     this.buildMarket();
+    this.buildJellies(rand);
     this.buildSkyLanterns();
     this.buildThanks();
     this.buildBuildings();
@@ -357,7 +358,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null; this.skyLanterns = null; this.jellies = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1030,6 +1031,26 @@ export class World {
     const gm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff9ad0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5 }); gm.userData.own = true;
     const glow = new THREE.Sprite(gm); glow.scale.set(5, 3, 1); glow.position.set(0, 2.3, 0.7); g.add(glow);
     this.cart = { g, lanterns, glow, px: px + TILE / 2 - 0.7 * 1, pz };
+  }
+
+  // Seashell Town at night: a few glowing jellyfish drift and pulse in the sea (water tiles away from the shore edge)
+  buildJellies(rand) {
+    this.jellies = null;
+    if (this.key !== 'seashell' || this.phase !== 'night') return; // the open sea only (Route 2's river is fresh water)
+    const spots = [];
+    for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if (this.tile(x, y) === '~' && this.tile(x + 1, y) === '~' && this.tile(x, y + 1) === '~' && this.tile(x - 1, y) === '~') spots.push([x, y]);
+    if (!spots.length) return;
+    const cols = [0x7ae0ff, 0xff8ae8, 0xb89aff], J = [];
+    for (let k = 0; k < Math.min(8, spots.length); k++) {
+      const [x, y] = spots[Math.floor(rand() * spots.length)], [px, pz] = wpos(x, y), col = cols[k % 3], g = new THREE.Group();
+      const bm = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.55, depthWrite: false }); bm.userData.own = true;
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), bm); g.add(dome);
+      const sm = new THREE.SpriteMaterial({ map: glowTex(), color: col, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.7 }); sm.userData.own = true;
+      const gl = new THREE.Sprite(sm); gl.scale.setScalar(1.6); gl.position.y = 0.05; g.add(gl);
+      g.position.set(px + (rand() - 0.5) * 1.2, -0.05, pz + (rand() - 0.5) * 1.2); this.group.add(g);
+      J.push({ g, dome, sm, ph: rand() * 6, x0: g.position.x, z0: g.position.z });
+    }
+    this.jellies = J;
   }
 
   // the Neon arcade: a glowing marquee over each bank of cabinets says which game it plays
@@ -2439,6 +2460,11 @@ export class World {
     if (this.thanksFan) { this.thanksFan.rotation.z -= dt * 14; if (Math.random() < dt * 3) this.g.fx.spawn({ shape: 'star', x: this.thanksFan.parent.parent.position.x + (Math.random() - 0.5) * 0.3, y: 0.55 + Math.random() * 0.3, z: this.thanksFan.parent.parent.position.z + (Math.random() - 0.5) * 0.3, vx: -1.1, vz: -0.65, vy: 0.15, life: 0.9, size: 0.18, color: 0xdff6ff }); }
     if (this.rocker?.isObject3D) { const near = this.hero && Math.hypot(this.hero.root.position.x - this.rocker.position.x, this.hero.root.position.z - this.rocker.position.z) < 3.2; this.rockA = (this.rockA ?? 0.04) + ((near ? 0.13 : 0.04) - (this.rockA ?? 0.04)) * Math.min(1, dt * 2); this.rocker.rotation.x = Math.sin(this.t * 1.7) * this.rockA; } // creak... creak...
     for (const a of this.wild || []) if (a.ring) { const k = 1 + Math.sin(this.t * 4) * 0.12; a.ring.position.x = a.root.position.x; a.ring.position.z = a.root.position.z; a.ring.scale.setScalar(1.6 * k); a.ring.material.opacity = 0.55 + Math.sin(this.t * 4) * 0.25; a.aura.material.opacity = 0.5 + Math.sin(this.t * 4 + 1) * 0.2; }
+    if (this.jellies) for (const J of this.jellies) { // pulse (squash and stretch) and drift in slow circles
+      const p = this.t * 1.8 + J.ph, q = Math.sin(p);
+      J.dome.scale.set(1 + q * 0.12, 1 - q * 0.18, 1 + q * 0.12); J.sm.opacity = 0.5 + q * 0.2;
+      J.g.position.x = J.x0 + Math.sin(this.t * 0.25 + J.ph) * 0.6; J.g.position.z = J.z0 + Math.cos(this.t * 0.2 + J.ph) * 0.6; J.g.position.y = -0.05 + Math.max(0, q) * 0.06;
+    }
     if (this.skyLanterns) for (const L of this.skyLanterns) { // each lantern rises for 14 s from a random spot near the hero, then starts again
       L.t += dt; if (L.t > 14 || !L.x) { L.t %= 14; L.x = this.hero.root.position.x + (Math.random() - 0.5) * 22; L.z = this.hero.root.position.z + (Math.random() - 0.3) * 14; }
       const f = L.t / 14; L.g.position.set(L.x + Math.sin(this.t * 0.7 + L.z) * 0.6, 0.5 + f * 13, L.z - f * 3); L.g.rotation.z = Math.sin(this.t * 1.3 + L.x) * 0.12;
