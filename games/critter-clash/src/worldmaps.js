@@ -124,7 +124,7 @@ export const MAPS = {
       { id: 'old', x: 20, act: 'sleep', y: 12, critter: 'snoozlo', name: 'Old Snoozlo', dir: 'w', lines: ['Old Snoozlo: Zzz... huh? Oh. They say the Critter Crown sits on top of Champion\'s Peak... zzz...', "Old Snoozlo: ...seven stadiums... seven cups... then the Crown... zzz..."] },
       { id: 'gardener', x: 4, act: 'water', y: 15, critter: 'clovebun', name: 'Gardener Bea', dir: 'e', story: 'lost:can', lines: ['Gardener Bea: These flowers love a good rain. So do water critters! They pop out of the grass all over when it pours.', 'Gardener Bea: Shake a berry bush once a day. Sometimes a sleepy critter tumbles out with the berries!'] },
       { id: 'jogger', x: 20, act: 'hop', y: 9, critter: 'voltferret', name: 'Jogger Zip', dir: 'w', wander: 3, lines: ['Jogger Zip: Hup hup! Push the stick all the way (or hold Shift) and you RUN. Dust everywhere!', 'Jogger Zip: Running is faster, but tall grass still finds you. Hup hup!'] },
-      { id: 'prickle', x: 7, act: 'cheer', y: 2, critter: 'pricklepuff', name: 'Pricklepuff', dir: 's', wander: 2, lines: ['Pricklepuff: I saw a traveller in a tricorn hat selling hats nobody else has! A different town every day!', 'Pricklepuff: Don\'t hug me. Everyone always wants to hug me. OUCH, they say.'] },
+      { id: 'prickle', x: 7, act: 'cheer', y: 2, critter: 'pricklepuff', name: 'Pricklepuff', story: 'lost:letter', dir: 's', wander: 2, lines: ['Pricklepuff: I saw a traveller in a tricorn hat selling hats nobody else has! A different town every day!', 'Pricklepuff: Don\'t hug me. Everyone always wants to hug me. OUCH, they say.'] },
     ],
   },
 
@@ -375,7 +375,7 @@ export const MAPS = {
       { id: 'boulder2', x: 14, act: 'flex', y: 6, critter: 'rolladillo', lv: 11, name: 'Big Boulder', dir: 's', lines: ["Big Boulder: I run the Champion Stadium. Only critters with three cups get a shot. You've got 'em? Then come on in!", 'Big Boulder: Rolladillo and I have never lost at home. Never! ...Okay, twice.'] },
       { id: 'spa', x: 21, act: 'fan', y: 4, critter: 'pengsicle', name: 'Pengsicle', dir: 'w', wander: 1, lines: ['Pengsicle: Too... hot... I came for the hot springs and I am MELTING.', 'Pengsicle: I hear the Midnight Cup is in a big city with neon lights. Somewhere cooler, I hope!'] },
       { id: 'kid4', x: 9, act: 'hop', y: 12, critter: 'kindlekit', name: 'Kindlekit', dir: 'e', wander: 2, lines: ['Kindlekit: Yip! The volcano rumbles every time someone wins the Champion Cup. Make it RUMBLE!'] },
-      { id: 'smith', x: 22, act: 'flex', y: 12, critter: 'emberfly', name: 'Smith Ash', dir: 'w', lines: ['Smith Ash: Feel that warm ground? Magma runs right under Cinder Town. Watch the cracks glow!', 'Smith Ash: The forge chimney never stops sparking. Neither do I. HAH!'] },
+      { id: 'smith', x: 22, act: 'flex', y: 12, critter: 'emberfly', name: 'Smith Ash', story: 'lost:cocoa', dir: 'w', lines: ['Smith Ash: Feel that warm ground? Magma runs right under Cinder Town. Watch the cracks glow!', 'Smith Ash: The forge chimney never stops sparking. Neither do I. HAH!'] },
       { id: 'tourist', x: 13, act: 'wave', y: 4, critter: 'bubbalotl', name: 'Tourist Bo', dir: 's', wander: 1, story: 'lost:camera', lines: ['Tourist Bo: I came for the lava pools and stayed for the spa. Don\'t tell my mum it\'s so hot here.', 'Tourist Bo: Captain Puff\'s balloon flies you between towns you\'ve visited. Check the Town Map in the ☰ menu!'] },
     ],
   },

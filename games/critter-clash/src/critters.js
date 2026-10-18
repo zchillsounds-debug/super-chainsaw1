@@ -1142,6 +1142,7 @@ export const SHOP_HATS = [
   { id: 'propeller', name: 'Propeller Cap', kind: 'propeller', col: 0x5a8aff, band: 0xffd84d, price: 0, gift: true },
   { id: 'phones', name: 'DJ Headphones', kind: 'phones', col: 0x2a2438, band: 0xff5ad8, price: 0, gift: true },
   { id: 'seedling', name: 'Seedling Sprout', kind: 'seedling', col: 0x5ac24a, band: 0xffffff, price: 0, gift: true },
+  { id: 'bobble', name: 'Cocoa Bobble Hat', kind: 'beanie', col: 0x8a4a2a, band: 0xfff4e0, price: 0, gift: true },
 ];
 export function shopHat(cr, id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return null;

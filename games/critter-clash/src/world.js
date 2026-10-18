@@ -10,7 +10,7 @@ import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx, playMusic } from './audio.js';
 import { rivalFor } from './worldmaps.js';
 import { getMap, CUP_ORDER } from './interiors.js';
-import { countUp, deliveryFor } from './story.js';
+import { countUp, deliveryFor, deliveredLine } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
 
@@ -2300,6 +2300,7 @@ export class World {
     a.dir = { n: 's', s: 'n', e: 'w', w: 'e' }[this.dir];
     if (n.story) return this.S.worldStory(n.story, this, a);
     const dq = deliveryFor(n.id); if (dq) return this.S.worldStory('deliver:' + dq, this, a);
+    const dl = !n.trainer && deliveredLine(n.id); if (dl && Math.random() < 0.6) return this.say(dl);
     if (n.trainer) {
       if (save.adv.flags[n.id]) {
         // after the crowning, route trainers want a rematch with the Champion once a day, at the hero's level

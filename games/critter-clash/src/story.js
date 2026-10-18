@@ -526,6 +526,22 @@ const LOST = {
     wait: ['Gardener Rosa: Did the seeds get to Diggles yet? Seashell Town, by the sandcastle. Keep them dry!'],
     done: ['Diggles: A packet... from Rosa?! CLOUD SEEDS! For MY castle?!', 'Diggles plants one right on top of the tallest tower. POOF! A little cloud flower puffs up!', 'Diggles: It\'s perfect. The greatest sandcastle in Clashara now has a CLOUD on it! Here, take this. I grew it on my head by accident.', '{hero} got the Seedling Sprout! 🌱 +2 🍓'],
   },
+  cocoa: {
+    who: 'Smith Ash', item: 'cocoa beans', hat: 'bobble', snack: true, berries: 0, toast: '☕', home: 'Cinder Town', to: { npc: 'cocoa', map: 'frostpeak', name: 'Cocoa Seller Cora', home: 'Frostpeak' },
+    thanks: 'Smith Ash: Cora sent a postcard. It just says "COCOA!!!" in very big letters. I think she\'s happy.',
+    after: ['Cocoa Seller Cora: Hot cocoa! Roasted in a volcano, sold on a mountain. Best in Clashara!'],
+    ask: ['Smith Ash: Psst. You heading up to Frostpeak? Cocoa Seller Cora ran out of cocoa ages ago. Poor thing.', 'Smith Ash: I roast cocoa beans on the forge chimney. Nothing roasts like volcano heat! Could you take her this sack?', '{hero} got a sack of roasted cocoa beans! ☕ Take it to Cocoa Seller Cora in Frostpeak.'],
+    wait: ['Smith Ash: Cora\'s the one by the Berry Center in Frostpeak. Go on, before the beans get cold! ...Well. Colder.'],
+    done: ['Cocoa Seller Cora: Is that... COCOA BEANS? Roasted? From Smith Ash?! Oh, you lovely little courier!', 'Cora brews a mug on the spot and hands it to {hero}. It\'s warm all the way to the paws!', 'Cocoa Seller Cora: And take this. I knitted it while I had nothing to sell. Which was a long time!', '{hero} got the Cocoa Bobble Hat and a mug of cocoa (a Power Snack)! ☕'],
+  },
+  letter: {
+    who: 'Pricklepuff', item: 'letter', berries: 3, snack: true, toast: '✉️', home: 'Bloom Town', to: { npc: 'elder', map: 'frostpeak', name: 'Old Snoozlo', home: 'Frostpeak' },
+    thanks: 'Pricklepuff: Grandpa Snoozlo wrote back! Well, he drew a picture of himself asleep. Same thing!',
+    after: ['Old Snoozlo: ...zzz... Little Pricklepuff\'s letter... I read it every morning... then I nap... zzz...'],
+    ask: ['Pricklepuff: Spiky hello! My grandpa lives way up in Frostpeak. He\'s Old Snoozlo, the sleepy one.', 'Pricklepuff: I wrote him a letter, but the post critter says nobody delivers that far. Could YOU take it?', '{hero} got Pricklepuff\'s letter! ✉️ Take it to Old Snoozlo in Frostpeak.'],
+    wait: ['Pricklepuff: Grandpa Snoozlo lives in Frostpeak, the very last town before the Peak. He\'s usually... asleep. Just wake him gently!'],
+    done: ['Old Snoozlo: ...zzz... hm? A letter? From... little Pricklepuff? ...Oh my. Oh my my.', 'Old Snoozlo reads it three times, very slowly, and smiles.', 'Old Snoozlo: Thank you, young one... Here. Berries, and my secret Power Snack... zzz...', '{hero} got 3 berries and a Power Snack! ⭐'],
+  },
 };
 // the ☰ card's favour line: the first favour still open (found things first)
 export function favourLine() {
@@ -549,20 +565,26 @@ export function favourList() {
 export function deliveryFor(npc) {
   const F = flags(); return Object.keys(LOST).find((id) => LOST[id].to?.npc === npc && F[id + '_asked'] && !F[id + '_done']) || null;
 }
+// what a delivery's recipient says once they have it
+export function deliveredLine(npc) {
+  const F = flags(), id = Object.keys(LOST).find((k) => LOST[k].to?.npc === npc && F[k + '_done']); return id && LOST[id].after ? LOST[id].after : null;
+}
 function lostQuest(S, w, a, key) {
   const F = flags(), [kind, id] = key.split(':'), Q = LOST[id], who = Q.who;
   if (kind === 'deliver') { // hand the parcel over: the one you brought it to gives the reward
     F[id + '_found'] = F[id + '_done'] = true;
     if (Q.hat) { const own = (save.adv.hats ||= []); if (!own.includes(Q.hat)) own.push(Q.hat); }
     save.berries = (save.berries || 0) + (Q.berries || 0);
+    const out = [...Q.done];
+    if (Q.snack) { const h = save.adv.hero, c = save.critters[h], r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4)); if (r.to > r.from) out.push(`{hero} grew to Lv ${r.to}!`); }
     persist(); w.questMarks?.(); sfx.jingle(3); S.toast(`${Q.toast} Delivered the ${Q.item}!`);
-    return w.say(Q.done, null, Q.to.name);
+    return w.say(out, null, Q.to.name);
   }
   if (kind === 'found') {
     F[id + '_found'] = true; persist(); sfx.jingle(2); w.buildLost?.(); w.questMarks?.(); S.toast(`${Q.toast} Found the ${Q.item}!`);
     return w.say(Q.found);
   }
-  if (F[id + '_done']) return w.say(Q.to ? [`${who}: Diggles sent me a drawing of the cloud flower on the castle. Thank you, little courier!`] : [a.n.lines[Math.floor(Math.random() * a.n.lines.length)]], null, who);
+  if (F[id + '_done']) return w.say(Q.to ? [Q.thanks || `${who}: ${Q.to.name} sent me a drawing of the cloud flower on the castle. Thank you, little courier!`] : [a.n.lines[Math.floor(Math.random() * a.n.lines.length)]], null, who);
   if (F[id + '_found']) {
     F[id + '_done'] = true;
     if (Q.hat) { const own = (save.adv.hats ||= []); if (!own.includes(Q.hat)) own.push(Q.hat); }
