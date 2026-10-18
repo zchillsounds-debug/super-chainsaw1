@@ -45,7 +45,7 @@ const markMat = (k) => MARKS[k] ||= new THREE.SpriteMaterial({ depthTest: false,
   c.fillStyle = '#2a1630'; c.font = 'bold 34px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(k, 32, 32);
 }) });
 // where each side quest's lost thing turns up: a solid tile (tree, rock, palm) you face from next door
-const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 } };
+const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, phones: { map: 'ember', x: 23, y: 1 } };
 
 const STEP = 0.23; // seconds per tile
 const SHINY_RATE = 1 / 30; // a rare shiny wild critter: beat it to unlock its shiny palette
@@ -1051,6 +1051,18 @@ export class World {
         for (const sd of [-1, 1]) { const b = inked(new THREE.CylinderGeometry(0.12, 0.14, 0.42, 12), toon(0xffb03a), OL * 0.3); b.position.x = sd * 0.15; g.add(b); const ln = new THREE.Mesh(new THREE.CircleGeometry(0.1, 12), toon(0x9ad8ff, { rim: 1 })); ln.rotation.x = Math.PI / 2; ln.position.set(sd * 0.15, -0.22, 0); g.add(ln); }
         const strap = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.02, 4, 16, Math.PI), toon(0xc8743a)); strap.position.y = 0.2; g.add(strap);
         g.position.set(px + 0.8, 1.15, pz + 1.25); g.rotation.set(0.4, 0, 0.15); g.scale.setScalar(1.3);
+      } else if (id === 'can') { // a green watering can with a sunflower, left on a rock
+        g.add(inked(new THREE.CylinderGeometry(0.24, 0.27, 0.42, 14), toon(0x4cba6a), OL * 0.35));
+        const sp = inked(new THREE.CylinderGeometry(0.04, 0.06, 0.5, 8), toon(0x4cba6a), OL * 0.25); sp.position.set(0.3, 0.12, 0); sp.rotation.z = -0.9; g.add(sp);
+        const rose = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.04, 0.06, 10), toon(0x3a9a5a)); rose.position.set(0.5, 0.27, 0); rose.rotation.z = -0.9; g.add(rose);
+        const hd = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.035, 6, 14, Math.PI), toon(0x3a9a5a)); hd.position.y = 0.2; hd.rotation.y = Math.PI / 2; g.add(hd);
+        const sf = new THREE.Mesh(new THREE.CircleGeometry(0.1, 10), toon(0xffd84d)); sf.position.z = 0.265; g.add(sf);
+        const ce = new THREE.Mesh(new THREE.CircleGeometry(0.045, 8), toon(0x8a5a2a)); ce.position.z = 0.27; g.add(ce);
+        g.position.set(px, 1.05, pz + 0.3); g.rotation.y = -0.5; g.scale.setScalar(1.3);
+      } else if (id === 'phones') { // pink headphones on a warm rock by the springs
+        const bd = inked(new THREE.TorusGeometry(0.3, 0.04, 6, 18, Math.PI), toon(0xff5ad8), OL * 0.25); g.add(bd);
+        for (const sd of [-1, 1]) { const c = inked(new THREE.CylinderGeometry(0.13, 0.13, 0.1, 14), toon(0x2a2438), OL * 0.3); c.rotation.z = Math.PI / 2; c.position.set(sd * 0.3, -0.02, 0); g.add(c); const pd = new THREE.Mesh(new THREE.CircleGeometry(0.09, 12), toon(0xff5ad8, { rim: 1 })); pd.position.set(sd * 0.36, -0.02, 0); pd.rotation.y = sd * Math.PI / 2; g.add(pd); }
+        g.position.set(px, 1.0, pz + 0.3); g.rotation.set(-1.1, 0.3, 0); g.scale.setScalar(1.3);
       }
       this.group.add(g);
       this.lost.push({ id, x: Q.x, y: Q.y, g });

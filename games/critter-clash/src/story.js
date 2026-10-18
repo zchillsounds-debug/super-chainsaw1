@@ -498,6 +498,20 @@ const LOST = {
     found: ['A pair of binoculars dangles from a low branch by its strap. {hero} unhooks them.', 'Owl Watcher Wren in Glowcap Hollow will want these!'],
     done: ['Owl Watcher Wren: My binoculars! Hoo hoo hoo! Now I can see EVERYTHING again.', 'Owl Watcher Wren: Please, have my trail snack and some berries. You\'ve earned them.', '{hero} got 2 berries and a Power Snack! ⭐'],
   },
+  can: {
+    who: 'Gardener Bea', item: 'watering can', hat: 'straw', berries: 2, toast: '🪴', hint: "on a rock at the south end of Route 1", home: 'Bloom Town',
+    ask: ['Gardener Bea: Oh, petals! I went to water the wild flowers on Route 1 and came back without my watering can.', 'Gardener Bea: I set it down on a rock near the bottom of the route, by the flowers. My knees aren\'t what they were. Could you fetch it?'],
+    wait: ['Gardener Bea: My watering can should be on a rock at the south end of Route 1, on the west side. It\'s green with a sunflower on it!'],
+    found: ['A green watering can with a painted sunflower sits on the rock, still half full. {hero} carries it carefully.', 'Gardener Bea in Bloom Town will be glad to see it!'],
+    done: ['Gardener Bea: My watering can! And you didn\'t spill a drop. Well, only a few. The grass is grateful.', 'Gardener Bea: Take my old Straw Hat. It keeps the sun off while you\'re out exploring.', '{hero} got the Straw Hat! 👒 +2 🍓'],
+  },
+  phones: {
+    who: 'DJ Tumble', item: 'headphones', hat: 'phones', berries: 3, toast: '🎧', hint: "on a rock by the hot springs in Cinder Town", home: 'Neon City',
+    ask: ['DJ Tumble: Yo... the show must go on, but my headphones went OFF. Like, off my head. Gone.', 'DJ Tumble: I was chilling at the hot springs in Cinder Town before the gig. Put them on a rock up by the steam, top right corner. Then I forgot them!', 'DJ Tumble: Bring them back and I\'ll hook you up. DJ\'s honour.'],
+    wait: ['DJ Tumble: No headphones yet? Cinder Town, the rock by the hot springs, top right. They\'re pink. You can\'t miss them. Probably.'],
+    found: ['A pair of pink headphones sits on a warm rock by the steaming spring. A tiny beat still thumps out of them.', 'DJ Tumble in Neon City needs these for tonight\'s show!'],
+    done: ['DJ Tumble: MY CANS! Aw yeah, the bass is back! Jiggawatt, cue the lights!', 'DJ Tumble: I\'ve got a spare pair. Pink and loud, just like the city. They\'re yours.', '{hero} got the DJ Headphones! 🎧 +3 🍓'],
+  },
 };
 // the ☰ card's favour line: the first favour still open (found things first)
 export function favourLine() {
