@@ -293,6 +293,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'hatshop') return hatShop(w);
   if (id === 'board') return requestBoard(S, w);
   if (id === 'trader') return trader(w);
+  if (id === 'noodles') return noodleCart(w);
   if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
   if (id === 'wardrobe') return wearMenu(w, '', null);
@@ -643,6 +644,29 @@ function trader(w) {
   }, () => { w.busy = false; w.say(['Trader Tock: Look for me tomorrow. Different town, and new hats every week!'], null, who); }, true); }, who);
 }
 
+// Chef Rumi's noodle cart in Neon City: a bowl of spark noodles once a day (berries for XP), and a hat you can't get anywhere else
+function noodleCart(w) {
+  const A = save.adv, who = 'Noodle Chef Rumi', day = new Date().toISOString().slice(0, 10), own = (A.hats ||= []);
+  const hat = SHOP_HATS.find((h) => h.id === 'boppers'), ate = A.noodles === day;
+  const opts = [ate ? 'Noodles (tomorrow!)' : 'Spark Noodles (2 🍓)', ...(own.includes(hat.id) ? [] : [`${hat.name} (${hat.price} 🍓)`]), 'Bye'];
+  w.ask(`${who}: Slurp up! Fresh spark noodles, hot all night. (You have ${save.berries || 0} 🍓)`, opts, (i) => {
+    const pick = opts[i];
+    if (pick === 'Bye') return w.say([`${who}: Come back hungry!`], null, who);
+    if (pick.startsWith('Noodles')) return w.say([`${who}: One bowl a day, friend! Any more and {hero} would float away on the fizz.`], null, who);
+    if (pick.startsWith('Spark')) {
+      if ((save.berries || 0) < 2) return w.say([`${who}: Two berries a bowl! Shake a bush or two and come back.`], null, who);
+      const h = A.hero, c = save.critters[h] || (save.critters[h] = { level: 1, xp: 0 });
+      save.berries -= 2; A.noodles = day;
+      const r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4)); persist(); sfx.jingle(2);
+      for (let k = 0; k < 10; k++) w.g.fx.spawn({ x: w.hero.root.position.x + (Math.random() - 0.5) * 0.8, y: 1.6, z: w.hero.root.position.z, vx: (Math.random() - 0.5) * 1.4, vy: 1.5 + Math.random() * 1.5, vz: (Math.random() - 0.5) * 1.4, color: Math.random() < 0.5 ? 0xffe04a : 0x5ae8ff, size: 0.16, life: 0.9, shape: 'spark' });
+      return w.say(['*SLURRRP* Spark noodles! They fizz all the way down. 🍜⚡', r.to > r.from ? `{hero} grew to Lv ${r.to}!` : '{hero} is buzzing with energy! (+XP)'], null, who);
+    }
+    if ((save.berries || 0) < hat.price) return w.say([`${who}: The ${hat.name}? ${hat.price} berries. I made them from old arcade lights!`], null, who);
+    save.berries -= hat.price; own.push(hat.id); A.hat = hat.id; persist(); sfx.jingle(2); w.wearHat();
+    w.say([`{hero} got the ${hat.name}! 🎩`, `${who}: Now {hero} glows like a real Neon City local!`], null, who);
+  }, who);
+}
+
 // pick a hat you own (from the Hat Shop, or the wardrobe at home)
 function wearMenu(w, who, back) {
   const A = save.adv, own = A.hats || [];
@@ -662,7 +686,7 @@ function hatShop(w) {
   const A = save.adv, own = (A.hats ||= []), who = 'Milliner Mo';
   const menu = () => w.ask(`Milliner Mo: Welcome to the Hat Shop! A hat for every head. (You have ${save.berries || 0} 🍓)`, ['Buy a hat', 'Wear a hat', 'Bye'], (i) => {
     if (i === 0) {
-      const left = SHOP_HATS.filter((h) => !own.includes(h.id) && !h.trader && !h.gift);
+      const left = SHOP_HATS.filter((h) => !own.includes(h.id) && !h.trader && !h.gift && !h.market);
       if (!left.length) return w.say(['Milliner Mo: You own every hat in the shop! A true hat collector. I\'m honoured!'], null, who);
       w.busy = true;
       return w.S.hatGrid('Milliner Mo: Which one catches your eye?', left, (id) => {

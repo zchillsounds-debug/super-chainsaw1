@@ -217,6 +217,7 @@ export class World {
     this.buildAurora();
     this.buildLamps();
     this.buildBonfire();
+    this.buildCart();
     this.buildThanks();
     this.buildBuildings();
     this.buildInterior();
@@ -260,7 +261,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.cart = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -904,6 +905,35 @@ export class World {
     }
     this.group.add(g);
     this.bonfire = { g, flames, sp, pool, px, pz, x, y };
+  }
+
+  // Chef Rumi's noodle cart on Neon City's south street: a striped awning, paper lanterns, a steaming pot and a glowing sign
+  buildCart() {
+    this.cart = null;
+    if (this.key !== 'neon') return;
+    const x = 8, y = 15, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px + TILE / 2, 0, pz); this.group.add(g);
+    this.solid.add(x + ',' + y); this.solid.add(x + 1 + ',' + y);
+    const box = (w, h, d, col, X, Y, Z, ink = 0.3) => { const m = inked(new THREE.BoxGeometry(w, h, d), toon(col), OL * ink); m.position.set(X, Y, Z); m.castShadow = true; g.add(m); return m; };
+    box(3.0, 1.0, 1.2, 0xc83a4a, 0, 0.75, 0); box(3.1, 0.12, 1.3, 0xf4e8d8, 0, 1.3, 0); // the cart and its counter
+    for (const sx of [-1.1, 1.1]) { const wh = inked(new THREE.CylinderGeometry(0.32, 0.32, 0.12, 14), toon(0x2a2438), OL * 0.3); wh.rotation.x = Math.PI / 2; wh.position.set(sx, 0.32, 0.66); g.add(wh); }
+    for (const sx of [-1.4, 1.4]) box(0.08, 1.5, 0.08, 0x5a3a2a, sx, 2.05, -0.5);
+    const stripes = canvasTex(64, 16, (c) => { for (let k = 0; k < 8; k++) { c.fillStyle = k % 2 ? '#fff4e8' : '#ff4a6a'; c.fillRect(k * 8, 0, 8, 16); } });
+    stripes.userData.own = true;
+    const aw = new THREE.Mesh(new THREE.BoxGeometry(3.3, 0.08, 1.6), new THREE.MeshToonMaterial({ map: stripes })); aw.material.userData.own = true; aw.position.set(0, 2.85, -0.1); aw.rotation.x = 0.28; aw.castShadow = true; g.add(aw);
+    const pot = inked(new THREE.CylinderGeometry(0.3, 0.26, 0.4, 12), toon(0x9aa0b8, { rim: 0.6 }), OL * 0.3); pot.position.set(-0.7, 1.56, 0); g.add(pot);
+    for (let k = 0; k < 3; k++) { const bw = inked(new THREE.SphereGeometry(0.17, 10, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), toon([0xffffff, 0x5ae8ff, 0xffd84d][k]), OL * 0.2); bw.position.set(0.3 + k * 0.38, 1.53, 0.2); g.add(bw); }
+    const sign = canvasTex(128, 40, (c) => { c.fillStyle = '#1a1430'; c.fillRect(0, 0, 128, 40); c.font = 'bold 26px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = '#ff5ad8'; c.shadowBlur = 8; c.fillStyle = '#ffd0f4'; c.fillText('NOODLES', 64, 21); });
+    sign.userData.own = true;
+    const sm = new THREE.MeshBasicMaterial({ map: sign }); sm.userData.own = true;
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.56), sm); sg.position.set(0, 0.8, 0.61); g.add(sg);
+    const lanterns = [];
+    for (let k = 0; k < 5; k++) {
+      const lm = new THREE.MeshBasicMaterial({ color: [0xff6a8a, 0xffc04a, 0x5ae8ff, 0xffc04a, 0xff6a8a][k] }); lm.userData.own = true;
+      const l = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), lm); l.scale.y = 1.25; l.position.set(-1.3 + k * 0.65, 2.55 - Math.sin(k / 4 * Math.PI) * 0.15, 0.7); g.add(l); lanterns.push(l);
+    }
+    const gm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff9ad0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5 }); gm.userData.own = true;
+    const glow = new THREE.Sprite(gm); glow.scale.set(5, 3, 1); glow.position.set(0, 2.3, 0.7); g.add(glow);
+    this.cart = { g, lanterns, glow, px: px + TILE / 2 - 0.7 * 1, pz };
   }
 
   // aurora ribbons hang over the snowy maps at night, waving slowly (they follow the camera, high up)
@@ -1667,7 +1697,7 @@ export class World {
         const p = new THREE.CylinderGeometry(0.07, 0.07, 1.3, 8); p.translate(px, 0.65, pz - 0.2); add('wood', p);
         const f = new THREE.CylinderGeometry(0.4, 0.45, 0.1, 12); f.translate(px, 0.05, pz - 0.2); add('wood', f);
         const k = new THREE.SphereGeometry(0.4, 12, 8); k.translate(px, 1.5, pz - 0.2); add('head', k);
-        const sold = SHOP_HATS.filter((s) => !s.trader && !s.gift), h = sold[(x * 3 + y) % sold.length], sk = new THREE.Group(); sk.position.set(px, 1.42, pz - 0.2); this.group.add(sk);
+        const sold = SHOP_HATS.filter((s) => !s.trader && !s.gift && !s.market), h = sold[(x * 3 + y) % sold.length], sk = new THREE.Group(); sk.position.set(px, 1.42, pz - 0.2); this.group.add(sk);
         hatModel({ def: { body: { headR: 0.62 } }, skull: sk }, h.kind, h.col, h.band);
       }
       if (t === 'K') { box('counter', TILE + 0.02, 1.1, 1.3, px, 0.55, pz); box('top', TILE + 0.04, 0.12, 1.45, px, 1.15, pz); }
@@ -2201,6 +2231,7 @@ export class World {
     for (const [fx, fy, fz, k = 1] of this.forgeFire || []) if (Math.random() < dt * 9 * k) this.g.fx.spawn({ x: fx + (Math.random() - 0.5) * 1.4 * k, y: fy, z: fz, vy: 1.2 + Math.random() * 1.6, vx: (Math.random() - 0.5) * 0.6, vz: 0.3 + Math.random() * 0.6, color: Math.random() < 0.6 ? 0xffa030 : 0xffe060, size: 0.14 + Math.random() * 0.1, life: 0.9, shape: 'glow' });
     if (this.thanksFan) { this.thanksFan.rotation.z -= dt * 14; if (Math.random() < dt * 3) this.g.fx.spawn({ shape: 'star', x: this.thanksFan.parent.parent.position.x + (Math.random() - 0.5) * 0.3, y: 0.55 + Math.random() * 0.3, z: this.thanksFan.parent.parent.position.z + (Math.random() - 0.5) * 0.3, vx: -1.1, vz: -0.65, vy: 0.15, life: 0.9, size: 0.18, color: 0xdff6ff }); }
     if (this.rocker?.isObject3D) { const near = this.hero && Math.hypot(this.hero.root.position.x - this.rocker.position.x, this.hero.root.position.z - this.rocker.position.z) < 3.2; this.rockA = (this.rockA ?? 0.04) + ((near ? 0.13 : 0.04) - (this.rockA ?? 0.04)) * Math.min(1, dt * 2); this.rocker.rotation.x = Math.sin(this.t * 1.7) * this.rockA; } // creak... creak...
+    if (this.cart) { const C = this.cart; C.lanterns.forEach((l, k) => { l.rotation.z = Math.sin(this.t * 1.6 + k) * 0.12; }); C.glow.material.opacity = 0.42 + Math.sin(this.t * 2.2) * 0.08; if (Math.random() < dt * 2.5) this.g.fx.spawn({ x: C.px + (Math.random() - 0.5) * 0.3, y: 1.9, z: C.pz, vy: 0.8, vx: 0.15, color: 0xf4f0ff, alpha: 0.45, size: 0.35, life: 1.6, shape: 'puff', additive: false, grow: 1.3 }); }
     if (this.bonfire) { const B = this.bonfire; B.flames.forEach((f, k) => { const q = 1 + Math.sin(this.t * (9 + k * 3) + k) * 0.12 + Math.sin(this.t * 23 + k * 2) * 0.06; f.scale.set(1 / Math.sqrt(q), q, 1 / Math.sqrt(q)); }); const fl = 0.85 + Math.sin(this.t * 13) * 0.08 + Math.sin(this.t * 31) * 0.05; B.sp.material.opacity = 0.5 * fl; B.pool.material.opacity = 0.7 * fl; if (Math.random() < dt * 6) this.g.fx.spawn({ x: B.px + (Math.random() - 0.5) * 0.4, y: 0.9, z: B.pz + (Math.random() - 0.5) * 0.4, vx: (Math.random() - 0.5) * 0.6, vy: 1.6 + Math.random() * 1.2, vz: (Math.random() - 0.5) * 0.6, color: 0xffb040, size: 0.14, life: 1.1, shape: 'spark' }); }
     if (this.pendulum) this.pendulum.rotation.z = Math.sin(this.t * 2.2) * 0.22; // tick... tock...
     for (const [jx, jy, jz, col, sh] of this.jars || []) if (Math.random() < dt * 5) this.g.fx.spawn(sh ? { x: jx + (Math.random() - 0.5) * 1.0, y: jy, z: jz + (Math.random() - 0.5) * 0.6, vy: 0.6, color: col, size: 0.14, life: 0.7, shape: sh } : { x: jx + (Math.random() - 0.5) * 0.5, y: jy + (Math.random() - 0.5) * 0.6, z: jz + (Math.random() - 0.5) * 0.5, color: 0xe8ff6a, size: 0.3, life: 0.8, shape: 'glow', fadeIn: 0.3 });

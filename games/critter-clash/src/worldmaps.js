@@ -424,6 +424,7 @@ export const MAPS = {
       { id: 'gang', x: 13, y: 15, critter: 'diggles', lv: 15, name: 'Gang Grunt', dir: 'e', story: 'heart', hideFlag: 'trial_heart' },
       { id: 'dash4', x: 14, y: 15, rival: true, rlv: 14, name: 'Dash', dir: 's', story: 'heart', hideFlag: 'trial_heart' },
       { id: 'tinker', x: 17, act: 'read', y: 12, critter: 'voltferret', name: 'Tinker Volt', dir: 's', story: 'lost:fan', lines: ['Tinker Volt: Everything in Neon City runs on spark power. Including me! Zzzap!', 'Tinker Volt: I fix the arcade machines. And the drones. And the lights. Mostly I fix things I broke.'] },
+      { id: 'noodle', x: 10, y: 15, act: 'wave', critter: 'ripples', name: 'Noodle Chef Rumi', dir: 'n', story: 'noodles' },
       { id: 'skater', x: 5, y: 13, critter: 'whirlwhisk', name: 'Skater Jo', dir: 'e', trainer: { lv: 14, sight: 4, intro: 'Skater Jo: Kickflip! Ollie! BATTLE! ...That last one isn\'t a skate trick. Let\'s go!', beat: 'Skater Jo: Wiped out. Totally worth it.', after: 'Skater Jo: The Night Gang hangs out by the south lamps. They\'ve been picking on a yellow critter all night.' } },
     ],
   },
