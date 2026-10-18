@@ -890,6 +890,7 @@ export class Screens {
     b.appendChild(this.btn('Resume', 'primary', close));
     b.appendChild(this.btn('🗺️ Town Map', 'secondary', () => { close(); this.worldMap(); }));
     b.appendChild(this.btn('🐾 Buddy', 'secondary', () => { close(); this.buddyPick(); }));
+    b.appendChild(this.btn('📸 Photo', 'secondary', () => { close(); setTimeout(() => this.worldObj?.snapshot(), 60); }));
     b.appendChild(this.btn('Save & Quit', 'ghost', () => { close(); persist(); this.leaveWorld(); this.title(); }));
     // start over with a new hero (tap twice: this replaces the current story)
     const fresh = this.btn('New Adventure', 'ghost small', () => {

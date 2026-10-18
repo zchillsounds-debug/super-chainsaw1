@@ -12,6 +12,7 @@ import { rivalFor } from './worldmaps.js';
 import { getMap, CUP_ORDER } from './interiors.js';
 import { countUp } from './story.js';
 import { ARENAS } from './arena.js';
+import { PhotoMode } from './photo.js';
 
 export const TILE = 2;
 const DIRS = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
@@ -1741,6 +1742,35 @@ export class World {
     } else { idlePose(P, this.t + 1); P.y = Math.abs(Math.sin(this.t * 3)) * 0.1; if (F.hop > 0) { F.hop -= dt; P.y = Math.sin((0.6 - F.hop) / 0.6 * Math.PI * 2) ** 2 * 0.6; P.armLz = P.armRz = 2; } if (!this.from) F.dir = F.x < this.hx ? 'e' : F.x > this.hx ? 'w' : F.y < this.hy ? 's' : 'n'; }
     F.root.rotation.y = turnTo(F.root.rotation.y, YAW[F.dir], dt * 14);
     F.cr.update(dt);
+  }
+
+  // ☰ → 📸 Photo: a close, low snapshot of the hero (and buddy) where they stand, in a keepsake frame
+  snapshot() {
+    const g = this.g, H = this.hero; if (!H || this.busy || this.dialog) return;
+    const cam = g.camera, keep = { pos: cam.position.clone(), quat: cam.quaternion.clone(), fov: cam.fov, yaw: H.root.rotation.y }, p = H.root.position;
+    H.root.rotation.y = 0.25; H.emote?.('happy', 'grin', 1.2);
+    const port = cam.aspect < 1;
+    cam.position.set(p.x + 1.1, p.y + (port ? 5.6 : 3.1), p.z + (port ? 7 : 4.1)); cam.lookAt(p.x, p.y + 0.8, p.z); cam.fov = port ? 38 : 34; cam.updateProjectionMatrix();
+    g.composer.render(0);
+    const src = g.renderer.domElement, W = src.width, Hh = src.height, pad = Math.round(Math.min(W, Hh) * 0.045), foot = pad * 3.2;
+    const out = document.createElement('canvas'); out.width = W + pad * 2; out.height = Hh + pad + foot;
+    const x = out.getContext('2d'), sc = Math.min(W, Hh) / 400;
+    x.fillStyle = '#fffaf0'; x.fillRect(0, 0, out.width, out.height);
+    x.drawImage(src, pad, pad);
+    x.font = `${Math.round(26 * sc)}px 'Lilita One', system-ui, sans-serif`; x.textBaseline = 'middle'; x.fillStyle = '#2a1630';
+    const when = { day: '☀️', evening: '🌇', night: '🌙' }[this.outPhase] + (this.rain ? '🌧️' : '');
+    const label = `${H.def.name} · ${this.M.name} ${when}`, fy = out.height - foot / 2;
+    if (x.measureText(label + ' CRITTER CLASH! ').width + pad * 3 < out.width) {
+      x.fillText(label, pad * 1.2, fy);
+      x.textAlign = 'right'; x.fillStyle = '#ff5a8a'; x.fillText('CRITTER CLASH!', out.width - pad * 1.2, fy);
+    } else { // a narrow (portrait) photo: the caption and the brand on two lines
+      x.textAlign = 'center'; x.fillText(label, out.width / 2, fy - foot * 0.17);
+      x.font = `${Math.round(18 * sc)}px 'Lilita One', system-ui, sans-serif`; x.fillStyle = '#ff5a8a'; x.fillText('CRITTER CLASH!', out.width / 2, fy + foot * 0.22);
+    }
+    cam.position.copy(keep.pos); cam.quaternion.copy(keep.quat); cam.fov = keep.fov; cam.updateProjectionMatrix(); H.root.rotation.y = keep.yaw;
+    sfx.shutter?.();
+    const fl = document.createElement('div'); fl.className = 'ph-flash go'; g.ui.appendChild(fl); setTimeout(() => fl.remove(), 600);
+    PhotoMode.prototype.preview.call({ game: g }, out.toDataURL('image/png'), out); // the photo mode's Save/Share card
   }
 
   updateCamera(dt) {
