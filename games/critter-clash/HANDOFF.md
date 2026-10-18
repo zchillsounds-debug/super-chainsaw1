@@ -3,6 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 15:44 UTC** (started 2026-10-18 15:44 UTC by session 17a). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
+- **Session 17e (2026-10-18 20:20–~21:20 UTC, session_01WXwKgexVpiRXyWsWsazxv3) did R429–R445 (see "Session 17e"); next round R446.**
 - **Session 17d (2026-10-18 19:00–~20:15 UTC, session_01Jt3NhTjr57JMGhaYdiZwXk) did R413–R428 (see "Session 17d"); next round R429.**
 - **Session 17c (2026-10-18 17:57–~19:30 UTC, session_01QTvrmqfxosdqeWGXKGsbMX) did R398–R412 (see "Session 17c"); next round R413.**
 - **Session 17b (2026-10-18 16:40–~17:55 UTC, session_01BfaGLYCvgsBvybduPxRouW) did R379–R397 (see "Session 17b"); next round R398.**
@@ -850,6 +851,24 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **Final checks (~20:12 UTC, production build of 786b72c = R428 + handoff):** advcup Sprout wins 3 matches and lands back in Bloom Town with no errors; tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait). A first 740×360 run flagged the title's Challenges/Critterdex/Camp as covered by the footer chips: the menu's 30px `rise` animation (still at its start in headless) slid it over the footer after R420 tightened the layout; short landscape now uses a 6px `riseShort`. Running three checks at once can time out the page load (412×915 did); run tapcheck alone if so.
 - **Next ideas:** a Town Map ⛲ mark or Today count badge on the ☰ button; more constellation variety (a seasonal 9th?); Glowcap/Cinder night events; Route lamps could be wooden lanterns instead of Victorian; Neon crowd draw calls (LOD for far critters); Ripples/Kindlekit balance re-check and the Alpha shown big in its battle (battle side, the user's chat); re-measure on a phone.
 
+## Session 17e (2026-10-18, 20:20–~21:20 UTC, session_01WXwKgexVpiRXyWsWsazxv3): fairy ring, hot spring, Critter Box, Pumpkin Nights, R429–R445
+- The local clone started on stale history; it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start (production build of 4a58ec5):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town.
+- **R429: ☰ Today badge.** The Journal's Today rows moved to `screens.todayList()` → `{ rows, after, night }`; `todayBadge()` sets `data-n` on the world ☰ button (open day rows, plus after-dark rows at night; refreshed every 3 s while `mode === 'world'`) and the ☰ menu's 📔 Journal button copies it (`.has-badge`).
+- **R430:** routes get wooden post lanterns (post, arm, hanging lantern) instead of Victorian lamps; `this.lampSpots` holds the picked corners.
+- **R431: Glowcap fairy ring** (new `src/ring.js`, `fairyRing(root, seed, onDone)`; test hook `el.__ring` with `step(dt)`, `tap(i)`, `tune`, `phase`, `close()`): 6 toadstools + a tall white one at glowcap 8,8 (solid, `buildRing()`); after dark they glow and shed spores; face it → 3 rounds (3/4/5 notes, 4 caps, `sfx.note(i)`); a full song pays 2 berries + 15% of a level once a night (`save.adv.ring`, `countUp('ring')`). By day: "come back after dark". Fen mentions it. **Test gotcha:** step it in small increments (`step(0.05)` × 90) — one big step plays only one note.
+- **R432:** short landscape (max-height 420, min-width 600): the Journal widens to 760px and its lists run in two columns.
+- **R433/R437: Cinder Town hot spring** (`buildSpring()`, ember 21–22 × 2–3, solid): rock ring, steaming turquoise pool, glows at night; face it → `soak()`: the hero sits in the pool for the talk (`this.soaking`, reset in `load()`), once a day +20% of a level (`save.adv.soak`, `countUp('soak')`).
+- **R434:** 9th constellation, The Toadstool; star log counts use `CONSTELLATIONS.length`.
+- **R435:** Town Map marks today's open ⛲ wish (Cloudtop), ♨️ soak (Cinder Town) and 🍄 ring song at night (Glowcap, drawn to the right of the dot), with a "✨ daily" legend chip.
+- **R436:** Pecan news `adv12` (tools' news lists include it).
+- **R438:** Journal Records opens with "🗺️ Clashara explored N%" (average of every bar that has a goal; gold at 100%); "Bottle notes read" has a goal now.
+- **R439: Berry Center Critter Box** (the right-hand shelf, `x === W - 2` in a `center` room, drawn as a cabinet with a glowing screen; sign act `pcbox` → story.js → `screens.leadPick(w)`): any team critter can lead the Adventure (`save.adv.hero`); the map reloads with the new lead; if the new lead was the buddy, the old lead becomes the buddy. Nurse Lilypop mentions it once (`flags.boxTip`).
+- **R440–R444: Pumpkin Nights** (`pumpkinNights()` in world.js: 15 Oct–2 Nov, or `save.adv.fest` to force it): `buildPumpkins()` puts a carved pumpkin beside up to 5 town doors (never on path tiles; solid); faces glow and flicker after dark; the first one checked each night gives a candy berry (`save.adv.pumpkin`, `countUp('pumpkin')`), the third treat ever gives the **Pumpkin Head** hat (`SHOP_HATS` entry with `season: true`; seasonal hats don't count in the Records hat total); townsfolk without a story sometimes chat about the festival (30%); 🎃 on the title's Adventure button; a Today row and Records row while it's on.
+- **R445:** 3 more bottle notes (15).
+- **Considered, skipped:** Neon crowd LOD — Neon night is ~330 draw calls (62 of them the shadow pass); the rest is animated critter parts already merged per joint, so an LOD would save little. A 100% hat reward would count towards its own goal.
+- Regression (production build of 1e4f4bb (R442)): advwins route1/glowcap/ember — 3 wild fights won, no errors.
+- **Next ideas:** show "Clashara explored %" on the ☰ card; more Pumpkin Nights touches (a spooky Glowwood night, costumes on wild critters, battle side for any fight visuals); portrait rooms still leave big dark bands above/below; a Critter Box tip in the Journal; Ripples/Kindlekit balance and the Alpha shown big in its battle (battle side, the user's chat); re-measure on a phone.
+
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - (Fixed in R132.) A re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
@@ -907,6 +926,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
+   - Session 17e chained at R446 with the 48-hour prompt word for word.
    - Session 17d chained at R429 with the 48-hour prompt word for word.
    - Session 16j did not chain: the user's window ended at about 10:45 UTC on 2026-10-18.
    - Session 16i chained to the next session at R359 with the same prompt (end ~10:45 UTC on 2026-10-18).
