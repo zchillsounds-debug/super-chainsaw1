@@ -10,7 +10,7 @@ import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx, playMusic } from './audio.js';
 import { rivalFor } from './worldmaps.js';
 import { getMap, CUP_ORDER } from './interiors.js';
-import { countUp } from './story.js';
+import { countUp, deliveryFor } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
 
@@ -664,6 +664,11 @@ export class World {
         const gate = new THREE.BoxGeometry(0.3, 0.32, 0.06); gate.translate(px, 0.16, pz + 0.51); sandD.push(gate);
         const fp = new THREE.CylinderGeometry(0.02, 0.02, 0.6, 4); fp.translate(px, 1.3, pz); sticks.push(fp);
         const fl = new THREE.BoxGeometry(0.3, 0.18, 0.02); fl.translate(px + 0.16, 1.5, pz); flags.push(fl);
+        if (save.adv.flags.seeds_done) { // Rosa's cloud flower puffs up beside the flag
+          const cf = new THREE.Group(); cf.position.set(px - 0.12, 1.2, pz + 0.1); cf.scale.setScalar(1.7); this.group.add(cf);
+          const st = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.3, 5), toon(0x4cba4a)); st.position.y = 0.15; cf.add(st);
+          for (let k = 0; k < 5; k++) { const pf = inked(new THREE.IcosahedronGeometry(k ? 0.12 : 0.16, 1), toon(0xffffff, { rim: 0.6 }), 0.012); pf.position.set(k ? Math.cos(k * 1.57) * 0.13 : 0, 0.36 + (k ? 0 : 0.04), k ? Math.sin(k * 1.57) * 0.13 : 0); cf.add(pf); }
+        }
         continue;
       }
       if (t === 'R') { const r = new THREE.DodecahedronGeometry(0.75, 0); r.scale(1.1, 0.75, 1); r.rotateY(rand() * 3); r.translate(px, 0.45, pz); rocks.push(r); }
@@ -1667,7 +1672,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = !id ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = deliveryFor(a.n.id) ? '?' : !id ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m;
@@ -2210,6 +2215,7 @@ export class World {
     if (this.dozing(n)) return this.say([`${n.name} is fast asleep, snoring softly. Better let them dream. Zzz...`]);
     a.dir = { n: 's', s: 'n', e: 'w', w: 'e' }[this.dir];
     if (n.story) return this.S.worldStory(n.story, this, a);
+    const dq = deliveryFor(n.id); if (dq) return this.S.worldStory('deliver:' + dq, this, a);
     if (n.trainer) {
       if (save.adv.flags[n.id]) {
         // after the crowning, route trainers want a rematch with the Champion once a day, at the hero's level

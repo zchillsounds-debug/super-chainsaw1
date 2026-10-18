@@ -1141,6 +1141,7 @@ export const SHOP_HATS = [
   { id: 'straw', name: 'Straw Hat', kind: 'wide', col: 0xe8c870, band: 0x4cba4a, price: 0, gift: true },
   { id: 'propeller', name: 'Propeller Cap', kind: 'propeller', col: 0x5a8aff, band: 0xffd84d, price: 0, gift: true },
   { id: 'phones', name: 'DJ Headphones', kind: 'phones', col: 0x2a2438, band: 0xff5ad8, price: 0, gift: true },
+  { id: 'seedling', name: 'Seedling Sprout', kind: 'seedling', col: 0x5ac24a, band: 0xffffff, price: 0, gift: true },
 ];
 export function shopHat(cr, id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return null;
@@ -1169,6 +1170,7 @@ export function hatModel(cr, kind, col, band) {
   if (kind === 'muffs') { add(new THREE.TorusGeometry(r * 0.86, r * 0.06, 6, 22, Math.PI), toon(band), 0.012).position.y = -r * 0.1; for (const sd of [-1, 1]) { const m = add(new THREE.SphereGeometry(r * 0.3, 12, 10), M, 0.015); m.position.set(sd * r * 0.86, -r * 0.12, 0); m.scale.set(0.7, 1, 1); } G.position.y -= r * 0.3; }
   if (kind === 'propeller') { const P = [toon(col), toon(0xff5a5a), toon(band), toon(0x5ac24a)]; for (let k = 0; k < 4; k++) add(new THREE.SphereGeometry(r * 0.72, 8, 8, k * Math.PI / 2, Math.PI / 2, 0, Math.PI / 2), P[k], 0.012).scale.y = 0.62; G.position.y -= r * 0.12; add(new THREE.CylinderGeometry(r * 0.04, r * 0.04, r * 0.3, 6), toon(0x8a94a4), 0).position.y = r * 0.55; const pr = new THREE.Group(); pr.name = 'spin'; pr.position.y = r * 0.7; G.add(pr); for (const sd of [-1, 1]) { const bl = inked(new THREE.BoxGeometry(r * 0.62, r * 0.03, r * 0.14), toon(band), 0.012); bl.position.x = sd * r * 0.31; bl.rotation.x = sd * 0.3; pr.add(bl); } pr.rotation.y = 0.6; }
   if (kind === 'phones') { add(new THREE.TorusGeometry(r * 0.84, r * 0.07, 6, 22, Math.PI), toon(band), 0.012).position.y = -r * 0.12; for (const sd of [-1, 1]) { const c = add(new THREE.CylinderGeometry(r * 0.3, r * 0.3, r * 0.2, 16)); c.rotation.z = Math.PI / 2; c.position.set(sd * r * 0.86, -r * 0.14, 0); const p = add(new THREE.CircleGeometry(r * 0.2, 16), toon(band, { rim: 1 }), 0); p.position.set(sd * r * 0.97, -r * 0.14, 0); p.rotation.y = sd * Math.PI / 2; } G.position.y -= r * 0.3; }
+  if (kind === 'seedling') { G.position.y -= r * 0.12; const st = add(new THREE.CylinderGeometry(r * 0.05, r * 0.07, r * 0.55, 6), toon(col), 0.01); st.position.y = r * 0.28; for (const sd of [-1, 1]) { const lf = add(new THREE.SphereGeometry(r * 0.36, 12, 8), toon(col), 0.012); lf.scale.set(1, 0.28, 0.55); lf.position.set(sd * r * 0.32, r * 0.58, 0); lf.rotation.z = sd * 0.5; } add(new THREE.IcosahedronGeometry(r * 0.13, 1), toon(band, { rim: 0.6 }), 0.01).position.y = r * 0.62; }
   if (kind === 'top') { add(new THREE.CylinderGeometry(r * 0.5, r * 0.46, r * 0.85, 18)).position.y = r * 0.42; add(new THREE.CylinderGeometry(r * 0.9, r * 0.9, r * 0.05, 22)); add(new THREE.CylinderGeometry(r * 0.475, r * 0.47, r * 0.14, 18), toon(band), 0).position.y = r * 0.12; G.rotation.z = -0.12; }
   G.position.y += r * 0.72; G.rotation.x = -0.1;
   cr.skull.add(G);

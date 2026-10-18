@@ -918,7 +918,7 @@ export class Screens {
     let body = '';
     if (tab === 'fav') {
       const { rows, unasked } = favourList();
-      body = rows.map((r) => { const c = giver(r.id); return `<li class="jr-row ${r.state}">${c ? `<img src="${this.game.portrait(c)}" alt="">` : ''}<div><b>${r.toast} ${r.who} <small>${r.home}</small></b><span>${r.state === 'done' ? '✅ ' : r.state === 'found' ? '📦 ' : '🔍 '}${r.text}</span></div></li>`; }).join('')
+      body = rows.map((r) => { const c = giver(r.id); return `<li class="jr-row ${r.state}">${c ? `<img src="${this.game.portrait(c)}" alt="">` : ''}<div><b>${r.toast} ${r.who} <small>${r.home}</small></b><span>${r.state === 'done' ? '✅ ' : r.state === 'found' || r.deliver ? '📦 ' : '🔍 '}${r.text}</span></div></li>`; }).join('')
         + (unasked ? `<li class="jr-more">❗ ${unasked} more townsfolk need a hand. Look for a ❗ over their heads!</li>` : rows.length ? '<li class="jr-more">🌟 You\'ve asked everyone in Clashara. What a good neighbour!</li>' : '');
     } else {
       const L = save.adv.fishLog || { n: 0 }, sp = { ...(L.sp || {}) };
@@ -966,7 +966,7 @@ export class Screens {
     const here = w.key.startsWith('in:') ? w.key.split(':')[1] : w.key;
     seen[here] = true;
     const tt = traderTown(); // 🎩 marks where Trader Tock is today
-    const fav = {}; for (const r of favourList().rows) if (r.at && !fav[r.at]) fav[r.at] = r.state === 'found' ? '📦' : '🔍'; // open favours: where to look, or who to take it back to
+    const fav = {}; for (const r of favourList().rows) if (r.at && !fav[r.at]) fav[r.at] = r.state === 'found' || r.deliver ? '📦' : '🔍'; // open favours: where to look, or who to take it back to
     // older saves: towns behind a cleared cup were visited
     for (const [k, n] of Object.entries(WMAP)) if (n.cup && F['cup_' + n.cup]) seen[k] = true;
     const links = [['village', 'route1'], ['route1', 'bloom'], ['bloom', 'route2'], ['route2', 'seashell'], ['seashell', 'glowwood'], ['glowwood', 'glowcap'], ['glowcap', 'cinder'], ['cinder', 'ember'], ['ember', 'neon'], ['neon', 'cloudtop', 1], ['cloudtop', 'frostpeak', 1], ['frostpeak', 'peak']];

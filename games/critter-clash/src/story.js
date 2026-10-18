@@ -293,7 +293,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'hatshop') return hatShop(w);
   if (id === 'board') return requestBoard(S, w);
   if (id === 'trader') return trader(w);
-  if (id.startsWith('lost:') || id.startsWith('found:')) return lostQuest(S, w, a, id);
+  if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
   if (id === 'wardrobe') return wearMenu(w, '', null);
   if (id.startsWith('case:')) { // a lobby trophy case
@@ -520,13 +520,19 @@ const LOST = {
     found: ['A pair of pink headphones sits on a warm rock by the steaming spring. A tiny beat still thumps out of them.', 'DJ Tumble in Neon City needs these for tonight\'s show!'],
     done: ['DJ Tumble: MY CANS! Aw yeah, the bass is back! Jiggawatt, cue the lights!', 'DJ Tumble: I\'ve got a spare pair. Pink and loud, just like the city. They\'re yours.', '{hero} got the DJ Headphones! 🎧 +3 🍓'],
   },
+  seeds: { // a delivery, not a lost thing: carry the packet to someone in another town (they give the reward)
+    who: 'Gardener Rosa', item: 'cloud seeds', hat: 'seedling', berries: 2, toast: '🌱', home: 'Cloudtop Gardens', to: { npc: 'castle', map: 'seashell', name: 'Diggles', home: 'Seashell Town' },
+    ask: ['Gardener Rosa: Oh, hello! Could you do an old gardener a favour? These are cloud seeds. Plant one and a fluffy cloud flower pops up!', 'Gardener Rosa: Diggles in Seashell Town wrote to me. They want one for the top of their sandcastle. Could you carry the packet down there?', '{hero} got a packet of cloud seeds! 🌱 Take it to Diggles in Seashell Town.'],
+    wait: ['Gardener Rosa: Did the seeds get to Diggles yet? Seashell Town, by the sandcastle. Keep them dry!'],
+    done: ['Diggles: A packet... from Rosa?! CLOUD SEEDS! For MY castle?!', 'Diggles plants one right on top of the tallest tower. POOF! A little cloud flower puffs up!', 'Diggles: It\'s perfect. The greatest sandcastle in Clashara now has a CLOUD on it! Here, take this. I grew it on my head by accident.', '{hero} got the Seedling Sprout! 🌱 +2 🍓'],
+  },
 };
 // the ☰ card's favour line: the first favour still open (found things first)
 export function favourLine() {
   const F = flags(), open = Object.entries(LOST).filter(([id]) => F[id + '_asked'] && !F[id + '_done']).sort(([a], [b]) => !!F[b + '_found'] - !!F[a + '_found']);
   if (!open.length) return '';
   const [id, Q] = open[0], name = Q.who.split(' ').pop();
-  return (F[id + '_found'] ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `${name}'s ${Q.item}: ${Q.hint}`) + (open.length > 1 ? ` (+${open.length - 1} more)` : '');
+  return (Q.to ? `Take the ${Q.item} to ${Q.to.name} in ${Q.to.home}` : F[id + '_found'] ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `${name}'s ${Q.item}: ${Q.hint}`) + (open.length > 1 ? ` (+${open.length - 1} more)` : '');
 }
 // the ☰ Journal's favour page: every favour you've been asked for (open first), and how many townsfolk still need a hand
 export function favourList() {
@@ -534,18 +540,29 @@ export function favourList() {
     const state = F[id + '_done'] ? 'done' : F[id + '_found'] ? 'found' : 'open';
     const name = Q.who.split(' ').pop();
     const home = Object.keys(MAPS).find((k) => (MAPS[k].npcs || []).some((n) => n.story === 'lost:' + id));
-    return { id, who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, at: state === 'found' ? home : state === 'open' ? LOST_SPOTS[id]?.map : null, text: state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
+    return { id, who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, deliver: !!Q.to, at: state === 'done' ? null : Q.to ? Q.to.map : state === 'found' ? home : LOST_SPOTS[id]?.map, text: Q.to ? (state === 'done' ? `Delivered the ${Q.item} to ${Q.to.name}` : `Take the ${Q.item} to ${Q.to.name} in ${Q.to.home}`) : state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
   });
   rows.sort((a, b) => ({ found: 0, open: 1, done: 2 })[a.state] - ({ found: 0, open: 1, done: 2 })[b.state]);
   return { rows, unasked: Object.keys(LOST).length - rows.length };
 }
+// a townsperson waiting for a delivery you're carrying (their talk turns into the hand-over)
+export function deliveryFor(npc) {
+  const F = flags(); return Object.keys(LOST).find((id) => LOST[id].to?.npc === npc && F[id + '_asked'] && !F[id + '_done']) || null;
+}
 function lostQuest(S, w, a, key) {
   const F = flags(), [kind, id] = key.split(':'), Q = LOST[id], who = Q.who;
+  if (kind === 'deliver') { // hand the parcel over: the one you brought it to gives the reward
+    F[id + '_found'] = F[id + '_done'] = true;
+    if (Q.hat) { const own = (save.adv.hats ||= []); if (!own.includes(Q.hat)) own.push(Q.hat); }
+    save.berries = (save.berries || 0) + (Q.berries || 0);
+    persist(); w.questMarks?.(); sfx.jingle(3); S.toast(`${Q.toast} Delivered the ${Q.item}!`);
+    return w.say(Q.done, null, Q.to.name);
+  }
   if (kind === 'found') {
     F[id + '_found'] = true; persist(); sfx.jingle(2); w.buildLost?.(); w.questMarks?.(); S.toast(`${Q.toast} Found the ${Q.item}!`);
     return w.say(Q.found);
   }
-  if (F[id + '_done']) return w.say([a.n.lines[Math.floor(Math.random() * a.n.lines.length)]], null, who);
+  if (F[id + '_done']) return w.say(Q.to ? [`${who}: Diggles sent me a drawing of the cloud flower on the castle. Thank you, little courier!`] : [a.n.lines[Math.floor(Math.random() * a.n.lines.length)]], null, who);
   if (F[id + '_found']) {
     F[id + '_done'] = true;
     if (Q.hat) { const own = (save.adv.hats ||= []); if (!own.includes(Q.hat)) own.push(Q.hat); }
