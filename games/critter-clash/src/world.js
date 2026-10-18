@@ -959,10 +959,27 @@ export class World {
     const r = rng(hash(this.key + ':lamps')); cand.sort(() => r() - 0.5);
     const picked = [];
     for (const c of cand) { if (picked.length >= (route ? 3 : 6)) break; if (picked.every((p) => Math.abs(p[0] - c[0]) + Math.abs(p[1] - c[1]) >= (route ? 11 : 8))) picked.push(c); }
-    if (!picked.length) return;
+    this.lampSpots = picked; if (!picked.length) return;
     const lit = this.phase !== 'day', iron = [], glass = [];
     for (const [cx, cy] of picked) {
       const px = cx * TILE, pz = cy * TILE;
+      if (route) { // out on the routes: a rough wooden post with an arm and a hanging lantern (a little country path light)
+        const post = new THREE.CylinderGeometry(0.1, 0.13, 2.9, 6); post.translate(px, 1.45, pz); iron.push(post);
+        const foot = new THREE.CylinderGeometry(0.2, 0.24, 0.24, 6); foot.translate(px, 0.12, pz); iron.push(foot);
+        const arm = new THREE.BoxGeometry(0.9, 0.1, 0.1); arm.translate(px + 0.38, 2.78, pz); iron.push(arm);
+        const brace = new THREE.BoxGeometry(0.5, 0.07, 0.07); brace.rotateZ(Math.PI / 4); brace.translate(px + 0.18, 2.55, pz); iron.push(brace);
+        const hook = new THREE.CylinderGeometry(0.015, 0.015, 0.22, 4); hook.translate(px + 0.72, 2.62, pz); iron.push(hook);
+        const lid = new THREE.ConeGeometry(0.2, 0.14, 6); lid.translate(px + 0.72, 2.47, pz); iron.push(lid);
+        const base = new THREE.CylinderGeometry(0.17, 0.17, 0.06, 6); base.translate(px + 0.72, 2.07, pz); iron.push(base);
+        const g = new THREE.CylinderGeometry(0.15, 0.15, 0.34, 6); g.translate(px + 0.72, 2.24, pz); glass.push(g);
+        if (lit) {
+          const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffb050, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: this.phase === 'night' ? 0.85 : 0.5 }); sm.userData.own = true;
+          const sp = new THREE.Sprite(sm); sp.scale.setScalar(1.7); sp.position.set(px + 0.72, 2.24, pz); this.group.add(sp);
+          const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xffa040, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: this.phase === 'night' ? 0.42 : 0.22 }); pm.userData.own = true;
+          const pool = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 4.4), pm); pool.rotation.x = -Math.PI / 2; pool.position.set(px + 0.72, 0.05, pz); this.group.add(pool);
+        }
+        continue;
+      }
       // a stout Victorian lamp: stepped base, fluted post with a collar, a framed lantern, a peaked cap and a finial
       const b = new THREE.CylinderGeometry(0.22, 0.28, 0.3, 8); b.translate(px, 0.15, pz); iron.push(b);
       const b2 = new THREE.CylinderGeometry(0.14, 0.2, 0.22, 8); b2.translate(px, 0.41, pz); iron.push(b2);
@@ -980,7 +997,7 @@ export class World {
         const pool = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), pm); pool.rotation.x = -Math.PI / 2; pool.position.set(px, 0.05, pz); this.group.add(pool);
       }
     }
-    const im = inked(mergeGeometries(iron), toon(0x3a3a4a), OL * 0.5); im.castShadow = true; this.group.add(im); iron.forEach((g) => g.dispose());
+    const im = inked(mergeGeometries(iron), toon(route ? 0x6e4a2e : 0x3a3a4a), OL * 0.5); im.castShadow = true; this.group.add(im); iron.forEach((g) => g.dispose());
     const gm = new THREE.Mesh(mergeGeometries(glass), lit ? LIT : toon(0xfff4d0, { rim: 0.8 })); this.group.add(gm); glass.forEach((g) => g.dispose());
   }
 
