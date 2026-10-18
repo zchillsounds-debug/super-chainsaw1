@@ -1162,7 +1162,7 @@ export class Screens {
     const gnt = F.ending && !F['gauntpay_' + gauntletWeek()]; // ⚔️ this week's Peak Gauntlet is still open
     const btl = w.outPhase === 'night' && seen.seashell && save.adv.bottle !== new Date().toISOString().slice(0, 10); // 🍾 tonight's message in a bottle is still on Seashell's shore
     const scope = w.outPhase === 'night' && seen.village && save.adv.stars !== new Date().toISOString().slice(0, 10); // 🔭 tonight's constellation in Sprout Village is still to be spotted
-    const day = new Date().toISOString().slice(0, 10), daily = { cloudtop: save.adv.wish !== day && '⛲', ember: save.adv.soak !== day && '♨️', glowcap: w.outPhase === 'night' && save.adv.ring !== day && '🍄' }; // a wish, a soak and tonight's fairy-ring song still to do
+    const day = new Date().toISOString().slice(0, 10), daily = { cloudtop: save.adv.wish !== day && '⛲', ember: save.adv.soak !== day && '♨️', glowcap: w.outPhase === 'night' && save.adv.ring !== day && '🍄', village: w.morning && save.adv.breakfast !== day && '🥞' }; // a wish, a soak and tonight's fairy-ring song still to do
     const fav = {}; for (const r of favourList().rows) if (r.at && !fav[r.at]) fav[r.at] = r.state === 'found' || r.deliver ? '📦' : '🔍'; // open favours: where to look, or who to take it back to
     // older saves: towns behind a cleared cup were visited
     for (const [k, n] of Object.entries(WMAP)) if (n.cup && F['cup_' + n.cup]) seen[k] = true;
