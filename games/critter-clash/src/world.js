@@ -158,7 +158,8 @@ export class World {
     const rand = rng(hash(key));
     // the phone's clock tints outdoor maps that have no mood of their own: golden evenings, soft blue nights
     const hr = save.adv.clock ?? new Date().getHours();
-    this.phase = M.indoor || M.mood ? 'day' : hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day';
+    this.outPhase = hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day'; // what the room windows show
+    this.phase = M.indoor || M.mood ? 'day' : this.outPhase;
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
     this.rain = canRain(M) && (save.adv.rain ?? rainAt(key, new Date(), hr));
     const shut = M.bramble && !save.adv.flags[M.bramble];
@@ -198,7 +199,8 @@ export class World {
     if (!key.startsWith('in:')) (save.adv.seen ||= {})[key] = true;
     persist();
     playMusic(M.music || 'camp');
-    this.mood(M.mood || (this.rain && RAIN[this.phase]) || PHASES[this.phase]);
+    const B = this.base, lamp = M.indoor && this.outPhase !== 'day' && M.indoor !== 'arcade' && { sun: 0xffd2a0, sunI: B.sunI * (this.outPhase === 'night' ? 0.72 : 0.85), sky: 0xffe2c4, gnd: B.gnd, hemiI: B.hemiI * 0.85, fog: 0xcfeeff }; // lamplight indoors after dark
+    this.mood(M.mood || lamp || (this.rain && RAIN[this.phase]) || PHASES[this.phase]);
     this.banner(M.name + (this.rain ? ' 🌧️' : ''));
   }
 
@@ -1085,7 +1087,7 @@ export class World {
           box('frame', 1.4, 1.05, 0.08, px, 2.05, pz + 1.02); box('art' + (x % 2), 1.18, 0.83, 0.06, px, 2.05, pz + 1.06); box('hill', 1.18, 0.28, 0.07, px, 1.77, pz + 1.07); box('sunny', 0.22, 0.22, 0.07, px + 0.32, 2.25, pz + 1.075);
         }
         if (back && this.M.indoor === 'center' && x === (W >> 1)) { box('trim', 1.3, 1.3, 0.08, px, 2.45, pz + 1.02); box('top', 0.36, 1.0, 0.08, px, 2.45, pz + 1.06); box('top', 1.0, 0.36, 0.08, px, 2.45, pz + 1.06); } // the Berry Center cross behind the nurse
-        if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C' && this.M.indoor !== 'lobby') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); }
+        if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C' && this.M.indoor !== 'lobby') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); if (this.outPhase === 'night') { box('stars', 0.07, 0.07, 0.1, px - 0.3, 2.15, pz + 1.04); box('stars', 0.05, 0.05, 0.1, px + 0.1, 2.0, pz + 1.04); box('stars', 0.06, 0.06, 0.1, px + 0.32, 2.2, pz + 1.04); box('moon', 0.2, 0.2, 0.1, px + 0.25, 1.75, pz + 1.04); } }
       }
       if (t === 'C' && this.M.indoor === 'center' && x === 1) { // the request board: cork, pinned notes
         box('wood', 1.9, 1.5, 0.2, px, 1.9, pz - 0.85); box('cork', 1.7, 1.3, 0.22, px, 1.9, pz - 0.84);
@@ -1153,16 +1155,26 @@ export class World {
       }
       if (t === 'K') { box('counter', TILE + 0.02, 1.1, 1.3, px, 0.55, pz); box('top', TILE + 0.04, 0.12, 1.45, px, 1.15, pz); }
     }
-    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: 0xbfe6ff, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, door0: 0xc8845a, door1: 0xd8946a };
+    const C = { wall: this.M.wall, wall2: this.M.wall, trim: 0xffffff, base: 0x8a5a3a, glass: { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 }[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: 0xffffff, top: 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, door0: 0xc8845a, door1: 0xd8946a };
     for (const k in L) {
       if (k === 'pane') { const m = new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: 0xd8f0ff, transparent: true, opacity: 0.22, depthWrite: false })); m.material.userData.own = true; this.group.add(m); L[k].forEach((g) => g.dispose()); continue; }
-      const glow = k === 'screen' || k === 'glass' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1';
+      const glow = k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1';
       const m = glow ? new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'screen' && this.M.indoor === 'arcade' ? 0xff8ae8 : C[k] })) : inked(mergeGeometries(L[k]), toon(C[k] ?? 0xffffff, { rim: 0.3 }), k === 'book0' || k === 'book1' || k === 'book2' ? OL * 0.3 : OL * 0.6);
       if (glow) m.material.userData.own = true;
       m.castShadow = !glow && k !== 'trim'; m.receiveShadow = true;
       this.group.add(m);
       L[k].forEach((g) => g.dispose());
     }
+    this.roomLamp();
+  }
+
+  // after dark a warm pool of lamplight on the room's floor (the arcade keeps its neon)
+  roomLamp() {
+    if (this.outPhase === 'day' || this.M.indoor === 'arcade') return;
+    const m = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xffb860, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: this.outPhase === 'night' ? 0.26 : 0.16 }); m.userData.own = true;
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(this.W * TILE * 0.8, this.H * TILE * 0.9), m);
+    const [px, pz] = wpos((this.W - 1) / 2, (this.H - 1) / 2 + 0.5);
+    pool.rotation.x = -Math.PI / 2; pool.position.set(px, 0.03, pz); this.group.add(pool);
   }
 
   // stadium lobbies: a poster of each of the cup's trainers' critters along the back wall
