@@ -349,7 +349,7 @@ export class World {
     this.buildMarquee();
     this.buildActors();
     this.buildPumpkins();
-    this.buildWisps();
+    this.buildWisps(x, y);
     // hero
     this.hero = new Critter(heroDef(), { lod: 'mid' }); bakeStatic(this.hero);
     this.hero.root.scale.setScalar(CS);
@@ -1321,12 +1321,14 @@ export class World {
   }
 
   // Glowcap Woods on Pumpkin Nights: five friendly wisps bob over the path; walk into each one to catch it (all five: a treat, once a night)
-  buildWisps() {
+  buildWisps(hx, hy) {
     this.wisps = null;
     const day = new Date().toISOString().slice(0, 10);
     if (this.key !== 'glowwood' || this.phase === 'day' || !pumpkinNights() || save.adv.wisp === day) return;
     const path = [];
-    for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if (this.tile(x, y) === ':') path.push([x, y]);
+    const reach = new Set([hx + ',' + hy]), q = [[hx, hy]]; // only path the hero can walk to (not behind the bramble)
+    while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (x + dx) + ',' + (y + dy); if (!reach.has(k) && this.walkable(x + dx, y + dy)) { reach.add(k); q.push([x + dx, y + dy]); } } }
+    for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if (this.tile(x, y) === ':' && reach.has(x + ',' + y)) path.push([x, y]);
     const rand = rng(hash(day + 'wisp')), pick = [];
     for (let k = 0; k < 400 && pick.length < 5; k++) { const q = path[Math.floor(rand() * path.length)]; if (q && pick.every(([a, b]) => Math.abs(a - q[0]) + Math.abs(b - q[1]) > 7)) pick.push(q); }
     const mk = (col, op, sc) => { const m = new THREE.SpriteMaterial({ map: glowTex(), color: col, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: op }); m.userData.own = true; const sp = new THREE.Sprite(m); sp.scale.setScalar(sc); return sp; };
