@@ -63,6 +63,13 @@ export function rainAt(key, d, hr = d.getHours()) {
   return hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}` + key) % 5 === 0;
 }
 
+// which visited town Trader Tock is in today (none before the Sprout Cup)
+export function traderTown() {
+  const towns = ['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak'].filter((k) => save.adv?.seen?.[k]);
+  if (!save.adv?.flags?.cup_sprout || !towns.length) return null;
+  return towns[hash(new Date().toISOString().slice(0, 10)) % towns.length];
+}
+
 // an umbrella held over a critter's head in the rain
 function brolly(cr, col) {
   const U = new THREE.Group(), r = cr.def.body.headR;
@@ -1701,10 +1708,8 @@ export class World {
 
   // Trader Tock visits one town a day (once the first cup is won), standing beside a path
   traderSpot() {
-    const towns = ['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak'].filter((k) => save.adv.seen?.[k]);
-    if (!save.adv.flags.cup_sprout || !towns.includes(this.key)) return [];
     const day = new Date().toISOString().slice(0, 10);
-    if (towns[hash(day) % towns.length] !== this.key) return [];
+    if (traderTown() !== this.key) return [];
     const busy = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.M.signs || []).map((n) => n.x + ',' + n.y), ...(this.M.buildings || []).map((b) => (b.x + b.door) + ',' + (b.y + b.h))]);
     const N4 = Object.values(DIRS), ok = [];
     for (let y = 2; y < this.H - 2; y++) for (let x = 2; x < this.W - 2; x++) {
