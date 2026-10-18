@@ -634,7 +634,7 @@ export class World {
   }
 
   buildProps(rand) {
-    const rocks = [], posts = [], rails = [], boards = [], sticks = [], snow = [], coal = [], carrot = [], drifts = [];
+    const rocks = [], posts = [], rails = [], boards = [], sticks = [], snow = [], coal = [], carrot = [], drifts = [], frostRocks = [], caps = [], shards = [];
     const UMB = [[0xff5a7a, 0xffffff], [0x3ac8e8, 0xfff2a0], [0xffb030, 0xffffff]], canopy = [[], [], [], [], [], []], towels = [[], [], [], [], [], []], sand = [], sandD = [], flags = []; let nu = 0;
     const snowmen = this.M.snow && this.key !== 'peak'; // Frostpeak's rocks are snowmen; the Peak's lake keeps its boulders
     for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) {
@@ -671,6 +671,12 @@ export class World {
         }
         continue;
       }
+      if (t === 'R' && this.M.snow) { // the Peak's boulders: frosted blue stone under a snow cap, with ice crystals growing out of them
+        const sc = 0.9 + rand() * 0.25, ry = rand() * 3, r = new THREE.DodecahedronGeometry(0.75 * sc, 0); r.scale(1.1, 0.8, 1); r.rotateY(ry); r.translate(px, 0.48 * sc, pz); frostRocks.push(r);
+        const c = new THREE.SphereGeometry(0.56 * sc, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2); c.scale(1.1, 0.36, 1.0); c.rotateY(ry); c.translate(px, 0.9 * sc, pz); caps.push(c);
+        for (let k = 0; k < 3; k++) { const a = ry + (k - 1) * 0.55, h = (k === 1 ? 1.5 : 1.0) + rand() * 0.3, sh = new THREE.CylinderGeometry(0, 0.2 + rand() * 0.08, h, 6); sh.translate(0, h / 2, 0); sh.rotateZ(-(k === 1 ? 0.3 : 0.55)); sh.rotateY(a); sh.translate(px + Math.cos(a) * 0.55 * sc, 0.3, pz - Math.sin(a) * 0.55 * sc); shards.push(sh); }
+        continue;
+      }
       if (t === 'R') { const r = new THREE.DodecahedronGeometry(0.75, 0); r.scale(1.1, 0.75, 1); r.rotateY(rand() * 3); r.translate(px, 0.45, pz); rocks.push(r); }
       if (t === '#') {
         const p = new THREE.BoxGeometry(0.22, 1.0, 0.22); p.translate(px, 0.5, pz); posts.push(p);
@@ -686,7 +692,8 @@ export class World {
       const b = new THREE.BoxGeometry(1.2, 0.7, 0.14); b.translate(px, 1.05, pz + 0.05); boards.push(b);
     }
     const put = (list, color, ink = OL) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color), ink); this.group.add(m); list.forEach((g) => g.dispose()); };
-    put(rocks, 0x9a94a8); put(snow, 0xffffff); put(coal, 0x2a2a34, 0); put(carrot, 0xff8a2a, OL * 0.4);
+    put(rocks, 0x9a94a8); put(frostRocks, 0x7a8aa8); put(caps, 0xf8fbff, OL * 0.6); put(snow, 0xffffff);
+    if (shards.length) { const m = inked(mergeGeometries(shards), toon(0xa8eaff, { rim: 1 }), OL * 0.5); m.castShadow = true; this.group.add(m); shards.forEach((g) => g.dispose()); } put(coal, 0x2a2a34, 0); put(carrot, 0xff8a2a, OL * 0.4);
     if (drifts.length) { const m = new THREE.Mesh(mergeGeometries(drifts), toon(0xf6faff, { rim: 0.8 })); m.receiveShadow = true; this.group.add(m); drifts.forEach((g) => g.dispose()); }
     put(posts, 0xfff4e0, OL * 0.6); put(rails, 0xfff4e0, OL * 0.5); put(sticks, 0x8a5a3a, OL * 0.5); put(boards, 0xc8925a);
     canopy.forEach((l, i) => { if (!l.length) return; const m = new THREE.Mesh(mergeGeometries(l), toon(UMB[i >> 1][i & 1], { side: THREE.DoubleSide })); m.castShadow = true; this.group.add(m); l.forEach((g) => g.dispose()); });
