@@ -147,7 +147,7 @@ export class Screens {
     // the two main modes share a row in landscape and stack on narrow portrait screens
     const main = document.createElement('div');
     main.className = 'title-main';
-    const advSub = () => { const k = save.adv.map?.startsWith('in:') ? save.adv.map.split(':')[1] : save.adv.map, cups = CUPS.filter((c) => save.adv.flags?.['cup_' + c.id]).length; return `${pumpkinNights() ? '🎃 ' : ''}${MAPS[k]?.name || ''} · 🏆${cups}/7`; };
+    const advSub = () => { const k = save.adv.map?.startsWith('in:') ? save.adv.map.split(':')[1] : save.adv.map, cups = CUPS.filter((c) => save.adv.flags?.['cup_' + c.id]).length; return `${pumpkinNights() ? '🎃 ' : ''}${MAPS[k]?.name || ''} · 🏆${cups}/7 · 🗺️${this.recordsPc()}%`; };
     main.append(this.btn(save.adv ? `Adventure <small>${advSub()}</small>` : 'Adventure <small>NEW!</small>', 'primary big', () => this.adventure()), this.btn('Tournament', 'big', () => this.cups()));
     m.appendChild(main);
     const row = document.createElement('div');
