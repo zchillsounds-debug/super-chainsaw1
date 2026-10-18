@@ -334,6 +334,7 @@ export class World {
     this.buildMarquee();
     this.buildActors();
     this.buildPumpkins();
+    this.buildWisps();
     // hero
     this.hero = new Critter(heroDef()); bakeStatic(this.hero);
     this.hero.root.scale.setScalar(CS);
@@ -1277,15 +1278,20 @@ export class World {
   // Pumpkin Nights: a carved pumpkin beside a few town doors; after dark their faces glow, and one of them hides a candy berry each night
   buildPumpkins() {
     this.pumpkins = [];
-    if (this.M.indoor || !pumpkinNights() || !(this.M.buildings || []).length) return;
+    const woods = this.key === 'glowwood' && this.phase !== 'day';
+    if (this.M.indoor || !pumpkinNights() || (!(this.M.buildings || []).length && !woods)) return;
     const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((d) => d.x + ',' + (d.y + 1)), ...(this.M.signs || []).map((g) => g.x + ',' + g.y)]);
     const spots = [];
     for (const d of this.doors) for (const dx of [-1, 1]) { const x = d.x + dx, y = d.y + 1; if ('."sf'.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y) && !taken.has(x + ',' + y)) { spots.push([x, y]); break; } }
+    if (woods) { // Glowcap Woods on Pumpkin Nights: jack-o'-lanterns light the path every few steps
+      const near = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => this.tile(x + dx, y + dy) === ':');
+      for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if ('."'.includes(this.tile(x, y)) && near(x, y) && !this.solid.has(x + ',' + y) && !taken.has(x + ',' + y) && spots.every(([a, b]) => Math.abs(a - x) + Math.abs(b - y) > 6)) spots.push([x, y]);
+    }
     const lit = this.phase !== 'day', orange = toon(0xff8a1a, { rim: 0.5 }), stemM = toon(0x4a7a2a);
     const face = canvasTex(64, 64, (c) => { c.fillStyle = lit ? '#ffd040' : '#3a1a08'; c.beginPath(); c.moveTo(14, 26); c.lineTo(24, 12); c.lineTo(30, 28); c.fill(); c.beginPath(); c.moveTo(34, 28); c.lineTo(40, 12); c.lineTo(50, 26); c.fill(); c.beginPath(); c.moveTo(10, 38); c.quadraticCurveTo(32, 62, 54, 38); c.lineTo(46, 42); c.lineTo(40, 36); c.lineTo(32, 44); c.lineTo(24, 36); c.lineTo(18, 42); c.closePath(); c.fill(); });
     face.userData.own = true;
     const fm = new THREE.MeshBasicMaterial({ map: face, transparent: true, depthWrite: false }); fm.userData.own = true;
-    for (const [x, y] of spots.slice(0, 5)) {
+    for (const [x, y] of spots.slice(0, woods ? 7 : 5)) {
       const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.rotation.y = (x * 7 % 5 - 2) * 0.12; g.scale.setScalar(1.7); this.group.add(g); this.solid.add(x + ',' + y);
       for (let k = 0; k < 5; k++) { const a = (k - 2) * 0.42, r = inked(new THREE.SphereGeometry(0.32, 12, 9), orange, OL * 0.35); r.scale.set(0.62, 0.78, 0.95); r.position.set(Math.sin(a) * 0.26, 0.3, Math.cos(a) * 0.12 - 0.06); r.castShadow = k === 2; g.add(r); } // ribbed lobes
       const st = inked(new THREE.CylinderGeometry(0.05, 0.07, 0.2, 6), stemM, OL * 0.3); st.position.y = 0.6; st.rotation.z = 0.25; g.add(st);
@@ -1294,6 +1300,50 @@ export class World {
       if (lit) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffa030, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: this.phase === 'night' ? 0.7 : 0.45 }); sm.userData.own = true; glow = new THREE.Sprite(sm); glow.scale.setScalar(1.8); glow.position.set(0, 0.4, 0.2); g.add(glow); }
       bakeStatic({ root: g, mats: {}, f, glow });
       this.pumpkins.push({ x, y, glow });
+    }
+  }
+
+  // Glowcap Woods on Pumpkin Nights: five friendly wisps bob over the path; walk into each one to catch it (all five: a treat, once a night)
+  buildWisps() {
+    this.wisps = null;
+    const day = new Date().toISOString().slice(0, 10);
+    if (this.key !== 'glowwood' || this.phase === 'day' || !pumpkinNights() || save.adv.wisp === day) return;
+    const path = [];
+    for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if (this.tile(x, y) === ':') path.push([x, y]);
+    const rand = rng(hash(day + 'wisp')), pick = [];
+    for (let k = 0; k < 400 && pick.length < 5; k++) { const q = path[Math.floor(rand() * path.length)]; if (q && pick.every(([a, b]) => Math.abs(a - q[0]) + Math.abs(b - q[1]) > 7)) pick.push(q); }
+    const mk = (col, op, sc) => { const m = new THREE.SpriteMaterial({ map: glowTex(), color: col, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: op }); m.userData.own = true; const sp = new THREE.Sprite(m); sp.scale.setScalar(sc); return sp; };
+    const ghost = canvasTex(64, 64, (c) => { // a little round ghost with a wavy tail and two shiny eyes
+      c.fillStyle = 'rgba(240,255,250,0.95)'; c.beginPath(); c.arc(32, 28, 18, Math.PI, 0); c.lineTo(50, 48);
+      for (let k = 0; k < 4; k++) c.quadraticCurveTo(50 - k * 9 - 4.5, 56 - (k % 2) * 8, 50 - (k + 1) * 9, 48);
+      c.closePath(); c.fill();
+      c.fillStyle = '#1a3a3a'; for (const ex of [25, 39]) { c.beginPath(); c.ellipse(ex, 30, 3.2, 4.4, 0, 0, 7); c.fill(); }
+      c.fillStyle = '#fff'; for (const ex of [26, 40]) { c.beginPath(); c.arc(ex, 28.5, 1.2, 0, 7); c.fill(); }
+      c.fillStyle = 'rgba(255,140,170,0.6)'; for (const ex of [20, 44]) { c.beginPath(); c.ellipse(ex, 37, 3, 2, 0, 0, 7); c.fill(); }
+    });
+    ghost.userData.own = true;
+    this.wisps = pick.map(([x, y], i) => { const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 1.2, pz); g.add(mk(0x7affc8, 0.7, 2.8)); const gm = new THREE.SpriteMaterial({ map: ghost, transparent: true, depthWrite: false }); gm.userData.own = true; const gs = new THREE.Sprite(gm); gs.scale.setScalar(1.35); g.add(gs); this.group.add(g); return { g, px, pz, ph: i * 1.7, live: true }; });
+    this.wispN = 0;
+  }
+
+  updateWisps(dt) {
+    const h = this.hero.root.position, fx = this.g.fx;
+    for (const w of this.wisps) {
+      if (!w.live) continue;
+      const t = this.t + w.ph, g = w.g;
+      g.position.set(w.px + Math.sin(t * 0.9) * 0.9, 1.1 + Math.sin(t * 2.3) * 0.25, w.pz + Math.cos(t * 0.7) * 0.6);
+      g.children[0].material.opacity = 0.6 + Math.sin(t * 5) * 0.15;
+      if (Math.random() < dt * 4) fx.spawn?.({ x: g.position.x, y: g.position.y, z: g.position.z, vx: (Math.random() - 0.5) * 0.4, vy: -0.3, vz: (Math.random() - 0.5) * 0.4, life: 0.9, size: 0.25, color: 0x9affd8, shape: 'glow', alpha: 0.6 });
+      if (Math.hypot(g.position.x - h.x, g.position.z - h.z) < 1.3) {
+        w.live = false; g.visible = false; this.wispN++;
+        fx.burst({ x: g.position.x, y: g.position.y, z: g.position.z }, { n: 22, speed: 2.6, up: 1.2, color: 0x9affd8, size: 0.4, life: 0.9, shape: 'star', drag: 1.8, spread: 1.4 });
+        sfx.note?.(this.wispN - 1);
+        if (this.wispN >= this.wisps.length) {
+          const A = save.adv; A.wisp = new Date().toISOString().slice(0, 10); countUp('wisp'); save.berries = (save.berries || 0) + 1;
+          const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.1)); persist(); sfx.jingle?.(1);
+          this.S.toast?.(`👻 All five wisps caught! +1 🍓${rr.to > rr.from ? ` · Grew to Lv ${rr.to}!` : ' · +XP'}`);
+        } else this.S.toast?.(`👻 Wisp caught! ${this.wispN} / ${this.wisps.length}`);
+      }
     }
   }
 
@@ -2846,6 +2896,7 @@ export class World {
     }
     if (this.twirlT > 0) this.twirlT -= dt;
     if (this.bloomFw) this.updateBloomFw(dt);
+    if (this.wisps) this.updateWisps(dt);
     if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams

@@ -987,6 +987,7 @@ export class Screens {
         ['⛸️', 'Skate a twirl', `${N('frostpeak')} pond`, A.skated === day, seen.frostpeak && A.skates],
         ['🍄', 'Sing with the fairy ring', N('glowcap'), A.ring === day, seen.glowcap],
         ['🎃', 'Find a pumpkin treat', 'pumpkins by the town doors', A.pumpkin === day, pumpkinNights()],
+        ['👻', 'Catch the five wisps', N('glowwood'), A.wisp === day, pumpkinNights() && seen.glowwood],
       ].filter((r) => r[4]);
     return { rows, after, night };
   }
@@ -1018,6 +1019,7 @@ export class Screens {
       + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
       + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
       + (A.cnt?.pumpkin ? bar('🎃', 'Pumpkin treats', A.cnt.pumpkin) : '')
+      + (A.cnt?.wisp ? bar('👻', 'Wisp nights', A.cnt.wisp) : '')
       + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length)
       + bar('🍾', 'Bottle notes read', (A.notes || []).length, BOTTLE_NOTES.length)
       + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
