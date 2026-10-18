@@ -15,6 +15,7 @@ import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
 import { stargaze, tonightConst, BOTTLE_NOTES, CONSTELLATIONS } from './stars.js';
 import { fairyRing } from './ring.js';
+import { snowballToss, SNOW_GOAL } from './snowball.js';
 
 export const TILE = 2;
 const DIRS = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
@@ -340,6 +341,7 @@ export class World {
     this.buildRing();
     this.buildSpring();
     this.buildSunset();
+    this.buildFort();
     this.buildBloomFw();
     this.buildFountain();
     this.buildStatue();
@@ -393,7 +395,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1326,6 +1328,43 @@ export class World {
       return this.say(['{hero} hops up on the bench and watches the sun melt into the sea. The waves turn to gold.', `${['A Squeakwing flaps across the sun like a tiny shadow puppet.', 'The sky goes orange, then pink, then a deep, sleepy purple.', 'For one second, right at the end... was that a green flash?!'][Math.floor(Math.random() * 3)]} ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, 'A shell was wedged in the bench, with a berry tucked inside! +1 🍓 (One sunset a day.)'], out);
     }
     return this.say(['{hero} swings their feet and watches the sea glow. Still beautiful the second time. (One sunset gift a day.)'], out);
+  }
+
+  // Frostpeak's snow fort (by the path, below the stadium): a curved wall of snow blocks, a pile of snowballs and Kip's little flag
+  buildFort() {
+    this.fort = null;
+    if (this.key !== 'frostpeak' || this.M.indoor) return;
+    const [x, y] = [10, 11];
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.itemSpots || []), this.hx + ',' + this.hy, this.dig ? this.dig.x + ',' + this.dig.y : '']);
+    if (this.tile(x, y) !== '.' || taken.has(x + ',' + y)) return;
+    const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(x + ',' + y);
+    const snow = toon(0xf4f8ff, { rim: 0.6 }), snow2 = toon(0xdce8fa, { rim: 0.6 });
+    for (let k = 0; k < 7; k++) { const a = -0.25 + k / 6 * (Math.PI + 0.5), b = inked(new THREE.BoxGeometry(0.62, 0.42, 0.42), k % 2 ? snow : snow2, OL * 0.3); b.position.set(Math.cos(a) * 0.95, 0.21, -Math.sin(a) * 0.75); b.rotation.y = a + Math.PI / 2; b.castShadow = true; g.add(b); }
+    for (let k = 0; k < 4; k++) { const a = 0.4 + k / 3 * (Math.PI - 0.8), b = inked(new THREE.BoxGeometry(0.5, 0.34, 0.38), k % 2 ? snow2 : snow, OL * 0.3); b.position.set(Math.cos(a) * 0.95, 0.6, -Math.sin(a) * 0.75); b.rotation.y = a + Math.PI / 2; g.add(b); }
+    [[0.1, 0.12, 0.25], [-0.15, 0.12, 0.32], [0.02, 0.12, 0.48], [-0.04, 0.3, 0.36]].forEach(([bx, by, bz]) => { const ball = inked(new THREE.SphereGeometry(0.14, 9, 7), snow, OL * 0.25); ball.position.set(bx, by, bz); g.add(ball); });
+    const pole = inked(new THREE.CylinderGeometry(0.03, 0.03, 1.2, 6), toon(0x8a5a3a), OL * 0.2); pole.position.set(0.85, 0.95, -0.55); g.add(pole);
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.32), toon(0xff5a8a, { side: THREE.DoubleSide })); flag.position.set(1.1, 1.38, -0.55); g.add(flag);
+    bakeStatic({ root: g, mats: {} });
+    this.fort = { x, y, px, pz };
+  }
+
+  // Snowball Toss at the fort: hit the snowmen, not Kip! A good score pays once a day; the best score is kept
+  snowFort() {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv;
+    this.busy = true;
+    const el = snowballToss(this.g.ui, this.g.portrait(byId('pebblepup')), hash(day + ':snow') + (this.snowTries = (this.snowTries || 0) + 1), (score) => {
+      this.g.modalClose = null; this.busy = false;
+      const best = score > (A.snowHi || 0); if (best) A.snowHi = score;
+      if (score < SNOW_GOAL) { persist(); return this.say([`Snowball Kid Kip: ${score} hits! ${best ? 'A new best for you, too! ' : ''}Get ${SNOW_GOAL} and I'll share my secret berry stash!`]); }
+      countUp('snowball');
+      if (A.snowball !== day) {
+        A.snowball = day; save.berries = (save.berries || 0) + 2; const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+        return this.say([`Snowball Kid Kip: WOW! ${score} hits! ${best ? 'That\'s your best ever!' : 'What an arm!'}`, `Kip digs two frosty berries out of the fort wall. +2 🍓 ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, 'Snowball Kid Kip: Come back tomorrow. I\'ll build faster snowmen!']);
+      }
+      persist();
+      return this.say([`Snowball Kid Kip: ${score} hits! ${best ? 'A new best!' : 'Nice throwing!'} (The berry stash refills tomorrow.)`]);
+    });
+    this.g.modalClose = () => el.__snow.close();
   }
 
   // a soak in Cinder Town's hot spring: steam billows up; the first soak of a day is worth a little XP
@@ -3290,6 +3329,7 @@ export class World {
     if (this.ring && this.ring.x === fx && this.ring.y === fy) return this.fairyRing();
     if (this.spring?.cells.has(fx + ',' + fy)) return this.soak();
     if (this.sunset && this.sunset.x === fx && this.sunset.y === fy) return this.sunsetSit();
+    if (this.fort && this.fort.x === fx && this.fort.y === fy) return this.snowFort();
     if (this.pumpkins?.some((p) => p.x === fx && p.y === fy)) return this.pumpkin();
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);

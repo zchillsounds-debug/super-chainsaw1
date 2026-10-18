@@ -984,6 +984,7 @@ export class Screens {
         ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
         ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
         ['♨️', 'Soak in the hot spring', N('ember'), A.soak === day, seen.ember],
+        ['⛄', 'Snowball Toss (12+ hits)', `${N('frostpeak')} snow fort`, A.snowball === day, seen.frostpeak],
         ['🌅', 'Watch the sunset (5–8 pm)', `${N('seashell')} bench`, A.sunset === day, (this.worldObj?.outPhase === 'evening' || A.sunset === day) && seen.seashell], // only while the sun is going down (or once it's watched)
         F.ending && ['🏔️', 'Peak Gauntlet (this week)', "Keeper Orla, Champion's Peak", !!F['gauntpay_' + gauntletWeek()], true],
       ].filter((r) => r && r[4]);
@@ -1041,6 +1042,7 @@ export class Screens {
       + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
       + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
       + bar('🌅', 'Sunsets watched', A.cnt?.sunset || 0)
+      + bar('⛄', 'Snowball Toss best', A.snowHi || 0)
       + (A.cnt?.breakfast ? bar('🥞', 'Breakfasts at home', A.cnt.breakfast) : '')
       + (A.cnt?.pumpkin ? bar('🎃', 'Pumpkin treats', A.cnt.pumpkin) : '')
       + (A.cnt?.wisp ? bar('👻', 'Wisp nights', A.cnt.wisp) : '')
@@ -1063,6 +1065,7 @@ export class Screens {
       'Berry bushes at the edge of town can be shaken once a day.',
       'Rooms look different after dark: lamps come on, and the windows fill with stars.',
       F.rod && 'Two fish only bite in the golden evening, between five and eight.',
+      seen.frostpeak && 'Snowball Kid Kip\'s snow fort in Frostpeak: hit 12 snowmen in Snowball Toss for a daily berry stash. Don\'t hit Kip!',
       seen.seashell && 'Sit on the driftwood bench on Seashell beach in the evening and watch the sun go down.',
       '📸 Photo in the ☰ menu saves a picture of your hero right where they stand.',
       (A.snaps || []).length < LANDMARKS.length && `Take a 📸 Photo by each town's landmark (${(A.snaps || []).length} / ${LANDMARKS.length} so far). All eight earn a hat!`,
@@ -1166,7 +1169,7 @@ export class Screens {
     const gnt = F.ending && !F['gauntpay_' + gauntletWeek()]; // ⚔️ this week's Peak Gauntlet is still open
     const btl = w.outPhase === 'night' && seen.seashell && save.adv.bottle !== new Date().toISOString().slice(0, 10); // 🍾 tonight's message in a bottle is still on Seashell's shore
     const scope = w.outPhase === 'night' && seen.village && save.adv.stars !== new Date().toISOString().slice(0, 10); // 🔭 tonight's constellation in Sprout Village is still to be spotted
-    const day = new Date().toISOString().slice(0, 10), daily = { cloudtop: save.adv.wish !== day && '⛲', ember: save.adv.soak !== day && '♨️', glowcap: w.outPhase === 'night' && save.adv.ring !== day && '🍄', village: w.morning && save.adv.breakfast !== day && '🥞', seashell: w.outPhase === 'evening' && save.adv.sunset !== day && '🌅' }; // a wish, a soak and tonight's fairy-ring song still to do
+    const day = new Date().toISOString().slice(0, 10), daily = { cloudtop: save.adv.wish !== day && '⛲', ember: save.adv.soak !== day && '♨️', glowcap: w.outPhase === 'night' && save.adv.ring !== day && '🍄', village: w.morning && save.adv.breakfast !== day && '🥞', seashell: w.outPhase === 'evening' && save.adv.sunset !== day && '🌅', frostpeak: save.adv.snowball !== day && '⛄' }; // a wish, a soak and tonight's fairy-ring song still to do
     const snap = new Set(LANDMARKS.filter((l) => !(save.adv.snaps || []).includes(l.id)).map((l) => l.map)); // 📸 a landmark here still to photograph (the name gets a little camera)
     const fav = {}; for (const r of favourList().rows) if (r.at && !fav[r.at]) fav[r.at] = r.state === 'found' || r.deliver ? '📦' : '🔍'; // open favours: where to look, or who to take it back to
     // older saves: towns behind a cleared cup were visited
