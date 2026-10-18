@@ -1018,6 +1018,7 @@ export class Screens {
     const dig = new Set(digLeft(MAPS)); // ⛏ a dig spot still waiting today
     const al = alphaToday(); // 💥 where today's Alpha waits
     const gnt = F.ending && !F['gauntpay_' + gauntletWeek()]; // ⚔️ this week's Peak Gauntlet is still open
+    const btl = w.outPhase === 'night' && seen.seashell && save.adv.bottle !== new Date().toISOString().slice(0, 10); // 🍾 tonight's message in a bottle is still on Seashell's shore
     const fav = {}; for (const r of favourList().rows) if (r.at && !fav[r.at]) fav[r.at] = r.state === 'found' || r.deliver ? '📦' : '🔍'; // open favours: where to look, or who to take it back to
     // older saves: towns behind a cleared cup were visited
     for (const [k, n] of Object.entries(WMAP)) if (n.cup && F['cup_' + n.cup]) seen[k] = true;
@@ -1028,7 +1029,7 @@ export class Screens {
       + Object.entries(WMAP).map(([k, n]) => {
         const v = seen[k], won = n.cup && F['cup_' + n.cup], town = !!n.fly;
         return `<g class="wm-node ${v ? 'seen' : ''} ${town ? 'town' : ''} ${k === here ? 'here' : ''}" data-k="${k}" transform="translate(${n.x} ${n.y})">
-          <circle r="${town ? 11 : 7}"/>${won ? '<text class="wm-cup" y="5">🏆</text>' : ''}${v && k !== 'peak' && [0, 1].some((j) => !F[`it_${k}_${j}`]) ? `<text class="wm-gift" x="${town ? -10 : -7}" y="${town ? -7 : -4}">🎁</text>` : ''}${k === tt ? '<text class="wm-gift" x="11" y="-7">🎩</text>' : ''}${gnt && k === 'peak' ? `<text class="wm-gift" x="${town ? -10 : -7}" y="${town ? -7 : -4}">⚔️</text>` : ''}${al && !al.done && al.map === k ? `<text class="wm-gift wm-dig" x="${town ? 19 : 15}" y="${town ? 6 : 5}">💥</text>` : ''}${v && dig.has(k) ? `<text class="wm-gift wm-dig" x="${town ? -19 : -15}" y="${town ? 6 : 5}">⛏️</text>` : ''}${fav[k] ? `<text class="wm-gift wm-fav" x="${town ? 11 : 8}" y="${town ? 12 : 9}">${fav[k]}</text>` : ''}
+          <circle r="${town ? 11 : 7}"/>${won ? '<text class="wm-cup" y="5">🏆</text>' : ''}${v && k !== 'peak' && [0, 1].some((j) => !F[`it_${k}_${j}`]) ? `<text class="wm-gift" x="${town ? -10 : -7}" y="${town ? -7 : -4}">🎁</text>` : ''}${k === tt ? '<text class="wm-gift" x="11" y="-7">🎩</text>' : ''}${gnt && k === 'peak' ? `<text class="wm-gift" x="${town ? -10 : -7}" y="${town ? -7 : -4}">⚔️</text>` : ''}${al && !al.done && al.map === k ? `<text class="wm-gift wm-dig" x="${town ? 19 : 15}" y="${town ? 6 : 5}">💥</text>` : ''}${v && dig.has(k) ? `<text class="wm-gift wm-dig" x="${town ? -19 : -15}" y="${town ? 6 : 5}">⛏️</text>` : ''}${btl && k === 'seashell' ? `<text class="wm-gift wm-dig" x="-27" y="-8">🍾</text>` : ''}${fav[k] ? `<text class="wm-gift wm-fav" x="${town ? 11 : 8}" y="${town ? 12 : 9}">${fav[k]}</text>` : ''}
           <text class="wm-name" y="${n.ly || (town ? 24 : 19)}">${v ? MAPS[k].name : '???'}</text></g>`;
       }).join('');
     const hp = WMAP[here];
@@ -1038,7 +1039,7 @@ export class Screens {
       <path class="wm-land" d="M18 238 L18 70 Q20 20 90 22 L300 18 Q385 22 385 90 L380 160 Q378 205 330 214 L230 216 Q215 244 150 242 Z"/>${[['🌲', 220, 34], ['🌲', 150, 40], ['🌋', 372, 78], ['🏙️', 372, 210], ['☁️', 290, 232], ['🏔️', 118, 150], ['🌊', 236, 128], ['🌸', 90, 196]].map(([e, x, y]) => `<text class="wm-deco" x="${x}" y="${y}">${e}</text>`).join('')}${svg}
       ${hp ? `<image href="${this.game.portrait(heroDef())}" x="${hp.x + 4}" y="${hp.y - 34}" width="30" height="30" class="wm-hero"/>` : ''}</svg>
       <p class="wm-tip">${Object.values(seen).length > 1 ? 'Tap a town you\'ve visited to fly there by mail balloon.' : 'Explore to fill in the map!'}</p>
-      ${Object.values(seen).length > 1 ? `<p class="wm-key">${[['🎁', 'gift'], tt && ['🎩', 'Trader Tock'], [...dig].some((k) => seen[k]) && ['⛏️', 'dig today'], al && !al.done && ['💥', 'Alpha'], gnt && ['⚔️', 'Gauntlet'], Object.keys(fav).length && ['🔍', 'lost thing'], Object.values(fav).includes('📦') && ['📦', 'deliver']].filter(Boolean).map(([i, t]) => `<span>${i} ${t}</span>`).join('')}</p>` : ''}
+      ${Object.values(seen).length > 1 ? `<p class="wm-key">${[['🎁', 'gift'], tt && ['🎩', 'Trader Tock'], [...dig].some((k) => seen[k]) && ['⛏️', 'dig today'], al && !al.done && ['💥', 'Alpha'], gnt && ['⚔️', 'Gauntlet'], btl && ['🍾', 'bottle'], Object.keys(fav).length && ['🔍', 'lost thing'], Object.values(fav).includes('📦') && ['📦', 'deliver']].filter(Boolean).map(([i, t]) => `<span>${i} ${t}</span>`).join('')}</p>` : ''}
       <div class="res-btns"></div></div>`;
     const close = () => { d.remove(); this.game.modalClose = null; };
     d.querySelector('.res-btns').appendChild(this.btn('Close', 'ghost', close));
