@@ -455,10 +455,13 @@ function pickPaged(w, q, labels, cb, who, page = 0) {
 // Trader Tock turns up in a different town each day with hats the shop doesn't sell
 function trader(w) {
   const A = save.adv, own = (A.hats ||= []), who = 'Trader Tock';
-  const stock = SHOP_HATS.filter((h) => h.trader && !own.includes(h.id));
-  if (!stock.length) return w.say(['Trader Tock: Tock tock! You bought my whole stock. I\'m off to find more treasures. See you around!'], null, who);
-  w.say(['Trader Tock: Tock tock! A traveller, like me! I wander a new town every day.'], () => pickPaged(w, `Trader Tock: Rare hats from far away! (You have ${save.berries || 0} 🍓)`, stock.map((h) => `${h.name} ${h.price}🍓`), (k) => {
-    if (k < 0) return w.say(['Trader Tock: Look for me tomorrow. Different town, same hats!'], null, who);
+  // two of the rare hats in the bag each week (Monday to Sunday), rotating through all of them
+  const all = SHOP_HATS.filter((h) => h.trader), wk = Math.floor((Date.now() / 86400000 + 3) / 7);
+  const week = [all[(wk * 2) % all.length], all[(wk * 2 + 1) % all.length]];
+  const stock = week.filter((h) => !own.includes(h.id));
+  if (!stock.length) return w.say([all.every((h) => own.includes(h.id)) ? 'Trader Tock: Tock tock! You own every hat I\'ve ever found. A true collector!' : 'Trader Tock: Tock tock! You bought this week\'s hats. Come back next week. I\'ll have new ones in the bag!'], null, who);
+  w.say(['Trader Tock: Tock tock! A traveller, like me! I wander a new town every day, and my bag changes every week.'], () => pickPaged(w, `Trader Tock: Rare hats from far away! (You have ${save.berries || 0} 🍓)`, stock.map((h) => `${h.name} ${h.price}🍓`), (k) => {
+    if (k < 0) return w.say(['Trader Tock: Look for me tomorrow. Different town, and new hats every week!'], null, who);
     const h = stock[k];
     if ((save.berries || 0) < h.price) return w.say([`Trader Tock: ${h.price} berries, friend. Shake some bushes and catch me before the day is out!`], null, who);
     save.berries -= h.price; own.push(h.id); A.hat = h.id; persist(); sfx.jingle(2); w.wearHat();
