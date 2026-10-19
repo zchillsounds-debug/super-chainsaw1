@@ -984,7 +984,7 @@ export class Critter {
     const t = (sy - B.h * 0.48) / (B.h * 0.5), snug = this.def.stage ? Math.sqrt(Math.max(0.3, 1 - t * t)) * 1.06 : 1;
     const ring = inked(new THREE.TorusGeometry(B.w * 0.5 * snug, this.def.stage ? 0.06 : 0.085, 10, 28), scarfMat, OL * 0.8);
     ring.rotation.x = Math.PI / 2 - 0.3;
-    ring.scale.set(B.chubby * 1.05, 1, this.def.stage ? 1.7 : 1); // grown forms: a flat cloth band, not a round tube
+    ring.scale.set(B.chubby * (this.def.stage ? 0.86 : 1.05), 1, this.def.stage ? 1.7 : 1); // grown forms: a flat cloth band, not a round tube, narrowed so its ends tuck into the sides (a collar under the chin, not a belt)
     ring.position.set(0, sy, B.w * 0.04);
     this.torso.add(ring);
     if (this.def.stage) {
