@@ -2603,11 +2603,12 @@ export class World {
   }
 
   // the hero runs through a leaf pile: leaves fly everywhere, and the pile flattens for a while
-  leafJump(L) {
+  leafJump(L, mine = true) {
     const p = L.g.position;
     for (let i = 0; i < 26; i++) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 0.3, z: p.z + (Math.random() - 0.5) * 1.2, vx: (Math.random() - 0.5) * 4, vy: 3 + Math.random() * 3.5, vz: (Math.random() - 0.5) * 4, grav: 5, drag: 1.6, color: L.cols[i % 4], size: 0.34, life: 1.6 + Math.random(), shape: 'leaf', additive: false, spin: (Math.random() - 0.5) * 8, floor: true });
     sfx.foot?.('grass'); sfx.ui?.('move');
     L.flat = 14; L.g.scale.set(1.25, 0.35, 1.25);
+    if (!mine) return;
     const day = new Date().toISOString().slice(0, 10), A = save.adv;
     if (A.leaves !== day) {
       A.leaves = day; countUp('leaves');
@@ -3478,6 +3479,7 @@ export class World {
     if (save.adv.steps % 8 === 0) persist();
     this.walkHome();
     const L = this.leafPiles?.find((q) => q.x === this.hx && q.y === this.hy && q.flat <= 0); if (L) this.leafJump(L);
+    const FL = this.follower && this.leafPiles?.find((q) => q.x === this.follower.x && q.y === this.follower.y && q.flat <= 0); if (FL) this.leafJump(FL, false); // the buddy bounds through one too
     this.steps++;
     this.encCool--;
     const t = this.tile(this.hx, this.hy);
