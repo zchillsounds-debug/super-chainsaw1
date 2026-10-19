@@ -512,12 +512,19 @@ const nightSongs = {};
 const nightOf = (name) => nightSongs[name] ||= SONGS[name] && { ...SONGS[name], night: true, bpm: Math.round(SONGS[name].bpm * 0.72), drums: 'k...............',
   inst: { lead: 'triangle', lead2: 'sine', leadVol: 0.085, bass: 'sine', bassVol: 0.2, stab: 'sine' } };
 
-export function playMusic(name, night = false) {
-  if (!ctx || currentSong === name + (night ? ':night' : '')) return;
+// golden-hour evenings: a touch slower and mellower (warm triangle lead, no hats, a lazy kick and snare)
+const eveSongs = {};
+const eveOf = (name) => eveSongs[name] ||= SONGS[name] && { ...SONGS[name], night: true, bpm: Math.round(SONGS[name].bpm * 0.86), drums: 'k.......s.....k.',
+  inst: { ...SONGS[name].inst, lead: 'triangle', lead2: 'square', leadVol: 0.07, bassVol: 0.24, stab: 'triangle', steel: SONGS[name].inst?.steel } };
+
+// mood: false (day), true or 'night' (lullaby), 'evening' (mellow)
+export function playMusic(name, mood = false) {
+  const tag = mood === 'evening' ? ':eve' : mood ? ':night' : '';
+  if (!ctx || currentSong === name + tag) return;
   stopMusic();
-  currentSong = name + (night ? ':night' : '');
+  currentSong = name + tag;
   intensity = 0;
-  const song = night ? nightOf(name) : SONGS[name];
+  const song = mood === 'evening' ? eveOf(name) : mood ? nightOf(name) : SONGS[name];
   if (!song) return;
   musicStep = 0;
   nextT = ctx.currentTime + 0.1;

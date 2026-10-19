@@ -413,7 +413,8 @@ export class World {
     if (!key.startsWith('in:')) (save.adv.seen ||= {})[key] = true;
     persist();
     const tune = this.touring ? 'victory' : M.music || 'camp';
-    playMusic(tune, this.outPhase === 'night' && !['victory', 'neon', 'boss'].includes(tune) && M.indoor !== 'arcade'); // night: the town's tune as a slow lullaby (Neon City parties on)
+    const calm = !['victory', 'neon', 'boss'].includes(tune) && M.indoor !== 'arcade';
+    playMusic(tune, calm && (this.outPhase === 'night' || this.outPhase === 'evening' && 'evening')); // evening: a mellower take; night: a slow lullaby (Neon City parties on)
     const B = this.base, lamp = M.indoor && this.outPhase !== 'day' && M.indoor !== 'arcade' && { sun: 0xffd2a0, sunI: B.sunI * (this.outPhase === 'night' ? 0.72 : 0.85), sky: 0xffe2c4, gnd: B.gnd, hemiI: B.hemiI * 0.85, fog: 0xcfeeff }; // lamplight indoors after dark
     this.morning = canRain(M) && !this.rain && this.phase === 'day' && hr >= 6 && hr < 9; // misty mornings on the grassy outdoor maps
     this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.morning && PHASES.morning) || PHASES[this.phase]);
@@ -4192,6 +4193,7 @@ export class World {
       return setTimeout(() => this.S.worldFight({ foe, lv, kind: 'wild', name: `Alpha ${foe.name}`, diff: Math.min(0.85, 0.3 + lv * 0.03), flag: al.flag, berries: 3, note: `💥 You beat the Alpha ${foe.name}! +3 🍓 and a Power Snack` }), 900);
     }
     countUp('wild');
+    if (this.phase === 'night' && (id === 'hootsy' || id === 'squeakwing')) countUp('owl'); // a night owl met after dark (Records)
     sfx.warn?.();
     if (a) this.bubble(a, '❗');
     const foe = withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv);

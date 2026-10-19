@@ -1088,6 +1088,7 @@ export class Screens {
       + bar('🏔️', 'Peak Gauntlets cleared', A.gauntWins || 0)
       + bar('💥', 'Alphas beaten', Object.keys(F).filter((k) => k.startsWith('alpha_')).length)
       + bar('🌿', 'Wild critters met', A.cnt?.wild || 0)
+      + (A.cnt?.owl ? bar('🦉', 'Night owls met', A.cnt.owl) : '')
       + bar('🕹️', 'TURBO best', A.arcadeHi || 0)
       + bar('🎈', 'SKY HOP best', A.hopHi || 0)
       + bar('🪩', 'Nights danced', A.cnt?.dance || 0)
