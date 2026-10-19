@@ -3786,8 +3786,11 @@ export class World {
     const g = this.g, H = this.hero; if (!H || this.busy || this.dialog) return;
     const cam = g.camera, keep = { pos: cam.position.clone(), quat: cam.quaternion.clone(), fov: cam.fov, yaw: H.root.rotation.y }, p = H.root.position;
     H.root.rotation.y = 0.25; H.emote?.('happy', 'grin', 1.2);
+    const F = this.follower && !this.follower.from ? this.follower : null, fk = F && { pos: F.root.position.clone(), yaw: F.root.rotation.y };
+    if (F) { F.root.position.set(p.x - 1.5, F.root.position.y, p.z + 0.35); F.root.rotation.y = 0.55; F.cr.emote?.('happy', 'grin', 1.2); } // the buddy steps up beside the hero for the shot
     const port = cam.aspect < 1;
-    cam.position.set(p.x + 1.1, p.y + (port ? 5.6 : 3.1), p.z + (port ? 7 : 4.1)); cam.lookAt(p.x, p.y + 0.8, p.z); cam.fov = port ? 38 : 34; cam.updateProjectionMatrix();
+    const mx = F ? p.x - 0.75 : p.x; // frame the pair
+    cam.position.set(mx + 1.1, p.y + (port ? 5.6 : 3.1), p.z + (port ? 7 : 4.1) + (F ? 0.5 : 0)); cam.lookAt(mx, p.y + 0.8, p.z); cam.fov = (port ? 38 : 34) + (F && port ? 6 : 0); cam.updateProjectionMatrix();
     g.composer.render(0);
     const src = g.renderer.domElement, W = src.width, Hh = src.height, pad = Math.round(Math.min(W, Hh) * 0.045), foot = pad * 3.2;
     const out = document.createElement('canvas'); out.width = W + pad * 2; out.height = Hh + pad + foot;
@@ -3796,15 +3799,17 @@ export class World {
     x.drawImage(src, pad, pad);
     x.font = `${Math.round(26 * sc)}px 'Lilita One', system-ui, sans-serif`; x.textBaseline = 'middle'; x.fillStyle = '#2a1630';
     const when = { day: '☀️', evening: '🌇', night: '🌙' }[this.outPhase] + (this.storm ? '⛈️' : this.rain ? '🌧️' : '');
-    const label = `${H.def.name} · ${this.M.name} ${when}`, fy = out.height - foot / 2;
+    const label = `${H.def.name}${F ? ' & ' + (F.name || F.cr.def.name) : ''} · ${this.M.name} ${when}`, fy = out.height - foot / 2;
     if (x.measureText(label + ' CRITTER CLASH! ').width + pad * 3 < out.width) {
       x.fillText(label, pad * 1.2, fy);
       x.textAlign = 'right'; x.fillStyle = '#ff5a8a'; x.fillText('CRITTER CLASH!', out.width - pad * 1.2, fy);
     } else { // a narrow (portrait) photo: the caption and the brand on two lines
+      for (let f = 26; f > 12 && x.measureText(label).width > out.width - pad * 2; f -= 2) x.font = `${Math.round(f * sc)}px 'Lilita One', system-ui, sans-serif`; // a long caption shrinks to fit
       x.textAlign = 'center'; x.fillText(label, out.width / 2, fy - foot * 0.17);
       x.font = `${Math.round(18 * sc)}px 'Lilita One', system-ui, sans-serif`; x.fillStyle = '#ff5a8a'; x.fillText('CRITTER CLASH!', out.width / 2, fy + foot * 0.22);
     }
     cam.position.copy(keep.pos); cam.quaternion.copy(keep.quat); cam.fov = keep.fov; cam.updateProjectionMatrix(); H.root.rotation.y = keep.yaw;
+    if (F) { F.root.position.copy(fk.pos); F.root.rotation.y = fk.yaw; }
     sfx.shutter?.();
     const fl = document.createElement('div'); fl.className = 'ph-flash go'; g.ui.appendChild(fl); setTimeout(() => fl.remove(), 600);
     PhotoMode.prototype.preview.call({ game: g }, out.toDataURL('image/png'), out); // the photo mode's Save/Share card
