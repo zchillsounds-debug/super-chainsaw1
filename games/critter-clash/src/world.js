@@ -406,6 +406,12 @@ export class World {
     // hero
     this.hero = new Critter(heroDef(), { lod: 'mid' }); bakeStatic(this.hero);
     this.hero.root.scale.setScalar(CS);
+    this.heroGlow = null;
+    if (this.phase === 'night' && !M.indoor) { // after dark the moonlight catches the hero's outline, and a soft pool of light walks with them, so you can always spot yourself
+      this.hero.setRim(0xd8e4ff, 1.7);
+      const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: M.lava ? 0xffa060 : 0x9ab8ff, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.3 }); pm.userData.own = true;
+      this.heroGlow = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 4.6), pm); this.heroGlow.rotation.x = -Math.PI / 2; this.group.add(this.heroGlow);
+    }
     this.group.add(this.hero.root);
     this.wearHat();
     this.wearEgg();
@@ -3846,6 +3852,7 @@ export class World {
 
   updateCamera(dt) {
     const cam = this.g.camera, p = this.hero.root.position;
+    this.heroGlow?.position.set(p.x, 0.06, p.z);
     const port = cam.aspect < 1;
     // portrait outdoors stands further back with a narrower lens (same ground width in view): a wide 80° lens blew the treetops under the camera up into big flat discs
     const far = port && !this.M.indoor, H = far ? 28 : port ? 21 : 17, D = far ? 19.5 : port ? 10 : 11.5;
