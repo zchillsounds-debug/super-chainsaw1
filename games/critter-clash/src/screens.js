@@ -569,6 +569,8 @@ export class Screens {
     const t = document.createElement('div');
     t.className = 'toast';
     t.textContent = msg;
+    const live = [...this.root.querySelectorAll('.toast')]; // two at once stack instead of printing over each other
+    if (live.length) t.style.marginTop = live.reduce((h, o) => h + o.offsetHeight + 8, 0) + 'px';
     this.root.appendChild(t);
     setTimeout(() => t.remove(), 2200);
   }

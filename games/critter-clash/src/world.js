@@ -323,6 +323,7 @@ export class World {
     this.phase = M.indoor ? 'day' : this.outPhase;
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
     this.rain = canRain(M) && (save.adv.rain ?? rainAt(key, new Date(), hr));
+    this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
     this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)); // now and then a proper snowfall up in the mountains (light flurries otherwise)
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
@@ -396,7 +397,7 @@ export class World {
     this.morning = canRain(M) && !this.rain && this.phase === 'day' && hr >= 6 && hr < 9; // misty mornings on the grassy outdoor maps
     this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.morning && PHASES.morning) || PHASES[this.phase]);
     this.buildMorning();
-    this.buildRainbow(hr);
+    this.buildRainbow();
     this.banner(M.name + (this.rain ? ' 🌧️' : this.snowing ? ' 🌨️' : ''));
   }
 
@@ -565,9 +566,10 @@ export class World {
       }
       // puddles collect on the paths in the rain
       const pr = rng(hash(this.key + ':rain')); // its own dice, so a rainy day doesn't shuffle the trees
-      if (this.rain) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === ':' && pr() < 0.28) {
+      if (this.rain || this.afterRain) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === ':' && pr() < (this.rain ? 0.28 : 0.18)) {
         const px = x * P + 8 + pr() * 16, py = y * P + 8 + pr() * 16, rx = 9 + pr() * 6, ry = 5 + pr() * 3;
-        c.fillStyle = 'rgba(96,116,150,0.6)'; c.beginPath(); c.ellipse(px, py, rx, ry, pr() * 0.6, 0, 7); c.fill();
+        c.fillStyle = this.rain ? 'rgba(96,116,150,0.6)' : 'rgba(118,182,240,0.75)'; // after the rain they mirror the clearing sky
+        c.beginPath(); c.ellipse(px, py, rx, ry, pr() * 0.6, 0, 7); c.fill();
         c.fillStyle = 'rgba(220,235,255,0.55)'; c.beginPath(); c.ellipse(px - rx * 0.3, py - ry * 0.35, rx * 0.35, ry * 0.25, 0, 0, 7); c.fill();
       }
       // grass speckles and flowers
@@ -1884,10 +1886,9 @@ export class World {
 
   // misty mornings: big soft banks of mist drift slowly across the map, thinning as they go
   // the hour after a shower: a big soft rainbow arcs across the sky (a screen overlay: the world camera looks down, so there's no sky to hang one in)
-  buildRainbow(hr) {
+  buildRainbow() {
     this.S.root.querySelectorAll('.wd-rainbow').forEach((e) => e.remove());
-    const M = this.M, after = save.adv.rainbow ?? (hr % 3 === 0 && hr >= 3 && rainAt(this.key, new Date(), hr - 3));
-    if (!canRain(M) || this.rain || this.phase !== 'day' || !after) return;
+    if (!this.afterRain) return;
     const el = document.createElement('div'); el.className = 'wd-rainbow';
     this.S.root.querySelector('.world-screen')?.prepend(el);
     if (!this.rainbowTold) { this.rainbowTold = true; setTimeout(() => this.group && el.isConnected && this.S.toast('🌈 The rain has stopped. Look, a rainbow!'), 2600); }
