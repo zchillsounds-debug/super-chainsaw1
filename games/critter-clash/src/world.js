@@ -396,6 +396,7 @@ export class World {
     this.morning = canRain(M) && !this.rain && this.phase === 'day' && hr >= 6 && hr < 9; // misty mornings on the grassy outdoor maps
     this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.morning && PHASES.morning) || PHASES[this.phase]);
     this.buildMorning();
+    this.buildRainbow(hr);
     this.banner(M.name + (this.rain ? ' 🌧️' : this.snowing ? ' 🌨️' : ''));
   }
 
@@ -1882,6 +1883,16 @@ export class World {
   }
 
   // misty mornings: big soft banks of mist drift slowly across the map, thinning as they go
+  // the hour after a shower: a big soft rainbow arcs across the sky (a screen overlay: the world camera looks down, so there's no sky to hang one in)
+  buildRainbow(hr) {
+    this.S.root.querySelectorAll('.wd-rainbow').forEach((e) => e.remove());
+    const M = this.M, after = save.adv.rainbow ?? (hr % 3 === 0 && hr >= 3 && rainAt(this.key, new Date(), hr - 3));
+    if (!canRain(M) || this.rain || this.phase !== 'day' || !after) return;
+    const el = document.createElement('div'); el.className = 'wd-rainbow';
+    this.S.root.querySelector('.world-screen')?.prepend(el);
+    if (!this.rainbowTold) { this.rainbowTold = true; setTimeout(() => this.group && el.isConnected && this.S.toast('🌈 The rain has stopped. Look, a rainbow!'), 2600); }
+  }
+
   buildMorning() {
     this.mornMist = null; this.mornMistIn = 0;
     if (!this.morning) return;
@@ -3709,6 +3720,7 @@ export class World {
       const name = B.cr.def?.name || 'Your buddy';
       const M = this.M, ctx = [ // what the buddy notices right here, right now
         this.rain && `${name} shakes the rain off... all over {hero}. Thanks, pal.`,
+        this.S.root.querySelector('.wd-rainbow') && `${name} points up at the rainbow, eyes wide. Is there a berry pot at the end of it?`,
         this.snowing && `${name} catches a snowflake on the tip of their tongue. Cold!`,
         M.snow && !this.snowing && `${name} flops into the snow and makes a snow critter.`,
         this.morning && `${name} yawns a big morning yawn and stretches. Is it breakfast yet?`,
