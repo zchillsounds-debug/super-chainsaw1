@@ -961,6 +961,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **R530/R531: balance.** A 2-rep full robin (72 games each, R513 build): Woolt 61%, Whirlwhisk 60%, most 44–58%, Squeakwing 40%, Diggles 38%, **Rolladillo 33%**. Rolladillo hp 1150→1190, speed 5.4→5.5, power 1.10→1.13 (the stat change rode along in the R530 commit). A focused 2-rep re-run then put Rolladillo at **58%** (42–30); fine for now, re-check in the next full robin.
 - Perf note: Cinder Road at noon is the busiest map (362 draw calls); its critters are already merged (`bakeStatic`, R382), ~40 draws each, so more merging gains little.
 - advload after R525: 160 fresh loads, no errors.
+- **Final checks (~03:50 UTC, production build of the R530 tree):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town, no errors.
 - **Next ideas:** Diggles (38%) and Squeakwing (40%) if they stay low in the next 2-rep robin; Neon City by day is still dusky (R463's call); the Alpha shown big in its battle (battle side, the user's chat); re-measure FPS on a phone (the rainbow overlay and A hint are cheap, but check); Daycare could show on the Town Map or hatch something (an egg?) if more depth is wanted; the album isn't in the save backup (by design).
 
 ## Critique backlog (known issues)
