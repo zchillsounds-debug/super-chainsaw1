@@ -383,7 +383,7 @@ export class World {
     this.buildThanks();
     this.buildBuildings();
     this.buildInterior();
-    this.buildToys();
+    this.buildToys(); this.buildTent();
     this.buildMarquee();
     this.buildActors();
     this.buildPumpkins();
@@ -3932,6 +3932,19 @@ export class World {
     const col = { chest: 0x6ab8ff, lid: 0xffd84d, ball: 0xff5a7a, ball2: 0xffffff, b0: 0x6ad070, b1: 0xff9a3a, b2: 0xb07aff };
     for (const [k, gs] of Object.entries(parts)) { const m = inked(mergeGeometries(gs), toon(col[k], { rim: 0.5 }), OL * 0.5); m.castShadow = true; this.group.add(m); gs.forEach((g) => g.dispose()); }
     this.solid.add('1,3');
+  }
+
+  // Flo's room: a striped play tent in the corner, with a pennant on top and a little round doorway
+  buildTent() {
+    if (this.M.indoor !== 'kidroom') return;
+    const [px, pz] = wpos(2, 2), G = new THREE.Group(); G.position.set(px, 0, pz); G.rotation.y = 0.5; G.scale.setScalar(1.3);
+    const cone = new THREE.ConeGeometry(0.85, 1.7, 6, 1, true); cone.translate(0, 0.85, 0);
+    const tent = inked(cone, toon(0xffe08a, { rim: 0.4 }), OL * 0.6); tent.castShadow = true; G.add(tent);
+    for (let k = 0; k < 3; k++) { const st = new THREE.ConeGeometry(0.86, 1.7, 6, 1, true, k * Math.PI * 2 / 3, Math.PI / 3); st.translate(0, 0.85, 0); const m = new THREE.Mesh(st, toon(0xff7a9a)); m.scale.setScalar(1.01); G.add(m); } // pink stripes
+    const door = new THREE.Mesh(new THREE.CircleGeometry(0.32, 16, 0, Math.PI), toon(0x5a3a50)); door.position.set(0, 0.02, 0.74); door.rotation.x = -0.46; G.add(door);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 6), toon(0x8a6a4a)); pole.position.y = 1.85; G.add(pole);
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.2), toon(0x6ab8ff, { side: THREE.DoubleSide })); flag.position.set(0.17, 1.98, 0); G.add(flag);
+    this.group.add(G); this.solid.add('2,2');
   }
 
   // the Critter Daycare in every Berry Center: Nanny Nell by the sofa, and the critter in her care romping by the rug
