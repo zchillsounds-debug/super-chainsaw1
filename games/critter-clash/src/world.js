@@ -3528,7 +3528,7 @@ export class World {
     if (this.bottle) { const B = this.bottle; B.g.position.y = 0.18 + Math.sin(this.t * 1.5) * 0.03; B.glint.material.opacity = 0.35 + Math.max(0, Math.sin(this.t * 2.3)) * 0.4; } // the bottle rocks in the wash and glints
     if (this.iceLan) this.iceLan.opacity = 0.58 + Math.sin(this.t * 7) * 0.04 + Math.sin(this.t * 11.3) * 0.03; // candle flicker
     if (this.dance) { // the floor flashes on the beat (faster while the hero dances); the records spin
-      const D = this.dance, fast = this.danceT > 0, beat = Math.floor(this.t * (fast ? 4 : 2));
+      const D = this.dance, fast = this.danceT > 0, beat = Math.floor(this.t * (this.g.reduceFlash ? 1 : fast ? 4 : 2)); // Reduce flashing: one gentle change a second
       if (beat !== D.beat) { D.beat = beat; const ca = D.floor.geometry.attributes.color; D.tiles.forEach((k, i) => { const c = D.cols[(k + beat) % D.cols.length], m = (k + beat) % 2 ? 1 : 0.45; for (let v = 0; v < 4; v++) ca.setXYZ(i * 4 + v, c.r * m, c.g * m, c.b * m); }); ca.needsUpdate = true; }
       D.discs.forEach((d, k) => { d.rotation.y += dt * (k ? 3.2 : 4); }); D.glow.material.color.copy(D.cols[beat % D.cols.length]); D.glow.material.opacity = 0.3 + (beat % 2) * 0.12;
     }
