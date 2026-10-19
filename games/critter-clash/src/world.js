@@ -136,6 +136,7 @@ export function twinkleWeek(d = new Date()) { if (save.adv?.winter != null) retu
 export function halloween(d = new Date()) { if (save.adv?.halloween != null) return !!save.adv.halloween; return pumpkinNights(d) && d.getMonth() === 9 && d.getDate() === 31; } // the big night itself (save.adv.halloween forces it)
 export function isAutumn(d = new Date()) { return save.adv?.autumn ?? (d.getMonth() === 9 || d.getMonth() === 10 && d.getDate() <= 15); } // October to mid-November; save.adv.autumn forces it
 export function isSpring(d = new Date()) { if (save.adv?.spring != null) return !!save.adv.spring; const m = d.getMonth(), day = d.getDate(); return (m === 2 && day >= 20) || m === 3; } // blossom time: 20 March to the end of April (save.adv.spring forces it)
+export function isSummer(d = new Date()) { if (save.adv?.summer != null) return !!save.adv.summer; const m = d.getMonth(), day = d.getDate(); return (m === 5 && day >= 21) || m === 6 || m === 7; } // midsummer to the end of August (save.adv.summer forces it)
 export function isFrost(d = new Date()) { if (save.adv?.frost != null) return !!save.adv.frost; const m = d.getMonth(), day = d.getDate(); return (m === 10 && day > 15) || (m === 11 && day < 18); } // after the autumn leaves and before Twinkle Week (save.adv.frost forces it)
 export function pumpkinNights(d = new Date()) { const m = d.getMonth(), day = d.getDate(); if (save.adv?.fest != null) return !!save.adv.fest; return (m === 9 && day >= 15) || (m === 10 && day <= 2); } // save.adv.fest forces it on (true) or off (false) for tests
 
@@ -438,6 +439,7 @@ export class World {
     this.buildWisps(x, y);
     this.buildFlutters(x, y);
     this.buildMoonflowers();
+    this.buildSunflowers();
     // hero
     this.hero = new Critter(heroDef(), { lod: 'mid' }); bakeStatic(this.hero); skinStatic(this.hero); // the hero keeps its whole shadow (no castLite)
     this.hero.root.scale.setScalar(CS);
@@ -1854,6 +1856,30 @@ export class World {
       const glow = new THREE.Sprite(sm); glow.scale.setScalar(1.8); glow.position.y = 0.75; g.add(glow);
       return { x, y, g, head, glow };
     });
+  }
+
+  // summer on the green maps: clumps of sunflowers, taller than the hero, stand where the grass meets the woods, their faces turned to the sun
+  buildSunflowers() {
+    const M = this.M;
+    if (!isSummer() || M.indoor || M.trees || M.snow || M.lava || M.city || M.fireflies || M.border === 'cloud' || this.key === 'seashell') return;
+    const rand = rng(hash(this.key + 'sun')), ok = [], T = (x, y) => this.tile(x, y) === 'T';
+    for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if (this.tile(x, y) === '.' && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => T(x + dx, y + dy))) ok.push([x, y]);
+    const pick = []; for (let k = 0; k < 400 && pick.length < 6 && ok.length; k++) { const p = ok[Math.floor(rand() * ok.length)]; if (pick.every(([a, b]) => Math.abs(a - p[0]) + Math.abs(b - p[1]) > 4)) pick.push(p); }
+    if (!pick.length) return;
+    const stems = [], petals = [], hearts = [], leaves = [];
+    for (const [x, y] of pick) {
+      const [px, pz] = wpos(x, y), back = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dx, dy]) => T(x + dx, y + dy)); // lean in against the trees
+      for (let k = 0, n = 3 + Math.floor(rand() * 2); k < n; k++) {
+        const s = 1.1 + rand() * 0.45, h = (1.7 + rand() * 0.6) * s, ox = px + back[0] * 0.55 + (rand() - 0.5) * 1.2, oz = pz + back[1] * 0.55 + (rand() - 0.5) * 1.0;
+        const st = new THREE.CylinderGeometry(0.045 * s, 0.06 * s, h, 5); st.translate(ox, h / 2, oz); stems.push(st);
+        for (const sd of [-1, 1]) { const lf = new THREE.SphereGeometry(0.2 * s, 6, 4); lf.scale(1.6, 0.25, 0.8); lf.rotateZ(sd * 0.5); lf.translate(ox + sd * 0.22 * s, h * (0.45 + rand() * 0.15), oz); leaves.push(lf); }
+        const tilt = -0.7 - rand() * 0.25, yaw = 0.25 + (rand() - 0.5) * 0.6, place = (g) => { g.rotateX(tilt); g.rotateY(yaw); g.translate(ox, h, oz); }; // faces up and toward the sun (and the camera)
+        const c = new THREE.CylinderGeometry(0.2 * s, 0.22 * s, 0.08 * s, 12); c.rotateX(Math.PI / 2); c.translate(0, 0, 0.04 * s); place(c); hearts.push(c);
+        for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2, pt = new THREE.SphereGeometry(0.1 * s, 6, 4); pt.scale(0.7, 2.0, 0.25); pt.translate(0, 0.33 * s, 0); pt.rotateZ(a); place(pt); petals.push(pt); }
+      }
+    }
+    const put = (list, c, ink) => { const m = inked(mergeGeometries(list), toon(c, { rim: 0.4 }), ink); m.castShadow = true; this.group.add(m); list.forEach((g) => g.dispose()); };
+    put(stems, 0x4a9a3a, OL * 0.4); put(leaves, 0x5ab04a, OL * 0.4); put(petals, 0xffcc22, OL * 0.4); put(hearts, 0x6a3a1a, OL * 0.4);
   }
 
   // Cinder Road after dusk: roast a sweet potato on a stick over the glowing lava (a little XP once a night)
@@ -4344,12 +4370,12 @@ export class World {
   // a soundscape of one-shots: birds by day, crickets at night, surf on the beach, rain, mountain wind, city hum, lava bubbling
   ambience(dt) {
     const M = this.M; if (!M || M.indoor || this.busy) return;
-    const A = this.amb ||= { bird: 3, cricket: 2, surf: 1, rain: 0, wind: 2, hum: 1, bubble: 2, owl: 6, rooster: 4 }, due = [];
+    const A = this.amb ||= { cicada: 3, bird: 3, cricket: 2, surf: 1, rain: 0, wind: 2, hum: 1, bubble: 2, owl: 6, rooster: 4 }, due = [];
     if (this.rain) due.push(['rain', 1.5]);
     else if (M.snow || M.border === 'cloud') due.push(['wind', 3.5]);
     else if (M.city) due.push(['hum', 2.2]);
     else if (this.phase === 'night' || M.fireflies) { due.push(['cricket', 1.1]); if (this.phase === 'night' && !M.city && !M.lava) due.push(['owl', 14]); }
-    else if (!M.lava) { due.push(['bird', this.morning ? 1.1 : 2.6]); if (this.morning && this.key === 'village') due.push(['rooster', 22]); } // a dawn chorus on misty mornings
+    else if (!M.lava) { due.push(['bird', this.morning ? 1.1 : 2.6]); if (isSummer() && !this.morning) due.push(['cicada', 9]); /* summer afternoons buzz with cicadas */ if (this.morning && this.key === 'village') due.push(['rooster', 22]); } // a dawn chorus on misty mornings
     if (M.arena === 'beach') due.push(['surf', 3.2]);
     if (M.lava) due.push(['bubble', 1.8]);
     for (const [k, gap] of due) if ((A[k] -= dt) <= 0) { A[k] = gap * (0.6 + Math.random() * 0.9); sfx.ambient?.(k); }

@@ -139,6 +139,9 @@ export const sfx = {
       for (const [dt, d] of [[0, 0.32], [0.55, 0.16], [0.75, 0.3]]) osc('sine', 410, 360, d, 0.05, { t: t + dt, attack: 0.06 });
     } else if (kind === 'rooster') { // a far-off rooster: cock-a-doodle-doooo
       for (const [dt, f0, f1, d] of [[0, 520, 640, 0.12], [0.16, 600, 700, 0.1], [0.3, 640, 760, 0.12], [0.46, 780, 560, 0.55]]) { osc('sawtooth', f0, f1, d, 0.018, { t: t + dt, attack: 0.03 }); osc('sine', f0 * 2, f1 * 2, d, 0.012, { t: t + dt, attack: 0.03 }); }
+    } else if (kind === 'cicada') { // a summer cicada: a buzzing drone that swells and fades
+      const n = 26 + Math.floor(r() * 12), f = 5400 + r() * 1400;
+      for (let i = 0; i < n; i++) { const e = Math.sin((i / n) * Math.PI); noise(0.05, 0.014 * e * e + 0.002, { t: t + i * 0.055, f0: f, q: 7, attack: 0.01 }); }
     } else if (kind === 'cricket') { // a soft trill
       for (let i = 0; i < 6; i++) osc('triangle', 4300, 4200, 0.025, 0.012, { t: t + i * 0.045 + (i > 2 ? 0.12 : 0), attack: 0.004 });
     } else if (kind === 'surf') { // a wave washing up the beach and hissing back
