@@ -86,6 +86,9 @@ const HOME = {
   neon: '🌃', neon_: 'zips off down a neon alley', frost: '❄️', frost_: 'slides away into the snow', sky: '☁️', sky_: 'floats off into the clouds',
 };
 
+// Adventure play time (save.adv.time, seconds the world was open): '45m', '3h 05m'
+const playTime = (t) => { const m = Math.floor((t || 0) / 60); return m < 60 ? `${m}m` : `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`; };
+
 export class Screens {
   constructor(game) {
     this.game = game;
@@ -980,7 +983,7 @@ export class Screens {
     d.className = 'modal-wrap';
     const F = save.adv.flags, cups = CUPS.filter((c) => F['cup_' + c.id]).length, h = heroDef();
     d.innerHTML = `<div class="modal wd-menu-modal"><h2>Adventure</h2>
-      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero${this.worldObj?.M && !this.worldObj.M.indoor && (!this.worldObj.M.mood || this.worldObj.M.snow || this.worldObj.M.border === 'cloud') ? ` · ${this.worldObj.storm ? '⛈️ Storm' : this.worldObj.rain ? '🌧️ Rain' : this.worldObj.snowing ? '🌨️ Snow' : { day: '☀️ Day', evening: '🌇 Evening', night: '🌙 Night' }[this.worldObj.phase] || ''}` : ''}</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => k.startsWith('it_')).length}/24 · 📋 ${save.adv.req?.day === new Date().toISOString().slice(0, 10) ? `${save.adv.req.paid.length}/3` : 'new!'}</small></div></div>
+      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero${this.worldObj?.M && !this.worldObj.M.indoor && (!this.worldObj.M.mood || this.worldObj.M.snow || this.worldObj.M.border === 'cloud') ? ` · ${this.worldObj.storm ? '⛈️ Storm' : this.worldObj.rain ? '🌧️ Rain' : this.worldObj.snowing ? '🌨️ Snow' : { day: '☀️ Day', evening: '🌇 Evening', night: '🌙 Night' }[this.worldObj.phase] || ''}` : ''}${save.adv.time >= 60 ? ` · ⏱️ ${playTime(save.adv.time)}` : ''}</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => k.startsWith('it_')).length}/24 · 📋 ${save.adv.req?.day === new Date().toISOString().slice(0, 10) ? `${save.adv.req.paid.length}/3` : 'new!'}</small></div></div>
       <div class="wd-cups">${['sprout', 'thunder', 'grove', 'champion', 'midnight', 'sky', 'legend'].map((id) => { const c = CUPS.find((x) => x.id === id), on = F['cup_' + id]; return `<span class="${on ? 'on' : ''}" style="--cc:${c.color}" title="${c.name}">${on ? '🏆' : ''}</span>`; }).join('')}${F.crowned ? '<span class="on crown" style="--cc:#ffd23f" title="Critter Crown">👑</span>' : ''}<em class="wd-pc" title="Clashara explored">🗺️ ${this.recordsPc()}%</em></div>
       <p class="wd-goal">📜 ${nextGoal(F)}${favourLine() ? `<small class="wd-fav">🤝 ${favourLine()}</small>` : ''}${save.adv.care && save.critters[save.adv.care.id] ? `<small class="wd-fav">🧸 ${grown(byId(save.adv.care.id), save.critters[save.adv.care.id].level).name} is at the Daycare · ${Math.max(0, (save.adv.steps || 0) - save.adv.care.at)} steps</small>` : ''}${save.adv.egg ? `<small class="wd-fav">🥚 Your egg hatches in ${Math.max(1, 250 - ((save.adv.steps || 0) - save.adv.egg.at))} steps</small>` : ''}</p>
       <div class="res-btns"></div></div>`;
@@ -1073,7 +1076,8 @@ export class Screens {
     const tr = npcs.filter((n) => n.trainer), fl = favourList(), fsp = new Set([...Object.keys(L.sp || {}), ...(L.best ? [L.best.name] : [])]);
     const parts = []; // every bar with a goal counts towards the overall completion
     const bar = (ic, name, n, of) => (of && parts.push(Math.min(1, n / of)), `<li class="jr-rec"><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`);
-    body = bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length)
+    body = (A.time >= 60 ? bar('⏱️', 'Time adventuring', playTime(A.time)) : '')
+      + bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length)
       + bar('⚔️', 'Trainers beaten', tr.filter((n) => F[n.id]).length, tr.length)
       + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_')).length, 24)
       + bar('🤝', 'Favours done', fl.rows.filter((r) => r.state === 'done').length, fl.rows.length + fl.unasked)

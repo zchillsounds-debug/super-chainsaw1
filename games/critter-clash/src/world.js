@@ -3416,6 +3416,7 @@ export class World {
   // ---------- update loop ----------
   update(dt) {
     this.t += dt;
+    save.adv.time = (save.adv.time || 0) + Math.min(dt, 0.25); // play time (the ☰ card and Records show it); the game pauses when the app is hidden
     this.bumpT = (this.bumpT || 0) - dt;
     this.skyCheck(dt);
     const inp = this.g.input;
