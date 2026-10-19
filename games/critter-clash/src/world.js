@@ -464,7 +464,15 @@ export class World {
         }
         if (t === 's' || t === 'P') { // sand rounds off where it meets grass on two sides
           const g = (dx, dy) => { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= W || Y >= H) return false; const k = this.tile(X, Y); return !'sP~=RlvhB'.includes(k) || (k === 'h' && !'sP'.includes(under(X, Y))); }, rr = 10;
-          c.fillStyle = this.phase === 'night' ? ((x + y) % 2 ? '#eeeadc' : '#ebe6d6') : (x + y) % 2 ? '#f4dc9a' : '#f1d894'; /* moonlit sand reads silver, not mud */ c.beginPath(); c.roundRect(x * P, y * P, P, P, [g(-1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, 1) ? rr : 0, g(-1, 0) && g(0, 1) ? rr : 0]); c.fill(); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); } }
+          c.fillStyle = this.phase === 'night' ? ((x + y) % 2 ? '#eeeadc' : '#ebe6d6') : (x + y) % 2 ? '#f4dc9a' : '#f1d894'; /* moonlit sand reads silver, not mud */ c.beginPath(); c.roundRect(x * P, y * P, P, P, [g(-1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, 1) ? rr : 0, g(-1, 0) && g(0, 1) ? rr : 0]); c.fill(); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); }
+          if (rand() < 0.22) { c.strokeStyle = 'rgba(190,140,70,0.24)'; c.lineWidth = 1.2; const ry = y * P + 6 + rand() * (P - 12), x0 = x * P + rand() * 10, x1 = x * P + P - rand() * 10; c.beginPath(); c.moveTo(x0, ry); c.quadraticCurveTo((x0 + x1) / 2, ry - 3 - rand() * 3, x1, ry + rand() * 2 - 1); c.stroke(); } // wind ripples
+          if (t === 's' && rand() < 0.07) { // a little seashell: a fan with ribs, pink, cream or lilac
+            const sx = x * P + 7 + rand() * (P - 14), sy = y * P + 7 + rand() * (P - 14), r = 4 + rand() * 2.5, a = rand() * Math.PI * 2;
+            c.save(); c.translate(sx, sy); c.rotate(a); c.fillStyle = ['#ffc8d4', '#fff4e0', '#e0c8ff', '#ffd8a8'][Math.floor(rand() * 4)];
+            c.beginPath(); c.moveTo(0, r * 0.6); c.arc(0, 0, r, Math.PI * 1.05, Math.PI * 1.95); c.closePath(); c.fill();
+            c.strokeStyle = 'rgba(150,90,90,0.5)'; c.lineWidth = 0.8; for (let k = 1; k < 5; k++) { const aa = Math.PI * (1.05 + k * 0.18); c.beginPath(); c.moveTo(0, r * 0.6); c.lineTo(Math.cos(aa) * r, Math.sin(aa) * r); c.stroke(); }
+            c.restore();
+          } }
       }
       // ice sheets fill the inside of their bends with a curve too, so a pond reads as a pond, not a plus sign
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
