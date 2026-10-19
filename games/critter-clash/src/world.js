@@ -135,6 +135,7 @@ export function twinkleWeek(d = new Date()) { if (save.adv?.winter != null) retu
 // Pumpkin Nights: a little harvest festival from mid-October to the start of November (carved pumpkins by the town doors)
 export function halloween(d = new Date()) { if (save.adv?.halloween != null) return !!save.adv.halloween; return pumpkinNights(d) && d.getMonth() === 9 && d.getDate() === 31; } // the big night itself (save.adv.halloween forces it)
 export function isAutumn(d = new Date()) { return save.adv?.autumn ?? (d.getMonth() === 9 || d.getMonth() === 10 && d.getDate() <= 15); } // October to mid-November; save.adv.autumn forces it
+export function isFrost(d = new Date()) { if (save.adv?.frost != null) return !!save.adv.frost; const m = d.getMonth(), day = d.getDate(); return (m === 10 && day > 15) || (m === 11 && day < 18); } // after the autumn leaves and before Twinkle Week (save.adv.frost forces it)
 export function pumpkinNights(d = new Date()) { const m = d.getMonth(), day = d.getDate(); if (save.adv?.fest != null) return !!save.adv.fest; return (m === 9 && day >= 15) || (m === 10 && day <= 2); } // save.adv.fest forces it on (true) or off (false) for tests
 
 export function heroDef() {
@@ -356,6 +357,7 @@ export class World {
     this.rain = showers && !twinkleEve; // on Twinkle Week evenings a shower comes down as snow instead
     this.storm = this.rain && !!(save.adv.storm ?? stormAt(new Date(), hr)); this.boltT = 2.5 + Math.random() * 3;
     this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (!!save.adv.flags?.quest && hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
+    this.frost = isFrost() && canRain(M) && !this.rain && !this.afterRain && this.phase === 'day' && hr >= 6 && hr < 10; // late-autumn mornings: a white frost on the grass and the treetops until mid-morning
     this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)) || twinkleEve && showers; // now and then a proper snowfall up in the mountains (light flurries otherwise)
     this.twinkleSnow = twinkleEve; // Twinkle Week evenings: a gentle snowfall over the green towns
     const shut = M.bramble && !save.adv.flags[M.bramble];
@@ -470,6 +472,7 @@ export class World {
   buildGround(rand) {
     const P = 32, W = this.W, H = this.H, C = { a: '#7ad259', b: '#77cf56', tall: '#4fae3e', path: '#e8c98a', dark: 'rgba(40,120,40,0.35)', lite: 'rgba(200,255,150,0.4)', ...this.M.palette, ...(this.phase === 'day' && this.M.dayPalette) };
     if (this.phase === 'night' && !this.M.palette?.a) Object.assign(C, { a: '#5cae78', b: '#59ab75', tall: '#3e8a62', lite: 'rgba(170,230,210,0.35)' }); // moonlit grass leans blue-green
+    if (this.frost && !this.M.palette?.a) Object.assign(C, { a: '#b2dcae', b: '#aed8aa', tall: '#86c08e', lite: 'rgba(255,255,255,0.6)', dark: 'rgba(90,150,120,0.3)' }); // frosty mornings: silvery-white grass
     // building footprints take the ground of the tile in front of their door row
     const under = (x, y) => { let k = y; while (this.tile(x, k) === 'h' && k < H) k++; const t = this.tile(x, k); return t === 'h' || t === 'T' ? '.' : t; };
     const tex = canvasTex(W * P, H * P, (c) => {
@@ -790,7 +793,7 @@ export class World {
       const tr = new THREE.CylinderGeometry(0.2 * s, 0.28 * s, 1.0 * s, 6); tr.translate(px + jx, 0.5 * s, pz + jz); trunks.push(tr);
       const a = ico(1.05 * s, dt); a.scale(1, 0.85, 1); a.translate(px + jx, 1.55 * s, pz + jz); (rand() < 0.5 ? F || can : F || can2).push(a);
       const b = ico(0.72 * s, top); b.translate(px + jx + (rand() - 0.5) * 0.3, 2.35 * s, pz + jz); (rand() < 0.5 ? F || can : F || can2).push(b);
-      if (this.M.snow) { const c = new THREE.SphereGeometry(0.62 * s, dt ? 10 : 7, dt ? 6 : 3, 0, Math.PI * 2, 0, Math.PI / 2.4); c.scale(1, 0.7, 1); c.translate(px + jx, 2.62 * s, pz + jz); caps.push(c); }
+      if (this.M.snow || this.frost) { const fr = this.frost && !this.M.snow, c = new THREE.SphereGeometry((fr ? 0.6 : 0.62) * s, dt ? 10 : 7, dt ? 6 : 3, 0, Math.PI * 2, 0, Math.PI / 2.4); c.scale(1, fr ? 0.6 : 0.7, 1); c.translate(px + jx, (fr ? 2.7 : 2.62) * s, pz + jz); caps.push(c); }
     };
     const caps = [];
     const fronds = [], ptrunks = [], nuts = [], puffs = [];
@@ -841,7 +844,7 @@ export class World {
     for (const [list, c] of [[fronds, 0x3fbf5a], [fronds2, 0x2f9e4a]]) if (list.length) { this.group.add(inked(mergeGeometries(list), toon(c, { rim: 0.4, side: THREE.DoubleSide }), OL * 0.35)); list.forEach((g) => g.dispose()); }
     const put = (list, color, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color, { rim: 0.4 }), ink); m.castShadow = true; this.group.add(m); list.forEach((g) => g.dispose()); };
     const TC = this.M.trees || (this.phase === 'night' ? [0x2f8a5a, 0x3a9a66, 0x6a4a3a] : [0x3fae4a, 0x4cc25a, 0x8a5a3a]); // moonlit canopies at night
-    put(can, TC[0], OL); put(can2, TC[1], OL); put(trunks, TC[2], OL * 0.6); put(caps, 0xffffff, OL * 0.6);
+    put(can, TC[0], OL); put(can2, TC[1], OL); put(trunks, TC[2], OL * 0.6); put(caps, this.frost ? 0xeef6ff : 0xffffff, OL * 0.6); // snow caps (a thinner frosting on frosty mornings)
     (this.phase === 'night' ? [0xb8743e, 0xb09a44, 0xa85e46, 0x6a8a4a] : [0xe8842e, 0xecbc3c, 0xcc5636, 0xa8c040]).forEach((c, i) => put(falls[i], c, OL)); // autumn canopies (moonlit at night)
   }
 
@@ -937,7 +940,7 @@ export class World {
     }
     if (!blades.length) return;
     const geo = mergeGeometries(blades);
-    const m = inked(geo, toon(this.M.blades || 0x2f9a3a, { rim: 0.5 }), OL * 0.4);
+    const m = inked(geo, toon(this.M.blades || (this.frost ? 0x6aae7a : 0x2f9a3a), { rim: 0.5 }), OL * 0.4);
     blades.forEach((g) => g.dispose());
     this.group.add(m);
     // the blades sway in the breeze and part around whoever walks through them (CPU, shared by the ink hull)
@@ -2090,7 +2093,9 @@ export class World {
 
   buildMorning() {
     this.mornMist = null; this.mornMistIn = 0;
-    if (!this.morning) return;
+    if (!this.morning && !this.frost) return;
+    if (this.frost && !ALPHA_TOLD.has('frost')) { ALPHA_TOLD.add('frost'); setTimeout(() => this.group && this.S.toast('❄️ A frosty morning! The grass crunches underfoot until the sun gets up.'), 1500); }
+    if (!this.morning) { this.mornMist = []; return; }
     const rand = rng(hash(this.key + 'mist')), W = this.W * TILE, H = this.H * TILE;
     this.mornMist = Array.from({ length: 9 }, () => {
       const m = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffffff, transparent: true, depthWrite: false, opacity: 0 }); m.userData.own = true;
@@ -2100,6 +2105,9 @@ export class World {
   }
 
   updateMorning(dt) {
+    if (this.frost && (this.breathT = (this.breathT || 0) - dt) <= 0) { // frosty mornings: the hero puffs little clouds of breath
+      this.breathT = 1.6 + Math.random() * 0.8; const h = this.hero?.root; if (h) { const a = h.rotation.y; this.g.fx.spawn({ x: h.position.x + Math.sin(a) * 0.55, y: h.position.y + 0.95, z: h.position.z + Math.cos(a) * 0.55, vx: Math.sin(a) * 0.4, vy: 0.25, vz: Math.cos(a) * 0.4, color: 0xffffff, size: 0.35, life: 1.1, shape: 'glow', alpha: 0.55, grow: 0.9, additive: false }); }
+    }
     if (Math.random() < dt * 14) { // dew on the grass catches the low sun: little twinkles come and go around the hero
       const x = this.hx + Math.floor((Math.random() - 0.5) * 14), y = this.hy + Math.floor((Math.random() - 0.5) * 9), t = this.tile(x, y);
       if (t === '.' || t === 'f') { const [px, pz] = wpos(x, y); this.g.fx.spawn({ x: px + (Math.random() - 0.5) * TILE, y: 0.12, z: pz + (Math.random() - 0.5) * TILE, color: 0xffffff, size: 0.38, life: 0.9, shape: 'star', grow: -0.5, spin: 2, alpha: 0.9 }); }
@@ -3618,7 +3626,7 @@ export class World {
       const [px, pz] = wpos(this.hx, this.hy), [dx, dy] = DIRS[this.dir];
       for (const sd of [-1, 1]) this.footprint(px - dy * sd * 0.22 - dx * 0.5 * (sd > 0), pz + dx * sd * 0.22 - dy * 0.5 * (sd > 0), this.M.snow ? 0x7a8ac0 : 0xa87a40);
     }
-    if (!this.sliding && t !== '"') sfx.foot(this.M.indoor || t === '=' ? 'wood' : t === 's' || t === 'P' ? 'sand' : t === 'i' ? 'ice' : this.M.snow ? 'snow' : this.M.city || this.M.lava ? 'stone' : 'grass');
+    if (!this.sliding && t !== '"') sfx.foot(this.M.indoor || t === '=' ? 'wood' : t === 's' || t === 'P' ? 'sand' : t === 'i' ? 'ice' : this.M.snow || this.frost && (t === '.' || t === 'f') ? 'snow' : this.M.city || this.M.lava ? 'stone' : 'grass');
     // ice: keep sliding the same way until something solid is in the way
     if (t === 'i') {
       const [dx, dy] = DIRS[this.dir], nx = this.hx + dx, ny = this.hy + dy;
