@@ -297,6 +297,7 @@ export class World {
   load(key, x, y, dir = 's') {
     const wet = this.rain && !this.M?.indoor; // came in out of the rain: shake off once inside
     this.unload(); this.soaking = false; this.sitting = false;
+    this.doors = []; this.itemSpots = []; this.dig = null; // the night props are placed before the buildings, items and dig spot: never read the last map's (or, on a fresh World, missing) ones
     this.g.fx.clear?.(); // last map's smoke, rain and sparkles don't follow you indoors
     const M = this.M = getMap(key) || getMap('village');
     if (M !== getMap(key)) { key = 'village'; x = 4; y = 6; }
@@ -1038,7 +1039,7 @@ export class World {
     this.bonfire = null;
     const at = { seashell: [13, 15, 's'], frostpeak: [9, 10, '.'] }[this.key]; // Seashell: between the umbrellas by the water; Frostpeak: in the open snow by the ice pond
     if (!at || this.phase === 'day' || this.M.indoor) return;
-    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((d) => d.x + ',' + (d.y + 1)), ...this.itemSpots, ...(this.M.signs || []).map((g) => g.x + ',' + g.y), this.hx + ',' + this.hy, this.dig ? this.dig.x + ',' + this.dig.y : '']);
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.M.buildings || []).map((b) => (b.x + b.door) + ',' + (b.y + b.h)), ...(this.M.signs || []).map((g) => g.x + ',' + g.y), this.hx + ',' + this.hy]); // built before the buildings, items and dig spot (those keep off solid tiles), so the door steps come from the map
     const spot = at.slice(0, 2);
     if (this.tile(...spot) !== at[2] || taken.has(spot.join(','))) return;
     const [x, y] = spot, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(1.35);
@@ -1292,7 +1293,7 @@ export class World {
     this.sunset = null;
     if (this.key !== 'seashell' || this.M.indoor) return;
     const [x, y] = [11, 14];
-    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.itemSpots || []), this.hx + ',' + this.hy, this.dig ? this.dig.x + ',' + this.dig.y : '']);
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), this.hx + ',' + this.hy]);
     if (this.tile(x, y) !== 's' || taken.has(x + ',' + y)) return;
     const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(1.3); this.group.add(g); this.solid.add(x + ',' + y);
     const drift = toon(0xc8a47a), drift2 = toon(0xa8845a);
@@ -1337,7 +1338,7 @@ export class World {
     this.fort = null;
     if (this.key !== 'frostpeak' || this.M.indoor) return;
     const [x, y] = [10, 11];
-    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.itemSpots || []), this.hx + ',' + this.hy, this.dig ? this.dig.x + ',' + this.dig.y : '']);
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), this.hx + ',' + this.hy]);
     if (this.tile(x, y) !== '.' || taken.has(x + ',' + y)) return;
     const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(x + ',' + y);
     const snow = toon(0xf4f8ff, { rim: 0.6 }), snow2 = toon(0xdce8fa, { rim: 0.6 });
@@ -1374,7 +1375,7 @@ export class World {
     this.garden = null;
     if (this.key !== 'bloom' || this.M.indoor) return;
     const [x, y] = [8, 13];
-    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.itemSpots || []), this.hx + ',' + this.hy, this.dig ? this.dig.x + ',' + this.dig.y : '']);
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), this.hx + ',' + this.hy]);
     if (this.tile(x, y) !== '.' || taken.has(x + ',' + y)) return;
     const G = save.adv.garden || {}, stage = G.stage || 0, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(x + ',' + y);
     const wood = toon(0xa8703a), soil = toon(0x6a4a30), leaf = toon(0x5ac24a), leaf2 = toon(0x3e9a3e);
