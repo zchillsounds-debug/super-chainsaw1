@@ -987,6 +987,14 @@ export class Critter {
     ring.scale.set(B.chubby * 1.05, 1, this.def.stage ? 1.7 : 1); // grown forms: a flat cloth band, not a round tube
     ring.position.set(0, sy, B.w * 0.04);
     this.torso.add(ring);
+    if (this.def.stage) {
+      // grown forms: a knot under the chin with a short end hanging down, so the band reads as a tied scarf from any angle
+      const R = B.w * 0.5 * snug, fy = sy + R * 0.296, fz = B.w * 0.04 + R * 0.955;
+      const knot = inked(new THREE.SphereGeometry(0.075, 10, 8), scarfMat, OL * 0.6);
+      knot.scale.set(1.15, 0.9, 0.7); knot.position.set(R * 0.18, fy - 0.01, fz + 0.02); this.torso.add(knot);
+      const end = inked(new THREE.BoxGeometry(0.11, 0.2, 0.035), scarfMat, OL * 0.6);
+      end.geometry.translate(0, -0.1, 0); end.position.set(R * 0.18, fy - 0.05, fz + 0.03); end.rotation.set(-0.35, 0, 0.18); this.torso.add(end);
+    }
     // two tails flapping off the back
     const tailG = new THREE.Group();
     tailG.position.set(B.w * 0.12, sy - B.h * 0.08, -B.w * 0.34);
