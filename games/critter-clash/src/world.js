@@ -431,9 +431,8 @@ export class World {
         if (t === 'i') {
           const o = (dx, dy) => !'iR'.includes(this.tile(x + dx, y + dy)), rr = 10; // ice sheets round off at their outer corners
           c.fillStyle = C.ice || '#b8e4ff'; c.beginPath(); c.roundRect(x * P, y * P, P, P, [o(-1, 0) && o(0, -1) ? rr : 0, o(1, 0) && o(0, -1) ? rr : 0, o(1, 0) && o(0, 1) ? rr : 0, o(-1, 0) && o(0, 1) ? rr : 0]); c.fill();
-          c.fillStyle = 'rgba(255,255,255,0.25)'; c.fillRect(x * P + ((x * 7 + y * 3) % 3) * 8 + 4, y * P + 3, 3, P - 6); // a glint
-          c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 2;
-          for (let k = 0; k < 2; k++) { const gx = x * P + 4 + rand() * (P - 12), gy = y * P + 4 + rand() * (P - 12); c.beginPath(); c.moveTo(gx, gy + 6); c.lineTo(gx + 6, gy); c.stroke(); }
+          c.strokeStyle = 'rgba(255,255,255,0.6)'; c.lineWidth = 1.5; // skate scratches
+          for (let k = 0; k < (rand() < 0.5 ? 1 : 0); k++) { const gx = x * P + 4 + rand() * (P - 12), gy = y * P + 4 + rand() * (P - 12); c.beginPath(); c.moveTo(gx, gy + 6); c.lineTo(gx + 6, gy); c.stroke(); }
         }
         if (t === '~' || t === '=') { // the muddy bank, rounded at outer corners like the water on top
           const dry = (dx, dy) => { const X = x + dx, Y = y + dy; return X < 0 || Y < 0 || X >= W || Y >= H ? this.M.outer === undefined : !'~='.includes(this.tile(X, Y)); };
@@ -458,6 +457,31 @@ export class World {
           const cx = (x + (dx > 0)) * P, cy = (y + (dy > 0)) * P, r = 12;
           c.fillStyle = C.ice || '#b8e4ff'; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx - dx * r, cy); c.arc(cx - dx * r, cy - dy * r, r, dy > 0 ? Math.PI / 2 : -Math.PI / 2, dx > 0 ? 0 : Math.PI, (dx > 0) === (dy > 0)); c.closePath(); c.fill();
         }
+      }
+      // the ice as one sheet, not tiles: deeper blue in the middle, long diagonal sheen streaks, hairline cracks and frozen bubbles
+      const iceT = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === 'i' || (this.tile(x, y) === 'R' && [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dy]) => this.tile(x + dx, y + dy) === 'i').length >= 2)) iceT.push([x, y]);
+      if (iceT.length > 12) {
+        c.save(); c.beginPath(); for (const [x, y] of iceT) c.rect(x * P, y * P, P, P); c.clip();
+        const xs = iceT.map((t) => t[0]), ys = iceT.map((t) => t[1]), x0 = Math.min(...xs) * P, y0 = Math.min(...ys) * P, x1 = (Math.max(...xs) + 1) * P, y1 = (Math.max(...ys) + 1) * P;
+        const gr = c.createRadialGradient((x0 + x1) / 2, (y0 + y1) / 2, 0, (x0 + x1) / 2, (y0 + y1) / 2, Math.max(x1 - x0, y1 - y0) * 0.6);
+        gr.addColorStop(0, 'rgba(40,110,190,0.22)'); gr.addColorStop(0.7, 'rgba(60,140,210,0.08)'); gr.addColorStop(1, 'rgba(255,255,255,0.12)');
+        c.fillStyle = gr; c.fillRect(x0, y0, x1 - x0, y1 - y0);
+        c.globalCompositeOperation = 'lighter'; // sheen: soft wide bands crossing the whole lake
+        for (let k = 0; k < 7; k++) { const sx = x0 + rand() * (x1 - x0), w = 10 + rand() * 26; c.fillStyle = `rgba(255,255,255,${0.05 + rand() * 0.07})`; c.beginPath(); c.moveTo(sx, y0); c.lineTo(sx + w, y0); c.lineTo(sx + w - (y1 - y0) * 0.6, y1); c.lineTo(sx - (y1 - y0) * 0.6, y1); c.closePath(); c.fill(); }
+        c.globalCompositeOperation = 'source-over';
+        c.lineCap = 'round';
+        for (let k = 0; k < Math.round(iceT.length / 14); k++) { // cracks: a wandering line with a branch or two
+          let [tx, ty] = iceT[Math.floor(rand() * iceT.length)], px = tx * P + rand() * P, py = ty * P + rand() * P, a = rand() * Math.PI * 2;
+          c.strokeStyle = 'rgba(255,255,255,0.75)'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(px, py);
+          for (let j = 0; j < 6; j++) { a += (rand() - 0.5) * 1.2; px += Math.cos(a) * 9; py += Math.sin(a) * 9; c.lineTo(px, py); if (rand() < 0.3) { c.moveTo(px, py); c.lineTo(px + Math.cos(a + 1.1) * 7, py + Math.sin(a + 1.1) * 7); c.moveTo(px, py); } }
+          c.stroke(); c.strokeStyle = 'rgba(30,90,160,0.18)'; c.lineWidth = 1; c.stroke();
+        }
+        for (let k = 0; k < iceT.length / 3; k++) { // tiny bubbles frozen in the ice
+          const [tx, ty] = iceT[Math.floor(rand() * iceT.length)], bx = tx * P + rand() * P, by = ty * P + rand() * P, r = 1 + rand() * 2.2;
+          c.fillStyle = 'rgba(255,255,255,0.55)'; c.beginPath(); c.arc(bx, by, r, 0, Math.PI * 2); c.fill();
+          c.fillStyle = 'rgba(255,255,255,0.9)'; c.beginPath(); c.arc(bx - r * 0.3, by - r * 0.3, r * 0.35, 0, Math.PI * 2); c.fill();
+        }
+        c.restore();
       }
       // a doormat on the way out
       if (this.M.exit) { const dx = this.M.enter.x * P, dy = (H - 1) * P; c.fillStyle = '#8a3a2a'; c.beginPath(); c.roundRect(dx + 3, dy + 4, P - 6, P - 8, 4); c.fill(); c.fillStyle = '#ffd84d'; c.font = 'bold 14px sans-serif'; c.textAlign = 'center'; c.fillText('▼', dx + P / 2, dy + P / 2 + 5); }
