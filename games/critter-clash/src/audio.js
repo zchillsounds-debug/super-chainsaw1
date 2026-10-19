@@ -147,6 +147,7 @@ export const sfx = {
     else if (kind === 'bubble') for (let i = 0; i < 3; i++) osc('sine', 300 + r() * 200, 700 + r() * 300, 0.05, 0.03, { t: t + i * 0.09 + r() * 0.05 });
   },
   step() { if (ctx) noise(0.04, 0.06, { f0: 900, q: 1.5, type: 'lowpass' }); },
+  leafPile() { if (!ctx) return; noise(0.45, 0.32, { f0: 2600, f1: 900, q: 1.2, attack: 0.01 }); noise(0.25, 0.18, { f0: 5200, f1: 3000, q: 2, attack: 0.04 }); osc('sine', 300, 760, 0.16, 0.06); }, // a crunchy, scattering rustle (autumn leaf piles)
   land() { if (ctx) { osc('sine', 120, 50, 0.15, 0.4); noise(0.2, 0.25, { f0: 600, f1: 200, type: 'lowpass' }); } },
   voice(pitch = 1, kind = 'attack') {
     if (!ctx) return;

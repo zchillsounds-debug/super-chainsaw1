@@ -2606,7 +2606,7 @@ export class World {
   leafJump(L, mine = true) {
     const p = L.g.position;
     for (let i = 0; i < 26; i++) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 0.3, z: p.z + (Math.random() - 0.5) * 1.2, vx: (Math.random() - 0.5) * 4, vy: 3 + Math.random() * 3.5, vz: (Math.random() - 0.5) * 4, grav: 5, drag: 1.6, color: L.cols[i % 4], size: 0.34, life: 1.6 + Math.random(), shape: 'leaf', additive: false, spin: (Math.random() - 0.5) * 8, floor: true });
-    sfx.foot?.('grass'); sfx.ui?.('move');
+    sfx.leafPile?.();
     L.flat = 14; L.g.scale.set(1.25, 0.35, 1.25);
     if (!mine) return;
     const day = new Date().toISOString().slice(0, 10), A = save.adv;
