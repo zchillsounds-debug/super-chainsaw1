@@ -996,6 +996,7 @@ export class Screens {
         ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
         ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
         ['♨️', 'Soak in the hot spring', N('ember'), A.soak === day, seen.ember],
+        ['🪵', 'Win a twig race', `${N('route2')} bridge`, A.twig === day, seen.route2],
         ['🦋', 'Catch five butterflies', `${N('route1')} (by day)`, A.flutter === day, seen.route1 && (this.worldObj?.outPhase === 'day' || A.flutter === day)],
         ['🪁', 'Fly a kite with Gale', N('cloudtop'), A.kite === day, seen.cloudtop && F.kite_done],
         ['💨', 'Ride the steam geyser', `${N('cinder')} steam vent`, A.geyser === day, seen.cinder],
@@ -1058,6 +1059,7 @@ export class Screens {
       + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
       + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
       + bar('🌅', 'Sunsets watched', A.cnt?.sunset || 0)
+      + bar('🪵', 'Twig races won', A.cnt?.twig || 0)
       + bar('⛄', 'Snowball Toss best', A.snowHi || 0)
       + bar('🌻', 'Flowers grown', A.cnt?.bloom || 0)
       + bar('🦋', 'Butterfly days', A.cnt?.flutter || 0)
@@ -1083,6 +1085,7 @@ export class Screens {
       'Hold the stick all the way to run outdoors.',
       'Your buddy walks behind you. Swap them from ☰ → 🐾 Buddy.',
       'Berry bushes at the edge of town can be shaken once a day.',
+      seen.route2 && 'On Route 2\'s bridge, face the river and press A for a twig race. Pick a twig and cheer it on!',
       'Rooms look different after dark: lamps come on, and the windows fill with stars.',
       F.rod && 'Two fish only bite in the golden evening, between five and eight.',
       seen.cinder && 'The steam geyser on Cinder Road blows every few seconds. Stand on the vent and hold on to your hat!',

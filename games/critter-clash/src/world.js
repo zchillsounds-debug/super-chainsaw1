@@ -394,6 +394,7 @@ export class World {
   unload() {
     if (!this.group) return;
     if (this.fishing) { this.fishing = null; this.busy = false; }
+    if (this.twigs) { this.twigs = null; this.busy = false; }
     this.fw = null;
     this.g.scene.remove(this.group);
     const maps = new Set();
@@ -1592,6 +1593,52 @@ export class World {
     ghost.userData.own = true;
     this.wisps = pick.map(([x, y], i) => { const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 1.2, pz); g.add(spooky ? mk(0x7affc8, 0.7, 2.8) : mk(0xd8ff6a, 0.75, 2.2)); if (spooky) { const gm = new THREE.SpriteMaterial({ map: ghost, transparent: true, depthWrite: false }); gm.userData.own = true; const gs = new THREE.Sprite(gm); gs.scale.setScalar(1.35); g.add(gs); } else g.add(mk(0xffffd0, 1, 0.55)); this.group.add(g); return { g, px, pz, ph: i * 1.7, live: true }; });
     this.wispN = 0;
+  }
+
+  // Route 2's bridge: pick a twig, drop both in the river upstream, and cheer as they drift under the bridge and down to the reeds
+  twigRace() {
+    this.ask('Which twig is yours?', ['🍂 The one with a leaf', '🌿 The bendy one'], (pick) => {
+      this.busy = true;
+      const river = (y) => { const xs = []; for (let x = 0; x < this.W; x++) if (this.tile(x, y) === '~') xs.push(x); return xs.length ? (xs[0] + xs[xs.length - 1]) / 2 : null; };
+      const lane = []; for (let y = 2; y < this.H - 2; y++) { const c = river(y); if (c != null) lane.push([y, c]); }
+      const z0 = wpos(0, this.hy - 1)[1], z1 = wpos(0, lane[lane.length - 1][0])[1] + 0.4;
+      const xAt = (z) => { const fy = (z - TILE / 2) / TILE, i = lane.findIndex(([y]) => y >= fy); const a = lane[Math.max(0, i - 1)], b = lane[Math.max(0, i)]; const t = b[0] === a[0] ? 0 : Math.min(1, Math.max(0, (fy - a[0]) / (b[0] - a[0]))); return wpos(a[1] + (b[1] - a[1]) * t, 0)[0]; };
+      const bark = toon(0x7a4a2a), mk = (leaf, bend) => {
+        const g = new THREE.Group();
+        const st = inked(new THREE.CylinderGeometry(0.05, 0.06, 0.9, 6), bark, OL * 0.4); st.rotation.z = Math.PI / 2; g.add(st);
+        if (bend) { const b2 = inked(new THREE.CylinderGeometry(0.04, 0.05, 0.42, 6), bark, OL * 0.4); b2.rotation.z = Math.PI / 2 - 0.7; b2.position.set(0.5, 0.12, 0); g.add(b2); }
+        if (leaf) { const lf = new THREE.Mesh(new THREE.CircleGeometry(0.2, 8), toon(0xff8a2a, { side: THREE.DoubleSide })); lf.rotation.x = -Math.PI / 2; lf.scale.set(1, 1.6, 1); lf.position.set(-0.25, 0.07, 0.12); g.add(lf); }
+        g.scale.setScalar(1.7); this.group.add(g); return g;
+      };
+      this.twigs = { pick, t: 0, z1, xAt, list: [mk(true, false), mk(false, true)].map((g, i) => ({ g, z: z0 - 0.3, off: i ? 0.55 : -0.55, v: 0.9 + Math.random() * 0.5, wob: Math.random() * 6, done: 0 })) };
+      for (const T of this.twigs.list) { T.g.position.set(xAt(T.z) + T.off, 1.6, T.z); }
+      this.dir = 's'; this.hero.root.rotation.y = 0; // turn to watch them come out the other side
+      sfx.whoosh?.(1.4); this.S.toast?.('🪵 Plop, plop! Go, twig, go!');
+    });
+  }
+
+  updateTwigs(dt) {
+    const R = this.twigs; R.t += dt;
+    for (const T of R.list) {
+      if (T.g.position.y > 0.07) { T.g.position.y = Math.max(0.07, T.g.position.y - dt * 4); if (T.g.position.y === 0.07) { this.g.fx.burst({ x: T.g.position.x, y: 0.1, z: T.g.position.z }, { n: 10, speed: 1.5, up: 1.6, color: 0xbfe8ff, size: 0.2, life: 0.5, drag: 2 }); sfx.water?.(); } continue; }
+      if (T.done) continue;
+      T.v = Math.max(0.6, Math.min(1.9, T.v + (Math.random() - 0.5) * dt * 2.4)); // the current pushes and eddies at random
+      T.z += T.v * dt * 2;
+      T.g.position.set(R.xAt(T.z) + T.off + Math.sin(R.t * 1.3 + T.wob) * 0.25, 0.07 + Math.sin(R.t * 3 + T.wob) * 0.03, T.z);
+      T.g.rotation.y = Math.sin(R.t * 0.8 + T.wob) * 0.9 + R.t * 0.3 * (T.off > 0 ? 1 : -1);
+      if (T.z >= R.z1) T.done = R.t;
+    }
+    if (!R.list.every((T) => T.done) && R.t < 30) return;
+    const win = R.list[0].done <= R.list[1].done ? 0 : 1, close = Math.abs(R.list[0].done - R.list[1].done) < 0.35, A = save.adv, day = new Date().toISOString().slice(0, 10);
+    for (const T of R.list) { T.g.traverse((o) => o.geometry?.dispose()); this.group.remove(T.g); }
+    this.twigs = null; this.busy = false;
+    const lines = [close ? 'Neck and neck... it\'s a photo finish!' : 'Both twigs bob out from under the bridge...'];
+    if (win === R.pick) {
+      sfx.jingle?.(2); countUp('twig');
+      if (A.twig !== day) { A.twig = day; save.berries = (save.berries || 0) + 1; const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.1)); persist(); lines.push(`{hero}'s twig wins! {hero} does a little victory hop. +1 🍓 ${rr.to > rr.from ? `· Grew to Lv ${rr.to}!` : '(+XP)'}`); }
+      else { persist(); lines.push("{hero}'s twig wins! Another one for the record books."); }
+    } else { sfx.ui?.('back'); lines.push("The other twig wins by a leaf. {hero} pouts... then laughs. Best of three?"); }
+    this.say(lines);
   }
 
   // Route 1 by day: five butterflies flutter over the grass by the path; walk into them to catch them (all five, once a day: a berry and a little XP)
@@ -3260,6 +3307,7 @@ export class World {
     if (this.bloomFw) this.updateBloomFw(dt);
     if (this.wisps) this.updateWisps(dt);
     if (this.flutters) this.updateFlutters(dt);
+    if (this.twigs) this.updateTwigs(dt);
     if (this.geyser) this.updateGeyser(dt);
     if (this.kite) this.updateKite(dt);
     if (this.mornMist) this.updateMorning(dt);
@@ -3581,6 +3629,10 @@ export class World {
     }
     if (this.dig && ((this.dig.x === fx && this.dig.y === fy) || (this.dig.x === this.hx && this.dig.y === this.hy))) return this.digUp();
     const lost = this.lost?.find((L) => L.x === fx && L.y === fy); if (lost) return this.S.worldStory('found:' + lost.id, this, null);
+    if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=' && this.tile(fx, fy) === '~') { // the bridge: a twig race (or a spot of fishing)
+      const opts = ['🪵 Twig race', ...(save.adv.flags.rod ? ['🎣 Fish'] : []), 'Never mind'];
+      return this.ask('Two twigs lie on the bridge rail. Drop them in the river and see whose floats to the end first?', opts, (i) => opts[i] === '🪵 Twig race' ? this.twigRace() : opts[i] === '🎣 Fish' ? this.cast() : null);
+    }
     if (this.tile(fx, fy) === '~' && save.adv.flags.rod && !this.M.indoor && !this.M.lava) return this.cast();
     const sign = (this.M.signs || []).find((s) => s.x === fx && s.y === fy);
     if (sign?.act) return this.S.worldStory(sign.act, this, null);
