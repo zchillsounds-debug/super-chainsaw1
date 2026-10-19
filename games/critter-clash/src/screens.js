@@ -1070,6 +1070,7 @@ export class Screens {
       + bar('🪵', 'Twig races won', A.cnt?.twig || 0)
       + bar('🎣', 'Fishing Derbies won', A.cnt?.derby || 0)
       + bar('🌟', 'Perfect days', A.cnt?.perfect || 0)
+      + bar('🌼', 'Moonflowers sniffed', A.cnt?.moon || 0)
       + bar('⛄', 'Snowball Toss best', A.snowHi || 0)
       + bar('🌻', 'Flowers grown', A.cnt?.bloom || 0)
       + bar('🦋', 'Butterfly days', A.cnt?.flutter || 0)
@@ -1095,6 +1096,7 @@ export class Screens {
       'Hold the stick all the way to run outdoors.',
       'Your buddy walks behind you. Swap them from ☰ → 🐾 Buddy.',
       'Berry bushes at the edge of town can be shaken once a day.',
+      seen.route1 && 'After dark, moonflowers open beside the path on Route 1. Give one a sniff!',
       seen.route2 && 'On Route 2\'s bridge, face the river and press A for a twig race. Pick a twig and cheer it on!',
       'Rooms look different after dark: lamps come on, and the windows fill with stars.',
       F.rod && 'Two fish only bite in the golden evening, between five and eight.',

@@ -151,7 +151,7 @@ export const MAPS = {
     signs: [{ x: 14, y: 5, text: 'ROUTE 2\n←  Bloom Town      Seashell Town  →\nCAUTION: big sleepy critters on the bridge.' }],
     wild: { list: [['bubbalotl', 4, 6], ['lilypop', 4, 6], ['pebblepup', 4, 6], ['ripples', 5, 7], ['pengsicle', 5, 7], ['whirlwhisk', 4, 6], ['squeakwing', 5, 7]], roam: 4, rate: 0.1 },
     npcs: [
-      { id: 'wren', x: 8, y: 7, critter: 'whirlwhisk', name: 'Kite Flyer Wren', dir: 'n', trainer: { lv: 5, sight: 3, intro: "Kite Flyer Wren: The wind's perfect today! Whirlwhisk and I could glide all the way to the sea. But first: a battle!", beat: 'Kite Flyer Wren: Blown away! Literally.', after: 'Kite Flyer Wren: The big critter on the bridge? It\'s been napping there for DAYS.' } },
+      { id: 'wren', x: 8, y: 7, critter: 'whirlwhisk', name: 'Kite Flyer Wren', dir: 'n', trainer: { lv: 5, sight: 3, intro: "Kite Flyer Wren: The wind's perfect today! Whirlwhisk and I could glide all the way to the sea. But first: a battle!", beat: 'Kite Flyer Wren: Blown away! Literally.', after: 'Kite Flyer Wren: Know what I do when the wind drops? Twig races! Stand on the bridge, face the river and drop two twigs. I always pick the one with a leaf.' } },
       { id: 'marina', x: 25, y: 7, critter: 'bubbalotl', name: 'Swimmer Marina', dir: 'w', trainer: { lv: 6, sight: 4, intro: 'Swimmer Marina: Splash! You crossed the bridge? Then you can handle a wave or two!', beat: "Swimmer Marina: Wiped out! You'd be a great surfer.", after: 'Swimmer Marina: Seashell Town is just ahead. The Thunder Cup stadium is right on the beach!' } },
       { id: 'boulder', x: 17, y: 6, critter: 'rolladillo', lv: 8, name: 'Bouldillo', dir: 's', story: 'boulder', hideFlag: 'trial_strength', scale: 1.35 },
     ],
