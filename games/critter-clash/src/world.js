@@ -3316,6 +3316,7 @@ export class World {
     const X = this.M.exit;
     if (X && this.hy === this.H - 1) { sfx.door(); this.fade(() => this.load(X.map, X.x, X.y, 's')); return; }
     if (this.pickItem()) return;
+    if (this.hatchEgg()) return;
     if (t === '"') {
       const [px, pz] = wpos(this.hx, this.hy);
       for (let k = 0; k < 5; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5), y: 0.4, z: pz + (Math.random() - 0.5), vy: 2 + Math.random() * 2, vx: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2, color: 0x3fae4a, size: 0.22, life: 0.5, shape: 'leaf', additive: false, grav: 6, rot: Math.random() * 6 });
@@ -3845,7 +3846,21 @@ export class World {
     if (this.M.indoor !== 'center') return [];
     const c = save.adv.care, out = [{ id: 'nanny', x: 2, y: 3, critter: 'woolt', name: 'Nanny Nell', dir: 'e', story: 'daycare', act: 'wave' }];
     if (c && save.critters[c.id]) out.push({ id: 'cared', x: 4, y: 4, critter: c.id, lv: save.critters[c.id].level, dir: 's', wander: 1, act: 'hop', story: 'daycare' });
+    (save.adv.nursery || []).forEach((id, i) => { const d = CRITTERS.find((q) => q.id === id); if (d) out.push({ id: 'hatch' + i, x: [3, 2, 3][i], y: [6, 5, 4][i], critter: id, lv: 1, scale: 0.55, dir: ['e', 's', 'e'][i], act: 'hop', name: `Baby ${d.name}`, lines: [`Baby ${d.name}: ${['Squeak!', 'Mew mew!', 'Peep peep!'][i]} (It tumbles over its own feet, then bounces right back up.)`, `Nanny Nell: That one hatched from the egg you carried. It follows the big critters everywhere!`] }); });
     return out;
+  }
+
+  // a Daycare egg (story.js daycare) hatches after 250 steps in the bag: the hatchling goes to live in Nanny Nell's nursery
+  hatchEgg() {
+    const A = save.adv, E = A.egg;
+    if (!E || (A.steps || 0) - E.at < 250 || this.dialog || this.M.indoor === 'lobby') return false;
+    const def = CRITTERS.find((c) => c.id === E.id) || CRITTERS[0], first = !(A.hats ||= []).includes('eggshell');
+    A.egg = null; (A.nursery ||= []).push(def.id); if (A.nursery.length > 3) A.nursery.shift();
+    countUp('egg'); save.berries = (save.berries || 0) + 5; if (first) A.hats.push('eggshell'); persist();
+    const p = this.hero.root.position; sfx.jingle?.(2);
+    this.g.fx.burst({ x: p.x, y: 1.2, z: p.z }, { n: 16, speed: 1.6, up: 2, color: 0xfff4d8, size: 0.28, life: 0.9, shape: 'star', grav: 4, drag: 1.5 });
+    this.say(['Oh? The egg in the bag is wobbling... crack... CRACK!', `🐣 A baby ${def.name} hatched! It blinks up at {hero} and squeaks.`, `The little ${def.name} will grow up at Nanny Nell's Daycare. Visit it at any Berry Center! (+5 berries)`, ...(first ? ['{hero} keeps a piece of the shell as a hat! Got the Eggshell Cap! 🎩'] : [])]);
+    return true;
   }
 
   // Trader Tock visits one town a day (once the first cup is won), standing beside a path

@@ -485,6 +485,14 @@ function daycare(S, w) {
       () => w.ask('Leave a critter at the Daycare?', ['Choose a critter', 'Not now'], (i) => { if (!i) S.leadPick(w, 'care'); }, who), who);
   }
   const def = byId(c.id), name = grown(def, save.critters[c.id].level).name, steps = Math.max(0, (A.steps || 0) - c.at);
+  // once a day, after a good long stay, Nell finds an egg by the cared critter's bed; it hatches after 250 more steps (world.js hatchEgg)
+  const day = new Date().toISOString().slice(0, 10);
+  if (steps >= 400 && !A.egg && A.eggDay !== day) return w.say([`${who}: Oh! I'm so glad you came by. Look what I found tucked in ${name}'s blanket this morning!`, `${who}: An egg! A little warm one, with spots. I've no idea how it got there. Critters are full of surprises!`],
+    () => w.ask('Take the egg?', ['Take the egg', 'Leave it with Nell'], (i) => {
+      if (i) return w.say([`${who}: I'll keep it warm by the heater, then. Ask me again any time today!`], null, who);
+      A.egg = { at: A.steps || 0, id: c.id }; A.eggDay = day; persist(); sfx.jingle?.(1);
+      w.say(['{hero} tucks the egg safely into the bag. 🥚', `${who}: Eggs love a good walk. Keep exploring and it'll hatch before you know it!`], null, who);
+    }, who), who);
   const mood = steps < 60 ? 'It has only just settled in. Take it for a little walk first... well, take YOURSELF for a walk!' : steps < 600 ? 'It\'s been chasing the other critters round the rug all day.' : steps < 2000 ? 'It\'s grown so much stronger! It practises its moves on the sofa cushions.' : 'It\'s as strong as my lessons can make it. It misses you!';
   w.say([`${who}: ${name} is having a lovely time! You've walked ${steps} step${steps === 1 ? '' : 's'} since you left it with me.`, `${who}: ${mood}`],
     () => w.ask(`Take ${name} back?`, ['Take it back', 'Leave it longer'], (i) => {
