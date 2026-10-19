@@ -1692,6 +1692,15 @@ export class World {
     });
   }
 
+  // Cinder Road after dusk: roast a sweet potato on a stick over the glowing lava (a little XP once a night)
+  lavaRoast() {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv;
+    if (A.roast === day) return this.say(['The lava glows and bubbles. Plip... plop.', '{hero} is still full from tonight\'s sweet potato. Maybe tomorrow night!']);
+    A.roast = day; countUp('roast'); const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.12)); persist(); sfx.jingle?.(1);
+    const p = this.hero.root.position, d = DIRS[this.dir]; this.g.fx.burst({ x: p.x + d[0] * 1.6, y: 0.4, z: p.z + d[1] * 1.6 }, { n: 18, speed: 1.6, up: 2.2, color: 0xffa040, size: 0.22, life: 0.8, drag: 1.4 });
+    return this.say(['A basket of sweet potatoes sits by the path, with a sign: "ROAST ONE! — Rio".', '{hero} holds one over the glowing lava on a long stick... sizzle, sizzle... perfectly roasted!', `Hot, sweet and smoky. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
+  }
+
   moonflowerSniff() {
     const day = new Date().toISOString().slice(0, 10), A = save.adv;
     if (A.moon === day) return this.say(['The moonflower sways in the night breeze. It smells of vanilla and starlight.', 'Moonflowers close at sunrise. Come back tomorrow night!']);
@@ -3676,6 +3685,7 @@ export class World {
       return this.say([['{hero} dances like nobody is watching. Everybody is watching. Nobody minds!', 'Boom-tss, boom-tss! {hero} spins, hops and strikes a pose.', 'The floor flashes pink, blue and gold under {hero}\'s feet. What a groove!'][Math.floor(Math.random() * 3)]]);
     }
     if (this.moonflowers?.some((f) => f.x === fx && f.y === fy)) return this.moonflowerSniff();
+    if (this.key === 'cinder' && this.phase !== 'day' && this.tile(fx, fy) === '~') return this.lavaRoast();
     if (this.scope && this.scope.x === fx && this.scope.y === fy) return this.stargaze();
     if (this.ring && this.ring.x === fx && this.ring.y === fy) return this.fairyRing();
     if (this.spring?.cells.has(fx + ',' + fy)) return this.soak();

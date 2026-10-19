@@ -1014,6 +1014,7 @@ export class Screens {
       ].filter((r) => r && r[4]);
       const after = [
         ['🔭', 'Spot a constellation', N('village'), A.stars === day, seen.village],
+        ['🍠', 'Roast a sweet potato', `${N('cinder')}, at the lava's edge`, A.roast === day, seen.cinder],
         ['🌼', 'Sniff a moonflower', `${N('route1')}, by the path`, A.moon === day, seen.route1],
         ['🍾', 'Message in a bottle', `${N('seashell')} shore`, A.bottle === day, seen.seashell],
         ['🔥', 'Toast a marshmallow', `${N('seashell')} bonfire`, (A.fire || {}).seashell === day, seen.seashell],
@@ -1071,6 +1072,7 @@ export class Screens {
       + bar('🎣', 'Fishing Derbies won', A.cnt?.derby || 0)
       + bar('🌟', 'Perfect days', A.cnt?.perfect || 0)
       + bar('🌼', 'Moonflowers sniffed', A.cnt?.moon || 0)
+      + bar('🍠', 'Sweet potatoes roasted', A.cnt?.roast || 0)
       + bar('⛄', 'Snowball Toss best', A.snowHi || 0)
       + bar('🌻', 'Flowers grown', A.cnt?.bloom || 0)
       + bar('🦋', 'Butterfly days', A.cnt?.flutter || 0)
@@ -1096,6 +1098,7 @@ export class Screens {
       'Hold the stick all the way to run outdoors.',
       'Your buddy walks behind you. Swap them from ☰ → 🐾 Buddy.',
       'Berry bushes at the edge of town can be shaken once a day.',
+      seen.cinder && 'After dusk on Cinder Road, face the lava and press A to roast a sweet potato.',
       seen.route1 && 'After dark, moonflowers open beside the path on Route 1. Give one a sniff!',
       seen.route2 && 'On Route 2\'s bridge, face the river and press A for a twig race. Pick a twig and cheer it on!',
       'Rooms look different after dark: lamps come on, and the windows fill with stars.',
