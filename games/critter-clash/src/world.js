@@ -3212,6 +3212,7 @@ export class World {
     // wild critters you can see, roaming the tall grass
     this.wild = [];
     const W = this.M.wild;
+    if (W && this.phase === 'night' && !ALPHA_TOLD.has('owls')) { ALPHA_TOLD.add('owls'); setTimeout(() => this.group && this.S.toast('🦉 Night owls are out! Hootsy and Squeakwing roam the tall grass after dark.'), 1200); }
     if (W?.roam) {
       const grass = [];
       for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) if (this.tile(x, y) === '"') grass.push([x, y]);
@@ -3237,8 +3238,16 @@ export class World {
     }
   }
 
+  // the map's wild critters; after dark the night owls (Hootsy, Squeakwing) come out too, at the map's levels, twice as often
+  wildList() {
+    const L = this.M.wild?.list || [];
+    if (this.phase !== 'night' || !L.length) return L;
+    const [, lo, hi] = L[0], owls = ['hootsy', 'squeakwing'].flatMap((id) => [[id, lo, hi], [id, lo, hi]]);
+    return [...L.filter(([i]) => !owls.some(([o]) => o === i)), ...owls];
+  }
+
   spawnWild(x, y, fixId, fixLv) {
-    const [id0, lo, hi] = this.M.wild.list[Math.floor(Math.random() * this.M.wild.list.length)], id = fixId || id0;
+    const WL = this.wildList(), [id0, lo, hi] = WL[Math.floor(Math.random() * WL.length)], id = fixId || id0;
     const lv = fixLv || lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = !fixId && Math.random() < SHINY_RATE;
     const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv), { lod: 'low' });
     cr.root.userData.critter = true;
@@ -4159,7 +4168,7 @@ export class World {
 
   // a wild critter jumps out of the tall grass
   ambush() {
-    const W = this.M.wild, wet = this.rain ? W.list.filter(([i]) => byId(i)?.type === 'water' || this.storm && byId(i)?.type === 'spark') : [];
+    const W = { list: this.wildList() }, wet = this.rain ? W.list.filter(([i]) => byId(i)?.type === 'water' || this.storm && byId(i)?.type === 'spark') : [];
     const L = wet.length && Math.random() < 0.5 ? wet : W.list; // water critters come out to play in the rain (and spark critters in a thunderstorm)
     const [id, lo, hi] = L[Math.floor(Math.random() * L.length)];
     const lv = lo + Math.floor(Math.random() * (hi - lo + 1));
