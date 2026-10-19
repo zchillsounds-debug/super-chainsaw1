@@ -448,7 +448,7 @@ export class World {
     this.buildPumpkins();
     this.buildXtree();
     this.buildScarecrow();
-    this.buildMelon(); this.buildPicnic();
+    this.buildMelon(); this.buildPicnic(); this.buildSnowman();
     this.buildWisps(x, y);
     this.buildFlutters(x, y);
     this.buildMoonflowers();
@@ -2154,6 +2154,44 @@ export class World {
     if (A.picnic === day) return this.say(['{hero} lies back on the blanket and watches the clouds. That one looks like a sandwich.', 'There\'s a fresh picnic every spring day. Come back tomorrow!']);
     A.picnic = day; countUp('picnic'); const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.15)); persist(); sfx.jingle?.(1);
     return this.say(['A checked blanket and a picnic basket by the pond. A tag on the basket says: "SPRING PICNIC. Please share! — Bea"', `{hero} sits down and shares a cress sandwich and a lemonade. ${['A blossom petal lands right in the cup.', 'A duckling waddles over and gets the crusts.', 'Somewhere, a butterfly lands on {hero}\'s nose.'][Math.floor(Math.random() * 3)]}`, `Full and happy! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
+  }
+
+  // winter (Jan-Feb) in Sprout Village: a patch of packed snow where the hero rolls a snow critter, one ball per press of A (a fresh one each day)
+  buildSnowman() {
+    this.snowman = null;
+    if (this.key !== 'village' || !isWinter() || this.phase === 'night') return;
+    const spot = this.propSpot([[8, 11], [9, 12], [8, 10], [8, 2]], '.'); if (!spot) return;
+    const [x, y] = spot, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(1.5); this.group.add(g); this.solid.add(x + ',' + y);
+    const snow = toon(0xf4f8ff, { rim: 0.6 }), patch = new THREE.Mesh(new THREE.CircleGeometry(0.85, 18), toon(0xeaf2ff)); patch.rotation.x = -Math.PI / 2; patch.position.y = 0.03; patch.scale.set(1, 0.8, 1); patch.receiveShadow = true; g.add(patch);
+    const parts = [];
+    const base = inked(new THREE.SphereGeometry(0.42, 16, 12), snow, OL * 0.5); base.position.y = 0.36; base.castShadow = true; g.add(base); parts.push([base]);
+    const mid = inked(new THREE.SphereGeometry(0.3, 16, 12), snow, OL * 0.5); mid.position.y = 0.9; mid.castShadow = true; g.add(mid);
+    const twig = toon(0x6a4a2a), arms = [-1, 1].map((sx) => { const a = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.025, 0.5, 5), twig); a.rotation.z = sx * 1.0; a.position.set(sx * 0.45, 1.02, 0); g.add(a); return a; });
+    parts.push([mid, ...arms]);
+    const head = inked(new THREE.SphereGeometry(0.24, 16, 12), snow, OL * 0.5); head.position.y = 1.33; head.rotation.x = -0.4; g.add(head);
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.2, 7), toon(0xff8a2a)); nose.rotation.x = Math.PI / 2 - 0.35; nose.position.set(0, 1.36, 0.27); g.add(nose);
+    const coal = toon(0x2a2a34), eyes = [-0.08, 0.08].map((ex) => { const e = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 5), coal); e.position.set(ex, 1.44, 0.2); g.add(e); return e; });
+    const ears = [-1, 1].map((sx) => { const e = inked(new THREE.SphereGeometry(0.09, 10, 8), snow, OL * 0.3); e.scale.set(0.8, 1.2, 0.6); e.position.set(sx * 0.16, 1.55, -0.02); g.add(e); return e; }); // a snow CRITTER: little round ears
+    const scarf = inked(new THREE.TorusGeometry(0.2, 0.05, 6, 16), toon(0xe84a5a), OL * 0.3); scarf.rotation.x = Math.PI / 2; scarf.position.y = 1.14; g.add(scarf);
+    parts.push([head, nose, ...eyes, ...ears, scarf]);
+    this.snowman = { x, y, g, parts };
+    this.snowShow();
+  }
+
+  snowShow() {
+    const day = new Date().toISOString().slice(0, 10), S = save.adv.snowman, n = S?.day === day ? S.n : 0;
+    this.snowman.parts.forEach((P, i) => P.forEach((m) => { m.visible = i < n; }));
+  }
+
+  snowRoll() {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv, S = A.snowman?.day === day ? A.snowman : (A.snowman = { day, n: 0 }), p = this.snowman.g.position;
+    if (S.n >= 3) return this.say([['The snow critter smiles its little coal smile. {hero} smiles back.', 'A Squeakwing lands on the snow critter\'s ear, then thinks better of it.'][(this.steps + new Date().getDate()) % 2], 'It\'ll melt in the night. Build a new one tomorrow!']);
+    S.n++; persist(); this.snowShow(); sfx.whoosh?.(0.5);
+    for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5), y: 0.4 + S.n * 0.4, z: p.z + (Math.random() - 0.5), vx: (Math.random() - 0.5) * 2, vy: 1 + Math.random() * 2, vz: (Math.random() - 0.5) * 2, color: 0xffffff, size: 0.2, life: 0.7, grav: 6 });
+    if (S.n === 1) return this.say(['A patch of good packing snow. {hero} rolls a big snowball for the bottom... roll, roll, ROLL!', 'Two more to go!']);
+    if (S.n === 2) return this.say(['{hero} heaves a middle ball on top and pokes in two twig arms. It waves! (No, that was the wind.)', 'One more for the head!']);
+    countUp('snowman'); save.berries = (save.berries || 0) + 2; const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.1)); persist(); sfx.jingle?.(2);
+    return this.say(['A round head, little ears, coal eyes, a carrot nose and Mom\'s spare scarf. It\'s a snow critter!', `Mom brings out hot berry juice for the builder. +2 🍓 ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
   }
 
   scareTalk() {
@@ -4343,6 +4381,7 @@ export class World {
     if (this.scare && this.scare.x === fx && this.scare.y === fy) return this.scareTalk();
     if (this.melon && this.melon.x === fx && this.melon.y === fy) return this.melonSplit();
     if (this.picnic && this.picnic.x === fx && this.picnic.y === fy) return this.picnicSit();
+    if (this.snowman && this.snowman.x === fx && this.snowman.y === fy) return this.snowRoll();
     if (this.roomFest && this.roomFest.x === fx && this.roomFest.y === fy) return this.say([this.roomFest.tw ? 'A little potted tree, hung with baubles and a golden star. Even indoors, it\'s Twinkle Week!' : this.outPhase === 'day' ? 'Two carved pumpkins wait in the corner for nightfall. The big one has a wonky grin.' : 'Two jack-o\'-lanterns flicker in the corner, grinning at {hero}. Happy Pumpkin Nights!']);
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
@@ -4381,7 +4420,7 @@ export class World {
     if (this.follower && at(this.follower) && !this.follower.from) return 'Pet';
     if (at(this.bush)) return 'Shake';
     if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
-    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest, this.melon, this.picnic].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
+    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest, this.melon, this.picnic, this.snowman].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
     if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod && !this.M.lava) return 'Fish'; }
     const sign = (this.M.signs || []).find((g) => g.x === fx && g.y === fy);
     if (sign) return sign.act ? ({ pcbox: 'Swap', board: 'Read', gauntsign: 'Read', smoothie: 'Blend', hatshop: 'Shop', rest: 'Rest', wardrobe: 'Open', mirror: 'Look', shelf: 'Look', arcade: 'Play', 'arcade:hop': 'Play' }[sign.act] || (sign.act.startsWith('case:') ? 'Look' : 'Use')) : sign.hide ? 'Look' : 'Read';
