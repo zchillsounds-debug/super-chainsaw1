@@ -3395,7 +3395,21 @@ export class World {
       for (let k = 0; k < 5; k++) this.g.fx.spawn({ x: B.root.position.x + (Math.random() - 0.5), y: 1.6 + Math.random() * 0.5, z: B.root.position.z, vy: 1 + Math.random(), color: 0xff6aa8, size: 0.35, life: 0.9, shape: 'star' });
       sfx.pickup?.();
       const name = B.cr.def?.name || 'Your buddy';
-      const lines = save.adv.follow ? ['Pip: Squeak! (Pip nuzzles {hero}.)'] : [[`${name} looks really happy to be out exploring with {hero}!`, `${name} bounces on the spot. Adventure!`, `${name} gives {hero} a big hug.`, `${name} sniffs the air. Something good is cooking somewhere...`][Math.floor(Math.random() * 4)]];
+      const M = this.M, ctx = [ // what the buddy notices right here, right now
+        this.rain && `${name} shakes the rain off... all over {hero}. Thanks, pal.`,
+        this.snowing && `${name} catches a snowflake on the tip of their tongue. Cold!`,
+        M.snow && !this.snowing && `${name} flops into the snow and makes a snow critter.`,
+        this.morning && `${name} yawns a big morning yawn and stretches. Is it breakfast yet?`,
+        this.phase === 'evening' && !M.indoor && `${name} watches the golden sky go pink. So pretty...`,
+        this.phase === 'night' && !M.indoor && `${name} points up at the stars, then yawns. Bedtime soon?`,
+        M.arena === 'beach' && `${name} wants to build a sandcastle. A BIG one.`,
+        M.lava && `${name} fans their face. Phew, it's toasty here!`,
+        M.city && `${name} bops along to the city's beat.`,
+        M.border === 'cloud' && `${name} peeks over the edge of the cloud. Whoa, that's high!`,
+        M.fireflies && `${name} sticks close to {hero}. These woods are a little spooky...`,
+        M.indoor && `${name} looks around the room and wags happily. Cosy!`,
+      ].filter(Boolean);
+      const lines = save.adv.follow ? ['Pip: Squeak! (Pip nuzzles {hero}.)'] : ctx.length && Math.random() < 0.6 ? [ctx[Math.floor(Math.random() * ctx.length)]] : [[`${name} looks really happy to be out exploring with {hero}!`, `${name} bounces on the spot. Adventure!`, `${name} gives {hero} a big hug.`, `${name} sniffs the air. Something good is cooking somewhere...`][Math.floor(Math.random() * 4)]];
       return this.say(lines);
     }
     if (this.bush && this.bush.x === fx && this.bush.y === fy) return this.shakeBush();
