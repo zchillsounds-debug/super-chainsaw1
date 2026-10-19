@@ -650,6 +650,31 @@ export class World {
         const p = new THREE.CylinderGeometry(0.42, 0.42, 0.05, 12, 1, false, 0.4, Math.PI * 1.8); p.translate(x * TILE + 0.5 + rand(), 0.1, y * TILE + 0.5 + rand()); pads.push(p);
       }
     }
+    // little town ponds (not the sea, rivers, ice or lava): a few lily pads, a pink water lily or two, and cattails at the bank
+    const nWet = this.M.tiles.join('').split('~').length - 1, pond = !this.M.pads && !this.M.lava && !this.M.snow && !this.M.indoor && this.M.border !== 'cloud' && this.M.arena !== 'beach' && nWet > 0 && nWet < 40;
+    if (pond) {
+      const reeds = [], heads = [], lilies = [];
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (this.tile(x, y) !== '~') continue;
+        if (rand() < 0.4) {
+          const px = x * TILE + 0.5 + rand(), pz = y * TILE + 0.5 + rand(), p = new THREE.CylinderGeometry(0.46, 0.46, 0.04, 12, 1, false, rand() * 6, Math.PI * 1.8); p.translate(px, 0.09, pz); pads.push(p);
+          if (rand() < 0.5) for (let k = 0; k < 5; k++) { const pe = new THREE.ConeGeometry(0.11, 0.26, 4); pe.rotateZ(0.6); pe.rotateY(k * 1.256); pe.translate(px, 0.18, pz); lilies.push(pe); }
+        }
+        for (const [dx, dy] of Object.values(DIRS)) {
+          if (!'.f'.includes(this.tile(x + dx, y + dy)) || rand() > 0.5) continue;
+          const side = (rand() - 0.5) * 1.2, ex = x * TILE + 1 + dx * 0.72 + dy * side, ez = y * TILE + 1 + dy * 0.72 + dx * side;
+          for (let k = 0; k < 4; k++) {
+            const h = 1.1 + rand() * 0.5, ox = (rand() - 0.5) * 0.3, oz = (rand() - 0.5) * 0.3, lean = (rand() - 0.5) * 0.25;
+            const s = new THREE.CylinderGeometry(0.035, 0.05, h, 4); s.rotateZ(lean); s.translate(ex + ox - Math.sin(lean) * h / 2, h / 2, ez + oz); reeds.push(s);
+            if (k < 3) { const c = new THREE.CapsuleGeometry(0.08, 0.22, 2, 6); c.rotateZ(lean); c.translate(ex + ox - Math.sin(lean) * h, h - 0.05, ez + oz); heads.push(c); }
+          }
+          const leaf = new THREE.ConeGeometry(0.07, 0.6, 3); leaf.rotateZ(0.35); leaf.translate(ex + 0.12, 0.28, ez); reeds.push(leaf);
+        }
+      }
+      if (reeds.length) { this.group.add(inked(mergeGeometries(reeds), toon(0x3e9a48, { rim: 0.4 }), OL * 0.3)); reeds.forEach((g) => g.dispose()); }
+      if (heads.length) { this.group.add(inked(mergeGeometries(heads), toon(0x8a5a32, { rim: 0.4 }), OL * 0.35)); heads.forEach((g) => g.dispose()); }
+      if (lilies.length) { this.group.add(inked(mergeGeometries(lilies), toon(0xff9ac8, { rim: 0.7 }), OL * 0.3)); lilies.forEach((g) => g.dispose()); }
+    }
     if (pads.length) { this.group.add(inked(mergeGeometries(pads), toon(0x4cba6a, { rim: 0.4 }), OL * 0.4)); pads.forEach((g) => g.dispose()); }
     if (water.length) {
       const lava = this.M.lava;
