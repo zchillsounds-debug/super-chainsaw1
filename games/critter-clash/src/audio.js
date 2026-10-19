@@ -508,7 +508,11 @@ function playStep(song, step, t) {
       if (len > 2) { const l = ctx.createOscillator(), g = ctx.createGain(); l.frequency.value = 6; g.gain.value = 5; l.connect(g); g.connect(o.frequency); l.start(t + spb); l.stop(t + spb * len); }
     }
   }
-  if (bells && s % 2 === 0) noise(s % 4 ? 0.07 : 0.11, s % 4 ? 0.035 : 0.06, { t, bus: musBus, type: 'bandpass', f0: 8500, q: 2.5, attack: 0.008 });
+  if (extra === 'spooky' && s === 0 && bar % 2 === 1) {
+    const f = N(chord[0] + 12), o = osc('sine', f * 0.94, f, spb * 14, 0.045, { t, bus, attack: spb * 4 });
+    const l = ctx.createOscillator(), g = ctx.createGain(); l.frequency.value = 5.5; g.gain.value = f * 0.025; l.connect(g); g.connect(o.frequency); l.start(t); l.stop(t + spb * 14);
+  }
+  if (extra === 'bells' && s % 2 === 0) noise(s % 4 ? 0.07 : 0.11, s % 4 ? 0.035 : 0.06, { t, bus: musBus, type: 'bandpass', f0: 8500, q: 2.5, attack: 0.008 });
   const d = song.drums[s];
   if (d === 'k') {
     osc('sine', 150, 40, 0.16, 0.55, { t, bus: musBus });
@@ -531,11 +535,12 @@ const eveOf = (name) => eveSongs[name] ||= SONGS[name] && { ...SONGS[name], nigh
   inst: { ...SONGS[name].inst, lead: 'triangle', lead2: 'square', leadVol: 0.07, bassVol: 0.24, stab: 'triangle', steel: SONGS[name].inst?.steel } };
 
 // mood: false (day), true or 'night' (lullaby), 'evening' (mellow)
-// bells: Twinkle Week in the Adventure towns, sleigh bells shake along on the beat
-let bells = false;
-export function playMusic(name, mood = false, withBells = false) {
-  const tag = (mood === 'evening' ? ':eve' : mood ? ':night' : '') + (withBells ? ':bells' : '');
-  bells = withBells;
+// extra: 'bells' (Twinkle Week: sleigh bells shake along on the beat) or 'spooky' (Pumpkin Nights after dusk: a wobbly ghost voice
+// oooOOOooo-ing the chord every other bar), for the Adventure towns and routes
+let extra = false;
+export function playMusic(name, mood = false, withExtra = false) {
+  const tag = (mood === 'evening' ? ':eve' : mood ? ':night' : '') + (withExtra ? ':' + withExtra : '');
+  extra = withExtra;
   if (!ctx || currentSong === name + tag) return;
   stopMusic();
   currentSong = name + tag;

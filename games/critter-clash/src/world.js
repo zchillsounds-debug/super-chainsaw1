@@ -437,7 +437,7 @@ export class World {
     persist();
     const tune = this.touring ? 'victory' : M.music || 'camp';
     const calm = !['victory', 'neon', 'boss'].includes(tune) && M.indoor !== 'arcade';
-    playMusic(tune, calm && (this.outPhase === 'night' || this.outPhase === 'evening' && 'evening'), tune !== 'victory' && twinkleWeek()); // evening: a mellower take; night: a slow lullaby (Neon City parties on); Twinkle Week adds sleigh bells
+    playMusic(tune, calm && (this.outPhase === 'night' || this.outPhase === 'evening' && 'evening'), tune !== 'victory' && (twinkleWeek() ? 'bells' : pumpkinNights() && this.outPhase !== 'day' && calm && 'spooky')); // evening: a mellower take; night: a slow lullaby (Neon City parties on); Twinkle Week adds sleigh bells, Pumpkin Nights after dusk a ghostly ooo
     const B = this.base, lamp = M.indoor && this.outPhase !== 'day' && M.indoor !== 'arcade' && { sun: 0xffd2a0, sunI: B.sunI * (this.outPhase === 'night' ? 0.72 : 0.85), sky: 0xffe2c4, gnd: B.gnd, hemiI: B.hemiI * 0.85, fog: 0xcfeeff }; // lamplight indoors after dark
     this.morning = canRain(M) && !this.rain && this.phase === 'day' && hr >= 6 && hr < 9; // misty mornings on the grassy outdoor maps
     this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.morning && PHASES.morning) || (M.arena === 'beach' && BEACH[this.phase]) || PHASES[this.phase]);
