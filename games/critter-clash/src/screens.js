@@ -1095,6 +1095,7 @@ export class Screens {
         ['🏡', 'A present from home', `home, ${N('village')}`, A.grownDay === day, A.grown?.length], // a grown-up Daycare baby (world.js grownSpot)
         ['🎄', 'A gift under the tree', 'by any Berry Center', A.xgift === day, twinkleWeek()], // Twinkle Week (world.js buildXtree)
         F.rod && (() => { const D = derbyOf(gauntletWeek()); return ['🎣', `Derby: ${D.name} ${D.cm}+ cm`, `this week, ${D.where}`, A.derbyWk === D.wk, true]; })(),
+        F.rod && seasonKey() && (() => { const [n, , , em] = SEASON_FISH[seasonKey()]; return !A.fishLog?.season?.[n] && [em, `Hook the ${n}`, `${seasonKey()} visitor, any water`, false, true, 'season']; })(), // the season's fish, until it's caught
         F.ending && ['🏔️', 'Peak Gauntlet (this week)', "Keeper Orla, Champion's Peak", !!F['gauntpay_' + gauntletWeek()], true],
       ].filter((r) => r && r[4]);
       const after = [
@@ -1231,7 +1232,7 @@ export class Screens {
     if (!m || !save.adv) return;
     let n = 0;
     let daily = [];
-    try { const { rows, after, night } = this.todayList(); n = rows.filter((r) => !r[3]).length + (night ? after.filter((r) => !r[3]).length : 0); daily = rows.filter((r) => !['🏔️', '🎣'].includes(r[0])); } catch (e) { n = 0; }
+    try { const { rows, after, night } = this.todayList(); n = rows.filter((r) => !r[3] && !r[5]).length + (night ? after.filter((r) => !r[3]).length : 0); daily = rows.filter((r) => !['🏔️', '🎣'].includes(r[0]) && !r[5]); } catch (e) { n = 0; }
     m.dataset.n = n > 9 ? '9+' : n || '';
     // a perfect day: every ☀️ daily row ticked (the weekly ones don't count) pays a bonus once a day
     const day = new Date().toISOString().slice(0, 10), A = save.adv;
