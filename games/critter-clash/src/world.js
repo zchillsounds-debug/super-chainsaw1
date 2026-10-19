@@ -246,10 +246,38 @@ function bakeStatic(cr) {
         mat.userData.own = true; cr.mats['bake' + Object.keys(cr.mats).length] = mat;
       }
       const o = new THREE.Mesh(geo, mat); o.castShadow = b.cast; o.receiveShadow = true; if (b.mat.side === THREE.BackSide) o.userData.hull = true;
+      o.userData.baked = b.vk || mat.uuid; // skinStatic can fold it in with the other joints' parts
       out.push(o); b.geos.forEach((q) => q.dispose());
     }
     for (const o of drop) g.remove(o);
     for (const o of [...add, ...out]) g.add(o);
+  }
+}
+
+// a baked critter still draws one or two meshes per joint (head, torso, each arm and leg, tail...): ~30 draws. Fold every
+// baked part into one skinned mesh per material, with the joints as its bones, so the rig still moves each part: ~8-12 draws
+const _sk = new THREE.Matrix4();
+function skinStatic(cr) {
+  const root = cr.root; root.updateMatrixWorld(true);
+  const inv = root.matrixWorld.clone().invert(), bones = [], idx = new Map(), buckets = new Map(), drop = [];
+  root.traverse((m) => {
+    if (!m.isMesh || m.isSkinnedMesh || !m.userData.baked || !m.visible) return;
+    let bi = idx.get(m.parent); if (bi == null) { idx.set(m.parent, bi = bones.length); bones.push(m.parent); }
+    const geo = m.geometry.clone().applyMatrix4(_sk.multiplyMatrices(inv, m.matrixWorld)), n = geo.attributes.position.count;
+    const si = new Uint16Array(n * 4), sw = new Float32Array(n * 4); for (let i = 0; i < n; i++) { si[i * 4] = bi; sw[i * 4] = 1; }
+    geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4)); geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4));
+    const k = m.userData.baked + (geo.index ? 'i' : 'n') + Object.keys(geo.attributes).sort().join();
+    let b = buckets.get(k); if (!b) buckets.set(k, b = { mat: m.material, geos: [], cast: false, hull: m.userData.hull });
+    b.geos.push(geo); b.cast ||= m.castShadow; drop.push(m);
+  });
+  if (bones.length < 2) return;
+  const merged = []; for (const b of buckets.values()) { const g = mergeGeometries(b.geos); b.geos.forEach((q) => q.dispose()); if (!g) return; merged.push([b, g]); } // incompatible: leave it as baked
+  for (const m of drop) { m.parent.remove(m); m.geometry.dispose(); }
+  const skel = new THREE.Skeleton(bones, bones.map((b) => b.matrixWorld.clone().invert()));
+  for (const [b, g] of merged) {
+    const o = new THREE.SkinnedMesh(g, b.mat); o.castShadow = b.cast; o.receiveShadow = true; o.userData.hull = b.hull;
+    root.add(o); o.updateMatrixWorld(true); o.bind(skel);
+    g.computeBoundingSphere(); o.boundingSphere = g.boundingSphere.clone(); o.boundingSphere.radius *= 1.3; // the rig swings parts a little past their rest pose
   }
 }
 
@@ -461,6 +489,7 @@ export class World {
     this.group.traverse((o) => {
       if (o.userData.critter) return;
       if (o.geometry && !o.userData.shared) o.geometry.dispose();
+      if (o.isSkinnedMesh) o.skeleton.dispose(); // skinStatic critters: free the bone texture
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
@@ -3443,7 +3472,7 @@ export class World {
           if (this.trickOrTreat(n)) { const [k, c, bd] = COSTUMES[hash(n.id) % COSTUMES.length]; hatModel(cr, k, c, bd); } // Pumpkin Nights after dark: the townsfolk dress up
           else if (twinkleWeek() && !this.M.indoor && !n.trainer && !n.story && n.lines?.length && hash(n.id) % 3) hatModel(cr, 'nightcap', [0xe8384a, 0x2a9a5a, 0xe8384a][hash(n.id) % 3], 0xffffff); // Twinkle Week: bobble hats all round
         }
-        bakeStatic(cr); castLite(cr);
+        bakeStatic(cr); skinStatic(cr); castLite(cr);
         if (this.rain && n.act !== 'fish' && n.act !== 'sleep') brolly(cr, [0xff5a8a, 0x5ab8ff, 0xffd84d, 0x8a6aff][(n.x + n.y) % 4]); // a brolly up in the rain
       }
       root.userData.critter = true;
@@ -3497,7 +3526,7 @@ export class World {
     const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv), { lod: 'low' });
     cr.root.userData.critter = true;
     if (pumpkinNights() && !fixId && Math.random() < 0.5) { const [k, c, b] = COSTUMES[Math.floor(Math.random() * COSTUMES.length)]; hatModel(cr, k, c, b); } // Pumpkin Nights: wild critters dress up too
-    bakeStatic(cr); castLite(cr);
+    bakeStatic(cr); skinStatic(cr); castLite(cr);
     cr.root.scale.setScalar(CS * 0.9);
     this.group.add(cr.root);
     const a = { id, lv, cr, root: cr.root, x, y, dir: 's', moveT: 0, from: null, wanderT: 0.5 + Math.random() * 2, wild: true, shiny };
@@ -3509,6 +3538,7 @@ export class World {
     const a = this.npcs.find((n) => n.n.id === id);
     if (!a) return;
     this.group.remove(a.root);
+    a.root.traverse((o) => { if (o.isSkinnedMesh) { o.skeleton.dispose(); o.geometry.dispose(); } }); // skinStatic's merged parts belong to this critter alone
     this.npcs.splice(this.npcs.indexOf(a), 1);
   }
 
