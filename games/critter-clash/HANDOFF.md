@@ -3,6 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 17:12 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
+- **Session 17m (2026-10-19 08:16–~09:45 UTC, session_01V4diccGXVCBukrvNKiZbpZ) did R586–R603 (see "Session 17m"); next round R604.**
 - **Session 17l (2026-10-19 07:00–~08:20 UTC, session_012Xz8agju9ofeQ4h5JvJknc) did R559–R585 (see "Session 17l"); next round R586.**
 - **Session 17k (2026-10-19 06:04–~07:05 UTC, session_01T4Ppdv8eks7xiYBZHXjX4g) did R543–R558 (see "Session 17k"); next round R559.** It chained early at ~200k context.
 - **Session 17j (2026-10-19 04:45–~06:20 UTC, session_01DQ35cJzhCn4DLxt8ufnCuy, started by hand) did R532–R542 (see "Session 17j"); next round R543.**
@@ -1021,6 +1022,23 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Critiqued and left as is: all towns/routes at 915×412, 740×360 and 412×915; 12 interiors; the ☰ card with every status line; Town Map; title/cups/challenges/dex/camp/select/team menus.
 - **Next ideas:** grown babies in photos; on Twinkle Week evenings rain could fall as snow; medium quality could thin far border trees too; re-check Squeakwing in the next full robin; the Alpha shown big in its battle (battle side, the user's chat); skinned critters if draw calls matter.
 
+## Session 17m (2026-10-19 08:16–~09:45 UTC, session_01V4diccGXVCBukrvNKiZbpZ): trick-or-treat, leaf piles, buddy photos, night hero light, balance, R586–R603
+- The local clone started on stale history (Round 5); it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start (production build of 0988c8a):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town, no errors.
+- **R586:** on Twinkle Week evenings/nights a shower over the green towns falls as a proper snowfall (`twinkleEve` in `load()`: `this.rain` off, `this.snowing` on), and flakes settle on the ground.
+- **R587:** ☰ 📸 Photo: the walking buddy (or a grown baby on a walk) steps up beside the hero for the shot and is named in the caption ("Cindermunch & Squeakwing · …"); a long portrait caption shrinks to fit.
+- **R588: perf.** Medium quality builds detail-0 canopies on the 3-tile border skirt, and detail-0 lower canopies (smooth tops) for trees deep in the woods (`deep()` in `buildTrees`): Peak ~473k → ~295k, Route 1 ~331k → ~210k triangles at medium. `tools/advtour.mjs` takes `Q=low|med|high`.
+- **R589:** Seashell's evening uses a rosier `BEACH` light (the plain golden hour turned sand and hero one orange). Route 2 is also `arena: 'beach'`, so it gets it too.
+- **R590/R601: Pumpkin Nights trick-or-treat.** After dark (outdoors, not dozing, not trainers/story folk: `trickOrTreat(n)`), townsfolk wear a costume hat (`COSTUMES`, shared with the costumed wild critters) and the first six you talk to each night give a candy berry (`save.adv.tot = {day, ids}`, `cnt.tot`): Journal Today row 🧛, Records 🍬, tip. The walking buddy dresses up too (R601). `roleHat()` now returns whether it added a hat.
+- **R591/R594:** Pecan news **adv21** (trick-or-treat, buddy photos, autumn leaf piles, Twinkle Week snow); the tools' news lists include it.
+- **R592:** after dark a soft moonlit pool of light (`this.heroGlow`, ember-warm on lava maps) follows the hero, and moonlight rims the hero's outline, so you can find yourself at night.
+- **R593/R596/R599/R600/R603: autumn leaf piles** (October to 15 November; `save.adv.autumn` forces it): two heaps per green map a day (`buildLeaves()`, a tile clear of the canopies and 3+ from townsfolk; not Seashell, snow, lava, city, cloud or Glowcap maps). Walk through one: leaves fly (`leafJump()`), the pile flattens for 14 s, a crunchy `sfx.leafPile()`, the hero grins; the first of the day (`A.leaves`) may hide a berry; the buddy scatters them too. Autumn leaves also drift down over those maps. Records 🍂.
+- **R595:** in the landscape world a toast drops below the map-name banner while it shows (CSS `body:not(.portrait):has(.wd-banner) .toast`); "Emberflies come out".
+- **R597: balance.** Full 2-rep robin (R591 build, 72 games each): everyone 39–63% (Whirlwhisk 63, Diggles 57, Ripples/Kindlekit 56, … Squeakwing 50, … Pricklepuff 40, Jiggawatt 39). Whirlwhisk power 1.16→1.14; Jiggawatt hp 1080→1100, power 1.10→1.12; Pricklepuff hp 1130→1150, power 1.13→1.14. Focused 2-rep re-check: Jiggawatt 50%, Pricklepuff 47%, Whirlwhisk 47%.
+- **R598:** Twinkle Week townsfolk wear red/green bobble hats. **R602:** the hat picker fits two full rows at 740×360.
+- advload (R591 build): 160 fresh loads, 0 problems. advperf (915×412 high, R598 build): all maps 102–338 draw calls, unchanged.
+- Critiqued and left as is: towns/routes at all three sizes (day, evening, night), 8 rooms in portrait (rooms leave the bottom for the controls on purpose), ☰ card, Journal Today/Records, Town Map, Hat Shop grid, title/cups/camp/dex.
+- **Next ideas:** a Halloween-night (31 Oct) special; Twinkle Week trick-or-treat equivalent (carol singers?); skinned critters if draw calls matter; the Alpha shown big in its battle (battle side, the user's chat); re-measure FPS on a phone; a full robin again after the next combat change.
+
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - (Fixed in R132.) A re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
@@ -1095,6 +1113,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
+   - Session 17m chained at R604 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17l chained at R586 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17k chained at R559 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17j (started by hand) chained at R543 with the 48-hour prompt word for word (if create_session refused, see the line added below).
