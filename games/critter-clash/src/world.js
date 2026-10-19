@@ -2233,7 +2233,9 @@ export class World {
     if (!id) { this.follower = null; return; }
     const pip = !!save.adv.follow, def = byId(id);
     const cr = new Critter(withGear(pip || wk ? def : skinned(def, save.skins?.[id]), pip ? 2 : wk ? 8 : save.critters[id]?.level || 1), { lod: 'mid' });
-    cr.root.userData.critter = true; bakeStatic(cr); castLite(cr);
+    cr.root.userData.critter = true;
+    if (!pip && pumpkinNights() && this.phase !== 'day' && !this.M.indoor) { const [k, c, bd] = COSTUMES[(hash(id) + 2) % COSTUMES.length]; hatModel(cr, k, c, bd); } // Pumpkin Nights: the buddy dresses up for trick-or-treating too
+    bakeStatic(cr); castLite(cr);
     cr.root.scale.setScalar(CS * (pip ? 0.7 : 0.85));
     this.group.add(cr.root);
     // start on a free tile behind the hero
