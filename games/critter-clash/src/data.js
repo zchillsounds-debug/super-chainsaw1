@@ -194,7 +194,7 @@ export const CRITTERS = [
     colors: { body: 0x2f7f8f, belly: 0xfff0d8, accent: 0xffb0c8, dark: 0x163f4a, eye: '#0c1a20', iris: '#ffd23a', wing: 0x1f5a68 },
     body: { w: 0.58, h: 0.52, headR: 0.5, legLen: 0.11, armLen: 0.18, chubby: 1.05 },
     ears: 'bat', tail: 'none', extra: 'bat', voice: 1.75,
-    stats: { hp: 1150, speed: 7.0, power: 1.26, weight: 0.9 },
+    stats: { hp: 1180, speed: 7.1, power: 1.30, weight: 0.9 },
     special: 'squeak', super: 'echoboom',
     moves: { special: 'Sonic Squeak', super: 'Echo Boom' },
   },
