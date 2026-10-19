@@ -807,8 +807,10 @@ export class World {
   }
 
   buildTrees(rand) {
-    const can = [], can2 = [], trunks = [], dt0 = this.g.quality === 'low' ? 0 : 1; // low quality: chunkier canopies (a quarter of the triangles)
-    const mid = this.g.quality === 'med', woody = (x, y) => x < 0 || y < 0 || x >= this.W || y >= this.H || this.tile(x, y) === 'T';
+    const can = [], can2 = [], trunks = [], dt0 = 1;
+    // medium and low quality: chunky canopies (a quarter of the triangles) on the border skirt and deep in the woods, where only the tops show;
+    // the trees along paths and clearings stay smooth (low used chunky everywhere, and the woods' edges read as cut gems)
+    const mid = this.g.quality === 'med' || this.g.quality === 'low', woody = (x, y) => x < 0 || y < 0 || x >= this.W || y >= this.H || this.tile(x, y) === 'T';
     const deep = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!woody(x + i, y + j)) return false; return true; }; // a tree with trees all round it: only its top shows
     // autumn on the green maps: about two trees in five turn orange, gold or red (picked by position, so the woods keep their shape)
     const M = this.M, fall = isAutumn() && !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && M.border !== 'cloud' && !M.fireflies, falls = [[], [], [], []];
