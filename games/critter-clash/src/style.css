@@ -1096,6 +1096,7 @@ body:has(.ring-wrap) .wd-a, body:has(.ring-wrap) .joybase { visibility: hidden; 
 /* portrait: the Critterdex card scrolls under the roster, so fade its bottom edge; toasts drop below the screen header */
 @media (max-aspect-ratio: 1/1) { .dex-info { -webkit-mask-image: linear-gradient(#000 calc(100% - 26px), transparent); mask-image: linear-gradient(#000 calc(100% - 26px), transparent); padding-bottom: 18px; } }
 body.portrait .toast { top: calc(70px + var(--sat)); }
+body:not(.portrait):has(.wd-banner) .toast { top: calc(64px + var(--sat)); } /* landscape world: a toast that lands while the map's name banner shows drops below it */
 body.portrait:has(.camp-screen) .toast { top: calc(112px + var(--sat)); } /* below Camp's berries and Toss ball buttons */
 .jr-day em { font-size: 11.5px; font-weight: 700; opacity: .7; text-align: right; max-width: 48%; }
 .jr-day.got { opacity: .6; }

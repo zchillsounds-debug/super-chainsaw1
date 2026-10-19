@@ -3317,7 +3317,7 @@ export class World {
     // wild critters you can see, roaming the tall grass
     this.wild = [];
     const W = this.M.wild;
-    if (W && this.phase === 'evening' && !ALPHA_TOLD.has('dusk')) { ALPHA_TOLD.add('dusk'); setTimeout(() => this.group && this.S.toast('✨ Dusk! Emberfly come out to glow over the tall grass in the golden evening.'), 1200); }
+    if (W && this.phase === 'evening' && !ALPHA_TOLD.has('dusk')) { ALPHA_TOLD.add('dusk'); setTimeout(() => this.group && this.S.toast('✨ Dusk! Emberflies come out to glow over the tall grass in the golden evening.'), 1200); }
     if (W && this.phase === 'night' && !ALPHA_TOLD.has('owls')) { ALPHA_TOLD.add('owls'); setTimeout(() => this.group && this.S.toast('🦉 Night owls are out! Hootsy and Squeakwing roam the tall grass after dark.'), 1200); }
     if (W?.roam) {
       const grass = [];
