@@ -1123,8 +1123,8 @@ export class Critter {
 }
 
 // route trainers dress for the job, so a Hiker, a Fisher and a Skater read apart at a glance
-const HATS = [
-  [/^Hiker/, 'bucket', 0x9a7240], [/^(Camper|Picker)/, 'cap', 0x4aa04a], [/^Fisher/, 'wide', 0xf0d27a], [/^(Picnicker|Gardener)/, 'wide', 0xfff2c8, 0xff6a9a],
+const HATS = [ // townsfolk hats by role (Mom wears a flower crown: she's the hero's own species, so it tells them apart)
+  [/^Mom$/, 'flower', 0x5ac24a, 0xff8ac8], [/^Hiker/, 'bucket', 0x9a7240], [/^(Camper|Picker)/, 'cap', 0x4aa04a], [/^Fisher/, 'wide', 0xf0d27a], [/^(Picnicker|Gardener)/, 'wide', 0xfff2c8, 0xff6a9a],
   [/^(Kite Flyer|Sky Diver)/, 'cap', 0x5a8ad8], [/^Swimmer/, 'swim', 0x3ac8ff], [/^Skater/, 'back', 0xff5a8a], [/^Firewalker/, 'band', 0xff4a2a], [/^Gang/, 'band', 0x3a2a4a], [/^Milliner/, 'top', 0x2a2438, 0xff3a5a], [/^Trader/, 'tricorn', 0x6a3a2a, 0xffd84d], [/^Ace/, 'beanie', 0xf4f8ff, 0x3a6ad8],
 ];
 export function roleHat(cr, name) {

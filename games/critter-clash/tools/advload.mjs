@@ -1,5 +1,6 @@
 // node tools/advload.mjs [WxH] : opens the Adventure fresh (a new World, as after an app restart) on every map and room,
 // at morning, noon, evening and night (and once in the rain), and reports any errors. Catches props that read state built later.
+// FORCE='{"frost":true,"winter":true}' merges into save.adv first (festivals, frost, autumn...)
 import { createRequire } from 'module';
 import { readFileSync } from 'fs';
 const require = createRequire('/opt/node22/lib/node_modules/');
@@ -19,19 +20,19 @@ const keys = await pg.evaluate(() => {
 });
 const maps = keys || ['village', 'route1', 'bloom', 'route2', 'seashell', 'glowwood', 'glowcap', 'cinder', 'ember', 'neon', 'cloudtop', 'frostpeak', 'peak'];
 for (const m of readFileSync(new URL('../src/interiors.js', import.meta.url), 'utf8').matchAll(/^  '([a-z0-9]+:[a-z0-9]+)': \{/gm)) maps.push('in:' + m[1]); // and every room
-let n = 0, bad = 0;
+let n = 0, bad = 0; const force = JSON.parse(process.env.FORCE || '{}');
 for (const map of maps) for (const [clock, rain] of [[7, false], [12, false], [18, false], [22, false], [12, true]]) {
-  const r = await pg.evaluate(([map, clock, rain]) => {
+  const r = await pg.evaluate(([map, clock, rain, force]) => {
     try {
       __game.screens.leaveWorld();
-      const A = __save.adv; Object.assign(A, { map, clock, rain, x: 1, y: 1 });
+      const A = __save.adv; Object.assign(A, force, { map, clock, rain, x: 1, y: 1 });
       // stand on the first walkable tile, as a save would
       __game.screens.adventure(); const w = __game.screens.worldObj;
       for (let y = 1; y < w.H - 1; y++) for (let x = 1; x < w.W - 1; x++) if (w.walkable(x, y)) { A.x = x; A.y = y; y = 1e9; break; }
       __game.screens.leaveWorld(); __game.screens.adventure(); __sim(0.4);
       return __game.screens.worldObj.key === map ? null : 'landed on ' + __game.screens.worldObj.key;
     } catch (e) { return String(e && e.stack || e).split('\n').slice(0, 3).join(' | '); }
-  }, [map, clock, rain]);
+  }, [map, clock, rain, force]);
   n++;
   if (r) { bad++; console.log(map, clock, rain ? 'rain' : '', '→', r); }
 }
