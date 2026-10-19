@@ -3755,6 +3755,10 @@ export class World {
       walkPose(P, this.t + 0.3);
       if (F.moveT <= 0) { F.from = null; this.setPos(F); }
     } else { idlePose(P, this.t + 1); P.y = Math.abs(Math.sin(this.t * 3)) * 0.1; if (F.hop > 0) { F.hop -= dt; P.y = Math.sin((0.6 - F.hop) / 0.6 * Math.PI * 2) ** 2 * 0.6; P.armLz = P.armRz = 2; } if (!this.from) F.dir = F.x < this.hx ? 'e' : F.x > this.hx ? 'w' : F.y < this.hy ? 's' : 'n'; }
+    if (!F.from && !F.hop && (this.idleT || 0) > 12 && !this.dialog) { // the hero dozed off, so the buddy curls up for a nap too
+      P.y = 0; P.sy = 0.84 + Math.sin(this.t * 1.4 + 1) * 0.04; P.head = 0.35; P.armLz = P.armRz = 0.05; F.cr.emote('closed', 'smile', 0.1);
+      if (Math.random() < dt * 0.4) this.g.fx.text?.({ x: F.root.position.x + 0.4, y: 1.9, z: F.root.position.z }, 'z', 'zz');
+    }
     F.root.rotation.y = turnTo(F.root.rotation.y, YAW[F.dir], dt * 14);
     F.cr.update(dt);
   }
