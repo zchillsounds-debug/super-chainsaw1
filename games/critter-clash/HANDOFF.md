@@ -3,6 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 17:12 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
+- **Session 17h (2026-10-19 00:59–~02:30 UTC, session_01CpYgjF7gfPegFE28S2QMaU) did R489–R508 (see "Session 17h"); next round R509.**
 - **Session 17g (2026-10-18 22:18–22:45 UTC, then a worker stall, then 00:13–~01:05 UTC on 2026-10-19, session_01BjG1fjq9qbS3C8jFjtAuWC) did R468–R488 (see "Session 17g"); next round R489.**
 - **Session 17f (2026-10-18 21:12–~22:20 UTC, session_01BmfWF5X6EkDYpX9XpiKuXu) did R446–R467 (see "Session 17f"); next round R468.**
 - **Session 17e (2026-10-18 20:20–~21:20 UTC, session_01WXwKgexVpiRXyWsWsazxv3) did R429–R445 (see "Session 17e"); next round R446.**
@@ -918,6 +919,27 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **Final checks (~00:55 UTC, production build of the R487 tree):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town with no errors; advload 160 fresh loads, no errors.
 - **Next ideas:** the Today list is long now (14 day rows); maybe group it by town or fold done rows; a Town Map 🪁/💨 mark is not needed but a "today" filter on the map could help; Neon City by day is still dusky (R463 made that call); the Alpha shown big in its battle and Ripples/Kindlekit balance (battle side, the user's chat); a sound for the snowball splat; re-measure FPS on a phone; other early builders (`buildScope`, `buildBottle`) still exclude `this.dig`, which is null at that point now (harmless).
 
+## Session 17h (2026-10-19 00:59–~02:30 UTC, session_01CpYgjF7gfPegFE28S2QMaU): ice, rooms, twig race, Fishing Derby, photo album, moonflowers, balance, R489–R508
+- The local clone started on stale history; it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start (production build of 0779a50):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town with no errors.
+- Scratch helpers (recreate them, they live in the scratchpad): `build.sh` (vite build of the working tree to `<scratch>/dist` + `vite preview --port 5181`; run it as its own Bash command) and `push.sh "<msg>"` (git add src/tools/md, commit with the attribution lines, fetch + merge origin, push with retries).
+- **R489:** Journal 📅 Today lists what's still open first; the done rows fold into one `.jr-done` line of ticked icons per section; After dark shows a count. The geyser row's 'where' is now "Cinder Road steam vent".
+- **R490/R502:** frozen ice is painted as one sheet over all `i` tiles (and boulders sitting in it) when a map has 6+: deep-blue radial middle, long additive sheen bands, branching cracks, frozen bubbles (Champion's Peak lake, Frostpeak pond). The per-tile glint stripe is gone.
+- **R491:** `sfx.snowball(gold)` (throw whoosh + crunchy splat, a sparkle for golden snowmen) in Snowball Toss.
+- **R492/R508: landmark photo album.** `landmarkSnap(photo, pad, W, Hh)` keeps a 220×165 JPEG crop of any 📸 Photo taken by a landmark in its own localStorage key `critterclash-album` (`albumGet()` in world.js; NOT in the save, so the backup code doesn't carry it). A retake replaces it ("New album photo"). Journal → Records shows eight polaroids (`.jr-album`/`.al-card`; tap one for a big `.al-view`), old snaps without a photo say "snap it again for the album", unseen towns are 🔒.
+- **R493:** rooms (not arcade/lobby/forge/cabin): panelling with seams under a rail and striped wallpaper above on the back wall; the side/front cut walls wear a wooden `cap` tinted to the room (`wall2` is a shade darker too).
+- **R494:** Berry Centers (pink/cream) and the Pecan Lab (cool grey) get checked floor tiles with grout and a shine (only when the room uses the default wood palette).
+- **R495/R496/R505: Route 2 twig race.** On the bridge (`=`), facing the river: ask Twig race / Fish (if rod) / Never mind → `twigRace()` (pick 🍂 or 🌿) → two twigs drop upstream and drift along the river's middle (`updateTwigs`) to the last river row; the first win of the day pays +1 berry +10% XP (`save.adv.twig`, `countUp('twig')`). Today row, Records, tip, 🪵 Town Map mark, Wren's after-battle line (the old one about the bridge critter went stale).
+- **R497: balance.** Full 19-critter robin (1 rep, production build): everyone 42–61% except Pricklepuff 31% (also low in earlier runs). Pricklepuff hp 1090→1130, speed 6.5→6.6, power 1.10→1.13; a 2-rep focused robin then put it at 53%.
+- **R498/R503: weekly Fishing Derby.** `derbyOf(gauntletWeek())` (world.js) picks an everyday (non-rare) fish from pond/sea/lava/cold/dusk and a size (its range's middle). Landing it at that size pays +6 berries +25% XP once a week (`save.adv.derbyWk`, `countUp('derby')`); the first win gives the new gift hat **Angler's Bucket** (`angler`, kind `bucket`). Finn tells the week's target; Today row (weekly, not counted for the perfect day), Fish tab banner, 🎯 derby tag in the fish album (named before it's caught), Records.
+- **R499:** Pecan news `adv16` (derby, album, twig race); the tools' news lists include it.
+- **R500:** lava edges throw a breathing warm additive glow onto the ground in the evening and at night (`buildLavaGlow()`, one merged mesh).
+- **R501: perfect day.** `todayBadge()` (every 3 s in the world) pays +5 berries once a day when all ☀️ daily rows (6+, weekly ones aside) are ticked (`save.adv.perfect`, `countUp('perfect')`); Today footer hint, Records.
+- **R504/R505: Route 1 moonflowers** (`buildMoonflowers()`): after dark (no rain) three glowing flowers beside the path, seeded by day; face one + A → `moonflowerSniff()` +12% XP once a night (`save.adv.moon`). After dark row, Records, tip.
+- **R506:** hat picker / Hat Shop portraits zoom toward the head (`object-view-box`). Note: on short screens the whole modal is scaled 0.7, which is why images measure 42px.
+- **R507:** beach sand gets wind ripples and little ribbed seashells painted into the ground texture.
+- Regression: advload 160 fresh loads, no errors (after R500).
+- **Next ideas:** Cinder Road still has no after-dark activity (the lava glow is visual only); a 🎣 Town Map mark while the derby is open (Seashell's marks are crowded already); Neon City by day is still dusky (R463's call); the Alpha shown big in its battle (battle side, the user's chat); a 2-rep full robin to confirm balance (last full run: 42–61% bar Pricklepuff, now buffed); re-measure FPS on a phone; the album isn't in the save backup (by design; say so if the user asks).
+
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - (Fixed in R132.) A re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
@@ -975,6 +997,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
+   - Session 17h chained at R509 with the 48-hour prompt word for word.
    - Session 17g chained at R489 with the 48-hour prompt word for word.
    - Session 17f chained at R468 with the 48-hour prompt word for word.
    - Session 17e chained at R446 with the 48-hour prompt word for word.
