@@ -8,6 +8,7 @@ import { Critter, roleHat, shopHat, hatModel, SHOP_HATS } from './critters.js';
 import { CRITTERS, CUPS, withGear, skinned } from './data.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx, playMusic } from './audio.js';
+import { typeSpeed } from './settings.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap, CUP_ORDER } from './interiors.js';
 import { countUp, deliveryFor, deliveredLine, gauntletWeek } from './story.js';
@@ -4151,7 +4152,8 @@ export class World {
       sm.textContent = name; sm.style.display = name ? '' : 'none';
       full = line; let i = 0; p.textContent = '';
       clearInterval(timer);
-      timer = setInterval(() => { p.textContent = full.slice(0, ++i); if (i % 3 === 0) sfx.ui('move'); if (i >= full.length) clearInterval(timer); }, 18);
+      const [ms, step] = typeSpeed();
+      timer = setInterval(() => { i += step; p.textContent = full.slice(0, i); if (i % 3 === 0 || step > 1) sfx.ui('move'); if (i >= full.length) clearInterval(timer); }, ms);
     };
     const D = this.dialog = {
       next: () => {

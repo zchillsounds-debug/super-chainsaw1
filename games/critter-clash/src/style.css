@@ -422,6 +422,13 @@ body.portrait .cup { flex: none; width: 100%; }
   .set-list { gap: 2px; margin-bottom: 8px; }
   .set { min-height: 40px; font-size: 15px; }
 }
+@media (max-height: 460px) and (min-aspect-ratio: 3/2) { /* short landscape phones: settings in two columns, so the whole list fits without scrolling */
+  .settings .modal { width: min(96vw, 880px); max-width: none; }
+  .settings .set-list { grid-template-columns: 1fr 1fr; column-gap: 26px; }
+  .settings .set { font-size: 14px; gap: 8px; }
+  .settings .seg button { padding: 4px 8px; font-size: 13px; }
+  .settings .set input[type=range] { flex-basis: 150px; }
+}
 
 /* intro name card (anime lower-third) */
 .namecard { position: absolute; left: 0; right: 0; bottom: 12vh; pointer-events: none; display: flex; visibility: hidden; z-index: 3; }

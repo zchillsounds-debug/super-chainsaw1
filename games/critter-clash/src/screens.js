@@ -6,7 +6,7 @@ import { HAZARDS, SIGS } from './hazards.js';
 import { Camp } from './camp.js';
 import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { grown, stageFor, FORMS, GROW_LV } from './growth.js';
-import { openSettings } from './settings.js';
+import { openSettings, typeSpeed } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
@@ -391,11 +391,12 @@ export class Screens {
       ctrl.innerHTML = '';
       let i = 0;
       clearInterval(this._typeT);
+      const [ms, step] = typeSpeed();
       this._typeT = setInterval(() => {
-        text.textContent = msg.slice(0, ++i);
-        if (i % 3 === 0) sfx.ui('move');
+        i += step; text.textContent = msg.slice(0, i);
+        if (i % 3 === 0 || step > 1) sfx.ui('move');
         if (i >= msg.length) { clearInterval(this._typeT); buttons(); }
-      }, 22);
+      }, ms + 4);
       text.onclick = () => { if (i < msg.length) { i = msg.length - 1; } };
     };
     const next = (label, fn) => ctrl.appendChild(this.btn(label, 'primary', fn));
@@ -1484,12 +1485,13 @@ export class Screens {
         const last = k === lines.length - 1;
         ctrl.appendChild(this.btn(last ? "Let's go!" : 'Next', 'primary', () => { if (last) { d.remove(); done?.(); } else { k++; show(); } }));
       };
+      const [ms, step] = typeSpeed();
       this._profT = setInterval(() => {
         if (!d.isConnected) return clearInterval(this._profT);
-        text.textContent = msg.slice(0, ++i);
-        if (i % 3 === 0) sfx.ui('move');
+        i += step; text.textContent = msg.slice(0, i);
+        if (i % 3 === 0 || step > 1) sfx.ui('move');
         if (i >= msg.length) finish();
-      }, 22);
+      }, ms + 4);
       // tapping anywhere finishes the line, a second tap moves on (like the Next button)
       d.onclick = (e) => { if (e.target.closest('button')) return; if (text.textContent === msg && ctrl.firstElementChild) ctrl.firstElementChild.click(); else finish(); };
     };
