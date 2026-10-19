@@ -3007,8 +3007,9 @@ export class World {
     if (sk && r < 0.52) { // the season's visitor (about one fish in four while it's in season)
       const [name, lo, hi, em] = SEASON_FISH[sk], cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null }, S = L.season ||= {};
       const first = !S[name]; L.n++; S[name] = Math.max(S[name] || 0, cm); if (first) save.berries = (save.berries || 0) + 3;
+      const hat = first && Object.values(SEASON_FISH).every(([n]) => S[n]) && !(save.adv.hats ||= []).includes('koi'); if (hat) save.adv.hats.push('koi');
       persist(); sfx.jingle?.(first ? 3 : 1);
-      return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long!`, first ? `A seasonal visitor! It only swims here in ${sk}. Fisher Finn will want to hear about this! +3 🍓 (☰ → Journal → 🎣)` : `${name}s only visit in ${sk}. Splash! Back it goes, until next year.`]);
+      return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long!`, first ? `A seasonal visitor! It only swims here in ${sk}. Fisher Finn will want to hear about this! +3 🍓 (☰ → Journal → 🎣)` : `${name}s only visit in ${sk}. Splash! Back it goes, until next year.`, ...(hat ? ['That\'s all four seasonal fish! Fisher Finn sends over a hat with a koi on top: the Koi Bucket Hat! 🎣 (☰ → 🎩 Hats)'] : [])]);
     }
     if (r < 0.7) { // a fish! measured, and Fisher Finn keeps the record book
       const kinds = FISH[this.phase === 'night' && !this.M.lava && Math.random() < 0.3 ? 'night' : this.phase === 'evening' && !this.M.lava && Math.random() < 0.3 ? 'dusk' : this.M.arena === 'beach' ? 'sea' : this.M.lava ? 'lava' : this.M.snow || this.M.border === 'cloud' ? 'cold' : 'pond'];

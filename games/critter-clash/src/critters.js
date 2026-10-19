@@ -1165,6 +1165,7 @@ export const SHOP_HATS = [
   { id: 'shutter', name: 'Shutterbug Cap', kind: 'cap', col: 0x3a9a6a, band: 0xffd84d, price: 0, gift: true }, // a photo of every town's landmark
   { id: 'sunbloom', name: 'Sunbloom Hat', kind: 'sunflower', col: 0xffd23a, band: 0x8a5a2a, price: 0, gift: true }, // the first flower grown in Bloom Town's garden plot
   { id: 'angler', name: "Angler's Bucket", kind: 'bucket', col: 0x4a8a8a, band: 0xffd84d, price: 0, gift: true }, // Fisher Finn's weekly Fishing Derby, first win
+  { id: 'koi', name: 'Koi Bucket Hat', kind: 'koi', col: 0x4a7ab8, band: 0xffd84d, price: 0, gift: true, season: true }, // all four seasonal visitor fish (a year-long goal, so not counted towards the hat total)
   { id: 'eggshell', name: 'Eggshell Cap', kind: 'eggshell', col: 0xfff6e4, band: 0x8ad8a0, price: 0, gift: true }, // the first egg hatched at Nanny Nell's Daycare
   { id: 'laurel', name: 'Golden Laurel', kind: 'laurel', col: 0xe8b830, band: 0xfff2a0, price: 0, gift: true }, // the Peak Gauntlet's first clear
 ];
@@ -1176,6 +1177,14 @@ export function shopHat(cr, id) {
 export function hatModel(cr, kind, col, band) {
   const r = cr.def.body.headR, M = toon(col, { rim: 0.4 }), G = new THREE.Group();
   const add = (geo, m = M, ink = 0.02) => { const o = inked(geo, m, ink); G.add(o); return o; };
+  if (kind === 'koi') { // a bucket hat with a koi leaping off the top (all four seasonal fish)
+    add(new THREE.CylinderGeometry(r * 0.55, r * 0.72, r * 0.42, 16)).position.y = r * 0.18; add(new THREE.CylinderGeometry(r * 1.0, r * 1.0, r * 0.05, 18)); add(new THREE.CylinderGeometry(r * 0.73, r * 0.73, r * 0.1, 16), toon(band), 0).position.y = r * 0.04;
+    const F = new THREE.Group(); F.position.set(0, r * 0.62, 0); F.rotation.z = 0.6; F.scale.setScalar(1.45); G.add(F); const fm = toon(0xff4a2a, { rim: 0.6 }), wm = toon(0xfff8f0, { rim: 0.6 }); // a white koi with red-orange patches (reads on orange heroes too)
+    const body = inked(new THREE.SphereGeometry(r * 0.2, 12, 8), wm, 0.015); body.scale.set(1.6, 0.85, 0.7); F.add(body);
+    for (const [px, py, pz, sr] of [[0.08, 0.1, 0.04, 0.1], [-0.13, 0.08, -0.03, 0.08], [0.0, 0.02, 0.1, 0.07]]) { const sp = new THREE.Mesh(new THREE.SphereGeometry(r * sr, 8, 6), fm); sp.scale.set(1.3, 0.7, 0.9); sp.position.set(r * px, r * py, r * pz); F.add(sp); }
+    const tail = inked(new THREE.ConeGeometry(r * 0.13, r * 0.22, 8), fm, 0.015); tail.rotation.z = Math.PI / 2; tail.scale.set(1, 1, 0.35); tail.position.x = -r * 0.38; F.add(tail);
+    for (const sd of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(r * 0.03, 6, 5), toon(0x1a1a24)); e.position.set(r * 0.22, r * 0.05, sd * r * 0.12); F.add(e); }
+  }
   if (kind === 'bucket') { add(new THREE.CylinderGeometry(r * 0.55, r * 0.72, r * 0.42, 16)).position.y = r * 0.18; add(new THREE.CylinderGeometry(r * 1.0, r * 1.0, r * 0.05, 18)); }
   if (kind === 'wide') { add(new THREE.SphereGeometry(r * 0.62, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.7; add(new THREE.CylinderGeometry(r * 1.3, r * 1.3, r * 0.04, 22)); if (band) { add(new THREE.CylinderGeometry(r * 0.63, r * 0.63, r * 0.1, 16), toon(band), 0).position.y = r * 0.06; const f = add(new THREE.SphereGeometry(r * 0.13, 8, 6), toon(band), 0.012); f.position.set(r * 0.5, r * 0.15, r * 0.3); } }
   if (kind === 'cap' || kind === 'back') { add(new THREE.SphereGeometry(r * 0.72, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.6; const v = add(new THREE.CylinderGeometry(r * 0.5, r * 0.5, r * 0.04, 16, 1, false, -Math.PI / 2, Math.PI)); v.position.z = r * 0.45 * (kind === 'back' ? -1 : 1); v.rotation.y = kind === 'back' ? Math.PI : 0; }
