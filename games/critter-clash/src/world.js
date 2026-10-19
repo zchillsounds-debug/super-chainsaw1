@@ -3672,7 +3672,7 @@ export class World {
     x.fillStyle = '#fffaf0'; x.fillRect(0, 0, out.width, out.height);
     x.drawImage(src, pad, pad);
     x.font = `${Math.round(26 * sc)}px 'Lilita One', system-ui, sans-serif`; x.textBaseline = 'middle'; x.fillStyle = '#2a1630';
-    const when = { day: '☀️', evening: '🌇', night: '🌙' }[this.outPhase] + (this.rain ? '🌧️' : '');
+    const when = { day: '☀️', evening: '🌇', night: '🌙' }[this.outPhase] + (this.storm ? '⛈️' : this.rain ? '🌧️' : '');
     const label = `${H.def.name} · ${this.M.name} ${when}`, fy = out.height - foot / 2;
     if (x.measureText(label + ' CRITTER CLASH! ').width + pad * 3 < out.width) {
       x.fillText(label, pad * 1.2, fy);
