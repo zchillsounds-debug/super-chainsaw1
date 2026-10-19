@@ -344,11 +344,13 @@ export class World {
     this.outPhase = hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day'; // what the room windows show
     this.phase = M.indoor ? 'day' : this.outPhase;
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
-    this.rain = canRain(M) && (save.adv.rain ?? rainAt(key, new Date(), hr));
+    const showers = canRain(M) && (save.adv.rain ?? rainAt(key, new Date(), hr));
+    const twinkleEve = twinkleWeek() && !M.indoor && !M.snow && !M.lava && !M.city && M.arena !== 'beach' && this.outPhase !== 'day';
+    this.rain = showers && !twinkleEve; // on Twinkle Week evenings a shower comes down as snow instead
     this.storm = this.rain && !!(save.adv.storm ?? stormAt(new Date(), hr)); this.boltT = 2.5 + Math.random() * 3;
     this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
-    this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)); // now and then a proper snowfall up in the mountains (light flurries otherwise)
-    this.twinkleSnow = twinkleWeek() && !M.indoor && !M.snow && !M.lava && !M.city && M.arena !== 'beach' && !this.rain && this.outPhase !== 'day'; // Twinkle Week evenings: a gentle snowfall over the green towns
+    this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)) || twinkleEve && showers; // now and then a proper snowfall up in the mountains (light flurries otherwise)
+    this.twinkleSnow = twinkleEve; // Twinkle Week evenings: a gentle snowfall over the green towns
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
@@ -3566,7 +3568,7 @@ export class World {
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 22, y: 0.08, z: p.z + (Math.random() - 0.6) * 15, color: 0xffffff, size: 0.2, life: 0.5, shape: 'star', fadeIn: 0.2 });
     }
-    if (this.M.snow && Math.random() < dt * 16) {
+    if ((this.M.snow || this.twinkleSnow && this.snowing) && Math.random() < dt * 16) { // flakes that settle on the ground
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 26, y: 7, z: p.z + (Math.random() - 0.65) * 18, vy: -1.2, vx: 0.3 + (Math.random() - 0.5) * 0.4, color: 0xffffff, size: 0.16, life: 5, shape: 'glow', additive: false, floor: true });
     }
