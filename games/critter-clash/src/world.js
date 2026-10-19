@@ -4033,7 +4033,8 @@ export class World {
     const nm = CRITTERS.find((c) => c.id === W.id)?.name || 'Your little one';
     if (this.follower) { this.group.remove(this.follower.root); this.follower = null; }
     if (home) this.fade(() => this.load(this.key, this.hx, this.hy, this.dir)); else this.makeFollower();
-    this.S.toast(home ? `🏡 ${nm} runs back to its favourite rug. What a walk!` : `🏡 ${nm} is tired out and trots off home for a nap.`);
+    const found = (save.adv.steps || 0) - (W.until - 400) >= 100; if (found) { save.berries = (save.berries || 0) + 1; persist(); sfx.pickup?.(); } // a proper walk turns up a berry
+    this.S.toast((home ? `🏡 ${nm} runs back to its favourite rug. What a walk!` : `🏡 ${nm} is tired out and trots off home for a nap.`) + (found ? ' It found a berry on the way! +1 🍓' : ''));
   }
 
   // a Daycare egg (story.js daycare) hatches after 250 steps in the bag: the hatchling goes to live in Nanny Nell's nursery
