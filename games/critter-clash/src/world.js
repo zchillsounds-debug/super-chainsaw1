@@ -3262,6 +3262,7 @@ export class World {
     // wild critters you can see, roaming the tall grass
     this.wild = [];
     const W = this.M.wild;
+    if (W && this.phase === 'evening' && !ALPHA_TOLD.has('dusk')) { ALPHA_TOLD.add('dusk'); setTimeout(() => this.group && this.S.toast('✨ Dusk! Emberfly come out to glow over the tall grass in the golden evening.'), 1200); }
     if (W && this.phase === 'night' && !ALPHA_TOLD.has('owls')) { ALPHA_TOLD.add('owls'); setTimeout(() => this.group && this.S.toast('🦉 Night owls are out! Hootsy and Squeakwing roam the tall grass after dark.'), 1200); }
     if (W?.roam) {
       const grass = [];
@@ -3288,12 +3289,12 @@ export class World {
     }
   }
 
-  // the map's wild critters; after dark the night owls (Hootsy, Squeakwing) come out too, at the map's levels, twice as often
+  // the map's wild critters; after dark the night owls (Hootsy, Squeakwing) come out too, at the map's levels, twice as often; in the golden evening, Emberfly glows over the grass
   wildList() {
     const L = this.M.wild?.list || [];
-    if (this.phase !== 'night' || !L.length) return L;
-    const [, lo, hi] = L[0], owls = ['hootsy', 'squeakwing'].flatMap((id) => [[id, lo, hi], [id, lo, hi]]);
-    return [...L.filter(([i]) => !owls.some(([o]) => o === i)), ...owls];
+    if (!L.length || this.phase === 'day') return L;
+    const [, lo, hi] = L[0], extra = (this.phase === 'night' ? ['hootsy', 'squeakwing'] : ['emberfly']).flatMap((id) => [[id, lo, hi], [id, lo, hi]]);
+    return [...L.filter(([i]) => !extra.some(([o]) => o === i)), ...extra];
   }
 
   spawnWild(x, y, fixId, fixLv) {
