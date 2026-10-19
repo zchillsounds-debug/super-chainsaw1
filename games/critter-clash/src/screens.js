@@ -10,7 +10,7 @@ import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
-import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, LANDMARKS } from './world.js';
+import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, LANDMARKS, albumGet } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -1123,8 +1123,13 @@ export class Screens {
         + (unasked ? `<li class="jr-more">❗ ${unasked} more townsfolk need a hand. Look for a ❗ over their heads!</li>` : rows.length ? '<li class="jr-more">🌟 You\'ve asked everyone in Clashara. What a good neighbour!</li>' : '');
     } else if (tab === 'rec') { // everything there is to find and beat, with how far along you are
       const R = this.records(), nx = [25, 50, 75, 100].find((p) => p > (save.adv.expl || 0));
-      const left = LANDMARKS.filter((l) => !(save.adv.snaps || []).includes(l.id) && save.adv.seen?.[l.map]);
-      body = R.body + (left.length ? `<li class="jr-more">📸 Landmarks to snap: ${left.map((l) => `${l.name} (${MAPS[l.map].name})`).join(', ')}</li>` : '') + (nx ? `<li class="jr-more">🎁 Next reward at ${nx}% explored${nx === 100 ? ': something golden!' : '.'}</li>` : '<li class="jr-more">🌟 Every corner explored. Visit your statue in Sprout Village!</li>');
+      // the photo album: one polaroid per landmark (its photo, a 'snapped' card for photos taken before the album, or where to find it)
+      const alb = albumGet(), snaps = save.adv.snaps || [];
+      const card = (l) => alb[l.id] ? `<button class="al-card got" data-id="${l.id}"><img src="${alb[l.id]}" alt=""><b>${l.name}</b></button>`
+        : snaps.includes(l.id) ? `<button class="al-card old"><i>📸</i><b>${l.name}</b><small>snap it again for the album</small></button>`
+          : `<button class="al-card"><i>${save.adv.seen?.[l.map] ? '❔' : '🔒'}</i><b>${save.adv.seen?.[l.map] ? l.name : '???'}</b><small>${save.adv.seen?.[l.map] ? MAPS[l.map].name : 'somewhere new'}</small></button>`;
+      body = R.body + `<li class="jr-head">📸 Photo album <small>${snaps.length}/${LANDMARKS.length}</small></li><li class="jr-album">${LANDMARKS.map(card).join('')}</li>`
+        + (snaps.length < LANDMARKS.length ? '<li class="jr-more">Stand by a landmark and take a ☰ → 📸 Photo to add it.</li>' : '') + (nx ? `<li class="jr-more">🎁 Next reward at ${nx}% explored${nx === 100 ? ': something golden!' : '.'}</li>` : '<li class="jr-more">🌟 Every corner explored. Visit your statue in Sprout Village!</li>');
       this.exploreCheck(R.pc);
     } else if (tab === 'today') { // every daily thing in one list: done today, or where to go for it
       const { rows, after, night } = this.todayList();
@@ -1156,6 +1161,10 @@ export class Screens {
       <ul class="jr-list">${body || '<li class="jr-more">Nobody has asked for help yet. Townsfolk with a ❗ over their heads have a favour to ask!</li>'}</ul>
       <div class="res-btns"></div></div>`;
     const close = () => { d.remove(); this.game.modalClose = null; };
+    d.querySelectorAll('.al-card.got').forEach((c) => c.addEventListener('click', () => { // a big look at an album photo; tap anywhere to put it back
+      sfx.ui('ok'); const v = document.createElement('div'); v.className = 'al-view'; v.innerHTML = `<figure><img src="${albumGet()[c.dataset.id]}" alt=""><figcaption>${c.querySelector('b').textContent}</figcaption></figure>`;
+      v.addEventListener('click', () => { sfx.ui('back'); v.remove(); }); d.appendChild(v);
+    }));
     d.querySelectorAll('.jr-tabs button').forEach((t) => t.addEventListener('click', () => { if (t.dataset.t === tab) return; sfx.ui('ok'); close(); this.worldJournal(t.dataset.t); }));
     d.querySelector('.res-btns').appendChild(this.btn('Close', 'ghost', () => { close(); this.worldMenu(); }));
     this.game.modalClose = close;

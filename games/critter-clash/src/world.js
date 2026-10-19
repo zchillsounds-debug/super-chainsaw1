@@ -97,6 +97,10 @@ export const LANDMARKS = [
   { id: 'fountain', map: 'cloudtop', at: [8, 9], name: 'the wishing fountain' },
   { id: 'pond', map: 'frostpeak', at: [4, 8], name: 'the frozen pond' },
 ];
+// the photo album: a small JPEG of the latest photo taken at each landmark (its own storage key, so the save and its backup code stay small)
+const ALBUM_KEY = 'critterclash-album';
+export function albumGet() { try { return JSON.parse(localStorage.getItem(ALBUM_KEY)) || {}; } catch (e) { return {}; } }
+function albumPut(id, url) { const a = albumGet(); a[id] = url; try { localStorage.setItem(ALBUM_KEY, JSON.stringify(a)); } catch (e) { /* full or blocked: the album just stays as it was */ } }
 export const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, ball: { map: 'route1', x: 7, y: 9 }, phones: { map: 'ember', x: 23, y: 1 }, blink: { map: 'route2', x: 12, y: 10 } };
 
 const STEP = 0.23; // seconds per tile
@@ -3442,14 +3446,21 @@ export class World {
     sfx.shutter?.();
     const fl = document.createElement('div'); fl.className = 'ph-flash go'; g.ui.appendChild(fl); setTimeout(() => fl.remove(), 600);
     PhotoMode.prototype.preview.call({ game: g }, out.toDataURL('image/png'), out); // the photo mode's Save/Share card
-    this.landmarkSnap();
+    this.landmarkSnap(out, pad, W, Hh);
   }
 
   // a photo taken near a town landmark goes in the Journal (all eight: the Shutterbug Cap)
-  landmarkSnap() {
+  landmarkSnap(photo, pad, W, Hh) {
     const A = save.adv, snaps = A.snaps ||= [];
-    const L = LANDMARKS.find((l) => l.map === this.key && !snaps.includes(l.id) && (() => { const d = l.door && this.doors.find((q) => q.b.id === l.door), [x, y] = d ? [d.x, d.y + 1] : l.at; return Math.abs(x - this.hx) + Math.abs(y - this.hy) <= 4; })());
+    const L = LANDMARKS.find((l) => l.map === this.key && (() => { const d = l.door && this.doors.find((q) => q.b.id === l.door), [x, y] = d ? [d.x, d.y + 1] : l.at; return Math.abs(x - this.hx) + Math.abs(y - this.hy) <= 4; })());
     if (!L) return;
+    if (photo) { // the album keeps a 4:3 crop from the middle of the shot (a newer photo of the same landmark replaces it)
+      const tw = 220, th = 165, c = document.createElement('canvas'); c.width = tw; c.height = th;
+      const sw = Math.min(W, Hh * 4 / 3), sh = sw * 3 / 4;
+      c.getContext('2d').drawImage(photo, pad + (W - sw) / 2, pad + (Hh - sh) / 2, sw, sh, 0, 0, tw, th);
+      albumPut(L.id, c.toDataURL('image/jpeg', 0.72));
+    }
+    if (snaps.includes(L.id)) return setTimeout(() => this.S.toast?.(`📸 New album photo: ${L.name}!`), 700);
     snaps.push(L.id);
     const all = snaps.length >= LANDMARKS.length, hat = all && !(A.hats ||= []).includes('shutter');
     if (hat) { A.hats.push('shutter'); save.berries = (save.berries || 0) + 15; }
