@@ -32,6 +32,8 @@ const RAIN = {
   day: { sun: 0xb8c4dc, sunI: 0.85, sky: 0xaab8d0, gnd: 0x3a4a50, hemiI: 0.9, fog: 0x9aa8b8 },
   evening: { sun: 0xd0a898, sunI: 0.9, sky: 0xb0a4b8, gnd: 0x3a3a48, hemiI: 0.85, fog: 0x8a8898 },
 };
+// the beach towns: a rosier sunset (the plain golden hour turned the warm sand, and everything on it, one orange)
+const BEACH = { evening: { sun: 0xffb8a8, sunI: 2.2, sky: 0xffcce0, gnd: 0x6a5a90, hemiI: 1.12, fog: 0xffc4cc } };
 // the snowy maps keep their own crisp daylight, but follow the clock after that: pink evenings, moonlit blue nights (with an aurora)
 const SNOWY = {
   evening: { sun: 0xffb8c8, sunI: 2.0, sky: 0xffd6e4, gnd: 0x7a6aa8, hemiI: 1.1, fog: 0xf0d4e4 },
@@ -426,7 +428,7 @@ export class World {
     playMusic(tune, calm && (this.outPhase === 'night' || this.outPhase === 'evening' && 'evening')); // evening: a mellower take; night: a slow lullaby (Neon City parties on)
     const B = this.base, lamp = M.indoor && this.outPhase !== 'day' && M.indoor !== 'arcade' && { sun: 0xffd2a0, sunI: B.sunI * (this.outPhase === 'night' ? 0.72 : 0.85), sky: 0xffe2c4, gnd: B.gnd, hemiI: B.hemiI * 0.85, fog: 0xcfeeff }; // lamplight indoors after dark
     this.morning = canRain(M) && !this.rain && this.phase === 'day' && hr >= 6 && hr < 9; // misty mornings on the grassy outdoor maps
-    this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.morning && PHASES.morning) || PHASES[this.phase]);
+    this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.morning && PHASES.morning) || (M.arena === 'beach' && BEACH[this.phase]) || PHASES[this.phase]);
     this.buildMorning();
     this.buildRainbow();
     this.banner(M.name + (this.storm ? ' ⛈️' : this.rain ? ' 🌧️' : this.snowing || this.twinkleSnow ? ' 🌨️' : ''));
