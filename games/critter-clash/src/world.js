@@ -3724,7 +3724,8 @@ export class World {
   updateCamera(dt) {
     const cam = this.g.camera, p = this.hero.root.position;
     const port = cam.aspect < 1;
-    const H = port ? 21 : 17, D = port ? 10 : 11.5;
+    // portrait outdoors stands further back with a narrower lens (same ground width in view): a wide 80° lens blew the treetops under the camera up into big flat discs
+    const far = port && !this.M.indoor, H = far ? 28 : port ? 21 : 17, D = far ? 19.5 : port ? 10 : 11.5;
     const want = new THREE.Vector3(p.x, H, p.z + D);
     // rooms are small: hold the whole room in view (portrait backs off far enough to fit the room's width)
     const vw = Math.min(this.W, port ? (this.M.indoor === 'arcade' ? 10 : 5.6) : 7.5); // the arcade backs off a little more, so its cabinets show from the door // wide rooms: portrait shows 5.6 tiles (so the room fills more of a tall screen) and pans with the hero
@@ -3735,9 +3736,10 @@ export class World {
     if (!this.camAt) this.camAt = want.clone(); else this.camAt.lerp(want, 1 - Math.exp(-dt * 8));
     cam.position.copy(this.camAt);
     if (this.M.indoor && port) cam.lookAt(this.camAt.x, 0.4, this.H * TILE / 2 + 1.2);
-    else cam.lookAt(this.camAt.x, 0.4, this.camAt.z - D + (port ? 0.6 : 0.3));
+    else cam.lookAt(this.camAt.x, 0.4, this.camAt.z - D + (far ? 1.6 : port ? 0.6 : 0.3));
     // portrait keeps about the same width of world in view as landscape shows in height
-    cam.fov = port ? Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) : 40; cam.updateProjectionMatrix();
+    cam.fov = far ? Math.min(56, 2 * Math.atan(Math.tan(0.38) / cam.aspect * 23.3 / 34.1) * 180 / Math.PI) : port ? Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) : 40; cam.updateProjectionMatrix();
+    const fog = this.g.scene.fog; if (fog?.isFog && this.hidden?.length) { fog.near = far ? 50 : 38; fog.far = far ? 92 : 80; } // the fog keeps its distance from the hero
     // the sun's shadow box follows the hero
     const sun = this.g.arena.sun;
     if (this.phase === 'evening' && !this.M.indoor) sun.position.set(p.x - 17, 15, p.z + 7); // a low evening sun: long shadows
