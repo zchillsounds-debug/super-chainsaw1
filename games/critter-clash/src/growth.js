@@ -607,9 +607,10 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
   if (P.boltmane) {
     const s = P.boltmane, bm = new THREE.MeshBasicMaterial({ color: C.bolt ?? 0x7af0ff });
     for (let k = 0; k < 7; k++) {
-      const a = (k - 3) * 0.42, b = new THREE.Mesh(boltGeo(), bm);
+      const a = (k - 3) * 0.5, b = new THREE.Mesh(boltGeo(), bm);
       const g = new THREE.Group();
-      g.position.set(Math.sin(a) * headR * 0.7, headR * (0.35 - Math.abs(k - 3) * 0.1), -headR * 0.72);
+      // the outer bolts flare out past the cheeks, so the mane reads from the front (portraits) as well as the side
+      g.position.set(Math.sin(a) * headR * 0.92, headR * (0.35 - Math.abs(k - 3) * 0.1), -headR * (0.72 - Math.abs(k - 3) * 0.1));
       g.rotation.set(-0.55 - Math.abs(k - 3) * 0.12, 0, -a * 0.9);
       b.rotation.y = Math.PI / 2; // zigzag face side-on, so it reads from the sides and back
       b.scale.setScalar(s * (1.0 - Math.abs(k - 3) * 0.1));

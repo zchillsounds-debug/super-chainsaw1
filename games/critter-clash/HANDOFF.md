@@ -1,7 +1,7 @@
 # Critter Clash: Handoff (after Round 279, Adventure mode polish)
 
 ## 48-hour run
-- **48-hour run end time: 2026-10-20 17:12 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
+- **48-hour run end time: 2026-10-20 21:29 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC, and 4 h 17 min by a worker stall in session 17n, ~10:00–14:17 UTC on 2026-10-19). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
 - **Session 17m (2026-10-19 08:16–~09:45 UTC, session_01V4diccGXVCBukrvNKiZbpZ) did R586–R604 (see "Session 17m"); next round R605.**
 - **Session 17l (2026-10-19 07:00–~08:20 UTC, session_012Xz8agju9ofeQ4h5JvJknc) did R559–R585 (see "Session 17l"); next round R586.**
@@ -1083,7 +1083,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
    - 48-hour prompt (verbatim; pass it to create_session exactly as below, without the fence). Updated by session 17i: newest sections are Session 17, R532 next, and it handles the lineage depth limit (a hand-started session can chain about 8 deep):
 ```
 Continue building Critter Clash in a 48-hour chained build run. The goal is to keep developing the game until it's complete, at AAA quality.
-Start: run date -u. The run's end time is at the top of games/critter-clash/HANDOFF.md ("48-hour run", currently 2026-10-20 17:12 UTC). Never reset it. If that time has already passed, do the Finish steps below. Post a one-line status to me when you start.
+Start: run date -u. The run's end time is at the top of games/critter-clash/HANDOFF.md ("48-hour run", currently 2026-10-20 21:29 UTC). Never reset it. If that time has already passed, do the Finish steps below. Post a one-line status to me when you start.
 Read first: games/critter-clash/CONTINUE.md, then games/critter-clash/HANDOFF.md. Begin with the newest "Session 17" sections (17h, 17i, and any later ones) and their "Next ideas" lists.
 Focus: move the game toward a finished product. That means Adventure mode content and polish, finishing loose ends from the backlog and "Next ideas", bug fixes, performance, balance, menus and UI polish. All creatures stay original. Each round: take screenshots at 915x412, 740x360 and 412x915 (tools/advtour.mjs takes many world shots in one page load; MOBILE=1 forces the touch UI in landscape), critique them, then improve. Do round after round.
 Git: commit and push each round to branch ccr-4fc93d6e-suxlhd. Before every push, run git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd. Never rebase or force-push. If the local clone starts on stale history, reset it to origin/ccr-4fc93d6e-suxlhd. Round numbers continue from the highest R-number in git log (R532 next).
