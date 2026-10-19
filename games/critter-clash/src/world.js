@@ -507,6 +507,13 @@ export class World {
           c.fillStyle = 'rgba(255,255,255,0.9)'; c.beginPath(); c.arc(bx - r * 0.3, by - r * 0.3, r * 0.35, 0, Math.PI * 2); c.fill();
         }
         c.restore();
+        if (this.M.snow) for (const [x, y] of iceT) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { // soft snow drifts piled along the ice's edge
+          if ('iRT'.includes(this.tile(x + dx, y + dy))) continue;
+          for (let k = 0; k < 3; k++) {
+            const t0 = (k + 0.2 + rand() * 0.6) / 3, ex = (x + 0.5 + dx * 0.5) * P + (dy ? (t0 - 0.5) * P : 0), ey = (y + 0.5 + dy * 0.5) * P + (dx ? (t0 - 0.5) * P : 0);
+            c.fillStyle = `rgba(255,255,255,${0.5 + rand() * 0.3})`; c.beginPath(); c.ellipse(ex, ey, dy ? 9 + rand() * 4 : 5 + rand() * 2, dx ? 9 + rand() * 4 : 5 + rand() * 2, 0, 0, Math.PI * 2); c.fill();
+          }
+        }
       }
       // a doormat on the way out
       if (this.M.exit) { const dx = this.M.enter.x * P, dy = (H - 1) * P; c.fillStyle = '#8a3a2a'; c.beginPath(); c.roundRect(dx + 3, dy + 4, P - 6, P - 8, 4); c.fill(); c.fillStyle = '#ffd84d'; c.font = 'bold 14px sans-serif'; c.textAlign = 'center'; c.fillText('▼', dx + P / 2, dy + P / 2 + 5); }
