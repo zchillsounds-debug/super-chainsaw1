@@ -267,7 +267,7 @@ export class World {
       A.fill.intensity = 0.35;
     } else {
       for (const o of this.hidden || []) o.visible = true;
-      this.hidden = [];
+      this.hidden = []; this.bolt = null;
       this.mood(null);
       if (this.fogWas) this.g.scene.fog = this.fogWas;
       const sun = A.sun;
@@ -321,6 +321,7 @@ export class World {
   load(key, x, y, dir = 's') {
     const wet = this.rain && !this.M?.indoor; // came in out of the rain: shake off once inside
     this.unload(); this.soaking = false; this.sitting = false;
+    if (this.bolt) { this.bolt.t = 9; this.updateBolt(0); } // a flash cut short by a door: the next map's mood starts from the real light
     this.doors = []; this.itemSpots = []; this.dig = null; // the night props are placed before the buildings, items and dig spot: never read the last map's (or, on a fresh World, missing) ones
     this.g.fx.clear?.(); // last map's smoke, rain and sparkles don't follow you indoors
     const M = this.M = getMap(key) || getMap('village');
@@ -1906,8 +1907,18 @@ export class World {
   lightning() {
     const scr = this.S.root.querySelector('.world-screen'); if (!scr || this.dialog) return;
     const el = document.createElement('div'); el.className = 'wd-bolt'; scr.appendChild(el); setTimeout(() => el.remove(), 900);
+    const A = this.g.arena; if (!this.bolt) this.bolt = { t: 0, hemi: A.hemi.intensity, sun: A.sun.intensity }; else this.bolt.t = 0; // the world itself lights up too (see updateBolt)
     setTimeout(() => this.group && sfx.rumble?.(), 400 + Math.random() * 1100);
     const day = new Date().toISOString().slice(0, 10); if (save.adv.stormDay !== day) { save.adv.stormDay = day; countUp('storm'); persist(); } // Records: thunderstorms weathered (one a day)
+  }
+
+  // the bolt's light on the 3D scene: two quick white-blue flashes on the sky light and sun, then back to the storm's gloom
+  updateBolt(dt) {
+    const B = this.bolt; if (!B) return;
+    const A = this.g.arena, t = (B.t += dt);
+    const f = Math.max(0, 1 - t / 0.12) + Math.max(0, 1 - Math.abs(t - 0.24) / 0.1) * 0.75 + Math.max(0, 1 - Math.abs(t - 0.45) / 0.25) * 0.25;
+    A.hemi.intensity = B.hemi + f * 2.6; A.sun.intensity = B.sun + f * 1.8;
+    if (t > 0.75) { A.hemi.intensity = B.hemi; A.sun.intensity = B.sun; this.bolt = null; }
   }
 
   // misty mornings: big soft banks of mist drift slowly across the map, thinning as they go
@@ -3428,6 +3439,7 @@ export class World {
     if (this.rain) {
       const p = this.hero.root.position;
       if (this.storm && (this.boltT -= dt) <= 0) { this.boltT = 7 + Math.random() * 10; this.lightning(); }
+      this.updateBolt(dt);
       for (let n = Math.floor(dt * (this.storm ? 230 : 150) + Math.random()); n > 0; n--) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 30, y: 6 + Math.random() * 3, z: p.z + (Math.random() - 0.6) * 20, vy: -16, vx: -1.5, color: 0xe8f0ff, alpha: 0.75, size: 1.4, stretch: 0.05, rot: Math.PI / 2 + 0.08, life: 0.5, shape: 'spark', additive: false });
       if (Math.random() < dt * 22) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 24, y: 0.08, z: p.z + (Math.random() - 0.6) * 16, color: 0xe8f2ff, alpha: 0.6, size: 0.35, life: 0.35, shape: 'ring', additive: false, grow: 1.6 });
     }
