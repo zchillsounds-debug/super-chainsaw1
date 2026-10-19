@@ -286,6 +286,7 @@ export class Screens {
       setTimeout(() => this.mode === 'title' && this.profTalk([
         "{name}, news from Nanny Nell! Three days after they hatch, the Daycare babies are all grown up, and they want to live with YOU. Look for them at home in Sprout Village!",
         "They're always finding little presents in the garden. And have you noticed? After dark, every town hums its tune a little softer, like a lullaby.",
+        "Night owls are out after dark, too: Hootsy and Squeakwing roam the tall grass on every route. Bring a lantern!",
       ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
