@@ -3,7 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 17:12 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
-- **Session 17i (2026-10-19 02:20–~03:55 UTC, session_01GCkeeKc9vfEuRH9UvU8ayy) did R514–R531 (see "Session 17i"); next round R532.**
+- **Session 17i (2026-10-19 02:20–~03:55 UTC, session_01GCkeeKc9vfEuRH9UvU8ayy) did R514–R531 (see "Session 17i"); next round R532. It could not chain (session lineage depth limit reached): **the user must start the next session by hand** with the 48-hour prompt in "Chaining".**
 - **Session 17h (2026-10-19 00:59–~02:30 UTC, session_01CpYgjF7gfPegFE28S2QMaU) did R489–R513 (see "Session 17h"); next round R514.**
 - **Session 17g (2026-10-18 22:18–22:45 UTC, then a worker stall, then 00:13–~01:05 UTC on 2026-10-19, session_01BjG1fjq9qbS3C8jFjtAuWC) did R468–R488 (see "Session 17g"); next round R489.**
 - **Session 17f (2026-10-18 21:12–~22:20 UTC, session_01BmfWF5X6EkDYpX9XpiKuXu) did R446–R467 (see "Session 17f"); next round R468.**
@@ -1021,7 +1021,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
-   - Session 17i chained at R532 with the 48-hour prompt word for word.
+   - Session 17i could NOT chain: create_session refused ('lineage depth 8, limit 8'; no setting changes it). The user has to start the next session by hand with the 48-hour prompt above. The next session it starts is a fresh lineage and can chain again.
    - Session 17h chained at R514 with the 48-hour prompt word for word.
    - Session 17g chained at R489 with the 48-hour prompt word for word.
    - Session 17f chained at R468 with the 48-hour prompt word for word.
