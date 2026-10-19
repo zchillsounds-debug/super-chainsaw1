@@ -428,7 +428,11 @@ export class World {
           const o = (dx, dy) => this.tile(x + dx, y + dy) !== '"', rr = 10;
           c.fillStyle = C.tall; c.beginPath(); c.roundRect(x * P, y * P, P, P, [o(-1, 0) && o(0, -1) ? rr : 0, o(1, 0) && o(0, -1) ? rr : 0, o(1, 0) && o(0, 1) ? rr : 0, o(-1, 0) && o(0, 1) ? rr : 0]); c.fill();
         }
-        if (this.M.indoor) { // wooden floorboards, staggered seams
+        const tiled = { center: ['#fff4f6', '#ffd8e4'], lab: ['#f2f6fa', '#d8e2ee'] }[this.M.indoor];
+        if (tiled && C.a === '#d8a86a') { // Berry Centers and the lab: glossy checked floor tiles with grout lines and a shine
+          for (let k = 0; k < 4; k++) { const qx = x * P + (k & 1) * P / 2, qy = y * P + (k >> 1) * P / 2; c.fillStyle = tiled[(x * 2 + (k & 1) + y * 2 + (k >> 1)) % 2]; c.fillRect(qx, qy, P / 2, P / 2); c.fillStyle = 'rgba(255,255,255,0.5)'; c.fillRect(qx + 3, qy + 3, P / 2 - 10, 2.5); }
+          c.strokeStyle = 'rgba(120,90,110,0.25)'; c.lineWidth = 1.5; c.strokeRect(x * P + 0.75, y * P + 0.75, P / 2 - 1.5, P / 2 - 1.5); c.strokeRect(x * P + P / 2 + 0.75, y * P + 0.75, P / 2 - 1.5, P / 2 - 1.5); c.strokeRect(x * P + 0.75, y * P + P / 2 + 0.75, P / 2 - 1.5, P / 2 - 1.5); c.strokeRect(x * P + P / 2 + 0.75, y * P + P / 2 + 0.75, P / 2 - 1.5, P / 2 - 1.5);
+        } else if (this.M.indoor) { // wooden floorboards, staggered seams
           c.strokeStyle = 'rgba(90,50,20,0.3)'; c.lineWidth = 1.5;
           for (let k = 0; k < 2; k++) { const sy = y * P + k * P / 2; c.beginPath(); c.moveTo(x * P, sy); c.lineTo(x * P + P, sy); c.stroke(); const sx = x * P + ((y * 2 + k) % 3) * P / 3; c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx, sy + P / 2); c.stroke(); }
         }
