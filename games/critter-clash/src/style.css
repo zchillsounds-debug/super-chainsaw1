@@ -1178,3 +1178,6 @@ body:has(.snow-wrap) .wd-a, body:has(.snow-wrap) .joybase { visibility: hidden; 
 }
 /* the Journal list fades out at its foot, so a list that scrolls says so instead of slicing a row in half */
 .jr-list { padding-bottom: 14px; -webkit-mask-image: linear-gradient(#000 calc(100% - 22px), transparent); mask-image: linear-gradient(#000 calc(100% - 22px), transparent); }
+/* the A button says what it would do: Talk, Read, Enter, Fish... */
+.wd-a.hint::after { content: attr(data-hint); position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); background: #fff; color: var(--ink); font-family: var(--display); font-size: 15px; line-height: 1; padding: 5px 10px 6px; border-radius: 999px; box-shadow: 0 0 0 3px var(--ink), 0 3px 0 3px rgba(0,0,0,.25); white-space: nowrap; pointer-events: none; animation: aHintPop .18s ease-out; }
+@keyframes aHintPop { from { transform: translateX(-50%) scale(.6); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }

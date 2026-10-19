@@ -3343,6 +3343,7 @@ export class World {
         else if (act) this.interact();
       }
     }
+    if ((this.hintT = (this.hintT || 0) - dt) <= 0) { this.hintT = 0.2; this.showHint(); }
     // hero position and walk cycle
     const H = this.hero, P = H.pose;
     H.resetPose();
@@ -3780,7 +3781,32 @@ export class World {
     if (door && this.dir === 'n') return this.S.worldDoor(door.b, this);
   }
 
-  // Trader Tock visits one town a day (once the first cup is won), standing beside a path
+  // what A would do right now, shown as a little label on the touch A button (Talk, Read, Enter, Fish...)
+  aHint() {
+    if (this.dialog || this.busy || this.moveT > 0 || this.fishing) return '';
+    const [fx, fy] = this.front(), at = (o) => o && o.x === fx && o.y === fy;
+    let a = this.occupied(fx, fy, 'hero');
+    if (!a && this.tile(fx, fy) === 'K') { const [dx, dy] = DIRS[this.dir]; a = this.occupied(fx + dx, fy + dy, 'hero'); }
+    if (a?.n) return 'Talk';
+    if (a?.wild) return 'Poke';
+    if (this.follower && at(this.follower) && !this.follower.from) return 'Pet';
+    if (at(this.bush)) return 'Shake';
+    if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
+    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
+    if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod && !this.M.lava) return 'Fish'; }
+    const sign = (this.M.signs || []).find((g) => g.x === fx && g.y === fy);
+    if (sign) return sign.act ? 'Use' : sign.hide ? 'Look' : 'Read';
+    if (this.dir === 'n' && this.doors.some(at)) return 'Enter';
+    return '';
+  }
+
+  showHint() {
+    const el = this.aBtn?.isConnected ? this.aBtn : (this.aBtn = this.S.root.querySelector('.wd-a'));
+    if (!el) return;
+    const h = this.aHint();
+    if (el.dataset.hint !== h) { el.dataset.hint = h; el.classList.toggle('hint', !!h); }
+  }
+
   // the Critter Daycare in every Berry Center: Nanny Nell by the sofa, and the critter in her care romping by the rug
   daycareSpot() {
     if (this.M.indoor !== 'center') return [];
@@ -3789,6 +3815,7 @@ export class World {
     return out;
   }
 
+  // Trader Tock visits one town a day (once the first cup is won), standing beside a path
   traderSpot() {
     const day = new Date().toISOString().slice(0, 10);
     if (traderTown() !== this.key) return [];
