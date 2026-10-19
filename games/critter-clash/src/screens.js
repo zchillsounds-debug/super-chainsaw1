@@ -278,6 +278,12 @@ export class Screens {
         "Carry one with you and it hatches as you walk. The babies grow up in her nursery, and the first one comes with a little keepsake. Your Journal's Today page tells you when an egg is waiting!",
         "One more thing: some showers have turned into THUNDERSTORMS. Spark critters love them! Keep your umbrella handy, and listen for the thunder.",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv18') && !save.news.includes('adv19')) {
+      save.news.push('adv19'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, news from Nanny Nell! Three days after they hatch, the Daycare babies are all grown up, and they want to live with YOU. Look for them at home in Sprout Village!",
+        "They're always finding little presents in the garden. And have you noticed? After dark, every town hums its tune a little softer, like a lullaby.",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);

@@ -11,7 +11,7 @@ const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console
 await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?q=high' + (w < h || process.env.MOBILE ? '&mobile' : ''));
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 await pg.evaluate(() => {
-  Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6', 'adv7', 'adv8', 'adv9', 'adv10', 'adv11', 'adv12', 'adv13', 'adv14', 'adv15', 'adv16', 'adv17', 'adv18'] });
+  Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6', 'adv7', 'adv8', 'adv9', 'adv10', 'adv11', 'adv12', 'adv13', 'adv14', 'adv15', 'adv16', 'adv17', 'adv18', 'adv19'] });
   for (const id of ['cindermunch', 'squeakwing', 'rolladillo']) if (!__save.unlocked.includes(id)) __save.unlocked.push(id);
   const flags = {}; for (const k of 'intro quest rival1 trial_strength cup_sprout cup_thunder woods'.split(' ')) flags[k] = true;
   __save.adv = { hero: 'cindermunch', map: 'village', x: 9, y: 9, dir: 's', flags, spawn: { map: 'village', x: 4, y: 6 } };
