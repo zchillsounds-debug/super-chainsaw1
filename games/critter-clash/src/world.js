@@ -137,6 +137,7 @@ export function halloween(d = new Date()) { if (save.adv?.halloween != null) ret
 export function isAutumn(d = new Date()) { return save.adv?.autumn ?? (d.getMonth() === 9 || d.getMonth() === 10 && d.getDate() <= 15); } // October to mid-November; save.adv.autumn forces it
 export function isSpring(d = new Date()) { if (save.adv?.spring != null) return !!save.adv.spring; const m = d.getMonth(), day = d.getDate(); return (m === 2 && day >= 20) || m === 3; } // blossom time: 20 March to the end of April (save.adv.spring forces it)
 export function isSummer(d = new Date()) { if (save.adv?.summer != null) return !!save.adv.summer; const m = d.getMonth(), day = d.getDate(); return (m === 5 && day >= 21) || m === 6 || m === 7; } // midsummer to the end of August (save.adv.summer forces it)
+export function isWinter(d = new Date()) { if (save.adv?.winterSnow != null) return !!save.adv.winterSnow; const m = d.getMonth(), day = d.getDate(); return (m === 0 && day > 3) || m === 1; } // after Twinkle Week to the end of February: frosty mornings, and showers fall as snow (save.adv.winterSnow forces it)
 export function isFrost(d = new Date()) { if (save.adv?.frost != null) return !!save.adv.frost; const m = d.getMonth(), day = d.getDate(); return (m === 10 && day > 15) || (m === 11 && day < 18); } // after the autumn leaves and before Twinkle Week (save.adv.frost forces it)
 export function pumpkinNights(d = new Date()) { const m = d.getMonth(), day = d.getDate(); if (save.adv?.fest != null) return !!save.adv.fest; return (m === 9 && day >= 15) || (m === 10 && day <= 2); } // save.adv.fest forces it on (true) or off (false) for tests
 
@@ -384,12 +385,14 @@ export class World {
     // a brand-new adventure starts on a dry day: no showers until Prof. Pecan has sent the hero out (first impressions)
     const showers = canRain(M) && (save.adv.rain ?? (!!save.adv.flags?.quest && rainAt(key, new Date(), hr)));
     const twinkleEve = twinkleWeek() && !M.indoor && !M.snow && !M.lava && !M.city && M.arena !== 'beach' && this.outPhase !== 'day';
-    this.rain = showers && !twinkleEve; // on Twinkle Week evenings a shower comes down as snow instead
+    const winterFall = isWinter() && showers && !M.indoor && !M.snow && !M.lava && !M.city && M.arena !== 'beach'; // January and February: a shower over the green maps comes down as snow
+    this.winterFall = winterFall;
+    this.rain = showers && !twinkleEve && !winterFall; // on Twinkle Week evenings a shower comes down as snow instead
     this.storm = this.rain && !!(save.adv.storm ?? stormAt(new Date(), hr)); this.boltT = 2.5 + Math.random() * 3;
     this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (!!save.adv.flags?.quest && hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
-    this.frost = isFrost() && canRain(M) && !this.rain && !this.afterRain && this.phase === 'day' && hr >= 6 && hr < 10; // late-autumn mornings: a white frost on the grass and the treetops until mid-morning
-    this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)) || twinkleEve && showers; // now and then a proper snowfall up in the mountains (light flurries otherwise)
-    this.twinkleSnow = twinkleEve; // Twinkle Week evenings: a gentle snowfall over the green towns
+    this.frost = (isFrost() || isWinter()) && canRain(M) && this.phase === 'day' && (winterFall || !this.rain && !this.afterRain && hr >= 6 && hr < 10); // (a winter snowfall dusts them white all day) // late-autumn mornings: a white frost on the grass and the treetops until mid-morning
+    this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)) || (twinkleEve || winterFall) && showers; // now and then a proper snowfall up in the mountains (light flurries otherwise)
+    this.twinkleSnow = twinkleEve || winterFall; // Twinkle Week evenings: a gentle snowfall over the green towns
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
       const t = this.tile(tx, ty);
@@ -2156,6 +2159,7 @@ export class World {
     this.mornMist = null; this.mornMistIn = 0;
     if (this.blossom && !ALPHA_TOLD.has('blossom')) { ALPHA_TOLD.add('blossom'); setTimeout(() => this.group && this.S.toast('🌸 Blossom time! The trees along the routes are in flower.'), 1500); }
     if (!this.morning && !this.frost) return;
+    if (this.frost && this.winterFall && !ALPHA_TOLD.has('frost')) { ALPHA_TOLD.add('frost'); setTimeout(() => this.group && this.S.toast('🌨️ Snow! A winter shower is dusting the green maps white.'), 1500); }
     if (this.frost && !ALPHA_TOLD.has('frost')) { ALPHA_TOLD.add('frost'); setTimeout(() => this.group && this.S.toast('❄️ A frosty morning! The grass crunches underfoot until the sun gets up.'), 1500); }
     if (!this.morning) { this.mornMist = []; return; }
     const rand = rng(hash(this.key + 'mist')), W = this.W * TILE, H = this.H * TILE;

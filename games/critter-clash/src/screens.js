@@ -337,6 +337,7 @@ export class Screens {
       setTimeout(() => this.mode === 'title' && this.profTalk([
         "{name}, I've been keeping a nature diary all year round! In spring, from late March through April, the trees along the routes blossom pink and white, and petals drift on the breeze.",
         "Then from midsummer to the end of August, sunflowers taller than you stand at the edge of the woods, and the cicadas buzz all afternoon.",
+        "And after Twinkle Week, through January and February, winter mornings are frosty, and a shower over the green maps comes down as snow!",
         "Every season has something new out there. Come and look!",
       ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
