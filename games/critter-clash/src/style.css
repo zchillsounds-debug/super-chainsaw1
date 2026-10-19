@@ -1185,7 +1185,7 @@ body:has(.snow-wrap) .wd-a, body:has(.snow-wrap) .joybase { visibility: hidden; 
 body:not(.is-touch) .wd-a.hint { display: block; width: auto; height: auto; background: none; box-shadow: none; font-size: 0; pointer-events: none; right: calc(22px + env(safe-area-inset-right)); bottom: calc(22px + var(--sab)); }
 body:not(.is-touch) .wd-a.hint::after { content: "Space · " attr(data-hint); position: static; display: block; transform: none; font-size: 16px; animation: none; }
 /* after a shower: a soft rainbow arcs over the world (its feet sit at the bottom corners on wide screens) */
-.wd-rainbow { position: absolute; left: 50%; top: 100%; width: 190vh; height: 190vh; min-width: 100vw; min-height: 100vw; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; z-index: 1; mix-blend-mode: screen; opacity: .42;
+.wd-rainbow { position: absolute; left: 50%; top: 100%; width: 190vh; height: 190vh; min-width: 100vw; min-height: 100vw; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; z-index: 1; opacity: .34; will-change: opacity;
   background: radial-gradient(closest-side, transparent 79%, rgba(255,70,70,.9) 81%, rgba(255,160,60,.9) 83.5%, rgba(255,230,80,.9) 86%, rgba(90,220,110,.9) 88.5%, rgba(80,170,255,.9) 91%, rgba(150,110,255,.9) 93.5%, transparent 96%);
   -webkit-mask-image: linear-gradient(to top, transparent 46%, #000 64%); mask-image: linear-gradient(to top, transparent 46%, #000 64%); animation: rbIn 3s ease-out; }
 @keyframes rbIn { from { opacity: 0; } }
