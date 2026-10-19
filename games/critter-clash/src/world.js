@@ -421,6 +421,7 @@ export class World {
     this.placeHero();
     this.buildItems(x, y);
     this.buildBush(x, y);
+    this.buildLeaves(x, y);
     this.buildLost();
     this.buildChamp();
     this.buildDig();
@@ -2580,6 +2581,41 @@ export class World {
     }
   }
 
+  // autumn (October to mid-November): a couple of fallen-leaf piles under the trees of the green maps; run through one and the leaves fly (the first of the day may hide a berry)
+  buildLeaves(x, y) {
+    this.leafPiles = [];
+    const M = this.M, d = new Date(), autumn = save.adv.autumn ?? (d.getMonth() === 9 || d.getMonth() === 10 && d.getDate() <= 15);
+    if (!autumn || M.indoor || M.snow || M.lava || M.city || M.arena === 'beach' || M.border === 'cloud' || M.fireflies || this.twinkleSnow) return;
+    const day = d.toISOString().slice(0, 10), rand = rng(hash(this.key + ':leaves:' + day));
+    const taken = new Set([...(M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((dd) => dd.x + ',' + (dd.y + 1)), ...this.itemSpots, x + ',' + y, this.bush && this.bush.x + ',' + this.bush.y]);
+    const near = (tx, ty, r) => { for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if ('TP'.includes(this.tile(tx + dx, ty + dy) || '-')) return true; return false; }; // just clear of the canopies (they hid a pile right under them)
+    const ok = [];
+    for (let ty = 1; ty < this.H - 1; ty++) for (let tx = 1; tx < this.W - 1; tx++) if (this.tile(tx, ty) === '.' && !this.solid.has(tx + ',' + ty) && !taken.has(tx + ',' + ty) && !near(tx, ty, 1) && near(tx, ty, 2) && !(M.signs || []).some((sg) => Math.abs(sg.x - tx) + Math.abs(sg.y - ty) < 2)) ok.push([tx, ty]);
+    const cols = [0xe8862a, 0xd04a2a, 0xf0c040, 0xb8642a];
+    for (let k = 0; k < 2 && ok.length; k++) {
+      const [tx, ty] = ok.splice(Math.floor(rand() * ok.length), 1)[0], [px, pz] = wpos(tx, ty), g = new THREE.Group(), parts = [[], [], []];
+      const dome = new THREE.SphereGeometry(0.82, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2); dome.scale(1, 0.62, 0.9); parts[0].push(dome); // the heap itself
+      for (let i = 0; i < 38; i++) { const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * 0.95, h = Math.sqrt(Math.max(0, 1 - (r / 0.95) ** 2)) * 0.5; const q = new THREE.IcosahedronGeometry(0.2 + rand() * 0.08, 0); q.scale(1.3, 0.4, 1); q.rotateX((rand() - 0.5) * 0.8); q.rotateY(rand() * 3); q.translate(Math.cos(a) * r, 0.04 + h, Math.sin(a) * r * 0.9); parts[1 + (i % 2)].push(q); }
+      parts.forEach((list, j) => { const m = inked(mergeGeometries(list), toon(j ? cols[(k * 2 + j) % 4] : 0xb8642a), OL * (j ? 0.3 : 0.5)); g.add(m); list.forEach((q) => q.dispose()); });
+      g.position.set(px, 0, pz); this.group.add(g);
+      this.leafPiles.push({ x: tx, y: ty, g, cols, flat: 0 });
+    }
+  }
+
+  // the hero runs through a leaf pile: leaves fly everywhere, and the pile flattens for a while
+  leafJump(L) {
+    const p = L.g.position;
+    for (let i = 0; i < 26; i++) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 0.3, z: p.z + (Math.random() - 0.5) * 1.2, vx: (Math.random() - 0.5) * 4, vy: 3 + Math.random() * 3.5, vz: (Math.random() - 0.5) * 4, grav: 5, drag: 1.6, color: L.cols[i % 4], size: 0.34, life: 1.6 + Math.random(), shape: 'leaf', additive: false, spin: (Math.random() - 0.5) * 8, floor: true });
+    sfx.foot?.('grass'); sfx.ui?.('move');
+    L.flat = 14; L.g.scale.set(1.25, 0.35, 1.25);
+    const day = new Date().toISOString().slice(0, 10), A = save.adv;
+    if (A.leaves !== day) {
+      A.leaves = day; countUp('leaves');
+      if (Math.random() < 0.5) { save.berries = (save.berries || 0) + 1; persist(); setTimeout(() => this.group && this.S.toast?.('🍂 Wheee! A berry was hiding in the leaves! +1 🍓'), 500); }
+      else { persist(); setTimeout(() => this.group && this.S.toast?.('🍂 Wheee! Leaves everywhere!'), 500); }
+    }
+  }
+
   makeBush(tx, ty) {
     const g = new THREE.Group(), [px, pz] = wpos(tx, ty), leaf = this.M.snow ? 0x5aa88a : 0x6ad050;
     for (const [bx, by, bz, r] of [[0, 0.55, 0, 0.62], [-0.4, 0.38, 0.18, 0.45], [0.4, 0.36, 0.16, 0.45], [0.05, 0.34, 0.38, 0.42]]) {
@@ -3441,6 +3477,7 @@ export class World {
     save.adv.steps = (save.adv.steps || 0) + 1;
     if (save.adv.steps % 8 === 0) persist();
     this.walkHome();
+    const L = this.leafPiles?.find((q) => q.x === this.hx && q.y === this.hy && q.flat <= 0); if (L) this.leafJump(L);
     this.steps++;
     this.encCool--;
     const t = this.tile(this.hx, this.hy);
@@ -3643,6 +3680,7 @@ export class World {
     for (const [jx, jy, jz, col, sh] of this.jars || []) if (Math.random() < dt * 5) this.g.fx.spawn(sh ? { x: jx + (Math.random() - 0.5) * 1.0, y: jy, z: jz + (Math.random() - 0.5) * 0.6, vy: 0.6, color: col, size: 0.14, life: 0.7, shape: sh } : { x: jx + (Math.random() - 0.5) * 0.5, y: jy + (Math.random() - 0.5) * 0.6, z: jz + (Math.random() - 0.5) * 0.5, color: 0xe8ff6a, size: 0.3, life: 0.8, shape: 'glow', fadeIn: 0.3 });
     if (this.forgePool) this.forgePool.material.opacity = 0.42 + Math.sin(this.t * 7) * 0.05 + Math.sin(this.t * 17) * 0.04;
     if (this.dig && Math.random() < dt * 4) { const D = this.dig; this.g.fx.spawn({ x: D.px + (Math.random() - 0.5) * 0.9, y: 0.25 + Math.random() * 0.3, z: D.pz + (Math.random() - 0.5) * 0.7, vy: 0.4, color: Math.random() < 0.5 ? 0xffffff : 0xfff0a0, size: 0.45, life: 0.7, shape: 'star' }); }
+    for (const L of this.leafPiles || []) if (L.flat > 0 && (L.flat -= dt) <= 0) L.g.scale.set(1, 1, 1); // the pile puffs back up after a while
     if (this.bush?.shake > 0) { const B = this.bush; B.shake -= dt; B.g.rotation.z = Math.sin(B.shake * 40) * B.shake * 0.18; B.g.scale.y = 1 + Math.sin(B.shake * 30) * B.shake * 0.08; }
     for (let k = 0; k < (this.pennants?.length || 0); k++) this.pennants[k].rotation.y = Math.sin(this.t * 3.1 + k * 1.7) * 0.35; // stadium pennants flap in the breeze
     for (const m of this.medals || []) m.rotation.y = this.t * 1.6;

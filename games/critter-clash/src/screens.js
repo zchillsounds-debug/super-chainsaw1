@@ -1141,6 +1141,7 @@ export class Screens {
       + (A.cnt?.breakfast ? bar('🥞', 'Breakfasts at home', A.cnt.breakfast) : '')
       + (A.cnt?.pumpkin ? bar('🎃', 'Pumpkin treats', A.cnt.pumpkin) : '')
       + (A.cnt?.tot ? bar('🍬', 'Trick-or-treats', A.cnt.tot) : '')
+      + (A.cnt?.leaves ? bar('🍂', 'Leaf piles jumped', A.cnt.leaves) : '')
       + (A.cnt?.twinkle ? bar('🎄', 'Twinkle Week gifts', A.cnt.twinkle) : '')
       + (A.cnt?.wisp ? bar('✨', 'Firefly & wisp nights', A.cnt.wisp) : '')
       + bar('📸', 'Landmark photos', (A.snaps || []).length, LANDMARKS.length)
