@@ -350,6 +350,7 @@ export class Screens {
         "{name}, Fisher Finn tells me some fish only visit Clashara in one season: a Blossom Koi in spring, a Sunburst Perch in summer, a Maple Trout in autumn and a Snowflake Smelt in winter!",
         "They bite in any water but lava. The Journal keeps them in their own little list, and the 📅 Today page reminds you while the season's fish is still out there.",
         "And listen to the townsfolk, too. They love to chat about the blossom, the sunflowers, the falling leaves and the snow.",
+        "Two more seasonal treats: on spring days Bea leaves a picnic by the Route 1 pond, and on summer days Finn leaves a watermelon on Seashell beach. Whack it open!",
       ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
@@ -1093,6 +1094,8 @@ export class Screens {
         ['♨️', 'Soak in the hot spring', N('ember'), A.soak === day, seen.ember],
         ['🪵', 'Win a twig race', `${N('route2')} bridge`, A.twig === day, seen.route2],
         ['🦋', 'Catch five butterflies', `${N('route1')} (by day)`, A.flutter === day, seen.route1 && (this.worldObj?.outPhase === 'day' || A.flutter === day)],
+        ['🍉', 'Split a watermelon', `${N('seashell')} beach (by day)`, A.melon === day, isSummer() && seen.seashell && (this.worldObj?.outPhase === 'day' || A.melon === day)], // summer only (world.js buildMelon)
+        ['🧺', 'Spring picnic', `${N('route1')} pond (by day)`, A.picnic === day, (isSpring() || isMeadow()) && seen.route1 && (this.worldObj?.outPhase === 'day' || A.picnic === day)], // spring only (world.js buildPicnic)
         ['🪁', 'Fly a kite with Gale', N('cloudtop'), A.kite === day, seen.cloudtop && F.kite_done],
         ['💨', 'Ride the steam geyser', `${N('cinder')} steam vent`, A.geyser === day, seen.cinder],
         ['🌻', A.garden?.stage >= 4 ? 'Pick your flower' : A.garden?.stage ? `Water the garden (day ${A.garden.stage}/4)` : 'Plant a seed', `${N('bloom')} garden plot`, A.garden?.stage >= 1 && A.garden.stage < 4 && A.garden.last === day, seen.bloom],

@@ -448,6 +448,7 @@ export class World {
     this.buildPumpkins();
     this.buildXtree();
     this.buildScarecrow();
+    this.buildMelon(); this.buildPicnic();
     this.buildWisps(x, y);
     this.buildFlutters(x, y);
     this.buildMoonflowers();
@@ -2082,6 +2083,77 @@ export class World {
     const tail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.02, 0.12), ink); tail.position.set(0, -0.02, -0.18); tail.rotation.x = 0.4; crow.add(tail);
     const perch = new THREE.Vector3(0.62, 1.3 * 1.2 + 0.1, -0.15); crow.position.copy(perch); crow.rotation.y = -0.6; root.add(crow);
     this.scare = { x, y, g, wob: 0, crow: { g: crow, wings, perch, fly: 0, away: false } };
+  }
+
+  // a free open tile for a seasonal prop: the first of `spots` that's plain ground and clear of townsfolk, doors, signs and the hero
+  propSpot(spots, ok = '."sf') {
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((q) => q.x + ',' + (q.y + 1)), ...(this.M.signs || []).map((g) => g.x + ',' + g.y), this.hx + ',' + this.hy]);
+    return spots.find(([x, y]) => ok.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y) && !taken.has(x + ',' + y));
+  }
+
+  // summer days on Seashell beach: a watermelon on a towel; A = whack it open (once a day), then the halves sit there until tomorrow
+  buildMelon() {
+    this.melon = null;
+    if (this.key !== 'seashell' || !isSummer() || this.phase !== 'day') return;
+    const spot = this.propSpot([[13, 15], [12, 15], [14, 15], [13, 14]], 's'); if (!spot) return;
+    const [x, y] = spot, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.rotation.y = 0.3; g.scale.setScalar(1.4); this.group.add(g); this.solid.add(x + ',' + y);
+    const towel = canvasTex(64, 64, (c, W, H) => { for (let k = 0; k < 8; k++) { c.fillStyle = k % 2 ? '#ffffff' : '#3ab4ff'; c.fillRect(0, k * H / 8, W, H / 8); } });
+    towel.userData.own = true; const tm = toon(0xffffff, { map: towel }); tm.userData.own = true;
+    const t = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.05), tm); t.rotation.x = -Math.PI / 2; t.position.y = 0.025; t.receiveShadow = true; g.add(t);
+    const rind = canvasTex(128, 64, (c, W, H) => { c.fillStyle = '#4caa3a'; c.fillRect(0, 0, W, H); c.fillStyle = '#1e6a26'; for (let k = 0; k < 10; k++) { c.beginPath(); for (let yy = 0; yy <= H; yy += 4) c.lineTo(k * W / 10 + Math.sin(yy * 0.4 + k) * 2.5, yy); for (let yy = H; yy >= 0; yy -= 4) c.lineTo(k * W / 10 + 5 + Math.sin(yy * 0.4 + k) * 2.5, yy); c.fill(); } });
+    rind.userData.own = true; const rm = toon(0xffffff, { map: rind, rim: 0.5 }); rm.userData.own = true;
+    const stick = inked(new THREE.CylinderGeometry(0.035, 0.04, 1.1, 6), toon(0x9a6a3a), OL * 0.3); stick.rotation.set(Math.PI / 2, 0, 1.2); stick.position.set(-0.45, 0.06, 0.32); g.add(stick); // the stick for whacking
+    const whole = new THREE.Group(); g.add(whole);
+    const ball = inked(new THREE.SphereGeometry(0.34, 18, 12), rm, OL * 0.5); ball.scale.set(1.15, 0.9, 1); ball.position.y = 0.3; ball.castShadow = true; whole.add(ball);
+    const halves = new THREE.Group(); g.add(halves); const red = toon(0xff4a5a, { rim: 0.3 }), seed = toon(0x2a1a1a);
+    for (const sx of [-1, 1]) { // two halves, cut side up, with seeds
+      const h = new THREE.Group(); h.position.set(sx * 0.36, 0, 0.05); h.rotation.z = sx * 0.12; halves.add(h);
+      const shell = inked(new THREE.SphereGeometry(0.34, 18, 10, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), rm, OL * 0.5); shell.scale.set(1.15, 0.9, 1); shell.position.y = 0.3; h.add(shell);
+      const face = new THREE.Mesh(new THREE.CircleGeometry(0.33, 20), red); face.rotation.x = -Math.PI / 2; face.scale.set(1.15, 1, 1); face.position.y = 0.305; h.add(face);
+      for (let k = 0; k < 7; k++) { const sd = new THREE.Mesh(new THREE.SphereGeometry(0.022, 5, 4), seed); const a = k * 2.4 + sx, r = 0.1 + (k % 3) * 0.06; sd.scale.set(1, 0.5, 1.5); sd.position.set(Math.cos(a) * r, 0.31, Math.sin(a) * r); h.add(sd); }
+    }
+    const done = save.adv.melon === new Date().toISOString().slice(0, 10); whole.visible = !done; halves.visible = done;
+    this.melon = { x, y, g, whole, halves };
+  }
+
+  melonSplit() {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv, M = this.melon;
+    if (A.melon === day) return this.say([['Two juicy watermelon halves, sitting in the sun. {hero} already had the best slice!', 'A gull eyes the watermelon. {hero} eyes the gull. Nobody moves.'][(this.steps + new Date().getDate()) % 2], 'A fresh watermelon turns up every summer morning.']);
+    A.melon = day; countUp('melon'); save.berries = (save.berries || 0) + 2; const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.1)); persist();
+    M.whole.visible = false; M.halves.visible = true; sfx.hit?.(); sfx.jingle?.(2);
+    const p = M.g.position; for (let k = 0; k < 16; k++) this.g.fx.spawn({ x: p.x, y: 0.5, z: p.z, vx: (Math.random() - 0.5) * 4, vy: 2 + Math.random() * 3, vz: (Math.random() - 0.5) * 4, color: [0xff4a5a, 0xff8a9a, 0x5ac84a][k % 3], size: 0.22, life: 0.8, grav: 9 });
+    return this.say(['A big striped watermelon sits on a beach towel, with a stick beside it. A note says: "SUMMER SPLASH! Whack it open and share! — Finn"', '{hero} lines up, closes their eyes, and... THWACK! Right down the middle! Juice everywhere!', `Sweet, cold and crunchy. Two seeds turn out to be berries! +2 🍓 ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
+  }
+
+  // spring days on Route 1: a picnic blanket and basket by the pond, under the blossom; A = sit and share a sandwich (once a day)
+  buildPicnic() {
+    this.picnic = null;
+    if (this.key !== 'route1' || !(isSpring() || isMeadow()) || this.phase !== 'day') return;
+    const spot = this.propSpot([[5, 16], [6, 16], [4, 16], [5, 15]], '.'); if (!spot) return;
+    const [x, y] = spot, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.rotation.y = -0.25; g.scale.setScalar(1.4); this.group.add(g); this.solid.add(x + ',' + y);
+    const check = canvasTex(64, 64, (c, W, H) => { c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H); c.fillStyle = 'rgba(240,80,110,0.75)'; for (let k = 0; k < 8; k += 2) { c.fillRect(k * W / 8, 0, W / 8, H); c.fillRect(0, k * H / 8, W, H / 8); } });
+    check.userData.own = true; const cm = toon(0xffffff, { map: check }); cm.userData.own = true;
+    const b = new THREE.Mesh(new THREE.PlaneGeometry(1.45, 1.2), cm); b.rotation.x = -Math.PI / 2; b.position.y = 0.025; b.receiveShadow = true; g.add(b);
+    const wick = toon(0xc89a5a, { rim: 0.4 }), lid = toon(0xb0844a);
+    const bk = inked(new THREE.BoxGeometry(0.5, 0.3, 0.34), wick, OL * 0.4); bk.position.set(-0.32, 0.17, -0.2); bk.castShadow = true; g.add(bk);
+    const lidM = inked(new THREE.BoxGeometry(0.52, 0.05, 0.36), lid, OL * 0.3); lidM.position.set(-0.32, 0.345, -0.2); g.add(lidM);
+    const hd = inked(new THREE.TorusGeometry(0.17, 0.025, 6, 14, Math.PI), lid, OL * 0.3); hd.position.set(-0.32, 0.36, -0.2); g.add(hd);
+    const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.15, 0.03, 14), toon(0xffffff)); plate.position.set(0.3, 0.04, 0.12); g.add(plate);
+    const bread = toon(0xf4d49a), fill = toon(0x7ad05a);
+    for (const [ox, oz, ry] of [[0.26, 0.08, 0.3], [0.36, 0.18, -0.5]]) { // two triangle sandwiches
+      const sw = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.06, 3), bread); sw.position.set(ox, 0.09, oz); sw.rotation.y = ry; g.add(sw);
+      const f = new THREE.Mesh(new THREE.CylinderGeometry(0.112, 0.112, 0.015, 3), fill); f.position.set(ox, 0.09, oz); f.rotation.y = ry; g.add(f);
+    }
+    const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.13, 10), toon(0xffe86a, { rim: 0.4 })); cup.position.set(0.05, 0.08, 0.35); g.add(cup);
+    this.picnic = { x, y, g };
+  }
+
+  picnicSit() {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv;
+    for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: this.picnic.g.position.x + (Math.random() - 0.5) * 2, y: 2.5 + Math.random(), z: this.picnic.g.position.z + (Math.random() - 0.5) * 2, vx: 0.4 + Math.random() * 0.4, vy: -0.6, vz: (Math.random() - 0.5) * 0.4, color: [0xffb8d8, 0xffffff, 0xff9ac8][k % 3], size: 0.2, life: 2.2, grav: 0.2 });
+    if (A.picnic === day) return this.say(['{hero} lies back on the blanket and watches the clouds. That one looks like a sandwich.', 'There\'s a fresh picnic every spring day. Come back tomorrow!']);
+    A.picnic = day; countUp('picnic'); const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+    return this.say(['A checked blanket and a picnic basket by the pond. A tag on the basket says: "SPRING PICNIC. Please share! — Bea"', `{hero} sits down and shares a cress sandwich and a lemonade. ${['A blossom petal lands right in the cup.', 'A duckling waddles over and gets the crusts.', 'Somewhere, a butterfly lands on {hero}\'s nose.'][Math.floor(Math.random() * 3)]}`, `Full and happy! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
   }
 
   scareTalk() {
@@ -4265,6 +4337,8 @@ export class World {
     if (this.pumpkins?.some((p) => p.x === fx && p.y === fy)) return this.pumpkin();
     if (this.xtree && this.xtree.x === fx && this.xtree.y === fy) return this.xtreeTalk();
     if (this.scare && this.scare.x === fx && this.scare.y === fy) return this.scareTalk();
+    if (this.melon && this.melon.x === fx && this.melon.y === fy) return this.melonSplit();
+    if (this.picnic && this.picnic.x === fx && this.picnic.y === fy) return this.picnicSit();
     if (this.roomFest && this.roomFest.x === fx && this.roomFest.y === fy) return this.say([this.roomFest.tw ? 'A little potted tree, hung with baubles and a golden star. Even indoors, it\'s Twinkle Week!' : this.outPhase === 'day' ? 'Two carved pumpkins wait in the corner for nightfall. The big one has a wonky grin.' : 'Two jack-o\'-lanterns flicker in the corner, grinning at {hero}. Happy Pumpkin Nights!']);
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
@@ -4303,7 +4377,7 @@ export class World {
     if (this.follower && at(this.follower) && !this.follower.from) return 'Pet';
     if (at(this.bush)) return 'Shake';
     if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
-    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
+    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest, this.melon, this.picnic].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
     if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod && !this.M.lava) return 'Fish'; }
     const sign = (this.M.signs || []).find((g) => g.x === fx && g.y === fy);
     if (sign) return sign.act ? ({ pcbox: 'Swap', board: 'Read', gauntsign: 'Read', smoothie: 'Blend', hatshop: 'Shop', rest: 'Rest', wardrobe: 'Open', mirror: 'Look', shelf: 'Look', arcade: 'Play', 'arcade:hop': 'Play' }[sign.act] || (sign.act.startsWith('case:') ? 'Look' : 'Use')) : sign.hide ? 'Look' : 'Read';
