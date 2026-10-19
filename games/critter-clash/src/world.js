@@ -438,7 +438,7 @@ export class World {
     this.buildFlutters(x, y);
     this.buildMoonflowers();
     // hero
-    this.hero = new Critter(heroDef(), { lod: 'mid' }); bakeStatic(this.hero);
+    this.hero = new Critter(heroDef(), { lod: 'mid' }); bakeStatic(this.hero); skinStatic(this.hero); // the hero keeps its whole shadow (no castLite)
     this.hero.root.scale.setScalar(CS);
     this.heroGlow = null;
     const gloomy = this.key === 'glowwood' || this.key === 'glowcap'; // the glowing woods are dim at any hour
