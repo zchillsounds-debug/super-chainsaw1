@@ -10,7 +10,7 @@ import { openSettings, typeSpeed } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
-import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf } from './world.js';
+import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, seasonKey } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -1285,7 +1285,8 @@ export class Screens {
       const D = derbyOf(gauntletWeek());
       body = (save.adv.flags.rod ? `<li class="jr-more">🏆 This week's Fishing Derby: a ${D.name} of ${D.cm} cm or more (${D.where}). ${save.adv.derbyWk === D.wk ? '✅ Won! A new fish on Monday.' : 'Fisher Finn has a prize!'}</li>` : '<li class="jr-more">🎣 Fisher Finn in Seashell Town lends out rods. Then face any water and press A!</li>')
         + Object.entries(FISH).map(([k, list]) => `<li class="jr-head">${where[k]}</li>` + list.map(([n], i) => { const cm = sp[n]; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? '🐟' : '❔'}</span><b>${cm || n === D.name ? n : '???'}${i === list.length - 1 ? ' <small>rare</small>' : ''}${n === D.name && save.adv.flags.rod ? ' <small class="dby">🎯 derby</small>' : ''}</b><em>${cm ? cm + ' cm' : ''}${L.best?.name === n ? ' 🏅' : ''}</em></li>`; }).join('')).join('')
-        + `<li class="jr-more">${Object.keys(sp).length}/${Object.values(FISH).flat().length} kinds · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
+        + `<li class="jr-head">🗓️ Seasonal visitors (one a season)</li>` + Object.entries(SEASON_FISH).map(([k, [n, , , em]]) => { const cm = L.season?.[n], now = seasonKey() === k; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? em : '❔'}</span><b>${cm || now ? n : '???'} <small>${k}${now ? ' · now!' : ''}</small></b><em>${cm ? cm + ' cm' : ''}</em></li>`; }).join('')
+        + `<li class="jr-more">${Object.keys(sp).length}/${Object.values(FISH).flat().length} kinds${L.season ? ` · ${Object.keys(L.season).length}/4 seasonal` : ''} · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
     }
     d.innerHTML = `<div class="modal wd-journal"><h2>Journal</h2>
       <div class="jr-tabs"><button data-t="today" class="${tab === 'today' ? 'on' : ''}">📅 Today</button><button data-t="fav" class="${tab === 'fav' ? 'on' : ''}">🤝 Favours</button><button data-t="fish" class="${tab === 'fish' ? 'on' : ''}">🐟 Fish</button><button data-t="night" class="${tab === 'night' ? 'on' : ''}">🌌 Night</button><button data-t="rec" class="${tab === 'rec' ? 'on' : ''}">🏅 Records</button></div>

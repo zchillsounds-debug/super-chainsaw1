@@ -91,6 +91,10 @@ export const FISH = {
   night: [['Moonfin', 14, 38], ['Glimmer Ray', 40, 95]], // only bite after dark (any water but lava)
   dusk: [['Sunset Snapper', 16, 42], ['Amber Koi', 22, 55]], // only bite in the golden evening (17-20h, any water but lava)
 };
+// seasonal visitors: one fish a season, only in its season (any water but lava). Kept apart from the album above (save.adv.fishLog.season),
+// so completing the album never waits on the calendar; each first catch is a little bonus
+export const SEASON_FISH = { spring: ['Blossom Koi', 20, 52, '🌸'], summer: ['Sunburst Perch', 14, 38, '🌻'], autumn: ['Maple Trout', 22, 56, '🍂'], winter: ['Snowflake Smelt', 8, 24, '❄️'] };
+export const seasonKey = () => isSpring() || isMeadow() ? 'spring' : isSummer() ? 'summer' : isAutumn() || isEarlyAutumn() ? 'autumn' : isFrost() || isWinter() || twinkleWeek() ? 'winter' : null;
 // Fisher Finn's weekly Fishing Derby: one everyday kind and a size to beat (Mondays bring a new one)
 export function derbyOf(wk) {
   const where = { pond: 'ponds and rivers', sea: 'the sea', lava: 'lava pools', cold: 'icy water', dusk: 'any water at golden hour' };
@@ -1881,7 +1885,7 @@ export class World {
   // every season the hero spends outdoors is ticked off (save.adv.seasons); all four earn the Four Seasons Crown
   seasonMark() {
     if (this.M.indoor || !save.adv.flags?.quest) return;
-    const k = isSpring() || isMeadow() ? 'spring' : isSummer() ? 'summer' : isAutumn() || isEarlyAutumn() ? 'autumn' : isFrost() || isWinter() || twinkleWeek() ? 'winter' : null, S = save.adv.seasons ||= {};
+    const k = seasonKey(), S = save.adv.seasons ||= {};
     if (!k || S[k]) return;
     S[k] = new Date().toISOString().slice(0, 10); persist();
     if (['spring', 'summer', 'autumn', 'winter'].every((q) => S[q]) && !(save.adv.hats ||= []).includes('seasons')) {
@@ -2888,6 +2892,13 @@ export class World {
       const [id, lo, hi] = W.length ? W[Math.floor(Math.random() * W.length)] : [['bubbalotl', 'ripples', 'lilypop', 'pengsicle'][Math.floor(Math.random() * 4)], lv, lv];
       const name = byId(id)?.name || 'critter';
       return this.say([`{hero} reels it in... It's a wild ${name}! And it's not happy about it!`], () => this.startWild(id, lo + Math.floor(Math.random() * (hi - lo + 1)), null, Math.random() < SHINY_RATE));
+    }
+    const sk = !this.M.lava && seasonKey();
+    if (sk && r < 0.52) { // the season's visitor (about one fish in four while it's in season)
+      const [name, lo, hi, em] = SEASON_FISH[sk], cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null }, S = L.season ||= {};
+      const first = !S[name]; L.n++; S[name] = Math.max(S[name] || 0, cm); if (first) save.berries = (save.berries || 0) + 3;
+      persist(); sfx.jingle?.(first ? 3 : 1);
+      return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long!`, first ? `A seasonal visitor! It only swims here in ${sk}. Fisher Finn will want to hear about this! +3 🍓 (☰ → Journal → 🎣)` : `${name}s only visit in ${sk}. Splash! Back it goes, until next year.`]);
     }
     if (r < 0.7) { // a fish! measured, and Fisher Finn keeps the record book
       const kinds = FISH[this.phase === 'night' && !this.M.lava && Math.random() < 0.3 ? 'night' : this.phase === 'evening' && !this.M.lava && Math.random() < 0.3 ? 'dusk' : this.M.arena === 'beach' ? 'sea' : this.M.lava ? 'lava' : this.M.snow || this.M.border === 'cloud' ? 'cold' : 'pond'];
