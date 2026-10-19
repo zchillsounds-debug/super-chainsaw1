@@ -3,6 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 17:12 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
+- **Session 17i (2026-10-19 02:20–~03:55 UTC, session_01GCkeeKc9vfEuRH9UvU8ayy) did R514–R531 (see "Session 17i"); next round R532.**
 - **Session 17h (2026-10-19 00:59–~02:30 UTC, session_01CpYgjF7gfPegFE28S2QMaU) did R489–R513 (see "Session 17h"); next round R514.**
 - **Session 17g (2026-10-18 22:18–22:45 UTC, then a worker stall, then 00:13–~01:05 UTC on 2026-10-19, session_01BjG1fjq9qbS3C8jFjtAuWC) did R468–R488 (see "Session 17g"); next round R489.**
 - **Session 17f (2026-10-18 21:12–~22:20 UTC, session_01BmfWF5X6EkDYpX9XpiKuXu) did R446–R467 (see "Session 17f"); next round R468.**
@@ -947,6 +948,21 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Regression: advload 160 fresh loads, no errors (after R500).
 - **Next ideas:** the Critique backlog's Sky Cup/Camp balloon item is already done (camp.js) and can be struck; Neon City by day is still dusky (R463's call); the Alpha shown big in its battle (battle side, the user's chat); a 2-rep full robin to confirm balance (last full run: 42–61% bar Pricklepuff, now buffed); re-measure FPS on a phone; the album isn't in the save backup (by design; say so if the user asks).
 
+## Session 17i (2026-10-19 02:20–~03:55 UTC, session_01GCkeeKc9vfEuRH9UvU8ayy): Daycare, A-button hints, rainbows, ponds, grass edges, balance, R514–R531
+- The local clone started on stale history; it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start (production build of 4e3c2a8):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town, no errors.
+- **R514/R523:** tall-grass patches fray at open edges onto lawn (`.`/`f`): short spill blades in `buildGrass` and scalloped `C.tall` tufts painted into the ground texture (a post pass). Neon City (`M.city`) keeps a neat kerb.
+- **R515:** Town Map on short landscape phones (`max-height: 420px` and `min-aspect-ratio: 3/2`) is a grid: map left, title/tip/legend/Close in a 210px right column (the growing legend pushed Close off at 740×360). Journal `.jr-list` fades at its foot (mask) so a scrolling list says so.
+- **R516/R517/R527/R530: Critter Daycare.** `daycareSpot()` (world.js) adds **Nanny Nell** (woolt, story `daycare`) at 2,3 in every Berry Center, and the cared critter romping at 4,4 (wander 1, hop, a pink ♥ now and then). `daycare(S, w)` (story.js): drop off any team critter but the lead (`S.leadPick(w, 'care')`, a mode of the Critter Box picker) → `save.adv.care = { id, at: steps, lv0 }`; take it back for `careXp(c)` = xpNeeded(lv0) × min(2000, steps since)/1000 (1000 steps = a level, up to two). The lead picker and buddy picker grey it out (`.hero-grid button.off`) and toast if tapped. ☰ card line "🧸 X is at the Daycare · N steps"; Records 🧸 Daycare stays (`cnt.care`); Nurse Lilypop mentions Nell once (`flags.careTip`); Pecan news **adv17** (tools' news lists include it). A toy corner (chest, ball, blocks) at 1,3 (solid) in every Berry Center.
+- **R518/R528:** small town ponds (`~` < 40, not beach/snow/lava/cloud/`M.pads`) get lily pads, pink water lilies and cattails on grassy banks; a river with a bridge (Route 2) gets cattails only.
+- **R519/R520/R529: A-button hints.** `aHint()` names what A would do (Talk, Poke, Pet, Shake, Dig, Look, Roast, Twigs, Fish, Read, Enter, Swap, Blend, Shop, Rest, Open, Play); `showHint()` every 0.2 s sets `.wd-a[data-hint]` → a pill above the touch A button; keyboard players get a "Space · Talk" prompt in the corner.
+- **R521/R522/R525/R526: after the rain.** `this.afterRain` (load): the first hour of a 3-hour block after a rainy one (`rainAt(key, d, hr - 3)`), day only, grassy maps; `save.adv.rainbow` forces it in tests. A screen-space rainbow `.wd-rainbow` (the world camera has no sky; per-orientation sizes, plain alpha), a toast, a buddy line, Records 🌈 Rainbows seen (`cnt.rainbow`, once a day), and sky-blue puddles on the paths. **Bug found and fixed in passing:** rain puddles had been drawn fine; my first edit briefly commented out the fill (never pushed).
+- **R522:** two toasts at once stack (`marginTop` by the live toasts' heights) instead of printing over each other. `advtour.mjs`: `MOBILE=1` forces the touch UI in landscape.
+- **R524:** townsfolk standing about turn to watch the hero within two tiles (rotation only; `a.dir` is unchanged, so trainers' watch lines and dialogs are unaffected; sleepers, anglers and dozers don't look up).
+- **R530/R531: balance.** A 2-rep full robin (72 games each, R513 build): Woolt 61%, Whirlwhisk 60%, most 44–58%, Squeakwing 40%, Diggles 38%, **Rolladillo 33%**. Rolladillo hp 1150→1190, speed 5.4→5.5, power 1.10→1.13 (the stat change rode along in the R530 commit). A focused 2-rep re-run then put Rolladillo at **58%** (42–30); fine for now, re-check in the next full robin.
+- Perf note: Cinder Road at noon is the busiest map (362 draw calls); its critters are already merged (`bakeStatic`, R382), ~40 draws each, so more merging gains little.
+- advload after R525: 160 fresh loads, no errors.
+- **Next ideas:** Diggles (38%) and Squeakwing (40%) if they stay low in the next 2-rep robin; Neon City by day is still dusky (R463's call); the Alpha shown big in its battle (battle side, the user's chat); re-measure FPS on a phone (the rainbow overlay and A hint are cheap, but check); Daycare could show on the Town Map or hatch something (an egg?) if more depth is wanted; the album isn't in the save backup (by design).
+
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - (Fixed in R132.) A re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
@@ -955,7 +971,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Full run at 05:40 (session 11, all 19 critters, 1 rep = 36 games each, no errors): Emberfly 67%, Bubbalotl 64%, Pebblepup and Snoozlo 61%, most 44–58%, Kindlekit 39%, Pengsicle 33%, Jiggawatt 25%, Squeakwing 22%. 1-rep runs swing ±15% (Pengsicle was 56% and Emberfly 41% in the previous run), so only buff critters that are low run after run: Squeakwing (21/44/38/22%) and Jiggawatt (38/25%) got buffs in R145.
 - Full run at 04:45 (session 11, 18 critters, 1 rep): Pebblepup/Whirlwhisk/Lilypop/Kindlekit 62%, Voltferret/Diggles 59%, most 38–56%, Bubbalotl 35%, Pricklepuff 24% (both buffed in R137). Run a full `tools/robin.mjs 1` with all 19 next.
 - Older: last full balance run (04:04, 18 critters, 1 rep = 34 games each): Voltferret, Pengsicle and Lilypop 68%, Pebblepup and Kindlekit 62%, most others 41–53%, Bubbalotl and Hootsy 35%, Squeakwing 21% (a focused run just before said 44%, so the sample is noisy). Small tweaks followed (top three power -0.02/-0.03, Bubbalotl/Hootsy/Squeakwing buffs) but were not re-measured. Re-run `tools/robin.mjs 2` first.
-- The Sky Cup outro promises a picnic; Camp could have a sky-themed reward (e.g. a balloon prop) for clearing it.
+- (Done in camp.js.) The Sky Cup outro promises a picnic; Camp could have a sky-themed reward (e.g. a balloon prop) for clearing it.
 - No localisation.
 
 - Growth (session 12) is untested on a real phone; ask the user how the growing scene and the big forms feel. Balance was not re-measured with grown forms (both sides grow by level in cups, so it's symmetric, but hand-built bodies are bigger targets visually only; hit ranges are unchanged).
@@ -1004,6 +1020,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
+   - Session 17i chained at R532 with the 48-hour prompt word for word.
    - Session 17h chained at R514 with the 48-hour prompt word for word.
    - Session 17g chained at R489 with the 48-hour prompt word for word.
    - Session 17f chained at R468 with the 48-hour prompt word for word.
