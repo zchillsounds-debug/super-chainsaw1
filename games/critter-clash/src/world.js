@@ -3853,6 +3853,7 @@ export class World {
   // a Daycare egg (story.js daycare) hatches after 250 steps in the bag: the hatchling goes to live in Nanny Nell's nursery
   hatchEgg() {
     const A = save.adv, E = A.egg;
+    if (E && (A.steps || 0) - E.at === 225) { this.S.toast('🥚 The egg in your bag is wobbling!'); sfx.ui?.('bounce'); }
     if (!E || (A.steps || 0) - E.at < 250 || this.dialog || this.M.indoor === 'lobby') return false;
     const def = CRITTERS.find((c) => c.id === E.id) || CRITTERS[0], first = !(A.hats ||= []).includes('eggshell');
     A.egg = null; (A.nursery ||= []).push(def.id); if (A.nursery.length > 3) A.nursery.shift();

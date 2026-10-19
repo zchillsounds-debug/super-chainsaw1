@@ -271,6 +271,12 @@ export class Screens {
         "{name}, every Berry Center has a CRITTER DAYCARE now! Nanny Nell looks after one critter from your team while you explore.",
         "Every step you walk helps it grow, up to two whole levels. Pick it up again at any Berry Center. Out on the routes, the tall grass has grown a little wilder, too!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv17') && !save.news.includes('adv18')) {
+      save.news.push('adv18'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, the strangest thing! Nanny Nell says EGGS keep turning up at her Daycare when a critter stays a good long while.",
+        "Carry one with you and it hatches as you walk. The babies grow up in her nursery, and the first one comes with a little keepsake. Your Journal's Today page tells you when an egg is waiting!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
