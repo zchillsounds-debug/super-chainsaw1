@@ -835,7 +835,7 @@ export class World {
     const mid = this.g.quality === 'med' || this.g.quality === 'low', woody = (x, y) => x < 0 || y < 0 || x >= this.W || y >= this.H || this.tile(x, y) === 'T';
     const deep = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!woody(x + i, y + j)) return false; return true; }; // a tree with trees all round it: only its top shows
     // autumn on the green maps: about two trees in five turn orange, gold or red (picked by position, so the woods keep their shape)
-    const M = this.M, green = !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && M.border !== 'cloud' && !M.fireflies, falls = [[], [], [], []];
+    const M = this.M, green = !M.indoor && !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && M.border !== 'cloud' && !M.fireflies, falls = [[], [], [], []];
     // spring (20 Mar-Apr) uses the same groves: blossom trees in pink, pale pink and white, with fresh green ones in between
     const bloom = green && isSpring(), fall = green && !bloom && isAutumn(), early = green && !bloom && !fall && isEarlyAutumn(); this.blossom = bloom;
     // groves share a hue (a 3x3-tile patch picks orange, gold or red), so the woods turn in drifts rather than a row of sweets; some trees are only just turning (yellow-green)
