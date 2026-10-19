@@ -249,6 +249,7 @@ export function interiorMap(key) {
     if (t === 'U') { const n = [...row].slice(0, x).filter((c) => c === 'U').length; signs.push({ x, y, text, hide: true, act: 'case:' + CUP_ORDER[n] }); return; }
     signs.push({ x, y, text, hide: true, act: t === 'Q' && kind === 'home' ? 'rest' : t === 'V' ? 'mirror' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
   }));
+  if (kind === 'kidroom') signs.push({ x: 2, y: 2, hide: true, text: 'Flo\'s play tent! Inside: a pillow fort, a torch, and a crayon drawing of a firefly holding a giant trophy. It says "ME, ONE DAY".' }); // world.js buildTent
   return {
     cup: b.stadium, shroom: outer === 'glowcap' && (bid.startsWith('shroom') || !!b.heal), cityView: !!O.city && (kind === 'house' || kind === 'flat'),
     name: b.heal ? `${O.name.replace(/ (Town|City|Gardens|Hollow|Village)$/, '')} Berry Center` : b.label || P.name || (b.id === 'home' ? 'Home' : 'House'),
