@@ -890,6 +890,9 @@ body:not(.is-touch) .wd-a { display: none; }
 .hero-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; max-height: 56vh; overflow-y: auto; margin-bottom: 12px; }
 .hero-grid button { background: #efe8fb; border-radius: 14px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; font-family: var(--display); font-size: 13px; color: var(--ink); }
 .hero-grid button img { width: 64px; height: 64px; margin: 0; }
+@media (max-height: 420px) { .hero-pick p { display: none; } .hero-pick h2 { margin-bottom: 6px; } .hero-pick .hero-grid { max-height: 58vh; margin-bottom: 8px; } .hero-pick .hero-grid button img { width: 52px; height: 52px; } } /* short landscape phones: the Back button stays on screen with a full team */
+.hero-pick .hp-sub { display: flex; align-items: center; gap: 4px; margin-top: 3px; font-family: var(--body); font-weight: 900; font-size: 11px; opacity: .85; }
+.hero-pick .hp-sub .mini-type { font-size: 10px; padding: 0 6px; margin: 0; -webkit-text-stroke-width: 2px; }
 .hero-grid button:hover { background: #ffe9a8; }
 .wd-hero { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; text-align: left; }
 .wd-hero img { width: 72px; height: 72px; margin: 0; }

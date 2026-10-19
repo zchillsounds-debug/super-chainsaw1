@@ -1339,7 +1339,7 @@ export class Screens {
     const g = this.game, d = document.createElement('div');
     d.className = 'modal-wrap';
     const team = CRITTERS.filter((c) => save.unlocked.includes(c.id) && c.id !== save.adv.hero);
-    d.innerHTML = `<div class="modal hero-pick"><h2>Walking buddy</h2><p>${save.adv.follow ? 'Pip is following you right now! Your buddy will be back once Pip is home.' : save.adv.walk ? `${byId(save.adv.walk.id)?.name || 'Your little one'} is out on a walk with you! Your buddy takes over once it heads home.` : 'Who comes along for the walk?'}</p><div class="hero-grid">${team.map((c) => `<button data-id="${c.id}" class="${save.adv.buddy === c.id ? 'on' : ''}${save.adv.care?.id === c.id ? ' off' : ''}"><img src="${g.portrait(skinOf(c))}" alt=""><span>${grown(c, save.critters[c.id].level).name}</span></button>`).join('')}</div></div>`;
+    d.innerHTML = `<div class="modal hero-pick"><h2>Walking buddy</h2><p>${save.adv.follow ? 'Pip is following you right now! Your buddy will be back once Pip is home.' : save.adv.walk ? `${byId(save.adv.walk.id)?.name || 'Your little one'} is out on a walk with you! Your buddy takes over once it heads home.` : 'Who comes along for the walk?'}</p><div class="hero-grid">${team.map((c) => `<button data-id="${c.id}" class="${save.adv.buddy === c.id ? 'on' : ''}${save.adv.care?.id === c.id ? ' off' : ''}"><img src="${g.portrait(skinOf(c))}" alt=""><span>${grown(c, save.critters[c.id].level).name}</span><small class="hp-sub"><b class="mini-type" style="background:${TYPES[c.type].color}">${TYPES[c.type].name}</b> Lv ${save.critters[c.id].level}</small></button>`).join('')}</div></div>`;
     const close = () => { d.remove(); this.game.modalClose = null; };
     d.querySelectorAll('.hero-grid button').forEach((btn) => btn.addEventListener('click', () => {
       if (btn.dataset.id === save.adv.care?.id) { sfx.ui('back'); return this.toast('🧸 That one is playing at the Daycare. Ask Nanny Nell at a Berry Center!'); }
@@ -1392,7 +1392,7 @@ export class Screens {
     const d = document.createElement('div');
     d.className = 'modal-wrap';
     const team = CRITTERS.filter((c) => save.unlocked.includes(c.id));
-    d.innerHTML = `<div class="modal hero-pick"><h2>Who is the hero?</h2><p>Every critter dreams of the Critter Crown. Whose story is this?</p><div class="hero-grid">${team.map((c) => `<button data-id="${c.id}"><img src="${g.portrait(skinOf(c))}" alt=""><span>${grown(c, save.critters[c.id].level).name}</span></button>`).join('')}</div></div>`;
+    d.innerHTML = `<div class="modal hero-pick"><h2>Who is the hero?</h2><p>Every critter dreams of the Critter Crown. Whose story is this?</p><div class="hero-grid">${team.map((c) => `<button data-id="${c.id}"><img src="${g.portrait(skinOf(c))}" alt=""><span>${grown(c, save.critters[c.id].level).name}</span><small class="hp-sub"><b class="mini-type" style="background:${TYPES[c.type].color}">${TYPES[c.type].name}</b> Lv ${save.critters[c.id].level}</small></button>`).join('')}</div></div>`;
     d.querySelectorAll('.hero-grid button').forEach((btn) => btn.addEventListener('click', () => {
       sfx.ui('ok');
       d.remove(); this.game.modalClose = null;
