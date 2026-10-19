@@ -4212,7 +4212,7 @@ export class World {
     el.innerHTML = `<div class="credits"><div class="roll" style="animation-duration:${stops.length * 5.4 + 1.5}s">
       <div class="logo-top ol">CRITTER</div><div class="logo-bot ol">CLASH!</div>
       <h2>👑 Champion of Clashara 👑</h2><p class="cr-big">${hero}</p><p>and ${name}</p>
-      <h3>The journey</h3>${stat('🏆', 'Cups won', `${CUPS.filter((c) => F['cup_' + c.id]).length} / ${CUPS.length}`)}${stat('👣', 'Steps walked', (A.steps || 0).toLocaleString())}${stat('⚔️', 'Trainers beaten', beat)}${stat('🌿', 'Wild critters met', A.cnt?.wild || 0)}${stat('🎣', 'Fish caught', A.fishLog?.n || 0)}${stat('🤝', 'Favours done', fav)}${stat('🎩', 'Hats collected', (A.hats || []).length)}
+      <h3>The journey</h3>${stat('🏆', 'Cups won', `${CUPS.filter((c) => F['cup_' + c.id]).length} / ${CUPS.length}`)}${A.time >= 60 ? stat('⏱️', 'Time adventuring', (({ h, m }) => h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`)({ h: Math.floor(A.time / 3600), m: Math.floor(A.time / 60) % 60 })) : ''}${stat('👣', 'Steps walked', (A.steps || 0).toLocaleString())}${stat('⚔️', 'Trainers beaten', beat)}${stat('🌿', 'Wild critters met', A.cnt?.wild || 0)}${stat('🎣', 'Fish caught', A.fishLog?.n || 0)}${stat('🤝', 'Favours done', fav)}${stat('🎩', 'Hats collected', (A.hats || []).length)}
       <h3>Starring</h3><p><b>${hero}</b> <small>the hero</small></p><p><b>Dash</b> <small>the rival (${rival})</small></p><p><b>Prof. Pecan</b> <small>as himself</small></p><p><b>King Snooze</b> <small>keeper of the Crown</small></p><p><b>Captain Puff</b> <small>and the mail balloon</small></p>
       <h3>Trainers</h3><p>${trainers.join(' · ')}</p>
       <h3>Townsfolk</h3><p>${folk.join(' · ')}</p>
