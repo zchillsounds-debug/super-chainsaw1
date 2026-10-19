@@ -3567,7 +3567,9 @@ export class World {
         else if (a.n?.act && !this.dialog) actPose(this, a, P, this.t + a.x * 0.7, dt);
         else idlePose(P, this.t + a.x);
         if (a.excl > 0) { a.excl -= dt; P.y = Math.max(P.y, Math.sin(Math.min(1, 1 - a.excl) * Math.PI) * 0.4); }
-        a.root.rotation.y = turnTo(a.root.rotation.y, YAW[a.dir], dt * 14);
+        // townsfolk standing about turn to watch the hero go by (trainers keep their watch line; sleepers and anglers don't look up)
+        const hp = this.hero.root.position, ap = a.root.position, near = a.n && !a.from && !a.n.trainer && !this.dialog && a.n.act !== 'sleep' && a.n.act !== 'fish' && !this.dozing(a.n) && Math.abs(a.x - this.hx) <= 2 && Math.abs(a.y - this.hy) <= 2 && !(a.x === this.hx && a.y === this.hy);
+        a.root.rotation.y = near ? turnTo(a.root.rotation.y, Math.atan2(hp.x - ap.x, hp.z - ap.z), dt * 6) : turnTo(a.root.rotation.y, YAW[a.dir], dt * 14);
         a.cr.update(dt);
       } else if (a.n.balloon) {
         // a moored balloon sways; when it takes off it rises (a.fly) with the hero aboard
