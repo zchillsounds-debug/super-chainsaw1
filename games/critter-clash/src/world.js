@@ -1305,7 +1305,7 @@ export class World {
     bakeStatic({ root: g, mats: {} });
     let sun = null, glints = [];
     if (this.phase === 'evening' && !this.rain) { // the sun touching the sea, straight out from the bench
-      const sz = (this.H - 0.3) * TILE, sg = new THREE.Group(); sg.position.set(px, 0, sz); this.group.add(sg);
+      const sz = (this.H + 0.7) * TILE, sg = new THREE.Group(); sg.position.set(px, 0, sz); this.group.add(sg);
       const halo = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff8a3a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.85 }); halo.userData.own = true;
       const hs = new THREE.Sprite(halo); hs.scale.set(14, 7, 1); hs.position.y = 0.4; sg.add(hs);
       const dm = new THREE.MeshBasicMaterial({ color: 0xffd070, transparent: true, opacity: 0.95, depthWrite: false }); dm.userData.own = true;
@@ -1313,9 +1313,11 @@ export class World {
       const gm = new THREE.MeshBasicMaterial({ color: 0xffc060, map: glowTex(), transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }); gm.userData.own = true;
       for (let k = 0; k < 14; k++) { // a glittering path on the water from the shore to the sun
         const t = k / 13, gl = new THREE.Mesh(new THREE.PlaneGeometry(1.6 - t * 0.6 + Math.random() * 0.4, 0.3), gm.clone()); gl.material.userData.own = true;
-        gl.rotation.x = -Math.PI / 2; gl.position.set(px + (Math.random() - 0.5) * (2.4 - t * 1.6), 0.09, (this.H - 1.9 + t * 1.5) * TILE); this.group.add(gl); glints.push({ m: gl, ph: Math.random() * 6, sp: 2 + Math.random() * 3 });
+        gl.rotation.x = -Math.PI / 2; gl.position.set(px + (Math.random() - 0.5) * (2.4 - t * 1.6), 0.09, (this.H - 1.9 + t * 3.2) * TILE); this.group.add(gl); glints.push({ m: gl, ph: Math.random() * 6, sp: 2 + Math.random() * 3 });
       }
-      sun = { sg, hs };
+      const pm = new THREE.MeshBasicMaterial({ color: 0xff8a40, map: glowTex(), transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }); pm.userData.own = true;
+      const sea = new THREE.Mesh(new THREE.PlaneGeometry(34, 9), pm); sea.rotation.x = -Math.PI / 2; sea.position.set(px, 0.08, sz - 1.2); this.group.add(sea); // warm light on the water round the sun, which also hides the seam where the map's sea meets the open sea
+      sun = { sg, hs, sea };
     }
     this.sunset = { x, y, px, pz, sun, glints };
   }
@@ -3359,7 +3361,7 @@ export class World {
     const fit = port ? (vw * TILE + 1.2) / (2 * Math.tan(Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) * Math.PI / 360) * cam.aspect) : 0;
     const rx = vw < this.W ? Math.max(vw * TILE / 2, Math.min((this.W - vw / 2) * TILE, p.x)) : this.W * TILE / 2;
     if (this.M.indoor) want.set(port ? rx : this.W * TILE / 2, port ? Math.max(16.5, fit * 0.86) : 16, this.H * TILE / 2 + (port ? Math.max(3.6, fit * 0.2) : 9.8));
-    if (this.sitting) want.z += port ? 4 : 5.5; // on the sunset bench: look out over the sea
+    if (this.sitting) want.z += port ? 2.4 : 5.5; // on the sunset bench: look out over the sea
     if (!this.camAt) this.camAt = want.clone(); else this.camAt.lerp(want, 1 - Math.exp(-dt * 8));
     cam.position.copy(this.camAt);
     if (this.M.indoor && port) cam.lookAt(this.camAt.x, 0.4, this.H * TILE / 2 + 1.2);
