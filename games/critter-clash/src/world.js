@@ -4549,7 +4549,7 @@ export class World {
       const day = new Date().toISOString().slice(0, 10), A = save.adv;
       if (A.breakfast !== day) {
         A.breakfast = day; countUp('breakfast'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
-        return this.say(['Mom: Good morning, sleepyhead! I made berry pancakes. Sit, sit! Adventures need breakfast.', `{hero} gobbles a whole stack! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : 'Full of energy! (+XP)'}`, 'Mom: Come by any morning before nine. There\'s always a stack with your name on it.'], null, n.name);
+        return this.say([A.flags.honey_done ? 'Mom: Good morning, sleepyhead! Berry pancakes with Elder Oakley\'s glowcap honey. Look, they glow! Sit, sit!' : 'Mom: Good morning, sleepyhead! I made berry pancakes. Sit, sit! Adventures need breakfast.', `{hero} gobbles a whole stack! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : 'Full of energy! (+XP)'}`, 'Mom: Come by any morning before nine. There\'s always a stack with your name on it.'], null, n.name);
       }
       return this.say(['Mom: More pancakes? Ha! Tomorrow morning, sweetie. Now go and explore!'], null, n.name);
     }

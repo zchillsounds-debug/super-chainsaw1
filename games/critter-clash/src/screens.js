@@ -351,6 +351,7 @@ export class Screens {
         "They bite in any water but lava. The Journal keeps them in their own little list, and the 📅 Today page reminds you while the season's fish is still out there.",
         "And listen to the townsfolk, too. They love to chat about the blossom, the sunflowers, the falling leaves and the snow.",
         "Two more seasonal treats: on spring days Bea leaves a picnic by the Route 1 pond, and on summer days Finn leaves a watermelon on Seashell beach. Whack it open!",
+        "Oh, and two more townsfolk have parcels that need carrying: Surfer Pengsicle in Seashell Town and Elder Oakley in Glowcap Hollow. Look for the ❗!",
       ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
