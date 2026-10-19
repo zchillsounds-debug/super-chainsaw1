@@ -3,6 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 21:29 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC, and 4 h 17 min by a worker stall in session 17n, ~10:00–14:17 UTC on 2026-10-19). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
+- **Session 17q (2026-10-19 17:10–~18:20 UTC, session_01AXYQttiHJUdTzqAKd8dsAy) did R637–R650 (see "Session 17q"); next round R651.**
 - **Session 17p (2026-10-19 15:53–~17:15 UTC, session_0136aYRsjLRmRKTEKj7yUeBs) did R629–R636 (see "Session 17p"); next round R637.**
 - **Session 17o (2026-10-19 14:38–~15:50 UTC, session_01A4ZY5wCmnYjfYmT3T4J1by) did R615–R628 (see "Session 17o"); next round R629.**
 - **Session 17n (2026-10-19 09:26–~10:00 UTC, a worker stall until 14:17, then 14:17–~14:50 UTC, session_01HUFkoLzTnjRxbWJxdvt8CV) did R605–R614 (see "Session 17n"); next round R615.**
@@ -1092,6 +1093,26 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **Note for the user's chat (battle side):** a Route 2 wild fight uses the "beach" open-field backdrop (sand dunes and palms); fine if intended (Route 2 runs to Seashell), odd if not. Also still: the open-field backdrop keeps green trees in autumn (`isAutumn()` is exported from world.js).
 - **Next ideas:** skin the buddy (follower, `lod: 'mid'`) and the hero too (the buddy didn't spawn in a quick advtour check, so it was left out untested); limit skinned critters' shadow to the body (cast a cheap shadow-only proxy) to win back the extra shadow triangles; a Twinkle Week snowman was considered and dropped (the Twinkle tree already stands by each Berry Center); a full robin after the next combat change.
 
+## Session 17q (2026-10-19 17:10–~18:20 UTC, session_01AXYQttiHJUdTzqAKd8dsAy): skinned hero and buddy, all four seasons, R637–R650
+- The local clone started on stale history (Round 5); reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start (production build of 778318b):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 and lands back in Bloom Town, no errors.
+- Scratch helpers as before: `build.sh` (worktree → `vite build` → `vite preview --port 5181`) and `push.sh` (commit + fetch/merge + push). **Gotcha:** an end-of-line `// comment` inserted mid-line swallows the rest of that line (R642 broke `ambience()` until fixed; `node --check src/world.js` catches it in a second, and the dev page just never becomes ready).
+- **R637:** the walking buddy is skinned too (`skinStatic` in `makeFollower`; ~30 → 8–11 meshes). `refreshFollower()` frees the old buddy's skeleton/geometry; the Daycare-walk end reuses it (indoors it just drops the reference; the reload's unload frees it). advload with `FORCE='{"buddy":"squeakwing"}'`: 160 loads, 0 problems.
+- **R638:** Seashell gulls glide on a shallow V with short flap bursts (a full flap seen from above looked like a pink bone at sunset).
+- **R639:** the hero is skinned (`skinStatic(this.hero)` right after `bakeStatic`; ~30 → 9–13 meshes). Hats, egg sling, brolly and the rod are added after and still ride on the joints. advroom (bed), advwins route1/cinder and photo fine.
+- **R640:** low quality used detail-0 canopies everywhere (cut-gem trees); it now follows medium's rule (chunky only on the border skirt and deep in the woods).
+- **R641: spring blossom** (`isSpring()`: 20 Mar–30 Apr; `save.adv.spring` forces it): about 40% of green-map trees flower in groves (pink / pale pink / white, moonlit at night) via the autumn `tint()` groves, pink petals drift past the hero (`this.blossom`), one-time 🌸 toast.
+- **R642: summer** (`isSummer()`: 21 Jun–31 Aug; `save.adv.summer`): `buildSunflowers()` puts up to 6 clumps of 3–4 tall sunflowers on grass tiles next to woods (leaning into the trees, faces up to the sun, merged into 4 meshes), and `sfx.ambient('cicada')` buzzes on summer afternoons.
+- **R643/R644:** Pecan news **adv25** (blossom, sunflowers, winter snow); tools' news lists include it. **Winter** (`isWinter()`: 4 Jan–end Feb; `save.adv.winterSnow`): frosty mornings return after Twinkle Week, and a shower over the green maps falls as snow (`this.winterFall` → no rain, `snowing`/`twinkleSnow` on, and `frost` all day so grass and treetops look dusted), with a 🌨️ toast.
+- **R645:** the ☰ card names the season/festival (`seasonTag()` in screens.js; kept on one line with `.nw`).
+- **R646:** ~30% of the trees on the volcano maps are charred grey (they had turned into another orange "autumn" wood).
+- **R647/R648:** a year-long goal: `seasonMark()` (called from `buildMorning`) ticks `save.adv.seasons.{spring,summer,autumn,winter}`; all four give the **Four Seasons Crown** (`kind: 'seasons'`, `season: true` so it isn't in the hat total). Journal Records shows '🗓️ Seasons seen 🌸 · 🍂 ·'.
+- **R649:** ☰ 📸 captions add snow and the season/festival emoji. **R650:** in Jan/Feb Pecan's forecast says snow for the green maps.
+- advload with `FORCE='{"spring":true,"summer":true,"winterSnow":true}'`: 160 loads, 0 problems.
+- **Final checks (~18:15 UTC, production build of 59c1a51 = R650):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint in portrait); advcup Sprout wins 3 and lands back in Bloom Town, no errors.
+- **Measured, not done:** skinned critters' shadows cost 47k (Route 1) – 80k (Cloudtop) triangles on medium (17–22%). A cheap shadow proxy can't be hidden from the main pass with layers (three r170's shadow map tests the *main* camera's layers), so it would cost a main-pass draw per critter and blobbier shadows; left as is.
+- Critiqued and left as is: world tour at 915×412 (8 towns), portrait 412×915 day/evening/night, low quality at 740×360, rooms at 740×360, menus (title, Tournament, Challenges, Camp, Critterdex, Training) at 740×360, title at 412×915, ☰ card, hat picker, photo, dialogue box. Neon City by day is still lavender-dusky (a style call).
+- **Next ideas:** room windows could show rain/snow; seasonal fish (careful: the fish album counts towards completion); May–mid-June and September have no seasonal look yet; the 'cicada' sound is untested on a real phone; a full robin after the next combat change.
+
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - (Fixed in R132.) A re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
@@ -1166,6 +1187,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
+   - Session 17q chained at R651 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17p chained at R637 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17o chained at R629 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17n chained at R615 with the 48-hour prompt word for word (if create_session refused, see the line added below).
