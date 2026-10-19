@@ -321,6 +321,7 @@ export class World {
   load(key, x, y, dir = 's') {
     const wet = this.rain && !this.M?.indoor; // came in out of the rain: shake off once inside
     this.unload(); this.soaking = false; this.sitting = false;
+    if (save.adv.nursery?.length) this.growUp(); // nursery babies three days old move into the hero's home
     if (this.bolt) { this.bolt.t = 9; this.updateBolt(0); } // a flash cut short by a door: the next map's mood starts from the real light
     this.doors = []; this.itemSpots = []; this.dig = null; // the night props are placed before the buildings, items and dig spot: never read the last map's (or, on a fresh World, missing) ones
     this.g.fx.clear?.(); // last map's smoke, rain and sparkles don't follow you indoors
@@ -3168,7 +3169,7 @@ export class World {
   buildActors() {
     this.npcs = [];
     const F = save.adv.flags;
-    for (const n of [...(this.M.npcs || []), ...this.traderSpot(), ...this.daycareSpot()].map((q) => q.night && this.phase !== 'day' ? { ...q, ...q.night } : q)) { // some folk have a night spot
+    for (const n of [...(this.M.npcs || []), ...this.traderSpot(), ...this.daycareSpot(), ...this.grownSpot()].map((q) => q.night && this.phase !== 'day' ? { ...q, ...q.night } : q)) { // some folk have a night spot
       if (n.hideFlag && F[n.hideFlag]) continue;
       if (n.showFlag && !F[n.showFlag]) continue;
       let root, cr = null;
@@ -3888,13 +3889,31 @@ export class World {
     return out;
   }
 
+  // three days after hatching, a nursery baby grows up and moves into the hero's home in Sprout Village; the last four stay
+  growUp() {
+    const A = save.adv, N = A.nursery || [], D = A.hatchDays || [], now = Date.now(), moved = [];
+    for (let i = 0; i < N.length; i++) if (D[i] && now - Date.parse(D[i]) >= 3 * 864e5) { moved.push(N[i]); N.splice(i, 1); D.splice(i, 1); i--; }
+    if (!moved.length) return;
+    (A.grown ||= []).push(...moved); while (A.grown.length > 4) A.grown.shift(); persist();
+    for (const id of moved) this.S.toast(`🏡 Baby ${CRITTERS.find((c) => c.id === id)?.name || 'critter'} grew up and moved into your home!`);
+  }
+
+  // grown-up Daycare babies hang about the hero's home; one of them has found a little present, once a day
+  grownSpot() {
+    if (this.M.indoor !== 'home') return [];
+    const day = new Date().toISOString().slice(0, 10), gift = save.adv.grownDay !== day;
+    return (save.adv.grown || []).map((id, i) => { const d = CRITTERS.find((q) => q.id === id); return d && { id: 'grown' + i, x: [7, 2, 5, 8][i], y: [2, 5, 6, 5][i], critter: id, lv: 8, scale: 0.85, dir: ['w', 'e', 'n', 'w'][i], wander: 1, act: 'hop', name: d.name, gift: gift && i === 0 }; }).filter(Boolean);
+  }
+
   // a Daycare egg (story.js daycare) hatches after 250 steps in the bag: the hatchling goes to live in Nanny Nell's nursery
   hatchEgg() {
     const A = save.adv, E = A.egg;
     if (E && (A.steps || 0) - E.at === 225) { this.S.toast('🥚 The egg in your bag is wobbling!'); sfx.ui?.('bounce'); }
     if (!E || (A.steps || 0) - E.at < 250 || this.dialog || this.M.indoor === 'lobby') return false;
     const def = CRITTERS.find((c) => c.id === E.id) || CRITTERS[0], first = !(A.hats ||= []).includes('eggshell');
-    A.egg = null; this.wearEgg(); (A.nursery ||= []).push(def.id); if (A.nursery.length > 3) A.nursery.shift();
+    A.egg = null; this.wearEgg(); (A.nursery ||= []).push(def.id); (A.hatchDays ||= []).push(new Date().toISOString().slice(0, 10));
+    while (A.hatchDays.length < A.nursery.length) A.hatchDays.unshift(A.hatchDays[0]); // babies from before R544 count as hatched with the oldest known
+    if (A.nursery.length > 3) { A.nursery.shift(); A.hatchDays.shift(); }
     countUp('egg'); save.berries = (save.berries || 0) + 5; if (first) A.hats.push('eggshell'); persist();
     const p = this.hero.root.position; sfx.jingle?.(2);
     this.g.fx.burst({ x: p.x, y: 1.2, z: p.z }, { n: 16, speed: 1.6, up: 2, color: 0xfff4d8, size: 0.28, life: 0.9, shape: 'star', grav: 4, drag: 1.5 });
@@ -3957,6 +3976,11 @@ export class World {
         }, n.name), n.name);
       }
       return this.challenge(a);
+    }
+    if (n.id?.startsWith('grown')) { // a grown-up Daycare baby: one has a present once a day, then they just play
+      const A = save.adv, day = new Date().toISOString().slice(0, 10), nm = n.name;
+      if (A.grownDay !== day) { A.grownDay = day; save.berries = (save.berries || 0) + 2; persist(); sfx.jingle?.(1); return this.say([`${nm} trots over with something in its mouth... a berry it found in the garden! And another! (+2 berries)`, `${nm} was a tiny egg in your bag once. Look at it now!`], null, nm); }
+      return this.say([[`${nm} rolls over for a tummy rub.`, `${nm} bounces on the rug. It's so happy to live here!`, `${nm} shows {hero} its best move. It learned it watching the TV!`][(this.t | 0) % 3]], null, nm);
     }
     if (n.id === 'mom' && this.morning) { // misty mornings: Mom serves berry pancakes, once a day
       const day = new Date().toISOString().slice(0, 10), A = save.adv;
