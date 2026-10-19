@@ -3,7 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 17:12 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
-- **Session 17h (2026-10-19 00:59–~02:30 UTC, session_01CpYgjF7gfPegFE28S2QMaU) did R489–R508 (see "Session 17h"); next round R509.**
+- **Session 17h (2026-10-19 00:59–~02:30 UTC, session_01CpYgjF7gfPegFE28S2QMaU) did R489–R513 (see "Session 17h"); next round R514.**
 - **Session 17g (2026-10-18 22:18–22:45 UTC, then a worker stall, then 00:13–~01:05 UTC on 2026-10-19, session_01BjG1fjq9qbS3C8jFjtAuWC) did R468–R488 (see "Session 17g"); next round R489.**
 - **Session 17f (2026-10-18 21:12–~22:20 UTC, session_01BmfWF5X6EkDYpX9XpiKuXu) did R446–R467 (see "Session 17f"); next round R468.**
 - **Session 17e (2026-10-18 20:20–~21:20 UTC, session_01WXwKgexVpiRXyWsWsazxv3) did R429–R445 (see "Session 17e"); next round R446.**
@@ -919,7 +919,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **Final checks (~00:55 UTC, production build of the R487 tree):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town with no errors; advload 160 fresh loads, no errors.
 - **Next ideas:** the Today list is long now (14 day rows); maybe group it by town or fold done rows; a Town Map 🪁/💨 mark is not needed but a "today" filter on the map could help; Neon City by day is still dusky (R463 made that call); the Alpha shown big in its battle and Ripples/Kindlekit balance (battle side, the user's chat); a sound for the snowball splat; re-measure FPS on a phone; other early builders (`buildScope`, `buildBottle`) still exclude `this.dig`, which is null at that point now (harmless).
 
-## Session 17h (2026-10-19 00:59–~02:30 UTC, session_01CpYgjF7gfPegFE28S2QMaU): ice, rooms, twig race, Fishing Derby, photo album, moonflowers, balance, R489–R508
+## Session 17h (2026-10-19 00:59–~02:30 UTC, session_01CpYgjF7gfPegFE28S2QMaU): ice, rooms, twig race, Fishing Derby, photo album, moonflowers, sweet potatoes, balance, R489–R513
 - The local clone started on stale history; it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start (production build of 0779a50):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town with no errors.
 - Scratch helpers (recreate them, they live in the scratchpad): `build.sh` (vite build of the working tree to `<scratch>/dist` + `vite preview --port 5181`; run it as its own Bash command) and `push.sh "<msg>"` (git add src/tools/md, commit with the attribution lines, fetch + merge origin, push with retries).
 - **R489:** Journal 📅 Today lists what's still open first; the done rows fold into one `.jr-done` line of ticked icons per section; After dark shows a count. The geyser row's 'where' is now "Cinder Road steam vent".
@@ -937,8 +937,15 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **R504/R505: Route 1 moonflowers** (`buildMoonflowers()`): after dark (no rain) three glowing flowers beside the path, seeded by day; face one + A → `moonflowerSniff()` +12% XP once a night (`save.adv.moon`). After dark row, Records, tip.
 - **R506:** hat picker / Hat Shop portraits zoom toward the head (`object-view-box`). Note: on short screens the whole modal is scaled 0.7, which is why images measure 42px.
 - **R507:** beach sand gets wind ripples and little ribbed seashells painted into the ground texture.
+- **R509/R510: Cinder Road sweet potatoes.** After dusk, face any lava tile on Cinder Road + A → `lavaRoast()` +12% XP once a night (`save.adv.roast`, `countUp('roast')`); a basket of sweet potatoes with a stick sits at 12,9 by the lava after dusk (built in `buildLavaGlow`). After dark row, Records, tip.
+- **R511:** Town Map: Seashell's daily mark shows 🎣 while the week's derby is open (beside the evening 🌅).
+- **R512:** soft snow drifts along the edges of frozen ice on snowy maps.
+- **R513:** the derby's Today row reads "Derby: <fish> <cm>+ cm" so it fits two columns.
+- Checks after R508 (production build): tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 and lands back in Bloom Town, no errors; advload 160 fresh loads, no errors.
+- **Final checks (~02:15 UTC, production build of the R513 tree):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town, no errors; advload 160 fresh loads, no errors.
+- A second full 1-rep robin after the Pricklepuff buff (R513 build): Voltferret 72%, Woolt 67%, most 39–58%, Pricklepuff 47%, Squeakwing 28%. The first run had Voltferret 47% and Squeakwing 56%, so 1-rep runs still swing ±25%; no change made. Run `robin.mjs 2` (or 3) before touching Voltferret/Squeakwing.
 - Regression: advload 160 fresh loads, no errors (after R500).
-- **Next ideas:** Cinder Road still has no after-dark activity (the lava glow is visual only); a 🎣 Town Map mark while the derby is open (Seashell's marks are crowded already); Neon City by day is still dusky (R463's call); the Alpha shown big in its battle (battle side, the user's chat); a 2-rep full robin to confirm balance (last full run: 42–61% bar Pricklepuff, now buffed); re-measure FPS on a phone; the album isn't in the save backup (by design; say so if the user asks).
+- **Next ideas:** the Critique backlog's Sky Cup/Camp balloon item is already done (camp.js) and can be struck; Neon City by day is still dusky (R463's call); the Alpha shown big in its battle (battle side, the user's chat); a 2-rep full robin to confirm balance (last full run: 42–61% bar Pricklepuff, now buffed); re-measure FPS on a phone; the album isn't in the save backup (by design; say so if the user asks).
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
@@ -997,7 +1004,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
-   - Session 17h chained at R509 with the 48-hour prompt word for word.
+   - Session 17h chained at R514 with the 48-hour prompt word for word.
    - Session 17g chained at R489 with the 48-hour prompt word for word.
    - Session 17f chained at R468 with the 48-hour prompt word for word.
    - Session 17e chained at R446 with the 48-hour prompt word for word.
