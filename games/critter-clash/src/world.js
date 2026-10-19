@@ -134,6 +134,7 @@ export function newAdventure(hero) {
 export function twinkleWeek(d = new Date()) { if (save.adv?.winter != null) return !!save.adv.winter; const m = d.getMonth(), day = d.getDate(); return (m === 11 && day >= 18) || (m === 0 && day <= 3); } // save.adv.winter forces it on/off (tests)
 // Pumpkin Nights: a little harvest festival from mid-October to the start of November (carved pumpkins by the town doors)
 export function halloween(d = new Date()) { if (save.adv?.halloween != null) return !!save.adv.halloween; return pumpkinNights(d) && d.getMonth() === 9 && d.getDate() === 31; } // the big night itself (save.adv.halloween forces it)
+export function isAutumn(d = new Date()) { return save.adv?.autumn ?? (d.getMonth() === 9 || d.getMonth() === 10 && d.getDate() <= 15); } // October to mid-November; save.adv.autumn forces it
 export function pumpkinNights(d = new Date()) { const m = d.getMonth(), day = d.getDate(); if (save.adv?.fest != null) return !!save.adv.fest; return (m === 9 && day >= 15) || (m === 10 && day <= 2); } // save.adv.fest forces it on (true) or off (false) for tests
 
 export function heroDef() {
@@ -777,11 +778,14 @@ export class World {
     const can = [], can2 = [], trunks = [], dt0 = this.g.quality === 'low' ? 0 : 1; // low quality: chunkier canopies (a quarter of the triangles)
     const mid = this.g.quality === 'med', woody = (x, y) => x < 0 || y < 0 || x >= this.W || y >= this.H || this.tile(x, y) === 'T';
     const deep = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!woody(x + i, y + j)) return false; return true; }; // a tree with trees all round it: only its top shows
+    // autumn on the green maps: about two trees in five turn orange, gold or red (picked by position, so the woods keep their shape)
+    const M = this.M, fall = isAutumn() && !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && M.border !== 'cloud' && !M.fireflies, falls = [[], [], []];
+    const tint = (x, y) => { if (!fall) return null; const h = (((x + 7) * 73856093) ^ ((y + 7) * 19349663)) >>> 0, k = h % 100; return k < 18 ? falls[0] : k < 32 ? falls[1] : k < 40 ? falls[2] : null; };
     const add = (x, y, dt = dt0, top = dt) => {
-      const [px, pz] = wpos(x, y), s = 0.85 + rand() * 0.3, jx = (rand() - 0.5) * 0.4, jz = (rand() - 0.5) * 0.4;
+      const [px, pz] = wpos(x, y), s = 0.85 + rand() * 0.3, jx = (rand() - 0.5) * 0.4, jz = (rand() - 0.5) * 0.4, F = tint(x, y);
       const tr = new THREE.CylinderGeometry(0.2 * s, 0.28 * s, 1.0 * s, 6); tr.translate(px + jx, 0.5 * s, pz + jz); trunks.push(tr);
-      const a = new THREE.IcosahedronGeometry(1.05 * s, dt); a.scale(1, 0.85, 1); a.translate(px + jx, 1.55 * s, pz + jz); (rand() < 0.5 ? can : can2).push(a);
-      const b = new THREE.IcosahedronGeometry(0.72 * s, top); b.translate(px + jx + (rand() - 0.5) * 0.3, 2.35 * s, pz + jz); (rand() < 0.5 ? can : can2).push(b);
+      const a = new THREE.IcosahedronGeometry(1.05 * s, dt); a.scale(1, 0.85, 1); a.translate(px + jx, 1.55 * s, pz + jz); (rand() < 0.5 ? F || can : F || can2).push(a);
+      const b = new THREE.IcosahedronGeometry(0.72 * s, top); b.translate(px + jx + (rand() - 0.5) * 0.3, 2.35 * s, pz + jz); (rand() < 0.5 ? F || can : F || can2).push(b);
       if (this.M.snow) { const c = new THREE.SphereGeometry(0.62 * s, dt ? 10 : 7, dt ? 6 : 3, 0, Math.PI * 2, 0, Math.PI / 2.4); c.scale(1, 0.7, 1); c.translate(px + jx, 2.62 * s, pz + jz); caps.push(c); }
     };
     const caps = [];
@@ -834,6 +838,7 @@ export class World {
     const put = (list, color, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color, { rim: 0.4 }), ink); m.castShadow = true; this.group.add(m); list.forEach((g) => g.dispose()); };
     const TC = this.M.trees || (this.phase === 'night' ? [0x2f8a5a, 0x3a9a66, 0x6a4a3a] : [0x3fae4a, 0x4cc25a, 0x8a5a3a]); // moonlit canopies at night
     put(can, TC[0], OL); put(can2, TC[1], OL); put(trunks, TC[2], OL * 0.6); put(caps, 0xffffff, OL * 0.6);
+    (this.phase === 'night' ? [0xb8703a, 0xb89a3e, 0x9a4a3a] : [0xf08a2a, 0xf2c23a, 0xd8503a]).forEach((c, i) => put(falls[i], c, OL)); // autumn canopies (moonlit at night)
   }
 
   // Neon City: blocks of lit skyscrapers where other maps have trees, street lamps (l)
@@ -2650,7 +2655,7 @@ export class World {
   // autumn (October to mid-November): a couple of fallen-leaf piles under the trees of the green maps; run through one and the leaves fly (the first of the day may hide a berry)
   buildLeaves(x, y) {
     this.leafPiles = [];
-    const M = this.M, d = new Date(), autumn = save.adv.autumn ?? (d.getMonth() === 9 || d.getMonth() === 10 && d.getDate() <= 15);
+    const M = this.M, d = new Date(), autumn = isAutumn(d);
     if (!autumn || M.indoor || M.snow || M.lava || M.city || this.key === 'seashell' || M.border === 'cloud' || M.fireflies || this.twinkleSnow) return;
     const day = d.toISOString().slice(0, 10), rand = rng(hash(this.key + ':leaves:' + day));
     const taken = new Set([...(M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((dd) => dd.x + ',' + (dd.y + 1)), ...this.itemSpots, x + ',' + y, this.bush && this.bush.x + ',' + this.bush.y]);
