@@ -369,6 +369,7 @@ export class World {
     this.buildPumpkins();
     this.buildWisps(x, y);
     this.buildFlutters(x, y);
+    this.buildMoonflowers();
     // hero
     this.hero = new Critter(heroDef(), { lod: 'mid' }); bakeStatic(this.hero);
     this.hero.root.scale.setScalar(CS);
@@ -411,7 +412,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1661,6 +1662,34 @@ export class World {
       else { persist(); lines.push("{hero}'s twig wins! Another one for the record books."); }
     } else { sfx.ui?.('back'); lines.push("The other twig wins by a leaf. {hero} pouts... then laughs. Best of three?"); }
     this.say(lines);
+  }
+
+  // Route 1 after dark: three moonflowers open beside the path and glow; sniff one (face it, A) for a little XP once a night
+  buildMoonflowers() {
+    this.moonflowers = null;
+    if (this.key !== 'route1' || this.phase !== 'night' || this.rain) return;
+    const day = new Date().toISOString().slice(0, 10), rand = rng(hash(day + 'moon')), ok = [];
+    for (let y = 2; y < this.H - 2; y++) for (let x = 2; x < this.W - 2; x++) if (this.tile(x, y) === '.' && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => this.tile(x + dx, y + dy) === ':')) ok.push([x, y]);
+    const pick = []; for (let k = 0; k < 300 && pick.length < 3 && ok.length; k++) { const p = ok[Math.floor(rand() * ok.length)]; if (pick.every(([a, b]) => Math.abs(a - p[0]) + Math.abs(b - p[1]) > 5)) pick.push(p); }
+    const petal = toon(0xf4f0ff, { emissive: 0x6a6aaa, rim: 0.9, side: THREE.DoubleSide }), heart = toon(0xfff2a0, { emissive: 0xaa9a3a }), stem = toon(0x3a7a4a);
+    this.moonflowers = pick.map(([x, y]) => {
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(1.6); this.group.add(g);
+      const st = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.7, 5), stem); st.position.y = 0.35; g.add(st);
+      const head = new THREE.Group(); head.position.y = 0.72; head.rotation.x = -0.35; g.add(head);
+      for (let i = 0; i < 6; i++) { const pt = new THREE.Mesh(new THREE.CircleGeometry(0.17, 8), petal); pt.scale.set(0.6, 1.3, 1); const a = (i / 6) * Math.PI * 2; pt.position.set(Math.sin(a) * 0.17, 0, Math.cos(a) * 0.17); pt.rotation.set(-Math.PI / 2 + 0.5 * Math.cos(a), 0, 0); pt.rotation.y = a; pt.rotation.order = 'YXZ'; pt.rotation.x = -1.1; head.add(pt); }
+      const c = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), heart); head.add(c);
+      const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xb8c8ff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.8 }); sm.userData.own = true;
+      const glow = new THREE.Sprite(sm); glow.scale.setScalar(1.8); glow.position.y = 0.75; g.add(glow);
+      return { x, y, g, head, glow };
+    });
+  }
+
+  moonflowerSniff() {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv;
+    if (A.moon === day) return this.say(['The moonflower sways in the night breeze. It smells of vanilla and starlight.', 'Moonflowers close at sunrise. Come back tomorrow night!']);
+    A.moon = day; countUp('moon'); const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.12)); persist(); sfx.jingle?.(1);
+    const p = this.hero.root.position; this.g.fx.burst({ x: p.x, y: 1, z: p.z }, { n: 14, speed: 1.4, up: 1.4, color: 0xd8e0ff, size: 0.25, life: 0.9, shape: 'star', drag: 1.6 });
+    return this.say(['{hero} sniffs the glowing moonflower... Mmm! Vanilla and starlight.', `{hero} feels calm and bright. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
   }
 
   // Route 1 by day: five butterflies flutter over the grass by the path; walk into them to catch them (all five, once a day: a berry and a little XP)
@@ -3336,6 +3365,7 @@ export class World {
     if (this.wisps) this.updateWisps(dt);
     if (this.flutters) this.updateFlutters(dt);
     if (this.twigs) this.updateTwigs(dt);
+    if (this.moonflowers) for (const [i, f] of this.moonflowers.entries()) { f.head.rotation.z = Math.sin(this.t * 0.9 + i * 2) * 0.12; f.glow.material.opacity = 0.65 + Math.sin(this.t * 1.6 + i) * 0.15; }
     if (this.lavaGlow) this.lavaGlow.m.opacity = this.lavaGlow.base * (1 + Math.sin(this.t * 1.3) * 0.12 + Math.sin(this.t * 3.7) * 0.06);
     if (this.geyser) this.updateGeyser(dt);
     if (this.kite) this.updateKite(dt);
@@ -3637,6 +3667,7 @@ export class World {
       if (save.adv.danced !== day) { save.adv.danced = day; countUp('dance'); save.berries = (save.berries || 0) + 1; persist(); return this.say(['The beat drops! {hero} busts out their best moves on the light-up floor.', 'The crowd cheers and someone tosses {hero} a berry! +1 🍓 (One tip a night.)']); }
       return this.say([['{hero} dances like nobody is watching. Everybody is watching. Nobody minds!', 'Boom-tss, boom-tss! {hero} spins, hops and strikes a pose.', 'The floor flashes pink, blue and gold under {hero}\'s feet. What a groove!'][Math.floor(Math.random() * 3)]]);
     }
+    if (this.moonflowers?.some((f) => f.x === fx && f.y === fy)) return this.moonflowerSniff();
     if (this.scope && this.scope.x === fx && this.scope.y === fy) return this.stargaze();
     if (this.ring && this.ring.x === fx && this.ring.y === fy) return this.fairyRing();
     if (this.spring?.cells.has(fx + ',' + fy)) return this.soak();

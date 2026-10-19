@@ -1014,6 +1014,7 @@ export class Screens {
       ].filter((r) => r && r[4]);
       const after = [
         ['🔭', 'Spot a constellation', N('village'), A.stars === day, seen.village],
+        ['🌼', 'Sniff a moonflower', `${N('route1')}, by the path`, A.moon === day, seen.route1],
         ['🍾', 'Message in a bottle', `${N('seashell')} shore`, A.bottle === day, seen.seashell],
         ['🔥', 'Toast a marshmallow', `${N('seashell')} bonfire`, (A.fire || {}).seashell === day, seen.seashell],
         ['🔥', 'Toast a marshmallow', `${N('frostpeak')} campfire`, (A.fire || {}).frostpeak === day, seen.frostpeak],
