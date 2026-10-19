@@ -3885,7 +3885,7 @@ export class World {
     if (this.M.indoor !== 'center') return [];
     const c = save.adv.care, out = [{ id: 'nanny', x: 2, y: 3, critter: 'woolt', name: 'Nanny Nell', dir: 'e', story: 'daycare', act: 'wave' }];
     if (c && save.critters[c.id]) out.push({ id: 'cared', x: 4, y: 4, critter: c.id, lv: save.critters[c.id].level, dir: 's', wander: 1, act: 'hop', story: 'daycare' });
-    (save.adv.nursery || []).forEach((id, i) => { const d = CRITTERS.find((q) => q.id === id); if (d) out.push({ id: 'hatch' + i, x: [3, 2, 3][i], y: [6, 5, 4][i], critter: id, lv: 1, scale: 0.55, dir: ['e', 's', 'e'][i], act: 'hop', name: `Baby ${d.name}`, lines: [`Baby ${d.name}: ${['Squeak!', 'Mew mew!', 'Peep peep!'][i]} (It tumbles over its own feet, then bounces right back up.)`, `Nanny Nell: That one hatched from the egg you carried. It follows the big critters everywhere!`] }); });
+    (save.adv.nursery || []).forEach((id, i) => { const d = CRITTERS.find((q) => q.id === id); if (d) out.push({ id: 'hatch' + i, x: [3, 2, 3][i], y: [6, 5, 4][i], critter: id, lv: 1, scale: 0.55, dir: ['e', 's', 'e'][i], act: 'hop', name: `Baby ${d.name}`, lines: [`Baby ${d.name}: ${['Squeak!', 'Mew mew!', 'Peep peep!'][i]} (It tumbles over its own feet, then bounces right back up.)`, `Nanny Nell: That one hatched from the egg you carried. It follows the big critters everywhere!`, (() => { const dd = Math.max(1, 3 - Math.floor((Date.now() - Date.parse(save.adv.hatchDays?.[i] || Date())) / 864e5)); return `Nanny Nell: In ${dd === 1 ? 'a day' : dd + ' days'} it'll be big enough to move in with you at home. I'll pack its blanket!`; })()] }); });
     return out;
   }
 

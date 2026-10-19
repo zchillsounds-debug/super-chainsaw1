@@ -1025,6 +1025,7 @@ export class Screens {
         ['⛄', 'Snowball Toss (12+ hits)', `${N('frostpeak')} snow fort`, A.snowball === day, seen.frostpeak],
         ['🌅', 'Watch the sunset (5–8 pm)', `${N('seashell')} bench`, A.sunset === day, (this.worldObj?.outPhase === 'evening' || A.sunset === day) && seen.seashell], // only while the sun is going down (or once it's watched)
         ['🥚', 'Collect a Daycare egg', 'Nanny Nell, any Berry Center', A.eggDay === day, A.eggDay === day || (A.care && !A.egg && (A.steps || 0) - A.care.at >= 400)], // only once Nell has one waiting
+        ['🏡', 'A present from home', `home, ${N('village')}`, A.grownDay === day, A.grown?.length], // a grown-up Daycare baby (world.js grownSpot)
         F.rod && (() => { const D = derbyOf(gauntletWeek()); return ['🎣', `Derby: ${D.name} ${D.cm}+ cm`, `this week, ${D.where}`, A.derbyWk === D.wk, true]; })(),
         F.ending && ['🏔️', 'Peak Gauntlet (this week)', "Keeper Orla, Champion's Peak", !!F['gauntpay_' + gauntletWeek()], true],
       ].filter((r) => r && r[4]);
@@ -1085,6 +1086,7 @@ export class Screens {
       + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
       + (A.cnt?.care ? bar('🧸', 'Daycare stays', A.cnt.care) : '')
       + (A.cnt?.egg ? bar('🐣', 'Eggs hatched', A.cnt.egg) : '')
+      + (A.grown?.length ? bar('🏡', 'Grown up at home', A.grown.length) : '')
       + (A.cnt?.storm ? bar('⛈️', 'Thunderstorms weathered', A.cnt.storm) : '')
       + (A.cnt?.rainbow ? bar('🌈', 'Rainbows seen', A.cnt.rainbow) : '')
       + bar('🌅', 'Sunsets watched', A.cnt?.sunset || 0)
