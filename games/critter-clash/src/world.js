@@ -349,11 +349,12 @@ export class World {
     this.outPhase = hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day'; // what the room windows show
     this.phase = M.indoor ? 'day' : this.outPhase;
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
-    const showers = canRain(M) && (save.adv.rain ?? rainAt(key, new Date(), hr));
+    // a brand-new adventure starts on a dry day: no showers until Prof. Pecan has sent the hero out (first impressions)
+    const showers = canRain(M) && (save.adv.rain ?? (!!save.adv.flags?.quest && rainAt(key, new Date(), hr)));
     const twinkleEve = twinkleWeek() && !M.indoor && !M.snow && !M.lava && !M.city && M.arena !== 'beach' && this.outPhase !== 'day';
     this.rain = showers && !twinkleEve; // on Twinkle Week evenings a shower comes down as snow instead
     this.storm = this.rain && !!(save.adv.storm ?? stormAt(new Date(), hr)); this.boltT = 2.5 + Math.random() * 3;
-    this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
+    this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (!!save.adv.flags?.quest && hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
     this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)) || twinkleEve && showers; // now and then a proper snowfall up in the mountains (light flurries otherwise)
     this.twinkleSnow = twinkleEve; // Twinkle Week evenings: a gentle snowfall over the green towns
     const shut = M.bramble && !save.adv.flags[M.bramble];
@@ -3456,8 +3457,8 @@ export class World {
   skyAt(hr) {
     const M = getMap(this.key) || this.M, d = new Date(), ph = hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day', key = this.key;
     if (!M || M.indoor) return ph;
-    const rain = canRain(M) && (save.adv.rain ?? rainAt(key, d, hr));
-    return [rain, rain && (save.adv.storm ?? stormAt(d, hr)), canRain(M) && !rain && ph === 'day' && hr >= 6 && hr < 9, canRain(M) && !rain && ph === 'day' && hr % 3 === 0 && hr >= 3 && rainAt(key, d, hr - 3), M.snow && rainAt(key + 'snow', d, hr)].map(Boolean).join() + ph;
+    const q = !!save.adv.flags?.quest, rain = canRain(M) && (save.adv.rain ?? (q && rainAt(key, d, hr)));
+    return [rain, rain && (save.adv.storm ?? stormAt(d, hr)), canRain(M) && !rain && ph === 'day' && hr >= 6 && hr < 9, canRain(M) && !rain && ph === 'day' && (save.adv.rainbow ?? (q && hr % 3 === 0 && hr >= 3 && rainAt(key, d, hr - 3))), M.snow && rainAt(key + 'snow', d, hr)].map(Boolean).join() + ph;
   }
 
   // the clock moved on while you stood about (evening fell, a shower rolled in): fade and rebuild the map round the hero at the same spot
