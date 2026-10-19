@@ -474,6 +474,18 @@ export class World {
             c.restore();
           } }
       }
+      // tall grass frays onto the lawn along its open edges: little scalloped tufts instead of a ruler-straight border
+      if (C.tall) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (this.tile(x, y) !== '"') continue;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          if (!'.f'.includes(this.tile(x + dx, y + dy))) continue;
+          c.fillStyle = C.tall;
+          for (let k = 0; k < 4; k++) {
+            const t0 = (k + 0.15 + rand() * 0.7) / 4, ex = (x + 0.5 + dx * 0.5) * P + (dy ? (t0 - 0.5) * P : 0), ey = (y + 0.5 + dy * 0.5) * P + (dx ? (t0 - 0.5) * P : 0), r = 3 + rand() * 3;
+            c.beginPath(); c.ellipse(ex, ey, dy ? r * 1.4 : r, dx ? r * 1.4 : r, 0, 0, Math.PI * 2); c.fill();
+          }
+        }
+      }
       // ice sheets fill the inside of their bends with a curve too, so a pond reads as a pond, not a plus sign
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         if ('iRT'.includes(this.tile(x, y))) continue;
@@ -824,6 +836,16 @@ export class World {
         c.rotateZ((rand() - 0.5) * 0.4); c.rotateY(rand() * 3);
         c.translate(px + (rand() - 0.5) * 1.6, 0.4, pz + (rand() - 0.5) * 1.6);
         blades.push(c);
+      }
+      // the patch frays at its open edges: a few shorter blades spill onto the lawn, so the patch isn't a hard square
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        if (!'.f'.includes(this.tile(x + dx, y + dy))) continue;
+        for (let k = 0; k < 3; k++) {
+          const c = new THREE.ConeGeometry(0.13, 0.32 + rand() * 0.3, 4), out = 1.0 + rand() * 0.3, side = (k - 1) * 0.6 + (rand() - 0.5) * 0.35;
+          c.rotateZ((rand() - 0.5) * 0.5); c.rotateY(rand() * 3);
+          c.translate(px + dx * out + dy * side, 0.22, pz + dy * out + dx * side);
+          blades.push(c);
+        }
       }
     }
     if (!blades.length) return;
