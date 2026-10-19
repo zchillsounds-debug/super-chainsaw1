@@ -508,6 +508,7 @@ function playStep(song, step, t) {
       if (len > 2) { const l = ctx.createOscillator(), g = ctx.createGain(); l.frequency.value = 6; g.gain.value = 5; l.connect(g); g.connect(o.frequency); l.start(t + spb); l.stop(t + spb * len); }
     }
   }
+  if (bells && s % 2 === 0) noise(s % 4 ? 0.07 : 0.11, s % 4 ? 0.035 : 0.06, { t, bus: musBus, type: 'bandpass', f0: 8500, q: 2.5, attack: 0.008 });
   const d = song.drums[s];
   if (d === 'k') {
     osc('sine', 150, 40, 0.16, 0.55, { t, bus: musBus });
@@ -530,8 +531,11 @@ const eveOf = (name) => eveSongs[name] ||= SONGS[name] && { ...SONGS[name], nigh
   inst: { ...SONGS[name].inst, lead: 'triangle', lead2: 'square', leadVol: 0.07, bassVol: 0.24, stab: 'triangle', steel: SONGS[name].inst?.steel } };
 
 // mood: false (day), true or 'night' (lullaby), 'evening' (mellow)
-export function playMusic(name, mood = false) {
-  const tag = mood === 'evening' ? ':eve' : mood ? ':night' : '';
+// bells: Twinkle Week in the Adventure towns, sleigh bells shake along on the beat
+let bells = false;
+export function playMusic(name, mood = false, withBells = false) {
+  const tag = (mood === 'evening' ? ':eve' : mood ? ':night' : '') + (withBells ? ':bells' : '');
+  bells = withBells;
   if (!ctx || currentSong === name + tag) return;
   stopMusic();
   currentSong = name + tag;
