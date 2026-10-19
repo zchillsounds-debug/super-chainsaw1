@@ -1060,18 +1060,21 @@ export class World {
   buildGulls() {
     this.gulls = [];
     if (this.M.arena !== 'beach' || this.M.indoor || this.phase === 'night') return; // gulls roost at night
-    const W = toon(0xffffff, { rim: 0.6 }), T = toon(0x9aa4b4);
+    const W = toon(0xffffff, { rim: 0.6 });
     for (let k = 0; k < 3; k++) {
       const g = new THREE.Group();
       const body = inked(new THREE.SphereGeometry(0.16, 10, 8), W, OL * 0.4); body.scale.set(0.8, 0.8, 1.8); g.add(body);
       const beak = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.16, 6), toon(0xffb030)); beak.rotation.x = Math.PI / 2; beak.position.z = 0.34; g.add(beak);
       const wings = [];
-      for (const sd of [-1, 1]) {
+      const flat = (pts, sd) => { const sh = new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x * sd, z))); const ge = new THREE.ShapeGeometry(sh); ge.rotateX(Math.PI / 2); return ge; }; // a flat outline in the x-z plane
+      for (const sd of [-1, 1]) { // a swept-back, tapering wing (bent at the wrist) with a black tip, so from above it reads as a gull and not a stick
         const wg = new THREE.Group(); wg.position.x = sd * 0.08;
-        const wm = inked(new THREE.BoxGeometry(0.7, 0.03, 0.26), W, OL * 0.3); wm.position.x = sd * 0.35; wg.add(wm);
-        const tip = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.035, 0.22), T); tip.position.x = sd * 0.62; wg.add(tip);
+        const wm = new THREE.Mesh(flat([[0, 0.12], [0.3, 0.1], [0.52, -0.02], [0.66, -0.16], [0.4, -0.12], [0.2, -0.1], [0, -0.1]], sd), toon(0xffffff, { rim: 0.6, side: THREE.DoubleSide })); wg.add(wm);
+        const tip = new THREE.Mesh(flat([[0.52, -0.02], [0.66, -0.16], [0.82, -0.3], [0.56, -0.17]], sd), toon(0x2e3240, { side: THREE.DoubleSide })); tip.position.y = 0.002; wg.add(tip);
+        const back = new THREE.Mesh(flat([[0.06, 0.06], [0.42, 0.03], [0.5, -0.04], [0.06, -0.02]], sd), toon(0xb8c2d0, { side: THREE.DoubleSide })); back.position.y = 0.004; wg.add(back); // grey on top of the wing
         g.add(wg); wings.push([wg, sd]);
       }
+      const tail = new THREE.Mesh(flat([[0, -0.2], [0.12, -0.42], [-0.12, -0.42]], 1), toon(0xffffff, { side: THREE.DoubleSide })); g.add(tail);
       g.scale.setScalar(1.4);
       this.group.add(g);
       this.gulls.push({ g, wings, r: 5 + k * 2.5, sp: 0.35 + k * 0.08, ph: k * 2.1, y: 4 + k * 0.6 });
