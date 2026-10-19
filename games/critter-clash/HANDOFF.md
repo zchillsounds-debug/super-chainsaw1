@@ -3,6 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 21:29 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC, and 4 h 17 min by a worker stall in session 17n, ~10:00–14:17 UTC on 2026-10-19). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
+- **Session 17n (2026-10-19 09:26–~10:00 UTC, a worker stall until 14:17, then 14:17–~14:50 UTC, session_01HUFkoLzTnjRxbWJxdvt8CV) did R605–R614 (see "Session 17n"); next round R615.**
 - **Session 17m (2026-10-19 08:16–~09:45 UTC, session_01V4diccGXVCBukrvNKiZbpZ) did R586–R604 (see "Session 17m"); next round R605.**
 - **Session 17l (2026-10-19 07:00–~08:20 UTC, session_012Xz8agju9ofeQ4h5JvJknc) did R559–R585 (see "Session 17l"); next round R586.**
 - **Session 17k (2026-10-19 06:04–~07:05 UTC, session_01T4Ppdv8eks7xiYBZHXjX4g) did R543–R558 (see "Session 17k"); next round R559.** It chained early at ~200k context.
@@ -1041,6 +1042,21 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Critiqued and left as is: towns/routes at all three sizes (day, evening, night), 8 rooms in portrait (rooms leave the bottom for the controls on purpose), ☰ card, Journal Today/Records, Town Map, Hat Shop grid, title/cups/camp/dex.
 - **Next ideas:** Twinkle Week trick-or-treat equivalent (carol singers?); skinned critters if draw calls matter; the Alpha shown big in its battle (battle side, the user's chat); re-measure FPS on a phone; a full robin again after the next combat change.
 
+## Session 17n (2026-10-19 09:26–~10:00 UTC, worker stall, 14:17–~14:50 UTC, session_01HUFkoLzTnjRxbWJxdvt8CV): first impressions, grown-form scarves, carols, glowing-woods light, R605–R614
+- The local clone started on stale history (Round 5); it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start (production build of eb73e80):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town, no errors.
+- **Worker stall ~10:00–14:17 UTC (4 h 17 min): the 48-hour end time moved from 2026-10-20 17:12 to 21:29 UTC.**
+- **R605:** a brand-new adventure starts on a dry day: no showers or rainbow puddles until `flags.quest` (Prof. Pecan sends the hero out). Both `load()` and `skyAt()` use the same rule, so the live sky check doesn't loop; `save.adv.rain`/`rainbow` still force it.
+- **R606:** the hero picker (`heroPick`) shows each critter's type chip and level; at ≤420 px tall it hides the blurb and shrinks portraits so Back stays on screen with a full team.
+- **R607:** grown forms (stage 2) wore the level-up scarf as a thin hoop floating round the tummy. `buildGear` now sizes it to the body's slice at that height and flattens it into a cloth band (stage forms only; base forms unchanged).
+- **R608:** Whirlglide's `windring` was 0.6 (inside its body, invisible) → 0.85; Tempestail gets `windring: 1` (it read as a plain grey cat from the front).
+- **R609:** `boltmane` (Voltweasel, Stormstoat, Thunderam, Megawatt) flares its outer bolts past the cheeks, so it reads from the front/portraits too.
+- **R610/R612: Twinkle Week carols.** After dark in Twinkle Week (`caroler(n)`, same eligibility as trick-or-treat), talking to townsfolk sings a carol together (🎵 bubble, `sfx.jingle(2)`); the first six a night give +1 berry (`save.adv.carol = {day, ids}`, `cnt.carol`). Journal Today row under "After dark", Records 🎵 "Carols sung", tip. Trick-or-treat wins if both festivals are forced on (they never overlap for real; tests use `save.adv.fest=false`).
+- **R611:** Glowcap Woods/Glowcap Hollow are dim at any hour, so the hero gets the moonlit rim and pool of light there by day too (was a brown blob). **R614:** the walking buddy gets the moonlit rim whenever the hero glow is on.
+- **Final checks (~14:45 UTC, production build of R614):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town, no errors.
+- **R613:** Pecan news **adv22** (carols, glowing-woods light, tidy scarves); the tools' news lists include it.
+- Critiqued and left as is: first-launch Prof. Pecan intro, new-adventure intro dialogue (portrait box is centred; the contact sheet is half-size), towns at 740×360 (touch UI) and 412×915, ☰ card, Journal Today/Fish, Camp, all 19 growth lines (lineup.sh).
+- **Next ideas:** Hootsy/Pricklepuff stage-2 scarves still look a little like a float from some angles (consider a knot/bow in front); a carol tune instead of the jingle; skinned critters if draw calls matter; the Alpha shown big in its battle (battle side, the user's chat); a full robin after the next combat change.
+
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - (Fixed in R132.) A re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
@@ -1080,10 +1096,10 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
    - `title`: "Critter Clash – rounds N+"
    - (Session 16e did not chain: the user's 5-hour window ended at 04:45 UTC on 2026-10-15.)
    - **48-hour run (from session 17a):** chain with the user's 48-hour prompt word for word (below), `source_revision` and `outcome_branch` `ccr-4fc93d6e-suxlhd`. The end time lives at the top of this file; never reset it.
-   - 48-hour prompt (verbatim; pass it to create_session exactly as below, without the fence). Updated by session 17i: newest sections are Session 17, R532 next, and it handles the lineage depth limit (a hand-started session can chain about 8 deep):
+   - 48-hour prompt (verbatim; pass it to create_session exactly as below, without the fence; its "currently 17:12" is the user's wording, the real end time is the one at the top of this file). Updated by session 17i: newest sections are Session 17, R532 next, and it handles the lineage depth limit (a hand-started session can chain about 8 deep):
 ```
 Continue building Critter Clash in a 48-hour chained build run. The goal is to keep developing the game until it's complete, at AAA quality.
-Start: run date -u. The run's end time is at the top of games/critter-clash/HANDOFF.md ("48-hour run", currently 2026-10-20 21:29 UTC). Never reset it. If that time has already passed, do the Finish steps below. Post a one-line status to me when you start.
+Start: run date -u. The run's end time is at the top of games/critter-clash/HANDOFF.md ("48-hour run", currently 2026-10-20 17:12 UTC). Never reset it. If that time has already passed, do the Finish steps below. Post a one-line status to me when you start.
 Read first: games/critter-clash/CONTINUE.md, then games/critter-clash/HANDOFF.md. Begin with the newest "Session 17" sections (17h, 17i, and any later ones) and their "Next ideas" lists.
 Focus: move the game toward a finished product. That means Adventure mode content and polish, finishing loose ends from the backlog and "Next ideas", bug fixes, performance, balance, menus and UI polish. All creatures stay original. Each round: take screenshots at 915x412, 740x360 and 412x915 (tools/advtour.mjs takes many world shots in one page load; MOBILE=1 forces the touch UI in landscape), critique them, then improve. Do round after round.
 Git: commit and push each round to branch ccr-4fc93d6e-suxlhd. Before every push, run git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd. Never rebase or force-push. If the local clone starts on stale history, reset it to origin/ccr-4fc93d6e-suxlhd. Round numbers continue from the highest R-number in git log (R532 next).
@@ -1115,6 +1131,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
+   - Session 17n chained at R615 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17m chained at R605 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17l chained at R586 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17k chained at R559 with the 48-hour prompt word for word (if create_session refused, see the line added below).
