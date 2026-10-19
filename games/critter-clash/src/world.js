@@ -3606,6 +3606,8 @@ export class World {
     }
     if (this.from || this.dialog) this.idleT = 0;
     H.root.rotation.y = turnTo(H.root.rotation.y, YAW[this.dir], dt * 18);
+    // the camera looks down from high up: facing it, the hero tips its chin up a little so you see a face, not the top of a head
+    P.head -= 0.22 * Math.max(0, Math.cos(H.root.rotation.y - YAW.s)) * ((this.idleT || 0) > 9.5 ? 0 : 1);
     H.update(dt);
     this.updateActors(dt);
     this.updateFollower(dt);
@@ -3800,6 +3802,7 @@ export class World {
         // townsfolk standing about turn to watch the hero go by (trainers keep their watch line; sleepers and anglers don't look up)
         const hp = this.hero.root.position, ap = a.root.position, near = a.n && !a.from && !a.n.trainer && !this.dialog && a.n.act !== 'sleep' && a.n.act !== 'fish' && !this.dozing(a.n) && Math.abs(a.x - this.hx) <= 2 && Math.abs(a.y - this.hy) <= 2 && !(a.x === this.hx && a.y === this.hy);
         a.root.rotation.y = near ? turnTo(a.root.rotation.y, Math.atan2(hp.x - ap.x, hp.z - ap.z), dt * 6) : turnTo(a.root.rotation.y, YAW[a.dir], dt * 14);
+        if (P.head < 0.2) P.head -= 0.22 * Math.max(0, Math.cos(a.root.rotation.y - YAW.s)); // chin up to the camera (sleepers keep their nod)
         a.cr.update(dt);
       } else if (a.n.balloon) {
         // a moored balloon sways; when it takes off it rises (a.fly) with the hero aboard
@@ -3845,6 +3848,7 @@ export class World {
       if (Math.random() < dt * 0.4) this.g.fx.text?.({ x: F.root.position.x + 0.4, y: 1.9, z: F.root.position.z }, 'z', 'zz');
     }
     F.root.rotation.y = turnTo(F.root.rotation.y, YAW[F.dir], dt * 14);
+    if ((this.idleT || 0) <= 12) P.head -= 0.22 * Math.max(0, Math.cos(F.root.rotation.y - YAW.s)); // chin up to the camera, like the hero
     F.cr.update(dt);
   }
 
