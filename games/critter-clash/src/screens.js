@@ -294,6 +294,7 @@ export class Screens {
         "{name}! Your grown-up Daycare babies keep staring at the front door. Ask one at home, and it'll come along for a walk!",
         "And listen in the golden evenings: the town tunes slow down and go all warm and mellow before the night lullabies start.",
         "Oh, and your Journal Records now count the night owls you meet. Hoo-hoo!",
+        "Never up after dark? Your bed at home can sleep you right through to the evening, the night or the next morning.",
       ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();

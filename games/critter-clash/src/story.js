@@ -382,6 +382,19 @@ export function storyTalk(S, id, w, a) {
     });
     return;
   }
+  if (id === 'rest') { // the hero's own bed: a nap, or sleep on until evening, night or morning (the world clock moves on for the rest of the real day)
+    save.adv.spawn = { ...w.M.exit }; persist();
+    const opts = ['💤 Just a nap', '🌇 Until evening', '🌙 Until night', '🌅 Until morning'];
+    w.ask('{hero} hops into bed. How long to sleep?', opts, (i) => {
+      sfx.jingle(2);
+      if (!i) return w.say(['{hero} has a quick nap... Ahh, refreshed!', 'Mom: Sweet dreams! (If you lose a battle, you\'ll come back home.)']);
+      const now = new Date(), target = [0, 17, 21, 7][i], h = (target - now.getHours() + 24) % 24;
+      save.adv.shift = h ? { day: now.toISOString().slice(0, 10), h } : null; persist();
+      w.fade(() => w.load(w.key, w.hx, w.hy, w.dir));
+      setTimeout(() => w.say([['', '{hero} snoozes until the sky turns gold...', '{hero} sleeps until the stars come out...', '{hero} sleeps right through until morning...'][i], ['', 'The window glows gold. Good evening, sleepyhead!', 'Hoo-hoo... The night owls are out, and the stars are twinkling.', 'Birds are singing outside. Good morning!'][i]]), 500);
+    });
+    return;
+  }
   if (id === 'nurse' || id === 'rest') {
     save.adv.spawn = { ...w.M.exit }; persist();
     sfx.jingle(2);

@@ -139,6 +139,8 @@ export function heroDef() {
 // weather: the grassy outdoor maps get the same few rainy 3-hour slots for everyone, picked from the date
 export const canRain = (M) => !M.indoor && !M.mood && !M.city && !M.snow && !M.lava && M.border !== 'cloud';
 // a third of the 3-hour blocks turn any showers in them into thunderstorms
+// the world's hour: the real clock, moved on by a nap in the hero's bed (until the real date changes)
+export function worldHour(d = new Date()) { const S = save.adv?.shift, h = d.getHours(); return S && S.day === d.toISOString().slice(0, 10) ? (h + S.h) % 24 : h; }
 export const stormAt = (d, hr = d.getHours()) => hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}storm`) % 3 === 0;
 export function rainAt(key, d, hr = d.getHours()) {
   return hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}` + key) % 5 === 0;
@@ -337,7 +339,7 @@ export class World {
     this.solid = new Set();
     const rand = rng(hash(key));
     // the phone's clock tints outdoor maps that have no mood of their own: golden evenings, soft blue nights
-    const hr = save.adv.clock ?? new Date().getHours();
+    const hr = save.adv.clock ?? worldHour();
     this.sky = this.skyAt(hr); this.skyT = 20;
     this.outPhase = hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day'; // what the room windows show
     this.phase = M.indoor ? 'day' : this.outPhase;
@@ -3401,7 +3403,7 @@ export class World {
     if ((this.skyT -= dt) > 0) return;
     this.skyT = 20;
     if (save.adv.clock != null || this.touring || this.dialog || this.busy || this.moveT > 0 || this.fishing || this.sitting || this.soaking || this.S.mode !== 'world' || this.S.root.querySelector('.modal-wrap')) return;
-    const now = this.skyAt(new Date().getHours());
+    const now = this.skyAt(worldHour());
     if (now === this.sky) return;
     const was = this.outPhase;
     this.fade(() => this.load(this.key, this.hx, this.hy, this.dir));
