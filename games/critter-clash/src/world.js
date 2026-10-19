@@ -477,7 +477,7 @@ export class World {
           } }
       }
       // tall grass frays onto the lawn along its open edges: little scalloped tufts instead of a ruler-straight border
-      if (C.tall) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (C.tall && !this.M.city) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         if (this.tile(x, y) !== '"') continue;
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
           if (!'.f'.includes(this.tile(x + dx, y + dy))) continue;
@@ -866,7 +866,7 @@ export class World {
         blades.push(c);
       }
       // the patch frays at its open edges: a few shorter blades spill onto the lawn, so the patch isn't a hard square
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      if (!this.M.city) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { // (city parks keep a neat kerb)
         if (!'.f'.includes(this.tile(x + dx, y + dy))) continue;
         for (let k = 0; k < 3; k++) {
           const c = new THREE.ConeGeometry(0.13, 0.32 + rand() * 0.3, 4), out = 1.0 + rand() * 0.3, side = (k - 1) * 0.6 + (rand() - 0.5) * 0.35;
