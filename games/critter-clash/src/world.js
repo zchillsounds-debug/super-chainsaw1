@@ -783,11 +783,13 @@ export class World {
     // groves share a hue (a 3x3-tile patch picks orange, gold or red), so the woods turn in drifts rather than a row of sweets; some trees are only just turning (yellow-green)
     const hsh = (x, y, s) => ((((x + s) * 73856093) ^ ((y + s) * 19349663)) >>> 0);
     const tint = (x, y) => { if (!fall) return null; const k = hsh(x, y, 7) % 100; if (k >= 58) return null; if (k >= 44) return falls[3]; const g = hsh(Math.floor((x + 9) / 3), Math.floor((y + 9) / 3), 3); return falls[(k < 8 ? g + 1 : g) % 3]; };
+    // a canopy blob; the chunky detail-0 one gets round normals too, so it shades like a ball instead of a cut gem
+    const ico = (r, d) => { const g = new THREE.IcosahedronGeometry(r, d); if (!d) { const P = g.attributes.position, N = g.attributes.normal; for (let i = 0; i < P.count; i++) N.setXYZ(i, P.getX(i) / r, P.getY(i) / r, P.getZ(i) / r); } return g; };
     const add = (x, y, dt = dt0, top = dt) => {
       const [px, pz] = wpos(x, y), s = 0.85 + rand() * 0.3, jx = (rand() - 0.5) * 0.4, jz = (rand() - 0.5) * 0.4, F = tint(x, y);
       const tr = new THREE.CylinderGeometry(0.2 * s, 0.28 * s, 1.0 * s, 6); tr.translate(px + jx, 0.5 * s, pz + jz); trunks.push(tr);
-      const a = new THREE.IcosahedronGeometry(1.05 * s, dt); a.scale(1, 0.85, 1); a.translate(px + jx, 1.55 * s, pz + jz); (rand() < 0.5 ? F || can : F || can2).push(a);
-      const b = new THREE.IcosahedronGeometry(0.72 * s, top); b.translate(px + jx + (rand() - 0.5) * 0.3, 2.35 * s, pz + jz); (rand() < 0.5 ? F || can : F || can2).push(b);
+      const a = ico(1.05 * s, dt); a.scale(1, 0.85, 1); a.translate(px + jx, 1.55 * s, pz + jz); (rand() < 0.5 ? F || can : F || can2).push(a);
+      const b = ico(0.72 * s, top); b.translate(px + jx + (rand() - 0.5) * 0.3, 2.35 * s, pz + jz); (rand() < 0.5 ? F || can : F || can2).push(b);
       if (this.M.snow) { const c = new THREE.SphereGeometry(0.62 * s, dt ? 10 : 7, dt ? 6 : 3, 0, Math.PI * 2, 0, Math.PI / 2.4); c.scale(1, 0.7, 1); c.translate(px + jx, 2.62 * s, pz + jz); caps.push(c); }
     };
     const caps = [];
