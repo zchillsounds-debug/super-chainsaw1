@@ -2007,8 +2007,10 @@ export class World {
   // Bloom Town on weekend nights (Fri-Sun): fireworks pop over the rooftops every few seconds (just north of the hero, so the high camera sees them)
   buildBloomFw() {
     this.bloomFw = null;
-    if (this.key !== 'bloom' || this.phase !== 'night' || ![0, 5, 6].includes(new Date().getDay())) return;
-    const b = (this.M.buildings || []).find((q) => q.stadium); if (!b) return;
+    const now = new Date(), newYear = twinkleWeek() && (now.getMonth() === 11 && now.getDate() === 31 || now.getMonth() === 0 && now.getDate() === 1); // New Year's Eve and Day: fireworks over every town
+    if (this.M.indoor || this.phase !== 'night' || !(this.key === 'bloom' && [0, 5, 6].includes(now.getDay()) || newYear)) return;
+    const b = (this.M.buildings || []).find((q) => q.stadium) || (this.M.buildings || [])[0]; if (!b) return;
+    if (newYear && !ALPHA_TOLD.has('newyear')) { ALPHA_TOLD.add('newyear'); setTimeout(() => this.group && this.S.toast('🎆 Happy New Year from all of Clashara!'), 2200); }
     const [px, pz] = wpos(b.x + b.w / 2 - 0.5, b.y + 0.5);
     this.bloomFw = { px, pz, t: 0.5, rockets: [] };
   }
