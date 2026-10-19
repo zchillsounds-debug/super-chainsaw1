@@ -3,6 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 17:12 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
+- **Session 17g (2026-10-18 22:18–22:45 UTC, then a worker stall, then 00:13–~01:05 UTC on 2026-10-19, session_01BjG1fjq9qbS3C8jFjtAuWC) did R468–R488 (see "Session 17g"); next round R489.**
 - **Session 17f (2026-10-18 21:12–~22:20 UTC, session_01BmfWF5X6EkDYpX9XpiKuXu) did R446–R467 (see "Session 17f"); next round R468.**
 - **Session 17e (2026-10-18 20:20–~21:20 UTC, session_01WXwKgexVpiRXyWsWsazxv3) did R429–R445 (see "Session 17e"); next round R446.**
 - **Session 17d (2026-10-18 19:00–~20:15 UTC, session_01Jt3NhTjr57JMGhaYdiZwXk) did R413–R428 (see "Session 17d"); next round R429.**
@@ -893,6 +894,30 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **Final checks (~22:15 UTC, production build of 3571d9d = R467):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town with no errors.
 - **Next ideas:** an evening thing to do (a Seashell sunset bench?); more landmarks / a photo album page (thumbnails would need storage care); a Town Map 📸 hint for unsnapped landmarks; the portrait arcade still pans to show its cabinets (could start the camera nearer one side); morning dew sparkles on grass; the Alpha shown big in its battle and Ripples/Kindlekit balance (battle side, the user's chat); re-measure FPS on a phone (LOD should help a lot).
 
+## Session 17g (2026-10-18 22:18 – 2026-10-19 ~01:05 UTC, session_01BjG1fjq9qbS3C8jFjtAuWC): sunset bench, snow fort, garden, geyser, kite, a night-load crash fix, R468–R488
+- The local clone started on stale history; it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start (production build of 31aab12):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town.
+- **Worker stall:** the worker stopped from ~22:45 to 00:13 UTC (88 min), so the 48-hour end time moved from 15:44 to **17:12 UTC on 2026-10-20** (top of this file).
+- **Scratch build helper** (`<scratchpad>/build.sh`): builds the *working tree* with `vite build --outDir <scratch>/dist` and serves it with `vite preview --port 5181` (no worktree needed; preview doesn't hot-reload). Call the script as its own Bash command: `pkill -f "port 518[1]"` inside a command line that contains that text kills the calling shell. `tools/multi.mjs` honours PORT now.
+- **R468/R481: Seashell sunset bench** (`buildSunset()`, driftwood bench at seashell 11,14, solid): in the golden evening (not raining) a big sun sinks into the open sea straight out from it (halo sprite + half disc at z = (H+0.7)·TILE), a glittering path on the water, and a warm additive glow plane that hides the seam where the map's sea meets the open sea. Face it → `sunsetSit()`: the hero sits (`this.sitting`), the camera pans out to sea (`updateCamera`: +5.5 landscape / +2.4 portrait), once a day +1 berry +15% XP (`save.adv.sunset`, `countUp('sunset')`). By day/night: come back in the evening. Today row (evening only, or once watched), Records, 🌅 Town Map daily mark, tip.
+- **R468: no trees past watery map edges**: the border loop skips outside cells whose nearest map tile is `~` (palms used to grow out of the open sea south of Seashell).
+- **R469:** Town Map names get ` 📸` where a landmark still waits for its photo (+ 'photo spot' key chip).
+- **R470:** misty mornings: dew twinkles (`star` particles) on grass/flower tiles around the hero (`updateMorning`).
+- **R471:** portrait arcade: `vw` 10 (instead of 5.6) so TURBO and SKY HOP show from the door.
+- **R472/R473: snowfall** on `M.snow` maps: light flurries always; a real snowfall when `rainAt(key + 'snow')` (or `save.adv.snow`) → `this.snowing`, 🌨️ on the banner and ☰ card.
+- **R474/R486: Snowball Toss** (new `src/snowball.js`, `snowballToss(root, kipPortrait, seed, onDone(score))`; hook `el.__snow` with `step(dt)`, `tap(i)`, `up`, `phase`, `score`, `close()`): Kip's snow fort at frostpeak 10,11 (`buildFort()`, solid). Snowmen pop up behind 6 mounds for 20 s (gold ones +3, Kip −2). 12+ hits → +2 berries +15% XP once a day (`save.adv.snowball`, `countUp('snowball')`); best in `save.adv.snowHi`. Each tap throws a CSS snowball. Today row, Records, ⛄ map mark, tip, Kip's line.
+- **R475/R485:** Pecan news `adv14` and `adv15` (tools' news lists include both).
+- **R476: Bloom Town garden plot** (`buildGarden()` at bloom 8,13; `gardenTend()`): plant → water once a day (sprout, leaves, bud) → on day 4 it blooms (colour cycles per bloom) → pick: +5 berries, +25% XP, the first bloom gives the new gift hat **Sunbloom Hat** (`SHOP_HATS` id `sunbloom`, new `hatModel` kind `sunflower`). State `save.adv.garden = { stage, last, blooms }`, `countUp('bloom')`. Today row, Records, 🌻 map mark, tip, Bea's line.
+- **R477:** on tall portrait phones the Journal list is up to 62vh.
+- **R478: Route 1 butterflies** (`buildFlutters()/updateFlutters()`): by day (not rain) five butterflies over reachable grass; walk into them; all five → +1 berry +10% XP once a day (`save.adv.flutter`, `countUp('flutter')`).
+- **R479: crash fix.** Opening the Adventure on a fresh World at night in Seashell Town or Frostpeak threw (buildBonfire/buildBottle read `this.doors`/`this.itemSpots` before the map built them). `load()` now resets `doors`, `itemSpots` and `dig` first; the bonfire takes door steps from `M.buildings`. **R480: `tools/advload.mjs`** opens the Adventure fresh on every map and room at 7/12/18/22h and in the rain (160 loads) and reports errors. Run it after adding any world prop.
+- **R482:** petting the buddy gives lines about the place, weather and hour.
+- **R483:** Glowcap Woods nights all year: outside Pumpkin Nights the five wisps are big golden fireflies (`this.wispKind`). `save.adv.fest = false` now forces the festival off (true forces it on).
+- **R484: Cinder Road steam geyser** (`buildGeyser()/updateGeyser()` at cinder 19,5, walkable): rumbles at 5.4 s, blasts at 6.6–7 s of a 7 s cycle; standing on the vent at the blast → `geyserLaunch()` (`this.launchT` spins the hero 4 units up; `busy` while airborne); first ride a day +1 berry (`save.adv.geyser`, `countUp('geyser')`).
+- **R487: Gale's kite** (story.js `lostQuest`: once `kite_done`, talking to Gale calls `w.flyKite(who)`): a canvas kite with a bow tail on a string flies beside the hero during the talk (`updateKite`); once a day +15% XP (`save.adv.kite`, `countUp('kite')`).
+- Regression: advwins seashell/frostpeak/village/glowcap/neon/cloudtop/ember/glowwood (fresh night loads): no errors.
+- **Final checks (~00:55 UTC, production build of the R487 tree):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town with no errors; advload 160 fresh loads, no errors.
+- **Next ideas:** the Today list is long now (14 day rows); maybe group it by town or fold done rows; a Town Map 🪁/💨 mark is not needed but a "today" filter on the map could help; Neon City by day is still dusky (R463 made that call); the Alpha shown big in its battle and Ripples/Kindlekit balance (battle side, the user's chat); a sound for the snowball splat; re-measure FPS on a phone; other early builders (`buildScope`, `buildBottle`) still exclude `this.dig`, which is null at that point now (harmless).
+
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - (Fixed in R132.) A re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
@@ -950,6 +975,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
+   - Session 17g chained at R489 with the 48-hour prompt word for word.
    - Session 17f chained at R468 with the 48-hour prompt word for word.
    - Session 17e chained at R446 with the 48-hour prompt word for word.
    - Session 17d chained at R429 with the 48-hour prompt word for word.
