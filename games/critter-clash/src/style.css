@@ -1217,3 +1217,4 @@ body:not(.is-touch) .wd-a.hint::after { content: "Space · " attr(data-hint); po
 @keyframes bolt { 0% { opacity: 0; } 6% { opacity: .75; } 14% { opacity: .05; } 22% { opacity: .55; } 100% { opacity: 0; } }
 .wd-bolt.soft { animation: boltsoft 1.6s ease-in-out forwards; } /* Reduce flashing: one slow, faint glow instead of the double flash */
 @keyframes boltsoft { 0% { opacity: 0; } 40% { opacity: .22; } 100% { opacity: 0; } }
+.nw { white-space: nowrap; }

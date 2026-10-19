@@ -10,7 +10,7 @@ import { openSettings, typeSpeed } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
-import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, LANDMARKS, albumGet, derbyOf } from './world.js';
+import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, LANDMARKS, albumGet, derbyOf } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -88,6 +88,10 @@ const HOME = {
 
 // Adventure play time (save.adv.time, seconds the world was open): '45m', '3h 05m'
 const playTime = (t) => { const m = Math.floor((t || 0) / 60); return m < 60 ? `${m}m` : `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`; };
+
+// the ☰ card names the season or festival, so players know the woods and towns change through the year
+const seasonTag = () => twinkleWeek() ? '🎄 Twinkle Week' : halloween() ? '👻 Halloween' : pumpkinNights() ? '🎃 Pumpkin Nights' : isAutumn() ? '🍂 Autumn'
+  : isFrost() || isWinter() ? '❄️ Winter' : isSpring() ? '🌸 Blossom' : isSummer() ? '🌻 Summer' : '';
 
 export class Screens {
   constructor(game) {
@@ -1037,7 +1041,7 @@ export class Screens {
     d.className = 'modal-wrap';
     const F = save.adv.flags, cups = CUPS.filter((c) => F['cup_' + c.id]).length, h = heroDef();
     d.innerHTML = `<div class="modal wd-menu-modal"><h2>Adventure</h2>
-      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero${this.worldObj?.M && !this.worldObj.M.indoor && (!this.worldObj.M.mood || this.worldObj.M.snow || this.worldObj.M.border === 'cloud') ? ` · ${this.worldObj.storm ? '⛈️ Storm' : this.worldObj.rain ? '🌧️ Rain' : this.worldObj.snowing ? '🌨️ Snow' : { day: '☀️ Day', evening: '🌇 Evening', night: '🌙 Night' }[this.worldObj.phase] || ''}` : ''}${save.adv.time >= 60 ? ` · ⏱️ ${playTime(save.adv.time)}` : ''}</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => k.startsWith('it_')).length}/24 · 📋 ${save.adv.req?.day === new Date().toISOString().slice(0, 10) ? `${save.adv.req.paid.length}/3` : 'new!'}</small></div></div>
+      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero${this.worldObj?.M && !this.worldObj.M.indoor && (!this.worldObj.M.mood || this.worldObj.M.snow || this.worldObj.M.border === 'cloud') ? ` · ${this.worldObj.storm ? '⛈️ Storm' : this.worldObj.rain ? '🌧️ Rain' : this.worldObj.snowing ? '🌨️ Snow' : { day: '☀️ Day', evening: '🌇 Evening', night: '🌙 Night' }[this.worldObj.phase] || ''}` : ''}${seasonTag() ? ` · <span class="nw">${seasonTag()}</span>` : ''}${save.adv.time >= 60 ? ` · ⏱️ ${playTime(save.adv.time)}` : ''}</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => k.startsWith('it_')).length}/24 · 📋 ${save.adv.req?.day === new Date().toISOString().slice(0, 10) ? `${save.adv.req.paid.length}/3` : 'new!'}</small></div></div>
       <div class="wd-cups">${['sprout', 'thunder', 'grove', 'champion', 'midnight', 'sky', 'legend'].map((id) => { const c = CUPS.find((x) => x.id === id), on = F['cup_' + id]; return `<span class="${on ? 'on' : ''}" style="--cc:${c.color}" title="${c.name}">${on ? '🏆' : ''}</span>`; }).join('')}${F.crowned ? '<span class="on crown" style="--cc:#ffd23f" title="Critter Crown">👑</span>' : ''}<em class="wd-pc" title="Clashara explored">🗺️ ${this.recordsPc()}%</em></div>
       <p class="wd-goal">📜 ${nextGoal(F)}${favourLine() ? `<small class="wd-fav">🤝 ${favourLine()}</small>` : ''}${save.adv.care && save.critters[save.adv.care.id] ? `<small class="wd-fav">🧸 ${grown(byId(save.adv.care.id), save.critters[save.adv.care.id].level).name} is at the Daycare · ${Math.max(0, (save.adv.steps || 0) - save.adv.care.at)} steps</small>` : ''}${save.adv.egg ? `<small class="wd-fav">🥚 Your egg hatches in ${Math.max(1, 250 - ((save.adv.steps || 0) - save.adv.egg.at))} steps</small>` : ''}${save.adv.walk ? `<small class="wd-fav">🐾 ${byId(save.adv.walk.id).name} is out on a walk with you</small>` : ''}</p>
       <div class="res-btns"></div></div>`;
