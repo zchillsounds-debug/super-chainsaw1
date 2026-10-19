@@ -332,6 +332,13 @@ export class Screens {
         "And once the leaves are down, from mid-November until Twinkle Week, early mornings bring a white frost. The grass crunches, the treetops sparkle, and you can see your breath!",
         "Oh, and that crow on the scarecrow? It has opinions. Very loud ones. Caw!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv24') && !save.news.includes('adv25')) {
+      save.news.push('adv25'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, I've been keeping a nature diary all year round! In spring, from late March through April, the trees along the routes blossom pink and white, and petals drift on the breeze.",
+        "Then from midsummer to the end of August, sunflowers taller than you stand at the edge of the woods, and the cicadas buzz all afternoon.",
+        "Every season has something new out there. Come and look!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);

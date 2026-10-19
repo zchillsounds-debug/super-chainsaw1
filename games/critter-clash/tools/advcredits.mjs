@@ -9,7 +9,7 @@ const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
 await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?q=low' + (w < h ? '&mobile' : ''));
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 await pg.evaluate(() => {
-  Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6', 'adv7', 'adv8', 'adv9', 'adv10', 'adv11', 'adv12', 'adv13', 'adv14', 'adv15', 'adv16', 'adv17', 'adv18', 'adv19', 'adv20', 'adv21', 'adv22', 'adv23', 'adv24'] });
+  Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6', 'adv7', 'adv8', 'adv9', 'adv10', 'adv11', 'adv12', 'adv13', 'adv14', 'adv15', 'adv16', 'adv17', 'adv18', 'adv19', 'adv20', 'adv21', 'adv22', 'adv23', 'adv24', 'adv25'] });
   const flags = { intro: true, quest: true, crowned: true, ending: true };
   for (const c of ['sprout', 'thunder', 'grove', 'champion', 'midnight', 'sky', 'legend']) flags['cup_' + c] = true;
   __save.adv = { hero: 'cindermunch', map: 'peak', x: 9, y: 7, dir: 's', flags, steps: 4321, time: 45320, hats: ['cap', 'boppers'], spawn: { map: 'village', x: 4, y: 6 }, seen: { village: 1, bloom: 1, seashell: 1, glowcap: 1, ember: 1, neon: 1, cloudtop: 1, frostpeak: 1, peak: 1 } };

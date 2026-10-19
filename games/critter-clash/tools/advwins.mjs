@@ -11,7 +11,7 @@ await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?q=low&mobile
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 for (const map of maps.split(',')) {
   const info = await pg.evaluate(([map, rain]) => {
-    Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6', 'adv7', 'adv8', 'adv9', 'adv10', 'adv11', 'adv12', 'adv13', 'adv14', 'adv15', 'adv16', 'adv17', 'adv18', 'adv19', 'adv20', 'adv21', 'adv22', 'adv23', 'adv24'] });
+    Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6', 'adv7', 'adv8', 'adv9', 'adv10', 'adv11', 'adv12', 'adv13', 'adv14', 'adv15', 'adv16', 'adv17', 'adv18', 'adv19', 'adv20', 'adv21', 'adv22', 'adv23', 'adv24', 'adv25'] });
     const M = __game.screens.constructor.getMap?.(map);
     __save.adv = { hero: 'cindermunch', map, x: 5, y: 5, dir: 's', flags: { intro: true, quest: true }, spawn: { map: 'village', x: 4, y: 6 }, ...(rain ? { rain: true, clock: 12 } : {}) };
     __game.screens.adventure(); __sim(0.5);
