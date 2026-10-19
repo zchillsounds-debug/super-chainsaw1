@@ -409,7 +409,8 @@ export class World {
     this.hero = new Critter(heroDef(), { lod: 'mid' }); bakeStatic(this.hero);
     this.hero.root.scale.setScalar(CS);
     this.heroGlow = null;
-    if (this.phase === 'night' && !M.indoor) { // after dark the moonlight catches the hero's outline, and a soft pool of light walks with them, so you can always spot yourself
+    const gloomy = this.key === 'glowwood' || this.key === 'glowcap'; // the glowing woods are dim at any hour
+    if ((this.phase === 'night' || gloomy) && !M.indoor) { // after dark (and always in the glowing woods) the moonlight catches the hero's outline, and a soft pool of light walks with them, so you can always spot yourself
       this.hero.setRim(0xd8e4ff, 1.7);
       const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: M.lava ? 0xffa060 : 0x9ab8ff, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.3 }); pm.userData.own = true;
       this.heroGlow = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 4.6), pm); this.heroGlow.rotation.x = -Math.PI / 2; this.group.add(this.heroGlow);
