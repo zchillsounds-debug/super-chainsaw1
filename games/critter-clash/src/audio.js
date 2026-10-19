@@ -102,6 +102,10 @@ export const sfx = {
   },
   spores() { if (ctx) { noise(0.6, 0.25, { f0: 1200, f1: 300, q: 1, attack: 0.03, type: 'lowpass' }); osc('sine', 300, 140, 0.3, 0.12); } },
   // a springy tongue: thwip out, slurp back
+  caw() { // a crow: two scratchy 'caw!'s (a falling sawtooth through a nasal noise band)
+    if (!ctx) return; const t = now();
+    for (const d of [0, 0.24]) { osc('sawtooth', 760, 540, 0.15, 0.07, { t: t + d, attack: 0.01 }); osc('square', 1140, 820, 0.13, 0.025, { t: t + d, attack: 0.01 }); noise(0.15, 0.06, { t: t + d, f0: 1500, f1: 1100, q: 4 }); }
+  },
   thwip() { if (ctx) { osc('square', 300, 1400, 0.09, 0.07); noise(0.1, 0.12, { f0: 1800, f1: 4000, q: 4 }); } },
   slurp() { if (ctx) { osc('sine', 1200, 260, 0.18, 0.18); osc('triangle', 600, 180, 0.14, 0.08); } },
   dodge() { if (ctx) { noise(0.2, 0.25, { f0: 2400, f1: 500, q: 3, attack: 0.02 }); osc('sine', 900, 1500, 0.08, 0.06); } },

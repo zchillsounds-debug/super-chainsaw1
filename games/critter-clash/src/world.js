@@ -840,7 +840,7 @@ export class World {
     const put = (list, color, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color, { rim: 0.4 }), ink); m.castShadow = true; this.group.add(m); list.forEach((g) => g.dispose()); };
     const TC = this.M.trees || (this.phase === 'night' ? [0x2f8a5a, 0x3a9a66, 0x6a4a3a] : [0x3fae4a, 0x4cc25a, 0x8a5a3a]); // moonlit canopies at night
     put(can, TC[0], OL); put(can2, TC[1], OL); put(trunks, TC[2], OL * 0.6); put(caps, 0xffffff, OL * 0.6);
-    (this.phase === 'night' ? [0xa8683a, 0xa8923e, 0x8e4a3a, 0x6a8a4a] : [0xe8842e, 0xecbc3c, 0xcc5636, 0xa8c040]).forEach((c, i) => put(falls[i], c, OL)); // autumn canopies (moonlit at night)
+    (this.phase === 'night' ? [0xb8743e, 0xb09a44, 0xa85e46, 0x6a8a4a] : [0xe8842e, 0xecbc3c, 0xcc5636, 0xa8c040]).forEach((c, i) => put(falls[i], c, OL)); // autumn canopies (moonlit at night)
   }
 
   // Neon City: blocks of lit skyscrapers where other maps have trees, street lamps (l)
@@ -3803,7 +3803,7 @@ export class World {
     if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
     if (this.scare?.crow) { // the scarecrow's crow: flap off when the hero comes near, drift back when they've gone
       const C = this.scare.crow, d = Math.abs(this.hx - this.scare.x) + Math.abs(this.hy - this.scare.y);
-      if (!C.away && d <= 2) { C.away = true; C.fly = 0; sfx.whoosh?.(1.6); }
+      if (!C.away && d <= 2) { C.away = true; C.fly = 0; sfx.whoosh?.(1.6); sfx.caw?.(); }
       if (C.away && C.fly >= 3 && d >= 6) { C.away = false; C.fly = 0; C.g.visible = true; C.g.position.copy(C.perch); }
       if (C.away && C.fly < 3) { C.fly += dt; const k = C.fly; C.g.position.set(C.perch.x + k * 2.2, C.perch.y + k * k * 1.2, C.perch.z - k * 1.4); C.wings.forEach((w, i) => { w.rotation.z = Math.sin(this.t * 28) * 0.9 * (i ? -1 : 1); }); if (k >= 3) C.g.visible = false; }
       else if (!C.away) { C.wings.forEach((w) => { w.rotation.z = 0; }); C.g.rotation.x = Math.sin(this.t * 2.3) > 0.97 ? 0.4 : 0; } // the odd peck at its own feathers
