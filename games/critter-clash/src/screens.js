@@ -998,7 +998,7 @@ export class Screens {
         ['♨️', 'Soak in the hot spring', N('ember'), A.soak === day, seen.ember],
         ['🦋', 'Catch five butterflies', `${N('route1')} (by day)`, A.flutter === day, seen.route1 && (this.worldObj?.outPhase === 'day' || A.flutter === day)],
         ['🪁', 'Fly a kite with Gale', N('cloudtop'), A.kite === day, seen.cloudtop && F.kite_done],
-        ['💨', 'Ride the steam geyser', `${N('cinder')} (stand on the vent)`, A.geyser === day, seen.cinder],
+        ['💨', 'Ride the steam geyser', `${N('cinder')} steam vent`, A.geyser === day, seen.cinder],
         ['🌻', A.garden?.stage >= 4 ? 'Pick your flower' : A.garden?.stage ? `Water the garden (day ${A.garden.stage}/4)` : 'Plant a seed', `${N('bloom')} garden plot`, A.garden?.stage >= 1 && A.garden.stage < 4 && A.garden.last === day, seen.bloom],
         ['⛄', 'Snowball Toss (12+ hits)', `${N('frostpeak')} snow fort`, A.snowball === day, seen.frostpeak],
         ['🌅', 'Watch the sunset (5–8 pm)', `${N('seashell')} bench`, A.sunset === day, (this.worldObj?.outPhase === 'evening' || A.sunset === day) && seen.seashell], // only while the sun is going down (or once it's watched)
@@ -1130,8 +1130,10 @@ export class Screens {
       const { rows, after, night } = this.todayList();
       const row = ([ic, name, where, done]) => `<li class="jr-fish jr-day ${done ? 'got' : ''}"><span>${done ? '✅' : ic}</span><b>${name}</b><em>${done ? 'done' : where}</em></li>`;
       const all = [...rows, ...after], n = all.filter((r) => r[3]).length;
-      body = `<li class="jr-head">☀️ Every day <small>${rows.filter((r) => r[3]).length}/${rows.length}</small></li>` + rows.map(row).join('')
-        + (after.length ? `<li class="jr-head">🌙 After dark${night ? '' : ' <small>(wait for the evening, or nap at home)</small>'}</li>` + after.map(row).join('') : '')
+      // what's still to do comes first; the done rows fold into one line of ticked icons at the end of each section
+      const sect = (list) => list.filter((r) => !r[3]).map(row).join('') + (list.some((r) => r[3]) ? `<li class="jr-done"><b>✅ Done</b>${list.filter((r) => r[3]).map(([ic, name]) => `<span title="${name}">${ic}</span>`).join('')}</li>` : '');
+      body = `<li class="jr-head">☀️ Every day <small>${rows.filter((r) => r[3]).length}/${rows.length}</small></li>` + sect(rows)
+        + (after.length ? `<li class="jr-head">🌙 After dark${night ? ` <small>${after.filter((r) => r[3]).length}/${after.length}</small>` : ' <small>(wait for the evening, or nap at home)</small>'}</li>` + sect(after) : '')
         + `<li class="jr-more">${n === all.length ? '🌟 Everything done today! See you tomorrow.' : `${n} of ${all.length} done today. A new day brings everything back!`}</li>`
         + `<li class="jr-tip">💡 ${this.tipOfDay()}</li>`;
     } else if (tab === 'night') { // the star log (Sprout Village's telescope) and the bottle notes read on Seashell's shore

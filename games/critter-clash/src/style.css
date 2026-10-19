@@ -1142,3 +1142,9 @@ body:has(.snow-wrap) .wd-a, body:has(.snow-wrap) .joybase { visibility: hidden; 
 .snowb { position: relative; }
 .sb-ball { position: absolute; left: 50%; bottom: 0; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #cfe4fa); box-shadow: 0 2px 4px #2a4a6a66; pointer-events: none; z-index: 5; animation: sb-throw .22s ease-out forwards; }
 @keyframes sb-throw { 0% { transform: translate(0, 0) scale(1.4); } 100% { transform: translate(var(--dx), var(--dy)) scale(.7); } }
+/* Journal 📅 Today: the done rows fold into one line of ticked icons */
+.jr-done { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 4px 8px; margin-bottom: 4px; border-radius: 10px; background: rgba(60,160,60,.12); font-size: 15px; }
+.jr-done b { font-size: 12px; margin-right: 4px; color: #2f7a2f; }
+.jr-done span { position: relative; filter: saturate(.8); }
+.jr-done span::after { content: '✓'; position: absolute; right: -3px; bottom: -4px; font-size: 9px; font-weight: 900; color: #fff; background: #3c9c3c; border-radius: 50%; width: 11px; height: 11px; line-height: 11px; text-align: center; }
+.wd-journal .jr-done { grid-column: 1 / -1; }
