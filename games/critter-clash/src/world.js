@@ -758,12 +758,14 @@ export class World {
   }
 
   buildTrees(rand) {
-    const can = [], can2 = [], trunks = [], dt = this.g.quality === 'low' ? 0 : 1; // low quality: chunkier canopies (a quarter of the triangles)
-    const add = (x, y) => {
+    const can = [], can2 = [], trunks = [], dt0 = this.g.quality === 'low' ? 0 : 1; // low quality: chunkier canopies (a quarter of the triangles)
+    const mid = this.g.quality === 'med', woody = (x, y) => x < 0 || y < 0 || x >= this.W || y >= this.H || this.tile(x, y) === 'T';
+    const deep = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!woody(x + i, y + j)) return false; return true; }; // a tree with trees all round it: only its top shows
+    const add = (x, y, dt = dt0, top = dt) => {
       const [px, pz] = wpos(x, y), s = 0.85 + rand() * 0.3, jx = (rand() - 0.5) * 0.4, jz = (rand() - 0.5) * 0.4;
       const tr = new THREE.CylinderGeometry(0.2 * s, 0.28 * s, 1.0 * s, 6); tr.translate(px + jx, 0.5 * s, pz + jz); trunks.push(tr);
       const a = new THREE.IcosahedronGeometry(1.05 * s, dt); a.scale(1, 0.85, 1); a.translate(px + jx, 1.55 * s, pz + jz); (rand() < 0.5 ? can : can2).push(a);
-      const b = new THREE.IcosahedronGeometry(0.72 * s, dt); b.translate(px + jx + (rand() - 0.5) * 0.3, 2.35 * s, pz + jz); (rand() < 0.5 ? can : can2).push(b);
+      const b = new THREE.IcosahedronGeometry(0.72 * s, top); b.translate(px + jx + (rand() - 0.5) * 0.3, 2.35 * s, pz + jz); (rand() < 0.5 ? can : can2).push(b);
       if (this.M.snow) { const c = new THREE.SphereGeometry(0.62 * s, dt ? 10 : 7, dt ? 6 : 3, 0, Math.PI * 2, 0, Math.PI / 2.4); c.scale(1, 0.7, 1); c.translate(px + jx, 2.62 * s, pz + jz); caps.push(c); }
     };
     const caps = [];
@@ -806,7 +808,7 @@ export class World {
       if (!inside && this.M.border !== 'cloud' && this.tile(Math.max(0, Math.min(this.W - 1, x)), Math.max(0, Math.min(this.H - 1, y))) === '~') continue; // open sea past a watery edge: no trees growing out of the waves
       if (t === '~' && this.M.border === 'cloud' && rand() < 0.12) { puff(x, y, 0.6); continue; }
       if (t === 'P' || (!inside && this.M.border === 'palm' && rand() < 0.3)) palm(x, y);
-      else if (inside ? t === 'T' : rand() < 0.85) add(x, y);
+      else if (inside ? t === 'T' : rand() < 0.85) add(x, y, mid && (!inside || deep(x, y)) ? 0 : dt0, mid && !inside ? 0 : dt0); // medium quality: chunkier canopies on the border skirt, and under the smooth tops deep in the woods
     }
     if (puffs.length) { this.group.add(inked(mergeGeometries(puffs), toon(0xffffff, { rim: 0.8 }), OL * 0.5)); puffs.forEach((g) => g.dispose()); }
     if (ptrunks.length) { this.group.add(inked(mergeGeometries(ptrunks), toon(0xa8784a), OL * 0.6)); ptrunks.forEach((g) => g.dispose()); }
