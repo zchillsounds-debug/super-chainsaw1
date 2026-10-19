@@ -1170,6 +1170,7 @@ export class Screens {
       + bar('⛲', 'Wishes made', A.cnt?.wish || 0)
       + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
       + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
+      + (A.cnt?.melon ? bar('🍉', 'Watermelons split', A.cnt.melon) : '') + (A.cnt?.picnic ? bar('🧺', 'Spring picnics', A.cnt.picnic) : '')
       + (A.cnt?.care ? bar('🧸', 'Daycare stays', A.cnt.care) : '')
       + (A.cnt?.egg ? bar('🐣', 'Eggs hatched', A.cnt.egg) : '')
       + (A.grown?.length ? bar('🏡', 'Grown up at home', A.grown.length) : '')
