@@ -275,10 +275,10 @@ export const FORMS = {
     forms: [
       { name: 'Whirlglide', species: 'Gale Glider', size: 1.1, voice: 1.2, bodyMul: GROW2,
         blurb: 'Glides on its own updrafts now. It hasn\'t touched the ground in three days.',
-        colors: { body: 0xaab4cc, dark: 0x323e5a, plume: 0xffffff }, parts: { windring: 0.6, brows: 0.4, tornado: 0.75 }, moves: { special: 'Sky Dive', super: 'Jet Gale' } },
+        colors: { body: 0xaab4cc, dark: 0x323e5a, plume: 0xffffff }, parts: { windring: 0.85, brows: 0.4, tornado: 0.75 }, moves: { special: 'Sky Dive', super: 'Jet Gale' } },
       { name: 'Tempestail', species: 'Tempest Glider', size: 1.24, voice: 0.95, bodyMul: GROW3,
         blurb: 'A whirlwind with a fluffy tail. Leaves fall upward wherever it goes.',
-        colors: { body: 0x8e9cc8, dark: 0x262e50, accent: 0xffffff, plume: 0xfff4c8 }, parts: { plumes: 0.8, brows: 0.7, tornado: 1.1 }, moves: { special: 'Tempest Dive', super: 'Hurricane Stream' } },
+        colors: { body: 0x8e9cc8, dark: 0x262e50, accent: 0xffffff, plume: 0xfff4c8 }, parts: { plumes: 0.8, brows: 0.7, tornado: 1.1, windring: 1 }, moves: { special: 'Tempest Dive', super: 'Hurricane Stream' } },
     ],
   },
   diggles: {
