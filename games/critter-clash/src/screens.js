@@ -10,7 +10,7 @@ import { openSettings, typeSpeed } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
-import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, LANDMARKS, albumGet, derbyOf } from './world.js';
+import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, LANDMARKS, albumGet, derbyOf } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -91,7 +91,7 @@ const playTime = (t) => { const m = Math.floor((t || 0) / 60); return m < 60 ? `
 
 // the ☰ card names the season or festival, so players know the woods and towns change through the year
 const seasonTag = () => twinkleWeek() ? '🎄 Twinkle Week' : halloween() ? '👻 Halloween' : pumpkinNights() ? '🎃 Pumpkin Nights' : isAutumn() ? '🍂 Autumn'
-  : isFrost() || isWinter() ? '❄️ Winter' : isSpring() ? '🌸 Blossom' : isSummer() ? '🌻 Summer' : '';
+  : isFrost() || isWinter() ? '❄️ Winter' : isSpring() ? '🌸 Blossom' : isMeadow() ? '🌼 Wildflowers' : isSummer() ? '🌻 Summer' : '';
 
 export class Screens {
   constructor(game) {

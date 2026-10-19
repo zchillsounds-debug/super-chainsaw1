@@ -136,6 +136,7 @@ export function twinkleWeek(d = new Date()) { if (save.adv?.winter != null) retu
 export function halloween(d = new Date()) { if (save.adv?.halloween != null) return !!save.adv.halloween; return pumpkinNights(d) && d.getMonth() === 9 && d.getDate() === 31; } // the big night itself (save.adv.halloween forces it)
 export function isAutumn(d = new Date()) { return save.adv?.autumn ?? (d.getMonth() === 9 || d.getMonth() === 10 && d.getDate() <= 15); } // October to mid-November; save.adv.autumn forces it
 export function isSpring(d = new Date()) { if (save.adv?.spring != null) return !!save.adv.spring; const m = d.getMonth(), day = d.getDate(); return (m === 2 && day >= 20) || m === 3; } // blossom time: 20 March to the end of April (save.adv.spring forces it)
+export function isMeadow(d = new Date()) { if (save.adv?.meadow != null) return !!save.adv.meadow; const m = d.getMonth(), day = d.getDate(); return m === 4 || (m === 5 && day < 21); } // late spring, May to midsummer: wildflowers all through the grass (save.adv.meadow forces it)
 export function isSummer(d = new Date()) { if (save.adv?.summer != null) return !!save.adv.summer; const m = d.getMonth(), day = d.getDate(); return (m === 5 && day >= 21) || m === 6 || m === 7; } // midsummer to the end of August (save.adv.summer forces it)
 export function isWinter(d = new Date()) { if (save.adv?.winterSnow != null) return !!save.adv.winterSnow; const m = d.getMonth(), day = d.getDate(); return (m === 0 && day > 3) || m === 1; } // after Twinkle Week to the end of February: frosty mornings, and showers fall as snow (save.adv.winterSnow forces it)
 export function isFrost(d = new Date()) { if (save.adv?.frost != null) return !!save.adv.frost; const m = d.getMonth(), day = d.getDate(); return (m === 10 && day > 15) || (m === 11 && day < 18); } // after the autumn leaves and before Twinkle Week (save.adv.frost forces it)
@@ -660,6 +661,17 @@ export class World {
         c.fillStyle = this.rain ? 'rgba(96,116,150,0.6)' : 'rgba(118,182,240,0.75)'; // after the rain they mirror the clearing sky
         c.beginPath(); c.ellipse(px, py, rx, ry, pr() * 0.6, 0, 7); c.fill();
         c.fillStyle = 'rgba(220,235,255,0.55)'; c.beginPath(); c.ellipse(px - rx * 0.3, py - ry * 0.35, rx * 0.35, ry * 0.25, 0, 0, 7); c.fill();
+      }
+      // late spring: wildflowers dotted all through the grass on the green maps (their own dice)
+      const Mm = this.M;
+      if (isMeadow() && !Mm.indoor && !Mm.trees && !Mm.snow && !Mm.lava && !Mm.city && !Mm.fireflies && Mm.border !== 'cloud' && this.key !== 'seashell') {
+        const mr = rng(hash(this.key + ':meadow'));
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === '.' && mr() < 0.35) for (let k = 0, n = 2 + Math.floor(mr() * 3); k < n; k++) {
+          const fx = x * P + 4 + mr() * (P - 8), fy = y * P + 4 + mr() * (P - 8);
+          c.fillStyle = ['#ffffff', '#ffe14d', '#ff9ac8', '#b8a0ff', '#ffffff'][Math.floor(mr() * 5)];
+          for (const [ox, oy] of [[-2, 0], [2, 0], [0, -2], [0, 2]]) { c.beginPath(); c.arc(fx + ox, fy + oy, 1.8, 0, 7); c.fill(); }
+          c.fillStyle = '#ffcc33'; c.beginPath(); c.arc(fx, fy, 1.3, 0, 7); c.fill();
+        }
       }
       // grass speckles and flowers
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -1867,7 +1879,7 @@ export class World {
   // every season the hero spends outdoors is ticked off (save.adv.seasons); all four earn the Four Seasons Crown
   seasonMark() {
     if (this.M.indoor || !save.adv.flags?.quest) return;
-    const k = isSpring() ? 'spring' : isSummer() ? 'summer' : isAutumn() ? 'autumn' : isFrost() || isWinter() || twinkleWeek() ? 'winter' : null, S = save.adv.seasons ||= {};
+    const k = isSpring() || isMeadow() ? 'spring' : isSummer() ? 'summer' : isAutumn() ? 'autumn' : isFrost() || isWinter() || twinkleWeek() ? 'winter' : null, S = save.adv.seasons ||= {};
     if (!k || S[k]) return;
     S[k] = new Date().toISOString().slice(0, 10); persist();
     if (['spring', 'summer', 'autumn', 'winter'].every((q) => S[q]) && !(save.adv.hats ||= []).includes('seasons')) {
@@ -4104,7 +4116,7 @@ export class World {
     x.drawImage(src, pad, pad);
     x.font = `${Math.round(26 * sc)}px 'Lilita One', system-ui, sans-serif`; x.textBaseline = 'middle'; x.fillStyle = '#2a1630';
     const when = { day: '☀️', evening: '🌇', night: '🌙' }[this.outPhase] + (this.storm ? '⛈️' : this.rain ? '🌧️' : this.snowing || this.twinkleSnow ? '🌨️' : '')
-      + (twinkleWeek() ? '🎄' : pumpkinNights() ? '🎃' : isAutumn() ? '🍂' : isSpring() ? '🌸' : isSummer() ? '🌻' : isFrost() || isWinter() ? '❄️' : ''); // the keepsake remembers the season too
+      + (twinkleWeek() ? '🎄' : pumpkinNights() ? '🎃' : isAutumn() ? '🍂' : isSpring() ? '🌸' : isMeadow() ? '🌼' : isSummer() ? '🌻' : isFrost() || isWinter() ? '❄️' : ''); // the keepsake remembers the season too
     const label = `${H.def.name}${F ? ' & ' + (F.name || F.cr.def.name) : ''} · ${this.M.name} ${when}`, fy = out.height - foot / 2;
     if (x.measureText(label + ' CRITTER CLASH! ').width + pad * 3 < out.width) {
       x.fillText(label, pad * 1.2, fy);
