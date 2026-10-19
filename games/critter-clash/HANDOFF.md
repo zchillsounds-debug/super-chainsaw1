@@ -3,7 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 17:12 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
-- **Session 17l (2026-10-19 07:00–~08:20 UTC, session_012Xz8agju9ofeQ4h5JvJknc) did R559–R582 (see "Session 17l"); next round R583.**
+- **Session 17l (2026-10-19 07:00–~08:20 UTC, session_012Xz8agju9ofeQ4h5JvJknc) did R559–R585 (see "Session 17l"); next round R586.**
 - **Session 17k (2026-10-19 06:04–~07:05 UTC, session_01T4Ppdv8eks7xiYBZHXjX4g) did R543–R558 (see "Session 17k"); next round R559.** It chained early at ~200k context.
 - **Session 17j (2026-10-19 04:45–~06:20 UTC, session_01DQ35cJzhCn4DLxt8ufnCuy, started by hand) did R532–R542 (see "Session 17j"); next round R543.**
 - **Session 17i (2026-10-19 02:20–~03:55 UTC, session_01GCkeeKc9vfEuRH9UvU8ayy) did R514–R531 (see "Session 17i"); next round R532. It could not chain (session lineage depth limit reached): **the user must start the next session by hand** with the 48-hour prompt in "Chaining".**
@@ -999,7 +999,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Critiqued and left as is: the ☰ card, Journal tabs and Town Map at 740×360/412×915; rooms at 740×360; the fresh-Adventure opening in portrait; evenings/nights in every town; the location banner is a 2.6 s pill, so a slow headless load can miss it (not a bug).
 - **Next ideas:** grown babies could follow the hero for a walk or appear in photos; an evening music variant (only night changes now); a Records row for night owls met; skinned critters if draw calls matter on phones; re-measure FPS on a phone (storm rain spawns ~230 drops/s); a full 2-rep robin (the last full one was R535); the Alpha shown big in its battle (battle side, the user's chat).
 
-## Session 17l (2026-10-19 07:00–~08:20 UTC, session_012Xz8agju9ofeQ4h5JvJknc): walks, evening tunes, Twinkle Week, sleep until night, text speed, R559–R582
+## Session 17l (2026-10-19 07:00–~08:25 UTC, session_012Xz8agju9ofeQ4h5JvJknc): walks, evening tunes, Twinkle Week, sleep until night, text speed, R559–R585
 - The local clone started on stale history; it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start (production build of f122f64):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town, no errors.
 - **R559:** Records 🦉 "Night owls met" (`cnt.owl`, counted in `startWild` for Hootsy/Squeakwing after dark).
 - **R560: evening music.** `playMusic(name, mood)` (audio.js): mood `'evening'` plays `eveOf(name)` (×0.86 bpm, triangle lead, lazy kick/snare, no hats); `true`/`'night'` is the lullaby. `load()` asks for evening when `outPhase === 'evening'`.
@@ -1015,10 +1015,11 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **R577:** tip of the day for walks. **R578: dusk critters:** in the golden evening Emberfly joins every wild list twice (`wildList()`), toast once a session.
 - **R579/R580:** a dozing hero stays asleep until you move (it woke every 14 s); the walking buddy curls up for a nap too.
 - **R581/R582: sleep until.** The hero's bed asks "Sleep until...?" (Just a nap / Evening / Night / Morning). `save.adv.shift = { day, h }` moves the world clock on for the rest of that real date (`worldHour()` in world.js, used by `load()` and `skyCheck()`); `save.adv.clock` (tests) still wins.
+- **R583:** the buddy picker says when a grown baby is out on a walk. **R584:** Prof. Pecan greets returning trainers once each Twinkle Week (`news` key `twinkle<year>`, January counts as the previous year). **R585:** low quality builds world trees with icosahedron detail 0 and coarser snow caps (Champion's Peak ~470k → ~280k triangles; the world's auto quality drops to low on slow phones since R563).
 - advload (R565 build): 160 fresh loads, 0 problems. advwins route1/glowwood fine. advperf (915×412 high): all maps 101–337 draw calls (Cloudtop noon is now the busiest); Peak/Glowcap Woods ~470k triangles.
-- **Final checks (~08:12 UTC, production build of the R582 tree):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town, no errors.
+- **Final checks (~08:12 UTC, production build of the R582 tree; R583–R585 are a modal line, a title greeting and low-quality tree geometry):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town, no errors.
 - Critiqued and left as is: all towns/routes at 915×412, 740×360 and 412×915; 12 interiors; the ☰ card with every status line; Town Map; title/cups/challenges/dex/camp/select/team menus.
-- **Next ideas:** grown babies in photos; a Twinkle Week Pecan greeting each December; triangle counts on Peak/Glowcap Woods (~470k) if phones struggle; the buddy picker could say a walker is out; re-check Squeakwing in the next full robin; the Alpha shown big in its battle (battle side, the user's chat); skinned critters if draw calls matter.
+- **Next ideas:** grown babies in photos; on Twinkle Week evenings rain could fall as snow; medium quality could thin far border trees too; re-check Squeakwing in the next full robin; the Alpha shown big in its battle (battle side, the user's chat); skinned critters if draw calls matter.
 
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
@@ -1094,7 +1095,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
-   - Session 17l chained at R583 with the 48-hour prompt word for word (if create_session refused, see the line added below).
+   - Session 17l chained at R586 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17k chained at R559 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17j (started by hand) chained at R543 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17i could NOT chain: create_session refused ('lineage depth 8, limit 8'; no setting changes it). The user has to start the next session by hand with the 48-hour prompt above. The next session it starts is a fresh lineage and can chain again.
