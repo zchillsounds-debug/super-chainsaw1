@@ -935,6 +935,8 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 @media (max-height: 420px) { .wd-goal { font-size: 13px; margin: -6px auto 6px; padding: 4px 8px; } }
 @media (max-height: 420px) { .wd-cups { margin: -6px 0 8px; } .wd-cups span { width: 26px; height: 26px; font-size: 13px; } }
 .hero-grid button.on { background: #ffe9a8; box-shadow: 0 0 0 3px var(--ink); }
+.hero-grid button.off { opacity: .55; filter: grayscale(.6); }
+.hero-grid button.off i { opacity: 1; font-style: normal; }
 
 /* results must always show their buttons (R244): the column scrolls if it has to, the buttons stick to the bottom edge,
    and when the content doesn't fit, .tight / .tighter (set by Screens.fitResults) squeeze the card first */

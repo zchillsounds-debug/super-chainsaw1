@@ -3093,7 +3093,7 @@ export class World {
   buildActors() {
     this.npcs = [];
     const F = save.adv.flags;
-    for (const n of [...(this.M.npcs || []), ...this.traderSpot()].map((q) => q.night && this.phase !== 'day' ? { ...q, ...q.night } : q)) { // some folk have a night spot
+    for (const n of [...(this.M.npcs || []), ...this.traderSpot(), ...this.daycareSpot()].map((q) => q.night && this.phase !== 'day' ? { ...q, ...q.night } : q)) { // some folk have a night spot
       if (n.hideFlag && F[n.hideFlag]) continue;
       if (n.showFlag && !F[n.showFlag]) continue;
       let root, cr = null;
@@ -3756,6 +3756,14 @@ export class World {
   }
 
   // Trader Tock visits one town a day (once the first cup is won), standing beside a path
+  // the Critter Daycare in every Berry Center: Nanny Nell by the sofa, and the critter in her care romping by the rug
+  daycareSpot() {
+    if (this.M.indoor !== 'center') return [];
+    const c = save.adv.care, out = [{ id: 'nanny', x: 2, y: 3, critter: 'woolt', name: 'Nanny Nell', dir: 'e', story: 'daycare', act: 'wave' }];
+    if (c && save.critters[c.id]) out.push({ id: 'cared', x: 4, y: 4, critter: c.id, lv: save.critters[c.id].level, dir: 's', wander: 1, act: 'hop', story: 'daycare' });
+    return out;
+  }
+
   traderSpot() {
     const day = new Date().toISOString().slice(0, 10);
     if (traderTown() !== this.key) return [];

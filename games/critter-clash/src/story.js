@@ -6,6 +6,7 @@ import { CUPS, CRITTERS, TYPES, withGear, skinned } from './data.js';
 const skinnedShiny = (id) => skinned(CRITTERS.find((c) => c.id === id), 'shiny');
 import { unlock } from './save.js';
 import { sfx } from './audio.js';
+import { grown } from './growth.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
@@ -303,6 +304,7 @@ export function storyTalk(S, id, w, a) {
     if (save.unlocked.length < 2) return w.say(['The CRITTER BOX hums. "Team: 1. Recruit more critters to swap who leads the way!"']);
     return w.say(['The CRITTER BOX blinks on. "Who leads the way?"'], () => S.leadPick(w));
   }
+  if (id === 'daycare') return daycare(S, w);
   if (id === 'trader') return trader(w);
   if (id === 'noodles') return noodleCart(w);
   if (id === 'arcade') return arcade(S, w);
@@ -384,7 +386,7 @@ export function storyTalk(S, id, w, a) {
     save.adv.spawn = { ...w.M.exit }; persist();
     sfx.jingle(2);
     w.say(id === 'rest' ? ['{hero} hops into bed for a quick nap...', 'Mom: Sweet dreams! (If you lose a battle, you\'ll come back home.)']
-      : ['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.', ...(save.berries > 0 ? ['Nurse Lilypop: Got spare berries? The blender over there makes smoothies that help critters grow!'] : []), ...(save.unlocked.length > 1 && !save.adv.flags.boxTip ? ((save.adv.flags.boxTip = true), ['Nurse Lilypop: See the Critter Box in the corner? Any critter on your team can take the lead from there.']) : []), ...(save.adv.req?.day !== new Date().toISOString().slice(0, 10) ? ['Nurse Lilypop: Oh, and there are new requests on the cork board by the door. Berries for little jobs!'] : [])], null, id === 'nurse' ? 'Nurse Lilypop' : '');
+      : ['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.', ...(save.berries > 0 ? ['Nurse Lilypop: Got spare berries? The blender over there makes smoothies that help critters grow!'] : []), ...(save.unlocked.length > 1 && !save.adv.flags.boxTip ? ((save.adv.flags.boxTip = true), ['Nurse Lilypop: See the Critter Box in the corner? Any critter on your team can take the lead from there.']) : []), ...(save.unlocked.length > 1 && save.adv.flags.boxTip && !save.adv.flags.careTip && !save.adv.care ? ((save.adv.flags.careTip = true), ['Nurse Lilypop: Have you met Nanny Nell by the sofa? She runs the Critter Daycare. Leave a critter with her and it trains while you walk!']) : []), ...(save.adv.req?.day !== new Date().toISOString().slice(0, 10) ? ['Nurse Lilypop: Oh, and there are new requests on the cork board by the door. Berries for little jobs!'] : [])], null, id === 'nurse' ? 'Nurse Lilypop' : '');
     return;
   }
   if (id === 'gauntlet') return gauntlet(S, w);
@@ -472,6 +474,26 @@ const REQUESTS = {
   wild: { text: 'Battle 3 wild critters', n: 3, now: () => save.adv.cnt?.wild || 0 },
   dig: { text: 'Dig up a beach sparkle', n: 1, now: () => save.adv.cnt?.dig || 0, need: 'cup_sprout' },
 };
+// the Critter Daycare (Nanny Nell, in every Berry Center): leave a team critter and it trains while the hero walks.
+// 1000 steps are worth one level (of the level it was dropped off at), up to two levels' worth
+export const careXp = (c) => Math.round(xpNeeded(c.lv0 || 1) * Math.min(2000, Math.max(0, (save.adv.steps || 0) - c.at)) / 1000);
+function daycare(S, w) {
+  const A = save.adv, c = A.care, who = 'Nanny Nell';
+  if (!c) {
+    if (save.unlocked.length < 2) return w.say([`${who}: Welcome to the Critter Daycare! Once there's more than one critter on your team, leave one with me.`, `${who}: It plays and trains while you explore. The more you walk, the more it grows!`], null, who);
+    return w.say([`${who}: Welcome to the Critter Daycare! Leave a critter with me and it plays and trains while you explore.`, `${who}: Every step you walk helps it grow. Pick it up again at any Berry Center. We're all one big family!`],
+      () => w.ask('Leave a critter at the Daycare?', ['Choose a critter', 'Not now'], (i) => { if (!i) S.leadPick(w, 'care'); }, who), who);
+  }
+  const def = byId(c.id), name = grown(def, save.critters[c.id].level).name, steps = Math.max(0, (A.steps || 0) - c.at);
+  const mood = steps < 60 ? 'It has only just settled in. Take it for a little walk first... well, take YOURSELF for a walk!' : steps < 600 ? 'It\'s been chasing the other critters round the rug all day.' : steps < 2000 ? 'It\'s grown so much stronger! It practises its moves on the sofa cushions.' : 'It\'s as strong as my lessons can make it. It misses you!';
+  w.say([`${who}: ${name} is having a lovely time! You've walked ${steps} step${steps === 1 ? '' : 's'} since you left it with me.`, `${who}: ${mood}`],
+    () => w.ask(`Take ${name} back?`, ['Take it back', 'Leave it longer'], (i) => {
+      if (i) return w.say([`${who}: Righto! ${name} and I will be right here.`], null, who);
+      const rr = grantXp(c.id, careXp(c)); A.care = null; countUp('care'); persist(); sfx.jingle?.(rr.to > rr.from ? 2 : 1);
+      w.fade(() => { w.load(w.key, w.hx, w.hy, w.dir); w.say([`${name} bounds back to {hero} for a big hug!`, rr.to > rr.from ? `${name} grew to Lv ${rr.to}! Nanny Nell waves goodbye.` : `${name} picked up a little experience. (+XP)`]); });
+    }, who), who);
+}
+
 export function countUp(k) { (save.adv.cnt ||= {})[k] = (save.adv.cnt[k] || 0) + 1; }
 function requestBoard(S, w) {
   const day = new Date().toISOString().slice(0, 10), F = flags();

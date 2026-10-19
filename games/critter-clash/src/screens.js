@@ -1067,6 +1067,7 @@ export class Screens {
       + bar('⛲', 'Wishes made', A.cnt?.wish || 0)
       + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
       + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
+      + (A.cnt?.care ? bar('🧸', 'Daycare stays', A.cnt.care) : '')
       + bar('🌅', 'Sunsets watched', A.cnt?.sunset || 0)
       + bar('🪵', 'Twig races won', A.cnt?.twig || 0)
       + bar('🎣', 'Fishing Derbies won', A.cnt?.derby || 0)
@@ -1271,9 +1272,10 @@ export class Screens {
     const g = this.game, d = document.createElement('div');
     d.className = 'modal-wrap';
     const team = CRITTERS.filter((c) => save.unlocked.includes(c.id) && c.id !== save.adv.hero);
-    d.innerHTML = `<div class="modal hero-pick"><h2>Walking buddy</h2><p>${save.adv.follow ? 'Pip is following you right now! Your buddy will be back once Pip is home.' : 'Who comes along for the walk?'}</p><div class="hero-grid">${team.map((c) => `<button data-id="${c.id}" class="${save.adv.buddy === c.id ? 'on' : ''}"><img src="${g.portrait(skinOf(c))}" alt=""><span>${grown(c, save.critters[c.id].level).name}</span></button>`).join('')}</div></div>`;
+    d.innerHTML = `<div class="modal hero-pick"><h2>Walking buddy</h2><p>${save.adv.follow ? 'Pip is following you right now! Your buddy will be back once Pip is home.' : 'Who comes along for the walk?'}</p><div class="hero-grid">${team.map((c) => `<button data-id="${c.id}" class="${save.adv.buddy === c.id ? 'on' : ''}${save.adv.care?.id === c.id ? ' off' : ''}"><img src="${g.portrait(skinOf(c))}" alt=""><span>${grown(c, save.critters[c.id].level).name}</span></button>`).join('')}</div></div>`;
     const close = () => { d.remove(); this.game.modalClose = null; };
     d.querySelectorAll('.hero-grid button').forEach((btn) => btn.addEventListener('click', () => {
+      if (btn.dataset.id === save.adv.care?.id) { sfx.ui('back'); return this.toast('🧸 That one is playing at the Daycare. Ask Nanny Nell at a Berry Center!'); }
       sfx.ui('ok'); close();
       save.adv.buddy = btn.dataset.id; persist();
       this.worldObj?.refreshFollower();
@@ -1286,14 +1288,24 @@ export class Screens {
   }
 
   // the Berry Center's Critter Box: swap which team critter leads the Adventure (the story carries on with them)
-  leadPick(w) {
-    const g = this.game, d = document.createElement('div');
+  leadPick(w, mode) { // mode 'care': pick who stays at Nanny Nell's Daycare instead
+    const g = this.game, d = document.createElement('div'), care = mode === 'care';
     d.className = 'modal-wrap';
-    const team = CRITTERS.filter((c) => save.unlocked.includes(c.id)), cur = save.adv.hero;
-    d.innerHTML = `<div class="modal hero-pick"><h2>Critter Box</h2><p>Who leads the way? Your lead walks the world and fights every battle.</p><div class="hero-grid">${team.map((c) => `<button data-id="${c.id}" class="${c.id === cur ? 'on' : ''}"><img src="${g.portrait(skinOf(c))}" alt=""><span>${grown(c, save.critters[c.id].level).name}</span><i>Lv${save.critters[c.id].level}</i></button>`).join('')}</div></div>`;
+    const team = CRITTERS.filter((c) => save.unlocked.includes(c.id)), cur = save.adv.hero, away = save.adv.care?.id;
+    d.innerHTML = `<div class="modal hero-pick"><h2>${care ? 'Critter Daycare' : 'Critter Box'}</h2><p>${care ? 'Who stays with Nanny Nell? It trains while you walk. (Your lead keeps walking with you.)' : 'Who leads the way? Your lead walks the world and fights every battle.'}</p><div class="hero-grid">${team.map((c) => `<button data-id="${c.id}" class="${c.id === (care ? '' : cur) ? 'on' : ''}${(care ? c.id === cur : c.id === away) ? ' off' : ''}"><img src="${g.portrait(skinOf(c))}" alt=""><span>${grown(c, save.critters[c.id].level).name}</span><i>${(care ? c.id === cur : c.id === away) ? (care ? 'Lead' : '🧸 Daycare') : 'Lv' + save.critters[c.id].level}</i></button>`).join('')}</div></div>`;
     const close = () => { d.remove(); this.game.modalClose = null; };
     d.querySelectorAll('.hero-grid button').forEach((btn) => btn.addEventListener('click', () => {
-      const id = btn.dataset.id; close();
+      const id = btn.dataset.id, name = grown(byId(id), save.critters[id].level).name;
+      if (care) {
+        if (id === cur) { sfx.ui('back'); return this.toast(`${name} is leading the way. Pick someone else!`); }
+        close(); sfx.ui('ok');
+        save.adv.care = { id, at: save.adv.steps || 0, lv0: save.critters[id].level };
+        if (save.adv.buddy === id) { save.adv.buddy = null; w.refreshFollower?.(); }
+        persist();
+        return w.fade(() => { w.load(w.key, w.hx, w.hy, w.dir); sfx.jingle?.(1); w.say([`Nanny Nell: ${name} is in safe paws! Off you go. Every step you walk helps it grow.`, 'Nanny Nell: Come back to any Berry Center when you want it back.'], null, 'Nanny Nell'); });
+      }
+      if (id === away) { sfx.ui('back'); return this.toast(`🧸 ${name} is at the Daycare. Ask Nanny Nell for it first!`); }
+      close();
       if (id === cur) { sfx.ui('ok'); return w.say(['{hero} is already leading the way. Onward!']); }
       sfx.ui('ok');
       if (save.adv.buddy === id) save.adv.buddy = cur; // the old lead walks behind instead
