@@ -335,6 +335,7 @@ export class World {
     const rand = rng(hash(key));
     // the phone's clock tints outdoor maps that have no mood of their own: golden evenings, soft blue nights
     const hr = save.adv.clock ?? new Date().getHours();
+    this.sky = this.skyAt(hr); this.skyT = 20;
     this.outPhase = hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day'; // what the room windows show
     this.phase = M.indoor ? 'day' : this.outPhase;
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
@@ -3326,6 +3327,26 @@ export class World {
     this.fade(() => this.load(e.to, x, y, dir));
   }
 
+  // what the sky is doing at an hour: time of day, misty morning, shower/storm, the rainbow hour, snowfall (see load)
+  skyAt(hr) {
+    const M = getMap(this.key) || this.M, d = new Date(), ph = hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day', key = this.key;
+    if (!M || M.indoor) return ph;
+    const rain = canRain(M) && (save.adv.rain ?? rainAt(key, d, hr));
+    return [rain, rain && (save.adv.storm ?? stormAt(d, hr)), canRain(M) && !rain && ph === 'day' && hr >= 6 && hr < 9, canRain(M) && !rain && ph === 'day' && hr % 3 === 0 && hr >= 3 && rainAt(key, d, hr - 3), M.snow && rainAt(key + 'snow', d, hr)].map(Boolean).join() + ph;
+  }
+
+  // the clock moved on while you stood about (evening fell, a shower rolled in): fade and rebuild the map round the hero at the same spot
+  skyCheck(dt) {
+    if ((this.skyT -= dt) > 0) return;
+    this.skyT = 20;
+    if (save.adv.clock != null || this.touring || this.dialog || this.busy || this.moveT > 0 || this.fishing || this.sitting || this.soaking || this.S.mode !== 'world' || this.S.root.querySelector('.modal-wrap')) return;
+    const now = this.skyAt(new Date().getHours());
+    if (now === this.sky) return;
+    const was = this.outPhase;
+    this.fade(() => this.load(this.key, this.hx, this.hy, this.dir));
+    setTimeout(() => this.outPhase !== was && this.S.toast(this.outPhase === 'evening' ? '🌇 The sun is getting low...' : this.outPhase === 'night' ? '🌙 Night falls over Clashara.' : '🌅 Good morning! A new day.'), 400);
+  }
+
   fade(fn) {
     this.busy = true;
     const f = document.createElement('div');
@@ -3395,6 +3416,7 @@ export class World {
   update(dt) {
     this.t += dt;
     this.bumpT = (this.bumpT || 0) - dt;
+    this.skyCheck(dt);
     const inp = this.g.input;
     const act = inp.pressed.attack || inp.pressed.confirm || this.tapA;
     this.tapA = false;
