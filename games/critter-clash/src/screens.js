@@ -311,6 +311,13 @@ export class Screens {
         "Autumn's here, too! Fallen leaves pile up by the trees in the green towns and routes. Run right through one. Wheee!",
         "And in Twinkle Week, an evening shower comes down as real snow over the green towns. Bring a scarf!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv21') && !save.news.includes('adv22')) {
+      save.news.push('adv22'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! I've been practising my singing. When Twinkle Week comes round, the townsfolk will sing carols with you after dark, and six a night share a mug of cocoa and a berry!",
+        "And deep in the glowing woods, the glowcaps now light your way at any hour. No more bumping into toadstools!",
+        "Oh, and the grown-up forms tie their level-up scarves properly now. Very smart. Very dashing.",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
