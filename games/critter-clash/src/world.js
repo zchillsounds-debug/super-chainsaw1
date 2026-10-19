@@ -3181,6 +3181,7 @@ export class World {
       this.group.add(g); this.rocker = g;
     }
     this.roomLamp();
+    this.roomFest = null; this.roomFestive();
     for (const [lx, lz, col] of this.lampPools || []) { // glowcap lamps light the floor around them
       const m = new THREE.MeshBasicMaterial({ map: glowTex(), color: col, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.35 }); m.userData.own = true;
       const pool = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), m); pool.rotation.x = -Math.PI / 2; pool.position.set(lx, 0.04, lz); this.group.add(pool);
@@ -3189,6 +3190,39 @@ export class World {
       const m = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xff7a2a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.5 }); m.userData.own = true;
       const pool = new THREE.Mesh(new THREE.PlaneGeometry(6 * k + 1, 4.5 * k + 1), m); pool.rotation.x = -Math.PI / 2; pool.position.set(fx, 0.04, fz + 1.4 * k + 0.4); this.group.add(pool); this.forgePool = pool;
     }
+  }
+
+  // festivals come indoors too: a jack-o'-lantern pair (Pumpkin Nights) or a little twinkling tree (Twinkle Week) in a back corner of the room
+  roomFestive() {
+    const pk = pumpkinNights(), tw = twinkleWeek();
+    if (!(pk || tw) || ['arcade', 'lobby'].includes(this.M.indoor)) return;
+    const busy = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.M.signs || []).map((g) => g.x + ',' + g.y)]);
+    const spot = [[1, 1], [this.W - 2, 1], [1, 2], [this.W - 2, 2], [2, 1], [this.W - 3, 1]].find(([x, y]) => this.tile(x, y) === '.' && !this.solid.has(x + ',' + y) && !busy.has(x + ',' + y));
+    if (!spot) return;
+    const [x, y] = spot, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(tw ? 1.55 : 1.35); this.group.add(g); this.solid.add(x + ',' + y);
+    const lit = this.outPhase !== 'day';
+    if (tw) {
+      const tiers = [[0.62, 0.7, 0.62], [0.48, 0.6, 1.05], [0.32, 0.5, 1.45]].map(([r, h, yy]) => { const c = new THREE.ConeGeometry(r, h, 9); c.translate(0, yy, 0); return c; });
+      const fir = inked(mergeGeometries(tiers), toon(0x2a7a4a, { rim: 0.4 }), OL * 0.4); fir.castShadow = true; g.add(fir); tiers.forEach((c) => c.dispose());
+      const pot = inked(new THREE.CylinderGeometry(0.22, 0.17, 0.3, 10), toon(0xc8503a), OL * 0.3); pot.position.y = 0.15; g.add(pot);
+      const star = inked(new THREE.OctahedronGeometry(0.13, 0), toon(0xffd84d, { emissive: lit ? 0x806010 : 0 }), OL * 0.3); star.position.y = 1.78; star.scale.set(1, 1.2, 0.5); g.add(star);
+      const cols = [0xff4a5a, 0x5ab8ff, 0xffd84d], balls = cols.map(() => []);
+      for (let k = 0; k < 10; k++) { const t = k / 10, yy = 0.45 + t * 1.15, r = 0.6 * (1 - t * 0.7) - 0.04, a = k * 2.4; const b = new THREE.SphereGeometry(0.06, 8, 6); b.translate(Math.cos(a) * r, yy, Math.sin(a) * r); balls[k % 3].push(b); }
+      balls.forEach((gs, i) => { const m = new THREE.Mesh(mergeGeometries(gs), lit ? new THREE.MeshBasicMaterial({ color: cols[i] }) : toon(cols[i], { rim: 0.8 })); if (lit) m.material.userData.own = true; g.add(m); gs.forEach((q) => q.dispose()); });
+    } else {
+      const orange = toon(0xff8a1a, { rim: 0.5 }), stemM = toon(0x4a7a2a);
+      const face = canvasTex(64, 64, (c) => { c.fillStyle = lit ? '#ffd040' : '#3a1a08'; c.beginPath(); c.moveTo(14, 26); c.lineTo(24, 12); c.lineTo(30, 28); c.fill(); c.beginPath(); c.moveTo(34, 28); c.lineTo(40, 12); c.lineTo(50, 26); c.fill(); c.beginPath(); c.moveTo(10, 38); c.quadraticCurveTo(32, 62, 54, 38); c.lineTo(46, 42); c.lineTo(40, 36); c.lineTo(32, 44); c.lineTo(24, 36); c.lineTo(18, 42); c.closePath(); c.fill(); });
+      face.userData.own = true;
+      const fm = new THREE.MeshBasicMaterial({ map: face, transparent: true, depthWrite: false }); fm.userData.own = true;
+      for (const [ox, oz, sc] of [[-0.2, -0.1, 1.25], [0.45, 0.3, 0.8]]) {
+        const p = new THREE.Group(); p.position.set(ox, 0, oz); p.scale.setScalar(sc); p.rotation.y = -ox * 0.6; g.add(p);
+        for (let k = 0; k < 5; k++) { const a = (k - 2) * 0.42, r = inked(new THREE.SphereGeometry(0.32, 12, 9), orange, OL * 0.35); r.scale.set(0.62, 0.78, 0.95); r.position.set(Math.sin(a) * 0.26, 0.3, Math.cos(a) * 0.12 - 0.06); r.castShadow = k === 2; p.add(r); }
+        const st = inked(new THREE.CylinderGeometry(0.05, 0.07, 0.2, 6), stemM, OL * 0.3); st.position.y = 0.6; st.rotation.z = 0.25; p.add(st);
+        const f = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.46), fm); f.position.set(0, 0.4, 0.27); f.rotation.x = -0.65; p.add(f);
+      }
+    }
+    if (lit) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: tw ? 0xffe080 : 0xffa030, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5 }); sm.userData.own = true; const gl = new THREE.Sprite(sm); gl.scale.setScalar(1.8); gl.position.set(0, tw ? 1.1 : 0.45, 0.2); g.add(gl); }
+    this.roomFest = { x, y, tw };
   }
 
   // after dark a warm pool of lamplight on the room's floor (the arcade keeps its neon)
@@ -4081,6 +4115,7 @@ export class World {
     if (this.pumpkins?.some((p) => p.x === fx && p.y === fy)) return this.pumpkin();
     if (this.xtree && this.xtree.x === fx && this.xtree.y === fy) return this.xtreeTalk();
     if (this.scare && this.scare.x === fx && this.scare.y === fy) return this.scareTalk();
+    if (this.roomFest && this.roomFest.x === fx && this.roomFest.y === fy) return this.say([this.roomFest.tw ? 'A little potted tree, hung with baubles and a golden star. Even indoors, it\'s Twinkle Week!' : this.outPhase === 'day' ? 'Two carved pumpkins wait in the corner for nightfall. The big one has a wonky grin.' : 'Two jack-o\'-lanterns flicker in the corner, grinning at {hero}. Happy Pumpkin Nights!']);
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
@@ -4118,7 +4153,7 @@ export class World {
     if (this.follower && at(this.follower) && !this.follower.from) return 'Pet';
     if (at(this.bush)) return 'Shake';
     if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
-    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
+    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
     if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod && !this.M.lava) return 'Fish'; }
     const sign = (this.M.signs || []).find((g) => g.x === fx && g.y === fy);
     if (sign) return sign.act ? ({ pcbox: 'Swap', board: 'Read', gauntsign: 'Read', smoothie: 'Blend', hatshop: 'Shop', rest: 'Rest', wardrobe: 'Open', mirror: 'Look', shelf: 'Look', arcade: 'Play', 'arcade:hop': 'Play' }[sign.act] || (sign.act.startsWith('case:') ? 'Look' : 'Use')) : sign.hide ? 'Look' : 'Read';
