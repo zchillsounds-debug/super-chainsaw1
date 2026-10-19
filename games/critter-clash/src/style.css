@@ -990,6 +990,7 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .jr-fish em { font-style: normal; font-weight: 800; }
 .jr-fish:not(.got) { opacity: .55; }
 @media (max-height: 420px) { .jr-list { max-height: 46vh; } .wd-journal h2 { margin-bottom: 4px; } }
+@media (min-height: 700px) and (max-aspect-ratio: 3/4) { .jr-list { max-height: min(62vh, 640px); } } /* tall phones: let the Journal use the height instead of scrolling a short list */
 
 /* Adventure hat picker */
 .hat-pick { width: min(560px, 96vw); }
