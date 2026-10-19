@@ -21,6 +21,8 @@ import { snowballToss, SNOW_GOAL } from './snowball.js';
 export const TILE = 2;
 const DIRS = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
 const YAW = { n: Math.PI, s: 0, e: Math.PI / 2, w: -Math.PI / 2 };
+// Pumpkin Nights costumes (wild critters, and townsfolk after dark)
+const COSTUMES = [['wizard', 0x3a2a4a, 0xff8a1a], ['pumpkin', 0xff8a1a, 0x4a7a2a], ['bunny', 0xf4f0ff, 0xff9ac8], ['top', 0x2a2438, 0xff3a5a], ['party', 0xff8a1a, 0x2a2438]];
 // clock-of-day lighting for outdoor maps without their own mood
 const PHASES = {
   day: null,
@@ -1913,6 +1915,9 @@ export class World {
     return this.say([this.phase === 'day' ? 'The tree is hung with baubles and a golden star. The gifts underneath are for other critters today. (Come back tomorrow!)' : 'The tree\'s little lights twinkle red, blue and gold. {hero} could watch them all night.']);
   }
 
+  // townsfolk you can trick-or-treat: Pumpkin Nights, after dark, outdoors, plain chatty folk (not trainers or story people)
+  trickOrTreat(n) { return pumpkinNights() && this.phase !== 'day' && !this.dozing(n) && !this.M.indoor && !n.story && !n.trainer && !n.rival && !n.pecan && !n.balloon && !!n.lines?.length; }
+
   // tap a pumpkin: after dark, the first one each night hides a candy berry
   pumpkin() {
     const day = new Date().toISOString().slice(0, 10), A = save.adv;
@@ -3256,7 +3261,7 @@ export class World {
         cr = new Critter(withGear(n.shiny ? skinned(byId(id), 'shiny') : byId(id), n.rival ? (n.rlv || 4) : (n.lv || n.trainer?.lv || 3)), { lod: 'low' });
         root = cr.root;
         root.scale.setScalar(CS * (n.scale || 1));
-        roleHat(cr, n.name || '');
+        if (!roleHat(cr, n.name || '') && this.trickOrTreat(n)) { const [k, c, bd] = COSTUMES[hash(n.id) % COSTUMES.length]; hatModel(cr, k, c, bd); } // Pumpkin Nights after dark: the townsfolk dress up
         bakeStatic(cr); castLite(cr);
         if (this.rain && n.act !== 'fish' && n.act !== 'sleep') brolly(cr, [0xff5a8a, 0x5ab8ff, 0xffd84d, 0x8a6aff][(n.x + n.y) % 4]); // a brolly up in the rain
       }
@@ -3310,7 +3315,7 @@ export class World {
     const lv = fixLv || lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = !fixId && Math.random() < SHINY_RATE;
     const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv), { lod: 'low' });
     cr.root.userData.critter = true;
-    if (pumpkinNights() && !fixId && Math.random() < 0.5) { const [k, c, b] = [['wizard', 0x3a2a4a, 0xff8a1a], ['pumpkin', 0xff8a1a, 0x4a7a2a], ['bunny', 0xf4f0ff, 0xff9ac8], ['top', 0x2a2438, 0xff3a5a], ['party', 0xff8a1a, 0x2a2438]][Math.floor(Math.random() * 5)]; hatModel(cr, k, c, b); } // Pumpkin Nights: wild critters dress up too
+    if (pumpkinNights() && !fixId && Math.random() < 0.5) { const [k, c, b] = COSTUMES[Math.floor(Math.random() * COSTUMES.length)]; hatModel(cr, k, c, b); } // Pumpkin Nights: wild critters dress up too
     bakeStatic(cr); castLite(cr);
     cr.root.scale.setScalar(CS * 0.9);
     this.group.add(cr.root);
@@ -4145,6 +4150,14 @@ export class World {
         return this.say(['Mom: Good morning, sleepyhead! I made berry pancakes. Sit, sit! Adventures need breakfast.', `{hero} gobbles a whole stack! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : 'Full of energy! (+XP)'}`, 'Mom: Come by any morning before nine. There\'s always a stack with your name on it.'], null, n.name);
       }
       return this.say(['Mom: More pancakes? Ha! Tomorrow morning, sweetie. Now go and explore!'], null, n.name);
+    }
+    if (this.trickOrTreat(n)) { // Pumpkin Nights after dark: trick or treat! (one treat from each of up to six townsfolk a night)
+      const day = new Date().toISOString().slice(0, 10), A = save.adv, T = A.tot?.day === day ? A.tot : (A.tot = { day, ids: [] }), who = n.name.split(' ').pop();
+      if (!T.ids.includes(n.id) && T.ids.length < 6) {
+        T.ids.push(n.id); countUp('tot'); save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(1);
+        const L = [`${who}: Eek! A spooky {hero}! ...Oh, it's you. Here, have a treat!`, `${who}: Trick or treat? Treat, definitely treat. I'm not ready for a trick.`, `${who}: Ooh, great costume! Wait... is that a costume? Here, take a candy berry!`, `${who}: Happy Pumpkin Nights! I saved the last candy berry for you.`];
+        return this.say(['{hero}: Trick or treat!', L[(hash(n.id) + T.ids.length) % L.length], `+1 🍓 candy berry! (${T.ids.length}/6 treats tonight)`], null, n.name);
+      }
     }
     if (pumpkinNights() && !n.story && n.lines?.length && Math.random() < 0.3) { // Pumpkin Nights chatter
       const who = n.name.split(' ').pop(), F = [`${who}: Happy Pumpkin Nights! Did you check the pumpkins by the doors after dark? Some hide treats!`, `${who}: I carved my pumpkin to look like {hero}. ...It came out looking like a potato. A HAPPY potato.`, `${who}: Pumpkin Nights only last until early November. Find three treats and there's a surprise, I hear!`, `${who}: Boo! ...Did I scare you? No? I'll practise.`, `${who}: The pumpkins glow brightest around midnight. Spooky... but cosy.`];

@@ -1118,8 +1118,8 @@ const HATS = [
   [/^(Kite Flyer|Sky Diver)/, 'cap', 0x5a8ad8], [/^Swimmer/, 'swim', 0x3ac8ff], [/^Skater/, 'back', 0xff5a8a], [/^Firewalker/, 'band', 0xff4a2a], [/^Gang/, 'band', 0x3a2a4a], [/^Milliner/, 'top', 0x2a2438, 0xff3a5a], [/^Trader/, 'tricorn', 0x6a3a2a, 0xffd84d], [/^Ace/, 'beanie', 0xf4f8ff, 0x3a6ad8],
 ];
 export function roleHat(cr, name) {
-  const h = HATS.find(([re]) => re.test(name)); if (!h) return;
-  hatModel(cr, h[1], h[2], h[3]);
+  const h = HATS.find(([re]) => re.test(name)); if (!h) return false;
+  hatModel(cr, h[1], h[2], h[3]); return true;
 }
 // hats the hero can buy at the Bloom Town Hat Shop (Adventure), priced in berries
 export const SHOP_HATS = [

@@ -1068,6 +1068,7 @@ export class Screens {
         ['⛸️', 'Skate a twirl', `${N('frostpeak')} pond`, A.skated === day, seen.frostpeak && A.skates],
         ['🍄', 'Sing with the fairy ring', N('glowcap'), A.ring === day, seen.glowcap],
         ['🎃', 'Find a pumpkin treat', 'pumpkins by the town doors', A.pumpkin === day, pumpkinNights()],
+        ['🧛', `Trick-or-treat (${A.tot?.day === day ? A.tot.ids.length : 0}/6)`, 'townsfolk in costume', A.tot?.day === day && A.tot.ids.length >= 6, pumpkinNights()],
         [pumpkinNights() ? '👻' : '✨', pumpkinNights() ? 'Catch the five wisps' : 'Catch five big fireflies', N('glowwood'), A.wisp === day, seen.glowwood],
       ].filter((r) => r[4]);
     return { rows, after, night };
@@ -1132,6 +1133,7 @@ export class Screens {
       + (A.cnt?.kite ? bar('🪁', 'Kites flown', A.cnt.kite) : '')
       + (A.cnt?.breakfast ? bar('🥞', 'Breakfasts at home', A.cnt.breakfast) : '')
       + (A.cnt?.pumpkin ? bar('🎃', 'Pumpkin treats', A.cnt.pumpkin) : '')
+      + (A.cnt?.tot ? bar('🍬', 'Trick-or-treats', A.cnt.tot) : '')
       + (A.cnt?.twinkle ? bar('🎄', 'Twinkle Week gifts', A.cnt.twinkle) : '')
       + (A.cnt?.wisp ? bar('✨', 'Firefly & wisp nights', A.cnt.wisp) : '')
       + bar('📸', 'Landmark photos', (A.snaps || []).length, LANDMARKS.length)
@@ -1170,6 +1172,7 @@ export class Screens {
       seen.cloudtop && 'Toss a berry in the Cloudtop fountain for a wish, once a day.',
       F.crowned && 'Since you were crowned, route trainers want a rematch once a day, at your level.',
       pumpkinNights() && 'Pumpkin Nights: the pumpkins by town doors glow after dark, and Glowcap Woods has wisps to catch.',
+      pumpkinNights() && 'Pumpkin Nights: after dark the townsfolk dress up. Say "trick or treat" to six of them a night for candy berries!',
       twinkleWeek() && 'Twinkle Week: look under the tree by any Berry Center for a gift, once a day.',
       A.grown?.length && 'Your grown-up Daycare babies love a walk. Ask one at home, and it may find a berry on the way.',
     ].filter(Boolean);
