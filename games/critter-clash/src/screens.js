@@ -1149,6 +1149,7 @@ export class Screens {
       + bar('💥', 'Alphas beaten', Object.keys(F).filter((k) => k.startsWith('alpha_')).length)
       + bar('🌿', 'Wild critters met', A.cnt?.wild || 0)
       + (A.cnt?.owl ? bar('🦉', 'Night owls met', A.cnt.owl) : '')
+      + bar('🗓️', 'Seasons seen', ['spring', 'summer', 'autumn', 'winter'].map((q, i) => (A.seasons?.[q] ? ['🌸', '🌻', '🍂', '❄️'][i] : '·')).join(' '))
       + bar('🕹️', 'TURBO best', A.arcadeHi || 0)
       + bar('🎈', 'SKY HOP best', A.hopHi || 0)
       + bar('🪩', 'Nights danced', A.cnt?.dance || 0)

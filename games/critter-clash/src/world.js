@@ -1861,6 +1861,18 @@ export class World {
     });
   }
 
+  // every season the hero spends outdoors is ticked off (save.adv.seasons); all four earn the Four Seasons Crown
+  seasonMark() {
+    if (this.M.indoor || !save.adv.flags?.quest) return;
+    const k = isSpring() ? 'spring' : isSummer() ? 'summer' : isAutumn() ? 'autumn' : isFrost() || isWinter() || twinkleWeek() ? 'winter' : null, S = save.adv.seasons ||= {};
+    if (!k || S[k]) return;
+    S[k] = new Date().toISOString().slice(0, 10); persist();
+    if (['spring', 'summer', 'autumn', 'winter'].every((q) => S[q]) && !(save.adv.hats ||= []).includes('seasons')) {
+      save.adv.hats.push('seasons'); persist();
+      setTimeout(() => this.group && this.S.toast('🌸🌻🍂❄️ You\'ve seen all four seasons in Clashara! New hat: Four Seasons Crown'), 3200);
+    }
+  }
+
   // summer on the green maps: clumps of sunflowers, taller than the hero, stand where the grass meets the woods, their faces turned to the sun
   buildSunflowers() {
     const M = this.M;
@@ -2157,6 +2169,7 @@ export class World {
 
   buildMorning() {
     this.mornMist = null; this.mornMistIn = 0;
+    this.seasonMark();
     if (this.blossom && !ALPHA_TOLD.has('blossom')) { ALPHA_TOLD.add('blossom'); setTimeout(() => this.group && this.S.toast('🌸 Blossom time! The trees along the routes are in flower.'), 1500); }
     if (!this.morning && !this.frost) return;
     if (this.frost && this.winterFall && !ALPHA_TOLD.has('frost')) { ALPHA_TOLD.add('frost'); setTimeout(() => this.group && this.S.toast('🌨️ Snow! A winter shower is dusting the green maps white.'), 1500); }
