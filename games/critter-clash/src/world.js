@@ -779,8 +779,10 @@ export class World {
     const mid = this.g.quality === 'med', woody = (x, y) => x < 0 || y < 0 || x >= this.W || y >= this.H || this.tile(x, y) === 'T';
     const deep = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!woody(x + i, y + j)) return false; return true; }; // a tree with trees all round it: only its top shows
     // autumn on the green maps: about two trees in five turn orange, gold or red (picked by position, so the woods keep their shape)
-    const M = this.M, fall = isAutumn() && !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && M.border !== 'cloud' && !M.fireflies, falls = [[], [], []];
-    const tint = (x, y) => { if (!fall) return null; const h = (((x + 7) * 73856093) ^ ((y + 7) * 19349663)) >>> 0, k = h % 100; return k < 18 ? falls[0] : k < 32 ? falls[1] : k < 40 ? falls[2] : null; };
+    const M = this.M, fall = isAutumn() && !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && M.border !== 'cloud' && !M.fireflies, falls = [[], [], [], []];
+    // groves share a hue (a 3x3-tile patch picks orange, gold or red), so the woods turn in drifts rather than a row of sweets; some trees are only just turning (yellow-green)
+    const hsh = (x, y, s) => ((((x + s) * 73856093) ^ ((y + s) * 19349663)) >>> 0);
+    const tint = (x, y) => { if (!fall) return null; const k = hsh(x, y, 7) % 100; if (k >= 58) return null; if (k >= 44) return falls[3]; const g = hsh(Math.floor((x + 9) / 3), Math.floor((y + 9) / 3), 3); return falls[(k < 8 ? g + 1 : g) % 3]; };
     const add = (x, y, dt = dt0, top = dt) => {
       const [px, pz] = wpos(x, y), s = 0.85 + rand() * 0.3, jx = (rand() - 0.5) * 0.4, jz = (rand() - 0.5) * 0.4, F = tint(x, y);
       const tr = new THREE.CylinderGeometry(0.2 * s, 0.28 * s, 1.0 * s, 6); tr.translate(px + jx, 0.5 * s, pz + jz); trunks.push(tr);
@@ -838,7 +840,7 @@ export class World {
     const put = (list, color, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color, { rim: 0.4 }), ink); m.castShadow = true; this.group.add(m); list.forEach((g) => g.dispose()); };
     const TC = this.M.trees || (this.phase === 'night' ? [0x2f8a5a, 0x3a9a66, 0x6a4a3a] : [0x3fae4a, 0x4cc25a, 0x8a5a3a]); // moonlit canopies at night
     put(can, TC[0], OL); put(can2, TC[1], OL); put(trunks, TC[2], OL * 0.6); put(caps, 0xffffff, OL * 0.6);
-    (this.phase === 'night' ? [0xb8703a, 0xb89a3e, 0x9a4a3a] : [0xf08a2a, 0xf2c23a, 0xd8503a]).forEach((c, i) => put(falls[i], c, OL)); // autumn canopies (moonlit at night)
+    (this.phase === 'night' ? [0xa8683a, 0xa8923e, 0x8e4a3a, 0x6a8a4a] : [0xe8842e, 0xecbc3c, 0xcc5636, 0xa8c040]).forEach((c, i) => put(falls[i], c, OL)); // autumn canopies (moonlit at night)
   }
 
   // Neon City: blocks of lit skyscrapers where other maps have trees, street lamps (l)
