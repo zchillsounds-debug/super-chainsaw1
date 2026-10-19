@@ -2611,6 +2611,7 @@ export class World {
     sfx.leafPile?.();
     L.flat = 14; L.g.scale.set(1.25, 0.35, 1.25);
     if (!mine) return;
+    this.hero.emote?.('happy', 'grin', 1);
     const day = new Date().toISOString().slice(0, 10), A = save.adv;
     if (A.leaves !== day) {
       A.leaves = day; countUp('leaves');
