@@ -3196,7 +3196,7 @@ export class World {
   roomFestive() {
     const pk = pumpkinNights(), tw = twinkleWeek();
     if (!(pk || tw) || ['arcade', 'lobby'].includes(this.M.indoor)) return;
-    const busy = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.M.signs || []).map((g) => g.x + ',' + g.y)]);
+    const busy = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.M.signs || []).map((g) => g.x + ',' + g.y), ...({ center: ['1,2', '1,3', '2,3'], kidroom: ['1,1', '1,2', '2,1', '2,2', '3,2'] }[this.M.indoor] || [])]); // (the Daycare toy chest, Flo's play tent)
     const spot = [[1, 1], [this.W - 2, 1], [1, 2], [this.W - 2, 2], [2, 1], [this.W - 3, 1]].find(([x, y]) => this.tile(x, y) === '.' && !this.solid.has(x + ',' + y) && !busy.has(x + ',' + y));
     if (!spot) return;
     const [x, y] = spot, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(tw ? 1.55 : 1.35); this.group.add(g); this.solid.add(x + ',' + y);
