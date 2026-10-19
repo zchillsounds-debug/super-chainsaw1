@@ -3,6 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 21:29 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC, and 4 h 17 min by a worker stall in session 17n, ~10:00–14:17 UTC on 2026-10-19). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
+- **Session 17o (2026-10-19 14:38–~15:50 UTC, session_01A4ZY5wCmnYjfYmT3T4J1by) did R615–R628 (see "Session 17o"); next round R629.**
 - **Session 17n (2026-10-19 09:26–~10:00 UTC, a worker stall until 14:17, then 14:17–~14:50 UTC, session_01HUFkoLzTnjRxbWJxdvt8CV) did R605–R614 (see "Session 17n"); next round R615.**
 - **Session 17m (2026-10-19 08:16–~09:45 UTC, session_01V4diccGXVCBukrvNKiZbpZ) did R586–R604 (see "Session 17m"); next round R605.**
 - **Session 17l (2026-10-19 07:00–~08:20 UTC, session_012Xz8agju9ofeQ4h5JvJknc) did R559–R585 (see "Session 17l"); next round R586.**
@@ -1057,6 +1058,23 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Critiqued and left as is: first-launch Prof. Pecan intro, new-adventure intro dialogue (portrait box is centred; the contact sheet is half-size), towns at 740×360 (touch UI) and 412×915, ☰ card, Journal Today/Fish, Camp, all 19 growth lines (lineup.sh).
 - **Next ideas:** Hootsy/Pricklepuff stage-2 scarves still look a little like a float from some angles (consider a knot/bow in front); a carol tune instead of the jingle; skinned critters if draw calls matter; the Alpha shown big in its battle (battle side, the user's chat); a full robin after the next combat change.
 
+## Session 17o (2026-10-19 14:38–~15:50 UTC, session_01A4ZY5wCmnYjfYmT3T4J1by): autumn trees, scarecrows, festive rooms, faces to camera, festival music, R615–R628
+- The local clone started on stale history (Round 5); it was reset to `origin/ccr-4fc93d6e-suxlhd`. **Checks at start (production build of c096394):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the in-battle pause menu in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town, no errors. advtrial/advgauntlet/advcredits fine; advload 160 fresh loads, 0 problems.
+- Build helper used this session: a scratch `build.sh` (worktree of HEAD → `vite build` → `vite preview --port 5181`). **Gotcha:** `pkill -f "vite preview"` inside a Bash call whose own command line contains that text kills the calling shell (exit 144); use `pkill -f "[v]ite preview"`.
+- **R615:** after dusk the stadium floodlights show a lit lamp panel on top (from the high camera they were dark boxes).
+- **R616/R627: grown-form scarves.** A knot and a short hanging end under the chin (`buildGear`, stage forms), and the band is narrowed sideways (x scale `chubby * 0.86`) so its ends tuck into the body: a collar, not a belt. Why it looked like a belt: the head overlaps the body so far down that the "neck" sits at t≈0.3 of the ellipsoid, nearly the widest part. Snoozlo's stage 2 still reads a little wide.
+- **R617:** Twinkle Week carols play `sfx.carol(k)` (four original waltz phrases, matching the verse shown) instead of the jingle.
+- **R618/R620: festival music.** `playMusic(name, mood, extra)`: `extra` = `'bells'` (Twinkle Week: sleigh-bell shakes on the beat) or `'spooky'` (Pumpkin Nights evenings/nights: a wobbly ghost "ooo" every other bar). The world passes it in `load()`; every other caller passes nothing, so it resets.
+- **R619: faces to camera.** In the world, the hero, buddy and townsfolk/wild critters tip their chin up (`P.head -= 0.22 * cos(yaw)`) when facing the high camera, so you see a face rather than the top of a head; dozers/sleepers keep their nod.
+- **R621/R626/R628: Pumpkin Nights scarecrow** (`buildScarecrow`, `scareTalk`): hay bales and pumpkins by every Berry Center (home in Sprout Village), by day too; A = it wobbles + a line; a crow on its arm flaps off when the hero is within 2 tiles and returns once they're 6+ away; on Halloween night its face glows. The face is painted on the head's texture (u=0.25 faces +z) and the head tips up, because a face plane sank into the sphere.
+- **R622: autumn colours.** `isAutumn()` (October to 15 Nov; `save.adv.autumn` forces it, shared with leaf piles). On green maps (no `M.trees`, snow, lava, Seashell, cloud or fireflies) ~40% of trees, picked by a position hash, get orange/gold/red canopies (moonlit shades at night): 3 extra merged meshes.
+- **R623/R624: festive rooms** (`roomFestive`): a jack-o'-lantern pair (Pumpkin Nights) or a little potted twinkling tree (Twinkle Week) in a free back corner of every room except the arcade and lobbies, lit after dark, with a Look line. It keeps clear of the Daycare toy chest (center) and Flo's tent (kidroom).
+- **R625:** Pecan news **adv23** (autumn colours, scarecrow, festive rooms, festival music); the tools' news lists include it.
+- **Final checks (~15:44 UTC, production build of cb4ad85 = R628):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint in portrait); advcup Sprout wins 3 matches and lands back in Bloom Town, no errors. APK runs for R621–R623 succeeded.
+- Critiqued and left as is: all towns at 3 sizes (day/evening/night), 8 rooms at 740×360 and 412×915 (portrait rooms pan with the hero on purpose), Journal tabs and ☰ card at both sizes, dialogue box at all sizes, all menus (tapcheck shots), 8 growth lines, advperf (102–336 draw calls, unchanged).
+- **Note for the user's chat (battle side):** in autumn the world trees turn orange/gold/red, but the open-field wild-fight backdrop (arena.js open mode) keeps green trees. `isAutumn()` is exported from world.js if you want to match it.
+- **Next ideas:** Snoozlo stage-2 collar still a touch wide; a crow "caw" sound; first-frost/late-November look after the autumn window; a Twinkle Week counterpart to the scarecrow (a snowman with a carrot nose by each Berry Center); a full robin after the next combat change.
+
 ## Critique backlog (known issues)
 - The user hasn't yet confirmed the Round 32 character-pick fix on their phone. If they reply, prioritise whatever they report.
 - (Fixed in R132.) A re-measure robin at 04:10 (production build of cccf6e6) died with `page.evaluate: TypeError: Cannot read properties of null (reading 'critter')` somewhere after 141+ matches. Only data.js stats changed since the previous clean full run, so it's a rare existing race. Unconfirmed guess: robin starts the next battle at once while the previous battle's `onEnd` → `screens.results()` timer (900 ms) fires mid-battle. A player can't start a battle that fast. Run robin against the dev server (port 5180) to get an unminified stack trace, and make robin call `__game.endBattle()` and wait 1 s between matches if the guess is right.
@@ -1131,6 +1149,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
+   - Session 17o chained at R629 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17n chained at R615 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17m chained at R605 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17l chained at R586 with the 48-hour prompt word for word (if create_session refused, see the line added below).
