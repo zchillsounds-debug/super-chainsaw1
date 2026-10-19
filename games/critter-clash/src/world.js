@@ -392,6 +392,9 @@ export class World {
     this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (!!save.adv.flags?.quest && hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
     this.frost = (isFrost() || isWinter()) && canRain(M) && this.phase === 'day' && (winterFall || !this.rain && !this.afterRain && hr >= 6 && hr < 10); // (a winter snowfall dusts them white all day) // late-autumn mornings: a white frost on the grass and the treetops until mid-morning
     this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)) || (twinkleEve || winterFall) && showers; // now and then a proper snowfall up in the mountains (light flurries otherwise)
+    { const ok = M.indoor && key.split(':')[1], OM = ok && MAPS[ok]; // indoors: the weather outside, for the windows
+      this.outWet = !!OM && canRain(OM) && !!(save.adv.rain ?? (!!save.adv.flags?.quest && rainAt(ok, new Date(), hr)));
+      this.outSnow = this.outWet && OM.arena !== 'beach' && (isWinter() || twinkleWeek() && this.outPhase !== 'day') || !!OM?.snow && !!(save.adv.snow ?? rainAt(ok + 'snow', new Date(), hr)); }
     this.twinkleSnow = twinkleEve || winterFall; // Twinkle Week evenings: a gentle snowfall over the green towns
     const shut = M.bramble && !save.adv.flags[M.bramble];
     for (let ty = 0; ty < this.H; ty++) for (let tx = 0; tx < this.W; tx++) {
@@ -2944,7 +2947,9 @@ export class World {
           if (x % 3 === 2 && this.tile(x, 1) !== 'C') { const pg = new THREE.CircleGeometry(0.42, 18); pg.translate(px, 1.95, pz + 1.04); add('glass', pg); const rg = new THREE.TorusGeometry(0.45, 0.08, 6, 18); rg.translate(px, 1.95, pz + 1.05); add('gold', rg); }
           if (x === 6) { const wh = new THREE.TorusGeometry(0.5, 0.06, 6, 20); wh.translate(px, 2.0, pz + 1.08); add('wood', wh); for (let k = 0; k < 4; k++) { const sp = new THREE.BoxGeometry(1.35, 0.07, 0.07); sp.rotateZ(k * Math.PI / 4); sp.translate(px, 2.0, pz + 1.09); add('wood', sp); } const hb = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 10); hb.rotateX(Math.PI / 2); hb.translate(px, 2.0, pz + 1.1); add('gold', hb); }
         }
-        if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C' && this.M.indoor !== 'lobby' && this.M.indoor !== 'cabin') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); if (this.outPhase === 'night') { box('stars', 0.07, 0.07, 0.1, px - 0.3, 2.15, pz + 1.04); box('stars', 0.05, 0.05, 0.1, px + 0.1, 2.0, pz + 1.04); box('stars', 0.06, 0.06, 0.1, px + 0.32, 2.2, pz + 1.04); box('moon', 0.2, 0.2, 0.1, px + 0.25, 1.75, pz + 1.04); } }
+        if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C' && this.M.indoor !== 'lobby' && this.M.indoor !== 'cabin') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); if (this.outPhase === 'night') { box('stars', 0.07, 0.07, 0.1, px - 0.3, 2.15, pz + 1.04); box('stars', 0.05, 0.05, 0.1, px + 0.1, 2.0, pz + 1.04); box('stars', 0.06, 0.06, 0.1, px + 0.32, 2.2, pz + 1.04); box('moon', 0.2, 0.2, 0.1, px + 0.25, 1.75, pz + 1.04); }
+          if (this.outSnow) for (let k = 0; k < 7; k++) box('stars', 0.06, 0.06, 0.1, px - 0.45 + ((k * 37 + x * 11) % 90) / 100, 1.55 + ((k * 53 + x * 7) % 65) / 100, pz + 1.045); // snowflakes past the glass
+          else if (this.outWet) for (let k = 0; k < 6; k++) box('stars', 0.022, 0.24, 0.1, px - 0.42 + k * 0.17, 1.62 + ((k * 29 + x * 13) % 40) / 100, pz + 1.045); } // rain running down the glass
         if (back && this.M.indoor === 'cottage' && x > 0 && x < W - 1 && x % 2 === 0) box('wood', 0.22, 3.1, 0.1, px - 1, 1.55, pz + 1.04); // old timber beams
         if (back && this.M.indoor === 'kidroom' && x > 0 && x < W - 1) { // fairy lights strung along the back wall, dipping between pins
           box('soot', TILE + 0.02, 0.03, 0.04, px, 2.86, pz + 1.05);
