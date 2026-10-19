@@ -11,7 +11,7 @@ await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 const maps = (process.argv[4] || 'village,route1,bloom,route2,seashell,glowwood,glowcap,cinder,ember,neon,cloudtop,frostpeak,peak').split(',');
 const clocks = [12, 22];
 const rows = await pg.evaluate(([maps, clocks]) => {
-  Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6', 'adv7', 'adv8', 'adv9', 'adv10', 'adv11', 'adv12', 'adv13', 'adv14', 'adv15'] });
+  Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6', 'adv7', 'adv8', 'adv9', 'adv10', 'adv11', 'adv12', 'adv13', 'adv14', 'adv15', 'adv16'] });
   const flags = {}; for (const k of 'intro quest rival1 trial_strength cup_sprout cup_thunder woods'.split(' ')) flags[k] = true;
   __save.adv = { hero: 'cindermunch', map: 'village', x: 9, y: 9, dir: 's', flags, spawn: { map: 'village', x: 4, y: 6 } };
   __game.screens.adventure(); __sim(0.5);

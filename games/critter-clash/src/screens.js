@@ -259,6 +259,12 @@ export class Screens {
         "{name}, Gardener Bea has opened a little garden plot in Bloom Town. Plant a seed, water it every day, and on the fourth day... well, you'll see. Bea says the first bloom comes with a surprise!",
         "Out on Route 1, butterflies are dancing over the grass on sunny days. And on Cinder Road, a steam geyser has woken up. Stand on the vent if you're brave! Glowcap Woods' big golden fireflies come out every night, too.",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv15') && !save.news.includes('adv16')) {
+      save.news.push('adv16'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, Fisher Finn has started a weekly FISHING DERBY! Every Monday he names a fish and a size to beat. Land one and his prize is yours, and the first winner gets his spare hat.",
+        "Your Journal keeps a photo album now: snap a 📸 Photo by any landmark and it's pinned in Records. And on Route 2's bridge, face the river for a twig race. Pick a twig and cheer it on!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
