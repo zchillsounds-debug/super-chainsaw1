@@ -2790,17 +2790,26 @@ export class World {
           const cp = new THREE.CylinderGeometry(1.6, 1.42, 0.22, 28); cp.translate(px + 1, 0.86, pz + 1); add('tcap', cp);
           for (let k = 0; k < 9; k++) { const a = k * 0.7 + 0.2, rr = 1.12 + (k % 2) * 0.22, sp = new THREE.SphereGeometry(0.13 + (k % 3) * 0.03, 8, 6); sp.scale(1, 0.3, 1); sp.translate(px + 1 + Math.cos(a) * rr, 0.97, pz + 1 + Math.sin(a) * rr); add('shine', sp); }
         }
-        if (!toad) box('wood', x1 - x0, 0.14, z1 - z0, (x0 + x1) / 2, 0.9, (z0 + z1) / 2);
-        if (!toad) for (const [cx, cz, ok] of [[x0, z0, !l && !u], [x1, z0, !r && !u], [x0, z1, !l && !d], [x1, z1, !r && !d]]) if (ok) box('wood', 0.14, 0.9, 0.14, cx + (cx < px ? 0.12 : -0.12), 0.45, cz + (cz < pz ? 0.12 : -0.12));
-        if (r && d) { const b = new THREE.SphereGeometry(0.3, 10, 8); b.translate(px + 1, 1.15, pz + 1); add('berry', b); }
+        const flat = this.M.indoor === 'flat'; // a Neon City flat: a low coffee table with a squashy sofa pulled up to it
+        if (flat && r && d) {
+          box('wood', 3.2, 0.12, 2.4, px + 1, 0.55, pz + 1); box('metal', 3.0, 0.05, 2.2, px + 1, 0.2, pz + 1);
+          for (const [lx, lz] of [[-1.4, -1], [1.4, -1], [-1.4, 1], [1.4, 1]]) box('metal', 0.1, 0.5, 0.1, px + 1 + lx, 0.3, pz + 1 + lz);
+          box('bean2', 1.3, 0.45, 3.6, px - 2.1, 0.32, pz + 1); box('bean2', 0.4, 1.1, 3.6, px - 2.75, 0.75, pz + 1); for (const e of [-1, 1]) box('bean', 1.3, 0.75, 0.35, px - 2.2, 0.5, pz + 1 + e * 1.8);
+          for (const e of [-1, 1]) box('bean', 1.05, 0.2, 1.6, px - 2.05, 0.62, pz + 1 + e * 0.85);
+          const pz2 = new THREE.CylinderGeometry(0.3, 0.3, 0.05, 14); pz2.translate(px + 1.6, 0.64, pz + 0.6); add('plate', pz2); box('book1', 0.7, 0.08, 0.5, px + 0.3, 0.65, pz + 1.3); box('metal', 0.2, 0.06, 0.45, px + 1.2, 0.64, pz + 1.5);
+          this.solid.add((x - 1) + ',' + y); this.solid.add((x - 1) + ',' + (y + 1));
+        }
+        if (!toad && !flat) box('wood', x1 - x0, 0.14, z1 - z0, (x0 + x1) / 2, 0.9, (z0 + z1) / 2);
+        if (!toad && !flat) for (const [cx, cz, ok] of [[x0, z0, !l && !u], [x1, z0, !r && !u], [x0, z1, !l && !d], [x1, z1, !r && !d]]) if (ok) box('wood', 0.14, 0.9, 0.14, cx + (cx < px ? 0.12 : -0.12), 0.45, cz + (cz < pz ? 0.12 : -0.12));
+        if (r && d && !flat) { const b = new THREE.SphereGeometry(0.3, 10, 8); b.translate(px + 1, 1.15, pz + 1); add('berry', b); }
         if (!l && !r && !u && !d) { const b = new THREE.SphereGeometry(0.22, 8, 6); b.translate(px, 1.1, pz); add('berry', b); }
         // stools pulled up at the open ends, and a little something on the table top
-        for (const sd of [-1, 1]) if (!toad && this.tile(x + sd, y) === '.' && !n(sd, 0)) { // (toadstool homes have toadstool stools of their own)
+        for (const sd of [-1, 1]) if (!toad && !flat && this.tile(x + sd, y) === '.' && !n(sd, 0)) { // (toadstool homes have toadstool stools of their own)
           const sx = px + sd * 1.2; box('stool', 0.7, 0.12, 0.7, sx, 0.55, pz);
           for (const [lx, lz] of [[-0.25, -0.25], [0.25, -0.25], [-0.25, 0.25], [0.25, 0.25]]) box('wood', 0.08, 0.5, 0.08, sx + lx, 0.25, pz + lz);
         }
         const v = (x * 7 + y * 3) % 4;
-        if (!(r && d) && (l || r || u || d)) {
+        if (!(r && d) && !flat && (l || r || u || d)) {
           if (this.M.indoor === 'lab') { // beakers of bubbling colour
             for (let k = 0; k < 2; k++) { const gx = px - 0.3 + k * 0.6, c = new THREE.CylinderGeometry(0.12, 0.15, 0.2, 10); c.translate(gx, 1.3, pz - 0.1); add('beaker', c); const q = new THREE.CylinderGeometry(0.15, 0.16, 0.24, 10); q.translate(gx, 1.08, pz - 0.1); add('fluid' + ((x + k) % 2), q); }
           } else if (v === 0) { const c = new THREE.CylinderGeometry(0.13, 0.11, 0.26, 10); c.translate(px - 0.2, 1.1, pz); add('mug', c); }
