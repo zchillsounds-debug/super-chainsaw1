@@ -335,6 +335,7 @@ export class World {
     this.phase = M.indoor ? 'day' : this.outPhase;
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
     this.rain = canRain(M) && (save.adv.rain ?? rainAt(key, new Date(), hr));
+    { const d = new Date(); this.storm = this.rain && !!(save.adv.storm ?? hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}storm`) % 3 === 0); this.boltT = 2.5 + Math.random() * 3; } // a third of the showers are thunderstorms
     this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
     this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)); // now and then a proper snowfall up in the mountains (light flurries otherwise)
     const shut = M.bramble && !save.adv.flags[M.bramble];
@@ -412,7 +413,7 @@ export class World {
     this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.morning && PHASES.morning) || PHASES[this.phase]);
     this.buildMorning();
     this.buildRainbow();
-    this.banner(M.name + (this.rain ? ' 🌧️' : this.snowing ? ' 🌨️' : ''));
+    this.banner(M.name + (this.storm ? ' ⛈️' : this.rain ? ' 🌧️' : this.snowing ? ' 🌨️' : ''));
   }
 
   unload() {
@@ -1897,6 +1898,14 @@ export class World {
     const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffe08a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.35 }); sm.userData.own = true;
     const glow = new THREE.Sprite(sm); glow.scale.setScalar(4); glow.position.y = 1.6; g.add(glow);
     this.statue = { x, y, px, pz, glow };
+  }
+
+  // a thunderstorm: the sky flashes white (twice, quickly), then the thunder rolls in a moment later
+  lightning() {
+    const scr = this.S.root.querySelector('.world-screen'); if (!scr || this.dialog) return;
+    const el = document.createElement('div'); el.className = 'wd-bolt'; scr.appendChild(el); setTimeout(() => el.remove(), 900);
+    setTimeout(() => this.group && sfx.rumble?.(), 400 + Math.random() * 1100);
+    const day = new Date().toISOString().slice(0, 10); if (save.adv.stormDay !== day) { save.adv.stormDay = day; countUp('storm'); persist(); } // Records: thunderstorms weathered (one a day)
   }
 
   // misty mornings: big soft banks of mist drift slowly across the map, thinning as they go
@@ -3416,7 +3425,8 @@ export class World {
     }
     if (this.rain) {
       const p = this.hero.root.position;
-      for (let n = Math.floor(dt * 150 + Math.random()); n > 0; n--) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 30, y: 6 + Math.random() * 3, z: p.z + (Math.random() - 0.6) * 20, vy: -16, vx: -1.5, color: 0xe8f0ff, alpha: 0.75, size: 1.4, stretch: 0.05, rot: Math.PI / 2 + 0.08, life: 0.5, shape: 'spark', additive: false });
+      if (this.storm && (this.boltT -= dt) <= 0) { this.boltT = 7 + Math.random() * 10; this.lightning(); }
+      for (let n = Math.floor(dt * (this.storm ? 230 : 150) + Math.random()); n > 0; n--) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 30, y: 6 + Math.random() * 3, z: p.z + (Math.random() - 0.6) * 20, vy: -16, vx: -1.5, color: 0xe8f0ff, alpha: 0.75, size: 1.4, stretch: 0.05, rot: Math.PI / 2 + 0.08, life: 0.5, shape: 'spark', additive: false });
       if (Math.random() < dt * 22) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 24, y: 0.08, z: p.z + (Math.random() - 0.6) * 16, color: 0xe8f2ff, alpha: 0.6, size: 0.35, life: 0.35, shape: 'ring', additive: false, grow: 1.6 });
     }
     if (this.M.snow && !this.M.indoor) { // snowflakes drift down round the hero: light flurries, or a real snowfall
