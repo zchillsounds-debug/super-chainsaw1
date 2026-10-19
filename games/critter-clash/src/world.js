@@ -365,6 +365,7 @@ export class World {
     this.buildThanks();
     this.buildBuildings();
     this.buildInterior();
+    this.buildToys();
     this.buildMarquee();
     this.buildActors();
     this.buildPumpkins();
@@ -3821,6 +3822,20 @@ export class World {
     if (!el) return;
     const h = this.aHint();
     if (el.dataset.hint !== h) { el.dataset.hint = h; el.classList.toggle('hint', !!h); }
+  }
+
+  // the Daycare corner of a Berry Center (left of Nanny Nell): a toy chest, a striped ball and a stack of letter blocks
+  buildToys() {
+    if (this.M.indoor !== 'center') return;
+    const [px, pz] = wpos(1, 3), parts = { chest: [], lid: [], ball: [], ball2: [], b0: [], b1: [], b2: [] };
+    const box = (k, w, h, d, x, y, z, ry = 0) => { const g = new THREE.BoxGeometry(w, h, d); g.rotateY(ry); g.translate(px + x, y, pz + z); parts[k].push(g); };
+    box('chest', 1.1, 0.6, 0.7, -0.15, 0.3, -0.35); box('lid', 1.18, 0.14, 0.78, -0.15, 0.66, -0.35);
+    const b = new THREE.SphereGeometry(0.28, 14, 10); b.translate(px + 0.45, 0.28, pz + 0.35); parts.ball.push(b);
+    const st = new THREE.TorusGeometry(0.285, 0.05, 6, 16); st.rotateY(0.6); st.translate(px + 0.45, 0.28, pz + 0.35); parts.ball2.push(st);
+    box('b0', 0.3, 0.3, 0.3, -0.4, 0.15, 0.4, 0.3); box('b1', 0.3, 0.3, 0.3, -0.08, 0.15, 0.45, -0.2); box('b2', 0.3, 0.3, 0.3, -0.25, 0.45, 0.42, 0.5);
+    const col = { chest: 0x6ab8ff, lid: 0xffd84d, ball: 0xff5a7a, ball2: 0xffffff, b0: 0x6ad070, b1: 0xff9a3a, b2: 0xb07aff };
+    for (const [k, gs] of Object.entries(parts)) { const m = inked(mergeGeometries(gs), toon(col[k], { rim: 0.5 }), OL * 0.5); m.castShadow = true; this.group.add(m); gs.forEach((g) => g.dispose()); }
+    this.solid.add('1,3');
   }
 
   // the Critter Daycare in every Berry Center: Nanny Nell by the sofa, and the critter in her care romping by the rug
