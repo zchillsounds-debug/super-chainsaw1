@@ -402,6 +402,7 @@ export class World {
     this.buildActors();
     this.buildPumpkins();
     this.buildXtree();
+    this.buildScarecrow();
     this.buildWisps(x, y);
     this.buildFlutters(x, y);
     this.buildMoonflowers();
@@ -1912,6 +1913,61 @@ export class World {
     if (lit) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffe080, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.7 }); sm.userData.own = true; glow = new THREE.Sprite(sm); glow.scale.setScalar(1.6); glow.position.y = 2.72; g.add(glow); }
     this.xtree = { x, y, lights, glow, cols };
     if (!ALPHA_TOLD.has('twinkle')) { ALPHA_TOLD.add('twinkle'); setTimeout(() => this.group && this.S.toast('🎄 Twinkle Week! Every town has a tree by its Berry Center, with a gift underneath each day.'), 1500); }
+  }
+
+  // Pumpkin Nights: a harvest scarecrow on hay bales by every Berry Center, so the festival shows by day too (A: it wobbles hello)
+  buildScarecrow() {
+    this.scare = null;
+    if (this.M.indoor || !pumpkinNights() || !(this.M.buildings || []).length) return;
+    const d = this.doors.find((q) => q.b.heal) || this.doors.find((q) => q.b.id === 'home'); if (!d) return;
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((q) => q.x + ',' + (q.y + 1)), ...(this.M.signs || []).map((g) => g.x + ',' + g.y), ...(this.pumpkins || []).map((q) => q.x + ',' + q.y)]);
+    const free = (x, y) => '."sf'.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y) && !taken.has(x + ',' + y);
+    const spot = [[2, 1], [-2, 1], [3, 1], [-3, 1], [2, 2], [-2, 2], [1, 2], [-1, 2]].map(([dx, dy]) => [d.x + dx, d.y + dy]).find(([x, y]) => free(x, y)); if (!spot) return;
+    const [x, y] = spot, [px, pz] = wpos(x, y), root = new THREE.Group(); root.position.set(px, 0, pz); root.scale.setScalar(1.3); this.group.add(root); this.solid.add(x + ',' + y);
+    const hayM = toon(0xe8c460, { rim: 0.4 }), bandM = toon(0xa8823a), wood = toon(0x7a5232);
+    for (const [bx, bz, ry] of [[-0.42, 0.28, 0.15], [0.45, 0.32, -0.2]]) { // two hay bales in front, tied with twine
+      const b = inked(new THREE.BoxGeometry(0.62, 0.36, 0.38), hayM, OL * 0.4); b.position.set(bx, 0.18, bz); b.rotation.y = ry; b.castShadow = true; root.add(b);
+      for (const o of [-0.16, 0.16]) { const t = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.37, 0.39), bandM); t.position.set(bx + Math.cos(ry) * o, 0.18, bz - Math.sin(ry) * o); t.rotation.y = ry; root.add(t); }
+    }
+    const orange = toon(0xff8a1a, { rim: 0.5 }), stem = toon(0x4a7a2a);
+    for (const [ox, oy, oz, r] of [[0.48, 0.47, 0.32, 0.17], [-0.36, 0.45, 0.3, 0.14], [-0.62, 0.1, 0.62, 0.12]]) { // pumpkins on and by the bales
+      const pk = inked(new THREE.SphereGeometry(r, 12, 9), orange, OL * 0.3); pk.scale.set(1.15, 0.85, 1.1); pk.position.set(ox, oy, oz); root.add(pk);
+      const st = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, 0.1, 5), stem); st.position.set(ox, oy + r * 0.85, oz); root.add(st);
+    }
+    const g = new THREE.Group(); g.position.z = -0.15; g.scale.setScalar(1.2); root.add(g); // the scarecrow itself (this part wobbles)
+    const post = inked(new THREE.CylinderGeometry(0.05, 0.06, 1.75, 6), wood, OL * 0.3); post.position.y = 0.88; g.add(post);
+    const bar = inked(new THREE.CylinderGeometry(0.04, 0.04, 1.1, 6), wood, OL * 0.3); bar.rotation.z = Math.PI / 2; bar.position.y = 1.28; g.add(bar);
+    const shirt = inked(new THREE.CylinderGeometry(0.2, 0.3, 0.62, 8), toon(0xc8503a, { rim: 0.4 }), OL * 0.4); shirt.position.y = 1.08; g.add(shirt);
+    for (const sx of [-1, 1]) {
+      const sl = inked(new THREE.CylinderGeometry(0.09, 0.11, 0.36, 7), toon(0xc8503a), OL * 0.3); sl.rotation.z = Math.PI / 2; sl.position.set(sx * 0.33, 1.28, 0); g.add(sl);
+      const straw = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.2, 6), hayM); straw.rotation.z = -sx * Math.PI / 2; straw.position.set(sx * 0.6, 1.28, 0); g.add(straw);
+    }
+    const patch = new THREE.Mesh(new THREE.PlaneGeometry(0.14, 0.14), toon(0x5a8ad8)); patch.position.set(0.09, 1.02, 0.27); patch.rotation.set(-0.15, 0.25, 0.2); g.add(patch);
+    // the face is painted on the burlap head (u = 0.25 faces +z), and the head tips up towards the camera
+    const face = canvasTex(256, 128, (c, W, H) => {
+      c.fillStyle = '#e8cf98'; c.fillRect(0, 0, W, H);
+      c.strokeStyle = 'rgba(160,120,60,0.35)'; c.lineWidth = 1; for (let k = 0; k < W; k += 6) { c.beginPath(); c.moveTo(k, 0); c.lineTo(k, H); c.stroke(); } // burlap weave
+      c.fillStyle = '#2a1a10'; for (const ex of [52, 76]) { c.beginPath(); c.arc(ex, 56, 6, 0, 7); c.fill(); }
+      c.strokeStyle = '#2a1a10'; c.lineWidth = 3; c.beginPath(); c.arc(64, 62, 14, 0.2 * Math.PI, 0.8 * Math.PI); c.stroke();
+      c.lineWidth = 2; for (let k = 0; k < 5; k++) { const a = (0.28 + k * 0.11) * Math.PI, mx = 64 + Math.cos(a) * 14, my = 62 + Math.sin(a) * 14; c.beginPath(); c.moveTo(mx, my - 4); c.lineTo(mx, my + 4); c.stroke(); } // stitches
+      c.fillStyle = 'rgba(255,140,100,0.5)'; for (const ex of [42, 86]) { c.beginPath(); c.arc(ex, 68, 6, 0, 7); c.fill(); }
+    });
+    face.userData.own = true;
+    const hm = toon(0xffffff, { map: face, rim: 0.4 }); hm.userData.own = true;
+    const head = inked(new THREE.SphereGeometry(0.25, 16, 12), hm, OL * 0.4); head.position.y = 1.62; head.rotation.x = -0.55; g.add(head);
+    const hatM = toon(0x6a4a2a), brim = inked(new THREE.CylinderGeometry(0.34, 0.36, 0.04, 14), hatM, OL * 0.3); brim.position.set(0, 1.82, -0.05); brim.rotation.x = -0.3; g.add(brim); // tipped back, so the high camera sees the face
+    const crown = inked(new THREE.ConeGeometry(0.19, 0.34, 10), hatM, OL * 0.3); crown.position.set(0, 1.97, -0.1); crown.rotation.set(-0.3, 0, 0.22); g.add(crown);
+    head.castShadow = shirt.castShadow = true;
+    bakeStatic({ root, mats: {}, g }); // merge the parts (the wobbling scarecrow stays its own group)
+    this.scare = { x, y, g, wob: 0 };
+  }
+
+  scareTalk() {
+    this.scare.wob = 1.4; sfx.whoosh?.(0.7);
+    const L = this.phase === 'day'
+      ? ['A scarecrow in a patched hat keeps watch over the hay bales and pumpkins. {hero} pokes it. It wobbles hello!', 'The scarecrow\'s stitched smile looks extra happy today. A crow lands on its hat, looks at {hero}, and decides to sit somewhere else.', 'A little card on the hay bale says: "Happy Pumpkin Nights! Treats by the town doors after dark."']
+      : ['In the pumpkin light the scarecrow\'s button eyes seem to twinkle. {hero} gives it a poke... it wobbles. Probably the wind. Probably.', '{hero} says goodnight to the scarecrow. It nods back. (The wind. Definitely the wind.)'];
+    return this.say([L[(this.steps + new Date().getDate()) % L.length]]);
   }
 
   // Twinkle Week: once a day there's a gift under a town tree; the third one holds a hat
@@ -3691,6 +3747,7 @@ export class World {
     if (this.kite) this.updateKite(dt);
     if (this.mornMist) this.updateMorning(dt);
     if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
+    if (this.scare?.wob > 0) { const S = this.scare; S.wob = Math.max(0, S.wob - dt); S.g.rotation.z = Math.sin(S.wob * 14) * 0.12 * S.wob; }
     if (this.xtree?.glow) { const X = this.xtree; X.glow.material.opacity = 0.55 + Math.sin(this.t * 2.2) * 0.15; X.lights.forEach((m, i) => { const on = Math.sin(this.t * 3 + i * 1.6) > -0.3; m.material.color.setHex(on ? X.cols[i] : 0x3a3448); }); } // the lights twinkle in turns
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
@@ -4018,6 +4075,7 @@ export class World {
     if (this.garden && this.garden.x === fx && this.garden.y === fy) return this.gardenTend();
     if (this.pumpkins?.some((p) => p.x === fx && p.y === fy)) return this.pumpkin();
     if (this.xtree && this.xtree.x === fx && this.xtree.y === fy) return this.xtreeTalk();
+    if (this.scare && this.scare.x === fx && this.scare.y === fy) return this.scareTalk();
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
@@ -4055,7 +4113,7 @@ export class World {
     if (this.follower && at(this.follower) && !this.follower.from) return 'Pet';
     if (at(this.bush)) return 'Shake';
     if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
-    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
+    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
     if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod && !this.M.lava) return 'Fish'; }
     const sign = (this.M.signs || []).find((g) => g.x === fx && g.y === fy);
     if (sign) return sign.act ? ({ pcbox: 'Swap', board: 'Read', gauntsign: 'Read', smoothie: 'Blend', hatshop: 'Shop', rest: 'Rest', wardrobe: 'Open', mirror: 'Look', shelf: 'Look', arcade: 'Play', 'arcade:hop': 'Play' }[sign.act] || (sign.act.startsWith('case:') ? 'Look' : 'Use')) : sign.hide ? 'Look' : 'Read';
