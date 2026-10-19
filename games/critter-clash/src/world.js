@@ -3921,7 +3921,10 @@ export class World {
       const c = this.hero.root.position, a = this.t * B.sp + B.ph;
       B.g.position.set(c.x + Math.cos(a) * B.r, B.y + Math.sin(a * 2) * 0.3, c.z - 3 + Math.sin(a) * B.r * 0.6);
       B.g.rotation.y = Math.atan2(-Math.sin(a), Math.cos(a) * 0.6); B.g.rotation.z = 0.25;
-      const f = Math.sin(this.t * 7 + B.ph) * 0.6; for (const [wg, sd] of B.wings) wg.rotation.z = sd * f;
+      // mostly a stiff-winged glide (a shallow V that reads as a gull from above), with a few quick flaps now and then:
+      // a full-depth flap seen from overhead squashes the wings into a stick (it read as a bone)
+      const u = (this.t * 0.3 + B.ph * 0.37) % 1, flap = u < 0.22 ? Math.sin(u / 0.22 * Math.PI) : 0;
+      const f = 0.12 + Math.sin(this.t * 2 + B.ph) * 0.05 + Math.sin(this.t * 11 + B.ph) * 0.45 * flap; for (const [wg, sd] of B.wings) wg.rotation.z = sd * f;
     }
     for (const D of this.drones || []) { // they zip past over the hero's part of town
       const c = this.hero.root.position, u = this.t * D.sp + D.ph * 4, x = (u % 36) - 18, dir = Math.floor(u / 36) % 2 ? -1 : 1;
