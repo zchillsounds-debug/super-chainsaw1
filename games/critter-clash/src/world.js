@@ -421,7 +421,7 @@ export class World {
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
 
   buildGround(rand) {
-    const P = 32, W = this.W, H = this.H, C = { a: '#7ad259', b: '#77cf56', tall: '#4fae3e', path: '#e8c98a', dark: 'rgba(40,120,40,0.35)', lite: 'rgba(200,255,150,0.4)', ...this.M.palette };
+    const P = 32, W = this.W, H = this.H, C = { a: '#7ad259', b: '#77cf56', tall: '#4fae3e', path: '#e8c98a', dark: 'rgba(40,120,40,0.35)', lite: 'rgba(200,255,150,0.4)', ...this.M.palette, ...(this.phase === 'day' && this.M.dayPalette) };
     if (this.phase === 'night' && !this.M.palette?.a) Object.assign(C, { a: '#5cae78', b: '#59ab75', tall: '#3e8a62', lite: 'rgba(170,230,210,0.35)' }); // moonlit grass leans blue-green
     // building footprints take the ground of the tile in front of their door row
     const under = (x, y) => { let k = y; while (this.tile(x, k) === 'h' && k < H) k++; const t = this.tile(x, k); return t === 'h' || t === 'T' ? '.' : t; };
@@ -603,7 +603,7 @@ export class World {
     ground.receiveShadow = true;
     this.group.add(ground);
     // the world beyond the map: forest floor
-    const outer = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), toon(this.M.outer || 0x3f8a3a, { rim: 0 }));
+    const outer = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), toon((this.phase === 'day' && this.M.dayOuter) || this.M.outer || 0x3f8a3a, { rim: 0 }));
     outer.rotation.x = -Math.PI / 2; outer.position.set(W * TILE / 2, -0.03, H * TILE / 2);
     outer.receiveShadow = true;
     this.group.add(outer);
@@ -1139,7 +1139,7 @@ export class World {
         const pool = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), pm); pool.rotation.x = -Math.PI / 2; pool.position.set(px, 0.05, pz); this.group.add(pool);
       }
     }
-    const im = inked(mergeGeometries(iron), toon(route ? 0x6e4a2e : 0x3a3a4a), OL * 0.5); im.castShadow = true; this.group.add(im); iron.forEach((g) => g.dispose());
+    const im = inked(mergeGeometries(iron), toon(route ? 0x6e4a2e : M.arena === 'beach' ? 0xeef2f6 : M.border === 'cloud' ? 0xf4ead4 : M.snow ? 0x2a4a6e : 0x3a3a4a), OL * 0.5); im.castShadow = true; this.group.add(im); iron.forEach((g) => g.dispose());
     const gm = new THREE.Mesh(mergeGeometries(glass), lit ? LIT : toon(0xfff4d0, { rim: 0.8 })); this.group.add(gm); glass.forEach((g) => g.dispose());
   }
 

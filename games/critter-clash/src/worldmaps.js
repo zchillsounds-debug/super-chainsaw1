@@ -388,6 +388,8 @@ export const MAPS = {
     outer: 0x1a1430,
     palette: { a: '#56507a', b: '#524c76', tall: '#2f6a58', path: '#9a94c4', dark: 'rgba(10,0,30,0.3)', lite: 'rgba(220,200,255,0.18)' },
     blades: 0x3aa87a,
+    dayPalette: { a: '#7a74a6', b: '#7670a2', path: '#bcb6e4', dark: 'rgba(30,10,60,0.25)', lite: 'rgba(240,230,255,0.22)' }, // by day the pavement is sunlit lilac; night (CITY) keeps the deep base
+    dayOuter: 0x2e2650,
     mood: { sun: 0xe0d4ff, sunI: 1.65, sky: 0xc8baff, gnd: 0x4a3a6a, hemiI: 1.38, fog: 0x2a2048 },
     tiles: [
       'TTTTTTTTTTTTTTTTTTTTTTTTTTTT',
