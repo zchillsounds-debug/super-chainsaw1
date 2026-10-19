@@ -3516,7 +3516,7 @@ export class World {
       // left alone, the hero gets bored: looks around, stretches, yawns, then dozes off
       const idle = this.dialog || this.busy ? 0 : (this.idleT = (this.idleT || 0) + dt);
       if (idle > 5) {
-        const ph = (idle - 5) % 14;
+        const ph = idle - 5; // once asleep, the hero stays asleep until you move
         if (ph < 3) { P.headYaw = Math.sin(ph * 2.2) * 0.7; }
         else if (ph < 4.5) { P.armLz = P.armRz = 2.6; P.sy = 1.08; P.lean = -0.15; H.emote('closed', 'open', 0.1); }
         else if (ph < 6) { P.head = -0.25; H.emote('closed', 'o', 0.1); }
