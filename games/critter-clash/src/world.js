@@ -135,6 +135,7 @@ export function twinkleWeek(d = new Date()) { if (save.adv?.winter != null) retu
 // Pumpkin Nights: a little harvest festival from mid-October to the start of November (carved pumpkins by the town doors)
 export function halloween(d = new Date()) { if (save.adv?.halloween != null) return !!save.adv.halloween; return pumpkinNights(d) && d.getMonth() === 9 && d.getDate() === 31; } // the big night itself (save.adv.halloween forces it)
 export function isAutumn(d = new Date()) { return save.adv?.autumn ?? (d.getMonth() === 9 || d.getMonth() === 10 && d.getDate() <= 15); } // October to mid-November; save.adv.autumn forces it
+export function isSpring(d = new Date()) { if (save.adv?.spring != null) return !!save.adv.spring; const m = d.getMonth(), day = d.getDate(); return (m === 2 && day >= 20) || m === 3; } // blossom time: 20 March to the end of April (save.adv.spring forces it)
 export function isFrost(d = new Date()) { if (save.adv?.frost != null) return !!save.adv.frost; const m = d.getMonth(), day = d.getDate(); return (m === 10 && day > 15) || (m === 11 && day < 18); } // after the autumn leaves and before Twinkle Week (save.adv.frost forces it)
 export function pumpkinNights(d = new Date()) { const m = d.getMonth(), day = d.getDate(); if (save.adv?.fest != null) return !!save.adv.fest; return (m === 9 && day >= 15) || (m === 10 && day <= 2); } // save.adv.fest forces it on (true) or off (false) for tests
 
@@ -813,10 +814,12 @@ export class World {
     const mid = this.g.quality === 'med' || this.g.quality === 'low', woody = (x, y) => x < 0 || y < 0 || x >= this.W || y >= this.H || this.tile(x, y) === 'T';
     const deep = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!woody(x + i, y + j)) return false; return true; }; // a tree with trees all round it: only its top shows
     // autumn on the green maps: about two trees in five turn orange, gold or red (picked by position, so the woods keep their shape)
-    const M = this.M, fall = isAutumn() && !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && M.border !== 'cloud' && !M.fireflies, falls = [[], [], [], []];
+    const M = this.M, green = !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && M.border !== 'cloud' && !M.fireflies, falls = [[], [], [], []];
+    // spring (20 Mar-Apr) uses the same groves: blossom trees in pink, pale pink and white, with fresh green ones in between
+    const bloom = green && isSpring(), fall = green && !bloom && isAutumn(); this.blossom = bloom;
     // groves share a hue (a 3x3-tile patch picks orange, gold or red), so the woods turn in drifts rather than a row of sweets; some trees are only just turning (yellow-green)
     const hsh = (x, y, s) => ((((x + s) * 73856093) ^ ((y + s) * 19349663)) >>> 0);
-    const tint = (x, y) => { if (!fall) return null; const k = hsh(x, y, 7) % 100; if (k >= 58) return null; if (k >= 44) return falls[3]; const g = hsh(Math.floor((x + 9) / 3), Math.floor((y + 9) / 3), 3); return falls[(k < 8 ? g + 1 : g) % 3]; };
+    const tint = (x, y) => { if (!fall && !bloom) return null; const k = hsh(x, y, 7) % 100; if (k >= (bloom ? 46 : 58)) return null; if (bloom && k >= 40) return null; if (k >= 44) return falls[3]; const g = hsh(Math.floor((x + 9) / 3), Math.floor((y + 9) / 3), 3); return falls[(k < 8 ? g + 1 : g) % 3]; };
     // a canopy blob; the chunky detail-0 one gets round normals too, so it shades like a ball instead of a cut gem
     const ico = (r, d) => { const g = new THREE.IcosahedronGeometry(r, d); if (!d) { const P = g.attributes.position, N = g.attributes.normal; for (let i = 0; i < P.count; i++) N.setXYZ(i, P.getX(i) / r, P.getY(i) / r, P.getZ(i) / r); } return g; };
     const add = (x, y, dt = dt0, top = dt) => {
@@ -876,7 +879,8 @@ export class World {
     const put = (list, color, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color, { rim: 0.4 }), ink); m.castShadow = true; this.group.add(m); list.forEach((g) => g.dispose()); };
     const TC = this.M.trees || (this.phase === 'night' ? [0x2f8a5a, 0x3a9a66, 0x6a4a3a] : [0x3fae4a, 0x4cc25a, 0x8a5a3a]); // moonlit canopies at night
     put(can, TC[0], OL); put(can2, TC[1], OL); put(trunks, TC[2], OL * 0.6); put(caps, this.frost ? 0xeef6ff : 0xffffff, OL * 0.6); // snow caps (a thinner frosting on frosty mornings)
-    (this.phase === 'night' ? [0xb8743e, 0xb09a44, 0xa85e46, 0x6a8a4a] : [0xe8842e, 0xecbc3c, 0xcc5636, 0xa8c040]).forEach((c, i) => put(falls[i], c, OL)); // autumn canopies (moonlit at night)
+    (bloom ? (this.phase === 'night' ? [0xb0889e, 0xb8a8b8, 0xa87894, 0x6a8a5a] : [0xf6a8c8, 0xfbe0ec, 0xec86b0, 0x9ad060])
+      : this.phase === 'night' ? [0xb8743e, 0xb09a44, 0xa85e46, 0x6a8a4a] : [0xe8842e, 0xecbc3c, 0xcc5636, 0xa8c040]).forEach((c, i) => put(falls[i], c, OL)); // autumn or blossom canopies (moonlit at night)
   }
 
   // Neon City: blocks of lit skyscrapers where other maps have trees, street lamps (l)
@@ -2124,6 +2128,7 @@ export class World {
 
   buildMorning() {
     this.mornMist = null; this.mornMistIn = 0;
+    if (this.blossom && !ALPHA_TOLD.has('blossom')) { ALPHA_TOLD.add('blossom'); setTimeout(() => this.group && this.S.toast('🌸 Blossom time! The trees along the routes are in flower.'), 1500); }
     if (!this.morning && !this.frost) return;
     if (this.frost && !ALPHA_TOLD.has('frost')) { ALPHA_TOLD.add('frost'); setTimeout(() => this.group && this.S.toast('❄️ A frosty morning! The grass crunches underfoot until the sun gets up.'), 1500); }
     if (!this.morning) { this.mornMist = []; return; }
@@ -3788,6 +3793,10 @@ export class World {
     if (this.phase !== 'day' && !this.M.indoor && halloween() && Math.random() < dt * 3) { // Halloween night: little ghosts drift by in every town
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 22, y: 1 + Math.random() * 2, z: p.z + (Math.random() - 0.6) * 14, vx: (Math.random() - 0.5) * 1.2, vy: 0.25, color: Math.random() < 0.7 ? 0xe8fff4 : 0xb8ffd8, size: 1.3, life: 4, shape: 'glow', fadeIn: 0.8, hold: 0.5, alpha: 0.9 });
+    }
+    if (this.blossom && !this.M.indoor && !this.rain && Math.random() < dt * 4) { // blossom time: pink petals drift across the green maps
+      const p = this.hero.root.position;
+      this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 26, y: 4 + Math.random() * 2, z: p.z + (Math.random() - 0.65) * 18, vy: -0.6, vx: 0.7 + Math.random() * 0.5, vz: (Math.random() - 0.5) * 0.4, color: Math.random() < 0.6 ? 0xf8b8d0 : 0xfff0f4, size: 0.22, life: 6, shape: 'leaf' });
     }
     if (this.leafPiles?.length && Math.random() < dt * 2.2) { // autumn: now and then a leaf lets go over the green maps too
       const p = this.hero.root.position;
