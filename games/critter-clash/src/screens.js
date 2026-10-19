@@ -325,6 +325,13 @@ export class Screens {
         pumpkinNights() ? "And for Pumpkin Nights, every Berry Center has a scarecrow on the hay bales, and there are jack-o'-lanterns indoors too. Give the scarecrow a poke. It's friendly!" : "Every Pumpkin Nights, a scarecrow keeps watch by each Berry Center, and jack-o'-lanterns light up the rooms. In Twinkle Week, little trees twinkle indoors too!",
         "Listen closely to the town music, too: sleigh bells in Twinkle Week, and something spooky going 'oooo' on Pumpkin Nights...",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv23') && !save.news.includes('adv24')) {
+      save.news.push('adv24'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, a little nature report! The autumn woods now turn in drifts: whole groves go gold or red together, with a few trees only just turning.",
+        "And once the leaves are down, from mid-November until Twinkle Week, early mornings bring a white frost. The grass crunches, the treetops sparkle, and you can see your breath!",
+        "Oh, and that crow on the scarecrow? It has opinions. Very loud ones. Caw!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
