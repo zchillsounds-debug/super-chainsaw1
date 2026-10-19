@@ -265,6 +265,12 @@ export class Screens {
         "{name}, Fisher Finn has started a weekly FISHING DERBY! Every Monday he names a fish and a size to beat. Land one and his prize is yours, and the first winner gets his spare hat.",
         "Your Journal keeps a photo album now: snap a 📸 Photo by any landmark and it's pinned in Records. And on Route 2's bridge, face the river for a twig race. Pick a twig and cheer it on!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv16') && !save.news.includes('adv17')) {
+      save.news.push('adv17'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, every Berry Center has a CRITTER DAYCARE now! Nanny Nell looks after one critter from your team while you explore.",
+        "Every step you walk helps it grow, up to two whole levels. Pick it up again at any Berry Center. Out on the routes, the tall grass has grown a little wilder, too!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
@@ -961,7 +967,7 @@ export class Screens {
     d.innerHTML = `<div class="modal wd-menu-modal"><h2>Adventure</h2>
       <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero${this.worldObj?.M && !this.worldObj.M.indoor && (!this.worldObj.M.mood || this.worldObj.M.snow || this.worldObj.M.border === 'cloud') ? ` · ${this.worldObj.rain ? '🌧️ Rain' : this.worldObj.snowing ? '🌨️ Snow' : { day: '☀️ Day', evening: '🌇 Evening', night: '🌙 Night' }[this.worldObj.phase] || ''}` : ''}</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => k.startsWith('it_')).length}/24 · 📋 ${save.adv.req?.day === new Date().toISOString().slice(0, 10) ? `${save.adv.req.paid.length}/3` : 'new!'}</small></div></div>
       <div class="wd-cups">${['sprout', 'thunder', 'grove', 'champion', 'midnight', 'sky', 'legend'].map((id) => { const c = CUPS.find((x) => x.id === id), on = F['cup_' + id]; return `<span class="${on ? 'on' : ''}" style="--cc:${c.color}" title="${c.name}">${on ? '🏆' : ''}</span>`; }).join('')}${F.crowned ? '<span class="on crown" style="--cc:#ffd23f" title="Critter Crown">👑</span>' : ''}<em class="wd-pc" title="Clashara explored">🗺️ ${this.recordsPc()}%</em></div>
-      <p class="wd-goal">📜 ${nextGoal(F)}${favourLine() ? `<small class="wd-fav">🤝 ${favourLine()}</small>` : ''}</p>
+      <p class="wd-goal">📜 ${nextGoal(F)}${favourLine() ? `<small class="wd-fav">🤝 ${favourLine()}</small>` : ''}${save.adv.care && save.critters[save.adv.care.id] ? `<small class="wd-fav">🧸 ${grown(byId(save.adv.care.id), save.critters[save.adv.care.id].level).name} is at the Daycare · ${Math.max(0, (save.adv.steps || 0) - save.adv.care.at)} steps</small>` : ''}</p>
       <div class="res-btns"></div></div>`;
     const b = d.querySelector('.res-btns');
     const close = () => { d.remove(); this.game.modalClose = null; };
