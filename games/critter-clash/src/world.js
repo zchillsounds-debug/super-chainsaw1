@@ -4485,7 +4485,24 @@ export class World {
       const who = n.name.split(' ').pop(), F = [`${who}: Happy Pumpkin Nights! Did you check the pumpkins by the doors after dark? Some hide treats!`, `${who}: I carved my pumpkin to look like {hero}. ...It came out looking like a potato. A HAPPY potato.`, `${who}: Pumpkin Nights only last until early November. Find three treats and there's a surprise, I hear!`, `${who}: Boo! ...Did I scare you? No? I'll practise.`, `${who}: The pumpkins glow brightest around midnight. Spooky... but cosy.`];
       return this.say([F[(hash(n.id) + new Date().getDate()) % F.length]], null, n.name);
     }
+    const sc = !pumpkinNights() && !n.story && n.lines?.length && !this.M.indoor && Math.random() < 0.3 && this.seasonChat(n); // the rest of the year's chatter: blossom, sunflowers, turning leaves, frost, snow
+    if (sc) return this.say([sc], null, n.name);
     this.say(n.lines.map((l) => l), null, n.name);
+  }
+
+  // one line about the time of year, or null (green maps get the trees and flowers; every map gets the festivals and the cold)
+  seasonChat(n) {
+    const who = n.name.split(' ').pop(), M = this.M, snowy = M.snow, green = !M.trees && !snowy && !M.lava && this.key !== 'seashell' && M.border !== 'cloud' && !M.fireflies; // same test as buildTrees
+    const L = twinkleWeek() ? [`${who}: Happy Twinkle Week! Did you peek under the tree by the Berry Center? There's a gift with your name on it.`, `${who}: Sing with me after dark! Carols go better with cocoa.`, `${who}: I tied a bell to my tail for Twinkle Week. Jingle jingle! ...It's very hard to sneak up on anyone.`]
+      : isWinter() ? [`${who}: Brr! When it rains this time of year, it comes down as snow instead. I LOVE it.`, `${who}: Winter mornings make the grass go crunchy. Crunch, crunch, crunch!`, snowy ? `${who}: Winter up here? Same as always. Snow on snow on snow!` : `${who}: I built a snow critter yesterday. It looked a bit like you, {hero}!`]
+      : isFrost() ? [`${who}: Did you see the frost this morning? The whole town sparkled like sugar!`, `${who}: Cold mornings, warm cocoa. That's the deal.`, `${who}: Twinkle Week is coming soon. I can feel it in my whiskers!`]
+      : isAutumn() ? [green ? `${who}: The trees have turned orange and gold. My favourite time of year!` : `${who}: Autumn already! Down in Bloom Town the trees go all orange.`, `${who}: Jump in a leaf pile! It's the law. (It isn't. But it should be.)`, `${who}: Crunchy leaves, cosy evenings... autumn is the best.`]
+      : isEarlyAutumn() ? [green ? `${who}: Look, one of the trees has gone a bit yellow already. Autumn is sneaking in!` : `${who}: The evenings are getting cooler. Autumn's on its way.`, `${who}: September already! Where did the summer go?`]
+      : isSpring() ? [green ? `${who}: The trees are in blossom! The petals blow all the way across town.` : `${who}: It's blossom time in the green towns. Pink petals everywhere, I hear!`, `${who}: Achoo! ...Sorry. Blossom season tickles my nose.`, `${who}: Spring is here! Everything smells like flowers and fresh rain.`]
+      : isMeadow() ? [green ? `${who}: The grass is full of little wildflowers now. Watch where you step!` : `${who}: Late spring! The meadows down south must be covered in flowers.`, `${who}: I made a daisy chain this morning. It's very long. It's still going, actually.`]
+      : isSummer() ? [green ? `${who}: Have you seen the sunflowers by the woods? They're taller than me!` : `${who}: Summer! Even up here it's a little warmer.`, `${who}: Hear the cicadas in the afternoon? Bzzzzzz! That's the sound of summer.`, `${who}: Long summer days are great. More daylight for battles!`]
+      : null;
+    return L ? L[(hash(n.id) + new Date().getDate()) % L.length] : null;
   }
 
   // ---------- dialogue box (Red/Blue style, bottom of the screen) ----------
