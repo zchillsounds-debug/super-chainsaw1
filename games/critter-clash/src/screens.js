@@ -288,6 +288,13 @@ export class Screens {
         "They're always finding little presents in the garden. And have you noticed? After dark, every town hums its tune a little softer, like a lullaby.",
         "Night owls are out after dark, too: Hootsy and Squeakwing roam the tall grass on every route. Bring a lantern!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv19') && !save.news.includes('adv20')) {
+      save.news.push('adv20'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! Your grown-up Daycare babies keep staring at the front door. Ask one at home, and it'll come along for a walk!",
+        "And listen in the golden evenings: the town tunes slow down and go all warm and mellow before the night lullabies start.",
+        "Oh, and your Journal Records now count the night owls you meet. Hoo-hoo!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
