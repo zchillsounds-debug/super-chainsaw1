@@ -2160,10 +2160,11 @@ export class World {
   // a friend who tags along one tile behind the hero (save.adv.follow)
   makeFollower() {
     // Pip during the Trial of Friendship, otherwise the walking buddy picked in the ☰ menu
-    const id = save.adv.follow || (save.adv.buddy && save.adv.buddy !== save.adv.hero && save.unlocked.includes(save.adv.buddy) ? save.adv.buddy : null);
+    const wk = !save.adv.follow && save.adv.walk && CRITTERS.find((c) => c.id === save.adv.walk.id); // a grown-up Daycare baby out for a walk
+    const id = save.adv.follow || wk?.id || (save.adv.buddy && save.adv.buddy !== save.adv.hero && save.unlocked.includes(save.adv.buddy) ? save.adv.buddy : null);
     if (!id) { this.follower = null; return; }
     const pip = !!save.adv.follow, def = byId(id);
-    const cr = new Critter(withGear(pip ? def : skinned(def, save.skins?.[id]), pip ? 2 : save.critters[id]?.level || 1), { lod: 'mid' });
+    const cr = new Critter(withGear(pip || wk ? def : skinned(def, save.skins?.[id]), pip ? 2 : wk ? 8 : save.critters[id]?.level || 1), { lod: 'mid' });
     cr.root.userData.critter = true; bakeStatic(cr); castLite(cr);
     cr.root.scale.setScalar(CS * (pip ? 0.7 : 0.85));
     this.group.add(cr.root);
@@ -3371,6 +3372,7 @@ export class World {
     save.adv.x = this.hx; save.adv.y = this.hy; save.adv.dir = this.dir;
     save.adv.steps = (save.adv.steps || 0) + 1;
     if (save.adv.steps % 8 === 0) persist();
+    this.walkHome();
     this.steps++;
     this.encCool--;
     const t = this.tile(this.hx, this.hy);
@@ -3954,7 +3956,21 @@ export class World {
   grownSpot() {
     if (this.M.indoor !== 'home') return [];
     const day = new Date().toISOString().slice(0, 10), gift = save.adv.grownDay !== day;
-    return (save.adv.grown || []).map((id, i) => { const d = CRITTERS.find((q) => q.id === id); return d && { id: 'grown' + i, x: [7, 2, 5, 8][i], y: [2, 5, 6, 5][i], critter: id, lv: 8, scale: 0.85, dir: ['w', 'e', 'n', 'w'][i], wander: 1, act: 'hop', name: d.name, gift: gift && i === 0 }; }).filter(Boolean);
+    return (save.adv.grown || []).map((id, i) => { const d = CRITTERS.find((q) => q.id === id); return d && save.adv.walk?.i !== i && { id: 'grown' + i, x: [7, 2, 5, 8][i], y: [2, 5, 6, 5][i], critter: id, lv: 8, scale: 0.85, dir: ['w', 'e', 'n', 'w'][i], wander: 1, act: 'hop', name: d.name, gift: gift && i === 0 }; }).filter(Boolean);
+  }
+
+  // a grown baby's walk ends after 400 steps (it trots home), or as soon as the hero brings it back home
+  walkHome() {
+    const W = save.adv.walk; if (!W) return;
+    const home = this.M.indoor === 'home';
+    if (!home) W.out = true;
+    if (home ? !W.out : (save.adv.steps || 0) < W.until) return;
+    if (this.dialog || this.M.indoor === 'lobby') return;
+    save.adv.walk = null; persist();
+    const nm = CRITTERS.find((c) => c.id === W.id)?.name || 'Your little one';
+    if (this.follower) { this.group.remove(this.follower.root); this.follower = null; }
+    if (home) this.fade(() => this.load(this.key, this.hx, this.hy, this.dir)); else this.makeFollower();
+    this.S.toast(home ? `🏡 ${nm} runs back to its favourite rug. What a walk!` : `🏡 ${nm} is tired out and trots off home for a nap.`);
   }
 
   // a Daycare egg (story.js daycare) hatches after 250 steps in the bag: the hatchling goes to live in Nanny Nell's nursery
@@ -4032,7 +4048,13 @@ export class World {
     if (n.id?.startsWith('grown')) { // a grown-up Daycare baby: one has a present once a day, then they just play
       const A = save.adv, day = new Date().toISOString().slice(0, 10), nm = n.name;
       if (A.grownDay !== day) { A.grownDay = day; save.berries = (save.berries || 0) + 2; persist(); sfx.jingle?.(1); return this.say([`${nm} trots over with something in its mouth... a berry it found in the garden! And another! (+2 berries)`, `${nm} was a tiny egg in your bag once. Look at it now!`], null, nm); }
-      return this.say([[`${nm} rolls over for a tummy rub.`, `${nm} bounces on the rug. It's so happy to live here!`, `${nm} shows {hero} its best move. It learned it watching the TV!`][(this.t | 0) % 3]], null, nm);
+      const i = +n.id.slice(5);
+      return this.say([[`${nm} rolls over for a tummy rub.`, `${nm} bounces on the rug. It's so happy to live here!`, `${nm} shows {hero} its best move. It learned it watching the TV!`][(this.t | 0) % 3]], () => this.ask(`${nm} looks at the door, then at {hero}. Take it for a walk?`, ['🐾 Let\'s go!', 'Not now'], (k) => {
+        if (k) return;
+        A.walk = { id: n.critter, i, until: (A.steps || 0) + 400 }; countUp('walk'); persist(); sfx.pickup?.();
+        this.fade(() => this.load(this.key, this.hx, this.hy, this.dir));
+        setTimeout(() => this.S.toast(`🐾 ${nm} trots along behind you! It'll head home after a good long walk.`), 500);
+      }, nm), nm);
     }
     if (n.id === 'mom' && this.morning) { // misty mornings: Mom serves berry pancakes, once a day
       const day = new Date().toISOString().slice(0, 10), A = save.adv;
