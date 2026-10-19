@@ -105,6 +105,14 @@ export const sfx = {
   thwip() { if (ctx) { osc('square', 300, 1400, 0.09, 0.07); noise(0.1, 0.12, { f0: 1800, f1: 4000, q: 4 }); } },
   slurp() { if (ctx) { osc('sine', 1200, 260, 0.18, 0.18); osc('triangle', 600, 180, 0.14, 0.08); } },
   dodge() { if (ctx) { noise(0.2, 0.25, { f0: 2400, f1: 500, q: 3, attack: 0.02 }); osc('sine', 900, 1500, 0.08, 0.06); } },
+  // Snowball Toss: a throw whoosh, then a soft crunchy splat when it lands (a bright sparkle on a golden snowman)
+  snowball(gold = false) {
+    if (!ctx) return;
+    const t = now() + 0.2;
+    noise(0.12, 0.08, { f0: 900, f1: 2600, q: 2 });
+    noise(0.16, 0.3, { t, f0: 1500, f1: 400, q: 0.8, type: 'lowpass' }); noise(0.08, 0.1, { t, f0: 4200, q: 2 }); osc('sine', 160, 70, 0.12, 0.15, { t });
+    if (gold) [1320, 1760, 2200].forEach((f, i) => osc('triangle', f, f, 0.12, 0.06, { t: t + 0.05 + i * 0.06 }));
+  },
   // a soft footfall that sounds like the ground under the hero
   foot(kind = 'grass') {
     if (!ctx) return;

@@ -42,8 +42,8 @@ export function snowballToss(root, kip, seed, onDone) {
     el.querySelector('.snowb').appendChild(ball); setTimeout(() => ball.remove(), 260);
     set(i, null); h.classList.add('hit', q.kind);
     setTimeout(() => h.classList.remove('hit'), 380);
-    if (q.kind === 'kip') { score = Math.max(0, score - 2); msg.textContent = 'Kip: "HEY! Not me!" (−2)'; sfx.ui?.('back'); }
-    else { score += q.kind === 'gold' ? 3 : 1; msg.textContent = q.kind === 'gold' ? '✨ A golden snowman! +3' : ['Splat!', 'Bullseye!', 'Got him!', 'Poof!'][score % 4]; sfx.ui?.('ok'); }
+    if (q.kind === 'kip') { score = Math.max(0, score - 2); msg.textContent = 'Kip: "HEY! Not me!" (−2)'; sfx.snowball?.(); sfx.ui?.('back'); }
+    else { score += q.kind === 'gold' ? 3 : 1; msg.textContent = q.kind === 'gold' ? '✨ A golden snowman! +3' : ['Splat!', 'Bullseye!', 'Got him!', 'Poof!'][score % 4]; sfx.snowball?.(q.kind === 'gold'); }
     scoreEl.textContent = score;
   };
   holes.forEach((h) => h.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); tap(+h.dataset.i); }));
