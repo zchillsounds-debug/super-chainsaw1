@@ -476,7 +476,7 @@ export class World {
       }
       // the ice as one sheet, not tiles: deeper blue in the middle, long diagonal sheen streaks, hairline cracks and frozen bubbles
       const iceT = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === 'i' || (this.tile(x, y) === 'R' && [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dy]) => this.tile(x + dx, y + dy) === 'i').length >= 2)) iceT.push([x, y]);
-      if (iceT.length > 12) {
+      if (iceT.length >= 6) {
         c.save(); c.beginPath(); for (const [x, y] of iceT) c.rect(x * P, y * P, P, P); c.clip();
         const xs = iceT.map((t) => t[0]), ys = iceT.map((t) => t[1]), x0 = Math.min(...xs) * P, y0 = Math.min(...ys) * P, x1 = (Math.max(...xs) + 1) * P, y1 = (Math.max(...ys) + 1) * P;
         const gr = c.createRadialGradient((x0 + x1) / 2, (y0 + y1) / 2, 0, (x0 + x1) / 2, (y0 + y1) / 2, Math.max(x1 - x0, y1 - y0) * 0.6);
