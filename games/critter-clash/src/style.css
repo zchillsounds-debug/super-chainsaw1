@@ -1139,3 +1139,6 @@ body:has(.snow-wrap) .wd-a, body:has(.snow-wrap) .joybase { visibility: hidden; 
 .snowb .sb-tap { margin: 0; color: #5a7a9a; font-size: 11px; visibility: hidden; }
 .snow-wrap.done .sb-tap { visibility: visible; }
 .snow-wrap.won .snowb { box-shadow: 0 0 0 4px #ffe07a, 0 0 40px #ffe07a88, 0 12px 36px #0007; }
+.snowb { position: relative; }
+.sb-ball { position: absolute; left: 50%; bottom: 0; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #cfe4fa); box-shadow: 0 2px 4px #2a4a6a66; pointer-events: none; z-index: 5; animation: sb-throw .22s ease-out forwards; }
+@keyframes sb-throw { 0% { transform: translate(0, 0) scale(1.4); } 100% { transform: translate(var(--dx), var(--dy)) scale(.7); } }

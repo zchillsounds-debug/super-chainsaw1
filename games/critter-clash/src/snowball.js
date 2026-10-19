@@ -37,7 +37,10 @@ export function snowballToss(root, kip, seed, onDone) {
   const tap = (i) => {
     if (phase !== 'play') return;
     const q = up[i]; if (!q) return;
-    const h = holes[i]; set(i, null); h.classList.add('hit', q.kind);
+    const h = holes[i], box = el.querySelector('.snowb').getBoundingClientRect(), hr = h.getBoundingClientRect(); // a snowball flies from the bottom of the panel to the target
+    const ball = document.createElement('i'); ball.className = 'sb-ball'; ball.style.setProperty('--dx', `${hr.left + hr.width / 2 - (box.left + box.width / 2)}px`); ball.style.setProperty('--dy', `${hr.top + hr.height * 0.35 - box.bottom}px`);
+    el.querySelector('.snowb').appendChild(ball); setTimeout(() => ball.remove(), 260);
+    set(i, null); h.classList.add('hit', q.kind);
     setTimeout(() => h.classList.remove('hit'), 380);
     if (q.kind === 'kip') { score = Math.max(0, score - 2); msg.textContent = 'Kip: "HEY! Not me!" (−2)'; sfx.ui?.('back'); }
     else { score += q.kind === 'gold' ? 3 : 1; msg.textContent = q.kind === 'gold' ? '✨ A golden snowman! +3' : ['Splat!', 'Bullseye!', 'Got him!', 'Poof!'][score % 4]; sfx.ui?.('ok'); }
