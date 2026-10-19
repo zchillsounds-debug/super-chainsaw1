@@ -1889,6 +1889,7 @@ export class World {
   buildRainbow() {
     this.S.root.querySelectorAll('.wd-rainbow').forEach((e) => e.remove());
     if (!this.afterRain) return;
+    const day = new Date().toISOString().slice(0, 10); if (save.adv.rainbowDay !== day) { save.adv.rainbowDay = day; countUp('rainbow'); persist(); } // Records: rainbows seen (one a day)
     const el = document.createElement('div'); el.className = 'wd-rainbow';
     this.S.root.querySelector('.world-screen')?.prepend(el);
     if (!this.rainbowTold) { this.rainbowTold = true; setTimeout(() => this.group && el.isConnected && this.S.toast('🌈 The rain has stopped. Look, a rainbow!'), 2600); }

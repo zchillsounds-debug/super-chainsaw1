@@ -1076,6 +1076,7 @@ export class Screens {
       + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
       + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
       + (A.cnt?.care ? bar('🧸', 'Daycare stays', A.cnt.care) : '')
+      + (A.cnt?.rainbow ? bar('🌈', 'Rainbows seen', A.cnt.rainbow) : '')
       + bar('🌅', 'Sunsets watched', A.cnt?.sunset || 0)
       + bar('🪵', 'Twig races won', A.cnt?.twig || 0)
       + bar('🎣', 'Fishing Derbies won', A.cnt?.derby || 0)
