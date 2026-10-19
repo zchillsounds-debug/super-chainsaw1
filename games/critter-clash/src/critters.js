@@ -978,11 +978,13 @@ export class Critter {
     const gold = toon(0xffc93a, { uniforms: U, rim: 0.9 });
     // the giant stage 3 forms outgrow the scarf (pin and crown still show)
     if (from <= 1 && (this.def.stage || 1) < 3) {
-    const ring = inked(new THREE.TorusGeometry(B.w * 0.5, this.def.stage ? 0.062 : 0.085, 10, 28), scarfMat, OL * 0.8);
-    ring.rotation.x = Math.PI / 2 - 0.3;
-    ring.scale.set(B.chubby * 1.05, 1, 1);
     // grown forms wear it just under the chin (their heads overlap the base neckline)
     const sy = this.def.stage ? B.h * 0.82 - headR * 0.26 : B.h * 0.84;
+    // ...and snug: sized to the body's slice at that height, so it reads as a scarf and not a hoop floating round the tummy
+    const t = (sy - B.h * 0.48) / (B.h * 0.5), snug = this.def.stage ? Math.sqrt(Math.max(0.3, 1 - t * t)) * 1.06 : 1;
+    const ring = inked(new THREE.TorusGeometry(B.w * 0.5 * snug, this.def.stage ? 0.06 : 0.085, 10, 28), scarfMat, OL * 0.8);
+    ring.rotation.x = Math.PI / 2 - 0.3;
+    ring.scale.set(B.chubby * 1.05, 1, this.def.stage ? 1.7 : 1); // grown forms: a flat cloth band, not a round tube
     ring.position.set(0, sy, B.w * 0.04);
     this.torso.add(ring);
     // two tails flapping off the back
