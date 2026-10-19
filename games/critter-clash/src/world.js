@@ -135,6 +135,8 @@ export function heroDef() {
 
 // weather: the grassy outdoor maps get the same few rainy 3-hour slots for everyone, picked from the date
 export const canRain = (M) => !M.indoor && !M.mood && !M.city && !M.snow && !M.lava && M.border !== 'cloud';
+// a third of the 3-hour blocks turn any showers in them into thunderstorms
+export const stormAt = (d, hr = d.getHours()) => hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}storm`) % 3 === 0;
 export function rainAt(key, d, hr = d.getHours()) {
   return hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}` + key) % 5 === 0;
 }
@@ -335,7 +337,7 @@ export class World {
     this.phase = M.indoor ? 'day' : this.outPhase;
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
     this.rain = canRain(M) && (save.adv.rain ?? rainAt(key, new Date(), hr));
-    { const d = new Date(); this.storm = this.rain && !!(save.adv.storm ?? hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}storm`) % 3 === 0); this.boltT = 2.5 + Math.random() * 3; } // a third of the showers are thunderstorms
+    this.storm = this.rain && !!(save.adv.storm ?? stormAt(new Date(), hr)); this.boltT = 2.5 + Math.random() * 3;
     this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
     this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)); // now and then a proper snowfall up in the mountains (light flurries otherwise)
     const shut = M.bramble && !save.adv.flags[M.bramble];
@@ -3750,6 +3752,7 @@ export class World {
       sfx.pickup?.();
       const name = B.cr.def?.name || 'Your buddy';
       const M = this.M, ctx = [ // what the buddy notices right here, right now
+        this.storm && `${name} jumps at a clap of thunder and hides behind {hero}. ...Is it over yet?`,
         this.rain && `${name} shakes the rain off... all over {hero}. Thanks, pal.`,
         this.S.root.querySelector('.wd-rainbow') && `${name} points up at the rainbow, eyes wide. Is there a berry pot at the end of it?`,
         this.snowing && `${name} catches a snowflake on the tip of their tongue. Cold!`,
@@ -4078,8 +4081,8 @@ export class World {
 
   // a wild critter jumps out of the tall grass
   ambush() {
-    const W = this.M.wild, wet = this.rain ? W.list.filter(([i]) => byId(i)?.type === 'water') : [];
-    const L = wet.length && Math.random() < 0.5 ? wet : W.list; // water critters come out to play in the rain
+    const W = this.M.wild, wet = this.rain ? W.list.filter(([i]) => byId(i)?.type === 'water' || this.storm && byId(i)?.type === 'spark') : [];
+    const L = wet.length && Math.random() < 0.5 ? wet : W.list; // water critters come out to play in the rain (and spark critters in a thunderstorm)
     const [id, lo, hi] = L[Math.floor(Math.random() * L.length)];
     const lv = lo + Math.floor(Math.random() * (hi - lo + 1));
     this.encCool = 6;

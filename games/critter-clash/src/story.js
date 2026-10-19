@@ -11,7 +11,7 @@ import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
 import { arcadeGame, skyHop } from './arcade.js';
-import { canRain, rainAt, LOST_SPOTS, derbyOf } from './world.js';
+import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf } from './world.js';
 
 const flags = () => save.adv.flags;
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -460,7 +460,8 @@ function forecast() {
   const later = new Date(Date.now() + 3 * 3600 * 1000), seen = Object.keys(save.adv.seen || {});
   const wet = seen.filter((k) => { const M = getMap(k); return M && canRain(M) && rainAt(k, later); }).map((k) => getMap(k).name);
   if (!seen.length) return [];
-  return [wet.length ? `Prof. Pecan: My weather vane says showers are coming to ${wet.slice(0, 3).join(', ')} soon. Water critters love the rain!`
+  return [wet.length && stormAt(later) ? `Prof. Pecan: My weather vane is spinning! Thunderstorms are coming to ${wet.slice(0, 3).join(', ')} soon. Spark critters love a good storm!`
+    : wet.length ? `Prof. Pecan: My weather vane says showers are coming to ${wet.slice(0, 3).join(', ')} soon. Water critters love the rain!`
     : 'Prof. Pecan: My weather vane says clear skies everywhere for the next few hours. Splendid!'];
 }
 
