@@ -1061,6 +1061,7 @@ export class Screens {
         ['🥚', 'Collect a Daycare egg', 'Nanny Nell, any Berry Center', A.eggDay === day, A.eggDay === day || (A.care && !A.egg && (A.steps || 0) - A.care.at >= 400)], // only once Nell has one waiting
         ['🏡', 'A present from home', `home, ${N('village')}`, A.grownDay === day, A.grown?.length], // a grown-up Daycare baby (world.js grownSpot)
         ['🎄', 'A gift under the tree', 'by any Berry Center', A.xgift === day, twinkleWeek()], // Twinkle Week (world.js buildXtree)
+        ['🎵', `Sing carols (${A.carol?.day === day ? A.carol.ids.length : 0}/6)`, 'townsfolk after dark', A.carol?.day === day && A.carol.ids.length >= 6, twinkleWeek()],
         F.rod && (() => { const D = derbyOf(gauntletWeek()); return ['🎣', `Derby: ${D.name} ${D.cm}+ cm`, `this week, ${D.where}`, A.derbyWk === D.wk, true]; })(),
         F.ending && ['🏔️', 'Peak Gauntlet (this week)', "Keeper Orla, Champion's Peak", !!F['gauntpay_' + gauntletWeek()], true],
       ].filter((r) => r && r[4]);
@@ -1144,6 +1145,7 @@ export class Screens {
       + (A.cnt?.tot ? bar('🍬', 'Trick-or-treats', A.cnt.tot) : '')
       + (A.cnt?.leaves ? bar('🍂', 'Leaf piles jumped', A.cnt.leaves) : '')
       + (A.cnt?.twinkle ? bar('🎄', 'Twinkle Week gifts', A.cnt.twinkle) : '')
+      + (A.cnt?.carol ? bar('🎵', 'Carols sung', A.cnt.carol) : '')
       + (A.cnt?.wisp ? bar('✨', 'Firefly & wisp nights', A.cnt.wisp) : '')
       + bar('📸', 'Landmark photos', (A.snaps || []).length, LANDMARKS.length)
       + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length)
@@ -1184,6 +1186,7 @@ export class Screens {
       new Date().getMonth() === 9 && 'Autumn: run through the leaf piles by the trees. The first one of the day sometimes hides a berry.',
       pumpkinNights() && 'Pumpkin Nights: after dark the townsfolk dress up. Say "trick or treat" to six of them a night for candy berries!',
       twinkleWeek() && 'Twinkle Week: look under the tree by any Berry Center for a gift, once a day.',
+      twinkleWeek() && 'Twinkle Week: after dark, talk to the townsfolk and sing a carol together. Six a night share a cocoa berry!',
       A.grown?.length && 'Your grown-up Daycare babies love a walk. Ask one at home, and it may find a berry on the way.',
     ].filter(Boolean);
     return tips[Math.floor(Date.now() / 864e5) % tips.length];

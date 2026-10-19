@@ -1928,6 +1928,9 @@ export class World {
   // townsfolk you can trick-or-treat: Pumpkin Nights, after dark, outdoors, plain chatty folk (not trainers or story people)
   trickOrTreat(n) { return pumpkinNights() && this.phase !== 'day' && !this.dozing(n) && !this.M.indoor && !n.story && !n.trainer && !n.rival && !n.pecan && !n.balloon && !!n.lines?.length; }
 
+  // townsfolk who'll sing a carol with you: Twinkle Week, after dark, outdoors, plain chatty folk
+  caroler(n) { return twinkleWeek() && this.phase !== 'day' && !this.dozing(n) && !this.M.indoor && !n.story && !n.trainer && !n.rival && !n.pecan && !n.balloon && !!n.lines?.length; }
+
   // tap a pumpkin: after dark, the first one each night hides a candy berry
   pumpkin() {
     const day = new Date().toISOString().slice(0, 10), A = save.adv;
@@ -4221,6 +4224,15 @@ export class World {
         T.ids.push(n.id); countUp('tot'); save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(1);
         const L = [`${who}: Eek! A spooky {hero}! ...Oh, it's you. Here, have a treat!`, `${who}: Trick or treat? Treat, definitely treat. I'm not ready for a trick.`, `${who}: Ooh, great costume! Wait... is that a costume? Here, take a candy berry!`, `${who}: Happy Pumpkin Nights! I saved the last candy berry for you.`];
         return this.say(['{hero}: Trick or treat!', L[(hash(n.id) + T.ids.length) % L.length], `+1 🍓 candy berry! (${T.ids.length}/${halloween() ? 10 : 6} treats tonight)`], null, n.name);
+      }
+    }
+    if (this.caroler(n)) { // Twinkle Week after dark: sing a carol together (six townsfolk a night share a mug of cocoa and a berry)
+      const day = new Date().toISOString().slice(0, 10), A = save.adv, T = A.carol?.day === day ? A.carol : (A.carol = { day, ids: [] }), who = n.name.split(' ').pop();
+      if (!T.ids.includes(n.id) && T.ids.length < 6) {
+        T.ids.push(n.id); countUp('carol'); save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(2); this.bubble(a, '🎵');
+        const songs = ['"Twinkle, twinkle, little berry, snow is soft and hearts are merry..."', '"Deck the dens with fluff and holly, every critter warm and jolly..."', '"Ring the bells on Frostpeak hill, the night is bright and the stars are still..."', '"Sleep, little critters, the snow falls slow, the tree lights shine on the town below..."'];
+        const L = [`${who}: A carol? Oh, I know just the one! Ahem...`, `${who}: You sing, I'll hum! I always forget the second verse.`, `${who}: Let's sing loud enough for the whole town to hear!`, `${who}: My favourite part of Twinkle Week! One, two, three...`];
+        return this.say([L[(hash(n.id) + T.ids.length) % L.length], `♪ {hero} and ${who} sing: ${songs[(hash(n.id) + new Date().getDate()) % songs.length]} ♪`, `${who}: Bravo! Here, a mug of cocoa and a winter berry for the road. +1 🍓 (${T.ids.length}/6 carols tonight)`], null, n.name);
       }
     }
     if (pumpkinNights() && !n.story && n.lines?.length && Math.random() < 0.3) { // Pumpkin Nights chatter
