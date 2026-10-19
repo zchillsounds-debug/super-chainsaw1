@@ -2172,7 +2172,7 @@ export class World {
     const [dx, dy] = DIRS[this.dir];
     let x = this.hx - dx, y = this.hy - dy;
     if (!this.walkable(x, y)) { x = this.hx; y = this.hy; }
-    this.follower = { cr, root: cr.root, x, y, dir: this.dir, from: null, moveT: 0 };
+    this.follower = { cr, root: cr.root, x, y, dir: this.dir, from: null, moveT: 0, name: wk?.name };
     this.setPos(this.follower);
   }
 
@@ -3817,7 +3817,7 @@ export class World {
       B.cr.emote('happy', 'open', 1);
       for (let k = 0; k < 5; k++) this.g.fx.spawn({ x: B.root.position.x + (Math.random() - 0.5), y: 1.6 + Math.random() * 0.5, z: B.root.position.z, vy: 1 + Math.random(), color: 0xff6aa8, size: 0.35, life: 0.9, shape: 'star' });
       sfx.pickup?.();
-      const name = B.cr.def?.name || 'Your buddy';
+      const name = B.name || B.cr.def?.name || 'Your buddy';
       const M = this.M, ctx = [ // what the buddy notices right here, right now
         this.storm && `${name} jumps at a clap of thunder and hides behind {hero}. ...Is it over yet?`,
         this.rain && `${name} shakes the rain off... all over {hero}. Thanks, pal.`,
