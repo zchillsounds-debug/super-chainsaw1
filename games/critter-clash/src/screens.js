@@ -303,6 +303,13 @@ export class Screens {
         "Oh, and your Journal Records now count the night owls you meet. Hoo-hoo!",
         "Never up after dark? Your bed at home can sleep you right through to the evening, the night or the next morning.",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv20') && !save.news.includes('adv21')) {
+      save.news.push('adv21'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        pumpkinNights() ? "{name}! It's Pumpkin Nights, and after dark the townsfolk are all in costume! Walk up and say \"trick or treat\". Six of them a night have a candy berry for you." : "{name}! Every Pumpkin Night from now on, the townsfolk will dress up after dark. Say \"trick or treat\" and they'll share a candy berry!",
+        "Your ☰ Photo got better, too: your walking buddy steps up beside you for the shot. Smile!",
+        "And in Twinkle Week, an evening shower comes down as real snow over the green towns. Bring a scarf!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
