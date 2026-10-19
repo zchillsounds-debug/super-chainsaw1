@@ -343,6 +343,7 @@ export class World {
     this.buildAurora();
     this.buildLamps();
     this.buildBonfire();
+    this.buildLavaGlow();
     this.buildCart();
     this.buildMarket();
     this.buildDance();
@@ -410,7 +411,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1072,6 +1073,21 @@ export class World {
     }
     const im = inked(mergeGeometries(iron), toon(route ? 0x6e4a2e : 0x3a3a4a), OL * 0.5); im.castShadow = true; this.group.add(im); iron.forEach((g) => g.dispose());
     const gm = new THREE.Mesh(mergeGeometries(glass), lit ? LIT : toon(0xfff4d0, { rim: 0.8 })); this.group.add(gm); glass.forEach((g) => g.dispose());
+  }
+
+  // lava throws a warm glow onto the ground beside it in the evening and at night (one merged mesh; the update makes it breathe)
+  buildLavaGlow() {
+    this.lavaGlow = null;
+    if (!this.M.lava || this.M.indoor || this.phase === 'day') return;
+    const quads = [];
+    for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) {
+      if (this.tile(x, y) !== '~' || [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dy]) => '~='.includes(this.tile(x + dx, y + dy)))) continue; // edge tiles only
+      const [px, pz] = wpos(x, y), q = new THREE.PlaneGeometry(TILE * 2.4, TILE * 2.4); q.rotateX(-Math.PI / 2); q.translate(px, 0.06, pz); quads.push(q);
+    }
+    if (!quads.length) return;
+    const m = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xff5a1a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: this.phase === 'night' ? 0.32 : 0.2 }); m.userData.own = true;
+    const mesh = new THREE.Mesh(mergeGeometries(quads), m); mesh.renderOrder = 1; this.group.add(mesh); quads.forEach((q) => q.dispose());
+    this.lavaGlow = { m, base: m.opacity };
   }
 
   // a beach bonfire in Seashell Town after dusk: logs, flickering flames, sparks and a warm pool of light on the sand
@@ -3320,6 +3336,7 @@ export class World {
     if (this.wisps) this.updateWisps(dt);
     if (this.flutters) this.updateFlutters(dt);
     if (this.twigs) this.updateTwigs(dt);
+    if (this.lavaGlow) this.lavaGlow.m.opacity = this.lavaGlow.base * (1 + Math.sin(this.t * 1.3) * 0.12 + Math.sin(this.t * 3.7) * 0.06);
     if (this.geyser) this.updateGeyser(dt);
     if (this.kite) this.updateKite(dt);
     if (this.mornMist) this.updateMorning(dt);
