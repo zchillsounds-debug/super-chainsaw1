@@ -308,6 +308,7 @@ export class Screens {
       setTimeout(() => this.mode === 'title' && this.profTalk([
         pumpkinNights() ? "{name}! It's Pumpkin Nights, and after dark the townsfolk are all in costume! Walk up and say \"trick or treat\". Six of them a night have a candy berry for you." : "{name}! Every Pumpkin Night from now on, the townsfolk will dress up after dark. Say \"trick or treat\" and they'll share a candy berry!",
         "Your ☰ Photo got better, too: your walking buddy steps up beside you for the shot. Smile!",
+        "Autumn's here, too! Fallen leaves pile up by the trees in the green towns and routes. Run right through one. Wheee!",
         "And in Twinkle Week, an evening shower comes down as real snow over the green towns. Bring a scarf!",
       ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
@@ -1180,6 +1181,7 @@ export class Screens {
       seen.cloudtop && 'Toss a berry in the Cloudtop fountain for a wish, once a day.',
       F.crowned && 'Since you were crowned, route trainers want a rematch once a day, at your level.',
       pumpkinNights() && 'Pumpkin Nights: the pumpkins by town doors glow after dark, and Glowcap Woods has wisps to catch.',
+      new Date().getMonth() === 9 && 'Autumn: run through the leaf piles by the trees. The first one of the day sometimes hides a berry.',
       pumpkinNights() && 'Pumpkin Nights: after dark the townsfolk dress up. Say "trick or treat" to six of them a night for candy berries!',
       twinkleWeek() && 'Twinkle Week: look under the tree by any Berry Center for a gift, once a day.',
       A.grown?.length && 'Your grown-up Daycare babies love a walk. Ask one at home, and it may find a berry on the way.',
