@@ -2784,12 +2784,18 @@ export class World {
       if (t === 'D') { // tables join up with their D neighbours; legs only at the outer corners
         const n = (dx, dy) => this.tile(x + dx, y + dy) === 'D', l = n(-1, 0), r = n(1, 0), u = n(0, -1), d = n(0, 1);
         const x0 = px - (l ? 1 : 0.85), x1 = px + (r ? 1 : 0.85), z0 = pz - (u ? 1 : 0.85), z1 = pz + (d ? 1 : 0.85);
-        box('wood', x1 - x0, 0.14, z1 - z0, (x0 + x1) / 2, 0.9, (z0 + z1) / 2);
-        for (const [cx, cz, ok] of [[x0, z0, !l && !u], [x1, z0, !r && !u], [x0, z1, !l && !d], [x1, z1, !r && !d]]) if (ok) box('wood', 0.14, 0.9, 0.14, cx + (cx < px ? 0.12 : -0.12), 0.45, cz + (cz < pz ? 0.12 : -0.12));
+        const toad = this.M.indoor === 'toad'; // Glowcap toadstool homes eat round a big toadstool: a red, white-spotted cap on a stubby stem
+        if (toad && r && d) {
+          const st = new THREE.CylinderGeometry(0.5, 0.68, 0.86, 16); st.translate(px + 1, 0.43, pz + 1); add('trim', st);
+          const cp = new THREE.CylinderGeometry(1.6, 1.42, 0.22, 28); cp.translate(px + 1, 0.86, pz + 1); add('tcap', cp);
+          for (let k = 0; k < 9; k++) { const a = k * 0.7 + 0.2, rr = 1.12 + (k % 2) * 0.22, sp = new THREE.SphereGeometry(0.13 + (k % 3) * 0.03, 8, 6); sp.scale(1, 0.3, 1); sp.translate(px + 1 + Math.cos(a) * rr, 0.97, pz + 1 + Math.sin(a) * rr); add('shine', sp); }
+        }
+        if (!toad) box('wood', x1 - x0, 0.14, z1 - z0, (x0 + x1) / 2, 0.9, (z0 + z1) / 2);
+        if (!toad) for (const [cx, cz, ok] of [[x0, z0, !l && !u], [x1, z0, !r && !u], [x0, z1, !l && !d], [x1, z1, !r && !d]]) if (ok) box('wood', 0.14, 0.9, 0.14, cx + (cx < px ? 0.12 : -0.12), 0.45, cz + (cz < pz ? 0.12 : -0.12));
         if (r && d) { const b = new THREE.SphereGeometry(0.3, 10, 8); b.translate(px + 1, 1.15, pz + 1); add('berry', b); }
         if (!l && !r && !u && !d) { const b = new THREE.SphereGeometry(0.22, 8, 6); b.translate(px, 1.1, pz); add('berry', b); }
         // stools pulled up at the open ends, and a little something on the table top
-        for (const sd of [-1, 1]) if (this.tile(x + sd, y) === '.' && !n(sd, 0)) {
+        for (const sd of [-1, 1]) if (!toad && this.tile(x + sd, y) === '.' && !n(sd, 0)) { // (toadstool homes have toadstool stools of their own)
           const sx = px + sd * 1.2; box('stool', 0.7, 0.12, 0.7, sx, 0.55, pz);
           for (const [lx, lz] of [[-0.25, -0.25], [0.25, -0.25], [-0.25, 0.25], [0.25, 0.25]]) box('wood', 0.08, 0.5, 0.08, sx + lx, 0.25, pz + lz);
         }
