@@ -344,6 +344,7 @@ export class World {
     this.buildSunset();
     this.buildFort();
     this.buildGarden();
+    this.buildGeyser();
     this.buildBloomFw();
     this.buildFountain();
     this.buildStatue();
@@ -398,7 +399,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1417,6 +1418,53 @@ export class World {
     const rainy = this.rain;
     return this.say([rainy ? 'The rain has watered the garden already! {hero} just checks the leaves.' : '{hero} gives the plant a good drink from Bea\'s watering can. Glug glug!',
       ['It grew a little taller overnight. New leaves!', 'A fat green bud has appeared at the top!', 'WOW! It burst into bloom! Pick it whenever you like.'][G.stage - 2]]);
+  }
+
+  // Cinder Road's steam geyser (just above the road, east of the lava river): it rumbles, then blasts a column of steam every few seconds.
+  // Stand on it when it blows and the hero gets launched sky-high (the first flight of a day shakes a berry loose)
+  buildGeyser() {
+    this.geyser = null;
+    if (this.key !== 'cinder' || this.M.indoor) return;
+    const [x, y] = [19, 5];
+    if (this.tile(x, y) !== '.') return;
+    const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g);
+    const rock = toon(0x3a2a28), rock2 = toon(0x5a4440);
+    for (let k = 0; k < 9; k++) { const a = k / 9 * Math.PI * 2, st = inked(new THREE.DodecahedronGeometry(0.22 + (k % 3) * 0.05, 0), k % 2 ? rock : rock2, OL * 0.3); st.scale.y = 0.55; st.position.set(Math.cos(a) * 0.62, 0.08, Math.sin(a) * 0.62); st.rotation.y = a * 2; g.add(st); }
+    const hm = new THREE.MeshBasicMaterial({ color: 0xff7a2a }); hm.userData.own = true;
+    const hole = new THREE.Mesh(new THREE.CircleGeometry(0.42, 18), hm); hole.rotation.x = -Math.PI / 2; hole.position.y = 0.05; g.add(hole);
+    const gm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff8a3a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.5 }); gm.userData.own = true;
+    const glow = new THREE.Sprite(gm); glow.scale.setScalar(2.4); glow.position.y = 0.3; g.add(glow);
+    bakeStatic({ root: g, mats: {}, keep: [hole, glow] });
+    this.geyser = { x, y, px, pz, t: 2.5, hm, glow };
+  }
+
+  updateGeyser(dt) {
+    const G = this.geyser, fx = this.g.fx, T = 7, prev = G.t % T; G.t += dt; const c = G.t % T;
+    const near = Math.abs(this.hx - G.x) + Math.abs(this.hy - G.y) < 12;
+    G.glow.material.opacity = 0.35 + (c > 5.4 ? 0.4 : 0) + Math.sin(this.t * 6) * 0.08;
+    if (c > 5.4 && c < 6.6) { // rumbling: little puffs, and the ground shivers
+      if (Math.random() < dt * 10) fx.spawn({ x: G.px + (Math.random() - 0.5) * 0.6, y: 0.2, z: G.pz + (Math.random() - 0.5) * 0.6, vy: 0.8, color: 0xe8e0e0, size: 0.5, life: 0.8, shape: 'puff', additive: false, grow: 1, alpha: 0.6 });
+      if (prev <= 5.4 && near) sfx.rumble?.();
+    }
+    if (c >= 6.6) { // the blast: a tall column of steam with hot sparks
+      for (let n = Math.floor(dt * 70 + Math.random()); n > 0; n--) fx.spawn({ x: G.px + (Math.random() - 0.5) * 0.5, y: 0.3, z: G.pz + (Math.random() - 0.5) * 0.5, vx: (Math.random() - 0.5) * 0.8, vy: 7 + Math.random() * 3, vz: (Math.random() - 0.5) * 0.8, color: 0xffffff, size: 0.8 + Math.random() * 0.5, life: 0.9, shape: 'puff', additive: false, grow: 1.4, drag: 1.5, alpha: 0.75 });
+      if (Math.random() < dt * 12) fx.spawn({ x: G.px, y: 0.5, z: G.pz, vx: (Math.random() - 0.5) * 2, vy: 6, vz: (Math.random() - 0.5) * 2, color: 0xffa030, size: 0.16, life: 0.9, shape: 'spark', grav: 6 });
+      if (prev < 6.6) {
+        if (near) sfx.whoosh?.(0.6);
+        if (this.hx === G.x && this.hy === G.y && !(this.moveT > 0) && !this.dialogEl && !this.busy) this.geyserLaunch();
+      }
+    }
+  }
+
+  // whoosh! the hero rides the steam up and lands back on the vent
+  geyserLaunch() {
+    this.launchT = 1.4; this.busy = true; sfx.jingle?.(1);
+    setTimeout(() => {
+      this.busy = false; sfx.land?.(); const G = this.geyser; if (G) this.g.fx.burst({ x: G.px, y: 0.3, z: G.pz }, { n: 12, speed: 2.5, up: 0.6, color: 0xd8c8c0, size: 0.6, life: 0.6, shape: 'puff', additive: false, grow: 1, drag: 3 });
+      const day = new Date().toISOString().slice(0, 10), A = save.adv; countUp('geyser');
+      if (A.geyser !== day) { A.geyser = day; save.berries = (save.berries || 0) + 1; persist(); this.S.toast?.('💨 WHEEE! A berry rained down from the sky! +1 🍓'); }
+      else { persist(); this.S.toast?.('💨 WHEEE! What a ride!'); }
+    }, 1400);
   }
 
   // a soak in Cinder Town's hot spring: steam billows up; the first soak of a day is worth a little XP
@@ -3058,6 +3106,7 @@ export class World {
       idlePose(P, this.t);
       if (this.twirlT > 0) { P.yaw = (1 - this.twirlT / 0.9) * Math.PI * 4; P.armLz = P.armRz = 1.4; P.legL = -0.4; H.emote('happy', 'grin', 0.1); }
       if (this.danceT > 0) { const b = Math.abs(Math.sin(this.t * 7)); P.y = b * 0.22; P.roll = Math.sin(this.t * 3.5) * 0.22; P.yaw = Math.sin(this.t * 1.8) * 0.7; P.armLz = 1.3 + Math.sin(this.t * 7) * 0.6; P.armRz = 1.3 - Math.sin(this.t * 7) * 0.6; P.legL = Math.sin(this.t * 7) * 0.5; P.legR = -P.legL; H.emote('happy', 'grin', 0.1); }
+      if (this.launchT > 0) { this.launchT -= dt; const k = 1 - Math.max(0, this.launchT) / 1.4; P.y = Math.sin(k * Math.PI) * 4.2; P.yaw = k * Math.PI * 4; P.armLz = P.armRz = 1.5; P.legL = -0.5; P.legR = 0.5; H.emote('happy', 'open', 0.1); }
       if (this.sitting && this.sunset) { const S = this.sunset; H.root.position.set(S.px, 0.62, S.pz - 0.05); H.root.rotation.y = YAW.s; P.legL = P.legR = -1.2 + Math.sin(this.t * 3) * 0.25 * (this.t % 2 < 1 ? 1 : -1); P.armLz = P.armRz = 0.5; H.emote('happy', 'grin', 0.1); }
       if (this.soaking && this.spring) { const S = this.spring; H.root.position.set(S.px, -0.22, S.pz + 0.3); H.root.rotation.y = YAW.s; P.armLz = P.armRz = 0.9; P.y = Math.sin(this.t * 1.5) * 0.03; H.emote('closed', 'grin', 0.1); }
       if (this.fishing) { P.armLx = P.armRx = -1.1 + Math.sin(this.t * 0.8) * 0.06; P.armLz = P.armRz = 0.2; if (this.fishing.phase === 'bite') { P.lean = 0.2; H.emote('happy', 'open', 0.1); } }
@@ -3144,6 +3193,7 @@ export class World {
     if (this.bloomFw) this.updateBloomFw(dt);
     if (this.wisps) this.updateWisps(dt);
     if (this.flutters) this.updateFlutters(dt);
+    if (this.geyser) this.updateGeyser(dt);
     if (this.mornMist) this.updateMorning(dt);
     if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker

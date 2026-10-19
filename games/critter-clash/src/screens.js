@@ -991,6 +991,7 @@ export class Screens {
         ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
         ['♨️', 'Soak in the hot spring', N('ember'), A.soak === day, seen.ember],
         ['🦋', 'Catch five butterflies', `${N('route1')} (by day)`, A.flutter === day, seen.route1 && (this.worldObj?.outPhase === 'day' || A.flutter === day)],
+        ['💨', 'Ride the steam geyser', `${N('cinder')} (stand on the vent)`, A.geyser === day, seen.cinder],
         ['🌻', A.garden?.stage >= 4 ? 'Pick your flower' : A.garden?.stage ? `Water the garden (day ${A.garden.stage}/4)` : 'Plant a seed', `${N('bloom')} garden plot`, A.garden?.stage >= 1 && A.garden.stage < 4 && A.garden.last === day, seen.bloom],
         ['⛄', 'Snowball Toss (12+ hits)', `${N('frostpeak')} snow fort`, A.snowball === day, seen.frostpeak],
         ['🌅', 'Watch the sunset (5–8 pm)', `${N('seashell')} bench`, A.sunset === day, (this.worldObj?.outPhase === 'evening' || A.sunset === day) && seen.seashell], // only while the sun is going down (or once it's watched)
@@ -1053,6 +1054,7 @@ export class Screens {
       + bar('⛄', 'Snowball Toss best', A.snowHi || 0)
       + bar('🌻', 'Flowers grown', A.cnt?.bloom || 0)
       + bar('🦋', 'Butterfly days', A.cnt?.flutter || 0)
+      + bar('💨', 'Geyser rides', A.cnt?.geyser || 0)
       + (A.cnt?.breakfast ? bar('🥞', 'Breakfasts at home', A.cnt.breakfast) : '')
       + (A.cnt?.pumpkin ? bar('🎃', 'Pumpkin treats', A.cnt.pumpkin) : '')
       + (A.cnt?.wisp ? bar('✨', 'Firefly & wisp nights', A.cnt.wisp) : '')
@@ -1075,6 +1077,7 @@ export class Screens {
       'Berry bushes at the edge of town can be shaken once a day.',
       'Rooms look different after dark: lamps come on, and the windows fill with stars.',
       F.rod && 'Two fish only bite in the golden evening, between five and eight.',
+      seen.cinder && 'The steam geyser on Cinder Road blows every few seconds. Stand on the vent and hold on to your hat!',
       seen.route1 && 'On sunny days, five butterflies flutter about Route 1. Walk into them to catch them all!',
       seen.bloom && 'Gardener Bea\'s plot in Bloom Town: plant a seed, water it once a day, and on the fourth day it blooms. Every flower is a new colour!',
       seen.frostpeak && 'Snowball Kid Kip\'s snow fort in Frostpeak: hit 12 snowmen in Snowball Toss for a daily berry stash. Don\'t hit Kip!',
