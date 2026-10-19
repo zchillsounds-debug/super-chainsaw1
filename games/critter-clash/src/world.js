@@ -3569,6 +3569,7 @@ export class World {
         } else if (this.danceT > 0 && a.n && Math.abs(a.x - this.hx) + Math.abs(a.y - this.hy) <= 4) actPose(this, { ...a, n: { ...a.n, act: 'dance' } }, P, this.t + a.x * 0.7, dt); // the crowd joins in
         else if (a.n?.act && !this.dialog) actPose(this, a, P, this.t + a.x * 0.7, dt);
         else idlePose(P, this.t + a.x);
+        if (a.n?.id === 'cared' && !this.dialog && Math.random() < dt * 0.3) this.g.fx.text?.({ x: a.root.position.x + 0.3, y: 2.2, z: a.root.position.z }, '♥', 'heart'); // happy at the Daycare
         if (a.excl > 0) { a.excl -= dt; P.y = Math.max(P.y, Math.sin(Math.min(1, 1 - a.excl) * Math.PI) * 0.4); }
         // townsfolk standing about turn to watch the hero go by (trainers keep their watch line; sleepers and anglers don't look up)
         const hp = this.hero.root.position, ap = a.root.position, near = a.n && !a.from && !a.n.trainer && !this.dialog && a.n.act !== 'sleep' && a.n.act !== 'fish' && !this.dozing(a.n) && Math.abs(a.x - this.hx) <= 2 && Math.abs(a.y - this.hy) <= 2 && !(a.x === this.hx && a.y === this.hy);

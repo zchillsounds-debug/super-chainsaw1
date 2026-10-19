@@ -64,7 +64,7 @@ export const CRITTERS = [
     colors: { body: 0xc9a27a, belly: 0xf3e2c6, accent: 0x8a6a4a, dark: 0x5a3e28, eye: '#24160c', iris: '#c08a55' },
     body: { w: 0.62, h: 0.52, headR: 0.44, legLen: 0.15, armLen: 0.17, chubby: 1.15 },
     ears: 'round', tail: 'stub', extra: 'shell', voice: 0.8,
-    stats: { hp: 1150, speed: 5.4, power: 1.1, weight: 1.3 },
+    stats: { hp: 1190, speed: 5.5, power: 1.13, weight: 1.3 },
     special: 'rollout', super: 'quake',
     moves: { special: 'Roly-Poly', super: 'Boulder Quake' },
   },
