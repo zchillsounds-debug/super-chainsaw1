@@ -653,6 +653,22 @@ const LOST = {
     wait: ['Tinker Volt: The melting Pengsicle sits by the hot springs in Cinder Town, top right. Hurry, before it\'s a puddle!'],
     done: ['Pengsicle: Is that... a FAN? For ME? From the big city?!', 'Pengsicle switches it on. WHIRRR! A frosty breeze! Little snowflakes swirl around its beak.', 'Pengsicle: I can feel my flippers again! Here, take my visor. I won\'t need the shade any more!', '{hero} got the Frosty Visor! 🕶️ +3 🍓'],
   },
+  charm: {
+    who: 'Surfer Pengsicle', item: 'sea-glass charm', berries: 3, snack: true, toast: '🌊', home: 'Seashell Town', to: { npc: 'old', map: 'bloom', name: 'Old Snoozlo', home: 'Bloom Town' },
+    thanks: 'Surfer Pengsicle: Old Snoozlo wrote back! He says he still floats like a log. A very proud log. Waddle waddle!',
+    after: ['Old Snoozlo: See this charm? A Pengsicle I taught to float made it for me. Floating is mostly napping, you know. On water.'],
+    ask: ['Surfer Pengsicle: Psst! You\'re going inland, right? When I was a chick, an old Snoozlo in Bloom Town taught me to float. I sank a LOT before that.', 'Surfer Pengsicle: I made him a charm out of sea glass to say thanks. Could you take it to him? He naps by the pond all day, so try after dark!', '{hero} got a sea-glass charm! 🌊 Take it to Old Snoozlo in Bloom Town.'],
+    wait: ['Surfer Pengsicle: Old Snoozlo naps by the pond in Bloom Town. He only really wakes up after dark!'],
+    done: ['Old Snoozlo: Mm? A charm... made of sea glass? From that little Pengsicle who kept sinking?!', 'Old Snoozlo holds it up to the lamplight. It glows sea-green. His sleepy eyes go a bit misty.', 'Old Snoozlo: Tell the young one... well, it\'s not so young now, is it? Here. Berries, and a snack for the road.', '{hero} got 3 berries and a Power Snack! ⭐'],
+  },
+  honey: {
+    who: 'Elder Oakley', item: 'jar of glowcap honey', berries: 2, snack: true, toast: '🍯', home: 'Glowcap Hollow', to: { npc: 'mom', map: 'village', name: 'Mom', home: 'Sprout Village' },
+    thanks: 'Elder Oakley: Hoo hoo. Your mother sent a stack of pancakes back with a squirrel. They were... mostly there. Delicious!',
+    after: ['Mom: Glowcap honey on pancakes! Oakley always did have the best ideas. Want some? There\'s plenty!'],
+    ask: ['Elder Oakley: Hoo hoo. You\'re from Sprout Village, aren\'t you? Then I know your mother! She sent me pancakes when I was poorly last winter.', 'Elder Oakley: The glowcaps make the sweetest honey in the Hollow. Would you take her a jar? It glows a little. Don\'t let that worry you.', '{hero} got a jar of glowcap honey! 🍯 Take it to Mom in Sprout Village.'],
+    wait: ['Elder Oakley: Your mother is in Sprout Village, of course. Mind the jar, it\'s sticky.'],
+    done: ['Mom: Is that honey from Elder Oakley? It\'s GLOWING! Oh, how lovely!', 'Mom dips a pinky in the jar. Then another pinky. Then a spoon.', 'Mom: Pancakes with glowcap honey tomorrow, I promise! Here, sweetie: some berries and a snack. Thank Oakley for me!', '{hero} got 2 berries and a Power Snack! ⭐'],
+  },
   lamp: {
     who: 'Mushroom Fan Fen', item: 'glowcap night-light', hat: 'nightcap', berries: 2, toast: '🍄', home: 'Glowcap Hollow', to: { npc: 'picnic', map: 'cloudtop', name: 'Picnicker Puff', home: 'Cloudtop Gardens' },
     thanks: 'Mushroom Fan Fen: Puff says the night-light makes the clouds glow pink. Best. Naps. Ever. That\'s what the letter said!',
