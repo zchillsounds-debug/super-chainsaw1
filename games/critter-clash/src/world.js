@@ -1160,7 +1160,7 @@ export class World {
         const pool = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), pm); pool.rotation.x = -Math.PI / 2; pool.position.set(px, 0.05, pz); this.group.add(pool);
       }
     }
-    const im = inked(mergeGeometries(iron), toon(route ? 0x6e4a2e : M.arena === 'beach' ? 0xeef2f6 : M.border === 'cloud' ? 0xf4ead4 : M.snow ? 0x2a4a6e : 0x3a3a4a), OL * 0.5); im.castShadow = true; this.group.add(im); iron.forEach((g) => g.dispose());
+    const im = inked(mergeGeometries(iron), toon(route ? 0x6e4a2e : M.arena === 'beach' ? 0x1f7f86 : M.border === 'cloud' ? 0x7a6ab8 : M.snow ? 0x2a4a6e : 0x3a3a4a), OL * 0.5); im.castShadow = true; this.group.add(im); iron.forEach((g) => g.dispose());
     const gm = new THREE.Mesh(mergeGeometries(glass), lit ? LIT : toon(0xfff4d0, { rim: 0.8 })); this.group.add(gm); glass.forEach((g) => g.dispose());
   }
 
