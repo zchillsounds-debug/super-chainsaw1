@@ -3304,7 +3304,10 @@ export class World {
         cr = new Critter(withGear(n.shiny ? skinned(byId(id), 'shiny') : byId(id), n.rival ? (n.rlv || 4) : (n.lv || n.trainer?.lv || 3)), { lod: 'low' });
         root = cr.root;
         root.scale.setScalar(CS * (n.scale || 1));
-        if (!roleHat(cr, n.name || '') && this.trickOrTreat(n)) { const [k, c, bd] = COSTUMES[hash(n.id) % COSTUMES.length]; hatModel(cr, k, c, bd); } // Pumpkin Nights after dark: the townsfolk dress up
+        if (!roleHat(cr, n.name || '')) {
+          if (this.trickOrTreat(n)) { const [k, c, bd] = COSTUMES[hash(n.id) % COSTUMES.length]; hatModel(cr, k, c, bd); } // Pumpkin Nights after dark: the townsfolk dress up
+          else if (twinkleWeek() && !this.M.indoor && !n.trainer && !n.story && n.lines?.length && hash(n.id) % 3) hatModel(cr, 'nightcap', [0xe8384a, 0x2a9a5a, 0xe8384a][hash(n.id) % 3], 0xffffff); // Twinkle Week: bobble hats all round
+        }
         bakeStatic(cr); castLite(cr);
         if (this.rain && n.act !== 'fish' && n.act !== 'sleep') brolly(cr, [0xff5a8a, 0x5ab8ff, 0xffd84d, 0x8a6aff][(n.x + n.y) % 4]); // a brolly up in the rain
       }
