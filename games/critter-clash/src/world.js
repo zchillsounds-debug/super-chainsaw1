@@ -342,6 +342,7 @@ export class World {
     this.buildSpring();
     this.buildSunset();
     this.buildFort();
+    this.buildGarden();
     this.buildBloomFw();
     this.buildFountain();
     this.buildStatue();
@@ -395,7 +396,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1365,6 +1366,53 @@ export class World {
       return this.say([`Snowball Kid Kip: ${score} hits! ${best ? 'A new best!' : 'Nice throwing!'} (The berry stash refills tomorrow.)`]);
     });
     this.g.modalClose = () => el.__snow.close();
+  }
+
+  // Bloom Town's garden plot (by Gardener Bea): plant a seed, water it once a day, and on the fourth day it blooms into a big flower
+  buildGarden() {
+    this.garden = null;
+    if (this.key !== 'bloom' || this.M.indoor) return;
+    const [x, y] = [8, 13];
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.itemSpots || []), this.hx + ',' + this.hy, this.dig ? this.dig.x + ',' + this.dig.y : '']);
+    if (this.tile(x, y) !== '.' || taken.has(x + ',' + y)) return;
+    const G = save.adv.garden || {}, stage = G.stage || 0, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(x + ',' + y);
+    const wood = toon(0xa8703a), soil = toon(0x6a4a30), leaf = toon(0x5ac24a), leaf2 = toon(0x3e9a3e);
+    for (const [sx, sz, w, d] of [[0, -0.78, 1.7, 0.14], [0, 0.78, 1.7, 0.14], [-0.78, 0, 0.14, 1.42], [0.78, 0, 0.14, 1.42]]) { const b = inked(new THREE.BoxGeometry(w, 0.26, d), wood, OL * 0.25); b.position.set(sx, 0.13, sz); b.castShadow = true; g.add(b); }
+    const bed = new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.2, 1.42), soil); bed.position.y = 0.1; bed.receiveShadow = true; g.add(bed);
+    const water = G.last === new Date().toISOString().slice(0, 10) && stage < 4; // watered today: the soil is dark and damp
+    if (water) bed.material = toon(0x4a3020);
+    const stake = inked(new THREE.BoxGeometry(0.06, 0.6, 0.06), wood, OL * 0.2); stake.position.set(-0.6, 0.45, 0.6); g.add(stake);
+    const tag = inked(new THREE.BoxGeometry(0.34, 0.22, 0.04), toon(0xfff4d8), OL * 0.2); tag.position.set(-0.6, 0.72, 0.62); g.add(tag);
+    const cols = [0xffd23a, 0xff7ab0, 0x7ab8ff, 0xffffff, 0xff8a3a], col = cols[(G.blooms || 0) % cols.length];
+    if (stage >= 1) { const h = [0, 0.25, 0.6, 1.05, 1.5][stage], st = inked(new THREE.CylinderGeometry(0.04, 0.06, h, 6), leaf, OL * 0.2); st.position.y = 0.2 + h / 2; g.add(st);
+      for (let k = 0; k < Math.min(stage + 1, 4); k++) { const lf = inked(new THREE.SphereGeometry(0.2, 8, 6), k % 2 ? leaf : leaf2, OL * 0.2); lf.scale.set(1, 0.25, 0.5); const sd = k % 2 ? 1 : -1; lf.position.set(sd * 0.18, 0.25 + (k + 0.5) * h / (Math.min(stage + 1, 4) + 0.5), 0); lf.rotation.z = sd * 0.4; g.add(lf); }
+      if (stage === 3) { const bud = inked(new THREE.SphereGeometry(0.16, 10, 8), leaf2, OL * 0.25); bud.scale.y = 1.3; bud.position.y = 0.2 + h + 0.1; g.add(bud); const tip = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.16, 8), toon(col)); tip.position.y = 0.2 + h + 0.28; g.add(tip); }
+      if (stage >= 4) { const head = new THREE.Group(); head.position.set(0, 0.2 + h + 0.15, 0.1); head.rotation.x = -0.75; g.add(head);
+        for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI * 2, pt = inked(new THREE.SphereGeometry(0.2, 8, 6), toon(col, { rim: 0.5 }), OL * 0.2); pt.scale.set(0.45, 1, 0.2); pt.position.set(Math.cos(a) * 0.34, Math.sin(a) * 0.34, 0); pt.rotation.z = a - Math.PI / 2; head.add(pt); }
+        const c = inked(new THREE.SphereGeometry(0.22, 12, 8), toon(0x8a5a2a), OL * 0.25); c.scale.z = 0.45; head.add(c); } }
+    bakeStatic({ root: g, mats: {} });
+    this.garden = { x, y, px, pz, stage, g };
+  }
+
+  // tend the garden plot: plant, water once a day (rain counts), pick the flower when it blooms
+  gardenTend() {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv, G = (A.garden ||= { stage: 0, blooms: 0 }), reload = () => { const o = this.garden.g; o.traverse((m) => m.geometry?.dispose()); this.group.remove(o); this.solid.delete(this.garden.x + ',' + this.garden.y); this.buildGarden(); };
+    const burst = (c) => this.g.fx.burst({ x: this.garden.px, y: 0.6, z: this.garden.pz }, { n: 14, speed: 1.6, up: 2.4, color: c, size: 0.2, life: 0.9, shape: 'star', grav: 4, additive: false });
+    if (!G.stage) {
+      G.stage = 1; G.last = day; persist(); sfx.ui?.('ok'); reload(); burst(0x8a5a2a);
+      return this.say(['An empty garden plot with a little wooden tag: "FOR ANYONE WHO LIKES FLOWERS. Love, Bea."', '{hero} pokes a seed into the soil and pats it down. A tiny sprout pops up already!', 'Water it once a day. In a few days, something lovely might bloom!']);
+    }
+    if (G.stage >= 4) {
+      G.stage = 0; G.blooms = (G.blooms || 0) + 1; countUp('bloom'); save.berries = (save.berries || 0) + 5; const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.25));
+      const hat = !(A.hats ||= []).includes('sunbloom'); if (hat) A.hats.push('sunbloom');
+      persist(); sfx.jingle?.(2); reload(); burst(0xffd23a);
+      return this.say(['The flower is in full bloom! {hero} picks it ever so gently.', `Gardener Bea: Oh my, what a beauty! Here, a basket of berries for your trouble. +5 🍓 ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, ...(hat ? ['Gardener Bea: And I made you something from the seeds. A hat that grows on you! {hero} got the Sunbloom Hat! 🌻'] : []), 'Gardener Bea: The plot is ready for a new seed whenever you are. Every flower comes up a different colour!']);
+    }
+    if (G.last === day) return this.say(['The soil is still damp. The little plant is doing its best!', 'Come back tomorrow to water it again.']);
+    G.stage++; G.last = day; persist(); reload(); burst(G.stage >= 4 ? 0xffd23a : 0x7ad8ff); sfx.water?.();
+    const rainy = this.rain;
+    return this.say([rainy ? 'The rain has watered the garden already! {hero} just checks the leaves.' : '{hero} gives the plant a good drink from Bea\'s watering can. Glug glug!',
+      ['It grew a little taller overnight. New leaves!', 'A fat green bud has appeared at the top!', 'WOW! It burst into bloom! Pick it whenever you like.'][G.stage - 2]]);
   }
 
   // a soak in Cinder Town's hot spring: steam billows up; the first soak of a day is worth a little XP
@@ -3330,6 +3378,7 @@ export class World {
     if (this.spring?.cells.has(fx + ',' + fy)) return this.soak();
     if (this.sunset && this.sunset.x === fx && this.sunset.y === fy) return this.sunsetSit();
     if (this.fort && this.fort.x === fx && this.fort.y === fy) return this.snowFort();
+    if (this.garden && this.garden.x === fx && this.garden.y === fy) return this.gardenTend();
     if (this.pumpkins?.some((p) => p.x === fx && p.y === fy)) return this.pumpkin();
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);

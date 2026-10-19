@@ -1,7 +1,7 @@
 # Critter Clash: Handoff (after Round 279, Adventure mode polish)
 
 ## 48-hour run
-- **48-hour run end time: 2026-10-20 15:44 UTC** (started 2026-10-18 15:44 UTC by session 17a). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
+- **48-hour run end time: 2026-10-20 17:12 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
 - **Session 17f (2026-10-18 21:12–~22:20 UTC, session_01BmfWF5X6EkDYpX9XpiKuXu) did R446–R467 (see "Session 17f"); next round R468.**
 - **Session 17e (2026-10-18 20:20–~21:20 UTC, session_01WXwKgexVpiRXyWsWsazxv3) did R429–R445 (see "Session 17e"); next round R446.**
