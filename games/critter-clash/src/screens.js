@@ -1043,6 +1043,7 @@ export class Screens {
         ['🌅', 'Watch the sunset (5–8 pm)', `${N('seashell')} bench`, A.sunset === day, (this.worldObj?.outPhase === 'evening' || A.sunset === day) && seen.seashell], // only while the sun is going down (or once it's watched)
         ['🥚', 'Collect a Daycare egg', 'Nanny Nell, any Berry Center', A.eggDay === day, A.eggDay === day || (A.care && !A.egg && (A.steps || 0) - A.care.at >= 400)], // only once Nell has one waiting
         ['🏡', 'A present from home', `home, ${N('village')}`, A.grownDay === day, A.grown?.length], // a grown-up Daycare baby (world.js grownSpot)
+        ['🎄', 'A gift under the tree', 'by any Berry Center', A.xgift === day, twinkleWeek()], // Twinkle Week (world.js buildXtree)
         F.rod && (() => { const D = derbyOf(gauntletWeek()); return ['🎣', `Derby: ${D.name} ${D.cm}+ cm`, `this week, ${D.where}`, A.derbyWk === D.wk, true]; })(),
         F.ending && ['🏔️', 'Peak Gauntlet (this week)', "Keeper Orla, Champion's Peak", !!F['gauntpay_' + gauntletWeek()], true],
       ].filter((r) => r && r[4]);
