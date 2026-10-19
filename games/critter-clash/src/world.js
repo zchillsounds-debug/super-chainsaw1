@@ -2585,12 +2585,12 @@ export class World {
   buildLeaves(x, y) {
     this.leafPiles = [];
     const M = this.M, d = new Date(), autumn = save.adv.autumn ?? (d.getMonth() === 9 || d.getMonth() === 10 && d.getDate() <= 15);
-    if (!autumn || M.indoor || M.snow || M.lava || M.city || M.arena === 'beach' || M.border === 'cloud' || M.fireflies || this.twinkleSnow) return;
+    if (!autumn || M.indoor || M.snow || M.lava || M.city || this.key === 'seashell' || M.border === 'cloud' || M.fireflies || this.twinkleSnow) return;
     const day = d.toISOString().slice(0, 10), rand = rng(hash(this.key + ':leaves:' + day));
     const taken = new Set([...(M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((dd) => dd.x + ',' + (dd.y + 1)), ...this.itemSpots, x + ',' + y, this.bush && this.bush.x + ',' + this.bush.y]);
     const near = (tx, ty, r) => { for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if ('TP'.includes(this.tile(tx + dx, ty + dy) || '-')) return true; return false; }; // just clear of the canopies (they hid a pile right under them)
     const ok = [];
-    for (let ty = 1; ty < this.H - 1; ty++) for (let tx = 1; tx < this.W - 1; tx++) if (this.tile(tx, ty) === '.' && !this.solid.has(tx + ',' + ty) && !taken.has(tx + ',' + ty) && !near(tx, ty, 1) && near(tx, ty, 2) && !(M.signs || []).some((sg) => Math.abs(sg.x - tx) + Math.abs(sg.y - ty) < 2)) ok.push([tx, ty]);
+    for (let ty = 1; ty < this.H - 1; ty++) for (let tx = 1; tx < this.W - 1; tx++) if (this.tile(tx, ty) === '.' && !this.solid.has(tx + ',' + ty) && !taken.has(tx + ',' + ty) && !near(tx, ty, 1) && near(tx, ty, 2) && !(M.npcs || []).some((n) => Math.abs(n.x - tx) + Math.abs(n.y - ty) < 3) && !(M.signs || []).some((sg) => Math.abs(sg.x - tx) + Math.abs(sg.y - ty) < 2)) ok.push([tx, ty]);
     const cols = [0xe8862a, 0xd04a2a, 0xf0c040, 0xb8642a];
     for (let k = 0; k < 2 && ok.length; k++) {
       const [tx, ty] = ok.splice(Math.floor(rand() * ok.length), 1)[0], [px, pz] = wpos(tx, ty), g = new THREE.Group(), parts = [[], [], []];
@@ -3615,6 +3615,10 @@ export class World {
     if (TC && (TC >> 16 & 255) > (TC >> 8 & 255) + 20 && !this.M.indoor && Math.random() < dt * 5) {
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 26, y: 5 + Math.random() * 2, z: p.z + (Math.random() - 0.65) * 18, vy: -0.9, vx: 0.6 + Math.random() * 0.5, vz: (Math.random() - 0.5) * 0.4, color: Math.random() < 0.5 ? TC : this.M.trees[1], size: 0.32, life: 5.5, shape: 'leaf', additive: false, spin: (Math.random() - 0.5) * 4, rot: Math.random() * 6, floor: true });
+    }
+    if (this.leafPiles?.length && Math.random() < dt * 2.2) { // autumn: now and then a leaf lets go over the green maps too
+      const p = this.hero.root.position;
+      this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 26, y: 5 + Math.random() * 2, z: p.z + (Math.random() - 0.65) * 18, vy: -0.9, vx: 0.6 + Math.random() * 0.5, vz: (Math.random() - 0.5) * 0.4, color: [0xe8862a, 0xd04a2a, 0xf0c040][Math.floor(Math.random() * 3)], size: 0.3, life: 5.5, shape: 'leaf', additive: false, spin: (Math.random() - 0.5) * 4, rot: Math.random() * 6, floor: true });
     }
     // the giant toadstools breathe out glowing spores, each in its cap's colour
     if (this.shrooms?.length && Math.random() < dt * 6) {
