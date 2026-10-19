@@ -344,6 +344,13 @@ export class Screens {
         "And after Twinkle Week, through January and February, winter mornings are frosty, and a shower over the green maps comes down as snow!",
         "Every season has something new out there. Come and look!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv25') && !save.news.includes('adv26')) {
+      save.news.push('adv26'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, Fisher Finn tells me some fish only visit Clashara in one season: a Blossom Koi in spring, a Sunburst Perch in summer, a Maple Trout in autumn and a Snowflake Smelt in winter!",
+        "They bite in any water but lava. The Journal keeps them in their own little list, and the 📅 Today page reminds you while the season's fish is still out there.",
+        "And listen to the townsfolk, too. They love to chat about the blossom, the sunflowers, the falling leaves and the snow.",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
@@ -1151,6 +1158,7 @@ export class Screens {
       + bar('🌿', 'Wild critters met', A.cnt?.wild || 0)
       + (A.cnt?.owl ? bar('🦉', 'Night owls met', A.cnt.owl) : '')
       + bar('🗓️', 'Seasons seen', ['spring', 'summer', 'autumn', 'winter'].map((q, i) => (A.seasons?.[q] ? ['🌸', '🌻', '🍂', '❄️'][i] : '·')).join(' '))
+      + (L.season ? bar('🐠', 'Seasonal fish', Object.entries(SEASON_FISH).map(([, [n, , , em]]) => (L.season[n] ? em : '·')).join(' ')) : '') // no goal: it doesn't count towards completion
       + bar('🕹️', 'TURBO best', A.arcadeHi || 0)
       + bar('🎈', 'SKY HOP best', A.hopHi || 0)
       + bar('🪩', 'Nights danced', A.cnt?.dance || 0)
