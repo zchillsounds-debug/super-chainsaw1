@@ -9,7 +9,7 @@ const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console
 await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?q=low&mobile&auto');
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 console.log('talk:', await pg.evaluate(() => {
-  Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6', 'adv7', 'adv8', 'adv9', 'adv10', 'adv11', 'adv12', 'adv13', 'adv14'] });
+  Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate', 'adventure', 'adv2', 'adv3', 'adv4', 'adv5', 'adv6', 'adv7', 'adv8', 'adv9', 'adv10', 'adv11', 'adv12', 'adv13', 'adv14', 'adv15'] });
   const flags = {}; for (const k of 'intro quest rival1 trial_strength cup_sprout woods ending crowned'.split(' ')) flags[k] = true;
   __save.adv = { hero: 'cindermunch', map: 'peak', x: 5, y: 5, dir: 'w', flags, spawn: { map: 'village', x: 4, y: 6 } };
   __save.critters.cindermunch.level = 22;

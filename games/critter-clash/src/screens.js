@@ -253,6 +253,12 @@ export class Screens {
         "{name}, fresh from the coast: Seashell Town has a driftwood bench right on the beach. Sit there in the golden evening and watch the sun melt into the sea. Fisher Finn says it's the best view in Clashara!",
         "And up in Frostpeak, snow is falling! Snowball Kid Kip built a snow fort by the path. Hit twelve snowmen in Snowball Toss and Kip shares a berry stash. Just... don't hit Kip.",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv14') && !save.news.includes('adv15')) {
+      save.news.push('adv15'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, Gardener Bea has opened a little garden plot in Bloom Town. Plant a seed, water it every day, and on the fourth day... well, you'll see. Bea says the first bloom comes with a surprise!",
+        "Out on Route 1, butterflies are dancing over the grass on sunny days. And on Cinder Road, a steam geyser has woken up. Stand on the vent if you're brave! Glowcap Woods' big golden fireflies come out every night, too.",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
