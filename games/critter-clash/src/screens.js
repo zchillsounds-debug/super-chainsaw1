@@ -1006,7 +1006,7 @@ export class Screens {
         ['⛸️', 'Skate a twirl', `${N('frostpeak')} pond`, A.skated === day, seen.frostpeak && A.skates],
         ['🍄', 'Sing with the fairy ring', N('glowcap'), A.ring === day, seen.glowcap],
         ['🎃', 'Find a pumpkin treat', 'pumpkins by the town doors', A.pumpkin === day, pumpkinNights()],
-        ['👻', 'Catch the five wisps', N('glowwood'), A.wisp === day, pumpkinNights() && seen.glowwood],
+        [pumpkinNights() ? '👻' : '✨', pumpkinNights() ? 'Catch the five wisps' : 'Catch five big fireflies', N('glowwood'), A.wisp === day, seen.glowwood],
       ].filter((r) => r[4]);
     return { rows, after, night };
   }
@@ -1055,7 +1055,7 @@ export class Screens {
       + bar('🦋', 'Butterfly days', A.cnt?.flutter || 0)
       + (A.cnt?.breakfast ? bar('🥞', 'Breakfasts at home', A.cnt.breakfast) : '')
       + (A.cnt?.pumpkin ? bar('🎃', 'Pumpkin treats', A.cnt.pumpkin) : '')
-      + (A.cnt?.wisp ? bar('👻', 'Wisp nights', A.cnt.wisp) : '')
+      + (A.cnt?.wisp ? bar('✨', 'Firefly & wisp nights', A.cnt.wisp) : '')
       + bar('📸', 'Landmark photos', (A.snaps || []).length, LANDMARKS.length)
       + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length)
       + bar('🍾', 'Bottle notes read', (A.notes || []).length, BOTTLE_NOTES.length)

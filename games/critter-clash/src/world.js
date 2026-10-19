@@ -116,7 +116,7 @@ export function newAdventure(hero) {
 }
 
 // Pumpkin Nights: a little harvest festival from mid-October to the start of November (carved pumpkins by the town doors)
-export function pumpkinNights(d = new Date()) { const m = d.getMonth(), day = d.getDate(); return (m === 9 && day >= 15) || (m === 10 && day <= 2) || !!save.adv?.fest; }
+export function pumpkinNights(d = new Date()) { const m = d.getMonth(), day = d.getDate(); if (save.adv?.fest != null) return !!save.adv.fest; return (m === 9 && day >= 15) || (m === 10 && day <= 2); } // save.adv.fest forces it on (true) or off (false) for tests
 
 export function heroDef() {
   const id = save.adv.hero, lv = save.critters[id]?.level || 1;
@@ -1463,7 +1463,8 @@ export class World {
   buildWisps(hx, hy) {
     this.wisps = null;
     const day = new Date().toISOString().slice(0, 10);
-    if (this.key !== 'glowwood' || this.phase === 'day' || !pumpkinNights() || save.adv.wisp === day) return;
+    if (this.key !== 'glowwood' || this.phase === 'day' || save.adv.wisp === day) return;
+    const spooky = pumpkinNights(); this.wispKind = spooky ? 'wisp' : 'fly'; // Pumpkin Nights: little ghost wisps; the rest of the year, five big golden fireflies
     const path = [];
     const reach = new Set([hx + ',' + hy]), q = [[hx, hy]]; // only path the hero can walk to (not behind the bramble)
     while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (x + dx) + ',' + (y + dy); if (!reach.has(k) && this.walkable(x + dx, y + dy)) { reach.add(k); q.push([x + dx, y + dy]); } } }
@@ -1480,7 +1481,7 @@ export class World {
       c.fillStyle = 'rgba(255,140,170,0.6)'; for (const ex of [20, 44]) { c.beginPath(); c.ellipse(ex, 37, 3, 2, 0, 0, 7); c.fill(); }
     });
     ghost.userData.own = true;
-    this.wisps = pick.map(([x, y], i) => { const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 1.2, pz); g.add(mk(0x7affc8, 0.7, 2.8)); const gm = new THREE.SpriteMaterial({ map: ghost, transparent: true, depthWrite: false }); gm.userData.own = true; const gs = new THREE.Sprite(gm); gs.scale.setScalar(1.35); g.add(gs); this.group.add(g); return { g, px, pz, ph: i * 1.7, live: true }; });
+    this.wisps = pick.map(([x, y], i) => { const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 1.2, pz); g.add(spooky ? mk(0x7affc8, 0.7, 2.8) : mk(0xd8ff6a, 0.75, 2.2)); if (spooky) { const gm = new THREE.SpriteMaterial({ map: ghost, transparent: true, depthWrite: false }); gm.userData.own = true; const gs = new THREE.Sprite(gm); gs.scale.setScalar(1.35); g.add(gs); } else g.add(mk(0xffffd0, 1, 0.55)); this.group.add(g); return { g, px, pz, ph: i * 1.7, live: true }; });
     this.wispN = 0;
   }
 
@@ -1533,7 +1534,7 @@ export class World {
       const t = this.t + w.ph, g = w.g;
       g.position.set(w.px + Math.sin(t * 0.9) * 0.9, 1.1 + Math.sin(t * 2.3) * 0.25, w.pz + Math.cos(t * 0.7) * 0.6);
       g.children[0].material.opacity = 0.6 + Math.sin(t * 5) * 0.15;
-      if (Math.random() < dt * 4) fx.spawn?.({ x: g.position.x, y: g.position.y, z: g.position.z, vx: (Math.random() - 0.5) * 0.4, vy: -0.3, vz: (Math.random() - 0.5) * 0.4, life: 0.9, size: 0.25, color: 0x9affd8, shape: 'glow', alpha: 0.6 });
+      if (Math.random() < dt * 4) fx.spawn?.({ x: g.position.x, y: g.position.y, z: g.position.z, vx: (Math.random() - 0.5) * 0.4, vy: -0.3, vz: (Math.random() - 0.5) * 0.4, life: 0.9, size: 0.25, color: this.wispKind === 'fly' ? 0xe8ff8a : 0x9affd8, shape: 'glow', alpha: 0.6 });
       if (Math.hypot(g.position.x - h.x, g.position.z - h.z) < 1.3) {
         w.live = false; g.visible = false; this.wispN++;
         fx.burst({ x: g.position.x, y: g.position.y, z: g.position.z }, { n: 22, speed: 2.6, up: 1.2, color: 0x9affd8, size: 0.4, life: 0.9, shape: 'star', drag: 1.8, spread: 1.4 });
@@ -1541,8 +1542,8 @@ export class World {
         if (this.wispN >= this.wisps.length) {
           const A = save.adv; A.wisp = new Date().toISOString().slice(0, 10); countUp('wisp'); save.berries = (save.berries || 0) + 1;
           const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.1)); persist(); sfx.jingle?.(1);
-          this.S.toast?.(`👻 All five wisps caught! +1 🍓${rr.to > rr.from ? ` · Grew to Lv ${rr.to}!` : ' · +XP'}`);
-        } else this.S.toast?.(`👻 Wisp caught! ${this.wispN} / ${this.wisps.length}`);
+          this.S.toast?.(`${this.wispKind === 'fly' ? '✨ All five fireflies caught (and let go)!' : '👻 All five wisps caught!'} +1 🍓${rr.to > rr.from ? ` · Grew to Lv ${rr.to}!` : ' · +XP'}`);
+        } else this.S.toast?.(`${this.wispKind === 'fly' ? '✨ Firefly' : '👻 Wisp'} caught! ${this.wispN} / ${this.wisps.length}`);
       }
     }
   }
