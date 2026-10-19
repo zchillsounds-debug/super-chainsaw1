@@ -70,6 +70,7 @@ button { border: 0; cursor: pointer; color: inherit; }
 .select-screen { position: absolute; inset: 0; padding: calc(10px + var(--sat)) calc(14px + var(--sar)) calc(10px + var(--sab)) calc(14px + var(--sal)); }
 .sel-head { display: flex; align-items: center; gap: 12px; }
 .sel-head h1 { font-family: var(--display); font-weight: 400; font-size: clamp(22px, 4.4vmin, 36px); margin: 0; color: #fff; text-shadow: 0 3px 0 var(--ink); -webkit-text-stroke: 5px var(--ink); paint-order: stroke fill; }
+@media (max-aspect-ratio: 1/1) { .sel-head h1 { background: rgba(26,18,48,.5); padding: 2px 16px 4px; border-radius: 999px; backdrop-filter: blur(3px); } } /* portrait: the stadium's jumbotron logo sits right behind the title */
 .sel-info { position: absolute; right: calc(14px + var(--sar)); top: calc(70px + var(--sat)); width: min(360px, 44vw); }
 .info-card { background: rgba(255,248,236,.96); color: var(--ink); border-radius: 22px; padding: 14px 18px 16px; box-shadow: 0 6px 0 rgba(0,0,0,.18), inset 0 0 0 4px var(--tc);
   animation: slideIn .35s cubic-bezier(.2,1.4,.4,1); position: relative; overflow: hidden; }
