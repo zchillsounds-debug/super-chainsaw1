@@ -104,7 +104,7 @@ export const CRITTERS = [
     colors: { body: 0xd9a46c, belly: 0xfff0d8, accent: 0x4fc45a, dark: 0x2f7a3a, eye: '#2a160c', iris: '#3fae4a' },
     body: { w: 0.62, h: 0.52, headR: 0.5, legLen: 0.13, armLen: 0.18, chubby: 1.12 },
     ears: 'round', tail: 'puff', extra: 'spines', voice: 1.3,
-    stats: { hp: 1090, speed: 6.5, power: 1.1, weight: 0.95 },
+    stats: { hp: 1130, speed: 6.6, power: 1.13, weight: 0.95 },
     special: 'seedspray', super: 'bramble',
     moves: { special: 'Seed Spray', super: 'Bramble Rush' },
   },
