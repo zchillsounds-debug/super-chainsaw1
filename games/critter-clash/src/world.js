@@ -3229,15 +3229,19 @@ export class World {
   // after dusk the stadium's floodlights come on: four masts on the rim, and the pitch glows
   stadiumLights(G, w, d) {
     if (this.phase === 'day') return;
-    const iron = [];
+    const iron = [], lamps = [];
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
       const x = sx * (w / 2 - 0.5) * 0.72, z = sz * (d / 2 - 0.4) * 0.72;
       const p = new THREE.CylinderGeometry(0.08, 0.12, 2.2, 6); p.translate(x, 3.6, z); iron.push(p);
       const h = new THREE.BoxGeometry(0.8, 0.45, 0.2); h.translate(x, 4.75, z); iron.push(h);
+      // the lamp panel on top, lit, so the top-down camera sees a glowing lamp rather than a dark box
+      const lp = new THREE.BoxGeometry(0.7, 0.04, 0.16); lp.translate(x, 4.985, z); lamps.push(lp);
       const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xfff0c8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.95 }); sm.userData.own = true;
       const sp = new THREE.Sprite(sm); sp.scale.setScalar(2.4); sp.position.set(x, 4.8, z + 0.15); G.add(sp);
     }
     const im = inked(mergeGeometries(iron), toon(0x4a4a5a), OL * 0.5); G.add(im); iron.forEach((g) => g.dispose());
+    const lm = new THREE.MeshBasicMaterial({ color: 0xfff6d8 }); lm.userData.own = true;
+    G.add(new THREE.Mesh(mergeGeometries(lamps), lm)); lamps.forEach((g) => g.dispose());
     const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xd8ffd0, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: this.phase === 'night' ? 0.45 : 0.25 }); pm.userData.own = true;
     const pool = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.85, d * 0.85), pm); pool.rotation.x = -Math.PI / 2; pool.position.y = 0.6; G.add(pool);
   }
