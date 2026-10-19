@@ -11,7 +11,7 @@ import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
 import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, LANDMARKS, albumGet, derbyOf } from './world.js';
-import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats } from './story.js';
+import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
 
@@ -1068,6 +1068,7 @@ export class Screens {
       + bar('🌅', 'Sunsets watched', A.cnt?.sunset || 0)
       + bar('🪵', 'Twig races won', A.cnt?.twig || 0)
       + bar('🎣', 'Fishing Derbies won', A.cnt?.derby || 0)
+      + bar('🌟', 'Perfect days', A.cnt?.perfect || 0)
       + bar('⛄', 'Snowball Toss best', A.snowHi || 0)
       + bar('🌻', 'Flowers grown', A.cnt?.bloom || 0)
       + bar('🦋', 'Butterfly days', A.cnt?.flutter || 0)
@@ -1118,8 +1119,15 @@ export class Screens {
     const m = this.root.querySelector('.world-screen .wd-menu');
     if (!m || !save.adv) return;
     let n = 0;
-    try { const { rows, after, night } = this.todayList(); n = rows.filter((r) => !r[3]).length + (night ? after.filter((r) => !r[3]).length : 0); } catch (e) { n = 0; }
+    let daily = [];
+    try { const { rows, after, night } = this.todayList(); n = rows.filter((r) => !r[3]).length + (night ? after.filter((r) => !r[3]).length : 0); daily = rows.filter((r) => !['🏔️', '🎣'].includes(r[0])); } catch (e) { n = 0; }
     m.dataset.n = n > 9 ? '9+' : n || '';
+    // a perfect day: every ☀️ daily row ticked (the weekly ones don't count) pays a bonus once a day
+    const day = new Date().toISOString().slice(0, 10), A = save.adv;
+    if (daily.length >= 6 && daily.every((r) => r[3]) && A.perfect !== day && !this.root.querySelector('.modal-wrap') && !this.worldObj?.dialog) {
+      A.perfect = day; countUp('perfect'); save.berries = (save.berries || 0) + 5; persist(); sfx.jingle?.(3);
+      this.toast(`🌟 A perfect day! Every daily thing done. +5 🍓`);
+    }
   }
 
   worldJournal(tab = 'today') {
@@ -1150,7 +1158,7 @@ export class Screens {
       const sect = (list) => list.filter((r) => !r[3]).map(row).join('') + (list.some((r) => r[3]) ? `<li class="jr-done"><b>✅ Done</b>${list.filter((r) => r[3]).map(([ic, name]) => `<span title="${name}">${ic}</span>`).join('')}</li>` : '');
       body = `<li class="jr-head">☀️ Every day <small>${rows.filter((r) => r[3]).length}/${rows.length}</small></li>` + sect(rows)
         + (after.length ? `<li class="jr-head">🌙 After dark${night ? ` <small>${after.filter((r) => r[3]).length}/${after.length}</small>` : ' <small>(wait for the evening, or nap at home)</small>'}</li>` + sect(after) : '')
-        + `<li class="jr-more">${n === all.length ? '🌟 Everything done today! See you tomorrow.' : `${n} of ${all.length} done today. A new day brings everything back!`}</li>`
+        + `<li class="jr-more">${n === all.length ? '🌟 Everything done today! See you tomorrow.' : `${n} of ${all.length} done today. ${save.adv.perfect === new Date().toISOString().slice(0, 10) ? '🌟 Perfect day bonus earned!' : 'Tick every ☀️ row for a perfect-day bonus!'}`}</li>`
         + `<li class="jr-tip">💡 ${this.tipOfDay()}</li>`;
     } else if (tab === 'night') { // the star log (Sprout Village's telescope) and the bottle notes read on Seashell's shore
       const seen = save.adv.consts || [], read = save.adv.notes || [];
