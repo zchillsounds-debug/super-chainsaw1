@@ -137,6 +137,7 @@ export function halloween(d = new Date()) { if (save.adv?.halloween != null) ret
 export function isAutumn(d = new Date()) { return save.adv?.autumn ?? (d.getMonth() === 9 || d.getMonth() === 10 && d.getDate() <= 15); } // October to mid-November; save.adv.autumn forces it
 export function isSpring(d = new Date()) { if (save.adv?.spring != null) return !!save.adv.spring; const m = d.getMonth(), day = d.getDate(); return (m === 2 && day >= 20) || m === 3; } // blossom time: 20 March to the end of April (save.adv.spring forces it)
 export function isMeadow(d = new Date()) { if (save.adv?.meadow != null) return !!save.adv.meadow; const m = d.getMonth(), day = d.getDate(); return m === 4 || (m === 5 && day < 21); } // late spring, May to midsummer: wildflowers all through the grass (save.adv.meadow forces it)
+export function isEarlyAutumn(d = new Date()) { if (save.adv?.early != null) return !!save.adv.early; return d.getMonth() === 8; } // September: the first trees start to turn (save.adv.early forces it)
 export function isSummer(d = new Date()) { if (save.adv?.summer != null) return !!save.adv.summer; const m = d.getMonth(), day = d.getDate(); return (m === 5 && day >= 21) || m === 6 || m === 7; } // midsummer to the end of August (save.adv.summer forces it)
 export function isWinter(d = new Date()) { if (save.adv?.winterSnow != null) return !!save.adv.winterSnow; const m = d.getMonth(), day = d.getDate(); return (m === 0 && day > 3) || m === 1; } // after Twinkle Week to the end of February: frosty mornings, and showers fall as snow (save.adv.winterSnow forces it)
 export function isFrost(d = new Date()) { if (save.adv?.frost != null) return !!save.adv.frost; const m = d.getMonth(), day = d.getDate(); return (m === 10 && day > 15) || (m === 11 && day < 18); } // after the autumn leaves and before Twinkle Week (save.adv.frost forces it)
@@ -836,10 +837,11 @@ export class World {
     // autumn on the green maps: about two trees in five turn orange, gold or red (picked by position, so the woods keep their shape)
     const M = this.M, green = !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && M.border !== 'cloud' && !M.fireflies, falls = [[], [], [], []];
     // spring (20 Mar-Apr) uses the same groves: blossom trees in pink, pale pink and white, with fresh green ones in between
-    const bloom = green && isSpring(), fall = green && !bloom && isAutumn(); this.blossom = bloom;
+    const bloom = green && isSpring(), fall = green && !bloom && isAutumn(), early = green && !bloom && !fall && isEarlyAutumn(); this.blossom = bloom;
     // groves share a hue (a 3x3-tile patch picks orange, gold or red), so the woods turn in drifts rather than a row of sweets; some trees are only just turning (yellow-green)
     const hsh = (x, y, s) => ((((x + s) * 73856093) ^ ((y + s) * 19349663)) >>> 0);
-    const tint = (x, y) => { if (!fall && !bloom) return null; const k = hsh(x, y, 7) % 100; if (k >= (bloom ? 46 : 58)) return null; if (bloom && k >= 40) return null; if (k >= 44) return falls[3]; const g = hsh(Math.floor((x + 9) / 3), Math.floor((y + 9) / 3), 3); return falls[(k < 8 ? g + 1 : g) % 3]; };
+    const tint = (x, y) => { if (early) { const k = hsh(x, y, 7) % 100; return k < 13 ? falls[3] : k < 17 ? falls[1] : null; } // September: a few trees just turning, the odd one gold
+      if (!fall && !bloom) return null; const k = hsh(x, y, 7) % 100; if (k >= (bloom ? 46 : 58)) return null; if (bloom && k >= 40) return null; if (k >= 44) return falls[3]; const g = hsh(Math.floor((x + 9) / 3), Math.floor((y + 9) / 3), 3); return falls[(k < 8 ? g + 1 : g) % 3]; };
     // a canopy blob; the chunky detail-0 one gets round normals too, so it shades like a ball instead of a cut gem
     const ico = (r, d) => { const g = new THREE.IcosahedronGeometry(r, d); if (!d) { const P = g.attributes.position, N = g.attributes.normal; for (let i = 0; i < P.count; i++) N.setXYZ(i, P.getX(i) / r, P.getY(i) / r, P.getZ(i) / r); } return g; };
     const add = (x, y, dt = dt0, top = dt) => {
@@ -1879,7 +1881,7 @@ export class World {
   // every season the hero spends outdoors is ticked off (save.adv.seasons); all four earn the Four Seasons Crown
   seasonMark() {
     if (this.M.indoor || !save.adv.flags?.quest) return;
-    const k = isSpring() || isMeadow() ? 'spring' : isSummer() ? 'summer' : isAutumn() ? 'autumn' : isFrost() || isWinter() || twinkleWeek() ? 'winter' : null, S = save.adv.seasons ||= {};
+    const k = isSpring() || isMeadow() ? 'spring' : isSummer() ? 'summer' : isAutumn() || isEarlyAutumn() ? 'autumn' : isFrost() || isWinter() || twinkleWeek() ? 'winter' : null, S = save.adv.seasons ||= {};
     if (!k || S[k]) return;
     S[k] = new Date().toISOString().slice(0, 10); persist();
     if (['spring', 'summer', 'autumn', 'winter'].every((q) => S[q]) && !(save.adv.hats ||= []).includes('seasons')) {
@@ -4116,7 +4118,7 @@ export class World {
     x.drawImage(src, pad, pad);
     x.font = `${Math.round(26 * sc)}px 'Lilita One', system-ui, sans-serif`; x.textBaseline = 'middle'; x.fillStyle = '#2a1630';
     const when = { day: '☀️', evening: '🌇', night: '🌙' }[this.outPhase] + (this.storm ? '⛈️' : this.rain ? '🌧️' : this.snowing || this.twinkleSnow ? '🌨️' : '')
-      + (twinkleWeek() ? '🎄' : pumpkinNights() ? '🎃' : isAutumn() ? '🍂' : isSpring() ? '🌸' : isMeadow() ? '🌼' : isSummer() ? '🌻' : isFrost() || isWinter() ? '❄️' : ''); // the keepsake remembers the season too
+      + (twinkleWeek() ? '🎄' : pumpkinNights() ? '🎃' : isAutumn() ? '🍂' : isEarlyAutumn() ? '🍃' : isSpring() ? '🌸' : isMeadow() ? '🌼' : isSummer() ? '🌻' : isFrost() || isWinter() ? '❄️' : ''); // the keepsake remembers the season too
     const label = `${H.def.name}${F ? ' & ' + (F.name || F.cr.def.name) : ''} · ${this.M.name} ${when}`, fy = out.height - foot / 2;
     if (x.measureText(label + ' CRITTER CLASH! ').width + pad * 3 < out.width) {
       x.fillText(label, pad * 1.2, fy);
