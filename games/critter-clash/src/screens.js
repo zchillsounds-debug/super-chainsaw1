@@ -170,7 +170,14 @@ export class Screens {
     this.root.querySelector('.title-screen').appendChild(gear);
     playMusic('menu');
     // news for returning trainers: new critters turned up in cups they may already have cleared
-    if (!g.autoplay && save.stats.battles >= 3 && !save.adv && !save.news?.includes('adventure')) {
+    const twk = 'twinkle' + (new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear()); // one greeting per festival
+    if (!g.autoplay && twinkleWeek() && save.adv?.flags?.quest && !save.news?.includes(twk)) {
+      (save.news ||= []).push(twk); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}, Happy Twinkle Week! Every town in Clashara has put up a tree by its Berry Center. Look underneath: there's a little gift for you each day!",
+        "Snow falls over the green towns in the evenings, and on New Year's Eve there are fireworks over every rooftop. Wrap up warm!",
+      ]), 600);
+    } else if (!g.autoplay && save.stats.battles >= 3 && !save.adv && !save.news?.includes('adventure')) {
       (save.news ||= []).push('adventure'); persist();
       setTimeout(() => this.mode === 'title' && this.profTalk([
         "{name}! Big news: the whole land of Clashara is open to explore. Tap ADVENTURE on the title screen!",
