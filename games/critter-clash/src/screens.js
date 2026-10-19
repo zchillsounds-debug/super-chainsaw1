@@ -10,7 +10,7 @@ import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
-import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, LANDMARKS, albumGet } from './world.js';
+import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, LANDMARKS, albumGet, derbyOf } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -1003,6 +1003,7 @@ export class Screens {
         ['🌻', A.garden?.stage >= 4 ? 'Pick your flower' : A.garden?.stage ? `Water the garden (day ${A.garden.stage}/4)` : 'Plant a seed', `${N('bloom')} garden plot`, A.garden?.stage >= 1 && A.garden.stage < 4 && A.garden.last === day, seen.bloom],
         ['⛄', 'Snowball Toss (12+ hits)', `${N('frostpeak')} snow fort`, A.snowball === day, seen.frostpeak],
         ['🌅', 'Watch the sunset (5–8 pm)', `${N('seashell')} bench`, A.sunset === day, (this.worldObj?.outPhase === 'evening' || A.sunset === day) && seen.seashell], // only while the sun is going down (or once it's watched)
+        F.rod && (() => { const D = derbyOf(gauntletWeek()); return ['🎣', `Fishing Derby: ${D.name} ${D.cm}+ cm`, `this week · ${D.where}`, A.derbyWk === D.wk, true]; })(),
         F.ending && ['🏔️', 'Peak Gauntlet (this week)', "Keeper Orla, Champion's Peak", !!F['gauntpay_' + gauntletWeek()], true],
       ].filter((r) => r && r[4]);
       const after = [
@@ -1060,6 +1061,7 @@ export class Screens {
       + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
       + bar('🌅', 'Sunsets watched', A.cnt?.sunset || 0)
       + bar('🪵', 'Twig races won', A.cnt?.twig || 0)
+      + bar('🎣', 'Fishing Derbies won', A.cnt?.derby || 0)
       + bar('⛄', 'Snowball Toss best', A.snowHi || 0)
       + bar('🌻', 'Flowers grown', A.cnt?.bloom || 0)
       + bar('🦋', 'Butterfly days', A.cnt?.flutter || 0)
@@ -1155,7 +1157,8 @@ export class Screens {
       const L = save.adv.fishLog || { n: 0 }, sp = { ...(L.sp || {}) };
       if (L.best && !sp[L.best.name]) sp[L.best.name] = L.best.cm;
       const where = { pond: '🌿 Ponds & rivers', sea: '🏖️ The sea', lava: '🌋 Lava pools', cold: '❄️ Icy water', night: '🌙 After dark (any water)', dusk: '🌇 Golden evenings (any water)' };
-      body = (save.adv.flags.rod ? '' : '<li class="jr-more">🎣 Fisher Finn in Seashell Town lends out rods. Then face any water and press A!</li>')
+      const D = derbyOf(gauntletWeek());
+      body = (save.adv.flags.rod ? `<li class="jr-more">🏆 This week's Fishing Derby: a ${D.name} of ${D.cm} cm or more (${D.where}). ${save.adv.derbyWk === D.wk ? '✅ Won! A new fish on Monday.' : 'Fisher Finn has a prize!'}</li>` : '<li class="jr-more">🎣 Fisher Finn in Seashell Town lends out rods. Then face any water and press A!</li>')
         + Object.entries(FISH).map(([k, list]) => `<li class="jr-head">${where[k]}</li>` + list.map(([n], i) => { const cm = sp[n]; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? '🐟' : '❔'}</span><b>${cm ? n : '???'}${i === list.length - 1 ? ' <small>rare</small>' : ''}</b><em>${cm ? cm + ' cm' : ''}${L.best?.name === n ? ' 🏅' : ''}</em></li>`; }).join('')).join('')
         + `<li class="jr-more">${Object.keys(sp).length}/${Object.values(FISH).flat().length} kinds · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
     }

@@ -1152,6 +1152,7 @@ export const SHOP_HATS = [
   { id: 'pumpkin', name: 'Pumpkin Head', kind: 'pumpkin', col: 0xff8a1a, band: 0x4a7a2a, price: 0, gift: true, season: true }, // three Pumpkin Nights treats (seasonal, so not counted towards the hat total)
   { id: 'shutter', name: 'Shutterbug Cap', kind: 'cap', col: 0x3a9a6a, band: 0xffd84d, price: 0, gift: true }, // a photo of every town's landmark
   { id: 'sunbloom', name: 'Sunbloom Hat', kind: 'sunflower', col: 0xffd23a, band: 0x8a5a2a, price: 0, gift: true }, // the first flower grown in Bloom Town's garden plot
+  { id: 'angler', name: "Angler's Bucket", kind: 'bucket', col: 0x4a8a8a, band: 0xffd84d, price: 0, gift: true }, // Fisher Finn's weekly Fishing Derby, first win
   { id: 'laurel', name: 'Golden Laurel', kind: 'laurel', col: 0xe8b830, band: 0xfff2a0, price: 0, gift: true }, // the Peak Gauntlet's first clear
 ];
 export function shopHat(cr, id) {

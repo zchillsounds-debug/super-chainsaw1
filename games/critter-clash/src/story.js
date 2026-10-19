@@ -10,7 +10,7 @@ import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
 import { arcadeGame, skyHop } from './arcade.js';
-import { canRain, rainAt, LOST_SPOTS } from './world.js';
+import { canRain, rainAt, LOST_SPOTS, derbyOf } from './world.js';
 
 const flags = () => save.adv.flags;
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -358,8 +358,8 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'fisher') { // Fisher Finn hands over his old rod: any pond, river or sea can be fished
     if (F.rod) {
-      const L = save.adv.fishLog;
-      w.say([a.n.lines[Math.floor(Math.random() * a.n.lines.length)], L?.best ? `Fisher Finn: Your record is a ${L.best.name}, ${L.best.cm} cm! ${L.best.cm >= 50 ? 'A monster! I\'m jealous.' : 'Not bad. The big ones bite in deep water. Every place has its own fish!'} (${L.n} caught)` : 'Fisher Finn: Remember: wait for the bobber to dip, THEN press A. Patience!', ...(!L?.sp?.Moonfin ? ['Fisher Finn: Psst. After dark, Moonfins bite in any water. Some say a Glimmer Ray too... glowing like the moon!'] : [])], null, 'Fisher Finn');
+      const L = save.adv.fishLog, D = derbyOf(gauntletWeek());
+      w.say([a.n.lines[Math.floor(Math.random() * a.n.lines.length)], save.adv.derbyWk === D.wk ? `Fisher Finn: You won this week's Derby! Come back Monday for a new fish to chase.` : `Fisher Finn: This week's FISHING DERBY: land a ${D.name} of ${D.cm} cm or more (try ${D.where}). Win and the prize is yours!`, L?.best ? `Fisher Finn: Your record is a ${L.best.name}, ${L.best.cm} cm! ${L.best.cm >= 50 ? 'A monster! I\'m jealous.' : 'Not bad. The big ones bite in deep water. Every place has its own fish!'} (${L.n} caught)` : 'Fisher Finn: Remember: wait for the bobber to dip, THEN press A. Patience!', ...(!L?.sp?.Moonfin ? ['Fisher Finn: Psst. After dark, Moonfins bite in any water. Some say a Glimmer Ray too... glowing like the moon!'] : [])], null, 'Fisher Finn');
       return;
     }
     w.say(['Fisher Finn: Shh! ...Oh, it\'s you. You look like a natural angler.', 'Fisher Finn: Here, take my old rod! I\'ve got a new one anyway.', 'Fisher Finn: Face any water and press A to cast. When the bobber dips, press A again, quick! You might hook a big fish, berries... or a grumpy water critter!'], () => {

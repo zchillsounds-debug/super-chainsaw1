@@ -86,6 +86,12 @@ export const FISH = {
   night: [['Moonfin', 14, 38], ['Glimmer Ray', 40, 95]], // only bite after dark (any water but lava)
   dusk: [['Sunset Snapper', 16, 42], ['Amber Koi', 22, 55]], // only bite in the golden evening (17-20h, any water but lava)
 };
+// Fisher Finn's weekly Fishing Derby: one everyday kind and a size to beat (Mondays bring a new one)
+export function derbyOf(wk) {
+  const where = { pond: 'ponds and rivers', sea: 'the sea', lava: 'lava pools', cold: 'icy water', dusk: 'any water at golden hour' };
+  const pool = Object.entries(where).flatMap(([k, w]) => FISH[k].slice(0, -1).map(([name, lo, hi]) => ({ name, cm: Math.round(lo + (hi - lo) * 0.5), where: w })));
+  return { wk, ...pool[hash('derby' + wk) % pool.length] };
+}
 // Landmark photos: snap a 📸 Photo near each of these (within 4 steps) for the Journal; all eight earn the Shutterbug Cap
 export const LANDMARKS = [
   { id: 'lab', map: 'village', door: 'lab', name: 'Pecan Lab' },
@@ -2413,8 +2419,14 @@ export class World {
       const cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };
       L.n++; const rec = !L.best || cm > L.best.cm, sp = (L.sp ||= {}); sp[name] = Math.max(sp[name] || 0, cm);
       if (rec) { L.best = { name, cm }; save.berries = (save.berries || 0) + 2; }
-      persist(); sfx.jingle?.(rec ? 3 : 1);
-      return this.say([`{hero} reeled in a ${name}! It's ${cm} cm long! 🐟`, ...(rec ? [`That's {hero}'s biggest catch ever! Fisher Finn would be proud. +2 🍓`] : [`{hero}'s record is still the ${L.best.name} (${L.best.cm} cm). Splash! Back it goes.`])]);
+      const A = save.adv, D = derbyOf(gauntletWeek()), derby = []; // this week's derby fish, big enough: Finn's prize (once a week)
+      if (name === D.name && cm >= D.cm && A.derbyWk !== D.wk) {
+        A.derbyWk = D.wk; countUp('derby'); save.berries = (save.berries || 0) + 6; const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.25));
+        const hat = !(A.hats ||= []).includes('angler'); if (hat) A.hats.push('angler');
+        derby.push(`🎣 That's this week's DERBY FISH, and big enough to win! Fisher Finn's prize: +6 🍓 ${rr.to > rr.from ? `· {hero} grew to Lv ${rr.to}!` : '(+XP)'}`, ...(hat ? ["...and Finn's spare hat: the Angler's Bucket! (☰ → 🎩 Hats)"] : []));
+      }
+      persist(); sfx.jingle?.(derby.length ? 3 : rec ? 3 : 1);
+      return this.say([`{hero} reeled in a ${name}! It's ${cm} cm long! 🐟`, ...(rec ? [`That's {hero}'s biggest catch ever! Fisher Finn would be proud. +2 🍓`] : derby.length ? [] : [`{hero}'s record is still the ${L.best.name} (${L.best.cm} cm). Splash! Back it goes.`]), ...derby]);
     }
     if (r < 0.88) {
       const n = 1 + (Math.random() < 0.4 ? 1 : 0);
