@@ -656,11 +656,12 @@ export class World {
     }
     // little town ponds (not the sea, rivers, ice or lava): a few lily pads, a pink water lily or two, and cattails at the bank
     const nWet = this.M.tiles.join('').split('~').length - 1, pond = !this.M.pads && !this.M.lava && !this.M.snow && !this.M.indoor && this.M.border !== 'cloud' && this.M.arena !== 'beach' && nWet > 0 && nWet < 40;
-    if (pond) {
+    const river = !pond && !this.M.lava && !this.M.snow && !this.M.indoor && this.M.tiles.some((r) => r.includes('=')); // a river with a bridge: cattails on its grassy bank, no pads on moving water
+    if (pond || river) {
       const reeds = [], heads = [], lilies = [];
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         if (this.tile(x, y) !== '~') continue;
-        if (rand() < 0.4) {
+        if (pond && rand() < 0.4) {
           const px = x * TILE + 0.5 + rand(), pz = y * TILE + 0.5 + rand(), p = new THREE.CylinderGeometry(0.46, 0.46, 0.04, 12, 1, false, rand() * 6, Math.PI * 1.8); p.translate(px, 0.09, pz); pads.push(p);
           if (rand() < 0.5) for (let k = 0; k < 5; k++) { const pe = new THREE.ConeGeometry(0.11, 0.26, 4); pe.rotateZ(0.6); pe.rotateY(k * 1.256); pe.translate(px, 0.18, pz); lilies.push(pe); }
         }
