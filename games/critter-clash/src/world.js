@@ -355,6 +355,7 @@ export class World {
     this.buildActors();
     this.buildPumpkins();
     this.buildWisps(x, y);
+    this.buildFlutters(x, y);
     // hero
     this.hero = new Critter(heroDef(), { lod: 'mid' }); bakeStatic(this.hero);
     this.hero.root.scale.setScalar(CS);
@@ -1478,6 +1479,48 @@ export class World {
     ghost.userData.own = true;
     this.wisps = pick.map(([x, y], i) => { const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 1.2, pz); g.add(mk(0x7affc8, 0.7, 2.8)); const gm = new THREE.SpriteMaterial({ map: ghost, transparent: true, depthWrite: false }); gm.userData.own = true; const gs = new THREE.Sprite(gm); gs.scale.setScalar(1.35); g.add(gs); this.group.add(g); return { g, px, pz, ph: i * 1.7, live: true }; });
     this.wispN = 0;
+  }
+
+  // Route 1 by day: five butterflies flutter over the grass by the path; walk into them to catch them (all five, once a day: a berry and a little XP)
+  buildFlutters(hx, hy) {
+    this.flutters = null;
+    const day = new Date().toISOString().slice(0, 10);
+    if (this.key !== 'route1' || this.phase !== 'day' || this.rain || save.adv.flutter === day) return;
+    const reach = new Set([hx + ',' + hy]), q = [[hx, hy]];
+    while (q.length) { const [x, y] = q.pop(); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (x + dx) + ',' + (y + dy); if (!reach.has(k) && this.walkable(x + dx, y + dy)) { reach.add(k); q.push([x + dx, y + dy]); } } }
+    const spots = []; for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if ('.f'.includes(this.tile(x, y)) && reach.has(x + ',' + y)) spots.push([x, y]);
+    const rand = rng(hash(day + 'flutter')), pick = [];
+    for (let k = 0; k < 400 && pick.length < 5; k++) { const p = spots[Math.floor(rand() * spots.length)]; if (p && pick.every(([a, b]) => Math.abs(a - p[0]) + Math.abs(b - p[1]) > 5)) pick.push(p); }
+    const cols = [0xffd23a, 0x7ab8ff, 0xff7ab0, 0xb07aff, 0xff9a3a];
+    this.flutters = pick.map(([x, y], i) => {
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 1, pz); g.scale.setScalar(1.7); this.group.add(g);
+      const wm = toon(cols[i % cols.length], { side: THREE.DoubleSide, rim: 0.5 }), wings = [];
+      for (const sd of [-1, 1]) { const wg = new THREE.Group(); g.add(wg); const w = new THREE.Mesh(new THREE.CircleGeometry(0.26, 10), wm); w.position.x = sd * 0.24; w.scale.set(1, 1.25, 1); w.rotation.x = -Math.PI / 2; wg.add(w); const w2 = new THREE.Mesh(new THREE.CircleGeometry(0.17, 8), wm); w2.position.set(sd * 0.18, 0, 0.26); w2.rotation.x = -Math.PI / 2; wg.add(w2); wings.push([wg, sd]); }
+      const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.3, 3, 6), toon(0x3a2a24)); body.rotation.x = Math.PI / 2; g.add(body);
+      return { g, wings, px, pz, ph: i * 1.7, live: true };
+    });
+    this.flutterN = 0;
+  }
+
+  updateFlutters(dt) {
+    const h = this.hero.root.position, fx = this.g.fx;
+    for (const b of this.flutters) {
+      if (!b.live) continue;
+      const t = this.t + b.ph, g = b.g;
+      g.position.set(b.px + Math.sin(t * 0.6) * 1.4 + Math.sin(t * 2.1) * 0.2, 0.9 + Math.abs(Math.sin(t * 1.7)) * 0.5, b.pz + Math.sin(t * 0.45 + 1) * 1.1);
+      g.rotation.y = Math.atan2(Math.cos(t * 0.6) * 0.84, Math.cos(t * 0.45 + 1) * 0.5);
+      for (const [wg, sd] of b.wings) wg.rotation.z = sd * (0.2 + Math.abs(Math.sin(t * 14)) * 1.0);
+      if (Math.hypot(g.position.x - h.x, g.position.z - h.z) < 1.2) {
+        b.live = false; g.visible = false; this.flutterN++;
+        fx.burst({ x: g.position.x, y: g.position.y, z: g.position.z }, { n: 16, speed: 2, up: 1.5, color: 0xfff4a0, size: 0.3, life: 0.8, shape: 'star', drag: 1.8 });
+        sfx.note?.(this.flutterN - 1);
+        if (this.flutterN >= this.flutters.length) {
+          const A = save.adv; A.flutter = new Date().toISOString().slice(0, 10); countUp('flutter'); save.berries = (save.berries || 0) + 1;
+          const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.1)); persist(); sfx.jingle?.(1);
+          this.S.toast?.(`🦋 All five butterflies caught (and let go)! +1 🍓${rr.to > rr.from ? ` · Grew to Lv ${rr.to}!` : ' · +XP'}`);
+        } else this.S.toast?.(`🦋 Butterfly caught! ${this.flutterN} / ${this.flutters.length}`);
+      }
+    }
   }
 
   updateWisps(dt) {
@@ -3096,6 +3139,7 @@ export class World {
     if (this.twirlT > 0) this.twirlT -= dt;
     if (this.bloomFw) this.updateBloomFw(dt);
     if (this.wisps) this.updateWisps(dt);
+    if (this.flutters) this.updateFlutters(dt);
     if (this.mornMist) this.updateMorning(dt);
     if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
