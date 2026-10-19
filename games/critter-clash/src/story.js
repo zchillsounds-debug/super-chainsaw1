@@ -490,7 +490,7 @@ function daycare(S, w) {
   if (steps >= 400 && !A.egg && A.eggDay !== day) return w.say([`${who}: Oh! I'm so glad you came by. Look what I found tucked in ${name}'s blanket this morning!`, `${who}: An egg! A little warm one, with spots. I've no idea how it got there. Critters are full of surprises!`],
     () => w.ask('Take the egg?', ['Take the egg', 'Leave it with Nell'], (i) => {
       if (i) return w.say([`${who}: I'll keep it warm by the heater, then. Ask me again any time today!`], null, who);
-      A.egg = { at: A.steps || 0, id: c.id }; A.eggDay = day; persist(); sfx.jingle?.(1);
+      A.egg = { at: A.steps || 0, id: c.id }; A.eggDay = day; persist(); sfx.jingle?.(1); w.wearEgg();
       w.say(['{hero} tucks the egg safely into the bag. 🥚', `${who}: Eggs love a good walk. Keep exploring and it'll hatch before you know it!`], null, who);
     }, who), who);
   const mood = steps < 60 ? 'It has only just settled in. Take it for a little walk first... well, take YOURSELF for a walk!' : steps < 600 ? 'It\'s been chasing the other critters round the rug all day.' : steps < 2000 ? 'It\'s grown so much stronger! It practises its moves on the sofa cushions.' : 'It\'s as strong as my lessons can make it. It misses you!';

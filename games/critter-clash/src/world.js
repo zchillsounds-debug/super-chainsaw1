@@ -281,6 +281,18 @@ export class World {
     if (this.g.scene.fog && this.hidden?.length) this.g.scene.fog.color.setHex(m?.fog ?? 0xcfeeff);
   }
 
+  // a Daycare egg rides on the hero's back in a little sling until it hatches
+  wearEgg() {
+    const H = this.hero; if (!H) return;
+    if (H.eggG) { H.torso.remove(H.eggG); H.eggG = null; }
+    if (!save.adv.egg) return;
+    const B = H.def.body, G = H.eggG = new THREE.Group(), s = Math.max(0.5, B.headR) * 0.5;
+    const egg = inked(new THREE.SphereGeometry(1, 14, 10), toon(0xfff4e0, { rim: 0.5 }), OL * 0.6); egg.scale.set(s * 0.78, s, s * 0.78); G.add(egg);
+    for (const [a, h] of [[0.4, 0.3], [2.2, -0.1], [3.9, 0.45], [5.2, -0.35]]) { const d = new THREE.Mesh(new THREE.SphereGeometry(s * 0.2, 8, 6), toon(0x7ad89a)); d.position.set(Math.cos(a) * s * 0.7, h * s, Math.sin(a) * s * 0.7); d.scale.set(1, 1, 0.5); d.lookAt(0, h * s, 0); G.add(d); }
+    const strap = new THREE.Mesh(new THREE.TorusGeometry(B.w * 0.62, 0.025, 5, 20), toon(0x9a6a3a)); strap.rotation.set(0.5, 0, 0); strap.position.set(0, -s * 0.2, Math.max(B.w * 0.62, B.headR * 0.95) - B.w * 0.15); G.add(strap);
+    G.position.set(0, B.h * 0.75, -Math.max(B.w * 0.62, B.headR * 0.95)); G.rotation.x = -0.25; H.torso.add(G);
+  }
+
   // the hero's hat from the Bloom Town Hat Shop (it covers the Lv 15 gear crown while worn)
   wearHat() {
     const H = this.hero; if (!H) return;
@@ -377,6 +389,7 @@ export class World {
     this.hero.root.scale.setScalar(CS);
     this.group.add(this.hero.root);
     this.wearHat();
+    this.wearEgg();
     if (this.rain) brolly(this.hero, 0xffd84d);
     this.shakeT = wet && M.indoor ? 1.1 : 0;
     this.hx = x; this.hy = y; this.dir = dir; this.moveT = 0; this.from = null;
@@ -3856,7 +3869,7 @@ export class World {
     if (E && (A.steps || 0) - E.at === 225) { this.S.toast('🥚 The egg in your bag is wobbling!'); sfx.ui?.('bounce'); }
     if (!E || (A.steps || 0) - E.at < 250 || this.dialog || this.M.indoor === 'lobby') return false;
     const def = CRITTERS.find((c) => c.id === E.id) || CRITTERS[0], first = !(A.hats ||= []).includes('eggshell');
-    A.egg = null; (A.nursery ||= []).push(def.id); if (A.nursery.length > 3) A.nursery.shift();
+    A.egg = null; this.wearEgg(); (A.nursery ||= []).push(def.id); if (A.nursery.length > 3) A.nursery.shift();
     countUp('egg'); save.berries = (save.berries || 0) + 5; if (first) A.hats.push('eggshell'); persist();
     const p = this.hero.root.position; sfx.jingle?.(2);
     this.g.fx.burst({ x: p.x, y: 1.2, z: p.z }, { n: 16, speed: 1.6, up: 2, color: 0xfff4d8, size: 0.28, life: 0.9, shape: 'star', grav: 4, drag: 1.5 });
