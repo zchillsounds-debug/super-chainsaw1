@@ -244,6 +244,17 @@ export const sfx = {
     [1, 1.26, 1.5, 2].forEach((m, i) => osc('square', base * m, base * m, 0.09, 0.07, { t: t + i * 0.055 }));
     osc('triangle', base * 2, base * 2.02, 0.35, 0.08, { t: t + 0.22 });
   },
+  // Twinkle Week carols: a short waltz-time phrase (one of four, original tunes) on soft bells with a hummed line below and sleigh-bell shakes
+  carol(k = 0) {
+    if (!ctx) return;
+    const t = now(), b = 0.24, P = [[0, 4, 7, 7, 9, 7, 4, 5, 4, 2, 0], [7, 7, 9, 7, 5, 4, 2, 4, 5, 4, 0], [0, 0, 4, 2, 0, -1, 0, 4, 7, 5, 4], [4, 5, 7, 12, 11, 9, 7, 9, 7, 4, 0]][k % 4];
+    const hz = (n) => 523.25 * Math.pow(2, n / 12);
+    P.forEach((n, i) => {
+      const at = t + i * b, len = i === P.length - 1 ? 0.9 : b * 1.6;
+      osc('sine', hz(n), hz(n), len, 0.1, { t: at }); osc('triangle', hz(n) * 2, hz(n) * 2, 0.12, 0.025, { t: at });
+      if (i % 3 === 0) { osc('triangle', hz(n - 12), hz(n - 12), b * 2.8, 0.05, { t: at, attack: 0.04 }); noise(0.12, 0.03, { t: at, f0: 7000, q: 1.5 }); }
+    });
+  },
   // growing: a soft shimmer that climbs with k (0..1), then a bright chord when the new form appears
   shimmer(k = 0) { if (!ctx) return; const f = 520 + k * 900; osc('sine', f, f * 1.5, 0.16, 0.07); osc('triangle', f * 2, f * 2.6, 0.1, 0.03); },
   note(i = 0) { if (!ctx) return; const f = [523, 659, 784, 880, 1047][i % 5]; osc('sine', f, f, 0.5, 0.16); osc('triangle', f * 2, f * 2, 0.22, 0.04); }, // the fairy ring's toadstool bells

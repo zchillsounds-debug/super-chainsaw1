@@ -4235,7 +4235,7 @@ export class World {
     if (this.caroler(n)) { // Twinkle Week after dark: sing a carol together (six townsfolk a night share a mug of cocoa and a berry)
       const day = new Date().toISOString().slice(0, 10), A = save.adv, T = A.carol?.day === day ? A.carol : (A.carol = { day, ids: [] }), who = n.name.split(' ').pop();
       if (!T.ids.includes(n.id) && T.ids.length < 6) {
-        T.ids.push(n.id); countUp('carol'); save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(2); this.bubble(a, '🎵');
+        T.ids.push(n.id); countUp('carol'); save.berries = (save.berries || 0) + 1; persist(); sfx.carol?.(hash(n.id) + new Date().getDate()); this.bubble(a, '🎵');
         const songs = ['"Twinkle, twinkle, little berry, snow is soft and hearts are merry..."', '"Deck the dens with fluff and holly, every critter warm and jolly..."', '"Ring the bells on Frostpeak hill, the night is bright and the stars are still..."', '"Sleep, little critters, the snow falls slow, the tree lights shine on the town below..."'];
         const L = [`${who}: A carol? Oh, I know just the one! Ahem...`, `${who}: You sing, I'll hum! I always forget the second verse.`, `${who}: Let's sing loud enough for the whole town to hear!`, `${who}: My favourite part of Twinkle Week! One, two, three...`];
         return this.say([L[(hash(n.id) + T.ids.length) % L.length], `♪ {hero} and ${who} sing: ${songs[(hash(n.id) + new Date().getDate()) % songs.length]} ♪`, `${who}: Bravo! Here, a mug of cocoa and a winter berry for the road. +1 🍓 (${T.ids.length}/6 carols tonight)`], null, n.name);
