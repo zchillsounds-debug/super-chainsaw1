@@ -318,6 +318,13 @@ export class Screens {
         "And deep in the glowing woods, the glowcaps now light your way at any hour. No more bumping into toadstools!",
         "Oh, and the grown-up forms tie their level-up scarves properly now. Very smart. Very dashing.",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv22') && !save.news.includes('adv23')) {
+      save.news.push('adv23'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! Have you seen the trees? From October to mid-November the woods in the green towns turn orange, gold and red. My favourite time of year!",
+        pumpkinNights() ? "And for Pumpkin Nights, every Berry Center has a scarecrow on the hay bales, and there are jack-o'-lanterns indoors too. Give the scarecrow a poke. It's friendly!" : "Every Pumpkin Nights, a scarecrow keeps watch by each Berry Center, and jack-o'-lanterns light up the rooms. In Twinkle Week, little trees twinkle indoors too!",
+        "Listen closely to the town music, too: sleigh bells in Twinkle Week, and something spooky going 'oooo' on Pumpkin Nights...",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
