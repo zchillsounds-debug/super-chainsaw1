@@ -1963,6 +1963,10 @@ export class World {
     const hatM = toon(0x6a4a2a), brim = inked(new THREE.CylinderGeometry(0.34, 0.36, 0.04, 14), hatM, OL * 0.3); brim.position.set(0, 1.82, -0.05); brim.rotation.x = -0.3; g.add(brim); // tipped back, so the high camera sees the face
     const crown = inked(new THREE.ConeGeometry(0.19, 0.34, 10), hatM, OL * 0.3); crown.position.set(0, 1.97, -0.1); crown.rotation.set(-0.3, 0, 0.22); g.add(crown);
     head.castShadow = shirt.castShadow = true;
+    if (halloween() && this.phase !== 'day') for (const ex of [-0.08, 0.08]) { // Halloween night: its button eyes glow. Spooky! (Friendly, though.)
+      const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffa020, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.9 }); sm.userData.own = true;
+      const e = new THREE.Sprite(sm); e.scale.setScalar(0.26); e.position.set(ex, 1.76, 0.3); g.add(e);
+    }
     bakeStatic({ root, mats: {}, g }); // merge the parts (the wobbling scarecrow stays its own group)
     // a crow perches on the scarecrow's arm; it flaps off when the hero comes close, and drifts back once they've gone
     const crow = new THREE.Group(), ink = toon(0x2a2a3a, { rim: 0.6 });
