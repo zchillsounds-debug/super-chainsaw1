@@ -504,15 +504,20 @@ function playStep(song, step, t) {
     synthBus.gain.linearRampToValueAtTime(1, t + spb * 1.8);
   }
   if (d === 's') { noise(0.14, 0.28, { t, bus: musBus, f0: 1800, f1: 900, q: 0.6 }); osc('triangle', 220, 160, 0.08, 0.15, { t, bus: musBus }); }
-  if (d === 'h' || s % 2 === 1 || intensity > 0) noise(0.03, s % 2 ? 0.07 : 0.05, { t, bus: musBus, type: 'highpass', f0: 7000 });
+  if (!song.night && (d === 'h' || s % 2 === 1 || intensity > 0)) noise(0.03, s % 2 ? 0.07 : 0.05, { t, bus: musBus, type: 'highpass', f0: 7000 });
 }
 
-export function playMusic(name) {
-  if (!ctx || currentSong === name) return;
+// the same tune after dark: slower, soft sine/triangle voices, just a heartbeat kick, no hats (the Adventure towns at night)
+const nightSongs = {};
+const nightOf = (name) => nightSongs[name] ||= SONGS[name] && { ...SONGS[name], night: true, bpm: Math.round(SONGS[name].bpm * 0.72), drums: 'k...............',
+  inst: { lead: 'triangle', lead2: 'sine', leadVol: 0.085, bass: 'sine', bassVol: 0.2, stab: 'sine' } };
+
+export function playMusic(name, night = false) {
+  if (!ctx || currentSong === name + (night ? ':night' : '')) return;
   stopMusic();
-  currentSong = name;
+  currentSong = name + (night ? ':night' : '');
   intensity = 0;
-  const song = SONGS[name];
+  const song = night ? nightOf(name) : SONGS[name];
   if (!song) return;
   musicStep = 0;
   nextT = ctx.currentTime + 0.1;

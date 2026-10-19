@@ -411,7 +411,8 @@ export class World {
     save.adv.map = key; save.adv.x = x; save.adv.y = y; save.adv.dir = dir;
     if (!key.startsWith('in:')) (save.adv.seen ||= {})[key] = true;
     persist();
-    playMusic(this.touring ? 'victory' : M.music || 'camp');
+    const tune = this.touring ? 'victory' : M.music || 'camp';
+    playMusic(tune, this.outPhase === 'night' && !['victory', 'neon', 'boss'].includes(tune) && M.indoor !== 'arcade'); // night: the town's tune as a slow lullaby (Neon City parties on)
     const B = this.base, lamp = M.indoor && this.outPhase !== 'day' && M.indoor !== 'arcade' && { sun: 0xffd2a0, sunI: B.sunI * (this.outPhase === 'night' ? 0.72 : 0.85), sky: 0xffe2c4, gnd: B.gnd, hemiI: B.hemiI * 0.85, fog: 0xcfeeff }; // lamplight indoors after dark
     this.morning = canRain(M) && !this.rain && this.phase === 'day' && hr >= 6 && hr < 9; // misty mornings on the grassy outdoor maps
     this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.morning && PHASES.morning) || PHASES[this.phase]);
