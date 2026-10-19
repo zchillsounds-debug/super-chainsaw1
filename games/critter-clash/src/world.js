@@ -399,7 +399,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1465,6 +1465,35 @@ export class World {
       if (A.geyser !== day) { A.geyser = day; save.berries = (save.berries || 0) + 1; persist(); this.S.toast?.('💨 WHEEE! A berry rained down from the sky! +1 🍓'); }
       else { persist(); this.S.toast?.('💨 WHEEE! What a ride!'); }
     }, 1400);
+  }
+
+  // Cloudtop Gardens, after Gale's kite is found: Gale lends it back, and the hero flies it high on the endless wind (once a day: a little XP)
+  flyKite(who) {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv, H = this.hero.root;
+    const g = new THREE.Group(); this.group.add(g);
+    const tex = canvasTex(64, 64, (c) => { c.fillStyle = '#ff4a4a'; c.beginPath(); c.moveTo(32, 0); c.lineTo(64, 26); c.lineTo(32, 64); c.lineTo(0, 26); c.fill(); c.fillStyle = '#ffd23a'; c.beginPath(); c.moveTo(32, 0); c.lineTo(64, 26); c.lineTo(32, 26); c.fill(); c.beginPath(); c.moveTo(32, 26); c.lineTo(32, 64); c.lineTo(0, 26); c.fill(); c.strokeStyle = '#5a2a1a'; c.lineWidth = 2; c.beginPath(); c.moveTo(32, 0); c.lineTo(32, 64); c.moveTo(0, 26); c.lineTo(64, 26); c.stroke(); });
+    tex.userData.own = true; const km = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide }); km.userData.own = true;
+    const kite = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.6), km); g.add(kite);
+    const bows = []; const bm = new THREE.MeshBasicMaterial({ color: 0xffd23a, side: THREE.DoubleSide }); bm.userData.own = true;
+    for (let k = 0; k < 5; k++) { const b = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.18), bm); g.add(b); bows.push(b); }
+    const lm = new THREE.LineBasicMaterial({ color: 0xffffff }); lm.userData.own = true;
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), lm); g.add(line);
+    this.kite = { g, kite, bows, line, t: 0 };
+    this.flyingKite = true; sfx.whoosh?.(0.8);
+    const out = () => { this.flyingKite = false; const K = this.kite; if (K) { K.g.traverse((o) => o.geometry?.dispose()); this.group.remove(K.g); } this.kite = null; };
+    if (A.kite !== day) {
+      A.kite = day; countUp('kite'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+      return this.say([`${who}: Want to fly it? Hold tight. The wind up here never stops!`, `Up, up, UP goes the kite! {hero} runs in a little circle, giggling. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, `${who}: Look at it loop! You're a natural. Come fly with me again tomorrow!`], out, who);
+    }
+    return this.say([`${who}: Again? Go on! The kite loves you.`, 'The kite swoops and loops on the breeze. Wheee!'], out, who);
+  }
+
+  updateKite(dt) {
+    const K = this.kite, h = this.hero.root.position; K.t += dt;
+    const lift = Math.min(1, K.t / 1.2), kx = h.x + 3.2 + Math.sin(K.t * 1.1) * 0.8, ky = 1 + lift * (4.2 + Math.sin(K.t * 1.7) * 0.5), kz = h.z + 0.6 + Math.cos(K.t * 0.9) * 0.4;
+    K.kite.position.set(kx, ky, kz); K.kite.rotation.set(-0.5, 0, Math.sin(K.t * 2.2) * 0.35);
+    K.bows.forEach((b, i) => { b.position.set(kx - (i + 1) * 0.28 + Math.sin(K.t * 4 + i) * 0.12, ky - 0.9 - i * 0.38, kz + 0.1); b.rotation.set(-0.5, 0, Math.sin(K.t * 5 + i) * 0.6); });
+    const pos = K.line.geometry.attributes.position; pos.setXYZ(0, h.x + 0.3, 1.1, h.z); pos.setXYZ(1, kx, ky - 0.7, kz); pos.needsUpdate = true;
   }
 
   // a soak in Cinder Town's hot spring: steam billows up; the first soak of a day is worth a little XP
@@ -3106,6 +3135,7 @@ export class World {
       idlePose(P, this.t);
       if (this.twirlT > 0) { P.yaw = (1 - this.twirlT / 0.9) * Math.PI * 4; P.armLz = P.armRz = 1.4; P.legL = -0.4; H.emote('happy', 'grin', 0.1); }
       if (this.danceT > 0) { const b = Math.abs(Math.sin(this.t * 7)); P.y = b * 0.22; P.roll = Math.sin(this.t * 3.5) * 0.22; P.yaw = Math.sin(this.t * 1.8) * 0.7; P.armLz = 1.3 + Math.sin(this.t * 7) * 0.6; P.armRz = 1.3 - Math.sin(this.t * 7) * 0.6; P.legL = Math.sin(this.t * 7) * 0.5; P.legR = -P.legL; H.emote('happy', 'grin', 0.1); }
+      if (this.flyingKite) { P.armRz = 1.6; P.armRx = -0.6; P.lean = -0.1; H.root.rotation.y = YAW.e; H.emote('happy', 'grin', 0.1); }
       if (this.launchT > 0) { this.launchT -= dt; const k = 1 - Math.max(0, this.launchT) / 1.4; P.y = Math.sin(k * Math.PI) * 4.2; P.yaw = k * Math.PI * 4; P.armLz = P.armRz = 1.5; P.legL = -0.5; P.legR = 0.5; H.emote('happy', 'open', 0.1); }
       if (this.sitting && this.sunset) { const S = this.sunset; H.root.position.set(S.px, 0.62, S.pz - 0.05); H.root.rotation.y = YAW.s; P.legL = P.legR = -1.2 + Math.sin(this.t * 3) * 0.25 * (this.t % 2 < 1 ? 1 : -1); P.armLz = P.armRz = 0.5; H.emote('happy', 'grin', 0.1); }
       if (this.soaking && this.spring) { const S = this.spring; H.root.position.set(S.px, -0.22, S.pz + 0.3); H.root.rotation.y = YAW.s; P.armLz = P.armRz = 0.9; P.y = Math.sin(this.t * 1.5) * 0.03; H.emote('closed', 'grin', 0.1); }
@@ -3194,6 +3224,7 @@ export class World {
     if (this.wisps) this.updateWisps(dt);
     if (this.flutters) this.updateFlutters(dt);
     if (this.geyser) this.updateGeyser(dt);
+    if (this.kite) this.updateKite(dt);
     if (this.mornMist) this.updateMorning(dt);
     if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
