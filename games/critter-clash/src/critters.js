@@ -9,7 +9,7 @@ import { buildGrowth, growthSeg } from './growth.js';
 const SEG = 36;
 let seg = SEG; // fewer segments for far-away world critters (lod 'low' / 'mid'); battles keep the full count
 const sphere = (r = 1) => new THREE.SphereGeometry(r, seg, Math.round(seg * 0.75));
-const capsule = (r, len) => new THREE.CapsuleGeometry(r, len, 8, 18);
+const capsule = (r, len) => new THREE.CapsuleGeometry(r, len, seg < 20 ? 4 : seg < 30 ? 6 : 8, seg < 20 ? 10 : seg < 30 ? 14 : 18); // limbs follow the world LOD too (they were ~half a far critter's triangles)
 
 // ---------- face textures ----------
 function eyeCanvas(ctx, w, h, { eye, iris }, kind) {
@@ -149,7 +149,7 @@ function flameGeo() {
     const t = i / 14;
     pts.push(new THREE.Vector2(Math.sin(t * Math.PI) ** 0.8 * (1 - t) ** 0.6 * 0.5 + 0.0001, t * 1.4 - 0.2));
   }
-  return new THREE.LatheGeometry(pts, 20);
+  return new THREE.LatheGeometry(pts, seg < 20 ? 12 : seg < 30 ? 16 : 20);
 }
 
 function boltGeo() {
@@ -982,7 +982,7 @@ export class Critter {
     const sy = this.def.stage ? B.h * 0.82 - headR * 0.26 : B.h * 0.84;
     // ...and snug: sized to the body's slice at that height, so it reads as a scarf and not a hoop floating round the tummy
     const t = (sy - B.h * 0.48) / (B.h * 0.5), snug = this.def.stage ? Math.sqrt(Math.max(0.3, 1 - t * t)) * 1.06 : 1;
-    const ring = inked(new THREE.TorusGeometry(B.w * 0.5 * snug, this.def.stage ? 0.06 : 0.085, 10, 28), scarfMat, OL * 0.8);
+    const ring = inked(new THREE.TorusGeometry(B.w * 0.5 * snug, this.def.stage ? 0.06 : 0.085, seg < 20 ? 6 : 10, seg < 20 ? 18 : 28), scarfMat, OL * 0.8);
     ring.rotation.x = Math.PI / 2 - 0.3;
     ring.scale.set(this.def.stage ? Math.min(B.chubby * 0.86, 0.36 / (B.w * 0.5 * snug)) : B.chubby * 1.05, 1, this.def.stage ? 1.7 : 1); // grown forms: a flat cloth band, not a round tube, narrowed so its ends tuck into the sides (a collar under the chin, not a belt; never wider than 0.36 a side, or the widest bodies like Snoozalot wear a belt again)
     ring.position.set(0, sy, B.w * 0.04);
