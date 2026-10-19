@@ -1061,7 +1061,6 @@ export class Screens {
         ['🥚', 'Collect a Daycare egg', 'Nanny Nell, any Berry Center', A.eggDay === day, A.eggDay === day || (A.care && !A.egg && (A.steps || 0) - A.care.at >= 400)], // only once Nell has one waiting
         ['🏡', 'A present from home', `home, ${N('village')}`, A.grownDay === day, A.grown?.length], // a grown-up Daycare baby (world.js grownSpot)
         ['🎄', 'A gift under the tree', 'by any Berry Center', A.xgift === day, twinkleWeek()], // Twinkle Week (world.js buildXtree)
-        ['🎵', `Sing carols (${A.carol?.day === day ? A.carol.ids.length : 0}/6)`, 'townsfolk after dark', A.carol?.day === day && A.carol.ids.length >= 6, twinkleWeek()],
         F.rod && (() => { const D = derbyOf(gauntletWeek()); return ['🎣', `Derby: ${D.name} ${D.cm}+ cm`, `this week, ${D.where}`, A.derbyWk === D.wk, true]; })(),
         F.ending && ['🏔️', 'Peak Gauntlet (this week)', "Keeper Orla, Champion's Peak", !!F['gauntpay_' + gauntletWeek()], true],
       ].filter((r) => r && r[4]);
@@ -1077,6 +1076,7 @@ export class Screens {
         ['⛸️', 'Skate a twirl', `${N('frostpeak')} pond`, A.skated === day, seen.frostpeak && A.skates],
         ['🍄', 'Sing with the fairy ring', N('glowcap'), A.ring === day, seen.glowcap],
         ['🎃', 'Find a pumpkin treat', 'pumpkins by the town doors', A.pumpkin === day, pumpkinNights()],
+        ['🎵', `Sing carols (${A.carol?.day === day ? A.carol.ids.length : 0}/6)`, 'townsfolk in bobble hats', A.carol?.day === day && A.carol.ids.length >= 6, twinkleWeek()],
         ['🧛', `Trick-or-treat (${A.tot?.day === day ? A.tot.ids.length : 0}/${halloween() ? 10 : 6})`, 'townsfolk in costume', A.tot?.day === day && A.tot.ids.length >= (halloween() ? 10 : 6), pumpkinNights()],
         [pumpkinNights() ? '👻' : '✨', pumpkinNights() ? 'Catch the five wisps' : 'Catch five big fireflies', N('glowwood'), A.wisp === day, seen.glowwood],
       ].filter((r) => r[4]);
