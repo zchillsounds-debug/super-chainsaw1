@@ -133,6 +133,7 @@ export function newAdventure(hero) {
 // Twinkle Week: a winter festival from 18 December to 3 January (a decorated tree by every Berry Center, a gift under it each day)
 export function twinkleWeek(d = new Date()) { if (save.adv?.winter != null) return !!save.adv.winter; const m = d.getMonth(), day = d.getDate(); return (m === 11 && day >= 18) || (m === 0 && day <= 3); } // save.adv.winter forces it on/off (tests)
 // Pumpkin Nights: a little harvest festival from mid-October to the start of November (carved pumpkins by the town doors)
+export function halloween(d = new Date()) { if (save.adv?.halloween != null) return !!save.adv.halloween; return pumpkinNights(d) && d.getMonth() === 9 && d.getDate() === 31; } // the big night itself (save.adv.halloween forces it)
 export function pumpkinNights(d = new Date()) { const m = d.getMonth(), day = d.getDate(); if (save.adv?.fest != null) return !!save.adv.fest; return (m === 9 && day >= 15) || (m === 10 && day <= 2); } // save.adv.fest forces it on (true) or off (false) for tests
 
 export function heroDef() {
@@ -440,6 +441,7 @@ export class World {
     this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.morning && PHASES.morning) || (M.arena === 'beach' && BEACH[this.phase]) || PHASES[this.phase]);
     this.buildMorning();
     this.buildRainbow();
+    if (halloween() && this.phase !== 'day' && !M.indoor && !ALPHA_TOLD.has('hween')) { ALPHA_TOLD.add('hween'); setTimeout(() => this.group && this.S.toast('👻 Happy Halloween! Ghosts drift through every town tonight, and the townsfolk have ten treats to share.'), 1500); }
     this.banner(M.name + (this.storm ? ' ⛈️' : this.rain ? ' 🌧️' : this.snowing || this.twinkleSnow ? ' 🌨️' : ''));
   }
 
@@ -3619,6 +3621,10 @@ export class World {
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 26, y: 5 + Math.random() * 2, z: p.z + (Math.random() - 0.65) * 18, vy: -0.9, vx: 0.6 + Math.random() * 0.5, vz: (Math.random() - 0.5) * 0.4, color: Math.random() < 0.5 ? TC : this.M.trees[1], size: 0.32, life: 5.5, shape: 'leaf', additive: false, spin: (Math.random() - 0.5) * 4, rot: Math.random() * 6, floor: true });
     }
+    if (this.phase !== 'day' && !this.M.indoor && halloween() && Math.random() < dt * 3) { // Halloween night: little ghosts drift by in every town
+      const p = this.hero.root.position;
+      this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 22, y: 1 + Math.random() * 2, z: p.z + (Math.random() - 0.6) * 14, vx: (Math.random() - 0.5) * 1.2, vy: 0.25, color: Math.random() < 0.7 ? 0xe8fff4 : 0xb8ffd8, size: 1.3, life: 4, shape: 'glow', fadeIn: 0.8, hold: 0.5, alpha: 0.9 });
+    }
     if (this.leafPiles?.length && Math.random() < dt * 2.2) { // autumn: now and then a leaf lets go over the green maps too
       const p = this.hero.root.position;
       this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 26, y: 5 + Math.random() * 2, z: p.z + (Math.random() - 0.65) * 18, vy: -0.9, vx: 0.6 + Math.random() * 0.5, vz: (Math.random() - 0.5) * 0.4, color: [0xe8862a, 0xd04a2a, 0xf0c040][Math.floor(Math.random() * 3)], size: 0.3, life: 5.5, shape: 'leaf', additive: false, spin: (Math.random() - 0.5) * 4, rot: Math.random() * 6, floor: true });
@@ -4210,10 +4216,10 @@ export class World {
     }
     if (this.trickOrTreat(n)) { // Pumpkin Nights after dark: trick or treat! (one treat from each of up to six townsfolk a night)
       const day = new Date().toISOString().slice(0, 10), A = save.adv, T = A.tot?.day === day ? A.tot : (A.tot = { day, ids: [] }), who = n.name.split(' ').pop();
-      if (!T.ids.includes(n.id) && T.ids.length < 6) {
+      if (!T.ids.includes(n.id) && T.ids.length < (halloween() ? 10 : 6)) {
         T.ids.push(n.id); countUp('tot'); save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(1);
         const L = [`${who}: Eek! A spooky {hero}! ...Oh, it's you. Here, have a treat!`, `${who}: Trick or treat? Treat, definitely treat. I'm not ready for a trick.`, `${who}: Ooh, great costume! Wait... is that a costume? Here, take a candy berry!`, `${who}: Happy Pumpkin Nights! I saved the last candy berry for you.`];
-        return this.say(['{hero}: Trick or treat!', L[(hash(n.id) + T.ids.length) % L.length], `+1 🍓 candy berry! (${T.ids.length}/6 treats tonight)`], null, n.name);
+        return this.say(['{hero}: Trick or treat!', L[(hash(n.id) + T.ids.length) % L.length], `+1 🍓 candy berry! (${T.ids.length}/${halloween() ? 10 : 6} treats tonight)`], null, n.name);
       }
     }
     if (pumpkinNights() && !n.story && n.lines?.length && Math.random() < 0.3) { // Pumpkin Nights chatter

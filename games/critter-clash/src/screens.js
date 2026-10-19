@@ -10,7 +10,7 @@ import { openSettings, typeSpeed } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
-import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, twinkleWeek, LANDMARKS, albumGet, derbyOf } from './world.js';
+import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, LANDMARKS, albumGet, derbyOf } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -1076,7 +1076,7 @@ export class Screens {
         ['⛸️', 'Skate a twirl', `${N('frostpeak')} pond`, A.skated === day, seen.frostpeak && A.skates],
         ['🍄', 'Sing with the fairy ring', N('glowcap'), A.ring === day, seen.glowcap],
         ['🎃', 'Find a pumpkin treat', 'pumpkins by the town doors', A.pumpkin === day, pumpkinNights()],
-        ['🧛', `Trick-or-treat (${A.tot?.day === day ? A.tot.ids.length : 0}/6)`, 'townsfolk in costume', A.tot?.day === day && A.tot.ids.length >= 6, pumpkinNights()],
+        ['🧛', `Trick-or-treat (${A.tot?.day === day ? A.tot.ids.length : 0}/${halloween() ? 10 : 6})`, 'townsfolk in costume', A.tot?.day === day && A.tot.ids.length >= (halloween() ? 10 : 6), pumpkinNights()],
         [pumpkinNights() ? '👻' : '✨', pumpkinNights() ? 'Catch the five wisps' : 'Catch five big fireflies', N('glowwood'), A.wisp === day, seen.glowwood],
       ].filter((r) => r[4]);
     return { rows, after, night };
