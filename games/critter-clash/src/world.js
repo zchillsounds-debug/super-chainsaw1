@@ -1909,8 +1909,9 @@ export class World {
   // a thunderstorm: the sky flashes white (twice, quickly), then the thunder rolls in a moment later
   lightning() {
     const scr = this.S.root.querySelector('.world-screen'); if (!scr || this.dialog) return;
-    const el = document.createElement('div'); el.className = 'wd-bolt'; scr.appendChild(el); setTimeout(() => el.remove(), 900);
-    const A = this.g.arena; if (!this.bolt) this.bolt = { t: 0, hemi: A.hemi.intensity, sun: A.sun.intensity }; else this.bolt.t = 0; // the world itself lights up too (see updateBolt)
+    const soft = !!this.g.reduceFlash; // the Reduce flashing setting: one slow, faint glow
+    const el = document.createElement('div'); el.className = 'wd-bolt' + (soft ? ' soft' : ''); scr.appendChild(el); setTimeout(() => el.remove(), soft ? 1700 : 900);
+    const A = this.g.arena; if (!this.bolt) this.bolt = { t: 0, hemi: A.hemi.intensity, sun: A.sun.intensity, soft }; else Object.assign(this.bolt, { t: 0, soft }); // the world itself lights up too (see updateBolt)
     setTimeout(() => this.group && sfx.rumble?.(), 400 + Math.random() * 1100);
     const day = new Date().toISOString().slice(0, 10); if (save.adv.stormDay !== day) { save.adv.stormDay = day; countUp('storm'); persist(); } // Records: thunderstorms weathered (one a day)
   }
@@ -1919,9 +1920,9 @@ export class World {
   updateBolt(dt) {
     const B = this.bolt; if (!B) return;
     const A = this.g.arena, t = (B.t += dt);
-    const f = Math.max(0, 1 - t / 0.12) + Math.max(0, 1 - Math.abs(t - 0.24) / 0.1) * 0.75 + Math.max(0, 1 - Math.abs(t - 0.45) / 0.25) * 0.25;
+    const f = B.soft ? 0.3 * Math.sin(Math.PI * Math.min(1, t / 1.5)) : Math.max(0, 1 - t / 0.12) + Math.max(0, 1 - Math.abs(t - 0.24) / 0.1) * 0.75 + Math.max(0, 1 - Math.abs(t - 0.45) / 0.25) * 0.25;
     A.hemi.intensity = B.hemi + f * 2.6; A.sun.intensity = B.sun + f * 1.8;
-    if (t > 0.75) { A.hemi.intensity = B.hemi; A.sun.intensity = B.sun; this.bolt = null; }
+    if (t > (B.soft ? 1.5 : 0.75)) { A.hemi.intensity = B.hemi; A.sun.intensity = B.sun; this.bolt = null; }
   }
 
   // misty mornings: big soft banks of mist drift slowly across the map, thinning as they go

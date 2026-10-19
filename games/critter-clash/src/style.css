@@ -1202,3 +1202,5 @@ body:not(.is-touch) .wd-a.hint::after { content: "Space · " attr(data-hint); po
 }
 .wd-bolt { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(ellipse at 40% 0%, rgba(240,246,255,.95), rgba(200,215,255,.55) 70%); opacity: 0; animation: bolt .8s linear forwards; }
 @keyframes bolt { 0% { opacity: 0; } 6% { opacity: .75; } 14% { opacity: .05; } 22% { opacity: .55; } 100% { opacity: 0; } }
+.wd-bolt.soft { animation: boltsoft 1.6s ease-in-out forwards; } /* Reduce flashing: one slow, faint glow instead of the double flash */
+@keyframes boltsoft { 0% { opacity: 0; } 40% { opacity: .22; } 100% { opacity: 0; } }
