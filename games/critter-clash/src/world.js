@@ -828,13 +828,13 @@ export class World {
     // a canopy blob; the chunky detail-0 one gets round normals too, so it shades like a ball instead of a cut gem
     const ico = (r, d) => { const g = new THREE.IcosahedronGeometry(r, d); if (!d) { const P = g.attributes.position, N = g.attributes.normal; for (let i = 0; i < P.count; i++) N.setXYZ(i, P.getX(i) / r, P.getY(i) / r, P.getZ(i) / r); } return g; };
     const add = (x, y, dt = dt0, top = dt) => {
-      const [px, pz] = wpos(x, y), s = 0.85 + rand() * 0.3, jx = (rand() - 0.5) * 0.4, jz = (rand() - 0.5) * 0.4, F = tint(x, y);
+      const [px, pz] = wpos(x, y), s = 0.85 + rand() * 0.3, jx = (rand() - 0.5) * 0.4, jz = (rand() - 0.5) * 0.4, F = tint(x, y) || (M.lava && hsh(x, y, 11) % 100 < 30 ? ash : null); // the volcano maps: about a third of the trees are charred grey
       const tr = new THREE.CylinderGeometry(0.2 * s, 0.28 * s, 1.0 * s, 6); tr.translate(px + jx, 0.5 * s, pz + jz); trunks.push(tr);
       const a = ico(1.05 * s, dt); a.scale(1, 0.85, 1); a.translate(px + jx, 1.55 * s, pz + jz); (rand() < 0.5 ? F || can : F || can2).push(a);
       const b = ico(0.72 * s, top); b.translate(px + jx + (rand() - 0.5) * 0.3, 2.35 * s, pz + jz); (rand() < 0.5 ? F || can : F || can2).push(b);
       if (this.M.snow || this.frost) { const fr = this.frost && !this.M.snow, c = new THREE.SphereGeometry((fr ? 0.6 : 0.62) * s, dt ? 10 : 7, dt ? 6 : 3, 0, Math.PI * 2, 0, Math.PI / 2.4); c.scale(1, fr ? 0.6 : 0.7, 1); c.translate(px + jx, (fr ? 2.7 : 2.62) * s, pz + jz); caps.push(c); }
     };
-    const caps = [];
+    const caps = [], ash = [];
     const fronds = [], ptrunks = [], nuts = [], puffs = [];
     const puff = (x, y, s = 1) => {
       const [px, pz] = wpos(x, y);
@@ -883,7 +883,7 @@ export class World {
     for (const [list, c] of [[fronds, 0x3fbf5a], [fronds2, 0x2f9e4a]]) if (list.length) { this.group.add(inked(mergeGeometries(list), toon(c, { rim: 0.4, side: THREE.DoubleSide }), OL * 0.35)); list.forEach((g) => g.dispose()); }
     const put = (list, color, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color, { rim: 0.4 }), ink); m.castShadow = true; this.group.add(m); list.forEach((g) => g.dispose()); };
     const TC = this.M.trees || (this.phase === 'night' ? [0x2f8a5a, 0x3a9a66, 0x6a4a3a] : [0x3fae4a, 0x4cc25a, 0x8a5a3a]); // moonlit canopies at night
-    put(can, TC[0], OL); put(can2, TC[1], OL); put(trunks, TC[2], OL * 0.6); put(caps, this.frost ? 0xeef6ff : 0xffffff, OL * 0.6); // snow caps (a thinner frosting on frosty mornings)
+    put(can, TC[0], OL); put(can2, TC[1], OL); put(ash, this.phase === 'night' ? 0x3a3034 : 0x6a5a58, OL); put(trunks, TC[2], OL * 0.6); put(caps, this.frost ? 0xeef6ff : 0xffffff, OL * 0.6); // snow caps (a thinner frosting on frosty mornings)
     (bloom ? (this.phase === 'night' ? [0xb0889e, 0xb8a8b8, 0xa87894, 0x6a8a5a] : [0xf6a8c8, 0xfbe0ec, 0xec86b0, 0x9ad060])
       : this.phase === 'night' ? [0xb8743e, 0xb09a44, 0xa85e46, 0x6a8a4a] : [0xe8842e, 0xecbc3c, 0xcc5636, 0xa8c040]).forEach((c, i) => put(falls[i], c, OL)); // autumn or blossom canopies (moonlit at night)
   }
