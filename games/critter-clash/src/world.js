@@ -1087,6 +1087,13 @@ export class World {
   // lava throws a warm glow onto the ground beside it in the evening and at night (one merged mesh; the update makes it breathe)
   buildLavaGlow() {
     this.lavaGlow = null;
+    if (this.key === 'cinder' && this.phase !== 'day' && this.tile(12, 9) === '.') { // Rio's basket of sweet potatoes by the lava (see lavaRoast)
+      const [px, pz] = wpos(12, 9), g = new THREE.Group(); g.position.set(px + 0.5, 0, pz + 0.3); g.scale.setScalar(1.7); this.group.add(g);
+      const b = inked(new THREE.CylinderGeometry(0.38, 0.3, 0.32, 10, 1, true), toon(0xb07a3a, { side: THREE.DoubleSide }), OL * 0.5); b.position.y = 0.16; g.add(b);
+      const base = new THREE.Mesh(new THREE.CircleGeometry(0.3, 10), toon(0x8a5a2a)); base.rotation.x = -Math.PI / 2; base.position.y = 0.02; g.add(base);
+      const pm = toon(0xd0507a, { rim: 0.6 }); for (let i = 0; i < 4; i++) { const q = inked(new THREE.SphereGeometry(0.13, 8, 6), pm, OL * 0.4); q.scale.set(1.5, 0.9, 0.9); q.position.set(Math.cos(i * 1.6) * 0.14, 0.32 + (i === 3) * 0.1, Math.sin(i * 1.6) * 0.14); q.rotation.y = i; g.add(q); }
+      const st = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.3, 5), toon(0x7a4a2a)); st.rotation.z = 0.9; st.position.set(0.35, 0.45, 0.1); g.add(st);
+    }
     if (!this.M.lava || this.M.indoor || this.phase === 'day') return;
     const quads = [];
     for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) {
