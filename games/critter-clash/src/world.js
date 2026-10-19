@@ -1964,7 +1964,16 @@ export class World {
     const crown = inked(new THREE.ConeGeometry(0.19, 0.34, 10), hatM, OL * 0.3); crown.position.set(0, 1.97, -0.1); crown.rotation.set(-0.3, 0, 0.22); g.add(crown);
     head.castShadow = shirt.castShadow = true;
     bakeStatic({ root, mats: {}, g }); // merge the parts (the wobbling scarecrow stays its own group)
-    this.scare = { x, y, g, wob: 0 };
+    // a crow perches on the scarecrow's arm; it flaps off when the hero comes close, and drifts back once they've gone
+    const crow = new THREE.Group(), ink = toon(0x2a2a3a, { rim: 0.6 });
+    const body = inked(new THREE.SphereGeometry(0.13, 10, 8), ink, OL * 0.3); body.scale.set(0.8, 0.85, 1.25); crow.add(body);
+    const hd = inked(new THREE.SphereGeometry(0.085, 10, 8), ink, OL * 0.3); hd.position.set(0, 0.1, 0.12); crow.add(hd);
+    const beak = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.09, 6), toon(0xffb020)); beak.rotation.x = Math.PI / 2; beak.position.set(0, 0.09, 0.22); crow.add(beak);
+    for (const e of [-0.04, 0.04]) { const ey = new THREE.Mesh(new THREE.SphereGeometry(0.018, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff })); ey.material.userData.own = true; ey.position.set(e, 0.13, 0.19); crow.add(ey); }
+    const wings = [-1, 1].map((sx) => { const w = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.025, 0.16), ink); w.geometry.translate(sx * 0.1, 0, 0); w.position.set(sx * 0.07, 0.03, -0.01); crow.add(w); return w; });
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.02, 0.12), ink); tail.position.set(0, -0.02, -0.18); tail.rotation.x = 0.4; crow.add(tail);
+    const perch = new THREE.Vector3(0.62, 1.3 * 1.2 + 0.1, -0.15); crow.position.copy(perch); crow.rotation.y = -0.6; root.add(crow);
+    this.scare = { x, y, g, wob: 0, crow: { g: crow, wings, perch, fly: 0, away: false } };
   }
 
   scareTalk() {
@@ -3786,6 +3795,13 @@ export class World {
     if (this.kite) this.updateKite(dt);
     if (this.mornMist) this.updateMorning(dt);
     if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
+    if (this.scare?.crow) { // the scarecrow's crow: flap off when the hero comes near, drift back when they've gone
+      const C = this.scare.crow, d = Math.abs(this.hx - this.scare.x) + Math.abs(this.hy - this.scare.y);
+      if (!C.away && d <= 2) { C.away = true; C.fly = 0; sfx.whoosh?.(1.6); }
+      if (C.away && C.fly >= 3 && d >= 6) { C.away = false; C.fly = 0; C.g.visible = true; C.g.position.copy(C.perch); }
+      if (C.away && C.fly < 3) { C.fly += dt; const k = C.fly; C.g.position.set(C.perch.x + k * 2.2, C.perch.y + k * k * 1.2, C.perch.z - k * 1.4); C.wings.forEach((w, i) => { w.rotation.z = Math.sin(this.t * 28) * 0.9 * (i ? -1 : 1); }); if (k >= 3) C.g.visible = false; }
+      else if (!C.away) { C.wings.forEach((w) => { w.rotation.z = 0; }); C.g.rotation.x = Math.sin(this.t * 2.3) > 0.97 ? 0.4 : 0; } // the odd peck at its own feathers
+    }
     if (this.scare?.wob > 0) { const S = this.scare; S.wob = Math.max(0, S.wob - dt); S.g.rotation.z = Math.sin(S.wob * 14) * 0.12 * S.wob; }
     if (this.xtree?.glow) { const X = this.xtree; X.glow.material.opacity = 0.55 + Math.sin(this.t * 2.2) * 0.15; X.lights.forEach((m, i) => { const on = Math.sin(this.t * 3 + i * 1.6) > -0.3; m.material.color.setHex(on ? X.cols[i] : 0x3a3448); }); } // the lights twinkle in turns
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
