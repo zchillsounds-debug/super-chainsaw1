@@ -10,7 +10,7 @@ import { openSettings } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
-import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, LANDMARKS, albumGet, derbyOf } from './world.js';
+import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, twinkleWeek, LANDMARKS, albumGet, derbyOf } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -150,7 +150,7 @@ export class Screens {
     // the two main modes share a row in landscape and stack on narrow portrait screens
     const main = document.createElement('div');
     main.className = 'title-main';
-    const advSub = () => { const k = save.adv.map?.startsWith('in:') ? save.adv.map.split(':')[1] : save.adv.map, cups = CUPS.filter((c) => save.adv.flags?.['cup_' + c.id]).length; return `${pumpkinNights() ? '🎃 ' : ''}${MAPS[k]?.name || ''} · 🏆${cups}/7 · 🗺️${this.recordsPc()}%`; };
+    const advSub = () => { const k = save.adv.map?.startsWith('in:') ? save.adv.map.split(':')[1] : save.adv.map, cups = CUPS.filter((c) => save.adv.flags?.['cup_' + c.id]).length; return `${pumpkinNights() ? '🎃 ' : twinkleWeek() ? '🎄 ' : ''}${MAPS[k]?.name || ''} · 🏆${cups}/7 · 🗺️${this.recordsPc()}%`; };
     main.append(this.btn(save.adv ? `Adventure <small>${advSub()}</small>` : 'Adventure <small>NEW!</small>', 'primary big', () => this.adventure()), this.btn('Tournament', 'big', () => this.cups()));
     m.appendChild(main);
     const row = document.createElement('div');
@@ -1122,6 +1122,7 @@ export class Screens {
       + (A.cnt?.kite ? bar('🪁', 'Kites flown', A.cnt.kite) : '')
       + (A.cnt?.breakfast ? bar('🥞', 'Breakfasts at home', A.cnt.breakfast) : '')
       + (A.cnt?.pumpkin ? bar('🎃', 'Pumpkin treats', A.cnt.pumpkin) : '')
+      + (A.cnt?.twinkle ? bar('🎄', 'Twinkle Week gifts', A.cnt.twinkle) : '')
       + (A.cnt?.wisp ? bar('✨', 'Firefly & wisp nights', A.cnt.wisp) : '')
       + bar('📸', 'Landmark photos', (A.snaps || []).length, LANDMARKS.length)
       + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length)
@@ -1159,6 +1160,7 @@ export class Screens {
       seen.cloudtop && 'Toss a berry in the Cloudtop fountain for a wish, once a day.',
       F.crowned && 'Since you were crowned, route trainers want a rematch once a day, at your level.',
       pumpkinNights() && 'Pumpkin Nights: the pumpkins by town doors glow after dark, and Glowcap Woods has wisps to catch.',
+      twinkleWeek() && 'Twinkle Week: look under the tree by any Berry Center for a gift, once a day.',
     ].filter(Boolean);
     return tips[Math.floor(Date.now() / 864e5) % tips.length];
   }

@@ -1149,6 +1149,7 @@ export const SHOP_HATS = [
   { id: 'visor', name: 'Frosty Visor', kind: 'visor', col: 0x6ad8ff, band: 0xffffff, price: 0, gift: true },
   { id: 'boppers', name: 'Neon Boppers', kind: 'boppers', col: 0x2a2438, band: 0xff5ad8, price: 8, market: true }, // only at Chef Rumi's noodle cart in Neon City
   { id: 'nightcap', name: 'Sleepy Nightcap', kind: 'nightcap', col: 0x6a8aff, band: 0xffffff, price: 0, gift: true },
+  { id: 'twinkle', name: 'Twinkle Bobble', kind: 'nightcap', col: 0xe8384a, band: 0xffffff, price: 0, gift: true, season: true }, // three Twinkle Week gifts from under the town trees (seasonal)
   { id: 'pumpkin', name: 'Pumpkin Head', kind: 'pumpkin', col: 0xff8a1a, band: 0x4a7a2a, price: 0, gift: true, season: true }, // three Pumpkin Nights treats (seasonal, so not counted towards the hat total)
   { id: 'shutter', name: 'Shutterbug Cap', kind: 'cap', col: 0x3a9a6a, band: 0xffd84d, price: 0, gift: true }, // a photo of every town's landmark
   { id: 'sunbloom', name: 'Sunbloom Hat', kind: 'sunflower', col: 0xffd23a, band: 0x8a5a2a, price: 0, gift: true }, // the first flower grown in Bloom Town's garden plot

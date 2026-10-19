@@ -125,6 +125,8 @@ export function newAdventure(hero) {
   persist();
 }
 
+// Twinkle Week: a winter festival from 18 December to 3 January (a decorated tree by every Berry Center, a gift under it each day)
+export function twinkleWeek(d = new Date()) { if (save.adv?.winter != null) return !!save.adv.winter; const m = d.getMonth(), day = d.getDate(); return (m === 11 && day >= 18) || (m === 0 && day <= 3); } // save.adv.winter forces it on/off (tests)
 // Pumpkin Nights: a little harvest festival from mid-October to the start of November (carved pumpkins by the town doors)
 export function pumpkinNights(d = new Date()) { const m = d.getMonth(), day = d.getDate(); if (save.adv?.fest != null) return !!save.adv.fest; return (m === 9 && day >= 15) || (m === 10 && day <= 2); } // save.adv.fest forces it on (true) or off (false) for tests
 
@@ -387,6 +389,7 @@ export class World {
     this.buildMarquee();
     this.buildActors();
     this.buildPumpkins();
+    this.buildXtree();
     this.buildWisps(x, y);
     this.buildFlutters(x, y);
     this.buildMoonflowers();
@@ -1860,6 +1863,44 @@ export class World {
         } else this.S.toast?.(`${this.wispKind === 'fly' ? '✨ Firefly' : '👻 Wisp'} caught! ${this.wispN} / ${this.wisps.length}`);
       }
     }
+  }
+
+  // Twinkle Week: a fir tree by the Berry Center door (the home door in Sprout Village), hung with baubles and a star; its lights twinkle after dark
+  buildXtree() {
+    this.xtree = null;
+    if (this.M.indoor || !twinkleWeek() || !(this.M.buildings || []).length) return;
+    const d = this.doors.find((q) => q.b.heal) || this.doors.find((q) => q.b.id === 'home'); if (!d) return;
+    const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((q) => q.x + ',' + (q.y + 1)), ...(this.M.signs || []).map((g) => g.x + ',' + g.y), ...(this.pumpkins || []).map((q) => q.x + ',' + q.y)]);
+    const free = (x, y) => '."sf'.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y) && !taken.has(x + ',' + y);
+    const spot = [[-2, 1], [2, 1], [-3, 1], [3, 1], [-2, 2], [2, 2], [-1, 2], [1, 2]].map(([dx, dy]) => [d.x + dx, d.y + dy]).find(([x, y]) => free(x, y)); if (!spot) return;
+    const [x, y] = spot, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(1.5); this.group.add(g); this.solid.add(x + ',' + y);
+    const tiers = [[0.95, 1.0, 0.95], [0.75, 0.9, 1.6], [0.5, 0.8, 2.2]].map(([r, h, yy]) => { const c = new THREE.ConeGeometry(r, h, 9); c.translate(0, yy, 0); return c; });
+    const fir = inked(mergeGeometries(tiers), toon(this.M.snow ? 0x2a6a5a : 0x2a7a4a, { rim: 0.4 }), OL * 0.5); fir.castShadow = true; g.add(fir); tiers.forEach((c) => c.dispose());
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.18, 0.5, 6), toon(0x7a4a2a)); trunk.position.y = 0.25; g.add(trunk);
+    const star = inked(new THREE.OctahedronGeometry(0.2, 0), toon(0xffd84d, { emissive: this.phase !== 'day' ? 0x806010 : 0 }), OL * 0.4); star.position.y = 2.72; star.scale.set(1, 1.2, 0.5); g.add(star);
+    const cols = [0xff4a5a, 0x5ab8ff, 0xffd84d, 0xff8ae0], balls = cols.map(() => []);
+    for (let k = 0; k < 16; k++) { const t = k / 16, yy = 0.75 + t * 1.75, r = 0.92 * (1 - t * 0.78) - 0.06, a = k * 2.4; const b = new THREE.SphereGeometry(0.085, 8, 6); b.translate(Math.cos(a) * r, yy - 0.12, Math.sin(a) * r); balls[k % 4].push(b); }
+    const lit = this.phase !== 'day', lights = balls.map((gs, i) => { const m = new THREE.Mesh(mergeGeometries(gs), lit ? new THREE.MeshBasicMaterial({ color: cols[i] }) : toon(cols[i], { rim: 0.8 })); if (lit) m.material.userData.own = true; g.add(m); gs.forEach((q) => q.dispose()); return m; });
+    for (const [gx, gz, w, c, rb] of [[0.55, 0.45, 0.34, 0xff5a7a, 0xffe060], [-0.5, 0.5, 0.28, 0x5ab8ff, 0xffffff], [0.05, 0.75, 0.24, 0xffd84d, 0xff4a5a]]) { // presents underneath
+      const p = inked(new THREE.BoxGeometry(w, w * 0.8, w), toon(c), OL * 0.3); p.position.set(gx, w * 0.4, gz); p.rotation.y = gx * 2; g.add(p);
+      const rib = new THREE.Mesh(new THREE.BoxGeometry(w * 1.02, w * 0.82, w * 0.2), toon(rb)); rib.position.copy(p.position); rib.rotation.y = p.rotation.y; g.add(rib);
+    }
+    let glow = null;
+    if (lit) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffe080, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.7 }); sm.userData.own = true; glow = new THREE.Sprite(sm); glow.scale.setScalar(1.6); glow.position.y = 2.72; g.add(glow); }
+    this.xtree = { x, y, lights, glow, cols };
+    if (!ALPHA_TOLD.has('twinkle')) { ALPHA_TOLD.add('twinkle'); setTimeout(() => this.group && this.S.toast('🎄 Twinkle Week! Every town has a tree by its Berry Center, with a gift underneath each day.'), 1500); }
+  }
+
+  // Twinkle Week: once a day there's a gift under a town tree; the third one holds a hat
+  xtreeTalk() {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv;
+    if (A.xgift !== day) {
+      A.xgift = day; countUp('twinkle'); save.berries = (save.berries || 0) + 2;
+      const hat = A.cnt.twinkle >= 3 && !(A.hats ||= []).includes('twinkle'); if (hat) A.hats.push('twinkle');
+      persist(); sfx.jingle?.(hat ? 3 : 1);
+      return this.say(['There\'s a little parcel under the tree with {hero}\'s name on it!', 'Two shiny winter berries! Happy Twinkle Week! +2 🍓 (One gift a day.)', ...(hat ? ['And a red bobble hat with a fluffy white bobble! {hero} got the Twinkle Bobble! (Wear it from ☰ → 🎩 Hats.)'] : [])]);
+    }
+    return this.say([this.phase === 'day' ? 'The tree is hung with baubles and a golden star. The gifts underneath are for other critters today. (Come back tomorrow!)' : 'The tree\'s little lights twinkle red, blue and gold. {hero} could watch them all night.']);
   }
 
   // tap a pumpkin: after dark, the first one each night hides a candy berry
@@ -3559,6 +3600,7 @@ export class World {
     if (this.kite) this.updateKite(dt);
     if (this.mornMist) this.updateMorning(dt);
     if (this.ring?.glow) { const R = this.ring; R.glow.material.opacity = 0.5 + Math.sin(this.t * 1.7) * 0.15; if (Math.random() < dt * 3) { const a = Math.random() * 6.28, d = TILE * (0.6 + Math.random() * 0.5); this.g.fx.spawn({ x: R.px + Math.cos(a) * d, y: 0.4, z: R.pz + Math.sin(a) * d, vy: 0.6, color: [0xff8ac0, 0xffe07a, 0x8affd8, 0xc0a0ff][Math.floor(Math.random() * 4)], size: 0.2, life: 1.8, shape: 'glow', alpha: 0.8 }); } } // spores drift up from the singing ring
+    if (this.xtree?.glow) { const X = this.xtree; X.glow.material.opacity = 0.55 + Math.sin(this.t * 2.2) * 0.15; X.lights.forEach((m, i) => { const on = Math.sin(this.t * 3 + i * 1.6) > -0.3; m.material.color.setHex(on ? X.cols[i] : 0x3a3448); }); } // the lights twinkle in turns
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
     if (this.statue) { const T = this.statue; T.glow.material.opacity = 0.3 + Math.sin(this.t * 1.6) * 0.08; if (Math.random() < dt * 2) this.g.fx.spawn({ x: T.px + (Math.random() - 0.5) * 1.6, y: 0.8 + Math.random() * 1.8, z: T.pz + (Math.random() - 0.5) * 1.2, vy: 0.3, life: 1.2, size: 0.3, color: 0xfff0a0, shape: 'star', alpha: 0.9 }); }
@@ -3871,6 +3913,7 @@ export class World {
     if (this.fort && this.fort.x === fx && this.fort.y === fy) return this.snowFort();
     if (this.garden && this.garden.x === fx && this.garden.y === fy) return this.gardenTend();
     if (this.pumpkins?.some((p) => p.x === fx && p.y === fy)) return this.pumpkin();
+    if (this.xtree && this.xtree.x === fx && this.xtree.y === fy) return this.xtreeTalk();
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
@@ -3908,7 +3951,7 @@ export class World {
     if (this.follower && at(this.follower) && !this.follower.from) return 'Pet';
     if (at(this.bush)) return 'Shake';
     if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
-    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
+    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
     if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod && !this.M.lava) return 'Fish'; }
     const sign = (this.M.signs || []).find((g) => g.x === fx && g.y === fy);
     if (sign) return sign.act ? ({ pcbox: 'Swap', board: 'Read', gauntsign: 'Read', smoothie: 'Blend', hatshop: 'Shop', rest: 'Rest', wardrobe: 'Open', mirror: 'Look', shelf: 'Look', arcade: 'Play', 'arcade:hop': 'Play' }[sign.act] || (sign.act.startsWith('case:') ? 'Look' : 'Use')) : sign.hide ? 'Look' : 'Read';
