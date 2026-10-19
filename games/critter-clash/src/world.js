@@ -712,6 +712,17 @@ export class World {
     const outer = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), toon((this.phase === 'day' && this.M.dayOuter) || this.M.outer || 0x3f8a3a, { rim: 0 }));
     outer.rotation.x = -Math.PI / 2; outer.position.set(W * TILE / 2, -0.03, H * TILE / 2);
     outer.receiveShadow = true;
+    this.seaTex = null;
+    if (this.M.arena === 'beach' && this.M.outer !== undefined) { // the open sea past the beach: sparse drifting wave marks, not a flat slab
+      const col = '#' + new THREE.Color(this.M.outer).getHexString(), night = this.phase === 'night';
+      const st = canvasTex(128, 128, (c, w, h) => {
+        c.fillStyle = col; c.fillRect(0, 0, w, h);
+        c.strokeStyle = night ? 'rgba(200,220,255,0.18)' : 'rgba(255,255,255,0.32)'; c.lineWidth = 3;
+        for (let k = 0; k < 4; k++) { const x = (k * 43 + 17) % w, y = (k * 71 + 9) % h; c.beginPath(); c.arc(x, y, 10, 0.3, 2.5); c.stroke(); }
+        if (night) { c.fillStyle = 'rgba(255,248,200,0.7)'; for (let k = 0; k < 3; k++) c.fillRect((k * 59 + 30) % w, (k * 37 + 50) % h, 3, 3); }
+      }, { repeat: [80, 80] });
+      st.userData.own = true; outer.material = toon(0xffffff, { map: st, rim: 0 }); outer.material.userData.own = true; this.seaTex = st;
+    }
     this.group.add(outer);
     // water surface with drifting ripples
     const water = [];
@@ -4129,6 +4140,7 @@ export class World {
     for (const P of this.prints || []) if (P.o.visible) { P.age += dt; P.o.material.opacity = 0.6 * Math.max(0, Math.min(1, (6 - P.age) / 2)); if (P.age > 6) P.o.visible = false; }
     // water ripples drift
     if (this.waterTex) this.waterTex.offset.set(this.t * 0.02, this.t * 0.03);
+    if (this.seaTex) this.seaTex.offset.set(this.t * 0.012, this.t * 0.02);
     this.updateCamera(dt);
   }
 
