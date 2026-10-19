@@ -346,7 +346,7 @@ export class World {
 
   // swap the walking buddy without reloading the map
   refreshFollower() {
-    if (this.follower) this.group.remove(this.follower.root);
+    if (this.follower) { this.group.remove(this.follower.root); this.follower.root.traverse((o) => { if (o.isSkinnedMesh) { o.skeleton.dispose(); o.geometry.dispose(); } }); } // skinStatic's merged parts belong to this buddy alone
     this.makeFollower();
   }
 
@@ -2357,7 +2357,7 @@ export class World {
     const cr = new Critter(withGear(pip || wk ? def : skinned(def, save.skins?.[id]), pip ? 2 : wk ? 8 : save.critters[id]?.level || 1), { lod: 'mid' });
     cr.root.userData.critter = true;
     if (!pip && pumpkinNights() && this.phase !== 'day' && !this.M.indoor) { const [k, c, bd] = COSTUMES[(hash(id) + 2) % COSTUMES.length]; hatModel(cr, k, c, bd); } // Pumpkin Nights: the buddy dresses up for trick-or-treating too
-    bakeStatic(cr); castLite(cr);
+    bakeStatic(cr); skinStatic(cr); castLite(cr);
     if (this.heroGlow) cr.setRim(0xd8e4ff, 1.4); // after dark (and in the glowing woods) moonlight rims the buddy too, so it doesn't vanish behind the hero
     cr.root.scale.setScalar(CS * (pip ? 0.7 : 0.85));
     this.group.add(cr.root);
@@ -4291,8 +4291,7 @@ export class World {
     if (this.dialog || this.M.indoor === 'lobby') return;
     save.adv.walk = null; persist();
     const nm = CRITTERS.find((c) => c.id === W.id)?.name || 'Your little one';
-    if (this.follower) { this.group.remove(this.follower.root); this.follower = null; }
-    if (home) this.fade(() => this.load(this.key, this.hx, this.hy, this.dir)); else this.makeFollower();
+    if (home) { this.follower = null; this.fade(() => this.load(this.key, this.hx, this.hy, this.dir)); } else this.refreshFollower();
     const found = (save.adv.steps || 0) - (W.until - 400) >= 100; if (found) { save.berries = (save.berries || 0) + 1; persist(); sfx.pickup?.(); } // a proper walk turns up a berry
     this.S.toast((home ? `🏡 ${nm} runs back to its favourite rug. What a walk!` : `🏡 ${nm} is tired out and trots off home for a nap.`) + (found ? ' It found a berry on the way! +1 🍓' : ''));
   }
