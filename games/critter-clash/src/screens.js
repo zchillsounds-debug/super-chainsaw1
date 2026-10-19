@@ -1163,6 +1163,7 @@ export class Screens {
       F.crowned && 'Since you were crowned, route trainers want a rematch once a day, at your level.',
       pumpkinNights() && 'Pumpkin Nights: the pumpkins by town doors glow after dark, and Glowcap Woods has wisps to catch.',
       twinkleWeek() && 'Twinkle Week: look under the tree by any Berry Center for a gift, once a day.',
+      A.grown?.length && 'Your grown-up Daycare babies love a walk. Ask one at home, and it may find a berry on the way.',
     ].filter(Boolean);
     return tips[Math.floor(Date.now() / 864e5) % tips.length];
   }
