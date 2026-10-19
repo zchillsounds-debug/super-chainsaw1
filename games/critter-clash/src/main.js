@@ -164,7 +164,9 @@ class Game {
 
   // frame-time watchdog for 'auto' quality
   trackPerf(dt) {
-    if (this.qualityPref !== 'auto' || !this.battle || this.battle.phase !== 'fight') return;
+    const world = this.screens?.mode === 'world' && !this.battle;
+    if (this.qualityPref !== 'auto' || !world && (!this.battle || this.battle.phase !== 'fight')) return;
+    if (world && (dt > 0.25 || this.ui.querySelector('.wd-fade'))) return; // a map load is one slow frame on purpose, not a slow phone
     const P = this.perf;
     P.acc += dt; P.n++;
     if (P.acc < 2) return;

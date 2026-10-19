@@ -3493,7 +3493,7 @@ export class World {
       const p = this.hero.root.position;
       if (this.storm && (this.boltT -= dt) <= 0) { this.boltT = 7 + Math.random() * 10; this.lightning(); }
       this.updateBolt(dt);
-      for (let n = Math.floor(dt * (this.storm ? 230 : 150) + Math.random()); n > 0; n--) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 30, y: 6 + Math.random() * 3, z: p.z + (Math.random() - 0.6) * 20, vy: -16, vx: -1.5, color: 0xe8f0ff, alpha: 0.75, size: 1.4, stretch: 0.05, rot: Math.PI / 2 + 0.08, life: 0.5, shape: 'spark', additive: false });
+      for (let n = Math.floor(dt * (this.storm ? 230 : 150) * (this.g.quality === 'low' ? 0.5 : 1) + Math.random()); n > 0; n--) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 30, y: 6 + Math.random() * 3, z: p.z + (Math.random() - 0.6) * 20, vy: -16, vx: -1.5, color: 0xe8f0ff, alpha: 0.75, size: 1.4, stretch: 0.05, rot: Math.PI / 2 + 0.08, life: 0.5, shape: 'spark', additive: false });
       if (Math.random() < dt * 22) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 24, y: 0.08, z: p.z + (Math.random() - 0.6) * 16, color: 0xe8f2ff, alpha: 0.6, size: 0.35, life: 0.35, shape: 'ring', additive: false, grow: 1.6 });
     }
     if (this.M.snow && !this.M.indoor) { // snowflakes drift down round the hero: light flurries, or a real snowfall
