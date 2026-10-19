@@ -1003,7 +1003,24 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
    - `title`: "Critter Clash – rounds N+"
    - (Session 16e did not chain: the user's 5-hour window ended at 04:45 UTC on 2026-10-15.)
    - **48-hour run (from session 17a):** chain with the user's 48-hour prompt word for word (below), `source_revision` and `outcome_branch` `ccr-4fc93d6e-suxlhd`. The end time lives at the top of this file; never reset it.
-   - 48-hour prompt (verbatim; pass it to create_session exactly as below, without the fence):
+   - 48-hour prompt (verbatim; pass it to create_session exactly as below, without the fence). Updated by session 17i: newest sections are Session 17, R532 next, and it handles the lineage depth limit (a hand-started session can chain about 8 deep):
+```
+Continue building Critter Clash in a 48-hour chained build run. The goal is to keep developing the game until it's complete, at AAA quality.
+Start: run date -u. The run's end time is at the top of games/critter-clash/HANDOFF.md ("48-hour run", currently 2026-10-20 17:12 UTC). Never reset it. If that time has already passed, do the Finish steps below. Post a one-line status to me when you start.
+Read first: games/critter-clash/CONTINUE.md, then games/critter-clash/HANDOFF.md. Begin with the newest "Session 17" sections (17h, 17i, and any later ones) and their "Next ideas" lists.
+Focus: move the game toward a finished product. That means Adventure mode content and polish, finishing loose ends from the backlog and "Next ideas", bug fixes, performance, balance, menus and UI polish. All creatures stay original. Each round: take screenshots at 915x412, 740x360 and 412x915 (tools/advtour.mjs takes many world shots in one page load; MOBILE=1 forces the touch UI in landscape), critique them, then improve. Do round after round.
+Git: commit and push each round to branch ccr-4fc93d6e-suxlhd. Before every push, run git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd. Never rebase or force-push. If the local clone starts on stale history, reset it to origin/ccr-4fc93d6e-suxlhd. Round numbers continue from the highest R-number in git log (R532 next).
+Ownership: my own chat also works on this branch and owns the Adventure battles, results and the flow back to the world: screens.js results/worldFight, battle.js, arena.js open mode and hud.js. Keep world work in world.js, worldmaps.js, interiors.js and story.js unless HANDOFF.md says otherwise.
+Checks: run tapcheck at 740x360 and 412x915, plus an advcup Sprout run, at the start and near the end of each session. Run them against a production build (HANDOFF.md "48-hour run" explains how), not the dev server.
+Chaining: each session builds for about 100 minutes, or less if context nears 300k. Then follow the HANDOFF "Chaining" steps:
+Update HANDOFF.md and CONTINUE.md with the rounds done, the next ideas and the 48-hour end time.
+Commit and push.
+Fetch the APK built from your last commit and send it to me.
+Call create_session with source_url https://github.com/zchillsounds-debug/super-chainsaw1, source_revision and outcome_branch ccr-4fc93d6e-suxlhd, and this same prompt word for word. Then tell me in one line that the next session has started.
+If create_session refuses because of the session lineage depth limit, don't retry. Note it in HANDOFF.md, push, and tell me in one line to start the next session by hand with this same prompt.
+If a worker stalls, push the end time back by the length of the stall.
+Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
+I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
 Continue building Critter Clash in a 48-hour chained build run. The goal is to keep developing the game until it's complete, at AAA quality.
 Start: run date -u. If HANDOFF.md doesn't already have a "48-hour run" end time, set one: now + 48 hours. Write it at the top of HANDOFF.md, then commit and push. Later sessions read that end time from HANDOFF.md and don't reset it. Post a one-line status to me when you start.
