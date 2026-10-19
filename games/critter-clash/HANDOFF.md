@@ -3,7 +3,7 @@
 ## 48-hour run
 - **48-hour run end time: 2026-10-20 21:52 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC, 4 h 17 min by a worker stall in session 17n, ~10:00–14:17 UTC on 2026-10-19, and 23 min by a worker restart in session 17r, ~19:08–19:31 UTC on 2026-10-19). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
-- **Session 17r (2026-10-19 18:18–~19:45 UTC, a worker restart ~19:08–19:31, session_01XNLHQuvCA3bwuJZLRkhYe5) did R655–R671 (see "Session 17r"); next round R672.**
+- **Session 17r (2026-10-19 18:18–~19:45 UTC, a worker restart ~19:08–19:31, session_01XNLHQuvCA3bwuJZLRkhYe5) did R655–R671 (see "Session 17r"); next round R672. It could not chain (session lineage depth limit, 8): **the user must start the next session by hand** with the 48-hour prompt in "Chaining".**
 - **Session 17q (2026-10-19 17:10–~18:20 UTC, session_01AXYQttiHJUdTzqAKd8dsAy) did R637–R654 (see "Session 17q"); next round R655.**
 - **Session 17p (2026-10-19 15:53–~17:15 UTC, session_0136aYRsjLRmRKTEKj7yUeBs) did R629–R636 (see "Session 17p"); next round R637.**
 - **Session 17o (2026-10-19 14:38–~15:50 UTC, session_01A4ZY5wCmnYjfYmT3T4J1by) did R615–R628 (see "Session 17o"); next round R629.**
