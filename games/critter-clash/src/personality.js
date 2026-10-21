@@ -48,6 +48,33 @@ export function sayLine(f, kind) {
 
 // ---------------- intros (about 1.5 s, then a held "ready" pose) ----------------
 const INTRO = {
+  // ---- Sunscatter Isles ----
+  smokeshell(f, P, k) { // clacks its claws, then the volcano shell puffs a smoke ring
+    if (k < 1.2) { P.armLz = P.armRz = 1.4 + sin(k * 18) * 0.4; P.sy = 0.95; f.critter.emote('happy', 'grin', 0.1); if (k > 0.6 && once(f, 'puff')) f.battle.fx.spawn({ x: f.x - Math.sin(f.face) * 0.5, y: f.y + 1.6, z: f.z - Math.cos(f.face) * 0.5, vy: 1.4, color: 0x7a6a72, size: 0.8, life: 0.9, shape: 'ring', grow: 1.6, additive: false }); }
+    else ready(f, P, k);
+  },
+  blowfin(f, P, k) { // puffs up, wobbles, then deflates with a raspberry
+    if (k < 0.9) { const p = Math.min(1, k / 0.35); P.sx = 1 + p * 0.45; P.sy = 1 + p * 0.38; P.armLz = P.armRz = 1.3 * p; f.critter.emote('angry', 'o', 0.1); }
+    else if (k < 1.3) { P.roll = sin(k * 30) * 0.15; f.critter.emote('dizzy', 'wobbly', 0.1); if (once(f, 'pff')) f.battle.fx.text(head(f, 0.2), 'pfffft', '', 0.8); }
+    else ready(f, P, k);
+  },
+  mossloth(f, P, k) { // a very slow wave
+    if (k < 1.6) { P.armRz = 2.4; P.armRx = sin(k * 2) * 0.5; P.head = 0.15; P.headRoll = sin(k * 1.4) * 0.2; f.critter.emote('closed', 'smile', 0.1); }
+    else ready(f, P, k);
+  },
+  toucharge(f, P, k) { // throws its beak up and squawks a crackle of sparks
+    if (k < 1.0) { P.head = -0.7; P.armLz = P.armRz = 1.8 + sin(k * 20) * 0.3; f.critter.emote('happy', 'yell', 0.1); if (k > 0.3 && once(f, 'sq')) { sfx.voice(f.def.voice, 'special'); f.battle.fx.burst(head(f, 0.2), { n: 10, speed: 4, up: 3, color: 0xfff060, size: 0.15, life: 0.4, shape: 'spark', grav: 3 }); } }
+    else ready(f, P, k);
+  },
+  pumicub(f, P, k) { // stomps twice; a little ash puffs up each time
+    const st = Math.floor(k / 0.45);
+    if (k < 0.9) { P.legL = st === 0 ? -0.9 * sin((k % 0.45) / 0.45 * Math.PI) : 0; P.legR = st === 1 ? -0.9 * sin((k % 0.45) / 0.45 * Math.PI) : 0; P.armLz = P.armRz = 0.9; f.critter.emote('angry', 'grin', 0.1); if (once(f, 'st' + st)) f.battle.fx.dust(f, 4, 0.6); }
+    else ready(f, P, k);
+  },
+  skimray(f, P, k) { // glides in on a breeze, wings rippling
+    if (k < 1.1) { P.y = 0.45 * (1 - k / 1.1); P.armLz = P.armRz = 1.4 + sin(k * 10) * 0.45; P.lean = 0.3; f.critter.emote('happy', 'smile', 0.1); }
+    else ready(f, P, k);
+  },
   snoozlo(f, P, k) {
     if (k < 1.0) { // dozing on its feet, head nodding
       P.sy = 0.92; P.head = 0.35 + sin(k * 5) * 0.12; P.armLz = P.armRz = 0.15; P.headRoll = sin(k * 2.5) * 0.15;
@@ -290,6 +317,27 @@ function ready(f, P, k) {
 
 // ---------------- victories (loop for the winpose) ----------------
 const WIN = {
+  smokeshell(f, P, k) { // claw-clap dance, a happy smoke ring now and then
+    P.armLz = P.armRz = 2.2 + sin(k * 12) * 0.4; P.y = abs(sin(k * 4)) * 0.12; P.roll = sin(k * 4) * 0.12; f.critter.emote('happy', 'grin', 0.1);
+    if (Math.random() < 0.015) f.battle.fx.spawn({ x: f.x, y: f.y + 1.7, z: f.z, vy: 1.2, color: 0x8a7a82, size: 0.7, life: 1, shape: 'ring', grow: 1.6, additive: false });
+  },
+  blowfin(f, P, k) { // puffs up proudly and bobs like a beach ball
+    const p = 0.5 + 0.5 * sin(k * 2); P.sx = 1 + p * 0.35; P.sy = 1 + p * 0.3; P.y = 0.1 + abs(sin(k * 3)) * 0.2; P.armLz = P.armRz = 1.2; f.critter.emote('happy', 'o', 0.1);
+  },
+  mossloth(f, P, k) { // a slow, happy sway with both arms up
+    P.armLz = P.armRz = 2.5; P.roll = sin(k * 1.2) * 0.22; P.head = 0.1; f.critter.emote(k % 5 > 3.5 ? 'closed' : 'happy', 'smile', 0.1);
+  },
+  toucharge(f, P, k) { // flaps and squawks, sparks hopping off its beak
+    P.armLz = P.armRz = 1.6 + sin(k * 14) * 0.6; P.head = -0.4 + sin(k * 5) * 0.2; P.y = abs(sin(k * 5)) * 0.1; f.critter.emote('happy', 'yell', 0.1);
+    if (Math.random() < 0.06) f.battle.fx.spawn({ ...head(f, 0.1), vy: 1.5, color: 0xfff060, size: 0.35, life: 0.35, shape: 'spark' });
+  },
+  pumicub(f, P, k) { // beats its chest, then bobs like it's floating in the sea
+    if (k % 4 < 2) { P.armLx = P.armRx = -1.2; P.armLz = 0.6 + sin(k * 16) * 0.5; P.armRz = 0.6 - sin(k * 16) * 0.5; f.critter.emote('angry', 'grin', 0.1); }
+    else { P.y = 0.08 + sin(k * 3) * 0.06; P.roll = sin(k * 2) * 0.1; P.armLz = P.armRz = 1.4; f.critter.emote('happy', 'smile', 0.1); }
+  },
+  skimray(f, P, k) { // floats up and loops lazily on the breeze
+    P.y = 0.5 + sin(k * 2) * 0.2; P.roll = sin(k * 1.5) * 0.35; P.armLz = P.armRz = 1.3 + sin(k * 9) * 0.5; P.lean = 0.2; f.critter.emote('happy', 'grin', 0.1);
+  },
   snoozlo(f, P, k) { // flops into a happy sway, then curls up for a nap with drifting z's
     const nap = k % 6 > 4;
     if (nap) { P.sy = 0.88; P.sx = 1.08; P.head = 0.12; P.headRoll = 0.35; P.armLz = P.armRz = 0.1; f.critter.emote('closed', 'smile', 0.1); if (Math.random() < 0.03) f.battle.fx.text(head(f, 0.3), 'z', 'zz', 0.8); }
