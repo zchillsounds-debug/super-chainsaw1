@@ -419,6 +419,7 @@ export class World {
     this.buildFerry();
     this.buildReef(rand);
     this.buildWindmills();
+    this.buildBigVolcano();
     this.buildButterflies();
     this.buildMist();
     this.buildAurora();
@@ -513,7 +514,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1267,6 +1268,20 @@ export class World {
       }
       return { sails, sp: 1.1 + (i % 2) * 0.35 };
     });
+  }
+
+  // Ember Isle: the island's volcano looms behind the town, a lazy plume of smoke rising from its glowing crater
+  buildBigVolcano() {
+    this.bigVolcano = null;
+    if (!this.M.volcano || this.M.indoor) return;
+    const g = new THREE.Group(), cx = this.W * TILE * 0.55, cz = -TILE * 6.5; g.position.set(cx, -0.5, cz); this.group.add(g);
+    const rock = toon(0x5a4a48, { rim: 0.35 }), skirt = toon(0x6a8a4a, { rim: 0.35 }), night = this.phase !== 'day';
+    const cone = inked(new THREE.CylinderGeometry(3.2, 15, 13, 24, 1, true), rock, OL * 0.6); cone.position.y = 6.5; g.add(cone);
+    const base = inked(new THREE.CylinderGeometry(13.5, 17, 3.2, 24, 1, true), skirt, OL * 0.5); base.position.y = 1.2; g.add(base);
+    for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2 + 0.3, r = new THREE.Mesh(new THREE.ConeGeometry(0.9, 6.5, 5), toon(0x4a3a3a)); r.position.set(Math.cos(a) * 8.6, 6.4, Math.sin(a) * 8.6); r.lookAt(0, 20, 0); r.rotateX(Math.PI / 2); g.add(r); } // dark lava ridges down its flanks
+    const gm = new THREE.MeshBasicMaterial({ color: night ? 0xff7a2a : 0xff9a4a }); gm.userData.own = true;
+    const crater = new THREE.Mesh(new THREE.CircleGeometry(3.1, 20), gm); crater.rotation.x = -Math.PI / 2; crater.position.y = 13; g.add(crater);
+    this.bigVolcano = { x: cx, y: 12.6, z: cz };
   }
 
   // kite kids: a kite on a long line, swooping over their heads
@@ -4151,6 +4166,7 @@ export class World {
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
     if (this.statue) { const T = this.statue; T.glow.material.opacity = 0.3 + Math.sin(this.t * 1.6) * 0.08; if (Math.random() < dt * 2) this.g.fx.spawn({ x: T.px + (Math.random() - 0.5) * 1.6, y: 0.8 + Math.random() * 1.8, z: T.pz + (Math.random() - 0.5) * 1.2, vy: 0.3, life: 1.2, size: 0.3, color: 0xfff0a0, shape: 'star', alpha: 0.9 }); }
+    if (this.bigVolcano && Math.random() < dt * 5) { const V = this.bigVolcano, sc = 1.6 + Math.random(); this.g.fx.spawn({ x: V.x + (Math.random() - 0.5) * 3, y: V.y, z: V.z + (Math.random() - 0.5) * 3, vx: 0.8 + Math.random() * 0.6, vy: 2.2, vz: 0.2, color: this.phase === 'day' ? 0xd8d0cc : 0x8a7a80, size: sc, life: 4.5, shape: 'glow', grav: 0, additive: false, alpha: 0.55 }); } // a lazy smoke plume drifting downwind
     if (this.windmills) for (const W of this.windmills) W.sails.rotation.z -= dt * W.sp;
     if (this.kites) for (const K of this.kites) { // the kite swoops in a lazy figure of eight downwind of its flyer; the tail ribbons trail behind
       K.t += dt; const a = K.t * 0.7, kx = K.px + 1.6 + Math.sin(a) * 1.6, ky = 6.4 + Math.sin(a * 2) * 0.7, kz = K.pz - 4.2 + Math.cos(a) * 0.6;

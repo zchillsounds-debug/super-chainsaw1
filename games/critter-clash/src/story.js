@@ -89,6 +89,20 @@ export function storyIntro(S, w) {
     w.say(['The rope bridge sways in the wind... and then you are across! Windmills turn on the cliff tops, and kites dance over the town.', '{hero}: So this is Breezy Bluffs. Hold on to your hat!']);
     return;
   }
+  if (w.key === 'ember_isle' && !F.ember_isle) {
+    F.ember_isle = true; persist();
+    w.say(['Black sand, warm wind, and a huge volcano puffing smoke over the rooftops. This is Ember Isle!', '{hero}: The Caldera Cup is inside THAT? ...Okay. Deep breaths.']);
+    return;
+  }
+  if (F.cup_caldera && !F.post_caldera && w.key === 'ember_isle') {
+    F.post_caldera = true; persist();
+    w.say([
+      'Magda: The mountain has never rumbled for a mainlander before, {hero}. All three island cups... the isles are proud of you.',
+      "Magda: But a champion's work isn't done. The Gloom Gulls hide on Starfall Atoll with the Sunstone. Every night without its light, a ship loses its way.",
+      'Magda: Captain Gill knows the waters out there. Talk to him at Port Coral. Go and bring the light home.',
+    ]);
+    return;
+  }
   if (F.cup_gale && !F.post_gale && w.key === 'bluffs') {
     F.post_gale = true; persist();
     w.say([
@@ -299,8 +313,9 @@ export function nextGoal(F) {
   if (F.crowned) {
     // Chapter 2: the Sunscatter Isles
     if (!F.isle_arrive) return F.ending ? 'Chapter 2: take the Sunny Gull ferry from the pier in Seashell Town to the Sunscatter Isles!' : 'You\'re the Champion! Rematch trainers and Dash, and find every gift box.';
-    const ISLE_AT = { coral: 'Port Coral', gale: 'Breezy Bluffs, past Palm Path', caldera: 'Ember Isle' };
+    const ISLE_AT = { coral: 'Port Coral', gale: 'Breezy Bluffs, past Palm Path', caldera: 'Ember Isle, down the Ash Trail from Breezy Bluffs' };
     const nx = ISLE_CUPS.find((c) => !F['cup_' + c.id]);
+    if (nx?.id === 'caldera' && !F.skua_b) return 'A Gloom Gull is blocking the Ash Trail at the east edge of Breezy Bluffs. Chase it off!';
     if (nx) return `Win the ${nx.name} in ${ISLE_AT[nx.id]}.`;
     return 'All three island cups are yours! The Starfall lighthouse is still dark...';
   }

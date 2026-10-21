@@ -225,7 +225,7 @@ export const CRITTERS = [
     colors: { body: 0x6ac8e8, belly: 0xfff6e0, accent: 0xffa64a, dark: 0x1e5a7a, eye: '#0c1a2a', iris: '#2a6aff' },
     body: { w: 0.66, h: 0.6, headR: 0.5, legLen: 0.1, armLen: 0.16, chubby: 1.2 },
     ears: 'none', tail: 'fin', extra: 'puffer', voice: 1.35, isle: true,
-    stats: { hp: 1260, speed: 6.4, power: 1.2, weight: 1.05 },
+    stats: { hp: 1300, speed: 6.6, power: 1.22, weight: 1.05 },
     special: 'puffup', super: 'tsunami',
     moves: { special: 'Puff Up', super: 'Riptide Rush' },
   },
