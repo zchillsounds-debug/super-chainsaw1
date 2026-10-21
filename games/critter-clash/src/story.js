@@ -75,6 +75,15 @@ export function storyIntro(S, w) {
     w.say(["{hero}: Brrr! So THIS is Frostpeak. And that mountain... that's Champion's Peak!", 'Captain Puff: The Legend Cup is the toughest of them all. Good luck, {hero}!']);
     return;
   }
+  if (F.cup_coral && !F.post_coral && w.key === 'coral') {
+    F.post_coral = true; persist();
+    w.say([
+      'Marina: The reef chose well, {hero}. Wear that Coral Cup with pride!',
+      'Marina: The Gale Cup is next, up on Breezy Bluffs, east along Palm Path past the rope bridge.',
+      "Marina: And keep your eyes on the sky. Gloom Gull balloons have been circling the islands. Whatever they want, it can't be good.",
+    ]);
+    return;
+  }
   if (w.key === 'coral' && !F.isle_arrive) {
     F.isle_arrive = true; persist();
     w.say([

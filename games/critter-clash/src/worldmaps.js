@@ -625,6 +625,7 @@ export const MAPS = {
     music: 'beach',
     arena: 'beach',
     isle: 'palm',
+    border: 'palm',
     palette: { a: '#86e06a', b: '#82dc66', tall: '#2f9e48', path: '#fbe8b8', sand: '#fff0c8', sand2: '#fbeac0', water: '#38cfd6', bank: '#d8b888' },
     tiles: [
       'PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP',

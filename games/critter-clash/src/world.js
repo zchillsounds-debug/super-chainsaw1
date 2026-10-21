@@ -860,7 +860,7 @@ export class World {
     const mid = this.g.quality === 'med' || this.g.quality === 'low', woody = (x, y) => x < 0 || y < 0 || x >= this.W || y >= this.H || this.tile(x, y) === 'T';
     const deep = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!woody(x + i, y + j)) return false; return true; }; // a tree with trees all round it: only its top shows
     // autumn on the green maps: about two trees in five turn orange, gold or red (picked by position, so the woods keep their shape)
-    const M = this.M, green = !M.indoor && !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && M.border !== 'cloud' && !M.fireflies, falls = [[], [], [], []];
+    const M = this.M, green = !M.indoor && !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && !M.isle && M.border !== 'cloud' && !M.fireflies, falls = [[], [], [], []];
     // spring (20 Mar-Apr) uses the same groves: blossom trees in pink, pale pink and white, with fresh green ones in between
     const bloom = green && isSpring(), fall = green && !bloom && isAutumn(), early = green && !bloom && !fall && isEarlyAutumn(); this.blossom = bloom;
     // groves share a hue (a 3x3-tile patch picks orange, gold or red), so the woods turn in drifts rather than a row of sweets; some trees are only just turning (yellow-green)
@@ -1415,7 +1415,7 @@ export class World {
   // Seashell Town at night: a few glowing jellyfish drift and pulse in the sea (water tiles away from the shore edge)
   buildJellies(rand) {
     this.jellies = null;
-    if (this.key !== 'seashell' || this.phase !== 'night') return; // the open sea only (Route 2's river is fresh water)
+    if ((this.key !== 'seashell' && !this.M.reef) || this.phase !== 'night') return; // the open sea only (Route 2's river is fresh water)
     const spots = [];
     for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if (this.tile(x, y) === '~' && this.tile(x + 1, y) === '~' && this.tile(x, y + 1) === '~' && this.tile(x - 1, y) === '~') spots.push([x, y]);
     if (!spots.length) return;
@@ -1961,7 +1961,7 @@ export class World {
   // summer on the green maps: clumps of sunflowers, taller than the hero, stand where the grass meets the woods, their faces turned to the sun
   buildSunflowers() {
     const M = this.M;
-    if (!isSummer() || M.indoor || M.trees || M.snow || M.lava || M.city || M.fireflies || M.border === 'cloud' || this.key === 'seashell') return;
+    if (!isSummer() || M.indoor || M.trees || M.snow || M.lava || M.city || M.fireflies || M.border === 'cloud' || this.key === 'seashell' || M.isle) return;
     const rand = rng(hash(this.key + 'sun')), ok = [], T = (x, y) => this.tile(x, y) === 'T';
     for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if (this.tile(x, y) === '.' && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => T(x + dx, y + dy))) ok.push([x, y]);
     const pick = []; for (let k = 0; k < 400 && pick.length < 6 && ok.length; k++) { const p = ok[Math.floor(rand() * ok.length)]; if (pick.every(([a, b]) => Math.abs(a - p[0]) + Math.abs(b - p[1]) > 4)) pick.push(p); }
@@ -2954,7 +2954,7 @@ export class World {
   buildLeaves(x, y) {
     this.leafPiles = [];
     const M = this.M, d = new Date(), autumn = isAutumn(d);
-    if (!autumn || M.indoor || M.snow || M.lava || M.city || this.key === 'seashell' || M.border === 'cloud' || M.fireflies || this.twinkleSnow) return;
+    if (!autumn || M.indoor || M.snow || M.lava || M.city || this.key === 'seashell' || M.isle || M.border === 'cloud' || M.fireflies || this.twinkleSnow) return;
     const day = d.toISOString().slice(0, 10), rand = rng(hash(this.key + ':leaves:' + day));
     const taken = new Set([...(M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((dd) => dd.x + ',' + (dd.y + 1)), ...this.itemSpots, x + ',' + y, this.bush && this.bush.x + ',' + this.bush.y]);
     const near = (tx, ty, r) => { for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if ('TP'.includes(this.tile(tx + dx, ty + dy) || '-')) return true; return false; }; // just clear of the canopies (they hid a pile right under them)
@@ -4686,7 +4686,7 @@ export class World {
 
   // one line about the time of year, or null (green maps get the trees and flowers; every map gets the festivals and the cold)
   seasonChat(n) {
-    const who = n.name.split(' ').pop(), M = this.M, snowy = M.snow, green = !M.trees && !snowy && !M.lava && this.key !== 'seashell' && M.border !== 'cloud' && !M.fireflies; // same test as buildTrees
+    const who = n.name.split(' ').pop(), M = this.M, snowy = M.snow, green = !M.trees && !snowy && !M.lava && this.key !== 'seashell' && !M.isle && M.border !== 'cloud' && !M.fireflies; // same test as buildTrees
     const L = twinkleWeek() ? [`${who}: Happy Twinkle Week! Did you peek under the tree by the Berry Center? There's a gift with your name on it.`, `${who}: Sing with me after dark! Carols go better with cocoa.`, `${who}: I tied a bell to my tail for Twinkle Week. Jingle jingle! ...It's very hard to sneak up on anyone.`]
       : isWinter() ? [`${who}: Brr! When it rains this time of year, it comes down as snow instead. I LOVE it.`, `${who}: Winter mornings make the grass go crunchy. Crunch, crunch, crunch!`, snowy ? `${who}: Winter up here? Same as always. Snow on snow on snow!` : `${who}: I built a snow critter yesterday. It looked a bit like you, {hero}!`]
       : isFrost() ? [`${who}: Did you see the frost this morning? The whole town sparkled like sugar!`, `${who}: Cold mornings, warm cocoa. That's the deal.`, `${who}: Twinkle Week is coming soon. I can feel it in my whiskers!`]
