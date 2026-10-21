@@ -676,7 +676,7 @@ const LOST = {
   glidesketch: {
     who: 'Kitemaker Hana', item: 'glider sketch', berries: 3, toast: '📜', home: 'Breezy Bluffs', needs: 'cup_gale', to: { npc: 'kite', map: 'cloudtop', name: 'Kite Flyer Gale', home: 'Cloudtop Gardens' },
     thanks: 'Kitemaker Hana: Gale liked the sketch? Then it WILL fly. Gale taught me everything I know about wind.',
-    later: ['glider', ["Kitemaker Hana: How's the Kite Glider? Stand in the updraft at the cliff edge and talk to the wind. It does the rest!", 'Kitemaker Hana: Out past the cliff there\'s a sea stack nobody can climb. Birds nest up there. I saw something sparkle in a nest once...']],
+    later: ['glider', ["Kitemaker Hana: How's the Kite Glider? Stand in the updraft at the cliff edge and talk to the wind. It does the rest!", 'Kitemaker Hana: Out past the cliff there\'s a sea stack nobody can climb. Birds nest up there. I saw something sparkle in a nest once...', 'Kitemaker Hana: Any strong rising wind works. They say the volcano on Ember Isle breathes hot air up its slope, too...']],
     ask: ['Kitemaker Hana: Champion! Feel that updraft at the cliff edge? Strong enough to lift a Pumicub. I want to build a kite you can RIDE.', 'Kitemaker Hana: I drew the plans, but I need the best flier I know to check them: Kite Flyer Gale, up in Cloudtop Gardens on the mainland. Could you take Gale my sketch?', '{hero} got a glider sketch! 📜 Take it to Kite Flyer Gale in Cloudtop Gardens (on the mainland).'],
     wait: ['Kitemaker Hana: Gale lives up in Cloudtop Gardens, over on the mainland. Take the ferry home, then ride Captain Puff\'s balloon!'],
     done: ['Kite Flyer Gale: A sketch from Hana?! We used to fly kites together, before she sailed to the isles!', 'Gale reads it upside down, then the right way up, then upside down again.', 'Kite Flyer Gale: Wheee, it works! But a glider this big needs a sail of real cloud silk. Talk to me again, I have some!', '{hero} got 3 berries! 🍓'],
@@ -690,11 +690,11 @@ const LOST = {
     done: ['Tinker Volt: Cloud silk? From Gale? For a glider you can RIDE? Oh, this is my kind of nonsense!', 'Volt welds, bends and zaps for a whole minute. Sparks everywhere.', 'Tinker Volt: Done! A folding spark-steel frame with the cloud silk sewn on. But Hana has to fit the harness herself. Talk to me again!', '{hero} got 3 berries! 🍓'],
   },
   glidewing: {
-    who: 'Tinker Volt', from: 'tinker', giverMap: 'neon', item: 'folded glider wing', berries: 20, snack: true, key: 'glider', toast: '🪁', home: 'Neon City', needs: 'glidesail_done', to: { npc: 'hana_b', map: 'bluffs', name: 'Kitemaker Hana', home: 'Breezy Bluffs' },
+    who: 'Tinker Volt', from: 'tinker', giverMap: 'neon', item: 'folded glider wing', hat: 'glidegog', berries: 20, snack: true, key: 'glider', toast: '🪁', home: 'Neon City', needs: 'glidesail_done', to: { npc: 'hana_b', map: 'bluffs', name: 'Kitemaker Hana', home: 'Breezy Bluffs' },
     thanks: 'Tinker Volt: Hana sent a postcard. It just says WHEEEEEE. I think it worked!',
     ask: ['Tinker Volt: The glider wing folds up small enough for a backpack. Neat, huh? Take it back to Kitemaker Hana on Breezy Bluffs.', 'Tinker Volt: And tell her if it explodes, it wasn\'t me. It won\'t explode. Probably.', '{hero} got a folded glider wing! 🪁 Take it to Kitemaker Hana on Breezy Bluffs.'],
     wait: ['Tinker Volt: Hana is on Breezy Bluffs, in the Sunscatter Isles. Ferry from Seashell Town!'],
-    done: ['Kitemaker Hana: The wing! Spark-steel and cloud silk... Gale and Volt, you two are geniuses!', 'Hana fits a harness, tightens three straps and ties a lucky ribbon on the tail.', 'Kitemaker Hana: There. The Kite Glider, made for one Champion. Stand in the cliff updraft and talk to the wind. Hold on tight!', '🪁 You got the KITE GLIDER! Cliff updraughts can carry you now. +20 🍓'],
+    done: ['Kitemaker Hana: The wing! Spark-steel and cloud silk... Gale and Volt, you two are geniuses!', 'Hana fits a harness, tightens three straps and ties a lucky ribbon on the tail.', 'Kitemaker Hana: There. The Kite Glider, made for one Champion. Stand in the cliff updraft and talk to the wind. Hold on tight!', '🪁 You got the KITE GLIDER! Updrafts can carry you now. +20 🍓', 'Kitemaker Hana: Oh, and these goggles go with it. Bugs in the eyes are NOT fun at that height.', '{hero} got the Glider Goggles! 🥽 (☰ → 🎩 Hats)'],
   },
 
   kite: {

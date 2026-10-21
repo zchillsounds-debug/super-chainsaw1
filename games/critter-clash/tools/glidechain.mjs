@@ -50,5 +50,13 @@ await step('stack', 'updraft', 9, 9);
 for (let i = 0; i < 6; i++) await pg.evaluate(() => __sim(0.25));
 await pg.waitForTimeout(1200); await pg.evaluate(() => __sim(0.5));
 console.log('back on:', await pg.evaluate(() => __game.screens.worldObj.key + ' ' + __game.screens.worldObj.hx + ',' + __game.screens.worldObj.hy + ' hero y ' + __game.screens.worldObj.hero.root.position.y.toFixed(2)));
+// the Ember Isle thermal → the Caldera Rim and its chest, then back
+await pg.evaluate(() => { const wo = __game.screens.worldObj; wo.load('ember_isle', 19, 2, 'n'); __sim(0.3); });
+await step('ember_isle', 'updraft', 19, 2);
+for (let i = 0; i < 6; i++) await pg.evaluate(() => __sim(0.25));
+await pg.waitForTimeout(1200); await pg.evaluate(() => __sim(0.5));
+console.log('now on:', await pg.evaluate(() => __game.screens.worldObj.key + ' ' + __game.screens.worldObj.hx + ',' + __game.screens.worldObj.hy));
+await step('rim', 'nest', 10, 2);
+console.log('hats:', await pg.evaluate(() => __save.adv.hats.join()));
 console.log('errors:', errs.join(' | ') || 'none');
 await b.close();

@@ -1415,6 +1415,8 @@ export const SHOP_HATS = [
   { id: 'sunstone', name: 'Sunstone Circlet', kind: 'laurel', col: 0xffa63a, band: 0xfff2a0, price: 0, gift: true, isle: true }, // Keeper Lumi's thanks for bringing the Sunstone home (Chapter 2 finale)
   { id: 'spelunk', name: 'Spelunker Cap', kind: 'cap', col: 0xe8b830, band: 0x5a4a3a, price: 0, gift: true, isle: true }, // the Deep Grotto's treasure chest
   { id: 'festhat', name: 'Festival Lantern Hat', kind: 'party', col: 0xff7a4a, band: 0xffe066, price: 0, gift: true, isle: true }, // the Sunstone Festival quest chain (Iona → Leilani → Shelly → Lumi)
+  { id: 'glidegog', name: 'Glider Goggles', kind: 'aviator', col: 0xff5a4a, band: 0x9ad8ff, price: 0, gift: true, isle: true }, // Hana's Kite Glider chain (Bluffs → Cloudtop → Neon → Bluffs)
+  { id: 'obsidian', name: 'Obsidian Helm', kind: 'helm', col: 0x3a3040, band: 0xff8a3a, price: 0, gift: true, isle: true }, // the treasure on the hidden Caldera Rim (glide there on the Ember Isle thermal)
   { id: 'laurel', name: 'Golden Laurel', kind: 'laurel', col: 0xe8b830, band: 0xfff2a0, price: 0, gift: true }, // the Peak Gauntlet's first clear
 ];
 export function shopHat(cr, id) {

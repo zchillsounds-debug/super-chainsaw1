@@ -775,6 +775,7 @@ export const MAPS = {
       { id: 'lab_e', x: 20, y: 8, w: 5, h: 3, roof: 0xe8e8e8, wall: 0xd8d4d0, door: 3, label: 'Volcano Lab' },
     ],
     signs: [{ x: 16, y: 7, text: 'EMBER ISLE\nHome of the Caldera Cup. The volcano is asleep. Shh.' }],
+    updrafts: [{ x: 19, y: 1, to: 'rim', tx: 8, ty: 11, dir: 'n', name: 'the Caldera Rim', hot: true }], // M3: a volcano thermal; the Kite Glider rides it up to the hidden crater rim
     npcs: [
       { id: 'leilani_e', x: 12, y: 13, act: 'wave', critter: 'blowfin', name: 'Lifeguard Leilani', dir: 'n', story: 'lost:festsilk', lines: ['Lifeguard Leilani: Black sand! It comes from the volcano. It gets SO hot at noon. Walk fast!', 'Lifeguard Leilani: Bring a water critter to the Caldera Cup. Everybody here forgets, then everybody here loses.'] },
       { id: 'tutu_e', x: 14, y: 9, act: 'sleep', critter: 'mossloth', name: 'Old Tutu', dir: 's', lines: ['Old Tutu: ...the mountain... has been sleeping... longer than me... zzz...', 'Old Tutu: ...Magda talks to the volcano... and sometimes... it talks back...'] },
@@ -861,6 +862,42 @@ export const MAPS = {
     wild: { list: [['skimray', 27, 29], ['squeakwing', 27, 29], ['toucharge', 27, 29], ['whirlwhisk', 28, 30]], roam: 3, rate: 0.12 },
     npcs: [
       { id: 'ama_s', x: 13, y: 8, act: 'read', critter: 'hootsy', name: 'Birdkeeper Ama', dir: 'w', lines: ["Birdkeeper Ama: A visitor?! Nobody has landed here in thirty years. How did you... a GLIDER? Hana's, I bet.", 'Birdkeeper Ama: I count the seabirds. Two hundred and twelve today. Two hundred and thirteen, with you.', 'Birdkeeper Ama: The big nest by the rocks belongs to a Skimray that never came back. Its egg is still warm, somehow. It shimmers...'] },
+    ],
+  },
+
+  // ===== M3: the Caldera Rim, the hidden crater at the top of Ember Isle's volcano (glide up on the thermal): a lava lake, steam vents, a treasure chest =====
+  rim: {
+    name: 'Caldera Rim',
+    music: 'volcano',
+    arena: 'volcano',
+    isle: 'rim',
+    lava: true,
+    border: 'rock',
+    outer: 0x2a1a1a,
+    hidden: true, // not on the Town Map: you can only glide here
+    palette: { a: '#6a5c5a', b: '#665856', tall: '#4a3a30', path: '#a08a7a', water: '#ff6a1a', bank: '#2a1a1a', sand: '#3a3436', sand2: '#363032', dark: 'rgba(40,20,20,0.35)', lite: 'rgba(255,200,150,0.2)' },
+    tiles: [
+      'RRRRRRRRRRRRRRRRRRRR',
+      'RRR.""..R....v.""RRR',
+      'RR..v...........""RR',
+      'RR...~~~~~~~~~....RR',
+      'R...~~~~~~~~~~~...vR',
+      'R""~~~~~~~~~~~~~...R',
+      'R""~~~~~~~~~~~~~...R',
+      'R...~~~~~~~~~~~~..RR',
+      'RR...~~~~~~~~~~...RR',
+      'RR.v...~~~~~~.....RR',
+      'RRR..........""..RRR',
+      'RRRR...R....""".RRRR',
+      'RRRRRR..........RRRR',
+      'RRRRRRRRRRRRRRRRRRRR',
+    ],
+    updrafts: [{ x: 9, y: 12, to: 'ember_isle', tx: 19, ty: 2, dir: 'n', name: 'Ember Isle', back: true, hot: true }],
+    chest: { x: 10, y: 1, flag: 'rim_chest', hat: 'obsidian', berries: 15, hatLine: "...and an Obsidian Helm, polished black glass from the volcano's heart!" },
+    signs: [{ x: 6, y: 12, text: 'CALDERA RIM\n(A scorched old board:) "TOO HOT. GO HOME. — the Volcano Lab"' }],
+    wild: { list: [['smokeshell', 28, 30], ['pumicub', 28, 30], ['cindermunch', 28, 30], ['kindlekit', 29, 31]], roam: 3, rate: 0.12 },
+    npcs: [
+      { id: 'cinder_r', x: 16, y: 9, act: 'read', critter: 'smokeshell', name: 'Volcanologist Ash', dir: 'w', lines: ["Volcanologist Ash: WHO glides into an active crater?! ...Okay, I did too. Hana's glider? Same.", 'Volcanologist Ash: The lava lake is cooling a little every year. In a thousand years you could skate on it. Bring a coat.', "Volcanologist Ash: Magda sends me up here to listen to the volcano. Today it said 'blorp'. That's a good sign."] },
     ],
   },
 

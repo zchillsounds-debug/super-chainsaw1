@@ -1467,7 +1467,7 @@ export class World {
       const p = inked(new THREE.CylinderGeometry(0.05, 0.07, 2.6, 6), pole, OL * 0.3); p.position.set(0.35, 1.3, 0.3); g.add(p);
       const sock = new THREE.Group(); sock.position.set(0.35, 2.45, 0.3); g.add(sock);
       for (let k = 0; k < 4; k++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.2 - k * 0.035, 0.2 - (k + 1) * 0.035, 0.24, 10, 1, true), k % 2 ? white : red); c.rotation.z = Math.PI / 2; c.position.x = -0.12 - k * 0.24; sock.add(c); }
-      const swirl = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false }); swirl.userData.own = true;
+      const swirl = new THREE.MeshBasicMaterial({ color: U.hot ? 0xffb070 : 0xffffff, transparent: true, opacity: 0.5, depthWrite: false }); swirl.userData.own = true;
       const rings = [0.5, 1.3, 2.1].map((h, k) => { const r = new THREE.Mesh(new THREE.TorusGeometry(0.42 + k * 0.12, 0.025, 4, 28, Math.PI * 1.3), swirl); r.rotation.x = Math.PI / 2; r.position.y = h; g.add(r); return r; });
       return { ...U, g, sock, rings, swirl, px, pz };
     });
@@ -1475,6 +1475,7 @@ export class World {
 
   updraftTalk(U) {
     const F = save.adv.flags;
+    if (!F.glider && U.hot) return this.say(['Hot air roars up the side of the volcano, so strong it makes the ash dance. The windsock points straight up at the crater.', 'Something light could ride that wind all the way to the top... if you had something to ride on.']);
     if (!F.glider) return this.say(U.back ? ['The wind howls up the rocks. It would carry you home, if you had something to ride it on.'] : ['A strong wind roars up the cliff, tugging at {hero}\'s fur. The windsock points out to sea, at a tall rock stack on the horizon.', 'If only you had something to ride the wind on... Kitemaker Hana tests her kites right here.']);
     this.ask(U.back ? `Glide back to ${U.name}?` : `Ride the updraft to ${U.name}?`, ['Glide!', 'Not now'], (i) => {
       if (i) return;
@@ -1516,7 +1517,7 @@ export class World {
     C.open = 0.01;
     for (let k = 0; k < 16; k++) this.g.fx.spawn({ x: C.px, y: 0.8, z: C.pz, vx: (Math.random() - 0.5) * 2.5, vy: 2 + Math.random() * 2, vz: (Math.random() - 0.5) * 2.5, color: 0xffd84a, size: 0.4, life: 1, shape: 'star', grav: 4 });
     const name = SHOP_HATS.find((h) => h.id === C.hat)?.name;
-    return this.say([`{hero} heaves the lid open... TREASURE! A pouch of ${C.berries} berries! +${C.berries} 🍓`, ...(hat ? [`...and a ${name}, with a little lamp on the front! 🎩 (☰ → 🎩 Hats)`] : [])]);
+    return this.say([`{hero} heaves the lid open... TREASURE! A pouch of ${C.berries} berries! +${C.berries} 🍓`, ...(hat ? [`${C.hatLine || `...and a ${name}, with a little lamp on the front!`} 🎩 (☰ → 🎩 Hats)`] : [])]);
   }
 
   // kite kids: a kite on a long line, swooping over their heads
@@ -4424,7 +4425,7 @@ export class World {
     if (this.updrafts) for (const U of this.updrafts) { // the windsock flutters, the wind swirls upward
       U.sock.rotation.y = Math.sin(this.t * 3 + U.x) * 0.25; U.sock.rotation.z = Math.sin(this.t * 7) * 0.05;
       U.rings.forEach((r, k) => { r.rotation.z = this.t * (2.2 + k * 0.6); r.position.y = 0.4 + ((this.t * 0.6 + k / 3) % 1) * 2.4; r.material.opacity = 0.45; });
-      if (Math.random() < dt * 4) this.g.fx.spawn({ x: U.px + (Math.random() - 0.5) * 0.9, y: 0.2, z: U.pz + (Math.random() - 0.5) * 0.9, vy: 3, color: 0xfff8e8, alpha: 0.6, size: 0.18, life: 0.9, shape: 'puff', additive: false });
+      if (Math.random() < dt * 4) this.g.fx.spawn({ x: U.px + (Math.random() - 0.5) * 0.9, y: 0.2, z: U.pz + (Math.random() - 0.5) * 0.9, vy: 3, color: U.hot ? 0x8a807a : 0xfff8e8, alpha: 0.6, size: U.hot ? 0.3 : 0.18, life: 0.9, shape: 'puff', additive: false });
     }
     if (this.gliding) { // up, up, and away: the hero lifts off on the Kite Glider, then the view fades to the far side
       const G = this.gliding, H = this.hero.root; G.t += dt;
