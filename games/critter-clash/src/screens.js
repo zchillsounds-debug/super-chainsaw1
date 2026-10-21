@@ -383,6 +383,13 @@ export class Screens {
         "And those Gloom Gulls... they say Captain Morra is hiding the Sunstone on Starfall Atoll. Win all three island cups and Captain Gill will sail you there.",
         "Oh, and Fisher Finn says the island reefs have four fish of their own. One of them is a marlin as long as a canoe!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.sunstone && save.news?.includes('adv28') && !save.news.includes('adv29')) {
+      save.news.push('adv29'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! The light on Starfall Atoll is back, and Captain Morra has... opened a BATTLE TOWER in the old Gloom Gull hideout? Win in a row for Bronze, Silver, Gold and Legend ranks!",
+        "Kitemaker Hana on Breezy Bluffs is building a glider you can ride. She needs help from Kite Flyer Gale and Tinker Volt on the mainland. Updrafts could carry you somewhere nobody has been!",
+        "And the islanders whisper of two legends: a golden moth that carries the dawn, and a narwhal that sings to the moon. Some people say pearls hide on every island, too. They only twinkle when you're close...",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);

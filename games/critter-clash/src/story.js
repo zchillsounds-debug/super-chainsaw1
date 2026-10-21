@@ -339,7 +339,12 @@ export function nextGoal(F) {
     if (nx?.id === 'caldera' && !F.skua_b) return 'A Gloom Gull is blocking the Ash Trail at the east edge of Breezy Bluffs. Chase it off!';
     if (nx) return `Win the ${nx.name} in ${ISLE_AT[nx.id]}.`;
     if (!F.sunstone) return F.morra ? 'Bring the Sunstone home to the Starfall lighthouse!' : 'Sail to Starfall Atoll with Captain Gill (Port Coral) and take the Sunstone back from Captain Morra!';
-    return 'You saved the Sunscatter Isles! Rematch trainers, find rare critters and explore.';
+    // post-game: point at whatever is still open (the Tower, the glider, the legends)
+    if (!(save.adv.tower?.best >= 7)) return 'Morra has opened a Battle Tower on Starfall Atoll. Win 7 in a row for Bronze rank!';
+    if (!F.glider) return 'Kitemaker Hana at the south cliff of Breezy Bluffs is building a glider you can ride. Lend her a hand!';
+    if (!F.legend_moonwhal) return 'Something sings under Starfall Atoll on starry nights... Go down to the beach after dark.';
+    if (!F.legend_solmoth) return F.festlamp_done ? 'A great golden glow rests on the volcano. Glide up the Ember Isle thermal to the Caldera Rim!' : 'The isles want a Sunstone Festival! Weather Watcher Iona on Breezy Bluffs has a job for you.';
+    return 'You saved the Sunscatter Isles! Climb the Battle Tower ranks, find every hidden pearl and explore.';
   }
   if (!F.quest) return 'Visit Professor Pecan\'s lab in Sprout Village.';
   const nx = Object.keys(GOAL_AT).find((id) => !F['cup_' + id]);
