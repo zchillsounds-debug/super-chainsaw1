@@ -171,7 +171,7 @@ export function rainAt(key, d, hr = d.getHours()) {
 // maps with a daily dig spot (beach sand, Frostpeak snow, Cinder Town ash) that hasn't been dug up today: the Town Map marks them ⛏
 export function digLeft(maps) {
   const day = new Date().toISOString().slice(0, 10);
-  return Object.keys(maps).filter((k) => { const M = maps[k]; return !M.indoor && (M.arena === 'beach' || (M.snow && k !== 'peak') || k === 'ember') && save.adv?.dig?.[k] !== day; });
+  return Object.keys(maps).filter((k) => { const M = maps[k]; return !M.indoor && (M.arena === 'beach' || (M.snow && k !== 'peak') || k === 'ember' || k === 'ember_isle') && save.adv?.dig?.[k] !== day; });
 }
 
 // one big Alpha wild critter a day, waiting in the tall grass of one visited route (after the Sprout Cup): tougher, worth berries
@@ -2957,7 +2957,7 @@ export class World {
     this.dig = null;
     const snow = this.M.snow && this.key !== 'peak'; // Frostpeak has one too: an ice gem under the snow
     const lava = this.key === 'ember'; // and Cinder Town: an ember gem in the warm ash
-    if ((this.M.arena !== 'beach' && !snow && !lava) || this.M.indoor) return;
+    if ((this.M.arena !== 'beach' && !snow && !lava && this.key !== 'ember_isle') || this.M.indoor) return; // (Ember Isle digs in its black sand beach)
     const day = new Date().toISOString().slice(0, 10), r = rng(hash(this.key + day));
     if ((save.adv.dig ||= {})[this.key] === day) return;
     const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((d) => d.x + ',' + (d.y + 1)), ...this.itemSpots, ...(this.M.signs || []).map((g) => g.x + ',' + g.y), this.hx + ',' + this.hy]);
@@ -2969,7 +2969,7 @@ export class World {
     if (!ok.length) return;
     const [x, y] = ok[Math.floor(r() * ok.length)], [px, pz] = wpos(x, y);
     const g = new THREE.Group(); g.position.set(px, 0, pz); // a little heap of turned sand with a pirate's X beside it
-    const heap = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), toon(snow ? 0xf4f8ff : lava ? 0x5a4a50 : 0xd8b068)); heap.scale.set(1, 0.38, 0.8); heap.position.set(-0.35, 0, -0.35); heap.receiveShadow = true; g.add(heap);
+    const heap = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), toon(snow ? 0xf4f8ff : lava || this.key === 'ember_isle' ? 0x5a4a50 : 0xd8b068)); heap.scale.set(1, 0.38, 0.8); heap.position.set(-0.35, 0, -0.35); heap.receiveShadow = true; g.add(heap);
     for (const a of [0.78, -0.78]) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.03, 0.17), lava ? new THREE.MeshBasicMaterial({ color: 0xff8a2a }) : toon(snow ? 0x4a8ad8 : 0xa8743a)); if (lava) b.material.userData.own = true; b.rotation.y = a; b.position.set(0.25, 0.02, 0.2); g.add(b); }
     const gem = new THREE.Mesh(new THREE.OctahedronGeometry(snow || lava ? 0.16 : 0.12), toon(snow ? 0xa8eaff : lava ? 0xff6a3a : 0xfff4a0, { rim: 1, emissive: snow ? 0x2a6a90 : lava ? 0x902a10 : 0x806a20 })); gem.position.set(-0.3, 0.22, -0.2); g.add(gem);
     this.group.add(g);
@@ -3004,6 +3004,7 @@ export class World {
     if (roll < 0.15) { // a Diggles was already down there
       const lv = Math.max(3, (save.critters[hero]?.level || 4) - 1);
       persist();
+      if (this.M.isle) return this.say(['{hero} digs and digs... and a little volcano shell scuttles out! A wild Smokeshell was hiding in the sand!'], () => this.startWild('smokeshell', lv, null, Math.random() < SHINY_RATE)); // island sand hides hermit crabs, not moles
       return this.say(['{hero} digs and digs... and finds a nose! A wild Diggles pops up, cross about its ceiling!'], () => this.startWild('diggles', lv, null, Math.random() < SHINY_RATE));
     }
     if (roll < 0.3) {

@@ -522,6 +522,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'dashisle') return dashIsle(S, w);
   if (id === 'skua') return skua(S, w);
   if (id === 'dashatoll') return dashAtoll(S, w);
+  if (id === 'dashember') return dashEmber(S, w);
   if (id === 'morra') return morra(S, w);
   if (id === 'dash3') {
     w.say([
@@ -1170,6 +1171,19 @@ function ferry(S, w) {
       : 'The Sunny Gull turns for home. The islands fade into the haze...';
     w.say([line], () => w.fade(() => { if (to === 'atoll') w.load('atoll', 9, 13, 'n'); else w.load(to, 12, 15, 'n'); if (to === 'coral' && !F.isle_arrive || to === 'atoll' && !F.atoll) setTimeout(() => storyIntro(S, w), 500); }));
   }, 'Captain Gill');
+}
+
+// Ember Isle: Dash ran the whole Ash Trail to beat the hero to the Caldera Cup
+function dashEmber(S, w) {
+  const rid = rivalFor(save.adv.hero), rdef = byId(rid);
+  w.say([
+    'Dash: There you are! I ran the WHOLE Ash Trail. Stepped on a steam vent. My feet are still smoking. Worth it!',
+    "Dash: I've been training on black sand all week. It's like running on hot pancakes. Let's go, Champ!",
+  ], () => S.worldFight({
+    foe: withGear(rdef, 25), lv: 25, kind: 'story', flag: 'dash_isle2', name: 'Rival Dash', diff: 0.85,
+    trainer: { name: 'Dash', critter: rid, title: 'Island rival', beat: "Hot hot HOT... okay, you win the volcano round. But the Sunstone race? That's still on!", gloat: 'Ha! Too hot to handle!' },
+    note: '🌋 You beat Dash on Ember Isle!',
+  }));
 }
 
 // Starfall Atoll: Dash got there first, and lost

@@ -1,6 +1,6 @@
 // Title, tournament cups/ladder, critter select, VS splash, results and pause overlays.
 import { buzz } from './haptics.js';
-import { CRITTERS, TYPES, CUPS, ALL_CUPS, cupById, SHINY, BADGES, MODS, STARTERS, skinned, withGear, gearFor, GEAR, dailyChallenge } from './data.js';
+import { CRITTERS, TYPES, CUPS, ISLE_CUPS, ALL_CUPS, cupById, SHINY, BADGES, MODS, STARTERS, skinned, withGear, gearFor, GEAR, dailyChallenge } from './data.js';
 import { sfx, playMusic } from './audio.js';
 import { HAZARDS, SIGS } from './hazards.js';
 import { Camp } from './camp.js';
@@ -1175,17 +1175,17 @@ export class Screens {
 
   records() {
     let body = '';
-    const A = save.adv, F = A.flags, L = A.fishLog || {}, npcs = Object.values(MAPS).flatMap((M) => M.npcs || []);
+    const A = save.adv, F = A.flags, L = A.fishLog || {}, npcs = Object.values(MAPS).filter((M) => !M.isle).flatMap((M) => M.npcs || []); // Clashara only: the isles keep their own rows below
     const tr = npcs.filter((n) => n.trainer), fl = favourList(), fsp = new Set([...Object.keys(L.sp || {}), ...(L.best ? [L.best.name] : [])]);
     const parts = []; // every bar with a goal counts towards the overall completion
-    const bar = (ic, name, n, of) => (of && parts.push(Math.min(1, n / of)), `<li class="jr-rec"><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`);
+    const bar = (ic, name, n, of, own) => (of && !own && parts.push(Math.min(1, n / of)), `<li class="jr-rec"><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`);
     body = (A.time >= 60 ? bar('⏱️', 'Time adventuring', playTime(A.time)) : '')
       + bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length)
       + bar('⚔️', 'Trainers beaten', tr.filter((n) => F[n.id]).length, tr.length)
       + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_')).length, 24)
       + bar('🤝', 'Favours done', fl.rows.filter((r) => r.state === 'done').length, fl.rows.length + fl.unasked)
-      + bar('🎩', 'Hats collected', (A.hats || []).filter((id) => !SHOP_HATS.find((h) => h.id === id)?.season).length, SHOP_HATS.filter((h) => !h.season).length)
-      + bar('🐟', 'Kinds of fish', fsp.size, Object.values(FISH).flat().length)
+      + bar('🎩', 'Hats collected', (A.hats || []).filter((id) => { const h = SHOP_HATS.find((q) => q.id === id); return h && !h.season && !h.isle; }).length, SHOP_HATS.filter((h) => !h.season && !h.isle).length)
+      + bar('🐟', 'Kinds of fish', [...fsp].filter((n) => !FISH.isle.some((f) => f[0] === n)).length, Object.entries(FISH).filter(([k]) => k !== 'isle').flatMap(([, v]) => v).length)
       + bar('📖', 'Critters on your team', save.unlocked.length, CRITTERS.length)
       + bar('🏔️', 'Peak Gauntlets cleared', A.gauntWins || 0)
       + bar('💥', 'Alphas beaten', Object.keys(F).filter((k) => k.startsWith('alpha_')).length)
@@ -1225,10 +1225,21 @@ export class Screens {
       + (A.cnt?.twinkle ? bar('🎄', 'Twinkle Week gifts', A.cnt.twinkle) : '')
       + (A.cnt?.carol ? bar('🎵', 'Carols sung', A.cnt.carol) : '')
       + (A.cnt?.wisp ? bar('✨', 'Firefly & wisp nights', A.cnt.wisp) : '')
-      + bar('📸', 'Landmark photos', (A.snaps || []).length, LANDMARKS.length)
+      + bar('📸', 'Landmark photos', (A.snaps || []).filter((id) => !LANDMARKS.find((l) => l.id === id)?.isle).length, LANDMARKS.filter((l) => !l.isle).length)
       + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length)
       + bar('🍾', 'Bottle notes read', (A.notes || []).length, BOTTLE_NOTES.length)
       + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
+    if (F.isle_arrive) { // Chapter 2: the Sunscatter Isles get their own rows (they don't count towards Clashara's %)
+      const itr = Object.values(MAPS).filter((M) => M.isle).flatMap((M) => M.npcs || []).filter((n) => n.trainer), ih = SHOP_HATS.filter((h) => h.isle && !h.season);
+      body += '<li class="jr-head">🏝️ Sunscatter Isles</li>'
+        + bar('🏆', 'Island cups won', ISLE_CUPS.filter((c) => F['cup_' + c.id]).length, ISLE_CUPS.length, true)
+        + bar('⚔️', 'Island trainers beaten', itr.filter((n) => F[n.id]).length, itr.length, true)
+        + bar('🎩', 'Island hats', ih.filter((h) => (A.hats || []).includes(h.id)).length, ih.length, true)
+        + bar('🐠', 'Reef fish', FISH.isle.filter((f) => fsp.has(f[0])).length, FISH.isle.length, true)
+        + bar('📸', 'Island landmarks', (A.snaps || []).filter((id) => LANDMARKS.find((l) => l.id === id)?.isle).length, LANDMARKS.filter((l) => l.isle).length, true)
+        + bar('🌟', 'The Sunstone', F.sunstone ? 'home' : F.morra ? 'found' : 'lost')
+        + bar('⛴️', 'Ferry rides', A.cnt?.ferry || 0);
+    }
     const pc = Math.floor(parts.reduce((a, b) => a + b, 0) / parts.length * 100);
     body = `<li class="jr-total ${pc >= 100 ? 'full' : ''}"><b>${pc >= 100 ? '🌟 Clashara complete!' : '🗺️ Clashara explored'}</b><em>${pc}%</em><i style="--p:${pc / 100}"></i></li>` + body;
     return { body, pc };

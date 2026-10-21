@@ -775,6 +775,7 @@ export const MAPS = {
     npcs: [
       { id: 'leilani_e', x: 12, y: 13, act: 'wave', critter: 'blowfin', name: 'Lifeguard Leilani', dir: 'n', wander: 2, lines: ['Lifeguard Leilani: Black sand! It comes from the volcano. It gets SO hot at noon. Walk fast!', 'Lifeguard Leilani: Bring a water critter to the Caldera Cup. Everybody here forgets, then everybody here loses.'] },
       { id: 'tutu_e', x: 14, y: 9, act: 'sleep', critter: 'mossloth', name: 'Old Tutu', dir: 's', lines: ['Old Tutu: ...the mountain... has been sleeping... longer than me... zzz...', 'Old Tutu: ...Magda talks to the volcano... and sometimes... it talks back...'] },
+      { id: 'dash_e', x: 16, y: 12, rival: true, rlv: 25, name: 'Dash', dir: 'e', story: 'dashember', hideFlag: 'dash_isle2' },
       { id: 'vent_kid', x: 9, y: 12, act: 'hop', critter: 'pumicub', name: 'Pumicub', dir: 'e', wander: 2, lines: ['Pumicub: Grrumph! (It rolls in the warm black sand, very pleased with itself.)'] },
     ],
   },
