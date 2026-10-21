@@ -35,7 +35,7 @@ export const SPECIALS = {
   puffup:    { cd: 3.2, range: [0, 2.6] },
   lariat:    { cd: 4.0, range: [0, 3.2] },
   beakbeam:  { cd: 4.2, range: [2, 7.5] },
-  pound:     { cd: 3.8, range: [1.5, 7] },
+  pound:     { cd: 3.4, range: [1.5, 7] },
   skimloop:  { cd: 4.0, range: [2, 7] },
 };
 

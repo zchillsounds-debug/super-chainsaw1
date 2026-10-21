@@ -44,7 +44,7 @@
 - New cups, new critters and new arenas may need small battle-side hooks. Keep them minimal, and list them in HANDOFF.md under "Note for the user's chat" so they can be reviewed.
 
 ## Status
-- M1: not started
-- M2: not started
+- **M1: done (session 18a, R672, R675, R678, R680).** Smokeshell (fire, volcano hermit crab), Blowfin (water, puffer fish), Mossloth (leaf, moss sloth), Toucharge (spark, thunder toucan), Pumicub (stone, pumice bear cub), Skimray (gust, breeze manta): new parts, six new specials, 3 growth forms each, shinies, lines, intro/win animations, Critterdex and Quick Battle (as trials until befriended in the isles). Balance: Toucharge, Smokeshell, Mossloth and Skimray landed in 44–63%; Blowfin and Pumicub were still ~27% after a first buff and got a second, bigger buff in R680 (**not re-measured yet: run `PORT=5181 node tools/robin.mjs 1 blowfin,pumicub` first next session**).
+- **M2: in progress (session 18a: R673, R674, R676, R677).** Done: the Sunny Gull ferry (Captain Gill on the Seashell pier; Champions only), Port Coral (Coral Stadium, Berry Center, Shell Hats stall with 4 island hats, Grandma Kalani's cottage, reef, pink sand), Palm Path (wild Mossloth/Blowfin/Skimray/Pumicub, two trainers; the rope bridge east is "being fixed" by Bridge Crew Bo), ISLE_CUPS (Coral, Gale, Caldera; the Coral Cup is playable and advcup-checked), Dash's island battle, arrival and post-Coral-Cup beats, the isles Town Map, the ☰ goal line, Pecan news adv27. Next: Breezy Bluffs (Gale Cup) and opening the rope bridge, the Ash Trail and Ember Isle (Caldera Cup), Starfall Atoll and the Gloom Gulls finale, Journal/credits for Chapter 2, more island fish/digs/landmarks.
 - M3: not started
 - M4: not started
