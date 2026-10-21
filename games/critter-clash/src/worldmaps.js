@@ -689,9 +689,11 @@ export const MAPS = {
       { id: 'loft_g', x: 19, y: 10, w: 4, h: 3, roof: 0x5ab8ff, door: 1, label: 'Kite Loft' },
     ],
     signs: [{ x: 14, y: 8, text: 'BREEZY BLUFFS\nHold on to your hat. No, really.' }],
+    updrafts: [{ x: 25, y: 13, to: 'stack', tx: 8, ty: 9, dir: 'n', name: 'Windcrest Stack' }], // M3: with the Kite Glider, the cliff updraft carries the hero out to a sea stack
     wild: { list: [['toucharge', 21, 23], ['skimray', 21, 23], ['whirlwhisk', 21, 23], ['squeakwing', 22, 24], ['mossloth', 21, 23]], roam: 4, rate: 0.1 },
     npcs: [
       { id: 'lani', x: 6, y: 12, critter: 'toucharge', name: 'Birdwatcher Lani', dir: 'n', trainer: { lv: 22, sight: 3, diff: 0.8, intro: 'Birdwatcher Lani: Shh! I was watching a wild Toucharge... and now I am watching YOU. Battle!', beat: 'Birdwatcher Lani: A rare sighting: me, losing.', after: 'Birdwatcher Lani: Toucharge sneeze sparks when the wind changes. Bless you, Toucharge.' } },
+      { id: 'hana_b', x: 24, y: 14, act: 'wave', critter: 'squeakwing', name: 'Kitemaker Hana', dir: 'n', story: 'lost:glidesketch', lines: ['Kitemaker Hana: Feel that wind coming up the cliff? That updraft could lift a house. Well. A small house.', 'Kitemaker Hana: I test every new kite right here at the cliff edge. My Squeakwing does the scary bits.'] },
       { id: 'koa', x: 17, y: 14, critter: 'skimray', name: 'Paraglider Koa', dir: 'w', trainer: { lv: 23, sight: 3, diff: 0.82, intro: 'Paraglider Koa: I jumped off these cliffs this morning! Skimray caught me. Now let us catch YOU!', beat: 'Paraglider Koa: Crash landing! You fly well, champ.', after: 'Paraglider Koa: From up high you can see Starfall Atoll in the north. The lighthouse is still dark.' } },
       { id: 'pip_b', x: 22, y: 7, act: 'cheer', critter: 'whirlwhisk', name: 'Kite Kid Pip', dir: 's', kite: 0xff5a7a, lines: ['Kite Kid Pip: My kite has been up since breakfast! The wind on the Bluffs NEVER stops.', 'Kite Kid Pip: Aunt Tilly at the stadium keeps the windmills turning. She is the slowest battler ever. And the hardest to beat!'] },
       { id: 'mele_b', x: 6, y: 5, act: 'cheer', critter: 'skimray', name: 'Kite Kid Mele', dir: 's', kite: 0x5ae0c0, lines: ['Kite Kid Mele: Skimray thinks my kite is its friend. It keeps gliding up to say hello.'] },
@@ -824,6 +826,41 @@ export const MAPS = {
       { id: 'morra_a', x: 11, y: 3, critter: 'skimray', name: 'Captain Morra', dir: 's', story: 'morra', hideFlag: 'sunstone', shiny: true, scale: 1.25 },
       { id: 'keeper_a', x: 11, y: 3, critter: 'hootsy', name: 'Keeper Lumi', dir: 's', showFlag: 'sunstone', story: 'lumi', lines: ['Keeper Lumi: The light is back! Ships can find their way home again. Thank you, Champion.', 'Keeper Lumi: I kept the lamp for forty years. The Sunstone warms up in the daytime and shines all night. A little sun in a stone.', 'Keeper Lumi: Captain Morra? She sails with us now. She keeps the night watch. Turns out she just hated being lonely in the dark.'] },
       { id: 'morra_b', x: 14, y: 4, critter: 'skimray', name: 'Morra', dir: 'w', showFlag: 'sunstone', shiny: true, lines: ['Morra: Hmph. The light is... nice, I suppose. Do not tell my Gulls I said so.', 'Morra: I wanted the night to last forever. Out at sea, the dark is so lonely. Now I keep watch with Lumi instead.'] },
+    ],
+  },
+
+  // ===== M3: Windcrest Stack, a hidden sea stack off Breezy Bluffs (only the Kite Glider reaches it): a seabird colony and a nest with a rare egg =====
+  stack: {
+    name: 'Windcrest Stack',
+    music: 'beach',
+    arena: 'beach',
+    isle: 'stack',
+    border: 'palm',
+    outer: 0x2a9ad0,
+    hidden: true, // not on the Town Map: you can only glide here
+    nests: [[5, 4], [13, 6], [6, 8]], // little seabird nests in the grass
+    palette: { a: '#9ad474', b: '#94ce6c', tall: '#58a64a', path: '#ece4d2', water: '#3ab8e0', bank: '#b8ae9e' },
+    tiles: [
+      '~~~~~~~~~~~~~~~~~~',
+      '~~~~~~RRRRRR~~~~~~',
+      '~~~~RRR....RRR~~~~',
+      '~~~RR..""....RR~~~',
+      '~~~R..""""..f.R~~~',
+      '~~RR..""".....RR~~',
+      '~~R......R.....R~~',
+      '~~RR..f..""....R~~',
+      '~~~R....."""..RR~~',
+      '~~~RR.........R~~~',
+      '~~~~RRR....RRR~~~~',
+      '~~~~~~RRRRRR~~~~~~',
+      '~~~~~~~~~~~~~~~~~~',
+    ],
+    updrafts: [{ x: 9, y: 10, to: 'bluffs', tx: 24, ty: 13, dir: 'w', name: 'Breezy Bluffs', back: true }],
+    chest: { x: 11, y: 3, flag: 'stack_egg', nest: true, shiny: 'skimray', berries: 10 },
+    signs: [{ x: 7, y: 9, text: 'WINDCREST STACK\n(Scratched into the rock:) "Only the wind comes here. And now, you."' }],
+    wild: { list: [['skimray', 27, 29], ['squeakwing', 27, 29], ['toucharge', 27, 29], ['whirlwhisk', 28, 30]], roam: 3, rate: 0.12 },
+    npcs: [
+      { id: 'ama_s', x: 13, y: 8, act: 'read', critter: 'hootsy', name: 'Birdkeeper Ama', dir: 'w', lines: ["Birdkeeper Ama: A visitor?! Nobody has landed here in thirty years. How did you... a GLIDER? Hana's, I bet.", 'Birdkeeper Ama: I count the seabirds. Two hundred and twelve today. Two hundred and thirteen, with you.', 'Birdkeeper Ama: The big nest by the rocks belongs to a Skimray that never came back. Its egg is still warm, somehow. It shimmers...'] },
     ],
   },
 

@@ -672,6 +672,31 @@ const LOST = {
     done: ['Keeper Lumi: The festival lantern! Oh, I haven\'t lit one of these in forty years.', 'Lumi touches the lantern to the great lamp. It glows gold... then rises, and rises, and twenty more lanterns float up from the boats in the lagoon!', 'Keeper Lumi: The Sunstone Festival has begun! Here, wear this. Everyone on the isles will know you lit the first lantern.', '{hero} got the Festival Lantern Hat! 🏮 +25 🍓'],
   },
 
+  // ---- M3: Hana's Kite Glider, a chain that crosses both regions (Bluffs → Cloudtop → Neon City → Bluffs); the glider rides the cliff updrafts ----
+  glidesketch: {
+    who: 'Kitemaker Hana', item: 'glider sketch', berries: 3, toast: '📜', home: 'Breezy Bluffs', needs: 'cup_gale', to: { npc: 'kite', map: 'cloudtop', name: 'Kite Flyer Gale', home: 'Cloudtop Gardens' },
+    thanks: 'Kitemaker Hana: Gale liked the sketch? Then it WILL fly. Gale taught me everything I know about wind.',
+    later: ['glider', ["Kitemaker Hana: How's the Kite Glider? Stand in the updraft at the cliff edge and talk to the wind. It does the rest!", 'Kitemaker Hana: Out past the cliff there\'s a sea stack nobody can climb. Birds nest up there. I saw something sparkle in a nest once...']],
+    ask: ['Kitemaker Hana: Champion! Feel that updraft at the cliff edge? Strong enough to lift a Pumicub. I want to build a kite you can RIDE.', 'Kitemaker Hana: I drew the plans, but I need the best flier I know to check them: Kite Flyer Gale, up in Cloudtop Gardens on the mainland. Could you take Gale my sketch?', '{hero} got a glider sketch! 📜 Take it to Kite Flyer Gale in Cloudtop Gardens (on the mainland).'],
+    wait: ['Kitemaker Hana: Gale lives up in Cloudtop Gardens, over on the mainland. Take the ferry home, then ride Captain Puff\'s balloon!'],
+    done: ['Kite Flyer Gale: A sketch from Hana?! We used to fly kites together, before she sailed to the isles!', 'Gale reads it upside down, then the right way up, then upside down again.', 'Kite Flyer Gale: Wheee, it works! But a glider this big needs a sail of real cloud silk. Talk to me again, I have some!', '{hero} got 3 berries! 🍓'],
+  },
+  glidesail: {
+    who: 'Kite Flyer Gale', from: 'kite', giverMap: 'cloudtop', item: 'bolt of cloud silk', berries: 3, toast: '☁️', home: 'Cloudtop Gardens', needs: 'glidesketch_done', to: { npc: 'tinker', map: 'neon', name: 'Tinker Volt', home: 'Neon City' },
+    thanks: 'Kite Flyer Gale: Tinker Volt says the cloud silk tickles. Of course it does!',
+    after: ['Tinker Volt: Cloud silk and spark-steel. The lightest glider frame ever made. Zzzap!'],
+    ask: ['Kite Flyer Gale: Here: cloud silk, spun from the morning mist up here. Light as a sigh and twice as strong.', 'Kite Flyer Gale: But Hana\'s frame is made of driftwood. Too heavy! Tinker Volt in Neon City could make a spark-steel frame. Take the silk to Volt?', '{hero} got a bolt of cloud silk! ☁️ Take it to Tinker Volt in Neon City.'],
+    wait: ['Kite Flyer Gale: Tinker Volt fixes the arcade machines in Neon City. Follow the buzzing!'],
+    done: ['Tinker Volt: Cloud silk? From Gale? For a glider you can RIDE? Oh, this is my kind of nonsense!', 'Volt welds, bends and zaps for a whole minute. Sparks everywhere.', 'Tinker Volt: Done! A folding spark-steel frame with the cloud silk sewn on. But Hana has to fit the harness herself. Talk to me again!', '{hero} got 3 berries! 🍓'],
+  },
+  glidewing: {
+    who: 'Tinker Volt', from: 'tinker', giverMap: 'neon', item: 'folded glider wing', berries: 20, snack: true, key: 'glider', toast: '🪁', home: 'Neon City', needs: 'glidesail_done', to: { npc: 'hana_b', map: 'bluffs', name: 'Kitemaker Hana', home: 'Breezy Bluffs' },
+    thanks: 'Tinker Volt: Hana sent a postcard. It just says WHEEEEEE. I think it worked!',
+    ask: ['Tinker Volt: The glider wing folds up small enough for a backpack. Neat, huh? Take it back to Kitemaker Hana on Breezy Bluffs.', 'Tinker Volt: And tell her if it explodes, it wasn\'t me. It won\'t explode. Probably.', '{hero} got a folded glider wing! 🪁 Take it to Kitemaker Hana on Breezy Bluffs.'],
+    wait: ['Tinker Volt: Hana is on Breezy Bluffs, in the Sunscatter Isles. Ferry from Seashell Town!'],
+    done: ['Kitemaker Hana: The wing! Spark-steel and cloud silk... Gale and Volt, you two are geniuses!', 'Hana fits a harness, tightens three straps and ties a lucky ribbon on the tail.', 'Kitemaker Hana: There. The Kite Glider, made for one Champion. Stand in the cliff updraft and talk to the wind. Hold on tight!', '🪁 You got the KITE GLIDER! Cliff updraughts can carry you now. +20 🍓'],
+  },
+
   kite: {
     who: 'Kite Flyer Gale', item: 'kite', hat: 'aviator', berries: 3, toast: '🪁', hint: "look in Frostpeak's snowy trees", home: 'Cloudtop Gardens',
     ask: ['Kite Flyer Gale: Wheee... oh. Hello. Sorry, I\'m a bit down. A gust snatched my kite right out of my wings!', 'Kite Flyer Gale: It flew off over the clouds toward Frostpeak. If you ever go there, could you look in the snowy trees for it?', 'Kite Flyer Gale: Red and yellow, with a long bow tail. I\'d be ever so grateful!'],
@@ -812,6 +837,10 @@ export function favourList() {
 export function deliveryFor(npc) {
   const F = flags(); return Object.keys(LOST).find((id) => LOST[id].to?.npc === npc && F[id + '_asked'] && !F[id + '_done']) || null;
 }
+// a quest-chain link given by someone whose own story is something else (Q.from): they ask for it first, once it's their turn
+export function chainFor(npc) {
+  const F = flags(); return Object.keys(LOST).find((id) => LOST[id].from === npc && questReady(id) && !F[id + '_asked']) || null;
+}
 // a quest chain's later link waits for the one before it (until then its giver just chats)
 export const questReady = (id) => !LOST[id]?.needs || !!flags()[LOST[id].needs];
 // what a delivery's recipient says once they have it
@@ -821,7 +850,7 @@ export function deliveredLine(npc) {
 function lostQuest(S, w, a, key) {
   const F = flags(), [kind, id] = key.split(':'), Q = LOST[id], who = Q.who;
   if (kind === 'deliver') { // hand the parcel over: the one you brought it to gives the reward
-    F[id + '_found'] = F[id + '_done'] = true;
+    F[id + '_found'] = F[id + '_done'] = true; if (Q.key) F[Q.key] = true;
     if (Q.hat) { const own = (save.adv.hats ||= []); if (!own.includes(Q.hat)) own.push(Q.hat); }
     save.berries = (save.berries || 0) + (Q.berries || 0);
     const out = [...Q.done];
@@ -834,6 +863,7 @@ function lostQuest(S, w, a, key) {
     return w.say(Q.found);
   }
   if (F[id + '_done'] && id === 'kite' && w.flyKite) return w.flyKite(who); // Gale lends the kite back: fly it together
+  if (F[id + '_done'] && Q.later && F[Q.later[0]]) return w.say(Q.later[1], null, who);
   if (F[id + '_done']) return w.say(Q.to ? [Q.thanks || `${who}: ${Q.to.name} sent me a drawing of the cloud flower on the castle. Thank you, little courier!`] : [a.n.lines[Math.floor(Math.random() * a.n.lines.length)]], null, who);
   if (F[id + '_found']) {
     F[id + '_done'] = true;

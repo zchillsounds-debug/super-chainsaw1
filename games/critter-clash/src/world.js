@@ -6,12 +6,12 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { toon, inked, canvasTex, outlineMatW } from './toon.js';
 import { Critter, roleHat, shopHat, hatModel, SHOP_HATS } from './critters.js';
 import { CRITTERS, CUPS, ISLE_CUPS, withGear, skinned, cupById } from './data.js';
-import { save, persist, grantXp, xpNeeded } from './save.js';
+import { save, persist, grantXp, xpNeeded, unlock } from './save.js';
 import { sfx, playMusic } from './audio.js';
 import { typeSpeed } from './settings.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap, CUP_ORDER } from './interiors.js';
-import { countUp, deliveryFor, deliveredLine, gauntletWeek, questReady } from './story.js';
+import { countUp, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
 import { stargaze, tonightConst, BOTTLE_NOTES, CONSTELLATIONS } from './stars.js';
@@ -457,7 +457,7 @@ export class World {
     this.buildToys(); this.buildTent();
     this.buildMarquee();
     this.buildActors();
-    this.buildKites();
+    this.buildKites(); this.buildUpdrafts();
     this.buildPumpkins();
     this.buildXtree();
     this.buildScarecrow();
@@ -522,7 +522,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.lighthouse = null; this.puz = null; this.chest = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.lighthouse = null; this.puz = null; this.chest = null; this.updrafts = null; this.gliding = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1349,7 +1349,7 @@ export class World {
       const hm = new THREE.MeshBasicMaterial({ color: 0x0a0810 }); hm.userData.own = true;
       const hole = new THREE.Mesh(new THREE.CircleGeometry(0.95, 16, 0, Math.PI), hm); hole.scale.set(1, 2.2, 1); hole.position.set(0, 0.02, -0.2); g.add(hole);
     }
-    if (!M.cave) return;
+    if (!M.cave) return this.buildChest();
     // crystals: little clusters growing out of the walls next to the floor, glowing teal and violet
     const cr = [[], []];
     for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) {
@@ -1392,7 +1392,18 @@ export class World {
       P.boulders.push({ x: at[0], y: at[1], m, t: 0 }); this.solid.add(at[0] + ',' + at[1]);
     }
     this.pressPlates(true);
-    if (M.chest) { // a treasure chest at the end of the cave
+    this.buildChest();
+  }
+
+  // a treasure chest at the end of a cave, or a big nest with a rare egg
+  buildChest() {
+    const M = this.M, F = save.adv.flags;
+    if (M.chest?.nest) { // a big seabird nest with a shimmering egg (Windcrest Stack)
+      const C = M.chest, [px, pz] = wpos(C.x, C.y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(C.x + ',' + C.y);
+      g.add(this.nestMesh(2.1));
+      const em = toon(0xe8f8ff, { rim: 1, emissive: 0x2a3a5a }).clone(); em.userData.own = true; const egg = inked(new THREE.SphereGeometry(0.36, 16, 12), em, OL * 0.5); egg.scale.y = 1.3; egg.position.y = 0.62; egg.visible = !F[C.flag]; g.add(egg);
+      this.chest = { ...C, lid: new THREE.Object3D(), egg, px, pz };
+    } else if (M.chest) { // a treasure chest at the end of the cave
       const C = M.chest, [px, pz] = wpos(C.x, C.y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(C.x + ',' + C.y);
       const wood = toon(0x9a5a2a), gold = toon(0xffc93a, { rim: 0.9, emissive: 0x3a2400 });
       const box = inked(new THREE.BoxGeometry(1.1, 0.6, 0.75), wood, OL * 0.4); box.position.y = 0.3; g.add(box);
@@ -1434,9 +1445,71 @@ export class World {
     if (!quiet) { sfx.jingle?.(2); this.S.toast?.('⚙️ Clunk! Somewhere, a gate grinds open.'); }
   }
 
+  // a twiggy seabird nest (s = size)
+  nestMesh(s = 1) {
+    const g = new THREE.Group(), twig = toon(0x9a7a4a), dark = toon(0x6a4a2a);
+    const ring = inked(new THREE.TorusGeometry(0.34 * s, 0.13 * s, 6, 16), twig, OL * 0.3); ring.rotation.x = Math.PI / 2; ring.position.y = 0.12 * s; g.add(ring);
+    const bed = new THREE.Mesh(new THREE.CircleGeometry(0.34 * s, 12), dark); bed.rotation.x = -Math.PI / 2; bed.position.y = 0.06 * s; g.add(bed);
+    for (let k = 0; k < 6; k++) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.02 * s, 0.02 * s, 0.5 * s, 4), twig); t.position.set(Math.cos(k) * 0.4 * s, 0.16 * s, Math.sin(k) * 0.4 * s); t.rotation.set(Math.PI / 2, 0, k * 1.1); g.add(t); }
+    return g;
+  }
+
+  // cliff updraughts: a striped windsock and wind swirling upward; with the Kite Glider they carry the hero to another map
+  buildUpdrafts() {
+    this.updrafts = null;
+    const M = this.M; if (M.indoor) return;
+    for (const [x, y] of M.nests || []) { const [px, pz] = wpos(x, y), n = this.nestMesh(0.8); n.position.set(px + 0.3, 0, pz - 0.2); this.group.add(n);
+      for (let k = 0; k < 2; k++) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), toon(0xf4ecd8)); e.scale.y = 1.25; e.position.set(px + 0.25 + k * 0.14, 0.14, pz - 0.2); this.group.add(e); } }
+    if (!M.updrafts) return;
+    const pole = toon(0x8a8a90), red = toon(0xff4a3a, { side: THREE.DoubleSide }), white = toon(0xfff8f0, { side: THREE.DoubleSide });
+    this.updrafts = M.updrafts.map((U) => {
+      const [px, pz] = wpos(U.x, U.y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(U.x + ',' + U.y);
+      const p = inked(new THREE.CylinderGeometry(0.05, 0.07, 2.6, 6), pole, OL * 0.3); p.position.set(0.35, 1.3, 0.3); g.add(p);
+      const sock = new THREE.Group(); sock.position.set(0.35, 2.45, 0.3); g.add(sock);
+      for (let k = 0; k < 4; k++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.2 - k * 0.035, 0.2 - (k + 1) * 0.035, 0.24, 10, 1, true), k % 2 ? white : red); c.rotation.z = Math.PI / 2; c.position.x = -0.12 - k * 0.24; sock.add(c); }
+      const swirl = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false }); swirl.userData.own = true;
+      const rings = [0.5, 1.3, 2.1].map((h, k) => { const r = new THREE.Mesh(new THREE.TorusGeometry(0.42 + k * 0.12, 0.025, 4, 28, Math.PI * 1.3), swirl); r.rotation.x = Math.PI / 2; r.position.y = h; g.add(r); return r; });
+      return { ...U, g, sock, rings, swirl, px, pz };
+    });
+  }
+
+  updraftTalk(U) {
+    const F = save.adv.flags;
+    if (!F.glider) return this.say(U.back ? ['The wind howls up the rocks. It would carry you home, if you had something to ride it on.'] : ['A strong wind roars up the cliff, tugging at {hero}\'s fur. The windsock points out to sea, at a tall rock stack on the horizon.', 'If only you had something to ride the wind on... Kitemaker Hana tests her kites right here.']);
+    this.ask(U.back ? `Glide back to ${U.name}?` : `Ride the updraft to ${U.name}?`, ['Glide!', 'Not now'], (i) => {
+      if (i) return;
+      this.busy = true; sfx.wave?.(); this.g.input?.haptic?.(30);
+      this.gliding = { t: 0, U, wing: this.gliderMesh() };
+      (save.adv.cnt ||= {}).glide = (save.adv.cnt.glide || 0) + 1; persist();
+    });
+  }
+
+  // the Kite Glider: a red-and-white delta wing on spark-steel struts, held over the hero's head
+  gliderMesh() {
+    const H = this.hero, g = new THREE.Group(), sh = new THREE.Shape();
+    sh.moveTo(0, 0.9); sh.lineTo(1.5, -0.45); sh.lineTo(0, -0.15); sh.lineTo(-1.5, -0.45); sh.closePath();
+    const sail = new THREE.Mesh(new THREE.ShapeGeometry(sh), toon(0xff5a4a, { side: THREE.DoubleSide, rim: 0.4 })); sail.rotation.x = -Math.PI / 2; g.add(sail);
+    const sh2 = new THREE.Shape(); sh2.moveTo(0, 0.9); sh2.lineTo(0.55, 0.05); sh2.lineTo(0, -0.15); sh2.lineTo(-0.55, 0.05); sh2.closePath();
+    const mid = new THREE.Mesh(new THREE.ShapeGeometry(sh2), toon(0xfff8f0, { side: THREE.DoubleSide })); mid.rotation.x = -Math.PI / 2; mid.position.y = 0.01; g.add(mid);
+    const steel = toon(0x6a7a8a);
+    for (const sx of [-0.35, 0.35]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.1, 5), steel); st.position.set(sx, -0.5, 0); st.rotation.z = sx * 0.6; g.add(st); }
+    g.position.y = (H.def.body.h + H.def.body.headR * 2) * 1.1 + 0.6; H.root.add(g);
+    return g;
+  }
+
   // the Deep Grotto's treasure: a hat and a pouch of berries
   openChest() {
     const C = this.chest, F = save.adv.flags;
+    if (C.nest) {
+      if (F[C.flag]) return this.say(['The big nest is empty now, apart from a few shimmering bits of eggshell. Skimray hatched right here!']);
+      F[C.flag] = true; save.berries = (save.berries || 0) + (C.berries || 0);
+      const d = CRITTERS.find((c) => c.id === C.shiny), joined = unlock(C.shiny); if (!(save.shinies ||= []).includes(C.shiny)) save.shinies.push(C.shiny);
+      persist(); sfx.jingle?.(3); this.g.input?.haptic?.(40);
+      C.egg.visible = false;
+      for (let k = 0; k < 26; k++) this.g.fx.spawn({ x: C.px, y: 0.7, z: C.pz, vx: (Math.random() - 0.5) * 3, vy: 1.5 + Math.random() * 2.5, vz: (Math.random() - 0.5) * 3, color: [0xff9ad8, 0x9ae8ff, 0xfff08a][k % 3], size: 0.38, life: 1.2, shape: 'star', grav: 3 });
+      this.S.toast?.(`🌟 A shiny ${d.name} ${joined ? 'joined your team!' : 'joined you!'}`);
+      return this.say(['{hero} leans over the big nest. The shimmering egg wobbles... wobbles... CRACK!', `A tiny ${d.name} flaps out, shining like a rainbow! It takes one look at {hero} and decides you are its parent.`, `🌟 A shiny ${d.name} joined your team! (Its shiny colours are yours in every mode now.)`, `There were ${C.berries} berries tucked under the egg, too. +${C.berries} 🍓`]);
+    }
     if (F[C.flag]) return this.say(['The chest is empty. Just a little dust, and a very old map of the isles.']);
     F[C.flag] = true; const hats = (save.adv.hats ||= []), hat = C.hat && !hats.includes(C.hat); if (hat) hats.push(C.hat);
     save.berries = (save.berries || 0) + (C.berries || 0); persist(); sfx.jingle?.(3);
@@ -3918,7 +3991,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = deliveryFor(a.n.id) ? '?' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m;
@@ -4347,6 +4420,17 @@ export class World {
     if (this.lighthouse?.beam) this.lighthouse.beam.rotation.y += dt * 0.6;
     if (this.lighthouse?.lan) for (const l of this.lighthouse.lan) { l.a += dt * 0.12; l.L.position.set(l.cx + Math.cos(l.a) * l.r, l.h + Math.sin(this.t * 0.8 + l.r) * 0.3, l.cz + Math.sin(l.a) * l.r * 0.7 + 1.5); }
     if (this.windmills) for (const W of this.windmills) W.sails.rotation.z -= dt * W.sp;
+    if (this.chest?.egg?.visible) { const C = this.chest; C.egg.rotation.z = Math.sin(this.t * 2) * 0.12; C.egg.material.emissive?.setHSL((this.t * 0.15) % 1, 0.6, 0.18); if (Math.random() < dt * 3) this.g.fx.spawn({ x: C.px + (Math.random() - 0.5) * 0.8, y: 0.6 + Math.random() * 0.6, z: C.pz + (Math.random() - 0.5) * 0.8, vy: 0.5, color: [0xff9ad8, 0x9ae8ff, 0xfff08a][Math.floor(Math.random() * 3)], size: 0.28, life: 0.8, shape: 'star', grow: -0.5 }); } // the rare egg shimmers through the rainbow
+    if (this.updrafts) for (const U of this.updrafts) { // the windsock flutters, the wind swirls upward
+      U.sock.rotation.y = Math.sin(this.t * 3 + U.x) * 0.25; U.sock.rotation.z = Math.sin(this.t * 7) * 0.05;
+      U.rings.forEach((r, k) => { r.rotation.z = this.t * (2.2 + k * 0.6); r.position.y = 0.4 + ((this.t * 0.6 + k / 3) % 1) * 2.4; r.material.opacity = 0.45; });
+      if (Math.random() < dt * 4) this.g.fx.spawn({ x: U.px + (Math.random() - 0.5) * 0.9, y: 0.2, z: U.pz + (Math.random() - 0.5) * 0.9, vy: 3, color: 0xfff8e8, alpha: 0.6, size: 0.18, life: 0.9, shape: 'puff', additive: false });
+    }
+    if (this.gliding) { // up, up, and away: the hero lifts off on the Kite Glider, then the view fades to the far side
+      const G = this.gliding, H = this.hero.root; G.t += dt;
+      H.position.y = Math.pow(Math.min(G.t, 1.4), 2) * 2.2; G.wing.rotation.z = Math.sin(G.t * 5) * 0.12; H.rotation.y += dt * 0.6;
+      if (G.t > 1.25 && !G.gone) { G.gone = true; const U = G.U; this.S.toast?.(U.back ? '🪁 Wheee! Gliding home...' : `🪁 WHOOSH! Gliding to ${U.name}...`); this.fade(() => { this.gliding = null; this.load(U.to, U.tx, U.ty, U.dir); }); }
+    }
     if (this.kites) for (const K of this.kites) { // the kite swoops in a lazy figure of eight downwind of its flyer; the tail ribbons trail behind
       K.t += dt; const a = K.t * 0.7, kx = K.px + 1.6 + Math.sin(a) * 1.6, ky = 6.4 + Math.sin(a * 2) * 0.7, kz = K.pz - 4.2 + Math.cos(a) * 0.6;
       K.kite.position.set(kx, ky, kz); K.kite.rotation.set(-0.3, 0, Math.sin(a) * 0.5);
@@ -4696,6 +4780,7 @@ export class World {
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
     if (this.chest && this.chest.x === fx && this.chest.y === fy) return this.openChest();
+    const up = this.updrafts?.find((u) => u.x === fx && u.y === fy); if (up) return this.updraftTalk(up);
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
     if (stall) {
       if (stall.kind === 'trinket') return this.say(['TRINKETS: glow rings, spark charms, a keychain shaped like a tiny Jiggawatt...', 'The stall keeper is fast asleep behind the counter. Maybe another night!']);
@@ -4865,6 +4950,7 @@ export class World {
     if (this.dozing(n)) return this.say([`${n.name} is fast asleep, snoring softly. Better let them dream. Zzz...`]);
     a.dir = { n: 's', s: 'n', e: 'w', w: 'e' }[this.dir];
     const dq = deliveryFor(n.id); if (dq) return this.S.worldStory('deliver:' + dq, this, a); // a parcel for them comes first (quest-chain links are givers too)
+    const cq = chainFor(n.id); if (cq) return this.S.worldStory('lost:' + cq, this, a); // a quest-chain link they hand out on top of their own story
     if (n.story) return this.S.worldStory(n.story, this, a);
     const dl = !n.trainer && !(n.id === 'mom' && this.morning) && deliveredLine(n.id); // (Mom's breakfast comes first) if (dl && Math.random() < 0.6) return this.say(dl);
     if (n.trainer) {
