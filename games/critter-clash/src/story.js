@@ -488,6 +488,7 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'gauntlet') return gauntlet(S, w);
   if (id === 'tower') return tower(S, w);
+  if (id === 'masters') return masters(S, w);
   if (id.startsWith('legend:')) return legend(S, w, id.slice(7));
   if (id === 'gauntsign') { // the signpost, with this week's theme chalked underneath
     const th = gauntletTheme(gauntletWeek()), sg = getMap('peak').signs.find((q) => q.act === 'gauntsign');
@@ -993,6 +994,32 @@ function tower(S, w) {
       note: `🗼 Battle Tower: ${n + 1} in a row! Talk to Morra to go on.`,
     });
   }, who), who);
+}
+
+// M4 post-game: the Sunscatter Masters. Each week Marina, Zephyra, Magda and Morra battle the hero in a row at champion level
+// (wins are saved, a loss just means trying that one again). Clearing all four pays 10 berries; the first clear ever gives the Champion's Lei.
+const MASTERS = [['Marina', 'blowfin', 'Coral Captain'], ['Zephyra', 'skimray', 'Wind Sage'], ['Magda', 'smokeshell', 'Caldera Keeper'], ['Morra', 'skimray', 'Tower Master']];
+function masters(S, w) {
+  const A = save.adv, F = A.flags, wk = gauntletWeek(), who = 'Champion Marina';
+  const n = MASTERS.findIndex((_, i) => !F[`mast_${wk}_${i}`]);
+  if (n < 0) {
+    if (!F['mastpay_' + wk]) {
+      F['mastpay_' + wk] = true; save.berries = (save.berries || 0) + 10;
+      const first = !(A.hats ||= []).includes('masterlei'); if (first) A.hats.push('masterlei');
+      A.mastWins = (A.mastWins || 0) + 1; persist(); sfx.jingle(3);
+      return w.say([`${who}: All four of us, one after another! You really are the Champion of the Sunscatter Isles.`, '{hero} got 10 🍓!', ...(first ? ["{hero} got the Champion's Lei! 🌺 (☰ → 🎩 Hats)"] : []), `${who}: We'll be back next week, stronger. Count on it!`], null, who);
+    }
+    return w.say([`${who}: You beat all four of us this week. We're training for Monday!`], null, who);
+  }
+  const [name, critter, title] = MASTERS[n], lv = Math.min(50, save.critters[A.hero].level + 3 + n);
+  w.say([
+    ...(n === 0 ? [`${who}: The isles have a new hero, and the island champions want a proper rematch. Me, Zephyra, Magda... and Morra insisted on coming too.`, `${who}: Four battles, champion level, a new week every Monday. Win them all this week and the isles reward you!`] : []),
+    `${who}: Battle ${n + 1} of 4: ${name} and a shiny ${byId(critter).name}, Lv ${lv}. Ready?`,
+  ], () => S.worldFight({
+    foe: withGear(skinnedShiny(critter), lv), lv, kind: 'story', flag: `mast_${wk}_${n}`, name, diff: Math.min(0.95, 0.88 + n * 0.02), berries: 2,
+    trainer: { name, critter, title: `Sunscatter Master ${n + 1}/4 · ${title}`, beat: n === 3 ? 'Hmph. The last Master falls. Go and tell Marina.' : 'What a battle! The next Master is waiting.', gloat: 'The Masters stand! Come back and try again.' },
+    note: n === 3 ? '🌺 Sunscatter Masters cleared! Talk to Marina.' : `🌺 Master ${n + 1}/4 beaten! +2 🍓`,
+  }), who);
 }
 
 // M4: the two legendaries. Solmoth rests on the Caldera Rim (after the Sunstone Festival); Moonwhal surfaces off Starfall Atoll at night (after Bronze in the Tower)

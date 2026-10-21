@@ -613,6 +613,7 @@ export const MAPS = {
     ],
     signs: [{ x: 13, y: 7, text: 'PORT CORAL\nGateway to the Sunscatter Isles. Mind the crabs.' }],
     npcs: [
+      { id: 'marina_c', x: 4, y: 7, critter: 'blowfin', name: 'Champion Marina', dir: 's', story: 'masters', showFlag: 'sunstone', shiny: true }, // M4: the weekly Sunscatter Masters
       { id: 'gill', x: 12, y: 16, critter: 'blowfin', name: 'Captain Gill', dir: 'n', story: 'ferry', lines: [] },
       { id: 'barnacle', x: 9, act: 'fish', y: 14, critter: 'smokeshell', name: 'Dockhand Shelly', dir: 's', story: 'lost:festlamp', lines: ["Dockhand Shelly: Welcome to the Sunscatter Isles! Three islands, three stadiums, and more sunshine than you can shake a palm at.", "Dockhand Shelly: The critters out here are like nothing on the mainland. Wait till you see a Toucharge sneeze!", "Dockhand Shelly: The coral glows at night. Come down to the pier after dark and look into the water."] },
       { id: 'snorkel', x: 20, act: 'hop', y: 13, critter: 'pumicub', name: 'Snorkeller Pia', dir: 'w', wander: 2, lines: ["Snorkeller Pia: Pumicub floats! I use it as a raft. It doesn't mind. I think.", "Snorkeller Pia: East of town is Palm Path. The tall grass there is full of island critters!"] },

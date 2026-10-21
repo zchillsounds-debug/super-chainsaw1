@@ -1248,6 +1248,7 @@ export class Screens {
         + bar('🦪', 'Hidden pearls', Object.keys(MAPS).filter((k) => MAPS[k].pearl && F['pearl_' + k]).length, Object.keys(MAPS).filter((k) => MAPS[k].pearl).length, true)
         + bar('🌟', 'The Sunstone', F.sunstone ? 'home' : F.morra ? 'found' : 'lost')
         + bar('⛴️', 'Ferry rides', A.cnt?.ferry || 0)
+        + (F.sunstone ? bar('🌺', 'Sunscatter Masters cleared', A.mastWins || 0) : '')
         + (F.sunstone ? bar('🗼', 'Battle Tower best streak', `${A.tower?.best || 0} · ${towerRank(A.tower?.best || 0)[2]} ${towerRank(A.tower?.best || 0)[1]}`) + (A.tower?.streak ? bar('🔥', 'Current Tower streak', A.tower.streak) : '') : '');
     }
     const pc = Math.floor(parts.reduce((a, b) => a + b, 0) / parts.length * 100);
