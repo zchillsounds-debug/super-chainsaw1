@@ -1413,6 +1413,7 @@ export const SHOP_HATS = [
   { id: 'koi', name: 'Koi Bucket Hat', kind: 'koi', col: 0x4a7ab8, band: 0xffd84d, price: 0, gift: true, season: true }, // all four seasonal visitor fish (a year-long goal, so not counted towards the hat total)
   { id: 'eggshell', name: 'Eggshell Cap', kind: 'eggshell', col: 0xfff6e4, band: 0x8ad8a0, price: 0, gift: true }, // the first egg hatched at Nanny Nell's Daycare
   { id: 'sunstone', name: 'Sunstone Circlet', kind: 'laurel', col: 0xffa63a, band: 0xfff2a0, price: 0, gift: true, isle: true }, // Keeper Lumi's thanks for bringing the Sunstone home (Chapter 2 finale)
+  { id: 'spelunk', name: 'Spelunker Cap', kind: 'cap', col: 0xe8b830, band: 0x5a4a3a, price: 0, gift: true, isle: true }, // the Deep Grotto's treasure chest
   { id: 'laurel', name: 'Golden Laurel', kind: 'laurel', col: 0xe8b830, band: 0xfff2a0, price: 0, gift: true }, // the Peak Gauntlet's first clear
 ];
 export function shopHat(cr, id) {

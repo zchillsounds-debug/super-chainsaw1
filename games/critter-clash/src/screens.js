@@ -1182,7 +1182,7 @@ export class Screens {
     body = (A.time >= 60 ? bar('⏱️', 'Time adventuring', playTime(A.time)) : '')
       + bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length)
       + bar('⚔️', 'Trainers beaten', tr.filter((n) => F[n.id]).length, tr.length)
-      + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_')).length, 24)
+      + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_') && !MAPS[k.slice(3, k.lastIndexOf('_'))]?.isle).length, 24)
       + bar('🤝', 'Favours done', fl.rows.filter((r) => r.state === 'done').length, fl.rows.length + fl.unasked)
       + bar('🎩', 'Hats collected', (A.hats || []).filter((id) => { const h = SHOP_HATS.find((q) => q.id === id); return h && !h.season && !h.isle; }).length, SHOP_HATS.filter((h) => !h.season && !h.isle).length)
       + bar('🐟', 'Kinds of fish', [...fsp].filter((n) => !FISH.isle.some((f) => f[0] === n)).length, Object.entries(FISH).filter(([k]) => k !== 'isle').flatMap(([, v]) => v).length)

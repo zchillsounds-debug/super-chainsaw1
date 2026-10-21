@@ -524,6 +524,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'dashatoll') return dashAtoll(S, w);
   if (id === 'dashember') return dashEmber(S, w);
   if (id === 'morra') return morra(S, w);
+  if (id === 'lumi') return lumi(S, w, a);
   if (id === 'dash3') {
     w.say([
       "Dash: Don't bother. I already tried to bash through those brambles. Twelve times.",
@@ -1193,6 +1194,20 @@ function dashAtoll(S, w) {
     'Dash: Her Gulls are all over the island. Morra herself is up at the lighthouse door, guarding the Sunstone.',
     "Dash: ...You go. I'll watch the boat. And if you lose, I'm telling everyone back home. Deal? Deal.",
   ], null, 'Dash');
+}
+
+// Keeper Lumi, once the light is home: her old Sun Lantern opens the Deep Grotto (M3)
+function lumi(S, w, a) {
+  const F = flags();
+  if (!F.lantern) {
+    F.lantern = true; persist(); sfx.jingle?.(3);
+    return w.say([
+      "Keeper Lumi: One more thing, Champion. When I was young I explored every cave in the isles with this: my old Sun Lantern.",
+      'Keeper Lumi: There\'s a chip of the Sunstone inside, so it never goes out. I hear there\'s a dark grotto under the Ash Trail that nobody has seen the end of...',
+      '🏮 You got the SUN LANTERN! Dark caves are no match for it now.',
+    ], null, 'Keeper Lumi');
+  }
+  const L = a?.n?.lines || []; w.say([L[Math.floor(Math.random() * L.length)] || 'Keeper Lumi: The light is back. Thank you.'], null, 'Keeper Lumi');
 }
 
 // the Chapter 2 finale: Captain Morra and her shiny Skimray at the lighthouse door

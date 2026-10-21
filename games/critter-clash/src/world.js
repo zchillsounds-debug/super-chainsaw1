@@ -392,7 +392,7 @@ export class World {
     const hr = save.adv.clock ?? worldHour();
     this.sky = this.skyAt(hr); this.skyT = 20;
     this.outPhase = hr >= 17 && hr < 20 ? 'evening' : hr >= 20 || hr < 6 ? 'night' : 'day'; // what the room windows show
-    this.phase = M.indoor ? 'day' : this.outPhase;
+    this.phase = M.indoor || M.cave ? 'day' : this.outPhase; // (caves keep their own dim light, whatever the hour)
     // now and then a shower rolls over the grassy outdoor maps (the same few hours for everyone, picked from the date)
     // a brand-new adventure starts on a dry day: no showers until Prof. Pecan has sent the hero out (first impressions)
     const showers = canRain(M) && (save.adv.rain ?? (!!save.adv.flags?.quest && rainAt(key, new Date(), hr)));
@@ -427,6 +427,7 @@ export class World {
     this.buildWindmills();
     this.buildBigVolcano();
     this.buildLighthouse();
+    this.buildCave(rand);
     this.buildButterflies();
     this.buildMist();
     this.buildAurora();
@@ -470,10 +471,10 @@ export class World {
     this.hero.root.scale.setScalar(CS);
     this.heroGlow = null;
     const gloomy = this.key === 'glowwood' || this.key === 'glowcap'; // the glowing woods are dim at any hour
-    if ((this.phase === 'night' || gloomy) && !M.indoor) { // after dark (and always in the glowing woods) the moonlight catches the hero's outline, and a soft pool of light walks with them, so you can always spot yourself
+    if ((this.phase === 'night' || gloomy || M.cave) && !M.indoor) { // after dark (and always in the glowing woods) the moonlight catches the hero's outline, and a soft pool of light walks with them, so you can always spot yourself
       this.hero.setRim(0xd8e4ff, 1.7);
-      const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: M.lava ? 0xffa060 : 0x9ab8ff, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.3 }); pm.userData.own = true;
-      this.heroGlow = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 4.6), pm); this.heroGlow.rotation.x = -Math.PI / 2; this.group.add(this.heroGlow);
+      const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: M.lava || M.dark ? 0xffa060 : 0x9ab8ff, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: M.dark ? 0.45 : 0.3 }); pm.userData.own = true;
+      this.heroGlow = new THREE.Mesh(new THREE.PlaneGeometry(M.dark ? 7.5 : 4.6, M.dark ? 7.5 : 4.6), pm); this.heroGlow.rotation.x = -Math.PI / 2; this.group.add(this.heroGlow);
     }
     this.group.add(this.hero.root);
     this.wearHat();
@@ -521,7 +522,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.lighthouse = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.lighthouse = null; this.puz = null; this.chest = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -916,18 +917,21 @@ export class World {
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
       return g;
     };
-    const fronds2 = [], rings = [];
+    const fronds2 = [], rings = [], crag = [];
     if (this.M.city) return this.buildCity(rand);
     if (this.M.indoor) return;
     for (let y = -3; y < this.H + 3; y++) for (let x = -3; x < this.W + 3; x++) {
       const inside = x >= 0 && y >= 0 && x < this.W && y < this.H;
       const t = inside ? this.tile(x, y) : null;
       if (!inside && this.M.border === 'cloud') { if (rand() < 0.45) puff(x, y); continue; }
+      if (this.M.border === 'rock') { if (!inside) { const [px, pz] = wpos(x, y), r = new THREE.IcosahedronGeometry(1.0, 1); r.scale(1.25, 2.0 + rand(), 1.25); r.rotateY(rand() * 3); r.translate(px, 1.2, pz); crag.push(r); } continue; }
       if (!inside && this.M.border !== 'cloud' && this.tile(Math.max(0, Math.min(this.W - 1, x)), Math.max(0, Math.min(this.H - 1, y))) === '~') continue; // open sea past a watery edge: no trees growing out of the waves
       if (t === '~' && this.M.border === 'cloud' && rand() < 0.12) { puff(x, y, 0.6); continue; }
+      if (!inside && this.M.mouth && Math.abs(x - this.M.mouth[0]) <= 2 && y < 0) continue; // keep the cave mouth clear
       if (t === 'P' || (!inside && this.M.border === 'palm' && rand() < 0.3)) palm(x, y);
       else if (inside ? t === 'T' : rand() < 0.85) add(x, y, mid && (!inside || deep(x, y)) ? 0 : dt0, mid && !inside ? 0 : dt0); // medium quality: chunkier canopies on the border skirt, and under the smooth tops deep in the woods
     }
+    if (crag.length) { this.group.add(inked(mergeGeometries(crag), toon(0x5a5064, { rim: 0.08 }), OL * 0.5)); crag.forEach((g) => g.dispose()); }
     if (puffs.length) { this.group.add(inked(mergeGeometries(puffs), toon(0xffffff, { rim: 0.8 }), OL * 0.5)); puffs.forEach((g) => g.dispose()); }
     if (ptrunks.length) { this.group.add(inked(mergeGeometries(ptrunks), toon(0xa8784a), OL * 0.6)); ptrunks.forEach((g) => g.dispose()); }
     if (nuts.length) { this.group.add(inked(mergeGeometries(nuts), toon(0x7a4a2a), OL * 0.4)); nuts.forEach((g) => g.dispose()); }
@@ -1060,7 +1064,7 @@ export class World {
   }
 
   buildProps(rand) {
-    const rocks = [], posts = [], rails = [], boards = [], sticks = [], snow = [], coal = [], carrot = [], drifts = [], frostRocks = [], caps = [], shards = [];
+    const crags = [], rocks = [], posts = [], rails = [], boards = [], sticks = [], snow = [], coal = [], carrot = [], drifts = [], frostRocks = [], caps = [], shards = [];
     const UMB = [[0xff5a7a, 0xffffff], [0x3ac8e8, 0xfff2a0], [0xffb030, 0xffffff]], canopy = [[], [], [], [], [], []], towels = [[], [], [], [], [], []], sand = [], sandD = [], flags = []; let nu = 0;
     const snowmen = this.M.snow && this.key !== 'peak'; // Frostpeak's rocks are snowmen; the Peak's lake keeps its boulders
     for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) {
@@ -1103,6 +1107,7 @@ export class World {
         for (let k = 0; k < 3; k++) { const a = ry + (k - 1) * 0.55, h = (k === 1 ? 1.5 : 1.0) + rand() * 0.3, sh = new THREE.CylinderGeometry(0, 0.2 + rand() * 0.08, h, 6); sh.translate(0, h / 2, 0); sh.rotateZ(-(k === 1 ? 0.3 : 0.55)); sh.rotateY(a); sh.translate(px + Math.cos(a) * 0.55 * sc, 0.3, pz - Math.sin(a) * 0.55 * sc); shards.push(sh); }
         continue;
       }
+      if (t === 'R' && this.M.cave) { const r = new THREE.IcosahedronGeometry(0.95, 1); r.scale(1.2, 1.5 + rand() * 0.9, 1.2); r.rotateY(rand() * 3); r.translate(px, 0.9, pz); crags.push(r); continue; } // cave walls: tall dark crags
       if (t === 'R') { const r = new THREE.DodecahedronGeometry(0.75, 0); r.scale(1.1, 0.75, 1); r.rotateY(rand() * 3); r.translate(px, 0.45, pz); rocks.push(r); }
       if (t === '#') {
         const p = new THREE.BoxGeometry(0.22, 1.0, 0.22); p.translate(px, 0.5, pz); posts.push(p);
@@ -1118,7 +1123,7 @@ export class World {
       const b = new THREE.BoxGeometry(1.2, 0.7, 0.14); b.translate(px, 1.05, pz + 0.05); boards.push(b);
     }
     const put = (list, color, ink = OL) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color), ink); this.group.add(m); list.forEach((g) => g.dispose()); };
-    put(rocks, 0x9a94a8); put(frostRocks, 0x7a8aa8); put(caps, 0xf8fbff, OL * 0.6); put(snow, 0xffffff);
+    put(rocks, 0x9a94a8); if (crags.length) { const m = inked(mergeGeometries(crags), toon(0x7a6e80, { rim: 0.08 }), OL * 0.6); this.group.add(m); crags.forEach((g) => g.dispose()); } put(frostRocks, 0x7a8aa8); put(caps, 0xf8fbff, OL * 0.6); put(snow, 0xffffff);
     if (shards.length) { const m = inked(mergeGeometries(shards), toon(0xa8eaff, { rim: 1 }), OL * 0.5); m.castShadow = true; this.group.add(m); shards.forEach((g) => g.dispose()); } put(coal, 0x2a2a34, 0); put(carrot, 0xff8a2a, OL * 0.4);
     if (drifts.length) { const m = new THREE.Mesh(mergeGeometries(drifts), toon(0xf6faff, { rim: 0.8 })); m.receiveShadow = true; this.group.add(m); drifts.forEach((g) => g.dispose()); }
     put(posts, 0xfff4e0, OL * 0.6); put(rails, 0xfff4e0, OL * 0.5); put(sticks, 0x8a5a3a, OL * 0.5); put(boards, 0xc8925a);
@@ -1319,6 +1324,115 @@ export class World {
       }
     }
     this.lighthouse = { beam };
+  }
+
+  // caves: glowing crystals in the walls, push-boulders, pits, pressure plates and gates, a treasure chest; and on the Ash Trail, the cave mouth
+  buildCave(rand) {
+    this.puz = null; this.chest = null;
+    const M = this.M, F = save.adv.flags;
+    if (M.mouth && !M.indoor) { // a dark arch of rock over the path where it runs into the cliff
+      const [x, y] = M.mouth, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz - 1.0); this.group.add(g);
+      const rock = toon(0x5a5258, { rim: 0.3 });
+      for (const sd of [-1, 1]) { const p = inked(new THREE.DodecahedronGeometry(0.9, 0), rock, OL * 0.5); p.scale.set(0.9, 1.9, 1); p.position.set(sd * 1.15, 1.2, 0); g.add(p); }
+      const top = inked(new THREE.DodecahedronGeometry(1.1, 0), rock, OL * 0.5); top.scale.set(1.9, 0.8, 1); top.position.set(0, 2.6, 0); g.add(top);
+      const hm = new THREE.MeshBasicMaterial({ color: 0x0a0810 }); hm.userData.own = true;
+      const hole = new THREE.Mesh(new THREE.CircleGeometry(0.95, 16, 0, Math.PI), hm); hole.scale.set(1, 2.2, 1); hole.position.set(0, 0.02, -0.2); g.add(hole);
+    }
+    if (!M.cave) return;
+    // crystals: little clusters growing out of the walls next to the floor, glowing teal and violet
+    const cr = [[], []];
+    for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) {
+      if (this.tile(x, y) !== 'R' || rand() > 0.22) continue;
+      const near = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dx, dy]) => this.tile(x + dx, y + dy) !== 'R'); if (!near) continue;
+      const [px, pz] = wpos(x, y), k = rand() < 0.5 ? 0 : 1;
+      for (let j = 0; j < 3; j++) { const c = new THREE.OctahedronGeometry(0.18 + rand() * 0.12, 0); c.scale(0.6, 1.8, 0.6); c.rotateZ((rand() - 0.5) * 0.8); c.translate(px + near[0] * 0.75 + (rand() - 0.5) * 0.5, 0.35 + rand() * 0.3, pz + near[1] * 0.75 + (rand() - 0.5) * 0.5); cr[k].push(c); }
+    }
+    cr.forEach((L, k) => { if (!L.length) return; const m = new THREE.MeshBasicMaterial({ color: k ? 0xb08aff : 0x5ae8e0 }); m.userData.own = true; this.group.add(inked(mergeGeometries(L), m, OL * 0.25)); L.forEach((g) => g.dispose()); });
+    const P = this.puz = { boulders: [], pits: [], plates: [], gates: [] };
+    const stone = toon(0xc0b4a8, { rim: 0.25 });
+    const pitDone = M.pitFlag && F[M.pitFlag], gateDone = M.gateFlag && F[M.gateFlag];
+    for (const [x, y] of M.pits || []) { // a dark pit (filled with rubble once a boulder drops in)
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0.02, pz); this.group.add(g);
+      const mm = new THREE.MeshBasicMaterial({ color: pitDone ? 0x6a6070 : 0x050308 }); mm.userData.own = true;
+      const m = new THREE.Mesh(new THREE.CircleGeometry(0.95, 16), mm); m.rotation.x = -Math.PI / 2; g.add(m);
+      const rim = inked(new THREE.TorusGeometry(0.95, 0.08, 4, 18), toon(0x3a3240), OL * 0.2); rim.rotation.x = Math.PI / 2; g.add(rim);
+      P.pits.push({ x, y, mm, full: !!pitDone }); if (!pitDone) this.solid.add(x + ',' + y);
+    }
+    for (const [x, y] of M.plates || []) { // a rune stone in the floor that glows when something heavy sits on it
+      const [px, pz] = wpos(x, y), pm = new THREE.MeshBasicMaterial({ color: 0x3a6a8a }); pm.userData.own = true;
+      const base = inked(new THREE.BoxGeometry(1.4, 0.1, 1.4), toon(0x4a4250), OL * 0.3); base.position.set(px, 0.05, pz); this.group.add(base);
+      const rune = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.42, 6), pm); rune.rotation.x = -Math.PI / 2; rune.position.set(px, 0.11, pz); this.group.add(rune);
+      P.plates.push({ x, y, pm });
+    }
+    for (const [x, y] of M.gates || []) { // iron bars between two stone posts; they sink into the floor when the plate is pressed
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g);
+      const iron = toon(0x3a3a48, { rim: 0.6 });
+      for (const sd of [-1, 1]) { const p = inked(new THREE.BoxGeometry(0.3, 2.0, 0.3), stone, OL * 0.4); p.position.set(sd * 0.95, 1.0, 0); g.add(p); }
+      const bars = new THREE.Group(); g.add(bars);
+      for (let k = -2; k <= 2; k++) { const b = inked(new THREE.CylinderGeometry(0.05, 0.05, 1.7, 6), iron, OL * 0.2); b.position.set(k * 0.32, 0.85, 0); bars.add(b); }
+      const bar = inked(new THREE.BoxGeometry(1.6, 0.1, 0.1), iron, OL * 0.2); bar.position.y = 1.5; bars.add(bar);
+      if (gateDone) bars.position.y = -1.75; else this.solid.add(x + ',' + y);
+      P.gates.push({ x, y, bars, open: !!gateDone, t: 0 });
+    }
+    for (const [x, y, role] of M.boulders || []) {
+      if (role === 'pit' && pitDone) continue; // it's down the pit now
+      const at = role === 'plate' && gateDone ? M.plates[0] : [x, y], [px, pz] = wpos(...at);
+      const m = inked(new THREE.DodecahedronGeometry(0.72, 0), stone, OL * 0.6); m.scale.set(1, 0.9, 1); m.rotation.y = x + y; m.position.set(px, 0.62, pz); m.castShadow = true; this.group.add(m);
+      P.boulders.push({ x: at[0], y: at[1], m, t: 0 }); this.solid.add(at[0] + ',' + at[1]);
+    }
+    this.pressPlates(true);
+    if (M.chest) { // a treasure chest at the end of the cave
+      const C = M.chest, [px, pz] = wpos(C.x, C.y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(C.x + ',' + C.y);
+      const wood = toon(0x9a5a2a), gold = toon(0xffc93a, { rim: 0.9, emissive: 0x3a2400 });
+      const box = inked(new THREE.BoxGeometry(1.1, 0.6, 0.75), wood, OL * 0.4); box.position.y = 0.3; g.add(box);
+      const lid = new THREE.Group(); lid.position.set(0, 0.6, -0.37); g.add(lid);
+      const top = inked(new THREE.CylinderGeometry(0.37, 0.37, 1.1, 12, 1, false, 0, Math.PI), wood, OL * 0.4); top.rotation.z = Math.PI / 2; top.position.z = 0.37; lid.add(top);
+      for (const sx of [-0.4, 0.4]) { const band = inked(new THREE.BoxGeometry(0.1, 0.62, 0.78), gold, OL * 0.2); band.position.set(sx, 0.3, 0); g.add(band); }
+      const lock = inked(new THREE.BoxGeometry(0.18, 0.2, 0.06), gold, OL * 0.2); lock.position.set(0, 0.5, 0.39); g.add(lock);
+      if (F[C.flag]) lid.rotation.x = -1.9;
+      this.chest = { ...C, lid, px, pz };
+    }
+  }
+
+  // a shove: the boulder rolls one tile on if the way is clear (or drops into a pit)
+  push(B, dx, dy, dir) {
+    const bx = B.x + dx, by = B.y + dy, P = this.puz, M = this.M;
+    const pit = P.pits.find((p) => p.x === bx && p.y === by && !p.full);
+    const free = pit || (this.walkable(bx, by) && !this.occupied(bx, by) && !P.boulders.some((b) => b.x === bx && b.y === by) && !(this.chest && this.chest.x === bx && this.chest.y === by));
+    if (!free || this.busy) return this.bump();
+    sfx.foot?.('stone'); this.g.input?.haptic?.(20);
+    this.solid.delete(B.x + ',' + B.y); B.from = [B.x, B.y]; B.x = bx; B.y = by; B.t = 0.28; B.dx = dx; B.dy = dy;
+    if (pit) { // down it goes, and the pit is a floor now
+      pit.full = true; B.drop = pit; if (M.pitFlag) { save.adv.flags[M.pitFlag] = true; persist(); }
+      setTimeout(() => { if (!this.puz) return; this.group.remove(B.m); P.boulders.splice(P.boulders.indexOf(B), 1); pit.mm.color.set(0x6a6070); this.solid.delete(bx + ',' + by); sfx.foot?.('stone');
+        for (let k = 0; k < 12; k++) { const [px, pz] = wpos(bx, by); this.g.fx.spawn({ x: px + (Math.random() - 0.5), y: 0.3, z: pz + (Math.random() - 0.5), vx: (Math.random() - 0.5) * 2, vy: 1.5 + Math.random() * 2, vz: (Math.random() - 0.5) * 2, color: 0x8a8094, alpha: 0.8, size: 0.35, life: 0.7, shape: 'puff', grav: 5, additive: false }); }
+        this.S.toast?.('🪨 The boulder fills the pit. You can walk across now!'); }, 300);
+    } else this.solid.add(bx + ',' + by);
+    setTimeout(() => this.puz && this.pressPlates(), 300);
+    this.tryMove(dir); // the hero leans in and follows the boulder
+  }
+
+  // plates glow under a boulder; when every plate is pressed, the gates sink (and stay open: the flag remembers)
+  pressPlates(quiet) {
+    const P = this.puz, M = this.M; if (!P?.plates.length) return;
+    let all = true;
+    for (const p of P.plates) { const on = P.boulders.some((b) => b.x === p.x && b.y === p.y); p.pm.color.set(on ? 0x6af0ff : 0x3a6a8a); all &&= on; }
+    if (!all || P.gates.every((g) => g.open)) return;
+    for (const g of P.gates) { g.open = true; g.t = 1; this.solid.delete(g.x + ',' + g.y); }
+    if (M.gateFlag) { save.adv.flags[M.gateFlag] = true; persist(); }
+    if (!quiet) { sfx.jingle?.(2); this.S.toast?.('⚙️ Clunk! Somewhere, a gate grinds open.'); }
+  }
+
+  // the Deep Grotto's treasure: a hat and a pouch of berries
+  openChest() {
+    const C = this.chest, F = save.adv.flags;
+    if (F[C.flag]) return this.say(['The chest is empty. Just a little dust, and a very old map of the isles.']);
+    F[C.flag] = true; const hats = (save.adv.hats ||= []), hat = C.hat && !hats.includes(C.hat); if (hat) hats.push(C.hat);
+    save.berries = (save.berries || 0) + (C.berries || 0); persist(); sfx.jingle?.(3);
+    C.open = 0.01;
+    for (let k = 0; k < 16; k++) this.g.fx.spawn({ x: C.px, y: 0.8, z: C.pz, vx: (Math.random() - 0.5) * 2.5, vy: 2 + Math.random() * 2, vz: (Math.random() - 0.5) * 2.5, color: 0xffd84a, size: 0.4, life: 1, shape: 'star', grav: 4 });
+    const name = SHOP_HATS.find((h) => h.id === C.hat)?.name;
+    return this.say([`{hero} heaves the lid open... TREASURE! A pouch of ${C.berries} berries! +${C.berries} 🍓`, ...(hat ? [`...and a ${name}, with a little lamp on the front! 🎩 (☰ → 🎩 Hats)`] : [])]);
   }
 
   // kite kids: a kite on a long line, swooping over their heads
@@ -3920,11 +4034,14 @@ export class World {
     // off the edge of the map: on to the next one
     if (nx < 0 || ny < 0 || nx >= this.W || ny >= this.H) {
       const e = this.M.edges?.[nx < 0 ? 'w' : nx >= this.W ? 'e' : ny < 0 ? 'n' : 's'];
+      if (e?.need && !save.adv.flags[e.need]) { this.bump(); return this.say([e.needSay]); }
       if (e && this.tile(this.hx, this.hy) !== 'T') { this.goTo(e, dir, nx, ny); return; }
       const X = this.M.exit;
       if (X && dir === 's') { sfx.door(); this.fade(() => this.load(X.map, X.x, X.y, 's')); return; }
       return this.bump();
     }
+    const bo = this.puz?.boulders.find((b) => b.x === nx && b.y === ny);
+    if (bo) return this.push(bo, dx, dy, dir);
     const who = this.occupied(nx, ny, 'hero');
     if (who?.wild) { this.wildFight(who); return; }
     if (who || !this.walkable(nx, ny)) return this.bump();
@@ -4205,6 +4322,11 @@ export class World {
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
     if (this.statue) { const T = this.statue; T.glow.material.opacity = 0.3 + Math.sin(this.t * 1.6) * 0.08; if (Math.random() < dt * 2) this.g.fx.spawn({ x: T.px + (Math.random() - 0.5) * 1.6, y: 0.8 + Math.random() * 1.8, z: T.pz + (Math.random() - 0.5) * 1.2, vy: 0.3, life: 1.2, size: 0.3, color: 0xfff0a0, shape: 'star', alpha: 0.9 }); }
     if (this.bigVolcano && Math.random() < dt * 5) { const V = this.bigVolcano, sc = 1.6 + Math.random(); this.g.fx.spawn({ x: V.x + (Math.random() - 0.5) * 3, y: V.y, z: V.z + (Math.random() - 0.5) * 3, vx: 0.8 + Math.random() * 0.6, vy: 2.2, vz: 0.2, color: this.phase === 'day' ? 0xd8d0cc : 0x8a7a80, size: sc, life: 4.5, shape: 'glow', grav: 0, additive: false, alpha: 0.55 }); } // a lazy smoke plume drifting downwind
+    if (this.puz) {
+      for (const B of this.puz.boulders) if (B.t > 0) { B.t = Math.max(0, B.t - dt); const k = 1 - B.t / 0.28, [ax, az] = wpos(...B.from), [bx, bz] = wpos(B.x, B.y); B.m.position.x = ax + (bx - ax) * k; B.m.position.z = az + (bz - az) * k; B.m.rotation.x += dt * 9 * (B.dy || 0); B.m.rotation.z -= dt * 9 * (B.dx || 0); if (B.drop) B.m.position.y = 0.62 - k * 1.2; }
+      for (const G of this.puz.gates) if (G.t > 0) { G.t = Math.max(0, G.t - dt * 0.8); G.bars.position.y = -1.75 * (1 - G.t); }
+    }
+    if (this.chest?.open > 0 && this.chest.open < 1) { this.chest.open = Math.min(1, this.chest.open + dt * 2.5); this.chest.lid.rotation.x = -1.9 * this.chest.open; }
     if (this.lighthouse?.beam) this.lighthouse.beam.rotation.y += dt * 0.6;
     if (this.windmills) for (const W of this.windmills) W.sails.rotation.z -= dt * W.sp;
     if (this.kites) for (const K of this.kites) { // the kite swoops in a lazy figure of eight downwind of its flyer; the tail ribbons trail behind
@@ -4555,6 +4677,7 @@ export class World {
     if (this.roomFest && this.roomFest.x === fx && this.roomFest.y === fy) return this.say([this.roomFest.tw ? 'A little potted tree, hung with baubles and a golden star. Even indoors, it\'s Twinkle Week!' : this.outPhase === 'day' ? 'Two carved pumpkins wait in the corner for nightfall. The big one has a wonky grin.' : 'Two jack-o\'-lanterns flicker in the corner, grinning at {hero}. Happy Pumpkin Nights!']);
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
+    if (this.chest && this.chest.x === fx && this.chest.y === fy) return this.openChest();
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
     if (stall) {
       if (stall.kind === 'trinket') return this.say(['TRINKETS: glow rings, spark charms, a keychain shaped like a tiny Jiggawatt...', 'The stall keeper is fast asleep behind the counter. Maybe another night!']);
