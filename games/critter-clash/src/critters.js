@@ -1418,6 +1418,11 @@ export const SHOP_HATS = [
   { id: 'glidegog', name: 'Glider Goggles', kind: 'aviator', col: 0xff5a4a, band: 0x9ad8ff, price: 0, gift: true, isle: true }, // Hana's Kite Glider chain (Bluffs → Cloudtop → Neon → Bluffs)
   { id: 'obsidian', name: 'Obsidian Helm', kind: 'helm', col: 0x3a3040, band: 0xff8a3a, price: 0, gift: true, isle: true }, // the treasure on the hidden Caldera Rim (glide there on the Ember Isle thermal)
   { id: 'pearl', name: 'Pearl Circlet', kind: 'laurel', col: 0xfff4f8, band: 0xffb8c8, price: 0, gift: true, isle: true }, // every hidden pearl in the Sunscatter Isles (one per island map)
+  // the Battle Tower on Starfall Atoll: one per rank (Bronze 7 wins in a row, Silver 14, Gold 21, Legend 35)
+  { id: 'towercap', name: 'Tower Cap', kind: 'cap', col: 0xc8803a, band: 0xffe0a0, price: 0, gift: true, isle: true },
+  { id: 'silverlaurel', name: 'Silver Laurel', kind: 'laurel', col: 0xdfe4f0, band: 0x9ad8ff, price: 0, gift: true, isle: true },
+  { id: 'towercrown', name: 'Tower Crown', kind: 'crown', col: 0xffc93a, band: 0xff4a6a, price: 0, gift: true, isle: true },
+  { id: 'morrahat', name: "Morra's Tricorn", kind: 'tricorn', col: 0x3a2a5a, band: 0xffc93a, price: 0, gift: true, isle: true },
   { id: 'laurel', name: 'Golden Laurel', kind: 'laurel', col: 0xe8b830, band: 0xfff2a0, price: 0, gift: true }, // the Peak Gauntlet's first clear
 ];
 export function shopHat(cr, id) {
@@ -1451,6 +1456,13 @@ export function hatModel(cr, kind, col, band) {
     for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, l = add(new THREE.SphereGeometry(r * 0.42, 12, 8), M, 0.014); l.scale.set(0.7, 0.85, 1); l.position.set(Math.cos(a) * r * 0.3, r * 0.32, Math.sin(a) * r * 0.3); l.rotation.y = -a; }
     const st = add(new THREE.CylinderGeometry(r * 0.07, r * 0.1, r * 0.3, 6), toon(band), 0.01); st.position.y = r * 0.78; st.rotation.z = 0.3;
     const lf = add(new THREE.SphereGeometry(r * 0.2, 8, 6), toon(0x5aa83a), 0.01); lf.scale.set(1, 0.25, 0.6); lf.position.set(r * 0.2, r * 0.72, 0);
+  }
+  if (kind === 'crown') { // a spiky royal crown with a gem on every point (the Battle Tower's Gold rank)
+    add(new THREE.CylinderGeometry(r * 0.62, r * 0.66, r * 0.3, 18, 1, true), toon(col, { rim: 0.9, side: THREE.DoubleSide })).position.y = r * 0.1;
+    const gem = toon(band, { rim: 1, emissive: new THREE.Color(band).multiplyScalar(0.25).getHex() });
+    for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2, sp = add(new THREE.ConeGeometry(r * 0.13, r * 0.36, 6), toon(col, { rim: 0.9 }), 0.012); sp.position.set(Math.cos(a) * r * 0.62, r * 0.4, Math.sin(a) * r * 0.62);
+      const gm = add(new THREE.SphereGeometry(r * 0.07, 8, 6), gem, 0); gm.position.set(Math.cos(a) * r * 0.68, r * 0.12, Math.sin(a) * r * 0.68); }
+    G.position.y += r * 0.02;
   }
   if (kind === 'laurel') { // a ring of golden leaves, two by two, with a bright gem at the front
     add(new THREE.TorusGeometry(r * 0.78, r * 0.045, 6, 22)).rotation.x = Math.PI / 2;

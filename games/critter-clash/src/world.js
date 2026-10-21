@@ -2907,7 +2907,8 @@ export class World {
   buildBuildings() {
     this.doors = []; this.chimneys = []; this.pennants = []; this.medals = []; this.labDish = this.beacon = null;
     if (!this.M.city) this.drones = null;
-    for (const b of this.M.buildings || []) {
+    for (const b0 of this.M.buildings || []) {
+      const b = b0.after && save.adv.flags[b0.after.flag] ? { ...b0, ...b0.after } : b0; // (a building can change after a story flag: the hideout becomes the Battle Tower)
       const x0 = b.x * TILE, z0 = b.y * TILE, w = b.w * TILE, d = b.h * TILE;
       const G = new THREE.Group();
       G.position.set(x0 + w / 2, 0, z0 + d / 2);
@@ -3015,6 +3016,7 @@ export class World {
         }
         if (b.heal) { const cr = inked(new THREE.BoxGeometry(0.9, 0.9, 0.1), toon(0xffffff), OL * 0.5); cr.position.set(dx, wallH - 0.1, front + 0.04); G.add(cr); const h = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.12), toon(0xff5a8a)); h.position.copy(cr.position); h.position.z += 0.03; G.add(h); const v2 = h.clone(); v2.rotation.z = Math.PI / 2; G.add(v2); }
       }
+      if (b.bt) this.battleTower(G, w, d);
       bakeStatic({ root: G, mats: {}, keep: [this.labDish, this.beacon, ...this.pennants, ...this.medals] }); // one mesh per material for the static parts (draw calls)
       this.group.add(G);
       this.doors.push({ x: b.x + b.door, y: b.y + b.h - 1, b });
@@ -3911,6 +3913,21 @@ export class World {
   }
 
   // Neon City: a lit tower with a neon band and a glowing sign over the door
+  // the Battle Tower: a round stone tower rising from the back of the old hideout, battlements, a blue-and-gold banner and a flag on top
+  battleTower(G, w, d) {
+    const stone = toon(0xd8d0c4, { rim: 0.4 }), dark = toon(0xb0a898), blue = toon(0x3a5aa8, { side: THREE.DoubleSide }), gold = toon(0xffc93a, { rim: 0.9 });
+    const T = new THREE.Group(); T.position.set(0, 0, -d / 2 + 0.9); G.add(T);
+    const body = inked(new THREE.CylinderGeometry(1.15, 1.35, 6.2, 16), stone, OL * 0.5); body.position.y = 3.1; body.castShadow = true; T.add(body);
+    for (const h of [2.2, 4.4]) { const band = inked(new THREE.CylinderGeometry(1.32 - h * 0.03, 1.32 - h * 0.03, 0.18, 16), dark, OL * 0.3); band.position.y = h; T.add(band); }
+    const top = inked(new THREE.CylinderGeometry(1.45, 1.25, 0.5, 16), stone, OL * 0.4); top.position.y = 6.4; T.add(top);
+    for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, m = inked(new THREE.BoxGeometry(0.42, 0.45, 0.32), stone, OL * 0.3); m.position.set(Math.cos(a) * 1.3, 6.85, Math.sin(a) * 1.3); m.rotation.y = -a; T.add(m); }
+    for (const [y, a] of [[3.3, 0], [5.0, 0.5]]) { const win = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.6), toon(0x2a3a5a)); win.position.set(Math.sin(a) * 1.3, y, Math.cos(a) * 1.3); win.rotation.y = a; T.add(win); }
+    const ban = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.6), blue); ban.position.set(0, 4.3, 1.36); T.add(ban);
+    const star = new THREE.Mesh(new THREE.CircleGeometry(0.24, 5), gold); star.position.set(0, 4.5, 1.37); T.add(star);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.6, 6), toon(0x8a8a90)); pole.position.y = 7.6; T.add(pole);
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.5), toon(0xffc93a, { side: THREE.DoubleSide })); flag.position.set(0.45, 8.1, 0); T.add(flag);
+  }
+
   towerModel(G, b, w, d) {
     const h = 3.4;
     const bx = new THREE.BoxGeometry(w - 0.4, h, d - 0.5), uv = bx.attributes.uv;

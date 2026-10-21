@@ -3,6 +3,7 @@
 // Tiles: W wall, C shelf, X machine (arcade cabinet, smoothie blender, lab console), Q bed, D table,
 // O potted plant, K counter (talk across it), Y rug (walkable), H hat stand (Hat Shop). Walking south off the doormat goes back out.
 import { MAPS } from './worldmaps.js';
+import { save } from './save.js';
 import { CUPS, CRITTERS, cupById } from './data.js';
 const shade = (hex, k) => { const n = parseInt(String(hex).replace('#', ''), 16); return (Math.round((n >> 16 & 255) * k) << 16) | (Math.round((n >> 8 & 255) * k) << 8) | Math.round((n & 255) * k); }; // a colour, dimmed
 
@@ -142,6 +143,16 @@ const ROOMS = {
     'WO....YYY....OW',
     'WWWWWWW.WWWWWWW',
   ],
+  tower: [ // the Battle Tower hall (Starfall Atoll): the Tower Master's counter, a long rug, plants and tables for the fans
+    'WWWWWWWWWWWWWWW',
+    'WO...........OW',
+    'W.....KKK.....W',
+    'W.............W',
+    'WD....YYY....DW',
+    'W.....YYY.....W',
+    'WO....YYY....OW',
+    'WWWWWWW.WWWWWWW',
+  ],
   arcade: [
     'WWWWWWWWWWWWW',
     'WXXX.....XXXW',
@@ -179,6 +190,12 @@ const PEOPLE = {
   'coral:berry_c': { visitor: ['blowfin', 'Puffy Pua', ['Puffy Pua: The smoothies here come with a little paper umbrella. Blowfin always tries to eat it.'], 'w', 9, 4], wall: '#ffe8f0' },
   'coral:cottage_c': { npcs: [['smokeshell', 'Grandma Kalani', ['Grandma Kalani: Welcome, mainlander! My Smokeshell keeps the cottage nice and toasty. A bit too toasty, some days.', 'Grandma Kalani: Fire critters love the volcano on Ember Isle. Bring a water critter if you go to the Caldera Cup!', 'Grandma Kalani: In my day the Starfall lighthouse shone every night. Sailors could always find home. Now... nothing but dark.'], 'e', 3, 2]], wall: '#fff0dc', rug: '#ffa64a' },
   'bluffs:berry_g': { visitor: ['skimray', 'Glider Noe', ['Glider Noe: The nurse ties every smoothie cup down with string. Up here, they blow away otherwise!'], 'e', 3, 4], wall: '#e4f4ff' },
+  'atoll:hideout_a': { npcs: [ // the Gloom Gull hideout; after the finale, Morra turns it into the Battle Tower
+    ['hootsy', 'Gloom Gull Noddy', ['Gloom Gull Noddy: Caw! This is the Gloom Gull hideout! Members only! ...Do you want to be a member? We have snacks.', 'Gloom Gull Noddy: Captain Morra is up at the lighthouse. She is VERY scary. I am only a bit scary.'], 's', 7, 3, null, '!sunstone'],
+    ['skimray', 'Tower Master Morra', [], 's', 7, 1, 'tower', 'sunstone'],
+    ['hootsy', 'Tower Fan Noddy', ['Tower Fan Noddy: Caw! The captain says battling is a better hobby than stealing the sun. I agree! Mostly.', 'Tower Fan Noddy: Seven wins in a row and the captain herself steps in. Her Skimray is SHINY. And mean.'], 'e', 2, 3, null, 'sunstone'],
+    ['squeakwing', 'Tower Fan Petra', ['Tower Fan Petra: I watch every streak. The best ever? Somebody got to twelve. Then sneezed. Then lost.', 'Tower Fan Petra: Rest at the Port Coral Berry Center between streaks! Your streak waits for you.'], 'w', 12, 3, null, 'sunstone'],
+  ], kind: 'tower', wall: '#e4dccc', rug: '#3a5aa8' },
   'bluffs:loft_g': { npcs: [['whirlwhisk', 'Apprentice Nalu', ['Apprentice Nalu: Welcome to the Kite Loft! Every kite on the Bluffs was stitched right here.', 'Apprentice Nalu: The secret is a long tail. A kite without a tail spins like a Whirlwhisk. I would know.', 'Apprentice Nalu: Kitemaker Hana? She\'s out at the south cliff edge, testing kites in the updraft. She practically lives there.'], 's', 5, 2]], kind: 'kidroom', name: 'Kite Loft', wall: '#e0f0ff', rug: '#5ab8ff' },
   'ember_isle:berry_e': { visitor: ['smokeshell', 'Toasty Keoni', ["Toasty Keoni: The nurse chills the smoothies in a bucket of sea water. On Ember Isle, that's the fanciest fridge there is."], 'w', 9, 4], wall: '#ffe8e0' },
   'ember_isle:shack_e': { npcs: [['blowfin', 'Surfer Malia', ['Surfer Malia: Ash surfs lava on a stone board. I surf WATER, like a normal person. Wanna see my board? It has a shark on it.', "Surfer Malia: Water critters soak fire critters. If you're going up against Magda, bring a splash!", 'Surfer Malia: At night you can see the crater glow from the beach. Spooky. Pretty, but spooky.'], 'e', 3, 2]], kind: 'cabin', name: 'Surf Shack', wall: '#fff0d0', rug: '#ff8a3a', floor: { a: '#c89a62', b: '#c0925a' } },
@@ -219,13 +236,14 @@ const ITEMS = {
 
 export function interiorMap(key) {
   const [, outer, bid] = key.split(':');
-  const O = MAPS[outer], b = O?.buildings?.find((x) => x.id === bid);
+  const O = MAPS[outer], b0 = O?.buildings?.find((x) => x.id === bid), b = b0?.after && save.adv?.flags?.[b0.after.flag] ? { ...b0, ...b0.after } : b0; // (a building can change after a story flag)
   if (!b) return null;
   const P = PEOPLE[`${outer}:${bid}`] || {};
   const kind = P.kind || (b.stadium ? 'lobby' : b.heal ? 'center' : b.lab ? 'lab' : 'house');
   const tiles = ROOMS[kind];
   const W = tiles[0].length, H = tiles.length, door = tiles[H - 1].indexOf('.');
-  const npcs = (P.npcs || []).map(([critter, name, lines, dir, x, y, story], k) => ({ id: 'in' + k, critter, name, lines, dir, x, y, wander: story ? 0 : 1, story }));
+  const has = (f) => !f || (f[0] === '!' ? !save.adv?.flags?.[f.slice(1)] : !!save.adv?.flags?.[f]); // an 8th entry: only there once a flag is set ('!flag': until it is)
+  const npcs = (P.npcs || []).map(([critter, name, lines, dir, x, y, story, need], k) => ({ id: 'in' + k, critter, name, lines, dir, x, y, wander: story ? 0 : 1, story, need })).filter((n) => has(n.need));
   if (b.stadium) { // a front desk to sign up for the cup, and two fans who can't wait
     const cup = cupById(b.stadium), m = cup.matches;
     npcs.push({ id: 'desk', critter: 'hootsy', name: 'Front Desk', dir: 's', x: 7, y: 1, story: 'cupdesk' });

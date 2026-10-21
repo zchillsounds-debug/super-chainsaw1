@@ -11,7 +11,7 @@ import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
 import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, seasonKey } from './world.js';
-import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp } from './story.js';
+import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp, towerRank } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
 
@@ -1239,7 +1239,8 @@ export class Screens {
         + bar('📸', 'Island landmarks', (A.snaps || []).filter((id) => LANDMARKS.find((l) => l.id === id)?.isle).length, LANDMARKS.filter((l) => l.isle).length, true)
         + bar('🦪', 'Hidden pearls', Object.keys(MAPS).filter((k) => MAPS[k].pearl && F['pearl_' + k]).length, Object.keys(MAPS).filter((k) => MAPS[k].pearl).length, true)
         + bar('🌟', 'The Sunstone', F.sunstone ? 'home' : F.morra ? 'found' : 'lost')
-        + bar('⛴️', 'Ferry rides', A.cnt?.ferry || 0);
+        + bar('⛴️', 'Ferry rides', A.cnt?.ferry || 0)
+        + (F.sunstone ? bar('🗼', 'Battle Tower best streak', `${A.tower?.best || 0} · ${towerRank(A.tower?.best || 0)[2]} ${towerRank(A.tower?.best || 0)[1]}`) + (A.tower?.streak ? bar('🔥', 'Current Tower streak', A.tower.streak) : '') : '');
     }
     const pc = Math.floor(parts.reduce((a, b) => a + b, 0) / parts.length * 100);
     body = `<li class="jr-total ${pc >= 100 ? 'full' : ''}"><b>${pc >= 100 ? '🌟 Clashara complete!' : '🗺️ Clashara explored'}</b><em>${pc}%</em><i style="--p:${pc / 100}"></i></li>` + body;

@@ -255,7 +255,7 @@ export const CRITTERS = [
     colors: { body: 0x9a9498, belly: 0xece4d8, accent: 0xff8a4a, dark: 0x3a363c, eye: '#1a1418', iris: '#c07a3a', ash: 0xdcd6d2 },
     body: { w: 0.64, h: 0.56, headR: 0.5, legLen: 0.14, armLen: 0.19, chubby: 1.15 },
     ears: 'round', tail: 'stub', extra: 'pumice', voice: 1.0, isle: true,
-    stats: { hp: 1240, speed: 6.5, power: 1.24, weight: 1.2 },
+    stats: { hp: 1290, speed: 6.7, power: 1.27, weight: 1.2 },
     special: 'pound', super: 'quake',
     moves: { special: 'Pumice Pound', super: 'Ashfall Quake' },
   },

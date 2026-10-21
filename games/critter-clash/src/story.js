@@ -482,6 +482,7 @@ export function storyTalk(S, id, w, a) {
     return;
   }
   if (id === 'gauntlet') return gauntlet(S, w);
+  if (id === 'tower') return tower(S, w);
   if (id === 'gauntsign') { // the signpost, with this week's theme chalked underneath
     const th = gauntletTheme(gauntletWeek()), sg = getMap('peak').signs.find((q) => q.act === 'gauntsign');
     return w.say([sg.text, `Someone has chalked a note underneath. "THIS WEEK: ${TYPES[th[0]].name.toUpperCase()} & ${TYPES[th[1]].name.toUpperCase()}!"`], null, '📜 Sign');
@@ -937,6 +938,53 @@ function gauntlet(S, w) {
     trainer: { name: f.name, critter: f.id, title: `Gauntlet ${n + 1}/5`, beat: n === 4 ? 'The last Ace falls! Go tell Orla!' : 'Well fought. The next Ace is waiting.', gloat: 'The Gauntlet stands! Come back and try again.' },
     note: n === 4 ? '🏔️ Peak Gauntlet cleared! Talk to Keeper Orla.' : `🏔️ Gauntlet ${n + 1}/5 won! +2 🍓`,
   }), who);
+}
+
+// M4 post-game: the Battle Tower in the old Gloom Gull hideout on Starfall Atoll. Win battles in a row; every 7th is Tower Master Morra herself.
+// The streak waits while you rest (it only ends on a loss). Ranks at 7 / 14 / 21 / 35 wins in a row, each with a hat the first time.
+const TOWER_ACES = ['Ace Coral', 'Ace Rennick', 'Ace Ola', 'Ace Brisa', 'Ace Kai', 'Ace Talia', 'Ace Nim', 'Ace Hoku', 'Ace Pua', 'Ace Ezra', 'Ace Mako', 'Ace Lio'];
+export const TOWER_RANKS = [[0, 'Rookie', '🪶'], [7, 'Bronze', '🥉', 'towercap', 10], [14, 'Silver', '🥈', 'silverlaurel', 15], [21, 'Gold', '🥇', 'towercrown', 20], [35, 'Legend', '👑', 'morrahat', 30]];
+export const towerRank = (n) => [...TOWER_RANKS].reverse().find((r) => n >= r[0]);
+export function towerFoe(run, n, hero) { // a shuffled order of every critter per streak, so a set of seven never repeats a critter
+  let h = ((run + 7) * 2654435761) >>> 0; const r = () => ((h = (h * 1103515245 + 12345) >>> 0) >>> 8) / 16777216;
+  const pool = CRITTERS.filter((c) => c.id !== hero).map((c) => c.id);
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  return { id: pool[n % pool.length], name: TOWER_ACES[(n * 5 + run * 3) % TOWER_ACES.length] };
+}
+function tower(S, w) {
+  const A = save.adv, F = A.flags, T = (A.tower ||= { streak: 0, best: 0, run: 0, wins: 0 }), who = 'Tower Master Morra';
+  const out = [];
+  if (T.pending) { // back from a Tower battle: did the streak survive?
+    T.pending = false;
+    if (F.tower_win) {
+      T.streak++; T.wins++; T.best = Math.max(T.best, T.streak);
+      const R = TOWER_RANKS.find((q) => q[0] === T.streak);
+      if (R && R[3] && !(A.hats ||= []).includes(R[3])) {
+        A.hats.push(R[3]); save.berries = (save.berries || 0) + R[4];
+        const hat = SHOP_HATS.find((x) => x.id === R[3]);
+        out.push(`${who}: ${T.streak} in a row! That makes you ${R[1]} rank. ${R[2]}`, `{hero} got the ${hat.name}! 🎩 +${R[4]} 🍓 (☰ → 🎩 Hats)`);
+        if (R[1] === 'Legend') out.push(`${who}: ...My own tricorn. Fine. You earned it. Do NOT tell the Gulls I gave you my hat.`);
+        sfx.jingle?.(3);
+      } else out.push(T.streak % 7 === 0 ? `${who}: You beat ME. Again. ${T.streak} in a row... Hmph. Impressive.` : `${who}: ${T.streak} in a row. Not bad, Champion.`);
+    } else {
+      out.push(`${who}: Ha! The streak ends at ${T.streak}. ${T.streak >= T.best && T.streak > 0 ? 'Still, that is your best ever.' : `Your best is ${T.best}.`}`, `${who}: Rest up and start a new streak whenever you like.`);
+      T.streak = 0; T.run++;
+    }
+    F.tower_win = false; persist();
+  }
+  const n = T.streak, boss = n % 7 === 6, rank = towerRank(T.best), lv = Math.min(50, save.critters[A.hero].level + 1 + Math.floor(n / 4) + (boss ? 2 : 0));
+  const f = boss ? { id: 'skimray', name: 'Tower Master Morra' } : towerFoe(T.run, n, A.hero), def = byId(f.id);
+  if (!T.seen) { T.seen = true; out.push(`${who}: Welcome to my Battle Tower! The Gulls needed a hobby that was not stealing the sun.`, `${who}: The rules: win battles in a row. Every seventh, you face ME. Lose once and the streak is over. Rest whenever you like; the streak waits.`, `${who}: Seven in a row for Bronze, then Silver, Gold... and Legend. Each rank wins you something special.`); persist(); }
+  out.push(`${who}: Streak ${n} · best ${T.best} (${rank[2]} ${rank[1]}). ${boss ? 'Battle 7 of the set... that is ME. Ready to lose?' : `Next: ${f.name} with ${def.name}, Lv ${lv}.`}`);
+  w.say(out, () => w.ask(boss ? 'Face Tower Master Morra?' : `Battle #${n + 1}?`, ['Battle!', 'Rest'], (i) => {
+    if (i) return w.say([`${who}: Your streak of ${n} waits right here. Don't keep me waiting too long.`], null, who);
+    T.pending = true; F.tower_win = false; persist();
+    S.worldFight({
+      foe: withGear(boss ? skinnedShiny('skimray') : def, lv), lv, kind: 'story', flag: 'tower_win', name: f.name, diff: Math.min(0.94, 0.76 + n * 0.008 + (boss ? 0.04 : 0)), berries: boss ? 4 : 1,
+      trainer: { name: f.name, critter: f.id, title: boss ? 'Tower Master' : `Battle Tower #${n + 1}`, beat: boss ? 'Beaten in my own tower?! ...Talk to me. We are not done.' : 'Good battle! Back to the Tower Master.', gloat: boss ? 'The tower stands! As do I.' : 'Your streak ends here!' },
+      note: `🗼 Battle Tower: ${n + 1} in a row! Talk to Morra to go on.`,
+    });
+  }, who), who);
 }
 
 // SKY HOP (the right-hand cabinets) keeps its own best score and its own daily prize
