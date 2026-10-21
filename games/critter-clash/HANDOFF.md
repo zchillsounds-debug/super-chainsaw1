@@ -1,6 +1,13 @@
 # Critter Clash: Handoff (after Round 279, Adventure mode polish)
 
-## 48-hour run
+## NEW (2026-10-21): Chapter 2 roadmap and a new 48-hour run
+- The first 48-hour run is over. It ended at 2026-10-20 21:52 UTC, and session 17r (R655–R671) was its last session.
+- The user then agreed a roadmap: **read `games/critter-clash/ROADMAP.md` first.** It covers new critters, a Chapter 2 region and story, deeper side content and post-game challenges, with about 80% new content.
+- **The new run's end time is set by its first session (start + 48 h), on the line below.** Later sessions never reset it.
+- **New 48-hour run end time: (not set yet; the first session of the new run writes it here)**
+- Round numbers continue from the highest R in `git log` (R672 next).
+
+## 48-hour run (the first one, finished)
 - **48-hour run end time: 2026-10-20 21:52 UTC** (started 2026-10-18 15:44 UTC by session 17a; pushed back 88 min by a worker stall in session 17g, 22:45–00:13 UTC, 4 h 17 min by a worker stall in session 17n, ~10:00–14:17 UTC on 2026-10-19, and 23 min by a worker restart in session 17r, ~19:08–19:31 UTC on 2026-10-19). Later sessions read this and do NOT reset it. If a worker stalls, push this end time back by the length of the stall.
 - Each session builds ~100 minutes (or less near 300k context), then chains with the user's prompt word for word (see "Chaining"). Round numbers continue from the highest R in `git log`.
 - **Session 17r (2026-10-19 18:18–~19:45 UTC, a worker restart ~19:08–19:31, session_01XNLHQuvCA3bwuJZLRkhYe5) did R655–R671 (see "Session 17r"); next round R672. It could not chain (session lineage depth limit, 8): **the user must start the next session by hand** with the 48-hour prompt in "Chaining".**
