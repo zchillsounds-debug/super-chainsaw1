@@ -344,6 +344,7 @@ export function nextGoal(F) {
     if (!F.glider) return 'Kitemaker Hana at the south cliff of Breezy Bluffs is building a glider you can ride. Lend her a hand!';
     if (!F.legend_moonwhal) return 'Something sings under Starfall Atoll on starry nights... Go down to the beach after dark.';
     if (!F.legend_solmoth) return F.festlamp_done ? 'A great golden glow rests on the volcano. Glide up the Ember Isle thermal to the Caldera Rim!' : 'The isles want a Sunstone Festival! Weather Watcher Iona on Breezy Bluffs has a job for you.';
+    if (!F.dash_show) return 'Dash is on Starfall Atoll, training harder than ever. He wants one last, full-strength battle!';
     return 'You saved the Sunscatter Isles! Climb the Battle Tower ranks, find every hidden pearl and explore.';
   }
   if (!F.quest) return 'Visit Professor Pecan\'s lab in Sprout Village.';
@@ -531,6 +532,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'skua') return skua(S, w);
   if (id === 'dashatoll') return dashAtoll(S, w);
   if (id === 'dashember') return dashEmber(S, w);
+  if (id === 'dashshow') return dashShow(S, w);
   if (id === 'morra') return morra(S, w);
   if (id === 'lumi') return lumi(S, w, a);
   if (id === 'dash3') {
@@ -998,7 +1000,7 @@ function tower(S, w) {
 
 // M4 post-game: the Sunscatter Masters. Each week Marina, Zephyra, Magda and Morra battle the hero in a row at champion level
 // (wins are saved, a loss just means trying that one again). Clearing all four pays 10 berries; the first clear ever gives the Champion's Lei.
-const MASTERS = [['Marina', 'blowfin', 'Coral Captain'], ['Zephyra', 'skimray', 'Wind Sage'], ['Magda', 'smokeshell', 'Caldera Keeper'], ['Morra', 'skimray', 'Tower Master']];
+export const MASTERS = [['Marina', 'blowfin', 'Coral Captain'], ['Zephyra', 'skimray', 'Wind Sage'], ['Magda', 'smokeshell', 'Caldera Keeper'], ['Morra', 'skimray', 'Tower Master']];
 function masters(S, w) {
   const A = save.adv, F = A.flags, wk = gauntletWeek(), who = 'Champion Marina';
   const n = MASTERS.findIndex((_, i) => !F[`mast_${wk}_${i}`]);
@@ -1347,6 +1349,36 @@ function dashEmber(S, w) {
     trainer: { name: 'Dash', critter: rid, title: 'Island rival', beat: "Hot hot HOT... okay, you win the volcano round. But the Sunstone race? That's still on!", gloat: 'Ha! Too hot to handle!' },
     note: '🌋 You beat Dash on Ember Isle!',
   }));
+}
+
+// M4 post-game: the Rival Showdown on Starfall Atoll. Dash's strongest team-mate at full strength (shiny gear, hero level +5),
+// once; after that a tougher daily rematch than the mainland one
+function dashShow(S, w) {
+  const F = flags(), rid = rivalFor(save.adv.hero), hl = save.critters[save.adv.hero].level, day = new Date().toISOString().slice(0, 10);
+  const trainer = (beat, gloat, title) => ({ name: 'Dash', critter: rid, title, beat, gloat });
+  if (!F.dash_show) {
+    const lv = Math.min(50, hl + 5);
+    return w.say([
+      "Dash: Champ! I've been training on this beach every day since the light came back. Morra's Skimray? I can dodge it with my eyes shut now.",
+      "Dash: Every time we battled, you were ahead. Mainland, islands, all of it. So no more warm-ups, no holding back.",
+      `Dash: My ${byId(rid).name} at FULL strength, Lv ${lv}. One battle. Whoever wins is the real number one. Ready?`,
+    ], () => S.worldFight({
+      foe: withGear(skinnedShiny(rid), lv), lv, kind: 'story', flag: 'dash_show', name: 'Rival Dash', diff: 0.95, berries: 15,
+      trainer: trainer("...Wow. That was my best. My very best. And you still won. ...You really are the Champion, huh. Here, take this. You earned it.", 'YES!! I did it! ...Wait, again. Best of three. Okay, best of one more. Come back!', 'Rival Showdown'),
+      note: "🔥 You won the Rival Showdown! +15 🍓 Talk to Dash again.",
+    }), 'Dash');
+  }
+  if (!(save.adv.hats ||= []).includes('rivalband')) {
+    save.adv.hats.push('rivalband'); persist(); sfx.jingle?.(2);
+    return w.say(["Dash: This was my lucky headband. I wore it for every battle since Sprout Village. ...Every battle I lost to you, too. Maybe it'll work better on you.", "{hero} got Dash's Headband! 🎩 (☰ → 🎩 Hats)", 'Dash: I\'ll still be here every day. One battle a day, island rules. And one day I\'ll win it back!'], null, 'Dash');
+  }
+  if (F['dashisle_' + day]) return w.say(["Dash: Okay, that's today's battle. I'm going to run laps round the lighthouse. Forty of them!"], null, 'Dash');
+  const lv = Math.min(50, hl + 4);
+  w.say(['Dash: Island rules, Champ. One battle a day, full strength. Let\'s go!'], () => S.worldFight({
+    foe: withGear(skinnedShiny(rid), lv), lv, kind: 'story', flag: 'dashisle_' + day, name: 'Rival Dash', diff: 0.9, berries: 4,
+    trainer: trainer('Argh! So close! Tomorrow, Champ. Tomorrow.', "Ha! Did you see that?! I'm writing this one down!", 'Island rival'),
+    note: "⚡ You beat Dash again! +4 🍓 (He'll be back tomorrow.)",
+  }), 'Dash');
 }
 
 // Starfall Atoll: Dash got there first, and lost

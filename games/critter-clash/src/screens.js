@@ -11,7 +11,7 @@ import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
 import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, seasonKey } from './world.js';
-import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp, towerRank } from './story.js';
+import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, gauntletFoes } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
 
@@ -1337,6 +1337,25 @@ export class Screens {
         + (after.length ? `<li class="jr-head">🌙 After dark${night ? ` <small>${after.filter((r) => r[3]).length}/${after.length}</small>` : ' <small>(wait for the evening, or nap at home)</small>'}</li>` + sect(after) : '')
         + `<li class="jr-more">${n === all.length ? '🌟 Everything done today! See you tomorrow.' : `${n} of ${all.length} done today. ${save.adv.perfect === new Date().toISOString().slice(0, 10) ? '🌟 Perfect day bonus earned!' : 'Tick every ☀️ row for a perfect-day bonus!'}`}</li>`
         + `<li class="jr-tip">💡 ${this.tipOfDay()}</li>`;
+    } else if (tab === 'champ') { // post-game (M4): the Battle Tower ladder, this week's Masters and Gauntlet, the legendaries and Dash
+      const A = save.adv, F = A.flags, T = A.tower || {}, wk = gauntletWeek(), hats = A.hats || [], nm = (id) => CRITTERS.find((c) => c.id === id)?.name || id;
+      const rowC = (ic, name, where, done) => `<li class="jr-fish jr-day ${done ? 'got' : ''}"><span>${done ? '✅' : ic}</span><b>${name}</b><em>${where}</em></li>`;
+      const mDone = MASTERS.filter((_, i) => F[`mast_${wk}_${i}`]).length, gf = gauntletFoes(wk, A.hero), gDone = gf.filter((_, i) => F[`gaunt_${wk}_${i}`]).length;
+      const left = 7 - ((Math.floor(Date.now() / 864e5) + 3) % 7);
+      body = `<li class="jr-head">🗼 Battle Tower <small>best ${T.best || 0} · ${towerRank(T.best || 0)[2]} ${towerRank(T.best || 0)[1]}</small></li>`
+        + `<li class="jr-more">🔥 Current streak: <b>${T.streak || 0}</b>${T.streak ? ` · next is battle ${T.streak + 1}${(T.streak + 1) % 7 === 0 ? ': Morra!' : ` (Morra at ${Math.ceil((T.streak + 1) / 7) * 7})`}` : ''} · ${T.wins || 0} Tower wins in all</li>`
+        + TOWER_RANKS.slice(1).map(([n, name, ic, hat, b]) => rowC(ic, `${name} rank`, (T.best || 0) >= n ? `${SHOP_HATS.find((h) => h.id === hat)?.name}` : `${n} in a row · ${SHOP_HATS.find((h) => h.id === hat)?.name} +${b} 🍓`, (T.best || 0) >= n)).join('')
+        + `<li class="jr-head">🌺 Sunscatter Masters <small>this week ${mDone}/4</small></li>`
+        + MASTERS.map(([name, cr, title], i) => rowC('⭐', `${name} <small>${title}</small>`, F[`mast_${wk}_${i}`] ? 'beaten' : `shiny ${nm(cr)}`, F[`mast_${wk}_${i}`])).join('')
+        + `<li class="jr-more">${mDone === 4 ? (F['mastpay_' + wk] ? '🌟 Cleared this week!' : '🌟 All four beaten! Talk to Marina in Port Coral.') : 'Champion Marina waits outside Coral Stadium.'} ${A.mastWins ? `Cleared ${A.mastWins} week${A.mastWins > 1 ? 's' : ''}${hats.includes('masterlei') ? " · Champion's Lei 🌺" : ''}.` : ''} New Masters in ${left} day${left > 1 ? 's' : ''}.</li>`
+        + `<li class="jr-head">🏔️ Peak Gauntlet <small>this week ${gDone}/5</small></li>`
+        + `<li class="jr-more">${gDone === 5 ? '🌟 Cleared this week!' : `Next: ${gf[gDone] ? nm(gf[gDone].id) : ''} on Champion's Peak (Keeper Orla).`} ${A.gauntWins ? `Cleared ${A.gauntWins} week${A.gauntWins > 1 ? 's' : ''}.` : ''}</li>`
+        + `<li class="jr-head">✨ Legendary critters <small>${['solmoth', 'moonwhal'].filter((id) => F['legend_' + id]).length}/2</small></li>`
+        + rowC('🌞', 'Solmoth <small>Dawn Moth</small>', F.legend_solmoth ? 'befriended' : F.festlamp_done ? 'rests on the Caldera Rim' : 'waits for a festival…', F.legend_solmoth)
+        + rowC('🌙', 'Moonwhal <small>Moon Narwhal</small>', F.legend_moonwhal ? 'befriended' : F.tower_bronze ? 'Starfall beach, after dark' : 'sings for a Tower hero…', F.legend_moonwhal)
+        + `<li class="jr-head">⚡ Rival Dash</li>`
+        + rowC('🔥', 'Rival Showdown', F.dash_show ? (hats.includes('rivalband') ? "won · Dash's Headband" : 'won! Talk to Dash') : 'Starfall Atoll', F.dash_show)
+        + (F.dash_show ? rowC('⚔️', "Today's island rematch", F['dashisle_' + new Date().toISOString().slice(0, 10)] ? 'done' : 'Starfall Atoll', F['dashisle_' + new Date().toISOString().slice(0, 10)]) : '');
     } else if (tab === 'night') { // the star log (Sprout Village's telescope) and the bottle notes read on Seashell's shore
       const seen = save.adv.consts || [], read = save.adv.notes || [];
       body = `<li class="jr-head">🔭 Star log <small>${seen.length}/${CONSTELLATIONS.length}</small></li>`
@@ -1355,7 +1374,7 @@ export class Screens {
         + `<li class="jr-more">${Object.keys(sp).length}/${Object.values(FISH).flat().length} kinds${L.season ? ` · ${Object.keys(L.season).length}/4 seasonal` : ''} · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
     }
     d.innerHTML = `<div class="modal wd-journal"><h2>Journal</h2>
-      <div class="jr-tabs"><button data-t="today" class="${tab === 'today' ? 'on' : ''}">📅 Today</button><button data-t="fav" class="${tab === 'fav' ? 'on' : ''}">🤝 Favours</button><button data-t="fish" class="${tab === 'fish' ? 'on' : ''}">🐟 Fish</button><button data-t="night" class="${tab === 'night' ? 'on' : ''}">🌌 Night</button><button data-t="rec" class="${tab === 'rec' ? 'on' : ''}">🏅 Records</button></div>
+      <div class="jr-tabs"><button data-t="today" class="${tab === 'today' ? 'on' : ''}">📅 Today</button><button data-t="fav" class="${tab === 'fav' ? 'on' : ''}">🤝 Favours</button><button data-t="fish" class="${tab === 'fish' ? 'on' : ''}">🐟 Fish</button><button data-t="night" class="${tab === 'night' ? 'on' : ''}">🌌 Night</button><button data-t="rec" class="${tab === 'rec' ? 'on' : ''}">🏅 Records</button>${save.adv.flags.sunstone ? `<button data-t="champ" class="${tab === 'champ' ? 'on' : ''}">🏆 Champ</button>` : ''}</div>
       <ul class="jr-list">${body || '<li class="jr-more">Nobody has asked for help yet. Townsfolk with a ❗ over their heads have a favour to ask!</li>'}</ul>
       <div class="res-btns"></div></div>`;
     const close = () => { d.remove(); this.game.modalClose = null; };

@@ -1425,6 +1425,7 @@ export const SHOP_HATS = [
   { id: 'silverlaurel', name: 'Silver Laurel', kind: 'laurel', col: 0xdfe4f0, band: 0x9ad8ff, price: 0, gift: true, isle: true },
   { id: 'towercrown', name: 'Tower Crown', kind: 'crown', col: 0xffc93a, band: 0xff4a6a, price: 0, gift: true, isle: true },
   { id: 'morrahat', name: "Morra's Tricorn", kind: 'tricorn', col: 0x3a2a5a, band: 0xffc93a, price: 0, gift: true, isle: true },
+  { id: 'rivalband', name: "Dash's Headband", kind: 'band', col: 0xe8443a, band: 0xffffff, price: 0, gift: true, isle: true }, // the Rival Showdown on Starfall Atoll
   { id: 'masterlei', name: "Champion's Lei", kind: 'flower', col: 0x3ac8b8, band: 0xffc93a, price: 0, gift: true, isle: true }, // the Sunscatter Masters' first clear
   { id: 'laurel', name: 'Golden Laurel', kind: 'laurel', col: 0xe8b830, band: 0xfff2a0, price: 0, gift: true }, // the Peak Gauntlet's first clear
 ];
