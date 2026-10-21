@@ -378,7 +378,13 @@ export function storyTalk(S, id, w, a) {
     // where the next cup is, in story order
     const WHERE = [['sprout', 'Bloom Town, north along Route 1'], ['thunder', 'Seashell Town, east along Route 2 from Bloom Town'], ['grove', 'Glowcap Hollow, through the woods north of Seashell Town'], ['champion', 'Cinder Town, down the volcano road east of Glowcap Hollow'], ['midnight', 'Neon City, east of Cinder Town'], ['sky', 'Cloudtop Gardens. Captain Puff flies there from Neon City'], ['legend', 'Frostpeak. Captain Puff flies there from Cloudtop']];
     const nx = WHERE.find(([id]) => !F['cup_' + id]), cup = nx && CUPS.find((c) => c.id === nx[0]);
-    w.say([...forecast(), F.crowned ? 'Prof. Pecan: Our very own Champion of Clashara! Come back and tell me everything sometime.'
+    // post-game: the professor has been reading up on the Sunscatter legends (a hint for whichever is still out there)
+    const lore = !F.sunstone ? null
+      : save.adv.hero === 'solmoth' || save.adv.hero === 'moonwhal' ? `Prof. Pecan: Is that... ${byId(save.adv.hero).name}?! A real legend, in my lab! Hold still, I need a sketch. Oh, my hands are shaking!`
+      : !F.legend_solmoth ? `Prof. Pecan: I've been reading old island books. One tells of a golden moth that wakes on a volcano rim when the isles celebrate the sun. ${F.festlamp_done ? 'Your festival! It must be awake now!' : 'Has anyone held a festival out there?'}`
+      : !F.legend_moonwhal ? `Prof. Pecan: The same old book speaks of a narwhal that sings to the moon off a lighthouse beach. ${F.tower_bronze ? 'Morra heard it singing, you say? Then go at night!' : 'Only sailors with real Battle Tower grit ever hear it, apparently.'}`
+      : 'Prof. Pecan: Solmoth AND Moonwhal, both friends of yours! The sun and the moon. I\'m rewriting chapter twelve of my book because of you.';
+    w.say([...forecast(), ...(lore ? [lore] : []), F.crowned ? 'Prof. Pecan: Our very own Champion of Clashara! Come back and tell me everything sometime.'
       : nx ? `Prof. Pecan: ${F.cup_sprout ? 'Marvellous work so far! ' : ''}Your next goal is the ${cup.name}, in ${nx[1]}.`
       : "Prof. Pecan: Seven cups! Champion's Peak is north of Frostpeak. The Crown is waiting!"]);
     return;

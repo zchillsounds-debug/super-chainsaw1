@@ -390,6 +390,12 @@ export class Screens {
         "Kitemaker Hana on Breezy Bluffs is building a glider you can ride. She needs help from Kite Flyer Gale and Tinker Volt on the mainland. Updrafts could carry you somewhere nobody has been!",
         "And the islanders whisper of two legends: a golden moth that carries the dawn, and a narwhal that sings to the moon. Some people say pearls hide on every island, too. They only twinkle when you're close...",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.sunstone && save.news?.includes('adv29') && !save.news.includes('adv30') && ((save.adv.tower?.best || 0) >= 7 || save.adv.flags.glider || save.adv.flags.legend_solmoth || save.adv.flags.legend_moonwhal)) {
+      save.news.push('adv30'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! Dash called me from Starfall Atoll. He's been training on that beach every single day, and he wants one last battle at full strength. He sounded very serious. Then he sneezed.",
+        "Your Journal has a new 🏆 Champ page, too: your Battle Tower ranks, this week's Sunscatter Masters and Peak Gauntlet, and the island legends, all in one place.",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
