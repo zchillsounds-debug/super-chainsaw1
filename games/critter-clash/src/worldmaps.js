@@ -826,6 +826,7 @@ export const MAPS = {
     signs: [{ x: 8, y: 12, text: 'STARFALL ATOLL\nThe lighthouse has guided sailors home for a hundred years.' }],
     wild: { list: [['skimray', 25, 27], ['toucharge', 25, 27], ['blowfin', 25, 27], ['smokeshell', 26, 28], ['mossloth', 26, 28], ['pumicub', 26, 28]], roam: 3, rate: 0.1 },
     npcs: [
+      { id: 'moonwhal_a', x: 15, y: 13, critter: 'moonwhal', name: 'Moonwhal', dir: 'w', story: 'legend:moonwhal', showFlag: 'tower_bronze', hideFlag: 'legend_moonwhal', scale: 1.5 }, // M4 legendary: dozes in the shallows; wakes after dark
       { id: 'gill_a', x: 9, y: 15, critter: 'blowfin', name: 'Captain Gill', dir: 'n', story: 'ferry', lines: [] },
       { id: 'dash_a', x: 13, y: 11, rival: true, rlv: 26, name: 'Dash', dir: 'w', story: 'dashatoll', hideFlag: 'sunstone' },
       { id: 'petrel_a', x: 16, y: 9, critter: 'squeakwing', name: 'Gloom Gull Petrel', dir: 'w', trainer: { lv: 26, sight: 3, diff: 0.85, intro: 'Gloom Gull Petrel: Caw! Nobody sets foot on our atoll! Squeakwing, scare them back into the sea!', beat: 'Gloom Gull Petrel: Caw... caw... ow.', after: 'Gloom Gull Petrel: The captain wanted the Sunstone so the night would last forever. I just wanted a cool black balloon.' } },
@@ -905,6 +906,7 @@ export const MAPS = {
     signs: [{ x: 6, y: 12, text: 'CALDERA RIM\n(A scorched old board:) "TOO HOT. GO HOME. — the Volcano Lab"' }],
     wild: { list: [['smokeshell', 28, 30], ['pumicub', 28, 30], ['cindermunch', 28, 30], ['kindlekit', 29, 31]], roam: 3, rate: 0.12 },
     npcs: [
+      { id: 'solmoth_r', x: 14, y: 2, critter: 'solmoth', name: 'Solmoth', dir: 's', story: 'legend:solmoth', showFlag: 'festlamp_done', hideFlag: 'legend_solmoth', scale: 1.5, act: 'hop' }, // M4 legendary: rests by the crater after the Sunstone Festival
       { id: 'cinder_r', x: 16, y: 9, act: 'read', critter: 'smokeshell', name: 'Volcanologist Ash', dir: 'w', lines: ["Volcanologist Ash: WHO glides into an active crater?! ...Okay, I did too. Hana's glider? Same.", 'Volcanologist Ash: The lava lake is cooling a little every year. In a thousand years you could skate on it. Bring a coat.', "Volcanologist Ash: Magda sends me up here to listen to the volcano. Today it said 'blorp'. That's a good sign."] },
     ],
   },

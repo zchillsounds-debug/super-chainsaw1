@@ -951,8 +951,9 @@ export class Critter {
         w.position.set(s * 0.08, B.h * (0.72 - k * 0.2), -B.w * 0.38);
         w.userData = { s, k };
         const leaf = new THREE.Mesh(new THREE.CircleGeometry(0.5, 20), wingMat);
-        leaf.scale.set(k ? 0.5 : 0.72, k ? 0.22 : 0.3, 1);
-        leaf.position.x = s * (k ? 0.24 : 0.36);
+        const wm = def.wingMul || 1; // (Solmoth's moth wings are much bigger than Emberfly's)
+        leaf.scale.set((k ? 0.5 : 0.72) * wm, (k ? 0.22 : 0.3) * wm, 1);
+        leaf.position.x = s * (k ? 0.24 : 0.36) * wm;
         const edge = new THREE.Mesh(new THREE.RingGeometry(0.46, 0.5, 24), veinMat);
         edge.scale.copy(leaf.scale); edge.position.copy(leaf.position);
         w.add(leaf, edge);

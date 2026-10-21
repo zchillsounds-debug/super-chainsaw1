@@ -483,6 +483,7 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'gauntlet') return gauntlet(S, w);
   if (id === 'tower') return tower(S, w);
+  if (id.startsWith('legend:')) return legend(S, w, id.slice(7));
   if (id === 'gauntsign') { // the signpost, with this week's theme chalked underneath
     const th = gauntletTheme(gauntletWeek()), sg = getMap('peak').signs.find((q) => q.act === 'gauntsign');
     return w.say([sg.text, `Someone has chalked a note underneath. "THIS WEEK: ${TYPES[th[0]].name.toUpperCase()} & ${TYPES[th[1]].name.toUpperCase()}!"`], null, '📜 Sign');
@@ -963,6 +964,8 @@ function tower(S, w) {
         A.hats.push(R[3]); save.berries = (save.berries || 0) + R[4];
         const hat = SHOP_HATS.find((x) => x.id === R[3]);
         out.push(`${who}: ${T.streak} in a row! That makes you ${R[1]} rank. ${R[2]}`, `{hero} got the ${hat.name}! 🎩 +${R[4]} 🍓 (☰ → 🎩 Hats)`);
+        F['tower_' + R[1].toLowerCase()] = true;
+        if (R[1] === 'Bronze') out.push(`${who}: Now you are strong enough to hear this. On starry nights, something sings under the atoll. Something BIG. Go down to the beach after dark... if you dare.`);
         if (R[1] === 'Legend') out.push(`${who}: ...My own tricorn. Fine. You earned it. Do NOT tell the Gulls I gave you my hat.`);
         sfx.jingle?.(3);
       } else out.push(T.streak % 7 === 0 ? `${who}: You beat ME. Again. ${T.streak} in a row... Hmph. Impressive.` : `${who}: ${T.streak} in a row. Not bad, Champion.`);
@@ -985,6 +988,26 @@ function tower(S, w) {
       note: `🗼 Battle Tower: ${n + 1} in a row! Talk to Morra to go on.`,
     });
   }, who), who);
+}
+
+// M4: the two legendaries. Solmoth rests on the Caldera Rim (after the Sunstone Festival); Moonwhal surfaces off Starfall Atoll at night (after Bronze in the Tower)
+const LEGENDS = {
+  solmoth: { lv: 36, diff: 0.92, flag: 'legend_solmoth', title: 'Legendary Dawn Moth', when: () => true,
+    meet: ['The air shimmers with heat... and something huge unfolds on the crater rim. Two great golden wings, patterned like the Sunstone itself.', 'SOLMOTH, the Dawn Moth! It turns to {hero}. The lava lake glows brighter.', 'Solmoth beats its wings once. A wave of warm light washes over you. It wants to see if you are worthy!'],
+    win: 'The Dawn Moth folds its wings, and its glow turns soft and warm...', note: '🌞 You befriended Solmoth, the Dawn Moth!' },
+  moonwhal: { lv: 36, diff: 0.92, flag: 'legend_moonwhal', title: 'Legendary Moon Narwhal', when: (w) => w.phase === 'night',
+    wait: ['A great shape drifts in the shallows, asleep. A long ivory horn rests on the sand.', 'It opens one silver eye at {hero}, then closes it again. It only wakes under the stars. (Come back at night!)'],
+    meet: ['A soft song rises out of the dark water. The stars shimmer on the waves... and a great narwhal surfaces, its horn glowing like a sliver of the moon.', 'MOONWHAL, the Moon Narwhal! Morra\'s lonely singer of the dark.', 'Moonwhal sings one long, low note... and dives straight at {hero}!'],
+    win: 'The song turns soft and happy, and the great narwhal swims closer...', note: '🌙 You befriended Moonwhal, the Moon Narwhal!' },
+};
+function legend(S, w, id) {
+  const L = LEGENDS[id], def = byId(id);
+  if (!L.when(w)) return w.say(L.wait);
+  w.say(L.meet, () => { sfx.jingle?.(3); S.worldFight({
+    foe: withGear(def, L.lv), lv: L.lv, kind: 'story', flag: L.flag, name: def.name, diff: L.diff, recruit: true, berries: 10,
+    trainer: { name: def.name, critter: id, title: L.title, beat: L.win, gloat: `${def.name} vanishes... It will be back. Try again!` },
+    note: L.note,
+  }); });
 }
 
 // SKY HOP (the right-hand cabinets) keeps its own best score and its own daily prize

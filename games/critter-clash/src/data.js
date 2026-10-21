@@ -269,6 +269,29 @@ export const CRITTERS = [
     special: 'skimloop', super: 'cyclone',
     moves: { special: 'Skim Loop', super: 'Squall Spin' },
   },
+  // ---- M4: the two legendaries of the Sunscatter Isles (befriended after boss battles in the Adventure) ----
+  {
+    id: 'solmoth', name: 'Solmoth', type: 'fire', species: 'Dawn Moth',
+    blurb: 'A great golden moth said to carry the first light of every morning. Its wings were the pattern for the Sunstone itself.',
+    colors: { body: 0xffb43a, belly: 0xfff2c8, accent: 0xff5a2a, dark: 0x7a3a10, eye: '#2a1008', iris: '#ff3a1a', flame: 0xffd24a, flameIn: 0xfff8d0 },
+    body: { w: 0.56, h: 0.62, headR: 0.5, legLen: 0.14, armLen: 0.2, chubby: 1.0 },
+    ears: 'antennae', tail: 'puff', extra: 'wings', wingMul: 2.1, voice: 1.25, isle: true, legend: true,
+    parts: { sunmane: 0.45 },
+    stats: { hp: 1180, speed: 7.2, power: 1.14, weight: 0.9 },
+    special: 'swoop', super: 'supernova',
+    moves: { special: 'Sunflare Swoop', super: 'Daybreak' },
+  },
+  {
+    id: 'moonwhal', name: 'Moonwhal', type: 'water', species: 'Moonlight Narwhal',
+    blurb: 'Sings under the sea on starry nights. Sailors say its horn is a sliver of the moon that fell into the waves.',
+    colors: { body: 0x8aa8e0, belly: 0xf4f8ff, accent: 0xfff2a8, dark: 0x2a3a6a, eye: '#0c1430', iris: '#6ac8ff', horn: 0xfff4c8, fin: 0x6a88c8, pearl: 0xfff8e0, steel: 0xfff4d8, collar: 0x6a88c8 },
+    body: { w: 0.64, h: 0.58, headR: 0.5, legLen: 0.1, armLen: 0.16, chubby: 1.15 },
+    ears: 'none', tail: 'fin', extra: 'none', voice: 0.8, isle: true, legend: true,
+    parts: { narhorn: 0.8, pearl: 0.7 },
+    stats: { hp: 1340, speed: 6.4, power: 1.16, weight: 1.15 },
+    special: 'iceslide', super: 'whirlpool',
+    moves: { special: 'Moonlit Glide', super: 'Moon Tide' },
+  },
 ];
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
@@ -297,6 +320,8 @@ export const SHINY = {
   mossloth:    { body: 0xe8c8a0, belly: 0xfff6ea, accent: 0xff9ad0, dark: 0x6a4a2e, iris: '#ff6ab0', flower: 0xffe066 },
   toucharge:   { body: 0xf2f2f6, belly: 0xffe0a0, accent: 0xff6ab0, dark: 0x4a4a5a, iris: '#ff4f9a', tip: 0x8a3aff },
   pumicub:     { body: 0x3a3238, belly: 0x8a7a80, accent: 0x6ae0ff, dark: 0x16121a, iris: '#6ae0ff', ash: 0x8a8088 },
+  solmoth:     { body: 0xd8e4ff, belly: 0xffffff, accent: 0x8a6aff, dark: 0x3a3a7a, iris: '#8a6aff', flame: 0xa8d8ff, flameIn: 0xffffff },
+  moonwhal:    { body: 0x3a2a5a, belly: 0xe8d8ff, accent: 0xff9ad8, dark: 0x140c24, iris: '#ff9ad8', horn: 0xffd8f0, fin: 0x5a3a8a, steel: 0xffd8f0, collar: 0x5a3a8a },
   skimray:     { body: 0x2a2a3a, belly: 0xffe6f4, accent: 0xffb0d8, dark: 0x0e0e18, iris: '#ff6ab0' },
 };
 

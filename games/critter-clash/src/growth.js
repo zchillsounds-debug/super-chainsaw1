@@ -369,6 +369,29 @@ export const FORMS = {
         colors: { body: 0xb83e30, dark: 0x4a1a14, rock: 0x3a2c34, lava: 0xff6a1e, horn: 0xfff0d0 }, parts: { lavaplates: 1, brows: 0.9, horns: 0.7, flamecrest: 0.6 }, moves: { special: 'Caldera Burst', super: 'Volcano Year' } },
     ],
   },
+  // ---- M4 legendaries ----
+  solmoth: {
+    path: 'Mystic',
+    forms: [
+      { name: 'Solarwing', species: 'Dawn Moth', size: 1.12, voice: 1.1, bodyMul: { ...GROW2, w: 1.1 },
+        blurb: 'Its wings now glow even at night, like two small sunrises. Cold islands warm up when it lands.',
+        colors: { body: 0xffa42a, flame: 0xffe066 }, parts: { sunmane: 0.6, orbs: 0.35 }, moves: { special: 'Solar Swoop', super: 'High Noon' } },
+      { name: 'Heliomoth', species: 'Noon Moth', size: 1.3, voice: 0.9, bodyMul: { ...GROW3, w: 1.2, limb: 1.6 },
+        blurb: 'When it spreads its wings, shadows run away. The old lighthouse keepers called it the Second Sun.',
+        colors: { body: 0xff9a1e, dark: 0x6a2a08, flame: 0xfff08a }, parts: { sunmane: 0.75, orbs: 0.7, brows: 0.4 }, moves: { special: 'Heliodive', super: 'Eternal Noon' } },
+    ],
+  },
+  moonwhal: {
+    path: 'Mystic',
+    forms: [
+      { name: 'Lunawhal', species: 'Moonlight Narwhal', size: 1.12, voice: 0.72, bodyMul: { ...GROW2, w: 1.16, chubby: 1.05 },
+        blurb: 'Its horn shines brighter as the moon grows full. On those nights, every fish in the lagoon follows it home.',
+        colors: { body: 0x7a98d8 }, parts: { narhorn: 0.95, pearl: 0.9, wave: 0.45 }, moves: { special: 'Moonbeam Glide', super: 'Spring Tide' } },
+      { name: 'Tidemoon', species: 'Moon Narwhal', size: 1.3, voice: 0.6, bodyMul: { ...GROW3, w: 1.3, chubby: 1.08, limb: 1.5 },
+        blurb: 'Said to pull the tides in and out by itself. It is very proud of this. Nobody has the heart to check.',
+        colors: { body: 0x6a88d0, dark: 0x1e2a5a }, parts: { narhorn: 1.15, pearl: 1.1, wave: 0.85, orbs: 0.45 }, moves: { special: 'Full Moon Glide', super: 'King Tide' } },
+    ],
+  },
   blowfin: {
     path: 'Mystic',
     forms: [
@@ -839,6 +862,17 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     g.position.set(0, headR * 1.2, -headR * 0.06); g.rotation.x = 0.3;
     cr.skull.add(g);
     (cr.spinners ||= []).push(spin);
+  }
+
+  // a narwhal's horn: a long ivory spiral from the forehead, tipped forward (Moonwhal); it doesn't spin
+  if (P.narhorn) {
+    const s = P.narhorn * headR, ivory = mat('horn', C.horn ?? 0xfff4d8, { rim: 1 });
+    const H = 1.35 * s, R = 0.15 * s, pts = [];
+    for (let i = 0; i <= 40; i++) { const t = i / 40, a = t * 4 * Math.PI * 2, r = R * (1 - t) * 1.05; pts.push(v(Math.cos(a) * r, t * H, Math.sin(a) * r)); }
+    const cone = new THREE.ConeGeometry(R, H, 14, 1, true); cone.translate(0, H / 2, 0);
+    const horn = inked(mergeGeometries([cone, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 48, 0.022 * s, 4)]), ivory, OL * 0.5);
+    horn.position.set(0, headR * 0.72, headR * 0.62); horn.rotation.x = 0.95;
+    SK.add(horn);
   }
 
   // big digging claws on the paws

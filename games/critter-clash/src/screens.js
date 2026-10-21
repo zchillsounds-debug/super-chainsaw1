@@ -77,6 +77,7 @@ const bossList = () => {
 
 function unlockHint(id) {
   for (const cup of CUPS) for (const m of cup.matches) if (m.critter === id) return `Beat ${m.name} in the ${cup.name}`;
+  if (CRITTERS.find((c) => c.id === id)?.legend) return 'A legend of the Sunscatter Isles. Find it after the Chapter 2 story (Adventure)';
   if (CRITTERS.find((c) => c.id === id)?.isle) return 'Befriend it in the Sunscatter Isles (Adventure)';
   return 'Keep battling!';
 }
