@@ -2,7 +2,7 @@
 // of all. Professor Pecan sets the quest; a rival, Dash, keeps turning up to test the hero;
 // the cup stadiums are the gyms. Every beat is keyed on save.adv.flags.
 import { save, persist, grantXp, xpNeeded } from './save.js';
-import { CUPS, CRITTERS, TYPES, withGear, skinned, cupById } from './data.js';
+import { CUPS, ISLE_CUPS, CRITTERS, TYPES, withGear, skinned, cupById } from './data.js';
 const skinnedShiny = (id) => skinned(CRITTERS.find((c) => c.id === id), 'shiny');
 import { unlock } from './save.js';
 import { sfx } from './audio.js';
@@ -273,7 +273,14 @@ function rivalTalk(S, w, a) {
 // the ☰ menu's one-line "what now?" for players coming back after a break
 const GOAL_AT = { sprout: 'Bloom Town, north along Route 1', thunder: 'Seashell Town, east along Route 2', grove: 'Glowcap Hollow, through the woods north of Seashell Town', champion: 'Cinder Town, down the volcano road', midnight: 'Neon City, east of Cinder Town', sky: 'Cloudtop Gardens (Captain Puff\'s balloon, Neon City)', legend: 'Frostpeak (Captain Puff\'s balloon, Cloudtop)' };
 export function nextGoal(F) {
-  if (F.crowned) return 'You\'re the Champion! Rematch trainers and Dash, and find every gift box.';
+  if (F.crowned) {
+    // Chapter 2: the Sunscatter Isles
+    if (!F.isle_arrive) return F.ending ? 'Chapter 2: take the Sunny Gull ferry from the pier in Seashell Town to the Sunscatter Isles!' : 'You\'re the Champion! Rematch trainers and Dash, and find every gift box.';
+    const ISLE_AT = { coral: 'Port Coral', gale: 'Breezy Bluffs, past Palm Path', caldera: 'Ember Isle' };
+    const nx = ISLE_CUPS.find((c) => !F['cup_' + c.id]);
+    if (nx) return `Win the ${nx.name} in ${ISLE_AT[nx.id]}.`;
+    return 'All three island cups are yours! The Starfall lighthouse is still dark...';
+  }
   if (!F.quest) return 'Visit Professor Pecan\'s lab in Sprout Village.';
   const nx = Object.keys(GOAL_AT).find((id) => !F['cup_' + id]);
   if (!nx) return 'Climb Champion\'s Peak, north of Frostpeak. The Crown is waiting!';

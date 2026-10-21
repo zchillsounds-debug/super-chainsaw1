@@ -28,6 +28,17 @@ const WMAP = {
   frostpeak: { x: 170, y: 208, cup: 'legend', fly: [18, 5], ly: 26 }, peak: { x: 150, y: 158 },
 };
 
+// Chapter 2: the Sunscatter Isles' own Town Map (nodes appear as their maps are built)
+const IMAP = {
+  coral: { x: 92, y: 176, cup: 'coral', fly: [21, 6] }, palmpath: { x: 168, y: 150 },
+  bluffs: { x: 236, y: 92, cup: 'gale', fly: [18, 6] }, ashtrail: { x: 290, y: 150 }, ember_isle: { x: 330, y: 196, cup: 'caldera', fly: [18, 6] },
+  atoll: { x: 352, y: 60, ly: -14 },
+};
+const ILINKS = [['coral', 'palmpath'], ['palmpath', 'bluffs'], ['bluffs', 'ashtrail'], ['ashtrail', 'ember_isle'], ['bluffs', 'atoll', 1]];
+const ISLE_LAND = ['M52 206 Q40 170 70 150 Q110 138 130 160 Q150 190 120 212 Q86 228 52 206 Z', 'M140 160 Q150 120 200 100 Q236 66 268 84 Q290 104 262 130 Q232 160 176 172 Q146 176 140 160 Z',
+  'M270 150 Q280 120 318 140 Q360 160 364 200 Q360 230 318 228 Q280 222 270 190 Z', 'M336 60 Q340 44 356 46 Q372 50 368 66 Q362 78 348 76 Q336 72 336 60 Z'].map((d) => `<path class="wm-land" d="${d}"/>`).join('');
+const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 316, 172], ['🗼', 366, 44], ['⛴️', 34, 226]];
+
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
 const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zoner: '🎯 Keeps away', turtle: '🛡️ Defensive', trickster: '🌀 Tricky' };
@@ -1348,29 +1359,31 @@ export class Screens {
     const tt = traderTown(); // 🎩 marks where Trader Tock is today
     const dig = new Set(digLeft(MAPS)); // ⛏ a dig spot still waiting today
     const al = alphaToday(); // 💥 where today's Alpha waits
-    const gnt = F.ending && !F['gauntpay_' + gauntletWeek()]; // ⚔️ this week's Peak Gauntlet is still open
-    const btl = w.outPhase === 'night' && seen.seashell && save.adv.bottle !== new Date().toISOString().slice(0, 10); // 🍾 tonight's message in a bottle is still on Seashell's shore
-    const scope = w.outPhase === 'night' && seen.village && save.adv.stars !== new Date().toISOString().slice(0, 10); // 🔭 tonight's constellation in Sprout Village is still to be spotted
+    const gnt = F.ending && !F['gauntpay_' + gauntletWeek()] && !MAPS[here]?.isle; // ⚔️ this week's Peak Gauntlet is still open
+    const btl = !MAPS[here]?.isle && w.outPhase === 'night' && seen.seashell && save.adv.bottle !== new Date().toISOString().slice(0, 10); // 🍾 tonight's message in a bottle is still on Seashell's shore
+    const scope = !MAPS[here]?.isle && w.outPhase === 'night' && seen.village && save.adv.stars !== new Date().toISOString().slice(0, 10); // 🔭 tonight's constellation in Sprout Village is still to be spotted
     const day = new Date().toISOString().slice(0, 10), daily = { cloudtop: save.adv.wish !== day && '⛲', ember: save.adv.soak !== day && '♨️', glowcap: w.outPhase === 'night' && save.adv.ring !== day && '🍄', village: w.morning && save.adv.breakfast !== day && '🥞', seashell: ((w.outPhase === 'evening' && save.adv.sunset !== day ? '🌅' : '') + (save.adv.flags.rod && save.adv.derbyWk !== gauntletWeek() ? '🎣' : '') + (isSummer() && w.outPhase === 'day' && save.adv.melon !== day ? '🍉' : '')) || false, frostpeak: save.adv.snowball !== day && '⛄', bloom: (save.adv.garden?.stage >= 4 || save.adv.garden?.last !== day) && '🌻', route2: save.adv.twig !== day && '🪵', route1: (isSpring() || isMeadow()) && w.outPhase === 'day' && save.adv.picnic !== day && '🧺' }; // (+ the summer watermelon and the spring picnic) // a wish, a soak and tonight's fairy-ring song still to do
     const snap = new Set(LANDMARKS.filter((l) => !(save.adv.snaps || []).includes(l.id)).map((l) => l.map)); // 📸 a landmark here still to photograph (the name gets a little camera)
     const fav = {}; for (const r of favourList().rows) if (r.at && !fav[r.at]) fav[r.at] = r.state === 'found' || r.deliver ? '📦' : '🔍'; // open favours: where to look, or who to take it back to
     // older saves: towns behind a cleared cup were visited
-    for (const [k, n] of Object.entries(WMAP)) if (n.cup && F['cup_' + n.cup]) seen[k] = true;
-    const links = [['village', 'route1'], ['route1', 'bloom'], ['bloom', 'route2'], ['route2', 'seashell'], ['seashell', 'glowwood'], ['glowwood', 'glowcap'], ['glowcap', 'cinder'], ['cinder', 'ember'], ['ember', 'neon'], ['neon', 'cloudtop', 1], ['cloudtop', 'frostpeak', 1], ['frostpeak', 'peak']];
+    // Chapter 2: out in the Sunscatter Isles the map shows the islands instead (you sail between the two by ferry)
+    const isle = !!MAPS[here]?.isle, NM = isle ? Object.fromEntries(Object.entries(IMAP).filter(([k]) => MAPS[k])) : WMAP;
+    for (const [k, n] of Object.entries(NM)) if (n.cup && F['cup_' + n.cup]) seen[k] = true;
+    const links = (isle ? ILINKS : [['village', 'route1'], ['route1', 'bloom'], ['bloom', 'route2'], ['route2', 'seashell'], ['seashell', 'glowwood'], ['glowwood', 'glowcap'], ['glowcap', 'cinder'], ['cinder', 'ember'], ['ember', 'neon'], ['neon', 'cloudtop', 1], ['cloudtop', 'frostpeak', 1], ['frostpeak', 'peak']]).filter(([a, b]) => NM[a] && NM[b]);
     const d = document.createElement('div');
     d.className = 'modal-wrap';
-    const svg = links.map(([a, b, air]) => { const A = WMAP[a], B = WMAP[b], on = seen[a] && seen[b]; return `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" class="${air ? 'air' : ''} ${on ? 'on' : ''}"/>`; }).join('')
-      + Object.entries(WMAP).map(([k, n]) => {
+    const svg = links.map(([a, b, air]) => { const A = NM[a], B = NM[b], on = seen[a] && seen[b]; return `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" class="${air ? 'air' : ''} ${on ? 'on' : ''}"/>`; }).join('')
+      + Object.entries(NM).map(([k, n]) => {
         const v = seen[k], won = n.cup && F['cup_' + n.cup], town = !!n.fly;
         return `<g class="wm-node ${v ? 'seen' : ''} ${town ? 'town' : ''} ${k === here ? 'here' : ''}" data-k="${k}" transform="translate(${n.x} ${n.y})">
           <circle r="${town ? 11 : 7}"/>${won ? '<text class="wm-cup" y="5">🏆</text>' : ''}${v && k !== 'peak' && [0, 1].some((j) => !F[`it_${k}_${j}`]) ? `<text class="wm-gift" x="${town ? -10 : -7}" y="${town ? -7 : -4}">🎁</text>` : ''}${k === tt ? '<text class="wm-gift" x="11" y="-7">🎩</text>' : ''}${gnt && k === 'peak' ? `<text class="wm-gift" x="${town ? -10 : -7}" y="${town ? -7 : -4}">⚔️</text>` : ''}${al && !al.done && al.map === k ? `<text class="wm-gift wm-dig" x="${town ? 19 : 15}" y="${town ? 6 : 5}">💥</text>` : ''}${v && dig.has(k) ? `<text class="wm-gift wm-dig" x="${town ? -19 : -15}" y="${town ? 6 : 5}">⛏️</text>` : ''}${btl && k === 'seashell' ? `<text class="wm-gift wm-dig" x="-27" y="-8">🍾</text>` : ''}${scope && k === 'village' ? `<text class="wm-gift wm-dig" x="22" y="-4">🔭</text>` : ''}${v && daily[k] ? `<text class="wm-gift wm-dig" x="${k === 'glowcap' ? 25 : -27}" y="${k === 'glowcap' ? 2 : -8}">${daily[k]}</text>` : ''}${fav[k] ? `<text class="wm-gift wm-fav" x="${town ? 11 : 8}" y="${town ? 12 : 9}">${fav[k]}</text>` : ''}
           <text class="wm-name" y="${n.ly || (town ? 24 : 19)}">${v ? MAPS[k].name : '???'}${v && snap.has(k) ? ' 📸' : ''}</text></g>`;
       }).join('');
-    const hp = WMAP[here];
+    const hp = NM[here];
     const ph = this.worldObj?.phase || 'day', stars = ph === 'night' ? [[30, 30], [120, 12], [210, 240], [260, 10], [392, 200], [12, 150], [360, 238], [70, 244], [330, 14], [395, 40]].map(([x, y], k) => `<circle cx="${x}" cy="${y}" r="${k % 3 ? 1.4 : 2.2}" class="wm-star"/>`).join('') : '';
-    d.innerHTML = `<div class="modal wd-map ${ph}"><h2>Clashara</h2>
+    d.innerHTML = `<div class="modal wd-map ${ph}"><h2>${isle ? 'Sunscatter Isles' : 'Clashara'}</h2>
       <svg viewBox="0 0 400 250" class="wm"><rect x="0" y="0" width="400" height="250" rx="18" class="wm-sea"/>${stars}
-      <path class="wm-land" d="M18 238 L18 70 Q20 20 90 22 L300 18 Q385 22 385 90 L380 160 Q378 205 330 214 L230 216 Q215 244 150 242 Z"/>${[['🌲', 220, 34], ['🌲', 150, 40], ['🌋', 372, 78], ['🏙️', 372, 210], ['☁️', 290, 232], ['🏔️', 118, 150], ['🌊', 236, 128], ['🌸', 90, 196]].map(([e, x, y]) => `<text class="wm-deco" x="${x}" y="${y}">${e}</text>`).join('')}${svg}
+      ${isle ? ISLE_LAND : '<path class="wm-land" d="M18 238 L18 70 Q20 20 90 22 L300 18 Q385 22 385 90 L380 160 Q378 205 330 214 L230 216 Q215 244 150 242 Z"/>'}${(isle ? ISLE_DECOR : [['🌲', 220, 34], ['🌲', 150, 40], ['🌋', 372, 78], ['🏙️', 372, 210], ['☁️', 290, 232], ['🏔️', 118, 150], ['🌊', 236, 128], ['🌸', 90, 196]]).map(([e, x, y]) => `<text class="wm-deco" x="${x}" y="${y}">${e}</text>`).join('')}${svg}
       ${hp ? `<image href="${this.game.portrait(heroDef())}" x="${hp.x + 4}" y="${hp.y - 34}" width="30" height="30" class="wm-hero"/>` : ''}</svg>
       <p class="wm-tip">${Object.values(seen).length > 1 ? 'Tap a town you\'ve visited to fly there by mail balloon.' : 'Explore to fill in the map!'}</p>
       ${Object.values(seen).length > 1 ? `<p class="wm-key">${[['🎁', 'gift'], tt && ['🎩', 'Trader Tock'], [...dig].some((k) => seen[k]) && ['⛏️', 'dig today'], al && !al.done && ['💥', 'Alpha'], gnt && ['⚔️', 'Gauntlet'], btl && ['🍾', 'bottle'], scope && ['🔭', 'stars'], Object.keys(daily).some((k) => seen[k] && daily[k]) && ['✨', `${Object.keys(daily).filter((k) => seen[k] && daily[k]).map((k) => daily[k]).join('')} daily`], Object.keys(fav).length && ['🔍', 'lost thing'], Object.values(fav).includes('📦') && ['📦', 'deliver'], [...snap].some((k) => seen[k]) && ['📸', 'photo spot']].filter(Boolean).map(([i, t]) => `<span>${i} ${t}</span>`).join('')}</p>` : ''}
@@ -1378,7 +1391,7 @@ export class Screens {
     const close = () => { d.remove(); this.game.modalClose = null; };
     d.querySelector('.res-btns').appendChild(this.btn('Close', 'ghost', close));
     d.querySelectorAll('.wm-node.town.seen').forEach((g) => g.addEventListener('click', () => {
-      const k = g.dataset.k, n = WMAP[k];
+      const k = g.dataset.k, n = NM[k];
       if (k === here && !w.key.startsWith('in:')) { this.toast('📍 You are here!'); return; }
       sfx.ui('ok'); close();
       const [x, y] = n.fly;
