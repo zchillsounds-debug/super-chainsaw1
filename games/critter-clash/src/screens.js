@@ -365,6 +365,15 @@ export class Screens {
         "Two more seasonal treats: on spring days Bea leaves a picnic by the Route 1 pond, on summer days Finn leaves a watermelon on Seashell beach (whack it open!), and on winter days you can roll a snow critter in Sprout Village.",
         "Oh, and two more townsfolk have parcels that need carrying: Surfer Pengsicle in Seashell Town and Elder Oakley in Glowcap Hollow. Look for the ❗!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv26') && !save.news.includes('adv27')) {
+      save.news.push('adv27'); persist();
+      const champ = !!save.adv.flags.ending;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! Big news from across the sea: six critters nobody on the mainland has ever seen, from the Sunscatter Isles!",
+        "Smokeshell lives in a tiny volcano, Blowfin puffs up into a spiky ball, Mossloth grows a garden on its back, Toucharge keeps lightning in its beak, Pumicub floats, and Skimray rides the trade winds.",
+        champ ? "And you're the Champion, so the Sunny Gull ferry will take you there! Find Captain Gill on the pier in Seashell Town. Three new cups are waiting." : "Only Champions can catch the ferry out there, though. Win the Crown, then look for Captain Gill on the pier in Seashell Town!",
+        "You can already try all six in Quick Battle. They're on the end of the critter list!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
