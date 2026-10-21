@@ -192,7 +192,7 @@ const PEOPLE = {
   'bluffs:berry_g': { visitor: ['skimray', 'Glider Noe', ['Glider Noe: The nurse ties every smoothie cup down with string. Up here, they blow away otherwise!'], 'e', 3, 4], wall: '#e4f4ff' },
   'atoll:hideout_a': { npcs: [ // the Gloom Gull hideout; after the finale, Morra turns it into the Battle Tower
     ['hootsy', 'Gloom Gull Noddy', ['Gloom Gull Noddy: Caw! This is the Gloom Gull hideout! Members only! ...Do you want to be a member? We have snacks.', 'Gloom Gull Noddy: Captain Morra is up at the lighthouse. She is VERY scary. I am only a bit scary.'], 's', 7, 3, null, '!sunstone'],
-    ['skimray', 'Tower Master Morra', [], 's', 7, 1, 'tower', 'sunstone'],
+    ['skimray', 'Tower Master Morra', [], 's', 7, 1, 'tower', 'sunstone', { shiny: true, scale: 1.15 }],
     ['hootsy', 'Tower Fan Noddy', ['Tower Fan Noddy: Caw! The captain says battling is a better hobby than stealing the sun. I agree! Mostly.', 'Tower Fan Noddy: Seven wins in a row and the captain herself steps in. Her Skimray is SHINY. And mean.'], 'e', 2, 3, null, 'sunstone'],
     ['squeakwing', 'Tower Fan Petra', ['Tower Fan Petra: I watch every streak. The best ever? Somebody got to twelve. Then sneezed. Then lost.', 'Tower Fan Petra: Rest at the Port Coral Berry Center between streaks! Your streak waits for you.'], 'w', 12, 3, null, 'sunstone'],
   ], kind: 'tower', wall: '#e4dccc', rug: '#3a5aa8' },
@@ -243,7 +243,7 @@ export function interiorMap(key) {
   const tiles = ROOMS[kind];
   const W = tiles[0].length, H = tiles.length, door = tiles[H - 1].indexOf('.');
   const has = (f) => !f || (f[0] === '!' ? !save.adv?.flags?.[f.slice(1)] : !!save.adv?.flags?.[f]); // an 8th entry: only there once a flag is set ('!flag': until it is)
-  const npcs = (P.npcs || []).map(([critter, name, lines, dir, x, y, story, need], k) => ({ id: 'in' + k, critter, name, lines, dir, x, y, wander: story ? 0 : 1, story, need })).filter((n) => has(n.need));
+  const npcs = (P.npcs || []).map(([critter, name, lines, dir, x, y, story, need, opt], k) => ({ id: 'in' + k, critter, name, lines, dir, x, y, wander: story ? 0 : 1, story, need, ...(opt || {}) })).filter((n) => has(n.need)); // (a 9th entry: extra NPC fields, e.g. shiny)
   if (b.stadium) { // a front desk to sign up for the cup, and two fans who can't wait
     const cup = cupById(b.stadium), m = cup.matches;
     npcs.push({ id: 'desk', critter: 'hootsy', name: 'Front Desk', dir: 's', x: 7, y: 1, story: 'cupdesk' });

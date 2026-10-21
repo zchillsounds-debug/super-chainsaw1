@@ -716,7 +716,7 @@ export class Screens {
       <div class="info-card" style="--tc:${T.color}">
         <div class="ic-row"><span class="ic-type">${T.name} type</span><span class="ic-lv">Lv ${prog.level}${c.stage ? ` · Stage ${c.stage}` : ''}</span></div>
         <h2>${c.name}</h2>
-        <div class="ic-species">${c.species}</div>
+        <div class="ic-species">${c.species}${base.legend ? ' <b class="ic-legend">★ Legendary</b>' : ''}</div>
         <p>${c.blurb}</p>
         <div class="stats">${bar('Health', (st.hp - 800) / 400)}${bar('Speed', (st.speed - 5) / 3)}${bar('Power', (st.power - 0.85) / 0.3)}${bar('Weight', (st.weight - 0.6) / 0.8)}</div>
         <div class="ic-beats"><small>Strong vs</small>${beats}</div>

@@ -1218,3 +1218,6 @@ body:not(.is-touch) .wd-a.hint::after { content: "Space · " attr(data-hint); po
 .wd-bolt.soft { animation: boltsoft 1.6s ease-in-out forwards; } /* Reduce flashing: one slow, faint glow instead of the double flash */
 @keyframes boltsoft { 0% { opacity: 0; } 40% { opacity: .22; } 100% { opacity: 0; } }
 .nw { white-space: nowrap; }
+
+/* M4: the two legendaries get a gold tag next to their species */
+.ic-legend { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 8px; background: linear-gradient(90deg, #ffc93a, #ff8a3a); color: #3a1a00; font-size: 0.78em; font-weight: 800; vertical-align: 1px; }
