@@ -84,6 +84,20 @@ export function storyIntro(S, w) {
     ]);
     return;
   }
+  if (w.key === 'bluffs' && !F.bluffs) {
+    F.bluffs = true; persist();
+    w.say(['The rope bridge sways in the wind... and then you are across! Windmills turn on the cliff tops, and kites dance over the town.', '{hero}: So this is Breezy Bluffs. Hold on to your hat!']);
+    return;
+  }
+  if (F.cup_gale && !F.post_gale && w.key === 'bluffs') {
+    F.post_gale = true; persist();
+    w.say([
+      'Zephyra: The wind spoke true, {hero}. The Gale Cup suits you.',
+      'Zephyra: The last island cup is the Caldera Cup, inside the sleepy volcano on Ember Isle. The Ash Trail runs east to it.',
+      'Zephyra: And the wind carries other news. The Gloom Gulls took the Sunstone, the heart of the Starfall lighthouse. Without it, ships lose their way at night.',
+    ]);
+    return;
+  }
   if (w.key === 'coral' && !F.isle_arrive) {
     F.isle_arrive = true; persist();
     w.say([
@@ -469,6 +483,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'rival2') rival2(S, w);
   if (id === 'ferry') return ferry(S, w);
   if (id === 'dashisle') return dashIsle(S, w);
+  if (id === 'skua') return skua(S, w);
   if (id === 'dash3') {
     w.say([
       "Dash: Don't bother. I already tried to bash through those brambles. Twelve times.",
@@ -1109,6 +1124,19 @@ function ferry(S, w) {
     (save.adv.cnt ||= {}).ferry = (save.adv.cnt.ferry || 0) + 1;
     w.say([home ? 'The Sunny Gull blows its horn and chugs out of the bay. Seashell Town shrinks behind you...' : 'The Sunny Gull turns for home. The islands fade into the haze...'], () => w.fade(() => { w.load(home ? 'coral' : 'seashell', 12, 15, 'n'); if (home && !F.isle_arrive) setTimeout(() => storyIntro(S, w), 500); }));
   }, 'Captain Gill');
+}
+
+// Breezy Bluffs: a Gloom Gull lookout spying on the town from the cliff edge (the first grunt of the Chapter 2 villains)
+function skua(S, w) {
+  w.say([
+    'Gloom Gull Skua: Caw! A mainland champion, snooping round the Bluffs? Captain Morra said you might turn up.',
+    "Gloom Gull Skua: The Sunstone is ours now. Starfall's lighthouse stays dark, and the Gloom Gulls rule the night skies!",
+    'Gloom Gull Skua: Squeakwing, show this tourist what gloom looks like!',
+  ], () => S.worldFight({
+    foe: withGear(byId('squeakwing'), 23), lv: 23, kind: 'story', flag: 'skua_b', name: 'Gloom Gull Skua', diff: 0.82,
+    trainer: { name: 'Skua', critter: 'squeakwing', title: 'Gloom Gull lookout', beat: "Caw?! Fine, keep your cups. Captain Morra will deal with you on Starfall Atoll. Gloom Gulls, AWAY!", gloat: 'Caw caw! Back to the mainland with you!' },
+    note: '🪶 You chased off a Gloom Gull lookout! Their hideout is on Starfall Atoll.',
+  }));
 }
 
 function dashIsle(S, w) {

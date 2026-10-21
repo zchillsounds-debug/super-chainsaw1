@@ -418,6 +418,7 @@ export class World {
     this.buildGulls();
     this.buildFerry();
     this.buildReef(rand);
+    this.buildWindmills();
     this.buildButterflies();
     this.buildMist();
     this.buildAurora();
@@ -447,6 +448,7 @@ export class World {
     this.buildToys(); this.buildTent();
     this.buildMarquee();
     this.buildActors();
+    this.buildKites();
     this.buildPumpkins();
     this.buildXtree();
     this.buildScarecrow();
@@ -511,7 +513,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1243,6 +1245,44 @@ export class World {
       }
     }
     by.forEach((list, i) => { if (!list.length) return; const m = night ? new THREE.MeshBasicMaterial({ color: new THREE.Color(cols[i]).multiplyScalar(0.8) }) : toon(cols[i], { rim: 0.6 }); if (night) m.userData.own = true; this.group.add(inked(mergeGeometries(list), m, OL * 0.3)); list.forEach((g) => g.dispose()); });
+  }
+
+  // Breezy Bluffs: white island windmills with red caps, sails turning in the trade wind
+  buildWindmills() {
+    this.windmills = null;
+    const L = this.M.windmills; if (!L || this.M.indoor) return;
+    const wall = toon(0xf6f2ea, { rim: 0.5 }), cap = toon(0xe8504a), wood = toon(0x9a6a42), cloth = toon(0xfff8e8, { rim: 0.6, side: THREE.DoubleSide }), win = toon(0x3a5a7a);
+    this.windmills = L.map(([x, y], i) => {
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.rotation.y = 0.35 - i * 0.3; g.scale.setScalar(1.25); this.group.add(g); this.solid.add(x + ',' + y);
+      const tower = inked(new THREE.CylinderGeometry(0.62, 0.86, 2.9, 14), wall, OL * 0.45); tower.position.y = 1.45; tower.castShadow = true; g.add(tower);
+      const roof = inked(new THREE.ConeGeometry(0.78, 0.9, 14), cap, OL * 0.4); roof.position.y = 3.35; g.add(roof);
+      const door = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.62), wood); door.position.set(0, 0.32, 0.86); g.add(door);
+      const wnd = new THREE.Mesh(new THREE.CircleGeometry(0.15, 10), win); wnd.position.set(0, 1.9, 0.7); g.add(wnd);
+      const hub = inked(new THREE.CylinderGeometry(0.13, 0.13, 0.36, 10), wood, OL * 0.3); hub.rotation.x = Math.PI / 2; hub.position.set(0, 2.85, 0.78); g.add(hub);
+      const sails = new THREE.Group(); sails.position.set(0, 2.85, 0.98); g.add(sails);
+      for (let k = 0; k < 4; k++) {
+        const arm = new THREE.Group(); arm.rotation.z = k * Math.PI / 2; sails.add(arm);
+        const spar = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.75, 0.05), wood); spar.position.y = 0.9; arm.add(spar);
+        const sail = inked(new THREE.PlaneGeometry(0.42, 1.25), cloth, OL * 0.2); sail.position.set(0.24, 1.08, 0); arm.add(sail);
+      }
+      return { sails, sp: 1.1 + (i % 2) * 0.35 };
+    });
+  }
+
+  // kite kids: a kite on a long line, swooping over their heads
+  buildKites() {
+    this.kites = null;
+    if (this.M.indoor) return;
+    const L = (this.M.npcs || []).filter((n) => n.kite); if (!L.length) return;
+    this.kites = L.map((n, i) => {
+      const [px, pz] = wpos(n.x, n.y), g = new THREE.Group(); this.group.add(g);
+      const m = toon(n.kite, { rim: 0.6, side: THREE.DoubleSide }), sh = new THREE.Shape(); sh.moveTo(0, 0.6); sh.lineTo(0.42, 0.05); sh.lineTo(0, -0.75); sh.lineTo(-0.42, 0.05); sh.closePath();
+      const kite = inked(new THREE.ShapeGeometry(sh), m, OL * 0.3); kite.scale.setScalar(1.35); g.add(kite);
+      const tail = [0, 1, 2].map((k) => { const b = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 4), toon(k % 2 ? 0xffffff : 0xffd040)); b.scale.set(1.4, 0.6, 0.6); g.add(b); return b; });
+      const lm = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 }); lm.userData.own = true;
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), lm); g.add(line);
+      return { g, kite, tail, line, px, pz, t: i * 2.3 };
+    });
   }
 
   // butterflies flutter over the flower beds on fine days
@@ -4111,6 +4151,13 @@ export class World {
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
     if (this.statue) { const T = this.statue; T.glow.material.opacity = 0.3 + Math.sin(this.t * 1.6) * 0.08; if (Math.random() < dt * 2) this.g.fx.spawn({ x: T.px + (Math.random() - 0.5) * 1.6, y: 0.8 + Math.random() * 1.8, z: T.pz + (Math.random() - 0.5) * 1.2, vy: 0.3, life: 1.2, size: 0.3, color: 0xfff0a0, shape: 'star', alpha: 0.9 }); }
+    if (this.windmills) for (const W of this.windmills) W.sails.rotation.z -= dt * W.sp;
+    if (this.kites) for (const K of this.kites) { // the kite swoops in a lazy figure of eight downwind of its flyer; the tail ribbons trail behind
+      K.t += dt; const a = K.t * 0.7, kx = K.px + 1.6 + Math.sin(a) * 1.6, ky = 6.4 + Math.sin(a * 2) * 0.7, kz = K.pz - 4.2 + Math.cos(a) * 0.6;
+      K.kite.position.set(kx, ky, kz); K.kite.rotation.set(-0.3, 0, Math.sin(a) * 0.5);
+      K.tail.forEach((b, k) => b.position.set(kx - Math.sin(a - 0.4 * (k + 1)) * 0.15 * (k + 1), ky - 0.75 - k * 0.28, kz + 0.05));
+      const p = K.line.geometry.attributes.position; p.setXYZ(0, K.px + 0.25, 1.1, K.pz); p.setXYZ(1, kx, ky - 0.6, kz); p.needsUpdate = true;
+    }
     if (this.fountain) { const F = this.fountain; if (Math.random() < dt * 14) { const a = Math.random() * 6.28; this.g.fx.spawn({ x: F.px + Math.cos(a) * 0.1, y: 2.6, z: F.pz + Math.sin(a) * 0.1, vx: Math.cos(a) * 1.4, vy: 1.8, vz: Math.sin(a) * 1.4, color: 0xd8f4ff, size: 0.16, life: 0.75, shape: 'glow', grav: 6, additive: false, alpha: 0.8 }); } F.arcs.forEach((m, i) => { m.material.opacity = 0.42 + Math.sin(this.t * 1.3 + i * 0.4) * 0.12; }); } // the spray falls into the bowl; the rainbow shimmers
     if (this.sliding && save.adv.skates && Math.random() < dt * 30) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.5, y: 0.15, z: p.z + (Math.random() - 0.5) * 0.5, vy: 0.6 + Math.random(), vx: (Math.random() - 0.5), vz: (Math.random() - 0.5), color: Math.random() < 0.5 ? 0xffffff : 0x9ae0ff, size: 0.16, life: 0.6, shape: Math.random() < 0.4 ? 'star' : 'glow' }); } // skates kick up ice sparkles
     if (this.danceT > 0) { this.danceT -= dt; if (Math.random() < dt * 8) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 1.6 + Math.random(), z: p.z, vy: 1.2, color: this.dance?.cols[Math.floor(Math.random() * 5)].getHex() ?? 0xff5ad8, size: 0.2, life: 0.9, shape: Math.random() < 0.5 ? 'star' : 'glow' }); } }
