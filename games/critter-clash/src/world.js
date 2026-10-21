@@ -3958,6 +3958,10 @@ export class World {
     this.wild = [];
     const W = this.M.wild;
     if (W && this.phase === 'evening' && !ALPHA_TOLD.has('dusk')) { ALPHA_TOLD.add('dusk'); setTimeout(() => this.group && this.S.toast('✨ Dusk! Emberflies come out to glow over the tall grass in the golden evening.'), 1200); }
+    const lucky = this.luckyNight(); // rare finds in the isles: lucky starry nights on Starfall, Blowfin swarms in island rain, Skimrays gliding at golden hour on the Bluffs
+    if (W && lucky && !ALPHA_TOLD.has('lucky')) { ALPHA_TOLD.add('lucky'); setTimeout(() => this.group && this.S.toast('🌠 A starry night on Starfall Atoll! Shiny critters are three times as common here tonight.'), 2600); }
+    if (W && this.M.isle && this.rain && !ALPHA_TOLD.has('swarm')) { ALPHA_TOLD.add('swarm'); setTimeout(() => this.group && this.S.toast('🌧️ Island rain! Blowfin swarm into the tall grass to puff up in the puddles.'), 2600); }
+    if (W && this.key === 'bluffs' && this.phase === 'evening' && !ALPHA_TOLD.has('glide')) { ALPHA_TOLD.add('glide'); setTimeout(() => this.group && this.S.toast('🌅 Golden hour on the Bluffs: Skimrays ride the evening updrafts.'), 2600); }
     if (W && this.phase === 'night' && !ALPHA_TOLD.has('owls')) { ALPHA_TOLD.add('owls'); setTimeout(() => this.group && this.S.toast('🦉 Night owls are out! Hootsy and Squeakwing roam the tall grass after dark.'), 1200); }
     if (W?.roam) {
       const grass = [];
@@ -3985,8 +3989,10 @@ export class World {
   }
 
   // the map's wild critters; after dark the night owls (Hootsy, Squeakwing) come out too, at the map's levels, twice as often; in the golden evening, Emberfly glows over the grass
+  luckyNight() { return this.key === 'atoll' && this.phase === 'night'; }
   wildList() {
-    const L = this.M.wild?.list || [];
+    const L0 = this.M.wild?.list || [], [, lo0, hi0] = L0[0] || [];
+    const L = !L0.length ? L0 : this.M.isle && this.rain ? [...L0, ['blowfin', lo0, hi0], ['blowfin', lo0, hi0], ['blowfin', lo0 + 2, hi0 + 2]] : this.key === 'bluffs' && this.phase === 'evening' ? [...L0, ['skimray', lo0, hi0], ['skimray', lo0 + 1, hi0 + 1]] : L0;
     if (!L.length || this.phase === 'day') return L;
     const [, lo, hi] = L[0], extra = (this.phase === 'night' ? ['hootsy', 'squeakwing'] : ['emberfly']).flatMap((id) => [[id, lo, hi], [id, lo, hi]]);
     return [...L.filter(([i]) => !extra.some(([o]) => o === i)), ...extra];
@@ -3994,7 +4000,7 @@ export class World {
 
   spawnWild(x, y, fixId, fixLv) {
     const WL = this.wildList(), [id0, lo, hi] = WL[Math.floor(Math.random() * WL.length)], id = fixId || id0;
-    const lv = fixLv || lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = !fixId && Math.random() < SHINY_RATE;
+    const lv = fixLv || lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = !fixId && Math.random() < SHINY_RATE * (this.luckyNight() ? 3 : 1);
     const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv), { lod: 'low' });
     cr.root.userData.critter = true;
     if (pumpkinNights() && !fixId && Math.random() < 0.5) { const [k, c, b] = COSTUMES[Math.floor(Math.random() * COSTUMES.length)]; hatModel(cr, k, c, b); } // Pumpkin Nights: wild critters dress up too
@@ -5064,7 +5070,7 @@ export class World {
     const [id, lo, hi] = L[Math.floor(Math.random() * L.length)];
     const lv = lo + Math.floor(Math.random() * (hi - lo + 1));
     this.encCool = 6;
-    this.startWild(id, lv, null, Math.random() < SHINY_RATE);
+    this.startWild(id, lv, null, Math.random() < SHINY_RATE * (this.luckyNight() ? 3 : 1));
   }
 
   wildFight(a) {
