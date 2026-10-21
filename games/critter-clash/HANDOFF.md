@@ -6,7 +6,7 @@
 - **The new run's end time is set by its first session (start + 48 h), on the line below.** Later sessions never reset it.
 - **New 48-hour run end time: 2026-10-23 16:49 UTC** (started 2026-10-21 16:49 UTC by session 18a; never reset it; push it back by the length of any worker stall)
 - Round numbers continue from the highest R in `git log`.
-- **Session 18a (2026-10-21 16:49–~18:20 UTC) did R672–R680 (see "Session 18a"); next round R681.** Milestone M1 is done; M2 is in progress (Port Coral, Palm Path, the ferry and the Coral Cup are in).
+- **Session 18a (2026-10-21 16:49–~18:20 UTC) did R672–R680 (see "Session 18a"); next round R681. It could not chain (no create_session tool in that chat): the user starts the next session by hand with the same prompt.** Milestone M1 is done; M2 is in progress (Port Coral, Palm Path, the ferry and the Coral Cup are in).
 
 ## Note for the user's chat (battle-side edits from the new run, please review)
 - **fighter.js** (not on the ownership list, but battle code): six new specials in `updateSpecial` (`eruption`, `puffup`, `lariat`, `beakbeam`, `pound`, `skimloop`), their `SPECIALS` cooldown/AI ranges, `burstN`/`popFired` reset in `startSpecial`, the six ids added to the "posed frame by frame" list in `animate`, and `STRIKE` combo flavours for the new ids. Hits go through `Battle.applyHit`; visuals use `B.fx` only. **No battle.js, arena.js, hud.js or results/worldFight edits.** The new critters' supers reuse existing super ids (`meteor`, `tsunami`, `bramble`, `thunder`, `quake`, `cyclone`) with new names.
@@ -1240,7 +1240,7 @@ If a worker stalls, push the end time back by the length of the stall.
 Finish: at the 48-hour end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
-   - **New run (from session 18a): chain with the user's Chapter 2 prompt word for word** (it begins "Continue building Critter Clash in a new 48-hour chained build run, following games/critter-clash/ROADMAP.md"); the end time is the "New 48-hour run end time" line at the top of this file. Session 18a chained at R681.
+   - **New run (from session 18a): chain with the user's Chapter 2 prompt word for word** (it begins "Continue building Critter Clash in a new 48-hour chained build run, following games/critter-clash/ROADMAP.md"); the end time is the "New 48-hour run end time" line at the top of this file. **Session 18a could NOT chain: this chat has no create_session tool at all** (not even after a tool search), so the user starts the next session by hand with the same prompt; it continues at R681.
    - Session 17q chained at R655 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17p chained at R637 with the 48-hour prompt word for word (if create_session refused, see the line added below).
    - Session 17o chained at R629 with the 48-hour prompt word for word (if create_session refused, see the line added below).
