@@ -34,10 +34,10 @@ const IMAP = {
   bluffs: { x: 236, y: 92, cup: 'gale', fly: [18, 6] }, ashtrail: { x: 290, y: 150 }, ember_isle: { x: 330, y: 196, cup: 'caldera', fly: [18, 6] },
   atoll: { x: 352, y: 60, ly: -14 },
 };
-const ILINKS = [['coral', 'palmpath'], ['palmpath', 'bluffs'], ['bluffs', 'ashtrail'], ['ashtrail', 'ember_isle'], ['bluffs', 'atoll', 1]];
+const ILINKS = [['coral', 'palmpath'], ['palmpath', 'bluffs'], ['bluffs', 'ashtrail'], ['ashtrail', 'ember_isle'], ['coral', 'atoll', 1]]; // (the dashed line is the Sunny Gull's run to Starfall)
 const ISLE_LAND = ['M52 206 Q40 170 70 150 Q110 138 130 160 Q150 190 120 212 Q86 228 52 206 Z', 'M140 160 Q150 120 200 100 Q236 66 268 84 Q290 104 262 130 Q232 160 176 172 Q146 176 140 160 Z',
   'M270 150 Q280 120 318 140 Q360 160 364 200 Q360 230 318 228 Q280 222 270 190 Z', 'M336 60 Q340 44 356 46 Q372 50 368 66 Q362 78 348 76 Q336 72 336 60 Z'].map((d) => `<path class="wm-land" d="${d}"/>`).join('');
-const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 316, 172], ['🗼', 366, 44], ['⛴️', 34, 226]];
+const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
@@ -373,6 +373,14 @@ export class Screens {
         "Smokeshell lives in a tiny volcano, Blowfin puffs up into a spiky ball, Mossloth grows a garden on its back, Toucharge keeps lightning in its beak, Pumicub floats, and Skimray rides the trade winds.",
         champ ? "And you're the Champion, so the Sunny Gull ferry will take you there! Find Captain Gill on the pier in Seashell Town. Three new cups are waiting." : "Only Champions can catch the ferry out there, though. Win the Crown, then look for Captain Gill on the pier in Seashell Town!",
         "You can already try all six in Quick Battle. They're on the end of the critter list!",
+      ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.isle_arrive && save.news?.includes('adv27') && !save.news.includes('adv28')) {
+      save.news.push('adv28'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! Captain Gill sent me a postcard from the isles. The rope bridge on Palm Path is fixed: Breezy Bluffs is open, windmills, kites and the Gale Cup!",
+        "Past the Bluffs, the Ash Trail steams its way down to Ember Isle, where the Caldera Cup sits inside a sleepy volcano. Black sand beaches! I must see them.",
+        "And those Gloom Gulls... they say Captain Morra is hiding the Sunstone on Starfall Atoll. Win all three island cups and Captain Gill will sail you there.",
+        "Oh, and Fisher Finn says the island reefs have four fish of their own. One of them is a marlin as long as a canoe!",
       ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
@@ -1245,7 +1253,7 @@ export class Screens {
       seen.frostpeak && 'Snowball Kid Kip\'s snow fort in Frostpeak: hit 12 snowmen in Snowball Toss for a daily berry stash. Don\'t hit Kip!',
       seen.seashell && 'Sit on the driftwood bench on Seashell beach in the evening and watch the sun go down.',
       '📸 Photo in the ☰ menu saves a picture of your hero right where they stand.',
-      (A.snaps || []).length < LANDMARKS.length && `Take a 📸 Photo by each town's landmark (${(A.snaps || []).length} / ${LANDMARKS.length} so far). All eight earn a hat!`,
+      (A.snaps || []).length < LANDMARKS.length && `Take a 📸 Photo by each town's landmark (${(A.snaps || []).length} / ${LANDMARKS.length} so far).${(A.hats || []).includes('shutter') ? '' : ' The eight in Clashara earn a hat!'}`,
       F.rod && 'Night fishing catches fish you never see by day.',
       (A.hats || []).length && 'Change hats any time from ☰ → 🎩 Hats. Each hat has its own story.',
       seen.neon && 'The Neon City arcade pays berries for a good score, once a day per game.',
@@ -1317,7 +1325,7 @@ export class Screens {
     } else {
       const L = save.adv.fishLog || { n: 0 }, sp = { ...(L.sp || {}) };
       if (L.best && !sp[L.best.name]) sp[L.best.name] = L.best.cm;
-      const where = { pond: '🌿 Ponds & rivers', sea: '🏖️ The sea', lava: '🌋 Lava pools', cold: '❄️ Icy water', night: '🌙 After dark (any water)', dusk: '🌇 Golden evenings (any water)' };
+      const where = { pond: '🌿 Ponds & rivers', sea: '🏖️ The sea', isle: '🏝️ Island reefs', lava: '🌋 Lava pools', cold: '❄️ Icy water', night: '🌙 After dark (any water)', dusk: '🌇 Golden evenings (any water)' };
       const D = derbyOf(gauntletWeek());
       body = (save.adv.flags.rod ? `<li class="jr-more">🏆 This week's Fishing Derby: a ${D.name} of ${D.cm} cm or more (${D.where}). ${save.adv.derbyWk === D.wk ? '✅ Won! A new fish on Monday.' : 'Fisher Finn has a prize!'}</li>` : '<li class="jr-more">🎣 Fisher Finn in Seashell Town lends out rods. Then face any water and press A!</li>')
         + Object.entries(FISH).map(([k, list]) => `<li class="jr-head">${where[k]}</li>` + list.map(([n], i) => { const cm = sp[n]; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? '🐟' : '❔'}</span><b>${cm || n === D.name ? n : '???'}${i === list.length - 1 ? ' <small>rare</small>' : ''}${n === D.name && save.adv.flags.rod ? ' <small class="dby">🎯 derby</small>' : ''}</b><em>${cm ? cm + ' cm' : ''}${L.best?.name === n ? ' 🏅' : ''}</em></li>`; }).join('')).join('')

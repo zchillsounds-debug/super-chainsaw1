@@ -90,6 +90,7 @@ export const FISH = {
   cold: [['Cloud Minnow', 6, 16], ['Frostfin', 15, 35]],
   night: [['Moonfin', 14, 38], ['Glimmer Ray', 40, 95]], // only bite after dark (any water but lava)
   dusk: [['Sunset Snapper', 16, 42], ['Amber Koi', 22, 55]], // only bite in the golden evening (17-20h, any water but lava)
+  isle: [['Parrotfin', 14, 36], ['Coral Puff', 10, 26], ['Reef Tang', 12, 30], ['Starfall Marlin', 60, 140]], // the Sunscatter Isles' warm reefs (Chapter 2)
 };
 // seasonal visitors: one fish a season, only in its season (any water but lava). Kept apart from the album above (save.adv.fishLog.season),
 // so completing the album never waits on the calendar; each first catch is a little bonus
@@ -111,6 +112,11 @@ export const LANDMARKS = [
   { id: 'arcade', map: 'neon', door: 'arcade', name: 'the Neon arcade' },
   { id: 'fountain', map: 'cloudtop', at: [8, 9], name: 'the wishing fountain' },
   { id: 'pond', map: 'frostpeak', at: [4, 8], name: 'the frozen pond' },
+  // Chapter 2: the Sunscatter Isles (all four: a bonus, not part of the Shutterbug Cap's eight)
+  { id: 'pier', map: 'coral', at: [12, 14], name: 'the Port Coral pier', isle: true },
+  { id: 'mills', map: 'bluffs', at: [24, 11], name: 'the Bluffs windmills', isle: true },
+  { id: 'volcano', map: 'ember_isle', at: [17, 2], name: 'the Ember Isle volcano', isle: true },
+  { id: 'lighthouse', map: 'atoll', at: [12, 3], name: 'the Starfall lighthouse', isle: true },
 ];
 // the photo album: a small JPEG of the latest photo taken at each landmark (its own storage key, so the save and its backup code stay small)
 const ALBUM_KEY = 'critterclash-album';
@@ -3161,7 +3167,7 @@ export class World {
       return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long!`, first ? `A seasonal visitor! It only swims here in ${sk}. Fisher Finn will want to hear about this! +3 🍓 (☰ → Journal → 🎣)` : `${name}s only visit in ${sk}. Splash! Back it goes, until next year.`, ...(hat ? ['That\'s all four seasonal fish! Fisher Finn sends over a hat with a koi on top: the Koi Bucket Hat! 🎣 (☰ → 🎩 Hats)'] : [])]);
     }
     if (r < 0.7) { // a fish! measured, and Fisher Finn keeps the record book
-      const kinds = FISH[this.phase === 'night' && !this.M.lava && Math.random() < 0.3 ? 'night' : this.phase === 'evening' && !this.M.lava && Math.random() < 0.3 ? 'dusk' : this.M.arena === 'beach' ? 'sea' : this.M.lava ? 'lava' : this.M.snow || this.M.border === 'cloud' ? 'cold' : 'pond'];
+      const kinds = FISH[this.phase === 'night' && !this.M.lava && Math.random() < 0.3 ? 'night' : this.phase === 'evening' && !this.M.lava && Math.random() < 0.3 ? 'dusk' : this.M.isle ? 'isle' : this.M.arena === 'beach' ? 'sea' : this.M.lava ? 'lava' : this.M.snow || this.M.border === 'cloud' ? 'cold' : 'pond'];
       const k = Math.random() < 0.12 ? kinds.length - 1 : Math.floor(Math.random() * (kinds.length - 1)), [name, lo, hi] = kinds[k];
       const cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };
       L.n++; const rec = !L.best || cm > L.best.cm, sp = (L.sp ||= {}); sp[name] = Math.max(sp[name] || 0, cm);
@@ -4431,10 +4437,12 @@ export class World {
     }
     if (snaps.includes(L.id)) return setTimeout(() => this.S.toast?.(`📸 New album photo: ${L.name}!`), 700);
     snaps.push(L.id);
-    const all = snaps.length >= LANDMARKS.length, hat = all && !(A.hats ||= []).includes('shutter');
+    const all = LANDMARKS.every((l) => l.isle || snaps.includes(l.id)), hat = all && !L.isle && !(A.hats ||= []).includes('shutter');
     if (hat) { A.hats.push('shutter'); save.berries = (save.berries || 0) + 15; }
+    const isles = L.isle && LANDMARKS.every((l) => !l.isle || snaps.includes(l.id)); // all four island landmarks: a postcard bonus
+    if (isles) save.berries = (save.berries || 0) + 15;
     persist();
-    setTimeout(() => { sfx.jingle?.(hat ? 3 : 1); this.S.toast?.(hat ? '📸 All eight landmarks! +15 🍓 and the Shutterbug Cap! (☰ → 🎩 Hats)' : `📸 Landmark photo: ${L.name}! (${snaps.length} / ${LANDMARKS.length} in the Journal)`); }, 700);
+    setTimeout(() => { sfx.jingle?.(hat || isles ? 3 : 1); this.S.toast?.(hat ? '📸 All eight landmarks! +15 🍓 and the Shutterbug Cap! (☰ → 🎩 Hats)' : isles ? '📸 All four island landmarks! A full set of postcards: +15 🍓' : `📸 Landmark photo: ${L.name}! (${snaps.length} / ${LANDMARKS.length} in the Journal)`); }, 700);
   }
 
   updateCamera(dt) {
