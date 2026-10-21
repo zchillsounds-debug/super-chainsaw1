@@ -4,7 +4,7 @@
 - The first 48-hour run is over. It ended at 2026-10-20 21:52 UTC, and session 17r (R655–R671) was its last session.
 - The user then agreed a roadmap: **read `games/critter-clash/ROADMAP.md` first.** It covers new critters, a Chapter 2 region and story, deeper side content and post-game challenges, with about 80% new content.
 - **The new run's end time is set by its first session (start + 48 h), on the line below.** Later sessions never reset it.
-- **New 48-hour run end time: (not set yet; the first session of the new run writes it here)**
+- **New 48-hour run end time: 2026-10-23 16:49 UTC** (started 2026-10-21 16:49 UTC by session 18a; never reset it; push it back by the length of any worker stall)
 - Round numbers continue from the highest R in `git log` (R672 next).
 
 ## 48-hour run (the first one, finished)
