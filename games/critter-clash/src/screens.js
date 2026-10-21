@@ -1,6 +1,6 @@
 // Title, tournament cups/ladder, critter select, VS splash, results and pause overlays.
 import { buzz } from './haptics.js';
-import { CRITTERS, TYPES, CUPS, SHINY, BADGES, MODS, STARTERS, skinned, withGear, gearFor, GEAR, dailyChallenge } from './data.js';
+import { CRITTERS, TYPES, CUPS, ALL_CUPS, cupById, SHINY, BADGES, MODS, STARTERS, skinned, withGear, gearFor, GEAR, dailyChallenge } from './data.js';
 import { sfx, playMusic } from './audio.js';
 import { HAZARDS, SIGS } from './hazards.js';
 import { Camp } from './camp.js';
@@ -46,7 +46,7 @@ const byId = (id) => CRITTERS.find((c) => c.id === id);
 
 // which cup match unlocks a critter (for the locked-card hint)
 const skinOf = (c) => withGear(skinned(c, save.skins?.[c.id]), save.critters?.[c.id]?.level);
-const cupOfShiny = (id) => CUPS.find((cup) => cup.matches.some((m) => m.critter === id));
+const cupOfShiny = (id) => ALL_CUPS().find((cup) => cup.matches.some((m) => m.critter === id));
 
 // badges newly satisfied by the save; marks them earned
 export function newBadges() {

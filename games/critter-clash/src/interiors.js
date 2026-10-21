@@ -3,7 +3,7 @@
 // Tiles: W wall, C shelf, X machine (arcade cabinet, smoothie blender, lab console), Q bed, D table,
 // O potted plant, K counter (talk across it), Y rug (walkable), H hat stand (Hat Shop). Walking south off the doormat goes back out.
 import { MAPS } from './worldmaps.js';
-import { CUPS, CRITTERS } from './data.js';
+import { CUPS, CRITTERS, cupById } from './data.js';
 const shade = (hex, k) => { const n = parseInt(String(hex).replace('#', ''), 16); return (Math.round((n >> 16 & 255) * k) << 16) | (Math.round((n >> 8 & 255) * k) << 8) | Math.round((n & 255) * k); }; // a colour, dimmed
 
 // stadium lobby trophy cases, left to right, in story order
@@ -218,7 +218,7 @@ export function interiorMap(key) {
   const W = tiles[0].length, H = tiles.length, door = tiles[H - 1].indexOf('.');
   const npcs = (P.npcs || []).map(([critter, name, lines, dir, x, y, story], k) => ({ id: 'in' + k, critter, name, lines, dir, x, y, wander: story ? 0 : 1, story }));
   if (b.stadium) { // a front desk to sign up for the cup, and two fans who can't wait
-    const cup = CUPS.find((c) => c.id === b.stadium), m = cup.matches;
+    const cup = cupById(b.stadium), m = cup.matches;
     npcs.push({ id: 'desk', critter: 'hootsy', name: 'Front Desk', dir: 's', x: 7, y: 1, story: 'cupdesk' });
     npcs.push({ id: 'fan1', critter: m[0].critter, name: 'Fan', dir: 'e', x: 3, y: 3, act: 'cheer', lines: [`Fan: ${m[0].name} is my favourite! Their ${CRITTERS.find((c) => c.id === m[0].critter).name} is first up in the ${cup.name}.`, `Fan: ${m.length} battles in a row. No breaks! That's the ${cup.name}.`] });
     npcs.push({ id: 'fan2', critter: m[m.length - 1].critter, name: 'Fan', dir: 'w', x: 11, y: 3, act: 'wave', lines: [`Fan: Nobody beats ${m[m.length - 1].name}. Nobody! ...Well, almost nobody.`, 'Fan: The posters on the wall are this season\'s line-up. Collect them all!'] });
@@ -257,7 +257,7 @@ export function interiorMap(key) {
     exit: { map: outer, x: b.x + b.door, y: b.y + b.h, dir: 's' },
     enter: { x: door, y: H - 2 },
     palette: P.dark ? { a: '#4a3a6a', b: '#46365f' } : P.floor || { a: '#d8a86a', b: '#d2a264' },
-    wall: P.wall || (b.stadium ? '#f4ecff' : b.heal ? '#ffe0ec' : '#fff1d8'), rug: P.rug || (b.stadium ? CUPS.find((c) => c.id === b.stadium).color : b.heal ? '#ff7aa8' : '#7aa8ff'),
+    wall: P.wall || (b.stadium ? '#f4ecff' : b.heal ? '#ffe0ec' : '#fff1d8'), rug: P.rug || (b.stadium ? cupById(b.stadium).color : b.heal ? '#ff7aa8' : '#7aa8ff'),
     outer: shade(P.wall || (b.stadium ? '#f4ecff' : b.heal ? '#ffe0ec' : '#fff1d8'), 0.34), // a dim echo of the room's own walls around it (tall phones see a lot of it), not a black void
     mood: P.dark ? { sun: 0xd0b0ff, sunI: 1.1, sky: 0xb09aff, gnd: 0x3a2a4a, hemiI: 1.2, fog: shade(P.wall || '#4a3a6a', 0.22) } : { sun: 0xfff0d8, sunI: 1.3, sky: 0xfff4e0, gnd: 0x8a6a4a, hemiI: 1.25, fog: shade(P.wall || (b.stadium ? '#f4ecff' : b.heal ? '#ffe0ec' : '#fff1d8'), 0.24) },
   };

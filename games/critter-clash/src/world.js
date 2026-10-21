@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { toon, inked, canvasTex, outlineMatW } from './toon.js';
 import { Critter, roleHat, shopHat, hatModel, SHOP_HATS } from './critters.js';
-import { CRITTERS, CUPS, withGear, skinned } from './data.js';
+import { CRITTERS, CUPS, withGear, skinned, cupById } from './data.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx, playMusic } from './audio.js';
 import { typeSpeed } from './settings.js';
@@ -416,6 +416,8 @@ export class World {
     this.buildVolcano(rand);
     this.buildFish();
     this.buildGulls();
+    this.buildFerry();
+    this.buildReef(rand);
     this.buildButterflies();
     this.buildMist();
     this.buildAurora();
@@ -562,7 +564,7 @@ export class World {
         }
         if (t === 's' || t === 'P') { // sand rounds off where it meets grass on two sides
           const g = (dx, dy) => { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= W || Y >= H) return false; const k = this.tile(X, Y); return !'sP~=RlvhB'.includes(k) || (k === 'h' && !'sP'.includes(under(X, Y))); }, rr = 10;
-          c.fillStyle = this.phase === 'night' ? ((x + y) % 2 ? '#eeeadc' : '#ebe6d6') : (x + y) % 2 ? '#f4dc9a' : '#f1d894'; /* moonlit sand reads silver, not mud */ c.beginPath(); c.roundRect(x * P, y * P, P, P, [g(-1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, 1) ? rr : 0, g(-1, 0) && g(0, 1) ? rr : 0]); c.fill(); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); }
+          c.fillStyle = C.sand ? ((x + y) % 2 ? C.sand : C.sand2 || C.sand) : this.phase === 'night' ? ((x + y) % 2 ? '#eeeadc' : '#ebe6d6') : (x + y) % 2 ? '#f4dc9a' : '#f1d894'; /* island maps bring their own sand (coral pink, black volcanic) */ /* moonlit sand reads silver, not mud */ c.beginPath(); c.roundRect(x * P, y * P, P, P, [g(-1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, 1) ? rr : 0, g(-1, 0) && g(0, 1) ? rr : 0]); c.fill(); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); }
           if (rand() < 0.22) { c.strokeStyle = 'rgba(190,140,70,0.24)'; c.lineWidth = 1.2; const ry = y * P + 6 + rand() * (P - 12), x0 = x * P + rand() * 10, x1 = x * P + P - rand() * 10; c.beginPath(); c.moveTo(x0, ry); c.quadraticCurveTo((x0 + x1) / 2, ry - 3 - rand() * 3, x1, ry + rand() * 2 - 1); c.stroke(); } // wind ripples
           if (t === 's' && rand() < 0.07) { // a little seashell: a fan with ribs, pink, cream or lilac
             const sx = x * P + 7 + rand() * (P - 14), sy = y * P + 7 + rand() * (P - 14), r = 4 + rand() * 2.5, a = rand() * Math.PI * 2;
@@ -728,6 +730,13 @@ export class World {
     const water = [];
     const planks = [];
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === '=') {
+      // a pier runs north-south (water on both sides): planks across it and rails down its sides
+      const ns = '~'.includes(this.tile(x - 1, y)) && '~'.includes(this.tile(x + 1, y)) && this.tile(x, y - 1) !== '~';
+      if (ns) {
+        for (let k = 0; k < 4; k++) { const b = new THREE.BoxGeometry(TILE * 0.98, 0.14, 0.42); b.translate(x * TILE + 1, 0.16, y * TILE + 0.27 + k * 0.49); planks.push(b); }
+        for (const side of [0.1, TILE - 0.1]) { const r = new THREE.BoxGeometry(0.12, 0.14, TILE); r.translate(x * TILE + side, 0.55, y * TILE + 1); planks.push(r); const p = new THREE.BoxGeometry(0.14, 0.6, 0.14); p.translate(x * TILE + side, 0.3, y * TILE + 0.1); planks.push(p); }
+        continue;
+      }
       for (let k = 0; k < 4; k++) { const b = new THREE.BoxGeometry(0.42, 0.14, TILE * 0.98); b.translate(x * TILE + 0.27 + k * 0.49, 0.16, y * TILE + 1); planks.push(b); }
       for (const side of [0.1, TILE - 0.1]) { const r = new THREE.BoxGeometry(TILE, 0.14, 0.12); r.translate(x * TILE + 1, 0.55, y * TILE + side); planks.push(r); const p = new THREE.BoxGeometry(0.14, 0.6, 0.14); p.translate(x * TILE + 0.1, 0.3, y * TILE + side); planks.push(p); }
     }
@@ -1191,6 +1200,49 @@ export class World {
       this.group.add(g);
       this.gulls.push({ g, wings, r: 5 + k * 2.5, sp: 0.35 + k * 0.08, ph: k * 2.1, y: 4 + k * 0.6 });
     }
+  }
+
+  // Chapter 2: the Sunny Gull, a little red-and-white ferry moored by the pier (it bobs on the swell)
+  buildFerry() {
+    this.ferry = null;
+    const F = this.M.ferry;
+    if (!F || this.M.indoor) return;
+    const g = new THREE.Group(), parts = (list, col) => { const m = inked(mergeGeometries(list), toon(col, { rim: 0.5 }), OL * 0.5); list.forEach((x) => x.dispose()); g.add(m); return m; };
+    const hull = [], white = [], red = [], dark = [];
+    { const h = new THREE.CylinderGeometry(1.25, 0.95, 0.9, 16, 1); h.scale(1, 1, 2.3); h.translate(0, 0.25, 0); hull.push(h); } // round-bellied hull, long fore and aft
+    { const bow = new THREE.ConeGeometry(1.25, 1.4, 16, 1); bow.rotateX(Math.PI / 2); bow.scale(1, 0.72, 1); bow.translate(0, 0.45, 3.5); hull.push(bow); }
+    { const d = new THREE.BoxGeometry(2.3, 0.12, 5.2); d.translate(0, 0.74, 0.1); white.push(d); }
+    { const c = new THREE.BoxGeometry(1.6, 1.1, 1.7); c.translate(0, 1.35, -0.6); white.push(c); }
+    { const r = new THREE.BoxGeometry(1.9, 0.14, 2.0); r.translate(0, 1.96, -0.6); red.push(r); }
+    { const st = new THREE.CylinderGeometry(0.26, 0.3, 1.1, 12); st.translate(0, 2.5, -0.9); red.push(st); const band = new THREE.CylinderGeometry(0.31, 0.31, 0.16, 12); band.translate(0, 2.75, -0.9); white.push(band); }
+    { const w = new THREE.TorusGeometry(0.34, 0.1, 6, 14); w.rotateY(Math.PI / 2); w.translate(1.06, 0.95, 0.8); red.push(w); }
+    for (const z of [-0.95, -0.25]) for (const sd of [-1, 1]) { const p = new THREE.CircleGeometry(0.17, 12); p.rotateY(sd * Math.PI / 2); p.translate(sd * 0.81, 1.45, z); dark.push(p); }
+    parts(hull, 0xe8463a); parts(white, 0xfaf6ee); parts(red, 0xe8463a); parts(dark, 0x2a4a6a);
+    { const stripe = new THREE.CylinderGeometry(1.27, 1.27, 0.14, 16, 1, true); stripe.scale(1, 1, 2.3); stripe.translate(0, 0.62, 0); parts([stripe], 0xfaf6ee); }
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.36), toon(0x3ad0d8, { side: THREE.DoubleSide })); flag.position.set(0.3, 3.15, -0.9); g.add(flag);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.8, 5), toon(0x5a4a3a)); pole.position.set(0, 3.0, -0.9); g.add(pole);
+    g.position.set(F.x * TILE + 1.2, 0, F.y * TILE + 1); g.rotation.y = F.rot ?? 0;
+    g.scale.setScalar(0.78);
+    this.group.add(g);
+    this.ferry = { g, flag, t: Math.random() * 6 };
+  }
+
+  // island harbours: little coral clusters in the shallows by the shore (they glow softly after dark)
+  buildReef(rand) {
+    if (!this.M.reef || this.M.indoor) return;
+    const W = this.W, H = this.H, night = this.phase === 'night', cols = [0xff7a9a, 0xffa64a, 0xb07aff, 0xffe066, 0x5ae0c0];
+    const by = cols.map(() => []);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (this.tile(x, y) !== '~' || this.tile(x, y - 1) === '~' && this.tile(x, y - 2) === '~' || rand() > 0.55) continue; // only the shallow first rows by the beach
+      if (this.M.ferry && Math.abs(x - this.M.ferry.x) <= 2 && Math.abs(y - this.M.ferry.y) <= 2) continue;
+      for (let k = 0; k < 2; k++) {
+        const ci = Math.floor(rand() * cols.length), px = x * TILE + 0.4 + rand() * 1.2, pz = y * TILE + 0.4 + rand() * 1.2;
+        if (rand() < 0.5) { // branching coral: three little tapered fingers
+          for (let f = 0; f < 3; f++) { const c = new THREE.CylinderGeometry(0.03, 0.09, 0.5 + rand() * 0.3, 5); c.rotateZ((f - 1) * 0.5); c.rotateY(rand() * 3); c.translate(px + (f - 1) * 0.12, 0.25, pz); by[ci].push(c); }
+        } else { const b = new THREE.SphereGeometry(0.22 + rand() * 0.1, 8, 6); b.scale(1, 0.65, 1); b.translate(px, 0.1, pz); by[ci].push(b); } // brain coral dome
+      }
+    }
+    by.forEach((list, i) => { if (!list.length) return; const m = night ? new THREE.MeshBasicMaterial({ color: new THREE.Color(cols[i]).multiplyScalar(0.8) }) : toon(cols[i], { rim: 0.6 }); if (night) m.userData.own = true; this.group.add(inked(mergeGeometries(list), m, OL * 0.3)); list.forEach((g) => g.dispose()); });
   }
 
   // butterflies flutter over the flower beds on fine days
@@ -2778,7 +2830,7 @@ export class World {
 
   // a stadium lobby whose cup you've won: bunting along the back wall, a CHAMPION banner on the front desk, and confetti the first time you walk in
   buildChamp() {
-    const M = this.M, cup = M.indoor === 'lobby' && CUPS.find((c) => c.id === M.cup), F = save.adv.flags;
+    const M = this.M, cup = M.indoor === 'lobby' && cupById(M.cup), F = save.adv.flags;
     if (!cup || !F['cup_' + cup.id]) return;
     const col = new THREE.Color(cup.color).getHex(), [, bz] = wpos(0, 0), tri = [];
     for (let x = 1.2 * TILE; x < (this.W - 1.2) * TILE; x += 0.62) {
@@ -3085,7 +3137,7 @@ export class World {
           for (const o of [-0.5, 0.5]) box('wains2', 0.06, 0.66, 0.08, px + o, 0.76, pz + 1.05); // panel seams
         }
         if (back && this.M.indoor === 'arcade') { box('neon', TILE + 0.01, 0.12, 0.08, px, 2.7, pz + 1.04); box('neon2', TILE + 0.01, 0.08, 0.08, px, 0.5, pz + 1.08); }
-        if (back && this.M.indoor === 'lobby' && x >= 5 && x <= 9) this.poster(x - 5 - Math.floor((5 - (CUPS.find((c) => c.id === this.M.cup)?.matches.length || 5)) / 2), px, pz);
+        if (back && this.M.indoor === 'lobby' && x >= 5 && x <= 9) this.poster(x - 5 - Math.floor((5 - (cupById(this.M.cup)?.matches.length || 5)) / 2), px, pz);
         if (back && this.M.indoor !== 'lobby' && x % 3 !== 2 && (x % 3 === 0 || x % 4 === 1) && x > 1 && x < W - 2 && '.QOD'.includes(this.tile(x, 1)) && x % 3 !== 2 && this.M.indoor !== 'arcade' && this.M.indoor !== 'cabin') { // a little framed landscape between the windows
           box('frame', 1.4, 1.05, 0.08, px, 2.05, pz + 1.02); box('art' + (x % 2), 1.18, 0.83, 0.06, px, 2.05, pz + 1.06); box('hill', 1.18, 0.28, 0.07, px, 1.77, pz + 1.07); box('sunny', 0.22, 0.22, 0.07, px + 0.32, 2.25, pz + 1.075);
         }
@@ -3492,7 +3544,7 @@ export class World {
 
   // stadium lobbies: a poster of each of the cup's trainers' critters along the back wall
   poster(k, px, pz) {
-    const cup = CUPS.find((c) => c.id === this.M.cup), m = k >= 0 && cup?.matches[k];
+    const cup = cupById(this.M.cup), m = k >= 0 && cup?.matches[k];
     if (!m) return;
     const tex = new THREE.TextureLoader().load(this.g.portrait(withGear(byId(m.critter), m.level)));
     tex.colorSpace = THREE.SRGBColorSpace; tex.userData.own = true;
@@ -3598,7 +3650,7 @@ export class World {
   }
 
   stadiumModel(G, b, w, d) {
-    const cup = CUPS.find((c) => c.id === b.stadium), won = save.adv.flags['cup_' + b.stadium];
+    const cup = cupById(b.stadium), won = save.adv.flags['cup_' + b.stadium];
     const stripes = canvasTex(256, 32, (c, W, H) => { for (let k = 0; k < 16; k++) { c.fillStyle = k % 2 ? '#fff4e0' : cup.color; c.fillRect(k * W / 16, 0, W / 16 + 1, H); } });
     stripes.userData.own = true;
     const wm = toon(0xffffff, { map: stripes }); wm.userData.own = true;
@@ -4123,6 +4175,7 @@ export class World {
       B.g.rotation.y = Math.atan2(Math.cos(a) * 1.4, -Math.sin(a * 0.8) * 0.8);
       const f = 0.2 + Math.abs(Math.sin(this.t * 14 + B.ph)) * 1.1; for (const [wg, sd] of B.wings) wg.rotation.z = sd * f;
     }
+    if (this.ferry) { const f = this.ferry; f.t += dt; f.g.position.y = Math.sin(f.t * 1.3) * 0.06 - 0.05; f.g.rotation.z = Math.sin(f.t * 0.9) * 0.025; f.flag.rotation.y = Math.sin(f.t * 5) * 0.3; }
     for (const B of this.gulls || []) {
       const c = this.hero.root.position, a = this.t * B.sp + B.ph;
       B.g.position.set(c.x + Math.cos(a) * B.r, B.y + Math.sin(a * 2) * 0.3, c.z - 3 + Math.sin(a) * B.r * 0.6);

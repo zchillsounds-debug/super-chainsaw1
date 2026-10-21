@@ -406,6 +406,46 @@ export const CUPS = [
   },
 ];
 
+// Chapter 2 (after the ending): the three stadium cups of the Sunscatter Isles. Kept out of CUPS so the
+// main story (Frostpeak's gate, "every cup", Tournament mode) is unchanged; look cups up by id with cupById.
+export const ISLE_CUPS = [
+  {
+    id: 'coral', arena: 'beach', name: 'Coral Cup', color: '#ff7a9a', desc: 'A harbour league on the coral reef. Bring a snorkel.', diff: [0.8, 0.95], isle: true,
+    intro: ["Welcome to Port Coral, {name}! The Coral Cup is the first stadium of the Sunscatter Isles.", "The islanders train in the waves every morning. Do not let the cute shells fool you!"],
+    outro: ["Coral Cup champion! The harbour bells are ringing for you, {name}.", "Next, the Gale Cup up on Breezy Bluffs. Hold on to your hat. Really, hold on to it."],
+    matches: [
+      { name: 'Nalu', style: 'rushdown', title: 'Surf Kid', critter: 'blowfin', level: 20, taunt: "Blowfin and I ride the big waves every morning. You look like a little ripple!", beat: "Wipeout! ...but what a ride.", gloat: "Totally tubular! Back to the beach with you." },
+      { name: 'Coralie', style: 'turtle', title: 'Reef Diver', critter: 'pumicub', level: 21, taunt: "Pumicub floats, but it hits like a rock. Ready?", beat: "You found a pearl in that one. Well fought!", gloat: "Sunk like a stone. Pumicub floats, you do not." },
+      { name: 'Old Barnacle', style: 'balanced', title: 'Harbourmaster', critter: 'smokeshell', level: 22, taunt: "Forty years I've run this harbour. Nobody docks without my say-so.", beat: "Hah! You've earned your sea legs. Dock wherever you like.", gloat: "Back to the ferry, landlubber." },
+      { name: 'Marina', style: 'zoner', title: 'Coral Captain', critter: 'blowfin', skin: 'shiny', level: 23, mods: ['itemrain'], boss: true, taunt: "The reef protects its own. Let's see if it likes you, {name}.", beat: "The reef has spoken: it likes you. The Coral Cup is yours.", gloat: "The tide always comes back in. Try again!" },
+    ],
+  },
+  {
+    id: 'gale', arena: 'sky', name: 'Gale Cup', color: '#8ad8ff', desc: 'A cliff-top stadium where the trade winds never stop.', diff: [0.85, 1], isle: true, requires: 'coral',
+    intro: ["Breezy Bluffs! Up here the wind decides who wins, {name}. Mostly.", "Watch the updrafts. Skimray trainers love them."],
+    outro: ["Gale Cup champion! The windmills are spinning just for you.", "Only the Caldera Cup is left, on Ember Isle. And keep an eye out for those Gloom Gulls..."],
+    matches: [
+      { name: 'Kai', style: 'trickster', title: 'Kite Racer', critter: 'skimray', level: 22, mods: ['lowgrav'], taunt: "My kite beat a seagull once. You're next.", beat: "Line snapped! Nice flying.", gloat: "Blown right off the cliff!" },
+      { name: 'Aunt Tilly', style: 'turtle', title: 'Windmill Keeper', critter: 'mossloth', level: 23, taunt: "Mossloth has been keeping the windmill company for years. Slowly.", beat: "Well, well. You're faster than the wind.", gloat: "Slow and steady, dearie. Every time." },
+      { name: 'Rook', style: 'rushdown', title: 'Storm Chaser', critter: 'toucharge', level: 24, taunt: "I chase storms for fun. You're just a light drizzle.", beat: "Lightning never strikes twice... except on me, apparently.", gloat: "Squawk! Struck you down!" },
+      { name: 'Zephyra', style: 'zoner', title: 'Wind Sage', critter: 'skimray', skin: 'shiny', level: 25, boss: true, taunt: "The wind told me you were coming, {name}. It also told me how this ends.", beat: "The wind changes... and today it blows your way. Take the Gale Cup.", gloat: "The wind knows. It always knows." },
+    ],
+  },
+  {
+    id: 'caldera', arena: 'volcano', name: 'Caldera Cup', color: '#ff8a3a', desc: 'A stadium built inside a sleepy volcano. Mostly sleepy.', diff: [0.9, 1], isle: true, requires: 'gale',
+    intro: ["Ember Isle's Caldera Cup! The floor is warm, {name}. That is normal. Probably.", "The best fire and stone critters in the isles train here. Show them what a champion can do!"],
+    outro: ["Caldera Cup champion! All three island cups are yours, {name}!", "The lighthouse on Starfall Atoll has gone dark... the Gloom Gulls are up to something. Go!"],
+    matches: [
+      { name: 'Ash', style: 'rushdown', title: 'Lava Surfer', critter: 'smokeshell', level: 24, taunt: "I surf lava. LAVA. You think I'm scared of you?", beat: "Okay, I'm a little scared of you now.", gloat: "Too hot for you!" },
+      { name: 'Basil', style: 'balanced', title: 'Hot Spring Host', critter: 'pumicub', level: 25, taunt: "Win and I'll run you a lovely hot bath. Lose and... I'll still run you a bath.", beat: "Bath's ready! You earned it.", gloat: "There there. Have a soak and try again." },
+      { name: 'Flint', style: 'trickster', title: 'Volcanologist', critter: 'toucharge', skin: 'shiny', level: 26, mods: ['supercharged'], taunt: "My readings say there's a 100% chance of you losing.", beat: "My readings were... wrong. Fascinating!", gloat: "Science wins again!" },
+      { name: 'Magda', style: 'turtle', title: 'Caldera Keeper', critter: 'smokeshell', skin: 'shiny', level: 27, boss: true, bossTitle: 'CALDERA KEEPER', taunt: "This volcano has slept for a thousand years. Do not wake it with a loss, {name}.", beat: "The mountain rumbles for you, champion. The Caldera Cup is yours.", gloat: "The mountain sleeps on. Come back stronger." },
+    ],
+  },
+];
+export const ALL_CUPS = () => [...CUPS, ...ISLE_CUPS];
+export const cupById = (id) => CUPS.find((c) => c.id === id) || ISLE_CUPS.find((c) => c.id === id);
+
 // Combo chain for every critter (scaled by stats.power). t = seconds.
 export const COMBO = [
   { dmg: 50, startup: 0.08, active: 0.08, recover: 0.16, range: 1.25, arc: 1.4, kb: 2.2, lift: 0, stun: 0.28, lunge: 3.5 },

@@ -2,7 +2,7 @@
 // of all. Professor Pecan sets the quest; a rival, Dash, keeps turning up to test the hero;
 // the cup stadiums are the gyms. Every beat is keyed on save.adv.flags.
 import { save, persist, grantXp, xpNeeded } from './save.js';
-import { CUPS, CRITTERS, TYPES, withGear, skinned } from './data.js';
+import { CUPS, CRITTERS, TYPES, withGear, skinned, cupById } from './data.js';
 const skinnedShiny = (id) => skinned(CRITTERS.find((c) => c.id === id), 'shiny');
 import { unlock } from './save.js';
 import { sfx } from './audio.js';
@@ -75,6 +75,18 @@ export function storyIntro(S, w) {
     w.say(["{hero}: Brrr! So THIS is Frostpeak. And that mountain... that's Champion's Peak!", 'Captain Puff: The Legend Cup is the toughest of them all. Good luck, {hero}!']);
     return;
   }
+  if (w.key === 'coral' && !F.isle_arrive) {
+    F.isle_arrive = true; persist();
+    w.say([
+      'The Sunny Gull bumps gently against the pier. Warm wind, turquoise water, and palm trees as far as the eye can see!',
+      '{hero}: So these are the Sunscatter Isles...',
+      'Captain Gill: Welcome to Port Coral, Champion! Three islands, three stadiums: the Coral Cup right here, the Gale Cup on Breezy Bluffs, and the Caldera Cup on Ember Isle.',
+      'Captain Gill: The critters out here are all new to mainland folk. Smokeshells, Blowfins, Toucharges... you will love them.',
+      'Captain Gill: Just watch out for the Gloom Gulls. A gang of sky pirates. Since they came, the great lighthouse on Starfall Atoll has gone dark...',
+      'Captain Gill: Whenever you want to go home, I will be right here on the pier. Off you go!',
+    ]);
+    return;
+  }
   if (CUPS.every((c) => F['cup_' + c.id]) && !F.seven && w.key === 'frostpeak') {
     F.seven = true; persist();
     w.say([
@@ -97,7 +109,7 @@ export function storyIntro(S, w) {
       'Prof. Pecan: {hero}, Champion of Clashara! I knew it from the very first day.',
       '{hero}: I did it... I really did it! But Dash is right. There are always stronger critters out there...',
       "{hero}: So I'll keep training! Every route, every stadium. Let's go!",
-    ], () => (w.credits ? w.credits(() => w.say(['★ THE END ★  Thanks for playing! The world is yours to explore. Wild critters are still out there, and every stadium welcomes a rematch.'])) : null));
+    ], () => (w.credits ? w.credits(() => w.say(['★ THE END ★  Thanks for playing! The world is yours to explore. Wild critters are still out there, and every stadium welcomes a rematch.', 'Psst... down on the pier in Seashell Town, a little ferry is getting ready to sail somewhere new. Chapter 2 awaits!'])) : null));
     return;
   }
   if (w.key === 'cloudtop' && !F.cloudtop) {
@@ -342,12 +354,12 @@ export function storyTalk(S, id, w, a) {
     return w.say([won.length ? `{hero}'s trophy shelf: ${won.length} of ${CUPS.length} cups. ${won.map((c) => c.name).join(', ')}.` : 'An empty trophy shelf, dusted and waiting. Mom says it\'s for {hero}\'s first cup.', ...(F.crowned ? ['And on top, in pride of place: the Critter Crown. 👑'] : won.length < CUPS.length ? ['There\'s still room for more!'] : [])]);
   }
   if (id.startsWith('case:')) { // a lobby trophy case
-    const cup = CUPS.find((c) => c.id === id.slice(5));
+    const cup = cupById(id.slice(5));
     w.say([F['cup_' + cup.id] ? `The ${cup.name} trophy! {hero}'s name is engraved on it. ✨` : `An empty stand. A little card says: "${cup.name}".`]);
     return;
   }
   if (id === 'cupdesk') { // the stadium's front desk signs you up for its cup
-    const cup = CUPS.find((c) => c.id === w.M.cup), front = w.M.exit, who = 'Front Desk';
+    const cup = cupById(w.M.cup), front = w.M.exit, who = 'Front Desk';
     if (F['cup_' + cup.id]) { w.say([`Front Desk: Hoo! The ${cup.name} champion! Your trophy has pride of place in the case.`, 'Front Desk: Want to battle the cup again? Use Tournament on the title screen.'], null, who); return; }
     w.say([`Front Desk: Hoo! Welcome to the ${cup.name}! ${cup.matches.length} battles stand between you and the trophy.`], () => w.ask(`Front Desk: Shall I sign {hero} up for the ${cup.name}?`, ["Let's go!", 'Not yet'], (i) => {
       if (i) { w.say(['Front Desk: No rush. Rest up at the Berry Center first!'], null, who); return; }
@@ -439,6 +451,8 @@ export function storyTalk(S, id, w, a) {
     }));
   }
   if (id === 'rival2') rival2(S, w);
+  if (id === 'ferry') return ferry(S, w);
+  if (id === 'dashisle') return dashIsle(S, w);
   if (id === 'dash3') {
     w.say([
       "Dash: Don't bother. I already tried to bash through those brambles. Twelve times.",
@@ -1063,6 +1077,35 @@ export function doorAction(S, b, w) {
     return;
   }
   w.say(['Nobody seems to be home.']);
+}
+
+// Chapter 2: the Sunny Gull ferry between Seashell Town and Port Coral (post-game)
+function ferry(S, w) {
+  const F = flags(), home = w.key === 'seashell';
+  if (home && !F.ending) {
+    return w.say(['Captain Gill: Ahoy! The Sunny Gull sails to the Sunscatter Isles, far across the sea.', "Captain Gill: But the islanders only welcome a true Champion. Come back wearing the Critter Crown, and I'll take you myself!"], null, 'Captain Gill');
+  }
+  const q = home ? (F.isle_arrive ? 'Captain Gill: Back to the islands, Champion?' : 'Captain Gill: The Champion of Clashara! The Sunscatter Isles have been waiting for you. All aboard?')
+    : 'Captain Gill: Sail back to Seashell Town?';
+  w.ask(q, [home ? 'All aboard!' : 'Sail home', 'Not yet'], (i) => {
+    if (i) return w.say([home ? 'Captain Gill: The sea will still be here. Take your time!' : 'Captain Gill: Enjoy the sunshine!'], null, 'Captain Gill');
+    sfx.wave?.(); sfx.jingle?.(1);
+    (save.adv.cnt ||= {}).ferry = (save.adv.cnt.ferry || 0) + 1;
+    w.say([home ? 'The Sunny Gull blows its horn and chugs out of the bay. Seashell Town shrinks behind you...' : 'The Sunny Gull turns for home. The islands fade into the haze...'], () => w.fade(() => { w.load(home ? 'coral' : 'seashell', 12, 15, 'n'); if (home && !F.isle_arrive) setTimeout(() => storyIntro(S, w), 500); }));
+  }, 'Captain Gill');
+}
+
+function dashIsle(S, w) {
+  const rid = rivalFor(save.adv.hero), rdef = byId(rid);
+  w.say([
+    "Dash: WHAT?! You're here too? I took the early ferry so I'd get here FIRST!",
+    "Dash: Look, Champ. Back home you got the Crown. Out here, nobody's heard of either of us. Clean slate.",
+    "Dash: So let's settle who's the real number one of the islands. Right now!",
+  ], () => S.worldFight({
+    foe: withGear(rdef, 22), lv: 22, kind: 'story', flag: 'dash_isle1', name: 'Rival Dash', diff: 0.82,
+    trainer: { name: 'Dash', critter: rid, title: 'Island rival', beat: "Argh! Still?! Okay, listen. The Gloom Gulls stole the Sunstone from the Starfall lighthouse. Whoever gets it back is the hero of the isles. And that'll be ME!", gloat: 'Ha! The islands are MINE!' },
+    note: '🏝️ You beat Dash in Port Coral! The race to the lighthouse is on.',
+  }));
 }
 
 function rival2(S, w) {
