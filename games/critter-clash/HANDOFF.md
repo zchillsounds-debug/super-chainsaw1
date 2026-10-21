@@ -6,7 +6,7 @@
 - **The new run's end time is set by its first session (start + 48 h), on the line below.** Later sessions never reset it.
 - **New 48-hour run end time: 2026-10-23 16:49 UTC** (started 2026-10-21 16:49 UTC by session 18a; never reset it; push it back by the length of any worker stall)
 - Round numbers continue from the highest R in `git log`.
-- **Session 18c (2026-10-21 22:43–~23:55 UTC, session_01W7Pdfri5qPxnMP2dsnCvLL) did R692–R700 (see "Session 18c"); next round R701.** M3 is done; M4 is in progress (the Battle Tower, both legendaries, the weekly Sunscatter Masters and harder island rematches are in). It wrapped up early at ~330k context.
+- **Session 18c (2026-10-21 22:43–~23:55 UTC, session_01W7Pdfri5qPxnMP2dsnCvLL) did R692–R700 (see "Session 18c"); next round R701.** M3 is done; M4 is in progress (the Battle Tower, both legendaries, the weekly Sunscatter Masters and harder island rematches are in). It wrapped up early at ~330k context and chained to session_01JkygnyfnFio7oFRNAVRJbS (18d).
 - **Session 18b (2026-10-21 21:18–~22:45 UTC, session_01Tf8Jp2QEVnMxbjMJYVpJ9c) did R681–R691 (see "Session 18b"); next round R692.** M2 is done; M3 is in progress (the Ember Grotto cave, the Sunstone Festival quest chain and rare island finds are in).
 - **Session 18a (2026-10-21 16:49–~18:20 UTC) did R672–R680 (see "Session 18a"); next round R681. It could not chain (no create_session tool in that chat): the user starts the next session by hand with the same prompt.** Milestone M1 is done; M2 is in progress (Port Coral, Palm Path, the ferry and the Coral Cup are in).
 
