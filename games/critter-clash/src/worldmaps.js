@@ -778,6 +778,52 @@ export const MAPS = {
       { id: 'vent_kid', x: 9, y: 12, act: 'hop', critter: 'pumicub', name: 'Pumicub', dir: 'e', wander: 2, lines: ['Pumicub: Grrumph! (It rolls in the warm black sand, very pleased with itself.)'] },
     ],
   },
+
+  atoll: {
+    name: 'Starfall Atoll',
+    music: 'beach',
+    arena: 'beach',
+    isle: 'atoll',
+    border: 'palm',
+    outer: 0x1a7aa8,
+    reef: true,
+    lighthouse: [12, 2], // the great Starfall lighthouse: dark until the Sunstone comes home
+    palette: { a: '#7ad46a', b: '#76d066', tall: '#2f9a50', path: '#f2ead8', sand: '#fff4e0', sand2: '#fbefd8', water: '#2ac4d8', bank: '#e0c8a0' },
+    tiles: [
+      '~~~~~~~~~~~~~~~~~~~~~~~~',
+      '~~~~~~~~ssRRRRss~~~~~~~~',
+      '~~~~~~sssR....Rsss~~~~~~',
+      '~~~~~ssP...:....Pss~~~~~',
+      '~~~~ssP....:.....Pss~~~~',
+      '~~~ssP.hhhh:...""".Pss~~',
+      '~~~sP..hhhh:...""""..ss~',
+      '~~ssP..hhhh:...""""..Ps~',
+      '~~sP.....:::.......f.Ps~',
+      '~~sP.f...:.....R.....Ps~',
+      '~~ssP....:.........""Ps~',
+      '~~~ssP...:.........""ss~',
+      '~~~~ssPP.:.......PPss~~~',
+      '~~~~~~sss:sssssssss~~~~~',
+      '~~~~~~~~~=~~~~~~~~~~~~~~',
+      '~~~~~~~~~=~~~~~~~~~~~~~~',
+      '~~~~~~~~~~~~~~~~~~~~~~~~',
+    ],
+    ferry: { x: 10, y: 15, back: 'coral' },
+    buildings: [
+      { id: 'hideout_a', x: 7, y: 5, w: 4, h: 3, roof: 0x2a2438, wall: 0x6a6070, door: 3, label: 'Gloom Gull Hideout' },
+    ],
+    signs: [{ x: 8, y: 12, text: 'STARFALL ATOLL\nThe lighthouse has guided sailors home for a hundred years.' }],
+    wild: { list: [['skimray', 25, 27], ['toucharge', 25, 27], ['blowfin', 25, 27], ['smokeshell', 26, 28], ['mossloth', 26, 28], ['pumicub', 26, 28]], roam: 3, rate: 0.1 },
+    npcs: [
+      { id: 'gill_a', x: 9, y: 15, critter: 'blowfin', name: 'Captain Gill', dir: 'n', story: 'ferry', lines: [] },
+      { id: 'dash_a', x: 13, y: 11, rival: true, rlv: 26, name: 'Dash', dir: 'w', story: 'dashatoll', hideFlag: 'sunstone' },
+      { id: 'petrel_a', x: 16, y: 9, critter: 'squeakwing', name: 'Gloom Gull Petrel', dir: 'w', trainer: { lv: 26, sight: 3, diff: 0.85, intro: 'Gloom Gull Petrel: Caw! Nobody sets foot on our atoll! Squeakwing, scare them back into the sea!', beat: 'Gloom Gull Petrel: Caw... caw... ow.', after: 'Gloom Gull Petrel: The captain wanted the Sunstone so the night would last forever. I just wanted a cool black balloon.' } },
+      { id: 'shag_a', x: 12, y: 6, critter: 'hootsy', name: 'Gloom Gull Shag', dir: 'w', trainer: { lv: 27, sight: 3, diff: 0.88, intro: "Gloom Gull Shag: Hoo goes there? Nobody gets to the lighthouse while I'm on watch!", beat: 'Gloom Gull Shag: Hoo... hoo knew?', after: "Gloom Gull Shag: Captain Morra is up by the lighthouse door. She never loses. Well. Hardly ever." } },
+      { id: 'morra_a', x: 11, y: 3, critter: 'skimray', name: 'Captain Morra', dir: 's', story: 'morra', hideFlag: 'sunstone', shiny: true, scale: 1.25 },
+      { id: 'keeper_a', x: 11, y: 3, critter: 'hootsy', name: 'Keeper Lumi', dir: 's', showFlag: 'sunstone', lines: ['Keeper Lumi: The light is back! Ships can find their way home again. Thank you, Champion.', 'Keeper Lumi: I kept the lamp for forty years. The Sunstone warms up in the daytime and shines all night. A little sun in a stone.', 'Keeper Lumi: Captain Morra? She sails with us now. She keeps the night watch. Turns out she just hated being lonely in the dark.'] },
+      { id: 'morra_b', x: 14, y: 4, critter: 'skimray', name: 'Morra', dir: 'w', showFlag: 'sunstone', shiny: true, lines: ['Morra: Hmph. The light is... nice, I suppose. Do not tell my Gulls I said so.', 'Morra: I wanted the night to last forever. Out at sea, the dark is so lonely. Now I keep watch with Lumi instead.'] },
+    ],
+  },
 };
 
 // the critter who keeps showing up to test the hero (never the hero's own species)

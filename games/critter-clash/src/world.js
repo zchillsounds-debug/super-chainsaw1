@@ -420,6 +420,7 @@ export class World {
     this.buildReef(rand);
     this.buildWindmills();
     this.buildBigVolcano();
+    this.buildLighthouse();
     this.buildButterflies();
     this.buildMist();
     this.buildAurora();
@@ -514,7 +515,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.lighthouse = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1282,6 +1283,36 @@ export class World {
     const gm = new THREE.MeshBasicMaterial({ color: night ? 0xff7a2a : 0xff9a4a }); gm.userData.own = true;
     const crater = new THREE.Mesh(new THREE.CircleGeometry(3.1, 20), gm); crater.rotation.x = -Math.PI / 2; crater.position.y = 13; g.add(crater);
     this.bigVolcano = { x: cx, y: 12.6, z: cz };
+  }
+
+  // Starfall Atoll: the great striped lighthouse. Dark and cold while the Gloom Gulls hold the Sunstone; once it's home, the lamp glows and a beam sweeps the sea after dark
+  buildLighthouse() {
+    this.lighthouse = null;
+    const L = this.M.lighthouse; if (!L || this.M.indoor) return;
+    const [x, y] = L, [px, pz] = wpos(x, y), lit = !!save.adv.flags.sunstone, dark = this.phase !== 'day';
+    const g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(x + ',' + y);
+    const rock = toon(0x8a8478, { rim: 0.4 }), red = toon(lit ? 0xe8443a : 0x8a4a4a), white = toon(lit ? 0xfaf6ee : 0xb8b4b0), black = toon(0x2a2a32);
+    const base = inked(new THREE.CylinderGeometry(1.3, 1.5, 0.6, 12), rock, OL * 0.5); base.position.y = 0.3; g.add(base);
+    for (let k = 0; k < 5; k++) { const r0 = 1.0 - k * 0.09, seg = inked(new THREE.CylinderGeometry(r0 - 0.09, r0, 1.1, 16), k % 2 ? white : red, OL * 0.45); seg.position.y = 0.6 + 0.55 + k * 1.1; seg.castShadow = true; g.add(seg); }
+    const top = 0.6 + 5.5;
+    const deck = inked(new THREE.CylinderGeometry(0.85, 0.85, 0.12, 16), black, OL * 0.35); deck.position.y = top + 0.06; g.add(deck);
+    const rail = inked(new THREE.TorusGeometry(0.82, 0.03, 4, 20), black, OL * 0.2); rail.rotation.x = Math.PI / 2; rail.position.y = top + 0.4; g.add(rail);
+    const gm = lit ? new THREE.MeshBasicMaterial({ color: 0xfff0a0 }) : toon(0x4a5a6a, { rim: 0.8 }); if (lit) gm.userData.own = true;
+    const lamp = inked(new THREE.CylinderGeometry(0.5, 0.5, 0.85, 12), gm, OL * 0.3); lamp.position.y = top + 0.55; g.add(lamp);
+    const dome = inked(new THREE.SphereGeometry(0.58, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), red, OL * 0.35); dome.position.y = top + 0.98; g.add(dome);
+    const tip = inked(new THREE.SphereGeometry(0.1, 8, 6), black, OL * 0.2); tip.position.y = top + 1.6; g.add(tip);
+    let beam = null;
+    if (lit) {
+      const glow = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xffe08a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: dark ? 0.9 : 0.45 }); glow.userData.own = true;
+      const halo = new THREE.Sprite(glow); halo.scale.setScalar(dark ? 4.5 : 2.4); halo.position.y = top + 0.55; g.add(halo);
+      if (dark) { // two long soft beams, back to back, turning slowly
+        beam = new THREE.Group(); beam.position.y = top + 0.55; g.add(beam);
+        const bm = new THREE.MeshBasicMaterial({ color: 0xfff0b0, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }); bm.userData.own = true;
+        for (const sd of [1, -1]) { const c = new THREE.Mesh(new THREE.ConeGeometry(1.6, 16, 16, 1, true), bm); c.rotation.z = sd * Math.PI / 2; c.position.x = sd * 8; beam.add(c); } // apex at the lamp, opening out to sea
+        beam.rotation.z = -0.08;
+      }
+    }
+    this.lighthouse = { beam };
   }
 
   // kite kids: a kite on a long line, swooping over their heads
@@ -4167,6 +4198,7 @@ export class World {
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
     if (this.statue) { const T = this.statue; T.glow.material.opacity = 0.3 + Math.sin(this.t * 1.6) * 0.08; if (Math.random() < dt * 2) this.g.fx.spawn({ x: T.px + (Math.random() - 0.5) * 1.6, y: 0.8 + Math.random() * 1.8, z: T.pz + (Math.random() - 0.5) * 1.2, vy: 0.3, life: 1.2, size: 0.3, color: 0xfff0a0, shape: 'star', alpha: 0.9 }); }
     if (this.bigVolcano && Math.random() < dt * 5) { const V = this.bigVolcano, sc = 1.6 + Math.random(); this.g.fx.spawn({ x: V.x + (Math.random() - 0.5) * 3, y: V.y, z: V.z + (Math.random() - 0.5) * 3, vx: 0.8 + Math.random() * 0.6, vy: 2.2, vz: 0.2, color: this.phase === 'day' ? 0xd8d0cc : 0x8a7a80, size: sc, life: 4.5, shape: 'glow', grav: 0, additive: false, alpha: 0.55 }); } // a lazy smoke plume drifting downwind
+    if (this.lighthouse?.beam) this.lighthouse.beam.rotation.y += dt * 0.6;
     if (this.windmills) for (const W of this.windmills) W.sails.rotation.z -= dt * W.sp;
     if (this.kites) for (const K of this.kites) { // the kite swoops in a lazy figure of eight downwind of its flyer; the tail ribbons trail behind
       K.t += dt; const a = K.t * 0.7, kx = K.px + 1.6 + Math.sin(a) * 1.6, ky = 6.4 + Math.sin(a * 2) * 0.7, kz = K.pz - 4.2 + Math.cos(a) * 0.6;

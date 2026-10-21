@@ -89,6 +89,28 @@ export function storyIntro(S, w) {
     w.say(['The rope bridge sways in the wind... and then you are across! Windmills turn on the cliff tops, and kites dance over the town.', '{hero}: So this is Breezy Bluffs. Hold on to your hat!']);
     return;
   }
+  if (w.key === 'atoll' && F.morra && !F.sunstone) { // the finale: the Sunstone goes home, and the lighthouse wakes
+    F.sunstone = true; const own = (save.adv.hats ||= []); if (!own.includes('sunstone')) own.push('sunstone'); persist(); sfx.jingle?.(2);
+    w.say([
+      'Captain Morra drops a round golden stone into your paws. It is warm, like a little piece of the sun.',
+      'Captain Morra: ...The Gloom Gulls are done. My crew wants to go home anyway. They say the dark is cold.',
+      '{hero} climbs the winding stairs to the very top of the lighthouse and sets the Sunstone in the great lamp...',
+      'FWOOOM! A golden beam sweeps out across the sea. Far away, ship horns hoot in thanks.',
+      "Keeper Lumi: You did it! I've kept this lamp for forty years, and I never thought I'd see it shine again.",
+      "Dash: Okay. OKAY. That was amazing. You're the hero of the isles. ...Next time it's me, though!",
+      'Keeper Lumi: Please, take this. A circlet made from a chip of the Sunstone. It glows a little at sunset. 🎩 (Sunstone Circlet added to your hats!)',
+      '🏝️ Chapter 2 complete! You saved the Sunscatter Isles. Captain Gill can still sail you anywhere you like.',
+    ], () => w.fade(() => w.load('atoll', w.hx, w.hy, 's')));
+    return;
+  }
+  if (w.key === 'atoll' && !F.atoll) {
+    F.atoll = true; persist();
+    w.say([
+      'The Sunny Gull creeps into a still lagoon. Black balloons bob over the palms, and the great lighthouse stands cold and dark.',
+      'Captain Gill: Starfall Atoll. Gloom Gull country. I\'ll wait right here by the pier. Be careful, Champion.',
+    ]);
+    return;
+  }
   if (w.key === 'ember_isle' && !F.ember_isle) {
     F.ember_isle = true; persist();
     w.say(['Black sand, warm wind, and a huge volcano puffing smoke over the rooftops. This is Ember Isle!', '{hero}: The Caldera Cup is inside THAT? ...Okay. Deep breaths.']);
@@ -317,7 +339,8 @@ export function nextGoal(F) {
     const nx = ISLE_CUPS.find((c) => !F['cup_' + c.id]);
     if (nx?.id === 'caldera' && !F.skua_b) return 'A Gloom Gull is blocking the Ash Trail at the east edge of Breezy Bluffs. Chase it off!';
     if (nx) return `Win the ${nx.name} in ${ISLE_AT[nx.id]}.`;
-    return 'All three island cups are yours! The Starfall lighthouse is still dark...';
+    if (!F.sunstone) return F.morra ? 'Bring the Sunstone home to the Starfall lighthouse!' : 'Sail to Starfall Atoll with Captain Gill (Port Coral) and take the Sunstone back from Captain Morra!';
+    return 'You saved the Sunscatter Isles! Rematch trainers, find rare critters and explore.';
   }
   if (!F.quest) return 'Visit Professor Pecan\'s lab in Sprout Village.';
   const nx = Object.keys(GOAL_AT).find((id) => !F['cup_' + id]);
@@ -499,6 +522,8 @@ export function storyTalk(S, id, w, a) {
   if (id === 'ferry') return ferry(S, w);
   if (id === 'dashisle') return dashIsle(S, w);
   if (id === 'skua') return skua(S, w);
+  if (id === 'dashatoll') return dashAtoll(S, w);
+  if (id === 'morra') return morra(S, w);
   if (id === 'dash3') {
     w.say([
       "Dash: Don't bother. I already tried to bash through those brambles. Twelve times.",
@@ -1127,18 +1152,47 @@ export function doorAction(S, b, w) {
 
 // Chapter 2: the Sunny Gull ferry between Seashell Town and Port Coral (post-game)
 function ferry(S, w) {
-  const F = flags(), home = w.key === 'seashell';
+  const F = flags(), home = w.key === 'seashell', atoll = w.key === 'atoll';
   if (home && !F.ending) {
     return w.say(['Captain Gill: Ahoy! The Sunny Gull sails to the Sunscatter Isles, far across the sea.', "Captain Gill: But the islanders only welcome a true Champion. Come back wearing the Critter Crown, and I'll take you myself!"], null, 'Captain Gill');
   }
+  // Port Coral, once all three island cups are won: Starfall Atoll is on the chart too
+  const ports = home ? [['coral', 'All aboard!']] : atoll ? [['coral', 'Back to Port Coral']] : [...(F.cup_caldera ? [['atoll', 'Starfall Atoll']] : []), ['seashell', 'Sail home']];
   const q = home ? (F.isle_arrive ? 'Captain Gill: Back to the islands, Champion?' : 'Captain Gill: The Champion of Clashara! The Sunscatter Isles have been waiting for you. All aboard?')
-    : 'Captain Gill: Sail back to Seashell Town?';
-  w.ask(q, [home ? 'All aboard!' : 'Sail home', 'Not yet'], (i) => {
-    if (i) return w.say([home ? 'Captain Gill: The sea will still be here. Take your time!' : 'Captain Gill: Enjoy the sunshine!'], null, 'Captain Gill');
+    : atoll ? (F.sunstone ? 'Captain Gill: What a sight, that light. Back to Port Coral?' : 'Captain Gill: I\'ll keep the engine warm. Back to Port Coral?')
+    : F.cup_caldera ? (F.sunstone ? 'Captain Gill: Where to, hero of the isles?' : 'Captain Gill: Three island cups! Then it\'s time. Shall we sail for Starfall Atoll and that dark lighthouse?') : 'Captain Gill: Sail back to Seashell Town?';
+  w.ask(q, [...ports.map((p) => p[1]), 'Not yet'], (i) => {
+    if (i >= ports.length) return w.say([home ? 'Captain Gill: The sea will still be here. Take your time!' : 'Captain Gill: Enjoy the sunshine!'], null, 'Captain Gill');
+    const to = ports[i][0];
     sfx.wave?.(); sfx.jingle?.(1);
     (save.adv.cnt ||= {}).ferry = (save.adv.cnt.ferry || 0) + 1;
-    w.say([home ? 'The Sunny Gull blows its horn and chugs out of the bay. Seashell Town shrinks behind you...' : 'The Sunny Gull turns for home. The islands fade into the haze...'], () => w.fade(() => { w.load(home ? 'coral' : 'seashell', 12, 15, 'n'); if (home && !F.isle_arrive) setTimeout(() => storyIntro(S, w), 500); }));
+    const line = to === 'coral' ? (home ? 'The Sunny Gull blows its horn and chugs out of the bay. Seashell Town shrinks behind you...' : 'The Sunny Gull swings round and heads back to Port Coral.')
+      : to === 'atoll' ? (F.sunstone ? 'The Sunny Gull sails north. The Starfall lighthouse shines on the horizon.' : 'The Sunny Gull sails north, into grey water. A dark tower rises from the sea... Starfall Atoll.')
+      : 'The Sunny Gull turns for home. The islands fade into the haze...';
+    w.say([line], () => w.fade(() => { if (to === 'atoll') w.load('atoll', 9, 13, 'n'); else w.load(to, 12, 15, 'n'); if (to === 'coral' && !F.isle_arrive || to === 'atoll' && !F.atoll) setTimeout(() => storyIntro(S, w), 500); }));
   }, 'Captain Gill');
+}
+
+// Starfall Atoll: Dash got there first, and lost
+function dashAtoll(S, w) {
+  w.say([
+    "Dash: ...Oh. It's you. Go on, say it. I rushed in alone, and Captain Morra's Skimray blew me clean off the rocks.",
+    'Dash: Her Gulls are all over the island. Morra herself is up at the lighthouse door, guarding the Sunstone.',
+    "Dash: ...You go. I'll watch the boat. And if you lose, I'm telling everyone back home. Deal? Deal.",
+  ], null, 'Dash');
+}
+
+// the Chapter 2 finale: Captain Morra and her shiny Skimray at the lighthouse door
+function morra(S, w) {
+  w.say([
+    'Captain Morra: So. The mainland champion. You beat Skua, you beat Tern, and now you think you can walk up to MY lighthouse.',
+    "Captain Morra: Do you know what the sea is like at night, child? Dark. Endless. Lonely. With the Sunstone, the Gloom Gulls will own the night.",
+    'Captain Morra: Skimray! Show them how dark it gets!',
+  ], () => S.worldFight({
+    foe: withGear(skinnedShiny('skimray'), 28), lv: 28, kind: 'story', flag: 'morra', name: 'Captain Morra', diff: 0.9,
+    trainer: { name: 'Morra', critter: 'skimray', title: 'Gloom Gull Captain', beat: "...Beaten. By a tourist. Fine. FINE. Take your shiny rock.", gloat: 'The night is ours! Back to your boat!' },
+    note: '🌟 You beat Captain Morra! The Sunstone is yours.',
+  }));
 }
 
 // Breezy Bluffs: a Gloom Gull lookout spying on the town from the cliff edge (the first grunt of the Chapter 2 villains)

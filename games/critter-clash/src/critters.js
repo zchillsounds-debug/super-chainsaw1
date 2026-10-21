@@ -1412,6 +1412,7 @@ export const SHOP_HATS = [
   { id: 'angler', name: "Angler's Bucket", kind: 'bucket', col: 0x4a8a8a, band: 0xffd84d, price: 0, gift: true }, // Fisher Finn's weekly Fishing Derby, first win
   { id: 'koi', name: 'Koi Bucket Hat', kind: 'koi', col: 0x4a7ab8, band: 0xffd84d, price: 0, gift: true, season: true }, // all four seasonal visitor fish (a year-long goal, so not counted towards the hat total)
   { id: 'eggshell', name: 'Eggshell Cap', kind: 'eggshell', col: 0xfff6e4, band: 0x8ad8a0, price: 0, gift: true }, // the first egg hatched at Nanny Nell's Daycare
+  { id: 'sunstone', name: 'Sunstone Circlet', kind: 'laurel', col: 0xffa63a, band: 0xfff2a0, price: 0, gift: true, isle: true }, // Keeper Lumi's thanks for bringing the Sunstone home (Chapter 2 finale)
   { id: 'laurel', name: 'Golden Laurel', kind: 'laurel', col: 0xe8b830, band: 0xfff2a0, price: 0, gift: true }, // the Peak Gauntlet's first clear
 ];
 export function shopHat(cr, id) {

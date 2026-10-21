@@ -18,7 +18,7 @@ const keys = await pg.evaluate(() => {
   const w = __game.screens.worldObj, out = Object.keys(__game.screens.worldObj.constructor.MAPS || {});
   return out.length ? out : null;
 });
-const maps = keys || ['village', 'route1', 'bloom', 'route2', 'seashell', 'glowwood', 'glowcap', 'cinder', 'ember', 'neon', 'cloudtop', 'frostpeak', 'peak', 'coral', 'palmpath', 'bluffs', 'ashtrail', 'ember_isle'];
+const maps = keys || ['village', 'route1', 'bloom', 'route2', 'seashell', 'glowwood', 'glowcap', 'cinder', 'ember', 'neon', 'cloudtop', 'frostpeak', 'peak', 'coral', 'palmpath', 'bluffs', 'ashtrail', 'ember_isle', 'atoll'];
 for (const m of readFileSync(new URL('../src/interiors.js', import.meta.url), 'utf8').matchAll(/^  '([a-z0-9_]+:[a-z0-9_]+)': \{/gm)) maps.push('in:' + m[1]); // and every room
 let n = 0, bad = 0; const force = JSON.parse(process.env.FORCE || '{}');
 for (const map of maps) for (const [clock, rain] of [[7, false], [12, false], [18, false], [22, false], [12, true]]) {
