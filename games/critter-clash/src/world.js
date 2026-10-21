@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { toon, inked, canvasTex, outlineMatW } from './toon.js';
 import { Critter, roleHat, shopHat, hatModel, SHOP_HATS } from './critters.js';
-import { CRITTERS, CUPS, withGear, skinned, cupById } from './data.js';
+import { CRITTERS, CUPS, ISLE_CUPS, withGear, skinned, cupById } from './data.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
 import { sfx, playMusic } from './audio.js';
 import { typeSpeed } from './settings.js';
@@ -2780,10 +2780,10 @@ export class World {
         }
         if (b.hatShop) { // a giant top hat perched on the ridge, and a striped awning over the door
           const sk = new THREE.Group(); sk.position.set(-w * 0.18, wallH + 1.25, 0); sk.rotation.x = -0.25; G.add(sk);
-          const big = hatModel({ def: { body: { headR: 1.25 } }, skull: sk }, 'top', 0x2a2438, 0xff3a5a); big.position.y = 0;
+          const isle = !!this.M.isle, big = isle ? hatModel({ def: { body: { headR: 1.25 } }, skull: sk }, 'wide', 0xf0d080, 0x3ad0d8) : hatModel({ def: { body: { headR: 1.25 } }, skull: sk }, 'top', 0x2a2438, 0xff3a5a); big.position.y = 0; // the island stall wears a straw boater
           const aw = [];
           for (let k = 0; k < 6; k++) { const g = new THREE.BoxGeometry(0.28, 0.06, 0.8); g.translate(dx - 0.7 + k * 0.28, 0, 0); aw.push(g); }
-          const A0 = new THREE.Mesh(mergeGeometries(aw.filter((_, k) => k % 2)), toon(0xffffff)), A1 = new THREE.Mesh(mergeGeometries(aw.filter((_, k) => !(k % 2))), toon(0xb07aff));
+          const A0 = new THREE.Mesh(mergeGeometries(aw.filter((_, k) => k % 2)), toon(0xffffff)), A1 = new THREE.Mesh(mergeGeometries(aw.filter((_, k) => !(k % 2))), toon(isle ? 0x2ac8b0 : 0xb07aff));
           for (const m of [A0, A1]) { m.position.set(0, 1.55, front + 0.42); m.rotation.x = 0.45; G.add(m); }
           aw.forEach((g) => g.dispose());
         }
@@ -4960,25 +4960,27 @@ export class World {
   storyCheck() { return this.S.worldStoryStep?.(this) || false; }
 
   // the Adventure ending: credits roll while the camera visits every town you've been to, like postcards, then home to the Peak
-  credits(done) {
+  // (isles: the Chapter 2 finale's credits, a postcard tour of the Sunscatter Isles that ends at the shining lighthouse)
+  credits(done, isles = false) {
     const A = save.adv, F = A.flags, seen = A.seen || {}, back = [this.key, this.hx, this.hy, this.dir];
-    const stops = ['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak'].filter((k) => seen[k] && MAPS[k]);
-    const spot = (k) => { // in front of the town's stadium, or by the hero's home in Sprout Village
+    const stops = (isles ? ['coral', 'bluffs', 'ember_isle', 'atoll'] : ['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak']).filter((k) => (seen[k] || k === this.key) && MAPS[k]);
+    const spot = (k) => { // in front of the town's stadium, or by the hero's home in Sprout Village (or below the lighthouse)
+      if (k === 'atoll') return [11, 5];
       const b = (MAPS[k].buildings || []).find((q) => q.stadium);
       return b ? [b.x + b.door, b.y + b.h + 1] : [4, 7];
     };
-    const npcs = Object.values(MAPS).flatMap((M) => M.npcs || []);
+    const npcs = Object.values(MAPS).filter((M) => !!M.isle === isles).flatMap((M) => M.npcs || []), cups = isles ? ISLE_CUPS : CUPS;
     const trainers = [...new Set(npcs.filter((n) => n.trainer).map((n) => n.name))];
-    const folk = [...new Set(npcs.filter((n) => !n.trainer && n.critter && n.critter !== '$hero' && !n.rival && !n.hideFlag && n.name && !/^(Gang|Vex|King)/.test(n.name)).map((n) => n.name))];
+    const folk = [...new Set(npcs.filter((n) => !n.trainer && n.critter && n.critter !== '$hero' && !n.rival && !n.hideFlag && n.name && !/^(Gang|Vex|King|Morra|Captain Gill)/.test(n.name)).map((n) => n.name))];
     const beat = npcs.filter((n) => n.trainer && F[n.id]).length, fav = Object.keys(F).filter((k) => k.endsWith('_done')).length;
     const hero = this.hero.def.name, rival = byId(rivalFor(A.hero))?.name || 'Voltferret', name = save.trainer?.name || 'Trainer';
     const stat = (ic, t, v) => `<p>${ic} ${t} <b>${v}</b></p>`;
     const el = document.createElement('div'); el.className = 'finale adv-credits';
     el.innerHTML = `<div class="credits"><div class="roll" style="animation-duration:${stops.length * 5.4 + 1.5}s">
       <div class="logo-top ol">CRITTER</div><div class="logo-bot ol">CLASH!</div>
-      <h2>👑 Champion of Clashara 👑</h2><p class="cr-big">${hero}</p><p>and ${name}</p>
-      <h3>The journey</h3>${stat('🏆', 'Cups won', `${CUPS.filter((c) => F['cup_' + c.id]).length} / ${CUPS.length}`)}${A.time >= 60 ? stat('⏱️', 'Time adventuring', (({ h, m }) => h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`)({ h: Math.floor(A.time / 3600), m: Math.floor(A.time / 60) % 60 })) : ''}${stat('👣', 'Steps walked', (A.steps || 0).toLocaleString())}${stat('⚔️', 'Trainers beaten', beat)}${stat('🌿', 'Wild critters met', A.cnt?.wild || 0)}${stat('🎣', 'Fish caught', A.fishLog?.n || 0)}${stat('🤝', 'Favours done', fav)}${stat('🎩', 'Hats collected', (A.hats || []).length)}
-      <h3>Starring</h3><p><b>${hero}</b> <small>the hero</small></p><p><b>Dash</b> <small>the rival (${rival})</small></p><p><b>Prof. Pecan</b> <small>as himself</small></p><p><b>King Snooze</b> <small>keeper of the Crown</small></p><p><b>Captain Puff</b> <small>and the mail balloon</small></p>
+      <h2>${isles ? '🏝️ Hero of the Sunscatter Isles 🏝️' : '👑 Champion of Clashara 👑'}</h2><p class="cr-big">${hero}</p><p>and ${name}</p>
+      <h3>The journey</h3>${stat('🏆', isles ? 'Island cups won' : 'Cups won', `${cups.filter((c) => F['cup_' + c.id]).length} / ${cups.length}`)}${A.time >= 60 ? stat('⏱️', 'Time adventuring', (({ h, m }) => h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`)({ h: Math.floor(A.time / 3600), m: Math.floor(A.time / 60) % 60 })) : ''}${stat('👣', 'Steps walked', (A.steps || 0).toLocaleString())}${stat('⚔️', 'Trainers beaten', beat)}${stat('🌿', 'Wild critters met', A.cnt?.wild || 0)}${stat('🎣', 'Fish caught', A.fishLog?.n || 0)}${stat('🤝', 'Favours done', fav)}${stat('🎩', 'Hats collected', (A.hats || []).length)}
+      <h3>Starring</h3><p><b>${hero}</b> <small>the hero</small></p><p><b>Dash</b> <small>the rival (${rival})</small></p>${isles ? '<p><b>Captain Gill</b> <small>and the Sunny Gull</small></p><p><b>Captain Morra</b> <small>of the Gloom Gulls</small></p><p><b>Keeper Lumi</b> <small>and the Starfall light</small></p><p><b>Marina · Zephyra · Magda</b> <small>the island cup bosses</small></p>' : '<p><b>Prof. Pecan</b> <small>as himself</small></p><p><b>King Snooze</b> <small>keeper of the Crown</small></p><p><b>Captain Puff</b> <small>and the mail balloon</small></p>'}
       <h3>Trainers</h3><p>${trainers.join(' · ')}</p>
       <h3>Townsfolk</h3><p>${folk.join(' · ')}</p>
       <h3>And you</h3><p>for playing!</p>

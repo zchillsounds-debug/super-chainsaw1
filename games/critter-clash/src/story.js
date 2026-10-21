@@ -99,8 +99,7 @@ export function storyIntro(S, w) {
       "Keeper Lumi: You did it! I've kept this lamp for forty years, and I never thought I'd see it shine again.",
       "Dash: Okay. OKAY. That was amazing. You're the hero of the isles. ...Next time it's me, though!",
       'Keeper Lumi: Please, take this. A circlet made from a chip of the Sunstone. It glows a little at sunset. 🎩 (Sunstone Circlet added to your hats!)',
-      '🏝️ Chapter 2 complete! You saved the Sunscatter Isles. Captain Gill can still sail you anywhere you like.',
-    ], () => w.fade(() => w.load('atoll', w.hx, w.hy, 's')));
+    ], () => { const after = () => w.say(['★ CHAPTER 2 COMPLETE ★  You saved the Sunscatter Isles! Captain Gill can still sail you anywhere you like, and the island cups welcome a rematch.']); if (w.credits) w.credits(after, true); else w.fade(() => { w.load('atoll', w.hx, w.hy, 's'); after(); }); });
     return;
   }
   if (w.key === 'atoll' && !F.atoll) {

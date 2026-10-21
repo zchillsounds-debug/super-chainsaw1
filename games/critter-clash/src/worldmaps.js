@@ -810,7 +810,7 @@ export const MAPS = {
     ],
     ferry: { x: 10, y: 15, back: 'coral' },
     buildings: [
-      { id: 'hideout_a', x: 7, y: 5, w: 4, h: 3, roof: 0x2a2438, wall: 0x6a6070, door: 3, label: 'Gloom Gull Hideout' },
+      { id: 'hideout_a', x: 7, y: 5, w: 4, h: 3, roof: 0x5a3a7a, wall: 0x9a90a4, door: 3, label: 'Gloom Gull Hideout' },
     ],
     signs: [{ x: 8, y: 12, text: 'STARFALL ATOLL\nThe lighthouse has guided sailors home for a hundred years.' }],
     wild: { list: [['skimray', 25, 27], ['toucharge', 25, 27], ['blowfin', 25, 27], ['smokeshell', 26, 28], ['mossloth', 26, 28], ['pumicub', 26, 28]], roam: 3, rate: 0.1 },
