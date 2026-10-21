@@ -1318,8 +1318,8 @@ export class World {
       const halo = new THREE.Sprite(glow); halo.scale.setScalar(dark ? 4.5 : 2.4); halo.position.y = top + 0.55; g.add(halo);
       if (dark) { // two long soft beams, back to back, turning slowly
         beam = new THREE.Group(); beam.position.y = top + 0.55; g.add(beam);
-        const bm = new THREE.MeshBasicMaterial({ color: 0xfff0b0, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }); bm.userData.own = true;
-        for (const sd of [1, -1]) { const c = new THREE.Mesh(new THREE.ConeGeometry(1.6, 16, 16, 1, true), bm); c.rotation.z = sd * Math.PI / 2; c.position.x = sd * 8; beam.add(c); } // apex at the lamp, opening out to sea
+        const bm = new THREE.MeshBasicMaterial({ color: 0xfff0b0, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }); bm.userData.own = true;
+        for (const sd of [1, -1]) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.9, 14, 16, 1, true), bm); c.rotation.z = sd * Math.PI / 2; c.position.x = sd * 7; beam.add(c); } // apex at the lamp, opening out to sea
         beam.rotation.z = -0.08;
       }
     }
