@@ -3372,7 +3372,7 @@ export class World {
         const p = new THREE.CylinderGeometry(0.07, 0.07, 1.3, 8); p.translate(px, 0.65, pz - 0.2); add('wood', p);
         const f = new THREE.CylinderGeometry(0.4, 0.45, 0.1, 12); f.translate(px, 0.05, pz - 0.2); add('wood', f);
         const k = new THREE.SphereGeometry(0.4, 12, 8); k.translate(px, 1.5, pz - 0.2); add('head', k);
-        const sold = SHOP_HATS.filter((s) => !s.trader && !s.gift && !s.market), h = sold[(x * 3 + y) % sold.length], sk = new THREE.Group(); sk.position.set(px, 1.42, pz - 0.2); this.group.add(sk);
+        const sold = SHOP_HATS.filter((s) => !s.trader && !s.gift && !s.market && !!s.isle === !!MAPS[this.key.split(':')[1]]?.isle), h = sold[(x * 3 + y) % sold.length], sk = new THREE.Group(); sk.position.set(px, 1.42, pz - 0.2); this.group.add(sk);
         hatModel({ def: { body: { headR: 0.62 } }, skull: sk }, h.kind, h.col, h.band);
       }
       if (t === 'K') { box('counter', TILE + 0.02, 1.1, 1.3, px, 0.55, pz); box('top', TILE + 0.04, 0.12, 1.45, px, 1.15, pz); }

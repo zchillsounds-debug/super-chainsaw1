@@ -32,10 +32,10 @@ export const SPECIALS = {
   squeak:    { cd: 3.1, range: [0, 3.4] },
   powernap:  { cd: 3.8, range: [0, 2.4] },
   eruption:  { cd: 4.2, range: [1.5, 6.2] },
-  puffup:    { cd: 3.6, range: [0, 2.3] },
+  puffup:    { cd: 3.2, range: [0, 2.6] },
   lariat:    { cd: 4.0, range: [0, 3.2] },
   beakbeam:  { cd: 4.2, range: [2, 7.5] },
-  pound:     { cd: 4.2, range: [1.5, 7] },
+  pound:     { cd: 3.8, range: [1.5, 7] },
   skimloop:  { cd: 4.0, range: [2, 7] },
 };
 
@@ -570,9 +570,9 @@ export class Fighter {
       if (!this.specFired && this.st > 0.2) {
         this.specFired = true; sfx.water(); this.invuln = Math.max(this.invuln || 0, 0.12);
         B.fx.burst(this.chestPos(), { n: 14, speed: 6, up: 1, color: 0xffb060, size: 0.14, life: 0.3, shape: 'spark', grav: 0 });
-        if (o && o.alive && this.distTo(o) < 2.1) {
+        if (o && o.alive && this.distTo(o) < 2.3) {
           const ang = this.angleTo(o);
-          B.applyHit(this, o, { dmg: 46 * this.power, kb: 3, lift: 0, stun: 0.45, dirX: Math.sin(ang), dirZ: Math.cos(ang), type: this.type, dizzy: 12 });
+          B.applyHit(this, o, { dmg: 56 * this.power, kb: 3, lift: 0, stun: 0.45, dirX: Math.sin(ang), dirZ: Math.cos(ang), type: this.type, dizzy: 12 });
         }
       }
       if (!this.popFired && this.st > 0.75) {
@@ -580,9 +580,9 @@ export class Fighter {
         B.fx.shock({ x: this.x, y: 0.1, z: this.z }, 0x7fd4ff, 3, 0.3);
         B.fx.burst(this.chestPos(), { n: 10, speed: 4, up: 3, color: 0xa8e4ff, size: 0.18, life: 0.45, shape: 'drop', additive: false, grav: 9 });
         sfx.bonk(); B.shake(0.2);
-        if (o && o.alive && this.distTo(o) < 2.6) {
+        if (o && o.alive && this.distTo(o) < 2.9) {
           const ang = this.angleTo(o);
-          B.applyHit(this, o, { dmg: 64 * this.power, kb: 10, lift: 4, stun: 0.55, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, launch: true, dizzy: 20 });
+          B.applyHit(this, o, { dmg: 80 * this.power, kb: 10, lift: 4, stun: 0.55, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, launch: true, dizzy: 20 });
         }
       }
       if (this.st > 1.0) { this.popFired = false; this.endSpecial(); }
@@ -605,7 +605,7 @@ export class Fighter {
         if (this.lariatT <= 0 && o && o.alive && this.distTo(o) < 1.9 && Math.abs(o.y - this.y) < 1.2) {
           this.lariatT = 0.28;
           const ang = this.angleTo(o), last = this.st > 0.8;
-          B.applyHit(this, o, { dmg: (last ? 40 : 26) * this.power, kb: last ? 7 : 2.5, lift: last ? 4 : 0, stun: 0.35, dirX: Math.sin(ang), dirZ: Math.cos(ang), type: this.type, launch: last, dizzy: 9 });
+          B.applyHit(this, o, { dmg: (last ? 48 : 30) * this.power, kb: last ? 7 : 2.5, lift: last ? 4 : 0, stun: 0.35, dirX: Math.sin(ang), dirZ: Math.cos(ang), type: this.type, launch: last, dizzy: 9 });
           sfx.leaf();
         }
       } else {
@@ -660,9 +660,9 @@ export class Fighter {
           B.fx.shock({ x: this.x, y: 0.05, z: this.z }, 0xd8c8a8, 4.6, 0.35); B.fx.dust(this, 10, 1.2);
           B.fx.burst({ x: this.x, y: 0.2, z: this.z }, { n: 10, speed: 5, up: 5, color: 0x9a9498, size: 0.2, life: 0.5, shape: 'glow', grav: 12, additive: false });
           sfx.bonk(); sfx.rumble?.(); B.shake(0.4);
-          if (o && o.alive && this.distTo(o) < 2.4 && o.y < 1.0) {
+          if (o && o.alive && this.distTo(o) < 2.7 && o.y < 1.0) {
             const ang = this.angleTo(o);
-            B.applyHit(this, o, { dmg: 96 * this.power, kb: 8, lift: 7, stun: 0.6, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, launch: true, dizzy: 26 });
+            B.applyHit(this, o, { dmg: 110 * this.power, kb: 8, lift: 7, stun: 0.6, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, launch: true, dizzy: 26 });
           }
         }
         if (this.st - this.specLandT > 0.28) { this.swoopLand = false; this.endSpecial(); }

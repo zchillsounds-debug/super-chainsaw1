@@ -174,6 +174,10 @@ const PEOPLE = {
   'neon:tower2': { npcs: [['whirlwhisk', 'Sky Lin', ['Sky Lin: From the top of this tower you can see Captain Puff\'s balloon in the east.', 'Sky Lin: Captain Puff only flies critters who\'ve won the Midnight Cup. House rules!'], 's', 5, 2]], kind: 'flat', name: 'Sky Flat', wall: '#d0e8ff', rug: '#5ad8ff' },
   'cloudtop:berry6': { visitor: ['whirlwhisk', 'Breeze', ['Breeze: The nurse up here is the highest nurse in all of Clashara. Literally!'], 'e', 3, 4] },
   'frostpeak:berry7': { visitor: ['pengsicle', 'Snowy', ['Snowy: Warm smoothies? In Frostpeak they make them HOT. Wonderful!'], 'w', 9, 4] },
+  // ---- Chapter 2: the Sunscatter Isles ----
+  'coral:hats_c': { npcs: [['toucharge', 'Shellkeeper Sandy', [], 's', 5, 1, 'hatshop']], kind: 'shop', name: 'Shell Hats', wall: '#dff8f4', rug: '#3ad0c0' },
+  'coral:berry_c': { visitor: ['blowfin', 'Puffy Pua', ['Puffy Pua: The smoothies here come with a little paper umbrella. Blowfin always tries to eat it.'], 'w', 9, 4], wall: '#ffe8f0' },
+  'coral:cottage_c': { npcs: [['smokeshell', 'Grandma Kalani', ['Grandma Kalani: Welcome, mainlander! My Smokeshell keeps the cottage nice and toasty. A bit too toasty, some days.', 'Grandma Kalani: Fire critters love the volcano on Ember Isle. Bring a water critter if you go to the Caldera Cup!', 'Grandma Kalani: In my day the Starfall lighthouse shone every night. Sailors could always find home. Now... nothing but dark.'], 'e', 3, 2]], wall: '#fff0dc', rug: '#ffa64a' },
   'frostpeak:lodge': { npcs: [['woolt', 'Lodge Keeper Fleece', ['Lodge Keeper Fleece: Come in, come in, out of the snow! The fire is lovely and warm.', 'Lodge Keeper Fleece: Many critters have climbed to the Peak. Only one gets the Crown.', 'Lodge Keeper Fleece: See a blue X in the snow out there? Dig! Ice gems turn up every day. Bring them to me and I\'ll pay in berries.'], 's', 7, 2]], kind: 'lodge', name: 'Mountain Lodge', wall: '#e8d0b0', rug: '#c8443a' },
 };
 

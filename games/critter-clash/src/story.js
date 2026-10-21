@@ -862,11 +862,11 @@ function noodleCart(w) {
 export function wearHats(w) { return wearMenu(w, '', null); }
 function wearMenu(w, who, back) {
   const A = save.adv, own = A.hats || [];
-  if (!own.length) return w.say([who ? "Milliner Mo: You don't have any hats yet! Have a look around." : 'The wardrobe is empty. The Hat Shop in Bloom Town sells hats for berries!'], back, who);
+  if (!own.length) return w.say([who ? `${who}: You don't have any hats yet! Have a look around.` : 'The wardrobe is empty. The Hat Shop in Bloom Town sells hats for berries!'], back, who);
   const mine = SHOP_HATS.filter((h) => own.includes(h.id));
   // a grid of the hero wearing each hat: tap to try one on, Done to close
   w.busy = true;
-  w.S.hatGrid(who ? 'Milliner Mo: Which hat today?' : 'Which hat will {hero} wear?'.replace('{hero}', w.hero?.def?.name || 'your hero'), mine, (id) => { A.hat = id; persist(); w.wearHat(); }, () => {
+  w.S.hatGrid(who ? `${who}: Which hat today?` : 'Which hat will {hero} wear?'.replace('{hero}', w.hero?.def?.name || 'your hero'), mine, (id) => { A.hat = id; persist(); w.wearHat(); }, () => {
     w.busy = false;
     const h = mine.find((x) => x.id === A.hat);
     w.say([h ? `{hero} is wearing the ${h.name}. Looking sharp!` : '{hero} goes without a hat. The wind feels nice!'], back, who);
@@ -875,23 +875,23 @@ function wearMenu(w, who, back) {
 
 // Milliner Mo's Hat Shop in Bloom Town: buy hats with berries, then wear any you own
 function hatShop(w) {
-  const A = save.adv, own = (A.hats ||= []), who = 'Milliner Mo';
-  const menu = () => w.ask(`Milliner Mo: Welcome to the Hat Shop! A hat for every head. (You have ${save.berries || 0} 🍓)`, ['Buy a hat', 'Wear a hat', 'Bye'], (i) => {
+  const A = save.adv, own = (A.hats ||= []), isle = !!MAPS[w.key.split(':')[1]]?.isle, who = isle ? 'Shellkeeper Sandy' : 'Milliner Mo';
+  const menu = () => w.ask(isle ? `Shellkeeper Sandy: Aloha! Island hats, woven by hand. (You have ${save.berries || 0} 🍓)` : `Milliner Mo: Welcome to the Hat Shop! A hat for every head. (You have ${save.berries || 0} 🍓)`, ['Buy a hat', 'Wear a hat', 'Bye'], (i) => {
     if (i === 0) {
-      const left = SHOP_HATS.filter((h) => !own.includes(h.id) && !h.trader && !h.gift && !h.market);
-      if (!left.length) return w.say(['Milliner Mo: You own every hat in the shop! A true hat collector. I\'m honoured!'], null, who);
+      const left = SHOP_HATS.filter((h) => !own.includes(h.id) && !h.trader && !h.gift && !h.market && !!h.isle === isle);
+      if (!left.length) return w.say([`${who}: You own every hat in the shop! A true hat collector. I\'m honoured!`], null, who);
       w.busy = true;
-      return w.S.hatGrid('Milliner Mo: Which one catches your eye?', left, (id) => {
+      return w.S.hatGrid(`${who}: Which one catches your eye?`, left, (id) => {
         w.busy = false;
         const h = left.find((x) => x.id === id);
-        if ((save.berries || 0) < h.price) return w.say([`Milliner Mo: The ${h.name} is ${h.price} berries. Shake a few berry bushes and come back!`], menu, who);
+        if ((save.berries || 0) < h.price) return w.say([`${who}: The ${h.name} is ${h.price} berries. Shake a few berry bushes and come back!`], menu, who);
         save.berries -= h.price; own.push(h.id); A.hat = h.id; persist();
         sfx.jingle(2); w.wearHat();
-        w.say([`{hero} got the ${h.name}! 🎩`, `Milliner Mo: Oh, it suits {hero} perfectly! Swap hats here any time, or in the wardrobe at home.`], null, who);
+        w.say([`{hero} got the ${h.name}! 🎩`, `${who}: Oh, it suits {hero} perfectly! Swap hats here any time, or in the wardrobe at home.`], null, who);
       }, () => { w.busy = false; menu(); }, true);
     }
     if (i === 1) return wearMenu(w, who, menu);
-    w.say(['Milliner Mo: Come again! Hats off to you!'], null, who);
+    w.say([`${who}: Come again! Hats off to you!`], null, who);
   }, who);
   menu();
 }

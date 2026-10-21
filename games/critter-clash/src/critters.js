@@ -1380,6 +1380,11 @@ export const SHOP_HATS = [
   { id: 'party', name: 'Party Hat', kind: 'party', col: 0xff5ad8, band: 0xffd84d, price: 5 },
   { id: 'flower', name: 'Flower Crown', kind: 'flower', col: 0x5ac24a, band: 0xff8ac8, price: 6 },
   { id: 'top', name: 'Top Hat', kind: 'top', col: 0x2a2438, band: 0xff3a5a, price: 8 },
+  // Chapter 2: only the Shell Hats stall in Port Coral sells these
+  { id: 'boater', name: 'Straw Boater', kind: 'wide', col: 0xf0d080, band: 0x3ad0d8, price: 8, isle: true },
+  { id: 'lei', name: 'Hibiscus Crown', kind: 'flower', col: 0x3ab86a, band: 0xff5a7a, price: 9, isle: true },
+  { id: 'captain', name: "Captain's Cap", kind: 'sailor', col: 0xffffff, band: 0x2a4a8a, price: 10, isle: true },
+  { id: 'surfvisor', name: 'Surf Visor', kind: 'visor', col: 0x3ad0d8, band: 0xffa64a, price: 8, isle: true },
   // only Trader Tock has these (a different town each day)
   { id: 'pirate', name: 'Pirate Hat', kind: 'tricorn', col: 0x2a2438, band: 0xffd84d, price: 10, trader: true },
   { id: 'wizard', name: 'Wizard Hat', kind: 'wizard', col: 0x5a3ab8, band: 0xffe14d, price: 12, trader: true },
