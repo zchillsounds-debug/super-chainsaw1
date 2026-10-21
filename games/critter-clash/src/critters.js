@@ -389,6 +389,91 @@ export class Critter {
       const ctr = new THREE.Mesh(sphere(headR * 0.07), toon(0xffe066));
       ctr.position.y = headR * 0.04; flower.add(ctr);
       skull.add(flower);
+    } else if (def.extra === 'hermit') {
+      // crab feelers bobbing up from the brow, and a tiny pinched mouth line under a dark nose dot
+      for (const s of [-1, 1]) {
+        const pts = [];
+        for (let k = 0; k <= 6; k++) { const t = k / 6; pts.push(new THREE.Vector3(s * (0.05 + t * 0.22) * headR, (0.7 + t * 0.55) * headR, (0.55 - t * 0.35) * headR)); }
+        const stalk = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 8, headR * 0.03, 5), this.mats.dark);
+        skull.add(stalk);
+        const tip = inked(sphere(headR * 0.07), this.mats.accent, OL * 0.4);
+        tip.position.copy(pts[6]); skull.add(tip);
+      }
+      const nose = new THREE.Mesh(sphere(headR * 0.06), this.mats.dark);
+      nose.scale.set(1.3, 0.8, 1); nose.position.set(0, -headR * 0.17, headR * 0.985);
+      skull.add(nose);
+    } else if (def.extra === 'puffer') {
+      // pouty fish lips and a crown of soft spines over the top and back of the head
+      const lips = inked(new THREE.TorusGeometry(headR * 0.1, headR * 0.05, 8, 16), this.mats.accent, OL * 0.4);
+      lips.scale.set(1.2, 0.9, 1); lips.position.set(0, -headR * 0.34, headR * 0.93); lips.rotation.x = -0.35;
+      skull.add(lips);
+      const cone = (r, h) => { const g = new THREE.ConeGeometry(r, h, 6); g.translate(0, h / 2, 0); return g; };
+      const hp = [];
+      for (let i = 0; i < 30; i++) {
+        const y = 1 - (i + 0.5) / 30 * 1.4, r = Math.sqrt(1 - y * y), a = i * 2.39996;
+        const d = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+        if (d.z > 0.35 && d.y < 0.55) continue; // keep the face clear
+        const g = cone(headR * 0.08, headR * 0.3);
+        g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d));
+        g.translate(d.x * headR * 0.95, d.y * headR * 0.95, d.z * headR * 0.95);
+        hp.push(g);
+      }
+      this.spines = inked(mergeGeometries(hp), this.mats.accent, OL * 0.5);
+      skull.add(this.spines);
+    } else if (def.extra === 'sloth') {
+      // big dark nose and a little hibiscus flower tucked over one ear
+      const nose = inked(sphere(headR * 0.12), this.mats.dark, OL * 0.5);
+      nose.scale.set(1.25, 0.85, 0.8); nose.position.set(0, -headR * 0.16, headR * 0.97);
+      skull.add(nose);
+      const flower = new THREE.Group();
+      flower.position.set(headR * 0.62, headR * 0.72, headR * 0.25); flower.rotation.set(-0.4, 0.3, -0.5); flower.scale.setScalar(1.4);
+      const petal = toon(C.flower ?? 0xff6a8a, { uniforms: U });
+      for (let k = 0; k < 5; k++) {
+        const pt = inked(sphere(headR * 0.12), petal, OL * 0.4);
+        const a = k / 5 * Math.PI * 2;
+        pt.scale.set(1, 0.45, 1.5); pt.position.set(Math.sin(a) * headR * 0.12, 0, Math.cos(a) * headR * 0.12); pt.rotation.set(-0.5, a, 0, 'YXZ');
+        flower.add(pt);
+      }
+      const ctr = new THREE.Mesh(sphere(headR * 0.06), toon(0xffe066)); ctr.position.y = headR * 0.03; flower.add(ctr);
+      skull.add(flower);
+    } else if (def.extra === 'toucan') {
+      // a huge banana beak: sunny yellow with a dark stripe at the base and a hot orange tip
+      const beak = new THREE.Group();
+      beak.position.set(0, -headR * 0.12, headR * 0.86);
+      const mk = (r1, r2, len, mat, z) => {
+        const g = new THREE.CylinderGeometry(r2, r1, len, 16); g.rotateX(Math.PI / 2); g.translate(0, 0, len / 2 + z);
+        const m = inked(g, mat, OL * 0.6); m.scale.set(0.8, 1.15, 1); beak.add(m); return m;
+      };
+      mk(headR * 0.32, headR * 0.3, headR * 0.14, this.mats.dark, 0);
+      mk(headR * 0.3, headR * 0.15, headR * 0.9, this.mats.accent, headR * 0.14);
+      const tip = inked(new THREE.ConeGeometry(headR * 0.15, headR * 0.3, 14).rotateX(Math.PI / 2).translate(0, 0, headR * 1.19), toon(C.tip ?? 0xff6a2a, { uniforms: U }), OL * 0.6);
+      tip.scale.set(0.8, 1.15, 1); beak.add(tip);
+      beak.rotation.x = 0.28;
+      skull.add(beak);
+      this.beak = beak;
+    } else if (def.extra === 'pumice') {
+      // a round snout patch with a dark nose, and a little ash puff on top of the head
+      const snout = inked(sphere(headR * 0.26), this.mats.belly, OL * 0.5);
+      snout.scale.set(1.15, 0.8, 0.6); snout.position.set(0, -headR * 0.3, headR * 0.82);
+      skull.add(snout);
+      const nose = inked(sphere(headR * 0.09), this.mats.dark, OL * 0.4);
+      nose.scale.set(1.35, 0.85, 0.9); nose.position.set(0, -headR * 0.2, headR * 1.0);
+      skull.add(nose);
+      const ash = [];
+      for (const [x, y, z, r] of [[0, 1.02, -0.05, 0.22], [0.2, 0.95, 0.05, 0.16], [-0.18, 0.97, -0.02, 0.17], [0.05, 1.2, -0.1, 0.14]]) { const g = sphere(headR * r); g.translate(x * headR, y * headR, z * headR); ash.push(g); }
+      skull.add(inked(mergeGeometries(ash), toon(C.ash ?? 0xd8d4d0, { uniforms: U }), OL * 0.5));
+    } else if (def.extra === 'manta') {
+      // a wide flat manta head, with two curled cephalic fins up front like horns
+      skull.scale.set(1.28, 0.82, 1.0);
+      for (const s of [-1, 1]) {
+        const pts = [];
+        for (let k = 0; k <= 6; k++) { const t = k / 6; pts.push(new THREE.Vector3(s * (0.55 + t * 0.18) * headR, (-0.25 + t * 0.4) * headR, (0.55 + Math.sin(t * 2.6) * 0.55) * headR)); }
+        const fin = inked(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 10, headR * 0.11, 7), this.mats.dark, OL * 0.5);
+        skull.add(fin);
+      }
+      const nose = new THREE.Mesh(sphere(headR * 0.05), this.mats.dark);
+      nose.position.set(0, -headR * 0.18, headR * 0.99);
+      skull.add(nose);
     } else {
       const nose = new THREE.Mesh(sphere(headR * 0.08), this.mats.dark);
       nose.scale.set(1.3, 0.8, 1);
@@ -410,6 +495,16 @@ export class Critter {
         c.fillRect(w * 0.3, h * 0.3, w * 0.4, h * 0.3);
       });
       skull.add(new THREE.Mesh(spherePatch(headR * 1.006, 0, 0.0, 0.95, 0.36), decalMat(maskTex)));
+    }
+    if (def.extra === 'sloth') {
+      // sleepy sloth face: dark tear-drop patches that slant down from each eye on a pale face disc
+      const pale = '#' + new THREE.Color(C.belly).getHexString(), dk = '#' + new THREE.Color(C.dark).getHexString();
+      const slothTex = canvasTex(256, 128, (c, w, h) => {
+        c.fillStyle = pale; c.beginPath(); c.ellipse(w * 0.5, h * 0.56, w * 0.47, h * 0.44, 0, 0, Math.PI * 2); c.fill();
+        c.fillStyle = dk;
+        for (const s of [-1, 1]) { c.beginPath(); c.ellipse(w * (0.5 + s * 0.2), h * 0.6, w * 0.15, h * 0.2, s * -0.55, 0, Math.PI * 2); c.fill(); }
+      });
+      skull.add(new THREE.Mesh(spherePatch(headR * 1.005, 0, -0.08, 1.0, 0.55), decalMat(slothTex)));
     }
     if (def.extra === 'owl') {
       // pale facial disc around both eyes
@@ -452,7 +547,7 @@ export class Critter {
     eyeL.renderOrder = eyeR.renderOrder = 2;
     skull.add(eyeL, eyeR);
     this.eyes = [eyeL, eyeR];
-    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' || def.extra === 'mole' ? -0.52 : def.extra === 'otter' ? -0.5 : def.extra === 'koala' ? -0.6 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
+    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' || def.extra === 'mole' ? -0.52 : def.extra === 'toucan' ? -0.62 : def.extra === 'otter' || def.extra === 'pumice' ? -0.5 : def.extra === 'puffer' ? -0.44 : def.extra === 'koala' ? -0.6 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
     mouth.renderOrder = 2;
     skull.add(mouth);
     const blushMat = decalMat(ft.blush);
@@ -716,6 +811,105 @@ export class Critter {
       skull.add(nose);
     }
 
+    // volcano hermit crab: a little volcano worn as a shell, with a glowing crater and a lava stripe spiralling round it
+    if (def.extra === 'hermit') {
+      const pts = [];
+      for (let k = 0; k <= 12; k++) { const t = k / 12; pts.push(new THREE.Vector2(Math.max(0.12, 0.5 * (1 - t) ** 0.85 + 0.12 * t), t * 0.95 - 0.05)); }
+      const shellG = new THREE.Group();
+      // big enough that the vent peeks up over one shoulder, even from the front
+      shellG.position.set(B.w * 0.12, B.h * 0.3, -B.w * 0.5); shellG.rotation.set(-0.5, 0, -0.3);
+      shellG.scale.set(B.w * 1.55, B.h * 2.3, B.w * 1.4);
+      const rockM = toon(C.rock ?? 0x5a4a52, { uniforms: U });
+      shellG.add(inked(new THREE.LatheGeometry(pts, seg < 20 ? 10 : 16), rockM, OL * 0.8));
+      // lava spiral band
+      const sp = [];
+      for (let k = 0; k <= 40; k++) { const t = k / 40, a = t * Math.PI * 4.2, y = 0.05 + t * 0.8, r = (0.5 * (1 - (y + 0.05) / 0.95) ** 0.85 + 0.12 * (y + 0.05) / 0.95) * 1.02; sp.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r)); }
+      const lavaM = new THREE.MeshBasicMaterial({ color: C.accent });
+      shellG.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(sp), 60, 0.035, 5), lavaM));
+      const crater = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.04, 14), lavaM);
+      crater.position.y = 0.91; shellG.add(crater);
+      (this.glows ||= []).push(crater);
+      torso.add(shellG);
+      this.hermitShell = shellG; this.craterY = 0.91;
+    }
+
+    // pufferfish: soft spines all over the back and sides, and a few dark spots
+    if (def.extra === 'puffer') {
+      const cone = (r, h) => { const g = new THREE.ConeGeometry(r, h, 6); g.translate(0, h / 2, 0); return g; };
+      const bp = [];
+      const ex = B.w * B.chubby * 0.5, ey = B.h * 0.5, ez = B.w * 0.95 * 0.5, cy = B.h * 0.48;
+      for (let i = 0; i < 36; i++) {
+        const y = 1 - (i + 0.5) / 36 * 1.7, r = Math.sqrt(1 - y * y), a = i * 2.39996;
+        const d = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+        if (d.z > 0.4 && y > -0.75) continue; // belly window stays smooth
+        const n = new THREE.Vector3(d.x / ex, d.y / ey, d.z / ez).normalize();
+        const g = cone(0.06, 0.22);
+        g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), n));
+        g.translate(d.x * ex * 0.95, cy + d.y * ey * 0.95, d.z * ez * 0.95);
+        bp.push(g);
+      }
+      this.bodySpines = inked(mergeGeometries(bp), this.mats.accent, OL * 0.5);
+      torso.add(this.bodySpines);
+      const spots = [];
+      for (const [a, y] of [[2.2, 0.3], [2.8, -0.1], [3.5, 0.25], [4.1, -0.05], [-0.9, 0.35], [3.14, 0.55]]) {
+        const g = sphere(0.055); g.scale(1, 1, 0.3);
+        const d = new THREE.Vector3(Math.sin(a) * Math.sqrt(1 - y * y), y, Math.cos(a) * Math.sqrt(1 - y * y));
+        g.lookAt(d); g.translate(d.x * ex * 1.0, cy + d.y * ey * 1.0, d.z * ez * 1.0); spots.push(g);
+      }
+      torso.add(new THREE.Mesh(mergeGeometries(spots), this.mats.dark));
+    }
+
+    // moss sloth: a shaggy mossy cape over the back and head, sprinkled with tiny flowers
+    if (def.extra === 'sloth') {
+      const mp = [], hp = [];
+      const ex = B.w * B.chubby * 0.5, ey = B.h * 0.5, ez = B.w * 0.95 * 0.5, cy = B.h * 0.48;
+      for (let i = 0; i < 30; i++) {
+        const y = 1 - (i + 0.5) / 30 * 1.5, r = Math.sqrt(1 - y * y), a = i * 2.39996;
+        const dx = Math.cos(a) * r, dz = Math.sin(a) * r;
+        if (dz > -0.2) continue;
+        const g = sphere(0.1 + (i % 3) * 0.025); g.scale(1, 0.7, 1); g.translate(dx * ex * 0.98, cy + y * ey * 0.98, dz * ez * 0.98); mp.push(g);
+      }
+      for (let i = 0; i < 16; i++) {
+        const y = 1 - (i + 0.5) / 16 * 0.9, r = Math.sqrt(1 - y * y), a = i * 2.39996;
+        const dx = Math.cos(a) * r, dz = Math.sin(a) * r;
+        if (dz > 0.15) continue;
+        const g = sphere(headR * (0.17 + (i % 3) * 0.03)); g.scale(1, 0.65, 1); g.translate(dx * headR * 0.92, y * headR * 0.92, dz * headR * 0.92); hp.push(g);
+      }
+      const mossM = toon(C.accent, { uniforms: U });
+      torso.add(inked(mergeGeometries(mp), mossM, OL * 0.6));
+      skull.add(inked(mergeGeometries(hp), mossM, OL * 0.6));
+      const fl = [];
+      for (const [x, y, z] of [[0.18, 0.75, -0.3], [-0.2, 0.55, -0.32], [0.05, 0.35, -0.34]]) { const g = sphere(0.045); g.translate(x * B.w * 1.4, y * B.h, z * B.w * 1.4); fl.push(g); }
+      torso.add(new THREE.Mesh(mergeGeometries(fl), toon(0xfff2a0)));
+    }
+
+    // pumice cub: porous stone fur; a few of the pores glow like embers
+    if (def.extra === 'pumice') {
+      const ex = B.w * B.chubby * 0.5, ey = B.h * 0.5, ez = B.w * 0.95 * 0.5, cy = B.h * 0.48;
+      const pore = [], hot = [], hpore = [];
+      for (let i = 0; i < 26; i++) {
+        const y = 1 - (i + 0.5) / 26 * 1.8, r = Math.sqrt(1 - y * y), a = i * 2.39996;
+        const d = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+        if (d.z > 0.7 && y < 0.3 && y > -0.6) continue;
+        const g = new THREE.CircleGeometry(0.05 + (i % 3) * 0.016, 8);
+        g.lookAt(d); g.translate(d.x * ex * 1.005, cy + d.y * ey * 1.005, d.z * ez * 1.005);
+        (i % 4 === 1 ? hot : pore).push(g);
+      }
+      for (let i = 0; i < 12; i++) {
+        const y = 1 - (i + 0.5) / 12 * 1.2, r = Math.sqrt(1 - y * y), a = i * 2.39996 + 1;
+        const d = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+        if (d.z > 0.35 && y < 0.5) continue;
+        const g = new THREE.CircleGeometry(headR * (0.08 + (i % 2) * 0.03), 8);
+        g.lookAt(d); g.translate(d.x * headR * 1.004, d.y * headR * 1.004, d.z * headR * 1.004);
+        hpore.push(g);
+      }
+      const poreM = new THREE.MeshBasicMaterial({ color: C.dark, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      const hotM = new THREE.MeshBasicMaterial({ color: C.accent, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      torso.add(new THREE.Mesh(mergeGeometries(pore), poreM));
+      if (hot.length) { const hm = new THREE.Mesh(mergeGeometries(hot), hotM); torso.add(hm); (this.glows ||= []).push(hm); }
+      if (hpore.length) skull.add(new THREE.Mesh(mergeGeometries(hpore), poreM));
+    }
+
     // gauzy insect wings on the back
     this.wings = [];
     if (def.extra === 'bat') {
@@ -780,13 +974,22 @@ export class Critter {
         w.scale.set(0.07, B.armLen * 1.9, 0.26);
         w.position.set(s * 0.03, -B.armLen * 0.78, 0);
         sh.add(w);
-      } else if (def.extra === 'owl') {
+      } else if (def.extra === 'manta') {
+        // broad flat wing fins that spread out sideways (the arm swing flaps them)
+        const g = sphere(0.5); g.scale(0.62, 0.07, 0.46); g.translate(s * 0.28, 0, -0.02);
+        const w = inked(g, this.mats.body, OL * 0.8);
+        w.rotation.z = -s * 0.25;
+        sh.add(w);
+        const tip = new THREE.Mesh(sphere(0.5), this.mats.dark);
+        tip.scale.set(0.2, 0.05, 0.16); tip.position.set(s * 0.54, -s * 0.06, -0.1); tip.rotation.z = -s * 0.25;
+        sh.add(tip);
+      } else if (def.extra === 'owl' || def.extra === 'toucan') {
         // stubby wings with a darker feather tip
         const w = inked(sphere(0.5), this.mats.body, OL * 0.8);
         w.scale.set(0.09, B.armLen * 1.7, 0.36);
         w.position.set(s * 0.02, -B.armLen * 0.7, -0.02);
         sh.add(w);
-        const tip = new THREE.Mesh(sphere(0.5), this.mats.accent);
+        const tip = new THREE.Mesh(sphere(0.5), def.extra === 'toucan' ? this.mats.dark : this.mats.accent);
         tip.scale.set(0.08, B.armLen * 0.9, 0.3);
         tip.position.set(s * 0.025, -B.armLen * 1.12, -0.03);
         sh.add(tip);
@@ -794,9 +997,32 @@ export class Critter {
         const a = inked(capsule(0.075 * LB, B.armLen), this.mats.body, OL * 0.8);
         a.position.y = -B.armLen * 0.5;
         sh.add(a);
-        const paw = new THREE.Mesh(sphere(0.085 * LB), this.mats.belly);
-        paw.position.y = -B.armLen - 0.02;
-        sh.add(paw);
+        if (def.extra === 'hermit') {
+          // chunky crab pincers: a fat claw with a hinged top finger
+          const claw = new THREE.Group();
+          claw.position.y = -B.armLen - 0.04;
+          const palm = inked(sphere(0.13 * LB), this.mats.accent, OL * 0.7);
+          palm.scale.set(0.9, 1.1, 0.8); claw.add(palm);
+          for (const [k, rz] of [[1, 0.35], [-1, -0.2]]) {
+            const f = inked(new THREE.ConeGeometry(0.06 * LB, 0.2 * LB, 10), this.mats.accent, OL * 0.6);
+            f.position.set(k * 0.045, -0.16 * LB, 0.02); f.rotation.set(Math.PI, 0, rz * k);
+            claw.add(f);
+          }
+          sh.add(claw);
+        } else {
+          const paw = new THREE.Mesh(sphere(0.085 * LB), def.extra === 'pumice' ? this.mats.dark : this.mats.belly);
+          paw.position.y = -B.armLen - 0.02;
+          sh.add(paw);
+          if (def.extra === 'sloth') {
+            // three long hooked claws for hanging off branches
+            for (let k = -1; k <= 1; k++) {
+              const c = new THREE.Mesh(new THREE.ConeGeometry(0.022, 0.16, 6), this.mats.belly);
+              c.position.set(k * 0.035, -B.armLen - 0.11, 0.04); c.rotation.x = Math.PI - 0.5;
+              sh.add(c);
+            }
+          }
+          if (def.extra === 'puffer') { a.visible = false; paw.visible = false; const fin = inked(sphere(0.5), this.mats.accent, OL * 0.6); fin.scale.set(0.05, 0.16, 0.22); fin.position.set(s * 0.05, -0.06, 0); fin.rotation.z = s * 0.4; sh.add(fin); }
+        }
       }
       sh.rotation.z = s * 0.35;
       sh.userData.side = s;
@@ -935,6 +1161,20 @@ export class Critter {
       tail.add(halo);
       this.lantern = halo;
       (this.glows ||= []).push(bulb);
+    } else if (def.tail === 'whip') {
+      // a long thin manta tail that tapers to a point, with a tiny barb fin
+      tail.position.y = B.h * 0.2;
+      tail.rotation.x = -1.35;
+      const pts = [];
+      for (let k = 0; k <= 8; k++) { const t = k / 8; pts.push(new THREE.Vector3(0, t * 0.85, -Math.sin(t * 2.2) * 0.12)); }
+      const g = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.04, 6);
+      const pos = g.attributes.position, nrm = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++) { const y = pos.getY(i), k = 1 - Math.min(1, Math.max(0, y / 0.85)) * 0.8; const c = pts[Math.round(Math.min(1, Math.max(0, y / 0.85)) * 8)]; nrm.set(pos.getX(i) - c.x, 0, pos.getZ(i) - c.z); pos.setX(i, c.x + nrm.x * k); pos.setZ(i, c.z + nrm.z * k); }
+      g.computeVertexNormals();
+      tail.add(inked(g, this.mats.dark, OL * 0.6));
+      const barb = inked(new THREE.ConeGeometry(0.05, 0.14, 4), this.mats.accent, OL * 0.4);
+      barb.position.set(0, 0.32, 0.03); barb.rotation.x = 0.6;
+      tail.add(barb);
     } else if (def.tail === 'bolt') {
       tail.position.y = B.h * 0.3;
       tail.rotation.x = -0.9;

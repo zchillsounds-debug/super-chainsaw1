@@ -31,6 +31,12 @@ export const SPECIALS = {
   flametrail: { cd: 5.0, range: [1.5, 7] },
   squeak:    { cd: 3.1, range: [0, 3.4] },
   powernap:  { cd: 3.8, range: [0, 2.4] },
+  eruption:  { cd: 4.2, range: [1.5, 6.2] },
+  puffup:    { cd: 3.6, range: [0, 2.3] },
+  lariat:    { cd: 4.0, range: [0, 3.2] },
+  beakbeam:  { cd: 4.2, range: [2, 7.5] },
+  pound:     { cd: 4.2, range: [1.5, 7] },
+  skimloop:  { cd: 4.0, range: [2, 7] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -54,7 +60,7 @@ const tailwhip = (P, i, w, s) => {
   if (!s) { P.yaw = 0.8 * w; P.sy = 0.85; return; }
   P.yaw = Math.PI * 0.95; P.tail = 3; P.lean = -0.2; P.armLz = P.armRz = 1.2;
 };
-const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip, pricklepuff: kick, woolt: headbutt, pebblepup: headbutt, whirlwhisk: tailwhip, lilypop: kick, diggles: headbutt };
+const STRIKE = { clovebun: kick, cindermunch: headbutt, rolladillo: headbutt, hootsy: wing, pengsicle: wing, emberfly: wing, voltferret: tailwhip, bubbalotl: tailwhip, pricklepuff: kick, woolt: headbutt, pebblepup: headbutt, whirlwhisk: tailwhip, lilypop: kick, diggles: headbutt, smokeshell: headbutt, pumicub: headbutt, toucharge: wing, skimray: wing, blowfin: tailwhip };
 
 // translucent fresnel bubble shown while guarding
 function makeShield(color, h) {
@@ -417,6 +423,7 @@ export class Fighter {
     this.specFired = false;
     this.napHit = false;
     this.swoopLand = false;
+    this.burstN = 0; this.popFired = false;
     this.digPhase = undefined;
     const o = this.opp;
     if (o) this.face = this.angleTo(o);
@@ -527,6 +534,166 @@ export class Fighter {
           this.critter.emote('closed', 'open', 0.1);
         }
         if (this.st > 1.2) this.endSpecial();
+      }
+    } else if (id === 'eruption') {
+      // the volcano shell rumbles, then three lava bursts march out along the ground toward the rival
+      const P = this.critter.pose;
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 12, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 12, dt);
+      if (this.st < 0.3) {
+        if (o) this.turnTo(this.angleTo(o), 10, dt);
+        P.sy = 0.82 + Math.sin(this.st * 60) * 0.03; P.sx = 1.12; P.lean = -0.35; P.armLz = P.armRz = 1.0;
+        if (Math.random() < 0.7) B.fx.spawn({ x: this.x - fx * 0.4 + (Math.random() - 0.5) * 0.3, y: 1.05, z: this.z - fz * 0.4 + (Math.random() - 0.5) * 0.3, vy: 2.5, color: 0x5a4a52, size: 0.45, life: 0.5, shape: 'glow', alpha: 0.6 });
+      } else { P.sy = 1.08; P.lean = 0.3; P.armLz = P.armRz = 2.2; this.critter.emote('angry', 'yell', 0.1); }
+      this.burstN = this.burstN || 0;
+      const at = [0.3, 0.46, 0.62];
+      if (this.burstN < 3 && this.st > at[this.burstN]) {
+        const k = this.burstN++, d = 1.7 + k * 1.45;
+        if (k === 0) { this.burstA = this.face; sfx.fire(); B.fx.burst({ x: this.x - fx * 0.3, y: 1.1, z: this.z - fz * 0.3 }, { n: 10, speed: 4, up: 5, color: 0xff7a20, size: 0.2, life: 0.6, shape: 'spark', grav: 9 }); }
+        const px = this.x + Math.sin(this.burstA) * d, pz = this.z + Math.cos(this.burstA) * d;
+        B.fx.shock({ x: px, y: 0.05, z: pz }, 0xff6a1e, 2.2, 0.3);
+        B.fx.burst({ x: px, y: 0.2, z: pz }, { n: 12, speed: 3.5, up: 6, color: 0xff8a2a, size: 0.24, life: 0.55, shape: 'glow', grav: 10 });
+        B.fx.burst({ x: px, y: 0.2, z: pz }, { n: 5, speed: 2, up: 4, color: 0x3a2a2a, size: 0.4, life: 0.6, shape: 'glow', grav: 4, additive: false });
+        sfx.boom?.(0.5); B.shake(0.15);
+        if (o && o.alive && !this.hitIds.has(o) && Math.hypot(o.x - px, o.z - pz) < 1.25 && o.y < 1.2) {
+          this.hitIds.add(o);
+          B.applyHit(this, o, { dmg: (k === 2 ? 70 : 52) * this.power, kb: k === 2 ? 8 : 4, lift: k === 2 ? 6 : 3, stun: 0.5, dirX: Math.sin(this.burstA), dirZ: Math.cos(this.burstA), heavy: k === 2, type: this.type, launch: k === 2, dizzy: 16 });
+        }
+      }
+      if (this.st > 0.9) { this.burstN = 0; this.endSpecial(); }
+    } else if (id === 'puffup') {
+      // gulps water and balloons into a spiky ball (jabs anyone close), then pops back with a big shove
+      const P = this.critter.pose;
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 10, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 10, dt);
+      const k = this.st < 0.2 ? this.st / 0.2 : this.st < 0.75 ? 1 : Math.max(0, 1 - (this.st - 0.75) / 0.12);
+      P.sx = 1 + k * 0.55; P.sy = 1 + k * 0.45; P.armLz = P.armRz = 1.4 * k; P.head = -0.2 * k; P.y = k * 0.15;
+      this.critter.emote(k > 0.5 ? 'angry' : 'open', 'o', 0.1);
+      if (!this.specFired && this.st > 0.2) {
+        this.specFired = true; sfx.water(); this.invuln = Math.max(this.invuln || 0, 0.12);
+        B.fx.burst(this.chestPos(), { n: 14, speed: 6, up: 1, color: 0xffb060, size: 0.14, life: 0.3, shape: 'spark', grav: 0 });
+        if (o && o.alive && this.distTo(o) < 2.1) {
+          const ang = this.angleTo(o);
+          B.applyHit(this, o, { dmg: 46 * this.power, kb: 3, lift: 0, stun: 0.45, dirX: Math.sin(ang), dirZ: Math.cos(ang), type: this.type, dizzy: 12 });
+        }
+      }
+      if (!this.popFired && this.st > 0.75) {
+        this.popFired = true;
+        B.fx.shock({ x: this.x, y: 0.1, z: this.z }, 0x7fd4ff, 3, 0.3);
+        B.fx.burst(this.chestPos(), { n: 10, speed: 4, up: 3, color: 0xa8e4ff, size: 0.18, life: 0.45, shape: 'drop', additive: false, grav: 9 });
+        sfx.bonk(); B.shake(0.2);
+        if (o && o.alive && this.distTo(o) < 2.6) {
+          const ang = this.angleTo(o);
+          B.applyHit(this, o, { dmg: 64 * this.power, kb: 10, lift: 4, stun: 0.55, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, launch: true, dizzy: 20 });
+        }
+      }
+      if (this.st > 1.0) { this.popFired = false; this.endSpecial(); }
+    } else if (id === 'lariat') {
+      // a lazy spinning clothesline: drifts toward the rival with arms out, several hits
+      const P = this.critter.pose;
+      if (this.st < 0.15) {
+        this.vx = this.vz = 0; if (o) this.turnTo(this.angleTo(o), 12, dt);
+        P.armLz = P.armRz = 1.2; P.sy = 0.9;
+      } else if (this.st < 1.05) {
+        if (!this.specFired) { this.specFired = true; sfx.whoosh?.(0.9); this.spinA = 0; this.lariatT = 0; }
+        if (o) this.turnTo(this.angleTo(o), 2.5, dt);
+        const sp = 3.6;
+        this.vx = Math.sin(this.face) * sp; this.vz = Math.cos(this.face) * sp;
+        this.spinA += dt * 17;
+        P.yaw = this.spinA; P.armLz = P.armRz = 1.55; P.lean = 0.1; P.sy = 1.02;
+        this.critter.emote('closed', 'smile', 0.1);
+        if (Math.random() < 0.5) B.fx.spawn({ x: this.x + Math.sin(this.spinA) * 1.2, y: 0.7, z: this.z + Math.cos(this.spinA) * 1.2, color: 0x8aff6a, size: 0.35, life: 0.25, shape: 'glow', alpha: 0.5 });
+        this.lariatT -= dt;
+        if (this.lariatT <= 0 && o && o.alive && this.distTo(o) < 1.9 && Math.abs(o.y - this.y) < 1.2) {
+          this.lariatT = 0.28;
+          const ang = this.angleTo(o), last = this.st > 0.8;
+          B.applyHit(this, o, { dmg: (last ? 40 : 26) * this.power, kb: last ? 7 : 2.5, lift: last ? 4 : 0, stun: 0.35, dirX: Math.sin(ang), dirZ: Math.cos(ang), type: this.type, launch: last, dizzy: 9 });
+          sfx.leaf();
+        }
+      } else {
+        this.vx = THREE.MathUtils.damp(this.vx, 0, 8, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 8, dt);
+        P.headRoll = Math.sin(this.st * 20) * 0.3; this.critter.emote('dizzy', 'wobbly', 0.1);
+        if (this.st > 1.3) this.endSpecial();
+      }
+    } else if (id === 'beakbeam') {
+      // charges the beak, then a long straight bolt of lightning
+      const P = this.critter.pose;
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 12, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 12, dt);
+      if (this.st < 0.34) {
+        if (o) this.turnTo(this.angleTo(o), 9, dt);
+        P.lean = -0.3; P.head = 0.15; P.armLz = P.armRz = 1.5; P.sy = 0.92;
+        if (Math.random() < 0.6) { const h = this.headPos(); B.fx.spawn({ x: h.x + fx * 0.7, y: h.y - 0.35, z: h.z + fz * 0.7, color: 0xfff060, size: 0.3 + this.st, life: 0.12, shape: 'glow', alpha: 0.8 }); }
+      } else { P.lean = 0.45; P.head = -0.15; P.armLz = P.armRz = 0.4; this.critter.emote('angry', 'open', 0.1); }
+      if (!this.specFired && this.st > 0.34) {
+        this.specFired = true; sfx.spark(); sfx.laser?.();
+        const h = this.headPos(), sx = h.x + fx * 0.6, sz = h.z + fz * 0.6, len = 7.5, by = h.y - 0.4;
+        for (let s = 0.4; s < len; s += 0.55) B.fx.spawn({ x: sx + fx * s, y: by, z: sz + fz * s, color: s % 1.1 < 0.55 ? 0xfff060 : 0x6ae0ff, size: 0.9, life: 0.18, shape: 'bolt', rot: Math.atan2(fx, fz) + (Math.random() - 0.5) * 0.6, stretch: 1.6 });
+        B.fx.spawn({ x: sx, y: by, z: sz, color: 0xffffff, size: 1.2, life: 0.15, shape: 'glow' });
+        if (o && o.alive) {
+          const rx = o.x - sx, rz = o.z - sz, along = rx * fx + rz * fz, side = Math.abs(rx * fz - rz * fx);
+          if (along > -0.4 && along < len && side < 0.8 && o.y < 1.6) {
+            B.applyHit(this, o, { dmg: 78 * this.power, kb: 5, lift: 1, stun: 0.6, dirX: fx, dirZ: fz, heavy: true, type: this.type, paralyze: 0.5, dizzy: 20 });
+          }
+        }
+      }
+      if (this.st > 0.7) this.endSpecial();
+    } else if (id === 'pound') {
+      // a big hop up and over, then a stony belly-thump where the rival stands
+      const P = this.critter.pose;
+      if (this.st < 0.2) {
+        if (o) this.turnTo(this.angleTo(o), 14, dt);
+        this.vx = this.vz = 0; P.sy = 0.75; P.sx = 1.15; P.armLz = P.armRz = 0.4;
+      } else if (!this.specFired) {
+        this.specFired = true;
+        this.vy = 9.5; this.y = 0.05;
+        const air = 2 * 9.5 / B.grav, d = o ? THREE.MathUtils.clamp(this.distTo(o) - 0.3, 0.5, 7) : 3;
+        this.poundV = d / air;
+        sfx.whoosh?.(0.8);
+      } else if (this.y > 0 || this.vy > 0) {
+        this.vx = Math.sin(this.face) * this.poundV; this.vz = Math.cos(this.face) * this.poundV;
+        if (this.vy < 0) this.vy -= B.grav * 0.6 * dt; // drops like a rock
+        P.armLz = P.armRz = 2.4; P.legL = P.legR = -0.6; P.lean = this.vy > 0 ? -0.3 : 0.5; P.sy = 1.08;
+        this.critter.emote('angry', 'grin', 0.1);
+      } else {
+        this.vx = THREE.MathUtils.damp(this.vx, 0, 14, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 14, dt);
+        P.sy = 0.72; P.sx = 1.25;
+        if (!this.swoopLand) {
+          this.swoopLand = true; this.specLandT = this.st;
+          B.fx.shock({ x: this.x, y: 0.05, z: this.z }, 0xd8c8a8, 4.6, 0.35); B.fx.dust(this, 10, 1.2);
+          B.fx.burst({ x: this.x, y: 0.2, z: this.z }, { n: 10, speed: 5, up: 5, color: 0x9a9498, size: 0.2, life: 0.5, shape: 'glow', grav: 12, additive: false });
+          sfx.bonk(); sfx.rumble?.(); B.shake(0.4);
+          if (o && o.alive && this.distTo(o) < 2.4 && o.y < 1.0) {
+            const ang = this.angleTo(o);
+            B.applyHit(this, o, { dmg: 96 * this.power, kb: 8, lift: 7, stun: 0.6, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, launch: true, dizzy: 26 });
+          }
+        }
+        if (this.st - this.specLandT > 0.28) { this.swoopLand = false; this.endSpecial(); }
+      }
+    } else if (id === 'skimloop') {
+      // skims out in a wide loop and cuts back through the rival
+      const P = this.critter.pose;
+      if (this.st < 0.12) {
+        this.vx = this.vz = 0; if (o) this.turnTo(this.angleTo(o), 14, dt);
+        P.sy = 0.85; P.armLz = P.armRz = 0.8;
+      } else if (this.st < 0.95) {
+        if (!this.specFired) { this.specFired = true; sfx.whoosh?.(1.3); this.loopDir = Math.random() < 0.5 ? -1 : 1; this.loopA = this.face; this.invuln = 0.15; }
+        // the heading turns a full circle over the glide; aim back at the rival in the second half
+        const t = (this.st - 0.12) / 0.83;
+        if (t < 0.55) this.loopA += this.loopDir * dt * 6.2;
+        else if (o) { const want = this.angleTo(o); this.loopA += THREE.MathUtils.clamp(angDiff(this.loopA, want), -dt * 9, dt * 9); }
+        this.face = this.loopA;
+        const sp = 13;
+        this.vx = Math.sin(this.loopA) * sp; this.vz = Math.cos(this.loopA) * sp;
+        P.armLz = P.armRz = 1.5 + Math.sin(this.st * 30) * 0.25; P.lean = 0.9; P.roll = this.loopDir * (t < 0.55 ? 0.5 : -0.2); P.y = 0.25;
+        this.trail(0xdfe8ff, 0xffffff);
+        if (o && o.alive && !this.hitIds.has(o) && this.distTo(o) < 1.35 && t > 0.3) {
+          this.hitIds.add(o);
+          const ang = this.angleTo(o);
+          B.applyHit(this, o, { dmg: 84 * this.power, kb: 7, lift: 4, stun: 0.5, dirX: Math.sin(ang), dirZ: Math.cos(ang), heavy: true, type: this.type, launch: true, dizzy: 18 });
+          this.vx *= 0.4; this.vz *= 0.4;
+        }
+      } else {
+        this.vx = THREE.MathUtils.damp(this.vx, 0, 9, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 9, dt);
+        P.lean = 0.2; P.armLz = P.armRz = 0.8;
+        if (this.st > 1.15) this.endSpecial();
       }
     } else if (id === 'squeak') {
       // a deep breath, then a squeak that rings outward as a wall of sound
@@ -995,7 +1162,7 @@ export class Fighter {
     } else if (S === 'special' && this.def.special === 'iceslide' && this.st >= 0.2 && this.st < 0.95) {
       P.lean = 1.45; P.y = 0.12; P.armLz = P.armRz = 1.2; P.armLx = P.armRx = 0.6; P.legL = P.legR = 1.2; P.head = -0.9; P.sx = 1.1; P.sy = 0.95;
       this.critter.emote('happy', 'grin', 0.1);
-    } else if (S === 'special' && (this.def.special === 'rocktoss' || this.def.special === 'puddle' || this.def.special === 'staticfield' || this.def.special === 'swoop' || this.def.special === 'tongue' || this.def.special === 'burrow' || this.def.special === 'powernap')) {
+    } else if (S === 'special' && (this.def.special === 'rocktoss' || this.def.special === 'puddle' || this.def.special === 'staticfield' || this.def.special === 'swoop' || this.def.special === 'tongue' || this.def.special === 'burrow' || this.def.special === 'powernap' || ['eruption', 'puffup', 'lariat', 'beakbeam', 'pound', 'skimloop'].includes(this.def.special))) {
       // posed frame by frame in updateSpecial
     } else if (S === 'super' && (this.def.super === 'megafluff' || this.def.super === 'bramble' || this.def.super === 'avalanche' || this.def.super === 'jetstream' || this.def.super === 'lilysplash' || this.def.super === 'whirlpool' || this.def.super === 'stormcloud' || this.def.super === 'fireworks' || this.def.super === 'echoboom' || this.def.super === 'molerush' || this.def.super === 'lullaby') && this.superPhase !== 'cutin') {
       // posed frame by frame in Battle.updateSuper

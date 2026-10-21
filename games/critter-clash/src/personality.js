@@ -23,6 +23,12 @@ export const LINES = {
 };
 
 Object.assign(LINES, {
+  smokeshell:  { intro: ['*puff puff* Ready!', 'Shell is HOT today!', 'Snip snap, here I come!'], win: ['*happy smoke ring*', 'Too hot to handle!', 'Snip! Snap! Done!'] },
+  blowfin:     { intro: ['Blub! Do not poke me!', '*gulp* ...ready!', 'I can get bigger, you know.'], win: ['Pfffff... phew.', 'Puffed up and proud!', 'Blub blub hooray!'] },
+  mossloth:    { intro: ['Hiii... thereee...', 'No rush. No rush at all.', 'Mmh... let us begin... slowly.'], win: ['Wow... I won... nice...', 'Slow and steady...', 'Nap... in the sun... now.'] },
+  toucharge:   { intro: ['SQUAWK! Charged up!', 'Beak? Loaded!', 'Feel the tropic thunder!'], win: ['SQUAWK-tacular!', 'Beak-ause I rule!', 'Zzzap! Tweet tweet!'] },
+  pumicub:     { intro: ['Grr! Rock solid!', 'I float, but I hit hard!', 'Bear hug? Stone hug!'], win: ['Grr-eat win!', 'Rock-a-bye, rival.', 'Bobbing with joy!'] },
+  skimray:     { intro: ['Catch the trade wind!', 'Skim, skim, skim!', 'Smooth sailing ahead.'], win: ['Breezed through it!', 'Home on the wind!', 'Wheee! Loop-de-loop!'] },
   pricklepuff: { intro: ["Don't touch the spines!", 'Prickly and proud!', "Hmph. Fine. Let's go."], win: ['Told you. Prickly.', 'Leaf me alone now.', 'Hmph! Too easy.'] },
   pebblepup:   { intro: ['Arf! Rock and ruff!', 'Fetch THIS!', 'Bark is worse than my bite. Bite is rocks.'], win: ['Good pup! Me!', 'Ruff day for you!', 'Stone cold. Arf!'] },
   whirlwhisk:  { intro: ['Wheee! Incoming!', 'Nuts to you!', 'Catch the breeze!'], win: ['Blown away!', "Nuttin' to it!", 'Wind beneath my tail!'] },

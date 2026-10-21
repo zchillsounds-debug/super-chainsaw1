@@ -66,6 +66,7 @@ const bossList = () => {
 
 function unlockHint(id) {
   for (const cup of CUPS) for (const m of cup.matches) if (m.critter === id) return `Beat ${m.name} in the ${cup.name}`;
+  if (CRITTERS.find((c) => c.id === id)?.isle) return 'Befriend it in the Sunscatter Isles (Adventure)';
   return 'Keep battling!';
 }
 
@@ -666,7 +667,7 @@ export class Screens {
     g.setShowcase([skinOf(c)], 'single');
     g.showcase[0].cheer = 0.8;
     const trial = this.free && !save.unlocked.includes(c.id);
-    this.root.querySelector('.sel-info').innerHTML = this.infoCard(c, trial ? `<div class="ic-trial">Trial · recruit in the ${cupOfShiny(c.id)?.name || 'Tournament'}</div>` : '');
+    this.root.querySelector('.sel-info').innerHTML = this.infoCard(c, trial ? `<div class="ic-trial">Trial · ${cupOfShiny(c.id) ? 'recruit in the ' + cupOfShiny(c.id).name : c.isle ? 'befriend it in the Sunscatter Isles' : 'recruit in the Tournament'}</div>` : '');
     this.root.querySelectorAll('.rcard').forEach((b, k) => { b.classList.toggle('on', k === i); if (k === i) b.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); });
   }
 
@@ -982,7 +983,7 @@ export class Screens {
         <button class="chip skin ${skin === 'base' ? 'on' : ''}" data-skin="base">Classic</button>
         <button class="chip skin shiny ${skin === 'shiny' ? 'on' : ''} ${hasShiny ? '' : 'locked'}" data-skin="shiny">${hasShiny ? '✦ Shiny' : '🔒 Shiny'}</button>
       </div>
-      ${hasShiny ? '' : `<div class="dex-hint">Clear the ${cup ? cup.name : 'tournament'} to unlock.</div>`}` : '';
+      ${hasShiny ? '' : `<div class="dex-hint">${cup ? 'Clear the ' + cup.name + ' to unlock.' : c.isle ? 'Spot a shiny one in the Sunscatter Isles.' : 'Clear the tournament to unlock.'}</div>`}` : '';
     const gear = `<div class="dex-gear"><small>Gear</small>${GEAR.map((x) => prog.level >= x.lv
       ? `<span class="got" title="${x.name}"><i>${x.icon}</i>${x.name}</span>`
       : `<span title="Reach Lv ${x.lv}"><i>🔒</i>Lv ${x.lv}</span>`).join('')}</div>`;
@@ -1005,7 +1006,7 @@ export class Screens {
     info.querySelector(`.gstage[data-lv="${GROW_LV.filter((l) => l <= prog.level).pop() || 1}"]`)?.classList.add('on');
     info.querySelector('.dex-moves').addEventListener('click', () => this.moveModal(c));
     info.querySelectorAll('.skin').forEach((b) => b.addEventListener('click', () => {
-      if (b.dataset.skin === 'shiny' && !hasShiny) { sfx.ui('back'); this.toast(`Clear the ${cup ? cup.name : 'tournament'} to unlock`); return; }
+      if (b.dataset.skin === 'shiny' && !hasShiny) { sfx.ui('back'); this.toast(cup ? `Clear the ${cup.name} to unlock` : c.isle ? 'Spot a shiny one in the Sunscatter Isles' : 'Clear the tournament to unlock'); return; }
       sfx.ui('ok');
       (save.skins ||= {})[c.id] = b.dataset.skin;
       persist();

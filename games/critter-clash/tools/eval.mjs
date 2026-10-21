@@ -5,7 +5,7 @@ const [q, js] = process.argv.slice(2);
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: 1280, height: 720 } });
 pg.on('pageerror', (e) => console.log('PAGEERR', e.message)); pg.on('console', (m) => console.log('CONSOLE', m.type(), m.text()));
-await pg.goto('http://localhost:5180/?' + q);
+await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?' + q);
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 await pg.waitForTimeout(2000);
 console.log(await pg.evaluate(js));

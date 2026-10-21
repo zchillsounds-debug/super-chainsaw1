@@ -357,6 +357,73 @@ export const FORMS = {
       },
     ],
   },
+  // ---- Chapter 2 critters (Sunscatter Isles) ----
+  smokeshell: {
+    path: 'Fortress',
+    forms: [
+      { name: 'Smokestack', species: 'Volcano Crab', size: 1.12, voice: 0.95, bodyMul: { ...GROW2, w: 1.16, chubby: 1.05 },
+        blurb: 'Its volcano shell grew a second vent. Hot lava plates now cover its shoulders like armour.',
+        colors: { body: 0xd84e3a, rock: 0x4e3e46, lava: 0xff8a2a, horn: 0xffe2b0 }, parts: { lavaplates: 0.6, brows: 0.5, horns: 0.4 }, moves: { special: 'Lava Volley', super: 'Volcano Week' } },
+      { name: 'Calderon', species: 'Caldera Crab', size: 1.3, voice: 0.72, bodyMul: { ...GROW3, w: 1.32, chubby: 1.08, limb: 1.8 },
+        blurb: 'Carries a whole crater on its back. The island it naps on is warmer than the others, and nobody knows why.',
+        colors: { body: 0xb83e30, dark: 0x4a1a14, rock: 0x3a2c34, lava: 0xff6a1e, horn: 0xfff0d0 }, parts: { lavaplates: 1, brows: 0.9, horns: 0.7, flamecrest: 0.6 }, moves: { special: 'Caldera Burst', super: 'Volcano Year' } },
+    ],
+  },
+  blowfin: {
+    path: 'Mystic',
+    forms: [
+      { name: 'Spinyfin', species: 'Spike Puffer', size: 1.1, voice: 1.15, bodyMul: { ...GROW2, w: 1.18, chubby: 1.05 },
+        blurb: 'Its spines grew long and glassy. It puffs up just to show off, which is very often.',
+        colors: { body: 0x4cb8e0, fin: 0xffa64a }, parts: { backfin: 0.6, brows: 0.4, whiskers: 0.5 }, moves: { special: 'Spike Puff', super: 'Riptide Rampage' } },
+      { name: 'Bloatide', species: 'Tide Puffer', size: 1.28, voice: 0.9, bodyMul: { ...GROW3, w: 1.34, chubby: 1.1 },
+        blurb: 'Rides its own wave around the reef. When it puffs up, the tide goes out a little.',
+        colors: { body: 0x2ea4d8, dark: 0x0e3e5e, fin: 0xffb45a, wave: 0x2a9ee8 }, parts: { backfin: 1, wave: 0.8, brows: 0.7, whiskers: 0.8 }, moves: { special: 'Tidal Puff', super: 'Riptide Typhoon' } },
+    ],
+  },
+  mossloth: {
+    path: 'Brute',
+    forms: [
+      { name: 'Fernsloth', species: 'Fern Sloth', size: 1.12, voice: 0.78, bodyMul: { ...GROW2, armLen: 1.4 },
+        blurb: 'Ferns grew into a shaggy mane while it was busy doing nothing. Birds nest in it and it does not mind.',
+        colors: { body: 0xa88c6c, petal: 0xff6a8a }, parts: { leafmane: 0.75, flowers: 0.6, brows: 0.4 }, moves: { special: 'Lazy Lasso', super: 'Wild Overgrowth' } },
+      { name: 'Jungloth', species: 'Jungle Sloth', size: 1.3, voice: 0.66, bodyMul: { ...GROW3, armLen: 1.7, limb: 1.7 },
+        blurb: 'A walking jungle with blossoming branches for antlers. It moves one step a day, but what a step.',
+        colors: { body: 0x96785a, dark: 0x3e2a1c, antler: 0x6a4a2e, blossom: 0xff8ac0, petal: 0xff6a8a }, parts: { leafmane: 1.1, flowers: 1, antlers: 0.7, brows: 0.8 }, moves: { special: 'Jungle Lariat', super: 'Rainforest Rise' } },
+    ],
+  },
+  toucharge: {
+    path: 'Storm',
+    forms: [
+      { name: 'Toucannon', species: 'Cannon Toucan', size: 1.1, voice: 1.3, bodyMul: GROW2,
+        blurb: 'Its beak hums like a power line. A crackling crest stands up when it is about to fire.',
+        colors: { body: 0x2e3254, bolt: 0xffe14d, plume: 0xffd52e }, parts: { boltmane: 0.55, plumes: 0.5, brows: 0.4 }, moves: { special: 'Beak Cannon', super: 'Thunder Shriek' } },
+      { name: 'Thundercan', species: 'Storm Toucan', size: 1.26, voice: 1.05, bodyMul: GROW3,
+        blurb: 'Tropical storms follow it from island to island. Its sneeze can light a whole harbour.',
+        colors: { body: 0x262a48, dark: 0x0e0e18, bolt: 0xffe14d, plume: 0xff8a2a }, parts: { boltmane: 1, plumes: 1, brows: 0.75, antennae: 0.5 }, moves: { special: 'Storm Beam', super: 'Hurricane Squawk' } },
+    ],
+  },
+  pumicub: {
+    path: 'Colossus',
+    forms: [
+      { name: 'Pumiursa', species: 'Pumice Bear', size: 1.14, voice: 0.85, bodyMul: { ...GROW2, w: 1.16, chubby: 1.05 },
+        blurb: 'Big enough to give a proper stone hug. Still floats, which surprises everyone at the beach.',
+        colors: { body: 0x8a848a, rock: 0x6a6268 }, parts: { stonearmor: 0.7, brows: 0.6 }, moves: { special: 'Pumice Slam', super: 'Ashfall Crash' } },
+      { name: 'Basaltursa', species: 'Basalt Bear', size: 1.32, voice: 0.66, bodyMul: { ...GROW3, w: 1.34, chubby: 1.1, limb: 1.9 },
+        blurb: 'Cooled lava columns stand up along its back. Its footsteps sound like distant thunder on the islands.',
+        colors: { body: 0x6a646c, dark: 0x262228, rock: 0x3a343c, crystal: 0xff8a4a, lava: 0xff7a2a }, parts: { stonearmor: 1.2, crystalridge: 0.9, lavaplates: 0.6, brows: 1 }, moves: { special: 'Basalt Pound', super: 'Ashfall Cataclysm' } },
+    ],
+  },
+  skimray: {
+    path: 'Sky',
+    forms: [
+      { name: 'Galeray', species: 'Gale Manta', size: 1.12, voice: 1.1, bodyMul: { ...GROW2, w: 1.2, h: 1.15 },
+        blurb: 'Catches the wind with wings as wide as a sail. Little gusts swirl round it wherever it glides.',
+        colors: { body: 0x6a86d8, plume: 0xe6f2ff }, parts: { windring: 0.6, plumes: 0.45 }, moves: { special: 'Gale Loop', super: 'Squall Storm' } },
+      { name: 'Monsoonray', species: 'Monsoon Manta', size: 1.28, voice: 0.88, bodyMul: { ...GROW3, w: 1.36, h: 1.3 },
+        blurb: 'Brings the rainy season wherever it flies. A little cloud rides on its back like a passenger.',
+        colors: { body: 0x5470c4, dark: 0x1a2660, cloud: 0xe8eeff, orb: 0xdff4ff, plume: 0xffffff }, parts: { windring: 1, cloudcrest: 0.8, orbs: 0.55, plumes: 0.7 }, moves: { special: 'Monsoon Loop', super: 'Typhoon Spin' } },
+    ],
+  },
 };
 
 // generic grown forms get a feature themed on their type
