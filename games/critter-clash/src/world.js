@@ -483,7 +483,7 @@ export class World {
     this.shakeT = wet && M.indoor ? 1.1 : 0;
     this.hx = x; this.hy = y; this.dir = dir; this.moveT = 0; this.from = null;
     this.placeHero();
-    this.buildItems(x, y);
+    this.buildItems(x, y); this.buildPearl();
     this.buildBush(x, y);
     this.buildLeaves(x, y);
     this.buildLost();
@@ -522,7 +522,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.lighthouse = null; this.puz = null; this.chest = null; this.updrafts = null; this.gliding = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.lighthouse = null; this.puz = null; this.chest = null; this.updrafts = null; this.gliding = null; this.pearl = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -3051,6 +3051,31 @@ export class World {
     }
   }
 
+  // M3 hidden finds: one pearl hidden on every Sunscatter Isles map (M.pearl). Invisible until the hero is close: a faint twinkle within 3 steps,
+  // the pearl itself at 1 step. Walk over it to pick it up; all of them earn the Pearl Circlet
+  buildPearl() {
+    this.pearl = null;
+    const M = this.M; if (M.indoor || !M.pearl || save.adv.flags['pearl_' + this.key]) return;
+    const [tx, ty] = M.pearl;
+    const g = new THREE.Group(), [px, pz] = wpos(tx, ty), shell = toon(0xffb8c8, { rim: 0.6, side: THREE.DoubleSide });
+    for (const [rx, ry] of [[0, 0], [-1.0, 0.25]]) { const h = inked(new THREE.SphereGeometry(0.28, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), shell, OL * 0.3); h.scale.y = 0.45; h.rotation.set(rx, 0, 0); h.position.set(0, 0.04 + ry * 0.2, ry * -0.2); g.add(h); }
+    const pm = toon(0xfffaf4, { rim: 1, emissive: 0x3a3440 }), pearl = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10), pm); pearl.position.y = 0.16; g.add(pearl);
+    g.position.set(px, 0, pz); g.visible = false; this.group.add(g);
+    this.pearl = { x: tx, y: ty, g, px, pz };
+  }
+
+  pickPearl() {
+    const P = this.pearl; if (!P || P.x !== this.hx || P.y !== this.hy) return false;
+    const F = save.adv.flags; F['pearl_' + this.key] = true; this.group.remove(P.g); this.pearl = null;
+    const all = Object.keys(MAPS).filter((k) => MAPS[k].pearl), n = all.filter((k) => F['pearl_' + k]).length;
+    save.berries = (save.berries || 0) + 2;
+    const done = n >= all.length && !(save.adv.hats ||= []).includes('pearl'); if (done) { save.adv.hats.push('pearl'); save.berries += 20; }
+    persist(); sfx.jingle?.(done ? 3 : 2); this.g.input?.haptic?.(25);
+    for (let k = 0; k < 14; k++) this.g.fx.spawn({ x: P.px, y: 0.4, z: P.pz, vx: (Math.random() - 0.5) * 3, vy: 1.5 + Math.random() * 2.5, vz: (Math.random() - 0.5) * 3, color: [0xffffff, 0xffb8c8, 0x9ae8ff][k % 3], size: 0.3, life: 0.9, shape: 'star', grav: 5 });
+    this.say([`Something glints under {hero}'s paw... a hidden pearl, tucked in a little pink shell! +2 🍓 (Pearls found: ${n}/${all.length})`, ...(done ? ['Every hidden pearl in the Sunscatter Isles! {hero} strings them into a shining circlet.', '{hero} got the Pearl Circlet! 🦪 +20 🍓 (☰ → 🎩 Hats)'] : n === 1 ? ['There must be more of these. One on every island map, maybe? They only twinkle when you get close...'] : [])]);
+    return true;
+  }
+
   // a berry bush at the edge of the trees in every outdoor map: shake it once a day for berries (and now and then a sleepy wild critter)
   // lost things for townsfolk side quests (flags <id>_asked → <id>_found → <id>_done; the lines live in story.js LOST)
   buildLost() {
@@ -4231,7 +4256,7 @@ export class World {
     // stepping on the doormat goes back outside
     const X = this.M.exit;
     if (X && this.hy === this.H - 1) { sfx.door(); this.fade(() => this.load(X.map, X.x, X.y, 's')); return; }
-    if (this.pickItem()) return;
+    if (this.pickItem() || this.pickPearl()) return;
     if (this.hatchEgg()) return;
     if (t === '"') {
       const [px, pz] = wpos(this.hx, this.hy);
@@ -4490,6 +4515,11 @@ export class World {
       if (this.brambleT <= 0) { this.brambles.visible = false; }
     }
     for (const a of this.wild || []) if (a.shiny && Math.random() < dt * 4) { const p = a.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 1.2, y: 0.4 + Math.random() * 1.4, z: p.z + (Math.random() - 0.5) * 1.2, vy: 0.4, color: 0xfff6a0, size: 0.26, life: 0.8, shape: 'star' }); }
+    if (this.pearl && !this.M.indoor) { // the hidden pearl: a faint twinkle when the hero is near, the shell itself right next to it
+      const P = this.pearl, d = Math.abs(P.x - this.hx) + Math.abs(P.y - this.hy);
+      P.g.visible = d <= 1;
+      if (d <= 3 && Math.random() < dt * (d <= 1 ? 4 : 1.6)) this.g.fx.spawn({ x: P.px + (Math.random() - 0.5) * 0.5, y: 0.2 + Math.random() * 0.4, z: P.pz + (Math.random() - 0.5) * 0.5, vy: 0.3, color: 0xfff8ff, size: 0.32, life: 0.7, shape: 'star', grow: -0.6, spin: 3, alpha: 0.9 });
+    }
     for (const it of this.items || []) {
       it.g.position.y = Math.abs(Math.sin(this.t * 2.5 + it.x)) * 0.12; it.g.rotation.y = Math.sin(this.t * 1.2 + it.y) * 0.4;
       if (Math.random() < dt * 2.5) this.g.fx.spawn({ x: it.g.position.x + (Math.random() - 0.5) * 0.8, y: 0.5 + Math.random() * 0.6, z: it.g.position.z + (Math.random() - 0.5) * 0.8, vy: 0.5, color: 0xfff0a0, size: 0.22, life: 0.7, shape: 'star' });

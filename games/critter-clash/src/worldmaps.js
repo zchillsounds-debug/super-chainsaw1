@@ -575,6 +575,7 @@ export const MAPS = {
   // ===== Chapter 2: the Sunscatter Isles (reached by the ferry from Seashell Town after the ending) =====
   coral: {
     name: 'Port Coral',
+    pearl: [24, 3], // a hidden pearl (M3): it only twinkles when you're close
     music: 'beach',
     arena: 'beach',
     isle: 'coral',
@@ -622,6 +623,7 @@ export const MAPS = {
 
   palmpath: {
     name: 'Palm Path',
+    pearl: [31, 9], // a hidden pearl (M3): it only twinkles when you're close
     music: 'beach',
     arena: 'beach',
     isle: 'palm',
@@ -655,6 +657,7 @@ export const MAPS = {
 
   bluffs: {
     name: 'Breezy Bluffs',
+    pearl: [6, 3], // a hidden pearl (M3): it only twinkles when you're close
     music: 'sky',
     arena: 'sky',
     isle: 'bluffs',
@@ -706,6 +709,7 @@ export const MAPS = {
 
   ashtrail: {
     name: 'Ash Trail',
+    pearl: [21, 2], // a hidden pearl (M3): it only twinkles when you're close
     music: 'volcano',
     arena: 'volcano',
     isle: 'ash',
@@ -740,6 +744,7 @@ export const MAPS = {
 
   ember_isle: {
     name: 'Ember Isle',
+    pearl: [2, 12], // a hidden pearl (M3): it only twinkles when you're close
     music: 'volcano',
     arena: 'volcano',
     isle: 'ember',
@@ -786,6 +791,7 @@ export const MAPS = {
 
   atoll: {
     name: 'Starfall Atoll',
+    pearl: [20, 9], // a hidden pearl (M3): it only twinkles when you're close
     music: 'beach',
     arena: 'beach',
     isle: 'atoll',
@@ -833,6 +839,7 @@ export const MAPS = {
   // ===== M3: Windcrest Stack, a hidden sea stack off Breezy Bluffs (only the Kite Glider reaches it): a seabird colony and a nest with a rare egg =====
   stack: {
     name: 'Windcrest Stack',
+    pearl: [3, 6], // a hidden pearl (M3): it only twinkles when you're close
     music: 'beach',
     arena: 'beach',
     isle: 'stack',
@@ -868,6 +875,7 @@ export const MAPS = {
   // ===== M3: the Caldera Rim, the hidden crater at the top of Ember Isle's volcano (glide up on the thermal): a lava lake, steam vents, a treasure chest =====
   rim: {
     name: 'Caldera Rim',
+    pearl: [3, 10], // a hidden pearl (M3): it only twinkles when you're close
     music: 'volcano',
     arena: 'volcano',
     isle: 'rim',
@@ -904,6 +912,7 @@ export const MAPS = {
   // ===== M3: the Ember Grotto, a lava-tube cave under the Ash Trail (boulders, a pressure plate and gate, then the dark Deep Grotto) =====
   grotto: {
     name: 'Ember Grotto',
+    pearl: [4, 4], // a hidden pearl (M3): it only twinkles when you're close
     music: 'volcano',
     arena: 'volcano',
     isle: 'grotto',
@@ -944,6 +953,7 @@ export const MAPS = {
 
   grotto2: {
     name: 'Deep Grotto',
+    pearl: [14, 2], // a hidden pearl (M3): it only twinkles when you're close
     music: 'volcano',
     arena: 'volcano',
     isle: 'grotto',

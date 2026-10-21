@@ -1237,6 +1237,7 @@ export class Screens {
         + bar('🎩', 'Island hats', ih.filter((h) => (A.hats || []).includes(h.id)).length, ih.length, true)
         + bar('🐠', 'Reef fish', FISH.isle.filter((f) => fsp.has(f[0])).length, FISH.isle.length, true)
         + bar('📸', 'Island landmarks', (A.snaps || []).filter((id) => LANDMARKS.find((l) => l.id === id)?.isle).length, LANDMARKS.filter((l) => l.isle).length, true)
+        + bar('🦪', 'Hidden pearls', Object.keys(MAPS).filter((k) => MAPS[k].pearl && F['pearl_' + k]).length, Object.keys(MAPS).filter((k) => MAPS[k].pearl).length, true)
         + bar('🌟', 'The Sunstone', F.sunstone ? 'home' : F.morra ? 'found' : 'lost')
         + bar('⛴️', 'Ferry rides', A.cnt?.ferry || 0);
     }
