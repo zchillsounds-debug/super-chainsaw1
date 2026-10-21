@@ -613,7 +613,7 @@ export const MAPS = {
     signs: [{ x: 13, y: 7, text: 'PORT CORAL\nGateway to the Sunscatter Isles. Mind the crabs.' }],
     npcs: [
       { id: 'gill', x: 12, y: 16, critter: 'blowfin', name: 'Captain Gill', dir: 'n', story: 'ferry', lines: [] },
-      { id: 'barnacle', x: 9, act: 'fish', y: 14, critter: 'smokeshell', name: 'Dockhand Shelly', dir: 's', lines: ["Dockhand Shelly: Welcome to the Sunscatter Isles! Three islands, three stadiums, and more sunshine than you can shake a palm at.", "Dockhand Shelly: The critters out here are like nothing on the mainland. Wait till you see a Toucharge sneeze!", "Dockhand Shelly: The coral glows at night. Come down to the pier after dark and look into the water."] },
+      { id: 'barnacle', x: 9, act: 'fish', y: 14, critter: 'smokeshell', name: 'Dockhand Shelly', dir: 's', story: 'lost:festlamp', lines: ["Dockhand Shelly: Welcome to the Sunscatter Isles! Three islands, three stadiums, and more sunshine than you can shake a palm at.", "Dockhand Shelly: The critters out here are like nothing on the mainland. Wait till you see a Toucharge sneeze!", "Dockhand Shelly: The coral glows at night. Come down to the pier after dark and look into the water."] },
       { id: 'snorkel', x: 20, act: 'hop', y: 13, critter: 'pumicub', name: 'Snorkeller Pia', dir: 'w', wander: 2, lines: ["Snorkeller Pia: Pumicub floats! I use it as a raft. It doesn't mind. I think.", "Snorkeller Pia: East of town is Palm Path. The tall grass there is full of island critters!"] },
       { id: 'kid_c', x: 6, act: 'cheer', y: 7, critter: 'mossloth', name: 'Mossloth', dir: 's', wander: 1, lines: ["Mossloth: Heeey... welcome... to... Port... Coral...", "Mossloth: ...I was going to say something else... but it was taking too long..."] },
       { id: 'dash_c', x: 14, y: 12, rival: true, rlv: 22, name: 'Dash', dir: 'w', story: 'dashisle', hideFlag: 'dash_isle1' },
@@ -698,7 +698,7 @@ export const MAPS = {
       { id: 'gull_b', x: 26, y: 9, critter: 'squeakwing', name: 'Gloom Gull Skua', dir: 'w', showFlag: 'cup_gale', hideFlag: 'skua_b', story: 'skua', scale: 1.05 }, // guards the Ash Trail once the Gale Cup is won
       { id: 'ranger_b', x: 26, y: 9, critter: 'rolladillo', name: 'Trail Ranger Ono', dir: 'w', hideFlag: 'cup_gale', lines: ["Trail Ranger Ono: The Ash Trail to Ember Isle starts here. Steam vents, hot rocks, grumpy fire critters.", "Trail Ranger Ono: I only let Gale Cup champions through. The stadium is just up the hill!"] },
       { id: 'ranger_b2', x: 26, y: 8, critter: 'rolladillo', name: 'Trail Ranger Ono', dir: 's', showFlag: 'skua_b', lines: ["Trail Ranger Ono: You chased that Gloom Gull off! The Ash Trail is all yours. Mind the vents."] },
-      { id: 'iona_b', x: 15, y: 11, act: 'wave', critter: 'toucharge', name: 'Weather Watcher Iona', dir: 's', wander: 2, lines: ['Weather Watcher Iona: Wind from the east, sunshine all day. Same as yesterday. Same as tomorrow. I love this job.', 'Weather Watcher Iona: Some nights I see a black balloon drifting towards Starfall Atoll. Gloom Gulls, I bet.'] },
+      { id: 'iona_b', x: 15, y: 11, act: 'wave', critter: 'toucharge', name: 'Weather Watcher Iona', dir: 's', wander: 2, story: 'lost:festframe', lines: ['Weather Watcher Iona: Wind from the east, sunshine all day. Same as yesterday. Same as tomorrow. I love this job.', 'Weather Watcher Iona: Some nights I see a black balloon drifting towards Starfall Atoll. Gloom Gulls, I bet.'] },
     ],
   },
 
@@ -774,7 +774,7 @@ export const MAPS = {
     ],
     signs: [{ x: 16, y: 7, text: 'EMBER ISLE\nHome of the Caldera Cup. The volcano is asleep. Shh.' }],
     npcs: [
-      { id: 'leilani_e', x: 12, y: 13, act: 'wave', critter: 'blowfin', name: 'Lifeguard Leilani', dir: 'n', wander: 2, lines: ['Lifeguard Leilani: Black sand! It comes from the volcano. It gets SO hot at noon. Walk fast!', 'Lifeguard Leilani: Bring a water critter to the Caldera Cup. Everybody here forgets, then everybody here loses.'] },
+      { id: 'leilani_e', x: 12, y: 13, act: 'wave', critter: 'blowfin', name: 'Lifeguard Leilani', dir: 'n', story: 'lost:festsilk', lines: ['Lifeguard Leilani: Black sand! It comes from the volcano. It gets SO hot at noon. Walk fast!', 'Lifeguard Leilani: Bring a water critter to the Caldera Cup. Everybody here forgets, then everybody here loses.'] },
       { id: 'tutu_e', x: 14, y: 9, act: 'sleep', critter: 'mossloth', name: 'Old Tutu', dir: 's', lines: ['Old Tutu: ...the mountain... has been sleeping... longer than me... zzz...', 'Old Tutu: ...Magda talks to the volcano... and sometimes... it talks back...'] },
       { id: 'dash_e', x: 16, y: 12, rival: true, rlv: 25, name: 'Dash', dir: 'e', story: 'dashember', hideFlag: 'dash_isle2' },
       { id: 'vent_kid', x: 9, y: 12, act: 'hop', critter: 'pumicub', name: 'Pumicub', dir: 'e', wander: 2, lines: ['Pumicub: Grrumph! (It rolls in the warm black sand, very pleased with itself.)'] },

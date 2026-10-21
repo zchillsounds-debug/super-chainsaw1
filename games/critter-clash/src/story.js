@@ -646,6 +646,32 @@ function pickPaged(w, q, labels, cb, who, page = 0) {
 
 // townsfolk side quests: someone lost something; it turns up in another place (world.js LOST_SPOTS draws it there)
 const LOST = {
+  // ---- Chapter 2 (M3): the Sunstone Festival, a chain of three deliveries across the isles (each link opens once the one before is done) ----
+  festframe: {
+    who: 'Weather Watcher Iona', item: 'kite frame', berries: 3, toast: '🪁', home: 'Breezy Bluffs', needs: 'sunstone', to: { npc: 'leilani_e', map: 'ember_isle', name: 'Lifeguard Leilani', home: 'Ember Isle' },
+    thanks: "Weather Watcher Iona: Leilani says the frame is perfect. Wind from the east, festival in the air. I love this job!",
+    after: ['Lifeguard Leilani: The kite frame is drying in the sun. Every festival lantern on the isles starts as one of Iona\'s frames.'],
+    ask: ['Weather Watcher Iona: The light is back, so the isles are throwing a Sunstone Festival! And every festival needs a giant kite lantern.', 'Weather Watcher Iona: I built the frame. Could you take it to Lifeguard Leilani on Ember Isle? She has the volcano silk to cover it.', '{hero} got a kite frame! 🪁 Take it to Lifeguard Leilani on the Ember Isle beach.'],
+    wait: ['Weather Watcher Iona: Leilani is the lifeguard on the black sand beach of Ember Isle. Down the Ash Trail!'],
+    done: ['Lifeguard Leilani: Iona\'s frame! Oh, it\'s beautiful. Light as a feather and strong as a surfboard.', 'Lifeguard Leilani: Here, for your trouble. And come back to me: the silk is ready too!', '{hero} got 3 berries! 🍓'],
+  },
+  festsilk: {
+    who: 'Lifeguard Leilani', item: 'roll of volcano silk', berries: 3, toast: '🧵', home: 'Ember Isle', needs: 'festframe_done', to: { npc: 'barnacle', map: 'coral', name: 'Dockhand Shelly', home: 'Port Coral' },
+    thanks: 'Lifeguard Leilani: Shelly says the silk glows a little in the dark. Of course it does. It comes from a volcano!',
+    after: ['Dockhand Shelly: I sew the sails for every boat in the harbour. A kite lantern? Easy. Ish.'],
+    ask: ['Lifeguard Leilani: The frame needs a cover, and nothing beats volcano silk. The Smokeshells spin it from warm ash. Really!', 'Lifeguard Leilani: Dockhand Shelly in Port Coral does all the sewing on the isles. Take her the silk and the frame?', '{hero} got a roll of volcano silk! 🧵 Take it to Dockhand Shelly on the Port Coral harbour.'],
+    wait: ['Lifeguard Leilani: Shelly works on the Port Coral harbour, by the water. Can\'t miss her. She\'s the one with the shell!'],
+    done: ['Dockhand Shelly: Volcano silk! And Iona\'s frame! Give me one minute...', 'Snip, stitch, stitch, snip... Shelly\'s Smokeshell holds the frame very still.', 'Dockhand Shelly: Ta-da! A kite lantern as big as a sail. But it needs a light, and only one light on the isles is bright enough. Talk to me again!', '{hero} got 3 berries! 🍓'],
+  },
+  festlamp: {
+    who: 'Dockhand Shelly', item: 'festival kite lantern', hat: 'festhat', berries: 25, snack: true, toast: '🏮', home: 'Port Coral', needs: 'festsilk_done', to: { npc: 'keeper_a', map: 'atoll', name: 'Keeper Lumi', home: 'Starfall Atoll' },
+    thanks: 'Dockhand Shelly: Did you see it from the harbour? The whole sky over Starfall glowing! Best festival ever.',
+    after: ['Keeper Lumi: Every night now, the festival lanterns float round the lighthouse. Look up, after dark!'],
+    ask: ['Dockhand Shelly: The festival lantern needs a spark of the Sunstone to glow. Keeper Lumi on Starfall Atoll is the only one who can light it.', 'Dockhand Shelly: Ask Captain Gill to sail you over. Careful, it\'s bigger than you are!', '{hero} got the festival kite lantern! 🏮 Take it to Keeper Lumi at the Starfall lighthouse.'],
+    wait: ['Dockhand Shelly: Keeper Lumi lives at the top of the Starfall lighthouse. Captain Gill can sail you there from the pier.'],
+    done: ['Keeper Lumi: The festival lantern! Oh, I haven\'t lit one of these in forty years.', 'Lumi touches the lantern to the great lamp. It glows gold... then rises, and rises, and twenty more lanterns float up from the boats in the lagoon!', 'Keeper Lumi: The Sunstone Festival has begun! Here, wear this. Everyone on the isles will know you lit the first lantern.', '{hero} got the Festival Lantern Hat! 🏮 +25 🍓'],
+  },
+
   kite: {
     who: 'Kite Flyer Gale', item: 'kite', hat: 'aviator', berries: 3, toast: '🪁', hint: "look in Frostpeak's snowy trees", home: 'Cloudtop Gardens',
     ask: ['Kite Flyer Gale: Wheee... oh. Hello. Sorry, I\'m a bit down. A gust snatched my kite right out of my wings!', 'Kite Flyer Gale: It flew off over the clouds toward Frostpeak. If you ever go there, could you look in the snowy trees for it?', 'Kite Flyer Gale: Red and yellow, with a long bow tail. I\'d be ever so grateful!'],
@@ -786,6 +812,8 @@ export function favourList() {
 export function deliveryFor(npc) {
   const F = flags(); return Object.keys(LOST).find((id) => LOST[id].to?.npc === npc && F[id + '_asked'] && !F[id + '_done']) || null;
 }
+// a quest chain's later link waits for the one before it (until then its giver just chats)
+export const questReady = (id) => !LOST[id]?.needs || !!flags()[LOST[id].needs];
 // what a delivery's recipient says once they have it
 export function deliveredLine(npc) {
   const F = flags(), id = Object.keys(LOST).find((k) => LOST[k].to?.npc === npc && F[k + '_done']); return id && LOST[id].after ? LOST[id].after : null;
@@ -817,6 +845,7 @@ function lostQuest(S, w, a, key) {
     return w.say(out, null, who);
   }
   if (F[id + '_asked']) return w.say(Q.wait, null, who);
+  if (Q.needs && !F[Q.needs]) return w.say([a.n.lines[Math.floor(Math.random() * a.n.lines.length)]], null, who); // not this link's turn yet
   F[id + '_asked'] = true; persist(); w.questMarks?.();
   return w.say(Q.ask, null, who);
 }

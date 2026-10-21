@@ -11,7 +11,7 @@ import { sfx, playMusic } from './audio.js';
 import { typeSpeed } from './settings.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap, CUP_ORDER } from './interiors.js';
-import { countUp, deliveryFor, deliveredLine, gauntletWeek } from './story.js';
+import { countUp, deliveryFor, deliveredLine, gauntletWeek, questReady } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
 import { stargaze, tonightConst, BOTTLE_NOTES, CONSTELLATIONS } from './stars.js';
@@ -1323,7 +1323,18 @@ export class World {
         beam.rotation.z = -0.08;
       }
     }
-    this.lighthouse = { beam };
+    let lan = null;
+    if (save.adv.flags.festlamp_done && this.phase !== 'day') { // the Sunstone Festival: paper kite lanterns drifting round the lighthouse every night
+      lan = [];
+      for (let k = 0; k < 9; k++) {
+        const L = new THREE.Group(), cm = new THREE.MeshBasicMaterial({ color: [0xffa040, 0xff6a5a, 0xffd060][k % 3] }); cm.userData.own = true;
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.3, 0.5, 8), cm); L.add(body);
+        const gl = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffb060, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.7 }); gl.userData.own = true;
+        const halo = new THREE.Sprite(gl); halo.scale.setScalar(1.6); L.add(halo);
+        this.group.add(L); lan.push({ L, a: k / 9 * Math.PI * 2, r: 3 + (k % 3) * 1.6, h: 3.5 + (k % 4) * 1.1, cx: px, cz: pz });
+      }
+    }
+    this.lighthouse = { beam, lan };
   }
 
   // caves: glowing crystals in the walls, push-boulders, pits, pressure plates and gates, a treasure chest; and on the Ash Trail, the cave mouth
@@ -3907,7 +3918,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = deliveryFor(a.n.id) ? '?' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : !id ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = deliveryFor(a.n.id) ? '?' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m;
@@ -4328,6 +4339,7 @@ export class World {
     }
     if (this.chest?.open > 0 && this.chest.open < 1) { this.chest.open = Math.min(1, this.chest.open + dt * 2.5); this.chest.lid.rotation.x = -1.9 * this.chest.open; }
     if (this.lighthouse?.beam) this.lighthouse.beam.rotation.y += dt * 0.6;
+    if (this.lighthouse?.lan) for (const l of this.lighthouse.lan) { l.a += dt * 0.12; l.L.position.set(l.cx + Math.cos(l.a) * l.r, l.h + Math.sin(this.t * 0.8 + l.r) * 0.3, l.cz + Math.sin(l.a) * l.r * 0.7 + 1.5); }
     if (this.windmills) for (const W of this.windmills) W.sails.rotation.z -= dt * W.sp;
     if (this.kites) for (const K of this.kites) { // the kite swoops in a lazy figure of eight downwind of its flyer; the tail ribbons trail behind
       K.t += dt; const a = K.t * 0.7, kx = K.px + 1.6 + Math.sin(a) * 1.6, ky = 6.4 + Math.sin(a * 2) * 0.7, kz = K.pz - 4.2 + Math.cos(a) * 0.6;
@@ -4846,8 +4858,8 @@ export class World {
     const n = a.n;
     if (this.dozing(n)) return this.say([`${n.name} is fast asleep, snoring softly. Better let them dream. Zzz...`]);
     a.dir = { n: 's', s: 'n', e: 'w', w: 'e' }[this.dir];
+    const dq = deliveryFor(n.id); if (dq) return this.S.worldStory('deliver:' + dq, this, a); // a parcel for them comes first (quest-chain links are givers too)
     if (n.story) return this.S.worldStory(n.story, this, a);
-    const dq = deliveryFor(n.id); if (dq) return this.S.worldStory('deliver:' + dq, this, a);
     const dl = !n.trainer && !(n.id === 'mom' && this.morning) && deliveredLine(n.id); // (Mom's breakfast comes first) if (dl && Math.random() < 0.6) return this.say(dl);
     if (n.trainer) {
       if (save.adv.flags[n.id]) {
