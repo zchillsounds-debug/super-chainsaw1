@@ -480,6 +480,17 @@ export class Critter {
       const ash = [];
       for (const [x, y, z, r] of [[0, 1.02, -0.05, 0.22], [0.2, 0.95, 0.05, 0.16], [-0.18, 0.97, -0.02, 0.17], [0.05, 1.2, -0.1, 0.14]]) { const g = sphere(headR * r); g.translate(x * headR, y * headR, z * headR); ash.push(g); }
       skull.add(inked(mergeGeometries(ash), toon(C.ash ?? 0xd8d4d0, { uniforms: U }), OL * 0.5));
+    } else if (def.extra === 'elk') {
+      // Verdelk: a long soft muzzle with a big dark nose, and a pale blaze up the brow
+      const muz = inked(sphere(headR * 0.34), this.mats.belly, OL * 0.5);
+      muz.scale.set(1.0, 0.78, 1.05); muz.position.set(0, -headR * 0.34, headR * 0.8);
+      skull.add(muz);
+      const nose = inked(sphere(headR * 0.12), this.mats.dark, OL * 0.4);
+      nose.scale.set(1.5, 0.8, 0.9); nose.position.set(0, -headR * 0.22, headR * 1.12);
+      skull.add(nose);
+      const blaze = inked(sphere(headR * 0.16), this.mats.belly, OL * 0.3);
+      blaze.scale.set(0.8, 1.6, 0.5); blaze.position.set(0, headR * 0.42, headR * 0.86); blaze.rotation.x = -0.5;
+      skull.add(blaze);
     } else if (def.extra === 'manta') {
       // a wide flat manta head, with two curled cephalic fins up front like horns
       skull.scale.set(1.28, 0.82, 1.0);
@@ -565,7 +576,7 @@ export class Critter {
     eyeL.renderOrder = eyeR.renderOrder = 2;
     skull.add(eyeL, eyeR);
     this.eyes = [eyeL, eyeR];
-    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' || def.extra === 'mole' ? -0.52 : def.extra === 'toucan' ? -0.62 : def.extra === 'otter' || def.extra === 'pumice' ? -0.5 : def.extra === 'puffer' ? -0.44 : def.extra === 'koala' ? -0.6 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
+    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' || def.extra === 'mole' ? -0.52 : def.extra === 'toucan' || def.extra === 'elk' ? -0.64 : def.extra === 'otter' || def.extra === 'pumice' ? -0.5 : def.extra === 'puffer' ? -0.44 : def.extra === 'koala' ? -0.6 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
     mouth.renderOrder = 2;
     skull.add(mouth);
     const blushMat = decalMat(ft.blush);
@@ -1447,6 +1458,7 @@ export const SHOP_HATS = [
   { id: 'surfvisor', name: "Surfer's Visor", kind: 'visor', col: 0xff7a3a, band: 0x3ac0e8, price: 0, gift: true, isle: true }, // WAVE RIDER at Ember Isle's Surf Shack: a ride of 300 or more
   { id: 'nightwatch', name: 'Night Watch Cap', kind: 'sailor', col: 0x2a3a6a, band: 0xffd84d, price: 0, gift: true, isle: true }, // Morra's Amends (Starfall Atoll): Keeper Lumi's thanks
   { id: 'dexcrown', name: 'Critterdex Crown', kind: 'crown', col: 0x5ad8a8, band: 0xffe27a, price: 0, gift: true, extra: true }, // every critter befriended (Prof. Pecan, with the Shiny Charm)
+  { id: 'grovecrown', name: 'Grove Crown', kind: 'laurel', col: 0x5ac24a, band: 0xff8ac0, price: 0, gift: true, extra: true }, // the Heartseed chain (Glowcap Woods → Sprout Village → Glowcap Hollow → Cloudtop → Glowcap Woods)
   { id: 'halo', name: 'Halo Ring', kind: 'halo', col: 0xffe27a, band: 0xfff8d0, price: 0, gift: true, extra: true }, // the chest on Rainbow Reach, the cloud islet above Cloudtop (Kite Glider)
   { id: 'rivalband', name: "Dash's Headband", kind: 'band', col: 0xe8443a, band: 0xffffff, price: 0, gift: true, isle: true }, // the Rival Showdown on Starfall Atoll
   { id: 'masterlei', name: "Champion's Lei", kind: 'flower', col: 0x3ac8b8, band: 0xffc93a, price: 0, gift: true, isle: true }, // the Sunscatter Masters' first clear

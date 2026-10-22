@@ -346,6 +346,7 @@ export function nextGoal(F) {
     if (!F.legend_solmoth) return F.festlamp_done ? 'A great golden glow rests on the volcano. Glide up the Ember Isle thermal to the Caldera Rim!' : 'The isles want a Sunstone Festival! Weather Watcher Iona on Breezy Bluffs has a job for you.';
     if (!F.dash_show) return 'Dash is on Starfall Atoll, training harder than ever. He wants one last, full-strength battle!';
     if (!F.amends3_done) return 'Morra, by the Starfall lighthouse, wants a quiet word. She has a chest full of things to give back...';
+    if (!F.legend_verdelk) return F.grove4_done ? 'Verdelk, the Grove Elk, is awake by the pond in Glowcap Woods!' : F.grove1_asked ? 'Keep the Heartseed chain going (☰ → Journal → Favours) to wake the forest\'s guardian.' : 'The glowcaps in Glowcap Woods are going dim. Picker Fern is worried. Ask her why.';
     if (!F.reach_chest) return 'A new windsock at the east edge of Cloudtop Gardens points straight at the sky. Ride that wind with your glider!';
     return 'You saved the Sunscatter Isles! Climb the Battle Tower ranks, find every hidden pearl and explore.';
   }
@@ -382,10 +383,11 @@ export function storyTalk(S, id, w, a) {
     const nx = WHERE.find(([id]) => !F['cup_' + id]), cup = nx && CUPS.find((c) => c.id === nx[0]);
     // post-game: the professor has been reading up on the Sunscatter legends (a hint for whichever is still out there)
     const lore = !F.sunstone ? null
-      : save.adv.hero === 'solmoth' || save.adv.hero === 'moonwhal' ? `Prof. Pecan: Is that... ${byId(save.adv.hero).name}?! A real legend, in my lab! Hold still, I need a sketch. Oh, my hands are shaking!`
+      : ['solmoth', 'moonwhal', 'verdelk'].includes(save.adv.hero) ? `Prof. Pecan: Is that... ${byId(save.adv.hero).name}?! A real legend, in my lab! Hold still, I need a sketch. Oh, my hands are shaking!`
       : !F.legend_solmoth ? `Prof. Pecan: I've been reading old island books. One tells of a golden moth that wakes on a volcano rim when the isles celebrate the sun. ${F.festlamp_done ? 'Your festival! It must be awake now!' : 'Has anyone held a festival out there?'}`
       : !F.legend_moonwhal ? `Prof. Pecan: The same old book speaks of a narwhal that sings to the moon off a lighthouse beach. ${F.tower_bronze ? 'Morra heard it singing, you say? Then go at night!' : 'Only sailors with real Battle Tower grit ever hear it, apparently.'}`
-      : 'Prof. Pecan: Solmoth AND Moonwhal, both friends of yours! The sun and the moon. I\'m rewriting chapter twelve of my book because of you.';
+      : !F.legend_verdelk ? (F.grove4_done ? 'Prof. Pecan: The Grove Elk is AWAKE? In Glowcap Woods, by the pond? Go, go! And bring me a petal if you can!' : 'Prof. Pecan: Solmoth AND Moonwhal! The sun and the moon. But the Grove Book says Clashara has a legend of its own... Picker Fern in Glowcap Woods sent word that the glowcaps are dimming. Curious!')
+      : 'Prof. Pecan: The sun, the moon AND the forest. Solmoth, Moonwhal and Verdelk, all friends of yours! I\'m rewriting chapter twelve of my book. Again.';
     // every critter befriended: the professor's Shiny Charm (twice the shiny wild critters)
     if (F.crowned && !F.shinycharm && CRITTERS.every((c) => save.unlocked.includes(c.id))) {
       F.shinycharm = true; (save.adv.hats ||= []).includes('dexcrown') || save.adv.hats.push('dexcrown'); save.berries = (save.berries || 0) + 30; persist(); sfx.jingle?.(3);
@@ -725,6 +727,37 @@ const LOST = {
     done: ['Keeper Lumi: A letter... from Morra? "Dear Lumi. I am sorry I took your light. The dark was lonely. It is less lonely now. — M."', 'Keeper Lumi: Oh, that silly captain. She\'s already forgiven. She has been since the day she came back.', 'Keeper Lumi: You carried her sorry all over the isles. Let me give you something. My night watch owl had a chick this spring... and look how it shines!', '🌟 A shiny Hootsy joined your team! Lumi\'s night watch owl chick.', '{hero} got the Night Watch Cap! 🧢 +20 🍓'],
   },
 
+  // ---- after M4: the Heartseed, a mainland chain that wakes Clashara's own legend (Fern → Pecan → Oakley → Rosa → Mama Squeak). A post-game extra, so it isn't in Clashara's % ----
+  grove1: {
+    who: 'Picker Fern', from: 'fern', giverMap: 'glowwood', extra: true, item: 'dim glowcap', berries: 3, toast: '🍄', home: 'Glowcap Woods', needs: 'sunstone', to: { npc: 'pecan', map: 'village', name: 'Prof. Pecan', home: 'Sprout Village' },
+    thanks: 'Picker Fern: The professor wrote back! Three pages. I understood the first word. It was "Dear".',
+    ask: ['Picker Fern: Champion! Look at this glowcap. It should glow bright green. It\'s barely a flicker!', 'Picker Fern: All over the woods they\'re going dim. My granny says it happens when the forest\'s old guardian sleeps too deeply.', 'Picker Fern: Could you show it to Prof. Pecan in Sprout Village? He knows everything. Or he says he does.', '{hero} got a dim glowcap! 🍄 Take it to Prof. Pecan in Sprout Village.'],
+    wait: ['Picker Fern: Prof. Pecan is in Sprout Village, south past Bloom Town. Hurry, before it goes out!'],
+    done: ['Prof. Pecan: A glowcap that won\'t glow? Hmm! Let me look under the lens...', 'Prof. Pecan: Its roots are starving! Not for water... for the forest\'s heartbeat. Oh my. I\'ve read about this!', 'Prof. Pecan: Talk to me again. I need to find a very old book.', '{hero} got 3 berries! 🍓'],
+  },
+  grove2: {
+    who: 'Prof. Pecan', from: 'pecan', giverMap: 'village', item: 'page from the Grove Book', berries: 3, toast: '📖', home: 'Sprout Village', needs: 'grove1_done', to: { npc: 'oakley', map: 'glowcap', name: 'Elder Oakley', home: 'Glowcap Hollow' },
+    thanks: 'Prof. Pecan: Oakley read the page? Then the old story is true. I KNEW chapter twelve needed rewriting again.',
+    ask: ['Prof. Pecan: Found it! The Grove Book. Older than Sprout Village. One page tells of VERDELK, the Grove Elk, whose antlers are the oldest tree in Clashara.', 'Prof. Pecan: Every hundred years it falls asleep, and the forest dims. To wake it, someone must plant a Heartseed. But only the Grove\'s elder knows where they grow.', 'Prof. Pecan: Take this page to Elder Oakley in Glowcap Hollow. Carefully! It\'s held together with hope and old jam.', '{hero} got a page from the Grove Book! 📖 Take it to Elder Oakley in Glowcap Hollow.'],
+    wait: ['Prof. Pecan: Elder Oakley is in Glowcap Hollow, north through Glowcap Woods. Mind the page!'],
+    done: ['Elder Oakley: Hoo... the Grove Book. I have not seen this page since I was a tadpole.', 'Elder Oakley: Yes. Verdelk sleeps, and the glowcaps go dim. Only a Heartseed can wake it. I have kept one, all these years.', 'Elder Oakley: Talk to me again, young one. It is a big thing, a Heartseed.', '{hero} got 3 berries! 🍓'],
+  },
+  grove3: {
+    who: 'Elder Oakley', from: 'oakley', giverMap: 'glowcap', item: 'Heartseed', berries: 3, toast: '🌰', home: 'Glowcap Hollow', needs: 'grove2_done', to: { npc: 'petal', map: 'cloudtop', name: 'Gardener Rosa', home: 'Cloudtop Gardens' },
+    thanks: 'Elder Oakley: Rosa woke the seed? Then the forest will wake soon too. Hoo hoo.',
+    ask: ['Elder Oakley: Here. The Heartseed. It is warm, like a sleeping critter. Feel it beat?', 'Elder Oakley: But it will not sprout down here in the dark woods. It needs sky light, and the gentlest gardener in Clashara.', 'Elder Oakley: Gardener Rosa, up in Cloudtop Gardens. Take it to her.', '{hero} got the Heartseed! 🌰 Take it to Gardener Rosa in Cloudtop Gardens.'],
+    wait: ['Elder Oakley: Rosa waters the cloud flowers in Cloudtop Gardens. Captain Puff\'s balloon will lift you there.'],
+    done: ['Gardener Rosa: A Heartseed?! I thought they were only a story!', 'Rosa sets it in a pot of cloud soil and waters it with morning dew. A tiny green shoot pops out at once... and waves at you.', 'Gardener Rosa: Oh! It\'s sprouted already. It wants to go home. Talk to me again!', '{hero} got 3 berries! 🍓'],
+  },
+  grove4: {
+    who: 'Gardener Rosa', from: 'petal', giverMap: 'cloudtop', item: 'sprouted Heartseed', hat: 'grovecrown', berries: 20, snack: true, toast: '🌱', home: 'Cloudtop Gardens', needs: 'grove3_done', to: { npc: 'mama', map: 'glowwood', name: 'Mama Squeak', home: 'Glowcap Woods' },
+    thanks: 'Gardener Rosa: I can see a green glow from up here, over the woods. Was that... you?',
+    after: ['Mama Squeak: Squeak! The glowcaps are shining again. Pip stays up past bedtime just to look at them.', 'Mama Squeak: The great elk waits by the pond. Be brave, little one!'],
+    ask: ['Gardener Rosa: The sprout keeps leaning toward Glowcap Woods, like a compass. It knows where it belongs.', 'Gardener Rosa: Mama Squeak knows every root in those woods. She\'ll know where to plant it. Off you go!', '{hero} got a sprouted Heartseed! 🌱 Take it to Mama Squeak in Glowcap Woods.'],
+    wait: ['Gardener Rosa: Mama Squeak hangs about in the north of Glowcap Woods, near the old bridge.'],
+    done: ['Mama Squeak: Squeak?! A Heartseed! The old trees told me stories of these when I was a pup.', 'Mama Squeak leads you to the pond. {hero} digs a little hole, and you plant the sprout together.', 'For a moment, nothing... then every glowcap in the woods flashes bright green at once! The ground hums.', 'Mama Squeak: Look! By the pond! Something HUGE is standing up...', 'Mama Squeak: Take this crown of leaves the forest dropped for you. You woke the woods, Champion!', '{hero} got the Grove Crown! 🌿 +20 🍓'],
+  },
+
   // ---- M3: Hana's Kite Glider, a chain that crosses both regions (Bluffs → Cloudtop → Neon City → Bluffs); the glider rides the cliff updrafts ----
   glidesketch: {
     who: 'Kitemaker Hana', item: 'glider sketch', berries: 3, toast: '📜', home: 'Breezy Bluffs', needs: 'cup_gale', to: { npc: 'kite', map: 'cloudtop', name: 'Kite Flyer Gale', home: 'Cloudtop Gardens' },
@@ -881,10 +914,15 @@ export function favourList() {
     const state = F[id + '_done'] ? 'done' : F[id + '_found'] ? 'found' : 'open';
     const name = Q.who.split(' ').pop();
     const home = Q.giverMap || Object.keys(MAPS).find((k) => (MAPS[k].npcs || []).some((n) => n.story === 'lost:' + id));
-    return { id, isle: isleQuest(id), who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, deliver: !!Q.to, critter: Q.critter, at: state === 'done' ? null : Q.to ? Q.to.map : state === 'found' ? home : LOST_SPOTS[id]?.map, text: Q.to ? (state === 'done' ? `Delivered the ${Q.item} to ${Q.to.name}` : `Take the ${Q.item} to ${Q.to.name} in ${Q.to.home}`) : state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
+    return { id, isle: isleQuest(id), extra: extraQuest(id), who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, deliver: !!Q.to, critter: Q.critter, at: state === 'done' ? null : Q.to ? Q.to.map : state === 'found' ? home : LOST_SPOTS[id]?.map, text: Q.to ? (state === 'done' ? `Delivered the ${Q.item} to ${Q.to.name}` : `Take the ${Q.item} to ${Q.to.name} in ${Q.to.home}`) : state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
   });
   rows.sort((a, b) => ({ found: 0, open: 1, done: 2 })[a.state] - ({ found: 0, open: 1, done: 2 })[b.state]);
-  return { rows, unasked: Object.keys(LOST).length - rows.length, mainland: Object.keys(LOST).filter((id) => !isleQuest(id)).length, isles: Object.keys(LOST).filter(isleQuest).length };
+  return { rows, unasked: Object.keys(LOST).length - rows.length, mainland: Object.keys(LOST).filter((id) => !isleQuest(id) && !extraQuest(id)).length, isles: Object.keys(LOST).filter(isleQuest).length };
+}
+// a post-game extra chain (like the Heartseed): on the Journal page, but not in Clashara's %
+function extraQuest(id) {
+  const Q = LOST[id], up = Q.needs?.endsWith('_done') && Q.needs.slice(0, -5);
+  return up && LOST[up] ? extraQuest(up) : !!Q.extra;
 }
 // a favour that starts in the Sunscatter Isles (it has its own Records row, so it doesn't change Clashara's %)
 function isleQuest(id) {
@@ -1084,6 +1122,9 @@ const LEGENDS = {
     wait: ['A great shape drifts in the shallows, asleep. A long ivory horn rests on the sand.', 'It opens one silver eye at {hero}, then closes it again. It only wakes under the stars. (Come back at night!)'],
     meet: ['A soft song rises out of the dark water. The stars shimmer on the waves... and a great narwhal surfaces, its horn glowing like a sliver of the moon.', 'MOONWHAL, the Moon Narwhal! Morra\'s lonely singer of the dark.', 'Moonwhal sings one long, low note... and dives straight at {hero}!'],
     win: 'The song turns soft and happy, and the great narwhal swims closer...', note: '🌙 You befriended Moonwhal, the Moon Narwhal!' },
+  verdelk: { lv: 38, diff: 0.92, flag: 'legend_verdelk', title: 'Legendary Grove Elk', when: () => true,
+    meet: ['A great elk stands by the pond, taller than the trees. Blossoms open and close along its antlers like it is breathing.', 'VERDELK, the Grove Elk! Every glowcap in the woods turns to face it.', 'Verdelk lowers its antlers at {hero}. Petals swirl. It wants to know who woke it!'],
+    win: 'The Grove Elk bows its great antlers, and a shower of petals falls...', note: '🌿 You befriended Verdelk, the Grove Elk!' },
 };
 function legend(S, w, id) {
   const L = LEGENDS[id], def = byId(id);

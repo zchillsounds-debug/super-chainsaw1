@@ -77,7 +77,7 @@ const bossList = () => {
 
 function unlockHint(id) {
   for (const cup of CUPS) for (const m of cup.matches) if (m.critter === id) return `Beat ${m.name} in the ${cup.name}`;
-  if (CRITTERS.find((c) => c.id === id)?.legend) return 'A legend of the Sunscatter Isles. Find it after the Chapter 2 story (Adventure)';
+  if (CRITTERS.find((c) => c.id === id)?.legend) return CRITTERS.find((c) => c.id === id).mainland ? 'A legend of Clashara. Wake it after the Chapter 2 story (Adventure)' : 'A legend of the Sunscatter Isles. Find it after the Chapter 2 story (Adventure)';
   if (CRITTERS.find((c) => c.id === id)?.isle) return 'Befriend it in the Sunscatter Isles (Adventure)';
   return 'Keep battling!';
 }
@@ -710,7 +710,7 @@ export class Screens {
     g.setShowcase([skinOf(c)], 'single');
     g.showcase[0].cheer = 0.8;
     const trial = this.free && !save.unlocked.includes(c.id);
-    this.root.querySelector('.sel-info').innerHTML = this.infoCard(c, trial ? `<div class="ic-trial">Trial · ${cupOfShiny(c.id) ? 'recruit in the ' + cupOfShiny(c.id).name : c.isle ? 'befriend it in the Sunscatter Isles' : 'recruit in the Tournament'}</div>` : '');
+    this.root.querySelector('.sel-info').innerHTML = this.infoCard(c, trial ? `<div class="ic-trial">Trial · ${cupOfShiny(c.id) ? 'recruit in the ' + cupOfShiny(c.id).name : c.mainland ? 'wake it in Glowcap Woods' : c.isle ? 'befriend it in the Sunscatter Isles' : 'recruit in the Tournament'}</div>` : '');
     this.root.querySelectorAll('.rcard').forEach((b, k) => { b.classList.toggle('on', k === i); if (k === i) b.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); });
   }
 
@@ -1360,9 +1360,10 @@ export class Screens {
         + `<li class="jr-more">${mDone === 4 ? (F['mastpay_' + wk] ? '🌟 Cleared this week!' : '🌟 All four beaten! Talk to Marina in Port Coral.') : 'Champion Marina waits outside Coral Stadium.'} ${A.mastWins ? `Cleared ${A.mastWins} week${A.mastWins > 1 ? 's' : ''}${hats.includes('masterlei') ? " · Champion's Lei 🌺" : ''}.` : ''} New Masters in ${left} day${left > 1 ? 's' : ''}.</li>`
         + `<li class="jr-head">🏔️ Peak Gauntlet <small>this week ${gDone}/5</small></li>`
         + `<li class="jr-more">${gDone === 5 ? '🌟 Cleared this week!' : `Next: ${gf[gDone] ? nm(gf[gDone].id) : ''} on Champion's Peak (Keeper Orla).`} ${A.gauntWins ? `Cleared ${A.gauntWins} week${A.gauntWins > 1 ? 's' : ''}.` : ''}</li>`
-        + `<li class="jr-head">✨ Legendary critters <small>${['solmoth', 'moonwhal'].filter((id) => F['legend_' + id]).length}/2</small></li>`
+        + `<li class="jr-head">✨ Legendary critters <small>${['solmoth', 'moonwhal', 'verdelk'].filter((id) => F['legend_' + id]).length}/3</small></li>`
         + rowC('🌞', 'Solmoth <small>Dawn Moth</small>', F.legend_solmoth ? 'befriended' : F.festlamp_done ? 'rests on the Caldera Rim' : 'waits for a festival…', F.legend_solmoth)
         + rowC('🌙', 'Moonwhal <small>Moon Narwhal</small>', F.legend_moonwhal ? 'befriended' : F.tower_bronze ? 'Starfall beach, after dark' : 'sings for a Tower hero…', F.legend_moonwhal)
+        + rowC('🌿', 'Verdelk <small>Grove Elk</small>', F.legend_verdelk ? 'befriended' : F.grove4_done ? 'Glowcap Woods, by the pond' : F.grove1_asked ? 'the Heartseed chain…' : 'sleeps under Glowcap Woods…', F.legend_verdelk)
         + `<li class="jr-head">📖 Critterdex <small>${save.unlocked.length}/${CRITTERS.length}</small></li>`
         + rowC('✨', 'Shiny Charm', F.shinycharm ? 'twice the shinies!' : `befriend every critter · ${CRITTERS.length - CRITTERS.filter((c) => save.unlocked.includes(c.id)).length} to go`, F.shinycharm)
         + `<li class="jr-head">⚡ Rival Dash</li>`

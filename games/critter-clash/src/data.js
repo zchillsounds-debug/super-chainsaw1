@@ -292,6 +292,18 @@ export const CRITTERS = [
     special: 'iceslide', super: 'whirlpool',
     moves: { special: 'Moonlit Glide', super: 'Moon Tide' },
   },
+  // ---- after M4: Clashara's own legend, the Grove Elk (wakes in Glowcap Woods once the Heartseed is planted) ----
+  {
+    id: 'verdelk', name: 'Verdelk', type: 'leaf', species: 'Grove Elk',
+    blurb: 'The oldest tree in Clashara is said to be its antlers, left behind when it last fell asleep. Glowcaps light up wherever it walks.',
+    colors: { body: 0x9a7a52, belly: 0xf2e6cc, accent: 0x6ad06a, dark: 0x3e2c1a, eye: '#140e08', iris: '#4ad07a', antler: 0xb8905a, blossom: 0xffa8d8, petal: 0xff7ab0, leaf: 0x5ac85a },
+    body: { w: 0.56, h: 0.62, headR: 0.5, legLen: 0.22, armLen: 0.18, chubby: 0.98 },
+    ears: 'pointy', tail: 'puff', extra: 'elk', voice: 0.85, legend: true, mainland: true,
+    parts: { antlers: 1.05, leafmane: 0.55, flowers: 0.35 },
+    stats: { hp: 1120, speed: 6.7, power: 1.06, weight: 1.15 },
+    special: 'leafrang', super: 'bloom',
+    moves: { special: 'Bough Boomerang', super: 'Ancient Bloom' },
+  },
 ];
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
@@ -322,6 +334,7 @@ export const SHINY = {
   pumicub:     { body: 0x3a3238, belly: 0x8a7a80, accent: 0x6ae0ff, dark: 0x16121a, iris: '#6ae0ff', ash: 0x8a8088 },
   solmoth:     { body: 0xd8e4ff, belly: 0xffffff, accent: 0x8a6aff, dark: 0x3a3a7a, iris: '#8a6aff', flame: 0xa8d8ff, flameIn: 0xffffff },
   moonwhal:    { body: 0x3a2a5a, belly: 0xe8d8ff, accent: 0xff9ad8, dark: 0x140c24, iris: '#ff9ad8', horn: 0xffd8f0, fin: 0x5a3a8a, steel: 0xffd8f0, collar: 0x5a3a8a },
+  verdelk:     { body: 0xe8e4f0, belly: 0xffffff, accent: 0xb08aff, dark: 0x4a3a6a, iris: '#b08aff', antler: 0xfff4d8, blossom: 0xb8e0ff, petal: 0x8ac0ff, leaf: 0xb08aff },
   skimray:     { body: 0x2a2a3a, belly: 0xffe6f4, accent: 0xffb0d8, dark: 0x0e0e18, iris: '#ff6ab0' },
 };
 

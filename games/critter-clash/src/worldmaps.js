@@ -252,6 +252,7 @@ export const MAPS = {
       { id: 'dash3', x: 8, y: 6, rival: true, rlv: 9, name: 'Dash', dir: 'e', story: 'dash3', hideFlag: 'dash3' },
       { id: 'pip2', x: 13, y: 6, critter: 'squeakwing', lv: 2, name: 'Pip', dir: 's', showFlag: 'trial_friendship', scale: 0.7, wander: 1, lines: ['Pip: Squeak! Squeak squeak! (Pip does a happy loop in the air.)', 'Mama Squeak: Pip says you\'re the bravest critter in the whole forest.'] },
       { id: 'pip', x: 3, y: 17, critter: 'squeakwing', lv: 2, name: 'Pip', dir: 'e', story: 'pip', hideFlag: 'pip_found', scale: 0.7 },
+      { id: 'verdelk_g', x: 16, y: 12, critter: 'verdelk', name: 'Verdelk', dir: 's', story: 'legend:verdelk', showFlag: 'grove4_done', hideFlag: 'legend_verdelk', scale: 1.5 }, // Clashara's legend: wakes by the pond once the Heartseed is planted
       { id: 'bully', x: 5, y: 17, critter: 'pricklepuff', lv: 10, name: 'Thistlehog', dir: 'w', story: 'pip', hideFlag: 'pip_saved', scale: 1.15 },
     ],
   },

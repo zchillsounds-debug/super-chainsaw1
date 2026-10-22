@@ -392,6 +392,17 @@ export const FORMS = {
         colors: { body: 0x6a88d0, dark: 0x1e2a5a }, parts: { narhorn: 1.15, pearl: 1.1, wave: 0.85, orbs: 0.45, starfreckles: 1 }, moves: { special: 'Full Moon Glide', super: 'King Tide' } },
     ],
   },
+  verdelk: {
+    path: 'Mystic',
+    forms: [
+      { name: 'Thicketelk', species: 'Thicket Elk', size: 1.12, voice: 0.75, bodyMul: { ...GROW2, w: 1.1, limb: 1.3 },
+        blurb: 'Its antlers grew so wide that birds raise their chicks in them. It walks very carefully under bridges.',
+        colors: { body: 0x8a6a44 }, parts: { antlers: 1.15, leafmane: 0.8, flowers: 0.6, brows: 0.3 }, moves: { special: 'Bough Barrage', super: 'Elder Bloom' } },
+      { name: 'Eldergrove', species: 'Ancient Elk', size: 1.3, voice: 0.62, bodyMul: { ...GROW3, w: 1.22, limb: 1.6 },
+        blurb: 'A whole forest grows on its back. When it sleeps for a hundred years, people build villages under its antlers.',
+        colors: { body: 0x7a5a3a, dark: 0x2e2010 }, parts: { antlers: 1.25, leafmane: 1.1, flowers: 0.9, brows: 0.6, orbs: 0.35 }, moves: { special: 'Grove Boomerang', super: 'First Forest' } },
+    ],
+  },
   blowfin: {
     path: 'Mystic',
     forms: [
