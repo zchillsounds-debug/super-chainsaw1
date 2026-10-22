@@ -124,7 +124,7 @@ export const LANDMARKS = [
 const ALBUM_KEY = 'critterclash-album';
 export function albumGet() { try { return JSON.parse(localStorage.getItem(ALBUM_KEY)) || {}; } catch (e) { return {}; } }
 function albumPut(id, url) { const a = albumGet(); a[id] = url; try { localStorage.setItem(ALBUM_KEY, JSON.stringify(a)); } catch (e) { /* full or blocked: the album just stays as it was */ } }
-export const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, ball: { map: 'route1', x: 7, y: 9 }, phones: { map: 'ember', x: 23, y: 1 }, blink: { map: 'route2', x: 12, y: 10 } };
+export const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, ball: { map: 'route1', x: 7, y: 9 }, phones: { map: 'ember', x: 23, y: 1 }, blink: { map: 'route2', x: 12, y: 10 }, cocomug: { map: 'palmpath', x: 30, y: 3 }, pebble: { map: 'ashtrail', x: 26, y: 3 }, kitetail: { map: 'atoll', x: 15, y: 3 } };
 
 const STEP = 0.23; // seconds per tile
 const ALPHA_TOLD = new Set(); // Alphas already announced this session
@@ -3196,6 +3196,21 @@ export class World {
         const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xe8ff6a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.85 }); sm.userData.own = true;
         const sp = new THREE.Sprite(sm); sp.scale.setScalar(1.4); sp.position.z = -0.22; g.add(sp);
         g.position.set(px, 1.05, pz + 0.1); g.rotation.y = 0.6; g.scale.setScalar(1.3);
+      } else if (id === 'cocomug') { // half a coconut in the sand, with a tiny crab peeking out
+        const cup = inked(new THREE.SphereGeometry(0.34, 14, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), toon(0x7a4a2a, { side: THREE.DoubleSide }), OL * 0.4); cup.position.y = 0.34; g.add(cup);
+        const rim = new THREE.Mesh(new THREE.CircleGeometry(0.31, 14), toon(0xfff4e0)); rim.rotation.x = -Math.PI / 2; rim.position.y = 0.33; g.add(rim);
+        const crab = inked(new THREE.SphereGeometry(0.12, 10, 8), toon(0xff6a3a), OL * 0.3); crab.scale.set(1.3, 0.7, 1); crab.position.set(0.05, 0.4, 0.08); g.add(crab);
+        for (const sd of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 4), toon(0x1a1010)); e.position.set(sd * 0.05, 0.49, 0.14); g.add(e); }
+        g.position.set(px, 0, pz + 0.3); g.scale.setScalar(1.4);
+      } else if (id === 'pebble') { // a warm, shiny black pebble by a vent, glowing a little
+        g.add(inked(new THREE.DodecahedronGeometry(0.2, 0), toon(0x2a2228, { rim: 1, emissive: 0x3a1004 }), OL * 0.3));
+        const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff8a3a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.7 }); sm.userData.own = true;
+        const sp = new THREE.Sprite(sm); sp.scale.setScalar(1.1); g.add(sp);
+        g.position.set(px, 0.2, pz + 0.3); g.scale.setScalar(1.4);
+      } else if (id === 'kitetail') { // a long rainbow ribbon tangled on the ground by a palm
+        const cols = [0xff4a4a, 0xff9a3a, 0xffd84d, 0x5ad86a, 0x4aa8ff, 0x9a6aff];
+        for (let k = 0; k < 12; k++) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.03, 0.12), toon(cols[k % 6])); r.position.set(-1.1 + k * 0.2, 0.05 + Math.abs(Math.sin(k * 0.8)) * 0.12, Math.sin(k * 0.9) * 0.3); r.rotation.y = Math.cos(k * 0.9) * 0.6; g.add(r); }
+        g.position.set(px, 0, pz + 0.3); g.scale.setScalar(1.3);
       }
       this.group.add(g);
       this.lost.push({ id, x: Q.x, y: Q.y, g });

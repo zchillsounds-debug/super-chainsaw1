@@ -785,6 +785,29 @@ const LOST = {
     done: ['Mama Squeak: Squeak?! A Heartseed! The old trees told me stories of these when I was a pup.', 'Mama Squeak leads you to the pond. {hero} digs a little hole, and you plant the sprout together.', 'For a moment, nothing... then every glowcap in the woods flashes bright green at once! The ground hums.', 'Mama Squeak: Look! By the pond! Something HUGE is standing up...', 'Mama Squeak: Take this crown of leaves the forest dropped for you. You woke the woods, Champion!', '{hero} got the Grove Crown! 🌿 +20 🍓'],
   },
 
+  // ---- island single-step favours: something lost on another island ----
+  cocomug: {
+    who: 'Mossloth', item: 'coconut cup', berries: 3, toast: '🥥', hint: 'somewhere along Palm Path, east of town', home: 'Port Coral',
+    ask: ['Mossloth: Heeey... have you... seen... my coconut cup...?', 'Mossloth: I put it down... on Palm Path... for a nap... three days ago...', 'Mossloth: It\'s brown... and round... like a coconut. Because it is one...'],
+    wait: ['Mossloth: ...still no cup...? It\'s on Palm Path... I think... near the far end... zzz...'],
+    found: ['There\'s a coconut cup in the sand, with a tiny crab living in it! {hero} asks it nicely to move out.', 'Mossloth in Port Coral will be so happy. Slowly.'],
+    done: ['Mossloth: ...my... cup...! You found it...!', 'Mossloth hugs the coconut cup. It takes about a minute.', 'Mossloth: Here... berries... for you... thank... you...', '{hero} got 3 berries! 🍓'],
+  },
+  pebble: {
+    who: 'Pumicub', item: 'lucky lava pebble', berries: 3, toast: '🪨', hint: 'on the Ash Trail, near the steam vents', home: 'Ember Isle',
+    ask: ['Pumicub: Grrrumph... (Pumicub paws at the sand, looking for something.)', 'Old Tutu: (half asleep) ...it lost... its lucky pebble... on the Ash Trail... it cried... all the way home...', 'Pumicub: Grumph! (It holds up its paws: a pebble about THIS big. Shiny. Warm.)'],
+    wait: ['Pumicub: Grumph? (It points north, toward the Ash Trail and its steam vents.)'],
+    found: ['A warm, shiny black pebble sits next to a steam vent. It\'s glowing a little!', 'Pumicub on Ember Isle has been looking everywhere for this.'],
+    done: ['Pumicub: GRUMPH!! (Pumicub rolls round and round in the black sand with its lucky pebble.)', 'Old Tutu: ...it says... thank you... and it wants... you to have... these...', '{hero} got 3 berries! 🍓'],
+  },
+  kitetail: {
+    who: 'Kite Kid Mele', item: 'kite tail ribbon', berries: 3, toast: '🎀', hint: 'far out at sea, on Starfall Atoll?', home: 'Breezy Bluffs',
+    ask: ['Kite Kid Mele: My kite lost its tail! A big gust ripped the ribbon off and it flew out over the sea.', 'Kite Kid Mele: Without a tail my kite spins and spins and crashes. Weather Watcher Iona says the wind was blowing toward Starfall Atoll.', 'Kite Kid Mele: It\'s a long rainbow ribbon. If you sail that way, could you look for it?'],
+    wait: ['Kite Kid Mele: Any luck? The wind was blowing toward Starfall Atoll. Captain Gill sails there from Port Coral!'],
+    found: ['A long rainbow ribbon is tangled round a palm by the Starfall lighthouse path. {hero} untangles it carefully.', 'Kite Kid Mele on Breezy Bluffs will be thrilled!'],
+    done: ['Kite Kid Mele: MY TAIL! You brought it all the way back from Starfall?', 'Mele ties the ribbon on, and the kite shoots up into the wind, straight and steady.', 'Kite Kid Mele: Wheee! Here, my kite money. You earned it!', '{hero} got 3 berries! 🍓'],
+  },
+
   // ---- M3: Hana's Kite Glider, a chain that crosses both regions (Bluffs → Cloudtop → Neon City → Bluffs); the glider rides the cliff updrafts ----
   glidesketch: {
     who: 'Kitemaker Hana', item: 'glider sketch', berries: 3, toast: '📜', home: 'Breezy Bluffs', needs: 'cup_gale', to: { npc: 'kite', map: 'cloudtop', name: 'Kite Flyer Gale', home: 'Cloudtop Gardens' },
