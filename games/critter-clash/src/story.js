@@ -461,6 +461,21 @@ export function storyTalk(S, id, w, a) {
     }, who), who);
     return;
   }
+  if (id === 'dive') { // Snorkeller Pia: after Morra sends her goggles back, she dives you down to the Sunken Wreck off the reef (and back up again)
+    const who = 'Snorkeller Pia';
+    if (w.key === 'wreck') return w.ask(`${who}: Blub! Running low on air? Ready to swim back up to Port Coral?`, ['Swim up', 'Stay'], (i) => {
+      if (i) return w.say([`${who}: Take your time. The wreck's not going anywhere. It's been here a hundred years!`], null, who);
+      sfx.door?.(); w.fade(() => w.load('coral', 20, 12, 's'));
+    }, who);
+    if (!F.amends1_done) return w.say([a.n.lines[Math.floor(Math.random() * a.n.lines.length)]], null, who);
+    const pitch = () => w.ask(`${who}: I've got spare goggles. Want to dive down to the wreck with me?`, ['Dive!', 'Not now'], (i) => {
+      if (i) return w.say([`${who}: Any time! I'll be right here, floating on my Pumicub.`], null, who);
+      F.dived = true; persist(); sfx.door?.(); S.toast('🤿 Down, down, down...');
+      w.fade(() => w.load('wreck', 9, 12, 'n'));
+    }, who);
+    if (F.dived) return pitch();
+    return w.say([`${who}: My goggles came back, so I've been diving every day! Guess what I found off the reef? A real SHIPWRECK.`, `${who}: The Merry Barnacle. It sank a hundred years ago. The old divers say the captain's chest is still down there!`], pitch, who);
+  }
   if (id === 'gullclub') { // the reformed Gloom Gulls fish off Starfall Atoll: bring Petrel today's catch of the day (any island water) for berries; five catches earn the Gull Club Cap
     const A = save.adv, day = new Date().toISOString().slice(0, 10), fish = gullFish(day), who = 'Petrel', own = (A.hats ||= []);
     if (!F.rod) return w.say(['Petrel: Caw! You fish? No? Fisher Finn on the mainland gives rods to anyone. He gave one to ME. I cried.', 'Petrel: Get a rod, then come back. The Gull Fishing Club needs members!'], null, who);

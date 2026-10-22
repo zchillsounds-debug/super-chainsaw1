@@ -429,6 +429,7 @@ export class World {
     this.buildReef(rand);
     this.buildWindmills();
     this.buildBigVolcano();
+    this.buildWreck();
     this.buildLighthouse();
     this.buildCave(rand);
     this.buildButterflies();
@@ -525,7 +526,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.lighthouse = null; this.puz = null; this.chest = null; this.updrafts = null; this.gliding = null; this.pearl = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.wreck = null; this.lighthouse = null; this.puz = null; this.chest = null; this.updrafts = null; this.gliding = null; this.pearl = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1198,7 +1199,7 @@ export class World {
   // seagulls wheel over the beach maps, wings flapping, shadows on the sand
   buildGulls() {
     this.gulls = [];
-    if (this.M.arena !== 'beach' || this.M.indoor || this.phase === 'night') return; // gulls roost at night
+    if (this.M.arena !== 'beach' || this.M.indoor || this.M.underwater || this.phase === 'night') return; // gulls roost at night
     const W = toon(0xffffff, { rim: 0.6 });
     for (let k = 0; k < 3; k++) {
       const g = new THREE.Group();
@@ -1286,6 +1287,36 @@ export class World {
   }
 
   // Ember Isle: the island's volcano looms behind the town, a lazy plume of smoke rising from its glowing crater
+  // the Sunken Wreck: a broken old ship on the sea floor (hull, snapped mast, torn sail, coral and sea weed), and light shafts slanting down through the water
+  buildWreck() {
+    this.wreck = null;
+    const M = this.M; if (!M.wreck || M.indoor) return;
+    const [wx, wy] = M.wreck, [x0, z0] = wpos(wx, wy), [x1, z1] = wpos(wx + 6, wy + 1), g = new THREE.Group();
+    g.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); g.rotation.set(0, 0.06, 0.08); this.group.add(g); // settled into the sand, listing a little
+    for (let x = wx; x <= wx + 6; x++) for (let y = wy; y <= wy + 1; y++) this.solid.add(x + ',' + y);
+    const wood = toon(0x6a4a32, { rim: 0.4 }), dark = toon(0x3e2a1c), plank = toon(0x8a6444), sail = toon(0xe8dcc0, { rim: 0.5 });
+    const L = (x1 - x0) * 0.82;
+    const hull = inked(new THREE.BoxGeometry(L, 1.5, 2.9), wood, OL * 0.6); hull.position.y = 0.55; g.add(hull);
+    const keel = inked(new THREE.BoxGeometry(L * 0.96, 0.35, 2.3), dark, OL * 0.4); keel.position.y = -0.1; g.add(keel);
+    const bow = inked(new THREE.CylinderGeometry(0.01, 1.45, 2.4, 3, 1), wood, OL * 0.6); bow.rotation.set(0, 0, -Math.PI / 2); bow.rotation.y = Math.PI / 6; bow.scale.set(1, 1, 1.15); bow.position.set(-L / 2 - 1.1, 0.55, 0); g.add(bow);
+    for (const y of [0.25, 0.85]) { const st = inked(new THREE.BoxGeometry(L + 0.05, 0.12, 2.95), plank, OL * 0.2); st.position.y = y; g.add(st); } // plank stripes
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(L - 0.3, 0.08, 2.6), dark); deck.position.y = 1.31; g.add(deck);
+    const hole = new THREE.Mesh(new THREE.CircleGeometry(0.55, 10), toon(0x1a120c)); hole.position.set(L * 0.18, 0.5, 1.46); hole.scale.y = 0.7; g.add(hole); // a hole torn in the side
+    for (let k = 0; k < 4; k++) { const port = new THREE.Mesh(new THREE.CircleGeometry(0.16, 12), toon(0x2a4a5a, { rim: 0.8 })); port.position.set(-L * 0.35 + k * L * 0.16, 0.95, 1.46); g.add(port); }
+    const mast = inked(new THREE.CylinderGeometry(0.13, 0.17, 4.6, 8), plank, OL * 0.4); mast.position.set(-L * 0.08, 2.9, 0); mast.rotation.z = 0.55; g.add(mast); // snapped, leaning over
+    const boom = inked(new THREE.CylinderGeometry(0.08, 0.08, 2.6, 6), plank, OL * 0.3); boom.position.set(-L * 0.08 - 1.0, 3.3, 0.1); boom.rotation.z = Math.PI / 2 + 0.55; g.add(boom);
+    const sl = new THREE.PlaneGeometry(1.9, 1.6, 4, 3); { const p = sl.attributes.position; for (let i = 0; i < p.count; i++) p.setZ(i, Math.sin(p.getX(i) * 2.2 + p.getY(i)) * 0.18); sl.computeVertexNormals(); }
+    const sm = sail.clone(); sm.side = THREE.DoubleSide; sm.userData.own = true; const sa = new THREE.Mesh(sl, sm); sa.position.set(-L * 0.08 - 1.0, 2.35, 0.15); sa.rotation.z = 0.55; g.add(sa);
+    const coral = [toon(0xff7a9a, { rim: 0.7 }), toon(0xffa05a, { rim: 0.7 }), toon(0xb07aff, { rim: 0.7 })], rnd = (k) => Math.abs(Math.sin(k * 12.9898) * 43758.5453) % 1;
+    for (let k = 0; k < 14; k++) { const c = inked(new THREE.SphereGeometry(0.16 + rnd(k) * 0.16, 8, 6), coral[k % 3], OL * 0.3); c.position.set((rnd(k + 3) - 0.5) * L, 0.2 + rnd(k + 7) * 1.2, (rnd(k + 5) < 0.5 ? -1 : 1) * 1.47); c.scale.z = 0.6; g.add(c); } // coral and barnacles on the hull
+    const weed = toon(0x2aa080, { rim: 0.5 }), sway = [];
+    for (let k = 0; k < 9; k++) { const w = inked(new THREE.ConeGeometry(0.12, 1.4 + rnd(k + 9) * 1.3, 5), weed, OL * 0.3); const ang = k / 9 * Math.PI * 2; w.position.set(Math.cos(ang) * (L / 2 + 0.4), 0.7, Math.sin(ang) * 1.9); g.add(w); sway.push(w); }
+    // light shafts: tall soft planes slanting down from the surface (never cast shadows, never block the camera)
+    const rays = [], rm = new THREE.MeshBasicMaterial({ color: 0xc8f8ff, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }); rm.userData.own = true;
+    for (let k = 0; k < 6; k++) { const r = new THREE.Mesh(new THREE.PlaneGeometry(1.4 + rnd(k + 20) * 1.2, 16), rm); const [rx, rz] = wpos(2 + Math.floor(rnd(k + 30) * (this.W - 4)), 1 + Math.floor(rnd(k + 40) * (this.H - 3))); r.position.set(rx, 6, rz); r.rotation.set(0, 0.6, 0.35); this.group.add(r); rays.push(r); }
+    this.wreck = { sway, rays, rm, t: 0 };
+  }
+
   buildBigVolcano() {
     this.bigVolcano = null;
     if (!this.M.volcano || this.M.indoor) return;
@@ -1572,7 +1603,7 @@ export class World {
   // street lamps at the edges of town paths (on tile corners, so they never block a step); lit from dusk
   buildLamps() {
     const M = this.M;
-    const route = !M.indoor && M.wild && !(M.buildings || []).length && !M.fireflies && !M.lava && this.key !== 'peak'; // routes get a few lamps along the path too
+    const route = !M.indoor && M.wild && !(M.buildings || []).length && !M.fireflies && !M.lava && !M.underwater && this.key !== 'peak'; // routes get a few lamps along the path too
     if (M.indoor || M.city || !((M.buildings || []).some((b) => b.heal) || this.key === 'village' || route)) return; // towns (and home)
     const ok = (x, y) => '.:"sf'.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y), cand = [];
     for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) { // corner between tiles (x-1..x, y-1..y)
@@ -2805,7 +2836,7 @@ export class World {
 
   buildButterflies() {
     this.flies = [];
-    if (this.M.indoor || this.M.snow || this.M.city || this.M.lava || this.rain || this.phase === 'night') return;
+    if (this.M.indoor || this.M.snow || this.M.city || this.M.lava || this.M.underwater || this.rain || this.phase === 'night') return;
     const spots = [];
     for (let y = 0; y < this.H; y++) for (let x = 0; x < this.W; x++) if (this.tile(x, y) === 'f') spots.push(wpos(x, y));
     if (!spots.length) return;
@@ -4482,6 +4513,13 @@ export class World {
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
     if (this.statue) { const T = this.statue; T.glow.material.opacity = 0.3 + Math.sin(this.t * 1.6) * 0.08; if (Math.random() < dt * 2) this.g.fx.spawn({ x: T.px + (Math.random() - 0.5) * 1.6, y: 0.8 + Math.random() * 1.8, z: T.pz + (Math.random() - 0.5) * 1.2, vy: 0.3, life: 1.2, size: 0.3, color: 0xfff0a0, shape: 'star', alpha: 0.9 }); }
+    if (this.wreck) { // the sunken wreck: sea weed sways, light shafts shimmer, bubbles rise everywhere (and out of the hull)
+      const R = this.wreck; R.t += dt;
+      R.sway.forEach((w, k) => { w.rotation.z = Math.sin(R.t * 1.3 + k) * 0.22; w.rotation.x = Math.cos(R.t * 1.1 + k * 2) * 0.12; });
+      R.rm.opacity = 0.08 + Math.sin(R.t * 0.9) * 0.03;
+      if (Math.random() < dt * 7) { const p = this.hero.root.position; this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 16, y: 0.2, z: p.z + (Math.random() - 0.5) * 10, vx: 0, vy: 1.4 + Math.random(), vz: 0, color: 0xe0faff, size: 0.12 + Math.random() * 0.14, life: 3, shape: 'glow', grav: -0.2, additive: false, alpha: 0.7 }); }
+      if (Math.random() < dt * 2) { const [hx, hz] = wpos(this.M.wreck[0] + 4, this.M.wreck[1] + 1); this.g.fx.spawn({ x: hx, y: 0.6, z: hz + 1.4, vx: (Math.random() - 0.5) * 0.3, vy: 1.2, vz: 0.2, color: 0xe0faff, size: 0.2, life: 3, shape: 'glow', grav: -0.2, additive: false, alpha: 0.75 }); }
+    }
     if (this.bigVolcano && Math.random() < dt * 5) { const V = this.bigVolcano, sc = 1.6 + Math.random(); this.g.fx.spawn({ x: V.x + (Math.random() - 0.5) * 3, y: V.y, z: V.z + (Math.random() - 0.5) * 3, vx: 0.8 + Math.random() * 0.6, vy: 2.2, vz: 0.2, color: this.phase === 'day' ? 0xd8d0cc : 0x8a7a80, size: sc, life: 4.5, shape: 'glow', grav: 0, additive: false, alpha: 0.55 }); } // a lazy smoke plume drifting downwind
     if (this.puz) {
       for (const B of this.puz.boulders) if (B.t > 0) { B.t = Math.max(0, B.t - dt); const k = 1 - B.t / 0.28, [ax, az] = wpos(...B.from), [bx, bz] = wpos(B.x, B.y); B.m.position.x = ax + (bx - ax) * k; B.m.position.z = az + (bz - az) * k; B.m.rotation.x += dt * 9 * (B.dy || 0); B.m.rotation.z -= dt * 9 * (B.dx || 0); if (B.drop) B.m.position.y = 0.62 - k * 1.2; }
@@ -5013,12 +5051,13 @@ export class World {
   ambience(dt) {
     const M = this.M; if (!M || M.indoor || this.busy) return;
     const A = this.amb ||= { cicada: 3, bird: 3, cricket: 2, surf: 1, rain: 0, wind: 2, hum: 1, bubble: 2, owl: 6, rooster: 4 }, due = [];
-    if (this.rain) due.push(['rain', 1.5]);
+    if (M.underwater) due.push(['bubble', 1.4]);
+    else if (this.rain) due.push(['rain', 1.5]);
     else if (M.snow || M.border === 'cloud') due.push(['wind', 3.5]);
     else if (M.city) due.push(['hum', 2.2]);
     else if (this.phase === 'night' || M.fireflies) { due.push(['cricket', 1.1]); if (this.phase === 'night' && !M.city && !M.lava) due.push(['owl', 14]); }
     else if (!M.lava) { due.push(['bird', this.morning ? 1.1 : 2.6]); if (isSummer() && !this.morning) due.push(['cicada', 9]); /* summer afternoons buzz with cicadas */ if (this.morning && this.key === 'village') due.push(['rooster', 22]); } // a dawn chorus on misty mornings
-    if (M.arena === 'beach') due.push(['surf', 3.2]);
+    if (M.arena === 'beach' && !M.underwater) due.push(['surf', 3.2]);
     if (M.lava) due.push(['bubble', 1.8]);
     for (const [k, gap] of due) if ((A[k] -= dt) <= 0) { A[k] = gap * (0.6 + Math.random() * 0.9); sfx.ambient?.(k); }
   }

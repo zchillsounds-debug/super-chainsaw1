@@ -618,7 +618,7 @@ export const MAPS = {
       { id: 'marina_c', x: 4, y: 7, critter: 'blowfin', name: 'Champion Marina', dir: 's', story: 'masters', showFlag: 'sunstone', shiny: true }, // M4: the weekly Sunscatter Masters
       { id: 'gill', x: 12, y: 16, critter: 'blowfin', name: 'Captain Gill', dir: 'n', story: 'ferry', lines: [] },
       { id: 'barnacle', x: 9, act: 'fish', y: 14, critter: 'smokeshell', name: 'Dockhand Shelly', dir: 's', story: 'lost:festlamp', lines: ["Dockhand Shelly: Welcome to the Sunscatter Isles! Three islands, three stadiums, and more sunshine than you can shake a palm at.", "Dockhand Shelly: The critters out here are like nothing on the mainland. Wait till you see a Toucharge sneeze!", "Dockhand Shelly: The coral glows at night. Come down to the pier after dark and look into the water."] },
-      { id: 'snorkel', x: 20, act: 'hop', y: 13, critter: 'pumicub', name: 'Snorkeller Pia', dir: 'w', wander: 2, lines: ["Snorkeller Pia: Pumicub floats! I use it as a raft. It doesn't mind. I think.", "Snorkeller Pia: East of town is Palm Path. The tall grass there is full of island critters!"] },
+      { id: 'snorkel', x: 20, act: 'hop', y: 13, critter: 'pumicub', name: 'Snorkeller Pia', dir: 'w', wander: 2, story: 'dive', lines: ["Snorkeller Pia: Pumicub floats! I use it as a raft. It doesn't mind. I think.", "Snorkeller Pia: East of town is Palm Path. The tall grass there is full of island critters!"] },
       { id: 'kid_c', x: 6, act: 'cheer', y: 7, critter: 'mossloth', name: 'Mossloth', dir: 's', wander: 1, lines: ["Mossloth: Heeey... welcome... to... Port... Coral...", "Mossloth: ...I was going to say something else... but it was taking too long..."] },
       { id: 'dash_c', x: 14, y: 12, rival: true, rlv: 22, name: 'Dash', dir: 'w', story: 'dashisle', hideFlag: 'dash_isle1' },
     ],
@@ -877,6 +877,46 @@ export const MAPS = {
     wild: { list: [['skimray', 27, 29], ['squeakwing', 27, 29], ['toucharge', 27, 29], ['whirlwhisk', 28, 30]], roam: 3, rate: 0.12 },
     npcs: [
       { id: 'ama_s', x: 13, y: 8, act: 'read', critter: 'hootsy', name: 'Birdkeeper Ama', dir: 'w', lines: ["Birdkeeper Ama: A visitor?! Nobody has landed here in thirty years. How did you... a GLIDER? Hana's, I bet.", 'Birdkeeper Ama: I count the seabirds. Two hundred and twelve today. Two hundred and thirteen, with you.', 'Birdkeeper Ama: The big nest by the rocks belongs to a Skimray that never came back. Its egg is still warm, somehow. It shimmers...'] },
+    ],
+  },
+
+  // ===== the Sunken Wreck, an old ship on the sea floor off Port Coral (Snorkeller Pia takes you down after Morra's Amends): coral, sea grass, light shafts and a captain's chest =====
+  wreck: {
+    name: 'Sunken Wreck',
+    music: 'beach',
+    arena: 'beach',
+    outer: 0x0e3a5a,
+    hidden: true, // not on the Town Map: Pia dives you here
+    extra: true, // a post-game extra: it doesn't count towards any explored %
+    underwater: true, // bubbles, light shafts, no rain, no weather
+    wreck: [6, 3], // the hull lies across x 6–12, rows 3–4 (world.js buildWreck)
+    palette: { a: '#c8bc90', b: '#c2b68a', tall: '#2a9a8a', path: '#e6dcbc', water: '#0e4a7a', bank: '#a8986e', dark: 'rgba(10,60,90,0.3)', lite: 'rgba(200,255,255,0.3)' },
+    trees: [0xff7a9a, 0xffa05a, 0xb85a6a],
+    blades: 0x3ac0a0,
+    mood: { sun: 0xfff4dc, sunI: 2.1, sky: 0x9ae4ff, gnd: 0x4a8a9a, hemiI: 1.35, fog: 0x2a8ab8 },
+    tiles: [
+      'TTTTTTTTTTTTTTTTTTTT',
+      'TT""....~~~~....""TT',
+      'T"""..R.~~~~..R.."TT',
+      'T""...............TT',
+      'T"................"T',
+      'TT.........R......"T',
+      'T""".............""T',
+      'T"""...:::::::...TTT',
+      'TT"....:.....:...""T',
+      'T......:..R..:....TT',
+      'T"""...:.....:..""TT',
+      'TT"""..:::::::..""TT',
+      'T........:........TT',
+      'TTTTTTTTTTTTTTTTTTTT',
+    ],
+    chest: { x: 13, y: 4, flag: 'wreck_chest', hat: 'diverhelm', berries: 20, hatLine: '...and an old brass Diving Helm, polished like new!' },
+    signs: [{ x: 14, y: 5, text: 'A barnacled name board, half buried in the sand:\n"THE MERRY BARNACLE. Port Coral. Sank one stormy night, a hundred years ago."' }],
+    wild: { list: [['bubbalotl', 30, 32], ['ripples', 30, 32], ['blowfin', 30, 32], ['pengsicle', 31, 33], ['smokeshell', 31, 33]], roam: 3, rate: 0.12 },
+    npcs: [
+      { id: 'pia_w', x: 10, y: 12, critter: 'pumicub', name: 'Snorkeller Pia', dir: 'n', story: 'dive', lines: [] },
+      { id: 'marlo_w', x: 15, y: 9, critter: 'blowfin', name: 'Diver Marlo', dir: 'w', trainer: { lv: 32, sight: 3, diff: 0.86, intro: 'Diver Marlo: Blub! A visitor on MY wreck? Blowfin, puff up and show them the way out!', beat: 'Diver Marlo: Blub... out of breath. Good battle!', after: 'Diver Marlo: The captain\'s chest is by the stern. Nobody could lift the lid. Maybe you can!' } },
+      { id: 'shellby_w', x: 4, y: 9, act: 'sleep', critter: 'smokeshell', name: 'Shellby', dir: 'e', lines: ['Shellby the Smokeshell blows a stream of warm bubbles. It lives in an old teapot from the wreck.', 'Shellby clicks its claws politely. Its shell is covered in tiny pink coral.'] },
     ],
   },
 
