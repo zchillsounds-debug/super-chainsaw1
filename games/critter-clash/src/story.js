@@ -345,6 +345,7 @@ export function nextGoal(F) {
     if (!F.legend_moonwhal) return 'Something sings under Starfall Atoll on starry nights... Go down to the beach after dark.';
     if (!F.legend_solmoth) return F.festlamp_done ? 'A great golden glow rests on the volcano. Glide up the Ember Isle thermal to the Caldera Rim!' : 'The isles want a Sunstone Festival! Weather Watcher Iona on Breezy Bluffs has a job for you.';
     if (!F.dash_show) return 'Dash is on Starfall Atoll, training harder than ever. He wants one last, full-strength battle!';
+    if (!F.amends3_done) return 'Morra, by the Starfall lighthouse, wants a quiet word. She has a chest full of things to give back...';
     if (!F.reach_chest) return 'A new windsock at the east edge of Cloudtop Gardens points straight at the sky. Ride that wind with your glider!';
     return 'You saved the Sunscatter Isles! Climb the Battle Tower ranks, find every hidden pearl and explore.';
   }
@@ -690,6 +691,33 @@ const LOST = {
     done: ['Keeper Lumi: The festival lantern! Oh, I haven\'t lit one of these in forty years.', 'Lumi touches the lantern to the great lamp. It glows gold... then rises, and rises, and twenty more lanterns float up from the boats in the lagoon!', 'Keeper Lumi: The Sunstone Festival has begun! Here, wear this. Everyone on the isles will know you lit the first lantern.', '{hero} got the Festival Lantern Hat! 🏮 +25 🍓'],
   },
 
+  // ---- after M4: Morra's Amends, a hub chain on Starfall Atoll. The reformed captain sends back what her Gulls stole, one thing at a time ----
+  amends1: {
+    who: 'Morra', item: 'pair of diving goggles', berries: 3, toast: '🥽', home: 'Starfall Atoll', needs: 'sunstone', to: { npc: 'snorkel', map: 'coral', name: 'Snorkeller Pia', home: 'Port Coral' },
+    thanks: 'Morra: Pia sent a shell back with you. A SHELL. For me. ...I am not crying. It is the sea spray.',
+    later: ['amends3_done', ['Morra: Lumi says the night watch owl likes you. Of course it does. Everyone does. It is very annoying.', 'Morra: The Gulls are fishermen now. Petrel caught a boot yesterday. He was so proud.']],
+    after: ['Snorkeller Pia: My goggles came back with a note: "Sorry. — M." I can see the reef again!'],
+    ask: ['Morra: Champion. A word. My Gulls "borrowed" things from all over the isles for years. I have a chest of it in the Tower. It is... a lot.', 'Morra: I cannot sail up to people and say sorry. My face does not do sorry. But you could take things back for me.', 'Morra: These diving goggles belong to a snorkeller in Port Coral. Pia, I think. She cried for a week. I heard.', '{hero} got a pair of diving goggles! 🥽 Take them to Snorkeller Pia in Port Coral.'],
+    wait: ['Morra: Pia swims by the Port Coral beach. Look for the Pumicub she uses as a raft.'],
+    done: ['Snorkeller Pia: MY GOGGLES! The ones with the little starfish on the strap! Where did you... Morra? Really?', 'Snorkeller Pia: Tell her thank you. And tell her I\'m keeping the note. Here, berries for you!', '{hero} got 3 berries! 🍓 (Talk to Morra again.)'],
+  },
+  amends2: {
+    who: 'Morra', from: 'morra_b', giverMap: 'atoll', item: 'carved walking stick', berries: 3, toast: '🦯', home: 'Starfall Atoll', needs: 'amends1_done', to: { npc: 'tutu_e', map: 'ember_isle', name: 'Old Tutu', home: 'Ember Isle' },
+    thanks: 'Morra: Old Tutu walked all the way to the pier to wave at our boat. With the stick. Slowly. It took an hour. Worth it.',
+    after: ['Old Tutu: ...my stick... came home... I carved it... when the volcano... was young... zzz...'],
+    ask: ['Morra: Pia smiled? Good. Next.', 'Morra: This walking stick. Skua took it from an old Mossloth on Ember Isle who was asleep at the time. Asleep! Shameful.', '{hero} got a carved walking stick! 🦯 Take it to Old Tutu on Ember Isle.'],
+    wait: ['Morra: Old Tutu naps in the middle of Ember Isle town. Do not wake him too fast.'],
+    done: ['Old Tutu: ...hm? ...my stick...? ...I thought... I had lost it... in a dream...', 'Old Tutu holds the walking stick very tight and smiles a slow, wrinkly smile.', 'Old Tutu: ...thank you... little one... and thank... whoever... zzz...', '{hero} got 3 berries! 🍓 (Talk to Morra again.)'],
+  },
+  amends3: {
+    who: 'Morra', from: 'morra_b', giverMap: 'atoll', item: 'letter for Lumi', hat: 'nightwatch', berries: 20, snack: true, shiny: 'hootsy', toast: '✉️', home: 'Starfall Atoll', needs: 'amends2_done', to: { npc: 'keeper_a', map: 'atoll', name: 'Keeper Lumi', home: 'Starfall Atoll' },
+    thanks: 'Morra: Lumi read it out loud. To everyone. In the lighthouse. Twice. ...Fine. Thank you, Champion.',
+    after: ['Keeper Lumi: Morra\'s letter is framed above the lamp now. She pretends not to look at it. She looks at it every night.'],
+    ask: ['Morra: The last thing in the chest is not a thing. It is the lighthouse itself. I took its light. Lumi\'s light.', 'Morra: I wrote her a letter. It took me nine tries. Please take it up to her before I tear it up again.', '{hero} got a letter for Lumi! ✉️ Take it to Keeper Lumi at the lighthouse door.'],
+    wait: ['Morra: Lumi is right there at the lighthouse door. I am not going over myself. Go on!'],
+    done: ['Keeper Lumi: A letter... from Morra? "Dear Lumi. I am sorry I took your light. The dark was lonely. It is less lonely now. — M."', 'Keeper Lumi: Oh, that silly captain. She\'s already forgiven. She has been since the day she came back.', 'Keeper Lumi: You carried her sorry all over the isles. Let me give you something. My night watch owl had a chick this spring... and look how it shines!', '🌟 A shiny Hootsy joined your team! Lumi\'s night watch owl chick.', '{hero} got the Night Watch Cap! 🧢 +20 🍓'],
+  },
+
   // ---- M3: Hana's Kite Glider, a chain that crosses both regions (Bluffs → Cloudtop → Neon City → Bluffs); the glider rides the cliff updrafts ----
   glidesketch: {
     who: 'Kitemaker Hana', item: 'glider sketch', berries: 3, toast: '📜', home: 'Breezy Bluffs', needs: 'cup_gale', to: { npc: 'kite', map: 'cloudtop', name: 'Kite Flyer Gale', home: 'Cloudtop Gardens' },
@@ -846,10 +874,17 @@ export function favourList() {
     const state = F[id + '_done'] ? 'done' : F[id + '_found'] ? 'found' : 'open';
     const name = Q.who.split(' ').pop();
     const home = Q.giverMap || Object.keys(MAPS).find((k) => (MAPS[k].npcs || []).some((n) => n.story === 'lost:' + id));
-    return { id, who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, deliver: !!Q.to, critter: Q.critter, at: state === 'done' ? null : Q.to ? Q.to.map : state === 'found' ? home : LOST_SPOTS[id]?.map, text: Q.to ? (state === 'done' ? `Delivered the ${Q.item} to ${Q.to.name}` : `Take the ${Q.item} to ${Q.to.name} in ${Q.to.home}`) : state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
+    return { id, isle: isleQuest(id), who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, deliver: !!Q.to, critter: Q.critter, at: state === 'done' ? null : Q.to ? Q.to.map : state === 'found' ? home : LOST_SPOTS[id]?.map, text: Q.to ? (state === 'done' ? `Delivered the ${Q.item} to ${Q.to.name}` : `Take the ${Q.item} to ${Q.to.name} in ${Q.to.home}`) : state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
   });
   rows.sort((a, b) => ({ found: 0, open: 1, done: 2 })[a.state] - ({ found: 0, open: 1, done: 2 })[b.state]);
-  return { rows, unasked: Object.keys(LOST).length - rows.length };
+  return { rows, unasked: Object.keys(LOST).length - rows.length, mainland: Object.keys(LOST).filter((id) => !isleQuest(id)).length, isles: Object.keys(LOST).filter(isleQuest).length };
+}
+// a favour that starts in the Sunscatter Isles (it has its own Records row, so it doesn't change Clashara's %)
+function isleQuest(id) {
+  const Q = LOST[id], up = Q.needs?.endsWith('_done') && Q.needs.slice(0, -5);
+  if (up && LOST[up]) return isleQuest(up); // a later link counts where its chain started (the glider chain's mainland links too)
+  const k = Q.giverMap || Object.keys(MAPS).find((m) => (MAPS[m].npcs || []).some((n) => n.story === 'lost:' + id) || (Q.from && (MAPS[m].npcs || []).some((n) => n.id === Q.from)));
+  return !!MAPS[k]?.isle;
 }
 // a townsperson waiting for a delivery you're carrying (their talk turns into the hand-over)
 export function deliveryFor(npc) {
@@ -870,6 +905,7 @@ function lostQuest(S, w, a, key) {
   if (kind === 'deliver') { // hand the parcel over: the one you brought it to gives the reward
     F[id + '_found'] = F[id + '_done'] = true; if (Q.key) F[Q.key] = true;
     if (Q.hat) { const own = (save.adv.hats ||= []); if (!own.includes(Q.hat)) own.push(Q.hat); }
+    if (Q.shiny) { unlock(Q.shiny); if (!(save.shinies ||= []).includes(Q.shiny)) save.shinies.push(Q.shiny); } // a rare shiny critter as the chain's reward
     save.berries = (save.berries || 0) + (Q.berries || 0);
     const out = [...Q.done];
     if (Q.snack) { const h = save.adv.hero, c = save.critters[h], r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4)); if (r.to > r.from) out.push(`{hero} grew to Lv ${r.to}!`); }

@@ -1199,7 +1199,7 @@ export class Screens {
       + bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length)
       + bar('⚔️', 'Trainers beaten', tr.filter((n) => F[n.id]).length, tr.length)
       + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_') && !MAPS[k.slice(3, k.lastIndexOf('_'))]?.isle && !MAPS[k.slice(3, k.lastIndexOf('_'))]?.extra).length, 24)
-      + bar('🤝', 'Favours done', fl.rows.filter((r) => r.state === 'done').length, fl.rows.length + fl.unasked)
+      + bar('🤝', 'Favours done', fl.rows.filter((r) => r.state === 'done' && !r.isle).length, fl.mainland)
       + bar('🎩', 'Hats collected', (A.hats || []).filter((id) => { const h = SHOP_HATS.find((q) => q.id === id); return h && !h.season && !h.isle && !h.extra; }).length, SHOP_HATS.filter((h) => !h.season && !h.isle && !h.extra).length)
       + bar('🐟', 'Kinds of fish', [...fsp].filter((n) => !FISH.isle.some((f) => f[0] === n)).length, Object.entries(FISH).filter(([k]) => k !== 'isle').flatMap(([, v]) => v).length)
       + bar('📖', 'Critters on your team', save.unlocked.length, CRITTERS.length)
@@ -1250,6 +1250,7 @@ export class Screens {
       body += '<li class="jr-head">🏝️ Sunscatter Isles</li>'
         + bar('🏆', 'Island cups won', ISLE_CUPS.filter((c) => F['cup_' + c.id]).length, ISLE_CUPS.length, true)
         + bar('⚔️', 'Island trainers beaten', itr.filter((n) => F[n.id]).length, itr.length, true)
+        + bar('🤝', 'Island favours', fl.rows.filter((r) => r.state === 'done' && r.isle).length, fl.isles, true)
         + bar('🎩', 'Island hats', ih.filter((h) => (A.hats || []).includes(h.id)).length, ih.length, true)
         + bar('🐠', 'Reef fish', FISH.isle.filter((f) => fsp.has(f[0])).length, FISH.isle.length, true)
         + bar('📸', 'Island landmarks', (A.snaps || []).filter((id) => LANDMARKS.find((l) => l.id === id)?.isle).length, LANDMARKS.filter((l) => l.isle).length, true)

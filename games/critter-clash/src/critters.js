@@ -1426,6 +1426,7 @@ export const SHOP_HATS = [
   { id: 'towercrown', name: 'Tower Crown', kind: 'crown', col: 0xffc93a, band: 0xff4a6a, price: 0, gift: true, isle: true },
   { id: 'morrahat', name: "Morra's Tricorn", kind: 'tricorn', col: 0x3a2a5a, band: 0xffc93a, price: 0, gift: true, isle: true },
   { id: 'surfvisor', name: "Surfer's Visor", kind: 'visor', col: 0xff7a3a, band: 0x3ac0e8, price: 0, gift: true, isle: true }, // WAVE RIDER at Ember Isle's Surf Shack: a ride of 300 or more
+  { id: 'nightwatch', name: 'Night Watch Cap', kind: 'sailor', col: 0x2a3a6a, band: 0xffd84d, price: 0, gift: true, isle: true }, // Morra's Amends (Starfall Atoll): Keeper Lumi's thanks
   { id: 'halo', name: 'Halo Ring', kind: 'halo', col: 0xffe27a, band: 0xfff8d0, price: 0, gift: true, extra: true }, // the chest on Rainbow Reach, the cloud islet above Cloudtop (Kite Glider)
   { id: 'rivalband', name: "Dash's Headband", kind: 'band', col: 0xe8443a, band: 0xffffff, price: 0, gift: true, isle: true }, // the Rival Showdown on Starfall Atoll
   { id: 'masterlei', name: "Champion's Lei", kind: 'flower', col: 0x3ac8b8, band: 0xffc93a, price: 0, gift: true, isle: true }, // the Sunscatter Masters' first clear

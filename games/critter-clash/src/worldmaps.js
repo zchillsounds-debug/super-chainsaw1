@@ -836,7 +836,7 @@ export const MAPS = {
       { id: 'shag_a', x: 12, y: 6, critter: 'hootsy', name: 'Gloom Gull Shag', dir: 'w', trainer: { lv: 27, sight: 3, diff: 0.88, intro: "Gloom Gull Shag: Hoo goes there? Nobody gets to the lighthouse while I'm on watch!", beat: 'Gloom Gull Shag: Hoo... hoo knew?', after: "Gloom Gull Shag: Captain Morra is up by the lighthouse door. She never loses. Well. Hardly ever." } },
       { id: 'morra_a', x: 11, y: 3, critter: 'skimray', name: 'Captain Morra', dir: 's', story: 'morra', hideFlag: 'sunstone', shiny: true, scale: 1.25 },
       { id: 'keeper_a', x: 11, y: 3, critter: 'hootsy', name: 'Keeper Lumi', dir: 's', showFlag: 'sunstone', story: 'lumi', lines: ['Keeper Lumi: The light is back! Ships can find their way home again. Thank you, Champion.', 'Keeper Lumi: I kept the lamp for forty years. The Sunstone warms up in the daytime and shines all night. A little sun in a stone.', 'Keeper Lumi: Captain Morra? She sails with us now. She keeps the night watch. Turns out she just hated being lonely in the dark.'] },
-      { id: 'morra_b', x: 14, y: 4, critter: 'skimray', name: 'Morra', dir: 'w', showFlag: 'sunstone', shiny: true, lines: ['Morra: Hmph. The light is... nice, I suppose. Do not tell my Gulls I said so.', 'Morra: I wanted the night to last forever. Out at sea, the dark is so lonely. Now I keep watch with Lumi instead.'] },
+      { id: 'morra_b', x: 14, y: 4, critter: 'skimray', name: 'Morra', dir: 'w', showFlag: 'sunstone', shiny: true, story: 'lost:amends1', lines: ['Morra: Hmph. The light is... nice, I suppose. Do not tell my Gulls I said so.', 'Morra: I wanted the night to last forever. Out at sea, the dark is so lonely. Now I keep watch with Lumi instead.'] },
     ],
   },
 
