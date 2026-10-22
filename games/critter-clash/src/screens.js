@@ -10,7 +10,7 @@ import { openSettings, typeSpeed } from './settings.js';
 import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
-import { World, newAdventure, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, seasonKey } from './world.js';
+import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, seasonKey } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, gauntletFoes } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -1136,6 +1136,7 @@ export class Screens {
         ['🕹️', 'TURBO prize', 'Neon City arcade', A.arcadeDay === day, seen.neon],
         ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
         ['🏄', 'WAVE RIDER prize', 'Ember Isle Surf Shack', A.surfDay === day, seen.ember_isle],
+        ['🐦', `Gull Club catch: ${gullFish(day)}`, 'any island water → Petrel, Starfall Atoll', A.gullPaid === day, F.amends3_done && F.rod],
         ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
         ['♨️', 'Soak in the hot spring', N('ember'), A.soak === day, seen.ember],
         ['🪵', 'Win a twig race', `${N('route2')} bridge`, A.twig === day, seen.route2],
@@ -1258,6 +1259,7 @@ export class Screens {
         + bar('🌟', 'The Sunstone', F.sunstone ? 'home' : F.morra ? 'found' : 'lost')
         + bar('⛴️', 'Ferry rides', A.cnt?.ferry || 0)
         + (A.surfHi ? bar('🏄', 'WAVE RIDER best', A.surfHi) : '')
+        + (A.cnt?.gull ? bar('🐦', 'Gull Club catches', A.cnt.gull) : '')
         + (F.sunstone ? bar('🌺', 'Sunscatter Masters cleared', A.mastWins || 0) : '')
         + (F.sunstone ? bar('🗼', 'Battle Tower best streak', `${A.tower?.best || 0} · ${towerRank(A.tower?.best || 0)[2]} ${towerRank(A.tower?.best || 0)[1]}`) + (A.tower?.streak ? bar('🔥', 'Current Tower streak', A.tower.streak) : '') : '');
     }

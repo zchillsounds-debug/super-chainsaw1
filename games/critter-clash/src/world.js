@@ -102,6 +102,8 @@ export function derbyOf(wk) {
   const pool = Object.entries(where).flatMap(([k, w]) => FISH[k].slice(0, -1).map(([name, lo, hi]) => ({ name, cm: Math.round(lo + (hi - lo) * 0.5), where: w })));
   return { wk, ...pool[hash('derby' + wk) % pool.length] };
 }
+// the Gull Fishing Club's catch of the day on Starfall Atoll (after Morra's Amends): one everyday reef fish a day
+export const gullFish = (day = new Date().toISOString().slice(0, 10)) => FISH.isle[hash('gull' + day) % (FISH.isle.length - 1)][0];
 // Landmark photos: snap a 📸 Photo near each of these (within 4 steps) for the Journal; all eight earn the Shutterbug Cap
 export const LANDMARKS = [
   { id: 'lab', map: 'village', door: 'lab', name: 'Pecan Lab' },
@@ -3417,6 +3419,8 @@ export class World {
         const hat = !(A.hats ||= []).includes('angler'); if (hat) A.hats.push('angler');
         derby.push(`🎣 That's this week's DERBY FISH, and big enough to win! Fisher Finn's prize: +6 🍓 ${rr.to > rr.from ? `· {hero} grew to Lv ${rr.to}!` : '(+XP)'}`, ...(hat ? ["...and Finn's spare hat: the Angler's Bucket! (☰ → 🎩 Hats)"] : []));
       }
+      const today = new Date().toISOString().slice(0, 10);
+      if (this.M.isle && A.flags.amends3_done && name === gullFish(today) && A.gullFish !== today) { A.gullFish = today; derby.push("🐦 That's today's Gull Club catch of the day! Petrel on Starfall Atoll will want to see it."); }
       persist(); sfx.jingle?.(derby.length ? 3 : rec ? 3 : 1);
       return this.say([`{hero} reeled in a ${name}! It's ${cm} cm long! 🐟`, ...(rec ? [`That's {hero}'s biggest catch ever! Fisher Finn would be proud. +2 🍓`] : derby.length ? [] : [`{hero}'s record is still the ${L.best.name} (${L.best.cm} cm). Splash! Back it goes.`]), ...derby]);
     }

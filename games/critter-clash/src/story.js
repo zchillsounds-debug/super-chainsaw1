@@ -11,7 +11,7 @@ import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
 import { arcadeGame, skyHop, waveRider } from './arcade.js';
-import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, seasonKey } from './world.js';
+import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, seasonKey, gullFish } from './world.js';
 
 const flags = () => save.adv.flags;
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -460,6 +460,18 @@ export function storyTalk(S, id, w, a) {
       });
     }, who), who);
     return;
+  }
+  if (id === 'gullclub') { // the reformed Gloom Gulls fish off Starfall Atoll: bring Petrel today's catch of the day (any island water) for berries; five catches earn the Gull Club Cap
+    const A = save.adv, day = new Date().toISOString().slice(0, 10), fish = gullFish(day), who = 'Petrel', own = (A.hats ||= []);
+    if (!F.rod) return w.say(['Petrel: Caw! You fish? No? Fisher Finn on the mainland gives rods to anyone. He gave one to ME. I cried.', 'Petrel: Get a rod, then come back. The Gull Fishing Club needs members!'], null, who);
+    if (A.gullFish === day && A.gullPaid !== day) {
+      A.gullPaid = day; countUp('gull'); save.berries = (save.berries || 0) + 3;
+      const n = A.cnt.gull, cap = n >= 5 && !own.includes('gullcap'); if (cap) own.push('gullcap');
+      persist(); sfx.jingle(cap ? 3 : 2);
+      return w.say([`Petrel: A ${fish}! Today's catch of the day! Caw caw! Look at it, Shag! LOOK AT IT!`, `Petrel: Club rules: the catch of the day pays 3 berries. Here! (${n} caught for the club${n < 5 ? `, ${5 - n} more for a club cap` : ''}.)`, '{hero} got 3 berries! 🍓', ...(cap ? ['Petrel: Five catches! You\'re a real Gull now. A GOOD Gull. Here, the club cap!', '{hero} got the Gull Club Cap! 🐦 (☰ → 🎩 Hats)'] : [])], null, who);
+    }
+    if (A.gullPaid === day) return w.say([`Petrel: That ${fish} you brought is the best thing that happened to me today. Except breakfast. A new catch of the day tomorrow!`], null, who);
+    return w.say([...(F.gullclub ? [] : ['Petrel: Caw! Champion! We\'re not Gloom Gulls any more. We\'re the Gull FISHING Club. The captain says honest work is good for the feathers.']), `Petrel: Today's catch of the day is a ${fish}. Catch one anywhere in the isles and show me!`, ...(F.gullclub ? [] : ['Petrel: I\'ve caught four boots so far. Shag says that\'s a club record.'])], () => { if (!F.gullclub) { F.gullclub = true; persist(); } }, who);
   }
   if (id === 'fisher') { // Fisher Finn hands over his old rod: any pond, river or sea can be fished
     if (F.rod) {
