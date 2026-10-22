@@ -1425,6 +1425,7 @@ export const SHOP_HATS = [
   { id: 'silverlaurel', name: 'Silver Laurel', kind: 'laurel', col: 0xdfe4f0, band: 0x9ad8ff, price: 0, gift: true, isle: true },
   { id: 'towercrown', name: 'Tower Crown', kind: 'crown', col: 0xffc93a, band: 0xff4a6a, price: 0, gift: true, isle: true },
   { id: 'morrahat', name: "Morra's Tricorn", kind: 'tricorn', col: 0x3a2a5a, band: 0xffc93a, price: 0, gift: true, isle: true },
+  { id: 'halo', name: 'Halo Ring', kind: 'halo', col: 0xffe27a, band: 0xfff8d0, price: 0, gift: true, extra: true }, // the chest on Rainbow Reach, the cloud islet above Cloudtop (Kite Glider)
   { id: 'rivalband', name: "Dash's Headband", kind: 'band', col: 0xe8443a, band: 0xffffff, price: 0, gift: true, isle: true }, // the Rival Showdown on Starfall Atoll
   { id: 'masterlei', name: "Champion's Lei", kind: 'flower', col: 0x3ac8b8, band: 0xffc93a, price: 0, gift: true, isle: true }, // the Sunscatter Masters' first clear
   { id: 'laurel', name: 'Golden Laurel', kind: 'laurel', col: 0xe8b830, band: 0xfff2a0, price: 0, gift: true }, // the Peak Gauntlet's first clear
@@ -1460,6 +1461,10 @@ export function hatModel(cr, kind, col, band) {
     for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, l = add(new THREE.SphereGeometry(r * 0.42, 12, 8), M, 0.014); l.scale.set(0.7, 0.85, 1); l.position.set(Math.cos(a) * r * 0.3, r * 0.32, Math.sin(a) * r * 0.3); l.rotation.y = -a; }
     const st = add(new THREE.CylinderGeometry(r * 0.07, r * 0.1, r * 0.3, 6), toon(band), 0.01); st.position.y = r * 0.78; st.rotation.z = 0.3;
     const lf = add(new THREE.SphereGeometry(r * 0.2, 8, 6), toon(0x5aa83a), 0.01); lf.scale.set(1, 0.25, 0.6); lf.position.set(r * 0.2, r * 0.72, 0);
+  }
+  if (kind === 'halo') { // a glowing golden ring floating over the head (Rainbow Reach)
+    const m = toon(col, { rim: 1, emissive: new THREE.Color(col).multiplyScalar(0.55).getHex() });
+    const h = add(new THREE.TorusGeometry(r * 0.62, r * 0.09, 8, 28), m, 0.012); h.rotation.x = Math.PI / 2; h.position.y = r * 0.55;
   }
   if (kind === 'crown') { // a spiky royal crown with a gem on every point (the Battle Tower's Gold rank)
     add(new THREE.CylinderGeometry(r * 0.62, r * 0.66, r * 0.3, 18, 1, true), toon(col, { rim: 0.9, side: THREE.DoubleSide })).position.y = r * 0.1;

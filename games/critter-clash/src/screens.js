@@ -394,6 +394,7 @@ export class Screens {
       save.news.push('adv30'); persist();
       setTimeout(() => this.mode === 'title' && this.profTalk([
         "{name}! Dash called me from Starfall Atoll. He's been training on that beach every single day, and he wants one last battle at full strength. He sounded very serious. Then he sneezed.",
+        "Kite Flyer Gale says a windsock has gone up at the east edge of Cloudtop Gardens, pointing straight at the sky. With Hana's glider... who knows where that wind goes?",
         "Your Journal has a new 🏆 Champ page, too: your Battle Tower ranks, this week's Sunscatter Masters and Peak Gauntlet, and the island legends, all in one place.",
       ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
@@ -1189,16 +1190,16 @@ export class Screens {
 
   records() {
     let body = '';
-    const A = save.adv, F = A.flags, L = A.fishLog || {}, npcs = Object.values(MAPS).filter((M) => !M.isle).flatMap((M) => M.npcs || []); // Clashara only: the isles keep their own rows below
+    const A = save.adv, F = A.flags, L = A.fishLog || {}, npcs = Object.values(MAPS).filter((M) => !M.isle && !M.extra).flatMap((M) => M.npcs || []); // Clashara only: the isles keep their own rows below (post-game extras like Rainbow Reach don't count either)
     const tr = npcs.filter((n) => n.trainer), fl = favourList(), fsp = new Set([...Object.keys(L.sp || {}), ...(L.best ? [L.best.name] : [])]);
     const parts = []; // every bar with a goal counts towards the overall completion
     const bar = (ic, name, n, of, own) => (of && !own && parts.push(Math.min(1, n / of)), `<li class="jr-rec"><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`);
     body = (A.time >= 60 ? bar('⏱️', 'Time adventuring', playTime(A.time)) : '')
       + bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length)
       + bar('⚔️', 'Trainers beaten', tr.filter((n) => F[n.id]).length, tr.length)
-      + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_') && !MAPS[k.slice(3, k.lastIndexOf('_'))]?.isle).length, 24)
+      + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_') && !MAPS[k.slice(3, k.lastIndexOf('_'))]?.isle && !MAPS[k.slice(3, k.lastIndexOf('_'))]?.extra).length, 24)
       + bar('🤝', 'Favours done', fl.rows.filter((r) => r.state === 'done').length, fl.rows.length + fl.unasked)
-      + bar('🎩', 'Hats collected', (A.hats || []).filter((id) => { const h = SHOP_HATS.find((q) => q.id === id); return h && !h.season && !h.isle; }).length, SHOP_HATS.filter((h) => !h.season && !h.isle).length)
+      + bar('🎩', 'Hats collected', (A.hats || []).filter((id) => { const h = SHOP_HATS.find((q) => q.id === id); return h && !h.season && !h.isle && !h.extra; }).length, SHOP_HATS.filter((h) => !h.season && !h.isle && !h.extra).length)
       + bar('🐟', 'Kinds of fish', [...fsp].filter((n) => !FISH.isle.some((f) => f[0] === n)).length, Object.entries(FISH).filter(([k]) => k !== 'isle').flatMap(([, v]) => v).length)
       + bar('📖', 'Critters on your team', save.unlocked.length, CRITTERS.length)
       + bar('🏔️', 'Peak Gauntlets cleared', A.gauntWins || 0)

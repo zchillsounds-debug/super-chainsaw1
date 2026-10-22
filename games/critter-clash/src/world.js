@@ -400,6 +400,7 @@ export class World {
     const winterFall = isWinter() && showers && !M.indoor && !M.snow && !M.lava && !M.city && M.arena !== 'beach'; // January and February: a shower over the green maps comes down as snow
     this.winterFall = winterFall;
     this.rain = showers && !twinkleEve && !winterFall; // on Twinkle Week evenings a shower comes down as snow instead
+    this.rainBelow = key === 'reach' && !!(save.adv.rain ?? (!!save.adv.flags?.quest && rainAt('bloom', new Date(), hr))); // Rainbow Reach floats above the weather: it's lucky while it rains on the mainland
     this.storm = this.rain && !!(save.adv.storm ?? stormAt(new Date(), hr)); this.boltT = 2.5 + Math.random() * 3;
     this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (!!save.adv.flags?.quest && hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
     this.frost = (isFrost() || isWinter()) && canRain(M) && this.phase === 'day' && (winterFall || !this.rain && !this.afterRain && hr >= 6 && hr < 10); // (a winter snowfall dusts them white all day) // late-autumn mornings: a white frost on the grass and the treetops until mid-morning
@@ -457,7 +458,7 @@ export class World {
     this.buildToys(); this.buildTent();
     this.buildMarquee();
     this.buildActors();
-    this.buildKites(); this.buildUpdrafts();
+    this.buildKites(); this.buildUpdrafts(); this.buildRainbowArch();
     this.buildPumpkins();
     this.buildXtree();
     this.buildScarecrow();
@@ -1476,6 +1477,7 @@ export class World {
   updraftTalk(U) {
     const F = save.adv.flags;
     if (!F.glider && U.hot) return this.say(['Hot air roars up the side of the volcano, so strong it makes the ash dance. The windsock points straight up at the crater.', 'Something light could ride that wind all the way to the top... if you had something to ride on.']);
+    if (!F.glider && U.hint) return this.say(U.hint);
     if (!F.glider) return this.say(U.back ? ['The wind howls up the rocks. It would carry you home, if you had something to ride it on.'] : ['A strong wind roars up the cliff, tugging at {hero}\'s fur. The windsock points out to sea, at a tall rock stack on the horizon.', 'If only you had something to ride the wind on... Kitemaker Hana tests her kites right here.']);
     this.ask(U.back ? `Glide back to ${U.name}?` : `Ride the updraft to ${U.name}?`, ['Glide!', 'Not now'], (i) => {
       if (i) return;
@@ -2605,6 +2607,16 @@ export class World {
     const arcs = cols.map((c, i) => { const m = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.55, depthWrite: false }); m.userData.own = true; const a = new THREE.Mesh(i ? rg : rg, m); a.scale.setScalar(1 - i * 0.075); a.position.set(0, 0.45, -0.1); a.rotation.y = 0.35; g.add(a); return a; });
     bakeStatic({ root: g, mats: {}, arcs });
     this.fountain = { x, y, px, pz, arcs };
+  }
+
+  // Rainbow Reach: a big rainbow arching over the sky shrine (M.rainbowArch: [x, y]), with a few cloud puffs at its feet
+  buildRainbowArch() {
+    const RA = this.M.rainbowArch; if (!RA || this.M.indoor) return;
+    const [px, pz] = wpos(RA[0], RA[1]), g = new THREE.Group(); g.position.set(px, 0, pz); g.rotation.y = 0.25; this.group.add(g);
+    const cols = [0xff5a5a, 0xffa040, 0xffe04a, 0x6ae070, 0x5ab8ff, 0x8a7aff, 0xc87aff], rg = new THREE.TorusGeometry(4.2, 0.16, 6, 40, Math.PI);
+    cols.forEach((c, i) => { const m = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.62, depthWrite: false }); m.userData.own = true; const a = new THREE.Mesh(rg, m); a.scale.setScalar(1 - i * 0.04); a.position.z = -0.6; g.add(a); });
+    const puff = toon(0xffffff, { rim: 0.8 });
+    for (const sx of [-1, 1]) for (const [dx, dy, r] of [[0, 0.2, 0.55], [0.45, 0.1, 0.4], [-0.4, 0.12, 0.42], [0.1, 0.55, 0.38]]) { const q = inked(new THREE.SphereGeometry(r, 12, 8), puff, OL * 0.3); q.position.set(sx * 4.0 + dx, dy, -0.6 + dx * 0.3); g.add(q); }
   }
 
   // Sprout Village, once all of Clashara is explored (Journal Records at 100%): a golden statue of the hero on a stone plinth
@@ -4075,7 +4087,7 @@ export class World {
     const W = this.M.wild;
     if (W && this.phase === 'evening' && !ALPHA_TOLD.has('dusk')) { ALPHA_TOLD.add('dusk'); setTimeout(() => this.group && this.S.toast('✨ Dusk! Emberflies come out to glow over the tall grass in the golden evening.'), 1200); }
     const lucky = this.luckyNight(); // rare finds in the isles: lucky starry nights on Starfall, Blowfin swarms in island rain, Skimrays gliding at golden hour on the Bluffs
-    if (W && lucky && !ALPHA_TOLD.has('lucky')) { ALPHA_TOLD.add('lucky'); setTimeout(() => this.group && this.S.toast('🌠 A starry night on Starfall Atoll! Shiny critters are three times as common here tonight.'), 2600); }
+    if (W && lucky && !ALPHA_TOLD.has('lucky')) { ALPHA_TOLD.add('lucky'); setTimeout(() => this.group && this.S.toast(this.key === 'reach' ? '🌈 It\'s raining down below, and the rainbow up here is brighter than ever! Shiny critters are three times as common.' : '🌠 A starry night on Starfall Atoll! Shiny critters are three times as common here tonight.'), 2600); }
     if (W && this.M.isle && this.rain && !ALPHA_TOLD.has('swarm')) { ALPHA_TOLD.add('swarm'); setTimeout(() => this.group && this.S.toast('🌧️ Island rain! Blowfin swarm into the tall grass to puff up in the puddles.'), 2600); }
     if (W && this.key === 'bluffs' && this.phase === 'evening' && !ALPHA_TOLD.has('glide')) { ALPHA_TOLD.add('glide'); setTimeout(() => this.group && this.S.toast('🌅 Golden hour on the Bluffs: Skimrays ride the evening updrafts.'), 2600); }
     if (W && this.phase === 'night' && !ALPHA_TOLD.has('owls')) { ALPHA_TOLD.add('owls'); setTimeout(() => this.group && this.S.toast('🦉 Night owls are out! Hootsy and Squeakwing roam the tall grass after dark.'), 1200); }
@@ -4105,7 +4117,7 @@ export class World {
   }
 
   // the map's wild critters; after dark the night owls (Hootsy, Squeakwing) come out too, at the map's levels, twice as often; in the golden evening, Emberfly glows over the grass
-  luckyNight() { return this.key === 'atoll' && this.phase === 'night'; }
+  luckyNight() { return this.key === 'atoll' && this.phase === 'night' || this.key === 'reach' && !!this.rainBelow; } // (Rainbow Reach: lucky while it rains down below)
   wildList() {
     const L0 = this.M.wild?.list || [], [, lo0, hi0] = L0[0] || [];
     const L = !L0.length ? L0 : this.M.isle && this.rain ? [...L0, ['blowfin', lo0, hi0], ['blowfin', lo0, hi0], ['blowfin', lo0 + 2, hi0 + 2]] : this.key === 'bluffs' && this.phase === 'evening' ? [...L0, ['skimray', lo0, hi0], ['skimray', lo0 + 1, hi0 + 1]] : L0;

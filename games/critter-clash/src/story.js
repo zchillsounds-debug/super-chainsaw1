@@ -345,6 +345,7 @@ export function nextGoal(F) {
     if (!F.legend_moonwhal) return 'Something sings under Starfall Atoll on starry nights... Go down to the beach after dark.';
     if (!F.legend_solmoth) return F.festlamp_done ? 'A great golden glow rests on the volcano. Glide up the Ember Isle thermal to the Caldera Rim!' : 'The isles want a Sunstone Festival! Weather Watcher Iona on Breezy Bluffs has a job for you.';
     if (!F.dash_show) return 'Dash is on Starfall Atoll, training harder than ever. He wants one last, full-strength battle!';
+    if (!F.reach_chest) return 'A new windsock at the east edge of Cloudtop Gardens points straight at the sky. Ride that wind with your glider!';
     return 'You saved the Sunscatter Isles! Climb the Battle Tower ranks, find every hidden pearl and explore.';
   }
   if (!F.quest) return 'Visit Professor Pecan\'s lab in Sprout Village.';

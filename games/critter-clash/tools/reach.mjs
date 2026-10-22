@@ -1,0 +1,36 @@
+// node tools/reach.mjs [WxH] [phase]: the Cloudtop updraft without and with the glider, Rainbow Reach (shots), its chest, and the glide back
+import { createRequire } from 'module';
+const require = createRequire('/opt/node22/lib/node_modules/');
+const { chromium } = require('playwright');
+const [size = '915x412', hour = ''] = process.argv.slice(2);
+const [w, h] = size.split('x').map(Number);
+const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const pg = await b.newPage({ viewport: { width: w, height: h } });
+const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
+await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?auto');
+await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
+const flags = Object.fromEntries('intro,quest,crowned,ending,isle_arrive,cup_coral,cup_gale,cup_sky,cup_midnight'.split(',').map((k) => [k, true]));
+await pg.evaluate(([flags, hour]) => {
+  Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: ['grow', 'tricks', 'grove', 'koala', 'bat', 'fox', 'jelly', 'otter', 'gate'] });
+  __save.adv = { hero: 'cindermunch', map: 'cloudtop', x: 20, y: 10, dir: 'e', flags, spawn: { map: 'village', x: 4, y: 6 }, rain: false, ...(hour ? { clock: +hour } : {}) };
+  __game.screens.adventure(); __sim(0.3);
+}, [flags, hour]);
+const drain = () => pg.evaluate(() => { const wo = __game.screens.worldObj, out = []; for (let i = 0; i < 30 && wo.dialog; i++) { out.push(document.querySelector('.wd-box')?.textContent?.slice(0, 90)); wo.dialog.next(); __sim(0.05); } return out; });
+const say = async (tag) => { await pg.waitForTimeout(300); console.log(tag, (await drain()).filter(Boolean).map((t) => t.slice(0, 70)).join(' / ')); };
+await pg.screenshot({ path: 'tools/out/reach-sock.png' });
+await pg.evaluate(() => { const wo = __game.screens.worldObj; wo.updraftTalk(wo.updrafts[0]); }); await say('[no glider]');
+await pg.evaluate(() => { __save.adv.flags.glider = true; const wo = __game.screens.worldObj; wo.updraftTalk(wo.updrafts[0]); }); await say('[glider]');
+for (let i = 0; i < 6; i++) await pg.evaluate(() => __sim(0.25));
+await pg.waitForTimeout(1200); await pg.evaluate(() => __sim(0.5)); await pg.waitForTimeout(800); await pg.evaluate(() => __sim(0.5));
+console.log('now on:', await pg.evaluate(() => __game.screens.worldObj.key + ' ' + __game.screens.worldObj.hx + ',' + __game.screens.worldObj.hy));
+await pg.evaluate(() => document.getAnimations().forEach((a) => { try { a.finish(); } catch { a.currentTime = 2000; } }));
+await pg.screenshot({ path: 'tools/out/reach.png' });
+await pg.evaluate(() => { const wo = __game.screens.worldObj; wo.load('reach', 11, 2, 'e'); __sim(0.3); wo.openChest(); }); await say('[chest]');
+await pg.evaluate(() => { const wo = __game.screens.worldObj; wo.talk(wo.npcs.find((q) => q.n.id === 'cirrus_r')); }); await say('[cirrus]');
+console.log('hats:', await pg.evaluate(() => __save.adv.hats.join()));
+await pg.evaluate(() => { const wo = __game.screens.worldObj; wo.load('reach', 7, 10, 's'); __sim(0.3); wo.updraftTalk(wo.updrafts[0]); }); await say('[back]');
+for (let i = 0; i < 6; i++) await pg.evaluate(() => __sim(0.25));
+await pg.waitForTimeout(1200); await pg.evaluate(() => __sim(0.5));
+console.log('back on:', await pg.evaluate(() => __game.screens.worldObj.key + ' ' + __game.screens.worldObj.hx + ',' + __game.screens.worldObj.hy));
+console.log('errors:', errs.join(' | ') || 'none');
+await b.close();

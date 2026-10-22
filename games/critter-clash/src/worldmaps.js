@@ -465,6 +465,7 @@ export const MAPS = {
       { id: 'berry6', x: 17, y: 2, w: 4, h: 3, roof: 0xff5a8a, door: 2, label: 'Berry Center', heal: true },
     ],
     signs: [{ x: 12, y: 6, text: 'CLOUDTOP GARDENS\nPlease do not feed the clouds.' }],
+    updrafts: [{ x: 21, y: 10, to: 'reach', tx: 7, ty: 10, dir: 'n', name: 'Rainbow Reach', hint: ['The wind rushes straight UP over the edge of the island. The windsock points at the sky, where a faint rainbow hangs over a cloud far above.', 'Something light could ride this wind... Kitemaker Hana on Breezy Bluffs builds gliders, they say.'] }], // after M4: a third hidden area for the Kite Glider, high above the mainland
     wild: { list: [['hootsy', 15, 17], ['whirlwhisk', 15, 17], ['squeakwing', 15, 17], ['emberfly', 16, 18], ['woolt', 16, 18]], roam: 2, rate: 0.1 },
     npcs: [
       { id: 'balloon2', x: 14, y: 12, balloon: 0xff9ac8, name: 'Captain Puff', dir: 'n', story: 'balloon', dest: [{ map: 'neon', x: 24, y: 15, dir: 'w', name: 'Neon City' }, { map: 'frostpeak', x: 11, y: 13, dir: 'n', name: 'Frostpeak', need: 'cup_sky' }] },
@@ -872,6 +873,45 @@ export const MAPS = {
     wild: { list: [['skimray', 27, 29], ['squeakwing', 27, 29], ['toucharge', 27, 29], ['whirlwhisk', 28, 30]], roam: 3, rate: 0.12 },
     npcs: [
       { id: 'ama_s', x: 13, y: 8, act: 'read', critter: 'hootsy', name: 'Birdkeeper Ama', dir: 'w', lines: ["Birdkeeper Ama: A visitor?! Nobody has landed here in thirty years. How did you... a GLIDER? Hana's, I bet.", 'Birdkeeper Ama: I count the seabirds. Two hundred and twelve today. Two hundred and thirteen, with you.', 'Birdkeeper Ama: The big nest by the rocks belongs to a Skimray that never came back. Its egg is still warm, somehow. It shimmers...'] },
+    ],
+  },
+
+  // ===== Rainbow Reach, a hidden cloud islet high above Cloudtop Gardens (only the Kite Glider reaches it): a sky shrine under a rainbow =====
+  reach: {
+    name: 'Rainbow Reach',
+    music: 'sky',
+    arena: 'sky',
+    outer: 0xeef6ff,
+    border: 'cloud',
+    hidden: true, // not on the Town Map: you can only glide here
+    extra: true, // a post-game extra: it doesn't count towards Clashara explored %
+    rainbowArch: [8, 7], // a big rainbow arching over the sky shrine
+    palette: { a: '#b0e4a0', b: '#aae09a', tall: '#7ac88a', path: '#fbf6ee', water: '#f0f8ff', bank: '#ffffff', dark: 'rgba(80,150,110,0.22)', lite: 'rgba(255,255,255,0.45)' },
+    trees: [0xffd0e8, 0xd8c8ff, 0x9a7a6a],
+    blades: 0x6ad08a,
+    mood: { sun: 0xfff8f0, sunI: 2.3, sky: 0xf0f4ff, gnd: 0xb09ae0, hemiI: 1.35, fog: 0xeef6ff },
+    tiles: [
+      '~~~~~~~~~~~~~~~~~~',
+      '~~~~~TT..f.TT~~~~~',
+      '~~~T.........T~~~~',
+      '~~T..""".R....T~~~',
+      '~T...""""...f..~~~',
+      '~T.f..:::::.....T~',
+      '~~...:.....:..""~~',
+      '~T...:..R..:.""".~',
+      '~T...:.....:..""~~',
+      '~~...:::::::....T~',
+      '~~~T...:......T~~~',
+      '~~~~TT.:..TT~~~~~~',
+      '~~~~~~~~~~~~~~~~~~',
+    ],
+    updrafts: [{ x: 7, y: 11, to: 'cloudtop', tx: 20, ty: 10, dir: 'w', name: 'Cloudtop Gardens', back: true }],
+    chest: { x: 12, y: 2, flag: 'reach_chest', hat: 'halo', berries: 15, hatLine: '...and a Halo Ring that floats and glows all by itself!' },
+    signs: [{ x: 8, y: 10, text: 'RAINBOW REACH\n(Painted in seven colours:) "Where the rainbow ends, the sky begins."' }, { x: 8, y: 7, text: 'The SKY SHRINE: a smooth white stone, warm to the touch. Rainbow light ripples over it.\nCarved underneath: "Rest here, travellers of the wind."' }],
+    wild: { list: [['whirlwhisk', 29, 31], ['hootsy', 29, 31], ['squeakwing', 29, 31], ['skimray', 30, 32], ['toucharge', 30, 32], ['emberfly', 30, 32]], roam: 3, rate: 0.12 },
+    npcs: [
+      { id: 'cirrus_r', x: 12, y: 7, act: 'sleep', critter: 'woolt', name: 'Cloud Hermit Cirrus', dir: 'w', lines: ["Cloud Hermit Cirrus: Mm? A visitor, gliding up on the east wind... Gale's windsock finally caught someone. Welcome to Rainbow Reach.", "Cloud Hermit Cirrus: I came up here in a balloon forty years ago, for one nap. The clouds were too comfy. I stayed.", "Cloud Hermit Cirrus: The rainbow never fades up here. On rainy days down below, the wild critters here sparkle more than ever, they say.", "Cloud Hermit Cirrus: There's an old chest by the trees. I never opened it. Opening chests is a lot of effort."] },
+      { id: 'altair_r', x: 15, y: 5, critter: 'whirlwhisk', name: 'Sky Ace Altair', dir: 'w', trainer: { lv: 32, sight: 3, diff: 0.86, intro: 'Sky Ace Altair: Nobody reaches the Reach by accident. You must be good. Show me!', beat: 'Sky Ace Altair: Blown away... above the clouds, too. How embarrassing.', after: "Sky Ace Altair: I rode Captain Puff's balloon up and jumped. Don't tell him. He thinks his sandbags keep going missing." } },
     ],
   },
 
