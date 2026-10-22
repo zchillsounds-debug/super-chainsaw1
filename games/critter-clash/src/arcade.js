@@ -321,3 +321,112 @@ export function waveRider(root, face, onDone) {
   el.__arcade = { S, flap: hop, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
   return el;
 }
+
+// REEF DIVE (Dive Coach Nami, in the Sunken Wreck): tap to kick upward, the hero sinks gently between kicks. Swim through the wreck's
+// water collecting gold coins (+5) and rare pearls (+15), dodge the bobbing jellyfish (they sting away 4 seconds of air) and grab
+// air bubbles (+3 s). The dive ends when the air runs out.
+export function reefDive(root, face, onDone) {
+  const el = document.createElement('div');
+  el.className = 'modal-wrap arcade-wrap';
+  el.innerHTML = `<div class="arcade dive"><div class="arc-top"><b>REEF DIVE</b><span class="arc-hud"></span></div>
+    <canvas width="${W}" height="${H}"></canvas>
+    <p class="arc-tip">Tap (or Space) to kick up. Grab 🪙 and pearls, catch air bubbles, don't touch the jellies!</p></div>`;
+  root.appendChild(el);
+  const cv = el.querySelector('canvas'), c = cv.getContext('2d'), hud = el.querySelector('.arc-hud');
+  const img = new Image(); img.src = face;
+  const S = { y: H / 2, vy: 0, t: 0, dist: 0, air: 20, coins: 0, pearls: 0, score: 0, things: [], pops: [], bub: [], next: 1, over: false, ready: 1.2, started: false, hurt: 0 };
+  const X = 76, R = 12, TOP = 18, FLOOR = H - 26;
+  const speed = () => 80 + Math.min(80, S.dist * 0.25);
+  const kick = () => { if (S.over) return; if (S.ready > 0) S.ready = 0; S.started = true; S.vy = -150; sfx.ui?.('move'); for (let k = 0; k < 3; k++) S.bub.push({ x: X - 10, y: S.y + 6, vx: -30 - Math.random() * 30, vy: -20 - Math.random() * 30, r: 2 + Math.random() * 2, t: 0.9 }); };
+  const onKey = (e) => {
+    if (!['Space', 'ArrowUp', 'KeyW', 'Enter'].includes(e.code)) return;
+    e.preventDefault(); e.stopPropagation();
+    if (e.type === 'keydown' && !e.repeat) kick();
+  };
+  addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
+  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); kick(); });
+  const pop = (x, y, txt, col) => S.pops.push({ x, y, txt, col, t: 0.8 });
+
+  const step = (dt) => {
+    S.t += dt;
+    for (const b of S.bub) { b.t -= dt; b.x += b.vx * dt; b.y += b.vy * dt; b.vy -= 20 * dt; }
+    S.bub = S.bub.filter((b) => b.t > 0);
+    if (S.ready > 0 || !S.started) { if (S.ready > 0) S.ready -= dt; S.y = H / 2 + Math.sin(S.t * 2) * 4; return; }
+    if (S.over) { S.y = Math.max(TOP, S.y - 40 * dt); return; } // out of air: float up to the surface
+    S.vy = Math.min(70, S.vy + 260 * dt); S.y = Math.max(TOP + R, Math.min(FLOOR - R, S.y + S.vy * dt));
+    S.hurt = Math.max(0, S.hurt - dt);
+    const v = speed(); S.dist += v * dt / 10;
+    S.air -= dt; if (S.air <= 0) { S.air = 0; S.over = true; sfx.ui?.('back'); setTimeout(close, 1800); return; }
+    S.next -= dt;
+    if (S.next <= 0) {
+      const r = Math.random(), lvl = Math.min(1, S.dist / 300), y = TOP + 24 + Math.random() * (FLOOR - TOP - 48);
+      if (r < 0.3 + lvl * 0.15) S.things.push({ k: 'jelly', x: W + 20, y0: y, y, ph: Math.random() * 6, amp: 14 + Math.random() * 18 });
+      else if (r < 0.72) for (let k = 0; k < 3; k++) S.things.push({ k: 'coin', x: W + 20 + k * 22, y: y + Math.sin(k) * 10 }); // a little row of coins
+      else if (r < 0.86) S.things.push({ k: 'air', x: W + 20, y });
+      else S.things.push({ k: 'pearl', x: W + 20, y });
+      S.next = Math.max(0.45, 1.0 - lvl * 0.35) + Math.random() * 0.4;
+    }
+    for (const o of S.things) {
+      o.x -= v * dt;
+      if (o.k === 'jelly') { o.ph += dt * 2.2; o.y = o.y0 + Math.sin(o.ph) * o.amp; }
+      if (o.got) continue;
+      const near = Math.hypot(o.x - X, o.y - S.y);
+      if (o.k === 'jelly' && near < R + 11 && !S.hurt) { o.got = true; S.hurt = 1; S.air = Math.max(0.1, S.air - 4); pop(X, S.y - 16, '-4s', '#ff8ab0'); sfx.ui?.('back'); }
+      if (o.k === 'coin' && near < R + 8) { o.got = true; S.coins++; S.score += 5; pop(o.x, o.y - 10, '+5', '#ffd84d'); sfx.ui?.('move'); }
+      if (o.k === 'pearl' && near < R + 9) { o.got = true; S.pearls++; S.score += 15; pop(o.x, o.y - 10, '+15', '#fff4f8'); sfx.ui?.('move'); }
+      if (o.k === 'air' && near < R + 12) { o.got = true; S.air = Math.min(20, S.air + 3); pop(o.x, o.y - 10, '+3s', '#bff4ff'); sfx.ui?.('move'); }
+    }
+    S.things = S.things.filter((o) => o.x > -30);
+    for (const p of S.pops) { p.t -= dt; p.y -= 30 * dt; }
+    S.pops = S.pops.filter((p) => p.t > 0);
+  };
+  const total = () => Math.floor(S.dist / 3) + S.score;
+
+  const draw = () => {
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#4ac8e8'); g.addColorStop(1, '#0e4a7a');
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    c.fillStyle = 'rgba(200,250,255,0.08)'; for (let k = 0; k < 4; k++) { const x = ((k * 97 - S.dist * 0.6) % (W + 80) + W + 80) % (W + 80) - 40; c.beginPath(); c.moveTo(x, 0); c.lineTo(x + 30, 0); c.lineTo(x - 20, H); c.lineTo(x - 50, H); c.fill(); } // light shafts
+    // the sea floor: sand, coral heads and swaying weed scrolling by
+    c.fillStyle = '#c8b88a'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 8) c.lineTo(x, FLOOR + 4 + Math.sin((x + S.dist * 3) * 0.05) * 3); c.lineTo(W, H); c.fill();
+    for (let k = 0; k < 6; k++) { const x = ((k * 71 - S.dist * 3) % (W + 60) + W + 60) % (W + 60) - 30; c.fillStyle = ['#ff7a9a', '#ffa05a', '#b07aff'][k % 3]; c.beginPath(); c.arc(x, FLOOR + 2, 9 + (k % 2) * 4, Math.PI, 0); c.fill(); c.strokeStyle = '#2aa080'; c.lineWidth = 3; c.beginPath(); c.moveTo(x + 18, FLOOR + 4); c.quadraticCurveTo(x + 18 + Math.sin(S.t * 2 + k) * 6, FLOOR - 14, x + 16, FLOOR - 28); c.stroke(); }
+    for (const o of S.things) {
+      if (o.got) continue;
+      if (o.k === 'coin') { c.fillStyle = '#ffd84d'; c.beginPath(); c.ellipse(o.x, o.y, 6 * Math.abs(Math.cos(S.t * 4 + o.x * 0.05)) + 1, 6, 0, 0, 7); c.fill(); c.strokeStyle = '#c08a1a'; c.lineWidth = 1.5; c.stroke(); }
+      if (o.k === 'pearl') { c.fillStyle = '#e8a0c0'; c.beginPath(); c.arc(o.x, o.y + 3, 9, 0, Math.PI); c.fill(); c.fillStyle = '#fff8fc'; c.beginPath(); c.arc(o.x, o.y, 6, 0, 7); c.fill(); }
+      if (o.k === 'air') { c.strokeStyle = 'rgba(230,250,255,0.9)'; c.lineWidth = 2; c.beginPath(); c.arc(o.x, o.y, 9 + Math.sin(S.t * 5) * 1.5, 0, 7); c.stroke(); c.fillStyle = 'rgba(230,250,255,0.25)'; c.fill(); }
+      if (o.k === 'jelly') { c.fillStyle = 'rgba(255,140,200,0.85)'; c.beginPath(); c.arc(o.x, o.y, 11, Math.PI, 0); c.fill(); c.strokeStyle = 'rgba(255,170,220,0.9)'; c.lineWidth = 2; for (const k of [-6, -2, 2, 6]) { c.beginPath(); c.moveTo(o.x + k, o.y); c.quadraticCurveTo(o.x + k + Math.sin(S.t * 6 + k) * 3, o.y + 9, o.x + k, o.y + 17); c.stroke(); } }
+    }
+    for (const b of S.bub) { c.globalAlpha = Math.min(1, b.t * 2); c.strokeStyle = '#e8fbff'; c.lineWidth = 1; c.beginPath(); c.arc(b.x, b.y, b.r, 0, 7); c.stroke(); }
+    c.globalAlpha = S.hurt > 0 && Math.floor(S.hurt * 10) % 2 ? 0.4 : 1;
+    // the hero with a little snorkel mask, tilting with its kick
+    c.save(); c.translate(X, S.y); c.rotate(Math.max(-0.4, Math.min(0.4, S.vy / 300)));
+    if (img.complete && img.naturalWidth) c.drawImage(img, -16, -16, 32, 32); else { c.fillStyle = '#ff9a40'; c.beginPath(); c.arc(0, 0, R, 0, 7); c.fill(); }
+    c.fillStyle = 'rgba(160,230,255,0.55)'; c.strokeStyle = '#3ac0e8'; c.lineWidth = 2; c.beginPath(); c.ellipse(4, -3, 9, 5, 0, 0, 7); c.fill(); c.stroke();
+    c.fillStyle = '#ffd84d'; c.fillRect(-12, -18, 3, 12);
+    c.restore(); c.globalAlpha = 1;
+    // the air bar
+    c.fillStyle = 'rgba(0,30,60,0.5)'; c.fillRect(10, 8, 104, 8); c.fillStyle = S.air < 5 ? '#ff6a6a' : '#bff4ff'; c.fillRect(12, 10, 100 * S.air / 20, 4);
+    c.textAlign = 'center'; c.font = 'bold 13px sans-serif';
+    for (const p of S.pops) { c.globalAlpha = Math.min(1, p.t * 2); c.fillStyle = p.col; c.fillText(p.txt, p.x, p.y); }
+    c.globalAlpha = 1;
+    if (S.ready > 0 || !S.started) { c.fillStyle = '#fff36b'; c.strokeStyle = '#0e4a7a'; c.lineWidth = 4; c.font = 'bold 26px sans-serif'; const t = S.ready > 0 ? 'READY?' : 'TAP TO KICK!'; c.strokeText(t, W / 2, H / 2 - 50); c.fillText(t, W / 2, H / 2 - 50); }
+    if (S.over) { c.fillStyle = 'rgba(10,40,70,0.55)'; c.fillRect(0, 0, W, H); c.fillStyle = '#fff36b'; c.font = 'bold 28px sans-serif'; c.fillText('OUT OF AIR!', W / 2, H / 2 - 10); c.fillStyle = '#fff'; c.font = 'bold 16px sans-serif'; c.fillText(`Score ${total()}`, W / 2, H / 2 + 16); }
+    hud.textContent = `🫧 ${Math.ceil(S.air)}s  🪙 ${S.coins}  ⭐ ${total()}`;
+  };
+  let last = performance.now(), raf = 0;
+  const loop = (now) => {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    step(dt); draw();
+    if (el.isConnected) raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+  let closed = false;
+  function close() {
+    if (closed) return; closed = true;
+    cancelAnimationFrame(raf); el.remove();
+    removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true);
+    onDone(total());
+  }
+  el.__arcade = { S, flap: kick, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
+  return el;
+}

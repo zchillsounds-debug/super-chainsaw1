@@ -10,7 +10,7 @@ import { grown } from './growth.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
-import { arcadeGame, skyHop, waveRider } from './arcade.js';
+import { arcadeGame, skyHop, waveRider, reefDive } from './arcade.js';
 import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, seasonKey, gullFish } from './world.js';
 
 const flags = () => save.adv.flags;
@@ -461,6 +461,7 @@ export function storyTalk(S, id, w, a) {
     }, who), who);
     return;
   }
+  if (id === 'reefdive') return dive(S, w);
   if (id === 'dive') { // Snorkeller Pia: after Morra sends her goggles back, she dives you down to the Sunken Wreck off the reef (and back up again)
     const who = 'Snorkeller Pia';
     if (w.key === 'wreck') return w.ask(`${who}: Blub! Running low on air? Ready to swim back up to Port Coral?`, ['Swim up', 'Stay'], (i) => {
@@ -1200,10 +1201,30 @@ function arcade(S, w, hop) {
       let prize = 0;
       if (A[DAY] !== day) { prize = score >= top ? 3 : score >= mid ? 2 : score >= lo ? 1 : 0; if (prize) { A[DAY] = day; save.berries = (save.berries || 0) + prize; } }
       persist(); if (best || prize) sfx.jingle(2);
-      w.say([`GAME OVER! Score: ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`The cabinet rattles... and drops ${prize} 🍓! (One prize a day.)`] : A[DAY] !== day ? [`Score ${lo} or more to win berries! (One prize a day.)`] : [])]);
+      w.say([`GAME OVER! You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`The cabinet rattles... and drops ${prize} 🍓! (One prize a day.)`] : A[DAY] !== day ? [`Score ${lo} or more to win berries! (One prize a day.)`] : [])]);
     });
     S.game.modalClose = () => el.__arcade.close();
   });
+}
+
+// the Sunken Wreck: Dive Coach Nami runs REEF DIVE (a daily berry prize; 250+ once wins her spare Snorkel Mask)
+function dive(S, w) {
+  const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.diveHi || 0, who = 'Dive Coach Nami', own = (A.hats ||= []);
+  w.ask(`${who}: Blub! Fancy a REEF DIVE? Kick up, sink down, grab the old coins from the wreck and dodge the jellies. ${hi ? `Your best dive: ${hi}.` : 'Watch your air!'}${A.diveDay !== day ? ' First good dive today wins berries!' : ''}${own.includes('snorkelmask') ? '' : ' Score 250 and my spare goggles are yours!'}`, ['Dive!', 'Not now'], (i) => {
+    if (i) return w.say([`${who}: The coins have waited a hundred years. They can wait a bit more.`], null, who);
+    w.busy = true;
+    const el = reefDive(S.root, S.game.portrait(w.hero.def), (score) => {
+      S.game.modalClose = null; w.busy = false;
+      const best = score > hi; if (best) A.diveHi = score;
+      (A.cnt ||= {}).dive = (A.cnt.dive || 0) + 1;
+      let prize = 0;
+      if (A.diveDay !== day) { prize = score >= 350 ? 3 : score >= 200 ? 2 : score >= 80 ? 1 : 0; if (prize) { A.diveDay = day; save.berries = (save.berries || 0) + prize; } }
+      const mask = score >= 250 && !own.includes('snorkelmask'); if (mask) own.push('snorkelmask');
+      persist(); if (best || prize || mask) sfx.jingle(2);
+      w.say([`${score >= 250 ? 'WHAT A DIVE!' : score >= 80 ? 'Nice dive!' : 'Blub blub...'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: ${prize} 🍓 from my treasure tin! (One prize a day.)`] : A.diveDay !== day ? [`${who}: Score 80 or more and I'll pay you in berries! (One prize a day.)`] : []), ...(mask ? [`${who}: Two hundred and fifty! You're half fish. Take my spare goggles!`, '{hero} got the Dive Goggles! 🤿 (☰ → 🎩 Hats)'] : [])], null, who);
+    });
+    S.game.modalClose = () => el.__arcade.close();
+  }, who);
 }
 
 // Ember Isle's Surf Shack: Surfer Malia lends out her board for WAVE RIDER (a daily berry prize; 300+ once wins her spare visor)
@@ -1220,7 +1241,7 @@ function surf(S, w) {
       if (A.surfDay !== day) { prize = score >= 450 ? 3 : score >= 250 ? 2 : score >= 100 ? 1 : 0; if (prize) { A.surfDay = day; save.berries = (save.berries || 0) + prize; } }
       const visor = score >= 300 && !own.includes('surfvisor'); if (visor) own.push('surfvisor');
       persist(); if (best || prize || visor) sfx.jingle(2);
-      w.say([`${score >= 300 ? 'TUBULAR!' : score >= 100 ? 'Nice ride!' : 'Wipeout!'} Score: ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: Here, ${prize} 🍓 from the shack's jar! (One prize a day.)`] : A.surfDay !== day ? [`${who}: Score 100 or more and I'll pay you in berries! (One prize a day.)`] : []), ...(visor ? [`${who}: THREE HUNDRED?! You're a natural. Take my spare visor!`, "{hero} got the Surfer's Visor! 🏄 (☰ → 🎩 Hats)"] : [])], null, who);
+      w.say([`${score >= 300 ? 'TUBULAR!' : score >= 100 ? 'Nice ride!' : 'Wipeout!'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: Here, ${prize} 🍓 from the shack's jar! (One prize a day.)`] : A.surfDay !== day ? [`${who}: Score 100 or more and I'll pay you in berries! (One prize a day.)`] : []), ...(visor ? [`${who}: THREE HUNDRED?! You're a natural. Take my spare visor!`, "{hero} got the Surfer's Visor! 🏄 (☰ → 🎩 Hats)"] : [])], null, who);
     });
     S.game.modalClose = () => el.__arcade.close();
   }, who);

@@ -916,6 +916,7 @@ export const MAPS = {
     npcs: [
       { id: 'pia_w', x: 10, y: 12, critter: 'pumicub', name: 'Snorkeller Pia', dir: 'n', story: 'dive', lines: [] },
       { id: 'marlo_w', x: 15, y: 9, critter: 'blowfin', name: 'Diver Marlo', dir: 'w', trainer: { lv: 32, sight: 3, diff: 0.86, intro: 'Diver Marlo: Blub! A visitor on MY wreck? Blowfin, puff up and show them the way out!', beat: 'Diver Marlo: Blub... out of breath. Good battle!', after: 'Diver Marlo: The captain\'s chest is by the stern. Nobody could lift the lid. Maybe you can!' } },
+      { id: 'nami_w', x: 3, y: 12, critter: 'bubbalotl', name: 'Dive Coach Nami', dir: 'e', story: 'reefdive', lines: [] }, // REEF DIVE, a diving mini-game (arcade.js)
       { id: 'shellby_w', x: 4, y: 9, act: 'sleep', critter: 'smokeshell', name: 'Shellby', dir: 'e', lines: ['Shellby the Smokeshell blows a stream of warm bubbles. It lives in an old teapot from the wreck.', 'Shellby clicks its claws politely. Its shell is covered in tiny pink coral.'] },
     ],
   },

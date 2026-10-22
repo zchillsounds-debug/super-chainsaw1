@@ -1143,6 +1143,7 @@ export class Screens {
         ['🕹️', 'TURBO prize', 'Neon City arcade', A.arcadeDay === day, seen.neon],
         ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
         ['🏄', 'WAVE RIDER prize', 'Ember Isle Surf Shack', A.surfDay === day, seen.ember_isle],
+        ['🤿', 'REEF DIVE prize', 'the Sunken Wreck (Snorkeller Pia, Port Coral)', A.diveDay === day, F.dived],
         ['🐦', `Gull Club catch: ${gullFish(day)}`, 'any island water → Petrel, Starfall Atoll', A.gullPaid === day, F.amends3_done && F.rod],
         ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
         ['♨️', 'Soak in the hot spring', N('ember'), A.soak === day, seen.ember],
@@ -1267,6 +1268,7 @@ export class Screens {
         + bar('⛴️', 'Ferry rides', A.cnt?.ferry || 0)
         + (A.surfHi ? bar('🏄', 'WAVE RIDER best', A.surfHi) : '')
         + (A.cnt?.gull ? bar('🐦', 'Gull Club catches', A.cnt.gull) : '')
+        + (A.diveHi ? bar('🤿', 'REEF DIVE best', A.diveHi) : '')
         + (F.sunstone ? bar('🌺', 'Sunscatter Masters cleared', A.mastWins || 0) : '')
         + (F.sunstone ? bar('🗼', 'Battle Tower best streak', `${A.tower?.best || 0} · ${towerRank(A.tower?.best || 0)[2]} ${towerRank(A.tower?.best || 0)[1]}`) + (A.tower?.streak ? bar('🔥', 'Current Tower streak', A.tower.streak) : '') : '');
     }

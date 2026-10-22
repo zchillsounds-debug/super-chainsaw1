@@ -1461,6 +1461,7 @@ export const SHOP_HATS = [
   { id: 'grovecrown', name: 'Grove Crown', kind: 'laurel', col: 0x5ac24a, band: 0xff8ac0, price: 0, gift: true, extra: true }, // the Heartseed chain (Glowcap Woods → Sprout Village → Glowcap Hollow → Cloudtop → Glowcap Woods)
   { id: 'gullcap', name: 'Gull Club Cap', kind: 'sailor', col: 0xf4f4f8, band: 0x6a4a9a, price: 0, gift: true, extra: true }, // the Gull Fishing Club on Starfall Atoll: five catches of the day
   { id: 'diverhelm', name: 'Diving Helm', kind: 'helm', col: 0xd8a03a, band: 0x3ac0e8, price: 0, gift: true, extra: true }, // the captain's chest in the Sunken Wreck (Snorkeller Pia dives you down, after Morra's Amends)
+  { id: 'snorkelmask', name: 'Dive Goggles', kind: 'aviator', col: 0x3ac0e8, band: 0xffd84d, price: 0, gift: true, extra: true }, // REEF DIVE in the Sunken Wreck: a dive of 250 or more
   { id: 'halo', name: 'Halo Ring', kind: 'halo', col: 0xffe27a, band: 0xfff8d0, price: 0, gift: true, extra: true }, // the chest on Rainbow Reach, the cloud islet above Cloudtop (Kite Glider)
   { id: 'rivalband', name: "Dash's Headband", kind: 'band', col: 0xe8443a, band: 0xffffff, price: 0, gift: true, isle: true }, // the Rival Showdown on Starfall Atoll
   { id: 'masterlei', name: "Champion's Lei", kind: 'flower', col: 0x3ac8b8, band: 0xffc93a, price: 0, gift: true, isle: true }, // the Sunscatter Masters' first clear
