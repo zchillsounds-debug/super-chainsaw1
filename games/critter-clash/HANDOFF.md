@@ -1171,7 +1171,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **R712:** the Battle Tower hall: four rank banners on the back wall (coloured once reached) and two flagpoles by Morra's counter flying the hero's best rank.
 - nextGoal's post-game list now runs Tower → glider → Moonwhal → Solmoth → Rival Showdown → Morra's Amends → Rainbow Reach → the final line.
 - Critiqued: the Champ tab at all three sizes, Rainbow Reach (day/night; fixed the test clock), the Cloudtop windsock, the Ember Isle volcano (landscape and portrait), the Tower hall, WAVE RIDER at 915×412 / 740×360 / 412×915, both legendaries' forms sheets.
-- FINAL_CHECKS_PLACEHOLDER
+- **Final checks (~00:35–01:00 UTC, production build of 83a801a, R711; R712 is a room-decor change, screenshot-checked):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the portrait pause menu); advcup Sprout wins 3 and lands back in Bloom Town, no errors; dashshow, reach, surf, amends, ch2walk, masters, tower, legends and glidechain all ran with no errors.
 - **Next ideas:** a Rainbow Reach night look (stars close enough to touch?); reformed Gloom Gulls fishing on the atoll after Morra's Amends; a third legendary or a mainland one; WAVE RIDER could get a night version; more island single-step favours; the Tower banners are small from the top-down camera (the flagpoles read better); the Ember Isle volcano can't show in landscape (a camera nudge near the north edge would fix it, but that's camera code). Watch Moonwhal (63%) in the next full robin.
 
 ## Session 18c (2026-10-21 22:43–~23:55 UTC, session_01W7Pdfri5qPxnMP2dsnCvLL): M3 finished (glider, hidden areas, pearls), M4 started (Battle Tower, legendaries, Masters), R692–R700
