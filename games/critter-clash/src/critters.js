@@ -168,6 +168,24 @@ function leafGeo() {
   return g;
 }
 
+// Solmoth's moth wings: gold fading to a flame-orange rim, inked veins, and a sun eye-spot towards the outer tip (side: 1 right, -1 left)
+const _mothTex = {};
+function mothTexture(side) {
+  if (_mothTex[side]) return _mothTex[side];
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(64, 64, 4, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,240,170,1)'); g.addColorStop(0.5, 'rgba(255,196,70,0.95)'); g.addColorStop(0.85, 'rgba(240,110,40,0.92)'); g.addColorStop(1, 'rgba(160,60,30,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  x.strokeStyle = 'rgba(120,50,20,0.5)'; x.lineWidth = 2;
+  for (let k = -2; k <= 2; k++) { x.beginPath(); x.moveTo(64, 64); x.quadraticCurveTo(64 + side * 40, 64 + k * 10, 64 + side * 60, 64 + k * 22); x.stroke(); }
+  const ex = 64 + side * 34, ey = 64; // the eye-spot: a dark ring, a red-gold iris and a bright pupil glint
+  x.fillStyle = '#5a2a1a'; x.beginPath(); x.arc(ex, ey, 17, 0, 7); x.fill();
+  x.fillStyle = '#ff6a2a'; x.beginPath(); x.arc(ex, ey, 12, 0, 7); x.fill();
+  x.fillStyle = '#ffe27a'; x.beginPath(); x.arc(ex, ey, 7, 0, 7); x.fill();
+  x.fillStyle = '#fffbe8'; x.beginPath(); x.arc(ex - 2, ey - 2, 2.5, 0, 7); x.fill();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return (_mothTex[side] = t);
+}
 let _wingTex = null;
 function wingTexture() {
   if (_wingTex) return _wingTex;
@@ -942,15 +960,16 @@ export class Critter {
       skull.add(fang);
     }
     if (def.extra === 'wings') {
-      // iridescent membrane: warm core, cyan-pink sheen, inked veins
+      // iridescent membrane: warm core, cyan-pink sheen, inked veins (Solmoth: golden moth wings with a sun eye-spot near each tip)
       const wingTex = wingTexture();
       const wingMat = new THREE.MeshBasicMaterial({ map: wingTex, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false });
+      const mothMats = def.wingTex === 'sun' && [1, -1].map((s) => new THREE.MeshBasicMaterial({ map: mothTexture(s), transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false }));
       const veinMat = new THREE.MeshBasicMaterial({ color: C.dark, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false });
       for (const s of [-1, 1]) for (const k of [0, 1]) {
         const w = new THREE.Group();
         w.position.set(s * 0.08, B.h * (0.72 - k * 0.2), -B.w * 0.38);
         w.userData = { s, k };
-        const leaf = new THREE.Mesh(new THREE.CircleGeometry(0.5, 20), wingMat);
+        const leaf = new THREE.Mesh(new THREE.CircleGeometry(0.5, 20), mothMats ? mothMats[s > 0 ? 0 : 1] : wingMat);
         const wm = def.wingMul || 1; // (Solmoth's moth wings are much bigger than Emberfly's)
         leaf.scale.set((k ? 0.5 : 0.72) * wm, (k ? 0.22 : 0.3) * wm, 1);
         leaf.position.x = s * (k ? 0.24 : 0.36) * wm;

@@ -275,7 +275,7 @@ export const CRITTERS = [
     blurb: 'A great golden moth said to carry the first light of every morning. Its wings were the pattern for the Sunstone itself.',
     colors: { body: 0xffb43a, belly: 0xfff2c8, accent: 0xff5a2a, dark: 0x7a3a10, eye: '#2a1008', iris: '#ff3a1a', flame: 0xffd24a, flameIn: 0xfff8d0 },
     body: { w: 0.56, h: 0.62, headR: 0.5, legLen: 0.14, armLen: 0.2, chubby: 1.0 },
-    ears: 'antennae', tail: 'puff', extra: 'wings', wingMul: 2.1, voice: 1.25, isle: true, legend: true,
+    ears: 'antennae', tail: 'puff', extra: 'wings', wingMul: 2.1, wingTex: 'sun', voice: 1.25, isle: true, legend: true,
     parts: { sunmane: 0.45 },
     stats: { hp: 1180, speed: 7.2, power: 1.14, weight: 0.9 },
     special: 'swoop', super: 'supernova',
