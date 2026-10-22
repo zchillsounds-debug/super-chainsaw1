@@ -300,7 +300,7 @@ export const CRITTERS = [
     body: { w: 0.56, h: 0.62, headR: 0.5, legLen: 0.22, armLen: 0.18, chubby: 0.98 },
     ears: 'pointy', tail: 'puff', extra: 'elk', voice: 0.85, legend: true, mainland: true,
     parts: { antlers: 1.05, leafmane: 0.55, flowers: 0.35 },
-    stats: { hp: 1120, speed: 6.7, power: 1.06, weight: 1.15 },
+    stats: { hp: 1100, speed: 6.7, power: 1.02, weight: 1.15 },
     special: 'leafrang', super: 'bloom',
     moves: { special: 'Bough Boomerang', super: 'Ancient Bloom' },
   },
