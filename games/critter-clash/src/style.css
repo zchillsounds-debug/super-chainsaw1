@@ -1024,6 +1024,9 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .arcade .arc-hud { color: #fff; font-family: var(--body, inherit); font-weight: 800; font-size: 13px; text-shadow: none; white-space: nowrap; }
 .arcade canvas { width: min(88vw, calc((100vh - 96px) * 4 / 3), 560px); aspect-ratio: 4 / 3; border-radius: 10px; image-rendering: pixelated; touch-action: none; background: #140e2a; }
 .arcade .arc-tip { margin: 0; color: #d8c8ff; font-size: 12px; text-align: center; }
+.arcade.surf { background: linear-gradient(#ffb070, #e0703a); border-color: #3ac0e8; box-shadow: 0 0 24px rgba(58,192,232,.5), 0 6px 0 #7a3a1a; }
+.arcade.surf .arc-top { color: #fff; text-shadow: 0 2px 0 #b04a1a; }
+.arcade.surf .arc-tip { color: #fff4e0; }
 
 /* Journal → Records: a progress bar under each row */
 .jr-rec { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; column-gap: 8px; padding: 5px 8px; border-radius: 10px; background: rgba(42,22,48,.05); margin-bottom: 4px; }

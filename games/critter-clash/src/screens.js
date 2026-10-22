@@ -1135,6 +1135,7 @@ export class Screens {
         ['🍜', 'Spark Noodles', N('neon'), A.noodles === day, seen.neon],
         ['🕹️', 'TURBO prize', 'Neon City arcade', A.arcadeDay === day, seen.neon],
         ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
+        ['🏄', 'WAVE RIDER prize', 'Ember Isle Surf Shack', A.surfDay === day, seen.ember_isle],
         ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
         ['♨️', 'Soak in the hot spring', N('ember'), A.soak === day, seen.ember],
         ['🪵', 'Win a twig race', `${N('route2')} bridge`, A.twig === day, seen.route2],
@@ -1255,6 +1256,7 @@ export class Screens {
         + bar('🦪', 'Hidden pearls', Object.keys(MAPS).filter((k) => MAPS[k].pearl && F['pearl_' + k]).length, Object.keys(MAPS).filter((k) => MAPS[k].pearl).length, true)
         + bar('🌟', 'The Sunstone', F.sunstone ? 'home' : F.morra ? 'found' : 'lost')
         + bar('⛴️', 'Ferry rides', A.cnt?.ferry || 0)
+        + (A.surfHi ? bar('🏄', 'WAVE RIDER best', A.surfHi) : '')
         + (F.sunstone ? bar('🌺', 'Sunscatter Masters cleared', A.mastWins || 0) : '')
         + (F.sunstone ? bar('🗼', 'Battle Tower best streak', `${A.tower?.best || 0} · ${towerRank(A.tower?.best || 0)[2]} ${towerRank(A.tower?.best || 0)[1]}`) + (A.tower?.streak ? bar('🔥', 'Current Tower streak', A.tower.streak) : '') : '');
     }

@@ -209,3 +209,115 @@ export function skyHop(root, face, onDone) {
   el.__arcade = { S, flap, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
   return el;
 }
+
+// WAVE RIDER (Ember Isle's Surf Shack, Surfer Malia): the hero rides a surfboard along the waves. Tap to hop over rocks,
+// grab shells (some float in the air), and don't hop into a gull. It speeds up the longer you ride.
+export function waveRider(root, face, onDone) {
+  const el = document.createElement('div');
+  el.className = 'modal-wrap arcade-wrap';
+  el.innerHTML = `<div class="arcade surf"><div class="arc-top"><b>WAVE RIDER</b><span class="arc-hud"></span></div>
+    <canvas width="${W}" height="${H}"></canvas>
+    <p class="arc-tip">Tap (or Space) to hop. Jump the rocks, grab 🐚, don't hop into the gulls!</p></div>`;
+  root.appendChild(el);
+  const cv = el.querySelector('canvas'), c = cv.getContext('2d'), hud = el.querySelector('.arc-hud');
+  const img = new Image(); img.src = face;
+  const S = { y: 0, vy: 0, air: false, t: 0, dist: 0, shells: 0, score: 0, things: [], pops: [], spray: [], next: 1.4, over: false, ready: 1.2, started: false, crash: 0 };
+  const X = 84, R = 13, SEA = H - 64; // the hero's column, hit radius and the calm sea line
+  const sea = (x) => SEA + Math.sin(x * 0.045 + S.t * 2.2) * 6 + Math.sin(x * 0.11 - S.t * 1.3) * 3; // the wave surface under any x
+  const speed = () => 110 + Math.min(110, S.dist * 0.45);
+  const hop = () => { if (S.over) return; if (S.ready > 0) S.ready = 0; S.started = true; if (!S.air) { S.air = true; S.vy = -270; sfx.ui?.('move'); for (let k = 0; k < 6; k++) S.spray.push({ x: X - 10 + Math.random() * 20, y: S.y + 10, vx: -40 - Math.random() * 60, vy: -60 - Math.random() * 60, t: 0.5 }); } };
+  const onKey = (e) => {
+    if (!['Space', 'ArrowUp', 'KeyW', 'Enter'].includes(e.code)) return;
+    e.preventDefault(); e.stopPropagation();
+    if (e.type === 'keydown' && !e.repeat) hop();
+  };
+  addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
+  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); hop(); });
+  const pop = (x, y, txt, col) => S.pops.push({ x, y, txt, col, t: 0.8 });
+  S.y = sea(X) - R;
+
+  const step = (dt) => {
+    S.t += dt;
+    if (S.ready > 0 || !S.started) { if (S.ready > 0) S.ready -= dt; S.y = sea(X) - R; return; }
+    if (S.over) { S.crash += dt; S.y = Math.min(SEA + 20, S.y + 60 * dt); return; }
+    const v = speed(); S.dist += v * dt / 10;
+    if (S.air) { S.vy += 640 * dt; S.y += S.vy * dt; if (S.y >= sea(X) - R) { S.air = false; S.vy = 0; for (let k = 0; k < 5; k++) S.spray.push({ x: X - 14 + Math.random() * 28, y: sea(X), vx: (Math.random() - 0.5) * 80, vy: -50 - Math.random() * 40, t: 0.45 }); } }
+    else S.y = sea(X) - R;
+    S.next -= dt;
+    if (S.next <= 0) { // what comes next: a rock, a gull, a shell on the water or a shell up in the air
+      const r = Math.random(), lvl = Math.min(1, S.dist / 400);
+      if (r < 0.42) S.things.push({ k: 'rock', x: W + 20, w: 14 + Math.random() * 10 });
+      else if (r < 0.42 + 0.18 + lvl * 0.12) S.things.push({ k: 'gull', x: W + 20, y: SEA - 70 - Math.random() * 18, f: Math.random() * 6 });
+      else S.things.push({ k: 'shell', x: W + 20, up: Math.random() < 0.5 });
+      if (Math.random() < 0.35) S.things.push({ k: 'shell', x: W + 60, up: true }); // a bonus shell over the next thing
+      S.next = Math.max(0.55, 1.25 - lvl * 0.5) + Math.random() * 0.5;
+    }
+    for (const o of S.things) {
+      o.x -= v * dt * (o.k === 'gull' ? 1.25 : 1);
+      if (o.k === 'gull') o.f += dt * 10;
+      const dx = Math.abs(o.x - X);
+      if (o.k === 'rock' && dx < o.w * 0.6 + R - 4 && S.y + R > sea(o.x) - 12) die();
+      if (o.k === 'gull' && dx < R + 10 && Math.abs(o.y - S.y) < R + 6) die();
+      if (o.k === 'shell' && !o.got) { const sy = o.up ? SEA - 64 : sea(o.x) - 6; if (dx < R + 8 && Math.abs(sy - S.y) < R + 10) { o.got = true; S.shells++; S.score += 5; pop(o.x, sy - 12, '+5', '#ffb0d0'); sfx.ui?.('move'); } }
+      if (o.k === 'rock' && !o.done && o.x < X - 20) { o.done = true; S.score += 3; pop(X, S.y - 18, '+3', '#9ae8ff'); }
+    }
+    S.things = S.things.filter((o) => o.x > -40);
+    for (const p of S.pops) { p.t -= dt; p.y -= 30 * dt; }
+    S.pops = S.pops.filter((p) => p.t > 0);
+    for (const p of S.spray) { p.t -= dt; p.x += p.vx * dt; p.vy += 300 * dt; p.y += p.vy * dt; }
+    S.spray = S.spray.filter((p) => p.t > 0);
+    S.score = Math.max(S.score, 0);
+  };
+  function die() { if (S.over) return; S.over = true; sfx.ui?.('back'); setTimeout(close, 1800); }
+  const total = () => Math.floor(S.dist / 2) + S.score;
+
+  const draw = () => {
+    const g = c.createLinearGradient(0, 0, 0, SEA); g.addColorStop(0, '#5ac8f0'); g.addColorStop(1, '#ffd8a0');
+    c.fillStyle = g; c.fillRect(0, 0, W, SEA + 10);
+    c.fillStyle = '#fff2b0'; c.beginPath(); c.arc(250, 44, 18, 0, 7); c.fill(); // the sun
+    // the volcano far behind, with a puff of smoke, scrolling very slowly
+    const vx = ((200 - S.dist * 0.3) % (W + 200) + W + 200) % (W + 200) - 100;
+    c.fillStyle = '#6a5a6a'; c.beginPath(); c.moveTo(vx - 90, SEA); c.lineTo(vx - 18, SEA - 82); c.lineTo(vx + 18, SEA - 82); c.lineTo(vx + 90, SEA); c.fill();
+    c.fillStyle = '#ff8a3a'; c.fillRect(vx - 16, SEA - 84, 32, 4);
+    c.fillStyle = 'rgba(230,220,220,0.7)'; for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(vx + 6 + k * 12 + Math.sin(S.t + k) * 3, SEA - 96 - k * 12, 9 + k * 3, 0, 7); c.fill(); }
+    // two layers of sea: a darker one behind, then the wave the hero rides
+    c.fillStyle = '#2a9ad0'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 8) c.lineTo(x, SEA - 8 + Math.sin(x * 0.03 + S.t * 1.4) * 4); c.lineTo(W, H); c.fill();
+    c.fillStyle = '#3ac0e8'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 6) c.lineTo(x, sea(x)); c.lineTo(W, H); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,0.8)'; c.lineWidth = 2; c.beginPath(); for (let x = 0; x <= W; x += 6) (x ? c.lineTo : c.moveTo).call(c, x, sea(x)); c.stroke();
+    for (const o of S.things) {
+      if (o.k === 'rock') { const sy = sea(o.x); c.fillStyle = '#4a4246'; c.beginPath(); c.moveTo(o.x - o.w, sy + 6); c.lineTo(o.x - o.w * 0.5, sy - 18); c.lineTo(o.x + o.w * 0.3, sy - 22); c.lineTo(o.x + o.w, sy + 6); c.fill(); c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(o.x - o.w, sy + 2, o.w * 2, 3); }
+      if (o.k === 'gull') { const fl = Math.sin(o.f) * 6; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.moveTo(o.x - 12, o.y - fl); c.quadraticCurveTo(o.x - 5, o.y - 6, o.x, o.y); c.quadraticCurveTo(o.x + 5, o.y - 6, o.x + 12, o.y - fl); c.stroke(); c.fillStyle = '#ffb030'; c.fillRect(o.x - 6, o.y - 1, 4, 2); }
+      if (o.k === 'shell' && !o.got) { const sy = o.up ? SEA - 64 : sea(o.x) - 6; c.fillStyle = '#ffb0c8'; c.beginPath(); c.moveTo(o.x - 7, sy + 4); c.quadraticCurveTo(o.x, sy - 10, o.x + 7, sy + 4); c.closePath(); c.fill(); c.strokeStyle = '#e07a9a'; c.lineWidth = 1; for (const k of [-3, 0, 3]) { c.beginPath(); c.moveTo(o.x, sy + 4); c.lineTo(o.x + k, sy - 4); c.stroke(); } }
+    }
+    for (const p of S.spray) { c.globalAlpha = Math.min(1, p.t * 3); c.fillStyle = '#fff'; c.beginPath(); c.arc(p.x, p.y, 2.5, 0, 7); c.fill(); }
+    c.globalAlpha = 1;
+    // the hero on an orange board with a white stripe, tilting with the wave (or tumbling after a crash)
+    const tilt = S.air ? Math.max(-0.4, Math.min(0.4, S.vy / 600)) : (sea(X + 6) - sea(X - 6)) / 14;
+    c.save(); c.translate(X, S.y); c.rotate(S.over ? S.crash * 6 : tilt);
+    c.fillStyle = '#ff7a3a'; c.beginPath(); c.ellipse(0, R + 2, 22, 4.5, 0, 0, 7); c.fill(); c.fillStyle = '#fff'; c.fillRect(-18, R + 1, 36, 2);
+    if (img.complete && img.naturalWidth) c.drawImage(img, -16, -18, 32, 32); else { c.fillStyle = '#ff9a40'; c.beginPath(); c.arc(0, -2, R, 0, 7); c.fill(); }
+    c.restore();
+    c.textAlign = 'center'; c.font = 'bold 13px sans-serif';
+    for (const p of S.pops) { c.globalAlpha = Math.min(1, p.t * 2); c.fillStyle = p.col; c.fillText(p.txt, p.x, p.y); }
+    c.globalAlpha = 1;
+    if (S.ready > 0 || !S.started) { c.fillStyle = '#fff36b'; c.strokeStyle = '#2a5a8a'; c.lineWidth = 4; c.font = 'bold 26px sans-serif'; const t = S.ready > 0 ? 'READY?' : 'TAP TO HOP!'; c.strokeText(t, W / 2, H / 2 - 50); c.fillText(t, W / 2, H / 2 - 50); }
+    if (S.over) { c.fillStyle = 'rgba(20,40,70,0.55)'; c.fillRect(0, 0, W, H); c.fillStyle = '#fff36b'; c.font = 'bold 28px sans-serif'; c.fillText('WIPEOUT!', W / 2, H / 2 - 10); c.fillStyle = '#fff'; c.font = 'bold 16px sans-serif'; c.fillText(`Score ${total()}`, W / 2, H / 2 + 16); }
+    hud.textContent = `🌊 ${Math.floor(S.dist)} m  🐚 ${S.shells}  ⭐ ${total()}`;
+  };
+  let last = performance.now(), raf = 0;
+  const loop = (now) => {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    step(dt); draw();
+    if (el.isConnected) raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+  let closed = false;
+  function close() {
+    if (closed) return; closed = true;
+    cancelAnimationFrame(raf); el.remove();
+    removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true);
+    onDone(total());
+  }
+  el.__arcade = { S, flap: hop, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
+  return el;
+}

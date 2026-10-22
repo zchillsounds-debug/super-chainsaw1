@@ -10,7 +10,7 @@ import { grown } from './growth.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
-import { arcadeGame, skyHop } from './arcade.js';
+import { arcadeGame, skyHop, waveRider } from './arcade.js';
 import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, seasonKey } from './world.js';
 
 const flags = () => save.adv.flags;
@@ -401,6 +401,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'noodles') return noodleCart(w);
   if (id === 'arcade') return arcade(S, w);
   if (id === 'arcade:hop') return arcade(S, w, true);
+  if (id === 'surf') return surf(S, w);
   if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
   if (id === 'wish') { // Cloudtop's wishing fountain: toss in a berry, make a wish; the clouds grant one a day
@@ -1069,6 +1070,26 @@ function arcade(S, w, hop) {
     });
     S.game.modalClose = () => el.__arcade.close();
   });
+}
+
+// Ember Isle's Surf Shack: Surfer Malia lends out her board for WAVE RIDER (a daily berry prize; 300+ once wins her spare visor)
+function surf(S, w) {
+  const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.surfHi || 0, who = 'Surfer Malia', own = (A.hats ||= []);
+  w.ask(`${who}: Wanna borrow my board? The waves off the black sand are PERFECT today. ${hi ? `Your best ride: ${hi}.` : 'Tap to hop the rocks, grab shells, dodge the gulls!'}${A.surfDay !== day ? ' First good ride today wins berries!' : ''}${own.includes('surfvisor') ? '' : ' Score 300 and my spare visor is yours!'}`, ['Surf!', 'Not now'], (i) => {
+    if (i) return w.say([`${who}: The waves'll wait. They always do.`], null, who);
+    w.busy = true;
+    const el = waveRider(S.root, S.game.portrait(w.hero.def), (score) => {
+      S.game.modalClose = null; w.busy = false;
+      const best = score > hi; if (best) A.surfHi = score;
+      (A.cnt ||= {}).surf = (A.cnt.surf || 0) + 1;
+      let prize = 0;
+      if (A.surfDay !== day) { prize = score >= 450 ? 3 : score >= 250 ? 2 : score >= 100 ? 1 : 0; if (prize) { A.surfDay = day; save.berries = (save.berries || 0) + prize; } }
+      const visor = score >= 300 && !own.includes('surfvisor'); if (visor) own.push('surfvisor');
+      persist(); if (best || prize || visor) sfx.jingle(2);
+      w.say([`${score >= 300 ? 'TUBULAR!' : score >= 100 ? 'Nice ride!' : 'Wipeout!'} Score: ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: Here, ${prize} 🍓 from the shack's jar! (One prize a day.)`] : A.surfDay !== day ? [`${who}: Score 100 or more and I'll pay you in berries! (One prize a day.)`] : []), ...(visor ? [`${who}: THREE HUNDRED?! You're a natural. Take my spare visor!`, "{hero} got the Surfer's Visor! 🏄 (☰ → 🎩 Hats)"] : [])], null, who);
+    });
+    S.game.modalClose = () => el.__arcade.close();
+  }, who);
 }
 
 // Chef Rumi's noodle cart in Neon City: a bowl of spark noodles once a day (berries for XP), and a hat you can't get anywhere else
