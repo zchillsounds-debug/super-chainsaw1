@@ -1363,6 +1363,8 @@ export class Screens {
         + `<li class="jr-head">✨ Legendary critters <small>${['solmoth', 'moonwhal'].filter((id) => F['legend_' + id]).length}/2</small></li>`
         + rowC('🌞', 'Solmoth <small>Dawn Moth</small>', F.legend_solmoth ? 'befriended' : F.festlamp_done ? 'rests on the Caldera Rim' : 'waits for a festival…', F.legend_solmoth)
         + rowC('🌙', 'Moonwhal <small>Moon Narwhal</small>', F.legend_moonwhal ? 'befriended' : F.tower_bronze ? 'Starfall beach, after dark' : 'sings for a Tower hero…', F.legend_moonwhal)
+        + `<li class="jr-head">📖 Critterdex <small>${save.unlocked.length}/${CRITTERS.length}</small></li>`
+        + rowC('✨', 'Shiny Charm', F.shinycharm ? 'twice the shinies!' : `befriend every critter · ${CRITTERS.length - CRITTERS.filter((c) => save.unlocked.includes(c.id)).length} to go`, F.shinycharm)
         + `<li class="jr-head">⚡ Rival Dash</li>`
         + rowC('🔥', 'Rival Showdown', F.dash_show ? (hats.includes('rivalband') ? "won · Dash's Headband" : 'won! Talk to Dash') : 'Starfall Atoll', F.dash_show)
         + (F.dash_show ? rowC('⚔️', "Today's island rematch", F['dashisle_' + new Date().toISOString().slice(0, 10)] ? 'done' : 'Starfall Atoll', F['dashisle_' + new Date().toISOString().slice(0, 10)]) : '');

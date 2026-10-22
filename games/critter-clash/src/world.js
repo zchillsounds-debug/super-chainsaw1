@@ -126,7 +126,7 @@ export const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { 
 
 const STEP = 0.23; // seconds per tile
 const ALPHA_TOLD = new Set(); // Alphas already announced this session
-const SHINY_RATE = 1 / 30; // a rare shiny wild critter: beat it to unlock its shiny palette
+const shinyRate = () => (save.adv?.flags?.shinycharm ? 2 : 1) / 30; // a rare shiny wild critter: beat it to unlock its shiny palette (twice as often with Prof. Pecan's Shiny Charm)
 const OL = 0.035;
 const CS = 1.4; // critters stand a bit taller than in battle so they read from the overhead camera
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -3222,7 +3222,7 @@ export class World {
     sfx.foot?.(D.snow ? 'snow' : D.lava ? 'stone' : 'sand'); sfx.pickup?.();
     const roll = Math.random(), hero = save.adv.hero;
     if (D.snow) { // under the snow: a sleepy Pengsicle, or an ice gem (gems are counted; every third one comes with a Power Snack)
-      if (roll < 0.15) { persist(); return this.say(['{hero} digs into the snow... and it digs back! A wild Pengsicle was napping in there!'], () => this.startWild('pengsicle', Math.max(3, (save.critters[hero]?.level || 4) - 1), null, Math.random() < SHINY_RATE)); }
+      if (roll < 0.15) { persist(); return this.say(['{hero} digs into the snow... and it digs back! A wild Pengsicle was napping in there!'], () => this.startWild('pengsicle', Math.max(3, (save.critters[hero]?.level || 4) - 1), null, Math.random() < shinyRate())); }
       const n = (save.adv.gems = (save.adv.gems || 0) + 1), b = 2 + (n % 3 === 0 ? 0 : 1); save.berries = (save.berries || 0) + b;
       const lines = [`{hero} digs up an ICE GEM! It glitters like frozen starlight. 💎 (${n} found) The Lodge Keeper swaps it for ${b} berries. +${b} 🍓`];
       if (n % 3 === 0) { const rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.4)); lines.push('Three gems! The Lodge Keeper throws in a Power Snack too! ⭐', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : [])); }
@@ -3231,7 +3231,7 @@ export class World {
       return this.say([...lines, 'Another glint will show in the snow tomorrow.']);
     }
     if (D.lava) { // in the warm ash: a grumpy Kindlekit, or an ember gem (Smith Ash buys them; every third one comes with a Power Snack)
-      if (roll < 0.15) { persist(); return this.say(['{hero} digs into the warm ash... and a tail flicks out! A wild Kindlekit was keeping cosy in there!'], () => this.startWild('kindlekit', Math.max(3, (save.critters[hero]?.level || 4) - 1), null, Math.random() < SHINY_RATE)); }
+      if (roll < 0.15) { persist(); return this.say(['{hero} digs into the warm ash... and a tail flicks out! A wild Kindlekit was keeping cosy in there!'], () => this.startWild('kindlekit', Math.max(3, (save.critters[hero]?.level || 4) - 1), null, Math.random() < shinyRate())); }
       const n = (save.adv.emberGems = (save.adv.emberGems || 0) + 1), b = 2 + (n % 3 === 0 ? 0 : 1); save.berries = (save.berries || 0) + b;
       const lines = [`{hero} digs up an EMBER GEM! It's warm, and it glows like a coal. 🔥 (${n} found) Smith Ash swaps it for ${b} berries. +${b} 🍓`];
       if (n % 3 === 0) { const rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.4)); lines.push('Three ember gems! Smith Ash throws in a Power Snack too! ⭐', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : [])); }
@@ -3242,8 +3242,8 @@ export class World {
     if (roll < 0.15) { // a Diggles was already down there
       const lv = Math.max(3, (save.critters[hero]?.level || 4) - 1);
       persist();
-      if (this.M.isle) return this.say(['{hero} digs and digs... and a little volcano shell scuttles out! A wild Smokeshell was hiding in the sand!'], () => this.startWild('smokeshell', lv, null, Math.random() < SHINY_RATE)); // island sand hides hermit crabs, not moles
-      return this.say(['{hero} digs and digs... and finds a nose! A wild Diggles pops up, cross about its ceiling!'], () => this.startWild('diggles', lv, null, Math.random() < SHINY_RATE));
+      if (this.M.isle) return this.say(['{hero} digs and digs... and a little volcano shell scuttles out! A wild Smokeshell was hiding in the sand!'], () => this.startWild('smokeshell', lv, null, Math.random() < shinyRate())); // island sand hides hermit crabs, not moles
+      return this.say(['{hero} digs and digs... and finds a nose! A wild Diggles pops up, cross about its ceiling!'], () => this.startWild('diggles', lv, null, Math.random() < shinyRate()));
     }
     if (roll < 0.3) {
       const c = save.critters[hero], rr = grantXp(hero, Math.round(xpNeeded(c.level) * 0.4)); persist(); sfx.jingle?.(2);
@@ -3395,7 +3395,7 @@ export class World {
       const lv = Math.max(2, (save.critters[save.adv.hero]?.level || 3) - 1);
       const [id, lo, hi] = W.length ? W[Math.floor(Math.random() * W.length)] : [['bubbalotl', 'ripples', 'lilypop', 'pengsicle'][Math.floor(Math.random() * 4)], lv, lv];
       const name = byId(id)?.name || 'critter';
-      return this.say([`{hero} reels it in... It's a wild ${name}! And it's not happy about it!`], () => this.startWild(id, lo + Math.floor(Math.random() * (hi - lo + 1)), null, Math.random() < SHINY_RATE));
+      return this.say([`{hero} reels it in... It's a wild ${name}! And it's not happy about it!`], () => this.startWild(id, lo + Math.floor(Math.random() * (hi - lo + 1)), null, Math.random() < shinyRate()));
     }
     const sk = !this.M.lava && seasonKey();
     if (sk && r < 0.52) { // the season's visitor (about one fish in four while it's in season)
@@ -4128,7 +4128,7 @@ export class World {
 
   spawnWild(x, y, fixId, fixLv) {
     const WL = this.wildList(), [id0, lo, hi] = WL[Math.floor(Math.random() * WL.length)], id = fixId || id0;
-    const lv = fixLv || lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = !fixId && Math.random() < SHINY_RATE * (this.luckyNight() ? 3 : 1);
+    const lv = fixLv || lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = !fixId && Math.random() < shinyRate() * (this.luckyNight() ? 3 : 1);
     const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv), { lod: 'low' });
     cr.root.userData.critter = true;
     if (pumpkinNights() && !fixId && Math.random() < 0.5) { const [k, c, b] = COSTUMES[Math.floor(Math.random() * COSTUMES.length)]; hatModel(cr, k, c, b); } // Pumpkin Nights: wild critters dress up too
@@ -5216,7 +5216,7 @@ export class World {
     const [id, lo, hi] = L[Math.floor(Math.random() * L.length)];
     const lv = lo + Math.floor(Math.random() * (hi - lo + 1));
     this.encCool = 6;
-    this.startWild(id, lv, null, Math.random() < SHINY_RATE * (this.luckyNight() ? 3 : 1));
+    this.startWild(id, lv, null, Math.random() < shinyRate() * (this.luckyNight() ? 3 : 1));
   }
 
   wildFight(a) {

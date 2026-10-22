@@ -386,7 +386,14 @@ export function storyTalk(S, id, w, a) {
       : !F.legend_solmoth ? `Prof. Pecan: I've been reading old island books. One tells of a golden moth that wakes on a volcano rim when the isles celebrate the sun. ${F.festlamp_done ? 'Your festival! It must be awake now!' : 'Has anyone held a festival out there?'}`
       : !F.legend_moonwhal ? `Prof. Pecan: The same old book speaks of a narwhal that sings to the moon off a lighthouse beach. ${F.tower_bronze ? 'Morra heard it singing, you say? Then go at night!' : 'Only sailors with real Battle Tower grit ever hear it, apparently.'}`
       : 'Prof. Pecan: Solmoth AND Moonwhal, both friends of yours! The sun and the moon. I\'m rewriting chapter twelve of my book because of you.';
-    w.say([...forecast(), ...(lore ? [lore] : []), F.crowned ? 'Prof. Pecan: Our very own Champion of Clashara! Come back and tell me everything sometime.'
+    // every critter befriended: the professor's Shiny Charm (twice the shiny wild critters)
+    if (F.crowned && !F.shinycharm && CRITTERS.every((c) => save.unlocked.includes(c.id))) {
+      F.shinycharm = true; (save.adv.hats ||= []).includes('dexcrown') || save.adv.hats.push('dexcrown'); save.berries = (save.berries || 0) + 30; persist(); sfx.jingle?.(3);
+      return w.say([`Prof. Pecan: {hero}... is it true? Every single critter, all ${CRITTERS.length} of them, friends of yours? Even the legends?!`, "Prof. Pecan: My Critterdex is complete. Forty years of work, and you finished it! Here: my Shiny Charm. It hums near sparkly critters.", '✨ You got the SHINY CHARM! Shiny wild critters turn up twice as often now.', "Prof. Pecan: And this, a little crown I made for whoever finished the 'dex. It was meant to be me. It's much better on you.", "{hero} got the Critterdex Crown! 👑 +30 🍓 (☰ → 🎩 Hats)"], null, 'Prof. Pecan');
+    }
+    const dexLeft = CRITTERS.length - CRITTERS.filter((c) => save.unlocked.includes(c.id)).length;
+    const dexLine = F.sunstone && !F.shinycharm && dexLeft <= 6 ? `Prof. Pecan: Only ${dexLeft} critter${dexLeft > 1 ? 's' : ''} left to befriend for a complete Critterdex! I have a special charm for whoever finishes it...` : null;
+    w.say([...forecast(), ...(lore ? [lore] : []), ...(dexLine ? [dexLine] : []), F.crowned ? 'Prof. Pecan: Our very own Champion of Clashara! Come back and tell me everything sometime.'
       : nx ? `Prof. Pecan: ${F.cup_sprout ? 'Marvellous work so far! ' : ''}Your next goal is the ${cup.name}, in ${nx[1]}.`
       : "Prof. Pecan: Seven cups! Champion's Peak is north of Frostpeak. The Crown is waiting!"]);
     return;
