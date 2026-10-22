@@ -288,7 +288,7 @@ export const CRITTERS = [
     body: { w: 0.64, h: 0.58, headR: 0.5, legLen: 0.1, armLen: 0.16, chubby: 1.15 },
     ears: 'none', tail: 'fin', extra: 'none', voice: 0.8, isle: true, legend: true,
     parts: { narhorn: 0.8, pearl: 0.7 },
-    stats: { hp: 1000, speed: 6.2, power: 0.91, weight: 1.05 },
+    stats: { hp: 920, speed: 6.0, power: 0.9, weight: 1.05 },
     special: 'iceslide', super: 'whirlpool',
     moves: { special: 'Moonlit Glide', super: 'Moon Tide' },
   },
