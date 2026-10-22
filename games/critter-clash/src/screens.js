@@ -397,6 +397,13 @@ export class Screens {
         "Kite Flyer Gale says a windsock has gone up at the east edge of Cloudtop Gardens, pointing straight at the sky. With Hana's glider... who knows where that wind goes?",
         "Your Journal has a new 🏆 Champ page, too: your Battle Tower ranks, this week's Sunscatter Masters and Peak Gauntlet, and the island legends, all in one place.",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.sunstone && save.news?.includes('adv30') && !save.news.includes('adv31') && (save.adv.flags.dash_show || save.adv.flags.amends1_done || save.adv.flags.legend_solmoth || save.adv.flags.legend_moonwhal)) {
+      save.news.push('adv31'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! Picker Fern sent me a glowcap from Glowcap Woods that won't glow. A whole forest going dim! I've been digging through the Grove Book ever since. Clashara may have a legend of its own...",
+        "Snorkeller Pia in Port Coral says she found a shipwreck off the reef. A real one, a hundred years old! If you've helped Morra send back Pia's goggles, she'll take you diving.",
+        "And the Gloom Gulls have started a FISHING club on Starfall Atoll. Petrel names a catch of the day. I'm told the club record is four boots.",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
