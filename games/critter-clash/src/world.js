@@ -4762,7 +4762,12 @@ export class World {
     if (!this.camAt) this.camAt = want.clone(); else this.camAt.lerp(want, 1 - Math.exp(-dt * 8));
     cam.position.copy(this.camAt);
     if (this.M.indoor && port) cam.lookAt(this.camAt.x, 0.4, this.H * TILE / 2 + 1.2);
-    else cam.lookAt(this.camAt.x, 0.4, this.camAt.z - D + (far ? 1.6 : port ? 0.6 : 0.3));
+    else {
+      // Ember Isle: near the north edge the camera tips its gaze up, so the volcano behind the town rises into view over the palms
+      const tilt = this.M.volcano && !this.M.indoor ? Math.max(0, Math.min(1, (5.5 - p.z / TILE) / 4)) * (port ? 5 : 5.5) : 0;
+      this.camTilt = (this.camTilt || 0) + (tilt - (this.camTilt || 0)) * (1 - Math.exp(-dt * 4));
+      cam.lookAt(this.camAt.x, 0.4 + this.camTilt * 0.25, this.camAt.z - D + (far ? 1.6 : port ? 0.6 : 0.3) - this.camTilt);
+    }
     // portrait keeps about the same width of world in view as landscape shows in height
     cam.fov = far ? Math.min(56, 2 * Math.atan(Math.tan(0.38) / cam.aspect * 23.3 / 34.1) * 180 / Math.PI) : port ? Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) : 40; cam.updateProjectionMatrix();
     const fog = this.g.scene.fog; if (fog?.isFog && this.hidden?.length) { fog.near = far ? 50 : 38; fog.far = far ? 92 : 80; } // the fog keeps its distance from the hero
