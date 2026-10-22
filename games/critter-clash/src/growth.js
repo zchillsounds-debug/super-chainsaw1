@@ -386,10 +386,10 @@ export const FORMS = {
     forms: [
       { name: 'Lunawhal', species: 'Moonlight Narwhal', size: 1.12, voice: 0.72, bodyMul: { ...GROW2, w: 1.16, chubby: 1.05 },
         blurb: 'Its horn shines brighter as the moon grows full. On those nights, every fish in the lagoon follows it home.',
-        colors: { body: 0x7a98d8 }, parts: { narhorn: 0.95, pearl: 0.9, wave: 0.45 }, moves: { special: 'Moonbeam Glide', super: 'Spring Tide' } },
+        colors: { body: 0x7a98d8 }, parts: { narhorn: 0.95, pearl: 0.9, wave: 0.45, starfreckles: 1 }, moves: { special: 'Moonbeam Glide', super: 'Spring Tide' } },
       { name: 'Tidemoon', species: 'Moon Narwhal', size: 1.3, voice: 0.6, bodyMul: { ...GROW3, w: 1.3, chubby: 1.08, limb: 1.5 },
         blurb: 'Said to pull the tides in and out by itself. It is very proud of this. Nobody has the heart to check.',
-        colors: { body: 0x6a88d0, dark: 0x1e2a5a }, parts: { narhorn: 1.15, pearl: 1.1, wave: 0.85, orbs: 0.45 }, moves: { special: 'Full Moon Glide', super: 'King Tide' } },
+        colors: { body: 0x6a88d0, dark: 0x1e2a5a }, parts: { narhorn: 1.15, pearl: 1.1, wave: 0.85, orbs: 0.45, starfreckles: 1 }, moves: { special: 'Full Moon Glide', super: 'King Tide' } },
     ],
   },
   blowfin: {
@@ -873,6 +873,16 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     const horn = inked(mergeGeometries([cone, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 48, 0.022 * s, 4)]), ivory, OL * 0.5);
     horn.position.set(0, headR * 0.72, headR * 0.62); horn.rotation.x = 0.95;
     SK.add(horn);
+  }
+
+  // little star freckles on the cheeks and brow (Moonwhal): flat pale-gold stars, slightly glowing
+  if (P.starfreckles) {
+    const sh = new THREE.Shape(); for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 - Math.PI / 2, r = i % 2 ? 0.4 : 1; (i ? sh.lineTo : sh.moveTo).call(sh, Math.cos(a) * r, -Math.sin(a) * r); }
+    const geo = new THREE.ShapeGeometry(sh), sm = new THREE.MeshBasicMaterial({ color: 0xfff2a8, side: THREE.DoubleSide });
+    for (const [x, y, z, k] of [[-0.62, -0.08, 0.74, 1], [-0.5, 0.06, 0.82, 0.7], [0.62, -0.08, 0.74, 1], [0.5, 0.06, 0.82, 0.7], [-0.32, 0.62, 0.68, 0.8], [0.36, 0.7, 0.6, 0.65]]) {
+      const st = new THREE.Mesh(geo, sm), n = v(x, y, z).normalize(); st.scale.setScalar(headR * 0.13 * k * P.starfreckles);
+      st.position.copy(n).multiplyScalar(headR * 1.01); st.lookAt(n.clone().multiplyScalar(headR * 3)); SK.add(st);
+    }
   }
 
   // big digging claws on the paws

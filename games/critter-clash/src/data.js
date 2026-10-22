@@ -287,7 +287,7 @@ export const CRITTERS = [
     colors: { body: 0x8aa8e0, belly: 0xf4f8ff, accent: 0xfff2a8, dark: 0x2a3a6a, eye: '#0c1430', iris: '#6ac8ff', horn: 0xfff4c8, fin: 0x6a88c8, pearl: 0xfff8e0, steel: 0xfff4d8, collar: 0x6a88c8 },
     body: { w: 0.64, h: 0.58, headR: 0.5, legLen: 0.1, armLen: 0.16, chubby: 1.15 },
     ears: 'none', tail: 'fin', extra: 'none', voice: 0.8, isle: true, legend: true,
-    parts: { narhorn: 0.8, pearl: 0.7 },
+    parts: { narhorn: 0.8, pearl: 0.7, starfreckles: 1 },
     stats: { hp: 920, speed: 6.0, power: 0.9, weight: 1.05 },
     special: 'iceslide', super: 'whirlpool',
     moves: { special: 'Moonlit Glide', super: 'Moon Tide' },
