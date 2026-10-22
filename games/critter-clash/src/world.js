@@ -1172,8 +1172,10 @@ export class World {
     }
     const put = (list, mat, ink = OL, group = this.group) => { if (!list.length) return null; const m = inked(mergeGeometries(list), mat, ink); m.castShadow = true; group.add(m); list.forEach((g) => g.dispose()); return m; };
     put(stems, toon(0xf4e8d0), OL * 0.6);
-    caps.forEach((l, k) => put(l, toon(CAP[k], { emissive: new THREE.Color(CAP[k]).multiplyScalar(0.55).getHex(), rim: 0.6 })));
-    tiny.forEach((l, k) => put(l, toon(CAP[k], { emissive: new THREE.Color(CAP[k]).multiplyScalar(0.9).getHex(), rim: 0 }), OL * 0.4));
+    // the Heartseed story: after the Chapter 2 finale the glowcaps go dim (Verdelk sleeps too deeply); once the Heartseed is planted they shine brighter than ever
+    const F = save.adv.flags, glow = F.grove4_done ? 1.35 : F.sunstone ? 0.45 : 1;
+    caps.forEach((l, k) => put(l, toon(CAP[k], { emissive: new THREE.Color(CAP[k]).multiplyScalar(Math.min(0.9, 0.55 * glow)).getHex(), rim: 0.6 })));
+    tiny.forEach((l, k) => put(l, toon(CAP[k], { emissive: new THREE.Color(CAP[k]).multiplyScalar(Math.min(1, 0.9 * glow)).getHex(), rim: 0 }), OL * 0.4));
     put(spots, toon(0xffffff, { emissive: 0xb0a898, rim: 0 }), 0);
     // brambles live in their own group so the Trial of Friendship can shrink them away
     if (vines.length && !(this.M.bramble && save.adv.flags[this.M.bramble])) {
@@ -1576,6 +1578,15 @@ export class World {
   // little after-touches of finished deliveries: Puff's glowcap night-light by the picnic blanket
   buildThanks() {
     this.thanksFan = null;
+    if (this.key === 'glowwood' && save.adv.flags.grove4_done) { // the Heartseed, planted by the pond: a young blossoming tree with a soft green glow
+      const [px, pz] = wpos(16, 10), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add('16,10');
+      const bark = toon(0x8a6444), leaf = toon(0x5ad86a, { rim: 0.6, emissive: 0x0a3a14 }), pink = toon(0xffa8d8, { rim: 0.8, emissive: 0x3a1028 });
+      const trunk = inked(new THREE.CylinderGeometry(0.16, 0.26, 1.8, 7), bark, OL * 0.4); trunk.position.y = 0.9; g.add(trunk);
+      for (const [x, y, z, r] of [[0, 2.05, 0, 0.75], [0.5, 1.8, 0.2, 0.5], [-0.45, 1.85, -0.1, 0.52], [0.1, 2.5, -0.15, 0.48]]) { const c = inked(new THREE.SphereGeometry(r, 12, 8), leaf, OL * 0.5); c.position.set(x, y, z); g.add(c); }
+      for (let k = 0; k < 9; k++) { const a = k / 9 * Math.PI * 2, b = inked(new THREE.SphereGeometry(0.13, 8, 6), pink, OL * 0.2); b.position.set(Math.cos(a) * 0.72, 2.0 + Math.sin(k * 2.3) * 0.35, Math.sin(a) * 0.6 + 0.12); g.add(b); }
+      const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0x8aff9a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 }); sm.userData.own = true;
+      const sp = new THREE.Sprite(sm); sp.scale.setScalar(3.4); sp.position.y = 2.0; g.add(sp);
+    }
     if (this.key === 'ember' && save.adv.flags.fan_done) { // Tinker Volt's pocket fan, whirring beside Pengsicle at the hot springs
       const n = (this.M.npcs || []).find((x) => x.id === 'spa'); if (!n) return;
       const [px, pz] = wpos(n.x, n.y), g = new THREE.Group(); g.position.set(px + 0.9, 0, pz + 0.75); g.rotation.y = -2.3; g.scale.setScalar(1.7);

@@ -42,9 +42,8 @@ await pg.screenshot({ path: 'tools/out/verdelk-world.png' });
 console.log('--- verdelk'); console.log(await talk('verdelk_g'));
 console.log('unlocked:', await pg.evaluate(() => __save.unlocked.includes('verdelk') + ' · flag ' + __save.adv.flags.legend_verdelk));
 for (let i = 0; i < 4; i++) { await pg.evaluate(() => { [...document.querySelectorAll('button')].find((x) => /Yay|OK|Continue/.test(x.textContent) && x.offsetParent)?.click(); __game.screens.worldObj?.dialog?.next(); }); await pg.waitForTimeout(300); }
-await pg.evaluate(() => { __game.screens.worldMenu(); }); await pg.waitForTimeout(400);
-await pg.evaluate(() => { [...document.querySelectorAll('button')].find((x) => /Journal/.test(x.textContent))?.click(); }); await pg.waitForTimeout(400);
-await pg.evaluate(() => { [...document.querySelectorAll('button')].find((x) => /Champ/.test(x.textContent))?.click(); }); await pg.waitForTimeout(500);
-await pg.screenshot({ path: 'tools/out/verdelk-journal.png' });
+await pg.evaluate(() => { __game.screens.worldJournal('champ'); }); await pg.waitForTimeout(400);
+await pg.evaluate(() => { document.getAnimations().forEach((a) => { try { a.finish(); } catch { a.currentTime = 2000; } }); const l = document.querySelector('.jr-list'); const h = [...l.querySelectorAll('.jr-head')].find((x) => /Legendary/.test(x.textContent)); h?.scrollIntoView(); });
+await pg.screenshot({ path: 'tools/out/verdelk-journal-' + (process.argv[2] || '915x412') + '.png' });
 console.log('errors:', errs.length ? errs.join('\n') : 'none');
 await b.close();
