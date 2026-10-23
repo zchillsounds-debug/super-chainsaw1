@@ -212,7 +212,7 @@ export function skyHop(root, face, onDone) {
 
 // WAVE RIDER (Ember Isle's Surf Shack, Surfer Malia): the hero rides a surfboard along the waves. Tap to hop over rocks,
 // grab shells (some float in the air), and don't hop into a gull. It speeds up the longer you ride.
-export function waveRider(root, face, onDone) {
+export function waveRider(root, face, onDone, night = false) { // (night: a starry sky, the moon, the lit lighthouse far off and glowing plankton in the spray)
   const el = document.createElement('div');
   el.className = 'modal-wrap arcade-wrap';
   el.innerHTML = `<div class="arcade surf"><div class="arc-top"><b>WAVE RIDER</b><span class="arc-hud"></span></div>
@@ -272,24 +272,30 @@ export function waveRider(root, face, onDone) {
   const total = () => Math.floor(S.dist / 2) + S.score;
 
   const draw = () => {
-    const g = c.createLinearGradient(0, 0, 0, SEA); g.addColorStop(0, '#5ac8f0'); g.addColorStop(1, '#ffd8a0');
+    const g = c.createLinearGradient(0, 0, 0, SEA); g.addColorStop(0, night ? '#0e1640' : '#5ac8f0'); g.addColorStop(1, night ? '#3a3a7a' : '#ffd8a0');
     c.fillStyle = g; c.fillRect(0, 0, W, SEA + 10);
-    c.fillStyle = '#fff2b0'; c.beginPath(); c.arc(250, 44, 18, 0, 7); c.fill(); // the sun
+    if (night) { // stars twinkling, a big moon, and the Starfall lighthouse sweeping its beam far away
+      for (let k = 0; k < 40; k++) { const x = (k * 73) % W, y = (k * 37) % (SEA - 70); c.fillStyle = `rgba(255,250,220,${0.4 + 0.5 * Math.abs(Math.sin(S.t * 2 + k))})`; c.fillRect(x, y, k % 5 ? 1.5 : 2.5, k % 5 ? 1.5 : 2.5); }
+      c.fillStyle = '#fff8dc'; c.beginPath(); c.arc(250, 44, 18, 0, 7); c.fill(); c.fillStyle = '#0e1640'; c.beginPath(); c.arc(258, 40, 15, 0, 7); c.fill();
+      const lx = 40, ly = SEA - 30, a = S.t * 1.2; c.fillStyle = 'rgba(255,240,170,0.18)'; c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx + Math.cos(a) * 160, ly - 20 + Math.sin(a) * 30); c.lineTo(lx + Math.cos(a + 0.12) * 160, ly - 20 + Math.sin(a + 0.12) * 30); c.fill();
+      c.fillStyle = '#e8e0e8'; c.fillRect(lx - 3, ly, 6, 26); c.fillStyle = '#e84a4a'; c.fillRect(lx - 3, ly + 8, 6, 5); c.fillStyle = '#fff4a0'; c.beginPath(); c.arc(lx, ly - 2, 4, 0, 7); c.fill();
+    } else { c.fillStyle = '#fff2b0'; c.beginPath(); c.arc(250, 44, 18, 0, 7); c.fill(); } // the sun
     // the volcano far behind, with a puff of smoke, scrolling very slowly
     const vx = ((200 - S.dist * 0.3) % (W + 200) + W + 200) % (W + 200) - 100;
     c.fillStyle = '#6a5a6a'; c.beginPath(); c.moveTo(vx - 90, SEA); c.lineTo(vx - 18, SEA - 82); c.lineTo(vx + 18, SEA - 82); c.lineTo(vx + 90, SEA); c.fill();
     c.fillStyle = '#ff8a3a'; c.fillRect(vx - 16, SEA - 84, 32, 4);
     c.fillStyle = 'rgba(230,220,220,0.7)'; for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(vx + 6 + k * 12 + Math.sin(S.t + k) * 3, SEA - 96 - k * 12, 9 + k * 3, 0, 7); c.fill(); }
     // two layers of sea: a darker one behind, then the wave the hero rides
-    c.fillStyle = '#2a9ad0'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 8) c.lineTo(x, SEA - 8 + Math.sin(x * 0.03 + S.t * 1.4) * 4); c.lineTo(W, H); c.fill();
-    c.fillStyle = '#3ac0e8'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 6) c.lineTo(x, sea(x)); c.lineTo(W, H); c.fill();
+    c.fillStyle = night ? '#1a3a7a' : '#2a9ad0'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 8) c.lineTo(x, SEA - 8 + Math.sin(x * 0.03 + S.t * 1.4) * 4); c.lineTo(W, H); c.fill();
+    c.fillStyle = night ? '#2a5aa8' : '#3ac0e8'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 6) c.lineTo(x, sea(x)); c.lineTo(W, H); c.fill();
     c.strokeStyle = 'rgba(255,255,255,0.8)'; c.lineWidth = 2; c.beginPath(); for (let x = 0; x <= W; x += 6) (x ? c.lineTo : c.moveTo).call(c, x, sea(x)); c.stroke();
     for (const o of S.things) {
       if (o.k === 'rock') { const sy = sea(o.x); c.fillStyle = '#4a4246'; c.beginPath(); c.moveTo(o.x - o.w, sy + 6); c.lineTo(o.x - o.w * 0.5, sy - 18); c.lineTo(o.x + o.w * 0.3, sy - 22); c.lineTo(o.x + o.w, sy + 6); c.fill(); c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(o.x - o.w, sy + 2, o.w * 2, 3); }
       if (o.k === 'gull') { const fl = Math.sin(o.f) * 6; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.moveTo(o.x - 12, o.y - fl); c.quadraticCurveTo(o.x - 5, o.y - 6, o.x, o.y); c.quadraticCurveTo(o.x + 5, o.y - 6, o.x + 12, o.y - fl); c.stroke(); c.fillStyle = '#ffb030'; c.fillRect(o.x - 6, o.y - 1, 4, 2); }
       if (o.k === 'shell' && !o.got) { const sy = o.up ? SEA - 64 : sea(o.x) - 6; c.fillStyle = '#ffb0c8'; c.beginPath(); c.moveTo(o.x - 7, sy + 4); c.quadraticCurveTo(o.x, sy - 10, o.x + 7, sy + 4); c.closePath(); c.fill(); c.strokeStyle = '#e07a9a'; c.lineWidth = 1; for (const k of [-3, 0, 3]) { c.beginPath(); c.moveTo(o.x, sy + 4); c.lineTo(o.x + k, sy - 4); c.stroke(); } }
     }
-    for (const p of S.spray) { c.globalAlpha = Math.min(1, p.t * 3); c.fillStyle = '#fff'; c.beginPath(); c.arc(p.x, p.y, 2.5, 0, 7); c.fill(); }
+    if (night) for (let k = 0; k < 14; k++) { const x = ((k * 53 - S.dist * 2) % W + W) % W, y = sea(x) + 8 + (k * 13) % 30; c.fillStyle = `rgba(120,255,230,${0.3 + 0.4 * Math.abs(Math.sin(S.t * 3 + k))})`; c.beginPath(); c.arc(x, y, 1.6, 0, 7); c.fill(); } // glowing plankton
+    for (const p of S.spray) { c.globalAlpha = Math.min(1, p.t * 3); c.fillStyle = night ? '#8affe8' : '#fff'; c.beginPath(); c.arc(p.x, p.y, 2.5, 0, 7); c.fill(); }
     c.globalAlpha = 1;
     // the hero on an orange board with a white stripe, tilting with the wave (or tumbling after a crash)
     const tilt = S.air ? Math.max(-0.4, Math.min(0.4, S.vy / 600)) : (sea(X + 6) - sea(X - 6)) / 14;
