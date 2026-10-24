@@ -34,8 +34,9 @@ Goal: take Critter Clash from "keeps growing" to **finished**. That means every 
 - Title screen, credits, app icon and version, a final How to Play, and the final full check pass (tapcheck, advcup, advstory, all the feature tools). Then the final APK.
 
 ### Completion status
-- **C1: in progress (session C1, 2026-10-24).**
-- C2–C8: not started.
+- **C1: done (session C1, R723–R730).** Night WAVE RIDER (R723), Rainbow Reach at night (R724), R713–R723 written up in HANDOFF.md, a full 28-critter robin (which also found and fixed a mirror-cyclone battle crash, R725) and two balance passes (R729–R730: Woolt 50%, Smokeshell 44%, Blowfin 44%, Skimray 43%; Pumicub swung 35% → 69% and was trimmed to power 1.25, not re-measured). Left over: the Tower hall banners are small from the top-down camera (minor).
+- **C2: started (session C1).** Done: `tools/mapwalk.mjs` (every map, end-game save: doors, edges and landings all reachable), `tools/mainwalk.mjs` (Chapter 1 gates and stadium doors at each stage, all good), advtrial, advgauntlet, the Pecan intro beat and advcup Sprout pass, and post-game next-goal lines for the Deep Grotto and the Sunken Wreck (R727). Next: play each mainland story beat with `advstory` (each cup's after-beat, the trials of Strength/Wisdom/Heart, Champion's Peak and the ending), check the ❗ marks and nextGoal at each stage, and look for soft-locks (e.g. leaving a map mid-beat).
+- C3–C8: not started.
 
 # Critter Clash roadmap: Adventure Chapter 2 (agreed with the user on 2026-10-21)
 
