@@ -690,18 +690,18 @@ export class Battle {
         if (t > 0.6) this.endSuper(f);
       }
     } else if (id === 'tsunami') {
-      if (f.superPhase === 'go') { f.superPhase = 'wave'; f.st = 0; this.waveR = 0.5; sfx.water(); sfx.boom(); }
+      if (f.superPhase === 'go') { f.superPhase = 'wave'; f.st = 0; f.waveR = 0.5; sfx.water(); sfx.boom(); }
       if (f.superPhase === 'wave') {
-        const prev = this.waveR;
-        this.waveR = Math.min(10, 0.5 + t * 11);
+        const prev = f.waveR;
+        f.waveR = Math.min(10, 0.5 + t * 11);
         for (let k = 0; k < 14; k++) {
           const a = Math.random() * Math.PI * 2;
-          fx.spawn({ x: f.x + Math.cos(a) * this.waveR, y: 0.3 + Math.random() * 1.6, z: f.z + Math.sin(a) * this.waveR, vy: 2 + Math.random() * 3, vx: Math.cos(a) * 3, vz: Math.sin(a) * 3,
+          fx.spawn({ x: f.x + Math.cos(a) * f.waveR, y: 0.3 + Math.random() * 1.6, z: f.z + Math.sin(a) * f.waveR, vy: 2 + Math.random() * 3, vx: Math.cos(a) * 3, vz: Math.sin(a) * 3,
             color: Math.random() < 0.5 ? 0x48b8ff : 0xdff6ff, size: 0.5 + Math.random() * 0.5, life: 0.5, shape: 'drop', additive: false, grav: 12 });
         }
-        if (Math.random() < 0.3) this.fx.shock(f, 0x8fd8ff, this.waveR, 0.25);
+        if (Math.random() < 0.3) this.fx.shock(f, 0x8fd8ff, f.waveR, 0.25);
         const d = f.distTo(o);
-        if (!f.hitIds.has(o) && d < this.waveR + 0.5 && d > prev - 0.8) {
+        if (!f.hitIds.has(o) && d < f.waveR + 0.5 && d > prev - 0.8) {
           f.hitIds.add(o);
           const a = f.angleTo(o);
           this.applyHit(f, o, { dmg: 250 * f.power, kb: 12, lift: 9, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 40 });
@@ -777,11 +777,11 @@ export class Battle {
         f.target = { x: o.x, z: o.z };
         sfx.leaf(); sfx.superCharge();
         this.spawnProjectile(f, { kind: 'gale', x: o.x, z: o.z, y: 0, vx: 0, vz: 0, r: 0.1, life: 1.6, hit: { dmg: 0 }, big: true });
-        this.cyclone = this.projectiles[this.projectiles.length - 1];
-        this.cyclone.mesh.scale.set(2.2, 2.6, 2.2);
+        f.cyclone = this.projectiles[this.projectiles.length - 1];
+        f.cyclone.mesh.scale.set(2.2, 2.6, 2.2);
       }
       if (f.superPhase === 'twist') {
-        const cy = this.cyclone;
+        const cy = f.cyclone; if (!cy) { this.endSuper(f); return; } // (per fighter: a shared one crashed when both sides twisted at once)
         if (t < 0.7) { f.target.x += (o.x - f.target.x) * 0.06; f.target.z += (o.z - f.target.z) * 0.06; }
         cy.x = f.target.x; cy.z = f.target.z;
         for (let k = 0; k < 4; k++) {
@@ -797,7 +797,7 @@ export class Battle {
             this.applyHit(f, o, { dmg: 260 * f.power, kb: 2, lift: 15, stun: 0.8, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: true, type: f.type, launch: true, dizzy: 40 });
           }
         }
-        if (t > 1.5) { this.cyclone = null; this.endSuper(f); }
+        if (t > 1.5) { f.cyclone = null; this.endSuper(f); }
       }
     } else if (id === 'blizzard') {
       if (f.superPhase === 'go') { f.superPhase = 'storm'; f.st = 0; f.target = { x: o.x, z: o.z }; f.strikeN = 0; sfx.water(); }
