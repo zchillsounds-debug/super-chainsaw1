@@ -1,4 +1,15 @@
-# Critter Clash: Handoff (after Round 279, Adventure mode polish)
+# Critter Clash: Handoff
+
+## Completion run (C1–C8; read `ROADMAP.md` → "Completion roadmap" first)
+- **Completion run: C1 in progress (session C1, 2026-10-24 02:08 UTC →, session_01UPhH5bFT8yNjD2V3aAs9yf). Next session does C1 if it isn't marked done in ROADMAP.md, else the next C-milestone.**
+- The run's prompt said the C1–C8 plan was agreed with the user, but no copy was on any branch, so C1 drafted it in ROADMAP.md from the open threads. If the user posts their own plan, it replaces the draft.
+- Work branch `ccr-4fc93d6e-suxlhd`. Before every push: `git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd`. Never rebase or force-push. Round numbers continue from the highest R in `git log`.
+- **Builds for checks:** the scratchpad's `build.sh` (`P=<port>`: a git worktree of **HEAD** → `vite build` → `vite preview`; it does NOT include uncommitted edits) and `wbuild.sh` (`P=<port>`: builds the **working tree** into `wdist` and serves it, for quick iteration). Recreate them from the "Session C1" section below in a fresh container.
+
+## Note for the user's chat (battle-side edits from the completion run, please review)
+- **Session C1, R725 (battle.js `updateSuper`):** the cyclone super kept its twister in `this.cyclone` (on the battle), so when both fighters used a cyclone super at once, the first to finish set it to null and the other crashed on `cy.x = ...` (found by a full robin: `TypeError: Cannot set properties of null (setting 'x')`). It is now `f.cyclone` (per fighter) with a null guard that ends the super. The tsunami's ring radius `this.waveR` became `f.waveR` the same way (no crash, but a mirror tsunami shared one ring). No other battle.js, arena.js, hud.js or results/worldFight edits.
+
+## (Older top section, kept)
 
 ## NEW (2026-10-21): Chapter 2 roadmap and a new 48-hour run
 - The first 48-hour run is over. It ended at 2026-10-20 21:52 UTC, and session 17r (R655–R671) was its last session.
@@ -1154,6 +1165,17 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **Final checks (~19:40 UTC, production build of 0dd51d0 = R671):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint in portrait); advcup Sprout wins 3 and lands back in Bloom Town, no errors.
 - Critiqued and left as is: world tours at 915×412, 740×360 (touch, medium) and 412×915, rooms at 412×915, title/Tournament/Camp at 412×915 and 740×360, Journal Today/Fish/Favours/Records, Town Map at both sizes, the hat picker, grown-form scarves (Hootsy/Pricklepuff/Snoozlo stage 2 now read as collars with a knot, so that old note is done).
 - **Next ideas:** autumn has leaf piles and Pumpkin Nights but no daily "prop" like the others (maybe apple-bobbing or a harvest basket in Bloom Town); the Hootsy stage-2 (gust) scarf is pale on a lavender body; the sea texture could also go on other water borders; a full robin after the next combat change.
+
+## Session C1 (2026-10-24 02:08 UTC →, session_01UPhH5bFT8yNjD2V3aAs9yf): completion run begins; C1 close the open threads
+- **Build scripts** (put them in the scratchpad; `S` = scratchpad path):
+  - `build.sh`: `git worktree add $S/wt HEAD --detach`, symlink `games/critter-clash/node_modules` into it, `npx vite build --outDir $S/dist --emptyOutDir`, `fuser -k $P/tcp`, then `nohup npx vite preview --outDir $S/dist --port $P --strictPort &`. Run `npm install` first in a fresh container.
+  - `wbuild.sh`: the same, but builds the working tree (`cd games/critter-clash; npx vite build --outDir $S/wdist`) so uncommitted edits show up.
+  - Run tools in parallel only if they use different ports or don't screenshot: advcup timed out on a screenshot while tapcheck ran at the same time.
+- **Checks at start (cdb4994, production build):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the portrait pause menu); advcup Sprout wins 3 and lands back in Bloom Town, no errors.
+- **Undocumented session (session_017gxL5n4uxP1o7uzrkiPXgq, R713–R723, reconstructed from git log):** R713 **Verdelk**, the Grove Elk, Clashara's own legend (leaf, 3 forms, shiny), woken by the Heartseed chain (Picker Fern → Prof. Pecan → Elder Oakley → Gardener Rosa → Mama Squeak; the Grove Crown), boss by the Glowcap Woods pond, `tools/grove.mjs`. R714 the **Gull Fishing Club** on Starfall Atoll (catch of the day, 3 🍓, Gull Club Cap after five), `tools/gullclub.mjs`. R715 the world camera eases up near the north edge so Ember Isle's volcano shows. R716/R718 Verdelk balance (hp 1060, speed 6.5, power 0.97). R717 the **Sunken Wreck** dive spot off Port Coral (after Morra's Amends; Diving Helm), `tools/wreck.mjs`. R719 Pecan news adv31. R720 the Heartseed in the world (Glowcap woods dim after the Chapter 2 finale, shine once it's planted; a young glowing tree by the pond). R721 three single-step island favours, `tools/islefavours.mjs`. R722 **REEF DIVE** (Dive Coach Nami in the wreck; Dive Goggles for 250+), `tools/reefdive.mjs`. R723 (part) a night drawing for WAVE RIDER. That session left no HANDOFF notes and no battle-side edits (src diff: arcade, critters, data, growth, screens, story, style, world, worldmaps).
+- **R723 (finished):** Surfer Malia offers a moonlight ride when the windows show night (`w.outPhase === 'night'`; the shack is indoors, so `w.phase` is always 'day' there). Night WAVE RIDER: stars, a crescent moon, the Starfall lighthouse on an islet sweeping its beam, a glowing crater, glowing plankton and spray. +5 🍓 for the first moonlight ride (`A.surfNight` count, `A.surfNightHi`), a 🌙 Records row. `tools/surf.mjs [WxH] [secs] [hour]`.
+- **R724: Rainbow Reach at night:** the rainbow turns into a pale silver moonbow and 26 soft star sprites drift low over the islet, twinkling (`this.nearStars`, animated in `update`). `tools/reach.mjs <WxH> 22`.
+- **R725: battle crash fix** (see "Note for the user's chat"): mirror cyclone supers.
 
 ## Session 18d (2026-10-21 23:40–~00:50 UTC, session_01JkygnyfnFio7oFRNAVRJbS): M4 finished, post-game content, R701–R712
 - Build/serve as in 18b/18c: the scratchpad `build.sh` (`P=<port>`: git worktree of HEAD → `vite build` → `vite preview` on that port). npm works; run `npm install` first in a fresh container.
