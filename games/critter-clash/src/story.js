@@ -400,7 +400,7 @@ export function storyTalk(S, id, w, a) {
     }
     const dexLeft = CRITTERS.length - CRITTERS.filter((c) => save.unlocked.includes(c.id)).length;
     const dexLine = F.sunstone && !F.shinycharm && dexLeft <= 6 ? `Prof. Pecan: Only ${dexLeft} critter${dexLeft > 1 ? 's' : ''} left to befriend for a complete Critterdex! I have a special charm for whoever finishes it...` : null;
-    w.say([...forecast(), ...(lore ? [lore] : []), ...(dexLine ? [dexLine] : []), F.crowned ? 'Prof. Pecan: Our very own Champion of Clashara! Come back and tell me everything sometime.'
+    w.say([...forecast(), ...(lore ? [lore] : []), ...(dexLine ? [dexLine] : []), F.crowned ? (F.isle_arrive && !F.grand_done ? 'Prof. Pecan: Our Champion! Keep an eye on the 🏅 Grand total in your Journal Records. Reach 100% of Clashara AND the isles, then come and see me. I have something special in mind...' : 'Prof. Pecan: Our very own Champion of Clashara! Come back and tell me everything sometime.')
       : nx ? `Prof. Pecan: ${F.cup_sprout ? 'Marvellous work so far! ' : ''}Your next goal is the ${cup.name}, in ${nx[1]}.`
       : "Prof. Pecan: Seven cups! Champion's Peak is north of Frostpeak. The Crown is waiting!"]);
     return;
