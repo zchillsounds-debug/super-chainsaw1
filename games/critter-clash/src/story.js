@@ -12,7 +12,7 @@ import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
 import { arcadeGame, skyHop, waveRider, reefDive } from './arcade.js';
-import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, seasonKey, gullFish } from './world.js';
+import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, seasonKey, gullFish, traderTown } from './world.js';
 
 const flags = () => save.adv.flags;
 const byId = (id) => CRITTERS.find((c) => c.id === id);
@@ -974,7 +974,8 @@ export function favourList() {
     return { id, isle: isleQuest(id), extra: extraQuest(id), who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, deliver: !!Q.to, critter: Q.critter, at: state === 'done' ? null : Q.to ? Q.to.map : state === 'found' ? home : LOST_SPOTS[id]?.map, text: Q.to ? (state === 'done' ? `Delivered the ${Q.item} to ${Q.to.name}` : `Take the ${Q.item} to ${Q.to.name} in ${Q.to.home}`) : state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
   });
   rows.sort((a, b) => ({ found: 0, open: 1, done: 2 })[a.state] - ({ found: 0, open: 1, done: 2 })[b.state]);
-  return { rows, unasked: Object.keys(LOST).length - rows.length, mainland: Object.keys(LOST).filter((id) => !isleQuest(id) && !extraQuest(id)).length, isles: Object.keys(LOST).filter(isleQuest).length };
+  return { rows, unasked: Object.keys(LOST).length - rows.length, mainland: Object.keys(LOST).filter((id) => !isleQuest(id) && !extraQuest(id)).length, isles: Object.keys(LOST).filter(isleQuest).length,
+    unaskedOf: (isle) => Object.keys(LOST).filter((id) => !F[id + '_asked'] && isleQuest(id) === isle && !extraQuest(id)).length };
 }
 // a post-game extra chain (like the Heartseed): on the Journal page, but not in Clashara's %
 function extraQuest(id) {
@@ -1140,6 +1141,23 @@ function gauntlet(S, w) {
 const TOWER_ACES = ['Ace Coral', 'Ace Rennick', 'Ace Ola', 'Ace Brisa', 'Ace Kai', 'Ace Talia', 'Ace Nim', 'Ace Hoku', 'Ace Pua', 'Ace Ezra', 'Ace Mako', 'Ace Lio'];
 export const TOWER_RANKS = [[0, 'Rookie', '🪶'], [7, 'Bronze', '🥉', 'towercap', 10], [14, 'Silver', '🥈', 'silverlaurel', 15], [21, 'Gold', '🥇', 'towercrown', 20], [35, 'Legend', '👑', 'morrahat', 30]];
 export const towerRank = (n) => [...TOWER_RANKS].reverse().find((r) => n >= r[0]);
+// R755: where a hat comes from (the Journal Records' "what's left" line)
+const HAT_WHERE = {
+  shutter: 'snap every landmark in Clashara', sunbloom: "grow a flower in Bea's garden plot, Bloom Town", angler: "win Fisher Finn's weekly Fishing Derby",
+  eggshell: "hatch an egg from Nanny Nell's Daycare", laurel: "clear the Peak Gauntlet (Keeper Orla)", sunstone: 'bring the Sunstone home',
+  pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
+  masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
+  gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
+};
+export function hatWhere(id) {
+  const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';
+  const q = Object.values(LOST).find((Q) => Q.hat === id); if (q) return `a favour for ${q.who} (${q.home})`;
+  const ck = Object.keys(MAPS).find((k) => MAPS[k].chest?.hat === id); if (ck) return `a treasure chest in ${MAPS[ck].name}`;
+  const tr = TOWER_RANKS.find((r) => r[3] === id); if (tr) return `${tr[0]} Battle Tower wins in a row`;
+  if (HAT_WHERE[id]) return HAT_WHERE[id];
+  if (h.trader) { const t = traderTown(); return `Trader Tock${t ? ` (today in ${MAPS[t].name})` : ''}`; }
+  return h.market ? "Chef Rumi's noodle cart, Neon City" : h.isle ? 'the Shell Hats stall, Port Coral' : h.price ? 'the Hat Shop, Bloom Town' : 'a gift';
+}
 export function towerFoe(run, n, hero) { // a shuffled order of every critter per streak, so a set of seven never repeats a critter
   let h = ((run + 7) * 2654435761) >>> 0; const r = () => ((h = (h * 1103515245 + 12345) >>> 0) >>> 8) / 16777216;
   const pool = CRITTERS.filter((c) => c.id !== hero).map((c) => c.id);

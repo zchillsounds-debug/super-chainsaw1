@@ -11,7 +11,7 @@ import { DUMMY, moveList } from './training.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
 import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, seasonKey } from './world.js';
-import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, gauntletFoes } from './story.js';
+import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, hatWhere, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, gauntletFoes } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { VERSION } from './version.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -1303,15 +1303,26 @@ export class Screens {
     const tr = npcs.filter((n) => n.trainer), fl = favourList(), fsp = new Set([...Object.keys(L.sp || {}), ...(L.best ? [L.best.name] : [])]);
     const parts = []; // every bar with a goal counts towards the overall completion
     const iparts = []; // the isles' bars: their own % (C4: Clashara and the isles make the grand total)
-    const bar = (ic, name, n, of, own) => (of && (own ? iparts : parts).push(Math.min(1, n / of)), `<li class="jr-rec"><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`);
+    // R755: a row with a goal that isn't full carries a "what's left" line (tap the row to see it)
+    const bar = (ic, name, n, of, own, left) => (of && (own ? iparts : parts).push(Math.min(1, n / of)), `<li class="jr-rec${of && n < of && left ? ' has-left' : ''}"${of && n < of && left ? ` data-left="${left.replace(/"/g, '&quot;')}"` : ''}><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`);
+    const lst = (xs, cap = 6) => xs.slice(0, cap).join(' · ') + (xs.length > cap ? ` · +${xs.length - cap} more` : '');
+    const seenMap = (k) => !!A.seen?.[k], mName = (k) => (seenMap(k) ? MAPS[k].name : 'somewhere new');
+    const byMap = (list) => { const g = {}; list.forEach(([k, x]) => (g[mName(k)] ||= []).push(x)); return Object.entries(g).map(([m, xs]) => (xs[0] == null ? `${m}${xs.length > 1 ? ` ×${xs.length}` : ''}` : `${m}: ${xs.join(', ')}`)); };
+    const trLeft = (isle) => byMap(Object.entries(MAPS).filter(([, M]) => !!M.isle === isle && (isle || !M.extra)).flatMap(([k, M]) => (M.npcs || []).filter((n) => n.trainer && !F[n.id] && (!isle || !(n.hideFlag && F[n.hideFlag]))).map((n) => [k, n.name])));
+    const boxLeft = (isle) => byMap(Object.entries(MAPS).filter(([k, M]) => !M.indoor && k !== 'peak' && !!M.isle === isle && !M.extra).flatMap(([k]) => [0, 1].filter((j) => !F[`it_${k}_${j}`]).map(() => [k, null])));
+    const hatLeft = (hs) => hs.filter((h) => !(A.hats || []).includes(h.id)).map((h) => `${h.name}: ${hatWhere(h.id)}`);
+    const fishLeft = (keys) => { const w = { pond: 'ponds & rivers', sea: 'the sea', isle: 'island reefs', lava: 'lava pools', cold: 'icy water', night: 'any water after dark', dusk: 'any water on golden evenings' }; return keys.map((k) => [k, FISH[k].filter((f) => !fsp.has(f[0])).length]).filter(([, c]) => c).map(([k, c]) => `${c} in ${w[k] || k}`); };
+    const favLeft = (isle) => { const open = fl.rows.filter((r) => r.state !== 'done' && !!r.isle === isle && !r.extra).map((r) => `${r.who}: ${r.text}`), un = fl.unaskedOf?.(isle) || 0; return [...open, ...(un ? [`${un} not asked yet (look for a ❗ over townsfolk)`] : [])]; };
+    const lmLeft = (isle) => LANDMARKS.filter((l) => !!l.isle === isle && !(A.snaps || []).includes(l.id)).map((l) => (seenMap(l.map) ? `${l.name} (${MAPS[l.map].name})` : '??? (somewhere new)'));
+    const dexLeft = () => { const miss = CRITTERS.filter((c) => !save.unlocked.includes(c.id)); return miss.map((c) => { const at = Object.keys(MAPS).filter((k) => MAPS[k].wild?.list?.some((w) => w[0] === c.id) && seenMap(k)); return at.length ? `${c.name} (wild in ${at.slice(0, 2).map((k) => MAPS[k].name).join(', ')})` : seenMap(Object.keys(MAPS).find((k) => MAPS[k].wild?.list?.some((w) => w[0] === c.id)) || '') ? c.name : '??? (a special critter)'; }); };
     body = (A.time >= 60 ? bar('⏱️', 'Time adventuring', playTime(A.time)) : '')
-      + bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length)
-      + bar('⚔️', 'Trainers beaten', tr.filter((n) => F[n.id]).length, tr.length)
-      + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_') && !MAPS[k.slice(3, k.lastIndexOf('_'))]?.isle && !MAPS[k.slice(3, k.lastIndexOf('_'))]?.extra).length, 24)
-      + bar('🤝', 'Favours done', fl.rows.filter((r) => r.state === 'done' && !r.isle).length, fl.mainland)
-      + bar('🎩', 'Hats collected', (A.hats || []).filter((id) => { const h = SHOP_HATS.find((q) => q.id === id); return h && !h.season && !h.isle && !h.extra; }).length, SHOP_HATS.filter((h) => !h.season && !h.isle && !h.extra).length)
-      + bar('🐟', 'Kinds of fish', [...fsp].filter((n) => !FISH.isle.some((f) => f[0] === n)).length, Object.entries(FISH).filter(([k]) => k !== 'isle').flatMap(([, v]) => v).length)
-      + bar('📖', 'Critters on your team', save.unlocked.length, CRITTERS.length)
+      + bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length, false, lst(CUPS.filter((c) => !F['cup_' + c.id]).map((c) => c.name)))
+      + bar('⚔️', 'Trainers beaten', tr.filter((n) => F[n.id]).length, tr.length, false, lst(trLeft(false), 4))
+      + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_') && !MAPS[k.slice(3, k.lastIndexOf('_'))]?.isle && !MAPS[k.slice(3, k.lastIndexOf('_'))]?.extra).length, 24, false, lst(boxLeft(false), 8))
+      + bar('🤝', 'Favours done', fl.rows.filter((r) => r.state === 'done' && !r.isle).length, fl.mainland, false, lst(favLeft(false), 3))
+      + bar('🎩', 'Hats collected', (A.hats || []).filter((id) => { const h = SHOP_HATS.find((q) => q.id === id); return h && !h.season && !h.isle && !h.extra; }).length, SHOP_HATS.filter((h) => !h.season && !h.isle && !h.extra).length, false, lst(hatLeft(SHOP_HATS.filter((h) => !h.season && !h.isle && !h.extra)), 4))
+      + bar('🐟', 'Kinds of fish', [...fsp].filter((n) => !FISH.isle.some((f) => f[0] === n)).length, Object.entries(FISH).filter(([k]) => k !== 'isle').flatMap(([, v]) => v).length, false, lst(fishLeft(Object.keys(FISH).filter((k) => k !== 'isle'))))
+      + bar('📖', 'Critters on your team', save.unlocked.length, CRITTERS.length, false, lst(dexLeft(), 5))
       + bar('🏔️', 'Peak Gauntlets cleared', A.gauntWins || 0)
       + bar('💥', 'Alphas beaten', Object.keys(F).filter((k) => k.startsWith('alpha_')).length)
       + bar('🌿', 'Wild critters met', A.cnt?.wild || 0)
@@ -1350,21 +1361,21 @@ export class Screens {
       + (A.cnt?.twinkle ? bar('🎄', 'Twinkle Week gifts', A.cnt.twinkle) : '')
       + (A.cnt?.carol ? bar('🎵', 'Carols sung', A.cnt.carol) : '')
       + (A.cnt?.wisp ? bar('✨', 'Firefly & wisp nights', A.cnt.wisp) : '')
-      + bar('📸', 'Landmark photos', (A.snaps || []).filter((id) => !LANDMARKS.find((l) => l.id === id)?.isle).length, LANDMARKS.filter((l) => !l.isle).length)
-      + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length)
-      + bar('🍾', 'Bottle notes read', (A.notes || []).length, BOTTLE_NOTES.length)
+      + bar('📸', 'Landmark photos', (A.snaps || []).filter((id) => !LANDMARKS.find((l) => l.id === id)?.isle).length, LANDMARKS.filter((l) => !l.isle).length, false, lst(lmLeft(false), 5))
+      + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length, false, `${CONSTELLATIONS.length - (A.consts || []).length} more: look through Grandpa's telescope in Sprout Village after dark`)
+      + bar('🍾', 'Bottle notes read', (A.notes || []).length, BOTTLE_NOTES.length, false, `${BOTTLE_NOTES.length - (A.notes || []).length} more: a bottle washes up on Seashell Town's shore most nights`)
       + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
     if (F.isle_arrive) { // Chapter 2: the Sunscatter Isles get their own rows (they don't count towards Clashara's %); a Gloom Gull who reformed before you battled them doesn't count against you
       const itr = Object.values(MAPS).filter((M) => M.isle).flatMap((M) => M.npcs || []).filter((n) => n.trainer && (F[n.id] || !(n.hideFlag && F[n.hideFlag]))), ih = SHOP_HATS.filter((h) => h.isle && !h.season);
       body += '<li class="jr-head">🏝️ Sunscatter Isles</li>'
-        + bar('🏆', 'Island cups won', ISLE_CUPS.filter((c) => F['cup_' + c.id]).length, ISLE_CUPS.length, true)
-        + bar('⚔️', 'Island trainers beaten', itr.filter((n) => F[n.id]).length, itr.length, true)
-        + bar('🎁', 'Island gift boxes', Object.keys(F).filter((k) => k.startsWith('it_') && MAPS[k.slice(3, k.lastIndexOf('_'))]?.isle).length, 20, true)
-        + bar('🤝', 'Island favours', fl.rows.filter((r) => r.state === 'done' && r.isle).length, fl.isles, true)
-        + bar('🎩', 'Island hats', ih.filter((h) => (A.hats || []).includes(h.id)).length, ih.length, true)
-        + bar('🐠', 'Reef fish', FISH.isle.filter((f) => fsp.has(f[0])).length, FISH.isle.length, true)
-        + bar('📸', 'Island landmarks', (A.snaps || []).filter((id) => LANDMARKS.find((l) => l.id === id)?.isle).length, LANDMARKS.filter((l) => l.isle).length, true)
-        + bar('🦪', 'Hidden pearls', Object.keys(MAPS).filter((k) => MAPS[k].pearl && F['pearl_' + k]).length, Object.keys(MAPS).filter((k) => MAPS[k].pearl).length, true)
+        + bar('🏆', 'Island cups won', ISLE_CUPS.filter((c) => F['cup_' + c.id]).length, ISLE_CUPS.length, true, lst(ISLE_CUPS.filter((c) => !F['cup_' + c.id]).map((c) => c.name)))
+        + bar('⚔️', 'Island trainers beaten', itr.filter((n) => F[n.id]).length, itr.length, true, lst(trLeft(true), 4))
+        + bar('🎁', 'Island gift boxes', Object.keys(F).filter((k) => k.startsWith('it_') && MAPS[k.slice(3, k.lastIndexOf('_'))]?.isle).length, 20, true, lst(boxLeft(true), 8))
+        + bar('🤝', 'Island favours', fl.rows.filter((r) => r.state === 'done' && r.isle).length, fl.isles, true, lst(favLeft(true), 3))
+        + bar('🎩', 'Island hats', ih.filter((h) => (A.hats || []).includes(h.id)).length, ih.length, true, lst(hatLeft(ih), 4))
+        + bar('🐠', 'Reef fish', FISH.isle.filter((f) => fsp.has(f[0])).length, FISH.isle.length, true, lst(fishLeft(['isle'])))
+        + bar('📸', 'Island landmarks', (A.snaps || []).filter((id) => LANDMARKS.find((l) => l.id === id)?.isle).length, LANDMARKS.filter((l) => l.isle).length, true, lst(lmLeft(true), 5))
+        + bar('🦪', 'Hidden pearls', Object.keys(MAPS).filter((k) => MAPS[k].pearl && F['pearl_' + k]).length, Object.keys(MAPS).filter((k) => MAPS[k].pearl).length, true, lst(byMap(Object.keys(MAPS).filter((k) => MAPS[k].pearl && !F['pearl_' + k]).map((k) => [k, null])), 5) + ' (they twinkle only up close)')
         + bar('🌟', 'The Sunstone', F.sunstone ? 'home' : F.morra ? 'found' : 'lost')
         + bar('⛴️', 'Ferry rides', A.cnt?.ferry || 0)
         + (A.surfHi ? bar('🏄', 'WAVE RIDER best', A.surfHi) : '')
@@ -1450,7 +1461,8 @@ export class Screens {
       const card = (l) => alb[l.id] ? `<button class="al-card got" data-id="${l.id}"><img src="${alb[l.id]}" alt=""><b>${l.name}</b></button>`
         : snaps.includes(l.id) ? `<button class="al-card old" data-hint="📸 Snap ${l.name} again with the camera to put it in the album."><i>📸</i><b>${l.name}</b><small>snap it again for the album</small></button>`
           : `<button class="al-card" data-hint="${save.adv.seen?.[l.map] ? `📸 Take a photo at ${l.name} (${MAPS[l.map].name}) for the album.` : '🔒 This spot is somewhere you haven\'t been yet.'}"><i>${save.adv.seen?.[l.map] ? '❔' : '🔒'}</i><b>${save.adv.seen?.[l.map] ? l.name : '???'}</b><small>${save.adv.seen?.[l.map] ? MAPS[l.map].name : 'somewhere new'}</small></button>`;
-      body = R.body + `<li class="jr-head">📸 Photo album <small>${snaps.length}/${LANDMARKS.length}</small></li><li class="jr-album">${LANDMARKS.map(card).join('')}</li>`
+      const i0 = R.body.indexOf('<li class="jr-rec'), tapTip = R.body.includes('has-left') ? '<li class="jr-more jr-tap">🔍 Tap a row to see what\'s still to find.</li>' : '';
+      body = R.body.slice(0, i0) + tapTip + R.body.slice(i0) + `<li class="jr-head">📸 Photo album <small>${snaps.length}/${LANDMARKS.length}</small></li><li class="jr-album">${LANDMARKS.map(card).join('')}</li>`
         + (snaps.length < LANDMARKS.length ? '<li class="jr-more al-tip">Stand by a landmark and take a ☰ → 📸 Photo to add it.</li>' : '') + (nx ? `<li class="jr-more">🎁 Next reward at ${nx}% explored${nx === 100 ? ': something golden!' : '.'}</li>` : '<li class="jr-more">🌟 Every corner explored. Visit your statue in Sprout Village!</li>');
       recPc = R.pc;
     } else if (tab === 'today') { // every daily thing in one list: done today, or where to go for it
@@ -1508,6 +1520,12 @@ export class Screens {
       <div class="res-btns"></div></div>`;
     const close = () => { d.remove(); this.game.modalClose = null; };
     d.querySelectorAll('.al-card:not(.got)').forEach((c) => c.addEventListener('click', () => { sfx.ui('bounce'); const tip = d.querySelector('.al-tip'); if (tip) { tip.textContent = c.dataset.hint; tip.classList.remove('flash'); void tip.offsetWidth; tip.classList.add('flash'); } else this.toast(c.dataset.hint); })); // an empty frame says where its photo is (in the line under the album)
+    d.querySelectorAll('.jr-rec.has-left').forEach((r) => r.addEventListener('click', () => { // R755: what's left for this row, in a line under it
+      const open = r.nextElementSibling?.classList.contains('jr-left'); d.querySelectorAll('.jr-left').forEach((x) => x.remove()); d.querySelectorAll('.jr-rec.open').forEach((x) => x.classList.remove('open'));
+      sfx.ui(open ? 'back' : 'bounce'); if (open) return;
+      const li = document.createElement('li'); li.className = 'jr-left'; li.textContent = '🔍 Still to find: ' + r.dataset.left; r.after(li); r.classList.add('open');
+      li.scrollIntoView?.({ block: 'nearest' });
+    }));
     d.querySelectorAll('.al-card.got').forEach((c) => c.addEventListener('click', () => { // a big look at an album photo; tap anywhere to put it back
       sfx.ui('ok'); const v = document.createElement('div'); v.className = 'al-view'; v.innerHTML = `<figure><img src="${albumGet()[c.dataset.id]}" alt=""><figcaption>${c.querySelector('b').textContent}</figcaption></figure>`;
       v.addEventListener('click', () => { sfx.ui('back'); v.remove(); }); d.appendChild(v);
