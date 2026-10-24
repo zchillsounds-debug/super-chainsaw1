@@ -132,6 +132,7 @@ const shinyRate = () => (save.adv?.flags?.shinycharm ? 2 : 1) / 30; // a rare sh
 const OL = 0.035;
 const CS = 1.4; // critters stand a bit taller than in battle so they read from the overhead camera
 const byId = (id) => CRITTERS.find((c) => c.id === id);
+if (typeof window !== "undefined") window.__maps = MAPS; // (for the route-audit tools)
 const rng = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 const hash = (s) => { let h = 7; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) % 2147483647; return h || 1; };
 const wpos = (x, y) => [x * TILE + TILE / 2, (y * TILE) + TILE / 2];
