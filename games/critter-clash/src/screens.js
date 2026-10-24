@@ -1199,9 +1199,9 @@ export class Screens {
     d.className = 'modal-wrap';
     const F = save.adv.flags, cups = CUPS.filter((c) => F['cup_' + c.id]).length, h = heroDef();
     d.innerHTML = `<div class="modal wd-menu-modal"><h2>Adventure</h2>
-      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero${this.worldObj?.M && !this.worldObj.M.indoor && (!this.worldObj.M.mood || this.worldObj.M.snow || this.worldObj.M.border === 'cloud') ? ` · ${this.worldObj.storm ? '⛈️ Storm' : this.worldObj.rain ? '🌧️ Rain' : this.worldObj.snowing ? '🌨️ Snow' : { day: '☀️ Day', evening: '🌇 Evening', night: '🌙 Night' }[this.worldObj.phase] || ''}` : ''}${seasonTag() ? ` · <span class="nw">${seasonTag()}</span>` : ''}${save.adv.time >= 60 ? ` · <span class="nw">⏱️ ${playTime(save.adv.time)}</span>` : ''}</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => k.startsWith('it_')).length}/24 · <span class="nw">📋 ${save.adv.req?.day === new Date().toISOString().slice(0, 10) ? `${save.adv.req.paid.length}/3` : 'new!'}</span></small></div></div>
+      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero${this.worldObj?.M && !this.worldObj.M.indoor && (!this.worldObj.M.mood || this.worldObj.M.snow || this.worldObj.M.border === 'cloud') ? ` · ${this.worldObj.storm ? '⛈️ Storm' : this.worldObj.rain ? '🌧️ Rain' : this.worldObj.snowing ? '🌨️ Snow' : { day: '☀️ Day', evening: '🌇 Evening', night: '🌙 Night' }[this.worldObj.phase] || ''}` : ''}${seasonTag() ? ` · <span class="nw">${seasonTag()}</span>` : ''}${save.adv.time >= 60 ? ` · <span class="nw">⏱️ ${playTime(save.adv.time)}</span>` : ''}</small><small>🏆 Cups ${cups}/${CUPS.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => { const M = MAPS[k.slice(3, k.lastIndexOf('_'))]; return k.startsWith('it_') && M && !M.extra && (!M.isle || F.isle_arrive); }).length}/${F.isle_arrive ? 44 : 24} · <span class="nw">📋 ${save.adv.req?.day === new Date().toISOString().slice(0, 10) ? `${save.adv.req.paid.length}/3` : 'new!'}</span></small></div></div>
       <div class="wd-cups">${['sprout', 'thunder', 'grove', 'champion', 'midnight', 'sky', 'legend'].map((id) => { const c = CUPS.find((x) => x.id === id), on = F['cup_' + id]; return `<span class="${on ? 'on' : ''}" style="--cc:${c.color}" title="${c.name}">${on ? '🏆' : ''}</span>`; }).join('')}${F.crowned ? '<span class="on crown" style="--cc:#ffd23f" title="Critter Crown">👑</span>' : ''}${F.isle_arrive ? `<em class="wd-pc" title="Grand total: Clashara and the isles">🏅 ${(() => { try { return this.records().tpc; } catch (e) { return 0; } })()}%</em>` : `<em class="wd-pc" title="Clashara explored">🗺️ ${this.recordsPc()}%</em>`}</div>
-      <p class="wd-goal">📜 ${nextGoal(F)}${favourLine() ? `<small class="wd-fav">🤝 ${favourLine()}</small>` : ''}${save.adv.care && save.critters[save.adv.care.id] ? `<small class="wd-fav">🧸 ${grown(byId(save.adv.care.id), save.critters[save.adv.care.id].level).name} is at the Daycare · ${Math.max(0, (save.adv.steps || 0) - save.adv.care.at)} steps</small>` : ''}${save.adv.egg ? `<small class="wd-fav">🥚 Your egg hatches in ${Math.max(1, 250 - ((save.adv.steps || 0) - save.adv.egg.at))} steps</small>` : ''}${save.adv.walk ? `<small class="wd-fav">🐾 ${byId(save.adv.walk.id).name} is out on a walk with you</small>` : ''}</p>
+      <p class="wd-goal">📜 ${this.goalLine(F)}${favourLine() ? `<small class="wd-fav">🤝 ${favourLine()}</small>` : ''}${save.adv.care && save.critters[save.adv.care.id] ? `<small class="wd-fav">🧸 ${grown(byId(save.adv.care.id), save.critters[save.adv.care.id].level).name} is at the Daycare · ${Math.max(0, (save.adv.steps || 0) - save.adv.care.at)} steps</small>` : ''}${save.adv.egg ? `<small class="wd-fav">🥚 Your egg hatches in ${Math.max(1, 250 - ((save.adv.steps || 0) - save.adv.egg.at))} steps</small>` : ''}${save.adv.walk ? `<small class="wd-fav">🐾 ${byId(save.adv.walk.id).name} is out on a walk with you</small>` : ''}</p>
       <div class="res-btns"></div></div>`;
     const b = d.querySelector('.res-btns');
     const close = () => { d.remove(); this.game.modalClose = null; };
@@ -1282,6 +1282,14 @@ export class Screens {
   }
 
   // the Journal's Records bars, and the overall 'Clashara explored' percentage (the ☰ card shows it too)
+  // R758: the ☰ card's goal line; once the isles are saved and only exploring is left, it names the Records row furthest from done
+  goalLine(F) {
+    const g = nextGoal(F);
+    if (!F.sunstone || F.grand || !g.startsWith('You saved the Sunscatter Isles!')) return g;
+    let R = null; try { R = this.records(); } catch (e) { return g; }
+    const r = [...R.todo].sort((a, b) => a.n / a.of - b.n / b.of)[0];
+    return r ? `🏅 Grand total ${R.tpc}%. Next: ${r.ic} ${r.name} (${r.n}/${r.of}), e.g. ${r.left.split(' · ')[0]}. Tap the 🏅 % above for everything left.` : g;
+  }
   recordsPc() { try { return this.records().pc; } catch (e) { return 0; } }
 
   // 'Clashara explored' milestones: berries at 25/50/75%, and at 100% a golden statue of the hero in Sprout Village (paid once each)
@@ -1307,7 +1315,8 @@ export class Screens {
     const parts = []; // every bar with a goal counts towards the overall completion
     const iparts = []; // the isles' bars: their own % (C4: Clashara and the isles make the grand total)
     // R755: a row with a goal that isn't full carries a "what's left" line (tap the row to see it)
-    const bar = (ic, name, n, of, own, left) => (of && (own ? iparts : parts).push(Math.min(1, n / of)), `<li class="jr-rec${of && n < of && left ? ' has-left' : ''}"${of && n < of && left ? ` data-left="${left.replace(/"/g, '&quot;')}"` : ''}><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`);
+    const todo = []; // R758: the rows still short of their goal, for the ☰ card's last post-game goal line
+    const bar = (ic, name, n, of, own, left) => (of && (own ? iparts : parts).push(Math.min(1, n / of)), of && n < of && left && todo.push({ ic, name, n, of, left }), `<li class="jr-rec${of && n < of && left ? ' has-left' : ''}"${of && n < of && left ? ` data-left="${left.replace(/"/g, '&quot;')}"` : ''}><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`);
     const lst = (xs, cap = 6) => xs.slice(0, cap).join(' · ') + (xs.length > cap ? ` · +${xs.length - cap} more` : '');
     const seenMap = (k) => !!A.seen?.[k], mName = (k) => (seenMap(k) ? MAPS[k].name : 'somewhere new');
     const byMap = (list) => { const g = {}; list.forEach(([k, x]) => (g[mName(k)] ||= []).push(x)); return Object.entries(g).map(([m, xs]) => (xs[0] == null ? `${m}${xs.length > 1 ? ` ×${xs.length}` : ''}` : `${m}: ${xs.join(', ')}`)); };
@@ -1393,7 +1402,7 @@ export class Screens {
     const total = (cls, label, done, n) => `<li class="jr-total ${cls} ${n >= 100 ? 'full' : ''}"><b>${n >= 100 ? done : label}</b><em>${n}%</em><i style="--p:${n / 100}"></i></li>`;
     if (isles) body = body.replace('<li class="jr-head">🏝️ Sunscatter Isles</li>', `<li class="jr-head">🏝️ Sunscatter Isles</li>${total('isle', '🏝️ Sunscatter Isles explored', '🌺 Sunscatter Isles complete!', ipc)}`);
     body = (isles ? total('grand', `🏅 Grand total${F.grand_done ? '' : ' · 100% for a surprise'}`, '🏅 100% complete! Clashara and the isles', tpc) : '') + total('', '🗺️ Clashara explored', '🌟 Clashara complete!', pc) + body;
-    return { body, pc, ipc, tpc };
+    return { body, pc, ipc, tpc, todo };
   }
 
   // one handy tip a day for the Journal's Today page (only about things the player can already use)
