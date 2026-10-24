@@ -1189,6 +1189,7 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **R762:** the isles Town Map puts a 🦪 by a map's name while its hidden pearl is still there (only once you've found your first pearl, so the secret isn't spoiled), with a 🦪 pearl key chip.
 - **R761:** roaming wild critters spawn at least 3 tiles apart where the patch allows and never step next to another wild critter (two or three merged into one blob in Breezy Bluffs).
 - Critiqued: Records with hints (915×412, 740×360, 412×915), the ☰ card post-game line (740×360, 412×915), title (740×360, 412×915, 360×640), Challenges, Tournament, Critterdex, Journal Champ/Today (740×360), Port Coral / Starfall / Breezy Bluffs (740×360), Sprout Village / Neon City / Frostpeak (412×915). Frostpeak's big pink dome in portrait is Captain Puff's balloon from above (fine).
+- **Final checks (production build of edad21e, R762):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the portrait pause menu); advcup Sprout wins 3 and lands back in Bloom Town, no errors. Also this session: uishots j-rec/j-rec2/menu at 915×412, 740×360, 412×915 all ok; menumem 10 laps no errors.
 - **Ideas not done:** roll the credits after the 100% scene (credits() is title-only today); battle draw-call merging (the user's chat's area).
 
 ## Session C6 (2026-10-24 10:14 UTC →, session_01QkoDzHqdeTRAs9mLSZt4Z7): C8 release polish done, R751–R754; the completion run is finished
