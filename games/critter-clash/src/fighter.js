@@ -1,6 +1,6 @@
 // A critter in battle: movement, combo/special/super state machine, hit reactions.
 import * as THREE from 'three';
-import { Critter } from './critters.js';
+import { Critter, freeCritter } from './critters.js';
 import { MOVE_POW, CD_MULT } from './growth.js';
 import { toon } from './toon.js';
 import { COMBO, TYPES } from './data.js';
@@ -1071,7 +1071,7 @@ export class Fighter {
     cr.root.position.copy(old.root.position); cr.root.rotation.copy(old.root.rotation);
     cr.root.visible = old.root.visible;
     scene?.remove(old.root); scene?.add(cr.root);
-    cr.root.add(this.shield);
+    cr.root.add(this.shield); freeCritter(old.root); // the shield moved over first
     this.critter = cr; this.root = cr.root; this.def = { ...def };
     this.stage = def.stage || 1; this.movePow = MOVE_POW[this.stage - 1];
   }
@@ -1243,5 +1243,8 @@ export class Fighter {
     this.root.rotation.y = this.face;
   }
 
-  dispose() { this.battle.scene.remove(this.root); if (this.mound) this.battle.scene.remove(this.mound); }
+  dispose() {
+    this.battle.scene.remove(this.root); if (this.mound) this.battle.scene.remove(this.mound);
+    freeCritter(this.root); freeCritter(this.mound); // each build makes new buffers; they stayed on the GPU battle after battle
+  }
 }

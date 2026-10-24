@@ -13,7 +13,7 @@ import { FX } from './fx.js';
 import { Input, isTouch } from './input.js';
 import { Hud } from './hud.js';
 import { Battle } from './battle.js';
-import { Critter, shopHat, SHOP_HATS } from './critters.js';
+import { Critter, shopHat, SHOP_HATS, freeCritter } from './critters.js';
 import { CRITTERS, CUPS, withGear } from './data.js';
 import { Screens } from './screens.js';
 import { initAudio, playMusic, sfx, nowPlaying, songNames } from './audio.js';
@@ -135,7 +135,7 @@ class Game {
       progress();
       await tick();
       this.composer.render();
-      for (const c of warm) this.scene.remove(c.root);
+      for (const c of warm) { this.scene.remove(c.root); freeCritter(c.root); }
       progress();
     } catch (e) { console.warn('prewarm', e); }
     if (Q.has('play')) {
@@ -275,13 +275,14 @@ class Game {
     ctx.putImageData(img, 0, 0);
     const url = c.toDataURL();
     rt.dispose();
+    freeCritter(cr.root); // the snapshot is kept as a data URL, so the critter's buffers can go
     this.portraits.set(key, url);
     return url;
   }
 
   // ---- showcase critters on the field (title / select) ----
   setShowcase(defs, layout = 'line') {
-    for (const s of this.showcase) this.scene.remove(s.root);
+    for (const s of this.showcase) { this.scene.remove(s.root); freeCritter(s.root); }
     this.showcase = defs.map((def, i) => {
       const c = new Critter(def);
       this.scene.add(c.root);

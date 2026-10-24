@@ -122,6 +122,9 @@ const decalMat = (map) => new THREE.MeshBasicMaterial({
   map, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
 });
 
+// free a critter's own buffers once it leaves for good (face/decal textures are shared caches and stay)
+export function freeCritter(root) { root?.traverse((o) => { o.geometry?.dispose(); if (o.isSkinnedMesh) o.skeleton.dispose(); }); }
+
 const faceTexCache = new Map();
 // per-look decal textures (mask, sloth, owl, penguin faces): shared by every critter with the same colours, never disposed
 const decalTexCache = new Map();
