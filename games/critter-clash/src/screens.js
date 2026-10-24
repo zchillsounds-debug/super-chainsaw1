@@ -169,7 +169,9 @@ export class Screens {
     // the two main modes share a row in landscape and stack on narrow portrait screens
     const main = document.createElement('div');
     main.className = 'title-main';
-    const advSub = () => { const k = save.adv.map?.startsWith('in:') ? save.adv.map.split(':')[1] : save.adv.map, cups = CUPS.filter((c) => save.adv.flags?.['cup_' + c.id]).length; return `${pumpkinNights() ? '🎃 ' : twinkleWeek() ? '🎄 ' : ''}${MAPS[k]?.name || ''} · 🏆${cups}/7 · 🗺️${this.recordsPc()}%`; };
+    const advSub = () => { const k = save.adv.map?.startsWith('in:') ? save.adv.map.split(':')[1] : save.adv.map, F = save.adv.flags || {}, isles = !!F.isle_arrive, cl = isles ? ALL_CUPS() : CUPS, cups = cl.filter((c) => F['cup_' + c.id]).length; // R756: after the ferry, the isles' cups and the Grand total
+      let pc = 0; try { pc = isles ? this.records().tpc : this.recordsPc(); } catch (e) { /* records not ready */ }
+      return `${pumpkinNights() ? '🎃 ' : twinkleWeek() ? '🎄 ' : ''}${MAPS[k]?.name || ''} · 🏆${cups}/${cl.length} · ${isles ? '🏅' : '🗺️'}${pc}%`; };
     main.append(this.btn(save.adv ? `Adventure <small>${advSub()}</small>` : 'Adventure <small>NEW!</small>', 'primary big', () => this.adventure()), this.btn('Tournament', 'big', () => this.cups()));
     m.appendChild(main);
     const row = document.createElement('div');
@@ -908,7 +910,7 @@ export class Screens {
     const teamDay = d.team && save.unlocked.length >= 3;
     const tm = dailyChallenge(new Date(Date.parse(d.key + 'T12:00:00Z') + 864e5)); // tomorrow's, previewed once today's is done
     card('daily' + (doneToday ? ' done' : ''), '#3dc8ff', `
-      <div class="cup-trophy">${doneToday ? '✅' : '📅'}</div>
+      <div class="cup-trophy">${doneToday ? '✅' : `<span class="cal-tile"><small>${new Date(d.key + 'T12:00:00Z').toLocaleString('en', { month: 'short', timeZone: 'UTC' })}</small><b>${+d.key.slice(8)}</b></span>`}</div>
       <h2>${teamDay ? 'Daily Team Challenge' : 'Daily Challenge'}</h2>
       <p>${teamDay ? '3-on-3 today! ' : ''}${mod.icon} <b>${mod.name}</b>: ${mod.desc}</p>
       <div class="cup-foes">${(teamDay ? d.team : [d.foe]).map((id, k) => `<img src="${g.portrait(skinned(byId(id), d.shiny && k === 0 ? 'shiny' : 'base'))}" alt="">`).join('')}</div>
