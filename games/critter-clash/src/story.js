@@ -1263,7 +1263,7 @@ function surf(S, w) {
       if (night) { A.surfNight = (A.surfNight || 0) + 1; A.surfNightHi = Math.max(A.surfNightHi || 0, score); if (moon) save.berries = (save.berries || 0) + 5; }
       let prize = 0;
       if (A.surfDay !== day) { prize = score >= 450 ? 3 : score >= 250 ? 2 : score >= 100 ? 1 : 0; if (prize) { A.surfDay = day; save.berries = (save.berries || 0) + prize; } }
-      const visor = score >= 300 && !own.includes('surfvisor'); if (visor) own.push('surfvisor');
+      const visor = score >= 300 && !own.includes('surfervisor'); if (visor) own.push('surfervisor');
       persist(); if (best || prize || visor || moon) sfx.jingle(2);
       w.say([`${score >= 300 ? 'TUBULAR!' : score >= 100 ? 'Nice ride!' : 'Wipeout!'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: Here, ${prize} 🍓 from the shack's jar! (One prize a day.)`] : A.surfDay !== day ? [`${who}: Score 100 or more and I'll pay you in berries! (One prize a day.)`] : []), ...(moon ? [`${who}: Your first moonlight ride! Not many surfers have seen the plankton glow. +5 🍓 🌙`] : []), ...(visor ? [`${who}: THREE HUNDRED?! You're a natural. Take my spare visor!`, "{hero} got the Surfer's Visor! 🏄 (☰ → 🎩 Hats)"] : [])], null, who);
     }, night);
@@ -1538,6 +1538,7 @@ function ferry(S, w) {
     const to = ports[i][0];
     sfx.wave?.(); sfx.jingle?.(1);
     (save.adv.cnt ||= {}).ferry = (save.adv.cnt.ferry || 0) + 1;
+    if (to !== 'atoll') save.adv.spawn = { ...getMap(`in:${to}:${to === 'coral' ? 'berry_c' : 'berry2'}`).exit }; // a lost battle brings you back to this side of the sea
     const line = to === 'coral' ? (home ? 'The Sunny Gull blows its horn and chugs out of the bay. Seashell Town shrinks behind you...' : 'The Sunny Gull swings round and heads back to Port Coral.')
       : to === 'atoll' ? (F.sunstone ? 'The Sunny Gull sails north. The Starfall lighthouse shines on the horizon.' : 'The Sunny Gull sails north, into grey water. A dark tower rises from the sea... Starfall Atoll.')
       : 'The Sunny Gull turns for home. The islands fade into the haze...';

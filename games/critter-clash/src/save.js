@@ -23,6 +23,8 @@ function load() {
   const f = fresh();
   if (!s) return f;
   // merge so new critters/settings appear in old saves
+  // R732: WAVE RIDER's Surfer's Visor shared the shop Surf Visor's id; a 300+ ride earns the real one
+  if (s.adv?.surfHi >= 300 && s.adv.hats && !s.adv.hats.includes('surfervisor')) s.adv.hats.push('surfervisor');
   return { ...f, ...s, critters: { ...f.critters, ...s.critters }, settings: { ...f.settings, ...s.settings }, stats: { ...f.stats, ...s.stats }, trainer: { ...f.trainer, ...s.trainer } };
 }
 

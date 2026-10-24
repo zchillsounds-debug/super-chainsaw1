@@ -1254,8 +1254,8 @@ export class Screens {
       + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length)
       + bar('🍾', 'Bottle notes read', (A.notes || []).length, BOTTLE_NOTES.length)
       + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
-    if (F.isle_arrive) { // Chapter 2: the Sunscatter Isles get their own rows (they don't count towards Clashara's %)
-      const itr = Object.values(MAPS).filter((M) => M.isle).flatMap((M) => M.npcs || []).filter((n) => n.trainer), ih = SHOP_HATS.filter((h) => h.isle && !h.season);
+    if (F.isle_arrive) { // Chapter 2: the Sunscatter Isles get their own rows (they don't count towards Clashara's %); a Gloom Gull who reformed before you battled them doesn't count against you
+      const itr = Object.values(MAPS).filter((M) => M.isle).flatMap((M) => M.npcs || []).filter((n) => n.trainer && (F[n.id] || !(n.hideFlag && F[n.hideFlag]))), ih = SHOP_HATS.filter((h) => h.isle && !h.season);
       body += '<li class="jr-head">🏝️ Sunscatter Isles</li>'
         + bar('🏆', 'Island cups won', ISLE_CUPS.filter((c) => F['cup_' + c.id]).length, ISLE_CUPS.length, true)
         + bar('⚔️', 'Island trainers beaten', itr.filter((n) => F[n.id]).length, itr.length, true)

@@ -1455,7 +1455,7 @@ export const SHOP_HATS = [
   { id: 'silverlaurel', name: 'Silver Laurel', kind: 'laurel', col: 0xdfe4f0, band: 0x9ad8ff, price: 0, gift: true, isle: true },
   { id: 'towercrown', name: 'Tower Crown', kind: 'crown', col: 0xffc93a, band: 0xff4a6a, price: 0, gift: true, isle: true },
   { id: 'morrahat', name: "Morra's Tricorn", kind: 'tricorn', col: 0x3a2a5a, band: 0xffc93a, price: 0, gift: true, isle: true },
-  { id: 'surfvisor', name: "Surfer's Visor", kind: 'visor', col: 0xff7a3a, band: 0x3ac0e8, price: 0, gift: true, isle: true }, // WAVE RIDER at Ember Isle's Surf Shack: a ride of 300 or more
+  { id: 'surfervisor', name: "Surfer's Visor", kind: 'visor', col: 0xff7a3a, band: 0x3ac0e8, price: 0, gift: true, isle: true }, // WAVE RIDER at Ember Isle's Surf Shack: a ride of 300 or more
   { id: 'nightwatch', name: 'Night Watch Cap', kind: 'sailor', col: 0x2a3a6a, band: 0xffd84d, price: 0, gift: true, isle: true }, // Morra's Amends (Starfall Atoll): Keeper Lumi's thanks
   { id: 'dexcrown', name: 'Critterdex Crown', kind: 'crown', col: 0x5ad8a8, band: 0xffe27a, price: 0, gift: true, extra: true }, // every critter befriended (Prof. Pecan, with the Shiny Charm)
   { id: 'grovecrown', name: 'Grove Crown', kind: 'laurel', col: 0x5ac24a, band: 0xff8ac0, price: 0, gift: true, extra: true }, // the Heartseed chain (Glowcap Woods → Sprout Village → Glowcap Hollow → Cloudtop → Glowcap Woods)

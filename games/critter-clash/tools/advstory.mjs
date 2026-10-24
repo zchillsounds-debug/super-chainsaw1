@@ -38,7 +38,7 @@ for (let step = 0; step < 40; step++) {
 }
 console.log(log.join('\n'));
 await pg.screenshot({ path: 'tools/out/story-end.png' });
-console.log('at:', await pg.evaluate(() => [__save.adv.map, __save.adv.x, __save.adv.y].join()));
+console.log('at:', await pg.evaluate(() => [__save.adv.map, __save.adv.x, __save.adv.y].join() + ' · spawn ' + JSON.stringify(__save.adv.spawn)));
 console.log('flags:', await pg.evaluate(() => Object.keys(__save.adv.flags).join()));
 console.log('errors:', errs.join(' | ') || 'none');
 await b.close();
