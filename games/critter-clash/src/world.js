@@ -900,17 +900,19 @@ export class World {
       const [px, pz] = wpos(x, y);
       for (let k = 0; k < 3; k++) { const g = new THREE.IcosahedronGeometry((0.7 + rand() * 0.6) * s, 1); g.scale(1, 0.6, 1); g.translate(px + (rand() - 0.5) * 1.6, -0.2 + rand() * 0.5, pz + (rand() - 0.5) * 1.6); puffs.push(g); }
     };
-    const palm = (x, y) => {
+    // lite (medium/low quality, the border skirt): a coarser trunk, three thin rings and two plain coconuts (~60% fewer triangles;
+    // from above only the fronds show)
+    const palm = (x, y, lite = false) => {
       const [px, pz] = wpos(x, y), s = 0.9 + rand() * 0.25, lean = (rand() - 0.5) * 0.5;
       const pts = []; for (let k = 0; k <= 6; k++) pts.push(new THREE.Vector3(px + Math.sin(k / 6 * 1.2) * lean, k / 6 * 3.2 * s, pz));
-      const tr = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 8, 0.18 * s, 6); ptrunks.push(tr);
+      const tr = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), lite ? 5 : 8, 0.18 * s, lite ? 5 : 6); ptrunks.push(tr);
       const top = pts[6], n = 7 + Math.floor(rand() * 2);
       for (let k = 0; k < n; k++) {
         const f = frond(s * (0.9 + rand() * 0.3), k % 3 === 0 ? 0.5 : 0.25 + rand() * 0.15);
         f.rotateY(k / n * Math.PI * 2 + rand() * 0.3); f.translate(top.x, top.y - 0.05, top.z); (k % 2 ? fronds : fronds2).push(f);
       }
-      for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2 + rand(); const nut = new THREE.IcosahedronGeometry(0.2 * s, 1); nut.translate(top.x + Math.cos(a) * 0.22, top.y - 0.28, top.z + Math.sin(a) * 0.22); nuts.push(nut); }
-      for (let k = 1; k < 6; k++) { const r = new THREE.TorusGeometry(0.19 * s, 0.045 * s, 4, 8); r.rotateX(Math.PI / 2); r.translate(pts[k].x, pts[k].y - 0.25 * s, pts[k].z); rings.push(r); }
+      for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2 + rand(); if (lite && k === 2) continue; const nut = new THREE.IcosahedronGeometry(0.2 * s, lite ? 0 : 1); nut.translate(top.x + Math.cos(a) * 0.22, top.y - 0.28, top.z + Math.sin(a) * 0.22); nuts.push(nut); }
+      for (let k = 1; k < 6; k += lite ? 2 : 1) { const r = new THREE.TorusGeometry(0.19 * s, 0.045 * s, lite ? 3 : 4, lite ? 6 : 8); r.rotateX(Math.PI / 2); r.translate(pts[k].x, pts[k].y - 0.25 * s, pts[k].z); rings.push(r); }
     };
     // an arching palm leaf: a folded strip that rises then droops, widest in the middle
     const frond = (s, rise) => {
@@ -935,8 +937,10 @@ export class World {
       if (!inside && this.M.border !== 'cloud' && this.tile(Math.max(0, Math.min(this.W - 1, x)), Math.max(0, Math.min(this.H - 1, y))) === '~') continue; // open sea past a watery edge: no trees growing out of the waves
       if (t === '~' && this.M.border === 'cloud' && rand() < 0.12) { puff(x, y, 0.6); continue; }
       if (!inside && this.M.mouth && Math.abs(x - this.M.mouth[0]) <= 2 && y < 0) continue; // keep the cave mouth clear
-      if (t === 'P' || (!inside && this.M.border === 'palm' && rand() < 0.3)) palm(x, y);
-      else if (inside ? t === 'T' : rand() < 0.85) add(x, y, mid && (!inside || deep(x, y)) ? 0 : dt0, mid && !inside ? 0 : dt0); // medium quality: chunkier canopies on the border skirt, and under the smooth tops deep in the woods
+      if (t === 'P' || (!inside && this.M.border === 'palm' && rand() < 0.3)) palm(x, y, mid && (!inside || deep(x, y)));
+      // medium quality: chunkier canopies on the border skirt, and under the smooth tops deep in the woods; the south skirt stays
+      // smooth (it fills the bottom of a portrait screen, nearest the camera, where chunky tops read as a row of green hexagons)
+      else if (inside ? t === 'T' : rand() < 0.85) { const near = y >= this.H; add(x, y, mid && !near && (!inside || deep(x, y)) ? 0 : dt0, mid && !inside && !near ? 0 : dt0); }
     }
     if (crag.length) { this.group.add(inked(mergeGeometries(crag), toon(0x5a5064, { rim: 0.08 }), OL * 0.5)); crag.forEach((g) => g.dispose()); }
     if (puffs.length) { this.group.add(inked(mergeGeometries(puffs), toon(0xffffff, { rim: 0.8 }), OL * 0.5)); puffs.forEach((g) => g.dispose()); }
