@@ -302,6 +302,9 @@ body.portrait.is-touch.in-battle:not(.at-results) .rotate-hint { display: grid; 
 .toast { position: absolute; left: 50%; top: calc(18px + var(--sat)); transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 99px; max-width: calc(100vw - 32px); width: max-content; text-align: center; box-sizing: border-box; border-radius: 22px;
   font-size: 15px; box-shadow: 0 4px 0 rgba(0,0,0,.3); animation: toastIn .3s cubic-bezier(.2,1.6,.4,1), fade .3s 1.9s reverse forwards; z-index: 60; }
 @keyframes toastIn { from { transform: translate(-50%, -30px); opacity: 0; } }
+.toast { pointer-events: none; }
+.toast.low { top: auto !important; bottom: calc(8px + var(--sab)); animation-name: toastUp, fade; }
+@keyframes toastUp { from { transform: translate(-50%, 30px); opacity: 0; } }
 .shake { animation: shake .35s; }
 @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
 
@@ -1112,7 +1115,7 @@ body.portrait:has(.camp-screen) .toast { top: calc(112px + var(--sat)); } /* bel
 .jr-day em { font-size: 11.5px; font-weight: 700; opacity: .7; text-align: right; max-width: 48%; }
 .jr-day.got { opacity: .6; }
 .jr-day:not(.got) { opacity: 1; }
-@media (max-width: 440px) { .jr-tabs button { font-size: 11.5px; padding: 6px 7px; } .jr-tabs { gap: 3px; } }
+@media (max-width: 440px) { .jr-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; } .jr-tabs button { font-size: 13.5px; padding: 8px 4px; } } /* portrait: two rows of three, big enough to tap */
 .stars .st-hint { margin: 0 0 2px; color: #b8c8ff; font-size: 12px; font-weight: 800; }
 .stars { position: relative; }
 .stars .st-catch { display: none; position: absolute; top: 18%; left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none; color: #fff36b; font-family: var(--display); font-size: 16px; text-shadow: 0 0 10px #ffb020; }

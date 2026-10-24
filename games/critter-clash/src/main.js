@@ -13,7 +13,7 @@ import { FX } from './fx.js';
 import { Input, isTouch } from './input.js';
 import { Hud } from './hud.js';
 import { Battle } from './battle.js';
-import { Critter, shopHat } from './critters.js';
+import { Critter, shopHat, SHOP_HATS } from './critters.js';
 import { CRITTERS, CUPS, withGear } from './data.js';
 import { Screens } from './screens.js';
 import { initAudio, playMusic, sfx } from './audio.js';
@@ -104,7 +104,7 @@ class Game {
     r.setAnimationLoop(() => this.frame());
     window.__game = this;
     window.__save = save;
-    window.__critters = CRITTERS; window.__cups = CUPS; window.__grow = withGear;
+    window.__critters = CRITTERS; window.__cups = CUPS; window.__grow = withGear; window.__hats = SHOP_HATS;
     // headless helper: advance the simulation in fixed steps without rendering
     window.__sim = (sec, dt = 1 / 60) => { for (let t = 0; t < sec; t += dt) this.step(dt); this.clock.getDelta(); };
     this.boot();

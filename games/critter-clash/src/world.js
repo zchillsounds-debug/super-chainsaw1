@@ -5195,6 +5195,7 @@ export class World {
   // ---------- dialogue box (Red/Blue style, bottom of the screen) ----------
   say(lines, done, who = '') {
     const hero = heroDef().name;
+    const narr = lines.map((l) => /^\{(hero|name)\} /.test(l)); // '{hero} got...' lines are narration: no speaker tag over them
     lines = lines.map((l) => l.replaceAll('{hero}', hero).replaceAll('{name}', save.trainer?.name || 'Trainer'));
     this.dialogEl?.remove();
     const el = this.dialogEl = document.createElement('div');
@@ -5204,7 +5205,7 @@ export class World {
     const p = el.querySelector('p'), sm = el.querySelector('small');
     let k = 0, timer = null, full = '';
     const show = () => {
-      let line = lines[k], name = who;
+      let line = lines[k], name = narr[k] ? '' : who;
       const m = /^([^:]{1,20}): (.*)$/s.exec(line);
       if (m) { name = m[1]; line = m[2]; }
       sm.textContent = name; sm.style.display = name ? '' : 'none';
