@@ -5,7 +5,8 @@ import { sfx } from './audio.js';
 import { buzz } from './haptics.js';
 
 const LEN = 30; // seconds a round lasts
-const W = 320, H = 240; // the cabinet's screen, in canvas pixels (scaled up to fit)
+const W = 320, H = 240;
+const jolt = (el, big) => { const cv = el.querySelector('canvas'); cv.classList.remove('jolt', 'big'); void cv.offsetWidth; cv.classList.add('jolt'); if (big) cv.classList.add('big'); }; // the cabinet screen shakes on a hit // the cabinet's screen, in canvas pixels (scaled up to fit)
 
 export function arcadeGame(root, face, onDone) {
   const el = document.createElement('div');
@@ -56,7 +57,7 @@ export function arcadeGame(root, face, onDone) {
       it.y += it.vy * dt; it.wob += dt * 5;
       if (!it.hit && it.y > H - 40 && it.y < H - 14 && Math.abs(it.x - S.x) < 22) {
         it.hit = true;
-        if (it.k === 'zap') { if (S.hurt <= 0) { S.lives--; S.hurt = 1; S.combo = 0; pop(it.x, it.y, 'ZAP!', '#7ae0ff'); sfx.arc('zap'); buzz('medium'); } }
+        if (it.k === 'zap') { if (S.hurt <= 0) { S.lives--; S.hurt = 1; S.combo = 0; pop(it.x, it.y, 'ZAP!', '#7ae0ff'); sfx.arc('zap'); buzz('medium'); jolt(el); } }
         else { S.combo++; const v = (it.k === 'gold' ? 25 : 5) * (1 + Math.floor(S.combo / 8)); S.score += v; pop(it.x, it.y, '+' + v, it.k === 'gold' ? '#ffd84d' : '#ff8ab0'); it.k === 'gold' ? (sfx.arc('gold'), buzz('light')) : sfx.arc('grab', S.combo); }
       }
       if (!it.hit && it.y > H + 10 && it.k !== 'zap') S.combo = 0;
@@ -163,7 +164,7 @@ export function skyHop(root, face, onDone) {
     for (const p of S.pops) { p.t -= dt; p.y -= 30 * dt; }
     S.pops = S.pops.filter((p) => p.t > 0);
   };
-  function die() { if (S.over) return; S.over = true; S.vy = -120; sfx.arc('crash'); buzz('heavy'); setTimeout(close, 1800); }
+  function die() { if (S.over) return; S.over = true; S.vy = -120; sfx.arc('crash'); buzz('heavy'); jolt(el, true); setTimeout(close, 1800); }
 
   const draw = () => {
     const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1a1040'); g.addColorStop(1, '#3a1a5a');
@@ -270,7 +271,7 @@ export function waveRider(root, face, onDone, night = false) { // (night: a star
     S.spray = S.spray.filter((p) => p.t > 0);
     S.score = Math.max(S.score, 0);
   };
-  function die() { if (S.over) return; S.over = true; sfx.arc('crash'); buzz('heavy'); setTimeout(close, 1800); }
+  function die() { if (S.over) return; S.over = true; sfx.arc('crash'); buzz('heavy'); jolt(el, true); setTimeout(close, 1800); }
   const total = () => Math.floor(S.dist / 2) + S.score;
 
   const draw = () => {
@@ -372,7 +373,7 @@ export function reefDive(root, face, onDone) {
     S.vy = Math.min(70, S.vy + 260 * dt); S.y = Math.max(TOP + R, Math.min(FLOOR - R, S.y + S.vy * dt));
     S.hurt = Math.max(0, S.hurt - dt);
     const v = speed(); S.dist += v * dt / 10;
-    S.air -= dt; if (S.air <= 0) { S.air = 0; S.over = true; sfx.arc('crash'); buzz('heavy'); setTimeout(close, 1800); return; }
+    S.air -= dt; if (S.air <= 0) { S.air = 0; S.over = true; sfx.arc('crash'); buzz('heavy'); jolt(el, true); setTimeout(close, 1800); return; }
     S.next -= dt;
     if (S.next <= 0) {
       const r = Math.random(), lvl = Math.min(1, S.dist / 300), y = TOP + 24 + Math.random() * (FLOOR - TOP - 48);
@@ -387,7 +388,7 @@ export function reefDive(root, face, onDone) {
       if (o.k === 'jelly') { o.ph += dt * 2.2; o.y = o.y0 + Math.sin(o.ph) * o.amp; }
       if (o.got) continue;
       const near = Math.hypot(o.x - X, o.y - S.y);
-      if (o.k === 'jelly' && near < R + 11 && !S.hurt) { o.got = true; S.hurt = 1; S.air = Math.max(0.1, S.air - 4); pop(X, S.y - 16, '-4s', '#ff8ab0'); sfx.arc('zap'); buzz('medium'); }
+      if (o.k === 'jelly' && near < R + 11 && !S.hurt) { o.got = true; S.hurt = 1; S.air = Math.max(0.1, S.air - 4); pop(X, S.y - 16, '-4s', '#ff8ab0'); sfx.arc('zap'); buzz('medium'); jolt(el); }
       if (o.k === 'coin' && near < R + 8) { o.got = true; S.coins++; S.score += 5; pop(o.x, o.y - 10, '+5', '#ffd84d'); sfx.arc('grab', S.coins % 8); }
       if (o.k === 'pearl' && near < R + 9) { o.got = true; S.pearls++; S.score += 15; pop(o.x, o.y - 10, '+15', '#fff4f8'); sfx.arc('pearl'); buzz('light'); }
       if (o.k === 'air' && near < R + 12) { o.got = true; S.air = Math.min(20, S.air + 3); pop(o.x, o.y - 10, '+3s', '#bff4ff'); sfx.arc('air'); }

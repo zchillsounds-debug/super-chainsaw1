@@ -669,6 +669,9 @@ export function playMusic(name, mood = false, withExtra = false) {
   }, 50);
 }
 
+export const nowPlaying = () => currentSong; // (for tools/audiocheck.mjs)
+export const songNames = () => Object.keys(SONGS);
+
 export function stopMusic() {
   if (musicTimer) clearInterval(musicTimer);
   musicTimer = null;

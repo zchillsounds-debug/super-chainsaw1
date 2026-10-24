@@ -3437,7 +3437,7 @@ export class World {
     const bob = inked(new THREE.SphereGeometry(0.13, 10, 8), toon(0xff4a4a), OL * 0.4); bob.position.set(0, 0.08, 2.3); g.add(bob);
     this.hero.root.add(g);
     this.fishing = { t: 0, bite: 1.4 + Math.random() * 2.6, phase: 'wait', rod: g, bob };
-    sfx.ui?.('ok');
+    sfx.whoosh?.(1.4); setTimeout(() => sfx.arc?.('splash'), 380); // swish... plop
   }
 
   updateFish(dt, act) {
@@ -3459,6 +3459,8 @@ export class World {
     this.hero.root.remove(F.rod);
     F.rod.traverse((o) => o.geometry?.dispose());
     this.busy = false;
+    if (how !== 'catch') sfx.ui?.('back');
+    else sfx.water?.();
     if (how === 'early') return this.say(['Too soon! The ripples fade away... Wait for the bobber to dip, then press A!']);
     if (how === 'miss') return this.say(['The bobber popped back up. Whatever it was got away!']);
     countUp('fish'); persist();
@@ -5211,6 +5213,7 @@ export class World {
       if (m) { name = m[1]; line = m[2]; }
       sm.textContent = name; sm.style.display = name ? '' : 'none';
       full = line; let i = 0; p.textContent = '';
+      if (/grew to Lv \d+!/.test(line)) reward(2); // a level-up line gets its own little fanfare
       clearInterval(timer);
       const [ms, step] = typeSpeed();
       timer = setInterval(() => { i += step; p.textContent = full.slice(0, i); if (i % 3 === 0 || step > 1) sfx.talk(name, full[i - 1] || 'a'); if (i >= full.length) clearInterval(timer); }, ms);

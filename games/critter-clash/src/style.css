@@ -1240,3 +1240,8 @@ body:not(.is-touch) .wd-a.hint::after { content: "Space · " attr(data-hint); po
 /* the album's tip line lights up with an empty frame's hint when you tap it */
 .jr-more.al-tip.flash { color: #5a3fd8; animation: alTip 0.6s ease-out; }
 @keyframes alTip { 0% { transform: scale(1.06); background: #ffe98a; } 100% { transform: none; background: transparent; } }
+
+/* arcade screens shake on a zap or crash */
+.arcade canvas.jolt { animation: arcJolt 0.25s ease-out; }
+.arcade canvas.jolt.big { animation: arcJolt 0.45s ease-out; }
+@keyframes arcJolt { 0%, 100% { translate: 0 0; } 20% { translate: -6px 2px; } 40% { translate: 5px -3px; } 60% { translate: -3px 2px; } 80% { translate: 2px -1px; } }
