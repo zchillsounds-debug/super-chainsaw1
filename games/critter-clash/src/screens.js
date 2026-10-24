@@ -681,10 +681,10 @@ export class Screens {
     parade();
   }
 
-  header(title, back) {
+  header(title, back, chip) {
     const h = document.createElement('div');
     h.className = 'sel-head';
-    h.innerHTML = `<button class="icon-btn back" aria-label="Back">‹</button><h1>${title}</h1>`;
+    h.innerHTML = `<button class="icon-btn back" aria-label="Back">‹</button><h1>${title}</h1>${chip ? `<span class="head-chip">${chip}</span>` : ''}`;
     h.querySelector('.back').addEventListener('click', () => { sfx.ui('back'); back(); });
     this.backFn = back;
     return h;
@@ -698,7 +698,8 @@ export class Screens {
     g.setShowcase([]);
     this.root.innerHTML = '<div class="cups-screen"><div class="cup-list"></div></div>';
     const S = this.root.firstElementChild;
-    S.prepend(this.header('Tournament', () => this.title()));
+    const won = CUPS.filter((c) => save.cups[c.id]).length; // R757: how many cups are won, up in the header
+    S.prepend(this.header('Tournament', () => this.title(), won === CUPS.length ? '🌟 All cups won!' : `🏆 ${won} / ${CUPS.length}`));
     const list = S.querySelector('.cup-list');
     CUPS.forEach((cup) => {
       const locked = cup.requires && !save.cups[cup.requires];

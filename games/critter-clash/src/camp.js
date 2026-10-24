@@ -13,6 +13,9 @@ const FEED_XP = 45, PET_XP = 10;
 const today = () => new Date().toISOString().slice(0, 10);
 const hearts = (pets = 0) => Math.min(5, Math.floor(pets / 4));
 const v = new THREE.Vector3();
+// R757: the camp's canvas textures are made once and reused; a new one per visit never got freed (+2–4 textures a Camp visit)
+const _campTex = {};
+const campTex = (k, ...a) => (_campTex[k] ||= canvasTex(...a));
 
 export class Camp {
   constructor(screens, team) {
@@ -29,7 +32,7 @@ export class Camp {
     this.ring.visible = false;
     this.g.scene.add(this.ring);
     // a striped play ball for fetch
-    const ballTex = canvasTex(64, 32, (x, w, h) => { for (let i = 0; i < 6; i++) { x.fillStyle = ['#ff5a6e', '#ffd04a', '#5ab8ff'][i % 3]; x.fillRect(i * w / 6, 0, w / 6, h); } });
+    const ballTex = campTex('ball', 64, 32, (x, w, h) => { for (let i = 0; i < 6; i++) { x.fillStyle = ['#ff5a6e', '#ffd04a', '#5ab8ff'][i % 3]; x.fillRect(i * w / 6, 0, w / 6, h); } });
     this.ball = inked(new THREE.SphereGeometry(0.2, 16, 12), toon(0xffffff, { map: ballTex }), 0.025);
     this.ball.castShadow = true;
     this.ball.visible = false;
@@ -463,7 +466,7 @@ function buildProps(cups, team = [], trials = {}, tamer = false, crowned = false
   }
   g.add(fire);
   // tent: a striped triangular prism
-  const tentTex = canvasTex(128, 64, (x, w, h) => { for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? '#fff4e0' : '#ff8a5a'; x.fillRect(i * w / 8, 0, w / 8, h); } });
+  const tentTex = campTex('tent', 128, 64, (x, w, h) => { for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? '#fff4e0' : '#ff8a5a'; x.fillRect(i * w / 8, 0, w / 8, h); } });
   const tri = new THREE.Shape([new THREE.Vector2(-1, 0), new THREE.Vector2(1, 0), new THREE.Vector2(0, 1.35)]);
   const tentGeo = new THREE.ExtrudeGeometry(tri, { depth: 2, bevelEnabled: false });
   tentGeo.translate(0, 0, -1);
@@ -480,7 +483,7 @@ function buildProps(cups, team = [], trials = {}, tamer = false, crowned = false
   tentG.add(flap);
   g.add(tentG);
   // picnic blanket with a basket of berries
-  const checker = canvasTex(64, 64, (x, w, h) => { for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { x.fillStyle = (i + j) % 2 ? '#ff5a6e' : '#fff6ea'; x.fillRect(i * w / 4, j * h / 4, w / 4, h / 4); } });
+  const checker = campTex('checker', 64, 64, (x, w, h) => { for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { x.fillStyle = (i + j) % 2 ? '#ff5a6e' : '#fff6ea'; x.fillRect(i * w / 4, j * h / 4, w / 4, h / 4); } });
   const blanket = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.4), toon(0xffffff, { map: checker }));
   blanket.rotation.set(-Math.PI / 2, 0, 0.3);
   blanket.position.set(2.6, 0.02, 1.9);
@@ -574,7 +577,7 @@ function buildProps(cups, team = [], trials = {}, tamer = false, crowned = false
   }
   let balloon = null;
   if (cups.sky) {
-    const tex = canvasTex(128, 64, (c, w, h) => { for (let k = 0; k < 8; k++) { c.fillStyle = k % 2 ? '#fff4e0' : '#ff6a8a'; c.fillRect(k * w / 8, 0, w / 8 + 1, h); } });
+    const tex = campTex('balloon', 128, 64, (c, w, h) => { for (let k = 0; k < 8; k++) { c.fillStyle = k % 2 ? '#fff4e0' : '#ff6a8a'; c.fillRect(k * w / 8, 0, w / 8 + 1, h); } });
     const bg = new THREE.Group(); // the whole balloon bobs
     const env = new THREE.SphereGeometry(1.15, 22, 16); env.scale(1, 1.18, 1);
     const e = inked(env, toon(0xffffff, { map: tex, rim: 0.3 }), OL * 1.2);
@@ -602,7 +605,7 @@ function buildProps(cups, team = [], trials = {}, tamer = false, crowned = false
   if (aced) {
     const ped = new THREE.Group();
     ped.position.set(-0.6, 0, -3.3);
-    const stripes = canvasTex(128, 32, (c, w, h) => { for (let k = 0; k < 12; k++) { c.fillStyle = k % 2 ? '#fff4e0' : '#ff5a4a'; c.fillRect(k * w / 12, 0, w / 12 + 1, h); } });
+    const stripes = campTex('pedestal', 128, 32, (c, w, h) => { for (let k = 0; k < 12; k++) { c.fillStyle = k % 2 ? '#fff4e0' : '#ff5a4a'; c.fillRect(k * w / 12, 0, w / 12 + 1, h); } });
     const base = inked(new THREE.CylinderGeometry(0.62, 0.68, 0.4, 24), toon(0xffffff, { map: stripes }), OL * 0.7);
     base.position.y = 0.2; ped.add(base);
     const top = inked(new THREE.CylinderGeometry(0.66, 0.66, 0.08, 24), toon(0xffc940), OL * 0.5);

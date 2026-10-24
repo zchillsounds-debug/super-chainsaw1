@@ -1274,3 +1274,5 @@ body:not(.is-touch) .wd-a.hint::after { content: "Space · " attr(data-hint); po
 .cal-tile { display: grid; grid-template-rows: auto 1fr; width: 38px; height: 40px; border-radius: 7px; overflow: hidden; background: #fff; box-shadow: 0 0 0 2.5px var(--ink); line-height: 1; }
 .cal-tile small { background: #e8443a; color: #fff; font-size: 10px; font-weight: 900; text-transform: uppercase; padding: 2px 0 1px; letter-spacing: .5px; }
 .cal-tile b { font-size: 20px; font-weight: 900; color: var(--ink); display: grid; place-items: center; }
+/* R757: a progress chip beside a screen title (Tournament cups won) */
+.head-chip { margin-left: auto; padding: 4px 12px; border-radius: 999px; background: rgba(26,18,48,.62); color: #ffe27a; font-weight: 900; font-size: 14px; white-space: nowrap; box-shadow: inset 0 0 0 2px rgba(255,226,122,.5); }
