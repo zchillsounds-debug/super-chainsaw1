@@ -1264,3 +1264,4 @@ body:not(.is-touch) .wd-a.hint::after { content: "Space · " attr(data-hint); po
   .howto-wrap .howto li { font-size: 13px; }
 }
 @media (max-width: 440px) { .ht-tabs { grid-template-columns: repeat(2, 1fr) !important; } }
+@media (max-aspect-ratio: 1/1) { .title-ver { top: calc(10px + var(--sat)); bottom: auto; } } /* portrait: the foot chips fill the bottom row */

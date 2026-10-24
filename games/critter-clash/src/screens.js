@@ -623,7 +623,7 @@ export class Screens {
     const foot = d.querySelector('.ht-foot');
     const prev = this.game.modalClose; // (the pause menu's, when opened from there)
     const close = () => { d.remove(); if (this.game.modalClose === close) this.game.modalClose = prev || null; };
-    if (!this.game.battle) foot.appendChild(this.btn('Credits', 'ghost-dark', () => { close(); this.credits(); }));
+    if (!this.game.battle) foot.appendChild(this.btn('Credits', '', () => { close(); this.credits(); }));
     foot.appendChild(this.btn('Got it!', 'primary', close));
     this.game.modalClose = close;
     d.addEventListener('click', (e) => { if (e.target === d) close(); });
