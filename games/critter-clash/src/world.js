@@ -2654,11 +2654,22 @@ export class World {
   }
 
   // Rainbow Reach: a big rainbow arching over the sky shrine (M.rainbowArch: [x, y]), with a few cloud puffs at its feet
+  // after dark it fades to a pale silver moonbow, and stars drift down close enough to touch (this.nearStars twinkle in update)
   buildRainbowArch() {
+    this.nearStars = null;
     const RA = this.M.rainbowArch; if (!RA || this.M.indoor) return;
     const [px, pz] = wpos(RA[0], RA[1]), g = new THREE.Group(); g.position.set(px, 0, pz); g.rotation.y = 0.25; this.group.add(g);
-    const cols = [0xff5a5a, 0xffa040, 0xffe04a, 0x6ae070, 0x5ab8ff, 0x8a7aff, 0xc87aff], rg = new THREE.TorusGeometry(4.2, 0.16, 6, 40, Math.PI);
-    cols.forEach((c, i) => { const m = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.62, depthWrite: false }); m.userData.own = true; const a = new THREE.Mesh(rg, m); a.scale.setScalar(1 - i * 0.04); a.position.z = -0.6; g.add(a); });
+    const night = this.phase === 'night', cols = night ? [0xe8e8ff, 0xd8e4ff, 0xf0f0ff, 0xd0e8ff, 0xe0d8ff, 0xf4f0ff, 0xd8dcff] : [0xff5a5a, 0xffa040, 0xffe04a, 0x6ae070, 0x5ab8ff, 0x8a7aff, 0xc87aff], rg = new THREE.TorusGeometry(4.2, 0.16, 6, 40, Math.PI);
+    cols.forEach((c, i) => { const m = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: night ? 0.3 - i * 0.025 : 0.62, depthWrite: false }); m.userData.own = true; const a = new THREE.Mesh(rg, m); a.scale.setScalar(1 - i * 0.04); a.position.z = -0.6; g.add(a); });
+    if (night) {
+      const rand = rng(hash('nearstars')); this.nearStars = [];
+      for (let k = 0; k < 26; k++) {
+        const sm = new THREE.SpriteMaterial({ map: glowTex(), color: k % 4 ? 0xfff6d0 : 0xb8d8ff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.7 }); sm.userData.own = true;
+        const sp = new THREE.Sprite(sm), [sx, sz] = wpos(1 + rand() * (this.W - 2), 1 + rand() * (this.H - 2));
+        sp.position.set(sx, 2.2 + rand() * 2.6, sz); sp.scale.setScalar(0.7 + rand() * 0.6); this.group.add(sp);
+        this.nearStars.push({ sp, ph: rand() * 7, y: sp.position.y, s: sp.scale.x });
+      }
+    }
     const puff = toon(0xffffff, { rim: 0.8 });
     for (const sx of [-1, 1]) for (const [dx, dy, r] of [[0, 0.2, 0.55], [0.45, 0.1, 0.4], [-0.4, 0.12, 0.42], [0.1, 0.55, 0.38]]) { const q = inked(new THREE.SphereGeometry(r, 12, 8), puff, OL * 0.3); q.position.set(sx * 4.0 + dx, dy, -0.6 + dx * 0.3); g.add(q); }
   }
@@ -4538,6 +4549,7 @@ export class World {
     if (this.xtree?.glow) { const X = this.xtree; X.glow.material.opacity = 0.55 + Math.sin(this.t * 2.2) * 0.15; X.lights.forEach((m, i) => { const on = Math.sin(this.t * 3 + i * 1.6) > -0.3; m.material.color.setHex(on ? X.cols[i] : 0x3a3448); }); } // the lights twinkle in turns
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
+    if (this.nearStars) for (const q of this.nearStars) { const tw = Math.sin(this.t * 1.7 + q.ph); q.sp.material.opacity = 0.65 + 0.35 * tw; q.sp.scale.setScalar(q.s * (0.85 + 0.2 * tw)); q.sp.position.y = q.y + Math.sin(this.t * 0.5 + q.ph) * 0.15; }
     if (this.statue) { const T = this.statue; T.glow.material.opacity = 0.3 + Math.sin(this.t * 1.6) * 0.08; if (Math.random() < dt * 2) this.g.fx.spawn({ x: T.px + (Math.random() - 0.5) * 1.6, y: 0.8 + Math.random() * 1.8, z: T.pz + (Math.random() - 0.5) * 1.2, vy: 0.3, life: 1.2, size: 0.3, color: 0xfff0a0, shape: 'star', alpha: 0.9 }); }
     if (this.wreck) { // the sunken wreck: sea weed sways, light shafts shimmer, bubbles rise everywhere (and out of the hull)
       const R = this.wreck; R.t += dt;
