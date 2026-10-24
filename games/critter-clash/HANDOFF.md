@@ -1,5 +1,12 @@
 # Critter Clash: Handoff
 
+## Completion polish (session P1, 2026-10-24 15:42 UTC →, session_01YAioKdDicaaaNXyLTCZ1Yb): R755–R762
+- **The user chose "more polish, for completion of the game"** after the C1–C8 run. This session did R755–R762 (details in "Session P1" below). Next round **R763**. Ask the user before picking a new direction.
+- Open question for the user: Zephyra (Gale Cup boss) and Captain Morra both use a shiny Skimray, so the Sunscatter Masters page lists "shiny Skimray" twice. That has been the story data since Chapter 2; change one only if the user wants it.
+
+## Note for the user's chat (session P1)
+- **No battle.js, arena.js open mode, hud.js or results/worldFight edits this session.** Touched: screens.js (Journal Records, ☰ card goal line and gift count, title Adventure button and footer, Tournament header chip via `header(title, back, chip)`, Daily card calendar), story.js (`hatWhere()`, `favourList().unaskedOf`), camp.js (textures made once), world.js (wild roamers spawn/walk apart), style.css.
+
 ## Completion run (C1–C8; read `ROADMAP.md` → "Completion roadmap" first)
 - **Completion run: FINISHED. All eight milestones (C1–C8) are done. Session C6 (2026-10-24 10:14–~12:40 UTC, session_01QkoDzHqdeTRAs9mLSZt4Z7) did R751–R754 and finished C8 (release polish), sent the final APK and did not chain, as the plan says.** Next round R755. Any new work starts from a new plan with the user.
 - The run's prompt said the C1–C8 plan was agreed with the user, but no copy was on any branch, so C1 drafted it in ROADMAP.md from the open threads. If the user posts their own plan, it replaces the draft.
@@ -1169,6 +1176,20 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - **Final checks (~19:40 UTC, production build of 0dd51d0 = R671):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint in portrait); advcup Sprout wins 3 and lands back in Bloom Town, no errors.
 - Critiqued and left as is: world tours at 915×412, 740×360 (touch, medium) and 412×915, rooms at 412×915, title/Tournament/Camp at 412×915 and 740×360, Journal Today/Fish/Favours/Records, Town Map at both sizes, the hat picker, grown-form scarves (Hootsy/Pricklepuff/Snoozlo stage 2 now read as collars with a knot, so that old note is done).
 - **Next ideas:** autumn has leaf piles and Pumpkin Nights but no daily "prop" like the others (maybe apple-bobbing or a harvest basket in Bloom Town); the Hootsy stage-2 (gust) scarf is pale on a lavender body; the sea texture could also go on other water borders; a full robin after the next combat change.
+
+## Session P1 (2026-10-24 15:42 UTC →, session_01YAioKdDicaaaNXyLTCZ1Yb): completion polish, R755–R762
+- Local clone was on another branch (claude/critter-clash-r755-5v0fi1, unrelated history); checked out `ccr-4fc93d6e-suxlhd` from origin. Build scripts recreated in the scratchpad as in Session C1 (`build.sh`, `wbuild.sh`, `push.sh`). `build.sh` hung once after starting the preview (the server was up and serving the new build; killing the script left it running).
+- **Checks at start (14efa04, production build):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the portrait pause menu); advcup Sprout wins 3 and lands back in Bloom Town, no errors.
+- **R755 Records "still to find":** every Records row with a goal that isn't full shows 🔍; tap it for a line under the row naming what's left and where: cups, unbeaten trainers by map, unopened gift boxes per map (×2), open favours plus how many aren't asked yet, missing hats with their source (`hatWhere(id)` in story.js: favour giver, chest map, Tower rank, a table for the rest, Hat Shop/Trader Tock today/noodle cart/Shell Hats stall), fish counts per water, critters to befriend with their wild maps (legends → the Champ page), landmarks, constellations, bottle notes, pearls. Unvisited maps read "somewhere new". A "Tap a row" line sits under the totals. Works in the two-column landscape Journal (the line spans both columns).
+- **R756:** the title's Adventure button counts the isle cups (🏆 n/10) and shows the 🏅 Grand total once the ferry is taken. The Daily Challenge card's calendar is a real date tile (the 📅 emoji always reads July 17).
+- **R757 Camp texture leak (the menumem creep):** every Camp visit built new canvas textures (ball, tent, blanket, balloon, pedestal) plus a cached toon material per texture, never freed: they are made once (`campTex` in camp.js). Found by per-step texture counts, then a scene texture diff (scratch tools). The leftover irregular growth in `menumem.mjs` (151 → 166 over 10 laps, was a steady +2/lap) is critters showing face expressions for the first time: shared cached textures uploaded lazily, bounded at 28 critters × 12 faces. Tournament header chip: 🏆 n / 7 or "All cups won!".
+- **R758:** once the isles are saved and every post-game beat is done, the ☰ card's goal line names the Grand total and the Records row furthest from done, with one example (was a generic line). The ☰ card's 🎁 count is /44 after the ferry (it counted island boxes against /24).
+- **R759:** a 🏅 100% chip on the title for a finished save; the footer chips wrap as whole chips (portrait squeezed them into two-line pills).
+- **R760:** the Critterdex row's hint names a missing legend ("a legend: see the 🏆 Champ page").
+- **R762:** the isles Town Map puts a 🦪 by a map's name while its hidden pearl is still there (only once you've found your first pearl, so the secret isn't spoiled), with a 🦪 pearl key chip.
+- **R761:** roaming wild critters spawn at least 3 tiles apart where the patch allows and never step next to another wild critter (two or three merged into one blob in Breezy Bluffs).
+- Critiqued: Records with hints (915×412, 740×360, 412×915), the ☰ card post-game line (740×360, 412×915), title (740×360, 412×915, 360×640), Challenges, Tournament, Critterdex, Journal Champ/Today (740×360), Port Coral / Starfall / Breezy Bluffs (740×360), Sprout Village / Neon City / Frostpeak (412×915). Frostpeak's big pink dome in portrait is Captain Puff's balloon from above (fine).
+- **Ideas not done:** roll the credits after the 100% scene (credits() is title-only today); battle draw-call merging (the user's chat's area).
 
 ## Session C6 (2026-10-24 10:14 UTC →, session_01QkoDzHqdeTRAs9mLSZt4Z7): C8 release polish done, R751–R754; the completion run is finished
 - Local clone started on stale history (d18c276); fast-forwarded to origin. Build scripts recreated in the scratchpad (`build.sh`, `wbuild.sh`, `push.sh`, as in Session C4) plus `battery.sh` (the final check pass, one tool after another, a line per tool into `battery.log`, full output in `bat/<tool>.txt`).
