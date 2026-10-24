@@ -1,5 +1,5 @@
 // node tools/uishots.mjs [WxH] [step,step] : the C5 UI pass. Opens every Adventure menu, modal and Journal tab with an
-// end-game save, screenshots each (tools/out/ui-<WxH>-<step>.png) and reports layout problems: anything that spills
+// end-game save, screenshots each (tools/out/ui-<WxH>-<step>.png) and reports layout problems (text under 10 px, too): anything that spills
 // out of the screen or out of its modal, text cut off sideways, and buttons under 26 px tall.
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
@@ -71,6 +71,7 @@ const CHECK = `(() => {
     if (r.right > box.right + 2 || r.left < box.left - 2) bad.push('SIDE ' + name + ' ' + Math.round(r.left) + '..' + Math.round(r.right) + ' of ' + Math.round(box.left) + '..' + Math.round(box.right));
     else if ((!sc || sc === top) && (r.bottom > box.bottom + 2 || r.top < box.top - 2)) bad.push('VERT ' + name + ' ' + Math.round(r.top) + '..' + Math.round(r.bottom) + ' of ' + Math.round(box.top) + '..' + Math.round(box.bottom));
     if (e.scrollWidth > e.clientWidth + 2 && cs.textOverflow !== 'ellipsis' && (cs.webkitLineClamp || 'none') === 'none' && cs.overflowX !== 'visible' && !/(auto|scroll)/.test(cs.overflowX) && e.clientWidth > 0) bad.push('CUT ' + name + ' ' + e.scrollWidth + '>' + e.clientWidth);
+    if ([...e.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim()) && !e.closest('svg') && parseFloat(cs.fontSize) < 10) bad.push('TINY ' + name + ' ' + cs.fontSize);
     if ((e.tagName === 'BUTTON' || e.classList.contains('btn')) && r.height < 26 && !e.closest('.jr-album')) bad.push('SMALL ' + name + ' h' + Math.round(r.height));
   }
   return [...new Set(bad)].slice(0, 12);
