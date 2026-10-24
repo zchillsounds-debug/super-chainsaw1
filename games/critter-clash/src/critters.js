@@ -1465,6 +1465,7 @@ export const SHOP_HATS = [
   { id: 'halo', name: 'Halo Ring', kind: 'halo', col: 0xffe27a, band: 0xfff8d0, price: 0, gift: true, extra: true }, // the chest on Rainbow Reach, the cloud islet above Cloudtop (Kite Glider)
   { id: 'rivalband', name: "Dash's Headband", kind: 'band', col: 0xe8443a, band: 0xffffff, price: 0, gift: true, isle: true }, // the Rival Showdown on Starfall Atoll
   { id: 'masterlei', name: "Champion's Lei", kind: 'flower', col: 0x3ac8b8, band: 0xffc93a, price: 0, gift: true, isle: true }, // the Sunscatter Masters' first clear
+  { id: 'grandcrown', name: "Explorer's Crown", kind: 'crown', col: 0x7a4ad8, band: 0xffd84d, price: 0, gift: true, extra: true }, // 100% of Clashara and the isles (Prof. Pecan's closing scene)
   { id: 'laurel', name: 'Golden Laurel', kind: 'laurel', col: 0xe8b830, band: 0xfff2a0, price: 0, gift: true }, // the Peak Gauntlet's first clear
 ];
 export function shopHat(cr, id) {

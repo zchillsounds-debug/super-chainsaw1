@@ -1188,6 +1188,10 @@ export class Screens {
 
   // 'Clashara explored' milestones: berries at 25/50/75%, and at 100% a golden statue of the hero in Sprout Village (paid once each)
   exploreCheck(pc = this.recordsPc()) {
+    if (!save.adv.flags.grand && save.adv.flags.isle_arrive) { // C4: 100% of Clashara and the isles: Prof. Pecan's closing scene (story.js grandTour)
+      let t = 0; try { t = this.records().tpc; } catch (e) { /* records not ready */ }
+      if (t >= 100) { save.adv.flags.grand = true; persist(); sfx.jingle?.(3); this.toast('🏅 100%! Every corner of Clashara and the Sunscatter Isles! Prof. Pecan wants to see you in Sprout Village...'); this.worldObj?.questMarks?.(); return; }
+    }
     const A = save.adv, steps = [[25, 5], [50, 10], [75, 15], [100, 25]], next = steps.find(([p]) => p > (A.expl || 0) && pc >= p);
     if (!next) return;
     A.expl = next[0]; save.berries = (save.berries || 0) + next[1];
@@ -1203,7 +1207,8 @@ export class Screens {
     const A = save.adv, F = A.flags, L = A.fishLog || {}, npcs = Object.values(MAPS).filter((M) => !M.isle && !M.extra).flatMap((M) => M.npcs || []); // Clashara only: the isles keep their own rows below (post-game extras like Rainbow Reach don't count either)
     const tr = npcs.filter((n) => n.trainer), fl = favourList(), fsp = new Set([...Object.keys(L.sp || {}), ...(L.best ? [L.best.name] : [])]);
     const parts = []; // every bar with a goal counts towards the overall completion
-    const bar = (ic, name, n, of, own) => (of && !own && parts.push(Math.min(1, n / of)), `<li class="jr-rec"><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`);
+    const iparts = []; // the isles' bars: their own % (C4: Clashara and the isles make the grand total)
+    const bar = (ic, name, n, of, own) => (of && (own ? iparts : parts).push(Math.min(1, n / of)), `<li class="jr-rec"><span>${ic}</span><b>${name}</b><em>${n}${of ? ` / ${of}` : ''}</em>${of ? `<i style="--p:${Math.min(1, n / of)}" class="${n >= of ? 'full' : ''}"></i>` : ''}</li>`);
     body = (A.time >= 60 ? bar('⏱️', 'Time adventuring', playTime(A.time)) : '')
       + bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length)
       + bar('⚔️', 'Trainers beaten', tr.filter((n) => F[n.id]).length, tr.length)
@@ -1259,6 +1264,7 @@ export class Screens {
       body += '<li class="jr-head">🏝️ Sunscatter Isles</li>'
         + bar('🏆', 'Island cups won', ISLE_CUPS.filter((c) => F['cup_' + c.id]).length, ISLE_CUPS.length, true)
         + bar('⚔️', 'Island trainers beaten', itr.filter((n) => F[n.id]).length, itr.length, true)
+        + bar('🎁', 'Island gift boxes', Object.keys(F).filter((k) => k.startsWith('it_') && MAPS[k.slice(3, k.lastIndexOf('_'))]?.isle).length, 20, true)
         + bar('🤝', 'Island favours', fl.rows.filter((r) => r.state === 'done' && r.isle).length, fl.isles, true)
         + bar('🎩', 'Island hats', ih.filter((h) => (A.hats || []).includes(h.id)).length, ih.length, true)
         + bar('🐠', 'Reef fish', FISH.isle.filter((f) => fsp.has(f[0])).length, FISH.isle.length, true)
@@ -1273,9 +1279,12 @@ export class Screens {
         + (F.sunstone ? bar('🌺', 'Sunscatter Masters cleared', A.mastWins || 0) : '')
         + (F.sunstone ? bar('🗼', 'Battle Tower best streak', `${A.tower?.best || 0} · ${towerRank(A.tower?.best || 0)[2]} ${towerRank(A.tower?.best || 0)[1]}`) + (A.tower?.streak ? bar('🔥', 'Current Tower streak', A.tower.streak) : '') : '');
     }
-    const pc = Math.floor(parts.reduce((a, b) => a + b, 0) / parts.length * 100);
-    body = `<li class="jr-total ${pc >= 100 ? 'full' : ''}"><b>${pc >= 100 ? '🌟 Clashara complete!' : '🗺️ Clashara explored'}</b><em>${pc}%</em><i style="--p:${pc / 100}"></i></li>` + body;
-    return { body, pc };
+    const pc = Math.floor(parts.reduce((a, b) => a + b, 0) / parts.length * 100), isles = !!F.isle_arrive;
+    const ipc = isles ? Math.floor(iparts.reduce((a, b) => a + b, 0) / iparts.length * 100) : 0, tpc = isles ? Math.floor((pc + ipc) / 2) : 0; // the grand total weighs both regions alike
+    const total = (cls, label, done, n) => `<li class="jr-total ${cls} ${n >= 100 ? 'full' : ''}"><b>${n >= 100 ? done : label}</b><em>${n}%</em><i style="--p:${n / 100}"></i></li>`;
+    if (isles) body = body.replace('<li class="jr-head">🏝️ Sunscatter Isles</li>', `<li class="jr-head">🏝️ Sunscatter Isles</li>${total('isle', '🏝️ Sunscatter Isles explored', '🌺 Sunscatter Isles complete!', ipc)}`);
+    body = (isles ? total('grand', `🏅 Grand total${F.grand_done ? '' : ' · 100% for a surprise'}`, '🏅 100% complete! Clashara and the isles', tpc) : '') + total('', '🗺️ Clashara explored', '🌟 Clashara complete!', pc) + body;
+    return { body, pc, ipc, tpc };
   }
 
   // one handy tip a day for the Journal's Today page (only about things the player can already use)

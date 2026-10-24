@@ -331,6 +331,7 @@ function rivalTalk(S, w, a) {
 // the ☰ menu's one-line "what now?" for players coming back after a break
 const GOAL_AT = { sprout: 'Bloom Town, north along Route 1', thunder: 'Seashell Town, east along Route 2', grove: 'Glowcap Hollow, through the woods north of Seashell Town', champion: 'Cinder Town, down the volcano road', midnight: 'Neon City, east of Cinder Town', sky: 'Cloudtop Gardens (Captain Puff\'s balloon, Neon City)', legend: 'Frostpeak (Captain Puff\'s balloon, Cloudtop)' };
 export function nextGoal(F) {
+  if (F.grand) return F.grand_done ? '🏅 100% complete! Every cup, critter and corner of Clashara and the isles. Thank you for playing!' : '100% of Clashara and the isles! Prof. Pecan wants to see you at his lab in Sprout Village.';
   if (F.crowned) {
     // Chapter 2: the Sunscatter Isles
     if (!F.isle_arrive) return F.ending ? 'Chapter 2: take the Sunny Gull ferry from the pier in Seashell Town to the Sunscatter Isles!' : 'You\'re the Champion! Rematch trainers and Dash, and find every gift box.';
@@ -364,6 +365,7 @@ export function nextGoal(F) {
 export function storyTalk(S, id, w, a) {
   const F = flags();
   if (id === 'pecan') {
+    if (F.grand && !F.grand_done) return grandTour(S, w);
     if (!F.quest) {
       w.say([
         'Prof. Pecan: Ah, {hero}! There you are. Your mom tells me you want to be the strongest critter in Clashara.',
@@ -993,11 +995,31 @@ export function deliveryFor(npc) {
 export function chainFor(npc) {
   const F = flags(); return Object.keys(LOST).find((id) => LOST[id].from === npc && questReady(id) && !F[id + '_asked']) || null;
 }
+// C4: 100% of Clashara and the Sunscatter Isles: Prof. Pecan's closing scene, a look back over the whole journey
+function grandTour(S, w) {
+  const F = flags(), A = save.adv, cups = [...CUPS, ...ISLE_CUPS].filter((c) => F['cup_' + c.id]).length, legends = ['solmoth', 'moonwhal', 'verdelk'].filter((id) => save.unlocked.includes(id)).length;
+  w.say([
+    'Prof. Pecan: {hero}! There you are! Everyone has been sending me letters. Every single person, from Bloom Town to Starfall Atoll!',
+    `Prof. Pecan: ${cups} cups. ${save.unlocked.length} critter friends, ${legends} of them legends. ${(A.steps || 0).toLocaleString()} steps. Every gift box, every pearl, every fish in the book...`,
+    "Prof. Pecan: When you left this lab you had one critter and three berries. Now there isn't a corner of the map you haven't been to.",
+    'Mom: (peeking in at the window) That\'s my {hero}!',
+    'Dash: (right behind her) ...Fine. FINE. That\'s pretty amazing. But I\'m catching up!',
+    "Prof. Pecan: So I had a crown made. Not for the strongest, not for the fastest. For the one who saw everything.",
+    `{hero} got the Explorer's Crown! 👑 +50 🍓 (☰ → 🎩 Hats)`,
+    "Prof. Pecan: The adventure doesn't stop here, of course. The Tower, the Masters, the night sky... But for today, {hero}: well done. Truly.",
+    '🏅 100% COMPLETE! Thank you for playing Critter Clash!',
+  ], () => {
+    F.grand_done = true; (A.hats ||= []).includes('grandcrown') || A.hats.push('grandcrown'); save.berries = (save.berries || 0) + 50; persist();
+    sfx.jingle?.(3); w.questMarks?.();
+    if (w.key === 'village') { const b = w.M.buildings?.find((q) => q.id === 'lab'); if (b) w.fireworks(b); }
+  }, 'Prof. Pecan');
+}
+
 // the main story's next beat: an orange ❗ over whoever starts it (favours keep the yellow one)
 export function storyMark(npc) {
   const F = flags(), c = (id) => F['cup_' + id];
   const on = {
-    pecan: !F.quest,
+    pecan: !F.quest || F.grand && !F.grand_done,
     boulder: c('sprout') && !F.trial_strength,
     rival2: F.trial_strength && !F.rival2,
     mama: c('thunder') && !F.trial_friendship && (!F.mama_asked || !!save.adv.follow),
