@@ -1,4 +1,5 @@
 // Settings modal: audio, vibration, graphics quality, accessibility, save reset.
+import { VERSION } from './version.js';
 import { save, persist, resetSave } from './save.js';
 import { backupSheet, restoreSheet } from './backup.js';
 import { vol, setVolumes, sfx } from './audio.js';
@@ -34,6 +35,7 @@ export function openSettings(game, root) {
       <label class="set"><span>Arena hazards</span><input type="checkbox" class="tog" data-k="hazards" ${s.hazards !== false ? 'checked' : ''}></label>
       <label class="set"><span>Reduce flashing</span><input type="checkbox" class="tog" data-k="reduceFlash" ${s.reduceFlash ? 'checked' : ''}></label>
       <div class="set"><span>Save</span><div class="seg bk"><button class="bk-up">Back up</button><button class="bk-in">Restore</button></div></div>
+      <div class="set about"><span>Critter Clash <small>${VERSION}</small></span><div class="seg"><button class="cr-open">Credits</button></div></div>
     </div>
     <div class="set-foot"><button class="btn ghost-dark reset">Reset progress</button><button class="btn primary done">Done</button></div>
   </div>`;
@@ -60,6 +62,9 @@ export function openSettings(game, root) {
   }));
   d.querySelector('.done').addEventListener('click', () => { sfx.ui('ok'); close(); });
   d.querySelector('.bk-up').addEventListener('click', () => { sfx.ui('ok'); backupSheet(root); });
+  const cr = d.querySelector('.cr-open');
+  if (game.battle || game.screens.mode === 'world') cr.closest('.set').querySelector('.seg').remove(); // the credits replace the screen: only from the menus
+  else cr.addEventListener('click', () => { sfx.ui('ok'); close(); game.screens.credits(); });
   d.querySelector('.bk-in').addEventListener('click', () => { sfx.ui('ok'); restoreSheet(root); });
   const reset = d.querySelector('.reset');
   reset.addEventListener('click', () => {

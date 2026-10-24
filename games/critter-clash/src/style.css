@@ -1245,3 +1245,22 @@ body:not(.is-touch) .wd-a.hint::after { content: "Space · " attr(data-hint); po
 .arcade canvas.jolt { animation: arcJolt 0.25s ease-out; }
 .arcade canvas.jolt.big { animation: arcJolt 0.45s ease-out; }
 @keyframes arcJolt { 0%, 100% { translate: 0 0; } 20% { translate: -6px 2px; } 40% { translate: 5px -3px; } 60% { translate: -3px 2px; } 80% { translate: 2px -1px; } }
+
+/* C8: How to Play tabs (one height on every tab), the version tag and the credits screen */
+.howto-wrap .modal { display: flex; flex-direction: column; height: min(600px, calc(100dvh - 32px)); }
+.howto-wrap .howto { flex: 1; min-height: 0; overflow: auto; margin: 0 0 10px; padding-right: 4px; align-content: start; -webkit-mask-image: linear-gradient(#000 calc(100% - 22px), transparent); mask-image: linear-gradient(#000 calc(100% - 22px), transparent); padding-bottom: 18px; }
+.howto-wrap .ht-tabs { flex-wrap: wrap; }
+.ht-foot { display: flex; justify-content: flex-end; gap: 10px; flex: none; }
+.title-ver { position: absolute; left: calc(10px + var(--sal)); bottom: calc(6px + var(--sab)); font-size: 11px; font-weight: 800; opacity: .55; text-shadow: 0 1px 0 var(--ink); pointer-events: none; }
+.credits .cr-ver { font-size: 13px; opacity: .7; margin-top: -8px; }
+.credits-screen.rolling .roll { animation: crRoll 60s linear forwards; }
+@keyframes crRoll { to { transform: translateY(calc(-100% + 55vh)); } }
+@media (max-aspect-ratio: 1/1) { .credits-screen .credits { top: 57%; bottom: calc(72px + var(--sab)); } @keyframes crRoll { to { transform: translateY(calc(-100% + 22vh)); } } }
+.credits-screen .res-btns { opacity: 1; }
+.set.about small { font-size: 12px; opacity: .65; margin-left: 4px; font-weight: 800; }
+@media (max-height: 420px) and (min-aspect-ratio: 1/1) {
+  .howto-wrap .modal { padding: 10px 16px; }
+  .howto-wrap .modal h2 { display: none; } /* the tabs say where you are; the list gets the room */
+  .howto-wrap .howto li { font-size: 13px; }
+}
+@media (max-width: 440px) { .ht-tabs { grid-template-columns: repeat(2, 1fr) !important; } }

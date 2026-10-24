@@ -13,6 +13,7 @@ import { SHOP_HATS } from './critters.js';
 import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, seasonKey } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, gauntletFoes } from './story.js';
 import { MAPS } from './worldmaps.js';
+import { VERSION } from './version.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
 
 // trainers and story foes meet the hero partway: an over-levelled hero still gets a fight (the foe climbs
@@ -161,6 +162,7 @@ export class Screens {
           <div class="logo-sub">Tiny critters. Huge bonks.</div>
         </div>
         <div class="title-menu"></div>
+        <div class="title-ver">${VERSION}</div>
         <div class="title-foot"><span>🧢 ${save.trainer.name}</span><span>Team ${save.unlocked.length}/${CRITTERS.length}</span><span>🏆 ${trophies}/${CUPS.length}</span>${trophies === CUPS.length ? '<span class="master">🌟 Critter Master</span>' : ''}</div>
       </div>`;
     const m = this.root.querySelector('.title-menu');
@@ -556,34 +558,125 @@ export class Screens {
     say('Welcome to Critter Clash! I study the bonkiest critters in the world, and I could use a trainer like you.', () => next('Next', askName));
   }
 
-  howTo() {
+  // How to Play: four tabs (the modal keeps one height, like the Journal), and Credits at the bottom
+  howTo(tab = 'battle') {
+    const li = (k, v) => `<li><b>${k}</b><span>${v}</span></li>`;
+    const TABS = {
+      battle: ['⚔️ Battle', [
+        ['Move', 'Left thumb anywhere on the left side · WASD / arrows · stick'],
+        ['Attack', 'Tap for a 3-hit combo; the third hit launches · J / Space'],
+        ['Special', "Your critter's signature move, on a cooldown · K"],
+        ['Dodge', 'A quick roll with invincibility; dodge at the last moment for bonus Super · L / Shift'],
+        ['Guard', 'Hold to raise a shield bubble that blocks most damage. Raise it right as a hit lands to PARRY and stagger the attacker · O'],
+        ['Super', 'Fills as you trade hits. When it glows, unleash it! · I'],
+        ['Power-ups', 'Berries heal, stars charge your Super, shoes give a speed burst. Grab them before your rival does!'],
+        ['Types', 'Each type beats two others (Blaze burns Sprout, Splash douses Blaze, Pebble grounds Zap...). Hitting a weakness deals extra damage.'],
+        ['Dizzy', 'Too many hits in a row makes a critter see stars. Mash buttons to shake it off!'],
+        ['Hazards', 'Later stadiums fight back: when a glowing ring appears on the floor, get out of it (or guard)! Each one has a second trick too: fissures, ice slicks, lasers (guard or roll through), rogue waves, crosswinds and spore clouds.'],
+        ['Growing', 'At Lv 7 and Lv 14 a critter grows into a new form: bigger, tougher, with stronger specials and supers. Rivals grow too!'],
+      ]],
+      adv: ['🗺️ Adventure', [
+        ['Explore', 'Walk your hero across Clashara with the stick or WASD; push the stick all the way (or hold Shift) to run. Press A to talk, read signs, open doors and fish.'],
+        ['Critters', 'Tall grass hides wild critters: beat one you haven\'t met and it may join your team. Rare sparkly shinies are always worth a fight. Trainers battle you on sight.'],
+        ['Marks', 'An orange ❗ is the next step of the story. A yellow ❗ is someone who needs a favour, and a ❓ is waiting for a parcel you carry.'],
+        ['☰ Menu', 'Your goal for now, the 📔 Journal (today\'s things to do, favours, fish, the night sky, Records and the Champ page), the Town Map (tap a town you\'ve visited to fly there), hats, your buddy and photos.'],
+        ['Cups', 'Each town\'s stadium holds a cup, and the trials test your Strength, Friendship and Wisdom on the road to the Critter Crown.'],
+        ['Berry Centers', 'Rest to heal, swap who leads the way at the Critter Box, leave a critter at the Daycare and blend berry smoothies.'],
+        ['The Isles', 'Once you hold the Critter Crown, the Sunny Gull ferry sails from Seashell Town to the Sunscatter Isles: new critters, three island cups and the Gloom Gulls.'],
+        ['After that', 'The Battle Tower, three legendary critters, the weekly Masters, the Kite Glider\'s hidden spots, pearls, dives and more. The Champ page keeps track.'],
+        ['100%', 'Records shows how much of Clashara and the isles you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
+      ]],
+      modes: ['🏆 Modes', [
+        ['Tournament', 'Seven stadium cups of three battles each. Win them all to become a Critter Master.'],
+        ['Quick Battle', 'Any critter you have against any rival, in any stadium, with a fun modifier if you like.'],
+        ['Training', 'In Challenges: practise moves on a dummy, with the ⚠ Hazards chip to try each stadium\'s tricks.'],
+        ['Survival', 'Fight until you fall; damage carries over. Every 5th rival is a shiny ⭐ Gatekeeper: beat it for berries and a full heal. Clearing the Boss Rush pays a berry basket too.'],
+        ['Daily', 'A new Daily Challenge every day for double XP; some days it\'s a 3-on-3 team fight. Clear it on back-to-back days for a streak: up to +5 berries a day.'],
+        ['Team Battle', 'Pick three critters against a rival team of three. The winner of each fight stays in with the damage it took.'],
+        ['Trials', 'Earn up to three stars in each stadium\'s hazard trial.'],
+        ['Camp', 'Pet your critters to build friendship and feed them berries for XP. Drop by daily for a gift. Best friends (5 hearts) start every battle with some Super.'],
+        ['Critterdex', 'Every critter, its forms, moves and where to find it. Beat a shiny to unlock its shiny colours.'],
+      ]],
+      tips: ['💡 Tips', [
+        ['Counters', 'A napping Snoozlo is a trap: hit it and it wakes up swinging. Wait it out, then pounce while it yawns.'],
+        ['Parry', 'Guard just as a hit lands: the attacker staggers and you get a free combo.'],
+        ['Pause', 'Pause any fight to see your move list, Restart it, or take a photo.'],
+        ['Settings', 'Make the touch buttons bigger or smaller, change the text speed, switch battle tips, vibration or arena hazards off, and turn on Reduce flashing.'],
+        ['Your save', 'It lives on this device. Settings → Back up gives you a code or a file to keep; Restore brings it back on a new phone.'],
+      ]],
+    };
     const d = document.createElement('div');
-    d.className = 'modal-wrap';
+    d.className = 'modal-wrap howto-wrap';
     d.innerHTML = `<div class="modal"><h2>How to Play</h2>
-      <ul class="howto">
-        <li><b>Move</b><span>Left thumb anywhere on the left side · WASD / arrows · stick</span></li>
-        <li><b>Attack</b><span>Tap for a 3-hit combo; the third hit launches · J / Space</span></li>
-        <li><b>Special</b><span>Your critter's signature move, on a cooldown · K</span></li>
-        <li><b>Dodge</b><span>Quick roll with invincibility; dodge at the last moment for bonus Super · L / Shift</span></li>
-        <li><b>Guard</b><span>Hold to raise a shield bubble that blocks most damage. Raise it right as a hit lands to PARRY and stagger the attacker · O</span></li>
-        <li><b>Power-ups</b><span>Berries heal, stars charge your Super, shoes give a speed burst. Grab them before your rival does!</span></li>
-        <li><b>Super</b><span>Fills as you trade hits. When it glows, unleash it! · I</span></li>
-        <li><b>Types</b><span>Each type beats two others (Blaze burns Sprout, Splash douses Blaze, Pebble grounds Zap...). Hitting a weakness deals extra damage.</span></li>
-        <li><b>Dizzy</b><span>Too many hits in a row makes a critter see stars. Mash buttons to shake it off!</span></li>
-        <li><b>Hazards</b><span>Later stadiums fight back: when a glowing ring appears on the floor, get out of it (or guard)! Each one has a second trick too: fissures, ice slicks, lasers (guard or roll through), rogue waves, crosswinds and spore clouds. Practise them in Training with the ⚠ Hazards chip, earn stars in the Stadium Trials (Challenges), or switch hazards off in Settings.</span></li>
-        <li><b>Adventure</b><span>Walk your hero across Clashara with the stick or WASD; push the stick all the way (or hold Shift) to run. Press A to talk, read signs and open doors. Tall grass hides wild critters, trainers battle you on sight, and each town's stadium holds a cup. The ☰ menu has a Town Map: tap a town you've visited to fly back to it. Hunt for hidden 🎁 gift boxes and rare sparkly shiny critters!</span></li>
-        <li><b>Team Battle</b><span>In Challenges: pick three critters against a rival team of three. The winner of each fight stays in with the damage it took.</span></li>
-        <li><b>Survival</b><span>Fight until you fall; damage carries over. Every 5th rival is a shiny ⭐ Gatekeeper: beat it for berries and a full heal. Clearing the Boss Rush pays a berry basket too.</span></li>
-        <li><b>Daily</b><span>A new Daily Challenge every day for double XP; some days it's a 3-on-3 team fight. Clear it on back-to-back days for a streak: up to +5 berries a day.</span></li>
-        <li><b>Counters</b><span>A napping Snoozlo is a trap: hit it and it wakes up swinging. Wait it out, then pounce while it yawns.</span></li>
-        <li><b>Camp</b><span>Pet your critters to build friendship and feed them berries for XP. Win battles to earn berries, and drop by daily for a gift. Best friends (5 hearts) start every battle with some super meter.</span></li>
-        <li><b>Growing</b><span>At Lv 7 and Lv 14 a critter grows into a new form: bigger, tougher, with stronger specials and supers. Rivals grow too!</span></li>
-        <li><b>Settings</b><span>Make the touch buttons bigger or smaller, switch battle tips off (or back on to replay them), and pause any fight to Restart it.</span></li>
-      </ul></div>`;
-    const close = this.btn('Got it!', 'primary', () => d.remove());
-    d.querySelector('.modal').appendChild(close);
-    d.addEventListener('click', (e) => { if (e.target === d) d.remove(); });
+      <div class="jr-tabs ht-tabs">${Object.entries(TABS).map(([k, [t]]) => `<button data-t="${k}">${t}</button>`).join('')}</div>
+      <ul class="howto"></ul>
+      <div class="ht-foot"></div></div>`;
+    const list = d.querySelector('.howto');
+    const show = (k) => {
+      tab = k;
+      list.innerHTML = TABS[k][1].map(([a, b]) => li(a, b)).join('');
+      list.scrollTop = 0;
+      d.querySelectorAll('.ht-tabs button').forEach((x) => x.classList.toggle('on', x.dataset.t === k));
+    };
+    d.querySelectorAll('.ht-tabs button').forEach((x) => x.addEventListener('click', () => { sfx.ui(x.dataset.t === tab ? 'move' : 'ok'); show(x.dataset.t); }));
+    show(TABS[tab] ? tab : 'battle');
+    const foot = d.querySelector('.ht-foot');
+    const prev = this.game.modalClose; // (the pause menu's, when opened from there)
+    const close = () => { d.remove(); if (this.game.modalClose === close) this.game.modalClose = prev || null; };
+    if (!this.game.battle) foot.appendChild(this.btn('Credits', 'ghost-dark', () => { close(); this.credits(); }));
+    foot.appendChild(this.btn('Got it!', 'primary', close));
+    this.game.modalClose = close;
+    d.addEventListener('click', (e) => { if (e.target === d) close(); });
     this.root.appendChild(d);
+  }
+
+  // ---------- the credits, from How to Play or Settings: who made it, who's in it, what it's built with ----------
+  credits() {
+    const g = this.game;
+    g.endBattle();
+    this.mode = 'credits';
+    g.setArena('meadow');
+    playMusic('victory');
+    const met = CRITTERS.filter((c) => save.unlocked.includes(c.id)), unmet = CRITTERS.length - met.length;
+    const rivals = [...new Set(CUPS.flatMap((c) => c.matches.map((m) => m.name)))].filter((n) => n !== 'Professor Pecan');
+    const isles = !!save.adv?.flags?.isle_arrive;
+    const towns = (keys) => keys.filter((k) => MAPS[k]).map((k) => MAPS[k].name).join(' · ');
+    this.root.innerHTML = `
+      <div class="finale credits-screen">
+        <div class="credits"><div class="roll">
+          <div class="logo-top ol">CRITTER</div><div class="logo-bot ol">CLASH!</div>
+          <p class="cr-ver">${VERSION}</p>
+          <h3>Made by</h3><p class="cr-big">zchillsounds</p>
+          <h3>Built with</h3><p>Claude Code</p><p><small>every critter, town, tune and bonk made in code</small></p>
+          <h3>Starring</h3>${met.map((c) => `<p><b>${c.name}</b> <small>${c.species}</small></p>`).join('')}${unmet ? `<p><small>…and ${unmet} more still to meet!</small></p>` : ''}
+          <h3>Clashara</h3><p>${towns(['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak'])}</p>
+          ${isles ? `<h3>The Sunscatter Isles</h3><p>${towns(['coral', 'palmpath', 'bluffs', 'ashtrail', 'ember_isle', 'atoll'])}</p>` : ''}
+          <h3>Rivals</h3><p>${rivals.join(' · ')}</p>
+          <h3>Special thanks</h3><p>Professor Pecan, as himself</p><p>Dash, for never giving up</p><p>The crowd, for all the cheering</p>
+          <h3>Made with</h3><p>three.js · Vite · Capacitor</p><p>Lilita One and Nunito <small>(SIL Open Font License)</small></p>
+          <h3>And you</h3><p>for playing!</p>
+          <p class="cr-big">Thanks for playing!</p>
+        </div></div>
+        <div class="res-btns"></div>
+      </div>`;
+    const S = this.root.firstElementChild;
+    S.querySelector('.res-btns').appendChild(this.btn('Back', 'primary', () => this.title()));
+    this.backFn = () => this.title();
+    // the team parades by, four at a time, cheering
+    let wave = 0;
+    const parade = () => {
+      if (this.mode !== 'credits') return;
+      const team = met.length ? met : CRITTERS.slice(0, 4);
+      let group = team.slice(wave * 4, wave * 4 + 4);
+      if (!group.length) { wave = 0; group = team.slice(0, 4); }
+      g.setShowcase(group.map(skinOf), 'line');
+      const wide = innerWidth > innerHeight;
+      for (const c of g.showcase) { c.cheer = 2.4; if (wide) c.root.position.x -= 2.4; }
+      wave++;
+      setTimeout(parade, 3600);
+    };
+    requestAnimationFrame(() => S.classList.add('rolling'));
+    parade();
   }
 
   header(title, back) {

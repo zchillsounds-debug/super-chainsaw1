@@ -13,6 +13,12 @@ export const world = "__game.endBattle?.(); S.adventure(); __sim(0.3);";
 const click = (txt) => `[...document.querySelectorAll('.modal-wrap button')].find((e) => e.textContent.includes(${JSON.stringify(txt)}))?.click()`;
 const scroll = (sel) => `{ const l = document.querySelector(${JSON.stringify(sel)}); if (l) l.scrollTop = 1e6; }`;
 export const STEPS = [
+  ['title', `__game.endBattle?.(); S.title()`],
+  ['howto', `S.title(); S.howTo()`],
+  ['howto-adv', `S.title(); S.howTo('adv')`],
+  ['howto-modes', `S.title(); S.howTo('modes')`],
+  ['howto-tips', `S.title(); S.howTo('tips')`],
+  ['credits', `S.credits()`],
   ['menu', `${world} S.worldMenu()`],
   ['j-today', `${world} S.worldJournal('today')`],
   ['j-today2', `${world} S.worldJournal('today'); ${scroll('.jr-list')}`],
