@@ -1229,20 +1229,22 @@ function dive(S, w) {
 
 // Ember Isle's Surf Shack: Surfer Malia lends out her board for WAVE RIDER (a daily berry prize; 300+ once wins her spare visor)
 function surf(S, w) {
-  const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.surfHi || 0, who = 'Surfer Malia', own = (A.hats ||= []);
-  w.ask(`${who}: Wanna borrow my board? The waves off the black sand are PERFECT today. ${hi ? `Your best ride: ${hi}.` : 'Tap to hop the rocks, grab shells, dodge the gulls!'}${A.surfDay !== day ? ' First good ride today wins berries!' : ''}${own.includes('surfvisor') ? '' : ' Score 300 and my spare visor is yours!'}`, ['Surf!', 'Not now'], (i) => {
+  const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.surfHi || 0, who = 'Surfer Malia', own = (A.hats ||= []), night = w.outPhase === 'night'; // (the shack is indoors, so ask what the windows show)
+  w.ask(`${who}: ${night ? `A night ride? The plankton's glowing and the lighthouse is sweeping the bay. Gnarly.${A.surfNight ? ` Your best by moonlight: ${A.surfNightHi || 0}.` : ' First moonlight ride gets a bonus!'}` : 'Wanna borrow my board? The waves off the black sand are PERFECT today.'} ${hi ? `Your best ride: ${hi}.` : 'Tap to hop the rocks, grab shells, dodge the gulls!'}${A.surfDay !== day ? ' First good ride today wins berries!' : ''}${own.includes('surfvisor') ? '' : ' Score 300 and my spare visor is yours!'}`, ['Surf!', 'Not now'], (i) => {
     if (i) return w.say([`${who}: The waves'll wait. They always do.`], null, who);
     w.busy = true;
     const el = waveRider(S.root, S.game.portrait(w.hero.def), (score) => {
       S.game.modalClose = null; w.busy = false;
       const best = score > hi; if (best) A.surfHi = score;
       (A.cnt ||= {}).surf = (A.cnt.surf || 0) + 1;
+      const moon = night && !A.surfNight; // the first moonlight ride ever: +5 berries
+      if (night) { A.surfNight = (A.surfNight || 0) + 1; A.surfNightHi = Math.max(A.surfNightHi || 0, score); if (moon) save.berries = (save.berries || 0) + 5; }
       let prize = 0;
       if (A.surfDay !== day) { prize = score >= 450 ? 3 : score >= 250 ? 2 : score >= 100 ? 1 : 0; if (prize) { A.surfDay = day; save.berries = (save.berries || 0) + prize; } }
       const visor = score >= 300 && !own.includes('surfvisor'); if (visor) own.push('surfvisor');
-      persist(); if (best || prize || visor) sfx.jingle(2);
-      w.say([`${score >= 300 ? 'TUBULAR!' : score >= 100 ? 'Nice ride!' : 'Wipeout!'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: Here, ${prize} 🍓 from the shack's jar! (One prize a day.)`] : A.surfDay !== day ? [`${who}: Score 100 or more and I'll pay you in berries! (One prize a day.)`] : []), ...(visor ? [`${who}: THREE HUNDRED?! You're a natural. Take my spare visor!`, "{hero} got the Surfer's Visor! 🏄 (☰ → 🎩 Hats)"] : [])], null, who);
-    });
+      persist(); if (best || prize || visor || moon) sfx.jingle(2);
+      w.say([`${score >= 300 ? 'TUBULAR!' : score >= 100 ? 'Nice ride!' : 'Wipeout!'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: Here, ${prize} 🍓 from the shack's jar! (One prize a day.)`] : A.surfDay !== day ? [`${who}: Score 100 or more and I'll pay you in berries! (One prize a day.)`] : []), ...(moon ? [`${who}: Your first moonlight ride! Not many surfers have seen the plankton glow. +5 🍓 🌙`] : []), ...(visor ? [`${who}: THREE HUNDRED?! You're a natural. Take my spare visor!`, "{hero} got the Surfer's Visor! 🏄 (☰ → 🎩 Hats)"] : [])], null, who);
+    }, night);
     S.game.modalClose = () => el.__arcade.close();
   }, who);
 }

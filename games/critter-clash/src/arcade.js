@@ -277,14 +277,22 @@ export function waveRider(root, face, onDone, night = false) { // (night: a star
     if (night) { // stars twinkling, a big moon, and the Starfall lighthouse sweeping its beam far away
       for (let k = 0; k < 40; k++) { const x = (k * 73) % W, y = (k * 37) % (SEA - 70); c.fillStyle = `rgba(255,250,220,${0.4 + 0.5 * Math.abs(Math.sin(S.t * 2 + k))})`; c.fillRect(x, y, k % 5 ? 1.5 : 2.5, k % 5 ? 1.5 : 2.5); }
       c.fillStyle = '#fff8dc'; c.beginPath(); c.arc(250, 44, 18, 0, 7); c.fill(); c.fillStyle = '#0e1640'; c.beginPath(); c.arc(258, 40, 15, 0, 7); c.fill();
-      const lx = 40, ly = SEA - 30, a = S.t * 1.2; c.fillStyle = 'rgba(255,240,170,0.18)'; c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx + Math.cos(a) * 160, ly - 20 + Math.sin(a) * 30); c.lineTo(lx + Math.cos(a + 0.12) * 160, ly - 20 + Math.sin(a + 0.12) * 30); c.fill();
-      c.fillStyle = '#e8e0e8'; c.fillRect(lx - 3, ly, 6, 26); c.fillStyle = '#e84a4a'; c.fillRect(lx - 3, ly + 8, 6, 5); c.fillStyle = '#fff4a0'; c.beginPath(); c.arc(lx, ly - 2, 4, 0, 7); c.fill();
     } else { c.fillStyle = '#fff2b0'; c.beginPath(); c.arc(250, 44, 18, 0, 7); c.fill(); } // the sun
     // the volcano far behind, with a puff of smoke, scrolling very slowly
     const vx = ((200 - S.dist * 0.3) % (W + 200) + W + 200) % (W + 200) - 100;
     c.fillStyle = '#6a5a6a'; c.beginPath(); c.moveTo(vx - 90, SEA); c.lineTo(vx - 18, SEA - 82); c.lineTo(vx + 18, SEA - 82); c.lineTo(vx + 90, SEA); c.fill();
     c.fillStyle = '#ff8a3a'; c.fillRect(vx - 16, SEA - 84, 32, 4);
     c.fillStyle = 'rgba(230,220,220,0.7)'; for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(vx + 6 + k * 12 + Math.sin(S.t + k) * 3, SEA - 96 - k * 12, 9 + k * 3, 0, 7); c.fill(); }
+    if (night) { // the Starfall lighthouse on its islet far off to the right, sweeping its beam across the bay
+      const lx = W - 44, ly = SEA - 40, a = Math.PI + Math.sin(S.t * 0.9) * 0.9;
+      c.fillStyle = 'rgba(255,240,170,0.16)'; c.beginPath(); c.moveTo(lx, ly - 3); c.lineTo(lx + Math.cos(a - 0.08) * 220, ly - 3 + Math.sin(a - 0.08) * 220); c.lineTo(lx + Math.cos(a + 0.08) * 220, ly - 3 + Math.sin(a + 0.08) * 220); c.fill();
+      c.fillStyle = '#26284a'; c.beginPath(); c.moveTo(lx - 30, SEA); c.quadraticCurveTo(lx, SEA - 22, lx + 30, SEA); c.fill(); // the islet
+      c.fillStyle = '#e8e0e8'; c.beginPath(); c.moveTo(lx - 5, ly + 30); c.lineTo(lx - 3.5, ly); c.lineTo(lx + 3.5, ly); c.lineTo(lx + 5, ly + 30); c.fill();
+      c.fillStyle = '#e84a4a'; c.fillRect(lx - 4.5, ly + 8, 9, 5); c.fillRect(lx - 5, ly + 19, 10, 5);
+      c.fillStyle = '#fff4a0'; c.beginPath(); c.arc(lx, ly - 3, 4.5, 0, 7); c.fill(); c.fillStyle = 'rgba(255,244,160,0.3)'; c.beginPath(); c.arc(lx, ly - 3, 10, 0, 7); c.fill();
+      const cg = c.createRadialGradient(vx, SEA - 84, 2, vx, SEA - 84, 20); cg.addColorStop(0, 'rgba(255,150,60,0.55)'); cg.addColorStop(1, 'rgba(255,120,40,0)');
+      c.fillStyle = cg; c.beginPath(); c.ellipse(vx, SEA - 84, 20, 9, 0, 0, 7); c.fill(); // the crater glows after dark
+    }
     // two layers of sea: a darker one behind, then the wave the hero rides
     c.fillStyle = night ? '#1a3a7a' : '#2a9ad0'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 8) c.lineTo(x, SEA - 8 + Math.sin(x * 0.03 + S.t * 1.4) * 4); c.lineTo(W, H); c.fill();
     c.fillStyle = night ? '#2a5aa8' : '#3ac0e8'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 6) c.lineTo(x, sea(x)); c.lineTo(W, H); c.fill();

@@ -1267,6 +1267,7 @@ export class Screens {
         + bar('🌟', 'The Sunstone', F.sunstone ? 'home' : F.morra ? 'found' : 'lost')
         + bar('⛴️', 'Ferry rides', A.cnt?.ferry || 0)
         + (A.surfHi ? bar('🏄', 'WAVE RIDER best', A.surfHi) : '')
+        + (A.surfNightHi ? bar('🌙', 'WAVE RIDER by moonlight', A.surfNightHi) : '')
         + (A.cnt?.gull ? bar('🐦', 'Gull Club catches', A.cnt.gull) : '')
         + (A.diveHi ? bar('🤿', 'REEF DIVE best', A.diveHi) : '')
         + (F.sunstone ? bar('🌺', 'Sunscatter Masters cleared', A.mastWins || 0) : '')

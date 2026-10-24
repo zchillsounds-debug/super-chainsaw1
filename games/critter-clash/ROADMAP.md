@@ -1,3 +1,42 @@
+# Critter Clash: Completion roadmap (C1–C8)
+
+> **Note from session C1 (2026-10-24):** the prompt for this run says the C1–C8 plan was agreed with the user, but no copy of it had been pushed to any branch, and HANDOFF.md had no "Completion run" line. So C1 drafted the plan below from the open threads in HANDOFF.md and the game's state. **If the user's agreed plan differs, theirs wins: replace this section with it** and keep the status lines.
+
+Goal: take Critter Clash from "keeps growing" to **finished**. That means every thread closed, every mode and screen consistent at phone sizes, no dead ends, a clear 100% goal, and a release-ready final APK. Each session does the first milestone that isn't done, keeps about 80% of its time on that milestone and 20% on the bugs it finds, and runs the usual checks.
+
+### C1. Close the open threads
+- Finish R723: Surfer Malia offers WAVE RIDER at night (night flag, a night best/prize, a Records/Today note).
+- Night looks for the post-game spots that lack one (Rainbow Reach).
+- Write up R713–R723 in HANDOFF.md (an earlier session didn't hand off).
+- A full balance robin with all critters, plus fixes for anyone outside 40–65%.
+
+### C2. Mainland story audit
+- Play a fresh save from the intro to the ending with the tools (advstory / advcup / advtrial per beat). Fix any soft-lock, missing ❗, or wrong nextGoal line.
+- Check that every map loads (advload) and every door/edge leads somewhere sensible.
+
+### C3. Chapter 2 and post-game audit
+- The same for the ferry → Chapter 2 finale → Tower / legends / Masters / quests.
+- Check that every Records row can reach 100%, and that every hat, pearl, photo and fish can be got.
+
+### C4. 100% completion goal
+- A clear completion target (Clashara % plus the isles), with a reward and a short closing scene for 100%, shown in the Journal.
+
+### C5. UI consistency pass
+- Every menu, modal and Journal tab at 915×412, 740×360 and 412×915: spacing, font sizes, button sizes, scroll, back buttons. Fix overlap and clipping.
+
+### C6. Audio and game feel
+- Sound coverage: every button, mini-game, quest step and reward has a sound. Music per region and time of day. Haptics/vibration where it helps.
+
+### C7. Stability
+- Save robustness (old saves migrate, a broken save recovers), long-session memory and leaks (map changes, battles in a row), errors in the console, and the frame rate on the phone-default quality.
+
+### C8. Release polish
+- Title screen, credits, app icon and version, a final How to Play, and the final full check pass (tapcheck, advcup, advstory, all the feature tools). Then the final APK.
+
+### Completion status
+- **C1: in progress (session C1, 2026-10-24).**
+- C2–C8: not started.
+
 # Critter Clash roadmap: Adventure Chapter 2 (agreed with the user on 2026-10-21)
 
 ## What the user decided
