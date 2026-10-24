@@ -163,7 +163,7 @@ export class Screens {
         </div>
         <div class="title-menu"></div>
         <div class="title-ver">${VERSION}</div>
-        <div class="title-foot"><span>🧢 ${save.trainer.name}</span><span>Team ${save.unlocked.length}/${CRITTERS.length}</span><span>🏆 ${trophies}/${CUPS.length}</span>${trophies === CUPS.length ? '<span class="master">🌟 Critter Master</span>' : ''}</div>
+        <div class="title-foot"><span>🧢 ${save.trainer.name}</span><span>Team ${save.unlocked.length}/${CRITTERS.length}</span><span>🏆 ${trophies}/${CUPS.length}</span>${trophies === CUPS.length ? '<span class="master">🌟 Critter Master</span>' : ''}${save.adv?.flags?.grand_done ? '<span class="master">🏅 100%</span>' : ''}</div>
       </div>`;
     const m = this.root.querySelector('.title-menu');
     // the two main modes share a row in landscape and stack on narrow portrait screens
