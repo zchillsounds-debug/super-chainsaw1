@@ -4190,6 +4190,7 @@ export class World {
       for (let k = 0; k < W.roam && grass.length; k++) {
         const [x, y] = grass.splice(Math.floor(Math.random() * grass.length), 1)[0];
         this.spawnWild(x, y);
+        const far = grass.filter(([gx, gy]) => Math.abs(gx - x) + Math.abs(gy - y) > 2); if (far.length) grass.splice(0, grass.length, ...far); // R761: start apart (neighbours overlapped into one blob)
       }
       const al = alphaToday();
       if (al && al.map === this.key && !al.done) { // today's Alpha: twice as big, a red aura, and it stays put in its patch
@@ -4732,7 +4733,7 @@ export class World {
         a.dir = d;
         if (a.wild) {
           if (nx === this.hx && ny === this.hy && !this.moveT) { this.wildFight(a); return; }
-          if (this.tile(nx, ny) !== '"' || this.occupied(nx, ny, a)) continue;
+          if (this.tile(nx, ny) !== '"' || this.occupied(nx, ny, a) || this.wild.some((o) => o !== a && Math.max(Math.abs(o.x - nx), Math.abs(o.y - ny)) < 2)) continue; // R761: keep a tile between wild critters
         } else {
           if (Math.abs(nx - a.home[0]) + Math.abs(ny - a.home[1]) > a.n.wander || !this.walkable(nx, ny) || this.occupied(nx, ny, a) || (this.from && this.from[0] === nx && this.from[1] === ny)) continue;
         }
