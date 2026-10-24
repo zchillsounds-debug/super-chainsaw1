@@ -355,7 +355,8 @@ export function nextGoal(F) {
   if (!F.quest) return 'Visit Professor Pecan\'s lab in Sprout Village.';
   const nx = Object.keys(GOAL_AT).find((id) => !F['cup_' + id]);
   if (!nx) return 'Climb Champion\'s Peak, north of Frostpeak. The Crown is waiting!';
-  if (nx === 'grove' && !F.trial_friendship) return 'Brambles block Glowcap Woods. Someone in the woods needs a friend.';
+  if (nx === 'grove' && !F.trial_friendship) return save.adv.follow === 'squeakwing' ? 'Pip is safe! Take Pip back to Mama Squeak by the brambles in Glowcap Woods.' : F.mama_asked ? 'Mama Squeak\'s baby Pip is lost in the south-west of Glowcap Woods. Find Pip!' : 'Brambles block Glowcap Woods. Someone in the woods needs a friend.';
+  if (F.cup_champion && !F.trial_heart && nx !== 'champion') return 'The Night Gang has Dash cornered on Neon City\'s south road. Your rival needs a hand!';
   if (nx === 'champion' && !F.trial_wisdom) return 'Cross the bridge on Cinder Road. The Stone Sage will test what you know.';
   return `Win the ${CUPS.find((c) => c.id === nx).name} in ${GOAL_AT[nx]}.`;
 }
@@ -991,6 +992,25 @@ export function deliveryFor(npc) {
 // a quest-chain link given by someone whose own story is something else (Q.from): they ask for it first, once it's their turn
 export function chainFor(npc) {
   const F = flags(); return Object.keys(LOST).find((id) => LOST[id].from === npc && questReady(id) && !F[id + '_asked']) || null;
+}
+// the main story's next beat: an orange ❗ over whoever starts it (favours keep the yellow one)
+export function storyMark(npc) {
+  const F = flags(), c = (id) => F['cup_' + id];
+  const on = {
+    pecan: !F.quest,
+    boulder: c('sprout') && !F.trial_strength,
+    rival2: F.trial_strength && !F.rival2,
+    mama: c('thunder') && !F.trial_friendship && (!F.mama_asked || !!save.adv.follow),
+    pip: F.mama_asked && !F.pip_saved,
+    sage: c('grove') && !F.trial_wisdom,
+    dash4: c('champion') && !F.trial_heart,
+    dash5: CUPS.every((x) => c(x.id)) && !F.dash5,
+    king: F.dash5 && !F.crowned,
+    gull_b: c('gale') && !F.skua_b,
+    morra_a: c('caldera') && !F.morra,
+    dash_b: F.sunstone && !F.dash_show,
+  };
+  return on[npc] ? '!' : null;
 }
 // a quest chain's later link waits for the one before it (until then its giver just chats)
 export const questReady = (id) => !LOST[id]?.needs || !!flags()[LOST[id].needs];

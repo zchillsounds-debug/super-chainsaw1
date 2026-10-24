@@ -11,7 +11,7 @@ import { sfx, playMusic } from './audio.js';
 import { typeSpeed } from './settings.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap, CUP_ORDER } from './interiors.js';
-import { countUp, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor } from './story.js';
+import { countUp, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor, storyMark } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
 import { stargaze, tonightConst, BOTTLE_NOTES, CONSTELLATIONS } from './stars.js';
@@ -78,8 +78,8 @@ const panelTex = () => PANEL ||= canvasTex(64, 64, (c) => {
 const MARKS = {}; // quest bubble materials (shared, never disposed)
 const markMat = (k) => MARKS[k] ||= new THREE.SpriteMaterial({ depthTest: false, map: canvasTex(64, 64, (c) => {
   c.fillStyle = '#2a1630'; c.beginPath(); c.arc(32, 30, 27, 0, 7); c.fill();
-  c.fillStyle = k === '!' ? '#ffd84d' : '#7ae0ff'; c.beginPath(); c.arc(32, 30, 23, 0, 7); c.fill();
-  c.fillStyle = '#2a1630'; c.font = 'bold 34px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(k, 32, 32);
+  c.fillStyle = k === '!' ? '#ffd84d' : k === 'm' ? '#ff7a3d' : '#7ae0ff'; c.beginPath(); c.arc(32, 30, 23, 0, 7); c.fill();
+  c.fillStyle = '#2a1630'; c.font = 'bold 34px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(k === 'm' ? '!' : k, 32, 32);
 }) });
 // where each side quest's lost thing turns up: a solid tile (tree, rock, palm) you face from next door
 // what bites where (name, min cm, max cm; the last of each list is the rare one). The ☰ Journal lists them as a fish album.
@@ -4131,10 +4131,10 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
-      this.group.add(m); a.mark = m;
+      this.group.add(m); a.mark = m; a.markKind = k;
     }
   }
 
@@ -4607,7 +4607,7 @@ export class World {
     if (this.spinner) this.spinner.rotation.y += dt * (this.moveT > 0 ? 18 : 3);
     this.ambience(dt);
     this.updateFireworks(dt);
-    for (const a of this.npcs || []) if (a.mark) a.mark.position.set(a.root.position.x, a.root.position.y + 2.7 + Math.sin(this.t * 4) * 0.12, a.root.position.z);
+    for (const a of this.npcs || []) if (a.mark) a.mark.position.set(a.root.position.x, a.root.position.y + 2.7 + ((a.n.scale || 1) - 1) * 3 + Math.sin(this.t * 4) * 0.12, a.root.position.z); // big folk (Bouldillo) carry it higher
     if ((this.M.snow || this.M.border === 'cloud') && this.phase === 'night' && !this.M.indoor && Math.random() < dt * 0.18) { // now and then a shooting star streaks across the top of the view
       const p = this.hero.root.position, port = this.g.camera.aspect < 1, sx = p.x + (Math.random() - 0.5) * 14, sz = p.z + (port ? -9 : -4) - Math.random() * 2, dir = Math.random() < 0.5 ? 1 : -1;
       for (let k = 0; k < 12; k++) this.g.fx.spawn({ x: sx - dir * k * 0.28, y: 6 + k * 0.1, z: sz, vx: dir * 9, vy: -1, color: k ? 0xd8ecff : 0xffffff, size: k ? 0.32 - k * 0.02 : 0.5, life: 0.55 - k * 0.03, shape: k ? 'glow' : 'star' });
@@ -4829,7 +4829,9 @@ export class World {
     const port = cam.aspect < 1;
     // portrait outdoors stands further back with a narrower lens (same ground width in view): a wide 80° lens blew the treetops under the camera up into big flat discs
     const far = port && !this.M.indoor, H = far ? 28 : port ? 21 : 17, D = far ? 19.5 : port ? 10 : 11.5;
-    const want = new THREE.Vector3(p.x, H, p.z + D);
+    // landscape stops short of the south border, so the last rows aren't half a screen of wall roofs (Neon City's south road)
+    const cz = !port && !this.M.indoor ? Math.min(p.z, (this.H - 4.2) * TILE) : p.z;
+    const want = new THREE.Vector3(p.x, H, cz + D);
     // rooms are small: hold the whole room in view (portrait backs off far enough to fit the room's width)
     const vw = Math.min(this.W, port ? (this.M.indoor === 'arcade' ? 10 : 5.6) : 7.5); // the arcade backs off a little more, so its cabinets show from the door // wide rooms: portrait shows 5.6 tiles (so the room fills more of a tall screen) and pans with the hero
     const fit = port ? (vw * TILE + 1.2) / (2 * Math.tan(Math.min(80, 2 * Math.atan(Math.tan(0.38) / cam.aspect) * 180 / Math.PI) * Math.PI / 360) * cam.aspect) : 0;

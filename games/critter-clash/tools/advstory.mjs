@@ -1,5 +1,5 @@
 // node tools/advstory.mjs <map> <x> <y> <dir> <flags,comma> [WxH]: stand there, press A, and play out whatever happens
-// (dialogue is tapped through, questions get the first answer, battles are forced wins) until the world is calm again
+// (dialogue is tapped through, questions get the first answer, battles are forced wins; LOSE=1 forces losses) until the world is calm again
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
 const { chromium } = require('playwright');
@@ -21,7 +21,7 @@ await pg.evaluate(([map, x, y, dir, flags]) => {
 const log = [];
 for (let step = 0; step < 40; step++) {
   await pg.waitForTimeout(600);
-  const st = await pg.evaluate(() => {
+  const st = await pg.evaluate((LOSE) => {
     const S = __game.screens, wo = S.worldObj;
     if (S.mode === 'world' && wo) {
       const t = document.querySelector('.wd-box')?.textContent?.slice(0, 70);
@@ -30,14 +30,15 @@ for (let step = 0; step < 40; step++) {
     }
     if (S.mode === 'results') { document.querySelector('.recruit .btn, .modal-wrap .btn')?.click(); [...document.querySelectorAll('button')].find((x) => /Continue/.test(x.textContent))?.click(); return 'results'; }
     const bt = __game.battle;
-    if (bt) { const p = bt.fighters[0]; for (let i = 0; i < 90 && bt.phase !== 'done'; i++) { p.hp = p.maxHp; if (bt.phase === 'fight') bt.fighters[1].hp = 1; __sim(0.5); } __sim(2); return 'battle vs ' + bt.fighters[1].def.name; }
+    if (bt) { const lose = LOSE; const p = bt.fighters[lose ? 1 : 0], q = bt.fighters[lose ? 0 : 1]; for (let i = 0; i < 90 && bt.phase !== 'done'; i++) { p.hp = p.maxHp; if (bt.phase === 'fight') q.hp = 1; __sim(0.5); } __sim(2); return (lose ? 'lost to ' : 'battle vs ') + bt.fighters[1].def.name; }
     return S.mode;
-  });
+  }, !!process.env.LOSE);
   if (log[log.length - 1] !== st) log.push(st);
   if (st === 'calm' && step > 2) break;
 }
 console.log(log.join('\n'));
 await pg.screenshot({ path: 'tools/out/story-end.png' });
+console.log('at:', await pg.evaluate(() => [__save.adv.map, __save.adv.x, __save.adv.y].join()));
 console.log('flags:', await pg.evaluate(() => Object.keys(__save.adv.flags).join()));
 console.log('errors:', errs.join(' | ') || 'none');
 await b.close();
