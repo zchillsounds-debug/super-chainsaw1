@@ -33,7 +33,12 @@ export const BOTTLE_NOTES = [
   'Any critter can lead the way! Try the Critter Box in a Berry Center. My Pebblepup has never been happier. (signed) A proud trainer',
 ];
 
-export function tonightConst(day, hash) { return CONSTELLATIONS[hash(day + ':stars') % CONSTELLATIONS.length]; }
+// tonight's pick, moved on to the next one you haven't logged (so the star log fills in, one new constellation a night)
+export function tonightConst(day, hash, seen = []) {
+  const n = CONSTELLATIONS.length, i0 = hash(day + ':stars') % n;
+  for (let k = 0; k < n; k++) { const C = CONSTELLATIONS[(i0 + k) % n]; if (!seen.includes(C.id)) return C; }
+  return CONSTELLATIONS[i0];
+}
 
 const W = 320, H = 200;
 

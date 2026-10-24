@@ -2779,7 +2779,7 @@ export class World {
 
   // look through the telescope: tonight's constellation traces itself; the first look of a night is worth a little XP
   stargaze() {
-    const day = new Date().toISOString().slice(0, 10), C = tonightConst(day, hash), A = save.adv;
+    const day = new Date().toISOString().slice(0, 10), A = save.adv, C = (A.stars === day && CONSTELLATIONS.find((q) => q.id === A.starsC)) || tonightConst(day, hash, A.consts || []); // the same one all night
     this.busy = true; sfx.shimmer?.(3);
     const el = stargaze(this.g.ui, C, hash(day), () => {
       this.g.modalClose = null; this.busy = false;
@@ -2787,7 +2787,7 @@ export class World {
       const seen = (A.consts ||= []), fresh = !seen.includes(C.id);
       if (fresh) seen.push(C.id);
       if (A.stars !== day) {
-        A.stars = day; countUp('stars'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+        A.stars = day; A.starsC = C.id; countUp('stars'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
         return this.say([...star, `{hero} spotted ${C.name}!${fresh ? ' A new one for the star log! ✨' : ''}`, `Counting stars is surprisingly tiring. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, `Star log: ${seen.length} of ${CONSTELLATIONS.length} constellations. A different one rises each night.`]);
       }
       persist();
@@ -4911,7 +4911,8 @@ export class World {
       return this.say([(snow ? ['The campfire crackles in the snow. {hero} holds out their paws. Ahh, that\'s better!', 'Sparks float up into the cold, starry sky. Somewhere, a snowman looks jealous.', '{hero} warms up by the fire until even their ears feel toasty.'] : ['The bonfire crackles and pops. {hero} holds out their paws. Toasty!', 'Sparks float up and wink out among the stars. The waves hush on the sand.', '{hero} watches the flames dance for a while. A perfect beach night.'])[Math.floor(Math.random() * 3)]]);
     }
     if (this.bottle && this.bottle.x === fx && this.bottle.y === fy) { // pop the cork, read the note, pocket the berry tucked inside
-      const B = this.bottle, notes = BOTTLE_NOTES, ni = hash(B.day + 'n') % notes.length;
+      const B = this.bottle, notes = BOTTLE_NOTES, read = save.adv.notes || [], i0 = hash(B.day + 'n') % notes.length;
+      const ni = [...notes.keys()].map((k) => (i0 + k) % notes.length).find((k) => !read.includes(k)) ?? i0; // a note you haven't read, if any are left
       if (!(save.adv.notes ||= []).includes(ni)) save.adv.notes.push(ni);
       save.adv.bottle = B.day; countUp('bottle'); save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(1);
       this.solid.delete(B.x + ',' + B.y); B.g.traverse((o) => o.geometry?.dispose()); this.group.remove(B.g); this.group.remove(B.glint); this.bottle = null;
