@@ -1,7 +1,7 @@
 # Critter Clash: Handoff
 
 ## Completion run (C1–C8; read `ROADMAP.md` → "Completion roadmap" first)
-- **Completion run: next is session C2 (continue milestone C2, the mainland story audit; see ROADMAP.md status). Session C1 (2026-10-24 02:08–~03:45 UTC, session_01UPhH5bFT8yNjD2V3aAs9yf) did R723–R730 and finished C1; next round R731.** Each later session: do the first C-milestone not marked done, then update this line.
+- **Completion run: next is session C2 (continue milestone C2, the mainland story audit; see ROADMAP.md status). Session C1 (2026-10-24 02:08–~03:45 UTC, session_01UPhH5bFT8yNjD2V3aAs9yf) did R723–R730 and finished C1; next round R731. It chained to session_01UGdChPvkPsLSfyUsJVsRPA (C2) and sent the user APK 1.0.789 (d18c276).** Each later session: do the first C-milestone not marked done, then update this line.
 - The run's prompt said the C1–C8 plan was agreed with the user, but no copy was on any branch, so C1 drafted it in ROADMAP.md from the open threads. If the user posts their own plan, it replaces the draft.
 - Work branch `ccr-4fc93d6e-suxlhd`. Before every push: `git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd`. Never rebase or force-push. Round numbers continue from the highest R in `git log`.
 - **Builds for checks:** the scratchpad's `build.sh` (`P=<port>`: a git worktree of **HEAD** → `vite build` → `vite preview`; it does NOT include uncommitted edits) and `wbuild.sh` (`P=<port>`: builds the **working tree** into `wdist` and serves it, for quick iteration). Recreate them from the "Session C1" section below in a fresh container.
