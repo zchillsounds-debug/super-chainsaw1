@@ -388,6 +388,7 @@ export class World {
     if (M !== getMap(key)) { key = 'village'; x = 4; y = 6; }
     this.key = key;
     this.W = M.tiles[0].length; this.H = M.tiles.length;
+    if (!(x >= 0 && x < this.W && y >= 0 && y < this.H) && key !== 'village') return this.load('village', 4, 6, 's'); // a damaged save put the hero off the map: home again
     this.group = new THREE.Group();
     this.g.scene.add(this.group);
     this.solid = new Set();
