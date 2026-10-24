@@ -13,14 +13,16 @@ const STAGES = [
   [['cup_thunder'], 'glowwood'], [['mama_asked'], 'glowwood'], [['pip_saved', 'pip_found'], 'glowwood'], [['trial_friendship', 'dash3'], 'glowcap'], [['cup_grove'], 'cinder'],
   [['trial_wisdom'], 'ember'], [['cup_champion'], 'neon'], [['trial_heart', 'post_heart'], 'neon'], [['cup_midnight'], 'cloudtop'], [['cup_sky'], 'frostpeak'], [['cup_legend'], 'peak'],
   [['dash5'], 'peak'], [['crowned', 'ending'], 'seashell'], [['isle_arrive'], 'coral'], [['cup_coral'], 'bluffs'], [['cup_gale'], 'bluffs'], [['skua_b'], 'ember_isle'],
-  [['cup_caldera'], 'atoll'], [['morra', 'sunstone'], 'atoll'],
+  [['cup_caldera'], 'atoll'], [['morra', 'sunstone'], 'atoll'], [['tower_bronze'], 'bluffs'], [['glider'], 'atoll'], [['legend_moonwhal'], 'bluffs'],
+  [['festlamp_done'], 'ember_isle'], [['legend_solmoth'], 'atoll'], [['dash_show'], 'atoll'], [['amends3_done'], 'glowwood'], [['grove1_asked'], 'glowwood'], [['grove4_done'], 'glowwood'],
+  [['legend_verdelk'], 'cloudtop'], [['reach_chest'], 'grotto'], [['grotto_chest'], 'coral'], [['wreck_chest'], 'coral'],
 ];
 const fl = ['intro'];
 for (const [add, map] of STAGES) {
   fl.push(...add);
   const r = await pg.evaluate(([fl, map]) => {
     Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true });
-    __save.adv = { hero: 'cindermunch', map, x: 2, y: 2, dir: 's', flags: Object.fromEntries(fl.map((k) => [k, true])), spawn: { map: 'village', x: 4, y: 6 }, follow: fl.includes('pip_found') && !fl.includes('trial_friendship') ? 'squeakwing' : null };
+    __save.adv = { hero: 'cindermunch', map, x: 2, y: 2, dir: 's', flags: Object.fromEntries(fl.map((k) => [k, true])), spawn: { map: 'village', x: 4, y: 6 }, follow: fl.includes('pip_found') && !fl.includes('trial_friendship') ? 'squeakwing' : null, tower: fl.includes('tower_bronze') ? { best: 7, streak: 0, run: 1, wins: 7 } : undefined };
     const S = __game.screens; S.adventure(); __sim(0.2);
     const wo = S.worldObj; wo.hx = 2; // the goal line is the same wherever the hero stands
     S.worldMenu(); const g = document.querySelector('.wd-goal')?.firstChild?.textContent || '?';

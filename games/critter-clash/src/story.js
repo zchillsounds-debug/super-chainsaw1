@@ -1009,6 +1009,7 @@ export function storyMark(npc) {
     gull_b: c('gale') && !F.skua_b,
     morra_a: c('caldera') && !F.morra,
     dash_b: F.sunstone && !F.dash_show,
+    moonwhal_a: F.tower_bronze && !F.legend_moonwhal, solmoth_r: F.festlamp_done && !F.legend_solmoth, verdelk_g: F.grove4_done && !F.legend_verdelk, // the legends, once awake
   };
   return on[npc] ? '!' : null;
 }
