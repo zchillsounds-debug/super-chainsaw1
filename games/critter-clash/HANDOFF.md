@@ -1183,7 +1183,8 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Also ran clean this session: advload (245 fresh loads), advtrial, advgauntlet, ch2walk, tower, reach (day/night), surf (day/night), advstory Pecan intro.
 - **Final checks (production build of 1896524, R729; R730 is one stat):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the portrait pause menu); advcup Sprout wins 3 and lands back in Bloom Town, no errors.
 - Critiqued: night WAVE RIDER at 915×412 / 740×360 / 412×915 (lighthouse was hidden under the sea → moved onto an islet; flat crater glow → a radial glow), Rainbow Reach night at all three sizes (stars too faint → bigger and brighter), the Tower hall (banners grey before any rank; small but fine).
-- **Next (C2):** advstory through each mainland beat in order; ❗ marks and nextGoal per stage; a mid-beat map-leave soft-lock hunt. Context note: screenshots cost a lot; C1 wrapped at ~210k.
+- **Late in the session (03:15–03:40; a worker restart at ~03:25):** the whole mainland story played through in order with advstory/advcup/advtrial, no errors, ending with `crowned,ending` (the exact commands are in ROADMAP.md C2 status). Dash's Thunder Stadium door ambush fires unless `rival2` is set (by design).
+- **Next (C2):** ❗ marks and nextGoal per stage; a mid-beat map-leave soft-lock hunt. Context note: screenshots cost a lot; C1 wrapped at ~210k.
 
 ## Session 18d (2026-10-21 23:40–~00:50 UTC, session_01JkygnyfnFio7oFRNAVRJbS): M4 finished, post-game content, R701–R712
 - Build/serve as in 18b/18c: the scratchpad `build.sh` (`P=<port>`: git worktree of HEAD → `vite build` → `vite preview` on that port). npm works; run `npm install` first in a fresh container.
