@@ -16,7 +16,7 @@ await pg.evaluate(() => {
   const F = new Set('intro quest rival1 crowned ending isle_arrive sunstone morra skua_b glider lantern rod festlamp_done tower_bronze'.split(' '));
   for (const M of Object.values(__maps)) { for (const n of M.npcs || []) for (const k of ['hideFlag', 'showFlag']) n[k] && F.add(n[k]); for (const e of Object.values(M.edges || {})) e.need && F.add(e.need); for (const bd of M.buildings || []) bd.stadium && F.add('cup_' + bd.stadium); }
   __save.trainer = { name: 'Samantha', partner: 'cindermunch' }; __save.tutorialDone = true; __save.berries = 1234;
-  __save.unlocked = __critters.map((c) => c.id); __critters.forEach((c) => { __save.critters[c.id].level = 30; });
+  __save.unlocked = __critters.map((c) => c.id); __critters.forEach((c) => { __save.critters[c.id].level = 30; }); __save.seenStage = Object.fromEntries(__critters.map((c) => [c.id, 3])); __save.news = ['tricks', 'grove', 'otter', 'frogmole', 'grow', ...Array.from({ length: 40 }, (_, i) => 'adv' + i)];
   __save.adv = { hero: 'cindermunch', map: 'bloom', x: 10, y: 8, dir: 's', flags: Object.fromEntries([...F].map((k) => [k, true])), spawn: { map: 'village', x: 4, y: 6 },
     hats: __hats.slice(0, 40).map((x) => x.id), clock: 12, rain: false, time: 40000, steps: 900,
     seen: Object.fromEntries(Object.keys(__maps).map((k) => [k, 1])), tower: { streak: 9, best: 15, run: 1, wins: 40 },
@@ -51,6 +51,9 @@ const STEPS = [
   ['backup', `S.leaveWorld(); S.title(); document.querySelector('.gear').click(); document.querySelector('.bk-up')?.click()`],
   ['restore', `S.leaveWorld(); S.title(); document.querySelector('.gear').click(); document.querySelector('.bk-in')?.click()`],
   ['matchsetup', `S.leaveWorld(); S.ctx = { kind: 'quick' }; S.select(); S.matchSheet(false)`],
+  ['challenges', `S.leaveWorld(); S.title(); S.challenges()`],
+  ['cups', `S.leaveWorld(); S.title(); S.cups()`],
+  ['dex', `S.leaveWorld(); S.title(); S.dex()`],
   ['toastmenu', `${world} S.worldMenu(); S.toast('🎉 Clashara explored: 75%! A reward waits at home.')`],
 ];
 const CHECK = `(() => {
