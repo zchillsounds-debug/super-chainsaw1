@@ -348,6 +348,8 @@ export function nextGoal(F) {
     if (!F.amends3_done) return 'Morra, by the Starfall lighthouse, wants a quiet word. She has a chest full of things to give back...';
     if (!F.legend_verdelk) return F.grove4_done ? 'Verdelk, the Grove Elk, is awake by the pond in Glowcap Woods!' : F.grove1_asked ? 'Keep the Heartseed chain going (☰ → Journal → Favours) to wake the forest\'s guardian.' : 'The glowcaps in Glowcap Woods are going dim. Picker Fern is worried. Ask her why.';
     if (!F.reach_chest) return 'A new windsock at the east edge of Cloudtop Gardens points straight at the sky. Ride that wind with your glider!';
+    if (!F.grotto_chest) return 'Keeper Lumi\'s Sun Lantern lights the Deep Grotto, through the Ember Grotto north of the Ash Trail. A treasure chest waits in the dark!';
+    if (!F.wreck_chest) return 'Snorkeller Pia in Port Coral knows a sunken ship off the reef. Ask her to take you diving!';
     return 'You saved the Sunscatter Isles! Climb the Battle Tower ranks, find every hidden pearl and explore.';
   }
   if (!F.quest) return 'Visit Professor Pecan\'s lab in Sprout Village.';
