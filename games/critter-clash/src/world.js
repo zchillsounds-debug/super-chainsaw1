@@ -5384,6 +5384,7 @@ export class World {
       <h3>Starring</h3><p><b>${hero}</b> <small>the hero</small></p><p><b>Dash</b> <small>the rival (${rival})</small></p>${isles ? '<p><b>Captain Gill</b> <small>and the Sunny Gull</small></p><p><b>Captain Morra</b> <small>of the Gloom Gulls</small></p><p><b>Keeper Lumi</b> <small>and the Starfall light</small></p><p><b>Marina · Zephyra · Magda</b> <small>the island cup bosses</small></p>' : '<p><b>Prof. Pecan</b> <small>as himself</small></p><p><b>King Snooze</b> <small>keeper of the Crown</small></p><p><b>Captain Puff</b> <small>and the mail balloon</small></p>'}
       <h3>Trainers</h3><p>${trainers.join(' · ')}</p>
       <h3>Townsfolk</h3><p>${folk.join(' · ')}</p>
+      <h3>Made by</h3><p>zchillsounds</p><p><small>built with Claude Code</small></p>
       <h3>And you</h3><p>for playing!</p>
       <p class="cr-big">Thanks for playing!</p>
     </div></div><div class="res-btns"><button class="btn ghost">Skip ⏭</button></div>`;

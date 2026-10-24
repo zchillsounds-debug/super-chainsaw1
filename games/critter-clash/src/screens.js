@@ -2300,6 +2300,7 @@ export class Screens {
           <h3>Starring</h3>${CRITTERS.map((c) => `<p><b>${c.name}</b> <small>${c.species}</small></p>`).join('')}
           <h3>Rivals</h3><p>${rivals.join(' · ')}</p>
           <h3>Special thanks</h3><p>Professor Pecan, as himself</p><p>The crowd, for all the cheering</p>
+          <h3>Made by</h3><p>zchillsounds</p><p><small>built with Claude Code</small></p>
           <h3>And you</h3><p>for playing!</p>
           <p class="cr-big">Thanks for playing!</p>
         </div></div>
