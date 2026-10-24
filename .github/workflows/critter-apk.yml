@@ -58,6 +58,18 @@ jobs:
               done
             done
           fi
+          # the round icon and the adaptive layers (Android 8+ shows only the middle of the foreground, masked)
+          if [ -f public/icon-fg.png ] && [ -f public/icon-bg.png ]; then
+            for d in android/app/src/main/res/mipmap-*dpi; do
+              [ -f public/icon-round.png ] && cp public/icon-round.png "$d/ic_launcher_round.png"
+              cp public/icon-fg.png "$d/ic_launcher_foreground.png"
+              cp public/icon-bg.png "$d/ic_launcher_background.png"
+            done
+            mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+            for f in ic_launcher ic_launcher_round; do
+              printf '<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@mipmap/ic_launcher_background"/>\n    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>\n</adaptive-icon>\n' > "android/app/src/main/res/mipmap-anydpi-v26/$f.xml"
+            done
+          fi
       - run: npx cap sync android
       - name: Same signing key and a rising version on every build (so each APK installs over the last and keeps the save)
         run: |
