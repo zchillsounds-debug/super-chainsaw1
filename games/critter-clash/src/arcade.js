@@ -2,6 +2,7 @@
 // CRITTER CLASH TURBO (left wall): a 30-second catch game; the hero slides along the bottom catching falling berries
 // (gold ones are worth more) and dodging zap bombs. SKY HOP (right wall): tap to flap through gaps in neon pillars.
 import { sfx } from './audio.js';
+import { buzz } from './haptics.js';
 
 const LEN = 30; // seconds a round lasts
 const W = 320, H = 240; // the cabinet's screen, in canvas pixels (scaled up to fit)
@@ -38,10 +39,11 @@ export function arcadeGame(root, face, onDone) {
   const pop = (x, y, txt, col) => S.pops.push({ x, y, txt, col, t: 0.8 });
 
   const step = (dt) => {
-    if (S.ready > 0) { S.ready -= dt; return; }
+    if (S.ready > 0) { const was = S.ready; S.ready -= dt; if (was > 0.5 && S.ready <= 0.5) sfx.arc('go'); return; }
     if (S.over) return;
-    S.t -= dt; S.hurt = Math.max(0, S.hurt - dt);
-    if (S.t <= 0 || S.lives <= 0) { S.t = Math.max(0, S.t); S.over = true; finish(); return; }
+    const sec = Math.ceil(S.t); S.t -= dt; S.hurt = Math.max(0, S.hurt - dt);
+    if (S.t > 0 && S.t <= 5 && Math.ceil(S.t) < sec) sfx.arc('tick'); // the last five seconds tick down
+    if (S.t <= 0 || S.lives <= 0) { S.t = Math.max(0, S.t); S.over = true; sfx.arc(S.lives <= 0 ? 'crash' : 'time'); buzz(S.lives <= 0 ? 'heavy' : 'medium'); finish(); return; }
     let ax = 0;
     if (keys.has('ArrowLeft') || keys.has('KeyA')) ax -= 1;
     if (keys.has('ArrowRight') || keys.has('KeyD')) ax += 1;
@@ -54,8 +56,8 @@ export function arcadeGame(root, face, onDone) {
       it.y += it.vy * dt; it.wob += dt * 5;
       if (!it.hit && it.y > H - 40 && it.y < H - 14 && Math.abs(it.x - S.x) < 22) {
         it.hit = true;
-        if (it.k === 'zap') { if (S.hurt <= 0) { S.lives--; S.hurt = 1; S.combo = 0; pop(it.x, it.y, 'ZAP!', '#7ae0ff'); sfx.ui?.('back'); } }
-        else { S.combo++; const v = (it.k === 'gold' ? 25 : 5) * (1 + Math.floor(S.combo / 8)); S.score += v; pop(it.x, it.y, '+' + v, it.k === 'gold' ? '#ffd84d' : '#ff8ab0'); sfx.ui?.('move'); }
+        if (it.k === 'zap') { if (S.hurt <= 0) { S.lives--; S.hurt = 1; S.combo = 0; pop(it.x, it.y, 'ZAP!', '#7ae0ff'); sfx.arc('zap'); buzz('medium'); } }
+        else { S.combo++; const v = (it.k === 'gold' ? 25 : 5) * (1 + Math.floor(S.combo / 8)); S.score += v; pop(it.x, it.y, '+' + v, it.k === 'gold' ? '#ffd84d' : '#ff8ab0'); it.k === 'gold' ? (sfx.arc('gold'), buzz('light')) : sfx.arc('grab', S.combo); }
       }
       if (!it.hit && it.y > H + 10 && it.k !== 'zap') S.combo = 0;
     }
@@ -125,7 +127,7 @@ export function skyHop(root, face, onDone) {
   const img = new Image(); img.src = face;
   const S = { y: H / 2, vy: 0, t: 0, score: 0, passed: 0, pipes: [], pops: [], next: 1.1, over: false, ready: 1.2, started: false, crash: 0 };
   const stars = Array.from({ length: 40 }, (_, i) => [(i * 73) % W, (i * 41) % (H - 40), 0.3 + (i % 3) * 0.3]);
-  const flap = () => { if (S.over) return; if (S.ready > 0) S.ready = 0; S.started = true; S.vy = -190; sfx.ui?.('move'); };
+  const flap = () => { if (S.over) return; if (S.ready > 0) S.ready = 0; S.started = true; S.vy = -190; sfx.arc('flap'); };
   const onKey = (e) => {
     if (!['Space', 'ArrowUp', 'KeyW', 'Enter'].includes(e.code)) return;
     e.preventDefault(); e.stopPropagation();
@@ -152,8 +154,8 @@ export function skyHop(root, face, onDone) {
     }
     for (const p of S.pipes) {
       p.x -= v * dt;
-      if (!p.done && p.x < X - 18) { p.done = true; S.passed++; S.score += 10; pop(X, S.y - 18, '+10', '#7ae0ff'); }
-      if (p.berry && Math.abs(p.x - X) < R + 8 && Math.abs(p.gy - S.y) < R + 8) { p.berry = false; S.score += 5; pop(p.x, p.gy - 14, '+5', '#ff8ab0'); sfx.ui?.('move'); }
+      if (!p.done && p.x < X - 18) { p.done = true; S.passed++; S.score += 10; pop(X, S.y - 18, '+10', '#7ae0ff'); sfx.arc('pass'); }
+      if (p.berry && Math.abs(p.x - X) < R + 8 && Math.abs(p.gy - S.y) < R + 8) { p.berry = false; S.score += 5; pop(p.x, p.gy - 14, '+5', '#ff8ab0'); sfx.arc('grab', 4); }
       if (Math.abs(p.x - X) < 18 + R - 4 && Math.abs(S.y - p.gy) > p.gap / 2 - R + 3) die();
     }
     S.pipes = S.pipes.filter((p) => p.x > -40);
@@ -161,7 +163,7 @@ export function skyHop(root, face, onDone) {
     for (const p of S.pops) { p.t -= dt; p.y -= 30 * dt; }
     S.pops = S.pops.filter((p) => p.t > 0);
   };
-  function die() { if (S.over) return; S.over = true; S.vy = -120; sfx.ui?.('back'); setTimeout(close, 1800); }
+  function die() { if (S.over) return; S.over = true; S.vy = -120; sfx.arc('crash'); buzz('heavy'); setTimeout(close, 1800); }
 
   const draw = () => {
     const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1a1040'); g.addColorStop(1, '#3a1a5a');
@@ -225,7 +227,7 @@ export function waveRider(root, face, onDone, night = false) { // (night: a star
   const X = 84, R = 13, SEA = H - 64; // the hero's column, hit radius and the calm sea line
   const sea = (x) => SEA + Math.sin(x * 0.045 + S.t * 2.2) * 6 + Math.sin(x * 0.11 - S.t * 1.3) * 3; // the wave surface under any x
   const speed = () => 110 + Math.min(110, S.dist * 0.45);
-  const hop = () => { if (S.over) return; if (S.ready > 0) S.ready = 0; S.started = true; if (!S.air) { S.air = true; S.vy = -270; sfx.ui?.('move'); for (let k = 0; k < 6; k++) S.spray.push({ x: X - 10 + Math.random() * 20, y: S.y + 10, vx: -40 - Math.random() * 60, vy: -60 - Math.random() * 60, t: 0.5 }); } };
+  const hop = () => { if (S.over) return; if (S.ready > 0) S.ready = 0; S.started = true; if (!S.air) { S.air = true; S.vy = -270; sfx.arc('hop'); for (let k = 0; k < 6; k++) S.spray.push({ x: X - 10 + Math.random() * 20, y: S.y + 10, vx: -40 - Math.random() * 60, vy: -60 - Math.random() * 60, t: 0.5 }); } };
   const onKey = (e) => {
     if (!['Space', 'ArrowUp', 'KeyW', 'Enter'].includes(e.code)) return;
     e.preventDefault(); e.stopPropagation();
@@ -241,7 +243,7 @@ export function waveRider(root, face, onDone, night = false) { // (night: a star
     if (S.ready > 0 || !S.started) { if (S.ready > 0) S.ready -= dt; S.y = sea(X) - R; return; }
     if (S.over) { S.crash += dt; S.y = Math.min(SEA + 20, S.y + 60 * dt); return; }
     const v = speed(); S.dist += v * dt / 10;
-    if (S.air) { S.vy += 640 * dt; S.y += S.vy * dt; if (S.y >= sea(X) - R) { S.air = false; S.vy = 0; for (let k = 0; k < 5; k++) S.spray.push({ x: X - 14 + Math.random() * 28, y: sea(X), vx: (Math.random() - 0.5) * 80, vy: -50 - Math.random() * 40, t: 0.45 }); } }
+    if (S.air) { S.vy += 640 * dt; S.y += S.vy * dt; if (S.y >= sea(X) - R) { S.air = false; S.vy = 0; sfx.arc('splash'); for (let k = 0; k < 5; k++) S.spray.push({ x: X - 14 + Math.random() * 28, y: sea(X), vx: (Math.random() - 0.5) * 80, vy: -50 - Math.random() * 40, t: 0.45 }); } }
     else S.y = sea(X) - R;
     S.next -= dt;
     if (S.next <= 0) { // what comes next: a rock, a gull, a shell on the water or a shell up in the air
@@ -258,7 +260,7 @@ export function waveRider(root, face, onDone, night = false) { // (night: a star
       const dx = Math.abs(o.x - X);
       if (o.k === 'rock' && dx < o.w * 0.6 + R - 4 && S.y + R > sea(o.x) - 12) die();
       if (o.k === 'gull' && dx < R + 10 && Math.abs(o.y - S.y) < R + 6) die();
-      if (o.k === 'shell' && !o.got) { const sy = o.up ? SEA - 64 : sea(o.x) - 6; if (dx < R + 8 && Math.abs(sy - S.y) < R + 10) { o.got = true; S.shells++; S.score += 5; pop(o.x, sy - 12, '+5', '#ffb0d0'); sfx.ui?.('move'); } }
+      if (o.k === 'shell' && !o.got) { const sy = o.up ? SEA - 64 : sea(o.x) - 6; if (dx < R + 8 && Math.abs(sy - S.y) < R + 10) { o.got = true; S.shells++; S.score += 5; pop(o.x, sy - 12, '+5', '#ffb0d0'); sfx.arc('grab', S.shells % 8); } }
       if (o.k === 'rock' && !o.done && o.x < X - 20) { o.done = true; S.score += 3; pop(X, S.y - 18, '+3', '#9ae8ff'); }
     }
     S.things = S.things.filter((o) => o.x > -40);
@@ -268,7 +270,7 @@ export function waveRider(root, face, onDone, night = false) { // (night: a star
     S.spray = S.spray.filter((p) => p.t > 0);
     S.score = Math.max(S.score, 0);
   };
-  function die() { if (S.over) return; S.over = true; sfx.ui?.('back'); setTimeout(close, 1800); }
+  function die() { if (S.over) return; S.over = true; sfx.arc('crash'); buzz('heavy'); setTimeout(close, 1800); }
   const total = () => Math.floor(S.dist / 2) + S.score;
 
   const draw = () => {
@@ -351,7 +353,7 @@ export function reefDive(root, face, onDone) {
   const S = { y: H / 2, vy: 0, t: 0, dist: 0, air: 20, coins: 0, pearls: 0, score: 0, things: [], pops: [], bub: [], next: 1, over: false, ready: 1.2, started: false, hurt: 0 };
   const X = 76, R = 12, TOP = 18, FLOOR = H - 26;
   const speed = () => 80 + Math.min(80, S.dist * 0.25);
-  const kick = () => { if (S.over) return; if (S.ready > 0) S.ready = 0; S.started = true; S.vy = -150; sfx.ui?.('move'); for (let k = 0; k < 3; k++) S.bub.push({ x: X - 10, y: S.y + 6, vx: -30 - Math.random() * 30, vy: -20 - Math.random() * 30, r: 2 + Math.random() * 2, t: 0.9 }); };
+  const kick = () => { if (S.over) return; if (S.ready > 0) S.ready = 0; S.started = true; S.vy = -150; sfx.arc('kick'); for (let k = 0; k < 3; k++) S.bub.push({ x: X - 10, y: S.y + 6, vx: -30 - Math.random() * 30, vy: -20 - Math.random() * 30, r: 2 + Math.random() * 2, t: 0.9 }); };
   const onKey = (e) => {
     if (!['Space', 'ArrowUp', 'KeyW', 'Enter'].includes(e.code)) return;
     e.preventDefault(); e.stopPropagation();
@@ -370,7 +372,7 @@ export function reefDive(root, face, onDone) {
     S.vy = Math.min(70, S.vy + 260 * dt); S.y = Math.max(TOP + R, Math.min(FLOOR - R, S.y + S.vy * dt));
     S.hurt = Math.max(0, S.hurt - dt);
     const v = speed(); S.dist += v * dt / 10;
-    S.air -= dt; if (S.air <= 0) { S.air = 0; S.over = true; sfx.ui?.('back'); setTimeout(close, 1800); return; }
+    S.air -= dt; if (S.air <= 0) { S.air = 0; S.over = true; sfx.arc('crash'); buzz('heavy'); setTimeout(close, 1800); return; }
     S.next -= dt;
     if (S.next <= 0) {
       const r = Math.random(), lvl = Math.min(1, S.dist / 300), y = TOP + 24 + Math.random() * (FLOOR - TOP - 48);
@@ -385,10 +387,10 @@ export function reefDive(root, face, onDone) {
       if (o.k === 'jelly') { o.ph += dt * 2.2; o.y = o.y0 + Math.sin(o.ph) * o.amp; }
       if (o.got) continue;
       const near = Math.hypot(o.x - X, o.y - S.y);
-      if (o.k === 'jelly' && near < R + 11 && !S.hurt) { o.got = true; S.hurt = 1; S.air = Math.max(0.1, S.air - 4); pop(X, S.y - 16, '-4s', '#ff8ab0'); sfx.ui?.('back'); }
-      if (o.k === 'coin' && near < R + 8) { o.got = true; S.coins++; S.score += 5; pop(o.x, o.y - 10, '+5', '#ffd84d'); sfx.ui?.('move'); }
-      if (o.k === 'pearl' && near < R + 9) { o.got = true; S.pearls++; S.score += 15; pop(o.x, o.y - 10, '+15', '#fff4f8'); sfx.ui?.('move'); }
-      if (o.k === 'air' && near < R + 12) { o.got = true; S.air = Math.min(20, S.air + 3); pop(o.x, o.y - 10, '+3s', '#bff4ff'); sfx.ui?.('move'); }
+      if (o.k === 'jelly' && near < R + 11 && !S.hurt) { o.got = true; S.hurt = 1; S.air = Math.max(0.1, S.air - 4); pop(X, S.y - 16, '-4s', '#ff8ab0'); sfx.arc('zap'); buzz('medium'); }
+      if (o.k === 'coin' && near < R + 8) { o.got = true; S.coins++; S.score += 5; pop(o.x, o.y - 10, '+5', '#ffd84d'); sfx.arc('grab', S.coins % 8); }
+      if (o.k === 'pearl' && near < R + 9) { o.got = true; S.pearls++; S.score += 15; pop(o.x, o.y - 10, '+15', '#fff4f8'); sfx.arc('pearl'); buzz('light'); }
+      if (o.k === 'air' && near < R + 12) { o.got = true; S.air = Math.min(20, S.air + 3); pop(o.x, o.y - 10, '+3s', '#bff4ff'); sfx.arc('air'); }
     }
     S.things = S.things.filter((o) => o.x > -30);
     for (const p of S.pops) { p.t -= dt; p.y -= 30 * dt; }

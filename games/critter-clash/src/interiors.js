@@ -280,7 +280,7 @@ export function interiorMap(key) {
   return {
     cup: b.stadium, shroom: outer === 'glowcap' && (bid.startsWith('shroom') || !!b.heal), cityView: !!O.city && (kind === 'house' || kind === 'flat'),
     name: b.heal ? `${O.name.replace(/ (Town|City|Gardens|Hollow|Village)$/, '')} Berry Center` : b.label || P.name || (b.id === 'home' ? 'Home' : 'House'),
-    indoor: kind, tiles, npcs, signs, music: O.music,
+    indoor: kind, tiles, npcs, signs, music: kind === 'center' ? 'center' : kind === 'lobby' || kind === 'tower' ? 'tower' : O.music, // Berry Centers have their own lullaby; stadium lobbies and the Tower hall a warm-up groove
     exit: { map: outer, x: b.x + b.door, y: b.y + b.h, dir: 's' },
     enter: { x: door, y: H - 2 },
     palette: P.dark ? { a: '#4a3a6a', b: '#46365f' } : P.floor || { a: '#d8a86a', b: '#d2a264' },

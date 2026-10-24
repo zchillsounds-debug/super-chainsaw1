@@ -3,6 +3,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { save } from './save.js';
+import { sfx } from './audio.js';
 
 const native = Capacitor.isNativePlatform();
 const STYLE = { light: ImpactStyle.Light, medium: ImpactStyle.Medium, heavy: ImpactStyle.Heavy };
@@ -16,4 +17,10 @@ export function buzz(kind = 'light') {
   last = now;
   if (native) Haptics.impact({ style: STYLE[kind] }).catch(() => {});
   else navigator.vibrate?.(MS[kind]);
+}
+
+// the Adventure's reward jingle with a tap you can feel (bigger rewards, a firmer tap)
+export function reward(level = 1) {
+  sfx.jingle(level);
+  buzz(level >= 3 ? 'heavy' : level === 2 ? 'medium' : 'light');
 }

@@ -52,7 +52,7 @@ export function backupSheet(root) {
     <div class="set-foot"><button class="btn ghost-dark bk-close">Close</button><span class="bk-acts"></span></div>`);
   const ta = d.querySelector('.bk-code'), status = (t) => (d.querySelector('.bk-status').textContent = t), acts = d.querySelector('.bk-acts');
   const mk = (label, cls, fn) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = label; b.addEventListener('click', fn); acts.appendChild(b); };
-  d.querySelector('.bk-close').addEventListener('click', () => d.remove());
+  d.querySelector('.bk-close').addEventListener('click', () => { sfx.ui('back'); d.remove(); });
   mk('Copy', '', async () => {
     try { await navigator.clipboard.writeText(code); } catch { ta.select(); document.execCommand('copy'); }
     status('Copied! Paste it somewhere safe.'); sfx.ui('ok');
@@ -86,7 +86,7 @@ export function restoreSheet(root) {
     const f = e.target.files?.[0];
     if (f) { ta.value = await f.text(); edited(); }
   });
-  d.querySelector('.bk-close').addEventListener('click', () => d.remove());
+  d.querySelector('.bk-close').addEventListener('click', () => { sfx.ui('back'); d.remove(); });
   go.addEventListener('click', () => {
     const s = check();
     if (!s) { sfx.ui('back'); return; }

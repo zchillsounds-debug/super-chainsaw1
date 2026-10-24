@@ -578,7 +578,7 @@ export const MAPS = {
   coral: {
     name: 'Port Coral',
     pearl: [24, 3], // a hidden pearl (M3): it only twinkles when you're close
-    music: 'beach',
+    music: 'isles',
     arena: 'beach',
     isle: 'coral',
     outer: 0x22b4c4,
@@ -627,7 +627,7 @@ export const MAPS = {
   palmpath: {
     name: 'Palm Path',
     pearl: [31, 9], // a hidden pearl (M3): it only twinkles when you're close
-    music: 'beach',
+    music: 'isles',
     arena: 'beach',
     isle: 'palm',
     border: 'palm',
@@ -795,7 +795,7 @@ export const MAPS = {
   atoll: {
     name: 'Starfall Atoll',
     pearl: [20, 9], // a hidden pearl (M3): it only twinkles when you're close
-    music: 'beach',
+    music: 'isles',
     arena: 'beach',
     isle: 'atoll',
     border: 'palm',
@@ -883,7 +883,7 @@ export const MAPS = {
   // ===== the Sunken Wreck, an old ship on the sea floor off Port Coral (Snorkeller Pia takes you down after Morra's Amends): coral, sea grass, light shafts and a captain's chest =====
   wreck: {
     name: 'Sunken Wreck',
-    music: 'beach',
+    music: 'cave',
     arena: 'beach',
     outer: 0x0e3a5a,
     hidden: true, // not on the Town Map: Pia dives you here
@@ -1002,7 +1002,7 @@ export const MAPS = {
   grotto: {
     name: 'Ember Grotto',
     pearl: [4, 4], // a hidden pearl (M3): it only twinkles when you're close
-    music: 'volcano',
+    music: 'cave',
     arena: 'volcano',
     isle: 'grotto',
     cave: true,
@@ -1043,7 +1043,7 @@ export const MAPS = {
   grotto2: {
     name: 'Deep Grotto',
     pearl: [14, 2], // a hidden pearl (M3): it only twinkles when you're close
-    music: 'volcano',
+    music: 'cave',
     arena: 'volcano',
     isle: 'grotto',
     cave: true,

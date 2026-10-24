@@ -1,6 +1,7 @@
 // Adventure mode: a Red/Blue style tile world drawn with the game's 3D toon look.
 // The hero (the critter the player picked) walks tile by tile; tall grass hides wild critters,
 // some roam in plain sight; trainers spot you from a distance; stadiums are the gyms.
+import { buzz, reward } from './haptics.js';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { toon, inked, canvasTex, outlineMatW } from './toon.js';
@@ -502,7 +503,7 @@ export class World {
     if (!key.startsWith('in:')) (save.adv.seen ||= {})[key] = true;
     persist();
     const tune = this.touring ? 'victory' : M.music || 'camp';
-    const calm = !['victory', 'neon', 'boss'].includes(tune) && M.indoor !== 'arcade';
+    const calm = !['victory', 'neon', 'boss', 'cave', 'tower', 'center'].includes(tune) && M.indoor !== 'arcade';
     playMusic(tune, calm && (this.outPhase === 'night' || this.outPhase === 'evening' && 'evening'), tune !== 'victory' && (twinkleWeek() ? 'bells' : pumpkinNights() && this.outPhase !== 'day' && calm && 'spooky')); // evening: a mellower take; night: a slow lullaby (Neon City parties on); Twinkle Week adds sleigh bells, Pumpkin Nights after dusk a ghostly ooo
     const B = this.base, lamp = M.indoor && this.outPhase !== 'day' && M.indoor !== 'arcade' && { sun: 0xffd2a0, sunI: B.sunI * (this.outPhase === 'night' ? 0.72 : 0.85), sky: 0xffe2c4, gnd: B.gnd, hemiI: B.hemiI * 0.85, fog: 0xcfeeff }; // lamplight indoors after dark
     this.morning = canRain(M) && !this.rain && this.phase === 'day' && hr >= 6 && hr < 9; // misty mornings on the grassy outdoor maps
@@ -1479,7 +1480,7 @@ export class World {
     if (!all || P.gates.every((g) => g.open)) return;
     for (const g of P.gates) { g.open = true; g.t = 1; this.solid.delete(g.x + ',' + g.y); }
     if (M.gateFlag) { save.adv.flags[M.gateFlag] = true; persist(); }
-    if (!quiet) { sfx.jingle?.(2); this.S.toast?.('⚙️ Clunk! Somewhere, a gate grinds open.'); }
+    if (!quiet) { reward(2); this.S.toast?.('⚙️ Clunk! Somewhere, a gate grinds open.'); }
   }
 
   // a twiggy seabird nest (s = size)
@@ -1543,7 +1544,7 @@ export class World {
       if (F[C.flag]) return this.say(['The big nest is empty now, apart from a few shimmering bits of eggshell. Skimray hatched right here!']);
       F[C.flag] = true; save.berries = (save.berries || 0) + (C.berries || 0);
       const d = CRITTERS.find((c) => c.id === C.shiny), joined = unlock(C.shiny); if (!(save.shinies ||= []).includes(C.shiny)) save.shinies.push(C.shiny);
-      persist(); sfx.jingle?.(3); this.g.input?.haptic?.(40);
+      persist(); reward(3); this.g.input?.haptic?.(40);
       C.egg.visible = false;
       for (let k = 0; k < 26; k++) this.g.fx.spawn({ x: C.px, y: 0.7, z: C.pz, vx: (Math.random() - 0.5) * 3, vy: 1.5 + Math.random() * 2.5, vz: (Math.random() - 0.5) * 3, color: [0xff9ad8, 0x9ae8ff, 0xfff08a][k % 3], size: 0.38, life: 1.2, shape: 'star', grav: 3 });
       this.S.toast?.(`🌟 A shiny ${d.name} ${joined ? 'joined your team!' : 'joined you!'}`);
@@ -1551,7 +1552,7 @@ export class World {
     }
     if (F[C.flag]) return this.say(['The chest is empty. Just a little dust, and a very old map of the isles.']);
     F[C.flag] = true; const hats = (save.adv.hats ||= []), hat = C.hat && !hats.includes(C.hat); if (hat) hats.push(C.hat);
-    save.berries = (save.berries || 0) + (C.berries || 0); persist(); sfx.jingle?.(3);
+    save.berries = (save.berries || 0) + (C.berries || 0); persist(); reward(3);
     C.open = 0.01;
     for (let k = 0; k < 16; k++) this.g.fx.spawn({ x: C.px, y: 0.8, z: C.pz, vx: (Math.random() - 0.5) * 2.5, vy: 2 + Math.random() * 2, vz: (Math.random() - 0.5) * 2.5, color: 0xffd84a, size: 0.4, life: 1, shape: 'star', grav: 4 });
     const name = SHOP_HATS.find((h) => h.id === C.hat)?.name;
@@ -1986,7 +1987,7 @@ export class World {
     if (this.rain) return this.say(['{hero} sits on the bench. Rain clouds hide the sunset today. Drip... drip...', 'Maybe tomorrow evening will be clear!']);
     this.sitting = true; const out = () => { this.sitting = false; this.placeHero(); };
     if (A.sunset !== day) {
-      A.sunset = day; countUp('sunset'); save.berries = (save.berries || 0) + 1; const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+      A.sunset = day; countUp('sunset'); save.berries = (save.berries || 0) + 1; const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); reward(1);
       return this.say(['{hero} hops up on the bench and watches the sun melt into the sea. The waves turn to gold.', `${['A Squeakwing flaps across the sun like a tiny shadow puppet.', 'The sky goes orange, then pink, then a deep, sleepy purple.', 'For one second, right at the end... was that a green flash?!'][Math.floor(Math.random() * 3)]} ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, 'A shell was wedged in the bench, with a berry tucked inside! +1 🍓 (One sunset a day.)'], out);
     }
     return this.say(['{hero} swings their feet and watches the sea glow. Still beautiful the second time. (One sunset gift a day.)'], out);
@@ -2020,7 +2021,7 @@ export class World {
       if (score < SNOW_GOAL) { persist(); return this.say([`Snowball Kid Kip: ${score} hits! ${best ? 'A new best for you, too! ' : ''}Get ${SNOW_GOAL} and I'll share my secret berry stash!`]); }
       countUp('snowball');
       if (A.snowball !== day) {
-        A.snowball = day; save.berries = (save.berries || 0) + 2; const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+        A.snowball = day; save.berries = (save.berries || 0) + 2; const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); reward(1);
         return this.say([`Snowball Kid Kip: WOW! ${score} hits! ${best ? 'That\'s your best ever!' : 'What an arm!'}`, `Kip digs two frosty berries out of the fort wall. +2 🍓 ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, 'Snowball Kid Kip: Come back tomorrow. I\'ll build faster snowmen!']);
       }
       persist();
@@ -2066,7 +2067,7 @@ export class World {
     if (G.stage >= 4) {
       G.stage = 0; G.blooms = (G.blooms || 0) + 1; countUp('bloom'); save.berries = (save.berries || 0) + 5; const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.25));
       const hat = !(A.hats ||= []).includes('sunbloom'); if (hat) A.hats.push('sunbloom');
-      persist(); sfx.jingle?.(2); reload(); burst(0xffd23a);
+      persist(); reward(2); reload(); burst(0xffd23a);
       return this.say(['The flower is in full bloom! {hero} picks it ever so gently.', `Gardener Bea: Oh my, what a beauty! Here, a basket of berries for your trouble. +5 🍓 ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, ...(hat ? ['Gardener Bea: And I made you something from the seeds. A hat that grows on you! {hero} got the Sunbloom Hat! 🌻'] : []), 'Gardener Bea: The plot is ready for a new seed whenever you are. Every flower comes up a different colour!']);
     }
     if (G.last === day) return this.say(['The soil is still damp. The little plant is doing its best!', 'Come back tomorrow to water it again.']);
@@ -2114,7 +2115,7 @@ export class World {
 
   // whoosh! the hero rides the steam up and lands back on the vent
   geyserLaunch() {
-    this.launchT = 1.4; this.busy = true; sfx.jingle?.(1);
+    this.launchT = 1.4; this.busy = true; reward(1);
     setTimeout(() => {
       this.busy = false; sfx.land?.(); const G = this.geyser; if (G) this.g.fx.burst({ x: G.px, y: 0.3, z: G.pz }, { n: 12, speed: 2.5, up: 0.6, color: 0xd8c8c0, size: 0.6, life: 0.6, shape: 'puff', additive: false, grow: 1, drag: 3 });
       const day = new Date().toISOString().slice(0, 10), A = save.adv; countUp('geyser');
@@ -2138,7 +2139,7 @@ export class World {
     this.flyingKite = true; sfx.whoosh?.(0.8);
     const out = () => { this.flyingKite = false; const K = this.kite; if (K) { K.g.traverse((o) => o.geometry?.dispose()); this.group.remove(K.g); } this.kite = null; };
     if (A.kite !== day) {
-      A.kite = day; countUp('kite'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+      A.kite = day; countUp('kite'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); reward(1);
       return this.say([`${who}: Want to fly it? Hold tight. The wind up here never stops!`, `Up, up, UP goes the kite! {hero} runs in a little circle, giggling. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, `${who}: Look at it loop! You're a natural. Come fly with me again tomorrow!`], out, who);
     }
     return this.say([`${who}: Again? Go on! The kite loves you.`, 'The kite swoops and loops on the breeze. Wheee!'], out, who);
@@ -2158,7 +2159,7 @@ export class World {
     sfx.water?.(); this.g.fx.burst({ x: S.px, y: 0.4, z: S.pz }, { n: 18, speed: 1.2, up: 2.2, color: 0xffffff, size: 0.9, life: 1.6, shape: 'glow', alpha: 0.5, grow: 1.2, drag: 1.2 });
     this.soaking = true; const out = () => { this.soaking = false; this.placeHero(); }; // the hero sits in the pool until the talk ends
     if (A.soak !== day) {
-      A.soak = day; countUp('soak'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.2)); persist(); sfx.jingle?.(1);
+      A.soak = day; countUp('soak'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.2)); persist(); reward(1);
       return this.say([this.phase === 'day' ? '{hero} slips into the hot spring. Ahhh... toasty all the way to the tail.' : '{hero} soaks in the glowing spring under the stars. The volcano rumbles a lullaby.', `${['Pengsicle fans {hero} with a flipper. Very kind.', 'Steam curls up like little critters. Was that one waving?', 'All the aches from battle melt right away.'][Math.floor(Math.random() * 3)]} ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, 'A soak a day keeps the grumpies away. Come back tomorrow!'], out);
     }
     return this.say(['{hero} dips a toe in... then hops all the way in. Still lovely! (One good long soak a day.)'], out);
@@ -2257,7 +2258,7 @@ export class World {
     this.twigs = null; this.busy = false;
     const lines = [close ? 'Neck and neck... it\'s a photo finish!' : 'Both twigs bob out from under the bridge...'];
     if (win === R.pick) {
-      sfx.jingle?.(2); countUp('twig');
+      reward(2); countUp('twig');
       if (A.twig !== day) { A.twig = day; save.berries = (save.berries || 0) + 1; const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.1)); persist(); lines.push(`{hero}'s twig wins! {hero} does a little victory hop. +1 🍓 ${rr.to > rr.from ? `· Grew to Lv ${rr.to}!` : '(+XP)'}`); }
       else { persist(); lines.push("{hero}'s twig wins! Another one for the record books."); }
     } else { sfx.ui?.('back'); lines.push("The other twig wins by a leaf. {hero} pouts... then laughs. Best of three?"); }
@@ -2324,7 +2325,7 @@ export class World {
   lavaRoast() {
     const day = new Date().toISOString().slice(0, 10), A = save.adv;
     if (A.roast === day) return this.say(['The lava glows and bubbles. Plip... plop.', '{hero} is still full from tonight\'s sweet potato. Maybe tomorrow night!']);
-    A.roast = day; countUp('roast'); const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.12)); persist(); sfx.jingle?.(1);
+    A.roast = day; countUp('roast'); const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.12)); persist(); reward(1);
     const p = this.hero.root.position, d = DIRS[this.dir]; this.g.fx.burst({ x: p.x + d[0] * 1.6, y: 0.4, z: p.z + d[1] * 1.6 }, { n: 18, speed: 1.6, up: 2.2, color: 0xffa040, size: 0.22, life: 0.8, drag: 1.4 });
     return this.say(['A basket of sweet potatoes sits by the path, with a sign: "ROAST ONE! — Rio".', '{hero} holds one over the glowing lava on a long stick... sizzle, sizzle... perfectly roasted!', `Hot, sweet and smoky. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
   }
@@ -2332,7 +2333,7 @@ export class World {
   moonflowerSniff() {
     const day = new Date().toISOString().slice(0, 10), A = save.adv;
     if (A.moon === day) return this.say(['The moonflower sways in the night breeze. It smells of vanilla and starlight.', 'Moonflowers close at sunrise. Come back tomorrow night!']);
-    A.moon = day; countUp('moon'); const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.12)); persist(); sfx.jingle?.(1);
+    A.moon = day; countUp('moon'); const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.12)); persist(); reward(1);
     const p = this.hero.root.position; this.g.fx.burst({ x: p.x, y: 1, z: p.z }, { n: 14, speed: 1.4, up: 1.4, color: 0xd8e0ff, size: 0.25, life: 0.9, shape: 'star', drag: 1.6 });
     return this.say(['{hero} sniffs the glowing moonflower... Mmm! Vanilla and starlight.', `{hero} feels calm and bright. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
   }
@@ -2372,7 +2373,7 @@ export class World {
         sfx.note?.(this.flutterN - 1);
         if (this.flutterN >= this.flutters.length) {
           const A = save.adv; A.flutter = new Date().toISOString().slice(0, 10); countUp('flutter'); save.berries = (save.berries || 0) + 1;
-          const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.1)); persist(); sfx.jingle?.(1);
+          const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.1)); persist(); reward(1);
           this.S.toast?.(`🦋 All five butterflies caught (and let go)! +1 🍓${rr.to > rr.from ? ` · Grew to Lv ${rr.to}!` : ' · +XP'}`);
         } else this.S.toast?.(`🦋 Butterfly caught! ${this.flutterN} / ${this.flutters.length}`);
       }
@@ -2393,7 +2394,7 @@ export class World {
         sfx.note?.(this.wispN - 1);
         if (this.wispN >= this.wisps.length) {
           const A = save.adv; A.wisp = new Date().toISOString().slice(0, 10); countUp('wisp'); save.berries = (save.berries || 0) + 1;
-          const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.1)); persist(); sfx.jingle?.(1);
+          const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.1)); persist(); reward(1);
           this.S.toast?.(`${this.wispKind === 'fly' ? '✨ All five fireflies caught (and let go)!' : '👻 All five wisps caught!'} +1 🍓${rr.to > rr.from ? ` · Grew to Lv ${rr.to}!` : ' · +XP'}`);
         } else this.S.toast?.(`${this.wispKind === 'fly' ? '✨ Firefly' : '👻 Wisp'} caught! ${this.wispN} / ${this.wisps.length}`);
       }
@@ -2521,7 +2522,7 @@ export class World {
     const day = new Date().toISOString().slice(0, 10), A = save.adv, M = this.melon;
     if (A.melon === day) return this.say([['Two juicy watermelon halves, sitting in the sun. {hero} already had the best slice!', 'A gull eyes the watermelon. {hero} eyes the gull. Nobody moves.'][(this.steps + new Date().getDate()) % 2], 'A fresh watermelon turns up every summer morning.']);
     A.melon = day; countUp('melon'); save.berries = (save.berries || 0) + 2; const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.1)); persist();
-    M.whole.visible = false; M.halves.visible = true; sfx.hit?.(); sfx.jingle?.(2);
+    M.whole.visible = false; M.halves.visible = true; sfx.hit?.(); reward(2);
     const p = M.g.position; for (let k = 0; k < 16; k++) this.g.fx.spawn({ x: p.x, y: 0.5, z: p.z, vx: (Math.random() - 0.5) * 4, vy: 2 + Math.random() * 3, vz: (Math.random() - 0.5) * 4, color: [0xff4a5a, 0xff8a9a, 0x5ac84a][k % 3], size: 0.22, life: 0.8, grav: 9 });
     return this.say(['A big striped watermelon sits on a beach towel, with a stick beside it. A note says: "SUMMER SPLASH! Whack it open and share! — Finn"', '{hero} lines up, closes their eyes, and... THWACK! Right down the middle! Juice everywhere!', `Sweet, cold and crunchy. Two seeds turn out to be berries! +2 🍓 ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
   }
@@ -2553,7 +2554,7 @@ export class World {
     const day = new Date().toISOString().slice(0, 10), A = save.adv;
     for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: this.picnic.g.position.x + (Math.random() - 0.5) * 2, y: 2.5 + Math.random(), z: this.picnic.g.position.z + (Math.random() - 0.5) * 2, vx: 0.4 + Math.random() * 0.4, vy: -0.6, vz: (Math.random() - 0.5) * 0.4, color: [0xffb8d8, 0xffffff, 0xff9ac8][k % 3], size: 0.2, life: 2.2, grav: 0.2 });
     if (A.picnic === day) return this.say(['{hero} lies back on the blanket and watches the clouds. That one looks like a sandwich.', 'There\'s a fresh picnic every spring day. Come back tomorrow!']);
-    A.picnic = day; countUp('picnic'); const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+    A.picnic = day; countUp('picnic'); const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.15)); persist(); reward(1);
     return this.say(['A checked blanket and a picnic basket by the pond. A tag on the basket says: "SPRING PICNIC. Please share! — Bea"', `{hero} sits down and shares a cress sandwich and a lemonade. ${['A blossom petal lands right in the cup.', 'A duckling waddles over and gets the crusts.', 'Somewhere, a butterfly lands on {hero}\'s nose.'][Math.floor(Math.random() * 3)]}`, `Full and happy! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
   }
 
@@ -2591,7 +2592,7 @@ export class World {
     for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5), y: 0.4 + S.n * 0.4, z: p.z + (Math.random() - 0.5), vx: (Math.random() - 0.5) * 2, vy: 1 + Math.random() * 2, vz: (Math.random() - 0.5) * 2, color: 0xffffff, size: 0.2, life: 0.7, grav: 6 });
     if (S.n === 1) return this.say(['A patch of good packing snow. {hero} rolls a big snowball for the bottom... roll, roll, ROLL!', 'Two more to go!']);
     if (S.n === 2) return this.say(['{hero} heaves a middle ball on top and pokes in two twig arms. It waves! (No, that was the wind.)', 'One more for the head!']);
-    countUp('snowman'); save.berries = (save.berries || 0) + 2; const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.1)); persist(); sfx.jingle?.(2);
+    countUp('snowman'); save.berries = (save.berries || 0) + 2; const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.1)); persist(); reward(2);
     return this.say(['A round head, little ears, coal eyes, a carrot nose and Mom\'s spare scarf. It\'s a snow critter!', `Mom brings out hot berry juice for the builder. +2 🍓 ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
   }
 
@@ -2609,7 +2610,7 @@ export class World {
     if (A.xgift !== day) {
       A.xgift = day; countUp('twinkle'); save.berries = (save.berries || 0) + 2;
       const hat = A.cnt.twinkle >= 3 && !(A.hats ||= []).includes('twinkle'); if (hat) A.hats.push('twinkle');
-      persist(); sfx.jingle?.(hat ? 3 : 1);
+      persist(); reward(hat ? 3 : 1);
       return this.say(['There\'s a little parcel under the tree with {hero}\'s name on it!', 'Two shiny winter berries! Happy Twinkle Week! +2 🍓 (One gift a day.)', ...(hat ? ['And a red bobble hat with a fluffy white bobble! {hero} got the Twinkle Bobble! (Wear it from ☰ → 🎩 Hats.)'] : [])]);
     }
     return this.say([this.phase === 'day' ? 'The tree is hung with baubles and a golden star. The gifts underneath are for other critters today. (Come back tomorrow!)' : 'The tree\'s little lights twinkle red, blue and gold. {hero} could watch them all night.']);
@@ -2628,7 +2629,7 @@ export class World {
     if (A.pumpkin !== day) {
       A.pumpkin = day; countUp('pumpkin'); save.berries = (save.berries || 0) + 1;
       const hat = A.cnt.pumpkin >= 3 && !(A.hats ||= []).includes('pumpkin'); if (hat) A.hats.push('pumpkin'); // the third treat comes with a hat
-      persist(); sfx.jingle?.(hat ? 3 : 1);
+      persist(); reward(hat ? 3 : 1);
       return this.say(['BOO! {hero} jumps... then peeks inside the glowing pumpkin.', 'A candy-wrapped berry! Happy Pumpkin Nights! +1 🍓 (One treat a night.)', ...(hat ? ['Wait, there\'s more! A tiny pumpkin hat, just {hero}\'s size! {hero} got the Pumpkin Head! 🎃 (Wear it from ☰ → 🎩 Hats.)'] : [`Treats found: ${A.cnt.pumpkin}. ${A.cnt.pumpkin < 3 ? 'Three treats bring a surprise!' : ''}`])]);
     }
     return this.say(['The pumpkin\'s face flickers warmly. Its treat is gone for tonight. (Come back tomorrow night!)']);
@@ -2787,7 +2788,7 @@ export class World {
       const seen = (A.consts ||= []), fresh = !seen.includes(C.id);
       if (fresh) seen.push(C.id);
       if (A.stars !== day) {
-        A.stars = day; A.starsC = C.id; countUp('stars'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+        A.stars = day; A.starsC = C.id; countUp('stars'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); reward(1);
         return this.say([...star, `{hero} spotted ${C.name}!${fresh ? ' A new one for the star log! ✨' : ''}`, `Counting stars is surprisingly tiring. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, `Star log: ${seen.length} of ${CONSTELLATIONS.length} constellations. A different one rises each night.`]);
       }
       persist();
@@ -3140,7 +3141,7 @@ export class World {
     const all = Object.keys(MAPS).filter((k) => MAPS[k].pearl), n = all.filter((k) => F['pearl_' + k]).length;
     save.berries = (save.berries || 0) + 2;
     const done = n >= all.length && !(save.adv.hats ||= []).includes('pearl'); if (done) { save.adv.hats.push('pearl'); save.berries += 20; }
-    persist(); sfx.jingle?.(done ? 3 : 2); this.g.input?.haptic?.(25);
+    persist(); reward(done ? 3 : 2); this.g.input?.haptic?.(25);
     for (let k = 0; k < 14; k++) this.g.fx.spawn({ x: P.px, y: 0.4, z: P.pz, vx: (Math.random() - 0.5) * 3, vy: 1.5 + Math.random() * 2.5, vz: (Math.random() - 0.5) * 3, color: [0xffffff, 0xffb8c8, 0x9ae8ff][k % 3], size: 0.3, life: 0.9, shape: 'star', grav: 5 });
     this.say([`Something glints under {hero}'s paw... a hidden pearl, tucked in a little pink shell! +2 🍓 (Pearls found: ${n}/${all.length})`, ...(done ? ['Every hidden pearl in the Sunscatter Isles! {hero} strings them into a shining circlet.', '{hero} got the Pearl Circlet! 🦪 +20 🍓 (☰ → 🎩 Hats)'] : n === 1 ? ['There must be more of these. One on every island map, maybe? They only twinkle when you get close...'] : [])]);
     return true;
@@ -3255,7 +3256,7 @@ export class World {
         if (this.M !== M || !this.hero) return;
         const p = this.hero.root.position;
         for (let i = 0; i < 46; i++) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 6, y: 4 + Math.random() * 1.5, z: p.z - 2 + (Math.random() - 0.5) * 3, vx: (Math.random() - 0.5) * 2, vy: Math.random() * 1.5, vz: (Math.random() - 0.5) * 2, color: [col, 0xffd23f, 0xffffff, 0x5ad8ff][i % 4], size: 0.32, life: 2.2, shape: 'confetti', additive: false, grav: 3, spin: 8, rot: Math.random() * 6 });
-        sfx.jingle?.(3); setTimeout(() => this.M === M && this.S.toast(`🎉 The lobby cheers for the ${cup.name} champion!`), 1400);
+        reward(3); setTimeout(() => this.M === M && this.S.toast(`🎉 The lobby cheers for the ${cup.name} champion!`), 1400);
         for (const a of this.npcs || []) if (a.n.id === 'fan1' || a.n.id === 'fan2') a.n.lines = [`Fan: You're the ${cup.name} champion! Can I have your autograph? On my head? Please?`, 'Fan: I saw the whole thing from the top row. That final move... WOW!'];
       }, 500);
     } else for (const a of this.npcs || []) if (a.n.id === 'fan1' || a.n.id === 'fan2') a.n.lines = [`Fan: The ${cup.name} champion, right here in the lobby! Everyone, look!`, `Fan: ${h.name} beat the whole line-up. I made a poster of YOU now!`];
@@ -3290,14 +3291,14 @@ export class World {
     (save.adv.dig ||= {})[this.key] = new Date().toISOString().slice(0, 10); countUp('dig');
     this.group.remove(D.g); D.g.traverse((o) => o.geometry?.dispose());
     for (let k = 0; k < 14; k++) this.g.fx.spawn({ x: D.px + (Math.random() - 0.5) * 0.8, y: 0.3, z: D.pz + (Math.random() - 0.5) * 0.8, vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 2.5, vz: (Math.random() - 0.5) * 3, color: D.snow ? 0xffffff : D.lava ? 0x6a5a5a : 0xe8c87a, alpha: 0.8, size: 0.3, life: 0.8, shape: 'puff', additive: false, grav: 8 });
-    sfx.foot?.(D.snow ? 'snow' : D.lava ? 'stone' : 'sand'); sfx.pickup?.();
+    sfx.foot?.(D.snow ? 'snow' : D.lava ? 'stone' : 'sand'); sfx.pickup?.(); buzz('light');
     const roll = Math.random(), hero = save.adv.hero;
     if (D.snow) { // under the snow: a sleepy Pengsicle, or an ice gem (gems are counted; every third one comes with a Power Snack)
       if (roll < 0.15) { persist(); return this.say(['{hero} digs into the snow... and it digs back! A wild Pengsicle was napping in there!'], () => this.startWild('pengsicle', Math.max(3, (save.critters[hero]?.level || 4) - 1), null, Math.random() < shinyRate())); }
       const n = (save.adv.gems = (save.adv.gems || 0) + 1), b = 2 + (n % 3 === 0 ? 0 : 1); save.berries = (save.berries || 0) + b;
       const lines = [`{hero} digs up an ICE GEM! It glitters like frozen starlight. 💎 (${n} found) The Lodge Keeper swaps it for ${b} berries. +${b} 🍓`];
       if (n % 3 === 0) { const rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.4)); lines.push('Three gems! The Lodge Keeper throws in a Power Snack too! ⭐', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : [])); }
-      persist(); sfx.jingle?.(3);
+      persist(); reward(3);
       for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: D.px, y: 0.5, z: D.pz, vx: (Math.random() - 0.5) * 2, vy: 1.5 + Math.random() * 2, vz: (Math.random() - 0.5) * 2, color: 0xa8eaff, size: 0.4, life: 0.9, shape: 'star', grav: 4 });
       return this.say([...lines, 'Another glint will show in the snow tomorrow.']);
     }
@@ -3306,7 +3307,7 @@ export class World {
       const n = (save.adv.emberGems = (save.adv.emberGems || 0) + 1), b = 2 + (n % 3 === 0 ? 0 : 1); save.berries = (save.berries || 0) + b;
       const lines = [`{hero} digs up an EMBER GEM! It's warm, and it glows like a coal. 🔥 (${n} found) Smith Ash swaps it for ${b} berries. +${b} 🍓`];
       if (n % 3 === 0) { const rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.4)); lines.push('Three ember gems! Smith Ash throws in a Power Snack too! ⭐', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : [])); }
-      persist(); sfx.jingle?.(3);
+      persist(); reward(3);
       for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: D.px, y: 0.5, z: D.pz, vx: (Math.random() - 0.5) * 2, vy: 1.5 + Math.random() * 2, vz: (Math.random() - 0.5) * 2, color: 0xff8a3a, size: 0.4, life: 0.9, shape: 'spark', grav: 4 });
       return this.say([...lines, 'Another warm glow will show in the ash tomorrow.']);
     }
@@ -3317,11 +3318,11 @@ export class World {
       return this.say(['{hero} digs and digs... and finds a nose! A wild Diggles pops up, cross about its ceiling!'], () => this.startWild('diggles', lv, null, Math.random() < shinyRate()));
     }
     if (roll < 0.3) {
-      const c = save.critters[hero], rr = grantXp(hero, Math.round(xpNeeded(c.level) * 0.4)); persist(); sfx.jingle?.(2);
+      const c = save.critters[hero], rr = grantXp(hero, Math.round(xpNeeded(c.level) * 0.4)); persist(); reward(2);
       return this.say(['{hero} digs up a sealed picnic tin. Inside: a Power Snack! ⭐', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : [])]);
     }
     const n = roll < 0.55 ? 3 : 1 + Math.floor(Math.random() * 2);
-    save.berries = (save.berries || 0) + n; persist(); sfx.jingle?.(n > 2 ? 3 : 1);
+    save.berries = (save.berries || 0) + n; persist(); reward(n > 2 ? 3 : 1);
     this.say([n > 2 ? `{hero} digs up a little treasure chest! It's full of berries! +${n} 🍓` : `{hero} digs in the sparkly sand and finds ${n === 1 ? 'a berry' : 'two berries'}, wrapped in seaweed. +${n} 🍓`, 'Another sparkle will turn up somewhere on the beach tomorrow.']);
   }
 
@@ -3417,7 +3418,7 @@ export class World {
     save.berries = (save.berries || 0) + n; countUp('bush'); persist();
     const [px, pz] = wpos(B.x, B.y), col = this.M.snow ? 0x7a5aff : 0xff3a5a;
     for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5) * 1.2, y: 1 + Math.random() * 0.5, z: pz + 0.3, vx: (Math.random() - 0.5) * 2.5, vy: 1.5 + Math.random() * 2, vz: 0.5 + Math.random(), color: col, size: 0.24, life: 0.9, shape: 'glow', additive: false, grav: 7 });
-    sfx.pickup?.();
+    sfx.pickup?.(); buzz('light');
     const W = this.M.wild?.list;
     if (W && Math.random() < 0.15) { // something was napping in there
       const [id, lo, hi] = W[Math.floor(Math.random() * W.length)];
@@ -3445,7 +3446,7 @@ export class World {
     if (F.phase === 'wait') {
       if (act) return this.reel('early');
       if (F.t >= F.bite) {
-        F.phase = 'bite'; F.t = 0; sfx.warn?.(); this.bubble({ root: this.hero.root }, '❗');
+        F.phase = 'bite'; F.t = 0; sfx.warn?.(); buzz('medium'); this.bubble({ root: this.hero.root }, '❗');
         const p = new THREE.Vector3(); F.bob.getWorldPosition(p);
         for (let k = 0; k < 8; k++) this.g.fx.spawn({ x: p.x, y: 0.1, z: p.z, vx: (Math.random() - 0.5) * 2, vy: 1 + Math.random() * 1.5, vz: (Math.random() - 0.5) * 2, color: this.M.lava ? 0xff9a3a : 0xe8f6ff, size: 0.18, life: 0.5, shape: 'glow', additive: false, grav: 8 });
       }
@@ -3473,7 +3474,7 @@ export class World {
       const [name, lo, hi, em] = SEASON_FISH[sk], cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null }, S = L.season ||= {};
       const first = !S[name]; L.n++; S[name] = Math.max(S[name] || 0, cm); if (first) save.berries = (save.berries || 0) + 3;
       const hat = first && Object.values(SEASON_FISH).every(([n]) => S[n]) && !(save.adv.hats ||= []).includes('koi'); if (hat) save.adv.hats.push('koi');
-      persist(); sfx.jingle?.(first ? 3 : 1);
+      persist(); reward(first ? 3 : 1);
       return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long!`, first ? `A seasonal visitor! It only swims here in ${sk}. Fisher Finn will want to hear about this! +3 🍓 (☰ → Journal → 🎣)` : `${name}s only visit in ${sk}. Splash! Back it goes, until next year.`, ...(hat ? ['That\'s all four seasonal fish! Fisher Finn sends over a hat with a koi on top: the Koi Bucket Hat! 🎣 (☰ → 🎩 Hats)'] : [])]);
     }
     if (r < 0.7) { // a fish! measured, and Fisher Finn keeps the record book
@@ -3490,12 +3491,12 @@ export class World {
       }
       const today = new Date().toISOString().slice(0, 10);
       if (this.M.isle && A.flags.amends3_done && name === gullFish(today) && A.gullFish !== today) { A.gullFish = today; derby.push("🐦 That's today's Gull Club catch of the day! Petrel on Starfall Atoll will want to see it."); }
-      persist(); sfx.jingle?.(derby.length ? 3 : rec ? 3 : 1);
+      persist(); reward(derby.length ? 3 : rec ? 3 : 1);
       return this.say([`{hero} reeled in a ${name}! It's ${cm} cm long! 🐟`, ...(rec ? [`That's {hero}'s biggest catch ever! Fisher Finn would be proud. +2 🍓`] : derby.length ? [] : [`{hero}'s record is still the ${L.best.name} (${L.best.cm} cm). Splash! Back it goes.`]), ...derby]);
     }
     if (r < 0.88) {
       const n = 1 + (Math.random() < 0.4 ? 1 : 0);
-      save.berries = (save.berries || 0) + n; persist(); sfx.jingle?.(2);
+      save.berries = (save.berries || 0) + n; persist(); reward(2);
       return this.say([`{hero} fished up a little net of berries! +${n} 🍓`]);
     }
     this.say([['{hero} fished up... an old boot. Squelch.', '{hero} fished up a soggy sock. Whose is this?!', '{hero} fished up a tin can. Into the bin it goes!'][Math.floor(Math.random() * 3)]]);
@@ -3509,7 +3510,7 @@ export class World {
     save.adv.flags[it.flag] = true;
     const [px, pz] = wpos(it.x, it.y);
     for (let k = 0; k < 14; k++) this.g.fx.spawn({ x: px, y: 0.6, z: pz, vx: (Math.random() - 0.5) * 4, vy: 2 + Math.random() * 3, vz: (Math.random() - 0.5) * 4, color: [0xffd84d, 0xff6aa8, 0x5ad8ff][k % 3], size: 0.3, life: 0.9, shape: 'star', grav: 6 });
-    sfx.jingle?.(2);
+    reward(2);
     const hero = heroDef();
     if (it.kind === 0) {
       const n = 2 + Math.floor(Math.random() * 2);
@@ -4820,7 +4821,7 @@ export class World {
     const isles = L.isle && LANDMARKS.every((l) => !l.isle || snaps.includes(l.id)); // all four island landmarks: a postcard bonus
     if (isles) save.berries = (save.berries || 0) + 15;
     persist();
-    setTimeout(() => { sfx.jingle?.(hat || isles ? 3 : 1); this.S.toast?.(hat ? '📸 All eight landmarks! +15 🍓 and the Shutterbug Cap! (☰ → 🎩 Hats)' : isles ? '📸 All four island landmarks! A full set of postcards: +15 🍓' : `📸 Landmark photo: ${L.name}! (${snaps.length} / ${LANDMARKS.length} in the Journal)`); }, 700);
+    setTimeout(() => { reward(hat || isles ? 3 : 1); this.S.toast?.(hat ? '📸 All eight landmarks! +15 🍓 and the Shutterbug Cap! (☰ → 🎩 Hats)' : isles ? '📸 All four island landmarks! A full set of postcards: +15 🍓' : `📸 Landmark photo: ${L.name}! (${snaps.length} / ${LANDMARKS.length} in the Journal)`); }, 700);
   }
 
   updateCamera(dt) {
@@ -4875,7 +4876,7 @@ export class World {
       B.dir = { n: 's', s: 'n', e: 'w', w: 'e' }[this.dir]; B.hop = 0.6;
       B.cr.emote('happy', 'open', 1);
       for (let k = 0; k < 5; k++) this.g.fx.spawn({ x: B.root.position.x + (Math.random() - 0.5), y: 1.6 + Math.random() * 0.5, z: B.root.position.z, vy: 1 + Math.random(), color: 0xff6aa8, size: 0.35, life: 0.9, shape: 'star' });
-      sfx.pickup?.();
+      sfx.pickup?.(); buzz('light');
       const name = B.name || B.cr.def?.name || 'Your buddy';
       const M = this.M, ctx = [ // what the buddy notices right here, right now
         this.storm && `${name} jumps at a clap of thunder and hides behind {hero}. ...Is it over yet?`,
@@ -4905,7 +4906,7 @@ export class World {
       const B = this.bonfire; for (let k = 0; k < 12; k++) this.g.fx.spawn({ x: B.px + (Math.random() - 0.5) * 0.5, y: 1, z: B.pz, vx: (Math.random() - 0.5) * 1.5, vy: 2 + Math.random() * 2, vz: (Math.random() - 0.5) * 1.5, color: 0xffc050, size: 0.18, life: 1.2, shape: 'spark' });
       const snow = !!this.M.snow, day = new Date().toISOString().slice(0, 10);
       if ((save.adv.fire ||= {})[this.key] !== day) { // the first warm-up of the day: a toasted marshmallow (a little XP)
-        save.adv.fire[this.key] = day; const hero = save.adv.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+        save.adv.fire[this.key] = day; const hero = save.adv.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); reward(1);
         return this.say([snow ? 'Someone left a bag of marshmallows by the fire. {hero} toasts one on a stick until it\'s golden... and gobbles it up! (+XP)' : 'A bag of marshmallows sits by the fire. {hero} toasts one until it\'s gooey and golden... mmm! (+XP)', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : []), 'One marshmallow a night is the rule. The fire will be here tomorrow too.']);
       }
       return this.say([(snow ? ['The campfire crackles in the snow. {hero} holds out their paws. Ahh, that\'s better!', 'Sparks float up into the cold, starry sky. Somewhere, a snowman looks jealous.', '{hero} warms up by the fire until even their ears feel toasty.'] : ['The bonfire crackles and pops. {hero} holds out their paws. Toasty!', 'Sparks float up and wink out among the stars. The waves hush on the sand.', '{hero} watches the flames dance for a while. A perfect beach night.'])[Math.floor(Math.random() * 3)]]);
@@ -4914,12 +4915,12 @@ export class World {
       const B = this.bottle, notes = BOTTLE_NOTES, read = save.adv.notes || [], i0 = hash(B.day + 'n') % notes.length;
       const ni = [...notes.keys()].map((k) => (i0 + k) % notes.length).find((k) => !read.includes(k)) ?? i0; // a note you haven't read, if any are left
       if (!(save.adv.notes ||= []).includes(ni)) save.adv.notes.push(ni);
-      save.adv.bottle = B.day; countUp('bottle'); save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(1);
+      save.adv.bottle = B.day; countUp('bottle'); save.berries = (save.berries || 0) + 1; persist(); reward(1);
       this.solid.delete(B.x + ',' + B.y); B.g.traverse((o) => o.geometry?.dispose()); this.group.remove(B.g); this.group.remove(B.glint); this.bottle = null;
       return this.say(['A bottle washed up on the sand! {hero} pops the cork and unrolls a note...', notes[ni], 'A berry was tucked inside, too! +1 🍓 (Another bottle may wash up tomorrow night.)']);
     }
     if (this.dance && this.dance.y === fy && this.dance.x.includes(fx)) { // DJ Tumble's night set: dance! The first dance of the night tips a berry
-      this.danceT = 3.2; sfx.jingle?.(1); const day = new Date().toISOString().slice(0, 10);
+      this.danceT = 3.2; reward(1); const day = new Date().toISOString().slice(0, 10);
       if (save.adv.danced !== day) { save.adv.danced = day; countUp('dance'); save.berries = (save.berries || 0) + 1; persist(); return this.say(['The beat drops! {hero} busts out their best moves on the light-up floor.', 'The crowd cheers and someone tosses {hero} a berry! +1 🍓 (One tip a night.)']); }
       return this.say([['{hero} dances like nobody is watching. Everybody is watching. Nobody minds!', 'Boom-tss, boom-tss! {hero} spins, hops and strikes a pose.', 'The floor flashes pink, blue and gold under {hero}\'s feet. What a groove!'][Math.floor(Math.random() * 3)]]);
     }
@@ -4947,7 +4948,7 @@ export class World {
       if (stall.kind === 'trinket') return this.say(['TRINKETS: glow rings, spark charms, a keychain shaped like a tiny Jiggawatt...', 'The stall keeper is fast asleep behind the counter. Maybe another night!']);
       const day = new Date().toISOString().slice(0, 10);
       if (save.adv.market !== day) { // one glowing candy floss a night: a little XP
-        save.adv.market = day; const hero = save.adv.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+        save.adv.market = day; const hero = save.adv.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); reward(1);
         return this.say(['GLOW SNACKS: "First candy floss of the night is on the house!"', `{hero} munches a glowing blue candy floss. It fizzes! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
       }
       return this.say(['GLOW SNACKS: "One free floss a night, little champ. Come back tomorrow!"']);
@@ -5054,7 +5055,7 @@ export class World {
     save.adv.walk = null; persist();
     const nm = CRITTERS.find((c) => c.id === W.id)?.name || 'Your little one';
     if (home) { this.follower = null; this.fade(() => this.load(this.key, this.hx, this.hy, this.dir)); } else this.refreshFollower();
-    const found = (save.adv.steps || 0) - (W.until - 400) >= 100; if (found) { save.berries = (save.berries || 0) + 1; persist(); sfx.pickup?.(); } // a proper walk turns up a berry
+    const found = (save.adv.steps || 0) - (W.until - 400) >= 100; if (found) { save.berries = (save.berries || 0) + 1; persist(); sfx.pickup?.(); buzz('light'); } // a proper walk turns up a berry
     this.S.toast((home ? `🏡 ${nm} runs back to its favourite rug. What a walk!` : `🏡 ${nm} is tired out and trots off home for a nap.`) + (found ? ' It found a berry on the way! +1 🍓' : ''));
   }
 
@@ -5068,7 +5069,7 @@ export class World {
     while (A.hatchDays.length < A.nursery.length) A.hatchDays.unshift(A.hatchDays[0]); // babies from before R544 count as hatched with the oldest known
     if (A.nursery.length > 3) { A.nursery.shift(); A.hatchDays.shift(); }
     countUp('egg'); save.berries = (save.berries || 0) + 5; if (first) A.hats.push('eggshell'); persist();
-    const p = this.hero.root.position; sfx.jingle?.(2);
+    const p = this.hero.root.position; reward(2);
     this.g.fx.burst({ x: p.x, y: 1.2, z: p.z }, { n: 16, speed: 1.6, up: 2, color: 0xfff4d8, size: 0.28, life: 0.9, shape: 'star', grav: 4, drag: 1.5 });
     this.say(['Oh? The egg in the bag is wobbling... crack... CRACK!', `🐣 A baby ${def.name} hatched! It blinks up at {hero} and squeaks.`, `The little ${def.name} will grow up at Nanny Nell's Daycare. Visit it at any Berry Center! (+5 berries)`, ...(first ? ['{hero} keeps a piece of the shell as a hat! Got the Eggshell Cap! 🎩'] : [])]);
     return true;
@@ -5092,14 +5093,14 @@ export class World {
   // a soundscape of one-shots: birds by day, crickets at night, surf on the beach, rain, mountain wind, city hum, lava bubbling
   ambience(dt) {
     const M = this.M; if (!M || M.indoor || this.busy) return;
-    const A = this.amb ||= { cicada: 3, bird: 3, cricket: 2, surf: 1, rain: 0, wind: 2, hum: 1, bubble: 2, owl: 6, rooster: 4 }, due = [];
+    const A = this.amb ||= { cicada: 3, bird: 3, cricket: 2, surf: 1, rain: 0, wind: 2, hum: 1, bubble: 2, owl: 6, rooster: 4, gull: 5 }, due = [];
     if (M.underwater) due.push(['bubble', 1.4]);
     else if (this.rain) due.push(['rain', 1.5]);
     else if (M.snow || M.border === 'cloud') due.push(['wind', 3.5]);
     else if (M.city) due.push(['hum', 2.2]);
     else if (this.phase === 'night' || M.fireflies) { due.push(['cricket', 1.1]); if (this.phase === 'night' && !M.city && !M.lava) due.push(['owl', 14]); }
     else if (!M.lava) { due.push(['bird', this.morning ? 1.1 : 2.6]); if (isSummer() && !this.morning) due.push(['cicada', 9]); /* summer afternoons buzz with cicadas */ if (this.morning && this.key === 'village') due.push(['rooster', 22]); } // a dawn chorus on misty mornings
-    if (M.arena === 'beach' && !M.underwater) due.push(['surf', 3.2]);
+    if (M.arena === 'beach' && !M.underwater) { due.push(['surf', 3.2]); if (this.phase === 'day' && !this.rain) due.push(['gull', 8]); } // gulls wheel over the coast by day
     if (M.lava) due.push(['bubble', 1.8]);
     for (const [k, gap] of due) if ((A[k] -= dt) <= 0) { A[k] = gap * (0.6 + Math.random() * 0.9); sfx.ambient?.(k); }
   }
@@ -5134,11 +5135,11 @@ export class World {
     }
     if (n.id?.startsWith('grown')) { // a grown-up Daycare baby: one has a present once a day, then they just play
       const A = save.adv, day = new Date().toISOString().slice(0, 10), nm = n.name;
-      if (A.grownDay !== day) { A.grownDay = day; save.berries = (save.berries || 0) + 2; persist(); sfx.jingle?.(1); return this.say([`${nm} trots over with something in its mouth... a berry it found in the garden! And another! (+2 berries)`, `${nm} was a tiny egg in your bag once. Look at it now!`], null, nm); }
+      if (A.grownDay !== day) { A.grownDay = day; save.berries = (save.berries || 0) + 2; persist(); reward(1); return this.say([`${nm} trots over with something in its mouth... a berry it found in the garden! And another! (+2 berries)`, `${nm} was a tiny egg in your bag once. Look at it now!`], null, nm); }
       const i = +n.id.slice(5);
       return this.say([[`${nm} rolls over for a tummy rub.`, `${nm} bounces on the rug. It's so happy to live here!`, `${nm} shows {hero} its best move. It learned it watching the TV!`][(this.t | 0) % 3]], () => this.ask(`${nm} looks at the door, then at {hero}. Take it for a walk?`, ['🐾 Let\'s go!', 'Not now'], (k) => {
         if (k) return;
-        A.walk = { id: n.critter, i, until: (A.steps || 0) + 400 }; countUp('walk'); persist(); sfx.pickup?.();
+        A.walk = { id: n.critter, i, until: (A.steps || 0) + 400 }; countUp('walk'); persist(); sfx.pickup?.(); buzz('light');
         this.fade(() => this.load(this.key, this.hx, this.hy, this.dir));
         setTimeout(() => this.S.toast(`🐾 ${nm} trots along behind you! It'll head home after a good long walk.`), 500);
       }, nm), nm);
@@ -5146,7 +5147,7 @@ export class World {
     if (n.id === 'mom' && this.morning) { // misty mornings: Mom serves berry pancakes, once a day
       const day = new Date().toISOString().slice(0, 10), A = save.adv;
       if (A.breakfast !== day) {
-        A.breakfast = day; countUp('breakfast'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); sfx.jingle?.(1);
+        A.breakfast = day; countUp('breakfast'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); reward(1);
         return this.say([A.flags.honey_done ? 'Mom: Good morning, sleepyhead! Berry pancakes with Elder Oakley\'s glowcap honey. Look, they glow! Sit, sit!' : 'Mom: Good morning, sleepyhead! I made berry pancakes. Sit, sit! Adventures need breakfast.', `{hero} gobbles a whole stack! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : 'Full of energy! (+XP)'}`, 'Mom: Come by any morning before nine. There\'s always a stack with your name on it.'], null, n.name);
       }
       return this.say(['Mom: More pancakes? Ha! Tomorrow morning, sweetie. Now go and explore!'], null, n.name);
@@ -5154,7 +5155,7 @@ export class World {
     if (this.trickOrTreat(n)) { // Pumpkin Nights after dark: trick or treat! (one treat from each of up to six townsfolk a night)
       const day = new Date().toISOString().slice(0, 10), A = save.adv, T = A.tot?.day === day ? A.tot : (A.tot = { day, ids: [] }), who = n.name.split(' ').pop();
       if (!T.ids.includes(n.id) && T.ids.length < (halloween() ? 10 : 6)) {
-        T.ids.push(n.id); countUp('tot'); save.berries = (save.berries || 0) + 1; persist(); sfx.jingle?.(1);
+        T.ids.push(n.id); countUp('tot'); save.berries = (save.berries || 0) + 1; persist(); reward(1);
         const L = [`${who}: Eek! A spooky {hero}! ...Oh, it's you. Here, have a treat!`, `${who}: Trick or treat? Treat, definitely treat. I'm not ready for a trick.`, `${who}: Ooh, great costume! Wait... is that a costume? Here, take a candy berry!`, `${who}: Happy Pumpkin Nights! I saved the last candy berry for you.`];
         return this.say(['{hero}: Trick or treat!', L[(hash(n.id) + T.ids.length) % L.length], `+1 🍓 candy berry! (${T.ids.length}/${halloween() ? 10 : 6} treats tonight)`], null, n.name);
       }
@@ -5212,7 +5213,7 @@ export class World {
       full = line; let i = 0; p.textContent = '';
       clearInterval(timer);
       const [ms, step] = typeSpeed();
-      timer = setInterval(() => { i += step; p.textContent = full.slice(0, i); if (i % 3 === 0 || step > 1) sfx.ui('move'); if (i >= full.length) clearInterval(timer); }, ms);
+      timer = setInterval(() => { i += step; p.textContent = full.slice(0, i); if (i % 3 === 0 || step > 1) sfx.talk(name, full[i - 1] || 'a'); if (i >= full.length) clearInterval(timer); }, ms);
     };
     const D = this.dialog = {
       next: () => {
@@ -5275,7 +5276,7 @@ export class World {
   spotted(a, steps, then) {
     this.busy = true;
     a.excl = 1; a.walking = true;
-    sfx.warn?.();
+    sfx.warn?.(); buzz('medium');
     this.bubble(a, '❗');
     this.dir = { n: 's', s: 'n', e: 'w', w: 'e' }[a.dir];
     const walk = (n) => {
@@ -5332,14 +5333,14 @@ export class World {
   startWild(id, lv, a, shiny = false) {
     this.busy = true;
     if (a?.alpha) { // the day's Alpha: a tougher fight, berries and a Power Snack for the win
-      const al = a.alpha, foe = withGear(byId(id), lv); countUp('wild'); sfx.warn?.(); this.bubble(a, '💥');
+      const al = a.alpha, foe = withGear(byId(id), lv); countUp('wild'); sfx.warn?.(); buzz('medium'); this.bubble(a, '💥');
       const f = document.createElement('div'); f.className = 'wd-flash'; this.S.root.appendChild(f);
       save.adv.snackDue = al.flag; // paid out on the next storyIntro after the win
       return setTimeout(() => this.S.worldFight({ foe, lv, kind: 'wild', name: `Alpha ${foe.name}`, diff: Math.min(0.85, 0.3 + lv * 0.03), flag: al.flag, berries: 3, note: `💥 You beat the Alpha ${foe.name}! +3 🍓 and a Power Snack` }), 900);
     }
     countUp('wild');
     if (this.phase === 'night' && (id === 'hootsy' || id === 'squeakwing')) countUp('owl'); // a night owl met after dark (Records)
-    sfx.warn?.();
+    sfx.warn?.(); buzz('medium');
     if (a) this.bubble(a, '❗');
     const foe = withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv);
     this.S.root.querySelector('.wd-flash')?.remove();

@@ -135,6 +135,9 @@ export const sfx = {
     if (kind === 'bird') { // a two- or three-note chirp
       const f = 2600 + r() * 1400, n = 2 + Math.floor(r() * 3);
       for (let i = 0; i < n; i++) osc('sine', f * (1 + (i % 2) * 0.18), f * (1.25 + r() * 0.2), 0.07, 0.035, { t: t + i * 0.11, attack: 0.008 });
+    } else if (kind === 'gull') { // a far-off gull: a few falling 'kee-ow' cries
+      const n = 1 + Math.floor(r() * 3), f = 1500 + r() * 400;
+      for (let i = 0; i < n; i++) { osc('sawtooth', f, f * 0.62, 0.22, 0.012, { t: t + i * 0.27, attack: 0.03 }); osc('sine', f * 1.02, f * 0.66, 0.22, 0.02, { t: t + i * 0.27, attack: 0.03 }); }
     } else if (kind === 'owl') { // a far-off owl: hoo... hoo-hoo
       for (const [dt, d] of [[0, 0.32], [0.55, 0.16], [0.75, 0.3]]) osc('sine', 410, 360, d, 0.05, { t: t + dt, attack: 0.06 });
     } else if (kind === 'rooster') { // a far-off rooster: cock-a-doodle-doooo
@@ -221,6 +224,15 @@ export const sfx = {
     noise(0.07, 0.3, { type: 'bandpass', f0: 1800, q: 2, t: now() + 0.07 });
     osc('square', 1400, 900, 0.04, 0.08, { t: now() + 0.07 });
   },
+  // a dialogue 'babble' blip: every speaker gets their own pitch (from their name; elders lower, kids higher), narration a soft tick
+  talk(name = '', ch = 'a') {
+    if (!ctx) return;
+    if (!name) { osc('square', 880, 880, 0.035, 0.035); return; }
+    let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) % 997;
+    const age = /\b(Old|Elder|Grandpa|Granny|Captain|Sage|King|Keeper)\b/.test(name) ? 0.72 : /\b(Kid|Little|Flo|Pip|Lad|Tot)\b/.test(name) ? 1.35 : 1;
+    const v = 'aeiouy'.indexOf(ch.toLowerCase()), f = (300 + (h % 9) * 45) * age * (v >= 0 ? 1 + v * 0.06 : 0.9) * (0.96 + Math.random() * 0.08);
+    osc('triangle', f, f * 1.08, 0.055, 0.075); osc('sine', f * 2, f * 2.1, 0.04, 0.025);
+  },
   ui(kind = 'move') {
     if (!ctx) return;
     if (kind === 'move') osc('square', 880, 880, 0.04, 0.06);
@@ -278,6 +290,25 @@ export const sfx = {
     const t = now();
     osc('square', 880, 880, 0.07, 0.06, { t });
     osc('square', 1175, 1175, 0.09, 0.06, { t: t + 0.09 });
+  },
+  // the arcade cabinets and island mini-games (arcade.js): chiptune blips, so each game has its own feel
+  arc(kind, n = 0) {
+    if (!ctx) return;
+    const t = now();
+    if (kind === 'grab') { const f = 880 * 2 ** (Math.min(n, 14) / 12); osc('square', f, f * 1.5, 0.07, 0.07); } // climbs with the combo
+    else if (kind === 'gold' || kind === 'pearl') [0, 4, 7, 12].forEach((s, i) => { const f = (kind === 'gold' ? 1047 : 1319) * 2 ** (s / 12); osc(kind === 'gold' ? 'square' : 'sine', f, f, 0.08, kind === 'gold' ? 0.06 : 0.09, { t: t + i * 0.045 }); });
+    else if (kind === 'zap') { osc('sawtooth', 700, 90, 0.3, 0.12); noise(0.25, 0.18, { f0: 3000, f1: 400, q: 1.5 }); }
+    else if (kind === 'flap') { osc('triangle', 380, 760, 0.08, 0.08); noise(0.06, 0.05, { f0: 1400, f1: 2600, q: 2 }); }
+    else if (kind === 'hop') { osc('sine', 220, 560, 0.14, 0.13); noise(0.18, 0.1, { f0: 2400, f1: 900, q: 1, type: 'lowpass' }); }
+    else if (kind === 'splash') noise(0.22, 0.12, { f0: 1800, f1: 500, q: 0.9 });
+    else if (kind === 'kick') { osc('sine', 320, 760, 0.1, 0.09); osc('sine', 600, 1100, 0.06, 0.04, { t: t + 0.06 }); }
+    else if (kind === 'air') [0, 1, 2].forEach((i) => osc('sine', 500 + i * 260, 900 + i * 300, 0.07, 0.07, { t: t + i * 0.05 }));
+    else if (kind === 'pass') osc('triangle', 1568, 1568, 0.05, 0.05);
+    else if (kind === 'tick') osc('square', 1760, 1760, 0.04, 0.05);
+    else if (kind === 'ready') osc('square', 660, 660, 0.12, 0.07);
+    else if (kind === 'go') { osc('square', 1320, 1320, 0.25, 0.08); osc('triangle', 660, 660, 0.25, 0.06); }
+    else if (kind === 'crash') { [523, 494, 466, 392].forEach((f, i) => osc('square', f, f * 0.97, 0.16, 0.07, { t: t + 0.05 + i * 0.15 })); noise(0.3, 0.2, { f0: 900, f1: 120, q: 0.8 }); }
+    else if (kind === 'time') [784, 988, 1175, 1568].forEach((f, i) => osc('square', f, f, i === 3 ? 0.35 : 0.1, 0.07, { t: t + i * 0.09 }));
   },
   rumble() { if (!ctx) return; noise(0.5, 0.35, { f0: 200, f1: 60, q: 1 }); osc('sine', 70, 40, 0.5, 0.3); },
   gong() { if (!ctx) return; osc('triangle', 220, 210, 1.6, 0.35); osc('sine', 330, 320, 1.4, 0.2); osc('sine', 554, 540, 1.0, 0.1); },
@@ -472,6 +503,74 @@ const SONGS = {
     ],
     drums: 'k.h.s.hkk.h.s.h.',
   },
+  // the Sunscatter Isles towns: a sunny calypso in F (3+3+2 steel-pan lead over a skipping bass)
+  isles: {
+    bpm: 124,
+    inst: { lead: 'triangle', lead2: 'sine', leadVol: 0.12, steel: true, bass: 'sine', bassVol: 0.26, stab: 'triangle' },
+    chords: [[53, 57, 60], [46, 50, 53, 57], [48, 52, 55, 58], [53, 57, 60, 64], [50, 53, 57], [46, 50, 53], [48, 52, 55], [53, 57, 60]],
+    lead: [
+      [72, null, null, 69, null, null, 72, null, 77, null, 76, null, 74, null, 72, null],
+      [74, null, null, 70, null, null, 74, null, 77, null, null, 74, null, null, null, null],
+      [76, null, null, 72, null, null, 76, null, 79, null, 77, null, 76, null, 74, null],
+      [72, null, null, 77, null, null, 81, null, 79, null, null, 77, null, null, null, null],
+      [81, null, null, 77, null, null, 74, null, 77, null, 81, null, 84, null, 81, null],
+      [82, null, null, 77, null, null, 74, null, 70, null, 74, null, 77, null, null, null],
+      [79, null, null, 76, null, null, 72, null, 76, null, 79, null, 82, null, 79, null],
+      [77, null, null, 72, null, null, 69, null, 72, null, null, null, 77, null, null, null],
+    ],
+    drums: 'k..s..k.k.s..s..',
+  },
+  // caves and the sunken wreck: a slow, hollow A-minor drift with water drips between the notes
+  cave: {
+    bpm: 78, drip: true,
+    inst: { lead: 'sine', lead2: 'triangle', leadVol: 0.11, bass: 'sine', bassVol: 0.24, stab: 'sine' },
+    chords: [[45, 48, 52], [41, 45, 48], [43, 47, 50], [40, 44, 47], [45, 48, 52], [38, 41, 45], [41, 45, 48], [40, 44, 47]],
+    lead: [
+      [69, null, null, null, 72, null, null, null, 71, null, null, 69, null, null, null, null],
+      [65, null, null, null, 69, null, null, null, 72, null, null, null, null, null, null, null],
+      [67, null, null, null, 71, null, null, null, 74, null, null, 72, null, null, null, null],
+      [71, null, null, null, 68, null, null, null, 64, null, null, null, null, null, null, null],
+      [76, null, null, null, 74, null, null, 72, null, null, 71, null, 72, null, null, null],
+      [74, null, null, null, 69, null, null, null, 65, null, null, null, 62, null, null, null],
+      [65, null, null, 69, null, null, 72, null, 77, null, null, null, 76, null, null, null],
+      [71, null, null, null, 68, null, null, null, 71, null, null, null, null, null, null, null],
+    ],
+    drums: 'k...............',
+  },
+  // the Berry Centers: a soft, rocking music-box lullaby while Nurse Lilypop patches everyone up
+  center: {
+    bpm: 100,
+    inst: { lead: 'sine', lead2: 'triangle', leadVol: 0.12, bass: 'sine', bassVol: 0.2, stab: 'sine' },
+    chords: [[48, 52, 55, 59], [53, 57, 60, 64], [50, 53, 57, 60], [55, 59, 62, 65], [48, 52, 55, 59], [45, 48, 52, 55], [53, 57, 60, 64], [55, 59, 62, 67]],
+    lead: [
+      [79, null, 76, null, 72, null, 76, null, 79, null, null, null, 84, null, null, null],
+      [81, null, 77, null, 72, null, 77, null, 81, null, null, null, 79, null, null, null],
+      [77, null, 74, null, 69, null, 74, null, 77, null, 76, null, 74, null, null, null],
+      [74, null, 71, null, 67, null, 71, null, 74, null, null, null, null, null, null, null],
+      [79, null, 76, null, 72, null, 76, null, 79, null, 81, null, 84, null, null, null],
+      [84, null, 81, null, 76, null, 81, null, 79, null, null, 76, null, null, null, null],
+      [77, null, 81, null, 84, null, 81, null, 77, null, 76, null, 74, null, null, null],
+      [74, null, null, 76, null, null, 74, null, 72, null, null, null, null, null, null, null],
+    ],
+    drums: 'k.......k.......',
+  },
+  // stadium lobbies and the Battle Tower hall: a pacing D-minor 'warm-up' groove, building to the fight
+  tower: {
+    bpm: 128,
+    inst: { lead: 'square', lead2: 'triangle', leadVol: 0.065, bass: 'sawtooth', bassVol: 0.17, stab: 'triangle' },
+    chords: [[50, 53, 57], [50, 53, 57], [46, 50, 53], [48, 52, 55], [50, 53, 57], [50, 53, 57], [43, 46, 50], [45, 49, 52]],
+    lead: [
+      [74, null, null, 74, null, 77, null, null, 74, null, 72, null, 74, null, null, null],
+      [null, null, 69, null, 72, null, 74, null, 77, null, null, null, 76, null, null, null],
+      [74, null, null, 74, null, 77, null, null, 81, null, 79, null, 77, null, null, null],
+      [76, null, null, 72, null, 76, null, 79, 76, null, null, null, null, null, null, null],
+      [86, null, null, 86, null, 84, null, null, 81, null, 79, null, 81, null, null, null],
+      [null, null, 77, null, 81, null, 84, null, 86, null, null, null, 84, null, null, null],
+      [82, null, null, 81, null, 79, null, null, 77, null, 74, null, 77, null, 79, null],
+      [81, null, null, null, 76, null, 73, null, 69, null, null, null, null, null, null, null],
+    ],
+    drums: 'k...s..kk.k.s...',
+  },
   victory: {
     bpm: 132,
     chords: [[48, 52, 55], [53, 57, 60], [55, 59, 62], [48, 52, 55]],
@@ -518,6 +617,10 @@ function playStep(song, step, t) {
   if (extra === 'spooky' && s === 0 && bar % 2 === 1) {
     const f = N(chord[0] + 12), o = osc('sine', f * 0.94, f, spb * 14, 0.045, { t, bus, attack: spb * 4 });
     const l = ctx.createOscillator(), g = ctx.createGain(); l.frequency.value = 5.5; g.gain.value = f * 0.025; l.connect(g); g.connect(o.frequency); l.start(t); l.stop(t + spb * 14);
+  }
+  if (song.drip && (s === 5 || s === 13) && Math.random() < 0.55) { // a drop falls into a still pool somewhere off in the dark
+    const f = 1400 + Math.random() * 900, d = t + Math.random() * spb;
+    osc('sine', f, f * 0.55, 0.12, 0.05, { t: d, bus }); osc('sine', f * 1.5, f * 1.1, 0.07, 0.02, { t: d + 0.05, bus });
   }
   if (extra === 'bells' && s % 2 === 0) noise(s % 4 ? 0.07 : 0.11, s % 4 ? 0.035 : 0.06, { t, bus: musBus, type: 'bandpass', f0: 8500, q: 2.5, attack: 0.008 });
   const d = song.drums[s];

@@ -2,6 +2,7 @@
 import { save, persist, resetSave } from './save.js';
 import { backupSheet, restoreSheet } from './backup.js';
 import { vol, setVolumes, sfx } from './audio.js';
+import { buzz } from './haptics.js';
 
 export function applySettings(game) {
   const s = save.settings;
@@ -50,6 +51,7 @@ export function openSettings(game, root) {
       if (!el.checked && game.battle?.tutorial) { game.battle.tutorial.dispose(); game.battle.tutorial = null; }
     } else s[el.dataset.k] = el.checked;
     applySettings(game); persist(); sfx.ui('move');
+    if (el.dataset.k === 'vibrate' && el.checked) buzz('medium'); // a sample tap, so you know it works
   }));
   d.querySelectorAll('.seg[data-k] button').forEach((b) => b.addEventListener('click', () => {
     const seg = b.parentElement;
@@ -61,7 +63,8 @@ export function openSettings(game, root) {
   d.querySelector('.bk-in').addEventListener('click', () => { sfx.ui('ok'); restoreSheet(root); });
   const reset = d.querySelector('.reset');
   reset.addEventListener('click', () => {
-    if (!reset.classList.contains('armed')) { reset.classList.add('armed'); reset.textContent = 'Tap again to erase everything'; return; }
+    if (!reset.classList.contains('armed')) { reset.classList.add('armed'); reset.textContent = 'Tap again to erase everything'; sfx.warn(); buzz('medium'); return; }
+    sfx.ui('back');
     resetSave(); close(); game.screens.title();
   });
   root.appendChild(d);

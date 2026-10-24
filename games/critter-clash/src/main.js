@@ -104,7 +104,7 @@ class Game {
     r.setAnimationLoop(() => this.frame());
     window.__game = this;
     window.__save = save;
-    window.__critters = CRITTERS; window.__cups = CUPS; window.__grow = withGear; window.__hats = SHOP_HATS;
+    window.__critters = CRITTERS; window.__cups = CUPS; window.__grow = withGear; window.__hats = SHOP_HATS; window.__sfx = sfx;
     // headless helper: advance the simulation in fixed steps without rendering
     window.__sim = (sec, dt = 1 / 60) => { for (let t = 0; t < sec; t += dt) this.step(dt); this.clock.getDelta(); };
     this.boot();

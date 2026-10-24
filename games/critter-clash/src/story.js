@@ -1,6 +1,7 @@
 // Adventure story: the hero critter dreams of the Critter Crown, worn by the strongest critter
 // of all. Professor Pecan sets the quest; a rival, Dash, keeps turning up to test the hero;
 // the cup stadiums are the gyms. Every beat is keyed on save.adv.flags.
+import { buzz, reward } from './haptics.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
 import { CUPS, ISLE_CUPS, CRITTERS, TYPES, withGear, skinned, cupById } from './data.js';
 const skinnedShiny = (id) => skinned(CRITTERS.find((c) => c.id === id), 'shiny');
@@ -90,7 +91,7 @@ export function storyIntro(S, w) {
     return;
   }
   if (w.key === 'atoll' && F.morra && !F.sunstone) { // the finale: the Sunstone goes home, and the lighthouse wakes
-    F.sunstone = true; const own = (save.adv.hats ||= []); if (!own.includes('sunstone')) own.push('sunstone'); persist(); sfx.jingle?.(2);
+    F.sunstone = true; const own = (save.adv.hats ||= []); if (!own.includes('sunstone')) own.push('sunstone'); persist(); reward(2);
     w.say([
       'Captain Morra drops a round golden stone into your paws. It is warm, like a little piece of the sun.',
       'Captain Morra: ...The Gloom Gulls are done. My crew wants to go home anyway. They say the dark is cold.',
@@ -259,7 +260,7 @@ export function storyStep(S, w) {
   if (w.key === 'peak' && w.hy <= 7 && !F.dash5) {
     const a = w.npcs.find((n) => n.n.id === 'dash5');
     if (!a) return false;
-    w.busy = true; sfx.warn?.(); w.bubble(a, '❗');
+    w.busy = true; sfx.warn?.(); buzz('medium'); w.bubble(a, '❗');
     setTimeout(() => { w.busy = false; dashFinal(S, w); }, 700);
     return true;
   }
@@ -299,7 +300,7 @@ export function storyStep(S, w) {
     const a = w.npcs.find((n) => n.n.id === 'rival1');
     if (!a) return false;
     w.busy = true;
-    sfx.warn?.();
+    sfx.warn?.(); buzz('medium');
     w.bubble(a, '❗');
     // Dash dashes over to stand right in front of the hero
     const spots = [[w.hx, w.hy - 1], [w.hx - 1, w.hy], [w.hx + 1, w.hy], [w.hx, w.hy + 1]];
@@ -378,7 +379,7 @@ export function storyTalk(S, id, w, a) {
         F.quest = true;
         save.berries = (save.berries || 0) + 3;
         persist();
-        S.toast('🍓 Got 3 berries!'); sfx.jingle(2);
+        S.toast('🍓 Got 3 berries!'); reward(2);
         w.removeNpc('guard');
       });
       return;
@@ -395,7 +396,7 @@ export function storyTalk(S, id, w, a) {
       : 'Prof. Pecan: The sun, the moon AND the forest. Solmoth, Moonwhal and Verdelk, all friends of yours! I\'m rewriting chapter twelve of my book. Again.';
     // every critter befriended: the professor's Shiny Charm (twice the shiny wild critters)
     if (F.crowned && !F.shinycharm && CRITTERS.every((c) => save.unlocked.includes(c.id))) {
-      F.shinycharm = true; (save.adv.hats ||= []).includes('dexcrown') || save.adv.hats.push('dexcrown'); save.berries = (save.berries || 0) + 30; persist(); sfx.jingle?.(3);
+      F.shinycharm = true; (save.adv.hats ||= []).includes('dexcrown') || save.adv.hats.push('dexcrown'); save.berries = (save.berries || 0) + 30; persist(); reward(3);
       return w.say([`Prof. Pecan: {hero}... is it true? Every single critter, all ${CRITTERS.length} of them, friends of yours? Even the legends?!`, "Prof. Pecan: My Critterdex is complete. Forty years of work, and you finished it! Here: my Shiny Charm. It hums near sparkly critters.", '✨ You got the SHINY CHARM! Shiny wild critters turn up twice as often now.', "Prof. Pecan: And this, a little crown I made for whoever finished the 'dex. It was meant to be me. It's much better on you.", "{hero} got the Critterdex Crown! 👑 +30 🍓 (☰ → 🎩 Hats)"], null, 'Prof. Pecan');
     }
     const dexLeft = CRITTERS.length - CRITTERS.filter((c) => save.unlocked.includes(c.id)).length;
@@ -427,16 +428,16 @@ export function storyTalk(S, id, w, a) {
       if (i) return;
       save.berries -= 1; A.wish = day; countUp('wish'); const r = Math.floor(Math.random() * 10);
       let out;
-      if (r < 2) { save.berries += 5; out = 'The fountain gurgles... and spits out FIVE berries! The clouds must like {hero}. +5 🍓'; sfx.jingle(3); }
-      else if (r < 6) { const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.3)); out = `A warm breeze swirls around {hero}. They feel stronger! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`; sfx.jingle(2); }
-      else { save.berries += 2; out = 'Plip! Two shiny berries bob up out of the water. +2 🍓 (A good deal!)'; sfx.jingle(1); }
+      if (r < 2) { save.berries += 5; out = 'The fountain gurgles... and spits out FIVE berries! The clouds must like {hero}. +5 🍓'; reward(3); }
+      else if (r < 6) { const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.3)); out = `A warm breeze swirls around {hero}. They feel stronger! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`; reward(2); }
+      else { save.berries += 2; out = 'Plip! Two shiny berries bob up out of the water. +2 🍓 (A good deal!)'; reward(1); }
       persist();
       w.say(['Plop! {hero} tosses a berry into the fountain and makes a wish...', out]);
     });
   }
   if (id === 'skates') { // Skater Ivy's night spot on the frozen pond: she lends out a pair of skates for keeps
     const who = 'Skater Ivy', npc = MAPS.frostpeak.npcs.find((n) => n.id === 'aurora');
-    if (!save.adv.skates) return w.say([`${who}: Oh! You want to skate too? Here, I always carry a spare pair. Tiny ones, just your size!`, `${who}: With skates on, you don't bonk at the end of a slide. You TWIRL. Try the pond!`], () => { save.adv.skates = true; persist(); S.toast('⛸️ Got Ivy\'s spare skates!'); sfx.jingle(2); }, who);
+    if (!save.adv.skates) return w.say([`${who}: Oh! You want to skate too? Here, I always carry a spare pair. Tiny ones, just your size!`, `${who}: With skates on, you don't bonk at the end of a slide. You TWIRL. Try the pond!`], () => { save.adv.skates = true; persist(); S.toast('⛸️ Got Ivy\'s spare skates!'); reward(2); }, who);
     const L = npc?.night?.lines || [];
     return w.say([Math.random() < 0.4 ? `${who}: Nice skates! Slide across the pond and finish with a twirl. The first twirl of the night makes you stronger. Probably.` : L[Math.floor(Math.random() * L.length)]], null, who);
   }
@@ -488,7 +489,7 @@ export function storyTalk(S, id, w, a) {
     if (A.gullFish === day && A.gullPaid !== day) {
       A.gullPaid = day; countUp('gull'); save.berries = (save.berries || 0) + 3;
       const n = A.cnt.gull, cap = n >= 5 && !own.includes('gullcap'); if (cap) own.push('gullcap');
-      persist(); sfx.jingle(cap ? 3 : 2);
+      persist(); reward(cap ? 3 : 2);
       return w.say([`Petrel: A ${fish}! Today's catch of the day! Caw caw! Look at it, Shag! LOOK AT IT!`, `Petrel: Club rules: the catch of the day pays 3 berries. Here! (${n} caught for the club${n < 5 ? `, ${5 - n} more for a club cap` : ''}.)`, '{hero} got 3 berries! 🍓', ...(cap ? ['Petrel: Five catches! You\'re a real Gull now. A GOOD Gull. Here, the club cap!', '{hero} got the Gull Club Cap! 🐦 (☰ → 🎩 Hats)'] : [])], null, who);
     }
     if (A.gullPaid === day) return w.say([`Petrel: That ${fish} you brought is the best thing that happened to me today. Except breakfast. A new catch of the day tomorrow!`], null, who);
@@ -501,7 +502,7 @@ export function storyTalk(S, id, w, a) {
       return;
     }
     w.say(['Fisher Finn: Shh! ...Oh, it\'s you. You look like a natural angler.', 'Fisher Finn: Here, take my old rod! I\'ve got a new one anyway.', 'Fisher Finn: Face any water and press A to cast. When the bobber dips, press A again, quick! You might hook a big fish, berries... or a grumpy water critter!'], () => {
-      F.rod = true; persist(); sfx.jingle(2); S.toast('🎣 Got the Old Rod!');
+      F.rod = true; persist(); reward(2); S.toast('🎣 Got the Old Rod!');
     }, 'Fisher Finn');
     return;
   }
@@ -513,7 +514,7 @@ export function storyTalk(S, id, w, a) {
       const h = save.adv.hero, c = save.critters[h];
       save.berries = n - 1;
       const r = grantXp(h, Math.round(xpNeeded(c.level) * 0.25)); countUp('smoothie'); persist();
-      sfx.jingle(2);
+      reward(2);
       w.say(['Whirrrr... *slurp*! A berry smoothie! 🍓', r.to > r.from ? `{hero} grew to Lv ${r.to}!` : '{hero} feels refreshed! (+XP)']);
     });
     return;
@@ -522,7 +523,7 @@ export function storyTalk(S, id, w, a) {
     save.adv.spawn = { ...w.M.exit }; persist();
     const opts = ['💤 Just a nap', '🌇 Evening', '🌙 Night', '🌅 Morning'];
     w.ask('{hero} hops into bed. Sleep until...?', opts, (i) => {
-      sfx.jingle(2);
+      reward(2);
       if (!i) return w.say(['{hero} has a quick nap... Ahh, refreshed!', 'Mom: Sweet dreams! (If you lose a battle, you\'ll come back home.)']);
       const now = new Date(), target = [0, 17, 21, 7][i], h = (target - now.getHours() + 24) % 24;
       save.adv.shift = h ? { day: now.toISOString().slice(0, 10), h } : null; persist();
@@ -533,7 +534,7 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'nurse' || id === 'rest') {
     save.adv.spawn = { ...w.M.exit }; persist();
-    sfx.jingle(2);
+    reward(2);
     w.say(id === 'rest' ? ['{hero} hops into bed for a quick nap...', 'Mom: Sweet dreams! (If you lose a battle, you\'ll come back home.)']
       : ['Nurse Lilypop: Welcome to the Berry Center! Let me fix you a berry smoothie...', 'Nurse Lilypop: All better! If you ever lose a battle, you\'ll wake up right here.', ...(save.berries > 0 ? ['Nurse Lilypop: Got spare berries? The blender over there makes smoothies that help critters grow!'] : []), ...(save.unlocked.length > 1 && !save.adv.flags.boxTip ? ((save.adv.flags.boxTip = true), ['Nurse Lilypop: See the Critter Box in the corner? Any critter on your team can take the lead from there.']) : []), ...(save.unlocked.length > 1 && save.adv.flags.boxTip && !save.adv.flags.careTip && !save.adv.care ? ((save.adv.flags.careTip = true), ['Nurse Lilypop: Have you met Nanny Nell by the sofa? She runs the Critter Daycare. Leave a critter with her and it trains while you walk!']) : []), ...(save.adv.req?.day !== new Date().toISOString().slice(0, 10) ? ['Nurse Lilypop: Oh, and there are new requests on the cork board by the door. Berries for little jobs!'] : [])], null, id === 'nurse' ? 'Nurse Lilypop' : '');
     return;
@@ -655,14 +656,14 @@ function daycare(S, w) {
   if (steps >= 400 && !A.egg && A.eggDay !== day) return w.say([`${who}: Oh! I'm so glad you came by. Look what I found tucked in ${name}'s blanket this morning!`, `${who}: An egg! A little warm one, with spots. I've no idea how it got there. Critters are full of surprises!`],
     () => w.ask('Take the egg?', ['Take the egg', 'Leave it with Nell'], (i) => {
       if (i) return w.say([`${who}: I'll keep it warm by the heater, then. Ask me again any time today!`], null, who);
-      A.egg = { at: A.steps || 0, id: c.id }; A.eggDay = day; persist(); sfx.jingle?.(1); w.wearEgg();
+      A.egg = { at: A.steps || 0, id: c.id }; A.eggDay = day; persist(); reward(1); w.wearEgg();
       w.say(['{hero} tucks the egg safely into the bag. 🥚', `${who}: Eggs love a good walk. Keep exploring and it'll hatch before you know it!`], null, who);
     }, who), who);
   const mood = steps < 60 ? 'It has only just settled in. Take it for a little walk first... well, take YOURSELF for a walk!' : steps < 600 ? 'It\'s been chasing the other critters round the rug all day.' : steps < 2000 ? 'It\'s grown so much stronger! It practises its moves on the sofa cushions.' : 'It\'s as strong as my lessons can make it. It misses you!';
   w.say([`${who}: ${name} is having a lovely time! You've walked ${steps} step${steps === 1 ? '' : 's'} since you left it with me.`, `${who}: ${mood}`],
     () => w.ask(`Take ${name} back?`, ['Take it back', 'Leave it longer'], (i) => {
       if (i) return w.say([`${who}: Righto! ${name} and I will be right here.`], null, who);
-      const rr = grantXp(c.id, careXp(c)); A.care = null; countUp('care'); persist(); sfx.jingle?.(rr.to > rr.from ? 2 : 1);
+      const rr = grantXp(c.id, careXp(c)); A.care = null; countUp('care'); persist(); reward(rr.to > rr.from ? 2 : 1);
       w.fade(() => { w.load(w.key, w.hx, w.hy, w.dir); w.say([`${name} bounds back to {hero} for a big hug!`, rr.to > rr.from ? `${name} grew to Lv ${rr.to}! Nanny Nell waves goodbye.` : `${name} picked up a little experience. (+XP)`]); });
     }, who), who);
 }
@@ -689,7 +690,7 @@ function requestBoard(S, w) {
       const h = save.adv.hero, c = save.critters[h], r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4));
       out.push(`All three done! A Power Snack for {hero}! ⭐`, r.to > r.from ? `{hero} grew to Lv ${r.to}!` : '{hero} feels stronger! (+XP)');
     }
-    persist(); sfx.jingle(2);
+    persist(); reward(2);
   } else out.push(R.paid.length === R.list.length ? 'All done for today. New requests tomorrow!' : 'Finish a request, then come back to this board for berries.');
   w.say(out);
 }
@@ -1010,7 +1011,7 @@ function grandTour(S, w) {
     '🏅 100% COMPLETE! Thank you for playing Critter Clash!',
   ], () => {
     F.grand_done = true; (A.hats ||= []).includes('grandcrown') || A.hats.push('grandcrown'); save.berries = (save.berries || 0) + 50; persist();
-    sfx.jingle?.(3); w.questMarks?.();
+    reward(3); w.questMarks?.();
     if (w.key === 'village') { const b = w.M.buildings?.find((q) => q.id === 'lab'); if (b) w.fireworks(b); }
   }, 'Prof. Pecan');
 }
@@ -1050,11 +1051,11 @@ function lostQuest(S, w, a, key) {
     save.berries = (save.berries || 0) + (Q.berries || 0);
     const out = [...Q.done];
     if (Q.snack) { const h = save.adv.hero, c = save.critters[h], r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4)); if (r.to > r.from) out.push(`{hero} grew to Lv ${r.to}!`); }
-    persist(); w.questMarks?.(); sfx.jingle(3); S.toast(`${Q.toast} Delivered the ${Q.item}!`);
+    persist(); w.questMarks?.(); reward(3); S.toast(`${Q.toast} Delivered the ${Q.item}!`);
     return w.say(out, null, Q.to.name);
   }
   if (kind === 'found') {
-    F[id + '_found'] = true; persist(); sfx.jingle(2); w.buildLost?.(); w.questMarks?.(); S.toast(`${Q.toast} Found the ${Q.item}!`);
+    F[id + '_found'] = true; persist(); reward(2); w.buildLost?.(); w.questMarks?.(); S.toast(`${Q.toast} Found the ${Q.item}!`);
     return w.say(Q.found);
   }
   if (F[id + '_done'] && id === 'kite' && w.flyKite) return w.flyKite(who); // Gale lends the kite back: fly it together
@@ -1066,7 +1067,7 @@ function lostQuest(S, w, a, key) {
     save.berries = (save.berries || 0) + (Q.berries || 0);
     const out = [...Q.done];
     if (Q.snack) { const h = save.adv.hero, c = save.critters[h], r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4)); if (r.to > r.from) out.push(`{hero} grew to Lv ${r.to}!`); }
-    persist(); w.questMarks?.(); sfx.jingle(3); S.toast(`${Q.toast} ${Q.item[0].toUpperCase() + Q.item.slice(1)} returned!`);
+    persist(); w.questMarks?.(); reward(3); S.toast(`${Q.toast} ${Q.item[0].toUpperCase() + Q.item.slice(1)} returned!`);
     return w.say(out, null, who);
   }
   if (F[id + '_asked']) return w.say(Q.wait, null, who);
@@ -1087,7 +1088,7 @@ function trader(w) {
     w.busy = false;
     const h = stock.find((x) => x.id === id);
     if ((save.berries || 0) < h.price) return w.say([`Trader Tock: ${h.price} berries, friend. Shake some bushes and catch me before the day is out!`], null, who);
-    save.berries -= h.price; own.push(h.id); A.hat = h.id; persist(); sfx.jingle(2); w.wearHat();
+    save.berries -= h.price; own.push(h.id); A.hat = h.id; persist(); reward(2); w.wearHat();
     w.say([`{hero} got the ${h.name}! 🎩`, 'Trader Tock: Splendid! Nobody else in Clashara has one of those.'], null, who);
   }, () => { w.busy = false; w.say(['Trader Tock: Look for me tomorrow. Different town, and new hats every week!'], null, who); }, true); }, who);
 }
@@ -1118,7 +1119,7 @@ function gauntlet(S, w) {
       F['gauntpay_' + wk] = true; save.berries = (save.berries || 0) + 8;
       const first = !(A.hats || []).includes('laurel');
       if (first) (A.hats ||= []).push('laurel');
-      A.gauntWins = (A.gauntWins || 0) + 1; persist(); sfx.jingle(3);
+      A.gauntWins = (A.gauntWins || 0) + 1; persist(); reward(3);
       return w.say([`${who}: All five Aces, down in one week! You really are the Champion.`, '{hero} got 8 🍓!', ...(first ? ['{hero} got the Golden Laurel! 🏅 (Wear it from ☰ → 🎩 Hats.)'] : []), `${who}: A new line-up climbs the mountain every Monday. See you then!`], null, who);
     }
     return w.say([`${who}: This week's Gauntlet is cleared. The next five Aces arrive on Monday!`], null, who);
@@ -1160,7 +1161,7 @@ function tower(S, w) {
         F['tower_' + R[1].toLowerCase()] = true;
         if (R[1] === 'Bronze') out.push(`${who}: Now you are strong enough to hear this. On starry nights, something sings under the atoll. Something BIG. Go down to the beach after dark... if you dare.`);
         if (R[1] === 'Legend') out.push(`${who}: ...My own tricorn. Fine. You earned it. Do NOT tell the Gulls I gave you my hat.`);
-        sfx.jingle?.(3);
+        reward(3);
       } else out.push(T.streak % 7 === 0 ? `${who}: You beat ME. Again. ${T.streak} in a row... Hmph. Impressive.` : `${who}: ${T.streak} in a row. Not bad, Champion.`);
     } else {
       out.push(`${who}: Ha! The streak ends at ${T.streak}. ${T.streak >= T.best && T.streak > 0 ? 'Still, that is your best ever.' : `Your best is ${T.best}.`}`, `${who}: Rest up and start a new streak whenever you like.`);
@@ -1193,7 +1194,7 @@ function masters(S, w) {
     if (!F['mastpay_' + wk]) {
       F['mastpay_' + wk] = true; save.berries = (save.berries || 0) + 10;
       const first = !(A.hats ||= []).includes('masterlei'); if (first) A.hats.push('masterlei');
-      A.mastWins = (A.mastWins || 0) + 1; persist(); sfx.jingle(3);
+      A.mastWins = (A.mastWins || 0) + 1; persist(); reward(3);
       return w.say([`${who}: All four of us, one after another! You really are the Champion of the Sunscatter Isles.`, '{hero} got 10 🍓!', ...(first ? ["{hero} got the Champion's Lei! 🌺 (☰ → 🎩 Hats)"] : []), `${who}: We'll be back next week, stronger. Count on it!`], null, who);
     }
     return w.say([`${who}: You beat all four of us this week. We're training for Monday!`], null, who);
@@ -1225,7 +1226,7 @@ const LEGENDS = {
 function legend(S, w, id) {
   const L = LEGENDS[id], def = byId(id);
   if (!L.when(w)) return w.say(L.wait);
-  w.say(L.meet, () => { sfx.jingle?.(3); S.worldFight({
+  w.say(L.meet, () => { reward(3); S.worldFight({
     foe: withGear(def, L.lv), lv: L.lv, kind: 'story', flag: L.flag, name: def.name, diff: L.diff, recruit: true, berries: 10,
     trainer: { name: def.name, critter: id, title: L.title, beat: L.win, gloat: `${def.name} vanishes... It will be back. Try again!` },
     note: L.note,
@@ -1245,7 +1246,7 @@ function arcade(S, w, hop) {
       const best = score > hi; if (best) A[HI] = score;
       let prize = 0;
       if (A[DAY] !== day) { prize = score >= top ? 3 : score >= mid ? 2 : score >= lo ? 1 : 0; if (prize) { A[DAY] = day; save.berries = (save.berries || 0) + prize; } }
-      persist(); if (best || prize) sfx.jingle(2);
+      persist(); if (best || prize) reward(2);
       w.say([`GAME OVER! You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`The cabinet rattles... and drops ${prize} 🍓! (One prize a day.)`] : A[DAY] !== day ? [`Score ${lo} or more to win berries! (One prize a day.)`] : [])]);
     });
     S.game.modalClose = () => el.__arcade.close();
@@ -1265,7 +1266,7 @@ function dive(S, w) {
       let prize = 0;
       if (A.diveDay !== day) { prize = score >= 350 ? 3 : score >= 200 ? 2 : score >= 80 ? 1 : 0; if (prize) { A.diveDay = day; save.berries = (save.berries || 0) + prize; } }
       const mask = score >= 250 && !own.includes('snorkelmask'); if (mask) own.push('snorkelmask');
-      persist(); if (best || prize || mask) sfx.jingle(2);
+      persist(); if (best || prize || mask) reward(2);
       w.say([`${score >= 250 ? 'WHAT A DIVE!' : score >= 80 ? 'Nice dive!' : 'Blub blub...'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: ${prize} 🍓 from my treasure tin! (One prize a day.)`] : A.diveDay !== day ? [`${who}: Score 80 or more and I'll pay you in berries! (One prize a day.)`] : []), ...(mask ? [`${who}: Two hundred and fifty! You're half fish. Take my spare goggles!`, '{hero} got the Dive Goggles! 🤿 (☰ → 🎩 Hats)'] : [])], null, who);
     });
     S.game.modalClose = () => el.__arcade.close();
@@ -1287,7 +1288,7 @@ function surf(S, w) {
       let prize = 0;
       if (A.surfDay !== day) { prize = score >= 450 ? 3 : score >= 250 ? 2 : score >= 100 ? 1 : 0; if (prize) { A.surfDay = day; save.berries = (save.berries || 0) + prize; } }
       const visor = score >= 300 && !own.includes('surfervisor'); if (visor) own.push('surfervisor');
-      persist(); if (best || prize || visor || moon) sfx.jingle(2);
+      persist(); if (best || prize || visor || moon) reward(2);
       w.say([`${score >= 300 ? 'TUBULAR!' : score >= 100 ? 'Nice ride!' : 'Wipeout!'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: Here, ${prize} 🍓 from the shack's jar! (One prize a day.)`] : A.surfDay !== day ? [`${who}: Score 100 or more and I'll pay you in berries! (One prize a day.)`] : []), ...(moon ? [`${who}: Your first moonlight ride! Not many surfers have seen the plankton glow. +5 🍓 🌙`] : []), ...(visor ? [`${who}: THREE HUNDRED?! You're a natural. Take my spare visor!`, "{hero} got the Surfer's Visor! 🏄 (☰ → 🎩 Hats)"] : [])], null, who);
     }, night);
     S.game.modalClose = () => el.__arcade.close();
@@ -1307,12 +1308,12 @@ function noodleCart(w) {
       if ((save.berries || 0) < 2) return w.say([`${who}: Two berries a bowl! Shake a bush or two and come back.`], null, who);
       const h = A.hero, c = save.critters[h] || (save.critters[h] = { level: 1, xp: 0 });
       save.berries -= 2; A.noodles = day;
-      const r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4)); persist(); sfx.jingle(2);
+      const r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4)); persist(); reward(2);
       for (let k = 0; k < 10; k++) w.g.fx.spawn({ x: w.hero.root.position.x + (Math.random() - 0.5) * 0.8, y: 1.6, z: w.hero.root.position.z, vx: (Math.random() - 0.5) * 1.4, vy: 1.5 + Math.random() * 1.5, vz: (Math.random() - 0.5) * 1.4, color: Math.random() < 0.5 ? 0xffe04a : 0x5ae8ff, size: 0.16, life: 0.9, shape: 'spark' });
       return w.say(['*SLURRRP* Spark noodles! They fizz all the way down. 🍜⚡', r.to > r.from ? `{hero} grew to Lv ${r.to}!` : '{hero} is buzzing with energy! (+XP)'], null, who);
     }
     if ((save.berries || 0) < hat.price) return w.say([`${who}: The ${hat.name}? ${hat.price} berries. I made them from old arcade lights!`], null, who);
-    save.berries -= hat.price; own.push(hat.id); A.hat = hat.id; persist(); sfx.jingle(2); w.wearHat();
+    save.berries -= hat.price; own.push(hat.id); A.hat = hat.id; persist(); reward(2); w.wearHat();
     w.say([`{hero} got the ${hat.name}! 🎩`, `${who}: Now {hero} glows like a real Neon City local!`], null, who);
   }, who);
 }
@@ -1345,7 +1346,7 @@ function hatShop(w) {
         const h = left.find((x) => x.id === id);
         if ((save.berries || 0) < h.price) return w.say([`${who}: The ${h.name} is ${h.price} berries. Shake a few berry bushes and come back!`], menu, who);
         save.berries -= h.price; own.push(h.id); A.hat = h.id; persist();
-        sfx.jingle(2); w.wearHat();
+        reward(2); w.wearHat();
         w.say([`{hero} got the ${h.name}! 🎩`, `${who}: Oh, it suits {hero} perfectly! Swap hats here any time, or in the wardrobe at home.`], null, who);
       }, () => { w.busy = false; menu(); }, true);
     }
@@ -1400,7 +1401,7 @@ function balloon(S, w, a) {
     w.say([`Captain Puff: Next stop, ${d.name}! Hold on to your ears!`], () => {
       w.busy = true;
       w.hero.root.visible = false; if (w.follower) w.follower.root.visible = false;
-      a.fly = 0; sfx.jingle?.(2);
+      a.fly = 0; reward(2);
       setTimeout(() => w.fade(() => w.load(d.map, d.x, d.y, d.dir)), 1500);
     });
   };
@@ -1461,7 +1462,7 @@ function sage(S, w) {
     if (k >= qs.length) {
       w.say(['Stone Sage: Hmm-hmm-hmm! Three for three. Wise AND strong.', 'Stone Sage: The bridge is yours. And take these berries. Thinking makes one hungry.'], () => {
         F.trial_wisdom = true; save.berries = (save.berries || 0) + 3; persist();
-        sfx.jingle(3); S.toast('🧠 Trial of Wisdom passed! 🍓 +3 berries');
+        reward(3); S.toast('🧠 Trial of Wisdom passed! 🍓 +3 berries');
         const a = w.npcs.find((n) => n.n.id === 'sage');
         if (a) { const p = a.root.position; w.g.fx.burst({ x: p.x, y: 1, z: p.z }, { n: 16, speed: 3, color: 0xd8d0c8, size: 0.6, shape: 'puff', additive: false, grav: -1 }); }
         w.removeNpc('sage');
@@ -1471,7 +1472,7 @@ function sage(S, w) {
     const Q = qs[k];
     w.ask(Q.q, Q.opts, (i) => {
       if (i !== Q.right) return fail();
-      sfx.jingle(1);
+      reward(1);
       w.say([['Stone Sage: Correct.', 'Stone Sage: Hmm. Correct again.', 'Stone Sage: ...Correct!'][k]], () => askN(k + 1));
     });
   };
@@ -1509,7 +1510,7 @@ function mama(S, w, a) {
     if (!save.unlocked.includes('squeakwing')) joined = unlock('squeakwing');
     persist();
     S.toast(joined ? '🦇 Squeakwing joined your team!' : '🤝 Trial of Friendship passed!');
-    sfx.jingle(3);
+    reward(3);
     const d = w.npcs.find((n) => n.n.id === 'dash3');
     w.say([
       '🤝 Trial of Friendship passed!',
@@ -1559,7 +1560,7 @@ function ferry(S, w) {
   w.ask(q, [...ports.map((p) => p[1]), 'Not yet'], (i) => {
     if (i >= ports.length) return w.say([home ? 'Captain Gill: The sea will still be here. Take your time!' : 'Captain Gill: Enjoy the sunshine!'], null, 'Captain Gill');
     const to = ports[i][0];
-    sfx.wave?.(); sfx.jingle?.(1);
+    sfx.wave?.(); reward(1);
     (save.adv.cnt ||= {}).ferry = (save.adv.cnt.ferry || 0) + 1;
     if (to !== 'atoll') save.adv.spawn = { ...getMap(`in:${to}:${to === 'coral' ? 'berry_c' : 'berry2'}`).exit }; // a lost battle brings you back to this side of the sea
     const line = to === 'coral' ? (home ? 'The Sunny Gull blows its horn and chugs out of the bay. Seashell Town shrinks behind you...' : 'The Sunny Gull swings round and heads back to Port Coral.')
@@ -1600,7 +1601,7 @@ function dashShow(S, w) {
     }), 'Dash');
   }
   if (!(save.adv.hats ||= []).includes('rivalband')) {
-    save.adv.hats.push('rivalband'); persist(); sfx.jingle?.(2);
+    save.adv.hats.push('rivalband'); persist(); reward(2);
     return w.say(["Dash: This was my lucky headband. I wore it for every battle since Sprout Village. ...Every battle I lost to you, too. Maybe it'll work better on you.", "{hero} got Dash's Headband! 🎩 (☰ → 🎩 Hats)", 'Dash: I\'ll still be here every day. One battle a day, island rules. And one day I\'ll win it back!'], null, 'Dash');
   }
   if (F['dashisle_' + day]) return w.say(["Dash: Okay, that's today's battle. I'm going to run laps round the lighthouse. Forty of them!"], null, 'Dash');
@@ -1625,7 +1626,7 @@ function dashAtoll(S, w) {
 function lumi(S, w, a) {
   const F = flags();
   if (!F.lantern) {
-    F.lantern = true; persist(); sfx.jingle?.(3);
+    F.lantern = true; persist(); reward(3);
     return w.say([
       "Keeper Lumi: One more thing, Champion. When I was young I explored every cave in the isles with this: my old Sun Lantern.",
       'Keeper Lumi: There\'s a chip of the Sunstone inside, so it never goes out. I hear there\'s a dark grotto under the Ash Trail that nobody has seen the end of...',
