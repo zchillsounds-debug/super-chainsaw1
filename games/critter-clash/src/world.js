@@ -1,7 +1,7 @@
 // Adventure mode: a Red/Blue style tile world drawn with the game's 3D toon look.
 // The hero (the critter the player picked) walks tile by tile; tall grass hides wild critters,
 // some roam in plain sight; trainers spot you from a distance; stadiums are the gyms.
-import { buzz, reward } from './haptics.js';
+import { buzz, reward, lastReward } from './haptics.js';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { toon, inked, canvasTex, outlineMatW } from './toon.js';
@@ -5214,6 +5214,7 @@ export class World {
       sm.textContent = name; sm.style.display = name ? '' : 'none';
       full = line; let i = 0; p.textContent = '';
       if (/grew to Lv \d+!/.test(line)) reward(2); // a level-up line gets its own little fanfare
+      else if (narr[k] && /\b(got|gets|receives|found|finds|picks up)\b/.test(line) && performance.now() - lastReward > 800) { sfx.pickup?.(); buzz('light'); } // '{hero} got…' lines chime (unless a reward jingle just played)
       clearInterval(timer);
       const [ms, step] = typeSpeed();
       timer = setInterval(() => { i += step; p.textContent = full.slice(0, i); if (i % 3 === 0 || step > 1) sfx.talk(name, full[i - 1] || 'a'); if (i >= full.length) clearInterval(timer); }, ms);
