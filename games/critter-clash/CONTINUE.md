@@ -20,7 +20,11 @@ The full, detailed handoff lives in the repo at `games/critter-clash/HANDOFF.md`
 - Session 16e (R255–R279) added: grass sway, new palms, chimney smoke, rain (world and fights), room furniture, the Berry Center smoothie blender, smooth water corners, trainer role hats, a natural meadow for wild fights, footprints, a night Town Map, doorway light, beach decor, falling leaves and petals, toadstool spores, and Pecan weather news.
 - Final checks for the session passed: tapcheck was clean at 740×360 and 412×915, the Sprout Cup played from the world and landed back there, and the wild-fight wins ran without errors.
 
-## Latest (2026-10-21): Chapter 2, a new 48-hour run
+## Latest (2026-10-24): the completion run (C1–C8)
+- The user started an 8-session **completion run**: `ROADMAP.md` → "Completion roadmap" (C1 close the open threads, C2 mainland story audit, C3 Chapter 2/post-game audit, C4 a 100% goal, C5 UI pass, C6 audio and feel, C7 stability, C8 release polish). The "Completion run" line at the top of HANDOFF.md names the next session. (No copy of the agreed plan was on any branch, so session C1 drafted it; the user's own plan replaces it if they post one.)
+- Session C1 (R723–R7xx): night WAVE RIDER, a Rainbow Reach moonbow and close stars at night, a battle crash fix (two cyclone supers at once), `tools/mapwalk.mjs` (every map's doors and edges) and `tools/mainwalk.mjs` (Chapter 1 gates), next-goal lines for the Deep Grotto and the Sunken Wreck, and a full balance robin.
+
+## Earlier (2026-10-21): Chapter 2, a new 48-hour run
 - **The user agreed `ROADMAP.md` (Chapter 2) and started a new 48-hour run; it ends at 2026-10-23 16:49 UTC** (top of HANDOFF.md; never reset it). Milestones in order: M1 new critters, M2 Chapter 2 region and story, M3 side content, M4 post-game.
 - Session 18a (R672–R680) finished **M1** (six original island critters: Smokeshell, Blowfin, Mossloth, Toucharge, Pumicub, Skimray, with growth forms and new specials) and started **M2**: the Sunny Gull ferry from Seashell Town (Champions only), Port Coral with the Coral Cup, Palm Path, the isles Town Map, island hats. Next round is R681. Blowfin/Pumicub balance needs a re-measure.
 - The npm registry was blocked in 18a's sandbox; HANDOFF "Session 18a" explains the static snapshot server used for the checks instead.
