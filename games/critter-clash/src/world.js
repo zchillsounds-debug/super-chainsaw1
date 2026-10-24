@@ -3447,7 +3447,7 @@ export class World {
       if (F.t >= F.bite) {
         F.phase = 'bite'; F.t = 0; sfx.warn?.(); this.bubble({ root: this.hero.root }, '❗');
         const p = new THREE.Vector3(); F.bob.getWorldPosition(p);
-        for (let k = 0; k < 8; k++) this.g.fx.spawn({ x: p.x, y: 0.1, z: p.z, vx: (Math.random() - 0.5) * 2, vy: 1 + Math.random() * 1.5, vz: (Math.random() - 0.5) * 2, color: 0xe8f6ff, size: 0.18, life: 0.5, shape: 'glow', additive: false, grav: 8 });
+        for (let k = 0; k < 8; k++) this.g.fx.spawn({ x: p.x, y: 0.1, z: p.z, vx: (Math.random() - 0.5) * 2, vy: 1 + Math.random() * 1.5, vz: (Math.random() - 0.5) * 2, color: this.M.lava ? 0xff9a3a : 0xe8f6ff, size: 0.18, life: 0.5, shape: 'glow', additive: false, grav: 8 });
       }
     } else if (act) this.reel('catch');
     else if (F.t > 0.85) this.reel('miss');
@@ -3461,10 +3461,10 @@ export class World {
     if (how === 'early') return this.say(['Too soon! The ripples fade away... Wait for the bobber to dip, then press A!']);
     if (how === 'miss') return this.say(['The bobber popped back up. Whatever it was got away!']);
     countUp('fish'); persist();
-    const r = Math.random(), W = (this.M.wild?.list || []).filter(([i]) => byId(i)?.type === 'water');
+    const r = Math.random(), W = (this.M.wild?.list || []).filter(([i]) => byId(i)?.type === (this.M.lava ? 'fire' : 'water')); // a lava pool hooks fire critters
     if (r < 0.45) {
       const lv = Math.max(2, (save.critters[save.adv.hero]?.level || 3) - 1);
-      const [id, lo, hi] = W.length ? W[Math.floor(Math.random() * W.length)] : [['bubbalotl', 'ripples', 'lilypop', 'pengsicle'][Math.floor(Math.random() * 4)], lv, lv];
+      const [id, lo, hi] = W.length ? W[Math.floor(Math.random() * W.length)] : [(this.M.lava ? ['cindermunch', 'emberfly', 'kindlekit', 'smokeshell'] : ['bubbalotl', 'ripples', 'lilypop', 'pengsicle'])[Math.floor(Math.random() * 4)], lv, lv];
       const name = byId(id)?.name || 'critter';
       return this.say([`{hero} reels it in... It's a wild ${name}! And it's not happy about it!`], () => this.startWild(id, lo + Math.floor(Math.random() * (hi - lo + 1)), null, Math.random() < shinyRate()));
     }
@@ -3477,7 +3477,7 @@ export class World {
       return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long!`, first ? `A seasonal visitor! It only swims here in ${sk}. Fisher Finn will want to hear about this! +3 🍓 (☰ → Journal → 🎣)` : `${name}s only visit in ${sk}. Splash! Back it goes, until next year.`, ...(hat ? ['That\'s all four seasonal fish! Fisher Finn sends over a hat with a koi on top: the Koi Bucket Hat! 🎣 (☰ → 🎩 Hats)'] : [])]);
     }
     if (r < 0.7) { // a fish! measured, and Fisher Finn keeps the record book
-      const kinds = FISH[this.phase === 'night' && !this.M.lava && Math.random() < 0.3 ? 'night' : this.phase === 'evening' && !this.M.lava && Math.random() < 0.3 ? 'dusk' : this.M.isle ? 'isle' : this.M.arena === 'beach' ? 'sea' : this.M.lava ? 'lava' : this.M.snow || this.M.border === 'cloud' ? 'cold' : 'pond'];
+      const kinds = FISH[this.phase === 'night' && !this.M.lava && Math.random() < 0.3 ? 'night' : this.phase === 'evening' && !this.M.lava && Math.random() < 0.3 ? 'dusk' : this.M.lava ? 'lava' : this.M.isle ? 'isle' : this.M.arena === 'beach' ? 'sea' : this.M.snow || this.M.border === 'cloud' ? 'cold' : 'pond'];
       const k = Math.random() < 0.12 ? kinds.length - 1 : Math.floor(Math.random() * (kinds.length - 1)), [name, lo, hi] = kinds[k];
       const cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };
       L.n++; const rec = !L.best || cm > L.best.cm, sp = (L.sp ||= {}); sp[name] = Math.max(sp[name] || 0, cm);
@@ -4957,7 +4957,7 @@ export class World {
       const opts = ['🪵 Twig race', ...(save.adv.flags.rod ? ['🎣 Fish'] : []), 'Never mind'];
       return this.ask('Two twigs lie on the bridge rail. Drop them in the river and see whose floats to the end first?', opts, (i) => opts[i] === '🪵 Twig race' ? this.twigRace() : opts[i] === '🎣 Fish' ? this.cast() : null);
     }
-    if (this.tile(fx, fy) === '~' && save.adv.flags.rod && !this.M.indoor && !this.M.lava) return this.cast();
+    if (this.tile(fx, fy) === '~' && save.adv.flags.rod && !this.M.indoor) return this.cast(); // lava pools too: Cinder Carp and Ember Eels bite there
     const sign = (this.M.signs || []).find((s) => s.x === fx && s.y === fy);
     if (sign?.act) return this.S.worldStory(sign.act, this, null);
     if (sign) return this.say([sign.text], null, sign.hide ? '' : '📜 Sign');
@@ -4977,7 +4977,7 @@ export class World {
     if (at(this.bush)) return 'Shake';
     if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
     if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest, this.melon, this.picnic, this.snowman].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
-    if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod && !this.M.lava) return 'Fish'; }
+    if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod) return 'Fish'; }
     const sign = (this.M.signs || []).find((g) => g.x === fx && g.y === fy);
     if (sign) return sign.act ? ({ pcbox: 'Swap', board: 'Read', gauntsign: 'Read', smoothie: 'Blend', hatshop: 'Shop', rest: 'Rest', wardrobe: 'Open', mirror: 'Look', shelf: 'Look', arcade: 'Play', 'arcade:hop': 'Play' }[sign.act] || (sign.act.startsWith('case:') ? 'Look' : 'Use')) : sign.hide ? 'Look' : 'Read';
     if (this.dir === 'n' && this.doors.some(at)) return 'Enter';
