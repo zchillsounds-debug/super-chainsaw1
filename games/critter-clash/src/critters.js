@@ -123,6 +123,9 @@ const decalMat = (map) => new THREE.MeshBasicMaterial({
 });
 
 const faceTexCache = new Map();
+// per-look decal textures (mask, sloth, owl, penguin faces): shared by every critter with the same colours, never disposed
+const decalTexCache = new Map();
+const decalTex = (key, w, h, draw) => decalTexCache.get(key) || decalTexCache.set(key, canvasTex(w, h, draw)).get(key);
 function faceTextures(def) {
   const key = def.id + (def.skin || '');
   if (faceTexCache.has(key)) return faceTexCache.get(key);
@@ -517,7 +520,7 @@ export class Critter {
     this.mouthMat = decalMat(ft.mouths.smile);
     const er = headR * 1.012;
     if (def.extra === 'mask') {
-      const maskTex = canvasTex(256, 96, (c, w, h) => {
+      const maskTex = decalTex('mask', 256, 96, (c, w, h) => {
         c.fillStyle = '#3a3048';
         c.beginPath(); c.ellipse(w * 0.3, h * 0.5, w * 0.24, h * 0.42, 0.15, 0, Math.PI * 2); c.fill();
         c.beginPath(); c.ellipse(w * 0.7, h * 0.5, w * 0.24, h * 0.42, -0.15, 0, Math.PI * 2); c.fill();
@@ -528,7 +531,7 @@ export class Critter {
     if (def.extra === 'sloth') {
       // sleepy sloth face: dark tear-drop patches that slant down from each eye on a pale face disc
       const pale = '#' + new THREE.Color(C.belly).getHexString(), dk = '#' + new THREE.Color(C.dark).getHexString();
-      const slothTex = canvasTex(256, 128, (c, w, h) => {
+      const slothTex = decalTex('sloth' + pale + dk, 256, 128, (c, w, h) => {
         c.fillStyle = pale; c.beginPath(); c.ellipse(w * 0.5, h * 0.56, w * 0.47, h * 0.44, 0, 0, Math.PI * 2); c.fill();
         c.fillStyle = dk;
         for (const s of [-1, 1]) { c.beginPath(); c.ellipse(w * (0.5 + s * 0.2), h * 0.6, w * 0.15, h * 0.2, s * -0.55, 0, Math.PI * 2); c.fill(); }
@@ -538,7 +541,7 @@ export class Critter {
     if (def.extra === 'owl') {
       // pale facial disc around both eyes
       const belly = '#' + new THREE.Color(C.belly).getHexString();
-      const diskTex = canvasTex(256, 128, (c, w, h) => {
+      const diskTex = decalTex('owl' + belly, 256, 128, (c, w, h) => {
         c.fillStyle = belly;
         c.beginPath(); c.ellipse(w * 0.3, h * 0.5, w * 0.27, h * 0.46, 0, 0, Math.PI * 2); c.fill();
         c.beginPath(); c.ellipse(w * 0.7, h * 0.5, w * 0.27, h * 0.46, 0, 0, Math.PI * 2); c.fill();
@@ -548,7 +551,7 @@ export class Critter {
     if (def.extra === 'penguin') {
       // white heart-shaped face over the dark head
       const belly = '#' + new THREE.Color(C.belly).getHexString();
-      const faceTex = canvasTex(256, 160, (c, w, h) => {
+      const faceTex = decalTex('penguin' + belly, 256, 160, (c, w, h) => {
         c.fillStyle = belly;
         c.beginPath();
         c.moveTo(w * 0.5, h * 0.3);
