@@ -695,6 +695,7 @@ kbd { font-family: var(--display); font-size: 12px; background: #fff; color: var
 .train-pick .row { display: flex; gap: 10px; justify-content: flex-end; position: sticky; bottom: -20px; z-index: 2; margin: 12px -22px -20px; padding: 10px 22px 14px; background: var(--cream); border-radius: 0 0 24px 24px; box-shadow: 0 -10px 12px -10px rgba(27,17,64,.35); }
 .train-pick .modal.more { -webkit-mask-image: none; mask-image: none; }
 @media (max-height: 420px) { .tp-foe { width: 35px; height: 35px; font-size: 18px; } .tp-foes { gap: 3px; } /* 26 critters: two rows on a short landscape phone */ .tp-ar, .tp-hz, .tp-mod { padding: 6px 10px; font-size: 13px; } .train-pick small { margin: 3px 0 3px; } .train-pick h2 { margin-bottom: 0; } }
+@media (max-height: 420px) and (min-width: 640px) { .train-pick:not(.trial-pick):not(.team-pick) .modal { max-width: min(640px, 94vw); } } /* 29 critters and Random: fifteen to a row, so still two rows */
 /* portrait battles (desktop windows, tablets): compact bars that fit beside the timer */
 body.portrait .pbar { min-width: 0; }
 body.portrait .pbar .portrait { width: 40px; height: 40px; }
@@ -990,7 +991,7 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .jr-tabs { display: flex; gap: 8px; justify-content: center; margin: -4px 0 8px; }
 .jr-tabs button { font: inherit; font-weight: 800; font-size: 14px; border: 0; border-radius: 999px; padding: 6px 12px; white-space: nowrap; background: rgba(60,40,20,.1); color: inherit; cursor: pointer; }
 .jr-tabs button.on { background: #ffd23f; color: #3a2a10; }
-.jr-list { list-style: none; margin: 0 0 10px; padding: 0 4px 0 0; max-height: min(52vh, 360px); overflow-y: auto; text-align: left; }
+.jr-list { list-style: none; margin: 0 0 10px; padding: 0 4px 0 0; height: min(52vh, 360px); overflow-y: auto; text-align: left; } /* a fixed height, so the tabs stay put when you switch pages */
 .jr-row { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 12px; background: rgba(60,40,20,.07); margin-bottom: 6px; }
 .jr-row img { width: 44px; height: 44px; margin: 0; flex: none; }
 .jr-row b { display: block; font-size: 14px; }
@@ -1006,8 +1007,8 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .jr-fish b { flex: 1; } .jr-fish b small { font-size: 10px; background: #b77aff; color: #fff; border-radius: 6px; padding: 1px 5px; margin-left: 4px; }
 .jr-fish em { font-style: normal; font-weight: 800; }
 .jr-fish:not(.got) { opacity: .55; }
-@media (max-height: 420px) { .jr-list { max-height: 46vh; } .wd-journal h2 { margin-bottom: 4px; } }
-@media (min-height: 700px) and (max-aspect-ratio: 3/4) { .jr-list { max-height: min(62vh, 640px); } } /* tall phones: let the Journal use the height instead of scrolling a short list */
+@media (max-height: 420px) { .jr-list { height: 46vh; } .wd-journal h2 { margin-bottom: 4px; } }
+@media (min-height: 700px) and (max-aspect-ratio: 3/4) { .jr-list { height: min(62vh, 640px); } } /* tall phones: let the Journal use the height instead of scrolling a short list */
 
 /* Adventure hat picker */
 .hat-pick { width: min(560px, 96vw); }
@@ -1126,7 +1127,8 @@ body.portrait:has(.camp-screen) .toast { top: calc(112px + var(--sat)); } /* bel
 /* short landscape phones: the Journal's lists run in two columns, so a page shows twice as much without scrolling */
 @media (max-height: 420px) and (min-width: 600px) {
   .wd-journal { max-width: min(760px, 94vw); width: min(760px, 94vw); }
-  .wd-journal .jr-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8px; align-content: start; max-height: calc(100vh - 190px); }
+  .wd-journal .jr-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8px; align-content: start; height: calc(100vh - 150px); }
+  .wd-journal h2 { display: none; } .wd-journal .jr-tabs { margin-top: 0; } /* the tabs say where you are; the list gets the room */
   .wd-journal .jr-head, .wd-journal .jr-more, .wd-journal .jr-tip, .wd-journal .jr-note, .wd-journal .jr-stars { grid-column: 1 / -1; }
   .wd-journal .jr-head:not(:first-child) { margin-top: 4px; }
   .wd-journal .jr-fish, .wd-journal .jr-rec, .wd-journal .jr-row { margin-bottom: 4px; min-width: 0; }

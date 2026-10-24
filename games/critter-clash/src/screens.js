@@ -1345,7 +1345,7 @@ export class Screens {
     const d = document.createElement('div');
     d.className = 'modal-wrap';
     const giver = (id) => { const lc = favourList().rows.find((r) => r.id === id)?.critter; if (lc) return CRITTERS.find((c) => c.id === lc); for (const M of Object.values(MAPS)) { const n = (M.npcs || []).find((x) => x.story === 'lost:' + id); if (n) return CRITTERS.find((c) => c.id === n.critter); } return null; };
-    let body = '';
+    let body = '', recPc = null;
     if (tab === 'fav') {
       const { rows, unasked } = favourList();
       body = rows.map((r) => { const c = giver(r.id); return `<li class="jr-row ${r.state}">${c ? `<img src="${this.game.portrait(c)}" alt="">` : ''}<div><b>${r.toast} ${r.who} <small>${r.home}</small></b><span>${r.state === 'done' ? '✅ ' : r.state === 'found' || r.deliver ? '📦 ' : '🔍 '}${r.text}</span></div></li>`; }).join('')
@@ -1359,7 +1359,7 @@ export class Screens {
           : `<button class="al-card"><i>${save.adv.seen?.[l.map] ? '❔' : '🔒'}</i><b>${save.adv.seen?.[l.map] ? l.name : '???'}</b><small>${save.adv.seen?.[l.map] ? MAPS[l.map].name : 'somewhere new'}</small></button>`;
       body = R.body + `<li class="jr-head">📸 Photo album <small>${snaps.length}/${LANDMARKS.length}</small></li><li class="jr-album">${LANDMARKS.map(card).join('')}</li>`
         + (snaps.length < LANDMARKS.length ? '<li class="jr-more">Stand by a landmark and take a ☰ → 📸 Photo to add it.</li>' : '') + (nx ? `<li class="jr-more">🎁 Next reward at ${nx}% explored${nx === 100 ? ': something golden!' : '.'}</li>` : '<li class="jr-more">🌟 Every corner explored. Visit your statue in Sprout Village!</li>');
-      this.exploreCheck(R.pc);
+      recPc = R.pc;
     } else if (tab === 'today') { // every daily thing in one list: done today, or where to go for it
       const { rows, after, night } = this.todayList();
       const row = ([ic, name, where, done]) => `<li class="jr-fish jr-day ${done ? 'got' : ''}"><span>${done ? '✅' : ic}</span><b>${name}</b><em>${done ? 'done' : where}</em></li>`;
@@ -1422,6 +1422,7 @@ export class Screens {
     d.querySelector('.res-btns').appendChild(this.btn('Close', 'ghost', () => { close(); this.worldMenu(); }));
     this.game.modalClose = close;
     this.root.appendChild(d);
+    if (recPc != null) this.exploreCheck(recPc); // after the modal is up, so its toast drops to the bottom edge
   }
 
   // Adventure wardrobe / Hat Shop: the hero wearing each hat they own; tap to put it on
