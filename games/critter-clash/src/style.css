@@ -901,6 +901,8 @@ body:not(.is-touch) .wd-a { display: none; }
 .hero-grid button { background: #efe8fb; border-radius: 14px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; font-family: var(--display); font-size: 13px; color: var(--ink); }
 .hero-grid button img { width: 64px; height: 64px; margin: 0; }
 @media (max-height: 420px) { .hero-pick p { display: none; } .hero-pick h2 { margin-bottom: 6px; } .hero-pick .hero-grid { max-height: 58vh; margin-bottom: 8px; } .hero-pick .hero-grid button img { width: 52px; height: 52px; } } /* short landscape phones: the Back button stays on screen with a full team */
+.hero-pick .hero-grid { grid-template-columns: repeat(auto-fit, minmax(84px, 108px)); justify-content: center; } /* a new save's three starters sat left in a wide box */
+.hero-pick .hero-grid i.hp-pal { font-size: 11px; opacity: 1; color: #b5761a; font-family: var(--display); margin-top: 2px; }
 .hero-pick .hp-sub { display: flex; align-items: center; gap: 4px; margin-top: 3px; font-family: var(--body); font-weight: 900; font-size: 11px; opacity: .85; }
 .hero-pick .hp-sub .mini-type { font-size: 10px; padding: 0 6px; margin: 0; -webkit-text-stroke-width: 2px; }
 .hero-grid button:hover { background: #ffe9a8; }
