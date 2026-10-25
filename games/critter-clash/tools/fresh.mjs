@@ -21,8 +21,13 @@ try {
   await tapText(/Yes/); await shot('after yes');
   await tapText(/Let's go/); await pg.waitForTimeout(1500); await shot('title');
   await tapText(/Adventure/); await pg.waitForTimeout(2500); await shot('adventure');
-  for (let i = 0; i < 6; i++) { await pg.mouse.click(w / 2, h * 0.8); await pg.waitForTimeout(700); }
-  await shot('adventure after taps');
+  await pg.locator('.hero-pick .hero-grid button').first().tap(); await pg.waitForTimeout(3000); await shot('world');
+  for (let i = 0; i < 24; i++) { // tap through the opening dialogue, a shot every few lines
+    const say = await pg.evaluate(() => document.querySelector('.wd-box')?.innerText?.replace(/\s+/g, ' ').slice(0, 90) || '');
+    if (i % 4 === 0) await shot('say: ' + say);
+    await pg.mouse.click(w / 2, h * 0.85); await pg.waitForTimeout(600); await pg.evaluate(() => window.__sim?.(0.6));
+  }
+  await shot('after intro');
   console.log('mode', await pg.evaluate(() => __game.screens.mode + ' ' + JSON.stringify({ map: __save.adv?.map, x: __save.adv?.x, y: __save.adv?.y })));
 } catch (e) { console.log('FAIL', e.message.split('\n')[0]); await shot('fail'); }
 console.log('errors:', errs.slice(0, 8).join(' | ') || 'none');
