@@ -4839,7 +4839,8 @@ export class World {
     // portrait outdoors stands further back with a narrower lens (same ground width in view): a wide 80° lens blew the treetops under the camera up into big flat discs
     const far = port && !this.M.indoor, H = far ? 28 : port ? 21 : 17, D = far ? 19.5 : port ? 10 : 11.5;
     // landscape stops short of the south border, so the last rows aren't half a screen of wall roofs (Neon City's south road)
-    const cz = !port && !this.M.indoor ? Math.min(p.z, (this.H - 4.2) * TILE) : p.z;
+    // portrait sees ~11 rows below the hero: near the south edge it holds back up to 3 rows on short maps (the 13-row routes were a third border skirt), 1.5 on tall ones (the hero stays clear of the joystick)
+    const cz = this.M.indoor ? p.z : port ? Math.max(p.z - (this.H <= 14 ? 3 : 1.5) * TILE, Math.min(p.z, (this.H - 11) * TILE)) : Math.min(p.z, (this.H - 4.2) * TILE);
     const want = new THREE.Vector3(p.x, H, cz + D);
     // rooms are small: hold the whole room in view (portrait backs off far enough to fit the room's width)
     const vw = Math.min(this.W, port ? (this.M.indoor === 'arcade' ? 10 : 5.6) : 7.5); // the arcade backs off a little more, so its cabinets show from the door // wide rooms: portrait shows 5.6 tiles (so the room fills more of a tall screen) and pans with the hero
