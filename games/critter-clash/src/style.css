@@ -406,6 +406,10 @@ body.portrait .cup { flex: none; width: 100%; }
 .tog::after { content: ''; position: absolute; left: 4px; top: 4px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 0 rgba(0,0,0,.2); transition: transform .15s; }
 .tog:checked { background: var(--violet); }
 .tog:checked::after { transform: translateX(24px); }
+@media (max-width: 380px) { /* 360 px phones: the segment rows, sliders and toggles ran past the panel's right edge */
+  .set { gap: 8px; font-size: 14px; } .set > * { min-width: 0; } .set input[type=range] { flex-basis: 150px; }
+  .seg button { padding: 4px 7px; font-size: 12px; }
+}
 .set-foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .btn.ghost-dark { background: none; color: #c03a5a; box-shadow: inset 0 0 0 3px #f0b8c6; font-size: 15px; }
 .btn.ghost-dark.armed { background: #ff4f6a; color: #fff; box-shadow: none; }
@@ -1013,7 +1017,7 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 @media (min-height: 700px) and (max-aspect-ratio: 3/4) { .jr-list { height: min(62vh, 640px); } } /* tall phones: let the Journal use the height instead of scrolling a short list */
 
 /* Adventure hat picker */
-.hat-pick { width: min(560px, 96vw); }
+.hat-pick { width: min(560px, calc(100vw - 32px)); } /* the wrap pads 16 px a side: 96vw ran 2 px off a 360 px phone */
 .hat-pick p { margin: -6px 0 8px; font-weight: 700; }
 .hat-pick .hero-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); max-height: min(50vh, 340px); }
 .hat-pick .hero-grid button img { width: 60px; height: 60px; }
