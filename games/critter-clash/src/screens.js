@@ -408,6 +408,13 @@ export class Screens {
         "Snorkeller Pia in Port Coral says she found a shipwreck off the reef. A real one, a hundred years old! If you've helped Morra send back Pia's goggles, she'll take you diving.",
         "And the Gloom Gulls have started a FISHING club on Starfall Atoll. Petrel names a catch of the day. I'm told the club record is four boots.",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.sunstone && save.news?.includes('adv31') && !save.news.includes('adv32')) {
+      save.news.push('adv32'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! Assistant Pele wrote from Ember Isle: the Volcano Lab finally has proper lab benches and a growth chamber. Until now they'd been doing science on the kitchen table!",
+        ...(isAutumn() || isEarlyAutumn() ? ["Gardener Bea has filled an apple-bobbing tub in Bloom Town while the leaves are falling. One apple a day, and no paws allowed!"] : []),
+        save.adv.flags.grand_done ? "I've been showing everyone the photos from your 100% day. Mom has watched the parade twice." : "And if you ever see every corner of Clashara and the isles, come straight to my lab. I'm planning a parade. A big one.",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
