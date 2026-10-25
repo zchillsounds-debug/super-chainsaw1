@@ -780,7 +780,7 @@ export const MAPS = {
       { id: 'stadium_e', x: 3, y: 2, w: 8, h: 4, stadium: 'caldera', door: 4, label: 'Caldera Stadium' },
       { id: 'berry_e', x: 21, y: 2, w: 4, h: 3, roof: 0xff7aa0, door: 2, label: 'Berry Center', heal: true },
       { id: 'shack_e', x: 3, y: 8, w: 4, h: 3, roof: 0xff8a3a, door: 2, label: 'Surf Shack' },
-      { id: 'lab_e', x: 20, y: 8, w: 5, h: 3, roof: 0xe8e8e8, wall: 0xd8d4d0, door: 3, label: 'Volcano Lab' },
+      { id: 'lab_e', x: 20, y: 8, w: 5, h: 3, roof: 0xe8e8e8, wall: 0xd8d4d0, door: 3, label: 'Volcano Lab', lab: true }, // a real lab inside (it was furnished as a house) and the lab's dish on the roof
     ],
     signs: [{ x: 16, y: 7, text: 'EMBER ISLE\nHome of the Caldera Cup. The volcano is asleep. Shh.' }],
     updrafts: [{ x: 19, y: 1, to: 'rim', tx: 8, ty: 11, dir: 'n', name: 'the Caldera Rim', hot: true }], // M3: a volcano thermal; the Kite Glider rides it up to the hidden crater rim
