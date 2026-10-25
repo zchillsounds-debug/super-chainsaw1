@@ -367,7 +367,7 @@ export class Screens {
         "{name}, Fisher Finn tells me some fish only visit Clashara in one season: a Blossom Koi in spring, a Sunburst Perch in summer, a Maple Trout in autumn and a Snowflake Smelt in winter!",
         "They bite in any water but lava. The Journal keeps them in their own little list, and the 📅 Today page reminds you while the season's fish is still out there.",
         "And listen to the townsfolk, too. They love to chat about the blossom, the sunflowers, the falling leaves and the snow.",
-        "Two more seasonal treats: on spring days Bea leaves a picnic by the Route 1 pond, on summer days Finn leaves a watermelon on Seashell beach (whack it open!), and on winter days you can roll a snow critter in Sprout Village.",
+        "More seasonal treats: on spring days Bea leaves a picnic by the Route 1 pond, on summer days Finn leaves a watermelon on Seashell beach (whack it open!), in autumn Bea fills an apple-bobbing tub in Bloom Town, and on winter days you can roll a snow critter in Sprout Village.",
         "Oh, and two more townsfolk have parcels that need carrying: Surfer Pengsicle in Seashell Town and Elder Oakley in Glowcap Hollow. Look for the ❗!",
       ]), 600);
     } else if (!g.autoplay && save.adv?.flags?.quest && save.news?.includes('adv26') && !save.news.includes('adv27')) {
@@ -1247,6 +1247,7 @@ export class Screens {
         ['♨️', 'Soak in the hot spring', N('ember'), A.soak === day, seen.ember],
         ['🪵', 'Win a twig race', `${N('route2')} bridge`, A.twig === day, seen.route2],
         ['🦋', 'Catch five butterflies', `${N('route1')} (by day)`, A.flutter === day, seen.route1 && (this.worldObj?.outPhase === 'day' || A.flutter === day)],
+        ['🍎', 'Bob for an apple', `${N('bloom')} (autumn, by day)`, A.apple === day, (isAutumn() || isEarlyAutumn()) && seen.bloom && (this.worldObj?.outPhase !== 'night' || A.apple === day)], // autumn only (world.js buildApples)
         ['🍉', 'Split a watermelon', `${N('seashell')} beach (by day)`, A.melon === day, isSummer() && seen.seashell && (this.worldObj?.outPhase === 'day' || A.melon === day)], // summer only (world.js buildMelon)
         ['🧺', 'Spring picnic', `${N('route1')} pond (by day)`, A.picnic === day, (isSpring() || isMeadow()) && seen.route1 && (this.worldObj?.outPhase === 'day' || A.picnic === day)], // spring only (world.js buildPicnic)
         ['☃️', 'Build a snow critter', `${N('village')} (winter days)`, A.snowman?.day === day && A.snowman.n >= 3, isWinter() && seen.village && (this.worldObj?.outPhase !== 'night' || A.snowman?.day === day)], // Jan-Feb (world.js buildSnowman)
@@ -1348,7 +1349,7 @@ export class Screens {
       + bar('⛲', 'Wishes made', A.cnt?.wish || 0)
       + bar('🍄', 'Fairy ring songs', A.cnt?.ring || 0)
       + bar('♨️', 'Hot spring soaks', A.cnt?.soak || 0)
-      + (A.cnt?.melon ? bar('🍉', 'Watermelons split', A.cnt.melon) : '') + (A.cnt?.picnic ? bar('🧺', 'Spring picnics', A.cnt.picnic) : '') + (A.cnt?.snowman ? bar('☃️', 'Snow critters built', A.cnt.snowman) : '')
+      + (A.cnt?.melon ? bar('🍉', 'Watermelons split', A.cnt.melon) : '') + (A.cnt?.picnic ? bar('🧺', 'Spring picnics', A.cnt.picnic) : '') + (A.cnt?.apple ? bar('🍎', 'Apples bobbed', A.cnt.apple) : '') + (A.cnt?.snowman ? bar('☃️', 'Snow critters built', A.cnt.snowman) : '')
       + (A.cnt?.care ? bar('🧸', 'Daycare stays', A.cnt.care) : '')
       + (A.cnt?.egg ? bar('🐣', 'Eggs hatched', A.cnt.egg) : '')
       + (A.grown?.length ? bar('🏡', 'Grown up at home', A.grown.length) : '')
@@ -1581,7 +1582,7 @@ export class Screens {
     const gnt = F.ending && !F['gauntpay_' + gauntletWeek()] && !MAPS[here]?.isle; // ⚔️ this week's Peak Gauntlet is still open
     const btl = !MAPS[here]?.isle && w.outPhase === 'night' && seen.seashell && save.adv.bottle !== new Date().toISOString().slice(0, 10); // 🍾 tonight's message in a bottle is still on Seashell's shore
     const scope = !MAPS[here]?.isle && w.outPhase === 'night' && seen.village && save.adv.stars !== new Date().toISOString().slice(0, 10); // 🔭 tonight's constellation in Sprout Village is still to be spotted
-    const day = new Date().toISOString().slice(0, 10), daily = { cloudtop: save.adv.wish !== day && '⛲', ember: save.adv.soak !== day && '♨️', glowcap: w.outPhase === 'night' && save.adv.ring !== day && '🍄', village: w.morning && save.adv.breakfast !== day && '🥞', seashell: ((w.outPhase === 'evening' && save.adv.sunset !== day ? '🌅' : '') + (save.adv.flags.rod && save.adv.derbyWk !== gauntletWeek() ? '🎣' : '') + (isSummer() && w.outPhase === 'day' && save.adv.melon !== day ? '🍉' : '')) || false, frostpeak: save.adv.snowball !== day && '⛄', bloom: (save.adv.garden?.stage >= 4 || save.adv.garden?.last !== day) && '🌻', route2: save.adv.twig !== day && '🪵', route1: (isSpring() || isMeadow()) && w.outPhase === 'day' && save.adv.picnic !== day && '🧺' }; // (+ the summer watermelon and the spring picnic) // a wish, a soak and tonight's fairy-ring song still to do
+    const day = new Date().toISOString().slice(0, 10), daily = { cloudtop: save.adv.wish !== day && '⛲', ember: save.adv.soak !== day && '♨️', glowcap: w.outPhase === 'night' && save.adv.ring !== day && '🍄', village: w.morning && save.adv.breakfast !== day && '🥞', seashell: ((w.outPhase === 'evening' && save.adv.sunset !== day ? '🌅' : '') + (save.adv.flags.rod && save.adv.derbyWk !== gauntletWeek() ? '🎣' : '') + (isSummer() && w.outPhase === 'day' && save.adv.melon !== day ? '🍉' : '')) || false, frostpeak: save.adv.snowball !== day && '⛄', bloom: (((save.adv.garden?.stage >= 4 || save.adv.garden?.last !== day) ? '🌻' : '') + ((isAutumn() || isEarlyAutumn()) && w.outPhase !== 'night' && save.adv.apple !== day ? '🍎' : '')) || false, route2: save.adv.twig !== day && '🪵', route1: (isSpring() || isMeadow()) && w.outPhase === 'day' && save.adv.picnic !== day && '🧺' }; // (+ the summer watermelon and the spring picnic) // a wish, a soak and tonight's fairy-ring song still to do
     const snap = new Set(LANDMARKS.filter((l) => !(save.adv.snaps || []).includes(l.id)).map((l) => l.map)); // 📸 a landmark here still to photograph (the name gets a little camera)
     const pearlHunt = Object.keys(MAPS).some((k) => MAPS[k].pearl && F['pearl_' + k]); // R762: 🦪 by a map's name while its hidden pearl is still out there (once you've found your first)
     const fav = {}; for (const r of favourList().rows) if (r.at && !fav[r.at]) fav[r.at] = r.state === 'found' || r.deliver ? '📦' : '🔍'; // open favours: where to look, or who to take it back to

@@ -468,7 +468,7 @@ export class World {
     this.buildPumpkins();
     this.buildXtree();
     this.buildScarecrow();
-    this.buildMelon(); this.buildPicnic(); this.buildSnowman();
+    this.buildMelon(); this.buildPicnic(); this.buildSnowman(); this.buildApples();
     this.buildWisps(x, y);
     this.buildFlutters(x, y);
     this.buildMoonflowers();
@@ -2530,6 +2530,37 @@ export class World {
     M.whole.visible = false; M.halves.visible = true; sfx.hit?.(); reward(2);
     const p = M.g.position; for (let k = 0; k < 16; k++) this.g.fx.spawn({ x: p.x, y: 0.5, z: p.z, vx: (Math.random() - 0.5) * 4, vy: 2 + Math.random() * 3, vz: (Math.random() - 0.5) * 4, color: [0xff4a5a, 0xff8a9a, 0x5ac84a][k % 3], size: 0.22, life: 0.8, grav: 9 });
     return this.say(['A big striped watermelon sits on a beach towel, with a stick beside it. A note says: "SUMMER SPLASH! Whack it open and share! — Finn"', '{hero} lines up, closes their eyes, and... THWACK! Right down the middle! Juice everywhere!', `Sweet, cold and crunchy. Two seeds turn out to be berries! +2 🍓 ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
+  }
+
+  // autumn (September to mid-November) in Bloom Town: Bea's apple-bobbing tub by the road, by day and evening; A = bob for one (once a day)
+  buildApples() {
+    this.apples = null;
+    if (this.key !== 'bloom' || !(isAutumn() || isEarlyAutumn()) || this.phase === 'night') return;
+    const spot = this.propSpot([[9, 11], [8, 11], [9, 12], [10, 11]], '.'); if (!spot) return;
+    const [x, y] = spot, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.rotation.y = 0.4; g.scale.setScalar(1.35); this.group.add(g); this.solid.add(x + ',' + y);
+    const wood = toon(0xa8743e, { rim: 0.4 }), hoop = toon(0x5a5a66);
+    const tub = inked(new THREE.CylinderGeometry(0.5, 0.42, 0.5, 18, 1, true), wood, OL * 0.5); tub.position.y = 0.25; tub.castShadow = true; g.add(tub);
+    const inside = new THREE.Mesh(new THREE.CylinderGeometry(0.47, 0.4, 0.48, 18, 1, true), toon(0x7a5028, { side: THREE.BackSide })); inside.position.y = 0.25; g.add(inside);
+    for (const hy of [0.1, 0.42]) { const h = new THREE.Mesh(new THREE.TorusGeometry(0.47 + (hy - 0.1) * 0.1, 0.022, 5, 22), hoop); h.rotation.x = Math.PI / 2; h.position.y = hy; g.add(h); }
+    const water = new THREE.Mesh(new THREE.CircleGeometry(0.47, 20), toon(0x5ab8e8, { rim: 0.5 })); water.rotation.x = -Math.PI / 2; water.position.y = 0.44; g.add(water);
+    const red = toon(0xe8323a, { rim: 0.5 }), green = toon(0x8ad040, { rim: 0.5 }), stem = toon(0x5a3a1a), fruit = [];
+    const apple = (m) => { const a = new THREE.Group(), b = inked(new THREE.SphereGeometry(0.1, 12, 9), m, OL * 0.3); b.scale.set(1, 0.9, 1); a.add(b); const s = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.01, 0.06, 4), stem); s.position.y = 0.1; a.add(s); return a; };
+    [[0.16, 0.1], [-0.18, 0.14], [0.02, -0.2], [-0.1, -0.04], [0.22, -0.14]].forEach(([ax, az], k) => { const a = apple(k === 3 ? green : red); a.position.set(ax, 0.47, az); a.rotation.set(0.3 * k, k, 0.2); g.add(a); fruit.push(a); });
+    const crate = inked(new THREE.BoxGeometry(0.42, 0.24, 0.3), wood, OL * 0.4); crate.position.set(0.62, 0.12, 0.2); crate.rotation.y = -0.3; crate.castShadow = true; g.add(crate);
+    for (let k = 0; k < 4; k++) { const a = apple(k % 3 ? red : green); a.position.set(0.52 + (k % 2) * 0.18, 0.27, 0.13 + Math.floor(k / 2) * 0.14); g.add(a); }
+    this.apples = { x, y, g, fruit };
+    this.appleShow();
+  }
+
+  appleShow() { const done = save.adv.apple === new Date().toISOString().slice(0, 10); this.apples.fruit[0].visible = !done; }
+
+  appleBob() {
+    const day = new Date().toISOString().slice(0, 10), A = save.adv, p = this.apples.g.position;
+    if (A.apple === day) return this.say([['Apples bob about in the tub. {hero} is still drying their ears.', 'A leaf floats down and lands in the tub. It does not count as an apple.'][(this.steps + new Date().getDate()) % 2], 'Bea tops up the tub every autumn morning.']);
+    A.apple = day; countUp('apple'); save.berries = (save.berries || 0) + 1; const rr = grantXp(A.hero, Math.round(xpNeeded(save.critters[A.hero].level) * 0.12)); persist(); reward(2);
+    this.appleShow(); sfx.water?.();
+    for (let k = 0; k < 14; k++) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.6, y: 0.7, z: p.z + (Math.random() - 0.5) * 0.6, vx: (Math.random() - 0.5) * 2.5, vy: 1.5 + Math.random() * 2, vz: (Math.random() - 0.5) * 2.5, color: k % 3 ? 0x9fdcff : 0xffffff, size: 0.18, life: 0.7, grav: 8 });
+    return this.say(['A wooden tub full of water and bobbing apples, with a crate beside it. A sign says: "AUTUMN APPLES! Bob for one. No paws! — Bea"', '{hero} takes a deep breath, dunks their whole face in... and comes up with an apple! SPLOOSH!', `Crunchy and sweet. There was a berry stuck to it, too! +1 🍓 ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : 'A little XP for being brave.'}`]);
   }
 
   // spring days on Route 1: a picnic blanket and basket by the pond, under the blossom; A = sit and share a sandwich (once a day)
@@ -4946,6 +4977,7 @@ export class World {
     if (this.scare && this.scare.x === fx && this.scare.y === fy) return this.scareTalk();
     if (this.melon && this.melon.x === fx && this.melon.y === fy) return this.melonSplit();
     if (this.picnic && this.picnic.x === fx && this.picnic.y === fy) return this.picnicSit();
+    if (this.apples && this.apples.x === fx && this.apples.y === fy) return this.appleBob();
     if (this.snowman && this.snowman.x === fx && this.snowman.y === fy) return this.snowRoll();
     if (this.roomFest && this.roomFest.x === fx && this.roomFest.y === fy) return this.say([this.roomFest.tw ? 'A little potted tree, hung with baubles and a golden star. Even indoors, it\'s Twinkle Week!' : this.outPhase === 'day' ? 'Two carved pumpkins wait in the corner for nightfall. The big one has a wonky grin.' : 'Two jack-o\'-lanterns flicker in the corner, grinning at {hero}. Happy Pumpkin Nights!']);
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
@@ -4987,7 +5019,7 @@ export class World {
     if (this.follower && at(this.follower) && !this.follower.from) return 'Pet';
     if (at(this.bush)) return 'Shake';
     if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
-    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest, this.melon, this.picnic, this.snowman].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
+    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest, this.melon, this.picnic, this.snowman, this.apples].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
     if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod) return 'Fish'; }
     const sign = (this.M.signs || []).find((g) => g.x === fx && g.y === fy);
     if (sign) return sign.act ? ({ pcbox: 'Swap', board: 'Read', gauntsign: 'Read', smoothie: 'Blend', hatshop: 'Shop', rest: 'Rest', wardrobe: 'Open', mirror: 'Look', shelf: 'Look', arcade: 'Play', 'arcade:hop': 'Play' }[sign.act] || (sign.act.startsWith('case:') ? 'Look' : 'Use')) : sign.hide ? 'Look' : 'Read';
