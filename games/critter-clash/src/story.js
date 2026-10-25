@@ -1188,14 +1188,14 @@ function tower(S, w) {
     F.tower_win = false; persist();
   }
   const n = T.streak, boss = n % 7 === 6, rank = towerRank(T.best), lv = Math.min(50, save.critters[A.hero].level + 1 + Math.floor(n / 4) + (boss ? 2 : 0));
-  const f = boss ? { id: 'skimray', name: 'Tower Master Morra' } : towerFoe(T.run, n, A.hero), def = byId(f.id);
+  const f = boss ? { id: 'toucharge', name: 'Tower Master Morra' } : towerFoe(T.run, n, A.hero), def = byId(f.id);
   if (!T.seen) { T.seen = true; out.push(`${who}: Welcome to my Battle Tower! The Gulls needed a hobby that was not stealing the sun.`, `${who}: The rules: win battles in a row. Every seventh, you face ME. Lose once and the streak is over. Rest whenever you like; the streak waits.`, `${who}: Seven in a row for Bronze, then Silver, Gold... and Legend. Each rank wins you something special.`); persist(); }
   out.push(`${who}: Streak ${n} · best ${T.best} (${rank[2]} ${rank[1]}). ${boss ? 'Battle 7 of the set... that is ME. Ready to lose?' : `Next: ${f.name} with ${def.name}, Lv ${lv}.`}`);
   w.say(out, () => w.ask(boss ? 'Face Tower Master Morra?' : `Battle #${n + 1}?`, ['Battle!', 'Rest'], (i) => {
     if (i) return w.say([`${who}: Your streak of ${n} waits right here. Don't keep me waiting too long.`], null, who);
     T.pending = true; F.tower_win = false; persist();
     S.worldFight({
-      foe: withGear(boss ? skinnedShiny('skimray') : def, lv), lv, kind: 'story', flag: 'tower_win', name: f.name, diff: Math.min(0.94, 0.76 + n * 0.008 + (boss ? 0.04 : 0)), berries: boss ? 4 : 1,
+      foe: withGear(boss ? skinnedShiny('toucharge') : def, lv), lv, kind: 'story', flag: 'tower_win', name: f.name, diff: Math.min(0.94, 0.76 + n * 0.008 + (boss ? 0.04 : 0)), berries: boss ? 4 : 1,
       trainer: { name: f.name, critter: f.id, title: boss ? 'Tower Master' : `Battle Tower #${n + 1}`, beat: boss ? 'Beaten in my own tower?! ...Talk to me. We are not done.' : 'Good battle! Back to the Tower Master.', gloat: boss ? 'The tower stands! As do I.' : 'Your streak ends here!' },
       note: `🗼 Battle Tower: ${n + 1} in a row! Talk to Morra to go on.`,
     });
@@ -1204,7 +1204,7 @@ function tower(S, w) {
 
 // M4 post-game: the Sunscatter Masters. Each week Marina, Zephyra, Magda and Morra battle the hero in a row at champion level
 // (wins are saved, a loss just means trying that one again). Clearing all four pays 10 berries; the first clear ever gives the Champion's Lei.
-export const MASTERS = [['Marina', 'blowfin', 'Coral Captain'], ['Zephyra', 'skimray', 'Wind Sage'], ['Magda', 'smokeshell', 'Caldera Keeper'], ['Morra', 'skimray', 'Tower Master']];
+export const MASTERS = [['Marina', 'blowfin', 'Coral Captain'], ['Zephyra', 'skimray', 'Wind Sage'], ['Magda', 'smokeshell', 'Caldera Keeper'], ['Morra', 'toucharge', 'Tower Master']];
 function masters(S, w) {
   const A = save.adv, F = A.flags, wk = gauntletWeek(), who = 'Champion Marina';
   const n = MASTERS.findIndex((_, i) => !F[`mast_${wk}_${i}`]);
@@ -1609,7 +1609,7 @@ function dashShow(S, w) {
   if (!F.dash_show) {
     const lv = Math.min(50, hl + 5);
     return w.say([
-      "Dash: Champ! I've been training on this beach every day since the light came back. Morra's Skimray? I can dodge it with my eyes shut now.",
+      "Dash: Champ! I've been training on this beach every day since the light came back. Morra's Toucharge? I can dodge its bolts with my eyes shut now.",
       "Dash: Every time we battled, you were ahead. Mainland, islands, all of it. So no more warm-ups, no holding back.",
       `Dash: My ${byId(rid).name} at FULL strength, Lv ${lv}. One battle. Whoever wins is the real number one. Ready?`,
     ], () => S.worldFight({
@@ -1634,7 +1634,7 @@ function dashShow(S, w) {
 // Starfall Atoll: Dash got there first, and lost
 function dashAtoll(S, w) {
   w.say([
-    "Dash: ...Oh. It's you. Go on, say it. I rushed in alone, and Captain Morra's Skimray blew me clean off the rocks.",
+    "Dash: ...Oh. It's you. Go on, say it. I rushed in alone, and Captain Morra's Toucharge zapped me clean off the rocks.",
     'Dash: Her Gulls are all over the island. Morra herself is up at the lighthouse door, guarding the Sunstone.',
     "Dash: ...You go. I'll watch the boat. And if you lose, I'm telling everyone back home. Deal? Deal.",
   ], null, 'Dash');
@@ -1654,15 +1654,15 @@ function lumi(S, w, a) {
   const L = a?.n?.lines || []; w.say([L[Math.floor(Math.random() * L.length)] || 'Keeper Lumi: The light is back. Thank you.'], null, 'Keeper Lumi');
 }
 
-// the Chapter 2 finale: Captain Morra and her shiny Skimray at the lighthouse door
+// the Chapter 2 finale: Captain Morra and her shiny Toucharge at the lighthouse door
 function morra(S, w) {
   w.say([
     'Captain Morra: So. The mainland champion. You beat Skua, you beat Tern, and now you think you can walk up to MY lighthouse.',
     "Captain Morra: Do you know what the sea is like at night, child? Dark. Endless. Lonely. With the Sunstone, the Gloom Gulls will own the night.",
-    'Captain Morra: Skimray! Show them how dark it gets!',
+    'Captain Morra: Toucharge! Show them how dark it gets!',
   ], () => S.worldFight({
-    foe: withGear(skinnedShiny('skimray'), 28), lv: 28, kind: 'story', flag: 'morra', name: 'Captain Morra', diff: 0.9,
-    trainer: { name: 'Morra', critter: 'skimray', title: 'Gloom Gull Captain', beat: "...Beaten. By a tourist. Fine. FINE. Take your shiny rock.", gloat: 'The night is ours! Back to your boat!' },
+    foe: withGear(skinnedShiny('toucharge'), 28), lv: 28, kind: 'story', flag: 'morra', name: 'Captain Morra', diff: 0.9,
+    trainer: { name: 'Morra', critter: 'toucharge', title: 'Gloom Gull Captain', beat: "...Beaten. By a tourist. Fine. FINE. Take your shiny rock.", gloat: 'The night is ours! Back to your boat!' },
     note: '🌟 You beat Captain Morra! The Sunstone is yours.',
   }));
 }

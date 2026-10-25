@@ -838,9 +838,9 @@ export const MAPS = {
       // after Morra's Amends the Gulls fish off the south shore: the Gull Fishing Club (story.js 'gullclub')
       { id: 'petrel_f', x: 8, y: 13, act: 'fish', critter: 'squeakwing', name: 'Petrel', dir: 's', showFlag: 'amends3_done', story: 'gullclub', lines: [] },
       { id: 'shag_f', x: 13, y: 13, act: 'fish', critter: 'hootsy', name: 'Shag', dir: 's', showFlag: 'amends3_done', lines: ['Shag: Hoo... the fish bite best when you are quiet. Petrel is never quiet.', 'Shag: I used to keep watch for the captain. Now I keep watch for bobbers. It is nicer.', 'Shag: Petrel once caught a fish so big he fell in. It was a boot. A big boot.'] },
-      { id: 'morra_a', x: 11, y: 3, critter: 'skimray', name: 'Captain Morra', dir: 's', story: 'morra', hideFlag: 'sunstone', shiny: true, scale: 1.25 },
+      { id: 'morra_a', x: 11, y: 3, critter: 'toucharge', name: 'Captain Morra', dir: 's', story: 'morra', hideFlag: 'sunstone', shiny: true, scale: 1.25 },
       { id: 'keeper_a', x: 11, y: 3, critter: 'hootsy', name: 'Keeper Lumi', dir: 's', showFlag: 'sunstone', story: 'lumi', lines: ['Keeper Lumi: The light is back! Ships can find their way home again. Thank you, Champion.', 'Keeper Lumi: I kept the lamp for forty years. The Sunstone warms up in the daytime and shines all night. A little sun in a stone.', 'Keeper Lumi: Captain Morra? She sails with us now. She keeps the night watch. Turns out she just hated being lonely in the dark.'] },
-      { id: 'morra_b', x: 14, y: 4, critter: 'skimray', name: 'Morra', dir: 'w', showFlag: 'sunstone', shiny: true, story: 'lost:amends1', lines: ['Morra: Hmph. The light is... nice, I suppose. Do not tell my Gulls I said so.', 'Morra: I wanted the night to last forever. Out at sea, the dark is so lonely. Now I keep watch with Lumi instead.'] },
+      { id: 'morra_b', x: 14, y: 4, critter: 'toucharge', name: 'Morra', dir: 'w', showFlag: 'sunstone', shiny: true, story: 'lost:amends1', lines: ['Morra: Hmph. The light is... nice, I suppose. Do not tell my Gulls I said so.', 'Morra: I wanted the night to last forever. Out at sea, the dark is so lonely. Now I keep watch with Lumi instead.'] },
     ],
   },
 
