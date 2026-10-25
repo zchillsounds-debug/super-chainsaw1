@@ -5362,16 +5362,17 @@ export class World {
   storyCheck() { return this.S.worldStoryStep?.(this) || false; }
 
   // the Adventure ending: credits roll while the camera visits every town you've been to, like postcards, then home to the Peak
-  // (isles: the Chapter 2 finale's credits, a postcard tour of the Sunscatter Isles that ends at the shining lighthouse)
+  // (isles: the Chapter 2 finale's credits, a postcard tour of the Sunscatter Isles that ends at the shining lighthouse;
+  //  'grand': after the 100% scene, both regions, ending back home in Sprout Village)
   credits(done, isles = false) {
-    const A = save.adv, F = A.flags, seen = A.seen || {}, back = [this.key, this.hx, this.hy, this.dir];
-    const stops = (isles ? ['coral', 'bluffs', 'ember_isle', 'atoll'] : ['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak']).filter((k) => (seen[k] || k === this.key) && MAPS[k]);
+    const A = save.adv, F = A.flags, seen = A.seen || {}, back = [this.key, this.hx, this.hy, this.dir], grand = isles === 'grand';
+    const stops = (grand ? ['bloom', 'seashell', 'glowcap', 'neon', 'frostpeak', 'coral', 'bluffs', 'ember_isle', 'atoll', 'village'] : isles ? ['coral', 'bluffs', 'ember_isle', 'atoll'] : ['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak']).filter((k) => (seen[k] || k === this.key) && MAPS[k]);
     const spot = (k) => { // in front of the town's stadium, or by the hero's home in Sprout Village (or below the lighthouse)
       if (k === 'atoll') return [11, 5];
       const b = (MAPS[k].buildings || []).find((q) => q.stadium);
       return b ? [b.x + b.door, b.y + b.h + 1] : [4, 7];
     };
-    const npcs = Object.values(MAPS).filter((M) => !!M.isle === isles).flatMap((M) => M.npcs || []), cups = isles ? ISLE_CUPS : CUPS;
+    const npcs = Object.values(MAPS).filter((M) => grand || !!M.isle === isles).flatMap((M) => M.npcs || []), cups = grand ? [...CUPS, ...ISLE_CUPS] : isles ? ISLE_CUPS : CUPS;
     const trainers = [...new Set(npcs.filter((n) => n.trainer).map((n) => n.name))];
     const folk = [...new Set(npcs.filter((n) => !n.trainer && n.critter && n.critter !== '$hero' && !n.rival && !n.hideFlag && n.name && !/^(Gang|Vex|King|Morra|Captain Gill)/.test(n.name)).map((n) => n.name))];
     const beat = npcs.filter((n) => n.trainer && F[n.id]).length, fav = Object.keys(F).filter((k) => k.endsWith('_done')).length;
@@ -5380,9 +5381,9 @@ export class World {
     const el = document.createElement('div'); el.className = 'finale adv-credits';
     el.innerHTML = `<div class="credits"><div class="roll" style="animation-duration:${stops.length * 5.4 + 1.5}s">
       <div class="logo-top ol">CRITTER</div><div class="logo-bot ol">CLASH!</div>
-      <h2>${isles ? '🏝️ Hero of the Sunscatter Isles 🏝️' : '👑 Champion of Clashara 👑'}</h2><p class="cr-big">${hero}</p><p>and ${name}</p>
-      <h3>The journey</h3>${stat('🏆', isles ? 'Island cups won' : 'Cups won', `${cups.filter((c) => F['cup_' + c.id]).length} / ${cups.length}`)}${A.time >= 60 ? stat('⏱️', 'Time adventuring', (({ h, m }) => h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`)({ h: Math.floor(A.time / 3600), m: Math.floor(A.time / 60) % 60 })) : ''}${stat('👣', 'Steps walked', (A.steps || 0).toLocaleString())}${stat('⚔️', 'Trainers beaten', beat)}${stat('🌿', 'Wild critters met', A.cnt?.wild || 0)}${stat('🎣', 'Fish caught', A.fishLog?.n || 0)}${stat('🤝', 'Favours done', fav)}${stat('🎩', 'Hats collected', (A.hats || []).length)}
-      <h3>Starring</h3><p><b>${hero}</b> <small>the hero</small></p><p><b>Dash</b> <small>the rival (${rival})</small></p>${isles ? '<p><b>Captain Gill</b> <small>and the Sunny Gull</small></p><p><b>Captain Morra</b> <small>of the Gloom Gulls</small></p><p><b>Keeper Lumi</b> <small>and the Starfall light</small></p><p><b>Marina · Zephyra · Magda</b> <small>the island cup bosses</small></p>' : '<p><b>Prof. Pecan</b> <small>as himself</small></p><p><b>King Snooze</b> <small>keeper of the Crown</small></p><p><b>Captain Puff</b> <small>and the mail balloon</small></p>'}
+      <h2>${grand ? '🏅 Explorer of Clashara and the Isles 🏅' : isles ? '🏝️ Hero of the Sunscatter Isles 🏝️' : '👑 Champion of Clashara 👑'}</h2><p class="cr-big">${hero}</p><p>and ${name}</p>
+      <h3>The journey</h3>${stat('🏆', isles && !grand ? 'Island cups won' : 'Cups won', `${cups.filter((c) => F['cup_' + c.id]).length} / ${cups.length}`)}${A.time >= 60 ? stat('⏱️', 'Time adventuring', (({ h, m }) => h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`)({ h: Math.floor(A.time / 3600), m: Math.floor(A.time / 60) % 60 })) : ''}${stat('👣', 'Steps walked', (A.steps || 0).toLocaleString())}${stat('⚔️', 'Trainers beaten', beat)}${stat('🌿', 'Wild critters met', A.cnt?.wild || 0)}${grand ? stat('🐾', 'Critter friends', save.unlocked.length) : ''}${stat('🎣', 'Fish caught', A.fishLog?.n || 0)}${stat('🤝', 'Favours done', fav)}${stat('🎩', 'Hats collected', (A.hats || []).length)}
+      <h3>Starring</h3><p><b>${hero}</b> <small>the hero</small></p><p><b>Dash</b> <small>the rival (${rival})</small></p>${grand ? '<p><b>Prof. Pecan</b> <small>as himself</small></p><p><b>King Snooze</b> <small>keeper of the Crown</small></p><p><b>Captain Puff</b> <small>and the mail balloon</small></p>' + '<p><b>Captain Gill</b> <small>and the Sunny Gull</small></p><p><b>Captain Morra</b> <small>of the Gloom Gulls</small></p><p><b>Keeper Lumi</b> <small>and the Starfall light</small></p><p><b>Marina · Zephyra · Magda</b> <small>the island cup bosses</small></p>' : isles ? '<p><b>Captain Gill</b> <small>and the Sunny Gull</small></p><p><b>Captain Morra</b> <small>of the Gloom Gulls</small></p><p><b>Keeper Lumi</b> <small>and the Starfall light</small></p><p><b>Marina · Zephyra · Magda</b> <small>the island cup bosses</small></p>' : '<p><b>Prof. Pecan</b> <small>as himself</small></p><p><b>King Snooze</b> <small>keeper of the Crown</small></p><p><b>Captain Puff</b> <small>and the mail balloon</small></p>'}
       <h3>Trainers</h3><p>${trainers.join(' · ')}</p>
       <h3>Townsfolk</h3><p>${folk.join(' · ')}</p>
       <h3>Made by</h3><p>zchillsounds</p><p><small>built with Claude Code</small></p>

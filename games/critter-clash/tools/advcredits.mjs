@@ -1,8 +1,9 @@
-// node tools/advcredits.mjs [WxH] [isles] : plays (isles: the Chapter 2 credits) the Adventure ending credits tour (all towns seen, all cups won) and takes a shot every few seconds
+// node tools/advcredits.mjs [WxH] [isles|grand] : plays (isles: the Chapter 2 credits; grand: the 100% credits over both regions) the Adventure ending credits tour (all towns seen, all cups won) and takes a shot every few seconds
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
 const { chromium } = require('playwright');
 const [w, h] = (process.argv[2] || '915x412').split('x').map(Number);
+const mode = process.argv[3] === 'grand' ? 'grand' : process.argv[3] === 'isles', tag = process.argv[3] === 'grand' ? 'g' : mode ? 'i' : '';
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: w, height: h } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
@@ -16,11 +17,11 @@ await pg.evaluate((isles) => {
   if (isles) { for (const c of ['coral', 'gale', 'caldera']) flags['cup_' + c] = true; Object.assign(flags, { isle_arrive: true, sunstone: true, atoll: true, bluffs: true, ember_isle: true, morra: true, post_coral: true, post_gale: true, post_caldera: true }); Object.assign(__save.adv, { map: 'atoll', x: 11, y: 5 }); Object.assign(__save.adv.seen, { coral: 1, bluffs: 1, ember_isle: 1, atoll: 1 }); }
   __game.screens.adventure(); __sim(0.5);
   window.__cdone = 0; __game.screens.worldObj.credits(() => { window.__cdone = 1; }, isles);
-}, process.argv[3] === 'isles');
-for (let i = 0; i < 12; i++) {
+}, mode);
+for (let i = 0; i < 18; i++) {
   await pg.waitForTimeout(4500);
   await pg.evaluate(() => __sim(0.2));
-  await pg.screenshot({ path: `tools/out/cred${process.argv[3] === 'isles' ? 'i' : ''}-${i}.png` });
+  await pg.screenshot({ path: `tools/out/cred${tag}-${i}.png` });
   const st = await pg.evaluate(() => [__game.screens.worldObj.key, __game.screens.worldObj.busy, window.__cdone]);
   console.log(i, JSON.stringify(st));
   if (st[2]) break;

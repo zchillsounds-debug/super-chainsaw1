@@ -1013,7 +1013,8 @@ function grandTour(S, w) {
   ], () => {
     F.grand_done = true; (A.hats ||= []).includes('grandcrown') || A.hats.push('grandcrown'); save.berries = (save.berries || 0) + 50; persist();
     reward(3); w.questMarks?.();
-    if (w.key === 'village') { const b = w.M.buildings?.find((q) => q.id === 'lab'); if (b) w.fireworks(b); }
+    const cheer = () => { if (w.key === 'village') { const b = w.M.buildings?.find((q) => q.id === 'lab'); if (b) w.fireworks(b); } };
+    w.credits ? w.credits(cheer, 'grand') : cheer(); // R764: the whole journey's credits, then fireworks over the lab
   }, 'Prof. Pecan');
 }
 
