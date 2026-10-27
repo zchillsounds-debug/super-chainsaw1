@@ -422,6 +422,13 @@ export class Screens {
         ...(isAutumn() || isEarlyAutumn() ? ["Gardener Bea has filled an apple-bobbing tub in Bloom Town while the leaves are falling. One apple a day, and no paws allowed!"] : []),
         save.adv.flags.grand_done ? "I've been showing everyone the photos from your 100% day. Mom has watched the parade twice." : "And if you ever see every corner of Clashara and the isles, come straight to my lab. I'm planning a parade. A big one.",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.sunstone && save.news?.includes('adv32') && !save.news.includes('adv33')) { // Chapter 3
+      save.news.push('adv33'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! Big news from Cinder Town: the old Sand-Rail is running again! It goes all the way south to the Amber Sands, a desert nobody has explored in years.",
+        "Conductor Tamsin says there are critters out there I've never even seen: a camel that keeps water in its humps, and a meerkat in goggles! Go and look, and tell me EVERYTHING.",
+        save.adv.flags.sands_arrive ? "One worry: a gang called the Dust Devils has bought every shovel in Sunwell Oasis. What are they digging for?" : "Find Conductor Tamsin by the train on the south side of Cinder Town. Pack a sun hat!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
@@ -599,6 +606,7 @@ export class Screens {
         ['Cups', 'Each town\'s stadium holds a cup, and the trials test your Strength, Friendship and Wisdom on the road to the Critter Crown.'],
         ['Berry Centers', 'Rest to heal, swap who leads the way at the Critter Box, leave a critter at the Daycare and blend berry smoothies.'],
         ['The Isles', 'Once you hold the Critter Crown, the Sunny Gull ferry sails from Seashell Town to the Sunscatter Isles: new critters, three island cups and the Gloom Gulls.'],
+        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils.'],
         ['After that', 'The Battle Tower, three legendary critters, the weekly Masters, the Kite Glider\'s hidden spots, pearls, dives and more. The Champ page keeps track.'],
         ['100%', 'Records shows how much of Clashara and the isles you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
       ]],
