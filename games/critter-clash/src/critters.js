@@ -530,6 +530,11 @@ export class Critter {
       const nose = inked(sphere(headR * 0.08), this.mats.dark, OL * 0.4);
       nose.scale.set(1.3, 0.8, 0.9); nose.position.set(0, -headR * 0.22, headR * 1.1);
       skull.add(nose);
+      const B = def.body; // and the faint dark bands across a meerkat's back
+      for (let k = 0; k < 3; k++) {
+        const y = B.h * (0.36 + k * 0.16), dy = (y - B.h * 0.48) / (B.h * 0.5), z = -B.w * 0.475 * Math.sqrt(Math.max(0, 1 - dy * dy)) * 0.96;
+        const st = new THREE.Mesh(sphere(0.5), this.mats.dark); st.scale.set(B.w * B.chubby * 0.62, B.h * 0.05, B.w * 0.12); st.position.set(0, y, z); this.torso.add(st);
+      }
     } else if (def.extra === 'scarab') {
       // Scarabold: two small curved mandibles under the face
       for (const s of [-1, 1]) {
