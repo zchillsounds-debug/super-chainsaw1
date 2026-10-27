@@ -3,6 +3,7 @@ import { buzz } from './haptics.js';
 import * as THREE from 'three';
 import { Fighter, SPECIALS } from './fighter.js';
 import { roleHat, shopHat } from './critters.js';
+import { bakeStatic, skinStatic } from './bake.js';
 import { Training } from './training.js';
 import { CpuBrain } from './ai.js';
 import { TYPES, typeMult, MODS } from './data.js';
@@ -39,7 +40,7 @@ const ROUND_TIME = 60;
 const INTRO_FIRST = 4.2, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
 
 export class Battle {
-  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, cpuHp = 1, training = false, hazards = false, stageSub = '', stageName = '', heroHat = null, cpuTitle = null } = {}) {
+  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, cpuHp = 1, training = false, hazards = false, stageSub = '', stageName = '', heroHat = null, cpuTitle = null, phase = null, rain = false } = {}) {
     this.stageSub = stageSub; this.stageName = stageName; this.cpuTitle = cpuTitle;
     this.trainHazards = training && hazards; // Sparring Setup can switch hazards on to practise them
     this.game = game;
@@ -57,11 +58,14 @@ export class Battle {
     this.speedMult = this.mods.has('turbo') ? 1.25 : 1;
     this.playerHp = playerHp; // survival runs carry damage between fights
     this.cpuHp = cpuHp; // team battles carry the rival's damage too
+    const ak = game.arena.key; // traits: night (Night Owl...), wet (Rain Dance) and day (Sunlit) fights
+    this.env = { night: phase === 'night' || ak === 'neon', wet: !!rain || ak === 'beach' };
     this.fighters = [];
     this.fighters.push(new Fighter(this, pDef, { level: playerLevel, side: 0 }));
     this.fighters.push(new Fighter(this, cDef, { level: cpuLevel, cpu: true, side: 1 }));
     if (trainer?.name) roleHat(this.fighters[1].critter, trainer.name); // a route Hiker keeps their hat on in the fight
     if (heroHat) { const P = this.fighters[0].critter; if (shopHat(P, heroHat) && P.gearCrown) P.gearCrown.visible = false; } // Adventure: the hero wears its chosen hat
+    for (const f of this.fighters) { bakeStatic(f.critter, false); skinStatic(f.critter, false); } // static parts merged per joint, then into a few skinned meshes: ~100 draws a fighter → ~25
     if (cpuTitle) { // the day's Alpha: a red ring at its feet, like in the tall grass
       const A = this.fighters[1]; A.alpha = true;
       A.alphaRing = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.1, 32), new THREE.MeshBasicMaterial({ color: 0xff4a2a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.85, side: THREE.DoubleSide }));
@@ -194,14 +198,24 @@ export class Battle {
     let eff = 1;
     if (h.type && h.type !== 'normal') { eff = typeMult(h.type, def.type); dmg *= eff; }
     if (def.state === 'down') dmg *= 0.5;
+    dmg *= this.traitDmg(att, def, h, eff);
     dmg = Math.round(dmg * (0.92 + Math.random() * 0.16));
+    if (def.trait === 'endure' && !def.endured && dmg >= def.hp && def.hp > 1) { dmg = def.hp - 1; def.endured = true; this.fx.text(def.headPos(), 'HANG ON!', 'big', 1); this.hud.callout('Hang On!', def.side, 1); } // Pebblepup's Hang On
     h.dmg = dmg;
     this.training?.guardKO(def, dmg);
+    if (att && att !== def) { // traits that change the blow itself
+      if (att.trait === 'dizzy' && h.dizzy) h = { ...h, dizzy: h.dizzy * 1.35 };
+      if (att.trait === 'heavy') h = { ...h, kb: h.kb * 1.2 };
+    }
     def.takeHit(h);
     if (def === this.player) this.roundDmgTaken += dmg;
-    // super meter: attacker gains more than defender
-    att.superM = Math.min(100, att.superM + dmg * 0.09 * this.superMult);
-    def.superM = Math.min(100, def.superM + dmg * 0.05 * this.superMult);
+    // super meter: attacker gains more than defender (Cheek Stash fills it faster)
+    att.superM = Math.min(100, att.superM + dmg * 0.09 * this.superMult * (att.trait === 'meter' ? 1.15 : 1));
+    def.superM = Math.min(100, def.superM + dmg * 0.05 * this.superMult * (def.trait === 'meter' ? 1.15 : 1));
+    if (att && att !== def && att.alive) {
+      if (att.trait === 'roots' && (h.projectile || att.state === 'special' || att.state === 'super')) att.hp = Math.min(att.maxHp, att.hp + Math.round(dmg * 0.15)); // Deep Roots
+      if (def.trait === 'thorns' && !h.projectile && att.distTo(def) < 2.2) { const back = Math.max(1, Math.round(dmg * 0.1)); att.hp = Math.max(1, att.hp - back); att.dmgDelay = 0.3; this.fx.text(att.headPos(), String(back), 'dmg weak', 0.6); } // Prickly
+    }
     const heavy = h.heavy || dmg > 90;
     this.hitstop = heavy ? 0.13 : 0.065;
     // feel the big ones in your hands: landing them or taking them
@@ -238,6 +252,21 @@ export class Battle {
     if (heavy) sfx.cheer(0.6);
     if (!def.alive) this.onKO(att, def);
     return true;
+  }
+
+  // passive traits that scale a landed hit's damage (traits.js); eff is the type multiplier already applied
+  traitDmg(att, def, h, eff) {
+    let k = 1;
+    if (att && att !== def) {
+      if (att.trait === 'first' && !att.firstLanded) { att.firstLanded = true; k *= 1.5; }
+      if (att.trait === 'combo') { att.chainN = this.clock - (att.chainAt ?? -9) < 1.1 ? (att.chainN || 0) + 1 : 1; att.chainAt = this.clock; if (att.chainN >= 3) k *= 1.15; }
+      if (att.trait === 'laststand' && att.hp < att.maxHp * 0.3) k *= 1.2;
+    }
+    if (def.trait === 'lucky' && Math.random() < 0.125) { k *= 0.5; this.fx.text(def.headPos(), 'Lucky!', '', 0.7); }
+    if (def.trait === 'resist' && eff > 1) k *= 0.75;
+    if (def.trait === 'sturdy' && h.projectile) k *= 0.8;
+    if (def.trait === 'shell' && def.hp > def.maxHp / 2) k *= 0.9;
+    return k;
   }
 
   // the champion's second wind: a short cinematic, then a faster, angrier rival

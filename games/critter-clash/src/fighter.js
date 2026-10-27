@@ -4,6 +4,7 @@ import { Critter, freeCritter } from './critters.js';
 import { MOVE_POW, CD_MULT } from './growth.js';
 import { toon } from './toon.js';
 import { COMBO, TYPES } from './data.js';
+import { traitOf } from './traits.js';
 import { ARENA_R } from './arena.js';
 import { sfx } from './audio.js';
 import { introAnim, winAnim } from './personality.js';
@@ -104,6 +105,13 @@ export class Fighter {
     this.speed = def.stats.speed;
     this.weight = def.stats.weight;
     this.type = def.type;
+    // passive trait (traits.js); the ones tied to the fight's weather and time of day apply here
+    const env = battle.env || {}, tk = this.trait = traitOf(def)?.k || null;
+    if (tk === 'tailwind') this.speed *= 1.07;
+    if (tk === 'night' && env.night) { this.speed *= 1.12; this.power *= 1.08; }
+    if (tk === 'moon' && env.night) this.power *= 1.08;
+    if (tk === 'rain' && env.wet) this.power *= 1.12;
+    if (tk === 'sun' && !env.night) this.power *= 1.08;
     this.ctl = { mx: 0, mz: 0, attack: false, special: false, dodge: false, super: false, guard: false };
     this.shield = makeShield(TYPES[def.type].glow, (def.body.h + def.body.headR) * (def.size || 1) + 0.35);
     this.root.add(this.shield);
@@ -128,6 +136,7 @@ export class Fighter {
     this.atkId = 0;
     this.paralyze = 0;
     this.guardHp = 100; this.guardRegenT = 0;
+    this.firstLanded = false; this.slipT = 0; this.quietT = 0; this.chainN = 0; // traits: Loud Opener, Slipstream, Regrowth, Playful
     this.speedBoost = 0;
     this.slick = 0;
     this.stepT = 0;
@@ -160,6 +169,9 @@ export class Fighter {
     this.st += dt;
     this.specCd = Math.max(0, this.specCd - dt);
     this.dodgeCd = Math.max(0, this.dodgeCd - dt);
+    if (this.slipT > 0) this.slipT -= dt;
+    this.quietT += dt;
+    if (this.trait === 'regen' && this.quietT > 3 && this.alive && this.battle.phase === 'fight' && this.hp < this.maxHp * 0.6) { this.hp = Math.min(this.maxHp * 0.6, this.hp + dt * this.maxHp * 0.006); this.dmgTrail = Math.max(this.dmgTrail, this.hp); } // Regrowth
     this.invuln = Math.max(0, this.invuln - dt);
     this.dmgTrail = Math.max(this.hp, this.dmgTrail - this.maxHp * 0.35 * dt * (this.dmgDelay > 0 ? 0 : 1));
     this.dmgDelay = (this.dmgDelay || 0) - dt;
@@ -181,7 +193,7 @@ export class Fighter {
       if (this.paralyze > 0) { this.paralyze -= dt; }
       if (ml > 0.15 && this.paralyze <= 0) {
         if (S !== 'run') this.setState('run');
-        const sp = this.speed * Math.min(1, ml) * (this.speedBoost > 0 ? 1.3 : 1) * (this.slick > 0 ? 0.7 : 1);
+        const sp = this.speed * Math.min(1, ml) * (this.speedBoost > 0 ? 1.3 : 1) * (this.slick > 0 ? 0.7 : 1) * (this.slipT > 0 ? 1.15 : 1) * (this.trait === 'rage' && this.hp < this.maxHp / 2 ? 1.12 : 1);
         const grip = this.slick > 0 ? 2.5 : 14; // a puddle makes the footing slippery
         this.vx = THREE.MathUtils.damp(this.vx, c.mx / ml * sp, grip, dt);
         this.vz = THREE.MathUtils.damp(this.vz, c.mz / ml * sp, grip, dt);
@@ -201,7 +213,7 @@ export class Fighter {
       this.vx = THREE.MathUtils.damp(this.vx, 0, 10, dt);
       this.vz = THREE.MathUtils.damp(this.vz, 0, 10, dt);
       if (o && o.alive) this.turnTo(this.angleTo(o), 10, dt);
-      this.guardHp = Math.max(0, this.guardHp - dt * 6); // holding it forever wears it down
+      this.guardHp = Math.max(0, this.guardHp - dt * 6 * (this.trait === 'guard' ? 0.65 : 1)); // holding it forever wears it down
       if (!c.guard && this.st > 0.12) { this.setState('idle'); this.critter.emote('open', 'smile'); }
       else if (c.dodge && this.dodgeCd <= 0) this.startDodge();
     } else if (S === 'attack') this.updateAttack(dt, c);
@@ -370,7 +382,7 @@ export class Fighter {
   blockHit(h, att) {
     const parry = this.st < 0.2 && !h.unblockable;
     if (parry) return 'parry';
-    this.guardHp -= h.dmg * (h.unblockable ? 0.9 : 0.4);
+    this.guardHp -= h.dmg * (h.unblockable ? 0.9 : 0.4) * (this.trait === 'guard' ? 0.65 : 1); // Curl Up
     this.shield.userData.flash = 1;
     this.face = Math.atan2(-h.dirX, -h.dirZ);
     this.vx = h.dirX * h.kb * 0.35 / this.weight; this.vz = h.dirZ * h.kb * 0.35 / this.weight;
@@ -390,7 +402,7 @@ export class Fighter {
     if (ml > 0.2) { dx = c.mx / ml; dz = c.mz / ml; } else { dx = -Math.sin(this.face); dz = -Math.cos(this.face); }
     this.setState('dodge');
     this.dodgeDir = [dx, dz];
-    this.dodgeCd = 0.55;
+    this.dodgeCd = 0.55 * (this.trait === 'dodgecd' ? 0.65 : 1); if (this.trait === 'slip') this.slipT = 2; // Quick Feet, Slipstream
     this.invuln = 0.3;
     this.vx = dx * 15; this.vz = dz * 15;
     this.critter.emote('closed', 'o', 0.3);
@@ -411,7 +423,7 @@ export class Fighter {
   startSpecial() {
     const id = this.def.special;
     this.setState('special');
-    this.specCd = SPECIALS[id].cd * CD_MULT[this.stage - 1];
+    this.specCd = SPECIALS[id].cd * CD_MULT[this.stage - 1] * (this.trait === 'specialcd' ? 0.8 : 1) * (this.trait === 'moon' && this.battle.env?.night ? 0.7 : 1); // Bright Spark, Moon Child
     if (this.stage > 1) {
       // grown forms charge their specials with a type-coloured flare
       const fx = this.battle.fx, c = this.chestPos(), col = TYPES[this.type].glow;
@@ -717,7 +729,7 @@ export class Fighter {
         this.trailAt -= dt;
         if (this.trailAt <= 0) {
           this.trailAt = 0.065;
-          B.spawnProjectile(this, { kind: 'ember', big: true, x: this.x, z: this.z, y: 0.03, vx: 0, vz: 0, r: 0.62, life: 2.0, hit: {} });
+          B.spawnProjectile(this, { kind: 'ember', big: true, x: this.x, z: this.z, y: 0.03, vx: 0, vz: 0, r: 0.62, life: this.trait === 'hothead' ? 3.0 : 2.0, hit: {} }); // Hot Head: burns longer
         }
         if (o && !this.hitIds.has(o) && this.distTo(o) < 1.3 && o.alive) {
           this.hitIds.add(o);
@@ -1039,9 +1051,10 @@ export class Fighter {
   takeHit(h) {
     this.hp = Math.max(0, this.hp - h.dmg);
     this.dmgDelay = 0.45;
-    this.dizzy += h.dizzy || 0;
+    this.dizzy += (h.dizzy || 0) * (this.trait === 'calm' ? 0.55 : 1); // Deep Sleeper
+    this.quietT = 0;
     this.critter.flash(0.09);
-    const kb = h.kb / this.weight;
+    const kb = h.kb / this.weight * (this.trait === 'kb' ? 0.7 : 1); // Thick Fur
     this.face = Math.atan2(-h.dirX, -h.dirZ);
     if (h.paralyze) this.paralyze = h.paralyze;
     if (!this.alive || h.launch || h.lift > 0) {

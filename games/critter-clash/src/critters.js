@@ -1308,7 +1308,7 @@ export class Critter {
       crown.position.set(headR * 0.14, headR * 1.0, headR * 0.05);
       crown.scale.setScalar(1.25);
       crown.rotation.set(0.12, 0, -0.22);
-      this.skull.add(crown); this.gearCrown = crown;
+      this.skull.add(crown); this.gearCrown = crown; crown.userData.noBake = true; // hidden under a hat: bake.js leaves it as is
     }
     if (this.built) this.root.traverse((o) => { if (o.isMesh && !o.userData.hull && o.material && !o.material.transparent) o.castShadow = true; });
   }
@@ -1476,7 +1476,8 @@ export const SHOP_HATS = [
 ];
 export function shopHat(cr, id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return null;
-  return hatModel(cr, h.kind, h.col, h.band);
+  const G = hatModel(cr, h.kind, h.col, h.band); G.userData.noBake = true; // the hero's hat comes off and changes: bake.js leaves it as is
+  return G;
 }
 // builds a hat on cr.skull (anything with def.body.headR and a skull group works, e.g. a shop's hat stand)
 export function hatModel(cr, kind, col, band) {

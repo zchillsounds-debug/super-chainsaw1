@@ -1,6 +1,7 @@
 // Training mode: an endless practice match with a configurable dummy, a combo readout and an input display.
 import { CpuBrain } from './ai.js';
 import { COMBO, MOVE_DESC, TYPES, typeMult } from './data.js';
+import { traitOf } from './traits.js';
 import { sfx } from './audio.js';
 
 export const DUMMY = [
@@ -20,6 +21,7 @@ export function moveList(def, touch) {
     <div class="mv"><div class="mv-in">${k('attack', 'HIT')} ${k('attack', 'HIT')} ${k('attack', 'HIT')}</div><div><b>Triple Combo</b><p>Two quick strikes and a launcher. ${combo} damage if all three land.</p></div></div>
     <div class="mv sp"><div class="mv-in">${k('special', 'SPECIAL')}</div><div><b>${def.moves.special}</b> <i class="ty">${TYPES[def.type].name}</i><p>${MOVE_DESC[def.special] || ''}</p></div></div>
     <div class="mv su"><div class="mv-in">${k('super', 'SUPER')}</div><div><b>${def.moves.super}</b> <i class="ty">Full meter</i><p>${MOVE_DESC[def.super] || ''}</p></div></div>
+    ${traitOf(def) ? `<div class="mv tr-row"><div class="mv-in"><kbd>${traitOf(def).icon}</kbd></div><div><b>${traitOf(def).name}</b> <i class="ty">Trait</i><p>${traitOf(def).desc} Always on.</p></div></div>` : ''}
     <div class="mv"><div class="mv-in">${k('dodge', 'DODGE')}</div><div><b>Dodge Roll</b><p>Untouchable for a moment. Cancels the end of your attacks.</p></div></div>
     <div class="mv"><div class="mv-in">${k('guard', 'GUARD')}</div><div><b>Guard &amp; Parry</b><p>Hold to block. Raise it just before a hit lands to <b>parry</b> and stun the rival.</p></div></div>
     <div class="mv ty-row"><div><b>Type matchups</b><p>${TYPES[def.type].name} hits ${Object.keys(TYPES).filter((t) => typeMult(def.type, t) > 1).map((t) => TYPES[t].name).join(' and ')} for extra damage.</p></div></div>

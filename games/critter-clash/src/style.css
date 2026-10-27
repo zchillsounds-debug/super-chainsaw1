@@ -1286,3 +1286,14 @@ body:not(.is-touch) .wd-a.hint::after { content: "Space · " attr(data-hint); po
 .title-foot { flex-wrap: wrap; justify-content: center; row-gap: 6px; }
 .title-foot span { white-space: nowrap; }
 @media (max-aspect-ratio: 1/1) { .title-foot { gap: 6px; } .title-foot span { padding: 3px 9px; font-size: 12px; } }
+/* passive trait chip (traits.js) on the select / Critterdex info card */
+.trait { display: flex; gap: 8px; align-items: center; margin-top: 8px; padding: 4px 10px; border-radius: 12px; background: color-mix(in srgb, var(--tc) 16%, #fff); position: relative; }
+.trait > i { font-style: normal; font-size: 20px; line-height: 1; }
+.trait small { opacity: .6; font-size: 11px; margin-right: 6px; }
+.trait b { font-size: 14px; }
+.info-card .trait p { margin: 1px 0 0; font-size: 12px; line-height: 1.2; }
+.ic-trait { margin-left: auto; padding: 1px 8px; border-radius: 99px; background: color-mix(in srgb, var(--tc) 18%, #fff); font-weight: 800; font-size: 12px; white-space: nowrap; }
+body.portrait .ic-trait { font-size: 10.5px; padding: 1px 6px; margin-right: 34px; }
+/* portrait select: a long roster scrolls in its own box (about three rows) so the info card never climbs over the header */
+body.portrait .sel-bottom > .roster { max-height: min(232px, 36vh); overflow-y: auto; overflow-x: hidden; padding: 12px 2px 4px; margin: -12px 0 0; scrollbar-width: none; }
+@media (max-height: 700px) { body.portrait .select-screen .sel-arrows { display: none; } }

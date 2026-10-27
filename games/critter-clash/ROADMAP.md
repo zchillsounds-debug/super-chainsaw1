@@ -48,7 +48,8 @@
 - Keep HANDOFF.md, CONTINUE.md and this file's status up to date; send the user the APK at the end of each session.
 
 ## Status
-- (nothing yet)
+- **B1 (session D1, 2026-10-27): done.** R772: the hero wears its Adventure hat in Adventure fights; the day's Alpha is ×1.32 in its fight, "Alpha <critter>" on the HUD and the intro card, a pulsing red ring and rising embers. R773: `bake.js` (the world's `bakeStatic`/`skinStatic`, moved out of world.js) merges each fighter's static parts: **battleperf 258–269 → 111–126 draw calls a frame (−56%)**, a fighter ~100 → ~15 draws. `tools/fightsheet.mjs` (every critter as a fighter at Lv 1/16/32, shiny, hat; before/after sheets) looks the same; battlemem flat (textures 138 after 60 battles vs 146 before). Hats (`shopHat`) and the gear crown carry `userData.noBake` (they come off or hide; they were folded into the merge before, which also hid the world hero's crown toggle). Merged battle parts don't take shadows (`bakeStatic(cr, false)`), as built.
+- **B2 (session D1): traits in.** `traits.js`: one passive trait per critter (28), wired in `Battle.traitDmg`/`applyHit` and Fighter (speed, guard, dodge, special cooldown, dizzy, knockback, regen, endure...). Night/wet/day come from `Battle.env` (Adventure phase and rain, the neon and beach arenas). Shown on the Critterdex card (full chip), the select card (a pill on the "Strong vs" row) and the Move List (a row under Super). Balance robin: see HANDOFF Session D1.
 
 # Critter Clash: Completion roadmap (C1–C8)
 

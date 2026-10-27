@@ -8,6 +8,7 @@ import { save, persist, grantXp, unlock, xpNeeded } from './save.js';
 import { grown, stageFor, FORMS, GROW_LV } from './growth.js';
 import { openSettings, typeSpeed } from './settings.js';
 import { DUMMY, moveList } from './training.js';
+import { traitChip, traitOf } from './traits.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
 import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, seasonKey } from './world.js';
@@ -826,7 +827,7 @@ export class Screens {
     this.root.querySelectorAll('.rcard').forEach((b, k) => { b.classList.toggle('on', k === i); if (k === i) b.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); });
   }
 
-  infoCard(base, extra = '') {
+  infoCard(base, extra = '', full = false) { // full: the Critterdex's roomy card (the trait's whole line)
     const T = TYPES[base.type], prog = save.critters[base.id];
     const c = grown(base, prog.level), st = c.stats, nx = GROW_LV.find((l) => l > prog.level);
     const bar = (label, v) => `<div class="stat"><span>${label}</span><i><b style="width:${Math.round(Math.max(0.08, Math.min(1, v)) * 100)}%"></b></i></div>`;
@@ -838,8 +839,9 @@ export class Screens {
         <div class="ic-species">${c.species}${base.legend ? ' <b class="ic-legend">★ Legendary</b>' : ''}</div>
         <p>${c.blurb}</p>
         <div class="stats">${bar('Health', (st.hp - 800) / 400)}${bar('Speed', (st.speed - 5) / 3)}${bar('Power', (st.power - 0.85) / 0.3)}${bar('Weight', (st.weight - 0.6) / 0.8)}</div>
-        <div class="ic-beats"><small>Strong vs</small>${beats}</div>
+        <div class="ic-beats"><small>Strong vs</small>${beats}${!full && traitOf(c) ? `<span class="ic-trait" title="${traitOf(c).desc}">${traitOf(c).icon} ${traitOf(c).name}</span>` : ''}</div>
         <div class="moves"><div><small>Special</small><b>${c.moves.special}</b></div><div><small>Super</small><b>${c.moves.super}</b></div></div>
+        ${full ? traitChip(c) : ''}
         ${extra}
         <div class="xpbar"><i style="width:${(prog.xp / xpNeeded(prog.level)) * 100}%"></i></div>
         <div class="ic-grow">${nx ? `🌱 Grows at Lv ${nx}` : '★ Fully grown'}</div>
@@ -1149,7 +1151,7 @@ export class Screens {
     }).join('')}</div>`;
     const record = `<div class="dex-record"><span><b>${prog.wins || 0}</b> wins</span><span>Lv <b>${prog.level}</b></span><span title="Friendship">💗 <b>${Math.min(5, Math.floor((prog.pets || 0) / 4))}</b>/5</span></div>`;
     const info = this.root.querySelector('.dex-info');
-    info.innerHTML = this.infoCard(c, record + growth + gear + skins + '<button class="chip dex-moves">📜 Move List</button>');
+    info.innerHTML = this.infoCard(c, record + growth + gear + skins + '<button class="chip dex-moves">📜 Move List</button>', true);
     info.querySelectorAll('.gstage').forEach((b) => b.addEventListener('click', () => {
       const lv = +b.dataset.lv;
       if (prog.level < lv) { sfx.ui('back'); this.toast(`Reach Lv ${lv} to find out what ${c.name} grows into!`); return; }
@@ -1709,7 +1711,7 @@ export class Screens {
     g.startBattle(h, info.alpha ? { ...info.foe, size: Math.min(1.75, (info.foe.size || 1) * 1.32) } : info.foe, { // the day's Alpha is big in its fight too
       cpuLevel: info.kind === 'wild' ? info.lv : storyLevel(info.lv, lv), playerLevel: lv, difficulty: info.diff ?? 0.3, arena,
       rounds: info.kind === 'wild' ? 1 : 2, trainer: info.trainer || null, stageName: place,
-      heroHat: save.adv.hat || null, cpuTitle: info.alpha ? info.name : null, // the hero keeps its Adventure hat on; the day's Alpha is named on the HUD
+      heroHat: save.adv.hat || null, cpuTitle: info.alpha ? info.name : null, phase, rain, // the hero keeps its Adventure hat on; the day's Alpha is named on the HUD
       stageSub: info.kind === 'wild' ? `${info.name} appeared!` : info.kind === 'story' ? 'Story battle' : `${info.name} wants to battle!`,
     });
     g.arena.setOpen(true); // out in the wild: no stadium, just the meadow
