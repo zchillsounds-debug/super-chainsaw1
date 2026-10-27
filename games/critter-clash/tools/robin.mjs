@@ -10,6 +10,7 @@ pg.on('pageerror', (e) => console.log('PAGEERR', e.message));
 await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?auto&q=low');
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
 const ids = await pg.evaluate(() => __critters.map((c) => c.id));
+let done = 0;
 const W = Object.fromEntries(ids.map((i) => [i, [0, 0]])), M = {};
 for (let r = 0; r < reps; r++) for (const a of ids) for (const c of ids) {
   if (a === c || (focus && !focus.includes(a) && !focus.includes(c))) continue;
@@ -21,6 +22,7 @@ for (let r = 0; r < reps; r++) for (const a of ids) for (const c of ids) {
     return bt.wins[0] > bt.wins[1];
   }, [a, c, +(process.env.LV || 10)]);
   W[a][won ? 0 : 1]++; W[c][won ? 1 : 0]++;
+  if (++done % 100 === 0) console.log(`-- ${done} matches: ` + Object.entries(W).filter(([, [w, l]]) => w + l).map(([i, [w, l]]) => `${i} ${(100 * w / (w + l)).toFixed(0)}%`).join(', ')); // running tallies, so a run cut short still says something
   const k = [a, c].sort().join('|'); M[k] = M[k] || {}; M[k][won ? a : c] = (M[k][won ? a : c] || 0) + 1;
 }
 for (const [i, [w, l]] of Object.entries(W).sort((x, y) => y[1][0] / (y[1][0] + y[1][1]) - x[1][0] / (x[1][0] + x[1][1]))) console.log(i.padEnd(12), w, l, (100 * w / (w + l)).toFixed(0) + '%');
