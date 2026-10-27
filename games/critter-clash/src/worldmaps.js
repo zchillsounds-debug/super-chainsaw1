@@ -850,7 +850,7 @@ export const MAPS = {
   // sands maps are `extra` for now: they don't count towards Clashara's or the isles' % (D4 gives them their own Records rows)
   oasis: {
     name: 'Sunwell Oasis',
-    music: 'isles',
+    music: 'sands',
     arena: 'canyon',
     sands: 'oasis',
     extra: true,
@@ -900,7 +900,7 @@ export const MAPS = {
 
   duneroad: {
     name: 'Dune Road',
-    music: 'isles',
+    music: 'sands',
     arena: 'canyon',
     sands: 'dunes',
     extra: true,

@@ -520,6 +520,23 @@ const SONGS = {
     ],
     drums: 'k..s..k.k.s..s..',
   },
+  // Chapter 3, the Amber Sands: a rolling caravan groove in D, with a desert-scale lead (flat 2nd, sharp 3rd) over a loping bass
+  sands: {
+    bpm: 104,
+    inst: { lead: 'triangle', lead2: 'square', leadVol: 0.11, bass: 'triangle', bassVol: 0.26, stab: 'triangle' },
+    chords: [[50, 53, 57], [51, 55, 58], [50, 53, 57], [48, 52, 55], [46, 50, 53], [45, 49, 52], [50, 53, 57], [45, 49, 52]],
+    lead: [
+      [74, null, 75, null, 78, null, 79, null, 78, null, 75, null, 74, null, null, null],
+      [75, null, 78, null, 79, null, 81, null, null, 79, 78, null, 75, null, null, null],
+      [81, null, 82, null, 81, null, 79, null, 78, null, 79, null, 81, null, null, null],
+      [79, null, 78, null, 75, null, 74, null, 72, null, 74, null, 75, null, null, null],
+      [74, null, null, 77, null, null, 82, null, 81, null, 79, null, 77, null, null, null],
+      [76, null, null, 73, null, null, 76, null, 81, null, null, null, 79, null, 78, null],
+      [74, null, 78, null, 81, null, 86, null, 84, null, 82, null, 81, null, null, null],
+      [81, null, 79, null, 78, null, 75, null, 74, null, null, null, null, null, null, null],
+    ],
+    drums: 'k..s..k.k..s.s..',
+  },
   // caves and the sunken wreck: a slow, hollow A-minor drift with water drips between the notes
   cave: {
     bpm: 78, drip: true,
