@@ -846,13 +846,17 @@ export class World {
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
       return g;
     };
-    const fronds2 = [], rings = [], crag = [];
+    const fronds2 = [], rings = [], crag = [], mesa = [];
     if (this.M.city) return this.buildCity(rand);
     if (this.M.indoor) return;
     for (let y = -3; y < this.H + 3; y++) for (let x = -3; x < this.W + 3; x++) {
       const inside = x >= 0 && y >= 0 && x < this.W && y < this.H;
       const t = inside ? this.tile(x, y) : null;
       if (!inside && this.M.border === 'cloud') { if (rand() < 0.45) puff(x, y); continue; }
+      if (this.M.border === 'mesa' && !inside) { // the Amber Sands: red sandstone crags and buttes past the edge, with open dunes between them
+        if (rand() < 0.5) { const [px, pz] = wpos(x, y), h = 1.2 + rand() * 2.2, r = new THREE.CylinderGeometry(0.8 + rand() * 0.4, 1.2 + rand() * 0.4, h, 7); r.rotateY(rand() * 3); r.translate(px + (rand() - 0.5), h / 2, pz + (rand() - 0.5)); mesa.push(r); }
+        continue;
+      }
       if (this.M.border === 'rock') { if (!inside) { const [px, pz] = wpos(x, y), r = new THREE.IcosahedronGeometry(1.0, 1); r.scale(1.25, 2.0 + rand(), 1.25); r.rotateY(rand() * 3); r.translate(px, 1.2, pz); crag.push(r); } continue; }
       if (!inside && this.M.border !== 'cloud' && this.tile(Math.max(0, Math.min(this.W - 1, x)), Math.max(0, Math.min(this.H - 1, y))) === '~') continue; // open sea past a watery edge: no trees growing out of the waves
       if (t === '~' && this.M.border === 'cloud' && rand() < 0.12) { puff(x, y, 0.6); continue; }
@@ -863,6 +867,7 @@ export class World {
       else if (inside ? t === 'T' : rand() < 0.85) { const near = y >= this.H; add(x, y, mid && !near && (!inside || deep(x, y)) ? 0 : dt0, mid && !inside && !near ? 0 : dt0); }
     }
     if (crag.length) { this.group.add(inked(mergeGeometries(crag), toon(0x5a5064, { rim: 0.08 }), OL * 0.5)); crag.forEach((g) => g.dispose()); }
+    if (mesa.length) { const m = inked(mergeGeometries(mesa), toon(0xc8704a, { rim: 0.2 }), OL * 0.5); m.castShadow = true; this.group.add(m); mesa.forEach((g) => g.dispose()); }
     if (puffs.length) { this.group.add(inked(mergeGeometries(puffs), toon(0xffffff, { rim: 0.8 }), OL * 0.5)); puffs.forEach((g) => g.dispose()); }
     if (ptrunks.length) { this.group.add(inked(mergeGeometries(ptrunks), toon(0xa8784a), OL * 0.6)); ptrunks.forEach((g) => g.dispose()); }
     if (nuts.length) { this.group.add(inked(mergeGeometries(nuts), toon(0x7a4a2a), OL * 0.4)); nuts.forEach((g) => g.dispose()); }
@@ -1054,7 +1059,7 @@ export class World {
       const b = new THREE.BoxGeometry(1.2, 0.7, 0.14); b.translate(px, 1.05, pz + 0.05); boards.push(b);
     }
     const put = (list, color, ink = OL) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color), ink); this.group.add(m); list.forEach((g) => g.dispose()); };
-    put(rocks, 0x9a94a8); if (crags.length) { const m = inked(mergeGeometries(crags), toon(0x7a6e80, { rim: 0.08 }), OL * 0.6); this.group.add(m); crags.forEach((g) => g.dispose()); } put(frostRocks, 0x7a8aa8); put(caps, 0xf8fbff, OL * 0.6); put(snow, 0xffffff);
+    put(rocks, this.M.sands ? 0xc8845a : 0x9a94a8); // (desert rocks are warm sandstone) if (crags.length) { const m = inked(mergeGeometries(crags), toon(0x7a6e80, { rim: 0.08 }), OL * 0.6); this.group.add(m); crags.forEach((g) => g.dispose()); } put(frostRocks, 0x7a8aa8); put(caps, 0xf8fbff, OL * 0.6); put(snow, 0xffffff);
     if (shards.length) { const m = inked(mergeGeometries(shards), toon(0xa8eaff, { rim: 1 }), OL * 0.5); m.castShadow = true; this.group.add(m); shards.forEach((g) => g.dispose()); } put(coal, 0x2a2a34, 0); put(carrot, 0xff8a2a, OL * 0.4);
     if (drifts.length) { const m = new THREE.Mesh(mergeGeometries(drifts), toon(0xf6faff, { rim: 0.8 })); m.receiveShadow = true; this.group.add(m); drifts.forEach((g) => g.dispose()); }
     put(posts, 0xfff4e0, OL * 0.6); put(rails, 0xfff4e0, OL * 0.5); put(sticks, 0x8a5a3a, OL * 0.5); put(boards, 0xc8925a);
