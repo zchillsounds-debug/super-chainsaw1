@@ -155,6 +155,16 @@ export function storyIntro(S, w) {
     ]);
     return;
   }
+  if (w.key === 'dunecamp' && F.cup_sandstorm && !F.post_sandstorm) {
+    F.post_sandstorm = true; persist();
+    w.say([
+      'The sail-cloth of the Sandstorm Dome booms like a drum, and the whole camp comes out of the tents to cheer.',
+      "Dune Warden Rasha: Three cups of the Amber Sands, {hero}. The wind has picked a side, and it's yours.",
+      "Rasha: Now. Those Dust Devils have been digging under MY dunes for a week. Their guards are still on the door of that black tent.",
+      "Dash: Let's go knock! Loudly! ...You knock. I'll be right behind you. Way behind.",
+    ]);
+    return;
+  }
   if (w.key === 'redrock' && F.devils1 && !F.sunshard) {
     F.sunshard = true; persist(); reward(1);
     w.say([
@@ -398,6 +408,8 @@ export function nextGoal(F) {
     if (F.cup_canyon && !F.devils1) return 'The Dust Devils are digging under the east rope lift in Redrock Canyon. Stop them!';
     if (F.devils1 && !F.dash_canyon) return 'Dash has caught up with you in Redrock Canyon. He wants a desert rematch!';
     if (F.dash_canyon && !F.cup_sandstorm) return F.dunecamp_arrive ? 'Win the Sandstorm Cup in the Sandstorm Dome at the Dune Camp.' : 'Take the canyon road east out of Redrock Canyon to the Dune Camp on the big dunes.';
+    if (F.cup_sandstorm && !F.devils2) return 'Dune Warden Rasha is going to the Dust Devils\' black tent at the Dune Camp. Get past the guards on its door!';
+    if (F.devils2 && !F.citymap) return 'The Dust Devil HQ is open. Find out what the Dust Devils are after inside their black tent.';
     if (!F.sunstone) return F.morra ? 'Bring the Sunstone home to the Starfall lighthouse!' : 'Sail to Starfall Atoll with Captain Gill (Port Coral) and take the Sunstone back from Captain Morra!';
     // post-game: point at whatever is still open (the Tower, the glider, the legends)
     if (!(save.adv.tower?.best >= 7)) return 'Morra has opened a Battle Tower on Starfall Atoll. Win 7 in a row for Bronze rank!';
@@ -642,6 +654,8 @@ export function storyTalk(S, id, w, a) {
   if (id === 'dashisle') return dashIsle(S, w);
   if (id === 'skua') return skua(S, w);
   if (id === 'devils1') return devils1(S, w);
+  if (id === 'devils2') return devils2(S, w);
+  if (id === 'devilmap') return devilMap(S, w);
   if (id === 'dashcanyon') return dashCanyon(S, w);
   if (id === 'dashatoll') return dashAtoll(S, w);
   if (id === 'dashember') return dashEmber(S, w);
@@ -1094,6 +1108,7 @@ export function storyMark(npc) {
     king: F.dash5 && !F.crowned,
     gull_b: c('gale') && !F.skua_b,
     devil_r: c('canyon') && !F.devils1, dash_r: F.devils1 && !F.dash_canyon, // Chapter 3: Redrock Canyon
+    guard_c2: c('sandstorm') && !F.devils2, // the Dune Camp: the Dust Devils' door guard
     morra_a: c('caldera') && !F.morra,
     dash_b: F.sunstone && !F.dash_show,
     moonwhal_a: F.tower_bronze && !F.legend_moonwhal, solmoth_r: F.festlamp_done && !F.legend_solmoth, verdelk_g: F.grove4_done && !F.legend_verdelk, // the legends, once awake
@@ -1771,6 +1786,34 @@ function devils1(S, w) {
     trainer: { name: 'Sable', critter: 'siroccat', title: 'Dust Devil lieutenant', beat: "Pfft. Keep the silly rock, then. The Baron has a dozen more crews digging out on the dunes. You can't stop all of us!", gloat: 'Ha! The canyon belongs to the Dust Devils now!' },
     note: '🏜️ You stopped the Dust Devils\' dig under the rope lift!',
   }));
+}
+
+// the Dune Camp: after the Sandstorm Cup, the Dust Devils' door guard won't stand aside for the Warden
+function devils2(S, w) {
+  if (!flags().cup_sandstorm) return w.say(["Dust Devil Flint: You're the kid who took the Sun Shard off Sable. The Baron wants a word with you. Not today, though. Today he's busy."]);
+  w.say([
+    'Dune Warden Rasha: Flint. Your crew has been digging under the camp. Pack your shovels and go.',
+    "Dust Devil Flint: The Baron said nobody goes in. Not you, Warden. And DEFINITELY not the cup kid.",
+    'Dust Devil Flint: Sizzlard! Heat it up!',
+  ], () => S.worldFight({
+    foe: withGear(byId('sizzlard'), 42), lv: 42, kind: 'story', flag: 'devils2', name: 'Dust Devil Flint', diff: 0.88,
+    trainer: { name: 'Flint', critter: 'sizzlard', title: 'Dust Devil guard', beat: "Too hot to handle! Grub, RUN! ...Grub? Grub already ran.", gloat: 'Nobody gets into Dust Devil HQ!' },
+    note: '🏜️ The Dust Devils\' guards ran off. Their black tent is open!',
+  }));
+}
+
+// inside the Dust Devil HQ: the cook gives up the Baron's plan (the big map on the table)
+function devilMap(S, w) {
+  const F = flags();
+  if (F.citymap) return w.say(["Dust Devil Cook: Beans? No? More for me. The Baron's at the gate. Go bother HIM."]);
+  F.citymap = true; persist(); reward(1);
+  w.say([
+    "Dust Devil Cook: Who let YOU in?! ...Fine. Fine! I only cook the beans. Look at the map if you want.",
+    'A huge map is pinned across the table. The dunes, the canyon, the oasis... and south of the camp, a circle drawn in red: "THE SUN GATE. DIG HERE."',
+    "Dust Devil Cook: Baron Sirocco took the whole crew to the old city's gate, past the big dune. He says the gate needs a sun stone to open.",
+    "Dust Devil Cook: Sable LOST the sun stone, though. To some kid. So the Baron is very, very cross. ...Wait. Are you the kid?",
+    '{hero} feels the Sun Shard, warm in their bag. Whoever brings it to the gate decides what the gate does.',
+  ]);
 }
 
 // Redrock Canyon: Dash catches up after the Dust Devils run off
