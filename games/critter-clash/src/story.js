@@ -136,6 +136,24 @@ export function storyIntro(S, w) {
     ]);
     return;
   }
+  if (w.key === 'redrock' && !F.redrock_arrive) {
+    F.redrock_arrive = true; persist();
+    w.say([
+      'The road squeezes between two red walls of rock... and opens into a canyon full of little clay houses stacked up the cliffs. Rope lifts creak up and down with baskets of water.',
+      '{hero}: Whoa. Redrock Canyon!',
+      'Liftkeeper Bo: Visitor! Welcome, welcome. The Canyon Stadium is up the steps on the north side. Mind the falling rocks in there. Ha! I mean it, though.',
+    ]);
+    return;
+  }
+  if (w.key === 'redrock' && F.devils1 && !F.sunshard) {
+    F.sunshard = true; persist(); reward(1);
+    w.say([
+      'Something glints in the hole the Dust Devils dug under the lift. {hero} brushes the sand away...',
+      '{hero} found a flat stone with a sun carved into it. It is warm, even in the shade. (The Sun Shard)',
+      "Elder Sabah: The gate of the old city was carved with a sun just like that. Keep it safe, little one. The Dust Devils will want it back.",
+    ]);
+    return;
+  }
   if (F.cup_mirage && !F.post_mirage && w.key === 'oasis') {
     F.post_mirage = true; persist();
     w.say([
@@ -367,6 +385,8 @@ export function nextGoal(F) {
     if (F.sunstone && !F.sands_arrive) return 'Chapter 3: the Sand-Rail runs again! Ride it from the south side of Cinder Town to the Amber Sands.';
     if (F.sands_arrive && !F.cup_mirage) return 'Win the Mirage Cup at the Sunwell Pavilion in Sunwell Oasis (Amber Sands).';
     if (F.cup_mirage && !F.cup_canyon) return 'The road is clear! Follow Dune Road east to Redrock Canyon and win the Canyon Cup.';
+    if (F.cup_canyon && !F.devils1) return 'The Dust Devils are digging under the east rope lift in Redrock Canyon. Stop them!';
+    if (F.devils1 && !F.dash_canyon) return 'Dash has caught up with you in Redrock Canyon. He wants a desert rematch!';
     if (!F.sunstone) return F.morra ? 'Bring the Sunstone home to the Starfall lighthouse!' : 'Sail to Starfall Atoll with Captain Gill (Port Coral) and take the Sunstone back from Captain Morra!';
     // post-game: point at whatever is still open (the Tower, the glider, the legends)
     if (!(save.adv.tower?.best >= 7)) return 'Morra has opened a Battle Tower on Starfall Atoll. Win 7 in a row for Bronze rank!';
@@ -610,6 +630,8 @@ export function storyTalk(S, id, w, a) {
   if (id === 'rail') return rail(S, w);
   if (id === 'dashisle') return dashIsle(S, w);
   if (id === 'skua') return skua(S, w);
+  if (id === 'devils1') return devils1(S, w);
+  if (id === 'dashcanyon') return dashCanyon(S, w);
   if (id === 'dashatoll') return dashAtoll(S, w);
   if (id === 'dashember') return dashEmber(S, w);
   if (id === 'dashshow') return dashShow(S, w);
@@ -1060,6 +1082,7 @@ export function storyMark(npc) {
     dash5: CUPS.every((x) => c(x.id)) && !F.dash5,
     king: F.dash5 && !F.crowned,
     gull_b: c('gale') && !F.skua_b,
+    devil_r: c('canyon') && !F.devils1, dash_r: F.devils1 && !F.dash_canyon, // Chapter 3: Redrock Canyon
     morra_a: c('caldera') && !F.morra,
     dash_b: F.sunstone && !F.dash_show,
     moonwhal_a: F.tower_bronze && !F.legend_moonwhal, solmoth_r: F.festlamp_done && !F.legend_solmoth, verdelk_g: F.grove4_done && !F.legend_verdelk, // the legends, once awake
@@ -1723,6 +1746,32 @@ function morra(S, w) {
     foe: withGear(skinnedShiny('toucharge'), 28), lv: 28, kind: 'story', flag: 'morra', name: 'Captain Morra', diff: 0.9,
     trainer: { name: 'Morra', critter: 'toucharge', title: 'Gloom Gull Captain', beat: "...Beaten. By a tourist. Fine. FINE. Take your shiny rock.", gloat: 'The night is ours! Back to your boat!' },
     note: '🌟 You beat Captain Morra! The Sunstone is yours.',
+  }));
+}
+
+// Redrock Canyon (Chapter 3): the first Dust Devils fight. Their lieutenant is digging under the east rope lift after the Canyon Cup
+function devils1(S, w) {
+  w.say([
+    'Dust Devil Sable: Well, well. The new Canyon champion. The boss warned me about you.',
+    "Dust Devil Sable: Under this lift is a stone with the sun carved on it. Baron Sirocco says it's a piece of the old city's gate. And it's OURS.",
+    'Dust Devil Sable: Siroccat, kick up some dust!',
+  ], () => S.worldFight({
+    foe: withGear(byId('siroccat'), 38), lv: 38, kind: 'story', flag: 'devils1', name: 'Dust Devil Sable', diff: 0.86,
+    trainer: { name: 'Sable', critter: 'siroccat', title: 'Dust Devil lieutenant', beat: "Pfft. Keep the silly rock, then. The Baron has a dozen more crews digging out on the dunes. You can't stop all of us!", gloat: 'Ha! The canyon belongs to the Dust Devils now!' },
+    note: '🏜️ You stopped the Dust Devils\' dig under the rope lift!',
+  }));
+}
+
+// Redrock Canyon: Dash catches up after the Dust Devils run off
+function dashCanyon(S, w) {
+  const rid = rivalFor(save.adv.hero), rdef = byId(rid);
+  w.say([
+    "Dash: *pant* *pant* I rode the Sand-Rail, then walked ALL of Dune Road. In THESE shoes. And you've already won the Canyon Cup?!",
+    "Dash: And chased off the Dust Devils? ...Okay. Okay okay okay. Desert rematch. Right here, in the dust!",
+  ], () => S.worldFight({
+    foe: withGear(rdef, 39), lv: 39, kind: 'story', flag: 'dash_canyon', name: 'Rival Dash', diff: 0.86,
+    trainer: { name: 'Dash', critter: rid, title: 'Desert rival', beat: "Sand everywhere and I STILL lose. Fine! Elder Sabah says the Dust Devils' camp is out on the big dunes. I'm going to find it first. See you there, Champ!", gloat: 'Ha! The desert likes ME better!' },
+    note: '⚡ You beat Dash in Redrock Canyon!',
   }));
 }
 
