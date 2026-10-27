@@ -429,6 +429,13 @@ export class Screens {
         "Conductor Tamsin says there are critters out there I've never even seen: a camel that keeps water in its humps, and a meerkat in goggles! Go and look, and tell me EVERYTHING.",
         save.adv.flags.sands_arrive ? "One worry: a gang called the Dust Devils has bought every shovel in Sunwell Oasis. What are they digging for?" : "Find Conductor Tamsin by the train on the south side of Cinder Town. Pack a sun hat!",
       ]), 600);
+    } else if (!g.autoplay && save.adv?.flags?.gate_open && save.news?.includes('adv33') && !save.news.includes('adv34')) { // Chapter 3 complete
+      save.news.push('adv34'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}! A postcard from the Amber Sands! Elder Sabah says you opened the Sun Gate. THE Sun Gate. With a stone from your bag!",
+        "Golden towers under the sand... I've ordered the biggest sun hat in the catalogue. Only a crack of the gate is open, she says, and the city behind it wants to be found slowly.",
+        "And the Dust Devils have swapped their shovels for brooms. Their old Baron sweeps the sand off the gate steps every morning. People can change, {name}!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
