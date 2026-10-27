@@ -37,14 +37,14 @@ if (want('edge')) {
 }
 if (want('views')) {
   await start('dunecamp', 6, 6, 'e', ['dash_canyon', 'dunecamp_arrive']);
-  for (const [n, x, y, d] of [['west', 6, 6, 's'], ['dome', 16, 6, 'n'], ['tents', 25, 6, 'n'], ['hq', 24, 7, 's']]) {
+  for (const [n, x, y, d] of [['west', 6, 6, 's'], ['dome', 16, 6, 'n'], ['tents', 25, 6, 'n'], ['hq', 24, 11, 'n']]) {
     await pg.evaluate(([x, y, d]) => { const o = __game.screens.worldObj; o.load('dunecamp', x, y, d); __sim(1); }, [x, y, d]);
     await shot('view-' + n);
   }
 }
 if (want('rooms')) {
   await start('dunecamp', 16, 5, 'n', ['dash_canyon', 'dunecamp_arrive']);
-  for (const [n, x, y] of [['lobby', 16, 5], ['weaver', 24, 4], ['berry', 4, 11]]) {
+  for (const [n, x, y] of [['lobby', 16, 5], ['weaver', 24, 4], ['berry', 4, 10]]) {
     await pg.evaluate(([x, y]) => { const o = __game.screens.worldObj; o.load('dunecamp', x, y, 'n'); __sim(0.8); o.tapA = true; __sim(0.2); }, [x, y]);
     await pg.waitForTimeout(2500); await pg.evaluate(() => __sim(1.5));
     console.log(n + ':', await W());
