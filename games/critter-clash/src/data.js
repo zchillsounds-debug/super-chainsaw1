@@ -568,6 +568,17 @@ export const SANDS_CUPS = [
       { name: 'Amaya', style: 'zoner', title: 'Oasis Keeper', critter: 'sizzlard', skin: 'shiny', level: 37, boss: true, bossTitle: 'OASIS KEEPER', taunt: "The oasis has stood for a thousand years, {name}. I keep it, and I keep this cup.", beat: "The water remembers who was strong. Take the Mirage Cup, champion.", gloat: "The sun is hot, and so is Sizzlard. Rest in the shade, traveller." },
     ],
   },
+  {
+    id: 'canyon', arena: 'canyon', name: 'Canyon Cup', color: '#d8643a', desc: 'A ring of red rock with the sky for a roof. Watch out for falling stones!', diff: [0.88, 1], sands: true,
+    intro: ["Welcome to Redrock Canyon, {name}! The Canyon Cup is fought in the open air, under the cliffs.", "The canyon echoes every cheer ten times over. Make them count!"],
+    outro: ["Canyon Cup champion! Hear that? The whole canyon is cheering. Ten times over.", "One cup left in the Amber Sands: the Sandstorm Cup, out at the dune camp. If the Dust Devils haven't dug it up first..."],
+    matches: [
+      { name: 'Rook', style: 'turtle', title: 'Rock Climber', critter: 'cactortle', level: 37, taunt: "Cactortle climbs slower than me, but it never, ever falls. Same goes for battles!", beat: "Lost my grip! Good battle.", gloat: "Steady hands, steady feet. Try climbing again!" },
+      { name: 'Mesa', style: 'rushdown', title: 'Lift Racer', critter: 'fennzap', level: 37, taunt: "I race the rope lifts every morning. Fennzap always beats the basket to the top!", beat: "Whoa, you're faster than the lift!", gloat: "Too slow! Even the basket would've beaten you." },
+      { name: 'Ochre', style: 'zoner', title: 'Clay Potter', critter: 'humpdrop', level: 38, mods: ['bighead'], taunt: "Red clay, cool water, a hot sun. That's how you make a pot. And a champion!", beat: "Cracked in the kiln... Well done!", gloat: "Back to the wheel with you. Shape up!" },
+      { name: 'Maro', style: 'balanced', title: 'Canyon Chief', critter: 'scarabold', skin: 'shiny', level: 40, boss: true, bossTitle: 'CANYON CHIEF', taunt: "These walls have stood for a million years, {name}. My Scarabold has rolled every stone in them.", beat: "The canyon has a new echo. Take the Canyon Cup. You earned every stone of it.", gloat: "The canyon doesn't move for anyone. Not even a champion." },
+    ],
+  },
 ];
 export const ALL_CUPS = () => [...CUPS, ...ISLE_CUPS];
 export const cupById = (id) => CUPS.find((c) => c.id === id) || ISLE_CUPS.find((c) => c.id === id) || SANDS_CUPS.find((c) => c.id === id);

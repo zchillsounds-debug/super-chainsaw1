@@ -18,6 +18,7 @@ export const HAZARDS = {
   sky:     { name: 'Updrafts', color: 0x4aa8ff, solid: true, glow: 0xffffff, r: 1.2, warn: 1.3, dmg: 6, lift: 9, kb: 1, word: 'WHOOSH!' },
   grove:   { name: 'Spore puffs', color: 0x9adf4a, solid: true, glow: 0xe8ffa0, r: 1.3, warn: 1.2, dmg: 5, stun: 0.5, kb: 1, dizzy: 45, word: 'ACHOO!' },
   oasis:   { name: 'Water geysers', color: 0x2ab0d8, glow: 0xb8f4ff, r: 1.2, warn: 1.3, dmg: 7, lift: 8.5, kb: 1.5, word: 'SPLOOSH!' }, // Chapter 3: the Sunwell Pavilion
+  canyon:  { name: 'Falling rocks', color: 0xc8402a, solid: true, glow: 0xffe0b0, r: 1.1, warn: 1.25, dmg: 9, stun: 0.6, kb: 3.2, word: 'CRUNCH!' }, // Chapter 3: Redrock Canyon
   beach:   { name: 'Coconuts', color: 0xe0482a, solid: true, glow: 0xfff2c0, r: 0.9, warn: 1.2, dmg: 7, stun: 0.5, kb: 3, word: 'BONK!' },
 };
 
@@ -28,6 +29,8 @@ export const SIGS = {
   beach:   { name: 'Rogue waves', word: 'SPLASH!', jumbo: 'ROGUE WAVE!', tip: 'Rogue wave! Step out of its lane!' },
   sky:     { name: 'Crosswinds', word: 'GUST!', jumbo: 'CROSSWIND!', tip: 'Crosswind! Hold your ground!' },
   grove:   { name: 'Spore clouds', word: 'ACHOO!', jumbo: 'SPORES!', tip: "Spore cloud! Don't breathe it in!" },
+  canyon:  { name: 'Rockslides', word: 'ROCKSLIDE!', jumbo: 'ROCKSLIDE!', tip: 'Rockslide! Get out from under the line!' }, // Redrock Canyon
+  oasis:   { name: 'Fountain rings', word: 'FOUNTAIN!', jumbo: 'FOUNTAIN!', tip: 'Fountain ring! Stay in the dry middle!' }, // the Sunwell Pavilion
 };
 
 // shared art for the ice slick (made once, never disposed)
@@ -63,6 +66,12 @@ function ringMesh(color, solid) {
 }
 
 function dropMesh(kind) {
+  if (kind === 'canyon') { // a chunky slab of red sandstone, with a paler band across it
+    const g = new THREE.Group(), r = inked(new THREE.DodecahedronGeometry(0.42, 0), toon(0xb8583a, { rim: 0.4 }), 0.025);
+    r.scale.set(1.15, 0.8, 1); g.add(r);
+    const band = new THREE.Mesh(new THREE.DodecahedronGeometry(0.43, 0), toon(0xe0a070)); band.scale.set(1.16, 0.22, 1.01); band.position.y = 0.04; g.add(band);
+    return g;
+  }
   if (kind === 'frost') {
     const m = inked(new THREE.ConeGeometry(0.22, 1.1, 8), toon(0xbfeeff, { rim: 0.9 }), 0.02);
     m.rotation.x = Math.PI; // point down
@@ -240,6 +249,20 @@ export class Hazards {
       // a crosswind sweeps the gardens and shoves everyone one way
       sg.warn = 1.1; sg.dur = 4; sg.dx = dx; sg.dz = dz;
       sfx.whoosh?.(0.5);
+    } else if (key === 'canyon') {
+      // a rockslide: stones tumble down in a line across the arena through one fighter, one after another
+      sg.warn = 0; sg.dur = 2.8;
+      const n = 6, gap = this.H.r * 1.7, off = (Math.random() - 0.5) * gap;
+      for (let k = 0; k < n; k++) { const a = (k - (n - 1) / 2) * gap + off; this.spawnAt(f.x + dx * a, f.z + dz * a, -0.45 - k * 0.22, k > 0); }
+      B.fx.text({ x: hp.x, y: hp.y + 0.4, z: hp.z }, 'ROCKSLIDE!', 'eff', 1);
+      sfx.rumble();
+    } else if (key === 'oasis') {
+      // the Sunwell's fountain show: geysers rise one after another in a ring round one fighter; the middle stays dry
+      sg.warn = 0; sg.dur = 3.2;
+      const n = 7, R = 2.4, a0 = Math.random() * Math.PI * 2, dir = Math.random() < 0.5 ? 1 : -1;
+      for (let k = 0; k < n; k++) { const a = a0 + dir * k / n * Math.PI * 2; this.spawnAt(f.x + Math.cos(a) * R, f.z + Math.sin(a) * R, -0.5 - k * 0.2, k > 0); }
+      B.fx.text({ x: hp.x, y: hp.y + 0.4, z: hp.z }, 'FOUNTAIN!', 'eff', 1);
+      sfx.warn();
     } else if (key === 'grove') {
       // a big spore cloud settles near one fighter and lingers; breathing it in makes you dizzy
       sg.warn = 1.2; sg.dur = 5.5; sg.r = 1.8;
@@ -373,7 +396,7 @@ export class Hazards {
     B.scene.add(mesh);
     const h = { x, z, t: t0, fired: false, mesh, follow };
     mesh.visible = t0 >= 0;
-    if (B.arena.key === 'frost' || B.arena.key === 'beach') {
+    if (B.arena.key === 'frost' || B.arena.key === 'beach' || B.arena.key === 'canyon') {
       h.drop = dropMesh(B.arena.key);
       h.drop.position.set(x, 9, z);
       B.scene.add(h.drop);
@@ -460,6 +483,10 @@ export class Hazards {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 24, speed: 3, up: 11, color: 0xd8f6ff, size: 0.3, life: 0.8, shape: 'glow', additive: false, grav: 14, alpha: 0.9 });
       B.fx.spawn({ x: h.x, y: 0.06, z: h.z, color: 0xe8fbff, size: H.r * 1.6, life: 0.6, shape: 'ring', additive: false, grow: 1.5, alpha: 0.7 });
       sfx.whoosh?.(0.9);
+    } else if (key === 'canyon') {
+      B.fx.burst({ x: h.x, y: 0.3, z: h.z }, { n: 16, speed: 3.5, up: 2.5, color: 0xd8a070, size: 0.7, life: 0.8, shape: 'puff', additive: false, grav: 1, grow: 1.3, alpha: 0.75 });
+      B.fx.burst(p, { n: 10, speed: 5, up: 4, color: 0xb8583a, size: 0.22, life: 0.6, shape: 'star', additive: false, grav: 12, spin: 8 });
+      sfx.bonk(); sfx.rumble();
     } else if (key === 'frost') {
       B.fx.burst(p, { n: 16, speed: 5, up: 3, color: 0xd8f6ff, size: 0.22, life: 0.5, shape: 'star', additive: false, grav: 8 });
       sfx.bonk();

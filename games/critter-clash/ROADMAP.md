@@ -1,7 +1,7 @@
 # Critter Clash roadmap: Chapter 3 (the Amber Sands) and battle depth (agreed with the user on 2026-10-27)
 
 ## What the user decided
-- **Next run:** a 48-hour chained run, **2026-10-27 06:00 → 2026-10-29 06:00 UTC** (the end time also sits at the top of HANDOFF.md; never reset it; push it back by the length of any worker stall).
+- **Next run:** a 48-hour chained run, **2026-10-27 06:00 → 2026-10-29 06:00 UTC** (now **08:37 UTC**: a 2 h 37 min worker stall in session D5) (the end time also sits at the top of HANDOFF.md; never reset it; push it back by the length of any worker stall).
 - **Focus:** Chapter 3, a new region with a **desert canyon and oasis** theme, plus **battle depth and feel**.
 - **Battle code is open now:** the run may edit battle.js, arena.js, hud.js and screens.js results/worldFight (the user's other chat no longer owns them). Keep each battle change measured: robin for balance, battleperf for speed, before/after screenshots for looks.
 - Designs stay **original** (no Pokémon IP). Make sensible calls and keep going; about 80% new content, 20% fixes and polish.

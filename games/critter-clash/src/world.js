@@ -334,7 +334,7 @@ export class World {
     }
     for (const s of M.signs || []) this.solid.add(s.x + ',' + s.y);
     if (M.train && !M.indoor) for (let x = M.train.from; x <= M.train.to; x++) this.solid.add(x + ',' + M.train.y); // the Sand-Rail's track (set before props and gift boxes are placed)
-    for (const [x, y] of [...(M.bazaar || []), ...(M.cacti || []), ...(M.well ? [M.well] : [])]) this.solid.add(x + ',' + y);
+    for (const [x, y] of [...(M.bazaar || []), ...(M.cacti || []), ...(M.lifts || []), ...(M.well ? [M.well] : [])]) this.solid.add(x + ',' + y);
     this.buildGround(rand);
     this.buildTrees(rand);
     this.buildGrass(rand);
@@ -361,6 +361,7 @@ export class World {
     this.buildMarket();
     this.buildBazaar();
     this.buildWell();
+    this.buildLifts();
     this.buildCacti();
     this.buildDance();
     this.buildIceLanterns();
@@ -1264,6 +1265,29 @@ export class World {
     }
     const add = (list, col, ink) => { if (!list.length) return; const m = ink ? inked(mergeGeometries(list), toon(col, { rim: 0.5 }), OL * 0.5) : new THREE.Mesh(mergeGeometries(list), toon(col)); list.forEach((q) => q.dispose()); m.castShadow = true; this.group.add(m); };
     add(green, 0x4a9a4a, true); add(spines, 0xf4f0e0, false); add(bloom, 0xff6a9a, true);
+  }
+
+  // Redrock Canyon: rope lifts up the cliff: a tall wooden gantry with a winch wheel, a rope, and a basket that rides up and down
+  buildLifts() {
+    this.lifts = [];
+    if (!this.M.lifts || this.M.indoor) return;
+    const wood = toon(0x7a4e2c), rope = toon(0xd8c088);
+    for (const [x, y] of this.M.lifts) {
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g);
+      const parts = [];
+      for (const sd of [-0.7, 0.7]) { const p = new THREE.BoxGeometry(0.16, 5.2, 0.16); p.translate(sd, 2.6, -0.2); parts.push(p); const br = new THREE.BoxGeometry(0.1, 1.6, 0.1); br.rotateZ(sd > 0 ? 0.5 : -0.5); br.translate(sd * 0.82, 0.7, -0.2); parts.push(br); }
+      const top = new THREE.BoxGeometry(1.9, 0.18, 0.3); top.translate(0, 5.2, -0.2); parts.push(top);
+      for (const hy of [1.8, 3.5]) { const c = new THREE.BoxGeometry(1.4, 0.08, 0.08); c.translate(0, hy, -0.2); parts.push(c); }
+      const frame = inked(mergeGeometries(parts), wood, OL * 0.4); frame.castShadow = true; g.add(frame); parts.forEach((q) => q.dispose());
+      const wheel = inked(new THREE.TorusGeometry(0.32, 0.07, 6, 14), toon(0x5a3a22), OL * 0.3); wheel.position.set(0, 5.45, -0.2); g.add(wheel);
+      const line = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1, 5), rope); line.position.set(0, 0, 0.05); g.add(line);
+      const basket = new THREE.Group(); g.add(basket);
+      const box = inked(new THREE.CylinderGeometry(0.42, 0.34, 0.45, 10, 1, true), toon(0xc89a5a, { side: THREE.DoubleSide }), OL * 0.4); box.position.y = 0.22; basket.add(box);
+      const floor = new THREE.Mesh(new THREE.CircleGeometry(0.34, 10), toon(0x8a6a3a)); floor.rotation.x = -Math.PI / 2; floor.position.y = 0.02; basket.add(floor);
+      const jug = inked(new THREE.SphereGeometry(0.16, 10, 8), toon(0xd8743a), OL * 0.3); jug.position.set(0.12, 0.42, 0); jug.scale.y = 1.2; basket.add(jug); // a water jug riding up to the mesa
+      basket.position.set(0, 0.2, 0.05);
+      this.lifts.push({ g, basket, line, phase: hash(this.key + x) % 100 / 100 * Math.PI * 2 });
+    }
   }
 
   // Chapter 3: the oasis's old stone well, with a little tiled roof, a rope and a bucket
@@ -3080,6 +3104,23 @@ export class World {
           const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), bm); bulb.position.set(w * 0.4, wallH + 1.98, d * 0.25); G.add(bulb);
           this.beacon = bulb;
 
+        } else if (b.adobe) {
+          // Redrock Canyon: an adobe cliff house: a flat roof with a low lip, a smaller second storey set back, wooden roof
+          // beams poking out of the walls, a ladder up to the top floor and a little round clay oven on the roof
+          const wc = new THREE.Color(b.wall || 0xf2d4ac), dark = toon(0xc0704a); // pale adobe walls with terracotta lips: they stand out from the red sand
+          const lip = inked(new THREE.BoxGeometry(w - 0.28, 0.22, d - 0.38), dark, OL * 0.6); lip.position.y = wallH + 0.11; G.add(lip);
+          const up = inked(new THREE.BoxGeometry(w * 0.52, 1.25, d * 0.5), toon(wc.clone().multiplyScalar(1.06).getHex()), OL); up.position.set(-w * 0.17, wallH + 0.62, -d * 0.16); G.add(up);
+          const lip2 = inked(new THREE.BoxGeometry(w * 0.52 + 0.12, 0.16, d * 0.5 + 0.12), dark, OL * 0.5); lip2.position.set(-w * 0.17, wallH + 1.3, -d * 0.16); G.add(lip2);
+          const beams = [];
+          for (let k = 0; k < 5; k++) { const g = new THREE.CylinderGeometry(0.07, 0.07, 0.5, 6); g.rotateX(Math.PI / 2); g.translate(-w / 2 + 0.55 + k * (w - 1.1) / 4, wallH - 0.18, d / 2 - 0.05); beams.push(g); }
+          for (let k = 0; k < 3; k++) { const g = new THREE.CylinderGeometry(0.06, 0.06, 0.45, 6); g.rotateX(Math.PI / 2); g.translate(-w * 0.17 - w * 0.18 + k * w * 0.18, wallH + 1.08, -d * 0.16 + d * 0.25 + 0.12); beams.push(g); }
+          G.add(inked(mergeGeometries(beams), toon(0x6a4428), OL * 0.3)); beams.forEach((g) => g.dispose());
+          const lad = [], lx = w * 0.2, lz = -d * 0.16 + d * 0.25 + 0.25; // a ladder leaning from the roof up to the top floor
+          for (const sd of [-0.22, 0.22]) { const g = new THREE.BoxGeometry(0.07, 1.9, 0.07); g.rotateX(-0.32); g.translate(lx + sd, wallH + 0.85, lz + 0.05); lad.push(g); }
+          for (let k = 0; k < 5; k++) { const g = new THREE.BoxGeometry(0.44, 0.05, 0.05); g.translate(lx, wallH + 0.2 + k * 0.33, lz + 0.32 - k * 0.11); lad.push(g); }
+          G.add(new THREE.Mesh(mergeGeometries(lad), toon(0x8a5a32))); lad.forEach((g) => g.dispose());
+          const oven = inked(new THREE.SphereGeometry(0.42, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xe8b088), OL * 0.5); oven.position.set(w * 0.3, wallH + 0.22, -d * 0.2); G.add(oven);
+          const mouth = new THREE.Mesh(new THREE.CircleGeometry(0.14, 10), toon(0x3a2418)); mouth.position.set(w * 0.3, wallH + 0.32, -d * 0.2 + 0.41); G.add(mouth);
         } else {
           // gable roof: a triangle extruded along the house
           const sh = new THREE.Shape(); sh.moveTo(-d / 2 - 0.15, 0); sh.lineTo(0, 1.5); sh.lineTo(d / 2 + 0.15, 0); sh.closePath();
@@ -4697,6 +4738,7 @@ export class World {
     if (this.glowTide) this.glowTide.material.opacity = 0.6 + Math.sin(this.t * 1.1) * 0.3 + Math.sin(this.t * 2.9) * 0.1; // waves of sea sparks
     if (this.cracks) this.cracks.material.opacity = (this.phase === 'day' ? 0.75 : 0.88) + Math.sin(this.t * 1.7) * (this.phase === 'day' ? 0.25 : 0.12); // the magma breathes
     if (this.labDish) this.labDish.rotation.y = Math.sin(this.t * 0.4) * 1.2;
+    for (const L of this.lifts || []) { const h = 0.2 + (1 - Math.cos(this.t * 0.25 + L.phase)) * 2.0; L.basket.position.y = h; L.line.position.y = (h + 0.7 + 5.45) / 2; L.line.scale.y = Math.max(0.1, 5.45 - h - 0.7); } // the baskets ride slowly up and down the cliff
     if (this.beacon) this.beacon.material.color.setHex(this.t % 1.6 < 0.25 ? 0xff5050 : 0x5a1818);
     if (this.crown) {
       this.crown.rotation.y += dt * 1.2; this.crown.position.y = 2.6 + Math.sin(this.t * 2) * 0.12;

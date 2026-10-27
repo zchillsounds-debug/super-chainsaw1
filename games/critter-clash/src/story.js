@@ -136,6 +136,16 @@ export function storyIntro(S, w) {
     ]);
     return;
   }
+  if (F.cup_mirage && !F.post_mirage && w.key === 'oasis') {
+    F.post_mirage = true; persist();
+    w.say([
+      'The oasis pool bubbles up like a fountain for a moment, as high as the palms, and the whole market cheers.',
+      'Oasis Keeper Amaya: The Sunwell has never jumped like that for a visitor. The Mirage Cup suits you, {hero}!',
+      'Amaya: Two more cups wait out in the sands. The Canyon Cup is in Redrock Canyon, at the far end of Dune Road, and the Sandstorm Cup is at the dune camp beyond.',
+      "Amaya: Sand Crew Kip is still clearing the rockfall on Dune Road. And watch the Dust Devils out there. They dig wherever they like and say the old city is theirs.",
+    ]);
+    return;
+  }
   if (w.key === 'oasis' && !F.sands_arrive) {
     F.sands_arrive = true; persist();
     w.say([
@@ -356,6 +366,7 @@ export function nextGoal(F) {
     if (nx) return `Win the ${nx.name} in ${ISLE_AT[nx.id]}.`;
     if (F.sunstone && !F.sands_arrive) return 'Chapter 3: the Sand-Rail runs again! Ride it from the south side of Cinder Town to the Amber Sands.';
     if (F.sands_arrive && !F.cup_mirage) return 'Win the Mirage Cup at the Sunwell Pavilion in Sunwell Oasis (Amber Sands).';
+    if (F.cup_mirage && !F.cup_canyon) return 'The road is clear! Follow Dune Road east to Redrock Canyon and win the Canyon Cup.';
     if (!F.sunstone) return F.morra ? 'Bring the Sunstone home to the Starfall lighthouse!' : 'Sail to Starfall Atoll with Captain Gill (Port Coral) and take the Sunstone back from Captain Morra!';
     // post-game: point at whatever is still open (the Tower, the glider, the legends)
     if (!(save.adv.tower?.best >= 7)) return 'Morra has opened a Battle Tower on Starfall Atoll. Win 7 in a row for Bronze rank!';
