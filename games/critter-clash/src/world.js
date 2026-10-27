@@ -4155,8 +4155,12 @@ export class World {
     const bowl = inked(new THREE.CylinderGeometry(1, 0.94, 2.6, 40, 1, true), wm, OL);
     bowl.scale.set(w / 2 - 0.2, 1, d / 2 - 0.1); bowl.position.y = 1.3; G.add(bowl);
     // inside: a sloped bank of seat rows with a speckled crowd, so the top-down view looks into a stadium, not a dark hole
+    const A = ARENAS[cup.arena] || {}, hex = (v, f) => '#' + new THREE.Color(v ?? f).getHexString();
+    // the Amber Sands' stadiums wear their arena's own colours (the Sunwell Pavilion is teal and terracotta); the older towns keep the navy-and-gold look
+    const rowA = cup.sands ? hex(A.wallA, 0x3a4a8a) : '#4a5aa0', rowB = cup.sands ? hex(A.accent ?? A.wallA, 0x4a5aa0) : '#3a4a8a';
+    const trim = cup.sands ? new THREE.Color(A.wallA ?? 0xffd23f).getHex() : 0xffd23f;
     const seats = canvasTex(512, 64, (c, W, H) => {
-      for (let r = 0; r < 4; r++) { c.fillStyle = r % 2 ? '#3a4a8a' : '#4a5aa0'; c.fillRect(0, r * H / 4, W, H / 4); }
+      for (let r = 0; r < 4; r++) { c.fillStyle = r % 2 ? rowA : rowB; c.fillRect(0, r * H / 4, W, H / 4); }
       const fans = ['#ff6a8a', '#ffe14d', '#ffffff', '#7ad0ff', cup.color, '#ffb070'];
       for (let k = 0; k < 420; k++) { c.fillStyle = fans[k % fans.length]; c.beginPath(); c.arc(Math.random() * W, (Math.floor(Math.random() * 4) + 0.45) * H / 4, 2.4, 0, 7); c.fill(); }
     });
@@ -4164,11 +4168,11 @@ export class World {
     const smat = toon(0xffffff, { map: seats, side: THREE.DoubleSide, rim: 0 }); smat.userData.own = true;
     const bank = new THREE.Mesh(new THREE.CylinderGeometry(0.93, 0.8, 2.4, 40, 1, true), smat);
     bank.scale.set(w / 2 - 0.2, 1, d / 2 - 0.1); bank.position.y = 1.25; G.add(bank);
-    const rim = inked(new THREE.TorusGeometry(1, 0.08, 6, 48), toon(0xffd23f), 0);
+    const rim = inked(new THREE.TorusGeometry(1, 0.08, 6, 48), toon(trim), 0);
     rim.rotation.x = Math.PI / 2; rim.scale.set(w / 2 - 0.2, d / 2 - 0.1, 1); rim.position.y = 2.6; G.add(rim);
     const field = new THREE.Mesh(new THREE.CircleGeometry(1, 40), toon(new THREE.Color(ARENAS[cup.arena]?.fieldA || '#5ac24a').getHex())); field.rotation.x = -Math.PI / 2; field.scale.set((w / 2 - 0.2) * 0.8, (d / 2 - 0.1) * 0.8, 1); field.position.y = 0.05; G.add(field);
     // arch over the gate
-    const arch = inked(new THREE.TorusGeometry(0.9, 0.18, 8, 16, Math.PI), toon(0xffd23f), OL * 0.6); arch.position.set((b.door + 0.5) * TILE - w / 2, 1.6, d / 2 - 0.1); G.add(arch);
+    const arch = inked(new THREE.TorusGeometry(0.9, 0.18, 8, 16, Math.PI), toon(trim), OL * 0.6); arch.position.set((b.door + 0.5) * TILE - w / 2, 1.6, d / 2 - 0.1); G.add(arch);
     const gate = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.6), toon(0x2a1630)); gate.position.set(arch.position.x, 0.8, d / 2 - 0.05); G.add(gate);
     // pennants
     for (let k = 0; k < 6; k++) {

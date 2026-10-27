@@ -887,7 +887,7 @@ export const MAPS = {
       { id: 'berry_o', x: 18, y: 2, w: 4, h: 3, roof: 0xff7aa0, wall: 0xf4dcb8, door: 2, label: 'Berry Center', heal: true },
       { id: 'hats_o', x: 3, y: 8, w: 4, h: 3, roof: 0xd8643a, wall: 0xf0d0a0, door: 1, label: 'Sand Hats', hatShop: true },
     ],
-    signs: [{ x: 11, y: 5, text: 'SUNWELL OASIS\nThe last cool water before the Amber Sands. Drink up!' }],
+    signs: [{ x: 14, y: 5, text: 'SUNWELL OASIS\nThe last cool water before the Amber Sands. Drink up!' }],
     npcs: [
       { id: 'tamsin_o', x: 13, y: 12, critter: 'humpdrop', name: 'Conductor Tamsin', dir: 'w', story: 'rail', lines: [] },
       { id: 'saffi', x: 12, y: 11, critter: 'fennzap', name: 'Trader Saffi', dir: 's', lines: ["Trader Saffi: Fresh dates! Sweet as sunshine! The first one's free, every day. Tell your friends!", "Trader Saffi: My Fennzap hears a customer coming from three dunes away. Its ears never stop twitching."] },
