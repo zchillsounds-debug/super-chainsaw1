@@ -682,6 +682,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'masters') return masters(S, w);
   if (id.startsWith('legend:')) return legend(S, w, id.slice(7));
   if (id === 'stargazer') return stargazer(S, w);
+  if (id === 'dtrial') return desertTrial(S, w);
   if (id === 'singing') return singingTalk(S, w);
   if (id === 'gauntsign') { // the signpost, with this week's theme chalked underneath
     const th = gauntletTheme(gauntletWeek()), sg = getMap('peak').signs.find((q) => q.act === 'gauntsign');
@@ -1328,7 +1329,7 @@ const HAT_WHERE = {
   pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
   masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
   gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
-  fossilhat: 'dig up every fossil for the Sunwell Museum', amberwreath: 'explore 100% of the Amber Sands',
+  fossilhat: 'dig up every fossil for the Sunwell Museum', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
 };
 export function hatWhere(id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';
@@ -1406,6 +1407,33 @@ function masters(S, w) {
     foe: withGear(skinnedShiny(critter), lv), lv, kind: 'story', flag: `mast_${wk}_${n}`, name, diff: Math.min(0.95, 0.88 + n * 0.02), berries: 2,
     trainer: { name, critter, title: `Sunscatter Master ${n + 1}/4 · ${title}`, beat: n === 3 ? 'Hmph. The last Master falls. Go and tell Marina.' : 'What a battle! The next Master is waiting.', gloat: 'The Masters stand! Come back and try again.' },
     note: n === 3 ? '🌺 Sunscatter Masters cleared! Talk to Marina.' : `🌺 Master ${n + 1}/4 beaten! +2 🍓`,
+  }), who);
+}
+
+// D4 post-game: the Desert Trial at the Sun Gate. Each week the desert's three cup champions and Elder Sabah battle the hero in a row, each in their
+// own arena with its hazards (the last one in a sandstorm), at champion level. Clearing all four pays 10 berries; the first clear ever gives the Sun Gate Laurel.
+export const DESERT_TRIAL = [['Amaya', 'sizzlard', 'Oasis Keeper', 'oasis'], ['Maro', 'scarabold', 'Canyon Chief', 'canyon'], ['Rasha', 'siroccat', 'Dune Warden', 'dunes'], ['Sabah', 'humpdrop', 'Elder of the Sands', 'dunes', true]];
+function desertTrial(S, w) {
+  const A = save.adv, F = A.flags, wk = gauntletWeek(), who = 'Elder Sabah';
+  const n = DESERT_TRIAL.findIndex((_, i) => !F[`dtrial_${wk}_${i}`]);
+  if (n < 0) {
+    if (!F['dtrialpay_' + wk]) {
+      F['dtrialpay_' + wk] = true; save.berries = (save.berries || 0) + 10;
+      const first = !(A.hats ||= []).includes('sunlaurel'); if (first) A.hats.push('sunlaurel');
+      A.dtrialWins = (A.dtrialWins || 0) + 1; persist(); reward(3);
+      return w.say([`${who}: The oasis, the canyon, the dunes and an old woman in a sandstorm. You crossed the whole desert in one week, little one.`, '{hero} got 10 🍓!', ...(first ? ['{hero} got the Sun Gate Laurel! 🌞 (☰ → 🎩 Hats)'] : []), `${who}: The sands shift every Monday. So does the Trial. Come back and cross them again.`], null, who);
+    }
+    return w.say([`${who}: You have crossed the Trial this week. Rest your paws until Monday.`], null, who);
+  }
+  const [name, critter, title, arena, storm] = DESERT_TRIAL[n], lv = Math.min(50, save.critters[A.hero].level + 3 + n);
+  const where = { oasis: 'the Sunwell Pavilion', canyon: 'the Canyon Stadium', dunes: 'the Sandstorm Dome' }[arena];
+  w.say([
+    ...(n === 0 ? [`${who}: The gate is open, the Dust Devils are sweeping, and the desert has a new champion. So the desert wants to test you. The old way.`, `${who}: The Desert Trial: four battles, each on its own ground. The oasis, the canyon, the dunes... and then me. A new Trial every Monday.`] : []),
+    storm ? `${who}: Battle 4 of 4. The last one is mine, and my Humpdrop has walked through a hundred sandstorms. We will fight in one. Lv ${lv}.` : `${who}: Battle ${n + 1} of 4: ${title} ${name} and a shiny ${byId(critter).name}, Lv ${lv}, in ${where}. Ready?`,
+  ], () => S.worldFight({
+    foe: withGear(skinnedShiny(critter), lv), lv, kind: 'story', flag: `dtrial_${wk}_${n}`, name, diff: Math.min(0.95, 0.88 + n * 0.02), berries: 2, arena, stadium: true, sandstorm: !!storm,
+    trainer: { name, critter, title: `Desert Trial ${n + 1}/4 · ${title}`, beat: n === 3 ? 'Ha! The sand is in my eyes, and you are still standing. Go on, go back to the gate.' : 'The sands remember this battle. The next keeper is waiting.', gloat: 'The desert is patient. Try again.' },
+    note: n === 3 ? '🌞 Desert Trial cleared! Talk to Elder Sabah.' : `🌞 Desert Trial ${n + 1}/4 won! +2 🍓`,
   }), who);
 }
 

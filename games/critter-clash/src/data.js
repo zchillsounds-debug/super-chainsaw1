@@ -377,7 +377,7 @@ export const CRITTERS = [
     body: { w: 0.5, h: 0.6, headR: 0.46, legLen: 0.16, armLen: 0.24, chubby: 0.95 },
     ears: 'none', tail: 'feathers', extra: 'sunbird', wingMul: 1.35, voice: 1.35, legend: true, desert: true,
     parts: { suncrest: 0.9, sunhalo: 0.85, tailplumes: 0.9 },
-    stats: { hp: 1000, speed: 7.0, power: 1.0, weight: 0.9 },
+    stats: { hp: 1090, speed: 7.0, power: 1.07, weight: 0.9 },
     special: 'swoop', super: 'jetstream',
     moves: { special: 'Sunfall Dive', super: 'Singing Sandstorm' },
   },

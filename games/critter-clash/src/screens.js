@@ -13,7 +13,7 @@ import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
 import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, seasonKey } from './world.js';
-import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, hatWhere, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, gauntletFoes } from './story.js';
+import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, hatWhere, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, DESERT_TRIAL, gauntletFoes } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { VERSION } from './version.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -1461,7 +1461,8 @@ export class Screens {
         + sb('🌵', 'Desert critters on your team', desert.filter((c) => save.unlocked.includes(c.id)).length, desert.length, lst(desert.filter((c) => !save.unlocked.includes(c.id)).map((c) => (c.legend ? (F.buried_vault ? `${c.name} (a legend: see the 🏆 Champ page)` : '??? (a legend)') : c.name)), 7))
         + sb('🏛️', 'Buried City secrets', city.filter(([f]) => F[f]).length, city.length, F.gate_open ? lst(city.filter(([f]) => !F[f]).map(([, t]) => t)) : 'somewhere beyond a great stone gate...')
         + (A.cnt?.rail ? bar('🚂', 'Sand-Rail rides', A.cnt.rail) : '')
-        + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '');
+        + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '')
+        + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '');
     }
     const pc = Math.floor(parts.reduce((a, b) => a + b, 0) / parts.length * 100), isles = !!F.isle_arrive;
     const ipc = isles ? Math.floor(iparts.reduce((a, b) => a + b, 0) / iparts.length * 100) : 0, spc = sands ? Math.floor(sparts.reduce((a, b) => a + b, 0) / sparts.length * 100) : 0;
@@ -1566,6 +1567,7 @@ export class Screens {
         + `<li class="jr-head">🌺 Sunscatter Masters <small>this week ${mDone}/4</small></li>`
         + MASTERS.map(([name, cr, title], i) => rowC('⭐', `${name} <small>${title}</small>`, F[`mast_${wk}_${i}`] ? 'beaten' : `shiny ${nm(cr)}`, F[`mast_${wk}_${i}`])).join('')
         + `<li class="jr-more">${mDone === 4 ? (F['mastpay_' + wk] ? '🌟 Cleared this week!' : '🌟 All four beaten! Talk to Marina in Port Coral.') : 'Champion Marina waits outside Coral Stadium.'} ${A.mastWins ? `Cleared ${A.mastWins} week${A.mastWins > 1 ? 's' : ''}${hats.includes('masterlei') ? " · Champion's Lei 🌺" : ''}.` : ''} New Masters in ${left} day${left > 1 ? 's' : ''}.</li>`
+        + (F.gate_open ? `<li class="jr-head">🌞 Desert Trial <small>this week ${DESERT_TRIAL.filter((_, i) => F[`dtrial_${wk}_${i}`]).length}/4</small></li>` + DESERT_TRIAL.map(([name, cr, title], i) => rowC('☀️', `${name} <small>${title}</small>`, F[`dtrial_${wk}_${i}`] ? 'beaten' : `shiny ${nm(cr)}`, F[`dtrial_${wk}_${i}`])).join('') + (A.dtrialWins ? '' : '<li class="jr-more">Elder Sabah at the Sun Gate. A new Trial every Monday.</li>') : '')
         + `<li class="jr-head">🏔️ Peak Gauntlet <small>this week ${gDone}/5</small></li>`
         + `<li class="jr-more">${gDone === 5 ? '🌟 Cleared this week!' : `Next: ${gf[gDone] ? nm(gf[gDone].id) : ''} on Champion's Peak (Keeper Orla).`} ${A.gauntWins ? `Cleared ${A.gauntWins} week${A.gauntWins > 1 ? 's' : ''}.` : ''}</li>`
         + `<li class="jr-head">✨ Legendary critters <small>${LEGEND_IDS().filter((id) => F['legend_' + id]).length}/${LEGEND_IDS().length}</small></li>`
@@ -1763,7 +1765,7 @@ export class Screens {
 
   // a fight from the world: wild critters, trainers and story battles
   worldFight(info) {
-    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = this.worldObj?.M.arena || 'meadow', place = this.worldObj?.M.name, phase = this.worldObj?.phase, rain = this.worldObj?.rain, sandstorm = !!this.worldObj?.sandstorm;
+    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = info.arena || this.worldObj?.M.arena || 'meadow', place = info.stadium ? null : this.worldObj?.M.name, phase = this.worldObj?.phase, rain = this.worldObj?.rain, sandstorm = info.sandstorm ?? !!this.worldObj?.sandstorm; // (the Desert Trial picks its own arena and weather)
     this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit, berries: info.berries, shiny: info.shiny, arena, rain, sandstorm };
     this.leaveWorld();
     this.mode = 'vs';
@@ -1773,7 +1775,7 @@ export class Screens {
       heroHat: save.adv.hat || null, cpuTitle: info.alpha ? info.name : null, phase, rain, sandstorm, // the hero keeps its Adventure hat on; the day's Alpha is named on the HUD
       stageSub: info.kind === 'wild' ? `${info.name} appeared!` : info.kind === 'story' ? 'Story battle' : `${info.name} wants to battle!`,
     });
-    g.arena.setOpen(true); // out in the wild: no stadium, just the meadow
+    g.arena.setOpen(!info.stadium); // out in the wild: no stadium, just the meadow
     if (phase && (phase !== 'day' || rain || sandstorm)) g.arena.tint(phase, rain, sandstorm);
   }
 
