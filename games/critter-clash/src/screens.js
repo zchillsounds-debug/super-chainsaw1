@@ -40,8 +40,8 @@ const ILINKS = [['coral', 'palmpath'], ['palmpath', 'bluffs'], ['bluffs', 'ashtr
 const ISLE_LAND = ['M52 206 Q40 170 70 150 Q110 138 130 160 Q150 190 120 212 Q86 228 52 206 Z', 'M140 160 Q150 120 200 100 Q236 66 268 84 Q290 104 262 130 Q232 160 176 172 Q146 176 140 160 Z',
   'M270 150 Q280 120 318 140 Q360 160 364 200 Q360 230 318 228 Q280 222 270 190 Z', 'M336 60 Q340 44 356 46 Q372 50 368 66 Q362 78 348 76 Q336 72 336 60 Z'].map((d) => `<path class="wm-land" d="${d}"/>`).join('');
 // Chapter 3: the Amber Sands' own Town Map (nodes appear as their maps are built; you ride the Sand-Rail between it and Clashara)
-const SMAP = { oasis: { x: 118, y: 160, cup: 'mirage', fly: [12, 14] }, duneroad: { x: 210, y: 150 }, redrock: { x: 286, y: 134, cup: 'canyon', fly: [14, 6] } };
-const SLINKS = [['oasis', 'duneroad'], ['duneroad', 'redrock']];
+const SMAP = { oasis: { x: 118, y: 160, cup: 'mirage', fly: [12, 14] }, duneroad: { x: 210, y: 150 }, redrock: { x: 286, y: 134, cup: 'canyon', fly: [14, 6] }, dunecamp: { x: 300, y: 200, cup: 'sandstorm', fly: [16, 6] } };
+const SLINKS = [['oasis', 'duneroad'], ['duneroad', 'redrock'], ['redrock', 'dunecamp']];
 const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 60 170 54 Q250 40 320 70 Q380 100 372 170 Q366 226 300 232 Q200 244 120 238 Q60 240 30 230 Z"/><path class="wm-dune" d="M200 120 Q240 96 290 118 M230 170 Q270 150 320 172 M60 200 Q90 186 130 206"/>';
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
 const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
@@ -1744,6 +1744,7 @@ export class Screens {
   worldDoor(b, w) { doorAction(this, b, w); }
   worldStory(id, w, a) { storyTalk(this, id, w, a); }
   worldStoryStep(w) { return storyStep(this, w); }
+  worldIntro(w) { storyIntro(this, w); }
 
   camp() {
     const g = this.game;

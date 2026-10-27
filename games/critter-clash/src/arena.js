@@ -31,6 +31,15 @@ export const ARENAS = {
     accent: 0xffc040, seat: [0xd8643a, 0x2ab0a8, 0xffc040, 0xfff0d8],
     hill: 0xd89a5a, trunk: 0x4a9a4a, leaves: [0xc8704a, 0xb8603a, 0xd8845a], scenery: 'mesas', cloud: 0xfff4e8, cloudShade: 0xb08060, sunI: 2.5,
   },
+  dunes: { // Chapter 3: the Sandstorm Dome, the Sandstorm Cup's stadium out on the dunes (a sail-cloth dome on tall poles, sand on the wind)
+    name: 'Sandstorm Dome',
+    skyTop: 0x5a8ad0, skyHorizon: 0xf0c890, sun: 0xffe8c0, sunDir: [-0.4, 0.7, -0.5],
+    hemiSky: 0xffe0b8, hemiGround: 0xa07a50, fieldA: '#e6c07e', fieldB: '#dcb472', line: '#7a3a2a', floor: 'sand',
+    wallA: 0xc8862a, wallB: 0x3a2a2a, ground: 0xe6c07e, fog: 0xf0c890,
+    accent: 0x2ab0a8, seat: [0xc8862a, 0x3a2a2a, 0xfff0d8, 0x2ab0a8],
+    hill: 0xe8b870, trunk: 0x6a4428, leaves: [0xe8b870, 0xdcaa62, 0xf0c47e], scenery: 'dunes', cloud: 0xfff0dc, cloudShade: 0xb08a60, sunI: 2.4,
+    drift: 'sand', canopy: 0xf4e4c4, back: 0xa8743e,
+  },
   beach: {
     name: 'Seashell Bay Arena',
     skyTop: 0x4a6ad8, skyHorizon: 0xffc9a0, sun: 0xffe0b8, sunDir: [0.6, 0.45, -0.5],
@@ -755,6 +764,17 @@ export class Arena {
         for (const sd of [-1, 1]) if (rand() < 0.7) { const up = (0.9 + rand() * 0.6) * sc, ay = (1 + rand() * 0.8) * sc; const o = new THREE.CapsuleGeometry(0.26 * sc, 0.5 * sc, 3, 6); o.rotateZ(Math.PI / 2); o.translate(x + sd * 0.6 * sc, ay, z); trunks.push(o); const u = new THREE.CapsuleGeometry(0.26 * sc, up, 3, 6); u.translate(x + sd * 0.95 * sc, ay + up / 2, z); trunks.push(u); }
       }
     }
+    else if (A.scenery === 'dunes') {
+      // long golden dunes with a sharp crest, rolling away on every side, and a few dry bushes nearer the bowl
+      for (let i = 0; i < 30; i++) {
+        const a = rand() * Math.PI * 2, r = 38 + rand() * 70, L = 10 + rand() * 16, h = 2.5 + rand() * 5;
+        const g = new THREE.SphereGeometry(1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+        const P = g.attributes.position; for (let k = 0; k < P.count; k++) { const x = P.getX(k), y = P.getY(k); P.setY(k, y * (1 - 0.35 * Math.max(0, x))); } // a steep slip face on one side
+        g.scale(L * 0.5, h, L * 0.22 + 2); g.rotateY(a + Math.PI / 2 + (rand() - 0.5) * 0.6); g.translate(Math.cos(a) * r, -0.3, Math.sin(a) * r); g.computeVertexNormals();
+        tops[i % 3].push(g);
+      }
+      for (let i = 0; i < 16; i++) { const a = rand() * Math.PI * 2, r = 30 + rand() * 20, g = new THREE.IcosahedronGeometry(0.7 + rand() * 0.6, 0); g.scale(1, 0.6, 1); g.translate(Math.cos(a) * r, 0.3, Math.sin(a) * r); trunks.push(g); }
+    }
     else if (A.scenery === 'mushrooms') {
       // a ring of giant toadstools with white spots, plus small glowing caps along the outer wall
       const spots = [], glow = [];
@@ -819,6 +839,26 @@ export class Arena {
       this.flies.frustumCulled = false;
       this.flies.userData.base = pos.slice();
       G.add(this.flies);
+    }
+    if (A.canopy) {
+      // the Sandstorm Dome: a ring of tall masts behind the stands holding scalloped sail-cloth panels that slope in over the seats
+      // (the middle stays open to the sky, and the camera's gap stays clear)
+      const N = 12, R1 = r0 + tiers * 1.25 + 2.2, R0 = r0 + 1.4, y1 = 16, y0 = 11.2, a0 = Math.PI * 0.2, a1 = Math.PI * 1.8, sails = [[], []], masts = [];
+      const ph = (r, a, y) => new THREE.Vector3(Math.sin(a) * r, y, Math.cos(a) * r);
+      for (let k = 0; k < N; k++) {
+        const aa = a0 + (a1 - a0) * k / N, ab = a0 + (a1 - a0) * (k + 1) / N, S = 6, pos = [], idx = [];
+        for (let j = 0; j <= S; j++) for (let i = 0; i <= S; i++) {
+          const u = i / S, v = j / S, a = aa + (ab - aa) * u, sag = Math.sin(u * Math.PI);
+          const r = R1 + (R0 - R1) * v + sag * v * 1.4, y = y1 + (y0 - y1) * v - sag * (0.9 + v * 0.8);
+          const p = ph(r, a, y); pos.push(p.x, p.y, p.z);
+        }
+        for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) { const q = j * (S + 1) + i; idx.push(q, q + S + 1, q + 1, q + 1, q + S + 1, q + S + 2); }
+        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+        sails[k % 2].push(g);
+      }
+      for (let k = 0; k <= N; k++) { const a = a0 + (a1 - a0) * k / N, m = new THREE.CylinderGeometry(0.22, 0.32, y1 + 1.6, 6); m.translate(Math.sin(a) * (R1 + 0.2), (y1 + 1.6) / 2, Math.cos(a) * (R1 + 0.2)); masts.push(m); }
+      sails.forEach((l, k) => { const m = inked(mergeGeometries(l), toon(k ? A.wallA : A.canopy, { env: true, rim: 0.3, side: THREE.DoubleSide }), 0.05); m.userData.stadium = true; G.add(m); l.forEach((g) => g.dispose()); });
+      const mm = inked(mergeGeometries(masts), toon(A.trunk, { env: true, rim: 0.2 }), 0.05); mm.userData.stadium = true; G.add(mm); masts.forEach((g) => g.dispose());
     }
     if (A.drift) this.buildDrift(G, rand, A.drift);
     if (A.rain) {
@@ -1151,6 +1191,7 @@ export class Arena {
     const K = {
       seeds:  { n: 160, size: 0.4, vy: 0.25, wind: 0.6, inner: 'rgba(255,255,250,1)', outer: 'rgba(255,255,240,0)', add: false, cap: 8 },
       embers: { n: 260, size: 0.5, vy: 1.4, wind: 0.3, inner: 'rgba(255,240,180,1)', outer: 'rgba(255,90,20,0)', add: true },
+      sand:   { n: 420, size: 0.28, vy: -0.15, wind: 4.5, inner: 'rgba(250,224,170,1)', outer: 'rgba(230,190,120,0)', add: false, cap: 7 },
       petals: { n: 200, size: 0.5, vy: -0.6, wind: 0.8, inner: 'rgba(255,190,220,1)', outer: 'rgba(255,150,200,0)', add: false },
     }[kind];
     const n = K.n, pos = new Float32Array(n * 3);

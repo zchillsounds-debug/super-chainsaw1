@@ -3073,6 +3073,7 @@ export class World {
       else if (b.shroom) this.shroomHouse(G, b, w, d);
       else if (b.tower) this.towerModel(G, b, w, d);
       else if (b.altar) this.altarModel(G, b, w, d);
+      else if (b.tent) this.tentModel(G, b, w, d);
       else {
         const wallH = b.lab ? 2.4 : 2.0;
         const walls = inked(new THREE.BoxGeometry(w - 0.4, wallH, d - 0.5), toon(b.wall || 0xfff1d8), OL);
@@ -4188,6 +4189,62 @@ export class World {
     const pool = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.85, d * 0.85), pm); pool.rotation.x = -Math.PI / 2; pool.position.y = 0.6; G.add(pool);
   }
 
+  // the Dune Camp (Chapter 3): a nomad tent: low striped canvas walls, a peaked roof on tall poles with pennants, guy ropes
+  // pegged into the sand and an open door flap. The Dust Devils' tents are rust and charcoal with a dust-swirl flag
+  tentModel(G, b, w, d) {
+    const [cA, cB] = b.stripes || ['#f4e4c4', '#d8643a'], wallH = 1.35, rh = b.w >= 5 ? 2.1 : 1.6;
+    const stripe = (n) => { const t = canvasTex(128, 32, (c, W, H) => { c.fillStyle = cA; c.fillRect(0, 0, W, H); c.fillStyle = cB; for (let k = 0; k < 4; k++) c.fillRect(k * 32 + 4, 0, 14, H); c.fillStyle = 'rgba(80,40,20,0.18)'; c.fillRect(0, H - 4, W, 4); }, { repeat: [n, 1] }); t.userData.own = true; return t; };
+    const wm = toon(0xffffff, { map: stripe(Math.max(2, Math.round(b.w * 1.2))) }); wm.userData.own = true;
+    const walls = inked(new THREE.BoxGeometry(w - 0.5, wallH, d - 0.6), wm, OL); walls.position.y = wallH / 2; G.add(walls);
+    // the roof: a four-sided peak, stretched to the tent's footprint and overhanging the walls a little
+    const rg = new THREE.ConeGeometry(1, 1, 4, 1, true); rg.rotateY(Math.PI / 4); rg.scale((w - 0.1) / Math.SQRT2, rh, (d - 0.2) / Math.SQRT2);
+    const rm = toon(0xffffff, { map: stripe(Math.max(3, b.w * 2)), side: THREE.DoubleSide }); rm.userData.own = true;
+    const roof = inked(rg, rm, OL); roof.position.y = wallH + rh / 2 - 0.05; G.add(roof);
+    const wood = toon(0x6a4428), poles = [], ropes = [];
+    const top = wallH + rh - 0.05;
+    { const g = new THREE.CylinderGeometry(0.07, 0.07, 0.9, 6); g.translate(0, top + 0.4, 0); poles.push(g); } // the centre pole pokes out of the peak
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { // guy ropes from the eaves to pegs in the sand
+      const ax = sx * (w / 2 - 0.1), az = sz * (d / 2 - 0.15), px = sx * (w / 2 + 0.35), pz = sz * (d / 2 + 0.2);
+      ropes.push({ px, pz, ax, az });
+      const peg = new THREE.CylinderGeometry(0.05, 0.03, 0.25, 5); peg.translate(px, 0.1, pz); poles.push(peg);
+    }
+    G.add(new THREE.Mesh(mergeGeometries(poles), wood)); poles.forEach((g) => g.dispose());
+    const rl = []; // ropes as thin boxes between eave and peg
+    for (const { px, pz, ax, az } of ropes) { const a = new THREE.Vector3(px, 0.15, pz), c = new THREE.Vector3(ax, wallH, az), len = a.distanceTo(c), g = new THREE.CylinderGeometry(0.022, 0.022, len, 4); g.translate(0, len / 2, 0); g.applyMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), c.clone().sub(a).normalize()))); g.translate(a.x, a.y, a.z); rl.push(g); }
+    G.add(new THREE.Mesh(mergeGeometries(rl), toon(0xe8d8b0))); rl.forEach((g) => g.dispose());
+    // the door: a dark opening with the flap tied back to one side
+    const dx = (b.door + 0.5) * TILE - w / 2, front = d / 2 - 0.3;
+    const hole = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.2), toon(0x2a1a14)); hole.position.set(dx, 0.6, front + 0.01); G.add(hole);
+    const fs = new THREE.Shape(); fs.moveTo(0, 0); fs.lineTo(0.42, 0); fs.lineTo(0.12, 1.25); fs.lineTo(0, 1.25); fs.closePath();
+    const flap = inked(new THREE.ShapeGeometry(fs), toon(new THREE.Color(cB).getHex(), { side: THREE.DoubleSide }), OL * 0.4); flap.position.set(dx + 0.5, 0, front + 0.04); G.add(flap);
+    // a pennant on the centre pole (a dust swirl on the Dust Devils' tents), flapping with the stadium ones
+    const fg = new THREE.PlaneGeometry(1.2, 0.66); fg.translate(0.6, 0, 0);
+    const ft = b.devils ? canvasTex(64, 36, (c, W, H) => { c.fillStyle = '#3a2a2a'; c.fillRect(0, 0, W, H); c.strokeStyle = '#ffb040'; c.lineWidth = 3; c.beginPath(); for (let k = 0; k < 28; k++) { const a = k * 0.5, r = 2 + k * 0.5; c.lineTo(W * 0.45 + Math.cos(a) * r, H / 2 + Math.sin(a) * r * 0.8); } c.stroke(); }) : null;
+    if (ft) ft.userData.own = true;
+    const fm = toon(ft ? 0xffffff : new THREE.Color(cB).getHex(), { side: THREE.DoubleSide, ...(ft ? { map: ft } : {}) }); if (ft) fm.userData.own = true;
+    const fl = new THREE.Mesh(fg, fm); fl.position.set(0, top + 0.6, 0); G.add(fl); this.pennants.push(fl);
+    if (b.heal) { // the camp's Berry Center is a tent too: a white cross on a pink board over the door
+      const cr = inked(new THREE.BoxGeometry(0.8, 0.8, 0.1), toon(0xff5a8a), OL * 0.5); cr.position.set(dx, wallH + 0.15, front + 0.25); cr.rotation.x = -0.3; G.add(cr);
+      const h = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.14, 0.12), toon(0xffffff)); h.position.copy(cr.position); h.position.z += 0.04; h.rotation.x = -0.3; G.add(h); const v = h.clone(); v.rotation.z = Math.PI / 2; G.add(v);
+    }
+    // hip seams from the peak down to each corner, and a cap on the peak, so the roof reads as a pyramid from above
+    const hx = (w - 0.1) / 2, hz = (d - 0.2) / 2, seams = [], apex = new THREE.Vector3(0, top + 0.02, 0);
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const c = new THREE.Vector3(sx * hx, wallH - 0.03, sz * hz), len = apex.distanceTo(c), g = new THREE.CylinderGeometry(0.07, 0.07, len, 5); g.translate(0, len / 2, 0); g.applyMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), apex.clone().sub(c).normalize()))); g.translate(c.x, c.y, c.z); seams.push(g); }
+    const cap = new THREE.SphereGeometry(0.2, 10, 6); cap.translate(0, top + 0.05, 0); seams.push(cap);
+    G.add(new THREE.Mesh(mergeGeometries(seams), toon(new THREE.Color(cB).multiplyScalar(0.62).getHex()))); seams.forEach((g) => g.dispose());
+    const slope = Math.PI / 2 - Math.atan2(rh, hz), onRoof = (m, f = 0.5) => { m.position.set(0, wallH + rh * (1 - f) + 0.06, hz * f + 0.06); m.rotation.x = -slope; G.add(m); };
+    if (b.heal) { // the camp's Berry Center: the round Berry sign painted on the front of the roof, where the camera sees it
+      const tex = canvasTex(128, 128, (c) => { c.fillStyle = '#ffffff'; c.beginPath(); c.arc(64, 64, 62, 0, 7); c.fill(); c.fillStyle = '#ff5a8a'; c.beginPath(); c.arc(64, 64, 52, 0, 7); c.fill(); c.fillStyle = '#ffffff'; c.fillRect(52, 28, 24, 72); c.fillRect(28, 52, 72, 24); });
+      tex.userData.own = true; const m = new THREE.MeshBasicMaterial({ map: tex, transparent: true }); m.userData.own = true;
+      onRoof(new THREE.Mesh(new THREE.CircleGeometry(0.62, 28), m), 0.5);
+    }
+    if (b.devils && b.w >= 5) { // the big black tent: DUST DEVILS painted crooked across the roof
+      const lt = canvasTex(256, 56, (c) => { c.fillStyle = '#ffb040'; c.font = 'bold 34px Lilita One, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('DUST DEVILS', 128, 30); });
+      lt.userData.own = true; const lm = new THREE.MeshBasicMaterial({ map: lt, transparent: true }); lm.userData.own = true;
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 0.62), lm); onRoof(pl, 0.55); pl.rotation.z = 0.05;
+    }
+  }
+
   stadiumModel(G, b, w, d) {
     const cup = cupById(b.stadium), won = save.adv.flags['cup_' + b.stadium];
     const stripes = canvasTex(256, 32, (c, W, H) => { for (let k = 0; k < 16; k++) { c.fillStyle = k % 2 ? '#fff4e0' : cup.color; c.fillRect(k * W / 16, 0, W / 16 + 1, H); } });
@@ -4416,7 +4473,7 @@ export class World {
     if (dir === 's') { x = nx + e.off; y = 0; }
     if (dir === 'w') { x = M2.tiles[0].length - 1; y = ny + e.off; }
     if (dir === 'e') { x = 0; y = ny + e.off; }
-    this.fade(() => this.load(e.to, x, y, dir));
+    this.fade(() => { this.load(e.to, x, y, dir); setTimeout(() => { if (this.S.worldObj === this && !this.dialogEl?.isConnected && !this.busy) this.S.worldIntro?.(this); }, 500); }); // a map's arrival scene plays as you walk in (it waited for the next battle or menu before)
   }
 
   // what the sky is doing at an hour: time of day, misty morning, shower/storm, the rainbow hour, snowfall (see load)

@@ -145,6 +145,16 @@ export function storyIntro(S, w) {
     ]);
     return;
   }
+  if (w.key === 'dunecamp' && !F.dunecamp_arrive) {
+    F.dunecamp_arrive = true; persist();
+    w.say([
+      'Past the last red rock the land opens into golden dunes as tall as houses. Striped tents flap in the wind, and over them all rises a great sail-cloth dome.',
+      "Dash: THERE you are! Took you long enough. Welcome to the Dune Camp, Champ.",
+      "Dash: See that black tent? Dust Devil HQ. And that big dome is the Sandstorm Dome: the last cup in the Amber Sands.",
+      "Dash: I'd win it myself, but... the wind keeps blowing my hat off. You go first. I'll watch the Dust Devils.",
+    ]);
+    return;
+  }
   if (w.key === 'redrock' && F.devils1 && !F.sunshard) {
     F.sunshard = true; persist(); reward(1);
     w.say([
@@ -387,6 +397,7 @@ export function nextGoal(F) {
     if (F.cup_mirage && !F.cup_canyon) return 'The road is clear! Follow Dune Road east to Redrock Canyon and win the Canyon Cup.';
     if (F.cup_canyon && !F.devils1) return 'The Dust Devils are digging under the east rope lift in Redrock Canyon. Stop them!';
     if (F.devils1 && !F.dash_canyon) return 'Dash has caught up with you in Redrock Canyon. He wants a desert rematch!';
+    if (F.dash_canyon && !F.cup_sandstorm) return F.dunecamp_arrive ? 'Win the Sandstorm Cup in the Sandstorm Dome at the Dune Camp.' : 'Take the canyon road east out of Redrock Canyon to the Dune Camp on the big dunes.';
     if (!F.sunstone) return F.morra ? 'Bring the Sunstone home to the Starfall lighthouse!' : 'Sail to Starfall Atoll with Captain Gill (Port Coral) and take the Sunstone back from Captain Morra!';
     // post-game: point at whatever is still open (the Tower, the glider, the legends)
     if (!(save.adv.tower?.best >= 7)) return 'Morra has opened a Battle Tower on Starfall Atoll. Win 7 in a row for Bronze rank!';

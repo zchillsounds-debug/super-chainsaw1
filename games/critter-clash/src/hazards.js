@@ -19,6 +19,7 @@ export const HAZARDS = {
   grove:   { name: 'Spore puffs', color: 0x9adf4a, solid: true, glow: 0xe8ffa0, r: 1.3, warn: 1.2, dmg: 5, stun: 0.5, kb: 1, dizzy: 45, word: 'ACHOO!' },
   oasis:   { name: 'Water geysers', color: 0x2ab0d8, glow: 0xb8f4ff, r: 1.2, warn: 1.3, dmg: 7, lift: 8.5, kb: 1.5, word: 'SPLOOSH!' }, // Chapter 3: the Sunwell Pavilion
   canyon:  { name: 'Falling rocks', color: 0xc8402a, solid: true, glow: 0xffe0b0, r: 1.1, warn: 1.25, dmg: 9, stun: 0.6, kb: 3.2, word: 'CRUNCH!' }, // Chapter 3: Redrock Canyon
+  dunes:   { name: 'Sand twisters', color: 0xb8742a, solid: true, glow: 0xffe0a0, r: 1.2, warn: 1.35, dmg: 6, lift: 6.5, kb: 2.2, dizzy: 30, word: 'WHIRL!' }, // Chapter 3: the Sandstorm Dome
   beach:   { name: 'Coconuts', color: 0xe0482a, solid: true, glow: 0xfff2c0, r: 0.9, warn: 1.2, dmg: 7, stun: 0.5, kb: 3, word: 'BONK!' },
 };
 
@@ -31,7 +32,21 @@ export const SIGS = {
   grove:   { name: 'Spore clouds', word: 'ACHOO!', jumbo: 'SPORES!', tip: "Spore cloud! Don't breathe it in!" },
   canyon:  { name: 'Rockslides', word: 'ROCKSLIDE!', jumbo: 'ROCKSLIDE!', tip: 'Rockslide! Get out from under the line!' }, // Redrock Canyon
   oasis:   { name: 'Fountain rings', word: 'FOUNTAIN!', jumbo: 'FOUNTAIN!', tip: 'Fountain ring! Stay in the dry middle!' }, // the Sunwell Pavilion
+  dunes:   { name: 'Sandstorms', word: 'SANDSTORM!', jumbo: 'SANDSTORM!', tip: 'Sandstorm! Guard to dig in!' }, // the Sandstorm Dome
 };
+
+// the Sandstorm Dome's twister: a spinning funnel of sand (open cone, point down) with darker bands, made once per twister
+let twistTex;
+function twistMesh() {
+  twistTex ||= canvasTex(64, 64, (c, w, h) => {
+    c.fillStyle = 'rgba(236,196,130,0.55)'; c.fillRect(0, 0, w, h);
+    for (let k = 0; k < 9; k++) { c.strokeStyle = k % 2 ? 'rgba(170,110,50,0.75)' : 'rgba(255,236,190,0.7)'; c.lineWidth = 2 + (k % 3); c.beginPath(); c.moveTo(0, k * 8 + 2); c.lineTo(w, k * 8 - 10); c.stroke(); }
+  }, { repeat: [2, 1] });
+  const m = new THREE.MeshBasicMaterial({ map: twistTex, transparent: true, depthWrite: false, side: THREE.DoubleSide, opacity: 0 });
+  const g = new THREE.CylinderGeometry(1.0, 0.18, 2.8, 16, 4, true); g.translate(0, 1.4, 0);
+  const mesh = new THREE.Mesh(g, m); mesh.userData.mat = m;
+  return mesh;
+}
 
 // shared art for the ice slick (made once, never disposed)
 let iceTex;
@@ -249,6 +264,11 @@ export class Hazards {
       // a crosswind sweeps the gardens and shoves everyone one way
       sg.warn = 1.1; sg.dur = 4; sg.dx = dx; sg.dz = dz;
       sfx.whoosh?.(0.5);
+    } else if (key === 'dunes') {
+      // the dome howls: a sandstorm blows straight across the floor, pushing everyone one way; guarding digs in
+      sg.warn = 1.2; sg.dur = 4.5; sg.dx = dx; sg.dz = dz;
+      B.fx.text({ x: hp.x, y: hp.y + 0.4, z: hp.z }, 'SANDSTORM!', 'eff', 1);
+      sfx.whoosh?.(0.6);
     } else if (key === 'canyon') {
       // a rockslide: stones tumble down in a line across the arena through one fighter, one after another
       sg.warn = 0; sg.dur = 2.8;
@@ -341,23 +361,24 @@ export class Hazards {
         }
         if (sg.pos >= sg.end) sg.passed = true;
       }
-    } else if (sg.kind === 'sky') {
-      const strength = live ? Math.min(1, e * 3) * Math.min(1, (sg.dur - e) * 2) : 0;
+    } else if (sg.kind === 'sky' || sg.kind === 'dunes') {
+      const strength = live ? Math.min(1, e * 3) * Math.min(1, (sg.dur - e) * 2) : 0, sand = sg.kind === 'dunes';
       // leaves and streaks blow across the gardens (a few in the warning, a gale once it's live)
-      const rate = live ? 26 : 6;
+      const rate = live ? (sand ? 60 : 26) : sand ? 12 : 6;
       const proj = (x, z) => new THREE.Vector3(x, 1, z).project(B.camera);
       const a0 = proj(0, 0), a1 = proj(sg.dx, sg.dz), rot = Math.atan2((a1.y - a0.y) / B.camera.aspect, a1.x - a0.x) - Math.PI / 2;
       for (let q = 0; q < Math.floor(rate * dt + Math.random()); q++) {
         const w = (Math.random() - 0.5) * ARENA_R * 2, back = -ARENA_R + Math.random() * ARENA_R;
         const x = sg.dx * back - sg.dz * w, z = sg.dz * back + sg.dx * w;
-        if (Math.random() < 0.6) fx.spawn({ x, y: 0.3 + Math.random() * 2, z, vx: sg.dx * 14, vz: sg.dz * 14, color: 0xffffff, size: 0.26, stretch: 9, rot, life: 0.5, shape: 'spark', additive: false, alpha: 0.9 });
+        if (sand) { if (Math.random() < 0.65) fx.spawn({ x, y: 0.2 + Math.random() * 2.4, z, vx: sg.dx * 16, vz: sg.dz * 16, color: Math.random() < 0.5 ? 0xf0d098 : 0xd8a868, size: 0.24, stretch: 10, rot, life: 0.5, shape: 'spark', additive: false, alpha: 0.85 }); else fx.spawn({ x, y: 0.3 + Math.random() * 1.6, z, vx: sg.dx * 8, vz: sg.dz * 8, color: 0xe8c488, size: 2.2, life: 0.9, shape: 'glow', additive: false, grow: 1.4, alpha: 0.3 }); }
+        else if (Math.random() < 0.6) fx.spawn({ x, y: 0.3 + Math.random() * 2, z, vx: sg.dx * 14, vz: sg.dz * 14, color: 0xffffff, size: 0.26, stretch: 9, rot, life: 0.5, shape: 'spark', additive: false, alpha: 0.9 });
         else fx.spawn({ x, y: 0.4 + Math.random() * 1.5, z, vx: sg.dx * 9, vz: sg.dz * 9, color: Math.random() < 0.5 ? 0xffc4de : 0xb8f0a0, size: 0.3, life: 1, shape: 'leaf', additive: false, spin: 10 });
       }
       if (strength > 0) for (const f of B.fighters) {
         if (!f.alive || f.under || f.state === 'super' || f.state === 'down') continue;
-        const push = 2.6 * strength * (f.state === 'guard' ? 0.4 : 1) / Math.max(0.7, f.weight || 1);
+        const push = (sand ? 3.1 : 2.6) * strength * (f.state === 'guard' ? (sand ? 0.15 : 0.4) : 1) / Math.max(0.7, f.weight || 1);
         f.x += sg.dx * push * dt; f.z += sg.dz * push * dt;
-        if (!sg.hit.has(f)) { sg.hit.add(f); const hp = f.headPos(); fx.text({ x: hp.x, y: hp.y + 0.3, z: hp.z }, 'WHOOSH!', 'eff', 0.8); }
+        if (!sg.hit.has(f)) { sg.hit.add(f); const hp = f.headPos(); fx.text({ x: hp.x, y: hp.y + 0.3, z: hp.z }, sand ? 'SANDBLAST!' : 'WHOOSH!', 'eff', 0.8); }
       }
       if (live && !sg.on) { sg.on = true; sfx.wind(sg.dur); }
     } else if (sg.kind === 'grove') {
@@ -401,6 +422,7 @@ export class Hazards {
       h.drop.position.set(x, 9, z);
       B.scene.add(h.drop);
     }
+    if (B.arena.key === 'dunes') { h.twist = twistMesh(); h.twist.position.set(x, 0, z); h.twist.scale.setScalar(0.01); B.scene.add(h.twist); }
     this.list.push(h);
     B.stats.hazardsSeen = (B.stats.hazardsSeen || 0) + 1;
     if (!this.warned) { this.warned = true; B.fx.text({ x, y: 1.4, z }, 'WATCH OUT!', 'eff', 1.1); }
@@ -452,6 +474,7 @@ export class Hazards {
         h.mesh.scale.setScalar(H.r * (1.25 - k * 0.25));
         if (Math.random() < dt * 14) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * H.r * 1.6, y: 0.1, z: h.z + (Math.random() - 0.5) * H.r * 1.6, vy: 1.2, color: H.glow, size: 0.16, life: 0.5, shape: B.arena.key === 'neon' ? 'spark' : 'glow' });
         if (h.drop) { const f = Math.max(0, 1 - k); h.drop.position.y = 0.4 + f * f * 9; h.drop.rotation.y += dt * 3; }
+        if (h.twist) { h.twist.rotation.y -= dt * (6 + k * 10); h.twist.scale.set(H.r * (0.3 + k * 0.6), 0.2 + k * 0.6, H.r * (0.3 + k * 0.6)); h.twist.userData.mat.opacity = 0.25 + k * 0.5; if (Math.random() < dt * 18) { const a = Math.random() * 6.28; B.fx.spawn({ x: h.x + Math.cos(a) * H.r * 0.8, y: 0.15, z: h.z + Math.sin(a) * H.r * 0.8, vx: -Math.sin(a) * 3, vz: Math.cos(a) * 3, vy: 1.5 + k * 2, color: 0xe8c488, size: 0.35, life: 0.5, shape: 'puff', additive: false, alpha: 0.6 }); } }
         if (k >= 1) this.fire(h);
       } else {
         const e = (h.t - H.warn) / 0.5;
@@ -459,6 +482,7 @@ export class Hazards {
         fill.material.opacity = Math.max(0, 0.4 * (1 - e));
         h.mesh.scale.setScalar(H.r * (1 + e * 0.3));
         if (h.drop) { h.drop.scale.setScalar(Math.max(0.01, 1 - e)); }
+        if (h.twist) { h.twist.rotation.y -= dt * 18; h.twist.scale.set(H.r * (0.9 + e * 0.4), 0.8 + e * 1.2, H.r * (0.9 + e * 0.4)); h.twist.userData.mat.opacity = 0.8 * Math.max(0, 1 - e); }
         if (B.arena.key === 'sky' && e < 0.8) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * 1.2, y: 0.2, z: h.z + (Math.random() - 0.5) * 1.2, vy: 10 + Math.random() * 4, color: 0xffffff, size: 0.28, stretch: 5, life: 0.4, shape: 'spark', additive: false, alpha: 0.85 });
         if (B.arena.key === 'oasis' && e < 0.8) for (let k = 0; k < 2; k++) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * 0.6, y: 0.2, z: h.z + (Math.random() - 0.5) * 0.6, vy: 11 + Math.random() * 4, color: Math.random() < 0.5 ? 0xe8fbff : 0x8ae0f4, size: 0.45, life: 0.55, shape: 'glow', additive: false, alpha: 0.85, grav: 6 }); // a column of spray
         if (B.arena.key === 'volcano' && e < 0.8) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * 0.7, y: 0.2, z: h.z + (Math.random() - 0.5) * 0.7, vy: 9 + Math.random() * 4, color: Math.random() < 0.5 ? 0xff7a1a : 0xffd040, size: 0.5, life: 0.5, shape: 'puff', grav: 9, grow: 1 });
@@ -483,6 +507,10 @@ export class Hazards {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 24, speed: 3, up: 11, color: 0xd8f6ff, size: 0.3, life: 0.8, shape: 'glow', additive: false, grav: 14, alpha: 0.9 });
       B.fx.spawn({ x: h.x, y: 0.06, z: h.z, color: 0xe8fbff, size: H.r * 1.6, life: 0.6, shape: 'ring', additive: false, grow: 1.5, alpha: 0.7 });
       sfx.whoosh?.(0.9);
+    } else if (key === 'dunes') {
+      B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 22, speed: 4, up: 6, color: 0xe8c488, size: 0.6, life: 0.9, shape: 'puff', additive: false, grav: 2, grow: 1.3, alpha: 0.75 });
+      B.fx.burst({ x: h.x, y: 0.6, z: h.z }, { n: 8, speed: 3, up: 7, color: 0xc89048, size: 0.22, life: 0.8, shape: 'star', additive: false, grav: 6, spin: 12 });
+      sfx.whoosh?.(1.1);
     } else if (key === 'canyon') {
       B.fx.burst({ x: h.x, y: 0.3, z: h.z }, { n: 16, speed: 3.5, up: 2.5, color: 0xd8a070, size: 0.7, life: 0.8, shape: 'puff', additive: false, grav: 1, grow: 1.3, alpha: 0.75 });
       B.fx.burst(p, { n: 10, speed: 5, up: 4, color: 0xb8583a, size: 0.22, life: 0.6, shape: 'star', additive: false, grav: 12, spin: 8 });
@@ -530,7 +558,8 @@ export class Hazards {
     const { ring, fill } = h.mesh.userData;
     ring.material.dispose(); fill.material.dispose();
     // toon materials are shared from a cache, so only geometry is freed here
-    for (const m of [h.mesh, h.drop]) {
+    if (h.twist) h.twist.userData.mat.dispose();
+    for (const m of [h.mesh, h.drop, h.twist]) {
       if (!m) continue;
       this.b.scene.remove(m);
       m.traverse((o) => o.geometry?.dispose());

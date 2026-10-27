@@ -579,6 +579,17 @@ export const SANDS_CUPS = [
       { name: 'Maro', style: 'balanced', title: 'Canyon Chief', critter: 'scarabold', skin: 'shiny', level: 40, boss: true, bossTitle: 'CANYON CHIEF', taunt: "These walls have stood for a million years, {name}. My Scarabold has rolled every stone in them.", beat: "The canyon has a new echo. Take the Canyon Cup. You earned every stone of it.", gloat: "The canyon doesn't move for anyone. Not even a champion." },
     ],
   },
+  {
+    id: 'sandstorm', arena: 'dunes', name: 'Sandstorm Cup', color: '#c8862a', desc: 'A great sail-cloth dome on the open dunes. Inside, the wind never stops.', diff: [0.9, 1], sands: true,
+    intro: ["Welcome to the Sandstorm Dome, {name}! The canvas keeps the worst of the wind out. Most of it. Some of it.", "Keep your eyes open in there. When the dome starts to howl, the sand comes sideways!"],
+    outro: ["Sandstorm Cup champion! All three Amber Sands cups! The camp will be singing about this for a week.", "Now, about those Dust Devils in the big black tent... The Warden won't let them dig under the dunes any longer."],
+    matches: [
+      { name: 'Kai', style: 'rushdown', title: 'Dune Surfer', critter: 'fennzap', level: 40, taunt: "I surf the dunes on a tea tray. Fennzap rides on my head. We're VERY fast.", beat: "Wiped out! Sand in my everything.", gloat: "Cowabunga! ...Is that what you say on sand?" },
+      { name: 'Imani', style: 'zoner', title: 'Sand Sailor', critter: 'humpdrop', level: 40, taunt: "My land-yacht sails on the wind. Humpdrop is the anchor. Ready to be blown away?", beat: "Becalmed... You took the wind right out of my sails.", gloat: "Fair winds to me, sand in your face!" },
+      { name: 'Tariq', style: 'turtle', title: 'Caravan Guard', critter: 'cactortle', level: 41, mods: ['bighead'], taunt: "I have guarded the caravans for twenty years. Nobody gets past Cactortle. Nobody.", beat: "...Somebody got past Cactortle.", gloat: "The caravan rolls on. You stay here." },
+      { name: 'Rasha', style: 'balanced', title: 'Dune Warden', critter: 'siroccat', skin: 'shiny', level: 43, boss: true, bossTitle: 'DUNE WARDEN', taunt: "I read the wind, {name}. I know where every dune will be tomorrow. I know how this battle ends, too.", beat: "The wind changed. It does that. The Sandstorm Cup is yours, champion of the sands.", gloat: "The wind always wins. Come back when it blows your way." },
+    ],
+  },
 ];
 export const ALL_CUPS = () => [...CUPS, ...ISLE_CUPS];
 export const cupById = (id) => CUPS.find((c) => c.id === id) || ISLE_CUPS.find((c) => c.id === id) || SANDS_CUPS.find((c) => c.id === id);
