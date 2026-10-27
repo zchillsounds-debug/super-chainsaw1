@@ -38,6 +38,12 @@ export const SPECIALS = {
   beakbeam:  { cd: 4.2, range: [2, 7.5] },
   pound:     { cd: 3.4, range: [1.5, 7] },
   skimloop:  { cd: 4.0, range: [2, 7] },
+  heatwave:  { cd: 3.8, range: [0, 3.6] },
+  geyser:    { cd: 4.2, range: [2, 9] },
+  needles:   { cd: 3.6, range: [0, 5] },
+  earzap:    { cd: 4.2, range: [2, 6.5] },
+  sandball:  { cd: 4.0, range: [2.5, 9] },
+  dustdevil: { cd: 4.6, range: [2.5, 9] },
 };
 
 // per-critter flavour on top of the shared 3-hit combo poses: (P, hit index, windup 0..1, striking)
@@ -136,7 +142,7 @@ export class Fighter {
     this.atkId = 0;
     this.paralyze = 0;
     this.guardHp = 100; this.guardRegenT = 0;
-    this.firstLanded = false; this.slipT = 0; this.quietT = 0; this.chainN = 0; // traits: Loud Opener, Slipstream, Regrowth, Playful
+    this.burnT = 0; this.firstLanded = false; this.slipT = 0; this.quietT = 0; this.chainN = 0; // traits: Loud Opener, Slipstream, Regrowth, Playful
     this.speedBoost = 0;
     this.slick = 0;
     this.stepT = 0;
@@ -170,6 +176,11 @@ export class Fighter {
     this.specCd = Math.max(0, this.specCd - dt);
     this.dodgeCd = Math.max(0, this.dodgeCd - dt);
     if (this.slipT > 0) this.slipT -= dt;
+    if (this.burnT > 0 && this.alive && this.battle.phase === 'fight') { // Heat Haze leaves a burn: a few small ticks, never a knockout
+      this.burnT -= dt; this.burnTick = (this.burnTick || 0) - dt;
+      if (Math.random() < dt * 12) this.battle.fx.spawn({ x: this.x + (Math.random() - 0.5) * 0.6, y: this.y + 0.3 + Math.random() * 0.8, z: this.z + (Math.random() - 0.5) * 0.6, vy: 1.5, color: Math.random() < 0.5 ? 0xff6a1e : 0xffc23a, size: 0.35, life: 0.4, shape: 'glow', grow: -1 });
+      if (this.burnTick <= 0) { this.burnTick = 0.6; const d = Math.round(9 * (this.burnBy?.power || 1)); this.hp = Math.max(1, this.hp - d); this.dmgDelay = 0.3; this.battle.fx.text({ x: this.x, y: this.y + 1.6, z: this.z }, String(d), 'dmg weak', 0.5); }
+    }
     this.quietT += dt;
     if (this.trait === 'regen' && this.quietT > 3 && this.alive && this.battle.phase === 'fight' && this.hp < this.maxHp * 0.6) { this.hp = Math.min(this.maxHp * 0.6, this.hp + dt * this.maxHp * 0.006); this.dmgTrail = Math.max(this.dmgTrail, this.hp); } // Regrowth
     this.invuln = Math.max(0, this.invuln - dt);
@@ -625,6 +636,91 @@ export class Fighter {
         P.headRoll = Math.sin(this.st * 20) * 0.3; this.critter.emote('dizzy', 'wobbly', 0.1);
         if (this.st > 1.3) this.endSpecial();
       }
+    } else if (id === 'heatwave') {
+      // Sizzlard flares its frill, then breathes a short fan of heat: hits close in front, burns on
+      const P = this.critter.pose;
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 12, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 12, dt);
+      if (this.st < 0.26) { if (o) this.turnTo(this.angleTo(o), 12, dt); P.lean = -0.25; P.sx = 1.12; P.sy = 0.9; P.head = 0.2; }
+      else { P.lean = 0.35; P.head = -0.1; this.critter.emote('angry', 'yell', 0.1); }
+      if (this.st > 0.26 && this.st < 0.56) {
+        const h = this.headPos();
+        for (let n = 0; n < 3; n++) { const a = this.face + (Math.random() - 0.5) * 0.9, sp = 7 + Math.random() * 4; B.fx.spawn({ x: h.x + Math.sin(a) * 0.4, y: h.y - 0.45, z: h.z + Math.cos(a) * 0.4, vx: Math.sin(a) * sp, vz: Math.cos(a) * sp, vy: 0.6, color: Math.random() < 0.5 ? 0xff7a2a : 0xffd04a, size: 0.55 + Math.random() * 0.4, life: 0.32, shape: 'glow', grow: 1.6, alpha: 0.8 }); }
+        if (!this.specFired) { this.specFired = true; sfx.fire(); }
+        if (o && o.alive && !this.hitIds.has(o) && !o.under && o.y < 1.4) {
+          const rx = o.x - this.x, rz = o.z - this.z, along = rx * fx + rz * fz, side = Math.abs(rx * fz - rz * fx);
+          if (along > 0 && along < 4 && side < 0.55 + along * 0.45) { this.hitIds.add(o); B.applyHit(this, o, { dmg: 84 * this.power, kb: 4.5, lift: 2, stun: 0.5, dirX: fx, dirZ: fz, heavy: true, type: this.type, dizzy: 16 }); o.burnT = 2.4; o.burnBy = this; }
+        }
+      }
+      if (this.st > 0.7) this.endSpecial();
+    } else if (id === 'geyser') {
+      // Humpdrop stamps, and a geyser wells up under the rival's feet a moment later
+      const P = this.critter.pose;
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 12, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 12, dt);
+      if (this.st < 0.25) { if (o) this.turnTo(this.angleTo(o), 12, dt); P.sy = 0.8; P.sx = 1.15; P.armLz = P.armRz = 1.2; }
+      else { P.sy = 1.08; P.armLz = P.armRz = 0.2; }
+      if (!this.specFired && this.st > 0.25) {
+        this.specFired = true; sfx.land(); B.fx.dust({ x: this.x, y: 0.05, z: this.z }, 6, 0.8);
+        const tx = o ? o.x + o.vx * 0.25 : this.x + fx * 4, tz = o ? o.z + o.vz * 0.25 : this.z + fz * 4;
+        B.spawnProjectile(this, { kind: 'geyser', big: true, x: tx, z: tz, y: 0, vx: 0, vz: 0, r: 1, life: 1.4, delay: 0.62, hit: { dmg: 88 * this.power, kb: 2, lift: 11, stun: 0.6, type: this.type, dizzy: 18 } });
+      }
+      if (this.st > 0.5) this.endSpecial();
+    } else if (id === 'needles') {
+      // Cactortle puffs its shell and fires needles all round, eight ways at once
+      const P = this.critter.pose;
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 12, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 12, dt);
+      if (this.st < 0.28) { P.sx = 0.9 + this.st; P.sy = 1.1 - this.st * 0.6; P.lean = -0.2; this.critter.emote('closed', 'o', 0.1); }
+      if (!this.specFired && this.st > 0.28) {
+        this.specFired = true; sfx.leaf(); sfx.whoosh?.(0.5);
+        for (let k = 0; k < 8; k++) {
+          const a = this.face + k * Math.PI / 4;
+          B.spawnProjectile(this, { kind: 'seed', x: this.x + Math.sin(a) * 0.6, z: this.z + Math.cos(a) * 0.6, y: 0.65, vx: Math.sin(a) * 13, vz: Math.cos(a) * 13, r: 0.3, life: 0.5,
+            hit: { dmg: 34 * this.power, kb: 3, lift: 0, stun: 0.3, type: this.type, dizzy: 8 } });
+        }
+        B.fx.spawn({ ...this.chestPos(), color: 0x9aff6a, size: 3, life: 0.2, shape: 'ring', grow: 1.6 });
+      }
+      if (this.st > 0.5) this.endSpecial();
+    } else if (id === 'earzap') {
+      // Fennzap charges both ears, then fires a crackling zig-zag bolt straight ahead (wide, stuns longer)
+      const P = this.critter.pose;
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 12, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 12, dt);
+      if (this.st < 0.3) {
+        if (o) this.turnTo(this.angleTo(o), 10, dt);
+        P.lean = -0.2; P.ear = -1; P.sy = 0.94;
+        if (Math.random() < 0.7) { const h = this.headPos(), s = Math.random() < 0.5 ? -1 : 1; B.fx.spawn({ x: h.x + Math.cos(this.face) * s * 0.4, y: h.y + 0.35, z: h.z - Math.sin(this.face) * s * 0.4, color: 0xffe14d, size: 0.25 + this.st, life: 0.1, shape: 'spark' }); }
+      } else { P.lean = 0.35; P.ear = 1.5; this.critter.emote('angry', 'open', 0.1); }
+      if (!this.specFired && this.st > 0.3) {
+        this.specFired = true; sfx.spark(); sfx.laser?.();
+        const h = this.headPos(), sx = h.x + fx * 0.5, sz = h.z + fz * 0.5, len = 6.5, by = h.y - 0.2;
+        for (let s = 0.3; s < len; s += 0.45) { const w = Math.sin(s * 3.1) * 0.35; B.fx.spawn({ x: sx + fx * s + fz * w, y: by - s * 0.05, z: sz + fz * s - fx * w, color: s % 0.9 < 0.45 ? 0xffe14d : 0xffffff, size: 0.95, life: 0.2, shape: 'bolt', rot: Math.atan2(fx, fz) + (Math.random() - 0.5) * 0.8, stretch: 1.4 }); }
+        if (o && o.alive) {
+          const rx = o.x - sx, rz = o.z - sz, along = rx * fx + rz * fz, side = Math.abs(rx * fz - rz * fx);
+          if (along > -0.4 && along < len && side < 1.0 && o.y < 1.6) B.applyHit(this, o, { dmg: 70 * this.power, kb: 4, lift: 1, stun: 0.6, dirX: fx, dirZ: fz, heavy: true, type: this.type, paralyze: 0.8, dizzy: 18 });
+        }
+      }
+      if (this.st > 0.66) this.endSpecial();
+    } else if (id === 'sandball') {
+      // Scarabold kicks a sandstone ball along the ground with its back legs
+      const P = this.critter.pose;
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 12, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 12, dt);
+      if (this.st < 0.3) { if (o) this.turnTo(this.angleTo(o), 12, dt); P.lean = 0.5; P.armLz = P.armRz = 1.1; }
+      else P.lean = -0.2;
+      if (!this.specFired && this.st > 0.3) {
+        this.specFired = true; sfx.land(); B.fx.dust({ x: this.x + fx, y: 0.05, z: this.z + fz }, 6, 0.8);
+        const hit = { dmg: 62 * this.power, kb: 5.5, lift: 3, stun: 0.5, type: this.type, dizzy: 16 };
+        B.spawnProjectile(this, { kind: 'sandball', x: this.x + fx * 0.9, z: this.z + fz * 0.9, y: 0.34, vx: fx * 8.5, vz: fz * 8.5, r: 0.34, life: 1.5, hit, base: hit });
+      }
+      if (this.st > 0.55) this.endSpecial();
+    } else if (id === 'dustdevil') {
+      // Siroccat spins on the spot and lets a little dust devil loose to chase the rival
+      const P = this.critter.pose;
+      this.vx = THREE.MathUtils.damp(this.vx, 0, 12, dt); this.vz = THREE.MathUtils.damp(this.vz, 0, 12, dt);
+      if (this.st < 0.35) { P.yaw = this.st * 40; P.armLz = P.armRz = 1.4; P.sy = 1.08; }
+      else P.yaw = 0;
+      if (!this.specFired && this.st > 0.35) {
+        this.specFired = true; sfx.whoosh?.(0.7);
+        B.spawnProjectile(this, { kind: 'dustdevil', x: this.x + fx * 1.0, z: this.z + fz * 1.0, y: 0.1, vx: fx * 4, vz: fz * 4, r: 0.55, life: 2.6, hit: { dmg: 66 * this.power, kb: 2.5, lift: 9, stun: 0.6, type: this.type, launch: true, dizzy: 22 } });
+      }
+      if (this.st > 0.6) this.endSpecial();
     } else if (id === 'beakbeam') {
       // charges the beak, then a long straight bolt of lightning
       const P = this.critter.pose;

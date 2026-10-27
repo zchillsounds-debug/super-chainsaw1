@@ -303,8 +303,76 @@ export const CRITTERS = [
     stats: { hp: 1060, speed: 6.5, power: 0.97, weight: 1.15 },
     special: 'leafrang', super: 'bloom',
     moves: { special: 'Bough Boomerang', super: 'Ancient Bloom' },
+  },  // ---- the Amber Sands (Chapter 3): desert critters, trials in Quick Battle until befriended out there ----
+  {
+    id: 'sizzlard', name: 'Sizzlard', type: 'fire', species: 'Sunbask Lizard',
+    blurb: 'Basks on hot rocks until its frill glows like a sunset. When it flares the frill, the air in front of it ripples with heat.',
+    colors: { body: 0xe89a3a, belly: 0xfff0c8, accent: 0xff4a2a, dark: 0x6a2a10, eye: '#2a1408', iris: '#ffcc22', frill: 0xff5a2a, frillTip: 0xffd23a },
+    body: { w: 0.54, h: 0.58, headR: 0.46, legLen: 0.17, armLen: 0.2, chubby: 0.92 },
+    ears: 'none', tail: 'whip', extra: 'lizard', voice: 1.15, desert: true,
+    parts: { frill: 1 },
+    stats: { hp: 1000, speed: 6.9, power: 1.06, weight: 0.85 },
+    special: 'heatwave', super: 'supernova',
+    moves: { special: 'Heat Haze', super: 'Mirage Blaze' },
+  },
+  {
+    id: 'humpdrop', name: 'Humpdrop', type: 'water', species: 'Oasis Camel',
+    blurb: 'A camel calf whose hump is a little water tank. It shares a sip with anyone lost in the dunes, then sprays them for fun.',
+    colors: { body: 0xd8b07a, belly: 0xfff4e0, accent: 0x4ac0ff, dark: 0x6a4a2a, eye: '#1a1008', iris: '#3a9aff', hump: 0xa8703a, drop: 0x5ad0ff },
+    body: { w: 0.6, h: 0.62, headR: 0.46, legLen: 0.26, armLen: 0.18, chubby: 1.0 },
+    ears: 'floppy', tail: 'puff', extra: 'camel', voice: 0.95, desert: true,
+    parts: { hump: 1 },
+    stats: { hp: 1180, speed: 6.0, power: 1.04, weight: 1.1 },
+    special: 'geyser', super: 'tsunami',
+    moves: { special: 'Oasis Geyser', super: 'Oasis Surge' },
+  },
+  {
+    id: 'cactortle', name: 'Cactortle', type: 'leaf', species: 'Cactus Tortoise',
+    blurb: 'Its shell is a living cactus that blooms once a year. Slow, patient, and very, very pointy.',
+    colors: { body: 0x8ab85a, belly: 0xf4ecc8, accent: 0x4a9a4a, dark: 0x2a4a22, eye: '#10180a', iris: '#ff6aa8', shell: 0x3e9a52, spine: 0xfff6d8, bloom: 0xff6aa8 },
+    body: { w: 0.62, h: 0.56, headR: 0.44, legLen: 0.16, armLen: 0.17, chubby: 1.08 },
+    ears: 'none', tail: 'stub', extra: 'tortoise', voice: 0.8, desert: true,
+    parts: { cactshell: 1 },
+    stats: { hp: 1240, speed: 5.6, power: 1.08, weight: 1.3 },
+    special: 'needles', super: 'bramble',
+    moves: { special: 'Needle Burst', super: 'Cactus Grove' },
+  },
+  {
+    id: 'fennzap', name: 'Fennzap', type: 'spark', species: 'Static Fennec',
+    blurb: 'Those enormous ears soak up static from the dry desert wind. Touch one and your fur stands on end for a week.',
+    colors: { body: 0xf2d8a0, belly: 0xfffaf0, accent: 0xffe14d, dark: 0x8a5a2a, eye: '#1a1008', iris: '#22c8ff', earIn: 0xffb0a0 },
+    body: { w: 0.5, h: 0.52, headR: 0.47, legLen: 0.17, armLen: 0.18, chubby: 0.95 },
+    ears: 'pointy', earScale: 1.75, tail: 'bushy', extra: 'fox', voice: 1.45, desert: true,
+    stats: { hp: 900, speed: 7.4, power: 0.98, weight: 0.72 },
+    special: 'earzap', super: 'thunder',
+    moves: { special: 'Ear Zap', super: 'Dune Thunder' },
+  },
+  {
+    id: 'scarabold', name: 'Scarabold', type: 'stone', species: 'Sandstone Scarab',
+    blurb: 'Rolls sandstone balls across the dunes from sunrise to sunset. Nobody knows where it takes them.',
+    colors: { body: 0x3a6a8a, belly: 0xe8d8b0, accent: 0xe8b84a, dark: 0x18283a, eye: '#0a1018', iris: '#ffd23a', shellA: 0x2a8a9a, shellB: 0x6a3aa8, horn: 0xf0d8a0 },
+    body: { w: 0.6, h: 0.56, headR: 0.44, legLen: 0.15, armLen: 0.2, chubby: 1.04 },
+    ears: 'antennae', tail: 'none', extra: 'scarab', voice: 0.9, desert: true,
+    parts: { scarab: 1 },
+    stats: { hp: 1180, speed: 5.7, power: 1.1, weight: 1.25 },
+    special: 'sandball', super: 'avalanche',
+    moves: { special: 'Sandball Roll', super: 'Sandslide' },
+  },
+  {
+    id: 'siroccat', name: 'Siroccat', type: 'gust', species: 'Dust Meerkat',
+    blurb: 'Stands on tiptoe to watch for sandstorms, then jumps right into them. Its goggles have seen every dune twice.',
+    colors: { body: 0xd8b888, belly: 0xfff2dc, accent: 0x5ad0c0, dark: 0x5a3a20, eye: '#140c06', iris: '#3a2a1a', goggle: 0x6a4a2a, lens: 0x7ae0ff },
+    body: { w: 0.48, h: 0.7, headR: 0.43, legLen: 0.2, armLen: 0.2, chubby: 0.88 },
+    ears: 'round', earScale: 0.7, tail: 'whip', extra: 'meerkat', voice: 1.3, desert: true,
+    parts: { goggles: 1 },
+    stats: { hp: 980, speed: 7.2, power: 1.02, weight: 0.8 },
+    special: 'dustdevil', super: 'cyclone',
+    moves: { special: 'Dust Devil', super: 'Dune Cyclone' },
   },
 ];
+
+// the critters of Clashara and the isles: the 100% goal, the Shiny Charm and the roster/shiny badges count these (D4 adds the Amber Sands)
+export const CLASSIC = CRITTERS.filter((c) => !c.desert);
 
 // Alternate "shiny" palettes, earned by clearing the cup a critter appears in.
 export const SHINY = {
@@ -335,6 +403,12 @@ export const SHINY = {
   solmoth:     { body: 0xd8e4ff, belly: 0xffffff, accent: 0x8a6aff, dark: 0x3a3a7a, iris: '#8a6aff', flame: 0xa8d8ff, flameIn: 0xffffff },
   moonwhal:    { body: 0x3a2a5a, belly: 0xe8d8ff, accent: 0xff9ad8, dark: 0x140c24, iris: '#ff9ad8', horn: 0xffd8f0, fin: 0x5a3a8a, steel: 0xffd8f0, collar: 0x5a3a8a },
   verdelk:     { body: 0xe8e4f0, belly: 0xffffff, accent: 0xb08aff, dark: 0x4a3a6a, iris: '#b08aff', antler: 0xfff4d8, blossom: 0xb8e0ff, petal: 0x8ac0ff, leaf: 0xb08aff },
+  sizzlard:    { body: 0x5ad0a0, belly: 0xf0fff4, accent: 0x3a6aff, dark: 0x1a4a3a, iris: '#3affc0', frill: 0x3a7aff, frillTip: 0xb8f0ff },
+  humpdrop:    { body: 0xf4f0e8, belly: 0xffffff, accent: 0xff8ac8, dark: 0x8a6a7a, iris: '#ff5aa8', hump: 0xe8e0d8, drop: 0xff9ad8 },
+  cactortle:   { body: 0xd8a85a, belly: 0xfff4dc, accent: 0xff8a3a, dark: 0x5a3a1a, iris: '#ffe14d', shell: 0x6a8ad8, spine: 0xffffff, bloom: 0xffe14d },
+  fennzap:     { body: 0x8a90a8, belly: 0xeef0ff, accent: 0xb88aff, dark: 0x2a2a3a, iris: '#ff5ad0', earIn: 0xd8b8ff },
+  scarabold:   { body: 0x8a2a3a, belly: 0xffe8c8, accent: 0x5ae0ff, dark: 0x2a0a10, iris: '#5ae0ff', shellA: 0xe8b83a, shellB: 0xff6a3a, horn: 0xffffff },
+  siroccat:    { body: 0x9a9a9a, belly: 0xf4f4f4, accent: 0xff7a5a, dark: 0x2a2a2a, iris: '#ff7a5a', goggle: 0x2a2a3a, lens: 0xffb85a },
   skimray:     { body: 0x2a2a3a, belly: 0xffe6f4, accent: 0xffb0d8, dark: 0x0e0e18, iris: '#ff6ab0' },
 };
 
@@ -510,7 +584,7 @@ export const BADGES = [
   { id: 'team', icon: '🤝', name: 'Dream Team', desc: 'Win a 3-on-3 Team Battle.', test: (s) => (s.stats.teamWins || 0) > 0 },
   { id: 'master', icon: '🌟', name: 'Critter Master', desc: 'Clear every cup.', test: (s) => CUPS.every((c) => s.cups[c.id]) },
   { id: 'crown', icon: '👑', name: 'Critter Crown', desc: "Win the Critter Crown on Champion's Peak in Adventure.", test: (s) => !!s.adv?.flags?.crowned },
-  { id: 'roster', icon: '🐾', name: 'Full Team', desc: 'Recruit every critter.', test: (s) => s.unlocked.length >= CRITTERS.length },
+  { id: 'roster', icon: '🐾', name: 'Full Team', desc: 'Recruit every critter.', test: (s) => CLASSIC.every((c) => s.unlocked.includes(c.id)) },
   { id: 'lv10', icon: '📈', name: 'Best Buds', desc: 'Raise a critter to Lv 10.', test: (s) => Object.values(s.critters).some((c) => c.level >= 10) },
   { id: 'grow', icon: '🌱', name: 'Growing Up', desc: 'Raise a critter to Lv 7 and watch it grow.', test: (s) => Object.values(s.critters).some((c) => c.level >= 7) },
   { id: 'grown', icon: '🌳', name: 'Fully Grown', desc: 'Raise a critter to its final form at Lv 14.', test: (s) => Object.values(s.critters).some((c) => c.level >= 14) },
@@ -523,7 +597,7 @@ export const BADGES = [
   { id: 'streak7', icon: '📆', name: 'Regular', desc: 'Clear the Daily Challenge 7 days in a row.', test: (s) => (s.stats.bestDaily || 0) >= 7 },
   { id: 'trials', icon: '🏟️', name: 'Trick Star', desc: 'Earn all 18 stars in the Stadium Trials.', test: (s) => Object.values(s.trials || {}).reduce((a, n) => a + n, 0) >= 18 },
   { id: 'tricks', icon: '🎪', name: 'Stadium Tamer', desc: 'Win in all six hazard stadiums with hazards switched on.', test: (s) => (s.stats.hazardArenas || []).length >= 6 },
-  { id: 'shiny', icon: '💎', name: 'Shiny Hunter', desc: 'Unlock every shiny palette.', test: (s) => (s.shinies || []).length >= CRITTERS.length },
+  { id: 'shiny', icon: '💎', name: 'Shiny Hunter', desc: 'Unlock every shiny palette.', test: (s) => CLASSIC.every((c) => (s.shinies || []).includes(c.id)) },
 ];
 
 // Match modifiers used by the Daily Challenge and deep Survival runs.
@@ -562,6 +636,12 @@ export function dailyChallenge(date = new Date()) {
 
 // Move-list blurbs (training mode and the Critterdex)
 export const MOVE_DESC = {
+  heatwave: 'Flares its frill and breathes a fan of shimmering heat. Burns anyone close in front.',
+  geyser: 'Taps the ground under the rival. A moment later a geyser bursts up and launches them.',
+  needles: 'Puffs up its shell and fires cactus needles in every direction at once.',
+  earzap: 'Charges its big ears, then fires a crackling bolt straight ahead. It can stun.',
+  sandball: 'Rolls a sandstone ball along the ground. It grows bigger the farther it rolls.',
+  dustdevil: 'Whips up a little dust devil that chases the rival and tosses them up.',
   comet: 'Rockets forward headfirst. Plows through anyone in the way.',
   bubble: 'Blows a big bubble that drifts forward and pops on contact.',
   leafrang: 'Throws a clover that curves out and back. It can hit twice!',

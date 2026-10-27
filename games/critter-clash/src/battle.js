@@ -397,6 +397,25 @@ export class Battle {
       scorch.rotation.x = core.rotation.x = -Math.PI / 2; core.position.y = 0.01;
       scorch.renderOrder = core.renderOrder = 1;
       mesh.add(scorch, core);
+    } else if (p.kind === 'sandball') {
+      // Scarabold's sandstone ball: banded so the roll shows
+      const ball = new THREE.Mesh(new THREE.IcosahedronGeometry(0.34, 2), new THREE.MeshToonMaterial({ color: 0xd8a860 }));
+      const band = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.05, 6, 20), new THREE.MeshToonMaterial({ color: 0xa8743a }));
+      const band2 = new THREE.Mesh(band.geometry.clone(), band.material.clone()); band2.rotation.y = Math.PI / 2;
+      const roll = new THREE.Group(); roll.add(ball, band, band2); mesh.add(roll);
+    } else if (p.kind === 'dustdevil') {
+      // Siroccat's little dust devil: stacked spinning rings, wide at the top
+      for (let k = 0; k < 5; k++) {
+        const r = 0.18 + k * 0.13, ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.05 + k * 0.012, 5, 18), new THREE.MeshBasicMaterial({ color: k % 2 ? 0xe8d0a0 : 0xc8a874, transparent: true, opacity: 0.75, depthWrite: false }));
+        ring.rotation.x = Math.PI / 2; ring.position.y = 0.15 + k * 0.32 - p.y; mesh.add(ring);
+      }
+    } else if (p.kind === 'geyser') {
+      // Humpdrop's geyser: a bubbling ring marks the spot, then a water column bursts up
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.75, 1.0, 32), new THREE.MeshBasicMaterial({ color: 0x8ae0ff, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false }));
+      ring.rotation.x = -Math.PI / 2; ring.position.y = 0.04;
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.8, 1, 18, 1, true), new THREE.MeshBasicMaterial({ color: 0xbff0ff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+      col.position.y = 0.5; col.scale.y = 0.01;
+      mesh.add(ring, col);
     } else if (p.kind === 'sonic') {
       // two stacked rings of sound; scaled up as they travel outward
       for (const [y, o] of [[0.45, 0.85], [1.05, 0.55]]) {
@@ -547,6 +566,38 @@ export class Battle {
           const a = Math.atan2(target.x - pr.x, target.z - pr.z) || 0;
           this.applyHit(O, target, { dmg: 11 * O.power, kb: 0.7, lift: 0, stun: 0.16, dirX: Math.sin(a), dirZ: Math.cos(a), heavy: false, type: O.type, dizzy: 4, projectile: true });
         }
+      } else if (pr.kind === 'sandball') {
+        // rolls along the ground and grows as it picks up sand: bigger, harder hits the farther it goes
+        const k = 1 + Math.min(1.4, pr.t * 1.3);
+        pr.mesh.scale.setScalar(k); pr.r = 0.34 * k; pr.y = 0.34 * k;
+        pr.hit = { ...pr.base, dmg: pr.base.dmg * (0.75 + k * 0.4), kb: pr.base.kb * (0.8 + k * 0.3) };
+        const roll = pr.mesh.children[0]; roll.rotation.x += Math.hypot(pr.vx, pr.vz) * dt / pr.r;
+        pr.mesh.rotation.y = Math.atan2(pr.vx, pr.vz);
+        if (Math.random() < 0.5) this.fx.spawn({ x: pr.x + (Math.random() - 0.5) * pr.r, y: 0.1, z: pr.z + (Math.random() - 0.5) * pr.r, vy: 0.8, color: 0xe8c890, alpha: 0.6, size: 0.4 * k, life: 0.5, shape: 'puff', additive: false, grow: 1.2 });
+      } else if (pr.kind === 'dustdevil') {
+        // drifts after the rival, spinning, kicking up sand
+        const tx = target.x - pr.x, tz = target.z - pr.z, tl = Math.hypot(tx, tz) || 1;
+        if (target.alive) { pr.vx += (tx / tl * 5.5 - pr.vx) * Math.min(1, dt * 1.6); pr.vz += (tz / tl * 5.5 - pr.vz) * Math.min(1, dt * 1.6); }
+        pr.mesh.children.forEach((c, k) => { c.rotation.z += dt * (9 + k * 2); c.position.x = Math.sin(pr.t * 7 + k) * 0.06 * k; });
+        const fade = Math.min(1, pr.t * 5, (pr.life - pr.t) * 3); pr.mesh.children.forEach((c) => (c.material.opacity = 0.75 * fade));
+        if (Math.random() < 0.6) { const a = Math.random() * 6.28; this.fx.spawn({ x: pr.x + Math.cos(a) * 0.5, y: 0.2 + Math.random() * 1.2, z: pr.z + Math.sin(a) * 0.5, vx: -Math.sin(a) * 2, vz: Math.cos(a) * 2, vy: 1, color: 0xd8b878, alpha: 0.55, size: 0.3, life: 0.45, shape: 'puff', additive: false }); }
+      } else if (pr.kind === 'geyser') {
+        // a beat of warning bubbles, then the column erupts and hits once
+        const [ring, col] = pr.mesh.children;
+        if (pr.t < pr.delay) {
+          ring.material.opacity = 0.5 + Math.sin(pr.t * 30) * 0.3; ring.scale.setScalar(0.8 + pr.t * 0.4);
+          if (Math.random() < 0.5) this.fx.spawn({ x: pr.x + (Math.random() - 0.5) * 1.2, y: 0.1, z: pr.z + (Math.random() - 0.5) * 1.2, vy: 1.5, color: 0xbff0ff, size: 0.2, life: 0.35, shape: 'glow', alpha: 0.8 });
+        } else {
+          const e = pr.t - pr.delay; col.material.opacity = Math.max(0, 0.75 - e * 1.2); col.scale.y = Math.min(4.2, 0.01 + e * 26); col.position.y = col.scale.y / 2; ring.material.opacity = Math.max(0, 0.8 - e * 2);
+          if (!pr.erupted) {
+            pr.erupted = true; sfx.water?.(); this.shake(0.3);
+            this.fx.burst({ x: pr.x, y: 0.4, z: pr.z }, { n: 22, speed: 3, up: 9, color: 0xbff0ff, shape: 'drop', additive: false, size: 0.25, life: 0.9, grav: 14 });
+            const d = Math.hypot(target.x - pr.x, target.z - pr.z);
+            if (target.alive && !target.under && d < 1.15 && target.y < 1) this.applyHit(pr.owner, target, { ...pr.hit, dirX: 0, dirZ: 0.001, heavy: true, launch: true, projectile: true });
+          }
+          if (e < 0.4 && Math.random() < 0.8) this.fx.spawn({ x: pr.x + (Math.random() - 0.5) * 0.8, y: 0.5 + Math.random() * 3, z: pr.z + (Math.random() - 0.5) * 0.8, vy: 4, color: 0xffffff, size: 0.45, life: 0.4, shape: 'glow', alpha: 0.7, additive: false });
+        }
+        pr.vx = pr.vz = 0;
       } else if (pr.kind === 'sonic') {
         // the ring grows fast then slows; it hits once as it sweeps past the rival
         const k = Math.min(1, pr.t / pr.dur), R = 0.5 + (pr.maxR - 0.5) * (1 - (1 - k) ** 2);

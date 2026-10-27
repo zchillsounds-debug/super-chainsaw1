@@ -1,6 +1,6 @@
 // Title, tournament cups/ladder, critter select, VS splash, results and pause overlays.
 import { buzz } from './haptics.js';
-import { CRITTERS, TYPES, CUPS, ISLE_CUPS, ALL_CUPS, cupById, SHINY, BADGES, MODS, STARTERS, skinned, withGear, gearFor, GEAR, dailyChallenge } from './data.js';
+import { CRITTERS, CLASSIC, TYPES, CUPS, ISLE_CUPS, ALL_CUPS, cupById, SHINY, BADGES, MODS, STARTERS, skinned, withGear, gearFor, GEAR, dailyChallenge } from './data.js';
 import { sfx, playMusic } from './audio.js';
 import { HAZARDS, SIGS } from './hazards.js';
 import { Camp } from './camp.js';
@@ -81,6 +81,7 @@ function unlockHint(id) {
   for (const cup of CUPS) for (const m of cup.matches) if (m.critter === id) return `Beat ${m.name} in the ${cup.name}`;
   if (CRITTERS.find((c) => c.id === id)?.legend) return CRITTERS.find((c) => c.id === id).mainland ? 'A legend of Clashara. Wake it after the Chapter 2 story (Adventure)' : 'A legend of the Sunscatter Isles. Find it after the Chapter 2 story (Adventure)';
   if (CRITTERS.find((c) => c.id === id)?.isle) return 'Befriend it in the Sunscatter Isles (Adventure)';
+  if (CRITTERS.find((c) => c.id === id)?.desert) return 'Befriend it in the Amber Sands (Adventure)';
   return 'Keep battling!';
 }
 
@@ -823,7 +824,7 @@ export class Screens {
     g.setShowcase([skinOf(c)], 'single');
     g.showcase[0].cheer = 0.8;
     const trial = this.free && !save.unlocked.includes(c.id);
-    this.root.querySelector('.sel-info').innerHTML = this.infoCard(c, trial ? `<div class="ic-trial">Trial · ${cupOfShiny(c.id) ? 'recruit in the ' + cupOfShiny(c.id).name : c.mainland ? 'wake it in Glowcap Woods' : c.isle ? 'befriend it in the Sunscatter Isles' : 'recruit in the Tournament'}</div>` : '');
+    this.root.querySelector('.sel-info').innerHTML = this.infoCard(c, trial ? `<div class="ic-trial">Trial · ${cupOfShiny(c.id) ? 'recruit in the ' + cupOfShiny(c.id).name : c.mainland ? 'wake it in Glowcap Woods' : c.isle ? 'befriend it in the Sunscatter Isles' : c.desert ? 'befriend it in the Amber Sands' : 'recruit in the Tournament'}</div>` : '');
     this.root.querySelectorAll('.rcard').forEach((b, k) => { b.classList.toggle('on', k === i); if (k === i) b.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); });
   }
 
@@ -1140,7 +1141,7 @@ export class Screens {
         <button class="chip skin ${skin === 'base' ? 'on' : ''}" data-skin="base">Classic</button>
         <button class="chip skin shiny ${skin === 'shiny' ? 'on' : ''} ${hasShiny ? '' : 'locked'}" data-skin="shiny">${hasShiny ? '✦ Shiny' : '🔒 Shiny'}</button>
       </div>
-      ${hasShiny ? '' : `<div class="dex-hint">${cup ? 'Clear the ' + cup.name + ' to unlock.' : c.isle ? 'Spot a shiny one in the Sunscatter Isles.' : 'Clear the tournament to unlock.'}</div>`}` : '';
+      ${hasShiny ? '' : `<div class="dex-hint">${cup ? 'Clear the ' + cup.name + ' to unlock.' : c.isle ? 'Spot a shiny one in the Sunscatter Isles.' : c.desert ? 'Spot a shiny one in the Amber Sands.' : 'Clear the tournament to unlock.'}</div>`}` : '';
     const gear = `<div class="dex-gear"><small>Gear</small>${GEAR.map((x) => prog.level >= x.lv
       ? `<span class="got" title="${x.name}"><i>${x.icon}</i>${x.name}</span>`
       : `<span title="Reach Lv ${x.lv}"><i>🔒</i>Lv ${x.lv}</span>`).join('')}</div>`;
@@ -1163,7 +1164,7 @@ export class Screens {
     info.querySelector(`.gstage[data-lv="${GROW_LV.filter((l) => l <= prog.level).pop() || 1}"]`)?.classList.add('on');
     info.querySelector('.dex-moves').addEventListener('click', () => this.moveModal(c));
     info.querySelectorAll('.skin').forEach((b) => b.addEventListener('click', () => {
-      if (b.dataset.skin === 'shiny' && !hasShiny) { sfx.ui('back'); this.toast(cup ? `Clear the ${cup.name} to unlock` : c.isle ? 'Spot a shiny one in the Sunscatter Isles' : 'Clear the tournament to unlock'); return; }
+      if (b.dataset.skin === 'shiny' && !hasShiny) { sfx.ui('back'); this.toast(cup ? `Clear the ${cup.name} to unlock` : c.isle ? 'Spot a shiny one in the Sunscatter Isles' : c.desert ? 'Spot a shiny one in the Amber Sands' : 'Clear the tournament to unlock'); return; }
       sfx.ui('ok');
       (save.skins ||= {})[c.id] = b.dataset.skin;
       persist();
@@ -1336,7 +1337,7 @@ export class Screens {
     const fishLeft = (keys) => { const w = { pond: 'ponds & rivers', sea: 'the sea', isle: 'island reefs', lava: 'lava pools', cold: 'icy water', night: 'any water after dark', dusk: 'any water on golden evenings' }; return keys.map((k) => [k, FISH[k].filter((f) => !fsp.has(f[0])).length]).filter(([, c]) => c).map(([k, c]) => `${c} in ${w[k] || k}`); };
     const favLeft = (isle) => { const open = fl.rows.filter((r) => r.state !== 'done' && !!r.isle === isle && !r.extra).map((r) => `${r.who}: ${r.text}`), un = fl.unaskedOf?.(isle) || 0; return [...open, ...(un ? [`${un} not asked yet (look for a ❗ over townsfolk)`] : [])]; };
     const lmLeft = (isle) => LANDMARKS.filter((l) => !!l.isle === isle && !(A.snaps || []).includes(l.id)).map((l) => (seenMap(l.map) ? `${l.name} (${MAPS[l.map].name})` : '??? (somewhere new)'));
-    const dexLeft = () => { const miss = CRITTERS.filter((c) => !save.unlocked.includes(c.id)); return miss.map((c) => { const at = Object.keys(MAPS).filter((k) => MAPS[k].wild?.list?.some((w) => w[0] === c.id) && seenMap(k)); return at.length ? `${c.name} (wild in ${at.slice(0, 2).map((k) => MAPS[k].name).join(', ')})` : ['solmoth', 'moonwhal', 'verdelk'].includes(c.id) ? `${F.sunstone ? c.name : '???'} (a legend${F.sunstone ? ': see the 🏆 Champ page' : ''})` : seenMap(Object.keys(MAPS).find((k) => MAPS[k].wild?.list?.some((w) => w[0] === c.id)) || '') ? c.name : '??? (somewhere new)'; }); };
+    const dexLeft = () => { const miss = CLASSIC.filter((c) => !save.unlocked.includes(c.id)); return miss.map((c) => { const at = Object.keys(MAPS).filter((k) => MAPS[k].wild?.list?.some((w) => w[0] === c.id) && seenMap(k)); return at.length ? `${c.name} (wild in ${at.slice(0, 2).map((k) => MAPS[k].name).join(', ')})` : ['solmoth', 'moonwhal', 'verdelk'].includes(c.id) ? `${F.sunstone ? c.name : '???'} (a legend${F.sunstone ? ': see the 🏆 Champ page' : ''})` : seenMap(Object.keys(MAPS).find((k) => MAPS[k].wild?.list?.some((w) => w[0] === c.id)) || '') ? c.name : '??? (somewhere new)'; }); };
     body = (A.time >= 60 ? bar('⏱️', 'Time adventuring', playTime(A.time)) : '')
       + bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length, false, lst(CUPS.filter((c) => !F['cup_' + c.id]).map((c) => c.name)))
       + bar('⚔️', 'Trainers beaten', tr.filter((n) => F[n.id]).length, tr.length, false, lst(trLeft(false), 4))
@@ -1344,7 +1345,7 @@ export class Screens {
       + bar('🤝', 'Favours done', fl.rows.filter((r) => r.state === 'done' && !r.isle).length, fl.mainland, false, lst(favLeft(false), 3))
       + bar('🎩', 'Hats collected', (A.hats || []).filter((id) => { const h = SHOP_HATS.find((q) => q.id === id); return h && !h.season && !h.isle && !h.extra; }).length, SHOP_HATS.filter((h) => !h.season && !h.isle && !h.extra).length, false, lst(hatLeft(SHOP_HATS.filter((h) => !h.season && !h.isle && !h.extra)), 4))
       + bar('🐟', 'Kinds of fish', [...fsp].filter((n) => !FISH.isle.some((f) => f[0] === n)).length, Object.entries(FISH).filter(([k]) => k !== 'isle').flatMap(([, v]) => v).length, false, lst(fishLeft(Object.keys(FISH).filter((k) => k !== 'isle'))))
-      + bar('📖', 'Critters on your team', save.unlocked.length, CRITTERS.length, false, lst(dexLeft(), 5))
+      + bar('📖', 'Critters on your team', CLASSIC.filter((c) => save.unlocked.includes(c.id)).length, CLASSIC.length, false, lst(dexLeft(), 5))
       + bar('🏔️', 'Peak Gauntlets cleared', A.gauntWins || 0)
       + bar('💥', 'Alphas beaten', Object.keys(F).filter((k) => k.startsWith('alpha_')).length)
       + bar('🌿', 'Wild critters met', A.cnt?.wild || 0)
@@ -1514,8 +1515,8 @@ export class Screens {
         + rowC('🌞', 'Solmoth <small>Dawn Moth</small>', F.legend_solmoth ? 'befriended' : F.festlamp_done ? 'rests on the Caldera Rim' : 'waits for a festival…', F.legend_solmoth)
         + rowC('🌙', 'Moonwhal <small>Moon Narwhal</small>', F.legend_moonwhal ? 'befriended' : F.tower_bronze ? 'Starfall beach, after dark' : 'sings for a Tower hero…', F.legend_moonwhal)
         + rowC('🌿', 'Verdelk <small>Grove Elk</small>', F.legend_verdelk ? 'befriended' : F.grove4_done ? 'Glowcap Woods, by the pond' : F.grove1_asked ? 'the Heartseed chain…' : 'sleeps under Glowcap Woods…', F.legend_verdelk)
-        + `<li class="jr-head">📖 Critterdex <small>${save.unlocked.length}/${CRITTERS.length}</small></li>`
-        + rowC('✨', 'Shiny Charm', F.shinycharm ? 'twice the shinies!' : `befriend every critter · ${CRITTERS.length - CRITTERS.filter((c) => save.unlocked.includes(c.id)).length} to go`, F.shinycharm)
+        + `<li class="jr-head">📖 Critterdex <small>${CLASSIC.filter((c) => save.unlocked.includes(c.id)).length}/${CLASSIC.length}</small></li>`
+        + rowC('✨', 'Shiny Charm', F.shinycharm ? 'twice the shinies!' : `befriend every critter · ${CLASSIC.length - CLASSIC.filter((c) => save.unlocked.includes(c.id)).length} to go`, F.shinycharm)
         + `<li class="jr-head">⚡ Rival Dash</li>`
         + rowC('🔥', 'Rival Showdown', F.dash_show ? (hats.includes('rivalband') ? "won · Dash's Headband" : 'won! Talk to Dash') : 'Starfall Atoll', F.dash_show)
         + (F.dash_show ? rowC('⚔️', "Today's island rematch", F['dashisle_' + new Date().toISOString().slice(0, 10)] ? 'done' : 'Starfall Atoll', F['dashisle_' + new Date().toISOString().slice(0, 10)]) : '');
@@ -1765,9 +1766,9 @@ export class Screens {
     // [have, need] for badges that count something; locked ones show a little progress bar
     const BADGE_PROG = {
       ten: (s) => [st.wins || 0, 10], combo: (s) => [st.bestCombo || 0, 10], super: (s) => [st.supers || 0, 10], counter: (s) => [st.counters || 0, 5],
-      roster: (s) => [s.unlocked.length, CRITTERS.length], streak5: (s) => [st.bestStreak || 0, 5], streak10: (s) => [st.bestStreak || 0, 10],
+      roster: (s) => [CLASSIC.filter((c) => s.unlocked.includes(c.id)).length, CLASSIC.length], streak5: (s) => [st.bestStreak || 0, 5], streak10: (s) => [st.bestStreak || 0, 10],
       snack: (s) => [st.fed || 0, 10], streak7: (s) => [st.bestDaily || 0, 7], tricks: (s) => [(st.hazardArenas || []).length, 6],
-      trials: (s) => [Object.values(s.trials || {}).reduce((a, n) => a + n, 0), 18], shiny: (s) => [(s.shinies || []).length, CRITTERS.length],
+      trials: (s) => [Object.values(s.trials || {}).reduce((a, n) => a + n, 0), 18], shiny: (s) => [CLASSIC.filter((c) => (s.shinies || []).includes(c.id)).length, CLASSIC.length],
       friend: (s) => [Math.max(0, ...Object.values(s.critters).map((c) => c.pets || 0)), 20],
     };
     const d = document.createElement('div');

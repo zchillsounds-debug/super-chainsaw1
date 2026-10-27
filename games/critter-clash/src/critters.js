@@ -497,6 +497,45 @@ export class Critter {
       const blaze = inked(sphere(headR * 0.16), this.mats.belly, OL * 0.3);
       blaze.scale.set(0.8, 1.6, 0.5); blaze.position.set(0, headR * 0.42, headR * 0.86); blaze.rotation.x = -0.5;
       skull.add(blaze);
+    } else if (def.extra === 'lizard') {
+      // Sizzlard: a wide flat snout with two nostril dots, and a scatter of darker scales on the brow
+      const sn = inked(sphere(headR * 0.42), this.mats.body, OL * 0.5);
+      sn.scale.set(1.25, 0.55, 0.9); sn.position.set(0, -headR * 0.36, headR * 0.62);
+      skull.add(sn);
+      for (const s of [-1, 1]) { const n = new THREE.Mesh(sphere(headR * 0.035), this.mats.dark); n.position.set(s * headR * 0.13, -headR * 0.26, headR * 1.0); skull.add(n); }
+      for (const [x, y, r] of [[-0.3, 0.62, 0.07], [0.05, 0.75, 0.09], [0.32, 0.6, 0.06], [-0.12, 0.47, 0.05], [0.18, 0.44, 0.05]]) {
+        const sc = new THREE.Mesh(sphere(headR * r), this.mats.accent); sc.scale.z = 0.4;
+        sc.position.set(x * headR, y * headR, Math.sqrt(Math.max(0.05, 1 - x * x - y * y)) * headR * 0.99); sc.lookAt(sc.position.clone().multiplyScalar(2)); skull.add(sc);
+      }
+    } else if (def.extra === 'camel') {
+      // Humpdrop: a long soft muzzle with sleepy slit nostrils
+      const muz = inked(sphere(headR * 0.36), this.mats.belly, OL * 0.5);
+      muz.scale.set(1.1, 0.8, 1.15); muz.position.set(0, -headR * 0.36, headR * 0.78);
+      skull.add(muz);
+      for (const s of [-1, 1]) { const n = inked(sphere(headR * 0.06), this.mats.dark, OL * 0.3); n.scale.set(1.4, 0.6, 0.6); n.position.set(s * headR * 0.15, -headR * 0.22, headR * 1.15); n.rotation.z = s * 0.4; skull.add(n); }
+    } else if (def.extra === 'tortoise') {
+      // Cactortle: a little hooked beak
+      const bk = inked(new THREE.ConeGeometry(headR * 0.22, headR * 0.3, 12), this.mats.dark, OL * 0.4);
+      bk.rotation.x = Math.PI / 2 + 0.5; bk.scale.set(1.2, 1, 0.7); bk.position.set(0, -headR * 0.3, headR * 0.95);
+      skull.add(bk);
+    } else if (def.extra === 'meerkat') {
+      // Siroccat: dark patches round the eyes, a slim pale muzzle and a tiny dark nose
+      for (const s of [-1, 1]) {
+        const pt = new THREE.Mesh(sphere(headR * 0.24), this.mats.dark); pt.scale.set(0.9, 1.15, 0.3);
+        pt.position.set(s * headR * 0.33, headR * 0.02, headR * 0.86); pt.rotation.y = s * 0.38; skull.add(pt);
+      }
+      const muz = inked(sphere(headR * 0.3), this.mats.belly, OL * 0.5);
+      muz.scale.set(0.9, 0.75, 1.2); muz.position.set(0, -headR * 0.34, headR * 0.76);
+      skull.add(muz);
+      const nose = inked(sphere(headR * 0.08), this.mats.dark, OL * 0.4);
+      nose.scale.set(1.3, 0.8, 0.9); nose.position.set(0, -headR * 0.22, headR * 1.1);
+      skull.add(nose);
+    } else if (def.extra === 'scarab') {
+      // Scarabold: two small curved mandibles under the face
+      for (const s of [-1, 1]) {
+        const m = inked(new THREE.ConeGeometry(headR * 0.08, headR * 0.34, 8), this.mats.dark, OL * 0.4);
+        m.position.set(s * headR * 0.2, -headR * 0.62, headR * 0.78); m.rotation.set(0.9, 0, s * 0.7); skull.add(m);
+      }
     } else if (def.extra === 'manta') {
       // a wide flat manta head, with two curled cephalic fins up front like horns
       skull.scale.set(1.28, 0.82, 1.0);

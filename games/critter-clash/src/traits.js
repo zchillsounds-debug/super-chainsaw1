@@ -28,6 +28,12 @@ export const TRAITS = {
   skimray: { k: 'slip', icon: '💨', name: 'Slipstream', desc: 'A dodge leaves it 15% faster for 2 seconds.' },
   solmoth: { k: 'sun', icon: '☀️', name: 'Sunlit', desc: '8% stronger in daytime fights.' },
   moonwhal: { k: 'moon', icon: '🌕', name: 'Moon Child', desc: 'At night its special recharges 30% faster and it hits 8% harder.' },
+  sizzlard: { k: 'sun', icon: '🦎', name: 'Sunbask', desc: '8% stronger in daytime fights.' },
+  humpdrop: { k: 'regen', icon: '🐪', name: 'Water Hump', desc: 'Slowly heals after 3 seconds without being hit (up to 60% health).' },
+  cactortle: { k: 'thorns', icon: '🌵', name: 'Spiny Shell', desc: 'Rivals who hit it up close take 10% of the damage back.' },
+  fennzap: { k: 'dodgecd', icon: '👂', name: 'Big Ears', desc: 'Hears blows coming: its dodge roll recharges 35% faster.' },
+  scarabold: { k: 'kb', icon: '🪲', name: 'Dug In', desc: 'Gets knocked back 30% less.' },
+  siroccat: { k: 'slip', icon: '🥽', name: 'Sand Runner', desc: 'A dodge leaves it 15% faster for 2 seconds.' },
   verdelk: { k: 'roots', icon: '🌳', name: 'Deep Roots', desc: 'Heals 15% of the damage its specials and supers deal.' },
 };
 

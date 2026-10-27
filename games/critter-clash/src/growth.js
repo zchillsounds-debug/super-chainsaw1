@@ -1111,6 +1111,77 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
     }
   }
 
+  // ---- Amber Sands (desert) parts ----
+  // Sizzlard: a fan frill round the neck, petals fanned out behind the head with bright tips
+  if (P.frill) {
+    const s = P.frill, fm = mat('frill', C.frill ?? C.accent, { side: THREE.DoubleSide }), tm = mat('frillTip', C.frillTip ?? 0xffd23a), n = 9;
+    for (let k = 0; k < n; k++) {
+      const a = -1.75 + (k / (n - 1)) * 3.5, L = headR * (0.75 + 0.25 * Math.cos(a * 0.8)) * s;
+      const g = new THREE.Group(); g.position.set(0, -headR * 0.25, -headR * 0.35); g.rotation.set(-0.35, 0, -a);
+      const pet = inked(sphere(1), fm, OL * 0.4); pet.scale.set(headR * 0.24 * s, L, headR * 0.05); pet.position.y = L * 0.95; g.add(pet);
+      const tip = new THREE.Mesh(sphere(1), tm); tip.scale.set(headR * 0.12 * s, L * 0.22, headR * 0.06); tip.position.y = L * 1.72; g.add(tip);
+      SK.add(g);
+    }
+  }
+  // Humpdrop: one hump (two on grown forms, P.hump > 1.3) on the back with a water droplet tucked on top
+  if (P.hump) {
+    const s = P.hump, hm = mat('hump', C.hump ?? C.body), dm = mat('drop', C.drop ?? 0x5ad0ff, { rim: 1 }), two = s > 1.3;
+    for (const dz of two ? [-0.32, 0.32] : [0]) {
+      const h = inked(sphere(B.w * 0.5 * Math.min(s, 1.2)), hm, OL * 0.7);
+      h.scale.set(0.9, 0.95, 0.8); h.position.set(0, B.h * (0.66 + dz * 0.6), -B.w * 0.52); TO.add(h);
+    }
+    const dg = new THREE.Group(); dg.position.set(0, B.h * 0.62 + B.w * 0.4, -B.w * 0.58);
+    const d = inked(sphere(B.w * 0.11 * s), dm, OL * 0.5); d.scale.set(1, 1.15, 1); dg.add(d);
+    const c = inked(new THREE.ConeGeometry(B.w * 0.08 * s, B.w * 0.14 * s, 12), dm, OL * 0.5); c.position.y = B.w * 0.14 * s; dg.add(c);
+    TO.add(dg);
+  }
+  // Cactortle: a domed cactus shell on the back, ribbed, with pale spines and a flower on top (more flowers grown)
+  if (P.cactshell) {
+    const s = P.cactshell, sm = mat('shell', C.shell ?? C.accent), sp = mat('spine', C.spine ?? 0xfff6d8), bm = mat('bloom', C.bloom ?? 0xff6aa8), R = B.w * 0.74 * s;
+    const dome = inked(sphere(R), sm, OL * 0.8); // a closed, flattened dome: no open rim showing from the front
+    dome.scale.set(1, 1.02, 0.62); dome.position.set(0, B.h * 0.5, -B.w * 0.3); TO.add(dome);
+    for (let k = 0; k < 16; k++) { // spines in pairs along the ribs
+      const a = -1.2 + (k % 6) * 0.48, b = 0.45 + Math.floor(k / 6) * 0.5, d = new THREE.Vector3(Math.sin(a) * Math.sin(b), Math.cos(b), -Math.cos(a) * Math.sin(b));
+      const t = new THREE.Mesh(new THREE.ConeGeometry(R * 0.035, R * 0.18, 5), sp); t.position.set(dome.position.x + d.x * R, dome.position.y + d.y * R * 1.02, dome.position.z + d.z * R * 0.62); t.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); TO.add(t);
+    }
+    { // a little cactus pad on top of the head with its own flower, so it reads as a cactus from the front
+      const cm = mat('pad', C.shell ?? C.accent), pad = inked(sphere(headR * 0.3), cm, OL * 0.5); pad.scale.set(0.75, 1.1, 0.45); pad.position.set(headR * 0.12, headR * 1.05, 0); pad.rotation.z = -0.25; SK.add(pad);
+      for (const [x, y] of [[-0.12, 0.95], [0.3, 1.1], [0.05, 1.3], [0.25, 0.85]]) { const t = new THREE.Mesh(new THREE.ConeGeometry(headR * 0.03, headR * 0.12, 5), sp); t.position.set(headR * x, headR * y, headR * 0.12); t.rotation.x = 1.2; SK.add(t); }
+      const fl = new THREE.Group(); fl.position.set(headR * 0.0, headR * 1.38, 0.02);
+      for (let k = 0; k < 5; k++) { const pt = inked(sphere(headR * 0.09), bm, OL * 0.3); pt.scale.set(1, 0.45, 1.6); const a = k / 5 * Math.PI * 2; pt.position.set(Math.cos(a) * headR * 0.1, 0, Math.sin(a) * headR * 0.1); pt.rotation.y = -a; fl.add(pt); }
+      fl.add(new THREE.Mesh(sphere(headR * 0.06), mat('bloomC', 0xffe14d))); SK.add(fl);
+    }
+    const nF = s > 1.3 ? 3 : 1;
+    for (let f = 0; f < nF; f++) {
+      const fg = new THREE.Group(); fg.position.set((f - (nF - 1) / 2) * R * 0.55, B.h * 0.5 + R * 0.8 - Math.abs(f - (nF - 1) / 2) * R * 0.12, -B.w * 0.3 - R * 0.35);
+      for (let k = 0; k < 5; k++) { const pt = inked(sphere(R * 0.09), bm, OL * 0.3); pt.scale.set(1, 0.4, 1.6); const a = k / 5 * Math.PI * 2; pt.position.set(Math.cos(a) * R * 0.1, 0, Math.sin(a) * R * 0.1); pt.rotation.y = -a; fg.add(pt); }
+      const ctr = new THREE.Mesh(sphere(R * 0.06), mat('bloomC', 0xffe14d)); ctr.position.y = R * 0.03; fg.add(ctr);
+      TO.add(fg);
+    }
+  }
+  // Scarabold: two glossy wing cases over the back (two-tone) and a forward-curving horn
+  if (P.scarab) {
+    const s = P.scarab, am = mat('shellA', C.shellA ?? C.accent, { rim: 0.9 }), bm2 = mat('shellB', C.shellB ?? C.dark, { rim: 0.9 }), hm = mat('horn', C.horn ?? 0xf0d8a0);
+    for (const x of [-1, 1]) {
+      const e = inked(sphere(B.w * 0.42 * s), x < 0 ? am : bm2, OL * 0.7);
+      e.scale.set(0.6, 1.2, 0.62); e.position.set(x * B.w * 0.21 * s, B.h * 0.56, -B.w * 0.42); e.rotation.set(-0.15, 0, x * 0.1); TO.add(e);
+    }
+    const a = v(0, 0, 0), b = v(0, 0.22, 0.12).multiplyScalar(s * headR * 2), c = v(0, 0.46, 0.02).multiplyScalar(s * headR * 2);
+    const h = inked(mergeGeometries([seg(a, b, headR * 0.14 * s, headR * 0.1 * s), seg(b, c, headR * 0.1 * s, headR * 0.015)]), hm, OL * 0.6);
+    h.position.set(0, headR * 0.5, headR * 0.55); SK.add(h);
+  }
+  // Siroccat: sand goggles pushed up on the forehead
+  if (P.goggles) {
+    const s = P.goggles, gm = mat('goggle', C.goggle ?? 0x6a4a2a), lm = mat('lens', C.lens ?? 0x7ae0ff, { rim: 1 });
+    const band = inked(new THREE.TorusGeometry(headR * 0.97, headR * 0.06 * s, 6, 26), gm, OL * 0.4); band.rotation.x = Math.PI / 2 - 0.5; band.position.y = headR * 0.32; SK.add(band);
+    for (const x of [-1, 1]) {
+      const g = new THREE.Group(); g.position.set(x * headR * 0.3, headR * 0.72, headR * 0.6); g.rotation.x = -0.75;
+      const rim = inked(new THREE.TorusGeometry(headR * 0.2 * s, headR * 0.05 * s, 6, 16), gm, OL * 0.4); g.add(rim);
+      const lens = new THREE.Mesh(new THREE.CircleGeometry(headR * 0.18 * s, 16), lm); lens.position.z = headR * 0.01; g.add(lens);
+      SK.add(g);
+    }
+  }
+
   flatten(SK); flatten(TO);
 }
 

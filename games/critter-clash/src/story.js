@@ -3,7 +3,7 @@
 // the cup stadiums are the gyms. Every beat is keyed on save.adv.flags.
 import { buzz, reward } from './haptics.js';
 import { save, persist, grantXp, xpNeeded } from './save.js';
-import { CUPS, ISLE_CUPS, CRITTERS, TYPES, withGear, skinned, cupById } from './data.js';
+import { CUPS, ISLE_CUPS, CRITTERS, CLASSIC, TYPES, withGear, skinned, cupById } from './data.js';
 const skinnedShiny = (id) => skinned(CRITTERS.find((c) => c.id === id), 'shiny');
 import { unlock } from './save.js';
 import { sfx } from './audio.js';
@@ -395,11 +395,11 @@ export function storyTalk(S, id, w, a) {
       : !F.legend_verdelk ? (F.grove4_done ? 'Prof. Pecan: The Grove Elk is AWAKE? In Glowcap Woods, by the pond? Go, go! And bring me a petal if you can!' : 'Prof. Pecan: Solmoth AND Moonwhal! The sun and the moon. But the Grove Book says Clashara has a legend of its own... Picker Fern in Glowcap Woods sent word that the glowcaps are dimming. Curious!')
       : 'Prof. Pecan: The sun, the moon AND the forest. Solmoth, Moonwhal and Verdelk, all friends of yours! I\'m rewriting chapter twelve of my book. Again.';
     // every critter befriended: the professor's Shiny Charm (twice the shiny wild critters)
-    if (F.crowned && !F.shinycharm && CRITTERS.every((c) => save.unlocked.includes(c.id))) {
+    if (F.crowned && !F.shinycharm && CLASSIC.every((c) => save.unlocked.includes(c.id))) {
       F.shinycharm = true; (save.adv.hats ||= []).includes('dexcrown') || save.adv.hats.push('dexcrown'); save.berries = (save.berries || 0) + 30; persist(); reward(3);
-      return w.say([`Prof. Pecan: {hero}... is it true? Every single critter, all ${CRITTERS.length} of them, friends of yours? Even the legends?!`, "Prof. Pecan: My Critterdex is complete. Forty years of work, and you finished it! Here: my Shiny Charm. It hums near sparkly critters.", '✨ You got the SHINY CHARM! Shiny wild critters turn up twice as often now.', "Prof. Pecan: And this, a little crown I made for whoever finished the 'dex. It was meant to be me. It's much better on you.", "{hero} got the Critterdex Crown! 👑 +30 🍓 (☰ → 🎩 Hats)"], null, 'Prof. Pecan');
+      return w.say([`Prof. Pecan: {hero}... is it true? Every single critter, all ${CLASSIC.length} of them, friends of yours? Even the legends?!`, "Prof. Pecan: My Critterdex is complete. Forty years of work, and you finished it! Here: my Shiny Charm. It hums near sparkly critters.", '✨ You got the SHINY CHARM! Shiny wild critters turn up twice as often now.', "Prof. Pecan: And this, a little crown I made for whoever finished the 'dex. It was meant to be me. It's much better on you.", "{hero} got the Critterdex Crown! 👑 +30 🍓 (☰ → 🎩 Hats)"], null, 'Prof. Pecan');
     }
-    const dexLeft = CRITTERS.length - CRITTERS.filter((c) => save.unlocked.includes(c.id)).length;
+    const dexLeft = CLASSIC.length - CLASSIC.filter((c) => save.unlocked.includes(c.id)).length;
     const dexLine = F.sunstone && !F.shinycharm && dexLeft <= 6 ? `Prof. Pecan: Only ${dexLeft} critter${dexLeft > 1 ? 's' : ''} left to befriend for a complete Critterdex! I have a special charm for whoever finishes it...` : null;
     w.say([...forecast(), ...(lore ? [lore] : []), ...(dexLine ? [dexLine] : []), F.crowned ? (F.isle_arrive && !F.grand_done ? 'Prof. Pecan: Our Champion! Keep an eye on the 🏅 Grand total in your Journal Records. Reach 100% of Clashara AND the isles, then come and see me. I have something special in mind...' : 'Prof. Pecan: Our very own Champion of Clashara! Come back and tell me everything sometime.')
       : nx ? `Prof. Pecan: ${F.cup_sprout ? 'Marvellous work so far! ' : ''}Your next goal is the ${cup.name}, in ${nx[1]}.`
