@@ -4277,7 +4277,9 @@ export class World {
     G.add(new THREE.Mesh(mergeGeometries(rl), toon(0xe8d8b0))); rl.forEach((g) => g.dispose());
     // the door: a dark opening with the flap tied back to one side
     const dx = (b.door + 0.5) * TILE - w / 2, front = d / 2 - 0.3;
-    const hole = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.2), toon(0x2a1a14)); hole.position.set(dx, 0.6, front + 0.01); G.add(hole);
+    const lit = this.phase !== 'day'; // after dusk a lamp burns inside: the doorway glows warm and spills light on the sand
+    const hole = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.2), lit ? LIT : toon(0x2a1a14)); hole.position.set(dx, 0.6, front + 0.01); G.add(hole);
+    if (lit) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffb050, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: this.phase === 'night' ? 0.8 : 0.5 }); sm.userData.own = true; const gl = new THREE.Sprite(sm); gl.userData.shared = true; gl.scale.setScalar(2.4); gl.position.set(dx, 0.7, front + 0.5); G.add(gl); }
     const fs = new THREE.Shape(); fs.moveTo(0, 0); fs.lineTo(0.42, 0); fs.lineTo(0.12, 1.25); fs.lineTo(0, 1.25); fs.closePath();
     const flap = inked(new THREE.ShapeGeometry(fs), toon(new THREE.Color(cB).getHex(), { side: THREE.DoubleSide }), OL * 0.4); flap.position.set(dx + 0.5, 0, front + 0.04); G.add(flap);
     // a pennant on the centre pole (a dust swirl on the Dust Devils' tents), flapping with the stadium ones
