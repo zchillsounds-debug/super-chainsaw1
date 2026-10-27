@@ -40,7 +40,7 @@ const ROUND_TIME = 60;
 const INTRO_FIRST = 4.2, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
 
 export class Battle {
-  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, cpuHp = 1, training = false, hazards = false, stageSub = '', stageName = '', heroHat = null, cpuTitle = null, phase = null, rain = false } = {}) {
+  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, cpuHp = 1, training = false, hazards = false, stageSub = '', stageName = '', heroHat = null, cpuTitle = null, phase = null, rain = false, sandstorm = false } = {}) {
     this.stageSub = stageSub; this.stageName = stageName; this.cpuTitle = cpuTitle;
     this.trainHazards = training && hazards; // Sparring Setup can switch hazards on to practise them
     this.game = game;
@@ -59,7 +59,7 @@ export class Battle {
     this.playerHp = playerHp; // survival runs carry damage between fights
     this.cpuHp = cpuHp; // team battles carry the rival's damage too
     const ak = game.arena.key; // traits: night (Night Owl...), wet (Rain Dance) and day (Sunlit) fights
-    this.env = { night: phase === 'night' || ak === 'neon', wet: !!rain || ak === 'beach' };
+    this.env = { night: phase === 'night' || ak === 'neon', wet: !!rain || ak === 'beach', sand: !!sandstorm }; // (sand: an Amber Sands sandstorm blows through the fight)
     this.fighters = [];
     this.fighters.push(new Fighter(this, pDef, { level: playerLevel, side: 0 }));
     this.fighters.push(new Fighter(this, cDef, { level: cpuLevel, cpu: true, side: 1 }));

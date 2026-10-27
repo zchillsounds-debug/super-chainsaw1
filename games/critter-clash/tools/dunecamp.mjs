@@ -10,7 +10,7 @@ const pg = await b.newPage({ viewport: { width: w, height: h } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
 await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?q=' + (process.env.Q || 'high') + (w < h ? '&mobile' : ''));
 await pg.waitForFunction(() => window.__ready, null, { timeout: 400000 });
-await pg.evaluate((h) => { window.__HOUR = h; }, process.env.HOUR || 11);
+await pg.evaluate(([h, st]) => { window.__HOUR = h; window.__STORM = st; }, [process.env.HOUR || 11, process.env.STORM === undefined ? undefined : process.env.STORM === '1']);
 const only = (process.env.ONLY || '').split(',').filter(Boolean), want = (k) => !only.length || only.includes(k);
 const shot = async (n) => { await pg.waitForTimeout(700); await pg.screenshot({ path: `tools/out/dc-${n}-${tag}.png`, timeout: 120000 }); };
 const start = (map, x, y, dir, extra = []) => pg.evaluate(([map, x, y, dir, extra]) => {
@@ -18,7 +18,7 @@ const start = (map, x, y, dir, extra = []) => pg.evaluate(([map, x, y, dir, extr
   const f = {}; for (const k of ['intro', 'quest', 'crowned', 'ending', 'isle_arrive', 'cup_coral', 'cup_gale', 'cup_caldera', 'cup_sprout', 'cup_thunder', 'cup_grove', 'cup_champion', 'cup_midnight', 'cup_sky', 'cup_legend', 'sunstone', 'morra', 'rail_open', 'sands_arrive', 'cup_mirage', 'post_mirage', 'redrock_arrive', 'cup_canyon', 'devils1', 'sunshard', ...extra]) f[k] = true;
   __save.critters.cindermunch.level = 40;
   const now = new Date(), H = +(window.__HOUR ?? 11);
-  __save.adv = { hero: 'cindermunch', map, x, y, dir, flags: f, spawn: { map: 'oasis', x: 12, y: 12 }, shift: { day: now.toISOString().slice(0, 10), h: (H - now.getHours() + 24) % 24 } };
+  __save.adv = { hero: 'cindermunch', map, x, y, dir, flags: f, spawn: { map: 'oasis', x: 12, y: 12 }, shift: { day: now.toISOString().slice(0, 10), h: (H - now.getHours() + 24) % 24 }, sandstorm: window.__STORM };
   __game.screens.adventure(); __sim(0.5);
 }, [map, x, y, dir, extra]);
 const W = () => pg.evaluate(() => { const o = __game.screens.worldObj; return o && `${o.key} ${o.hx},${o.hy} dlg=${!!document.querySelector('.wd-box')}`; });
@@ -65,6 +65,19 @@ if (want('gate')) {
     await start('sungate', x, y, d, ['dash_canyon', 'dunecamp_arrive', 'cup_sandstorm', 'post_sandstorm', 'devils2', 'citymap', 'sungate_arrive', ...ex]);
     await pg.evaluate(() => __sim(1)); await shot('view-' + n);
   }
+}
+if (want('storm')) {
+  // a sandstorm (STORM=1 forces it on): the camp and the canyon in the storm, the menu card's weather, then a wild fight in it
+  await pg.evaluate(() => { window.__STORM = true; });
+  for (const [m, x, y] of [['dunecamp', 16, 6], ['redrock', 14, 6]]) { await start(m, x, y, 's', ['dash_canyon', 'dunecamp_arrive']); await pg.evaluate(() => __sim(1.5)); await shot('storm-' + m); }
+  await pg.evaluate(() => __game.screens.worldMenu()); await pg.waitForTimeout(500);
+  console.log('menu weather:', await pg.evaluate(() => document.querySelector('.wd-hero small')?.textContent));
+  await shot('storm-menu');
+  await pg.evaluate(() => { document.querySelector('.modal-wrap')?.remove(); const S = __game.screens; S.worldFight({ foe: __grow(__critters.find((c) => c.id === 'fennzap'), 38), lv: 38, kind: 'wild', name: 'Wild Fennzap' }); for (let k = 0; k < 14 && __game.battle.phase !== 'fight'; k++) __sim(0.5); __sim(2); });
+  console.log('fight env:', await pg.evaluate(() => JSON.stringify(__game.battle.env)), 'sig:', await pg.evaluate(() => __game.battle.hazards.S?.name));
+  await shot('storm-fight');
+  await pg.evaluate(() => { const H = __game.battle.hazards; H.signature(); __sim(1.6); });
+  await shot('storm-fight-sig');
 }
 if (want('map')) {
   await start('dunecamp', 16, 6, 's', ['dash_canyon', 'dunecamp_arrive']);

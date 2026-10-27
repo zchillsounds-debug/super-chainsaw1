@@ -111,6 +111,8 @@ export class Hazards {
     this.list = [];
     this.H = HAZARDS[battle.arena.key];
     this.S = SIGS[battle.arena.key];
+    this.sandWx = !!battle.env?.sand; // an Amber Sands sandstorm: the arena's signature turns into sandstorms, and sand blows through all fight long
+    if (this.sandWx) this.S = SIGS.dunes;
     this.sig = null;
     this.timer = 10;
   }
@@ -172,7 +174,7 @@ export class Hazards {
 
   // ---------- the arena's signature pattern ----------
   signature() {
-    const B = this.b, key = B.arena.key;
+    const B = this.b, key = this.sandWx ? 'dunes' : B.arena.key;
     const f = B.fighters[Math.random() < 0.5 ? 0 : 1];
     const ang = Math.random() * Math.PI * 2, dx = Math.cos(ang), dz = Math.sin(ang);
     const sg = { kind: key, t: 0, meshes: [], mats: [], hit: new Set() };
@@ -451,6 +453,7 @@ export class Hazards {
       }
     }
     if (this.sig) this.updateSig(dt);
+    if (this.sandWx && Math.random() < dt * 30) { const w = (Math.random() - 0.5) * ARENA_R * 2.4; B.fx.spawn({ x: -ARENA_R - 2, y: 0.3 + Math.random() * 3, z: w, vx: 15 + Math.random() * 6, color: Math.random() < 0.5 ? 0xf4d8a0 : 0xd8a868, size: 0.2, stretch: 8, rot: -Math.PI / 2, life: 1.6, shape: 'spark', additive: false, alpha: 0.7 }); } // the weather's sand, blowing through
     for (let i = this.list.length - 1; i >= 0; i--) {
       const h = this.list[i];
       h.t += dt;

@@ -1222,7 +1222,7 @@ export class Screens {
     d.className = 'modal-wrap';
     const F = save.adv.flags, cl = [...CUPS, ...(F.isle_arrive ? ISLE_CUPS : []), ...(F.sands_arrive ? SANDS_CUPS : [])], cups = cl.filter((c) => F['cup_' + c.id]).length, h = heroDef(); // every region the hero has reached
     d.innerHTML = `<div class="modal wd-menu-modal"><h2>Adventure</h2>
-      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero${this.worldObj?.M && !this.worldObj.M.indoor && (!this.worldObj.M.mood || this.worldObj.M.snow || this.worldObj.M.border === 'cloud') ? ` · ${this.worldObj.storm ? '⛈️ Storm' : this.worldObj.rain ? '🌧️ Rain' : this.worldObj.snowing ? '🌨️ Snow' : { day: '☀️ Day', evening: '🌇 Evening', night: '🌙 Night' }[this.worldObj.phase] || ''}` : ''}${seasonTag() ? ` · <span class="nw">${seasonTag()}</span>` : ''}${save.adv.time >= 60 ? ` · <span class="nw">⏱️ ${playTime(save.adv.time)}</span>` : ''}</small><small>🏆 Cups ${cups}/${cl.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => { const M = MAPS[k.slice(3, k.lastIndexOf('_'))]; return k.startsWith('it_') && M && !M.extra && (!M.isle || F.isle_arrive); }).length}/${F.isle_arrive ? 44 : 24} · <span class="nw">📋 ${save.adv.req?.day === new Date().toISOString().slice(0, 10) ? `${save.adv.req.paid.length}/3` : 'new!'}</span></small></div></div>
+      <div class="wd-hero"><img src="${this.game.portrait(h)}" alt=""><div><b>${h.name}</b><small>Lv ${save.critters[h.id].level} · Hero${this.worldObj?.M && !this.worldObj.M.indoor && (!this.worldObj.M.mood || this.worldObj.M.snow || this.worldObj.M.border === 'cloud') ? ` · ${this.worldObj.sandstorm ? '🌪️ Sandstorm' : this.worldObj.storm ? '⛈️ Storm' : this.worldObj.rain ? '🌧️ Rain' : this.worldObj.snowing ? '🌨️ Snow' : { day: '☀️ Day', evening: '🌇 Evening', night: '🌙 Night' }[this.worldObj.phase] || ''}` : ''}${seasonTag() ? ` · <span class="nw">${seasonTag()}</span>` : ''}${save.adv.time >= 60 ? ` · <span class="nw">⏱️ ${playTime(save.adv.time)}</span>` : ''}</small><small>🏆 Cups ${cups}/${cl.length} · 🍓 ${save.berries || 0} · 🎁 ${Object.keys(F).filter((k) => { const M = MAPS[k.slice(3, k.lastIndexOf('_'))]; return k.startsWith('it_') && M && !M.extra && (!M.isle || F.isle_arrive); }).length}/${F.isle_arrive ? 44 : 24} · <span class="nw">📋 ${save.adv.req?.day === new Date().toISOString().slice(0, 10) ? `${save.adv.req.paid.length}/3` : 'new!'}</span></small></div></div>
       <div class="wd-cups">${['sprout', 'thunder', 'grove', 'champion', 'midnight', 'sky', 'legend'].map((id) => { const c = CUPS.find((x) => x.id === id), on = F['cup_' + id]; return `<span class="${on ? 'on' : ''}" style="--cc:${c.color}" title="${c.name}">${on ? '🏆' : ''}</span>`; }).join('')}${F.crowned ? '<span class="on crown" style="--cc:#ffd23f" title="Critter Crown">👑</span>' : ''}${F.isle_arrive ? `<em class="wd-pc" title="Grand total: Clashara and the isles">🏅 ${(() => { try { return this.records().tpc; } catch (e) { return 0; } })()}%</em>` : `<em class="wd-pc" title="Clashara explored">🗺️ ${this.recordsPc()}%</em>`}</div>
       <p class="wd-goal">📜 ${this.goalLine(F)}${favourLine() ? `<small class="wd-fav">🤝 ${favourLine()}</small>` : ''}${save.adv.care && save.critters[save.adv.care.id] ? `<small class="wd-fav">🧸 ${grown(byId(save.adv.care.id), save.critters[save.adv.care.id].level).name} is at the Daycare · ${Math.max(0, (save.adv.steps || 0) - save.adv.care.at)} steps</small>` : ''}${save.adv.egg ? `<small class="wd-fav">🥚 Your egg hatches in ${Math.max(1, 250 - ((save.adv.steps || 0) - save.adv.egg.at))} steps</small>` : ''}${save.adv.walk ? `<small class="wd-fav">🐾 ${byId(save.adv.walk.id).name} is out on a walk with you</small>` : ''}</p>
       <div class="res-btns"></div></div>`;
@@ -1718,18 +1718,18 @@ export class Screens {
 
   // a fight from the world: wild critters, trainers and story battles
   worldFight(info) {
-    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = this.worldObj?.M.arena || 'meadow', place = this.worldObj?.M.name, phase = this.worldObj?.phase, rain = this.worldObj?.rain;
-    this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit, berries: info.berries, shiny: info.shiny, arena, rain };
+    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = this.worldObj?.M.arena || 'meadow', place = this.worldObj?.M.name, phase = this.worldObj?.phase, rain = this.worldObj?.rain, sandstorm = !!this.worldObj?.sandstorm;
+    this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit, berries: info.berries, shiny: info.shiny, arena, rain, sandstorm };
     this.leaveWorld();
     this.mode = 'vs';
     g.startBattle(h, info.alpha ? { ...info.foe, size: Math.min(1.75, (info.foe.size || 1) * 1.32) } : info.foe, { // the day's Alpha is big in its fight too
       cpuLevel: info.kind === 'wild' ? info.lv : storyLevel(info.lv, lv), playerLevel: lv, difficulty: info.diff ?? 0.3, arena,
       rounds: info.kind === 'wild' ? 1 : 2, trainer: info.trainer || null, stageName: place,
-      heroHat: save.adv.hat || null, cpuTitle: info.alpha ? info.name : null, phase, rain, // the hero keeps its Adventure hat on; the day's Alpha is named on the HUD
+      heroHat: save.adv.hat || null, cpuTitle: info.alpha ? info.name : null, phase, rain, sandstorm, // the hero keeps its Adventure hat on; the day's Alpha is named on the HUD
       stageSub: info.kind === 'wild' ? `${info.name} appeared!` : info.kind === 'story' ? 'Story battle' : `${info.name} wants to battle!`,
     });
     g.arena.setOpen(true); // out in the wild: no stadium, just the meadow
-    if (phase && (phase !== 'day' || rain)) g.arena.tint(phase, rain);
+    if (phase && (phase !== 'day' || rain || sandstorm)) g.arena.tint(phase, rain, sandstorm);
   }
 
   worldCup(cup, front) {

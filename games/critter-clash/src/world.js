@@ -32,6 +32,12 @@ const PHASES = {
   evening: { sun: 0xffa868, sunI: 2.5, sky: 0xffd0b0, gnd: 0x6a4a58, hemiI: 1.08, fog: 0xffc098 }, // golden hour: an orange sun, rosy fill
   night: { sun: 0xa8b8ff, sunI: 0.95, sky: 0x7484cc, gnd: 0x2a3050, hemiI: 0.82, fog: 0x3a4878 },
 };
+// a sandstorm: the light goes amber and dim, the far dunes vanish in a golden haze
+const SANDSTORM = {
+  day: { sun: 0xffd8a0, sunI: 1.25, sky: 0xf0c890, gnd: 0x8a6a40, hemiI: 1.05, fog: 0xd8a868 },
+  evening: { sun: 0xffa870, sunI: 1.2, sky: 0xe8a878, gnd: 0x6a4a38, hemiI: 0.95, fog: 0xc88a58 },
+  night: { sun: 0xc8a888, sunI: 0.8, sky: 0x8a7468, gnd: 0x2a2430, hemiI: 0.8, fog: 0x5a4a48 },
+};
 const RAIN = {
   day: { sun: 0xb8c4dc, sunI: 0.85, sky: 0xaab8d0, gnd: 0x3a4a50, hemiI: 0.9, fog: 0x9aa8b8 },
   evening: { sun: 0xd0a898, sunI: 0.9, sky: 0xb0a4b8, gnd: 0x3a3a48, hemiI: 0.85, fog: 0x8a8898 },
@@ -169,6 +175,8 @@ export const canRain = (M) => !M.indoor && !M.mood && !M.city && !M.snow && !M.l
 // the world's hour: the real clock, moved on by a nap in the hero's bed (until the real date changes)
 export function worldHour(d = new Date()) { const S = save.adv?.shift, h = d.getHours(); return S && S.day === d.toISOString().slice(0, 10) ? (h + S.h) % 24 : h; }
 export const stormAt = (d, hr = d.getHours()) => hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}storm`) % 3 === 0;
+// the Amber Sands: one 3-hour block in six brings a sandstorm over the whole region (the same for everyone, picked from the date)
+export const sandAt = (d, hr = d.getHours()) => hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}sands`) % 6 === 0;
 export function rainAt(key, d, hr = d.getHours()) {
   return hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}` + key) % 5 === 0;
 }
@@ -320,6 +328,7 @@ export class World {
     this.rain = showers && !twinkleEve && !winterFall; // on Twinkle Week evenings a shower comes down as snow instead
     this.rainBelow = key === 'reach' && !!(save.adv.rain ?? (!!save.adv.flags?.quest && rainAt('bloom', new Date(), hr))); // Rainbow Reach floats above the weather: it's lucky while it rains on the mainland
     this.storm = this.rain && !!(save.adv.storm ?? stormAt(new Date(), hr)); this.boltT = 2.5 + Math.random() * 3;
+    this.sandstorm = !!M.sands && !M.indoor && !!(save.adv.sandstorm ?? (!!save.adv.flags?.sands_arrive && sandAt(new Date(), hr))); // the Amber Sands' weather
     this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (!!save.adv.flags?.quest && hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
     this.frost = (isFrost() || isWinter()) && canRain(M) && this.phase === 'day' && (winterFall || !this.rain && !this.afterRain && hr >= 6 && hr < 10); // (a winter snowfall dusts them white all day) // late-autumn mornings: a white frost on the grass and the treetops until mid-morning
     this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)) || (twinkleEve || winterFall) && showers; // now and then a proper snowfall up in the mountains (light flurries otherwise)
@@ -430,11 +439,11 @@ export class World {
     playMusic(tune, calm && (this.outPhase === 'night' || this.outPhase === 'evening' && 'evening'), tune !== 'victory' && (twinkleWeek() ? 'bells' : pumpkinNights() && this.outPhase !== 'day' && calm && 'spooky')); // evening: a mellower take; night: a slow lullaby (Neon City parties on); Twinkle Week adds sleigh bells, Pumpkin Nights after dusk a ghostly ooo
     const B = this.base, lamp = M.indoor && this.outPhase !== 'day' && M.indoor !== 'arcade' && { sun: 0xffd2a0, sunI: B.sunI * (this.outPhase === 'night' ? 0.72 : 0.85), sky: 0xffe2c4, gnd: B.gnd, hemiI: B.hemiI * 0.85, fog: 0xcfeeff }; // lamplight indoors after dark
     this.morning = canRain(M) && !this.rain && this.phase === 'day' && hr >= 6 && hr < 9; // misty mornings on the grassy outdoor maps
-    this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.morning && PHASES.morning) || (M.arena === 'beach' && BEACH[this.phase]) || PHASES[this.phase]);
+    this.mood(((M.snow || M.border === 'cloud') && SNOWY[this.phase]) || (M.lava && LAVA[this.phase]) || (M.city && CITY[this.phase]) || (M.fireflies && M.mood && WOODS[this.phase]) || M.mood || lamp || (this.rain && RAIN[this.phase]) || (this.sandstorm && SANDSTORM[this.phase]) || (this.morning && PHASES.morning) || (M.arena === 'beach' && BEACH[this.phase]) || PHASES[this.phase]);
     this.buildMorning();
     this.buildRainbow();
     if (halloween() && this.phase !== 'day' && !M.indoor && !ALPHA_TOLD.has('hween')) { ALPHA_TOLD.add('hween'); setTimeout(() => this.group && this.S.toast('👻 Happy Halloween! Ghosts drift through every town tonight, and the townsfolk have ten treats to share.'), 1500); }
-    this.banner(M.name + (this.storm ? ' ⛈️' : this.rain ? ' 🌧️' : this.snowing || this.twinkleSnow ? ' 🌨️' : ''));
+    this.banner(M.name + (this.sandstorm ? ' 🌪️' : this.storm ? ' ⛈️' : this.rain ? ' 🌧️' : this.snowing || this.twinkleSnow ? ' 🌨️' : ''));
   }
 
   unload() {
@@ -4691,6 +4700,11 @@ export class World {
       for (let n = Math.floor(dt * (this.storm ? 230 : 150) * (this.g.quality === 'low' ? 0.5 : 1) + Math.random()); n > 0; n--) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 30, y: 6 + Math.random() * 3, z: p.z + (Math.random() - 0.6) * 20, vy: -16, vx: -1.5, color: 0xe8f0ff, alpha: 0.75, size: 1.4, stretch: 0.05, rot: Math.PI / 2 + 0.08, life: 0.5, shape: 'spark', additive: false });
       if (Math.random() < dt * 22) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 24, y: 0.08, z: p.z + (Math.random() - 0.6) * 16, color: 0xe8f2ff, alpha: 0.6, size: 0.35, life: 0.35, shape: 'ring', additive: false, grow: 1.6 });
     }
+    if (this.sandstorm) { // sand streaks blow sideways past the hero, with soft golden gusts
+      const p = this.hero.root.position, lo = this.g.quality === 'low' ? 0.5 : 1;
+      for (let n = Math.floor(dt * 120 * lo + Math.random()); n > 0; n--) this.g.fx.spawn({ x: p.x - 16 + Math.random() * 8, y: 0.3 + Math.random() * 4, z: p.z + (Math.random() - 0.6) * 20, vx: 18 + Math.random() * 8, vy: (Math.random() - 0.5) * 0.6, color: Math.random() < 0.5 ? 0xf4d8a0 : 0xd8a868, size: 0.22, stretch: 8, rot: -Math.PI / 2, life: 1.6, shape: 'spark', additive: false, alpha: 0.75 });
+      if (Math.random() < dt * 10 * lo) this.g.fx.spawn({ x: p.x - 14 + Math.random() * 6, y: 0.6 + Math.random() * 2.5, z: p.z + (Math.random() - 0.6) * 18, vx: 9 + Math.random() * 4, color: 0xe8c488, size: 4 + Math.random() * 3, life: 2.6, shape: 'glow', additive: false, alpha: 0.28, fadeIn: 0.6 });
+    }
     if (this.M.snow && !this.M.indoor || this.twinkleSnow) { // snowflakes drift down round the hero: light flurries, or a real snowfall
       const p = this.hero.root.position;
       for (let n = Math.floor(dt * (this.snowing ? 55 : 10) + Math.random()); n > 0; n--) this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 30, y: 6 + Math.random() * 4, z: p.z + (Math.random() - 0.6) * 20, vy: -1.4 - Math.random() * 0.8, vx: 0.5 + Math.random() * 0.6, vz: (Math.random() - 0.5) * 0.4, color: 0xffffff, alpha: 0.9, size: (this.snowing ? 0.2 : 0.14) + Math.random() * 0.16, life: 4, shape: 'glow', additive: false, grav: 0 });
@@ -5339,7 +5353,7 @@ export class World {
     const A = this.amb ||= { cicada: 3, bird: 3, cricket: 2, surf: 1, rain: 0, wind: 2, hum: 1, bubble: 2, owl: 6, rooster: 4, gull: 5 }, due = [];
     if (M.underwater) due.push(['bubble', 1.4]);
     else if (this.rain) due.push(['rain', 1.5]);
-    else if (M.snow || M.border === 'cloud') due.push(['wind', 3.5]);
+    else if (M.snow || M.border === 'cloud' || this.sandstorm) due.push(['wind', this.sandstorm ? 2.2 : 3.5]);
     else if (M.city) due.push(['hum', 2.2]);
     else if (this.phase === 'night' || M.fireflies) { due.push(['cricket', 1.1]); if (this.phase === 'night' && !M.city && !M.lava) due.push(['owl', 14]); }
     else if (!M.lava) { due.push(['bird', this.morning ? 1.1 : 2.6]); if (isSummer() && !this.morning) due.push(['cicada', 9]); /* summer afternoons buzz with cicadas */ if (this.morning && this.key === 'village') due.push(['rooster', 22]); } // a dawn chorus on misty mornings
