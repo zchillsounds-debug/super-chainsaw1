@@ -20,7 +20,7 @@ const start = (flags, extra = {}) => pg.evaluate(([flags, extra]) => {
   __save.adv = { hero: 'cindermunch', map: 'oasis', x: 12, y: 12, dir: 's', flags: f, hats: [], spawn: { map: 'oasis', x: 12, y: 12 }, sandstorm: false, ...extra };
   __game.screens.adventure(); __sim(0.5);
 }, [flags, extra]);
-const maps = ['oasis', 'duneroad', 'redrock', 'dunecamp', 'sungate', 'buried1', 'buried2', 'buried3'];
+const maps = ['oasis', 'duneroad', 'redrock', 'dunecamp', 'sungate', 'buried1', 'buried2', 'buried3', 'singing'];
 if (want('boxes')) {
   await start(story);
   for (const m of maps) {
@@ -55,7 +55,7 @@ if (want('rec')) {
     return F;
   });
   await start([...story], { fossils: ['sandshell', 'sunbeetle', 'rayfin', 'mesatooth', 'tailspine', 'sandclaw', 'thunderegg', 'hornskull', 'fanfin', 'stonecoil', 'trilobug', 'sunfeather'], snaps: ['sunwell', 'lift', 'dome', 'sungate'], hats: ['pith', 'sandgog', 'cactcrown', 'dunehat', 'suncrown', 'sunseeker', 'fossilhat'] });
-  await pg.evaluate((full) => { Object.assign(__save.adv.flags, full); for (const id of ['scarabold', 'fennzap', 'siroccat', 'sizzlard', 'cactortle', 'humpdrop']) __save.unlocked.includes(id) || __save.unlocked.push(id); }, full);
+  await pg.evaluate((full) => { Object.assign(__save.adv.flags, full); for (const id of ['scarabold', 'fennzap', 'siroccat', 'sizzlard', 'cactortle', 'humpdrop', 'aurelark']) __save.unlocked.includes(id) || __save.unlocked.push(id); }, full);
   await rec('full');
   await pg.waitForTimeout(3500);
   console.log('wreath:', await pg.evaluate(() => [!!__save.adv.flags.sands_full, __save.adv.hats.includes('amberwreath'), document.querySelector('.toast')?.textContent || '']));

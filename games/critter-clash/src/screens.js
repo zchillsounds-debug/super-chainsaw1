@@ -439,6 +439,13 @@ export class Screens {
         "Golden towers under the sand... I've ordered the biggest sun hat in the catalogue. Only a crack of the gate is open, she says, and the city behind it wants to be found slowly.",
         "And the Dust Devils have swapped their shovels for brooms. Their old Baron sweeps the sand off the gate steps every morning. People can change, {name}!",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv35') && !save.news.includes('adv36') && save.adv.flags.legend_aurelark) { // D4: the Sun-Bird
+      save.news.push('adv36'); persist();
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        "{name}!! Stargazer Nuri sent me a whole notebook. Forty pages! About one night on the Singing Dunes, three humming stones, and a golden bird coming up out of the sand!",
+        "Aurelark, the Sun-Bird. Solmoth carries the dawn, Moonwhal sings to the moon, Verdelk keeps the forest... and Aurelark wakes the desert. I'm going to need a bigger book.",
+        save.adv.dtrialWins ? "And Elder Sabah says you crossed her Desert Trial too. In a sandstorm! Mom made me sit down when I read that part." : "Oh, and Elder Sabah at the Sun Gate is holding a Desert Trial every week. Four champions, four arenas. She says to bring a scarf.",
+      ]), 600);
     } else if (!g.autoplay && save.news?.includes('adv33') && !save.news.includes('adv35') && ((save.adv.fossils || []).length >= 4 || save.adv.flags.caravan3_done || save.adv.flags.buried_vault)) { // Chapter 3 side content (D3)
       save.news.push('adv35'); persist();
       const F = save.adv.flags, nf = (save.adv.fossils || []).length;
