@@ -369,6 +369,18 @@ export const CRITTERS = [
     special: 'dustdevil', super: 'cyclone',
     moves: { special: 'Dust Devil', super: 'Dune Cyclone' },
   },
+  // ---- D4: the Amber Sands' legend, the Sun-Bird of the vault mural (wakes over the Singing Dunes when the three stars stand above them) ----
+  {
+    id: 'aurelark', name: 'Aurelark', type: 'gust', species: 'Sun-Bird',
+    blurb: 'Sleeps under the Singing Dunes for a hundred years at a time. When it wakes, the dunes hum, and the sun rises a little warmer.',
+    colors: { body: 0xf2b23a, belly: 0xfff0c8, accent: 0xff7a2a, dark: 0x5a2a14, eye: '#1a0c06', iris: '#2ad0c8', crest: 0xffe066, tip: 0xd8402a, halo: 0xffe27a, beak: 0xffd25a, plume: 0xff9a3a },
+    body: { w: 0.5, h: 0.6, headR: 0.46, legLen: 0.16, armLen: 0.24, chubby: 0.95 },
+    ears: 'none', tail: 'feathers', extra: 'sunbird', wingMul: 1.35, voice: 1.35, legend: true, desert: true,
+    parts: { suncrest: 0.9, sunhalo: 0.85, tailplumes: 0.9 },
+    stats: { hp: 1000, speed: 7.0, power: 1.0, weight: 0.9 },
+    special: 'swoop', super: 'jetstream',
+    moves: { special: 'Sunfall Dive', super: 'Singing Sandstorm' },
+  },
 ];
 
 // the critters of Clashara and the isles: the 100% goal, the Shiny Charm and the roster/shiny badges count these (D4 adds the Amber Sands)
@@ -408,6 +420,7 @@ export const SHINY = {
   cactortle:   { body: 0xd8a85a, belly: 0xfff4dc, accent: 0xff8a3a, dark: 0x5a3a1a, iris: '#ffe14d', shell: 0x6a8ad8, spine: 0xffffff, bloom: 0xffe14d },
   fennzap:     { body: 0x8a90a8, belly: 0xeef0ff, accent: 0xb88aff, dark: 0x2a2a3a, iris: '#ff5ad0', earIn: 0xd8b8ff },
   scarabold:   { body: 0x8a2a3a, belly: 0xffe8c8, accent: 0x5ae0ff, dark: 0x2a0a10, iris: '#5ae0ff', shellA: 0xe8b83a, shellB: 0xff6a3a, horn: 0xffffff },
+  aurelark:    { body: 0x7a6ad8, belly: 0xf0eaff, accent: 0xff9ad8, dark: 0x2a1e5a, iris: '#ffe066', crest: 0xd8f0ff, tip: 0x4a3ab8, halo: 0xd8e8ff, beak: 0xffe8a0, plume: 0xb88aff }, // twilight: the three stars' colours
   siroccat:    { body: 0x9a9a9a, belly: 0xf4f4f4, accent: 0xff7a5a, dark: 0x2a2a2a, iris: '#ff7a5a', goggle: 0x2a2a3a, lens: 0xffb85a },
   skimray:     { body: 0x2a2a3a, belly: 0xffe6f4, accent: 0xffb0d8, dark: 0x0e0e18, iris: '#ff6ab0' },
 };

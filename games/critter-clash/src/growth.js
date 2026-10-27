@@ -392,6 +392,17 @@ export const FORMS = {
         colors: { body: 0x6a88d0, dark: 0x1e2a5a }, parts: { narhorn: 1.15, pearl: 1.1, wave: 0.85, orbs: 0.45, starfreckles: 1 }, moves: { special: 'Full Moon Glide', super: 'King Tide' } },
     ],
   },
+  aurelark: {
+    path: 'Mystic',
+    forms: [
+      { name: 'Dawnlark', species: 'Dawn Sun-Bird', size: 1.12, voice: 1.2, bodyMul: { ...GROW2, armLen: 1.12 },
+        blurb: 'Its crest catches the first light before the sun is even up. Caravans set off when they see it glint on a dune top.',
+        colors: { body: 0xf0a832 }, parts: { suncrest: 1.05, sunhalo: 1, tailplumes: 1.12, brows: 0.3 }, moves: { special: 'Dawnfall Dive', super: 'Dune Choir' } },
+      { name: 'Sunherald', species: 'Herald of the Sun', size: 1.3, voice: 1.05, bodyMul: { ...GROW3, armLen: 1.25 },
+        blurb: 'When it sings, every dune in the Amber Sands sings back. The old city was built facing the spot where it sleeps.',
+        colors: { body: 0xeea02a, dark: 0x4a200e, accent: 0xff6a1e }, parts: { suncrest: 1.22, sunhalo: 1.15, tailplumes: 1.35, brows: 0.55, orbs: 0.3 }, moves: { special: 'Solar Dive', super: 'Song of the Sun' } },
+    ],
+  },
   verdelk: {
     path: 'Mystic',
     forms: [
@@ -1246,6 +1257,40 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       const rim = inked(new THREE.TorusGeometry(headR * 0.2 * s, headR * 0.05 * s, 6, 16), gm, OL * 0.4); g.add(rim);
       const lens = new THREE.Mesh(new THREE.CircleGeometry(headR * 0.18 * s, 16), lm); lens.position.z = headR * 0.01; g.add(lens);
       SK.add(g);
+    }
+  }
+
+  // ---- D4: Aurelark, the Sun-Bird ----
+  // a fan of sunray feathers over the crown, each with a hot tip
+  if (P.suncrest) {
+    const s = P.suncrest, fm = mat('crest', C.crest ?? 0xffd84a), tm = mat('tip', C.tip ?? 0xd8402a);
+    for (let k = 0; k < 7; k++) {
+      const a = (k - 3) * 0.3, len = (1 - Math.abs(k - 3) * 0.13) * s, g = new THREE.Group();
+      g.position.set(Math.sin(a) * headR * 0.5, headR * 0.82, -headR * 0.12);
+      g.rotation.set(-0.35, 0, -a); // fanned out like the sun's rays, leaning back
+      const f = inked(leafGeo().rotateX(-Math.PI / 2).scale(headR * 0.8 * len, headR * 1.05 * len, headR * 0.6), fm, OL * 0.45); g.add(f); // (rotated so the feather runs up y)
+      const t = inked(sphere(headR * 0.085 * len).translate(0, headR * 0.92 * len, 0), tm, OL * 0.35); g.add(t);
+      SK.add(g);
+    }
+  }
+  // a sun-disc halo behind the head: a ring with short rays (it glows, so it reads at night)
+  if (P.sunhalo) {
+    const s = P.sunhalo, hm = new THREE.MeshBasicMaterial({ color: C.halo ?? 0xffe27a, transparent: true, opacity: 0.9 });
+    const geos = [new THREE.TorusGeometry(headR * 1.12 * s, headR * 0.045, 6, 40)];
+    for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2, r0 = headR * 1.18 * s; geos.push(new THREE.ConeGeometry(headR * 0.05, headR * (k % 2 ? 0.14 : 0.24) * s, 5).translate(0, r0 + headR * (k % 2 ? 0.07 : 0.12) * s, 0).rotateZ(-a)); }
+    const halo = new THREE.Mesh(mergeGeometries(geos), hm); halo.position.set(0, headR * 0.05, -headR * 0.72);
+    SK.add(halo);
+  }
+  // long tail streamers that end in a round sun-spot
+  if (P.tailplumes) {
+    const s = P.tailplumes, pm = mat('tplume', C.plume ?? C.accent), sm = mat('tip', C.tip ?? 0xd8402a), em = mat('crest', C.crest ?? 0xffd84a);
+    for (const [x, ry, len] of [[0, 0, 1], [-0.1, 0.28, 0.82], [0.1, -0.28, 0.82]]) {
+      const g = new THREE.Group(); g.position.set(x, B.h * 0.42, -B.w * 0.42); g.rotation.set(2.98, ry, 0); // streaming back, nearly level
+      const L = 0.95 * s * len;
+      g.add(inked(leafGeo().scale(0.26 * s, 0.4, L).rotateZ(Math.PI / 2), pm, OL * 0.4)); // (leafGeo runs along z; turned on edge so it shows from the side)
+      g.add(inked(new THREE.CylinderGeometry(0.11 * s, 0.11 * s, 0.04, 16).rotateZ(Math.PI / 2).translate(0, 0, L * 0.95), sm, OL * 0.35)); // the sun-spot lies flat on the plume
+      g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.06 * s, 0.06 * s, 0.05, 14).rotateZ(Math.PI / 2).translate(0, 0, L * 0.95), em));
+      TO.add(g);
     }
   }
 

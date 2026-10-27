@@ -41,11 +41,12 @@ const ILINKS = [['coral', 'palmpath'], ['palmpath', 'bluffs'], ['bluffs', 'ashtr
 const ISLE_LAND = ['M52 206 Q40 170 70 150 Q110 138 130 160 Q150 190 120 212 Q86 228 52 206 Z', 'M140 160 Q150 120 200 100 Q236 66 268 84 Q290 104 262 130 Q232 160 176 172 Q146 176 140 160 Z',
   'M270 150 Q280 120 318 140 Q360 160 364 200 Q360 230 318 228 Q280 222 270 190 Z', 'M336 60 Q340 44 356 46 Q372 50 368 66 Q362 78 348 76 Q336 72 336 60 Z'].map((d) => `<path class="wm-land" d="${d}"/>`).join('');
 // Chapter 3: the Amber Sands' own Town Map (nodes appear as their maps are built; you ride the Sand-Rail between it and Clashara)
-const SMAP = { oasis: { x: 118, y: 160, cup: 'mirage', fly: [12, 14] }, duneroad: { x: 210, y: 150 }, redrock: { x: 286, y: 134, cup: 'canyon', fly: [14, 6] }, dunecamp: { x: 300, y: 200, cup: 'sandstorm', fly: [16, 6] }, sungate: { x: 236, y: 214, fly: [13, 10] } };
-const SLINKS = [['oasis', 'duneroad'], ['duneroad', 'redrock'], ['redrock', 'dunecamp'], ['dunecamp', 'sungate']];
+const SMAP = { oasis: { x: 118, y: 160, cup: 'mirage', fly: [12, 14] }, duneroad: { x: 210, y: 150 }, redrock: { x: 286, y: 134, cup: 'canyon', fly: [14, 6] }, dunecamp: { x: 300, y: 200, cup: 'sandstorm', fly: [16, 6] }, sungate: { x: 236, y: 214, fly: [13, 10] }, singing: { x: 350, y: 166, fly: [3, 5] } };
+const SLINKS = [['oasis', 'duneroad'], ['duneroad', 'redrock'], ['redrock', 'dunecamp'], ['dunecamp', 'sungate'], ['dunecamp', 'singing']];
 const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 60 170 54 Q250 40 320 70 Q380 100 372 170 Q366 226 300 232 Q200 244 120 238 Q60 240 30 230 Z"/><path class="wm-dune" d="M200 120 Q240 96 290 118 M230 170 Q270 150 320 172 M60 200 Q90 186 130 206"/>';
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
 const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
+const LEGEND_IDS = () => ['solmoth', 'moonwhal', 'verdelk', ...(save.adv?.flags?.sands_arrive ? ['aurelark'] : [])]; // the Champ page's legends (the Sun-Bird once you reach the sands)
 const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat']; // the desert's found hats (the Sand Hats stall's four are `sands`)
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
@@ -86,7 +87,7 @@ const bossList = () => {
 
 function unlockHint(id) {
   for (const cup of CUPS) for (const m of cup.matches) if (m.critter === id) return `Beat ${m.name} in the ${cup.name}`;
-  if (CRITTERS.find((c) => c.id === id)?.legend) return CRITTERS.find((c) => c.id === id).mainland ? 'A legend of Clashara. Wake it after the Chapter 2 story (Adventure)' : 'A legend of the Sunscatter Isles. Find it after the Chapter 2 story (Adventure)';
+  if (CRITTERS.find((c) => c.id === id)?.legend) return CRITTERS.find((c) => c.id === id).desert ? 'A legend of the Amber Sands. Wake it after the Chapter 3 story (Adventure)' : CRITTERS.find((c) => c.id === id).mainland ? 'A legend of Clashara. Wake it after the Chapter 2 story (Adventure)' : 'A legend of the Sunscatter Isles. Find it after the Chapter 2 story (Adventure)';
   if (CRITTERS.find((c) => c.id === id)?.isle) return 'Befriend it in the Sunscatter Isles (Adventure)';
   if (CRITTERS.find((c) => c.id === id)?.desert) return 'Befriend it in the Amber Sands (Adventure)';
   return 'Keep battling!';
@@ -854,7 +855,7 @@ export class Screens {
     g.setShowcase([skinOf(c)], 'single');
     g.showcase[0].cheer = 0.8;
     const trial = this.free && !save.unlocked.includes(c.id);
-    this.root.querySelector('.sel-info').innerHTML = this.infoCard(c, trial ? `<div class="ic-trial">Trial · ${cupOfShiny(c.id) ? 'recruit in the ' + cupOfShiny(c.id).name : c.mainland ? 'wake it in Glowcap Woods' : c.isle ? 'befriend it in the Sunscatter Isles' : c.desert ? 'befriend it in the Amber Sands' : 'recruit in the Tournament'}</div>` : '');
+    this.root.querySelector('.sel-info').innerHTML = this.infoCard(c, trial ? `<div class="ic-trial">Trial · ${cupOfShiny(c.id) ? 'recruit in the ' + cupOfShiny(c.id).name : c.mainland ? 'wake it in Glowcap Woods' : c.legend && c.desert ? 'wake it over the Singing Dunes' : c.isle ? 'befriend it in the Sunscatter Isles' : c.desert ? 'befriend it in the Amber Sands' : 'recruit in the Tournament'}</div>` : '');
     this.root.querySelectorAll('.rcard').forEach((b, k) => { b.classList.toggle('on', k === i); if (k === i) b.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); });
   }
 
@@ -1457,7 +1458,7 @@ export class Screens {
         + sb('🎩', 'Desert hats', sh.filter((h) => (A.hats || []).includes(h.id)).length, sh.length, lst(hatLeft(sh), 4))
         + sb('🦴', 'Fossils dug up', fos.length, FOSSILS.length, `${FOSSILS.length - fos.length} more: a dig heap turns up on each desert map every day (A by the bone)`)
         + sb('📸', 'Desert landmarks', (A.snaps || []).filter((id) => LANDMARKS.find((l) => l.id === id)?.sands).length, LANDMARKS.filter((l) => l.sands).length, lst(lmLeft(false, true), 4))
-        + sb('🌵', 'Desert critters on your team', desert.filter((c) => save.unlocked.includes(c.id)).length, desert.length, lst(desert.filter((c) => !save.unlocked.includes(c.id)).map((c) => c.name), 6))
+        + sb('🌵', 'Desert critters on your team', desert.filter((c) => save.unlocked.includes(c.id)).length, desert.length, lst(desert.filter((c) => !save.unlocked.includes(c.id)).map((c) => (c.legend ? (F.buried_vault ? `${c.name} (a legend: see the 🏆 Champ page)` : '??? (a legend)') : c.name)), 7))
         + sb('🏛️', 'Buried City secrets', city.filter(([f]) => F[f]).length, city.length, F.gate_open ? lst(city.filter(([f]) => !F[f]).map(([, t]) => t)) : 'somewhere beyond a great stone gate...')
         + (A.cnt?.rail ? bar('🚂', 'Sand-Rail rides', A.cnt.rail) : '')
         + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '');
@@ -1567,10 +1568,11 @@ export class Screens {
         + `<li class="jr-more">${mDone === 4 ? (F['mastpay_' + wk] ? '🌟 Cleared this week!' : '🌟 All four beaten! Talk to Marina in Port Coral.') : 'Champion Marina waits outside Coral Stadium.'} ${A.mastWins ? `Cleared ${A.mastWins} week${A.mastWins > 1 ? 's' : ''}${hats.includes('masterlei') ? " · Champion's Lei 🌺" : ''}.` : ''} New Masters in ${left} day${left > 1 ? 's' : ''}.</li>`
         + `<li class="jr-head">🏔️ Peak Gauntlet <small>this week ${gDone}/5</small></li>`
         + `<li class="jr-more">${gDone === 5 ? '🌟 Cleared this week!' : `Next: ${gf[gDone] ? nm(gf[gDone].id) : ''} on Champion's Peak (Keeper Orla).`} ${A.gauntWins ? `Cleared ${A.gauntWins} week${A.gauntWins > 1 ? 's' : ''}.` : ''}</li>`
-        + `<li class="jr-head">✨ Legendary critters <small>${['solmoth', 'moonwhal', 'verdelk'].filter((id) => F['legend_' + id]).length}/3</small></li>`
+        + `<li class="jr-head">✨ Legendary critters <small>${LEGEND_IDS().filter((id) => F['legend_' + id]).length}/${LEGEND_IDS().length}</small></li>`
         + rowC('🌞', 'Solmoth <small>Dawn Moth</small>', F.legend_solmoth ? 'befriended' : F.festlamp_done ? 'rests on the Caldera Rim' : 'waits for a festival…', F.legend_solmoth)
         + rowC('🌙', 'Moonwhal <small>Moon Narwhal</small>', F.legend_moonwhal ? 'befriended' : F.tower_bronze ? 'Starfall beach, after dark' : 'sings for a Tower hero…', F.legend_moonwhal)
         + rowC('🌿', 'Verdelk <small>Grove Elk</small>', F.legend_verdelk ? 'befriended' : F.grove4_done ? 'Glowcap Woods, by the pond' : F.grove1_asked ? 'the Heartseed chain…' : 'sleeps under Glowcap Woods…', F.legend_verdelk)
+        + (F.sands_arrive ? rowC('🌅', 'Aurelark <small>Sun-Bird</small>', F.legend_aurelark ? 'befriended' : F.sunbird_wake ? 'awake on the Singing Dunes' : F.sunbird1 ? 'the Singing Dunes, after dark' : F.buried_vault ? 'ask a stargazer…' : 'sleeps under the sand…', F.legend_aurelark) : '')
         + `<li class="jr-head">📖 Critterdex <small>${CLASSIC.filter((c) => save.unlocked.includes(c.id)).length}/${CLASSIC.length}</small></li>`
         + rowC('✨', 'Shiny Charm', F.shinycharm ? 'twice the shinies!' : `befriend every critter · ${CLASSIC.length - CLASSIC.filter((c) => save.unlocked.includes(c.id)).length} to go`, F.shinycharm)
         + `<li class="jr-head">⚡ Rival Dash</li>`

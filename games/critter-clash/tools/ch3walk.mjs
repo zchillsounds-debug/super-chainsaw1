@@ -33,6 +33,13 @@ const steps = [
   ['dunecamp', [0, 6], 'cup_mirage cup_canyon devils1 dash_canyon cup_sandstorm devils2 citymap', 'edge:s', true, 'Dune Camp: over the big dune to the Sun Gate'],
   ['sungate', [3, 0], 'cup_mirage cup_canyon devils1 dash_canyon cup_sandstorm devils2 citymap', 'npc:baron_g', true, 'Sun Gate: Baron Sirocco at the gate'],
   ['sungate', [3, 0], 'cup_mirage cup_canyon devils1 dash_canyon cup_sandstorm devils2 citymap baron gate_open', 'edge:n', true, 'Sun Gate: back over the dune after the finale'],
+  // D4: the Sun-Bird
+  ['dunecamp', [0, 6], 'cup_mirage cup_canyon devils1 dash_canyon cup_sandstorm devils2 citymap baron gate_open buried_vault', 'npc:star_c', true, 'Dune Camp: Stargazer Nuri (the vault mural)'],
+  ['dunecamp', [0, 6], 'cup_mirage cup_canyon devils1 dash_canyon cup_sandstorm devils2 citymap baron gate_open buried_vault', 'edge:e', false, 'Dune Camp: the Singing Dunes hold before Nuri'],
+  ['dunecamp', [0, 6], 'cup_mirage cup_canyon devils1 dash_canyon cup_sandstorm devils2 citymap baron gate_open buried_vault sunbird1', 'edge:e', true, 'Dune Camp: east to the Singing Dunes'],
+  ['singing', [0, 5], 'sunbird1 sunbird_wake', 'npc:aurelark_s', true, 'Singing Dunes: the Sun-Bird at its nest'],
+  ['singing', [0, 5], 'sunbird1', 'npc:nuri_s', true, 'Singing Dunes: Stargazer Nuri'],
+  ['singing', [0, 5], 'sunbird1', 'edge:w', true, 'Singing Dunes: back west to the camp'],
 ];
 let bad = 0;
 for (const [map, [fx, fy], fl, target, want, what] of steps) {

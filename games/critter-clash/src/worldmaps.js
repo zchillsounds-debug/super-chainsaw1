@@ -1007,7 +1007,7 @@ export const MAPS = {
       'Rs"""""ssRsshhhhhhhhssshhhhshhhR',
       'Rs"""""ssssshhhhhhhhssshhhhshhhR',
       'Rssssssssssshhhhhhhhssss:ssss:sR',
-      'Rssssssssssssss::sssssss:ssss:sR',
+      'Rssssssssssssss::sssssss:ssss:::',
       ':::::::::::::::::::::::::::::::R',
       'RsshhhhssssssssssssssshhhhhhsssR',
       'Rsshhhhs""""""sssssssshhhhhhsssR',
@@ -1017,7 +1017,7 @@ export const MAPS = {
       'RRRRRsRRRRsRRRRsRRRRsRRRRsRRRRsR',
       'RRRRRRRRRRRRRRRsRRRRRRRRRRRRRRRR',
     ],
-    edges: { w: { to: 'redrock', off: 0 }, s: { to: 'sungate', off: -12, need: 'citymap', needSay: 'Dune Kid Rami: That way is just the big dune. Nobody goes over the big dune. Except the Dust Devils, at night, with shovels.' } },
+    edges: { e: { to: 'singing', off: 0, need: 'sunbird1', needSay: 'Stargazer Nuri: East of here is nothing but dunes. Empty, quiet dunes. ...Mostly quiet.' }, w: { to: 'redrock', off: 0 }, s: { to: 'sungate', off: -12, need: 'citymap', needSay: 'Dune Kid Rami: That way is just the big dune. Nobody goes over the big dune. Except the Dust Devils, at night, with shovels.' } },
     cacti: [[8, 4], [20, 7], [30, 8], [13, 11]],
     buildings: [
       { id: 'stadium_s', x: 12, y: 1, w: 8, h: 4, stadium: 'sandstorm', door: 4, label: 'Sandstorm Dome' },
@@ -1032,13 +1032,55 @@ export const MAPS = {
       { id: 'dash_c', x: 9, y: 7, rival: true, rlv: 39, name: 'Dash', dir: 'e', showFlag: 'dunecamp_arrive', act: 'flex', lines: ["Dash: The Dust Devils' big black tent is right over there. Two guards on the door. They wouldn't even let me peek!", "Dash: The camp folk say the Dune Warden is the only one the Dust Devils are scared of. And she's busy running the Sandstorm Cup. So... win it?"] },
       { id: 'elder_c', x: 7, y: 5, critter: 'humpdrop', name: 'Camp Elder Zahra', dir: 's', lines: ['Camp Elder Zahra: Welcome to the Dune Camp, traveller. We move with the dunes, and the dunes move with the wind. This week, they stopped here.', 'Camp Elder Zahra: The Dust Devils pitched their black tent at the edge of our camp and started digging. Under OUR dunes! The Warden will have words.'] },
       { id: 'weaver_c', x: 22, y: 4, critter: 'cactortle', name: 'Weaver Tamar', dir: 's', wander: 1, lines: ['Weaver Tamar: Every stripe on a tent means something. Teal is for water, orange is for the sun, and black... black means the Dust Devils bought the cheap cloth.', 'Weaver Tamar: Cactortle holds the threads for me. It never drops one. It never lets go of anything, actually.'] },
-      { id: 'star_c', x: 30, y: 5, critter: 'siroccat', name: 'Stargazer Nuri', dir: 'w', lines: ['Stargazer Nuri: Out here there are no town lights at all. At night the sky is so full of stars it looks like spilled sugar.', 'Stargazer Nuri: When a sandstorm rolls in, the stars go out one by one. Then the dome starts to howl.'] },
+      { id: 'star_c', x: 30, y: 4, critter: 'siroccat', name: 'Stargazer Nuri', dir: 's', story: 'stargazer', hideFlag: 'sunbird1', lines: ['Stargazer Nuri: Out here there are no town lights at all. At night the sky is so full of stars it looks like spilled sugar.', 'Stargazer Nuri: When a sandstorm rolls in, the stars go out one by one. Then the dome starts to howl.'] },
       { id: 'kid_c', x: 16, y: 9, critter: 'fennzap', name: 'Dune Kid Rami', dir: 'n', wander: 1, lines: ['Dune Kid Rami: I slid all the way down the big dune on a tea tray! Twice! The second time Fennzap was steering.', 'Dune Kid Rami: The Dust Devils keep sneaking out at night with shovels. I counted. Eleven shovels.'] },
       { id: 'guard_c1', x: 24, y: 10, critter: 'scarabold', name: 'Dust Devil Grub', dir: 's', hideFlag: 'devils2', lines: ['Dust Devil Grub: Nope. Nobody goes in the HQ. Baron\'s orders.', 'Dust Devil Grub: What\'s inside? ...Nothing. Maps. Shovels. A really big map. Nothing!'] },
       { id: 'guard_c2', x: 25, y: 10, critter: 'sizzlard', name: 'Dust Devil Flint', dir: 's', hideFlag: 'devils2', act: 'flex', story: 'devils2' }, // after the Sandstorm Cup: a story battle (devils2)
       { id: 'rasha_c', x: 22, y: 10, critter: 'siroccat', name: 'Dune Warden Rasha', dir: 'e', showFlag: 'cup_sandstorm', hideFlag: 'citymap', shiny: true, lines: ['Dune Warden Rasha: Flint has guarded that door all week. Show him the Sandstorm Cup. And then show him your partner.'] },
       { id: 'surfer_c', x: 8, y: 3, critter: 'fennzap', name: 'Dune Surfer Lio', dir: 's', trainer: { lv: 38, sight: 3, diff: 0.86, intro: 'Dune Surfer Lio: Gnarly dune, huh? Fennzap and I ride it on a tea tray. Let\'s ride a battle!', beat: 'Dune Surfer Lio: Totally wiped out. Sand in my ears. Good one!' } },
       { id: 'sailor_c', x: 19, y: 10, critter: 'humpdrop', name: 'Caravan Hand Ola', dir: 'w', trainer: { lv: 38, sight: 3, diff: 0.86, intro: 'Caravan Hand Ola: The caravan leaves at sunrise, and Humpdrop carries the water. Before that... a battle!', beat: 'Caravan Hand Ola: Humpdrop needs a drink. So do I.' } },
+    ],
+  },
+
+  // ===== D4: the Singing Dunes, east of the Dune Camp (once Stargazer Nuri has read the vault mural's three stars): open dunes with three
+  // wind-carved singing stones; at night, sing all three under their stars and the sand in the middle gives up the Sun-Bird =====
+  singing: {
+    name: 'Singing Dunes',
+    music: 'sands',
+    arena: 'dunes',
+    sands: 'dunes',
+    extra: true,
+    border: 'mesa',
+    outer: 0xe8bc78,
+    palette: { a: '#e6c88a', b: '#e0c080', tall: '#c8a458', path: '#cfa268', sand: '#f2d49c', sand2: '#f1d29a', water: '#3ac8c8', bank: '#c89a5a' },
+    blades: 0xd0b060,
+    tiles: [
+      'RRRRRRRRRRRRRRRRRRRRRRRRRRRR',
+      'RsssssssssssRRRssssssssssRRR',
+      'Rss""sssssssssssssssss""sssR',
+      'Rss""ssssssssssssssssssssssR',
+      'Rsssssss:::::::::ssss""sssRR',
+      '::::::::sssssssss:ssssssssRR',
+      'Rssssssssssssssss:sssssss"sR',
+      'Rsssssssssssssssssssssssss"R',
+      'Rssss""sssssssssssssssssssRR',
+      'Rssss""sssssssssssss""sssssR',
+      'Rsssssssssssssssssss""sssssR',
+      'RsssssssssssRRsssssssssssssR',
+      'RRssssssssssssssssssssssssRR',
+      'RRRRRRRRRRRRRRRRRRRRRRRRRRRR',
+    ],
+    edges: { w: { to: 'dunecamp', off: 0 } },
+    singers: [[6, 2], [22, 5], [19, 10]], // the singing stones (A at night: each hums under its own star; all three in one night wake the Sun-Bird)
+    nest: [13, 7], // where the Sun-Bird sleeps under the sand
+    ripples: true, // big dunes and wind ripples painted over the sand (world.js)
+    cacti: [[3, 10], [24, 2], [9, 11]],
+    signs: [{ x: 1, y: 4, text: 'THE SINGING DUNES\nWhen the night wind blows, the stones sing. Camp rule: sing back.' }],
+    wild: { list: [['siroccat', 40, 43], ['fennzap', 40, 43], ['scarabold', 40, 43], ['sizzlard', 41, 44], ['humpdrop', 41, 44], ['cactortle', 41, 44]], roam: 4, rate: 0.1 },
+    npcs: [
+      { id: 'aurelark_s', x: 13, y: 7, critter: 'aurelark', name: 'Aurelark', dir: 's', story: 'legend:aurelark', showFlag: 'sunbird_wake', hideFlag: 'legend_aurelark', scale: 1.5, act: 'hop' },
+      { id: 'nuri_s', x: 10, y: 5, critter: 'siroccat', name: 'Stargazer Nuri', dir: 'e', showFlag: 'sunbird1', hideFlag: 'legend_aurelark', story: 'singing' },
+      { id: 'chanter_s', x: 4, y: 7, critter: 'humpdrop', name: 'Dune Singer Amani', dir: 'e', wander: 1, trainer: { lv: 42, sight: 3, diff: 0.88, intro: 'Dune Singer Amani: I come here to sing with the stones. Humpdrop hums the low part. Battle us, and hear the high part!', beat: 'Dune Singer Amani: A lovely duet. You were a little sharp. Humpdrop was a little flat.' } },
     ],
   },
 

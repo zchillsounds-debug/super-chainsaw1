@@ -201,6 +201,7 @@ export class Battle {
     dmg *= this.traitDmg(att, def, h, eff);
     dmg = Math.round(dmg * (0.92 + Math.random() * 0.16));
     if (def.trait === 'endure' && !def.endured && dmg >= def.hp && def.hp > 1) { dmg = def.hp - 1; def.endured = true; this.fx.text(def.headPos(), 'HANG ON!', 'big', 1); this.hud.callout('Hang On!', def.side, 1); } // Pebblepup's Hang On
+    if (def.trait === 'sunrise' && !def.endured && dmg >= def.hp) { def.hp = Math.max(def.hp, Math.round(def.maxHp * 0.2)); dmg = 0; def.endured = true; this.fx.text(def.headPos(), 'SUNRISE!', 'big', 1); this.hud.callout('Sunrise Song!', def.side, 1); } // Aurelark rises again once, at 20%
     h.dmg = dmg;
     this.training?.guardKO(def, dmg);
     if (att && att !== def) { // traits that change the blow itself

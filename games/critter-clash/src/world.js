@@ -14,7 +14,7 @@ import { typeSpeed } from './settings.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap, CUP_ORDER, fossilAt } from './interiors.js';
 import { FOSSILS } from './fossils.js';
-import { hatRegion, countUp, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor, storyMark } from './story.js';
+import { hatRegion, countUp, singNight, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor, storyMark } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
 import { stargaze, tonightConst, BOTTLE_NOTES, CONSTELLATIONS } from './stars.js';
@@ -417,6 +417,7 @@ export class World {
     this.buildMarket();
     this.buildBazaar();
     this.buildWell();
+    this.buildSingers();
     this.buildLifts();
     this.buildRuins();
     this.buildCacti();
@@ -570,6 +571,28 @@ export class World {
             c.strokeStyle = 'rgba(150,90,90,0.5)'; c.lineWidth = 0.8; for (let k = 1; k < 5; k++) { const aa = Math.PI * (1.05 + k * 0.18); c.beginPath(); c.moveTo(0, r * 0.6); c.lineTo(Math.cos(aa) * r, Math.sin(aa) * r); c.stroke(); }
             c.restore();
           } }
+      }
+      // D4: big dunes (the Singing Dunes): broad soft light and shadow sides, then long wind ripples over everything, so the sand reads as one sea of dunes, not tiles
+      if (this.M.ripples) {
+        const night = this.phase === 'night', dr = rng(hash(this.key + ':dunes'));
+        c.save(); c.beginPath(); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if ('s:"'.includes(this.tile(x, y))) c.rect(x * P, y * P, P, P); c.clip();
+        for (let k = 0; k < 7; k++) { // a dune: a lit windward slope and a shadowed slip face either side of a curved crest
+          const cx = (1 + dr() * (W - 2)) * P, cy = (1 + dr() * (H - 2)) * P, rx = (3 + dr() * 3) * P, ry = (1.6 + dr() * 1.2) * P, tilt = -0.35 + dr() * 0.3;
+          c.save(); c.translate(cx, cy); c.rotate(tilt);
+          const lit = c.createRadialGradient(0, -ry * 0.3, 0, 0, -ry * 0.3, rx); lit.addColorStop(0, night ? 'rgba(255,255,255,0.10)' : 'rgba(255,246,220,0.32)'); lit.addColorStop(1, 'rgba(255,246,220,0)');
+          c.fillStyle = lit; c.beginPath(); c.ellipse(0, -ry * 0.3, rx, ry, 0, 0, Math.PI * 2); c.fill();
+          const sh = c.createRadialGradient(0, ry * 0.45, 0, 0, ry * 0.45, rx * 0.9); sh.addColorStop(0, night ? 'rgba(20,20,60,0.22)' : 'rgba(170,110,50,0.26)'); sh.addColorStop(1, 'rgba(170,110,50,0)');
+          c.fillStyle = sh; c.beginPath(); c.ellipse(0, ry * 0.45, rx * 0.9, ry * 0.8, 0, 0, Math.PI * 2); c.fill();
+          c.strokeStyle = night ? 'rgba(255,255,255,0.18)' : 'rgba(255,250,235,0.55)'; c.lineWidth = 3; c.beginPath(); c.moveTo(-rx * 0.8, ry * 0.1); c.quadraticCurveTo(0, -ry * 0.55, rx * 0.8, ry * 0.1); c.stroke(); // the crest
+          c.restore();
+        }
+        c.strokeStyle = night ? 'rgba(30,30,70,0.16)' : 'rgba(170,115,55,0.22)'; c.lineWidth = 1.6;
+        for (let y0 = 6; y0 < H * P; y0 += 9 + dr() * 5) { // wind ripples, slightly wavy, all leaning the same way
+          const ph = dr() * 6, amp = 2 + dr() * 2.5; c.beginPath();
+          for (let x = 0; x <= W * P; x += 12) { const yy = y0 + Math.sin(x / 38 + ph) * amp + x * 0.06; x ? c.lineTo(x, yy) : c.moveTo(x, yy); }
+          c.stroke();
+        }
+        c.restore();
       }
       // tall grass frays onto the lawn along its open edges: little scalloped tufts instead of a ruler-straight border
       if (C.tall && !this.M.city) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -1399,6 +1422,47 @@ export class World {
     }
     const put = (list, mat, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), mat, ink); m.castShadow = ink > 0; this.group.add(m); list.forEach((g) => g.dispose()); };
     put(stone, toon(0xe8c890, { rim: 0.3 }), OL * 0.6); put(gold, toon(0xf0b030, { rim: 0.6 }), OL * 0.5); put(dark, toon(0x4a3020), OL * 0.3); put(wood, toon(0x7a4e2c), 0); put(sand, toon(0xf0d098), 0);
+  }
+
+  // D4: the Singing Dunes' three wind-carved stones (each with a star of the Lark's Crown over it after dark) and the Sun-Bird's resting place
+  buildSingers() {
+    this.singers = null; this.nestGlow = null;
+    const SG = this.M.singers; if (!SG || this.M.indoor) return;
+    const night = this.phase === 'night', A = save.adv, sung = A.sing?.night === singNight() ? A.sing.n : [], F = A.flags;
+    const stone = toon(0xd8a868, { rim: 0.5 }), dark = toon(0x5a3420), band = toon(0xc07a48);
+    this.singers = SG.map(([x, y], i) => {
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(x + ',' + y);
+      const col = inked(new THREE.CylinderGeometry(0.34, 0.6, 2.3, 9), stone, OL * 0.5); col.position.y = 1.15; col.rotation.z = (i - 1) * 0.08; col.castShadow = true; g.add(col);
+      const cap = inked(new THREE.SphereGeometry(0.42, 10, 8), stone, OL * 0.4); cap.scale.set(1.15, 0.6, 1); cap.position.set((i - 1) * 0.1, 2.32, 0); g.add(cap);
+      for (const [hy, hr] of [[1.55, 0.13], [0.95, 0.1], [1.25, 0.07]]) { const h = new THREE.Mesh(new THREE.CircleGeometry(hr, 12), dark); h.position.set(hr === 0.07 ? 0.18 : -0.04, hy, 0.5 - (hy - 0.9) * 0.12); h.rotation.x = -0.06; g.add(h); } // wind holes (the stone sings through them)
+      for (const by of [0.45, 1.8]) { const b = new THREE.Mesh(new THREE.TorusGeometry(0.5 - by * 0.08, 0.035, 5, 18), band); b.rotation.x = Math.PI / 2; b.position.y = by; g.add(b); } // wind-worn stripes
+      const sm = new THREE.SpriteMaterial({ map: glowTex(), color: sung.includes(i) ? 0xfff2a0 : 0xd8e4ff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: night ? (sung.includes(i) ? 1 : 0.55) : 0 }); sm.userData.own = true;
+      const star = new THREE.Sprite(sm); star.position.set(px, 3.7, pz - 0.3); star.scale.setScalar(sung.includes(i) ? 2.2 : 1.3); this.group.add(star);
+      return { x, y, i, g, star, base: star.scale.x };
+    });
+    const N = this.M.nest; if (!N) return;
+    const [nx, nz] = wpos(N[0], N[1]), ng = new THREE.Group(); ng.position.set(nx, 0, nz); this.group.add(ng);
+    const mound = inked(new THREE.SphereGeometry(1.3, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xeecc8e), OL * 0.3); mound.scale.y = 0.22; ng.add(mound);
+    const gold = toon(0xffc84a, { rim: 0.9 });
+    for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2 + 0.3, f = inked(new THREE.SphereGeometry(0.5, 8, 6), gold, OL * 0.3); f.scale.set(0.12, 0.05, 0.42); f.position.set(Math.cos(a) * 1.1, 0.22, Math.sin(a) * 1.1); f.rotation.set(0.5, -a + Math.PI / 2, 0); ng.add(f); } // golden feathers poking out of the sand
+    if (F.sunbird_wake && !F.legend_aurelark) { const gm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffd86a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.8 }); gm.userData.own = true; const gs = new THREE.Sprite(gm); gs.position.set(nx, 1.4, nz); gs.scale.setScalar(5); this.group.add(gs); this.nestGlow = gs; }
+  }
+  singAt(sg) {
+    const A = save.adv, F = A.flags, night = singNight();
+    if (F.legend_aurelark) return this.say(['The stone hums softly in the wind. Somewhere far off, a bird hums back.']);
+    if (this.phase !== 'night') return this.say(['A tall sandstone stone, worn full of holes by the wind. In the daytime heat it is completely silent.', ...(F.sunbird1 ? ['(Stargazer Nuri said the stones only sing after dark.)'] : [])]);
+    if (!F.sunbird1) return this.say(['The night wind blows through the holes in the stone: a low, sad note. It sounds a little like someone humming in their sleep.']);
+    if (A.sing?.night !== night) A.sing = { night, n: [] };
+    if (A.sing.n.includes(sg.i)) return this.say(['This stone is still humming. Its star burns bright over the dune.']);
+    A.sing.n.push(sg.i); persist(); sfx.hum?.(sg.i); reward(1);
+    sg.star.material.color.set(0xfff2a0); sg.star.material.opacity = 1; sg.base = 2.2;
+    const n = A.sing.n.length;
+    if (n < 3) return this.say([`{hero} sings along with the stone. Its hum grows louder and louder... and the star above it flares bright gold!`, `${n} of 3 stones are singing.`]);
+    this.say(['{hero} sings with the last stone. All three are singing now, one long chord, and the dunes join in!', 'The sand in the middle of the dunes starts to tremble... and glow...'], () => {
+      F.sunbird_wake = true; persist(); sfx.rumble?.();
+      this.fade(() => this.load(this.key, this.hx, this.hy, this.dir));
+      setTimeout(() => this.say(['A great golden bird bursts up out of the sand, shaking off a hundred years of sleep!', 'Its crest lights up the whole desert like a sunrise. It\'s the Sun-Bird from the mural!']), 1400);
+    });
   }
 
   // Chapter 3: the oasis's old stone well, with a little tiled roof, a rope and a bucket
@@ -5009,6 +5073,8 @@ export class World {
     if (this.xtree?.glow) { const X = this.xtree; X.glow.material.opacity = 0.55 + Math.sin(this.t * 2.2) * 0.15; X.lights.forEach((m, i) => { const on = Math.sin(this.t * 3 + i * 1.6) > -0.3; m.material.color.setHex(on ? X.cols[i] : 0x3a3448); }); } // the lights twinkle in turns
     if (this.pumpkins?.length && this.phase !== 'day') this.pumpkins.forEach((p, i) => { if (p.glow) p.glow.material.opacity = 0.55 + Math.sin(this.t * 9 + i * 2) * 0.08 + Math.sin(this.t * 23 + i) * 0.05; }); // candle flicker
     if (this.spring) { const S = this.spring; if (Math.random() < dt * 5) { const a = Math.random() * 6.28, d = Math.random() * TILE * 0.8; this.g.fx.spawn({ x: S.px + Math.cos(a) * d, y: 0.3, z: S.pz + Math.sin(a) * d, vy: 0.9, vx: 0.15, color: 0xffffff, size: 0.7, life: 2.2, shape: 'glow', alpha: 0.28, grow: 0.9, additive: false }); } if (S.glow) S.glow.material.opacity = 0.4 + Math.sin(this.t * 1.1) * 0.08; } // the spring steams
+    if (this.singers) for (const q of this.singers) q.star.scale.setScalar(q.base * (0.9 + 0.12 * Math.sin(this.t * 2.2 + q.i * 2)));
+    if (this.nestGlow) this.nestGlow.material.opacity = 0.6 + 0.25 * Math.sin(this.t * 1.6);
     if (this.nearStars) for (const q of this.nearStars) { const tw = Math.sin(this.t * 1.7 + q.ph); q.sp.material.opacity = 0.65 + 0.35 * tw; q.sp.scale.setScalar(q.s * (0.85 + 0.2 * tw)); q.sp.position.y = q.y + Math.sin(this.t * 0.5 + q.ph) * 0.15; }
     if (this.statue) { const T = this.statue; T.glow.material.opacity = 0.3 + Math.sin(this.t * 1.6) * 0.08; if (Math.random() < dt * 2) this.g.fx.spawn({ x: T.px + (Math.random() - 0.5) * 1.6, y: 0.8 + Math.random() * 1.8, z: T.pz + (Math.random() - 0.5) * 1.2, vy: 0.3, life: 1.2, size: 0.3, color: 0xfff0a0, shape: 'star', alpha: 0.9 }); }
     if (this.wreck) { // the sunken wreck: sea weed sways, light shafts shimmer, bubbles rise everywhere (and out of the hull)
@@ -5417,6 +5483,7 @@ export class World {
     if (this.chest && this.chest.x === fx && this.chest.y === fy) return this.openChest();
     const mi = this.puz?.mirrors?.find((m) => m.x === fx && m.y === fy); if (mi) return this.turnMirror(mi);
     const up = this.updrafts?.find((u) => u.x === fx && u.y === fy); if (up) return this.updraftTalk(up);
+    const sg = this.singers?.find((q) => q.x === fx && q.y === fy); if (sg) return this.singAt(sg);
     if (this.well && this.well.x === fx && this.well.y === fy) {
       const day = new Date().toISOString().slice(0, 10);
       if (save.adv.wellDay !== day) { save.adv.wellDay = day; save.berries = (save.berries || 0) + 1; persist(); reward(1); return this.say(['{hero} winds the bucket up from the well. The water is cold and clear, even in the desert heat!', 'Something shiny sits in the bottom of the bucket... a berry someone dropped in for luck! +1 🍓']); }
@@ -5467,6 +5534,7 @@ export class World {
     if (this.follower && at(this.follower) && !this.follower.from) return 'Pet';
     if (at(this.bush)) return 'Shake';
     if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
+    if (this.singers?.some(at)) return this.phase === 'night' ? 'Sing' : 'Look';
     if ([this.well, this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest, this.melon, this.picnic, this.snowman, this.apples].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
     if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod) return 'Fish'; }
     const sign = (this.M.signs || []).find((g) => g.x === fx && g.y === fy);

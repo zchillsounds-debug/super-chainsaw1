@@ -475,6 +475,14 @@ export class Critter {
       beak.rotation.x = 0.28;
       skull.add(beak);
       this.beak = beak;
+    } else if (def.extra === 'sunbird') {
+      // Aurelark: a short golden beak with a hooked tip, and a dark mask line from each eye like a desert lark
+      const bk = new THREE.Group(); bk.position.set(0, -headR * 0.14, headR * 0.86);
+      const up = inked(new THREE.ConeGeometry(headR * 0.2, headR * 0.5, 14).rotateX(Math.PI / 2).translate(0, 0, headR * 0.22), toon(C.beak ?? 0xffc23a, { uniforms: U }), OL * 0.55);
+      up.scale.set(1, 0.8, 1); bk.add(up);
+      const hook = inked(new THREE.ConeGeometry(headR * 0.07, headR * 0.16, 10).translate(0, -headR * 0.06, 0).rotateX(Math.PI * 0.85).translate(0, -headR * 0.02, headR * 0.44), toon(C.beak ?? 0xffc23a, { uniforms: U }), OL * 0.45);
+      bk.add(hook); bk.rotation.x = 0.18; skull.add(bk); this.beak = bk;
+      for (const sd of [-1, 1]) { const m = new THREE.Mesh(sphere(headR * 0.1), this.mats.dark); m.scale.set(1.9, 0.32, 0.4); m.position.set(sd * headR * 0.56, headR * 0.06, headR * 0.76); m.rotation.set(0, sd * 0.6, sd * 0.12); skull.add(m); }
     } else if (def.extra === 'pumice') {
       // a round snout patch with a dark nose, and a little ash puff on top of the head
       const snout = inked(sphere(headR * 0.26), this.mats.belly, OL * 0.5);
@@ -626,7 +634,7 @@ export class Critter {
     eyeL.renderOrder = eyeR.renderOrder = 2;
     skull.add(eyeL, eyeR);
     this.eyes = [eyeL, eyeR];
-    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' || def.extra === 'mole' ? -0.52 : def.extra === 'toucan' || def.extra === 'elk' ? -0.64 : def.extra === 'otter' || def.extra === 'pumice' ? -0.5 : def.extra === 'puffer' ? -0.44 : def.extra === 'koala' ? -0.6 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
+    const mouth = new THREE.Mesh(spherePatch(headR * 1.014, 0, def.extra === 'owl' || def.extra === 'penguin' || def.extra === 'mole' ? -0.52 : def.extra === 'toucan' || def.extra === 'elk' || def.extra === 'sunbird' ? -0.64 : def.extra === 'otter' || def.extra === 'pumice' ? -0.5 : def.extra === 'puffer' ? -0.44 : def.extra === 'koala' ? -0.6 : frog ? -0.12 : -0.38, frog ? 0.46 : 0.27, 0.18), this.mouthMat);
     mouth.renderOrder = 2;
     skull.add(mouth);
     const blushMat = decalMat(ft.blush);
@@ -1064,6 +1072,17 @@ export class Critter {
         const tip = new THREE.Mesh(sphere(0.5), this.mats.dark);
         tip.scale.set(0.2, 0.05, 0.16); tip.position.set(s * 0.54, -s * 0.06, -0.1); tip.rotation.z = -s * 0.25;
         sh.add(tip);
+      } else if (def.extra === 'sunbird') {
+        // big feathered wings: four long flight feathers fanned from the shoulder, body gold to a sunset tip (the arm swing flaps them)
+        const W = def.wingMul || 1, tipM = (this.mats.wingTip ||= toon(C.tip ?? 0xd8402a, { uniforms: U }));
+        const wg = new THREE.Group(); wg.rotation.z = s * 0.55; sh.add(wg); // held out from the body, so the wing reads from the front
+        const cov = inked(sphere(0.5), this.mats.body, OL * 0.8); cov.scale.set(0.1, B.armLen * 1.9 * W, 0.46 * W); cov.position.set(s * 0.03, -B.armLen * 0.72 * W, -0.04); wg.add(cov);
+        for (let k = 0; k < 5; k++) {
+          const f = inked(sphere(0.5), k < 2 ? this.mats.accent : tipM, OL * 0.6);
+          f.scale.set(0.06, B.armLen * (2.6 - k * 0.26) * W, 0.17 * W);
+          f.position.set(s * (0.05 + k * 0.012), -B.armLen * (1.3 - k * 0.06) * W, 0.04 - k * 0.1 * W); f.rotation.x = 0.1 + k * 0.2; f.rotation.z = s * k * 0.06;
+          wg.add(f);
+        }
       } else if (def.extra === 'owl' || def.extra === 'toucan') {
         // stubby wings with a darker feather tip
         const w = inked(sphere(0.5), this.mats.body, OL * 0.8);

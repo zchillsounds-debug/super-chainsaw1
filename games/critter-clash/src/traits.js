@@ -33,6 +33,7 @@ export const TRAITS = {
   cactortle: { k: 'thorns', icon: '🌵', name: 'Spiny Shell', desc: 'Rivals who hit it up close take 10% of the damage back.' },
   fennzap: { k: 'dodgecd', icon: '👂', name: 'Big Ears', desc: 'Hears blows coming: its dodge roll recharges 35% faster.' },
   scarabold: { k: 'kb', icon: '🪲', name: 'Dug In', desc: 'Gets knocked back 30% less.' },
+  aurelark: { k: 'sunrise', icon: '🌅', name: 'Sunrise Song', desc: 'Once a battle, a knockout blow can\'t keep it down: it rises again with 20% health.' },
   siroccat: { k: 'slip', icon: '🥽', name: 'Sand Runner', desc: 'A dodge leaves it 15% faster for 2 seconds.' },
   verdelk: { k: 'roots', icon: '🌳', name: 'Deep Roots', desc: 'Heals 15% of the damage its specials and supers deal.' },
 };

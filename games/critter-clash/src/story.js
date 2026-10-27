@@ -444,7 +444,7 @@ const GOAL_AT = { sprout: 'Bloom Town, north along Route 1', thunder: 'Seashell 
 export function nextGoal(F) {
   if (F.grand && !F.grand_done) return '100% complete! Prof. Pecan wants to see you at his lab in Sprout Village.';
   if (F.grand && !F.sands_arrive) return '🏅 100% complete! And a new region waits: ride the Sand-Rail from Cinder Town to the Amber Sands.';
-  if (F.grand && F.gate_open && F.buried_vault) return F.sands_full ? '🏅 100% complete! Every cup, critter and corner of Clashara, the isles and the Amber Sands. Thank you for playing!' : '🏅 Your 100% crown is yours to keep! Now explore the Amber Sands to 100% (📔 Journal → Records) for one more prize.'; // (a crown won before Chapter 3: the story below comes first)
+  if (F.grand && F.gate_open && F.buried_vault && F.legend_aurelark) return F.sands_full ? '🏅 100% complete! Every cup, critter and corner of Clashara, the isles and the Amber Sands. Thank you for playing!' : '🏅 Your 100% crown is yours to keep! Now explore the Amber Sands to 100% (📔 Journal → Records) for one more prize.'; // (a crown won before Chapter 3: the story below comes first)
   if (F.crowned) {
     // Chapter 2: the Sunscatter Isles
     if (!F.isle_arrive) return F.ending ? 'Chapter 2: take the Sunny Gull ferry from the pier in Seashell Town to the Sunscatter Isles!' : 'You\'re the Champion! Rematch trainers and Dash, and find every gift box.';
@@ -461,6 +461,7 @@ export function nextGoal(F) {
     if (F.cup_sandstorm && !F.devils2) return 'Dune Warden Rasha is going to the Dust Devils\' black tent at the Dune Camp. Get past the guards on its door!';
     if (F.devils2 && !F.citymap) return 'The Dust Devil HQ is open. Find out what the Dust Devils are after inside their black tent.';
     if (F.citymap && !F.baron) return F.sungate_arrive ? 'Baron Sirocco is at the Sun Gate. Stop him, and bring the Sun Shard home!' : 'Cross the big dune south of the Dune Camp to the Sun Gate, where Baron Sirocco is digging.';
+    if (F.buried_vault && !F.legend_aurelark) return F.sunbird_wake ? 'The Sun-Bird is awake on the Singing Dunes! Go and meet it.' : F.sunbird1 ? 'After dark, sing with the three stones on the Singing Dunes (east of the Dune Camp).' : 'The vault mural showed three stars over a sleeping bird. Stargazer Nuri at the Dune Camp knows the night sky!';
     if (F.gate_open && !F.buried_vault) return F.buried_beam ? 'Past the Hall of Mirrors, the Buried City\'s Starless Vault waits in the dark. Find what it keeps!' : F.buried_chest ? 'Stairs behind the Sun Hall\'s chest lead down to the Hall of Mirrors. Turn the mirrors and steer the sunbeam onto the old sun disc!' : 'The Sun Gate is open a crack. Explore the Buried City beyond it: the Sun Hall\'s gold floor and its treasure.';
     if (!F.sunstone) return F.morra ? 'Bring the Sunstone home to the Starfall lighthouse!' : 'Sail to Starfall Atoll with Captain Gill (Port Coral) and take the Sunstone back from Captain Morra!';
     // post-game: point at whatever is still open (the Tower, the glider, the legends)
@@ -511,11 +512,12 @@ export function storyTalk(S, id, w, a) {
     const nx = WHERE.find(([id]) => !F['cup_' + id]), cup = nx && CUPS.find((c) => c.id === nx[0]);
     // post-game: the professor has been reading up on the Sunscatter legends (a hint for whichever is still out there)
     const lore = !F.sunstone ? null
-      : ['solmoth', 'moonwhal', 'verdelk'].includes(save.adv.hero) ? `Prof. Pecan: Is that... ${byId(save.adv.hero).name}?! A real legend, in my lab! Hold still, I need a sketch. Oh, my hands are shaking!`
+      : ['solmoth', 'moonwhal', 'verdelk', 'aurelark'].includes(save.adv.hero) ? `Prof. Pecan: Is that... ${byId(save.adv.hero).name}?! A real legend, in my lab! Hold still, I need a sketch. Oh, my hands are shaking!`
       : !F.legend_solmoth ? `Prof. Pecan: I've been reading old island books. One tells of a golden moth that wakes on a volcano rim when the isles celebrate the sun. ${F.festlamp_done ? 'Your festival! It must be awake now!' : 'Has anyone held a festival out there?'}`
       : !F.legend_moonwhal ? `Prof. Pecan: The same old book speaks of a narwhal that sings to the moon off a lighthouse beach. ${F.tower_bronze ? 'Morra heard it singing, you say? Then go at night!' : 'Only sailors with real Battle Tower grit ever hear it, apparently.'}`
       : !F.legend_verdelk ? (F.grove4_done ? 'Prof. Pecan: The Grove Elk is AWAKE? In Glowcap Woods, by the pond? Go, go! And bring me a petal if you can!' : 'Prof. Pecan: Solmoth AND Moonwhal! The sun and the moon. But the Grove Book says Clashara has a legend of its own... Picker Fern in Glowcap Woods sent word that the glowcaps are dimming. Curious!')
-      : 'Prof. Pecan: The sun, the moon AND the forest. Solmoth, Moonwhal and Verdelk, all friends of yours! I\'m rewriting chapter twelve of my book. Again.';
+      : F.buried_vault && !F.legend_aurelark ? `Prof. Pecan: A bird asleep under the dunes, carved in a vault with no light? Desert people have sung about a Sun-Bird for a thousand years. ${F.sunbird1 ? 'The Singing Dunes, after dark! Go, go!' : 'Somebody out there who knows the stars might know where to look.'}`
+            : 'Prof. Pecan: The sun, the moon AND the forest. Solmoth, Moonwhal and Verdelk, all friends of yours! I\'m rewriting chapter twelve of my book. Again.';
     // every critter befriended: the professor's Shiny Charm (twice the shiny wild critters)
     if (F.crowned && !F.shinycharm && CLASSIC.every((c) => save.unlocked.includes(c.id))) {
       F.shinycharm = true; (save.adv.hats ||= []).includes('dexcrown') || save.adv.hats.push('dexcrown'); save.berries = (save.berries || 0) + 30; persist(); reward(3);
@@ -679,6 +681,8 @@ export function storyTalk(S, id, w, a) {
   if (id === 'tower') return tower(S, w);
   if (id === 'masters') return masters(S, w);
   if (id.startsWith('legend:')) return legend(S, w, id.slice(7));
+  if (id === 'stargazer') return stargazer(S, w);
+  if (id === 'singing') return singingTalk(S, w);
   if (id === 'gauntsign') { // the signpost, with this week's theme chalked underneath
     const th = gauntletTheme(gauntletWeek()), sg = getMap('peak').signs.find((q) => q.act === 'gauntsign');
     return w.say([sg.text, `Someone has chalked a note underneath. "THIS WEEK: ${TYPES[th[0]].name.toUpperCase()} & ${TYPES[th[1]].name.toUpperCase()}!"`], null, '📜 Sign');
@@ -1208,7 +1212,8 @@ export function storyMark(npc) {
     baron_g: F.citymap && !F.baron, // the Sun Gate: Baron Sirocco
     morra_a: c('caldera') && !F.morra,
     dash_b: F.sunstone && !F.dash_show,
-    moonwhal_a: F.tower_bronze && !F.legend_moonwhal, solmoth_r: F.festlamp_done && !F.legend_solmoth, verdelk_g: F.grove4_done && !F.legend_verdelk, // the legends, once awake
+    moonwhal_a: F.tower_bronze && !F.legend_moonwhal, solmoth_r: F.festlamp_done && !F.legend_solmoth, verdelk_g: F.grove4_done && !F.legend_verdelk, aurelark_s: F.sunbird_wake && !F.legend_aurelark, // the legends, once awake
+    star_c: F.buried_vault && !F.sunbird1, // D4: Stargazer Nuri wants to hear about the vault mural
   };
   return on[npc] ? '!' : null;
 }
@@ -1416,7 +1421,29 @@ const LEGENDS = {
   verdelk: { lv: 38, diff: 0.92, flag: 'legend_verdelk', title: 'Legendary Grove Elk', when: () => true,
     meet: ['A great elk stands by the pond, taller than the trees. Blossoms open and close along its antlers like it is breathing.', 'VERDELK, the Grove Elk! Every glowcap in the woods turns to face it.', 'Verdelk lowers its antlers at {hero}. Petals swirl. It wants to know who woke it!'],
     win: 'The Grove Elk bows its great antlers, and a shower of petals falls...', note: '🌿 You befriended Verdelk, the Grove Elk!' },
+  aurelark: { lv: 46, diff: 0.93, flag: 'legend_aurelark', title: 'Legendary Sun-Bird', when: () => true,
+    meet: ['The great golden bird shakes the sand from its wings. Its crest blazes like a sunrise, right in the middle of the night.', 'AURELARK, the Sun-Bird! The one on the mural. Every dune around you is humming now, one long, low note.', 'Aurelark opens its wings wide and sings. It wants to hear {hero} sing back, the loud way!'],
+    win: 'The Sun-Bird folds its wings, and the dunes go quiet... then it sings again, softly, just for {hero}.', note: '🌅 You befriended Aurelark, the Sun-Bird!' },
 };
+// D4: the Sun-Bird. Stargazer Nuri (Dune Camp) reads the vault mural's three stars, then waits out on the Singing Dunes
+function stargazer(S, w) {
+  const F = flags();
+  if (!F.buried_vault) return w.say(['Stargazer Nuri: Out here there are no town lights at all. At night the sky is so full of stars it looks like spilled sugar.', F.gate_open ? 'Stargazer Nuri: They say there are pictures carved deep inside the Buried City. Pictures of the sky! If you ever find one, describe it to me. Every star.' : 'Stargazer Nuri: When a sandstorm rolls in, the stars go out one by one. Then the dome starts to howl.']);
+  w.say([
+    'Stargazer Nuri: A carving of a bird asleep under the dunes, with three stars over it? In the Starless Vault? Tell me again. Slowly.',
+    'Stargazer Nuri: ...Three stars in a little bent line. That\'s the Lark\'s Crown! In autumn it rises in the east, right over the Singing Dunes.',
+    'Stargazer Nuri: The old camp song goes: "When the three stars stand over the Singing Dunes, sing with the stones, and the Sun-Bird sings back." I always thought it was a lullaby!',
+    'Stargazer Nuri: The Singing Dunes are just east of the camp. I\'m going out there with my telescope tonight. Meet me! Bring {hero}!',
+  ], () => { F.sunbird1 = true; persist(); reward(2); S.toast?.('🌟 The Singing Dunes are open, east of the Dune Camp'); w.fade(() => w.load(w.key, w.hx, w.hy, w.dir)); }, 'Stargazer Nuri');
+}
+function singingTalk(S, w) {
+  const F = flags(), A = save.adv, n = (A.sing?.night === singNight() ? A.sing.n : []).length;
+  if (F.sunbird_wake) return w.say(['Stargazer Nuri: It\'s REAL. It\'s really real. Look at the light coming off its crest!', 'Stargazer Nuri: Go on, {hero}. It\'s waiting for you. I\'ll be here, writing down everything. Everything!']);
+  if (w.phase !== 'night') return w.say(['Stargazer Nuri: The three stones up on the dunes only sing when the night wind blows. And the Lark\'s Crown only rises after dark.', 'Stargazer Nuri: Have a rest at the camp, and come back when the stars are out. I\'ll keep my telescope warm.']);
+  w.say([n ? `Stargazer Nuri: ${n} of the three stones sang! Look, ${n === 1 ? 'one star is' : 'two stars are'} burning brighter up there. Keep going!` : 'Stargazer Nuri: There it is! The Lark\'s Crown, three stars, one over each singing stone. See them?',
+    'Stargazer Nuri: Stand next to a stone and sing along with it (press A). All three, tonight, before the stars set!']);
+}
+export const singNight = () => new Date(Date.now() - 12 * 3600e3).toISOString().slice(0, 10); // one desert night, evening to dawn
 function legend(S, w, id) {
   const L = LEGENDS[id], def = byId(id);
   if (!L.when(w)) return w.say(L.wait);
