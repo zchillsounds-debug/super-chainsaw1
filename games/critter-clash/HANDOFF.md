@@ -1,5 +1,12 @@
 # Critter Clash: Handoff
 
+## NEW (2026-10-27): Chapter 3 + battle depth, a 48-hour run
+- **Read `ROADMAP.md` first** (top section: B1 battle quick wins → B2 passive traits → D1 six desert critters → D2 the Amber Sands region and story → D3 side content → D4 post-game).
+- **Run end time: 2026-10-29 06:00 UTC** (started 2026-10-27 06:00 UTC; never reset it; push it back by the length of any worker stall).
+- **The battle code is open now** (the user said so on 2026-10-27): battle.js, arena.js, hud.js and screens.js results/worldFight may be edited. The old "keep away" notes below are history.
+- Next round **R772**. The chain prompt is in "Chaining" → "Chapter 3 run".
+- The polish run (P1–P2) is over; the user's open question about hats in fights is answered (yes, B1).
+
 ## Polish run (sessions P2+, 2026-10-25): about 4 hours, chained
 - **Polish run end time: 2026-10-25 09:37 UTC** (started 02:14 UTC by session P2, planned end 06:15; pushed back 3 h 22 min by a worker stall in session P2, ~03:20–06:42 UTC; never reset it; push it back by the length of any later stall). At that time: send the final APK, update this file and CONTINUE.md, and stop with a short summary. Don't chain after that.
 - The user chose (session P2): **more completion polish**, change Captain Morra's shiny Skimray to a **shiny Toucharge** (done, R763), and a **~4 hour chained run**. Work branch `ccr-4fc93d6e-suxlhd` (the user approved pushing there; merge origin first, never rebase or force-push).
@@ -1470,6 +1477,19 @@ Ownership: keep away from battle.js, arena.js open mode, hud.js and screens.js r
 Checks: run tapcheck at 740x360 and 412x915, plus an advcup Sprout run, at the start and near the end of each session, against a production build (HANDOFF.md "Session C1" explains the build scripts).
 Chaining: each session builds for about 100 minutes, or less if context nears 300k. Then: update HANDOFF.md and CONTINUE.md with the rounds done, the ideas left and the end time; commit and push; fetch the APK built from your last commit and send it to me; call create_session with source_url https://github.com/zchillsounds-debug/super-chainsaw1, source_revision and outcome_branch ccr-4fc93d6e-suxlhd, and this same prompt word for word; then tell me in one line that the next session has started. If create_session refuses (lineage depth), don't retry: note it in HANDOFF.md, push, and tell me in one line to start the next session by hand with this same prompt.
 Finish: at the end time, send the final APK, update HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
+I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
+```
+   - **Chapter 3 run (from 2026-10-27): chain with this prompt word for word** (`source_revision`/`outcome_branch` `ccr-4fc93d6e-suxlhd`, title "Critter Clash Ch3 run: rounds N+"):
+```
+Continue Critter Clash in a 48-hour chained build run: Chapter 3 (the Amber Sands, a desert canyon and oasis region) and battle depth, following the top section of games/critter-clash/ROADMAP.md.
+Start: run date -u. The run's end time is at the top of games/critter-clash/HANDOFF.md ("Run end time", 2026-10-29 06:00 UTC unless a stall pushed it back); never reset it. If it has already passed, do the Finish steps below. Post a one-line status to me when you start.
+Read first: games/critter-clash/ROADMAP.md (top section and its Status), games/critter-clash/CONTINUE.md, then games/critter-clash/HANDOFF.md from the top, starting with the newest sessions.
+Work: pick up the first roadmap milestone that isn't done (B1, B2, D1, D2, D3, D4 in order). About 80% new content, 20% fixes and polish. All designs stay original. Each round: screenshots at 915x412, 740x360 and 412x915 (360x640 for menus), critique, improve. The battle code (battle.js, arena.js, hud.js, screens.js results/worldFight) is open: measure battle changes with robin, battleperf and before/after shots.
+Git: commit and push each round to branch ccr-4fc93d6e-suxlhd. Before every push, run git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd. Never rebase or force-push. If the local clone starts on other history, check out origin/ccr-4fc93d6e-suxlhd. Round numbers continue from the highest R-number in git log.
+Checks: run tapcheck at 740x360 and 412x915, plus an advcup Sprout run, at the start and near the end of each session, against a production build (HANDOFF.md "Session C1" explains the build scripts).
+Chaining: each session builds for about 100 minutes, or less if context nears 300k. Then: update ROADMAP.md status, HANDOFF.md and CONTINUE.md (rounds done, next steps, the end time); commit and push; fetch the APK built from your last commit (branch apk-critter-clash) and send it to me; call create_session with source_url https://github.com/zchillsounds-debug/super-chainsaw1, source_revision and outcome_branch ccr-4fc93d6e-suxlhd, and this same prompt word for word; then tell me in one line that the next session has started. If create_session refuses or keeps failing, don't loop: note it in HANDOFF.md, push, and tell me in one line to start the next session by hand with this same prompt.
+If a worker stalls, push the end time back by the length of the stall.
+Finish: at the end time, send the final APK, update ROADMAP.md, HANDOFF.md and CONTINUE.md, and stop with a short summary. Don't chain after that.
 I approve this plan and continuous building, so don't stop to ask me questions. Make sensible calls and keep going.
 ```
 5. Tell the user in one short message what was done and that the next session has started.

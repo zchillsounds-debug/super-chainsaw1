@@ -20,6 +20,9 @@ The full, detailed handoff lives in the repo at `games/critter-clash/HANDOFF.md`
 - Session 16e (R255–R279) added: grass sway, new palms, chimney smoke, rain (world and fights), room furniture, the Berry Center smoothie blender, smooth water corners, trainer role hats, a natural meadow for wild fights, footprints, a night Town Map, doorway light, beach decor, falling leaves and petals, toadstool spores, and Pecan weather news.
 - Final checks for the session passed: tapcheck was clean at 740×360 and 412×915, the Sprout Cup played from the world and landed back there, and the wild-fight wins ran without errors.
 
+## Latest (2026-10-27): Chapter 3 (the Amber Sands) + battle depth, a 48-hour run
+- The user agreed a new roadmap (`ROADMAP.md`, top section): B1 battle quick wins (hats and the Alpha in fights, lighter battles), B2 passive traits, D1 six desert critters, D2 the Amber Sands region and story (oasis town, canyon village, dune camp, buried city; three cups with new arenas and sandstorms; the Dust Devils), D3 side content, D4 post-game. Run: 2026-10-27 06:00 → 2026-10-29 06:00 UTC. The battle code is open now. Next round R772.
+
 ## Latest (2026-10-25): a ~4-hour chained polish run (session P2 on, R763+)
 - The user asked for more completion polish in a ~4-hour chained run (ends **2026-10-25 09:37 UTC** after a 3 h 22 min worker stall; the top of HANDOFF.md). Session P2 (R763–R771): Captain Morra's shiny Toucharge (the Masters no longer list shiny Skimray twice), the 100% scene rolls the credits over both regions, 360 px phone fixes (Settings, Hats, Hat Shop), a portrait camera that doesn't show a third of a screen of border on the short routes, the partner first in "Who is the hero?", a roomier Camp for big teams, a real Volcano Lab on Ember Isle, an autumn apple-bobbing tub in Bloom Town (every season has a daily treat now), Pecan news adv32.
 

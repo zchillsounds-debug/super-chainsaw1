@@ -1,3 +1,55 @@
+# Critter Clash roadmap: Chapter 3 (the Amber Sands) and battle depth (agreed with the user on 2026-10-27)
+
+## What the user decided
+- **Next run:** a 48-hour chained run, **2026-10-27 06:00 → 2026-10-29 06:00 UTC** (the end time also sits at the top of HANDOFF.md; never reset it; push it back by the length of any worker stall).
+- **Focus:** Chapter 3, a new region with a **desert canyon and oasis** theme, plus **battle depth and feel**.
+- **Battle code is open now:** the run may edit battle.js, arena.js, hud.js and screens.js results/worldFight (the user's other chat no longer owns them). Keep each battle change measured: robin for balance, battleperf for speed, before/after screenshots for looks.
+- Designs stay **original** (no Pokémon IP). Make sensible calls and keep going; about 80% new content, 20% fixes and polish.
+
+## Milestones (in order; each session picks up the first one that isn't done)
+
+### B1. Battle feel quick wins (about 1–2 sessions)
+- The hero wears its chosen Adventure hat (`save.adv.hat`) in Adventure fights (the hat model from critters.js `hatModel`/`shopHat`, sized per critter like in the world).
+- The daily **Alpha** is big in its battle too (the world shows it ×1.45 with a red aura) and is named "Alpha <critter>" on the HUD.
+- **Battle draw calls:** each fighter costs ~105 draw calls (`tools/battleperf.mjs`: 250–275 a frame). Merge each fighter's static parts the way the world does (`skinStatic`/skinned critters), aiming for ~40% fewer. Before/after shots of several critters, all growth forms, shinies, hats and supers must look identical. Check `battlemem` stays flat.
+- Done when hats and the Alpha show in fights, battleperf is down clearly, and tapcheck/advcup/robin are clean.
+
+### B2. Passive traits (about 1–2 sessions)
+- Every critter gets **one passive trait** that fits it (e.g. "Thick Fur: less knockback", "Night Owl: faster after dark in the Adventure", "Hot Head: burns last longer"). Keep them simple and readable.
+- Implement in battle.js/fighter.js; show the trait on the Critterdex card, the select info card and the Move List.
+- A full balance robin after: everyone at roughly 40–65% wins.
+
+### D1. Six desert critters (about 2–3 sessions)
+- One per type (fire, water, leaf, spark, stone, gust), original desert designs that read clearly at world scale and in battle, each with stats, moves, a new special, 3 growth forms (growth.js), a shiny, a trait (B2), Critterdex and Quick Battle entries (as trials until befriended in the Amber Sands).
+- Balance robin; keep them in range.
+
+### D2. The Amber Sands: region and story (about 6–8 sessions)
+- Opens **after the Chapter 2 finale**: a sand-rail train from Cinder Town (or Seashell's ferry captain points the way; choose what reads best).
+- About four areas plus routes, each with a strong look: an **oasis market town** (palms, awnings, a well, a bazaar), a **red-rock canyon village** (cliff houses, rope lifts), a **dune camp**, and the edge of a **buried ancient city**. Sandstorms as weather, heat shimmer by day, starry desert nights.
+- **Three new cups**, each with a **new battle arena and hazard** (a canyon arena with falling rocks, an oasis pavilion with geysers, a sandstorm dome), plus **sandstorm weather in battles**.
+- A new antagonist gang, the **Dust Devils** (treasure hunters digging up the buried city), Dash's rival arc carrying on, a finale and Chapter 3 credits.
+- The usual systems carry over: Berry Centers, a hat stall, oasis fish, digs, landmark photos, Town Map, Journal Records, Pecan news.
+- Done when a fresh post-Chapter-2 save plays from the train to the Chapter 3 finale and back; add a `ch3walk` check and an `advcup` run for one new cup.
+
+### D3. Side content (about 3–4 sessions)
+- The **Buried City** dungeon: sliding-sand and mirror light-beam puzzles, a dark section, a treasure.
+- **Fossil digs** that fill a museum in the oasis town.
+- A **caravan quest chain** across the towns with a real reward.
+- Rare finds: mirage shinies, sandstorm spawns, night-only spawns.
+
+### D4. Post-game (about 3–4 sessions)
+- A **desert legendary** with its own story and boss battle.
+- A **Desert Trial** (a gauntlet) and champion-level rematches.
+- Records and the 🏅 **Grand total** include the Amber Sands. A save already at 100% keeps its crown and gets a "new region to explore" goal line instead.
+
+### Always (about 20%)
+- Fix bugs found on the way. Checks at the start and end of each session against a production build: tapcheck 740×360 and 412×915, the advcup Sprout run.
+- The critique loop at 915×412, 740×360 and 412×915 (360×640 for menus).
+- Keep HANDOFF.md, CONTINUE.md and this file's status up to date; send the user the APK at the end of each session.
+
+## Status
+- (nothing yet)
+
 # Critter Clash: Completion roadmap (C1–C8)
 
 > **Note from session C1 (2026-10-24):** the prompt for this run says the C1–C8 plan was agreed with the user, but no copy of it had been pushed to any branch, and HANDOFF.md had no "Completion run" line. So C1 drafted the plan below from the open threads in HANDOFF.md and the game's state. **If the user's agreed plan differs, theirs wins: replace this section with it** and keep the status lines.
