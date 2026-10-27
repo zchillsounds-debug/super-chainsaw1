@@ -20,6 +20,9 @@ The full, detailed handoff lives in the repo at `games/critter-clash/HANDOFF.md`
 - Session 16e (R255–R279) added: grass sway, new palms, chimney smoke, rain (world and fights), room furniture, the Berry Center smoothie blender, smooth water corners, trainer role hats, a natural meadow for wild fights, footprints, a night Town Map, doorway light, beach decor, falling leaves and petals, toadstool spores, and Pecan weather news.
 - Final checks for the session passed: tapcheck was clean at 740×360 and 412×915, the Sprout Cup played from the world and landed back there, and the wild-fight wins ran without errors.
 
+## Latest (2026-10-27, session D3): the Amber Sands open (R780–R785)
+- The Sand-Rail from Cinder Town (after the Sunstone) to **Sunwell Oasis** (bazaar, well, Sand Hats, Berry Center, Dust Devils about), **Dune Road** with the six desert critters wild, a desert battle look (Redrock Canyon), a desert tune, the **Mirage Cup** in the new Sunwell Pavilion with water geysers, Pecan news adv33, and a balance pass after the first full robin with traits. Run end: **2026-10-29 06:00 UTC**. Next round R786.
+
 ## Latest (2026-10-27): Chapter 3 (the Amber Sands) + battle depth, a 48-hour run
 - Session D2 (R777–R779): the six desert critters' growth forms (Scorchfrill/Solarisk, Twinspout/Fountamel, Saguarshell/Bloomesa, Fennvolt/Thunderfenn, Bouldarab/Monolarab, Sandsquall/Simoomcat) and their balance. Next round R780; next up the B2 full robin and D2, the Amber Sands region. Run end: 2026-10-29 06:00 UTC.
 - Session D1 (R772–R776): the hero's hat and the daily Alpha in fights, battles ~56% fewer draw calls, a passive trait for every critter, the six desert critters.
