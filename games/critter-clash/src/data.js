@@ -144,7 +144,7 @@ export const CRITTERS = [
     colors: { body: 0x86d95a, belly: 0xfff3c4, accent: 0xff8ac0, dark: 0x2f6a3a, eye: '#14240e', iris: '#ffb020' },
     body: { w: 0.66, h: 0.5, headR: 0.5, legLen: 0.14, armLen: 0.18, chubby: 1.15 },
     ears: 'none', tail: 'none', extra: 'frog', voice: 1.05,
-    stats: { hp: 1060, speed: 6.4, power: 0.99, weight: 1.0 },
+    stats: { hp: 1060, speed: 6.4, power: 1.04, weight: 1.0 },
     special: 'tongue', super: 'lilysplash',
     moves: { special: 'Tongue Lash', super: 'Lily Splash' },
   },
@@ -174,7 +174,7 @@ export const CRITTERS = [
     colors: { body: 0x62d8ec, belly: 0xeefcff, accent: 0xffe14d, dark: 0x1a5a7a, eye: '#0c2030', iris: '#ffb020' },
     body: { w: 0.6, h: 0.5, headR: 0.5, legLen: 0.09, armLen: 0.2, chubby: 1.0 },
     ears: 'none', tail: 'tentacles', extra: 'jelly', voice: 1.5,
-    stats: { hp: 1100, speed: 6.3, power: 1.12, weight: 0.8 },
+    stats: { hp: 1150, speed: 6.3, power: 1.19, weight: 0.8 },
     special: 'staticfield', super: 'stormcloud',
     moves: { special: 'Static Field', super: 'Storm Cloud' },
   },
@@ -194,7 +194,7 @@ export const CRITTERS = [
     colors: { body: 0x2f7f8f, belly: 0xfff0d8, accent: 0xffb0c8, dark: 0x163f4a, eye: '#0c1a20', iris: '#ffd23a', wing: 0x1f5a68 },
     body: { w: 0.58, h: 0.52, headR: 0.5, legLen: 0.11, armLen: 0.18, chubby: 1.05 },
     ears: 'bat', tail: 'none', extra: 'bat', voice: 1.75,
-    stats: { hp: 1210, speed: 7.1, power: 1.33, weight: 0.9 },
+    stats: { hp: 1210, speed: 7.1, power: 1.38, weight: 0.9 },
     special: 'squeak', super: 'echoboom',
     moves: { special: 'Sonic Squeak', super: 'Echo Boom' },
   },
@@ -225,7 +225,7 @@ export const CRITTERS = [
     colors: { body: 0x6ac8e8, belly: 0xfff6e0, accent: 0xffa64a, dark: 0x1e5a7a, eye: '#0c1a2a', iris: '#2a6aff' },
     body: { w: 0.66, h: 0.6, headR: 0.5, legLen: 0.1, armLen: 0.16, chubby: 1.2 },
     ears: 'none', tail: 'fin', extra: 'puffer', voice: 1.35, isle: true,
-    stats: { hp: 1300, speed: 6.6, power: 1.27, weight: 1.05 },
+    stats: { hp: 1300, speed: 6.6, power: 1.32, weight: 1.05 },
     special: 'puffup', super: 'tsunami',
     moves: { special: 'Puff Up', super: 'Riptide Rush' },
   },
@@ -235,7 +235,7 @@ export const CRITTERS = [
     colors: { body: 0xb59a7a, belly: 0xf4e8d4, accent: 0x6ccf5a, dark: 0x4a3426, eye: '#1a120c', iris: '#3a8a3a', flower: 0xff6a8a },
     body: { w: 0.58, h: 0.58, headR: 0.5, legLen: 0.13, armLen: 0.3, chubby: 1.05 },
     ears: 'none', tail: 'stub', extra: 'sloth', voice: 0.85, isle: true,
-    stats: { hp: 1120, speed: 5.9, power: 1.16, weight: 1.1 },
+    stats: { hp: 1180, speed: 5.9, power: 1.24, weight: 1.1 },
     special: 'lariat', super: 'bramble',
     moves: { special: 'Lazy Lariat', super: 'Overgrowth' },
   },
@@ -265,7 +265,7 @@ export const CRITTERS = [
     colors: { body: 0x7d9ae8, belly: 0xf4f8ff, accent: 0xd8f0ff, dark: 0x2a3a7a, eye: '#10163a', iris: '#ffb020' },
     body: { w: 0.66, h: 0.44, headR: 0.48, legLen: 0.1, armLen: 0.18, chubby: 1.12 },
     ears: 'none', tail: 'whip', extra: 'manta', voice: 1.25, isle: true,
-    stats: { hp: 1080, speed: 7.2, power: 1.06, weight: 0.8 },
+    stats: { hp: 1080, speed: 7.2, power: 1.11, weight: 0.8 },
     special: 'skimloop', super: 'cyclone',
     moves: { special: 'Skim Loop', super: 'Squall Spin' },
   },
@@ -277,7 +277,7 @@ export const CRITTERS = [
     body: { w: 0.56, h: 0.62, headR: 0.5, legLen: 0.14, armLen: 0.2, chubby: 1.0 },
     ears: 'antennae', tail: 'puff', extra: 'wings', wingMul: 2.1, wingTex: 'sun', voice: 1.25, isle: true, legend: true,
     parts: { sunmane: 0.45 },
-    stats: { hp: 1180, speed: 7.2, power: 1.14, weight: 0.9 },
+    stats: { hp: 1180, speed: 7.2, power: 1.10, weight: 0.9 },
     special: 'swoop', super: 'supernova',
     moves: { special: 'Sunflare Swoop', super: 'Daybreak' },
   },
@@ -555,8 +555,22 @@ export const ISLE_CUPS = [
     ],
   },
 ];
+// Chapter 3: the Amber Sands' cups (won in the Adventure only; they don't count in Records until D4)
+export const SANDS_CUPS = [
+  {
+    id: 'mirage', arena: 'oasis', name: 'Mirage Cup', color: '#ffb84a', desc: 'A palm-shaded pavilion by the oasis pool. Is that trophy real, or a mirage?', diff: [0.86, 1], sands: true,
+    intro: ["Welcome to the Sunwell Pavilion, {name}! The Mirage Cup is the first cup of the Amber Sands.", "Desert trainers fight like the weather out here: hot, fast, and full of surprises."],
+    outro: ["Mirage Cup champion! It's real, {name}. The trophy is really, truly real.", "The sand crews say the road to Redrock Canyon is nearly clear. And those Dust Devils are still digging..."],
+    matches: [
+      { name: 'Sami', style: 'rushdown', title: 'Dune Runner', critter: 'siroccat', level: 34, taunt: "I run the dunes every morning before sunrise. You look like you've never seen sand!", beat: "Sand in my eyes... no excuses. You're quick!", gloat: "Too slow for the desert. Have some water and try again." },
+      { name: 'Rafi', style: 'turtle', title: 'Caravan Driver', critter: 'humpdrop', level: 35, taunt: "Humpdrop and I have crossed the Amber Sands forty times. One battle won't slow us down.", beat: "Well! Humpdrop needs a long drink after that one.", gloat: "Slow and steady crosses the desert. Every time." },
+      { name: 'Saffron', style: 'trickster', title: 'Spice Trader', critter: 'fennzap', level: 35, mods: ['itemrain'], taunt: "A pinch of spark, a dash of speed. Fennzap is my secret recipe!", beat: "Too much pepper! You beat me fair and square.", gloat: "Spicy! Come back when you can take the heat." },
+      { name: 'Amaya', style: 'zoner', title: 'Oasis Keeper', critter: 'sizzlard', skin: 'shiny', level: 37, boss: true, bossTitle: 'OASIS KEEPER', taunt: "The oasis has stood for a thousand years, {name}. I keep it, and I keep this cup.", beat: "The water remembers who was strong. Take the Mirage Cup, champion.", gloat: "The sun is hot, and so is Sizzlard. Rest in the shade, traveller." },
+    ],
+  },
+];
 export const ALL_CUPS = () => [...CUPS, ...ISLE_CUPS];
-export const cupById = (id) => CUPS.find((c) => c.id === id) || ISLE_CUPS.find((c) => c.id === id);
+export const cupById = (id) => CUPS.find((c) => c.id === id) || ISLE_CUPS.find((c) => c.id === id) || SANDS_CUPS.find((c) => c.id === id);
 
 // Combo chain for every critter (scaled by stats.power). t = seconds.
 export const COMBO = [

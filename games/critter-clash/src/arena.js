@@ -15,6 +15,14 @@ export const ARENAS = {
     hill: 0x6fbf55, trunk: 0x8a5a3a, leaves: [0x47b04a, 0x5cc85a, 0x3a9a48], scenery: 'trees', cloud: 0xffffff, cloudShade: 0x5a6a90, sunI: 2.4,
     drift: 'seeds',
   },
+  oasis: { // Chapter 3: the Sunwell Pavilion, the Mirage Cup's stadium (palms and pale sand under a hot blue sky; geysers to come)
+    name: 'Sunwell Pavilion',
+    skyTop: 0x2a7ae8, skyHorizon: 0xffe4b0, sun: 0xfff2d8, sunDir: [-0.45, 0.8, 0.4],
+    hemiSky: 0xfff0d8, hemiGround: 0x9a7a5a, fieldA: '#ecd29a', fieldB: '#e2c68a', line: '#2ab0a8', floor: 'sand',
+    wallA: 0x2ab0a8, wallB: 0xfff0d8, ground: 0xecd29a, fog: 0xffe8c0,
+    accent: 0xd8643a, seat: [0x2ab0a8, 0xd8643a, 0xffc040, 0xfff0d8],
+    hill: 0xe0b878, trunk: 0x9a6a40, leaves: [0x3cb86a, 0x52c870, 0x2f9a58], scenery: 'palms', cloud: 0xfff8ee, cloudShade: 0xb08a70, sunI: 2.5,
+  },
   canyon: { // Chapter 3: the Amber Sands' red-rock canyon (wild fights out on the dunes use its open field; no hazard yet, so not in Quick Battle)
     name: 'Redrock Canyon Arena',
     skyTop: 0x3a7ae0, skyHorizon: 0xffd8a0, sun: 0xfff0d0, sunDir: [0.5, 0.75, -0.4],

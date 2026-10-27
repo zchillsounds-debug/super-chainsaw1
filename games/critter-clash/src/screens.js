@@ -1,6 +1,6 @@
 // Title, tournament cups/ladder, critter select, VS splash, results and pause overlays.
 import { buzz } from './haptics.js';
-import { CRITTERS, CLASSIC, TYPES, CUPS, ISLE_CUPS, ALL_CUPS, cupById, SHINY, BADGES, MODS, STARTERS, skinned, withGear, gearFor, GEAR, dailyChallenge } from './data.js';
+import { CRITTERS, CLASSIC, TYPES, CUPS, ISLE_CUPS, SANDS_CUPS, ALL_CUPS, cupById, SHINY, BADGES, MODS, STARTERS, skinned, withGear, gearFor, GEAR, dailyChallenge } from './data.js';
 import { sfx, playMusic } from './audio.js';
 import { HAZARDS, SIGS } from './hazards.js';
 import { Camp } from './camp.js';
@@ -40,7 +40,7 @@ const ILINKS = [['coral', 'palmpath'], ['palmpath', 'bluffs'], ['bluffs', 'ashtr
 const ISLE_LAND = ['M52 206 Q40 170 70 150 Q110 138 130 160 Q150 190 120 212 Q86 228 52 206 Z', 'M140 160 Q150 120 200 100 Q236 66 268 84 Q290 104 262 130 Q232 160 176 172 Q146 176 140 160 Z',
   'M270 150 Q280 120 318 140 Q360 160 364 200 Q360 230 318 228 Q280 222 270 190 Z', 'M336 60 Q340 44 356 46 Q372 50 368 66 Q362 78 348 76 Q336 72 336 60 Z'].map((d) => `<path class="wm-land" d="${d}"/>`).join('');
 // Chapter 3: the Amber Sands' own Town Map (nodes appear as their maps are built; you ride the Sand-Rail between it and Clashara)
-const SMAP = { oasis: { x: 118, y: 160, fly: [12, 14] }, duneroad: { x: 210, y: 150 } };
+const SMAP = { oasis: { x: 118, y: 160, cup: 'mirage', fly: [12, 14] }, duneroad: { x: 210, y: 150 } };
 const SLINKS = [['oasis', 'duneroad']];
 const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 60 170 54 Q250 40 320 70 Q380 100 372 170 Q366 226 300 232 Q200 244 120 238 Q60 240 30 230 Z"/><path class="wm-dune" d="M200 120 Q240 96 290 118 M230 170 Q270 150 320 172 M60 200 Q90 186 130 206"/>';
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
@@ -64,7 +64,7 @@ const byId = (id) => CRITTERS.find((c) => c.id === id);
 
 // which cup match unlocks a critter (for the locked-card hint)
 const skinOf = (c) => withGear(skinned(c, save.skins?.[c.id]), save.critters?.[c.id]?.level);
-const cupOfShiny = (id) => ALL_CUPS().find((cup) => cup.matches.some((m) => m.critter === id));
+const cupOfShiny = (id) => [...ALL_CUPS(), ...SANDS_CUPS].find((cup) => cup.matches.some((m) => m.critter === id));
 
 // badges newly satisfied by the save; marks them earned
 export function newBadges() {
@@ -1937,7 +1937,7 @@ export class Screens {
         <div class="vs-mark">VS</div>
         <div class="vs-side r${gold ? ' gold' : ''}" style="--tc:${TYPES[c.type].color}"><img src="${g.portrait(c)}" alt=""><b>${c.name}</b><small>${label}</small></div>
         ${this.ctx.kind === 'team' ? `<div class="vs-team">${this.teamRow(this.ctx.team, this.ctx.php, this.ctx.pi)}${this.teamRow(this.ctx.foes, this.ctx.fhp, this.ctx.fi)}</div>${this.ctx.sent ? `<div class="vs-go ${this.ctx.sent}">${this.ctx.sent === 'you' ? `Go, ${p.name}!` : `Rival sends out ${c.name}!`}</div>` : ''}` : ''}
-        ${HAZARDS[opts.arena] && save.settings.hazards !== false ? `<div class="vs-hazard">⚠ Arena hazards: ${HAZARDS[opts.arena].name} & ${SIGS[opts.arena].name.toLowerCase()}</div>` : ''}
+        ${HAZARDS[opts.arena] && save.settings.hazards !== false ? `<div class="vs-hazard">⚠ Arena hazards: ${HAZARDS[opts.arena].name}${SIGS[opts.arena] ? ` & ${SIGS[opts.arena].name.toLowerCase()}` : ''}</div>` : ''}
       </div>`;
     sfx.boom();
     // only if the player is still on this VS screen (back or a menu tap during it must not drop them into a fight)
@@ -2025,7 +2025,7 @@ export class Screens {
     if (stats.perfect) save.stats.perfects = (save.stats.perfects || 0) + 1;
     if (stats.counters) save.stats.counters = (save.stats.counters || 0) + stats.counters;
     if (won && HAZARDS[opts.arena || 'meadow'] && stats.hazardsSeen >= 2 && !stats.hazardHits) save.stats.hazardClean = (save.stats.hazardClean || 0) + 1;
-    if (won && HAZARDS[opts.arena || 'meadow'] && save.settings.hazards !== false && !(save.stats.hazardArenas ||= []).includes(opts.arena)) save.stats.hazardArenas.push(opts.arena);
+    if (won && HAZARDS[opts.arena || 'meadow'] && ARENA_NAME[opts.arena] && save.settings.hazards !== false && !(save.stats.hazardArenas ||= []).includes(opts.arena)) /* (the six classic hazard stadiums: the badge counts those) */ save.stats.hazardArenas.push(opts.arena);
     let joined = false, cupDone = false, shinies = [];
     if (won && cup) {
       joined = unlock(cDef.id);

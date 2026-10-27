@@ -355,6 +355,7 @@ export function nextGoal(F) {
     if (nx?.id === 'caldera' && !F.skua_b) return 'A Gloom Gull is blocking the Ash Trail at the east edge of Breezy Bluffs. Chase it off!';
     if (nx) return `Win the ${nx.name} in ${ISLE_AT[nx.id]}.`;
     if (F.sunstone && !F.sands_arrive) return 'Chapter 3: the Sand-Rail runs again! Ride it from the south side of Cinder Town to the Amber Sands.';
+    if (F.sands_arrive && !F.cup_mirage) return 'Win the Mirage Cup at the Sunwell Pavilion in Sunwell Oasis (Amber Sands).';
     if (!F.sunstone) return F.morra ? 'Bring the Sunstone home to the Starfall lighthouse!' : 'Sail to Starfall Atoll with Captain Gill (Port Coral) and take the Sunstone back from Captain Morra!';
     // post-game: point at whatever is still open (the Tower, the glider, the legends)
     if (!(save.adv.tower?.best >= 7)) return 'Morra has opened a Battle Tower on Starfall Atoll. Win 7 in a row for Bronze rank!';
@@ -472,7 +473,7 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'cupdesk') { // the stadium's front desk signs you up for its cup
     const cup = cupById(w.M.cup), front = w.M.exit, who = 'Front Desk';
-    if (F['cup_' + cup.id]) { w.say([`Front Desk: Hoo! The ${cup.name} champion! Your trophy has pride of place in the case.`, 'Front Desk: Want to battle the cup again? Use Tournament on the title screen.'], null, who); return; }
+    if (F['cup_' + cup.id]) { w.say([`Front Desk: Hoo! The ${cup.name} champion! Your trophy has pride of place in the case.`, cup.sands ? 'Front Desk: The desert trainers still talk about your final. Out on the dunes they\'ll battle you any day!' : 'Front Desk: Want to battle the cup again? Use Tournament on the title screen.'], null, who); return; }
     w.say([`Front Desk: Hoo! Welcome to the ${cup.name}! ${cup.matches.length} battles stand between you and the trophy.`], () => w.ask(`Front Desk: Shall I sign {hero} up for the ${cup.name}?`, ["Let's go!", 'Not yet'], (i) => {
       if (i) { w.say(['Front Desk: No rush. Rest up at the Berry Center first!'], null, who); return; }
       w.say([Object.keys(F).some((k) => k.startsWith('cup_')) ? "{hero}: Another cup, another trophy. Let's go!" : '{hero}: This is it. My first real cup. Let\'s go!'], () => {

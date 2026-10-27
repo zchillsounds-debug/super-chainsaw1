@@ -17,6 +17,7 @@ export const HAZARDS = {
   neon:    { name: 'Shock tiles', color: 0xff3fd8, glow: 0x9af4ff, r: 1.3, warn: 1.1, dmg: 6, stun: 0.3, paralyze: 0.6, kb: 1.5, word: 'ZZAP!' },
   sky:     { name: 'Updrafts', color: 0x4aa8ff, solid: true, glow: 0xffffff, r: 1.2, warn: 1.3, dmg: 6, lift: 9, kb: 1, word: 'WHOOSH!' },
   grove:   { name: 'Spore puffs', color: 0x9adf4a, solid: true, glow: 0xe8ffa0, r: 1.3, warn: 1.2, dmg: 5, stun: 0.5, kb: 1, dizzy: 45, word: 'ACHOO!' },
+  oasis:   { name: 'Water geysers', color: 0x2ab0d8, glow: 0xb8f4ff, r: 1.2, warn: 1.3, dmg: 7, lift: 8.5, kb: 1.5, word: 'SPLOOSH!' }, // Chapter 3: the Sunwell Pavilion
   beach:   { name: 'Coconuts', color: 0xe0482a, solid: true, glow: 0xfff2c0, r: 0.9, warn: 1.2, dmg: 7, stun: 0.5, kb: 3, word: 'BONK!' },
 };
 
@@ -436,6 +437,7 @@ export class Hazards {
         h.mesh.scale.setScalar(H.r * (1 + e * 0.3));
         if (h.drop) { h.drop.scale.setScalar(Math.max(0.01, 1 - e)); }
         if (B.arena.key === 'sky' && e < 0.8) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * 1.2, y: 0.2, z: h.z + (Math.random() - 0.5) * 1.2, vy: 10 + Math.random() * 4, color: 0xffffff, size: 0.28, stretch: 5, life: 0.4, shape: 'spark', additive: false, alpha: 0.85 });
+        if (B.arena.key === 'oasis' && e < 0.8) for (let k = 0; k < 2; k++) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * 0.6, y: 0.2, z: h.z + (Math.random() - 0.5) * 0.6, vy: 11 + Math.random() * 4, color: Math.random() < 0.5 ? 0xe8fbff : 0x8ae0f4, size: 0.45, life: 0.55, shape: 'glow', additive: false, alpha: 0.85, grav: 6 }); // a column of spray
         if (B.arena.key === 'volcano' && e < 0.8) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * 0.7, y: 0.2, z: h.z + (Math.random() - 0.5) * 0.7, vy: 9 + Math.random() * 4, color: Math.random() < 0.5 ? 0xff7a1a : 0xffd040, size: 0.5, life: 0.5, shape: 'puff', grav: 9, grow: 1 });
         if (e >= 1) this.remove(i);
       }
@@ -454,6 +456,10 @@ export class Hazards {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 14, speed: 3, up: 9, color: 0xffffff, size: 0.5, life: 0.7, shape: 'puff', additive: false, grav: 4, grow: 1.2 });
       for (let k = 0; k < 6; k++) B.fx.spawn({ x: h.x + (Math.random() - 0.5), y: 0.6, z: h.z + (Math.random() - 0.5), vy: 7, color: 0xffc4de, size: 0.3, life: 1, shape: 'leaf', additive: false, spin: 8, drag: 1 });
       sfx.whoosh?.(1.2);
+    } else if (key === 'oasis') {
+      B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 24, speed: 3, up: 11, color: 0xd8f6ff, size: 0.3, life: 0.8, shape: 'glow', additive: false, grav: 14, alpha: 0.9 });
+      B.fx.spawn({ x: h.x, y: 0.06, z: h.z, color: 0xe8fbff, size: H.r * 1.6, life: 0.6, shape: 'ring', additive: false, grow: 1.5, alpha: 0.7 });
+      sfx.whoosh?.(0.9);
     } else if (key === 'frost') {
       B.fx.burst(p, { n: 16, speed: 5, up: 3, color: 0xd8f6ff, size: 0.22, life: 0.5, shape: 'star', additive: false, grav: 8 });
       sfx.bonk();

@@ -860,10 +860,10 @@ export const MAPS = {
     tiles: [
       'PPPPPPPPPPPPPPPPPPPPPPPPPP',
       'Psssssssssss::ssssssssssRP',
-      'PsPsssssssss::sssshhhhsssP',
-      'Psssssssssss::sssshhhhsssP',
-      'Psssssssssss::sssshhhhsssP',
-      'Psssssssssss::sssssssssssP',
+      'PsPhhhhhhhhs::sssshhhhsssP',
+      'Psshhhhhhhhs::sssshhhhsssP',
+      'Psshhhhhhhhs::sssshhhhsssP',
+      'Psshhhhhhhhs::sssssssssssP',
       'Ps::::::::::::::::::::::::',
       'Pssssss:sPssssssPss:sssssP',
       'Psshhhh:ss~~~~~~sss:sssssP',
@@ -879,10 +879,11 @@ export const MAPS = {
     ],
     edges: { e: { to: 'duneroad', off: -1 } },
     train: { x: 9, y: 13, from: 1, to: 24 }, // the Sand-Rail stops beside the market row (the platform)
-    well: [5, 3], // the town's old stone well (A: a cool drink, once a day)
+    well: [15, 3], // the town's old stone well (A: a cool drink, once a day)
     bazaar: [[11, 11, 'dates'], [13, 11, 'pots'], [15, 11, 'rugs']], // market stalls under the pool's palms, open onto the market row
-    cacti: [[4, 14], [8, 15], [12, 15], [19, 14], [20, 16], [14, 16], [3, 4], [23, 3]], // saguaros out on the dunes past the track
+    cacti: [[4, 14], [8, 15], [12, 15], [19, 14], [20, 16], [14, 16], [23, 3]], // saguaros out on the dunes past the track
     buildings: [
+      { id: 'stadium_m', x: 3, y: 2, w: 8, h: 4, stadium: 'mirage', door: 4, label: 'Mirage Stadium' },
       { id: 'berry_o', x: 18, y: 2, w: 4, h: 3, roof: 0xff7aa0, wall: 0xf4dcb8, door: 2, label: 'Berry Center', heal: true },
       { id: 'hats_o', x: 3, y: 8, w: 4, h: 3, roof: 0xd8643a, wall: 0xf0d0a0, door: 1, label: 'Sand Hats', hatShop: true },
     ],
@@ -891,9 +892,9 @@ export const MAPS = {
       { id: 'tamsin_o', x: 13, y: 12, critter: 'humpdrop', name: 'Conductor Tamsin', dir: 'w', story: 'rail', lines: [] },
       { id: 'saffi', x: 12, y: 11, critter: 'fennzap', name: 'Trader Saffi', dir: 's', lines: ["Trader Saffi: Fresh dates! Sweet as sunshine! The first one's free, every day. Tell your friends!", "Trader Saffi: My Fennzap hears a customer coming from three dunes away. Its ears never stop twitching."] },
       { id: 'oma', x: 14, y: 11, critter: 'cactortle', name: 'Weaver Oma', dir: 's', lines: ["Weaver Oma: These rugs took me all summer. Cactortle sits on the loom when I'm not looking. Very prickly patterns.", "Weaver Oma: The red canyon to the east? My grandmother was born up there, in a house in the cliff."] },
-      { id: 'wellkeep', x: 6, y: 4, critter: 'scarabold', name: 'Wellkeeper Bram', dir: 'w', lines: ["Wellkeeper Bram: This well has never once run dry. Some say an old spring runs under the sands, all the way from the buried city.", "Wellkeeper Bram: Scarabold rolls the bucket up for me. It thinks the bucket is a very big ball."] },
+      { id: 'wellkeep', x: 16, y: 3, critter: 'scarabold', name: 'Wellkeeper Bram', dir: 'w', lines: ["Wellkeeper Bram: This well has never once run dry. Some say an old spring runs under the sands, all the way from the buried city.", "Wellkeeper Bram: Scarabold rolls the bucket up for me. It thinks the bucket is a very big ball."] },
       { id: 'kid_o', x: 21, act: 'hop', y: 9, critter: 'siroccat', name: 'Siroccat', dir: 'w', wander: 2, lines: ["Siroccat: (It stands up tall on its back legs and stares at the horizon. Then at you. Then back at the horizon.)", "Siroccat: Chirr! (It's on lookout duty. Nothing gets past Siroccat. Except maybe that beetle.)"] },
-      { id: 'sun_o', x: 15, act: 'fan', y: 5, critter: 'sizzlard', name: 'Sunbather Rex', dir: 's', wander: 1, lines: ["Sunbather Rex: Ahh, the Amber Sands. Hot by day, cold by night. Sizzlard soaks up the sun until its frill glows.", "Sunbather Rex: Don't stay out on the dunes when a sandstorm blows in. You won't see your own paws!"] },
+      { id: 'sun_o', x: 10, act: 'fan', y: 7, critter: 'sizzlard', name: 'Sunbather Rex', dir: 's', wander: 1, lines: ["Sunbather Rex: Ahh, the Amber Sands. Hot by day, cold by night. Sizzlard soaks up the sun until its frill glows.", "Sunbather Rex: Don't stay out on the dunes when a sandstorm blows in. You won't see your own paws!"] },
       { id: 'grit_o', x: 22, y: 12, critter: 'scarabold', name: 'Dust Devil Grit', dir: 'w', lines: ["Dust Devil Grit: Eh? Who are YOU looking at? We're just... shopping. For shovels. LOTS of shovels.", "Dust Devil Grit: The buried city? Never heard of it. Definitely not digging it up. Go away, tourist!"] },
     ],
   },
@@ -925,11 +926,12 @@ export const MAPS = {
     ],
     edges: { w: { to: 'oasis', off: 1 } },
     cacti: [[14, 2], [17, 3], [8, 10], [23, 10], [29, 4], [12, 4], [19, 9]],
-    signs: [{ x: 2, y: 4, text: 'DUNE ROAD\n←  Sunwell Oasis      Redrock Canyon  →' }],
+    signs: [{ x: 2, y: 4, text: 'DUNE ROAD\n←  Sunwell Oasis      Redrock Canyon  →' }, { x: 23, y: 4, text: 'KEEP OUT!\nOfficial Dust Devil dig. Nothing to see here. Especially not treasure.' }],
     wild: { list: [['sizzlard', 32, 35], ['humpdrop', 32, 35], ['cactortle', 32, 35], ['fennzap', 32, 35], ['scarabold', 33, 36], ['siroccat', 33, 36]], roam: 4, rate: 0.1 },
     npcs: [
       { id: 'ranger_d', x: 10, y: 3, critter: 'siroccat', name: 'Ranger Sol', dir: 's', trainer: { lv: 33, sight: 3, diff: 0.8, intro: 'Ranger Sol: Halt! Nobody crosses my dunes without a battle. Siroccat, lookout position!', beat: 'Ranger Sol: Sand in my boots AND a loss. What a day.', after: 'Ranger Sol: Desert critters hide in the dry grass. Bring water, and a fast partner.' } },
       { id: 'hiker_d', x: 20, y: 7, critter: 'cactortle', name: 'Hiker Dusty', dir: 'w', trainer: { lv: 34, sight: 3, diff: 0.82, intro: 'Hiker Dusty: Careful, Cactortle gets prickly when it\'s thirsty. And it\'s ALWAYS thirsty. Battle!', beat: 'Hiker Dusty: Ow, ow, ow. Spines everywhere. Good battle though!', after: 'Hiker Dusty: Somewhere under these dunes is a whole city. Some nights, when the wind blows the sand away, you can see its towers.' } },
+      { id: 'devil_d', x: 25, y: 4, critter: 'fennzap', name: 'Dust Devil Rake', dir: 'w', act: 'flex', lines: ["Dust Devil Rake: Can't you read? KEEP OUT. The boss says the old city's gate is round here somewhere, and we're gonna find it first.", "Dust Devil Rake: ...I didn't say that. Forget I said that. Fennzap, look scary!"] },
       { id: 'crew_d', x: 32, y: 5, critter: 'scarabold', name: 'Sand Crew Kip', dir: 'w', lines: ['Sand Crew Kip: Whoa there! A sand drift buried the road to Redrock Canyon last night. Scarabold and I are rolling it away, one ball at a time.', 'Sand Crew Kip: Come back later and it\'ll be clear. Probably. Scarabold keeps rolling the sand back the wrong way.'] },
     ],
   },
