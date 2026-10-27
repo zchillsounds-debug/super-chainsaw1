@@ -933,6 +933,29 @@ const LOST = {
     done: ['Mama Squeak: Squeak?! A Heartseed! The old trees told me stories of these when I was a pup.', 'Mama Squeak leads you to the pond. {hero} digs a little hole, and you plant the sprout together.', 'For a moment, nothing... then every glowcap in the woods flashes bright green at once! The ground hums.', 'Mama Squeak: Look! By the pond! Something HUGE is standing up...', 'Mama Squeak: Take this crown of leaves the forest dropped for you. You woke the woods, Champion!', '{hero} got the Grove Crown! 🌿 +20 🍓'],
   },
 
+  // ---- Chapter 3 (D3): the Sunwell caravan, a desert chain (Hakim → Ines → Tamar → Hakim) ending in a shiny Humpdrop. An extra, like the Heartseed ----
+  caravan1: {
+    who: 'Caravan Master Hakim', from: 'hakim_o', giverMap: 'oasis', extra: true, item: 'crate of Sunwell dates', berries: 3, toast: '🌴', home: 'Sunwell Oasis', needs: 'dunecamp_arrive', to: { npc: 'potter_r', map: 'redrock', name: 'Potter Ines', home: 'Redrock Canyon' },
+    thanks: 'Caravan Master Hakim: Ines got her dates? Then the caravan road is open again. Step one of many, my friend!',
+    ask: ['Caravan Master Hakim: You there, with the strong-looking critter! My caravan used to cross the whole Amber Sands. Oasis to canyon, canyon to dunes, dunes and home.', 'Caravan Master Hakim: Then the sandstorms came, and the Dust Devils, and my Humpdrops refused to leave the shade. Who can blame them?', 'Caravan Master Hakim: Help me start the old road again? This crate of dates is for Potter Ines in Redrock Canyon. She trades the best pots in the desert for them.', '{hero} got a crate of Sunwell dates! 🌴 Take it to Potter Ines in Redrock Canyon.'],
+    wait: ['Caravan Master Hakim: Potter Ines works by the cliff houses in Redrock Canyon. East along Dune Road, past Sand Crew Kip.'],
+    done: ['Potter Ines: Sunwell dates! HAKIM\'s dates! Does this mean the caravan is running again?', 'Potter Ines: Oh, I have waited YEARS for this. Talk to me again: I have a load of pots for the next stop!', '{hero} got 3 berries! 🍓'],
+  },
+  caravan2: {
+    who: 'Potter Ines', from: 'potter_r', giverMap: 'redrock', item: 'stack of canyon pots', berries: 3, toast: '🏺', home: 'Redrock Canyon', needs: 'caravan1_done', to: { npc: 'weaver_c', map: 'dunecamp', name: 'Weaver Tamar', home: 'the Dune Camp' },
+    thanks: 'Potter Ines: Tamar sent a thank-you note. Woven. She weaves her NOTES. That woman.',
+    ask: ['Potter Ines: These pots are for Weaver Tamar at the Dune Camp. She stores her dyes in them: red from the canyon, teal from the oasis, gold from the dunes.', 'Potter Ines: Carry them gently! Canyon clay is strong, but not THAT strong.', '{hero} got a stack of canyon pots! 🏺 Take them to Weaver Tamar at the Dune Camp.'],
+    wait: ['Potter Ines: The Dune Camp is out east, over the canyon road. Tamar is the one surrounded by thread.'],
+    done: ['Weaver Tamar: Pots! Canyon pots! Mine all cracked in the last sandstorm. Now I can mix my dyes again.', 'Weaver Tamar: Wait there, little traveller. The caravan always carried a rug home. Talk to me again!', '{hero} got 3 berries! 🍓'],
+  },
+  caravan3: {
+    who: 'Weaver Tamar', from: 'weaver_c', giverMap: 'dunecamp', item: 'rolled-up dune rug', berries: 25, snack: true, shiny: 'humpdrop', toast: '🧶', home: 'the Dune Camp', needs: 'caravan2_done', to: { npc: 'hakim_o', map: 'oasis', name: 'Caravan Master Hakim', home: 'Sunwell Oasis' },
+    thanks: 'Weaver Tamar: Hakim hung my rug in the market? Everyone will see it. Oh, I hope I got the corners straight.',
+    after: ['Caravan Master Hakim: The road is open, oasis to canyon to dunes and home. My Humpdrops even stopped sulking. Well. Mostly.', 'Caravan Master Hakim: That little shiny one of yours? Its mother leads the caravan now. Proudest Humpdrop in the desert.'],
+    ask: ['Weaver Tamar: This rug is for Hakim. Every stripe is a stop on the old road: oasis teal, canyon red, dune gold. The last stripe is home.', 'Weaver Tamar: Take it back to Sunwell Oasis, and the caravan\'s first trip will be done. Hakim will cry. He always cries.', '{hero} got a rolled-up dune rug! 🧶 Take it back to Caravan Master Hakim in Sunwell Oasis.'],
+    wait: ['Weaver Tamar: Hakim waits by the Sand-Rail platform in Sunwell Oasis. Far west of here, past the canyon.'],
+    done: ['Caravan Master Hakim: Tamar\'s rug... oasis, canyon, dunes and home. The whole road, woven in one piece.', 'Caravan Master Hakim: (sniff) I am not crying. It is the sand. There is a LOT of sand.', 'Caravan Master Hakim: You carried the caravan all by yourself, little one. Every caravan needs a Humpdrop... and one of mine just had a calf. Look how it shines!', '{hero} got a new friend: a shiny Humpdrop calf! 🌟 (Its shiny colours are yours in every mode now.)', '{hero} got 25 berries and a Power Snack! 🍓⭐'],
+  },
   // ---- island single-step favours: something lost on another island ----
   cocomug: {
     who: 'Mossloth', item: 'coconut cup', berries: 3, toast: '🥥', hint: 'somewhere along Palm Path, east of town', home: 'Port Coral',
