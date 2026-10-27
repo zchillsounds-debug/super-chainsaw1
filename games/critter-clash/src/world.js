@@ -4331,6 +4331,18 @@ export class World {
     bank.scale.set(w / 2 - 0.2, 1, d / 2 - 0.1); bank.position.y = 1.25; G.add(bank);
     const rim = inked(new THREE.TorusGeometry(1, 0.08, 6, 48), toon(trim), 0);
     rim.rotation.x = Math.PI / 2; rim.scale.set(w / 2 - 0.2, d / 2 - 0.1, 1); rim.position.y = 2.6; G.add(rim);
+    if (A.canopy) { // the Sandstorm Dome: masts round the bowl hold scalloped sail-cloth panels sloping in over the seats (open over the gate and the middle)
+      const sx = w / 2 - 0.2, sz = d / 2 - 0.1, N = 9, a0 = Math.PI * 0.62, a1 = Math.PI * 2.38, sails = [[], []], masts = [];
+      for (let k = 0; k < N; k++) {
+        const aa = a0 + (a1 - a0) * k / N, ab = a0 + (a1 - a0) * (k + 1) / N, S = 4, pos = [], idx = [];
+        for (let j = 0; j <= S; j++) for (let i = 0; i <= S; i++) { const u = i / S, v = j / S, a = aa + (ab - aa) * u, sag = Math.sin(u * Math.PI), r = 1.06 - v * 0.34 + sag * v * 0.06, y = 4.3 - v * 1.1 - sag * (0.25 + v * 0.2); pos.push(Math.cos(a) * r * sx, y, Math.sin(a) * r * sz); }
+        for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) { const q = j * (S + 1) + i; idx.push(q, q + S + 1, q + 1, q + 1, q + S + 1, q + S + 2); }
+        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); sails[k % 2].push(g);
+      }
+      for (let k = 0; k <= N; k++) { const a = a0 + (a1 - a0) * k / N, m = new THREE.CylinderGeometry(0.08, 0.12, 4.6, 6); m.translate(Math.cos(a) * 1.08 * sx, 2.3, Math.sin(a) * 1.08 * sz); masts.push(m); }
+      sails.forEach((l, k) => { G.add(inked(mergeGeometries(l), toon(k ? A.wallA : A.canopy, { rim: 0.3, side: THREE.DoubleSide }), OL * 0.5)); l.forEach((g) => g.dispose()); });
+      G.add(new THREE.Mesh(mergeGeometries(masts), toon(A.trunk ?? 0x6a4428))); masts.forEach((g) => g.dispose());
+    }
     const field = new THREE.Mesh(new THREE.CircleGeometry(1, 40), toon(new THREE.Color(ARENAS[cup.arena]?.fieldA || '#5ac24a').getHex())); field.rotation.x = -Math.PI / 2; field.scale.set((w / 2 - 0.2) * 0.8, (d / 2 - 0.1) * 0.8, 1); field.position.y = 0.05; G.add(field);
     // arch over the gate
     const arch = inked(new THREE.TorusGeometry(0.9, 0.18, 8, 16, Math.PI), toon(trim), OL * 0.6); arch.position.set((b.door + 0.5) * TILE - w / 2, 1.6, d / 2 - 0.1); G.add(arch);
@@ -4351,7 +4363,7 @@ export class World {
       this.medals.push(star);
     }
     // the cup's emblem on a sign over the gate
-    const sign = canvasTex(256, 64, (c, W, H) => { c.fillStyle = '#2a1630'; c.beginPath(); c.roundRect(0, 0, W, H, 16); c.fill(); c.fillStyle = '#fff'; c.font = 'bold 34px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(cup.name.toUpperCase(), W / 2, H / 2 + 2); });
+    const sign = canvasTex(256, 64, (c, W, H) => { c.fillStyle = '#2a1630'; c.beginPath(); c.roundRect(0, 0, W, H, 16); c.fill(); c.fillStyle = '#fff'; c.font = 'bold 34px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(cup.name.toUpperCase(), W / 2, H / 2 + 2, W - 16); }); // (squeezed to fit: SANDSTORM CUP ran off both ends)
     sign.userData.own = true;
     const sm = new THREE.MeshBasicMaterial({ map: sign, transparent: true }); sm.userData.own = true;
     const s = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.8), sm); s.position.set((b.door + 0.5) * TILE - w / 2, 3.0, d / 2 + 0.05); G.add(s);
