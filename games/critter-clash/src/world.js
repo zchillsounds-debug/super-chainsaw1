@@ -1354,7 +1354,7 @@ export class World {
     this.lifts = [];
     if (!this.M.lifts || this.M.indoor) return;
     const wood = toon(0x7a4e2c), rope = toon(0xd8c088);
-    for (const [x, y] of this.M.lifts) {
+    for (const [x, y, way, lx, ly] of this.M.lifts) {
       const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g);
       const parts = [];
       for (const sd of [-0.7, 0.7]) { const p = new THREE.BoxGeometry(0.16, 5.2, 0.16); p.translate(sd, 2.6, -0.2); parts.push(p); const br = new THREE.BoxGeometry(0.1, 1.6, 0.1); br.rotateZ(sd > 0 ? 0.5 : -0.5); br.translate(sd * 0.82, 0.7, -0.2); parts.push(br); }
@@ -1368,7 +1368,7 @@ export class World {
       const floor = new THREE.Mesh(new THREE.CircleGeometry(0.34, 10), toon(0x8a6a3a)); floor.rotation.x = -Math.PI / 2; floor.position.y = 0.02; basket.add(floor);
       const jug = inked(new THREE.SphereGeometry(0.16, 10, 8), toon(0xd8743a), OL * 0.3); jug.position.set(0.12, 0.42, 0); jug.scale.y = 1.2; basket.add(jug); // a water jug riding up to the mesa
       basket.position.set(0, 0.2, 0.05);
-      this.lifts.push({ g, basket, line, phase: hash(this.key + x) % 100 / 100 * Math.PI * 2 });
+      this.lifts.push({ g, basket, line, phase: hash(this.key + x) % 100 / 100 * Math.PI * 2, x, y, way, lx, ly });
     }
   }
 
@@ -1462,6 +1462,15 @@ export class World {
       F.sunbird_wake = true; persist(); sfx.rumble?.();
       this.fade(() => this.load(this.key, this.hx, this.hy, this.dir));
       setTimeout(() => this.say(['A great golden bird bursts up out of the sand, shaking off a hundred years of sleep!', 'Its crest lights up the whole desert like a sunrise. It\'s the Sun-Bird from the mural!']), 1400);
+    });
+  }
+
+  // a rope lift between Redrock Canyon and the mesa top (once the Canyon Cup is won Liftkeeper Bo has the winch going)
+  rideLift(L) {
+    if (!save.adv.flags.cup_canyon) return this.say(['The basket is tied to the gantry with three knots and a bow. A tag says: CLOSED FOR OILING. — Bo']);
+    const up = L.way === 'up';
+    this.say([up ? '{hero} climbs into the basket. Far above, a Scarabold leans on the winch... and up it goes, creak by creak!' : '{hero} climbs into the basket and waves goodbye to the sky. Down, down, down...'], () => {
+      sfx.whoosh?.(); this.goTo({ to: up ? 'mesa' : 'redrock', at: [L.lx, L.ly] }, 's');
     });
   }
 
@@ -5484,6 +5493,7 @@ export class World {
     const mi = this.puz?.mirrors?.find((m) => m.x === fx && m.y === fy); if (mi) return this.turnMirror(mi);
     const up = this.updrafts?.find((u) => u.x === fx && u.y === fy); if (up) return this.updraftTalk(up);
     const sg = this.singers?.find((q) => q.x === fx && q.y === fy); if (sg) return this.singAt(sg);
+    const lf = this.lifts?.find((q) => q.x === fx && q.y === fy && q.way); if (lf) return this.rideLift(lf);
     if (this.well && this.well.x === fx && this.well.y === fy) {
       const day = new Date().toISOString().slice(0, 10);
       if (save.adv.wellDay !== day) { save.adv.wellDay = day; save.berries = (save.berries || 0) + 1; persist(); reward(1); return this.say(['{hero} winds the bucket up from the well. The water is cold and clear, even in the desert heat!', 'Something shiny sits in the bottom of the bucket... a berry someone dropped in for luck! +1 🍓']); }
@@ -5535,6 +5545,7 @@ export class World {
     if (at(this.bush)) return 'Shake';
     if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
     if (this.singers?.some(at)) return this.phase === 'night' ? 'Sing' : 'Look';
+    if (this.lifts?.some((q) => q.way && at(q))) return save.adv.flags.cup_canyon ? 'Ride' : 'Look';
     if ([this.well, this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest, this.melon, this.picnic, this.snowman, this.apples].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
     if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod) return 'Fish'; }
     const sign = (this.M.signs || []).find((g) => g.x === fx && g.y === fy);

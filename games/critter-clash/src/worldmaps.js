@@ -967,7 +967,7 @@ export const MAPS = {
       'RRRRRRRRRRRRRRRRRRRRRRRRRRRRRR',
     ],
     edges: { w: { to: 'duneroad', off: -1 }, e: { to: 'dunecamp', off: 0, need: 'dash_canyon', needSay: 'The canyon road runs east toward the big dunes. Elder Sabah says it gets very hot out there. Maybe finish your business in Redrock Canyon first.' } },
-    lifts: [[14, 3], [27, 3]], // rope lifts up the canyon wall: a wooden gantry, a rope and a basket that rides up and down
+    lifts: [[14, 3, 'up', 5, 9], [27, 3, 'up', 18, 9]], // rope lifts up the canyon wall: a wooden gantry, a rope and a basket that rides up and down (after the Canyon Cup A rides one up to Redrock Mesa: landing x, y)
     cacti: [[2, 11], [16, 11], [26, 8], [11, 12]],
     buildings: [
       { id: 'cliff1', x: 2, y: 1, w: 4, h: 3, adobe: true, wall: 0xf2d4ac, door: 1, label: 'Cliff House' },
@@ -975,10 +975,10 @@ export const MAPS = {
       { id: 'stadium_r', x: 18, y: 1, w: 8, h: 4, stadium: 'canyon', door: 4, label: 'Canyon Stadium' },
       { id: 'berry_r', x: 3, y: 8, w: 4, h: 3, roof: 0xff7aa0, wall: 0xf0c8a0, door: 1, label: 'Berry Center', heal: true },
     ],
-    signs: [{ x: 13, y: 5, text: 'REDROCK CANYON\nMind the rocks. Mind the lifts. Mind the Dust Devils.' }, { x: 15, y: 4, text: 'ROPE LIFT\nUp to the mesa top. (Closed: the winch is being oiled.)' }],
+    signs: [{ x: 13, y: 5, text: 'REDROCK CANYON\nMind the rocks. Mind the lifts. Mind the Dust Devils.' }, { x: 15, y: 4, text: 'ROPE LIFT\nUp to the mesa top. Step in the basket and hold on to your hat.' }],
     wild: { list: [['scarabold', 34, 37], ['sizzlard', 34, 37], ['fennzap', 34, 37], ['cactortle', 35, 37]], roam: 3, rate: 0.1 },
     npcs: [
-      { id: 'lift_r', x: 13, y: 4, critter: 'scarabold', name: 'Liftkeeper Bo', dir: 's', lines: ['Liftkeeper Bo: These rope lifts haul water and visitors up to the mesa top. Scarabold pulls. I supervise.', 'Liftkeeper Bo: The winch is squeaky today. Come back another day and I\'ll take you up. Probably.'] },
+      { id: 'lift_r', x: 13, y: 4, critter: 'scarabold', name: 'Liftkeeper Bo', dir: 's', story: 'liftkeeper', lines: ['Liftkeeper Bo: These rope lifts haul water and visitors up to the mesa top. Scarabold pulls. I supervise.', 'Liftkeeper Bo: The winch is squeaky today. Come back another day and I\'ll take you up. Probably.'] },
       { id: 'potter_r', x: 10, y: 5, critter: 'cactortle', name: 'Potter Ines', dir: 's', wander: 1, lines: ['Potter Ines: Canyon clay makes the best pots. It\'s red because the whole canyon is one big, slow pot that the sun is still baking.', 'Potter Ines: The Dust Devils bought every shovel in the village last week. What do they think is down there?'] },
       { id: 'kid_r', x: 15, y: 10, critter: 'fennzap', name: 'Canyon Kid Tovi', dir: 'w', wander: 1, lines: ['Canyon Kid Tovi: Shout into the canyon! ...HELLO! ...hello ...ello ...llo. See? The rocks talk back!', 'Canyon Kid Tovi: Fennzap\'s big ears can hear a beetle walking from across the canyon.'] },
       { id: 'elder_r', x: 24, y: 7, critter: 'humpdrop', name: 'Elder Sabah', dir: 'w', lines: ['Elder Sabah: My grandmother\'s grandmother saw the buried city before the sand swallowed it. Golden towers, she said, and a gate shaped like the sun.', 'Elder Sabah: Some things are buried for a reason, little one. Tell that to the Dust Devils.'] },
@@ -1039,6 +1039,45 @@ export const MAPS = {
       { id: 'rasha_c', x: 22, y: 10, critter: 'siroccat', name: 'Dune Warden Rasha', dir: 'e', showFlag: 'cup_sandstorm', hideFlag: 'citymap', shiny: true, lines: ['Dune Warden Rasha: Flint has guarded that door all week. Show him the Sandstorm Cup. And then show him your partner.'] },
       { id: 'surfer_c', x: 8, y: 3, critter: 'fennzap', name: 'Dune Surfer Lio', dir: 's', trainer: { lv: 38, sight: 3, diff: 0.86, intro: 'Dune Surfer Lio: Gnarly dune, huh? Fennzap and I ride it on a tea tray. Let\'s ride a battle!', beat: 'Dune Surfer Lio: Totally wiped out. Sand in my ears. Good one!' } },
       { id: 'sailor_c', x: 19, y: 10, critter: 'humpdrop', name: 'Caravan Hand Ola', dir: 'w', trainer: { lv: 38, sight: 3, diff: 0.86, intro: 'Caravan Hand Ola: The caravan leaves at sunrise, and Humpdrop carries the water. Before that... a battle!', beat: 'Caravan Hand Ola: Humpdrop needs a drink. So do I.' } },
+    ],
+  },
+
+  // ===== after the Canyon Cup: Redrock Mesa, the flat top of the canyon wall, up Liftkeeper Bo's rope lifts (A on a lift rides it; the mesa's
+  // two lifts come back down). A water-tank garden, a long view south, a climber, gust critters and a chest =====
+  mesa: {
+    name: 'Redrock Mesa',
+    music: 'sands',
+    arena: 'canyon',
+    sands: 'canyon',
+    extra: true,
+    border: 'mesa',
+    outer: 0xc8784a,
+    palette: { a: '#d89a6a', b: '#d29262', tall: '#b88a40', path: '#e8b07c', sand: '#e0a070', sand2: '#dc9a6a', water: '#3ab8c0', bank: '#b8784a' },
+    blades: 0xc8a050,
+    tiles: [
+      'RRRRRRRRRRRRRRRRRRRRRRRR',
+      'Rsss""sssssssssRRsssssRR',
+      'Rsss""ssssssssssssss""sR',
+      'RsssssssRRsssssssssss"sR',
+      'Rssssssssssssss""sssssRR',
+      'Rss""ssssssssss""ssssssR',
+      'Rss""sssssRssssssssssssR',
+      'RssssssssssssssssssRsssR',
+      'Rsssss""ssssssssssssssRR',
+      'Rssssssssssssssssssss""R',
+      'RRssssssssRRsssssssssssR',
+      'RRRRRRRRRRRRRRRRRRRRRRRR',
+    ],
+    edges: {},
+    lifts: [[5, 10, 'down', 14, 4], [18, 10, 'down', 27, 4]], // back down to Redrock Canyon (x, y, 'down', landing x, y)
+    cacti: [[2, 7], [21, 4], [12, 9]],
+    chest: { x: 16, y: 2, flag: 'mesa_chest', hat: 'mesaband', berries: 30, hatLine: '...and a Mesa Climber\'s Bandana, sun-faded red, with a little rope knot at the back!' },
+    signs: [{ x: 9, y: 9, text: 'REDROCK MESA\nOn a clear day you can see the Sun Gate from here. On a very clear day, the sea.' }],
+    wild: { list: [['siroccat', 38, 41], ['skimray', 38, 41], ['whirlwhisk', 38, 41], ['fennzap', 38, 41], ['scarabold', 39, 41]], roam: 4, rate: 0.1 },
+    npcs: [
+      { id: 'lina_m', x: 7, y: 5, critter: 'cactortle', name: 'Mesa Gardener Lina', dir: 's', wander: 1, lines: ['Mesa Gardener Lina: Every jug that comes up the rope lift goes into my melons. Up here they get sun from the moment it rises until the moment it sets.', 'Mesa Gardener Lina: Cactortle guards the patch from Fennzaps. It mostly guards it by sleeping on it.'] },
+      { id: 'zuri_m', x: 19, y: 6, critter: 'skimray', name: 'Mesa Climber Zuri', dir: 'w', trainer: { lv: 41, sight: 3, diff: 0.88, intro: 'Mesa Climber Zuri: I climbed up. No rope lift. Skimray says that was silly. Let\'s battle about it!', beat: 'Mesa Climber Zuri: Okay. Next time I\'m taking the lift.' } },
+      { id: 'watch_m', x: 11, y: 2, critter: 'humpdrop', name: 'Lookout Omar', dir: 's', lines: ['Lookout Omar: From up here I can see every dust cloud in the Amber Sands. That one is a caravan. That one is a sandstorm. That one... is Dash, running.', 'Lookout Omar: When the Lark\'s Crown rises over the Singing Dunes, it rises right over there. East. You can\'t miss it.'] },
     ],
   },
 

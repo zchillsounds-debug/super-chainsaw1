@@ -684,6 +684,7 @@ export function storyTalk(S, id, w, a) {
   if (id.startsWith('legend:')) return legend(S, w, id.slice(7));
   if (id === 'stargazer') return stargazer(S, w);
   if (id === 'dtrial') return desertTrial(S, w);
+  if (id === 'liftkeeper') return w.say(F.cup_canyon ? ['Liftkeeper Bo: The winch is oiled, the rope is new, and Scarabold has had its breakfast. The lifts are open!', 'Liftkeeper Bo: Step up to either lift and hop in the basket. Up top is the mesa: melons, a lookout, and a view all the way to the Sun Gate.'] : ['Liftkeeper Bo: These rope lifts haul water and visitors up to the mesa top. Scarabold pulls. I supervise.', 'Liftkeeper Bo: The winch is squeaky today. Win the Canyon Cup and I\'ll have it oiled for the champion. Probably.'], null, 'Liftkeeper Bo');
   if (id === 'singing') return singingTalk(S, w);
   if (id === 'gauntsign') { // the signpost, with this week's theme chalked underneath
     const th = gauntletTheme(gauntletWeek()), sg = getMap('peak').signs.find((q) => q.act === 'gauntsign');

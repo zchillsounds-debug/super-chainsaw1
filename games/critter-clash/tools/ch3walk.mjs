@@ -40,6 +40,9 @@ const steps = [
   ['singing', [0, 5], 'sunbird1 sunbird_wake', 'npc:aurelark_s', true, 'Singing Dunes: the Sun-Bird at its nest'],
   ['singing', [0, 5], 'sunbird1', 'npc:nuri_s', true, 'Singing Dunes: Stargazer Nuri'],
   ['singing', [0, 5], 'sunbird1', 'edge:w', true, 'Singing Dunes: back west to the camp'],
+  ['mesa', [5, 9], '', 'npc:zuri_m', true, 'Redrock Mesa: Climber Zuri from the west lift'],
+  ['mesa', [5, 9], '', 'npc:watch_m', true, 'Redrock Mesa: Lookout Omar'],
+  ['mesa', [18, 9], '', 'npc:lina_m', true, 'Redrock Mesa: Gardener Lina from the east lift'],
 ];
 let bad = 0;
 for (const [map, [fx, fy], fl, target, want, what] of steps) {
