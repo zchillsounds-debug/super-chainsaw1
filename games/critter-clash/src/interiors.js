@@ -1,6 +1,6 @@
 // Adventure interiors: every house, Berry Center, lab and shop in the world can be walked into.
 // A room is a small tile map built on demand from the building it belongs to ('in:<map>:<building id>').
-// Tiles: W wall, C shelf, X machine (arcade cabinet, smoothie blender, lab console), Q bed, D table,
+// Tiles: W wall, p fossil plinth (the museum), C shelf, X machine (arcade cabinet, smoothie blender, lab console), Q bed, D table,
 // O potted plant, K counter (talk across it), Y rug (walkable), H hat stand (Hat Shop). Walking south off the doormat goes back out.
 import { MAPS } from './worldmaps.js';
 import { save } from './save.js';
@@ -153,6 +153,17 @@ const ROOMS = {
     'WO....YYY....OW',
     'WWWWWWW.WWWWWWW',
   ],
+  // the Sunwell Museum: twelve fossil plinths (p), a curator's desk, and a sand-coloured rug
+  museum: [
+    'WWWWWWWWWWWWW',
+    'Wp.p.p.p.p.pW',
+    'W...........W',
+    'W.p.p...p.p.W',
+    'W...........W',
+    'W.p..YYY..p.W',
+    'WO...YYY...OW',
+    'WWWWWW.WWWWWW',
+  ],
   arcade: [
     'WWWWWWWWWWWWW',
     'WXXX.....XXXW',
@@ -194,6 +205,7 @@ const PEOPLE = {
   'dunecamp:tent_w': { npcs: [['cactortle', 'Weaver Tamar\'s Apprentice', ["Weaver's Apprentice: Teal and cream, teal and cream. I've woven eleven tents this year. My Cactortle has woven zero. It keeps eating the thread.", "Weaver's Apprentice: The Dust Devils asked us to weave them a tent. All black. We said no. They bought cheap cloth from the canyon instead."], 's', 4, 2]], wall: '#f4e4c4', rug: '#1fa8b0' },
   'dunecamp:tent_s': { npcs: [['siroccat', 'Stargazer Nuri\'s Sister', ["Stargazer Lila: Nuri counts the stars. I count the sandstorms. Seven this month!", "Stargazer Lila: Old songs say the buried city's gate opens only when the sun stone is whole again. The Dust Devils have been asking about that song a lot."], 's', 4, 2]], wall: '#f6e8cc', rug: '#d8643a' },
   'dunecamp:hq_c': { npcs: [['siroccat', 'Dust Devil Cook', [], 's', 6, 2, 'devilmap']], wall: '#5a3a32', rug: '#ffb040', dark: true }, // the cook gives up the Baron's map (citymap)
+  'oasis:museum_o': { npcs: [['cactortle', 'Curator Petra', [], 's', 6, 2, 'museum']], kind: 'museum', name: 'Sunwell Museum', wall: '#f4e4c4', rug: '#2aa8a0' },
   'oasis:berry_o': { visitor: ['humpdrop', 'Traveller Idris', ['Traveller Idris: Humpdrop stores water in its humps, so it never gets thirsty on the dunes. I wish I had humps.'], 'w', 9, 4], wall: '#fff0dc' },
   'coral:hats_c': { npcs: [['toucharge', 'Shellkeeper Sandy', [], 's', 5, 1, 'hatshop']], kind: 'shop', name: 'Shell Hats', wall: '#dff8f4', rug: '#3ad0c0' },
   'coral:berry_c': { visitor: ['blowfin', 'Puffy Pua', ['Puffy Pua: The smoothies here come with a little paper umbrella. Blowfin always tries to eat it.'], 'w', 9, 4], wall: '#ffe8f0' },
@@ -212,7 +224,11 @@ const PEOPLE = {
   'frostpeak:lodge': { npcs: [['woolt', 'Lodge Keeper Fleece', ['Lodge Keeper Fleece: Come in, come in, out of the snow! The fire is lovely and warm.', 'Lodge Keeper Fleece: Many critters have climbed to the Peak. Only one gets the Crown.', 'Lodge Keeper Fleece: See a blue X in the snow out there? Dig! Ice gems turn up every day. Bring them to me and I\'ll pay in berries.'], 's', 7, 2]], kind: 'lodge', name: 'Mountain Lodge', wall: '#e8d0b0', rug: '#c8443a' },
 };
 
+// the museum's plinths in reading order (back row first, left to right): plinth n shows FOSSILS[n]
+export const fossilAt = (tiles, x, y) => { let n = 0; for (let j = 0; j < tiles.length; j++) for (let i = 0; i < tiles[j].length; i++) { if (j === y && i === x) return n; if (tiles[j][i] === 'p') n++; } return -1; };
+
 const ITEMS = {
+  p: 'A fossil plinth.',
   C: 'A shelf full of books about critters. One is called "So Your Critter Grew Three Sizes".',
   X: 'It hums and blinks. Better not touch anything.',
   Q: 'A comfy bed with a fluffy pillow.',
@@ -284,6 +300,7 @@ export function interiorMap(key) {
     if (t === 'C' && kind === 'forge') text = 'Racks of tongs and hammers. One hammer is labelled "NOT FOR CRITTERS".';
     if (t === 'C' && kind === 'shop') text = 'Hat boxes, stacked to the ceiling. One is labelled "EXTRA FLOPPY".';
     if (t === 'U') { const n = [...row].slice(0, x).filter((c) => c === 'U').length; signs.push({ x, y, text, hide: true, act: 'case:' + CUP_ORDER[n] }); return; }
+    if (t === 'p') { signs.push({ x, y, text: '', hide: true, act: 'fossil:' + fossilAt(tiles, x, y) }); return; }
     signs.push({ x, y, text, hide: true, act: t === 'Q' && kind === 'home' ? 'rest' : t === 'V' ? 'mirror' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
   }));
   if (kind === 'kidroom') signs.push({ x: 2, y: 2, hide: true, text: 'Flo\'s play tent! Inside: a pillow fort, a torch, and a crayon drawing of a firefly holding a giant trophy. It says "ME, ONE DAY".' }); // world.js buildTent

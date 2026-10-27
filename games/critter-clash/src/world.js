@@ -12,7 +12,8 @@ import { save, persist, grantXp, xpNeeded, unlock } from './save.js';
 import { sfx, playMusic } from './audio.js';
 import { typeSpeed } from './settings.js';
 import { rivalFor, MAPS } from './worldmaps.js';
-import { getMap, CUP_ORDER } from './interiors.js';
+import { getMap, CUP_ORDER, fossilAt } from './interiors.js';
+import { FOSSILS } from './fossils.js';
 import { hatRegion, countUp, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor, storyMark } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
@@ -181,10 +182,49 @@ export function rainAt(key, d, hr = d.getHours()) {
   return hash(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${Math.floor(hr / 3)}` + key) % 5 === 0;
 }
 
+// a museum fossil on its plinth (y = the plinth top), as [material key, geometry] pairs merged with the room's furniture
+function fossilParts(shape, x, y, z) {
+  const out = [], put = (k, g, X, Y, Z) => { g.translate(X, Y, Z); g.scale(1.35, 1.35, 1.35); g.translate(x, y, z); out.push([k, g]); }; // (built round the plinth top, then a size up)
+  const sph = (r, sx = 1, sy = 1, sz = 1) => { const g = new THREE.SphereGeometry(r, 12, 8); g.scale(sx, sy, sz); return g; };
+  const bar = (w, h, d, rz = 0, ry = 0) => { const g = new THREE.BoxGeometry(w, h, d); g.rotateZ(rz); g.rotateY(ry); return g; };
+  if (shape === 'shell' || shape === 'coil') { // a spiral standing up: beads shrinking round and in (the coil is a tighter, rounder one)
+    const n = shape === 'coil' ? 14 : 10;
+    for (let k = 0; k < n; k++) { const f = Math.pow(shape === 'coil' ? 0.88 : 0.84, k), a = k * (shape === 'coil' ? 0.62 : 0.8); put(k % 2 ? 'bone2' : 'bone', sph(0.2 * f + 0.03), Math.cos(a) * 0.32 * f, 0.4 + Math.sin(a) * 0.32 * f, 0); }
+  } else if (shape === 'beetle' || shape === 'bug') { // a round shell body, a head, legs (the trilobug has ridges instead)
+    const bug = shape === 'bug';
+    put('bone', sph(0.32, 1, bug ? 0.3 : 0.5, 1.3), 0, 0.12, 0); put('bone2', sph(0.16, 1.3, 0.6, 0.8), 0, 0.1, 0.42);
+    if (bug) for (let k = 0; k < 5; k++) put('bone2', bar(0.6 - Math.abs(k - 2) * 0.08, 0.05, 0.06), 0, 0.2, -0.3 + k * 0.14);
+    else { for (const sd of [-1, 1]) for (let k = 0; k < 3; k++) put('bone2', bar(0.34, 0.05, 0.05, 0, sd * (0.3 - k * 0.3)), sd * 0.38, 0.06, -0.18 + k * 0.18); put('bone2', bar(0.03, 0.04, 0.8), 0, 0.29, -0.05); }
+  } else if (shape === 'wing' || shape === 'fan') { // a fan of bony rays standing on a little foot
+    const n = shape === 'fan' ? 7 : 5, len = shape === 'fan' ? 0.5 : 0.7;
+    put('bone2', bar(0.2, 0.12, 0.2), 0, 0.06, 0);
+    for (let k = 0; k < n; k++) { const a = (k / (n - 1) - 0.5) * (shape === 'fan' ? 2.2 : 1.6); const g = new THREE.BoxGeometry(0.07, len, 0.06); g.translate(0, len / 2, 0); g.rotateZ(a); put(k % 2 ? 'bone2' : 'bone', g, 0, 0.1, 0); }
+    if (shape === 'wing') put('bone', sph(0.42, 1.3, 0.75, 0.12), 0, 0.42, -0.04);
+  } else if (shape === 'tooth') { // a long curved tooth on a stand
+    put('bone2', bar(0.3, 0.12, 0.3), 0, 0.06, 0);
+    const g = new THREE.ConeGeometry(0.14, 0.75, 10); g.rotateZ(0.25); put('bone', g, 0.05, 0.5, 0);
+  } else if (shape === 'spine') { // tail bones in a gently curving row, each with a little spike
+    for (let k = 0; k < 7; k++) { const s = 1 - k * 0.09; put('bone', bar(0.16 * s, 0.16 * s, 0.14 * s), -0.45 + k * 0.15, 0.1 + Math.sin(k * 0.5) * 0.08, 0); const sp = new THREE.ConeGeometry(0.05 * s, 0.18 * s, 6); put('bone2', sp, -0.45 + k * 0.15, 0.25 + Math.sin(k * 0.5) * 0.08, 0); }
+  } else if (shape === 'claw') { // three hooked claws on a knuckle
+    put('bone2', sph(0.16, 1.6, 0.8, 1), 0, 0.12, 0);
+    for (let k = -1; k <= 1; k++) { const g = new THREE.ConeGeometry(0.07, 0.5, 8); g.translate(0, 0.25, 0); g.rotateZ(-0.6 + k * 0.05); g.rotateY(k * 0.5); put('bone', g, k * 0.14, 0.14, 0); }
+  } else if (shape === 'egg') { // a speckled stone egg in a little ring, with cracks
+    put('bone2', new THREE.TorusGeometry(0.2, 0.05, 6, 14).rotateX(Math.PI / 2), 0, 0.04, 0);
+    put('bone', sph(0.26, 1, 1.35, 1), 0, 0.36, 0);
+    for (let k = 0; k < 3; k++) put('bone2', bar(0.04, 0.16, 0.02, 0.6 * (k - 1)), -0.05 + k * 0.06, 0.4 + k * 0.06, 0.25);
+  } else if (shape === 'skull') { // a broad skull with two stubby horns and dark eye holes
+    put('bone', sph(0.3, 1.1, 0.8, 1.1), 0, 0.3, 0); put('bone', bar(0.36, 0.12, 0.34), 0, 0.12, 0.22);
+    for (const sd of [-1, 1]) { const h = new THREE.ConeGeometry(0.07, 0.3, 8); h.rotateZ(-sd * 0.7); put('bone2', h, sd * 0.3, 0.52, 0); put('soot', sph(0.07), sd * 0.12, 0.34, 0.28); }
+  } else if (shape === 'feather') { // the Sun-Bird Feather: a long golden vane on a quill, standing in a stand
+    put('bone2', bar(0.24, 0.1, 0.24), 0, 0.05, 0); put('gold', bar(0.04, 0.95, 0.04, 0.12), 0.02, 0.5, 0); put('gold', sph(0.42, 0.28, 1.05, 0.06).rotateZ(0.12), 0.05, 0.6, 0);
+  }
+  return out;
+}
+
 // maps with a daily dig spot (beach sand, Frostpeak snow, Cinder Town ash) that hasn't been dug up today: the Town Map marks them ⛏
 export function digLeft(maps) {
   const day = new Date().toISOString().slice(0, 10);
-  return Object.keys(maps).filter((k) => { const M = maps[k]; return !M.indoor && (M.arena === 'beach' || (M.snow && k !== 'peak') || k === 'ember' || k === 'ember_isle') && save.adv?.dig?.[k] !== day; });
+  return Object.keys(maps).filter((k) => { const M = maps[k]; return !M.indoor && (M.arena === 'beach' || (M.snow && k !== 'peak') || k === 'ember' || k === 'ember_isle' || (M.sands && !M.cave && save.adv?.flags?.sands_arrive)) && save.adv?.dig?.[k] !== day; });
 }
 
 // one big Alpha wild critter a day, waiting in the tall grass of one visited route (after the Sprout Cup): tougher, worth berries
@@ -3315,15 +3355,26 @@ export class World {
         }
         // door and windows on the south face
         const dx = (b.door + 0.5) * TILE - w / 2, front = d / 2 - 0.25;
-        if (b.lab || b.hatShop) { // a name board over the door
+        if (b.lab || b.hatShop || b.museum) { // a name board over the door
           const ltex = canvasTex(256, 48, (c) => {
-            c.fillStyle = b.hatShop ? '#5a2a8a' : '#2a4a7a'; c.beginPath(); c.roundRect(2, 2, 252, 44, 10); c.fill();
-            c.fillStyle = '#ffffff'; c.font = 'bold 30px Lilita One, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText((b.label || 'LAB').toUpperCase(), 128, 26);
+            c.fillStyle = b.hatShop ? '#5a2a8a' : b.museum ? '#1a6a66' : '#2a4a7a'; c.beginPath(); c.roundRect(2, 2, 252, 44, 10); c.fill();
+            c.fillStyle = '#ffffff'; c.font = 'bold 30px Lilita One, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText((b.museum ? 'MUSEUM' : b.label || 'LAB').toUpperCase(), 128, 26);
           });
           ltex.userData.own = true;
           const lm = new THREE.MeshBasicMaterial({ map: ltex, transparent: true }); lm.userData.own = true;
           const plate = new THREE.Mesh(new THREE.PlaneGeometry(b.hatShop ? 2.2 : 2.6, b.hatShop ? 0.42 : 0.48), lm);
           plate.position.set(dx, wallH - 0.3, d / 2 - 0.17); G.add(plate);
+        }
+        if (b.museum) { // the Sunwell Museum: sandstone columns either side of the door under a little pediment, and a giant bone on the ridge
+          const sand = toon(0xf0dcb0, { rim: 0.3 }), parts = [];
+          for (const sd of [-1, 1]) { const c = new THREE.CylinderGeometry(0.16, 0.18, 1.9, 10); c.translate(dx + sd * 0.78, 0.95, front + 0.35); parts.push(c); const cap = new THREE.BoxGeometry(0.44, 0.12, 0.44); cap.translate(dx + sd * 0.78, 1.95, front + 0.35); parts.push(cap); const ft = new THREE.BoxGeometry(0.44, 0.12, 0.44); ft.translate(dx + sd * 0.78, 0.06, front + 0.35); parts.push(ft); }
+          const lintel = new THREE.BoxGeometry(2.1, 0.16, 0.6); lintel.translate(dx, 2.08, front + 0.3); parts.push(lintel);
+          const ped = new THREE.Shape(); ped.moveTo(-1.1, 0); ped.lineTo(0, 0.55); ped.lineTo(1.1, 0); ped.closePath();
+          const pg = new THREE.ExtrudeGeometry(ped, { depth: 0.5, bevelEnabled: false }); pg.translate(dx, 2.16, front + 0.05); G.add(inked(pg, sand, OL * 0.5)); // (extrusions aren't indexed: kept out of the merge)
+          G.add(inked(mergeGeometries(parts), sand, OL * 0.5)); parts.forEach((g) => g.dispose());
+          const bone = toon(0xf4ead0, { rim: 0.6 }), bg = [], bc = new THREE.CylinderGeometry(0.2, 0.2, 2.2, 10); bc.rotateZ(Math.PI / 2); bg.push(bc);
+          for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const k = new THREE.SphereGeometry(0.3, 12, 8); k.translate(sx * 1.15, 0, sz * 0.22); bg.push(k); }
+          const B = inked(mergeGeometries(bg), bone, OL * 0.5); B.position.set(-w * 0.12, wallH + 1.75, 0); B.rotation.set(-0.35, 0, 0.12); G.add(B); bg.forEach((g) => g.dispose());
         }
         if (b.hatShop) { // a giant top hat perched on the ridge, and a striped awning over the door
           const sk = new THREE.Group(); sk.position.set(-w * 0.18, wallH + 1.25, 0); sk.rotation.x = -0.25; G.add(sk);
@@ -3545,14 +3596,15 @@ export class World {
     this.dig = null;
     const snow = this.M.snow && this.key !== 'peak'; // Frostpeak has one too: an ice gem under the snow
     const lava = this.key === 'ember'; // and Cinder Town: an ember gem in the warm ash
-    if ((this.M.arena !== 'beach' && !snow && !lava && this.key !== 'ember_isle') || this.M.indoor) return; // (Ember Isle digs in its black sand beach)
+    const fossil = !!this.M.sands && !this.M.cave && !!save.adv.flags.sands_arrive; // and the Amber Sands: fossils for the Sunwell Museum (D3)
+    if ((this.M.arena !== 'beach' && !snow && !lava && !fossil && this.key !== 'ember_isle') || this.M.indoor) return; // (Ember Isle digs in its black sand beach)
     const day = new Date().toISOString().slice(0, 10), r = rng(hash(this.key + day));
     if ((save.adv.dig ||= {})[this.key] === day) return;
     const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((d) => d.x + ',' + (d.y + 1)), ...this.itemSpots, ...(this.M.signs || []).map((g) => g.x + ',' + g.y), this.hx + ',' + this.hy]);
     const ok = [];
     const seen = new Set([this.hx + ',' + this.hy]), q = [[this.hx, this.hy]]; // only sand you can walk to, and not tucked behind a building or the trees
     for (let i = 0; i < q.length; i++) for (const [dx, dy] of Object.values(DIRS)) { const nx = q[i][0] + dx, ny = q[i][1] + dy, k = nx + ',' + ny; if (!seen.has(k) && this.walkable(nx, ny)) { seen.add(k); q.push([nx, ny]); } }
-    for (const [x, y] of q) if (this.tile(x, y) === (snow || lava ? '.' : 's') && x > 1 && y > 1 && x < this.W - 2 && y < this.H - 1 && !taken.has(x + ',' + y) && !'hTP'.includes(this.tile(x, y + 1)) && !'hTP'.includes(this.tile(x, y + 2))) ok.push([x, y]);
+    for (const [x, y] of q) if ((fossil ? '.s'.includes(this.tile(x, y)) : this.tile(x, y) === (snow || lava ? '.' : 's')) && x > 1 && y > 1 && x < this.W - 2 && y < this.H - 1 && !taken.has(x + ',' + y) && !'hTP'.includes(this.tile(x, y + 1)) && !'hTP'.includes(this.tile(x, y + 2))) ok.push([x, y]);
     ok.sort((a, b) => a[1] - b[1] || a[0] - b[0]); // the same spot all day, wherever you walked in from
     if (!ok.length) return;
     const [x, y] = ok[Math.floor(r() * ok.length)], [px, pz] = wpos(x, y);
@@ -3562,7 +3614,8 @@ export class World {
     const gem = new THREE.Mesh(new THREE.OctahedronGeometry(snow || lava ? 0.16 : 0.12), toon(snow ? 0xa8eaff : lava ? 0xff6a3a : 0xfff4a0, { rim: 1, emissive: snow ? 0x2a6a90 : lava ? 0x902a10 : 0x806a20 })); gem.position.set(-0.3, 0.22, -0.2); g.add(gem);
     this.group.add(g);
     if (lava) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff6a2a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 }); sm.userData.own = true; const sp = new THREE.Sprite(sm); sp.scale.setScalar(1.3); sp.position.set(0.2, 0.15, 0.2); g.add(sp); }
-    this.dig = { x, y, g, px, pz, snow, lava };
+    if (fossil) { const bn = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.42, 6), toon(0xeedcb4)); bn.rotation.z = 1.2; bn.position.set(-0.1, 0.12, -0.32); g.add(bn); for (const sd of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), toon(0xeedcb4)); e.position.set(-0.1 + sd * 0.2 * Math.cos(1.2), 0.12 + sd * 0.2 * Math.sin(1.2) * 0.3, -0.32); g.add(e); } } // a bone poking out of the heap
+    this.dig = { x, y, g, px, pz, snow, lava, fossil };
   }
   digUp() {
     const D = this.dig; this.dig = null;
@@ -3579,6 +3632,14 @@ export class World {
       persist(); reward(3);
       for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: D.px, y: 0.5, z: D.pz, vx: (Math.random() - 0.5) * 2, vy: 1.5 + Math.random() * 2, vz: (Math.random() - 0.5) * 2, color: 0xa8eaff, size: 0.4, life: 0.9, shape: 'star', grav: 4 });
       return this.say([...lines, 'Another glint will show in the snow tomorrow.']);
+    }
+    if (D.fossil) { // desert sand: a cross Scarabold, or a fossil for the Sunwell Museum (a new one if there's one left to find here; else a fossil chip worth berries)
+      if (roll < 0.15) { persist(); return this.say(['{hero} digs into the hot sand... and the sand digs back! A wild Scarabold was keeping cool down there!'], () => this.startWild('scarabold', Math.max(30, (save.critters[hero]?.level || 30) - 2), null, Math.random() < shinyRate())); }
+      const got = (save.adv.fossils ||= []), left = FOSSILS.filter((f) => !got.includes(f.id) && (!f.gate || this.key === 'sungate')), f = left.length && roll < 0.9 ? left[Math.floor(Math.random() * left.length)] : null;
+      for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: D.px, y: 0.5, z: D.pz, vx: (Math.random() - 0.5) * 2, vy: 1.5 + Math.random() * 2, vz: (Math.random() - 0.5) * 2, color: f ? 0xfff0c8 : 0xe8c87a, size: 0.4, life: 0.9, shape: 'star', grav: 4 });
+      if (!f) { save.berries = (save.berries || 0) + 3; persist(); reward(2); return this.say(['{hero} brushes away the sand... a little fossil chip! Too small for the museum, but Trader Saffi buys them. +3 🍓', 'Another bump will show in the sand tomorrow.']); }
+      got.push(f.id); persist(); reward(3);
+      return this.say([`{hero} brushes away the sand, very carefully... a FOSSIL! 🦴 The ${f.name}!`, f.blurb, `It goes straight to Curator Petra at the Sunwell Museum. (${got.length} of ${FOSSILS.length} on show)`]);
     }
     if (D.lava) { // in the warm ash: a grumpy Kindlekit, or an ember gem (Smith Ash buys them; every third one comes with a Power Snack)
       if (roll < 0.15) { persist(); return this.say(['{hero} digs into the warm ash... and a tail flicks out! A wild Kindlekit was keeping cosy in there!'], () => this.startWild('kindlekit', Math.max(3, (save.critters[hero]?.level || 4) - 1), null, Math.random() < shinyRate())); }
@@ -4059,6 +4120,13 @@ export class World {
         for (const sd of [-1, 1]) { const h = new THREE.TorusGeometry(0.16, 0.04, 6, 12); h.translate(px + sd * 0.44, 1.5, pz - 0.3); add(col, h); }
         if (won) { const gem = new THREE.SphereGeometry(0.12, 8, 6); gem.translate(px, 1.45, pz + 0.08); add('gem' + n % 3, gem); }
       }
+      if (t === 'p') { // a museum plinth: a sandstone block with a name card, and the fossil on top once it's been dug up
+        const n = fossilAt(this.M.tiles, x, y), F0 = FOSSILS[n], got = F0 && (save.adv.fossils || []).includes(F0.id);
+        box('plinth', 1.2, 0.85, 1.0, px, 0.42, pz - 0.25); box('base', 1.32, 0.1, 1.12, px, 0.9, pz - 0.25); box('base', 1.32, 0.12, 1.12, px, 0.06, pz - 0.25);
+        box('card', 0.56, 0.3, 0.04, px, 0.55, pz + 0.27);
+        if (got) for (const [k, g] of fossilParts(F0.shape, px, 0.95, pz - 0.25)) add(k, g);
+        else box('sandbed', 0.8, 0.06, 0.6, px, 0.98, pz - 0.25); // waiting for its fossil
+      }
       if (t === 'H') { // a hat stand wearing one of the shop's hats
         const p = new THREE.CylinderGeometry(0.07, 0.07, 1.3, 8); p.translate(px, 0.65, pz - 0.2); add('wood', p);
         const f = new THREE.CylinderGeometry(0.4, 0.45, 0.1, 12); f.translate(px, 0.05, pz - 0.2); add('wood', f);
@@ -4170,7 +4238,7 @@ export class World {
         const cup = new THREE.CylinderGeometry(0.16, 0.08, 0.3, 10); cup.translate(px - 0.2, 0.95, pz); add('gold', cup);
       }
     }
-    const C = { mirror: 0xd4ecff, hb0: 0xff8ac8, hb1: 0x5ad8c8, hb2: 0xffd84d, ribbon: 0xff4a7a, shine: 0xffffff, tcap: 0xff4a5a, bean: 0xff5ad8, bean2: 0xd83ab8, wall: this.M.wall, wall2: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x8a5a3a), 0.22).getHex(), wains: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x8a5a3a), 0.3).getHex(), wains2: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x6a3a1a), 0.45).getHex(), rail: 0xfff6ea, cap: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x9a6a3a), 0.55).getHex(), stripe: new THREE.Color(this.M.wall).multiplyScalar(0.93).getHex(), trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: this.M.indoor === 'tower' ? 0x2a4a8a : 0xffffff, top: this.M.indoor === 'tower' ? 0xffc93a : 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, ghost: 0x8a7464, ghostc: 0x2a8a5a, aqua: 0x3ab8ff, weed: 0x4cc25a, sandy: 0xf4dc9a, lava: 0xff5a2a, pine: 0x2f7a5a, knit: 0xd86a8a, knit2: 0xfff0d8, flies: 0xe8ff6a, door0: 0xc8845a, door1: 0xd8946a, canvas: 0xf0e4c4, rope: 0xc8a064, leather: 0x8a4a2e, ski0: 0xff5a5a, ski1: 0x5a9aff, rank0: 0xc8803a, rank1: 0xc8d0e0, rank2: 0xffc93a, rank3: 0x7a4ad8, rankoff: 0x9a96a4 };
+    const C = { mirror: 0xd4ecff, hb0: 0xff8ac8, hb1: 0x5ad8c8, hb2: 0xffd84d, ribbon: 0xff4a7a, shine: 0xffffff, tcap: 0xff4a5a, bean: 0xff5ad8, bean2: 0xd83ab8, wall: this.M.wall, wall2: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x8a5a3a), 0.22).getHex(), wains: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x8a5a3a), 0.3).getHex(), wains2: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x6a3a1a), 0.45).getHex(), rail: 0xfff6ea, cap: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x9a6a3a), 0.55).getHex(), stripe: new THREE.Color(this.M.wall).multiplyScalar(0.93).getHex(), trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: this.M.indoor === 'tower' ? 0x2a4a8a : 0xffffff, top: this.M.indoor === 'tower' ? 0xffc93a : 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, ghost: 0x8a7464, ghostc: 0x2a8a5a, aqua: 0x3ab8ff, weed: 0x4cc25a, sandy: 0xf4dc9a, lava: 0xff5a2a, pine: 0x2f7a5a, knit: 0xd86a8a, knit2: 0xfff0d8, flies: 0xe8ff6a, door0: 0xc8845a, door1: 0xd8946a, canvas: 0xf0e4c4, rope: 0xc8a064, leather: 0x8a4a2e, ski0: 0xff5a5a, ski1: 0x5a9aff, rank0: 0xc8803a, rank1: 0xc8d0e0, rank2: 0xffc93a, rank3: 0x7a4ad8, rankoff: 0x9a96a4, bone: 0xeedcb4, bone2: 0xb89464, plinth: 0xd8b888, card: 0xfff6e0, sandbed: 0xe8c890 };
     for (const k in L) {
       if (k === 'pane' || k === 'goo') { const m = new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'goo' ? 0x5aff9a : 0xd8f0ff, transparent: true, opacity: k === 'goo' ? 0.5 : 0.22, depthWrite: false })); if (k === 'goo') m.renderOrder = 2; m.material.userData.own = true; this.group.add(m); L[k].forEach((g) => g.dispose()); continue; }
       const glow = k === 'mirror' || k === 'shine' || k === 'cap0' || k === 'cap1' || k === 'lit' || k === 'fire' || k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1' || k === 'flies' || k === 'aqua' || k === 'lava';

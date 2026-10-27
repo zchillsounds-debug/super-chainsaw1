@@ -11,6 +11,7 @@ import { grown } from './growth.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
+import { FOSSILS } from './fossils.js';
 import { arcadeGame, skyHop, waveRider, reefDive } from './arcade.js';
 import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, seasonKey, gullFish, traderTown } from './world.js';
 
@@ -569,6 +570,20 @@ export function storyTalk(S, id, w, a) {
   if (id === 'shelf') { // the trophy shelf at home fills up as you win
     const F = flags(), won = CUPS.filter((c) => F['cup_' + c.id]);
     return w.say([won.length ? `{hero}'s trophy shelf: ${won.length} of ${CUPS.length} cups. ${won.map((c) => c.name).join(', ')}.` : 'An empty trophy shelf, dusted and waiting. Mom says it\'s for {hero}\'s first cup.', ...(F.crowned ? ['And on top, in pride of place: the Critter Crown. 👑'] : won.length < CUPS.length ? ['There\'s still room for more!'] : [])]);
+  }
+  if (id.startsWith('fossil:')) { // a Sunwell Museum plinth (D3)
+    const f = FOSSILS[+id.slice(7)], got = f && (save.adv.fossils || []).includes(f.id);
+    if (!f) return;
+    return w.say(got ? [`🦴 ${f.name}. Found by {hero}.`, f.blurb] : [`An empty plinth with a little card: "No. ${+id.slice(7) + 1}: ${f.gate ? 'something golden, from the sands by the Sun Gate' : 'still under the sand somewhere'}."`]);
+  }
+  if (id === 'museum') { // Curator Petra: fossils from the desert digs; thank-yous at 4, 8 and all 12
+    const who = 'Curator Petra', got = (save.adv.fossils ||= []).length, N = FOSSILS.length, gifts = [];
+    if (got >= 4 && !F.fossil4) { F.fossil4 = true; save.berries = (save.berries || 0) + 10; gifts.push(`${who}: Four fossils! The museum looks like a museum now. Please, take these for your trouble. +10 🍓`); }
+    if (got >= 8 && !F.fossil8) { F.fossil8 = true; const h = save.adv.hero, rr = grantXp(h, Math.round(xpNeeded(save.critters[h].level) * 0.5)); gifts.push(`${who}: Eight! The school trips are coming back! Here, my famous Fossil Fudge. A real Power Snack! ⭐`, ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : [])); }
+    if (got >= N && !F.fossil12) { F.fossil12 = true; const hats = (save.adv.hats ||= []); if (!hats.includes('fossilhat')) hats.push('fossilhat'); save.berries = (save.berries || 0) + 20; gifts.push(`${who}: Every plinth full. All ${N}. In forty years I never... oh, I need to sit down.`, `${who}: Take my old field hat. It has dug up more fossils than anyone alive. Well. Than anyone except YOU. 🎩 (☰ → 🎩 Hats) +20 🍓`); }
+    if (gifts.length) { persist(); reward(3); return w.say(gifts, null, who); }
+    if (!got) return w.say([`${who}: Welcome to the Sunwell Museum! Twelve plinths, and... no fossils. The sand took them all back, a thousand years ago.`, `${who}: But the desert gives things back too. See a heap of sand with a bone poking out, on the dunes or in the canyon? Face it and press A, and dig!`, `${who}: One heap a day on every desert map. Bring me what you find. Well, you don't even need to bring it. I'll come and get it. I'm VERY fast for a Cactortle.`], null, who);
+    return w.say([got >= N ? `${who}: All ${N} fossils, on show for everyone. People come all the way from Cinder Town now. The Sand-Rail has never been so busy!` : `${who}: ${got} of ${N} fossils on show! ${got >= 8 ? 'Nearly there.' : got >= 4 ? 'More digging, more museum!' : 'A fine start.'} Keep an eye out for heaps of sand with a bone in them.`, ...(got < N && !(save.adv.fossils || []).includes('sunfeather') ? [`${who}: The old songs mention something golden, buried by the Sun Gate. If you dig there, dig gently.`] : [])], null, who);
   }
   if (id.startsWith('case:')) { // a lobby trophy case
     const cup = cupById(id.slice(5));

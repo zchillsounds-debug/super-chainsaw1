@@ -1518,6 +1518,7 @@ export const SHOP_HATS = [
   { id: 'diverhelm', name: 'Diving Helm', kind: 'helm', col: 0xd8a03a, band: 0x3ac0e8, price: 0, gift: true, extra: true }, // the captain's chest in the Sunken Wreck (Snorkeller Pia dives you down, after Morra's Amends)
   { id: 'snorkelmask', name: 'Dive Goggles', kind: 'aviator', col: 0x3ac0e8, band: 0xffd84d, price: 0, gift: true, extra: true }, // REEF DIVE in the Sunken Wreck: a dive of 250 or more
   { id: 'suncrown', name: 'Sun Crown', kind: 'crown', col: 0xf0b030, band: 0xd8643a, price: 0, gift: true, extra: true }, // the treasure of the Buried City's Sun Hall (Chapter 3)
+  { id: 'fossilhat', name: 'Fossil Ranger Hat', kind: 'ranger', col: 0xe2d2a8, band: 0x8a5a2a, price: 0, gift: true, extra: true }, // Curator Petra at the Sunwell Museum: every fossil dug up (Chapter 3, D3)
   { id: 'sunseeker', name: "Sun-Seeker's Hat", kind: 'wide', col: 0xe6d2a0, band: 0xc8502e, price: 0, gift: true, extra: true }, // the chest in the Buried City's dark Starless Vault (Chapter 3, D3)
   { id: 'halo', name: 'Halo Ring', kind: 'halo', col: 0xffe27a, band: 0xfff8d0, price: 0, gift: true, extra: true }, // the chest on Rainbow Reach, the cloud islet above Cloudtop (Kite Glider)
   { id: 'rivalband', name: "Dash's Headband", kind: 'band', col: 0xe8443a, band: 0xffffff, price: 0, gift: true, isle: true }, // the Rival Showdown on Starfall Atoll
