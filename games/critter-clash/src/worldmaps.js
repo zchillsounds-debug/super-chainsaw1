@@ -851,7 +851,7 @@ export const MAPS = {
   oasis: {
     name: 'Sunwell Oasis',
     music: 'isles',
-    arena: 'beach',
+    arena: 'canyon',
     sands: 'oasis',
     extra: true,
     outer: 0xe0b878,
@@ -901,7 +901,7 @@ export const MAPS = {
   duneroad: {
     name: 'Dune Road',
     music: 'isles',
-    arena: 'beach',
+    arena: 'canyon',
     sands: 'dunes',
     extra: true,
     border: 'mesa',

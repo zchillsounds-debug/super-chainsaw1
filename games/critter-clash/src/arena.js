@@ -15,6 +15,14 @@ export const ARENAS = {
     hill: 0x6fbf55, trunk: 0x8a5a3a, leaves: [0x47b04a, 0x5cc85a, 0x3a9a48], scenery: 'trees', cloud: 0xffffff, cloudShade: 0x5a6a90, sunI: 2.4,
     drift: 'seeds',
   },
+  canyon: { // Chapter 3: the Amber Sands' red-rock canyon (wild fights out on the dunes use its open field; no hazard yet, so not in Quick Battle)
+    name: 'Redrock Canyon Arena',
+    skyTop: 0x3a7ae0, skyHorizon: 0xffd8a0, sun: 0xfff0d0, sunDir: [0.5, 0.75, -0.4],
+    hemiSky: 0xffe8c8, hemiGround: 0xa8704a, fieldA: '#e8b878', fieldB: '#ddac6c', line: '#fff4e0', floor: 'sand',
+    wallA: 0xd8643a, wallB: 0xfff0d8, ground: 0xe8b878, fog: 0xffd8a8,
+    accent: 0xffc040, seat: [0xd8643a, 0x2ab0a8, 0xffc040, 0xfff0d8],
+    hill: 0xd89a5a, trunk: 0x4a9a4a, leaves: [0xc8704a, 0xb8603a, 0xd8845a], scenery: 'mesas', cloud: 0xfff4e8, cloudShade: 0xb08060, sunI: 2.5,
+  },
   beach: {
     name: 'Seashell Bay Arena',
     skyTop: 0x4a6ad8, skyHorizon: 0xffc9a0, sun: 0xffe0b8, sunDir: [0.6, 0.45, -0.5],
@@ -723,6 +731,20 @@ export class Arena {
         g.rotateY(rand() * 6);
         g.translate(Math.cos(a) * r, 0.5, Math.sin(a) * r);
         tops[i % 3].push(g);
+      }
+    }
+    else if (A.scenery === 'mesas') {
+      // flat-topped sandstone buttes in three shades out on the dunes, and saguaro cacti (the trunk colour) nearer the field
+      for (let i = 0; i < 26; i++) {
+        const a = rand() * Math.PI * 2, r = 40 + rand() * 60, w = 3 + rand() * 6, h = 4 + rand() * 12;
+        const g = new THREE.CylinderGeometry(w, w * 1.18, h, 7); g.rotateY(rand() * 6); g.translate(Math.cos(a) * r, h / 2 - 0.2, Math.sin(a) * r);
+        tops[i % 3].push(g);
+        if (rand() < 0.5) { const c = new THREE.CylinderGeometry(w * 0.55, w * 0.7, h * 0.35, 6); c.translate(Math.cos(a) * r + w * 0.5, h + h * 0.17 - 0.3, Math.sin(a) * r); tops[(i + 1) % 3].push(c); } // a stacked cap
+      }
+      for (let i = 0; i < 18; i++) {
+        const a = rand() * Math.PI * 2, r = 30 + rand() * 24, sc = 1.2 + rand() * 1.2, x = Math.cos(a) * r, z = Math.sin(a) * r;
+        const t = new THREE.CapsuleGeometry(0.4 * sc, 2.6 * sc, 3, 8); t.translate(x, 1.5 * sc, z); trunks.push(t);
+        for (const sd of [-1, 1]) if (rand() < 0.7) { const up = (0.9 + rand() * 0.6) * sc, ay = (1 + rand() * 0.8) * sc; const o = new THREE.CapsuleGeometry(0.26 * sc, 0.5 * sc, 3, 6); o.rotateZ(Math.PI / 2); o.translate(x + sd * 0.6 * sc, ay, z); trunks.push(o); const u = new THREE.CapsuleGeometry(0.26 * sc, up, 3, 6); u.translate(x + sd * 0.95 * sc, ay + up / 2, z); trunks.push(u); }
       }
     }
     else if (A.scenery === 'mushrooms') {
