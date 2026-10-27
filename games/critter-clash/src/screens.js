@@ -1706,9 +1706,10 @@ export class Screens {
     this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit, berries: info.berries, shiny: info.shiny, arena, rain };
     this.leaveWorld();
     this.mode = 'vs';
-    g.startBattle(h, info.foe, {
+    g.startBattle(h, info.alpha ? { ...info.foe, size: Math.min(1.75, (info.foe.size || 1) * 1.32) } : info.foe, { // the day's Alpha is big in its fight too
       cpuLevel: info.kind === 'wild' ? info.lv : storyLevel(info.lv, lv), playerLevel: lv, difficulty: info.diff ?? 0.3, arena,
       rounds: info.kind === 'wild' ? 1 : 2, trainer: info.trainer || null, stageName: place,
+      heroHat: save.adv.hat || null, cpuTitle: info.alpha ? info.name : null, // the hero keeps its Adventure hat on; the day's Alpha is named on the HUD
       stageSub: info.kind === 'wild' ? `${info.name} appeared!` : info.kind === 'story' ? 'Story battle' : `${info.name} wants to battle!`,
     });
     g.arena.setOpen(true); // out in the wild: no stadium, just the meadow

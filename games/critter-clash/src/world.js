@@ -5379,7 +5379,7 @@ export class World {
       const al = a.alpha, foe = withGear(byId(id), lv); countUp('wild'); sfx.warn?.(); buzz('medium'); this.bubble(a, '💥');
       const f = document.createElement('div'); f.className = 'wd-flash'; this.S.root.appendChild(f);
       save.adv.snackDue = al.flag; // paid out on the next storyIntro after the win
-      return setTimeout(() => this.S.worldFight({ foe, lv, kind: 'wild', name: `Alpha ${foe.name}`, diff: Math.min(0.85, 0.3 + lv * 0.03), flag: al.flag, berries: 3, note: `💥 You beat the Alpha ${foe.name}! +3 🍓 and a Power Snack` }), 900);
+      return setTimeout(() => this.S.worldFight({ foe, lv, kind: 'wild', alpha: true, name: `Alpha ${foe.name}`, diff: Math.min(0.85, 0.3 + lv * 0.03), flag: al.flag, berries: 3, note: `💥 You beat the Alpha ${foe.name}! +3 🍓 and a Power Snack` }), 900);
     }
     countUp('wild');
     if (this.phase === 'night' && (id === 'hootsy' || id === 'squeakwing')) countUp('owl'); // a night owl met after dark (Records)

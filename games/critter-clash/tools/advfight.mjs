@@ -16,7 +16,8 @@ await pg.evaluate(([map]) => {
   __game.screens.adventure(); __sim(0.5);
 }, [map]);
 if (pre) await pg.evaluate(pre);
-await pg.evaluate(([id, lv]) => __game.screens.worldObj.startWild(id, +lv), [id, lv]);
+// 'alpha:<id>' starts the day's-Alpha fight the way the world does (big, named on the HUD)
+await pg.evaluate(([id, lv]) => { if (!id.startsWith('alpha:')) return __game.screens.worldObj.startWild(id, +lv); const d = __critters.find((c) => c.id === id.slice(6)); __game.screens.worldFight({ foe: d, lv: +lv, kind: 'wild', alpha: true, name: 'Alpha ' + d.name, diff: 0.5 }); }, [id, lv]);
 await pg.waitForFunction(() => __game.battle, null, { timeout: 30000 });
 await pg.evaluate(() => __sim(1.2)); await pg.waitForTimeout(800);
 await pg.screenshot({ path: `tools/out/${prefix}-a.png` });

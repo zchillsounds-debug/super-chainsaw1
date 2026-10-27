@@ -2,7 +2,7 @@
 import { buzz } from './haptics.js';
 import * as THREE from 'three';
 import { Fighter, SPECIALS } from './fighter.js';
-import { roleHat } from './critters.js';
+import { roleHat, shopHat } from './critters.js';
 import { Training } from './training.js';
 import { CpuBrain } from './ai.js';
 import { TYPES, typeMult, MODS } from './data.js';
@@ -39,8 +39,8 @@ const ROUND_TIME = 60;
 const INTRO_FIRST = 4.2, INTRO_FOCUS = 1.6; // first-round intro: rival close-up, then ours, then wide
 
 export class Battle {
-  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, cpuHp = 1, training = false, hazards = false, stageSub = '', stageName = '' } = {}) {
-    this.stageSub = stageSub; this.stageName = stageName;
+  constructor(game, pDef, cDef, { cpuLevel = 1, difficulty = 0.5, rounds = 2, playerLevel = 1, onEnd, trainer = null, mods = [], playerHp = 1, cpuHp = 1, training = false, hazards = false, stageSub = '', stageName = '', heroHat = null, cpuTitle = null } = {}) {
+    this.stageSub = stageSub; this.stageName = stageName; this.cpuTitle = cpuTitle;
     this.trainHazards = training && hazards; // Sparring Setup can switch hazards on to practise them
     this.game = game;
     this.scene = game.scene;
@@ -61,6 +61,12 @@ export class Battle {
     this.fighters.push(new Fighter(this, pDef, { level: playerLevel, side: 0 }));
     this.fighters.push(new Fighter(this, cDef, { level: cpuLevel, cpu: true, side: 1 }));
     if (trainer?.name) roleHat(this.fighters[1].critter, trainer.name); // a route Hiker keeps their hat on in the fight
+    if (heroHat) { const P = this.fighters[0].critter; if (shopHat(P, heroHat) && P.gearCrown) P.gearCrown.visible = false; } // Adventure: the hero wears its chosen hat
+    if (cpuTitle) { // the day's Alpha: a red ring at its feet, like in the tall grass
+      const A = this.fighters[1]; A.alpha = true;
+      A.alphaRing = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.1, 32), new THREE.MeshBasicMaterial({ color: 0xff4a2a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.85, side: THREE.DoubleSide }));
+      A.alphaRing.rotation.x = -Math.PI / 2; A.alphaRing.position.y = 0.05; A.root.add(A.alphaRing);
+    }
     // best friends (5 hearts in Critter Camp) start the match with a head start on their super
     this.bestFriend = !training && (save.critters[pDef.id]?.pets || 0) >= 20;
     if (this.bestFriend) this.fighters[0].superM = 25;
@@ -1489,7 +1495,7 @@ export class Battle {
     if (this.phase === 'intro') {
       if (this.round === 1) {
         this.introFocus = this.phaseT < INTRO_FOCUS ? c : this.phaseT < INTRO_FOCUS * 2 ? p : null;
-        if (this.introSaid === 0 && this.phaseT > 0.15) { this.introSaid = 1; sayLine(c, 'intro'); this.hud.nameCard(c, this.trainer, / appeared!$/.test(this.stageSub) ? (this.stageSub.startsWith('✨') ? 'Shiny wild' : 'Wild') : null); }
+        if (this.introSaid === 0 && this.phaseT > 0.15) { this.introSaid = 1; sayLine(c, 'intro'); this.hud.nameCard(c, this.trainer, / appeared!$/.test(this.stageSub) ? (this.cpuTitle ? '💥 The Alpha' : this.stageSub.startsWith('✨') ? 'Shiny wild' : 'Wild') : null); }
         if (this.introSaid === 1 && this.phaseT > INTRO_FOCUS + 0.15) { this.introSaid = 2; sayLine(p, 'intro'); this.hud.nameCard(p, null); }
       }
       if (this.phaseT > (this.round === 1 ? INTRO_FIRST : 0.9)) { this.introFocus = null; this.phase = 'countdown'; this.phaseT = 0; this.hud.countdown(); p.setState('idle'); c.setState('idle'); }

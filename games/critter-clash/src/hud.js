@@ -56,7 +56,7 @@ export class Hud {
     b.fighters.forEach((f, i) => {
       const B = this.bars[i];
       B.img.src = this.game.portrait(f.def);
-      B.nm.textContent = i === 1 && b.trainer ? `${b.trainer.name}'s ${f.def.name}` : f.def.name;
+      B.nm.textContent = i === 1 && b.trainer ? `${b.trainer.name}'s ${f.def.name}` : i === 1 && b.cpuTitle || f.def.name;
       B.lv.textContent = 'Lv' + f.level + (i === 0 && b.bestFriend ? ' 💗' : '');
       B.lv.title = i === 0 && b.bestFriend ? 'Best friends: starts with super meter' : '';
       B.chip.textContent = TYPES[f.type].name;

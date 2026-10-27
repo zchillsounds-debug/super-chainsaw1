@@ -1212,6 +1212,11 @@ export class Fighter {
       P.lean = 0.5; P.head = 0.5; P.sy = 0.85; P.ear = 1.5; P.armLz = P.armRz = -0.1;
       this.critter.emote('closed', 'wobbly', 0.2);
     }
+    if (this.alphaRing) this.alphaRing.material.opacity = this.alive ? 0.6 + Math.sin(this.battle.clock * 5) * 0.25 : 0;
+    if (this.alpha && this.alive && this.root.visible && Math.random() < dt * 16) { // the day's Alpha keeps its red aura in the fight: embers rising off it
+      const a = Math.random() * 6.28, r = 0.6 * (this.def.size || 1);
+      this.battle.fx.spawn({ x: this.x + Math.cos(a) * r, y: this.y + 0.2 + Math.random() * 0.6, z: this.z + Math.sin(a) * r, vy: 1.4 + Math.random(), color: Math.random() < 0.6 ? 0xff4a2a : 0xff9a3a, size: 0.65, life: 0.8, shape: 'glow', alpha: 0.75, grow: -0.6 });
+    }
     this.critter.update(dt);
   }
 
