@@ -13,7 +13,7 @@ import { sfx, playMusic } from './audio.js';
 import { typeSpeed } from './settings.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap, CUP_ORDER } from './interiors.js';
-import { countUp, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor, storyMark } from './story.js';
+import { hatRegion, countUp, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor, storyMark } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
 import { stargaze, tonightConst, BOTTLE_NOTES, CONSTELLATIONS } from './stars.js';
@@ -164,7 +164,7 @@ export function heroDef() {
 }
 
 // weather: the grassy outdoor maps get the same few rainy 3-hour slots for everyone, picked from the date
-export const canRain = (M) => !M.indoor && !M.mood && !M.city && !M.snow && !M.lava && M.border !== 'cloud';
+export const canRain = (M) => !M.indoor && !M.mood && !M.city && !M.snow && !M.lava && M.border !== 'cloud' && !M.sands; // (the Amber Sands get sandstorms instead, not rain)
 // a third of the 3-hour blocks turn any showers in them into thunderstorms
 // the world's hour: the real clock, moved on by a nap in the hero's bed (until the real date changes)
 export function worldHour(d = new Date()) { const S = save.adv?.shift, h = d.getHours(); return S && S.day === d.toISOString().slice(0, 10) ? (h + S.h) % 24 : h; }
@@ -333,6 +333,8 @@ export class World {
       if ('TP~#RhmvlWCXQDOKHUucFAb'.includes(t) || (t === 'B' && shut)) this.solid.add(tx + ',' + ty);
     }
     for (const s of M.signs || []) this.solid.add(s.x + ',' + s.y);
+    if (M.train && !M.indoor) for (let x = M.train.from; x <= M.train.to; x++) this.solid.add(x + ',' + M.train.y); // the Sand-Rail's track (set before props and gift boxes are placed)
+    for (const [x, y] of [...(M.bazaar || []), ...(M.cacti || []), ...(M.well ? [M.well] : [])]) this.solid.add(x + ',' + y);
     this.buildGround(rand);
     this.buildTrees(rand);
     this.buildGrass(rand);
@@ -342,6 +344,7 @@ export class World {
     this.buildFish();
     this.buildGulls();
     this.buildFerry();
+    this.buildTrain();
     this.buildReef(rand);
     this.buildWindmills();
     this.buildBigVolcano();
@@ -356,6 +359,9 @@ export class World {
     this.buildLavaGlow();
     this.buildCart();
     this.buildMarket();
+    this.buildBazaar();
+    this.buildWell();
+    this.buildCacti();
     this.buildDance();
     this.buildIceLanterns();
     this.buildBottle();
@@ -497,7 +503,8 @@ export class World {
           const g = (dx, dy) => { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= W || Y >= H) return false; const k = this.tile(X, Y); return !'sP~=RlvhB'.includes(k) || (k === 'h' && !'sP'.includes(under(X, Y))); }, rr = 10;
           c.fillStyle = C.sand ? ((x + y) % 2 ? C.sand : C.sand2 || C.sand) : this.phase === 'night' ? ((x + y) % 2 ? '#eeeadc' : '#ebe6d6') : (x + y) % 2 ? '#f4dc9a' : '#f1d894'; /* island maps bring their own sand (coral pink, black volcanic) */ /* moonlit sand reads silver, not mud */ c.beginPath(); c.roundRect(x * P, y * P, P, P, [g(-1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, -1) ? rr : 0, g(1, 0) && g(0, 1) ? rr : 0, g(-1, 0) && g(0, 1) ? rr : 0]); c.fill(); for (let k = 0; k < 6; k++) { c.fillStyle = rand() < 0.5 ? 'rgba(190,140,70,0.35)' : 'rgba(255,255,235,0.6)'; c.fillRect(x * P + rand() * P, y * P + rand() * P, 2, 2); }
           if (rand() < 0.22) { c.strokeStyle = 'rgba(190,140,70,0.24)'; c.lineWidth = 1.2; const ry = y * P + 6 + rand() * (P - 12), x0 = x * P + rand() * 10, x1 = x * P + P - rand() * 10; c.beginPath(); c.moveTo(x0, ry); c.quadraticCurveTo((x0 + x1) / 2, ry - 3 - rand() * 3, x1, ry + rand() * 2 - 1); c.stroke(); } // wind ripples
-          if (t === 's' && rand() < 0.07) { // a little seashell: a fan with ribs, pink, cream or lilac
+          if (t === 's' && this.M.sands && rand() < 0.09) { const sx = x * P + 7 + rand() * (P - 14), sy = y * P + 7 + rand() * (P - 14); c.fillStyle = ['#c8a070', '#b88a5a', '#d8b888'][Math.floor(rand() * 3)]; c.beginPath(); c.ellipse(sx, sy, 3 + rand() * 2, 2 + rand() * 1.5, rand() * 3, 0, 7); c.fill(); } // desert pebbles
+          else if (t === 's' && rand() < 0.07) { // a little seashell: a fan with ribs, pink, cream or lilac
             const sx = x * P + 7 + rand() * (P - 14), sy = y * P + 7 + rand() * (P - 14), r = 4 + rand() * 2.5, a = rand() * Math.PI * 2;
             c.save(); c.translate(sx, sy); c.rotate(a); c.fillStyle = ['#ffc8d4', '#fff4e0', '#e0c8ff', '#ffd8a8'][Math.floor(rand() * 4)];
             c.beginPath(); c.moveTo(0, r * 0.6); c.arc(0, 0, r, Math.PI * 1.05, Math.PI * 1.95); c.closePath(); c.fill();
@@ -586,7 +593,7 @@ export class World {
       }
       // starfish and shells washed up on the sand (their own dice, so nothing else on the map moves)
       const br = rng(hash(this.key + ':beach'));
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === 's' && br() < 0.1) {
+      if (!this.M.sands) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.tile(x, y) === 's' && br() < 0.1) {
         const px = x * P + 6 + br() * 20, py = y * P + 6 + br() * 20;
         c.save(); c.translate(px, py); c.rotate(br() * 6); c.scale(1.3, 1.3);
         if (br() < 0.5) { c.fillStyle = ['#ff7a5a', '#ff9a4a', '#ff6a8a'][Math.floor(br() * 3)]; c.beginPath(); for (let k = 0; k < 10; k++) { const r = k % 2 ? 2.5 : 6.5; c.lineTo(Math.cos(k * Math.PI / 5) * r, Math.sin(k * Math.PI / 5) * r); } c.closePath(); c.fill(); }
@@ -791,7 +798,7 @@ export class World {
     const mid = this.g.quality === 'med' || this.g.quality === 'low', woody = (x, y) => x < 0 || y < 0 || x >= this.W || y >= this.H || this.tile(x, y) === 'T';
     const deep = (x, y) => { for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!woody(x + i, y + j)) return false; return true; }; // a tree with trees all round it: only its top shows
     // autumn on the green maps: about two trees in five turn orange, gold or red (picked by position, so the woods keep their shape)
-    const M = this.M, green = !M.indoor && !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && !M.isle && M.border !== 'cloud' && !M.fireflies, falls = [[], [], [], []];
+    const M = this.M, green = !M.indoor && !M.trees && !M.snow && !M.lava && this.key !== 'seashell' && !M.isle && !M.sands && M.border !== 'cloud' && !M.fireflies, falls = [[], [], [], []];
     // spring (20 Mar-Apr) uses the same groves: blossom trees in pink, pale pink and white, with fresh green ones in between
     const bloom = green && isSpring(), fall = green && !bloom && isAutumn(), early = green && !bloom && !fall && isEarlyAutumn(); this.blossom = bloom;
     // groves share a hue (a 3x3-tile patch picks orange, gold or red), so the woods turn in drifts rather than a row of sweets; some trees are only just turning (yellow-green)
@@ -1121,7 +1128,7 @@ export class World {
   // seagulls wheel over the beach maps, wings flapping, shadows on the sand
   buildGulls() {
     this.gulls = [];
-    if (this.M.arena !== 'beach' || this.M.indoor || this.M.underwater || this.phase === 'night') return; // gulls roost at night
+    if (this.M.arena !== 'beach' || this.M.sands || this.M.indoor || this.M.underwater || this.phase === 'night') return; // gulls roost at night (and stay by the sea)
     const W = toon(0xffffff, { rim: 0.6 });
     for (let k = 0; k < 3; k++) {
       const g = new THREE.Group();
@@ -1166,6 +1173,109 @@ export class World {
     g.scale.setScalar(0.78);
     this.group.add(g);
     this.ferry = { g, flag, t: Math.random() * 6 };
+  }
+
+  // Chapter 3: the Sand-Rail, a little sand-coloured steam train on a track along the south edge (Cinder Town and the Amber Sands)
+  buildTrain() {
+    this.train = null;
+    const T = this.M.train;
+    if (!T || this.M.indoor) return;
+    const g = new THREE.Group(), parts = (list, col, o = {}) => { const m = inked(mergeGeometries(list), toon(col, { rim: 0.5, ...o }), OL * 0.5); list.forEach((x) => x.dispose()); m.castShadow = true; g.add(m); return m; };
+    const [tx0, tz] = wpos(T.from, T.y), [tx1] = wpos(T.to, T.y), rails = [], ties = [];
+    for (const sd of [-0.45, 0.45]) { const r = new THREE.BoxGeometry(tx1 - tx0 + TILE, 0.08, 0.1); r.translate((tx0 + tx1) / 2, 0.06, tz + sd); rails.push(r); }
+    for (let x = tx0 - TILE / 2 + 0.3; x < tx1 + TILE / 2; x += 0.75) { const t = new THREE.BoxGeometry(0.28, 0.06, 1.3); t.translate(x, 0.03, tz); ties.push(t); }
+    { const m = new THREE.Mesh(mergeGeometries(rails), toon(0x8a8a9a, { rim: 0.6 })); rails.forEach((x) => x.dispose()); this.group.add(m); }
+    { const m = new THREE.Mesh(mergeGeometries(ties), toon(0x7a5434)); ties.forEach((x) => x.dispose()); m.receiveShadow = true; this.group.add(m); }
+    // the engine (front to the east, +x): a round boiler, a tall funnel, a cab with a sun-shade roof, a brass bell and a red cowcatcher
+    const body = [], trim = [], brass = [], dark = [], red = [], cream = [], teal = [], terra = [];
+    { const b = new THREE.CylinderGeometry(0.62, 0.62, 2.6, 16); b.rotateZ(Math.PI / 2); b.translate(1.0, 1.05, 0); body.push(b); }
+    { const f = new THREE.CircleGeometry(0.62, 16); f.rotateY(Math.PI / 2); f.translate(2.31, 1.05, 0); dark.push(f); }
+    { const l = new THREE.SphereGeometry(0.16, 10, 8); l.translate(2.32, 1.3, 0); brass.push(l); }
+    { const c = new THREE.CylinderGeometry(0.2, 0.32, 0.9, 12); c.translate(1.7, 1.95, 0); dark.push(c); const top = new THREE.CylinderGeometry(0.4, 0.22, 0.25, 12); top.translate(1.7, 2.45, 0); dark.push(top); }
+    { const d = new THREE.SphereGeometry(0.26, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2); d.translate(0.8, 1.62, 0); brass.push(d); }
+    for (const x of [0.2, 1.0, 1.8]) { const band = new THREE.CylinderGeometry(0.64, 0.64, 0.08, 16); band.rotateZ(Math.PI / 2); band.translate(x, 1.05, 0); brass.push(band); }
+    { const cab = new THREE.BoxGeometry(1.3, 1.25, 1.35); cab.translate(-0.75, 1.2, 0); body.push(cab); const roof = new THREE.BoxGeometry(1.6, 0.12, 1.6); roof.translate(-0.75, 1.9, 0); teal.push(roof); }
+    for (const sd of [-1, 1]) { const w = new THREE.PlaneGeometry(0.6, 0.5); w.rotateY(sd > 0 ? 0 : Math.PI); w.translate(-0.7, 1.45, sd * 0.68); dark.push(w); }
+    { const base = new THREE.BoxGeometry(3.6, 0.3, 1.2); base.translate(0.4, 0.45, 0); dark.push(base); }
+    { const cc = new THREE.ConeGeometry(0.62, 0.7, 4); cc.rotateZ(-Math.PI / 2); cc.rotateX(Math.PI / 4); cc.scale(0.7, 0.6, 1); cc.translate(2.45, 0.42, 0); red.push(cc); }
+    const wheel = (x, r, list) => { for (const sd of [-0.62, 0.62]) { const w = new THREE.CylinderGeometry(r, r, 0.12, 14); w.rotateX(Math.PI / 2); w.translate(x, r + 0.04, sd); list.push(w); } };
+    for (const x of [-0.6, 0.5, 1.5]) wheel(x, x > 0 ? 0.36 : 0.32, red);
+    { const rod = new THREE.BoxGeometry(2.2, 0.06, 0.04); rod.translate(0.45, 0.42, 0.7); brass.push(rod); }
+    // two open carriages with striped sun awnings (terracotta and teal), cream sides and benches
+    [[-2.95, terra], [-5.35, teal]].forEach(([cx, aw]) => {
+      { const fl = new THREE.BoxGeometry(2.1, 0.22, 1.3); fl.translate(cx, 0.5, 0); dark.push(fl); }
+      for (const sd of [-1, 1]) { const w = new THREE.BoxGeometry(2.1, 0.45, 0.08); w.translate(cx, 0.83, sd * 0.62); cream.push(w); }
+      for (const ex of [-1, 1]) { const w = new THREE.BoxGeometry(0.08, 0.45, 1.3); w.translate(cx + ex * 1.03, 0.83, 0); cream.push(w); }
+      for (const px of [-0.95, 0.95]) for (const sd of [-0.58, 0.58]) { const p = new THREE.CylinderGeometry(0.04, 0.04, 1.0, 5); p.translate(cx + px, 1.5, sd); brass.push(p); }
+      for (let k = 0; k < 4; k++) { const st = new THREE.BoxGeometry(2.2 / 4, 0.08, 1.5); st.translate(cx - 0.825 + k * 0.55, 2.02, 0); (k % 2 ? cream : aw).push(st); }
+      { const b = new THREE.BoxGeometry(0.3, 0.3, 1.1); b.translate(cx, 0.75, 0); trim.push(b); }
+      wheel(cx - 0.65, 0.28, dark); wheel(cx + 0.65, 0.28, dark);
+    });
+    parts(body, 0xe8b85a); parts(trim, 0x9a6a3a); parts(brass, 0xe8c040, { rim: 0.8 }); parts(dark, 0x3a2e2a); parts(red, 0xd8463a); parts(cream, 0xfaf0dc); parts(teal, 0x2ab0a8); parts(terra, 0xd8643a);
+    const [gx] = wpos(T.x, T.y); g.position.set(gx + 4.2, 0.08, tz);
+    this.group.add(g);
+    this.train = { g, x: g.position.x + 1.7, z: tz, t: Math.random() * 3 };
+  }
+
+  // Chapter 3: Sunwell Oasis's bazaar: striped awnings over crates of dates, painted pots and rolled rugs
+  buildBazaar() {
+    if (!this.M.bazaar || this.M.indoor) return;
+    const GOODS = { dates: [0xd8643a, 0x8a4a2a], pots: [0x2ab0a8, 0xd8643a], rugs: [0xc83a5a, 0x3a6ad8] };
+    for (const [x, y, kind] of this.M.bazaar) {
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g);
+      this.solid.add(x + ',' + y); this.stalls.push({ x, y, kind });
+      const [c1, c2] = GOODS[kind];
+      const box = (w, h, d, c, X, Y, Z, ink = 0.3) => { const m = inked(new THREE.BoxGeometry(w, h, d), toon(c), OL * ink); m.position.set(X, Y, Z); m.castShadow = true; g.add(m); return m; };
+      box(1.7, 0.85, 0.9, 0x9a6a3a, 0, 0.42, 0.1); box(1.8, 0.08, 1.0, 0xe8c890, 0, 0.88, 0.1);
+      for (const sx of [-0.82, 0.82]) for (const sz of [-0.4, 0.55]) box(0.07, 2.1, 0.07, 0x6a4a2a, sx, 1.05, sz);
+      for (let k = 0; k < 5; k++) { const st = inked(new THREE.BoxGeometry(1.9 / 5, 0.06, 1.35), toon(k % 2 ? 0xfaf0dc : c1, { rim: 0.4 }), OL * 0.2); st.position.set(-0.76 + k * 0.38, 2.15, 0.05); st.rotation.x = -0.18; g.add(st); }
+      for (let k = 0; k < 3; k++) {
+        const X = -0.5 + k * 0.5;
+        if (kind === 'dates') { const b = inked(new THREE.CylinderGeometry(0.2, 0.16, 0.18, 10), toon(0xc8a060), OL * 0.2); b.position.set(X, 1.0, 0.15); g.add(b); const d = inked(new THREE.SphereGeometry(0.17, 10, 6), toon(k === 1 ? c2 : c1, { rim: 0.6 }), OL * 0.2); d.scale.y = 0.55; d.position.set(X, 1.12, 0.15); g.add(d); }
+        if (kind === 'pots') { const p = inked(new THREE.SphereGeometry(0.2, 12, 8), toon(k === 1 ? c1 : c2, { rim: 0.5 }), OL * 0.25); p.scale.set(1, 1.15, 1); p.position.set(X, 1.15, 0.15); g.add(p); const n = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.14, 8), toon(k === 1 ? c1 : c2)); n.position.set(X, 1.42, 0.15); g.add(n); }
+        if (kind === 'rugs') { const r = inked(new THREE.CylinderGeometry(0.13, 0.13, 0.9, 10), toon([c1, 0xe8b85a, c2][k], { rim: 0.4 }), OL * 0.2); r.rotation.z = Math.PI / 2; r.position.set(0, 1.04 + k * 0.2, 0.1 - k * 0.05); g.add(r); }
+      }
+      if (kind === 'rugs') { const hang = inked(new THREE.BoxGeometry(1.5, 0.9, 0.03), toon(c1, { side: THREE.DoubleSide }), OL * 0.2); hang.position.set(0, 1.5, -0.4); g.add(hang); const band = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.16, 0.04), toon(0xe8b85a)); band.position.set(0, 1.5, -0.39); g.add(band); }
+      bakeStatic({ root: g, mats: {} });
+    }
+  }
+
+  // Chapter 3: saguaro cacti on the dunes (a trunk and one or two arms, little white spines; some flower in pink)
+  buildCacti() {
+    if (!this.M.cacti || this.M.indoor) return;
+    const green = [], spines = [], bloom = [], rr = rng(hash(this.key + ':cacti'));
+    for (const [x, y] of this.M.cacti) {
+      const [px, pz] = wpos(x, y), s = 0.8 + rr() * 0.45, h = 2.2 * s, ox = px + (rr() - 0.5) * 0.4, oz = pz + (rr() - 0.5) * 0.4;
+      const trunk = new THREE.CapsuleGeometry(0.32 * s, h, 4, 10); trunk.translate(ox, h / 2 + 0.3 * s, oz); green.push(trunk);
+      const arms = rr() < 0.4 ? [1] : [1, -1];
+      for (const sd of arms) {
+        const ay = h * (0.38 + rr() * 0.2), up = 0.7 * s + rr() * 0.4;
+        const out = new THREE.CapsuleGeometry(0.2 * s, 0.35 * s, 4, 8); out.rotateZ(Math.PI / 2); out.translate(ox + sd * 0.5 * s, ay, oz); green.push(out);
+        const arm = new THREE.CapsuleGeometry(0.2 * s, up, 4, 8); arm.translate(ox + sd * 0.78 * s, ay + up / 2 + 0.1, oz); green.push(arm);
+        if (rr() < 0.45) { const f = new THREE.SphereGeometry(0.13 * s, 8, 6); f.translate(ox + sd * 0.78 * s, ay + up + 0.3 * s, oz); bloom.push(f); }
+      }
+      for (let k = 0; k < 10; k++) { const a = rr() * Math.PI * 2, hy = 0.4 + rr() * h, sp = new THREE.ConeGeometry(0.025, 0.14, 3); sp.rotateZ(-Math.PI / 2); sp.rotateY(-a); sp.translate(ox + Math.cos(a) * 0.33 * s, hy, oz + Math.sin(a) * 0.33 * s); spines.push(sp); }
+      if (rr() < 0.5) { const f = new THREE.SphereGeometry(0.16 * s, 8, 6); f.translate(ox, h + 0.62 * s, oz); bloom.push(f); }
+    }
+    const add = (list, col, ink) => { if (!list.length) return; const m = ink ? inked(mergeGeometries(list), toon(col, { rim: 0.5 }), OL * 0.5) : new THREE.Mesh(mergeGeometries(list), toon(col)); list.forEach((q) => q.dispose()); m.castShadow = true; this.group.add(m); };
+    add(green, 0x4a9a4a, true); add(spines, 0xf4f0e0, false); add(bloom, 0xff6a9a, true);
+  }
+
+  // Chapter 3: the oasis's old stone well, with a little tiled roof, a rope and a bucket
+  buildWell() {
+    this.well = null;
+    const W = this.M.well;
+    if (!W || this.M.indoor) return;
+    const [x, y] = W, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(x + ',' + y);
+    const ring = inked(new THREE.CylinderGeometry(0.75, 0.82, 0.75, 16, 1, true), toon(0xd8c0a0, { side: THREE.DoubleSide }), OL * 0.4); ring.position.y = 0.38; ring.castShadow = true; g.add(ring);
+    const lip = inked(new THREE.TorusGeometry(0.76, 0.1, 6, 18), toon(0xc8a888), OL * 0.3); lip.rotation.x = Math.PI / 2; lip.position.y = 0.76; g.add(lip);
+    const water = new THREE.Mesh(new THREE.CircleGeometry(0.7, 16), toon(0x2a8a9a, { rim: 0.9 })); water.rotation.x = -Math.PI / 2; water.position.y = 0.45; g.add(water);
+    for (const sd of [-0.72, 0.72]) { const p = inked(new THREE.BoxGeometry(0.12, 1.6, 0.12), toon(0x7a5434), OL * 0.3); p.position.set(sd, 1.4, 0); g.add(p); }
+    const roof = inked(new THREE.ConeGeometry(1.15, 0.6, 4), toon(0xd8643a, { rim: 0.4 }), OL * 0.4); roof.rotation.y = Math.PI / 4; roof.position.y = 2.45; roof.castShadow = true; g.add(roof);
+    const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.5, 6), toon(0x7a5434)); axle.rotation.z = Math.PI / 2; axle.position.y = 1.85; g.add(axle);
+    const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.8, 4), toon(0xc8a868)); rope.position.y = 1.45; g.add(rope);
+    const bucket = inked(new THREE.CylinderGeometry(0.17, 0.13, 0.25, 10), toon(0x8a6a4a), OL * 0.3); bucket.position.y = 1.0; g.add(bucket);
+    this.well = { x, y, g, bucket };
   }
 
   // island harbours: little coral clusters in the shallows by the shore (they glow softly after dark)
@@ -2218,7 +2328,7 @@ export class World {
   // summer on the green maps: clumps of sunflowers, taller than the hero, stand where the grass meets the woods, their faces turned to the sun
   buildSunflowers() {
     const M = this.M;
-    if (!isSummer() || M.indoor || M.trees || M.snow || M.lava || M.city || M.fireflies || M.border === 'cloud' || this.key === 'seashell' || M.isle) return;
+    if (!isSummer() || M.indoor || M.trees || M.snow || M.lava || M.city || M.fireflies || M.border === 'cloud' || this.key === 'seashell' || M.isle || M.sands) return;
     const rand = rng(hash(this.key + 'sun')), ok = [], T = (x, y) => this.tile(x, y) === 'T';
     for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if (this.tile(x, y) === '.' && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => T(x + dx, y + dy))) ok.push([x, y]);
     const pick = []; for (let k = 0; k < 400 && pick.length < 6 && ok.length; k++) { const p = ok[Math.floor(rand() * ok.length)]; if (pick.every(([a, b]) => Math.abs(a - p[0]) + Math.abs(b - p[1]) > 4)) pick.push(p); }
@@ -3306,7 +3416,7 @@ export class World {
   buildLeaves(x, y) {
     this.leafPiles = [];
     const M = this.M, d = new Date(), autumn = isAutumn(d);
-    if (!autumn || M.indoor || M.snow || M.lava || M.city || this.key === 'seashell' || M.isle || M.border === 'cloud' || M.fireflies || this.twinkleSnow) return;
+    if (!autumn || M.indoor || M.snow || M.lava || M.city || this.key === 'seashell' || M.isle || M.sands || M.border === 'cloud' || M.fireflies || this.twinkleSnow) return;
     const day = d.toISOString().slice(0, 10), rand = rng(hash(this.key + ':leaves:' + day));
     const taken = new Set([...(M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((dd) => dd.x + ',' + (dd.y + 1)), ...this.itemSpots, x + ',' + y, this.bush && this.bush.x + ',' + this.bush.y]);
     const near = (tx, ty, r) => { for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if ('TP'.includes(this.tile(tx + dx, ty + dy) || '-')) return true; return false; }; // just clear of the canopies (they hid a pile right under them)
@@ -3734,7 +3844,7 @@ export class World {
         const p = new THREE.CylinderGeometry(0.07, 0.07, 1.3, 8); p.translate(px, 0.65, pz - 0.2); add('wood', p);
         const f = new THREE.CylinderGeometry(0.4, 0.45, 0.1, 12); f.translate(px, 0.05, pz - 0.2); add('wood', f);
         const k = new THREE.SphereGeometry(0.4, 12, 8); k.translate(px, 1.5, pz - 0.2); add('head', k);
-        const sold = SHOP_HATS.filter((s) => !s.trader && !s.gift && !s.market && !!s.isle === !!MAPS[this.key.split(':')[1]]?.isle), h = sold[(x * 3 + y) % sold.length], sk = new THREE.Group(); sk.position.set(px, 1.42, pz - 0.2); this.group.add(sk);
+        const sold = SHOP_HATS.filter((s) => !s.trader && !s.gift && !s.market && hatRegion(s) === hatRegion(MAPS[this.key.split(':')[1]])), h = sold[(x * 3 + y) % sold.length], sk = new THREE.Group(); sk.position.set(px, 1.42, pz - 0.2); this.group.add(sk);
         hatModel({ def: { body: { headR: 0.62 } }, skull: sk }, h.kind, h.col, h.band);
       }
       if (this.M.indoor === 'tower' && y === 2 && (x === 4 || x === 10)) { // flagpoles either side of Morra's counter, flying the hero's best Tower rank (white until Bronze)
@@ -4607,6 +4717,7 @@ export class World {
       B.g.rotation.y = Math.atan2(Math.cos(a) * 1.4, -Math.sin(a * 0.8) * 0.8);
       const f = 0.2 + Math.abs(Math.sin(this.t * 14 + B.ph)) * 1.1; for (const [wg, sd] of B.wings) wg.rotation.z = sd * f;
     }
+    if (this.train && Math.random() < dt * 2.5) { const T = this.train; this.g.fx.spawn({ x: T.x, y: 2.75, z: T.z, vx: -0.5, vy: 1.2, vz: 0.1, color: 0xf4ece0, alpha: 0.55, size: 0.6, life: 2, shape: 'puff', additive: false, grow: 1.6 }); } // the Sand-Rail idles: a lazy puff from the funnel now and then
     if (this.ferry) { const f = this.ferry; f.t += dt; f.g.position.y = Math.sin(f.t * 1.3) * 0.06 - 0.05; f.g.rotation.z = Math.sin(f.t * 0.9) * 0.025; f.flag.rotation.y = Math.sin(f.t * 5) * 0.3; }
     for (const B of this.gulls || []) {
       const c = this.hero.root.position, a = this.t * B.sp + B.ph;
@@ -4897,8 +5008,23 @@ export class World {
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
     if (this.chest && this.chest.x === fx && this.chest.y === fy) return this.openChest();
     const up = this.updrafts?.find((u) => u.x === fx && u.y === fy); if (up) return this.updraftTalk(up);
+    if (this.well && this.well.x === fx && this.well.y === fy) {
+      const day = new Date().toISOString().slice(0, 10);
+      if (save.adv.wellDay !== day) { save.adv.wellDay = day; save.berries = (save.berries || 0) + 1; persist(); reward(1); return this.say(['{hero} winds the bucket up from the well. The water is cold and clear, even in the desert heat!', 'Something shiny sits in the bottom of the bucket... a berry someone dropped in for luck! +1 🍓']); }
+      return this.say(['{hero} peers down the well. Far below, the water sparkles. An echo says: "...well... well... well..."']);
+    }
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
     if (stall) {
+      if (stall.kind === 'pots') return this.say(['Painted pots in sunset colours: terracotta, teal and gold. A tiny one has a Scarabold painted on it, rolling a ball.', 'A card says: "Hand-made by the potters of the red canyon. Please do not let your critter sit in them."']);
+      if (stall.kind === 'rugs') return this.say(['Rolled rugs, woven in zigzags of red, gold and blue. The pattern looks a little like sand dunes... and a little like a Cactortle.']);
+      if (stall.kind === 'dates') {
+        const day = new Date().toISOString().slice(0, 10);
+        if (save.adv.dates !== day) { // one sweet date a day: a little XP (like Neon City's candy floss)
+          save.adv.dates = day; const hero = save.adv.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); reward(1);
+          return this.say(['Trader Saffi: "First date of the day is free! Sweet as sunshine!"', `{hero} nibbles a sticky golden date. Mmm! ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`]);
+        }
+        return this.say(['Trader Saffi: "One free date a day, little traveller. Come back tomorrow!"']);
+      }
       if (stall.kind === 'trinket') return this.say(['TRINKETS: glow rings, spark charms, a keychain shaped like a tiny Jiggawatt...', 'The stall keeper is fast asleep behind the counter. Maybe another night!']);
       const day = new Date().toISOString().slice(0, 10);
       if (save.adv.market !== day) { // one glowing candy floss a night: a little XP
@@ -4932,7 +5058,7 @@ export class World {
     if (this.follower && at(this.follower) && !this.follower.from) return 'Pet';
     if (at(this.bush)) return 'Shake';
     if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
-    if ([this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest, this.melon, this.picnic, this.snowman, this.apples].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
+    if ([this.well, this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest, this.melon, this.picnic, this.snowman, this.apples].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
     if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod) return 'Fish'; }
     const sign = (this.M.signs || []).find((g) => g.x === fx && g.y === fy);
     if (sign) return sign.act ? ({ pcbox: 'Swap', board: 'Read', gauntsign: 'Read', smoothie: 'Blend', hatshop: 'Shop', rest: 'Rest', wardrobe: 'Open', mirror: 'Look', shelf: 'Look', arcade: 'Play', 'arcade:hop': 'Play' }[sign.act] || (sign.act.startsWith('case:') ? 'Look' : 'Use')) : sign.hide ? 'Look' : 'Read';
@@ -5134,7 +5260,7 @@ export class World {
 
   // one line about the time of year, or null (green maps get the trees and flowers; every map gets the festivals and the cold)
   seasonChat(n) {
-    const who = n.name.split(' ').pop(), M = this.M, snowy = M.snow, green = !M.trees && !snowy && !M.lava && this.key !== 'seashell' && !M.isle && M.border !== 'cloud' && !M.fireflies; // same test as buildTrees
+    const who = n.name.split(' ').pop(), M = this.M, snowy = M.snow, green = !M.trees && !snowy && !M.lava && this.key !== 'seashell' && !M.isle && !M.sands && M.border !== 'cloud' && !M.fireflies; // same test as buildTrees
     const L = twinkleWeek() ? [`${who}: Happy Twinkle Week! Did you peek under the tree by the Berry Center? There's a gift with your name on it.`, `${who}: Sing with me after dark! Carols go better with cocoa.`, `${who}: I tied a bell to my tail for Twinkle Week. Jingle jingle! ...It's very hard to sneak up on anyone.`]
       : isWinter() ? [`${who}: Brr! When it rains this time of year, it comes down as snow instead. I LOVE it.`, `${who}: Winter mornings make the grass go crunchy. Crunch, crunch, crunch!`, snowy ? `${who}: Winter up here? Same as always. Snow on snow on snow!` : `${who}: I built a snow critter yesterday. It looked a bit like you, {hero}!`]
       : isFrost() ? [`${who}: Did you see the frost this morning? The whole town sparkled like sugar!`, `${who}: Cold mornings, warm cocoa. That's the deal.`, `${who}: Twinkle Week is coming soon. I can feel it in my whiskers!`]

@@ -186,6 +186,8 @@ const PEOPLE = {
   'cloudtop:berry6': { visitor: ['whirlwhisk', 'Breeze', ['Breeze: The nurse up here is the highest nurse in all of Clashara. Literally!'], 'e', 3, 4] },
   'frostpeak:berry7': { visitor: ['pengsicle', 'Snowy', ['Snowy: Warm smoothies? In Frostpeak they make them HOT. Wonderful!'], 'w', 9, 4] },
   // ---- Chapter 2: the Sunscatter Isles ----
+  'oasis:hats_o': { npcs: [['fennzap', 'Hatter Zara', [], 's', 5, 1, 'hatshop']], kind: 'shop', name: 'Sand Hats', wall: '#f4e0c0', rug: '#d8643a' },
+  'oasis:berry_o': { visitor: ['humpdrop', 'Traveller Idris', ['Traveller Idris: Humpdrop stores water in its humps, so it never gets thirsty on the dunes. I wish I had humps.'], 'w', 9, 4], wall: '#fff0dc' },
   'coral:hats_c': { npcs: [['toucharge', 'Shellkeeper Sandy', [], 's', 5, 1, 'hatshop']], kind: 'shop', name: 'Shell Hats', wall: '#dff8f4', rug: '#3ad0c0' },
   'coral:berry_c': { visitor: ['blowfin', 'Puffy Pua', ['Puffy Pua: The smoothies here come with a little paper umbrella. Blowfin always tries to eat it.'], 'w', 9, 4], wall: '#ffe8f0' },
   'coral:cottage_c': { npcs: [['smokeshell', 'Grandma Kalani', ['Grandma Kalani: Welcome, mainlander! My Smokeshell keeps the cottage nice and toasty. A bit too toasty, some days.', 'Grandma Kalani: Fire critters love the volcano on Ember Isle. Bring a water critter if you go to the Caldera Cup!', 'Grandma Kalani: In my day the Starfall lighthouse shone every night. Sailors could always find home. Now... nothing but dark.'], 'e', 3, 2]], wall: '#fff0dc', rug: '#ffa64a' },

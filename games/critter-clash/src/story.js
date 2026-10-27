@@ -15,6 +15,8 @@ import { arcadeGame, skyHop, waveRider, reefDive } from './arcade.js';
 import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, seasonKey, gullFish, traderTown } from './world.js';
 
 const flags = () => save.adv.flags;
+// which region a hat (or a map) belongs to: the Sand Hats stall sells sands hats, Shell Hats the island ones, Milliner Mo the rest
+export const hatRegion = (o) => o?.sands ? 'sands' : o?.isle ? 'isle' : 'main';
 const byId = (id) => CRITTERS.find((c) => c.id === id);
 
 // opening narration, the first time the world loads
@@ -131,6 +133,17 @@ export function storyIntro(S, w) {
       'Zephyra: The wind spoke true, {hero}. The Gale Cup suits you.',
       'Zephyra: The last island cup is the Caldera Cup, inside the sleepy volcano on Ember Isle. The Ash Trail runs east to it.',
       'Zephyra: And the wind carries other news. The Gloom Gulls took the Sunstone, the heart of the Starfall lighthouse. Without it, ships lose their way at night.',
+    ]);
+    return;
+  }
+  if (w.key === 'oasis' && !F.sands_arrive) {
+    F.sands_arrive = true; persist();
+    w.say([
+      'The Sand-Rail hisses to a stop. Heat shimmers over the rooftops, palms rustle round a pool of blue water, and the market smells of dates and spice.',
+      '{hero}: So this is the Amber Sands...',
+      'Conductor Tamsin: Welcome to Sunwell Oasis! Out past the palms lie the red canyons, the dune camps and, folk say, a whole city buried under the sand.',
+      "Conductor Tamsin: Lately a gang of treasure hunters has been poking about. The Dust Devils, they call themselves. Shovels, sunglasses, no manners.",
+      'Conductor Tamsin: Whenever you want to go home, find me here on the platform. Off you go, and drink plenty of water!',
     ]);
     return;
   }
@@ -332,6 +345,7 @@ function rivalTalk(S, w, a) {
 // the ☰ menu's one-line "what now?" for players coming back after a break
 const GOAL_AT = { sprout: 'Bloom Town, north along Route 1', thunder: 'Seashell Town, east along Route 2', grove: 'Glowcap Hollow, through the woods north of Seashell Town', champion: 'Cinder Town, down the volcano road', midnight: 'Neon City, east of Cinder Town', sky: 'Cloudtop Gardens (Captain Puff\'s balloon, Neon City)', legend: 'Frostpeak (Captain Puff\'s balloon, Cloudtop)' };
 export function nextGoal(F) {
+  if (F.grand && F.grand_done && !F.sands_arrive) return '🏅 100% complete! And a new region waits: ride the Sand-Rail from Cinder Town to the Amber Sands.';
   if (F.grand) return F.grand_done ? '🏅 100% complete! Every cup, critter and corner of Clashara and the isles. Thank you for playing!' : '100% of Clashara and the isles! Prof. Pecan wants to see you at his lab in Sprout Village.';
   if (F.crowned) {
     // Chapter 2: the Sunscatter Isles
@@ -340,6 +354,7 @@ export function nextGoal(F) {
     const nx = ISLE_CUPS.find((c) => !F['cup_' + c.id]);
     if (nx?.id === 'caldera' && !F.skua_b) return 'A Gloom Gull is blocking the Ash Trail at the east edge of Breezy Bluffs. Chase it off!';
     if (nx) return `Win the ${nx.name} in ${ISLE_AT[nx.id]}.`;
+    if (F.sunstone && !F.sands_arrive) return 'Chapter 3: the Sand-Rail runs again! Ride it from the south side of Cinder Town to the Amber Sands.';
     if (!F.sunstone) return F.morra ? 'Bring the Sunstone home to the Starfall lighthouse!' : 'Sail to Starfall Atoll with Captain Gill (Port Coral) and take the Sunstone back from Captain Morra!';
     // post-game: point at whatever is still open (the Tower, the glider, the legends)
     if (!(save.adv.tower?.best >= 7)) return 'Morra has opened a Battle Tower on Starfall Atoll. Win 7 in a row for Bronze rank!';
@@ -580,6 +595,7 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'rival2') rival2(S, w);
   if (id === 'ferry') return ferry(S, w);
+  if (id === 'rail') return rail(S, w);
   if (id === 'dashisle') return dashIsle(S, w);
   if (id === 'skua') return skua(S, w);
   if (id === 'dashatoll') return dashAtoll(S, w);
@@ -1157,7 +1173,7 @@ export function hatWhere(id) {
   const tr = TOWER_RANKS.find((r) => r[3] === id); if (tr) return `${tr[0]} Battle Tower wins in a row`;
   if (HAT_WHERE[id]) return HAT_WHERE[id];
   if (h.trader) { const t = traderTown(); return `Trader Tock${t ? ` (today in ${MAPS[t].name})` : ''}`; }
-  return h.market ? "Chef Rumi's noodle cart, Neon City" : h.isle ? 'the Shell Hats stall, Port Coral' : h.price ? 'the Hat Shop, Bloom Town' : 'a gift';
+  return h.market ? "Chef Rumi's noodle cart, Neon City" : h.sands ? 'the Sand Hats stall, Sunwell Oasis' : h.isle ? 'the Shell Hats stall, Port Coral' : h.price ? 'the Hat Shop, Bloom Town' : 'a gift';
 }
 export function towerFoe(run, n, hero) { // a shuffled order of every critter per streak, so a set of seven never repeats a critter
   let h = ((run + 7) * 2654435761) >>> 0; const r = () => ((h = (h * 1103515245 + 12345) >>> 0) >>> 8) / 16777216;
@@ -1354,10 +1370,10 @@ function wearMenu(w, who, back) {
 
 // Milliner Mo's Hat Shop in Bloom Town: buy hats with berries, then wear any you own
 function hatShop(w) {
-  const A = save.adv, own = (A.hats ||= []), isle = !!MAPS[w.key.split(':')[1]]?.isle, who = isle ? 'Shellkeeper Sandy' : 'Milliner Mo';
-  const menu = () => w.ask(isle ? `Shellkeeper Sandy: Aloha! Island hats, woven by hand. (You have ${save.berries || 0} 🍓)` : `Milliner Mo: Welcome to the Hat Shop! A hat for every head. (You have ${save.berries || 0} 🍓)`, ['Buy a hat', 'Wear a hat', 'Bye'], (i) => {
+  const A = save.adv, own = (A.hats ||= []), reg = hatRegion(MAPS[w.key.split(':')[1]]), isle = reg === 'isle', who = reg === 'sands' ? 'Hatter Zara' : isle ? 'Shellkeeper Sandy' : 'Milliner Mo';
+  const menu = () => w.ask(reg === 'sands' ? `Hatter Zara: Shade for your head, friend! Desert hats, for sun and sandstorms. (You have ${save.berries || 0} 🍓)` : isle ? `Shellkeeper Sandy: Aloha! Island hats, woven by hand. (You have ${save.berries || 0} 🍓)` : `Milliner Mo: Welcome to the Hat Shop! A hat for every head. (You have ${save.berries || 0} 🍓)`, ['Buy a hat', 'Wear a hat', 'Bye'], (i) => {
     if (i === 0) {
-      const left = SHOP_HATS.filter((h) => !own.includes(h.id) && !h.trader && !h.gift && !h.market && !!h.isle === isle);
+      const left = SHOP_HATS.filter((h) => !own.includes(h.id) && !h.trader && !h.gift && !h.market && hatRegion(h) === reg);
       if (!left.length) return w.say([`${who}: You own every hat in the shop! A true hat collector. I\'m honoured!`], null, who);
       w.busy = true;
       return w.S.hatGrid(`${who}: Which one catches your eye?`, left, (id) => {
@@ -1587,6 +1603,36 @@ function ferry(S, w) {
       : 'The Sunny Gull turns for home. The islands fade into the haze...';
     w.say([line], () => w.fade(() => { if (to === 'atoll') w.load('atoll', 9, 13, 'n'); else w.load(to, 12, 15, 'n'); if (to === 'coral' && !F.isle_arrive || to === 'atoll' && !F.atoll) setTimeout(() => storyIntro(S, w), 500); }));
   }, 'Captain Gill');
+}
+
+// Chapter 3: the Sand-Rail between Cinder Town and Sunwell Oasis (it runs again once the Sunstone is home)
+function rail(S, w) {
+  const F = flags(), home = w.key === 'ember', who = 'Conductor Tamsin';
+  if (home && !F.sunstone) {
+    return w.say([
+      'Conductor Tamsin: This is the Sand-Rail! Once it ran all the way south to the Amber Sands: red canyons, golden dunes, a sparkling oasis.',
+      'Conductor Tamsin: Then a great sandstorm buried the line. The sand crews have been digging it out for years. Years!',
+      "Conductor Tamsin: They say they'll be done any day now. Go and have an adventure, and come back later. Humpdrop and I will keep the engine warm.",
+    ], null, who);
+  }
+  const first = home && !F.rail_open;
+  if (first) { F.rail_open = true; persist(); }
+  const q = !home ? 'Conductor Tamsin: Back to Cinder Town?' : F.sands_arrive ? 'Conductor Tamsin: Back to the Amber Sands?' : 'Conductor Tamsin: All aboard for the Amber Sands?';
+  const go = () => w.ask(q, [home ? 'All aboard!' : 'Ride home', 'Not yet'], (i) => {
+    if (i) return w.say([home ? "Conductor Tamsin: No rush. The desert isn't going anywhere. Well... it moves a bit. But slowly!" : 'Conductor Tamsin: Enjoy the oasis! Stay out of the midday sun.'], null, who);
+    sfx.whoosh?.(0.6); reward(1);
+    (save.adv.cnt ||= {}).rail = (save.adv.cnt.rail || 0) + 1;
+    save.adv.spawn = { ...getMap(home ? 'in:oasis:berry_o' : 'in:ember:berry4').exit }; // a lost battle brings you back to this end of the line
+    const line = home ? (F.sands_arrive ? 'Toot toot! The Sand-Rail chugs south. The volcano shrinks behind you, and the air turns hot and golden...' : 'Toot TOOT! The Sand-Rail puffs out of Cinder Town. Hills turn to rocks, rocks turn to dunes, and the sky turns a deep, hot blue...')
+      : 'Toot toot! The Sand-Rail chugs north, past the dunes and the red rocks, back towards the smoking volcano.';
+    w.say([line], () => w.fade(() => { if (home) w.load('oasis', 12, 12, 'e'); else w.load('ember', 13, 13, 'e'); if (home && !F.sands_arrive) setTimeout(() => storyIntro(S, w), 500); }));
+  }, who);
+  if (first) return w.say([
+    "Conductor Tamsin: Well, I'll be! The hero who lit the Starfall lighthouse!",
+    "Conductor Tamsin: And guess what? The sand crews finished this morning. The line to the Amber Sands is clear at last!",
+    "Conductor Tamsin: The Sand-Rail stops at Sunwell Oasis, the last cool water before the deep desert. New critters, new trainers, and stadiums out in the sand!",
+  ], go, who);
+  go();
 }
 
 // Ember Isle: Dash ran the whole Ash Trail to beat the hero to the Caldera Cup

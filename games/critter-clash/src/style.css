@@ -924,6 +924,8 @@ body:not(.is-touch) .wd-a { display: none; }
 .wm { width: 100%; max-height: calc(100dvh - 190px); display: block; margin: 0 auto; }
 .wm-sea { fill: #6ac8f0; }
 .wm-land { fill: #8ad86a; stroke: #f4dc9a; stroke-width: 6; stroke-linejoin: round; }
+.wm-sea.wm-dunes { fill: #e0a868; } .wd-map.evening .wm-sea.wm-dunes { fill: #d88a6a; } .wd-map.night .wm-sea.wm-dunes { fill: #5a4a5a; }
+.wm-land.wm-sand { fill: #f0c878; stroke: #d89a58; } .wd-map.night .wm-land.wm-sand { fill: #a8845a; stroke: #7a5a3a; } .wm-dune { fill: none; stroke: #d8a05a; stroke-width: 3; stroke-linecap: round; opacity: 0.7; }
 .wm line { stroke: #fff; stroke-width: 5; stroke-linecap: round; opacity: .45; }
 .wm line.on { stroke: #e8b86a; opacity: 1; }
 .wm line.air { stroke-dasharray: 3 7; stroke-width: 3; stroke: #ff9ac8; opacity: .8; }

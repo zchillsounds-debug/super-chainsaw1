@@ -364,10 +364,11 @@ export const MAPS = {
       'TT.hhhh.....:....hhhh...TT',
       'TT...:......:......:....TT',
       'TT...::::::::::::::::...TT',
-      'TT..v.................v.TT',
+      'TT......................TT',
       'TTTTTTTTTTTTTTTTTTTTTTTTTT',
     ],
     edges: { w: { to: 'cinder', off: -1 }, e: { to: 'neon', off: 0 } },
+    train: { x: 8, y: 14, from: 2, to: 23 }, // Chapter 3: the old Sand-Rail to the Amber Sands waits on its track (track tiles x from..to on row y)
     buildings: [
       { id: 'stadium4', x: 3, y: 2, w: 8, h: 4, stadium: 'champion', door: 5, label: 'Champion Stadium' },
       { id: 'berry4', x: 17, y: 9, w: 4, h: 3, roof: 0xff5a8a, door: 2, label: 'Berry Center', heal: true },
@@ -379,6 +380,7 @@ export const MAPS = {
       { id: 'spa', x: 21, act: 'fan', y: 4, critter: 'pengsicle', name: 'Pengsicle', dir: 'w', wander: 1, lines: ['Pengsicle: Too... hot... I came for the hot springs and I am MELTING.', 'Pengsicle: I hear the Midnight Cup is in a big city with neon lights. Somewhere cooler, I hope!'] },
       { id: 'kid4', x: 9, act: 'hop', y: 12, critter: 'kindlekit', name: 'Kindlekit', dir: 'e', wander: 2, lines: ['Kindlekit: Yip! The volcano rumbles every time someone wins the Champion Cup. Make it RUMBLE!'] },
       { id: 'smith', x: 22, act: 'flex', y: 12, critter: 'emberfly', name: 'Smith Ash', story: 'lost:cocoa', dir: 'w', lines: ['Smith Ash: See a warm glow in the ash with an X by it? Dig there! Ember gems grow in the heat. I\'ll swap you berries for every one.', 'Smith Ash: Feel that warm ground? Magma runs right under Cinder Town. Watch the cracks glow!', 'Smith Ash: The forge chimney never stops sparking. Neither do I. HAH!'] },
+      { id: 'tamsin', x: 14, y: 13, critter: 'humpdrop', name: 'Conductor Tamsin', dir: 'n', story: 'rail', lines: [] }, // Chapter 3: the Sand-Rail to the Amber Sands
       { id: 'tourist', x: 13, act: 'wave', y: 4, critter: 'bubbalotl', name: 'Tourist Bo', dir: 's', wander: 1, story: 'lost:camera', lines: ['Tourist Bo: I came for the lava pools and stayed for the spa. Don\'t tell my mum it\'s so hot here.', 'Tourist Bo: Captain Puff\'s balloon flies you between towns you\'ve visited. Check the Town Map in the ☰ menu!'] },
     ],
   },
@@ -841,6 +843,57 @@ export const MAPS = {
       { id: 'morra_a', x: 11, y: 3, critter: 'toucharge', name: 'Captain Morra', dir: 's', story: 'morra', hideFlag: 'sunstone', shiny: true, scale: 1.25 },
       { id: 'keeper_a', x: 11, y: 3, critter: 'hootsy', name: 'Keeper Lumi', dir: 's', showFlag: 'sunstone', story: 'lumi', lines: ['Keeper Lumi: The light is back! Ships can find their way home again. Thank you, Champion.', 'Keeper Lumi: I kept the lamp for forty years. The Sunstone warms up in the daytime and shines all night. A little sun in a stone.', 'Keeper Lumi: Captain Morra? She sails with us now. She keeps the night watch. Turns out she just hated being lonely in the dark.'] },
       { id: 'morra_b', x: 14, y: 4, critter: 'toucharge', name: 'Morra', dir: 'w', showFlag: 'sunstone', shiny: true, story: 'lost:amends1', lines: ['Morra: Hmph. The light is... nice, I suppose. Do not tell my Gulls I said so.', 'Morra: I wanted the night to last forever. Out at sea, the dark is so lonely. Now I keep watch with Lumi instead.'] },
+    ],
+  },
+
+  // ===== Chapter 3: the Amber Sands (reached by the Sand-Rail from Cinder Town once the Sunstone is home) =====
+  // sands maps are `extra` for now: they don't count towards Clashara's or the isles' % (D4 gives them their own Records rows)
+  oasis: {
+    name: 'Sunwell Oasis',
+    music: 'isles',
+    arena: 'beach',
+    sands: 'oasis',
+    extra: true,
+    outer: 0xe0b878,
+    border: 'palm',
+    palette: { a: '#c8c070', b: '#c2ba6a', tall: '#8a9a48', path: '#e8b878', sand: '#f4d6a0', sand2: '#eecf96', water: '#3ac8c8', bank: '#c89a5a' },
+    tiles: [
+      'PPPPPPPPPPPPPPPPPPPPPPPPPP',
+      'Psssssssssss::ssssssssssRP',
+      'PsPsssssssss::sssshhhhsssP',
+      'Psssssssssss::sssshhhhsssP',
+      'Psssssssssss::sssshhhhsssP',
+      'Psssssssssss::sssssssssssP',
+      'Ps::::::::::::::::::::::sP',
+      'Pssssss:sPssssssPss:sssssP',
+      'Psshhhh:ss~~~~~~sss:sssssP',
+      'Psshhhh:ss~~~~~~sss:sssPsP',
+      'Psshhhh:ss~~~~~~sss:sssssP',
+      'Pssssss:sPssssssPss:sssssP',
+      'Ps::::::::::::::::::::::sP',
+      'PssssssssssssssssssssssssP',
+      'PssssssssssssssssssssssPsP',
+      'PsPssRssssssssssssssssPssP',
+      'PssssssssssssssssRsssssssP',
+      'PPPPPPPPPPPPPPPPPPPPPPPPPP',
+    ],
+    train: { x: 9, y: 13, from: 1, to: 24 }, // the Sand-Rail stops beside the market row (the platform)
+    well: [5, 3], // the town's old stone well (A: a cool drink, once a day)
+    bazaar: [[11, 11, 'dates'], [13, 11, 'pots'], [15, 11, 'rugs']], // market stalls under the pool's palms, open onto the market row
+    cacti: [[4, 14], [8, 15], [12, 15], [19, 14], [20, 16], [14, 16], [3, 4], [23, 3]], // saguaros out on the dunes past the track
+    buildings: [
+      { id: 'berry_o', x: 18, y: 2, w: 4, h: 3, roof: 0xff7aa0, wall: 0xf4dcb8, door: 2, label: 'Berry Center', heal: true },
+      { id: 'hats_o', x: 3, y: 8, w: 4, h: 3, roof: 0xd8643a, wall: 0xf0d0a0, door: 1, label: 'Sand Hats', hatShop: true },
+    ],
+    signs: [{ x: 11, y: 5, text: 'SUNWELL OASIS\nThe last cool water before the Amber Sands. Drink up!' }],
+    npcs: [
+      { id: 'tamsin_o', x: 13, y: 12, critter: 'humpdrop', name: 'Conductor Tamsin', dir: 'w', story: 'rail', lines: [] },
+      { id: 'saffi', x: 12, y: 11, critter: 'fennzap', name: 'Trader Saffi', dir: 's', lines: ["Trader Saffi: Fresh dates! Sweet as sunshine! The first one's free, every day. Tell your friends!", "Trader Saffi: My Fennzap hears a customer coming from three dunes away. Its ears never stop twitching."] },
+      { id: 'oma', x: 14, y: 11, critter: 'cactortle', name: 'Weaver Oma', dir: 's', lines: ["Weaver Oma: These rugs took me all summer. Cactortle sits on the loom when I'm not looking. Very prickly patterns.", "Weaver Oma: The red canyon to the east? My grandmother was born up there, in a house in the cliff."] },
+      { id: 'wellkeep', x: 6, y: 4, critter: 'scarabold', name: 'Wellkeeper Bram', dir: 'w', lines: ["Wellkeeper Bram: This well has never once run dry. Some say an old spring runs under the sands, all the way from the buried city.", "Wellkeeper Bram: Scarabold rolls the bucket up for me. It thinks the bucket is a very big ball."] },
+      { id: 'kid_o', x: 21, act: 'hop', y: 9, critter: 'siroccat', name: 'Siroccat', dir: 'w', wander: 2, lines: ["Siroccat: (It stands up tall on its back legs and stares at the horizon. Then at you. Then back at the horizon.)", "Siroccat: Chirr! (It's on lookout duty. Nothing gets past Siroccat. Except maybe that beetle.)"] },
+      { id: 'sun_o', x: 15, act: 'fan', y: 5, critter: 'sizzlard', name: 'Sunbather Rex', dir: 's', wander: 1, lines: ["Sunbather Rex: Ahh, the Amber Sands. Hot by day, cold by night. Sizzlard soaks up the sun until its frill glows.", "Sunbather Rex: Don't stay out on the dunes when a sandstorm blows in. You won't see your own paws!"] },
+      { id: 'grit_o', x: 22, y: 12, critter: 'scarabold', name: 'Dust Devil Grit', dir: 'w', lines: ["Dust Devil Grit: Eh? Who are YOU looking at? We're just... shopping. For shovels. LOTS of shovels.", "Dust Devil Grit: The buried city? Never heard of it. Definitely not digging it up. Go away, tourist!"] },
     ],
   },
 

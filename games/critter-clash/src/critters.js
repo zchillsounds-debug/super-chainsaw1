@@ -1467,6 +1467,11 @@ export const SHOP_HATS = [
   { id: 'lei', name: 'Hibiscus Crown', kind: 'flower', col: 0x3ab86a, band: 0xff5a7a, price: 9, isle: true },
   { id: 'captain', name: "Captain's Cap", kind: 'sailor', col: 0xffffff, band: 0x2a4a8a, price: 10, isle: true },
   { id: 'surfvisor', name: 'Surf Visor', kind: 'visor', col: 0x3ad0d8, band: 0xffa64a, price: 8, isle: true },
+  // Chapter 3: Hatter Zara's Sand Hats stall in Sunwell Oasis (extra: they don't count towards the mainland's hat total yet)
+  { id: 'pith', name: 'Explorer Helmet', kind: 'helm', col: 0xe8d4a0, band: 0x8a5a2a, price: 10, sands: true, extra: true },
+  { id: 'sandgog', name: 'Sandstorm Goggles', kind: 'aviator', col: 0xc8743a, band: 0x5ac8d8, price: 9, sands: true, extra: true },
+  { id: 'cactcrown', name: 'Cactus Bloom Crown', kind: 'flower', col: 0x4a9a4a, band: 0xff6a9a, price: 9, sands: true, extra: true },
+  { id: 'dunehat', name: 'Dune Sun Hat', kind: 'wide', col: 0xd8643a, band: 0xffd84d, price: 8, sands: true, extra: true },
   // only Trader Tock has these (a different town each day)
   { id: 'pirate', name: 'Pirate Hat', kind: 'tricorn', col: 0x2a2438, band: 0xffd84d, price: 10, trader: true },
   { id: 'wizard', name: 'Wizard Hat', kind: 'wizard', col: 0x5a3ab8, band: 0xffe14d, price: 12, trader: true },
