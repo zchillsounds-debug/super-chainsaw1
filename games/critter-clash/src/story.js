@@ -165,6 +165,28 @@ export function storyIntro(S, w) {
     ]);
     return;
   }
+  if (w.key === 'sungate' && !F.sungate_arrive) {
+    F.sungate_arrive = true; persist();
+    w.say([
+      'Over the big dune the sand is full of stone: broken pillars banded with gold, and holes everywhere, dug by the Dust Devils.',
+      'At the far end a round stone gate sits in a half-buried wall. Over it a great stone sun is carved... with one wedge missing.',
+      "{hero} feels the Sun Shard grow warm. It's the missing piece!",
+    ]);
+    return;
+  }
+  if (w.key === 'sungate' && F.baron && !F.gate_open) { // Chapter 3's finale: the Sun Shard goes home
+    F.gate_open = true; persist(); reward(2);
+    w.say([
+      'Baron Sirocco: Impossible... beaten. In front of my own gate.',
+      "{hero} climbs the dune beside the gate and holds up the Sun Shard. It slides into the stone sun with a soft click.",
+      'The stone sun blazes gold. The ground hums. Slowly, with a sigh of sand, the Sun Gate opens... just a crack. Warm light spills out over the dunes.',
+      'Dune Warden Rasha: The gate chose who opened it. Not the ones with the most shovels, Sirocco.',
+      'Elder Sabah: Golden towers, deep under the sand, and they are still shining. My grandmother\'s grandmother was right.',
+      "Baron Sirocco: ...It's beautiful. I only ever wanted to find it. I didn't think about what it wanted. The Dust Devils are done digging. I'm sorry.",
+      "Dash: That was AMAZING. And I was there! Mostly behind a pillar, but there!",
+    ], () => { const after = () => w.say(['★ CHAPTER 3 COMPLETE ★  You saved the Amber Sands! The Sun Gate is safe with the camp, the Sand-Rail runs both ways, and every desert cup welcomes a rematch.']); if (w.credits) w.credits(after, 'sands'); else after(); });
+    return;
+  }
   if (w.key === 'redrock' && F.devils1 && !F.sunshard) {
     F.sunshard = true; persist(); reward(1);
     w.say([
@@ -410,6 +432,7 @@ export function nextGoal(F) {
     if (F.dash_canyon && !F.cup_sandstorm) return F.dunecamp_arrive ? 'Win the Sandstorm Cup in the Sandstorm Dome at the Dune Camp.' : 'Take the canyon road east out of Redrock Canyon to the Dune Camp on the big dunes.';
     if (F.cup_sandstorm && !F.devils2) return 'Dune Warden Rasha is going to the Dust Devils\' black tent at the Dune Camp. Get past the guards on its door!';
     if (F.devils2 && !F.citymap) return 'The Dust Devil HQ is open. Find out what the Dust Devils are after inside their black tent.';
+    if (F.citymap && !F.baron) return F.sungate_arrive ? 'Baron Sirocco is at the Sun Gate. Stop him, and bring the Sun Shard home!' : 'Cross the big dune south of the Dune Camp to the Sun Gate, where Baron Sirocco is digging.';
     if (!F.sunstone) return F.morra ? 'Bring the Sunstone home to the Starfall lighthouse!' : 'Sail to Starfall Atoll with Captain Gill (Port Coral) and take the Sunstone back from Captain Morra!';
     // post-game: point at whatever is still open (the Tower, the glider, the legends)
     if (!(save.adv.tower?.best >= 7)) return 'Morra has opened a Battle Tower on Starfall Atoll. Win 7 in a row for Bronze rank!';
@@ -656,6 +679,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'devils1') return devils1(S, w);
   if (id === 'devils2') return devils2(S, w);
   if (id === 'devilmap') return devilMap(S, w);
+  if (id === 'baron') return baron(S, w);
   if (id === 'dashcanyon') return dashCanyon(S, w);
   if (id === 'dashatoll') return dashAtoll(S, w);
   if (id === 'dashember') return dashEmber(S, w);
@@ -1109,6 +1133,7 @@ export function storyMark(npc) {
     gull_b: c('gale') && !F.skua_b,
     devil_r: c('canyon') && !F.devils1, dash_r: F.devils1 && !F.dash_canyon, // Chapter 3: Redrock Canyon
     guard_c2: c('sandstorm') && !F.devils2, // the Dune Camp: the Dust Devils' door guard
+    baron_g: F.citymap && !F.baron, // the Sun Gate: Baron Sirocco
     morra_a: c('caldera') && !F.morra,
     dash_b: F.sunstone && !F.dash_show,
     moonwhal_a: F.tower_bronze && !F.legend_moonwhal, solmoth_r: F.festlamp_done && !F.legend_solmoth, verdelk_g: F.grove4_done && !F.legend_verdelk, // the legends, once awake
@@ -1814,6 +1839,21 @@ function devilMap(S, w) {
     "Dust Devil Cook: Sable LOST the sun stone, though. To some kid. So the Baron is very, very cross. ...Wait. Are you the kid?",
     '{hero} feels the Sun Shard, warm in their bag. Whoever brings it to the gate decides what the gate does.',
   ]);
+}
+
+// the Sun Gate: Baron Sirocco, the Dust Devils' boss, wants the Sun Shard for his gate (Chapter 3's last battle)
+function baron(S, w) {
+  w.say([
+    'Baron Sirocco: So. The cup kid. The one who took my sun stone from Sable, beat my guards and read my map. Over my beans.',
+    "Baron Sirocco: Under this gate is a city of gold, child. A thousand years of treasure. All it wants is the shard in your bag.",
+    "Baron Sirocco: Give it to me, and I'll give you... a shovel. A good one!",
+    "{hero} holds the Sun Shard tight.",
+    'Baron Sirocco: No? Then the desert decides. Siroccat, bring the storm!',
+  ], () => S.worldFight({
+    foe: { ...withGear(skinned(byId('siroccat'), 'shiny'), 46), size: 1.25 }, lv: 46, kind: 'story', flag: 'baron', name: 'Baron Sirocco', diff: 0.92, // (a big one: the Baron's own storm cat)
+    trainer: { name: 'Sirocco', critter: 'siroccat', title: 'Baron of the Dust Devils', boss: true, beat: 'The storm... has blown itself out.', gloat: 'The sands bury everyone in the end, child. Come back when you are taller.' },
+    note: '🌞 You beat Baron Sirocco at the Sun Gate!',
+  }));
 }
 
 // Redrock Canyon: Dash catches up after the Dust Devils run off

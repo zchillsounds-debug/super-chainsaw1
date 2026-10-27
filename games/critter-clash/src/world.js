@@ -7,7 +7,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { bakeStatic, skinStatic } from './bake.js';
 import { toon, inked, canvasTex, outlineMatW } from './toon.js';
 import { Critter, roleHat, shopHat, hatModel, SHOP_HATS } from './critters.js';
-import { CRITTERS, CUPS, ISLE_CUPS, withGear, skinned, cupById } from './data.js';
+import { CRITTERS, CUPS, ISLE_CUPS, SANDS_CUPS, withGear, skinned, cupById } from './data.js';
 import { save, persist, grantXp, xpNeeded, unlock } from './save.js';
 import { sfx, playMusic } from './audio.js';
 import { typeSpeed } from './settings.js';
@@ -334,7 +334,8 @@ export class World {
     }
     for (const s of M.signs || []) this.solid.add(s.x + ',' + s.y);
     if (M.train && !M.indoor) for (let x = M.train.from; x <= M.train.to; x++) this.solid.add(x + ',' + M.train.y); // the Sand-Rail's track (set before props and gift boxes are placed)
-    for (const [x, y] of [...(M.bazaar || []), ...(M.cacti || []), ...(M.lifts || []), ...(M.well ? [M.well] : [])]) this.solid.add(x + ',' + y);
+    for (const [x, y] of [...(M.bazaar || []), ...(M.cacti || []), ...(M.lifts || []), ...(M.well ? [M.well] : []), ...(M.pillars || []), ...(M.digs || [])]) this.solid.add(x + ',' + y);
+    if (M.gate) for (let j = 0; j < 2; j++) for (let i = 0; i < 5; i++) this.solid.add((M.gate[0] + i) + ',' + (M.gate[1] + j)); // the Sun Gate (5x2)
     this.buildGround(rand);
     this.buildTrees(rand);
     this.buildGrass(rand);
@@ -362,6 +363,7 @@ export class World {
     this.buildBazaar();
     this.buildWell();
     this.buildLifts();
+    this.buildRuins();
     this.buildCacti();
     this.buildDance();
     this.buildIceLanterns();
@@ -1288,6 +1290,58 @@ export class World {
       basket.position.set(0, 0.2, 0.05);
       this.lifts.push({ g, basket, line, phase: hash(this.key + x) % 100 / 100 * Math.PI * 2 });
     }
+  }
+
+  // Chapter 3: the buried city's edge: sandstone pillars poking out of the dunes (gold-banded, some snapped off), the Dust Devils'
+  // dig holes with a shovel left standing, and the Sun Gate: a round stone gate in a half-buried wall, a sun disc over it with one
+  // wedge missing (the Sun Shard), obelisks either side. Once the shard is home (gate_open) the doors stand open on a warm glow
+  buildRuins() {
+    this.gateGlow = null;
+    const M = this.M;
+    if (M.indoor || (!M.pillars && !M.digs && !M.gate)) return;
+    const stone = [], gold = [], dark = [], wood = [], sand = [];
+    for (const [x, y, k] of M.pillars || []) {
+      const [px, pz] = wpos(x, y), h = k ? 0.8 + (hash(this.key + x + y) % 5) * 0.12 : 2.6 + (hash(this.key + y + x) % 4) * 0.35;
+      const c = new THREE.CylinderGeometry(0.42, 0.48, h, 10); c.translate(px, h / 2, pz); stone.push(c);
+      const base = new THREE.CylinderGeometry(0.62, 0.66, 0.28, 10); base.translate(px, 0.14, pz); stone.push(base);
+      const band = new THREE.CylinderGeometry(0.47, 0.47, 0.16, 10); band.translate(px, Math.min(h - 0.2, 1.1), pz); gold.push(band);
+      if (!k) { const cap = new THREE.BoxGeometry(1.1, 0.26, 1.1); cap.translate(px, h + 0.13, pz); stone.push(cap); }
+      else { const top = new THREE.CylinderGeometry(0.3, 0.42, 0.25, 7); top.rotateZ(0.35); top.translate(px + 0.05, h + 0.08, pz); stone.push(top); } // a snapped-off stump
+      const mound = new THREE.SphereGeometry(0.9, 10, 5, 0, Math.PI * 2, 0, Math.PI / 2); mound.scale(1, 0.32, 1); mound.translate(px, 0, pz); sand.push(mound);
+    }
+    for (const [x, y] of M.digs || []) {
+      const [px, pz] = wpos(x, y);
+      const hole = new THREE.CircleGeometry(0.62, 14); hole.rotateX(-Math.PI / 2); hole.translate(px, 0.04, pz); dark.push(hole);
+      const rim = new THREE.TorusGeometry(0.66, 0.16, 5, 14); rim.rotateX(Math.PI / 2); rim.scale(1, 1, 0.6); rim.translate(px, 0.06, pz); sand.push(rim);
+      const heap = new THREE.SphereGeometry(0.5, 9, 5, 0, Math.PI * 2, 0, Math.PI / 2); heap.scale(1, 0.7, 1); heap.translate(px + 0.75, 0, pz - 0.35); sand.push(heap);
+      const shaft = new THREE.CylinderGeometry(0.04, 0.04, 1.0, 5); shaft.rotateZ(0.25); shaft.translate(px + 0.8, 0.75, pz - 0.35); wood.push(shaft);
+      const blade = new THREE.BoxGeometry(0.26, 0.32, 0.04); blade.rotateZ(0.25); blade.translate(px + 0.93, 0.2, pz - 0.35); dark.push(blade);
+    }
+    if (M.gate) {
+      const [gx, gy] = M.gate, [cx] = wpos(gx + 2, gy), [, z0] = wpos(gx, gy), cz = z0 + TILE * 0.5, open = !!save.adv.flags.gate_open;
+      const wall = new THREE.BoxGeometry(5 * TILE - 0.2, 3.4, 1.2); wall.translate(cx, 1.7, cz - 0.2); stone.push(wall);
+      const lip = new THREE.BoxGeometry(5 * TILE + 0.1, 0.3, 1.4); lip.translate(cx, 3.45, cz - 0.2); gold.push(lip);
+      const arch = new THREE.TorusGeometry(1.25, 0.28, 8, 20, Math.PI); arch.translate(cx, 1.45, cz + 0.42); gold.push(arch);
+      for (const sd of [-1, 1]) {
+        const jamb = new THREE.BoxGeometry(0.5, 1.5, 0.5); jamb.translate(cx + sd * 1.25, 0.72, cz + 0.42); stone.push(jamb);
+        const ob = new THREE.CylinderGeometry(0.22, 0.42, 3.6, 4); ob.rotateY(Math.PI / 4); ob.translate(cx + sd * (2.5 * TILE + 0.3), 1.8, cz + 0.6); stone.push(ob);
+        const tip = new THREE.ConeGeometry(0.26, 0.5, 4); tip.rotateY(Math.PI / 4); tip.translate(cx + sd * (2.5 * TILE + 0.3), 3.85, cz + 0.6); gold.push(tip);
+        if (!open) { const door = new THREE.BoxGeometry(1.16, 2.6, 0.16); door.translate(cx + sd * 0.6, 1.3, cz + 0.42); dark.push(door); } // two stone doors, shut
+      }
+      // the sun over the gate: a gold disc with rays, one wedge dark (the missing Sun Shard) until the shard is home
+      const disc = new THREE.CylinderGeometry(0.7, 0.7, 0.14, 20, 1, false, open ? 0 : 0.6, open ? Math.PI * 2 : Math.PI * 2 - 0.9); disc.rotateX(Math.PI / 2); disc.translate(cx, 4.2, cz + 0.42); gold.push(disc);
+      if (!open) { const gap = new THREE.CylinderGeometry(0.66, 0.66, 0.1, 6, 1, false, -0.3, 0.9); gap.rotateX(Math.PI / 2); gap.translate(cx, 4.2, cz + 0.4); dark.push(gap); }
+      for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2, r = new THREE.ConeGeometry(0.14, 0.5, 4); r.translate(0, 0.95, 0); r.rotateZ(-a); r.translate(cx, 4.2, cz + 0.42); gold.push(r); }
+      const dune = new THREE.SphereGeometry(1, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2); dune.scale(5 * TILE * 0.62, 1.4, 1.4); dune.translate(cx, 0, cz - 0.9); sand.push(dune); // the dune it's half buried in
+      if (open) {
+        const gm = new THREE.MeshBasicMaterial({ color: 0xffe8a0, transparent: true, opacity: 0.85 }); gm.userData.own = true;
+        const glow = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.6), gm); glow.position.set(cx, 1.3, cz + 0.45); this.group.add(glow); this.gateGlow = glow;
+        const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffd060, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.8 }); sm.userData.own = true;
+        const halo = new THREE.Sprite(sm); halo.userData.shared = true; halo.scale.setScalar(5); halo.position.set(cx, 1.6, cz + 0.9); this.group.add(halo);
+      }
+    }
+    const put = (list, mat, ink) => { if (!list.length) return; const m = inked(mergeGeometries(list), mat, ink); m.castShadow = ink > 0; this.group.add(m); list.forEach((g) => g.dispose()); };
+    put(stone, toon(0xe8c890, { rim: 0.3 }), OL * 0.6); put(gold, toon(0xf0b030, { rim: 0.6 }), OL * 0.5); put(dark, toon(0x4a3020), OL * 0.3); put(wood, toon(0x7a4e2c), 0); put(sand, toon(0xf0d098), 0);
   }
 
   // Chapter 3: the oasis's old stone well, with a little tiled roof, a rope and a bucket
@@ -5016,7 +5070,8 @@ export class World {
     if (this.M.indoor && port) cam.lookAt(this.camAt.x, 0.4, this.H * TILE / 2 + 1.2);
     else {
       // Ember Isle: near the north edge the camera tips its gaze up, so the volcano behind the town rises into view over the palms
-      const tilt = this.M.volcano && !this.M.indoor ? Math.max(0, Math.min(1, (5.5 - p.z / TILE) / 4)) * (port ? 5 : 5.5) : 0;
+      const tilt = this.M.volcano && !this.M.indoor ? Math.max(0, Math.min(1, (5.5 - p.z / TILE) / 4)) * (port ? 5 : 5.5)
+        : this.M.gate ? Math.max(0, Math.min(1, (this.M.gate[1] + 7.5 - p.z / TILE) / 4)) * (port ? 4 : 5) : 0; // (and the Sun Gate rises into view as you walk up to it)
       this.camTilt = (this.camTilt || 0) + (tilt - (this.camTilt || 0)) * (1 - Math.exp(-dt * 4));
       cam.lookAt(this.camAt.x, 0.4 + this.camTilt * 0.25, this.camAt.z - D + (far ? 1.6 : port ? 0.6 : 0.3) - this.camTilt);
     }
@@ -5545,25 +5600,27 @@ export class World {
   // (isles: the Chapter 2 finale's credits, a postcard tour of the Sunscatter Isles that ends at the shining lighthouse;
   //  'grand': after the 100% scene, both regions, ending back home in Sprout Village)
   credits(done, isles = false) {
-    const A = save.adv, F = A.flags, seen = A.seen || {}, back = [this.key, this.hx, this.hy, this.dir], grand = isles === 'grand';
-    const stops = (grand ? ['bloom', 'seashell', 'glowcap', 'neon', 'frostpeak', 'coral', 'bluffs', 'ember_isle', 'atoll', 'village'] : isles ? ['coral', 'bluffs', 'ember_isle', 'atoll'] : ['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak']).filter((k) => (seen[k] || k === this.key) && MAPS[k]);
+    const A = save.adv, F = A.flags, seen = A.seen || {}, back = [this.key, this.hx, this.hy, this.dir], grand = isles === 'grand', sands = isles === 'sands'; // (sands: the Chapter 3 credits)
+    if (sands) isles = false;
+    const stops = (sands ? ['oasis', 'duneroad', 'redrock', 'dunecamp', 'sungate'] : grand ? ['bloom', 'seashell', 'glowcap', 'neon', 'frostpeak', 'coral', 'bluffs', 'ember_isle', 'atoll', 'village'] : isles ? ['coral', 'bluffs', 'ember_isle', 'atoll'] : ['village', 'bloom', 'seashell', 'glowcap', 'ember', 'neon', 'cloudtop', 'frostpeak']).filter((k) => (seen[k] || k === this.key) && MAPS[k]);
     const spot = (k) => { // in front of the town's stadium, or by the hero's home in Sprout Village (or below the lighthouse)
       if (k === 'atoll') return [11, 5];
+      if (k === 'sungate') return [13, 9]; if (k === 'duneroad') return [16, 5];
       const b = (MAPS[k].buildings || []).find((q) => q.stadium);
       return b ? [b.x + b.door, b.y + b.h + 1] : [4, 7];
     };
-    const npcs = Object.values(MAPS).filter((M) => grand || !!M.isle === isles).flatMap((M) => M.npcs || []), cups = grand ? [...CUPS, ...ISLE_CUPS] : isles ? ISLE_CUPS : CUPS;
+    const npcs = Object.values(MAPS).filter((M) => sands ? !!M.sands : grand || (!!M.isle === isles && !M.sands)).flatMap((M) => M.npcs || []), cups = sands ? SANDS_CUPS : grand ? [...CUPS, ...ISLE_CUPS] : isles ? ISLE_CUPS : CUPS;
     const trainers = [...new Set(npcs.filter((n) => n.trainer).map((n) => n.name))];
-    const folk = [...new Set(npcs.filter((n) => !n.trainer && n.critter && n.critter !== '$hero' && !n.rival && !n.hideFlag && n.name && !/^(Gang|Vex|King|Morra|Captain Gill)/.test(n.name)).map((n) => n.name))];
+    const folk = [...new Set(npcs.filter((n) => !n.trainer && n.critter && n.critter !== '$hero' && !n.rival && !n.hideFlag && n.name && !/^(Gang|Vex|King|Morra|Captain Gill|Dust Devil|Baron)/.test(n.name)).map((n) => n.name))];
     const beat = npcs.filter((n) => n.trainer && F[n.id]).length, fav = Object.keys(F).filter((k) => k.endsWith('_done')).length;
     const hero = this.hero.def.name, rival = byId(rivalFor(A.hero))?.name || 'Voltferret', name = save.trainer?.name || 'Trainer';
     const stat = (ic, t, v) => `<p>${ic} ${t} <b>${v}</b></p>`;
     const el = document.createElement('div'); el.className = 'finale adv-credits';
     el.innerHTML = `<div class="credits"><div class="roll" style="animation-duration:${stops.length * 5.4 + 1.5}s">
       <div class="logo-top ol">CRITTER</div><div class="logo-bot ol">CLASH!</div>
-      <h2>${grand ? '🏅 Master Explorer 🏅' : isles ? '🏝️ Hero of the Sunscatter Isles 🏝️' : '👑 Champion of Clashara 👑'}</h2>${grand ? '<p><small>every corner of Clashara and the Sunscatter Isles</small></p>' : ''}<p class="cr-big">${hero}</p><p>and ${name}</p>
-      <h3>The journey</h3>${stat('🏆', isles && !grand ? 'Island cups won' : 'Cups won', `${cups.filter((c) => F['cup_' + c.id]).length} / ${cups.length}`)}${A.time >= 60 ? stat('⏱️', 'Time adventuring', (({ h, m }) => h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`)({ h: Math.floor(A.time / 3600), m: Math.floor(A.time / 60) % 60 })) : ''}${stat('👣', 'Steps walked', (A.steps || 0).toLocaleString())}${stat('⚔️', 'Trainers beaten', beat)}${stat('🌿', 'Wild critters met', A.cnt?.wild || 0)}${grand ? stat('🐾', 'Critter friends', save.unlocked.length) : ''}${stat('🎣', 'Fish caught', A.fishLog?.n || 0)}${stat('🤝', 'Favours done', fav)}${stat('🎩', 'Hats collected', (A.hats || []).length)}
-      <h3>Starring</h3><p><b>${hero}</b> <small>the hero</small></p><p><b>Dash</b> <small>the rival (${rival})</small></p>${grand ? '<p><b>Prof. Pecan</b> <small>as himself</small></p><p><b>King Snooze</b> <small>keeper of the Crown</small></p><p><b>Captain Puff</b> <small>and the mail balloon</small></p>' + '<p><b>Captain Gill</b> <small>and the Sunny Gull</small></p><p><b>Captain Morra</b> <small>of the Gloom Gulls</small></p><p><b>Keeper Lumi</b> <small>and the Starfall light</small></p><p><b>Marina · Zephyra · Magda</b> <small>the island cup bosses</small></p>' : isles ? '<p><b>Captain Gill</b> <small>and the Sunny Gull</small></p><p><b>Captain Morra</b> <small>of the Gloom Gulls</small></p><p><b>Keeper Lumi</b> <small>and the Starfall light</small></p><p><b>Marina · Zephyra · Magda</b> <small>the island cup bosses</small></p>' : '<p><b>Prof. Pecan</b> <small>as himself</small></p><p><b>King Snooze</b> <small>keeper of the Crown</small></p><p><b>Captain Puff</b> <small>and the mail balloon</small></p>'}
+      <h2>${sands ? '🏜️ Hero of the Amber Sands 🏜️' : grand ? '🏅 Master Explorer 🏅' : isles ? '🏝️ Hero of the Sunscatter Isles 🏝️' : '👑 Champion of Clashara 👑'}</h2>${grand ? '<p><small>every corner of Clashara and the Sunscatter Isles</small></p>' : ''}<p class="cr-big">${hero}</p><p>and ${name}</p>
+      <h3>The journey</h3>${stat('🏆', sands ? 'Desert cups won' : isles && !grand ? 'Island cups won' : 'Cups won', `${cups.filter((c) => F['cup_' + c.id]).length} / ${cups.length}`)}${A.time >= 60 ? stat('⏱️', 'Time adventuring', (({ h, m }) => h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`)({ h: Math.floor(A.time / 3600), m: Math.floor(A.time / 60) % 60 })) : ''}${stat('👣', 'Steps walked', (A.steps || 0).toLocaleString())}${stat('⚔️', 'Trainers beaten', beat)}${stat('🌿', 'Wild critters met', A.cnt?.wild || 0)}${grand ? stat('🐾', 'Critter friends', save.unlocked.length) : ''}${stat('🎣', 'Fish caught', A.fishLog?.n || 0)}${stat('🤝', 'Favours done', fav)}${stat('🎩', 'Hats collected', (A.hats || []).length)}
+      <h3>Starring</h3><p><b>${hero}</b> <small>the hero</small></p><p><b>Dash</b> <small>the rival (${rival})</small></p>${sands ? '<p><b>Conductor Tamsin</b> <small>and the Sand-Rail</small></p><p><b>Baron Sirocco</b> <small>of the Dust Devils</small></p><p><b>Elder Sabah</b> <small>keeper of the old songs</small></p><p><b>Amaya · Maro · Rasha</b> <small>the desert cup bosses</small></p>' : grand ? '<p><b>Prof. Pecan</b> <small>as himself</small></p><p><b>King Snooze</b> <small>keeper of the Crown</small></p><p><b>Captain Puff</b> <small>and the mail balloon</small></p>' + '<p><b>Captain Gill</b> <small>and the Sunny Gull</small></p><p><b>Captain Morra</b> <small>of the Gloom Gulls</small></p><p><b>Keeper Lumi</b> <small>and the Starfall light</small></p><p><b>Marina · Zephyra · Magda</b> <small>the island cup bosses</small></p>' : isles ? '<p><b>Captain Gill</b> <small>and the Sunny Gull</small></p><p><b>Captain Morra</b> <small>of the Gloom Gulls</small></p><p><b>Keeper Lumi</b> <small>and the Starfall light</small></p><p><b>Marina · Zephyra · Magda</b> <small>the island cup bosses</small></p>' : '<p><b>Prof. Pecan</b> <small>as himself</small></p><p><b>King Snooze</b> <small>keeper of the Crown</small></p><p><b>Captain Puff</b> <small>and the mail balloon</small></p>'}
       <h3>Trainers</h3><p>${trainers.join(' · ')}</p>
       <h3>Townsfolk</h3><p>${folk.join(' · ')}</p>
       <h3>Made by</h3><p>zchillsounds</p><p><small>built with Claude Code</small></p>

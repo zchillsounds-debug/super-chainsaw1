@@ -51,6 +51,21 @@ if (want('rooms')) {
     await shot('room-' + n);
   }
 }
+if (want('gate')) {
+  // the big dune: bumps until the Baron's map is found, then leads to the Sun Gate (arrival scene)
+  await start('dunecamp', 15, 12, 's', ['dash_canyon', 'dunecamp_arrive', 'cup_sandstorm', 'post_sandstorm', 'devils2']);
+  await walk('ArrowDown', 1.2);
+  console.log('no map:', await W());
+  await start('dunecamp', 15, 12, 's', ['dash_canyon', 'dunecamp_arrive', 'cup_sandstorm', 'post_sandstorm', 'devils2', 'citymap']);
+  await walk('ArrowDown', 2.4);
+  await pg.waitForTimeout(2000); await pg.evaluate(() => __sim(2.5));
+  console.log('walked south:', await W(), 'arrive:', await pg.evaluate(() => !!__save.adv.flags.sungate_arrive), 'goal:', await pg.evaluate(() => __game.screens.goalLine(__save.adv.flags)));
+  await shot('gate-arrive');
+  for (const [n, x, y, d, ex] of [['gate', 13, 10, 'n', []], ['ruins', 8, 13, 'e', []], ['gate-open', 13, 10, 'n', ['baron', 'gate_open']]]) {
+    await start('sungate', x, y, d, ['dash_canyon', 'dunecamp_arrive', 'cup_sandstorm', 'post_sandstorm', 'devils2', 'citymap', 'sungate_arrive', ...ex]);
+    await pg.evaluate(() => __sim(1)); await shot('view-' + n);
+  }
+}
 if (want('map')) {
   await start('dunecamp', 16, 6, 's', ['dash_canyon', 'dunecamp_arrive']);
   await pg.evaluate(() => __game.screens.worldMap());
