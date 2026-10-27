@@ -458,6 +458,73 @@ export const FORMS = {
         colors: { body: 0x5470c4, dark: 0x1a2660, cloud: 0xe8eeff, orb: 0xdff4ff, plume: 0xffffff }, parts: { windring: 1, cloudcrest: 0.8, orbs: 0.55, plumes: 0.7 }, moves: { special: 'Monsoon Loop', super: 'Typhoon Spin' } },
     ],
   },
+  // ---- D1: the Amber Sands (desert) ----
+  sizzlard: {
+    path: 'Swift',
+    forms: [
+      { name: 'Scorchfrill', species: 'Flare Lizard', size: 1.12, voice: 1.0, bodyMul: { ...GROW2, w: 1.08 }, tailScale: 1.35,
+        blurb: 'Its frill grew wide enough to shade a whole nest of eggs. When it snaps it open, the sand under it turns to glass.',
+        colors: { frill: 0xff4a1e, frillTip: 0xffe14d, accent: 0xff3a1a }, parts: { frill: 1.3, brows: 0.45 }, moves: { special: 'Scorch Haze', super: 'Mirage Inferno' } },
+      { name: 'Solarisk', species: 'Sunfire Lizard', size: 1.3, voice: 0.82, bodyMul: { ...GROW3, w: 1.15, limb: 1.6 }, tailScale: 1.7,
+        blurb: 'Soaks up a whole desert day in its frill and lets it out all at once. Travellers mistake it for a second sunset.',
+        colors: { body: 0xd8822a, dark: 0x5a1e08, frill: 0xff3a14, frillTip: 0xfff08a, flame: 0xffc83a, horn: 0xfff0c8 }, parts: { frill: 1.42, flamecrest: 0.45, horns: 0.4, brows: 0.8 }, moves: { special: 'Solar Haze', super: 'Sunfire Mirage' } },
+    ],
+  },
+  humpdrop: {
+    path: 'Fortress',
+    forms: [
+      { name: 'Twinspout', species: 'Spring Camel', size: 1.12, voice: 0.9, bodyMul: { ...GROW2, w: 1.14, chubby: 1.04 },
+        blurb: 'Two humps now, two tanks of cool spring water. It leads caravans from one well to the next and never gets lost.',
+        colors: { hump: 0x9a6232, drop: 0x4ad0ff }, parts: { hump: 1.45, whiskers: 0.4 }, moves: { special: 'Spring Geyser', super: 'Twin Surge' } },
+      { name: 'Fountamel', species: 'Fountain Camel', size: 1.3, voice: 0.72, bodyMul: { ...GROW3, w: 1.26, chubby: 1.06, limb: 1.7 },
+        blurb: 'Where it kneels to rest, a fresh spring bubbles up. Every oasis on the old maps is a place one of them once slept.',
+        colors: { body: 0xcc9e64, hump: 0x8a5428, drop: 0x3ac8ff, fin: 0x4ac0ff, pearl: 0xe8fbff }, parts: { hump: 1.75, backfin: 0.55, pearl: 0.8, brows: 0.6 }, moves: { special: 'Fountain Geyser', super: 'Great Oasis' } },
+    ],
+  },
+  cactortle: {
+    path: 'Colossus',
+    forms: [
+      { name: 'Saguarshell', species: 'Saguaro Tortoise', size: 1.14, voice: 0.72, bodyMul: { ...GROW2, w: 1.16, h: 1.15, chubby: 1.06 },
+        blurb: 'Its shell grew into a little saguaro grove. Desert birds nest in it, and it is far too polite to ask them to leave.',
+        colors: { shell: 0x348a48, bloom: 0xff5a9a }, parts: { cactshell: 1.12, brows: 0.4 }, moves: { special: 'Needle Storm', super: 'Saguaro Grove' } },
+      { name: 'Bloomesa', species: 'Mesa Tortoise', size: 1.32, voice: 0.6, bodyMul: { ...GROW3, w: 1.3, h: 1.35, chubby: 1.1, limb: 1.7 },
+        blurb: 'An old mesa that learned to walk. Once a year its whole back bursts into flower, and the desert comes to look.',
+        colors: { body: 0x7aa84a, shell: 0x2e7a40, bloom: 0xff4a8a, dark: 0x1e3a18, rock: 0xc88a5a }, parts: { cactshell: 1.32, flowers: 0.6, stonearmor: 0.45, brows: 0.8 }, moves: { special: 'Thorn Tempest', super: 'Desert Bloom' } },
+    ],
+  },
+  fennzap: {
+    path: 'Storm',
+    forms: [
+      { name: 'Fennvolt', species: 'Storm Fennec', size: 1.1, voice: 1.25, earScale: 1.95, bodyMul: { ...GROW2, w: 1.04 }, tailScale: 1.3,
+        blurb: 'Its ears crackle in the dry wind and light up blue at night. It can hear a storm three dunes away.',
+        colors: { accent: 0x5ae0ff, bolt: 0x7af0ff }, parts: { boltmane: 0.45 }, moves: { special: 'Ear Volt', super: 'Dune Storm' } },
+      { name: 'Thunderfenn', species: 'Thunder Fennec', size: 1.26, voice: 1.0, earScale: 2.1, bodyMul: { ...GROW3, w: 1.1, limb: 1.5 }, tailScale: 1.55,
+        blurb: 'Calls dry lightning down onto the dunes and leaves glass flowers where it strikes. Its ears hum like power lines.',
+        colors: { body: 0xf0cc88, dark: 0x6a4018, accent: 0x3ad0ff, bolt: 0xb8f4ff, horn: 0xffe14d }, parts: { boltmane: 0.8, horns: 0.45, brows: 0.6 }, moves: { special: 'Thunder Ears', super: 'Dune Tempest' } },
+    ],
+  },
+  scarabold: {
+    path: 'Brute',
+    forms: [
+      { name: 'Bouldarab', species: 'Boulder Scarab', size: 1.14, voice: 0.8, bodyMul: { ...GROW2, w: 1.16, chubby: 1.05 },
+        blurb: 'Rolls boulders bigger than itself up canyon walls, just to watch them roll back down. Its wing cases shine like tiles.',
+        colors: { shellA: 0x1e9aa8, shellB: 0x7a3ab8, horn: 0xffe0a0 }, parts: { scarab: 1.3, brows: 0.5 }, moves: { special: 'Boulder Roll', super: 'Rockslide Rush' } },
+      { name: 'Monolarab', species: 'Monolith Scarab', size: 1.32, voice: 0.66, bodyMul: { ...GROW3, w: 1.3, chubby: 1.08, limb: 1.8 },
+        blurb: 'The buried city\'s builders carved it on their gates. Its shell glitters with gold veins and old sand-worn glyphs.',
+        colors: { body: 0x2e5a7a, dark: 0x101e2e, shellA: 0x18a0a8, shellB: 0x6a2aa8, horn: 0xffd88a, crystal: 0xffd23a }, parts: { scarab: 1.6, crystalridge: 0.5, brows: 0.9 }, moves: { special: 'Monolith Roll', super: 'Canyon Collapse' } },
+    ],
+  },
+  siroccat: {
+    path: 'Sky',
+    forms: [
+      { name: 'Sandsquall', species: 'Squall Meerkat', size: 1.1, voice: 1.15, bodyMul: { ...GROW2, w: 1.06 }, tailScale: 1.3,
+        blurb: 'Keeps watch from the top of the tallest dune. A little whirl of sand follows it everywhere, like a pet.',
+        colors: { lens: 0x5ae8ff, goggle: 0x5a3a1a }, parts: { goggles: 1.12, windring: 0.45 }, moves: { special: 'Sand Devil', super: 'Squall Cyclone' } },
+      { name: 'Simoomcat', species: 'Storm Meerkat', size: 1.26, voice: 0.95, bodyMul: { ...GROW3, w: 1.12, limb: 1.5 }, tailScale: 1.55,
+        blurb: 'Rides the great sandstorms like a surfer rides waves. When it lands, the storm curls up at its feet and goes to sleep.',
+        colors: { body: 0xc8a470, dark: 0x4a2e14, lens: 0x7af0ff, goggle: 0x4a2e14, plume: 0xfff2dc }, parts: { goggles: 1.3, windring: 0.8, plumes: 0.5, brows: 0.6 }, moves: { special: 'Simoom Devil', super: 'Great Sandstorm' } },
+    ],
+  },
 };
 
 // generic grown forms get a feature themed on their type
@@ -1126,9 +1193,9 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
   // Humpdrop: one hump (two on grown forms, P.hump > 1.3) on the back with a water droplet tucked on top
   if (P.hump) {
     const s = P.hump, hm = mat('hump', C.hump ?? C.body), dm = mat('drop', C.drop ?? 0x5ad0ff, { rim: 1 }), two = s > 1.3;
-    for (const dz of two ? [-0.32, 0.32] : [0]) {
-      const h = inked(sphere(B.w * 0.5 * Math.min(s, 1.2)), hm, OL * 0.7);
-      h.scale.set(0.9, 0.95, 0.8); h.position.set(0, B.h * (0.66 + dz * 0.6), -B.w * 0.52); TO.add(h);
+    for (const dz of two ? [-0.4, 0.4] : [0]) { // two humps sit apart down the back, each a little smaller, so they read as two
+      const h = inked(sphere(B.w * (two ? 0.42 : 0.5) * Math.min(s, 1.2)), hm, OL * 0.7);
+      h.scale.set(0.9, 0.95, 0.8); h.position.set(0, B.h * (0.64 + dz * 0.6), -B.w * (two ? 0.5 : 0.52)); TO.add(h);
     }
     const dg = new THREE.Group(); dg.position.set(0, B.h * 0.62 + B.w * 0.4, -B.w * 0.58);
     const d = inked(sphere(B.w * 0.11 * s), dm, OL * 0.5); d.scale.set(1, 1.15, 1); dg.add(d);
@@ -1151,7 +1218,7 @@ export function buildGrowth(cr, def, U, OL, { flameGeo, leafGeo, boltGeo }) {
       for (let k = 0; k < 5; k++) { const pt = inked(sphere(headR * 0.09), bm, OL * 0.3); pt.scale.set(1, 0.45, 1.6); const a = k / 5 * Math.PI * 2; pt.position.set(Math.cos(a) * headR * 0.1, 0, Math.sin(a) * headR * 0.1); pt.rotation.y = -a; fl.add(pt); }
       fl.add(new THREE.Mesh(sphere(headR * 0.06), mat('bloomC', 0xffe14d))); SK.add(fl);
     }
-    const nF = s > 1.3 ? 3 : 1;
+    const nF = s > 1.3 ? 3 : s > 1.08 ? 2 : 1;
     for (let f = 0; f < nF; f++) {
       const fg = new THREE.Group(); fg.position.set((f - (nF - 1) / 2) * R * 0.55, B.h * 0.5 + R * 0.8 - Math.abs(f - (nF - 1) / 2) * R * 0.12, -B.w * 0.3 - R * 0.35);
       for (let k = 0; k < 5; k++) { const pt = inked(sphere(R * 0.09), bm, OL * 0.3); pt.scale.set(1, 0.4, 1.6); const a = k / 5 * Math.PI * 2; pt.position.set(Math.cos(a) * R * 0.1, 0, Math.sin(a) * R * 0.1); pt.rotation.y = -a; fg.add(pt); }
