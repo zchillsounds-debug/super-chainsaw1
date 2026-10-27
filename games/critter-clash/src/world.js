@@ -1071,7 +1071,8 @@ export class World {
       const b = new THREE.BoxGeometry(1.2, 0.7, 0.14); b.translate(px, 1.05, pz + 0.05); boards.push(b);
     }
     const put = (list, color, ink = OL) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color), ink); this.group.add(m); list.forEach((g) => g.dispose()); };
-    put(rocks, this.M.sands ? 0xc8845a : 0x9a94a8); // (desert rocks are warm sandstone) if (crags.length) { const m = inked(mergeGeometries(crags), toon(0x7a6e80, { rim: 0.08 }), OL * 0.6); this.group.add(m); crags.forEach((g) => g.dispose()); } put(frostRocks, 0x7a8aa8); put(caps, 0xf8fbff, OL * 0.6); put(snow, 0xffffff);
+    put(rocks, this.M.sands ? 0xc8845a : 0x9a94a8); // (desert rocks are warm sandstone)
+    if (crags.length) { const m = inked(mergeGeometries(crags), toon(this.M.sands ? 0x7a4a2c : 0x7a6e80, { rim: 0.08 }), OL * 0.6); this.group.add(m); crags.forEach((g) => g.dispose()); } put(frostRocks, 0x7a8aa8); put(caps, 0xf8fbff, OL * 0.6); put(snow, 0xffffff);
     if (shards.length) { const m = inked(mergeGeometries(shards), toon(0xa8eaff, { rim: 1 }), OL * 0.5); m.castShadow = true; this.group.add(m); shards.forEach((g) => g.dispose()); } put(coal, 0x2a2a34, 0); put(carrot, 0xff8a2a, OL * 0.4);
     if (drifts.length) { const m = new THREE.Mesh(mergeGeometries(drifts), toon(0xf6faff, { rim: 0.8 })); m.receiveShadow = true; this.group.add(m); drifts.forEach((g) => g.dispose()); }
     put(posts, 0xfff4e0, OL * 0.6); put(rails, 0xfff4e0, OL * 0.5); put(sticks, 0x8a5a3a, OL * 0.5); put(boards, 0xc8925a);
@@ -4517,6 +4518,9 @@ export class World {
       if (X && dir === 's') { sfx.door(); this.fade(() => this.load(X.map, X.x, X.y, 's')); return; }
       return this.bump();
     }
+    if (this.M.gate && save.adv.flags.gate_open && nx === this.M.gate[0] + 2 && ny === this.M.gate[1] + 1) { // through the open Sun Gate, down into the Buried City
+      sfx.door(); this.fade(() => { this.load('buried1', 10, 14, 'n'); setTimeout(() => { if (this.S.worldObj === this && !this.dialogEl?.isConnected && !this.busy) this.S.worldIntro?.(this); }, 500); }); return;
+    }
     const bo = this.puz?.boulders.find((b) => b.x === nx && b.y === ny);
     if (bo) return this.push(bo, dx, dy, dir);
     const who = this.occupied(nx, ny, 'hero');
@@ -4550,6 +4554,7 @@ export class World {
     if (dir === 's') { x = nx + e.off; y = 0; }
     if (dir === 'w') { x = M2.tiles[0].length - 1; y = ny + e.off; }
     if (dir === 'e') { x = 0; y = ny + e.off; }
+    if (e.at) [x, y] = e.at; // a fixed landing spot (the Buried City comes back out at the Sun Gate's steps)
     this.fade(() => { this.load(e.to, x, y, dir); setTimeout(() => { if (this.S.worldObj === this && !this.dialogEl?.isConnected && !this.busy) this.S.worldIntro?.(this); }, 500); }); // a map's arrival scene plays as you walk in (it waited for the next battle or menu before)
   }
 

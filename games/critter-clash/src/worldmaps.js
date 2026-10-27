@@ -1091,6 +1091,44 @@ export const MAPS = {
     ],
   },
 
+  // ===== Chapter 3 (D3): the Buried City, through the open Sun Gate. Floor 1, the Sun Hall: a field of polished gold tiles you
+  // slide across (like Frostpeak's ice: plan where you stop), a sandstone block to roll onto a sun plate, and a treasure =====
+  buried1: {
+    name: 'Buried City',
+    music: 'cave',
+    arena: 'dunes',
+    sands: 'city',
+    extra: true,
+    cave: true,
+    border: 'rock',
+    outer: 0x2a1a10,
+    palette: { a: '#c8a470', b: '#c29e6a', tall: '#b89040', path: '#b08a58', ice: '#f2c858', water: '#3ac8c8', bank: '#6a4a2a', dark: 'rgba(40,20,0,0.3)', lite: 'rgba(255,230,160,0.18)' },
+    mood: { sun: 0xffd8a0, sunI: 1.1, sky: 0xffe0a8, gnd: 0x4a3018, hemiI: 1.15, fog: 0x2a1a10 },
+    tiles: [
+      'RRRRRRRRRRRRRRRRRRRR',
+      'RRRRRRRR....RRRRRRRR',
+      'RRRRRRR......RRRRRRR',
+      'RRRRRRRR....RRRRRRRR',
+      'RRRRRRRRRR.RRRRRRRRR',
+      'RR...............RRR',
+      'RRRRRRRRRRRRRR.RRRRR',
+      'RRiiiiiiiiiiiRiiiiRR',
+      'RRiiiiiiiiiiiiiRiiRR',
+      'RRiiiiiiiiiiiRiiiiRR',
+      'RRiiiiiiiiiiiiiiRiRR',
+      'RRiiiiiiiiiiRiiiiiRR',
+      'RRiiRiiiiiiiiiiiiiRR',
+      'RRR.RRRRRRRRRRRRRRRR',
+      'RR...........RRRRRRR',
+      'RRRRRRRRRR..RRRRRRRR',
+    ],
+    edges: { s: { to: 'sungate', at: [13, 8] } }, // the way out leads back through the gate
+    boulders: [[12, 5, 'plate']], plates: [[5, 5]], gates: [[10, 4]], gateFlag: 'buried_gate',
+    chest: { x: 9, y: 2, flag: 'buried_chest', hat: 'suncrown', berries: 25, hatLine: '...and a Sun Crown of old gold, warm as a summer afternoon!' },
+    signs: [{ x: 5, y: 14, text: 'Old letters, carved deep: "THE FLOOR OF THE SUN HALL IS POLISHED GOLD. WHERE YOU SLIDE, YOU STOP ONLY AT STONE."' }, { x: 3, y: 5, text: 'A sun is carved in the floor here. Something heavy belongs on it. (Pushed a block too far? Step outside and it rolls back.)' }],
+    npcs: [],
+  },
+
   // ===== M3: Windcrest Stack, a hidden sea stack off Breezy Bluffs (only the Kite Glider reaches it): a seabird colony and a nest with a rare egg =====
   stack: {
     name: 'Windcrest Stack',

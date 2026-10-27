@@ -187,6 +187,15 @@ export function storyIntro(S, w) {
     ], () => { const after = () => w.say(['★ CHAPTER 3 COMPLETE ★  You saved the Amber Sands! The Sun Gate is safe with the camp, the Sand-Rail runs both ways, and every desert cup welcomes a rematch.']); if (w.credits) w.credits(after, 'sands'); else after(); });
     return;
   }
+  if (w.key === 'buried1' && !F.buried_arrive) {
+    F.buried_arrive = true; persist();
+    w.say([
+      '{hero} squeezes through the crack in the Sun Gate. Inside, it is cool and quiet, and the floor shines like a mirror made of gold.',
+      'Light falls in thin beams through holes in the roof, far, far above. The sand has kept this hall safe for a thousand years.',
+      'Somewhere ahead, past the shining floor, a stone door is shut tight.',
+    ]);
+    return;
+  }
   if (w.key === 'redrock' && F.devils1 && !F.sunshard) {
     F.sunshard = true; persist(); reward(1);
     w.say([

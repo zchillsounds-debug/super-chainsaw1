@@ -79,6 +79,25 @@ if (want('storm')) {
   await pg.evaluate(() => { const H = __game.battle.hazards; H.signature(); __sim(1.6); });
   await shot('storm-fight-sig');
 }
+if (want('city')) {
+  // D3: through the open Sun Gate into the Buried City; solve the gold floor (7 slides), roll the block onto the sun plate, open the chest
+  const all = ['dash_canyon', 'dunecamp_arrive', 'cup_sandstorm', 'post_sandstorm', 'devils2', 'citymap', 'sungate_arrive', 'baron', 'gate_open'];
+  await start('sungate', 13, 7, 'n', all);
+  await walk('ArrowUp', 0.3); await pg.waitForTimeout(2000); await pg.evaluate(() => __sim(2.5));
+  console.log('into the gate:', await W(), 'arrive:', await pg.evaluate(() => !!__save.adv.flags.buried_arrive));
+  await shot('city-in');
+  await start('buried1', 3, 13, 'n', [...all, 'buried_arrive']);
+  const tap = async (key) => { await pg.keyboard.down(key); await pg.waitForTimeout(120); await pg.evaluate(() => __sim(0.22)); await pg.keyboard.up(key); await pg.waitForTimeout(80); await pg.evaluate(() => __sim(2.2)); };
+  for (const k of ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft', 'ArrowUp']) { await tap(k); console.log(' ', k, await W()); }
+  await shot('city-ice');
+  await tap('ArrowUp'); for (let k = 0; k < 8; k++) await tap('ArrowLeft'); // one step, then seven pushes: the block lands on the plate
+  console.log('block:', await W(), 'gate flag:', await pg.evaluate(() => !!__save.adv.flags.buried_gate));
+  await shot('city-plate');
+  await pg.evaluate(() => { const o = __game.screens.worldObj; o.load('buried1', 9, 3, 'n'); __sim(0.6); o.tapA = true; __sim(0.3); });
+  await pg.waitForTimeout(500);
+  console.log('chest:', await pg.evaluate(() => [!!__save.adv.flags.buried_chest, (__save.adv.hats || []).includes('suncrown')].join(',')));
+  await shot('city-chest');
+}
 if (want('map')) {
   await start('dunecamp', 16, 6, 's', ['dash_canyon', 'dunecamp_arrive']);
   await pg.evaluate(() => __game.screens.worldMap());
