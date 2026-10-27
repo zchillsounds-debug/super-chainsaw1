@@ -196,6 +196,23 @@ export function storyIntro(S, w) {
     ]);
     return;
   }
+  if (w.key === 'buried2' && !F.buried2_arrive) {
+    F.buried2_arrive = true; persist();
+    w.say([
+      'The stairs behind the chest wind down into a long hall. Bronze mirrors stand about on stone plinths, dusty but still bright.',
+      'A single sunbeam pours in through a round hole in the west wall and bounces off the first mirror... into the floor.',
+      'On the far wall, an old bronze sun waits in the dark. Beside it, iron bars block the way on. (Face a mirror and press A to turn it.)',
+    ]);
+    return;
+  }
+  if (w.key === 'buried3' && !F.buried3_arrive) {
+    F.buried3_arrive = true; persist();
+    w.say([
+      'Down here, no sunbeam reaches. It is darker than the darkest night... and then the Sun Crown from the hall above begins to glow, warm and gold, all by itself.',
+      'A little pool of light, just enough to see the next few steps. Somewhere in the dark, something skitters away.',
+    ]);
+    return;
+  }
   if (w.key === 'redrock' && F.devils1 && !F.sunshard) {
     F.sunshard = true; persist(); reward(1);
     w.say([
@@ -442,6 +459,7 @@ export function nextGoal(F) {
     if (F.cup_sandstorm && !F.devils2) return 'Dune Warden Rasha is going to the Dust Devils\' black tent at the Dune Camp. Get past the guards on its door!';
     if (F.devils2 && !F.citymap) return 'The Dust Devil HQ is open. Find out what the Dust Devils are after inside their black tent.';
     if (F.citymap && !F.baron) return F.sungate_arrive ? 'Baron Sirocco is at the Sun Gate. Stop him, and bring the Sun Shard home!' : 'Cross the big dune south of the Dune Camp to the Sun Gate, where Baron Sirocco is digging.';
+    if (F.gate_open && !F.buried_vault) return F.buried_beam ? 'Past the Hall of Mirrors, the Buried City\'s Starless Vault waits in the dark. Find what it keeps!' : F.buried_chest ? 'Stairs behind the Sun Hall\'s chest lead down to the Hall of Mirrors. Turn the mirrors and steer the sunbeam onto the old sun disc!' : 'The Sun Gate is open a crack. Explore the Buried City beyond it: the Sun Hall\'s gold floor and its treasure.';
     if (!F.sunstone) return F.morra ? 'Bring the Sunstone home to the Starfall lighthouse!' : 'Sail to Starfall Atoll with Captain Gill (Port Coral) and take the Sunstone back from Captain Morra!';
     // post-game: point at whatever is still open (the Tower, the glider, the legends)
     if (!(save.adv.tower?.best >= 7)) return 'Morra has opened a Battle Tower on Starfall Atoll. Win 7 in a row for Bronze rank!';

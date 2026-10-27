@@ -328,7 +328,7 @@ export class World {
     this.rain = showers && !twinkleEve && !winterFall; // on Twinkle Week evenings a shower comes down as snow instead
     this.rainBelow = key === 'reach' && !!(save.adv.rain ?? (!!save.adv.flags?.quest && rainAt('bloom', new Date(), hr))); // Rainbow Reach floats above the weather: it's lucky while it rains on the mainland
     this.storm = this.rain && !!(save.adv.storm ?? stormAt(new Date(), hr)); this.boltT = 2.5 + Math.random() * 3;
-    this.sandstorm = !!M.sands && !M.indoor && !!(save.adv.sandstorm ?? (!!save.adv.flags?.sands_arrive && sandAt(new Date(), hr))); // the Amber Sands' weather
+    this.sandstorm = !!M.sands && !M.indoor && !M.cave && !!(save.adv.sandstorm ?? (!!save.adv.flags?.sands_arrive && sandAt(new Date(), hr))); // the Amber Sands' weather
     this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (!!save.adv.flags?.quest && hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
     this.frost = (isFrost() || isWinter()) && canRain(M) && this.phase === 'day' && (winterFall || !this.rain && !this.afterRain && hr >= 6 && hr < 10); // (a winter snowfall dusts them white all day) // late-autumn mornings: a white frost on the grass and the treetops until mid-morning
     this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)) || (twinkleEve || winterFall) && showers; // now and then a proper snowfall up in the mountains (light flurries otherwise)
@@ -1550,8 +1550,116 @@ export class World {
       const m = inked(new THREE.DodecahedronGeometry(0.72, 0), stone, OL * 0.6); m.scale.set(1, 0.9, 1); m.rotation.y = x + y; m.position.set(px, 0.62, pz); m.castShadow = true; this.group.add(m);
       P.boulders.push({ x: at[0], y: at[1], m, t: 0 }); this.solid.add(at[0] + ',' + at[1]);
     }
+    if (M.beam) this.buildBeam();
+    for (const sg of M.signs || []) if (sg.mural) this.buildMural(sg);
     this.pressPlates(true);
     this.buildChest();
+  }
+
+  // D3, the Hall of Mirrors: a sun window in the wall, bronze mirrors on stands (A turns one between / and \), an old sun disc
+  // set in the north wall, and the beam itself, re-traced tile by tile whenever a mirror turns. Mirror turns are saved per map
+  buildBeam() {
+    const M = this.M, P = this.puz, F = save.adv.flags, saved = save.adv.mirrors?.[this.key];
+    const bronze = toon(0xc8903a, { rim: 0.9, emissive: 0x2a1600 }), stone = toon(0xb89a74, { rim: 0.2 }), glass = new THREE.MeshBasicMaterial({ color: 0xfff4dc, side: THREE.DoubleSide }); glass.userData.own = true;
+    const glow = (col, op, s) => { const m = new THREE.MeshBasicMaterial({ map: glowTex(), color: col, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: op }); m.userData.own = true; const q = new THREE.Mesh(new THREE.PlaneGeometry(s, s), m); return q; };
+    { // the sun window: a round hole in the wall with sunlight pouring through, and a pale shaft of dust
+      const [px, pz] = wpos(M.beam.x, M.beam.y), g = new THREE.Group(); g.position.set(px + M.beam.dx * 0.95, 0, pz + M.beam.dy * 0.95); g.rotation.y = Math.atan2(M.beam.dx, M.beam.dy); this.group.add(g);
+      const rim = inked(new THREE.TorusGeometry(0.42, 0.1, 6, 18), stone, OL * 0.3); rim.position.y = 1.0; g.add(rim);
+      const hm = new THREE.MeshBasicMaterial({ color: 0xfff2c0 }); hm.userData.own = true; const hole = new THREE.Mesh(new THREE.CircleGeometry(0.4, 18), hm); hole.position.set(0, 1.0, -0.02); g.add(hole);
+      const gl = glow(0xffd070, 0.8, 2.6); gl.position.set(0, 1.0, 0.05); g.add(gl);
+    }
+    { // the sun disc in the north wall: bronze, with a ring of rays; it blazes once the beam finds it
+      const [x, y] = M.sunDisc, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz + 0.98); this.group.add(g);
+      const dm = toon(0x9a6a2a, { rim: 0.8, emissive: 0x000000 }).clone(); dm.userData.own = true;
+      const disc = inked(new THREE.CylinderGeometry(0.5, 0.5, 0.12, 20), dm, OL * 0.3); disc.rotation.x = Math.PI / 2; disc.position.y = 1.0; g.add(disc);
+      for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2, r = inked(new THREE.ConeGeometry(0.1, 0.32, 4), dm, OL * 0.2); r.position.set(Math.cos(a) * 0.72, 1.0 + Math.sin(a) * 0.72, 0); r.rotation.z = a - Math.PI / 2; g.add(r); }
+      const gl = glow(0xffc850, 0, 4); gl.position.set(0, 1.0, 0.1); g.add(gl);
+      P.disc = { x, y, dm, gl, lit: !!F[M.gateFlag] };
+    }
+    P.mirrors = M.mirrors.map(([x, y, o], i) => { // a stone plinth, a bronze ring on a fork, and a polished face
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(x + ',' + y);
+      const base = inked(new THREE.CylinderGeometry(0.5, 0.6, 0.35, 8), stone, OL * 0.4); base.position.y = 0.17; g.add(base);
+      const turn = new THREE.Group(); turn.position.y = 1.0; turn.scale.setScalar(1.25); g.add(turn);
+      for (const sd of [-1, 1]) { const arm = inked(new THREE.BoxGeometry(0.08, 0.75, 0.08), bronze, OL * 0.2); arm.position.set(sd * 0.62, -0.32, 0); turn.add(arm); }
+      const ring = inked(new THREE.TorusGeometry(0.55, 0.07, 6, 20), bronze, OL * 0.25); turn.add(ring);
+      const face = new THREE.Mesh(new THREE.CircleGeometry(0.5, 20), glass); turn.add(face);
+      const mo = saved?.[i] || o; turn.rotation.y = mo === '/' ? Math.PI / 4 : -Math.PI / 4;
+      return { x, y, o: mo, turn, face, t: 0 };
+    });
+    P.beamMeshes = []; this.traceBeam(true);
+  }
+
+  // the Starless Vault's mural: a sandstone stele at the back of the vault, carved with a great sun-bird asleep under the dunes and
+  // three stars in a row, its gold inlay faintly glowing in the dark (the sign post it stands for is hidden; A reads it)
+  buildMural(sg) {
+    const [px, pz] = wpos(sg.x, sg.y);
+    const tex = canvasTex(320, 180, (c) => {
+      c.fillStyle = '#a8804e'; c.fillRect(0, 0, 320, 180);
+      for (let k = 0; k < 140; k++) { c.fillStyle = `rgba(${k % 2 ? '60,36,16' : '230,200,150'},0.12)`; c.fillRect((k * 97) % 320, (k * 53) % 180, 3 + k % 5, 2); }
+      c.lineWidth = 5; c.strokeStyle = '#5a3818'; c.strokeRect(6, 6, 308, 168);
+      c.lineCap = 'round'; c.lineJoin = 'round';
+      const gold = '#f4c850', ink = '#4a2c12';
+      c.fillStyle = gold; for (const [x, y] of [[124, 30], [160, 24], [196, 30]]) { c.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 4 : 10, a = i / 10 * Math.PI * 2 - Math.PI / 2; c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); } c.fill(); }
+      c.strokeStyle = ink; c.lineWidth = 4; // dunes
+      for (const [y, a] of [[150, 18], [162, 12]]) { c.beginPath(); c.moveTo(14, y); for (let x = 14; x <= 306; x += 6) c.lineTo(x, y - Math.sin((x - 14) / 292 * Math.PI) * a - Math.sin(x / 30) * 3); c.stroke(); }
+      c.beginPath(); c.arc(160, 104, 26, 0, Math.PI * 2); c.fillStyle = gold; c.fill(); c.stroke(); // the sun behind it
+      for (const sd of [-1, 1]) { // wings: long sweeping curves with feather lines
+        c.beginPath(); c.moveTo(160 + sd * 14, 112); c.quadraticCurveTo(160 + sd * 70, 60, 160 + sd * 136, 92); c.quadraticCurveTo(160 + sd * 92, 112, 160 + sd * 18, 126); c.closePath(); c.fillStyle = '#c89a5a'; c.fill(); c.stroke();
+        for (let f = 0; f < 5; f++) { const t = 0.3 + f * 0.15; c.beginPath(); c.moveTo(160 + sd * (30 + f * 20), 104 - f * 2); c.lineTo(160 + sd * (44 + f * 22), 112 + t * 4); c.stroke(); }
+      }
+      c.beginPath(); c.ellipse(160, 124, 20, 12, 0, 0, Math.PI * 2); c.fillStyle = '#c89a5a'; c.fill(); c.stroke(); // curled body, tucked head, a long tail
+      c.beginPath(); c.arc(146, 118, 8, 0, Math.PI * 2); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(142, 117); c.lineTo(148, 117); c.stroke(); // a sleeping eye
+      c.beginPath(); c.moveTo(178, 128); c.quadraticCurveTo(214, 140, 236, 128); c.quadraticCurveTo(222, 150, 186, 136); c.stroke();
+      c.fillStyle = gold; c.beginPath(); c.moveTo(160, 94); c.lineTo(166, 106); c.lineTo(154, 106); c.closePath(); c.fill(); // a gold crest
+    });
+    const mm = new THREE.MeshBasicMaterial({ map: tex, color: 0x9a8a78 }); mm.userData.own = true;
+    const g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); // a stone stele on a low plinth, leaning back so it reads from above
+    const plinth = inked(new THREE.BoxGeometry(3.2, 0.4, 1.0), toon(0x7a5a38, { rim: 0.2 }), OL * 0.4); plinth.position.y = 0.2; g.add(plinth);
+    const tilt = new THREE.Group(); tilt.position.set(0, 0.4, 0); tilt.rotation.x = -0.45; g.add(tilt);
+    const frame = inked(new THREE.BoxGeometry(3.0, 1.9, 0.22), toon(0x6a4a2a, { rim: 0.2 }), OL * 0.4); frame.position.set(0, 0.95, 0); tilt.add(frame);
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(2.76, 1.6), mm); panel.position.set(0, 0.95, 0.12); tilt.add(panel);
+    const gm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xffb850, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.3 }); gm.userData.own = true;
+    const gl = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 3.0), gm); gl.position.set(0, 0.95, 0.16); tilt.add(gl);
+  }
+
+  // follow the sunbeam from the window: a mirror turns it 90 degrees, rock, a closed gate or the edge of the hall stops it
+  traceBeam(quiet) {
+    const M = this.M, P = this.puz, F = save.adv.flags;
+    for (const m of P.beamMeshes) { this.group.remove(m); m.geometry.dispose(); m.material.dispose(); }
+    P.beamMeshes = [];
+    let { x, y, dx, dy } = M.beam, hit = false;
+    const pts = [[x + dx * 0.45, y + dy * 0.45]], seen = new Set();
+    for (let i = 0; i < 200; i++) {
+      x += dx; y += dy;
+      if (x === P.disc.x && y === P.disc.y) { pts.push([x - dx * 0.45, y - dy * 0.45]); hit = true; break; }
+      const mi = P.mirrors.find((m) => m.x === x && m.y === y);
+      if (mi) { const k = x + ',' + y + ',' + dx; if (seen.has(k)) break; seen.add(k); pts.push([x, y]); [dx, dy] = mi.o === '/' ? [-dy, -dx] : [dy, dx]; mi.lit = true; continue; }
+      const t = this.tile(x, y), shut = P.gates.some((g) => g.x === x && g.y === y && !g.open);
+      if (!t || t === 'R' || shut) { pts.push([x - dx * 0.5, y - dy * 0.5]); break; }
+    }
+    const core = new THREE.MeshBasicMaterial({ color: 0xfff6d0, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.95 }), halo = new THREE.MeshBasicMaterial({ color: 0xffb840, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.28 });
+    for (let k = 1; k < pts.length; k++) {
+      const [ax, az] = wpos(...pts[k - 1]), [bx, bz] = wpos(...pts[k]), len = Math.hypot(bx - ax, bz - az) + 0.1;
+      for (const [mat, th] of [[core, 0.1], [halo, 0.42]]) { const m = new THREE.Mesh(new THREE.BoxGeometry(len, th, th), mat.clone()); m.position.set((ax + bx) / 2, 1.0, (az + bz) / 2); m.rotation.y = -Math.atan2(bz - az, bx - ax); this.group.add(m); P.beamMeshes.push(m); }
+    }
+    core.dispose(); halo.dispose();
+    P.beamEnd = pts[pts.length - 1]; P.beamPts = pts;
+    P.disc.lit = hit || !!F[M.gateFlag];
+    P.disc.dm.emissive.set(P.disc.lit ? 0x8a5a00 : 0x000000); P.disc.gl.material.opacity = P.disc.lit ? 0.85 : 0;
+    if (!hit || P.gates.every((g) => g.open)) return;
+    for (const g of P.gates) { g.open = true; g.t = 1; this.solid.delete(g.x + ',' + g.y); }
+    F[M.gateFlag] = true; persist();
+    if (!quiet) { reward(2); this.S.toast?.('☀️ The sunbeam strikes the old sun disc. It blazes gold... and the gate grinds down into the floor!');
+      const [px, pz] = wpos(P.disc.x, P.disc.y); for (let k = 0; k < 24; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5) * 1.4, y: 1 + (Math.random() - 0.5) * 1.4, z: pz + 1.1, vx: (Math.random() - 0.5) * 3, vy: Math.random() * 2, vz: 1 + Math.random() * 2, color: 0xffd84a, size: 0.4, life: 1.1, shape: 'star', grav: 2 }); }
+  }
+
+  // A on a mirror: it swings a quarter turn on its fork, and the beam finds a new way
+  turnMirror(mi) {
+    if (mi.t > 0) return;
+    mi.from = mi.turn.rotation.y; mi.o = mi.o === '/' ? '\\' : '/'; mi.to = mi.o === '/' ? Math.PI / 4 : -Math.PI / 4; mi.t = 0.35;
+    ((save.adv.mirrors ||= {})[this.key] = this.puz.mirrors.map((m) => m.o)); persist();
+    sfx.foot?.('stone'); this.g.input?.haptic?.(15); // the beam re-traces when the swing ends (update)
   }
 
   // a treasure chest at the end of a cave, or a big nest with a rare egg
@@ -4820,6 +4928,14 @@ export class World {
     if (this.puz) {
       for (const B of this.puz.boulders) if (B.t > 0) { B.t = Math.max(0, B.t - dt); const k = 1 - B.t / 0.28, [ax, az] = wpos(...B.from), [bx, bz] = wpos(B.x, B.y); B.m.position.x = ax + (bx - ax) * k; B.m.position.z = az + (bz - az) * k; B.m.rotation.x += dt * 9 * (B.dy || 0); B.m.rotation.z -= dt * 9 * (B.dx || 0); if (B.drop) B.m.position.y = 0.62 - k * 1.2; }
       for (const G of this.puz.gates) if (G.t > 0) { G.t = Math.max(0, G.t - dt * 0.8); G.bars.position.y = -1.75 * (1 - G.t); }
+      if (this.puz.mirrors) { // mirrors swing round; the beam shimmers; sparks where it ends and dust motes drift through it
+        const P = this.puz;
+        for (const m of P.mirrors) if (m.t > 0) { m.t = Math.max(0, m.t - dt); const k = 1 - m.t / 0.35, e = k * k * (3 - 2 * k); m.turn.rotation.y = m.from + (m.to - m.from) * e; if (!m.t) this.traceBeam(); }
+        P.beamMeshes.forEach((m, i) => { m.material.opacity = (i % 2 ? 0.24 : 0.85) + Math.sin(this.t * 6 + i) * (i % 2 ? 0.06 : 0.1); });
+        if (P.beamEnd && Math.random() < dt * (P.disc.lit ? 10 : 5)) { const [px, pz] = wpos(...P.beamEnd); this.g.fx.spawn({ x: px, y: 1.0, z: pz, vx: (Math.random() - 0.5) * 1.6, vy: Math.random() * 1.5, vz: (Math.random() - 0.5) * 1.6, color: 0xffe08a, size: 0.25, life: 0.6, shape: 'star', grav: 2 }); }
+        if (P.beamPts && Math.random() < dt * 6) { const k = 1 + Math.floor(Math.random() * (P.beamPts.length - 1)), f = Math.random(), [ax, az] = wpos(...P.beamPts[k - 1]), [bx, bz] = wpos(...P.beamPts[k]); this.g.fx.spawn({ x: ax + (bx - ax) * f, y: 1.0 + (Math.random() - 0.5) * 0.3, z: az + (bz - az) * f, vy: 0.15, color: 0xfff2c0, size: 0.14, life: 1.2, shape: 'glow', alpha: 0.8 }); }
+        if (P.disc.lit) P.disc.gl.material.opacity = 0.75 + Math.sin(this.t * 3) * 0.12;
+      }
     }
     if (this.chest?.open > 0 && this.chest.open < 1) { this.chest.open = Math.min(1, this.chest.open + dt * 2.5); this.chest.lid.rotation.x = -1.9 * this.chest.open; }
     if (this.lighthouse?.beam) this.lighthouse.beam.rotation.y += dt * 0.6;
@@ -5203,6 +5319,7 @@ export class World {
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
     if (this.chest && this.chest.x === fx && this.chest.y === fy) return this.openChest();
+    const mi = this.puz?.mirrors?.find((m) => m.x === fx && m.y === fy); if (mi) return this.turnMirror(mi);
     const up = this.updrafts?.find((u) => u.x === fx && u.y === fy); if (up) return this.updraftTalk(up);
     if (this.well && this.well.x === fx && this.well.y === fy) {
       const day = new Date().toISOString().slice(0, 10);

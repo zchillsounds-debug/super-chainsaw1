@@ -17,7 +17,7 @@ const FLAGS = await pg.evaluate(() => { const F = new Set('intro quest rival1 cr
   for (const M of Object.values(__maps)) { for (const n of M.npcs || []) for (const k of ['hideFlag', 'showFlag']) n[k] && F.add(n[k]); for (const e of Object.values(M.edges || {})) e.need && F.add(e.need); for (const bd of M.buildings || []) bd.stadium && F.add('cup_' + bd.stadium); }
   return [...F]; });
 let bad = 0;
-const PUZZLE = { grotto: 'edge n → grotto2' }; // behind the boulder puzzle on purpose (boulders count as solid here)
+const PUZZLE = { grotto: 'edge n → grotto2', buried1: 'edge n → buried2', buried2: 'edge n → buried3' }; // behind the boulder puzzle on purpose (boulders count as solid here)
 const geo = {}; // map -> { W, H, open: Set } for the edge-landing check
 for (const map of keys) {
   await pg.evaluate(([map, FLAGS]) => {
@@ -58,7 +58,8 @@ for (const [map, G] of Object.entries(geo)) for (const [d, e] of Object.entries(
     const [x, y] = c.split(',').map(Number);
     if (!((d === 'n' && y === 0) || (d === 's' && y === G.H - 1) || (d === 'w' && x === 0) || (d === 'e' && x === G.W - 1))) continue;
     n++;
-    const off = e.off || 0, lx = d === 'e' ? 0 : d === 'w' ? T.W - 1 : x + off, ly = d === 's' ? 0 : d === 'n' ? T.H - 1 : y + off;
+    const off = e.off || 0; let lx = d === 'e' ? 0 : d === 'w' ? T.W - 1 : x + off, ly = d === 's' ? 0 : d === 'n' ? T.H - 1 : y + off;
+    if (e.at) [lx, ly] = e.at; // a fixed landing spot
     if (!T.open.has(lx + ',' + ly)) blocked++;
   }
   if (blocked) { bad++; console.log('FAIL', `${map} edge ${d} → ${e.to}: ${blocked}/${n} edge tiles land on a blocked tile`); }
