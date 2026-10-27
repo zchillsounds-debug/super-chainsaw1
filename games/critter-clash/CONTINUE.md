@@ -21,6 +21,8 @@ The full, detailed handoff lives in the repo at `games/critter-clash/HANDOFF.md`
 - Final checks for the session passed: tapcheck was clean at 740×360 and 412×915, the Sprout Cup played from the world and landed back there, and the wild-fight wins ran without errors.
 
 ## Latest (2026-10-27): Chapter 3 (the Amber Sands) + battle depth, a 48-hour run
+- Session D2 (R777–R779): the six desert critters' growth forms (Scorchfrill/Solarisk, Twinspout/Fountamel, Saguarshell/Bloomesa, Fennvolt/Thunderfenn, Bouldarab/Monolarab, Sandsquall/Simoomcat) and their balance. Next round R780; next up the B2 full robin and D2, the Amber Sands region. Run end: 2026-10-29 06:00 UTC.
+- Session D1 (R772–R776): the hero's hat and the daily Alpha in fights, battles ~56% fewer draw calls, a passive trait for every critter, the six desert critters.
 - **Session D1 (R772–R776):** B1 done (the hero's hat and a big Alpha in Adventure fights; fighters merged into a few meshes: draw calls a frame 265 → 117). B2 in (a passive trait for every critter, on the Critterdex card, the select card and the Move List; balance still to measure). D1 started: six desert critters (Sizzlard, Humpdrop, Cactortle, Fennzap, Scarabold, Siroccat) with new specials; growth forms and balance next. Run end time still **2026-10-29 06:00 UTC**. Next round R777.
 - The user agreed a new roadmap (`ROADMAP.md`, top section): B1 battle quick wins (hats and the Alpha in fights, lighter battles), B2 passive traits, D1 six desert critters, D2 the Amber Sands region and story (oasis town, canyon village, dune camp, buried city; three cups with new arenas and sandstorms; the Dust Devils), D3 side content, D4 post-game. Run: 2026-10-27 06:00 → 2026-10-29 06:00 UTC. The battle code is open now. Next round R772.
 
