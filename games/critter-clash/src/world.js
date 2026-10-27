@@ -467,6 +467,7 @@ export class World {
     this.buildLost();
     this.buildChamp();
     this.buildDig();
+    this.buildMirages();
     this.makeFollower();
     this.camAt = null;
     this.steps = 0;
@@ -500,7 +501,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.wreck = null; this.lighthouse = null; this.puz = null; this.chest = null; this.updrafts = null; this.gliding = null; this.pearl = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.wreck = null; this.lighthouse = null; this.puz = null; this.chest = null; this.updrafts = null; this.gliding = null; this.pearl = null; this.mirages = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -3591,6 +3592,21 @@ export class World {
     } else for (const a of this.npcs || []) if (a.n.id === 'fan1' || a.n.id === 'fan2') a.n.lines = [`Fan: The ${cup.name} champion, right here in the lobby! Everyone, look!`, `Fan: ${h.name} beat the whole line-up. I made a poster of YOU now!`];
   }
 
+  // D3, mirage hours on the Amber Sands: pale shimmering 'pools' lie on the open sand, wobbling in the heat; walk up and they fade away
+  buildMirages() {
+    this.mirages = null;
+    if (!this.mirageHour()) return;
+    const r = rng(hash(this.key + ':mirage')), spots = [];
+    for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if ('.s'.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y) && '.s'.includes(this.tile(x + 1, y)) && '.s'.includes(this.tile(x - 1, y))) spots.push([x, y]);
+    this.mirages = [];
+    for (let k = 0; k < 4 && spots.length; k++) {
+      const [x, y] = spots.splice(Math.floor(r() * spots.length), 1)[0], [px, pz] = wpos(x, y);
+      const m = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0x6ac8e8, transparent: true, depthWrite: false, opacity: 0 }); // (additive washed out on pale sand) m.userData.own = true;
+      const q = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 1.6), m); q.rotation.x = -Math.PI / 2; q.position.set(px, 0.06, pz); this.group.add(q);
+      this.mirages.push({ q, m, px, pz, ph: r() * 6 });
+    }
+  }
+
   // beaches hide one sparkly dig spot a day (a new place each day): A on it or facing it digs up a treasure
   buildDig() {
     this.dig = null;
@@ -4595,9 +4611,11 @@ export class World {
     const W = this.M.wild;
     if (W && this.phase === 'evening' && !ALPHA_TOLD.has('dusk')) { ALPHA_TOLD.add('dusk'); setTimeout(() => this.group && this.S.toast('✨ Dusk! Emberflies come out to glow over the tall grass in the golden evening.'), 1200); }
     const lucky = this.luckyNight(); // rare finds in the isles: lucky starry nights on Starfall, Blowfin swarms in island rain, Skimrays gliding at golden hour on the Bluffs
-    if (W && lucky && !ALPHA_TOLD.has('lucky')) { ALPHA_TOLD.add('lucky'); setTimeout(() => this.group && this.S.toast(this.key === 'reach' ? '🌈 It\'s raining down below, and the rainbow up here is brighter than ever! Shiny critters are three times as common.' : '🌠 A starry night on Starfall Atoll! Shiny critters are three times as common here tonight.'), 2600); }
+    if (W && lucky && !ALPHA_TOLD.has('lucky')) { ALPHA_TOLD.add('lucky'); setTimeout(() => this.group && this.S.toast(this.M.sands ? '☀️ Mirage hour! In the shimmering noon heat, shiny critters are three times as common out on the sands.' : this.key === 'reach' ? '🌈 It\'s raining down below, and the rainbow up here is brighter than ever! Shiny critters are three times as common.' : '🌠 A starry night on Starfall Atoll! Shiny critters are three times as common here tonight.'), 2600); }
     if (W && this.M.isle && this.rain && !ALPHA_TOLD.has('swarm')) { ALPHA_TOLD.add('swarm'); setTimeout(() => this.group && this.S.toast('🌧️ Island rain! Blowfin swarm into the tall grass to puff up in the puddles.'), 2600); }
     if (W && this.key === 'bluffs' && this.phase === 'evening' && !ALPHA_TOLD.has('glide')) { ALPHA_TOLD.add('glide'); setTimeout(() => this.group && this.S.toast('🌅 Golden hour on the Bluffs: Skimrays ride the evening updrafts.'), 2600); }
+    if (W && this.M.sands && this.sandstorm && !ALPHA_TOLD.has('sandswarm')) { ALPHA_TOLD.add('sandswarm'); setTimeout(() => this.group && this.S.toast('🌪️ Sandstorm! Siroccats ride the wind into the dry grass.'), 2600); }
+    if (W && this.M.sands && this.phase === 'night' && !ALPHA_TOLD.has('fennnight')) { ALPHA_TOLD.add('fennnight'); ALPHA_TOLD.add('owls'); setTimeout(() => this.group && this.S.toast('🌙 Desert night! Big-eared Fennzap come out to hunt by starlight.'), 1200); }
     if (W && this.phase === 'night' && !ALPHA_TOLD.has('owls')) { ALPHA_TOLD.add('owls'); setTimeout(() => this.group && this.S.toast('🦉 Night owls are out! Hootsy and Squeakwing roam the tall grass after dark.'), 1200); }
     if (W?.roam) {
       const grass = [];
@@ -4626,12 +4644,14 @@ export class World {
   }
 
   // the map's wild critters; after dark the night owls (Hootsy, Squeakwing) come out too, at the map's levels, twice as often; in the golden evening, Emberfly glows over the grass
-  luckyNight() { return this.key === 'atoll' && this.phase === 'night' || this.key === 'reach' && !!this.rainBelow; } // (Rainbow Reach: lucky while it rains down below)
+  luckyNight() { return this.key === 'atoll' && this.phase === 'night' || this.key === 'reach' && !!this.rainBelow || this.mirageHour(); } // (Rainbow Reach: lucky while it rains down below)
+  // D3: the Amber Sands' mirage hours: noon to three on a clear day, the heat shimmers and shinies show three times as often
+  mirageHour() { const M = this.M; if (!M.sands || M.cave || M.indoor || this.sandstorm || this.phase !== 'day') return false; const h = save.adv.clock ?? worldHour(); return h >= 12 && h < 15; }
   wildList() {
     const L0 = this.M.wild?.list || [], [, lo0, hi0] = L0[0] || [];
-    const L = !L0.length ? L0 : this.M.isle && this.rain ? [...L0, ['blowfin', lo0, hi0], ['blowfin', lo0, hi0], ['blowfin', lo0 + 2, hi0 + 2]] : this.key === 'bluffs' && this.phase === 'evening' ? [...L0, ['skimray', lo0, hi0], ['skimray', lo0 + 1, hi0 + 1]] : L0;
+    const L = !L0.length ? L0 : this.M.isle && this.rain ? [...L0, ['blowfin', lo0, hi0], ['blowfin', lo0, hi0], ['blowfin', lo0 + 2, hi0 + 2]] : this.key === 'bluffs' && this.phase === 'evening' ? [...L0, ['skimray', lo0, hi0], ['skimray', lo0 + 1, hi0 + 1]] : this.M.sands && this.sandstorm ? [...L0, ['siroccat', lo0, hi0], ['siroccat', lo0 + 1, hi0 + 1], ['siroccat', lo0 + 2, hi0 + 2]] : L0; // (sandstorms blow Siroccats into the grass)
     if (!L.length || this.phase === 'day') return L;
-    const [, lo, hi] = L[0], extra = (this.phase === 'night' ? ['hootsy', 'squeakwing'] : ['emberfly']).flatMap((id) => [[id, lo, hi], [id, lo, hi]]);
+    const [, lo, hi] = L[0], extra = (this.phase === 'night' ? this.M.sands ? ['fennzap', 'squeakwing'] : ['hootsy', 'squeakwing'] : ['emberfly']).flatMap((id) => [[id, lo, hi], [id, lo, hi]]); // (desert nights: big-eared Fennzap hunt by starlight)
     return [...L.filter(([i]) => !extra.some(([o]) => o === i)), ...extra];
   }
 
@@ -5005,6 +5025,7 @@ export class World {
         if (P.disc.lit) P.disc.gl.material.opacity = 0.75 + Math.sin(this.t * 3) * 0.12;
       }
     }
+    if (this.mirages) { const hp = this.hero.root.position; for (const Q of this.mirages) { const d = Math.hypot(hp.x - Q.px, hp.z - Q.pz), near = Math.min(1, Math.max(0, (d - 4) / 6)); Q.m.opacity = (0.55 + Math.sin(this.t * 2.3 + Q.ph) * 0.12) * near; Q.q.scale.set(1 + Math.sin(this.t * 1.7 + Q.ph) * 0.08, 1 + Math.sin(this.t * 3.1 + Q.ph) * 0.15, 1); } } // a mirage fades as you get close
     if (this.chest?.open > 0 && this.chest.open < 1) { this.chest.open = Math.min(1, this.chest.open + dt * 2.5); this.chest.lid.rotation.x = -1.9 * this.chest.open; }
     if (this.lighthouse?.beam) this.lighthouse.beam.rotation.y += dt * 0.6;
     if (this.lighthouse?.lan) for (const l of this.lighthouse.lan) { l.a += dt * 0.12; l.L.position.set(l.cx + Math.cos(l.a) * l.r, l.h + Math.sin(this.t * 0.8 + l.r) * 0.3, l.cz + Math.sin(l.a) * l.r * 0.7 + 1.5); }
