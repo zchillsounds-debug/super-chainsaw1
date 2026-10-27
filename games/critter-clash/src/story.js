@@ -442,8 +442,9 @@ function rivalTalk(S, w, a) {
 // the ☰ menu's one-line "what now?" for players coming back after a break
 const GOAL_AT = { sprout: 'Bloom Town, north along Route 1', thunder: 'Seashell Town, east along Route 2', grove: 'Glowcap Hollow, through the woods north of Seashell Town', champion: 'Cinder Town, down the volcano road', midnight: 'Neon City, east of Cinder Town', sky: 'Cloudtop Gardens (Captain Puff\'s balloon, Neon City)', legend: 'Frostpeak (Captain Puff\'s balloon, Cloudtop)' };
 export function nextGoal(F) {
-  if (F.grand && F.grand_done && !F.sands_arrive) return '🏅 100% complete! And a new region waits: ride the Sand-Rail from Cinder Town to the Amber Sands.';
-  if (F.grand) return F.grand_done ? '🏅 100% complete! Every cup, critter and corner of Clashara and the isles. Thank you for playing!' : '100% of Clashara and the isles! Prof. Pecan wants to see you at his lab in Sprout Village.';
+  if (F.grand && !F.grand_done) return '100% complete! Prof. Pecan wants to see you at his lab in Sprout Village.';
+  if (F.grand && !F.sands_arrive) return '🏅 100% complete! And a new region waits: ride the Sand-Rail from Cinder Town to the Amber Sands.';
+  if (F.grand && F.gate_open && F.buried_vault) return F.sands_full ? '🏅 100% complete! Every cup, critter and corner of Clashara, the isles and the Amber Sands. Thank you for playing!' : '🏅 Your 100% crown is yours to keep! Now explore the Amber Sands to 100% (📔 Journal → Records) for one more prize.'; // (a crown won before Chapter 3: the story below comes first)
   if (F.crowned) {
     // Chapter 2: the Sunscatter Isles
     if (!F.isle_arrive) return F.ending ? 'Chapter 2: take the Sunny Gull ferry from the pier in Seashell Town to the Sunscatter Isles!' : 'You\'re the Champion! Rematch trainers and Dash, and find every gift box.';
@@ -1135,16 +1136,22 @@ export function favourList() {
     const state = F[id + '_done'] ? 'done' : F[id + '_found'] ? 'found' : 'open';
     const name = Q.who.split(' ').pop();
     const home = Q.giverMap || Object.keys(MAPS).find((k) => (MAPS[k].npcs || []).some((n) => n.story === 'lost:' + id));
-    return { id, isle: isleQuest(id), extra: extraQuest(id), who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, deliver: !!Q.to, critter: Q.critter, at: state === 'done' ? null : Q.to ? Q.to.map : state === 'found' ? home : LOST_SPOTS[id]?.map, text: Q.to ? (state === 'done' ? `Delivered the ${Q.item} to ${Q.to.name}` : `Take the ${Q.item} to ${Q.to.name} in ${Q.to.home}`) : state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
+    return { id, isle: isleQuest(id), extra: extraQuest(id), sands: sandsQuest(id), who: Q.who, home: Q.home, item: Q.item, toast: Q.toast, state, deliver: !!Q.to, critter: Q.critter, at: state === 'done' ? null : Q.to ? Q.to.map : state === 'found' ? home : LOST_SPOTS[id]?.map, text: Q.to ? (state === 'done' ? `Delivered the ${Q.item} to ${Q.to.name}` : `Take the ${Q.item} to ${Q.to.name} in ${Q.to.home}`) : state === 'done' ? `Returned the ${Q.item}` : state === 'found' ? `Take the ${Q.item} back to ${name} in ${Q.home}` : `Find the ${Q.item}: ${Q.hint}` };
   });
   rows.sort((a, b) => ({ found: 0, open: 1, done: 2 })[a.state] - ({ found: 0, open: 1, done: 2 })[b.state]);
-  return { rows, unasked: Object.keys(LOST).length - rows.length, mainland: Object.keys(LOST).filter((id) => !isleQuest(id) && !extraQuest(id)).length, isles: Object.keys(LOST).filter(isleQuest).length,
+  return { rows, unasked: Object.keys(LOST).length - rows.length, mainland: Object.keys(LOST).filter((id) => !isleQuest(id) && !extraQuest(id)).length, isles: Object.keys(LOST).filter(isleQuest).length, sands: Object.keys(LOST).filter(sandsQuest).length,
     unaskedOf: (isle) => Object.keys(LOST).filter((id) => !F[id + '_asked'] && isleQuest(id) === isle && !extraQuest(id)).length };
 }
 // a post-game extra chain (like the Heartseed): on the Journal page, but not in Clashara's %
 function extraQuest(id) {
   const Q = LOST[id], up = Q.needs?.endsWith('_done') && Q.needs.slice(0, -5);
   return up && LOST[up] ? extraQuest(up) : !!Q.extra;
+}
+// a favour that starts in the Amber Sands (Chapter 3: the desert's own Records row)
+function sandsQuest(id) {
+  const Q = LOST[id], up = Q.needs?.endsWith('_done') && Q.needs.slice(0, -5);
+  if (up && LOST[up]) return sandsQuest(up);
+  return !!MAPS[Q.giverMap || Object.keys(MAPS).find((m) => (MAPS[m].npcs || []).some((n) => n.story === 'lost:' + id || (Q.from && n.id === Q.from)))]?.sands;
 }
 // a favour that starts in the Sunscatter Isles (it has its own Records row, so it doesn't change Clashara's %)
 function isleQuest(id) {
@@ -1316,6 +1323,7 @@ const HAT_WHERE = {
   pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
   masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
   gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
+  fossilhat: 'dig up every fossil for the Sunwell Museum', amberwreath: 'explore 100% of the Amber Sands',
 };
 export function hatWhere(id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';

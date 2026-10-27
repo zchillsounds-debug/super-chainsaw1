@@ -1097,6 +1097,7 @@ export const MAPS = {
   // slide across (like Frostpeak's ice: plan where you stop), a sandstone block to roll onto a sun plate, and a treasure =====
   buried1: {
     name: 'Buried City',
+    noItems: true, // (no gift boxes: the gold slide floor leaves nowhere to put one; the Records count on it)
     music: 'cave',
     arena: 'dunes',
     sands: 'city',

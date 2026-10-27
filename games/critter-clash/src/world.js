@@ -128,6 +128,11 @@ export const LANDMARKS = [
   { id: 'mills', map: 'bluffs', at: [24, 11], name: 'the Bluffs windmills', isle: true },
   { id: 'volcano', map: 'ember_isle', at: [17, 2], name: 'the Ember Isle volcano', isle: true },
   { id: 'lighthouse', map: 'atoll', at: [12, 3], name: 'the Starfall lighthouse', isle: true },
+  // Chapter 3: the Amber Sands (their own Records row and a set bonus, like the isles')
+  { id: 'sunwell', map: 'oasis', at: [15, 4], name: 'the Sunwell', sands: true },
+  { id: 'lift', map: 'redrock', at: [14, 5], name: 'the Redrock rope lift', sands: true },
+  { id: 'dome', map: 'dunecamp', door: 'stadium_s', name: 'the Sandstorm Dome', sands: true },
+  { id: 'sungate', map: 'sungate', at: [13, 8], name: 'the Sun Gate', sands: true },
 ];
 // the photo album: a small JPEG of the latest photo taken at each landmark (its own storage key, so the save and its backup code stay small)
 const ALBUM_KEY = 'critterclash-album';
@@ -369,6 +374,7 @@ export class World {
     this.rainBelow = key === 'reach' && !!(save.adv.rain ?? (!!save.adv.flags?.quest && rainAt('bloom', new Date(), hr))); // Rainbow Reach floats above the weather: it's lucky while it rains on the mainland
     this.storm = this.rain && !!(save.adv.storm ?? stormAt(new Date(), hr)); this.boltT = 2.5 + Math.random() * 3;
     this.sandstorm = !!M.sands && !M.indoor && !M.cave && !!(save.adv.sandstorm ?? (!!save.adv.flags?.sands_arrive && sandAt(new Date(), hr))); // the Amber Sands' weather
+    if (this.sandstorm && !this.g.autoplay) { const sd = new Date().toISOString().slice(0, 10) + ':' + Math.floor(hr / 3); if (save.adv.sandDay !== sd) { save.adv.sandDay = sd; countUp('sandstorm'); persist(); } } // Records: sandstorms weathered (one per storm)
     this.afterRain = canRain(M) && !this.rain && this.phase === 'day' && !!(save.adv.rainbow ?? (!!save.adv.flags?.quest && hr % 3 === 0 && hr >= 3 && rainAt(key, new Date(), hr - 3))); // the hour after a shower: puddles linger and a rainbow comes out
     this.frost = (isFrost() || isWinter()) && canRain(M) && this.phase === 'day' && (winterFall || !this.rain && !this.afterRain && hr >= 6 && hr < 10); // (a winter snowfall dusts them white all day) // late-autumn mornings: a white frost on the grass and the treetops until mid-morning
     this.snowing = !!M.snow && !M.indoor && (save.adv.snow ?? rainAt(key + 'snow', new Date(), hr)) || (twinkleEve || winterFall) && showers; // now and then a proper snowfall up in the mountains (light flurries otherwise)
@@ -3425,7 +3431,7 @@ export class World {
   // hidden treasures: two gift boxes per outdoor map, on reachable open tiles off the beaten path; walk over one to open it
   buildItems(x, y) {
     this.items = []; this.itemSpots = [];
-    if (this.M.indoor || this.key === 'peak') return;
+    if (this.M.indoor || this.M.noItems || this.key === 'peak') return;
     const seen = new Set([x + ',' + y]), q = [[x, y]];
     for (let i = 0; i < q.length; i++) for (const [dx, dy] of Object.values(DIRS)) {
       const nx = q[i][0] + dx, ny = q[i][1] + dy, k = nx + ',' + ny;
@@ -5279,12 +5285,13 @@ export class World {
     }
     if (snaps.includes(L.id)) return setTimeout(() => this.S.toast?.(`📸 New album photo: ${L.name}!`), 700);
     snaps.push(L.id);
-    const all = LANDMARKS.every((l) => l.isle || snaps.includes(l.id)), hat = all && !L.isle && !(A.hats ||= []).includes('shutter');
+    const all = LANDMARKS.every((l) => l.isle || l.sands || snaps.includes(l.id)), hat = all && !L.isle && !L.sands && !(A.hats ||= []).includes('shutter');
     if (hat) { A.hats.push('shutter'); save.berries = (save.berries || 0) + 15; }
     const isles = L.isle && LANDMARKS.every((l) => !l.isle || snaps.includes(l.id)); // all four island landmarks: a postcard bonus
-    if (isles) save.berries = (save.berries || 0) + 15;
+    const sands = L.sands && LANDMARKS.every((l) => !l.sands || snaps.includes(l.id)); // all four desert landmarks: the same
+    if (isles || sands) save.berries = (save.berries || 0) + 15;
     persist();
-    setTimeout(() => { reward(hat || isles ? 3 : 1); this.S.toast?.(hat ? '📸 All eight landmarks! +15 🍓 and the Shutterbug Cap! (☰ → 🎩 Hats)' : isles ? '📸 All four island landmarks! A full set of postcards: +15 🍓' : `📸 Landmark photo: ${L.name}! (${snaps.length} / ${LANDMARKS.length} in the Journal)`); }, 700);
+    setTimeout(() => { reward(hat || isles || sands ? 3 : 1); this.S.toast?.(hat ? '📸 All eight landmarks! +15 🍓 and the Shutterbug Cap! (☰ → 🎩 Hats)' : isles ? '📸 All four island landmarks! A full set of postcards: +15 🍓' : sands ? '📸 All four desert landmarks! A sun-bleached set of postcards: +15 🍓' : `📸 Landmark photo: ${L.name}! (${snaps.length} / ${LANDMARKS.length} in the Journal)`); }, 700);
   }
 
   updateCamera(dt) {

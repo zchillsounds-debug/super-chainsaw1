@@ -11,6 +11,7 @@ import { DUMMY, moveList } from './training.js';
 import { traitChip, traitOf } from './traits.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
+import { FOSSILS } from './fossils.js';
 import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, seasonKey } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, hatWhere, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, gauntletFoes } from './story.js';
 import { MAPS } from './worldmaps.js';
@@ -45,6 +46,7 @@ const SLINKS = [['oasis', 'duneroad'], ['duneroad', 'redrock'], ['redrock', 'dun
 const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 60 170 54 Q250 40 320 70 Q380 100 372 170 Q366 226 300 232 Q200 244 120 238 Q60 240 30 230 Z"/><path class="wm-dune" d="M200 120 Q240 96 290 118 M230 170 Q270 150 320 172 M60 200 Q90 186 130 206"/>';
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
 const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
+const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat']; // the desert's found hats (the Sand Hats stall's four are `sands`)
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
@@ -436,6 +438,14 @@ export class Screens {
         "Golden towers under the sand... I've ordered the biggest sun hat in the catalogue. Only a crack of the gate is open, she says, and the city behind it wants to be found slowly.",
         "And the Dust Devils have swapped their shovels for brooms. Their old Baron sweeps the sand off the gate steps every morning. People can change, {name}!",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv33') && !save.news.includes('adv35') && ((save.adv.fossils || []).length >= 4 || save.adv.flags.caravan3_done || save.adv.flags.buried_vault)) { // Chapter 3 side content (D3)
+      save.news.push('adv35'); persist();
+      const F = save.adv.flags, nf = (save.adv.fossils || []).length;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        nf >= 4 ? `{name}! Curator Petra sent me a sketch of the Sunwell Museum: ${nf >= 12 ? 'all twelve plinths full! A whole buried sea, back in the light' : `${nf} fossils on their plinths already`}. I've pinned it over my desk. Mom says it's crooked.` : "{name}! Curator Petra wrote from Sunwell Oasis: her museum has twelve empty plinths, and she hears you're good with a shovel.",
+        F.caravan3_done ? "And Caravan Master Hakim's road is open again, oasis to canyon to dunes! He says a little shiny Humpdrop wouldn't leave your side. I'm not surprised." : "Caravan Master Hakim is looking for a helper to get his caravan road going again. Dates, pots, rugs... it's a long road, but a friendly one.",
+        F.buried_vault ? "A mural of a sun-bird, sleeping under the dunes, in a vault with no light at all? {name}, that's not a story. That's a map. Keep your eyes on the night sky out there." : "And the Buried City behind the Sun Gate has more than one floor, they say. Bring a lantern!",
+      ]), 600);
     } else if (!g.autoplay && save.stats.battles >= 1 && !save.news?.includes('grow')) {
       (save.news ||= []).push('grow'); persist();
       const already = CRITTERS.filter((c) => save.unlocked.includes(c.id) && stageFor(save.critters[c.id].level) > 1).map((c) => grown(c, save.critters[c.id].level).name);
@@ -615,7 +625,7 @@ export class Screens {
         ['The Isles', 'Once you hold the Critter Crown, the Sunny Gull ferry sails from Seashell Town to the Sunscatter Isles: new critters, three island cups and the Gloom Gulls.'],
         ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils.'],
         ['After that', 'The Battle Tower, three legendary critters, the weekly Masters, the Kite Glider\'s hidden spots, pearls, dives and more. The Champ page keeps track.'],
-        ['100%', 'Records shows how much of Clashara and the isles you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
+        ['100%', 'Records shows how much of Clashara, the isles (and later the Amber Sands) you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
       ]],
       modes: ['🏆 Modes', [
         ['Tournament', 'Seven stadium cups of three battles each. Win them all to become a Critter Master.'],
@@ -1327,7 +1337,11 @@ export class Screens {
   exploreCheck(pc = this.recordsPc()) {
     if (!save.adv.flags.grand && save.adv.flags.isle_arrive) { // C4: 100% of Clashara and the isles: Prof. Pecan's closing scene (story.js grandTour)
       let t = 0; try { t = this.records().tpc; } catch (e) { /* records not ready */ }
-      if (t >= 100) { save.adv.flags.grand = true; persist(); sfx.jingle?.(3); this.toast('🏅 100%! Every corner of Clashara and the Sunscatter Isles! Prof. Pecan wants to see you in Sprout Village...'); this.worldObj?.questMarks?.(); return; }
+      if (t >= 100) { save.adv.flags.grand = true; persist(); sfx.jingle?.(3); this.toast(`🏅 100%! Every corner of Clashara${save.adv.flags.sands_arrive ? ', the isles and the Amber Sands' : ' and the Sunscatter Isles'}! Prof. Pecan wants to see you in Sprout Village...`); this.worldObj?.questMarks?.(); return; }
+    }
+    if (save.adv.flags.sands_arrive && !save.adv.flags.sands_full) { // D4: every corner of the Amber Sands: a wreath of desert gold (on top of whatever the grand total does)
+      let s = 0; try { s = this.records().spc; } catch (e) { /* records not ready */ }
+      if (s >= 100) { const F = save.adv.flags; F.sands_full = true; (save.adv.hats ||= []).includes('amberwreath') || save.adv.hats.push('amberwreath'); save.berries = (save.berries || 0) + 30; persist(); sfx.jingle?.(3); setTimeout(() => this.toast('🌞 100% of the Amber Sands! +30 🍓 and the Amber Wreath (☰ → 🎩 Hats)'), 2800); }
     }
     const A = save.adv, steps = [[25, 5], [50, 10], [75, 15], [100, 25]], next = steps.find(([p]) => p > (A.expl || 0) && pc >= p);
     if (!next) return;
@@ -1356,7 +1370,7 @@ export class Screens {
     const hatLeft = (hs) => hs.filter((h) => !(A.hats || []).includes(h.id)).map((h) => `${h.name}: ${hatWhere(h.id)}`);
     const fishLeft = (keys) => { const w = { pond: 'ponds & rivers', sea: 'the sea', isle: 'island reefs', lava: 'lava pools', cold: 'icy water', night: 'any water after dark', dusk: 'any water on golden evenings' }; return keys.map((k) => [k, FISH[k].filter((f) => !fsp.has(f[0])).length]).filter(([, c]) => c).map(([k, c]) => `${c} in ${w[k] || k}`); };
     const favLeft = (isle) => { const open = fl.rows.filter((r) => r.state !== 'done' && !!r.isle === isle && !r.extra).map((r) => `${r.who}: ${r.text}`), un = fl.unaskedOf?.(isle) || 0; return [...open, ...(un ? [`${un} not asked yet (look for a ❗ over townsfolk)`] : [])]; };
-    const lmLeft = (isle) => LANDMARKS.filter((l) => !!l.isle === isle && !(A.snaps || []).includes(l.id)).map((l) => (seenMap(l.map) ? `${l.name} (${MAPS[l.map].name})` : '??? (somewhere new)'));
+    const lmLeft = (isle, sands = false) => LANDMARKS.filter((l) => !!l.isle === isle && !!l.sands === sands && !(A.snaps || []).includes(l.id)).map((l) => (seenMap(l.map) ? `${l.name} (${MAPS[l.map].name})` : '??? (somewhere new)'));
     const dexLeft = () => { const miss = CLASSIC.filter((c) => !save.unlocked.includes(c.id)); return miss.map((c) => { const at = Object.keys(MAPS).filter((k) => MAPS[k].wild?.list?.some((w) => w[0] === c.id) && seenMap(k)); return at.length ? `${c.name} (wild in ${at.slice(0, 2).map((k) => MAPS[k].name).join(', ')})` : ['solmoth', 'moonwhal', 'verdelk'].includes(c.id) ? `${F.sunstone ? c.name : '???'} (a legend${F.sunstone ? ': see the 🏆 Champ page' : ''})` : seenMap(Object.keys(MAPS).find((k) => MAPS[k].wild?.list?.some((w) => w[0] === c.id)) || '') ? c.name : '??? (somewhere new)'; }); };
     body = (A.time >= 60 ? bar('⏱️', 'Time adventuring', playTime(A.time)) : '')
       + bar('🏆', 'Cups won', CUPS.filter((c) => F['cup_' + c.id]).length, CUPS.length, false, lst(CUPS.filter((c) => !F['cup_' + c.id]).map((c) => c.name)))
@@ -1404,7 +1418,7 @@ export class Screens {
       + (A.cnt?.twinkle ? bar('🎄', 'Twinkle Week gifts', A.cnt.twinkle) : '')
       + (A.cnt?.carol ? bar('🎵', 'Carols sung', A.cnt.carol) : '')
       + (A.cnt?.wisp ? bar('✨', 'Firefly & wisp nights', A.cnt.wisp) : '')
-      + bar('📸', 'Landmark photos', (A.snaps || []).filter((id) => !LANDMARKS.find((l) => l.id === id)?.isle).length, LANDMARKS.filter((l) => !l.isle).length, false, lst(lmLeft(false), 5))
+      + bar('📸', 'Landmark photos', (A.snaps || []).filter((id) => { const l = LANDMARKS.find((q) => q.id === id); return l && !l.isle && !l.sands; }).length, LANDMARKS.filter((l) => !l.isle && !l.sands).length, false, lst(lmLeft(false), 5))
       + bar('🔭', 'Constellations spotted', (A.consts || []).length, CONSTELLATIONS.length, false, `${CONSTELLATIONS.length - (A.consts || []).length} more: look through Grandpa's telescope in Sprout Village after dark`)
       + bar('🍾', 'Bottle notes read', (A.notes || []).length, BOTTLE_NOTES.length, false, `${BOTTLE_NOTES.length - (A.notes || []).length} more: a bottle washes up on Seashell Town's shore most nights`)
       + bar('👣', 'Steps walked', (A.steps || 0).toLocaleString());
@@ -1428,12 +1442,34 @@ export class Screens {
         + (F.sunstone ? bar('🌺', 'Sunscatter Masters cleared', A.mastWins || 0) : '')
         + (F.sunstone ? bar('🗼', 'Battle Tower best streak', `${A.tower?.best || 0} · ${towerRank(A.tower?.best || 0)[2]} ${towerRank(A.tower?.best || 0)[1]}`) + (A.tower?.streak ? bar('🔥', 'Current Tower streak', A.tower.streak) : '') : '');
     }
+    const sands = !!F.sands_arrive, sparts = []; // D4: the Amber Sands (Chapter 3) get their own rows and %, and join the grand total
+    if (sands) {
+      const sb = (ic, name, n, of, left) => { sparts.push(Math.min(1, n / of)); const h = bar(ic, name, n, of, true, left); iparts.pop(); return h; }; // (bar files a goal row under the isles: move it to the sands)
+      const sMaps = Object.keys(MAPS).filter((k) => MAPS[k].sands), str = sMaps.flatMap((k) => (MAPS[k].npcs || []).filter((n) => n.trainer && (F[n.id] || !(n.hideFlag && F[n.hideFlag]))).map((n) => [k, n]));
+      const sh = SHOP_HATS.filter((h) => h.sands || SANDS_GIFT_HATS.includes(h.id)), fos = A.fossils || [], desert = CRITTERS.filter((c) => c.desert);
+      const city = [['buried_gate', 'the Sun Hall\'s sun plate'], ['buried_chest', 'the Sun Hall\'s chest'], ['buried_beam', 'the Hall of Mirrors\' sunbeam'], ['buried_vault', 'the Starless Vault\'s chest']];
+      const bMaps = sMaps.filter((k) => !MAPS[k].indoor && !MAPS[k].noItems), sboxes = bMaps.length * 2;
+      body += '<li class="jr-head">🏜️ Amber Sands</li>'
+        + sb('🏆', 'Desert cups won', SANDS_CUPS.filter((c) => F['cup_' + c.id]).length, SANDS_CUPS.length, lst(SANDS_CUPS.filter((c) => !F['cup_' + c.id]).map((c) => c.name)))
+        + sb('⚔️', 'Desert trainers beaten', str.filter(([, n]) => F[n.id]).length, str.length, lst(byMap(str.filter(([, n]) => !F[n.id]).map(([k, n]) => [k, n.name])), 4))
+        + sb('🎁', 'Desert gift boxes', bMaps.reduce((a, k) => a + [0, 1].filter((j) => F[`it_${k}_${j}`]).length, 0), sboxes, lst(byMap(bMaps.flatMap((k) => [0, 1].filter((j) => !F[`it_${k}_${j}`]).map(() => [k, null]))), 8))
+        + sb('🤝', 'Desert favours', fl.rows.filter((r) => r.state === 'done' && r.sands).length, fl.sands, lst(fl.rows.filter((r) => r.state !== 'done' && r.sands).map((r) => `${r.who}: ${r.text}`).concat(fl.rows.some((r) => r.sands) ? [] : ['look for a ❗ over a caravan master in Sunwell Oasis']), 3))
+        + sb('🎩', 'Desert hats', sh.filter((h) => (A.hats || []).includes(h.id)).length, sh.length, lst(hatLeft(sh), 4))
+        + sb('🦴', 'Fossils dug up', fos.length, FOSSILS.length, `${FOSSILS.length - fos.length} more: a dig heap turns up on each desert map every day (A by the bone)`)
+        + sb('📸', 'Desert landmarks', (A.snaps || []).filter((id) => LANDMARKS.find((l) => l.id === id)?.sands).length, LANDMARKS.filter((l) => l.sands).length, lst(lmLeft(false, true), 4))
+        + sb('🌵', 'Desert critters on your team', desert.filter((c) => save.unlocked.includes(c.id)).length, desert.length, lst(desert.filter((c) => !save.unlocked.includes(c.id)).map((c) => c.name), 6))
+        + sb('🏛️', 'Buried City secrets', city.filter(([f]) => F[f]).length, city.length, F.gate_open ? lst(city.filter(([f]) => !F[f]).map(([, t]) => t)) : 'somewhere beyond a great stone gate...')
+        + (A.cnt?.rail ? bar('🚂', 'Sand-Rail rides', A.cnt.rail) : '')
+        + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '');
+    }
     const pc = Math.floor(parts.reduce((a, b) => a + b, 0) / parts.length * 100), isles = !!F.isle_arrive;
-    const ipc = isles ? Math.floor(iparts.reduce((a, b) => a + b, 0) / iparts.length * 100) : 0, tpc = isles ? Math.floor((pc + ipc) / 2) : 0; // the grand total weighs both regions alike
+    const ipc = isles ? Math.floor(iparts.reduce((a, b) => a + b, 0) / iparts.length * 100) : 0, spc = sands ? Math.floor(sparts.reduce((a, b) => a + b, 0) / sparts.length * 100) : 0;
+    const tpc = !isles ? 0 : sands ? Math.floor((pc + ipc + spc) / 3) : Math.floor((pc + ipc) / 2); // the grand total weighs every region alike
     const total = (cls, label, done, n) => `<li class="jr-total ${cls} ${n >= 100 ? 'full' : ''}"><b>${n >= 100 ? done : label}</b><em>${n}%</em><i style="--p:${n / 100}"></i></li>`;
     if (isles) body = body.replace('<li class="jr-head">🏝️ Sunscatter Isles</li>', `<li class="jr-head">🏝️ Sunscatter Isles</li>${total('isle', '🏝️ Sunscatter Isles explored', '🌺 Sunscatter Isles complete!', ipc)}`);
-    body = (isles ? total('grand', `🏅 Grand total${F.grand_done ? '' : ' · 100% for a surprise'}`, '🏅 100% complete! Clashara and the isles', tpc) : '') + total('', '🗺️ Clashara explored', '🌟 Clashara complete!', pc) + body;
-    return { body, pc, ipc, tpc, todo };
+    if (sands) body = body.replace('<li class="jr-head">🏜️ Amber Sands</li>', `<li class="jr-head">🏜️ Amber Sands</li>${total('sands', '🏜️ Amber Sands explored', '🌞 Amber Sands complete!', spc)}`);
+    body = (isles ? total('grand', `🏅 Grand total${F.grand_done ? '' : ' · 100% for a surprise'}`, sands ? '🏅 100% complete! Clashara, the isles and the sands' : '🏅 100% complete! Clashara and the isles', tpc) : '') + total('', '🗺️ Clashara explored', '🌟 Clashara complete!', pc) + body;
+    return { body, pc, ipc, spc, tpc, todo };
   }
 
   // one handy tip a day for the Journal's Today page (only about things the player can already use)
@@ -1455,7 +1491,7 @@ export class Screens {
       seen.frostpeak && 'Snowball Kid Kip\'s snow fort in Frostpeak: hit 12 snowmen in Snowball Toss for a daily berry stash. Don\'t hit Kip!',
       seen.seashell && 'Sit on the driftwood bench on Seashell beach in the evening and watch the sun go down.',
       '📸 Photo in the ☰ menu saves a picture of your hero right where they stand.',
-      (A.snaps || []).length < LANDMARKS.length && `Take a 📸 Photo by each town's landmark (${(A.snaps || []).length} / ${LANDMARKS.length} so far).${(A.hats || []).includes('shutter') ? '' : ' The eight in Clashara earn a hat!'}`,
+      (A.snaps || []).length < LANDMARKS.filter((l) => !l.sands || F.sands_arrive).length && `Take a 📸 Photo by each town's landmark (${(A.snaps || []).length} / ${LANDMARKS.filter((l) => !l.sands || F.sands_arrive).length} so far).${(A.hats || []).includes('shutter') ? '' : ' The eight in Clashara earn a hat!'}`,
       F.rod && 'Night fishing catches fish you never see by day.',
       (A.hats || []).length && 'Change hats any time from ☰ → 🎩 Hats. Each hat has its own story.',
       seen.neon && 'The Neon City arcade pays berries for a good score, once a day per game.',
@@ -1500,13 +1536,13 @@ export class Screens {
     } else if (tab === 'rec') { // everything there is to find and beat, with how far along you are
       const R = this.records(), nx = [25, 50, 75, 100].find((p) => p > (save.adv.expl || 0));
       // the photo album: one polaroid per landmark (its photo, a 'snapped' card for photos taken before the album, or where to find it)
-      const alb = albumGet(), snaps = save.adv.snaps || [];
+      const alb = albumGet(), snaps = save.adv.snaps || [], lms = LANDMARKS.filter((l) => !l.sands || save.adv.flags.sands_arrive); // (the desert's four once you've been)
       const card = (l) => alb[l.id] ? `<button class="al-card got" data-id="${l.id}"><img src="${alb[l.id]}" alt=""><b>${l.name}</b></button>`
         : snaps.includes(l.id) ? `<button class="al-card old" data-hint="📸 Snap ${l.name} again with the camera to put it in the album."><i>📸</i><b>${l.name}</b><small>snap it again for the album</small></button>`
           : `<button class="al-card" data-hint="${save.adv.seen?.[l.map] ? `📸 Take a photo at ${l.name} (${MAPS[l.map].name}) for the album.` : '🔒 This spot is somewhere you haven\'t been yet.'}"><i>${save.adv.seen?.[l.map] ? '❔' : '🔒'}</i><b>${save.adv.seen?.[l.map] ? l.name : '???'}</b><small>${save.adv.seen?.[l.map] ? MAPS[l.map].name : 'somewhere new'}</small></button>`;
       const i0 = R.body.indexOf('<li class="jr-rec'), tapTip = R.body.includes('has-left') ? '<li class="jr-more jr-tap">🔍 Tap a row to see what\'s still to find.</li>' : '';
-      body = R.body.slice(0, i0) + tapTip + R.body.slice(i0) + `<li class="jr-head">📸 Photo album <small>${snaps.length}/${LANDMARKS.length}</small></li><li class="jr-album">${LANDMARKS.map(card).join('')}</li>`
-        + (snaps.length < LANDMARKS.length ? '<li class="jr-more al-tip">Stand by a landmark and take a ☰ → 📸 Photo to add it.</li>' : '') + (nx ? `<li class="jr-more">🎁 Next reward at ${nx}% explored${nx === 100 ? ': something golden!' : '.'}</li>` : '<li class="jr-more">🌟 Every corner explored. Visit your statue in Sprout Village!</li>');
+      body = R.body.slice(0, i0) + tapTip + R.body.slice(i0) + `<li class="jr-head">📸 Photo album <small>${snaps.length}/${lms.length}</small></li><li class="jr-album">${lms.map(card).join('')}</li>`
+        + (snaps.length < lms.length ? '<li class="jr-more al-tip">Stand by a landmark and take a ☰ → 📸 Photo to add it.</li>' : '') + (nx ? `<li class="jr-more">🎁 Next reward at ${nx}% explored${nx === 100 ? ': something golden!' : '.'}</li>` : '<li class="jr-more">🌟 Every corner explored. Visit your statue in Sprout Village!</li>');
       recPc = R.pc;
     } else if (tab === 'today') { // every daily thing in one list: done today, or where to go for it
       const { rows, after, night } = this.todayList();
