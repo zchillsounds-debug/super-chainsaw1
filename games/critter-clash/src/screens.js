@@ -450,6 +450,14 @@ export class Screens {
         "Aurelark, the Sun-Bird. Solmoth carries the dawn, Moonwhal sings to the moon, Verdelk keeps the forest... and Aurelark wakes the desert. I'm going to need a bigger book.",
         save.adv.dtrialWins ? "And Elder Sabah says you crossed her Desert Trial too. In a sandstorm! Mom made me sit down when I read that part." : "Oh, and Elder Sabah at the Sun Gate is holding a Desert Trial every week. Four champions, four arenas. She says to bring a scarf.",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv36') && !save.news.includes('adv37') && (save.adv.flags.vault_lit || save.adv.sledHi || Object.keys(save.adv.flags).some((k) => k.startsWith('champre_')))) { // after D4: the desert's post-game bits
+      save.news.push('adv37'); persist();
+      const F = save.adv.flags;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        F.vault_lit ? "{name}! The Starless Vault isn't starless any more! Elder Sabah says a thread of sunlight runs all the way down through it now, mirror to mirror. They're calling it the Sunlit Vault." : "{name}, the Starless Vault has a crack in its east wall, they say, and a thread of sunlight comes through it. Bronze mirrors, a sun disc... sound familiar?",
+        save.adv.sledHi ? `And Kai at the Dune Camp says you rode his tea tray down the big dune for ${save.adv.sledHi} points. A TEA TRAY, {name}. I'd like to try. I'd like to try very slowly.` : "And Dune Surfer Kai at the Dune Camp wants someone to race the sunset on his tea tray. DUNE SLED, he calls it. Hold on going down, let go at the top!",
+        "Oh, and the three desert champions wait in their stadium lobbies now, for one rematch a day. Pool Angler Layla at the Sunwell has a hat for whoever catches all four oasis fish!",
+      ]), 600);
     } else if (!g.autoplay && save.news?.includes('adv33') && !save.news.includes('adv35') && ((save.adv.fossils || []).length >= 4 || save.adv.flags.caravan3_done || save.adv.flags.buried_vault)) { // Chapter 3 side content (D3)
       save.news.push('adv35'); persist();
       const F = save.adv.flags, nf = (save.adv.fossils || []).length;
