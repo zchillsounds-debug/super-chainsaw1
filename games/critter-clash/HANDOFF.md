@@ -34,6 +34,7 @@
 - ch3walk (27 steps) and mapwalk oasis/flats/duneroad: all good.
 - **Checks at end (a1307ce, R825, production build):** tapcheck 740×360 / 412×915 clean (only the expected rotate hint over the portrait pause menu); advcup Sprout wins 3 and lands back in Bloom Town, no errors.
 - Critiqued: Team setup at 915×412 / 360×640 (chips overflowed → fixed), Match Setup 360×640; the night market at 915×412 (night, evening, day), 740×360, 412×915 (the sky lantern was a small dot → bigger); the curio question at 740×360; the salt arena day/night/evening (washed out → toned down); brine vents mid-fight; the Pecan news card at 412×915.
+- APK **1.0.904** (from 1a5765c) sent to the user. Chained to **session_01JqoFyK5NJf2qBf6mwpFqDF** ("Critter Clash Ch3 run: rounds R826+") with the prompt word for word.
 - **Left / next (R826+):** Kamal's world model is always a Fennzap while his fight critter changes; a How to Play line for the night market; the lantern hat is small on big-headed heroes; a full fresh-save play from the Sand-Rail through the legend.
 
 ## Session D10 (2026-10-28 05:00 UTC →, session_01JqoFyLB9LfuGGfgsTxNWr5): the sky chip, the Glass Flats, the salt road (R813–R817)
