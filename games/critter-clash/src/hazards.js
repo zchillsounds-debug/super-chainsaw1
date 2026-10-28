@@ -573,6 +573,7 @@ export class Hazards {
     const B = this.b;
     if (!f.alive || f.invuln > 0 || f.state === 'down' || f.state === 'super' || f.state === 'launched') return false;
     if (f.state === 'guard') { f.shield.userData.flash = 1; B.fx.text(f.headPos(), 'BLOCK', '', 0.5); return 'block'; }
+    if (f.glowcap > 0) { B.fx.text(f.headPos(), 'MISSED!', '', 0.6); return false; } // R846: a glowcap's light shows where the cave drips
     const dmg = Math.min(H.dmg, f.hp - 1);
     f.takeHit({ dmg: Math.max(0, dmg), kb: H.kb, dirX, dirZ, stun: H.stun || 0.4, lift: H.lift || 0, launch: !!H.lift, paralyze: H.paralyze, dizzy: H.dizzy || 0 });
     f.dmgDelay = 0.3;

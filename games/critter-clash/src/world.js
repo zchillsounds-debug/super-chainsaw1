@@ -446,6 +446,7 @@ export class World {
     this.buildFountain();
     this.buildStatue();
     this.buildJellies(rand);
+    this.buildLoaches(rand);
     this.buildSkyLanterns();
     this.buildThanks();
     this.buildBuildings();
@@ -519,7 +520,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.wreck = null; this.lighthouse = null; this.puz = null; this.chest = null; this.chest2 = null; this.updrafts = null; this.gliding = null; this.pearl = null; this.mirages = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.loaches = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.wreck = null; this.lighthouse = null; this.puz = null; this.chest = null; this.chest2 = null; this.updrafts = null; this.gliding = null; this.pearl = null; this.mirages = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -2223,6 +2224,29 @@ export class World {
       J.push({ g, dome, sm, ph: rand() * 6, x0: g.position.x, z0: g.position.z });
     }
     this.jellies = J;
+  }
+
+  // R845: the Sunwell Spring's pool: a few Lantern Loaches swim slow loops under the water, each with a little light on its nose
+  buildLoaches(rand) {
+    this.loaches = null;
+    if (!this.M.springFish) return;
+    const spots = [];
+    for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if (this.tile(x, y) === '~' && this.tile(x + 1, y) === '~' && this.tile(x - 1, y) === '~') spots.push([x, y]);
+    if (!spots.length) return;
+    const bm = new THREE.MeshBasicMaterial({ color: 0x0e4452, transparent: true, opacity: 0.6, depthWrite: false }); bm.userData.own = true; // a dark shape seen through the bright water
+    const body = new THREE.SphereGeometry(0.2, 10, 6); body.scale(2.4, 0.5, 1);
+    const tail = new THREE.ConeGeometry(0.12, 0.3, 4); tail.rotateZ(Math.PI / 2); tail.scale(1.2, 0.4, 1.5); tail.translate(-0.6, 0, 0);
+    const L = [];
+    for (let k = 0; k < Math.min(4, spots.length); k++) {
+      const [x, y] = spots[Math.floor(rand() * spots.length)], [px, pz] = wpos(x, y), g = new THREE.Group();
+      g.add(new THREE.Mesh(body, bm), new THREE.Mesh(tail, bm));
+      const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffc830, depthWrite: false, transparent: true, opacity: 0.9 }); sm.userData.own = true;
+      const nose = new THREE.Sprite(sm); nose.scale.setScalar(0.5); nose.position.set(0.5, 0.06, 0); g.add(nose);
+      const hm = sm.clone(); hm.opacity = 0.25; hm.userData.own = true; const halo = new THREE.Sprite(hm); halo.scale.setScalar(2.2); g.add(halo);
+      g.position.set(px, 0.04, pz); this.group.add(g);
+      L.push({ g, sm, hm, ph: rand() * 6, r: 0.5 + rand() * 0.6, sp: (0.35 + rand() * 0.3) * (k % 2 ? -1 : 1), x0: px, z0: pz });
+    }
+    this.loaches = L;
   }
 
   // the Neon arcade: a glowing marquee over each bank of cabinets says which game it plays
@@ -4848,7 +4872,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m; a.markKind = k;
@@ -5254,6 +5278,13 @@ export class World {
       const p = this.t * 1.8 + J.ph, q = Math.sin(p);
       J.dome.scale.set(1 + q * 0.12, 1 - q * 0.18, 1 + q * 0.12); J.sm.opacity = 0.5 + q * 0.2;
       J.g.position.x = J.x0 + Math.sin(this.t * 0.25 + J.ph) * 0.6; J.g.position.z = J.z0 + Math.cos(this.t * 0.2 + J.ph) * 0.6; J.g.position.y = -0.05 + Math.max(0, q) * 0.06;
+    }
+    if (this.loaches) for (const F of this.loaches) { // swim slow loops; the nose light blinks twice now and then
+      const a = this.t * F.sp + F.ph, wob = Math.sin(this.t * 3 + F.ph) * 0.08;
+      F.g.position.x = F.x0 + Math.cos(a) * F.r; F.g.position.z = F.z0 + Math.sin(a) * F.r * 0.7;
+      F.g.rotation.y = Math.atan2(Math.cos(a) * F.sp * 0.7, -Math.sin(a) * F.sp) * -1 + wob;
+      const b = (this.t * 0.4 + F.ph) % 4, blink = b < 0.5 && Math.sin(b * Math.PI * 4) < 0 ? 0.25 : 1;
+      F.sm.opacity = 0.9 * blink; F.hm.opacity = 0.25 * blink;
     }
     if (this.bottle) { const B = this.bottle; B.g.position.y = 0.18 + Math.sin(this.t * 1.5) * 0.03; B.glint.material.opacity = 0.35 + Math.max(0, Math.sin(this.t * 2.3)) * 0.4; } // the bottle rocks in the wash and glints
     if (this.iceLan) this.iceLan.opacity = 0.58 + Math.sin(this.t * 7) * 0.04 + Math.sin(this.t * 11.3) * 0.03; // candle flicker

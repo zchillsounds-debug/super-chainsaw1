@@ -670,7 +670,7 @@ export class Screens {
         ['Dodge', 'A quick roll with invincibility; dodge at the last moment for bonus Super · L / Shift'],
         ['Guard', 'Hold to raise a shield bubble that blocks most damage. Raise it right as a hit lands to PARRY and stagger the attacker · O'],
         ['Super', 'Fills as you trade hits. When it glows, unleash it! · I'],
-        ['Power-ups', 'Berries heal, stars charge your Super, shoes give a speed burst. In the Amber Sands, a water flask cools a burn and a golden scarab shields you from the next blow. Grab them before your rival does!'],
+        ['Power-ups', 'Berries heal, stars charge your Super, shoes give a speed burst. In the Amber Sands, a water flask cools a burn and a golden scarab shields you from the next blow. Down in the Sunwell Grotto, a glowcap mushroom makes falling dripstones miss you for a while. Grab them before your rival does!'],
         ['Types', 'Each type beats two others (Blaze burns Sprout, Splash douses Blaze, Pebble grounds Zap...). Hitting a weakness deals extra damage.'],
         ['Dizzy', 'Too many hits in a row makes a critter see stars. Mash buttons to shake it off!'],
         ['Hazards', 'Later stadiums fight back: when a glowing ring appears on the floor, get out of it (or guard)! Each one has a second trick too: fissures, ice slicks, lasers (guard or roll through), rogue waves, crosswinds and spore clouds.'],

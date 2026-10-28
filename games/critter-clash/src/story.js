@@ -1777,7 +1777,7 @@ function caravanRunTalk(S, w, a) {
       let prize = 0;
       if (A.caravanDay !== day) { prize = score >= 550 ? 3 : score >= 400 ? 2 : score >= 250 ? 1 : 0; if (prize) { A.caravanDay = day; save.berries = (save.berries || 0) + prize; } }
       const hat = score >= 500 && !own.includes('caravanturban'); if (hat) own.push('caravanturban');
-      persist(); if (best || prize || hat) reward(2);
+      persist(); w.questMarks?.(); if (best || prize || hat) reward(2);
       w.say([`${score >= 500 ? 'What a caravan master!' : score >= 250 ? 'A fine run!' : 'Humpdrops everywhere!'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`,
         ...(prize ? [`${who}: ${prize} 🍓 from the caravan purse! (One prize a day.)`] : A.caravanDay !== day ? [`${who}: Score 250 or more and the caravan pays you in berries! (One prize a day.)`] : []),
         ...(hat ? [`${who}: 500?! You lead them better than I do. Here: my old caravan turban. A leader should look like one!`, "{hero} got the Caravan Leader's Turban! 🎩 (☰ → 🎩 Hats)"] : !own.includes('caravanturban') ? [`${who}: Score 500 and my old leader's turban is yours.`] : [])], null, who);

@@ -11,8 +11,11 @@ const KINDS = {
   shoe:  { glow: 0x5ad8ff, label: 'SPEED UP!' },
   flask: { glow: 0x4fe6ff, label: 'COOL WATER!' },
   scarab: { glow: 0xffc23a, label: 'SCARAB SHIELD!' },
+  glowcap: { glow: 0x5affe0, label: 'GLOWCAP!' },
 };
 const DESERT = new Set(['oasis', 'canyon', 'saltflat', 'dunes']);
+// R846: the Sunwell Grotto grows its own: a glowcap mushroom (a bite of HP, and its glow shows where the cave drips: hazards miss you for 10 s)
+const CAVE = new Set(['grotto']);
 
 function buildMesh(kind) {
   const g = new THREE.Group();
@@ -66,6 +69,22 @@ function buildMesh(kind) {
     const shine = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), new THREE.MeshBasicMaterial({ color: 0xfff6c8 }));
     shine.position.set(-0.08, 0.17, -0.05); g.add(shine);
     g.position.y = -0.08;
+  } else if (kind === 'glowcap') {
+    // a glowcap: a pale stalk under a domed, glowing teal cap with cream spots
+    const stalk = inked(new THREE.CylinderGeometry(0.08, 0.11, 0.3, 12), toon(0xf2ead2), 0.015);
+    stalk.position.y = -0.05; g.add(stalk);
+    const capM = new THREE.MeshBasicMaterial({ color: 0x4ff0d6 });
+    const cap = inked(new THREE.SphereGeometry(0.27, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), capM, 0.02);
+    cap.scale.set(1, 0.72, 1); cap.position.y = 0.08; g.add(cap);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.03, 6, 24), new THREE.MeshBasicMaterial({ color: 0x2fb8a8 }));
+    rim.rotation.x = Math.PI / 2; rim.position.y = 0.08; g.add(rim);
+    for (let i = 0; i < 5; i++) {
+      const a = i * 1.26, up = i % 2 ? 0.55 : 0.85;
+      const sp = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), new THREE.MeshBasicMaterial({ color: 0xfffbe0 }));
+      sp.position.set(Math.cos(a) * 0.27 * Math.sin(up), 0.08 + 0.195 * Math.cos(up), Math.sin(a) * 0.27 * Math.sin(up)); g.add(sp);
+    }
+    const halo = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 10), new THREE.MeshBasicMaterial({ color: 0x5affe0, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending }));
+    halo.position.y = 0.1; g.add(halo);
   } else {
     const body = inked(new THREE.CapsuleGeometry(0.13, 0.22, 6, 14), toon(0x3d9bff), 0.02);
     body.rotation.z = Math.PI / 2; body.scale.set(1, 1, 0.85);
@@ -78,7 +97,7 @@ function buildMesh(kind) {
       g.add(w);
     }
   }
-  if (kind === 'flask' || kind === 'scarab') g.scale.setScalar(1.4); // (the desert two read small next to Lv 30 fighters)
+  if (kind === 'flask' || kind === 'scarab' || kind === 'glowcap') g.scale.setScalar(1.4); // (the desert two read small next to Lv 30 fighters)
   // soft glow disc underneath
   const disc = new THREE.Mesh(new THREE.CircleGeometry(0.55, 32), new THREE.MeshBasicMaterial({ color: KINDS[kind].glow, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending }));
   disc.rotation.x = -Math.PI / 2;
@@ -95,6 +114,8 @@ export class Items {
     this.b = battle;
     this.list = [];
     this.shields = [];
+    this.glows = [];
+    this.cave = CAVE.has(battle.arena?.key);
     this.desert = DESERT.has(battle.arena?.key) || !!battle.env?.sand;
     this.timer = 9 + Math.random() * 4;
   }
@@ -135,7 +156,8 @@ export class Items {
         const behind = Math.min(p.hp / p.maxHp, c.hp / c.maxHp) < 0.5;
         const r = Math.random();
         // out in the Amber Sands, about one drop in three is a desert one
-        if (this.desert && Math.random() < 0.34) this.spawn(behind && Math.random() < 0.6 ? 'flask' : Math.random() < 0.5 ? 'flask' : 'scarab');
+        if (this.cave && Math.random() < 0.34) this.spawn('glowcap'); // down in the grotto, about one in three is a glowcap
+        else if (this.desert && Math.random() < 0.34) this.spawn(behind && Math.random() < 0.6 ? 'flask' : Math.random() < 0.5 ? 'flask' : 'scarab');
         else this.spawn(behind && r < 0.5 ? 'berry' : r < 0.4 ? 'berry' : r < 0.72 ? 'star' : 'shoe');
       }
     }
@@ -150,6 +172,16 @@ export class Items {
       const blink = left < 2 ? (Math.sin(sh.t * 18) > 0 ? 1 : 0.3) : 1;
       sh.mesh.material.opacity = (0.18 + Math.sin(sh.t * 5) * 0.05) * blink; sh.mesh.children[0].material.opacity = 0.75 * blink;
       if (Math.random() < dt * 5) B.fx.spawn({ x: f.x + (Math.random() - 0.5) * 1.4, y: f.y + 0.4 + Math.random() * 1.2, z: f.z + (Math.random() - 0.5) * 1.4, vy: 0.6, color: 0xffd36a, size: 0.14, life: 0.5, shape: 'star', additive: false });
+    }
+    for (let i = this.glows.length - 1; i >= 0; i--) { // a glowcap's light bobs over its fighter's head, blinking out in its last 2 s
+      const gl = this.glows[i], f = gl.f;
+      gl.t += dt;
+      if (!(f.glowcap > 0) || !f.alive) { this.dropGlow(i); continue; }
+      f.glowcap -= dt;
+      const blink = f.glowcap < 2 ? (Math.sin(gl.t * 18) > 0 ? 1 : 0.3) : 1, hp = f.headPos();
+      gl.mesh.position.set(f.x + Math.cos(gl.t * 2.4) * 0.7, hp.y + 0.1 + Math.sin(gl.t * 3.1) * 0.12, f.z + Math.sin(gl.t * 2.4) * 0.7);
+      gl.mesh.material.opacity = 0.95 * blink; gl.mesh.children[0].material.opacity = (0.3 + Math.sin(gl.t * 6) * 0.08) * blink;
+      if (Math.random() < dt * 4) B.fx.spawn({ x: f.x + (Math.random() - 0.5) * 1.2, y: f.y + 0.3 + Math.random() * 1.1, z: f.z + (Math.random() - 0.5) * 1.2, vy: 0.5, color: 0x8affea, size: 0.12, life: 0.6, shape: 'star', additive: false });
     }
     for (let i = this.list.length - 1; i >= 0; i--) {
       const it = this.list[i];
@@ -199,6 +231,18 @@ export class Items {
         this.b.scene.add(mesh);
         this.shields.push({ f, mesh, t: 0 });
       }
+    } else if (it.kind === 'glowcap') {
+      const heal = Math.round(f.maxHp * 0.06);
+      f.hp = Math.min(f.maxHp, f.hp + heal);
+      f.dmgTrail = Math.max(f.dmgTrail, f.hp);
+      f.glowcap = 10;
+      B.fx.text({ x: hp.x, y: hp.y, z: hp.z }, '+' + heal, 'heal', 0.9);
+      if (!this.glows.some((q) => q.f === f)) {
+        const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 8), new THREE.MeshBasicMaterial({ color: 0xc8fff4, transparent: true, opacity: 0.95, depthWrite: false }));
+        mesh.add(new THREE.Mesh(new THREE.SphereGeometry(0.5, 14, 10), new THREE.MeshBasicMaterial({ color: 0x1fd8b8, transparent: true, opacity: 0.3, depthWrite: false })));
+        this.b.scene.add(mesh);
+        this.glows.push({ f, mesh, t: 0 });
+      }
     } else {
       f.speedBoost = 6;
     }
@@ -229,6 +273,13 @@ export class Items {
     this.shields.splice(i, 1);
   }
 
+  dropGlow(i) {
+    const gl = this.glows[i];
+    this.b.scene.remove(gl.mesh);
+    gl.mesh.traverse((o) => { o.geometry?.dispose(); o.material?.dispose(); });
+    this.glows.splice(i, 1);
+  }
+
   remove(i) {
     const it = this.list[i];
     this.b.scene.remove(it.mesh);
@@ -239,6 +290,7 @@ export class Items {
   clear() {
     for (let i = this.list.length - 1; i >= 0; i--) this.remove(i);
     for (let i = this.shields.length - 1; i >= 0; i--) { this.shields[i].f.scarab = 0; this.dropShield(i); }
+    for (let i = this.glows.length - 1; i >= 0; i--) { this.glows[i].f.glowcap = 0; this.dropGlow(i); }
     this.timer = 9 + Math.random() * 4;
   }
 }
