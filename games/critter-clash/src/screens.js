@@ -483,6 +483,14 @@ export class Screens {
         A.curios ? `And the Mirage Merchant sold you a curio! ${A.curios > 1 ? `${A.curios} of them!` : ''} He brings a new one every day after noon, they say. Or the same one, wearing a disguise.` : "The Mirage Merchant on the Glass Flats has a new curio every day now, once you've bought his turban. A glass lure, a mirror... even bottled heat!",
         "Oh, and Team Battle has a sky button now too, like Quick Battle. A night-time 3-on-3 under the stars. Lovely!",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv42') && !save.news.includes('adv43') && (save.adv.flags.gcap_done || save.adv.flags.hollow_arrive)) { // R863: the Old Aqueduct, Osei, the Starspot Eel, the aqueduct arena
+      save.news.push('adv43'); persist();
+      const A = save.adv, F = A.flags;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        F.aq_done ? "{name}! Wellkeeper Bram sent word: the Sunwell is brimming! A Waterwright Osei says you opened a thousand-year-old sluice in a tunnel under the sands. You are an engineer now. Congratulations!" : F.aq_arrive ? "{name}! You went down Pim's grate into an old water tunnel! A Waterwright Osei says the Sun City dug it to feed the Sunwell. There's a big wheel at the far end he can't reach..." : "{name}! Forager Pim mentioned an old iron grate south of the black pool. Water gurgles under it. Pim has the key, if you've helped with the glowcaps!",
+        A.fishLog?.hollow ? `And a Starspot Eel, ${A.fishLog.hollow} cm! Freckled with little lights like the night sky. I've put your drawing on the wall.` : "Pim says something with freckles swims in that black pool in the hollow. Freckles that LIGHT UP. Bring a rod!",
+        "A tip from the stadiums: fights in the aqueduct happen in its round cistern hall. The old spouts in the floor shove you about, and sometimes a floodgate opens. Step out of the surge!",
+      ]), 600);
     } else if (!g.autoplay && save.news?.includes('adv41') && !save.news.includes('adv42') && (save.adv.flags.odjournal_done || save.adv.flags.spring_arrive)) { // R853: Glowcap Hollow, Forager Pim, the glowcap power-up, Grit and Sirocco
       save.news.push('adv42'); persist();
       const A = save.adv, F = A.flags;
@@ -694,7 +702,7 @@ export class Screens {
         ['Cups', 'Each town\'s stadium holds a cup, and the trials test your Strength, Friendship and Wisdom on the road to the Critter Crown.'],
         ['Berry Centers', 'Rest to heal, swap who leads the way at the Critter Box, leave a critter at the Daycare and blend berry smoothies.'],
         ['The Isles', 'Once you hold the Critter Crown, the Sunny Gull ferry sails from Seashell Town to the Sunscatter Isles: new critters, three island cups and the Gloom Gulls.'],
-        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it, where Forager Pim\'s spore puffs fly in SPORE DRIFT.'],
+        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it, where Forager Pim\'s spore puffs fly in SPORE DRIFT. Past Pim\'s grate, an old water tunnel runs south: turn its sluice wheels to cross the channels.'],
         ['After that', 'The Battle Tower, three legendary critters, the weekly Masters, the Kite Glider\'s hidden spots, pearls, dives and more. The Champ page keeps track.'],
         ['100%', 'Records shows how much of Clashara, the isles (and later the Amber Sands) you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
       ]],
