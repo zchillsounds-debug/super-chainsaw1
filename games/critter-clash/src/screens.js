@@ -482,6 +482,15 @@ export class Screens {
         A.curios ? `And the Mirage Merchant sold you a curio! ${A.curios > 1 ? `${A.curios} of them!` : ''} He brings a new one every day after noon, they say. Or the same one, wearing a disguise.` : "The Mirage Merchant on the Glass Flats has a new curio every day now, once you've bought his turban. A glass lure, a mirror... even bottled heat!",
         "Oh, and Team Battle has a sky button now too, like Quick Battle. A night-time 3-on-3 under the stars. Lovely!",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv40') && !save.news.includes('adv41') && (save.adv.flags.gate_open || save.adv.flags.caravan3_done || save.adv.flags.spring_arrive)) { // R840: Sirocco's Amends, CARAVAN RUN, Odette's journal, the grotto
+      save.news.push('adv41'); persist();
+      const A = save.adv, F = A.flags;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        F.sirocco4_done ? "{name}! A letter from the Sun Gate, signed just \"Sirocco\". He says you carried a bucket, a note, a cog and a rope knot across the whole desert for him. He sounds... happy?" : F.gate_open ? "{name}! I hear Sirocco sits by the Sun Gate every day now, looking sorry for himself. Maybe he needs a friend to carry a few apologies about?" : "{name}! The Amber Sands keep getting busier. Every letter from the oasis has sand in it. My desk is a beach.",
+        A.caravanHi ? `And Caravan Master Hakim let you lead his Humpdrops! ${A.caravanHi} points, and ${A.hats?.includes('caravanturban') ? 'his own turban!' : 'only a little bit of stampeding.'}` : F.caravan3_done ? "Caravan Master Hakim says his Humpdrops are restless. He's looking for someone to lead them on a run. Three lanes, lots of cacti. Sounds thrilling!" : "Caravan Master Hakim is still looking for help to get his caravan road going again.",
+        F.odjournal_done ? "Spelunker Odette wrote too: her cave journal is home, and she says you look very dashing in her lamp cap." : F.spring_arrive ? "Spelunker Odette, down in the Sunwell Spring, lost her cave journal on a windy mesa. Poor thing. She's drawing maps on date wrappers." : "",
+        "And a tip from the stadiums: fights in the Sunwell Spring now happen in a glowing grotto. Mind the dripstones! Oh, and those WANTED outlaws? They run. Corner them!",
+      ].filter(Boolean)), 600);
     } else if (!g.autoplay && save.news?.includes('adv39') && !save.news.includes('adv40') && (save.adv.bountySeen || save.adv.flags.spring_arrive)) { // R830: the Caravan Guild's board, the Sunwell Spring, the desert power-ups
       save.news.push('adv40'); persist();
       const A = save.adv;
@@ -675,7 +684,7 @@ export class Screens {
         ['Cups', 'Each town\'s stadium holds a cup, and the trials test your Strength, Friendship and Wisdom on the road to the Critter Crown.'],
         ['Berry Centers', 'Rest to heal, swap who leads the way at the Critter Box, leave a critter at the Daycare and blend berry smoothies.'],
         ['The Isles', 'Once you hold the Critter Crown, the Sunny Gull ferry sails from Seashell Town to the Sunscatter Isles: new critters, three island cups and the Gloom Gulls.'],
-        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night.'],
+        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave.'],
         ['After that', 'The Battle Tower, three legendary critters, the weekly Masters, the Kite Glider\'s hidden spots, pearls, dives and more. The Champ page keeps track.'],
         ['100%', 'Records shows how much of Clashara, the isles (and later the Amber Sands) you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
       ]],

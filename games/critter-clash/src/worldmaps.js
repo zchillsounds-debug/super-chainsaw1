@@ -903,7 +903,8 @@ export const MAPS = {
       { id: 'yusra_o', x: 17, y: 10, critter: 'sizzlard', name: 'Lantern Maker Yusra', dir: 'e', dark: true, showFlag: 'cup_mirage', story: 'skylantern', lines: [] },
       { id: 'layla_o', x: 17, y: 9, critter: 'humpdrop', name: 'Pool Angler Layla', dir: 'w', story: 'oasisfish', lines: [] }, // the oasis fish album (Records, Amber Sands)
       { id: 'hakim_o', x: 2, y: 12, critter: 'humpdrop', name: 'Caravan Master Hakim', dir: 'e', story: 'caravanrun', lines: ["Caravan Master Hakim: My Humpdrops can walk three days without a drink. I can walk about three minutes. We make a good team.", "Caravan Master Hakim: The caravan road runs oasis, canyon, dunes and home. Every stop trades something. That is how the desert stays friends."] },
-      { id: 'grit_o', x: 22, y: 12, critter: 'scarabold', name: 'Dust Devil Grit', dir: 'w', lines: ["Dust Devil Grit: Eh? Who are YOU looking at? We're just... shopping. For shovels. LOTS of shovels.", "Dust Devil Grit: The buried city? Never heard of it. Definitely not digging it up. Go away, tourist!"] },
+      { id: 'grit_o', x: 22, y: 12, critter: 'scarabold', name: 'Dust Devil Grit', dir: 'w', hideFlag: 'sirocco3_done', lines: ["Dust Devil Grit: Eh? Who are YOU looking at? We're just... shopping. For shovels. LOTS of shovels.", "Dust Devil Grit: The buried city? Never heard of it. Definitely not digging it up. Go away, tourist!"] },
+      { id: 'grit_w', x: 14, y: 3, critter: 'scarabold', name: 'Grit', dir: 'e', act: 'water', showFlag: 'sirocco3_done', lines: ['Grit: Scrub, scrub, scrub. Bram says the well rim hasn\'t been this clean since he was a boy. That\'s the nicest thing anybody\'s said to me in years.', 'Grit: Don\'t call me a Dust Devil. I\'m a Well Devil now. ...No. That\'s worse. Just Grit.', 'Grit: Scarabold LOVES this job. It rolls the bucket up and down all day. Look at it go!'] }, // R839: after Sirocco\'s Amends he helps at the well
     ],
   },
 
