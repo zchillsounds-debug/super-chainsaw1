@@ -20,6 +20,7 @@ export const HAZARDS = {
   oasis:   { name: 'Water geysers', color: 0x2ab0d8, glow: 0xb8f4ff, r: 1.2, warn: 1.3, dmg: 7, lift: 8.5, kb: 1.5, word: 'SPLOOSH!' }, // Chapter 3: the Sunwell Pavilion
   canyon:  { name: 'Falling rocks', color: 0xc8402a, solid: true, glow: 0xffe0b0, r: 1.1, warn: 1.25, dmg: 9, stun: 0.6, kb: 3.2, word: 'CRUNCH!' }, // Chapter 3: Redrock Canyon
   dunes:   { name: 'Sand twisters', color: 0xb8742a, solid: true, glow: 0xffe0a0, r: 1.2, warn: 1.35, dmg: 6, lift: 6.5, kb: 2.2, dizzy: 30, word: 'WHIRL!' }, // Chapter 3: the Sandstorm Dome
+  saltflat: { name: 'Brine vents', color: 0x3a8ab8, glow: 0xffffff, r: 1.15, warn: 1.35, dmg: 6, lift: 7, kb: 1.6, word: 'HISS!' }, // R823: the Glass Flats (wild fights): the crust cracks and spits hot brine
   beach:   { name: 'Coconuts', color: 0xe0482a, solid: true, glow: 0xfff2c0, r: 0.9, warn: 1.2, dmg: 7, stun: 0.5, kb: 3, word: 'BONK!' },
 };
 
@@ -489,6 +490,7 @@ export class Hazards {
         if (h.twist) { h.twist.rotation.y -= dt * 18; h.twist.scale.set(H.r * (0.9 + e * 0.4), 0.8 + e * 1.2, H.r * (0.9 + e * 0.4)); h.twist.userData.mat.opacity = 0.8 * Math.max(0, 1 - e); }
         if (B.arena.key === 'sky' && e < 0.8) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * 1.2, y: 0.2, z: h.z + (Math.random() - 0.5) * 1.2, vy: 10 + Math.random() * 4, color: 0xffffff, size: 0.28, stretch: 5, life: 0.4, shape: 'spark', additive: false, alpha: 0.85 });
         if (B.arena.key === 'oasis' && e < 0.8) for (let k = 0; k < 2; k++) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * 0.6, y: 0.2, z: h.z + (Math.random() - 0.5) * 0.6, vy: 11 + Math.random() * 4, color: Math.random() < 0.5 ? 0xe8fbff : 0x8ae0f4, size: 0.45, life: 0.55, shape: 'glow', additive: false, alpha: 0.85, grav: 6 }); // a column of spray
+        if (B.arena.key === 'saltflat' && e < 0.8) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * 0.6, y: 0.2, z: h.z + (Math.random() - 0.5) * 0.6, vy: 8 + Math.random() * 4, color: Math.random() < 0.5 ? 0xe4f6ff : 0xa8d8f0, size: 0.5, life: 0.6, shape: 'puff', additive: false, alpha: 0.85, grav: 5, grow: 1.2 }); // a hissing jet of brine steam
         if (B.arena.key === 'volcano' && e < 0.8) B.fx.spawn({ x: h.x + (Math.random() - 0.5) * 0.7, y: 0.2, z: h.z + (Math.random() - 0.5) * 0.7, vy: 9 + Math.random() * 4, color: Math.random() < 0.5 ? 0xff7a1a : 0xffd040, size: 0.5, life: 0.5, shape: 'puff', grav: 9, grow: 1 });
         if (e >= 1) this.remove(i);
       }
@@ -511,6 +513,10 @@ export class Hazards {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 24, speed: 3, up: 11, color: 0xd8f6ff, size: 0.3, life: 0.8, shape: 'glow', additive: false, grav: 14, alpha: 0.9 });
       B.fx.spawn({ x: h.x, y: 0.06, z: h.z, color: 0xe8fbff, size: H.r * 1.6, life: 0.6, shape: 'ring', additive: false, grow: 1.5, alpha: 0.7 });
       sfx.whoosh?.(0.9);
+    } else if (key === 'saltflat') {
+      B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 20, speed: 3, up: 9, color: 0xc8e8f8, size: 0.55, life: 0.8, shape: 'puff', additive: false, grav: 6, grow: 1.3, alpha: 0.85 });
+      B.fx.burst(p, { n: 12, speed: 4.5, up: 5, color: 0xffffff, size: 0.16, life: 0.6, shape: 'star', additive: false, grav: 12, spin: 10 }); // salt chips
+      sfx.whoosh?.(1.3);
     } else if (key === 'dunes') {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 22, speed: 4, up: 6, color: 0xe8c488, size: 0.6, life: 0.9, shape: 'puff', additive: false, grav: 2, grow: 1.3, alpha: 0.75 });
       B.fx.burst({ x: h.x, y: 0.6, z: h.z }, { n: 8, speed: 3, up: 7, color: 0xc89048, size: 0.22, life: 0.8, shape: 'star', additive: false, grav: 6, spin: 12 });

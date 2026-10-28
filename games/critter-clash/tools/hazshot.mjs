@@ -21,7 +21,7 @@ const step = (s) => pg.evaluate((s) => { __game.paused = false; __sim(s); __game
 await pg.evaluate(() => { const H = __game.battle.hazards; H.spawnAt(__game.battle.fighters[1].x, __game.battle.fighters[1].z); });
 await step(0.7); await shot('a-falling');
 await step(0.7); await shot('b-landed');
-await pg.evaluate(() => { const H = __game.battle.hazards; for (const q of H.list) q.t = 99; H.update(0.016); H.signature(); });
+await pg.evaluate(() => { const H = __game.battle.hazards; for (const q of H.list) q.t = 99; H.update(0.016); if (H.S) H.signature(); });
 await step(0.45); await shot('c-sig');
 await step(0.9); await shot('d-sig');
 await pg.evaluate(() => { __game.paused = false; });
