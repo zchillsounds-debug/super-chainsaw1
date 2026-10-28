@@ -1316,6 +1316,9 @@ export const MAPS = {
     signs: [{ x: 9, y: 1, text: 'Scratched into the rock in neat capitals: "O.D. WAS HERE. THE MUSHROOMS GLOW BRIGHTER WHEN YOU HUM TO THEM. (I THINK.)"' }],
     wild: { list: [['squeakwing', 37, 39], ['mossloth', 37, 39], ['fennzap', 37, 39]], roam: 2, rate: 0.1 },
     npcs: [
+      // R852: two cave folk who'd rather battle than talk
+      { id: 'lio_h', x: 5, y: 3, critter: 'squeakwing', name: 'Caver Lio', dir: 'e', trainer: { lv: 40, sight: 3, diff: 0.86, intro: 'Caver Lio: Squeakwing heard you coming three caves ago! Echo-location, baby. Let\'s battle!', beat: 'Caver Lio: Squeakwing says you were very loud and very good. Mostly loud.' } },
+      { id: 'mae_h', x: 15, y: 6, critter: 'fennzap', name: 'Spore Collector Mae', dir: 'w', trainer: { lv: 40, sight: 3, diff: 0.86, intro: 'Spore Collector Mae: Careful where you step! Those spores took me all morning. Fennzap, shoo them off!', beat: 'Spore Collector Mae: Fine, fine. Just don\'t sneeze near my jars.' } },
       { id: 'pim_h', x: 12, y: 9, critter: 'mossloth', name: 'Forager Pim', dir: 'w', story: 'glowcaps', lines: [
         'Forager Pim: Shh. Listen. Hear that? Drip... drip... That\'s the glowcaps drinking.',
       ] },
