@@ -106,7 +106,8 @@ export const FISH = {
 // so completing the album never waits on the calendar; each first catch is a little bonus
 // the Amber Sands' mirage hours (12-15h, clear days) bring one more visitor to the desert pools: a fish you can see right through. Kept apart too (fishLog.mirage)
 export const MIRAGE_FISH = ['Heatwave Glassfish', 6, 18, '🫧'];
-export const SPRING_FISH = ['Lantern Loach', 8, 22, '🏮']; // R829: blind, glowing, only in the Sunwell Spring under the oasis well
+export const SPRING_FISH = ['Lantern Loach', 8, 22, '🏮'];
+export const HOLLOW_FISH = ['Starspot Eel', 40, 96, '🌌']; // R857: only in Glowcap Hollow's black pool: inky blue, freckled with tiny lights like a night sky // R829: blind, glowing, only in the Sunwell Spring under the oasis well
 export const SEASON_FISH = { spring: ['Blossom Koi', 20, 52, '🌸'], summer: ['Sunburst Perch', 14, 38, '🌻'], autumn: ['Maple Trout', 22, 56, '🍂'], winter: ['Snowflake Smelt', 8, 24, '❄️'] };
 export const seasonKey = () => isSpring() || isMeadow() ? 'spring' : isSummer() ? 'summer' : isAutumn() || isEarlyAutumn() ? 'autumn' : isFrost() || isWinter() || twinkleWeek() ? 'winter' : null;
 // Fisher Finn's weekly Fishing Derby: one everyday kind and a size to beat (Mondays bring a new one)
@@ -2240,10 +2241,15 @@ export class World {
     const tail = new THREE.ConeGeometry(0.12, 0.3, 4); tail.rotateZ(Math.PI / 2); tail.scale(1.2, 0.4, 1.5); tail.translate(-0.6, 0, 0);
     const L = [];
     for (let k = 0; k < Math.min(4, spots.length); k++) {
-      const [x, y] = spots[Math.floor(rand() * spots.length)], [px, pz] = wpos(x, y), g = new THREE.Group();
-      g.add(new THREE.Mesh(body, bm), new THREE.Mesh(tail, bm));
-      const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffc830, depthWrite: false, transparent: true, opacity: 0.9 }); sm.userData.own = true;
-      const nose = new THREE.Sprite(sm); nose.scale.setScalar(0.5); nose.position.set(0.5, 0.06, 0); g.add(nose);
+      const [x, y] = spots[Math.floor(rand() * spots.length)], [px, pz] = wpos(x, y), g = new THREE.Group(), eel = this.M.dark && k % 2 === 0;
+      if (eel) { // R857: a Starspot Eel in Glowcap Hollow's pool: long, inky, a row of pale blue freckles that twinkle
+        const em = bm.clone(); em.color.set(0x0a1030); em.opacity = 0.75; em.userData.own = true;
+        const eb = new THREE.SphereGeometry(0.2, 10, 6); eb.scale(4.4, 0.42, 0.7); g.add(new THREE.Mesh(eb, em));
+        const et = new THREE.ConeGeometry(0.1, 0.5, 4); et.rotateZ(Math.PI / 2); et.scale(1.2, 0.3, 1.2); et.translate(-1.05, 0, 0); g.add(new THREE.Mesh(et, em));
+      } else g.add(new THREE.Mesh(body, bm), new THREE.Mesh(tail, bm));
+      const sm = new THREE.SpriteMaterial({ map: glowTex(), color: eel ? 0xa8d8ff : 0xffc830, depthWrite: false, transparent: true, opacity: 0.9 }); sm.userData.own = true;
+      const nose = new THREE.Sprite(sm); nose.scale.setScalar(eel ? 0.3 : 0.5); nose.position.set(0.5, 0.06, 0); g.add(nose);
+      if (eel) for (const [ox, oz] of [[0.15, 0.05], [-0.2, -0.04], [-0.55, 0.03], [0.75, -0.02]]) { const sp = new THREE.Sprite(sm); sp.scale.setScalar(0.24); sp.position.set(ox, 0.08, oz); g.add(sp); }
       const hm = sm.clone(); hm.opacity = 0.25; hm.userData.own = true; const halo = new THREE.Sprite(hm); halo.scale.setScalar(2.2); g.add(halo);
       g.position.set(px, 0.04, pz); this.group.add(g);
       L.push({ g, sm, hm, ph: rand() * 6, r: 0.5 + rand() * 0.6, sp: (0.35 + rand() * 0.3) * (k % 2 ? -1 : 1), x0: px, z0: pz });
@@ -4124,6 +4130,12 @@ export class World {
       const [id, lo, hi] = W.length ? W[Math.floor(Math.random() * W.length)] : [(this.M.lava ? ['cindermunch', 'emberfly', 'kindlekit', 'smokeshell'] : ['bubbalotl', 'ripples', 'lilypop', 'pengsicle'])[Math.floor(Math.random() * 4)], lv, lv];
       const name = byId(id)?.name || 'critter';
       return this.say([`{hero} reels it in... It's a wild ${name}! And it's not happy about it!`], () => this.startWild(id, lo + Math.floor(Math.random() * (hi - lo + 1)), null, Math.random() < shinyRate()));
+    }
+    if (this.M.dark && this.M.springFish && r < 0.68) { // R857: Glowcap Hollow's black pool: the Starspot Eel (about half the catches there)
+      const [name, lo, hi, em] = HOLLOW_FISH, cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };
+      const first = !L.hollow; L.n++; L.hollow = Math.max(L.hollow || 0, cm); if (first) save.berries = (save.berries || 0) + 5;
+      persist(); reward(first ? 3 : 1);
+      return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long, inky blue and freckled all over with tiny lights, like a piece of the night sky!`, first ? 'It only lives here, in the black pool of Glowcap Hollow. Forager Pim and Pool Angler Layla will want to hear about this! +5 🍓 (☰ → Journal → 🎣)' : `A ${name}. Its freckles twinkle once and it pours itself back into the dark.${L.hollow === cm ? ' Your biggest one yet!' : ''}`]);
     }
     if (this.M.springFish && r < 0.8) { // R829: the Sunwell Spring's own fish (most catches here)
       const [name, lo, hi, em] = SPRING_FISH, cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };

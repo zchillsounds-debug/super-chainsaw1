@@ -1208,7 +1208,7 @@ export const MAPS = {
     ],
     edges: { n: { to: 'dunecamp', off: 12 } },
     gate: [11, 5], // the Sun Gate (5x2, world.js buildRuins)
-    pillars: [[7, 9, 0], [18, 9, 0], [9, 12, 1], [22, 10, 0], [24, 15, 1], [6, 11, 1], [16, 15, 0], [20, 4, 1], [8, 2, 0], [21, 2, 1], [5, 4, 1]],
+    pillars: [[7, 9, 0], [19, 11, 0] /* R856: was (18,9), right in front of Sirocco and Grit */, [9, 12, 1], [22, 10, 0], [24, 15, 1], [6, 11, 1], [16, 15, 0], [20, 4, 1], [8, 2, 0], [21, 2, 1], [5, 4, 1]],
     digs: [[10, 8], [16, 8], [20, 10], [11, 15], [25, 8], [14, 2]],
     signs: [{ x: 4, y: 8, text: 'DUST DEVIL DIG No. 12\nKEEP OUT. Treasure is ours. Gate is ours. Sun is ours.' }],
     wild: { list: [['siroccat', 38, 41], ['scarabold', 38, 41], ['cactortle', 38, 41], ['sizzlard', 39, 41]], roam: 4, rate: 0.1 },

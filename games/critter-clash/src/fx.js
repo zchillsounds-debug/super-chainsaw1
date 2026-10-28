@@ -243,7 +243,11 @@ export class FX {
       v.copy(tx.p).project(this.camera);
       const k = tx.t / tx.life;
       const pop = k < 0.15 ? 0.4 + (k / 0.15) * 0.9 : k < 0.25 ? 1.3 - (k - 0.15) * 3 : 1;
-      const x = (v.x * 0.5 + 0.5) * W + tx.dx * k, y = (-v.y * 0.5 + 0.5) * H - (tx.follow ? 0 : k * 50) + (tx.oy || 0);
+      let x = (v.x * 0.5 + 0.5) * W + tx.dx * k, y = (-v.y * 0.5 + 0.5) * H - (tx.follow ? 0 : k * 50) + (tx.oy || 0);
+      if (!tx.follow) { // R856: pop-ups stay on screen (power-up labels sat off the left edge in portrait and under the HUD bars)
+        const hw = (tx.w ||= tx.el.offsetWidth) / 2 + 8; x = Math.min(W - hw, Math.max(hw, x));
+        if (tx.el.classList.contains('eff')) y = Math.max(W > H ? 96 : 150, y);
+      }
       tx.el.style.transform = `translate(${x}px, ${y}px) translate(-50%,-50%) rotate(${tx.rot}deg) scale(${pop})`;
       tx.el.style.opacity = k > 0.75 ? (1 - k) / 0.25 : 1;
       if (tx.follow) {

@@ -737,6 +737,8 @@ export function storyTalk(S, id, w, a) {
     if (got.length === FISH.oasis.length && !hats.includes('palmangler')) { hats.push('palmangler'); save.berries = (save.berries || 0) + 8; persist(); reward(3); return w.say([`${who}: All four?! Even the Sunwell Sturgeon? It's been down there since my grandmother's grandmother. It's the size of a canoe!`, '{hero} got 8 🍓 and the Palm Angler Hat! 🎣 (☰ → 🎩 Hats)', `${who}: It keeps the sun off and the fish think you're a palm tree. Mostly.`], null, who); }
     const loach = save.adv.fishLog?.spring, F0 = save.adv.flags; // R831: the Sunwell Spring's Lantern Loach
     if (hats.includes('palmangler') && loach && !F0.layla_loach) { F0.layla_loach = true; save.berries = (save.berries || 0) + 3; persist(); reward(2); return w.say([`${who}: Wait. A fish with no EYES? And a light on its nose? Under the WELL?`, `${who}: ${loach} cm! Grandma always said the Sunwell had a heart down there. I thought she meant it was a nice well.`, `${who}: Here, 3 berries for the best fish story I've ever heard. Don't tell the Glassfish. +3 🍓`], null, who); }
+    const eel = save.adv.fishLog?.hollow; // R857: Glowcap Hollow's Starspot Eel
+    if (hats.includes('palmangler') && eel && !F0.layla_eel) { F0.layla_eel = true; save.berries = (save.berries || 0) + 3; persist(); reward(2); return w.say([`${who}: An eel. With FRECKLES. That light up. In a mushroom cave past the spring.`, `${who}: ${eel} cm?! I'm going to need you to draw me a picture. ...That's a worm with stars on. Fine. I believe you. +3 🍓`], null, who); }
     if (hats.includes('palmangler') && F0.cup_mirage && !loach && Math.random() < 0.5) return w.say([`${who}: Ever looked down Bram's well? When the sun's straight overhead the water glows blue down there. Blue! Wells aren't meant to glow.`], null, who);
     if (hats.includes('palmangler')) return w.say([save.adv.fishLog?.mirage ? `${who}: A Heatwave Glassfish! You really hooked one? I've only ever seen them as a wobble in the water, after noon when the air shimmers.` : `${who}: The pool's calm today. The Mirage Guppies are the hardest to see. They look like a ripple until they bite.`, ...(save.adv.fishLog?.mirage ? [] : [`${who}: Grandma says there's one more fish in here. A glass one. It only bites in the mirage hours, when the air over the sand goes wobbly. Noon till three.`])], null, who);
     const left = FISH.oasis.filter(([n]) => !sp[n]).map(([n]) => (n === 'Sunwell Sturgeon' ? 'something HUGE at the bottom' : n.replace(/y$/, 'ie').replace(/h$/, 'he') + 's'));
@@ -1827,12 +1829,13 @@ function glowcapTalk(S, w, a) {
 function sporeDriftTalk(S, w) {
   const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.sporeHi || 0, who = 'Forager Pim';
   w.ask(`${who}: Feel that updraft? It blows all the way up the old shaft to the desert. My spore puffs ride it. Hop on one? Keep near the motes: the puff\'s glow fades without them. ${hi ? `Your best drift: ${hi}.` : 'Drag to steer!'}`, ['Drift!', 'Just chat'], (i) => {
-    if (i) return w.say([[
+    if (i) return w.say([A.fishLog?.hollow && !A.flags.pim_eel ? (A.flags.pim_eel = true, persist(), `Forager Pim: You caught a Starspot Eel? ${A.fishLog.hollow} cm! They come up at night to nibble the glowcaps' roots. I've been blaming the drips for YEARS.`) : [
       'Forager Pim: The lamp-makers up at the night market will want some of these. A glowcap lantern never needs oil!',
       'Forager Pim: Your Glowcap Hat\'s glowing nicely. Hum to it now and then. Odette says it helps. I think Odette is making that up.',
       'Forager Pim: Did you know? A glowcap\'s light shows exactly where the cave will drip next. Critters who eat one dodge the dripstones!',
+      A.fishLog?.hollow ? 'Forager Pim: The Starspot Eels have been twinkling all week. Something has them excited. Probably you.' : 'Forager Pim: That black pool isn\'t empty, you know. Bring a rod. Look for the freckles.',
       A.hat === 'glowcaphat' ? 'Forager Pim: Ooh, you\'re wearing it! Watch the tall moss: shiny critters can\'t resist a glowcap.' : 'Forager Pim: Put your Glowcap Hat on down here and see who comes out of the moss to look. Shiny ones, I bet!',
-    ][Math.floor(Math.random() * 4)]], null, who);
+    ][Math.floor(Math.random() * 5)]], null, who);
     w.busy = true;
     const el = sporeDrift(S.root, S.game.portrait(w.hero.def), (score) => {
       S.game.modalClose = null; w.busy = false;
