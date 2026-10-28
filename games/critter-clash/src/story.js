@@ -707,6 +707,7 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'fortune') return fortuneTeller(w);
   if (id === 'skylantern') return skyLantern(w);
+  if (id === 'lampduel') return lampDuel(S, w);
   if (id === 'oasisfish') { // Pool Angler Layla by the Sunwell pool: the four oasis fish, and her spare hat for all four
     const who = 'Pool Angler Layla', sp = save.adv.fishLog?.sp || {}, got = FISH.oasis.filter(([n]) => sp[n]), hats = (save.adv.hats ||= []);
     if (!F.rod) return w.say([`${who}: A rod! I'd lend you mine, but Humpdrop is using it as a back-scratcher. Fisher Finn in Seashell Town hands them out to anyone who asks nicely.`], null, who);
@@ -2173,4 +2174,21 @@ function skyLantern(w) {
     else out.push(c < 7 ? `${who}: Lovely! ${7 - c} more nights and I'll have something for you.` : `${who}: Beautiful. The Sun-Bird will see that one for sure.`);
     persist(); w.say(out, null, who);
   }, who);
+}
+
+// R825: Lamplight Duelist Kamal, the night market's sparring partner: one battle a night by the lanterns (his critter changes nightly)
+const DUELISTS = ['fennzap', 'siroccat', 'sizzlard', 'humpdrop'];
+export const lampFlag = () => 'lampduel_' + singNight();
+function lampDuel(S, w) {
+  const A = save.adv, who = 'Lamplight Duelist Kamal', flag = lampFlag(), wins = Object.keys(A.flags).filter((k) => k.startsWith('lampduel_')).length;
+  const id = DUELISTS[hash32(singNight() + ':duel') % DUELISTS.length], name = CRITTERS.find((c) => c.id === id).name, lv = Math.min(50, save.critters[A.hero].level + 2);
+  if (A.flags[flag]) return w.say([`${who}: A fine duel! The lanterns are still swinging from it. Come back tomorrow night. ${name} wants a rematch already.`], null, who);
+  w.say([
+    wins ? `${who}: You're back! ${wins} lamplight win${wins > 1 ? 's' : ''} so far. The market folk keep count, you know.` : `${who}: Every night, when the lanterns go up, I duel whoever's brave enough. Right here, under the palms.`,
+    `${who}: Tonight it's my ${name}, Lv ${lv}. Win and I'll pay 3 🍓, the old market rate. Ready?`,
+  ], () => S.worldFight({
+    foe: withGear(CRITTERS.find((c) => c.id === id), lv), lv, kind: 'story', flag, name: 'Kamal', diff: 0.85, berries: 3,
+    trainer: { name: 'Kamal', critter: id, title: 'Lamplight Duelist', beat: 'The lanterns cheer for you tonight!', gloat: 'The lanterns are on my side tonight!' },
+    note: `🏮 You won the lamplight duel! +3 🍓 (Back tomorrow night.)`,
+  }), who);
 }

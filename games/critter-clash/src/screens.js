@@ -1522,7 +1522,8 @@ export class Screens {
         + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '')
         + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '')
         + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal
-        + (A.cnt?.lantern ? bar('🏮', 'Sky lanterns sent up', A.cnt.lantern) : ''); // R820: no goal
+        + (A.cnt?.lantern ? bar('🏮', 'Sky lanterns sent up', A.cnt.lantern) : '') // R820: no goal
+        + (Object.keys(F).some((k) => k.startsWith('lampduel_')) ? bar('⚔️', 'Lamplight duels won', Object.keys(F).filter((k) => k.startsWith('lampduel_')).length) : ''); // R825: no goal
     }
     const pc = Math.floor(parts.reduce((a, b) => a + b, 0) / parts.length * 100), isles = !!F.isle_arrive;
     const ipc = isles ? Math.floor(iparts.reduce((a, b) => a + b, 0) / iparts.length * 100) : 0, spc = sands ? Math.floor(sparts.reduce((a, b) => a + b, 0) / sparts.length * 100) : 0;

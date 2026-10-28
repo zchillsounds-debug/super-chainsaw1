@@ -34,6 +34,19 @@ for (const hr of (process.env.HOURS || '21,18,11').split(',').map(Number)) {
       const t = await talk(18, 10, 'w', n === 0 ? 'lantern' : null);
       if (n === 0 || n >= 6) console.log(`Yusra ${n + 1}:`, t.slice(0, 400));
     }
+    // R825: Lamplight Duelist Kamal: one duel a night (forced win), then 'come back tomorrow night'
+    await pg.evaluate(() => { const o = __game.screens.worldObj; o.hx = 19; o.hy = 7; o.dir = 'w'; o.placeHero(); __sim(0.3); o.tapA = true; __sim(0.3); });
+    for (let k = 0; k < 6 && !(await pg.evaluate(() => !!__game.battle)); k++) await pg.evaluate(() => { __game.screens.worldObj.tapA = true; __sim(0.8); });
+    await pg.waitForFunction(() => !!__game.battle, null, { timeout: 30000 }).catch(() => {});
+    console.log('duel:', await pg.evaluate(() => { const B = __game.battle; return B ? `${B.fighters[1].def.name} Lv ${B.opts?.cpuLevel ?? '?'} env ${JSON.stringify(B.env)} arena ${__game.arena.key}` : 'no battle'; }));
+    await pg.evaluate(() => { __sim(3); }); await shot('duel');
+    const b0 = await pg.evaluate(() => __save.berries || 0);
+    console.log('  battle end:', await pg.evaluate(() => { const bt = __game.battle, p = bt.fighters[0], q = bt.fighters[1]; for (let i = 0; i < 40 && bt.phase !== 'done'; i++) { if (bt.phase === 'fight') { q.hp = 0; bt.onKO(p, q); } __sim(1); } return bt.phase + ' ' + __game.screens.mode; }));
+    for (let k = 0; k < 10 && await pg.evaluate(() => __game.screens.mode !== 'world'); k++) { await pg.waitForTimeout(800); const m = await pg.evaluate(() => { const S = __game.screens; if (S.mode === 'results') { const st = document.querySelector('.streak')?.textContent.slice(0, 80); document.querySelector('.recruit .btn, .modal-wrap .btn')?.click(); [...document.querySelectorAll('button')].find((x) => /Continue/.test(x.textContent))?.click(); return 'results: ' + st; } return S.mode; }); if (m?.startsWith('results')) console.log(' ', m); }
+    await close();
+    await pg.evaluate(() => { __game.autoplay = false; });
+    console.log('duel flag', await pg.evaluate(() => Object.keys(__save.adv.flags).filter((k) => k.startsWith('lampduel_')).join(',')), 'berries +', (await pg.evaluate(() => __save.berries || 0)) - b0, 'mode', await pg.evaluate(() => __game.screens.mode));
+    if (await pg.evaluate(() => __game.screens.mode === 'world')) console.log('Kamal again:', await talk(19, 7, 'w'));
     console.log('hat:', await pg.evaluate(() => __save.adv.hats.includes('lanternhat')), 'count', await pg.evaluate(() => __save.adv.cnt.lantern));
     await pg.evaluate(() => { __save.adv.hat = 'lanternhat'; }); await start('oasis', 7, 10, 's', 21); await pg.evaluate(() => __sim(1)); await shot('hat');
   }
