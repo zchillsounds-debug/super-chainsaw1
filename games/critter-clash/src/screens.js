@@ -47,7 +47,7 @@ const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
 const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
 const LEGEND_IDS = () => ['solmoth', 'moonwhal', 'verdelk', ...(save.adv?.flags?.sands_arrive ? ['aurelark'] : [])]; // the Champ page's legends (the Sun-Bird once you reach the sands)
-const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet']; // the desert's found hats (the Sand Hats stall's four are `sands`)
+const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles']; // the desert's found hats (the Sand Hats stall's four are `sands`)
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
@@ -1293,6 +1293,7 @@ export class Screens {
         ['🕹️', 'TURBO prize', 'Neon City arcade', A.arcadeDay === day, seen.neon],
         ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
         ['🏄', 'WAVE RIDER prize', 'Ember Isle Surf Shack', A.surfDay === day, seen.ember_isle],
+        ['🛷', 'DUNE SLED prize', 'Dune Camp, with Kai', A.sledDay === day, !!A.flags?.cup_sandstorm],
         ['🤿', 'REEF DIVE prize', 'the Sunken Wreck (Snorkeller Pia, Port Coral)', A.diveDay === day, F.dived],
         ['🐦', `Gull Club catch: ${gullFish(day)}`, 'any island water → Petrel, Starfall Atoll', A.gullPaid === day, F.amends3_done && F.rod],
         ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
@@ -1473,6 +1474,7 @@ export class Screens {
         + sb('🌵', 'Desert critters on your team', desert.filter((c) => save.unlocked.includes(c.id)).length, desert.length, lst(desert.filter((c) => !save.unlocked.includes(c.id)).map((c) => (c.legend ? (F.buried_vault ? `${c.name} (a legend: see the 🏆 Champ page)` : '??? (a legend)') : c.name)), 7))
         + sb('🏛️', 'Buried City secrets', city.filter(([f]) => F[f]).length, city.length, F.gate_open ? lst(city.filter(([f]) => !F[f]).map(([, t]) => t)) : 'somewhere beyond a great stone gate...')
         + (A.cnt?.rail ? bar('🚂', 'Sand-Rail rides', A.cnt.rail) : '')
+        + (A.sledHi ? bar('🛷', 'DUNE SLED best', A.sledHi) : '')
         + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '')
         + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '');
     }

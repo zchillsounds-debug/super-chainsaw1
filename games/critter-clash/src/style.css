@@ -1042,6 +1042,9 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .arcade.surf { background: linear-gradient(#ffb070, #e0703a); border-color: #3ac0e8; box-shadow: 0 0 24px rgba(58,192,232,.5), 0 6px 0 #7a3a1a; }
 .arcade.surf .arc-top { color: #fff; text-shadow: 0 2px 0 #b04a1a; }
 .arcade.surf .arc-tip { color: #fff4e0; }
+.arcade.sled { background: linear-gradient(#f4c070, #c8743a); border-color: #fff2b0; box-shadow: 0 0 24px rgba(255,200,90,.5), 0 6px 0 #6a3416; }
+.arcade.sled .arc-top { color: #fff; text-shadow: 0 2px 0 #8a4416; }
+.arcade.sled .arc-tip { color: #fff4e0; }
 .arcade.dive { background: linear-gradient(#3ab0d8, #0e4a7a); border-color: #ffd84d; box-shadow: 0 0 24px rgba(255,216,77,.45), 0 6px 0 #0a2a4a; }
 .arcade.dive .arc-top { color: #fff; text-shadow: 0 2px 0 #0a3a6a; }
 .arcade.dive .arc-tip { color: #e0f8ff; }

@@ -12,7 +12,7 @@ import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
-import { arcadeGame, skyHop, waveRider, reefDive } from './arcade.js';
+import { arcadeGame, skyHop, waveRider, reefDive, duneSled } from './arcade.js';
 import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, FISH, seasonKey, gullFish, traderTown } from './world.js';
 
 const flags = () => save.adv.flags;
@@ -543,6 +543,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'arcade') return arcade(S, w);
   if (id === 'arcade:hop') return arcade(S, w, true);
   if (id === 'surf') return surf(S, w);
+  if (id === 'sled') return sled(S, w);
   if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
   if (id === 'wish') { // Cloudtop's wishing fountain: toss in a berry, make a wish; the clouds grant one a day
@@ -1340,7 +1341,7 @@ const HAT_WHERE = {
   pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
   masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
   gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
-  fossilhat: 'dig up every fossil for the Sunwell Museum', mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
+  fossilhat: 'dig up every fossil for the Sunwell Museum', mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
 };
 export function hatWhere(id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';
@@ -1568,6 +1569,26 @@ function surf(S, w) {
       persist(); if (best || prize || visor || moon) reward(2);
       w.say([`${score >= 300 ? 'TUBULAR!' : score >= 100 ? 'Nice ride!' : 'Wipeout!'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: Here, ${prize} 🍓 from the shack's jar! (One prize a day.)`] : A.surfDay !== day ? [`${who}: Score 100 or more and I'll pay you in berries! (One prize a day.)`] : []), ...(moon ? [`${who}: Your first moonlight ride! Not many surfers have seen the plankton glow. +5 🍓 🌙`] : []), ...(visor ? [`${who}: THREE HUNDRED?! You're a natural. Take my spare visor!`, "{hero} got the Surfer's Visor! 🏄 (☰ → 🎩 Hats)"] : [])], null, who);
     }, night);
+    S.game.modalClose = () => el.__arcade.close();
+  }, who);
+}
+
+// R810: the Dune Camp. Dune Surfer Kai (from the Sandstorm Cup) lends his tea tray for DUNE SLED: a daily berry prize; 380+ once wins his goggles
+function sled(S, w) {
+  const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.sledHi || 0, who = 'Dune Surfer Kai', own = (A.hats ||= []);
+  w.ask(`${who}: You beat me in the dome, so now you have to try the BIG dune. Tea tray, no brakes, till the sun goes down. ${hi ? `Your best run: ${hi}.` : 'Hold on going down, let go at the top!'}`, ['Sled!', 'Not now'], (i) => {
+    if (i) return w.say([`${who}: The dunes'll still be here. They move about a bit, but they'll be here.`], null, who);
+    w.busy = true;
+    const el = duneSled(S.root, S.game.portrait(w.hero.def), (score) => {
+      S.game.modalClose = null; w.busy = false;
+      const best = score > hi; if (best) A.sledHi = score;
+      countUp('sled');
+      let prize = 0;
+      if (A.sledDay !== day) { prize = score >= 450 ? 3 : score >= 350 ? 2 : score >= 250 ? 1 : 0; if (prize) { A.sledDay = day; save.berries = (save.berries || 0) + prize; } }
+      const gog = score >= 380 && !own.includes('sledgoggles'); if (gog) own.push('sledgoggles');
+      persist(); if (best || prize || gog) reward(2);
+      w.say([`${score >= 380 ? 'RADICAL!' : score >= 250 ? 'Nice run!' : 'Sand everywhere!'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: ${prize} 🍓 from the camp's date jar! (One prize a day.)`] : A.sledDay !== day ? [`${who}: Score 250 or more and the camp pays you in berries! (One prize a day.)`] : []), ...(gog ? [`${who}: ${score}?! Okay, okay. Take my spare sand goggles. You've earned them.`, '{hero} got the Sand Sled Goggles! 🎩 (☰ → 🎩 Hats)'] : [])], null, who);
+    });
     S.game.modalClose = () => el.__arcade.close();
   }, who);
 }

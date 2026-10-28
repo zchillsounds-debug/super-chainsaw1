@@ -447,3 +447,136 @@ export function reefDive(root, face, onDone) {
   el.__arcade = { S, flap: kick, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
   return el;
 }
+
+// DUNE SLED (Dune Kid Kai at the Dune Camp, after the Sandstorm Cup): the hero rides a tea tray over endless dunes until sunset.
+// Hold (tap and hold, or Space) to press down: heavy on the way down a dune you pick up speed, but heavy on a crest you stay
+// glued to the sand. Let go at a crest and a fast tray flies; land along a downslope for a SWOOSH (a boost), land into an upslope
+// for a THUD. Grab dates (+5) and sun gems (+15, up high), and don't ride into a cactus (it halves your speed). 40 seconds of sun.
+export function duneSled(root, face, onDone) {
+  const el = document.createElement('div');
+  el.className = 'modal-wrap arcade-wrap';
+  el.innerHTML = `<div class="arcade sled"><div class="arc-top"><b>DUNE SLED</b><span class="arc-hud"></span></div>
+    <canvas width="${W}" height="${H}"></canvas>
+    <p class="arc-tip">Hold to dig in going downhill, let go at the top to fly! Land on a downslope. 🌴 dates, ☀️ gems, no cacti!</p></div>`;
+  root.appendChild(el);
+  const cv = el.querySelector('canvas'), c = cv.getContext('2d'), hud = el.querySelector('.arc-hud');
+  const img = new Image(); img.src = face;
+  const SUN = 40, X = 92, R = 12; // seconds of daylight; the hero's screen column and size
+  const S = { x: 0, y: 0, v: 120, vy: 0, air: false, hold: false, t: 0, left: SUN, dates: 0, gems: 0, swoosh: 0, combo: 0, things: [], pops: [], dust: [], over: false, ready: 1.2, started: false, end: 0, camY: 0, next: 260, best: 0 };
+  // the dunes: two long swells and a ripple, always rideable (the first stretch is a gentle run-in)
+  const ty = (x) => { const k = Math.min(1, x / 500); return 168 + k * (40 * Math.sin(x * 0.0105) + 16 * Math.sin(x * 0.027 + 1.3)) + 5 * Math.sin(x * 0.06); };
+  const slope = (x) => (ty(x + 1) - ty(x - 1)) / 2, curve = (x) => ty(x + 2) - 2 * ty(x) + ty(x - 2);
+  const press = (on) => { if (S.over) return; if (on && S.ready > 0) S.ready = 0; if (on) S.started = true; S.hold = on && S.started; };
+  const onKey = (e) => {
+    if (!['Space', 'ArrowDown', 'KeyS', 'Enter'].includes(e.code)) return;
+    e.preventDefault(); e.stopPropagation();
+    if (!e.repeat) press(e.type === 'keydown');
+  };
+  addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
+  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); cv.setPointerCapture?.(e.pointerId); press(true); });
+  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) cv.addEventListener(ev, () => press(false));
+  const pop = (x, y, txt, col) => S.pops.push({ x, y, txt, col, t: 0.9 });
+  S.y = ty(0);
+
+  const step = (dt) => {
+    S.t += dt;
+    if (S.ready > 0 || !S.started) { if (S.ready > 0) S.ready -= dt; return; }
+    if (S.over) { S.end += dt; S.v = Math.max(0, S.v - 160 * dt); S.x += S.v * dt; if (!S.air) S.y = ty(S.x); else { S.vy += 520 * dt; S.y = Math.min(ty(S.x), S.y + S.vy * dt); if (S.y >= ty(S.x)) S.air = false; } return; }
+    S.left -= dt; if (S.left <= 0) { S.left = 0; S.over = true; sfx.arc('crash'); setTimeout(close, 2200); return; }
+    const G = S.hold ? 1500 : 560;
+    if (!S.air) {
+      const s = slope(S.x), cs = 1 / Math.sqrt(1 + s * s);
+      S.v += G * s * cs * dt * 0.55 - (S.hold && s < 0 ? 30 : 6) * dt; // downhill (s > 0) speeds you up, pressing harder; pressing uphill only drags
+      S.v = Math.max(70, Math.min(430, S.v));
+      S.x += S.v * cs * dt; S.y = ty(S.x); S.vy = S.v * slope(S.x) * cs;
+      if (!S.hold && curve(S.x) / 4 * S.v * S.v > G * 0.9 && slope(S.x) < 0.25) { S.air = true; sfx.arc('hop'); } // over a crest too fast to follow the sand: airborne
+      if (S.v > 180 && Math.random() < dt * 30) S.dust.push({ x: S.x - 8, y: S.y, vx: -S.v * 0.3 - Math.random() * 40, vy: -30 - Math.random() * 50, t: 0.5 });
+    } else {
+      S.vy += G * dt; S.x += S.v * dt; S.y += S.vy * dt; S.v = Math.max(70, S.v - 4 * dt);
+      if (S.y >= ty(S.x)) { // touchdown: how well does the tray meet the sand?
+        const a = Math.atan2(S.vy, S.v), b = Math.atan(slope(S.x)), off = Math.abs(a - b);
+        S.air = false; S.y = ty(S.x);
+        if (off < 0.32 && slope(S.x) > 0.05) { S.swoosh++; S.combo++; S.v = Math.min(430, S.v + 45); pop(S.x, S.y - 26, S.combo > 1 ? `SWOOSH ×${S.combo}` : 'SWOOSH!', '#fff36b'); sfx.arc('grab', Math.min(7, S.combo)); }
+        else if (off > 0.7) { S.combo = 0; S.v *= 0.6; pop(S.x, S.y - 26, 'THUD', '#ffb0a0'); sfx.arc('splash'); buzz('light'); jolt(el); }
+        else S.combo = 0;
+        for (let k = 0; k < 6; k++) S.dust.push({ x: S.x + (Math.random() - 0.5) * 20, y: S.y, vx: (Math.random() - 0.5) * 80, vy: -40 - Math.random() * 60, t: 0.5 });
+      }
+    }
+    S.best = Math.max(S.best, ty(S.x) - S.y);
+    while (S.next < S.x + W + 60) { // lay out the dunes ahead: dates over the crests, gems high up, cacti in the troughs
+      const x = S.next, r = Math.random();
+      if (r < 0.5) for (let k = 0; k < 3; k++) S.things.push({ k: 'date', x: x + k * 22, y: ty(x + k * 22) - 26 - Math.sin(k / 2 * Math.PI) * 18 - Math.random() * 40 });
+      else if (r < 0.66) S.things.push({ k: 'gem', x, y: ty(x) - 55 - Math.random() * 40 });
+      else if (S.x > 300) S.things.push({ k: 'cactus', x, y: ty(x) });
+      S.next += 120 + Math.random() * 110;
+    }
+    for (const o of S.things) {
+      if (o.got) continue;
+      if (o.k === 'cactus') { if (!S.air && Math.abs(o.x - S.x) < 10) { o.got = true; S.combo = 0; S.v = Math.max(70, S.v * 0.5); pop(S.x, S.y - 26, 'OUCH!', '#9af07a'); sfx.arc('crash'); buzz('medium'); jolt(el, true); } continue; }
+      if (Math.hypot(o.x - S.x, o.y - (S.y - R)) < R + 10) { o.got = true; if (o.k === 'date') { S.dates++; pop(o.x, o.y - 10, '+5', '#ffd0a0'); sfx.arc('grab', S.dates % 8); } else { S.gems++; pop(o.x, o.y - 10, '+15', '#fff36b'); sfx.arc('grab', 7); buzz('light'); } }
+    }
+    S.things = S.things.filter((o) => o.x > S.x - X - 40);
+    for (const p of S.pops) { p.t -= dt; p.y -= 30 * dt; }
+    S.pops = S.pops.filter((p) => p.t > 0);
+    for (const p of S.dust) { p.t -= dt; p.x += p.vx * dt; p.vy += 200 * dt; p.y += p.vy * dt; }
+    S.dust = S.dust.filter((p) => p.t > 0);
+  };
+  const total = () => Math.floor(S.x / 40) + S.dates * 5 + S.gems * 15 + S.swoosh * 5;
+
+  const draw = () => {
+    const cx = S.x - X, want = Math.min(0, S.y - 70); S.camY += (want - S.camY) * 0.15; const cy = S.camY; // the view rises to follow a big jump
+    const k = 1 - S.left / SUN; // the sun goes down as the run goes on
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, k < 0.7 ? '#5ab8e8' : '#4a5aa8'); g.addColorStop(0.55, k < 0.7 ? '#ffd8a0' : '#ff9a6a'); g.addColorStop(1, '#ffb070');
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    const sx = 40 + k * 220, sy = 40 + k * k * 110 - cy * 0.1;
+    c.fillStyle = k < 0.7 ? '#fff2b0' : '#ffb040'; c.beginPath(); c.arc(sx, sy, 16, 0, 7); c.fill();
+    c.fillStyle = 'rgba(255,240,180,0.25)'; c.beginPath(); c.arc(sx, sy, 26, 0, 7); c.fill();
+    // far mesas and a back row of dunes, scrolling slowly
+    c.fillStyle = '#c8784a'; for (let i = 0; i < 4; i++) { const mx = ((i * 140 - cx * 0.12) % 560 + 560) % 560 - 100, my = 150 - cy * 0.3; c.fillRect(mx, my - 30 - (i % 2) * 14, 60 + (i % 3) * 12, 60); c.fillRect(mx - 6, my - 34 - (i % 2) * 14, 72 + (i % 3) * 12, 6); }
+    c.fillStyle = '#e8b87a'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 8) c.lineTo(x, 172 - cy * 0.5 + 14 * Math.sin((x + cx * 0.5) * 0.017)); c.lineTo(W, H); c.fill();
+    // the dune the tray rides: a warm sand gradient with wind ripples
+    c.fillStyle = '#f4d090'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 4) c.lineTo(x, ty(x + cx) - cy); c.lineTo(W, H); c.fill();
+    c.strokeStyle = '#d8a860'; c.lineWidth = 2; c.beginPath(); for (let x = 0; x <= W; x += 4) (x ? c.lineTo : c.moveTo).call(c, x, ty(x + cx) - cy); c.stroke();
+    c.strokeStyle = 'rgba(200,150,80,0.45)'; c.lineWidth = 1; for (let r = 1; r <= 3; r++) { c.beginPath(); for (let x = 0; x <= W; x += 6) { const y = ty(x + cx) - cy + r * 14 + Math.sin((x + cx) * 0.08 + r) * 2; (x ? c.lineTo : c.moveTo).call(c, x, y); } c.stroke(); }
+    for (const o of S.things) {
+      if (o.got && o.k !== 'cactus') continue;
+      const x = o.x - cx, y = o.y - cy; if (x < -30 || x > W + 30) continue;
+      if (o.k === 'date') { c.fillStyle = '#8a4a22'; c.beginPath(); c.ellipse(x, y, 4, 6, 0.3, 0, 7); c.fill(); c.fillStyle = 'rgba(255,220,180,0.7)'; c.fillRect(x - 1, y - 4, 2, 3); }
+      if (o.k === 'gem') { const b = 1 + Math.sin(S.t * 6) * 0.15; c.fillStyle = 'rgba(255,240,120,0.35)'; c.beginPath(); c.arc(x, y, 12 * b, 0, 7); c.fill(); c.fillStyle = '#ffd84d'; c.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 3.5 : 8 * b, a = i / 10 * Math.PI * 2 - Math.PI / 2; c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); } c.fill(); }
+      if (o.k === 'cactus') { c.fillStyle = o.got ? '#7aa858' : '#3a8a4a'; c.fillRect(x - 3, y - 22, 6, 24); c.fillRect(x - 9, y - 14, 4, 8); c.fillRect(x - 9, y - 10, 7, 3); c.fillRect(x + 5, y - 18, 4, 9); c.fillRect(x + 2, y - 12, 7, 3); c.fillStyle = '#ff7aa0'; c.fillRect(x - 2, y - 25, 4, 3); }
+    }
+    for (const p of S.dust) { c.globalAlpha = Math.min(1, p.t * 2); c.fillStyle = '#f8e0b0'; c.beginPath(); c.arc(p.x - cx, p.y - cy, 2.5, 0, 7); c.fill(); }
+    c.globalAlpha = 1;
+    // the hero on a silver tea tray, tilted with the sand (or with the flight)
+    const tilt = S.air ? Math.atan2(S.vy, S.v) * 0.8 : Math.atan(slope(S.x));
+    c.save(); c.translate(X, S.y - cy); c.rotate(tilt);
+    c.fillStyle = '#c8ccd8'; c.beginPath(); c.ellipse(0, -2, 18, 4, 0, 0, 7); c.fill(); c.strokeStyle = '#8a90a8'; c.lineWidth = 1.5; c.stroke();
+    if (img.complete && img.naturalWidth) c.drawImage(img, -15, -32, 30, 30); else { c.fillStyle = '#ff9a40'; c.beginPath(); c.arc(0, -16, R, 0, 7); c.fill(); }
+    c.restore();
+    if (S.hold && !S.over) { c.fillStyle = 'rgba(255,255,255,0.7)'; c.font = 'bold 11px sans-serif'; c.textAlign = 'center'; c.fillText('▼', X, S.y - cy - 38); }
+    c.textAlign = 'center'; c.font = 'bold 13px sans-serif';
+    for (const p of S.pops) { c.globalAlpha = Math.min(1, p.t * 2); c.fillStyle = p.col; c.strokeStyle = 'rgba(90,50,20,0.8)'; c.lineWidth = 3; c.strokeText(p.txt, p.x - cx, p.y - cy); c.fillText(p.txt, p.x - cx, p.y - cy); }
+    c.globalAlpha = 1;
+    // the sun timer along the top
+    c.fillStyle = 'rgba(90,50,20,0.35)'; c.fillRect(10, 8, W - 20, 6); c.fillStyle = S.left < 8 ? '#ff7a3a' : '#ffd84d'; c.fillRect(10, 8, (W - 20) * S.left / SUN, 6);
+    if (S.ready > 0 || !S.started) { c.fillStyle = '#fff36b'; c.strokeStyle = '#8a4a1a'; c.lineWidth = 4; c.font = 'bold 24px sans-serif'; const t = S.ready > 0 ? 'READY?' : 'HOLD TO SLED!'; c.strokeText(t, W / 2, H / 2 - 50); c.fillText(t, W / 2, H / 2 - 50); }
+    if (S.over && S.end > 0.3) { c.fillStyle = 'rgba(70,30,40,0.55)'; c.fillRect(0, 0, W, H); c.fillStyle = '#fff36b'; c.font = 'bold 28px sans-serif'; c.fillText('SUNSET!', W / 2, H / 2 - 10); c.fillStyle = '#fff'; c.font = 'bold 16px sans-serif'; c.fillText(`Score ${total()}`, W / 2, H / 2 + 16); }
+    hud.textContent = `🏜️ ${Math.floor(S.x / 10)} m  🌴 ${S.dates}  ☀️ ${S.gems}  ⭐ ${total()}`;
+  };
+  let last = performance.now(), raf = 0;
+  const loop = (now) => {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    step(dt); draw();
+    if (el.isConnected) raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+  let closed = false;
+  function close() {
+    if (closed) return; closed = true;
+    cancelAnimationFrame(raf); el.remove();
+    removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true);
+    onDone(total());
+  }
+  el.__arcade = { S, press, slope: (x) => slope(x), step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
+  return el;
+}

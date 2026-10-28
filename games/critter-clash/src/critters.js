@@ -1539,6 +1539,7 @@ export const SHOP_HATS = [
   { id: 'suncrown', name: 'Sun Crown', kind: 'crown', col: 0xf0b030, band: 0xd8643a, price: 0, gift: true, extra: true }, // the treasure of the Buried City's Sun Hall (Chapter 3)
   { id: 'fossilhat', name: 'Fossil Ranger Hat', kind: 'ranger', col: 0xe2d2a8, band: 0x8a5a2a, price: 0, gift: true, extra: true }, // Curator Petra at the Sunwell Museum: every fossil dug up (Chapter 3, D3)
   { id: 'mirrorcirclet', name: 'Mirror Circlet', kind: 'circlet', col: 0xe8b040, band: 0xfff4dc, price: 0, gift: true, extra: true }, // the Starless Vault's sun alcove (light the vault with the mirrors)
+  { id: 'sledgoggles', name: 'Sand Sled Goggles', kind: 'aviator', col: 0xd8a060, band: 0x5ac8e8, price: 0, gift: true, extra: true }, // Dune Surfer Kai at the Dune Camp: 380 at DUNE SLED
   { id: 'palmangler', name: 'Palm Angler Hat', kind: 'bucket', col: 0x2aa8a0, band: 0xf2c46a, price: 0, gift: true, extra: true }, // Pool Angler Layla at Sunwell Oasis: all four oasis fish
   { id: 'mesaband', name: "Mesa Climber's Bandana", kind: 'band', col: 0xc8402a, band: 0xf2d49c, price: 0, gift: true, extra: true }, // the chest on Redrock Mesa (after the Canyon Cup)
   { id: 'sunlaurel', name: 'Sun Gate Laurel', kind: 'laurel', col: 0xd8643a, band: 0xffd84a, price: 0, gift: true, extra: true }, // the Desert Trial's first clear (D4)
