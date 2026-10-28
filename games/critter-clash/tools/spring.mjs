@@ -52,5 +52,9 @@ console.log('rope:', await answer(0));
 await pg.waitForTimeout(2500); await pg.evaluate(() => __sim(2));
 console.log('back:', await W());
 await shot('back');
+// R831: Pool Angler Layla hears about the Lantern Loach (once she's given her hat): +3 berries, once
+await pg.evaluate(() => { __save.adv.hats.push('palmangler'); const o = __game.screens.worldObj; o.hx = 16; o.hy = 9; o.dir = 'e'; o.placeHero(); __sim(0.5); o.tapA = true; __sim(0.5); });
+const ll = []; for (let k = 0; k < 4; k++) { await pg.waitForTimeout(500); await pg.evaluate(() => __sim(3)); const t = await say(); if (!t) break; ll.push(t.slice(0, 90)); await pg.evaluate(() => { __game.screens.worldObj.tapA = true; __sim(0.3); }); }
+console.log('Layla:', ll.join(' / '), 'flag', await pg.evaluate(() => !!__save.adv.flags.layla_loach));
 console.log(errs.length ? 'ERRORS: ' + errs.slice(0, 5).join(' | ') : 'no errors');
 await b.close();
