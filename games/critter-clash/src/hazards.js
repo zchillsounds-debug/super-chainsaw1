@@ -21,7 +21,7 @@ export const HAZARDS = {
   canyon:  { name: 'Falling rocks', color: 0xc8402a, solid: true, glow: 0xffe0b0, r: 1.1, warn: 1.25, dmg: 9, stun: 0.6, kb: 3.2, word: 'CRUNCH!' }, // Chapter 3: Redrock Canyon
   dunes:   { name: 'Sand twisters', color: 0xb8742a, solid: true, glow: 0xffe0a0, r: 1.2, warn: 1.35, dmg: 6, lift: 6.5, kb: 2.2, dizzy: 30, word: 'WHIRL!' }, // Chapter 3: the Sandstorm Dome
   saltflat: { name: 'Brine vents', color: 0x3a8ab8, glow: 0xffffff, r: 1.15, warn: 1.35, dmg: 6, lift: 7, kb: 1.6, word: 'HISS!' }, // R823: the Glass Flats (wild fights): the crust cracks and spits hot brine
-  grotto:  { name: 'Dripstones', color: 0x2ab8c0, solid: true, glow: 0x9afff4, r: 1.05, warn: 1.3, dmg: 7, stun: 0.5, kb: 2.6, word: 'PLINK!' }, // R835: the Sunwell Grotto (wild fights): a stalactite with a glowing drop on its tip lets go
+  grotto:  { name: 'Dripstones', color: 0xff9a2a, solid: true, glow: 0x9afff4, r: 1.05, warn: 1.3, dmg: 7, stun: 0.5, kb: 2.6, word: 'PLINK!' }, // R835: the Sunwell Grotto (wild fights): a stalactite with a glowing drop on its tip lets go
   beach:   { name: 'Coconuts', color: 0xe0482a, solid: true, glow: 0xfff2c0, r: 0.9, warn: 1.2, dmg: 7, stun: 0.5, kb: 3, word: 'BONK!' },
 };
 
@@ -34,6 +34,7 @@ export const SIGS = {
   grove:   { name: 'Spore clouds', word: 'ACHOO!', jumbo: 'SPORES!', tip: "Spore cloud! Don't breathe it in!" },
   canyon:  { name: 'Rockslides', word: 'ROCKSLIDE!', jumbo: 'ROCKSLIDE!', tip: 'Rockslide! Get out from under the line!' }, // Redrock Canyon
   oasis:   { name: 'Fountain rings', word: 'FOUNTAIN!', jumbo: 'FOUNTAIN!', tip: 'Fountain ring! Stay in the dry middle!' }, // the Sunwell Pavilion
+  grotto:  { name: 'Cave-ins', word: 'CAVE-IN!', jumbo: 'CAVE-IN!', tip: 'Cave-in! Get clear of the cross!' }, // R841: the Sunwell Grotto
   dunes:   { name: 'Sandstorms', word: 'SANDSTORM!', jumbo: 'SANDSTORM!', tip: 'Sandstorm! Guard to dig in!' }, // the Sandstorm Dome
 };
 
@@ -286,6 +287,14 @@ export class Hazards {
       for (let k = 0; k < n; k++) { const a = (k - (n - 1) / 2) * gap + off; this.spawnAt(f.x + dx * a, f.z + dz * a, -0.45 - k * 0.22, k > 0); }
       B.fx.text({ x: hp.x, y: hp.y + 0.4, z: hp.z }, 'ROCKSLIDE!', 'eff', 1);
       sfx.rumble();
+    } else if (key === 'grotto') {
+      // R841: the roof lets go in a cross over one fighter: the four arms first, outside in, then the middle; dive out diagonally
+      sg.warn = 0; sg.dur = 3;
+      const G = 1.9, pts = [[2, 0], [-2, 0], [0, 2], [0, -2], [1, 0], [-1, 0], [0, 1], [0, -1], [0, 0]];
+      pts.forEach(([a, b], k) => this.spawnAt(f.x + (dx * a - dz * b) * G, f.z + (dz * a + dx * b) * G, -0.4 - Math.floor(k / 4) * 0.35 - (k === 8 ? 0.15 : 0), k > 0));
+      B.fx.text({ x: hp.x, y: hp.y + 0.4, z: hp.z }, 'CAVE-IN!', 'eff', 1);
+      for (let k = 0; k < 14; k++) B.fx.spawn({ x: f.x + (Math.random() - 0.5) * 6, y: 7 + Math.random() * 2, z: f.z + (Math.random() - 0.5) * 6, vy: -4, color: 0x8aa0aa, size: 0.18, life: 1.1, shape: 'star', additive: false, grav: 6 }); // grit trickling down first
+      sfx.rumble?.();
     } else if (key === 'oasis') {
       // the Sunwell's fountain show: geysers rise one after another in a ring round one fighter; the middle stays dry
       sg.warn = 0; sg.dur = 3.2;
