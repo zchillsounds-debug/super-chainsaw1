@@ -206,6 +206,15 @@ export function storyIntro(S, w) {
     ]);
     return;
   }
+  if (w.key === 'glowhollow' && !F.hollow_arrive) { // R847: through the crack east of the spring
+    F.hollow_arrive = true; persist();
+    w.say([
+      '{hero} squeezes through the crack, sideways, breath held... and pops out into a hollow full of soft green-blue light.',
+      'Mushrooms! Clumps of them on every rock, glowing like little lamps. The air smells of rain and moss.',
+      'Somebody is sitting very still by a black pool, holding a basket.',
+    ]);
+    return;
+  }
   if (w.key === 'buried1' && !F.buried_arrive) {
     F.buried_arrive = true; persist();
     w.say([
@@ -566,6 +575,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'surf') return surf(S, w);
   if (id === 'sled') return sled(S, w);
   if (id === 'caravanrun') return caravanRunTalk(S, w, a);
+  if (id === 'glowcaps') return glowcapTalk(S, w, a);
   if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
   if (id === 'wish') { // Cloudtop's wishing fountain: toss in a berry, make a wish; the clouds grant one a day
@@ -1163,7 +1173,7 @@ const LOST = {
     wait: ['Spelunker Odette: Any sign of my journal? It blew off the top of Redrock Mesa. Liftkeeper Bo\'s rope lift goes up there from the canyon.', 'Spelunker Odette: (She\'s drawing a new map on the back of a date wrapper. It isn\'t going well.)'],
     found: ['A battered leather notebook is wedged against a rock at the mesa\'s east edge, its pages flapping in the wind.', 'Inside are caves and more caves, drawn in tiny careful pencil. The last page just says "SPRING. GLOWS. WHY??"', 'Spelunker Odette down the Sunwell will be so relieved!'],
     done: ['Spelunker Odette: My JOURNAL! Oh, oh, every page is still here. Even the one with the jam stain.', 'Spelunker Odette: You know what? A real explorer should have a real lamp. Take my spare cap. The lamp never goes out: it\'s got a sliver of spring-glow in it.', '{hero} got the Spelunker\'s Lamp Cap! 🔦 (☰ → 🎩 Hats)', '{hero} got 10 berries and a Power Snack! 🍓⭐'],
-    later: ['odjournal_done', ['Spelunker Odette: I\'ve started a new page: "THE SPRING GLOWS BECAUSE OF THE LOACHES." Or the loaches glow because of the spring? More research needed.', 'Spelunker Odette: That lamp cap suits you. Hold it near the pool and the spring glows back!']],
+    later: ['odjournal_done', ['Spelunker Odette: I\'ve started a new page: "THE SPRING GLOWS BECAUSE OF THE LOACHES." Or the loaches glow because of the spring? More research needed.', 'Spelunker Odette: That lamp cap suits you. Hold it near the pool and the spring glows back!', 'Spelunker Odette: Feel that cold draught? There\'s a crack in the east wall. With a lamp you could squeeze through. I smelled mushrooms!']],
   },
 
   // ---- M3: Hana's Kite Glider, a chain that crosses both regions (Bluffs → Cloudtop → Neon City → Bluffs); the glider rides the cliff updrafts ----
@@ -1784,6 +1794,35 @@ function caravanRunTalk(S, w, a) {
     });
     S.game.modalClose = () => el.__arcade.close();
   }, who);
+}
+
+// R848: Forager Pim in Glowcap Hollow wants the hollow's six big glowcaps (picked in the world: flags gcap_<n>) for the Glowcap Hat
+export const glowcapCount = () => { const F = flags(); return (MAPS.glowhollow.glowcaps || []).filter((_, i) => F['gcap_' + i]).length; };
+function glowcapTalk(S, w, a) {
+  const F = flags(), who = 'Forager Pim', n = glowcapCount(), all = MAPS.glowhollow.glowcaps.length, own = (save.adv.hats ||= []);
+  if (F.gcap_done) return w.say([[
+    'Forager Pim: The lamp-makers up at the night market will want some of these. A glowcap lantern never needs oil!',
+    'Forager Pim: Your Glowcap Hat\'s glowing nicely. Hum to it now and then. Odette says it helps. I think Odette is making that up.',
+    'Forager Pim: Did you know? A glowcap\'s light shows exactly where the cave will drip next. Critters who eat one dodge the dripstones!',
+  ][Math.floor(Math.random() * 3)]], null, who);
+  if (!F.gcap_asked) {
+    F.gcap_asked = true; persist(); w.questMarks?.();
+    return w.say([
+      'Forager Pim: Oh! A visitor. Shh, not so loud, the glowcaps are shy. I\'m Pim. I forage.',
+      `Forager Pim: The little ones on the rocks, leave those be: they light the way. But ${all} BIG glowcaps grow wild in this hollow, and I need them for my spore box.`,
+      'Forager Pim: My knees don\'t bend the way they used to. Could you pick them for me? They glow brighter than the rest. Just walk right up to one.',
+      `Forager Pim: Bring me all ${all} and I\'ll make you something nice. Something that GLOWS.`,
+    ], null, who);
+  }
+  if (n < all) return w.say([n ? `Forager Pim: ${n} of ${all}! Lovely and plump. Keep looking: the big ones grow in the corners, where it drips.` : `Forager Pim: The ${all} big glowcaps, remember? They glow brighter than the little ones. Walk right up to them.`], null, who);
+  F.gcap_done = true; if (!own.includes('glowcaphat')) own.push('glowcaphat');
+  save.berries = (save.berries || 0) + 20; persist(); w.questMarks?.(); reward(3); S.toast('🍄 Glowcap Hat!');
+  return w.say([
+    `Forager Pim: All ${all}! Oh, look at them glow in the basket. My spore box will be full for a whole year.`,
+    'Forager Pim: Here. I stitched the biggest cap I ever found onto a felt band. It still glows. It will glow for years!',
+    '{hero} got the Glowcap Hat! 🍄 (☰ → 🎩 Hats)',
+    '{hero} got 20 berries! 🍓',
+  ], null, who);
 }
 
 // Chef Rumi's noodle cart in Neon City: a bowl of spark noodles once a day (berries for XP), and a hat you can't get anywhere else

@@ -1546,7 +1546,8 @@ export const SHOP_HATS = [
   { id: 'mirageturban', name: 'Mirage Turban', kind: 'turban', col: 0xeef6ff, band: 0x5ac8e8, price: 0, gift: true, extra: true }, // R814: the Mirage Merchant on the Glass Flats (mirage hours only)
   { id: 'caravanturban', name: "Caravan Leader's Turban", kind: 'turban', col: 0xe8843a, band: 0x2ab0a8, price: 0, gift: true, extra: true }, // R838: 500 at CARAVAN RUN (Caravan Master Hakim, Sunwell Oasis)
   { id: 'siroccohat', name: "Sirocco's Wide-Brim", kind: 'ranger', col: 0x6a5ab0, band: 0xffc840, price: 0, gift: true, extra: true }, // R836: Sirocco's Amends (the reformed Baron's old hat)
-  { id: 'lampcap', name: "Spelunker's Lamp Cap", kind: 'lampcap', col: 0xffbe2a, band: 0xe8f8ff, price: 0, gift: true, extra: true }, // R833: Spelunker Odette's favour (her cave journal, found on Redrock Mesa)
+  { id: 'lampcap', name: "Spelunker's Lamp Cap", kind: 'lampcap', col: 0xffbe2a, band: 0xe8f8ff, price: 0, gift: true, extra: true },
+  { id: 'glowcaphat', name: 'Glowcap Hat', kind: 'glowshroom', col: 0x3ee8cc, band: 0xfff8dc, price: 0, gift: true, extra: true }, // R848: Forager Pim's thanks (six big glowcaps from Glowcap Hollow) // R833: Spelunker Odette's favour (her cave journal, found on Redrock Mesa)
   { id: 'dewcirclet', name: 'Dewdrop Circlet', kind: 'circlet', col: 0xcfe8f4, band: 0x3ac8e8, price: 0, gift: true, extra: true }, // R829: the Sunwell Spring's chest
   { id: 'guildfez', name: 'Caravan Guild Fez', kind: 'fez', col: 0xa8243a, band: 0xffc23a, price: 0, gift: true, extra: true }, // R828: five full days of the Caravan Guild's bounty board
   { id: 'lanternhat', name: 'Paper Lantern Hat', kind: 'lantern', col: 0xffa040, band: 0xd83a3a, price: 0, gift: true, extra: true }, // R820: Lantern Maker Yusra's night market, seven sky lanterns
@@ -1635,6 +1636,16 @@ export function hatModel(cr, kind, col, band) {
     const lens = new THREE.Mesh(new THREE.CircleGeometry(r * 0.17, 16), toon(band, { rim: 1, emissive: new THREE.Color(band).multiplyScalar(0.8).getHex() })); lens.position.set(0, r * 0.38, r * 0.875); G.add(lens);
     const beam = new THREE.Mesh(new THREE.ConeGeometry(r * 0.42, r * 1.1, 14, 1, true), new THREE.MeshBasicMaterial({ color: band, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide })); beam.rotation.x = -Math.PI / 2; beam.position.set(0, r * 0.38, r * 1.42); G.add(beam);
     for (const sd of [-1, 1]) { const s = new THREE.Mesh(new THREE.TorusGeometry(r * 0.3, r * 0.03, 4, 10, Math.PI * 0.6), toon(0x5a3a22)); s.position.set(sd * r * 0.8, -r * 0.18, 0); s.rotation.set(0, Math.PI / 2, -Math.PI / 2 - sd * 0.3); G.add(s); }
+  }
+  if (kind === 'glowshroom') { // R848: a big glowcap mushroom cap on a felt band: a domed, softly glowing teal cap with cream spots and pale gills underneath
+    G.position.y -= r * 0.05;
+    add(new THREE.CylinderGeometry(r * 0.5, r * 0.56, r * 0.18, 16), toon(0x6a5a48), 0.01).position.y = r * 0.06;
+    const cm = new THREE.MeshBasicMaterial({ color: col });
+    const cap = add(new THREE.SphereGeometry(r * 0.95, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), cm); cap.scale.y = 0.62; cap.position.y = r * 0.14;
+    const gill = new THREE.Mesh(new THREE.CircleGeometry(r * 0.94, 20), toon(0xe8f4e0, { side: THREE.DoubleSide })); gill.rotation.x = Math.PI / 2; gill.position.y = r * 0.135; G.add(gill);
+    for (let k = 0; k < 8; k++) { const a = k * 2.4 + 0.3, el = 0.3 + (k % 3) * 0.3, d = new THREE.Mesh(new THREE.SphereGeometry(r * 0.1, 8, 6), toon(band, { rim: 0.6 })); d.position.set(Math.cos(a) * Math.cos(el) * r * 0.93, r * 0.14 + Math.sin(el) * r * 0.59, Math.sin(a) * Math.cos(el) * r * 0.93); d.scale.y = 0.45; G.add(d); }
+    const hm = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.18, depthWrite: false, blending: THREE.AdditiveBlending });
+    const halo = new THREE.Mesh(new THREE.SphereGeometry(r * 1.25, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), hm); halo.scale.y = 0.7; halo.position.y = r * 0.1; G.add(halo);
   }
   if (kind === 'fez') { // R828: a tall felt fez with a gold tassel on a cord (the Caravan Guild's seal of trust)
     G.position.y -= r * 0.12;

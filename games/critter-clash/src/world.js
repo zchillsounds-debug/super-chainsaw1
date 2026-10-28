@@ -14,7 +14,7 @@ import { typeSpeed } from './settings.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap, CUP_ORDER, fossilAt } from './interiors.js';
 import { FOSSILS } from './fossils.js';
-import { hatRegion, countUp, singNight, lampCritter, wantedToday, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor, storyMark } from './story.js';
+import { hatRegion, countUp, singNight, lampCritter, wantedToday, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor, storyMark, glowcapCount } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
 import { stargaze, tonightConst, BOTTLE_NOTES, CONSTELLATIONS } from './stars.js';
@@ -447,6 +447,7 @@ export class World {
     this.buildStatue();
     this.buildJellies(rand);
     this.buildLoaches(rand);
+    this.buildShrooms(rand);
     this.buildSkyLanterns();
     this.buildThanks();
     this.buildBuildings();
@@ -470,7 +471,7 @@ export class World {
     const gloomy = this.key === 'glowwood' || this.key === 'glowcap'; // the glowing woods are dim at any hour
     if ((this.phase === 'night' || gloomy || M.cave) && !M.indoor) { // after dark (and always in the glowing woods) the moonlight catches the hero's outline, and a soft pool of light walks with them, so you can always spot yourself
       this.hero.setRim(0xd8e4ff, 1.7);
-      const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: M.lava || M.dark ? 0xffa060 : 0x9ab8ff, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: M.dark ? 0.45 : 0.3 }); pm.userData.own = true;
+      const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: M.dark && M.sands === 'spring' ? 0x9afff0 : M.lava || M.dark ? 0xffa060 : 0x9ab8ff, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: M.dark ? 0.45 : 0.3 }); pm.userData.own = true;
       this.heroGlow = new THREE.Mesh(new THREE.PlaneGeometry(M.dark ? 7.5 : 4.6, M.dark ? 7.5 : 4.6), pm); this.heroGlow.rotation.x = -Math.PI / 2; this.group.add(this.heroGlow);
     }
     this.group.add(this.hero.root);
@@ -520,7 +521,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.loaches = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.wreck = null; this.lighthouse = null; this.puz = null; this.chest = null; this.chest2 = null; this.updrafts = null; this.gliding = null; this.pearl = null; this.mirages = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.loaches = null; this.shrooms = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.wreck = null; this.lighthouse = null; this.puz = null; this.chest = null; this.chest2 = null; this.updrafts = null; this.gliding = null; this.pearl = null; this.mirages = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -2247,6 +2248,54 @@ export class World {
       L.push({ g, sm, hm, ph: rand() * 6, r: 0.5 + rand() * 0.6, sp: (0.35 + rand() * 0.3) * (k % 2 ? -1 : 1), x0: px, z0: pz });
     }
     this.loaches = L;
+  }
+
+  // R847: Glowcap Hollow: clumps of small glowing mushrooms on the rocks light the dark (M.shrooms), and the six big glowcaps
+  // Forager Pim wants (M.glowcaps, flags gcap_<n>) glow brighter and bob; walk onto one to pick it
+  buildShrooms(rand) {
+    this.shrooms = null;
+    const M = this.M; if (!M.shrooms && !M.glowcaps) return;
+    const F = save.adv.flags, stalks = [], caps = [], spots = [], glows = [], big = [];
+    const shroom = (X, Z, s, list) => {
+      const st = new THREE.CylinderGeometry(0.05 * s, 0.07 * s, 0.32 * s, 6); st.translate(X, 0.16 * s, Z); stalks.push(st);
+      const cp = new THREE.SphereGeometry(0.2 * s, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2); cp.scale(1, 0.65, 1); cp.translate(X, 0.3 * s, Z); list.push(cp);
+      for (let k = 0; k < 3; k++) { const a = k * 2.1 + X, d = new THREE.SphereGeometry(0.035 * s, 5, 4); d.translate(X + Math.cos(a) * 0.13 * s, 0.38 * s, Z + Math.sin(a) * 0.13 * s); spots.push(d); }
+    };
+    for (const [x, y] of M.shrooms || []) {
+      const [px, pz] = wpos(x, y), rock = this.tile(x, y) === 'R';
+      for (let k = 0; k < 4; k++) { const s = 1.0 + rand() * 0.7, X = px + (rand() - 0.5) * 1.3, Z = pz + (rand() - 0.5) * 1.1 + (rock ? 0.9 : 0); shroom(X, Z, s, caps); }
+      glows.push([px, 0.4, pz + (rock ? 0.9 : 0)]);
+    }
+    const cm = new THREE.MeshBasicMaterial({ color: 0x3ee8cc }); cm.userData.own = true;
+    const add = (list, mat) => { if (!list.length) return; const m = new THREE.Mesh(mergeGeometries(list), mat); list.forEach((q) => q.dispose()); this.group.add(m); };
+    add(stalks, toon(0xe8e0c8)); add(caps, cm); add(spots, toon(0xfff8dc));
+    if (glows.length) { // a pool of light on the floor round each clump
+      const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0x3ee8cc, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.55 }); pm.userData.own = true;
+      add(glows.map(([X, , Z]) => new THREE.PlaneGeometry(3.4, 3.4).rotateX(-Math.PI / 2).translate(X, 0.04, Z)), pm);
+    }
+    (M.glowcaps || []).forEach(([x, y], i) => {
+      if (F['gcap_' + i]) return;
+      const [px, pz] = wpos(x, y), g = new THREE.Group();
+      const bm = new THREE.MeshBasicMaterial({ color: 0x46f2d6 }); bm.userData.own = true;
+      g.add(inked(new THREE.CylinderGeometry(0.09, 0.13, 0.5, 8).translate(0, 0.25, 0), toon(0xf2ead2), OL * 0.3));
+      const cap = inked(new THREE.SphereGeometry(0.38, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), bm, OL * 0.4); cap.scale.y = 0.62; cap.position.y = 0.46; g.add(cap);
+      for (let k = 0; k < 5; k++) { const a = k * 1.26, d = new THREE.Mesh(new THREE.SphereGeometry(0.055, 6, 5), toon(0xfffbe0)); d.position.set(Math.cos(a) * 0.26, 0.6, Math.sin(a) * 0.26); g.add(d); }
+      const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0x7affe8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.8 }); sm.userData.own = true;
+      const glow = new THREE.Sprite(sm); glow.scale.setScalar(2.4); glow.position.y = 0.5; g.add(glow);
+      g.scale.setScalar(1.7); g.position.set(px, 0, pz); this.group.add(g);
+      big.push({ i, x, y, g, sm, px, pz, ph: i * 1.3 });
+    });
+    this.shrooms = { big };
+  }
+
+  pickGlowcap() {
+    const B = this.shrooms?.big, k = B ? B.findIndex((q) => q.x === this.hx && q.y === this.hy) : -1; if (k < 0) return false;
+    const q = B[k], F = save.adv.flags; F['gcap_' + q.i] = true; B.splice(k, 1); this.group.remove(q.g);
+    const n = glowcapCount(), all = this.M.glowcaps.length;
+    persist(); reward(2); this.g.input?.haptic?.(25); this.questMarks();
+    for (let j = 0; j < 14; j++) this.g.fx.spawn({ x: q.px, y: 0.5, z: q.pz, vx: (Math.random() - 0.5) * 3, vy: 1.5 + Math.random() * 2.5, vz: (Math.random() - 0.5) * 3, color: [0x7affe8, 0xfffbe0, 0x3ee8cc][j % 3], size: 0.3, life: 0.9, shape: 'star', grav: 5 });
+    this.say([`{hero} picks a big glowcap! It's cool and soft, and it glows right through {hero}'s paws. 🍄 (${n}/${all})`, ...(n >= all ? ['That\'s all of them! Forager Pim will be delighted.'] : !F.gcap_asked && n === 1 ? ['Somebody by the pool is watching hopefully...'] : [])]);
+    return true;
   }
 
   // the Neon arcade: a glowing marquee over each bank of cabinets says which game it plays
@@ -4872,7 +4921,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (!F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m; a.markKind = k;
@@ -5123,7 +5172,7 @@ export class World {
     // stepping on the doormat goes back outside
     const X = this.M.exit;
     if (X && this.hy === this.H - 1) { sfx.door(); this.fade(() => this.load(X.map, X.x, X.y, 's')); return; }
-    if (this.pickItem() || this.pickPearl()) return;
+    if (this.pickItem() || this.pickPearl() || this.pickGlowcap()) return;
     if (this.hatchEgg()) return;
     if (t === '"') {
       const [px, pz] = wpos(this.hx, this.hy);
@@ -5279,6 +5328,7 @@ export class World {
       J.dome.scale.set(1 + q * 0.12, 1 - q * 0.18, 1 + q * 0.12); J.sm.opacity = 0.5 + q * 0.2;
       J.g.position.x = J.x0 + Math.sin(this.t * 0.25 + J.ph) * 0.6; J.g.position.z = J.z0 + Math.cos(this.t * 0.2 + J.ph) * 0.6; J.g.position.y = -0.05 + Math.max(0, q) * 0.06;
     }
+    if (this.shrooms) for (const q of this.shrooms.big) { q.g.scale.y = 1.7 + Math.sin(this.t * 2 + q.ph) * 0.08; q.sm.opacity = 0.65 + Math.sin(this.t * 2.6 + q.ph) * 0.2; } // the big glowcaps breathe
     if (this.loaches) for (const F of this.loaches) { // swim slow loops; the nose light blinks twice now and then
       const a = this.t * F.sp + F.ph, wob = Math.sin(this.t * 3 + F.ph) * 0.08;
       F.g.position.x = F.x0 + Math.cos(a) * F.r; F.g.position.z = F.z0 + Math.sin(a) * F.r * 0.7;
