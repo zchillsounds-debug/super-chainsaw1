@@ -55,7 +55,7 @@ const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zo
 const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater', frost: 'Frostpeak Dome', neon: 'Neon Rooftop', sky: 'Cloudtop Gardens', grove: 'Glowcap Grove' };
 const ARENA_KEYS = Object.keys(ARENA_NAME);
 // R810: the Amber Sands' three stadiums join Quick Battle and Sparring once their Adventure cup is won (each has its own hazard)
-const SANDS_ARENA = { oasis: ['Sunwell Pavilion', 'mirage'], canyon: ['Canyon Stadium', 'canyon'], dunes: ['Sandstorm Dome', 'sandstorm'], grotto: ['Sunwell Grotto', null, 'spring_arrive'] }; // (R842: the grotto once you've climbed down the well)
+const SANDS_ARENA = { oasis: ['Sunwell Pavilion', 'mirage'], canyon: ['Canyon Stadium', 'canyon'], dunes: ['Sandstorm Dome', 'sandstorm'], grotto: ['Sunwell Grotto', null, 'spring_arrive'], aqueduct: ['Old Aqueduct', null, 'aq_arrive'] }; // (R862: the aqueduct once you've been down there) // (R842: the grotto once you've climbed down the well)
 const arenaName = (k) => ARENA_NAME[k] || SANDS_ARENA[k]?.[0] || k;
 // Quick Battle's sky chip: the time of day and the weather (night and rain wake the night/rain traits; the sandstorm waits for the Sandstorm Cup)
 const SKIES = { day: ['☀️', 'Day'], evening: ['🌇', 'Evening'], night: ['🌙', 'Night'], rain: ['🌧️', 'Rain'], sandstorm: ['🌪️', 'Sandstorm'] };
@@ -118,6 +118,7 @@ const HOME = {
   neon: '🌃', neon_: 'zips off down a neon alley', frost: '❄️', frost_: 'slides away into the snow', sky: '☁️', sky_: 'floats off into the clouds',
   canyon: '🏜️', canyon_: 'kicks up a puff of sand and darts off over the dunes', saltflat: '🫧', saltflat_: 'shimmers away across the salt like a mirage', // (R822: the Amber Sands)
   grotto: '💧', grotto_: 'splashes off into the glowing pool', // (R834: the Sunwell Spring)
+  aqueduct: '🏺', aqueduct_: 'dives into the channel and rides the water away', // (R862: the Old Aqueduct)
 };
 
 // Adventure play time (save.adv.time, seconds the world was open): '45m', '3h 05m'
@@ -1554,6 +1555,7 @@ export class Screens {
         + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal
         + (A.cnt?.lantern ? bar('🏮', 'Sky lanterns sent up', A.cnt.lantern) : '') // R820: no goal
         + (F.hollow_arrive ? bar('🍄', 'Big glowcaps for Forager Pim', F.gcap_done ? 'all given ✓' : `${glowcapCount()} / ${MAPS.glowhollow.glowcaps.length}`) : '') // R849: no goal (the Glowcap Hat counts with the found hats)
+        + (F.aq_arrive ? bar('💧', "The Old Aqueduct's Sun Sluice", F.aqueduct_flow ? 'open ✓' : 'shut') : '') // R861: no goal (its two hats count with the found hats)
         + (A.bountySeen ? bar('📜', 'Guild Seals (full bounty boards)', A.seals || 0) : '') // R828: no goal (the fez comes at five; it counts with the found hats)
         + (Object.keys(F).some((k) => k.startsWith('lampduel_')) ? bar('⚔️', 'Lamplight duels won', Object.keys(F).filter((k) => k.startsWith('lampduel_')).length) : ''); // R825: no goal
     }
@@ -1862,7 +1864,7 @@ export class Screens {
 
   // a fight from the world: wild critters, trainers and story battles
   worldFight(info) {
-    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = info.arena || this.worldObj?.M.arena || 'meadow', place = info.stadium ? null : this.worldObj?.M.name, cave = arena === 'grotto', phase = cave ? 'day' : this.worldObj?.phase, rain = !cave && this.worldObj?.rain, sandstorm = info.sandstorm ?? (!cave && !!this.worldObj?.sandstorm); // (R834: no sky in the grotto) // (the Desert Trial picks its own arena and weather)
+    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = info.arena || this.worldObj?.M.arena || 'meadow', place = info.stadium ? null : this.worldObj?.M.name, cave = arena === 'grotto' || arena === 'aqueduct', phase = cave ? 'day' : this.worldObj?.phase, rain = !cave && this.worldObj?.rain, sandstorm = info.sandstorm ?? (!cave && !!this.worldObj?.sandstorm); // (R834: no sky in the grotto) // (the Desert Trial picks its own arena and weather)
     this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit, berries: info.berries, shiny: info.shiny, arena, rain, sandstorm };
     this.leaveWorld();
     this.mode = 'vs';

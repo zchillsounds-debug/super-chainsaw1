@@ -143,6 +143,7 @@ export const LANDMARKS = [
   { id: 'saltflats', map: 'flats', at: [14, 7], name: 'the Glass Flats', sands: true }, // R816
   { id: 'springpool', map: 'wellspring', at: [7, 5], name: 'the glowing spring', sands: true }, // R843: down the Sunwell
   { id: 'glowhollow', map: 'glowhollow', at: [8, 7], name: 'Glowcap Hollow', sands: true }, // R852: through the crack
+  { id: 'aqueduct', map: 'aqueduct', at: [23, 5], name: 'the sun-bird spout', sands: true }, // R861: the Old Aqueduct's outlet
 ];
 // the photo album: a small JPEG of the latest photo taken at each landmark (its own storage key, so the save and its backup code stay small)
 const ALBUM_KEY = 'critterclash-album';

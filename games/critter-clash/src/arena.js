@@ -49,6 +49,16 @@ export const ARENAS = {
     hill: 0x24343c, trunk: 0x4a5c66, leaves: [0x52666e, 0x485c64, 0x5c7078], scenery: 'grotto', cloud: 0x2a3a44, cloudShade: 0x0a1418, sunI: 2.3,
     drift: 'motes',
   },
+  aqueduct: { // R862: the Old Aqueduct (its wild fights): warm sandstone flagstones in a round cistern hall, carved arches all round, a ring
+    // channel of running water, and shafts of daylight from holes in the roof. A cave too (no sky tint)
+    name: 'Old Aqueduct', cave: true,
+    skyTop: 0x140c06, skyHorizon: 0x4a3420, sun: 0xfff0d8, sunDir: [-0.2, 1, 0.3],
+    hemiSky: 0xffe8c8, hemiGround: 0x7a5a3a, fieldA: '#c8aa80', fieldB: '#c0a278', line: '#3ac8d8', floor: 'stone',
+    wallA: 0x9a7652, wallB: 0x3ac8d8, ground: 0x6a5038, fog: 0x1a120a, fogNear: 40, fogFar: 140,
+    accent: 0x3ac8d8, seat: [0x9a7652, 0xc8aa80, 0x7a5a3a, 0x3ac8d8],
+    hill: 0x7a5a3a, trunk: 0xb08a60, leaves: [0xa8845c, 0x9a7852, 0xb4906a], scenery: 'aqueduct', cloud: 0x4a3a2a, cloudShade: 0x1a120a, sunI: 2.2,
+    drift: 'dust',
+  },
   dunes: { // Chapter 3: the Sandstorm Dome, the Sandstorm Cup's stadium out on the dunes (a sail-cloth dome on tall poles, sand on the wind)
     name: 'Sandstorm Dome',
     skyTop: 0x5a8ad0, skyHorizon: 0xf0c890, sun: 0xffe8c0, sunDir: [-0.4, 0.7, -0.5],
@@ -873,6 +883,22 @@ export class Arena {
       const shaft = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 9, 40, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xd8f8ff, transparent: true, opacity: 0.07, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false }));
       shaft.position.y = 20; this.shaft = shaft; G.add(shaft);
     }
+    else if (A.scenery === 'aqueduct') {
+      // R862: a round cistern hall: tall sandstone piers joined by arches, a ring channel of running water round the floor, light shafts from the roof
+      for (let i = 0; i < 24; i++) {
+        const a = (i / 24) * Math.PI * 2, r = 28, x = Math.cos(a) * r, z = Math.sin(a) * r, hh = 16;
+        const p = new THREE.BoxGeometry(3.2, hh, 3.2); p.rotateY(-a); p.translate(x, hh / 2, z); tops[i % 3].push(p);
+        const a2 = a + Math.PI / 24, arch = new THREE.TorusGeometry(3.4, 0.9, 6, 12, Math.PI); arch.rotateY(-a2 + Math.PI / 2); arch.translate(Math.cos(a2) * r, 11, Math.sin(a2) * r); tops[(i + 1) % 3].push(arch);
+        const back = new THREE.BoxGeometry(7.6, 22, 1.5); back.rotateY(-a2 + Math.PI / 2); back.translate(Math.cos(a2) * (r + 3.5), 11, Math.sin(a2) * (r + 3.5)); trunks.push(back);
+      }
+      const flowTex = canvasTex(256, 32, (c, w, h) => { c.fillStyle = '#2aa8bc'; c.fillRect(0, 0, w, h); for (let k = 0; k < 40; k++) { c.fillStyle = `rgba(220,255,255,${0.25 + (k % 3) * 0.15})`; c.fillRect((k * 53) % w, (k * 7) % h, 10 + (k % 4) * 8, 2 + (k % 3)); } }, { repeat: [14, 1] });
+      const ring = new THREE.Mesh(new THREE.RingGeometry(24.4, 26.6, 80, 1), new THREE.MeshBasicMaterial({ map: flowTex, transparent: true, opacity: 0.9 })); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.06; this.flow = ring; G.add(ring);
+      const curb = []; for (const rr of [24.2, 26.8]) { const t = new THREE.TorusGeometry(rr, 0.32, 5, 72); t.rotateX(Math.PI / 2); t.translate(0, 0.2, 0); curb.push(t); }
+      G.add(new THREE.Mesh(mergeGeometries(curb), toon(0xc8aa80))); curb.forEach((g) => g.dispose());
+      const sm = new THREE.MeshBasicMaterial({ color: 0xfff0c8, transparent: true, opacity: 0.08, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
+      const shafts = []; for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + 0.6, c = new THREE.CylinderGeometry(2.2, 3.6, 40, 16, 1, true); c.translate(Math.cos(a) * 18, 20, Math.sin(a) * 18); shafts.push(c); }
+      const shaft = new THREE.Mesh(mergeGeometries(shafts), sm); shafts.forEach((g) => g.dispose()); this.shaft = shaft; G.add(shaft);
+    }
     else if (A.scenery === 'mushrooms') {
       // a ring of giant toadstools with white spots, plus small glowing caps along the outer wall
       const spots = [], glow = [];
@@ -1291,6 +1317,7 @@ export class Arena {
       embers: { n: 260, size: 0.5, vy: 1.4, wind: 0.3, inner: 'rgba(255,240,180,1)', outer: 'rgba(255,90,20,0)', add: true },
       sand:   { n: 420, size: 0.28, vy: -0.15, wind: 4.5, inner: 'rgba(250,224,170,1)', outer: 'rgba(230,190,120,0)', add: false, cap: 7 },
       motes:  { n: 240, size: 0.42, vy: 0.35, wind: 0.25, inner: 'rgba(200,255,250,1)', outer: 'rgba(80,230,230,0)', add: true, cap: 9 }, // R834: spring-glow in the grotto
+      dust:   { n: 200, size: 0.36, vy: 0.12, wind: 0.2, inner: 'rgba(255,240,200,1)', outer: 'rgba(255,200,120,0)', add: true, cap: 9 }, // R862: sunlit dust in the aqueduct
       petals: { n: 200, size: 0.5, vy: -0.6, wind: 0.8, inner: 'rgba(255,190,220,1)', outer: 'rgba(255,150,200,0)', add: false },
     }[kind];
     const n = K.n, pos = new Float32Array(n * 3);
@@ -1336,6 +1363,7 @@ export class Arena {
 
   update(dt, t) {
     if (this.shaft) this.shaft.material.opacity = 0.065 + Math.sin(t * 0.9) * 0.02; // R834: the grotto's light shaft breathes
+    if (this.flow) this.flow.material.map.offset.x = (t * 0.06) % 1; // R862: the aqueduct's ring channel runs
     if (this.mirage) { this.mirage.material.opacity = 0.2 + Math.sin(t * 1.7) * 0.07; this.mirage.scale.y = 1 + Math.sin(t * 2.3) * 0.04; } // R821: the Glass Flats' mirage town wobbles
     this.sky.material.uniforms.uTime.value = t;
     if (this.snow) {

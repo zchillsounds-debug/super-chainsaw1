@@ -1332,7 +1332,7 @@ export const MAPS = {
   aqueduct: {
     name: 'Old Aqueduct',
     music: 'cave',
-    arena: 'grotto',
+    arena: 'aqueduct', // R862: its own cistern-hall arena (sluice spouts, floodgates)
     sands: 'spring',
     extra: true,
     cave: true,

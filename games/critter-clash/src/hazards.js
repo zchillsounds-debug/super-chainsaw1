@@ -22,6 +22,7 @@ export const HAZARDS = {
   dunes:   { name: 'Sand twisters', color: 0xb8742a, solid: true, glow: 0xffe0a0, r: 1.2, warn: 1.35, dmg: 6, lift: 6.5, kb: 2.2, dizzy: 30, word: 'WHIRL!' }, // Chapter 3: the Sandstorm Dome
   saltflat: { name: 'Brine vents', color: 0x3a8ab8, glow: 0xffffff, r: 1.15, warn: 1.35, dmg: 6, lift: 7, kb: 1.6, word: 'HISS!' }, // R823: the Glass Flats (wild fights): the crust cracks and spits hot brine
   grotto:  { name: 'Dripstones', color: 0xff9a2a, solid: true, glow: 0x9afff4, r: 1.05, warn: 1.3, dmg: 7, stun: 0.5, kb: 2.6, word: 'PLINK!' }, // R835: the Sunwell Grotto (wild fights): a stalactite with a glowing drop on its tip lets go
+  aqueduct: { name: 'Sluice spouts', color: 0x2ab8d0, glow: 0xc8f8ff, r: 1.2, warn: 1.3, dmg: 6, kb: 4.2, word: 'GUSH!' }, // R862: the Old Aqueduct (wild fights): an old spout in the floor blasts a jet sideways
   beach:   { name: 'Coconuts', color: 0xe0482a, solid: true, glow: 0xfff2c0, r: 0.9, warn: 1.2, dmg: 7, stun: 0.5, kb: 3, word: 'BONK!' },
 };
 
@@ -35,6 +36,7 @@ export const SIGS = {
   canyon:  { name: 'Rockslides', word: 'ROCKSLIDE!', jumbo: 'ROCKSLIDE!', tip: 'Rockslide! Get out from under the line!' }, // Redrock Canyon
   oasis:   { name: 'Fountain rings', word: 'FOUNTAIN!', jumbo: 'FOUNTAIN!', tip: 'Fountain ring! Stay in the dry middle!' }, // the Sunwell Pavilion
   grotto:  { name: 'Cave-ins', word: 'CAVE-IN!', jumbo: 'CAVE-IN!', tip: 'Cave-in! Get clear of the cross!' }, // R841: the Sunwell Grotto
+  aqueduct: { name: 'Floodgates', word: 'FLOOD!', jumbo: 'FLOODGATE!', tip: 'Floodgate! Step out of the surge!' }, // R862: a surge down one lane (the rogue wave's lane, in sluice water)
   dunes:   { name: 'Sandstorms', word: 'SANDSTORM!', jumbo: 'SANDSTORM!', tip: 'Sandstorm! Guard to dig in!' }, // the Sandstorm Dome
 };
 
@@ -183,7 +185,7 @@ export class Hazards {
 
   // ---------- the arena's signature pattern ----------
   signature() {
-    const B = this.b, key = this.sandWx ? 'dunes' : B.arena.key;
+    const B = this.b, key = this.sandWx ? 'dunes' : B.arena.key === 'aqueduct' ? 'beach' : B.arena.key; // (R862: the aqueduct's floodgate surge runs like a rogue wave)
     const f = B.fighters[Math.random() < 0.5 ? 0 : 1];
     const ang = Math.random() * Math.PI * 2, dx = Math.cos(ang), dz = Math.sin(ang);
     const sg = { kind: key, t: 0, meshes: [], mats: [], hit: new Set() };
@@ -374,7 +376,7 @@ export class Hazards {
           if (sg.hit.has(f)) continue;
           const along = (f.x - sg.cx) * sg.dx + (f.z - sg.cz) * sg.dz, side = (f.x - sg.cx) * -sg.dz + (f.z - sg.cz) * sg.dx;
           if (Math.abs(side) > sg.half || Math.abs(along - sg.pos) > 0.7 || f.y > 1.2) continue;
-          const r = this.hurt(f, sg.dx, sg.dz, { dmg: 7, kb: 7, stun: 0.55 }, 'SPLASH!');
+          const r = this.hurt(f, sg.dx, sg.dz, { dmg: 7, kb: 7, stun: 0.55 }, this.S?.word || 'SPLASH!');
           if (r === 'block') { f.vx += sg.dx * 4; f.vz += sg.dz * 4; }
           if (r) { sg.hit.add(f); fx.burst({ x: f.x, y: 0.6, z: f.z }, { n: 14, speed: 4, up: 4, color: 0xe8fbff, size: 0.3, life: 0.6, shape: 'drop', additive: false, grav: 9 }); sfx.bonk(); }
         }
@@ -529,6 +531,10 @@ export class Hazards {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 24, speed: 3, up: 11, color: 0xd8f6ff, size: 0.3, life: 0.8, shape: 'glow', additive: false, grav: 14, alpha: 0.9 });
       B.fx.spawn({ x: h.x, y: 0.06, z: h.z, color: 0xe8fbff, size: H.r * 1.6, life: 0.6, shape: 'ring', additive: false, grow: 1.5, alpha: 0.7 });
       sfx.whoosh?.(0.9);
+    } else if (key === 'aqueduct') { // R862: a jet of sluice water bursts out of the floor and shoves
+      B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 22, speed: 6, up: 5, color: 0xd8f8ff, size: 0.3, life: 0.6, shape: 'glow', additive: false, grav: 12, alpha: 0.9 });
+      B.fx.spawn({ x: h.x, y: 0.06, z: h.z, color: 0xe8fbff, size: H.r * 1.7, life: 0.55, shape: 'ring', additive: false, grow: 1.6, alpha: 0.75 });
+      sfx.whoosh?.(1.0);
     } else if (key === 'saltflat') {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 20, speed: 3, up: 9, color: 0xc8e8f8, size: 0.55, life: 0.8, shape: 'puff', additive: false, grav: 6, grow: 1.3, alpha: 0.85 });
       B.fx.burst(p, { n: 12, speed: 4.5, up: 5, color: 0xffffff, size: 0.16, life: 0.6, shape: 'star', additive: false, grav: 12, spin: 10 }); // salt chips
