@@ -1155,7 +1155,7 @@ export const MAPS = {
       'RRRRRRRRRRRRRRRRRRRRRRRRRRRR',
     ],
     edges: { n: { to: 'duneroad', off: 3 } },
-    mirageTown: [[4, 4], [8, 3], [20, 3], [24, 4], [11, 2]], // where the shimmering town stands in the mirage hours (not solid: walk up and it melts)
+    mirageTown: [[4, 4], [8, 3], [20, 3], [24, 4], [11, 2]], mirageStall: [14, 3], // where the shimmering town stands in the mirage hours (not solid: walk up and it melts)
     cacti: [[3, 11], [24, 6]],
     signs: [{ x: 13, y: 2, text: 'THE GLASS FLATS\nA dry salt lake. Bring water. Bring a hat. Do not try to visit the town.' }],
     wild: { list: [['siroccat', 37, 40], ['fennzap', 37, 40], ['scarabold', 37, 40], ['humpdrop', 38, 41]], roam: 4, rate: 0.1 },

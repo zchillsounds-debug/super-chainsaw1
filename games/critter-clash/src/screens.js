@@ -47,7 +47,7 @@ const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
 const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
 const LEGEND_IDS = () => ['solmoth', 'moonwhal', 'verdelk', ...(save.adv?.flags?.sands_arrive ? ['aurelark'] : [])]; // the Champ page's legends (the Sun-Bird once you reach the sands)
-const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles', 'mirageturban']; // the desert's found hats (the Sand Hats stall's four are `sands`)
+const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles', 'mirageturban', 'minerhelm']; // the desert's found hats (the Sand Hats stall's four are `sands`)
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
@@ -461,6 +461,15 @@ export class Screens {
         F.vault_lit ? "{name}! The Starless Vault isn't starless any more! Elder Sabah says a thread of sunlight runs all the way down through it now, mirror to mirror. They're calling it the Sunlit Vault." : "{name}, the Starless Vault has a crack in its east wall, they say, and a thread of sunlight comes through it. Bronze mirrors, a sun disc... sound familiar?",
         save.adv.sledHi ? `And Kai at the Dune Camp says you rode his tea tray down the big dune for ${save.adv.sledHi} points. A TEA TRAY, {name}. I'd like to try. I'd like to try very slowly.` : "And Dune Surfer Kai at the Dune Camp wants someone to race the sunset on his tea tray. DUNE SLED, he calls it. Hold on going down, let go at the top!",
         "Oh, and the three desert champions wait in their stadium lobbies now, for one rematch a day. Pool Angler Layla at the Sunwell has a hat for whoever catches all four oasis fish!",
+      ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv37') && !save.news.includes('adv38') && (save.adv.flags.flats_arrive || save.adv.fishLog?.mirage || save.adv.flags.salt1_asked)) { // R815: the Glass Flats, the glassfish, the salt road
+      save.news.push('adv38'); persist();
+      const F = save.adv.flags, H = save.adv.hats || [];
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        H.includes('mirageturban') ? "{name}! Mirage Watcher Sami wrote to me from the Glass Flats. She says you BOUGHT something in the mirage town. From a merchant who isn't there. I have so many questions." : "{name}! South of Dune Road there's a dry salt lake, the Glass Flats. Every day after noon a whole town shimmers up on the far side. Towers, domes, a blue gate. Nobody can reach it!",
+        save.adv.fishLog?.mirage ? `And a Heatwave Glassfish, ${save.adv.fishLog.mirage} cm! You can see right through them, Layla says. I keep picturing a fish made of window.` : "Pool Angler Layla says one more fish lives in the desert pools: a glass one that only bites in the mirage hours. Noon till three, when the air goes wobbly.",
+        F.salt2_done ? "Salt Miner Hamid sent me a little bag of Glass Flats salt, too. On my eggs this morning. Best breakfast of the year!" : "Oh, and if you meet Salt Miner Hamid out there, he needs someone to carry salt to the Dune Camp. The camp salts its dates for the cold nights.",
+        "One more thing: Quick Battle has a sky button now! Day, evening, night, rain... and a sandstorm, if you've earned the Sandstorm Cup. Night owls love a night fight.",
       ]), 600);
     } else if (!g.autoplay && save.news?.includes('adv33') && !save.news.includes('adv35') && ((save.adv.fossils || []).length >= 4 || save.adv.flags.caravan3_done || save.adv.flags.buried_vault)) { // Chapter 3 side content (D3)
       save.news.push('adv35'); persist();

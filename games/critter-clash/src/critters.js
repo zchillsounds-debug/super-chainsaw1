@@ -1541,6 +1541,7 @@ export const SHOP_HATS = [
   { id: 'mirrorcirclet', name: 'Mirror Circlet', kind: 'circlet', col: 0xe8b040, band: 0xfff4dc, price: 0, gift: true, extra: true }, // the Starless Vault's sun alcove (light the vault with the mirrors)
   { id: 'sledgoggles', name: 'Sand Sled Goggles', kind: 'aviator', col: 0xd8a060, band: 0x5ac8e8, price: 0, gift: true, extra: true }, // Dune Surfer Kai at the Dune Camp: 380 at DUNE SLED
   { id: 'palmangler', name: 'Palm Angler Hat', kind: 'bucket', col: 0x2aa8a0, band: 0xf2c46a, price: 0, gift: true, extra: true }, // Pool Angler Layla at Sunwell Oasis: all four oasis fish
+  { id: 'minerhelm', name: "Salt Miner's Helmet", kind: 'helm', col: 0xf4ecd8, band: 0xffd84d, price: 0, gift: true, extra: true }, // R815: the salt road (Salt Miner Hamid, the Glass Flats)
   { id: 'mirageturban', name: 'Mirage Turban', kind: 'turban', col: 0xeef6ff, band: 0x5ac8e8, price: 0, gift: true, extra: true }, // R814: the Mirage Merchant on the Glass Flats (mirage hours only)
   { id: 'mesaband', name: "Mesa Climber's Bandana", kind: 'band', col: 0xc8402a, band: 0xf2d49c, price: 0, gift: true, extra: true }, // the chest on Redrock Mesa (after the Canyon Cup)
   { id: 'sunlaurel', name: 'Sun Gate Laurel', kind: 'laurel', col: 0xd8643a, band: 0xffd84a, price: 0, gift: true, extra: true }, // the Desert Trial's first clear (D4)

@@ -146,6 +146,15 @@ export function storyIntro(S, w) {
     ]);
     return;
   }
+  if (w.key === 'flats' && !F.flats_arrive) { // R814: the Glass Flats
+    F.flats_arrive = true; persist();
+    w.say([
+      'South of the dunes the sand turns white and flat, cracked into tiles like a giant plate. It crunches under {hero}\'s feet. Salt!',
+      '{hero}: The Glass Flats...',
+      (w.mirageHour?.() ? 'And on the far side, wobbling in the heat, a whole town of pale blue towers stands where a moment ago there was nothing.' : 'Far off, the air already shimmers. People say that after noon a town appears out there.'),
+    ]);
+    return;
+  }
   if (w.key === 'dunecamp' && !F.dunecamp_arrive) {
     F.dunecamp_arrive = true; persist();
     w.say([
@@ -959,6 +968,23 @@ const LOST = {
     ask: ['Gardener Rosa: The sprout keeps leaning toward Glowcap Woods, like a compass. It knows where it belongs.', 'Gardener Rosa: Mama Squeak knows every root in those woods. She\'ll know where to plant it. Off you go!', '{hero} got a sprouted Heartseed! 🌱 Take it to Mama Squeak in Glowcap Woods.'],
     wait: ['Gardener Rosa: Mama Squeak hangs about in the north of Glowcap Woods, near the old bridge.'],
     done: ['Mama Squeak: Squeak?! A Heartseed! The old trees told me stories of these when I was a pup.', 'Mama Squeak leads you to the pond. {hero} digs a little hole, and you plant the sprout together.', 'For a moment, nothing... then every glowcap in the woods flashes bright green at once! The ground hums.', 'Mama Squeak: Look! By the pond! Something HUGE is standing up...', 'Mama Squeak: Take this crown of leaves the forest dropped for you. You woke the woods, Champion!', '{hero} got the Grove Crown! 🌿 +20 🍓'],
+  },
+
+  // ---- R815: the salt road, a short desert chain from the Glass Flats (Hakim the miner → Camp Elder Zahra → back): the Salt Miner's Helmet ----
+  salt1: {
+    who: 'Salt Miner Hamid', from: 'miner_f', giverMap: 'flats', extra: true, item: 'block of Glass Flats salt', berries: 4, toast: '🧂', home: 'the Glass Flats', needs: 'cup_canyon', to: { npc: 'elder_c', map: 'dunecamp', name: 'Camp Elder Zahra', home: 'the Dune Camp' },
+    thanks: 'Salt Miner Hamid: Zahra got her salt? Good. Without salt, the camp\'s dates go sticky, the cheese goes sad, and Zahra goes grumpy.',
+    ask: ['Salt Miner Hamid: You look like someone who walks a lot. Do me a favour?', 'Salt Miner Hamid: This block is for Camp Elder Zahra at the Dune Camp. The camp salts its dates and cheese for the cold months. No salt, no winter stores!', '{hero} got a block of Glass Flats salt! 🧂 Take it to Camp Elder Zahra at the Dune Camp.'],
+    wait: ['Salt Miner Hamid: The Dune Camp is out east past Redrock Canyon. Zahra sits in the shade by the tents and tells everybody what to do.'],
+    done: ['Camp Elder Zahra: Salt from the Glass Flats! Hamid cut this. Look at the edges, so neat. That man cuts salt like a jeweller.', 'Camp Elder Zahra: Now the dates won\'t spoil before the cold nights. Wait, little one. Talk to me again: Hamid deserves something back.', '{hero} got 4 berries! 🍓'],
+  },
+  salt2: {
+    who: 'Camp Elder Zahra', from: 'elder_c', giverMap: 'dunecamp', item: 'jar of salted camp dates', berries: 12, snack: true, hat: 'minerhelm', toast: '🫙', home: 'the Dune Camp', needs: 'salt1_done', to: { npc: 'miner_f', map: 'flats', name: 'Salt Miner Hamid', home: 'the Glass Flats' },
+    thanks: 'Camp Elder Zahra: Hamid sent word: "the dates are perfect, the jar is perfect, tell Zahra she is perfect." Hmph. He is not wrong.',
+    after: ['Salt Miner Hamid: Salted dates for lunch, every day. And when the town shows up at noon, I eat them watching it. Best seat in the desert.', 'Salt Miner Hamid: That helmet looks good on you. The lamp still works! Not that you need it out here. Unless you go underground...'],
+    ask: ['Camp Elder Zahra: A jar of our salted dates, made with his own salt. Take it back to Hamid on the Glass Flats. Out there, he eats nothing but dust and sunshine.', '{hero} got a jar of salted camp dates! 🫙 Take it back to Salt Miner Hamid on the Glass Flats.'],
+    wait: ['Camp Elder Zahra: The Glass Flats are south of Dune Road. Hamid is the one chopping salt and talking to his Scarabold.'],
+    done: ['Salt Miner Hamid: Salted dates?! From Zahra? With MY salt? (munch) Oh. Oh, that is good.', 'Salt Miner Hamid: Here. My old miner\'s helmet, from when I dug salt in the caves under the flats. It has a lamp! It still turns on!', '{hero} got the Salt Miner\'s Helmet! ⛑️ (☰ → 🎩 Hats)', '{hero} got 12 berries and a Power Snack! 🍓⭐'],
   },
 
   // ---- Chapter 3 (D3): the Sunwell caravan, a desert chain (Hakim → Ines → Tamar → Hakim) ending in a shiny Humpdrop. An extra, like the Heartseed ----

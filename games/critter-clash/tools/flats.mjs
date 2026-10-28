@@ -36,5 +36,20 @@ for (const hr of (process.env.HOURS || '13,10,21').split(',').map(Number)) {
     await pg.evaluate(() => __sim(1)); await shot('turban');
   }
 }
+// R815: the salt road (SALT=0 skips): Hamid → Zahra → Hamid, the Salt Miner's Helmet
+if (process.env.SALT !== '0') {
+  const talk = async (map, x, y, dir, hr = 10) => { await pg.evaluate(([map]) => { const o = __game.screens.worldObj; if (o.key !== map) o.load(map, 5, 5, 's'); __sim(1); }, [map]); await pg.waitForTimeout(1500); await pg.evaluate(([map, x, y, dir]) => { const o = __game.screens.worldObj; __sim(1); o.hx = x; o.hy = y; o.dir = dir; o.placeHero(); __sim(0.3); o.tapA = true; __sim(0.3); }, [map, x, y, dir]); const t = []; for (let k = 0; k < 14; k++) { const l = await pg.evaluate(() => { __sim(1.5); const b = document.querySelector('.wd-box'); const t = b?.textContent.replace('▼', '').slice(0, 90); if (b) { __game.screens.worldObj.tapA = true; __sim(0.4); } return t; }); if (!l) break; t.push(l); } await close(); return t.join(' / '); };
+  await start('flats', 6, 9, 'e', 10);
+  console.log('Hamid 1:', await talk('flats', 6, 9, 'e'));
+  console.log('Zahra 1:', await talk('dunecamp', 7, 6, 'n'));
+  console.log('Zahra 2:', await talk('dunecamp', 7, 6, 'n'));
+  await pg.waitForTimeout(1500); await pg.evaluate(() => __sim(2));
+  console.log('Zahra hint:', await pg.evaluate(() => { const o = __game.screens.worldObj; return o.aHint() + ' busy ' + o.busy + ' box ' + !!document.querySelector('.wd-box'); }));
+  console.log('Zahra 3:', await talk('dunecamp', 7, 6, 'n'));
+  console.log('Hamid 2:', await talk('flats', 6, 9, 'e'));
+  console.log('Hamid 3:', await talk('flats', 6, 9, 'e'));
+  await shot('salt');
+  console.log('salt flags:', await pg.evaluate(() => Object.keys(__save.adv.flags).filter((k) => k.startsWith('salt')).join(',')), 'helmet', await pg.evaluate(() => __save.adv.hats.includes('minerhelm')));
+}
 console.log(errs.length ? 'ERRORS: ' + errs.slice(0, 5).join(' | ') : 'no errors');
 await b.close();

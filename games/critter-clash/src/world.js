@@ -3734,6 +3734,16 @@ export class World {
       this.group.add(g);
       this.mirages.push({ q: g, m: k ? null : m, m2: k ? null : b, px, pz, ph: k * 1.3, town: true });
     });
+    if (this.M.mirageStall) { // the Mirage Merchant's pitch: a patterned rug and a striped parasol (they're as real as he is, for three hours)
+      const [sx, sy] = this.M.mirageStall, [px, pz] = wpos(sx, sy), L = {}, put = (k, geo) => (L[k] ||= []).push(geo);
+      const rug = new THREE.BoxGeometry(3.0, 0.06, 1.8); rug.translate(px - 1.2, 0.03, pz + 0.2); put(0x2a8ab8, rug);
+      const brd = new THREE.BoxGeometry(2.6, 0.07, 1.4); brd.translate(px - 1.2, 0.04, pz + 0.2); put(0xf0e0c0, brd);
+      const pole = new THREE.CylinderGeometry(0.06, 0.06, 2.8, 6); pole.translate(px - 1.9, 1.4, pz - 0.2); put(0x8a5a3a, pole);
+      for (let k = 0; k < 8; k++) { const seg = new THREE.ConeGeometry(1.5, 0.6, 3, 1, true, k * Math.PI / 4, Math.PI / 4); seg.translate(px - 1.9, 2.85, pz - 0.2); put(k % 2 ? 0xfff4e0 : 0x3a9ad8, seg); }
+      const box = new THREE.BoxGeometry(0.7, 0.5, 0.5); box.translate(px - 0.9, 0.3, pz - 0.1); put(0xa86a3a, box);
+      const hb = new THREE.CylinderGeometry(0.28, 0.28, 0.24, 12); hb.translate(px - 0.9, 0.67, pz - 0.1); put(0xeef6ff, hb);
+      for (const [col, list] of Object.entries(L)) { const mesh = new THREE.Mesh(mergeGeometries(list), toon(+col, { side: THREE.DoubleSide })); mesh.castShadow = true; this.group.add(mesh); }
+    }
   }
 
   // beaches hide one sparkly dig spot a day (a new place each day): A on it or facing it digs up a treasure
