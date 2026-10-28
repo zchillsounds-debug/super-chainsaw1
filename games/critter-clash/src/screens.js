@@ -47,7 +47,7 @@ const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
 const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
 const LEGEND_IDS = () => ['solmoth', 'moonwhal', 'verdelk', ...(save.adv?.flags?.sands_arrive ? ['aurelark'] : [])]; // the Champ page's legends (the Sun-Bird once you reach the sands)
-const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles', 'mirageturban', 'minerhelm']; // the desert's found hats (the Sand Hats stall's four are `sands`)
+const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles', 'mirageturban', 'minerhelm', 'lanternhat']; // the desert's found hats (the Sand Hats stall's four are `sands`)
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
@@ -1118,6 +1118,15 @@ export class Screens {
       mb.addEventListener('click', () => { mod = modKeys[(modKeys.indexOf(mod) + 1) % modKeys.length]; this.teamMod = mod; sfx.ui('move'); paint(); this.toast(mod ? `${MODS[mod].icon} ${MODS[mod].name}: ${MODS[mod].desc}` : 'No modifier'); });
       paint(); row.appendChild(mb);
     }
+    // the sky over all three fights (daily team days keep a clear day)
+    let sky = 'day';
+    if (!this.ctx.daily) {
+      sky = skyKeys().includes(this.teamSky) ? this.teamSky : 'day';
+      const sb = document.createElement('button'); sb.className = 'tp-mod tp-sky';
+      const paint = () => { sb.classList.toggle('on', sky !== 'day'); sb.innerHTML = `${SKIES[sky][0]}<span> ${SKIES[sky][1]}</span>`; };
+      sb.addEventListener('click', () => { const K = skyKeys(); sky = K[(K.indexOf(sky) + 1) % K.length]; this.teamSky = sky; sfx.ui('move'); paint(); this.toast(`${SKIES[sky][0]} ${SKIES[sky][1]}${sky === 'night' ? ': night critters wake up' : sky === 'rain' ? ': rain critters love it' : sky === 'sandstorm' ? ': sand blows through all three fights' : ''}`); });
+      paint(); row.appendChild(sb);
+    }
     row.appendChild(this.btn('Back', 'ghost-dark', () => d.remove()));
     const go = this.btn('FIGHT!', 'primary', () => {
       if (team.length < 3) return;
@@ -1128,7 +1137,7 @@ export class Screens {
       if (daily) foes.push(...daily.team);
       while (foes.length < 3) { const id = pick(pool); if (!foes.includes(id)) foes.push(id); }
       const arena = daily ? daily.arena : pick(MODS[mod]?.hazard ? ARENA_KEYS.filter((k) => HAZARDS[k]) : ARENA_KEYS);
-      this.ctx = { kind: 'team', team, foes, pi: 0, fi: 0, php: [1, 1, 1], fhp: [1, 1, 1], arena, daily, mods: !daily && mod ? [mod] : [] };
+      this.ctx = { kind: 'team', team, foes, pi: 0, fi: 0, php: [1, 1, 1], fhp: [1, 1, 1], arena, daily, mods: !daily && mod ? [mod] : [], sky: daily ? 'day' : sky };
       this.sel = CRITTERS.findIndex((c) => c.id === team[0]);
       this.vs();
     });
@@ -1501,7 +1510,9 @@ export class Screens {
         + (A.cnt?.rail ? bar('🚂', 'Sand-Rail rides', A.cnt.rail) : '')
         + (A.sledHi ? bar('🛷', 'DUNE SLED best', A.sledHi) : '')
         + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '')
-        + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '');
+        + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '')
+        + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal
+        + (A.cnt?.lantern ? bar('🏮', 'Sky lanterns sent up', A.cnt.lantern) : ''); // R820: no goal
     }
     const pc = Math.floor(parts.reduce((a, b) => a + b, 0) / parts.length * 100), isles = !!F.isle_arrive;
     const ipc = isles ? Math.floor(iparts.reduce((a, b) => a + b, 0) / iparts.length * 100) : 0, spc = sands ? Math.floor(sparts.reduce((a, b) => a + b, 0) / sparts.length * 100) : 0;
@@ -1996,8 +2007,8 @@ export class Screens {
       const T = this.ctx, pl = save.critters[p.id].level;
       const avg = Math.round(T.team.reduce((a, id) => a + save.critters[id].level, 0) / 3);
       c = T.daily && T.fi === 0 && T.daily.shiny ? skinned(byId(T.foes[0]), 'shiny') : byId(T.foes[T.fi]);
-      opts = { mods: T.daily ? [T.daily.mod] : T.mods || [], cpuLevel: Math.max(1, avg) + (T.daily ? 1 : 0), difficulty: 0.55 + T.fi * 0.08, playerLevel: pl, arena: T.arena, rounds: 1, playerHp: T.php[T.pi], cpuHp: T.fhp[T.fi], stageSub: `Team Battle · ${T.pi === 2 ? 'Your last critter!' : T.fi === 2 ? 'Their last critter!' : `Fight ${T.pi + T.fi + 1}`}` };
-      label = T.daily ? `Daily team ${T.fi + 1}/3 · ${MODS[T.daily.mod].icon} ${MODS[T.daily.mod].name}` : `Rival team ${T.fi + 1}/3${T.mods?.length ? ` · ${MODS[T.mods[0]].icon}` : ''}`;
+      opts = { mods: T.daily ? [T.daily.mod] : T.mods || [], cpuLevel: Math.max(1, avg) + (T.daily ? 1 : 0), difficulty: 0.55 + T.fi * 0.08, playerLevel: pl, arena: T.arena, rounds: 1, playerHp: T.php[T.pi], cpuHp: T.fhp[T.fi], ...skyOpts(T.sky), stageSub: `Team Battle · ${T.pi === 2 ? 'Your last critter!' : T.fi === 2 ? 'Their last critter!' : `Fight ${T.pi + T.fi + 1}`}` };
+      label = T.daily ? `Daily team ${T.fi + 1}/3 · ${MODS[T.daily.mod].icon} ${MODS[T.daily.mod].name}` : `Rival team ${T.fi + 1}/3${T.mods?.length ? ` · ${MODS[T.mods[0]].icon}` : ''}${T.sky && T.sky !== 'day' ? ` · ${SKIES[T.sky][0]}` : ''}`;
     } else if (this.ctx.kind === 'trials') {
       const T = this.ctx, pl = save.critters[p.id].level;
       c = byId(T.foe);

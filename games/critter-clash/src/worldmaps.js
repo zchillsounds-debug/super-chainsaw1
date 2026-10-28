@@ -880,7 +880,8 @@ export const MAPS = {
     edges: { e: { to: 'duneroad', off: -1 } },
     train: { x: 9, y: 13, from: 1, to: 24 }, // the Sand-Rail stops beside the market row (the platform)
     well: [15, 3], // the town's old stone well (A: a cool drink, once a day)
-    bazaar: [[11, 11, 'dates'], [13, 11, 'pots'], [15, 11, 'rugs']], // market stalls under the pool's palms, open onto the market row
+    bazaar: [[11, 11, 'dates'], [13, 11, 'pots'], [15, 11, 'rugs']],
+    lanterns: [[9, 7, 16, 7], [9, 11, 16, 11], [9, 7, 9, 11], [16, 7, 16, 11]], // R820: the night market's lantern strings round the pool's palms (after the Mirage Cup) // market stalls under the pool's palms, open onto the market row
     cacti: [[4, 14], [8, 15], [12, 15], [19, 14], [20, 16], [14, 16], [23, 3]], // saguaros out on the dunes past the track
     buildings: [
       { id: 'stadium_m', x: 3, y: 2, w: 8, h: 4, stadium: 'mirage', door: 4, label: 'Mirage Stadium' },
@@ -896,6 +897,8 @@ export const MAPS = {
       { id: 'wellkeep', x: 16, y: 3, critter: 'scarabold', name: 'Wellkeeper Bram', dir: 'w', lines: ["Wellkeeper Bram: This well has never once run dry. Some say an old spring runs under the sands, all the way from the buried city.", "Wellkeeper Bram: Scarabold rolls the bucket up for me. It thinks the bucket is a very big ball."] },
       { id: 'kid_o', x: 17, act: 'hop', y: 5, critter: 'siroccat', name: 'Siroccat', dir: 'w', wander: 2, lines: ["Siroccat: (It stands up tall on its back legs and stares at the horizon. Then at you. Then back at the horizon.)", "Siroccat: Chirr! (It's on lookout duty. Nothing gets past Siroccat. Except maybe that beetle.)"] },
       { id: 'sun_o', x: 10, act: 'fan', y: 7, critter: 'sizzlard', name: 'Sunbather Rex', dir: 's', wander: 1, lines: ["Sunbather Rex: Ahh, the Amber Sands. Hot by day, cold by night. Sizzlard soaks up the sun until its frill glows.", "Sunbather Rex: Don't stay out on the dunes when a sandstorm blows in. You won't see your own paws!"] },
+      { id: 'zara_o', x: 8, y: 9, critter: 'fennzap', name: 'Fortune Teller Zara', dir: 'w', dark: true, showFlag: 'cup_mirage', story: 'fortune', lines: [] }, // R820: the night market (evening and night)
+      { id: 'yusra_o', x: 17, y: 10, critter: 'sizzlard', name: 'Lantern Maker Yusra', dir: 'e', dark: true, showFlag: 'cup_mirage', story: 'skylantern', lines: [] },
       { id: 'layla_o', x: 17, y: 9, critter: 'humpdrop', name: 'Pool Angler Layla', dir: 'w', story: 'oasisfish', lines: [] }, // the oasis fish album (Records, Amber Sands)
       { id: 'hakim_o', x: 2, y: 12, critter: 'humpdrop', name: 'Caravan Master Hakim', dir: 'e', lines: ["Caravan Master Hakim: My Humpdrops can walk three days without a drink. I can walk about three minutes. We make a good team.", "Caravan Master Hakim: The caravan road runs oasis, canyon, dunes and home. Every stop trades something. That is how the desert stays friends."] },
       { id: 'grit_o', x: 22, y: 12, critter: 'scarabold', name: 'Dust Devil Grit', dir: 'w', lines: ["Dust Devil Grit: Eh? Who are YOU looking at? We're just... shopping. For shovels. LOTS of shovels.", "Dust Devil Grit: The buried city? Never heard of it. Definitely not digging it up. Go away, tourist!"] },

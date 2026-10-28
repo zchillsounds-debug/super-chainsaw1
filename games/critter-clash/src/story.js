@@ -13,7 +13,7 @@ import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
 import { arcadeGame, skyHop, waveRider, reefDive, duneSled } from './arcade.js';
-import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, FISH, seasonKey, gullFish, traderTown } from './world.js';
+import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, FISH, seasonKey, gullFish, traderTown, alphaToday } from './world.js';
 
 const flags = () => save.adv.flags;
 // which region a hat (or a map) belongs to: the Sand Hats stall sells sands hats, Shell Hats the island ones, Milliner Mo the rest
@@ -697,7 +697,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'champre') return champRematch(S, w);
   if (id === 'miragemerchant') { // R814: the Glass Flats' Mirage Merchant, there only in the mirage hours: the Mirage Turban for 25 berries
     const who = 'Mirage Merchant', hats = (save.adv.hats ||= []), b = save.berries || 0;
-    if (hats.includes('mirageturban')) return w.say([`${who}: You again. Or is it me again? Out here it's hard to tell.`, `${who}: When the air stops shimmering, I'll be gone. Don't be sad. I'm always back tomorrow, just after noon.`], null, who);
+    if (hats.includes('mirageturban')) return mirageCurio(w, who);
     return w.say([`${who}: Welcome, welcome, to the finest shop in a town that isn't there!`, `${who}: I sell one thing. A turban woven from heat haze. Light as air, cool as a well. 25 berries.`], () => w.ask(`${who}: The Mirage Turban, 25 🍓? (You have ${b} 🍓)`, ['Buy it', 'Not now'], (i) => {
       if (i !== 0) return w.say([`${who}: Then I'll fold it away. Mind, I'm only here till three.`], null, who);
       if (b < 25) return w.say([`${who}: Ah. Your berries are a mirage too, I'm afraid. Come back with 25.`], null, who);
@@ -705,6 +705,8 @@ export function storyTalk(S, id, w, a) {
       w.say(['{hero} got the Mirage Turban! 🫧 (☰ → 🎩 Hats)', `${who}: It suits you! If you look closely, the veil shimmers. If you look very closely... so do I.`], null, who);
     }, who), who);
   }
+  if (id === 'fortune') return fortuneTeller(w);
+  if (id === 'skylantern') return skyLantern(w);
   if (id === 'oasisfish') { // Pool Angler Layla by the Sunwell pool: the four oasis fish, and her spare hat for all four
     const who = 'Pool Angler Layla', sp = save.adv.fishLog?.sp || {}, got = FISH.oasis.filter(([n]) => sp[n]), hats = (save.adv.hats ||= []);
     if (!F.rod) return w.say([`${who}: A rod! I'd lend you mine, but Humpdrop is using it as a back-scratcher. Fisher Finn in Seashell Town hands them out to anyone who asks nicely.`], null, who);
@@ -2118,4 +2120,57 @@ function rival2(S, w) {
     trainer: { name: 'Dash', critter: rid, title: 'Your rival', beat: 'Grr... FINE. Go win your shiny cup. But the Crown is MINE, you hear me?!', gloat: 'Ha! Still too slow!' },
     note: '⚡ You beat Dash again! The Thunder Stadium gate is open.',
   }));
+}
+
+// R819: once the turban is sold, the Mirage Merchant brings one curio a day (three take turns), one sale a day
+export const CURIOS = [
+  ['glasslure', 'Glass Lure', '🎣', 6, 'A lure blown from desert glass. The next fish you hook in Amber Sands water will be a Heatwave Glassfish, any hour of the day.'],
+  ['shimmer', 'Shimmer Mirror', '🪞', 12, 'Hold it up to the grass on any desert map. The next wild critter that rises there will shimmer: a shiny!'],
+  ['haze', 'Bottled Haze', '🫙', 5, 'A jar of noon heat with the lid screwed on tight. One sniff and your lead critter feels strong. A Power Snack!'],
+];
+export const curioToday = () => CURIOS[Math.floor(Date.now() / 86400000) % CURIOS.length];
+function mirageCurio(w, who) {
+  const A = save.adv, F = A.flags, day = new Date().toISOString().slice(0, 10), [id, name, em, cost, desc] = curioToday(), b = save.berries || 0;
+  if (F['curio_' + day]) return w.say([`${who}: You again. Or is it me again? Out here it's hard to tell.`, `${who}: Today's curio is sold. Tomorrow, just after noon, I'll have something new. Or something old that looks new. Same thing, out here.`], null, who);
+  if (id === 'glasslure' && A.glassLure) return w.say([`${who}: Today I have a Glass Lure... but you've still got the last one! Use it in any Amber Sands water first. Come back tomorrow.`], null, who);
+  if (id === 'shimmer' && A.shimmer) return w.say([`${who}: Today I have a Shimmer Mirror... but yours hasn't shimmered yet! Walk through some desert grass. Come back tomorrow.`], null, who);
+  return w.say([`${who}: Back for more? The turban's sold, but every day the haze brings me one new curio.`, `${who}: Today: the ${name} ${em}. ${desc}`], () => w.ask(`${who}: The ${name}, ${cost} 🍓? (You have ${b} 🍓)`, ['Buy it', 'Not now'], (i) => {
+    if (i !== 0) return w.say([`${who}: As you like. It'll be gone by three, and so will I.`], null, who);
+    if (b < cost) return w.say([`${who}: Ah. Not quite enough berries. ${cost} for the ${name}. The air's still shimmering, if you're quick.`], null, who);
+    save.berries = b - cost; F['curio_' + day] = true; A.curios = (A.curios || 0) + 1;
+    if (id === 'glasslure') { A.glassLure = true; persist(); reward(1); return w.say([`{hero} got the Glass Lure! ${em}`, `${who}: Cast it in any Amber Sands water. The Sunwell pool, say. Glassfish can't resist their own reflection.`], null, who); }
+    if (id === 'shimmer') { A.shimmer = true; persist(); reward(1); return w.say([`{hero} got the Shimmer Mirror! ${em}`, `${who}: Walk through the grass on any desert map. The next wild critter that rises will catch the light... and keep it!`], null, who); }
+    const h = A.hero, r = grantXp(h, Math.round(xpNeeded(save.critters[h].level) * 0.5)); persist(); reward(2);
+    w.say([`{hero} sniffed the Bottled Haze! ${em} A Power Snack! ⭐`, r.to > r.from ? `{hero} grew to Lv ${r.to}!` : '{hero} feels stronger! (+XP)', `${who}: Smells of noon, doesn't it? Warm stones and dates.`], null, who);
+  }, who), who);
+}
+
+// R820: the oasis night market (evening and night, after the Mirage Cup). Fortune Teller Zara reads the day: where today's Alpha waits,
+// and what the Mirage Merchant will bring after noon. Lantern Maker Yusra lets the hero send up one sky lantern a night (seven: her hat).
+const FORTUNES = ['A stranger will offer you a date. Take it. It\'s a very good date.', 'Your lucky number is three. Or four. The cards are smudged.', 'Something small and shiny is hiding in tall grass. Look twice.', 'Beware of sand in your shoes. That one comes true every night.', 'A big win is coming. Or a big lunch. Either way, you\'ll be happy.'];
+function fortuneTeller(w) {
+  const who = 'Fortune Teller Zara', al = alphaToday(), [, cname, cem] = curioToday(), day = new Date().toISOString().slice(0, 10), F = flags();
+  const mapName = (k) => MAPS[k]?.name || getMap(k)?.name || k;
+  const lines = [`${who}: Sit, sit! Fennzap's ears hear the future. Mostly they hear me, but sometimes the future too.`];
+  lines.push(al ? (al.done ? `${who}: The cards show a big ${CRITTERS.find((c) => c.id === al.id)?.name || 'critter'}... already beaten today! By you, I think. The cards look a bit scared of you.` : `${who}: The cards show a big angry ${CRITTERS.find((c) => c.id === al.id)?.name || 'critter'} in the tall grass of ${mapName(al.map)}. Today's Alpha! It's waiting for you.`) : `${who}: The cards are blank. Win more cups and they'll have more to say.`);
+  if (save.adv.hats?.includes('mirageturban')) lines.push(F['curio_' + day] ? `${who}: And the Mirage Merchant... you already bought today's curio. The cards say tomorrow's is a surprise. Even to them.` : `${who}: And the Mirage Merchant, out on the Glass Flats after noon: the cards show a ${cname} ${cem}.`);
+  lines.push(`${who}: And one for you, free: ${FORTUNES[hash32(day) % FORTUNES.length]}`);
+  return w.say(lines, null, who);
+}
+const hash32 = (s) => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; };
+function skyLantern(w) {
+  const who = 'Lantern Maker Yusra', A = save.adv, hats = (A.hats ||= []), night = singNight(), n = A.cnt?.lantern || 0;
+  if (A.lanternNight === night) return w.say([`${who}: One lantern a night, that's the rule. Look, yours is still up there, the little bright one next to the moon.`, n >= 7 ? `${who}: You've sent up ${n} now. The stars must be getting crowded.` : `${who}: Come back tomorrow night. ${7 - n} more and I'll have something for you.`], null, who);
+  return w.say([`${who}: Every night after the market, we send paper lanterns up over the sands. For wishes, for luck, for the Sun-Bird to find its way home.`, `${who}: I've made one for you! Hold it up... let the warm air fill it... and let go!`], () => {
+    A.lanternNight = night; countUp('lantern'); const c = A.cnt.lantern;
+    const p = w.hero.root.position;
+    w.g.fx.spawn({ x: p.x, y: 1.6, z: p.z, vx: 0.15, vy: 0.9, color: 0xffa040, size: 1.4, life: 8, hold: 0.85, fadeIn: 0.3 });
+    w.g.fx.spawn({ x: p.x, y: 1.6, z: p.z, vx: 0.15, vy: 0.9, color: 0xffe0a0, size: 0.7, life: 8, hold: 0.85, fadeIn: 0.3 });
+    for (let k = 0; k < 12; k++) w.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.6, y: 1.4, z: p.z + (Math.random() - 0.5) * 0.6, vx: (Math.random() - 0.5) * 0.4, vy: 0.6 + Math.random() * 0.6, color: 0xffd060, size: 0.12, life: 2.5, shape: 'spark' });
+    sfx.ui?.('ok'); reward(1);
+    const out = [`The lantern drifts up, up over the palms, a warm little light against the stars. 🏮 (${c} sent up)`];
+    if (c === 7 && !hats.includes('lanternhat')) { hats.push('lanternhat'); out.push(`${who}: Seven lanterns! That's a whole wish-string. Here, I made this for you to keep. A lantern that never floats away!`, '{hero} got the Paper Lantern Hat! 🏮 (☰ → 🎩 Hats)'); }
+    else out.push(c < 7 ? `${who}: Lovely! ${7 - c} more nights and I'll have something for you.` : `${who}: Beautiful. The Sun-Bird will see that one for sure.`);
+    persist(); w.say(out, null, who);
+  }, who);
 }

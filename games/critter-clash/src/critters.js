@@ -1543,6 +1543,7 @@ export const SHOP_HATS = [
   { id: 'palmangler', name: 'Palm Angler Hat', kind: 'bucket', col: 0x2aa8a0, band: 0xf2c46a, price: 0, gift: true, extra: true }, // Pool Angler Layla at Sunwell Oasis: all four oasis fish
   { id: 'minerhelm', name: "Salt Miner's Helmet", kind: 'helm', col: 0xf4ecd8, band: 0xffd84d, price: 0, gift: true, extra: true }, // R815: the salt road (Salt Miner Hamid, the Glass Flats)
   { id: 'mirageturban', name: 'Mirage Turban', kind: 'turban', col: 0xeef6ff, band: 0x5ac8e8, price: 0, gift: true, extra: true }, // R814: the Mirage Merchant on the Glass Flats (mirage hours only)
+  { id: 'lanternhat', name: 'Paper Lantern Hat', kind: 'lantern', col: 0xffa040, band: 0xd83a3a, price: 0, gift: true, extra: true }, // R820: Lantern Maker Yusra's night market, seven sky lanterns
   { id: 'mesaband', name: "Mesa Climber's Bandana", kind: 'band', col: 0xc8402a, band: 0xf2d49c, price: 0, gift: true, extra: true }, // the chest on Redrock Mesa (after the Canyon Cup)
   { id: 'sunlaurel', name: 'Sun Gate Laurel', kind: 'laurel', col: 0xd8643a, band: 0xffd84a, price: 0, gift: true, extra: true }, // the Desert Trial's first clear (D4)
   { id: 'amberwreath', name: 'Amber Wreath', kind: 'crown', col: 0xe8a040, band: 0x2aa8a0, price: 0, gift: true, extra: true }, // 100% of the Amber Sands' Records (D4)
@@ -1602,6 +1603,14 @@ export function hatModel(cr, kind, col, band) {
     const j = add(new THREE.OctahedronGeometry(r * 0.13), gem, 0.01); j.position.set(0, r * 0.28, r * 0.76); j.scale.set(1, 1.3, 0.6);
     const veil = new THREE.Mesh(new THREE.ConeGeometry(r * 0.7, r * 1.1, 14, 1, true, Math.PI * 0.25, Math.PI * 1.5), new THREE.MeshBasicMaterial({ color: band, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }));
     veil.position.set(0, -r * 0.18, -r * 0.12); veil.rotation.y = Math.PI; G.add(veil);
+  }
+  if (kind === 'lantern') { // R820: a round paper lantern on a little cap, ribbed, glowing warm, a red tassel underneath (the oasis night market)
+    const glow = toon(col, { rim: 1, emissive: new THREE.Color(col).multiplyScalar(0.5).getHex() }), dark = toon(0x3a2a1a);
+    add(new THREE.CylinderGeometry(r * 0.5, r * 0.6, r * 0.12, 14), dark, 0.012).position.y = r * 0.0;
+    const L = add(new THREE.SphereGeometry(r * 0.56, 14, 10), glow, 0.014); L.scale.set(1, 0.8, 1); L.position.y = r * 0.45;
+    for (let k = 0; k < 3; k++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(r * (k === 1 ? 0.57 : 0.47), r * 0.025, 4, 18), toon(band)); rib.rotation.x = Math.PI / 2; rib.position.y = r * (0.45 + (k - 1) * 0.22); G.add(rib); }
+    add(new THREE.CylinderGeometry(r * 0.16, r * 0.2, r * 0.1, 10), dark, 0.01).position.y = r * 0.86;
+    const t = add(new THREE.ConeGeometry(r * 0.08, r * 0.3, 6), toon(band), 0.008); t.position.set(r * 0.5, r * 0.25, 0); t.rotation.z = 0.2;
   }
   if (kind === 'halo') { // a glowing golden ring floating over the head (Rainbow Reach)
     const m = toon(col, { rim: 1, emissive: new THREE.Color(col).multiplyScalar(0.55).getHex() });

@@ -422,6 +422,7 @@ export class World {
     this.buildCart();
     this.buildMarket();
     this.buildBazaar();
+    this.buildLanterns();
     this.buildWell();
     this.buildSingers();
     this.buildLifts();
@@ -1350,6 +1351,29 @@ export class World {
       if (kind === 'rugs') { const hang = inked(new THREE.BoxGeometry(1.5, 0.9, 0.03), toon(c1, { side: THREE.DoubleSide }), OL * 0.2); hang.position.set(0, 1.5, -0.4); g.add(hang); const band = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.16, 0.04), toon(0xe8b85a)); band.position.set(0, 1.5, -0.39); g.add(band); }
       bakeStatic({ root: g, mats: {} });
     }
+  }
+
+  // R820: the oasis night market: strings of paper lanterns between the pool's palms (lit after dark once the Mirage Cup is won; pale paper by day)
+  buildLanterns() {
+    if (!this.M.lanterns || this.M.indoor || !save.adv.flags?.cup_mirage) return;
+    const lit = this.phase !== 'day', cols = [0xff6a3a, 0xffc040, 0xff4a7a, 0x3ac8c8, 0xffe070], cord = [], paper = cols.map(() => []), caps = [], glow = [];
+    for (const [x1, y1, x2, y2] of this.M.lanterns) {
+      const [ax, az] = wpos(x1, y1), [bx, bz] = wpos(x2, y2), n = Math.max(4, Math.round(Math.hypot(bx - ax, bz - az) / 1.1)), hy = (t) => 3.3 - Math.sin(t * Math.PI) * 0.7;
+      const pts = []; for (let k = 0; k <= 16; k++) { const t = k / 16; pts.push(new THREE.Vector3(ax + (bx - ax) * t, hy(t), az + (bz - az) * t)); }
+      cord.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.025, 4, false));
+      for (let k = 1; k < n; k++) {
+        const t = k / n, X = ax + (bx - ax) * t, Z = az + (bz - az) * t, Y = hy(t) - 0.32, c = (k + x1 + y1) % cols.length;
+        const L = new THREE.SphereGeometry(0.2, 10, 8); L.scale(1, 1.2, 1); L.translate(X, Y, Z); paper[c].push(L);
+        const top = new THREE.CylinderGeometry(0.09, 0.11, 0.07, 8); top.translate(X, Y + 0.25, Z); caps.push(top);
+        const bot = new THREE.CylinderGeometry(0.11, 0.09, 0.06, 8); bot.translate(X, Y - 0.25, Z); caps.push(bot);
+        const st = new THREE.CylinderGeometry(0.008, 0.008, 0.08, 3); st.translate(X, Y + 0.31, Z); caps.push(st);
+        glow.push([X, Y, Z, cols[c]]);
+      }
+    }
+    const merged = (list, mat, ink) => { if (!list.length) return; const m = ink ? inked(mergeGeometries(list), mat, OL * 0.25) : new THREE.Mesh(mergeGeometries(list), mat); list.forEach((q) => q.dispose()); this.group.add(m); };
+    merged(cord, toon(0x5a3a22), false); merged(caps, toon(0x3a2a1a), false);
+    paper.forEach((list, i) => { let mat; if (lit) { mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(cols[i]).lerp(new THREE.Color(0xffffff), 0.25) }); mat.userData.own = true; } else mat = toon(new THREE.Color(cols[i]).lerp(new THREE.Color(0xfff4e0), 0.45).getHex(), { rim: 0.5 }); merged(list, mat, !lit); });
+    if (lit) for (const [X, Y, Z, c] of glow.filter((_, i) => i % 2 === 0)) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: c, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: this.phase === 'night' ? 0.55 : 0.35 }); sm.userData.own = true; const sp = new THREE.Sprite(sm); sp.scale.setScalar(1.3); sp.position.set(X, Y, Z); this.group.add(sp); }
   }
 
   // Chapter 3: saguaro cacti on the dunes (a trunk and one or two arms, little white spines; some flower in pink)
@@ -3959,7 +3983,8 @@ export class World {
     if (how === 'early') return this.say(['Too soon! The ripples fade away... Wait for the bobber to dip, then press A!']);
     if (how === 'miss') return this.say(['The bobber popped back up. Whatever it was got away!']);
     countUp('fish'); persist();
-    const r = Math.random(), W = (this.M.wild?.list || []).filter(([i]) => byId(i)?.type === (this.M.lava ? 'fire' : 'water')); // a lava pool hooks fire critters
+    const lure = this.M.sands && save.adv.glassLure; if (lure) delete save.adv.glassLure; // R819: the Mirage Merchant's Glass Lure hooks a glassfish (r 0.6 skips the critter and season rolls)
+    const r = lure ? 0.6 : Math.random(), W = (this.M.wild?.list || []).filter(([i]) => byId(i)?.type === (this.M.lava ? 'fire' : 'water')); // a lava pool hooks fire critters
     if (r < 0.45) {
       const lv = Math.max(2, (save.critters[save.adv.hero]?.level || 3) - 1);
       const [id, lo, hi] = W.length ? W[Math.floor(Math.random() * W.length)] : [(this.M.lava ? ['cindermunch', 'emberfly', 'kindlekit', 'smokeshell'] : ['bubbalotl', 'ripples', 'lilypop', 'pengsicle'])[Math.floor(Math.random() * 4)], lv, lv];
@@ -3974,7 +3999,7 @@ export class World {
       persist(); reward(first ? 3 : 1);
       return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long!`, first ? `A seasonal visitor! It only swims here in ${sk}. Fisher Finn will want to hear about this! +3 🍓 (☰ → Journal → 🎣)` : `${name}s only visit in ${sk}. Splash! Back it goes, until next year.`, ...(hat ? ['That\'s all four seasonal fish! Fisher Finn sends over a hat with a koi on top: the Koi Bucket Hat! 🎣 (☰ → 🎩 Hats)'] : [])]);
     }
-    if (this.mirageHour() && r < 0.64) { // the mirage hour's glassfish (about one catch in five while the air shimmers)
+    if (lure || (this.mirageHour() && r < 0.64)) { // the mirage hour's glassfish (about one catch in five while the air shimmers)
       const [name, lo, hi, em] = MIRAGE_FISH, cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };
       const first = !L.mirage; L.n++; L.mirage = Math.max(L.mirage || 0, cm); if (first) save.berries = (save.berries || 0) + 5;
       persist(); reward(first ? 3 : 1);
@@ -4771,7 +4796,8 @@ export class World {
     for (const n of [...(this.M.npcs || []), ...this.traderSpot(), ...this.daycareSpot(), ...this.grownSpot()].map((q) => q.night && this.phase !== 'day' ? { ...q, ...q.night } : q)) { // some folk have a night spot
       if (n.hideFlag && F[n.hideFlag]) continue;
       if (n.showFlag && !F[n.showFlag]) continue;
-      if (n.mirage && !this.mirageHour()) continue; // (the Glass Flats' Mirage Merchant: only while the air shimmers)
+      if (n.mirage && !this.mirageHour()) continue;
+      if (n.dark && this.phase === 'day') continue; // (R820: the oasis night market's folk come out after sunset) // (the Glass Flats' Mirage Merchant: only while the air shimmers)
       let root, cr = null;
       if (n.pecan) { root = pecanModel(); root.scale.setScalar(CS); }
       else if (n.balloon) { root = balloonModel(n.balloon); }
@@ -4845,7 +4871,8 @@ export class World {
 
   spawnWild(x, y, fixId, fixLv) {
     const WL = this.wildList(), [id0, lo, hi] = WL[Math.floor(Math.random() * WL.length)], id = fixId || id0;
-    const lv = fixLv || lo + Math.floor(Math.random() * (hi - lo + 1)), shiny = !fixId && Math.random() < shinyRate() * (this.luckyNight() ? 3 : 1);
+    const lv = fixLv || lo + Math.floor(Math.random() * (hi - lo + 1)), mirror = !fixId && this.M.sands && save.adv.shimmer, shiny = mirror || (!fixId && Math.random() < shinyRate() * (this.luckyNight() ? 3 : 1));
+    if (mirror) { delete save.adv.shimmer; persist(); } // R819: the Mirage Merchant's Shimmer Mirror
     const cr = new Critter(withGear(shiny ? skinned(byId(id), 'shiny') : byId(id), lv), { lod: 'low' });
     cr.root.userData.critter = true;
     if (pumpkinNights() && !fixId && Math.random() < 0.5) { const [k, c, b] = COSTUMES[Math.floor(Math.random() * COSTUMES.length)]; hatModel(cr, k, c, b); } // Pumpkin Nights: wild critters dress up too
