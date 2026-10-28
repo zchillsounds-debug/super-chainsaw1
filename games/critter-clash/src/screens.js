@@ -487,7 +487,7 @@ export class Screens {
       const A = save.adv, F = A.flags;
       setTimeout(() => this.mode === 'title' && this.profTalk([
         F.gcap_done ? "{name}! A parcel came up the Sunwell rope this morning: a jar of glowcap spores from a Forager Pim, with a note saying \"thank you for the legwork\". It glows on my desk all night!" : F.hollow_arrive ? "{name}! Odette writes that you squeezed through the crack behind the spring into a hollow full of glowing mushrooms! A Forager Pim lives down there and needs a hand picking them." : F.odjournal_done ? "{name}! Odette says she felt a cold draught from a crack in the spring's east wall. With her lamp cap on, you could squeeze through. She smelled MUSHROOMS." : "{name}! There's more under the Sunwell than a pool, I'm sure of it. Odette is down there mapping every crack.",
-        A.hats?.includes('glowcaphat') ? `And that Glowcap Hat! Pim says shiny critters creep out of the moss to look at it. Wear it in the hollow and see!` : "",
+        A.hats?.includes('glowcaphat') ? `And that Glowcap Hat! Pim says shiny critters creep out of the moss to look at it. Wear it in the hollow and see!${A.sporeHi ? ` And a SPORE DRIFT of ${A.sporeHi}! Up a dark shaft on a mushroom puff. You are braver than me.` : ''}` : "",
         F.sirocco4_done ? "Grit walks out to the Sun Gate every evening now, to sit with Sirocco and count the stars. Two old Dust Devils, making terrible tea. I think that's lovely." : "",
         "And a tip from the stadiums: in the Sunwell Grotto, a glowcap mushroom can drop into a fight. Eat it and the dripstones miss you for a while!",
       ].filter(Boolean)), 600);
@@ -693,7 +693,7 @@ export class Screens {
         ['Cups', 'Each town\'s stadium holds a cup, and the trials test your Strength, Friendship and Wisdom on the road to the Critter Crown.'],
         ['Berry Centers', 'Rest to heal, swap who leads the way at the Critter Box, leave a critter at the Daycare and blend berry smoothies.'],
         ['The Isles', 'Once you hold the Critter Crown, the Sunny Gull ferry sails from Seashell Town to the Sunscatter Isles: new critters, three island cups and the Gloom Gulls.'],
-        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it.'],
+        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it, where Forager Pim\'s spore puffs fly in SPORE DRIFT.'],
         ['After that', 'The Battle Tower, three legendary critters, the weekly Masters, the Kite Glider\'s hidden spots, pearls, dives and more. The Champ page keeps track.'],
         ['100%', 'Records shows how much of Clashara, the isles (and later the Amber Sands) you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
       ]],
@@ -1547,7 +1547,8 @@ export class Screens {
         + sb('🏛️', 'Buried City secrets', city.filter(([f]) => F[f]).length, city.length, F.gate_open ? lst(city.filter(([f]) => !F[f]).map(([, t]) => t)) : 'somewhere beyond a great stone gate...')
         + (A.cnt?.rail ? bar('🚂', 'Sand-Rail rides', A.cnt.rail) : '')
         + (A.sledHi ? bar('🛷', 'DUNE SLED best', A.sledHi) : '')
-        + (A.caravanHi ? bar('🐪', 'CARAVAN RUN best', A.caravanHi) : '') // R838: no goal
+        + (A.caravanHi ? bar('🐪', 'CARAVAN RUN best', A.caravanHi) : '')
+        + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') // R854: no goal // R838: no goal
         + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '')
         + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '')
         + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal

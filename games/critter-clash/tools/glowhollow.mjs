@@ -32,7 +32,7 @@ await pg.evaluate(() => { __save.adv.flags.odjournal_done = true; });
 await walk('ArrowRight', 1.2); await pg.waitForTimeout(1500); await pg.evaluate(() => __sim(2)); await pg.waitForTimeout(500);
 console.log('through:', await W(), 'arrive:', await pg.evaluate(() => !!__save.adv.flags.hollow_arrive), '|', (await say() || '').slice(0, 90));
 await shot('arrive'); await close();
-const talk = async () => { await pg.evaluate(() => { const o = __game.screens.worldObj; o.hx = 11; o.hy = 9; o.dir = 'e'; o.placeHero(); __sim(0.5); o.tapA = true; __sim(0.5); }); const ll = []; for (let k = 0; k < 6; k++) { await pg.waitForTimeout(400); await pg.evaluate(() => __sim(3)); const t = await say(); if (!t) break; ll.push(t.slice(0, 80)); await pg.evaluate(() => { __game.screens.worldObj.tapA = true; __sim(0.3); }); } return ll.join(' / '); };
+const talk = async () => { await pg.evaluate(() => { const o = __game.screens.worldObj; o.hx = 13; o.hy = 9; o.dir = 'w'; o.placeHero(); __sim(0.5); o.tapA = true; __sim(0.5); }); const ll = []; for (let k = 0; k < 6; k++) { await pg.waitForTimeout(400); await pg.evaluate(() => __sim(3)); const t = await say(); if (!t) break; ll.push(t.slice(0, 80)); await pg.evaluate(() => { __game.screens.worldObj.tapA = true; __sim(0.3); }); } return ll.join(' / '); };
 console.log('mark before:', await pg.evaluate(() => __game.screens.worldObj.npcs.find((a) => a.n.id === 'pim_h')?.mark ? 'mark' : 'none'));
 console.log('Pim 1:', await talk()); await close();
 const caps = await pg.evaluate(() => __maps.glowhollow.glowcaps);

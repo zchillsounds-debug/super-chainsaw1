@@ -12,7 +12,7 @@ import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
-import { arcadeGame, skyHop, waveRider, reefDive, duneSled, caravanRun } from './arcade.js';
+import { arcadeGame, skyHop, waveRider, reefDive, duneSled, caravanRun, sporeDrift } from './arcade.js';
 import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, FISH, seasonKey, gullFish, traderTown, alphaToday } from './world.js';
 
 const flags = () => save.adv.flags;
@@ -1800,12 +1800,7 @@ function caravanRunTalk(S, w, a) {
 export const glowcapCount = () => { const F = flags(); return (MAPS.glowhollow.glowcaps || []).filter((_, i) => F['gcap_' + i]).length; };
 function glowcapTalk(S, w, a) {
   const F = flags(), who = 'Forager Pim', n = glowcapCount(), all = MAPS.glowhollow.glowcaps.length, own = (save.adv.hats ||= []);
-  if (F.gcap_done) return w.say([[
-    'Forager Pim: The lamp-makers up at the night market will want some of these. A glowcap lantern never needs oil!',
-    'Forager Pim: Your Glowcap Hat\'s glowing nicely. Hum to it now and then. Odette says it helps. I think Odette is making that up.',
-    'Forager Pim: Did you know? A glowcap\'s light shows exactly where the cave will drip next. Critters who eat one dodge the dripstones!',
-    save.adv.hat === 'glowcaphat' ? 'Forager Pim: Ooh, you\'re wearing it! Watch the tall moss: shiny critters can\'t resist a glowcap.' : 'Forager Pim: Put your Glowcap Hat on down here and see who comes out of the moss to look. Shiny ones, I bet!',
-  ][Math.floor(Math.random() * 4)]], null, who);
+  if (F.gcap_done) return sporeDriftTalk(S, w);
   if (!F.gcap_asked) {
     F.gcap_asked = true; persist(); w.questMarks?.();
     return w.say([
@@ -1824,7 +1819,33 @@ function glowcapTalk(S, w, a) {
     'Forager Pim: Wear it down here and the glow-lovers come out to look. Shiny critters, I mean! They think you\'re one of them.',
     '{hero} got the Glowcap Hat! 🍄 (☰ → 🎩 Hats)',
     '{hero} got 20 berries! 🍓',
+    'Forager Pim: Oh, and talk to me again sometime. My spore puffs fly, you know. All the way up the old shaft!',
   ], null, who);
+}
+
+// R854: once the glowcaps are in, Pim's spore puffs ride the updraft up the old shaft: SPORE DRIFT (daily berries at 200/350/500, a Records best)
+function sporeDriftTalk(S, w) {
+  const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.sporeHi || 0, who = 'Forager Pim';
+  w.ask(`${who}: Feel that updraft? It blows all the way up the old shaft to the desert. My spore puffs ride it. Hop on one? Keep near the motes: the puff\'s glow fades without them. ${hi ? `Your best drift: ${hi}.` : 'Drag to steer!'}`, ['Drift!', 'Just chat'], (i) => {
+    if (i) return w.say([[
+      'Forager Pim: The lamp-makers up at the night market will want some of these. A glowcap lantern never needs oil!',
+      'Forager Pim: Your Glowcap Hat\'s glowing nicely. Hum to it now and then. Odette says it helps. I think Odette is making that up.',
+      'Forager Pim: Did you know? A glowcap\'s light shows exactly where the cave will drip next. Critters who eat one dodge the dripstones!',
+      A.hat === 'glowcaphat' ? 'Forager Pim: Ooh, you\'re wearing it! Watch the tall moss: shiny critters can\'t resist a glowcap.' : 'Forager Pim: Put your Glowcap Hat on down here and see who comes out of the moss to look. Shiny ones, I bet!',
+    ][Math.floor(Math.random() * 4)]], null, who);
+    w.busy = true;
+    const el = sporeDrift(S.root, S.game.portrait(w.hero.def), (score) => {
+      S.game.modalClose = null; w.busy = false;
+      const best = score > hi; if (best) A.sporeHi = score;
+      countUp('spore');
+      let prize = 0;
+      if (A.sporeDay !== day) { prize = score >= 500 ? 3 : score >= 350 ? 2 : score >= 200 ? 1 : 0; if (prize) { A.sporeDay = day; save.berries = (save.berries || 0) + prize; } }
+      persist(); if (best || prize) reward(2);
+      w.say([`${score >= 600 ? 'All the way up to the daylight!' : score >= 300 ? 'A lovely long drift!' : 'Pfff! The puff fizzled out.'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`,
+        ...(prize ? [`${who}: ${prize} 🍓 from my basket! (One prize a day.)`] : A.sporeDay !== day ? [`${who}: Score 200 or more and I'll share some berries! (One prize a day.)`] : [])]);
+    });
+    S.game.modalClose = () => el.__arcade.close();
+  }, who);
 }
 
 // Chef Rumi's noodle cart in Neon City: a bowl of spark noodles once a day (berries for XP), and a hat you can't get anywhere else

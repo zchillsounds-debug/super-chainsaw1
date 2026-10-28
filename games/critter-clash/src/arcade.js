@@ -731,3 +731,119 @@ export function caravanRun(root, face, onDone) {
   el.__arcade = { S, lane, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
   return el;
 }
+
+// R854: SPORE DRIFT (Forager Pim, Glowcap Hollow): the hero rides a glowcap's spore puff up a pitch-dark shaft. The puff's own glow is the
+// only light: it fades as you rise, and glowing motes (+5) and glowcaps (+15) top it up. Rock ledges jut out from the walls (only seen
+// inside the light, though motes and glowcaps shine through the dark) and drips fall: a bump dims the light. Light out, the run ends;
+// reach daylight at the top of the shaft (600 m) for +60. Drag (or ←/→) to steer. Score: metres climbed + pickups.
+export function sporeDrift(root, face, onDone) {
+  const el = document.createElement('div');
+  el.className = 'modal-wrap arcade-wrap';
+  el.innerHTML = `<div class="arcade spore"><div class="arc-top"><b>SPORE DRIFT</b><span class="arc-hud"></span></div>
+    <canvas width="${W}" height="${H}"></canvas>
+    <p class="arc-tip">Drag (or ←/→) to steer up the dark shaft. ✨ motes and 🍄 glowcaps keep your light alive. Mind the rock!</p></div>`;
+  root.appendChild(el);
+  const cv = el.querySelector('canvas'), c = cv.getContext('2d'), hud = el.querySelector('.arc-hud');
+  const img = new Image(); img.src = face;
+  const Y = 170, R = 12, TOP = 600, WALL = 34; // the hero's row, hit radius, the shaft's height in metres, the wall width
+  const S = { x: W / 2, vx: 0, h: 0, light: 1, score: 0, motes: 0, caps: 0, things: [], pops: [], next: 40, over: false, won: false, ready: 1.2, started: false, end: 0, hurt: 0, t: 0 };
+  const keys = new Set(); let target = null;
+  const onKey = (e) => {
+    if (!['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD'].includes(e.code)) return;
+    e.preventDefault(); e.stopPropagation();
+    if (e.type === 'keydown') { keys.add(e.code); start(); } else keys.delete(e.code);
+  };
+  addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
+  const toX = (e) => { const r = cv.getBoundingClientRect(); return (e.clientX - r.left) / r.width * W; };
+  const start = () => { if (S.ready > 0) S.ready = 0; if (!S.started) { S.started = true; sfx.arc('go'); } };
+  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); cv.setPointerCapture?.(e.pointerId); target = toX(e); start(); });
+  cv.addEventListener('pointermove', (e) => { if (target != null) target = toX(e); });
+  const up = () => { target = null; };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  const pop = (x, y, txt, col) => S.pops.push({ x, y, txt, col, t: 0.8 });
+  const speed = () => 34 + Math.min(30, S.h * 0.06); // px a second the shaft scrolls (4 px = 1 m)
+  const spawn = () => {
+    const m = S.h, r = Math.random(), gap = Math.max(70, 120 - m * 0.06);
+    if (r < 0.5) { // a ledge from one wall (or both, with a gap)
+      const side = Math.random() < 0.5 ? -1 : 1, both = m > 150 && Math.random() < 0.4;
+      if (both) { const gx = WALL + gap / 2 + Math.random() * (W - 2 * WALL - gap); S.things.push({ k: 'rock', x0: WALL, x1: gx - gap / 2, y: -14 }, { k: 'rock', x0: gx + gap / 2, x1: W - WALL, y: -14 }); S.things.push({ k: Math.random() < 0.35 ? 'cap' : 'mote', x: gx, y: -14 }); }
+      else { const len = 70 + Math.random() * (W - 2 * WALL - gap - 70); S.things.push(side < 0 ? { k: 'rock', x0: WALL, x1: WALL + len, y: -14 } : { k: 'rock', x0: W - WALL - len, x1: W - WALL, y: -14 }); S.things.push({ k: 'mote', x: side < 0 ? WALL + len + 24 + Math.random() * 30 : W - WALL - len - 24 - Math.random() * 30, y: -30 }); }
+    } else if (r < 0.75) { for (let k = 0; k < 3; k++) S.things.push({ k: 'mote', x: WALL + 20 + Math.random() * (W - 2 * WALL - 40), y: -14 - k * 26 }); }
+    else if (r < 0.88) S.things.push({ k: 'cap', x: WALL + 24 + Math.random() * (W - 2 * WALL - 48), y: -14 });
+    else S.things.push({ k: 'drip', x: WALL + 20 + Math.random() * (W - 2 * WALL - 40), y: -14, vy: 50 + Math.random() * 30 });
+    S.next = 46 + Math.random() * 30;
+  };
+  const bump = (txt) => { if (S.hurt > 0) return; S.hurt = 0.9; S.light = Math.max(0, S.light - 0.28); pop(S.x, Y - 22, txt, '#ff8a6a'); sfx.arc('zap'); buzz('medium'); jolt(el); };
+  function finish(won) { if (S.over) return; S.over = true; S.won = won; if (won) { S.score += 60; sfx.arc('gold'); } else { sfx.arc('crash'); buzz('heavy'); } setTimeout(close, 2000); }
+  const step = (dt) => {
+    S.t += dt;
+    if (S.ready > 0) { S.ready -= dt; return; }
+    if (!S.started || S.over) { if (S.over) S.end += dt; return; }
+    const tgt = target != null ? target : null, k = (keys.has('ArrowLeft') || keys.has('KeyA') ? -1 : 0) + (keys.has('ArrowRight') || keys.has('KeyD') ? 1 : 0);
+    if (tgt != null) S.vx += (Math.max(-1, Math.min(1, (tgt - S.x) / 30)) * 260 - S.vx) * Math.min(1, dt * 6);
+    else S.vx += (k * 200 - S.vx) * Math.min(1, dt * 5);
+    S.x = Math.max(WALL + R, Math.min(W - WALL - R, S.x + S.vx * dt + Math.sin(S.t * 1.7) * 6 * dt)); // a gentle drift
+    const v = speed(), dy = v * dt; S.h += dy / 4; S.score += dy / 4;
+    S.light = Math.max(0, S.light - dt * (0.066 + Math.min(0.03, S.h * 0.00006)));
+    S.hurt = Math.max(0, S.hurt - dt);
+    S.next -= dy; if (S.next <= 0 && S.h < TOP - 30) spawn();
+    for (const o of S.things) {
+      o.y += dy + (o.vy ? o.vy * dt : 0);
+      if (o.gone) continue;
+      if (o.k === 'rock') { if (o.y > Y - R - 7 && o.y < Y + R + 7 && S.x > o.x0 - R + 3 && S.x < o.x1 + R - 3) { o.gone = true; bump('BONK!'); } }
+      else if (Math.abs(o.x - S.x) < R + 9 && Math.abs(o.y - Y) < R + 9) {
+        o.gone = true;
+        if (o.k === 'mote') { S.motes++; S.score += 5; S.light = Math.min(1, S.light + 0.12); pop(o.x, o.y - 12, '+5', '#bfffee'); sfx.arc('grab', 3 + (S.motes % 5)); }
+        else if (o.k === 'cap') { S.caps++; S.score += 15; S.light = Math.min(1, S.light + 0.35); pop(o.x, o.y - 12, '+15 🍄', '#5affe0'); sfx.arc('pearl'); }
+        else bump('DRIP!');
+      }
+    }
+    S.things = S.things.filter((o) => o.y < H + 30 && !(o.gone && o.k !== 'rock'));
+    for (const p of S.pops) { p.t -= dt; p.y -= 26 * dt; }
+    S.pops = S.pops.filter((p) => p.t > 0);
+    if (S.h >= TOP) { S.h = TOP; finish(true); } else if (S.light <= 0) finish(false);
+  };
+  const draw = () => {
+    const sky = Math.max(0, (S.h - (TOP - 80)) / 80); // daylight creeps in near the top
+    c.fillStyle = '#0a141a'; c.fillRect(0, 0, W, H);
+    // the shaft walls: jagged slate columns scrolling down
+    c.fillStyle = '#26363e';
+    for (const sd of [0, 1]) { c.beginPath(); c.moveTo(sd ? W : 0, 0); for (let y = -20; y <= H + 20; y += 10) { const q = Math.floor((y - S.h * 4) / 10), j = ((q * 37 + sd * 11) % 13 + 13) % 13; c.lineTo(sd ? W - WALL + 4 - j : WALL - 4 + j, y + (S.h * 4) % 10); } c.lineTo(sd ? W : 0, H); c.fill(); }
+    for (const o of S.things) if (o.k === 'rock' && !o.gone) { c.fillStyle = '#3a4c56'; c.fillRect(o.x0, o.y - 7, o.x1 - o.x0, 14); c.fillStyle = '#4e646e'; c.fillRect(o.x0, o.y - 7, o.x1 - o.x0, 4); c.fillStyle = '#1a262e'; for (let x = o.x0 + 8; x < o.x1 - 4; x += 16) c.fillRect(x, o.y + 7, 6, 4 + (x % 3) * 2); }
+    for (const o of S.things) if (o.k === 'drip' && !o.gone) { c.fillStyle = '#7adff0'; c.beginPath(); c.moveTo(o.x, o.y - 9); c.quadraticCurveTo(o.x + 6, o.y + 2, o.x, o.y + 5); c.quadraticCurveTo(o.x - 6, o.y + 2, o.x, o.y - 9); c.fill(); }
+    // the dark: everything outside the spore's light is black, then the glowing things shine through it
+    const rad = 26 + S.light * 110, gx = S.x, gy = Y;
+    const g = c.createRadialGradient(gx, gy, rad * 0.35, gx, gy, rad); g.addColorStop(0, 'rgba(4,10,14,0)'); g.addColorStop(1, `rgba(4,10,14,${0.93 - sky * 0.8})`);
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    if (sky > 0) { const sg = c.createLinearGradient(0, 0, 0, H * 0.6); sg.addColorStop(0, `rgba(255,236,170,${sky * 0.85})`); sg.addColorStop(1, 'rgba(255,236,170,0)'); c.fillStyle = sg; c.fillRect(0, 0, W, H); }
+    for (const o of S.things) {
+      if (o.gone) continue;
+      if (o.k === 'mote') { const tw = 0.7 + Math.sin(S.t * 6 + o.x) * 0.3; c.fillStyle = `rgba(160,255,230,${0.25 * tw})`; c.beginPath(); c.arc(o.x, o.y, 9, 0, 7); c.fill(); c.fillStyle = `rgba(230,255,248,${tw})`; c.beginPath(); c.arc(o.x, o.y, 3.2, 0, 7); c.fill(); }
+      if (o.k === 'cap') { c.fillStyle = 'rgba(90,255,224,0.22)'; c.beginPath(); c.arc(o.x, o.y, 16, 0, 7); c.fill(); c.fillStyle = '#f2ead2'; c.fillRect(o.x - 2.5, o.y, 5, 9); c.fillStyle = '#46f2d6'; c.beginPath(); c.ellipse(o.x, o.y, 11, 7, 0, Math.PI, 0); c.fill(); c.fillStyle = '#fffbe0'; for (const dx of [-5, 0, 5]) { c.beginPath(); c.arc(o.x + dx, o.y - 3 - (dx ? 0 : 2), 1.6, 0, 7); c.fill(); } }
+    }
+    // the hero on a glowing spore puff, its own halo
+    c.fillStyle = `rgba(90,255,224,${0.18 + S.light * 0.25})`; c.beginPath(); c.arc(S.x, Y, 22 + Math.sin(S.t * 3) * 2, 0, 7); c.fill();
+    c.fillStyle = 'rgba(220,255,248,0.9)'; for (let k = 0; k < 6; k++) { const a = k * 1.05 + S.t * 0.8; c.beginPath(); c.arc(S.x + Math.cos(a) * 12, Y + 12 + Math.sin(a) * 3, 5, 0, 7); c.fill(); }
+    if (!(S.hurt > 0 && Math.sin(S.t * 30) > 0)) { if (img.complete && img.naturalWidth) c.drawImage(img, S.x - 15, Y - 18, 30, 30); else { c.fillStyle = '#ff9a40'; c.beginPath(); c.arc(S.x, Y - 3, R, 0, 7); c.fill(); } }
+    // the light meter down the right wall
+    c.fillStyle = 'rgba(0,0,0,0.5)'; c.fillRect(W - 14, 30, 7, H - 60); c.fillStyle = S.light < 0.25 ? '#ff8a6a' : '#5affe0'; const lh = (H - 60) * S.light; c.fillRect(W - 14, 30 + (H - 60) - lh, 7, lh);
+    c.textAlign = 'center'; c.font = 'bold 13px sans-serif';
+    for (const p of S.pops) { c.globalAlpha = Math.min(1, p.t * 2); c.fillStyle = p.col; c.fillText(p.txt, p.x, p.y); }
+    c.globalAlpha = 1;
+    if (S.ready > 0 || !S.started) { c.fillStyle = '#5affe0'; c.font = 'bold 24px sans-serif'; c.fillText(S.ready > 0 ? 'READY?' : 'DRAG TO DRIFT!', W / 2, 70); }
+    if (S.over) { c.fillStyle = 'rgba(4,10,14,0.6)'; c.fillRect(0, 0, W, H); c.fillStyle = S.won ? '#fff36b' : '#5affe0'; c.font = 'bold 26px sans-serif'; c.fillText(S.won ? 'DAYLIGHT!' : 'LIGHTS OUT!', W / 2, H / 2 - 12); c.fillStyle = '#fff'; c.font = 'bold 16px sans-serif'; c.fillText(`Score ${Math.floor(S.score)}`, W / 2, H / 2 + 14); }
+    hud.textContent = `⛰️ ${Math.floor(S.h)} m  ⭐ ${Math.floor(S.score)}`;
+  };
+  let last = performance.now(), raf = 0;
+  const loop = (now) => { const dt = Math.min(0.05, (now - last) / 1000); last = now; step(dt); draw(); if (el.isConnected) raf = requestAnimationFrame(loop); };
+  raf = requestAnimationFrame(loop);
+  let closed = false;
+  function close() {
+    if (closed) return; closed = true;
+    cancelAnimationFrame(raf); el.remove();
+    removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true);
+    onDone(Math.floor(S.score));
+  }
+  el.__arcade = { S, start, steer: (x) => { target = x; }, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
+  return el;
+}

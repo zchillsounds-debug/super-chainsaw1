@@ -1048,6 +1048,9 @@ body:has(.wd-ask) .wd-a { visibility: hidden; }
 .arcade.sled { background: linear-gradient(#f4c070, #c8743a); border-color: #fff2b0; box-shadow: 0 0 24px rgba(255,200,90,.5), 0 6px 0 #6a3416; }
 .arcade.sled .arc-top { color: #fff; text-shadow: 0 2px 0 #8a4416; }
 .arcade.sled .arc-tip { color: #fff4e0; }
+.arcade.spore { background: linear-gradient(#1a3a40, #0a1a20); border-color: #5affe0; box-shadow: 0 0 24px rgba(90,255,224,.45), 0 6px 0 #04100e; }
+.arcade.spore .arc-top { color: #c8fff4; text-shadow: 0 2px 0 #04302a; }
+.arcade.spore .arc-tip { color: #bfeee4; }
 .arcade.dive { background: linear-gradient(#3ab0d8, #0e4a7a); border-color: #ffd84d; box-shadow: 0 0 24px rgba(255,216,77,.45), 0 6px 0 #0a2a4a; }
 .arcade.dive .arc-top { color: #fff; text-shadow: 0 2px 0 #0a3a6a; }
 .arcade.dive .arc-tip { color: #e0f8ff; }
