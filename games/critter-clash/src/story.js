@@ -1804,7 +1804,8 @@ function glowcapTalk(S, w, a) {
     'Forager Pim: The lamp-makers up at the night market will want some of these. A glowcap lantern never needs oil!',
     'Forager Pim: Your Glowcap Hat\'s glowing nicely. Hum to it now and then. Odette says it helps. I think Odette is making that up.',
     'Forager Pim: Did you know? A glowcap\'s light shows exactly where the cave will drip next. Critters who eat one dodge the dripstones!',
-  ][Math.floor(Math.random() * 3)]], null, who);
+    save.adv.hat === 'glowcaphat' ? 'Forager Pim: Ooh, you\'re wearing it! Watch the tall moss: shiny critters can\'t resist a glowcap.' : 'Forager Pim: Put your Glowcap Hat on down here and see who comes out of the moss to look. Shiny ones, I bet!',
+  ][Math.floor(Math.random() * 4)]], null, who);
   if (!F.gcap_asked) {
     F.gcap_asked = true; persist(); w.questMarks?.();
     return w.say([
@@ -1820,6 +1821,7 @@ function glowcapTalk(S, w, a) {
   return w.say([
     `Forager Pim: All ${all}! Oh, look at them glow in the basket. My spore box will be full for a whole year.`,
     'Forager Pim: Here. I stitched the biggest cap I ever found onto a felt band. It still glows. It will glow for years!',
+    'Forager Pim: Wear it down here and the glow-lovers come out to look. Shiny critters, I mean! They think you\'re one of them.',
     '{hero} got the Glowcap Hat! 🍄 (☰ → 🎩 Hats)',
     '{hero} got 20 berries! 🍓',
   ], null, who);

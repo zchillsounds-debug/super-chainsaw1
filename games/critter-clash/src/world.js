@@ -4921,7 +4921,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (!F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? null : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m; a.markKind = k;
@@ -4964,7 +4964,7 @@ export class World {
     const W = this.M.wild;
     if (W && this.phase === 'evening' && !ALPHA_TOLD.has('dusk')) { ALPHA_TOLD.add('dusk'); setTimeout(() => this.group && this.S.toast('✨ Dusk! Emberflies come out to glow over the tall grass in the golden evening.'), 1200); }
     const lucky = this.luckyNight(); // rare finds in the isles: lucky starry nights on Starfall, Blowfin swarms in island rain, Skimrays gliding at golden hour on the Bluffs
-    if (W && lucky && !ALPHA_TOLD.has('lucky')) { ALPHA_TOLD.add('lucky'); setTimeout(() => this.group && this.S.toast(this.M.sands ? '☀️ Mirage hour! In the shimmering noon heat, shiny critters are three times as common out on the sands.' : this.key === 'reach' ? '🌈 It\'s raining down below, and the rainbow up here is brighter than ever! Shiny critters are three times as common.' : '🌠 A starry night on Starfall Atoll! Shiny critters are three times as common here tonight.'), 2600); }
+    if (W && lucky && !ALPHA_TOLD.has('lucky')) { ALPHA_TOLD.add('lucky'); setTimeout(() => this.group && this.S.toast(this.key === 'glowhollow' ? '🍄 Your Glowcap Hat glows in the dark! Shiny critters creep out of the moss to look: three times as common here.' : this.M.sands ? '☀️ Mirage hour! In the shimmering noon heat, shiny critters are three times as common out on the sands.' : this.key === 'reach' ? '🌈 It\'s raining down below, and the rainbow up here is brighter than ever! Shiny critters are three times as common.' : '🌠 A starry night on Starfall Atoll! Shiny critters are three times as common here tonight.'), 2600); }
     if (W && this.M.isle && this.rain && !ALPHA_TOLD.has('swarm')) { ALPHA_TOLD.add('swarm'); setTimeout(() => this.group && this.S.toast('🌧️ Island rain! Blowfin swarm into the tall grass to puff up in the puddles.'), 2600); }
     if (W && this.key === 'bluffs' && this.phase === 'evening' && !ALPHA_TOLD.has('glide')) { ALPHA_TOLD.add('glide'); setTimeout(() => this.group && this.S.toast('🌅 Golden hour on the Bluffs: Skimrays ride the evening updrafts.'), 2600); }
     if (W && this.M.sands && this.sandstorm && !ALPHA_TOLD.has('sandswarm')) { ALPHA_TOLD.add('sandswarm'); setTimeout(() => this.group && this.S.toast('🌪️ Sandstorm! Siroccats ride the wind into the dry grass.'), 2600); }
@@ -4997,7 +4997,7 @@ export class World {
   }
 
   // the map's wild critters; after dark the night owls (Hootsy, Squeakwing) come out too, at the map's levels, twice as often; in the golden evening, Emberfly glows over the grass
-  luckyNight() { return this.key === 'atoll' && this.phase === 'night' || this.key === 'reach' && !!this.rainBelow || this.mirageHour(); } // (Rainbow Reach: lucky while it rains down below)
+  luckyNight() { return this.key === 'atoll' && this.phase === 'night' || this.key === 'reach' && !!this.rainBelow || this.mirageHour() || this.key === 'glowhollow' && save.adv.hat === 'glowcaphat'; } // (Rainbow Reach: lucky while it rains down below; R851: Glowcap Hollow while you wear the Glowcap Hat)
   // D3: the Amber Sands' mirage hours: noon to three on a clear day, the heat shimmers and shinies show three times as often
   mirageHour() { const M = this.M; if (!M.sands || M.cave || M.indoor || this.sandstorm || this.phase !== 'day') return false; const h = save.adv.clock ?? worldHour(); return h >= 12 && h < 15; }
   wildList() {
