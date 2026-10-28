@@ -4922,7 +4922,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? null : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? (save.adv.sporeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m; a.markKind = k;

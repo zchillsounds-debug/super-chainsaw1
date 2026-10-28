@@ -1840,7 +1840,7 @@ function sporeDriftTalk(S, w) {
       countUp('spore');
       let prize = 0;
       if (A.sporeDay !== day) { prize = score >= 500 ? 3 : score >= 350 ? 2 : score >= 200 ? 1 : 0; if (prize) { A.sporeDay = day; save.berries = (save.berries || 0) + prize; } }
-      persist(); if (best || prize) reward(2);
+      persist(); w.questMarks?.(); if (best || prize) reward(2);
       w.say([`${score >= 600 ? 'All the way up to the daylight!' : score >= 300 ? 'A lovely long drift!' : 'Pfff! The puff fizzled out.'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`,
         ...(prize ? [`${who}: ${prize} 🍓 from my basket! (One prize a day.)`] : A.sporeDay !== day ? [`${who}: Score 200 or more and I'll share some berries! (One prize a day.)`] : [])]);
     });
