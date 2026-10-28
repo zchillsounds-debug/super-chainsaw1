@@ -482,6 +482,15 @@ export class Screens {
         A.curios ? `And the Mirage Merchant sold you a curio! ${A.curios > 1 ? `${A.curios} of them!` : ''} He brings a new one every day after noon, they say. Or the same one, wearing a disguise.` : "The Mirage Merchant on the Glass Flats has a new curio every day now, once you've bought his turban. A glass lure, a mirror... even bottled heat!",
         "Oh, and Team Battle has a sky button now too, like Quick Battle. A night-time 3-on-3 under the stars. Lovely!",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv41') && !save.news.includes('adv42') && (save.adv.flags.odjournal_done || save.adv.flags.spring_arrive)) { // R853: Glowcap Hollow, Forager Pim, the glowcap power-up, Grit and Sirocco
+      save.news.push('adv42'); persist();
+      const A = save.adv, F = A.flags;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        F.gcap_done ? "{name}! A parcel came up the Sunwell rope this morning: a jar of glowcap spores from a Forager Pim, with a note saying \"thank you for the legwork\". It glows on my desk all night!" : F.hollow_arrive ? "{name}! Odette writes that you squeezed through the crack behind the spring into a hollow full of glowing mushrooms! A Forager Pim lives down there and needs a hand picking them." : F.odjournal_done ? "{name}! Odette says she felt a cold draught from a crack in the spring's east wall. With her lamp cap on, you could squeeze through. She smelled MUSHROOMS." : "{name}! There's more under the Sunwell than a pool, I'm sure of it. Odette is down there mapping every crack.",
+        A.hats?.includes('glowcaphat') ? `And that Glowcap Hat! Pim says shiny critters creep out of the moss to look at it. Wear it in the hollow and see!` : "",
+        F.sirocco4_done ? "Grit walks out to the Sun Gate every evening now, to sit with Sirocco and count the stars. Two old Dust Devils, making terrible tea. I think that's lovely." : "",
+        "And a tip from the stadiums: in the Sunwell Grotto, a glowcap mushroom can drop into a fight. Eat it and the dripstones miss you for a while!",
+      ].filter(Boolean)), 600);
     } else if (!g.autoplay && save.news?.includes('adv40') && !save.news.includes('adv41') && (save.adv.flags.gate_open || save.adv.flags.caravan3_done || save.adv.flags.spring_arrive)) { // R840: Sirocco's Amends, CARAVAN RUN, Odette's journal, the grotto
       save.news.push('adv41'); persist();
       const A = save.adv, F = A.flags;
@@ -684,7 +693,7 @@ export class Screens {
         ['Cups', 'Each town\'s stadium holds a cup, and the trials test your Strength, Friendship and Wisdom on the road to the Critter Crown.'],
         ['Berry Centers', 'Rest to heal, swap who leads the way at the Critter Box, leave a critter at the Daycare and blend berry smoothies.'],
         ['The Isles', 'Once you hold the Critter Crown, the Sunny Gull ferry sails from Seashell Town to the Sunscatter Isles: new critters, three island cups and the Gloom Gulls.'],
-        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave.'],
+        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it.'],
         ['After that', 'The Battle Tower, three legendary critters, the weekly Masters, the Kite Glider\'s hidden spots, pearls, dives and more. The Champ page keeps track.'],
         ['100%', 'Records shows how much of Clashara, the isles (and later the Amber Sands) you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
       ]],
