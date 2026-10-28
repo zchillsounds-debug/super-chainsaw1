@@ -763,6 +763,16 @@ export class Arena {
         const t = new THREE.CapsuleGeometry(0.4 * sc, 2.6 * sc, 3, 8); t.translate(x, 1.5 * sc, z); trunks.push(t);
         for (const sd of [-1, 1]) if (rand() < 0.7) { const up = (0.9 + rand() * 0.6) * sc, ay = (1 + rand() * 0.8) * sc; const o = new THREE.CapsuleGeometry(0.26 * sc, 0.5 * sc, 3, 6); o.rotateZ(Math.PI / 2); o.translate(x + sd * 0.6 * sc, ay, z); trunks.push(o); const u = new THREE.CapsuleGeometry(0.26 * sc, up, 3, 6); u.translate(x + sd * 0.95 * sc, ay + up / 2, z); trunks.push(u); }
       }
+      // R812: the canyon itself: tall banded red cliffs in a broken ring behind the stands (the Canyon Stadium has no roof; the cliffs
+      // tower over the back wall so the arena reads as a canyon floor from the fight camera). Not behind the camera's gap.
+      const strata = [[], [], []];
+      for (let i = 0; i < 15; i++) {
+        const a = Math.PI * (0.32 + 1.36 * (i + rand() * 0.6) / 15), r = 31 + rand() * 7, w = 4.5 + rand() * 3, h = 15 + rand() * 11, x = Math.sin(a) * r, z = Math.cos(a) * r, ry = rand() * 6;
+        const body = new THREE.CylinderGeometry(w * 0.92, w * 1.08, h, 8); body.rotateY(ry); body.translate(x, h / 2 - 0.5, z); strata[0].push(body);
+        for (const f of [0.38, 0.68]) { const band = new THREE.CylinderGeometry(w * (1.04 - f * 0.12), w * (1.06 - f * 0.12), 1.3 + rand(), 8); band.rotateY(ry); band.translate(x, h * f, z); strata[1].push(band); }
+        const cap = new THREE.CylinderGeometry(w * 0.86, w * 0.94, 1.4, 8); cap.rotateY(ry); cap.translate(x, h + 0.2, z); strata[2].push(cap);
+      }
+      [0xb4482a, 0xe8a070, 0xd06a3e].forEach((col, k) => { const m = inked(mergeGeometries(strata[k]), toon(col, { env: true, rim: 0.25 }), 0.08); m.castShadow = false; m.userData.stadium = true; G.add(m); strata[k].forEach((g) => g.dispose()); });
     }
     else if (A.scenery === 'dunes') {
       // long golden dunes with a sharp crest, rolling away on every side, and a few dry bushes nearer the bowl
