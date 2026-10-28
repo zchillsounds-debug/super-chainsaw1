@@ -1544,6 +1544,7 @@ export const SHOP_HATS = [
   { id: 'palmangler', name: 'Palm Angler Hat', kind: 'bucket', col: 0x2aa8a0, band: 0xf2c46a, price: 0, gift: true, extra: true }, // Pool Angler Layla at Sunwell Oasis: all four oasis fish
   { id: 'minerhelm', name: "Salt Miner's Helmet", kind: 'helm', col: 0xf4ecd8, band: 0xffd84d, price: 0, gift: true, extra: true }, // R815: the salt road (Salt Miner Hamid, the Glass Flats)
   { id: 'mirageturban', name: 'Mirage Turban', kind: 'turban', col: 0xeef6ff, band: 0x5ac8e8, price: 0, gift: true, extra: true }, // R814: the Mirage Merchant on the Glass Flats (mirage hours only)
+  { id: 'lampcap', name: "Spelunker's Lamp Cap", kind: 'lampcap', col: 0xffbe2a, band: 0xe8f8ff, price: 0, gift: true, extra: true }, // R833: Spelunker Odette's favour (her cave journal, found on Redrock Mesa)
   { id: 'dewcirclet', name: 'Dewdrop Circlet', kind: 'circlet', col: 0xcfe8f4, band: 0x3ac8e8, price: 0, gift: true, extra: true }, // R829: the Sunwell Spring's chest
   { id: 'guildfez', name: 'Caravan Guild Fez', kind: 'fez', col: 0xa8243a, band: 0xffc23a, price: 0, gift: true, extra: true }, // R828: five full days of the Caravan Guild's bounty board
   { id: 'lanternhat', name: 'Paper Lantern Hat', kind: 'lantern', col: 0xffa040, band: 0xd83a3a, price: 0, gift: true, extra: true }, // R820: Lantern Maker Yusra's night market, seven sky lanterns
@@ -1622,6 +1623,16 @@ export function hatModel(cr, kind, col, band) {
     for (let k = 0; k < 9; k++) { const a = k * 2.4, el = 0.35 + (k % 3) * 0.32, d = new THREE.Mesh(new THREE.SphereGeometry(r * 0.07, 6, 5), toon(band)); d.position.set(Math.cos(a) * Math.cos(el) * r * 0.8, Math.sin(el) * r * 0.58, Math.sin(a) * Math.cos(el) * r * 0.8); d.scale.y = 0.5; G.add(d); }
     add(new THREE.SphereGeometry(r * 0.16, 10, 8), M, 0.012).position.set(0, r * 0.12, -r * 0.78);
     for (const sd of [-1, 1]) { const t = add(new THREE.ConeGeometry(r * 0.13, r * 0.5, 4), M, 0.012); t.position.set(sd * r * 0.14, -r * 0.08, -r * 0.92); t.rotation.set(-0.5, 0, sd * 0.45); t.scale.z = 0.4; }
+  }
+  if (kind === 'lampcap') { // R833: a round caving cap with a brim, a chin strap and a glowing lamp up front (Spelunker Odette's)
+    G.position.y -= r * 0.16; G.scale.setScalar(1.12);
+    const dome = add(new THREE.SphereGeometry(r * 0.8, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2)); dome.scale.y = 0.82;
+    add(new THREE.CylinderGeometry(r * 0.94, r * 0.94, r * 0.06, 20), M, 0.012).position.y = r * 0.02;
+    const ridge = new THREE.Mesh(new THREE.BoxGeometry(r * 0.14, r * 0.08, r * 1.3), toon(new THREE.Color(col).multiplyScalar(0.75).getHex())); ridge.position.y = r * 0.62; ridge.scale.y = 1; G.add(ridge);
+    const house = add(new THREE.CylinderGeometry(r * 0.2, r * 0.24, r * 0.22, 14), toon(0x4a4a52), 0.012); house.rotation.x = Math.PI / 2; house.position.set(0, r * 0.38, r * 0.76);
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(r * 0.17, 16), toon(band, { rim: 1, emissive: new THREE.Color(band).multiplyScalar(0.8).getHex() })); lens.position.set(0, r * 0.38, r * 0.875); G.add(lens);
+    const beam = new THREE.Mesh(new THREE.ConeGeometry(r * 0.42, r * 1.1, 14, 1, true), new THREE.MeshBasicMaterial({ color: band, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide })); beam.rotation.x = -Math.PI / 2; beam.position.set(0, r * 0.38, r * 1.42); G.add(beam);
+    for (const sd of [-1, 1]) { const s = new THREE.Mesh(new THREE.TorusGeometry(r * 0.3, r * 0.03, 4, 10, Math.PI * 0.6), toon(0x5a3a22)); s.position.set(sd * r * 0.8, -r * 0.18, 0); s.rotation.set(0, Math.PI / 2, -Math.PI / 2 - sd * 0.3); G.add(s); }
   }
   if (kind === 'fez') { // R828: a tall felt fez with a gold tassel on a cord (the Caravan Guild's seal of trust)
     G.position.y -= r * 0.12;

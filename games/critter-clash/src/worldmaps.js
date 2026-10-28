@@ -1259,7 +1259,7 @@ export const MAPS = {
     signs: [{ x: 10, y: 1, text: '', hide: true, act: 'wellrope' }, { x: 14, y: 2, text: 'Old letters on a wet stone: "THE SUNWELL NEVER RUNS DRY. ITS WATER WALKS UNDER THE SANDS FROM THE CITY OF THE SUN."' }],
     wild: { list: [['humpdrop', 35, 38], ['scarabold', 35, 38], ['blowfin', 35, 38], ['squeakwing', 35, 38]], roam: 2, rate: 0.1 },
     npcs: [
-      { id: 'odette_w', x: 17, y: 3, act: 'read', critter: 'humpdrop', name: 'Spelunker Odette', dir: 'w', lines: [
+      { id: 'odette_w', x: 17, y: 3, act: 'read', critter: 'humpdrop', name: 'Spelunker Odette', dir: 'w', story: 'lost:odjournal', lines: [
         "Spelunker Odette: You climbed down the WELL? Ha! Me too. Bram thinks I'm out buying dates.",
         "Spelunker Odette: Feel how cool it is down here! The spring glows all night and all day. Something in the water shines.",
         "Spelunker Odette: There are fish in that pool with no eyes at all. They carry their own little lights instead. Bring a rod!",

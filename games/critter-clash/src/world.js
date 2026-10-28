@@ -145,7 +145,7 @@ export const LANDMARKS = [
 const ALBUM_KEY = 'critterclash-album';
 export function albumGet() { try { return JSON.parse(localStorage.getItem(ALBUM_KEY)) || {}; } catch (e) { return {}; } }
 function albumPut(id, url) { const a = albumGet(); a[id] = url; try { localStorage.setItem(ALBUM_KEY, JSON.stringify(a)); } catch (e) { /* full or blocked: the album just stays as it was */ } }
-export const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, ball: { map: 'route1', x: 7, y: 9 }, phones: { map: 'ember', x: 23, y: 1 }, blink: { map: 'route2', x: 12, y: 10 }, cocomug: { map: 'palmpath', x: 30, y: 3 }, pebble: { map: 'ashtrail', x: 26, y: 3 }, kitetail: { map: 'atoll', x: 15, y: 3 } };
+export const LOST_SPOTS = { kite: { map: 'frostpeak', x: 22, y: 10 }, camera: { map: 'cinder', x: 28, y: 2 }, pearl: { map: 'route2', x: 27, y: 7 }, carrot: { map: 'cloudtop', x: 16, y: 9 }, binos: { map: 'glowwood', x: 11, y: 10 }, can: { map: 'route1', x: 4, y: 21 }, ball: { map: 'route1', x: 7, y: 9 }, phones: { map: 'ember', x: 23, y: 1 }, blink: { map: 'route2', x: 12, y: 10 }, cocomug: { map: 'palmpath', x: 30, y: 3 }, pebble: { map: 'ashtrail', x: 26, y: 3 }, kitetail: { map: 'atoll', x: 15, y: 3 }, odjournal: { map: 'mesa', x: 21, y: 7 } };
 
 const STEP = 0.23; // seconds per tile
 const ALPHA_TOLD = new Set(); // Alphas already announced this session
@@ -3733,6 +3733,16 @@ export class World {
         const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff8a3a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.7 }); sm.userData.own = true;
         const sp = new THREE.Sprite(sm); sp.scale.setScalar(1.1); g.add(sp);
         g.position.set(px, 0.2, pz + 0.3); g.scale.setScalar(1.4);
+      } else if (id === 'odjournal') { // R833: Odette's cave journal, blown open against a rock on the mesa, its pages flapping, a pencil beside it
+        const cover = toon(0x7a4a2a), page = toon(0xf8f0dc);
+        for (const sd of [-1, 1]) {
+          const c = inked(new THREE.BoxGeometry(0.42, 0.04, 0.56), cover, OL * 0.25); c.position.set(sd * 0.22, 0.03, 0); c.rotation.z = -sd * 0.12; g.add(c);
+          const pg = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.05, 0.5), page); pg.position.set(sd * 0.2, 0.07, 0); pg.rotation.z = -sd * 0.12; g.add(pg);
+          for (let k = 0; k < 4; k++) { const ln = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.005, 0.02), toon(0x5a6a8a)); ln.position.set(sd * 0.2, 0.1 + sd * 0.0, -0.16 + k * 0.1); ln.rotation.z = -sd * 0.12; g.add(ln); }
+        }
+        const flap = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.48), toon(0xfffaf0, { side: THREE.DoubleSide })); flap.position.set(0.05, 0.25, 0); flap.rotation.set(-Math.PI / 2, 0.9, 0); flap.userData.flap = true; g.add(flap);
+        const pen = inked(new THREE.CylinderGeometry(0.025, 0.025, 0.5, 6), toon(0xffc83a), OL * 0.2); pen.rotation.set(Math.PI / 2, 0, 0.6); pen.position.set(0.55, 0.04, 0.18); g.add(pen);
+        g.position.set(px, 0.02, pz + 0.3); g.rotation.y = 0.3; g.scale.setScalar(1.5);
       } else if (id === 'kitetail') { // a long rainbow ribbon tangled on the ground by a palm
         const cols = [0xff4a4a, 0xff9a3a, 0xffd84d, 0x5ad86a, 0x4aa8ff, 0x9a6aff];
         for (let k = 0; k < 12; k++) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.03, 0.12), toon(cols[k % 6])); r.position.set(-1.1 + k * 0.2, 0.05 + Math.abs(Math.sin(k * 0.8)) * 0.12, Math.sin(k * 0.9) * 0.3); r.rotation.y = Math.cos(k * 0.9) * 0.6; g.add(r); }
@@ -5421,7 +5431,7 @@ export class World {
         const P = a.cr.pose; a.cr.resetPose();
         if (a.from) {
           a.moveT -= dt;
-          const k = 1 - Math.max(0, a.moveT) / (a.wild ? STEP * 1.6 : STEP * 1.3), [ax, az] = wpos(...a.from), [bx, bz] = wpos(a.x, a.y);
+          const k = 1 - Math.max(0, a.moveT) / (a.len || (a.wild ? STEP * 1.6 : STEP * 1.3)), [ax, az] = wpos(...a.from), [bx, bz] = wpos(a.x, a.y);
           a.root.position.set(ax + (bx - ax) * k, 0, az + (bz - az) * k);
           walkPose(P, this.t + (a.wild ? 0.5 : 0));
           if (a.moveT <= 0) { a.from = null; this.setPos(a); if (a.arrived) { const f = a.arrived; a.arrived = null; f(); } }
@@ -5455,6 +5465,7 @@ export class World {
         a.root.rotation.y = turnTo(a.root.rotation.y, YAW[a.dir], dt * 10);
       }
       if (this.busy || this.dialog || a.from || a.walking) continue;
+      if (a.n?.id === 'wanted' && this.outlawRun(a)) continue;
       // wandering: town folk shuffle near home; wild critters roam their grass
       a.wanderT -= dt;
       if ((a.n?.wander && !this.dozing(a.n) || a.wild && !a.alpha && this.phase !== 'night') && a.wanderT <= 0) {
@@ -5853,6 +5864,46 @@ export class World {
     if (!ok.length) return [];
     const [x, y] = ok[hash(W.flag + this.key) % ok.length];
     return [{ id: 'wanted', x, y, critter: W.id, name: 'Outlaw ' + W.nick, dir: 's', story: 'wanted', act: 'hop', lv: 30, lines: [] }];
+  }
+
+  // R832: today's outlaw won't just stand there: when the hero gets close it bolts a few tiles (three times, then it's out of puff)
+  outlawRun(a) {
+    if (a.flee?.length) {
+      const [nx, ny] = a.flee.shift();
+      if (this.occupied(nx, ny, a)) { a.flee = null; return false; }
+      a.dir = nx > a.x ? 'e' : nx < a.x ? 'w' : ny > a.y ? 's' : 'n';
+      a.from = [a.x, a.y]; a.x = nx; a.y = ny; a.moveT = a.len = STEP * 0.62;
+      if (Math.random() < 0.5) this.g.fx.burst({ x: a.root.position.x, y: 0.2, z: a.root.position.z }, { n: 4, speed: 0.8, up: 0.8, color: 0xe8cc98, size: 0.22, life: 0.45, grav: 2, drag: 2 });
+      return true;
+    }
+    a.len = null;
+    if (a.runs >= 3 && Math.random() < 0.012) this.g.fx.text?.({ x: a.root.position.x + 0.4, y: 2.2, z: a.root.position.z }, '💦', 'zz', 0.9); // out of puff
+    if ((a.runs || 0) >= 3 || Math.max(Math.abs(a.x - this.hx), Math.abs(a.y - this.hy)) > 2) return false;
+    // flee: the reachable tile 3-5 steps off that ends furthest from the hero
+    const seen = new Map([[a.x + ',' + a.y, null]]), q = [[a.x, a.y, 0]], ends = [];
+    while (q.length) {
+      const [x, y, d] = q.shift();
+      if (d >= 3) ends.push([x, y, d]);
+      if (d >= 5) continue;
+      for (const [dx, dy] of Object.values(DIRS)) {
+        const nx = x + dx, ny = y + dy, k = nx + ',' + ny;
+        if (seen.has(k) || nx < 2 || ny < 2 || nx >= this.W - 2 || ny >= this.H - 2 || !this.walkable(nx, ny) || this.occupied(nx, ny, a) || this.tile(nx, ny) === '"' || this.doors.some((o) => o.x === nx && o.y + 1 === ny)) continue;
+        seen.set(k, x + ',' + y); q.push([nx, ny, d + 1]);
+      }
+    }
+    const far = (e) => Math.abs(e[0] - this.hx) + Math.abs(e[1] - this.hy);
+    const score = (e) => far(e) - Math.max(0, Math.abs(e[1] - this.hy) - 2) * 1.5; // (sideways beats up/down: short landscape screens lose it off the top)
+    const best = ends.filter((e) => far(e) >= 4).sort((p, r) => score(r) - score(p) || p[2] - r[2])[0];
+    a.runs = (a.runs || 0) + 1;
+    const p = a.root.position;
+    if (!best) { a.runs = 3; return false; } // boxed in: it gives up
+    const path = []; for (let k = best[0] + ',' + best[1]; seen.get(k); k = seen.get(k)) path.unshift(k.split(',').map(Number));
+    a.flee = path; a.excl = 0.6;
+    this.g.fx.text?.({ x: p.x, y: 2.4, z: p.z }, a.runs >= 3 ? '!!' : '!', 'bolt', 0.7);
+    sfx.whoosh?.(1.3);
+    if (a.runs === 1) this.S.toast(`🤠 ${a.n.name} bolts! Corner it — it can't run forever.`);
+    else if (a.runs === 3) setTimeout(() => this.group && this.S.toast(`💦 ${a.n.name} is out of puff!`), 900);
+    return true;
   }
 
   traderSpot() {

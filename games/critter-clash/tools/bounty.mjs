@@ -36,7 +36,7 @@ for (const m of ['duneroad', 'redrock', 'flats', 'dunecamp']) {
   const o = await pg.evaluate(() => { const o = __game.screens.worldObj, a = o.npcs.find((q) => q.n.id === 'wanted'); return a ? { x: a.x, y: a.y, name: a.n.name } : null; });
   if (!o) continue;
   console.log('outlaw on', m, JSON.stringify(o));
-  await pg.evaluate(([x, y]) => { const o = __game.screens.worldObj; o.hx = x; o.hy = y + 1; o.dir = 'n'; o.placeHero(); __sim(1.5); }, [o.x, o.y]);
+  await pg.evaluate(([x, y]) => { const o = __game.screens.worldObj; o.npcs.find((q) => q.n.id === 'wanted').runs = 3; o.hx = x; o.hy = y + 1; o.dir = 'n'; o.placeHero(); __sim(1.5); }, [o.x, o.y]); // (R832: out of puff, so it stays put)
   await shot('outlaw');
   await pg.evaluate(() => { __game.screens.worldObj.tapA = true; __sim(0.4); });
   for (let k = 0; k < 6 && !(await pg.evaluate(() => !!__game.battle)); k++) await pg.evaluate(() => { __game.screens.worldObj.tapA = true; __sim(0.8); });

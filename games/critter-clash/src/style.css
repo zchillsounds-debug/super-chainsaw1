@@ -249,6 +249,7 @@ div.portrait > img { width: 118%; margin: -6% 0 0 -9%; display: block; }
 .fxtext.dizzy { font-size: 32px; color: #ffd23f; }
 .fxtext.zz { font-size: 22px; color: #d8ccff; }
 .fxtext.zzz { font-size: 26px; color: #b8d8ff; font-style: italic; }
+.fxtext.bolt { font-size: 28px; color: #ff8a2a; font-weight: 900; text-shadow: 0 0 3px #fff, 0 2px 0 #6a2a00; }
 .fxtext.heart { font-size: 22px; color: #ff6aa8; text-shadow: 0 0 3px #fff; }
 
 /* ---------- touch controls ---------- */

@@ -1123,6 +1123,16 @@ const LOST = {
     done: ['Kite Kid Mele: MY TAIL! You brought it all the way back from Starfall?', 'Mele ties the ribbon on, and the kite shoots up into the wind, straight and steady.', 'Kite Kid Mele: Wheee! Here, my kite money. You earned it!', '{hero} got 3 berries! 🍓'],
   },
 
+  // ---- R833: Spelunker Odette (the Sunwell Spring) lost her cave journal on Redrock Mesa: the Spelunker's Lamp Cap. An Amber Sands extra ----
+  odjournal: {
+    who: 'Spelunker Odette', item: 'cave journal', berries: 10, snack: true, hat: 'lampcap', extra: true, toast: '📓', hint: 'blown off the top of Redrock Mesa?', home: 'the Sunwell Spring', needs: 'cup_canyon',
+    ask: ['Spelunker Odette: You there! You get around, don\'t you? I have lost something terrible. My CAVE JOURNAL.', 'Spelunker Odette: Every cave I ever crawled into, mapped in pencil. The Sunwell, the canyon caves, even a sketch of the Buried City\'s door!', 'Spelunker Odette: I was up on Redrock Mesa, drawing the canyon from above, and a gust snatched it right out of my hands. It went flapping off along the cliff top.', 'Spelunker Odette: Brown leather, falling apart. If you ride Bo\'s rope lift up to the mesa, could you look?'],
+    wait: ['Spelunker Odette: Any sign of my journal? It blew off the top of Redrock Mesa. Liftkeeper Bo\'s rope lift goes up there from the canyon.', 'Spelunker Odette: (She\'s drawing a new map on the back of a date wrapper. It isn\'t going well.)'],
+    found: ['A battered leather notebook is wedged against a rock at the mesa\'s east edge, its pages flapping in the wind.', 'Inside are caves and more caves, drawn in tiny careful pencil. The last page just says "SPRING. GLOWS. WHY??"', 'Spelunker Odette down the Sunwell will be so relieved!'],
+    done: ['Spelunker Odette: My JOURNAL! Oh, oh, every page is still here. Even the one with the jam stain.', 'Spelunker Odette: You know what? A real explorer should have a real lamp. Take my spare cap. The lamp never goes out: it\'s got a sliver of spring-glow in it.', '{hero} got the Spelunker\'s Lamp Cap! 🔦 (☰ → 🎩 Hats)', '{hero} got 10 berries and a Power Snack! 🍓⭐'],
+    later: ['odjournal_done', ['Spelunker Odette: I\'ve started a new page: "THE SPRING GLOWS BECAUSE OF THE LOACHES." Or the loaches glow because of the spring? More research needed.', 'Spelunker Odette: That lamp cap suits you. Hold it near the pool and the spring glows back!']],
+  },
+
   // ---- M3: Hana's Kite Glider, a chain that crosses both regions (Bluffs → Cloudtop → Neon City → Bluffs); the glider rides the cliff updrafts ----
   glidesketch: {
     who: 'Kitemaker Hana', item: 'glider sketch', berries: 3, toast: '📜', home: 'Breezy Bluffs', needs: 'cup_gale', to: { npc: 'kite', map: 'cloudtop', name: 'Kite Flyer Gale', home: 'Cloudtop Gardens' },
