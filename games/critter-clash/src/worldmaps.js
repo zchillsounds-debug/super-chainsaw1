@@ -1228,7 +1228,7 @@ export const MAPS = {
   wellspring: {
     name: 'Sunwell Spring',
     music: 'cave',
-    arena: 'canyon',
+    arena: 'grotto', // R834: its own cave arena (was the canyon's open field)
     sands: 'spring',
     extra: true,
     cave: true,

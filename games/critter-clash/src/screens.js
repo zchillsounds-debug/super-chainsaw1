@@ -117,6 +117,7 @@ const HOME = {
   beach: '🐚', beach_: 'scuttles back into the dunes', volcano: '🌋', volcano_: 'dashes off into the ash',
   neon: '🌃', neon_: 'zips off down a neon alley', frost: '❄️', frost_: 'slides away into the snow', sky: '☁️', sky_: 'floats off into the clouds',
   canyon: '🏜️', canyon_: 'kicks up a puff of sand and darts off over the dunes', saltflat: '🫧', saltflat_: 'shimmers away across the salt like a mirage', // (R822: the Amber Sands)
+  grotto: '💧', grotto_: 'splashes off into the glowing pool', // (R834: the Sunwell Spring)
 };
 
 // Adventure play time (save.adv.time, seconds the world was open): '45m', '3h 05m'
@@ -1839,7 +1840,7 @@ export class Screens {
 
   // a fight from the world: wild critters, trainers and story battles
   worldFight(info) {
-    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = info.arena || this.worldObj?.M.arena || 'meadow', place = info.stadium ? null : this.worldObj?.M.name, phase = this.worldObj?.phase, rain = this.worldObj?.rain, sandstorm = info.sandstorm ?? !!this.worldObj?.sandstorm; // (the Desert Trial picks its own arena and weather)
+    const g = this.game, h = heroDef(), lv = save.critters[h.id].level, arena = info.arena || this.worldObj?.M.arena || 'meadow', place = info.stadium ? null : this.worldObj?.M.name, cave = arena === 'grotto', phase = cave ? 'day' : this.worldObj?.phase, rain = !cave && this.worldObj?.rain, sandstorm = info.sandstorm ?? (!cave && !!this.worldObj?.sandstorm); // (R834: no sky in the grotto) // (the Desert Trial picks its own arena and weather)
     this.ctx = { kind: 'world', fight: info.kind, flag: info.flag, name: info.name, note: info.note, recruit: info.recruit, berries: info.berries, shiny: info.shiny, arena, rain, sandstorm };
     this.leaveWorld();
     this.mode = 'vs';

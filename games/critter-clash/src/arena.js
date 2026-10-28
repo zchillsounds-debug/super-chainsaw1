@@ -39,6 +39,16 @@ export const ARENAS = {
     accent: 0x5ac8e8, seat: [0xe8e0cc, 0x5ac8e8, 0xfff8ec, 0xd8c8a4],
     hill: 0xe4d8c0, trunk: 0xfaf6ee, leaves: [0xe0c8a0, 0xd4b890, 0xead6b0], scenery: 'saltflat', cloud: 0xffffff, cloudShade: 0xa8b0c8, sunI: 1.9,
   },
+  grotto: { // R834: the Sunwell Spring's cave (its wild fights only): wet slate flagstones with glowing pools, dark rock walls all round, spring
+    // crystals, a shaft of daylight down the well and motes of spring-glow drifting up. A cave has no sky, so world fights skip the clock's tint (cave: true)
+    name: 'Sunwell Grotto', cave: true,
+    skyTop: 0x050e14, skyHorizon: 0x163a46, sun: 0xd8f6ff, sunDir: [0.15, 1, 0.25],
+    hemiSky: 0xbaf0fa, hemiGround: 0x4a6872, fieldA: '#7a9096', fieldB: '#72888e', line: '#8af0ff', floor: 'stone',
+    wallA: 0x3a5a66, wallB: 0x8ad8e8, ground: 0x34444c, fog: 0x0c1c24, fogNear: 40, fogFar: 140,
+    accent: 0x3ae8e0, seat: [0x3a5a66, 0x2ad8d0, 0x8a9aa0, 0x5a7078],
+    hill: 0x24343c, trunk: 0x4a5c66, leaves: [0x52666e, 0x485c64, 0x5c7078], scenery: 'grotto', cloud: 0x2a3a44, cloudShade: 0x0a1418, sunI: 2.3,
+    drift: 'motes',
+  },
   dunes: { // Chapter 3: the Sandstorm Dome, the Sandstorm Cup's stadium out on the dunes (a sail-cloth dome on tall poles, sand on the wind)
     name: 'Sandstorm Dome',
     skyTop: 0x5a8ad0, skyHorizon: 0xf0c890, sun: 0xffe8c0, sunDir: [-0.4, 0.7, -0.5],
@@ -239,6 +249,26 @@ export class Arena {
           }
           c.restore();
         }
+      } else if (A.floor === 'stone') {
+        // R834: wet slate flagstones (irregular slabs, dark grout), a sheen of water, and glowing spring pools
+        c.fillStyle = '#4a5a60'; c.fillRect(0, 0, w, h);
+        const S = 70;
+        for (let y = -S; y < h + S; y += S) for (let x = -S + ((y / S) % 2 ? S / 2 : 0); x < w + S; x += S) {
+          const j = () => (Math.random() - 0.5) * 14, g = 4;
+          const pts = [[x + g + j(), y + g + j()], [x + S - g + j(), y + g + j()], [x + S - g + j(), y + S - g + j()], [x + g + j(), y + S - g + j()]];
+          const v = Math.random(); c.fillStyle = v < 0.33 ? A.fieldA : v < 0.66 ? A.fieldB : '#86989c';
+          c.beginPath(); pts.forEach(([px, py]) => c.lineTo(px, py)); c.closePath(); c.fill();
+          c.strokeStyle = 'rgba(200,240,250,0.12)'; c.lineWidth = 3; c.beginPath(); c.moveTo(...pts[0]); c.lineTo(...pts[1]); c.stroke(); // a wet top edge
+          if (Math.random() < 0.25) { c.strokeStyle = 'rgba(20,30,36,0.5)'; c.lineWidth = 2; c.beginPath(); c.moveTo(x + S * 0.3, y + S * 0.3); c.lineTo(x + S * 0.5 + j(), y + S * 0.55 + j()); c.lineTo(x + S * 0.7, y + S * 0.6 + j()); c.stroke(); }
+        }
+        for (let i = 0; i < 7; i++) { // glowing spring pools (puddles in the dips between the slabs)
+          const a = Math.random() * 6.28, r = w * (0.08 + Math.random() * 0.34), x = w / 2 + Math.cos(a) * r, y = h / 2 + Math.sin(a) * r, R = 40 + Math.random() * 40;
+          const gr = c.createRadialGradient(x, y, 0, x, y, R * 1.8); gr.addColorStop(0, 'rgba(140,255,245,0.8)'); gr.addColorStop(0.45, 'rgba(70,220,225,0.45)'); gr.addColorStop(1, 'rgba(40,160,180,0)');
+          c.fillStyle = gr; c.beginPath(); c.ellipse(x, y, R * 1.8, R * 1.3, Math.random() * 3, 0, 6.28); c.fill();
+          c.fillStyle = 'rgba(170,255,250,0.75)'; c.beginPath(); c.ellipse(x, y, R, R * 0.7, Math.random() * 3, 0, 6.28); c.fill();
+        }
+        for (let i = 0; i < 4000; i++) { c.globalAlpha = 0.06 + Math.random() * 0.1; c.fillStyle = Math.random() < 0.5 ? '#c8e8f0' : '#1a242a'; c.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+        c.globalAlpha = 1;
       } else if (A.floor === 'salt') {
         // R821: a salt crust: a jittered honeycomb of plates, each a touch brighter or duller, with raised white ridges and a soft shadow
         c.fillStyle = A.fieldA; c.fillRect(0, 0, w, h);
@@ -827,6 +857,22 @@ export class Arena {
       const mm = new THREE.MeshBasicMaterial({ color: 0x8ad0ff, transparent: true, opacity: 0.26, depthWrite: false, fog: false });
       const mirage = new THREE.Mesh(mergeGeometries(town), mm); town.forEach((g) => g.dispose()); this.mirage = mirage; G.add(mirage);
     }
+    else if (A.scenery === 'grotto') {
+      // R834: the cave: a ring of tall, jagged rock walls closing in, stalagmites, glowing spring crystals and a shaft of daylight from the well
+      for (let i = 0; i < 40; i++) {
+        const a = (i / 40) * Math.PI * 2 + rand() * 0.12, r = 30 + rand() * 12, hh = 14 + rand() * 22, g = new THREE.IcosahedronGeometry(1, 1);
+        g.scale(5 + rand() * 4, hh, 5 + rand() * 4); g.rotateY(rand() * 6); g.translate(Math.cos(a) * r, hh * 0.35, Math.sin(a) * r); tops[i % 3].push(g);
+      }
+      for (let i = 0; i < 26; i++) { const a = rand() * Math.PI * 2, r = 19 + rand() * 10, hh = 1.5 + rand() * 4, g = new THREE.ConeGeometry(0.5 + rand() * 0.7, hh, 7); g.translate(Math.cos(a) * r, hh / 2, Math.sin(a) * r); trunks.push(g); }
+      const cry = [];
+      for (let i = 0; i < 18; i++) {
+        const a = rand() * Math.PI * 2, r = 17 + rand() * 12, x = Math.cos(a) * r, z = Math.sin(a) * r;
+        for (let k = 0; k < 4; k++) { const L = 1 + rand() * 1.8, g = new THREE.OctahedronGeometry(0.35, 0); g.scale(0.6, L * 1.6, 0.6); g.rotateZ((rand() - 0.5) * 0.9); g.rotateX((rand() - 0.5) * 0.9); g.translate(x + (rand() - 0.5) * 0.9, L * 0.4, z + (rand() - 0.5) * 0.9); cry.push(g); }
+      }
+      G.add(new THREE.Mesh(mergeGeometries(cry), new THREE.MeshBasicMaterial({ color: 0x7af8f0 }))); cry.forEach((g) => g.dispose());
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 9, 40, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xd8f8ff, transparent: true, opacity: 0.07, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false }));
+      shaft.position.y = 20; this.shaft = shaft; G.add(shaft);
+    }
     else if (A.scenery === 'mushrooms') {
       // a ring of giant toadstools with white spots, plus small glowing caps along the outer wall
       const spots = [], glow = [];
@@ -1244,6 +1290,7 @@ export class Arena {
       seeds:  { n: 160, size: 0.4, vy: 0.25, wind: 0.6, inner: 'rgba(255,255,250,1)', outer: 'rgba(255,255,240,0)', add: false, cap: 8 },
       embers: { n: 260, size: 0.5, vy: 1.4, wind: 0.3, inner: 'rgba(255,240,180,1)', outer: 'rgba(255,90,20,0)', add: true },
       sand:   { n: 420, size: 0.28, vy: -0.15, wind: 4.5, inner: 'rgba(250,224,170,1)', outer: 'rgba(230,190,120,0)', add: false, cap: 7 },
+      motes:  { n: 240, size: 0.42, vy: 0.35, wind: 0.25, inner: 'rgba(200,255,250,1)', outer: 'rgba(80,230,230,0)', add: true, cap: 9 }, // R834: spring-glow in the grotto
       petals: { n: 200, size: 0.5, vy: -0.6, wind: 0.8, inner: 'rgba(255,190,220,1)', outer: 'rgba(255,150,200,0)', add: false },
     }[kind];
     const n = K.n, pos = new Float32Array(n * 3);
@@ -1288,6 +1335,7 @@ export class Arena {
   }
 
   update(dt, t) {
+    if (this.shaft) this.shaft.material.opacity = 0.065 + Math.sin(t * 0.9) * 0.02; // R834: the grotto's light shaft breathes
     if (this.mirage) { this.mirage.material.opacity = 0.2 + Math.sin(t * 1.7) * 0.07; this.mirage.scale.y = 1 + Math.sin(t * 2.3) * 0.04; } // R821: the Glass Flats' mirage town wobbles
     this.sky.material.uniforms.uTime.value = t;
     if (this.snow) {

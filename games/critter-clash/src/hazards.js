@@ -21,6 +21,7 @@ export const HAZARDS = {
   canyon:  { name: 'Falling rocks', color: 0xc8402a, solid: true, glow: 0xffe0b0, r: 1.1, warn: 1.25, dmg: 9, stun: 0.6, kb: 3.2, word: 'CRUNCH!' }, // Chapter 3: Redrock Canyon
   dunes:   { name: 'Sand twisters', color: 0xb8742a, solid: true, glow: 0xffe0a0, r: 1.2, warn: 1.35, dmg: 6, lift: 6.5, kb: 2.2, dizzy: 30, word: 'WHIRL!' }, // Chapter 3: the Sandstorm Dome
   saltflat: { name: 'Brine vents', color: 0x3a8ab8, glow: 0xffffff, r: 1.15, warn: 1.35, dmg: 6, lift: 7, kb: 1.6, word: 'HISS!' }, // R823: the Glass Flats (wild fights): the crust cracks and spits hot brine
+  grotto:  { name: 'Dripstones', color: 0x2ab8c0, solid: true, glow: 0x9afff4, r: 1.05, warn: 1.3, dmg: 7, stun: 0.5, kb: 2.6, word: 'PLINK!' }, // R835: the Sunwell Grotto (wild fights): a stalactite with a glowing drop on its tip lets go
   beach:   { name: 'Coconuts', color: 0xe0482a, solid: true, glow: 0xfff2c0, r: 0.9, warn: 1.2, dmg: 7, stun: 0.5, kb: 3, word: 'BONK!' },
 };
 
@@ -86,6 +87,12 @@ function dropMesh(kind) {
     const g = new THREE.Group(), r = inked(new THREE.DodecahedronGeometry(0.42, 0), toon(0xb8583a, { rim: 0.4 }), 0.025);
     r.scale.set(1.15, 0.8, 1); g.add(r);
     const band = new THREE.Mesh(new THREE.DodecahedronGeometry(0.43, 0), toon(0xe0a070)); band.scale.set(1.16, 0.22, 1.01); band.position.y = 0.04; g.add(band);
+    return g;
+  }
+  if (kind === 'grotto') { // R835: a slate-blue stalactite, ringed, with a bead of spring-glow on its point
+    const g = new THREE.Group(), m = inked(new THREE.ConeGeometry(0.26, 1.25, 7), toon(0x5a7480, { rim: 0.5 }), 0.022); m.rotation.x = Math.PI; g.add(m);
+    for (const y of [0.25, -0.05]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.2 + y * 0.2, 0.2 + y * 0.2, 0.06, 7), toon(0x7a96a0)); r.position.y = y; g.add(r); }
+    const d = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 10), new THREE.MeshBasicMaterial({ color: 0x9afff4 })); d.position.y = -0.66; d.scale.y = 1.3; g.add(d);
     return g;
   }
   if (kind === 'frost') {
@@ -420,7 +427,7 @@ export class Hazards {
     B.scene.add(mesh);
     const h = { x, z, t: t0, fired: false, mesh, follow };
     mesh.visible = t0 >= 0;
-    if (B.arena.key === 'frost' || B.arena.key === 'beach' || B.arena.key === 'canyon') {
+    if (B.arena.key === 'frost' || B.arena.key === 'beach' || B.arena.key === 'canyon' || B.arena.key === 'grotto') {
       h.drop = dropMesh(B.arena.key);
       h.drop.position.set(x, 9, z);
       B.scene.add(h.drop);
@@ -521,6 +528,11 @@ export class Hazards {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 22, speed: 4, up: 6, color: 0xe8c488, size: 0.6, life: 0.9, shape: 'puff', additive: false, grav: 2, grow: 1.3, alpha: 0.75 });
       B.fx.burst({ x: h.x, y: 0.6, z: h.z }, { n: 8, speed: 3, up: 7, color: 0xc89048, size: 0.22, life: 0.8, shape: 'star', additive: false, grav: 6, spin: 12 });
       sfx.whoosh?.(1.1);
+    } else if (key === 'grotto') {
+      B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 18, speed: 3.5, up: 7, color: 0x9afff4, size: 0.24, life: 0.7, shape: 'glow', grav: 14 }); // a splash of spring-glow
+      B.fx.burst(p, { n: 10, speed: 4.5, up: 4, color: 0x6a8a96, size: 0.2, life: 0.6, shape: 'star', additive: false, grav: 12, spin: 8 }); // and stone chips
+      B.fx.spawn({ x: h.x, y: 0.06, z: h.z, color: 0xb8fff8, size: H.r * 1.5, life: 0.5, shape: 'ring', grow: 1.6, alpha: 0.8 });
+      sfx.bonk();
     } else if (key === 'canyon') {
       B.fx.burst({ x: h.x, y: 0.3, z: h.z }, { n: 16, speed: 3.5, up: 2.5, color: 0xd8a070, size: 0.7, life: 0.8, shape: 'puff', additive: false, grav: 1, grow: 1.3, alpha: 0.75 });
       B.fx.burst(p, { n: 10, speed: 5, up: 4, color: 0xb8583a, size: 0.22, life: 0.6, shape: 'star', additive: false, grav: 12, spin: 8 });
