@@ -1133,7 +1133,7 @@ export const MAPS = {
   flats: {
     name: 'Glass Flats',
     music: 'sands',
-    arena: 'canyon',
+    arena: 'saltflat',
     sands: 'flats',
     extra: true,
     border: 'mesa',

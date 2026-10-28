@@ -31,6 +31,14 @@ export const ARENAS = {
     accent: 0xffc040, seat: [0xd8643a, 0x2ab0a8, 0xffc040, 0xfff0d8],
     hill: 0xd89a5a, trunk: 0x4a9a4a, leaves: [0xc8704a, 0xb8603a, 0xd8845a], scenery: 'mesas', cloud: 0xfff4e8, cloudShade: 0xb08060, sunI: 2.5,
   },
+  saltflat: { // R821: the Glass Flats' salt lake (its wild fights only): a white honeycomb crust under a pale, hazy sky, a see-through mirage town far off
+    name: 'Glass Flats',
+    skyTop: 0x4a8ae0, skyHorizon: 0xd8e6f6, sun: 0xfff4e4, sunDir: [-0.35, 0.82, 0.4],
+    hemiSky: 0xdce8f6, hemiGround: 0x9a9080, fieldA: '#d8d2c2', fieldB: '#d2ccbc', line: '#ffffff', floor: 'salt',
+    wallA: 0xe8e0cc, wallB: 0xfff8ec, ground: 0xd4cebe, fog: 0xd8e4f2,
+    accent: 0x5ac8e8, seat: [0xe8e0cc, 0x5ac8e8, 0xfff8ec, 0xd8c8a4],
+    hill: 0xe4d8c0, trunk: 0xfaf6ee, leaves: [0xe0c8a0, 0xd4b890, 0xead6b0], scenery: 'saltflat', cloud: 0xffffff, cloudShade: 0xa8b0c8, sunI: 1.9,
+  },
   dunes: { // Chapter 3: the Sandstorm Dome, the Sandstorm Cup's stadium out on the dunes (a sail-cloth dome on tall poles, sand on the wind)
     name: 'Sandstorm Dome',
     skyTop: 0x5a8ad0, skyHorizon: 0xf0c890, sun: 0xffe8c0, sunDir: [-0.4, 0.7, -0.5],
@@ -231,6 +239,23 @@ export class Arena {
           }
           c.restore();
         }
+      } else if (A.floor === 'salt') {
+        // R821: a salt crust: a jittered honeycomb of plates, each a touch brighter or duller, with raised white ridges and a soft shadow
+        c.fillStyle = A.fieldA; c.fillRect(0, 0, w, h);
+        const S = 62, cols = Math.ceil(w / (S * 1.5)) + 2, rows = Math.ceil(h / (S * 1.732)) + 2, jit = {};
+        const J = (i, j, k) => (jit[i + ',' + j + ',' + k] ||= [(Math.random() - 0.5) * 18, (Math.random() - 0.5) * 18]);
+        const corner = (cx, cy, k) => [cx + Math.cos(k * Math.PI / 3) * S, cy + Math.sin(k * Math.PI / 3) * S];
+        const cells = [];
+        for (let i = -1; i < cols; i++) for (let j = -1; j < rows; j++) {
+          const cx = i * S * 1.5, cy = j * S * 1.732 + (i % 2 ? S * 0.866 : 0);
+          const pts = []; for (let k = 0; k < 6; k++) { const [x, y] = corner(cx, cy, k), key = [Math.round(x / 3), Math.round(y / 3)], d = J(key[0], key[1], 0); pts.push([x + d[0], y + d[1]]); }
+          cells.push(pts);
+        }
+        for (const pts of cells) { c.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,0.18)' : 'rgba(150,135,110,0.12)'; c.beginPath(); pts.forEach(([x, y]) => c.lineTo(x, y)); c.closePath(); c.fill(); }
+        c.lineJoin = 'round';
+        for (const [lw, st, oy] of [[9, 'rgba(120,105,85,0.3)', 3], [6, 'rgba(248,246,240,0.9)', 0]]) { c.lineWidth = lw; c.strokeStyle = st; for (const pts of cells) { c.beginPath(); pts.forEach(([x, y]) => c.lineTo(x, y + oy)); c.closePath(); c.stroke(); } }
+        for (let i = 0; i < 5000; i++) { c.globalAlpha = 0.08 + Math.random() * 0.12; c.fillStyle = Math.random() < 0.6 ? '#ffffff' : '#b8a888'; c.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+        c.globalAlpha = 1;
       } else if (A.floor === 'snow') {
         c.fillStyle = A.fieldA; c.fillRect(0, 0, w, h);
         // soft drifts and blue shadows
@@ -517,7 +542,7 @@ export class Arena {
     }
 
     // dirt ring between field and wall
-    const ring = new THREE.Mesh(new THREE.RingGeometry(ARENA_R + 0.5, ARENA_R + 1.4, 72), toon(A.floor === 'neon' ? 0x3a3060 : A.floor === 'moss' ? 0x9a7a58 : 0xd9b07a, { env: true, rim: 0 }));
+    const ring = new THREE.Mesh(new THREE.RingGeometry(ARENA_R + 0.5, ARENA_R + 1.4, 72), toon(A.floor === 'neon' ? 0x3a3060 : A.floor === 'moss' ? 0x9a7a58 : A.floor === 'salt' ? 0xd8ccb4 : 0xd9b07a, { env: true, rim: 0 }));
     ring.rotation.x = -Math.PI / 2; ring.position.y = 0.005; ring.receiveShadow = true;
     G.add(ring);
 
@@ -784,6 +809,23 @@ export class Arena {
         tops[i % 3].push(g);
       }
       for (let i = 0; i < 16; i++) { const a = rand() * Math.PI * 2, r = 30 + rand() * 20, g = new THREE.IcosahedronGeometry(0.7 + rand() * 0.6, 0); g.scale(1, 0.6, 1); g.translate(Math.cos(a) * r, 0.3, Math.sin(a) * r); trunks.push(g); }
+    }
+    else if (A.scenery === 'saltflat') {
+      // R821: far, low pale mesas across the salt, white salt mounds nearer, and a see-through sky-blue mirage town shimmering on the horizon
+      for (let i = 0; i < 16; i++) {
+        const a = rand() * Math.PI * 2, r = 70 + rand() * 50, w = 5 + rand() * 8, h = 3 + rand() * 6;
+        const g = new THREE.CylinderGeometry(w, w * 1.2, h, 7); g.rotateY(rand() * 6); g.translate(Math.cos(a) * r, h / 2 - 0.3, Math.sin(a) * r); tops[i % 3].push(g);
+      }
+      for (let i = 0; i < 22; i++) { const a = rand() * Math.PI * 2, r = 22 + rand() * 26, g = new THREE.ConeGeometry(0.6 + rand() * 0.9, 0.5 + rand() * 0.9, 7); g.translate(Math.cos(a) * r, 0.3, Math.sin(a) * r); trunks.push(g); }
+      const town = [];
+      for (let i = 0; i < 14; i++) {
+        const a = Math.PI * (0.55 + 0.9 * i / 13) + (rand() - 0.5) * 0.08, r = 48 + rand() * 6, x = Math.sin(a) * r, z = Math.cos(a) * r, bw = 2.2 + rand() * 2.5, bh = 3 + rand() * 6;
+        const b = new THREE.BoxGeometry(bw, bh, bw); b.rotateY(-a); b.translate(x, bh / 2 + 0.4, z); town.push(b);
+        if (rand() < 0.5) { const d = new THREE.SphereGeometry(bw * 0.55, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2); d.translate(x, bh + 0.4, z); town.push(d); }
+        else if (rand() < 0.5) { const t = new THREE.CylinderGeometry(0.5, 0.6, bh * 0.7, 8); t.translate(x + bw * 0.4, bh + bh * 0.35 + 0.4, z); town.push(t); }
+      }
+      const mm = new THREE.MeshBasicMaterial({ color: 0x8ad0ff, transparent: true, opacity: 0.26, depthWrite: false, fog: false });
+      const mirage = new THREE.Mesh(mergeGeometries(town), mm); town.forEach((g) => g.dispose()); this.mirage = mirage; G.add(mirage);
     }
     else if (A.scenery === 'mushrooms') {
       // a ring of giant toadstools with white spots, plus small glowing caps along the outer wall
@@ -1246,6 +1288,7 @@ export class Arena {
   }
 
   update(dt, t) {
+    if (this.mirage) { this.mirage.material.opacity = 0.2 + Math.sin(t * 1.7) * 0.07; this.mirage.scale.y = 1 + Math.sin(t * 2.3) * 0.04; } // R821: the Glass Flats' mirage town wobbles
     this.sky.material.uniforms.uTime.value = t;
     if (this.snow) {
       const p = this.snow.geometry.attributes.position, a = p.array;

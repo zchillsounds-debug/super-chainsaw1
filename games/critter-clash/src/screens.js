@@ -116,6 +116,7 @@ const HOME = {
   meadow: '🌿', meadow_: 'scampers back into the grass', grove: '🍄', grove_: 'scurries off under the toadstools',
   beach: '🐚', beach_: 'scuttles back into the dunes', volcano: '🌋', volcano_: 'dashes off into the ash',
   neon: '🌃', neon_: 'zips off down a neon alley', frost: '❄️', frost_: 'slides away into the snow', sky: '☁️', sky_: 'floats off into the clouds',
+  canyon: '🏜️', canyon_: 'kicks up a puff of sand and darts off over the dunes', saltflat: '🫧', saltflat_: 'shimmers away across the salt like a mirage', // (R822: the Amber Sands)
 };
 
 // Adventure play time (save.adv.time, seconds the world was open): '45m', '3h 05m'
@@ -471,6 +472,15 @@ export class Screens {
         F.salt2_done ? "Salt Miner Hamid sent me a little bag of Glass Flats salt, too. On my eggs this morning. Best breakfast of the year!" : "Oh, and if you meet Salt Miner Hamid out there, he needs someone to carry salt to the Dune Camp. The camp salts its dates for the cold nights.",
         "One more thing: Quick Battle has a sky button now! Day, evening, night, rain... and a sandstorm, if you've earned the Sandstorm Cup. Night owls love a night fight.",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv38') && !save.news.includes('adv39') && (save.adv.cnt?.lantern || save.adv.curios)) { // R822: the oasis night market, the merchant's curios, the salt flats
+      save.news.push('adv39'); persist();
+      const A = save.adv;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        A.cnt?.lantern ? `{name}! I saw a little light go up over the Amber Sands last night. Lantern Maker Yusra says it was yours! ${A.cnt.lantern > 1 ? `${A.cnt.lantern} of them now!` : ''}` : "{name}! After sunset, Sunwell Oasis hangs paper lanterns round the pool. A night market! Lantern Maker Yusra lets every visitor send one up.",
+        "Fortune Teller Zara sets up there too. Her Fennzap's big ears hear the future, apparently. She told me I'd find my glasses. They were on my head!",
+        A.curios ? `And the Mirage Merchant sold you a curio! ${A.curios > 1 ? `${A.curios} of them!` : ''} He brings a new one every day after noon, they say. Or the same one, wearing a disguise.` : "The Mirage Merchant on the Glass Flats has a new curio every day now, once you've bought his turban. A glass lure, a mirror... even bottled heat!",
+        "Oh, and Team Battle has a sky button now too, like Quick Battle. A night-time 3-on-3 under the stars. Lovely!",
+      ]), 600);
     } else if (!g.autoplay && save.news?.includes('adv33') && !save.news.includes('adv35') && ((save.adv.fossils || []).length >= 4 || save.adv.flags.caravan3_done || save.adv.flags.buried_vault)) { // Chapter 3 side content (D3)
       save.news.push('adv35'); persist();
       const F = save.adv.flags, nf = (save.adv.fossils || []).length;
@@ -666,7 +676,7 @@ export class Screens {
         ['Training', 'In Challenges: practise moves on a dummy, with the ⚠ Hazards chip to try each stadium\'s tricks.'],
         ['Survival', 'Fight until you fall; damage carries over. Every 5th rival is a shiny ⭐ Gatekeeper: beat it for berries and a full heal. Clearing the Boss Rush pays a berry basket too.'],
         ['Daily', 'A new Daily Challenge every day for double XP; some days it\'s a 3-on-3 team fight. Clear it on back-to-back days for a streak: up to +5 berries a day.'],
-        ['Team Battle', 'Pick three critters against a rival team of three. The winner of each fight stays in with the damage it took.'],
+        ['Team Battle', 'Pick three critters against a rival team of three. The winner of each fight stays in with the damage it took. The modifier and sky chips set all three fights.'],
         ['Trials', 'Earn up to three stars in each stadium\'s hazard trial.'],
         ['Camp', 'Pet your critters to build friendship and feed them berries for XP. Drop by daily for a gift. Best friends (5 hearts) start every battle with some Super.'],
         ['Critterdex', 'Every critter, its forms, moves and where to find it. Beat a shiny to unlock its shiny colours.'],
