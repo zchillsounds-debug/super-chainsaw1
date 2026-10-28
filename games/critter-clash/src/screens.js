@@ -1422,6 +1422,7 @@ export class Screens {
       + bar('🌿', 'Wild critters met', A.cnt?.wild || 0)
       + (A.cnt?.owl ? bar('🦉', 'Night owls met', A.cnt.owl) : '')
       + bar('🗓️', 'Seasons seen', ['spring', 'summer', 'autumn', 'winter'].map((q, i) => (A.seasons?.[q] ? ['🌸', '🌻', '🍂', '❄️'][i] : '·')).join(' '))
+      + (L.mirage ? bar('🫧', 'Heatwave Glassfish', L.mirage + ' cm') : '') // the mirage hours' visitor: no goal either
       + (L.season ? bar('🐠', 'Seasonal fish', Object.entries(SEASON_FISH).map(([, [n, , , em]]) => (L.season[n] ? em : '·')).join(' ')) : '') // no goal: it doesn't count towards completion
       + bar('🕹️', 'TURBO best', A.arcadeHi || 0)
       + bar('🎈', 'SKY HOP best', A.hopHi || 0)

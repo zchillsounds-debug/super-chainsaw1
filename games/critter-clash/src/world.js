@@ -4039,6 +4039,7 @@ export class World {
         box(back ? 'wall' : 'wall2', TILE, h, TILE, px, h / 2, pz);
         box(back || ['arcade', 'lobby'].includes(this.M.indoor) ? 'trim' : 'cap', TILE + 0.02, 0.16, TILE + 0.02, px, h, pz); // the cut walls round the room wear a wooden cap
         if (back) box('base', TILE + 0.01, 0.35, 0.12, px, 0.17, pz + 1.02);
+        if (this.M.indoor === 'tent' && !back && !front && (x === 0 || x === W - 1)) { const sx = px + (x === 0 ? 1 : -1) * (TILE / 2 + 0.02); box('tstripe', 0.04, h - 0.1, TILE / 2, sx, h / 2, pz - TILE / 4); } // canvas stripes down the tent's sides too
         if (back && x > 0 && x < W - 1 && !['arcade', 'lobby', 'forge', 'cabin', 'tent'].includes(this.M.indoor)) { // panelling below a rail, striped wallpaper above
           box('wains', TILE + 0.01, 0.82, 0.06, px, 0.76, pz + 1.03); box('rail', TILE + 0.02, 0.1, 0.11, px, 1.2, pz + 1.04);
           for (const o of [-0.75, -0.25, 0.25, 0.75]) box('stripe', 0.2, 1.95, 0.03, px + o, 2.22, pz + 1.015);
