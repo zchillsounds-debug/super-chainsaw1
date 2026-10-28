@@ -847,3 +847,148 @@ export function sporeDrift(root, face, onDone) {
   el.__arcade = { S, start, steer: (x) => { target = x; }, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
   return el;
 }
+
+// R865: WATERWORKS (Waterwright Osei, the Old Aqueduct, after the Sun Sluice): tap stone channel tiles to turn them and lead the
+// water from the sun-bird spout (left) to the cistern (right). Each board solved scores and adds time; the boards grow harder.
+export function waterworks(root, face, onDone) {
+  const el = document.createElement('div');
+  el.className = 'modal-wrap arcade-wrap';
+  el.innerHTML = `<div class="arcade pipes"><div class="arc-top"><b>WATERWORKS</b><span class="arc-hud"></span></div>
+    <canvas width="${W}" height="${H}"></canvas>
+    <p class="arc-tip">Tap a stone to turn it. Lead the water from the spout to the cistern! Fewer turns score more.</p></div>`;
+  root.appendChild(el);
+  const cv = el.querySelector('canvas'), c = cv.getContext('2d'), hud = el.querySelector('.arc-hud');
+  const img = new Image(); img.src = face;
+  const C = 7, R = 5, T = 34, X0 = (W - C * T) / 2, Y0 = 44; // the grid: 7 × 5 tiles of 34 px
+  const N = 1, E = 2, S_ = 4, Wb = 8, DIR = [[0, -1, N, S_], [1, 0, E, Wb], [0, 1, S_, N], [-1, 0, Wb, E]];
+  const rot = (m) => ((m << 1) | (m >> 3)) & 15;
+  const S = { time: 45, score: 0, boards: 0, moves: 0, grid: [], sol: [], inR: 2, outR: 2, wet: new Set(), flood: 0, pops: [], over: false, ready: 1.2, started: false, t: 0, cur: [3, 2] };
+  const pop = (x, y, txt, col) => S.pops.push({ x, y, txt, col, t: 1 });
+  function newBoard() {
+    const lvl = S.boards; S.inR = Math.floor(Math.random() * R); S.outR = Math.floor(Math.random() * R);
+    // a wandering path from the spout's tile to the cistern's tile (a self-avoiding random walk, longer on later boards)
+    const want = Math.min(C + 10, C + 1 + lvl * 2);
+    let path = null;
+    for (let tries = 0; tries < 400 && !path; tries++) {
+      const p = [[0, S.inR]], seen = new Set(['0,' + S.inR]);
+      while (p.length < 60) {
+        const [x, y] = p[p.length - 1];
+        if (x === C - 1 && y === S.outR) break;
+        const opts = DIR.map(([dx, dy]) => [x + dx, y + dy]).filter(([a, b]) => a >= 0 && b >= 0 && a < C && b < R && !seen.has(a + ',' + b));
+        if (!opts.length) break;
+        opts.sort(() => Math.random() - 0.5);
+        const east = opts.find(([a]) => a > x), pick = p.length < want && Math.random() < 0.6 ? opts[0] : (east && Math.random() < 0.7 ? east : opts[0]);
+        p.push(pick); seen.add(pick.join());
+      }
+      const [lx, ly] = p[p.length - 1];
+      if (lx === C - 1 && ly === S.outR && p.length >= Math.min(want, C + 4) - 2) path = p;
+    }
+    if (!path) { path = []; for (let x = 0; x < C; x++) path.push([x, S.inR]); for (let y = S.inR; y !== S.outR; y += Math.sign(S.outR - S.inR)) path.push([C - 1, y + Math.sign(S.outR - S.inR)]); }
+    const g = Array.from({ length: R }, () => Array(C).fill(0));
+    path.forEach(([x, y], i) => {
+      let m = 0;
+      const nb = [path[i - 1] || [-1, S.inR], path[i + 1] || [C, S.outR]];
+      for (const [a, b] of nb) for (const [dx, dy, bit] of DIR) if (x + dx === a && y + dy === b) m |= bit;
+      if (lvl >= 2 && Math.random() < 0.18) m |= DIR[Math.floor(Math.random() * 4)][2]; // a tee now and then (a spare outlet)
+      g[y][x] = m;
+    });
+    const fill = [5, 3, 3, 6, 7, 5, 9, 11];
+    for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) if (!g[y][x]) g[y][x] = fill[Math.floor(Math.random() * fill.length)];
+    S.sol = g.map((r) => r.slice());
+    S.grid = g.map((r) => r.map((m) => { for (let k = Math.floor(Math.random() * 4); k > 0; k--) m = rot(m); return m; }));
+    S.path = path; S.flood = 0; S.moves = 0;
+    S.need = path.reduce((n, [x, y]) => { let m = S.grid[y][x], k = 0; while (m !== S.sol[y][x] && k < 4) { m = rot(m); k++; } return n + k; }, 0); // the fewest turns that fix it (for the tidy bonus)
+    flow(); if (S.solved) newBoard();
+  }
+  function flow() { // which tiles the water reaches from the spout
+    const wet = new Set(), q = [];
+    if (S.grid[S.inR][0] & Wb) { wet.add('0,' + S.inR); q.push([0, S.inR]); }
+    for (let i = 0; i < q.length; i++) { const [x, y] = q[i], m = S.grid[y][x]; for (const [dx, dy, bit, back] of DIR) { const a = x + dx, b = y + dy; if (!(m & bit) || a < 0 || b < 0 || a >= C || b >= R || wet.has(a + ',' + b) || !(S.grid[b][a] & back)) continue; wet.add(a + ',' + b); q.push([a, b]); } }
+    S.wet = wet; S.solved = wet.has((C - 1) + ',' + S.outR) && !!(S.grid[S.outR][C - 1] & E);
+  }
+  const start = () => { if (S.ready > 0) S.ready = 0; if (!S.started) { S.started = true; sfx.arc('go'); } };
+  function turn(x, y) {
+    if (S.over || S.flood > 0 || x < 0 || y < 0 || x >= C || y >= R) return;
+    start(); S.grid[y][x] = rot(S.grid[y][x]); S.moves++; S.cur = [x, y];
+    flow(); sfx.arc('tick');
+    if (S.solved) { // the water runs through: score, a little time back, then a fresh (harder) board
+      const pts = 40 + S.wet.size * 4 + Math.max(0, S.need + 6 - S.moves) * 3, add = Math.max(1, 6 - S.boards); // (the time back shrinks: 6 s, 5, 4... then 1)
+      S.score += pts; S.boards++; S.time = Math.min(60, S.time + add); S.flood = 0.9;
+      pop(W / 2, Y0 + R * T / 2, `+${pts}  +${add} s`, '#9ff0ff'); sfx.arc('gold'); buzz('light');
+    }
+  }
+  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); const r = cv.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W, py = (e.clientY - r.top) / r.height * H; turn(Math.floor((px - X0) / T), Math.floor((py - Y0) / T)); if (S.ready > 0 || !S.started) start(); });
+  const onKey = (e) => {
+    const mv = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.code];
+    if (!mv && e.code !== 'Space' && e.code !== 'Enter') return;
+    e.preventDefault(); e.stopPropagation(); if (e.type !== 'keydown') return;
+    if (mv) { S.cur = [Math.max(0, Math.min(C - 1, S.cur[0] + mv[0])), Math.max(0, Math.min(R - 1, S.cur[1] + mv[1]))]; start(); } else turn(S.cur[0], S.cur[1]);
+  };
+  addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
+  newBoard();
+  function finish() { if (S.over) return; S.over = true; sfx.arc('time'); setTimeout(close, 2200); }
+  const step = (dt) => {
+    S.t += dt;
+    for (const p of S.pops) { p.t -= dt; p.y -= 20 * dt; }
+    S.pops = S.pops.filter((p) => p.t > 0);
+    if (S.ready > 0) { S.ready -= dt; return; }
+    if (!S.started || S.over) return;
+    if (S.flood > 0) { S.flood -= dt; if (S.flood <= 0) newBoard(); return; } // (the clock waits while the water runs through)
+    const was = Math.ceil(S.time); S.time -= dt;
+    if (S.time <= 5 && Math.ceil(S.time) < was) sfx.arc('tick');
+    if (S.time <= 0) { S.time = 0; finish(); }
+  };
+  const draw = () => {
+    c.fillStyle = '#2a1c12'; c.fillRect(0, 0, W, H);
+    // sandstone blocks behind the grid
+    for (let y = 0; y < H; y += 16) for (let x = (y / 16) % 2 ? -12 : 0; x < W; x += 24) { c.fillStyle = (x * 7 + y * 3) % 5 ? '#4a3220' : '#523826'; c.fillRect(x + 1, y + 1, 22, 14); }
+    c.fillStyle = 'rgba(20,12,6,0.55)'; c.fillRect(X0 - 6, Y0 - 6, C * T + 12, R * T + 12);
+    const wave = S.t * 3;
+    for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) {
+      const px = X0 + x * T, py = Y0 + y * T, m = S.grid[y][x], wet = S.wet.has(x + ',' + y), cx = px + T / 2, cy = py + T / 2;
+      c.fillStyle = (x + y) % 2 ? '#b88a58' : '#c4965e'; c.fillRect(px + 1, py + 1, T - 2, T - 2);
+      c.fillStyle = 'rgba(255,240,200,0.18)'; c.fillRect(px + 1, py + 1, T - 2, 3);
+      // the carved channel: a dark groove from the middle to each open side, blue when water runs in it
+      const arms = DIR.filter(([, , bit]) => m & bit);
+      for (const pass of [0, 1]) {
+        c.strokeStyle = pass ? (wet ? `hsl(${195 + Math.sin(wave + x + y) * 6},85%,${S.flood > 0 ? 66 : 58}%)` : '#5a3e26') : '#3a2616'; c.lineWidth = pass ? 8 : 13; c.lineCap = 'round';
+        c.beginPath(); for (const [dx, dy] of arms) { c.moveTo(cx, cy); c.lineTo(cx + dx * T / 2, cy + dy * T / 2); } c.stroke();
+      }
+      if (wet) { c.fillStyle = 'rgba(220,250,255,0.75)'; for (const [dx, dy] of arms) { const k = (S.t * 1.6 + (x + y) * 0.3) % 1; c.beginPath(); c.arc(cx + dx * T / 2 * k, cy + dy * T / 2 * k, 1.6, 0, 7); c.fill(); } }
+    }
+    // the grid's cursor (keyboard) and the spout and cistern at either end
+    if (S.started && !S.over) { c.strokeStyle = 'rgba(255,240,160,0.7)'; c.lineWidth = 2; c.strokeRect(X0 + S.cur[0] * T + 2, Y0 + S.cur[1] * T + 2, T - 4, T - 4); }
+    const sy = Y0 + S.inR * T + T / 2, oy = Y0 + S.outR * T + T / 2;
+    c.fillStyle = '#d8a040'; c.beginPath(); c.moveTo(X0 - 4, sy - 7); c.lineTo(X0 - 16, sy - 13); c.lineTo(X0 - 24, sy - 9); c.lineTo(X0 - 26, sy + 2); c.lineTo(X0 - 18, sy + 12); c.lineTo(X0 - 4, sy + 7); c.fill(); // the bronze sun-bird spout: a head, an eye and a beak
+    c.fillStyle = '#a8742a'; c.beginPath(); c.moveTo(X0 - 16, sy - 13); c.lineTo(X0 - 12, sy - 20); c.lineTo(X0 - 9, sy - 11); c.fill(); // (its crest)
+    c.fillStyle = '#2a1a10'; c.beginPath(); c.arc(X0 - 17, sy - 4, 2.2, 0, 7); c.fill();
+    c.fillStyle = `hsl(195,85%,58%)`; c.fillRect(X0 - 6, sy - 4, 7, 8);
+    const full = S.flood > 0 ? 1 : 0;
+    c.fillStyle = '#2a9ab0'; c.fillRect(X0 + C * T + 1, oy - 15, 24, 30); // (a teal-tiled rim, so the goal reads at a glance) c.fillStyle = full ? '#7adfff' : '#2a1a10'; c.fillRect(X0 + C * T + 5, oy - 10, 16, 21);
+    if (full) { c.fillStyle = 'rgba(200,250,255,0.8)'; c.fillRect(X0 + C * T + 5, oy - 10 + Math.sin(S.t * 8) * 1.5, 16, 3); }
+    // the hero waits by the cistern, cheering when it fills
+    if (img.complete && img.naturalWidth) c.drawImage(img, W - 30, H - 34 - (full ? Math.abs(Math.sin(S.t * 10)) * 6 : 0), 26, 26);
+    // the clock bar
+    c.fillStyle = 'rgba(0,0,0,0.45)'; c.fillRect(X0, 18, C * T, 10); c.fillStyle = S.time < 10 ? '#ff8a6a' : '#5ad0ff'; c.fillRect(X0, 18, C * T * Math.min(1, S.time / 60), 10);
+    c.textAlign = 'center'; c.font = 'bold 13px sans-serif';
+    for (const p of S.pops) { c.globalAlpha = Math.min(1, p.t * 2); c.fillStyle = p.col; c.strokeStyle = '#1a1008'; c.lineWidth = 3; c.strokeText(p.txt, p.x, p.y); c.fillText(p.txt, p.x, p.y); }
+    c.globalAlpha = 1;
+    if (S.ready > 0 || !S.started) { c.fillStyle = 'rgba(20,12,6,0.55)'; c.fillRect(0, H / 2 - 26, W, 44); c.fillStyle = '#9ff0ff'; c.font = 'bold 22px sans-serif'; c.fillText(S.ready > 0 ? 'READY?' : 'TAP A STONE!', W / 2, H / 2 + 4); }
+    if (S.over) { c.fillStyle = 'rgba(20,12,6,0.7)'; c.fillRect(0, 0, W, H); c.fillStyle = '#9ff0ff'; c.font = 'bold 26px sans-serif'; c.fillText("TIME'S UP!", W / 2, H / 2 - 14); c.fillStyle = '#fff'; c.font = 'bold 16px sans-serif'; c.fillText(`${S.boards} fixed · Score ${S.score}`, W / 2, H / 2 + 14); }
+    hud.textContent = `⏱️ ${Math.ceil(S.time)}  💧 ${S.boards}  ⭐ ${S.score}`;
+  };
+  let last = performance.now(), raf = 0;
+  const loop = (now) => { const dt = Math.min(0.05, (now - last) / 1000); last = now; step(dt); draw(); if (el.isConnected) raf = requestAnimationFrame(loop); };
+  raf = requestAnimationFrame(loop);
+  let closed = false;
+  function close() {
+    if (closed) return; closed = true;
+    cancelAnimationFrame(raf); el.remove();
+    removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true);
+    onDone(S.score);
+  }
+  // (for the bots: solve() turns every wrong tile on the path once more until the board runs, counting the turns)
+  const solve = () => { for (const [x, y] of S.path) { let k = 0; while (S.grid[y][x] !== S.sol[y][x] && k++ < 4 && !S.solved) turn(x, y); } };
+  el.__arcade = { S, start, turn, solve, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
+  return el;
+}

@@ -12,7 +12,7 @@ import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
-import { arcadeGame, skyHop, waveRider, reefDive, duneSled, caravanRun, sporeDrift } from './arcade.js';
+import { arcadeGame, skyHop, waveRider, reefDive, duneSled, caravanRun, sporeDrift, waterworks } from './arcade.js';
 import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, FISH, seasonKey, gullFish, traderTown, alphaToday } from './world.js';
 
 const flags = () => save.adv.flags;
@@ -221,6 +221,14 @@ export function storyIntro(S, w) {
       '{hero} squeezes past the old grate and down a flight of worn steps... into a long, cool tunnel of carved sandstone.',
       'Shafts of daylight fall from holes high in the roof. Somewhere ahead, water is running.',
       'A man in a teal cap is scribbling on a slate, muttering about wheels.',
+    ]);
+    return;
+  }
+  if (w.key === 'aqueduct' && F.aq_done && !F.aq_green) { // R866: with the water home, green critters move into the tunnel's moss
+    F.aq_green = true; persist();
+    w.say([
+      'The tunnel smells different now: wet stone and something green. The moss along the walls has grown thick and bright.',
+      'Something small and froggy plops out of sight. The moss has new neighbours!',
     ]);
     return;
   }
@@ -1532,7 +1540,7 @@ const HAT_WHERE = {
   pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
   masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
   gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
-  caravanturban: 'score 500 at CARAVAN RUN (Caravan Master Hakim, Sunwell Oasis)', fossilhat: 'dig up every fossil for the Sunwell Museum', wheelcap: 'open the Sun Sluice for Waterwright Osei (the Old Aqueduct, past Glowcap Hollow)', sunspout: 'a treasure chest in the Old Aqueduct (past Glowcap Hollow)', dewcirclet: "a treasure chest in the Sunwell Spring (down the oasis well)", guildfez: "clear the Caravan Guild's bounty board on five days (Sunwell Oasis)", mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
+  caravanturban: 'score 500 at CARAVAN RUN (Caravan Master Hakim, Sunwell Oasis)', pipegoggles: 'score 600 at WATERWORKS (Waterwright Osei, the Old Aqueduct)', pipegoggles: 'score 450 at WATERWORKS (Waterwright Osei, the Old Aqueduct)', fossilhat: 'dig up every fossil for the Sunwell Museum', wheelcap: 'open the Sun Sluice for Waterwright Osei (the Old Aqueduct, past Glowcap Hollow)', sunspout: 'a treasure chest in the Old Aqueduct (past Glowcap Hollow)', dewcirclet: "a treasure chest in the Sunwell Spring (down the oasis well)", guildfez: "clear the Caravan Guild's bounty board on five days (Sunwell Oasis)", mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
 };
 export function hatWhere(id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';
@@ -1839,12 +1847,12 @@ function glowcapTalk(S, w, a) {
 // R860: Waterwright Osei in the Old Aqueduct wants the Sun Sluice at the far end opened, so the water runs home to the Sunwell
 function aqueductTalk(S, w) {
   const F = flags(), who = 'Waterwright Osei', own = (save.adv.hats ||= []);
-  if (F.aq_done) return w.say([[
+  if (F.aq_done) return waterworksTalk(S, w, () => w.say([[
     'Waterwright Osei: Hear that? That\'s a thousand-year-old tunnel doing its job again. Best sound in the world.',
     'Waterwright Osei: Wellkeeper Bram says the well\'s never been so full. He\'s been dropping in two berries a day for luck. Go and see!',
     'Waterwright Osei: The Sun City built this to share its water with everyone who passed. "Water for all who thirst." Good people, whoever they were.',
     'Waterwright Osei: The wheels still swap the channels, but the water doesn\'t go that way any more. Spin them if you like. I do. It\'s soothing.',
-  ][Math.floor(Math.random() * 4)]], null, who);
+  ][Math.floor(Math.random() * 4)]], null, who));
   if (F.aqueduct_flow) {
     F.aq_done = true; if (!own.includes('wheelcap')) own.push('wheelcap');
     save.berries = (save.berries || 0) + 20; const hero = save.adv.hero, c = save.critters[hero], r = grantXp(hero, Math.round(xpNeeded(c.level) * 0.4));
@@ -1867,6 +1875,29 @@ function aqueductTalk(S, w) {
     ], null, who);
   }
   return w.say([save.adv.sluice ? 'Waterwright Osei: The east channel\'s running now. There\'s another wheel between the channels, I\'m sure of it.' : 'Waterwright Osei: Turn a wheel and watch the water swing over. You only need the channel in FRONT of you dry.', 'Waterwright Osei: The Sun Sluice is the big bronze wheel at the far end, by the sun-bird spout.'], null, who);
+}
+
+// R865: after the Sun Sluice, Osei's practice board: WATERWORKS (turn channel stones to lead the water to the cistern;
+// daily berries at 150/300/450, the Brass Pipe Goggles at 600, a Records best)
+function waterworksTalk(S, w, chat) {
+  const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.pipeHi || 0, who = 'Waterwright Osei', own = (A.hats ||= []);
+  w.ask(`${who}: Every waterwright learns on a practice board: carved channel stones you turn till the water runs from the spout to the cistern. Fancy a go against the clock? ${hi ? `Your best: ${hi}.` : 'Tap a stone to turn it!'}`, ['Play!', 'Just chat'], (i) => {
+    if (i) return chat();
+    w.busy = true;
+    const el = waterworks(S.root, S.game.portrait(w.hero.def), (score) => {
+      S.game.modalClose = null; w.busy = false;
+      const best = score > hi; if (best) A.pipeHi = score;
+      countUp('pipes');
+      let prize = 0;
+      if (A.pipeDay !== day) { prize = score >= 450 ? 3 : score >= 300 ? 2 : score >= 150 ? 1 : 0; if (prize) { A.pipeDay = day; save.berries = (save.berries || 0) + prize; } }
+      const hat = score >= 600 && !own.includes('pipegoggles'); if (hat) own.push('pipegoggles');
+      persist(); w.questMarks?.(); if (best || prize || hat) reward(2);
+      w.say([`${score >= 450 ? 'A master waterwright!' : score >= 150 ? 'The water runs true!' : 'Splish. Splosh. Mostly on the floor.'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`,
+        ...(prize ? [`${who}: ${prize} 🍓 for your trouble! (One prize a day.)`] : A.pipeDay !== day ? [`${who}: Score 150 or more and there are berries in it for you. (One prize a day.)`] : []),
+        ...(hat ? [`${who}: 600! I didn't fix boards that fast at your age. Have my old brass goggles. They kept the spray out of my eyes for thirty years.`, '{hero} got the Brass Pipe Goggles! 🥽 (☰ → 🎩 Hats)'] : !own.includes('pipegoggles') ? [`${who}: Score 600 and my old brass goggles are yours.`] : [])], null, who);
+    });
+    S.game.modalClose = () => el.__arcade.close();
+  }, who);
 }
 
 // R854: once the glowcaps are in, Pim's spore puffs ride the updraft up the old shaft: SPORE DRIFT (daily berries at 200/350/500, a Records best)

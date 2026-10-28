@@ -1309,3 +1309,6 @@ body.portrait .ic-trait { font-size: 10.5px; padding: 1px 6px; margin-right: 34p
 /* portrait select: a long roster scrolls in its own box (about three rows) so the info card never climbs over the header */
 body.portrait .sel-bottom > .roster { max-height: min(232px, 36vh); overflow-y: auto; overflow-x: hidden; padding: 12px 2px 4px; margin: -12px 0 0; scrollbar-width: none; }
 @media (max-height: 700px) { body.portrait .select-screen .sel-arrows { display: none; } }
+.arcade.pipes { background: linear-gradient(#5a3e26, #2a1c12); border-color: #5ad0ff; box-shadow: 0 0 24px rgba(90,208,255,.4), 0 6px 0 #1a1008; }
+.arcade.pipes .arc-top { color: #dff6ff; text-shadow: 0 2px 0 #1a3040; }
+.arcade.pipes .arc-tip { color: #f0e0c8; }

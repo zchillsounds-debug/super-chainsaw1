@@ -47,7 +47,7 @@ const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
 const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
 const LEGEND_IDS = () => ['solmoth', 'moonwhal', 'verdelk', ...(save.adv?.flags?.sands_arrive ? ['aurelark'] : [])]; // the Champ page's legends (the Sun-Bird once you reach the sands)
-const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles', 'mirageturban', 'minerhelm', 'lanternhat', 'guildfez', 'dewcirclet', 'lampcap', 'siroccohat', 'caravanturban', 'glowcaphat', 'sunspout', 'wheelcap']; // the desert's found hats (the Sand Hats stall's four are `sands`)
+const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles', 'mirageturban', 'minerhelm', 'lanternhat', 'guildfez', 'dewcirclet', 'lampcap', 'siroccohat', 'caravanturban', 'glowcaphat', 'sunspout', 'wheelcap', 'pipegoggles']; // the desert's found hats (the Sand Hats stall's four are `sands`)
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
@@ -483,6 +483,14 @@ export class Screens {
         A.curios ? `And the Mirage Merchant sold you a curio! ${A.curios > 1 ? `${A.curios} of them!` : ''} He brings a new one every day after noon, they say. Or the same one, wearing a disguise.` : "The Mirage Merchant on the Glass Flats has a new curio every day now, once you've bought his turban. A glass lure, a mirror... even bottled heat!",
         "Oh, and Team Battle has a sky button now too, like Quick Battle. A night-time 3-on-3 under the stars. Lovely!",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv43') && !save.news.includes('adv44') && save.adv.flags.aq_done) { // R867: WATERWORKS, the Brass Pipe Goggles, green critters in the aqueduct's moss
+      save.news.push('adv44'); persist();
+      const A = save.adv;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        A.pipeHi ? `{name}! Waterwright Osei writes that you scored ${A.pipeHi} on his WATERWORKS board. He says most apprentices flood the floor on their first go. I would. I'd flood the whole lab.` : "{name}! Waterwright Osei sent me a letter. He keeps a practice board down in the aqueduct, carved stones you turn to lead the water from a spout to a cistern. He'd like you to have a go. Against the clock!",
+        A.hats?.includes('pipegoggles') ? "And he gave you his old Brass Pipe Goggles! Thirty years of spray, he says. They suit you." : "Score 600 on it and he says his old brass goggles are yours.",
+        "One more thing: with the water flowing again, the tunnel's moss has gone thick and green. Lilypop and Mossloth have moved in! Wild ones, so bring your best.",
+      ]), 600);
     } else if (!g.autoplay && save.news?.includes('adv42') && !save.news.includes('adv43') && (save.adv.flags.gcap_done || save.adv.flags.hollow_arrive)) { // R863: the Old Aqueduct, Osei, the Starspot Eel, the aqueduct arena
       save.news.push('adv43'); persist();
       const A = save.adv, F = A.flags;
@@ -702,7 +710,7 @@ export class Screens {
         ['Cups', 'Each town\'s stadium holds a cup, and the trials test your Strength, Friendship and Wisdom on the road to the Critter Crown.'],
         ['Berry Centers', 'Rest to heal, swap who leads the way at the Critter Box, leave a critter at the Daycare and blend berry smoothies.'],
         ['The Isles', 'Once you hold the Critter Crown, the Sunny Gull ferry sails from Seashell Town to the Sunscatter Isles: new critters, three island cups and the Gloom Gulls.'],
-        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it, where Forager Pim\'s spore puffs fly in SPORE DRIFT. Past Pim\'s grate, an old water tunnel runs south: turn its sluice wheels to cross the channels.'],
+        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it, where Forager Pim\'s spore puffs fly in SPORE DRIFT. Past Pim\'s grate, an old water tunnel runs south: turn its sluice wheels to cross the channels, then try Waterwright Osei\'s WATERWORKS board.'],
         ['After that', 'The Battle Tower, three legendary critters, the weekly Masters, the Kite Glider\'s hidden spots, pearls, dives and more. The Champ page keeps track.'],
         ['100%', 'Records shows how much of Clashara, the isles (and later the Amber Sands) you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
       ]],
@@ -1557,7 +1565,7 @@ export class Screens {
         + (A.cnt?.rail ? bar('🚂', 'Sand-Rail rides', A.cnt.rail) : '')
         + (A.sledHi ? bar('🛷', 'DUNE SLED best', A.sledHi) : '')
         + (A.caravanHi ? bar('🐪', 'CARAVAN RUN best', A.caravanHi) : '')
-        + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') // R854: no goal // R838: no goal
+        + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') + (A.pipeHi ? bar('💧', 'WATERWORKS best', A.pipeHi) : '') // R865, R854, R838: no goal
         + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '')
         + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '')
         + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal

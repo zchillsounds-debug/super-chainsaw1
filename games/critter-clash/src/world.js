@@ -157,7 +157,7 @@ const shinyRate = () => (save.adv?.flags?.shinycharm ? 2 : 1) / 30; // a rare sh
 const OL = 0.035;
 const CS = 1.4; // critters stand a bit taller than in battle so they read from the overhead camera
 const byId = (id) => CRITTERS.find((c) => c.id === id);
-if (typeof window !== "undefined") window.__maps = MAPS; // (for the route-audit tools)
+if (typeof window !== "undefined") { window.__maps = MAPS; window.__landmarks = LANDMARKS; } // (for the route-audit tools)
 const rng = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 const hash = (s) => { let h = 7; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) % 2147483647; return h || 1; };
 const wpos = (x, y) => [x * TILE + TILE / 2, (y * TILE) + TILE / 2];
@@ -5021,7 +5021,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? (save.adv.sporeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : a.n.story === 'aqueduct' ? (!F.aq_asked ? '!' : F.aqueduct_flow && !F.aq_done ? '?' : null) /* R860 */ : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? (save.adv.sporeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : a.n.story === 'aqueduct' ? (!F.aq_asked ? '!' : F.aqueduct_flow && !F.aq_done ? '?' : F.aq_done && save.adv.pipeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R860; R865: today's WATERWORKS prize */ : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m; a.markKind = k;
@@ -5103,6 +5103,7 @@ export class World {
   wildList() {
     const L0 = this.M.wild?.list || [], [, lo0, hi0] = L0[0] || [];
     const L = !L0.length ? L0 : this.M.isle && this.rain ? [...L0, ['blowfin', lo0, hi0], ['blowfin', lo0, hi0], ['blowfin', lo0 + 2, hi0 + 2]] : this.key === 'bluffs' && this.phase === 'evening' ? [...L0, ['skimray', lo0, hi0], ['skimray', lo0 + 1, hi0 + 1]] : this.M.sands && this.sandstorm ? [...L0, ['siroccat', lo0, hi0], ['siroccat', lo0 + 1, hi0 + 1], ['siroccat', lo0 + 2, hi0 + 2]] : L0; // (sandstorms blow Siroccats into the grass)
+    if (this.key === 'aqueduct' && save.adv.flags.aqueduct_flow && L.length) return [...L, ['lilypop', lo0, hi0], ['mossloth', lo0 + 1, hi0 + 1]]; // R866 (a cave: always 'day'): the water's home, and green critters have moved into the moss
     if (!L.length || this.phase === 'day') return L;
     const [, lo, hi] = L[0], extra = (this.phase === 'night' ? this.M.sands ? ['fennzap', 'squeakwing'] : ['hootsy', 'squeakwing'] : ['emberfly']).flatMap((id) => [[id, lo, hi], [id, lo, hi]]); // (desert nights: big-eared Fennzap hunt by starlight)
     return [...L.filter(([i]) => !extra.some(([o]) => o === i)), ...extra];

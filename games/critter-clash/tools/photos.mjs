@@ -7,12 +7,17 @@ const pg = await b.newPage({ viewport: { width: 640, height: 360 } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
 await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?auto&q=low');
 await pg.waitForFunction(() => window.__ready, null, { timeout: 120000 });
-const LM = [['village', 'lab'], ['bloom', 'stadium'], ['seashell', [13, 15]], ['glowcap', [8, 8]], ['ember', [21, 3]], ['neon', 'arcade'], ['cloudtop', [8, 9]], ['frostpeak', [4, 8]], ['coral', [12, 14]], ['bluffs', [24, 11]], ['ember_isle', [17, 2]], ['atoll', [12, 3]]];
-const flags = 'intro,quest,rival1,trial_strength,rival2,trial_friendship,pip_found,pip_saved,dash3,trial_wisdom,trial_heart,crowned,ending,isle_arrive,skua_b,morra,sunstone,atoll,cup_sprout,cup_thunder,cup_grove,cup_champion,cup_midnight,cup_sky,cup_legend,cup_coral,cup_gale,cup_caldera'.split(',');
+// R864: the landmark list comes from the game (world.js LANDMARKS, window.__landmarks), so new desert spots are checked too
+const LM = await pg.evaluate(() => __landmarks.map((l) => [l.map, l.door || l.at]));
+// an end-game save, as in mapwalk: every flag a townsfolk or edge gate mentions, plus the story milestones and the aqueduct's flow
+const flags = await pg.evaluate(() => { const F = new Set('intro quest rival1 crowned ending isle_arrive sunstone morra skua_b glider lantern atoll aqueduct_flow'.split(' '));
+  for (const M of Object.values(__maps)) { for (const n of M.npcs || []) for (const k of ['hideFlag', 'showFlag']) n[k] && F.add(n[k]); for (const e of Object.values(M.edges || {})) e.need && F.add(e.need); for (const bd of M.buildings || []) bd.stadium && F.add('cup_' + bd.stadium); }
+  return [...F]; });
 let bad = 0;
 for (const [map, at] of LM) {
   const r = await pg.evaluate(([map, at, flags]) => {
     const M = __maps[map], e = Object.keys(M.edges || {})[0] || 's';
+    __save.trainer = { name: 'Sam', partner: 'cindermunch' }; __save.tutorialDone = true;
     __save.adv = { hero: 'cindermunch', map, x: 1, y: 1, dir: 's', flags: Object.fromEntries(flags.map((k) => [k, true])), spawn: { map: 'village', x: 4, y: 6 } };
     __game.screens.adventure(); __sim(0.05);
     const wo = __game.screens.worldObj;

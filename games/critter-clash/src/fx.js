@@ -219,6 +219,7 @@ export class FX {
       const n = this.dmgSeq = this.texts.some((o) => o.dmg && o.t < 0.4) ? (this.dmgSeq || 0) + 1 : 0;
       tx.dmg = true; tx.oy = -(n % 2) * 22; tx.dx = (n % 2 ? 1 : -1) * (26 + (n % 3) * 14);
     }
+    if (cls === 'eff') for (const o of this.texts) if (o.t < 0.2 && o.el.classList.contains('heal')) { o.under = tx; o.dx = tx.dx; } // R864: a power-up's heal number sits just under its label, not behind it
     this.texts.push(tx);
   }
 
@@ -247,6 +248,8 @@ export class FX {
       if (!tx.follow) { // R856: pop-ups stay on screen (power-up labels sat off the left edge in portrait and under the HUD bars)
         const hw = (tx.w ||= tx.el.offsetWidth) / 2 + 8; x = Math.min(W - hw, Math.max(hw, x));
         if (tx.el.classList.contains('eff')) y = Math.max(W > H ? 96 : 150, y);
+        if (tx.under) y = Math.max(y, (tx.under.y ?? y) + 34);
+        tx.y = y;
       }
       tx.el.style.transform = `translate(${x}px, ${y}px) translate(-50%,-50%) rotate(${tx.rot}deg) scale(${pop})`;
       tx.el.style.opacity = k > 0.75 ? (1 - k) / 0.25 : 1;

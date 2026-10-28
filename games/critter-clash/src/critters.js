@@ -1548,6 +1548,7 @@ export const SHOP_HATS = [
   { id: 'siroccohat', name: "Sirocco's Wide-Brim", kind: 'ranger', col: 0x6a5ab0, band: 0xffc840, price: 0, gift: true, extra: true }, // R836: Sirocco's Amends (the reformed Baron's old hat)
   { id: 'lampcap', name: "Spelunker's Lamp Cap", kind: 'lampcap', col: 0xffbe2a, band: 0xe8f8ff, price: 0, gift: true, extra: true },
   { id: 'glowcaphat', name: 'Glowcap Hat', kind: 'glowshroom', col: 0x3ee8cc, band: 0xfff8dc, price: 0, gift: true, extra: true }, // R848: Forager Pim's thanks (six big glowcaps from Glowcap Hollow) // R833: Spelunker Odette's favour (her cave journal, found on Redrock Mesa)
+  { id: 'pipegoggles', name: 'Brass Pipe Goggles', kind: 'aviator', col: 0xb8863a, band: 0x5ad0ff, price: 0, gift: true, extra: true }, // R865: 600 at WATERWORKS (Waterwright Osei, the Old Aqueduct)
   { id: 'wheelcap', name: "Waterwright's Cap", kind: 'wheelcap', col: 0x2a8a9a, band: 0xd8a040, price: 0, gift: true, extra: true }, // R860: Waterwright Osei's thanks for opening the Sun Sluice (the Old Aqueduct)
   { id: 'sunspout', name: 'Sun-Spout Circlet', kind: 'circlet', col: 0xe0a84a, band: 0x3ab8e0, price: 0, gift: true, extra: true }, // R858: the Old Aqueduct's chest
   { id: 'dewcirclet', name: 'Dewdrop Circlet', kind: 'circlet', col: 0xcfe8f4, band: 0x3ac8e8, price: 0, gift: true, extra: true }, // R829: the Sunwell Spring's chest
