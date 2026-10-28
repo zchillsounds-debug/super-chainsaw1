@@ -1548,6 +1548,8 @@ export const SHOP_HATS = [
   { id: 'siroccohat', name: "Sirocco's Wide-Brim", kind: 'ranger', col: 0x6a5ab0, band: 0xffc840, price: 0, gift: true, extra: true }, // R836: Sirocco's Amends (the reformed Baron's old hat)
   { id: 'lampcap', name: "Spelunker's Lamp Cap", kind: 'lampcap', col: 0xffbe2a, band: 0xe8f8ff, price: 0, gift: true, extra: true },
   { id: 'glowcaphat', name: 'Glowcap Hat', kind: 'glowshroom', col: 0x3ee8cc, band: 0xfff8dc, price: 0, gift: true, extra: true }, // R848: Forager Pim's thanks (six big glowcaps from Glowcap Hollow) // R833: Spelunker Odette's favour (her cave journal, found on Redrock Mesa)
+  { id: 'wheelcap', name: "Waterwright's Cap", kind: 'wheelcap', col: 0x2a8a9a, band: 0xd8a040, price: 0, gift: true, extra: true }, // R860: Waterwright Osei's thanks for opening the Sun Sluice (the Old Aqueduct)
+  { id: 'sunspout', name: 'Sun-Spout Circlet', kind: 'circlet', col: 0xe0a84a, band: 0x3ab8e0, price: 0, gift: true, extra: true }, // R858: the Old Aqueduct's chest
   { id: 'dewcirclet', name: 'Dewdrop Circlet', kind: 'circlet', col: 0xcfe8f4, band: 0x3ac8e8, price: 0, gift: true, extra: true }, // R829: the Sunwell Spring's chest
   { id: 'guildfez', name: 'Caravan Guild Fez', kind: 'fez', col: 0xa8243a, band: 0xffc23a, price: 0, gift: true, extra: true }, // R828: five full days of the Caravan Guild's bounty board
   { id: 'lanternhat', name: 'Paper Lantern Hat', kind: 'lantern', col: 0xffa040, band: 0xd83a3a, price: 0, gift: true, extra: true }, // R820: Lantern Maker Yusra's night market, seven sky lanterns
@@ -1654,6 +1656,17 @@ export function hatModel(cr, kind, col, band) {
     const top = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.08, r * 0.08, r * 0.05, 8), toon(band)); top.position.y = r * 0.63; G.add(top);
     const cord = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.025, r * 0.025, r * 0.5, 5), toon(band)); cord.position.set(r * 0.25, r * 0.6, 0); cord.rotation.z = -1.25; G.add(cord);
     const tas = add(new THREE.ConeGeometry(r * 0.1, r * 0.34, 8), toon(band, { rim: 0.8 }), 0.01); tas.position.set(r * 0.5, r * 0.38, 0);
+  }
+  if (kind === 'wheelcap') { // R860: a soft teal waterworker's cap with a short brim, and a little bronze sluice wheel badge on the front with a blue glass drop at its hub
+    G.position.y -= r * 0.14;
+    const dome = add(new THREE.SphereGeometry(r * 0.8, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2)); dome.scale.set(1, 0.7, 1.05);
+    const brim = add(new THREE.CylinderGeometry(r * 0.62, r * 0.62, r * 0.05, 18, 1, false, -Math.PI / 2, Math.PI)); brim.scale.z = 0.7; brim.position.set(0, r * 0.03, r * 0.62);
+    add(new THREE.TorusGeometry(r * 0.8, r * 0.05, 6, 24), toon(new THREE.Color(col).multiplyScalar(0.7).getHex()), 0.01).rotation.x = Math.PI / 2;
+    const br = toon(band, { rim: 0.9, emissive: new THREE.Color(band).multiplyScalar(0.2).getHex() }), W = new THREE.Group(); W.position.set(0, r * 0.36, r * 0.74); W.rotation.x = -0.35; G.add(W);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 0.2, r * 0.035, 6, 18), br); W.add(ring);
+    for (let k = 0; k < 3; k++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(r * 0.03, r * 0.4, r * 0.03), br); sp.rotation.z = k * Math.PI / 3; W.add(sp); }
+    for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, h = new THREE.Mesh(new THREE.SphereGeometry(r * 0.04, 6, 5), br); h.position.set(Math.cos(a) * r * 0.24, Math.sin(a) * r * 0.24, 0); W.add(h); }
+    const drop = new THREE.Mesh(new THREE.SphereGeometry(r * 0.075, 10, 8), toon(0x5ad8ff, { rim: 1, emissive: 0x1a5a7a })); drop.position.z = r * 0.03; W.add(drop);
   }
   if (kind === 'halo') { // a glowing golden ring floating over the head (Rainbow Reach)
     const m = toon(col, { rim: 1, emissive: new THREE.Color(col).multiplyScalar(0.55).getHex() });

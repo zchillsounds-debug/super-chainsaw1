@@ -1307,9 +1307,10 @@ export const MAPS = {
       'RRR"".....~~...RRR',
       'RRRR""........RRRR',
       'RRRRRRR...RRRRRRRR',
-      'RRRRRRRRRRRRRRRRRR',
+      'RRRRRRRR.RRRRRRRRR',
     ],
-    edges: { w: { to: 'wellspring', off: 2 } },
+    // R858: a passage south, behind an old iron grate, leads down into the Old Aqueduct (Pim opens it once the glowcaps are in)
+    edges: { w: { to: 'wellspring', off: 2 }, s: { to: 'aqueduct', off: -4, need: 'gcap_done', needSay: 'An old iron grate blocks a passage going down. Water gurgles somewhere far below. It\'s locked. (Forager Pim might have the key.)' } },
     // the six big glowcaps Forager Pim wants (walk onto one to pick it), and clumps of small ones on the rocks that light the way
     glowcaps: [[8, 1], [15, 4], [3, 5], [4, 8], [14, 8], [8, 11]],
     shrooms: [[11, 4], [6, 6], [5, 8], [2, 8], [16, 6], [10, 5], [4, 2], [12, 2], [6, 11], [15, 9], [3, 10], [13, 10]],
@@ -1322,6 +1323,49 @@ export const MAPS = {
       { id: 'pim_h', x: 12, y: 9, critter: 'mossloth', name: 'Forager Pim', dir: 'w', story: 'glowcaps', lines: [
         'Forager Pim: Shh. Listen. Hear that? Drip... drip... That\'s the glowcaps drinking.',
       ] },
+    ],
+  },
+
+  // ===== R858: the Old Aqueduct, south of Glowcap Hollow: a long sandstone water tunnel the Sun City's builders dug to feed the
+  // Sunwell. Shafts of daylight fall from holes in the roof. Two stone channels cross it; sluice wheels swap which one runs (world.js
+  // buildSluice), and the big Sun Sluice at the east end sends the water home to the Sunwell for Waterwright Osei =====
+  aqueduct: {
+    name: 'Old Aqueduct',
+    music: 'cave',
+    arena: 'grotto',
+    sands: 'spring',
+    extra: true,
+    cave: true,
+    qanat: true, // sandstone, no crystals; light shafts from the roof
+    noItems: true,
+    border: 'rock',
+    outer: 0x1a1410,
+    palette: { a: '#b49a78', b: '#ae9472', tall: '#6a9a5a', path: '#c4aa84', water: '#2ab8c8', bank: '#6a5440', dark: 'rgba(40,24,10,0.3)', lite: 'rgba(255,230,180,0.14)' },
+    mood: { sun: 0xffe8c8, sunI: 0.85, sky: 0xc8b08a, gnd: 0x2a2018, hemiI: 0.95, fog: 0x1a1410 },
+    tiles: [
+      'RRRR.RRRRRRRRRRRRRRRRRRRRRR',
+      'RRR...RRRRRRRRRRRRRRRRRRRRR',
+      'RR.....RRRRR.R.RRRRRR.RRRRR',
+      'RR.......................RR',
+      'RR.""............."".....RR',
+      'RR."".............""...~~RR',
+      'RR.....................~~RR',
+      'RR....""............""...RR',
+      'RRRRRRRRRRRRRRRRRRRRRRRRRRR',
+      'RRRRRRRRRRRRRRRRRRRRRRRRRRR',
+    ],
+    edges: { n: { to: 'glowhollow', off: 4 } },
+    // two channels (columns a and b, rows y0..y1), small wheels that swap them, and the Sun Sluice (flag: both run dry for good)
+    sluice: { a: 9, b: 17, y0: 3, y1: 7, wheels: [[6, 2], [12, 2]], main: [21, 2], flag: 'aqueduct_flow' },
+    shafts: [[4, 5], [11, 6], [19, 6]],
+    spout: [24, 5], // a carved sun-bird spout over the outlet pool: dry until the Sun Sluice opens
+    chest: { x: 14, y: 2, flag: 'aq_chest', berries: 25, hat: 'sunspout', hatLine: '...and a Sun-Spout Circlet, a bronze band with a little sun-bird whose beak drips a bead of glass water!' },
+    signs: [{ x: 3, y: 2, text: 'Letters carved deep in the sandstone: "FROM THE CITY OF THE SUN, WATER FOR ALL WHO THIRST. TURN THE WHEELS GENTLY."' }],
+    wild: { list: [['humpdrop', 38, 40], ['blowfin', 38, 40], ['skimray', 38, 40], ['scarabold', 38, 40]], roam: 2, rate: 0.1 },
+    npcs: [
+      { id: 'osei_a', x: 4, y: 3, critter: 'blowfin', name: 'Waterwright Osei', dir: 's', story: 'aqueduct', lines: [] },
+      { id: 'tess_a', x: 14, y: 6, critter: 'skimray', name: 'Tunnel Runner Tess', dir: 'w', trainer: { lv: 41, sight: 3, diff: 0.86, intro: 'Tunnel Runner Tess: I run the whole aqueduct every morning. Skimray skims the channels. Battle!', beat: 'Tunnel Runner Tess: Phew! You\'re quicker than the water.', after: 'Tunnel Runner Tess: When the wheels turn, the channels swap. Took me a week to work that out. Don\'t tell anyone.' } },
+      { id: 'baz_a', x: 20, y: 6, critter: 'humpdrop', name: 'Old Digger Baz', dir: 'w', trainer: { lv: 41, sight: 3, diff: 0.86, intro: 'Old Digger Baz: I dug for the Dust Devils once. Now I just sit down here where it\'s cool. Humpdrop, wake up! Battle!', beat: 'Old Digger Baz: Ha! Good. That woke me up better than tea.', after: 'Old Digger Baz: That big wheel by the outlet hasn\'t turned in a thousand years. Go on. Give it a shove.' } },
     ],
   },
 

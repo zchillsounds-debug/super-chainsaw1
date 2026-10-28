@@ -215,6 +215,15 @@ export function storyIntro(S, w) {
     ]);
     return;
   }
+  if (w.key === 'aqueduct' && !F.aq_arrive) { // R858: down through Pim's grate
+    F.aq_arrive = true; persist();
+    w.say([
+      '{hero} squeezes past the old grate and down a flight of worn steps... into a long, cool tunnel of carved sandstone.',
+      'Shafts of daylight fall from holes high in the roof. Somewhere ahead, water is running.',
+      'A man in a teal cap is scribbling on a slate, muttering about wheels.',
+    ]);
+    return;
+  }
   if (w.key === 'buried1' && !F.buried_arrive) {
     F.buried_arrive = true; persist();
     w.say([
@@ -576,6 +585,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'sled') return sled(S, w);
   if (id === 'caravanrun') return caravanRunTalk(S, w, a);
   if (id === 'glowcaps') return glowcapTalk(S, w, a);
+  if (id === 'aqueduct') return aqueductTalk(S, w);
   if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
   if (id === 'wish') { // Cloudtop's wishing fountain: toss in a berry, make a wish; the clouds grant one a day
@@ -1522,7 +1532,7 @@ const HAT_WHERE = {
   pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
   masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
   gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
-  caravanturban: 'score 500 at CARAVAN RUN (Caravan Master Hakim, Sunwell Oasis)', fossilhat: 'dig up every fossil for the Sunwell Museum', dewcirclet: "a treasure chest in the Sunwell Spring (down the oasis well)", guildfez: "clear the Caravan Guild's bounty board on five days (Sunwell Oasis)", mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
+  caravanturban: 'score 500 at CARAVAN RUN (Caravan Master Hakim, Sunwell Oasis)', fossilhat: 'dig up every fossil for the Sunwell Museum', wheelcap: 'open the Sun Sluice for Waterwright Osei (the Old Aqueduct, past Glowcap Hollow)', sunspout: 'a treasure chest in the Old Aqueduct (past Glowcap Hollow)', dewcirclet: "a treasure chest in the Sunwell Spring (down the oasis well)", guildfez: "clear the Caravan Guild's bounty board on five days (Sunwell Oasis)", mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
 };
 export function hatWhere(id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';
@@ -1822,7 +1832,41 @@ function glowcapTalk(S, w, a) {
     '{hero} got the Glowcap Hat! 🍄 (☰ → 🎩 Hats)',
     '{hero} got 20 berries! 🍓',
     'Forager Pim: Oh, and talk to me again sometime. My spore puffs fly, you know. All the way up the old shaft!',
+    'Forager Pim: And here: the key to the old grate south of the pool. Water runs down there. Lots of it. I never liked getting my feet wet.',
   ], null, who);
+}
+
+// R860: Waterwright Osei in the Old Aqueduct wants the Sun Sluice at the far end opened, so the water runs home to the Sunwell
+function aqueductTalk(S, w) {
+  const F = flags(), who = 'Waterwright Osei', own = (save.adv.hats ||= []);
+  if (F.aq_done) return w.say([[
+    'Waterwright Osei: Hear that? That\'s a thousand-year-old tunnel doing its job again. Best sound in the world.',
+    'Waterwright Osei: Wellkeeper Bram says the well\'s never been so full. He\'s been dropping in two berries a day for luck. Go and see!',
+    'Waterwright Osei: The Sun City built this to share its water with everyone who passed. "Water for all who thirst." Good people, whoever they were.',
+    'Waterwright Osei: The wheels still swap the channels, but the water doesn\'t go that way any more. Spin them if you like. I do. It\'s soothing.',
+  ][Math.floor(Math.random() * 4)]], null, who);
+  if (F.aqueduct_flow) {
+    F.aq_done = true; if (!own.includes('wheelcap')) own.push('wheelcap');
+    save.berries = (save.berries || 0) + 20; const hero = save.adv.hero, c = save.critters[hero], r = grantXp(hero, Math.round(xpNeeded(c.level) * 0.4));
+    persist(); w.questMarks?.(); reward(3); S.toast('💧 Waterwright\'s Cap!');
+    return w.say([
+      'Waterwright Osei: You did it! I felt it in my boots: the whole tunnel hummed, and the channels went quiet.',
+      'Waterwright Osei: That water\'s running all the way to the Sunwell now, the way the Sun City meant it to. The oasis will never run short again.',
+      'Waterwright Osei: Here. My spare cap, with a little sluice wheel on the front. Every waterwright should have one.',
+      '{hero} got the Waterwright\'s Cap! 💧 (☰ → 🎩 Hats)',
+      `{hero} got 20 berries and a Power Snack! 🍓⭐${r.to > r.from ? ` {hero} grew to Lv ${r.to}!` : ''}`,
+    ], null, who);
+  }
+  if (!F.aq_asked) {
+    F.aq_asked = true; persist(); w.questMarks?.();
+    return w.say([
+      'Waterwright Osei: Mind the channels! Oh, hello. Osei, waterwright. I mend old waterworks. And this is the oldest I\'ve ever seen.',
+      'Waterwright Osei: It\'s a water tunnel. The Sun City dug it to carry water under the sands, all the way to the Sunwell. A thousand years old, and still running!',
+      'Waterwright Osei: But somebody shut the big Sun Sluice at the far end. So the water spills into these side channels and drains off into the sand. Wasted!',
+      'Waterwright Osei: I can\'t get to the sluice: there\'s always a channel running in the way. Those little wheels swap which one runs. Can you work it out and open the big one?',
+    ], null, who);
+  }
+  return w.say([save.adv.sluice ? 'Waterwright Osei: The east channel\'s running now. There\'s another wheel between the channels, I\'m sure of it.' : 'Waterwright Osei: Turn a wheel and watch the water swing over. You only need the channel in FRONT of you dry.', 'Waterwright Osei: The Sun Sluice is the big bronze wheel at the far end, by the sun-bird spout.'], null, who);
 }
 
 // R854: once the glowcaps are in, Pim's spore puffs ride the updraft up the old shaft: SPORE DRIFT (daily berries at 200/350/500, a Records best)

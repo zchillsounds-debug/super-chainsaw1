@@ -450,6 +450,7 @@ export class World {
     this.buildJellies(rand);
     this.buildLoaches(rand);
     this.buildShrooms(rand);
+    this.buildSluice();
     this.buildSkyLanterns();
     this.buildThanks();
     this.buildBuildings();
@@ -523,7 +524,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.loaches = null; this.shrooms = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.wreck = null; this.lighthouse = null; this.puz = null; this.chest = null; this.chest2 = null; this.updrafts = null; this.gliding = null; this.pearl = null; this.mirages = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.loaches = null; this.shrooms = null; this.sluice = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.wreck = null; this.lighthouse = null; this.puz = null; this.chest = null; this.chest2 = null; this.updrafts = null; this.gliding = null; this.pearl = null; this.mirages = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1176,7 +1177,7 @@ export class World {
     const put = (list, color, ink = OL) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color), ink); this.group.add(m); list.forEach((g) => g.dispose()); };
     const warm = this.M.sands && this.M.sands !== 'spring'; // (R829: the Sunwell Spring's wet stone is cool blue-grey)
     put(rocks, warm ? 0xc8845a : this.M.sands ? 0x8aa8b4 : 0x9a94a8); // (desert rocks are warm sandstone)
-    if (crags.length) { const m = inked(mergeGeometries(crags), toon(warm ? 0x7a4a2c : this.M.sands ? 0x527684 : 0x7a6e80, { rim: 0.08 }), OL * 0.6); this.group.add(m); crags.forEach((g) => g.dispose()); } put(frostRocks, 0x7a8aa8); put(caps, 0xf8fbff, OL * 0.6); put(snow, 0xffffff);
+    if (crags.length) { const m = inked(mergeGeometries(crags), toon(warm ? 0x7a4a2c : this.M.qanat ? 0x9a7652 : this.M.sands ? 0x527684 : 0x7a6e80, { rim: 0.08 }), OL * 0.6); this.group.add(m); crags.forEach((g) => g.dispose()); } put(frostRocks, 0x7a8aa8); put(caps, 0xf8fbff, OL * 0.6); put(snow, 0xffffff);
     if (shards.length) { const m = inked(mergeGeometries(shards), toon(0xa8eaff, { rim: 1 }), OL * 0.5); m.castShadow = true; this.group.add(m); shards.forEach((g) => g.dispose()); } put(coal, 0x2a2a34, 0); put(carrot, 0xff8a2a, OL * 0.4);
     if (drifts.length) { const m = new THREE.Mesh(mergeGeometries(drifts), toon(0xf6faff, { rim: 0.8 })); m.receiveShadow = true; this.group.add(m); drifts.forEach((g) => g.dispose()); }
     put(posts, 0xfff4e0, OL * 0.6); put(rails, 0xfff4e0, OL * 0.5); put(sticks, 0x8a5a3a, OL * 0.5); put(boards, 0xc8925a);
@@ -1730,6 +1731,7 @@ export class World {
       const hole = new THREE.Mesh(new THREE.CircleGeometry(0.95, 16, 0, Math.PI), hm); hole.scale.set(1, 2.2, 1); hole.position.set(0, 0.02, -0.2); g.add(hole);
     }
     if (!M.cave) return this.buildChest();
+    if (M.qanat) { this.puz = { boulders: [], pits: [], plates: [], gates: [] }; return this.buildChest(); } // R858: the aqueduct: sandstone, no crystals
     // crystals: little clusters growing out of the walls next to the floor, glowing teal and violet
     const cr = [[], []];
     for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) {
@@ -2255,6 +2257,90 @@ export class World {
       L.push({ g, sm, hm, ph: rand() * 6, r: 0.5 + rand() * 0.6, sp: (0.35 + rand() * 0.3) * (k % 2 ? -1 : 1), x0: px, z0: pz });
     }
     this.loaches = L;
+  }
+
+  // R859: the Old Aqueduct. Water pours from grates in the north wall down one of two stone channels across the tunnel (M.sluice.a / .b,
+  // columns over rows y0..y1); a running channel can't be crossed. Each small wheel swaps which channel runs (save.adv.sluice: 0 = a, 1 = b).
+  // The big Sun Sluice at the east end sends all the water home to the Sunwell (flag): both channels run dry for good and the spout pours
+  buildSluice() {
+    this.sluice = null;
+    const M = this.M, S = M.sluice; if (!S) return;
+    const F = save.adv.flags, stone = toon(0xc8ae88, { rim: 0.2 }), bed = toon(0x5a4632), bronze = toon(0xc8903a, { rim: 0.9, emissive: 0x2a1600 }), wood = toon(0x8a5a32);
+    const flowTex = canvasTex(64, 128, (c) => { c.fillStyle = '#32b4c4'; c.fillRect(0, 0, 64, 128); for (let k = 0; k < 30; k++) { c.fillStyle = `rgba(230,255,255,${0.2 + (k % 3) * 0.15})`; c.fillRect((k * 23) % 60, (k * 37) % 128, 3 + (k % 4) * 3, 8 + (k % 5) * 5); } });
+    flowTex.wrapS = flowTex.wrapT = THREE.RepeatWrapping;
+    const chans = ['a', 'b'].map((id) => {
+      const x = S[id], [px, pz0] = wpos(x, S.y0), [, pz1] = wpos(x, S.y1), zc = (pz0 + pz1) / 2, len = pz1 - pz0 + TILE, g = new THREE.Group(); g.position.set(px, 0, zc); this.group.add(g);
+      const b = new THREE.Mesh(new THREE.PlaneGeometry(1.5, len), bed); b.rotation.x = -Math.PI / 2; b.position.y = 0.02; g.add(b);
+      for (const sd of [-1, 1]) { const c = inked(new THREE.BoxGeometry(0.24, 0.22, len), stone, OL * 0.25); c.position.set(sd * 0.86, 0.11, 0); g.add(c); }
+      const t = flowTex.clone(); t.needsUpdate = true; t.repeat.set(1, len / 2.2);
+      const wm = new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.88, depthWrite: false }); wm.userData.own = true;
+      const water = new THREE.Mesh(new THREE.PlaneGeometry(1.48, len), wm); water.rotation.x = -Math.PI / 2; water.position.y = 0.16; g.add(water);
+      const grate = new THREE.Group(); grate.position.set(0, 0, -len / 2 + 0.05); g.add(grate); // the inflow: a carved mouth in the wall with a falling sheet of water
+      const arch = inked(new THREE.BoxGeometry(1.7, 1.3, 0.3), stone, OL * 0.3); arch.position.y = 0.95; grate.add(arch);
+      const hm = new THREE.MeshBasicMaterial({ color: 0x1a120a }); hm.userData.own = true; const hole = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.7), hm); hole.position.set(0, 0.85, 0.16); grate.add(hole);
+      const fm = new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide }); fm.userData.own = true;
+      const fall = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.75), fm); fall.position.set(0, 0.5, 0.2); fall.rotation.x = -0.25; grate.add(fall);
+      return { id, x, wm, fm, water, fall, t, lvl: 1, len };
+    });
+    const wheel = (x, y, big) => { // a spoked wheel on a stone post, facing the tunnel
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz + 0.2); this.group.add(g); this.solid.add(x + ',' + y);
+      const post = inked(new THREE.BoxGeometry(0.5, 1.1, 0.5), stone, OL * 0.4); post.position.y = 0.55; g.add(post);
+      const sp = new THREE.Group(); sp.position.set(0, big ? 1.55 : 1.35, 0.32); sp.scale.setScalar(big ? 1.5 : 1.25); g.add(sp);
+      sp.add(inked(new THREE.TorusGeometry(0.62, 0.07, 6, 22), big ? bronze : wood, OL * 0.25));
+      for (let k = 0; k < 3; k++) { const s2 = inked(new THREE.BoxGeometry(0.07, 1.2, 0.07), big ? bronze : wood, OL * 0.15); s2.rotation.z = k * Math.PI / 3; sp.add(s2); }
+      for (let k = 0; k < 6; k++) { const h = inked(new THREE.CylinderGeometry(0.06, 0.06, 0.28, 6), wood, OL * 0.15); const a = k / 6 * Math.PI * 2; h.rotation.x = Math.PI / 2; h.position.set(Math.cos(a) * 0.68, Math.sin(a) * 0.68, 0.12); sp.add(h); }
+      const hub = inked(new THREE.CylinderGeometry(0.16, 0.16, 0.16, 12), bronze, OL * 0.2); hub.rotation.x = Math.PI / 2; sp.add(hub);
+      if (big) { const dm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xffc850, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.5 }); dm.userData.own = true; const gl = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), dm); gl.position.z = -0.05; sp.add(gl); }
+      return { x, y, big, sp, spin: 0 };
+    };
+    const wheels = S.wheels.map(([x, y]) => wheel(x, y, false)), main = wheel(...S.main, true);
+    // shafts of daylight from holes in the roof, and a sun-bird spout over the outlet pool
+    const shaftTex = canvasTex(8, 64, (c) => { const g = c.createLinearGradient(0, 0, 0, 64); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.55, 'rgba(255,255,255,0.5)'); g.addColorStop(1, 'rgba(255,255,255,1)'); c.fillStyle = g; c.fillRect(0, 0, 8, 64); });
+    const lm = new THREE.MeshBasicMaterial({ map: shaftTex, color: 0xfff0c8, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false }); lm.userData.own = true;
+    const pm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xffe8b0, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }); pm.userData.own = true;
+    for (const [x, y] of M.shafts || []) { const [px, pz] = wpos(x, y); const c = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 1.0, 5.5, 16, 1, true), lm); c.position.set(px, 2.75, pz); this.group.add(c); const f = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), pm); f.rotation.x = -Math.PI / 2; f.position.set(px, 0.05, pz); this.group.add(f); }
+    let spout = null;
+    if (M.spout) {
+      const [px, pz] = wpos(...M.spout), g = new THREE.Group(); g.position.set(px + 1.0, 0, pz + 0.4); g.rotation.y = -Math.PI / 2; g.scale.setScalar(1.35); this.group.add(g);
+      const head = inked(new THREE.SphereGeometry(0.42, 12, 10), stone, OL * 0.3); head.scale.set(1, 0.9, 1.1); head.position.set(0, 1.5, 0.1); g.add(head);
+      const beak = inked(new THREE.ConeGeometry(0.16, 0.6, 8), toon(0xe8b04a, { rim: 0.6 }), OL * 0.2); beak.rotation.x = Math.PI / 2; beak.position.set(0, 1.42, 0.62); g.add(beak);
+      for (const sd of [-1, 1]) { const w2 = inked(new THREE.BoxGeometry(0.9, 0.5, 0.12), stone, OL * 0.25); w2.position.set(sd * 0.62, 1.55, 0); w2.rotation.z = sd * 0.5; g.add(w2); const e = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 5), toon(0x2a1a10)); e.position.set(sd * 0.18, 1.62, 0.44); g.add(e); }
+      const sm = new THREE.MeshBasicMaterial({ map: flowTex, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide }); sm.userData.own = true;
+      const pour = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1.4), sm); pour.position.set(0, 0.7, 0.95); pour.rotation.y = Math.PI / 2; g.add(pour);
+      spout = { pour, sm, g };
+    }
+    this.sluice = { chans, wheels, main, spout, flowTex };
+    this.sluiceSet(true);
+  }
+
+  // which channel runs now: 'a', 'b', or neither once the Sun Sluice is open. Running channels are solid
+  sluiceSet(quiet) {
+    const L = this.sluice, S = this.M.sluice, flow = !!save.adv.flags[S.flag], run = flow ? null : (save.adv.sluice ? 'b' : 'a');
+    for (const c of L.chans) {
+      c.on = c.id === run;
+      for (let y = S.y0; y <= S.y1; y++) { if (c.on) this.solid.add(c.x + ',' + y); else if (this.tile(c.x, y) !== 'R') this.solid.delete(c.x + ',' + y); }
+      if (quiet) c.lvl = c.on ? 1 : 0;
+    }
+    if (L.spout) L.spout.pour.visible = flow;
+  }
+
+  // A on a wheel: a small one swaps the channels; the Sun Sluice opens the way home for the water (once)
+  turnWheel(wh) {
+    const L = this.sluice, S = this.M.sluice, F = save.adv.flags;
+    if (wh.spin > 0) return;
+    if (F[S.flag]) { wh.spin = 0.6; sfx.foot?.('stone'); return this.say([wh.big ? 'The Sun Sluice stands open. Far off, the water chuckles all the way down to the Sunwell.' : 'The wheel spins freely. Both channels are dry: all the water runs to the Sunwell now.']); }
+    if (wh.big) {
+      this.busy = true; wh.spin = 2.2; sfx.rumble?.(); this.g.input?.haptic?.(40);
+      setTimeout(() => {
+        F[S.flag] = true; persist(); this.sluiceSet(); this.busy = false; reward(3); this.questMarks?.();
+        this.S.toast?.('💧 The Sun Sluice opens! The water runs home to the Sunwell.');
+        this.say(['{hero} leans on the great bronze wheel. It groans... creaks... and turns!', 'Deep in the wall, something heavy lifts. The channels gurgle, then drain. The sun-bird spout coughs once, twice... and POURS!', 'Far away, down the long dark tunnel, the water runs home to the Sunwell. Waterwright Osei will want to know!']);
+      }, 1100);
+      return;
+    }
+    save.adv.sluice = save.adv.sluice ? 0 : 1; persist(); wh.spin = 1.0;
+    sfx.foot?.('stone'); this.g.input?.haptic?.(20); this.sluiceSet();
+    this.S.toast?.(save.adv.sluice ? '⚙️ Clunk! The water swings into the east channel.' : '⚙️ Clunk! The water swings into the west channel.');
   }
 
   // R847: Glowcap Hollow: clumps of small glowing mushrooms on the rocks light the dark (M.shrooms), and the six big glowcaps
@@ -4934,7 +5020,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? (save.adv.sporeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? (save.adv.sporeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : a.n.story === 'aqueduct' ? (!F.aq_asked ? '!' : F.aqueduct_flow && !F.aq_done ? '?' : null) /* R860 */ : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m; a.markKind = k;
@@ -5342,6 +5428,15 @@ export class World {
       J.g.position.x = J.x0 + Math.sin(this.t * 0.25 + J.ph) * 0.6; J.g.position.z = J.z0 + Math.cos(this.t * 0.2 + J.ph) * 0.6; J.g.position.y = -0.05 + Math.max(0, q) * 0.06;
     }
     if (this.shrooms) for (const q of this.shrooms.big) { q.g.scale.y = 1.7 + Math.sin(this.t * 2 + q.ph) * 0.08; q.sm.opacity = 0.65 + Math.sin(this.t * 2.6 + q.ph) * 0.2; } // the big glowcaps breathe
+    if (this.sluice) { // R859: water runs down the channels; drained ones sink away; wheels spin; the spout pours once the sluice is open
+      const L = this.sluice; L.flowTex.offset.y += dt * 0.9;
+      for (const c of L.chans) {
+        c.t.offset.y += dt * 1.1; c.lvl += ((c.on ? 1 : 0) - c.lvl) * Math.min(1, dt * 2.5);
+        c.water.position.y = 0.02 + c.lvl * 0.14; c.wm.opacity = 0.88 * Math.min(1, c.lvl * 1.4); c.water.visible = c.lvl > 0.02; c.fall.visible = c.lvl > 0.3; c.fm.opacity = 0.8 * c.lvl;
+      }
+      for (const wh of [...L.wheels, L.main]) if (wh.spin > 0) { wh.spin = Math.max(0, wh.spin - dt); wh.sp.rotation.z -= dt * (wh.big ? 2.2 : 5); }
+      if (L.spout?.pour.visible && Math.random() < dt * 10) { const p = new THREE.Vector3(); L.spout.pour.getWorldPosition(p); this.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.4, y: 0.15, z: p.z + (Math.random() - 0.5) * 0.4, vx: (Math.random() - 0.5) * 1.5, vy: 1 + Math.random(), vz: (Math.random() - 0.5) * 1.5, color: 0xe8fcff, size: 0.18, life: 0.5, shape: 'glow', additive: false, grav: 8 }); }
+    }
     if (this.loaches) for (const F of this.loaches) { // swim slow loops; the nose light blinks twice now and then
       const a = this.t * F.sp + F.ph, wob = Math.sin(this.t * 3 + F.ph) * 0.08;
       F.g.position.x = F.x0 + Math.cos(a) * F.r; F.g.position.z = F.z0 + Math.sin(a) * F.r * 0.7;
@@ -5792,12 +5887,13 @@ export class World {
     if (this.chest && this.chest.x === fx && this.chest.y === fy) return this.openChest();
     if (this.chest2 && this.chest2.x === fx && this.chest2.y === fy) return this.openChest(this.chest2);
     const mi = this.puz?.mirrors?.find((m) => m.x === fx && m.y === fy); if (mi) return this.turnMirror(mi);
+    const wh = this.sluice && [...this.sluice.wheels, this.sluice.main].find((q) => q.x === fx && q.y === fy); if (wh) return this.turnWheel(wh);
     const up = this.updrafts?.find((u) => u.x === fx && u.y === fy); if (up) return this.updraftTalk(up);
     const sg = this.singers?.find((q) => q.x === fx && q.y === fy); if (sg) return this.singAt(sg);
     const lf = this.lifts?.find((q) => q.x === fx && q.y === fy && q.way); if (lf) return this.rideLift(lf);
     if (this.well && this.well.x === fx && this.well.y === fy) {
       const day = new Date().toISOString().slice(0, 10);
-      if (save.adv.wellDay !== day) { save.adv.wellDay = day; save.berries = (save.berries || 0) + 1; persist(); reward(1); return this.say(['{hero} winds the bucket up from the well. The water is cold and clear, even in the desert heat!', 'Something shiny sits in the bottom of the bucket... a berry someone dropped in for luck! +1 🍓']); }
+      if (save.adv.wellDay !== day) { const aq = !!save.adv.flags.aqueduct_flow; save.adv.wellDay = day; save.berries = (save.berries || 0) + (aq ? 2 : 1); persist(); reward(1); return this.say([aq ? '{hero} winds the bucket up from the well. It\'s brimming! Ever since the Sun Sluice opened, the Sunwell runs sweet and full.' : '{hero} winds the bucket up from the well. The water is cold and clear, even in the desert heat!', aq ? 'Two berries bob in the bucket, dropped in for luck! +2 🍓' : 'Something shiny sits in the bottom of the bucket... a berry someone dropped in for luck! +1 🍓']); } // R860: the open Sun Sluice fills the well (+1)
       if (save.adv.flags.cup_mirage) return this.ask('{hero} peers down the well. A knotted rope runs all the way down, and far below the water glows blue... Climb down?', ['Climb down', 'Not now'], (i) => { if (!i) { sfx.whoosh?.(); this.goTo({ to: 'wellspring', at: [10, 2] }, 's'); } }); // R829: the Sunwell Spring
       return this.say(['{hero} peers down the well. Far below, the water sparkles. An echo says: "...well... well... well..."']);
     }
@@ -5848,6 +5944,7 @@ export class World {
     if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
     if (this.singers?.some(at)) return this.phase === 'night' ? 'Sing' : 'Look';
     if (this.lifts?.some((q) => q.way && at(q))) return save.adv.flags.cup_canyon ? 'Ride' : 'Look';
+    if (this.sluice && [...this.sluice.wheels, this.sluice.main].some(at)) return 'Turn';
     if ([this.well, this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest, this.melon, this.picnic, this.snowman, this.apples].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
     if (this.tile(fx, fy) === '~' && !this.M.indoor) { if (this.key === 'cinder' && this.phase !== 'day') return 'Roast'; if (this.key === 'route2' && this.tile(this.hx, this.hy) === '=') return 'Twigs'; if (save.adv.flags.rod) return 'Fish'; }
     const sign = (this.M.signs || []).find((g) => g.x === fx && g.y === fy);
