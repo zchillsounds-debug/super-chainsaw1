@@ -902,7 +902,7 @@ export const MAPS = {
       { id: 'kamal_o', x: 18, y: 7, critter: 'fennzap', name: 'Lamplight Duelist Kamal', dir: 'w', dark: true, showFlag: 'cup_mirage', story: 'lampduel', lines: [] }, // R825: one duel a night
       { id: 'yusra_o', x: 17, y: 10, critter: 'sizzlard', name: 'Lantern Maker Yusra', dir: 'e', dark: true, showFlag: 'cup_mirage', story: 'skylantern', lines: [] },
       { id: 'layla_o', x: 17, y: 9, critter: 'humpdrop', name: 'Pool Angler Layla', dir: 'w', story: 'oasisfish', lines: [] }, // the oasis fish album (Records, Amber Sands)
-      { id: 'hakim_o', x: 2, y: 12, critter: 'humpdrop', name: 'Caravan Master Hakim', dir: 'e', lines: ["Caravan Master Hakim: My Humpdrops can walk three days without a drink. I can walk about three minutes. We make a good team.", "Caravan Master Hakim: The caravan road runs oasis, canyon, dunes and home. Every stop trades something. That is how the desert stays friends."] },
+      { id: 'hakim_o', x: 2, y: 12, critter: 'humpdrop', name: 'Caravan Master Hakim', dir: 'e', story: 'caravanrun', lines: ["Caravan Master Hakim: My Humpdrops can walk three days without a drink. I can walk about three minutes. We make a good team.", "Caravan Master Hakim: The caravan road runs oasis, canyon, dunes and home. Every stop trades something. That is how the desert stays friends."] },
       { id: 'grit_o', x: 22, y: 12, critter: 'scarabold', name: 'Dust Devil Grit', dir: 'w', lines: ["Dust Devil Grit: Eh? Who are YOU looking at? We're just... shopping. For shovels. LOTS of shovels.", "Dust Devil Grit: The buried city? Never heard of it. Definitely not digging it up. Go away, tourist!"] },
     ],
   },

@@ -580,3 +580,154 @@ export function duneSled(root, face, onDone) {
   el.__arcade = { S, press, slope: (x) => slope(x), step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
   return el;
 }
+
+// R837: CARAVAN RUN (Caravan Master Hakim in Sunwell Oasis, once his caravan road is open): the hero leads three Humpdrops along
+// three lanes of desert. Tap above or below the leader (or ↑/↓) to change lanes; the Humpdrops follow in your tracks. Dates +5,
+// golden scarabs +15, water skins top up the water (+4 s). A cactus or a sand twister scares off a Humpdrop; lose all three, or
+// run out of water, and the run is over. Halfway through a sandstorm blows in and you can only see what's close. Reach the next
+// camp, 1000 m off, for +60 (and every Humpdrop still with you is +20).
+export function caravanRun(root, face, onDone) {
+  const el = document.createElement('div');
+  el.className = 'modal-wrap arcade-wrap';
+  el.innerHTML = `<div class="arcade caravan"><div class="arc-top"><b>CARAVAN RUN</b><span class="arc-hud"></span></div>
+    <canvas width="${W}" height="${H}"></canvas>
+    <p class="arc-tip">Tap above or below to change lanes! 🌴 dates, 🪲 scarabs, 💧 water. Keep your Humpdrops away from cacti!</p></div>`;
+  root.appendChild(el);
+  const cv = el.querySelector('canvas'), c = cv.getContext('2d'), hud = el.querySelector('.arc-hud');
+  const img = new Image(); img.src = face;
+  const LANES = [118, 166, 214], X = 128, WATER = 40, CAMP = 10000;
+  const S = { x: 0, v: 110, lane: 1, y: LANES[1], t: 0, water: WATER, humps: 3, lost: [], dates: 0, scarabs: 0, skins: 0, things: [], pops: [], trail: [], over: false, ready: 1.2, started: false, end: 0, next: 220, storm: 16 + Math.random() * 8, stormT: 0, hurt: 0 };
+  const lane = (d) => { if (S.over) return; if (S.ready > 0) S.ready = 0; S.started = true; const n = Math.max(0, Math.min(2, S.lane + d)); if (n !== S.lane) { S.lane = n; sfx.arc('hop'); } };
+  const onKey = (e) => {
+    const d = { ArrowUp: -1, KeyW: -1, ArrowDown: 1, KeyS: 1 }[e.code];
+    if (d == null && e.code !== 'Space') return;
+    e.preventDefault(); e.stopPropagation();
+    if (e.type === 'keydown' && !e.repeat) d == null ? lane(0) : lane(d);
+  };
+  addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
+  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); const r = cv.getBoundingClientRect(), y = (e.clientY - r.top) / r.height * H; lane(y < S.y - 14 ? -1 : y > S.y + 14 ? 1 : 0); });
+  const pop = (x, y, txt, col) => S.pops.push({ x, y, txt, col, t: 0.9 });
+  const scare = () => { // a Humpdrop bolts off the back of the line
+    S.humps--; S.hurt = 0.6; sfx.arc('crash'); buzz('medium'); jolt(el, true);
+    S.lost.push({ x: X - 30 * (S.humps + 1), y: S.y, vy: -60, t: 1.2 });
+    pop(X, S.y - 30, S.humps ? 'MROOO!' : 'NO HUMPDROPS!', '#ffb0a0');
+    if (S.humps <= 0) end();
+  };
+  const end = () => { if (S.over) return; S.over = true; setTimeout(close, 2400); };
+
+  const step = (dt) => {
+    S.t += dt;
+    if (S.ready > 0 || !S.started) { if (S.ready > 0) S.ready -= dt; return; }
+    S.y += (LANES[S.lane] - S.y) * Math.min(1, dt * 12);
+    S.trail.unshift(S.y); if (S.trail.length > 90) S.trail.pop();
+    if (S.over) { S.end += dt; S.v = Math.max(0, S.v - 140 * dt); S.x += S.v * dt; return; }
+    S.water -= dt; if (S.water <= 0) { S.water = 0; pop(X, S.y - 30, 'OUT OF WATER!', '#9ad8ff'); sfx.arc('crash'); end(); return; }
+    S.hurt = Math.max(0, S.hurt - dt);
+    S.v = Math.min(250, 110 + S.t * 3.2); S.x += S.v * dt;
+    if (S.x >= CAMP) { S.arrived = true; pop(X, S.y - 30, 'CAMP! +60', '#fff36b'); sfx.arc('grab', 7); buzz('light'); end(); return; }
+    if (S.storm > 0) { S.storm -= dt; if (S.storm <= 0) { S.stormT = 7; pop(W / 2, 70, 'SANDSTORM!', '#ffd08a'); sfx.whoosh?.(0.7); } } else if (S.stormT > 0) S.stormT -= dt;
+    while (S.next < Math.min(S.x + W, CAMP - 300)) { // a row of trouble and treats: never all three lanes blocked
+      const x = S.next, cact = Math.floor(Math.random() * 3), r = Math.random();
+      if (S.x > 150) S.things.push({ k: 'cactus', x, l: cact });
+      const free = [0, 1, 2].filter((l) => l !== cact);
+      const pick = free[Math.floor(Math.random() * free.length)];
+      if (r < 0.45) for (let k = 0; k < 3; k++) S.things.push({ k: 'date', x: x + 26 + k * 20, l: pick });
+      else if (r < 0.57) S.things.push({ k: 'skin', x: x + 40, l: pick });
+      else if (r < 0.69) S.things.push({ k: 'scarab', x: x + 40, l: pick });
+      else if (r < 0.88 && S.x > 600) S.things.push({ k: 'twister', x: x + 90, l: pick, y: LANES[pick], dir: Math.random() < 0.5 ? -1 : 1 });
+      S.next += 150 + Math.random() * 90 - Math.min(50, S.t * 1.2);
+    }
+    for (const o of S.things) {
+      if (o.got) continue;
+      if (o.k === 'twister') { // it wanders between lanes as it comes
+        o.y += o.dir * 34 * dt; if (o.y < LANES[0] || o.y > LANES[2]) { o.dir *= -1; o.y = Math.max(LANES[0], Math.min(LANES[2], o.y)); }
+      }
+      const sx = o.x - S.x + X, oy = o.k === 'twister' ? o.y : LANES[o.l];
+      if (Math.abs(sx - X) > 14 || Math.abs(oy - S.y) > 18) continue;
+      o.got = true;
+      if (o.k === 'cactus' || o.k === 'twister') { if (S.hurt > 0) { o.got = false; continue; } scare(); }
+      else if (o.k === 'date') { S.dates++; pop(X, S.y - 24, '+5', '#ffd0a0'); sfx.arc('grab', S.dates % 8); }
+      else if (o.k === 'scarab') { S.scarabs++; pop(X, S.y - 24, '+15', '#fff36b'); sfx.arc('grab', 7); buzz('light'); }
+      else if (o.k === 'skin') { S.skins++; S.water = Math.min(WATER, S.water + 4); pop(X, S.y - 24, '+4 s 💧', '#9ad8ff'); sfx.arc('splash'); }
+    }
+    S.things = S.things.filter((o) => o.x - S.x + X > -30);
+    for (const p of S.pops) { p.t -= dt; p.y -= 30 * dt; }
+    S.pops = S.pops.filter((p) => p.t > 0);
+    for (const L of S.lost) { L.t -= dt; L.x -= 120 * dt; L.vy += 160 * dt; L.y += L.vy * dt * 0.4; }
+    S.lost = S.lost.filter((L) => L.t > 0);
+  };
+  const total = () => Math.floor(S.x / 40) + S.dates * 5 + S.scarabs * 15 + S.skins * 3 + S.humps * 20 + (S.arrived ? 60 : 0);
+
+  const hump = (x, y, k, ph) => { // a Humpdrop seen side-on, plodding: tan body, a hump, a little head, a teal saddle blanket
+    const b = Math.sin(ph) * 2;
+    c.fillStyle = '#9a6a3a'; for (const lx of [-8, 6]) c.fillRect(x + lx, y - 4 + (lx > 0 ? b : -b) * 0.5, 4, 9);
+    c.fillStyle = '#d8a868'; c.beginPath(); c.ellipse(x, y - 10 + b * 0.3, 14, 8, 0, 0, 7); c.fill();
+    c.beginPath(); c.ellipse(x - 1, y - 19 + b * 0.3, 7, 6, 0, 0, 7); c.fill();
+    c.fillStyle = ['#2ab0a8', '#d8643a', '#ffc040'][k % 3]; c.fillRect(x - 9, y - 15 + b * 0.3, 14, 5);
+    c.fillStyle = '#d8a868'; c.beginPath(); c.ellipse(x + 15, y - 14 + b * 0.3, 6, 5, 0, 0, 7); c.fill();
+    c.fillStyle = '#3a2214'; c.fillRect(x + 17, y - 16 + b * 0.3, 2, 2);
+  };
+  const draw = () => {
+    const storm = S.stormT > 0 ? Math.min(1, S.stormT, (7 - S.stormT) * 2) : 0;
+    const g = c.createLinearGradient(0, 0, 0, 90); g.addColorStop(0, '#4aa0e8'); g.addColorStop(1, '#ffe0a8');
+    c.fillStyle = g; c.fillRect(0, 0, W, 92);
+    c.fillStyle = '#fff2b0'; c.beginPath(); c.arc(270, 30, 14, 0, 7); c.fill();
+    c.fillStyle = '#c8784a'; for (let i = 0; i < 4; i++) { const mx = ((i * 130 - S.x * 0.08) % 520 + 520) % 520 - 90, my = 92; c.fillRect(mx, my - 26 - (i % 2) * 12, 54 + (i % 3) * 10, 30); c.fillRect(mx - 5, my - 30 - (i % 2) * 12, 64 + (i % 3) * 10, 5); }
+    c.fillStyle = '#ecc488'; c.fillRect(0, 88, W, H - 88);
+    c.fillStyle = 'rgba(200,150,80,0.35)'; for (let k = 0; k < 2; k++) { const y = (LANES[k] + LANES[k + 1]) / 2; for (let x = -((S.x * 1) % 24); x < W; x += 24) c.fillRect(x, y, 12, 2); } // the tracks between lanes
+    c.fillStyle = 'rgba(255,240,210,0.4)'; for (let i = 0; i < 18; i++) { const x = ((i * 53 - S.x) % (W + 40) + W + 40) % (W + 40) - 20, y = 96 + (i * 37) % 140; c.fillRect(x, y, 6, 2); }
+    const cx = CAMP - S.x + X + 30; // the next camp: striped tents and a palm rolling in from the right
+    if (cx < W + 80) for (const [dx, dy, col] of [[0, 120, '#2ab0a8'], [40, 172, '#d8643a'], [10, 222, '#ffc040']]) {
+      const x = cx + dx, y = dy; c.fillStyle = '#f4e4c4'; c.beginPath(); c.moveTo(x - 22, y); c.lineTo(x, y - 30); c.lineTo(x + 22, y); c.fill();
+      c.fillStyle = col; c.beginPath(); c.moveTo(x - 8, y); c.lineTo(x, y - 30); c.lineTo(x + 8, y); c.fill(); c.fillStyle = '#5a3a22'; c.fillRect(x - 3, y - 9, 6, 9);
+    }
+    for (const o of S.things) {
+      if (o.got) continue;
+      const x = o.x - S.x + X, y = o.k === 'twister' ? o.y : LANES[o.l]; if (x < -30 || x > W + 30) continue;
+      const vis = storm ? Math.max(0.08, 1 - storm * Math.max(0, (x - X - 40) / 90)) : 1; c.globalAlpha = vis;
+      if (o.k === 'cactus') { c.fillStyle = '#3a8a4a'; c.fillRect(x - 4, y - 28, 8, 30); c.fillRect(x - 11, y - 18, 5, 10); c.fillRect(x - 11, y - 12, 9, 4); c.fillRect(x + 6, y - 23, 5, 11); c.fillRect(x + 2, y - 15, 9, 4); c.fillStyle = '#ff7aa0'; c.fillRect(x - 2, y - 31, 4, 3); }
+      if (o.k === 'date') { c.fillStyle = '#8a4a22'; c.beginPath(); c.ellipse(x, y - 10, 4, 6, 0.3, 0, 7); c.fill(); c.fillStyle = 'rgba(255,220,180,0.7)'; c.fillRect(x - 1, y - 14, 2, 3); }
+      if (o.k === 'skin') { c.fillStyle = '#7a5a3a'; c.beginPath(); c.ellipse(x, y - 10, 7, 9, 0, 0, 7); c.fill(); c.fillStyle = '#5ac8e8'; c.beginPath(); c.arc(x, y - 9, 4, 0, 7); c.fill(); c.fillStyle = '#5a3a22'; c.fillRect(x - 2, y - 22, 4, 4); }
+      if (o.k === 'scarab') { const b = 1 + Math.sin(S.t * 6) * 0.15; c.fillStyle = 'rgba(255,230,120,0.35)'; c.beginPath(); c.arc(x, y - 10, 12 * b, 0, 7); c.fill(); c.fillStyle = '#e8b020'; c.beginPath(); c.ellipse(x, y - 10, 6, 8, 0, 0, 7); c.fill(); c.strokeStyle = '#8a5a10'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y - 18); c.lineTo(x, y - 2); c.stroke(); }
+      if (o.k === 'twister') { for (let k = 0; k < 6; k++) { const w2 = 4 + k * 3.2, yy = y - 4 - k * 6, wob = Math.sin(S.t * 9 + k) * 3; c.fillStyle = `rgba(200,150,80,${0.75 - k * 0.08})`; c.beginPath(); c.ellipse(x + wob, yy, w2, 3, 0, 0, 7); c.fill(); } }
+      c.globalAlpha = 1;
+    }
+    // the caravan: Humpdrops trailing in the leader's tracks, the hero out in front
+    for (let k = S.humps - 1; k >= 0; k--) { const y = S.trail[Math.min(S.trail.length - 1, (k + 1) * 9)] ?? S.y; hump(X - 32 * (k + 1), y, k, S.x * 0.08 + k); }
+    for (const L of S.lost) { c.globalAlpha = Math.min(1, L.t); hump(L.x, L.y, 0, S.t * 12); c.globalAlpha = 1; }
+    c.save(); c.translate(X, S.y);
+    if (S.hurt > 0 && Math.floor(S.hurt * 12) % 2) c.globalAlpha = 0.4;
+    c.fillStyle = 'rgba(0,0,0,0.15)'; c.beginPath(); c.ellipse(0, 2, 13, 4, 0, 0, 7); c.fill();
+    if (img.complete && img.naturalWidth) c.drawImage(img, -15, -30 + Math.abs(Math.sin(S.x * 0.08)) * -2, 30, 30); else { c.fillStyle = '#ff9a40'; c.beginPath(); c.arc(0, -14, 12, 0, 7); c.fill(); }
+    c.restore();
+    if (storm) { // blowing sand: an amber wall that only the near tiles show through
+      const sg = c.createLinearGradient(X + 30, 0, W, 0); sg.addColorStop(0, `rgba(220,170,100,${0.15 * storm})`); sg.addColorStop(1, `rgba(210,160,90,${0.85 * storm})`);
+      c.fillStyle = sg; c.fillRect(0, 0, W, H);
+      c.fillStyle = `rgba(255,235,190,${0.5 * storm})`; for (let i = 0; i < 40; i++) { const x = ((i * 71 - S.t * 420) % W + W) % W, y = (i * 29 + S.t * 10) % H; c.fillRect(x, y, 14, 1.5); }
+    }
+    c.textAlign = 'center'; c.font = 'bold 13px sans-serif';
+    for (const p of S.pops) { c.globalAlpha = Math.min(1, p.t * 2); c.fillStyle = p.col; c.strokeStyle = 'rgba(90,50,20,0.8)'; c.lineWidth = 3; c.strokeText(p.txt, p.x, p.y); c.fillText(p.txt, p.x, p.y); }
+    c.globalAlpha = 1;
+    // the water timer along the top
+    c.fillStyle = 'rgba(30,60,90,0.35)'; c.fillRect(10, 8, W - 20, 6); c.fillStyle = S.water < 8 ? '#ff7a3a' : '#5ac8e8'; c.fillRect(10, 8, (W - 20) * S.water / WATER, 6);
+    if (S.ready > 0 || !S.started) { c.fillStyle = '#fff36b'; c.strokeStyle = '#8a4a1a'; c.lineWidth = 4; c.font = 'bold 24px sans-serif'; const t = S.ready > 0 ? 'READY?' : 'TAP TO SET OFF!'; c.strokeText(t, W / 2, H / 2 - 50); c.fillText(t, W / 2, H / 2 - 50); }
+    if (S.over && S.end > 0.3) { c.fillStyle = 'rgba(70,40,20,0.55)'; c.fillRect(0, 0, W, H); c.fillStyle = '#fff36b'; c.font = 'bold 26px sans-serif'; c.fillText(S.arrived ? 'CAMP!' : S.humps > 0 ? 'OUT OF WATER!' : 'SCATTERED!', W / 2, H / 2 - 10); c.fillStyle = '#fff'; c.font = 'bold 16px sans-serif'; c.fillText(`Score ${total()}`, W / 2, H / 2 + 16); }
+    hud.textContent = `🐪×${S.humps}  ${Math.floor(Math.min(S.x, CAMP) / 10)}/${CAMP / 10} m  🌴 ${S.dates}  ⭐ ${total()}`;
+  };
+  let last = performance.now(), raf = 0;
+  const loop = (now) => {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    step(dt); draw();
+    if (el.isConnected) raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+  let closed = false;
+  function close() {
+    if (closed) return; closed = true;
+    cancelAnimationFrame(raf); el.remove();
+    removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true);
+    onDone(total());
+  }
+  el.__arcade = { S, lane, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
+  return el;
+}

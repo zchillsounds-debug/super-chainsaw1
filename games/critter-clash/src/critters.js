@@ -1544,6 +1544,7 @@ export const SHOP_HATS = [
   { id: 'palmangler', name: 'Palm Angler Hat', kind: 'bucket', col: 0x2aa8a0, band: 0xf2c46a, price: 0, gift: true, extra: true }, // Pool Angler Layla at Sunwell Oasis: all four oasis fish
   { id: 'minerhelm', name: "Salt Miner's Helmet", kind: 'helm', col: 0xf4ecd8, band: 0xffd84d, price: 0, gift: true, extra: true }, // R815: the salt road (Salt Miner Hamid, the Glass Flats)
   { id: 'mirageturban', name: 'Mirage Turban', kind: 'turban', col: 0xeef6ff, band: 0x5ac8e8, price: 0, gift: true, extra: true }, // R814: the Mirage Merchant on the Glass Flats (mirage hours only)
+  { id: 'caravanturban', name: "Caravan Leader's Turban", kind: 'turban', col: 0xe8843a, band: 0x2ab0a8, price: 0, gift: true, extra: true }, // R838: 500 at CARAVAN RUN (Caravan Master Hakim, Sunwell Oasis)
   { id: 'siroccohat', name: "Sirocco's Wide-Brim", kind: 'ranger', col: 0x6a5ab0, band: 0xffc840, price: 0, gift: true, extra: true }, // R836: Sirocco's Amends (the reformed Baron's old hat)
   { id: 'lampcap', name: "Spelunker's Lamp Cap", kind: 'lampcap', col: 0xffbe2a, band: 0xe8f8ff, price: 0, gift: true, extra: true }, // R833: Spelunker Odette's favour (her cave journal, found on Redrock Mesa)
   { id: 'dewcirclet', name: 'Dewdrop Circlet', kind: 'circlet', col: 0xcfe8f4, band: 0x3ac8e8, price: 0, gift: true, extra: true }, // R829: the Sunwell Spring's chest

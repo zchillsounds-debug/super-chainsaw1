@@ -12,7 +12,7 @@ import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
-import { arcadeGame, skyHop, waveRider, reefDive, duneSled } from './arcade.js';
+import { arcadeGame, skyHop, waveRider, reefDive, duneSled, caravanRun } from './arcade.js';
 import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, FISH, seasonKey, gullFish, traderTown, alphaToday } from './world.js';
 
 const flags = () => save.adv.flags;
@@ -565,6 +565,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'arcade:hop') return arcade(S, w, true);
   if (id === 'surf') return surf(S, w);
   if (id === 'sled') return sled(S, w);
+  if (id === 'caravanrun') return caravanRunTalk(S, w, a);
   if (id.startsWith('lost:') || id.startsWith('found:') || id.startsWith('deliver:')) return lostQuest(S, w, a, id);
 
   if (id === 'wish') { // Cloudtop's wishing fountain: toss in a berry, make a wish; the clouds grant one a day
@@ -1509,7 +1510,7 @@ const HAT_WHERE = {
   pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
   masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
   gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
-  fossilhat: 'dig up every fossil for the Sunwell Museum', dewcirclet: "a treasure chest in the Sunwell Spring (down the oasis well)", guildfez: "clear the Caravan Guild's bounty board on five days (Sunwell Oasis)", mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
+  caravanturban: 'score 500 at CARAVAN RUN (Caravan Master Hakim, Sunwell Oasis)', fossilhat: 'dig up every fossil for the Sunwell Museum', dewcirclet: "a treasure chest in the Sunwell Spring (down the oasis well)", guildfez: "clear the Caravan Guild's bounty board on five days (Sunwell Oasis)", mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
 };
 export function hatWhere(id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';
@@ -1756,6 +1757,30 @@ function sled(S, w) {
       const gog = score >= 380 && !own.includes('sledgoggles'); if (gog) own.push('sledgoggles');
       persist(); if (best || prize || gog) reward(2);
       w.say([`${score >= 380 ? 'RADICAL!' : score >= 250 ? 'Nice run!' : 'Sand everywhere!'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: ${prize} 🍓 from the camp's date jar! (One prize a day.)`] : A.sledDay !== day ? [`${who}: Score 250 or more and the camp pays you in berries! (One prize a day.)`] : []), ...(gog ? [`${who}: ${score}?! Okay, okay. Take my spare sand goggles. You've earned them.`, '{hero} got the Sand Sled Goggles! 🎩 (☰ → 🎩 Hats)'] : [])], null, who);
+    });
+    S.game.modalClose = () => el.__arcade.close();
+  }, who);
+}
+
+// R838: Caravan Master Hakim, once his road is open (the caravan chain), lets the hero lead the Humpdrops in CARAVAN RUN: a daily berry
+// prize, and 500+ once wins the Caravan Leader's Turban
+function caravanRunTalk(S, w, a) {
+  const A = save.adv, F = A.flags, day = new Date().toISOString().slice(0, 10), hi = A.caravanHi || 0, who = 'Caravan Master Hakim', own = (A.hats ||= []);
+  if (!F.caravan3_done) return w.say([a.n.lines[Math.floor(Math.random() * a.n.lines.length)]], null, who);
+  w.ask(`${who}: The road is open, and my Humpdrops are restless! Lead them on a run to the next camp? Mind the cacti: they spook easily. ${hi ? `Your best run: ${hi}.` : 'Tap above or below to change lanes!'}`, ['Lead!', 'Not now'], (i) => {
+    if (i) return w.say([LOST.caravan3.after[Math.floor(Math.random() * LOST.caravan3.after.length)]], null, who);
+    w.busy = true;
+    const el = caravanRun(S.root, S.game.portrait(w.hero.def), (score) => {
+      S.game.modalClose = null; w.busy = false;
+      const best = score > hi; if (best) A.caravanHi = score;
+      countUp('caravan');
+      let prize = 0;
+      if (A.caravanDay !== day) { prize = score >= 550 ? 3 : score >= 400 ? 2 : score >= 250 ? 1 : 0; if (prize) { A.caravanDay = day; save.berries = (save.berries || 0) + prize; } }
+      const hat = score >= 500 && !own.includes('caravanturban'); if (hat) own.push('caravanturban');
+      persist(); if (best || prize || hat) reward(2);
+      w.say([`${score >= 500 ? 'What a caravan master!' : score >= 250 ? 'A fine run!' : 'Humpdrops everywhere!'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`,
+        ...(prize ? [`${who}: ${prize} 🍓 from the caravan purse! (One prize a day.)`] : A.caravanDay !== day ? [`${who}: Score 250 or more and the caravan pays you in berries! (One prize a day.)`] : []),
+        ...(hat ? [`${who}: 500?! You lead them better than I do. Here: my old caravan turban. A leader should look like one!`, "{hero} got the Caravan Leader's Turban! 🎩 (☰ → 🎩 Hats)"] : !own.includes('caravanturban') ? [`${who}: Score 500 and my old leader's turban is yours.`] : [])], null, who);
     });
     S.game.modalClose = () => el.__arcade.close();
   }, who);
