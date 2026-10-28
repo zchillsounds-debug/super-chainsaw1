@@ -14,7 +14,7 @@ import { typeSpeed } from './settings.js';
 import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap, CUP_ORDER, fossilAt } from './interiors.js';
 import { FOSSILS } from './fossils.js';
-import { hatRegion, countUp, singNight, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor, storyMark } from './story.js';
+import { hatRegion, countUp, singNight, lampCritter, wantedToday, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor, storyMark } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
 import { stargaze, tonightConst, BOTTLE_NOTES, CONSTELLATIONS } from './stars.js';
@@ -106,6 +106,7 @@ export const FISH = {
 // so completing the album never waits on the calendar; each first catch is a little bonus
 // the Amber Sands' mirage hours (12-15h, clear days) bring one more visitor to the desert pools: a fish you can see right through. Kept apart too (fishLog.mirage)
 export const MIRAGE_FISH = ['Heatwave Glassfish', 6, 18, '🫧'];
+export const SPRING_FISH = ['Lantern Loach', 8, 22, '🏮']; // R829: blind, glowing, only in the Sunwell Spring under the oasis well
 export const SEASON_FISH = { spring: ['Blossom Koi', 20, 52, '🌸'], summer: ['Sunburst Perch', 14, 38, '🌻'], autumn: ['Maple Trout', 22, 56, '🍂'], winter: ['Snowflake Smelt', 8, 24, '❄️'] };
 export const seasonKey = () => isSpring() || isMeadow() ? 'spring' : isSummer() ? 'summer' : isAutumn() || isEarlyAutumn() ? 'autumn' : isFrost() || isWinter() || twinkleWeek() ? 'winter' : null;
 // Fisher Finn's weekly Fishing Derby: one everyday kind and a size to beat (Mondays bring a new one)
@@ -423,6 +424,8 @@ export class World {
     this.buildMarket();
     this.buildBazaar();
     this.buildLanterns();
+    this.buildBountyBoard();
+    this.buildWellRope();
     this.buildWell();
     this.buildSingers();
     this.buildLifts();
@@ -1166,8 +1169,9 @@ export class World {
       const b = new THREE.BoxGeometry(1.2, 0.7, 0.14); b.translate(px, 1.05, pz + 0.05); boards.push(b);
     }
     const put = (list, color, ink = OL) => { if (!list.length) return; const m = inked(mergeGeometries(list), toon(color), ink); this.group.add(m); list.forEach((g) => g.dispose()); };
-    put(rocks, this.M.sands ? 0xc8845a : 0x9a94a8); // (desert rocks are warm sandstone)
-    if (crags.length) { const m = inked(mergeGeometries(crags), toon(this.M.sands ? 0x7a4a2c : 0x7a6e80, { rim: 0.08 }), OL * 0.6); this.group.add(m); crags.forEach((g) => g.dispose()); } put(frostRocks, 0x7a8aa8); put(caps, 0xf8fbff, OL * 0.6); put(snow, 0xffffff);
+    const warm = this.M.sands && this.M.sands !== 'spring'; // (R829: the Sunwell Spring's wet stone is cool blue-grey)
+    put(rocks, warm ? 0xc8845a : this.M.sands ? 0x8aa8b4 : 0x9a94a8); // (desert rocks are warm sandstone)
+    if (crags.length) { const m = inked(mergeGeometries(crags), toon(warm ? 0x7a4a2c : this.M.sands ? 0x527684 : 0x7a6e80, { rim: 0.08 }), OL * 0.6); this.group.add(m); crags.forEach((g) => g.dispose()); } put(frostRocks, 0x7a8aa8); put(caps, 0xf8fbff, OL * 0.6); put(snow, 0xffffff);
     if (shards.length) { const m = inked(mergeGeometries(shards), toon(0xa8eaff, { rim: 1 }), OL * 0.5); m.castShadow = true; this.group.add(m); shards.forEach((g) => g.dispose()); } put(coal, 0x2a2a34, 0); put(carrot, 0xff8a2a, OL * 0.4);
     if (drifts.length) { const m = new THREE.Mesh(mergeGeometries(drifts), toon(0xf6faff, { rim: 0.8 })); m.receiveShadow = true; this.group.add(m); drifts.forEach((g) => g.dispose()); }
     put(posts, 0xfff4e0, OL * 0.6); put(rails, 0xfff4e0, OL * 0.5); put(sticks, 0x8a5a3a, OL * 0.5); put(boards, 0xc8925a);
@@ -1354,6 +1358,50 @@ export class World {
   }
 
   // R820: the oasis night market: strings of paper lanterns between the pool's palms (lit after dark once the Mirage Cup is won; pale paper by day)
+  // R828: the Caravan Guild's bounty board (Sunwell Oasis): a plank board on two posts under a little striped awning,
+  // pinned all over with notes and one big WANTED poster (its sign entry has act 'bounty')
+  buildBountyBoard() {
+    const at = this.M.bountyBoard; if (!at || this.M.indoor) return;
+    const [px, pz] = wpos(at[0], at[1]), G = new THREE.Group(); G.position.set(px, 0, pz + 0.2); G.scale.setScalar(1.35);
+    const wood = toon(0x8a5a3a), plank = toon(0xc8925a), paper = toon(0xfff2d4), red = toon(0xc8302a);
+    for (const sd of [-1, 1]) { const p = inked(new THREE.BoxGeometry(0.16, 2.3, 0.16), wood, OL * 0.5); p.position.set(sd * 0.85, 1.15, 0); G.add(p); }
+    const b = inked(new THREE.BoxGeometry(1.9, 1.15, 0.1), plank, OL * 0.6); b.position.set(0, 1.35, 0); G.add(b);
+    for (const y of [0.98, 1.72]) { const t = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.05, 0.12), wood); t.position.set(0, y, 0.01); G.add(t); }
+    const aw = inked(new THREE.BoxGeometry(2.2, 0.06, 0.6), toon(0xd8643a), OL * 0.5); aw.position.set(0, 2.32, 0.18); aw.rotation.x = 0.32; G.add(aw);
+    for (let k = 0; k < 4; k++) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.27, 0.062, 0.6), toon(0xfff2d4)); st.position.set(-0.81 + k * 0.54, 2.326, 0.18); st.rotation.x = 0.32; G.add(st); }
+    for (const [x, y, w, h, r] of [[-0.62, 1.48, 0.42, 0.34, 0.08], [-0.6, 1.12, 0.36, 0.24, -0.06], [0.62, 1.5, 0.38, 0.3, -0.1], [0.66, 1.14, 0.34, 0.26, 0.07]]) {
+      const n = new THREE.Mesh(new THREE.PlaneGeometry(w, h), paper); n.position.set(x, y, 0.06); n.rotation.z = r; G.add(n);
+      for (let l = 0; l < 3; l++) { const ln = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.7, 0.02), toon(0x8a7a6a)); ln.position.set(x, y + h * 0.25 - l * h * 0.22, 0.065); ln.rotation.z = r; G.add(ln); }
+      const pin = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 5), red); pin.position.set(x, y + h * 0.4, 0.07); G.add(pin);
+    }
+    // the WANTED poster: parchment, a red title band, a dark critter silhouette, a bounty line
+    const wp = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.82), toon(0xf4dcae)); wp.position.set(0, 1.36, 0.06); G.add(wp);
+    const band = new THREE.Mesh(new THREE.PlaneGeometry(0.56, 0.14), red); band.position.set(0, 1.66, 0.065); G.add(band);
+    const sil = new THREE.Mesh(new THREE.CircleGeometry(0.17, 16), toon(0x4a3020)); sil.position.set(0, 1.38, 0.065); sil.scale.y = 0.85; G.add(sil);
+    for (const sd of [-1, 1]) { const ear = new THREE.Mesh(new THREE.CircleGeometry(0.07, 3), toon(0x4a3020)); ear.position.set(sd * 0.1, 1.55, 0.066); ear.rotation.z = Math.PI / 2; G.add(ear); }
+    const cash = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.07), toon(0x8a3a20)); cash.position.set(0, 1.08, 0.065); G.add(cash);
+    G.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+    // the face of the board leans back a little, so the notes read from the world camera above
+    const face = new THREE.Group(); face.position.y = 0.9; face.rotation.x = -0.3;
+    for (const o of [...G.children]) if (o.position.y > 0.95 && o.position.y < 2.2) { G.remove(o); o.position.y -= 0.9; face.add(o); }
+    G.add(face);
+    this.group.add(G);
+  }
+
+  // R829: under the oasis well: the rope hanging down a shaft of daylight, with the bucket on the floor beside it
+  buildWellRope() {
+    const at = this.M.rope; if (!at) return;
+    const [px, pz] = wpos(at[0], at[1]), G = new THREE.Group(); G.position.set(px, 0, pz + 0.4); this.group.add(G);
+    const rope = inked(new THREE.CylinderGeometry(0.06, 0.06, 9, 6), toon(0xc8a060), OL * 0.3); rope.position.y = 4.5; G.add(rope);
+    for (let k = 0; k < 6; k++) { const kn = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 5), toon(0xa88040)); kn.position.y = 0.6 + k * 0.7; G.add(kn); }
+    const bk = inked(new THREE.CylinderGeometry(0.32, 0.26, 0.42, 12, 1, true), toon(0x8a5a3a, { side: THREE.DoubleSide }), OL * 0.4); bk.position.set(0.7, 0.21, 0.3); bk.rotation.z = 0.25; G.add(bk);
+    const hoop = new THREE.Mesh(new THREE.TorusGeometry(0.31, 0.03, 4, 14), toon(0x5a5a64)); hoop.rotation.x = Math.PI / 2; hoop.position.set(0.7, 0.36, 0.3); G.add(hoop);
+    const lm = new THREE.MeshBasicMaterial({ color: 0xfff4d0, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }); lm.userData.own = true;
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.4, 10, 16, 1, true), lm); shaft.position.y = 5; G.add(shaft);
+    const pm = new THREE.MeshBasicMaterial({ color: 0xfff0c0, transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending }); pm.userData.own = true;
+    const pool = new THREE.Mesh(new THREE.CircleGeometry(1.4, 20), pm); pool.rotation.x = -Math.PI / 2; pool.position.y = 0.03; G.add(pool);
+  }
+
   buildLanterns() {
     if (!this.M.lanterns || this.M.indoor || !save.adv.flags?.cup_mirage) return;
     const lit = this.phase !== 'day', cols = [0xff6a3a, 0xffc040, 0xff4a7a, 0x3ac8c8, 0xffe070], cord = [], paper = cols.map(() => []), caps = [], glow = [];
@@ -3813,6 +3861,7 @@ export class World {
       for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: D.px, y: 0.5, z: D.pz, vx: (Math.random() - 0.5) * 2, vy: 1.5 + Math.random() * 2, vz: (Math.random() - 0.5) * 2, color: 0xa8eaff, size: 0.4, life: 0.9, shape: 'star', grav: 4 });
       return this.say([...lines, 'Another glint will show in the snow tomorrow.']);
     }
+    if (D.fossil) countUp('sanddig');
     if (D.fossil) { // desert sand: a cross Scarabold, or a fossil for the Sunwell Museum (a new one if there's one left to find here; else a fossil chip worth berries)
       if (roll < 0.15) { persist(); return this.say(['{hero} digs into the hot sand... and the sand digs back! A wild Scarabold was keeping cool down there!'], () => this.startWild('scarabold', Math.max(30, (save.critters[hero]?.level || 30) - 2), null, Math.random() < shinyRate())); }
       const got = (save.adv.fossils ||= []), left = FOSSILS.filter((f) => !got.includes(f.id) && (!f.gate || this.key === 'sungate')), f = left.length && roll < 0.9 ? left[Math.floor(Math.random() * left.length)] : null;
@@ -3982,7 +4031,7 @@ export class World {
     else sfx.water?.();
     if (how === 'early') return this.say(['Too soon! The ripples fade away... Wait for the bobber to dip, then press A!']);
     if (how === 'miss') return this.say(['The bobber popped back up. Whatever it was got away!']);
-    countUp('fish'); persist();
+    countUp('fish'); if (this.M.sands) countUp('sandfish'); persist(); // (R828: the Caravan Guild's bounties count desert catches)
     const lure = this.M.sands && save.adv.glassLure; if (lure) delete save.adv.glassLure; // R819: the Mirage Merchant's Glass Lure hooks a glassfish (r 0.6 skips the critter and season rolls)
     const r = lure ? 0.6 : Math.random(), W = (this.M.wild?.list || []).filter(([i]) => byId(i)?.type === (this.M.lava ? 'fire' : 'water')); // a lava pool hooks fire critters
     if (r < 0.45) {
@@ -3991,7 +4040,13 @@ export class World {
       const name = byId(id)?.name || 'critter';
       return this.say([`{hero} reels it in... It's a wild ${name}! And it's not happy about it!`], () => this.startWild(id, lo + Math.floor(Math.random() * (hi - lo + 1)), null, Math.random() < shinyRate()));
     }
-    const sk = !this.M.lava && seasonKey();
+    if (this.M.springFish && r < 0.8) { // R829: the Sunwell Spring's own fish (most catches here)
+      const [name, lo, hi, em] = SPRING_FISH, cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };
+      const first = !L.spring; L.n++; L.spring = Math.max(L.spring || 0, cm); if (first) save.berries = (save.berries || 0) + 5;
+      persist(); reward(first ? 3 : 1);
+      return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long. It has no eyes at all, but a little light glows on its nose!`, first ? 'It only lives down here in the spring, in the dark under the oasis. Pool Angler Layla will want to hear about this! +5 🍓 (☰ → Journal → 🎣)' : `A ${name}. Its light blinks twice, then it swims home.${L.spring === cm ? ' Your biggest one yet!' : ''}`]);
+    }
+    const sk = !this.M.lava && !this.M.springFish && seasonKey();
     if (sk && r < 0.52) { // the season's visitor (about one fish in four while it's in season)
       const [name, lo, hi, em] = SEASON_FISH[sk], cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null }, S = L.season ||= {};
       const first = !S[name]; L.n++; S[name] = Math.max(S[name] || 0, cm); if (first) save.berries = (save.berries || 0) + 3;
@@ -4782,7 +4837,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m; a.markKind = k;
@@ -4793,7 +4848,7 @@ export class World {
   buildActors() {
     this.npcs = [];
     const F = save.adv.flags;
-    for (const n of [...(this.M.npcs || []), ...this.traderSpot(), ...this.daycareSpot(), ...this.grownSpot()].map((q) => q.night && this.phase !== 'day' ? { ...q, ...q.night } : q)) { // some folk have a night spot
+    for (const n of [...(this.M.npcs || []), ...this.traderSpot(), ...this.wantedSpot(), ...this.daycareSpot(), ...this.grownSpot()].map((q) => q.night && this.phase !== 'day' ? { ...q, ...q.night } : q)) { // some folk have a night spot
       if (n.hideFlag && F[n.hideFlag]) continue;
       if (n.showFlag && !F[n.showFlag]) continue;
       if (n.mirage && !this.mirageHour()) continue;
@@ -4802,7 +4857,7 @@ export class World {
       if (n.pecan) { root = pecanModel(); root.scale.setScalar(CS); }
       else if (n.balloon) { root = balloonModel(n.balloon); }
       else {
-        const id = n.critter === '$hero' ? save.adv.hero : n.rival ? rivalFor(save.adv.hero) : n.critter;
+        const id = n.critter === '$hero' ? save.adv.hero : n.rival ? rivalFor(save.adv.hero) : n.story === 'lampduel' ? lampCritter() : n.critter;
         cr = new Critter(withGear(n.shiny ? skinned(byId(id), 'shiny') : byId(id), n.rival ? (n.rlv || 4) : (n.lv || n.trainer?.lv || 3)), { lod: 'low' });
         root = cr.root;
         root.scale.setScalar(CS * (n.scale || 1));
@@ -5637,6 +5692,7 @@ export class World {
     if (this.well && this.well.x === fx && this.well.y === fy) {
       const day = new Date().toISOString().slice(0, 10);
       if (save.adv.wellDay !== day) { save.adv.wellDay = day; save.berries = (save.berries || 0) + 1; persist(); reward(1); return this.say(['{hero} winds the bucket up from the well. The water is cold and clear, even in the desert heat!', 'Something shiny sits in the bottom of the bucket... a berry someone dropped in for luck! +1 🍓']); }
+      if (save.adv.flags.cup_mirage) return this.ask('{hero} peers down the well. A knotted rope runs all the way down, and far below the water glows blue... Climb down?', ['Climb down', 'Not now'], (i) => { if (!i) { sfx.whoosh?.(); this.goTo({ to: 'wellspring', at: [10, 2] }, 's'); } }); // R829: the Sunwell Spring
       return this.say(['{hero} peers down the well. Far below, the water sparkles. An echo says: "...well... well... well..."']);
     }
     const stall = this.stalls?.find((q) => q.x === fx && q.y === fy);
@@ -5784,6 +5840,21 @@ export class World {
   }
 
   // Trader Tock visits one town a day (once the first cup is won), standing beside a path
+  // R828: today's WANTED outlaw (the Caravan Guild's poster): on its map once the poster has been read, until it's beaten
+  wantedSpot() {
+    const W = wantedToday();
+    if (!W || !W.posted || W.map !== this.key || save.adv.flags[W.flag] || this.M.indoor) return [];
+    const busy = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.M.signs || []).map((n) => n.x + ',' + n.y), ...(this.M.buildings || []).map((b) => (b.x + b.door) + ',' + (b.y + b.h))]);
+    const N4 = Object.values(DIRS), ok = [];
+    for (let y = 2; y < this.H - 2; y++) for (let x = 3; x < this.W - 3; x++) {
+      if (this.tile(x, y) !== 's' || busy.has(x + ',' + y) || !this.walkable(x, y)) continue;
+      if (N4.some(([dx, dy]) => this.tile(x + dx, y + dy) === ':') && N4.filter(([dx, dy]) => this.walkable(x + dx, y + dy)).length === 4) ok.push([x, y]);
+    }
+    if (!ok.length) return [];
+    const [x, y] = ok[hash(W.flag + this.key) % ok.length];
+    return [{ id: 'wanted', x, y, critter: W.id, name: 'Outlaw ' + W.nick, dir: 's', story: 'wanted', act: 'hop', lv: 30, lines: [] }];
+  }
+
   traderSpot() {
     const day = new Date().toISOString().slice(0, 10);
     if (traderTown() !== this.key) return [];
@@ -6043,12 +6114,12 @@ export class World {
   startWild(id, lv, a, shiny = false) {
     this.busy = true;
     if (a?.alpha) { // the day's Alpha: a tougher fight, berries and a Power Snack for the win
-      const al = a.alpha, foe = withGear(byId(id), lv); countUp('wild'); sfx.warn?.(); buzz('medium'); this.bubble(a, '💥');
+      const al = a.alpha, foe = withGear(byId(id), lv); countUp('wild'); if (this.M.sands) countUp('sandwild'); sfx.warn?.(); buzz('medium'); this.bubble(a, '💥');
       const f = document.createElement('div'); f.className = 'wd-flash'; this.S.root.appendChild(f);
       save.adv.snackDue = al.flag; // paid out on the next storyIntro after the win
       return setTimeout(() => this.S.worldFight({ foe, lv, kind: 'wild', alpha: true, name: `Alpha ${foe.name}`, diff: Math.min(0.85, 0.3 + lv * 0.03), flag: al.flag, berries: 3, note: `💥 You beat the Alpha ${foe.name}! +3 🍓 and a Power Snack` }), 900);
     }
-    countUp('wild');
+    countUp('wild'); if (this.M.sands) countUp('sandwild');
     if (this.phase === 'night' && (id === 'hootsy' || id === 'squeakwing')) countUp('owl'); // a night owl met after dark (Records)
     sfx.warn?.(); buzz('medium');
     if (a) this.bubble(a, '❗');

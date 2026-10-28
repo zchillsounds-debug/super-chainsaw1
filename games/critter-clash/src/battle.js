@@ -173,6 +173,11 @@ export class Battle {
       if (def.state === 'dodge' && def.invuln > 0) this.perfectDodge(def);
       return false;
     }
+    // R826: a golden scarab's shield eats one blow (a super cracks it and still lands)
+    if (def.scarab > 0 && att !== def) {
+      const sup = att?.state === 'super';
+      if (this.items.shieldHit(def) && !sup) return false;
+    }
     if (def.state === 'guard') {
       if (att.state === 'super') h.unblockable = true;
       const r = def.blockHit(h, att);

@@ -197,6 +197,15 @@ export function storyIntro(S, w) {
     ], () => { const after = () => w.say(['★ CHAPTER 3 COMPLETE ★  You saved the Amber Sands! The Sun Gate is safe with the camp, the Sand-Rail runs both ways, and every desert cup welcomes a rematch.']); if (w.credits) w.credits(after, 'sands'); else after(); });
     return;
   }
+  if (w.key === 'wellspring' && !F.spring_arrive) { // R829: down the oasis well
+    F.spring_arrive = true; persist();
+    w.say([
+      '{hero} climbs down, knot by knot, into the cool dark. Splash! Boots in shallow water.',
+      'It\'s a cave! A spring glows blue under the oasis, and the walls drip and sparkle. Daylight falls down the shaft like a long gold rope.',
+      'Somewhere a voice is humming. Somebody else is down here.',
+    ]);
+    return;
+  }
   if (w.key === 'buried1' && !F.buried_arrive) {
     F.buried_arrive = true; persist();
     w.say([
@@ -542,6 +551,9 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'hatshop') return hatShop(w);
   if (id === 'board') return requestBoard(S, w);
+  if (id === 'bounty') return bountyBoard(S, w);
+  if (id === 'wanted') return wantedFight(S, w);
+  if (id === 'wellrope') return w.ask('The well rope. Climb back up to Sunwell Oasis?', ['Climb up', 'Stay'], (i) => { if (!i) { sfx.whoosh?.(); w.goTo({ to: 'oasis', at: [15, 4] }, 'n'); } }); // R829
   if (id === 'pcbox') { // the Berry Center's Critter Box: any critter on the team can take the lead
     if (save.unlocked.length < 2) return w.say(['The CRITTER BOX hums. "Team: 1. Recruit more critters to swap who leads the way!"']);
     return w.say(['The CRITTER BOX blinks on. "Who leads the way?"'], () => S.leadPick(w));
@@ -874,6 +886,78 @@ function requestBoard(S, w) {
     persist(); reward(2);
   } else out.push(R.paid.length === R.list.length ? 'All done for today. New requests tomorrow!' : 'Finish a request, then come back to this board for berries.');
   w.say(out);
+}
+
+// R828: the Caravan Guild's bounty board in Sunwell Oasis: two desert jobs and a WANTED poster a day.
+// A job counts from the day's first look at the board (like the Berry Center requests); each pays 3 🍓, the outlaw 6,
+// a full board a Guild Seal (a Power Snack), and five seals the Caravan Guild Fez.
+const lampWins = () => Object.keys(save.adv.flags).filter((k) => k.startsWith('lampduel_')).length;
+const champWins = () => Object.keys(save.adv.flags).filter((k) => k.startsWith('champre_')).length;
+const SANDS_BOUNTIES = {
+  sandwild: { text: 'Battle 3 wild critters in the Amber Sands', n: 3, now: () => save.adv.cnt?.sandwild || 0 },
+  sandfish: { text: 'Reel in a catch from desert water', n: 1, now: () => save.adv.cnt?.sandfish || 0 },
+  sanddig: { text: 'Dig up something in the desert sand', n: 1, now: () => save.adv.cnt?.sanddig || 0 },
+  lantern: { text: 'Send up a sky lantern (the night market)', n: 1, now: () => save.adv.cnt?.lantern || 0, need: 'cup_mirage' },
+  duel: { text: 'Win a lamplight duel (the night market)', n: 1, now: lampWins, need: 'cup_mirage' },
+  champ: { text: 'Beat a desert champion in their lobby', n: 1, now: champWins, need: 'cup_mirage' },
+  sled: { text: 'Ride DUNE SLED (the Dune Camp)', n: 1, now: () => save.adv.cnt?.sled || 0, need: 'cup_sandstorm' },
+};
+const OUTLAWS = [['scarabold', 'Rustclaw'], ['siroccat', 'Whirlwind Wes'], ['fennzap', 'Sparkjack'], ['sizzlard', 'Scorch'], ['cactortle', 'Old Prickles'], ['humpdrop', 'Lumpy Pete']];
+const WANTED_MAPS = [['duneroad', 'sands_arrive'], ['redrock', 'cup_mirage'], ['flats', 'cup_canyon'], ['dunecamp', 'dash_canyon']];
+const today = () => new Date().toISOString().slice(0, 10);
+// today's outlaw: who, and where (one of the desert maps the hero can reach)
+export function wantedToday() {
+  const F = save.adv.flags, day = today(), maps = WANTED_MAPS.filter(([, f]) => F[f]).map(([m]) => m);
+  if (!maps.length) return null;
+  const h = hash32(day + ':wanted'), [id, nick] = OUTLAWS[h % OUTLAWS.length];
+  return { id, nick, map: maps[(h >>> 8) % maps.length], flag: 'wanted_' + day, posted: save.adv.bounty?.day === day };
+}
+function bountyBoard(S, w) {
+  const A = save.adv, F = A.flags, day = today();
+  let R = A.bounty;
+  if (R?.day !== day) {
+    let h = hash32(day + ':bounty');
+    const pool = Object.keys(SANDS_BOUNTIES).filter((k) => !SANDS_BOUNTIES[k].need || F[SANDS_BOUNTIES[k].need]), pick = [];
+    while (pick.length < 2 && pool.length) { h = (h * 16807) % 2147483647; pick.push(pool.splice(h % pool.length, 1)[0]); }
+    R = A.bounty = { day, list: pick, base: Object.fromEntries(pick.map((k) => [k, SANDS_BOUNTIES[k].now()])), paid: [] };
+    persist();
+  }
+  const W = wantedToday(), MAPN = (k) => MAPS[k]?.name || k, crit = grown(CRITTERS.find((c) => c.id === W.id), Math.min(50, save.critters[A.hero].level + 3)).name;
+  const prog = (k) => k === 'wanted' ? (F[W.flag] ? 1 : 0) : Math.min(SANDS_BOUNTIES[k].n, SANDS_BOUNTIES[k].now() - R.base[k]);
+  const need = (k) => k === 'wanted' ? 1 : SANDS_BOUNTIES[k].n;
+  const all = [...R.list, 'wanted'];
+  const lines = all.map((k) => k === 'wanted'
+    ? `${F[W.flag] ? '✅' : '🤠'} WANTED: ${W.nick} the ${crit}, seen on ${MAPN(W.map)}. 6 🍓`
+    : `${prog(k) >= need(k) ? '✅' : '⬜'} ${SANDS_BOUNTIES[k].text}${need(k) > 1 ? ` (${prog(k)}/${need(k)})` : ''}. 3 🍓`);
+  const fresh = all.filter((k) => prog(k) >= need(k) && !R.paid.includes(k));
+  const out = [`📜 THE CARAVAN GUILD · bounties for ${day.slice(5).replace('-', '/')}\n` + lines.join('\n')];
+  if (!A.bountySeen) { A.bountySeen = true; out.unshift('A sun-bleached board under a little awning, stuck all over with notes. The Caravan Guild posts its jobs here every morning.'); }
+  if (fresh.length) {
+    const pay = fresh.reduce((n, k) => n + (k === 'wanted' ? 6 : 3), 0);
+    R.paid.push(...fresh); save.berries = (save.berries || 0) + pay;
+    out.push(`Bount${fresh.length > 1 ? 'ies' : 'y'} done! The Guild's tin box pays ${pay} 🍓.`);
+    if (R.paid.length === all.length) {
+      A.seals = (A.seals || 0) + 1;
+      const h = A.hero, c = save.critters[h], r = grantXp(h, Math.round(xpNeeded(c.level) * 0.4));
+      out.push(`The whole board, cleared! A GUILD SEAL is pressed into the corner, and a Power Snack for {hero}! ⭐ (${A.seals} seal${A.seals > 1 ? 's' : ''})`, ...(r.to > r.from ? [`{hero} grew to Lv ${r.to}!`] : []));
+      const hats = (A.hats ||= []);
+      if (A.seals >= 5 && !hats.includes('guildfez')) { hats.push('guildfez'); out.push('Five Guild Seals! A parcel hangs on the board with your name on it: the CARAVAN GUILD FEZ! 🎩 (Hats in the ☰ menu.)'); }
+      else if (A.seals < 5) out.push(`${5 - A.seals} more full board${5 - A.seals > 1 ? 's' : ''} and the Guild sends a gift.`);
+    }
+    persist(); reward(2);
+  } else out.push(R.paid.length === all.length ? 'All done for today. Fresh notes go up tomorrow morning.' : F[W.flag] || W.posted ? 'Finish a job, then come back to the board to be paid.' : 'Finish a job, then come back to be paid. The outlaw only shows up once the poster is read: go and look!');
+  w.say(out);
+}
+function wantedFight(S, w) {
+  const W = wantedToday(); if (!W) return;
+  const A = save.adv, crit = CRITTERS.find((c) => c.id === W.id), lv = Math.min(50, save.critters[A.hero].level + 3), who = `Outlaw ${W.nick}`, form = grown(crit, lv).name;
+  if (A.flags[W.flag]) return w.say([`${who}: (It sulks behind a rock and won't look at you.)`]);
+  w.say([`${who}: (A ${form} in a spotted red bandana. It's the one on the poster! It kicks sand at {hero} and squares up.)`],
+    () => S.worldFight({
+      foe: withGear(crit, lv), lv, kind: 'story', flag: W.flag, name: W.nick, diff: 0.85, berries: 0,
+      trainer: { name: who, critter: W.id, title: 'WANTED', self: true, /* (R828: the outlaw IS the critter: the HUD says its name, not "...'s <critter>") */ beat: 'The outlaw flops over in the sand!', gloat: 'The outlaw cackles and kicks sand!' },
+      note: '🤠 Outlaw caught! Back to the Caravan Guild\'s board in Sunwell Oasis for the 6 🍓 bounty.',
+    }));
 }
 
 // a list too long for one row of answer buttons: three to a page, then "More"
@@ -1380,7 +1464,7 @@ const HAT_WHERE = {
   pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
   masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
   gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
-  fossilhat: 'dig up every fossil for the Sunwell Museum', mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
+  fossilhat: 'dig up every fossil for the Sunwell Museum', dewcirclet: "a treasure chest in the Sunwell Spring (down the oasis well)", guildfez: "clear the Caravan Guild's bounty board on five days (Sunwell Oasis)", mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
 };
 export function hatWhere(id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';
@@ -2179,9 +2263,10 @@ function skyLantern(w) {
 // R825: Lamplight Duelist Kamal, the night market's sparring partner: one battle a night by the lanterns (his critter changes nightly)
 const DUELISTS = ['fennzap', 'siroccat', 'sizzlard', 'humpdrop'];
 export const lampFlag = () => 'lampduel_' + singNight();
+export const lampCritter = () => DUELISTS[hash32(singNight() + ':duel') % DUELISTS.length]; // (R827: the world shows Kamal with tonight's critter too)
 function lampDuel(S, w) {
   const A = save.adv, who = 'Lamplight Duelist Kamal', flag = lampFlag(), wins = Object.keys(A.flags).filter((k) => k.startsWith('lampduel_')).length;
-  const id = DUELISTS[hash32(singNight() + ':duel') % DUELISTS.length], name = CRITTERS.find((c) => c.id === id).name, lv = Math.min(50, save.critters[A.hero].level + 2);
+  const id = lampCritter(), name = CRITTERS.find((c) => c.id === id).name, lv = Math.min(50, save.critters[A.hero].level + 2);
   if (A.flags[flag]) return w.say([`${who}: A fine duel! The lanterns are still swinging from it. Come back tomorrow night. ${name} wants a rematch already.`], null, who);
   w.say([
     wins ? `${who}: You're back! ${wins} lamplight win${wins > 1 ? 's' : ''} so far. The market folk keep count, you know.` : `${who}: Every night, when the lanterns go up, I duel whoever's brave enough. Right here, under the palms.`,

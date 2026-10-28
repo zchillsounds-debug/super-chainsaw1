@@ -889,12 +889,13 @@ export const MAPS = {
       { id: 'hats_o', x: 3, y: 8, w: 4, h: 3, roof: 0xd8643a, wall: 0xf0d0a0, door: 1, label: 'Sand Hats', hatShop: true },
       { id: 'museum_o', x: 20, y: 8, w: 4, h: 3, roof: 0x2aa8a0, wall: 0xf2dcb0, door: 1, label: 'Sunwell Museum', museum: true }, // D3: the fossils dug up on the desert maps go on show here
     ],
-    signs: [{ x: 14, y: 5, text: 'SUNWELL OASIS\nThe last cool water before the Amber Sands. Drink up!' }],
+    signs: [{ x: 14, y: 5, text: 'SUNWELL OASIS\nThe last cool water before the Amber Sands. Drink up!' }, { x: 23, y: 5, text: '', hide: true, act: 'bounty' }],
+    bountyBoard: [23, 5], // R828: the Caravan Guild's bounty board (two desert jobs and a WANTED outlaw a day)
     npcs: [
       { id: 'tamsin_o', x: 13, y: 12, critter: 'humpdrop', name: 'Conductor Tamsin', dir: 'w', story: 'rail', lines: [] },
       { id: 'saffi', x: 12, y: 11, critter: 'fennzap', name: 'Trader Saffi', dir: 's', lines: ["Trader Saffi: Fresh dates! Sweet as sunshine! The first one's free, every day. Tell your friends!", "Trader Saffi: My Fennzap hears a customer coming from three dunes away. Its ears never stop twitching."] },
       { id: 'oma', x: 14, y: 11, critter: 'cactortle', name: 'Weaver Oma', dir: 's', lines: ["Weaver Oma: These rugs took me all summer. Cactortle sits on the loom when I'm not looking. Very prickly patterns.", "Weaver Oma: The red canyon to the east? My grandmother was born up there, in a house in the cliff."] },
-      { id: 'wellkeep', x: 16, y: 3, critter: 'scarabold', name: 'Wellkeeper Bram', dir: 'w', lines: ["Wellkeeper Bram: This well has never once run dry. Some say an old spring runs under the sands, all the way from the buried city.", "Wellkeeper Bram: Scarabold rolls the bucket up for me. It thinks the bucket is a very big ball."] },
+      { id: 'wellkeep', x: 16, y: 3, critter: 'scarabold', name: 'Wellkeeper Bram', dir: 'w', lines: ["Wellkeeper Bram: This well has never once run dry. Some say an old spring runs under the sands, all the way from the buried city.", "Wellkeeper Bram: Scarabold rolls the bucket up for me. It thinks the bucket is a very big ball.", "Wellkeeper Bram: The rope? It goes all the way down. Once you've a Mirage Cup to your name, I won't stop you climbing it. Mind the wet knots!"] },
       { id: 'kid_o', x: 17, act: 'hop', y: 5, critter: 'siroccat', name: 'Siroccat', dir: 'w', wander: 2, lines: ["Siroccat: (It stands up tall on its back legs and stares at the horizon. Then at you. Then back at the horizon.)", "Siroccat: Chirr! (It's on lookout duty. Nothing gets past Siroccat. Except maybe that beetle.)"] },
       { id: 'sun_o', x: 10, act: 'fan', y: 7, critter: 'sizzlard', name: 'Sunbather Rex', dir: 's', wander: 1, lines: ["Sunbather Rex: Ahh, the Amber Sands. Hot by day, cold by night. Sizzlard soaks up the sun until its frill glows.", "Sunbather Rex: Don't stay out on the dunes when a sandstorm blows in. You won't see your own paws!"] },
       { id: 'zara_o', x: 8, y: 9, critter: 'fennzap', name: 'Fortune Teller Zara', dir: 'w', dark: true, showFlag: 'cup_mirage', story: 'fortune', lines: [] }, // R820: the night market (evening and night)
@@ -1219,6 +1220,51 @@ export const MAPS = {
       { id: 'sabah_g', x: 15, y: 8, critter: 'humpdrop', name: 'Elder Sabah', dir: 'n', showFlag: 'gate_open', story: 'dtrial', lines: ['Elder Sabah: Golden towers, my grandmother\'s grandmother said. A gate shaped like the sun. And now I have seen it. Thank you, little one.', 'Elder Sabah: The gate only opened a crack. The rest of the city, it seems, wants to be found slowly.'] },
       { id: 'baron_g2', x: 18, y: 8, critter: 'siroccat', name: 'Sirocco', dir: 'w', showFlag: 'gate_open', act: 'wave', lines: ['Sirocco: Not a Baron any more. Just Sirocco. The Warden says I can help guard the gate. With a shovel. Facing the OTHER way.', 'Sirocco: I wanted gold. The gate showed me something better. ...Also it was very bright. I may need a lie down.'] },
       { id: 'dash_g', x: 9, y: 8, rival: true, rlv: 40, name: 'Dash', dir: 'e', showFlag: 'gate_open', act: 'flex', lines: ["Dash: I TOTALLY would have beaten the Baron too. I was just... warming up. For a long time. Behind a pillar.", "Dash: Next stop: wherever's next! Race you there, Champ!"] },
+    ],
+  },
+
+  // ===== R829: the Sunwell Spring, a cool cave under Sunwell Oasis's old well (climb down the rope once the Mirage Cup is won):
+  // a glowing spring pool with its own blind fish, a boulder for a rune plate that opens a barred alcove, and a treasure =====
+  wellspring: {
+    name: 'Sunwell Spring',
+    music: 'cave',
+    arena: 'canyon',
+    sands: 'spring',
+    extra: true,
+    cave: true,
+    springFish: true, // the Lantern Loach bites only here (world.js cast)
+    border: 'rock',
+    outer: 0x0e1a20,
+    palette: { a: '#6a8088', b: '#667c84', tall: '#3aa88a', path: '#7a8a8c', water: '#2ad8d0', bank: '#2a3a44', dark: 'rgba(0,20,30,0.3)', lite: 'rgba(140,240,255,0.16)' },
+    mood: { sun: 0xc8f0ff, sunI: 0.95, sky: 0x8ad0e0, gnd: 0x1a2a30, hemiI: 1.1, fog: 0x0e1a20 },
+    tiles: [
+      'RRRRRRRRRRRRRRRRRRRRRR',
+      'RRRRRRRRRR.RRRRRRRRRRR',
+      'RRRRR..............RRR',
+      'RRR..~~~~...""......RR',
+      'RR..~~~~~~..""...R..RR',
+      'RR...~~~~...........RR',
+      'RRR........RRRR..RRRRR',
+      'RRRR..R.........R...RR',
+      'RRR.................RR',
+      'RR..""..............RR',
+      'RRRRRRR.RRRRRRRRRRRRRR',
+      'RRRRR.....RRRRRRRRRRRR',
+      'RRRRRR...RRRRRRRRRRRRR',
+      'RRRRRRRRRRRRRRRRRRRRRR',
+    ],
+    rope: [10, 1], // the well rope hangs down here in a shaft of daylight (A: climb back up)
+    boulders: [[15, 8, 'plate']], plates: [[12, 8]], gates: [[7, 10]], gateFlag: 'spring_gate',
+    chest: { x: 7, y: 12, flag: 'spring_chest', hat: 'dewcirclet', berries: 25, hatLine: '...and a Dewdrop Circlet, cool silver set with a drop of spring water that never dries!' },
+    signs: [{ x: 10, y: 1, text: '', hide: true, act: 'wellrope' }, { x: 14, y: 2, text: 'Old letters on a wet stone: "THE SUNWELL NEVER RUNS DRY. ITS WATER WALKS UNDER THE SANDS FROM THE CITY OF THE SUN."' }],
+    wild: { list: [['humpdrop', 35, 38], ['scarabold', 35, 38], ['blowfin', 35, 38], ['squeakwing', 35, 38]], roam: 2, rate: 0.1 },
+    npcs: [
+      { id: 'odette_w', x: 17, y: 3, act: 'read', critter: 'humpdrop', name: 'Spelunker Odette', dir: 'w', lines: [
+        "Spelunker Odette: You climbed down the WELL? Ha! Me too. Bram thinks I'm out buying dates.",
+        "Spelunker Odette: Feel how cool it is down here! The spring glows all night and all day. Something in the water shines.",
+        "Spelunker Odette: There are fish in that pool with no eyes at all. They carry their own little lights instead. Bring a rod!",
+        "Spelunker Odette: See the barred alcove past the rune stone? Something heavy on the rune opens it. I tried sitting on it. I'm not heavy enough.",
+      ] },
     ],
   },
 

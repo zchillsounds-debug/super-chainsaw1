@@ -1,4 +1,5 @@
 // Arena power-ups that drop in mid-round: berry (heal), star (super meter), shoe (speed burst).
+// R826: the Amber Sands add two of their own on the desert arenas and in sandstorms: a water flask (a sip of HP, puts out a burn and clears the head) and a golden scarab (a shield that eats the next blow).
 import * as THREE from 'three';
 import { toon, inked } from './toon.js';
 import { sfx } from './audio.js';
@@ -8,7 +9,10 @@ const KINDS = {
   berry: { glow: 0xff5a8a, label: 'YUM! +HP' },
   star:  { glow: 0xffd23f, label: 'SUPER UP!' },
   shoe:  { glow: 0x5ad8ff, label: 'SPEED UP!' },
+  flask: { glow: 0x4fe6ff, label: 'COOL WATER!' },
+  scarab: { glow: 0xffc23a, label: 'SCARAB SHIELD!' },
 };
+const DESERT = new Set(['oasis', 'canyon', 'saltflat', 'dunes']);
 
 function buildMesh(kind) {
   const g = new THREE.Group();
@@ -34,6 +38,34 @@ function buildMesh(kind) {
     const geo = new THREE.ExtrudeGeometry(s, { depth: 0.12, bevelEnabled: true, bevelSize: 0.04, bevelThickness: 0.04, bevelSegments: 2 });
     geo.center();
     g.add(inked(geo, toon(0xffd23f), 0.02));
+  } else if (kind === 'flask') {
+    // a round canteen: a flat blue-teal water bottle with a cork and a leather strap
+    const body = inked(new THREE.CylinderGeometry(0.26, 0.26, 0.16, 24), toon(0x2fb8d8), 0.02);
+    body.rotation.x = Math.PI / 2; g.add(body);
+    const band = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.035, 8, 28), toon(0xc8873a));
+    g.add(band);
+    const neck = inked(new THREE.CylinderGeometry(0.06, 0.08, 0.12, 12), toon(0x2fb8d8), 0.015);
+    neck.position.y = 0.3; g.add(neck);
+    const cork = inked(new THREE.CylinderGeometry(0.07, 0.06, 0.08, 12), toon(0xb07a45), 0.015);
+    cork.position.y = 0.39; g.add(cork);
+    const shine = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    shine.position.set(-0.1, 0.1, 0.08); g.add(shine);
+  } else if (kind === 'scarab') {
+    // a golden scarab: a domed shell split down the middle, a little head, six legs
+    const shell = inked(new THREE.SphereGeometry(0.26, 24, 14, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xffbf2a), 0.02);
+    shell.scale.set(0.85, 0.75, 1.1); g.add(shell);
+    const seam = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.2, 0.56), toon(0x8a5a10));
+    seam.position.y = 0.09; g.add(seam);
+    const head = inked(new THREE.SphereGeometry(0.11, 12, 10), toon(0x5a3a10), 0.015);
+    head.position.set(0, 0.03, 0.3); head.scale.set(1, 0.7, 0.8); g.add(head);
+    for (let i = 0; i < 6; i++) {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.03, 0.03), toon(0x5a3a10));
+      const sd = i % 2 ? 1 : -1, row = Math.floor(i / 2) - 1;
+      leg.position.set(sd * 0.25, 0, row * 0.15); leg.rotation.y = row * sd * 0.4; g.add(leg);
+    }
+    const shine = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), new THREE.MeshBasicMaterial({ color: 0xfff6c8 }));
+    shine.position.set(-0.08, 0.17, -0.05); g.add(shine);
+    g.position.y = -0.08;
   } else {
     const body = inked(new THREE.CapsuleGeometry(0.13, 0.22, 6, 14), toon(0x3d9bff), 0.02);
     body.rotation.z = Math.PI / 2; body.scale.set(1, 1, 0.85);
@@ -46,6 +78,7 @@ function buildMesh(kind) {
       g.add(w);
     }
   }
+  if (kind === 'flask' || kind === 'scarab') g.scale.setScalar(1.4); // (the desert two read small next to Lv 30 fighters)
   // soft glow disc underneath
   const disc = new THREE.Mesh(new THREE.CircleGeometry(0.55, 32), new THREE.MeshBasicMaterial({ color: KINDS[kind].glow, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending }));
   disc.rotation.x = -Math.PI / 2;
@@ -61,6 +94,8 @@ export class Items {
   constructor(battle) {
     this.b = battle;
     this.list = [];
+    this.shields = [];
+    this.desert = DESERT.has(battle.arena?.key) || !!battle.env?.sand;
     this.timer = 9 + Math.random() * 4;
   }
 
@@ -99,8 +134,22 @@ export class Items {
         // whoever is behind is a little more likely to see a berry
         const behind = Math.min(p.hp / p.maxHp, c.hp / c.maxHp) < 0.5;
         const r = Math.random();
-        this.spawn(behind && r < 0.5 ? 'berry' : r < 0.4 ? 'berry' : r < 0.72 ? 'star' : 'shoe');
+        // out in the Amber Sands, about one drop in three is a desert one
+        if (this.desert && Math.random() < 0.34) this.spawn(behind && Math.random() < 0.6 ? 'flask' : Math.random() < 0.5 ? 'flask' : 'scarab');
+        else this.spawn(behind && r < 0.5 ? 'berry' : r < 0.4 ? 'berry' : r < 0.72 ? 'star' : 'shoe');
       }
+    }
+    for (let i = this.shields.length - 1; i >= 0; i--) {
+      const sh = this.shields[i], f = sh.f;
+      sh.t += dt;
+      if (!(f.scarab > 0) || !f.alive) { this.dropShield(i); continue; }
+      f.scarab -= dt;
+      const left = f.scarab;
+      sh.mesh.position.set(f.x, f.y + 0.75 * (f.def.size || 1), f.z);
+      sh.mesh.rotation.y += dt * 1.4;
+      const blink = left < 2 ? (Math.sin(sh.t * 18) > 0 ? 1 : 0.3) : 1;
+      sh.mesh.material.opacity = (0.18 + Math.sin(sh.t * 5) * 0.05) * blink; sh.mesh.children[0].material.opacity = 0.75 * blink;
+      if (Math.random() < dt * 5) B.fx.spawn({ x: f.x + (Math.random() - 0.5) * 1.4, y: f.y + 0.4 + Math.random() * 1.2, z: f.z + (Math.random() - 0.5) * 1.4, vy: 0.6, color: 0xffd36a, size: 0.14, life: 0.5, shape: 'star', additive: false });
     }
     for (let i = this.list.length - 1; i >= 0; i--) {
       const it = this.list[i];
@@ -132,6 +181,24 @@ export class Items {
       B.fx.text({ x: hp.x, y: hp.y, z: hp.z }, '+' + heal, 'heal', 0.9);
     } else if (it.kind === 'star') {
       f.superM = Math.min(100, f.superM + 40);
+    } else if (it.kind === 'flask') {
+      const heal = Math.round(f.maxHp * 0.08);
+      f.hp = Math.min(f.maxHp, f.hp + heal);
+      f.dmgTrail = Math.max(f.dmgTrail, f.hp);
+      f.burnT = 0; f.dizzy = 0;
+      B.fx.text({ x: hp.x, y: hp.y, z: hp.z }, '+' + heal, 'heal', 0.9);
+      B.fx.burst({ x: f.x, y: hp.y, z: f.z }, { n: 14, speed: 2.5, up: 4, color: 0x8ff0ff, size: 0.2, life: 0.7, grav: 9 });
+    } else if (it.kind === 'scarab') {
+      f.scarab = 10;
+      if (!this.shields.some((s) => s.f === f)) {
+        // a gold shell: a see-through amber bubble with a brighter gold lattice over it, like a scarab's wing case
+        const geo = new THREE.IcosahedronGeometry(1.05 * (f.def.size || 1), 1);
+        const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xffb020, transparent: true, opacity: 0.2, depthWrite: false }));
+        mesh.add(new THREE.LineSegments(new THREE.WireframeGeometry(geo), new THREE.LineBasicMaterial({ color: 0xffe080, transparent: true, opacity: 0.85 })));
+        mesh.scale.set(1.1, 1, 1.1);
+        this.b.scene.add(mesh);
+        this.shields.push({ f, mesh, t: 0 });
+      }
     } else {
       f.speedBoost = 6;
     }
@@ -142,6 +209,26 @@ export class Items {
     sfx.pickup();
   }
 
+  // a blow lands on a scarab shield: it shatters and the hit is gone (Battle.applyHit asks first)
+  shieldHit(def) {
+    if (!(def.scarab > 0)) return false;
+    def.scarab = 0;
+    const B = this.b, cp = def.chestPos();
+    B.fx.text(def.headPos(), 'SHIELDED!', 'big', 0.9);
+    B.fx.burst(cp, { n: 22, speed: 6, up: 3, color: 0xffc23a, size: 0.26, life: 0.6, shape: 'star', additive: false, grav: 7, spin: 10 });
+    B.fx.spawn({ ...cp, color: 0xffd36a, size: 3, life: 0.25, shape: 'ring', grow: 1.6 });
+    sfx.block?.();
+    B.hitstop = Math.max(B.hitstop, 0.08);
+    return true;
+  }
+
+  dropShield(i) {
+    const sh = this.shields[i];
+    this.b.scene.remove(sh.mesh);
+    sh.mesh.geometry.dispose(); sh.mesh.material.dispose(); sh.mesh.children[0].geometry.dispose(); sh.mesh.children[0].material.dispose();
+    this.shields.splice(i, 1);
+  }
+
   remove(i) {
     const it = this.list[i];
     this.b.scene.remove(it.mesh);
@@ -149,5 +236,9 @@ export class Items {
     this.list.splice(i, 1);
   }
 
-  clear() { for (let i = this.list.length - 1; i >= 0; i--) this.remove(i); this.timer = 9 + Math.random() * 4; }
+  clear() {
+    for (let i = this.list.length - 1; i >= 0; i--) this.remove(i);
+    for (let i = this.shields.length - 1; i >= 0; i--) { this.shields[i].f.scarab = 0; this.dropShield(i); }
+    this.timer = 9 + Math.random() * 4;
+  }
 }

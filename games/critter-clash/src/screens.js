@@ -12,7 +12,7 @@ import { traitChip, traitOf } from './traits.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
-import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, MIRAGE_FISH, seasonKey } from './world.js';
+import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, MIRAGE_FISH, SPRING_FISH, seasonKey } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, hatWhere, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, DESERT_TRIAL, gauntletFoes, champReFlag, CUP_HALL } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { VERSION } from './version.js';
@@ -47,7 +47,7 @@ const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
 const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
 const LEGEND_IDS = () => ['solmoth', 'moonwhal', 'verdelk', ...(save.adv?.flags?.sands_arrive ? ['aurelark'] : [])]; // the Champ page's legends (the Sun-Bird once you reach the sands)
-const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles', 'mirageturban', 'minerhelm', 'lanternhat']; // the desert's found hats (the Sand Hats stall's four are `sands`)
+const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles', 'mirageturban', 'minerhelm', 'lanternhat', 'guildfez', 'dewcirclet']; // the desert's found hats (the Sand Hats stall's four are `sands`)
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
@@ -481,6 +481,14 @@ export class Screens {
         A.curios ? `And the Mirage Merchant sold you a curio! ${A.curios > 1 ? `${A.curios} of them!` : ''} He brings a new one every day after noon, they say. Or the same one, wearing a disguise.` : "The Mirage Merchant on the Glass Flats has a new curio every day now, once you've bought his turban. A glass lure, a mirror... even bottled heat!",
         "Oh, and Team Battle has a sky button now too, like Quick Battle. A night-time 3-on-3 under the stars. Lovely!",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv39') && !save.news.includes('adv40') && (save.adv.bountySeen || save.adv.flags.spring_arrive)) { // R830: the Caravan Guild's board, the Sunwell Spring, the desert power-ups
+      save.news.push('adv40'); persist();
+      const A = save.adv;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        A.bountySeen ? `{name}! The Caravan Guild posts jobs on a board in Sunwell Oasis now, and I hear you've been taking them!${A.seals ? ` ${A.seals} Guild Seal${A.seals > 1 ? 's' : ''} already!` : ''} Mind the outlaws on the WANTED poster. They kick sand.` : "{name}! The Caravan Guild has put up a bounty board in Sunwell Oasis. Two jobs a day, and a WANTED critter in a red bandana somewhere out on the sands!",
+        A.flags.spring_arrive ? `And you went DOWN the Sunwell! A whole glowing spring under the oasis.${A.fishLog?.spring ? ` A Lantern Loach, ${A.fishLog.spring} cm, with its own little light? I need to sit down.` : ' Fish with no eyes, Odette says, carrying their own lights. Bring a rod!'}` : "Wellkeeper Bram's well goes deeper than anyone thought. If you've won the Mirage Cup, take a look down that rope!",
+        "One more thing from the stadiums: out in the Amber Sands, a water flask can drop into a fight (it cools a burn) and so can a golden scarab. Grab the scarab and it shields you from the next blow!",
+      ]), 600);
     } else if (!g.autoplay && save.news?.includes('adv33') && !save.news.includes('adv35') && ((save.adv.fossils || []).length >= 4 || save.adv.flags.caravan3_done || save.adv.flags.buried_vault)) { // Chapter 3 side content (D3)
       save.news.push('adv35'); persist();
       const F = save.adv.flags, nf = (save.adv.fossils || []).length;
@@ -652,7 +660,7 @@ export class Screens {
         ['Dodge', 'A quick roll with invincibility; dodge at the last moment for bonus Super · L / Shift'],
         ['Guard', 'Hold to raise a shield bubble that blocks most damage. Raise it right as a hit lands to PARRY and stagger the attacker · O'],
         ['Super', 'Fills as you trade hits. When it glows, unleash it! · I'],
-        ['Power-ups', 'Berries heal, stars charge your Super, shoes give a speed burst. Grab them before your rival does!'],
+        ['Power-ups', 'Berries heal, stars charge your Super, shoes give a speed burst. In the Amber Sands, a water flask cools a burn and a golden scarab shields you from the next blow. Grab them before your rival does!'],
         ['Types', 'Each type beats two others (Blaze burns Sprout, Splash douses Blaze, Pebble grounds Zap...). Hitting a weakness deals extra damage.'],
         ['Dizzy', 'Too many hits in a row makes a critter see stars. Mash buttons to shake it off!'],
         ['Hazards', 'Later stadiums fight back: when a glowing ring appears on the floor, get out of it (or guard)! Each one has a second trick too: fissures, ice slicks, lasers (guard or roll through), rogue waves, crosswinds and spore clouds.'],
@@ -666,7 +674,7 @@ export class Screens {
         ['Cups', 'Each town\'s stadium holds a cup, and the trials test your Strength, Friendship and Wisdom on the road to the Critter Crown.'],
         ['Berry Centers', 'Rest to heal, swap who leads the way at the Critter Box, leave a critter at the Daycare and blend berry smoothies.'],
         ['The Isles', 'Once you hold the Critter Crown, the Sunny Gull ferry sails from Seashell Town to the Sunscatter Isles: new critters, three island cups and the Gloom Gulls.'],
-        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils.'],
+        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night.'],
         ['After that', 'The Battle Tower, three legendary critters, the weekly Masters, the Kite Glider\'s hidden spots, pearls, dives and more. The Champ page keeps track.'],
         ['100%', 'Records shows how much of Clashara, the isles (and later the Amber Sands) you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
       ]],
@@ -1337,6 +1345,7 @@ export class Screens {
         ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
         ['🏄', 'WAVE RIDER prize', 'Ember Isle Surf Shack', A.surfDay === day, seen.ember_isle],
         ['🛷', 'DUNE SLED prize', 'Dune Camp, with Kai', A.sledDay === day, !!A.flags?.cup_sandstorm],
+        ['📜', `Caravan Guild bounties (${A.bounty?.day === day ? A.bounty.paid.length : 0}/3)`, `the board in ${N('oasis')}`, A.bounty?.day === day && A.bounty.paid.length >= 3, !!F.sands_arrive], // R828
         ['🤿', 'REEF DIVE prize', 'the Sunken Wreck (Snorkeller Pia, Port Coral)', A.diveDay === day, F.dived],
         ['🐦', `Gull Club catch: ${gullFish(day)}`, 'any island water → Petrel, Starfall Atoll', A.gullPaid === day, F.amends3_done && F.rod],
         ['⛲', 'Make a wish', N('cloudtop'), A.wish === day, seen.cloudtop],
@@ -1523,6 +1532,7 @@ export class Screens {
         + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '')
         + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal
         + (A.cnt?.lantern ? bar('🏮', 'Sky lanterns sent up', A.cnt.lantern) : '') // R820: no goal
+        + (A.bountySeen ? bar('📜', 'Guild Seals (full bounty boards)', A.seals || 0) : '') // R828: no goal (the fez comes at five; it counts with the found hats)
         + (Object.keys(F).some((k) => k.startsWith('lampduel_')) ? bar('⚔️', 'Lamplight duels won', Object.keys(F).filter((k) => k.startsWith('lampduel_')).length) : ''); // R825: no goal
     }
     const pc = Math.floor(parts.reduce((a, b) => a + b, 0) / parts.length * 100), isles = !!F.isle_arrive;
@@ -1658,6 +1668,7 @@ export class Screens {
         + Object.entries(FISH).filter(([k]) => k !== 'oasis' || save.adv.flags.sands_arrive).map(([k, list]) => `<li class="jr-head">${where[k]}</li>` + list.map(([n], i) => { const cm = sp[n]; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? '🐟' : '❔'}</span><b>${cm || n === D.name ? n : '???'}${i === list.length - 1 ? ' <small>rare</small>' : ''}${n === D.name && save.adv.flags.rod ? ' <small class="dby">🎯 derby</small>' : ''}</b><em>${cm ? cm + ' cm' : ''}${L.best?.name === n ? ' 🏅' : ''}</em></li>`; }).join('')).join('')
         + `<li class="jr-head">🗓️ Seasonal visitors (one a season · catch all four for a hat!)</li>` + Object.entries(SEASON_FISH).map(([k, [n, , , em]]) => { const cm = L.season?.[n], now = seasonKey() === k; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? em : '❔'}</span><b>${cm || now ? n : '???'} <small>${k}${now ? ' · now!' : ''}</small></b><em>${cm ? cm + ' cm' : ''}</em></li>`; }).join('')
         + (save.adv.flags.sands_arrive ? `<li class="jr-head">🌫️ Mirage hours (Amber Sands water, 12–15 h on clear days)</li><li class="jr-fish ${L.mirage ? 'got' : ''}"><span>${L.mirage ? MIRAGE_FISH[3] : '❔'}</span><b>${L.mirage || save.adv.fishLog?.sp?.['Mirage Guppy'] ? MIRAGE_FISH[0] : '???'} <small>visitor</small></b><em>${L.mirage ? L.mirage + ' cm' : ''}</em></li>` : '')
+        + (save.adv.flags.spring_arrive ? `<li class="jr-head">💧 Sunwell Spring (under the oasis well)</li><li class="jr-fish ${L.spring ? 'got' : ''}"><span>${L.spring ? SPRING_FISH[3] : '❔'}</span><b>${L.spring ? SPRING_FISH[0] : '???'} <small>cave</small></b><em>${L.spring ? L.spring + ' cm' : ''}</em></li>` : '') // R829
         + `<li class="jr-more">${Object.keys(sp).length}/${Object.entries(FISH).filter(([k]) => k !== 'oasis' || save.adv.flags.sands_arrive).flatMap(([, v]) => v).length} kinds${L.season ? ` · ${Object.keys(L.season).length}/4 seasonal` : ''} · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
     }
     d.innerHTML = `<div class="modal wd-journal"><h2>Journal</h2>

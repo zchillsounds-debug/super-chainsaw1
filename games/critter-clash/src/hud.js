@@ -56,7 +56,7 @@ export class Hud {
     b.fighters.forEach((f, i) => {
       const B = this.bars[i];
       B.img.src = this.game.portrait(f.def);
-      B.nm.textContent = i === 1 && b.trainer ? `${b.trainer.name}'s ${f.def.name}` : i === 1 && b.cpuTitle || f.def.name;
+      B.nm.textContent = i === 1 && b.trainer ? (b.trainer.self ? b.trainer.name : `${b.trainer.name}'s ${f.def.name}`) : i === 1 && b.cpuTitle || f.def.name;
       B.lv.textContent = 'Lv' + f.level + (i === 0 && b.bestFriend ? ' 💗' : '');
       B.lv.title = i === 0 && b.bestFriend ? 'Best friends: starts with super meter' : '';
       B.chip.textContent = TYPES[f.type].name;
@@ -146,7 +146,7 @@ export class Hud {
     c.style.setProperty('--tc', TYPES[f.type].color);
     c.classList.toggle('right', f.side === 1);
     const me = save.trainer?.name;
-    c.querySelector('small').textContent = trainer ? `${trainer.title} ${trainer.name}'s` : tag || (f.side ? 'Rival' : null) || (me ? `Trainer ${me}'s` : 'Your partner');
+    c.querySelector('small').textContent = trainer?.self ? `${trainer.title}!` : trainer ? `${trainer.title} ${trainer.name}'s` : tag || (f.side ? 'Rival' : null) || (me ? `Trainer ${me}'s` : 'Your partner');
     c.querySelector('b').textContent = f.def.name;
     c.querySelector('.nc-type').textContent = `${TYPES[f.type].name} type · Lv${f.level} ${f.def.species}`;
     c.classList.remove('on'); void c.offsetWidth; c.classList.add('on');

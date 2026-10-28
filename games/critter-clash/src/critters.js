@@ -1464,6 +1464,7 @@ export class Critter {
 
 // route trainers dress for the job, so a Hiker, a Fisher and a Skater read apart at a glance
 const HATS = [ // townsfolk hats by role (Mom wears a flower crown: she's the hero's own species, so it tells them apart)
+  [/^Outlaw/, 'bandana', 0xc8302a, 0xfff4e0], // R828: the Caravan Guild's Wanted outlaws wear spotted red bandanas
   [/^Gloom Gull/, 'band', 0x4a3a6a], [/Morra$/, 'tricorn', 0x3a2a5a, 0xffc93a], [/^Kitemaker/, 'aviator', 0xff5a4a, 0x9ad8ff], [/^Volcanologist/, 'helm', 0xe8b830, 0xffffff], [/^Birdkeeper/, 'wide', 0xe8d8a0, 0x5a8a4a], // Chapter 2: the Gloom Gulls wear dark bandanas
   [/^Mom$/, 'flower', 0x5ac24a, 0xff8ac8], [/^Hiker/, 'bucket', 0x9a7240], [/^(Camper|Picker)/, 'cap', 0x4aa04a], [/^Fisher/, 'wide', 0xf0d27a], [/^(Picnicker|Gardener)/, 'wide', 0xfff2c8, 0xff6a9a],
   [/^(Kite Flyer|Sky Diver)/, 'cap', 0x5a8ad8], [/^Swimmer/, 'swim', 0x3ac8ff], [/^Skater/, 'back', 0xff5a8a], [/^Firewalker/, 'band', 0xff4a2a], [/^Gang/, 'band', 0x3a2a4a], [/^Milliner/, 'top', 0x2a2438, 0xff3a5a], [/^Trader/, 'tricorn', 0x6a3a2a, 0xffd84d], [/^Ace/, 'beanie', 0xf4f8ff, 0x3a6ad8],
@@ -1543,6 +1544,8 @@ export const SHOP_HATS = [
   { id: 'palmangler', name: 'Palm Angler Hat', kind: 'bucket', col: 0x2aa8a0, band: 0xf2c46a, price: 0, gift: true, extra: true }, // Pool Angler Layla at Sunwell Oasis: all four oasis fish
   { id: 'minerhelm', name: "Salt Miner's Helmet", kind: 'helm', col: 0xf4ecd8, band: 0xffd84d, price: 0, gift: true, extra: true }, // R815: the salt road (Salt Miner Hamid, the Glass Flats)
   { id: 'mirageturban', name: 'Mirage Turban', kind: 'turban', col: 0xeef6ff, band: 0x5ac8e8, price: 0, gift: true, extra: true }, // R814: the Mirage Merchant on the Glass Flats (mirage hours only)
+  { id: 'dewcirclet', name: 'Dewdrop Circlet', kind: 'circlet', col: 0xcfe8f4, band: 0x3ac8e8, price: 0, gift: true, extra: true }, // R829: the Sunwell Spring's chest
+  { id: 'guildfez', name: 'Caravan Guild Fez', kind: 'fez', col: 0xa8243a, band: 0xffc23a, price: 0, gift: true, extra: true }, // R828: five full days of the Caravan Guild's bounty board
   { id: 'lanternhat', name: 'Paper Lantern Hat', kind: 'lantern', col: 0xffa040, band: 0xd83a3a, price: 0, gift: true, extra: true }, // R820: Lantern Maker Yusra's night market, seven sky lanterns
   { id: 'mesaband', name: "Mesa Climber's Bandana", kind: 'band', col: 0xc8402a, band: 0xf2d49c, price: 0, gift: true, extra: true }, // the chest on Redrock Mesa (after the Canyon Cup)
   { id: 'sunlaurel', name: 'Sun Gate Laurel', kind: 'laurel', col: 0xd8643a, band: 0xffd84a, price: 0, gift: true, extra: true }, // the Desert Trial's first clear (D4)
@@ -1611,6 +1614,22 @@ export function hatModel(cr, kind, col, band) {
     for (let k = 0; k < 3; k++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(r * (k === 1 ? 0.57 : 0.47), r * 0.025, 4, 18), toon(band)); rib.rotation.x = Math.PI / 2; rib.position.y = r * (0.45 + (k - 1) * 0.22); G.add(rib); }
     add(new THREE.CylinderGeometry(r * 0.16, r * 0.2, r * 0.1, 10), dark, 0.01).position.y = r * 0.86;
     const t = add(new THREE.ConeGeometry(r * 0.08, r * 0.3, 6), toon(band), 0.008); t.position.set(r * 0.5, r * 0.25, 0); t.rotation.z = 0.2;
+    G.scale.setScalar(1.25); G.position.y -= r * 0.08; // (R827: it read small next to the other hats, on big heads most of all)
+  }
+  if (kind === 'bandana') { // R828: a spotted headscarf pulled low, knotted at the back with two loose tails (the Wanted outlaws)
+    G.position.y -= r * 0.22;
+    const cap = add(new THREE.SphereGeometry(r * 0.8, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)); cap.scale.y = 0.72;
+    for (let k = 0; k < 9; k++) { const a = k * 2.4, el = 0.35 + (k % 3) * 0.32, d = new THREE.Mesh(new THREE.SphereGeometry(r * 0.07, 6, 5), toon(band)); d.position.set(Math.cos(a) * Math.cos(el) * r * 0.8, Math.sin(el) * r * 0.58, Math.sin(a) * Math.cos(el) * r * 0.8); d.scale.y = 0.5; G.add(d); }
+    add(new THREE.SphereGeometry(r * 0.16, 10, 8), M, 0.012).position.set(0, r * 0.12, -r * 0.78);
+    for (const sd of [-1, 1]) { const t = add(new THREE.ConeGeometry(r * 0.13, r * 0.5, 4), M, 0.012); t.position.set(sd * r * 0.14, -r * 0.08, -r * 0.92); t.rotation.set(-0.5, 0, sd * 0.45); t.scale.z = 0.4; }
+  }
+  if (kind === 'fez') { // R828: a tall felt fez with a gold tassel on a cord (the Caravan Guild's seal of trust)
+    G.position.y -= r * 0.12;
+    add(new THREE.CylinderGeometry(r * 0.46, r * 0.58, r * 0.62, 18)).position.y = r * 0.3;
+    add(new THREE.CylinderGeometry(r * 0.585, r * 0.585, r * 0.1, 18), toon(band), 0.01).position.y = r * 0.05;
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.08, r * 0.08, r * 0.05, 8), toon(band)); top.position.y = r * 0.63; G.add(top);
+    const cord = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.025, r * 0.025, r * 0.5, 5), toon(band)); cord.position.set(r * 0.25, r * 0.6, 0); cord.rotation.z = -1.25; G.add(cord);
+    const tas = add(new THREE.ConeGeometry(r * 0.1, r * 0.34, 8), toon(band, { rim: 0.8 }), 0.01); tas.position.set(r * 0.5, r * 0.38, 0);
   }
   if (kind === 'halo') { // a glowing golden ring floating over the head (Rainbow Reach)
     const m = toon(col, { rim: 1, emissive: new THREE.Color(col).multiplyScalar(0.55).getHex() });
