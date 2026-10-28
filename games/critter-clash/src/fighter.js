@@ -118,6 +118,7 @@ export class Fighter {
     if (tk === 'moon' && env.night) this.power *= 1.08;
     if (tk === 'rain' && env.wet) this.power *= 1.12;
     if (tk === 'sun' && !env.night) this.power *= 1.08;
+    if (traitOf(def)?.sand && env.sand) this.speed *= 1.1; // (Siroccat: a sandstorm is its weather)
     this.ctl = { mx: 0, mz: 0, attack: false, special: false, dodge: false, super: false, guard: false };
     this.shield = makeShield(TYPES[def.type].glow, (def.body.h + def.body.headR) * (def.size || 1) + 0.35);
     this.root.add(this.shield);

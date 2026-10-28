@@ -34,7 +34,7 @@ export const TRAITS = {
   fennzap: { k: 'dodgecd', icon: '👂', name: 'Big Ears', desc: 'Hears blows coming: its dodge roll recharges 35% faster.' },
   scarabold: { k: 'kb', icon: '🪲', name: 'Dug In', desc: 'Gets knocked back 30% less.' },
   aurelark: { k: 'sunrise', icon: '🌅', name: 'Sunrise Song', desc: 'Once a battle, a knockout blow can\'t keep it down: it rises again with 20% health.' },
-  siroccat: { k: 'slip', icon: '🥽', name: 'Sand Runner', desc: 'A dodge leaves it 15% faster for 2 seconds.' },
+  siroccat: { k: 'slip', sand: true, icon: '🥽', name: 'Sand Runner', desc: 'A dodge leaves it 15% faster for 2 seconds. In a sandstorm it runs 10% faster all fight.' },
   verdelk: { k: 'roots', icon: '🌳', name: 'Deep Roots', desc: 'Heals 15% of the damage its specials and supers deal.' },
 };
 

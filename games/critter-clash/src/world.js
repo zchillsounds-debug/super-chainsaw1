@@ -479,7 +479,7 @@ export class World {
     this.buildLost();
     this.buildChamp();
     this.buildDig();
-    this.buildMirages();
+    this.buildMirages(); this.buildMirageTown();
     this.makeFollower();
     this.camAt = null;
     this.steps = 0;
@@ -597,6 +597,24 @@ export class World {
           for (let x = 0; x <= W * P; x += 12) { const yy = y0 + Math.sin(x / 38 + ph) * amp + x * 0.06; x ? c.lineTo(x, yy) : c.moveTo(x, yy); }
           c.stroke();
         }
+        c.restore();
+      }
+      // R814: a salt lake (the Glass Flats): the white crust is cracked into rough many-sided tiles, each crack a raised pale ridge with a soft shadow
+      if (this.M.salt) {
+        const night = this.phase === 'night', sr = rng(hash(this.key + ':salt')), S = P * 0.95, hw = S * Math.sqrt(3), seen = new Set(), seg = [];
+        c.save(); c.beginPath(); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if ('s:"'.includes(this.tile(x, y))) c.rect(x * P, y * P, P, P); c.clip();
+        // a honeycomb whose corners are nudged (the same nudge for every cell sharing a corner), so the plates come out as rough hexagons
+        const jit = (vx, vy) => { const k = hash(this.key + Math.round(vx) + ',' + Math.round(vy)); return [vx + ((k % 97) / 97 - 0.5) * S * 0.55, vy + (((k >> 8) % 89) / 89 - 0.5) * S * 0.55]; };
+        for (let r = -1; r * S * 1.5 < H * P + S * 2; r++) for (let q = -1; q * hw < W * P + hw; q++) {
+          const cx = q * hw + (r % 2 ? hw / 2 : 0), cy = r * S * 1.5, V = [];
+          for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; V.push([cx + Math.cos(a) * S, cy + Math.sin(a) * S]); }
+          if (sr() < 0.32) { c.fillStyle = night ? 'rgba(200,210,255,0.06)' : sr() < 0.55 ? 'rgba(255,255,255,0.4)' : 'rgba(200,185,160,0.13)'; c.beginPath(); V.forEach(([x0, y0], k) => { const [jx, jy] = jit(x0, y0); k ? c.lineTo(jx, jy) : c.moveTo(jx, jy); }); c.fill(); } // brighter and duller plates
+          for (let k = 0; k < 6; k++) { const A = V[k], B = V[(k + 1) % 6], key = [A, B].map(([x0, y0]) => Math.round(x0) + ',' + Math.round(y0)).sort().join('|'); if (seen.has(key)) continue; seen.add(key); seg.push([jit(...A), jit(...B)]); }
+        }
+        const R0 = hash(this.key + ':ridge'); // both passes (shadow, then ridge) bend each crack the same way
+        const draw2 = (dy, col, lw) => { const q = rng(R0); c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); for (const [[ax, ay], [bx, by]] of seg) { const mx = (ax + bx) / 2 + (q() - 0.5) * 5, my = (ay + by) / 2 + (q() - 0.5) * 5; c.moveTo(ax, ay + dy); c.quadraticCurveTo(mx, my + dy, bx, by + dy); } c.stroke(); };
+        draw2(1.6, night ? 'rgba(20,24,60,0.25)' : 'rgba(150,130,100,0.3)', 2.2); // the ridge's shadow
+        draw2(0, night ? 'rgba(230,236,255,0.4)' : 'rgba(255,255,255,0.95)', 2.4); // the raised salt ridge
         c.restore();
       }
       // tall grass frays onto the lawn along its open edges: little scalloped tufts instead of a ruler-straight border
@@ -3699,6 +3717,25 @@ export class World {
     }
   }
 
+  // R814, the Glass Flats in the mirage hours: a pale shimmering town on the far side, towers, domes and a blue gate, all see-through. It wobbles
+  // and melts away as the hero walks up (drawn with the mirage pools' fade in update)
+  buildMirageTown() {
+    if (!this.M.mirageTown || !this.mirageHour()) return;
+    const m = new THREE.MeshBasicMaterial({ color: 0x9cc4f0, transparent: true, opacity: 0, depthWrite: false }), b = new THREE.MeshBasicMaterial({ color: 0x3a88d8, transparent: true, opacity: 0, depthWrite: false });
+    (this.mirages ||= []);
+    this.M.mirageTown.forEach(([x, y], k) => {
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz);
+      const add = (geo, mat, X, Y, Z = 0) => { const o = new THREE.Mesh(geo, mat); o.position.set(X, Y, Z); g.add(o); return o; };
+      const h = 4.6 + (k % 3) * 1.6;
+      add(new THREE.BoxGeometry(3.0, h, 1.8), m, 0, h / 2);
+      add(new THREE.SphereGeometry(1.2, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), k % 2 ? b : m, 0, h);
+      if (k % 2 === 0) { add(new THREE.CylinderGeometry(0.42, 0.5, h + 2.4, 10), m, 1.6, (h + 2.4) / 2, -0.3); add(new THREE.ConeGeometry(0.55, 1.0, 10), b, 1.6, h + 2.9, -0.3); }
+      add(new THREE.BoxGeometry(0.9, 1.4, 0.05), b, 0, 0.7, 0.82); // a blue gate
+      this.group.add(g);
+      this.mirages.push({ q: g, m: k ? null : m, m2: k ? null : b, px, pz, ph: k * 1.3, town: true });
+    });
+  }
+
   // beaches hide one sparkly dig spot a day (a new place each day): A on it or facing it digs up a treasure
   buildDig() {
     this.dig = null;
@@ -4722,6 +4759,7 @@ export class World {
     for (const n of [...(this.M.npcs || []), ...this.traderSpot(), ...this.daycareSpot(), ...this.grownSpot()].map((q) => q.night && this.phase !== 'day' ? { ...q, ...q.night } : q)) { // some folk have a night spot
       if (n.hideFlag && F[n.hideFlag]) continue;
       if (n.showFlag && !F[n.showFlag]) continue;
+      if (n.mirage && !this.mirageHour()) continue; // (the Glass Flats' Mirage Merchant: only while the air shimmers)
       let root, cr = null;
       if (n.pecan) { root = pecanModel(); root.scale.setScalar(CS); }
       else if (n.balloon) { root = balloonModel(n.balloon); }
@@ -5165,7 +5203,10 @@ export class World {
         if (P.disc.lit) P.disc.gl.material.opacity = 0.75 + Math.sin(this.t * 3) * 0.12;
       }
     }
-    if (this.mirages) { const hp = this.hero.root.position; for (const Q of this.mirages) { const d = Math.hypot(hp.x - Q.px, hp.z - Q.pz), near = Math.min(1, Math.max(0, (d - 4) / 6)); Q.m.opacity = (0.55 + Math.sin(this.t * 2.3 + Q.ph) * 0.12) * near; Q.q.scale.set(1 + Math.sin(this.t * 1.7 + Q.ph) * 0.08, 1 + Math.sin(this.t * 3.1 + Q.ph) * 0.15, 1); } } // a mirage fades as you get close
+    if (this.mirages) { const hp = this.hero.root.position; let townNear = 1; for (const Q of this.mirages) { const d = Math.hypot(hp.x - Q.px, hp.z - Q.pz), near = Math.min(1, Math.max(0, (d - 4) / 6));
+      if (Q.town) { townNear = Math.min(townNear, Math.min(1, Math.max(0, (d - 3.5) / 5))); Q.q.scale.set(1 + Math.sin(this.t * 1.3 + Q.ph) * 0.05, 1 + Math.sin(this.t * 2.1 + Q.ph) * 0.1, 1); continue; }
+      Q.m.opacity = (0.55 + Math.sin(this.t * 2.3 + Q.ph) * 0.12) * near; Q.q.scale.set(1 + Math.sin(this.t * 1.7 + Q.ph) * 0.08, 1 + Math.sin(this.t * 3.1 + Q.ph) * 0.15, 1); }
+      for (const Q of this.mirages) if (Q.m2) { Q.m.opacity = (0.55 + Math.sin(this.t * 1.9) * 0.1) * townNear; Q.m2.opacity = (0.62 + Math.sin(this.t * 2.4) * 0.12) * townNear; } } // a mirage fades as you get close (the town melts all at once)
     for (const C of [this.chest, this.chest2]) if (C?.open > 0 && C.open < 1) { C.open = Math.min(1, C.open + dt * 2.5); C.lid.rotation.x = -1.9 * C.open; }
     if (this.lighthouse?.beam) this.lighthouse.beam.rotation.y += dt * 0.6;
     if (this.lighthouse?.lan) for (const l of this.lighthouse.lan) { l.a += dt * 0.12; l.L.position.set(l.cx + Math.cos(l.a) * l.r, l.h + Math.sin(this.t * 0.8 + l.r) * 0.3, l.cz + Math.sin(l.a) * l.r * 0.7 + 1.5); }

@@ -686,6 +686,16 @@ export function storyTalk(S, id, w, a) {
   if (id === 'stargazer') return stargazer(S, w);
   if (id === 'dtrial') return desertTrial(S, w);
   if (id === 'champre') return champRematch(S, w);
+  if (id === 'miragemerchant') { // R814: the Glass Flats' Mirage Merchant, there only in the mirage hours: the Mirage Turban for 25 berries
+    const who = 'Mirage Merchant', hats = (save.adv.hats ||= []), b = save.berries || 0;
+    if (hats.includes('mirageturban')) return w.say([`${who}: You again. Or is it me again? Out here it's hard to tell.`, `${who}: When the air stops shimmering, I'll be gone. Don't be sad. I'm always back tomorrow, just after noon.`], null, who);
+    return w.say([`${who}: Welcome, welcome, to the finest shop in a town that isn't there!`, `${who}: I sell one thing. A turban woven from heat haze. Light as air, cool as a well. 25 berries.`], () => w.ask(`${who}: The Mirage Turban, 25 🍓? (You have ${b} 🍓)`, ['Buy it', 'Not now'], (i) => {
+      if (i !== 0) return w.say([`${who}: Then I'll fold it away. Mind, I'm only here till three.`], null, who);
+      if (b < 25) return w.say([`${who}: Ah. Your berries are a mirage too, I'm afraid. Come back with 25.`], null, who);
+      save.berries = b - 25; hats.push('mirageturban'); persist(); reward(2);
+      w.say(['{hero} got the Mirage Turban! 🫧 (☰ → 🎩 Hats)', `${who}: It suits you! If you look closely, the veil shimmers. If you look very closely... so do I.`], null, who);
+    }, who), who);
+  }
   if (id === 'oasisfish') { // Pool Angler Layla by the Sunwell pool: the four oasis fish, and her spare hat for all four
     const who = 'Pool Angler Layla', sp = save.adv.fishLog?.sp || {}, got = FISH.oasis.filter(([n]) => sp[n]), hats = (save.adv.hats ||= []);
     if (!F.rod) return w.say([`${who}: A rod! I'd lend you mine, but Humpdrop is using it as a back-scratcher. Fisher Finn in Seashell Town hands them out to anyone who asks nicely.`], null, who);
@@ -1341,7 +1351,7 @@ const HAT_WHERE = {
   pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
   masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
   gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
-  fossilhat: 'dig up every fossil for the Sunwell Museum', mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
+  fossilhat: 'dig up every fossil for the Sunwell Museum', mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
 };
 export function hatWhere(id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';

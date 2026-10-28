@@ -1541,6 +1541,7 @@ export const SHOP_HATS = [
   { id: 'mirrorcirclet', name: 'Mirror Circlet', kind: 'circlet', col: 0xe8b040, band: 0xfff4dc, price: 0, gift: true, extra: true }, // the Starless Vault's sun alcove (light the vault with the mirrors)
   { id: 'sledgoggles', name: 'Sand Sled Goggles', kind: 'aviator', col: 0xd8a060, band: 0x5ac8e8, price: 0, gift: true, extra: true }, // Dune Surfer Kai at the Dune Camp: 380 at DUNE SLED
   { id: 'palmangler', name: 'Palm Angler Hat', kind: 'bucket', col: 0x2aa8a0, band: 0xf2c46a, price: 0, gift: true, extra: true }, // Pool Angler Layla at Sunwell Oasis: all four oasis fish
+  { id: 'mirageturban', name: 'Mirage Turban', kind: 'turban', col: 0xeef6ff, band: 0x5ac8e8, price: 0, gift: true, extra: true }, // R814: the Mirage Merchant on the Glass Flats (mirage hours only)
   { id: 'mesaband', name: "Mesa Climber's Bandana", kind: 'band', col: 0xc8402a, band: 0xf2d49c, price: 0, gift: true, extra: true }, // the chest on Redrock Mesa (after the Canyon Cup)
   { id: 'sunlaurel', name: 'Sun Gate Laurel', kind: 'laurel', col: 0xd8643a, band: 0xffd84a, price: 0, gift: true, extra: true }, // the Desert Trial's first clear (D4)
   { id: 'amberwreath', name: 'Amber Wreath', kind: 'crown', col: 0xe8a040, band: 0x2aa8a0, price: 0, gift: true, extra: true }, // 100% of the Amber Sands' Records (D4)
@@ -1591,6 +1592,15 @@ export function hatModel(cr, kind, col, band) {
     const rim = inked(new THREE.TorusGeometry(r * 0.2, r * 0.05, 6, 16), gold, 0.012); F.add(rim);
     const face = new THREE.Mesh(new THREE.CircleGeometry(r * 0.19, 16), toon(band, { rim: 1, emissive: new THREE.Color(band).multiplyScalar(0.45).getHex() })); face.position.z = 0.005; F.add(face);
     for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, ray = inked(new THREE.ConeGeometry(r * 0.05, r * 0.14, 4), gold, 0.01); ray.position.set(Math.cos(a) * r * 0.31, Math.sin(a) * r * 0.31, 0); ray.rotation.z = a - Math.PI / 2; F.add(ray); }
+  }
+  if (kind === 'turban') { // R814: a wrapped turban, three tilted turns of pale cloth, a glass-blue jewel on the brow and a see-through veil trailing behind
+    G.position.y -= r * 0.32;
+    for (let k = 0; k < 3; k++) { const t = add(new THREE.TorusGeometry(r * (0.74 - k * 0.12), r * 0.17, 8, 20), M, 0.015); t.rotation.x = Math.PI / 2 + (k % 2 ? 0.16 : -0.14); t.position.y = r * (0.12 + k * 0.2); }
+    add(new THREE.SphereGeometry(r * 0.42, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), M, 0.015).position.y = r * 0.4;
+    const gem = toon(band, { rim: 1, emissive: new THREE.Color(band).multiplyScalar(0.45).getHex() });
+    const j = add(new THREE.OctahedronGeometry(r * 0.13), gem, 0.01); j.position.set(0, r * 0.28, r * 0.76); j.scale.set(1, 1.3, 0.6);
+    const veil = new THREE.Mesh(new THREE.ConeGeometry(r * 0.7, r * 1.1, 14, 1, true, Math.PI * 0.25, Math.PI * 1.5), new THREE.MeshBasicMaterial({ color: band, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }));
+    veil.position.set(0, -r * 0.18, -r * 0.12); veil.rotation.y = Math.PI; G.add(veil);
   }
   if (kind === 'halo') { // a glowing golden ring floating over the head (Rainbow Reach)
     const m = toon(col, { rim: 1, emissive: new THREE.Color(col).multiplyScalar(0.55).getHex() });

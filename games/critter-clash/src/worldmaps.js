@@ -924,10 +924,10 @@ export const MAPS = {
       'Rsss""""sssR"""""""sssssss"""""ssR',
       'RRRsssssssss"""""""ssRssss"""""RRR',
       'RssssssssssssssssssssssssssssssssR',
-      'RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR',
-      'RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR',
+      'RRRRRRRRRRRRRRRR::RRRRRRRRRRRRRRRR',
+      'RRRRRRRRRRRRRRRR::RRRRRRRRRRRRRRRR',
     ],
-    edges: { w: { to: 'oasis', off: 1 }, e: { to: 'redrock', off: 1, need: 'cup_mirage', needSay: 'Sand Crew Kip: Not yet! The drift is still too deep. Win the Mirage Cup in Sunwell Oasis and I bet we\'ll have it cleared by then.' } },
+    edges: { s: { to: 'flats', off: -3, need: 'cup_canyon', needSay: 'A salt crew sign: GLASS FLATS — CLOSED. The salt road is not safe while the canyon cup is up for grabs. (Win the Canyon Cup in Redrock Canyon.)' }, w: { to: 'oasis', off: 1 }, e: { to: 'redrock', off: 1, need: 'cup_mirage', needSay: 'Sand Crew Kip: Not yet! The drift is still too deep. Win the Mirage Cup in Sunwell Oasis and I bet we\'ll have it cleared by then.' } },
     cacti: [[14, 2], [17, 3], [8, 10], [23, 10], [29, 4], [12, 4], [19, 9]],
     signs: [{ x: 2, y: 4, text: 'DUNE ROAD\n←  Sunwell Oasis      Redrock Canyon  →' }, { x: 23, y: 4, text: 'KEEP OUT!\nOfficial Dust Devil dig. Nothing to see here. Especially not treasure.' }],
     wild: { list: [['sizzlard', 32, 35], ['humpdrop', 32, 35], ['cactortle', 32, 35], ['fennzap', 32, 35], ['scarabold', 33, 36], ['siroccat', 33, 36]], roam: 4, rate: 0.1 },
@@ -1122,6 +1122,48 @@ export const MAPS = {
       { id: 'aurelark_s', x: 13, y: 7, critter: 'aurelark', name: 'Aurelark', dir: 's', story: 'legend:aurelark', showFlag: 'sunbird_wake', hideFlag: 'legend_aurelark', scale: 1.5, act: 'hop' },
       { id: 'nuri_s', x: 10, y: 5, critter: 'siroccat', name: 'Stargazer Nuri', dir: 'e', showFlag: 'sunbird1', hideFlag: 'legend_aurelark', story: 'singing' },
       { id: 'chanter_s', x: 4, y: 7, critter: 'humpdrop', name: 'Dune Singer Amani', dir: 'e', wander: 1, trainer: { lv: 42, sight: 3, diff: 0.88, intro: 'Dune Singer Amani: I come here to sing with the stones. Humpdrop hums the low part. Battle us, and hear the high part!', beat: 'Dune Singer Amani: A lovely duet. You were a little sharp. Humpdrop was a little flat.' } },
+    ],
+  },
+
+  // ===== R814: the Glass Flats, south of Dune Road (after the Canyon Cup): a dry salt lake, white crust cracked into tiles. In the mirage hours
+  // a shimmering town rises on the far side, and the Mirage Merchant only trades while it stands =====
+  flats: {
+    name: 'Glass Flats',
+    music: 'sands',
+    arena: 'canyon',
+    sands: 'flats',
+    extra: true,
+    border: 'mesa',
+    outer: 0xe8d8b8,
+    palette: { a: '#e8e0cc', b: '#e4dcc6', tall: '#b8b098', path: '#d8c8a4', sand: '#f4f0e4', sand2: '#f0ece0', water: '#3ac8c8', bank: '#c89a5a' },
+    blades: 0xb8b098,
+    salt: true, // the crust is painted cracked into tiles (world.js)
+    tiles: [
+      'RRRRRRRRRRRRR::RRRRRRRRRRRRR',
+      'RRsssssssssss::ssssssssssssR',
+      'Rsssssssssssss:sssssssssssRR',
+      'Rsss""ssssssss:sssssssss""sR',
+      'Rsss""ssssssss:sssssssss""sR',
+      'Rssssssss:::::::::sssssssssR',
+      'RssssssssssssssssssssRssssRR',
+      'RsssssRsssssssssssssssssssRR',
+      'Rssssssss""sssssss""sssssssR',
+      'Rssssssss""sssssss""sssssssR',
+      'Rsssssssssssssssssssssssss"R',
+      'RRsssssssssssRssssssssssss"R',
+      'RRRsssssssssssssssssssssRRRR',
+      'RRRRRRRRRRRRRRRRRRRRRRRRRRRR',
+    ],
+    edges: { n: { to: 'duneroad', off: 3 } },
+    mirageTown: [[4, 4], [8, 3], [20, 3], [24, 4], [11, 2]], // where the shimmering town stands in the mirage hours (not solid: walk up and it melts)
+    cacti: [[3, 11], [24, 6]],
+    signs: [{ x: 13, y: 2, text: 'THE GLASS FLATS\nA dry salt lake. Bring water. Bring a hat. Do not try to visit the town.' }],
+    wild: { list: [['siroccat', 37, 40], ['fennzap', 37, 40], ['scarabold', 37, 40], ['humpdrop', 38, 41]], roam: 4, rate: 0.1 },
+    npcs: [
+      { id: 'miner_f', x: 7, y: 9, critter: 'scarabold', name: 'Salt Miner Hamid', dir: 'e', act: 'flex', lines: ['Salt Miner Hamid: Salt! The whole lake is salt. I cut it in blocks and the caravans carry it to the oasis.', 'Salt Miner Hamid: After noon the air gets wobbly and a town shows up over there. Every day! Nobody lives in it. Nobody can reach it.', "Salt Miner Hamid: Well. Somebody sells hats in it. Don't ask me how."] },
+      { id: 'kid_f', x: 20, y: 7, critter: 'fennzap', name: 'Mirage Watcher Sami', dir: 'w', wander: 1, lines: ['Mirage Watcher Sami: I come here every day at noon to watch the town appear. It\'s got towers! And a blue gate!', 'Mirage Watcher Sami: You can\'t walk into it. When you get close it just... melts. Like ice cream.', 'Mirage Watcher Sami: Grandpa says it\'s the buried city, remembering itself. I think it\'s just hot.'] },
+      { id: 'merchant_f', x: 14, y: 3, critter: 'siroccat', name: 'Mirage Merchant', dir: 's', mirage: true, shiny: true, story: 'miragemerchant' }, // only there in the mirage hours
+      { id: 'racer_f', x: 22, y: 10, critter: 'siroccat', name: 'Salt Racer Noor', dir: 'w', trainer: { lv: 40, sight: 3, diff: 0.86, intro: 'Salt Racer Noor: The flats are flat. That means nothing slows you down! Ready, set, BATTLE!', beat: 'Salt Racer Noor: Whoa! You\'re faster than the wind out here!', after: 'Salt Racer Noor: Siroccat and I race the wind every morning. The wind is winning. 41 to 3.' } },
     ],
   },
 
