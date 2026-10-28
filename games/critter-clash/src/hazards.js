@@ -36,6 +36,7 @@ export const SIGS = {
   canyon:  { name: 'Rockslides', word: 'ROCKSLIDE!', jumbo: 'ROCKSLIDE!', tip: 'Rockslide! Get out from under the line!' }, // Redrock Canyon
   oasis:   { name: 'Fountain rings', word: 'FOUNTAIN!', jumbo: 'FOUNTAIN!', tip: 'Fountain ring! Stay in the dry middle!' }, // the Sunwell Pavilion
   grotto:  { name: 'Cave-ins', word: 'CAVE-IN!', jumbo: 'CAVE-IN!', tip: 'Cave-in! Get clear of the cross!' }, // R841: the Sunwell Grotto
+  saltflat: { name: 'Salt cracks', word: 'CRACK!', jumbo: 'SALT CRACK!', tip: 'Salt crack! Step off the line!' }, // R869: the Glass Flats: a crack zigzags across the crust, brine vents burst along it
   aqueduct: { name: 'Floodgates', word: 'FLOOD!', jumbo: 'FLOODGATE!', tip: 'Floodgate! Step out of the surge!' }, // R862: a surge down one lane (the rogue wave's lane, in sluice water)
   dunes:   { name: 'Sandstorms', word: 'SANDSTORM!', jumbo: 'SANDSTORM!', tip: 'Sandstorm! Guard to dig in!' }, // the Sandstorm Dome
 };
@@ -297,6 +298,22 @@ export class Hazards {
       B.fx.text({ x: hp.x, y: hp.y + 0.4, z: hp.z }, 'CAVE-IN!', 'eff', 1);
       for (let k = 0; k < 14; k++) B.fx.spawn({ x: f.x + (Math.random() - 0.5) * 6, y: 7 + Math.random() * 2, z: f.z + (Math.random() - 0.5) * 6, vy: -4, color: 0x8aa0aa, size: 0.18, life: 1.1, shape: 'star', additive: false, grav: 6 }); // grit trickling down first
       sfx.rumble?.();
+    } else if (key === 'saltflat') {
+      // R869: the salt crust splits: a crack zigzags across the flat through one fighter, and the brine vents along it burst one after
+      // another as it runs (step sideways off the line; running along it doesn't help)
+      sg.warn = 0; sg.dur = 3.1; sg.segs = [];
+      const n = 7, gap = 1.55, start = -(n - 1) / 2 * gap + (Math.random() - 0.5) * gap, pts = [];
+      for (let k = 0; k < n; k++) { const a = start + k * gap, side = (k % 2 ? 1 : -1) * (0.55 + Math.random() * 0.35); pts.push([f.x + dx * a - dz * side, f.z + dz * a + dx * side]); }
+      const mat = own(new THREE.MeshBasicMaterial({ color: 0x1e5a7e, transparent: true, opacity: 0, depthWrite: false })); // (a dark brine-wet crack reads on the white crust)
+      pts.forEach(([x, z], k) => {
+        this.spawnAt(x, z, -0.45 - k * 0.2, k > 0);
+        if (!k) return;
+        const [px, pz] = pts[k - 1], len = Math.hypot(x - px, z - pz), seg = add(bandMesh(len + 0.25, 0.3, mat.clone()));
+        seg.position.set((x + px) / 2, 0.04, (z + pz) / 2); seg.rotation.y = -Math.atan2(z - pz, x - px); sg.segs.push(seg);
+      });
+      mat.dispose();
+      B.fx.text({ x: hp.x, y: hp.y + 0.4, z: hp.z }, 'SALT CRACK!', 'eff', 1);
+      sfx.warn(); sfx.rumble?.();
     } else if (key === 'oasis') {
       // the Sunwell's fountain show: geysers rise one after another in a ring round one fighter; the middle stays dry
       sg.warn = 0; sg.dur = 3.2;
@@ -328,6 +345,8 @@ export class Hazards {
     if (sg.kind === 'volcano') {
       sg.crack.children[0].material.opacity = Math.min(0.9, t * 2) * (1 - Math.max(0, (t - 2.1) / 0.5)) * (0.7 + 0.3 * Math.sin(t * 30));
       if (Math.random() < dt * 20) { const a = (Math.random() - 0.5) * 9; fx.spawn({ x: sg.crack.position.x + Math.cos(-sg.crack.rotation.y) * a, y: 0.1, z: sg.crack.position.z + Math.sin(-sg.crack.rotation.y) * a, vy: 1.5, color: 0xffb040, size: 0.18, life: 0.5, shape: 'glow' }); }
+    } else if (sg.kind === 'saltflat') { // the crack runs segment by segment (0.2 s apart, like the vents), glints, then fades
+      sg.segs.forEach((seg, k) => { const m = seg.children[0].material, on = Math.min(1, Math.max(0, (t - k * 0.2) * 5)); m.opacity = on * 0.9 * (1 - Math.max(0, (t - 2.5) / 0.6)) * (0.8 + 0.2 * Math.sin(t * 24 + k)); });
     } else if (sg.kind === 'frost') {
       const fade = Math.min(1, Math.max(0, (sg.warn + sg.dur - t) / 0.6));
       sg.mat.opacity = (live ? 0.85 : 0.25 + 0.35 * k * (0.6 + 0.4 * Math.sin(t * 18))) * fade;

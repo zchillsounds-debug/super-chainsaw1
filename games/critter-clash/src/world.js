@@ -1411,13 +1411,19 @@ export class World {
 
   buildLanterns() {
     if (!this.M.lanterns || this.M.indoor || !save.adv.flags?.cup_mirage) return;
-    const lit = this.phase !== 'day', cols = [0xff6a3a, 0xffc040, 0xff4a7a, 0x3ac8c8, 0xffe070], cord = [], paper = cols.map(() => []), caps = [], glow = [];
+    const lit = this.phase !== 'day', gcap = !!save.adv.flags.glowjar_done, cols = [0xff6a3a, 0xffc040, 0xff4a7a, 0x3ac8c8, 0xffe070, 0x5affb0, 0xf4ecd0], cord = [], paper = cols.map(() => []), caps = [], glow = [];
     for (const [x1, y1, x2, y2] of this.M.lanterns) {
       const [ax, az] = wpos(x1, y1), [bx, bz] = wpos(x2, y2), n = Math.max(4, Math.round(Math.hypot(bx - ax, bz - az) / 1.1)), hy = (t) => 3.3 - Math.sin(t * Math.PI) * 0.7;
       const pts = []; for (let k = 0; k <= 16; k++) { const t = k / 16; pts.push(new THREE.Vector3(ax + (bx - ax) * t, hy(t), az + (bz - az) * t)); }
       cord.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.025, 4, false));
       for (let k = 1; k < n; k++) {
-        const t = k / n, X = ax + (bx - ax) * t, Z = az + (bz - az) * t, Y = hy(t) - 0.32, c = (k + x1 + y1) % cols.length;
+        const t = k / n, X = ax + (bx - ax) * t, Z = az + (bz - az) * t, Y = hy(t) - 0.32, c = (k + x1 + y1) % 5;
+        if (gcap && (k + x1) % 3 === 0) { // R868: a glowcap lantern (Pim's spores): a teal mushroom cap on a pale stem, hung in the string
+          const cap = new THREE.SphereGeometry(0.34, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2); cap.scale(1, 0.8, 1); cap.translate(X, Y + 0.04, Z); paper[5].push(cap);
+          const stem = new THREE.CylinderGeometry(0.09, 0.12, 0.34, 8); stem.translate(X, Y - 0.15, Z); paper[6].push(stem);
+          const st = new THREE.CylinderGeometry(0.008, 0.008, 0.12, 3); st.translate(X, Y + 0.25, Z); caps.push(st);
+          glow.push([X, Y, Z, cols[5], 1]); continue;
+        }
         const L = new THREE.SphereGeometry(0.2, 10, 8); L.scale(1, 1.2, 1); L.translate(X, Y, Z); paper[c].push(L);
         const top = new THREE.CylinderGeometry(0.09, 0.11, 0.07, 8); top.translate(X, Y + 0.25, Z); caps.push(top);
         const bot = new THREE.CylinderGeometry(0.11, 0.09, 0.06, 8); bot.translate(X, Y - 0.25, Z); caps.push(bot);
@@ -1428,7 +1434,7 @@ export class World {
     const merged = (list, mat, ink) => { if (!list.length) return; const m = ink ? inked(mergeGeometries(list), mat, OL * 0.25) : new THREE.Mesh(mergeGeometries(list), mat); list.forEach((q) => q.dispose()); this.group.add(m); };
     merged(cord, toon(0x5a3a22), false); merged(caps, toon(0x3a2a1a), false);
     paper.forEach((list, i) => { let mat; if (lit) { mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(cols[i]).lerp(new THREE.Color(0xffffff), 0.25) }); mat.userData.own = true; } else mat = toon(new THREE.Color(cols[i]).lerp(new THREE.Color(0xfff4e0), 0.45).getHex(), { rim: 0.5 }); merged(list, mat, !lit); });
-    if (lit) for (const [X, Y, Z, c] of glow.filter((_, i) => i % 2 === 0)) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: c, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: this.phase === 'night' ? 0.55 : 0.35 }); sm.userData.own = true; const sp = new THREE.Sprite(sm); sp.scale.setScalar(1.3); sp.position.set(X, Y, Z); this.group.add(sp); }
+    if (lit) for (const [X, Y, Z, c] of glow.filter((q, i) => i % 2 === 0 || q[4])) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: c, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: this.phase === 'night' ? 0.55 : 0.35 }); sm.userData.own = true; const sp = new THREE.Sprite(sm); sp.scale.setScalar(1.3); sp.position.set(X, Y, Z); this.group.add(sp); }
   }
 
   // Chapter 3: saguaro cacti on the dunes (a trunk and one or two arms, little white spines; some flower in pink)

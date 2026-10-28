@@ -23,6 +23,7 @@ for (const [map, at] of LM) {
     const wo = __game.screens.worldObj;
     let start = null; for (let i = 0; i < (e === 'n' || e === 's' ? wo.W : wo.H) && !start; i++) { const x = e === 'e' ? wo.W - 1 : e === 'w' ? 0 : i, y = e === 's' ? wo.H - 1 : e === 'n' ? 0 : i; if (wo.walkable(x, y)) start = [x, y]; }
     if (!M.edges || !start) start = { cloudtop: [13, 12], atoll: [9, 13] }[map] || start; // balloon / ferry landings
+    if (!start && M.lifts) start = [M.lifts[0][0], M.lifts[0][1]]; // (Redrock Mesa: the BFS starts at a rope lift's top)
     if (!start) return 'no way in on edge ' + e;
     const d = typeof at === 'string' && wo.doors.find((q) => q.b.id === at), [tx, ty] = d ? [d.x, d.y + 1] : at;
     const seen = new Set([start.join()]), q = [start];

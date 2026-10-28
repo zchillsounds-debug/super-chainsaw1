@@ -1140,6 +1140,17 @@ const LOST = {
     done: ['Sirocco: A rope knot. From the liftkeeper. "Come up any time." ...', 'Sirocco: (He turns it over and over in his hands.) You carried all of it, didn\'t you. The bucket, the note, the cog. Town to town, for someone who tried to beat you.', 'Sirocco: I won\'t need a Baron\'s hat any more. Take it. It\'s seen every dune in the Amber Sands, and now it can see the rest of the world.', '{hero} got Sirocco\'s Wide-Brim! 🤠 (☰ → 🎩 Hats)', '{hero} got 20 berries and a Power Snack! 🍓⭐'],
   },
 
+  // R868: Pim's glowcap spores reach the night market: a jar for Lantern Maker Yusra, who starts hanging glowcap lanterns (teal, never need oil)
+  glowjar: {
+    who: 'Forager Pim', from: 'pim_h', giverMap: 'glowhollow', extra: true, item: 'jar of glowcap spores', berries: 8, toast: '🍄', home: 'Glowcap Hollow', needs: 'gcap_done', hat: 'glowlantern',
+    to: { npc: 'yusra_o', map: 'oasis', name: 'Lantern Maker Yusra', home: 'the Sunwell night market' },
+    thanks: 'Forager Pim: Yusra sent me a lantern back! It glows on my shelf. Now I have TWO things that glow. Three, with me.',
+    after: ['Lantern Maker Yusra: The glowcap lanterns are the talk of the market. No oil, no smoke, and they never go out! Pim is a genius. A muddy genius.'],
+    ask: ['Forager Pim: Psst. You go up to the oasis sometimes, don\'t you? To the night market, with the paper lanterns?', 'Forager Pim: Paper lanterns need oil. Glowcaps don\'t! Grow a glowcap inside a paper shade and it glows for a whole season.', 'Forager Pim: I filled a jar with spores for the lantern-maker up there. Could you take it to her? She works at the market after dark.', '{hero} got a jar of glowcap spores! 🍄'],
+    wait: ['Forager Pim: The lantern-maker sets up at the night market in Sunwell Oasis, after dark. Shake the jar gently. The spores like a little wake-up.'],
+    done: ['Lantern Maker Yusra: Spores? From the hollow under the well? (She holds the jar up: it glows a soft teal in her hands.)', 'Lantern Maker Yusra: A lantern that never needs oil... Oh, I\'ve dreamed of this! I\'ll hang them on the strings tonight, between the paper ones.', 'Lantern Maker Yusra: And the first one is for you. A glowcap lantern on a little cap, so the night market always knows it\'s you.', '{hero} got the Glowcap Lantern Hat! 🍄 +8 🍓 (☰ → 🎩 Hats)'],
+  },
+
   // ---- Chapter 3 (D3): the Sunwell caravan, a desert chain (Hakim → Ines → Tamar → Hakim) ending in a shiny Humpdrop. An extra, like the Heartseed ----
   caravan1: {
     who: 'Caravan Master Hakim', from: 'hakim_o', giverMap: 'oasis', extra: true, item: 'crate of Sunwell dates', berries: 3, toast: '🌴', home: 'Sunwell Oasis', needs: 'dunecamp_arrive', to: { npc: 'potter_r', map: 'redrock', name: 'Potter Ines', home: 'Redrock Canyon' },
@@ -2459,11 +2470,12 @@ function skyLantern(w) {
   return w.say([`${who}: Every night after the market, we send paper lanterns up over the sands. For wishes, for luck, for the Sun-Bird to find its way home.`, `${who}: I've made one for you! Hold it up... let the warm air fill it... and let go!`], () => {
     A.lanternNight = night; countUp('lantern'); const c = A.cnt.lantern;
     const p = w.hero.root.position;
-    w.g.fx.spawn({ x: p.x, y: 1.6, z: p.z, vx: 0.15, vy: 0.9, color: 0xffa040, size: 1.4, life: 8, hold: 0.85, fadeIn: 0.3 });
-    w.g.fx.spawn({ x: p.x, y: 1.6, z: p.z, vx: 0.15, vy: 0.9, color: 0xffe0a0, size: 0.7, life: 8, hold: 0.85, fadeIn: 0.3 });
+    const gc = A.flags.glowjar_done; // R868: after Pim's spores, a glowcap lantern (teal)
+    w.g.fx.spawn({ x: p.x, y: 1.6, z: p.z, vx: 0.15, vy: 0.9, color: gc ? 0x3ae8c8 : 0xffa040, size: 1.4, life: 8, hold: 0.85, fadeIn: 0.3 });
+    w.g.fx.spawn({ x: p.x, y: 1.6, z: p.z, vx: 0.15, vy: 0.9, color: gc ? 0xc8fff4 : 0xffe0a0, size: 0.7, life: 8, hold: 0.85, fadeIn: 0.3 });
     for (let k = 0; k < 12; k++) w.g.fx.spawn({ x: p.x + (Math.random() - 0.5) * 0.6, y: 1.4, z: p.z + (Math.random() - 0.5) * 0.6, vx: (Math.random() - 0.5) * 0.4, vy: 0.6 + Math.random() * 0.6, color: 0xffd060, size: 0.12, life: 2.5, shape: 'spark' });
     sfx.ui?.('ok'); reward(1);
-    const out = [`The lantern drifts up, up over the palms, a warm little light against the stars. 🏮 (${c} sent up)`];
+    const out = [gc ? `The glowcap lantern drifts up over the palms, a cool teal light among the stars. 🍄 (${c} sent up)` : `The lantern drifts up, up over the palms, a warm little light against the stars. 🏮 (${c} sent up)`];
     if (c === 7 && !hats.includes('lanternhat')) { hats.push('lanternhat'); out.push(`${who}: Seven lanterns! That's a whole wish-string. Here, I made this for you to keep. A lantern that never floats away!`, '{hero} got the Paper Lantern Hat! 🏮 (☰ → 🎩 Hats)'); }
     else out.push(c < 7 ? `${who}: Lovely! ${7 - c} more nights and I'll have something for you.` : `${who}: Beautiful. The Sun-Bird will see that one for sure.`);
     persist(); w.say(out, null, who);
