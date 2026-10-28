@@ -662,7 +662,7 @@ export class Screens {
       ]],
       modes: ['🏆 Modes', [
         ['Tournament', 'Seven stadium cups of three battles each. Win them all to become a Critter Master.'],
-        ['Quick Battle', 'Any critter you have against any rival, in any stadium, with a fun modifier if you like.'],
+        ['Quick Battle', 'Any critter you have against any rival, in any stadium, with a fun modifier if you like. The sky chip picks day, evening, night or rain (and a sandstorm, once the Sandstorm Cup is won): night and rain wake some critters\' traits.'],
         ['Training', 'In Challenges: practise moves on a dummy, with the ⚠ Hazards chip to try each stadium\'s tricks.'],
         ['Survival', 'Fight until you fall; damage carries over. Every 5th rival is a shiny ⭐ Gatekeeper: beat it for berries and a full heal. Clearing the Boss Rush pays a berry basket too.'],
         ['Daily', 'A new Daily Challenge every day for double XP; some days it\'s a 3-on-3 team fight. Clear it on back-to-back days for a streak: up to +5 berries a day.'],

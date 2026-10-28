@@ -51,5 +51,10 @@ if (process.env.SALT !== '0') {
   await shot('salt');
   console.log('salt flags:', await pg.evaluate(() => Object.keys(__save.adv.flags).filter((k) => k.startsWith('salt')).join(',')), 'helmet', await pg.evaluate(() => __save.adv.hats.includes('minerhelm')));
 }
+if (process.env.MAP !== '0') { // the Amber Sands Town Map with the Glass Flats node
+  await pg.evaluate(() => { const o = __game.screens.worldObj; o.load('flats', 14, 7, 'n'); __sim(0.6); }); await pg.waitForTimeout(1200);
+  await pg.evaluate(() => { for (let k = 0; k < 8 && document.querySelector('.wd-box'); k++) { __game.screens.worldObj.tapA = true; __sim(0.6); } __game.screens.worldMap(); });
+  await pg.waitForTimeout(900); await shot('map');
+}
 console.log(errs.length ? 'ERRORS: ' + errs.slice(0, 5).join(' | ') : 'no errors');
 await b.close();

@@ -138,6 +138,7 @@ export const LANDMARKS = [
   { id: 'sungate', map: 'sungate', at: [13, 8], name: 'the Sun Gate', sands: true },
   { id: 'mesatop', map: 'mesa', at: [11, 3], name: 'the mesa lookout', sands: true }, // (R809: two more, up the rope lifts and out on the Singing Dunes)
   { id: 'singstones', map: 'singing', at: [13, 7], name: 'the singing stones', sands: true },
+  { id: 'saltflats', map: 'flats', at: [14, 7], name: 'the Glass Flats', sands: true }, // R816
 ];
 // the photo album: a small JPEG of the latest photo taken at each landmark (its own storage key, so the save and its backup code stay small)
 const ALBUM_KEY = 'critterclash-album';
@@ -1996,7 +1997,7 @@ export class World {
   // street lamps at the edges of town paths (on tile corners, so they never block a step); lit from dusk
   buildLamps() {
     const M = this.M;
-    const route = !M.indoor && M.wild && !(M.buildings || []).length && !M.fireflies && !M.lava && !M.underwater && this.key !== 'peak'; // routes get a few lamps along the path too
+    const route = !M.indoor && M.wild && !(M.buildings || []).length && !M.fireflies && !M.lava && !M.underwater && !M.salt && this.key !== 'peak'; // routes get a few lamps along the path too
     if (M.indoor || M.city || !((M.buildings || []).some((b) => b.heal) || this.key === 'village' || route)) return; // towns (and home)
     const ok = (x, y) => '.:"sf'.includes(this.tile(x, y)) && !this.solid.has(x + ',' + y), cand = [];
     for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) { // corner between tiles (x-1..x, y-1..y)
