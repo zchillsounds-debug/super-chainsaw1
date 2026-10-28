@@ -1077,6 +1077,38 @@ const LOST = {
     done: ['Salt Miner Hamid: Salted dates?! From Zahra? With MY salt? (munch) Oh. Oh, that is good.', 'Salt Miner Hamid: Here. My old miner\'s helmet, from when I dug salt in the caves under the flats. It has a lamp! It still turns on!', '{hero} got the Salt Miner\'s Helmet! ⛑️ (☰ → 🎩 Hats)', '{hero} got 12 berries and a Power Snack! 🍓⭐'],
   },
 
+  // ---- R836: Sirocco's Amends, after the Chapter 3 finale: the reformed Baron sends back what the Dust Devils took (Sun Gate → Bram → Grit →
+  // Liftkeeper Bo → Sirocco): his old wide-brimmed hat. An extra, like the caravan ----
+  sirocco1: {
+    who: 'Sirocco', from: 'baron_g2', giverMap: 'sungate', extra: true, item: 'dented brass bucket', berries: 3, toast: '🪣', home: 'the Sun Gate', needs: 'gate_open', to: { npc: 'wellkeep', map: 'oasis', name: 'Wellkeeper Bram', home: 'Sunwell Oasis' },
+    thanks: 'Sirocco: Bram has his bucket back? Good. One less thing in my tent that isn\'t mine.',
+    ask: ['Sirocco: You again. Good. I need a favour, and I can\'t ask anyone else.', 'Sirocco: The Dust Devils took things. Shovels, buckets, a winch cog... Anything that helped us dig. None of it was ours.', 'Sirocco: I can\'t walk into those towns yet. They\'d chase me out with brooms. Rightly.', 'Sirocco: Start with this bucket. It\'s Wellkeeper Bram\'s, from the Sunwell. We used it to haul sand away from the gate. Tell him... tell him I\'m sorry.', '{hero} got a dented brass bucket! 🪣 Take it to Wellkeeper Bram in Sunwell Oasis.'],
+    wait: ['Sirocco: Bram keeps the well in the middle of Sunwell Oasis. Take the Sand-Rail if your feet are tired. Mine are.'],
+    done: ['Wellkeeper Bram: My BUCKET! Twenty years I hauled water with this bucket. I thought a Humpdrop ate it.', 'Wellkeeper Bram: Sirocco sent it back? And said SORRY? Well. Well, well, well. (That is a well joke.)', 'Wellkeeper Bram: Hold on, little one. Talk to me again: I\'ve got a reply, and I know just who should carry it.', '{hero} got 3 berries! 🍓'],
+  },
+  sirocco2: {
+    who: 'Wellkeeper Bram', from: 'wellkeep', giverMap: 'oasis', item: 'note and a flask of well water', berries: 3, toast: '📝', home: 'Sunwell Oasis', needs: 'sirocco1_done', to: { npc: 'grit_o', map: 'oasis', name: 'Dust Devil Grit', home: 'Sunwell Oasis' },
+    thanks: 'Wellkeeper Bram: Grit scrubbed the whole well rim this morning. Badly. But he scrubbed it!',
+    ask: ['Wellkeeper Bram: That Dust Devil, Grit, still skulks round the market pretending he\'s "shopping". For a week.', 'Wellkeeper Bram: Give him this flask of cool well water and my note. It says: "The well needs a good scrub. Bring your Scarabold."', '{hero} got a note and a flask of well water! 📝 Take them to Dust Devil Grit, by the market.'],
+    wait: ['Wellkeeper Bram: Grit hangs about the south edge of the market. Big Scarabold, bigger frown.'],
+    done: ['Dust Devil Grit: Huh? For ME? From the WELLKEEPER? ...(reads the note) He wants me to... help? With the well?', 'Dust Devil Grit: (gulps the water) ...That is really good water. Okay. OKAY. I\'ll do it. Scarabold, we\'ve got a job. A real one.', 'Dust Devil Grit: Wait! If we\'re fixing things... talk to me again. I\'ve had something in my pocket for weeks and it\'s been burning a hole.', '{hero} got 3 berries! 🍓'],
+  },
+  sirocco3: {
+    who: 'Dust Devil Grit', from: 'grit_o', giverMap: 'oasis', item: 'squeaky brass winch cog', berries: 4, toast: '⚙️', home: 'Sunwell Oasis', needs: 'sirocco2_done', to: { npc: 'lift_r', map: 'redrock', name: 'Liftkeeper Bo', home: 'Redrock Canyon' },
+    thanks: 'Dust Devil Grit: Bo got his cog? Did he yell? He yelled, didn\'t he. ...Did he say anything nice after the yelling?',
+    ask: ['Dust Devil Grit: This cog. I pinched it out of the rope lift in Redrock Canyon. The Baron said, "slow the canyon folk down." So I did.', 'Dust Devil Grit: Liftkeeper Bo\'s been running the lift on a spare ever since. That\'s why it squeaks. That\'s MY fault. Take it back to him? Please?', '{hero} got a squeaky brass winch cog! ⚙️ Take it to Liftkeeper Bo in Redrock Canyon.'],
+    wait: ['Dust Devil Grit: Liftkeeper Bo works the rope lift by the canyon stadium. Tell him... no. Don\'t tell him anything. Just give him the cog and run.'],
+    done: ['Liftkeeper Bo: My COG! My good cog! THAT\'S why the winch squeaks! I\'ve been oiling the wrong thing for a month!', 'Liftkeeper Bo: (Scarabold snaps the cog back in. The winch hums like new.) Ahhh. Listen to that. Not a squeak.', 'Liftkeeper Bo: Sirocco\'s putting things right, is he? Talk to me again. I\'ve got something for him.', '{hero} got 4 berries! 🍓'],
+  },
+  sirocco4: {
+    who: 'Liftkeeper Bo', from: 'lift_r', giverMap: 'redrock', item: 'rope-knot charm', berries: 20, snack: true, hat: 'siroccohat', toast: '🪢', home: 'Redrock Canyon', needs: 'sirocco3_done', to: { npc: 'baron_g2', map: 'sungate', name: 'Sirocco', home: 'the Sun Gate' },
+    thanks: 'Liftkeeper Bo: Sirocco came up the lift yesterday. On his own. Paid his fare and everything.',
+    after: ['Sirocco: The towns let me in now. Bram makes me carry water. Bo makes me oil the winch. It\'s... nice, being useful.', 'Sirocco: The gate is quiet. I think whatever sleeps down there sleeps better without us banging on its door.'],
+    ask: ['Liftkeeper Bo: Every lift rope in the canyon ends in one of these knots. Holds anything. We call it a fresh-start knot: you tie it when you put up a new rope.', 'Liftkeeper Bo: Take it to Sirocco at the Sun Gate. Tell him the canyon says: come up any time. Fare\'s the same for everybody.', '{hero} got a rope-knot charm! 🪢 Take it to Sirocco at the Sun Gate.'],
+    wait: ['Liftkeeper Bo: The Sun Gate\'s past the Dune Camp, over the big dune. Sirocco sits by the gate most days, just looking at it.'],
+    done: ['Sirocco: A rope knot. From the liftkeeper. "Come up any time." ...', 'Sirocco: (He turns it over and over in his hands.) You carried all of it, didn\'t you. The bucket, the note, the cog. Town to town, for someone who tried to beat you.', 'Sirocco: I won\'t need a Baron\'s hat any more. Take it. It\'s seen every dune in the Amber Sands, and now it can see the rest of the world.', '{hero} got Sirocco\'s Wide-Brim! 🤠 (☰ → 🎩 Hats)', '{hero} got 20 berries and a Power Snack! 🍓⭐'],
+  },
+
   // ---- Chapter 3 (D3): the Sunwell caravan, a desert chain (Hakim → Ines → Tamar → Hakim) ending in a shiny Humpdrop. An extra, like the Heartseed ----
   caravan1: {
     who: 'Caravan Master Hakim', from: 'hakim_o', giverMap: 'oasis', extra: true, item: 'crate of Sunwell dates', berries: 3, toast: '🌴', home: 'Sunwell Oasis', needs: 'dunecamp_arrive', to: { npc: 'potter_r', map: 'redrock', name: 'Potter Ines', home: 'Redrock Canyon' },
