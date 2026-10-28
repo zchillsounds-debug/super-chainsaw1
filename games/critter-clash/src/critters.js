@@ -1538,6 +1538,7 @@ export const SHOP_HATS = [
   { id: 'snorkelmask', name: 'Dive Goggles', kind: 'aviator', col: 0x3ac0e8, band: 0xffd84d, price: 0, gift: true, extra: true }, // REEF DIVE in the Sunken Wreck: a dive of 250 or more
   { id: 'suncrown', name: 'Sun Crown', kind: 'crown', col: 0xf0b030, band: 0xd8643a, price: 0, gift: true, extra: true }, // the treasure of the Buried City's Sun Hall (Chapter 3)
   { id: 'fossilhat', name: 'Fossil Ranger Hat', kind: 'ranger', col: 0xe2d2a8, band: 0x8a5a2a, price: 0, gift: true, extra: true }, // Curator Petra at the Sunwell Museum: every fossil dug up (Chapter 3, D3)
+  { id: 'mirrorcirclet', name: 'Mirror Circlet', kind: 'circlet', col: 0xe8b040, band: 0xfff4dc, price: 0, gift: true, extra: true }, // the Starless Vault's sun alcove (light the vault with the mirrors)
   { id: 'palmangler', name: 'Palm Angler Hat', kind: 'bucket', col: 0x2aa8a0, band: 0xf2c46a, price: 0, gift: true, extra: true }, // Pool Angler Layla at Sunwell Oasis: all four oasis fish
   { id: 'mesaband', name: "Mesa Climber's Bandana", kind: 'band', col: 0xc8402a, band: 0xf2d49c, price: 0, gift: true, extra: true }, // the chest on Redrock Mesa (after the Canyon Cup)
   { id: 'sunlaurel', name: 'Sun Gate Laurel', kind: 'laurel', col: 0xd8643a, band: 0xffd84a, price: 0, gift: true, extra: true }, // the Desert Trial's first clear (D4)
@@ -1581,6 +1582,14 @@ export function hatModel(cr, kind, col, band) {
     for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, l = add(new THREE.SphereGeometry(r * 0.42, 12, 8), M, 0.014); l.scale.set(0.7, 0.85, 1); l.position.set(Math.cos(a) * r * 0.3, r * 0.32, Math.sin(a) * r * 0.3); l.rotation.y = -a; }
     const st = add(new THREE.CylinderGeometry(r * 0.07, r * 0.1, r * 0.3, 6), toon(band), 0.01); st.position.y = r * 0.78; st.rotation.z = 0.3;
     const lf = add(new THREE.SphereGeometry(r * 0.2, 8, 6), toon(0x5aa83a), 0.01); lf.scale.set(1, 0.25, 0.6); lf.position.set(r * 0.2, r * 0.72, 0);
+  }
+  if (kind === 'circlet') { // a thin gold circlet with a little round bronze mirror on the brow, rayed like the old sun discs (the Starless Vault)
+    G.position.y -= r * 0.4; const gold = toon(col, { rim: 1, emissive: new THREE.Color(col).multiplyScalar(0.2).getHex() });
+    add(new THREE.TorusGeometry(r * 0.9, r * 0.06, 6, 24), gold, 0.012).rotation.x = Math.PI / 2;
+    const F = new THREE.Group(); F.position.set(0, r * 0.12, r * 0.9); F.rotation.x = -0.15; G.add(F);
+    const rim = inked(new THREE.TorusGeometry(r * 0.2, r * 0.05, 6, 16), gold, 0.012); F.add(rim);
+    const face = new THREE.Mesh(new THREE.CircleGeometry(r * 0.19, 16), toon(band, { rim: 1, emissive: new THREE.Color(band).multiplyScalar(0.45).getHex() })); face.position.z = 0.005; F.add(face);
+    for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, ray = inked(new THREE.ConeGeometry(r * 0.05, r * 0.14, 4), gold, 0.01); ray.position.set(Math.cos(a) * r * 0.31, Math.sin(a) * r * 0.31, 0); ray.rotation.z = a - Math.PI / 2; F.add(ray); }
   }
   if (kind === 'halo') { // a glowing golden ring floating over the head (Rainbow Reach)
     const m = toon(col, { rim: 1, emissive: new THREE.Color(col).multiplyScalar(0.55).getHex() });

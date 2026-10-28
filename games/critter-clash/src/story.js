@@ -1340,7 +1340,7 @@ const HAT_WHERE = {
   pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
   masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
   gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
-  fossilhat: 'dig up every fossil for the Sunwell Museum', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
+  fossilhat: 'dig up every fossil for the Sunwell Museum', mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
 };
 export function hatWhere(id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';

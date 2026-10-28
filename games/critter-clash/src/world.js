@@ -353,8 +353,8 @@ export class World {
     if (this.bolt) { this.bolt.t = 9; this.updateBolt(0); } // a flash cut short by a door: the next map's mood starts from the real light
     this.doors = []; this.itemSpots = []; this.dig = null; // the night props are placed before the buildings, items and dig spot: never read the last map's (or, on a fresh World, missing) ones
     this.g.fx.clear?.(); // last map's smoke, rain and sparkles don't follow you indoors
-    const M = this.M = getMap(key) || getMap('village');
-    if (M !== getMap(key)) { key = 'village'; x = 4; y = 6; }
+    const M0 = getMap(key) || getMap('village'), M = this.M = M0.lit && save.adv.flags?.[M0.lit.flag] ? { ...M0, ...M0.lit } : M0; // (a map can change its look once a flag is set: the Starless Vault, lit)
+    if (M0 !== getMap(key)) { key = 'village'; x = 4; y = 6; }
     this.key = key;
     this.W = M.tiles[0].length; this.H = M.tiles.length;
     if (!(x >= 0 && x < this.W && y >= 0 && y < this.H) && key !== 'village') return this.load('village', 4, 6, 's'); // a damaged save put the hero off the map: home again
@@ -511,7 +511,7 @@ export class World {
       for (const m of [].concat(o.material || [])) { if (m.map) maps.add(m.map); if (m.userData?.own) m.dispose(); }
     });
     for (const t of maps) if (t.userData?.own) t.dispose();
-    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.wreck = null; this.lighthouse = null; this.puz = null; this.chest = null; this.updrafts = null; this.gliding = null; this.pearl = null; this.mirages = null;
+    this.group = null; this.grassGeo = null; this.prints = null; this.forgeFire = null; this.forgePool = null; this.lampPools = null; this.lavaGlow = null; this.moonflowers = null; this.jars = null; this.pendulum = null; this.thanksFan = null; this.rocker = null; this.bonfire = null; this.sunset = null; this.fort = null; this.garden = null; this.geyser = null; this.kite = null; this.flyingKite = false; this.cart = null; this.skyLanterns = null; this.jellies = null; this.dance = null; this.iceLan = null; this.bottle = null; this.scope = null; this.bloomFw = null; this.fountain = null; this.windmills = null; this.kites = null; this.bigVolcano = null; this.wreck = null; this.lighthouse = null; this.puz = null; this.chest = null; this.chest2 = null; this.updrafts = null; this.gliding = null; this.pearl = null; this.mirages = null;
   }
 
   tile(x, y) { return this.M.tiles[y]?.[x] ?? 'T'; }
@@ -1621,7 +1621,7 @@ export class World {
 
   // caves: glowing crystals in the walls, push-boulders, pits, pressure plates and gates, a treasure chest; and on the Ash Trail, the cave mouth
   buildCave(rand) {
-    this.puz = null; this.chest = null;
+    this.puz = null; this.chest = null; this.chest2 = null;
     const M = this.M, F = save.adv.flags;
     if (M.mouth && !M.indoor) { // a dark arch of rock over the path where it runs into the cliff
       const [x, y] = M.mouth, [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz - 1.0); this.group.add(g);
@@ -1773,7 +1773,10 @@ export class World {
     if (!hit || P.gates.every((g) => g.open)) return;
     for (const g of P.gates) { g.open = true; g.t = 1; this.solid.delete(g.x + ',' + g.y); }
     F[M.gateFlag] = true; persist();
-    if (!quiet) { reward(2); this.S.toast?.('☀️ The sunbeam strikes the old sun disc. It blazes gold... and the gate grinds down into the floor!');
+    if (!quiet && M.lit) { reward(3); sfx.rumble?.(); this.busy = true; // the Starless Vault: the disc blazes, and the whole vault lights up
+      setTimeout(() => { this.busy = false; this.say(M.lit.solved, () => this.fade(() => this.load(this.key, this.hx, this.hy, this.dir))); }, 900);
+    }
+    if (!quiet && !M.lit) { reward(2); this.S.toast?.('☀️ The sunbeam strikes the old sun disc. It blazes gold... and the gate grinds down into the floor!');
       const [px, pz] = wpos(P.disc.x, P.disc.y); for (let k = 0; k < 24; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5) * 1.4, y: 1 + (Math.random() - 0.5) * 1.4, z: pz + 1.1, vx: (Math.random() - 0.5) * 3, vy: Math.random() * 2, vz: 1 + Math.random() * 2, color: 0xffd84a, size: 0.4, life: 1.1, shape: 'star', grav: 2 }); }
   }
 
@@ -1793,8 +1796,13 @@ export class World {
       g.add(this.nestMesh(2.1));
       const em = toon(0xe8f8ff, { rim: 1, emissive: 0x2a3a5a }).clone(); em.userData.own = true; const egg = inked(new THREE.SphereGeometry(0.36, 16, 12), em, OL * 0.5); egg.scale.y = 1.3; egg.position.y = 0.62; egg.visible = !F[C.flag]; g.add(egg);
       this.chest = { ...C, lid: new THREE.Object3D(), egg, px, pz };
-    } else if (M.chest) { // a treasure chest at the end of the cave
-      const C = M.chest, [px, pz] = wpos(C.x, C.y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(C.x + ',' + C.y);
+    } else if (M.chest) this.chest = this.plainChest(M.chest);
+    this.chest2 = M.chest2 ? this.plainChest(M.chest2) : null; // a second chest (the Starless Vault's sun alcove)
+  }
+  plainChest(C) { // a treasure chest at the end of the cave
+    const F = save.adv.flags;
+    {
+      const [px, pz] = wpos(C.x, C.y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(C.x + ',' + C.y);
       const wood = toon(0x9a5a2a), gold = toon(0xffc93a, { rim: 0.9, emissive: 0x3a2400 });
       const box = inked(new THREE.BoxGeometry(1.1, 0.6, 0.75), wood, OL * 0.4); box.position.y = 0.3; g.add(box);
       const lid = new THREE.Group(); lid.position.set(0, 0.6, -0.37); g.add(lid);
@@ -1802,7 +1810,7 @@ export class World {
       for (const sx of [-0.4, 0.4]) { const band = inked(new THREE.BoxGeometry(0.1, 0.62, 0.78), gold, OL * 0.2); band.position.set(sx, 0.3, 0); g.add(band); }
       const lock = inked(new THREE.BoxGeometry(0.18, 0.2, 0.06), gold, OL * 0.2); lock.position.set(0, 0.5, 0.39); g.add(lock);
       if (F[C.flag]) lid.rotation.x = -1.9;
-      this.chest = { ...C, lid, px, pz };
+      return { ...C, lid, px, pz };
     }
   }
 
@@ -1810,7 +1818,7 @@ export class World {
   push(B, dx, dy, dir) {
     const bx = B.x + dx, by = B.y + dy, P = this.puz, M = this.M;
     const pit = P.pits.find((p) => p.x === bx && p.y === by && !p.full);
-    const free = pit || (this.walkable(bx, by) && !this.occupied(bx, by) && !P.boulders.some((b) => b.x === bx && b.y === by) && !(this.chest && this.chest.x === bx && this.chest.y === by));
+    const free = pit || (this.walkable(bx, by) && !this.occupied(bx, by) && !P.boulders.some((b) => b.x === bx && b.y === by) && ![this.chest, this.chest2].some((c) => c && c.x === bx && c.y === by));
     if (!free || this.busy) return this.bump();
     sfx.foot?.('stone'); this.g.input?.haptic?.(20);
     this.solid.delete(B.x + ',' + B.y); B.from = [B.x, B.y]; B.x = bx; B.y = by; B.t = 0.28; B.dx = dx; B.dy = dy;
@@ -1890,8 +1898,8 @@ export class World {
   }
 
   // the Deep Grotto's treasure: a hat and a pouch of berries
-  openChest() {
-    const C = this.chest, F = save.adv.flags;
+  openChest(C = this.chest) {
+    const F = save.adv.flags;
     if (C.nest) {
       if (F[C.flag]) return this.say(['The big nest is empty now, apart from a few shimmering bits of eggshell. Skimray hatched right here!']);
       F[C.flag] = true; save.berries = (save.berries || 0) + (C.berries || 0);
@@ -5110,7 +5118,7 @@ export class World {
       }
     }
     if (this.mirages) { const hp = this.hero.root.position; for (const Q of this.mirages) { const d = Math.hypot(hp.x - Q.px, hp.z - Q.pz), near = Math.min(1, Math.max(0, (d - 4) / 6)); Q.m.opacity = (0.55 + Math.sin(this.t * 2.3 + Q.ph) * 0.12) * near; Q.q.scale.set(1 + Math.sin(this.t * 1.7 + Q.ph) * 0.08, 1 + Math.sin(this.t * 3.1 + Q.ph) * 0.15, 1); } } // a mirage fades as you get close
-    if (this.chest?.open > 0 && this.chest.open < 1) { this.chest.open = Math.min(1, this.chest.open + dt * 2.5); this.chest.lid.rotation.x = -1.9 * this.chest.open; }
+    for (const C of [this.chest, this.chest2]) if (C?.open > 0 && C.open < 1) { C.open = Math.min(1, C.open + dt * 2.5); C.lid.rotation.x = -1.9 * C.open; }
     if (this.lighthouse?.beam) this.lighthouse.beam.rotation.y += dt * 0.6;
     if (this.lighthouse?.lan) for (const l of this.lighthouse.lan) { l.a += dt * 0.12; l.L.position.set(l.cx + Math.cos(l.a) * l.r, l.h + Math.sin(this.t * 0.8 + l.r) * 0.3, l.cz + Math.sin(l.a) * l.r * 0.7 + 1.5); }
     if (this.windmills) for (const W of this.windmills) W.sails.rotation.z -= dt * W.sp;
@@ -5493,6 +5501,7 @@ export class World {
     if (this.statue && this.statue.x === fx && this.statue.y === fy) return this.say(['A shining golden statue of {hero}! The plaque says:', `"${heroDef().name}, who explored every corner of Clashara. Where every big dream starts small."`]);
     if (this.fountain && this.fountain.x === fx && this.fountain.y === fy) return this.S.worldStory('wish', this);
     if (this.chest && this.chest.x === fx && this.chest.y === fy) return this.openChest();
+    if (this.chest2 && this.chest2.x === fx && this.chest2.y === fy) return this.openChest(this.chest2);
     const mi = this.puz?.mirrors?.find((m) => m.x === fx && m.y === fy); if (mi) return this.turnMirror(mi);
     const up = this.updrafts?.find((u) => u.x === fx && u.y === fy); if (up) return this.updraftTalk(up);
     const sg = this.singers?.find((q) => q.x === fx && q.y === fy); if (sg) return this.singAt(sg);

@@ -47,7 +47,7 @@ const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
 const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
 const LEGEND_IDS = () => ['solmoth', 'moonwhal', 'verdelk', ...(save.adv?.flags?.sands_arrive ? ['aurelark'] : [])]; // the Champ page's legends (the Sun-Bird once you reach the sands)
-const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler']; // the desert's found hats (the Sand Hats stall's four are `sands`)
+const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet']; // the desert's found hats (the Sand Hats stall's four are `sands`)
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
@@ -1459,7 +1459,7 @@ export class Screens {
       const sb = (ic, name, n, of, left) => { sparts.push(Math.min(1, n / of)); const h = bar(ic, name, n, of, true, left); iparts.pop(); return h; }; // (bar files a goal row under the isles: move it to the sands)
       const sMaps = Object.keys(MAPS).filter((k) => MAPS[k].sands), str = sMaps.flatMap((k) => (MAPS[k].npcs || []).filter((n) => n.trainer && (F[n.id] || !(n.hideFlag && F[n.hideFlag]))).map((n) => [k, n]));
       const sh = SHOP_HATS.filter((h) => h.sands || SANDS_GIFT_HATS.includes(h.id)), fos = A.fossils || [], desert = CRITTERS.filter((c) => c.desert);
-      const city = [['buried_gate', 'the Sun Hall\'s sun plate'], ['buried_chest', 'the Sun Hall\'s chest'], ['buried_beam', 'the Hall of Mirrors\' sunbeam'], ['buried_vault', 'the Starless Vault\'s chest']];
+      const city = [['buried_gate', 'the Sun Hall\'s sun plate'], ['buried_chest', 'the Sun Hall\'s chest'], ['buried_beam', 'the Hall of Mirrors\' sunbeam'], ['buried_vault', 'the Starless Vault\'s chest'], ['vault_lit', 'a thread of sun in the Starless Vault'], ['vault_alcove', 'the Starless Vault\'s sun alcove']];
       const bMaps = sMaps.filter((k) => !MAPS[k].indoor && !MAPS[k].noItems), sboxes = bMaps.length * 2;
       body += '<li class="jr-head">🏜️ Amber Sands</li>'
         + sb('🏆', 'Desert cups won', SANDS_CUPS.filter((c) => F['cup_' + c.id]).length, SANDS_CUPS.length, lst(SANDS_CUPS.filter((c) => !F['cup_' + c.id]).map((c) => c.name)))

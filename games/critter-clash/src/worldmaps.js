@@ -1271,7 +1271,7 @@ export const MAPS = {
     tiles: [
       'RRRRRRRRRRRRRRRRRRRR',
       'RRRRRRR......RRRRRRR',
-      'RRRRRRR......RRRRRRR',
+      'RRRRRRR.........RRRR',
       'RRRRRRR......RRRRRRR',
       'RRRRRRRRR..RRRRRRRRR',
       'RRR..............RRR',
@@ -1286,6 +1286,14 @@ export const MAPS = {
       'RRRRRRRRRR:RRRRRRRRR',
     ],
     edges: { s: { to: 'buried2', off: 0 } },
+    // R809: a thread of sun through a crack in the east wall (13 rows down). Steer it with five mirrors up through the whole vault onto the
+    // old sun disc over the upper hall and the vault lights up, and the bars of the sun alcove (east of the mural room) sink. Solved: \\ \\ \\ / / (the last two are decoys)
+    beam: { x: 17, y: 13, dx: -1, dy: 0 }, sunDisc: [14, 4],
+    mirrors: [[16, 13, '/'], [16, 9, '/'], [4, 9, '/'], [4, 6, '\\'], [14, 6, '\\'], [8, 5, '/'], [12, 10, '\\']],
+    gates: [[13, 2]], gateFlag: 'vault_lit',
+    lit: { flag: 'vault_lit', name: 'Sunlit Vault', dark: false, mood: { sun: 0xffd8a0, sunI: 0.95, sky: 0xf0c890, gnd: 0x3a2412, hemiI: 1.0, fog: 0x241610 }, palette: { a: '#b8946a', b: '#b48e64', tall: '#b89040', path: '#a8825a', water: '#3ac8c8', bank: '#5a3e24', dark: 'rgba(40,20,0,0.3)', lite: 'rgba(255,230,160,0.16)' },
+      solved: ['The thread of sunlight leaps from mirror to mirror, all the way up through the vault... and strikes the old sun disc!', 'The disc blazes gold. Light pours down every hall. The Starless Vault isn\'t starless any more!', 'Somewhere near the mural, iron bars grind down into the floor.'] },
+    chest2: { x: 15, y: 2, flag: 'vault_alcove', hat: 'mirrorcirclet', berries: 25, hatLine: '...and a Mirror Circlet: a thin gold band with a little sun-mirror on the brow. It catches every scrap of light!' },
     chest: { x: 8, y: 1, flag: 'buried_vault', hat: 'sunseeker', berries: 40, hatLine: '...and a Sun-Seeker\'s Hat, wide-brimmed and sand-coloured, with a band the red of the canyons!' },
     signs: [{ x: 11, y: 1, hide: true, mural: true, text: 'A mural, carved deep, lit by the Sun Crown\'s glow: a great winged critter of sand and sunlight, curled up asleep under the tallest dune. Over it, three stars in a row.\n"WHEN THE THREE STARS STAND OVER THE SINGING DUNES, THE SUN-BIRD WAKES."' }],
     wild: { list: [['scarabold', 40, 42], ['fennzap', 40, 42], ['siroccat', 41, 43]], roam: 2, rate: 0.1 },

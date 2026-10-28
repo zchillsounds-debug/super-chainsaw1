@@ -26,9 +26,9 @@ const face = (x, y, dir) => pg.evaluate(([x, y, dir]) => { const o = __game.scre
 const tapA = () => pg.evaluate(() => { const o = __game.screens.worldObj; o.tapA = true; __sim(0.3); });
 
 const lobby = (process.env.LOBBY || 'oasis:stadium_m');
-await start('in:' + lobby, 10, 3, 'n', 11, []);
+await start('in:' + lobby, 12, 3, 'n', 11, []);
 await shot('lobby');
-console.log('champion hint:', await face(10, 3, 'n'));
+console.log('champion hint:', await face(12, 3, 'n'));
 for (let k = 0; k < 2; k++) {
   await tapA();
   const log = [];
@@ -48,7 +48,7 @@ for (let k = 0; k < 2; k++) {
   }
   console.log(`-- talk ${k + 1}:`, log.filter((x) => !x.startsWith('say')).join(' > '), '|', log.filter((x) => x.startsWith('say')).join(' / '));
   console.log('   map', await pg.evaluate(() => __save.adv.map + ' ' + __save.adv.x + ',' + __save.adv.y), 'berries', await pg.evaluate(() => __save.berries));
-  await face(10, 3, 'n');
+  await face(12, 3, 'n');
 }
 await pg.evaluate(() => __game.screens.worldJournal('champ'));
 await pg.evaluate(() => { const el = [...document.querySelectorAll('.jr-head')].find((e) => e.textContent.includes('champions')); el?.scrollIntoView(); });
