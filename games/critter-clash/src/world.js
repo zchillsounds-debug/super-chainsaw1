@@ -140,6 +140,7 @@ export const LANDMARKS = [
   { id: 'mesatop', map: 'mesa', at: [11, 3], name: 'the mesa lookout', sands: true }, // (R809: two more, up the rope lifts and out on the Singing Dunes)
   { id: 'singstones', map: 'singing', at: [13, 7], name: 'the singing stones', sands: true },
   { id: 'saltflats', map: 'flats', at: [14, 7], name: 'the Glass Flats', sands: true }, // R816
+  { id: 'springpool', map: 'wellspring', at: [7, 5], name: 'the glowing spring', sands: true }, // R843: down the Sunwell
 ];
 // the photo album: a small JPEG of the latest photo taken at each landmark (its own storage key, so the save and its backup code stay small)
 const ALBUM_KEY = 'critterclash-album';
