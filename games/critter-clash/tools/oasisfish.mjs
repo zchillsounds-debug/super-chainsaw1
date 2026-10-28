@@ -1,5 +1,5 @@
 // node tools/oasisfish.mjs [WxH] : R809/R810: four catches in the Sunwell pool (the oasis fish, forced rolls), Pool Angler Layla's hat, the
-// Amber Sands Records rows and the fish album; then Quick Battle's Match Setup with the three desert stadiums unlocked. ONLY=fish,quick.
+// Amber Sands Records rows and the fish album; then Quick Battle's Match Setup with the three desert stadiums unlocked. ONLY=fish,glass,quick. R813: glass = a mirage-hour catch (the Heatwave Glassfish), Layla's line, the album row.
 // Screenshots in tools/out/of-*.
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
@@ -44,6 +44,19 @@ if (want('fish')) {
   await pg.waitForTimeout(800);
   await pg.evaluate(() => { const el = [...document.querySelectorAll('.jr-head')].find((e) => e.textContent.includes('Oasis')); el?.scrollIntoView(); });
   await shot('album');
+}
+if (want('glass')) {
+  await start('oasis', 16, 9, 'w', 13, ['rod']);
+  console.log('mirage hour:', await pg.evaluate(() => __game.screens.worldObj.mirageHour()));
+  await face(16, 9, 'w');
+  console.log('catch:', await pg.evaluate(() => { const o = __game.screens.worldObj, R = Math.random; let i = 0; Math.random = () => (i === 0 && /\.reel /.test(new Error().stack.split('\n')[2] || '') ? (i++, 0.6) : R()); o.fishing = { rod: new o.hero.root.constructor() }; o.hero.root.add(o.fishing.rod); o.reel('catch'); Math.random = R; }).then(say));
+  await shot('glass'); await close();
+  console.log('log:', await pg.evaluate(() => JSON.stringify({ m: __save.adv.fishLog.mirage, b: __save.berries })));
+  await pg.evaluate(() => { __save.adv.hats = ['palmangler']; });
+  await face(18, 9, 'w'); await tapA(); console.log('Layla:', await say()); await close();
+  await pg.evaluate(() => __game.screens.worldJournal('fish')); await pg.waitForTimeout(800);
+  await pg.evaluate(() => { const el = [...document.querySelectorAll('.jr-head')].find((e) => e.textContent.includes('Mirage')); el?.scrollIntoView({ block: 'center' }); });
+  await shot('galbum');
 }
 if (want('quick')) {
   await pg.evaluate(() => { __save.adv = { flags: { cup_mirage: true, cup_canyon: true, cup_sandstorm: true } }; __game.screens.title(); });

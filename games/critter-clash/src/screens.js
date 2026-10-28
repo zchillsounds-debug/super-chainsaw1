@@ -12,7 +12,7 @@ import { traitChip, traitOf } from './traits.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
-import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, seasonKey } from './world.js';
+import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, MIRAGE_FISH, seasonKey } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, hatWhere, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, DESERT_TRIAL, gauntletFoes, champReFlag, CUP_HALL } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { VERSION } from './version.js';
@@ -57,6 +57,10 @@ const ARENA_KEYS = Object.keys(ARENA_NAME);
 // R810: the Amber Sands' three stadiums join Quick Battle and Sparring once their Adventure cup is won (each has its own hazard)
 const SANDS_ARENA = { oasis: ['Sunwell Pavilion', 'mirage'], canyon: ['Canyon Stadium', 'canyon'], dunes: ['Sandstorm Dome', 'sandstorm'] };
 const arenaName = (k) => ARENA_NAME[k] || SANDS_ARENA[k]?.[0] || k;
+// Quick Battle's sky chip: the time of day and the weather (night and rain wake the night/rain traits; the sandstorm waits for the Sandstorm Cup)
+const SKIES = { day: ['☀️', 'Day'], evening: ['🌇', 'Evening'], night: ['🌙', 'Night'], rain: ['🌧️', 'Rain'], sandstorm: ['🌪️', 'Sandstorm'] };
+const skyKeys = () => Object.keys(SKIES).filter((k) => k !== 'sandstorm' || save.adv?.flags?.cup_sandstorm);
+const skyOpts = (k) => (!k || k === 'day' ? {} : k === 'rain' ? { phase: 'day', rain: true } : k === 'sandstorm' ? { phase: 'day', sandstorm: true } : { phase: k });
 const arenaKeys = () => [...ARENA_KEYS, ...Object.keys(SANDS_ARENA).filter((k) => save.adv?.flags?.['cup_' + SANDS_ARENA[k][1]])];
 // Stadium Trials: one fight per hazard stadium under Stadium Mayhem, against a critter at home there
 const TRIALS = [
@@ -1032,19 +1036,22 @@ export class Screens {
     // Quick Battle: one chip cycles through the match modifiers
     const modKeys = ['', ...Object.keys(MODS).filter((k) => !MODS[k].hazard || save.settings.hazards !== false)];
     let mod = modKeys.includes(this.quickMod) ? this.quickMod : '';
+    let sky = skyKeys().includes(this.quickSky) ? this.quickSky : 'day';
     const sync = () => {
       d.querySelectorAll('.tp-foe').forEach((b) => b.classList.toggle('on', b.dataset.id === foe));
       d.querySelectorAll('.tp-ar').forEach((b) => b.classList.toggle('on', b.dataset.k === arena));
       // one chip toggles hazard practice (only the ⚠ stadiums have any)
       d.querySelectorAll('.tp-hz').forEach((b) => { b.classList.toggle('on', hz === '1'); b.textContent = `⚠ Hazards: ${hz === '1' ? 'On' : 'Off'}`; });
-      d.querySelectorAll('.tp-mod').forEach((b) => { b.classList.toggle('on', !!mod); b.innerHTML = mod ? `${MODS[mod].icon}<span> ${MODS[mod].name}</span>` : '🎲<span> No modifier</span>'; });
+      d.querySelectorAll('.tp-sky').forEach((b) => { b.classList.toggle('on', sky !== 'day'); b.innerHTML = `${SKIES[sky][0]}<span> ${SKIES[sky][1]}</span>`; });
+      d.querySelectorAll('.tp-mod:not(.tp-sky)').forEach((b) => { b.classList.toggle('on', !!mod); b.innerHTML = mod ? `${MODS[mod].icon}<span> ${MODS[mod].name}</span>` : '🎲<span> No modifier</span>'; });
     };
     d.querySelectorAll('.tp-hz').forEach((b) => b.addEventListener('click', () => { hz = hz === '1' ? '0' : '1'; sfx.ui('move'); sync(); }));
     d.querySelectorAll('.tp-foe').forEach((b) => b.addEventListener('click', () => { foe = b.dataset.id; sfx.ui('move'); sync(); }));
     d.querySelectorAll('.tp-ar').forEach((b) => b.addEventListener('click', () => { arena = b.dataset.k; sfx.ui('move'); sync(); }));
     sync();
     const row = d.querySelector('.row');
-    if (!train) { const mb = document.createElement('button'); mb.className = 'tp-mod'; mb.addEventListener('click', () => { mod = modKeys[(modKeys.indexOf(mod) + 1) % modKeys.length]; sfx.ui('move'); sync(); this.toast(mod ? `${MODS[mod].icon} ${MODS[mod].name}: ${MODS[mod].desc}` : 'No modifier'); }); row.appendChild(mb); }
+    if (!train) { const mb = document.createElement('button'); mb.className = 'tp-mod'; mb.addEventListener('click', () => { mod = modKeys[(modKeys.indexOf(mod) + 1) % modKeys.length]; sfx.ui('move'); sync(); this.toast(mod ? `${MODS[mod].icon} ${MODS[mod].name}: ${MODS[mod].desc}` : 'No modifier'); }); row.appendChild(mb);
+      const sb = document.createElement('button'); sb.className = 'tp-mod tp-sky'; sb.addEventListener('click', () => { const K = skyKeys(); sky = K[(K.indexOf(sky) + 1) % K.length]; sfx.ui('move'); sync(); this.toast(`${SKIES[sky][0]} ${SKIES[sky][1]}${sky === 'night' ? ': night critters wake up' : sky === 'rain' ? ': rain critters love it' : sky === 'sandstorm' ? ': sand blows through the whole fight' : ''}`); }); row.appendChild(sb); }
     sync();
     row.appendChild(this.btn('Back', 'ghost-dark', () => d.remove()));
     row.appendChild(this.btn(train ? 'PRACTICE!' : 'FIGHT!', 'primary', () => {
@@ -1052,10 +1059,10 @@ export class Screens {
       this[key + 'Foe'] = foe; this[key + 'Arena'] = arena;
       const c = foe === 'random' ? others[Math.floor(Math.random() * others.length)] : others.find((x) => x.id === foe);
       if (!train) {
-        this.quickMod = mod;
+        this.quickMod = mod; this.quickSky = sky;
         // Stadium Mayhem on a random arena picks one that has hazards
         const ar = arena !== 'random' ? arena : pick(MODS[mod]?.hazard ? arenaKeys().filter((k) => HAZARDS[k]) : arenaKeys());
-        this.quickPick = { c, arena: ar, mods: mod ? [mod] : [] };
+        this.quickPick = { c, arena: ar, mods: mod ? [mod] : [], sky };
         this.vs(); return;
       }
       this.mode = 'battle';
@@ -1618,6 +1625,7 @@ export class Screens {
       body = (save.adv.flags.rod ? `<li class="jr-more">🏆 This week's Fishing Derby: a ${D.name} of ${D.cm} cm or more (${D.where}). ${save.adv.derbyWk === D.wk ? '✅ Won! A new fish on Monday.' : 'Fisher Finn has a prize!'}</li>` : '<li class="jr-more">🎣 Fisher Finn in Seashell Town lends out rods. Then face any water and press A!</li>')
         + Object.entries(FISH).filter(([k]) => k !== 'oasis' || save.adv.flags.sands_arrive).map(([k, list]) => `<li class="jr-head">${where[k]}</li>` + list.map(([n], i) => { const cm = sp[n]; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? '🐟' : '❔'}</span><b>${cm || n === D.name ? n : '???'}${i === list.length - 1 ? ' <small>rare</small>' : ''}${n === D.name && save.adv.flags.rod ? ' <small class="dby">🎯 derby</small>' : ''}</b><em>${cm ? cm + ' cm' : ''}${L.best?.name === n ? ' 🏅' : ''}</em></li>`; }).join('')).join('')
         + `<li class="jr-head">🗓️ Seasonal visitors (one a season · catch all four for a hat!)</li>` + Object.entries(SEASON_FISH).map(([k, [n, , , em]]) => { const cm = L.season?.[n], now = seasonKey() === k; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? em : '❔'}</span><b>${cm || now ? n : '???'} <small>${k}${now ? ' · now!' : ''}</small></b><em>${cm ? cm + ' cm' : ''}</em></li>`; }).join('')
+        + (save.adv.flags.sands_arrive ? `<li class="jr-head">🌫️ Mirage hours (Amber Sands water, 12–15 h on clear days)</li><li class="jr-fish ${L.mirage ? 'got' : ''}"><span>${L.mirage ? MIRAGE_FISH[3] : '❔'}</span><b>${L.mirage || save.adv.fishLog?.sp?.['Mirage Guppy'] ? MIRAGE_FISH[0] : '???'} <small>visitor</small></b><em>${L.mirage ? L.mirage + ' cm' : ''}</em></li>` : '')
         + `<li class="jr-more">${Object.keys(sp).length}/${Object.entries(FISH).filter(([k]) => k !== 'oasis' || save.adv.flags.sands_arrive).flatMap(([, v]) => v).length} kinds${L.season ? ` · ${Object.keys(L.season).length}/4 seasonal` : ''} · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
     }
     d.innerHTML = `<div class="modal wd-journal"><h2>Journal</h2>
@@ -1798,8 +1806,7 @@ export class Screens {
       heroHat: save.adv.hat || null, cpuTitle: info.alpha ? info.name : null, phase, rain, sandstorm, // the hero keeps its Adventure hat on; the day's Alpha is named on the HUD
       stageSub: info.kind === 'wild' ? `${info.name} appeared!` : info.kind === 'story' ? 'Story battle' : `${info.name} wants to battle!`,
     });
-    g.arena.setOpen(!info.stadium); // out in the wild: no stadium, just the meadow
-    if (phase && (phase !== 'day' || rain || sandstorm)) g.arena.tint(phase, rain, sandstorm);
+    g.arena.setOpen(!info.stadium); // out in the wild: no stadium, just the meadow (startBattle tints the sky)
   }
 
   worldCup(cup, front) {
@@ -1997,8 +2004,8 @@ export class Screens {
       this.quickPick = null;
       c = q?.c || others[Math.floor(Math.random() * others.length)];
       const pl = save.critters[p.id].level;
-      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: q?.arena || pick(ARENA_KEYS), mods: q?.mods || [] };
-      label = `CPU · ${DIFFS[this.diff].name}${opts.mods.length ? ` · ${MODS[opts.mods[0]].icon} ${MODS[opts.mods[0]].name}` : ""}`;
+      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: q?.arena || pick(ARENA_KEYS), mods: q?.mods || [], ...skyOpts(q?.sky) };
+      label = `CPU · ${DIFFS[this.diff].name}${opts.mods.length ? ` · ${MODS[opts.mods[0]].icon} ${MODS[opts.mods[0]].name}` : ""}${q?.sky && q.sky !== 'day' ? ` · ${SKIES[q.sky][0]}` : ''}`;
     }
     c = withGear(c, opts.cpuLevel); // rivals grow with their level too (Lv 7 / Lv 14 forms)
     const gold = this.ctx.kind === 'bossrush' || opts.trainer?.boss || /^Gatekeeper/.test(opts.stageSub || ''); // big fights get a gold nameplate

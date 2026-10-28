@@ -325,6 +325,7 @@ class Game {
       ...opts,
       onEnd: (won, stats) => setTimeout(() => this.screens.results(won, stats, pDef, cDef, opts), 900),
     });
+    if (opts.phase && (opts.phase !== 'day' || opts.rain || opts.sandstorm)) this.arena.tint(opts.phase, opts.rain, opts.sandstorm); // world fights and Quick Battle's sky chip (a rematch keeps it)
   }
 
   endBattle() {

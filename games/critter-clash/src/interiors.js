@@ -123,6 +123,17 @@ const ROOMS = {
     'WO.......OW',
     'WWWWW.WWWWW',
   ],
+  // R813: a Dune Camp nomad tent: striped canvas walls, floor cushions round a brass tray of mint tea, brass lanterns, a stack of rolled rugs
+  tent: [
+    'WWWWWWWWWWW',
+    'Www.x...xQW',
+    'W........QW',
+    'W.ydy.....W',
+    'W...YYYY..W',
+    'Wx..YYYY.xW',
+    'W.........W',
+    'WWWWW.WWWWW',
+  ],
   shop: [
     'WWWWWWWWWWW',
     'WHHH...HHHW',
@@ -198,12 +209,12 @@ const PEOPLE = {
   'frostpeak:berry7': { visitor: ['pengsicle', 'Snowy', ['Snowy: Warm smoothies? In Frostpeak they make them HOT. Wonderful!'], 'w', 9, 4] },
   // ---- Chapter 2: the Sunscatter Isles ----
   'oasis:hats_o': { npcs: [['fennzap', 'Hatter Zara', [], 's', 5, 1, 'hatshop']], kind: 'shop', name: 'Sand Hats', wall: '#f4e0c0', rug: '#d8643a' },
-  'oasis:stadium_m': { npcs: [['humpdrop', 'Pavilion Guide Nadia', ['Pavilion Guide Nadia: Welcome to the Sunwell Pavilion! The arena floor sits right on top of the old spring.', 'Pavilion Guide Nadia: Mind the geysers. And when the fountains rise in a ring around you, stay in the dry middle. Or roll out, fast!', 'Pavilion Guide Nadia: The Keeper waters her Sizzlard every morning. It hates it. It is VERY shiny.'], 'n', 2, 5], ['sizzlard', 'Oasis Keeper Amaya', [], 's', 12, 2, 'champre', 'cup_mirage', { shiny: true }]], wall: '#f6e8d0', rug: '#1fa8b0' }, // the Mirage Stadium's lobby, in the pavilion's teal and sand
+  'oasis:stadium_m': { npcs: [['humpdrop', 'Pavilion Guide Nadia', ['Pavilion Guide Nadia: Welcome to the Sunwell Pavilion! The arena floor sits right on top of the old spring.', 'Pavilion Guide Nadia: Mind the geysers. And when the fountains rise in a ring around you, stay in the dry middle. Or roll out, fast!', 'Pavilion Guide Nadia: The Keeper waters her Sizzlard every morning. It hates it. It is VERY shiny.'], 'n', 2, 5], ['sizzlard', 'Oasis Keeper Amaya', [], 's', 12, 2, 'champre', 'cup_mirage', { shiny: true }]], wall: '#f6e8d0', rug: '#1fa8b0', floor: { a: '#ecd2a0', b: '#e6ca96' } }, // the Mirage Stadium's lobby, in the pavilion's teal and sand
   'redrock:stadium_r': { npcs: [['scarabold', 'Rock Watcher Dun', ['Rock Watcher Dun: The Canyon Stadium has no roof. Lovely for the sun. Less lovely when the cliff drops a stone on you!', 'Rock Watcher Dun: A red ring on the floor means a rock is coming. And when the cliff rumbles, a whole line of them comes down. Step off the line!', 'Rock Watcher Dun: Chief Maro\'s Scarabold is shiny as a polished pebble. It rolled half these boulders here itself.'], 'n', 2, 5], ['scarabold', 'Canyon Chief Maro', [], 's', 12, 2, 'champre', 'cup_canyon', { shiny: true }]], wall: '#f2dcc0', rug: '#c8502a' }, // the Canyon Stadium's lobby: sandstone and terracotta
   'dunecamp:stadium_s': { npcs: [['fennzap', 'Dome Keeper Yusuf', ['Dome Keeper Yusuf: Welcome to the Sandstorm Dome! The sail-cloth keeps out the sun. The sand... has its own opinions.', 'Dome Keeper Yusuf: When a little twister spins up on the floor, step away. When the whole dome howls, the sand blows sideways. Lean into it!', "Dome Keeper Yusuf: Warden Rasha's Siroccat is shiny as a new coin. It rides the wind like a kite."], 'n', 2, 5], ['siroccat', 'Dune Warden Rasha', [], 's', 12, 2, 'champre', 'cup_sandstorm', { shiny: true }]], wall: '#f4e4c4', rug: '#c8862a' }, // the Sandstorm Dome's lobby: canvas and rust
   'dunecamp:berry_c': { visitor: ['humpdrop', 'Caravan Cook Safi', ['Caravan Cook Safi: Date smoothies! The camp\'s Berry Center runs on dates. And sand. Mostly dates.'], 'w', 9, 4], wall: '#fff0e4' },
-  'dunecamp:tent_w': { npcs: [['cactortle', 'Weaver Tamar\'s Apprentice', ["Weaver's Apprentice: Teal and cream, teal and cream. I've woven eleven tents this year. My Cactortle has woven zero. It keeps eating the thread.", "Weaver's Apprentice: The Dust Devils asked us to weave them a tent. All black. We said no. They bought cheap cloth from the canyon instead."], 's', 4, 2]], wall: '#f4e4c4', rug: '#1fa8b0' },
-  'dunecamp:tent_s': { npcs: [['siroccat', 'Stargazer Nuri\'s Sister', ["Stargazer Lila: Nuri counts the stars. I count the sandstorms. Seven this month!", "Stargazer Lila: Old songs say the buried city's gate opens only when the sun stone is whole again. The Dust Devils have been asking about that song a lot."], 's', 4, 2]], wall: '#f6e8cc', rug: '#d8643a' },
+  'dunecamp:tent_w': { kind: 'tent', npcs: [['cactortle', 'Weaver Tamar\'s Apprentice', ["Weaver's Apprentice: Teal and cream, teal and cream. I've woven eleven tents this year. My Cactortle has woven zero. It keeps eating the thread.", "Weaver's Apprentice: The Dust Devils asked us to weave them a tent. All black. We said no. They bought cheap cloth from the canyon instead."], 's', 4, 2]], wall: '#f4e4c4', rug: '#1fa8b0' },
+  'dunecamp:tent_s': { kind: 'tent', tiles: ['WWWWWWWWWWW', 'Www.x...NQW', 'W........QW', 'W.ydy.....W', 'W...YYYY..W', 'Wx..YYYY.xW', 'W.........W', 'WWWWW.WWWWW'], npcs: [['siroccat', 'Stargazer Nuri\'s Sister', ["Stargazer Lila: Nuri counts the stars. I count the sandstorms. Seven this month!", "Stargazer Lila: Old songs say the buried city's gate opens only when the sun stone is whole again. The Dust Devils have been asking about that song a lot."], 's', 4, 2]], wall: '#f6e8cc', rug: '#d8643a', floor: { a: '#ecd2a0', b: '#e6ca96' } },
   'dunecamp:hq_c': { npcs: [['siroccat', 'Dust Devil Cook', [], 's', 6, 2, 'devilmap']], wall: '#5a3a32', rug: '#ffb040', dark: true }, // the cook gives up the Baron's map (citymap)
   'oasis:museum_o': { npcs: [['cactortle', 'Curator Petra', [], 's', 6, 2, 'museum']], kind: 'museum', name: 'Sunwell Museum', wall: '#f4e4c4', rug: '#2aa8a0' },
   'oasis:berry_o': { visitor: ['humpdrop', 'Traveller Idris', ['Traveller Idris: Humpdrop stores water in its humps, so it never gets thirsty on the dunes. I wish I had humps.'], 'w', 9, 4], wall: '#fff0dc' },
@@ -256,6 +267,10 @@ const ITEMS = {
   M: 'A big squashy armchair facing the fire. {hero} sinks into it and almost falls asleep.',
   I: 'Two pairs of skis and poles. A tag on one says "for rent: ask Fleece".',
   E: 'A huge squashy beanbag. {hero} flops into it... and might never get up again.',
+  y: 'A fat floor cushion, embroidered with little suns. {hero} sits cross-legged on it. Very comfy.',
+  d: 'A round brass tray on short legs. A teapot of mint tea and three tiny glasses. The tea is still warm!',
+  x: 'A brass lantern with star-shaped holes. It throws little stars all over the canvas.',
+  w: 'Rugs, rolled up and stacked. Every caravan carries a few, for trading or for sitting on.',
   Z: 'A tower of hat boxes tied up with ribbons. Milliner Mo says the bottom one is "not for sale. Ever."',
 };
 
@@ -265,7 +280,7 @@ export function interiorMap(key) {
   if (!b) return null;
   const P = PEOPLE[`${outer}:${bid}`] || {};
   const kind = P.kind || (b.stadium ? 'lobby' : b.heal ? 'center' : b.lab ? 'lab' : 'house');
-  const tiles = ROOMS[kind];
+  const tiles = P.tiles || ROOMS[kind]; // (a room can bring its own layout of its kind)
   const W = tiles[0].length, H = tiles.length, door = tiles[H - 1].indexOf('.');
   const has = (f) => !f || (f[0] === '!' ? !save.adv?.flags?.[f.slice(1)] : !!save.adv?.flags?.[f]); // an 8th entry: only there once a flag is set ('!flag': until it is)
   const npcs = (P.npcs || []).map(([critter, name, lines, dir, x, y, story, need, opt], k) => ({ id: 'in' + k, critter, name, lines, dir, x, y, wander: story ? 0 : 1, story, need, ...(opt || {}) })).filter((n) => has(n.need)); // (a 9th entry: extra NPC fields, e.g. shiny)
@@ -298,6 +313,8 @@ export function interiorMap(key) {
     if (t === 'F' && kind === 'lodge') text = 'A crackling log fire. {hero} warms their paws. Toasty!';
     if (t === 'C' && kind === 'cabin') text = 'Charts of the coast, a brass telescope, and a bottle with a tiny ship inside.';
     if (t === 'C' && kind === 'forge') text = 'Racks of tongs and hammers. One hammer is labelled "NOT FOR CRITTERS".';
+    if (t === 'N' && kind === 'tent') text = 'A brass telescope poking out through a flap in the canvas. Lila has chalked star names all round its legs.';
+    if (t === 'Q' && kind === 'tent') text = 'A bedroll on a low wooden frame, under a striped camel-wool blanket. Desert nights get cold!';
     if (t === 'C' && kind === 'shop') text = 'Hat boxes, stacked to the ceiling. One is labelled "EXTRA FLOPPY".';
     if (t === 'U') { const n = [...row].slice(0, x).filter((c) => c === 'U').length; signs.push({ x, y, text, hide: true, act: 'case:' + CUP_ORDER[n] }); return; }
     if (t === 'p') { signs.push({ x, y, text: '', hide: true, act: 'fossil:' + fossilAt(tiles, x, y) }); return; }

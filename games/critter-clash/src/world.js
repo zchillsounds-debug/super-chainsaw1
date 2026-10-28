@@ -104,6 +104,8 @@ export const FISH = {
 };
 // seasonal visitors: one fish a season, only in its season (any water but lava). Kept apart from the album above (save.adv.fishLog.season),
 // so completing the album never waits on the calendar; each first catch is a little bonus
+// the Amber Sands' mirage hours (12-15h, clear days) bring one more visitor to the desert pools: a fish you can see right through. Kept apart too (fishLog.mirage)
+export const MIRAGE_FISH = ['Heatwave Glassfish', 6, 18, '🫧'];
 export const SEASON_FISH = { spring: ['Blossom Koi', 20, 52, '🌸'], summer: ['Sunburst Perch', 14, 38, '🌻'], autumn: ['Maple Trout', 22, 56, '🍂'], winter: ['Snowflake Smelt', 8, 24, '❄️'] };
 export const seasonKey = () => isSpring() || isMeadow() ? 'spring' : isSummer() ? 'summer' : isAutumn() || isEarlyAutumn() ? 'autumn' : isFrost() || isWinter() || twinkleWeek() ? 'winter' : null;
 // Fisher Finn's weekly Fishing Derby: one everyday kind and a size to beat (Mondays bring a new one)
@@ -3924,6 +3926,12 @@ export class World {
       persist(); reward(first ? 3 : 1);
       return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long!`, first ? `A seasonal visitor! It only swims here in ${sk}. Fisher Finn will want to hear about this! +3 🍓 (☰ → Journal → 🎣)` : `${name}s only visit in ${sk}. Splash! Back it goes, until next year.`, ...(hat ? ['That\'s all four seasonal fish! Fisher Finn sends over a hat with a koi on top: the Koi Bucket Hat! 🎣 (☰ → 🎩 Hats)'] : [])]);
     }
+    if (this.mirageHour() && r < 0.64) { // the mirage hour's glassfish (about one catch in five while the air shimmers)
+      const [name, lo, hi, em] = MIRAGE_FISH, cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };
+      const first = !L.mirage; L.n++; L.mirage = Math.max(L.mirage || 0, cm); if (first) save.berries = (save.berries || 0) + 5;
+      persist(); reward(first ? 3 : 1);
+      return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long, and you can see the pool right through it!`, first ? 'It only bites while the desert air shimmers, in the mirage hours after noon. Pool Angler Layla will flip! +5 🍓 (☰ → Journal → 🎣)' : 'It wobbles like the air over the sand... and slips back into the pool.']);
+    }
     if (r < 0.7) { // a fish! measured, and Fisher Finn keeps the record book
       const kinds = FISH[this.phase === 'night' && !this.M.lava && Math.random() < 0.3 ? 'night' : this.phase === 'evening' && !this.M.lava && Math.random() < 0.3 ? 'dusk' : this.M.lava ? 'lava' : this.M.isle ? 'isle' : this.M.sands ? 'oasis' : this.M.arena === 'beach' ? 'sea' : this.M.snow || this.M.border === 'cloud' ? 'cold' : 'pond'];
       const k = Math.random() < 0.12 ? kinds.length - 1 : Math.floor(Math.random() * (kinds.length - 1)), [name, lo, hi] = kinds[k];
@@ -3983,14 +3991,25 @@ export class World {
         box(back ? 'wall' : 'wall2', TILE, h, TILE, px, h / 2, pz);
         box(back || ['arcade', 'lobby'].includes(this.M.indoor) ? 'trim' : 'cap', TILE + 0.02, 0.16, TILE + 0.02, px, h, pz); // the cut walls round the room wear a wooden cap
         if (back) box('base', TILE + 0.01, 0.35, 0.12, px, 0.17, pz + 1.02);
-        if (back && x > 0 && x < W - 1 && !['arcade', 'lobby', 'forge', 'cabin'].includes(this.M.indoor)) { // panelling below a rail, striped wallpaper above
+        if (back && x > 0 && x < W - 1 && !['arcade', 'lobby', 'forge', 'cabin', 'tent'].includes(this.M.indoor)) { // panelling below a rail, striped wallpaper above
           box('wains', TILE + 0.01, 0.82, 0.06, px, 0.76, pz + 1.03); box('rail', TILE + 0.02, 0.1, 0.11, px, 1.2, pz + 1.04);
           for (const o of [-0.75, -0.25, 0.25, 0.75]) box('stripe', 0.2, 1.95, 0.03, px + o, 2.22, pz + 1.015);
           for (const o of [-0.5, 0.5]) box('wains2', 0.06, 0.66, 0.08, px + o, 0.76, pz + 1.05); // panel seams
         }
+        if (back && this.M.indoor === 'tent' && x > 0 && x < W - 1) { // a nomad tent: wide canvas stripes down the back, a scalloped valance and a ridge pole
+          for (const o of [-0.5, 0.5]) box(o < 0 ? 'tstripe' : 'wall', 1.0, 2.9, 0.04, px + o, 1.6, pz + 1.02);
+          box('tstripe', TILE + 0.01, 0.3, 0.07, px, 2.95, pz + 1.05);
+          for (const o of [-0.5, 0.5]) { const sc = new THREE.CylinderGeometry(0.5, 0.5, 0.05, 12, 1, false, Math.PI / 2, Math.PI); sc.rotateX(Math.PI / 2); sc.translate(px + o, 2.8, pz + 1.08); add('tstripe', sc); }
+          box('wood', TILE + 0.02, 0.14, 0.14, px, 3.15, pz + 0.95);
+          if (x === (W >> 1)) { // a woven hanging in the middle: rows of diamonds in the camp's colours, a fringe along the bottom
+            box('rugend', 1.7, 1.6, 0.05, px, 1.75, pz + 1.08);
+            for (let r = 0; r < 3; r++) for (let q = 0; q < 3; q++) { const dm = new THREE.BoxGeometry(0.3, 0.3, 0.04); dm.rotateZ(Math.PI / 4); dm.translate(px - 0.5 + q * 0.5, 1.25 + r * 0.5, pz + 1.11); add('cush' + ((r + q) % 3), dm); }
+            for (let q = 0; q < 9; q++) box('cush0', 0.05, 0.22, 0.04, px - 0.8 + q * 0.2, 0.86, pz + 1.1);
+          }
+        }
         if (back && this.M.indoor === 'arcade') { box('neon', TILE + 0.01, 0.12, 0.08, px, 2.7, pz + 1.04); box('neon2', TILE + 0.01, 0.08, 0.08, px, 0.5, pz + 1.08); }
         if (back && this.M.indoor === 'lobby' && x >= 5 && x <= 9) this.poster(x - 5 - Math.floor((5 - (cupById(this.M.cup)?.matches.length || 5)) / 2), px, pz);
-        if (back && this.M.indoor !== 'lobby' && x % 3 !== 2 && (x % 3 === 0 || x % 4 === 1) && x > 1 && x < W - 2 && '.QOD'.includes(this.tile(x, 1)) && x % 3 !== 2 && this.M.indoor !== 'arcade' && this.M.indoor !== 'cabin' && this.M.indoor !== 'tower') { // a little framed landscape between the windows
+        if (back && this.M.indoor !== 'lobby' && x % 3 !== 2 && (x % 3 === 0 || x % 4 === 1) && x > 1 && x < W - 2 && '.QOD'.includes(this.tile(x, 1)) && x % 3 !== 2 && this.M.indoor !== 'arcade' && this.M.indoor !== 'cabin' && this.M.indoor !== 'tower' && this.M.indoor !== 'tent') { // a little framed landscape between the windows
           box('frame', 1.4, 1.05, 0.08, px, 2.05, pz + 1.02); box('art' + (x % 2), 1.18, 0.83, 0.06, px, 2.05, pz + 1.06); box('hill', 1.18, 0.28, 0.07, px, 1.77, pz + 1.07); box('sunny', 0.22, 0.22, 0.07, px + 0.32, 2.25, pz + 1.075);
         }
         if (back && this.M.indoor === 'tower' && [2, 4, 10, 12].includes(x)) { // a rank banner for Bronze, Silver, Gold and Legend: coloured once the hero has reached it, grey until then
@@ -4004,7 +4023,7 @@ export class World {
           if (x % 3 === 2 && this.tile(x, 1) !== 'C') { const pg = new THREE.CircleGeometry(0.42, 18); pg.translate(px, 1.95, pz + 1.04); add('glass', pg); const rg = new THREE.TorusGeometry(0.45, 0.08, 6, 18); rg.translate(px, 1.95, pz + 1.05); add('gold', rg); }
           if (x === 6) { const wh = new THREE.TorusGeometry(0.5, 0.06, 6, 20); wh.translate(px, 2.0, pz + 1.08); add('wood', wh); for (let k = 0; k < 4; k++) { const sp = new THREE.BoxGeometry(1.35, 0.07, 0.07); sp.rotateZ(k * Math.PI / 4); sp.translate(px, 2.0, pz + 1.09); add('wood', sp); } const hb = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 10); hb.rotateX(Math.PI / 2); hb.translate(px, 2.0, pz + 1.1); add('gold', hb); }
         }
-        if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C' && this.M.indoor !== 'lobby' && this.M.indoor !== 'cabin') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); if (this.outPhase === 'night') { box('stars', 0.07, 0.07, 0.1, px - 0.3, 2.15, pz + 1.04); box('stars', 0.05, 0.05, 0.1, px + 0.1, 2.0, pz + 1.04); box('stars', 0.06, 0.06, 0.1, px + 0.32, 2.2, pz + 1.04); box('moon', 0.2, 0.2, 0.1, px + 0.25, 1.75, pz + 1.04); }
+        if (back && x % 3 === 2 && x > 0 && x < W - 1 && this.tile(x, 1) !== 'C' && this.M.indoor !== 'lobby' && this.M.indoor !== 'cabin' && this.M.indoor !== 'tent') { box('glass', 1.1, 0.9, 0.08, px, 1.9, pz + 1.02); box('trim', 1.3, 0.12, 0.14, px, 1.4, pz + 1.04); if (this.outPhase === 'night') { box('stars', 0.07, 0.07, 0.1, px - 0.3, 2.15, pz + 1.04); box('stars', 0.05, 0.05, 0.1, px + 0.1, 2.0, pz + 1.04); box('stars', 0.06, 0.06, 0.1, px + 0.32, 2.2, pz + 1.04); box('moon', 0.2, 0.2, 0.1, px + 0.25, 1.75, pz + 1.04); }
           if (this.outSnow) for (let k = 0; k < 7; k++) box('stars', 0.06, 0.06, 0.1, px - 0.45 + ((k * 37 + x * 11) % 90) / 100, 1.55 + ((k * 53 + x * 7) % 65) / 100, pz + 1.045); // snowflakes past the glass
           else if (this.outWet) for (let k = 0; k < 6; k++) box('stars', 0.022, 0.24, 0.1, px - 0.42 + k * 0.17, 1.62 + ((k * 29 + x * 13) % 40) / 100, pz + 1.045); } // rain running down the glass
         if (back && this.M.indoor === 'cottage' && x > 0 && x < W - 1 && x % 2 === 0) box('wood', 0.22, 3.1, 0.1, px - 1, 1.55, pz + 1.04); // old timber beams
@@ -4285,6 +4304,35 @@ export class World {
         const bb = new THREE.SphereGeometry(0.75, 16, 10); bb.scale(1.05, 0.55, 1); bb.translate(px, 0.4, pz); add('bean', bb);
         const dn = new THREE.SphereGeometry(0.42, 12, 8); dn.scale(1, 0.35, 1); dn.translate(px + 0.05, 0.68, pz + 0.05); add('bean2', dn);
       }
+      if (t === 'y') { // a fat floor cushion with a button in the middle and a tassel at each corner
+        const k = (x + y) % 3, cu = new THREE.SphereGeometry(0.62, 16, 8); cu.scale(1, 0.34, 1); cu.translate(px, 0.22, pz); add('cush' + k, cu);
+        const bt = new THREE.SphereGeometry(0.1, 8, 6); bt.translate(px, 0.43, pz); add('brass', bt);
+        for (let q = 0; q < 4; q++) { const a = q * Math.PI / 2 + Math.PI / 4, ts = new THREE.ConeGeometry(0.07, 0.2, 6); ts.translate(px + Math.cos(a) * 0.55, 0.15, pz + Math.sin(a) * 0.55); add('brass', ts); }
+      }
+      if (t === 'd') { // a round brass tray table: a teapot and three little tea glasses
+        for (let q = 0; q < 3; q++) { const a = q * 2.1, lg = new THREE.CylinderGeometry(0.04, 0.04, 0.45, 6); lg.translate(px + Math.cos(a) * 0.4, 0.22, pz + Math.sin(a) * 0.4); add('wood', lg); }
+        const tr = new THREE.CylinderGeometry(0.62, 0.58, 0.07, 20); tr.translate(px, 0.47, pz); add('brass', tr);
+        const rim = new THREE.TorusGeometry(0.6, 0.035, 5, 24); rim.rotateX(Math.PI / 2); rim.translate(px, 0.51, pz); add('brass', rim);
+        const tp = new THREE.SphereGeometry(0.19, 12, 8); tp.scale(1, 0.9, 1); tp.translate(px - 0.1, 0.68, pz - 0.05); add('silver', tp);
+        const sp = new THREE.CylinderGeometry(0.025, 0.04, 0.26, 6); sp.rotateZ(-0.9); sp.translate(px + 0.1, 0.72, pz - 0.05); add('silver', sp);
+        const ld = new THREE.ConeGeometry(0.1, 0.16, 10); ld.translate(px - 0.1, 0.9, pz - 0.05); add('silver', ld);
+        for (const [dx, dz] of [[0.28, 0.2], [-0.25, 0.3], [0.2, -0.3]]) { const gl = new THREE.CylinderGeometry(0.06, 0.05, 0.13, 8); gl.translate(px + dx, 0.57, pz + dz); add('tea', gl); }
+      }
+      if (t === 'x') { // a tall brass lantern on a stand, pierced with stars: it glows at the top
+        const ft = new THREE.CylinderGeometry(0.28, 0.34, 0.1, 10); ft.translate(px, 0.05, pz - 0.2); add('brass', ft);
+        const pl = new THREE.CylinderGeometry(0.05, 0.05, 1.2, 6); pl.translate(px, 0.65, pz - 0.2); add('brass', pl);
+        const bd = new THREE.CylinderGeometry(0.26, 0.2, 0.55, 8); bd.translate(px, 1.5, pz - 0.2); add('lamp', bd);
+        const tp = new THREE.ConeGeometry(0.3, 0.4, 8); tp.translate(px, 1.97, pz - 0.2); add('brass', tp);
+        const kb = new THREE.SphereGeometry(0.07, 8, 6); kb.translate(px, 2.2, pz - 0.2); add('brass', kb);
+        for (let q = 0; q < 6; q++) { const a = q * Math.PI / 3, h = new THREE.BoxGeometry(0.06, 0.06, 0.03); h.rotateY(-a); h.translate(px + Math.cos(a) * 0.235, 1.5 + (q % 2) * 0.12, pz - 0.2 + Math.sin(a) * 0.235); add('brass', h); }
+        (this.jars ||= []).push([px, 1.5, pz - 0.2, 0xffd890, 'ring']); (this.lampPools ||= []).push([px, pz, 0xffb048]);
+      }
+      if (t === 'w') { // rolled rugs stacked against the wall, their ends showing rings of colour
+        for (const [dy, dz, k] of [[0.3, -0.25, 0], [0.3, 0.3, 1], [0.78, 0.02, 2]]) {
+          const r = new THREE.CylinderGeometry(0.28, 0.28, 1.7, 14); r.rotateZ(Math.PI / 2); r.translate(px, dy, pz + dz - 0.2); add('cush' + k, r);
+          for (const sd of [-1, 1]) { const e = new THREE.CylinderGeometry(0.17, 0.17, 0.02, 12); e.rotateZ(Math.PI / 2); e.translate(px + sd * 0.86, dy, pz + dz - 0.2); add('rugend', e); }
+        }
+      }
       if (t === 'Z') { // a wobbly tower of striped hat boxes with ribbons and bows
         [[0.62, 0.55, 'hb0', 0.06], [0.52, 0.48, 'hb1', -0.1], [0.42, 0.42, 'hb2', 0.08]].reduce((y, [r, h, k, dx]) => {
           const c = new THREE.CylinderGeometry(r, r, h, 18); c.translate(px + dx, y + h / 2, pz - 0.1); add(k, c);
@@ -4344,7 +4392,7 @@ export class World {
         const cup = new THREE.CylinderGeometry(0.16, 0.08, 0.3, 10); cup.translate(px - 0.2, 0.95, pz); add('gold', cup);
       }
     }
-    const C = { mirror: 0xd4ecff, hb0: 0xff8ac8, hb1: 0x5ad8c8, hb2: 0xffd84d, ribbon: 0xff4a7a, shine: 0xffffff, tcap: 0xff4a5a, bean: 0xff5ad8, bean2: 0xd83ab8, wall: this.M.wall, wall2: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x8a5a3a), 0.22).getHex(), wains: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x8a5a3a), 0.3).getHex(), wains2: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x6a3a1a), 0.45).getHex(), rail: 0xfff6ea, cap: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x9a6a3a), 0.55).getHex(), stripe: new THREE.Color(this.M.wall).multiplyScalar(0.93).getHex(), trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: this.M.indoor === 'tower' ? 0x2a4a8a : 0xffffff, top: this.M.indoor === 'tower' ? 0xffc93a : 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, ghost: 0x8a7464, ghostc: 0x2a8a5a, aqua: 0x3ab8ff, weed: 0x4cc25a, sandy: 0xf4dc9a, lava: 0xff5a2a, pine: 0x2f7a5a, knit: 0xd86a8a, knit2: 0xfff0d8, flies: 0xe8ff6a, door0: 0xc8845a, door1: 0xd8946a, canvas: 0xf0e4c4, rope: 0xc8a064, leather: 0x8a4a2e, ski0: 0xff5a5a, ski1: 0x5a9aff, rank0: 0xc8803a, rank1: 0xc8d0e0, rank2: 0xffc93a, rank3: 0x7a4ad8, rankoff: 0x9a96a4, bone: 0xeedcb4, bone2: 0xb89464, plinth: 0xd8b888, card: 0xfff6e0, sandbed: 0xe8c890 };
+    const C = { mirror: 0xd4ecff, hb0: 0xff8ac8, hb1: 0x5ad8c8, hb2: 0xffd84d, ribbon: 0xff4a7a, shine: 0xffffff, tcap: 0xff4a5a, bean: 0xff5ad8, bean2: 0xd83ab8, wall: this.M.wall, wall2: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x8a5a3a), 0.22).getHex(), wains: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x8a5a3a), 0.3).getHex(), wains2: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x6a3a1a), 0.45).getHex(), rail: 0xfff6ea, cap: new THREE.Color(this.M.wall).lerp(new THREE.Color(0x9a6a3a), 0.55).getHex(), stripe: new THREE.Color(this.M.wall).multiplyScalar(0.93).getHex(), trim: 0xffffff, base: 0x8a5a3a, glass: (this.M.cityView ? { day: 0xb8a0ff, evening: 0xff8aa8, night: 0x3a2a7a } : { day: 0xbfe6ff, evening: 0xffa070, night: 0x1c2450 })[this.outPhase], stars: 0xffffff, moon: 0xfff0b0, wood: 0xa8703a, brick: 0x9a4a3a, brick2: 0x6a2a24, cap0: 0x3affd0, cap1: 0xff6ab0, skyline: 0x2a2048, lit: 0xffe070, stone: 0xa8a4b4, soot: 0x2a2228, fire: 0xffa030, coal: 0x2a1a1a, stump: 0x8a5a3a, iron: 0x4a4a5a, book0: 0xff6a5a, book1: 0x5a9aff, book2: 0xffd84d, metal: this.M.indoor === 'arcade' ? 0x5a3aa8 : 0xd0d8e8, screen: 0x6affd8, btn: 0xff5a8a, blanket: this.M.indoor === 'tent' ? 0xd8643a : 0x5a9aff, pillow: 0xffffff, berry: 0xff3a6a, pot: 0xc86a4a, leaf: 0x4cc25a, counter: this.M.indoor === 'tower' ? 0x2a4a8a : 0xffffff, top: this.M.indoor === 'tower' ? 0xffc93a : 0xff7aa8, neon: 0xff5ad8, neon2: 0x3af0ff, frame: 0x8a5a3a, art0: 0x9ad8ff, art1: 0xffc8a0, hill: 0x5ac24a, sunny: 0xffe14d, stool: 0xd88a4a, mug: 0xffffff, plate: 0xf4f0e8, beaker: 0xd8f0ff, fluid0: 0x6aff9a, fluid1: 0xff7ad8, head: 0xf4e4d0, gold: 0xffc93a, dim: 0x9a94a8, gem0: 0xff4f8a, gem1: 0x48b8ff, gem2: 0x6ad050, cork: 0xc8925a, note0: 0xfff6c8, note1: 0xc8f0ff, note2: 0xffd8e8, pin: 0xff4a4a, ghost: 0x8a7464, ghostc: 0x2a8a5a, aqua: 0x3ab8ff, weed: 0x4cc25a, sandy: 0xf4dc9a, lava: 0xff5a2a, pine: 0x2f7a5a, knit: 0xd86a8a, knit2: 0xfff0d8, flies: 0xe8ff6a, door0: 0xc8845a, door1: 0xd8946a, canvas: 0xf0e4c4, rope: 0xc8a064, leather: 0x8a4a2e, ski0: 0xff5a5a, ski1: 0x5a9aff, rank0: 0xc8803a, rank1: 0xc8d0e0, rank2: 0xffc93a, rank3: 0x7a4ad8, rankoff: 0x9a96a4, bone: 0xeedcb4, bone2: 0xb89464, plinth: 0xd8b888, card: 0xfff6e0, sandbed: 0xe8c890, tstripe: this.M.rug, cush0: 0xd8643a, cush1: 0x1fa8b0, cush2: 0xf0b030, brass: 0xd8a040, silver: 0xd8dce4, tea: 0x8adf9a, lamp: 0xffd890, rugend: 0xfff0d0 };
     for (const k in L) {
       if (k === 'pane' || k === 'goo') { const m = new THREE.Mesh(mergeGeometries(L[k]), new THREE.MeshBasicMaterial({ color: k === 'goo' ? 0x5aff9a : 0xd8f0ff, transparent: true, opacity: k === 'goo' ? 0.5 : 0.22, depthWrite: false })); if (k === 'goo') m.renderOrder = 2; m.material.userData.own = true; this.group.add(m); L[k].forEach((g) => g.dispose()); continue; }
       const glow = k === 'mirror' || k === 'shine' || k === 'cap0' || k === 'cap1' || k === 'lit' || k === 'fire' || k === 'screen' || k === 'glass' || k === 'stars' || k === 'moon' || k === 'neon' || k === 'neon2' || k === 'fluid0' || k === 'fluid1' || k === 'flies' || k === 'aqua' || k === 'lava';

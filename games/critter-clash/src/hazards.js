@@ -440,9 +440,11 @@ export class Hazards {
   }
 
   update(dt) {
+    const B = this.b;
+    if (this.sandWx && Math.random() < dt * 30) { const w = (Math.random() - 0.5) * ARENA_R * 2.4; B.fx.spawn({ x: -ARENA_R - 2, y: 0.3 + Math.random() * 3, z: w, vx: 15 + Math.random() * 6, color: Math.random() < 0.5 ? 0xf4d8a0 : 0xd8a868, size: 0.2, stretch: 8, rot: -Math.PI / 2, life: 1.6, shape: 'spark', additive: false, alpha: 0.7 }); } // the weather's sand blows even where there are no hazards
     // off in the meadow, in training (unless Sparring Setup switched them on), and when switched off in Settings
     if (!this.H || (this.b.training && !this.b.trainHazards) || save.settings.hazards === false) return;
-    const B = this.b, H = this.H;
+    const H = this.H;
     if (B.phase === 'fight' && B.time > 8) {
       this.timer -= dt * (B.mods?.has('mayhem') ? 2 : 1);
       if (this.timer <= 0 && this.list.length < (this.stormy ? 4 : 2)) {
@@ -453,7 +455,6 @@ export class Hazards {
       }
     }
     if (this.sig) this.updateSig(dt);
-    if (this.sandWx && Math.random() < dt * 30) { const w = (Math.random() - 0.5) * ARENA_R * 2.4; B.fx.spawn({ x: -ARENA_R - 2, y: 0.3 + Math.random() * 3, z: w, vx: 15 + Math.random() * 6, color: Math.random() < 0.5 ? 0xf4d8a0 : 0xd8a868, size: 0.2, stretch: 8, rot: -Math.PI / 2, life: 1.6, shape: 'spark', additive: false, alpha: 0.7 }); } // the weather's sand, blowing through
     for (let i = this.list.length - 1; i >= 0; i--) {
       const h = this.list[i];
       h.t += dt;
