@@ -904,7 +904,7 @@ export const MAPS = {
       { id: 'layla_o', x: 17, y: 9, critter: 'humpdrop', name: 'Pool Angler Layla', dir: 'w', story: 'oasisfish', lines: [] }, // the oasis fish album (Records, Amber Sands)
       { id: 'hakim_o', x: 2, y: 12, critter: 'humpdrop', name: 'Caravan Master Hakim', dir: 'e', story: 'caravanrun', lines: ["Caravan Master Hakim: My Humpdrops can walk three days without a drink. I can walk about three minutes. We make a good team.", "Caravan Master Hakim: The caravan road runs oasis, canyon, dunes and home. Every stop trades something. That is how the desert stays friends."] },
       { id: 'grit_o', x: 22, y: 12, critter: 'scarabold', name: 'Dust Devil Grit', dir: 'w', hideFlag: 'sirocco3_done', lines: ["Dust Devil Grit: Eh? Who are YOU looking at? We're just... shopping. For shovels. LOTS of shovels.", "Dust Devil Grit: The buried city? Never heard of it. Definitely not digging it up. Go away, tourist!"] },
-      { id: 'grit_w', x: 14, y: 3, critter: 'scarabold', name: 'Grit', dir: 'e', act: 'water', showFlag: 'sirocco3_done', lines: ['Grit: Scrub, scrub, scrub. Bram says the well rim hasn\'t been this clean since he was a boy. That\'s the nicest thing anybody\'s said to me in years.', 'Grit: Don\'t call me a Dust Devil. I\'m a Well Devil now. ...No. That\'s worse. Just Grit.', 'Grit: Scarabold LOVES this job. It rolls the bucket up and down all day. Look at it go!'] }, // R839: after Sirocco\'s Amends he helps at the well
+      { id: 'grit_w', x: 14, y: 3, critter: 'scarabold', name: 'Grit', dir: 'e', act: 'water', showFlag: 'sirocco3_done', night: { hideFlag: 'sirocco4_done' } /* R850: after dark he's out at the Sun Gate with Sirocco */, lines: ['Grit: Scrub, scrub, scrub. Bram says the well rim hasn\'t been this clean since he was a boy. That\'s the nicest thing anybody\'s said to me in years.', 'Grit: Don\'t call me a Dust Devil. I\'m a Well Devil now. ...No. That\'s worse. Just Grit.', 'Grit: Scarabold LOVES this job. It rolls the bucket up and down all day. Look at it go!'] }, // R839: after Sirocco\'s Amends he helps at the well
     ],
   },
 
@@ -1220,6 +1220,13 @@ export const MAPS = {
       { id: 'rasha_g', x: 11, y: 8, critter: 'siroccat', name: 'Dune Warden Rasha', dir: 'n', showFlag: 'gate_open', shiny: true, lines: ['Dune Warden Rasha: The camp will keep watch over the gate now. Nobody digs here without the elders\' blessing.', 'Dune Warden Rasha: Whatever sleeps down there has slept a thousand years. It can wait for someone kind to knock.'] },
       { id: 'sabah_g', x: 15, y: 8, critter: 'humpdrop', name: 'Elder Sabah', dir: 'n', showFlag: 'gate_open', story: 'dtrial', lines: ['Elder Sabah: Golden towers, my grandmother\'s grandmother said. A gate shaped like the sun. And now I have seen it. Thank you, little one.', 'Elder Sabah: The gate only opened a crack. The rest of the city, it seems, wants to be found slowly.'] },
       { id: 'baron_g2', x: 18, y: 8, critter: 'siroccat', name: 'Sirocco', dir: 'w', showFlag: 'gate_open', act: 'wave', lines: ['Sirocco: Not a Baron any more. Just Sirocco. The Warden says I can help guard the gate. With a shovel. Facing the OTHER way.', 'Sirocco: I wanted gold. The gate showed me something better. ...Also it was very bright. I may need a lie down.'] },
+      // R850: once Sirocco's Amends is done, Grit walks out from the oasis after his day at the well and sits with Sirocco till dark
+      { id: 'grit_g', x: 19, y: 8, critter: 'scarabold', name: 'Grit', dir: 'w', dark: true, showFlag: 'sirocco4_done', act: 'wave', lines: [
+        'Grit: Evening! I walk out from the oasis after the well\'s scrubbed. Sirocco makes terrible tea. I drink it anyway.',
+        'Sirocco: Grit tells me the oasis folk say "good morning" to him now. Good morning! To a Dust Devil! ...Former Dust Devil.',
+        'Grit: We count the stars over the Singing Dunes. Sirocco always loses count at forty. On purpose, I reckon, so we can start again.',
+        'Sirocco: I asked Grit to forgive me for the digging. He said only if I learn to scrub a well. So. I am learning.',
+      ] },
       { id: 'dash_g', x: 9, y: 8, rival: true, rlv: 40, name: 'Dash', dir: 'e', showFlag: 'gate_open', act: 'flex', lines: ["Dash: I TOTALLY would have beaten the Baron too. I was just... warming up. For a long time. Behind a pillar.", "Dash: Next stop: wherever's next! Race you there, Champ!"] },
     ],
   },

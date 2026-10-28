@@ -13,7 +13,7 @@ import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
 import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, MIRAGE_FISH, SPRING_FISH, seasonKey } from './world.js';
-import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, hatWhere, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, DESERT_TRIAL, gauntletFoes, champReFlag, CUP_HALL } from './story.js';
+import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, hatWhere, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, DESERT_TRIAL, gauntletFoes, champReFlag, CUP_HALL, glowcapCount } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { VERSION } from './version.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -1543,6 +1543,7 @@ export class Screens {
         + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '')
         + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal
         + (A.cnt?.lantern ? bar('🏮', 'Sky lanterns sent up', A.cnt.lantern) : '') // R820: no goal
+        + (F.hollow_arrive ? bar('🍄', 'Big glowcaps for Forager Pim', F.gcap_done ? 'all given ✓' : `${glowcapCount()} / ${MAPS.glowhollow.glowcaps.length}`) : '') // R849: no goal (the Glowcap Hat counts with the found hats)
         + (A.bountySeen ? bar('📜', 'Guild Seals (full bounty boards)', A.seals || 0) : '') // R828: no goal (the fez comes at five; it counts with the found hats)
         + (Object.keys(F).some((k) => k.startsWith('lampduel_')) ? bar('⚔️', 'Lamplight duels won', Object.keys(F).filter((k) => k.startsWith('lampduel_')).length) : ''); // R825: no goal
     }
