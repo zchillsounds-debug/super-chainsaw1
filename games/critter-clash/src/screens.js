@@ -55,13 +55,13 @@ const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zo
 const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater', frost: 'Frostpeak Dome', neon: 'Neon Rooftop', sky: 'Cloudtop Gardens', grove: 'Glowcap Grove' };
 const ARENA_KEYS = Object.keys(ARENA_NAME);
 // R810: the Amber Sands' three stadiums join Quick Battle and Sparring once their Adventure cup is won (each has its own hazard)
-const SANDS_ARENA = { oasis: ['Sunwell Pavilion', 'mirage'], canyon: ['Canyon Stadium', 'canyon'], dunes: ['Sandstorm Dome', 'sandstorm'] };
+const SANDS_ARENA = { oasis: ['Sunwell Pavilion', 'mirage'], canyon: ['Canyon Stadium', 'canyon'], dunes: ['Sandstorm Dome', 'sandstorm'], grotto: ['Sunwell Grotto', null, 'spring_arrive'] }; // (R842: the grotto once you've climbed down the well)
 const arenaName = (k) => ARENA_NAME[k] || SANDS_ARENA[k]?.[0] || k;
 // Quick Battle's sky chip: the time of day and the weather (night and rain wake the night/rain traits; the sandstorm waits for the Sandstorm Cup)
 const SKIES = { day: ['☀️', 'Day'], evening: ['🌇', 'Evening'], night: ['🌙', 'Night'], rain: ['🌧️', 'Rain'], sandstorm: ['🌪️', 'Sandstorm'] };
 const skyKeys = () => Object.keys(SKIES).filter((k) => k !== 'sandstorm' || save.adv?.flags?.cup_sandstorm);
 const skyOpts = (k) => (!k || k === 'day' ? {} : k === 'rain' ? { phase: 'day', rain: true } : k === 'sandstorm' ? { phase: 'day', sandstorm: true } : { phase: k });
-const arenaKeys = () => [...ARENA_KEYS, ...Object.keys(SANDS_ARENA).filter((k) => save.adv?.flags?.['cup_' + SANDS_ARENA[k][1]])];
+const arenaKeys = () => [...ARENA_KEYS, ...Object.keys(SANDS_ARENA).filter((k) => save.adv?.flags?.[SANDS_ARENA[k][2] || 'cup_' + SANDS_ARENA[k][1]])];
 // Stadium Trials: one fight per hazard stadium under Stadium Mayhem, against a critter at home there
 const TRIALS = [
   { arena: 'beach', foe: 'ripples' }, { arena: 'volcano', foe: 'kindlekit' }, { arena: 'frost', foe: 'pengsicle' },
@@ -2058,7 +2058,7 @@ export class Screens {
       this.quickPick = null;
       c = q?.c || others[Math.floor(Math.random() * others.length)];
       const pl = save.critters[p.id].level;
-      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: q?.arena || pick(ARENA_KEYS), mods: q?.mods || [], ...skyOpts(q?.sky) };
+      opts = { cpuLevel: Math.max(1, pl + (this.diff - 1) * 2), difficulty: DIFFS[this.diff].v, playerLevel: pl, arena: q?.arena || pick(ARENA_KEYS), mods: q?.mods || [], ...(q?.arena === 'grotto' ? {} : skyOpts(q?.sky)) }; // (no sky in the grotto)
       label = `CPU · ${DIFFS[this.diff].name}${opts.mods.length ? ` · ${MODS[opts.mods[0]].icon} ${MODS[opts.mods[0]].name}` : ""}${q?.sky && q.sky !== 'day' ? ` · ${SKIES[q.sky][0]}` : ''}`;
     }
     c = withGear(c, opts.cpuLevel); // rivals grow with their level too (Lv 7 / Lv 14 forms)

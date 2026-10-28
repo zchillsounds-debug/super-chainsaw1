@@ -1445,6 +1445,7 @@ export class Arena {
 
   // world fights follow the phone's clock: a golden evening or a starry night over the open field (null puts the day back)
   tint(phase, rain = false, sand = false) {
+    if (this.A.cave) { phase = null; rain = sand = false; } // R842: no sky to tint in a cave
     this.rainy = !!rain && !!phase;
     if (rain && phase !== 'night') phase = 'rain';
     if (sand && phase !== 'night') phase = 'sand'; // an Amber Sands sandstorm: a low amber sky

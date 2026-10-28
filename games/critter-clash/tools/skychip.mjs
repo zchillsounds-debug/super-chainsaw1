@@ -11,7 +11,7 @@ await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?q=' + (proce
 await pg.waitForFunction(() => window.__ready, null, { timeout: 400000 });
 const shot = async (n) => { await pg.waitForTimeout(700); await pg.screenshot({ path: `tools/out/sky-${n}-${tag}.png`, timeout: 120000 }); };
 const setup = async () => {
-  await pg.evaluate(() => { Object.assign(__save, { tutorialDone: true }); __save.adv = { flags: { cup_mirage: true, cup_canyon: true, cup_sandstorm: true } }; __game.screens.title(); });
+  await pg.evaluate(() => { Object.assign(__save, { tutorialDone: true }); __save.adv = { flags: { cup_mirage: true, cup_canyon: true, cup_sandstorm: true, spring_arrive: true } }; __game.screens.title(); });
   await pg.waitForTimeout(600);
   await pg.evaluate(() => { const S = __game.screens; S.ctx = { kind: 'quick' }; S.select(); S.sel = 0; S.matchSheet(false); });
   await pg.waitForTimeout(600);
