@@ -13,7 +13,7 @@ import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
 import { arcadeGame, skyHop, waveRider, reefDive } from './arcade.js';
-import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, seasonKey, gullFish, traderTown } from './world.js';
+import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, FISH, seasonKey, gullFish, traderTown } from './world.js';
 
 const flags = () => save.adv.flags;
 // which region a hat (or a map) belongs to: the Sand Hats stall sells sands hats, Shell Hats the island ones, Milliner Mo the rest
@@ -684,6 +684,15 @@ export function storyTalk(S, id, w, a) {
   if (id.startsWith('legend:')) return legend(S, w, id.slice(7));
   if (id === 'stargazer') return stargazer(S, w);
   if (id === 'dtrial') return desertTrial(S, w);
+  if (id === 'champre') return champRematch(S, w);
+  if (id === 'oasisfish') { // Pool Angler Layla by the Sunwell pool: the four oasis fish, and her spare hat for all four
+    const who = 'Pool Angler Layla', sp = save.adv.fishLog?.sp || {}, got = FISH.oasis.filter(([n]) => sp[n]), hats = (save.adv.hats ||= []);
+    if (!F.rod) return w.say([`${who}: A rod! I'd lend you mine, but Humpdrop is using it as a back-scratcher. Fisher Finn in Seashell Town hands them out to anyone who asks nicely.`], null, who);
+    if (got.length === FISH.oasis.length && !hats.includes('palmangler')) { hats.push('palmangler'); save.berries = (save.berries || 0) + 8; persist(); reward(3); return w.say([`${who}: All four?! Even the Sunwell Sturgeon? It's been down there since my grandmother's grandmother. It's the size of a canoe!`, '{hero} got 8 🍓 and the Palm Angler Hat! 🎣 (☰ → 🎩 Hats)', `${who}: It keeps the sun off and the fish think you're a palm tree. Mostly.`], null, who); }
+    if (hats.includes('palmangler')) return w.say([`${who}: The pool's calm today. The Mirage Guppies are the hardest to see. They look like a ripple until they bite.`], null, who);
+    const left = FISH.oasis.filter(([n]) => !sp[n]).map(([n]) => (n === 'Sunwell Sturgeon' ? 'something HUGE at the bottom' : n.replace(/y$/, 'ie').replace(/h$/, 'he') + 's'));
+    return w.say([`${who}: This pool is fed by the spring under the sands. The fish here live nowhere else in the world.`, got.length ? `${who}: ${got.length} of ${FISH.oasis.length} so far! Still out there: ${left.join(', ')}.` : `${who}: Date Gouramis, Sandgill Loaches, Mirage Guppies... and something HUGE at the bottom. Catch all four and my spare hat is yours.`], null, who);
+  }
   if (id === 'liftkeeper') return w.say(F.cup_canyon ? ['Liftkeeper Bo: The winch is oiled, the rope is new, and Scarabold has had its breakfast. The lifts are open!', 'Liftkeeper Bo: Step up to either lift and hop in the basket. Up top is the mesa: melons, a lookout, and a view all the way to the Sun Gate.'] : ['Liftkeeper Bo: These rope lifts haul water and visitors up to the mesa top. Scarabold pulls. I supervise.', 'Liftkeeper Bo: The winch is squeaky today. Win the Canyon Cup and I\'ll have it oiled for the champion. Probably.'], null, 'Liftkeeper Bo');
   if (id === 'singing') return singingTalk(S, w);
   if (id === 'gauntsign') { // the signpost, with this week's theme chalked underneath
@@ -1331,7 +1340,7 @@ const HAT_WHERE = {
   pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
   masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
   gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
-  fossilhat: 'dig up every fossil for the Sunwell Museum', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
+  fossilhat: 'dig up every fossil for the Sunwell Museum', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
 };
 export function hatWhere(id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';
@@ -1436,6 +1445,23 @@ function desertTrial(S, w) {
     foe: withGear(skinnedShiny(critter), lv), lv, kind: 'story', flag: `dtrial_${wk}_${n}`, name, diff: Math.min(0.95, 0.88 + n * 0.02), berries: 2, arena, stadium: true, sandstorm: !!storm,
     trainer: { name, critter, title: `Desert Trial ${n + 1}/4 · ${title}`, beat: n === 3 ? 'Ha! The sand is in my eyes, and you are still standing. Go on, go back to the gate.' : 'The sands remember this battle. The next keeper is waiting.', gloat: 'The desert is patient. Try again.' },
     note: n === 3 ? '🌞 Desert Trial cleared! Talk to Elder Sabah.' : `🌞 Desert Trial ${n + 1}/4 won! +2 🍓`,
+  }), who);
+}
+
+// D4: each desert cup's champion waits in their stadium lobby after you win it, for one battle a day at the hero's level +3 in their own arena
+export const CUP_HALL = { mirage: 'the Mirage Stadium', canyon: 'the Canyon Stadium', sandstorm: 'the Sandstorm Dome' };
+export const champReFlag = (cup, day = new Date().toISOString().slice(0, 10)) => `champre_${cup}_${day}`;
+function champRematch(S, w) {
+  const A = save.adv, cup = cupById(w.M.cup), boss = cup.matches[cup.matches.length - 1], who = `${boss.title} ${boss.name}`, flag = champReFlag(cup.id);
+  if (A.flags[flag]) return w.say([`${who}: That was today's battle, champion. Come back tomorrow. I'll have a new trick or two by then.`], null, who);
+  const lv = Math.min(50, save.critters[A.hero].level + 3), storm = cup.id === 'sandstorm';
+  w.say([
+    Object.keys(A.flags).some((k) => k.startsWith('champre_' + cup.id)) ? `${who}: Back again, champion? Good. One battle a day keeps us both sharp.` : `${who}: You took my cup, {hero}. Fair and square. But a keeper doesn't stop keeping.`,
+    `${who}: One battle a day, on ${CUP_HALL[cup.id]}'s own floor. My shiny ${byId(boss.critter).name} at Lv ${lv}${storm ? ', and the dome howling' : ''}. Ready?`,
+  ], () => S.worldFight({
+    foe: withGear(skinnedShiny(boss.critter), lv), lv, kind: 'story', flag, name: boss.name, diff: 0.9, berries: 4, arena: cup.arena, stadium: true, sandstorm: storm,
+    trainer: { name: boss.name, critter: boss.critter, title: `Champion rematch · ${boss.title}`, beat: boss.beat, gloat: boss.gloat },
+    note: `🏟️ You beat ${boss.name} again! +4 🍓 (Back tomorrow.)`,
   }), who);
 }
 

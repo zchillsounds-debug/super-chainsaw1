@@ -100,6 +100,7 @@ export const FISH = {
   night: [['Moonfin', 14, 38], ['Glimmer Ray', 40, 95]], // only bite after dark (any water but lava)
   dusk: [['Sunset Snapper', 16, 42], ['Amber Koi', 22, 55]], // only bite in the golden evening (17-20h, any water but lava)
   isle: [['Parrotfin', 14, 36], ['Coral Puff', 10, 26], ['Reef Tang', 12, 30], ['Starfall Marlin', 60, 140]], // the Sunscatter Isles' warm reefs (Chapter 2)
+  oasis: [['Date Gourami', 8, 22], ['Sandgill Loach', 12, 30], ['Mirage Guppy', 3, 9], ['Sunwell Sturgeon', 50, 120]], // the Amber Sands' spring-fed pools (Chapter 3)
 };
 // seasonal visitors: one fish a season, only in its season (any water but lava). Kept apart from the album above (save.adv.fishLog.season),
 // so completing the album never waits on the calendar; each first catch is a little bonus
@@ -133,6 +134,8 @@ export const LANDMARKS = [
   { id: 'lift', map: 'redrock', at: [14, 5], name: 'the Redrock rope lift', sands: true },
   { id: 'dome', map: 'dunecamp', door: 'stadium_s', name: 'the Sandstorm Dome', sands: true },
   { id: 'sungate', map: 'sungate', at: [13, 8], name: 'the Sun Gate', sands: true },
+  { id: 'mesatop', map: 'mesa', at: [11, 3], name: 'the mesa lookout', sands: true }, // (R809: two more, up the rope lifts and out on the Singing Dunes)
+  { id: 'singstones', map: 'singing', at: [13, 7], name: 'the singing stones', sands: true },
 ];
 // the photo album: a small JPEG of the latest photo taken at each landmark (its own storage key, so the save and its backup code stay small)
 const ALBUM_KEY = 'critterclash-album';
@@ -3914,7 +3917,7 @@ export class World {
       return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long!`, first ? `A seasonal visitor! It only swims here in ${sk}. Fisher Finn will want to hear about this! +3 🍓 (☰ → Journal → 🎣)` : `${name}s only visit in ${sk}. Splash! Back it goes, until next year.`, ...(hat ? ['That\'s all four seasonal fish! Fisher Finn sends over a hat with a koi on top: the Koi Bucket Hat! 🎣 (☰ → 🎩 Hats)'] : [])]);
     }
     if (r < 0.7) { // a fish! measured, and Fisher Finn keeps the record book
-      const kinds = FISH[this.phase === 'night' && !this.M.lava && Math.random() < 0.3 ? 'night' : this.phase === 'evening' && !this.M.lava && Math.random() < 0.3 ? 'dusk' : this.M.lava ? 'lava' : this.M.isle ? 'isle' : this.M.arena === 'beach' ? 'sea' : this.M.snow || this.M.border === 'cloud' ? 'cold' : 'pond'];
+      const kinds = FISH[this.phase === 'night' && !this.M.lava && Math.random() < 0.3 ? 'night' : this.phase === 'evening' && !this.M.lava && Math.random() < 0.3 ? 'dusk' : this.M.lava ? 'lava' : this.M.isle ? 'isle' : this.M.sands ? 'oasis' : this.M.arena === 'beach' ? 'sea' : this.M.snow || this.M.border === 'cloud' ? 'cold' : 'pond'];
       const k = Math.random() < 0.12 ? kinds.length - 1 : Math.floor(Math.random() * (kinds.length - 1)), [name, lo, hi] = kinds[k];
       const cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };
       L.n++; const rec = !L.best || cm > L.best.cm, sp = (L.sp ||= {}); sp[name] = Math.max(sp[name] || 0, cm);
@@ -5366,7 +5369,7 @@ export class World {
     const sands = L.sands && LANDMARKS.every((l) => !l.sands || snaps.includes(l.id)); // all four desert landmarks: the same
     if (isles || sands) save.berries = (save.berries || 0) + 15;
     persist();
-    setTimeout(() => { reward(hat || isles || sands ? 3 : 1); this.S.toast?.(hat ? '📸 All eight landmarks! +15 🍓 and the Shutterbug Cap! (☰ → 🎩 Hats)' : isles ? '📸 All four island landmarks! A full set of postcards: +15 🍓' : sands ? '📸 All four desert landmarks! A sun-bleached set of postcards: +15 🍓' : `📸 Landmark photo: ${L.name}! (${snaps.length} / ${LANDMARKS.length} in the Journal)`); }, 700);
+    setTimeout(() => { reward(hat || isles || sands ? 3 : 1); this.S.toast?.(hat ? '📸 All eight landmarks! +15 🍓 and the Shutterbug Cap! (☰ → 🎩 Hats)' : isles ? '📸 All four island landmarks! A full set of postcards: +15 🍓' : sands ? `📸 All ${LANDMARKS.filter((l) => l.sands).length} desert landmarks! A sun-bleached set of postcards: +15 🍓` : `📸 Landmark photo: ${L.name}! (${snaps.length} / ${LANDMARKS.length} in the Journal)`); }, 700);
   }
 
   updateCamera(dt) {

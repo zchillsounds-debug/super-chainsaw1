@@ -23,7 +23,7 @@ export const ARENAS = {
     accent: 0xd8643a, seat: [0x2ab0a8, 0xd8643a, 0xffc040, 0xfff0d8],
     hill: 0xe0b878, trunk: 0x9a6a40, leaves: [0x3cb86a, 0x52c870, 0x2f9a58], scenery: 'palms', cloud: 0xfff8ee, cloudShade: 0xb08a70, sunI: 2.5,
   },
-  canyon: { // Chapter 3: the Amber Sands' red-rock canyon (wild fights out on the dunes use its open field; no hazard yet, so not in Quick Battle)
+  canyon: { // Chapter 3: the Amber Sands' red-rock canyon (wild fights out on the dunes use its open field; in Quick Battle once the Canyon Cup is won)
     name: 'Redrock Canyon Arena',
     skyTop: 0x3a7ae0, skyHorizon: 0xffd8a0, sun: 0xfff0d0, sunDir: [0.5, 0.75, -0.4],
     hemiSky: 0xffe8c8, hemiGround: 0xa8704a, fieldA: '#e8b878', fieldB: '#ddac6c', line: '#fff4e0', floor: 'sand',

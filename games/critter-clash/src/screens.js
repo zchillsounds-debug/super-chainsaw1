@@ -13,7 +13,7 @@ import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
 import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, seasonKey } from './world.js';
-import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, hatWhere, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, DESERT_TRIAL, gauntletFoes } from './story.js';
+import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, hatWhere, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, DESERT_TRIAL, gauntletFoes, champReFlag, CUP_HALL } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { VERSION } from './version.js';
 import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
@@ -47,13 +47,17 @@ const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
 const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
 const LEGEND_IDS = () => ['solmoth', 'moonwhal', 'verdelk', ...(save.adv?.flags?.sands_arrive ? ['aurelark'] : [])]; // the Champ page's legends (the Sun-Bird once you reach the sands)
-const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband']; // the desert's found hats (the Sand Hats stall's four are `sands`)
+const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler']; // the desert's found hats (the Sand Hats stall's four are `sands`)
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
 const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zoner: '🎯 Keeps away', turtle: '🛡️ Defensive', trickster: '🌀 Tricky' };
 const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater', frost: 'Frostpeak Dome', neon: 'Neon Rooftop', sky: 'Cloudtop Gardens', grove: 'Glowcap Grove' };
 const ARENA_KEYS = Object.keys(ARENA_NAME);
+// R810: the Amber Sands' three stadiums join Quick Battle and Sparring once their Adventure cup is won (each has its own hazard)
+const SANDS_ARENA = { oasis: ['Sunwell Pavilion', 'mirage'], canyon: ['Canyon Stadium', 'canyon'], dunes: ['Sandstorm Dome', 'sandstorm'] };
+const arenaName = (k) => ARENA_NAME[k] || SANDS_ARENA[k]?.[0] || k;
+const arenaKeys = () => [...ARENA_KEYS, ...Object.keys(SANDS_ARENA).filter((k) => save.adv?.flags?.['cup_' + SANDS_ARENA[k][1]])];
 // Stadium Trials: one fight per hazard stadium under Stadium Mayhem, against a critter at home there
 const TRIALS = [
   { arena: 'beach', foe: 'ripples' }, { arena: 'volcano', foe: 'kindlekit' }, { arena: 'frost', foe: 'pengsicle' },
@@ -1009,12 +1013,12 @@ export class Screens {
     const others = CRITTERS.filter((x) => x.id !== p.id);
     const key = train ? 'train' : 'quick';
     let foe = this[key + 'Foe'] && this[key + 'Foe'] !== p.id ? this[key + 'Foe'] : 'random', arena = this[key + 'Arena'] || (train ? 'meadow' : 'random');
-    const arenas = train ? ARENA_KEYS : ['random', ...ARENA_KEYS];
+    const arenas = train ? arenaKeys() : ['random', ...arenaKeys()];
     const d = document.createElement('div');
     d.className = 'modal-wrap train-pick';
     d.innerHTML = `<div class="modal"><h2>${train ? 'Sparring Setup' : 'Match Setup'}</h2>
       <small>${train ? 'Dummy' : 'Rival'}</small><div class="tp-foes">${['random', ...others.map((c) => c.id)].map((id) => `<button class="tp-foe" data-id="${id}">${id === 'random' ? '<b>?</b>' : `<img src="${g.portrait(CRITTERS.find((c) => c.id === id))}" alt="${id}">`}</button>`).join('')}</div>
-      <small>Arena</small><div class="tp-arenas">${arenas.map((k) => `<button class="tp-ar" data-k="${k}">${k === 'random' ? '🎲 Random' : ARENA_NAME[k]}${HAZARDS[k] && save.settings.hazards !== false ? ' ⚠' : ''}</button>`).join('')}${train && save.settings.hazards !== false ? '<button class="tp-hz"></button>' : ''}</div>
+      <small>Arena</small><div class="tp-arenas">${arenas.map((k) => `<button class="tp-ar" data-k="${k}">${k === 'random' ? '🎲 Random' : arenaName(k)}${HAZARDS[k] && save.settings.hazards !== false ? ' ⚠' : ''}</button>`).join('')}${train && save.settings.hazards !== false ? '<button class="tp-hz"></button>' : ''}</div>
       <div class="row"></div></div>`;
     let hz = this.trainHz ? '1' : '0';
     // Quick Battle: one chip cycles through the match modifiers
@@ -1042,7 +1046,7 @@ export class Screens {
       if (!train) {
         this.quickMod = mod;
         // Stadium Mayhem on a random arena picks one that has hazards
-        const ar = arena !== 'random' ? arena : pick(MODS[mod]?.hazard ? ARENA_KEYS.filter((k) => HAZARDS[k]) : ARENA_KEYS);
+        const ar = arena !== 'random' ? arena : pick(MODS[mod]?.hazard ? arenaKeys().filter((k) => HAZARDS[k]) : arenaKeys());
         this.quickPick = { c, arena: ar, mods: mod ? [mod] : [] };
         this.vs(); return;
       }
@@ -1376,7 +1380,7 @@ export class Screens {
     const trLeft = (isle) => byMap(Object.entries(MAPS).filter(([, M]) => !!M.isle === isle && (isle || !M.extra)).flatMap(([k, M]) => (M.npcs || []).filter((n) => n.trainer && !F[n.id] && (!isle || !(n.hideFlag && F[n.hideFlag]))).map((n) => [k, n.name])));
     const boxLeft = (isle) => byMap(Object.entries(MAPS).filter(([k, M]) => !M.indoor && k !== 'peak' && !!M.isle === isle && !M.extra).flatMap(([k]) => [0, 1].filter((j) => !F[`it_${k}_${j}`]).map(() => [k, null])));
     const hatLeft = (hs) => hs.filter((h) => !(A.hats || []).includes(h.id)).map((h) => `${h.name}: ${hatWhere(h.id)}`);
-    const fishLeft = (keys) => { const w = { pond: 'ponds & rivers', sea: 'the sea', isle: 'island reefs', lava: 'lava pools', cold: 'icy water', night: 'any water after dark', dusk: 'any water on golden evenings' }; return keys.map((k) => [k, FISH[k].filter((f) => !fsp.has(f[0])).length]).filter(([, c]) => c).map(([k, c]) => `${c} in ${w[k] || k}`); };
+    const fishLeft = (keys) => { const w = { pond: 'ponds & rivers', sea: 'the sea', isle: 'island reefs', oasis: 'the oasis pool', lava: 'lava pools', cold: 'icy water', night: 'any water after dark', dusk: 'any water on golden evenings' }; return keys.map((k) => [k, FISH[k].filter((f) => !fsp.has(f[0])).length]).filter(([, c]) => c).map(([k, c]) => `${c} in ${w[k] || k}`); };
     const favLeft = (isle) => { const open = fl.rows.filter((r) => r.state !== 'done' && !!r.isle === isle && !r.extra).map((r) => `${r.who}: ${r.text}`), un = fl.unaskedOf?.(isle) || 0; return [...open, ...(un ? [`${un} not asked yet (look for a ❗ over townsfolk)`] : [])]; };
     const lmLeft = (isle, sands = false) => LANDMARKS.filter((l) => !!l.isle === isle && !!l.sands === sands && !(A.snaps || []).includes(l.id)).map((l) => (seenMap(l.map) ? `${l.name} (${MAPS[l.map].name})` : '??? (somewhere new)'));
     const dexLeft = () => { const miss = CLASSIC.filter((c) => !save.unlocked.includes(c.id)); return miss.map((c) => { const at = Object.keys(MAPS).filter((k) => MAPS[k].wild?.list?.some((w) => w[0] === c.id) && seenMap(k)); return at.length ? `${c.name} (wild in ${at.slice(0, 2).map((k) => MAPS[k].name).join(', ')})` : ['solmoth', 'moonwhal', 'verdelk'].includes(c.id) ? `${F.sunstone ? c.name : '???'} (a legend${F.sunstone ? ': see the 🏆 Champ page' : ''})` : seenMap(Object.keys(MAPS).find((k) => MAPS[k].wild?.list?.some((w) => w[0] === c.id)) || '') ? c.name : '??? (somewhere new)'; }); };
@@ -1386,7 +1390,7 @@ export class Screens {
       + bar('🎁', 'Gift boxes found', Object.keys(F).filter((k) => k.startsWith('it_') && !MAPS[k.slice(3, k.lastIndexOf('_'))]?.isle && !MAPS[k.slice(3, k.lastIndexOf('_'))]?.extra).length, 24, false, lst(boxLeft(false), 8))
       + bar('🤝', 'Favours done', fl.rows.filter((r) => r.state === 'done' && !r.isle).length, fl.mainland, false, lst(favLeft(false), 3))
       + bar('🎩', 'Hats collected', (A.hats || []).filter((id) => { const h = SHOP_HATS.find((q) => q.id === id); return h && !h.season && !h.isle && !h.extra; }).length, SHOP_HATS.filter((h) => !h.season && !h.isle && !h.extra).length, false, lst(hatLeft(SHOP_HATS.filter((h) => !h.season && !h.isle && !h.extra)), 4))
-      + bar('🐟', 'Kinds of fish', [...fsp].filter((n) => !FISH.isle.some((f) => f[0] === n)).length, Object.entries(FISH).filter(([k]) => k !== 'isle').flatMap(([, v]) => v).length, false, lst(fishLeft(Object.keys(FISH).filter((k) => k !== 'isle'))))
+      + bar('🐟', 'Kinds of fish', [...fsp].filter((n) => ![...FISH.isle, ...FISH.oasis].some((f) => f[0] === n)).length, Object.entries(FISH).filter(([k]) => k !== 'isle' && k !== 'oasis').flatMap(([, v]) => v).length, false, lst(fishLeft(Object.keys(FISH).filter((k) => k !== 'isle' && k !== 'oasis'))))
       + bar('📖', 'Critters on your team', CLASSIC.filter((c) => save.unlocked.includes(c.id)).length, CLASSIC.length, false, lst(dexLeft(), 5))
       + bar('🏔️', 'Peak Gauntlets cleared', A.gauntWins || 0)
       + bar('💥', 'Alphas beaten', Object.keys(F).filter((k) => k.startsWith('alpha_')).length)
@@ -1463,6 +1467,7 @@ export class Screens {
         + sb('🎁', 'Desert gift boxes', bMaps.reduce((a, k) => a + [0, 1].filter((j) => F[`it_${k}_${j}`]).length, 0), sboxes, lst(byMap(bMaps.flatMap((k) => [0, 1].filter((j) => !F[`it_${k}_${j}`]).map(() => [k, null]))), 8))
         + sb('🤝', 'Desert favours', fl.rows.filter((r) => r.state === 'done' && r.sands).length, fl.sands, lst(fl.rows.filter((r) => r.state !== 'done' && r.sands).map((r) => `${r.who}: ${r.text}`).concat(fl.rows.some((r) => r.sands) ? [] : ['look for a ❗ over a caravan master in Sunwell Oasis']), 3))
         + sb('🎩', 'Desert hats', sh.filter((h) => (A.hats || []).includes(h.id)).length, sh.length, lst(hatLeft(sh), 4))
+        + sb('🐡', 'Oasis fish', FISH.oasis.filter((f) => fsp.has(f[0])).length, FISH.oasis.length, lst(fishLeft(['oasis'])))
         + sb('🦴', 'Fossils dug up', fos.length, FOSSILS.length, `${FOSSILS.length - fos.length} more: a dig heap turns up on each desert map every day (A by the bone)`)
         + sb('📸', 'Desert landmarks', (A.snaps || []).filter((id) => LANDMARKS.find((l) => l.id === id)?.sands).length, LANDMARKS.filter((l) => l.sands).length, lst(lmLeft(false, true), 4))
         + sb('🌵', 'Desert critters on your team', desert.filter((c) => save.unlocked.includes(c.id)).length, desert.length, lst(desert.filter((c) => !save.unlocked.includes(c.id)).map((c) => (c.legend ? (F.buried_vault ? `${c.name} (a legend: see the 🏆 Champ page)` : '??? (a legend)') : c.name)), 7))
@@ -1575,6 +1580,7 @@ export class Screens {
         + MASTERS.map(([name, cr, title], i) => rowC('⭐', `${name} <small>${title}</small>`, F[`mast_${wk}_${i}`] ? 'beaten' : `shiny ${nm(cr)}`, F[`mast_${wk}_${i}`])).join('')
         + `<li class="jr-more">${mDone === 4 ? (F['mastpay_' + wk] ? '🌟 Cleared this week!' : '🌟 All four beaten! Talk to Marina in Port Coral.') : 'Champion Marina waits outside Coral Stadium.'} ${A.mastWins ? `Cleared ${A.mastWins} week${A.mastWins > 1 ? 's' : ''}${hats.includes('masterlei') ? " · Champion's Lei 🌺" : ''}.` : ''} New Masters in ${left} day${left > 1 ? 's' : ''}.</li>`
         + (F.gate_open ? `<li class="jr-head">🌞 Desert Trial <small>this week ${DESERT_TRIAL.filter((_, i) => F[`dtrial_${wk}_${i}`]).length}/4</small></li>` + DESERT_TRIAL.map(([name, cr, title], i) => rowC('☀️', `${name} <small>${title}</small>`, F[`dtrial_${wk}_${i}`] ? 'beaten' : `shiny ${nm(cr)}`, F[`dtrial_${wk}_${i}`])).join('') + (A.dtrialWins ? '' : '<li class="jr-more">Elder Sabah at the Sun Gate. A new Trial every Monday.</li>') : '')
+        + (F.cup_mirage ? (() => { const won = SANDS_CUPS.filter((c) => F['cup_' + c.id]), today = won.filter((c) => F[champReFlag(c.id)]).length, all = Object.keys(F).filter((k) => k.startsWith('champre_')).length; return `<li class="jr-head">🏟️ Desert champions <small>today ${today}/${won.length}</small></li>` + won.map((c) => { const b = c.matches[c.matches.length - 1]; return rowC('🏟️', `${b.name} <small>${b.title}</small>`, F[champReFlag(c.id)] ? 'beaten today' : `${CUP_HALL[c.id].replace('the ', '')} lobby · shiny ${nm(b.critter)}`, F[champReFlag(c.id)]); }).join('') + `<li class="jr-more">One rematch a day in each desert stadium's lobby (+4 🍓).${all ? ` ${all} won in all.` : ''}</li>`; })() : '')
         + `<li class="jr-head">🏔️ Peak Gauntlet <small>this week ${gDone}/5</small></li>`
         + `<li class="jr-more">${gDone === 5 ? '🌟 Cleared this week!' : `Next: ${gf[gDone] ? nm(gf[gDone].id) : ''} on Champion's Peak (Keeper Orla).`} ${A.gauntWins ? `Cleared ${A.gauntWins} week${A.gauntWins > 1 ? 's' : ''}.` : ''}</li>`
         + `<li class="jr-head">✨ Legendary critters <small>${LEGEND_IDS().filter((id) => F['legend_' + id]).length}/${LEGEND_IDS().length}</small></li>`
@@ -1597,12 +1603,12 @@ export class Screens {
     } else {
       const L = save.adv.fishLog || { n: 0 }, sp = { ...(L.sp || {}) };
       if (L.best && !sp[L.best.name]) sp[L.best.name] = L.best.cm;
-      const where = { pond: '🌿 Ponds & rivers', sea: '🏖️ The sea', isle: '🏝️ Island reefs', lava: '🌋 Lava pools', cold: '❄️ Icy water', night: '🌙 After dark (any water)', dusk: '🌇 Golden evenings (any water)' };
+      const where = { pond: '🌿 Ponds & rivers', sea: '🏖️ The sea', isle: '🏝️ Island reefs', oasis: '🌴 Oasis pools', lava: '🌋 Lava pools', cold: '❄️ Icy water', night: '🌙 After dark (any water)', dusk: '🌇 Golden evenings (any water)' };
       const D = derbyOf(gauntletWeek());
       body = (save.adv.flags.rod ? `<li class="jr-more">🏆 This week's Fishing Derby: a ${D.name} of ${D.cm} cm or more (${D.where}). ${save.adv.derbyWk === D.wk ? '✅ Won! A new fish on Monday.' : 'Fisher Finn has a prize!'}</li>` : '<li class="jr-more">🎣 Fisher Finn in Seashell Town lends out rods. Then face any water and press A!</li>')
-        + Object.entries(FISH).map(([k, list]) => `<li class="jr-head">${where[k]}</li>` + list.map(([n], i) => { const cm = sp[n]; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? '🐟' : '❔'}</span><b>${cm || n === D.name ? n : '???'}${i === list.length - 1 ? ' <small>rare</small>' : ''}${n === D.name && save.adv.flags.rod ? ' <small class="dby">🎯 derby</small>' : ''}</b><em>${cm ? cm + ' cm' : ''}${L.best?.name === n ? ' 🏅' : ''}</em></li>`; }).join('')).join('')
+        + Object.entries(FISH).filter(([k]) => k !== 'oasis' || save.adv.flags.sands_arrive).map(([k, list]) => `<li class="jr-head">${where[k]}</li>` + list.map(([n], i) => { const cm = sp[n]; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? '🐟' : '❔'}</span><b>${cm || n === D.name ? n : '???'}${i === list.length - 1 ? ' <small>rare</small>' : ''}${n === D.name && save.adv.flags.rod ? ' <small class="dby">🎯 derby</small>' : ''}</b><em>${cm ? cm + ' cm' : ''}${L.best?.name === n ? ' 🏅' : ''}</em></li>`; }).join('')).join('')
         + `<li class="jr-head">🗓️ Seasonal visitors (one a season · catch all four for a hat!)</li>` + Object.entries(SEASON_FISH).map(([k, [n, , , em]]) => { const cm = L.season?.[n], now = seasonKey() === k; return `<li class="jr-fish ${cm ? 'got' : ''}"><span>${cm ? em : '❔'}</span><b>${cm || now ? n : '???'} <small>${k}${now ? ' · now!' : ''}</small></b><em>${cm ? cm + ' cm' : ''}</em></li>`; }).join('')
-        + `<li class="jr-more">${Object.keys(sp).length}/${Object.values(FISH).flat().length} kinds${L.season ? ` · ${Object.keys(L.season).length}/4 seasonal` : ''} · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
+        + `<li class="jr-more">${Object.keys(sp).length}/${Object.entries(FISH).filter(([k]) => k !== 'oasis' || save.adv.flags.sands_arrive).flatMap(([, v]) => v).length} kinds${L.season ? ` · ${Object.keys(L.season).length}/4 seasonal` : ''} · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
     }
     d.innerHTML = `<div class="modal wd-journal"><h2>Journal</h2>
       <div class="jr-tabs"><button data-t="today" class="${tab === 'today' ? 'on' : ''}">📅 Today</button><button data-t="fav" class="${tab === 'fav' ? 'on' : ''}">🤝 Favours</button><button data-t="fish" class="${tab === 'fish' ? 'on' : ''}">🐟 Fish</button><button data-t="night" class="${tab === 'night' ? 'on' : ''}">🌌 Night</button><button data-t="rec" class="${tab === 'rec' ? 'on' : ''}">🏅 Records</button>${save.adv.flags.sunstone ? `<button data-t="champ" class="${tab === 'champ' ? 'on' : ''}">🏆 Champ</button>` : ''}</div>

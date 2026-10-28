@@ -1538,6 +1538,7 @@ export const SHOP_HATS = [
   { id: 'snorkelmask', name: 'Dive Goggles', kind: 'aviator', col: 0x3ac0e8, band: 0xffd84d, price: 0, gift: true, extra: true }, // REEF DIVE in the Sunken Wreck: a dive of 250 or more
   { id: 'suncrown', name: 'Sun Crown', kind: 'crown', col: 0xf0b030, band: 0xd8643a, price: 0, gift: true, extra: true }, // the treasure of the Buried City's Sun Hall (Chapter 3)
   { id: 'fossilhat', name: 'Fossil Ranger Hat', kind: 'ranger', col: 0xe2d2a8, band: 0x8a5a2a, price: 0, gift: true, extra: true }, // Curator Petra at the Sunwell Museum: every fossil dug up (Chapter 3, D3)
+  { id: 'palmangler', name: 'Palm Angler Hat', kind: 'bucket', col: 0x2aa8a0, band: 0xf2c46a, price: 0, gift: true, extra: true }, // Pool Angler Layla at Sunwell Oasis: all four oasis fish
   { id: 'mesaband', name: "Mesa Climber's Bandana", kind: 'band', col: 0xc8402a, band: 0xf2d49c, price: 0, gift: true, extra: true }, // the chest on Redrock Mesa (after the Canyon Cup)
   { id: 'sunlaurel', name: 'Sun Gate Laurel', kind: 'laurel', col: 0xd8643a, band: 0xffd84a, price: 0, gift: true, extra: true }, // the Desert Trial's first clear (D4)
   { id: 'amberwreath', name: 'Amber Wreath', kind: 'crown', col: 0xe8a040, band: 0x2aa8a0, price: 0, gift: true, extra: true }, // 100% of the Amber Sands' Records (D4)
