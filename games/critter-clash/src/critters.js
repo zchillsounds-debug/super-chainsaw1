@@ -1554,6 +1554,8 @@ export const SHOP_HATS = [
   { id: 'dewcirclet', name: 'Dewdrop Circlet', kind: 'circlet', col: 0xcfe8f4, band: 0x3ac8e8, price: 0, gift: true, extra: true }, // R829: the Sunwell Spring's chest
   { id: 'guildfez', name: 'Caravan Guild Fez', kind: 'fez', col: 0xa8243a, band: 0xffc23a, price: 0, gift: true, extra: true }, // R828: five full days of the Caravan Guild's bounty board
   { id: 'runnerband', name: "Runner's Headband", kind: 'band', col: 0x2ab8d0, band: 0xffd040, price: 0, gift: true, extra: true }, // R875: TUNNEL RUN under 6.6 s (Tunnel Runner Tess, the Old Aqueduct)
+  { id: 'songcirclet', name: 'Songstone Circlet', kind: 'songstone', col: 0xe8b060, band: 0xb88ae8, price: 0, gift: true, extra: true }, // R892: a nine-note song in DUNE CHORUS (Dune Singer Amani, the Singing Dunes)
+  { id: 'rosetiara', name: 'Rose Salt Tiara', kind: 'circlet', col: 0xf6b8c8, band: 0xffffff, price: 0, gift: true, extra: true }, // R893: Salt Carver Yara's four rose-salt statues (critters in their shiny colours, the Glass Flats)
   { id: 'saltcrown', name: 'Salt Crystal Crown', kind: 'crown', col: 0xf4f4f0, band: 0x9ad8ff, price: 0, gift: true, extra: true }, // R887: fill Salt Carver Yara's eight plinths (the Glass Flats)
   { id: 'scopecap', name: "Lookout's Spyglass Cap", kind: 'scopecap', col: 0xd8a860, band: 0xe8b04a, price: 0, gift: true, extra: true }, // R885: five right sightings through Lookout Omar's spyglass (Redrock Mesa)
   { id: 'melonhelm', name: 'Melon Rind Helmet', kind: 'melon', col: 0x3aa040, band: 0xff5a6a, price: 0, gift: true, extra: true }, // R883: shoo 16 Fennzaps in MELON WATCH (Mesa Gardener Lina, Redrock Mesa)
@@ -1607,6 +1609,14 @@ export function hatModel(cr, kind, col, band) {
     for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, l = add(new THREE.SphereGeometry(r * 0.42, 12, 8), M, 0.014); l.scale.set(0.7, 0.85, 1); l.position.set(Math.cos(a) * r * 0.3, r * 0.32, Math.sin(a) * r * 0.3); l.rotation.y = -a; }
     const st = add(new THREE.CylinderGeometry(r * 0.07, r * 0.1, r * 0.3, 6), toon(band), 0.01); st.position.y = r * 0.78; st.rotation.z = 0.3;
     const lf = add(new THREE.SphereGeometry(r * 0.2, 8, 6), toon(0x5aa83a), 0.01); lf.scale.set(1, 0.25, 0.6); lf.position.set(r * 0.2, r * 0.72, 0);
+  }
+  if (kind === 'songstone') { // R892: a braided sand-coloured circlet with a little standing stone on the brow, its sun glyph glowing violet
+    G.position.y -= r * 0.4; const sand = toon(col, { rim: 0.8 });
+    add(new THREE.TorusGeometry(r * 0.9, r * 0.065, 6, 24), sand, 0.012).rotation.x = Math.PI / 2;
+    for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2, b = new THREE.Mesh(new THREE.SphereGeometry(r * 0.06, 6, 4), toon(band)); b.position.set(Math.cos(a) * r * 0.9, r * 0.05, Math.sin(a) * r * 0.9); G.add(b); }
+    const st = add(new THREE.CylinderGeometry(r * 0.13, r * 0.17, r * 0.42, 7), toon(0xc8946a, { rim: 0.6 }), 0.014); st.position.set(0, r * 0.26, r * 0.9); st.scale.z = 0.6;
+    const cap = add(new THREE.SphereGeometry(r * 0.13, 8, 6), toon(0xc8946a, { rim: 0.6 }), 0.014); cap.position.set(0, r * 0.47, r * 0.9); cap.scale.z = 0.6;
+    const gl = new THREE.Mesh(new THREE.CircleGeometry(r * 0.07, 12), toon(band, { rim: 1, emissive: new THREE.Color(band).multiplyScalar(0.6).getHex() })); gl.position.set(0, r * 0.3, r * 0.9 + r * 0.11); G.add(gl);
   }
   if (kind === 'circlet') { // a thin gold circlet with a little round bronze mirror on the brow, rayed like the old sun discs (the Starless Vault)
     G.position.y -= r * 0.4; const gold = toon(col, { rim: 1, emissive: new THREE.Color(col).multiplyScalar(0.2).getHex() });

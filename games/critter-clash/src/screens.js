@@ -47,7 +47,7 @@ const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
 const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
 const LEGEND_IDS = () => ['solmoth', 'moonwhal', 'verdelk', ...(save.adv?.flags?.sands_arrive ? ['aurelark'] : [])]; // the Champ page's legends (the Sun-Bird once you reach the sands)
-const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles', 'mirageturban', 'minerhelm', 'lanternhat', 'guildfez', 'dewcirclet', 'lampcap', 'siroccohat', 'caravanturban', 'glowcaphat', 'sunspout', 'tollband', 'runnerband', 'coincrown', 'melonhelm', 'scopecap', 'saltcrown', 'wheelcap', 'pipegoggles', 'glowlantern']; // the desert's found hats (the Sand Hats stall's four are `sands`)
+const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles', 'mirageturban', 'minerhelm', 'lanternhat', 'guildfez', 'dewcirclet', 'lampcap', 'siroccohat', 'caravanturban', 'glowcaphat', 'sunspout', 'tollband', 'runnerband', 'coincrown', 'melonhelm', 'scopecap', 'saltcrown', 'rosetiara', 'songcirclet', 'wheelcap', 'pipegoggles', 'glowlantern']; // the desert's found hats (the Sand Hats stall's four are `sands`)
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
@@ -55,7 +55,7 @@ const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zo
 const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater', frost: 'Frostpeak Dome', neon: 'Neon Rooftop', sky: 'Cloudtop Gardens', grove: 'Glowcap Grove' };
 const ARENA_KEYS = Object.keys(ARENA_NAME);
 // R810: the Amber Sands' three stadiums join Quick Battle and Sparring once their Adventure cup is won (each has its own hazard)
-const SANDS_ARENA = { oasis: ['Sunwell Pavilion', 'mirage'], canyon: ['Canyon Stadium', 'canyon'], dunes: ['Sandstorm Dome', 'sandstorm'], grotto: ['Sunwell Grotto', null, 'spring_arrive'], aqueduct: ['Old Aqueduct', null, 'aq_arrive'], mesa: ['Redrock Mesa', null, 'cup_canyon'] }; // (R888: Redrock Mesa once its rope lifts run) // (R862: the aqueduct once you've been down there) // (R842: the grotto once you've climbed down the well)
+const SANDS_ARENA = { oasis: ['Sunwell Pavilion', 'mirage'], canyon: ['Canyon Stadium', 'canyon'], dunes: ['Sandstorm Dome', 'sandstorm'], grotto: ['Sunwell Grotto', null, 'spring_arrive'], aqueduct: ['Old Aqueduct', null, 'aq_arrive'], mesa: ['Redrock Mesa', null, 'cup_canyon'], singing: ['Singing Dunes', null, 'sunbird1'] }; // (R895: the Singing Dunes once Nuri lets you through) // (R888: Redrock Mesa once its rope lifts run) // (R862: the aqueduct once you've been down there) // (R842: the grotto once you've climbed down the well)
 const arenaName = (k) => ARENA_NAME[k] || SANDS_ARENA[k]?.[0] || k;
 // Quick Battle's sky chip: the time of day and the weather (night and rain wake the night/rain traits; the sandstorm waits for the Sandstorm Cup)
 const SKIES = { day: ['☀️', 'Day'], evening: ['🌇', 'Evening'], night: ['🌙', 'Night'], rain: ['🌧️', 'Rain'], sandstorm: ['🌪️', 'Sandstorm'] };
@@ -118,6 +118,7 @@ const HOME = {
   neon: '🌃', neon_: 'zips off down a neon alley', frost: '❄️', frost_: 'slides away into the snow', sky: '☁️', sky_: 'floats off into the clouds',
   canyon: '🏜️', canyon_: 'kicks up a puff of sand and darts off over the dunes', saltflat: '🫧', saltflat_: 'shimmers away across the salt like a mirage', // (R822: the Amber Sands)
   mesa: '🏜️', mesa_: 'tumbles off over the edge of the mesa with the tumbleweeds', // (R888: Redrock Mesa)
+  singing: '🎵', singing_: 'slides off down a singing dune, humming', // (R895: the Singing Dunes)
   grotto: '💧', grotto_: 'splashes off into the glowing pool', // (R834: the Sunwell Spring)
   aqueduct: '🏺', aqueduct_: 'dives into the channel and rides the water away', // (R862: the Old Aqueduct)
 };
@@ -484,6 +485,14 @@ export class Screens {
         A.curios ? `And the Mirage Merchant sold you a curio! ${A.curios > 1 ? `${A.curios} of them!` : ''} He brings a new one every day after noon, they say. Or the same one, wearing a disguise.` : "The Mirage Merchant on the Glass Flats has a new curio every day now, once you've bought his turban. A glass lure, a mirror... even bottled heat!",
         "Oh, and Team Battle has a sky button now too, like Quick Battle. A night-time 3-on-3 under the stars. Lovely!",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv46') && !save.news.includes('adv47') && save.adv.flags.cup_sandstorm) { // R894: DUNE CHORUS, Yara's rose salt, the mesa's rolling tumbleweeds
+      save.news.push('adv47'); persist();
+      const A = save.adv;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        A.chorusHi ? `{name}! Dune Singer Amani says you sang a ${A.chorusHi}-note song back to the singing stones. DUNE CHORUS! I can't even remember a phone number.` : "{name}! Out on the Singing Dunes, Dune Singer Amani sings with the four old stones. Beat her in a battle and she'll let you join in. DUNE CHORUS, she calls it!",
+        A.roseStat?.length ? `And Salt Carver Yara has carved ${A.roseStat.length} of your shiny critters in rose salt! Pink statues on the Glass Flats. They glow at sunset, apparently.` : "And Salt Carver Yara found a vein of ROSE salt on the Glass Flats. Once her eight white plinths are full, she'll carve critters wearing their shiny colours in pink!",
+        "Oh, and the tumbleweeds on Redrock Mesa don't just drop and burst any more. They bounce off down the wind! Very dramatic. Mind your ankles.",
+      ]), 600);
     } else if (!g.autoplay && save.news?.includes('adv45') && !save.news.includes('adv46') && save.adv.flags.cup_canyon) { // R886: the museum's coin case, MELON WATCH, Lookout Omar's spyglass
       save.news.push('adv46'); persist();
       const A = save.adv;
@@ -727,7 +736,7 @@ export class Screens {
         ['Cups', 'Each town\'s stadium holds a cup, and the trials test your Strength, Friendship and Wisdom on the road to the Critter Crown.'],
         ['Berry Centers', 'Rest to heal, swap who leads the way at the Critter Box, leave a critter at the Daycare and blend berry smoothies.'],
         ['The Isles', 'Once you hold the Critter Crown, the Sunny Gull ferry sails from Seashell Town to the Sunscatter Isles: new critters, three island cups and the Gloom Gulls.'],
-        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it, where Forager Pim\'s spore puffs fly in SPORE DRIFT. Past Pim\'s grate, an old water tunnel runs south: turn its sluice wheels to cross the channels, then try Waterwright Osei\'s WATERWORKS board, and race Tunnel Runner Tess once the channels run dry. Up on Redrock Mesa, Gardener Lina needs help after dark: shoo the Fennzaps out of her melons in MELON WATCH, and Lookout Omar wants help spotting dust clouds through his spyglass. On the Glass Flats, Salt Carver Yara carves a new critter in salt every day: lead with one she hasn\'t done yet.'],
+        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it, where Forager Pim\'s spore puffs fly in SPORE DRIFT. Past Pim\'s grate, an old water tunnel runs south: turn its sluice wheels to cross the channels, then try Waterwright Osei\'s WATERWORKS board, and race Tunnel Runner Tess once the channels run dry. Up on Redrock Mesa, Gardener Lina needs help after dark: shoo the Fennzaps out of her melons in MELON WATCH, and Lookout Omar wants help spotting dust clouds through his spyglass. On the Glass Flats, Salt Carver Yara carves a new critter in salt every day: lead with one she hasn\'t done yet (once her garden is full, critters in their shiny colours go in rose salt). On the Singing Dunes, beat Dune Singer Amani and she\'ll sing DUNE CHORUS with you: the stones sing, you sing it back.'],
         ['After that', 'The Battle Tower, three legendary critters, the weekly Masters, the Kite Glider\'s hidden spots, pearls, dives and more. The Champ page keeps track.'],
         ['100%', 'Records shows how much of Clashara, the isles (and later the Amber Sands) you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
       ]],
@@ -1402,9 +1411,11 @@ export class Screens {
         ['🍄', 'SPORE DRIFT prize', 'Forager Pim, Glowcap Hollow', A.sporeDay === day, !!F.gcap_done],
         ['💧', 'WATERWORKS prize', 'Waterwright Osei, the Old Aqueduct', A.pipeDay === day, !!F.aq_done],
         ['🏃', 'TUNNEL RUN prize', 'Tunnel Runner Tess, the Old Aqueduct', A.runDay === day, !!(F.tess_a && F.aqueduct_flow)], // R876
+        ['🎵', 'DUNE CHORUS prize', 'Dune Singer Amani, the Singing Dunes', A.chorusDay === day, !!F.chanter_s], // R892
         ['🍉', 'MELON WATCH prize (after dark)', 'Mesa Gardener Lina, Redrock Mesa', A.melonDay === day, !!seen.mesa], // R884
         ['🔭', 'Spot the dust cloud', 'Lookout Omar\'s spyglass, Redrock Mesa', A.scopeDay === day, !!seen.mesa], // R886
         ((A.saltStat || []).length < 8) && ['🗿', 'Pose for a salt statue', 'Salt Carver Yara, the Glass Flats (a new critter each day)', A.saltDay === day, !!seen.flats], // R887
+        ((A.saltStat || []).length >= 8 && (A.roseStat || []).length < 4) && ['🌸', 'Pose for a rose-salt statue', 'Salt Carver Yara (a critter in its shiny colours)', A.saltDay === day, true], // R893
         ['📜', `Caravan Guild bounties (${A.bounty?.day === day ? A.bounty.paid.length : 0}/3)`, `the board in ${N('oasis')}`, A.bounty?.day === day && A.bounty.paid.length >= 3, !!F.sands_arrive], // R828
         ['🤿', 'REEF DIVE prize', 'the Sunken Wreck (Snorkeller Pia, Port Coral)', A.diveDay === day, F.dived],
         ['🐦', `Gull Club catch: ${gullFish(day)}`, 'any island water → Petrel, Starfall Atoll', A.gullPaid === day, F.amends3_done && F.rod],
@@ -1589,7 +1600,8 @@ export class Screens {
         + (A.cnt?.rail ? bar('🚂', 'Sand-Rail rides', A.cnt.rail) : '')
         + (A.sledHi ? bar('🛷', 'DUNE SLED best', A.sledHi) : '')
         + (A.caravanHi ? bar('🐪', 'CARAVAN RUN best', A.caravanHi) : '')
-        + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') + (A.pipeHi ? bar('💧', 'WATERWORKS best', A.pipeHi) : '') + (A.runBest ? bar('🏃', 'TUNNEL RUN best', (A.runBest / 10).toFixed(1) + ' s') : '') /* R875 */ + (A.melonBest ? bar('🍉', 'MELON WATCH best', A.melonBest + ' shooed') : '') /* R884 */ + (A.scopeN ? bar('🔭', 'Dust clouds spotted', A.scopeN) : '') /* R886 */ + (A.saltStat?.length ? bar('🗿', 'Salt statues', `${Math.min(8, A.saltStat.length)} / 8`) : '') /* R887 */ // R865, R854, R838: no goal
+        + (A.chorusHi ? bar('🎵', 'DUNE CHORUS best', A.chorusHi + ' notes') : '') // R892
+        + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') + (A.pipeHi ? bar('💧', 'WATERWORKS best', A.pipeHi) : '') + (A.runBest ? bar('🏃', 'TUNNEL RUN best', (A.runBest / 10).toFixed(1) + ' s') : '') /* R875 */ + (A.melonBest ? bar('🍉', 'MELON WATCH best', A.melonBest + ' shooed') : '') /* R884 */ + (A.scopeN ? bar('🔭', 'Dust clouds spotted', A.scopeN) : '') /* R886 */ + (A.saltStat?.length ? bar('🗿', 'Salt statues', `${Math.min(8, A.saltStat.length)} / 8${A.roseStat?.length ? ` · 🌸 ${A.roseStat.length} / 4` : ''}`) : '') /* R887 (R893: rose salt) */ // R865, R854, R838: no goal
         + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '')
         + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '')
         + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal

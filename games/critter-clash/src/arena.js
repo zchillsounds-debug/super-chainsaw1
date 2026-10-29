@@ -5,6 +5,7 @@ import { toon, inked, canvasTex, outlineMat } from './toon.js';
 
 export const ARENA_R = 11.5;
 
+export const SING_STONES = [Math.PI * 0.75, Math.PI * 1.25, Math.PI * 1.9]; // R895: where the Singing Dunes arena's three stones stand (angles round the field; hazards.js starts the Stone Song there)
 export const ARENAS = {
   meadow: {
     name: 'Sunny Meadow Stadium',
@@ -76,6 +77,15 @@ export const ARENAS = {
     accent: 0x2ab0a8, seat: [0xc8862a, 0x3a2a2a, 0xfff0d8, 0x2ab0a8],
     hill: 0xe8b870, trunk: 0x6a4428, leaves: [0xe8b870, 0xdcaa62, 0xf0c47e], scenery: 'dunes', cloud: 0xfff0dc, cloudShade: 0xb08a60, sunI: 2.4,
     drift: 'sand', canopy: 0xf4e4c4, back: 0xa8743e,
+  },
+  singing: { // R895: the Singing Dunes (its wild fights): golden dunes at dusk under a violet sky, three old singing stones round the field
+    name: 'Singing Dunes',
+    skyTop: 0x2e2470, skyHorizon: 0xf0a088, sun: 0xffb890, sunDir: [-0.65, 0.42, -0.45],
+    hemiSky: 0xb8a0f0, hemiGround: 0x7a5060, fieldA: '#dcae80', fieldB: '#d2a478', line: '#fff0f8', floor: 'sand',
+    wallA: 0xc8862a, wallB: 0x5a3a5a, ground: 0xc89a80, fog: 0xb890b0,
+    accent: 0xb88ae8, seat: [0xc8862a, 0x5a3a5a, 0xfff0d8, 0xb88ae8],
+    hill: 0xd09a78, trunk: 0x6a4428, leaves: [0xd09a78, 0xc48c70, 0xdcaa88], scenery: 'dunes', stones: true, cloud: 0xffd0e0, cloudShade: 0x7a5a9a, sunI: 1.8,
+    drift: 'sand',
   },
   beach: {
     name: 'Seashell Bay Arena',
@@ -866,6 +876,14 @@ export class Arena {
         tops[i % 3].push(g);
       }
       for (let i = 0; i < 16; i++) { const a = rand() * Math.PI * 2, r = 30 + rand() * 20, g = new THREE.IcosahedronGeometry(0.7 + rand() * 0.6, 0); g.scale(1, 0.6, 1); g.translate(Math.cos(a) * r, 0.3, Math.sin(a) * r); trunks.push(g); }
+      if (A.stones) { // R895: the three old singing stones stand round the field (where the Stone Song rings start), each with a glowing glyph
+        const st = [], gl = [];
+        for (const a of SING_STONES) { const x = Math.sin(a) * 21, z = Math.cos(a) * 21, g = new THREE.CylinderGeometry(1.7, 2.2, 9, 7); g.scale(1, 1, 0.62); g.rotateY(a); g.translate(x, 4, z); st.push(g);
+          const cap = new THREE.SphereGeometry(1.75, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2); cap.scale(1, 0.7, 0.62); cap.rotateY(a); cap.translate(x, 8.5, z); st.push(cap);
+          const d = new THREE.CircleGeometry(0.95, 16); d.rotateY(a + Math.PI); d.translate(x - Math.sin(a) * 1.2, 5.4, z - Math.cos(a) * 1.2); gl.push(d); }
+        const m = inked(mergeGeometries(st), toon(0xc8946a, { rim: 0.5 }), 0.05); m.castShadow = false; G.add(m); st.forEach((g) => g.dispose());
+        const gm = new THREE.Mesh(mergeGeometries(gl), new THREE.MeshBasicMaterial({ color: 0xd8b0ff })); G.add(gm); gl.forEach((g) => g.dispose());
+      }
     }
     else if (A.scenery === 'saltflat') {
       // R821: far, low pale mesas across the salt, white salt mounds nearer, and a see-through sky-blue mirage town shimmering on the horizon

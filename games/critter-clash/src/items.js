@@ -13,7 +13,7 @@ const KINDS = {
   scarab: { glow: 0xffc23a, label: 'SCARAB SHIELD!' },
   glowcap: { glow: 0x5affe0, label: 'GLOWCAP!' },
 };
-const DESERT = new Set(['oasis', 'canyon', 'saltflat', 'dunes', 'mesa']); // (R888: + Redrock Mesa)
+const DESERT = new Set(['oasis', 'canyon', 'saltflat', 'dunes', 'mesa', 'singing']); // (R888: + Redrock Mesa; R895: + the Singing Dunes)
 // R846: the Sunwell Grotto grows its own: a glowcap mushroom (a bite of HP, and its glow shows where the cave drips: hazards miss you for 10 s)
 const CAVE = new Set(['grotto']);
 

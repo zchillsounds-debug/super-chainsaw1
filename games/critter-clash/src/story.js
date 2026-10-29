@@ -12,7 +12,7 @@ import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
-import { arcadeGame, skyHop, waveRider, reefDive, duneSled, caravanRun, sporeDrift, waterworks } from './arcade.js';
+import { arcadeGame, skyHop, waveRider, reefDive, duneSled, caravanRun, sporeDrift, waterworks, duneChorus } from './arcade.js';
 import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, FISH, seasonKey, gullFish, traderTown, alphaToday } from './world.js';
 
 const flags = () => save.adv.flags;
@@ -592,6 +592,7 @@ export function storyTalk(S, id, w, a) {
   if (id === 'arcade:hop') return arcade(S, w, true);
   if (id === 'surf') return surf(S, w);
   if (id === 'sled') return sled(S, w);
+  if (id === 'chorus') return chorusTalk(S, w, a);
   if (id === 'caravanrun') return caravanRunTalk(S, w, a);
   if (id === 'glowcaps') return glowcapTalk(S, w, a);
   if (id === 'aqueduct') return aqueductTalk(S, w);
@@ -945,6 +946,7 @@ const SANDS_BOUNTIES = {
   duel: { text: 'Win a lamplight duel (the night market)', n: 1, now: lampWins, need: 'cup_mirage' },
   champ: { text: 'Beat a desert champion in their lobby', n: 1, now: champWins, need: 'cup_mirage' },
   sled: { text: 'Ride DUNE SLED (the Dune Camp)', n: 1, now: () => save.adv.cnt?.sled || 0, need: 'cup_sandstorm' },
+  chorus: { text: 'Sing DUNE CHORUS (the Singing Dunes)', n: 1, now: () => save.adv.cnt?.chorus || 0, need: 'chanter_s' }, // R892
 };
 const OUTLAWS = [['scarabold', 'Rustclaw'], ['siroccat', 'Whirlwind Wes'], ['fennzap', 'Sparkjack'], ['sizzlard', 'Scorch'], ['cactortle', 'Old Prickles'], ['humpdrop', 'Lumpy Pete']];
 const WANTED_MAPS = [['duneroad', 'sands_arrive'], ['redrock', 'cup_mirage'], ['flats', 'cup_canyon'], ['dunecamp', 'dash_canyon']];
@@ -1561,7 +1563,7 @@ const HAT_WHERE = {
   pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
   masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
   gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
-  saltcrown: 'have Salt Carver Yara carve eight different critters (the Glass Flats, one a day)', scopecap: 'spot five dust clouds through Lookout Omar\'s spyglass (Redrock Mesa, by day)', melonhelm: 'shoo 16 Fennzaps in MELON WATCH (Mesa Gardener Lina, Redrock Mesa, after dark)', coincrown: 'fill the Sun City coin case in the Sunwell Museum (dig coins from the Old Aqueduct\'s silt)', caravanturban: 'score 500 at CARAVAN RUN (Caravan Master Hakim, Sunwell Oasis)', pipegoggles: 'score 600 at WATERWORKS (Waterwright Osei, the Old Aqueduct)', fossilhat: 'dig up every fossil for the Sunwell Museum', wheelcap: 'open the Sun Sluice for Waterwright Osei (the Old Aqueduct, past Glowcap Hollow)', sunspout: 'a treasure chest in the Old Aqueduct (past Glowcap Hollow)', runnerband: 'run the Old Aqueduct under 6.6 seconds in TUNNEL RUN (Tunnel Runner Tess, once the channels are dry)', tollband: "a chest in the Old Aqueduct's toll-keeper's nook (up the east inflow, once the Sun Sluice drains it)", dewcirclet: "a treasure chest in the Sunwell Spring (down the oasis well)", guildfez: "clear the Caravan Guild's bounty board on five days (Sunwell Oasis)", mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
+  songcirclet: 'sing a nine-note song back in DUNE CHORUS (Dune Singer Amani, the Singing Dunes)', rosetiara: 'have Salt Carver Yara carve four critters in their shiny colours in rose salt (after the eight white statues)', saltcrown: 'have Salt Carver Yara carve eight different critters (the Glass Flats, one a day)', scopecap: 'spot five dust clouds through Lookout Omar\'s spyglass (Redrock Mesa, by day)', melonhelm: 'shoo 16 Fennzaps in MELON WATCH (Mesa Gardener Lina, Redrock Mesa, after dark)', coincrown: 'fill the Sun City coin case in the Sunwell Museum (dig coins from the Old Aqueduct\'s silt)', caravanturban: 'score 500 at CARAVAN RUN (Caravan Master Hakim, Sunwell Oasis)', pipegoggles: 'score 600 at WATERWORKS (Waterwright Osei, the Old Aqueduct)', fossilhat: 'dig up every fossil for the Sunwell Museum', wheelcap: 'open the Sun Sluice for Waterwright Osei (the Old Aqueduct, past Glowcap Hollow)', sunspout: 'a treasure chest in the Old Aqueduct (past Glowcap Hollow)', runnerband: 'run the Old Aqueduct under 6.6 seconds in TUNNEL RUN (Tunnel Runner Tess, once the channels are dry)', tollband: "a chest in the Old Aqueduct's toll-keeper's nook (up the east inflow, once the Sun Sluice drains it)", dewcirclet: "a treasure chest in the Sunwell Spring (down the oasis well)", guildfez: "clear the Caravan Guild's bounty board on five days (Sunwell Oasis)", mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
 };
 export function hatWhere(id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';
@@ -1808,6 +1810,28 @@ function sled(S, w) {
       const gog = score >= 380 && !own.includes('sledgoggles'); if (gog) own.push('sledgoggles');
       persist(); if (best || prize || gog) reward(2);
       w.say([`${score >= 380 ? 'RADICAL!' : score >= 250 ? 'Nice run!' : 'Sand everywhere!'} You scored ${score}.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: ${prize} 🍓 from the camp's date jar! (One prize a day.)`] : A.sledDay !== day ? [`${who}: Score 250 or more and the camp pays you in berries! (One prize a day.)`] : []), ...(gog ? [`${who}: ${score}?! Okay, okay. Take my spare sand goggles. You've earned them.`, '{hero} got the Sand Sled Goggles! 🎩 (☰ → 🎩 Hats)'] : [])], null, who);
+    });
+    S.game.modalClose = () => el.__arcade.close();
+  }, who);
+}
+
+// R892: Dune Singer Amani (the Singing Dunes), once beaten, sings with the four stones in DUNE CHORUS: a song a note longer each time.
+// Five notes or more is a daily berry prize (+3), nine once wins her Songstone Circlet. Battle keeps her old talk (rematches).
+function chorusTalk(S, w, a) {
+  const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.chorusHi || 0, who = 'Dune Singer Amani', own = (A.hats ||= []);
+  w.ask(`${who}: The stones are in good voice tonight. Sing with them? They sing a song, you sing it back, and every time it grows by a note. ${hi ? `Your longest song: ${hi} notes.` : 'Listen first, then tap the stones in the same order!'}`, ['Sing!', 'Battle', 'Not now'], (i) => {
+    if (i === 1) { a.skipChorus = true; w.talk(a); a.skipChorus = false; return; }
+    if (i) return w.say([`${who}: The dunes will hum without us for a while. Humpdrop doesn't mind. Humpdrop always hums.`], null, who);
+    w.busy = true;
+    const el = duneChorus(S.root, S.game.portrait(w.hero.def), (score) => {
+      S.game.modalClose = null; w.busy = false;
+      const best = score > hi; if (best) A.chorusHi = score;
+      countUp('chorus');
+      let prize = 0;
+      if (A.chorusDay !== day && score >= 5) { prize = 3; A.chorusDay = day; save.berries = (save.berries || 0) + prize; }
+      const hat = score >= 9 && !own.includes('songcirclet'); if (hat) own.push('songcirclet');
+      persist(); if (best || prize || hat) reward(hat ? 3 : 2); w.questMarks?.();
+      w.say([`${score >= 9 ? 'The whole dune sings along!' : score >= 5 ? 'A lovely song!' : score ? 'A short song, but a sweet one.' : 'The stones go quiet...'} ${score} notes.${best ? ' A new best! 🏆' : ''}`, ...(prize ? [`${who}: The stones liked that. So did I. ${prize} 🍓 from the singers' basket! (One prize a day.)`] : A.chorusDay !== day ? [`${who}: Sing five notes back and the singers' basket is yours today. (One prize a day.)`] : []), ...(hat ? [`${who}: NINE notes! Even the high part! Here: my Songstone Circlet. The little stone on it hums when the wind blows. Truly.`, '{hero} got the Songstone Circlet! 🎵 (☰ → 🎩 Hats)'] : [])], null, who);
     });
     S.game.modalClose = () => el.__arcade.close();
   }, who);

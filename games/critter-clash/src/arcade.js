@@ -992,3 +992,115 @@ export function waterworks(root, face, onDone) {
   el.__arcade = { S, start, turn, solve, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
   return el;
 }
+
+// R892: DUNE CHORUS (Dune Singer Amani, the Singing Dunes, after her battle): four singing stones on a moonlit dune. The stones sing a
+// song, one note longer each time; sing it back by tapping them in the same order. One wrong note (or a long pause) ends the night.
+// The score is the longest song sung back.
+export function duneChorus(root, face, onDone) {
+  const el = document.createElement('div');
+  el.className = 'modal-wrap arcade-wrap';
+  el.innerHTML = `<div class="arcade chorus"><div class="arc-top"><b>DUNE CHORUS</b><span class="arc-hud"></span></div>
+    <canvas width="${W}" height="${H}"></canvas>
+    <p class="arc-tip">Listen to the stones, then tap them in the same order. Each song is one note longer!</p></div>`;
+  root.appendChild(el);
+  const cv = el.querySelector('canvas'), c = cv.getContext('2d'), hud = el.querySelector('.arc-hud');
+  const img = new Image(); img.src = face;
+  const ST = [ // the four stones: where they stand, their glow and the glyph carved on each
+    { x: 52, y: 156, col: '#ffc84a', glyph: 'sun' }, { x: 124, y: 146, col: '#9ad0ff', glyph: 'moon' },
+    { x: 196, y: 146, col: '#ff8ad0', glyph: 'star' }, { x: 268, y: 156, col: '#6af0d0', glyph: 'wind' },
+  ];
+  const SW = 46, SH = 70;
+  const S = { seq: [], at: 0, mode: 'ready', t: 0, wait: 1.3, lit: [0, 0, 0, 0], score: 0, over: false, wrong: -1, idle: 0, pops: [] };
+  const stars = Array.from({ length: 46 }, (_, i) => [(i * 73.7) % W, (i * 41.3) % 96, 0.6 + (i % 3) * 0.5, i * 1.7]);
+  const pop = (x, y, txt, col) => S.pops.push({ x, y, txt, col, t: 1.1 });
+  const sing = (i, len) => { S.lit[i] = len; sfx.chorus?.(i); };
+  const gap = () => Math.max(0.28, 0.62 - S.seq.length * 0.03); // the song speeds up as it grows
+  function next() { S.seq.push(Math.floor(Math.random() * 4)); S.at = 0; S.mode = 'play'; S.wait = 0.55; }
+  function tap(i) {
+    if (S.over || i < 0 || i > 3) return;
+    if (S.mode === 'ready') { S.wait = 0; return; }
+    if (S.mode !== 'you') return;
+    S.idle = 0;
+    if (S.seq[S.at] !== i) { S.wrong = S.seq[S.at]; sing(i, 0.3); S.lit[S.wrong] = 1.6; finish(); return; }
+    sing(i, 0.32); S.at++; buzz('light');
+    if (S.at >= S.seq.length) { S.score = S.seq.length; S.mode = 'gap'; S.wait = 0.9; pop(W / 2, 60, S.score >= 9 ? 'BEAUTIFUL!' : S.score >= 5 ? 'LOVELY!' : 'NICE!', '#ffe8a0'); sfx.arc('gold'); }
+  }
+  const hit = (px, py) => ST.findIndex((s) => Math.abs(px - s.x) < SW / 2 + 8 && py > s.y - SH - 6 && py < s.y + 16);
+  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); const r = cv.getBoundingClientRect(); tap(hit((e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H)); });
+  const KEYS = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, KeyA: 0, KeyS: 1, KeyD: 2, KeyF: 3, ArrowLeft: 0, ArrowUp: 1, ArrowDown: 2, ArrowRight: 3 };
+  const onKey = (e) => { const k = KEYS[e.code]; if (k === undefined && e.code !== 'Space') return; e.preventDefault(); e.stopPropagation(); if (e.type === 'keydown' && !e.repeat) tap(k ?? 0); };
+  addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
+  function finish() { if (S.over) return; S.over = true; S.mode = 'over'; sfx.arc('crash'); setTimeout(close, 2600); }
+  const step = (dt) => {
+    S.t += dt;
+    for (let i = 0; i < 4; i++) S.lit[i] = Math.max(0, S.lit[i] - dt);
+    for (const p of S.pops) { p.t -= dt; p.y -= 16 * dt; }
+    S.pops = S.pops.filter((p) => p.t > 0);
+    if (S.over) return;
+    if (S.mode === 'ready' || S.mode === 'gap') { S.wait -= dt; if (S.wait <= 0) next(); return; }
+    if (S.mode === 'play') { // the stones sing the song, note by note
+      S.wait -= dt;
+      if (S.wait <= 0) {
+        if (S.at < S.seq.length) { sing(S.seq[S.at], gap() * 0.8); S.at++; S.wait = gap(); }
+        else { S.mode = 'you'; S.at = 0; S.idle = 0; }
+      }
+      return;
+    }
+    if (S.mode === 'you') { S.idle += dt; if (S.idle > 5) { S.wrong = S.seq[S.at]; S.lit[S.wrong] = 1.6; finish(); } }
+  };
+  function glyph(g, x, y, col) {
+    c.strokeStyle = col; c.fillStyle = col; c.lineWidth = 2.2; c.lineCap = 'round';
+    if (g === 'sun') { c.beginPath(); c.arc(x, y, 5.5, 0, 7); c.stroke(); for (let k = 0; k < 8; k++) { const a = k / 8 * 6.283; c.beginPath(); c.moveTo(x + Math.cos(a) * 8, y + Math.sin(a) * 8); c.lineTo(x + Math.cos(a) * 11, y + Math.sin(a) * 11); c.stroke(); } }
+    else if (g === 'moon') { c.beginPath(); c.arc(x, y, 9, 0.9, 5.4); c.arc(x + 5, y - 0.5, 6.8, 4.9, 1.3, true); c.closePath(); c.fill(); }
+    else if (g === 'star') { c.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? 4 : 10; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.closePath(); c.fill(); }
+    else { c.beginPath(); for (let k = 0; k <= 30; k++) { const a = k / 30 * 9.4, rr = 1 + k * 0.33; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.stroke(); }
+  }
+  const draw = () => {
+    const sky = c.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#120c2e'); sky.addColorStop(0.55, '#3a2452'); sky.addColorStop(1, '#6a3c4a');
+    c.fillStyle = sky; c.fillRect(0, 0, W, H);
+    for (const [x, y, s, ph] of stars) { c.globalAlpha = 0.45 + 0.45 * Math.sin(S.t * 1.6 + ph); c.fillStyle = '#fff6dc'; c.fillRect(x, y, s, s); }
+    c.globalAlpha = 1;
+    c.fillStyle = '#fff2c8'; c.beginPath(); c.arc(276, 30, 13, 0, 7); c.fill(); c.fillStyle = '#120c2e'; c.beginPath(); c.arc(282, 26, 11, 0, 7); c.fill(); // a crescent moon
+    // far dunes, then the near dune the stones stand on
+    c.fillStyle = '#4a2c40'; c.beginPath(); c.moveTo(0, 128); for (let x = 0; x <= W; x += 16) c.lineTo(x, 118 + Math.sin(x * 0.021 + 1) * 12); c.lineTo(W, H); c.lineTo(0, H); c.fill();
+    c.fillStyle = '#7a4a3a'; c.beginPath(); c.moveTo(0, 162); c.quadraticCurveTo(80, 128, 160, 136); c.quadraticCurveTo(240, 128, W, 162); c.lineTo(W, H); c.lineTo(0, H); c.fill();
+    c.fillStyle = 'rgba(255,200,150,0.12)'; c.beginPath(); c.moveTo(0, 162); c.quadraticCurveTo(80, 128, 160, 136); c.quadraticCurveTo(240, 128, W, 162); c.lineTo(W, 168); c.quadraticCurveTo(160, 140, 0, 168); c.fill(); // moonlight on the crest
+    c.strokeStyle = 'rgba(40,20,24,0.22)'; c.lineWidth = 1.5; for (let k = 0; k < 6; k++) { const y = 176 + k * 11; c.beginPath(); c.moveTo(-10, y + 4); for (let x = 0; x <= W + 10; x += 20) c.quadraticCurveTo(x + 5, y - 3 + (k % 2) * 2, x + 10, y + 2); c.stroke(); } // wind ripples in the sand
+    ST.forEach((s, i) => {
+      const L = Math.min(1, S.lit[i] * 4), x = s.x, y = s.y;
+      if (L > 0) { const g = c.createRadialGradient(x, y - SH / 2, 4, x, y - SH / 2, 58); g.addColorStop(0, s.col); g.addColorStop(1, 'rgba(0,0,0,0)'); c.globalAlpha = 0.9 * L; c.fillStyle = g; c.fillRect(x - 62, y - SH - 34, 124, SH + 64); c.globalAlpha = 1;
+        c.strokeStyle = s.col; c.lineWidth = 2; c.globalAlpha = L * 0.8; c.beginPath(); c.ellipse(x, y + 1, SW / 2 + 6 + (1 - L) * 10, 7, 0, 0, 7); c.stroke(); c.globalAlpha = 1; } // a ring of light on the sand
+      c.fillStyle = 'rgba(20,10,20,0.4)'; c.beginPath(); c.ellipse(x + 4, y + 2, SW / 2 + 4, 6, 0, 0, 7); c.fill(); // its shadow
+      c.fillStyle = '#b88660'; c.beginPath(); c.moveTo(x - SW / 2, y); c.lineTo(x - SW / 2 + 4, y - SH + 14); c.quadraticCurveTo(x, y - SH - 8, x + SW / 2 - 4, y - SH + 14); c.lineTo(x + SW / 2, y); c.closePath(); c.fill(); // a rounded standing stone
+      if (L > 0) { c.globalAlpha = 0.55 * L; c.fillStyle = s.col; c.fill(); c.globalAlpha = 1; } // the stone takes on its note's colour
+      c.fillStyle = 'rgba(60,30,20,0.28)'; c.beginPath(); c.moveTo(x + 6, y); c.lineTo(x + SW / 2 - 4, y - SH + 14); c.lineTo(x + SW / 2, y); c.fill(); // its shaded side
+      c.fillStyle = 'rgba(255,230,190,0.25)'; c.fillRect(x - SW / 2 + 8, y - SH + 16, 3, SH - 22);
+      glyph(s.glyph, x, y - SH / 2 - 2, L > 0 ? '#fffbe8' : 'rgba(70,36,24,0.75)');
+      if (L > 0) { glyph(s.glyph, x, y - SH / 2 - 2, s.col); c.globalAlpha = L; glyph(s.glyph, x, y - SH / 2 - 2, '#ffffff'); c.globalAlpha = 1; for (let k = 0; k < 3; k++) { const a = S.t * 3 + k * 2.1; c.fillStyle = s.col; c.fillRect(x + Math.cos(a) * 16, y - SH - 4 - ((S.t * 30 + k * 12) % 26), 2, 2); } } // its note drifts up
+    });
+    // the hero sits in the sand below, Amani's Humpdrop humming beside
+    c.fillStyle = 'rgba(20,10,20,0.35)'; c.beginPath(); c.ellipse(W / 2, H - 14, 18, 5, 0, 0, 7); c.fill();
+    if (img.complete && img.naturalWidth) c.drawImage(img, W / 2 - 19, H - 52 - (S.mode === 'gap' ? Math.abs(Math.sin(S.t * 9)) * 6 : 0), 38, 38);
+    c.textAlign = 'center';
+    const msg = S.mode === 'ready' ? 'LISTEN...' : S.mode === 'play' ? '♪ the stones sing ♪' : S.mode === 'you' ? 'YOUR TURN!' : '';
+    if (msg) { c.font = 'bold 15px sans-serif'; c.strokeStyle = '#120c2e'; c.lineWidth = 4; c.strokeText(msg, W / 2, 30); c.fillStyle = S.mode === 'you' ? '#ffe8a0' : '#d8c8ff'; c.fillText(msg, W / 2, 30); }
+    if (S.mode === 'you') { c.fillStyle = 'rgba(255,255,255,0.18)'; c.fillRect(W / 2 - 60, 38, 120, 5); c.fillStyle = '#ffe8a0'; c.fillRect(W / 2 - 60, 38, 120 * S.at / S.seq.length, 5); } // notes sung back so far
+    c.font = 'bold 14px sans-serif';
+    for (const p of S.pops) { c.globalAlpha = Math.min(1, p.t * 2); c.fillStyle = p.col; c.strokeStyle = '#120c2e'; c.lineWidth = 3; c.strokeText(p.txt, p.x, p.y); c.fillText(p.txt, p.x, p.y); }
+    c.globalAlpha = 1;
+    if (S.over) { c.fillStyle = 'rgba(18,12,46,0.62)'; c.fillRect(0, 44, W, 62); c.fillStyle = '#ffe8a0'; c.font = 'bold 20px sans-serif'; c.fillText(S.score ? 'THE SONG ENDS' : 'A WRONG NOTE!', W / 2, 70); c.fillStyle = '#fff'; c.font = 'bold 14px sans-serif'; c.fillText(`Longest song: ${S.score} notes`, W / 2, 94); }
+    hud.textContent = `🎵 ${S.score}${S.mode === 'you' || S.mode === 'play' ? `  ♪ ${S.seq.length}` : ''}`;
+  };
+  let last = performance.now(), raf = 0;
+  const loop = (now) => { const dt = Math.min(0.05, (now - last) / 1000); last = now; step(dt); draw(); if (el.isConnected) raf = requestAnimationFrame(loop); };
+  raf = requestAnimationFrame(loop);
+  let closed = false;
+  function close() {
+    if (closed) return; closed = true;
+    cancelAnimationFrame(raf); el.remove();
+    removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true);
+    onDone(S.score);
+  }
+  el.__arcade = { S, tap, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
+  return el;
+}

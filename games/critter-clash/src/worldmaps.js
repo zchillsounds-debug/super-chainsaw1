@@ -1096,7 +1096,7 @@ export const MAPS = {
   singing: {
     name: 'Singing Dunes',
     music: 'sands',
-    arena: 'dunes',
+    arena: 'singing', // R895: its own arena (dusk, the singing stones, the Stone Song)
     sands: 'dunes',
     extra: true,
     border: 'mesa',
@@ -1122,6 +1122,7 @@ export const MAPS = {
     edges: { w: { to: 'dunecamp', off: 0 } },
     singers: [[6, 2], [22, 5], [19, 10]], // the singing stones (A at night: each hums under its own star; all three in one night wake the Sun-Bird)
     nest: [13, 7], // where the Sun-Bird sleeps under the sand
+    chorus: { who: 'chanter_s' }, // R892: Dune Singer Amani's DUNE CHORUS (after her battle)
     ripples: true, // big dunes and wind ripples painted over the sand (world.js)
     cacti: [[3, 10], [24, 2], [9, 11]],
     signs: [{ x: 1, y: 4, text: 'THE SINGING DUNES\nWhen the night wind blows, the stones sing. Camp rule: sing back.' }],
@@ -1163,7 +1164,7 @@ export const MAPS = {
       'RRRRRRRRRRRRRRRRRRRRRRRRRRRR',
     ],
     edges: { n: { to: 'duneroad', off: 3 } },
-    statues: { who: 'yara_f', spots: [[10, 11], [16, 11], [8, 10], [18, 10], [6, 11], [20, 11], [4, 10], [22, 10]] }, // R887: Salt Carver Yara's statue garden (one statue per critter, one a day)
+    statues: { who: 'yara_f', spots: [[10, 11], [16, 11], [8, 10], [18, 10], [6, 11], [20, 11], [4, 10], [22, 10]], rose: [[12, 7], [15, 7], [10, 7], [17, 7]] }, /* R893: four rose-salt plinths behind her, for critters in their shiny colours */ // R887: Salt Carver Yara's statue garden (one statue per critter, one a day)
     mirageTown: [[4, 4], [8, 3], [20, 3], [24, 4], [11, 2]], mirageStall: [14, 3], // where the shimmering town stands in the mirage hours (not solid: walk up and it melts)
     cacti: [[3, 11], [24, 6]],
     signs: [{ x: 13, y: 2, text: 'THE GLASS FLATS\nA dry salt lake. Bring water. Bring a hat. Do not try to visit the town.' }],

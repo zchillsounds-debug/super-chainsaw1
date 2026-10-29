@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { toon, inked, canvasTex } from './toon.js';
 import { sfx } from './audio.js';
-import { ARENA_R } from './arena.js';
+import { ARENA_R, SING_STONES } from './arena.js';
 import { save } from './save.js';
 
 export const HAZARDS = {
@@ -23,6 +23,7 @@ export const HAZARDS = {
   saltflat: { name: 'Brine vents', color: 0x3a8ab8, glow: 0xffffff, r: 1.15, warn: 1.35, dmg: 6, lift: 7, kb: 1.6, word: 'HISS!' }, // R823: the Glass Flats (wild fights): the crust cracks and spits hot brine
   grotto:  { name: 'Dripstones', color: 0xff9a2a, solid: true, glow: 0x9afff4, r: 1.05, warn: 1.3, dmg: 7, stun: 0.5, kb: 2.6, word: 'PLINK!' }, // R835: the Sunwell Grotto (wild fights): a stalactite with a glowing drop on its tip lets go
   aqueduct: { name: 'Sluice spouts', color: 0x2ab8d0, glow: 0xc8f8ff, r: 1.2, warn: 1.3, dmg: 6, kb: 4.2, word: 'GUSH!' }, // R862: the Old Aqueduct (wild fights): an old spout in the floor blasts a jet sideways
+  singing: { name: 'Sand twisters', color: 0xb8742a, solid: true, glow: 0xffd8f0, r: 1.2, warn: 1.35, dmg: 6, lift: 6.5, kb: 2.2, dizzy: 30, word: 'WHIRL!' }, // R895: the Singing Dunes (wild fights): the dome's twisters, out in the open
   mesa:    { name: 'Tumbleweeds', color: 0xa8702a, solid: true, glow: 0xffe8b0, r: 1.15, warn: 1.25, dmg: 6, stun: 0.35, kb: 3.6, word: 'TUMBLE!' }, // R888: Redrock Mesa (wild fights): a dry tumbleweed bounces down out of the wind
   beach:   { name: 'Coconuts', color: 0xe0482a, solid: true, glow: 0xfff2c0, r: 0.9, warn: 1.2, dmg: 7, stun: 0.5, kb: 3, word: 'BONK!' },
 };
@@ -39,6 +40,7 @@ export const SIGS = {
   grotto:  { name: 'Cave-ins', word: 'CAVE-IN!', jumbo: 'CAVE-IN!', tip: 'Cave-in! Get clear of the cross!' }, // R841: the Sunwell Grotto
   saltflat: { name: 'Salt cracks', word: 'CRACK!', jumbo: 'SALT CRACK!', tip: 'Salt crack! Step off the line!' }, // R869: the Glass Flats: a crack zigzags across the crust, brine vents burst along it
   aqueduct: { name: 'Floodgates', name2: 'Whirlpools', word: 'FLOOD!', jumbo: 'FLOODGATE!', tip: 'Floodgate! Step out of the surge!' }, // R862: a surge down one lane (the rogue wave's lane, in sluice water); R874: or a whirlpool drain that drags you in, then spouts
+  singing: { name: 'Stone Song', word: 'HUMMM!', jumbo: 'STONE SONG!', tip: 'The stones sing! Guard as the ring passes!' }, // R895: a ring of sound rolls out across the field from one of the singing stones
   mesa:    { name: 'Crosswinds', word: 'GUST!', jumbo: 'CROSSWIND!', tip: 'Crosswind! Hold your ground!' }, // R888: the mesa top's wind (runs like the Cloudtop crosswind)
   dunes:   { name: 'Sandstorms', word: 'SANDSTORM!', jumbo: 'SANDSTORM!', tip: 'Sandstorm! Guard to dig in!' }, // the Sandstorm Dome
 };
@@ -359,6 +361,17 @@ export class Hazards {
       ring.traverse((o) => o.material && sg.mats.push(o.material));
       B.fx.text({ x: sg.x, y: 1.6, z: sg.z }, 'WHIRLPOOL!', 'eff', 1);
       sfx.warn();
+    } else if (key === 'singing') {
+      // R895: one of the three stones hums, then a ring of sound rolls out across the whole field from its foot; whoever it passes
+      // gets a small shove away from the stone and a dizzy head (guard to let it wash over you)
+      const a = SING_STONES[Math.floor(Math.random() * SING_STONES.length)];
+      sg.warn = 1.1; sg.dur = 2.6; sg.speed = 9; sg.x = Math.sin(a) * (ARENA_R + 1); sg.z = Math.cos(a) * (ARENA_R + 1);
+      const m = own(new THREE.MeshBasicMaterial({ color: 0xd8b0ff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+      const wave = add(new THREE.Mesh(new THREE.RingGeometry(0.86, 1, 72), m)); wave.rotation.x = -Math.PI / 2; wave.position.set(sg.x, 0.06, sg.z); wave.scale.setScalar(0.01); sg.wave = wave; sg.mats.push(m);
+      const m2 = own(new THREE.MeshBasicMaterial({ color: 0xffe0f8, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+      const wave2 = add(new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 72, 1, true), m2)); wave2.position.set(sg.x, 0.5, sg.z); wave2.scale.setScalar(0.01); sg.wave2 = wave2; sg.mats.push(m2); // a low shimmering wall of sound
+      sfx.hum?.(Math.floor(Math.random() * 3));
+      B.fx.text({ x: sg.x * 0.8, y: 2.4, z: sg.z * 0.8 }, this.S?.word || 'HUMMM!', 'eff', 1.1);
     } else if (key === 'grove') {
       // a big spore cloud settles near one fighter and lingers; breathing it in makes you dizzy
       sg.warn = 1.2; sg.dur = 5.5; sg.r = 1.8;
@@ -477,6 +490,24 @@ export class Hazards {
         f.x += (ox / dd * pull - oz / dd * sg.spin * pull * 0.6) * dt; f.z += (oz / dd * pull + ox / dd * sg.spin * pull * 0.6) * dt;
         if (!sg.hit.has(f)) { sg.hit.add(f); const hp = f.headPos(); fx.text({ x: hp.x, y: hp.y + 0.3, z: hp.z }, 'SWIRL!', 'eff', 0.8); }
       }
+    } else if (sg.kind === 'singing') {
+      const fade = Math.min(1, Math.max(0, (sg.warn + sg.dur - t) / 0.6));
+      if (!live) { if (Math.random() < dt * 30) fx.spawn({ x: sg.x + (Math.random() - 0.5) * 2, y: 0.5 + Math.random() * 3, z: sg.z + (Math.random() - 0.5) * 2, vy: 1.2, color: Math.random() < 0.5 ? 0xd8b0ff : 0xffe0f8, size: 0.35, life: 0.7, shape: 'glow' }); }
+      else {
+        if (!sg.on) { sg.on = true; sfx.hum?.(2); B.shake(0.15); }
+        const R = (t - sg.warn) * sg.speed;
+        sg.wave.scale.setScalar(Math.max(0.01, R)); sg.wave2.scale.set(Math.max(0.01, R), 0.9 + Math.sin(t * 30) * 0.15, Math.max(0.01, R));
+        sg.wave.material.opacity = 0.8 * fade; sg.wave2.material.opacity = 0.3 * fade;
+        for (let k = 0; k < 3; k++) { const a = Math.random() * 6.283, x = sg.x + Math.cos(a) * R, z = sg.z + Math.sin(a) * R; if (Math.hypot(x, z) < ARENA_R + 0.5) fx.spawn({ x, y: 0.2, z, vy: 1.5, color: 0xd8b0ff, size: 0.3, life: 0.4, shape: 'spark' }); }
+        if (fade > 0.3) for (const f of B.fighters) {
+          if (sg.hit.has(f)) continue;
+          const dx = f.x - sg.x, dz = f.z - sg.z, d = Math.hypot(dx, dz);
+          if (Math.abs(d - R) > 0.55) continue;
+          sg.hit.add(f);
+          const r = this.hurt(f, dx / d, dz / d, { dmg: 3, kb: 2.8, stun: 0.25, dizzy: 26 }, this.S?.word || 'HUMMM!');
+          if (r === true) fx.burst({ x: f.x, y: 1, z: f.z }, { n: 10, speed: 2, up: 2, color: 0xd8b0ff, size: 0.25, life: 0.6, shape: 'star', grav: 1 });
+        }
+      }
     } else if (sg.kind === 'grove') {
       const { ring, fill } = sg.ring.userData;
       const fade = Math.min(1, Math.max(0, (sg.warn + sg.dur - t) / 0.8));
@@ -518,7 +549,7 @@ export class Hazards {
       h.drop.position.set(x, 9, z);
       B.scene.add(h.drop);
     }
-    if (B.arena.key === 'dunes') { h.twist = twistMesh(); h.twist.position.set(x, 0, z); h.twist.scale.setScalar(0.01); B.scene.add(h.twist); }
+    if (B.arena.key === 'dunes' || B.arena.key === 'singing') { h.twist = twistMesh(); h.twist.position.set(x, 0, z); h.twist.scale.setScalar(0.01); B.scene.add(h.twist); }
     this.list.push(h);
     B.stats.hazardsSeen = (B.stats.hazardsSeen || 0) + 1;
     if (!this.warned) { this.warned = true; B.fx.text({ x, y: 1.4, z }, 'WATCH OUT!', 'eff', 1.1); }
@@ -625,7 +656,7 @@ export class Hazards {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 20, speed: 3, up: 9, color: 0xc8e8f8, size: 0.55, life: 0.8, shape: 'puff', additive: false, grav: 6, grow: 1.3, alpha: 0.85 });
       B.fx.burst(p, { n: 12, speed: 4.5, up: 5, color: 0xffffff, size: 0.16, life: 0.6, shape: 'star', additive: false, grav: 12, spin: 10 }); // salt chips
       sfx.whoosh?.(1.3);
-    } else if (key === 'dunes') {
+    } else if (key === 'dunes' || key === 'singing') {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 22, speed: 4, up: 6, color: 0xe8c488, size: 0.6, life: 0.9, shape: 'puff', additive: false, grav: 2, grow: 1.3, alpha: 0.75 });
       B.fx.burst({ x: h.x, y: 0.6, z: h.z }, { n: 8, speed: 3, up: 7, color: 0xc89048, size: 0.22, life: 0.8, shape: 'star', additive: false, grav: 6, spin: 12 });
       sfx.whoosh?.(1.1);

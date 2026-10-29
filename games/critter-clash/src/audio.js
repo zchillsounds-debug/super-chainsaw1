@@ -277,6 +277,7 @@ export const sfx = {
   // growing: a soft shimmer that climbs with k (0..1), then a bright chord when the new form appears
   shimmer(k = 0) { if (!ctx) return; const f = 520 + k * 900; osc('sine', f, f * 1.5, 0.16, 0.07); osc('triangle', f * 2, f * 2.6, 0.1, 0.03); },
   hum(i = 0) { if (!ctx) return; const f = [196, 247, 294][i % 3]; osc('sine', f, f * 1.02, 1.4, 0.2); osc('triangle', f * 2, f * 2.01, 1.0, 0.05); osc('sine', f * 1.5, f * 1.5, 1.2, 0.06); }, // a singing stone (the Singing Dunes)
+  chorus(i = 0) { if (!ctx) return; const f = [262, 330, 392, 494][i % 4]; osc('sine', f, f * 1.003, 0.7, 0.17); osc('triangle', f * 2, f * 2, 0.3, 0.04); osc('sine', f * 1.5, f * 1.5, 0.5, 0.04); }, // R892: DUNE CHORUS's four singing stones
   note(i = 0) { if (!ctx) return; const f = [523, 659, 784, 880, 1047][i % 5]; osc('sine', f, f, 0.5, 0.16); osc('triangle', f * 2, f * 2, 0.22, 0.04); }, // the fairy ring's toadstool bells
   firework() { if (!ctx) return; noise(0.35, 0.1, { f0: 900, f1: 120 }); osc('sine', 1400 + Math.random() * 600, 2600, 0.25, 0.025); },
   grown() {

@@ -2773,12 +2773,23 @@ export class World {
       cr.root.scale.setScalar(CS * 0.85); cr.root.position.y = 0.46; cr.root.rotation.y = (i % 2 ? -0.35 : 0.35); g.add(cr.root);
       bakeStatic({ root: g, mats: {} });
     });
+    // R893: the rose-salt statues (critters carved in their shiny colours, once the white garden is full): pink salt on taller plinths
+    const rose = toon(0xf6b8c8, { rim: 0.9, emissive: 0x3a1a22 }), rp = toon(0xe8c8cc), re = toon(0xd890a8);
+    (save.adv.roseStat || []).slice(0, (S.rose || []).length).forEach((id, i) => {
+      const def = byId(id); if (!def) return;
+      const [x, y] = S.rose[i], [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(x + ',' + y);
+      const b = inked(new THREE.CylinderGeometry(0.62, 0.7, 0.56, 8), rp, OL * 0.3); b.position.y = 0.28; b.castShadow = true; g.add(b);
+      const t = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 0.08, 8), re); t.position.y = 0.58; g.add(t);
+      const cr = new Critter(withGear(skinned(def, 'shiny'), 20), { lod: 'low' }); cr.root.traverse((o) => { if (o.isMesh && !o.userData.hull) o.material = rose; });
+      cr.root.scale.setScalar(CS * 0.85); cr.root.position.y = 0.62; cr.root.rotation.y = (i % 2 ? -0.35 : 0.35); g.add(cr.root);
+      bakeStatic({ root: g, mats: {} });
+    });
   }
   // R887: Salt Carver Yara carves the lead critter in salt, once a day (A.saltDay), one statue per critter: +3 berries each, +10 at four,
   // and her Salt Crystal Crown when all eight plinths stand
   statueAsk(a) {
     const n = a.n, A = save.adv, S = this.M.statues, day = new Date().toISOString().slice(0, 10), list = (A.saltStat ||= []), hero = A.hero, nm = byId(hero)?.name || 'your critter';
-    if (list.length >= S.spots.length) return this.say([`${n.name}: All ${S.spots.length} plinths full! The caravans stop just to look. I'm calling it the Salt Garden.`, `${n.name}: When the wind wears one down, I'll carve it again. Salt is patient. So am I.`], null, n.name);
+    if (list.length >= S.spots.length) return S.rose ? this.roseAsk(a) : this.say([`${n.name}: All ${S.spots.length} plinths full! The caravans stop just to look. I'm calling it the Salt Garden.`, `${n.name}: When the wind wears one down, I'll carve it again. Salt is patient. So am I.`], null, n.name);
     if (list.includes(hero)) return this.say([`${n.name}: I've carved ${nm} already! Look, over there, in salt. Lead with another critter and I'll carve that one.`], null, n.name);
     if (A.saltDay === day) return this.say([`${n.name}: My chisel needs a rest. And so does my wrist. Come back tomorrow with another model!`], null, n.name);
     this.ask(`${n.name}: ${list.length ? `${list.length} statue${list.length > 1 ? 's' : ''} so far! ` : 'I carve the salt into critters. '}What a face ${nm} has! Would ${nm} pose for a statue? Just hold still.`, ['🗿 Pose!', 'Not now'], (i) => {
@@ -2791,6 +2802,27 @@ export class World {
         this.say([`${n.name}: There! ${nm}, in salt, forever. Or until the next big rain. It never rains here. So: forever! +3 🍓`,
           ...(k === 4 ? [`${n.name}: Four statues! People are starting to call this place a garden. Here, a little extra for my best model. +10 🍓`] : []),
           ...(hat ? [`${n.name}: Eight! Every plinth! I made this from the very first salt crystal I ever found. It's yours. Wear it in the sun and watch it sparkle.`, '{hero} got the Salt Crystal Crown! 👑 (☰ → 🎩 Hats)'] : [`${n.name}: ${S.spots.length - k} plinth${S.spots.length - k > 1 ? 's' : ''} left. Bring me another critter tomorrow!`])], null, n.name);
+      }));
+    }, n.name);
+  }
+  // R893: once the eight white plinths are full, Yara carves critters wearing their shiny colours in rare rose salt (four plinths behind
+  // her): one a day (shares A.saltDay), +4 berries each, and at four +15 and her Rose Salt Tiara
+  roseAsk(a) {
+    const n = a.n, A = save.adv, S = this.M.statues, day = new Date().toISOString().slice(0, 10), list = (A.roseStat ||= []), hero = A.hero, nm = byId(hero)?.name || 'your critter';
+    if (list.length >= S.rose.length) return this.say([`${n.name}: White salt in front, rose salt behind. Every plinth full! The caravans stop just to look. I'm calling it the Salt Garden.`, `${n.name}: When the wind wears one down, I'll carve it again. Salt is patient. So am I.`], null, n.name);
+    if (!A.flags.rose_hint) { A.flags.rose_hint = true; persist(); this.questMarks?.(); }
+    if (save.skins?.[hero] !== 'shiny') return this.say([`${n.name}: All eight plinths full! But look what I dug up: a vein of ROSE salt. Pink as a sunset. Far too rare for an ordinary statue.`, `${n.name}: Rose salt is for a critter in its shiny colours. Lead with one wearing its shiny palette (☰ → Team) and I'll carve it on the plinths behind me. ${list.length ? `${list.length} of ${S.rose.length} so far.` : ''}`], null, n.name);
+    if (list.includes(hero)) return this.say([`${n.name}: Shiny ${nm} is already in rose salt, right behind me! Another shiny critter, and I'll carve that one.`], null, n.name);
+    if (A.saltDay === day) return this.say([`${n.name}: Rose salt is hard work. My chisel needs a rest. Come back tomorrow!`], null, n.name);
+    this.ask(`${n.name}: Ooh! ${nm} in its shiny colours! That's what the rose salt is for. Would it pose? Very, very still?`, ['🌸 Pose!', 'Not now'], (i) => {
+      if (i) return;
+      list.push(hero); A.saltDay = day; const k = list.length; save.berries = (save.berries || 0) + 4 + (k === S.rose.length ? 15 : 0);
+      const hat = k >= S.rose.length && !(A.hats ||= []).includes('rosetiara'); if (hat) A.hats.push('rosetiara');
+      countUp('rosestatue'); persist(); reward(hat ? 3 : 2); this.questMarks?.();
+      this.say([`{hero} holds very, very still... pink salt dust everywhere! It smells faintly of roses. How?`], () => this.fade(() => {
+        this.load(this.key, this.hx, this.hy, this.dir);
+        this.say([`${n.name}: There! Shiny ${nm}, in rose salt. It glows at sunset. You'll see. +4 🍓`,
+          ...(hat ? [`${n.name}: All four rose plinths! The Salt Garden is finished. Here, a tiara from the last of the rose salt. +15 🍓`, '{hero} got the Rose Salt Tiara! 🌸 (☰ → 🎩 Hats)'] : [`${n.name}: ${S.rose.length - k} rose plinth${S.rose.length - k > 1 ? 's' : ''} left. Bring me another shiny model!`])], null, n.name);
       }));
     }, n.name);
   }
@@ -5285,7 +5317,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? (save.adv.sporeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : this.M.statues?.who === a.n.id ? ((save.adv.saltStat || []).length < this.M.statues.spots.length && save.adv.saltDay !== new Date().toISOString().slice(0, 10) && !(save.adv.saltStat || []).includes(save.adv.hero) ? '!' : null) /* R887: a new model for Yara */ : this.M.lookout?.who === a.n.id ? (this.phase !== 'night' && save.adv.scopeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R885: today's sighting */ : this.M.melons?.who === a.n.id ? (!F.melon_hint ? '!' : (this.phase === 'night' || this.phase === 'evening') && save.adv.melonDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R884: tonight's MELON WATCH prize */ : this.M.run?.who === a.n.id ? (F[a.n.id] && F[this.M.sluice?.flag] && save.adv.runDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R876: today's TUNNEL RUN prize */ : a.n.story === 'aqueduct' ? (!F.aq_asked ? '!' : F.aqueduct_flow && !F.aq_done ? '?' : F.aq_done && save.adv.pipeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R860; R865: today's WATERWORKS prize */ : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? (save.adv.sporeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : this.M.statues?.who === a.n.id ? ((save.adv.saltStat || []).length < this.M.statues.spots.length ? (save.adv.saltDay !== new Date().toISOString().slice(0, 10) && !(save.adv.saltStat || []).includes(save.adv.hero) ? '!' : null) : !F.rose_hint ? '!' : (save.adv.roseStat || []).length < (this.M.statues.rose || []).length && save.skins?.[save.adv.hero] === 'shiny' && save.adv.saltDay !== new Date().toISOString().slice(0, 10) && !(save.adv.roseStat || []).includes(save.adv.hero) ? '!' : null) /* R887: a new model for Yara (R893: the rose salt) */ : this.M.lookout?.who === a.n.id ? (this.phase !== 'night' && save.adv.scopeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R885: today's sighting */ : this.M.melons?.who === a.n.id ? (!F.melon_hint ? '!' : (this.phase === 'night' || this.phase === 'evening') && save.adv.melonDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R884: tonight's MELON WATCH prize */ : this.M.chorus?.who === a.n.id ? (F[a.n.id] && save.adv.chorusDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R892: today's DUNE CHORUS prize */ : this.M.run?.who === a.n.id ? (F[a.n.id] && F[this.M.sluice?.flag] && save.adv.runDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R876: today's TUNNEL RUN prize */ : a.n.story === 'aqueduct' ? (!F.aq_asked ? '!' : F.aqueduct_flow && !F.aq_done ? '?' : F.aq_done && save.adv.pipeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R860; R865: today's WATERWORKS prize */ : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m; a.markKind = k;
@@ -6409,6 +6441,7 @@ export class World {
     if (this.M.melons?.who === n.id && !a.skipMelon) return this.melonAsk(a); // R883: MELON WATCH
     if (this.M.lookout?.who === n.id && !a.skipScope) return this.scopeAsk(a); // R885: Lookout Omar's spyglass
     if (this.M.statues?.who === n.id) return this.statueAsk(a); // R887: Salt Carver Yara
+    if (this.M.chorus?.who === n.id && !a.skipChorus && save.adv.flags[n.id]) return this.S.worldStory('chorus', this, a); // R892: DUNE CHORUS (once Amani's beaten)
     if (this.M.run?.who === n.id && !a.skipRun && save.adv.flags[n.id] && save.adv.flags[this.M.sluice?.flag]) return this.runAsk(a); // R875: TUNNEL RUN
     const dl = !n.trainer && !(n.id === 'mom' && this.morning) && deliveredLine(n.id); // (Mom's breakfast comes first) if (dl && Math.random() < 0.6) return this.say(dl);
     if (n.trainer) {
