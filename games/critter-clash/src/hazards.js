@@ -576,6 +576,17 @@ export class Hazards {
         if (k >= 1) this.fire(h);
       } else {
         const e = (h.t - H.warn) / 0.5;
+        if (h.roll) { // R891: the tumbleweed bounces on downwind after it lands, then breaks up into twigs
+          const s = Math.min(1, (h.t - H.warn) / 1.4), d = h.roll.d * (1 - (1 - s) * (1 - s)), rx = h.x + h.roll.dx * d, rz = h.z + h.roll.dz * d;
+          h.drop.position.set(rx, 0.42 + Math.abs(Math.sin(s * Math.PI * 3)) * 0.55 * (1 - s), rz);
+          h.drop.rotateOnWorldAxis(h.roll.ax, dt * 9 * (1.2 - s));
+          h.drop.scale.setScalar(s < 0.8 ? 1 : Math.max(0.01, (1 - s) / 0.2));
+          if (Math.random() < dt * 16) B.fx.spawn({ x: rx, y: 0.12, z: rz, vy: 0.6, color: 0xd8946a, size: 0.38, life: 0.6, shape: 'puff', additive: false, grow: 1.4, alpha: 0.5 });
+          if (s >= 0.8 && !h.roll.broke) { h.roll.broke = true; B.fx.burst({ x: rx, y: 0.4, z: rz }, { n: 12, speed: 4, up: 4, color: 0xc8944a, size: 0.2, life: 0.7, shape: 'star', additive: false, grav: 10, spin: 10 }); }
+          ring.material.opacity = Math.max(0, 0.9 * (1 - e)); fill.material.opacity = Math.max(0, 0.4 * (1 - e));
+          if (s >= 1) this.remove(i);
+          continue;
+        }
         ring.material.opacity = Math.max(0, 0.9 * (1 - e));
         fill.material.opacity = Math.max(0, 0.4 * (1 - e));
         h.mesh.scale.setScalar(H.r * (1 + e * 0.3));
@@ -623,9 +634,17 @@ export class Hazards {
       B.fx.burst(p, { n: 10, speed: 4.5, up: 4, color: 0x6a8a96, size: 0.2, life: 0.6, shape: 'star', additive: false, grav: 12, spin: 8 }); // and stone chips
       B.fx.spawn({ x: h.x, y: 0.06, z: h.z, color: 0xb8fff8, size: H.r * 1.5, life: 0.5, shape: 'ring', grow: 1.6, alpha: 0.8 });
       sfx.bonk();
-    } else if (key === 'mesa') { // R888: the tumbleweed bursts into twigs and a puff of red dust
+    } else if (key === 'mesa') { // R888: the tumbleweed lands in a puff of red dust (R891: and bounces on downwind, shedding twigs; it breaks up in update)
       B.fx.burst({ x: h.x, y: 0.3, z: h.z }, { n: 12, speed: 3, up: 2, color: 0xd8946a, size: 0.6, life: 0.7, shape: 'puff', additive: false, grav: 1, grow: 1.3, alpha: 0.7 });
-      B.fx.burst(p, { n: 14, speed: 5, up: 4, color: 0xc8944a, size: 0.2, life: 0.7, shape: 'star', additive: false, grav: 10, spin: 10 });
+      B.fx.burst(p, { n: 6, speed: 4, up: 3, color: 0xc8944a, size: 0.18, life: 0.6, shape: 'star', additive: false, grav: 10, spin: 10 });
+      if (h.drop) { // roll away from the middle-ish, inside the ring
+        let a = (this.windA ??= Math.random() * 6.28) + (Math.random() - 0.5) * 0.8;
+        const r = Math.hypot(h.x, h.z), lim = ARENA_R - 1.2;
+        if (r > 0.5 && Math.cos(a - Math.atan2(h.z, h.x)) > 0.3 && r > lim - 3) a += Math.PI;
+        const dx = Math.cos(a), dz = Math.sin(a);
+        let d = 3.4; for (; d > 0.5; d -= 0.2) if (Math.hypot(h.x + dx * d, h.z + dz * d) < lim) break;
+        h.roll = { dx, dz, d, ax: new THREE.Vector3(dz, 0, -dx) };
+      }
       sfx.bonk();
     } else if (key === 'canyon') {
       B.fx.burst({ x: h.x, y: 0.3, z: h.z }, { n: 16, speed: 3.5, up: 2.5, color: 0xd8a070, size: 0.7, life: 0.8, shape: 'puff', additive: false, grav: 1, grow: 1.3, alpha: 0.75 });
