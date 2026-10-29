@@ -116,6 +116,7 @@ export class Items {
     this.shields = [];
     this.glows = [];
     this.cave = CAVE.has(battle.arena?.key);
+    this.aqua = battle.arena?.key === 'aqueduct'; // R872: the Old Aqueduct's cistern hall: water flasks (sluice water's cool and clean)
     this.desert = DESERT.has(battle.arena?.key) || !!battle.env?.sand;
     this.timer = 9 + Math.random() * 4;
   }
@@ -157,6 +158,7 @@ export class Items {
         const r = Math.random();
         // out in the Amber Sands, about one drop in three is a desert one
         if (this.cave && Math.random() < 0.34) this.spawn('glowcap'); // down in the grotto, about one in three is a glowcap
+        else if (this.aqua && Math.random() < 0.3) this.spawn('flask');
         else if (this.desert && Math.random() < 0.34) this.spawn(behind && Math.random() < 0.6 ? 'flask' : Math.random() < 0.5 ? 'flask' : 'scarab');
         else this.spawn(behind && r < 0.5 ? 'berry' : r < 0.4 ? 'berry' : r < 0.72 ? 'star' : 'shoe');
       }
