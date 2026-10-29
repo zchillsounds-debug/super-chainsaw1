@@ -1,4 +1,4 @@
-// node tools/news44.mjs [WxH] (UPTO=44 for adv45, R877; UPTO=45 for adv46, R886; UPTO=46 for adv47, R894) : R867: Pecan news adv44 (WATERWORKS, the goggles, the moss critters) on the title; shot tools/out/news44-*.png
+// node tools/news44.mjs [WxH] (UPTO=44 for adv45, R877; UPTO=45 for adv46, R886; UPTO=46 for adv47, R894; UPTO=47 for adv48, R906) : R867: Pecan news adv44 (WATERWORKS, the goggles, the moss critters) on the title; shot tools/out/news44-*.png
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
 const { chromium } = require('playwright');

@@ -485,6 +485,15 @@ export class Screens {
         A.curios ? `And the Mirage Merchant sold you a curio! ${A.curios > 1 ? `${A.curios} of them!` : ''} He brings a new one every day after noon, they say. Or the same one, wearing a disguise.` : "The Mirage Merchant on the Glass Flats has a new curio every day now, once you've bought his turban. A glass lure, a mirror... even bottled heat!",
         "Oh, and Team Battle has a sky button now too, like Quick Battle. A night-time 3-on-3 under the stars. Lovely!",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv47') && !save.news.includes('adv48') && save.adv.flags.gate_open) { // R906: Sirocco's glyph rubbings, Zahra's fireside tales
+      save.news.push('adv48'); persist();
+      const A = save.adv;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        A.glyphs?.length ? `{name}! Sirocco showed me your charcoal rubbings from the Sun Gate pillars. ${A.glyphs.length >= 6 ? 'All six! The whole inscription!' : `${A.glyphs.length} of the six so far!`} My fingers are still grey.` : "{name}! The old Baron, Sirocco, has found carvings on the Sun Gate's standing pillars. He's handing out paper and charcoal to anyone who'll rub them!",
+        "He reads the old words out as they show up. Something about a sun-bird and a promise. I'd tell you more, but you should hear it from him.",
+        A.tales?.length ? `And Camp Elder Zahra says you've sat by her fire for ${A.tales.length} of her shadow tales! ${A.tales.length >= 5 ? 'Every one!' : 'She has five, you know.'}` : "And after dark at the Dune Camp, Camp Elder Zahra lights a fire by her tent and tells shadow-puppet tales on the canvas. She asks a question after, so listen well!",
+        "I asked her for one about a professor. It was about a lost pair of glasses. I don't know why everyone laughed.",
+      ]), 600);
     } else if (!g.autoplay && save.news?.includes('adv46') && !save.news.includes('adv47') && save.adv.flags.cup_sandstorm) { // R894: DUNE CHORUS, Yara's rose salt, the mesa's rolling tumbleweeds
       save.news.push('adv47'); persist();
       const A = save.adv;
