@@ -1825,7 +1825,10 @@ function sled(S, w) {
 // Five notes or more is a daily berry prize (+3), nine once wins her Songstone Circlet. Battle keeps her old talk (rematches).
 function chorusTalk(S, w, a) {
   const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.chorusHi || 0, who = 'Dune Singer Amani', own = (A.hats ||= []);
-  w.ask(`${who}: The stones are in good voice tonight. Sing with them? They sing a song, you sing it back, and every time it grows by a note. ${hi ? `Your longest song: ${hi} notes.` : 'Listen first, then tap the stones in the same order!'}`, ['Sing!', 'Battle', 'Not now'], (i) => {
+  const moonOk = own.includes('songcirclet') && (w.phase === 'night' || w.phase === 'evening'), opts = moonOk ? ['Sing!', '🌙 Moonlight', 'Battle', 'Not now'] : ['Sing!', 'Battle', 'Not now']; // R902: the faster Moonlight chorus after the circlet, after dark
+  w.ask(`${who}: The stones are in good voice tonight. Sing with them? They sing a song, you sing it back, and every time it grows by a note. ${hi ? `Your longest song: ${hi} notes.` : 'Listen first, then tap the stones in the same order!'}${moonOk ? ` Or the Moonlight chorus: the stones sing it quick!${A.moonChorusHi ? ` (Best: ${A.moonChorusHi}.)` : ''}` : ''}`, opts, (k) => {
+    const i = moonOk ? [0, 3, 1, 2][k] : k; // (0 sing, 1 battle, 2 not now, 3 moonlight)
+    if (i === 3) return moonChorus(S, w);
     if (i === 1) { a.skipChorus = true; w.talk(a); a.skipChorus = false; return; }
     if (i) return w.say([`${who}: The dunes will hum without us for a while. Humpdrop doesn't mind. Humpdrop always hums.`], null, who);
     w.busy = true;
@@ -1841,6 +1844,21 @@ function chorusTalk(S, w, a) {
     });
     S.game.modalClose = () => el.__arcade.close();
   }, who);
+}
+
+// R902: the Moonlight chorus (after the Songstone Circlet, after dark): the stones sing faster; 8+ notes is the day's berry prize too
+function moonChorus(S, w) {
+  const A = save.adv, day = new Date().toISOString().slice(0, 10), hi = A.moonChorusHi || 0, who = 'Dune Singer Amani';
+  w.busy = true;
+  const el = duneChorus(S.root, S.game.portrait(w.hero.def), (score) => {
+    S.game.modalClose = null; w.busy = false;
+    const best = score > hi; if (best) A.moonChorusHi = score;
+    countUp('chorus');
+    const prize = A.chorusDay !== day && score >= 8; if (prize) { A.chorusDay = day; save.berries = (save.berries || 0) + 4; }
+    persist(); if (best || prize) reward(2); w.questMarks?.();
+    w.say([`${score >= 8 ? 'The moon itself is humming along!' : score ? 'Quick songs are hard songs.' : 'The stones go quiet...'} ${score} notes.${best ? ' A new Moonlight best! 🏆' : ''}`, ...(prize ? [`${who}: By moonlight, too! 4 🍓 from the singers' basket. (One prize a day.)`] : A.chorusDay !== day ? [`${who}: Eight notes by moonlight fills the singers' basket. (One prize a day.)`] : [])], null, who);
+  }, true);
+  S.game.modalClose = () => el.__arcade.close();
 }
 
 // R838: Caravan Master Hakim, once his road is open (the caravan chain), lets the hero lead the Humpdrops in CARAVAN RUN: a daily berry

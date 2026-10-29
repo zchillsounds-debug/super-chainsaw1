@@ -996,10 +996,10 @@ export function waterworks(root, face, onDone) {
 // R892: DUNE CHORUS (Dune Singer Amani, the Singing Dunes, after her battle): four singing stones on a moonlit dune. The stones sing a
 // song, one note longer each time; sing it back by tapping them in the same order. One wrong note (or a long pause) ends the night.
 // The score is the longest song sung back.
-export function duneChorus(root, face, onDone) {
+export function duneChorus(root, face, onDone, moon = false) { // (R902: moon = the Moonlight chorus: the stones sing faster)
   const el = document.createElement('div');
   el.className = 'modal-wrap arcade-wrap';
-  el.innerHTML = `<div class="arcade chorus"><div class="arc-top"><b>DUNE CHORUS</b><span class="arc-hud"></span></div>
+  el.innerHTML = `<div class="arcade chorus"><div class="arc-top"><b>${moon ? 'MOONLIGHT CHORUS' : 'DUNE CHORUS'}</b><span class="arc-hud"></span></div>
     <canvas width="${W}" height="${H}"></canvas>
     <p class="arc-tip">Listen to the stones, then tap them in the same order. Each song is one note longer!</p></div>`;
   root.appendChild(el);
@@ -1014,7 +1014,7 @@ export function duneChorus(root, face, onDone) {
   const stars = Array.from({ length: 46 }, (_, i) => [(i * 73.7) % W, (i * 41.3) % 96, 0.6 + (i % 3) * 0.5, i * 1.7]);
   const pop = (x, y, txt, col) => S.pops.push({ x, y, txt, col, t: 1.1 });
   const sing = (i, len) => { S.lit[i] = len; sfx.chorus?.(i); };
-  const gap = () => Math.max(0.28, 0.62 - S.seq.length * 0.03); // the song speeds up as it grows
+  const gap = () => Math.max(moon ? 0.22 : 0.28, (0.62 - S.seq.length * 0.03) * (moon ? 0.72 : 1)); // the song speeds up as it grows
   function next() { S.seq.push(Math.floor(Math.random() * 4)); S.at = 0; S.mode = 'play'; S.wait = 0.55; }
   function tap(i) {
     if (S.over || i < 0 || i > 3) return;

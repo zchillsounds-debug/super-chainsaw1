@@ -1602,7 +1602,7 @@ export class Screens {
         + (A.cnt?.rail ? bar('🚂', 'Sand-Rail rides', A.cnt.rail) : '')
         + (A.sledHi ? bar('🛷', 'DUNE SLED best', A.sledHi) : '')
         + (A.caravanHi ? bar('🐪', 'CARAVAN RUN best', A.caravanHi) : '')
-        + (A.chorusHi ? bar('🎵', 'DUNE CHORUS best', A.chorusHi + ' notes') : '') // R892
+        + (A.chorusHi ? bar('🎵', 'DUNE CHORUS best', A.chorusHi + ' notes' + (A.moonChorusHi ? ` · 🌙 ${A.moonChorusHi}` : '')) : '') // R892 (R902: the Moonlight best)
         + (A.dconsts?.length ? bar('🌌', 'Desert constellations', `${A.dconsts.length} / 4`) : '') // R901: no goal
         + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') + (A.pipeHi ? bar('💧', 'WATERWORKS best', A.pipeHi) : '') + (A.runBest ? bar('🏃', 'TUNNEL RUN best', (A.runBest / 10).toFixed(1) + ' s') : '') /* R875 */ + (A.melonBest ? bar('🍉', 'MELON WATCH best', A.melonBest + ' shooed') : '') /* R884 */ + (A.scopeN ? bar('🔭', 'Dust clouds spotted', A.scopeN) : '') /* R886 */ + (A.saltStat?.length ? bar('🗿', 'Salt statues', `${Math.min(8, A.saltStat.length)} / 8${A.roseStat?.length ? ` · 🌸 ${A.roseStat.length} / 4` : ''}`) : '') /* R887 (R893: rose salt) */ // R865, R854, R838: no goal
         + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '')
