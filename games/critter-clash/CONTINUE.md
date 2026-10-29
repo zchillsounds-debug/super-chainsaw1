@@ -20,6 +20,9 @@ The full, detailed handoff lives in the repo at `games/critter-clash/HANDOFF.md`
 - Session 16e (R255–R279) added: grass sway, new palms, chimney smoke, rain (world and fights), room furniture, the Berry Center smoothie blender, smooth water corners, trainer role hats, a natural meadow for wild fights, footprints, a night Town Map, doorway light, beach decor, falling leaves and petals, toadstool spores, and Pecan weather news.
 - Final checks for the session passed: tapcheck was clean at 740×360 and 412×915, the Sprout Cup played from the world and landed back there, and the wild-fight wins ran without errors.
 
+## Latest (2026-10-29, session D21 = completion run, session 2 of 5): R906–R909
+- Story playthroughs: all three chapters played beat by beat (`tools/beats.mjs`), cups in each region, the three credit rolls, every goal line through Chapter 3, the Desert Trial and the four legends: no errors. Fixes: Prof. Pecan talks about the Amber Sands and the three-region 100%, no pop-ups over the credits, a Redrock goal line; Pecan news adv48. Next round **R910**; next is **session 3 of 5** (balance). Details in HANDOFF.md "Session D21".
+
 ## Latest (2026-10-29, session D20 = completion run, session 1 of 5): R903–R905
 - The user's final run: **5 sessions for a complete game, with the APK and the source zip sent at the end** (ROADMAP.md top section). Done: Sirocco's glyph rubbings at the Sun Gate (the Sun-Glyph Band), Camp Elder Zahra's fireside shadow-puppet tales at the Dune Camp (the Storyteller's Turban), Journal rows, route checks of all three chapters (all good). Next round **R906**; next is **session 2 of 5** (story playthroughs and bug fixes). Details in HANDOFF.md "Session D20".
 

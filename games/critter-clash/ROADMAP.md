@@ -14,6 +14,7 @@
 5. **Session 5 (last):** a full regression pass (all of the above, fixes only), final version, final APK and source zip sent to the user; no chaining.
 
 ## Status
+- **Session 2 (D21, R906–R909): done.** Story playthroughs of all three chapters with the new `tools/beats.mjs` (every beat moves on; losses hold), advcup on the Coral and Mirage Cups, advcredits isles / sands / grand, goals.mjs through Chapter 3, the Desert Trial and all four legends: no errors. Fixed: Prof. Pecan's lab talk now covers the Amber Sands and the three-region 100%, no toasts over the credits, a stale Redrock goal line, a ❗ on Elder Sabah for the Desert Trial; Pecan news adv48. Next: session 3 (balance). Details: HANDOFF.md "Session D21".
 - **Session 1 (D20, R903–R905): done.** Sirocco's glyph rubbings, Zahra's fireside tales, Journal rows; mainwalk / ch2walk / ch3walk all good; start and end checks clean. Next: session 2 (story playthroughs). Details: HANDOFF.md "Session D20".
 
 # Critter Clash roadmap: Chapter 3 (the Amber Sands) and battle depth (agreed with the user on 2026-10-27)

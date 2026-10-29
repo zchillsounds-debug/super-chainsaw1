@@ -1,4 +1,5 @@
 // node tools/advcup.mjs [WxH] [map x y flags]: enter a stadium (default: Bloom Town's Sprout Stadium) from the Adventure world, win the cup, and check you land back in the world
+// (forced wins step the sim 0.1 s at a time, R907: an under-levelled hero can be one-shot by a big super inside 0.5 s)
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
 const { chromium } = require('playwright');
@@ -33,7 +34,7 @@ for (let step = 0; step < 60; step++) {
   if (mode === 'world') break;
   if (mode === 'ladder') { await click(/Battle!/); continue; }
   if (mode === 'vs' || mode === 'null') {
-    const r = await pg.evaluate(() => { const bt = __game.battle; if (!bt) return; const p = bt.fighters[0]; for (let i = 0; i < 400 && bt.phase !== 'done'; i++) { p.hp = p.maxHp; if (bt.phase === 'fight') bt.fighters[1].hp = 1; __sim(0.1); } // (0.1 s steps: an under-levelled hero can be one-shot by a big super inside 0.5 s) __sim(2); return `${bt.fighters[1].def.name}: wins ${bt.wins} phase ${bt.phase}`; });
+    const r = await pg.evaluate(() => { const bt = __game.battle; if (!bt) return; const p = bt.fighters[0]; for (let i = 0; i < 400 && bt.phase !== 'done'; i++) { p.hp = p.maxHp; if (bt.phase === 'fight') bt.fighters[1].hp = 1; __sim(0.1); } __sim(2); return `${bt.fighters[1].def.name}: wins ${bt.wins} phase ${bt.phase}`; });
     if (r && process.env.DBG) console.log('  battle:', r);
     continue;
   }
