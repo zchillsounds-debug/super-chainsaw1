@@ -1163,11 +1163,13 @@ export const MAPS = {
       'RRRRRRRRRRRRRRRRRRRRRRRRRRRR',
     ],
     edges: { n: { to: 'duneroad', off: 3 } },
+    statues: { who: 'yara_f', spots: [[10, 11], [16, 11], [8, 10], [18, 10], [6, 11], [20, 11], [4, 10], [22, 10]] }, // R887: Salt Carver Yara's statue garden (one statue per critter, one a day)
     mirageTown: [[4, 4], [8, 3], [20, 3], [24, 4], [11, 2]], mirageStall: [14, 3], // where the shimmering town stands in the mirage hours (not solid: walk up and it melts)
     cacti: [[3, 11], [24, 6]],
     signs: [{ x: 13, y: 2, text: 'THE GLASS FLATS\nA dry salt lake. Bring water. Bring a hat. Do not try to visit the town.' }],
     wild: { list: [['siroccat', 37, 40], ['fennzap', 37, 40], ['scarabold', 37, 40], ['humpdrop', 38, 41]], roam: 4, rate: 0.1 },
     npcs: [
+      { id: 'yara_f', x: 13, y: 9, critter: 'humpdrop', name: 'Salt Carver Yara', dir: 's', lines: [] }, // R887: carves the lead critter in salt (statueAsk)
       { id: 'miner_f', x: 7, y: 9, critter: 'scarabold', name: 'Salt Miner Hamid', dir: 'e', act: 'flex', lines: ['Salt Miner Hamid: Salt! The whole lake is salt. I cut it in blocks and the caravans carry it to the oasis.', 'Salt Miner Hamid: After noon the air gets wobbly and a town shows up over there. Every day! Nobody lives in it. Nobody can reach it.', "Salt Miner Hamid: Well. Somebody sells hats in it. Don't ask me how."] },
       { id: 'kid_f', x: 20, y: 7, critter: 'fennzap', name: 'Mirage Watcher Sami', dir: 'w', wander: 1, lines: ['Mirage Watcher Sami: I come here every day at noon to watch the town appear. It\'s got towers! And a blue gate!', 'Mirage Watcher Sami: You can\'t walk into it. When you get close it just... melts. Like ice cream.', 'Mirage Watcher Sami: Grandpa says it\'s the buried city, remembering itself. I think it\'s just hot.'] },
       { id: 'merchant_f', x: 14, y: 3, critter: 'siroccat', name: 'Mirage Merchant', dir: 's', mirage: true, shiny: true, story: 'miragemerchant' }, // only there in the mirage hours

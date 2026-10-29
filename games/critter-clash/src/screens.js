@@ -47,7 +47,7 @@ const SAND_LAND = '<path class="wm-land wm-sand" d="M30 230 Q22 150 60 110 Q100 
 const SAND_DECOR = [['🌴', 92, 186], ['🏜️', 300, 140], ['🌵', 210, 210], ['🏛️', 330, 92], ['🚂', 40, 120]];
 const ISLE_DECOR = [['🌴', 60, 172], ['🐚', 128, 200], ['🌴', 196, 140], ['🪁', 250, 70], ['🌋', 352, 178], ['🗼', 366, 44], ['⛴️', 34, 226]];
 const LEGEND_IDS = () => ['solmoth', 'moonwhal', 'verdelk', ...(save.adv?.flags?.sands_arrive ? ['aurelark'] : [])]; // the Champ page's legends (the Sun-Bird once you reach the sands)
-const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles', 'mirageturban', 'minerhelm', 'lanternhat', 'guildfez', 'dewcirclet', 'lampcap', 'siroccohat', 'caravanturban', 'glowcaphat', 'sunspout', 'tollband', 'runnerband', 'coincrown', 'melonhelm', 'scopecap', 'wheelcap', 'pipegoggles', 'glowlantern']; // the desert's found hats (the Sand Hats stall's four are `sands`)
+const SANDS_GIFT_HATS = ['suncrown', 'sunseeker', 'fossilhat', 'mesaband', 'palmangler', 'mirrorcirclet', 'sledgoggles', 'mirageturban', 'minerhelm', 'lanternhat', 'guildfez', 'dewcirclet', 'lampcap', 'siroccohat', 'caravanturban', 'glowcaphat', 'sunspout', 'tollband', 'runnerband', 'coincrown', 'melonhelm', 'scopecap', 'saltcrown', 'wheelcap', 'pipegoggles', 'glowlantern']; // the desert's found hats (the Sand Hats stall's four are `sands`)
 
 const PROF_SVG = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="20" ry="18" fill="#c98a4a" stroke="#2a1630" stroke-width="3"/><path d="M12 30c0-12 9-20 20-20s20 8 20 20z" fill="#7a4a2a" stroke="#2a1630" stroke-width="3"/><path d="M32 4v8" stroke="#2a1630" stroke-width="4" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#2a1630"/><circle cx="39" cy="40" r="3" fill="#2a1630"/><path d="M27 48q5 4 10 0" stroke="#2a1630" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/><circle cx="39" cy="40" r="7" fill="none" stroke="#2a1630" stroke-width="2"/></svg>';
 
@@ -1403,6 +1403,7 @@ export class Screens {
         ['🏃', 'TUNNEL RUN prize', 'Tunnel Runner Tess, the Old Aqueduct', A.runDay === day, !!(F.tess_a && F.aqueduct_flow)], // R876
         ['🍉', 'MELON WATCH prize (after dark)', 'Mesa Gardener Lina, Redrock Mesa', A.melonDay === day, !!seen.mesa], // R884
         ['🔭', 'Spot the dust cloud', 'Lookout Omar\'s spyglass, Redrock Mesa', A.scopeDay === day, !!seen.mesa], // R886
+        ((A.saltStat || []).length < 8) && ['🗿', 'Pose for a salt statue', 'Salt Carver Yara, the Glass Flats (a new critter each day)', A.saltDay === day, !!seen.flats], // R887
         ['📜', `Caravan Guild bounties (${A.bounty?.day === day ? A.bounty.paid.length : 0}/3)`, `the board in ${N('oasis')}`, A.bounty?.day === day && A.bounty.paid.length >= 3, !!F.sands_arrive], // R828
         ['🤿', 'REEF DIVE prize', 'the Sunken Wreck (Snorkeller Pia, Port Coral)', A.diveDay === day, F.dived],
         ['🐦', `Gull Club catch: ${gullFish(day)}`, 'any island water → Petrel, Starfall Atoll', A.gullPaid === day, F.amends3_done && F.rod],
@@ -1587,7 +1588,7 @@ export class Screens {
         + (A.cnt?.rail ? bar('🚂', 'Sand-Rail rides', A.cnt.rail) : '')
         + (A.sledHi ? bar('🛷', 'DUNE SLED best', A.sledHi) : '')
         + (A.caravanHi ? bar('🐪', 'CARAVAN RUN best', A.caravanHi) : '')
-        + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') + (A.pipeHi ? bar('💧', 'WATERWORKS best', A.pipeHi) : '') + (A.runBest ? bar('🏃', 'TUNNEL RUN best', (A.runBest / 10).toFixed(1) + ' s') : '') /* R875 */ + (A.melonBest ? bar('🍉', 'MELON WATCH best', A.melonBest + ' shooed') : '') /* R884 */ + (A.scopeN ? bar('🔭', 'Dust clouds spotted', A.scopeN) : '') /* R886 */ // R865, R854, R838: no goal
+        + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') + (A.pipeHi ? bar('💧', 'WATERWORKS best', A.pipeHi) : '') + (A.runBest ? bar('🏃', 'TUNNEL RUN best', (A.runBest / 10).toFixed(1) + ' s') : '') /* R875 */ + (A.melonBest ? bar('🍉', 'MELON WATCH best', A.melonBest + ' shooed') : '') /* R884 */ + (A.scopeN ? bar('🔭', 'Dust clouds spotted', A.scopeN) : '') /* R886 */ + (A.saltStat?.length ? bar('🗿', 'Salt statues', `${Math.min(8, A.saltStat.length)} / 8`) : '') /* R887 */ // R865, R854, R838: no goal
         + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '')
         + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '')
         + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal

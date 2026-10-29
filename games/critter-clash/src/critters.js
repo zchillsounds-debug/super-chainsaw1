@@ -1554,6 +1554,7 @@ export const SHOP_HATS = [
   { id: 'dewcirclet', name: 'Dewdrop Circlet', kind: 'circlet', col: 0xcfe8f4, band: 0x3ac8e8, price: 0, gift: true, extra: true }, // R829: the Sunwell Spring's chest
   { id: 'guildfez', name: 'Caravan Guild Fez', kind: 'fez', col: 0xa8243a, band: 0xffc23a, price: 0, gift: true, extra: true }, // R828: five full days of the Caravan Guild's bounty board
   { id: 'runnerband', name: "Runner's Headband", kind: 'band', col: 0x2ab8d0, band: 0xffd040, price: 0, gift: true, extra: true }, // R875: TUNNEL RUN under 6.6 s (Tunnel Runner Tess, the Old Aqueduct)
+  { id: 'saltcrown', name: 'Salt Crystal Crown', kind: 'crown', col: 0xf4f4f0, band: 0x9ad8ff, price: 0, gift: true, extra: true }, // R887: fill Salt Carver Yara's eight plinths (the Glass Flats)
   { id: 'scopecap', name: "Lookout's Spyglass Cap", kind: 'scopecap', col: 0xd8a860, band: 0xe8b04a, price: 0, gift: true, extra: true }, // R885: five right sightings through Lookout Omar's spyglass (Redrock Mesa)
   { id: 'melonhelm', name: 'Melon Rind Helmet', kind: 'melon', col: 0x3aa040, band: 0xff5a6a, price: 0, gift: true, extra: true }, // R883: shoo 16 Fennzaps in MELON WATCH (Mesa Gardener Lina, Redrock Mesa)
   { id: 'coincrown', name: 'Sun-Coin Crown', kind: 'coincrown', col: 0xd89a3a, band: 0x2ab8a0, price: 0, gift: true, extra: true }, // R881: fill the Sunwell Museum's Sun City coin case (12 coins from the aqueduct silt; Curator Petra)
