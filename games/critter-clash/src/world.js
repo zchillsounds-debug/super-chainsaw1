@@ -2775,7 +2775,7 @@ export class World {
       bakeStatic({ root: g, mats: {} });
     });
     // R893: the rose-salt statues (critters carved in their shiny colours, once the white garden is full): pink salt on taller plinths
-    const rose = toon(0xf6b8c8, { rim: 0.9, emissive: 0x3a1a22 }), rp = toon(0xe8c8cc), re = toon(0xd890a8);
+    const rose = toon(0xf6b8c8, { rim: 0.9, emissive: this.phase === 'evening' ? 0x8a3a50 : 0x3a1a22 }), /* they glow at sunset, as Yara says */ rp = toon(0xe8c8cc), re = toon(0xd890a8);
     (save.adv.roseStat || []).slice(0, (S.rose || []).length).forEach((id, i) => {
       const def = byId(id); if (!def) return;
       const [x, y] = S.rose[i], [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g); this.solid.add(x + ',' + y);
