@@ -1,6 +1,7 @@
 # Critter Clash: Handoff
 
-- **8-session run: this line says which session comes next: session 8 of 8 (N = 8).** Session 7 (D19, 2026-10-29 03:00 → ~04:40 UTC, session_01JqoFyKU3oGpskWbovKCPti, R891–R902) sent the APK built from its handoff commit and chained to the next session with the prompt word for word (see "Session D19"). Session 6 = D18 (session_01JqoFyHH1jJETTEagCU7M1K, R881–R890); Session 5 = D17 (session_01JqoFyJvbi2cDU7MjzEvd91, R873–R880); Session 4 = D16 (session_01JqoFyLmUq7tdcu84breUcx, R864–R872); Session 3 = D15 (session_01JqoFyKT3Hb1U8QL9Z4zRVy, R856–R863); session 2 = D14 (session_01JqoFyHpXJafQZEiCM2kEML, R844–R855); session 1 = D13 (session_01JqoFyLaG9FqKGcc8ZHWq69, R832–R843). The user started this 8-session chained run on 2026-10-28; its prompt is kept word for word in "Chaining" → "8-session run". Each session bumps N here before it chains; **session 8 sends the final APK and stops (no chaining)** with a short summary. The old 48-hour end time below no longer applies.
+- **5-session completion run (the user's final run, 2026-10-29): this line says which session comes next: session 2 of 5 (N = 2).** Session 1 = D20 (2026-10-29 04:17 UTC →, session_01JqoFyHTHraW1uVz89BaAvo, R903+). Mid-session the user asked for "this last 5 sessions for a complete game with the source files and apk to download at the end", so D20 (the old run's session 8 of 8) became session 1 of 5 of this run. Plan: ROADMAP.md top section. Its prompt is kept word for word in "Chaining" → "5-session completion run". Each session bumps N here before it chains; **session 5 sends the final APK and the source zip and stops.**
+- **8-session run (ended: session 8 = D20 turned into session 1 of the 5-session completion run above):** Session 7 (D19, 2026-10-29 03:00 → ~04:40 UTC, session_01JqoFyKU3oGpskWbovKCPti, R891–R902) sent the APK built from its handoff commit and chained to the next session with the prompt word for word (see "Session D19"). Session 6 = D18 (session_01JqoFyHH1jJETTEagCU7M1K, R881–R890); Session 5 = D17 (session_01JqoFyJvbi2cDU7MjzEvd91, R873–R880); Session 4 = D16 (session_01JqoFyLmUq7tdcu84breUcx, R864–R872); Session 3 = D15 (session_01JqoFyKT3Hb1U8QL9Z4zRVy, R856–R863); session 2 = D14 (session_01JqoFyHpXJafQZEiCM2kEML, R844–R855); session 1 = D13 (session_01JqoFyLaG9FqKGcc8ZHWq69, R832–R843). The user started this 8-session chained run on 2026-10-28; its prompt is kept word for word in "Chaining" → "8-session run". Each session bumps N here before it chains; **session 8 sends the final APK and stops (no chaining)** with a short summary. The old 48-hour end time below no longer applies.
 
 ## NEW (2026-10-27): Chapter 3 + battle depth, a 48-hour run
 - **Read `ROADMAP.md` first** (top section: B1 battle quick wins → B2 passive traits → D1 six desert critters → D2 the Amber Sands region and story → D3 side content → D4 post-game).
@@ -1692,6 +1693,22 @@ L6. Meadow drift seeds read as dandelion fluff, not snowballs, on menu cameras (
 - Keep doing critique passes on phone sizes (915×412, 412×915, 740×360).
 
 ## Chaining (do this at the end of each session)
+
+### 5-session completion run (the prompt, word for word; current)
+    Continue Critter Clash (games/critter-clash) on branch ccr-4fc93d6e-suxlhd, as session N of the 5-session completion run (my final run: a complete game, with the source files and the APK to download at the end).
+    
+    First command: git fetch origin ccr-4fc93d6e-suxlhd && git log --oneline HEAD..origin/ccr-4fc93d6e-suxlhd. If it lists anything, run git reset --hard origin/ccr-4fc93d6e-suxlhd. Then read ROADMAP.md (top section "Completion run (final, 5 sessions)" and its Status), CONTINUE.md, and HANDOFF.md from the top, newest session first. The "5-session completion run" line at the top of HANDOFF.md gives this session's number N. Post a one-line status to me when you start.
+    
+    Work: about 100 minutes, or less if context nears 300k. Follow ROADMAP.md's completion plan for session N: about 80% completion work (playthroughs, bug fixes, balance, gaps, release polish) and 20% small content only where a gap shows. All designs stay original. Battle changes are measured with robin, battleperf and before/after shots. Each round: screenshots at 915x412, 740x360 and 412x915 (360x640 for menus), critique, improve. Round numbers continue from the highest R-number in git log.
+    
+    Checks: build with the scripts described in HANDOFF.md "Session C1". At the start and the end of each session, run tapcheck at 740x360 and 412x915 plus an advcup Sprout run against a production build.
+    
+    Git: commit and push each round. Before every push, run git fetch origin ccr-4fc93d6e-suxlhd && git merge --no-edit origin/ccr-4fc93d6e-suxlhd. Never rebase or force-push.
+    
+    End of session: update ROADMAP.md status, HANDOFF.md (rounds done, next steps, N+1) and CONTINUE.md, then commit and push. Fetch the APK built from your last commit (branch apk-critter-clash) and send it to me. If N < 5, call create_session with source_url https://github.com/zchillsounds-debug/super-chainsaw1, source_revision and outcome_branch ccr-4fc93d6e-suxlhd, and this same prompt word for word, then tell me in one line that it started. If create_session fails, don't loop: note it in HANDOFF.md, push, and tell me to start the next session by hand with this prompt. If N = 5: make a zip of the complete source (games/critter-clash without node_modules, dist, android or tools/out, plus .github/workflows/critter-apk.yml), send it to me with the final APK, and stop with a short summary of the finished game.
+    
+    I approve continuous building, so don't stop to ask me questions.
+
 1. Update this HANDOFF.md: rounds done, backlog, next steps, and the time used so far.
 2. Commit and push to `ccr-4fc93d6e-suxlhd` (merge `origin/ccr-4fc93d6e-suxlhd` first; never rebase or force-push).
 3. Fetch the APK built from your last commit and send it to the user (see "APK").

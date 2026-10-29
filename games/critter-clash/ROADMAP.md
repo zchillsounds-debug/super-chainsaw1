@@ -1,3 +1,21 @@
+# Completion run (final, 5 sessions): a complete game, source + APK at the end (agreed with the user on 2026-10-29)
+
+## What the user decided (2026-10-29, during session D20)
+- "I need to run this last 5 sessions for a complete game with the source files and apk to download at the end, please make sure the game is complete and send over at the end of these 5 sessions."
+- Session D20 (the old run's "session 8 of 8") became **session 1 of 5** of this run. The old 8-session run's "stop at 8" no longer applies.
+- **Focus:** finishing, not growing: about 80% completion work (playthroughs, bug fixes, balance, gaps, release polish) and 20% small content only where a gap shows. Designs stay original. Battle changes measured (robin, battleperf, before/after shots).
+- **Session 5 sends the final APK and a zip of the complete source** (games/critter-clash without node_modules, dist, android, tools/out; plus .github/workflows/critter-apk.yml), then stops with a short summary.
+
+## Plan (each session picks up its line; carry over anything left)
+1. **Session 1 (D20):** R903–R904 content (Sirocco's glyph rubbings, Zahra's fireside tales); route checks of all three chapters (mainwalk, ch2walk, ch3walk) and fixes; this plan.
+2. **Session 2:** story playthroughs: advstory through the key beats of each chapter, advcup on one cup per region (Sprout, an isle cup, a desert cup), advcredits isles / sands / grand; fix every bug found. Today/Records/How to Play/Pecan news for R903–R904.
+3. **Session 3:** balance: a full robin with traits, split into focused robins (`LV=14 node tools/robin.mjs 1 a,b,...`) so each fits; every critter in 40–65%; fix outliers and re-measure; battleperf on every arena (no regressions).
+4. **Session 4:** release polish: tapcheck at 740×360 / 915×412 / 360×640 / 412×915, uisteps/uishots (every menu, modal and Journal tab), photos.mjs, the save backup/restore, the title screen and credits, version bump; fix all findings.
+5. **Session 5 (last):** a full regression pass (all of the above, fixes only), final version, final APK and source zip sent to the user; no chaining.
+
+## Status
+- **Session 1 (D20, R903–R904):** see HANDOFF.md "Session D20".
+
 # Critter Clash roadmap: Chapter 3 (the Amber Sands) and battle depth (agreed with the user on 2026-10-27)
 
 ## What the user decided
