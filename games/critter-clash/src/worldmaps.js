@@ -1026,6 +1026,7 @@ export const MAPS = {
     ],
     edges: { e: { to: 'singing', off: 0, need: 'sunbird1', needSay: 'Stargazer Nuri: East of here is nothing but dunes. Empty, quiet dunes. ...Mostly quiet.' }, w: { to: 'redrock', off: 0 }, s: { to: 'sungate', off: -12, need: 'citymap', needSay: 'Dune Kid Rami: That way is just the big dune. Nobody goes over the big dune. Except the Dust Devils, at night, with shovels.' } },
     cacti: [[8, 4], [20, 7], [30, 8], [13, 11]],
+    tales: { who: 'elder_c', fire: [5, 4] }, /* R904: Camp Elder Zahra's fireside tales after dark (a campfire by her) */
     buildings: [
       { id: 'stadium_s', x: 12, y: 1, w: 8, h: 4, stadium: 'sandstorm', door: 4, label: 'Sandstorm Dome' },
       { id: 'tent_w', x: 23, y: 1, w: 4, h: 3, tent: true, stripes: ['#f4e4c4', '#1fa8b0'], door: 1, label: "Weaver's Tent" },
@@ -1217,6 +1218,7 @@ export const MAPS = {
     gate: [11, 5], // the Sun Gate (5x2, world.js buildRuins)
     pillars: [[7, 9, 0], [19, 11, 0] /* R856: was (18,9), right in front of Sirocco and Grit */, [9, 12, 1], [22, 10, 0], [24, 15, 1], [6, 11, 1], [16, 15, 0], [20, 4, 1], [8, 2, 0], [21, 2, 1], [5, 4, 1]],
     digs: [[10, 8], [16, 8], [20, 10], [11, 15], [25, 8], [14, 2]],
+    glyphs: { who: 'baron_g2', need: 'gate_open', spots: [[7, 9, 'sunbird'], [19, 11, 'eye'], [22, 10, 'water'], [16, 15, 'caravan'], [8, 2, 'gate'], [21, 2, 'heart']] }, /* R903: the standing pillars' carvings: Sirocco's rubbings */
     signs: [{ x: 4, y: 8, text: 'DUST DEVIL DIG No. 12\nKEEP OUT. Treasure is ours. Gate is ours. Sun is ours.' }],
     wild: { list: [['siroccat', 38, 41], ['scarabold', 38, 41], ['cactortle', 38, 41], ['sizzlard', 39, 41]], roam: 4, rate: 0.1 },
     npcs: [

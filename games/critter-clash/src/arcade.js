@@ -1104,3 +1104,205 @@ export function duneChorus(root, face, onDone, moon = false) { // (R902: moon = 
   el.__arcade = { S, tap, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) step(1 / 60); draw(); }, close };
   return el;
 }
+
+// R903: a glyph rubbing at the Sun Gate: a sheet of paper on a carved pillar; rub charcoal over it (drag, or tap/A for a stroke at a time)
+// and the carving shows through pale where the stone dips in. Done when most of the sheet is rubbed. Glyph ids: GLYPHS below
+export const GLYPHS = {
+  sunbird: { name: 'the Sun-Bird', word: 'The Sun-Bird' },
+  eye: { name: 'the Open Eye', word: 'keeps watch' },
+  water: { name: 'the Three Waters', word: 'over the water' },
+  caravan: { name: 'the Long Walker', word: 'of all who travel.' },
+  gate: { name: 'the Round Gate', word: 'The gate opens' },
+  heart: { name: 'the Warm Heart', word: 'to a kind heart.' },
+};
+export function drawGlyph(c, id, x, y, s, col, lw = 0.16) { // one Sun Gate glyph, about 2s across, in strokes of width lw*s
+  c.save(); c.translate(x, y); c.scale(s, s); c.strokeStyle = col; c.fillStyle = col; c.lineWidth = lw; c.lineCap = 'round'; c.lineJoin = 'round';
+  const L = (pts) => { c.beginPath(); pts.forEach(([px, py], i) => (i ? c.lineTo(px, py) : c.moveTo(px, py))); c.stroke(); };
+  if (id === 'sunbird') { // a sun disc held up between two raised wings, a little tail below
+    c.beginPath(); c.arc(0, -0.35, 0.3, 0, 7); c.stroke();
+    L([[-0.08, 0.05], [-0.45, -0.1], [-0.85, -0.55], [-0.62, 0.05], [-0.25, 0.3]]); L([[0.08, 0.05], [0.45, -0.1], [0.85, -0.55], [0.62, 0.05], [0.25, 0.3]]);
+    L([[0, 0], [0, 0.55]]); L([[-0.22, 0.85], [0, 0.55], [0.22, 0.85]]);
+  } else if (id === 'eye') { // an open eye under a brow of rays
+    c.beginPath(); c.moveTo(-0.85, 0.15); c.quadraticCurveTo(0, -0.55, 0.85, 0.15); c.quadraticCurveTo(0, 0.75, -0.85, 0.15); c.stroke();
+    c.beginPath(); c.arc(0, 0.15, 0.2, 0, 7); c.fill();
+    for (const a of [-0.9, -0.45, 0, 0.45, 0.9]) L([[Math.sin(a) * 0.62, -0.4 - Math.cos(a) * 0.1], [Math.sin(a) * 0.8, -0.62 - Math.cos(a) * 0.2]]);
+  } else if (id === 'water') { // three waves over a well mouth
+    for (let k = 0; k < 3; k++) { c.beginPath(); const y0 = -0.6 + k * 0.38; c.moveTo(-0.8, y0); for (let i = 1; i <= 4; i++) c.quadraticCurveTo(-0.8 + (i - 0.5) * 0.4, y0 + (i % 2 ? -0.18 : 0.18), -0.8 + i * 0.4, y0); c.stroke(); }
+    L([[-0.55, 0.85], [-0.55, 0.5], [0.55, 0.5], [0.55, 0.85]]);
+  } else if (id === 'caravan') { // a long-legged walker with a hump and a pack, footprints behind
+    c.beginPath(); c.moveTo(-0.7, -0.05); c.quadraticCurveTo(-0.35, -0.6, 0.05, -0.15); c.quadraticCurveTo(0.25, -0.05, 0.4, -0.35); c.lineTo(0.55, -0.7); c.lineTo(0.78, -0.62); c.stroke();
+    L([[-0.7, -0.05], [0.4, -0.05]]); L([[-0.55, -0.05], [-0.6, 0.5]]); L([[-0.25, -0.05], [-0.2, 0.5]]); L([[0.15, -0.05], [0.12, 0.5]]); L([[0.38, -0.08], [0.45, 0.5]]);
+    for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(-0.75 + k * 0.32, 0.8 - (k % 2) * 0.08, 0.06, 0, 7); c.fill(); }
+  } else if (id === 'gate') { // a round gate in a wall, a sun over it
+    c.beginPath(); c.moveTo(-0.45, 0.8); c.lineTo(-0.45, 0.15); c.arc(0, 0.15, 0.45, Math.PI, 0); c.lineTo(0.45, 0.8); c.stroke();
+    L([[-0.9, 0.8], [0.9, 0.8]]); L([[-0.9, 0.8], [-0.9, -0.05], [-0.62, -0.05]]); L([[0.9, 0.8], [0.9, -0.05], [0.62, -0.05]]);
+    c.beginPath(); c.arc(0, -0.62, 0.16, 0, 7); c.fill(); for (let k = 0; k < 6; k++) { const a = k / 6 * 6.283; L([[Math.cos(a) * 0.25, -0.62 + Math.sin(a) * 0.25], [Math.cos(a) * 0.36, -0.62 + Math.sin(a) * 0.36]]); }
+  } else { // heart: two open hands cupping a small flame
+    c.beginPath(); c.moveTo(-0.8, -0.1); c.quadraticCurveTo(-0.75, 0.6, 0, 0.7); c.quadraticCurveTo(0.75, 0.6, 0.8, -0.1); c.stroke();
+    L([[-0.8, -0.1], [-0.6, -0.25]]); L([[0.8, -0.1], [0.6, -0.25]]);
+    c.beginPath(); c.moveTo(0, -0.75); c.quadraticCurveTo(0.32, -0.3, 0.18, 0.05); c.quadraticCurveTo(0, 0.25, -0.18, 0.05); c.quadraticCurveTo(-0.32, -0.3, 0, -0.75); c.stroke();
+  }
+  c.restore();
+}
+export function glyphRub(root, id, onDone) {
+  const el = document.createElement('div');
+  el.className = 'modal-wrap arcade-wrap';
+  el.innerHTML = `<div class="arcade rubbing"><div class="arc-top"><b>GLYPH RUBBING</b><span class="arc-hud"></span></div>
+    <canvas width="${W}" height="${H}"></canvas>
+    <p class="arc-tip">Rub the charcoal over the paper: drag across it (or tap / press A a stroke at a time) until the carving shows.</p></div>`;
+  root.appendChild(el);
+  const cv = el.querySelector('canvas'), c = cv.getContext('2d'), hud = el.querySelector('.arc-hud');
+  const PX = 70, PY = 26, PW = 180, PH = 186, CS = 10, GX = PW / CS, GY = Math.ceil(PH / CS); // the paper sheet and its coverage grid
+  const rub = document.createElement('canvas'); rub.width = W; rub.height = H; const rc = rub.getContext('2d'); // charcoal laid so far
+  const gl = document.createElement('canvas'); gl.width = W; gl.height = H; const gc = gl.getContext('2d'); // the pale glyph, masked by the rub
+  const cells = new Uint8Array(GX * GY);
+  const S = { t: 0, cover: 0, done: false, last: null, k: 0 };
+  let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  function stroke(x, y) { // a smudge of charcoal at (x, y); marks the grid cells it covers
+    if (S.done) return;
+    for (let k = 0; k < 14; k++) { const a = rnd() * 6.283, r = rnd() * 15; rc.fillStyle = `rgba(${34 + rnd() * 20 | 0},${28 + rnd() * 14 | 0},${30 + rnd() * 14 | 0},${0.18 + rnd() * 0.22})`; rc.fillRect(x + Math.cos(a) * r - 2, y + Math.sin(a) * r * 0.7 - 1, 4 + rnd() * 5, 2 + rnd() * 2); }
+    const i0 = Math.floor((x - PX - 15) / CS), i1 = Math.floor((x - PX + 15) / CS), j0 = Math.floor((y - PY - 11) / CS), j1 = Math.floor((y - PY + 11) / CS);
+    for (let j = Math.max(0, j0); j <= Math.min(GY - 1, j1); j++) for (let i = Math.max(0, i0); i <= Math.min(GX - 1, i1); i++) cells[j * GX + i] = 1;
+    S.cover = cells.reduce((v, q) => v + q, 0) / cells.length;
+    if (S.cover >= 0.86) { S.done = true; rc.fillStyle = 'rgba(40,32,34,0.5)'; rc.fillRect(PX, PY, PW, PH); sfx.arc?.('gold'); buzz('medium'); setTimeout(close, 1500); } // the last pass evens it out
+  }
+  function drag(x0, y0, x1, y1) { const d = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.ceil(d / 6)); for (let k = 1; k <= n; k++) stroke(x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n); }
+  function tap() { // one back-and-forth stroke across the next band of the paper (keys, A, and the test bots)
+    if (S.done) return; const row = S.k % Math.ceil(PH / 20), y = PY + 10 + row * 20; S.k++;
+    drag(PX + 4, y, PX + PW - 4, y + 4); sfx.ui?.('move'); buzz('light');
+  }
+  const pos = (e) => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; };
+  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); cv.setPointerCapture?.(e.pointerId); const p = pos(e); S.last = p; S.moved = 0; stroke(...p); });
+  cv.addEventListener('pointermove', (e) => { if (!S.last) return; e.preventDefault(); const p = pos(e); S.moved += Math.hypot(p[0] - S.last[0], p[1] - S.last[1]); drag(...S.last, ...p); S.last = p; });
+  const up = () => { if (S.last && S.moved < 4) tap(); S.last = null; }; // a tap without a drag rubs a whole stroke
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', () => { S.last = null; });
+  const onKey = (e) => { if (!['Space', 'Enter', 'KeyA', 'KeyZ', 'KeyX'].includes(e.code)) { if (e.code === 'Escape' && e.type === 'keydown') close(); return; } e.preventDefault(); e.stopPropagation(); if (e.type === 'keydown' && !e.repeat) tap(); };
+  addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
+  const draw = () => {
+    S.t += 1 / 60;
+    // the pillar's sandstone face behind the sheet
+    const st = c.createLinearGradient(0, 0, W, 0); st.addColorStop(0, '#a87a4e'); st.addColorStop(0.5, '#d8aa74'); st.addColorStop(1, '#9a6c44');
+    c.fillStyle = st; c.fillRect(0, 0, W, H);
+    c.fillStyle = 'rgba(90,56,30,0.18)'; for (let k = 0; k < 9; k++) c.fillRect(0, 12 + k * 26, W, 2);
+    c.fillStyle = '#e0b048'; c.fillRect(0, H - 22, W, 10); c.fillStyle = 'rgba(0,0,0,0.15)'; c.fillRect(0, H - 13, W, 2); // the gold band
+    c.fillStyle = 'rgba(40,20,10,0.3)'; c.fillRect(PX + 5, PY + 6, PW, PH); // the sheet's shadow
+    c.fillStyle = '#f4ead2'; c.fillRect(PX, PY, PW, PH); // the paper
+    c.fillStyle = 'rgba(160,130,90,0.12)'; for (let k = 0; k < 40; k++) c.fillRect(PX + (k * 47) % PW, PY + (k * 31) % PH, 2, 2);
+    c.save(); c.beginPath(); c.rect(PX, PY, PW, PH); c.clip(); c.drawImage(rub, 0, 0); c.restore(); // charcoal only takes on the paper
+    gc.clearRect(0, 0, W, H); gc.globalCompositeOperation = 'source-over'; drawGlyph(gc, id, PX + PW / 2, PY + PH / 2, 70, '#f4ead2', 0.17); // where the stone dips in, the paper stays pale
+    gc.globalCompositeOperation = 'destination-in'; gc.drawImage(rub, 0, 0); gc.globalCompositeOperation = 'source-over';
+    c.save(); c.beginPath(); c.rect(PX, PY, PW, PH); c.clip(); c.globalAlpha = 1; c.drawImage(gl, 0, 0); c.drawImage(gl, 0, 0); c.restore();
+    c.fillStyle = '#8a8a8a'; c.fillRect(PX + 8, PY - 6, 22, 10); c.fillRect(PX + PW - 30, PY - 6, 22, 10); // two strips of tape
+    if (S.done) { c.fillStyle = 'rgba(255,240,190,' + (0.25 + 0.2 * Math.sin(S.t * 6)) + ')'; c.fillRect(PX, PY, PW, PH); c.textAlign = 'center'; c.font = 'bold 18px sans-serif'; c.strokeStyle = '#3a2410'; c.lineWidth = 4; const t = GLYPHS[id].name.toUpperCase() + '!'; c.strokeText(t, W / 2, H - 30); c.fillStyle = '#ffe8a0'; c.fillText(t, W / 2, H - 30); }
+    else { c.fillStyle = 'rgba(0,0,0,0.3)'; c.fillRect(W / 2 - 60, H - 16, 120, 6); c.fillStyle = '#ffe8a0'; c.fillRect(W / 2 - 60, H - 16, 120 * Math.min(1, S.cover / 0.86), 6); }
+    hud.textContent = `✏️ ${Math.round(Math.min(1, S.cover / 0.86) * 100)}%`;
+  };
+  let raf = 0; const loop = () => { draw(); if (el.isConnected) raf = requestAnimationFrame(loop); }; raf = requestAnimationFrame(loop);
+  let closed = false;
+  function close() {
+    if (closed) return; closed = true;
+    cancelAnimationFrame(raf); el.remove();
+    removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true);
+    onDone(S.done);
+  }
+  el.__arcade = { S, tap, close };
+  return el;
+}
+
+// R904: Camp Elder Zahra's fireside tales at the Dune Camp: a shadow-puppet show on the tent wall, firelight flickering. Each tale is a few
+// scenes; each scene a line of the tale and a few shadow shapes gliding from one spot to another. Tap (or A) for the next scene
+export const TALES = [
+  { id: 'lamp', name: 'The Sun-Bird\'s Feather', q: 'What did the Sun-Bird leave for the lost caravan?', a: ['A golden feather', 'A jar of water', 'A map of the stars'], scenes: [
+    { say: 'Long ago, a caravan lost its way in the deep dunes. The night was black, and the travellers could not see their own feet.', items: [['dunes', 0, 0, 0, 0], ['walker', 30, 150, 120, 150, 1], ['walker', -10, 152, 80, 152, 0.8]] },
+    { say: 'High above flew the Sun-Bird, on her way home to sleep under the sand. She heard them calling... and she circled back.', items: [['dunes', 0, 0, 0, 0], ['bird', 320, 40, 170, 70, 1.2], ['walker', 120, 150, 125, 150, 1]] },
+    { say: 'She shook out one golden feather. It floated down, still glowing, and lit the whole dune like a lamp.', items: [['dunes', 0, 0, 0, 0], ['bird', 170, 70, -40, 30, 1.2], ['feather', 175, 60, 160, 140, 1]] },
+    { say: 'The travellers followed its light all the way to water. They planted it by the spring, and that is why the oasis lamps are gold.', items: [['dunes', 0, 0, 0, 0], ['palm', 230, 150, 230, 150, 1], ['lamp', 200, 150, 200, 150, 1], ['walker', 60, 150, 150, 150, 1]] },
+  ] },
+  { id: 'hum', name: 'Why Humpdrop Hums', q: 'Why does Humpdrop hum?', a: ['So travellers can follow it in the dark', 'To scare off the Fennzaps', 'Because it forgot the words'], scenes: [
+    { say: 'Once there was a Humpdrop who carried the last of the water across the great dunes, with a long line of travellers behind it.', items: [['dunes', 0, 0, 0, 0], ['hump', 40, 148, 170, 148, 1], ['walker', -20, 152, 100, 152, 0.8], ['walker', -60, 152, 60, 152, 0.8]] },
+    { say: 'Then a sandstorm rolled in. The sky went brown, and nobody could see the Humpdrop in front of them.', items: [['dunes', 0, 0, 0, 0], ['wind', 330, 70, 120, 90, 1.4], ['wind', 360, 120, 150, 110, 1], ['hump', 170, 148, 180, 148, 1]] },
+    { say: 'So the Humpdrop hummed. A low, steady hum, hmmmmm, all through the storm, and everyone followed the sound.', items: [['dunes', 0, 0, 0, 0], ['notes', 190, 120, 210, 60, 1], ['hump', 180, 148, 230, 148, 1], ['walker', 80, 152, 160, 152, 0.8]] },
+    { say: 'Every one of them came home. And Humpdrops have hummed ever since, just in case somebody behind them is lost.', items: [['dunes', 0, 0, 0, 0], ['tent', 250, 150, 250, 150, 1], ['hump', 140, 148, 200, 148, 1], ['notes', 200, 110, 220, 50, 1]] },
+  ] },
+  { id: 'moon', name: 'The Scarab Who Rolled the Moon', q: 'What did the little scarab roll up the sky?', a: ['The moon', 'A sun stone', 'A melon'], scenes: [
+    { say: 'One night the moon got tired, sank down behind the dunes, and simply would not get up again.', items: [['dunes', 0, 0, 0, 0], ['moon', 160, 40, 260, 140, 1]] },
+    { say: 'The whole desert went dark. The owls bumped into palm trees. The Fennzaps tripped over their own tails.', items: [['dunes', 0, 0, 0, 0], ['palm', 90, 150, 90, 150, 1], ['bird', 40, 70, 110, 80, 0.7]] },
+    { say: 'But one small Scarabold put its head down and pushed. It rolled that moon up the dune, all the way to the top of the sky.', items: [['dunes', 0, 0, 0, 0], ['moon', 250, 130, 170, 40, 1], ['scarab', 270, 150, 190, 60, 1]] },
+    { say: 'It is still up there, rolling. That is why the moon moves across the sky, and why Scarabolds are so proud of themselves.', items: [['dunes', 0, 0, 0, 0], ['moon', 120, 40, 200, 36, 1], ['scarab', 140, 60, 220, 56, 1], ['star', 60, 30, 60, 30, 1], ['star', 280, 50, 280, 50, 1]] },
+  ] },
+  { id: 'sisters', name: 'The Wind\'s Two Sisters', q: 'Which sister makes the dunes sing?', a: ['The gentle sister', 'The wild sister', 'Neither, it\'s the stones'], scenes: [
+    { say: 'The wind has two sisters. The wild one roars over the dunes and throws sand in everyone\'s eyes.', items: [['dunes', 0, 0, 0, 0], ['wind', 320, 60, 60, 80, 1.6], ['wind', 340, 110, 100, 120, 1.2]] },
+    { say: 'The gentle one only whispers. Nobody ever notices her. The wild one gets all the songs and all the stories.', items: [['dunes', 0, 0, 0, 0], ['wind', 60, 110, 200, 104, 0.6]] },
+    { say: 'One evening the gentle sister brushed over the tall stones, very softly... and the stones began to sing.', items: [['dunes', 0, 0, 0, 0], ['stone', 120, 150, 120, 150, 1], ['stone', 200, 150, 200, 150, 1.1], ['wind', 40, 100, 240, 96, 0.6], ['notes', 160, 110, 170, 50, 1]] },
+    { say: 'The wild sister has tried ever since. But when she blows, the stones only rattle. Some things only answer to a gentle touch.', items: [['dunes', 0, 0, 0, 0], ['stone', 120, 150, 120, 150, 1], ['stone', 200, 150, 200, 150, 1.1], ['wind', 330, 80, 150, 90, 1.5]] },
+  ] },
+  { id: 'well', name: 'The Well That Kept a Secret', q: 'What does the old well keep?', a: ['Every wish ever dropped in', 'The Baron\'s gold', 'A sleeping Lantern Loach'], scenes: [
+    { say: 'The Sunwell is the oldest well in the sands. Every traveller who passes drops a pebble in, and makes a wish.', items: [['dunes', 0, 0, 0, 0], ['well', 170, 150, 170, 150, 1], ['walker', 40, 152, 130, 152, 1]] },
+    { say: 'Nobody ever hears the pebbles land. Plip? No. Plop? Never. They just... fall, and fall.', items: [['dunes', 0, 0, 0, 0], ['well', 170, 150, 170, 150, 1], ['pebble', 170, 90, 170, 150, 1]] },
+    { say: 'Because the well keeps them. Every pebble and every wish, a thousand years of them, safe in the cool dark.', items: [['dunes', 0, 0, 0, 0], ['well', 170, 150, 170, 150, 1], ['star', 150, 110, 140, 60, 0.8], ['star', 190, 120, 200, 70, 0.8], ['star', 170, 100, 172, 40, 1]] },
+    { say: 'And on very quiet nights, if you lean over the edge, you can hear them. Not wishes any more. Just... hope, humming.', items: [['dunes', 0, 0, 0, 0], ['well', 170, 150, 170, 150, 1], ['walker', 130, 152, 140, 152, 1], ['notes', 175, 120, 180, 70, 0.8]] },
+  ] },
+];
+export function shadowTale(root, tale, onDone) {
+  const el = document.createElement('div');
+  el.className = 'modal-wrap arcade-wrap';
+  el.innerHTML = `<div class="arcade tale"><div class="arc-top"><b>${tale.name.toUpperCase()}</b><span class="arc-hud"></span></div>
+    <canvas width="${W}" height="${H}"></canvas>
+    <p class="arc-tip tale-say"></p></div>`;
+  root.appendChild(el);
+  const cv = el.querySelector('canvas'), c = cv.getContext('2d'), hud = el.querySelector('.arc-hud'), sayEl = el.querySelector('.tale-say');
+  const S = { i: 0, t: 0, T: 0, over: false };
+  const DUR = 4.2; // a scene's shapes glide for this long, then hold
+  const show = () => { sayEl.textContent = tale.scenes[S.i].say; hud.textContent = `${S.i + 1} / ${tale.scenes.length}`; S.t = 0; };
+  function tap() { if (S.over) return; if (S.t < 0.5) return; if (S.i + 1 >= tale.scenes.length) { S.over = true; sfx.ui?.('ok'); setTimeout(close, 250); return; } S.i++; sfx.ui?.('move'); show(); }
+  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); tap(); }); sayEl.addEventListener('pointerdown', (e) => { e.preventDefault(); tap(); });
+  const onKey = (e) => { if (!['Space', 'Enter', 'KeyA', 'KeyZ', 'KeyX', 'ArrowRight'].includes(e.code)) { if (e.code === 'Escape' && e.type === 'keydown') close(); return; } e.preventDefault(); e.stopPropagation(); if (e.type === 'keydown' && !e.repeat) tap(); };
+  addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
+  const sil = (k, x, y, s, t) => { // one shadow shape, drawn in the puppet's black
+    c.save(); c.translate(x, y); c.scale(s, s); c.fillStyle = '#1a0e0a'; c.strokeStyle = '#1a0e0a'; c.lineCap = 'round'; c.lineJoin = 'round';
+    const bob = Math.sin(t * 5) * 1.5;
+    if (k === 'walker') { c.translate(0, bob * 0.5); c.beginPath(); c.arc(0, -34, 6, 0, 7); c.fill(); c.beginPath(); c.moveTo(-7, -28); c.lineTo(7, -28); c.lineTo(9, -6); c.lineTo(-9, -6); c.fill(); c.lineWidth = 3; const st = Math.sin(t * 6) * 5; c.beginPath(); c.moveTo(-3, -6); c.lineTo(-3 - st, 0); c.moveTo(3, -6); c.lineTo(3 + st, 0); c.stroke(); c.beginPath(); c.moveTo(8, -24); c.lineTo(14, 0); c.stroke(); c.fillRect(-12, -26, 6, 12); } // a cloaked traveller with a staff and a pack
+    else if (k === 'bird') { const f = Math.sin(t * 7) * 10; c.beginPath(); c.ellipse(0, 0, 14, 6, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-4, -2); c.lineTo(-20, -14 - f); c.lineTo(4, -3); c.fill(); c.beginPath(); c.moveTo(4, -2); c.lineTo(22, -16 - f); c.lineTo(8, -1); c.fill(); c.beginPath(); c.moveTo(-13, 0); c.lineTo(-24, -4); c.lineTo(-24, 6); c.fill(); c.beginPath(); c.arc(14, -3, 4, 0, 7); c.fill(); }
+    else if (k === 'hump') { c.translate(0, bob * 0.6); c.beginPath(); c.moveTo(-26, -10); c.quadraticCurveTo(-14, -40, 0, -18); c.quadraticCurveTo(10, -36, 18, -14); c.lineTo(24, -26); c.lineTo(32, -24); c.lineTo(26, -10); c.lineTo(-26, -10); c.fill(); c.lineWidth = 4; const st = Math.sin(t * 5) * 4; for (const lx of [-20, -10, 8, 18]) { c.beginPath(); c.moveTo(lx, -10); c.lineTo(lx + (lx % 20 ? st : -st), 0); c.stroke(); } }
+    else if (k === 'moon') { c.fillStyle = 'rgba(255,240,200,0.9)'; c.beginPath(); c.arc(0, 0, 18, 0, 7); c.fill(); c.fillStyle = 'rgba(200,150,90,0.5)'; c.beginPath(); c.arc(-5, -4, 4, 0, 7); c.arc(6, 5, 3, 0, 7); c.fill(); } // the moon is a cut-out: the firelight shines through
+    else if (k === 'star') { c.fillStyle = 'rgba(255,240,190,' + (0.6 + 0.4 * Math.sin(t * 4 + x)) + ')'; c.beginPath(); for (let q = 0; q < 10; q++) { const a = -Math.PI / 2 + q * Math.PI / 5, r = q % 2 ? 2.5 : 6; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } c.fill(); }
+    else if (k === 'feather') { c.rotate(Math.sin(t * 3) * 0.5); c.fillStyle = 'rgba(255,220,120,0.95)'; c.beginPath(); c.ellipse(0, 0, 4, 12, 0.3, 0, 7); c.fill(); c.globalAlpha = 0.35; c.beginPath(); c.arc(0, 0, 20, 0, 7); c.fill(); }
+    else if (k === 'lamp') { c.fillRect(-2, -30, 4, 30); c.beginPath(); c.moveTo(-8, -40); c.lineTo(8, -40); c.lineTo(5, -30); c.lineTo(-5, -30); c.fill(); c.fillStyle = 'rgba(255,210,110,0.9)'; c.beginPath(); c.arc(0, -36, 4, 0, 7); c.fill(); }
+    else if (k === 'palm') { c.lineWidth = 5; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(6, -30, 0, -56); c.stroke(); for (const a of [-2.6, -2.0, -1.2, -0.5, 0.1]) { c.beginPath(); c.moveTo(0, -56); c.quadraticCurveTo(Math.cos(a) * 20, -56 + Math.sin(a) * 20 - 6, Math.cos(a) * 32, -56 + Math.sin(a) * 18 + 10); c.lineWidth = 4; c.stroke(); } }
+    else if (k === 'tent') { c.beginPath(); c.moveTo(-34, 0); c.lineTo(0, -40); c.lineTo(34, 0); c.fill(); c.fillStyle = 'rgba(255,190,90,0.8)'; c.beginPath(); c.moveTo(-6, 0); c.lineTo(0, -14); c.lineTo(6, 0); c.fill(); }
+    else if (k === 'scarab') { c.rotate(-0.5); c.beginPath(); c.ellipse(0, 0, 11, 8, 0, 0, 7); c.fill(); c.beginPath(); c.arc(11, -1, 5, 0, 7); c.fill(); c.lineWidth = 2; for (const lx of [-6, 0, 6]) { c.beginPath(); c.moveTo(lx, 6); c.lineTo(lx + 3 * Math.sin(t * 9 + lx), 12); c.stroke(); } }
+    else if (k === 'wind') { c.strokeStyle = 'rgba(26,14,10,0.75)'; c.lineWidth = 3; for (let q = 0; q < 3; q++) { c.beginPath(); const y0 = q * 9 - 9; c.moveTo(-40 + q * 6, y0); c.bezierCurveTo(-15, y0 - 10 + Math.sin(t * 4 + q) * 4, 10, y0 + 10, 30 - q * 4, y0); c.arc(30 - q * 4, y0 - 5, 5, Math.PI / 2, -Math.PI, true); c.stroke(); } }
+    else if (k === 'stone') { c.beginPath(); c.moveTo(-12, 0); c.lineTo(-10, -48); c.quadraticCurveTo(0, -60, 10, -48); c.lineTo(12, 0); c.fill(); c.fillStyle = 'rgba(255,200,120,0.6)'; c.beginPath(); c.arc(0, -30, 4, 0, 7); c.fill(); }
+    else if (k === 'notes') { c.fillStyle = 'rgba(26,14,10,0.85)'; for (let q = 0; q < 3; q++) { const nx = q * 12 - 12, ny = -q * 10 + Math.sin(t * 3 + q) * 3; c.beginPath(); c.ellipse(nx, ny, 4, 3, -0.4, 0, 7); c.fill(); c.fillRect(nx + 3, ny - 14, 1.6, 14); } }
+    else if (k === 'well') { c.fillRect(-20, -18, 40, 18); c.fillRect(-20, -44, 4, 26); c.fillRect(16, -44, 4, 26); c.fillRect(-24, -48, 48, 5); c.fillRect(-1, -43, 2, 16); }
+    else if (k === 'pebble') { c.beginPath(); c.ellipse(0, 0, 3, 2.4, 0, 0, 7); c.fill(); }
+    c.restore();
+  };
+  const draw = (dt) => {
+    S.t += dt; S.T += dt;
+    const fl = 0.85 + 0.1 * Math.sin(S.T * 13) + 0.06 * Math.sin(S.T * 31); // the fire flickers
+    const g = c.createRadialGradient(W / 2, H + 30, 20, W / 2, H * 0.4, 260); g.addColorStop(0, `rgba(255,${190 * fl | 0},${100 * fl | 0},1)`); g.addColorStop(0.55, `rgba(${230 * fl | 0},${130 * fl | 0},60,1)`); g.addColorStop(1, '#5a2414');
+    c.fillStyle = g; c.fillRect(0, 0, W, H); // the lit tent cloth
+    c.strokeStyle = 'rgba(90,40,20,0.25)'; c.lineWidth = 1; for (let x = 18; x < W; x += 40) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x + 6, H); c.stroke(); } // cloth seams
+    const sc = tale.scenes[S.i], k = Math.min(1, S.t / DUR), e = k * k * (3 - 2 * k);
+    for (const [kind, x0, y0, x1, y1, s = 1] of sc.items) {
+      if (kind === 'dunes') { c.fillStyle = '#2a140c'; c.beginPath(); c.moveTo(0, H); c.lineTo(0, 160); c.quadraticCurveTo(70, 140, 140, 156); c.quadraticCurveTo(220, 172, W, 150); c.lineTo(W, H); c.fill(); continue; }
+      sil(kind, x0 + (x1 - x0) * e, y0 + (y1 - y0) * e, s, S.T);
+    }
+    c.fillStyle = 'rgba(20,8,4,0.85)'; c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 10) c.lineTo(x, H - 14 - Math.abs(Math.sin(x * 0.7 + S.T * 9)) * 10 * fl); c.lineTo(W, H); c.fill(); // the flames' own shadow along the bottom
+    c.fillStyle = 'rgba(255,240,200,0.7)'; c.font = 'bold 11px sans-serif'; c.textAlign = 'right'; c.fillText(S.t > 1.2 ? (S.i + 1 < tale.scenes.length ? 'tap ▶' : 'tap ✓') : '', W - 8, H - 6);
+  };
+  show();
+  let last = performance.now(), raf = 0;
+  const loop = (now) => { const dt = Math.min(0.05, (now - last) / 1000); last = now; draw(dt); if (el.isConnected) raf = requestAnimationFrame(loop); };
+  raf = requestAnimationFrame(loop);
+  let closed = false;
+  function close() {
+    if (closed) return; closed = true;
+    cancelAnimationFrame(raf); el.remove();
+    removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true);
+    onDone(S.over);
+  }
+  el.__arcade = { S, tap, step: (sec) => { for (let t = 0; t < sec; t += 1 / 60) draw(1 / 60); }, close };
+  return el;
+}

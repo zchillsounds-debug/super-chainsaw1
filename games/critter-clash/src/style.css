@@ -1317,3 +1317,7 @@ body.portrait .sel-bottom > .roster { max-height: min(232px, 36vh); overflow-y: 
 .arcade.pipes .arc-tip { color: #f0e0c8; }
 
 .wd-scope { position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%); width: min(56vh, 70vw); height: min(56vh, 70vw); border-radius: 50%; overflow: hidden; z-index: 7; pointer-events: none; box-shadow: 0 0 0 8px #c8902a, 0 0 0 12px #5a3a1a, 0 0 0 100vmax rgba(10,6,4,0.72); animation: scopeIn 0.35s ease-out; } .wd-scope canvas { width: 100%; height: 100%; display: block; } body.portrait .wd-scope { top: 40%; } @keyframes scopeIn { from { transform: translate(-50%, -50%) scale(0.6); } } /* R885: Lookout Omar's spyglass view */
+.arcade.rubbing { background: linear-gradient(#6a4428, #2a1a10); border-color: #e8b84a; box-shadow: 0 0 24px rgba(232,184,74,.35), 0 6px 0 #1a0e06; } .arcade.rubbing .arc-top { color: #ffe8a0; text-shadow: 0 2px 0 #2a1a10; } .arcade.rubbing .arc-tip { color: #f4e4c8; } /* R903: glyph rubbings */
+.arcade.tale { background: linear-gradient(#5a2a18, #1e0c06); border-color: #ff9a40; box-shadow: 0 0 28px rgba(255,140,60,.45), 0 6px 0 #140804; } .arcade.tale .arc-top { color: #ffd8a0; text-shadow: 0 2px 0 #1e0c06; } /* R904: Zahra's fireside tales */
+.arcade.tale canvas { width: min(88vw, calc((100vh - 150px) * 4 / 3), 520px); }
+.arcade.tale .tale-say { color: #fff0dc; font-size: 13px; line-height: 1.3; min-height: 3.9em; max-width: min(88vw, 520px); cursor: pointer; }

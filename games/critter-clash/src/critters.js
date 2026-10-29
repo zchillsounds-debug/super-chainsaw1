@@ -1554,6 +1554,8 @@ export const SHOP_HATS = [
   { id: 'dewcirclet', name: 'Dewdrop Circlet', kind: 'circlet', col: 0xcfe8f4, band: 0x3ac8e8, price: 0, gift: true, extra: true }, // R829: the Sunwell Spring's chest
   { id: 'guildfez', name: 'Caravan Guild Fez', kind: 'fez', col: 0xa8243a, band: 0xffc23a, price: 0, gift: true, extra: true }, // R828: five full days of the Caravan Guild's bounty board
   { id: 'runnerband', name: "Runner's Headband", kind: 'band', col: 0x2ab8d0, band: 0xffd040, price: 0, gift: true, extra: true }, // R875: TUNNEL RUN under 6.6 s (Tunnel Runner Tess, the Old Aqueduct)
+  { id: 'storyturban', name: "Storyteller's Turban", kind: 'turban', col: 0x3a2a6a, band: 0xff9a40, price: 0, gift: true, extra: true }, // R904: hear all five of Camp Elder Zahra's fireside tales (the Dune Camp, after dark)
+  { id: 'glyphband', name: 'Sun-Glyph Band', kind: 'glyphband', col: 0xd8a870, band: 0xe8b84a, price: 0, gift: true, extra: true }, // R903: six glyph rubbings from the Sun Gate's pillars for Sirocco
   { id: 'songcirclet', name: 'Songstone Circlet', kind: 'songstone', col: 0xe8b060, band: 0xb88ae8, price: 0, gift: true, extra: true }, // R892: a nine-note song in DUNE CHORUS (Dune Singer Amani, the Singing Dunes)
   { id: 'rosetiara', name: 'Rose Salt Tiara', kind: 'circlet', col: 0xf6b8c8, band: 0xffffff, price: 0, gift: true, extra: true }, // R893: Salt Carver Yara's four rose-salt statues (critters in their shiny colours, the Glass Flats)
   { id: 'saltcrown', name: 'Salt Crystal Crown', kind: 'crown', col: 0xf4f4f0, band: 0x9ad8ff, price: 0, gift: true, extra: true }, // R887: fill Salt Carver Yara's eight plinths (the Glass Flats)
@@ -1609,6 +1611,17 @@ export function hatModel(cr, kind, col, band) {
     for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, l = add(new THREE.SphereGeometry(r * 0.42, 12, 8), M, 0.014); l.scale.set(0.7, 0.85, 1); l.position.set(Math.cos(a) * r * 0.3, r * 0.32, Math.sin(a) * r * 0.3); l.rotation.y = -a; }
     const st = add(new THREE.CylinderGeometry(r * 0.07, r * 0.1, r * 0.3, 6), toon(band), 0.01); st.position.y = r * 0.78; st.rotation.z = 0.3;
     const lf = add(new THREE.SphereGeometry(r * 0.2, 8, 6), toon(0x5aa83a), 0.01); lf.scale.set(1, 0.25, 0.6); lf.position.set(r * 0.2, r * 0.72, 0);
+  }
+  if (kind === 'glyphband') { // R903: a sandstone band carved from a pillar cap, a gold-framed plaque on the brow with the Sun-Bird glyph cut in
+    G.position.y -= r * 0.4; const sand = toon(col, { rim: 0.7 }), gold = toon(band, { rim: 1, emissive: new THREE.Color(band).multiplyScalar(0.25).getHex() });
+    add(new THREE.CylinderGeometry(r * 0.92, r * 0.94, r * 0.16, 24, 1, true), toon(col, { rim: 0.7, side: THREE.DoubleSide }), 0.012);
+    for (const y of [-r * 0.08, r * 0.08]) { const t = add(new THREE.TorusGeometry(r * 0.93, r * 0.025, 4, 24), gold, 0); t.rotation.x = Math.PI / 2; t.position.y = y; }
+    const P = new THREE.Group(); P.position.set(0, r * 0.14, r * 0.93); P.rotation.x = -0.12; G.add(P);
+    P.add(inked(new THREE.BoxGeometry(r * 0.38, r * 0.38, r * 0.06), gold, 0.012));
+    const face = new THREE.Mesh(new THREE.BoxGeometry(r * 0.3, r * 0.3, r * 0.03), sand); face.position.z = r * 0.03; P.add(face);
+    const ink = toon(0x5a3418), disc = new THREE.Mesh(new THREE.TorusGeometry(r * 0.05, r * 0.016, 4, 12), ink); disc.position.set(0, r * 0.05, r * 0.05); P.add(disc);
+    for (const sd of [-1, 1]) { const w = new THREE.Mesh(new THREE.BoxGeometry(r * 0.12, r * 0.025, r * 0.01), ink); w.position.set(sd * r * 0.075, -r * 0.01, r * 0.05); w.rotation.z = sd * 0.6; P.add(w); }
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(r * 0.02, r * 0.09, r * 0.01), ink); tail.position.set(0, -r * 0.07, r * 0.05); P.add(tail);
   }
   if (kind === 'songstone') { // R892: a braided sand-coloured circlet with a little standing stone on the brow, its sun glyph glowing violet
     G.position.y -= r * 0.4; const sand = toon(col, { rim: 0.8 });

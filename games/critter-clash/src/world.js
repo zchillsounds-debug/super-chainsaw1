@@ -19,6 +19,7 @@ import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
 import { stargaze, tonightConst, BOTTLE_NOTES, CONSTELLATIONS, DESERT_CONSTS } from './stars.js';
 import { fairyRing } from './ring.js';
+import { glyphRub, drawGlyph, GLYPHS, shadowTale, TALES } from './arcade.js';
 import { snowballToss, SNOW_GOAL } from './snowball.js';
 
 export const TILE = 2;
@@ -473,6 +474,7 @@ export class World {
     this.buildGarden();
     this.buildMelons();
     this.buildLookout();
+    this.buildGlyphs();
     this.buildStatues();
     this.buildGeyser();
     this.buildBloomFw();
@@ -2194,7 +2196,7 @@ export class World {
   // a beach bonfire in Seashell Town after dusk: logs, flickering flames, sparks and a warm pool of light on the sand
   buildBonfire() {
     this.bonfire = null;
-    const at = { seashell: [13, 15, 's'], frostpeak: [9, 10, '.'] }[this.key]; // Seashell: between the umbrellas by the water; Frostpeak: in the open snow by the ice pond
+    const at = { seashell: [13, 15, 's'], frostpeak: [9, 10, '.'] }[this.key] || (this.M.tales ? [...this.M.tales.fire, 's'] : null); // (R904: + the Dune Camp's fire, for Zahra's tales) // Seashell: between the umbrellas by the water; Frostpeak: in the open snow by the ice pond
     if (!at || this.phase === 'day' || this.M.indoor) return;
     const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.M.buildings || []).map((b) => (b.x + b.door) + ',' + (b.y + b.h)), ...(this.M.signs || []).map((g) => g.x + ',' + g.y), this.hx + ',' + this.hy]); // built before the buildings, items and dig spot (those keep off solid tiles), so the door steps come from the map
     const spot = at.slice(0, 2);
@@ -2863,6 +2865,89 @@ export class World {
         }, n.name);
       });
     }, n.name);
+  }
+  // R904: Camp Elder Zahra's fireside tales (M.tales): after dark she tells one of five desert tales as a shadow-puppet show on the tent wall
+  // (arcade.js shadowTale), then asks a question about it. Once a night (A.taleDay); right: +2 berries; all five heard (A.tales): the
+  // Storyteller's Turban. By day she says to come back after dark (once, F.tale_hint), then chats as before
+  taleAsk(a) {
+    const n = a.n, A = save.adv, F = A.flags, day = new Date().toISOString().slice(0, 10), heard = A.tales || [], chat = () => { a.skipTale = true; this.talk(a); a.skipTale = false; };
+    if (this.phase === 'day') {
+      if (F.tale_hint) return chat();
+      F.tale_hint = true; persist(); this.questMarks?.();
+      return this.say([`${n.name}: Ah, a young traveller. When the sun goes down, we light a fire by my tent, and I tell the old tales on the tent wall. With shadows!`, `${n.name}: Come back after dark. Bring your partner. The tales are better with someone to hold on to.`], null, n.name);
+    }
+    if (A.taleDay === day) return this.ask(`${n.name}: One tale a night, little one, or the fire gets jealous. ${heard.length < TALES.length ? `You've heard ${heard.length} of my ${TALES.length}.` : 'You know all my tales now. Perhaps one day you will tell me one.'}`, ['Good night', 'Chat'], (i) => { if (i) chat(); }, n.name);
+    const h = [...day].reduce((v, c) => (v * 31 + c.charCodeAt(0)) >>> 0, 11), pool = TALES.filter((t) => !heard.includes(t.id)), tale = (pool.length ? pool : TALES)[h % (pool.length || TALES.length)];
+    this.ask(`${n.name}: The fire's lit. Sit with me, and I'll tell you "${tale.name}".`, ['Listen', 'Chat', 'Not now'], (i) => {
+      if (i === 1) return chat();
+      if (i) return this.say([`${n.name}: The tale will keep. Tales are patient.`], null, n.name);
+      this.busy = true; sfx.whoosh?.();
+      const el = shadowTale(this.S.root, tale, () => {
+        this.S.game.modalClose = null; this.busy = false;
+        const first = !heard.includes(tale.id); if (first) (A.tales ||= []).push(tale.id);
+        const rot = (h + TALES.indexOf(tale) * 2 + heard.length) % 3, order = [0, 1, 2].map((k) => (k + rot) % 3); // the right answer moves about
+        this.ask(`${n.name}: ${tale.q}`, order.map((k) => tale.a[k]), (j) => {
+          const ok = order[j] === 0; A.taleDay = day; countUp('tale'); if (ok) save.berries = (save.berries || 0) + 2;
+          const all = A.tales.length >= TALES.length, own = (A.hats ||= []), hat = all && !own.includes('storyturban'); if (hat) own.push('storyturban');
+          persist(); if (ok || hat) reward(hat ? 3 : 1); this.questMarks?.();
+          this.say([ok ? `${n.name}: ${tale.a[0]}. Yes! You listen like a desert fox. A berry for each ear. +2 🍓` : `${n.name}: Hmm, no... ${tale.a[0].toLowerCase()}. But you were sleepy, and the fire was warm. I forgive you.`,
+            ...(hat ? [`${n.name}: And that was the last of my five tales. Now you carry them too. A storyteller must look the part, so... this was my mother's. +🎩`, '{hero} got the Storyteller\'s Turban! 🔥 (☰ → 🎩 Hats)'] : [`${n.name}: ${all ? 'Come back any night, I never mind telling one twice.' : `${TALES.length - A.tales.length} more tale${TALES.length - A.tales.length > 1 ? 's' : ''} to go. Come back tomorrow night.`}`])], null, n.name);
+        }, n.name);
+      });
+      this.S.game.modalClose = () => el.__arcade.close();
+    }, n.name);
+  }
+  // R903: the Sun Gate's carved pillars (M.glyphs: { who, need, spots: [[x, y, glyph]] }): a sandstone plaque on each standing pillar's
+  // south face with an old glyph cut into it; once Sirocco hands over charcoal and paper, A on a pillar takes a rubbing (arcade.js glyphRub)
+  buildGlyphs() {
+    this.glyphs = null;
+    const G = this.M.glyphs; if (!G || this.M.indoor || !save.adv.flags[G.need]) return;
+    const done = save.adv.glyphs || [];
+    this.glyphs = G.spots.map(([x, y, id]) => {
+      const [px, pz] = wpos(x, y), have = done.includes(id);
+      const tex = canvasTex(128, 128, (c) => {
+        c.fillStyle = '#c89a68'; c.fillRect(0, 0, 128, 128); c.fillStyle = 'rgba(90,56,30,0.18)'; for (let k = 0; k < 6; k++) c.fillRect(0, 10 + k * 22, 128, 2);
+        c.strokeStyle = '#e8b84a'; c.lineWidth = 8; c.strokeRect(4, 4, 120, 120); // a gold frame
+        drawGlyph(c, id, 66, 66, 40, 'rgba(255,240,200,0.35)', 0.19); drawGlyph(c, id, 64, 64, 40, '#5a3418', 0.17); // cut in, the lit lip under it
+        if (have) { c.fillStyle = '#f4ead2'; c.fillRect(86, 92, 30, 26); c.fillStyle = '#3a2a28'; c.fillRect(90, 98, 22, 3); c.fillRect(90, 104, 16, 3); c.fillRect(90, 110, 19, 3); } // a scrap of your rubbing, tucked in the corner
+      });
+      tex.userData.own = true; const m = toon(0xffffff, { map: tex, rim: 0.3, emissive: this.phase === 'day' ? 0x000000 : 0x8a7050 }); m.emissiveMap = tex; m.userData.own = true; // (catches the lamplight after dark)
+      const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.86), m); plate.position.set(px, 1.75, pz + 0.49); plate.rotation.x = -0.18; this.group.add(plate);
+      return { x, y, id, have };
+    });
+  }
+  // A on a carved pillar: before Sirocco asks, just a look; after, rub it (once per glyph)
+  rubGlyph(gp) {
+    const A = save.adv, F = A.flags, g = GLYPHS[gp.id];
+    if (!F.glyph_asked) return this.say(['An old glyph is cut deep into the pillar, worn smooth by a thousand years of sand. It looks like a word... but whose?']);
+    if ((A.glyphs || []).includes(gp.id)) return this.say([`{hero}'s already taken a rubbing of ${g.name}. Sirocco has it safe in his pack.`]);
+    this.say(['{hero} tapes a sheet of paper over the glyph and gets out the charcoal...'], () => {
+      this.busy = true;
+      const el = glyphRub(this.S.root, gp.id, (ok) => {
+        this.S.game.modalClose = null; this.busy = false;
+        if (!ok) return this.say(['{hero} peels the paper off. Maybe later.']);
+        (A.glyphs ||= []).push(gp.id); countUp('glyph'); persist(); reward(1); this.questMarks?.();
+        const n = A.glyphs.length, all = n >= this.M.glyphs.spots.length;
+        this.say([`{hero} took a rubbing of ${g.name}! (${n} / ${this.M.glyphs.spots.length})`, all ? 'That\'s every carved pillar! Take the rubbings to Sirocco.' : 'Sirocco will want to see this.']);
+      });
+      this.S.game.modalClose = () => el.__arcade.close();
+    });
+  }
+  // R903: Sirocco (no longer a Baron) wants to READ the old city now, not dig it up: he hands over charcoal and paper, and pieces the gate's
+  // inscription together from your rubbings (A.glyphs). All six: +15 berries and the Sun-Glyph Band (glyphband)
+  glyphAsk(a) {
+    const n = a.n, A = save.adv, F = A.flags, G = this.M.glyphs, have = A.glyphs || [], all = G.spots.length;
+    const read = () => G.spots.map(([, , id]) => id).filter((id) => have.includes(id)).map((id) => GLYPHS[id].word).join(' ');
+    const ids = Object.keys(GLYPHS), inscr = ids.map((id) => (have.includes(id) ? GLYPHS[id].word : '…')).join(' ');
+    if (!F.glyph_asked) {
+      return this.say([`${n.name}: Psst. Champ. Look at the pillars. See the carvings? Those aren't decorations. That's WRITING. A thousand years old.`, `${n.name}: When I was a Baron I'd have dug them up and sold them. Now I just want to know what they SAY. Grit says that's called "growing".`, `${n.name}: I can't climb up there with my back. Here: paper and charcoal. Tape a sheet over a carving and rub. Bring me every glyph on the standing pillars. Six, I count.`, '{hero} got a roll of paper and a stick of charcoal! (A on a carved pillar to take a rubbing.)'], () => { F.glyph_asked = true; persist(); this.questMarks?.(); }, n.name);
+    }
+    if (F.glyph_done) { a.skipGlyph = true; this.talk(a); a.skipGlyph = false; return; }
+    if (have.length < all) {
+      return this.ask(`${n.name}: ${have.length ? `${have.length} of ${all} rubbings! So far it reads: "${inscr}"` : 'No rubbings yet? The standing pillars, champ. The ones with their hats on.'}`, ['Keep at it', 'Chat'], (i) => { if (i) { a.skipGlyph = true; this.talk(a); a.skipGlyph = false; } }, n.name);
+    }
+    F.glyph_done = true; const own = (A.hats ||= []); if (!own.includes('glyphband')) own.push('glyphband'); save.berries = (save.berries || 0) + 15; persist(); reward(3); this.questMarks?.();
+    this.say([`${n.name}: All six! Let me lay them out in the sand... Sun-Bird first, it's always the Sun-Bird first... there.`, `${n.name}: "${read()}"`, `${n.name}: ...Huh. All that digging. All those shovels. And the gate only ever wanted someone kind to knock. Rasha was right. Don't tell her I said that.`, `${n.name}: Take this. I carved it from a broken pillar cap. Glyph and all. A Baron's last treasure, freely given. +15 🍓`, '{hero} got the Sun-Glyph Band! 🪶 (☰ → 🎩 Hats)'], null, n.name);
   }
   // R883: Mesa Gardener Lina's melon patch on Redrock Mesa (M.melons: a soil bed with a striped melon on every tile, a low rope fence)
   buildMelons() {
@@ -5320,7 +5405,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? (save.adv.sporeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : this.M.statues?.who === a.n.id ? ((save.adv.saltStat || []).length < this.M.statues.spots.length ? (save.adv.saltDay !== new Date().toISOString().slice(0, 10) && !(save.adv.saltStat || []).includes(save.adv.hero) ? '!' : null) : !F.rose_hint ? '!' : (save.adv.roseStat || []).length < (this.M.statues.rose || []).length && save.skins?.[save.adv.hero] === 'shiny' && save.adv.saltDay !== new Date().toISOString().slice(0, 10) && !(save.adv.roseStat || []).includes(save.adv.hero) ? '!' : null) /* R887: a new model for Yara (R893: the rose salt) */ : this.M.lookout?.who === a.n.id ? (this.phase !== 'night' && save.adv.scopeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R885: today's sighting */ : this.M.melons?.who === a.n.id ? (!F.melon_hint ? '!' : (this.phase === 'night' || this.phase === 'evening') && save.adv.melonDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R884: tonight's MELON WATCH prize */ : this.M.chorus?.who === a.n.id ? (F[a.n.id] && save.adv.chorusDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R892: today's DUNE CHORUS prize */ : this.M.run?.who === a.n.id ? (F[a.n.id] && F[this.M.sluice?.flag] && save.adv.runDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R876: today's TUNNEL RUN prize */ : a.n.story === 'aqueduct' ? (!F.aq_asked ? '!' : F.aqueduct_flow && !F.aq_done ? '?' : F.aq_done && save.adv.pipeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R860; R865: today's WATERWORKS prize */ : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? (save.adv.sporeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : this.M.statues?.who === a.n.id ? ((save.adv.saltStat || []).length < this.M.statues.spots.length ? (save.adv.saltDay !== new Date().toISOString().slice(0, 10) && !(save.adv.saltStat || []).includes(save.adv.hero) ? '!' : null) : !F.rose_hint ? '!' : (save.adv.roseStat || []).length < (this.M.statues.rose || []).length && save.skins?.[save.adv.hero] === 'shiny' && save.adv.saltDay !== new Date().toISOString().slice(0, 10) && !(save.adv.roseStat || []).includes(save.adv.hero) ? '!' : null) /* R887: a new model for Yara (R893: the rose salt) */ : this.M.tales?.who === a.n.id ? (this.phase === 'day' ? (!F.tale_hint ? '!' : null) : save.adv.taleDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R904 */ : this.M.glyphs?.who === a.n.id ? (!F.glyph_asked ? '!' : !F.glyph_done && (save.adv.glyphs || []).length >= this.M.glyphs.spots.length ? '?' : null) /* R903 */ : this.M.lookout?.who === a.n.id ? (this.phase !== 'night' && save.adv.scopeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R885: today's sighting */ : this.M.melons?.who === a.n.id ? (!F.melon_hint ? '!' : (this.phase === 'night' || this.phase === 'evening') && save.adv.melonDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R884: tonight's MELON WATCH prize */ : this.M.chorus?.who === a.n.id ? (F[a.n.id] && save.adv.chorusDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R892: today's DUNE CHORUS prize */ : this.M.run?.who === a.n.id ? (F[a.n.id] && F[this.M.sluice?.flag] && save.adv.runDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R876: today's TUNNEL RUN prize */ : a.n.story === 'aqueduct' ? (!F.aq_asked ? '!' : F.aqueduct_flow && !F.aq_done ? '?' : F.aq_done && save.adv.pipeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R860; R865: today's WATERWORKS prize */ : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m; a.markKind = k;
@@ -6194,6 +6279,7 @@ export class World {
     const wh = this.sluice && [...this.sluice.wheels, this.sluice.main].find((q) => q.x === fx && q.y === fy); if (wh) return this.turnWheel(wh);
     const up = this.updrafts?.find((u) => u.x === fx && u.y === fy); if (up) return this.updraftTalk(up);
     const sg = this.singers?.find((q) => q.x === fx && q.y === fy); if (sg) return this.singAt(sg);
+    const gp = this.glyphs?.find((q) => q.x === fx && q.y === fy); if (gp) return this.rubGlyph(gp); // R903
     const lf = this.lifts?.find((q) => q.x === fx && q.y === fy && q.way); if (lf) return this.rideLift(lf);
     if (this.well && this.well.x === fx && this.well.y === fy) {
       const day = new Date().toISOString().slice(0, 10);
@@ -6247,6 +6333,7 @@ export class World {
     if (at(this.bush)) return 'Shake';
     if (this.dig && (at(this.dig) || (this.dig.x === this.hx && this.dig.y === this.hy))) return 'Dig';
     if (this.singers?.some(at)) return this.phase === 'night' ? 'Sing' : 'Look';
+    { const gp = this.glyphs?.find(at); if (gp) return save.adv.flags.glyph_asked && !(save.adv.glyphs || []).includes(gp.id) ? 'Rub' : 'Look'; }
     if (this.lifts?.some((q) => q.way && at(q))) return save.adv.flags.cup_canyon ? 'Ride' : 'Look';
     if (this.sluice && [...this.sluice.wheels, this.sluice.main].some(at)) return 'Turn';
     if ([this.well, this.bonfire, this.bottle, this.scope, this.ring, this.sunset, this.fort, this.garden, this.statue, this.fountain, this.xtree, this.scare, this.roomFest, this.melon, this.picnic, this.snowman, this.apples].some(at) || [this.moonflowers, this.pumpkins, this.stalls, this.lost].some((L) => L?.some(at)) || this.spring?.cells.has(fx + ',' + fy) || (this.dance && this.dance.y === fy && this.dance.x.includes(fx))) return 'Look';
@@ -6443,6 +6530,8 @@ export class World {
     if (n.story) return this.S.worldStory(n.story, this, a);
     if (this.M.melons?.who === n.id && !a.skipMelon) return this.melonAsk(a); // R883: MELON WATCH
     if (this.M.lookout?.who === n.id && !a.skipScope) return this.scopeAsk(a); // R885: Lookout Omar's spyglass
+    if (this.M.tales?.who === n.id && !a.skipTale) return this.taleAsk(a); // R904: Zahra's fireside tales
+    if (this.M.glyphs?.who === n.id && !a.skipGlyph) return this.glyphAsk(a); // R903: Sirocco's glyph rubbings
     if (this.M.statues?.who === n.id) return this.statueAsk(a); // R887: Salt Carver Yara
     if (this.M.chorus?.who === n.id && !a.skipChorus && save.adv.flags[n.id]) return this.S.worldStory('chorus', this, a); // R892: DUNE CHORUS (once Amani's beaten)
     if (this.M.run?.who === n.id && !a.skipRun && save.adv.flags[n.id] && save.adv.flags[this.M.sluice?.flag]) return this.runAsk(a); // R875: TUNNEL RUN
