@@ -500,7 +500,7 @@ export function nextGoal(F) {
     if (nx) return `Win the ${nx.name} in ${ISLE_AT[nx.id]}.`;
     if (F.sunstone && !F.sands_arrive) return 'Chapter 3: the Sand-Rail runs again! Ride it from the south side of Cinder Town to the Amber Sands.';
     if (F.sands_arrive && !F.cup_mirage) return 'Win the Mirage Cup at the Sunwell Pavilion in Sunwell Oasis (Amber Sands).';
-    if (F.cup_mirage && !F.cup_canyon) return 'The road is clear! Follow Dune Road east to Redrock Canyon and win the Canyon Cup.';
+    if (F.cup_mirage && !F.cup_canyon) return F.redrock_arrive ? 'Win the Canyon Cup in the Canyon Stadium in Redrock Canyon.' : 'The road is clear! Follow Dune Road east to Redrock Canyon and win the Canyon Cup.';
     if (F.cup_canyon && !F.devils1) return 'The Dust Devils are digging under the east rope lift in Redrock Canyon. Stop them!';
     if (F.devils1 && !F.dash_canyon) return 'Dash has caught up with you in Redrock Canyon. He wants a desert rematch!';
     if (F.dash_canyon && !F.cup_sandstorm) return F.dunecamp_arrive ? 'Win the Sandstorm Cup in the Sandstorm Dome at the Dune Camp.' : 'Take the canyon road east out of Redrock Canyon to the Dune Camp on the big dunes.';

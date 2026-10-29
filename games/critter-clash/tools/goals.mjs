@@ -1,4 +1,4 @@
-// node tools/goals.mjs : the ☰ goal line and the orange story ❗ (storyMark) at every main-story stage, mainland then isles
+// node tools/goals.mjs : the ☰ goal line and the orange story ❗ (storyMark) at every main-story stage, mainland, isles, then the Amber Sands
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/');
 const { chromium } = require('playwright');
@@ -16,6 +16,11 @@ const STAGES = [
   [['cup_caldera'], 'atoll'], [['morra', 'sunstone'], 'atoll'], [['tower_bronze'], 'bluffs'], [['glider'], 'atoll'], [['legend_moonwhal'], 'bluffs'],
   [['festlamp_done'], 'ember_isle'], [['legend_solmoth'], 'atoll'], [['dash_show'], 'atoll'], [['amends3_done'], 'glowwood'], [['grove1_asked'], 'glowwood'], [['grove4_done'], 'glowwood'],
   [['legend_verdelk'], 'cloudtop'], [['reach_chest'], 'grotto'], [['grotto_chest'], 'coral'], [['wreck_chest'], 'coral'],
+  // R908: Chapter 3, the Amber Sands
+  [['rail_open', 'sands_arrive'], 'oasis'], [['cup_mirage', 'post_mirage'], 'duneroad'], [['redrock_arrive'], 'redrock'], [['cup_canyon'], 'redrock'], [['devils1', 'sunshard'], 'redrock'],
+  [['dash_canyon'], 'dunecamp'], [['dunecamp_arrive'], 'dunecamp'], [['cup_sandstorm', 'post_sandstorm'], 'dunecamp'], [['devils2'], 'dunecamp'], [['citymap'], 'sungate'],
+  [['sungate_arrive'], 'sungate'], [['baron', 'gate_open'], 'sungate'], [['buried_chest'], 'sungate'], [['buried_beam'], 'sungate'], [['buried_vault'], 'dunecamp'],
+  [['sunbird1'], 'singing'], [['sunbird_wake'], 'singing'], [['legend_aurelark'], 'sungate'],
 ];
 const fl = ['intro'];
 for (const [add, map] of STAGES) {
