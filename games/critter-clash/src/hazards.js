@@ -176,6 +176,7 @@ export class Hazards {
   // the laser can't be outrun, only guarded or dodged: true just before the beam reaches f
   incoming(f) {
     const s = this.sig;
+    if (s?.kind === 'singing' && !s.hit.has(f) && s.t >= s.warn) { const gap = Math.hypot(f.x - s.x, f.z - s.z) - (s.t - s.warn) * s.speed; return gap > 0 && gap / s.speed < 0.3; } // R898: the Stone Song's ring about to arrive (guard or roll through it)
     if (!s || s.kind !== 'neon' || s.t < s.warn - 0.25 || s.hit.has(f)) return false;
     const fa = Math.atan2(f.z, f.x), a = s.ang;
     // angle the beam still has to turn (the beam is a full line, so it also arrives from the other side)
