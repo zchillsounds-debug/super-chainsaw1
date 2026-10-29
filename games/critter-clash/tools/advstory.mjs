@@ -30,7 +30,7 @@ for (let step = 0; step < 40; step++) {
     }
     if (S.mode === 'results') { document.querySelector('.recruit .btn, .modal-wrap .btn')?.click(); [...document.querySelectorAll('button')].find((x) => /Continue/.test(x.textContent))?.click(); return 'results'; }
     const bt = __game.battle;
-    if (bt) { const lose = LOSE; const p = bt.fighters[lose ? 1 : 0], q = bt.fighters[lose ? 0 : 1]; for (let i = 0; i < 90 && bt.phase !== 'done'; i++) { p.hp = p.maxHp; if (bt.phase === 'fight') q.hp = 1; __sim(0.5); } __sim(2); return (lose ? 'lost to ' : 'battle vs ') + bt.fighters[1].def.name; }
+    if (bt) { const lose = LOSE; const p = bt.fighters[lose ? 1 : 0], q = bt.fighters[lose ? 0 : 1]; for (let i = 0; i < 450 && bt.phase !== 'done'; i++) { p.hp = p.maxHp; if (bt.phase === 'fight') q.hp = 1; __sim(0.1); } __sim(2); return (lose ? 'lost to ' : 'battle vs ') + bt.fighters[1].def.name; }
     return S.mode;
   }, !!process.env.LOSE);
   if (log[log.length - 1] !== st) log.push(st);

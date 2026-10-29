@@ -33,7 +33,8 @@ for (let step = 0; step < 60; step++) {
   if (mode === 'world') break;
   if (mode === 'ladder') { await click(/Battle!/); continue; }
   if (mode === 'vs' || mode === 'null') {
-    await pg.evaluate(() => { const bt = __game.battle; if (!bt) return; const p = bt.fighters[0]; for (let i = 0; i < 80 && bt.phase !== 'done'; i++) { p.hp = p.maxHp; if (bt.phase === 'fight') bt.fighters[1].hp = 1; __sim(0.5); } __sim(2); });
+    const r = await pg.evaluate(() => { const bt = __game.battle; if (!bt) return; const p = bt.fighters[0]; for (let i = 0; i < 400 && bt.phase !== 'done'; i++) { p.hp = p.maxHp; if (bt.phase === 'fight') bt.fighters[1].hp = 1; __sim(0.1); } // (0.1 s steps: an under-levelled hero can be one-shot by a big super inside 0.5 s) __sim(2); return `${bt.fighters[1].def.name}: wins ${bt.wins} phase ${bt.phase}`; });
+    if (r && process.env.DBG) console.log('  battle:', r);
     continue;
   }
   if (mode === 'results') { await pg.evaluate(() => document.querySelector('.recruit .btn, .modal-wrap .btn')?.click()); if (!(await click(/Next Battle|Collect Trophy/))) await click(/Continue/); continue; }

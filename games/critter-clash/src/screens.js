@@ -958,6 +958,7 @@ export class Screens {
   }
 
   toast(msg) {
+    if (this.root.querySelector('.adv-credits')) return; // R907: nothing pops up over the rolling credits (an Alpha's toast at a stop)
     const t = document.createElement('div');
     t.className = 'toast';
     t.textContent = msg;

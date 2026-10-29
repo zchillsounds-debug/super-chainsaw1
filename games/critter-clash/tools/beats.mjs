@@ -41,7 +41,7 @@ const play = async () => {
       }
       if (S.mode === 'results') { document.querySelector('.recruit .btn, .modal-wrap .btn')?.click(); [...document.querySelectorAll('button')].find((x) => /Continue/.test(x.textContent))?.click(); return 'results'; }
       const bt = __game.battle;
-      if (bt) { const p = bt.fighters[LOSE ? 1 : 0], q = bt.fighters[LOSE ? 0 : 1]; for (let i = 0; i < 90 && bt.phase !== 'done'; i++) { p.hp = p.maxHp; if (bt.phase === 'fight') q.hp = 1; __sim(0.5); } __sim(2); return (LOSE ? 'lost to ' : 'battle vs ') + bt.fighters[1].def.name; }
+      if (bt) { const p = bt.fighters[LOSE ? 1 : 0], q = bt.fighters[LOSE ? 0 : 1]; for (let i = 0; i < 450 && bt.phase !== 'done'; i++) { p.hp = p.maxHp; if (bt.phase === 'fight') q.hp = 1; __sim(0.1); } __sim(2); return (LOSE ? 'lost to ' : 'battle vs ') + bt.fighters[1].def.name + ' (' + bt.wins.join('-') + ')'; }
       const mw = document.querySelector('.modal-wrap'); if (mw) { [...mw.querySelectorAll('button')].pop()?.click(); return 'modal: ' + mw.textContent.slice(0, 50); }
       return S.mode;
     }, !!process.env.LOSE);
