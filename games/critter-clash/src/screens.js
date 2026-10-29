@@ -1413,6 +1413,7 @@ export class Screens {
         ['💧', 'WATERWORKS prize', 'Waterwright Osei, the Old Aqueduct', A.pipeDay === day, !!F.aq_done],
         ['🏃', 'TUNNEL RUN prize', 'Tunnel Runner Tess, the Old Aqueduct', A.runDay === day, !!(F.tess_a && F.aqueduct_flow)], // R876
         ['🎵', 'DUNE CHORUS prize', 'Dune Singer Amani, the Singing Dunes', A.chorusDay === day, !!F.chanter_s], // R892
+        ((A.dconsts || []).length < 4) && ['🌌', 'The desert sky (after dark)', 'Nuri\'s telescope, the Singing Dunes', A.dstars === day, !!F.sunbird1], // R901
         ['🍉', 'MELON WATCH prize (after dark)', 'Mesa Gardener Lina, Redrock Mesa', A.melonDay === day, !!seen.mesa], // R884
         ['🔭', 'Spot the dust cloud', 'Lookout Omar\'s spyglass, Redrock Mesa', A.scopeDay === day, !!seen.mesa], // R886
         ((A.saltStat || []).length < 8) && ['🗿', 'Pose for a salt statue', 'Salt Carver Yara, the Glass Flats (a new critter each day)', A.saltDay === day, !!seen.flats], // R887
@@ -1602,6 +1603,7 @@ export class Screens {
         + (A.sledHi ? bar('🛷', 'DUNE SLED best', A.sledHi) : '')
         + (A.caravanHi ? bar('🐪', 'CARAVAN RUN best', A.caravanHi) : '')
         + (A.chorusHi ? bar('🎵', 'DUNE CHORUS best', A.chorusHi + ' notes') : '') // R892
+        + (A.dconsts?.length ? bar('🌌', 'Desert constellations', `${A.dconsts.length} / 4`) : '') // R901: no goal
         + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') + (A.pipeHi ? bar('💧', 'WATERWORKS best', A.pipeHi) : '') + (A.runBest ? bar('🏃', 'TUNNEL RUN best', (A.runBest / 10).toFixed(1) + ' s') : '') /* R875 */ + (A.melonBest ? bar('🍉', 'MELON WATCH best', A.melonBest + ' shooed') : '') /* R884 */ + (A.scopeN ? bar('🔭', 'Dust clouds spotted', A.scopeN) : '') /* R886 */ + (A.saltStat?.length ? bar('🗿', 'Salt statues', `${Math.min(8, A.saltStat.length)} / 8${A.roseStat?.length ? ` · 🌸 ${A.roseStat.length} / 4` : ''}`) : '') /* R887 (R893: rose salt) */ // R865, R854, R838: no goal
         + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '')
         + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '')
