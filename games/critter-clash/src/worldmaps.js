@@ -1131,6 +1131,7 @@ export const MAPS = {
     npcs: [
       { id: 'aurelark_s', x: 13, y: 7, critter: 'aurelark', name: 'Aurelark', dir: 's', story: 'legend:aurelark', showFlag: 'sunbird_wake', hideFlag: 'legend_aurelark', scale: 1.5, act: 'hop' },
       { id: 'nuri_s', x: 10, y: 5, critter: 'siroccat', name: 'Stargazer Nuri', dir: 'e', showFlag: 'sunbird1', hideFlag: 'legend_aurelark', story: 'singing' },
+      { id: 'nuri_s2', x: 10, y: 5, critter: 'siroccat', name: 'Stargazer Nuri', dir: 'e', showFlag: 'legend_aurelark', story: 'nurisky' }, // R899: back by her telescope after the legend
       { id: 'chanter_s', x: 4, y: 7, critter: 'humpdrop', name: 'Dune Singer Amani', dir: 'e', wander: 1, trainer: { lv: 42, sight: 3, diff: 0.88, intro: 'Dune Singer Amani: I come here to sing with the stones. Humpdrop hums the low part. Battle us, and hear the high part!', beat: 'Dune Singer Amani: A lovely duet. You were a little sharp. Humpdrop was a little flat.' } },
     ],
   },

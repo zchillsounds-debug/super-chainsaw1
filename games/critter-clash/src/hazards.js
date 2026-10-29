@@ -495,7 +495,7 @@ export class Hazards {
       const fade = Math.min(1, Math.max(0, (sg.warn + sg.dur - t) / 0.6));
       if (!live) { if (Math.random() < dt * 30) fx.spawn({ x: sg.x + (Math.random() - 0.5) * 2, y: 0.5 + Math.random() * 3, z: sg.z + (Math.random() - 0.5) * 2, vy: 1.2, color: Math.random() < 0.5 ? 0xd8b0ff : 0xffe0f8, size: 0.35, life: 0.7, shape: 'glow' }); }
       else {
-        if (!sg.on) { sg.on = true; sfx.hum?.(2); B.shake(0.15); }
+        if (!sg.on) { sg.on = true; (sfx.stonesong || sfx.hum)?.call(sfx, 2); B.shake(0.15); }
         const R = (t - sg.warn) * sg.speed;
         sg.wave.scale.setScalar(Math.max(0.01, R)); sg.wave2.scale.set(Math.max(0.01, R), 0.9 + Math.sin(t * 30) * 0.15, Math.max(0.01, R));
         sg.wave.material.opacity = 0.8 * fade; sg.wave2.material.opacity = 0.3 * fade;

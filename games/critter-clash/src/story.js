@@ -12,6 +12,7 @@ import { rivalFor, MAPS } from './worldmaps.js';
 import { getMap } from './interiors.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
+import { DESERT_CONSTS } from './stars.js';
 import { arcadeGame, skyHop, waveRider, reefDive, duneSled, caravanRun, sporeDrift, waterworks, duneChorus } from './arcade.js';
 import { canRain, rainAt, stormAt, LOST_SPOTS, derbyOf, isWinter, SEASON_FISH, FISH, seasonKey, gullFish, traderTown, alphaToday } from './world.js';
 
@@ -775,6 +776,11 @@ export function storyTalk(S, id, w, a) {
   }
   if (id === 'liftkeeper') return w.say(F.cup_canyon ? ['Liftkeeper Bo: The winch is oiled, the rope is new, and Scarabold has had its breakfast. The lifts are open!', 'Liftkeeper Bo: Step up to either lift and hop in the basket. Up top is the mesa: melons, a lookout, and a view all the way to the Sun Gate.'] : ['Liftkeeper Bo: These rope lifts haul water and visitors up to the mesa top. Scarabold pulls. I supervise.', 'Liftkeeper Bo: The winch is squeaky today. Win the Canyon Cup and I\'ll have it oiled for the champion. Probably.'], null, 'Liftkeeper Bo');
   if (id === 'singing') return singingTalk(S, w);
+  if (id === 'nurisky') { // R899: Stargazer Nuri, back by her telescope after the legend: what's left of the desert sky
+    const seen = save.adv.dconsts || [], left = DESERT_CONSTS.filter((c) => !seen.includes(c.id)), who = 'Stargazer Nuri', night = w.phase === 'night';
+    return w.say(left.length ? [`${who}: The Sun-Bird sleeps easy now, so I can get back to my stars. ${night ? 'My telescope\'s right here. Have a look!' : 'Come back after dark and use my telescope.'}`, `${who}: ${seen.length ? `${seen.length} of ${DESERT_CONSTS.length} desert constellations in your log.` : 'The desert sky has four constellations of its own.'} One I'd love you to see: ${left[0].tip}`]
+      : [`${who}: All four desert constellations! The Sun-Bird, the Caravan, the Scarab and the Lantern. You know this sky better than I do now.`, `${who}: ${night ? 'Look, the Sun-Bird is rising. She always looks a little sleepy.' : 'On clear nights the stones hum along with the stars. Or maybe that\'s me.'}`], null, who);
+  }
   if (id === 'gauntsign') { // the signpost, with this week's theme chalked underneath
     const th = gauntletTheme(gauntletWeek()), sg = getMap('peak').signs.find((q) => q.act === 'gauntsign');
     return w.say([sg.text, `Someone has chalked a note underneath. "THIS WEEK: ${TYPES[th[0]].name.toUpperCase()} & ${TYPES[th[1]].name.toUpperCase()}!"`], null, '📜 Sign');
