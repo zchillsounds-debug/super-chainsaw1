@@ -14,7 +14,7 @@
 5. **Session 5 (last):** a full regression pass (all of the above, fixes only), final version, final APK and source zip sent to the user; no chaining.
 
 ## Status
-- **Session 1 (D20, R903–R904):** see HANDOFF.md "Session D20".
+- **Session 1 (D20, R903–R905): done.** Sirocco's glyph rubbings, Zahra's fireside tales, Journal rows; mainwalk / ch2walk / ch3walk all good; start and end checks clean. Next: session 2 (story playthroughs). Details: HANDOFF.md "Session D20".
 
 # Critter Clash roadmap: Chapter 3 (the Amber Sands) and battle depth (agreed with the user on 2026-10-27)
 
