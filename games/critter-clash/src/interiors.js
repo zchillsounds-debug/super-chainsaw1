@@ -170,7 +170,7 @@ const ROOMS = {
     'Wp.p.p.p.p.pW',
     'W...........W',
     'W.p.p...p.p.W',
-    'W...........W',
+    'W.....e.....W',
     'W.p..YYY..p.W',
     'WO...YYY...OW',
     'WWWWWW.WWWWWW',
@@ -271,6 +271,7 @@ const ITEMS = {
   d: 'A round brass tray on short legs. A teapot of mint tea and three tiny glasses. The tea is still warm!',
   x: 'A brass lantern with star-shaped holes. It throws little stars all over the canvas.',
   w: 'Rugs, rolled up and stacked. Every caravan carries a few, for trading or for sitting on.',
+  e: 'A coin case.',
   Z: 'A tower of hat boxes tied up with ribbons. Milliner Mo says the bottom one is "not for sale. Ever."',
 };
 
@@ -317,6 +318,7 @@ export function interiorMap(key) {
     if (t === 'Q' && kind === 'tent') text = 'A bedroll on a low wooden frame, under a striped camel-wool blanket. Desert nights get cold!';
     if (t === 'C' && kind === 'shop') text = 'Hat boxes, stacked to the ceiling. One is labelled "EXTRA FLOPPY".';
     if (t === 'U') { const n = [...row].slice(0, x).filter((c) => c === 'U').length; signs.push({ x, y, text, hide: true, act: 'case:' + CUP_ORDER[n] }); return; }
+    if (t === 'e') { signs.push({ x, y, text: '', hide: true, act: 'coincase' }); return; } // R881: the Sunwell Museum's Sun City coin case (story.js)
     if (t === 'p') { signs.push({ x, y, text: '', hide: true, act: 'fossil:' + fossilAt(tiles, x, y) }); return; }
     signs.push({ x, y, text, hide: true, act: t === 'Q' && kind === 'home' ? 'rest' : t === 'V' ? 'mirror' : t === 'X' && kind === 'center' ? 'smoothie' : t === 'H' ? 'hatshop' : null });
   }));

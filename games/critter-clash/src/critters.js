@@ -1554,6 +1554,7 @@ export const SHOP_HATS = [
   { id: 'dewcirclet', name: 'Dewdrop Circlet', kind: 'circlet', col: 0xcfe8f4, band: 0x3ac8e8, price: 0, gift: true, extra: true }, // R829: the Sunwell Spring's chest
   { id: 'guildfez', name: 'Caravan Guild Fez', kind: 'fez', col: 0xa8243a, band: 0xffc23a, price: 0, gift: true, extra: true }, // R828: five full days of the Caravan Guild's bounty board
   { id: 'runnerband', name: "Runner's Headband", kind: 'band', col: 0x2ab8d0, band: 0xffd040, price: 0, gift: true, extra: true }, // R875: TUNNEL RUN under 6.6 s (Tunnel Runner Tess, the Old Aqueduct)
+  { id: 'coincrown', name: 'Sun-Coin Crown', kind: 'coincrown', col: 0xd89a3a, band: 0x2ab8a0, price: 0, gift: true, extra: true }, // R881: fill the Sunwell Museum's Sun City coin case (12 coins from the aqueduct silt; Curator Petra)
   { id: 'tollband', name: 'Toll-Keeper\'s Band', kind: 'circlet', col: 0xd8a040, band: 0x2ab8a0, price: 0, gift: true, extra: true }, // R873: the Old Aqueduct's toll-keeper's nook (up the dry east inflow)
   { id: 'glowlantern', name: 'Glowcap Lantern Hat', kind: 'lantern', col: 0x3ae8c8, band: 0xfff4d8, price: 0, gift: true, extra: true }, // R868: Lantern Maker Yusra, for Pim's jar of glowcap spores
   { id: 'lanternhat', name: 'Paper Lantern Hat', kind: 'lantern', col: 0xffa040, band: 0xd83a3a, price: 0, gift: true, extra: true }, // R820: Lantern Maker Yusra's night market, seven sky lanterns
@@ -1607,6 +1608,15 @@ export function hatModel(cr, kind, col, band) {
     const rim = inked(new THREE.TorusGeometry(r * 0.2, r * 0.05, 6, 16), gold, 0.012); F.add(rim);
     const face = new THREE.Mesh(new THREE.CircleGeometry(r * 0.19, 16), toon(band, { rim: 1, emissive: new THREE.Color(band).multiplyScalar(0.45).getHex() })); face.position.z = 0.005; F.add(face);
     for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, ray = inked(new THREE.ConeGeometry(r * 0.05, r * 0.14, 4), gold, 0.01); ray.position.set(Math.cos(a) * r * 0.31, Math.sin(a) * r * 0.31, 0); ray.rotation.z = a - Math.PI / 2; F.add(ray); }
+  }
+  if (kind === 'coincrown') { // R881: a bronze band with old toll coins standing up all round it, edge-on like a crown's points; the front coin is bigger, with a teal sun-bird stamp
+    G.position.y -= r * 0.36; const br = toon(col, { rim: 1, emissive: new THREE.Color(col).multiplyScalar(0.18).getHex() });
+    add(new THREE.TorusGeometry(r * 0.86, r * 0.07, 6, 24), br, 0.012).rotation.x = Math.PI / 2;
+    for (let k = 0; k < 11; k++) {
+      const a = Math.PI / 2 + (k - 5) / 11 * Math.PI * 2, big = k === 5, cr2 = r * (big ? 0.24 : 0.16), c = add(new THREE.CylinderGeometry(cr2, cr2, r * 0.05, 14), br, 0.01);
+      c.rotation.x = Math.PI / 2; c.rotation.y = 0; const o = new THREE.Group(); o.position.set(Math.cos(a) * r * 0.86, r * (big ? 0.22 : 0.15), Math.sin(a) * r * 0.86); o.rotation.y = -a + Math.PI / 2; G.add(o); G.remove(c); o.add(c);
+      if (big) { const st = new THREE.Mesh(new THREE.CircleGeometry(r * 0.13, 12), toon(band, { rim: 1, emissive: new THREE.Color(band).multiplyScalar(0.4).getHex() })); st.position.z = r * 0.03; o.add(st); }
+    }
   }
   if (kind === 'turban') { // R814: a wrapped turban, three tilted turns of pale cloth, a glass-blue jewel on the brow and a see-through veil trailing behind
     G.position.y -= r * 0.32;
