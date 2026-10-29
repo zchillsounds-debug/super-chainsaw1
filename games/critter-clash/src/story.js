@@ -1458,6 +1458,7 @@ export function storyMark(npc) {
     dash_b: F.sunstone && !F.dash_show,
     moonwhal_a: F.tower_bronze && !F.legend_moonwhal, solmoth_r: F.festlamp_done && !F.legend_solmoth, verdelk_g: F.grove4_done && !F.legend_verdelk, aurelark_s: F.sunbird_wake && !F.legend_aurelark, // the legends, once awake
     star_c: F.buried_vault && !F.sunbird1, // D4: Stargazer Nuri wants to hear about the vault mural
+    sabah_g: F.legend_aurelark && !save.adv.dtrialWins && !F.grand, // R909: Elder Sabah while the Desert Trial is the goal line (the same test as nextGoal)
   };
   return on[npc] ? '!' : null;
 }
