@@ -718,7 +718,7 @@ export class Screens {
         ['Cups', 'Each town\'s stadium holds a cup, and the trials test your Strength, Friendship and Wisdom on the road to the Critter Crown.'],
         ['Berry Centers', 'Rest to heal, swap who leads the way at the Critter Box, leave a critter at the Daycare and blend berry smoothies.'],
         ['The Isles', 'Once you hold the Critter Crown, the Sunny Gull ferry sails from Seashell Town to the Sunscatter Isles: new critters, three island cups and the Gloom Gulls.'],
-        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it, where Forager Pim\'s spore puffs fly in SPORE DRIFT. Past Pim\'s grate, an old water tunnel runs south: turn its sluice wheels to cross the channels, then try Waterwright Osei\'s WATERWORKS board, and race Tunnel Runner Tess once the channels run dry.'],
+        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it, where Forager Pim\'s spore puffs fly in SPORE DRIFT. Past Pim\'s grate, an old water tunnel runs south: turn its sluice wheels to cross the channels, then try Waterwright Osei\'s WATERWORKS board, and race Tunnel Runner Tess once the channels run dry. Up on Redrock Mesa, Gardener Lina needs help after dark: shoo the Fennzaps out of her melons in MELON WATCH.'],
         ['After that', 'The Battle Tower, three legendary critters, the weekly Masters, the Kite Glider\'s hidden spots, pearls, dives and more. The Champ page keeps track.'],
         ['100%', 'Records shows how much of Clashara, the isles (and later the Amber Sands) you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
       ]],
@@ -1393,6 +1393,7 @@ export class Screens {
         ['🍄', 'SPORE DRIFT prize', 'Forager Pim, Glowcap Hollow', A.sporeDay === day, !!F.gcap_done],
         ['💧', 'WATERWORKS prize', 'Waterwright Osei, the Old Aqueduct', A.pipeDay === day, !!F.aq_done],
         ['🏃', 'TUNNEL RUN prize', 'Tunnel Runner Tess, the Old Aqueduct', A.runDay === day, !!(F.tess_a && F.aqueduct_flow)], // R876
+        ['🍉', 'MELON WATCH prize (after dark)', 'Mesa Gardener Lina, Redrock Mesa', A.melonDay === day, !!seen.mesa], // R884
         ['📜', `Caravan Guild bounties (${A.bounty?.day === day ? A.bounty.paid.length : 0}/3)`, `the board in ${N('oasis')}`, A.bounty?.day === day && A.bounty.paid.length >= 3, !!F.sands_arrive], // R828
         ['🤿', 'REEF DIVE prize', 'the Sunken Wreck (Snorkeller Pia, Port Coral)', A.diveDay === day, F.dived],
         ['🐦', `Gull Club catch: ${gullFish(day)}`, 'any island water → Petrel, Starfall Atoll', A.gullPaid === day, F.amends3_done && F.rod],
@@ -1577,13 +1578,13 @@ export class Screens {
         + (A.cnt?.rail ? bar('🚂', 'Sand-Rail rides', A.cnt.rail) : '')
         + (A.sledHi ? bar('🛷', 'DUNE SLED best', A.sledHi) : '')
         + (A.caravanHi ? bar('🐪', 'CARAVAN RUN best', A.caravanHi) : '')
-        + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') + (A.pipeHi ? bar('💧', 'WATERWORKS best', A.pipeHi) : '') + (A.runBest ? bar('🏃', 'TUNNEL RUN best', (A.runBest / 10).toFixed(1) + ' s') : '') /* R875 */ // R865, R854, R838: no goal
+        + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') + (A.pipeHi ? bar('💧', 'WATERWORKS best', A.pipeHi) : '') + (A.runBest ? bar('🏃', 'TUNNEL RUN best', (A.runBest / 10).toFixed(1) + ' s') : '') /* R875 */ + (A.melonBest ? bar('🍉', 'MELON WATCH best', A.melonBest + ' shooed') : '') /* R884 */ // R865, R854, R838: no goal
         + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '')
         + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '')
         + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal
         + (A.cnt?.lantern ? bar('🏮', 'Sky lanterns sent up', A.cnt.lantern) : '') // R820: no goal
         + (F.hollow_arrive ? bar('🍄', 'Big glowcaps for Forager Pim', F.gcap_done ? 'all given ✓' : `${glowcapCount()} / ${MAPS.glowhollow.glowcaps.length}`) : '') // R849: no goal (the Glowcap Hat counts with the found hats)
-        + (F.aq_arrive ? bar('💧', "The Old Aqueduct's Sun Sluice", F.aqueduct_flow ? 'open ✓' : 'shut') : '') + (F.aqueduct_flow ? bar('🏺', "The toll-keeper's nook", F.aq_nook ? 'found ✓' : 'not yet') : '') /* R880: no goal */ + (A.aqCoins ? bar('🪙', 'Sun City coins (aqueduct silt)', A.aqCoins >= 12 ? `${A.aqCoins} · case full ✓` : `${A.aqCoins} · case ${A.aqCoins}/12`) : '') /* R871: no goal */ // R861: no goal (its two hats count with the found hats)
+        + (F.aq_arrive ? bar('💧', "The Old Aqueduct's Sun Sluice", F.aqueduct_flow ? 'open ✓' : 'shut') : '') + (F.aqueduct_flow ? bar('🏺', "The toll-keeper's nook", F.aq_nook ? 'found ✓' : 'not yet') : '') /* R880: no goal */ + (A.aqCoins ? bar('🪙', 'Sun City coins', A.aqCoins >= 12 ? `${A.aqCoins} · case full ✓` : `${A.aqCoins} · case ${A.aqCoins}/12`) : '') /* R871: no goal */ // R861: no goal (its two hats count with the found hats)
         + (A.bountySeen ? bar('📜', 'Guild Seals (full bounty boards)', A.seals || 0) : '') // R828: no goal (the fez comes at five; it counts with the found hats)
         + (Object.keys(F).some((k) => k.startsWith('lampduel_')) ? bar('⚔️', 'Lamplight duels won', Object.keys(F).filter((k) => k.startsWith('lampduel_')).length) : ''); // R825: no goal
     }

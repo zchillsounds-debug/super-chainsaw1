@@ -7,7 +7,7 @@ export const endGameSave = () => {
   __save.adv = { hero: 'cindermunch', map: 'bloom', x: 10, y: 8, dir: 's', flags: Object.fromEntries([...F].map((k) => [k, true])), spawn: { map: 'village', x: 4, y: 6 },
     hats: __hats.slice(0, 40).map((x) => x.id), clock: 12, rain: false, time: 40000, steps: 900,
     seen: Object.fromEntries(Object.keys(__maps).map((k) => [k, 1])), tower: { streak: 9, best: 15, run: 1, wins: 40 },
-    fishLog: { n: 30, sp: { 'Pond Minnow': 12 } }, consts: [], notes: [0, 1, 2], snaps: [] };
+    fishLog: { n: 30, sp: { 'Pond Minnow': 12 } }, melonBest: 14, aqCoins: 7, runBest: 71, consts: [], notes: [0, 1, 2], snaps: [] };
 };
 export const world = "__game.endBattle?.(); S.adventure(); __sim(0.3);";
 const click = (txt) => `[...document.querySelectorAll('.modal-wrap button')].find((e) => e.textContent.includes(${JSON.stringify(txt)}))?.click()`;
