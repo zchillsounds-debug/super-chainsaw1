@@ -445,6 +445,7 @@ export class World {
     this.buildSunset();
     this.buildFort();
     this.buildGarden();
+    this.buildMelons();
     this.buildGeyser();
     this.buildBloomFw();
     this.buildFountain();
@@ -514,6 +515,7 @@ export class World {
 
   unload() {
     if (this.run) this.runEnd(null);
+    if (this.mw) this.mwEnd(true);
     if (!this.group) return;
     if (this.fishing) { this.fishing = null; this.busy = false; }
     if (this.twigs) { this.twigs = null; this.busy = false; }
@@ -2727,6 +2729,91 @@ export class World {
         const c = inked(new THREE.SphereGeometry(0.22, 12, 8), toon(0x8a5a2a), OL * 0.25); c.scale.z = 0.45; head.add(c); } }
     bakeStatic({ root: g, mats: {} });
     this.garden = { x, y, px, pz, stage, g };
+  }
+
+  // R883: Mesa Gardener Lina's melon patch on Redrock Mesa (M.melons: a soil bed with a striped melon on every tile, a low rope fence)
+  buildMelons() {
+    this.melons = null;
+    const P = this.M.melons; if (!P || this.M.indoor) return;
+    const g = new THREE.Group(); this.group.add(g);
+    const [x0, z0] = wpos(P.x, P.y), [x1, z1] = wpos(P.x + P.w - 1, P.y + P.h - 1), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, W = x1 - x0 + TILE * 0.9, D = z1 - z0 + TILE * 0.9;
+    const bed = new THREE.Mesh(new THREE.BoxGeometry(W, 0.08, D), toon(0x7a4a2a)); bed.position.set(cx, 0.04, cz); bed.receiveShadow = true; g.add(bed);
+    const wood = toon(0x9a6a3a), rope = toon(0xe8d8a8);
+    for (const [px, pz] of [[cx - W / 2, cz - D / 2], [cx + W / 2, cz - D / 2], [cx - W / 2, cz + D / 2], [cx + W / 2, cz + D / 2], [cx, cz - D / 2], [cx, cz + D / 2]]) { const p = inked(new THREE.CylinderGeometry(0.07, 0.08, 0.6, 6), wood, OL * 0.2); p.position.set(px, 0.3, pz); p.castShadow = true; g.add(p); }
+    for (const [w, d, ox, oz] of [[W, 0.04, 0, -D / 2], [W, 0.04, 0, D / 2], [0.04, D, -W / 2, 0], [0.04, D, W / 2, 0]]) { const r = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, d), rope); r.position.set(cx + ox, 0.48, cz + oz); g.add(r); }
+    const rind = toon(0x3aa040, { rim: 0.5 }), stripe = toon(0x1e6a2a), leaf = toon(0x5ac24a), body = new THREE.SphereGeometry(0.46, 14, 10), st = new THREE.SphereGeometry(0.466, 14, 10, 0, 0.22);
+    for (let j = 0; j < P.h; j++) for (let i = 0; i < P.w; i++) {
+      const [px, pz] = wpos(P.x + i, P.y + j), ox = ((i * 7 + j * 3) % 5 - 2) * 0.08, m = new THREE.Group(); m.position.set(px + ox, 0.4, pz - 0.15 + ((i + j) % 2) * 0.12); m.rotation.y = (i * 1.7 + j) % 3; m.scale.set(1.25, 0.85, 1); g.add(m);
+      const b = inked(body, rind, OL * 0.25); b.castShadow = true; m.add(b);
+      for (let k = 0; k < 6; k++) { const sm = new THREE.Mesh(st, stripe); sm.rotation.y = k / 6 * Math.PI * 2; m.add(sm); }
+      for (const sd of [-1, 1]) { const lf = inked(new THREE.SphereGeometry(0.2, 8, 6), leaf, OL * 0.2); lf.scale.set(1.2, 0.2, 0.7); lf.position.set(sd * 0.6, -0.22, 0.2 * sd); lf.rotation.y = sd; g.add(lf); lf.position.add(m.position).setY(0.1); }
+    }
+    bakeStatic({ root: g, mats: {} });
+    this.melons = { g };
+  }
+  // R883: MELON WATCH: after dark, Fennzaps sneak into Lina's patch and pop up between the melons. Step onto one's tile to shoo it.
+  // 25 seconds; shoo 8 for the day's berries (A.melonDay), 12 for Lina's Melon Rind Helmet; best on Records (A.melonBest)
+  melonAsk(a) {
+    const n = a.n, A = save.adv, day = new Date().toISOString().slice(0, 10), dark = this.phase === 'night' || this.phase === 'evening', P = this.M.melons;
+    if (!dark) {
+      if (!A.flags.melon_hint) { A.flags.melon_hint = true; persist(); return this.say([`${n.name}: Melons, melons, melons! Ripe in the sun all day...`, `${n.name}: ...and nibbled all night. The Fennzaps come sniffing up the cliffs after dark. Come back after sunset and help me shoo them?`], null, n.name); }
+      a.skipMelon = true; this.talk(a); a.skipMelon = false; return;
+    }
+    this.ask(`${n.name}: They're here! Little ears popping up between my melons! Step on the spot where one pops up and it'll scoot off. Shoo ${P.goal} and I'll pay you in berries!${A.melonBest ? ` Your best: ${A.melonBest}.` : ''}${A.melonDay === day ? ' (You already earned today\'s berries!)' : ''}`, ['🍉 Melon Watch!', 'Chat', 'Never mind'], (i) => {
+      if (i === 1) { a.skipMelon = true; this.talk(a); a.skipMelon = false; return; }
+      if (i === 0) this.mwStart();
+    }, n.name);
+  }
+  mwStart() {
+    const P = this.M.melons, foxes = [];
+    for (let k = 0; k < 2; k++) { const cr = new Critter(withGear(byId('fennzap'), 36), { lod: 'low' }); bakeStatic(cr); skinStatic(cr); cr.root.scale.setScalar(0.001); cr.root.visible = false; this.group.add(cr.root);
+      const rm = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xffd040, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0 }); rm.userData.own = true;
+      const ring = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), rm); ring.rotation.x = -Math.PI / 2; ring.visible = false; this.group.add(ring); // a warm glow under each Fennzap so it shows at night
+      foxes.push({ cr, ring, rm, x: -1, y: -1, t: 0, life: 0 }); }
+    document.querySelectorAll('.toast').forEach((t) => t.remove()); // (an arrival toast would sit over the score)
+    const el = document.createElement('div'); el.className = 'wd-run wd-melon'; this.S.root.appendChild(el);
+    this.mw = { t: P.time, go: 1.2, n: 0, foxes, el, next: 0.3 };
+    sfx.beep(); this.mwTick(0);
+  }
+  mwTick(dt) {
+    const U = this.mw, P = this.M.melons;
+    if (U.go > 0) { U.go -= dt; if (U.go <= 0) sfx.beep(true); }
+    else if (!this.dialog && !this.busy) {
+      U.t -= dt; U.next -= dt;
+      const late = U.t < P.time * 0.45; // the last stretch: two at once, quicker
+      if (U.next <= 0) { const f = U.foxes.find((q) => q.life <= 0) ; if (f && (late || !U.foxes.some((q) => q.life > 0))) {
+        const busy = new Set(U.foxes.filter((q) => q.life > 0).map((q) => q.x + ',' + q.y)); let x, y, k = 0;
+        do { x = P.x + Math.floor(Math.random() * P.w); y = P.y + Math.floor(Math.random() * P.h); } while (k++ < 20 && (busy.has(x + ',' + y) || (x === this.hx && y === this.hy) || Math.abs(x - this.hx) + Math.abs(y - this.hy) < 2));
+        f.x = x; f.y = y; f.life = late ? 1.5 : 1.9; f.t = 0; f.cr.root.visible = true; const [px, pz] = wpos(x, y); f.cr.root.position.set(px, 0, pz + 0.25); f.ring.visible = true; f.ring.position.set(px, 0.1, pz + 0.25); f.cr.root.rotation.y = Math.atan2(this.hx - x, this.hy - y);
+        sfx.foot?.('sand'); U.next = late ? 0.35 : 0.5; } else U.next = 0.1; }
+      for (const f of U.foxes) if (f.life > 0) {
+        f.t += dt; f.life -= dt;
+        if (f.x === this.hx && f.y === this.hy) { // shooed!
+          U.n++; f.life = 0; this.g.input?.haptic?.(15); sfx.pickup?.();
+          const [px, pz] = wpos(f.x, f.y); for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5) * 0.6, y: 0.5, z: pz + (Math.random() - 0.5) * 0.6, vx: (Math.random() - 0.5) * 3, vy: 1.5 + Math.random() * 2, vz: (Math.random() - 0.5) * 3, color: k % 2 ? 0xffe14d : 0xe8c87a, size: 0.3, life: 0.6, shape: k % 2 ? 'star' : 'puff', additive: false, grav: 6 });
+        }
+        const pop = Math.min(1, f.t / 0.18, Math.max(0, f.life) / 0.18); f.cr.root.scale.setScalar(Math.max(0.001, CS * 0.75 * pop)); f.cr.root.position.y = -0.5 * (1 - pop); f.rm.opacity = 0.9 * pop * (0.75 + 0.25 * Math.sin(f.t * 14));
+        if (f.life <= 0) { f.cr.root.visible = false; f.cr.root.scale.setScalar(0.001); f.ring.visible = false; }
+      }
+      if (U.t <= 0) return this.mwEnd(false);
+    }
+    U.el.innerHTML = U.go > 0 ? `<b>READY...</b> <i>step on the Fennzaps!</i>` : `🍉 <b>${U.n}</b> <i>shooed</i> <small>${Math.max(0, U.t).toFixed(0)} s</small>`;
+  }
+  mwEnd(quiet) {
+    const U = this.mw; this.mw = null;
+    U.el.remove(); for (const f of U.foxes) { f.cr.root.parent?.remove(f.cr.root); f.cr.root.traverse((o) => o.geometry?.dispose()); f.ring.parent?.remove(f.ring); f.ring.geometry.dispose(); f.rm.dispose(); }
+    if (quiet) return;
+    const P = this.M.melons, A = save.adv, day = new Date().toISOString().slice(0, 10), who = 'Mesa Gardener Lina', own = (A.hats ||= []), n = U.n;
+    const pb = n > (A.melonBest || 0); if (pb) A.melonBest = n; countUp('melonwatch');
+    const beat = n >= P.goal, prize = beat && A.melonDay !== day, hat = n >= P.gold && !own.includes('melonhelm');
+    if (prize) { A.melonDay = day; save.berries = (save.berries || 0) + 4; } if (hat) own.push('melonhelm');
+    persist(); if (beat) reward(hat ? 3 : 2); this.questMarks?.();
+    this.say([
+      beat ? `${who}: ${n} Fennzaps shooed! ${n >= P.gold ? 'Not a single nibble tonight. You\'re a natural!' : 'My melons thank you!'}` : `${who}: ${n} shooed... and the rest got a nibble or two. Help me again? ${P.goal} would do it!`,
+      ...(pb ? [`A new best on the melon watch! 🍉 ${n}`] : []),
+      ...(prize ? ['Lina hands over a basket of berries, and a slice of melon for the road. +4 🍓 (Shoo them again tomorrow night for more.)'] : beat ? ['(You already earned Lina\'s berries today. Your score still counts for Records!)'] : ['Tip: stand in the middle of the patch, so every melon is a step or two away.']),
+      ...(hat ? [`${who}: ${P.gold}! Here. I carved this out of last year's prize melon and dried it in the sun for a whole summer. It's a helmet now. Don't eat it.`, '{hero} got the Melon Rind Helmet! 🍉 (☰ → 🎩 Hats)'] : []),
+    ], null, who);
   }
 
   // tend the garden plot: plant, water once a day (rain counts), pick the flower when it blooms
@@ -5357,7 +5444,7 @@ export class World {
       const [px, pz] = wpos(this.hx, this.hy);
       for (let k = 0; k < 5; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5), y: 0.4, z: pz + (Math.random() - 0.5), vy: 2 + Math.random() * 2, vx: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2, color: 0x3fae4a, size: 0.22, life: 0.5, shape: 'leaf', additive: false, grav: 6, rot: Math.random() * 6 });
       sfx.step?.();
-      if (this.M.wild && this.encCool <= 0 && !this.run && Math.random() < (this.M.wild.rate || 0.1)) { this.ambush(); return; }
+      if (this.M.wild && this.encCool <= 0 && !this.run && !this.mw && Math.random() < (this.M.wild.rate || 0.1)) { this.ambush(); return; }
     }
     if (this.storyCheck()) return;
     this.trainerCheck();
@@ -5385,6 +5472,7 @@ export class World {
     const act = inp.pressed.attack || inp.pressed.confirm || this.tapA;
     this.tapA = false;
     if (this.run) this.runTick(dt);
+    if (this.mw) this.mwTick(dt);
     if (this.fishing && !this.dialog) this.updateFish(dt, act);
     if (this.dialog) { this.dialog.steer?.(inp.move); if (act) this.dialog.next(); }
     else if (!this.busy) {
@@ -5891,7 +5979,7 @@ export class World {
     // talk across a counter
     if (!a && this.tile(fx, fy) === 'K') { const [dx, dy] = DIRS[this.dir]; a = this.occupied(fx + dx, fy + dy, 'hero'); }
     if (a && a.n) return this.talk(a);
-    if (a?.wild && !this.busy) { // poke a roaming wild critter (a sleeping one wakes up grumpy)
+    if (a?.wild && !this.busy && !this.mw && !this.run) { // poke a roaming wild critter (a sleeping one wakes up grumpy)
       return this.say([this.phase === 'night' ? `The wild ${a.cr.def.name} was fast asleep... and now it's wide awake and grumpy!` : `The wild ${a.cr.def.name} puffs up for a fight!`], () => this.wildFight(a));
     }
     const B = this.follower;
@@ -6218,6 +6306,7 @@ export class World {
     const dq = deliveryFor(n.id); if (dq) return this.S.worldStory('deliver:' + dq, this, a); // a parcel for them comes first (quest-chain links are givers too)
     const cq = chainFor(n.id); if (cq) return this.S.worldStory('lost:' + cq, this, a); // a quest-chain link they hand out on top of their own story
     if (n.story) return this.S.worldStory(n.story, this, a);
+    if (this.M.melons?.who === n.id && !a.skipMelon) return this.melonAsk(a); // R883: MELON WATCH
     if (this.M.run?.who === n.id && !a.skipRun && save.adv.flags[n.id] && save.adv.flags[this.M.sluice?.flag]) return this.runAsk(a); // R875: TUNNEL RUN
     const dl = !n.trainer && !(n.id === 'mom' && this.morning) && deliveredLine(n.id); // (Mom's breakfast comes first) if (dl && Math.random() < 0.6) return this.say(dl);
     if (n.trainer) {
@@ -6554,6 +6643,7 @@ export class World {
       const beacon = new THREE.Sprite(bm); beacon.scale.setScalar(2.2); beacon.position.set(0, 2.6, 0); g.add(beacon); // a pulsing light over the post to make for
       return { g, r, rm, bm, beacon };
     });
+    document.querySelectorAll('.toast').forEach((t) => t.remove());
     const el = document.createElement('div'); el.className = 'wd-run'; this.S.root.appendChild(el);
     this.run = { t: 0, cp: 0, marks, el, go: 1.2 };
     sfx.beep(); this.runTick(0);

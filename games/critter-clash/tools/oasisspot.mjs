@@ -8,13 +8,13 @@ const pg = await b.newPage({ viewport: { width: w, height: h } });
 const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
 await pg.goto('http://localhost:' + (process.env.PORT || 5180) + '/?q=high' + (w < h ? '&mobile' : ''));
 await pg.waitForFunction(() => window.__ready, null, { timeout: 400000 });
-await pg.evaluate(([x, y]) => {
+await pg.evaluate(([x, y, map, hr, flags]) => {
   Object.assign(__save, { trainer: { name: 'Sam', partner: 'cindermunch' }, tutorialDone: true, news: [] });
-  const f = {}; for (const k of 'intro,quest,crowned,ending,sunstone,rail_open,sands_arrive'.split(',')) f[k] = true;
+  const f = {}; for (const k of flags.split(',')) f[k] = true;
   const now = new Date();
-  __save.adv = { hero: 'cindermunch', map: 'oasis', x, y, dir: 's', flags: f, hats: [], spawn: { map: 'oasis', x: 12, y: 12 }, sandstorm: false, shift: { day: now.toISOString().slice(0, 10), h: (11 - now.getHours() + 24) % 24 } };
+  __save.adv = { hero: 'cindermunch', map, x, y, dir: 's', flags: f, hats: [], spawn: { map: 'oasis', x: 12, y: 12 }, sandstorm: false, shift: { day: now.toISOString().slice(0, 10), h: (hr - now.getHours() + 24) % 24 } };
   __game.screens.adventure(); __sim(1.5);
-}, [sx, sy]);
+}, [sx, sy, process.env.MAP || 'oasis', +(process.env.HR || 11), (process.env.FLAGS || 'intro,quest,crowned,ending,sunstone,rail_open,sands_arrive,cup_mirage,cup_canyon,dash_canyon,redrock_arrive,mesa_open')]);
 await pg.waitForTimeout(800); await pg.screenshot({ path: `tools/out/oasisspot-${tag}.png`, timeout: 120000 });
 console.log('errors:', errs.join(' | ') || 'none');
 await b.close();
