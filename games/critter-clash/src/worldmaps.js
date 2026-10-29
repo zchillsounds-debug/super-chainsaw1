@@ -1344,8 +1344,8 @@ export const MAPS = {
     mood: { sun: 0xffe8c8, sunI: 0.85, sky: 0xc8b08a, gnd: 0x2a2018, hemiI: 0.95, fog: 0x1a1410 },
     tiles: [
       'RRRR.RRRRRRRRRRRRRRRRRRRRRR',
-      'RRR...RRRRRRRRRRRRRRRRRRRRR',
-      'RR.....RRRRR.R.RRRRRR.RRRRR',
+      'RRR...RRRRRRRRRRR.RRRRRRRRR',
+      'RR.....RRRRR.R.RR.RRR.RRRRR',
       'RR.......................RR',
       'RR.""............."".....RR',
       'RR."".............""...~~RR',
@@ -1359,6 +1359,9 @@ export const MAPS = {
     sluice: { a: 9, b: 17, y0: 3, y1: 7, wheels: [[6, 2], [12, 2]], main: [21, 2], flag: 'aqueduct_flow' },
     shafts: [[4, 5], [11, 6], [19, 6]],
     spout: [24, 5], // a carved sun-bird spout over the outlet pool: dry until the Sun Sluice opens
+    // R873: once the Sun Sluice drains it, the east channel's inflow (17,2) is a way up into the old toll-keeper's nook (its chest at 17,1, under a mosaic)
+    nook: { x: 17, y: 2, cells: [[17, 2]], mosaic: [17, 0] },
+    chest2: { x: 17, y: 1, flag: 'aq_nook', berries: 30, empty: 'The toll-keeper\'s chest is empty. Above it, the sun-bird mosaic glitters: "TOLL PAID. WATER SHARED. REST HERE A WHILE."', hat: 'tollband', hatLine: '...and a Toll-Keeper\'s Band: a teal mosaic headband set with little bronze sun-bird coins. It jingles!' },
     chest: { x: 14, y: 2, flag: 'aq_chest', berries: 25, hat: 'sunspout', hatLine: '...and a Sun-Spout Circlet, a bronze band with a little sun-bird whose beak drips a bead of glass water!' },
     signs: [{ x: 3, y: 2, text: 'Letters carved deep in the sandstone: "FROM THE CITY OF THE SUN, WATER FOR ALL WHO THIRST. TURN THE WHEELS GENTLY."' }],
     wild: { list: [['humpdrop', 38, 40], ['blowfin', 38, 40], ['skimray', 38, 40], ['scarabold', 38, 40]], roam: 2, rate: 0.1 },

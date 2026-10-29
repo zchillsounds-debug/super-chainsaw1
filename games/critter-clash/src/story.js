@@ -229,6 +229,7 @@ export function storyIntro(S, w) {
     w.say([
       'The tunnel smells different now: wet stone and something green. The moss along the walls has grown thick and bright.',
       'Something small and froggy plops out of sight. The moss has new neighbours!',
+      'And the east channel\'s carved inflow, dry for the first time in ages, gapes like a little doorway in the wall...',
     ]);
     return;
   }
@@ -1551,7 +1552,7 @@ const HAT_WHERE = {
   pearl: 'find every hidden pearl in the isles', surfervisor: 'score 300+ in WAVE RIDER (Ember Isle)', rivalband: 'win the Rival Showdown on Starfall Atoll',
   masterlei: 'clear the Sunscatter Masters (Port Coral)', dexcrown: 'befriend every critter, then see Prof. Pecan', snorkelmask: 'score 250+ in REEF DIVE',
   gullcap: 'five catches for the Gull Club (Starfall Atoll)', grandcrown: 'reach a 100% Grand total',
-  caravanturban: 'score 500 at CARAVAN RUN (Caravan Master Hakim, Sunwell Oasis)', pipegoggles: 'score 600 at WATERWORKS (Waterwright Osei, the Old Aqueduct)', pipegoggles: 'score 450 at WATERWORKS (Waterwright Osei, the Old Aqueduct)', fossilhat: 'dig up every fossil for the Sunwell Museum', wheelcap: 'open the Sun Sluice for Waterwright Osei (the Old Aqueduct, past Glowcap Hollow)', sunspout: 'a treasure chest in the Old Aqueduct (past Glowcap Hollow)', dewcirclet: "a treasure chest in the Sunwell Spring (down the oasis well)", guildfez: "clear the Caravan Guild's bounty board on five days (Sunwell Oasis)", mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
+  caravanturban: 'score 500 at CARAVAN RUN (Caravan Master Hakim, Sunwell Oasis)', pipegoggles: 'score 600 at WATERWORKS (Waterwright Osei, the Old Aqueduct)', fossilhat: 'dig up every fossil for the Sunwell Museum', wheelcap: 'open the Sun Sluice for Waterwright Osei (the Old Aqueduct, past Glowcap Hollow)', sunspout: 'a treasure chest in the Old Aqueduct (past Glowcap Hollow)', tollband: "a chest in the Old Aqueduct's toll-keeper's nook (up the east inflow, once the Sun Sluice drains it)", dewcirclet: "a treasure chest in the Sunwell Spring (down the oasis well)", guildfez: "clear the Caravan Guild's bounty board on five days (Sunwell Oasis)", mirrorcirclet: 'light the Starless Vault with its mirrors (the Buried City)', sledgoggles: 'score 380 at DUNE SLED (Dune Surfer Kai, the Dune Camp)', palmangler: 'catch all four oasis fish (Pool Angler Layla, Sunwell Oasis)', mirageturban: 'buy it from the Mirage Merchant on the Glass Flats (mirage hours, 12-15 h)', sunlaurel: 'clear the Desert Trial (Elder Sabah, the Sun Gate)', amberwreath: 'explore 100% of the Amber Sands',
 };
 export function hatWhere(id) {
   const h = SHOP_HATS.find((x) => x.id === id); if (!h) return '';
@@ -1858,6 +1859,10 @@ function glowcapTalk(S, w, a) {
 // R860: Waterwright Osei in the Old Aqueduct wants the Sun Sluice at the far end opened, so the water runs home to the Sunwell
 function aqueductTalk(S, w) {
   const F = flags(), who = 'Waterwright Osei', own = (save.adv.hats ||= []);
+  if (F.aq_done && F.aqueduct_flow && !F.aq_nook && !F.aq_nookhint) { F.aq_nookhint = true; persist(); return w.say([ // R873: a nudge toward the nook
+    'Waterwright Osei: Oh! With the east channel dry, look: its inflow mouth. That\'s no drain, that\'s a crawlway!',
+    'Waterwright Osei: The old books say the Sun City kept a toll-keeper down here, with a little nook all of their own. Go on, take a peek. I\'m too big to fit.',
+  ], null, who); }
   if (F.aq_done) return waterworksTalk(S, w, () => w.say([[
     'Waterwright Osei: Hear that? That\'s a thousand-year-old tunnel doing its job again. Best sound in the world.',
     'Waterwright Osei: Wellkeeper Bram says the well\'s never been so full. He\'s been dropping in two berries a day for luck. Go and see!',

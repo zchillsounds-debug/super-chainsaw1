@@ -2017,7 +2017,7 @@ export class World {
       this.S.toast?.(`🌟 A shiny ${d.name} ${joined ? 'joined your team!' : 'joined you!'}`);
       return this.say(['{hero} leans over the big nest. The shimmering egg wobbles... wobbles... CRACK!', `A tiny ${d.name} flaps out, shining like a rainbow! It takes one look at {hero} and decides you are its parent.`, `🌟 A shiny ${d.name} joined your team! (Its shiny colours are yours in every mode now.)`, `There were ${C.berries} berries tucked under the egg, too. +${C.berries} 🍓`]);
     }
-    if (F[C.flag]) return this.say(['The chest is empty. Just a little dust, and a very old map of the isles.']);
+    if (F[C.flag]) return this.say([C.empty || 'The chest is empty. Just a little dust, and a very old map of the isles.']);
     F[C.flag] = true; const hats = (save.adv.hats ||= []), hat = C.hat && !hats.includes(C.hat); if (hat) hats.push(C.hat);
     save.berries = (save.berries || 0) + (C.berries || 0); persist(); reward(3);
     C.open = 0.01;
@@ -2287,7 +2287,7 @@ export class World {
       const hm = new THREE.MeshBasicMaterial({ color: 0x1a120a }); hm.userData.own = true; const hole = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.7), hm); hole.position.set(0, 0.85, 0.16); grate.add(hole);
       const fm = new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide }); fm.userData.own = true;
       const fall = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.75), fm); fall.position.set(0, 0.5, 0.2); fall.rotation.x = -0.25; grate.add(fall);
-      return { id, x, wm, fm, water, fall, t, lvl: 1, len };
+      return { id, x, wm, fm, water, fall, t, lvl: 1, len, arch, hole };
     });
     const wheel = (x, y, big) => { // a spoked wheel on a stone post, facing the tunnel
       const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz + 0.2); this.group.add(g); this.solid.add(x + ',' + y);
@@ -2316,7 +2316,26 @@ export class World {
       const pour = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1.4), sm); pour.position.set(0, 0.7, 0.95); pour.rotation.y = Math.PI / 2; g.add(pour);
       spout = { pour, sm, g };
     }
-    this.sluice = { chans, wheels, main, spout, flowTex };
+    // R873: the toll-keeper's nook up the east inflow: a bronze-and-teal sun-bird mosaic on its back wall, and a little lamp
+    let nook = null;
+    if (M.nook) {
+      const [mx, mz] = wpos(...M.nook.mosaic), g = new THREE.Group(); g.position.set(mx, 0, mz + 0.62); this.group.add(g);
+      const tex = canvasTex(128, 96, (c) => {
+        c.fillStyle = '#c8ae88'; c.fillRect(0, 0, 128, 96);
+        const cols = ['#2ab8a0', '#1a8a7a', '#e8b850', '#c88a2a', '#f4e8c8'];
+        for (let y = 0; y < 12; y++) for (let x = 0; x < 16; x++) { // a sun-bird with spread wings over rays, in little square tiles
+          const u = (x - 7.5) / 8, v = (y - 5.5) / 6, r = Math.hypot(u, v), wing = Math.abs(v + 0.15 - Math.abs(u) * 0.5) < 0.18 && Math.abs(u) < 0.95, body = Math.hypot(u * 2.2, v + 0.05) < 0.42;
+          c.fillStyle = body ? cols[2] : wing ? cols[(x + y) % 2 ? 0 : 1] : r < 1 && Math.floor(Math.atan2(v, u) * 4) % 2 ? cols[3] : cols[4];
+          c.fillRect(x * 8 + 0.5, y * 8 + 0.5, 7, 7);
+        }
+      });
+      const panel = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2.4), (() => { const m = new THREE.MeshBasicMaterial({ map: tex, color: 0xf0e4d0 }); m.userData.own = true; return m; })()); panel.position.y = 2.3; g.add(panel);
+      const fr = inked(new THREE.BoxGeometry(3.5, 0.2, 0.2), bronze, OL * 0.2); fr.position.y = 3.58; g.add(fr); const fr2 = fr.clone(); fr2.position.y = 1.02; g.add(fr2);
+      const lm2 = new THREE.MeshBasicMaterial({ map: glowTex(), color: 0xffc860, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0 }); lm2.userData.own = true;
+      const glow = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 3.8), lm2); glow.position.set(0, 2.2, 0.05); g.add(glow);
+      nook = { g, glow, lm2 };
+    }
+    this.sluice = { chans, wheels, main, spout, flowTex, nook };
     this.sluiceSet(true);
   }
 
@@ -2329,6 +2348,12 @@ export class World {
       if (quiet) c.lvl = c.on ? 1 : 0;
     }
     if (L.spout) L.spout.pour.visible = flow;
+    const N = this.M.nook; // R873: the dry east inflow opens into the toll-keeper's nook
+    if (N) {
+      for (const [x, y] of N.cells) if (flow) this.solid.delete(x + ',' + y); else this.solid.add(x + ',' + y);
+      const cb = L.chans.find((c) => c.x === N.x); if (cb) { cb.arch.visible = cb.hole.visible = !flow; }
+      if (L.nook) L.nook.lm2.opacity = flow ? 0.55 : 0;
+    }
   }
 
   // A on a wheel: a small one swaps the channels; the Sun Sluice opens the way home for the water (once)
