@@ -2247,7 +2247,7 @@ function rail(S, w) {
     save.adv.spawn = { ...getMap(home ? 'in:oasis:berry_o' : 'in:ember:berry4').exit }; // a lost battle brings you back to this end of the line
     const line = home ? (F.sands_arrive ? 'Toot toot! The Sand-Rail chugs south. The volcano shrinks behind you, and the air turns hot and golden...' : 'Toot TOOT! The Sand-Rail puffs out of Cinder Town. Hills turn to rocks, rocks turn to dunes, and the sky turns a deep, hot blue...')
       : 'Toot toot! The Sand-Rail chugs north, past the dunes and the red rocks, back towards the smoking volcano.';
-    w.say([line], () => w.fade(() => { if (home) w.load('oasis', 12, 12, 'e'); else w.load('ember', 13, 13, 'e'); if (home && !F.sands_arrive) setTimeout(() => storyIntro(S, w), 500); }));
+    w.say([line], () => w.fade(() => { if (home) w.load('oasis', 14, 12, 'e') /* R882: east of the engine, so it doesn't hide the hero */; else w.load('ember', 13, 13, 'e'); if (home && !F.sands_arrive) setTimeout(() => storyIntro(S, w), 500); }));
   }, who);
   if (first) return w.say([
     "Conductor Tamsin: Well, I'll be! The hero who lit the Starfall lighthouse!",
