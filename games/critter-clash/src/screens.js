@@ -483,6 +483,14 @@ export class Screens {
         A.curios ? `And the Mirage Merchant sold you a curio! ${A.curios > 1 ? `${A.curios} of them!` : ''} He brings a new one every day after noon, they say. Or the same one, wearing a disguise.` : "The Mirage Merchant on the Glass Flats has a new curio every day now, once you've bought his turban. A glass lure, a mirror... even bottled heat!",
         "Oh, and Team Battle has a sky button now too, like Quick Battle. A night-time 3-on-3 under the stars. Lovely!",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv45') && !save.news.includes('adv46') && save.adv.flags.cup_canyon) { // R886: the museum's coin case, MELON WATCH, Lookout Omar's spyglass
+      save.news.push('adv46'); persist();
+      const A = save.adv;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        A.aqCoins ? `{name}! Curator Petra has a new case in the Sunwell Museum, just for your Sun City coins. ${Math.min(12, A.aqCoins)} of 12 so far! She polishes them every morning.` : "{name}! Curator Petra has put a new glass case in the Sunwell Museum, with twelve empty rings. For old Sun City coins, she says. The aqueduct's silt is full of them!",
+        A.melonBest ? `And Gardener Lina on Redrock Mesa says you shooed ${A.melonBest} Fennzaps out of her melons in one night. MELON WATCH! I'd have just eaten the melons.` : "And up on Redrock Mesa, Gardener Lina needs a hand after dark. Fennzaps keep popping up in her melon patch. Step on them and they scoot! She calls it MELON WATCH.",
+        A.scopeN ? `Lookout Omar tells me you've spotted ${A.scopeN} dust cloud${A.scopeN > 1 ? 's' : ''} through his spyglass. Five, and he has a cap for you!` : "Lookout Omar up there has a brass spyglass, too. Every day he spots a dust cloud somewhere in the sands and can't tell where. Have a look for him!",
+      ]), 600);
     } else if (!g.autoplay && save.news?.includes('adv44') && !save.news.includes('adv45') && save.adv.flags.aq_done) { // R877: the toll-keeper's nook, TUNNEL RUN, the aqueduct arena's whirlpools
       save.news.push('adv45'); persist();
       const A = save.adv;
@@ -1394,6 +1402,7 @@ export class Screens {
         ['💧', 'WATERWORKS prize', 'Waterwright Osei, the Old Aqueduct', A.pipeDay === day, !!F.aq_done],
         ['🏃', 'TUNNEL RUN prize', 'Tunnel Runner Tess, the Old Aqueduct', A.runDay === day, !!(F.tess_a && F.aqueduct_flow)], // R876
         ['🍉', 'MELON WATCH prize (after dark)', 'Mesa Gardener Lina, Redrock Mesa', A.melonDay === day, !!seen.mesa], // R884
+        ['🔭', 'Spot the dust cloud', 'Lookout Omar\'s spyglass, Redrock Mesa', A.scopeDay === day, !!seen.mesa], // R886
         ['📜', `Caravan Guild bounties (${A.bounty?.day === day ? A.bounty.paid.length : 0}/3)`, `the board in ${N('oasis')}`, A.bounty?.day === day && A.bounty.paid.length >= 3, !!F.sands_arrive], // R828
         ['🤿', 'REEF DIVE prize', 'the Sunken Wreck (Snorkeller Pia, Port Coral)', A.diveDay === day, F.dived],
         ['🐦', `Gull Club catch: ${gullFish(day)}`, 'any island water → Petrel, Starfall Atoll', A.gullPaid === day, F.amends3_done && F.rod],
@@ -1578,7 +1587,7 @@ export class Screens {
         + (A.cnt?.rail ? bar('🚂', 'Sand-Rail rides', A.cnt.rail) : '')
         + (A.sledHi ? bar('🛷', 'DUNE SLED best', A.sledHi) : '')
         + (A.caravanHi ? bar('🐪', 'CARAVAN RUN best', A.caravanHi) : '')
-        + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') + (A.pipeHi ? bar('💧', 'WATERWORKS best', A.pipeHi) : '') + (A.runBest ? bar('🏃', 'TUNNEL RUN best', (A.runBest / 10).toFixed(1) + ' s') : '') /* R875 */ + (A.melonBest ? bar('🍉', 'MELON WATCH best', A.melonBest + ' shooed') : '') /* R884 */ // R865, R854, R838: no goal
+        + (A.sporeHi ? bar('🍄', 'SPORE DRIFT best', A.sporeHi) : '') + (A.pipeHi ? bar('💧', 'WATERWORKS best', A.pipeHi) : '') + (A.runBest ? bar('🏃', 'TUNNEL RUN best', (A.runBest / 10).toFixed(1) + ' s') : '') /* R875 */ + (A.melonBest ? bar('🍉', 'MELON WATCH best', A.melonBest + ' shooed') : '') /* R884 */ + (A.scopeN ? bar('🔭', 'Dust clouds spotted', A.scopeN) : '') /* R886 */ // R865, R854, R838: no goal
         + (A.cnt?.sandstorm ? bar('🌪️', 'Sandstorms weathered', A.cnt.sandstorm) : '')
         + (F.gate_open ? bar('🌞', 'Desert Trials cleared', A.dtrialWins || 0) : '')
         + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal
