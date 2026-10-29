@@ -1358,6 +1358,8 @@ export const MAPS = {
     // two channels (columns a and b, rows y0..y1), small wheels that swap them, and the Sun Sluice (flag: both run dry for good)
     sluice: { a: 9, b: 17, y0: 3, y1: 7, wheels: [[6, 2], [12, 2]], main: [21, 2], flag: 'aqueduct_flow' },
     shafts: [[4, 5], [11, 6], [19, 6]],
+    // R875: TUNNEL RUN with Tunnel Runner Tess once the channels are dry: tag the west post, then the spout post, then back to her
+    run: { who: 'tess_a', pts: [[3, 6], [22, 5], [13, 6]], par: 8.0, gold: 6.6 },
     spout: [24, 5], // a carved sun-bird spout over the outlet pool: dry until the Sun Sluice opens
     // R873: once the Sun Sluice drains it, the east channel's inflow (17,2) is a way up into the old toll-keeper's nook (its chest at 17,1, under a mosaic)
     nook: { x: 17, y: 2, cells: [[17, 2]], mosaic: [17, 0] },

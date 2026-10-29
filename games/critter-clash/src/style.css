@@ -895,6 +895,8 @@ body:not(.is-touch) .wd-a { display: none; }
 .wd-fade.out { opacity: 0; }
 .wd-flash { position: absolute; inset: 0; z-index: 60; pointer-events: none; animation: wdFlash .9s steps(1) both; }
 @keyframes wdFlash { 0%, 22%, 44% { background: #fff; } 11%, 33%, 55% { background: transparent; } 66% { background: #000; clip-path: inset(0 0 50% 0); } 78% { background: #000; clip-path: inset(0 0 15% 0); } 100% { background: #000; clip-path: inset(0); } }
+.wd-run { position: absolute; left: 50%; transform: translateX(-50%); top: calc(14px + var(--sat)); background: var(--ink); color: #fff; font-family: var(--display); font-size: 20px; padding: 6px 16px; border-radius: 14px; box-shadow: 0 0 0 3px #3ae8f0; z-index: 6; pointer-events: none; white-space: nowrap; display: flex; gap: 8px; align-items: baseline; }
+.wd-run b { font-size: 26px; min-width: 2.2em; text-align: right; } body.portrait .wd-run { top: calc(74px + var(--sat)); font-size: 17px; padding: 5px 12px; } body.portrait .wd-run b { font-size: 22px; } .wd-run i { font-style: normal; color: #3ae8f0; } .wd-run small { font-size: 13px; opacity: 0.75; } /* R875: TUNNEL RUN's clock */
 .wd-banner { position: absolute; left: calc(16px + env(safe-area-inset-left)); top: calc(14px + var(--sat)); background: var(--ink); color: #fff; font-family: var(--display); font-size: 20px; padding: 8px 18px; border-radius: 14px; box-shadow: 0 0 0 3px #fff; z-index: 6; animation: wdBanner 2.6s both; pointer-events: none; }
 @keyframes wdBanner { 0% { transform: translateY(-80px); } 12%, 85% { transform: none; } 100% { transform: translateY(-80px); } }
 .wd-bubble { position: absolute; transform: translate(-50%, -100%); font-size: 34px; z-index: 20; pointer-events: none; animation: wdPop .25s both; }

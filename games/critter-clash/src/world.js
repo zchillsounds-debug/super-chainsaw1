@@ -512,6 +512,7 @@ export class World {
   }
 
   unload() {
+    if (this.run) this.runEnd(null);
     if (!this.group) return;
     if (this.fishing) { this.fishing = null; this.busy = false; }
     if (this.twigs) { this.twigs = null; this.busy = false; }
@@ -5282,6 +5283,7 @@ export class World {
   arrive() {
     // finished a step
     save.adv.x = this.hx; save.adv.y = this.hy; save.adv.dir = this.dir;
+    if (this.run) this.runStep();
     save.adv.steps = (save.adv.steps || 0) + 1;
     if (save.adv.steps % 8 === 0) persist();
     this.walkHome();
@@ -5321,7 +5323,7 @@ export class World {
       const [px, pz] = wpos(this.hx, this.hy);
       for (let k = 0; k < 5; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5), y: 0.4, z: pz + (Math.random() - 0.5), vy: 2 + Math.random() * 2, vx: (Math.random() - 0.5) * 2, vz: (Math.random() - 0.5) * 2, color: 0x3fae4a, size: 0.22, life: 0.5, shape: 'leaf', additive: false, grav: 6, rot: Math.random() * 6 });
       sfx.step?.();
-      if (this.M.wild && this.encCool <= 0 && Math.random() < (this.M.wild.rate || 0.1)) { this.ambush(); return; }
+      if (this.M.wild && this.encCool <= 0 && !this.run && Math.random() < (this.M.wild.rate || 0.1)) { this.ambush(); return; }
     }
     if (this.storyCheck()) return;
     this.trainerCheck();
@@ -5348,6 +5350,7 @@ export class World {
     const inp = this.g.input;
     const act = inp.pressed.attack || inp.pressed.confirm || this.tapA;
     this.tapA = false;
+    if (this.run) this.runTick(dt);
     if (this.fishing && !this.dialog) this.updateFish(dt, act);
     if (this.dialog) { this.dialog.steer?.(inp.move); if (act) this.dialog.next(); }
     else if (!this.busy) {
@@ -6181,6 +6184,7 @@ export class World {
     const dq = deliveryFor(n.id); if (dq) return this.S.worldStory('deliver:' + dq, this, a); // a parcel for them comes first (quest-chain links are givers too)
     const cq = chainFor(n.id); if (cq) return this.S.worldStory('lost:' + cq, this, a); // a quest-chain link they hand out on top of their own story
     if (n.story) return this.S.worldStory(n.story, this, a);
+    if (this.M.run?.who === n.id && !a.skipRun && save.adv.flags[n.id] && save.adv.flags[this.M.sluice?.flag]) return this.runAsk(a); // R875: TUNNEL RUN
     const dl = !n.trainer && !(n.id === 'mom' && this.morning) && deliveredLine(n.id); // (Mom's breakfast comes first) if (dl && Math.random() < 0.6) return this.say(dl);
     if (n.trainer) {
       if (save.adv.flags[n.id]) {
@@ -6492,6 +6496,65 @@ export class World {
       }
     };
     tick();
+  }
+
+  // R875: TUNNEL RUN (M.run): a sprint through the drained aqueduct against Tunnel Runner Tess's time. Tag each post in order
+  // (a glowing ring marks the next one), back to Tess to stop the clock. Beat her time (par) for the day's berries; the gold time
+  // earns her old headband. Wild critters keep out of the way while you run. Best time on Records (A.runBest, tenths of a second)
+  runAsk(a) {
+    const R = this.M.run, A = save.adv, n = a.n, day = new Date().toISOString().slice(0, 10), best = A.runBest ? (A.runBest / 10).toFixed(1) + ' s' : null;
+    const opts = ['🏃 Race!', 'Battle', 'Never mind'];
+    this.ask(`${n.name}: With the channels dry, the whole tunnel's a running track! West post, the spout post, then back to me. My time's ${R.par.toFixed(1)} seconds.${best ? ` Your best: ${best}.` : ''}${A.runDay === day ? ' (You already beat me today!)' : ''} Run hard: push the stick all the way!`, opts, (i) => {
+      if (i === 1) { a.skipRun = true; this.talk(a); a.skipRun = false; return; }
+      if (i === 0) this.runStart();
+    }, n.name);
+  }
+  runStart() {
+    const R = this.M.run, ring = new THREE.RingGeometry(0.55, 0.78, 28), post = new THREE.CylinderGeometry(0.12, 0.14, 2.2, 8);
+    const marks = R.pts.map(([x, y], k) => {
+      const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); this.group.add(g);
+      const rm = new THREE.MeshBasicMaterial({ color: k === R.pts.length - 1 ? 0xffd040 : 0x3ae8f0, transparent: true, opacity: 0.25, depthWrite: false, side: THREE.DoubleSide }); rm.userData.own = true;
+      const r = new THREE.Mesh(ring, rm); r.rotation.x = -Math.PI / 2; r.position.y = 0.06; g.add(r);
+      if (k < R.pts.length - 1) { const p = inked(post, toon(0xc8903a, { rim: 0.8 }), OL * 0.2); p.position.set(0.55, 1.1, -0.3); g.add(p); const fl = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.45), rm.clone()); fl.material.opacity = 0.95; fl.material.userData.own = true; fl.position.set(0.93, 1.95, -0.3); g.add(fl); }
+      const bm = new THREE.SpriteMaterial({ map: glowTex(), color: k === R.pts.length - 1 ? 0xffd040 : 0x3ae8f0, transparent: true, depthWrite: false, opacity: 0 }); bm.userData.own = true;
+      const beacon = new THREE.Sprite(bm); beacon.scale.setScalar(2.2); beacon.position.set(0, 2.6, 0); g.add(beacon); // a pulsing light over the post to make for
+      return { g, r, rm, bm, beacon };
+    });
+    const el = document.createElement('div'); el.className = 'wd-run'; this.S.root.appendChild(el);
+    this.run = { t: 0, cp: 0, marks, el, go: 1.2 };
+    sfx.beep(); this.runTick(0);
+  }
+  runTick(dt) {
+    const U = this.run, R = this.M.run;
+    if (U.go > 0) { U.go -= dt; if (U.go <= 0) sfx.beep(true); } else if (!this.dialog && !this.busy) U.t += dt;
+    U.marks.forEach((m, k) => { const on = k === U.cp; m.rm.opacity = on ? 0.6 + 0.35 * Math.sin(this.t * 8) : k < U.cp ? 0.08 : 0.22; m.r.scale.setScalar(on ? 1 + 0.15 * Math.sin(this.t * 6) : 1); m.bm.opacity = on ? 0.75 + 0.25 * Math.sin(this.t * 7) : 0; m.beacon.position.y = 2.6 + (on ? 0.2 * Math.sin(this.t * 4) : 0); });
+    const next = ['⬅ west post', '➡ spout post', '⬅ back to Tess'][U.cp] || '';
+    U.el.innerHTML = U.go > 0 ? `<b>READY...</b> <i>${next}</i>` : `🏃 <b>${U.t.toFixed(1)}</b> s <i>${next}</i> <small>Tess ${R.par.toFixed(1)}</small>`;
+  }
+  runStep() {
+    const U = this.run, R = this.M.run, [x, y] = R.pts[U.cp];
+    if (Math.max(Math.abs(this.hx - x), Math.abs(this.hy - y)) > 1) return;
+    U.cp++; this.g.input?.haptic?.(15);
+    const [px, pz] = wpos(x, y); for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: px + (Math.random() - 0.5), y: 0.4, z: pz + (Math.random() - 0.5), vy: 2 + Math.random() * 2, color: 0x3ae8f0, size: 0.3, life: 0.6, shape: 'star', grav: 4 });
+    sfx.pickup?.();
+    if (U.cp >= R.pts.length) this.runEnd(U.t);
+  }
+  runEnd(time) {
+    const U = this.run; this.run = null;
+    U.el.remove(); for (const m of U.marks) { m.g.parent?.remove(m.g); m.g.traverse((o) => { if (o.material?.userData.own) o.material.dispose(); }); }
+    if (time == null) return;
+    const R = this.M.run, A = save.adv, day = new Date().toISOString().slice(0, 10), tt = Math.round(time * 10), who = 'Tunnel Runner Tess', own = (A.hats ||= []);
+    const pb = !A.runBest || tt < A.runBest; if (pb) A.runBest = tt; countUp('tunnelrun');
+    const beat = time < R.par, prize = beat && A.runDay !== day, hat = time < R.gold && !own.includes('runnerband');
+    if (prize) { A.runDay = day; save.berries = (save.berries || 0) + 4; } if (hat) own.push('runnerband');
+    persist(); if (beat) reward(hat ? 3 : 2); this.questMarks?.();
+    const ts = (tt / 10).toFixed(1) + ' s';
+    this.say([
+      beat ? `${who}: ${ts}! You beat me! ${time < R.gold ? 'That\'s... that\'s faster than anyone, ever.' : 'Not bad at all!'}` : `${who}: ${ts}. Close! My ${R.par.toFixed(1)} still stands. Again?`,
+      ...(pb ? [`A new best time on the tunnel track! 🏃 ${ts}`] : []),
+      ...(prize ? ['Tess tosses over her day\'s snack berries. +4 🍓 (Beat her again tomorrow for more.)'] : beat ? ['(You already won her berries today. Your time still counts for Records!)'] : [`Tip: run (push the stick all the way, or hold Shift) and cut the corners. Under ${R.par.toFixed(1)} s beats her.`]),
+      ...(hat ? [`${who}: Under ${R.gold.toFixed(1)}! Here, you've earned my old Runner's Headband. Sweat-proof, spray-proof, legend-proof.`, '{hero} got the Runner\'s Headband! 🎽 (☰ → 🎩 Hats)'] : []),
+    ], null, who);
   }
 
   banner(text) {

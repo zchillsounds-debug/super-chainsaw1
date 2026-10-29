@@ -1553,6 +1553,7 @@ export const SHOP_HATS = [
   { id: 'sunspout', name: 'Sun-Spout Circlet', kind: 'circlet', col: 0xe0a84a, band: 0x3ab8e0, price: 0, gift: true, extra: true }, // R858: the Old Aqueduct's chest
   { id: 'dewcirclet', name: 'Dewdrop Circlet', kind: 'circlet', col: 0xcfe8f4, band: 0x3ac8e8, price: 0, gift: true, extra: true }, // R829: the Sunwell Spring's chest
   { id: 'guildfez', name: 'Caravan Guild Fez', kind: 'fez', col: 0xa8243a, band: 0xffc23a, price: 0, gift: true, extra: true }, // R828: five full days of the Caravan Guild's bounty board
+  { id: 'runnerband', name: "Runner's Headband", kind: 'band', col: 0x2ab8d0, band: 0xffd040, price: 0, gift: true, extra: true }, // R875: TUNNEL RUN under 6.6 s (Tunnel Runner Tess, the Old Aqueduct)
   { id: 'tollband', name: 'Toll-Keeper\'s Band', kind: 'circlet', col: 0xd8a040, band: 0x2ab8a0, price: 0, gift: true, extra: true }, // R873: the Old Aqueduct's toll-keeper's nook (up the dry east inflow)
   { id: 'glowlantern', name: 'Glowcap Lantern Hat', kind: 'lantern', col: 0x3ae8c8, band: 0xfff4d8, price: 0, gift: true, extra: true }, // R868: Lantern Maker Yusra, for Pim's jar of glowcap spores
   { id: 'lanternhat', name: 'Paper Lantern Hat', kind: 'lantern', col: 0xffa040, band: 0xd83a3a, price: 0, gift: true, extra: true }, // R820: Lantern Maker Yusra's night market, seven sky lanterns
