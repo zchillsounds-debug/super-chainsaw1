@@ -37,7 +37,7 @@ export const SIGS = {
   oasis:   { name: 'Fountain rings', word: 'FOUNTAIN!', jumbo: 'FOUNTAIN!', tip: 'Fountain ring! Stay in the dry middle!' }, // the Sunwell Pavilion
   grotto:  { name: 'Cave-ins', word: 'CAVE-IN!', jumbo: 'CAVE-IN!', tip: 'Cave-in! Get clear of the cross!' }, // R841: the Sunwell Grotto
   saltflat: { name: 'Salt cracks', word: 'CRACK!', jumbo: 'SALT CRACK!', tip: 'Salt crack! Step off the line!' }, // R869: the Glass Flats: a crack zigzags across the crust, brine vents burst along it
-  aqueduct: { name: 'Floodgates', word: 'FLOOD!', jumbo: 'FLOODGATE!', tip: 'Floodgate! Step out of the surge!' }, // R862: a surge down one lane (the rogue wave's lane, in sluice water)
+  aqueduct: { name: 'Floodgates', name2: 'Whirlpools', word: 'FLOOD!', jumbo: 'FLOODGATE!', tip: 'Floodgate! Step out of the surge!' }, // R862: a surge down one lane (the rogue wave's lane, in sluice water); R874: or a whirlpool drain that drags you in, then spouts
   dunes:   { name: 'Sandstorms', word: 'SANDSTORM!', jumbo: 'SANDSTORM!', tip: 'Sandstorm! Guard to dig in!' }, // the Sandstorm Dome
 };
 
@@ -65,6 +65,21 @@ const getIceTex = () => iceTex ||= canvasTex(256, 64, (c, w, h) => {
   }
   c.fillStyle = 'rgba(120,200,255,0.35)'; c.fillRect(0, 0, w, 5); c.fillRect(0, h - 5, w, 5);
 }, { repeat: [5, 1] });
+
+// R874: the aqueduct's whirlpool: dark water spiralling down to a drain grate, with foam arms (made once, never disposed)
+let whirlTex;
+const getWhirlTex = () => whirlTex ||= canvasTex(256, 256, (c, w, h) => {
+  const cx = w / 2, cy = h / 2, R = w / 2;
+  const g = c.createRadialGradient(cx, cy, 4, cx, cy, R); g.addColorStop(0, 'rgba(8,40,52,1)'); g.addColorStop(0.35, 'rgba(22,110,130,0.95)'); g.addColorStop(0.85, 'rgba(50,180,200,0.8)'); g.addColorStop(1, 'rgba(60,200,220,0)');
+  c.fillStyle = g; c.fillRect(0, 0, w, h);
+  for (let arm = 0; arm < 5; arm++) { // foam arms spiralling in
+    c.strokeStyle = `rgba(232,251,255,${0.55 + (arm % 2) * 0.3})`; c.lineWidth = 6 - (arm % 3); c.lineCap = 'round'; c.beginPath();
+    for (let q = 0; q <= 40; q++) { const u = q / 40, rr = R * (0.95 - u * 0.8), a = arm / 5 * Math.PI * 2 + u * 4.2; q ? c.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr) : c.moveTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); }
+    c.stroke();
+  }
+  c.fillStyle = '#6a5440'; c.beginPath(); c.arc(cx, cy, 20, 0, Math.PI * 2); c.fill(); // the bronze-brown drain grate
+  c.strokeStyle = '#1a120a'; c.lineWidth = 3; for (let q = -2; q <= 2; q++) { c.beginPath(); c.moveTo(cx + q * 7, cy - 17); c.lineTo(cx + q * 7, cy + 17); c.stroke(); }
+});
 
 function bandMesh(len, wid, mat) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(len, wid), mat);
@@ -135,7 +150,7 @@ export class Hazards {
     for (const h of this.list) if (!h.fired && h.t >= 0 && Math.hypot(x - h.x, z - h.z) < this.H.r + 0.4) return h;
     const s = this.sig;
     if (!s) return null;
-    if (s.kind === 'grove' && Math.hypot(x - s.x, z - s.z) < s.r + 0.4) return s;
+    if ((s.kind === 'grove' || s.kind === 'whirl') && Math.hypot(x - s.x, z - s.z) < s.r + 0.4) return s;
     if (s.kind === 'beach' && !s.passed) {
       // in the wave's lane and not yet behind it: sidestep out of the lane
       const along = (x - s.cx) * s.dx + (z - s.cz) * s.dz, side = (x - s.cx) * -s.dz + (z - s.cz) * s.dx;
@@ -186,7 +201,8 @@ export class Hazards {
 
   // ---------- the arena's signature pattern ----------
   signature() {
-    const B = this.b, key = this.sandWx ? 'dunes' : B.arena.key === 'aqueduct' ? 'beach' : B.arena.key; // (R862: the aqueduct's floodgate surge runs like a rogue wave)
+    const B = this.b, key = this.sandWx ? 'dunes' : B.arena.key === 'aqueduct' ? (this.whirlNext ? 'whirl' : 'beach') : B.arena.key; // (R862: the aqueduct's floodgate surge runs like a rogue wave; R874: it takes turns with a whirlpool)
+    if (B.arena.key === 'aqueduct' && !this.sandWx) this.whirlNext = !this.whirlNext;
     const f = B.fighters[Math.random() < 0.5 ? 0 : 1];
     const ang = Math.random() * Math.PI * 2, dx = Math.cos(ang), dz = Math.sin(ang);
     const sg = { kind: key, t: 0, meshes: [], mats: [], hit: new Set() };
@@ -272,7 +288,7 @@ export class Hazards {
       w.scale.setScalar(0.01);
       sg.wave = add(w); w.rotation.y = Math.PI / 2 - ang;
       sg.wave.position.set(sg.cx + dx * sg.start, 0, sg.cz + dz * sg.start);
-      B.fx.text({ x: sg.wave.position.x, y: 2, z: sg.wave.position.z }, 'WAVE!', 'eff', 1.1);
+      B.fx.text({ x: sg.wave.position.x, y: 2, z: sg.wave.position.z }, B.arena.key === 'aqueduct' ? 'FLOODGATE!' : 'WAVE!', 'eff', 1.1);
       sfx.warn();
     } else if (key === 'sky') {
       // a crosswind sweeps the gardens and shoves everyone one way
@@ -320,6 +336,20 @@ export class Hazards {
       const n = 7, R = 2.4, a0 = Math.random() * Math.PI * 2, dir = Math.random() < 0.5 ? 1 : -1;
       for (let k = 0; k < n; k++) { const a = a0 + dir * k / n * Math.PI * 2; this.spawnAt(f.x + Math.cos(a) * R, f.z + Math.sin(a) * R, -0.5 - k * 0.2, k > 0); }
       B.fx.text({ x: hp.x, y: hp.y + 0.4, z: hp.z }, 'FOUNTAIN!', 'eff', 1);
+      sfx.warn();
+    } else if (key === 'whirl') {
+      // R874: the Old Aqueduct: a drain grate in the cistern floor opens near one fighter and the water spins down it: a whirlpool
+      // that drags everyone nearby round and in (guarding digs in), then the drain coughs and a sluice jet spouts from the middle
+      sg.warn = 1.0; sg.dur = 4.4; sg.r = 2.6; sg.jumbo = 'WHIRLPOOL!'; sg.spin = Math.random() < 0.5 ? 1 : -1;
+      const a = Math.random() * Math.PI * 2, d = 1.2 + Math.random() * 0.8;
+      sg.x = f.x + Math.cos(a) * d; sg.z = f.z + Math.sin(a) * d;
+      const r = Math.hypot(sg.x, sg.z), lim = ARENA_R - 3.2;
+      if (r > lim) { sg.x *= lim / r; sg.z *= lim / r; }
+      sg.mat = own(new THREE.MeshBasicMaterial({ map: getWhirlTex(), transparent: true, opacity: 0, depthWrite: false }));
+      const disc = add(bandMesh(sg.r * 2, sg.r * 2, sg.mat)); disc.position.set(sg.x, 0.04, sg.z); sg.disc = disc;
+      const ring = add(ringMesh(0x2ab8d0, true)); ring.position.set(sg.x, 0.035, sg.z); ring.scale.setScalar(sg.r); sg.ring = ring;
+      ring.traverse((o) => o.material && sg.mats.push(o.material));
+      B.fx.text({ x: sg.x, y: 1.6, z: sg.z }, 'WHIRLPOOL!', 'eff', 1);
       sfx.warn();
     } else if (key === 'grove') {
       // a big spore cloud settles near one fighter and lingers; breathing it in makes you dizzy
@@ -421,6 +451,24 @@ export class Hazards {
         if (!sg.hit.has(f)) { sg.hit.add(f); const hp = f.headPos(); fx.text({ x: hp.x, y: hp.y + 0.3, z: hp.z }, sand ? 'SANDBLAST!' : 'WHOOSH!', 'eff', 0.8); }
       }
       if (live && !sg.on) { sg.on = true; sfx.wind(sg.dur); }
+    } else if (sg.kind === 'whirl') {
+      const { ring, fill } = sg.ring.userData, end = sg.warn + sg.dur;
+      const fade = Math.min(1, Math.max(0, (end - t) / 0.6)), strength = live ? Math.min(1, e * 2) * fade : 0;
+      sg.disc.rotation.y += dt * sg.spin * (1 + strength * 3.5);
+      sg.disc.scale.setScalar(0.3 + 0.7 * Math.min(1, k * 1.2));
+      sg.mat.opacity = (live ? 0.85 : 0.35 + k * 0.4) * fade;
+      ring.material.opacity = (live ? 0.6 : 0.4 + 0.5 * (0.5 + 0.5 * Math.sin(t * (8 + k * 18)))) * fade; fill.material.opacity = 0;
+      if (live && Math.random() < dt * 20 * fade) { const a = Math.random() * 6.28, d = sg.r * (0.5 + Math.random() * 0.5); fx.spawn({ x: sg.x + Math.cos(a) * d, y: 0.12, z: sg.z + Math.sin(a) * d, vx: -Math.sin(a) * sg.spin * 3 - Math.cos(a) * 1.5, vz: Math.cos(a) * sg.spin * 3 - Math.sin(a) * 1.5, color: 0xe8fbff, size: 0.3, life: 0.5, shape: 'drop', additive: false, alpha: 0.9 }); }
+      if (live && !sg.on) { sg.on = true; sfx.whoosh?.(0.4); }
+      if (!sg.jet && e > sg.dur - 1.7) { sg.jet = true; this.spawnAt(sg.x, sg.z, 0, true); } // the drain coughs: a sluice jet from the middle
+      if (strength > 0) for (const f of B.fighters) {
+        if (!f.alive || f.under || f.state === 'super' || f.state === 'down') continue;
+        const ox = sg.x - f.x, oz = sg.z - f.z, dd = Math.hypot(ox, oz);
+        if (dd > sg.r + 0.6 || dd < 0.05) continue;
+        const pull = 2.4 * strength * (f.state === 'guard' ? 0.3 : 1) / Math.max(0.7, f.weight || 1) * Math.min(1, dd / 0.8);
+        f.x += (ox / dd * pull - oz / dd * sg.spin * pull * 0.6) * dt; f.z += (oz / dd * pull + ox / dd * sg.spin * pull * 0.6) * dt;
+        if (!sg.hit.has(f)) { sg.hit.add(f); const hp = f.headPos(); fx.text({ x: hp.x, y: hp.y + 0.3, z: hp.z }, 'SWIRL!', 'eff', 0.8); }
+      }
     } else if (sg.kind === 'grove') {
       const { ring, fill } = sg.ring.userData;
       const fade = Math.min(1, Math.max(0, (sg.warn + sg.dur - t) / 0.8));

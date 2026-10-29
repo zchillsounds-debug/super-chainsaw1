@@ -2102,7 +2102,7 @@ export class Screens {
         <div class="vs-mark">VS</div>
         <div class="vs-side r${gold ? ' gold' : ''}" style="--tc:${TYPES[c.type].color}"><img src="${g.portrait(c)}" alt=""><b>${c.name}</b><small>${label}</small></div>
         ${this.ctx.kind === 'team' ? `<div class="vs-team">${this.teamRow(this.ctx.team, this.ctx.php, this.ctx.pi)}${this.teamRow(this.ctx.foes, this.ctx.fhp, this.ctx.fi)}</div>${this.ctx.sent ? `<div class="vs-go ${this.ctx.sent}">${this.ctx.sent === 'you' ? `Go, ${p.name}!` : `Rival sends out ${c.name}!`}</div>` : ''}` : ''}
-        ${HAZARDS[opts.arena] && save.settings.hazards !== false ? `<div class="vs-hazard">⚠ Arena hazards: ${HAZARDS[opts.arena].name}${SIGS[opts.arena] ? ` & ${SIGS[opts.arena].name.toLowerCase()}` : ''}</div>` : ''}
+        ${HAZARDS[opts.arena] && save.settings.hazards !== false ? `<div class="vs-hazard">⚠ Arena hazards: ${HAZARDS[opts.arena].name}${SIGS[opts.arena] ? `${SIGS[opts.arena].name2 ? ', ' : ' & '}${SIGS[opts.arena].name.toLowerCase()}${SIGS[opts.arena].name2 ? ` & ${SIGS[opts.arena].name2.toLowerCase()}` : ''}` : ''}</div>` : ''}
       </div>`;
     sfx.boom();
     // only if the player is still on this VS screen (back or a menu tap during it must not drop them into a fight)
