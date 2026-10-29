@@ -32,7 +32,7 @@ export const ARENAS = {
     hill: 0xd89a5a, trunk: 0x4a9a4a, leaves: [0xc8704a, 0xb8603a, 0xd8845a], scenery: 'mesas', cloud: 0xfff4e8, cloudShade: 0xb08060, sunI: 2.5,
   },
   mesa: { // R888: Redrock Mesa (its wild fights): a flat red tabletop high above the sands, bigger sky, the far mesas below and a dry wind
-    name: 'Redrock Mesa',
+    name: 'Redrock Mesa', top: true, // (top: up on the tabletop, so no canyon cliffs towering round it)
     skyTop: 0x2a6ad8, skyHorizon: 0xffe0b0, sun: 0xfff2d8, sunDir: [-0.4, 0.8, -0.35],
     hemiSky: 0xfff0d8, hemiGround: 0xa0603a, fieldA: '#d89a6a', fieldB: '#d09060', line: '#fff0dc', floor: 'sand',
     wallA: 0xb8502a, wallB: 0xfff0d8, ground: 0xc8784a, fog: 0xffe0b8,
@@ -840,13 +840,21 @@ export class Arena {
       // R812: the canyon itself: tall banded red cliffs in a broken ring behind the stands (the Canyon Stadium has no roof; the cliffs
       // tower over the back wall so the arena reads as a canyon floor from the fight camera). Not behind the camera's gap.
       const strata = [[], [], []];
-      for (let i = 0; i < 15; i++) {
+      for (let i = 0; i < (A.top ? 0 : 15); i++) {
         const a = Math.PI * (0.32 + 1.36 * (i + rand() * 0.6) / 15), r = 31 + rand() * 7, w = 4.5 + rand() * 3, h = 15 + rand() * 11, x = Math.sin(a) * r, z = Math.cos(a) * r, ry = rand() * 6;
         const body = new THREE.CylinderGeometry(w * 0.92, w * 1.08, h, 8); body.rotateY(ry); body.translate(x, h / 2 - 0.5, z); strata[0].push(body);
         for (const f of [0.38, 0.68]) { const band = new THREE.CylinderGeometry(w * (1.04 - f * 0.12), w * (1.06 - f * 0.12), 1.3 + rand(), 8); band.rotateY(ry); band.translate(x, h * f, z); strata[1].push(band); }
         const cap = new THREE.CylinderGeometry(w * 0.86, w * 0.94, 1.4, 8); cap.rotateY(ry); cap.translate(x, h + 0.2, z); strata[2].push(cap);
       }
-      [0xb4482a, 0xe8a070, 0xd06a3e].forEach((col, k) => { const m = inked(mergeGeometries(strata[k]), toon(col, { env: true, rim: 0.25 }), 0.08); m.castShadow = false; m.userData.stadium = true; G.add(m); strata[k].forEach((g) => g.dispose()); });
+      if (A.top) { // R889: the mesa top: dry tumbleweeds caught against the boulders round the field, and Gardener Lina's melons in a row
+        const tw = [], mel = [], st = [];
+        for (let i = 0; i < 9; i++) { const a = Math.PI * (0.3 + 1.4 * i / 8) + rand() * 0.2, r = 24 + rand() * 6, x = Math.sin(a) * r, z = Math.cos(a) * r, sc = 0.9 + rand() * 0.7;
+          for (let k = 0; k < 4; k++) { const t = new THREE.TorusGeometry(0.6 * sc, 0.05 * sc, 4, 12); t.rotateX(k * 0.9 + i); t.rotateY(k * 1.6); t.translate(x, 0.6 * sc, z); tw.push(t); } }
+        for (let i = 0; i < 7; i++) { const a = Math.PI * (0.62 + i * 0.05), r = 27, x = Math.sin(a) * r, z = Math.cos(a) * r; const m = new THREE.SphereGeometry(0.9, 12, 8); m.scale(1.3, 0.85, 1); m.translate(x, 0.7, z); mel.push(m);
+          for (let k = 0; k < 6; k++) { const s2 = new THREE.SphereGeometry(0.91, 6, 8, k * Math.PI / 3, 0.2); s2.scale(1.3, 0.85, 1); s2.translate(x, 0.7, z); st.push(s2); } }
+        [[tw, 0xc8944a], [mel, 0x3aa040], [st, 0x1e6a2a]].forEach(([L, col]) => { const m = inked(mergeGeometries(L), toon(col, { rim: 0.4 }), 0.04); m.castShadow = false; G.add(m); L.forEach((g) => g.dispose()); });
+      }
+      [0xb4482a, 0xe8a070, 0xd06a3e].forEach((col, k) => { if (!strata[k].length) return; const m = inked(mergeGeometries(strata[k]), toon(col, { env: true, rim: 0.25 }), 0.08); m.castShadow = false; m.userData.stadium = true; G.add(m); strata[k].forEach((g) => g.dispose()); });
     }
     else if (A.scenery === 'dunes') {
       // long golden dunes with a sharp crest, rolling away on every side, and a few dry bushes nearer the bowl
