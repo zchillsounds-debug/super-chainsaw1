@@ -28,6 +28,7 @@ const reel = () => pg.evaluate(() => { const o = __game.screens.worldObj, R = Ma
 await load([...base, 'rod'], 22, 5, 'e'); await reel(); console.log('before flow:', await lines());
 await load([...base, 'rod', 'aqueduct_flow', 'aq_done', 'aq_nookhint'], 22, 5, 'e'); await reel(); await shot('catch'); console.log('after flow:', await lines());
 await reel(); console.log('again:', await lines());
+await at(21, 6, 'e'); await pg.evaluate(() => __sim(1.3)); await shot('pool'); console.log('carp swimming:', await pg.evaluate(() => __game.screens.worldObj.loaches?.length));
 console.log('fishLog.aq', await pg.evaluate(() => __save.adv.fishLog?.aq));
 await pg.evaluate(() => { __game.screens.worldJournal('fish'); }); await pg.waitForTimeout(800);
 console.log('journal row:', await pg.evaluate(() => [...document.querySelectorAll('.jr-fish')].map((e) => e.textContent).filter((t) => /aqueduct/.test(t)).join(' | ')));

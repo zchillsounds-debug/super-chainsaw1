@@ -2243,6 +2243,25 @@ export class World {
   // R845: the Sunwell Spring's pool: a few Lantern Loaches swim slow loops under the water, each with a little light on its nose
   buildLoaches(rand) {
     this.loaches = null;
+    const SL = this.M.sluice;
+    if (SL && save.adv.flags[SL.flag]) { // R879: two Coinscale Carp circle in the aqueduct's outlet pool under the spout, bronze scales glinting
+      const pool = []; for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if (this.tile(x, y) === '~') pool.push(wpos(x, y));
+      if (!pool.length) return;
+      const cx = pool.reduce((a, p) => a + p[0], 0) / pool.length, cz = pool.reduce((a, p) => a + p[1], 0) / pool.length;
+      const cm = new THREE.MeshBasicMaterial({ color: 0x8a5a1a, transparent: true, opacity: 0.8, depthWrite: false }); cm.userData.own = true;
+      const body = new THREE.SphereGeometry(0.2, 10, 6); body.scale(2.0, 0.5, 1.15);
+      const tail = new THREE.ConeGeometry(0.15, 0.32, 4); tail.rotateZ(Math.PI / 2); tail.scale(1, 0.4, 1.6); tail.translate(-0.5, 0, 0);
+      const L = [];
+      for (let k = 0; k < 2; k++) {
+        const g = new THREE.Group(); g.add(new THREE.Mesh(body, cm), new THREE.Mesh(tail, cm));
+        const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffc860, depthWrite: false, transparent: true, opacity: 0.9 }); sm.userData.own = true;
+        for (const ox of [0.15, -0.15]) { const sp = new THREE.Sprite(sm); sp.scale.setScalar(0.22); sp.position.set(ox, 0.07, 0); g.add(sp); } // coin-glints on the back
+        const hm = sm.clone(); hm.opacity = 0.2; hm.userData.own = true; const halo = new THREE.Sprite(hm); halo.scale.setScalar(1.4); g.add(halo);
+        g.position.set(cx, 0.05, cz); this.group.add(g);
+        L.push({ g, sm, hm, ph: k * Math.PI, r: 0.55 + k * 0.2, sp: k % 2 ? -0.8 : 0.65, x0: cx, z0: cz });
+      }
+      this.loaches = L; return;
+    }
     if (!this.M.springFish) return;
     const spots = [];
     for (let y = 1; y < this.H - 1; y++) for (let x = 1; x < this.W - 1; x++) if (this.tile(x, y) === '~' && this.tile(x + 1, y) === '~' && this.tile(x - 1, y) === '~') spots.push([x, y]);
