@@ -1,6 +1,6 @@
 // shared by uishots.mjs and sfxcheck.mjs: an end-game save and the steps that open every Adventure menu, modal and Journal tab
 export const endGameSave = () => {
-  const F = new Set('intro quest rival1 crowned ending isle_arrive sunstone morra skua_b glider lantern rod festlamp_done tower_bronze sands_arrive cup_sandstorm caravan3_done gcap_done aq_done aqueduct_flow'.split(' '));
+  const F = new Set('intro quest rival1 crowned ending isle_arrive sunstone morra skua_b glider lantern rod festlamp_done tower_bronze sands_arrive cup_sandstorm caravan3_done gcap_done aq_done aqueduct_flow tess_a'.split(' '));
   for (const M of Object.values(__maps)) { for (const n of M.npcs || []) for (const k of ['hideFlag', 'showFlag']) n[k] && F.add(n[k]); for (const e of Object.values(M.edges || {})) e.need && F.add(e.need); for (const bd of M.buildings || []) bd.stadium && F.add('cup_' + bd.stadium); }
   __save.trainer = { name: 'Samantha', partner: 'cindermunch' }; __save.tutorialDone = true; __save.berries = 1234;
   __save.unlocked = __critters.map((c) => c.id); __critters.forEach((c) => { __save.critters[c.id].level = 30; }); __save.seenStage = Object.fromEntries(__critters.map((c) => [c.id, 3])); __save.news = ['tricks', 'grove', 'otter', 'frogmole', 'grow', ...Array.from({ length: 40 }, (_, i) => 'adv' + i)];

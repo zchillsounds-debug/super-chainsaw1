@@ -483,6 +483,14 @@ export class Screens {
         A.curios ? `And the Mirage Merchant sold you a curio! ${A.curios > 1 ? `${A.curios} of them!` : ''} He brings a new one every day after noon, they say. Or the same one, wearing a disguise.` : "The Mirage Merchant on the Glass Flats has a new curio every day now, once you've bought his turban. A glass lure, a mirror... even bottled heat!",
         "Oh, and Team Battle has a sky button now too, like Quick Battle. A night-time 3-on-3 under the stars. Lovely!",
       ]), 600);
+    } else if (!g.autoplay && save.news?.includes('adv44') && !save.news.includes('adv45') && save.adv.flags.aq_done) { // R877: the toll-keeper's nook, TUNNEL RUN, the aqueduct arena's whirlpools
+      save.news.push('adv45'); persist();
+      const A = save.adv;
+      setTimeout(() => this.mode === 'title' && this.profTalk([
+        A.flags.aq_nook ? "{name}! Osei tells me you squeezed up the dry east inflow and found the old toll-keeper's nook. A sun-bird mosaic! I'm told the tiles are as bright as the day they were laid." : "{name}! Osei has a theory. With the east channel dry, its carved inflow is really a crawlway, up to an old toll-keeper's nook. He's too big to fit. You aren't!",
+        A.runBest ? `And Tunnel Runner Tess says you ran her course in ${(A.runBest / 10).toFixed(1)} seconds. West post, spout post, back again. I get puffed walking to the kettle.` : "And Tunnel Runner Tess has turned the dry tunnel into a running track: TUNNEL RUN. Beat her 8.0 seconds for a snack. Run flat out!",
+        "A tip from the stadiums: fights in the aqueduct's cistern hall have whirlpools now. A drain opens, the water spins you in, then it spouts! Walk out of the swirl, or guard to dig in.",
+      ]), 600);
     } else if (!g.autoplay && save.news?.includes('adv43') && !save.news.includes('adv44') && save.adv.flags.aq_done) { // R867: WATERWORKS, the Brass Pipe Goggles, green critters in the aqueduct's moss
       save.news.push('adv44'); persist();
       const A = save.adv;
@@ -710,7 +718,7 @@ export class Screens {
         ['Cups', 'Each town\'s stadium holds a cup, and the trials test your Strength, Friendship and Wisdom on the road to the Critter Crown.'],
         ['Berry Centers', 'Rest to heal, swap who leads the way at the Critter Box, leave a critter at the Daycare and blend berry smoothies.'],
         ['The Isles', 'Once you hold the Critter Crown, the Sunny Gull ferry sails from Seashell Town to the Sunscatter Isles: new critters, three island cups and the Gloom Gulls.'],
-        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it, where Forager Pim\'s spore puffs fly in SPORE DRIFT. Past Pim\'s grate, an old water tunnel runs south: turn its sluice wheels to cross the channels, then try Waterwright Osei\'s WATERWORKS board.'],
+        ['The Sands', 'Once the Starfall lighthouse shines again, the Sand-Rail runs from Cinder Town to the Amber Sands: desert critters on Dune Road, the Sunwell Oasis bazaar and the Dust Devils. After dark, the oasis holds a lantern-lit night market with a duel every night. Caravan Master Hakim lets you lead his Humpdrops in CARAVAN RUN once his road is open, and the oasis well hides a glowing cave, with a hollow full of glowing mushrooms through a crack behind it, where Forager Pim\'s spore puffs fly in SPORE DRIFT. Past Pim\'s grate, an old water tunnel runs south: turn its sluice wheels to cross the channels, then try Waterwright Osei\'s WATERWORKS board, and race Tunnel Runner Tess once the channels run dry.'],
         ['After that', 'The Battle Tower, three legendary critters, the weekly Masters, the Kite Glider\'s hidden spots, pearls, dives and more. The Champ page keeps track.'],
         ['100%', 'Records shows how much of Clashara, the isles (and later the Amber Sands) you\'ve explored. Reach a 100% Grand total, then go and see Prof. Pecan!'],
       ]],
@@ -1384,6 +1392,7 @@ export class Screens {
         ['🐪', 'CARAVAN RUN prize', `Caravan Master Hakim, ${N('oasis')}`, A.caravanDay === day, !!F.caravan3_done], // R870: the three newer desert mini-games' daily prizes
         ['🍄', 'SPORE DRIFT prize', 'Forager Pim, Glowcap Hollow', A.sporeDay === day, !!F.gcap_done],
         ['💧', 'WATERWORKS prize', 'Waterwright Osei, the Old Aqueduct', A.pipeDay === day, !!F.aq_done],
+        ['🏃', 'TUNNEL RUN prize', 'Tunnel Runner Tess, the Old Aqueduct', A.runDay === day, !!(F.tess_a && F.aqueduct_flow)], // R876
         ['📜', `Caravan Guild bounties (${A.bounty?.day === day ? A.bounty.paid.length : 0}/3)`, `the board in ${N('oasis')}`, A.bounty?.day === day && A.bounty.paid.length >= 3, !!F.sands_arrive], // R828
         ['🤿', 'REEF DIVE prize', 'the Sunken Wreck (Snorkeller Pia, Port Coral)', A.diveDay === day, F.dived],
         ['🐦', `Gull Club catch: ${gullFish(day)}`, 'any island water → Petrel, Starfall Atoll', A.gullPaid === day, F.amends3_done && F.rod],
