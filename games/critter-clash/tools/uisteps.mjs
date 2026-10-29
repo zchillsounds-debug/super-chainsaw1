@@ -24,6 +24,7 @@ export const STEPS = [
   ['j-today2', `${world} S.worldJournal('today'); ${scroll('.jr-list')}`],
   ['j-fav', `${world} S.worldJournal('fav')`],
   ['j-fish', `${world} S.worldJournal('fish')`],
+  ['j-fish2', `${world} S.worldJournal('fish'); ${scroll('.jr-list')}`], // R878: the bottom of the fish list (desert pools)
   ['j-night', `${world} S.worldJournal('night')`],
   ['j-rec', `${world} S.worldJournal('rec')`],
   ['j-rec2', `${world} S.worldJournal('rec'); ${scroll('.jr-list')}`],

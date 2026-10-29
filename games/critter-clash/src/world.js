@@ -107,6 +107,7 @@ export const FISH = {
 // the Amber Sands' mirage hours (12-15h, clear days) bring one more visitor to the desert pools: a fish you can see right through. Kept apart too (fishLog.mirage)
 export const MIRAGE_FISH = ['Heatwave Glassfish', 6, 18, '🫧'];
 export const SPRING_FISH = ['Lantern Loach', 8, 22, '🏮'];
+export const AQ_FISH = ['Coinscale Carp', 22, 64, '🏺']; // R878: only in the Old Aqueduct's outlet pool once the Sun Sluice runs: round bronze scales like old toll coins
 export const HOLLOW_FISH = ['Starspot Eel', 40, 96, '🌌']; // R857: only in Glowcap Hollow's black pool: inky blue, freckled with tiny lights like a night sky // R829: blind, glowing, only in the Sunwell Spring under the oasis well
 export const SEASON_FISH = { spring: ['Blossom Koi', 20, 52, '🌸'], summer: ['Sunburst Perch', 14, 38, '🌻'], autumn: ['Maple Trout', 22, 56, '🍂'], winter: ['Snowflake Smelt', 8, 24, '❄️'] };
 export const seasonKey = () => isSpring() || isMeadow() ? 'spring' : isSummer() ? 'summer' : isAutumn() || isEarlyAutumn() ? 'autumn' : isFrost() || isWinter() || twinkleWeek() ? 'winter' : null;
@@ -4266,6 +4267,12 @@ export class World {
       const first = !L.hollow; L.n++; L.hollow = Math.max(L.hollow || 0, cm); if (first) save.berries = (save.berries || 0) + 5;
       persist(); reward(first ? 3 : 1);
       return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long, inky blue and freckled all over with tiny lights, like a piece of the night sky!`, first ? 'It only lives here, in the black pool of Glowcap Hollow. Forager Pim and Pool Angler Layla will want to hear about this! +5 🍓 (☰ → Journal → 🎣)' : `A ${name}. Its freckles twinkle once and it pours itself back into the dark.${L.hollow === cm ? ' Your biggest one yet!' : ''}`]);
+    }
+    if (this.M.sluice && save.adv.flags[this.M.sluice.flag] && r < 0.78) { // R878: the aqueduct's outlet pool, fed by the sun-bird spout: the Coinscale Carp
+      const [name, lo, hi, em] = AQ_FISH, cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };
+      const first = !L.aq, prev = L.aq || 0; L.n++; L.aq = Math.max(prev, cm); if (first) save.berries = (save.berries || 0) + 5;
+      persist(); reward(first ? 3 : 1);
+      return this.say([`{hero} reeled in a ${name}! ${em} It's ${cm} cm long, and every scale is a round bronze disc, like a pocketful of old toll coins!`, first ? 'It swam in with the water from the Sunwell, and it likes the spout\'s splash. Waterwright Osei says the Sun City carved them on the well-heads! +5 🍓 (☰ → Journal → 🎣)' : `A ${name}. It flicks its coin-bright tail and swims back under the spout.${cm > prev ? ' Your biggest yet!' : ''}`]);
     }
     if (this.M.springFish && r < 0.8) { // R829: the Sunwell Spring's own fish (most catches here)
       const [name, lo, hi, em] = SPRING_FISH, cm = Math.round(lo + (hi - lo) * Math.pow(Math.random(), 1.6)), L = save.adv.fishLog ||= { n: 0, best: null };

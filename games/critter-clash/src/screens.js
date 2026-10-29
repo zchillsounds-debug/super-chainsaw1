@@ -12,7 +12,7 @@ import { traitChip, traitOf } from './traits.js';
 import { PhotoMode } from './photo.js';
 import { SHOP_HATS } from './critters.js';
 import { FOSSILS } from './fossils.js';
-import { World, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, MIRAGE_FISH, SPRING_FISH, HOLLOW_FISH, seasonKey } from './world.js';
+import { World, AQ_FISH, newAdventure, gullFish, heroDef, traderTown, digLeft, alphaToday, FISH, pumpkinNights, halloween, twinkleWeek, isAutumn, isSpring, isSummer, isWinter, isFrost, isMeadow, isEarlyAutumn, LANDMARKS, albumGet, derbyOf, SEASON_FISH, MIRAGE_FISH, SPRING_FISH, HOLLOW_FISH, seasonKey } from './world.js';
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, hatWhere, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, DESERT_TRIAL, gauntletFoes, champReFlag, CUP_HALL, glowcapCount } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { VERSION } from './version.js';
@@ -1722,6 +1722,7 @@ export class Screens {
         + (save.adv.flags.sands_arrive ? `<li class="jr-head">🌫️ Mirage hours (Amber Sands water, 12–15 h on clear days)</li><li class="jr-fish ${L.mirage ? 'got' : ''}"><span>${L.mirage ? MIRAGE_FISH[3] : '❔'}</span><b>${L.mirage || save.adv.fishLog?.sp?.['Mirage Guppy'] ? MIRAGE_FISH[0] : '???'} <small>visitor</small></b><em>${L.mirage ? L.mirage + ' cm' : ''}</em></li>` : '')
         + (save.adv.flags.spring_arrive ? `<li class="jr-head">💧 Sunwell Spring (under the oasis well)</li><li class="jr-fish ${L.spring ? 'got' : ''}"><span>${L.spring ? SPRING_FISH[3] : '❔'}</span><b>${L.spring ? SPRING_FISH[0] : '???'} <small>cave</small></b><em>${L.spring ? L.spring + ' cm' : ''}</em></li>` : '') // R829
         + (save.adv.flags.hollow_arrive ? `<li class="jr-fish ${L.hollow ? 'got' : ''}"><span>${L.hollow ? HOLLOW_FISH[3] : '❔'}</span><b>${L.hollow ? HOLLOW_FISH[0] : '???'} <small>hollow</small></b><em>${L.hollow ? L.hollow + ' cm' : ''}</em></li>` : '') // R857
+        + (save.adv.flags.aqueduct_flow ? `<li class="jr-head">🏺 Old Aqueduct (the pool under the spout)</li><li class="jr-fish ${L.aq ? 'got' : ''}"><span>${L.aq ? AQ_FISH[3] : '❔'}</span><b>${L.aq ? AQ_FISH[0] : '???'} <small>aqueduct</small></b><em>${L.aq ? L.aq + ' cm' : ''}</em></li>` : '') // R878
         + `<li class="jr-more">${Object.keys(sp).length}/${Object.entries(FISH).filter(([k]) => k !== 'oasis' || save.adv.flags.sands_arrive).flatMap(([, v]) => v).length} kinds${L.season ? ` · ${Object.keys(L.season).length}/4 seasonal` : ''} · ${L.n || 0} caught${save.adv.gems ? ` · 💎 ${save.adv.gems} ice gem${save.adv.gems > 1 ? 's' : ''}` : ''}${save.adv.emberGems ? ` · 🔥 ${save.adv.emberGems} ember gem${save.adv.emberGems > 1 ? 's' : ''}` : ''}</li>`;
     }
     d.innerHTML = `<div class="modal wd-journal"><h2>Journal</h2>

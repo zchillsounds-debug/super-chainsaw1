@@ -1868,7 +1868,8 @@ function aqueductTalk(S, w) {
     'Waterwright Osei: Wellkeeper Bram says the well\'s never been so full. He\'s been dropping in two berries a day for luck. Go and see!',
     'Waterwright Osei: The Sun City built this to share its water with everyone who passed. "Water for all who thirst." Good people, whoever they were.',
     'Waterwright Osei: The wheels still swap the channels, but the water doesn\'t go that way any more. Spin them if you like. I do. It\'s soothing.',
-  ][Math.floor(Math.random() * 4)]], null, who));
+    'Waterwright Osei: Fish came in with the water! Coinscale Carp, in the pool under the spout. Scales like little toll coins. Bring a rod.', // R878
+  ][Math.floor(Math.random() * 5)]], null, who));
   if (F.aqueduct_flow) {
     F.aq_done = true; if (!own.includes('wheelcap')) own.push('wheelcap');
     save.berries = (save.berries || 0) + 20; const hero = save.adv.hero, c = save.critters[hero], r = grantXp(hero, Math.round(xpNeeded(c.level) * 0.4));
