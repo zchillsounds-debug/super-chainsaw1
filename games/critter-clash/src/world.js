@@ -17,7 +17,7 @@ import { FOSSILS } from './fossils.js';
 import { hatRegion, countUp, singNight, lampCritter, wantedToday, deliveryFor, deliveredLine, gauntletWeek, questReady, chainFor, storyMark, glowcapCount } from './story.js';
 import { ARENAS } from './arena.js';
 import { PhotoMode } from './photo.js';
-import { stargaze, tonightConst, BOTTLE_NOTES, CONSTELLATIONS } from './stars.js';
+import { stargaze, tonightConst, BOTTLE_NOTES, CONSTELLATIONS, DESERT_CONSTS } from './stars.js';
 import { fairyRing } from './ring.js';
 import { snowballToss, SNOW_GOAL } from './snowball.js';
 
@@ -2566,10 +2566,11 @@ export class World {
   // Sprout Village after dusk: a telescope on a tripod by a picnic blanket at the south edge (look through it for tonight's constellation)
   buildScope() {
     this.scope = null;
-    if (this.key !== 'village' || this.phase === 'day') return;
-    const [x, y] = [16, 14];
+    const SC = this.M.scope; // R896: another map's telescope (M.scope: { x, y, need }: Stargazer Nuri's on the Singing Dunes, the desert sky)
+    if ((this.key !== 'village' && !SC) || this.phase === 'day' || (SC?.need && !save.adv.flags[SC.need])) return;
+    const [x, y] = SC ? [SC.x, SC.y] : [16, 14];
     const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...(this.itemSpots || []), this.hx + ',' + this.hy, this.dig ? this.dig.x + ',' + this.dig.y : '']);
-    if (this.tile(x, y) !== '.' || taken.has(x + ',' + y)) return;
+    if ((this.tile(x, y) !== '.' && !SC) || taken.has(x + ',' + y)) return;
     const [px, pz] = wpos(x, y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(1.35); this.group.add(g); this.solid.add(x + ',' + y);
     const wood = toon(0x8a5a3a), brass = toon(0xe8b04a, { rim: 0.6 });
     for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2 + 0.3, leg = inked(new THREE.CylinderGeometry(0.045, 0.06, 1.35, 6), wood, OL * 0.25); leg.position.set(Math.cos(a) * 0.3, 0.62, Math.sin(a) * 0.3); leg.rotation.set(Math.sin(a) * 0.42, 0, -Math.cos(a) * 0.42); g.add(leg); }
@@ -2578,14 +2579,14 @@ export class World {
     for (const y of [-0.3, 0.35]) { const band = inked(new THREE.CylinderGeometry(0.205, 0.205, 0.08, 14), toon(0x8a5a2a), OL * 0.2); band.position.y = y; tube.add(band); }
     const lens = new THREE.Mesh(new THREE.CircleGeometry(0.15, 14), new THREE.MeshBasicMaterial({ color: 0x9ad8ff })); lens.material.userData.own = true; lens.rotation.x = -Math.PI / 2; lens.position.y = 0.66; tube.add(lens);
     const eye = inked(new THREE.CylinderGeometry(0.06, 0.07, 0.22, 8), toon(0x3a2a24), OL * 0.2); eye.position.y = -0.74; tube.add(eye);
-    const tex = canvasTex(64, 64, (c) => { for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { c.fillStyle = (i + j) % 2 ? '#ff6a7a' : '#fff4e8'; c.fillRect(i * 16, j * 16, 16, 16); } });
+    const tex = canvasTex(64, 64, (c) => { for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { c.fillStyle = (i + j) % 2 ? (SC ? '#2ab0a8' : '#ff6a7a') : (SC ? '#f2c46a' : '#fff4e8'); c.fillRect(i * 16, j * 16, 16, 16); } }); // (R896: Nuri's is a teal and saffron desert rug)
     tex.userData.own = true; const bm = toon(0xffffff, { map: tex });
     const bl = new THREE.Mesh(new THREE.PlaneGeometry(TILE * 1.5, TILE * 1.1), bm); bl.rotation.x = -Math.PI / 2; bl.rotation.z = 0.12; bl.position.set(-TILE * 1.05, 0.035, 0.1); bl.receiveShadow = true; g.add(bl);
     const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.26, 10), toon(0xfff2b0, { emissive: 0xffd060 })); jar.position.set(-TILE * 1.0, 0.16, -0.2); g.add(jar);
     const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xffd880, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 }); sm.userData.own = true;
     const glow = new THREE.Sprite(sm); glow.scale.setScalar(2.6); glow.position.set(-TILE * 1.0, 0.4, -0.2); g.add(glow);
     bakeStatic({ root: g, mats: {}, glow });
-    this.scope = { x, y, glow };
+    this.scope = { x, y, glow, desert: !!SC };
   }
 
   // Glowcap Hollow's fairy ring: six little toadstools round a tall one; after dark they glow and sing (tap the tune back, once a night for a prize)
@@ -3703,19 +3704,21 @@ export class World {
 
   // look through the telescope: tonight's constellation traces itself; the first look of a night is worth a little XP
   stargaze() {
-    const day = new Date().toISOString().slice(0, 10), A = save.adv, C = (A.stars === day && CONSTELLATIONS.find((q) => q.id === A.starsC)) || tonightConst(day, hash, A.consts || []); // the same one all night
+    const D = !!this.scope?.desert, L = D ? DESERT_CONSTS : CONSTELLATIONS, kS = D ? 'dstars' : 'stars', kC = D ? 'dstarsC' : 'starsC', kL = D ? 'dconsts' : 'consts'; // (R896: the desert sky keeps its own log)
+    const day = new Date().toISOString().slice(0, 10), A = save.adv, C = (A[kS] === day && L.find((q) => q.id === A[kC])) || tonightConst(day, hash, A[kL] || [], L); // the same one all night
     this.busy = true; sfx.shimmer?.(3);
     const el = stargaze(this.g.ui, C, hash(day), () => {
       this.g.modalClose = null; this.busy = false;
       const star = this.caughtStar ? ['{hero} caught a shooting star! It turned into a berry. +1 🍓'] : []; this.caughtStar = false;
-      const seen = (A.consts ||= []), fresh = !seen.includes(C.id);
+      const seen = (A[kL] ||= []), fresh = !seen.includes(C.id);
       if (fresh) seen.push(C.id);
-      if (A.stars !== day) {
-        A.stars = day; A.starsC = C.id; countUp('stars'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); reward(1);
-        return this.say([...star, `{hero} spotted ${C.name}!${fresh ? ' A new one for the star log! ✨' : ''}`, `Counting stars is surprisingly tiring. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, `Star log: ${seen.length} of ${CONSTELLATIONS.length} constellations. A different one rises each night.`]);
+      if (D && fresh && seen.length === L.length) { save.berries = (save.berries || 0) + 10; } // R896: the whole desert sky
+      if (A[kS] !== day) {
+        A[kS] = day; A[kC] = C.id; countUp('stars'); const hero = A.hero, rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.15)); persist(); reward(1);
+        return this.say([...star, `{hero} spotted ${C.name}!${fresh ? ' A new one for the star log! ✨' : ''}`, `Counting stars is surprisingly tiring. ${rr.to > rr.from ? `{hero} grew to Lv ${rr.to}!` : '(+XP)'}`, D ? `Desert star log: ${seen.length} of ${L.length}. ${seen.length === L.length && fresh ? 'Stargazer Nuri claps! The whole desert sky! +10 🍓' : 'Nuri says a different one rises each night.'}` : `Star log: ${seen.length} of ${CONSTELLATIONS.length} constellations. A different one rises each night.`]);
       }
       persist();
-      return this.say([...star, `${C.name} twinkles away. Another constellation will rise tomorrow night. (Star log: ${seen.length} of ${CONSTELLATIONS.length})`]);
+      return this.say([...star, `${C.name} twinkles away. Another constellation will rise tomorrow night. (${D ? 'Desert star log' : 'Star log'}: ${seen.length} of ${L.length})`]);
     }, () => { // a shooting star caught in the eyepiece: one berry a night
       if (A.shoot === day) return;
       A.shoot = day; save.berries = (save.berries || 0) + 1; persist(); this.caughtStar = true;

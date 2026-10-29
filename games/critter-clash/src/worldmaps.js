@@ -1122,6 +1122,7 @@ export const MAPS = {
     edges: { w: { to: 'dunecamp', off: 0 } },
     singers: [[6, 2], [22, 5], [19, 10]], // the singing stones (A at night: each hums under its own star; all three in one night wake the Sun-Bird)
     nest: [13, 7], // where the Sun-Bird sleeps under the sand
+    scope: { x: 11, y: 5, need: 'sunbird1' }, // R896: Stargazer Nuri's telescope, after dark (the desert sky's own constellations)
     chorus: { who: 'chanter_s' }, // R892: Dune Singer Amani's DUNE CHORUS (after her battle)
     ripples: true, // big dunes and wind ripples painted over the sand (world.js)
     cacti: [[3, 10], [24, 2], [9, 11]],

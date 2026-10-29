@@ -16,7 +16,7 @@ import { World, AQ_FISH, newAdventure, gullFish, heroDef, traderTown, digLeft, a
 import { storyIntro, storyStep, storyTalk, doorAction, nextGoal, favourLine, favourList, hatWhere, gauntletWeek, wearHats, countUp, towerRank, TOWER_RANKS, MASTERS, DESERT_TRIAL, gauntletFoes, champReFlag, CUP_HALL, glowcapCount } from './story.js';
 import { MAPS } from './worldmaps.js';
 import { VERSION } from './version.js';
-import { CONSTELLATIONS, BOTTLE_NOTES } from './stars.js';
+import { CONSTELLATIONS, DESERT_CONSTS, BOTTLE_NOTES } from './stars.js';
 
 // trainers and story foes meet the hero partway: an over-levelled hero still gets a fight (the foe climbs
 // halfway to the hero's level), and an under-levelled one is never more than 3 levels behind
@@ -1733,6 +1733,7 @@ export class Screens {
       body = `<li class="jr-head">🔭 Star log <small>${seen.length}/${CONSTELLATIONS.length}</small></li>`
         + `<li class="jr-stars">${CONSTELLATIONS.map((c) => `<span class="${seen.includes(c.id) ? 'got' : ''}">${seen.includes(c.id) ? '✨ ' + c.name : '❔ ???'}</span>`).join('')}</li>`
         + (seen.length ? '' : '<li class="jr-more">Grandpa\'s telescope stands by the trees in Sprout Village. Look through it after dark!</li>')
+        + (save.adv.flags?.sunbird1 ? `<li class="jr-head">🏜️ Desert sky <small>${(save.adv.dconsts || []).length}/${DESERT_CONSTS.length}</small></li><li class="jr-stars">${DESERT_CONSTS.map((c) => `<span class="${(save.adv.dconsts || []).includes(c.id) ? 'got' : ''}">${(save.adv.dconsts || []).includes(c.id) ? '✨ ' + c.name : '❔ ???'}</span>`).join('')}</li>` + ((save.adv.dconsts || []).length ? '' : '<li class="jr-more">Stargazer Nuri\'s telescope stands on the Singing Dunes. The desert sky has its own stars!</li>') : '') // R896
         + `<li class="jr-head">🍾 Bottle notes <small>${read.length}/${BOTTLE_NOTES.length}</small></li>`
         + (read.length ? [...read].sort((a, b) => a - b).map((i) => `<li class="jr-note">${BOTTLE_NOTES[i].replace(/\(signed\) (.*)$/, '<em>— $1</em>')}</li>`).join('') : '<li class="jr-more">A bottle washes up on Seashell Town\'s shore most nights. Pop the cork!</li>');
     } else {
