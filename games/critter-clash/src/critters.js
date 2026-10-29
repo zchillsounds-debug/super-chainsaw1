@@ -1554,6 +1554,7 @@ export const SHOP_HATS = [
   { id: 'dewcirclet', name: 'Dewdrop Circlet', kind: 'circlet', col: 0xcfe8f4, band: 0x3ac8e8, price: 0, gift: true, extra: true }, // R829: the Sunwell Spring's chest
   { id: 'guildfez', name: 'Caravan Guild Fez', kind: 'fez', col: 0xa8243a, band: 0xffc23a, price: 0, gift: true, extra: true }, // R828: five full days of the Caravan Guild's bounty board
   { id: 'runnerband', name: "Runner's Headband", kind: 'band', col: 0x2ab8d0, band: 0xffd040, price: 0, gift: true, extra: true }, // R875: TUNNEL RUN under 6.6 s (Tunnel Runner Tess, the Old Aqueduct)
+  { id: 'scopecap', name: "Lookout's Spyglass Cap", kind: 'scopecap', col: 0xd8a860, band: 0xe8b04a, price: 0, gift: true, extra: true }, // R885: five right sightings through Lookout Omar's spyglass (Redrock Mesa)
   { id: 'melonhelm', name: 'Melon Rind Helmet', kind: 'melon', col: 0x3aa040, band: 0xff5a6a, price: 0, gift: true, extra: true }, // R883: shoo 16 Fennzaps in MELON WATCH (Mesa Gardener Lina, Redrock Mesa)
   { id: 'coincrown', name: 'Sun-Coin Crown', kind: 'coincrown', col: 0xd89a3a, band: 0x2ab8a0, price: 0, gift: true, extra: true }, // R881: fill the Sunwell Museum's Sun City coin case (12 coins from the aqueduct silt; Curator Petra)
   { id: 'tollband', name: 'Toll-Keeper\'s Band', kind: 'circlet', col: 0xd8a040, band: 0x2ab8a0, price: 0, gift: true, extra: true }, // R873: the Old Aqueduct's toll-keeper's nook (up the dry east inflow)
@@ -1588,7 +1589,11 @@ export function hatModel(cr, kind, col, band) {
   }
   if (kind === 'bucket') { add(new THREE.CylinderGeometry(r * 0.55, r * 0.72, r * 0.42, 16)).position.y = r * 0.18; add(new THREE.CylinderGeometry(r * 1.0, r * 1.0, r * 0.05, 18)); }
   if (kind === 'wide') { add(new THREE.SphereGeometry(r * 0.62, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.7; add(new THREE.CylinderGeometry(r * 1.3, r * 1.3, r * 0.04, 22)); if (band) { add(new THREE.CylinderGeometry(r * 0.63, r * 0.63, r * 0.1, 16), toon(band), 0).position.y = r * 0.06; const f = add(new THREE.SphereGeometry(r * 0.13, 8, 6), toon(band), 0.012); f.position.set(r * 0.5, r * 0.15, r * 0.3); } }
-  if (kind === 'cap' || kind === 'back') { add(new THREE.SphereGeometry(r * 0.72, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.6; const v = add(new THREE.CylinderGeometry(r * 0.5, r * 0.5, r * 0.04, 16, 1, false, -Math.PI / 2, Math.PI)); v.position.z = r * 0.45 * (kind === 'back' ? -1 : 1); v.rotation.y = kind === 'back' ? Math.PI : 0; }
+  if (kind === 'scopecap') { // R885: a sand-coloured cap with a little brass spyglass strapped on top, pointing forward
+    const t = add(new THREE.CylinderGeometry(r * 0.09, r * 0.12, r * 0.6, 10), toon(band, { rim: 0.8 }), 0.01); t.rotation.x = Math.PI / 2; t.position.set(0, r * 0.5, r * 0.05);
+    for (const z of [-0.12, 0.2]) { const b = add(new THREE.CylinderGeometry(r * 0.125, r * 0.125, r * 0.05, 10), toon(0x8a5a2a), 0); b.rotation.x = Math.PI / 2; b.position.set(0, r * 0.5, r * z); }
+  }
+  if (kind === 'cap' || kind === 'back' || kind === 'scopecap') { add(new THREE.SphereGeometry(r * 0.72, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.6; const v = add(new THREE.CylinderGeometry(r * 0.5, r * 0.5, r * 0.04, 16, 1, false, -Math.PI / 2, Math.PI)); v.position.z = r * 0.45 * (kind === 'back' ? -1 : 1); v.rotation.y = kind === 'back' ? Math.PI : 0; }
   if (kind === 'swim') { add(new THREE.SphereGeometry(r * 0.8, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.75; G.position.y -= r * 0.25; }
   if (kind === 'band') { add(new THREE.TorusGeometry(r * 0.95, r * 0.08, 6, 20)).rotation.x = Math.PI / 2; G.position.y -= r * 0.45; }
   if (kind === 'beanie') { add(new THREE.SphereGeometry(r * 0.78, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2)).scale.y = 0.82; add(new THREE.TorusGeometry(r * 0.76, r * 0.1, 6, 20), toon(band), 0.012).rotation.x = Math.PI / 2; add(new THREE.SphereGeometry(r * 0.2, 10, 8), toon(band)).position.y = r * 0.68; G.position.y -= r * 0.2; }

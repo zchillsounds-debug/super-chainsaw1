@@ -1079,7 +1079,8 @@ export const MAPS = {
     edges: {},
     lifts: [[5, 10, 'down', 14, 4], [18, 10, 'down', 27, 4]], // back down to Redrock Canyon (x, y, 'down', landing x, y)
     cacti: [[2, 7], [21, 4], [12, 9]],
-    melons: { x: 2, y: 3, w: 4, h: 2, who: 'lina_m', time: 25, goal: 10, gold: 16 }, // R883: Lina's melon patch (MELON WATCH after dark)
+    melons: { x: 2, y: 3, w: 4, h: 2, who: 'lina_m', time: 25, goal: 10, gold: 16 },
+    lookout: { x: 12, y: 2, who: 'watch_m' }, // R885: Lookout Omar's spyglass (a daily sighting) // R883: Lina's melon patch (MELON WATCH after dark)
     chest: { x: 16, y: 2, flag: 'mesa_chest', hat: 'mesaband', berries: 30, hatLine: '...and a Mesa Climber\'s Bandana, sun-faded red, with a little rope knot at the back!' },
     signs: [{ x: 9, y: 9, text: 'REDROCK MESA\nOn a clear day you can see the Sun Gate from here. On a very clear day, the sea.' }],
     wild: { list: [['siroccat', 38, 41], ['skimray', 38, 41], ['whirlwhisk', 38, 41], ['fennzap', 38, 41], ['scarabold', 39, 41]], roam: 4, rate: 0.1 },

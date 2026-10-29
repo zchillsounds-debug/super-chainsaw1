@@ -1314,3 +1314,5 @@ body.portrait .sel-bottom > .roster { max-height: min(232px, 36vh); overflow-y: 
 .arcade.pipes { background: linear-gradient(#5a3e26, #2a1c12); border-color: #5ad0ff; box-shadow: 0 0 24px rgba(90,208,255,.4), 0 6px 0 #1a1008; }
 .arcade.pipes .arc-top { color: #dff6ff; text-shadow: 0 2px 0 #1a3040; }
 .arcade.pipes .arc-tip { color: #f0e0c8; }
+
+.wd-scope { position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%); width: min(56vh, 70vw); height: min(56vh, 70vw); border-radius: 50%; overflow: hidden; z-index: 7; pointer-events: none; box-shadow: 0 0 0 8px #c8902a, 0 0 0 12px #5a3a1a, 0 0 0 100vmax rgba(10,6,4,0.72); animation: scopeIn 0.35s ease-out; } .wd-scope canvas { width: 100%; height: 100%; display: block; } body.portrait .wd-scope { top: 40%; } @keyframes scopeIn { from { transform: translate(-50%, -50%) scale(0.6); } } /* R885: Lookout Omar's spyglass view */

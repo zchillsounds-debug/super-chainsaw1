@@ -158,6 +158,32 @@ const shinyRate = () => (save.adv?.flags?.shinycharm ? 2 : 1) / 30; // a rare sh
 const OL = 0.035;
 const CS = 1.4; // critters stand a bit taller than in battle so they read from the overhead camera
 const byId = (id) => CRITTERS.find((c) => c.id === id);
+// R885: Lookout Omar's spyglass sightings: six desert places, each drawn as a little spyglass view (scopeDraw) with a dust cloud on the move
+const SCOPE_SPOTS = [
+  { id: 'oasis', name: 'Sunwell Oasis', line: 'A caravan coming in for water, I bet.' },
+  { id: 'canyon', name: 'Redrock Canyon', line: 'Probably Chief Maro\'s Scarabold digging again.' },
+  { id: 'camp', name: 'the Dune Camp', line: 'Kai must be sledding down the big dune.' },
+  { id: 'gate', name: 'the Sun Gate', line: 'Elder Sabah sweeps the steps every morning.' },
+  { id: 'flats', name: 'the Glass Flats', line: 'The salt miners, heading home with their carts.' },
+  { id: 'singing', name: 'the Singing Dunes', line: 'The wind, making the stones hum.' },
+];
+function scopeDraw(c, id, seed) {
+  const W = 320, H = 320, hz = id === 'flats' ? 180 : 170, R = (k) => ((seed >> k) & 15) / 15;
+  const sky = c.createLinearGradient(0, 0, 0, hz); sky.addColorStop(0, '#7ac8f0'); sky.addColorStop(1, '#ffe6b8'); c.fillStyle = sky; c.fillRect(0, 0, W, hz);
+  const gnd = { oasis: '#e8c888', canyon: '#d8905a', camp: '#eec88a', gate: '#e8c080', flats: '#f2f0ea', singing: '#f0c47a' }[id];
+  c.fillStyle = gnd; c.fillRect(0, hz, W, H - hz);
+  const tri = (x, y, w, h, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(x - w / 2, y); c.lineTo(x, y - h); c.lineTo(x + w / 2, y); c.fill(); };
+  const palm = (x, y, s) => { c.strokeStyle = '#8a5a2a'; c.lineWidth = 4 * s; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 6 * s, y - 25 * s, x + 2 * s, y - 48 * s); c.stroke(); c.fillStyle = '#3a9a40'; for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + (k - 2) * 0.7; c.beginPath(); c.ellipse(x + 2 * s + Math.cos(a) * 16 * s, y - 48 * s + Math.sin(a) * 9 * s + 6 * s, 18 * s, 5 * s, a, 0, Math.PI * 2); c.fill(); } };
+  if (id === 'oasis') { c.fillStyle = '#3ac8c8'; c.beginPath(); c.ellipse(160, hz + 40, 90, 22, 0, 0, Math.PI * 2); c.fill(); c.fillStyle = '#c87a4a'; c.fillRect(60, hz - 18, 40, 22); c.fillRect(220, hz - 22, 46, 26); palm(70, hz + 36, 1.3); palm(250, hz + 30, 1.1); palm(200, hz + 44, 0.9); }
+  if (id === 'canyon') { c.fillStyle = '#b8582a'; c.fillRect(0, hz - 70, 120, 70); c.fillRect(210, hz - 90, 110, 90); c.fillStyle = '#9a4422'; c.fillRect(0, hz - 74, 120, 8); c.fillRect(210, hz - 94, 110, 8); c.fillStyle = '#3a1a10'; for (const [x, y] of [[20, 40], [60, 30], [90, 50], [230, 60], [270, 40], [300, 70]]) c.fillRect(x, hz - y, 10, 12); }
+  if (id === 'camp') { c.fillStyle = '#e8b870'; c.beginPath(); c.ellipse(260, hz + 2, 120, 44, 0, Math.PI, 0); c.fill(); for (const [x, w, col] of [[70, 70, '#e86a3a'], [160, 90, '#f4e8d0'], [250, 64, '#3aa8a0']]) { tri(x, hz + 14, w, 54, col); c.fillStyle = '#5a3a2a'; c.fillRect(x - 6, hz - 4, 12, 18); } }
+  if (id === 'gate') { c.fillStyle = '#d8a860'; for (const x of [110, 210]) { c.fillRect(x - 12, hz - 110, 24, 110); c.fillRect(x - 18, hz - 116, 36, 10); } c.fillStyle = '#ffd040'; c.beginPath(); c.arc(160, hz - 90, 22, 0, Math.PI * 2); c.fill(); c.fillStyle = '#c89048'; c.fillRect(80, hz - 6, 160, 8); }
+  if (id === 'flats') { c.fillStyle = 'rgba(122,200,240,0.35)'; c.fillRect(0, hz, W, 40); c.strokeStyle = 'rgba(200,190,170,0.7)'; c.lineWidth = 2; for (let k = 0; k < 6; k++) { c.beginPath(); c.moveTo(20 + k * 55, hz + 50 + (k % 3) * 20); c.lineTo(60 + k * 55, hz + 70 + (k % 2) * 25); c.lineTo(40 + k * 55, hz + 110); c.stroke(); } c.fillStyle = '#9a8a7a'; c.fillRect(230, hz - 14, 26, 14); c.fillRect(262, hz - 10, 18, 10); }
+  if (id === 'singing') { c.fillStyle = '#e4b064'; for (const [x, w] of [[60, 160], [220, 200], [150, 120]]) { c.beginPath(); c.ellipse(x, hz + 6, w / 2, 34, 0, Math.PI, 0); c.fill(); } c.fillStyle = '#a8784a'; for (const [x, y, h] of [[90, hz - 18, 46], [170, hz - 28, 56], [245, hz - 16, 42]]) { c.beginPath(); c.ellipse(x, y, 9, h / 2, 0, 0, Math.PI * 2); c.fill(); } }
+  // the dust cloud (somewhere along the horizon), a few puffs of tan
+  const dx = 120 + R(2) * 150, dy = hz - 14 - R(6) * 20; for (let k = 0; k < 7; k++) { c.fillStyle = `rgba(178,128,70,${0.7 - k * 0.06})`; c.beginPath(); c.arc(dx - k * 16, dy - Math.sin(k) * 6, 16 + k * 3, 0, Math.PI * 2); c.fill(); }
+  c.fillStyle = 'rgba(0,0,0,0.12)'; for (let y = 0; y < H; y += 4) c.fillRect(0, y, W, 1); // a faint lens texture
+}
 if (typeof window !== "undefined") { window.__maps = MAPS; window.__landmarks = LANDMARKS; } // (for the route-audit tools)
 const rng = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 const hash = (s) => { let h = 7; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) % 2147483647; return h || 1; };
@@ -446,6 +472,7 @@ export class World {
     this.buildFort();
     this.buildGarden();
     this.buildMelons();
+    this.buildLookout();
     this.buildGeyser();
     this.buildBloomFw();
     this.buildFountain();
@@ -2731,6 +2758,43 @@ export class World {
     this.garden = { x, y, px, pz, stage, g };
   }
 
+  // R885: Lookout Omar's brass spyglass on Redrock Mesa (M.lookout: a tripod aimed out over the sands)
+  buildLookout() {
+    const L = this.M.lookout; if (!L || this.M.indoor) return;
+    const [px, pz] = wpos(L.x, L.y), g = new THREE.Group(); g.position.set(px, 0, pz); g.scale.setScalar(1.35); this.group.add(g); this.solid.add(L.x + ',' + L.y);
+    const wood = toon(0x8a5a3a), brass = toon(0xe8b04a, { rim: 0.6 });
+    for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2 + 0.3, leg = inked(new THREE.CylinderGeometry(0.045, 0.06, 1.35, 6), wood, OL * 0.25); leg.position.set(Math.cos(a) * 0.3, 0.62, Math.sin(a) * 0.3); leg.rotation.set(Math.sin(a) * 0.42, 0, -Math.cos(a) * 0.42); g.add(leg); }
+    const tube = new THREE.Group(); tube.position.y = 1.3; tube.rotation.set(1.25, 0.9, 0, 'YXZ'); g.add(tube); // aimed out low over the sands, south-east
+    tube.add(inked(new THREE.CylinderGeometry(0.13, 0.18, 1.2, 14), brass, OL * 0.3));
+    for (const y of [-0.28, 0.3]) { const band = inked(new THREE.CylinderGeometry(0.185, 0.185, 0.08, 14), toon(0x8a5a2a), OL * 0.2); band.position.y = y; tube.add(band); }
+    const shade = inked(new THREE.CylinderGeometry(0.2, 0.19, 0.2, 14, 1, true), brass, OL * 0.2); shade.position.y = 0.66; tube.add(shade);
+    const eye = inked(new THREE.CylinderGeometry(0.06, 0.07, 0.22, 8), toon(0x3a2a24), OL * 0.2); eye.position.y = -0.7; tube.add(eye);
+    bakeStatic({ root: g, mats: {} });
+  }
+  // R885: Lookout Omar's daily sighting: look through the spyglass (a drawn view of one desert place, with a dust cloud), then say where it was.
+  // Right once a day: +3 berries (A.scopeDay, A.scopeN); five right: the Lookout's Spyglass Cap. Night: he's watching stars instead
+  scopeAsk(a) {
+    const n = a.n, A = save.adv, day = new Date().toISOString().slice(0, 10);
+    if (this.phase === 'night') { a.skipScope = true; this.talk(a); a.skipScope = false; return; }
+    if (A.scopeDay === day) return this.say([`${n.name}: That's today's dust cloud spotted. ${A.scopeN || 0} right so far! Come back tomorrow, there's always something moving out there.`], null, n.name);
+    const P = SCOPE_SPOTS, h = [...day].reduce((v, c) => (v * 31 + c.charCodeAt(0)) >>> 0, 7), k = h % P.length, spot = P[k];
+    const others = P.filter((q, i) => i !== k), o1 = others[(h >> 4) % others.length], o2 = others.filter((q) => q !== o1)[(h >> 8) % (others.length - 1)];
+    const opts = [spot, o1, o2].sort((x, y) => ((h >> 3) % 2 ? x.name.localeCompare(y.name) : y.name.localeCompare(x.name)));
+    this.say([`${n.name}: Something's kicking up dust out there! My old eyes can't tell where. Have a look through the spyglass?`], () => {
+      const el = document.createElement('div'); el.className = 'wd-scope'; const cv = document.createElement('canvas'); cv.width = cv.height = 320; el.appendChild(cv); this.S.root.appendChild(el);
+      scopeDraw(cv.getContext('2d'), spot.id, h); sfx.ui?.('ok');
+      this.say(['🔭 Through the spyglass: far away, a little cloud of dust drifts along...'], () => {
+        el.remove();
+        this.ask(`${n.name}: Well? Where was it?`, opts.map((q) => q.name), (i) => {
+          const ok = opts[i] === spot; A.scopeDay = day; if (ok) { A.scopeN = (A.scopeN || 0) + 1; save.berries = (save.berries || 0) + 3; }
+          const hat = ok && A.scopeN >= 5 && !(A.hats ||= []).includes('scopecap'); if (hat) A.hats.push('scopecap');
+          persist(); if (ok) reward(hat ? 3 : 2); this.questMarks?.();
+          this.say(ok ? [`${n.name}: ${spot.name[0].toUpperCase() + spot.name.slice(1)}! ${spot.line} Sharp eyes! Here, for your trouble. +3 🍓`, ...(hat ? [`${n.name}: That's five! You're a born lookout. Take my spare cap. The brim keeps the sun out of your eyes, and the little brass spyglass on top... is mostly for show.`, '{hero} got the Lookout\'s Spyglass Cap! 🔭 (☰ → 🎩 Hats)'] : [])]
+            : [`${n.name}: Hmm... ${opts[i].name}? I don't think so. That looked like ${spot.name} to me, now I squint. ${spot.line}`, `${n.name}: Come back tomorrow. There's always something moving out there.`], null, n.name);
+        }, n.name);
+      });
+    }, n.name);
+  }
   // R883: Mesa Gardener Lina's melon patch on Redrock Mesa (M.melons: a soil bed with a striped melon on every tile, a low rope fence)
   buildMelons() {
     this.melons = null;
@@ -5185,7 +5249,7 @@ export class World {
     for (const a of this.npcs) {
       if (a.mark) { this.group.remove(a.mark); a.mark = null; }
       const id = a.n.story?.startsWith('lost:') && a.n.story.slice(5);
-      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? (save.adv.sporeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : this.M.melons?.who === a.n.id ? (!F.melon_hint ? '!' : (this.phase === 'night' || this.phase === 'evening') && save.adv.melonDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R884: tonight's MELON WATCH prize */ : this.M.run?.who === a.n.id ? (F[a.n.id] && F[this.M.sluice?.flag] && save.adv.runDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R876: today's TUNNEL RUN prize */ : a.n.story === 'aqueduct' ? (!F.aq_asked ? '!' : F.aqueduct_flow && !F.aq_done ? '?' : F.aq_done && save.adv.pipeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R860; R865: today's WATERWORKS prize */ : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
+      const k = a.n.id === 'wanted' ? 'm' : storyMark(a.n.id) ? 'm' : deliveryFor(a.n.id) ? '?' : chainFor(a.n.id) ? '!' : a.n.story === 'gauntlet' ? (F['gauntpay_' + gauntletWeek()] ? null : '!') : a.n.story === 'glowcaps' ? (F.gcap_done ? (save.adv.sporeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !F.gcap_asked ? '!' : !F.gcap_done && glowcapCount() >= MAPS.glowhollow.glowcaps.length ? '?' : null) : this.M.lookout?.who === a.n.id ? (this.phase !== 'night' && save.adv.scopeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R885: today's sighting */ : this.M.melons?.who === a.n.id ? (!F.melon_hint ? '!' : (this.phase === 'night' || this.phase === 'evening') && save.adv.melonDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R884: tonight's MELON WATCH prize */ : this.M.run?.who === a.n.id ? (F[a.n.id] && F[this.M.sluice?.flag] && save.adv.runDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R876: today's TUNNEL RUN prize */ : a.n.story === 'aqueduct' ? (!F.aq_asked ? '!' : F.aqueduct_flow && !F.aq_done ? '?' : F.aq_done && save.adv.pipeDay !== new Date().toISOString().slice(0, 10) ? '!' : null) /* R860; R865: today's WATERWORKS prize */ : a.n.story === 'caravanrun' ? (F.caravan3_done && save.adv.caravanDay !== new Date().toISOString().slice(0, 10) ? '!' : null) : !id || !questReady(id) ? null : !F[id + '_asked'] ? '!' : F[id + '_found'] && !F[id + '_done'] ? '?' : null;
       if (!k) continue;
       const m = new THREE.Sprite(markMat(k)); m.userData.shared = true; m.scale.setScalar(1.35);
       this.group.add(m); a.mark = m; a.markKind = k;
@@ -6307,6 +6371,7 @@ export class World {
     const cq = chainFor(n.id); if (cq) return this.S.worldStory('lost:' + cq, this, a); // a quest-chain link they hand out on top of their own story
     if (n.story) return this.S.worldStory(n.story, this, a);
     if (this.M.melons?.who === n.id && !a.skipMelon) return this.melonAsk(a); // R883: MELON WATCH
+    if (this.M.lookout?.who === n.id && !a.skipScope) return this.scopeAsk(a); // R885: Lookout Omar's spyglass
     if (this.M.run?.who === n.id && !a.skipRun && save.adv.flags[n.id] && save.adv.flags[this.M.sluice?.flag]) return this.runAsk(a); // R875: TUNNEL RUN
     const dl = !n.trainer && !(n.id === 'mom' && this.morning) && deliveredLine(n.id); // (Mom's breakfast comes first) if (dl && Math.random() < 0.6) return this.say(dl);
     if (n.trainer) {
