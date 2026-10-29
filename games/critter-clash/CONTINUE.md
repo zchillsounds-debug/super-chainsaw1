@@ -20,6 +20,9 @@ The full, detailed handoff lives in the repo at `games/critter-clash/HANDOFF.md`
 - Session 16e (R255–R279) added: grass sway, new palms, chimney smoke, rain (world and fights), room furniture, the Berry Center smoothie blender, smooth water corners, trainer role hats, a natural meadow for wild fights, footprints, a night Town Map, doorway light, beach decor, falling leaves and petals, toadstool spores, and Pecan weather news.
 - Final checks for the session passed: tapcheck was clean at 740×360 and 412×915, the Sprout Cup played from the world and landed back there, and the wild-fight wins ran without errors.
 
+## Latest (2026-10-29, session D19 = 8-session run, session 7): R891–R902
+- Tumbleweeds roll on Redrock Mesa, **DUNE CHORUS** on the Singing Dunes, rose-salt statues for shiny critters on the Glass Flats, a **Singing Dunes battle arena** with the Stone Song, Stargazer Nuri's telescope and the desert constellations, the Moonlight chorus, Pecan news adv47. Next round **R903**; the next session is **session 8 of 8** (the last: it sends the final APK and stops). Details in HANDOFF.md "Session D19".
+
 ## Latest (2026-10-27, session D3): the Amber Sands open (R780–R785)
 - The Sand-Rail from Cinder Town (after the Sunstone) to **Sunwell Oasis** (bazaar, well, Sand Hats, Berry Center, Dust Devils about), **Dune Road** with the six desert critters wild, a desert battle look (Redrock Canyon), a desert tune, the **Mirage Cup** in the new Sunwell Pavilion with water geysers, Pecan news adv33, and a balance pass after the first full robin with traits. Run end: **2026-10-29 06:00 UTC**. Next round R786.
 
