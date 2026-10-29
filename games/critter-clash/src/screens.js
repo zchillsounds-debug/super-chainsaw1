@@ -1583,7 +1583,7 @@ export class Screens {
         + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal
         + (A.cnt?.lantern ? bar('🏮', 'Sky lanterns sent up', A.cnt.lantern) : '') // R820: no goal
         + (F.hollow_arrive ? bar('🍄', 'Big glowcaps for Forager Pim', F.gcap_done ? 'all given ✓' : `${glowcapCount()} / ${MAPS.glowhollow.glowcaps.length}`) : '') // R849: no goal (the Glowcap Hat counts with the found hats)
-        + (F.aq_arrive ? bar('💧', "The Old Aqueduct's Sun Sluice", F.aqueduct_flow ? 'open ✓' : 'shut') : '') + (A.aqCoins ? bar('🪙', 'Sun City coins (aqueduct silt)', A.aqCoins) : '') /* R871: no goal */ // R861: no goal (its two hats count with the found hats)
+        + (F.aq_arrive ? bar('💧', "The Old Aqueduct's Sun Sluice", F.aqueduct_flow ? 'open ✓' : 'shut') : '') + (F.aqueduct_flow ? bar('🏺', "The toll-keeper's nook", F.aq_nook ? 'found ✓' : 'not yet') : '') /* R880: no goal */ + (A.aqCoins ? bar('🪙', 'Sun City coins (aqueduct silt)', A.aqCoins) : '') /* R871: no goal */ // R861: no goal (its two hats count with the found hats)
         + (A.bountySeen ? bar('📜', 'Guild Seals (full bounty boards)', A.seals || 0) : '') // R828: no goal (the fez comes at five; it counts with the found hats)
         + (Object.keys(F).some((k) => k.startsWith('lampduel_')) ? bar('⚔️', 'Lamplight duels won', Object.keys(F).filter((k) => k.startsWith('lampduel_')).length) : ''); // R825: no goal
     }
