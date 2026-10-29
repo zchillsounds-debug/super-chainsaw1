@@ -1381,6 +1381,9 @@ export class Screens {
         ['🎈', 'SKY HOP prize', 'Neon City arcade', A.hopDay === day, seen.neon],
         ['🏄', 'WAVE RIDER prize', 'Ember Isle Surf Shack', A.surfDay === day, seen.ember_isle],
         ['🛷', 'DUNE SLED prize', 'Dune Camp, with Kai', A.sledDay === day, !!A.flags?.cup_sandstorm],
+        ['🐪', 'CARAVAN RUN prize', `Caravan Master Hakim, ${N('oasis')}`, A.caravanDay === day, !!F.caravan3_done], // R870: the three newer desert mini-games' daily prizes
+        ['🍄', 'SPORE DRIFT prize', 'Forager Pim, Glowcap Hollow', A.sporeDay === day, !!F.gcap_done],
+        ['💧', 'WATERWORKS prize', 'Waterwright Osei, the Old Aqueduct', A.pipeDay === day, !!F.aq_done],
         ['📜', `Caravan Guild bounties (${A.bounty?.day === day ? A.bounty.paid.length : 0}/3)`, `the board in ${N('oasis')}`, A.bounty?.day === day && A.bounty.paid.length >= 3, !!F.sands_arrive], // R828
         ['🤿', 'REEF DIVE prize', 'the Sunken Wreck (Snorkeller Pia, Port Coral)', A.diveDay === day, F.dived],
         ['🐦', `Gull Club catch: ${gullFish(day)}`, 'any island water → Petrel, Starfall Atoll', A.gullPaid === day, F.amends3_done && F.rod],
@@ -1571,7 +1574,7 @@ export class Screens {
         + (A.curios ? bar('🫧', 'Mirage curios bought', A.curios) : '') // R819: no goal
         + (A.cnt?.lantern ? bar('🏮', 'Sky lanterns sent up', A.cnt.lantern) : '') // R820: no goal
         + (F.hollow_arrive ? bar('🍄', 'Big glowcaps for Forager Pim', F.gcap_done ? 'all given ✓' : `${glowcapCount()} / ${MAPS.glowhollow.glowcaps.length}`) : '') // R849: no goal (the Glowcap Hat counts with the found hats)
-        + (F.aq_arrive ? bar('💧', "The Old Aqueduct's Sun Sluice", F.aqueduct_flow ? 'open ✓' : 'shut') : '') // R861: no goal (its two hats count with the found hats)
+        + (F.aq_arrive ? bar('💧', "The Old Aqueduct's Sun Sluice", F.aqueduct_flow ? 'open ✓' : 'shut') : '') + (A.aqCoins ? bar('🪙', 'Sun City coins (aqueduct silt)', A.aqCoins) : '') /* R871: no goal */ // R861: no goal (its two hats count with the found hats)
         + (A.bountySeen ? bar('📜', 'Guild Seals (full bounty boards)', A.seals || 0) : '') // R828: no goal (the fez comes at five; it counts with the found hats)
         + (Object.keys(F).some((k) => k.startsWith('lampduel_')) ? bar('⚔️', 'Lamplight duels won', Object.keys(F).filter((k) => k.startsWith('lampduel_')).length) : ''); // R825: no goal
     }

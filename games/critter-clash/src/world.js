@@ -240,7 +240,7 @@ function fossilParts(shape, x, y, z) {
 // maps with a daily dig spot (beach sand, Frostpeak snow, Cinder Town ash) that hasn't been dug up today: the Town Map marks them ⛏
 export function digLeft(maps) {
   const day = new Date().toISOString().slice(0, 10);
-  return Object.keys(maps).filter((k) => { const M = maps[k]; return !M.indoor && (M.arena === 'beach' || (M.snow && k !== 'peak') || k === 'ember' || k === 'ember_isle' || (M.sands && !M.cave && save.adv?.flags?.sands_arrive)) && save.adv?.dig?.[k] !== day; });
+  return Object.keys(maps).filter((k) => { const M = maps[k]; return !M.indoor && (M.arena === 'beach' || (M.snow && k !== 'peak') || k === 'ember' || k === 'ember_isle' || (M.sands && !M.cave && save.adv?.flags?.sands_arrive) || (M.sluice && save.adv?.flags?.[M.sluice.flag])) && save.adv?.dig?.[k] !== day; });
 }
 
 // one big Alpha wild critter a day, waiting in the tall grass of one visited route (after the Sprout Cup): tougher, worth berries
@@ -4009,25 +4009,27 @@ export class World {
     const snow = this.M.snow && this.key !== 'peak'; // Frostpeak has one too: an ice gem under the snow
     const lava = this.key === 'ember'; // and Cinder Town: an ember gem in the warm ash
     const fossil = !!this.M.sands && !this.M.cave && !!save.adv.flags.sands_arrive; // and the Amber Sands: fossils for the Sunwell Museum (D3)
-    if ((this.M.arena !== 'beach' && !snow && !lava && !fossil && this.key !== 'ember_isle') || this.M.indoor) return; // (Ember Isle digs in its black sand beach)
+    const SL = this.M.sluice, silt = !!SL && !!save.adv.flags[SL.flag]; // R871: and the Old Aqueduct's drained channel beds, once the Sun Sluice is open: old Sun City toll coins in the silt
+    if ((this.M.arena !== 'beach' && !snow && !lava && !fossil && !silt && this.key !== 'ember_isle') || this.M.indoor) return; // (Ember Isle digs in its black sand beach)
     const day = new Date().toISOString().slice(0, 10), r = rng(hash(this.key + day));
     if ((save.adv.dig ||= {})[this.key] === day) return;
     const taken = new Set([...(this.M.npcs || []).map((n) => n.x + ',' + n.y), ...this.doors.map((d) => d.x + ',' + (d.y + 1)), ...this.itemSpots, ...(this.M.signs || []).map((g) => g.x + ',' + g.y), this.hx + ',' + this.hy]);
     const ok = [];
     const seen = new Set([this.hx + ',' + this.hy]), q = [[this.hx, this.hy]]; // only sand you can walk to, and not tucked behind a building or the trees
     for (let i = 0; i < q.length; i++) for (const [dx, dy] of Object.values(DIRS)) { const nx = q[i][0] + dx, ny = q[i][1] + dy, k = nx + ',' + ny; if (!seen.has(k) && this.walkable(nx, ny)) { seen.add(k); q.push([nx, ny]); } }
-    for (const [x, y] of q) if ((fossil ? '.s'.includes(this.tile(x, y)) : this.tile(x, y) === (snow || lava ? '.' : 's')) && x > 1 && y > 1 && x < this.W - 2 && y < this.H - 1 && !taken.has(x + ',' + y) && !'hTP'.includes(this.tile(x, y + 1)) && !'hTP'.includes(this.tile(x, y + 2))) ok.push([x, y]);
+    for (const [x, y] of q) if ((silt ? (x === SL.a || x === SL.b) && y >= SL.y0 && y <= SL.y1 : fossil ? '.s'.includes(this.tile(x, y)) : this.tile(x, y) === (snow || lava ? '.' : 's')) && x > 1 && y > 1 && x < this.W - 2 && y < this.H - 1 && !taken.has(x + ',' + y) && !'hTP'.includes(this.tile(x, y + 1)) && !'hTP'.includes(this.tile(x, y + 2))) ok.push([x, y]);
     ok.sort((a, b) => a[1] - b[1] || a[0] - b[0]); // the same spot all day, wherever you walked in from
     if (!ok.length) return;
     const [x, y] = ok[Math.floor(r() * ok.length)], [px, pz] = wpos(x, y);
     const g = new THREE.Group(); g.position.set(px, 0, pz); // a little heap of turned sand with a pirate's X beside it
-    const heap = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), toon(snow ? 0xf4f8ff : lava || this.key === 'ember_isle' ? 0x5a4a50 : 0xd8b068)); heap.scale.set(1, 0.38, 0.8); heap.position.set(-0.35, 0, -0.35); heap.receiveShadow = true; g.add(heap);
+    const heap = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), toon(snow ? 0xf4f8ff : silt ? 0x6a5a44 : lava || this.key === 'ember_isle' ? 0x5a4a50 : 0xd8b068)); heap.scale.set(1, 0.38, 0.8); heap.position.set(-0.35, 0, -0.35); heap.receiveShadow = true; g.add(heap);
     for (const a of [0.78, -0.78]) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.03, 0.17), lava ? new THREE.MeshBasicMaterial({ color: 0xff8a2a }) : toon(snow ? 0x4a8ad8 : 0xa8743a)); if (lava) b.material.userData.own = true; b.rotation.y = a; b.position.set(0.25, 0.02, 0.2); g.add(b); }
     const gem = new THREE.Mesh(new THREE.OctahedronGeometry(snow || lava ? 0.16 : 0.12), toon(snow ? 0xa8eaff : lava ? 0xff6a3a : 0xfff4a0, { rim: 1, emissive: snow ? 0x2a6a90 : lava ? 0x902a10 : 0x806a20 })); gem.position.set(-0.3, 0.22, -0.2); g.add(gem);
     this.group.add(g);
     if (lava) { const sm = new THREE.SpriteMaterial({ map: glowTex(), color: 0xff6a2a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 }); sm.userData.own = true; const sp = new THREE.Sprite(sm); sp.scale.setScalar(1.3); sp.position.set(0.2, 0.15, 0.2); g.add(sp); }
     if (fossil) { const bn = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.42, 6), toon(0xeedcb4)); bn.rotation.z = 1.2; bn.position.set(-0.1, 0.12, -0.32); g.add(bn); for (const sd of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), toon(0xeedcb4)); e.position.set(-0.1 + sd * 0.2 * Math.cos(1.2), 0.12 + sd * 0.2 * Math.sin(1.2) * 0.3, -0.32); g.add(e); } } // a bone poking out of the heap
-    this.dig = { x, y, g, px, pz, snow, lava, fossil };
+    if (silt) { gem.visible = false; const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.04, 14), toon(0xd8a040, { rim: 1, emissive: 0x6a4a10 })); coin.rotation.set(1.1, 0, 0.3); coin.position.set(-0.28, 0.2, -0.18); g.add(coin); } // (a bronze coin peeking out of wet silt)
+    this.dig = { x, y, g, px, pz, snow, lava, fossil, silt };
   }
   digUp() {
     const D = this.dig; this.dig = null;
@@ -4044,6 +4046,15 @@ export class World {
       persist(); reward(3);
       for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: D.px, y: 0.5, z: D.pz, vx: (Math.random() - 0.5) * 2, vy: 1.5 + Math.random() * 2, vz: (Math.random() - 0.5) * 2, color: 0xa8eaff, size: 0.4, life: 0.9, shape: 'star', grav: 4 });
       return this.say([...lines, 'Another glint will show in the snow tomorrow.']);
+    }
+    if (D.silt) { // R871: the aqueduct's silt: a dozing Lilypop, or a Sun City toll coin (Waterwright Osei pays for them; every fifth: a Power Snack)
+      if (roll < 0.15) { persist(); return this.say(['{hero} scoops into the cool silt... and it croaks! A wild Lilypop was snoozing in the mud!'], () => this.startWild('lilypop', Math.max(30, (save.critters[hero]?.level || 30) - 2), null, Math.random() < shinyRate())); }
+      const n = (save.adv.aqCoins = (save.adv.aqCoins || 0) + 1), b = 3; save.berries = (save.berries || 0) + b;
+      const lines = [`{hero} scoops away the silt... an old bronze coin, stamped with a sun-bird! 🪙 (${n} found) Waterwright Osei says the Sun City charged travellers a coin for the water... then gave it all back for the upkeep. +${b} 🍓`];
+      if (n % 5 === 0) { const rr = grantXp(hero, Math.round(xpNeeded(save.critters[hero].level) * 0.4)); lines.push('Five coins! Osei throws in a Power Snack: "for the mud on your boots". ⭐', ...(rr.to > rr.from ? [`{hero} grew to Lv ${rr.to}!`] : [])); }
+      persist(); reward(3);
+      for (let k = 0; k < 10; k++) this.g.fx.spawn({ x: D.px, y: 0.5, z: D.pz, vx: (Math.random() - 0.5) * 2, vy: 1.5 + Math.random() * 2, vz: (Math.random() - 0.5) * 2, color: 0xffd070, size: 0.4, life: 0.9, shape: 'star', grav: 4 });
+      return this.say([...lines, 'The channel will drop a little more silt by tomorrow.']);
     }
     if (D.fossil) countUp('sanddig');
     if (D.fossil) { // desert sand: a cross Scarabold, or a fossil for the Sunwell Museum (a new one if there's one left to find here; else a fossil chip worth berries)
