@@ -55,7 +55,7 @@ const STYLE_TAG = { balanced: '⚖️ Balanced', rushdown: '🔥 Aggressive', zo
 const ARENA_NAME = { meadow: 'Sunny Meadow', beach: 'Seashell Bay', volcano: 'Magma Crater', frost: 'Frostpeak Dome', neon: 'Neon Rooftop', sky: 'Cloudtop Gardens', grove: 'Glowcap Grove' };
 const ARENA_KEYS = Object.keys(ARENA_NAME);
 // R810: the Amber Sands' three stadiums join Quick Battle and Sparring once their Adventure cup is won (each has its own hazard)
-const SANDS_ARENA = { oasis: ['Sunwell Pavilion', 'mirage'], canyon: ['Canyon Stadium', 'canyon'], dunes: ['Sandstorm Dome', 'sandstorm'], grotto: ['Sunwell Grotto', null, 'spring_arrive'], aqueduct: ['Old Aqueduct', null, 'aq_arrive'] }; // (R862: the aqueduct once you've been down there) // (R842: the grotto once you've climbed down the well)
+const SANDS_ARENA = { oasis: ['Sunwell Pavilion', 'mirage'], canyon: ['Canyon Stadium', 'canyon'], dunes: ['Sandstorm Dome', 'sandstorm'], grotto: ['Sunwell Grotto', null, 'spring_arrive'], aqueduct: ['Old Aqueduct', null, 'aq_arrive'], mesa: ['Redrock Mesa', null, 'cup_canyon'] }; // (R888: Redrock Mesa once its rope lifts run) // (R862: the aqueduct once you've been down there) // (R842: the grotto once you've climbed down the well)
 const arenaName = (k) => ARENA_NAME[k] || SANDS_ARENA[k]?.[0] || k;
 // Quick Battle's sky chip: the time of day and the weather (night and rain wake the night/rain traits; the sandstorm waits for the Sandstorm Cup)
 const SKIES = { day: ['☀️', 'Day'], evening: ['🌇', 'Evening'], night: ['🌙', 'Night'], rain: ['🌧️', 'Rain'], sandstorm: ['🌪️', 'Sandstorm'] };
@@ -117,6 +117,7 @@ const HOME = {
   beach: '🐚', beach_: 'scuttles back into the dunes', volcano: '🌋', volcano_: 'dashes off into the ash',
   neon: '🌃', neon_: 'zips off down a neon alley', frost: '❄️', frost_: 'slides away into the snow', sky: '☁️', sky_: 'floats off into the clouds',
   canyon: '🏜️', canyon_: 'kicks up a puff of sand and darts off over the dunes', saltflat: '🫧', saltflat_: 'shimmers away across the salt like a mirage', // (R822: the Amber Sands)
+  mesa: '🏜️', mesa_: 'tumbles off over the edge of the mesa with the tumbleweeds', // (R888: Redrock Mesa)
   grotto: '💧', grotto_: 'splashes off into the glowing pool', // (R834: the Sunwell Spring)
   aqueduct: '🏺', aqueduct_: 'dives into the channel and rides the water away', // (R862: the Old Aqueduct)
 };

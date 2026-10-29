@@ -1055,7 +1055,7 @@ export const MAPS = {
   mesa: {
     name: 'Redrock Mesa',
     music: 'sands',
-    arena: 'canyon',
+    arena: 'mesa', // R888: its own arena (tumbleweeds, crosswinds)
     sands: 'canyon',
     extra: true,
     border: 'mesa',

@@ -31,6 +31,15 @@ export const ARENAS = {
     accent: 0xffc040, seat: [0xd8643a, 0x2ab0a8, 0xffc040, 0xfff0d8],
     hill: 0xd89a5a, trunk: 0x4a9a4a, leaves: [0xc8704a, 0xb8603a, 0xd8845a], scenery: 'mesas', cloud: 0xfff4e8, cloudShade: 0xb08060, sunI: 2.5,
   },
+  mesa: { // R888: Redrock Mesa (its wild fights): a flat red tabletop high above the sands, bigger sky, the far mesas below and a dry wind
+    name: 'Redrock Mesa',
+    skyTop: 0x2a6ad8, skyHorizon: 0xffe0b0, sun: 0xfff2d8, sunDir: [-0.4, 0.8, -0.35],
+    hemiSky: 0xfff0d8, hemiGround: 0xa0603a, fieldA: '#d89a6a', fieldB: '#d09060', line: '#fff0dc', floor: 'sand',
+    wallA: 0xb8502a, wallB: 0xfff0d8, ground: 0xc8784a, fog: 0xffe0b8,
+    accent: 0xffb040, seat: [0xb8502a, 0xffb040, 0x3aa040, 0xfff0d8],
+    hill: 0xc8784a, trunk: 0x3aa040, leaves: [0xb8603a, 0xa8502a, 0xc8704a], scenery: 'mesas', cloud: 0xffffff, cloudShade: 0xc09070, sunI: 2.6,
+    drift: 'dust',
+  },
   saltflat: { // R821: the Glass Flats' salt lake (its wild fights only): a white honeycomb crust under a pale, hazy sky, a see-through mirage town far off
     name: 'Glass Flats',
     skyTop: 0x4a8ae0, skyHorizon: 0xd8e6f6, sun: 0xfff4e4, sunDir: [-0.35, 0.82, 0.4],

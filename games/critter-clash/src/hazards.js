@@ -23,6 +23,7 @@ export const HAZARDS = {
   saltflat: { name: 'Brine vents', color: 0x3a8ab8, glow: 0xffffff, r: 1.15, warn: 1.35, dmg: 6, lift: 7, kb: 1.6, word: 'HISS!' }, // R823: the Glass Flats (wild fights): the crust cracks and spits hot brine
   grotto:  { name: 'Dripstones', color: 0xff9a2a, solid: true, glow: 0x9afff4, r: 1.05, warn: 1.3, dmg: 7, stun: 0.5, kb: 2.6, word: 'PLINK!' }, // R835: the Sunwell Grotto (wild fights): a stalactite with a glowing drop on its tip lets go
   aqueduct: { name: 'Sluice spouts', color: 0x2ab8d0, glow: 0xc8f8ff, r: 1.2, warn: 1.3, dmg: 6, kb: 4.2, word: 'GUSH!' }, // R862: the Old Aqueduct (wild fights): an old spout in the floor blasts a jet sideways
+  mesa:    { name: 'Tumbleweeds', color: 0xa8702a, solid: true, glow: 0xffe8b0, r: 1.15, warn: 1.25, dmg: 6, stun: 0.35, kb: 3.6, word: 'TUMBLE!' }, // R888: Redrock Mesa (wild fights): a dry tumbleweed bounces down out of the wind
   beach:   { name: 'Coconuts', color: 0xe0482a, solid: true, glow: 0xfff2c0, r: 0.9, warn: 1.2, dmg: 7, stun: 0.5, kb: 3, word: 'BONK!' },
 };
 
@@ -38,6 +39,7 @@ export const SIGS = {
   grotto:  { name: 'Cave-ins', word: 'CAVE-IN!', jumbo: 'CAVE-IN!', tip: 'Cave-in! Get clear of the cross!' }, // R841: the Sunwell Grotto
   saltflat: { name: 'Salt cracks', word: 'CRACK!', jumbo: 'SALT CRACK!', tip: 'Salt crack! Step off the line!' }, // R869: the Glass Flats: a crack zigzags across the crust, brine vents burst along it
   aqueduct: { name: 'Floodgates', name2: 'Whirlpools', word: 'FLOOD!', jumbo: 'FLOODGATE!', tip: 'Floodgate! Step out of the surge!' }, // R862: a surge down one lane (the rogue wave's lane, in sluice water); R874: or a whirlpool drain that drags you in, then spouts
+  mesa:    { name: 'Crosswinds', word: 'GUST!', jumbo: 'CROSSWIND!', tip: 'Crosswind! Hold your ground!' }, // R888: the mesa top's wind (runs like the Cloudtop crosswind)
   dunes:   { name: 'Sandstorms', word: 'SANDSTORM!', jumbo: 'SANDSTORM!', tip: 'Sandstorm! Guard to dig in!' }, // the Sandstorm Dome
 };
 
@@ -102,6 +104,12 @@ function ringMesh(color, solid) {
 }
 
 function dropMesh(kind) {
+  if (kind === 'mesa') { // R888: a tumbleweed: a loose ball of dry twigs (tilted hoops round a dark core)
+    const g = new THREE.Group(), tw = toon(0xc8944a, { rim: 0.5 }), dk = toon(0x8a5a2a);
+    for (let k = 0; k < 6; k++) { const t = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.035, 4, 14), k % 2 ? tw : dk); t.rotation.set(k * 0.9, k * 1.7, k * 0.4); g.add(t); }
+    g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.22, 0), dk));
+    return g;
+  }
   if (kind === 'canyon') { // a chunky slab of red sandstone, with a paler band across it
     const g = new THREE.Group(), r = inked(new THREE.DodecahedronGeometry(0.42, 0), toon(0xb8583a, { rim: 0.4 }), 0.025);
     r.scale.set(1.15, 0.8, 1); g.add(r);
@@ -201,7 +209,7 @@ export class Hazards {
 
   // ---------- the arena's signature pattern ----------
   signature() {
-    const B = this.b, key = this.sandWx ? 'dunes' : B.arena.key === 'aqueduct' ? (this.whirlNext ? 'whirl' : 'beach') : B.arena.key; // (R862: the aqueduct's floodgate surge runs like a rogue wave; R874: it takes turns with a whirlpool)
+    const B = this.b, key = this.sandWx ? 'dunes' : B.arena.key === 'aqueduct' ? (this.whirlNext ? 'whirl' : 'beach') : B.arena.key === 'mesa' ? 'sky' : B.arena.key; // (R888: the mesa's crosswind; R862: the aqueduct's floodgate surge runs like a rogue wave; R874: it takes turns with a whirlpool)
     if (B.arena.key === 'aqueduct' && !this.sandWx) this.whirlNext = !this.whirlNext;
     const f = B.fighters[Math.random() < 0.5 ? 0 : 1];
     const ang = Math.random() * Math.PI * 2, dx = Math.cos(ang), dz = Math.sin(ang);
@@ -505,7 +513,7 @@ export class Hazards {
     B.scene.add(mesh);
     const h = { x, z, t: t0, fired: false, mesh, follow };
     mesh.visible = t0 >= 0;
-    if (B.arena.key === 'frost' || B.arena.key === 'beach' || B.arena.key === 'canyon' || B.arena.key === 'grotto') {
+    if (B.arena.key === 'frost' || B.arena.key === 'beach' || B.arena.key === 'canyon' || B.arena.key === 'grotto' || B.arena.key === 'mesa') {
       h.drop = dropMesh(B.arena.key);
       h.drop.position.set(x, 9, z);
       B.scene.add(h.drop);
@@ -614,6 +622,10 @@ export class Hazards {
       B.fx.burst({ x: h.x, y: 0.4, z: h.z }, { n: 18, speed: 3.5, up: 7, color: 0x9afff4, size: 0.24, life: 0.7, shape: 'glow', grav: 14 }); // a splash of spring-glow
       B.fx.burst(p, { n: 10, speed: 4.5, up: 4, color: 0x6a8a96, size: 0.2, life: 0.6, shape: 'star', additive: false, grav: 12, spin: 8 }); // and stone chips
       B.fx.spawn({ x: h.x, y: 0.06, z: h.z, color: 0xb8fff8, size: H.r * 1.5, life: 0.5, shape: 'ring', grow: 1.6, alpha: 0.8 });
+      sfx.bonk();
+    } else if (key === 'mesa') { // R888: the tumbleweed bursts into twigs and a puff of red dust
+      B.fx.burst({ x: h.x, y: 0.3, z: h.z }, { n: 12, speed: 3, up: 2, color: 0xd8946a, size: 0.6, life: 0.7, shape: 'puff', additive: false, grav: 1, grow: 1.3, alpha: 0.7 });
+      B.fx.burst(p, { n: 14, speed: 5, up: 4, color: 0xc8944a, size: 0.2, life: 0.7, shape: 'star', additive: false, grav: 10, spin: 10 });
       sfx.bonk();
     } else if (key === 'canyon') {
       B.fx.burst({ x: h.x, y: 0.3, z: h.z }, { n: 16, speed: 3.5, up: 2.5, color: 0xd8a070, size: 0.7, life: 0.8, shape: 'puff', additive: false, grav: 1, grow: 1.3, alpha: 0.75 });
